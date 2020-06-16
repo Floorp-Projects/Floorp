@@ -340,6 +340,11 @@ test_description_schema = Schema({
         'test-name',
         Any([text_type], 'built-projects')),
 
+    # When set only run on projects where the build would already be running.
+    # This ensures tasks where this is True won't be the cause of the build
+    # running on a project it otherwise wouldn't have.
+    Optional('built-projects-only'): bool,
+
     # Same as `run-on-projects` except it only applies to Fission tasks. Fission
     # tasks will ignore `run_on_projects` and non-Fission tasks will ignore
     # `fission-run-on-projects`.
@@ -644,6 +649,7 @@ def set_defaults(config, tasks):
         task.setdefault('run-as-administrator', False)
         task.setdefault('chunks', 1)
         task.setdefault('run-on-projects', 'built-projects')
+        task.setdefault('built-projects-only', False)
         task.setdefault('instance-size', 'default')
         task.setdefault('max-run-time', 3600)
         task.setdefault('reboot', False)
@@ -1261,6 +1267,19 @@ def handle_run_on_projects(config, tasks):
     for task in tasks:
         if task['run-on-projects'] == 'built-projects':
             task['run-on-projects'] = task['build-attributes'].get('run_on_projects', ['all'])
+
+        if task.pop('built-projects-only', False):
+            built_projects = set(task['build-attributes'].get('run_on_projects', {'all'}))
+            run_on_projects = set(task.get('run-on-projects', set()))
+
+            # If 'all' exists in run-on-projects, then the intersection of both
+            # is built-projects. Similarly if 'all' exists in built-projects,
+            # the intersection is run-on-projects (so do nothing). When neither
+            # contains 'all', take the actual set intersection.
+            if 'all' in run_on_projects:
+                task['run-on-projects'] = sorted(built_projects)
+            elif 'all' not in built_projects:
+                task['run-on-projects'] = sorted(run_on_projects & built_projects)
         yield task
 
 

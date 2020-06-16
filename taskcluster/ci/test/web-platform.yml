@@ -303,6 +303,7 @@ test-verify-wpt:
             (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: ['try']
             # do not run on beta or release: usually just confirms earlier results
             default: ['autoland', 'try']
+    built-projects-only: true
     tier: 2
     mozharness:
         extra-options:
