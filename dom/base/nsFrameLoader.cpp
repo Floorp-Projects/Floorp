@@ -183,8 +183,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mIsRemoteFrame(aIsRemoteFrame),
       mWillChangeProcess(false),
       mObservingOwnerContent(false),
-      mTabProcessCrashFired(false),
-      mNotifyingCrash(false) {}
+      mTabProcessCrashFired(false) {}
 
 nsFrameLoader::~nsFrameLoader() {
   if (mMessageManager) {
@@ -468,12 +467,6 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
   RefPtr<BrowsingContext> context = aContext;
   if (!context || !aPreserveContext) {
     context = CreateBrowsingContext(aOwner, /* openWindowInfo */ nullptr);
-    if (aContext) {
-      MOZ_ASSERT(
-          XRE_IsParentProcess(),
-          "Recreating browing contexts only supported in the parent process");
-      aContext->Canonical()->ReplacedBy(context->Canonical());
-    }
   }
   NS_ENSURE_TRUE(context, nullptr);
 
@@ -3220,12 +3213,6 @@ already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
 }
 
 BrowsingContext* nsFrameLoader::GetBrowsingContext() {
-  if (mNotifyingCrash) {
-    if (mPendingBrowsingContext && mPendingBrowsingContext->EverAttached()) {
-      return mPendingBrowsingContext;
-    }
-    return nullptr;
-  }
   if (IsRemoteFrame()) {
     Unused << EnsureRemoteBrowser();
   } else if (mOwnerContent) {
@@ -3484,11 +3471,6 @@ void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
   if (!os) {
     return;
   }
-
-  mNotifyingCrash = true;
-  auto resetNotifyCrash =
-      mozilla::MakeScopeExit([&] { mNotifyingCrash = false; });
-
   os->NotifyObservers(ToSupports(this), "oop-frameloader-crashed", nullptr);
 
   // Check our owner element still references us. If it's moved, on, events
