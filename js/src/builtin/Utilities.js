@@ -68,13 +68,6 @@ function ToNumber(v) {
     return +v;
 }
 
-
-// ES6 7.2.1 (previously, ES5 9.10 under the name "CheckObjectCoercible").
-function RequireObjectCoercible(v) {
-    if (v === undefined || v === null)
-        ThrowTypeError(JSMSG_CANT_CONVERT_TO, ToString(v), "object");
-}
-
 // ES2017 draft rev aebf014403a3e641fb1622aec47c40f051943527
 // 7.2.10 SameValueZero ( x, y )
 function SameValueZero(x, y) {
