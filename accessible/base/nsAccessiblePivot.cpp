@@ -418,10 +418,7 @@ bool nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
     return false;
 
   nsCOMPtr<nsIAccessible> xpcOldPos = ToXPC(aOldPosition);  // death grip
-  nsTObserverArray<nsCOMPtr<nsIAccessiblePivotObserver>>::ForwardIterator iter(
-      mObservers);
-  while (iter.HasMore()) {
-    nsIAccessiblePivotObserver* obs = iter.GetNext();
+  for (nsIAccessiblePivotObserver* obs : mObservers.ForwardRange()) {
     obs->OnPivotChanged(this, xpcOldPos, aOldStart, aOldEnd, ToXPC(mPosition),
                         mStartOffset, mEndOffset, aReason, aBoundaryType,
                         aIsFromUserInput);
