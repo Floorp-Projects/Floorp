@@ -220,8 +220,6 @@ struct ParentLoadInfoForwarderArgs
 
   bool isThirdPartyContextToTopWindow;
 
-  bool isInThirdPartyContext;
-
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder
   // in BackgroundUtils.cpp/.h!
