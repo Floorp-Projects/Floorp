@@ -1040,8 +1040,13 @@ SearchService.prototype = {
    *   Set to true if this load is happening during a reload.
    */
   async _loadEngines(cache, isReload) {
+    if (!gModernConfig) {
+      await this._loadEnginesLegacy(cache, isReload);
+      return;
+    }
+
     logConsole.debug("_loadEngines: start");
-    let engines = await this._findEngines();
+    let engines = await this._findEngineSelectorEngines();
 
     let buildID = Services.appinfo.platformBuildID;
     let rebuildCache =
@@ -1053,50 +1058,27 @@ SearchService.prototype = {
 
     let enginesCorrupted = false;
     if (!rebuildCache) {
-      if (gModernConfig) {
-        const notInCacheEngines = engine => {
-          return !cache.builtInEngineList.find(details => {
-            return (
-              engine.webExtension.id == details.id &&
-              engine.webExtension.locale == details.locale
-            );
-          });
-        };
+      const notInCacheEngines = engine => {
+        return !cache.builtInEngineList.find(details => {
+          return (
+            engine.webExtension.id == details.id &&
+            engine.webExtension.locale == details.locale
+          );
+        });
+      };
 
-        rebuildCache =
-          !cache.builtInEngineList ||
-          cache.builtInEngineList.length != engines.length ||
-          engines.some(notInCacheEngines);
+      rebuildCache =
+        !cache.builtInEngineList ||
+        cache.builtInEngineList.length != engines.length ||
+        engines.some(notInCacheEngines);
 
-        if (
-          !rebuildCache &&
-          cache.engines.filter(e => e._isBuiltin).length !=
-            cache.builtInEngineList.length
-        ) {
-          rebuildCache = true;
-          enginesCorrupted = true;
-        }
-      } else {
-        function notInCacheVisibleEngines(engineName) {
-          return !cache.visibleDefaultEngines.includes(engineName);
-        }
-        // Legacy config.
-        rebuildCache =
-          cache.visibleDefaultEngines.length !=
-            this._visibleDefaultEngines.length ||
-          this._visibleDefaultEngines.some(notInCacheVisibleEngines);
-
-        // We don't do a built-in list comparison with distributions because they
-        // have a different set of built-ins to that given from the configuration.
-        if (
-          !rebuildCache &&
-          SearchUtils.distroID == "" &&
-          cache.engines.filter(e => e._isBuiltin).length !=
-            cache.visibleDefaultEngines.length
-        ) {
-          rebuildCache = true;
-          enginesCorrupted = true;
-        }
+      if (
+        !rebuildCache &&
+        cache.engines.filter(e => e._isBuiltin).length !=
+          cache.builtInEngineList.length
+      ) {
+        rebuildCache = true;
+        enginesCorrupted = true;
       }
     }
 
@@ -1107,18 +1089,14 @@ SearchService.prototype = {
 
     if (!rebuildCache) {
       logConsole.debug("_loadEngines: loading from cache directories");
-      if (gModernConfig) {
-        const newEngines = await this._loadEnginesFromConfig(engines, isReload);
-        for (let engine of newEngines) {
-          this._addEngineToStore(engine);
-        }
-        // TODO: Remove the second argument when we remove the legacy config
-        // (the function should then always skip-builtin engines).
-        this._loadEnginesFromCache(cache, true);
-        this._loadEnginesMetadataFromCache(cache);
-      } else {
-        this._loadEnginesFromCache(cache);
+      const newEngines = await this._loadEnginesFromConfig(engines, isReload);
+      for (let engine of newEngines) {
+        this._addEngineToStore(engine);
       }
+      // TODO: Remove the second argument when we remove the legacy config
+      // (the function should then always skip-builtin engines).
+      this._loadEnginesFromCache(cache, true);
+      this._loadEnginesMetadataFromCache(cache);
       if (this._engines.size) {
         logConsole.debug("_loadEngines: done using existing cache");
         return;
@@ -1131,21 +1109,9 @@ SearchService.prototype = {
     logConsole.debug(
       "_loadEngines: Absent or outdated cache. Loading engines from disk."
     );
-    if (gModernConfig) {
-      let newEngines = await this._loadEnginesFromConfig(engines, isReload);
-      newEngines.forEach(this._addEngineToStore, this);
-    } else {
-      let distDirs = await this._getDistibutionEngineDirectories();
-      for (let loadDir of distDirs) {
-        let enginesFromDir = await this._loadEnginesFromDir(loadDir);
-        enginesFromDir.forEach(this._addEngineToStore, this);
-      }
+    let newEngines = await this._loadEnginesFromConfig(engines, isReload);
+    newEngines.forEach(this._addEngineToStore, this);
 
-      let engineList = this._enginesToLocales(engines);
-      for (let [id, locales] of engineList) {
-        await this.ensureBuiltinExtension(id, locales, isReload);
-      }
-    }
     logConsole.debug(
       "_loadEngines: loading",
       this._startupExtensions.size,
@@ -1167,6 +1133,104 @@ SearchService.prototype = {
     this._loadEnginesMetadataFromCache(cache);
 
     logConsole.debug("_loadEngines: done using rebuilt cache");
+  },
+
+  /**
+   * Loads engines asynchronously (legacy configuration).
+   *
+   * @param {object} cache
+   *   An object representing the search engine cache.
+   * @param {boolean} isReload
+   *   Set to true if this load is happening during a reload.
+   */
+  async _loadEnginesLegacy(cache, isReload) {
+    logConsole.debug("_loadEnginesLegacy: start");
+    let engines = await this._findEnginesLegacy();
+
+    let buildID = Services.appinfo.platformBuildID;
+    let rebuildCache =
+      gEnvironment.get("RELOAD_ENGINES") ||
+      !cache.engines ||
+      cache.version != SearchUtils.CACHE_VERSION ||
+      cache.locale != Services.locale.requestedLocale ||
+      cache.buildID != buildID;
+
+    let enginesCorrupted = false;
+    if (!rebuildCache) {
+      function notInCacheVisibleEngines(engineName) {
+        return !cache.visibleDefaultEngines.includes(engineName);
+      }
+      // Legacy config.
+      rebuildCache =
+        cache.visibleDefaultEngines.length !=
+          this._visibleDefaultEngines.length ||
+        this._visibleDefaultEngines.some(notInCacheVisibleEngines);
+
+      // We don't do a built-in list comparison with distributions because they
+      // have a different set of built-ins to that given from the configuration.
+      if (
+        !rebuildCache &&
+        SearchUtils.distroID == "" &&
+        cache.engines.filter(e => e._isBuiltin).length !=
+          cache.visibleDefaultEngines.length
+      ) {
+        rebuildCache = true;
+        enginesCorrupted = true;
+      }
+    }
+
+    Services.telemetry.scalarSet(
+      "browser.searchinit.engines_cache_corrupted",
+      enginesCorrupted
+    );
+
+    if (!rebuildCache) {
+      logConsole.debug("_loadEnginesLegacy: loading from cache directories");
+      this._loadEnginesFromCache(cache);
+      if (this._engines.size) {
+        logConsole.debug("_loadEnginesLegacy: done using existing cache");
+        return;
+      }
+      logConsole.debug(
+        "_loadEnginesLegacy: No valid engines found in cache. Loading engines from disk."
+      );
+    }
+
+    logConsole.debug(
+      "_loadEnginesLegacy: Absent or outdated cache. Loading engines from disk."
+    );
+    let distDirs = await this._getDistibutionEngineDirectories();
+    for (let loadDir of distDirs) {
+      let enginesFromDir = await this._loadEnginesFromDir(loadDir);
+      enginesFromDir.forEach(this._addEngineToStore, this);
+    }
+
+    let engineList = this._enginesToLocales(engines);
+    for (let [id, locales] of engineList) {
+      await this.ensureBuiltinExtension(id, locales, isReload);
+    }
+
+    logConsole.debug(
+      "_loadEnginesLegacy: loading",
+      this._startupExtensions.size,
+      "engines reported by AddonManager startup"
+    );
+    for (let extension of this._startupExtensions) {
+      await this._installExtensionEngine(
+        extension,
+        [SearchUtils.DEFAULT_TAG],
+        true
+      );
+    }
+
+    logConsole.debug(
+      "_loadEnginesLegacy: loading user-installed engines from the obsolete cache"
+    );
+    this._loadEnginesFromCache(cache, true);
+
+    this._loadEnginesMetadataFromCache(cache);
+
+    logConsole.debug("_loadEnginesLegacy: done using rebuilt cache");
   },
 
   /**
@@ -1207,7 +1271,9 @@ SearchService.prototype = {
    */
   async _getDistibutionEngineDirectories() {
     if (gModernConfig) {
-      return [];
+      throw new Error(
+        "_getDistibutionEngineDirectories is obsolete for modern config."
+      );
     }
     // Get the non-empty distribution directories into distDirs...
     let distDirs = [];
@@ -1835,15 +1901,16 @@ SearchService.prototype = {
    * @returns {Array<string>}
    *   Returns an array of engine names.
    */
-  async _findEngines() {
-    if (gModernConfig) {
-      return this._findEngineSelectorEngines();
-    }
-    logConsole.debug("_findEngines: looking for engines in list.json");
+  async _findEnginesLegacy() {
+    logConsole.debug("_findEnginesLegacy: looking for engines in list.json");
 
     let chan = SearchUtils.makeChannel(this._listJSONURL);
     if (!chan) {
-      logConsole.debug("_findEngines:", this._listJSONURL, "isn't registered");
+      logConsole.debug(
+        "_findEnginesLegacy:",
+        this._listJSONURL,
+        "isn't registered"
+      );
       return [];
     }
 
@@ -1855,7 +1922,10 @@ SearchService.prototype = {
         resolve(event.target.responseText);
       };
       request.onerror = function(event) {
-        logConsole.debug("_findEngines: failed to read", this._listJSONURL);
+        logConsole.debug(
+          "_findEnginesLegacy: failed to read",
+          this._listJSONURL
+        );
         resolve();
       };
       request.open("GET", Services.io.newURI(this._listJSONURL).spec, true);
