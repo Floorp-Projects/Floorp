@@ -360,11 +360,7 @@ Notify when a release has been started.
 
 release-bouncer-sub
 -------------------
-Submits bouncer updates for releases.
-
-release-bouncer-sub-nazgul
---------------------------
-Submits bouncer updates for releases, using new implementation of bouncer-admin (Nazgul).
+Submits bouncer information for releases.
 
 release-mark-as-shipped
 -----------------------
@@ -374,21 +370,13 @@ release-bouncer-aliases
 -----------------------
 Update Bouncer's (download.mozilla.org) "latest" aliases.
 
-release-bouncer-aliases-nazgul
-------------------------------
-Update Bouncer's (download.mozilla.org) "latest" aliases, using the new implementation of bouncer-admin (Nazgul).
-
 cron-bouncer-check
 ------------------
 Checks Bouncer (download.mozilla.org) uptake.
 
 bouncer-locations
 -----------------
-Updates nightly bouncer locations for version bump
-
-bouncer-locations-nazgul
-------------------------
-Updates nightly bouncer locations for version bump, using new implementation of bouncer-admin (Nazgul).
+Updates nightly bouncer locations for version bump.
 
 release-bouncer-check
 ---------------------
@@ -504,10 +492,6 @@ Moves the partner repacks to S3 buckets.
 release-partner-repack-bouncer-sub
 ----------------------------------
 Sets up bouncer products for partners.
-
-release-partner-repack-bouncer-sub-nazgul
------------------------------------------
-Sets up bouncer products for partners, using new implementation of bouncer-admin (Nazgul).
 
 release-early-tagging
 ---------------------
