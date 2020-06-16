@@ -28,7 +28,7 @@ add_task(async function() {
         true,
         true
       );
-      let browserIds = await SpecialPowers.spawn(
+      await SpecialPowers.spawn(
         browser,
         [{ base1: BASE1, base2: BASE2 }],
         async function({ base1, base2 }) {
@@ -172,58 +172,10 @@ add_task(async function() {
             }
             await unreachable(start, seventh);
           }
-
-          let topBrowserId = topBC.browserId;
-          ok(topBrowserId > 0, "Should have a browser ID.");
-          for (let [name, bc] of Object.entries({
-            first,
-            second,
-            third,
-            fourth,
-            fifth,
-          })) {
-            is(
-              bc.browserId,
-              topBrowserId,
-              `${name} frame should have the same browserId as top.`
-            );
-          }
-
-          ok(sixth.browserId > 0, "sixth should have a browserId.");
-          isnot(
-            sixth.browserId,
-            topBrowserId,
-            "sixth frame should have a different browserId to top."
-          );
-
-          return [topBrowserId, sixth.browserId];
         }
       );
 
-      [sixth, seventh] = await Promise.all([sixth, seventh]);
-
-      is(
-        browser.browserId,
-        browserIds[0],
-        "browser should have the right browserId."
-      );
-      is(
-        browser.browsingContext.browserId,
-        browserIds[0],
-        "browser's BrowsingContext should have the right browserId."
-      );
-      is(
-        sixth.linkedBrowser.browserId,
-        browserIds[1],
-        "sixth should have the right browserId."
-      );
-      is(
-        sixth.linkedBrowser.browsingContext.browserId,
-        browserIds[1],
-        "sixth's BrowsingContext should have the right browserId."
-      );
-
-      for (let tab of [sixth, seventh]) {
+      for (let tab of await Promise.all([sixth, seventh])) {
         BrowserTestUtils.removeTab(tab);
       }
     }

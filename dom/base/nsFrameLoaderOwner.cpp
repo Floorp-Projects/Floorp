@@ -286,9 +286,3 @@ void nsFrameLoaderOwner::SubframeCrashed() {
                          /* inProgress */ false,
                          /* isRemote */ false, frameLoaderInit, IgnoreErrors());
 }
-
-void nsFrameLoaderOwner::UnbindFromTree() {
-  // If we're being adopted into a different document, we'll want to inherit a
-  // browser ID from our new BrowsingContext, so clear our current ID here.
-  mBrowserId = 0;
-}
