@@ -58,6 +58,34 @@ codespell:
             - '**/*.ftl'
             - 'tools/lint/codespell.yml'
 
+
+rejected-words:
+    description: Reject some words we don't want to use in the code base
+    treeherder:
+        symbol: text(rejected-words)
+        # We don't want patches to be backed out because of this, a follow up bug will be
+        # good enough
+        tier: 2
+    run:
+        mach: lint -v -l rejected-words -f treeherder -f json:/builds/worker/mozlint.json *
+    when:
+        files-changed:
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.jxs'
+            - '**/*.xml'
+            - '**/*.html'
+            - '**/*.xhtml'
+            - '**/*.cpp'
+            - '**/*.c'
+            - '**/*.h'
+            - '**/*.configure'
+            - '**/*.py'
+            - '**/*.properties'
+            - '**/*.rst'
+            - '**/*.ftl'
+            - 'tools/lint/rejected-words.yml'
+
 cpp-virtual-final:
     description: lint C++ virtual function declarations
     treeherder:
