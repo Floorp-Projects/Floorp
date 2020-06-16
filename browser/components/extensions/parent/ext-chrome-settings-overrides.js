@@ -185,31 +185,23 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     await ExtensionSettingsStore.initialize();
     let item = ExtensionSettingsStore.getSetting(
       DEFAULT_SEARCH_STORE_TYPE,
-      DEFAULT_SEARCH_SETTING_NAME
+      DEFAULT_SEARCH_SETTING_NAME,
+      id
     );
     if (!item) {
       return;
     }
-    if (
-      Services.search.defaultEngine.name != item.value &&
-      Services.search.defaultEngine.name != item.initialValue
-    ) {
-      // The current engine is not the same as the value that the ExtensionSettingsStore has.
-      // This means that the user changed the engine, so we shouldn't control it anymore.
-      // Do nothing and remove our entry from the ExtensionSettingsStore.
-      ExtensionSettingsStore.removeSetting(
-        id,
-        DEFAULT_SEARCH_STORE_TYPE,
-        DEFAULT_SEARCH_SETTING_NAME
-      );
-      return;
-    }
+    let control = await ExtensionSettingsStore.getLevelOfControl(
+      id,
+      DEFAULT_SEARCH_STORE_TYPE,
+      DEFAULT_SEARCH_SETTING_NAME
+    );
     item = ExtensionSettingsStore[action](
       id,
       DEFAULT_SEARCH_STORE_TYPE,
       DEFAULT_SEARCH_SETTING_NAME
     );
-    if (item) {
+    if (item && control == "controlled_by_this_extension") {
       try {
         let engine = Services.search.getEngineByName(
           item.value || item.initialValue
@@ -261,7 +253,19 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
   }
 
   static async onEnabling(id) {
-    chrome_settings_overrides.processDefaultSearchSetting("enable", id);
+    await ExtensionSettingsStore.initialize();
+    let item = await ExtensionSettingsStore.getSetting(
+      DEFAULT_SEARCH_STORE_TYPE,
+      DEFAULT_SEARCH_SETTING_NAME,
+      id
+    );
+    if (item) {
+      ExtensionSettingsStore.enable(
+        id,
+        DEFAULT_SEARCH_STORE_TYPE,
+        DEFAULT_SEARCH_SETTING_NAME
+      );
+    }
   }
 
   static async onUninstall(id) {
@@ -311,11 +315,11 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     }
   }
 
-  static onDisable(id) {
+  static async onDisable(id) {
     homepagePopup.clearConfirmation(id);
 
-    chrome_settings_overrides.processDefaultSearchSetting("disable", id);
-    chrome_settings_overrides.removeEngine(id);
+    await chrome_settings_overrides.processDefaultSearchSetting("disable", id);
+    await chrome_settings_overrides.removeEngine(id);
   }
 
   async onManifestEntry(entryName) {
@@ -391,6 +395,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       await this.setDefault(engineName);
     }
     if (!result.canInstallEngine) {
+      // This extension is overriding an app-provided one, so we don't
+      // add its engine as well.
       return;
     }
     await this.addSearchEngine();
@@ -443,6 +449,9 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     if (extension.startupReason === "ADDON_INSTALL") {
       let defaultEngine = await Services.search.getDefault();
       await ExtensionSettingsStore.initialize();
+      // We should only get here if an extension is setting an app-provided
+      // engine to default and we are ignoring the addons other engine settings.
+      // In this case we do not show the prompt to the user.
       let item = await ExtensionSettingsStore.addSetting(
         extension.id,
         DEFAULT_SEARCH_STORE_TYPE,
@@ -454,10 +463,18 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         Services.search.getEngineByName(item.value)
       );
     } else if (extension.startupReason === "ADDON_ENABLE") {
-      chrome_settings_overrides.processDefaultSearchSetting(
-        "enable",
-        extension.id
+      // We would be called for every extension being enabled, we should verify
+      // that it has control and only then set it as default
+      let control = await ExtensionSettingsStore.getLevelOfControl(
+        extension.id,
+        DEFAULT_SEARCH_STORE_TYPE,
+        DEFAULT_SEARCH_SETTING_NAME
       );
+      if (control === "controlled_by_this_extension") {
+        await Services.search.setDefault(
+          Services.search.getEngineByName(engineName)
+        );
+      }
     }
   }
 
