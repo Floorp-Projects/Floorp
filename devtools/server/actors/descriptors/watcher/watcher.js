@@ -51,7 +51,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * If this Watcher is related to a precise BrowsingContext,
    * return its Browsing Context ID.
    *
-   * @return String
+   * @return {Integer|null}
    *         The related browsing context ID, or null if we observe all of them.
    */
   get browsingContextID() {
@@ -111,6 +111,12 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     await targetHelperModule.createTargets(this, watchedResources);
   },
 
+  /**
+   * Stop watching for a given target type.
+   *
+   * @param {string} targetType
+   *        Type of context to observe. See TARGET_TYPES object.
+   */
   unwatchTargets(targetType) {
     const isWatchingTargets = WatcherRegistry.unwatchTargets(this, targetType);
     if (!isWatchingTargets) {
@@ -138,6 +144,14 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     this.emit("target-destroyed-form", actor);
   },
 
+  /**
+   * Given a browsingContextID, returns its parent browsingContextID. Returns null if a
+   * parent browsing context couldn't be found. Throws if the browsing context
+   * corresponding to the passed browsingContextID couldn't be found.
+   *
+   * @param {Integer} browsingContextID
+   * @returns {Integer|null}
+   */
   getParentBrowsingContextID(browsingContextID) {
     const browsingContext = BrowsingContext.get(browsingContextID);
     if (!browsingContext) {
