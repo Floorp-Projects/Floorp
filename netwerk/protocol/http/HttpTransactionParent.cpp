@@ -54,7 +54,17 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpTransactionParent::Release(void) {
   // we are done with this transaction. We should send a delete message
   // to delete the transaction child in socket process.
   if (count == 1 && CanSend()) {
-    mozilla::Unused << Send__delete__(this);
+    if (!NS_IsMainThread()) {
+      RefPtr<HttpTransactionParent> self = this;
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
+          NS_NewRunnableFunction("HttpTransactionParent::Release", [self]() {
+            mozilla::Unused << self->Send__delete__(self);
+            // Make sure we can not send IPC after Send__delete__().
+            MOZ_ASSERT(!self->CanSend());
+          })));
+    } else {
+      mozilla::Unused << Send__delete__(this);
+    }
     return 1;
   }
   return count;
@@ -65,7 +75,8 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpTransactionParent::Release(void) {
 //-----------------------------------------------------------------------------
 
 HttpTransactionParent::HttpTransactionParent(bool aIsDocumentLoad)
-    : mResponseIsComplete(false),
+    : mEventTargetMutex("HttpTransactionParent::EventTargetMutex"),
+      mResponseIsComplete(false),
       mTransferSize(0),
       mRequestSize(0),
       mProxyConnectFailed(false),
@@ -218,15 +229,64 @@ void HttpTransactionParent::SetSniffedTypeToChannel(
 }
 
 NS_IMETHODIMP
-HttpTransactionParent::GetDeliveryTarget(nsIEventTarget** aNewTarget) {
-  nsCOMPtr<nsIEventTarget> target = mTargetThread;
-  target.forget(aNewTarget);
+HttpTransactionParent::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
+  MutexAutoLock lock(mEventTargetMutex);
+
+  nsCOMPtr<nsIEventTarget> target = mODATarget;
+  if (!mODATarget) {
+    target = mTargetThread;
+  }
+  target.forget(aEventTarget);
   return NS_OK;
+}
+
+already_AddRefed<nsIEventTarget> HttpTransactionParent::GetODATarget() {
+  nsCOMPtr<nsIEventTarget> target;
+  {
+    MutexAutoLock lock(mEventTargetMutex);
+    target = mODATarget ? mODATarget : mTargetThread;
+  }
+
+  if (!target) {
+    target = GetMainThreadEventTarget();
+  }
+  return target.forget();
 }
 
 NS_IMETHODIMP HttpTransactionParent::RetargetDeliveryTo(
     nsIEventTarget* aEventTarget) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  LOG(("HttpTransactionParent::RetargetDeliveryTo [this=%p, aTarget=%p]", this,
+       aEventTarget));
+
+  MOZ_ASSERT(NS_IsMainThread(), "Should be called on main thread only");
+  MOZ_ASSERT(!mODATarget);
+  NS_ENSURE_ARG(aEventTarget);
+
+  if (aEventTarget->IsOnCurrentThread()) {
+    NS_WARNING("Retargeting delivery to same thread");
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+      do_QueryInterface(mChannel, &rv);
+  if (!retargetableListener || NS_FAILED(rv)) {
+    NS_WARNING("Listener is not retargetable");
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  rv = retargetableListener->CheckListenerChain();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Subsequent listeners are not retargetable");
+    return rv;
+  }
+
+  {
+    MutexAutoLock lock(mEventTargetMutex);
+    mODATarget = aEventTarget;
+  }
+
+  return NS_OK;
 }
 
 void HttpTransactionParent::SetDNSWasRefreshed() {
@@ -449,9 +509,12 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnDataAvailable(
     return IPC_OK();
   }
 
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpTransactionParent>(this), aData, aOffset,
-             aCount, aDataSentToChildProcess]() {
+  mEventQ->RunOrEnqueue(new ChannelFunctionEvent(
+      [self = UnsafePtr<HttpTransactionParent>(this)]() {
+        return self->GetODATarget();
+      },
+      [self = UnsafePtr<HttpTransactionParent>(this), aData, aOffset, aCount,
+       aDataSentToChildProcess]() {
         self->DoOnDataAvailable(aData, aOffset, aCount,
                                 aDataSentToChildProcess);
       }));
@@ -473,15 +536,35 @@ void HttpTransactionParent::DoOnDataAvailable(
                                       NS_ASSIGNMENT_DEPEND);
 
   if (NS_FAILED(rv)) {
-    Cancel(rv);
+    CancelOnMainThread(rv);
     return;
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
   rv = mChannel->OnDataAvailable(this, stringStream, aOffset, aCount);
   if (NS_FAILED(rv)) {
-    Cancel(rv);
+    CancelOnMainThread(rv);
   }
+}
+
+// Note: Copied from HttpChannelChild.
+void HttpTransactionParent::CancelOnMainThread(nsresult aRv) {
+  LOG(("HttpTransactionParent::CancelOnMainThread [this=%p]", this));
+
+  if (NS_IsMainThread()) {
+    Cancel(aRv);
+    return;
+  }
+
+  mEventQ->Suspend();
+  // Cancel is expected to preempt any other channel events, thus we put this
+  // event in the front of mEventQ to make sure nsIStreamListener not receiving
+  // any ODA/OnStopRequest callbacks.
+  mEventQ->PrependEvent(MakeUnique<NeckoTargetChannelFunctionEvent>(
+      this, [self = UnsafePtr<HttpTransactionParent>(this), aRv]() {
+        self->Cancel(aRv);
+      }));
+  mEventQ->Resume();
 }
 
 mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStopRequest(
