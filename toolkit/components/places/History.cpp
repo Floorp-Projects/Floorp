@@ -1738,7 +1738,7 @@ History* History::GetService() {
     return gService;
   }
 
-  nsCOMPtr<IHistory> service = services::GetHistoryService();
+  nsCOMPtr<IHistory> service = services::GetHistory();
   if (service) {
     NS_ASSERTION(gService, "Our constructor was not run?!");
   }

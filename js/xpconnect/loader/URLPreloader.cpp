@@ -122,7 +122,7 @@ Result<Ok, nsresult> URLPreloader::InitInternal() {
   mResProto = do_QueryInterface(ph, &rv);
   MOZ_TRY(rv);
 
-  mChromeReg = services::GetChromeRegistryService();
+  mChromeReg = services::GetChromeRegistry();
   if (!mChromeReg) {
     return Err(NS_ERROR_UNEXPECTED);
   }

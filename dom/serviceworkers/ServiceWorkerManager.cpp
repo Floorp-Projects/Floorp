@@ -255,7 +255,7 @@ already_AddRefed<nsIAsyncShutdownClient> GetAsyncShutdownBarrier() {
     return nullptr;
   }
 
-  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
   MOZ_ASSERT(svc);
 
   nsCOMPtr<nsIAsyncShutdownClient> barrier;

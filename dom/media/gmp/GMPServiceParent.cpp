@@ -1499,7 +1499,7 @@ static bool IsNodeIdValid(GMPParent* aParent) {
 }
 
 static nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
-  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
   MOZ_RELEASE_ASSERT(svc);
 
   nsCOMPtr<nsIAsyncShutdownClient> barrier;

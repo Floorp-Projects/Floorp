@@ -126,7 +126,7 @@ struct InitUploadPrefObserver {}
 #[allow(non_snake_case)]
 impl UploadPrefObserver {
     unsafe fn begin_observing(&self) -> Result<(), nsresult> {
-        let pref_service = xpcom::services::get_PreferencesService().ok_or(NS_ERROR_FAILURE)?;
+        let pref_service = xpcom::services::get_PrefService().ok_or(NS_ERROR_FAILURE)?;
         let pref_branch: RefPtr<nsIPrefBranch> =
             (*pref_service).query_interface().ok_or(NS_ERROR_FAILURE)?;
         let pref_nscstr = &nsCStr::from("datareporting.healthreport.uploadEnabled") as &nsACString;

@@ -1851,7 +1851,7 @@ static void WatchRegKey(uint32_t aRoot, nsCOMPtr<nsIWindowsRegKey>& aKey) {
 
 already_AddRefed<nsIAsyncShutdownClient> GetProfileChangeTeardownPhase() {
   nsCOMPtr<nsIAsyncShutdownService> asyncShutdownSvc =
-      services::GetAsyncShutdown();
+      services::GetAsyncShutdownService();
   MOZ_ASSERT(asyncShutdownSvc);
   if (NS_WARN_IF(!asyncShutdownSvc)) {
     return nullptr;
