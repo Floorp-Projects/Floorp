@@ -177,12 +177,13 @@ class Doctor(MachCommandBase):
 @CommandProvider
 class Clobber(MachCommandBase):
     NO_AUTO_LOG = True
-    CLOBBER_CHOICES = ['objdir', 'python', 'gradle']
+    CLOBBER_CHOICES = set(['objdir', 'python', 'gradle'])
 
     @Command('clobber', category='build',
              description='Clobber the tree (delete the object directory).')
-    @CommandArgument('what', default=['objdir'], nargs='*',
-                     help='Target to clobber, must be one of {{{}}} (default objdir).'.format(
+    @CommandArgument('what', default=['objdir', 'python'], nargs='*',
+                     help='Target to clobber, must be one of {{{}}} (default '
+                     'objdir and python).'.format(
              ', '.join(CLOBBER_CHOICES)))
     @CommandArgument('--full', action='store_true',
                      help='Perform a full clobber')
@@ -194,10 +195,10 @@ class Clobber(MachCommandBase):
         Sometimes it is necessary to clean up these files in order to make
         things work again. This command can be used to perform that cleanup.
 
-        By default, this command removes most files in the current object
-        directory (where build output is stored). Some files (like Visual
-        Studio project files) are not removed by default. If you would like
-        to remove the object directory in its entirety, run with `--full`.
+        The `objdir` target removes most files in the current object directory
+        (where build output is stored). Some files (like Visual Studio project
+        files) are not removed by default. If you would like to remove the
+        object directory in its entirety, run with `--full`.
 
         The `python` target will clean up various generated Python files from
         the source directory and will remove untracked files from well-known
@@ -209,8 +210,11 @@ class Clobber(MachCommandBase):
 
         The `gradle` target will remove the "gradle" subdirectory of the object
         directory.
+
+        By default, the command clobbers the `objdir` and `python` targets.
         """
-        invalid = set(what) - set(self.CLOBBER_CHOICES)
+        what = set(what)
+        invalid = what - self.CLOBBER_CHOICES
         if invalid:
             print('Unknown clobber target(s): {}'.format(', '.join(invalid)))
             return 1
