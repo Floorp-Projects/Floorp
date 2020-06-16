@@ -35,7 +35,7 @@ class TestParser(unittest.TestCase):
 
         ParserError.exit_func()
         self.assertEquals(hist.dataset(), "nsITelemetry::DATASET_ALL_CHANNELS")
-        self.assertEquals(hist.products(), ["firefox", "fennec", "geckoview"])
+        self.assertEquals(hist.products(), ["firefox", "fennec"])
 
     def test_usecounter_histogram(self):
         SAMPLE_HISTOGRAM = {
@@ -56,7 +56,7 @@ class TestParser(unittest.TestCase):
         self.assertEquals(hist.expiration(), "never")
         self.assertEquals(hist.kind(), "boolean")
         self.assertEquals(hist.description(), "Whether a foo used bar")
-        self.assertEquals(hist.products(), ["firefox", "fennec", "geckoview"])
+        self.assertEquals(hist.products(), ["firefox", "fennec"])
 
 
 if __name__ == '__main__':
