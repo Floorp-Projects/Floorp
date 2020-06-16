@@ -43,10 +43,6 @@ add_task(async function() {
   filterButtons.forEach(filterButton => {
     ok(filterIsEnabled(filterButton), "filter is enabled");
   });
-
-  // Wait for the CSS warning to be displayed so we don't have a pending promise.
-  await waitFor(() => findMessage(hud, "Expected color but found ‘blouge’"));
-
   // Check that the ui settings were persisted.
   await closeTabAndToolbox();
 });
