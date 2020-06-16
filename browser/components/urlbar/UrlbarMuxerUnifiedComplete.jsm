@@ -15,8 +15,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
-  PlacesSearchAutocompleteProvider:
-    "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -194,15 +193,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         result.source == UrlbarUtils.RESULT_SOURCE.HISTORY &&
         result.type == UrlbarUtils.RESULT_TYPE.URL
       ) {
-        let submission;
-        try {
-          // parseSubmissionURL throws if PlacesSearchAutocompleteProvider
-          // hasn't finished initializing, so try-catch this call.  There's no
-          // harm if it throws, we just won't dedupe SERPs this time.
-          submission = PlacesSearchAutocompleteProvider.parseSubmissionURL(
-            result.payload.url
-          );
-        } catch (error) {}
+        let submission = Services.search.parseSubmissionURL(result.payload.url);
         if (submission) {
           let resultQuery = submission.terms.toLocaleLowerCase();
           if (

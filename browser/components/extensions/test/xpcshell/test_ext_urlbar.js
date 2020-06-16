@@ -1356,14 +1356,8 @@ add_task(async function test_privateBrowsing_allowed_onQueryCanceled() {
   controller.cancelQuery();
   await startPromise;
 
-  // Check isActive and priority.
-  Assert.ok(provider.isActive(context));
-  Assert.equal(provider.getPriority(context), 0);
-
-  // The events should have been fired.
-  await Promise.all(
-    ["onBehaviorRequested", "onQueryCanceled"].map(msg => ext.awaitMessage(msg))
-  );
+  // onQueryCanceled should have been fired.
+  await ext.awaitMessage("onQueryCanceled");
 
   await ext.unload();
 });

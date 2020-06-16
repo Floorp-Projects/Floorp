@@ -23,6 +23,7 @@ EXTRA_JS_MODULES += [
     'UrlbarProviderTopSites.jsm',
     'UrlbarProviderUnifiedComplete.jsm',
     'UrlbarResult.jsm',
+    'UrlbarSearchUtils.jsm',
     'UrlbarTokenizer.jsm',
     'UrlbarUtils.jsm',
     'UrlbarValueFormatter.jsm',
