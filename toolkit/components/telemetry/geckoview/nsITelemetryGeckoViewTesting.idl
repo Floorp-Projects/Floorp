@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This is an internal interface used only for testing purposes.
+ *
+ * THIS IS NOT AN API TO BE USED BY EXTENSIONS! ONLY USED BY MOZILLA TESTS.
+ */
+[scriptable, builtinclass, uuid(019feb07-e5dd-48e6-aa59-fc98bcb65e7f)]
+interface nsITelemetryGeckoViewTesting : nsISupports
+{
+  /**
+   * The following methods map to the functions with the
+   * same name from TelemetryGeckoViewPersistence.cpp.
+   * Even though [implicit_jscontext] it's not needed on the methods,
+   * it's there to make it harder to call them from C++: this IDL is only
+   * meant to be used in xpcshell tests (JS).
+   */
+  [implicit_jscontext]
+  void initPersistence();
+  [implicit_jscontext]
+  void deInitPersistence();
+  [implicit_jscontext]
+  void clearPersistenceData();
+
+  /**
+   * Enqueues a persist action into the Telemetry persistence thread:
+   * measurements might be written to the disk after it returns.
+   */
+  [implicit_jscontext]
+  void forcePersist();
+
+  /**
+   * The following method maps to the function with the same name from TelemetryScalar.cpp.
+   *
+   * It marks deserialization as in progress.
+   * After this, all scalar operations are recorded into the pending operations list.
+   */
+  [implicit_jscontext]
+  void deserializationStarted();
+};

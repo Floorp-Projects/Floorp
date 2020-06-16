@@ -185,6 +185,8 @@ SupportedProduct GetCurrentProduct() {
 #if defined(MOZ_WIDGET_ANDROID)
   if (mozilla::StaticPrefs::toolkit_telemetry_geckoview_streaming()) {
     return SupportedProduct::GeckoviewStreaming;
+  } else if (mozilla::StaticPrefs::toolkit_telemetry_isGeckoViewMode()) {
+    return SupportedProduct::Geckoview;
   } else {
     return SupportedProduct::Fennec;
   }

@@ -47,7 +47,7 @@ with.optin:
     description: opt-in event
     release_channel_collection: opt-in
     expiry_version: never
-    products: ['firefox', 'fennec']
+    products: ['firefox', 'fennec', 'geckoview']
     extra_keys:
       message: a message 2
         """
@@ -72,7 +72,7 @@ with.optin:
                     "methods": ["testme2"],
                     "extra_keys": ["message"],
                     "record_on_release": False,
-                    "products": ["firefox", "fennec"],
+                    "products": ["firefox", "fennec", "geckoview"],
                 }
             },
         }

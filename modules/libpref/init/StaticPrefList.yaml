@@ -8998,6 +8998,11 @@
   value: 2000
   mirror: always
 
+- name: toolkit.telemetry.isGeckoViewMode
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: toolkit.telemetry.geckoview.batchDurationMS
   type: RelaxedAtomicUint32
   value: 5000
