@@ -149,7 +149,7 @@ class BlockReflowInput {
   };
   std::tuple<nscoord, ClearFloatsResult> ClearFloats(
       nscoord aBCoord, mozilla::StyleClear aBreakType,
-      nsIFrame* aReplacedBlock = nullptr, uint32_t aFlags = 0);
+      nsIFrame* aReplacedBlock = nullptr);
 
   nsFloatManager* FloatManager() const {
     MOZ_ASSERT(mReflowInput.mFloatManager,
