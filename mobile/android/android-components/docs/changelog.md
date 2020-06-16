@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 45.0.0-SNAPSHOT (In Development)
+# 46.0.0-SNAPSHOT (In Development)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v44.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/105?closed=1)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/106?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 45.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v44.0.0...v45.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/105?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v45.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v45.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v45.0.0/buildSrc/src/main/java/Config.kt)
 
 * **concept-engine**
   * Exposed `GeckoRuntimeSettings#setLoginAutofillEnabled` to control whether login forms should be automatically filled in suitable situations
