@@ -31,6 +31,7 @@ class FxAccountsCommands {
   constructor(fxAccountsInternal) {
     this._fxai = fxAccountsInternal;
     this.sendTab = new SendTab(this, fxAccountsInternal);
+    this._invokeRateLimitExpiry = 0;
   }
 
   async availableCommands() {
@@ -54,7 +55,21 @@ class FxAccountsCommands {
       "sessionToken",
     ]);
     const client = this._fxai.fxAccountsClient;
-    await client.invokeCommand(sessionToken, command, device.id, payload);
+    const now = Date.now();
+    if (now < this._invokeRateLimitExpiry) {
+      const remaining = (this._invokeRateLimitExpiry - now) / 1000;
+      throw new Error(
+        `Invoke for ${command} is rate-limited for ${remaining} seconds.`
+      );
+    }
+    try {
+      await client.invokeCommand(sessionToken, command, device.id, payload);
+    } catch (err) {
+      if (err.code && err.code === 429 && err.retryAfter) {
+        this._invokeRateLimitExpiry = Date.now() + err.retryAfter * 1000;
+      }
+      throw err;
+    }
     log.info(`Payload sent to device ${device.id}.`);
   }
 

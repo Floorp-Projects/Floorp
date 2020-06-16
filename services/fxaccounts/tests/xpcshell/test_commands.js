@@ -7,6 +7,10 @@ const { FxAccountsCommands, SendTab } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommands.js"
 );
 
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
+);
+
 const { COMMAND_SENDTAB, COMMAND_SENDTAB_TAIL } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
@@ -36,6 +40,14 @@ function FxaInternalMock() {
     telemetry: new TelemetryMock(),
   };
 }
+
+function MockFxAccountsClient() {
+  FxAccountsClient.apply(this);
+}
+
+MockFxAccountsClient.prototype = {
+  __proto__: FxAccountsClient.prototype,
+};
 
 add_task(async function test_sendtab_isDeviceCompatible() {
   const sendTab = new SendTab(null, null);
@@ -92,6 +104,56 @@ add_task(async function test_sendtab_send() {
       extra: { flowID: "1" },
     },
   ]);
+});
+
+add_task(async function test_sendtab_send_rate_limit() {
+  const rateLimitReject = {
+    code: 429,
+    retryAfter: 5,
+    retryAfterLocalized: "retry after 5 seconds",
+  };
+  const fxAccounts = {
+    fxAccountsClient: new MockFxAccountsClient(),
+    getUserAccountData() {
+      return {};
+    },
+    telemetry: new TelemetryMock(),
+  };
+  let rejected = false;
+  let invoked = 0;
+  fxAccounts.fxAccountsClient.invokeCommand = async function invokeCommand() {
+    invoked++;
+    Assert.ok(invoked <= 2, "only called twice and not more");
+    if (rejected) {
+      return {};
+    }
+    rejected = true;
+    return Promise.reject(rateLimitReject);
+  };
+  const commands = new FxAccountsCommands(fxAccounts);
+  const sendTab = new SendTab(commands, fxAccounts);
+  sendTab._encrypt = () => "encryptedpayload";
+
+  const tab = { title: "Foo", url: "https://foo.bar/" };
+  let report = await sendTab.send([{ name: "Device 1" }], tab);
+  Assert.equal(report.succeeded.length, 0);
+  Assert.equal(report.failed.length, 1);
+  Assert.equal(report.failed[0].error, rateLimitReject);
+
+  report = await sendTab.send([{ name: "Device 1" }], tab);
+  Assert.equal(report.succeeded.length, 0);
+  Assert.equal(report.failed.length, 1);
+  Assert.ok(
+    report.failed[0].error.message.includes(
+      "Invoke for " +
+        "https://identity.mozilla.com/cmd/open-uri is rate-limited"
+    )
+  );
+
+  commands._invokeRateLimitExpiry = Date.now() - 1000;
+  report = await sendTab.send([{ name: "Device 1" }], tab);
+  Assert.equal(report.succeeded.length, 1);
+  Assert.equal(report.failed.length, 0);
 });
 
 add_task(async function test_sendtab_receive() {
