@@ -43,7 +43,7 @@ class ModuleSegment;
 
 struct CallableOffsets;
 struct FuncOffsets;
-class Frame;
+struct Frame;
 
 using RegisterState = JS::ProfilingFrameIterator::RegisterState;
 
@@ -170,7 +170,7 @@ class ExitReason {
 class ProfilingFrameIterator {
   const Code* code_;
   const CodeRange* codeRange_;
-  uint8_t* callerFP_;
+  Frame* callerFP_;
   void* callerPC_;
   void* stackAddress_;
   uint8_t* unwoundIonCallerFP_;
@@ -236,7 +236,7 @@ void GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed,
 // Describes register state and associated code at a given call frame.
 
 struct UnwindState {
-  uint8_t* fp;
+  Frame* fp;
   void* pc;
   const Code* code;
   const CodeRange* codeRange;
@@ -256,6 +256,19 @@ struct UnwindState {
 
 bool StartUnwinding(const RegisterState& registers, UnwindState* unwindState,
                     bool* unwoundCaller);
+
+// Bit set as the lowest bit of a frame pointer, used in two different mutually
+// exclusive situations:
+// - either it's a low bit tag in a FramePointer value read from the
+// Frame::callerFP of an inner wasm frame. This indicates the previous call
+// frame has been set up by a JIT caller that directly called into a wasm
+// function's body. This is only stored in Frame::callerFP for a wasm frame
+// called from JIT code, and thus it can not appear in a JitActivation's
+// exitFP.
+// - or it's the low big tag set when exiting wasm code in JitActivation's
+// exitFP.
+
+constexpr uintptr_t ExitOrJitEntryFPTag = 0x1;
 
 }  // namespace wasm
 }  // namespace js

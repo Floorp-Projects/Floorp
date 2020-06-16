@@ -300,17 +300,17 @@ static bool WasmHandleDebugTrap() {
   JitActivation* activation = CallingActivation();
   JSContext* cx = activation->cx();
   Frame* fp = activation->wasmExitFP();
-  Instance* instance = fp->instance();
+  Instance* instance = fp->tls->instance;
   const Code& code = instance->code();
   MOZ_ASSERT(code.metadata().debugEnabled);
 
   // The debug trap stub is the innermost frame. It's return address is the
   // actual trap site.
-  const CallSite* site = code.lookupCallSite(fp->returnAddress());
+  const CallSite* site = code.lookupCallSite(fp->returnAddress);
   MOZ_ASSERT(site);
 
   // Advance to the actual trapping frame.
-  fp = fp->wasmCaller();
+  fp = fp->callerFP;
   DebugFrame* debugFrame = DebugFrame::from(fp);
 
   if (site->kind() == CallSite::EnterFrame) {
@@ -505,7 +505,7 @@ static void* WasmHandleTrap() {
       if (!CheckRecursionLimit(cx)) {
         return nullptr;
       }
-      if (activation->wasmExitFP()->tls()->isInterrupted()) {
+      if (activation->wasmExitFP()->tls->isInterrupted()) {
         return CheckInterrupt(cx, activation);
       }
       return ReportError(cx, JSMSG_OVER_RECURSED);
