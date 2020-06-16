@@ -41,8 +41,7 @@ OS_LIBS += CONFIG['EDITLINE_LIBS']
 
 # Place a GDB Python auto-load file next to the shell executable, both in
 # the build directory and in the dist/bin directory.
-DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
-FINAL_TARGET_PP_FILES += ['js-gdb.py.in']
+FINAL_TARGET_FILES += ['js-gdb.py']
 OBJDIR_FILES.js.src.shell += ['!/dist/bin/js-gdb.py']
 
 # People expect the js shell to wind up in the top-level JS dir.
