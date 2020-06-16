@@ -37,8 +37,7 @@ use webrender::{
     api::units::*, api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor,
     CompositorCapabilities, CompositorConfig, DebugFlags, Device, FastHashMap, NativeSurfaceId, NativeSurfaceInfo,
     NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
-    SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, WrShaders,
-    ONE_TIME_USAGE_HINT,
+    SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, WrShaders, ONE_TIME_USAGE_HINT,
 };
 
 #[cfg(target_os = "macos")]
