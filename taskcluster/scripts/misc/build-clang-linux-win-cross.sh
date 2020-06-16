@@ -9,7 +9,7 @@ cd $MOZ_FETCHES_DIR
 # We have a non-extracted clang-cl/clang.tar.zst for Windows clang-cl that we need to extract
 # files from.
 
-$GECKO_PATH/taskcluster/scripts/misc/zstdpy -d clang-cl/clang.tar.zst | tar -x --wildcards clang/lib/clang/*/lib/windows clang/bin/clang-cl.exe clang/bin/llvm-symbolizer.exe
+$GECKO_PATH/taskcluster/scripts/misc/zstdpy -d clang-cl/clang.tar.zst | tar -x --wildcards clang/lib/clang/*/lib/windows clang/bin/clang-cl.exe
 chmod +x clang/bin/clang-cl.exe
 tar -c clang | $GECKO_PATH/taskcluster/scripts/misc/zstdpy > clang.tar.zst
 
