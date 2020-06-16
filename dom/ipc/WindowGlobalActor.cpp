@@ -101,7 +101,7 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
       init.context().mFields) =
       doc->CookieJarSettings()->GetIsOnContentBlockingAllowList();
   mozilla::Get<WindowContext::IDX_IsThirdPartyWindow>(init.context().mFields) =
-      nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr, nullptr);
+      doc->HasThirdPartyChannel();
   mozilla::Get<WindowContext::IDX_IsThirdPartyTrackingResourceWindow>(
       init.context().mFields) =
       nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow);
