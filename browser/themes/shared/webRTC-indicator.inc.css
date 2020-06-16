@@ -57,13 +57,14 @@ button {
   display: flex;
   align-items: center;
   min-width: 30px;
-  margin: 5px 5px 5px 0px;
+  margin-block: 5px;
+  margin-inline: 0 5px;
   box-sizing: border-box;
-  padding: 0px 5px;
+  padding: 0 5px;
 }
 
 .separator {
-  border-right: var(--indicator-item-separator);
+  border-inline-end: var(--indicator-item-separator);
   min-width: 1px;
   padding: 0;
 }
@@ -105,8 +106,7 @@ button {
   background-image: url("chrome://browser/skin/notification-icons/screen.svg");
   width: 16px;
   height: 16px;
-  margin-inline-start: 5px;
-  margin-inline-end: 10px;
+  margin-inline: 5px 10px;
 }
 
 #device-share {
