@@ -56,6 +56,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "BrowserUsageTelemetry",
+  "resource:///modules/BrowserUsageTelemetry.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
@@ -668,7 +673,7 @@ CustomizeMode.prototype = {
     });
   },
 
-  async addToToolbar(aNode) {
+  async addToToolbar(aNode, aReason) {
     aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstElementChild) {
       aNode = aNode.firstElementChild;
@@ -690,6 +695,10 @@ CustomizeMode.prototype = {
     }
 
     CustomizableUI.addWidgetToArea(widgetToAdd, CustomizableUI.AREA_NAVBAR);
+    BrowserUsageTelemetry.recordWidgetChange(
+      widgetToAdd,
+      CustomizableUI.AREA_NAVBAR
+    );
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
@@ -707,7 +716,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  async addToPanel(aNode) {
+  async addToPanel(aNode, aReason) {
     aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstElementChild) {
       aNode = aNode.firstElementChild;
@@ -720,6 +729,7 @@ CustomizeMode.prototype = {
 
     let panel = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
     CustomizableUI.addWidgetToArea(aNode.id, panel);
+    BrowserUsageTelemetry.recordWidgetChange(aNode.id, panel, aReason);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
@@ -754,7 +764,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  async removeFromArea(aNode) {
+  async removeFromArea(aNode, aReason) {
     aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstElementChild) {
       aNode = aNode.firstElementChild;
@@ -766,6 +776,7 @@ CustomizeMode.prototype = {
     }
 
     CustomizableUI.removeWidgetFromArea(aNode.id);
+    BrowserUsageTelemetry.recordWidgetChange(aNode.id, null, aReason);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
@@ -2089,7 +2100,8 @@ CustomizeMode.prototype = {
           return;
         }
 
-        CustomizableUI.removeWidgetFromArea(aDraggedItemId);
+        CustomizableUI.removeWidgetFromArea(aDraggedItemId, "drag");
+        BrowserUsageTelemetry.recordWidgetChange(aDraggedItemId, null, "drag");
         // Special widgets are removed outright, we can return here:
         if (CustomizableUI.isSpecialWidget(aDraggedItemId)) {
           return;
@@ -2148,6 +2160,11 @@ CustomizeMode.prototype = {
     // widget to the end of the area.
     if (aTargetNode == areaCustomizationTarget) {
       CustomizableUI.addWidgetToArea(aDraggedItemId, aTargetArea.id);
+      BrowserUsageTelemetry.recordWidgetChange(
+        aDraggedItemId,
+        aTargetArea.id,
+        "drag"
+      );
       this._onDragEnd(aEvent);
       return;
     }
@@ -2196,8 +2213,18 @@ CustomizeMode.prototype = {
     // that the widget is moving within a customizable area.
     if (aTargetArea == aOriginArea) {
       CustomizableUI.moveWidgetWithinArea(aDraggedItemId, position);
+      BrowserUsageTelemetry.recordWidgetChange(
+        aDraggedItemId,
+        aTargetArea.id,
+        "drag"
+      );
     } else {
       CustomizableUI.addWidgetToArea(aDraggedItemId, aTargetArea.id, position);
+      BrowserUsageTelemetry.recordWidgetChange(
+        aDraggedItemId,
+        aTargetArea.id,
+        "drag"
+      );
     }
 
     this._onDragEnd(aEvent);
@@ -2638,6 +2665,11 @@ CustomizeMode.prototype = {
         "downloads-button",
         "nav-bar",
         insertionPoint
+      );
+      BrowserUsageTelemetry.recordWidgetChange(
+        "downloads-button",
+        "nav-bar",
+        "move-downloads"
       );
     }
   },
