@@ -99,7 +99,6 @@ class TargetList {
     // For now, this is only toggled by tests.
     this.listenForWorkers = false;
     this.listenForServiceWorkers = false;
-    this.destroyServiceWorkersOnNavigation = false;
   }
 
   // Called whenever a new Target front is available.
@@ -424,10 +423,6 @@ class TargetList {
     // Re-register the listeners as the top level target changed
     // and some targets are fetched from it
     await this.startListening();
-  }
-
-  isTargetRegistered(targetFront) {
-    return this._targets.has(targetFront);
   }
 }
 

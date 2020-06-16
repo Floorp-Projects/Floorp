@@ -102,32 +102,21 @@ class LegacyWorkersWatcher {
       }
     }
 
-    const promises = workers.map(workerTarget =>
-      this._processNewWorkerTarget(workerTarget, existingTargets)
-    );
+    const promises = [];
+    for (const workerTarget of workers) {
+      if (
+        !this._supportWorkerTarget(workerTarget) ||
+        existingTargets.has(workerTarget)
+      ) {
+        continue;
+      }
+
+      // Add the new worker targets to the local list
+      existingTargets.add(workerTarget);
+      promises.push(this.onTargetAvailable(workerTarget));
+    }
+
     await Promise.all(promises);
-  }
-
-  // This is overloaded for Service Workers, which records all SW targets,
-  // but only notify about a subset of them.
-  _recordWorkerTarget(workerTarget) {
-    return this._supportWorkerTarget(workerTarget);
-  }
-
-  async _processNewWorkerTarget(workerTarget, existingTargets) {
-    if (
-      !this._recordWorkerTarget(workerTarget) ||
-      existingTargets.has(workerTarget)
-    ) {
-      return;
-    }
-
-    // Add the new worker targets to the local list
-    existingTargets.add(workerTarget);
-
-    if (this._supportWorkerTarget(workerTarget)) {
-      await this.onTargetAvailable(workerTarget);
-    }
   }
 
   async listen() {

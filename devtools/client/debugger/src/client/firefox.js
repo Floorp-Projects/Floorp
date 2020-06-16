@@ -28,7 +28,6 @@ export async function onConnect(
     targetList.listenForWorkers = true;
     if (targetFront.localTab && features.windowlessServiceWorkers) {
       targetList.listenForServiceWorkers = true;
-      targetList.destroyServiceWorkersOnNavigation = true;
     }
     await targetList.startListening();
   }

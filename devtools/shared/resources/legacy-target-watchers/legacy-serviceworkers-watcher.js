@@ -12,8 +12,8 @@ const {
 } = require("devtools/shared/resources/legacy-target-watchers/legacy-workers-watcher");
 
 class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
-  constructor(targetList, onTargetAvailable, onTargetDestroyed) {
-    super(targetList, onTargetAvailable, onTargetDestroyed);
+  constructor(...args) {
+    super(...args);
     this._registrations = [];
     this._processTargets = new Set();
 
@@ -42,22 +42,10 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     this._onRegistrationListChanged = this._onRegistrationListChanged.bind(
       this
     );
-    this._onNavigate = this._onNavigate.bind(this);
 
     // Flag used from the parent class to listen to process targets.
     // Decision tree is complicated, keep all logic in the parent methods.
     this._isServiceWorkerWatcher = true;
-  }
-
-  /**
-   * Override from LegacyWorkersWatcher.
-   *
-   * We record all valid service worker targets (ie workers that match a service
-   * worker registration), but we will only notify about the ones which match
-   * the current domain.
-   */
-  _recordWorkerTarget(workerTarget) {
-    return !!this._getRegistrationForWorkerTarget(workerTarget);
   }
 
   // Override from LegacyWorkersWatcher.
@@ -66,8 +54,8 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
       return false;
     }
 
-    const registration = this._getRegistrationForWorkerTarget(workerTarget);
-    return registration && this._isRegistrationValidForTarget(registration);
+    const swFronts = this._getAllServiceWorkerFronts();
+    return swFronts.some(({ id }) => id === workerTarget.id);
   }
 
   // Override from LegacyWorkersWatcher.
@@ -79,23 +67,12 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     // registrations.
     await this._onRegistrationListChanged();
 
-    if (this.target.isLocalTab) {
-      // Note that we rely on "navigate" rather than "will-navigate" because the
-      // destroyed/available callbacks should be triggered after the Debugger
-      // has cleaned up its reducers, which happens on "will-navigate".
-      this.target.on("navigate", this._onNavigate);
-    }
-
     await super.listen();
   }
 
   // Override from LegacyWorkersWatcher.
   unlisten() {
     this._workersListener.removeListener(this._onRegistrationListChanged);
-
-    if (this.target.isLocalTab) {
-      this.target.off("navigate", this._onNavigate);
-    }
 
     super.unlisten();
   }
@@ -128,91 +105,57 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     return super._onProcessAvailable({ targetFront });
   }
 
-  _shouldDestroyTargetsOnNavigation() {
-    return !!this.targetList.destroyServiceWorkersOnNavigation;
-  }
-
   _onProcessDestroyed({ targetFront }) {
     this._processTargets.delete(targetFront);
     return super._onProcessDestroyed({ targetFront });
   }
 
-  _onNavigate() {
-    const allServiceWorkerTargets = this._getAllServiceWorkerTargets();
-    const shouldDestroy = this._shouldDestroyTargetsOnNavigation();
-
-    for (const target of allServiceWorkerTargets) {
-      const isRegisteredBefore = this.targetList.isTargetRegistered(target);
-      if (shouldDestroy && isRegisteredBefore) {
-        this.onTargetDestroyed(target);
-      }
-
-      // Note: we call isTargetRegistered again because calls to
-      // onTargetDestroyed might have modified the list of registered targets.
-      const isRegisteredAfter = this.targetList.isTargetRegistered(target);
-      const isValidTarget = this._supportWorkerTarget(target);
-      if (isValidTarget && !isRegisteredAfter) {
-        // If the target is still valid for the current top target, call
-        // onTargetAvailable as well.
-        this.onTargetAvailable(target);
-      }
-    }
-  }
-
   async _onRegistrationListChanged() {
-    await this._updateRegistrations();
+    const {
+      registrations,
+    } = await this.rootFront.listServiceWorkerRegistrations();
+
+    this._registrations = registrations.filter(r =>
+      this._isRegistrationValid(r)
+    );
 
     // Everything after this point is not strictly necessary for sw support
     // in the target list, but it makes the behavior closer to the previous
     // listAllWorkers/WorkersListener pair.
     const allServiceWorkerTargets = this._getAllServiceWorkerTargets();
+    const swFronts = this._getAllServiceWorkerFronts();
     for (const target of allServiceWorkerTargets) {
-      const hasRegistration = this._getRegistrationForWorkerTarget(target);
-      if (!hasRegistration) {
+      const match = swFronts.find(({ id }) => id === target.id);
+      if (!match) {
         // XXX: At this point the worker target is not really destroyed, but
         // historically, listAllWorkers* APIs stopped returning worker targets
         // if worker registrations are no longer available.
-        if (this.targetList.isTargetRegistered(target)) {
-          // Only emit onTargetDestroyed if it wasn't already done by
-          // onNavigate (ie the target is still tracked by TargetList)
-          this.onTargetDestroyed(target);
-        }
-        // Here we only care about service workers which no longer match *any*
-        // registration. The worker will be completely destroyed soon, remove
-        // it from the legacy worker watcher internal targetsByProcess Maps.
+        this.onTargetDestroyed(target);
         this._removeTargetReferences(target);
       }
     }
   }
 
-  // Delete the provided worker target from the internal targetsByProcess Maps.
-  _removeTargetReferences(target) {
-    const allProcessTargets = this._getProcessTargets().filter(t =>
-      this.targetsByProcess.get(t)
+  // Retrieve all the ServiceWorkerFronts currently known.
+  _getAllServiceWorkerFronts() {
+    return (
+      this._registrations
+        // Flatten all ServiceWorkerRegistration fronts into list of
+        // ServiceWorker fronts. ServiceWorker fronts are just a description
+        // class and are not targets. They are not WorkerTarget fronts.
+        .reduce((p, registration) => {
+          return [
+            registration.evaluatingWorker,
+            registration.activeWorker,
+            registration.installingWorker,
+            registration.waitingWorker,
+            ...p,
+          ];
+        }, [])
+        // Filter out null workers, most registrations only have one worker
+        // set at a given time.
+        .filter(Boolean)
     );
-
-    for (const processTarget of allProcessTargets) {
-      this.targetsByProcess.get(processTarget).delete(target);
-    }
-  }
-
-  async _updateRegistrations() {
-    const {
-      registrations,
-    } = await this.rootFront.listServiceWorkerRegistrations();
-
-    this._registrations = registrations;
-  }
-
-  _getRegistrationForWorkerTarget(workerTarget) {
-    return this._registrations.find(r => {
-      return (
-        r.evaluatingWorker?.id === workerTarget.id ||
-        r.activeWorker?.id === workerTarget.id ||
-        r.installingWorker?.id === workerTarget.id ||
-        r.waitingWorker?.id === workerTarget.id
-      );
-    });
   }
 
   _getProcessTargets() {
@@ -232,9 +175,20 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     return serviceWorkerTargets;
   }
 
+  // Delete the provided worker target from the internal targetsByProcess Maps.
+  _removeTargetReferences(target) {
+    const allProcessTargets = this._getProcessTargets().filter(t =>
+      this.targetsByProcess.get(t)
+    );
+
+    for (const processTarget of allProcessTargets) {
+      this.targetsByProcess.get(processTarget).delete(target);
+    }
+  }
+
   // Check if the registration is relevant for the current target, ie
   // corresponds to the same domain.
-  _isRegistrationValidForTarget(registration) {
+  _isRegistrationValid(registration) {
     if (this.target.isParentProcess) {
       // All registrations are valid for main process debugging.
       return true;
