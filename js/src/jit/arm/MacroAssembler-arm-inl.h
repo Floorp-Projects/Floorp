@@ -213,16 +213,16 @@ void MacroAssembler::xorPtr(Imm32 imm, Register dest) {
 // ===============================================================
 // Swap instructions
 
-void MacroAssembler::swap16SignExtend(Register reg) { as_revsh(reg, reg); }
+void MacroAssembler::byteSwap16SignExtend(Register reg) { as_revsh(reg, reg); }
 
-void MacroAssembler::swap16ZeroExtend(Register reg) {
+void MacroAssembler::byteSwap16ZeroExtend(Register reg) {
   as_rev16(reg, reg);
   as_uxth(reg, reg, 0);
 }
 
-void MacroAssembler::swap32(Register reg) { as_rev(reg, reg); }
+void MacroAssembler::byteSwap32(Register reg) { as_rev(reg, reg); }
 
-void MacroAssembler::swap64(Register64 reg) {
+void MacroAssembler::byteSwap64(Register64 reg) {
   as_rev(reg.high, reg.high);
   as_rev(reg.low, reg.low);
 

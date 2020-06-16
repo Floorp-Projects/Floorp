@@ -159,7 +159,7 @@ void MacroAssembler::xorPtr(Imm32 imm, Register dest) { xorl(imm, dest); }
 // ===============================================================
 // Swap instructions
 
-void MacroAssembler::swap64(Register64 reg) {
+void MacroAssembler::byteSwap64(Register64 reg) {
   bswapl(reg.low);
   bswapl(reg.high);
   xchgl(reg.low, reg.high);

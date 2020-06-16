@@ -133,7 +133,7 @@ void MacroAssembler::xor64(const Operand& src, Register64 dest) {
 // ===============================================================
 // Swap instructions
 
-void MacroAssembler::swap64(Register64 reg) { bswapq(reg.reg); }
+void MacroAssembler::byteSwap64(Register64 reg) { bswapq(reg.reg); }
 
 // ===============================================================
 // Arithmetic functions
