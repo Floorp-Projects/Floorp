@@ -18,7 +18,6 @@ include PURLClassifierInfo;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
-using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 using nsIHttpChannel::FlashPluginState from "mozilla/net/NeckoMessageUtils.h";
 
 namespace mozilla {
@@ -178,8 +177,6 @@ child:
   async OriginalCacheInputStreamAvailable(IPCStream? stream);
 
   async AltDataCacheInputStreamAvailable(IPCStream? stream);
-
-  async OverrideReferrerInfoDuringBeginConnect(nsIReferrerInfo referrerInfo);
 
   async OnProgress(int64_t progress, int64_t progressMax);
 
