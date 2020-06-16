@@ -1618,9 +1618,7 @@ bool InnerViewTable::sweepEntry(JSObject** pkey, ViewVector& views) {
   return views.empty();
 }
 
-void InnerViewTable::sweep() {
-  map.sweep();
-}
+void InnerViewTable::sweep() { map.sweep(); }
 
 void InnerViewTable::sweepAfterMinorGC() {
   MOZ_ASSERT(needsSweepAfterMinorGC());

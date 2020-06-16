@@ -556,7 +556,6 @@ struct LookAndFeelInt {
   int32_t value;
 };
 
-
 // On the Mac, GetColor(ColorID::TextSelectForeground, color) returns this
 // constant to specify that the foreground color should not be changed
 // (ie. a colored text keeps its colors  when selected).

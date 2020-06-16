@@ -3418,8 +3418,8 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
 
   MOZ_ASSERT(!HashTable());
   HashTable() = new PrefsHashTable(XRE_IsParentProcess()
-                                      ? kHashTableInitialLengthParent
-                                      : kHashTableInitialLengthContent);
+                                       ? kHashTableInitialLengthParent
+                                       : kHashTableInitialLengthContent);
 
   gTelemetryLoadData =
       new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();

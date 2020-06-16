@@ -2794,7 +2794,6 @@ HttpTrafficAnalyzer* nsHttpHandler::GetHttpTrafficAnalyzer() {
 }
 
 bool nsHttpHandler::IsHttp3VersionSupported(const nsACString& version) {
-
   if (!StaticPrefs::network_http_http3_support_draft28() &&
       version.EqualsLiteral("h3-28")) {
     return false;

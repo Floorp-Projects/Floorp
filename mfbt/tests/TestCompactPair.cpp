@@ -35,13 +35,13 @@ using mozilla::MakeCompactPair;
   static_assert(sizeof(name##_2) == (size),                                    \
                 "CompactPair<" #T2 ", " #T1 "> has an unexpected size");
 
-static constexpr std::size_t sizemax(std::size_t a, std::size_t b)
-{
+static constexpr std::size_t sizemax(std::size_t a, std::size_t b) {
   return (a > b) ? a : b;
 }
 
 INSTANTIATE(int, int, prim1, 2 * sizeof(int));
-INSTANTIATE(int, long, prim2, sizeof(long) + sizemax(sizeof(int), alignof(long)));
+INSTANTIATE(int, long, prim2,
+            sizeof(long) + sizemax(sizeof(int), alignof(long)));
 
 struct EmptyClass {
   explicit EmptyClass(int) {}
