@@ -12,8 +12,8 @@
 
     <FrameLayout
         android:id="@+id/favicon_wrapper"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:padding="4dp"
         android:background="@drawable/top_sites_background"
         app:layout_constraintBottom_toTopOf="@id/top_site_title"
@@ -23,11 +23,12 @@
         app:layout_constraintTop_toTopOf="parent">
         <ImageView
             android:id="@+id/favicon_image"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
             android:adjustViewBounds="true"
             android:importantForAccessibility="no"
-            android:scaleType="centerInside" />
+            android:scaleType="fitCenter" />
     </FrameLayout>
 
     <TextView

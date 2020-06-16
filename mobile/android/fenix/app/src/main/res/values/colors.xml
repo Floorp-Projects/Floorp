@@ -103,7 +103,7 @@
     <color name="scrimStart_dark_theme">#F520123A</color>
     <color name="scrimEnd_dark_theme">#F515141A</color>
     <color name="top_site_background_dark_theme">@color/dark_grey_50</color>
-    <color name="top_site_border_dark_theme">@color/dark_grey_50</color>
+    <color name="top_site_border_dark_theme">@color/dark_grey_10</color>
     <color name="top_site_title_text_dark_theme">@color/light_grey_90</color>
     <color name="collection_icon_color_violet_dark_theme">#AB71FF</color>
     <color name="collection_icon_color_blue_dark_theme">#00B3F4</color>
