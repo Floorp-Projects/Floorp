@@ -62,12 +62,6 @@ set_define('JS_64BIT', depends(target)(lambda t: t.bitness == 64 or None))
 set_define('JS_PUNBOX64', depends(target)(lambda t: t.bitness == 64 or None))
 set_define('JS_NUNBOX32', depends(target)(lambda t: t.bitness == 32 or None))
 
-# Bits of Stencil-related parser-atoms work are being landed before
-# being enabled.  This define controls that code, and will be removed,
-# along with guard code in ParserAtoms.cpp, when the final transition
-# to parser atoms lands.
-set_define('JS_PARSER_ATOMS', None)
-
 
 # SpiderMonkey as a shared library, and how its symbols are exported
 # ==================================================================
