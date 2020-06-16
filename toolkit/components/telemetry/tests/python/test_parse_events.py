@@ -94,7 +94,7 @@ extra_keys:
   key1: test1
   key2: test2
 products:
-    - geckoview
+    - fennec
 operating_systems:
     - windows
 """
@@ -109,7 +109,7 @@ operating_systems:
         self.assertEqual(evt.methods, ["method1", "method2"])
         self.assertEqual(evt.objects, ["object1", "object2"])
         self.assertEqual(evt.record_in_processes, ["content"])
-        self.assertEqual(evt.products, ["geckoview"])
+        self.assertEqual(evt.products, ["fennec"])
         self.assertEqual(evt.operating_systems, ["windows"])
         self.assertEqual(sorted(evt.extra_keys), ["key1", "key2"])
 

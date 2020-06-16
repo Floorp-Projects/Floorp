@@ -5,8 +5,10 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mozilla/Telemetry.h"
 #include "nsThreadUtils.h"
 #include "TelemetryFixture.h"
+#include "TelemetryTestHelpers.h"
 #include "streaming/GeckoViewStreamingTelemetry.h"
 
 using namespace mozilla;
