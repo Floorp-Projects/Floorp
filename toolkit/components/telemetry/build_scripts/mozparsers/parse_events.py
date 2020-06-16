@@ -203,7 +203,7 @@ class EventData:
         # Check products.
         products = definition.get('products')
         for product in products:
-            if not utils.is_valid_product(product) and self._strict_type_checks:
+            if not utils.is_valid_product(product):
                 ParserError(self.identifier + ': Unknown value in products: ' +
                             product).handle_later()
             if utils.is_geckoview_streaming_product(product):

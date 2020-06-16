@@ -235,6 +235,14 @@ Data-choices notification
 GeckoView
 ---------
 
+``toolkit.telemetry.isGeckoViewMode``
+
+   Whether or not Telemetry needs to run in :doc:`GeckoView <../internals/geckoview>` mode. If true, and ``toolkit.telemetry.geckoview.streaming`` is false,  measurements persistence is enabled. Defaults to false on all products except GeckoView.
+
+``toolkit.telemetry.geckoPersistenceTimeout``
+
+   The interval that governs how frequently measurements are saved to disk, in milliseconds. Defaults to 60000 (60 seconds).
+
 ``toolkit.telemetry.geckoview.streaming``
 
    Whether the GeckoView mode we're running in is the variety that uses the :doc:`GeckoView Streaming Telemetry API <../internals/geckoview-streaming>` or not.

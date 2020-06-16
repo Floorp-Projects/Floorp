@@ -46,7 +46,7 @@ newscalar:
     notification_emails: ["telemetry-client-dev@mozilla.org"]
     record_in_processes: ["main"]
     release_channel_collection: opt-out
-    products: ["firefox", "fennec"]
+    products: ["firefox", "fennec", "geckoview"]
     keyed: false
         """
 
@@ -60,7 +60,7 @@ newscalar:
                     "keyed": False,
                     "keys": [],
                     "stores": ["main"],
-                    "products": ["firefox", "fennec"],
+                    "products": ["firefox", "fennec", "geckoview"],
                 },
                 "withoptin": {
                     "kind": "nsITelemetry::SCALAR_TYPE_COUNT",

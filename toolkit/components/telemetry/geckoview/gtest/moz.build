@@ -14,6 +14,12 @@ LOCAL_INCLUDES += [
     '/xpcom/io',
 ]
 
+DEFINES['MOZ_TELEMETRY_GECKOVIEW'] = True
+
+UNIFIED_SOURCES = [
+    'TestGeckoView.cpp',
+]
+
 # GeckoView Streaming Telemetry is only available on Android.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
   UNIFIED_SOURCES += [
