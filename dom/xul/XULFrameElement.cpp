@@ -154,7 +154,6 @@ void XULFrameElement::UnbindFromTree(bool aNullParent) {
   }
   mFrameLoader = nullptr;
 
-  nsFrameLoaderOwner::UnbindFromTree();
   nsXULElement::UnbindFromTree(aNullParent);
 }
 
