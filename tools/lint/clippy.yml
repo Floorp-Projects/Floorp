@@ -110,5 +110,10 @@ clippy:
         - rs
     support-files:
         - 'tools/lint/clippy/**'
+    # the version of clippy is:
+    # clippy 0.0.212 (d4092ac 2020-05-11)
+    # but 0.0.212 isn't updated. we use the date instead
+    # replacing - by . because Python StrictVersion expects this
+    min_clippy_version: 2020.05.11
     type: external
     payload: clippy:lint
