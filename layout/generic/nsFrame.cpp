@@ -195,14 +195,6 @@ struct nsContentAndOffset {
 #define FORCE_SELECTION_UPDATE 1
 #define CALC_DEBUG 0
 
-// This is faster than nsBidiPresUtils::IsFrameInParagraphDirection,
-// because it uses the frame pointer passed in without drilling down to
-// the leaf frame.
-static bool IsReversedDirectionFrame(nsIFrame* aFrame) {
-  FrameBidiData bidiData = aFrame->GetBidiData();
-  return !IS_SAME_DIRECTION(bidiData.embeddingLevel, bidiData.baseLevel);
-}
-
 #include "nsILineIterator.h"
 #include "prenv.h"
 
@@ -8345,7 +8337,8 @@ nsresult nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct* aPos) {
 // Determine movement direction relative to frame
 static bool IsMovingInFrameDirection(nsIFrame* frame, nsDirection aDirection,
                                      bool aVisual) {
-  bool isReverseDirection = aVisual && IsReversedDirectionFrame(frame);
+  bool isReverseDirection =
+      aVisual && nsBidiPresUtils::IsReversedDirectionFrame(frame);
   return aDirection == (isReverseDirection ? eDirPrevious : eDirNext);
 }
 
@@ -8958,7 +8951,7 @@ nsresult nsIFrame::GetFrameFromDirection(
 
   *aOutOffset = (aDirection == eDirNext) ? 0 : -1;
 
-  if (aVisual && IsReversedDirectionFrame(traversedFrame)) {
+  if (aVisual && nsBidiPresUtils::IsReversedDirectionFrame(traversedFrame)) {
     // The new frame is reverse-direction, go to the other end
     *aOutOffset = -1 - *aOutOffset;
   }
