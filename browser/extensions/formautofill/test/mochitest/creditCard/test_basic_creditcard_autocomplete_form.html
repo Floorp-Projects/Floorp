@@ -69,8 +69,8 @@ add_task(async function all_saved_fields_less_than_threshold() {
   await addCreditCard(reducedMockRecord);
 
   await setInput("#cc-name", "");
-  synthesizeKey("KEY_ArrowDown");
   await expectPopup();
+  synthesizeKey("KEY_ArrowDown");
   checkMenuEntries([reducedMockRecord].map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
@@ -84,8 +84,8 @@ add_task(async function check_menu_when_both_existed() {
   await setupCreditCardStorage();
 
   await setInput("#cc-number", "");
-  synthesizeKey("KEY_ArrowDown");
   await expectPopup();
+  synthesizeKey("KEY_ArrowDown");
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primaryAffix: cc.ccNumberFmt.affix,
     primary: cc.ccNumberFmt.label,
@@ -93,24 +93,24 @@ add_task(async function check_menu_when_both_existed() {
   })));
 
   await setInput("#cc-name", "");
-  synthesizeKey("KEY_ArrowDown");
   await expectPopup();
+  synthesizeKey("KEY_ArrowDown");
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
   })));
 
   await setInput("#cc-exp-year", "");
-  synthesizeKey("KEY_ArrowDown");
   await expectPopup();
+  synthesizeKey("KEY_ArrowDown");
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-year"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
   })));
 
   await setInput("#cc-exp-month", "");
-  synthesizeKey("KEY_ArrowDown");
   await expectPopup();
+  synthesizeKey("KEY_ArrowDown");
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-month"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
@@ -160,7 +160,8 @@ add_task(async function check_fields_after_form_autofill() {
   await setInput("#cc-exp-year", 202);
 
   synthesizeKey("KEY_ArrowDown");
-  await expectPopup();
+  // The popup doesn't auto-show on focus because the field isn't empty
+  await expectPopup(); 
   checkMenuEntries(MOCK_STORAGE.slice(1).map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-year"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
