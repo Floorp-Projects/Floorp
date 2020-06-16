@@ -568,6 +568,7 @@ nsresult nsObjectLoadingContent::BindToTree(BindContext& aContext,
 }
 
 void nsObjectLoadingContent::UnbindFromTree(bool aNullParent) {
+  nsFrameLoaderOwner::UnbindFromTree();
   nsImageLoadingContent::UnbindFromTree(aNullParent);
 
   nsCOMPtr<Element> thisElement =
