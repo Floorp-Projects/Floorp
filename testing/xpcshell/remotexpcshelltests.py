@@ -10,6 +10,7 @@ from argparse import Namespace
 import os
 import posixpath
 import shutil
+import six
 import sys
 import runxpcshelltests as xpcshell
 import tempfile
@@ -230,18 +231,10 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         except Exception as e:
             self.log.warning(str(e))
 
-    # TODO: consider creating a separate log dir.  We don't have the test file structure,
-    # so we use filename.log.  Would rather see ./logs/filename.log
     def createLogFile(self, test, stdout):
-        try:
-            f = None
-            filename = test.replace('\\', '/').split('/')[-1] + ".log"
-            f = open(filename, "w")
+        filename = test.replace('\\', '/').split('/')[-1] + ".log"
+        with open(filename, "wb") as f:
             f.write(stdout)
-
-        finally:
-            if f is not None:
-                f.close()
 
 
 # A specialization of XPCShellTests that runs tests on an Android device.
@@ -344,17 +337,16 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         # often important when using ADB, as there is a limit to the length
         # of the ADB command line.
         localWrapper = tempfile.mktemp()
-        f = open(localWrapper, "w")
-        f.write("#!/system/bin/sh\n")
-        for envkey, envval in self.env.iteritems():
-            f.write("export %s=%s\n" % (envkey, envval))
-        f.writelines([
-            "cd $1\n",
-            "echo xpcw: cd $1\n",
-            "shift\n",
-            "echo xpcw: xpcshell \"$@\"\n",
-            "%s/xpcshell \"$@\"\n" % self.remoteBinDir])
-        f.close()
+        with open(localWrapper, "w") as f:
+            f.write("#!/system/bin/sh\n")
+            for envkey, envval in six.iteritems(self.env):
+                f.write("export %s=%s\n" % (envkey, envval))
+            f.writelines([
+                "cd $1\n",
+                "echo xpcw: cd $1\n",
+                "shift\n",
+                "echo xpcw: xpcshell \"$@\"\n",
+                "%s/xpcshell \"$@\"\n" % self.remoteBinDir])
         remoteWrapper = posixpath.join(self.remoteBinDir, "xpcw")
         self.device.push(localWrapper, remoteWrapper)
         self.device.chmod(remoteWrapper, root=True)
