@@ -280,10 +280,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         for implementation_status in c["skip_implementation_status"]:
             cmd.append("--skip-implementation-status=%s" % implementation_status)
 
-        # Bug 1643177
-        if 'backlog' not in c["skip_implementation_status"]:
-            cmd.append("--timeout-multiplier=0.25")
-
         test_paths = set()
         if not (self.verify_enabled or self.per_test_coverage):
             mozharness_test_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))

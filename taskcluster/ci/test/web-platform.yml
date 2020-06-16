@@ -87,16 +87,16 @@ web-platform-tests-backlog:
     treeherder-symbol: W-b(wpt)
     chunks:
         by-test-platform:
-            android.*: 3
-            linux.*64-asan/opt: 3
-            linux.*64-ccov/opt: 3
-            linux.*/debug: 3
-            macosx.*/debug: 3
-            windows7.*/opt: 1
-            windows7.*/debug: 3
-            windows10.*/debug: 1
-            windows10-64-ccov/opt: 3
-            default: 1
+            android.*: 6
+            linux.*64-asan/opt: 6
+            linux.*64-ccov/opt: 6
+            linux.*/debug: 6
+            macosx.*/debug: 5
+            windows7.*/opt: 3
+            windows7.*/debug: 5
+            windows10.*/debug: 3
+            windows10-64-ccov/opt: 6
+            default: 3
     max-run-time:
         by-test-platform:
             .*/debug: 7200
