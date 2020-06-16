@@ -57,7 +57,6 @@ class SelectBookmarkFolderFragment : Fragment() {
                     .getTree(BookmarkRoot.Root.id, recursive = true)
                     ?.let { DesktopFolders(context, showMobileRoot = true).withOptionalDesktopFolders(it) }
             }
-            activity?.title = bookmarkNode?.title ?: getString(R.string.library_bookmarks)
             val adapter = SelectBookmarkFolderAdapter(sharedViewModel)
             recylerViewBookmarkFolders.adapter = adapter
             adapter.updateData(bookmarkNode)
