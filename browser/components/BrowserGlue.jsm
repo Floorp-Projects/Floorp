@@ -5002,6 +5002,7 @@ var AboutHomeStartupCache = {
     }
 
     Services.obs.addObserver(this, "ipc:content-created");
+    Services.obs.addObserver(this, "process-type-set");
     Services.obs.addObserver(this, "ipc:content-shutdown");
 
     let lci = Services.loadContextInfo.default;
@@ -5040,6 +5041,7 @@ var AboutHomeStartupCache = {
     }
 
     Services.obs.removeObserver(this, "ipc:content-created");
+    Services.obs.removeObserver(this, "process-type-set");
     Services.obs.removeObserver(this, "ipc:content-shutdown");
 
     if (this._cacheTask) {
@@ -5464,6 +5466,8 @@ var AboutHomeStartupCache = {
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "process-type-set":
+      // Intentional fall-through
       case "ipc:content-created": {
         let childID = aData;
         let procManager = aSubject
