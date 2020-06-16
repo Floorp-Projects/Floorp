@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta charset="utf-8">
 <title>Test for Bug 1644511</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
@@ -9,7 +10,9 @@
   }
 </style>
 
-<div id="host" contenteditable="" dir="rtl">مرحبا عالم!</div>
+<div id="host" contenteditable="" dir="rtl">مرحبا عالم!<br>Hello World</div>
+
+<button onclick="subtestLTR()"></button>
 
 <script>
 const caretMovementStyleFlag = "bidi.edit.caret_movement_style";
@@ -20,9 +23,34 @@ const caretMovementStyleFlag = "bidi.edit.caret_movement_style";
  * suppresses the flag. See also Bug 1644489.
  */
 function moveCaret(aRight, aSelect) {
-  const dir = aRight ? "Next" : "Previous";
   const select = aSelect ? "selectChar" : "char";
+  const dir = aRight ? "Next" : "Previous";
   SpecialPowers.doCommand(window, `cmd_${select}${dir}`);
+}
+
+/**
+ * Safer to directly select text node when the paragraph ends with LTR text as
+ * the left edge is the end of the paragraph and then also the start of the LTR
+ * text.
+ */
+function putCaretInLastLine(div) {
+  const { lastChild } = div;
+  getSelection().collapse(lastChild, 1); // Pass 1 because of bug 1645877
+}
+
+// LTR behavior should be always same regardless of the flag
+function subtestLTR() {
+  putCaretInLastLine(host);
+  moveCaret(true, true);
+  is(getSelection().anchorOffset, 1, "Shift+ArrowRight should select from left");
+  is(getSelection().focusOffset, 2, "Shift+ArrowRight should select to right");
+  moveCaret(true, false);
+  is(getSelection().anchorOffset, 2, "Collapsing by ArrowRight should put the caret to the right side");
+
+  putCaretInLastLine(host);
+  moveCaret(true, true);
+  moveCaret(false, false);
+  is(getSelection().anchorOffset, 1, "Collapsing by ArrowLeft should put the caret to the left side");
 }
 
 async function testLogicalMovement() {
@@ -40,6 +68,8 @@ async function testLogicalMovement() {
   moveCaret(true, true);
   moveCaret(false, false);
   is(getSelection().anchorOffset, 0, "Collapsing by ArrowLeft should put the caret to the right side");
+
+  subtestLTR();
 }
 
 async function testVisualMovement() {
@@ -57,6 +87,8 @@ async function testVisualMovement() {
   moveCaret(false, true);
   moveCaret(true, false);
   is(getSelection().anchorOffset, 0, "Collapsing by ArrowRight should put the caret to the right side");
+
+  subtestLTR();
 }
 
 async function testHybridMovement() {
@@ -74,6 +106,8 @@ async function testHybridMovement() {
   moveCaret(true, true);
   moveCaret(true, false);
   is(getSelection().anchorOffset, 0, "Collapsing by ArrowRight should put the caret to the right side");
+
+  subtestLTR();
 }
 
 SimpleTest.waitForExplicitFinish();

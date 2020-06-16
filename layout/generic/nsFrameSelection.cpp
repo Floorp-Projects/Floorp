@@ -783,6 +783,9 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     if (anchorFocusRange) {
       nsINode* node;
       int32_t offset;
+      if (visualMovement && nsBidiPresUtils::IsReversedDirectionFrame(frame)) {
+        direction = nsDirection(1 - direction);
+      }
       if (direction == eDirPrevious) {
         node = anchorFocusRange->GetStartContainer();
         offset = anchorFocusRange->StartOffset();
