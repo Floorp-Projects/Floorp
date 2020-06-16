@@ -1019,6 +1019,15 @@ class nsLayoutUtils {
       const nsIFrame* aFrame1, const nsIFrame* aFrame2);
 
   /**
+   * Find the nearest common ancestor frame for aFrame1 and aFrame2, assuming
+   * that they are within the same block.
+   *
+   * Returns null if they are not within the same block.
+   */
+  static const nsIFrame* FindNearestCommonAncestorFrameWithinBlock(
+      const nsTextFrame* aFrame1, const nsTextFrame* aFrame2);
+
+  /**
    * Transforms a list of CSSPoints from aFromFrame to aToFrame, taking into
    * account all relevant transformations on the frames up to (but excluding)
    * their nearest common ancestor.

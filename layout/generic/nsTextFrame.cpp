@@ -1914,8 +1914,16 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
     };
 
     const nsIFrame* ancestor =
-        nsLayoutUtils::FindNearestCommonAncestorFrame(aFrame1, aFrame2);
-    MOZ_ASSERT(ancestor);
+        nsLayoutUtils::FindNearestCommonAncestorFrameWithinBlock(aFrame1,
+                                                                 aFrame2);
+
+    if (!ancestor) {
+      // The two frames are within different blocks, e.g. due to block
+      // fragmentation. In theory we shouldn't prevent cross-frame shaping
+      // here, but it's an edge case where we should rarely decide to allow
+      // cross-frame shaping, so we don't try harder here.
+      return false;
+    }
 
     // Map inline-end and inline-start to physical sides for checking presence
     // of non-zero margin/border/padding.
