@@ -1230,7 +1230,8 @@ const browsingContextTargetPrototype = {
   /**
    * Ensure that CSS error reporting is enabled.
    */
-  ensureCSSErrorReportingEnabled(request) {
+  async ensureCSSErrorReportingEnabled(request) {
+    const promises = [];
     for (const docShell of this.docShells) {
       if (docShell.cssErrorReportingEnabled) {
         continue;
@@ -1253,12 +1254,15 @@ const browsingContextTargetPrototype = {
           continue;
         }
         // Reparse the sheet so that we see the existing errors.
-        getSheetText(sheet, this._consoleActor).then(text => {
-          InspectorUtils.parseStyleSheet(sheet, text, /* aUpdate = */ false);
-        });
+        const onStyleSheetParsed = getSheetText(sheet, this._consoleActor)
+          .then(text => {
+            InspectorUtils.parseStyleSheet(sheet, text, /* aUpdate = */ false);
+          })
+          .catch(e => console.error("Error while parsing stylesheet"));
+        promises.push(onStyleSheetParsed);
       }
     }
-
+    await Promise.all(promises);
     return {};
   },
 
