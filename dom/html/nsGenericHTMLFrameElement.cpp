@@ -208,6 +208,7 @@ void nsGenericHTMLFrameElement::UnbindFromTree(bool aNullParent) {
     mFrameLoader = nullptr;
   }
 
+  nsFrameLoaderOwner::UnbindFromTree();
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }
 
