@@ -163,7 +163,6 @@ Required Fields
 
   - ``firefox`` - Collected in Firefox Desktop for submission via Firefox Telemetry.
   - ``fennec`` - Collected in Firefox for Android for submission via Firefox Mobile Telemetry.
-  - ``geckoview`` - *deprecated* Will be removed in Firefox 79. (see `bug 1620395 <https://bugzilla.mozilla.org/show_bug.cgi?id=1620395>`__)
 
 - ``record_in_processes``: A list of processes the scalar is allowed to record in. Currently supported values are:
 
@@ -309,6 +308,7 @@ Other examples can be found in the `test coverage <https://dxr.mozilla.org/mozil
 Version History
 ===============
 
+- Firefox 79:  ``geckoview`` support removed (see `bug 1620395 <https://bugzilla.mozilla.org/show_bug.cgi?id=1620395>`__).
 - Firefox 50: Initial scalar support (`bug 1276195 <https://bugzilla.mozilla.org/show_bug.cgi?id=1276195>`_).
 - Firefox 51: Added keyed scalars (`bug 1277806 <https://bugzilla.mozilla.org/show_bug.cgi?id=1277806>`_).
 - Firefox 53: Added child process scalars (`bug 1278556 <https://bugzilla.mozilla.org/show_bug.cgi?id=1278556>`_).
