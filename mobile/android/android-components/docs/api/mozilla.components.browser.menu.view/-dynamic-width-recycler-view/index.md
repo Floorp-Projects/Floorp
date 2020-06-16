@@ -2,7 +2,7 @@
 
 # DynamicWidthRecyclerView
 
-`class DynamicWidthRecyclerView : RecyclerView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/view/DynamicWidthRecyclerView.kt#L17)
+`class DynamicWidthRecyclerView : RecyclerView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/view/DynamicWidthRecyclerView.kt#L18)
 
 [RecylerView](#) with automatically set width between widthMin / widthMax xml attributes.
 
