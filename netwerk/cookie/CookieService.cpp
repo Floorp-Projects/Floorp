@@ -827,6 +827,10 @@ void CookieService::GetCookiesForURI(
     const OriginAttributes& aOriginAttrs, nsTArray<Cookie*>& aCookieList) {
   NS_ASSERTION(aHostURI, "null host!");
 
+  if (!CookieCommons::IsSchemeSupported(aHostURI)) {
+    return;
+  }
+
   if (!IsInitialized()) {
     return;
   }
