@@ -10,7 +10,7 @@ PACKAGE_VERSION = "1.2.1"
 
 # dependencies
 deps = [
-    "distro == 1.4.0",
+    "distro >= 1.4.0",
     "mozfile >= 0.12",
 ]
 
