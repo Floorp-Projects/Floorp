@@ -19,11 +19,6 @@ add_task(async function testLongElapsedTime() {
 
       let stateChangeWaiter = new Promise(resolve => {
         listener = {
-          QueryInterface: ChromeUtils.generateQI([
-            Ci.nsIWebProgressListener,
-            Ci.nsISupportsWeakReference,
-          ]),
-
           onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
             if (!aWebProgress.isTopLevel) {
               return;

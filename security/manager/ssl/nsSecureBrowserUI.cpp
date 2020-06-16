@@ -184,8 +184,6 @@ void nsSecureBrowserUI::UpdateForLocationOrMixedContentChange() {
   if (ctx->GetDocShell()) {
     nsDocShell* nativeDocShell = nsDocShell::Cast(ctx->GetDocShell());
     nativeDocShell->nsDocLoader::OnSecurityChange(nullptr, mState);
-  } else if (ctx->GetWebProgress()) {
-    ctx->GetWebProgress()->OnSecurityChange(nullptr, nullptr, mState);
   }
 }
 
