@@ -1537,8 +1537,22 @@ class TokenStreamCharsShared {
     return mozilla::IsAscii(static_cast<char32_t>(unit));
   }
 
-  JSAtom* drainCharBufferIntoAtom(JSContext* cx) {
-    JSAtom* atom = AtomizeChars(cx, charBuffer.begin(), charBuffer.length());
+  JSAtom* drainCharBufferIntoAtom() {
+    JSAtom* atom = AtomizeChars(this->compilationInfo->cx, charBuffer.begin(),
+                                charBuffer.length());
+    if (!atom) {
+      return nullptr;
+    }
+
+    // Add to parser atoms table.
+#ifdef JS_PARSER_ATOMS
+    auto maybeId = this->compilationInfo->parserAtoms.internChar16(
+        this->compilationInfo->cx, charBuffer.begin(), charBuffer.length());
+    if (maybeId.isErr()) {
+      return nullptr;
+    }
+#endif  // JS_PARSER_ATOMS
+
     charBuffer.clear();
     return atom;
   }
@@ -1602,8 +1616,7 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
     sourceUnits.ungetCodeUnit();
   }
 
-  static MOZ_ALWAYS_INLINE JSAtom* atomizeSourceChars(
-      JSContext* cx, mozilla::Span<const Unit> units);
+  MOZ_ALWAYS_INLINE JSAtom* atomizeSourceChars(mozilla::Span<const Unit> units);
 
   /**
    * Try to match a non-LineTerminator ASCII code point.  Return true iff it
@@ -1689,18 +1702,45 @@ inline void TokenStreamCharsBase<Unit>::consumeKnownCodeUnit(int32_t unit) {
 }
 
 template <>
-/* static */ MOZ_ALWAYS_INLINE JSAtom*
-TokenStreamCharsBase<char16_t>::atomizeSourceChars(
-    JSContext* cx, mozilla::Span<const char16_t> units) {
-  return AtomizeChars(cx, units.data(), units.size());
+MOZ_ALWAYS_INLINE JSAtom* TokenStreamCharsBase<char16_t>::atomizeSourceChars(
+    mozilla::Span<const char16_t> units) {
+  JSAtom* atom =
+      AtomizeChars(this->compilationInfo->cx, units.data(), units.size());
+  if (!atom) {
+    return nullptr;
+  }
+
+#ifdef JS_PARSER_ATOMS
+  auto maybeId = this->compilationInfo->parserAtoms.internChar16(
+      this->compilationInfo->cx, units.data(), units.size());
+  if (maybeId.isErr()) {
+    return nullptr;
+  }
+#endif  // JS_PARSER_ATOMS
+
+  return atom;
 }
 
 template <>
 /* static */ MOZ_ALWAYS_INLINE JSAtom*
 TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(
-    JSContext* cx, mozilla::Span<const mozilla::Utf8Unit> units) {
+    mozilla::Span<const mozilla::Utf8Unit> units) {
   auto chars = ToCharSpan(units);
-  return AtomizeUTF8Chars(cx, chars.data(), chars.size());
+  JSAtom* atom =
+      AtomizeUTF8Chars(this->compilationInfo->cx, chars.data(), chars.size());
+  if (!atom) {
+    return nullptr;
+  }
+
+#ifdef JS_PARSER_ATOMS
+  auto maybeId = this->compilationInfo->parserAtoms.internUtf8(
+      this->compilationInfo->cx, units.data(), units.size());
+  if (maybeId.isErr()) {
+    return nullptr;
+  }
+#endif  // JS_PARSER_ATOMS
+
+  return atom;
 }
 
 template <typename Unit>
@@ -2141,7 +2181,7 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
       return nullptr;
     }
 
-    return drainCharBufferIntoAtom(anyChars.cx);
+    return drainCharBufferIntoAtom();
   }
 };
 
