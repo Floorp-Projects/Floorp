@@ -57,7 +57,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
     const TrapData& trapData = activation->wasmTrapData();
     void* unwoundPC = trapData.unwoundPC;
 
-    code_ = &fp_->tls->instance->code();
+    code_ = &fp_->instance()->code();
     MOZ_ASSERT(code_ == LookupCode(unwoundPC));
 
     codeRange_ = code_->lookupFuncRange(unwoundPC);
@@ -109,43 +109,42 @@ void WasmFrameIter::operator++() {
 }
 
 void WasmFrameIter::popFrame() {
-  Frame* prevFP = fp_;
-  fp_ = prevFP->callerFP;
-  resumePCinCurrentFrame_ = (uint8_t*)prevFP->returnAddress;
-
-  if (uintptr_t(fp_) & ExitOrJitEntryFPTag) {
-    // We just unwound a frame pointer which has the low bit set,
+  if (fp_->callerIsExitOrJitEntryFP()) {
+    // We run into a frame pointer which has the low bit set,
     // indicating this is a direct call from the jit into the wasm
     // function's body. The call stack resembles this at this point:
     //
     // |---------------------|
     // |      JIT FRAME      |
-    // | JIT FAKE EXIT FRAME | <-- tagged fp_
-    // |      WASM FRAME     | <-- prevFP (already unwound)
+    // | JIT FAKE EXIT FRAME | <-- tagged fp_->callerFP_
+    // |      WASM FRAME     | <-- fp_
     // |---------------------|
     //
-    // fp_ points to the fake exit frame set up by the jit caller, and the
-    // return-address-to-fp is in JIT code, thus doesn't belong to any wasm
-    // instance's code (in particular, there's no associated CodeRange).
+    // fp_->callerFP_ points to the fake exit frame set up by the jit caller,
+    // and the return-address-to-fp is in JIT code, thus doesn't belong to any
+    // wasm instance's code (in particular, there's no associated CodeRange).
     // Mark the frame as such and untag FP.
-    MOZ_ASSERT(!LookupCode(prevFP->returnAddress));
+    MOZ_ASSERT(!LookupCode(fp_->returnAddress()));
 
-    unwoundIonCallerFP_ =
-        (uint8_t*)(uintptr_t(fp_) & ~uintptr_t(ExitOrJitEntryFPTag));
+    unwoundIonCallerFP_ = fp_->jitEntryCaller();
     unwoundIonFrameType_ = FrameType::Exit;
+
+    if (unwind_ == Unwind::True) {
+      activation_->setJSExitFP(unwoundIonCallerFP());
+      unwoundAddressOfReturnAddress_ = fp_->addressOfReturnAddress();
+    }
 
     fp_ = nullptr;
     code_ = nullptr;
     codeRange_ = nullptr;
 
-    if (unwind_ == Unwind::True) {
-      activation_->setJSExitFP(unwoundIonCallerFP_);
-      unwoundAddressOfReturnAddress_ = &prevFP->returnAddress;
-    }
-
     MOZ_ASSERT(done());
     return;
   }
+
+  Frame* prevFP = fp_;
+  fp_ = fp_->wasmCaller();
+  resumePCinCurrentFrame_ = prevFP->returnAddress();
 
   if (!fp_) {
     code_ = nullptr;
@@ -155,15 +154,14 @@ void WasmFrameIter::popFrame() {
       // We're exiting via the interpreter entry; we can safely reset
       // exitFP.
       activation_->setWasmExitFP(nullptr);
-      unwoundAddressOfReturnAddress_ = &prevFP->returnAddress;
+      unwoundAddressOfReturnAddress_ = prevFP->addressOfReturnAddress();
     }
 
     MOZ_ASSERT(done());
     return;
   }
 
-  void* returnAddress = prevFP->returnAddress;
-
+  void* returnAddress = prevFP->returnAddress();
   code_ = LookupCode(returnAddress, &codeRange_);
   MOZ_ASSERT(codeRange_);
 
@@ -180,7 +178,7 @@ void WasmFrameIter::popFrame() {
     //
     // The next value of FP is just a regular jit frame used as a marker to
     // know that we should transition to a JSJit frame iterator.
-    unwoundIonCallerFP_ = (uint8_t*)fp_;
+    unwoundIonCallerFP_ = reinterpret_cast<uint8_t*>(fp_);
     unwoundIonFrameType_ = FrameType::JSJitToWasm;
 
     fp_ = nullptr;
@@ -188,15 +186,15 @@ void WasmFrameIter::popFrame() {
     codeRange_ = nullptr;
 
     if (unwind_ == Unwind::True) {
-      activation_->setJSExitFP(unwoundIonCallerFP_);
-      unwoundAddressOfReturnAddress_ = &prevFP->returnAddress;
+      activation_->setJSExitFP(unwoundIonCallerFP());
+      unwoundAddressOfReturnAddress_ = prevFP->addressOfReturnAddress();
     }
 
     MOZ_ASSERT(done());
     return;
   }
 
-  MOZ_ASSERT(code_ == &fp_->tls->instance->code());
+  MOZ_ASSERT(code_ == &fp_->instance()->code());
   MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
 
   const CallSite* callsite = code_->lookupCallSite(returnAddress);
@@ -274,7 +272,7 @@ unsigned WasmFrameIter::computeLine(uint32_t* column) const {
 
 Instance* WasmFrameIter::instance() const {
   MOZ_ASSERT(!done());
-  return fp_->tls->instance;
+  return fp_->instance();
 }
 
 void** WasmFrameIter::unwoundAddressOfReturnAddress() const {
@@ -425,12 +423,12 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
     *entry = masm.currentOffset();
 
     masm.subFromStackPtr(Imm32(sizeof(Frame)));
-    masm.storePtr(ra, Address(StackPointer, offsetof(Frame, returnAddress)));
+    masm.storePtr(ra, Address(StackPointer, Frame::returnAddressOffset())));
     MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
-    masm.storePtr(WasmTlsReg, Address(StackPointer, offsetof(Frame, tls)));
+    masm.storePtr(WasmTlsReg, Address(StackPointer, Frame::tlsOffset())));
     MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
     masm.storePtr(FramePointer,
-                  Address(StackPointer, offsetof(Frame, callerFP)));
+                  Address(StackPointer, Frame::callerFPOffset())));
     MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
     masm.moveStackPtrTo(FramePointer);
     MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
@@ -446,13 +444,12 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
     *entry = masm.currentOffset();
 
     masm.Sub(sp, sp, sizeof(Frame));
-    masm.Str(ARMRegister(lr, 64),
-             MemOperand(sp, offsetof(Frame, returnAddress)));
+    masm.Str(ARMRegister(lr, 64), MemOperand(sp, Frame::returnAddressOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
-    masm.Str(ARMRegister(WasmTlsReg, 64), MemOperand(sp, offsetof(Frame, tls)));
+    masm.Str(ARMRegister(WasmTlsReg, 64), MemOperand(sp, Frame::tlsOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
     masm.Str(ARMRegister(FramePointer, 64),
-             MemOperand(sp, offsetof(Frame, callerFP)));
+             MemOperand(sp, Frame::callerFPOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
     masm.Mov(ARMRegister(FramePointer, 64), sp);
     MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
@@ -498,11 +495,11 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 
-  masm.loadPtr(Address(StackPointer, offsetof(Frame, callerFP)), FramePointer);
+  masm.loadPtr(Address(StackPointer, Frame::callerFPOffset())), FramePointer);
   poppedFP = masm.currentOffset();
-  masm.loadPtr(Address(StackPointer, offsetof(Frame, tls)), WasmTlsReg);
+  masm.loadPtr(Address(StackPointer, Frame::tlsOffset())), WasmTlsReg);
   poppedTlsReg = masm.currentOffset();
-  masm.loadPtr(Address(StackPointer, offsetof(Frame, returnAddress)), ra);
+  masm.loadPtr(Address(StackPointer, Frame::returnAddressOffset())), ra);
 
   *ret = masm.currentOffset();
   masm.as_jr(ra);
@@ -516,13 +513,13 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
   AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 5);
 
   masm.Ldr(ARMRegister(FramePointer, 64),
-           MemOperand(sp, offsetof(Frame, callerFP)));
+           MemOperand(sp, Frame::callerFPOffset()));
   poppedFP = masm.currentOffset();
 
-  masm.Ldr(ARMRegister(WasmTlsReg, 64), MemOperand(sp, offsetof(Frame, tls)));
+  masm.Ldr(ARMRegister(WasmTlsReg, 64), MemOperand(sp, Frame::tlsOffset()));
   poppedTlsReg = masm.currentOffset();
 
-  masm.Ldr(ARMRegister(lr, 64), MemOperand(sp, offsetof(Frame, returnAddress)));
+  masm.Ldr(ARMRegister(lr, 64), MemOperand(sp, Frame::returnAddressOffset()));
   *ret = masm.currentOffset();
 
   masm.Add(sp, sp, sizeof(Frame));
@@ -709,7 +706,7 @@ static void AssertNoWasmExitFPInJitExit(MacroAssembler& masm) {
   Label ok;
   masm.branchTestPtr(Assembler::Zero,
                      Address(scratch, JitActivation::offsetOfPackedExitFP()),
-                     Imm32(uintptr_t(ExitOrJitEntryFPTag)), &ok);
+                     Imm32(ExitOrJitEntryFPTag), &ok);
   masm.breakpoint();
   masm.bind(&ok);
 #endif
@@ -811,18 +808,18 @@ ProfilingFrameIterator::ProfilingFrameIterator(const Frame* fp)
   initFromExitFP(fp);
 }
 
-static inline void AssertDirectJitCall(const void* fp) {
+static inline void AssertDirectJitCall(const uint8_t* fp) {
   // Called via an inlined fast JIT to wasm call: in this case, FP is
   // pointing in the middle of the exit frame, right before the exit
   // footer; ensure the exit frame type is the expected one.
 #ifdef DEBUG
-  auto* jitCaller = (ExitFrameLayout*)(uintptr_t(fp) & ~ExitOrJitEntryFPTag);
+  auto* jitCaller = (ExitFrameLayout*)(Frame::toJitEntryCaller(fp));
   MOZ_ASSERT(jitCaller->footer()->type() ==
              jit::ExitFrameType::DirectWasmJitCall);
 #endif
 }
 
-static inline void AssertMatchesCallSite(void* callerPC, Frame* callerFP) {
+static inline void AssertMatchesCallSite(void* callerPC, uint8_t* callerFP) {
 #ifdef DEBUG
   const CodeRange* callerCodeRange;
   const Code* code = LookupCode(callerPC, &callerCodeRange);
@@ -852,19 +849,14 @@ static inline void AssertMatchesCallSite(void* callerPC, Frame* callerFP) {
 void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
   MOZ_ASSERT(fp);
   stackAddress_ = (void*)fp;
-
-  void* pc = fp->returnAddress;
-
-  code_ = LookupCode(pc, &codeRange_);
+  code_ = LookupCode(fp->returnAddress(), &codeRange_);
 
   if (!code_) {
     // This is a direct call from the JIT, the caller FP is pointing to a
     // tagged JIT caller's frame.
-    MOZ_ASSERT(uintptr_t(fp->callerFP) & ExitOrJitEntryFPTag);
-    AssertDirectJitCall(fp->callerFP);
+    AssertDirectJitCall(fp->jitEntryCaller());
 
-    unwoundIonCallerFP_ =
-        (uint8_t*)(uintptr_t(fp->callerFP) & ~ExitOrJitEntryFPTag);
+    unwoundIonCallerFP_ = fp->jitEntryCaller();
     MOZ_ASSERT(done());
     return;
   }
@@ -887,12 +879,12 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
     case CodeRange::JitEntry:
       callerPC_ = nullptr;
       callerFP_ = nullptr;
-      unwoundIonCallerFP_ = (uint8_t*)fp->callerFP;
+      unwoundIonCallerFP_ = fp->rawCaller();
       break;
     case CodeRange::Function:
-      fp = fp->callerFP;
-      callerPC_ = fp->returnAddress;
-      callerFP_ = fp->callerFP;
+      fp = fp->wasmCaller();
+      callerPC_ = fp->returnAddress();
+      callerFP_ = fp->rawCaller();
       AssertMatchesCallSite(callerPC_, callerFP_);
       break;
     case CodeRange::ImportJitExit:
@@ -906,14 +898,6 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
   }
 
   MOZ_ASSERT(!done());
-}
-
-static void AssertCallerFP(DebugOnly<bool> fpWasTagged, Frame* const fp,
-                           void** const sp) {
-  MOZ_ASSERT_IF(!fpWasTagged.value,
-                fp == reinterpret_cast<Frame*>(sp)->callerFP);
-  MOZ_ASSERT_IF(fpWasTagged.value, (Frame*)(uintptr_t(fp) | 0x1) ==
-                                       reinterpret_cast<Frame*>(sp)->callerFP);
 }
 
 static bool isSignatureCheckFail(uint32_t offsetInCode,
@@ -943,8 +927,9 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
   // make sure it's untagged.
   // - tagged by an direct JIT call.
   // - unreliable if it's not been set yet, in prologues.
-  DebugOnly<bool> fpWasTagged = uintptr_t(registers.fp) & ExitOrJitEntryFPTag;
-  Frame* const fp = (Frame*)(intptr_t(registers.fp) & ~ExitOrJitEntryFPTag);
+  uint8_t* fp = Frame::isExitOrJitEntryFP(registers.fp)
+                    ? Frame::toJitEntryCaller(registers.fp)
+                    : reinterpret_cast<uint8_t*>(registers.fp);
 
   // Get the CodeRange describing pc and the base address to which the
   // CodeRange is relative. If the pc is not in a wasm module or a builtin
@@ -994,7 +979,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
   // exception here.
   *unwoundCaller = true;
 
-  Frame* fixedFP = nullptr;
+  uint8_t* fixedFP = nullptr;
   void* fixedPC = nullptr;
   switch (codeRange->kind()) {
     case CodeRange::Function:
@@ -1055,8 +1040,9 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         AssertMatchesCallSite(fixedPC, fixedFP);
       } else if (offsetFromEntry == PushedFP) {
         // The full Frame has been pushed; fp is still the caller's fp.
-        AssertCallerFP(fpWasTagged, fp, sp);
-        fixedPC = reinterpret_cast<Frame*>(sp)->returnAddress;
+        const auto* frame = Frame::fromUntaggedWasmExitFP(sp);
+        MOZ_ASSERT(frame->rawCaller() == fp);
+        fixedPC = frame->returnAddress();
         fixedFP = fp;
         AssertMatchesCallSite(fixedPC, fixedFP);
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
@@ -1066,8 +1052,8 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         // The fixedFP field of the Frame has been loaded into fp.
         // The ra and TLS might also be loaded, but the Frame structure is
         // still on stack, so we can acess the ra form there.
-        AssertCallerFP(fpWasTagged, fp, sp);
-        fixedPC = reinterpret_cast<Frame*>(sp)->returnAddress;
+        MOZ_ASSERT(*sp == fp);
+        fixedPC = Frame::fromUntaggedWasmExitFP(sp)->returnAddress();
         fixedFP = fp;
         AssertMatchesCallSite(fixedPC, fixedFP);
 #elif defined(JS_CODEGEN_ARM64)
@@ -1075,7 +1061,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         // been restored so several cases can be coalesced here.
       } else if (offsetInCode >= codeRange->ret() - PoppedFP &&
                  offsetInCode <= codeRange->ret()) {
-        fixedPC = reinterpret_cast<Frame*>(sp)->returnAddress;
+        fixedPC = Frame::fromUntaggedWasmExitFP(sp)->returnAddress();
         fixedFP = fp;
         AssertMatchesCallSite(fixedPC, fixedFP);
 #else
@@ -1105,8 +1091,9 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
 
         if (isSignatureCheckFail(offsetInCode, codeRange)) {
           // Frame have been pushed and FP has been set.
-          fixedFP = fp->callerFP;
-          fixedPC = fp->returnAddress;
+          const auto* frame = Frame::fromUntaggedWasmExitFP(fp);
+          fixedFP = frame->rawCaller();
+          fixedPC = frame->returnAddress();
           AssertMatchesCallSite(fixedPC, fixedFP);
           break;
         }
@@ -1115,7 +1102,9 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         fixedPC = pc;
         fixedFP = fp;
         *unwoundCaller = false;
-        AssertMatchesCallSite(fp->returnAddress, fp->callerFP);
+        AssertMatchesCallSite(
+            Frame::fromUntaggedWasmExitFP(fp)->returnAddress(),
+            Frame::fromUntaggedWasmExitFP(fp)->rawCaller());
         break;
       }
       break;
@@ -1125,7 +1114,8 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       fixedPC = pc;
       fixedFP = fp;
       *unwoundCaller = false;
-      AssertMatchesCallSite(fp->returnAddress, fp->callerFP);
+      AssertMatchesCallSite(Frame::fromUntaggedWasmExitFP(fp)->returnAddress(),
+                            Frame::fromUntaggedWasmExitFP(fp)->rawCaller());
       break;
     case CodeRange::InterpEntry:
       // The entry trampoline is the final frame in an wasm JitActivation. The
@@ -1146,7 +1136,8 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         return false;
       }
 #endif
-      fixedFP = offsetFromEntry < SetJitEntryFP ? (Frame*)sp : fp;
+      fixedFP =
+          offsetFromEntry < SetJitEntryFP ? reinterpret_cast<uint8_t*>(sp) : fp;
       fixedPC = nullptr;
 
       // On the error return path, FP might be set to FailFP. Ignore these
@@ -1205,24 +1196,23 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
     // transient tagged values of FP (during wasm::SetExitFP) here because
     // StartUnwinding would not have unwound then.
     if (unwindState.codeRange->isFunction() &&
-        (uintptr_t(state.fp) & ExitOrJitEntryFPTag)) {
-      unwoundIonCallerFP_ = (uint8_t*)callerFP_;
+        Frame::isExitOrJitEntryFP(reinterpret_cast<uint8_t*>(state.fp))) {
+      unwoundIonCallerFP_ = callerFP_;
     }
   } else {
-    callerFP_ = unwindState.fp->callerFP;
-    callerPC_ = unwindState.fp->returnAddress;
+    callerFP_ = Frame::fromUntaggedWasmExitFP(unwindState.fp)->rawCaller();
+    callerPC_ = Frame::fromUntaggedWasmExitFP(unwindState.fp)->returnAddress();
     // See comment above. The only way to get a tagged FP here means that
     // the caller is a fast JIT caller which called into a wasm function.
-    if ((uintptr_t(callerFP_) & ExitOrJitEntryFPTag)) {
+    if (Frame::isExitOrJitEntryFP(callerFP_)) {
       MOZ_ASSERT(unwindState.codeRange->isFunction());
-      unwoundIonCallerFP_ =
-          (uint8_t*)(uintptr_t(callerFP_) & ~ExitOrJitEntryFPTag);
+      unwoundIonCallerFP_ = Frame::toJitEntryCaller(callerFP_);
     }
   }
 
   if (unwindState.codeRange->isJitEntry()) {
     MOZ_ASSERT(!unwoundIonCallerFP_);
-    unwoundIonCallerFP_ = (uint8_t*)callerFP_;
+    unwoundIonCallerFP_ = callerFP_;
   }
 
   if (unwindState.codeRange->isInterpEntry()) {
@@ -1273,13 +1263,12 @@ void ProfilingFrameIterator::operator++() {
 
   code_ = LookupCode(callerPC_, &codeRange_);
 
-  if (!code_ && uintptr_t(callerFP_) & ExitOrJitEntryFPTag) {
+  if (!code_ && Frame::isExitOrJitEntryFP(callerFP_)) {
     // The parent frame is an inlined wasm call, the tagged FP points to
     // the fake exit frame.
     MOZ_ASSERT(!codeRange_);
     AssertDirectJitCall(callerFP_);
-    unwoundIonCallerFP_ =
-        (uint8_t*)(uintptr_t(callerFP_) & ~uintptr_t(ExitOrJitEntryFPTag));
+    unwoundIonCallerFP_ = Frame::toJitEntryCaller(callerFP_);
     MOZ_ASSERT(done());
     return;
   }
@@ -1287,12 +1276,13 @@ void ProfilingFrameIterator::operator++() {
   MOZ_ASSERT(codeRange_);
 
   if (codeRange_->isJitEntry()) {
-    unwoundIonCallerFP_ = (uint8_t*)callerFP_;
+    unwoundIonCallerFP_ = callerFP_;
     MOZ_ASSERT(!done());
     return;
   }
 
-  MOZ_ASSERT(code_ == &callerFP_->tls->instance->code());
+  MOZ_ASSERT(code_ ==
+             &Frame::fromUntaggedWasmExitFP(callerFP_)->instance()->code());
 
   switch (codeRange_->kind()) {
     case CodeRange::Function:
@@ -1301,12 +1291,14 @@ void ProfilingFrameIterator::operator++() {
     case CodeRange::BuiltinThunk:
     case CodeRange::TrapExit:
     case CodeRange::DebugTrap:
-    case CodeRange::FarJumpIsland:
+    case CodeRange::FarJumpIsland: {
       stackAddress_ = callerFP_;
-      callerPC_ = callerFP_->returnAddress;
-      AssertMatchesCallSite(callerPC_, callerFP_->callerFP);
-      callerFP_ = callerFP_->callerFP;
+      const auto* frame = Frame::fromUntaggedWasmExitFP(callerFP_);
+      callerPC_ = frame->returnAddress();
+      AssertMatchesCallSite(callerPC_, frame->rawCaller());
+      callerFP_ = frame->rawCaller();
       break;
+    }
     case CodeRange::InterpEntry:
       MOZ_CRASH("should have had null caller fp");
     case CodeRange::JitEntry:
