@@ -103,8 +103,6 @@ cfr-whatsnew-button =
   .label = What’s New
   .tooltiptext = What’s New
 
-cfr-whatsnew-panel-header = What’s New
-
 cfr-whatsnew-release-notes-link-text = Read the release notes
 
 cfr-whatsnew-fx70-title = { -brand-short-name } now fights harder for your privacy
