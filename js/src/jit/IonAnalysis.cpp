@@ -5134,6 +5134,10 @@ void jit::DumpMIRExpressions(MIRGraph& graph, const CompileInfo& info,
     }
   }
 
-  out.printf("===== %s:%u =====\n", info.filename(), info.lineno());
+  if (info.compilingWasm()) {
+    out.printf("===== end wasm MIR dump =====\n");
+  } else {
+    out.printf("===== %s:%u =====\n", info.filename(), info.lineno());
+  }
 #endif
 }
