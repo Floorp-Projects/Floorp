@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -195,6 +196,14 @@ class ProvidersManager {
 
     let query = new Query(queryContext, controller, muxer, providers);
     this.queries.set(queryContext, query);
+
+    // The muxer and many providers depend on the search service and our search
+    // utils.  Make sure they're initialized now (via UrlbarSearchUtils) so that
+    // all query-related urlbar modules don't need to do it.
+    await UrlbarSearchUtils.init();
+    if (query.canceled) {
+      return;
+    }
 
     // Update the behavior of extension providers.
     for (let provider of this.providers) {

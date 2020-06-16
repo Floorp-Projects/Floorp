@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
-  PlacesSearchAutocompleteProvider:
-    "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
@@ -388,9 +386,8 @@ var UrlbarTestUtils = {
       .getService(Ci.nsIObserver)
       .observe(null, "profile-after-change", null);
 
-    // These two calls are necessary because UrlbarMuxerUnifiedComplete.sort
-    // calls PlacesSearchAutocompleteProvider.parseSubmissionURL, so we need
-    // engines and PlacesSearchAutocompleteProvider.
+    // This is necessary because UrlbarMuxerUnifiedComplete.sort calls
+    // Services.search.parseSubmissionURL, so we need engines.
     try {
       await AddonTestUtils.promiseStartupManager();
     } catch (error) {
@@ -398,7 +395,6 @@ var UrlbarTestUtils = {
         throw error;
       }
     }
-    await PlacesSearchAutocompleteProvider.ensureReady();
   },
 };
 

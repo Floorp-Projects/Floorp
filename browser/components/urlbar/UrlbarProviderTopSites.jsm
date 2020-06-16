@@ -14,13 +14,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  PlacesSearchAutocompleteProvider:
-    "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   TOP_SITES_MAX_SITES_PER_ROW: "resource://activity-stream/common/Reducers.jsm",
   TOP_SITES_DEFAULT_ROWS: "resource://activity-stream/common/Reducers.jsm",
@@ -190,9 +189,7 @@ class ProviderTopSites extends UrlbarProvider {
           break;
         }
         case "search": {
-          let engine = await PlacesSearchAutocompleteProvider.engineForAlias(
-            site.title
-          );
+          let engine = await UrlbarSearchUtils.engineForAlias(site.title);
 
           if (!engine && site.url) {
             // Look up the engine by its domain.
@@ -201,9 +198,7 @@ class ProviderTopSites extends UrlbarProvider {
               host = new URL(site.url).hostname;
             } catch (err) {}
             if (host) {
-              engine = await PlacesSearchAutocompleteProvider.engineForDomainPrefix(
-                host
-              );
+              engine = await UrlbarSearchUtils.engineForDomainPrefix(host);
             }
           }
 

@@ -15,10 +15,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
-  PlacesSearchAutocompleteProvider:
-    "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -68,7 +67,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
   async isActive(queryContext) {
     this._engines = [];
     if (queryContext.searchString.trim() == "@") {
-      this._engines = await PlacesSearchAutocompleteProvider.tokenAliasEngines();
+      this._engines = await UrlbarSearchUtils.tokenAliasEngines();
     }
 
     return this._engines.length;
