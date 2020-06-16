@@ -29,13 +29,6 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.repository.getLogger("Urlbar.Provider.TopSites")
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "topSitesRows",
-  "browser.newtabpage.activity-stream.topSitesRows",
-  TOP_SITES_DEFAULT_ROWS
-);
-
 /**
  * This module exports a provider returning the user's newtab Top Sites.
  */
@@ -125,12 +118,25 @@ class ProviderTopSites extends UrlbarProvider {
     // Filter out empty values. Site is empty when there's a gap between tiles
     // on about:newtab.
     sites = sites.filter(site => site);
+
+    // This is done here, rather than in the global scope, because
+    // TOP_SITES_DEFAULT_ROWS causes the import of Reducers.jsm, and we want to
+    // do that only when actually querying for Top Sites.
+    if (this.topSitesRows === undefined) {
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "topSitesRows",
+        "browser.newtabpage.activity-stream.topSitesRows",
+        TOP_SITES_DEFAULT_ROWS
+      );
+    }
+
     // We usually respect maxRichResults, though we never show a number of Top
     // Sites greater than what is visible in the New Tab Page, because the
     // additional ones couldn't be managed from the page.
     let numTopSites = Math.min(
       UrlbarPrefs.get("maxRichResults"),
-      TOP_SITES_MAX_SITES_PER_ROW * topSitesRows
+      TOP_SITES_MAX_SITES_PER_ROW * this.topSitesRows
     );
     sites = sites.slice(0, numTopSites);
 
