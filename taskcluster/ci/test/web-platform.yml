@@ -104,7 +104,11 @@ web-platform-tests-backlog:
             default: 3600
     variants: []
     e10s: true
-    run-on-projects: ['mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*-ccov.*: []  # Bug 1643177 - do not run backlog on coverage
+            .*-devedition.*: []  # Bug 1643177 - do not run backlog on devedition
+            default: ['mozilla-central']
     tier: 2
     mozharness:
         chunked: true
@@ -160,7 +164,11 @@ web-platform-tests-reftest-backlog:
             default: 1
     variants: []
     e10s: true
-    run-on-projects: ['mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            .*-ccov.*: []  # Bug 1643177 - do not run backlog on coverage
+            .*-devedition.*: []  # Bug 1643177 - do not run backlog on devedition
+            default: ['mozilla-central']
     tier: 2
     mozharness:
         extra-options:
