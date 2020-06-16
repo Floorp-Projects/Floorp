@@ -1431,10 +1431,15 @@ var BookmarkingUI = {
     );
   },
 
-  toggleBookmarksToolbar() {
+  toggleBookmarksToolbar(reason) {
     CustomizableUI.setToolbarVisibility(
       "PersonalToolbar",
       document.getElementById("PersonalToolbar").collapsed
+    );
+    BrowserUsageTelemetry.recordToolbarVisibility(
+      "PersonalToolbar",
+      document.getElementById("PersonalToolbar").collapsed,
+      reason
     );
   },
 
@@ -1924,9 +1929,19 @@ var BookmarkingUI = {
       }
 
       CustomizableUI.addWidgetToArea(this.BOOKMARK_BUTTON_ID, area, pos);
+      BrowserUsageTelemetry.recordWidgetChange(
+        this.BOOKMARK_BUTTON_ID,
+        area,
+        "bookmark-tools"
+      );
     } else {
       // Move it back to the palette.
       CustomizableUI.removeWidgetFromArea(this.BOOKMARK_BUTTON_ID);
+      BrowserUsageTelemetry.recordWidgetChange(
+        this.BOOKMARK_BUTTON_ID,
+        null,
+        "bookmark-tools"
+      );
     }
     triggerNode.setAttribute("checked", !placement);
     updateToggleControlLabel(triggerNode);

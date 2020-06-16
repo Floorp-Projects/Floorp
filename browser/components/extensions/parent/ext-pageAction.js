@@ -21,9 +21,17 @@ ChromeUtils.defineModuleGetter(
   "PanelPopup",
   "resource:///modules/ExtensionPopups.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUsageTelemetry",
+  "resource:///modules/BrowserUsageTelemetry.jsm"
+);
 
 var { DefaultWeakMap } = ExtensionUtils;
 
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 var { PageActionBase } = ChromeUtils.import(
   "resource://gre/modules/ExtensionActions.jsm"
 );
@@ -53,6 +61,25 @@ class PageAction extends PageActionBase {
 this.pageAction = class extends ExtensionAPI {
   static for(extension) {
     return pageActionMap.get(extension);
+  }
+
+  static onUpdate(id, manifest) {
+    if (!("page_action" in manifest)) {
+      // If the new version has no page action then mark this widget as hidden
+      // in the telemetry. If it is already marked hidden then this will do
+      // nothing.
+      BrowserUsageTelemetry.recordWidgetChange(makeWidgetId(id), null, "addon");
+    }
+  }
+
+  static onDisable(id) {
+    BrowserUsageTelemetry.recordWidgetChange(makeWidgetId(id), null, "addon");
+  }
+
+  static onUninstall(id) {
+    // If the telemetry already has this widget as hidden then this will not
+    // record anything.
+    BrowserUsageTelemetry.recordWidgetChange(makeWidgetId(id), null, "addon");
   }
 
   async onManifestEntry(entryName) {
@@ -126,6 +153,20 @@ this.pageAction = class extends ExtensionAPI {
           },
         })
       );
+
+      if (this.extension.startupReason != "APP_STARTUP") {
+        // Make sure the browser telemetry has the correct state for this widget.
+        // Defer loading BrowserUsageTelemetry until after startup is complete.
+        ExtensionParent.browserStartupPromise.then(() => {
+          BrowserUsageTelemetry.recordWidgetChange(
+            widgetId,
+            this.browserPageAction.pinnedToUrlbar
+              ? "page-action-buttons"
+              : null,
+            "addon"
+          );
+        });
+      }
 
       // If the page action is only enabled in some URLs, do pattern matching in
       // the active tabs and update the button if necessary.

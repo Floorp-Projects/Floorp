@@ -21,6 +21,11 @@ ChromeUtils.defineModuleGetter(
   "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUsageTelemetry",
+  "resource:///modules/BrowserUsageTelemetry.jsm"
+);
 
 const WIDGET_ID = "search-container";
 const PREF_NAME = "browser.search.widget.inNavBar";
@@ -85,8 +90,14 @@ const SearchWidgetTracker = {
         CustomizableUI.AREA_NAVBAR,
         CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1
       );
+      BrowserUsageTelemetry.recordWidgetChange(
+        WIDGET_ID,
+        CustomizableUI.AREA_NAVBAR,
+        "searchpref"
+      );
     } else {
       CustomizableUI.removeWidgetFromArea(WIDGET_ID);
+      BrowserUsageTelemetry.recordWidgetChange(WIDGET_ID, null, "searchpref");
     }
   },
 

@@ -11,6 +11,7 @@
     "url": "chrome://browser/content/parent/ext-browserAction.js",
     "schema": "chrome://extensions/content/schemas/browser_action.json",
     "scopes": ["addon_parent"],
+    "events": ["update", "uninstall", "disable"],
     "manifest": ["browser_action"],
     "paths": [
       ["browserAction"]
@@ -143,6 +144,7 @@
     "url": "chrome://browser/content/parent/ext-pageAction.js",
     "schema": "chrome://extensions/content/schemas/page_action.json",
     "scopes": ["addon_parent"],
+    "events": ["update", "uninstall", "disable"],
     "manifest": ["page_action"],
     "paths": [
       ["pageAction"]
