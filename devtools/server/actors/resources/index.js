@@ -6,13 +6,19 @@
 
 const TYPES = {
   CONSOLE_MESSAGE: "console-message",
+  PLATFORM_MESSAGE: "platform-message",
 };
 exports.TYPES = TYPES;
 
+const resources = {
+  [TYPES.CONSOLE_MESSAGE]: "devtools/server/actors/resources/console-messages",
+  [TYPES.PLATFORM_MESSAGE]:
+    "devtools/server/actors/resources/platform-messages",
+};
+
 const LISTENERS = {};
-loader.lazyRequireGetter(
-  LISTENERS,
-  TYPES.CONSOLE_MESSAGE,
-  "devtools/server/actors/resources/console-messages"
-);
+for (const [type, path] of Object.entries(resources)) {
+  loader.lazyRequireGetter(LISTENERS, type, path);
+}
+
 exports.LISTENERS = LISTENERS;
