@@ -5,6 +5,7 @@
 DevToolsModules(
     'console-messages.js',
     'css-changes.js',
+    'css-messages.js',
     'error-messages.js',
     'platform-messages.js',
     'root-node.js',

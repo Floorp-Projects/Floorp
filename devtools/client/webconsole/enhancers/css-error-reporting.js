@@ -7,7 +7,7 @@
 const {
   INITIALIZE,
   FILTER_TOGGLE,
-  TARGET_AVAILABLE,
+  FILTERS,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -15,30 +15,23 @@ const {
  * filter is toggled on.
  */
 function ensureCSSErrorReportingEnabled(webConsoleUI) {
+  let watchingCSSMessages = false;
   return next => (reducer, initialState, enhancer) => {
     function ensureErrorReportingEnhancer(state, action) {
-      const proxies = webConsoleUI ? webConsoleUI.getAllProxies() : null;
-      if (!proxies) {
-        return reducer(state, action);
-      }
-
       state = reducer(state, action);
-      if (!state.filters.css) {
+
+      // If we're already watching CSS messages, or if the CSS filter is disabled,
+      // we don't do anything.
+      if (!webConsoleUI || watchingCSSMessages || !state.filters.css) {
         return state;
       }
 
       const cssFilterToggled =
-        action.type == FILTER_TOGGLE && action.filter == "css";
-      if (
-        cssFilterToggled ||
-        action.type == INITIALIZE ||
-        action.type == TARGET_AVAILABLE
-      ) {
-        for (const proxy of proxies) {
-          if (proxy.target && proxy.target.ensureCSSErrorReportingEnabled) {
-            proxy.target.ensureCSSErrorReportingEnabled();
-          }
-        }
+        action.type == FILTER_TOGGLE && action.filter == FILTERS.CSS;
+
+      if (cssFilterToggled || action.type == INITIALIZE) {
+        watchingCSSMessages = true;
+        webConsoleUI.watchCssMessages();
       }
 
       return state;
