@@ -1,0 +1,399 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+"use strict";
+
+gReduceMotionOverride = true;
+
+const AREAS = [
+  "keyboard",
+  "menu_bar",
+  "tabs_bar",
+  "nav_bar",
+  "bookmarks_bar",
+  "app_menu",
+  "tabs_context",
+  "content_context",
+  "overflow_menu",
+  "pinned_overflow_menu",
+  "pageaction_urlbar",
+  "pageaction_panel",
+
+  "preferences_paneHome",
+  "preferences_paneGeneral",
+  "preferences_panePrivacy",
+  "preferences_paneSearch",
+  "preferences_paneSearchResults",
+  "preferences_paneSync",
+  "preferences_paneContainers",
+];
+
+// Checks that the correct number of clicks are registered against the correct
+// keys in the scalars.
+function assertInteractionScalars(expectedAreas) {
+  let processScalars =
+    Services.telemetry.getSnapshotForKeyedScalars("main", true)?.parent ?? {};
+
+  for (let source of AREAS) {
+    let scalars = processScalars?.[`browser.ui.interaction.${source}`] ?? {};
+
+    let expected = expectedAreas[source] ?? {};
+
+    let expectedKeys = new Set(
+      Object.keys(scalars).concat(Object.keys(expected))
+    );
+    for (let key of expectedKeys) {
+      Assert.equal(
+        scalars[key],
+        expected[key],
+        `Expected to see the correct value for ${key} in ${source}.`
+      );
+    }
+  }
+}
+
+const elem = id => document.getElementById(id);
+const click = el => {
+  if (typeof el == "string") {
+    el = elem(el);
+  }
+
+  EventUtils.synthesizeMouseAtCenter(el, {}, window);
+};
+
+add_task(async function toolbarButtons() {
+  await BrowserTestUtils.withNewTab("http://example.com", async () => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
+
+    let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+    let tabClose = BrowserTestUtils.waitForTabClosing(newTab);
+
+    let transition = BrowserTestUtils.waitForTransition(
+      elem("PersonalToolbar")
+    );
+    CustomizableUI.setToolbarVisibility("PersonalToolbar", true);
+    registerCleanupFunction(() => {
+      CustomizableUI.setToolbarVisibility("PersonalToolbar", false);
+    });
+    await transition;
+
+    let tabs = elem("tabbrowser-tabs");
+    if (!tabs.hasAttribute("overflow")) {
+      tabs.setAttribute("overflow", "true");
+      registerCleanupFunction(() => {
+        tabs.removeAttribute("overflow");
+      });
+    }
+
+    click("stop-reload-button");
+    click("back-button");
+    click("back-button");
+
+    // Make sure the all tabs panel is in the document.
+    gTabsPanel.initElements();
+    let view = elem("allTabsMenu-allTabsView");
+    let shown = BrowserTestUtils.waitForEvent(view, "ViewShown");
+    click("alltabs-button");
+    await shown;
+
+    let hidden = BrowserTestUtils.waitForEvent(view, "ViewHiding");
+    gTabsPanel.hideAllTabsPanel();
+    await hidden;
+
+    click(newTab.querySelector(".tab-close-button"));
+    await tabClose;
+    click(document.querySelector("#PlacesToolbarItems .bookmark-item"));
+
+    let pagePanel = elem("pageActionPanel");
+    shown = BrowserTestUtils.waitForEvent(pagePanel, "popupshown");
+    click("pageActionButton");
+    await shown;
+
+    hidden = BrowserTestUtils.waitForEvent(pagePanel, "popuphidden");
+    click("pageAction-panel-copyURL");
+    await hidden;
+
+    assertInteractionScalars({
+      nav_bar: {
+        "stop-reload-button": 1,
+        "back-button": 2,
+      },
+      tabs_bar: {
+        "alltabs-button": 1,
+        "tab-close-button": 1,
+      },
+      bookmarks_bar: {
+        "bookmark-item": 1,
+      },
+      pageaction_urlbar: {
+        pageActionButton: 1,
+      },
+      pageaction_panel: {
+        copyURL: 1,
+      },
+    });
+  });
+});
+
+add_task(async function contextMenu() {
+  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
+
+    let tab = gBrowser.getTabForBrowser(browser);
+    let context = elem("tabContextMenu");
+    let shown = BrowserTestUtils.waitForEvent(context, "popupshown");
+    EventUtils.synthesizeMouseAtCenter(
+      tab,
+      { type: "contextmenu", button: 2 },
+      window
+    );
+    await shown;
+
+    let hidden = BrowserTestUtils.waitForEvent(context, "popuphidden");
+    click("context_toggleMuteTab");
+    await hidden;
+
+    assertInteractionScalars({
+      tabs_context: {
+        "context-toggleMuteTab": 1,
+      },
+    });
+  });
+});
+
+add_task(async function appMenu() {
+  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
+
+    let shown = BrowserTestUtils.waitForEvent(
+      elem("appMenu-popup"),
+      "popupshown"
+    );
+    click("PanelUI-menu-button");
+    await shown;
+
+    let hidden = BrowserTestUtils.waitForEvent(
+      elem("appMenu-popup"),
+      "popuphidden"
+    );
+    click("appMenu-find-button");
+    await hidden;
+
+    assertInteractionScalars({
+      nav_bar: {
+        "PanelUI-menu-button": 1,
+      },
+      app_menu: {
+        "appMenu-find-button": 1,
+      },
+    });
+  });
+});
+
+add_task(async function devtools() {
+  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
+
+    let shown = BrowserTestUtils.waitForEvent(
+      elem("appMenu-popup"),
+      "popupshown"
+    );
+    click("PanelUI-menu-button");
+    await shown;
+
+    shown = BrowserTestUtils.waitForEvent(
+      elem("PanelUI-developer"),
+      "ViewShown"
+    );
+    click("appMenu-developer-button");
+    await shown;
+
+    let tabOpen = BrowserTestUtils.waitForNewTab(gBrowser);
+    let hidden = BrowserTestUtils.waitForEvent(
+      elem("appMenu-popup"),
+      "popuphidden"
+    );
+    click(
+      document.querySelector(
+        "#PanelUI-developer toolbarbutton[key='key_viewSource']"
+      )
+    );
+    await hidden;
+
+    let tab = await tabOpen;
+    BrowserTestUtils.removeTab(tab);
+
+    // Note that item ID's have '_' converted to '-'.
+    assertInteractionScalars({
+      nav_bar: {
+        "PanelUI-menu-button": 1,
+      },
+      app_menu: {
+        "appMenu-developer-button": 1,
+        "key-viewSource": 1,
+      },
+    });
+  });
+});
+
+add_task(async function webextension() {
+  BrowserUsageTelemetry._resetAddonIds();
+
+  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
+
+    const extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        version: "1",
+        applications: {
+          gecko: { id: "random_addon@example.com" },
+        },
+        browser_action: {
+          default_icon: "default.png",
+          default_title: "Hello",
+        },
+        page_action: {
+          default_icon: "default.png",
+          default_title: "Hello",
+          show_matches: ["http://example.com/*"],
+        },
+      },
+    });
+
+    await extension.startup();
+
+    // As the first add-on interacted with this should show up as `addon0`.
+
+    click("random_addon_example_com-browser-action");
+    assertInteractionScalars({
+      nav_bar: {
+        addon0: 1,
+      },
+    });
+
+    // Wait for the element to show up.
+    await TestUtils.waitForCondition(() =>
+      elem("pageAction-urlbar-random_addon_example_com")
+    );
+
+    click("pageAction-urlbar-random_addon_example_com");
+    assertInteractionScalars({
+      pageaction_urlbar: {
+        addon0: 1,
+      },
+    });
+
+    const extension2 = ExtensionTestUtils.loadExtension({
+      manifest: {
+        version: "1",
+        applications: {
+          gecko: { id: "random_addon2@example.com" },
+        },
+        browser_action: {
+          default_icon: "default.png",
+          default_title: "Hello",
+        },
+        page_action: {
+          default_icon: "default.png",
+          default_title: "Hello",
+          show_matches: ["http://example.com/*"],
+        },
+      },
+    });
+
+    await extension2.startup();
+
+    // A second extension should be `addon1`.
+
+    click("random_addon2_example_com-browser-action");
+    assertInteractionScalars({
+      nav_bar: {
+        addon1: 1,
+      },
+    });
+
+    // Wait for the element to show up.
+    await TestUtils.waitForCondition(() =>
+      elem("pageAction-urlbar-random_addon2_example_com")
+    );
+
+    click("pageAction-urlbar-random_addon2_example_com");
+    assertInteractionScalars({
+      pageaction_urlbar: {
+        addon1: 1,
+      },
+    });
+
+    // The first should have retained its ID.
+    click("random_addon_example_com-browser-action");
+    assertInteractionScalars({
+      nav_bar: {
+        addon0: 1,
+      },
+    });
+
+    click("pageAction-urlbar-random_addon_example_com");
+    assertInteractionScalars({
+      pageaction_urlbar: {
+        addon0: 1,
+      },
+    });
+
+    await extension.unload();
+
+    // The second should retain its ID.
+    click("random_addon2_example_com-browser-action");
+    click("random_addon2_example_com-browser-action");
+    assertInteractionScalars({
+      nav_bar: {
+        addon1: 2,
+      },
+    });
+
+    click("pageAction-urlbar-random_addon2_example_com");
+    assertInteractionScalars({
+      pageaction_urlbar: {
+        addon1: 1,
+      },
+    });
+
+    await extension2.unload();
+  });
+});
+
+add_task(async function preferences() {
+  let initialized = BrowserTestUtils.waitForEvent(gBrowser, "Initialized");
+  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+    await initialized;
+
+    Services.telemetry.getSnapshotForKeyedScalars("main", true);
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#browserRestoreSession",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#category-search",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#searchBarShownRadio",
+      {},
+      gBrowser.selectedBrowser.browsingContext
+    );
+
+    assertInteractionScalars({
+      preferences_paneGeneral: {
+        browserRestoreSession: 1,
+      },
+      preferences_paneSearch: {
+        searchBarShownRadio: 1,
+      },
+    });
+  });
+});

@@ -19,6 +19,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  PageActions: "resource:///modules/PageActions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -117,6 +120,80 @@ const URLBAR_SELECTED_RESULT_METHODS = {
 };
 
 const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
+
+// The elements we consider to be interactive.
+const UI_TARGET_ELEMENTS = [
+  "menuitem",
+  "toolbarbutton",
+  "key",
+  "command",
+  "checkbox",
+  "input",
+  "button",
+  "image",
+  "radio",
+  "richlistitem",
+];
+
+// The containers of interactive elements that we care about and their pretty
+// names. These should be listed in order of most-specific to least-specific,
+// when iterating JavaScript will guarantee that ordering and so we will find
+// the most specific area first.
+const BROWSER_UI_CONTAINER_IDS = {
+  "toolbar-menubar": "menu-bar",
+  TabsToolbar: "tabs-bar",
+  PersonalToolbar: "bookmarks-bar",
+  "appMenu-popup": "app-menu",
+  tabContextMenu: "tabs-context",
+  contentAreaContextMenu: "content-context",
+  "widget-overflow-list": "overflow-menu",
+  "widget-overflow-fixed-list": "pinned-overflow-menu",
+  "page-action-buttons": "pageaction-urlbar",
+  pageActionPanel: "pageaction-panel",
+
+  // This should appear last as some of the above are inside the nav bar.
+  "nav-bar": "nav-bar",
+};
+
+const IGNORABLE_EVENTS = new WeakMap();
+
+const KNOWN_ADDONS = [];
+
+function telemetryId(widgetId, obscureAddons = true) {
+  // Add-on IDs need to be obscured.
+  function addonId(id) {
+    if (!obscureAddons) {
+      return id;
+    }
+
+    let pos = KNOWN_ADDONS.indexOf(id);
+    if (pos < 0) {
+      pos = KNOWN_ADDONS.length;
+      KNOWN_ADDONS.push(id);
+    }
+    return `addon${pos}`;
+  }
+
+  if (widgetId.endsWith("-browser-action")) {
+    widgetId = addonId(
+      widgetId.substring(0, widgetId.length - "-browser-action".length)
+    );
+  } else if (widgetId.startsWith("pageAction-")) {
+    let actionId;
+    if (widgetId.startsWith("pageAction-urlbar-")) {
+      actionId = widgetId.substring("pageAction-urlbar-".length);
+    } else if (widgetId.startsWith("pageAction-panel-")) {
+      actionId = widgetId.substring("pageAction-panel-".length);
+    }
+
+    if (actionId) {
+      let action = PageActions.actionForID(actionId);
+      widgetId = action?._isMozillaAction ? actionId : addonId(actionId);
+    }
+  }
+
+  return widgetId.replace(/_/g, "-");
+}
 
 function getOpenTabsAndWinsCounts() {
   let loadedTabCount = 0;
@@ -337,6 +414,18 @@ let BrowserUsageTelemetry = {
     this._lastRecordLoadedTabCount = 0;
     this._setupAfterRestore();
     this._inited = true;
+
+    Services.prefs.addObserver("browser.tabs.extraDragSpace", this);
+    Services.prefs.addObserver("browser.tabs.drawInTitlebar", this);
+
+    this._recordUITelemetry();
+  },
+
+  /**
+   * Resets the masked add-on identifiers. Only for use in tests.
+   */
+  _resetAddonIds() {
+    KNOWN_ADDONS.length = 0;
   },
 
   /**
@@ -380,6 +469,28 @@ let BrowserUsageTelemetry = {
         break;
       case TELEMETRY_SUBSESSIONSPLIT_TOPIC:
         this.afterSubsessionSplit();
+        break;
+      case "nsPref:changed":
+        switch (data) {
+          case "browser.tabs.extraDragSpace":
+            this._recordWidgetChange(
+              "drag-space",
+              Services.prefs.getBoolPref("browser.tabs.extraDragSpace")
+                ? "on"
+                : "off",
+              "pref"
+            );
+            break;
+          case "browser.tabs.drawInTitlebar":
+            this._recordWidgetChange(
+              "titlebar",
+              Services.prefs.getBoolPref("browser.tabs.drawInTitlebar")
+                ? "off"
+                : "on",
+              "pref"
+            );
+            break;
+        }
         break;
     }
   },
@@ -669,10 +780,367 @@ let BrowserUsageTelemetry = {
     );
   },
 
+  _buildWidgetPositions() {
+    let widgetMap = new Map();
+
+    const toolbarState = nodeId => {
+      let value = Services.xulStore.getValue(
+        AppConstants.BROWSER_CHROME_URL,
+        nodeId,
+        "collapsed"
+      );
+      if (value) {
+        return value == "true" ? "off" : "on";
+      }
+      return "off";
+    };
+
+    widgetMap.set(
+      BROWSER_UI_CONTAINER_IDS.PersonalToolbar,
+      toolbarState("PersonalToolbar")
+    );
+
+    let menuBarHidden =
+      Services.xulStore.getValue(
+        AppConstants.BROWSER_CHROME_URL,
+        "toolbar-menubar",
+        "autohide"
+      ) != "false";
+
+    widgetMap.set("menu-toolbar", menuBarHidden ? "off" : "on");
+
+    widgetMap.set(
+      "drag-space",
+      Services.prefs.getBoolPref("browser.tabs.extraDragSpace") ? "on" : "off"
+    );
+
+    // Drawing in the titlebar means not showing the titlebar, hence the negation.
+    widgetMap.set(
+      "titlebar",
+      Services.prefs.getBoolPref("browser.tabs.drawInTitlebar", true)
+        ? "off"
+        : "on"
+    );
+
+    for (let area of CustomizableUI.areas) {
+      if (!(area in BROWSER_UI_CONTAINER_IDS)) {
+        continue;
+      }
+
+      let position = BROWSER_UI_CONTAINER_IDS[area];
+      if (area == "nav-bar") {
+        position = `${BROWSER_UI_CONTAINER_IDS[area]}-start`;
+      }
+
+      let widgets = CustomizableUI.getWidgetsInArea(area);
+
+      for (let widget of widgets) {
+        if (!widget) {
+          continue;
+        }
+
+        if (widget.id.startsWith("customizableui-special-")) {
+          continue;
+        }
+
+        if (area == "nav-bar" && widget.id == "urlbar-container") {
+          position = `${BROWSER_UI_CONTAINER_IDS[area]}-end`;
+          continue;
+        }
+
+        widgetMap.set(widget.id, position);
+      }
+    }
+
+    let actions = PageActions.actions;
+    for (let action of actions) {
+      if (action.pinnedToUrlbar) {
+        widgetMap.set(action.id, "pageaction-urlbar");
+      }
+    }
+
+    return widgetMap;
+  },
+
+  _getWidgetID(node) {
+    // We want to find a sensible ID for this element.
+    if (!node) {
+      return null;
+    }
+
+    // See if this is a customizable widget.
+    if (node.ownerDocument.URL == AppConstants.BROWSER_CHROME_URL) {
+      // First find if it is inside one of the customizable areas.
+      for (let area of CustomizableUI.areas) {
+        if (node.closest(`#${area}`)) {
+          for (let widget of CustomizableUI.getWidgetIdsInArea(area)) {
+            if (
+              // We care about the buttons on the tabs themselves.
+              widget == "tabbrowser-tabs" ||
+              // We care about the page action and other buttons in here.
+              widget == "urlbar-container" ||
+              // We care about individual bookmarks here.
+              widget == "personal-bookmarks"
+            ) {
+              continue;
+            }
+
+            if (node.closest(`#${widget}`)) {
+              return widget;
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    if (node.id) {
+      return node.id;
+    }
+
+    // A couple of special cases in the tabs.
+    for (let cls of ["bookmark-item", "tab-icon-sound", "tab-close-button"]) {
+      if (node.classList.contains(cls)) {
+        return cls;
+      }
+    }
+
+    // One of these will at least let us know what the widget is for.
+    for (let idAttribute of [
+      "preference",
+      "key",
+      "command",
+      "observes",
+      "data-l10n-id",
+    ]) {
+      if (node.hasAttribute(idAttribute)) {
+        return node.getAttribute(idAttribute);
+      }
+    }
+
+    return this._getWidgetID(node.parentElement);
+  },
+
+  _getWidgetContainer(node) {
+    if (node.localName == "key") {
+      return "keyboard";
+    }
+
+    if (node.ownerDocument.URL == AppConstants.BROWSER_CHROME_URL) {
+      // Find the container holding this element.
+      for (let containerId of Object.keys(BROWSER_UI_CONTAINER_IDS)) {
+        let container = node.ownerDocument.getElementById(containerId);
+        if (container && container.contains(node)) {
+          return BROWSER_UI_CONTAINER_IDS[containerId];
+        }
+      }
+    } else if (node.ownerDocument.URL.startsWith("about:preferences")) {
+      // Find the element's category.
+      let container = node.closest("[data-category]");
+      if (!container) {
+        return null;
+      }
+
+      return `preferences_${container.getAttribute("data-category")}`;
+    }
+
+    return null;
+  },
+
+  lastClickTarget: null,
+
+  ignoreEvent(event) {
+    IGNORABLE_EVENTS.set(event, true);
+  },
+
+  _recordCommand(event) {
+    if (IGNORABLE_EVENTS.get(event)) {
+      return;
+    }
+
+    let types = [event.type];
+    let sourceEvent = event;
+    while (sourceEvent.sourceEvent) {
+      sourceEvent = sourceEvent.sourceEvent;
+      types.push(sourceEvent.type);
+    }
+
+    let lastTarget = this.lastClickTarget?.get();
+    if (
+      lastTarget &&
+      sourceEvent.type == "command" &&
+      sourceEvent.target.contains(lastTarget)
+    ) {
+      // Ignore a command event triggered by a click.
+      this.lastClickTarget = null;
+      return;
+    }
+
+    this.lastClickTarget = null;
+
+    if (sourceEvent.type == "click") {
+      // Only care about main button clicks.
+      if (sourceEvent.button != 0) {
+        return;
+      }
+
+      // This click may trigger a command event so retain the target to be able
+      // to dedupe that event.
+      this.lastClickTarget = Cu.getWeakReference(sourceEvent.target);
+    }
+
+    // We should never see events from web content as they are fired in a
+    // content process, but let's be safe.
+    let url = sourceEvent.target.ownerDocument.documentURIObject;
+    if (!url.schemeIs("chrome") && !url.schemeIs("about")) {
+      return;
+    }
+
+    // This is what events targetted  at content will actually look like.
+    if (sourceEvent.target.localName == "browser") {
+      return;
+    }
+
+    // Find the actual element we're interested in.
+    let node = sourceEvent.target;
+    while (!UI_TARGET_ELEMENTS.includes(node.localName)) {
+      node = node.parentNode;
+      if (!node) {
+        // A click on a space or label or something we're not interested in.
+        return;
+      }
+    }
+
+    let item = this._getWidgetID(node);
+    let source = this._getWidgetContainer(node);
+
+    if (item && source) {
+      let scalar = `browser.ui.interaction.${source.replace("-", "_")}`;
+      Services.telemetry.keyedScalarAdd(scalar, telemetryId(item), 1);
+    }
+  },
+
+  /**
+   * Listens for UI interactions in the window.
+   */
+  _addUsageListeners(win) {
+    // Listen for command events from the UI.
+    win.addEventListener("command", event => this._recordCommand(event), true);
+    win.addEventListener("click", event => this._recordCommand(event), true);
+  },
+
+  /**
+   * A public version of the private method to take care of the `nav-bar-start`,
+   * `nav-bar-end` thing that callers shouldn't have to care about. It also
+   * accepts the DOM ids for the areas rather than the cleaner ones we report
+   * to telemetry.
+   */
+  recordWidgetChange(widgetId, newPos, reason) {
+    try {
+      if (newPos) {
+        newPos = BROWSER_UI_CONTAINER_IDS[newPos];
+      }
+
+      if (newPos == "nav-bar") {
+        let { position } = CustomizableUI.getPlacementOfWidget(widgetId);
+        let { position: urlPosition } = CustomizableUI.getPlacementOfWidget(
+          "urlbar-container"
+        );
+        newPos = newPos + (urlPosition > position ? "-start" : "-end");
+      }
+
+      this._recordWidgetChange(widgetId, newPos, reason);
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  recordToolbarVisibility(toolbarId, newState, reason) {
+    this._recordWidgetChange(
+      BROWSER_UI_CONTAINER_IDS[toolbarId],
+      newState ? "on" : "off",
+      reason
+    );
+  },
+
+  _recordWidgetChange(widgetId, newPos, reason) {
+    // In some cases (like when add-ons are detected during startup) this gets
+    // called before we've reported the initial positions. Ignore such cases.
+    if (!this.widgetMap) {
+      return;
+    }
+
+    if (widgetId == "urlbar-container") {
+      // We don't report the position of the url bar, it is after nav-bar-start
+      // and before nav-bar-end. But moving it means the widgets around it have
+      // effectively moved so update those.
+      let position = "nav-bar-start";
+      let widgets = CustomizableUI.getWidgetsInArea("nav-bar");
+
+      for (let widget of widgets) {
+        if (!widget) {
+          continue;
+        }
+
+        if (widget.id.startsWith("customizableui-special-")) {
+          continue;
+        }
+
+        if (widget.id == "urlbar-container") {
+          position = "nav-bar-end";
+          continue;
+        }
+
+        // This will do nothing if the position hasn't changed.
+        this._recordWidgetChange(widget.id, position, reason);
+      }
+
+      return;
+    }
+
+    let oldPos = this.widgetMap.get(widgetId);
+    if (oldPos == newPos) {
+      return;
+    }
+
+    let action = "move";
+
+    if (!oldPos) {
+      action = "add";
+    } else if (!newPos) {
+      action = "remove";
+    }
+
+    let key = `${telemetryId(widgetId, false)}_${action}_${oldPos ??
+      "na"}_${newPos ?? "na"}_${reason}`;
+    Services.telemetry.keyedScalarAdd("browser.ui.customized_widgets", key, 1);
+
+    if (newPos) {
+      this.widgetMap.set(widgetId, newPos);
+    } else {
+      this.widgetMap.delete(widgetId);
+    }
+  },
+
+  _recordUITelemetry() {
+    this.widgetMap = this._buildWidgetPositions();
+
+    for (let [widgetId, position] of this.widgetMap.entries()) {
+      let key = `${telemetryId(widgetId, false)}_pinned_${position}`;
+      Services.telemetry.keyedScalarSet(
+        "browser.ui.toolbar_widgets",
+        key,
+        true
+      );
+    }
+  },
+
   /**
    * Adds listeners to a single chrome window.
    */
   _registerWindow(win) {
+    this._addUsageListeners(win);
+
     win.addEventListener("unload", this);
     win.addEventListener("TabOpen", this, true);
     win.addEventListener("TabPinned", this, true);

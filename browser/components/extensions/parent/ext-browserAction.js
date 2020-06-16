@@ -31,6 +31,11 @@ ChromeUtils.defineModuleGetter(
   "ViewPopup",
   "resource:///modules/ExtensionPopups.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUsageTelemetry",
+  "resource:///modules/BrowserUsageTelemetry.jsm"
+);
 
 var { DefaultWeakMap } = ExtensionUtils;
 
@@ -56,6 +61,10 @@ XPCOMUtils.defineLazyGetter(this, "browserAreas", () => {
     personaltoolbar: CustomizableUI.AREA_BOOKMARKS,
   };
 });
+
+function actionWidgetId(widgetId) {
+  return `${widgetId}-browser-action`;
+}
 
 class BrowserAction extends BrowserActionBase {
   constructor(extension, buttonDelegate) {
@@ -122,7 +131,7 @@ this.browserAction = class extends ExtensionAPI {
     );
 
     let widgetId = makeWidgetId(extension.id);
-    this.id = `${widgetId}-browser-action`;
+    this.id = actionWidgetId(widgetId);
     this.viewId = `PanelUI-webext-${widgetId}-browser-action-view`;
     this.widget = null;
 
@@ -136,6 +145,37 @@ this.browserAction = class extends ExtensionAPI {
     browserActionMap.set(extension, this);
 
     this.build();
+  }
+
+  static onUpdate(id, manifest) {
+    if (!("browser_action" in manifest)) {
+      // If the new version has no browser action then mark this widget as
+      // hidden in the telemetry. If it is already marked hidden then this will
+      // do nothing.
+      BrowserUsageTelemetry.recordWidgetChange(
+        actionWidgetId(makeWidgetId(id)),
+        null,
+        "addon"
+      );
+    }
+  }
+
+  static onDisable(id) {
+    BrowserUsageTelemetry.recordWidgetChange(
+      actionWidgetId(makeWidgetId(id)),
+      null,
+      "addon"
+    );
+  }
+
+  static onUninstall(id) {
+    // If the telemetry already has this widget as hidden then this will not
+    // record anything.
+    BrowserUsageTelemetry.recordWidgetChange(
+      actionWidgetId(makeWidgetId(id)),
+      null,
+      "addon"
+    );
   }
 
   onShutdown() {
@@ -267,6 +307,19 @@ this.browserAction = class extends ExtensionAPI {
         }
       },
     });
+
+    if (this.extension.startupReason != "APP_STARTUP") {
+      // Make sure the browser telemetry has the correct state for this widget.
+      // Defer loading BrowserUsageTelemetry until after startup is complete.
+      ExtensionParent.browserStartupPromise.then(() => {
+        let placement = CustomizableUI.getPlacementOfWidget(widget.id);
+        BrowserUsageTelemetry.recordWidgetChange(
+          widget.id,
+          placement?.area || null,
+          "addon"
+        );
+      });
+    }
 
     this.widget = widget;
   }
