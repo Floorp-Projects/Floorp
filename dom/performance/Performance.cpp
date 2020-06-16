@@ -596,10 +596,9 @@ void Performance::QueueEntry(PerformanceEntry* aEntry) {
   }
 
   nsTObserverArray<PerformanceObserver*> interestedObservers;
-  nsTObserverArray<PerformanceObserver*>::ForwardIterator observerIt(
-      mObservers);
-  while (observerIt.HasMore()) {
-    PerformanceObserver* observer = observerIt.GetNext();
+  /// XXX We could use a NonObservingRange here and then
+  /// TransformIf(IntoNewArray).
+  for (PerformanceObserver* observer : mObservers.ForwardRange()) {
     if (observer->ObservesTypeOfEntry(aEntry)) {
       interestedObservers.AppendElement(observer);
     }
