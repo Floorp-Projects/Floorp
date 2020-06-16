@@ -1,3 +1,5 @@
+gczeal(0);
+
 for (let p of [false, true]) {
   f(p);
 
