@@ -11,6 +11,7 @@
 
 #include <functional>
 #include <initializer_list>
+#include <iterator>
 #include <new>
 #include <ostream>
 #include <type_traits>
@@ -27,7 +28,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/ReverseIterator.h"
 #include "mozilla/Span.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/fallible.h"
@@ -961,8 +961,8 @@ class nsTArray_Impl
   typedef nsTArray_SafeElementAtHelper<E, self_type> safeelementat_helper_type;
   typedef mozilla::ArrayIterator<elem_type&, self_type> iterator;
   typedef mozilla::ArrayIterator<const elem_type&, self_type> const_iterator;
-  typedef mozilla::ReverseIterator<iterator> reverse_iterator;
-  typedef mozilla::ReverseIterator<const_iterator> const_reverse_iterator;
+  typedef std::reverse_iterator<iterator> reverse_iterator;
+  typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
   using base_type::EmptyHdr;
   using safeelementat_helper_type::SafeElementAt;

@@ -6,6 +6,8 @@
 #define mozilla_Buffer_h
 
 #include <algorithm>
+#include <iterator>
+
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
@@ -169,8 +171,8 @@ class Buffer final {
 
   typedef T* iterator;
   typedef const T* const_iterator;
-  typedef ReverseIterator<T*> reverse_iterator;
-  typedef ReverseIterator<const T*> const_reverse_iterator;
+  typedef std::reverse_iterator<T*> reverse_iterator;
+  typedef std::reverse_iterator<const T*> const_reverse_iterator;
 
   // Methods for range-based for loops.
   iterator begin() { return mData.get(); }

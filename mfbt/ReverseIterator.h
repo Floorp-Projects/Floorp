@@ -17,9 +17,19 @@
 
 namespace mozilla {
 
+// This should only be used in cases where std::reverse_iterator cannot be used,
+// because the underlying iterator is not a proper bidirectional iterator, but
+// rather, e.g., a stashing iterator such as IntegerIterator. It is less
+// efficient than std::reverse_iterator for proper bidirectional iterators.
 template <typename IteratorT>
 class ReverseIterator {
  public:
+  using value_type = typename IteratorT::value_type;
+  using pointer = typename IteratorT::pointer;
+  using reference = typename IteratorT::reference;
+  using difference_type = typename IteratorT::difference_type;
+  using iterator_category = typename IteratorT::iterator_category;
+
   template <typename Iterator>
   explicit ReverseIterator(Iterator aIter) : mCurrent(aIter) {}
 
@@ -27,9 +37,17 @@ class ReverseIterator {
   MOZ_IMPLICIT ReverseIterator(const ReverseIterator<Iterator>& aOther)
       : mCurrent(aOther.mCurrent) {}
 
+  // The return type is not reference, but rather the return type of
+  // Iterator::operator*(), which might be value_type, to allow this to work
+  // with stashing iterators such as IntegerIterator, see also Bug 1175485.
   decltype(*std::declval<IteratorT>()) operator*() const {
     IteratorT tmp = mCurrent;
     return *--tmp;
+  }
+
+  /* Difference operator */
+  difference_type operator-(const ReverseIterator& aOther) const {
+    return -(aOther.mCurrent - mCurrent);
   }
 
   /* Increments and decrements operators */
@@ -141,7 +159,6 @@ class IteratorRange {
   reverse_iterator rend() const { return reverse_iterator(mIterBegin); }
   const_reverse_iterator crend() const { return rend(); }
 
- private:
   IteratorT mIterBegin;
   IteratorT mIterEnd;
 };
