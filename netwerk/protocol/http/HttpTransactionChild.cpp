@@ -457,6 +457,8 @@ HttpTransactionChild::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     mDataBridgeParent = nullptr;
   }
 
+  mTransactionPump = nullptr;
+
   // Don't bother sending IPC to parent process if already canceled.
   if (mCanceled) {
     return mStatus;
