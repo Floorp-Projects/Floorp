@@ -233,17 +233,51 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
   }
 
   nsPIDOMWindowOuter* current = nsPIDOMWindowOuter::From(aWindow);
-  auto* const browsingContext = current->GetBrowsingContext();
-  MOZ_ASSERT(browsingContext);
+  do {
+    // We use GetInProcessScriptableParent rather than GetParent because we
+    // consider <iframe mozbrowser> to be a top-level frame.
+    nsPIDOMWindowOuter* parent = current->GetInProcessScriptableParent();
+    // We don't use SameCOMIdentity here since we know that nsPIDOMWindowOuter
+    // is only implemented by nsGlobalWindowOuter, so different objects of that
+    // type will not have different nsISupports COM identities, and checking the
+    // actual COM identity using SameCOMIdentity is expensive due to the virtual
+    // calls involved.
+    if (parent == current) {
+      auto* const browsingContext = current->GetBrowsingContext();
+      MOZ_ASSERT(browsingContext);
 
-  WindowContext* wc = browsingContext->GetCurrentWindowContext();
-  if (NS_WARN_IF(!wc)) {
-    *aResult = true;
-    return NS_OK;
-  }
+      // We're either at the topmost content window (i.e. no third party), or,
+      // with fission, we may be an out-of-process content subframe (i.e. third
+      // party), since GetInProcessScriptableParent above explicitly does not
+      // go beyond process boundaries. In either case, we already know the
+      // result.
+      *aResult = browsingContext->IsContentSubframe();
+      return NS_OK;
+    }
 
-  *aResult = wc->GetIsThirdPartyWindow();
-  return NS_OK;
+    nsCOMPtr<nsIPrincipal> currentPrincipal;
+    nsresult rv =
+        GetPrincipalFromWindow(current, getter_AddRefs(currentPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPrincipal> parentPrincipal;
+    rv = GetPrincipalFromWindow(parent, getter_AddRefs(parentPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = currentPrincipal->IsThirdPartyPrincipal(parentPrincipal, &result);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (result) {
+      *aResult = true;
+      return NS_OK;
+    }
+
+    current = parent;
+  } while (1);
+
+  MOZ_ASSERT_UNREACHABLE("should've returned");
+  return NS_ERROR_UNEXPECTED;
 }
 
 nsresult ThirdPartyUtil::IsThirdPartyGlobal(

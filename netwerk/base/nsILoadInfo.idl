@@ -483,7 +483,7 @@ interface nsILoadInfo : nsISupports
    * false, then this request may be third-party if it's a third-party to
    * loadingPrincipal.
    */
-  [infallible] attribute boolean isInThirdPartyContext;
+  [infallible] readonly attribute boolean isInThirdPartyContext;
 
   /**
    * True if this request is a third party in respect to the top-level window.

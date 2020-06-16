@@ -16500,18 +16500,5 @@ bool Document::UseRegularPrincipal() const {
   return EffectiveStoragePrincipal() == NodePrincipal();
 }
 
-bool Document::HasThirdPartyChannel() {
-  nsCOMPtr<nsIChannel> channel = GetChannel();
-  if (channel) {
-    return AntiTrackingUtils::IsThirdPartyChannel(channel);
-  }
-
-  if (mParentDocument) {
-    return mParentDocument->HasThirdPartyChannel();
-  }
-
-  return false;
-}
-
 }  // namespace dom
 }  // namespace mozilla

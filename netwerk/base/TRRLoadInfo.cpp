@@ -104,11 +104,6 @@ TRRLoadInfo::GetIsInThirdPartyContext(bool* aIsInThirdPartyContext) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::SetIsInThirdPartyContext(bool aIsInThirdPartyContext) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetIsThirdPartyContextToTopWindow(
     bool* aIsThirdPartyContextToTopWindow) {
   return NS_ERROR_NOT_IMPLEMENTED;

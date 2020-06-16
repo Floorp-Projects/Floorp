@@ -1461,8 +1461,6 @@ class Document : public nsINode,
 
   PreloadService& Preloads() { return mPreloadService; }
 
-  bool HasThirdPartyChannel();
-
  protected:
   friend class nsUnblockOnloadEvent;
 
