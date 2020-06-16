@@ -1279,15 +1279,6 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
   telemetry->InitMemoryReporter();
   InitHistogramRecordingEnabled();  // requires sTelemetry to exist
 
-#if defined(MOZ_TELEMETRY_GECKOVIEW)
-  // We only want to add persistence for GeckoView, but both
-  // GV and Fennec are on Android. So just init persistence if this
-  // is Android but not Fennec.
-  if (GetCurrentProduct() == SupportedProduct::Geckoview) {
-    TelemetryGeckoViewPersistence::InitPersistence();
-  }
-#endif
-
   return ret.forget();
 }
 
@@ -1307,12 +1298,6 @@ void TelemetryImpl::ShutdownTelemetry() {
   TelemetryEvent::DeInitializeGlobalState();
   TelemetryOrigin::DeInitializeGlobalState();
   TelemetryIPCAccumulator::DeInitializeGlobalState();
-
-#if defined(MOZ_TELEMETRY_GECKOVIEW)
-  if (GetCurrentProduct() == SupportedProduct::Geckoview) {
-    TelemetryGeckoViewPersistence::DeInitPersistence();
-  }
-#endif
 }
 
 void TelemetryImpl::StoreSlowSQL(const nsACString& sql, uint32_t delay,
@@ -1758,24 +1743,6 @@ NS_IMETHODIMP
 TelemetryImpl::ClearEvents() {
   TelemetryEvent::ClearEvents();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-TelemetryImpl::ClearProbes() {
-#if defined(MOZ_TELEMETRY_GECKOVIEW)
-  // We only support this in GeckoView.
-  if (GetCurrentProduct() != SupportedProduct::Geckoview) {
-    MOZ_ASSERT(false, "ClearProbes is only supported on GeckoView");
-    return NS_ERROR_FAILURE;
-  }
-
-  // TODO: supporting clear for histograms will come from bug 1457127.
-  TelemetryScalar::ClearScalars();
-  TelemetryGeckoViewPersistence::ClearPersistenceData();
-  return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 NS_IMETHODIMP
