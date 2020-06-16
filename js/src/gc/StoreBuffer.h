@@ -394,8 +394,7 @@ class StoreBuffer {
   inline void CheckAccess() const {
 #ifdef DEBUG
     if (JS::RuntimeHeapIsBusy()) {
-      MOZ_ASSERT((CurrentThreadCanAccessRuntime(runtime_) && !lock_.isHeld()) ||
-                 lock_.ownedByCurrentThread());
+      MOZ_ASSERT(lock_.ownedByCurrentThread());
     } else {
       MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
     }

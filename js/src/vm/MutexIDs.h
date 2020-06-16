@@ -22,6 +22,7 @@
   _(ShellObjectMailbox, 100)          \
                                       \
   _(AtomsTable, 200)                  \
+  _(StoreBuffer, 200)                 \
                                       \
   _(WasmInitBuiltinThunks, 250)       \
   _(WasmLazyStubsTier1, 250)          \
@@ -30,7 +31,6 @@
   _(GlobalHelperThreadState, 300)     \
                                       \
   _(GCLock, 400)                      \
-  _(StoreBuffer, 400)                 \
                                       \
   _(SharedImmutableStringsCache, 500) \
   _(FutexThread, 500)                 \

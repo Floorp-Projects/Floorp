@@ -5121,6 +5121,7 @@ void GCRuntime::sweepFinalizationRegistriesOnMainThread() {
   gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
   gcstats::AutoPhase ap2(stats(),
                          gcstats::PhaseKind::SWEEP_FINALIZATION_REGISTRIES);
+  AutoLockStoreBuffer lock(&storeBuffer());
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     sweepFinalizationRegistries(zone);
   }
@@ -5169,6 +5170,8 @@ void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase) {
 }
 
 void GCRuntime::sweepDebuggerOnMainThread(JSFreeOp* fop) {
+  AutoLockStoreBuffer lock(&storeBuffer());
+
   // Detach unreachable debuggers and global objects from each other.
   // This can modify weakmaps and so must happen before weakmap sweeping.
   DebugAPI::sweepAll(fop);
@@ -5342,6 +5345,8 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
 #endif
 
   {
+    AutoLockStoreBuffer lock(&storeBuffer());
+
     AutoPhase ap(stats(), PhaseKind::FINALIZE_START);
     callFinalizeCallbacks(fop, JSFINALIZE_GROUP_PREPARE);
     {
@@ -5470,6 +5475,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
 
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::FINALIZE_END);
+    AutoLockStoreBuffer lock(&storeBuffer());
     JSFreeOp fop(rt);
     callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_END);
   }
@@ -6279,6 +6285,7 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
 
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::FINALIZE_END);
+    AutoLockStoreBuffer lock(&storeBuffer());
     callFinalizeCallbacks(&fop, JSFINALIZE_COLLECTION_END);
 
     if (allCCVisibleZonesWereCollected()) {
