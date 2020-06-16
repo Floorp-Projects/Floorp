@@ -316,6 +316,10 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // Set to the canceled status value if the main channel was canceled.
   nsresult mStatus;
 
+  // The referrer info, set during nsHttpChannel::BeginConnect, to override the
+  // original one. This info will be sent in OnStartRequest.
+  nsCOMPtr<nsIReferrerInfo> mOverrideReferrerInfo;
+
   // OnStatus is always called before OnProgress.
   // Set true in OnStatus if next OnProgress can be ignored
   // since the information can be recontructed from ODA.
@@ -347,6 +351,10 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   uint8_t mCacheNeedFlowControlInitialized : 1;
   uint8_t mNeedFlowControl : 1;
   uint8_t mSuspendedForFlowControl : 1;
+
+  // Defaults to false. Is set to true at the begining of OnStartRequest.
+  // Used to ensure methods can't be called before OnStartRequest.
+  uint8_t mAfterOnStartRequestBegun : 1;
 
   // Set to true if we get OnStartRequest called with an nsIMultiPartChannel,
   // and expect multiple OnStartRequest calls.
