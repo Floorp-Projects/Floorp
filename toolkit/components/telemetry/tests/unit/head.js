@@ -526,6 +526,9 @@ if (runningInParent) {
   // Speed up child process accumulations
   Services.prefs.setIntPref(TelemetryUtils.Preferences.IPCBatchTimeout, 10);
 
+  // Ensure we're not in a GeckoView-like environment by default
+  Services.prefs.setBoolPref("toolkit.telemetry.isGeckoViewMode", false);
+
   // Make sure ecosystem telemetry is disabled, no matter which build
   // Individual tests will enable it when appropriate
   Services.prefs.setBoolPref(

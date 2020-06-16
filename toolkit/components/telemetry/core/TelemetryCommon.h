@@ -37,9 +37,7 @@ static_assert(static_cast<uint16_t>(RecordedProcessType::Main) == 1,
 enum class SupportedProduct : uint8_t {
   Firefox = (1 << 0),
   Fennec = (1 << 1),
-  // Note that `1 << 2` (former GeckoView) is missing in the representation
-  // but isn't necessary to be maintained, but we see no point in filling it
-  // at this time.
+  Geckoview = (1 << 2),
   GeckoviewStreaming = (1 << 3),
   Thunderbird = (1 << 4),
 };

@@ -1088,3 +1088,65 @@ add_task(
     );
   }
 );
+
+add_task(
+  {
+    skip_if: () => !gIsAndroid,
+  },
+  async function test_geckoviewSpecificScalar() {
+    const DEFAULT_PRODUCT_SCALAR = "telemetry.test.default_products";
+    const DESKTOP_ONLY_SCALAR = "telemetry.test.desktop_only";
+    const MULTIPRODUCT_SCALAR = "telemetry.test.multiproduct";
+    const MOBILE_ONLY_SCALAR = "telemetry.test.mobile_only";
+    const GECKOVIEW_ONLY_SCALAR = "telemetry.test.geckoview_only";
+
+    Telemetry.clearScalars();
+
+    // Fake a geckoview-like environment
+    Services.prefs.setBoolPref("toolkit.telemetry.isGeckoViewMode", true);
+
+    // Try to set the mobile and multiproduct scalars
+    let expectedValue = 11714;
+    Telemetry.scalarAdd(GECKOVIEW_ONLY_SCALAR, expectedValue);
+    Telemetry.scalarAdd(MOBILE_ONLY_SCALAR, expectedValue);
+    Telemetry.scalarAdd(MULTIPRODUCT_SCALAR, expectedValue);
+    Telemetry.scalarSet(DEFAULT_PRODUCT_SCALAR, expectedValue);
+
+    // Try to set the desktop-only scalar to some value. We will not be recording the value,
+    // but we shouldn't throw.
+    Telemetry.scalarSet(DESKTOP_ONLY_SCALAR, 11715);
+    Telemetry.scalarSetMaximum(DESKTOP_ONLY_SCALAR, 11715);
+
+    // Get a snapshot of the scalars.
+    const scalars = TelemetryTestUtils.getProcessScalars("parent");
+
+    Assert.equal(
+      scalars[GECKOVIEW_ONLY_SCALAR],
+      expectedValue,
+      "The geckoview-only scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[MOBILE_ONLY_SCALAR],
+      expectedValue,
+      "The mobile-only scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[MULTIPRODUCT_SCALAR],
+      expectedValue,
+      "The multiproduct scalar must contain the right value"
+    );
+    Assert.equal(
+      scalars[DEFAULT_PRODUCT_SCALAR],
+      expectedValue,
+      "The default products scalar must contain the right value"
+    );
+
+    Assert.ok(
+      !(DESKTOP_ONLY_SCALAR in scalars),
+      "The desktop-only scalar must not be persisted."
+    );
+
+    // Reset to original environment
+    Services.prefs.clearUserPref("toolkit.telemetry.isGeckoViewMode");
+  }
+);

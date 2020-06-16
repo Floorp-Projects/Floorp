@@ -20,6 +20,7 @@ a11y:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
@@ -40,6 +41,7 @@ a11y:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
@@ -59,6 +61,7 @@ a11y:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -79,6 +82,7 @@ a11y:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -99,6 +103,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -117,6 +122,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -134,6 +140,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -152,6 +159,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -170,6 +178,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -188,6 +197,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -208,6 +218,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
     record_into_store:
@@ -230,6 +241,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -250,6 +262,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -268,6 +281,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -289,6 +303,7 @@ browser.engagement:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -313,6 +328,7 @@ browser.engagement.navigation:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -331,6 +347,7 @@ browser.engagement.navigation:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -349,6 +366,7 @@ browser.engagement.navigation:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -367,6 +385,7 @@ browser.engagement.navigation:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -385,6 +404,7 @@ browser.engagement.navigation:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -402,6 +422,7 @@ browser.engagement.navigation:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -521,6 +542,7 @@ browser.usage:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'all'
 
@@ -537,6 +559,7 @@ browser.usage:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
       - 'content'
@@ -611,6 +634,7 @@ extensions.updates:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 
@@ -629,6 +653,7 @@ identity.fxaccounts:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 
@@ -652,6 +677,7 @@ security:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   intermediate_preloading_num_preloaded:
@@ -703,6 +729,7 @@ security:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   tls_delegated_credentials_txn:
@@ -718,6 +745,7 @@ security:
     release_channel_collection: opt-out
     products:
       - 'firefox'
+      - 'geckoview'
     record_in_processes:
       - main
   https_only_mode_enabled:
@@ -769,6 +797,7 @@ contentblocking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   fingerprinting_blocking_enabled:
@@ -785,6 +814,7 @@ contentblocking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   category:
@@ -801,6 +831,7 @@ contentblocking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   trackers_blocked_count:
@@ -1063,6 +1094,7 @@ sandbox:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
     operating_systems:
@@ -1082,6 +1114,7 @@ findbar:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   find_prev:
@@ -1097,6 +1130,7 @@ findbar:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   find_next:
@@ -1112,6 +1146,7 @@ findbar:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   highlight_all:
@@ -1127,6 +1162,7 @@ findbar:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   match_case:
@@ -1142,6 +1178,7 @@ findbar:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   match_diacritics:
@@ -1157,6 +1194,7 @@ findbar:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   whole_words:
@@ -1172,6 +1210,7 @@ findbar:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1248,6 +1287,7 @@ preferences:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   prefs_file_was_invalid:
@@ -1263,6 +1303,7 @@ preferences:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   read_user_js:
@@ -1278,6 +1319,7 @@ preferences:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   search_query:
@@ -1296,6 +1338,7 @@ preferences:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   browser_home_page_change:
@@ -1313,6 +1356,7 @@ preferences:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   browser_home_page_count:
@@ -1332,6 +1376,7 @@ preferences:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   use_current_page:
@@ -1349,6 +1394,7 @@ preferences:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   use_bookmark:
@@ -1366,6 +1412,7 @@ preferences:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
   prevent_accessibility_services:
@@ -1383,6 +1430,7 @@ preferences:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1402,6 +1450,7 @@ webrtc.video:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'content'
 
@@ -1420,6 +1469,7 @@ webrtc.video:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'content'
 
@@ -1446,6 +1496,7 @@ webrtc.sdp:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'content'
 
@@ -1467,6 +1518,7 @@ mathml:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'content'
 
@@ -1488,6 +1540,7 @@ mediarecorder:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
       - content
@@ -1509,6 +1562,7 @@ media:
     release_channel_collection: opt-out
     products:
       - 'firefox'
+      - 'geckoview'
     record_in_processes:
       - content
 
@@ -1528,6 +1582,7 @@ media:
     release_channel_collection: opt-out
     products:
       - 'firefox'
+      - 'geckoview'
     record_in_processes:
       - content
 
@@ -1547,6 +1602,7 @@ media:
     release_channel_collection: opt-out
     products:
       - 'firefox'
+      - 'geckoview'
     record_in_processes:
       - content
 
@@ -1566,6 +1622,7 @@ media:
     release_channel_collection: opt-out
     products:
       - 'firefox'
+      - 'geckoview'
     record_in_processes:
       - content
 
@@ -1585,6 +1642,7 @@ dom.contentprocess:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   os_priority_lowered:
@@ -1602,6 +1660,7 @@ dom.contentprocess:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   os_priority_raised:
@@ -1620,6 +1679,7 @@ dom.contentprocess:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   os_priority_change_considered:
@@ -1637,6 +1697,7 @@ dom.contentprocess:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1656,6 +1717,7 @@ dom.parentprocess:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1690,6 +1752,7 @@ devtools.toolbar.eyedropper:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1709,6 +1772,7 @@ devtools.copy.unique.css.selector:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1728,6 +1792,7 @@ devtools.copy.full.css.selector:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1746,6 +1811,7 @@ devtools.copy.xpath:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1763,6 +1829,7 @@ devtools.layout.flexboxhighlighter:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1780,6 +1847,7 @@ devtools.markup.flexboxhighlighter:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1797,6 +1865,7 @@ devtools.rules.flexboxhighlighter:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1814,6 +1883,7 @@ devtools.markup.gridinspector:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1831,6 +1901,7 @@ devtools.rules.gridinspector:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1848,6 +1919,7 @@ devtools.grid.gridinspector:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1865,6 +1937,7 @@ devtools.grid.showGridAreasOverlay:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1882,6 +1955,7 @@ devtools.grid.showGridLineNumbers:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1899,6 +1973,7 @@ devtools.grid.showInfiniteLines:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1921,6 +1996,7 @@ devtools.inspector:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1939,6 +2015,7 @@ devtools.inspector:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1958,6 +2035,7 @@ devtools.shadowdom:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1976,6 +2054,7 @@ devtools.shadowdom:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -1995,6 +2074,7 @@ devtools.shadowdom:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2013,6 +2093,7 @@ devtools:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2031,6 +2112,7 @@ devtools.tooltip:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2048,6 +2130,7 @@ devtools.responsive:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
     release_channel_collection: opt-out
@@ -2065,6 +2148,7 @@ devtools.responsive:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
     release_channel_collection: opt-out
@@ -2090,6 +2174,7 @@ devtools.tool:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2111,6 +2196,7 @@ devtools.accessibility:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2130,6 +2216,7 @@ devtools.accessibility:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2150,6 +2237,7 @@ devtools.accessibility:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2172,6 +2260,7 @@ devtools.accessibility:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2192,6 +2281,7 @@ devtools.accessibility:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2211,6 +2301,7 @@ devtools.accessibility:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2232,6 +2323,7 @@ devtools.accessibility:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2253,6 +2345,7 @@ devtools.accessibility:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2275,6 +2368,7 @@ devtools.accessibility:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2293,6 +2387,7 @@ devtools.application:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2315,6 +2410,7 @@ devtools.toolbox:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2331,6 +2427,7 @@ devtools.webreplay:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2346,6 +2443,7 @@ devtools.webreplay:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2361,6 +2459,7 @@ devtools.webreplay:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2376,6 +2475,7 @@ devtools.webreplay:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2391,6 +2491,7 @@ devtools.webreplay:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2409,6 +2510,7 @@ devtools.changesview:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2430,6 +2532,7 @@ dom.event:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'content'
 
@@ -2450,6 +2553,7 @@ dom.event:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'content'
 
@@ -2468,6 +2572,7 @@ navigator.storage:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
       - 'content'
@@ -2486,6 +2591,7 @@ navigator.storage:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
       - 'content'
@@ -2507,6 +2613,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - all
@@ -2527,6 +2634,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2547,6 +2655,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'all'
 
@@ -2564,6 +2673,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'all'
 
@@ -2581,6 +2691,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2598,6 +2709,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -2616,6 +2728,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2636,6 +2749,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - all
@@ -2653,6 +2767,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2669,6 +2784,7 @@ telemetry:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
       - 'content'
@@ -2687,6 +2803,7 @@ telemetry.discarded:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'all_childs'
   keyed_accumulations:
@@ -2702,6 +2819,7 @@ telemetry.discarded:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'all_childs'
   scalar_actions:
@@ -2717,6 +2835,7 @@ telemetry.discarded:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'all_childs'
   keyed_scalar_actions:
@@ -2732,6 +2851,7 @@ telemetry.discarded:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'all_childs'
   child_events:
@@ -2747,6 +2867,7 @@ telemetry.discarded:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'all_childs'
 
@@ -2765,6 +2886,7 @@ normandy:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 
@@ -2787,6 +2909,7 @@ gfx.advanced.layers:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -2807,6 +2930,7 @@ gfx.omtp:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'content'
 
@@ -2828,6 +2952,7 @@ gfx.hdr:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3058,6 +3183,7 @@ gfx:
       - jmuizelaar@mozilla.com
     products:
       - 'firefox'
+      - 'geckoview'
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
@@ -3078,6 +3204,7 @@ formautofill:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3096,6 +3223,7 @@ formautofill.addresses:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   fill_type_autofill:
@@ -3112,6 +3240,7 @@ formautofill.addresses:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   fill_type_autofill_update:
@@ -3130,6 +3259,7 @@ formautofill.addresses:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3148,6 +3278,7 @@ formautofill.creditCards:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   fill_type_autofill:
@@ -3164,6 +3295,7 @@ formautofill.creditCards:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
   fill_type_autofill_modified:
@@ -3182,6 +3314,7 @@ formautofill.creditCards:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3204,6 +3337,7 @@ screenshots:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3224,6 +3358,7 @@ screenshots:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3243,6 +3378,7 @@ screenshots:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3281,6 +3417,7 @@ idb.failure:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3551,6 +3688,7 @@ timestamps:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 
@@ -3569,6 +3707,7 @@ timestamps:
     products:
       - firefox
       - fennec
+      - geckoview
     record_in_processes:
       - main
 
@@ -3586,6 +3725,7 @@ timestamps:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 
@@ -3605,6 +3745,7 @@ browser.timings:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3625,6 +3766,7 @@ sw:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
       - 'content'
@@ -3644,6 +3786,7 @@ sw:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
       - 'content'
@@ -3663,6 +3806,7 @@ sw:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
       - 'content'
@@ -3686,6 +3830,7 @@ widget:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3703,6 +3848,7 @@ widget:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3723,6 +3869,7 @@ widget:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3743,6 +3890,7 @@ widget:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -3761,6 +3909,7 @@ memoryreporter:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'content'
 
@@ -3783,6 +3932,7 @@ update:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 
@@ -3808,6 +3958,7 @@ update:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
     operating_systems:
@@ -3849,6 +4000,7 @@ browser.search:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 
@@ -3868,6 +4020,7 @@ browser.search:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 
@@ -3929,6 +4082,7 @@ encoding:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
       - content
@@ -3984,6 +4138,7 @@ startup:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - main
@@ -4005,6 +4160,7 @@ startup:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -4025,6 +4181,7 @@ script.preloader:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
       - 'content'
@@ -4046,6 +4203,7 @@ networking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -4065,6 +4223,7 @@ networking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -4120,6 +4279,7 @@ networking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
@@ -4137,6 +4297,7 @@ networking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -4153,6 +4314,7 @@ networking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -4169,6 +4331,7 @@ networking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
 
@@ -4185,6 +4348,7 @@ networking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
@@ -4202,6 +4366,7 @@ networking:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
@@ -4531,6 +4696,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'geckoview_streaming'
       - 'thunderbird'
     record_in_processes:
@@ -4548,6 +4714,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'geckoview_streaming'
       - 'thunderbird'
     record_in_processes:
@@ -4565,6 +4732,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'geckoview_streaming'
       - 'thunderbird'
     record_in_processes:
@@ -4581,6 +4749,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4596,6 +4765,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4612,6 +4782,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4628,6 +4799,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4645,6 +4817,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4662,6 +4835,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4678,6 +4852,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4694,6 +4869,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4715,6 +4891,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4731,6 +4908,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'content'
@@ -4747,6 +4925,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4763,6 +4942,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'content'
@@ -4778,6 +4958,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'socket'
@@ -4793,6 +4974,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'all'
@@ -4808,6 +4990,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'all_childs'
@@ -4823,6 +5006,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'all'
@@ -4869,6 +5053,7 @@ telemetry.test:
     products:
       - firefox
       - fennec
+      - geckoview
       - thunderbird
 
   mobile_only:
@@ -4883,6 +5068,20 @@ telemetry.test:
       - 'all'
     products:
       - fennec
+      - geckoview
+
+  geckoview_only:
+    bug_numbers:
+      - 1452552
+    description: A testing uint scalar; not meant to be touched
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+    products:
+      - geckoview
 
   keyed_mobile_only:
     bug_numbers:
@@ -4897,6 +5096,7 @@ telemetry.test:
       - 'all'
     products:
       - fennec
+      - geckoview
 
   main_only:
     bug_numbers:
@@ -4910,6 +5110,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4928,6 +5129,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4947,6 +5149,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4965,6 +5168,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -4984,6 +5188,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -5003,6 +5208,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -5023,6 +5229,7 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -5045,6 +5252,7 @@ corroborate:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 
@@ -5061,6 +5269,7 @@ corroborate:
     products:
       - 'firefox'
       - 'fennec'
+      - 'geckoview'
     record_in_processes:
       - main
 

@@ -69,6 +69,7 @@ activity_stream:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: >
       This is recorded with every user interaction on Activity Stream elements.
@@ -90,6 +91,7 @@ activity_stream:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: >
       This is recorded with every session ended in Activity Stream.
@@ -115,6 +117,7 @@ activity_stream:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     expiry_version: never
     extra_keys:
@@ -157,6 +160,7 @@ addonsManager:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596]
@@ -181,6 +185,7 @@ addonsManager:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596]
@@ -204,6 +209,7 @@ addonsManager:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1500147, 1546248, 1590736, 1630596]
     release_channel_collection: opt-out
@@ -225,6 +231,7 @@ addonsManager:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1500147, 1590736, 1630596]
     release_channel_collection: opt-out
@@ -254,6 +261,7 @@ addonsManager:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1500147, 1513344, 1529347, 1546248, 1590736, 1630596]
     release_channel_collection: opt-out
@@ -279,6 +287,7 @@ addonsManager:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     bug_numbers: [1544927, 1580561, 1590736, 1630596]
@@ -358,6 +367,7 @@ extensions.data:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     extra_keys:
@@ -380,6 +390,7 @@ extensions.data:
     expiry_version: "81"
     products:
       - "firefox"
+      - "geckoview"
     record_in_processes: ["main", "content"]
     release_channel_collection: opt-out
     extra_keys:
@@ -424,6 +435,7 @@ navigation:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: >
       This is recorded on each search navigation.
@@ -503,6 +515,7 @@ normandy:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -529,6 +542,7 @@ normandy:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -553,6 +567,7 @@ normandy:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -574,6 +589,7 @@ normandy:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -597,6 +613,7 @@ normandy:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -614,6 +631,7 @@ normandy:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -628,6 +646,7 @@ normandy:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
@@ -733,6 +752,7 @@ pwmgr:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     expiry_version: never
@@ -793,6 +813,7 @@ fxa:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1595954]
     notification_emails: ["sync-dev@mozilla.org"]
@@ -898,6 +919,7 @@ telemetry.test:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     description: This is a test entry for Telemetry.
@@ -913,6 +935,7 @@ telemetry.test:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     description: This is an opt-out test entry.
@@ -926,6 +949,7 @@ telemetry.test:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     description: This is a test entry with an expired version.
@@ -939,6 +963,7 @@ telemetry.test:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     expiry_version: "999"
@@ -949,6 +974,7 @@ telemetry.test:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     description: This event is used to test main-process only recording.
@@ -960,6 +986,7 @@ telemetry.test:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["content"]
     description: This event is used to test content-process only recording.
@@ -974,6 +1001,7 @@ telemetry.test:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main", "content"]
     description: This event is used to test main and content process recording.
@@ -985,6 +1013,7 @@ telemetry.test:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     description: This event is used to test default products main recording.
@@ -1004,7 +1033,7 @@ telemetry.test:
     record_in_processes: ["main"]
     description: This event is used to test multiproduct main recording.
     expiry_version: never
-    products: ["firefox", "fennec", "thunderbird"]
+    products: ["firefox", "fennec", "geckoview","thunderbird"]
   mobile_only:
     objects: ["object1"]
     bug_numbers: [1452552]
@@ -1012,7 +1041,7 @@ telemetry.test:
     record_in_processes: ["main"]
     description: This event is used to test mobile-only main recording.
     expiry_version: never
-    products: ["fennec"]
+    products: ["fennec", "geckoview"]
 
 # This is a secondary category used for Telemetry tests.
 # The events here will not be sent out with any pings.
@@ -1024,6 +1053,7 @@ telemetry.test.second:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     description: This is a test entry for Telemetry.
@@ -1039,6 +1069,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User activates the responsive_design or split_console in the devtools toolbox.
     release_channel_collection: opt-out
@@ -1054,6 +1085,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has added a breakpoint to a script.
     release_channel_collection: opt-out
@@ -1067,6 +1099,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User clicked the blackbox button to blackbox a script.
     release_channel_collection: opt-out
@@ -1080,6 +1113,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User closes devtools toolbox.
     release_channel_collection: opt-out
@@ -1095,6 +1129,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User closes about:debugging.
     release_channel_collection: opt-out
@@ -1109,6 +1144,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User is trying to connect to a remote runtime.
     release_channel_collection: opt-out
@@ -1126,6 +1162,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has pressed the continue button on a paused script.
     release_channel_collection: opt-out
@@ -1139,6 +1176,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User deactivates the responsive_design or split_console in the devtools toolbox.
     release_channel_collection: opt-out
@@ -1154,6 +1192,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: A new device was detected in about:debugging
     release_channel_collection: opt-out
@@ -1169,6 +1208,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: A previously listed device was removed in about:debugging
     release_channel_collection: opt-out
@@ -1184,6 +1224,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User is editing HTML via the context menu item in the markup view.
     release_channel_collection: opt-out
@@ -1199,6 +1240,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has executed edit / resend in the netmonitor.
     release_channel_collection: opt-out
@@ -1212,6 +1254,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User is editing a CSS rule by clicking on or next to a CSS property, enabling / disabling a rule or creating a new property.
     release_channel_collection: opt-out
@@ -1225,6 +1268,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User opens a tool in the devtools toolbox.
     release_channel_collection: opt-out
@@ -1244,6 +1288,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has executed some JS in the Web Console.
     release_channel_collection: opt-out
@@ -1259,6 +1304,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has toggled, navigated or evaluated expressions from reverse search .
     release_channel_collection: opt-out
@@ -1273,6 +1319,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User closes a tool in the devtools toolbox.
     release_channel_collection: opt-out
@@ -1315,6 +1362,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has changed filters in the web console.
     release_channel_collection: opt-out
@@ -1331,6 +1379,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked on the inspect button of one of the debug targets of aboutdebugging.
     release_channel_collection: opt-out
@@ -1346,6 +1395,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked "Jump to definition" icon (next to logged functions) in the web console.
     release_channel_collection: opt-out
@@ -1359,6 +1409,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked a link to a source file in the web console.
     release_channel_collection: opt-out
@@ -1372,6 +1423,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has expanded an object in the web console.
     release_channel_collection: opt-out
@@ -1385,6 +1437,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User opens devtools toolbox.
     release_channel_collection: opt-out
@@ -1404,6 +1457,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User opens about:debugging.
     release_channel_collection: opt-out
@@ -1418,6 +1472,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has changed pausing behaviour in the debugger.
     release_channel_collection: opt-out
@@ -1433,6 +1488,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: Debugger has paused in a script due to a breakpoint or exception.
     release_channel_collection: opt-out
@@ -1448,6 +1504,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has changed log persist status.
     release_channel_collection: opt-out
@@ -1461,6 +1518,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User clicked the pretty print button to pretty print a script.
     release_channel_collection: opt-out
@@ -1474,6 +1532,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has removed a breakpoint from a script.
     release_channel_collection: opt-out
@@ -1487,6 +1546,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: A new remote runtime has been detected in about:debugging
     release_channel_collection: opt-out
@@ -1504,6 +1564,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: Connection was established with a remote runtime in about:debugging
     release_channel_collection: opt-out
@@ -1523,6 +1584,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: Connection was lost with a remote runtime in about debugging
     release_channel_collection: opt-out
@@ -1540,6 +1602,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: A previously listed runtime was removed in about:debugging
     release_channel_collection: opt-out
@@ -1557,6 +1620,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User navigates to a new page of an application such as about:debugging
     release_channel_collection: opt-out
@@ -1571,6 +1635,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked on the "Open Profiler" button in a runtime page of about:debugging
     release_channel_collection: opt-out
@@ -1585,6 +1650,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has selected a WebSocket frame.
     release_channel_collection: opt-out
@@ -1598,6 +1664,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has switched sidepanel tabs.
     release_channel_collection: opt-out
@@ -1614,6 +1681,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has changed the throttle setting in the netmonitor.
     release_channel_collection: opt-out
@@ -1628,6 +1696,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: The amount of time a tool was opened for.
     release_channel_collection: opt-out
@@ -1643,6 +1712,7 @@ devtools.main:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes: ["main"]
     description: User has clicked on the "Enable/Disable connection prompt" button in a runtime page of about:debugging
     release_channel_collection: opt-out
@@ -1838,6 +1908,7 @@ uptake.remotecontent.result:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
@@ -1955,6 +2026,7 @@ pictureinpicture:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     bug_numbers:
@@ -1974,6 +2046,7 @@ pictureinpicture:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     bug_numbers:
@@ -1993,6 +2066,7 @@ pictureinpicture:
     products:
       - "firefox"
       - "fennec"
+      - "geckoview"
     record_in_processes:
       - main
     bug_numbers:
