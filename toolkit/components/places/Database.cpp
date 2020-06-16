@@ -378,7 +378,7 @@ Database::Database()
 already_AddRefed<nsIAsyncShutdownClient>
 Database::GetProfileChangeTeardownPhase() {
   nsCOMPtr<nsIAsyncShutdownService> asyncShutdownSvc =
-      services::GetAsyncShutdown();
+      services::GetAsyncShutdownService();
   MOZ_ASSERT(asyncShutdownSvc);
   if (NS_WARN_IF(!asyncShutdownSvc)) {
     return nullptr;
@@ -395,7 +395,7 @@ Database::GetProfileChangeTeardownPhase() {
 already_AddRefed<nsIAsyncShutdownClient>
 Database::GetProfileBeforeChangePhase() {
   nsCOMPtr<nsIAsyncShutdownService> asyncShutdownSvc =
-      services::GetAsyncShutdown();
+      services::GetAsyncShutdownService();
   MOZ_ASSERT(asyncShutdownSvc);
   if (NS_WARN_IF(!asyncShutdownSvc)) {
     return nullptr;

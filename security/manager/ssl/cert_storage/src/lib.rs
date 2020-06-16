@@ -1033,7 +1033,7 @@ fn do_construct_cert_storage(
 }
 
 fn read_int_pref(name: &str) -> Result<u32, SecurityStateError> {
-    let pref_service = match xpcom::services::get_PreferencesService() {
+    let pref_service = match xpcom::services::get_PrefService() {
         Some(ps) => ps,
         _ => {
             return Err(SecurityStateError::from(
@@ -1213,7 +1213,7 @@ impl CertStorage {
         ];
 
         // Fetch add observers for relevant prefs
-        let pref_service = xpcom::services::get_PreferencesService().unwrap();
+        let pref_service = xpcom::services::get_PrefService().unwrap();
         let prefs: RefPtr<nsIPrefBranch> = match (*pref_service).query_interface() {
             Some(pb) => pb,
             _ => return Err(SecurityStateError::from("could not QI to nsIPrefBranch")),

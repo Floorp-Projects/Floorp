@@ -256,7 +256,7 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
     const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
     const uint64_t& aExtraSizeData, const nsCString& aExtraStringData) {
   nsCOMPtr<nsIHttpActivityDistributor> activityDistributor =
-      services::GetActivityDistributor();
+      services::GetHttpActivityDistributor();
   MOZ_ASSERT(activityDistributor);
 
   Unused << activityDistributor->ObserveActivityWithArgs(

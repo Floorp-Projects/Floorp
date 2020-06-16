@@ -156,7 +156,7 @@ nsresult ResolveURI(nsIURI* in, nsIURI** out) {
     return ioService->NewURI(spec, nullptr, nullptr, out);
   } else if (in->SchemeIs("chrome")) {
     nsCOMPtr<nsIChromeRegistry> chromeReg =
-        mozilla::services::GetChromeRegistryService();
+        mozilla::services::GetChromeRegistry();
     if (!chromeReg) return NS_ERROR_UNEXPECTED;
 
     return chromeReg->ConvertChromeURL(in, out);
