@@ -85,16 +85,13 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   aLinkElement->GetIntegrity(integrity);
   aLinkElement->GetReferrerPolicy(referrerPolicyAttr);
   auto referrerPolicy = PreloadReferrerPolicy(referrerPolicyAttr);
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      dom::ReferrerInfo::CreateFromDocumentAndPolicyOverride(mDocument,
-                                                             referrerPolicy);
   dom::DOMString domType;
   aLinkElement->GetType(domType);
   domType.ToString(type);
 
   RefPtr<PreloaderBase> preload = PreloadOrCoalesce(
       uri, url, aPolicyType, as, type, charset, srcset, sizes, integrity,
-      crossOrigin, referrerPolicy, referrerPolicyAttr, referrerInfo);
+      crossOrigin, referrerPolicy, referrerPolicyAttr);
 
   if (!preload) {
     NotifyNodeEvent(aLinkElement, false);
@@ -125,7 +122,7 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkHeader(
   auto referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
   return PreloadOrCoalesce(aURI, aURL, aPolicyType, aAs, aType, EmptyString(),
                            aSrcset, aSizes, aIntegrity, aCORS, referrerPolicy,
-                           aReferrerPolicy, aReferrerInfo);
+                           aReferrerPolicy);
 }
 
 already_AddRefed<PreloaderBase> PreloadService::PreloadOrCoalesce(
@@ -133,8 +130,7 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadOrCoalesce(
     const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
     const nsAString& aSrcset, const nsAString& aSizes,
     const nsAString& aIntegrity, const nsAString& aCORS,
-    dom::ReferrerPolicy aReferrerPolicy, const nsAString& aReferrerPolicyAttr,
-    nsIReferrerInfo* aReferrerInfo) {
+    dom::ReferrerPolicy aReferrerPolicy, const nsAString& aReferrerPolicyAttr) {
   bool isImgSet = false;
   PreloadHashKey preloadKey;
   nsCOMPtr<nsIURI> uri = aURI;
@@ -144,7 +140,7 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadOrCoalesce(
         PreloadHashKey::CreateAsScript(uri, aCORS, aType, aReferrerPolicy);
   } else if (aAs.LowerCaseEqualsASCII("style")) {
     preloadKey = PreloadHashKey::CreateAsStyle(
-        uri, mDocument->NodePrincipal(), aReferrerInfo,
+        uri, mDocument->NodePrincipal(), aReferrerPolicy,
         dom::Element::StringToCORSMode(aCORS),
         css::eAuthorSheetFeatures /* see Loader::LoadSheet */);
   } else if (aAs.LowerCaseEqualsASCII("image")) {
