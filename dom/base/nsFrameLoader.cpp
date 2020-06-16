@@ -83,6 +83,7 @@
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "mozilla/dom/SessionStoreListener.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/dom/XULFrameElement.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "GeckoProfiler.h"
@@ -295,6 +296,10 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   nsAutoString frameName;
   GetFrameName(aOwner, frameName);
 
+  // By default we just use the same browser ID as the parent.
+  uint64_t browserId = parentBC->GetBrowserId();
+  RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(aOwner);
+
   // Create our BrowsingContext without immediately attaching it. It's possible
   // that no DocShell or remote browser will ever be created for this
   // FrameLoader, particularly if the document that we were created for is not
@@ -302,16 +307,38 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   // it will wind up attached as a child of the currently active inner window
   // for the BrowsingContext, and cause no end of trouble.
   if (IsTopContent(parentBC, aOwner)) {
+    if (owner && owner->GetBrowserId() != 0) {
+      // This frame has already been assigned an ID. This can happen for example
+      // if a frame is re-inserted into the DOM (i.e. on a remoteness change).
+      browserId = owner->GetBrowserId();
+
+      // This implies that we do not support changing a frame's "type"
+      // attribute. Doing so would mean needing to change the browser ID for the
+      // frame and the intent is to never change this.
+      MOZ_DIAGNOSTIC_ASSERT(browserId != parentBC->GetBrowserId());
+    } else {
+      browserId = nsContentUtils::GenerateBrowserId();
+      if (owner) {
+        owner->SetBrowserId(browserId);
+      }
+    }
+
     // Create toplevel content without a parent & as Type::Content.
-    return BrowsingContext::CreateDetached(nullptr, opener, frameName,
-                                           BrowsingContext::Type::Content);
+    return BrowsingContext::CreateDetached(
+        nullptr, opener, frameName, BrowsingContext::Type::Content, browserId);
   }
 
   MOZ_ASSERT(!aOpenWindowInfo,
              "Can't have openWindowInfo for non-toplevel context");
 
+  if (owner) {
+    MOZ_DIAGNOSTIC_ASSERT(owner->GetBrowserId() == 0 ||
+                          owner->GetBrowserId() == browserId);
+    owner->SetBrowserId(browserId);
+  }
+
   return BrowsingContext::CreateDetached(parentInner, nullptr, frameName,
-                                         parentBC->GetType());
+                                         parentBC->GetType(), browserId);
 }
 
 static bool InitialLoadIsRemote(Element* aOwner) {
@@ -1294,6 +1321,13 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
   aOther->MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
 
+  // When embedding the frame in SetOwnerContent, we check that the
+  // BrowsingContext's browser ID matches that of the embedder element, so swap
+  // the IDs here.
+  uint64_t ourBrowserId = aThisOwner->GetBrowserId();
+  aThisOwner->SetBrowserId(aOtherOwner->GetBrowserId());
+  aOtherOwner->SetBrowserId(ourBrowserId);
+
   SetOwnerContent(otherContent);
   aOther->SetOwnerContent(ourContent);
 
@@ -1707,6 +1741,13 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   SetTreeOwnerAndChromeEventHandlerOnDocshellTree(
       otherDocshell, ourOwner,
       ourBc->IsContent() ? ourChromeEventHandler.get() : nullptr);
+
+  // When embedding the frame in SetOwnerContent, we check that the
+  // BrowsingContext's browser ID matches that of the embedder element, so swap
+  // the IDs here.
+  uint64_t ourBrowserId = aThisOwner->GetBrowserId();
+  aThisOwner->SetBrowserId(aOtherOwner->GetBrowserId());
+  aOtherOwner->SetBrowserId(ourBrowserId);
 
   // Switch the owner content before we start calling AddTreeItemToTreeOwner.
   // Note that we rely on this to deal with setting mObservingOwnerContent to
