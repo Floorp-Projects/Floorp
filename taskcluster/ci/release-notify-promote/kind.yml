@@ -12,7 +12,7 @@ transforms:
 kind-dependencies:
     - post-beetmover-dummy
     - release-generate-checksums-beetmover
-    - release-bouncer-sub-nazgul
+    - release-bouncer-sub
 
 job-defaults:
     name: notify-release-drivers-promote
