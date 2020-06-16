@@ -7,17 +7,16 @@ package mozilla.components.feature.share.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import mozilla.components.feature.share.RecentApp
 import mozilla.components.feature.share.db.RecentAppsDatabase.Companion.RECENT_APPS_TABLE
 
-@Entity(
-    tableName = RECENT_APPS_TABLE
-)
+@Entity(tableName = RECENT_APPS_TABLE)
 internal data class RecentAppEntity(
 
     @PrimaryKey
     @ColumnInfo(name = "activityName")
-    var activityName: String,
+    override var activityName: String,
 
     @ColumnInfo(name = "score")
-    var score: Double
-)
+    override var score: Double = 0.0
+) : RecentApp
