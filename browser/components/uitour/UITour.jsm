@@ -59,6 +59,11 @@ ChromeUtils.defineModuleGetter(
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUsageTelemetry",
+  "resource:///modules/BrowserUsageTelemetry.jsm"
+);
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "browser.uitour.loglevel";
@@ -1986,6 +1991,11 @@ var UITour = {
     CustomizableUI.addWidgetToArea(
       aTarget.widgetName,
       CustomizableUI.AREA_NAVBAR
+    );
+    BrowserUsageTelemetry.recordWidgetChange(
+      aTarget.widgetName,
+      CustomizableUI.AREA_NAVBAR,
+      "uitour"
     );
     this.sendPageCallback(aBrowser, aCallbackID);
   },

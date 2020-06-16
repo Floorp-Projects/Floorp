@@ -43,18 +43,18 @@
               contexttype="toolbaritem"
               class="customize-context-reportExtension"/>
     <menuseparator/>
-    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
+    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode, 'panelitem-context')"
               id="customizationPanelItemContextMenuPin"
               data-lazy-l10n-id="toolbar-context-menu-pin-to-overflow-menu"
               closemenu="single"
               class="customize-context-moveToPanel"/>
-    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
+    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode, 'panelitem-context')"
               id="customizationPanelItemContextMenuUnpin"
               closemenu="single"
               class="customize-context-moveToToolbar"
               accesskey="&customizeMenu.unpinFromOverflowMenu.accesskey;"
               label="&customizeMenu.unpinFromOverflowMenu.label;"/>
-    <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
+    <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode, 'panelitem-context')"
               closemenu="single"
               class="customize-context-removeFromPanel"
               data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"/>
@@ -179,11 +179,11 @@
 <html:template id="customModeWrapper">
   <menupopup id="customizationPaletteItemContextMenu"
              onpopupshowing="gCustomizeMode.onPaletteContextMenuShowing(event)">
-    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
+    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode, 'palette-context')"
               class="customize-context-addToToolbar"
               accesskey="&customizeMenu.addToToolbar.accesskey;"
               label="&customizeMenu.addToToolbar.label;"/>
-    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
+    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode, 'palette-context')"
               class="customize-context-addToPanel"
               accesskey="&customizeMenu.addToOverflowMenu.accesskey;"
               label="&customizeMenu.addToOverflowMenu.label;"/>
@@ -222,7 +222,7 @@
                descriptionheightworkaround="true">
       <vbox class="panel-subview-body">
         <vbox id="appMenu-addon-banners"/>
-        <toolbarbutton class="panel-banner-item"
+        <toolbarbutton id="appMenu-update-banner" class="panel-banner-item"
                        label-update-available="&updateAvailable.panelUI.label;"
                        label-update-manual="&updateManual.panelUI.label;"
                        label-update-unsupported="&updateUnsupported.panelUI.label;"
@@ -530,6 +530,7 @@
                 <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.tabsnotsyncing.label;</label>
                 <hbox pack="center">
                   <toolbarbutton class="PanelUI-remotetabs-button"
+                                 id="PanelUI-remotetabs-tabsdisabledpane-button"
                                  label="&appMenuRemoteTabs.opensyncprefs.label;"
                                  oncommand="gSync.openPrefs('synced-tabs');"/>
                 </hbox>
@@ -565,6 +566,7 @@
             <image class="fxaSyncIllustration"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
+                           id="PanelUI-remotetabs-setupsync-button"
                            label="&appMenuRemoteTabs.signintosync.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
@@ -577,6 +579,7 @@
             <image class="fxaSyncIllustration"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
+                           id="PanelUI-remotetabs-syncdisabled-button"
                            label="&appMenuRemoteTabs.turnonsync.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
@@ -589,6 +592,7 @@
             <image class="fxaSyncIllustrationIssue"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
+                           id="PanelUI-remotetabs-reauthsync-button"
                            label="&appMenuRemoteTabs.signintosync.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
@@ -601,6 +605,7 @@
             <image class="fxaSyncIllustrationIssue"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.unverified.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
+                           id="PanelUI-remotetabs-unverified-button"
                            label="&appMenuRemoteTabs.opensyncprefs.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
@@ -699,7 +704,7 @@
                 <!-- The rest of the values get dynamically inserted. The "presetsbuilt"
                     attribute will get updated to "true" once the presets have been
                     built. -->
-                <menuitem label="Custom" value="custom"/>
+                <menuitem id="PanelUI-profiler-presets-custom" label="Custom" value="custom"/>
               </menupopup>
             </menulist>
             <!-- The following description gets inserted dynamically. -->
@@ -969,7 +974,7 @@
                        class="subviewbutton subviewbutton-iconic"
                        label-show="&viewBookmarksToolbar.label;"
                        label-hide="&hideBookmarksToolbar.label;"
-                       oncommand="BookmarkingUI.toggleBookmarksToolbar();"/>
+                       oncommand="BookmarkingUI.toggleBookmarksToolbar('bookmark-tools');"/>
       </vbox>
     </panelview>
 

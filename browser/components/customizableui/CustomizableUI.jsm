@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PanelMultiView: "resource:///modules/PanelMultiView.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
@@ -4388,6 +4389,9 @@ var CustomizableUI = {
         if (!item.hasAttribute("onclick")) {
           subviewItem.addEventListener("click", event => {
             let newEvent = new doc.defaultView.MouseEvent(event.type, event);
+
+            // Telemetry should only pay attention to the original event.
+            BrowserUsageTelemetry.ignoreEvent(newEvent);
             item.dispatchEvent(newEvent);
           });
         }
@@ -4408,6 +4412,9 @@ var CustomizableUI = {
               event.sourceEvent,
               0
             );
+
+            // Telemetry should only pay attention to the original event.
+            BrowserUsageTelemetry.ignoreEvent(newEvent);
             item.dispatchEvent(newEvent);
           });
         }

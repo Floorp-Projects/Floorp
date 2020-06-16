@@ -956,6 +956,11 @@ var BrowserPageActions = {
     this._contextAction = null;
 
     action.pinnedToUrlbar = !action.pinnedToUrlbar;
+    BrowserUsageTelemetry.recordWidgetChange(
+      action.id,
+      action.pinnedToUrlbar ? "page-action-buttons" : null,
+      "pageaction-context"
+    );
   },
 
   /**

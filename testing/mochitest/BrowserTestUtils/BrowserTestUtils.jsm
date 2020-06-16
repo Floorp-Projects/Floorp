@@ -2072,6 +2072,51 @@ var BrowserTestUtils = {
     });
   },
 
+  /**
+   * Waits for CSS transitions to complete for an element. Tracks any
+   * transitions that start after this function is called and resolves once all
+   * started transitions complete.
+   *
+   * @param element (Element)
+   *        The element that will transition.
+   * @param timeout (number)
+   *        The maximum time to wait in milliseconds. Defaults to 5 seconds.
+   * @return Promise
+   *        Resolves when transitions complete or rejects if the timeout is hit.
+   */
+  waitForTransition(element, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      let cleanup = () => {
+        element.removeEventListener("transitionrun", listener);
+        element.removeEventListener("transitionend", listener);
+      };
+
+      let timer = element.ownerGlobal.setTimeout(() => {
+        cleanup();
+        reject();
+      }, timeout);
+
+      let transitionCount = 0;
+
+      let listener = event => {
+        if (event.type == "transitionrun") {
+          transitionCount++;
+        } else {
+          transitionCount--;
+          if (transitionCount == 0) {
+            cleanup();
+            element.ownerGlobal.clearTimeout(timer);
+            resolve();
+          }
+        }
+      };
+
+      element.addEventListener("transitionrun", listener);
+      element.addEventListener("transitionend", listener);
+      element.addEventListener("transitioncancel", listener);
+    });
+  },
+
   _knownAboutPages: new Set(),
   _loadedAboutContentScript: false,
   /**

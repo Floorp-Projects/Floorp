@@ -16,9 +16,9 @@ As the transition to the ``BrowserUsageTelemetry`` happens, the ``recordSearch``
 
 A list of the components recording search Telemetry can be found using the following `DXR search <https://dxr.mozilla.org/mozilla-central/search?q=recordSearchInTelemetry>`_.
 
-Measured interactions
-=====================
-The usage telemetry module currently measures these interactions with the browser:
+Tab and window interactions
+===========================
+The usage telemetry module currently measures these interactions with the browser's tabs and windows:
 
 - *tab and window engagement*: counts the number of non-private tabs and windows opened in a subsession, after the session is restored (see e.g. ``browser.engagement.max_concurrent_tab_count``);
 - *URI loads*: counts the number of page loads (doesn't track and send the addresses, just the counts) directly triggered by the users (see ``browser.engagement.total_uri_count``);
@@ -26,3 +26,96 @@ The usage telemetry module currently measures these interactions with the browse
 
 
 Please see `Scalars.yaml <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_ for the full list of tracked interactions.
+
+Customizable UI
+===============
+
+This telemetry records information about the positions of toolbar items and when
+the user interacts with them. It is submitted as scalar values along with the
+normal telemetry ping. There are a number of different parts to this telemetry:
+
+UI Areas
+--------
+
+For the purposes of this telemetry a set of areas are defined:
+
+* In the main browser UI:
+
+  * ``menu-bar`` - The main menu.
+  * ``menu-toolbar`` - The normally hidden toolbar that holds the main menu.
+  * ``drag-space`` - The optional drag space.
+  * ``titlebar`` - The optional title bar.
+  * ``tabs-bar`` - The area where tabs are displayed.
+  * ``bookmarks-bar`` - The bookmarks toolbar.
+  * ``app-menu`` - The main application (hamburger) menu.
+  * ``tabs-context`` - The context menu shown from right-clicking a tab.
+  * ``content-context`` - The context menu shown from right-clicking the web page.
+  * ``widget-overflow-list`` - Items that have overflowed the available space.
+  * ``pinned-overflow-menu`` - Items that the user has pinned to the toolbar overflow menu.
+  * ``pageaction-urlbar`` - Page actions buttons in the address bar.
+  * ``pageaction-panel`` - The page action (meatball) menu.
+  * ``nav-bar-start`` - The area of the navigation toolbar before the address bar.
+  * ``nav-bar-end`` - The area of the navigastion toolbar after the address bar.
+
+* In ``about:preferences`` the different cagtegories are used:
+
+  * ``preferences-paneGeneral``
+  * ``preferences-paneHome``
+  * ``preferences-panePrivacy``
+  * ``preferences-paneSearch``
+  * ``preferences-paneSearchResults``
+  * ``preferences-paneSync``
+  * ``preferences-paneContainers``
+
+Widget Identifiers
+------------------
+
+In order to uniquely identify a visual element a set of heuristics are used:
+
+#. If the element is one of the customizable toolbar items then that item's ID
+   is used.
+#. If the DOM element has an ID set then that is used.
+#. If the DOM element's class contains one of ``bookmark-item``,
+   ``tab-icon-sound`` or ``tab-close-button`` then that is used.
+#. If the DOM element has a ``preference`` ``key``, ``command``, ``observes`` or
+   ``data-l10n-id`` attribute then that is used.
+#. If there is still no identifier then this is repeated for the DOM element's
+   parent element.
+
+Widget Locations
+----------------
+
+The keyed scalar ``browser.ui.toolbar_widgets`` records the position of widgets in
+the UI. At startup the positions of widgets are collected and recorded by
+setting the scalar key ``<widget id>_pinned_<area>`` to true. The widget ID are
+the IDs of the elements in the DOM. The area is one of the areas listed above
+from the browser UI that can be customised.
+
+For the areas that can be controlled the scalar keys ``<area>_<off/on>`` are set.
+
+Widget Customization
+--------------------
+
+The scalar ``browser.ui.customized_widgets`` records whenever the user moves a
+widget around the toolbars or shows or hides some of the areas. When a change
+occurs the scalar with the key ``<widget id>_<action>_<old area>_<new area>_<reason>``
+is incremented. The action can be one of ``move``, ``add`` or ``remove``. Old
+area and new area are the previous and now locations of the widget. In the case
+of ``add`` or ``remove`` actions one of the areas will be ``na``. For areas that
+can be shown or hidden the areas will be ``off`` or ``on``. The reason is a simple
+string that indicates what caused the move to happen (drag, context menu, etc.).
+
+UI Interactions
+---------------
+
+The scalars ``browser.ui.interaction.<area>`` record how often the use
+interacts with the browser. The area is one of those above with the addition of
+``keyboard`` for keyboard shortcuts.
+
+When an interaction occurs the widget's identifier is used as the key and the
+scalar is incremented. If the widget is provided by an add-on then the add-on
+identifier is dropped and an identifier of the form ``addonX`` is used where X
+is a number. The number used is stable for a single session. Everytime the user
+moves or interacts with an add-on the same number is used but then the numbers
+for each add-on may change after Firefox has been restarted.
+
