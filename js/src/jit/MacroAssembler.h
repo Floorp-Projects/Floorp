@@ -842,16 +842,16 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Swap instructions
 
   // Swap the two lower bytes and sign extend the result to 32-bit.
-  inline void swap16SignExtend(Register reg) PER_SHARED_ARCH;
+  inline void byteSwap16SignExtend(Register reg) PER_SHARED_ARCH;
 
   // Swap the two lower bytes and zero extend the result to 32-bit.
-  inline void swap16ZeroExtend(Register reg) PER_SHARED_ARCH;
+  inline void byteSwap16ZeroExtend(Register reg) PER_SHARED_ARCH;
 
   // Swap all four bytes in a 32-bit integer.
-  inline void swap32(Register reg) PER_SHARED_ARCH;
+  inline void byteSwap32(Register reg) PER_SHARED_ARCH;
 
   // Swap all eight bytes in a 64-bit integer.
-  inline void swap64(Register64 reg) PER_ARCH;
+  inline void byteSwap64(Register64 reg) PER_ARCH;
 
   // ===============================================================
   // Arithmetic functions

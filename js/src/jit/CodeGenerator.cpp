@@ -12315,24 +12315,24 @@ void CodeGenerator::visitLoadDataViewElement(LLoadDataViewElement* lir) {
 
     switch (storageType) {
       case Scalar::Int16:
-        masm.swap16SignExtend(out.gpr());
+        masm.byteSwap16SignExtend(out.gpr());
         break;
       case Scalar::Uint16:
-        masm.swap16ZeroExtend(out.gpr());
+        masm.byteSwap16ZeroExtend(out.gpr());
         break;
       case Scalar::Int32:
-        masm.swap32(out.gpr());
+        masm.byteSwap32(out.gpr());
         break;
       case Scalar::Uint32:
-        masm.swap32(out.isFloat() ? temp : out.gpr());
+        masm.byteSwap32(out.isFloat() ? temp : out.gpr());
         break;
       case Scalar::Float32:
-        masm.swap32(temp);
+        masm.byteSwap32(temp);
         break;
       case Scalar::Float64:
       case Scalar::BigInt64:
       case Scalar::BigUint64:
-        masm.swap64(temp64);
+        masm.byteSwap64(temp64);
         break;
       case Scalar::Int8:
       case Scalar::Uint8:
@@ -12833,20 +12833,20 @@ void CodeGenerator::visitStoreDataViewElement(LStoreDataViewElement* lir) {
 
     switch (writeType) {
       case Scalar::Int16:
-        masm.swap16SignExtend(temp);
+        masm.byteSwap16SignExtend(temp);
         break;
       case Scalar::Uint16:
-        masm.swap16ZeroExtend(temp);
+        masm.byteSwap16ZeroExtend(temp);
         break;
       case Scalar::Int32:
       case Scalar::Uint32:
       case Scalar::Float32:
-        masm.swap32(temp);
+        masm.byteSwap32(temp);
         break;
       case Scalar::Float64:
       case Scalar::BigInt64:
       case Scalar::BigUint64:
-        masm.swap64(temp64);
+        masm.byteSwap64(temp64);
         break;
       case Scalar::Int8:
       case Scalar::Uint8:
