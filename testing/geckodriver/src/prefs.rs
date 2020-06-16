@@ -116,6 +116,10 @@ lazy_static! {
         // No hang monitor
         ("hangmonitor.timeout", Pref::new(0)),
 
+        // Disable idle-daily notifications to avoid expensive operations
+        // that may cause unexpected test timeouts.
+        ("idle.lastDailyNotification", Pref::new(-1)),
+
         // Show chrome errors and warnings in the error console
         ("javascript.options.showInConsole", Pref::new(true)),
 
