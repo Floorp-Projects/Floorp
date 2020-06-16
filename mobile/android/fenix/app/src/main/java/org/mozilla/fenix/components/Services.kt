@@ -26,7 +26,7 @@ class Services(
     private val accountManager: FxaAccountManager
 ) {
     val accountsAuthFeature by lazy {
-        FirefoxAccountsAuthFeature(accountManager, FxaServer.redirectUrl()) { context, authUrl ->
+        FirefoxAccountsAuthFeature(accountManager, FxaServer.REDIRECT_URL) { context, authUrl ->
             CoroutineScope(Dispatchers.Main).launch {
                 val intent = SupportUtils.createAuthCustomTabIntent(context, authUrl)
                 context.startActivity(intent)

@@ -14,15 +14,14 @@ import org.mozilla.fenix.ext.settings
 
 object FxaServer {
     private const val CLIENT_ID = "a2270f727f45f648"
-
     const val REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel"
 
     fun config(context: Context): ServerConfig {
         val serverOverride = context.settings().overrideFxAServer
         val tokenServerOverride = context.settings().overrideSyncTokenServer.ifEmpty { null }
         if (serverOverride.isEmpty()) {
-            return ServerConfig(Server.RELEASE, CLIENT_ID, redirectUrl(), tokenServerOverride)
+            return ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL, tokenServerOverride)
         }
-        return ServerConfig(serverOverride, CLIENT_ID, redirectUrl(), tokenServerOverride)
+        return ServerConfig(serverOverride, CLIENT_ID, REDIRECT_URL, tokenServerOverride)
     }
 }
