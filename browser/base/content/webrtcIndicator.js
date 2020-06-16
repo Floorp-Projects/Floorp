@@ -26,6 +26,12 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/webrtcUI.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserWindowTracker",
+  "resource:///modules/BrowserWindowTracker.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gScreenManager",
@@ -156,7 +162,7 @@ const WebRTCIndicator = {
     this.ensureOnScreen();
 
     if (!this.positionCustomized) {
-      this.centerOnPrimaryDisplay();
+      this.centerOnDisplay(initialLayout);
     }
     this.updatingIndicatorState = false;
   },
@@ -176,10 +182,14 @@ const WebRTCIndicator = {
   },
 
   /**
-   * Finds the primary display and moves the indicator at the bottom,
+   * Finds the appropriate display and moves the indicator at the bottom,
    * horizontally centered.
+   *
+   * If the indicator is first being opened, the appropriate display is the same
+   * display as the most recently used browser window. Otherwise, the
+   * appropriate display is the same display that the indicator is currently on.
    */
-  centerOnPrimaryDisplay() {
+  centerOnDisplay(aInitialLayout) {
     // This should be called in initialize right after we've just called
     // updateIndicatorState. Since updateIndicatorState uses
     // window.sizeToContent, the layout information should be up to date,
@@ -189,20 +199,55 @@ const WebRTCIndicator = {
       width: windowWidth,
     } = window.windowUtils.getBoundsWithoutFlushing(document.documentElement);
 
-    // The initial position of the fwindow should be at the bottom of the
-    // primary screen, above any OS UI (like the task bar or dock), centered
-    // horizontally.
-    let screen = gScreenManager.primaryScreen;
+    let screen;
+
+    if (aInitialLayout) {
+      // The indicator is opening, so find the most recent browser window, and
+      // make sure the indicator opens on the same display.
+      let recentWindow = BrowserWindowTracker.getTopWindow();
+
+      let {
+        height: originatorHeight,
+        width: originatorWidth,
+      } = recentWindow.windowUtils.getBoundsWithoutFlushing(
+        recentWindow.document.documentElement
+      );
+
+      screen = gScreenManager.screenForRect(
+        recentWindow.screenX,
+        recentWindow.screenY,
+        originatorWidth,
+        originatorHeight
+      );
+    } else {
+      // The indicator is already open, so use the same display that the
+      // indicator is already on.
+      screen = gScreenManager.screenForRect(
+        window.screenX,
+        window.screenY,
+        windowWidth,
+        windowHeight
+      );
+    }
+
     let scaleFactor = screen.contentsScaleFactor / screen.defaultCSSScaleFactor;
 
+    // We want to center the indicator horizontally on the display regardless of
+    // UI (like a vertical dock) on the left or right sides. This is why we're
+    // using GetRectDisplayPix for the left and width screen values.
+    let leftDevPix = {};
     let widthDevPix = {};
-    screen.GetRectDisplayPix({}, {}, widthDevPix, {});
+    screen.GetRectDisplayPix(leftDevPix, {}, widthDevPix, {});
     let screenWidth = widthDevPix.value * scaleFactor;
 
+    // However, we want to make sure that vertically, the indicator is above any
+    // existing OS UI, so we use GetAvailRectDisplayPix for the top and height
+    // values.
     let availTopDevPix = {};
     let availHeightDevPix = {};
     screen.GetAvailRectDisplayPix({}, availTopDevPix, {}, availHeightDevPix);
 
+    let left = leftDevPix.value * scaleFactor;
     let availHeight =
       (availTopDevPix.value + availHeightDevPix.value) * scaleFactor;
     // To center the window, we subtract the window width from the screen
@@ -211,7 +256,7 @@ const WebRTCIndicator = {
     // To put the window at the bottom of the screen, just above any OS UI,
     // we subtract the window height from the available height.
     window.moveTo(
-      (screenWidth - windowWidth) / 2,
+      left + (screenWidth - windowWidth) / 2,
       availHeight - windowHeight - this.VERTICAL_OFFSET_PX
     );
   },
@@ -245,7 +290,6 @@ const WebRTCIndicator = {
     this.loaded = true;
 
     this.updateIndicatorState(true /* initialLayout */);
-    this.centerOnPrimaryDisplay();
 
     window.addEventListener("click", this);
     window.windowRoot.addEventListener("MozUpdateWindowPos", this);
