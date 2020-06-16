@@ -55,9 +55,8 @@ def create_parser(mach_interface=False):
     parser = argparse.ArgumentParser()
     add_arg = parser.add_argument
 
-    if not mach_interface:
-        add_arg('-e', '--executablePath', required=True, dest="browser_path",
-                help="path to executable we are testing")
+    add_arg('-e', '--executablePath', required=False, dest="browser_path",
+            help="path to executable we are testing")
     add_arg('-t', '--title', default='qm-pxp01',
             help="Title of the test run")
     add_arg('--browserWait', dest='browser_wait', default=5, type=int,
