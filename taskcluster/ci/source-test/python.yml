@@ -87,9 +87,15 @@ mochitest-harness:
         - linux1804-64-asan/opt
     always-target: false
     require-build:
-        linux1804-64-asan/opt: build-linux64-asan/opt
-        linux1804-64/debug: build-linux64/debug
-        linux1804-64/opt: build-linux64-shippable/opt
+        by-project:
+            try:
+                linux1804-64-asan/opt: build-linux64-asan/opt
+                linux1804-64/debug: build-linux64/debug
+                linux1804-64/opt: build-linux64/opt
+            default:
+                linux1804-64-asan/opt: build-linux64-asan/opt
+                linux1804-64/debug: build-linux64/debug
+                linux1804-64/opt: build-linux64-shippable/opt
     treeherder:
         symbol: py2(mch)
     worker:
@@ -252,9 +258,15 @@ reftest-harness:
         - linux1804-64/debug
         - linux1804-64-asan/opt
     require-build:
-        linux1804-64-asan/opt: build-linux64-asan/opt
-        linux1804-64/debug: build-linux64/debug
-        linux1804-64/opt: build-linux64-shippable/opt
+        by-project:
+            try:
+                linux1804-64-asan/opt: build-linux64-asan/opt
+                linux1804-64/debug: build-linux64/debug
+                linux1804-64/opt: build-linux64/opt
+            default:
+                linux1804-64-asan/opt: build-linux64-asan/opt
+                linux1804-64/debug: build-linux64/debug
+                linux1804-64/opt: build-linux64-shippable/opt
     always-target: false
     treeherder:
         symbol: py2(ref)
@@ -406,7 +418,11 @@ telemetry-integration-tests:
                 docker-image: {in-tree: "ubuntu1804-test"}
                 max-run-time: 3600
     require-build:
-        linux1804-64/opt: build-linux64-shippable/opt
+        by-project:
+            try:
+                linux1804-64/opt: build-linux64/opt
+            default:
+                linux1804-64/opt: build-linux64-shippable/opt
     treeherder:
         symbol: tt(i)
         tier: 3

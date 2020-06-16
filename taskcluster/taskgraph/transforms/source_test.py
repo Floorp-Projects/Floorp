@@ -43,9 +43,9 @@ source_test_description_schema = Schema({
     # contain a build label for the task platform.
     # The task will then depend on a build task, and the installer url will be
     # saved to the GECKO_INSTALLER_URL environment variable.
-    Optional('require-build'): {
-        text_type: text_type,
-    },
+    Optional('require-build'): optionally_keyed_by(
+        'project', {text_type: text_type}
+    ),
 
     # These fields can be keyed by "platform", and are otherwise identical to
     # job descriptions.
@@ -175,6 +175,7 @@ def handle_platform(config, jobs):
     """
     fields = [
         'fetches.toolchain',
+        'require-build',
         'worker-type',
         'worker',
     ]
@@ -183,7 +184,7 @@ def handle_platform(config, jobs):
         platform = job['platform']
 
         for field in fields:
-            resolve_keyed_by(job, field, item_name=job['name'])
+            resolve_keyed_by(job, field, item_name=job['name'], project=config.params['project'])
 
         if 'treeherder' in job:
             job['treeherder']['platform'] = platform
