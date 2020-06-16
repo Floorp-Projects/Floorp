@@ -7,6 +7,7 @@ package mozilla.components.browser.menu.view
 import android.util.AttributeSet
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.R
+import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -114,40 +115,91 @@ class DynamicWidthRecyclerViewTest {
     }
 
     @Test
+    fun `getMaterialMinimumTapAreaInPx should return MATERIAL_MINIMUM_TAP_AREA_DP to pixels`() {
+        val dynamicRecyclerView = DynamicWidthRecyclerView(testContext, null)
+
+        val minimumTapAreaInPx = DynamicWidthRecyclerView.MATERIAL_MINIMUM_TAP_AREA_DP
+            .dpToPx(testContext.resources.displayMetrics)
+
+        assertEquals(minimumTapAreaInPx, dynamicRecyclerView.getMaterialMinimumTapAreaInPx())
+    }
+
+    @Test
+    fun `getMaterialMinimumItemWidthInPx should return MATERIAL_MINIMUM_ITEM_WIDTH_DP to pixels`() {
+        val dynamicRecyclerView = DynamicWidthRecyclerView(testContext, null)
+
+        val minimumItemWidthInPx = DynamicWidthRecyclerView.MATERIAL_MINIMUM_ITEM_WIDTH_DP
+            .dpToPx(testContext.resources.displayMetrics)
+
+        assertEquals(minimumItemWidthInPx, dynamicRecyclerView.getMaterialMinimumItemWidthInPx())
+    }
+
+    @Test
+    fun `setReconciledDimensions() must set material minimum width even if childs are smaller`() {
+        val childrenWidth = 20
+        val materialMinWidth = DynamicWidthRecyclerView.MATERIAL_MINIMUM_ITEM_WIDTH_DP
+        // Layout width is *2 to allow bigger sizes. minWidth is /2 to verify the material min width is used.
+        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(
+            testContext, getCustomAttributesSet(materialMinWidth * 2, materialMinWidth / 2, 500)))
+
+        dynamicRecyclerView.setReconciledDimensions(childrenWidth, 500)
+
+        verify(dynamicRecyclerView).callSetMeasuredDimension(materialMinWidth, 500)
+    }
+
+    @Test
     fun `setReconciledDimensions() must set minWidth even if children width is smaller`() {
-        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(testContext, getCustomAttributesSet(100, 50, 100)))
+        val childrenWidth = 20
+        // minWidth set in xml. Ensure it is bigger than the default.
+        val minWidth = DynamicWidthRecyclerView.MATERIAL_MINIMUM_ITEM_WIDTH_DP + 10
+        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(
+            testContext, getCustomAttributesSet(minWidth * 2, minWidth, 500)))
 
-        dynamicRecyclerView.setReconciledDimensions(20, 100)
+        dynamicRecyclerView.setReconciledDimensions(childrenWidth, 500)
 
-        verify(dynamicRecyclerView).callSetMeasuredDimension(50, 100)
+        verify(dynamicRecyclerView).callSetMeasuredDimension(minWidth, 500)
     }
 
     @Test
     fun `setReconciledDimensions() will set children width if it is bigger than minWidth and smaller than maxWidth`() {
-        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(testContext, getCustomAttributesSet(100, 50, 100)))
+        val materialMinWidth = DynamicWidthRecyclerView.MATERIAL_MINIMUM_ITEM_WIDTH_DP
+        val childrenWidth = materialMinWidth + 10
+        // Layout width is *2 to allow bigger sizes. minWidth is /2 to verify the material min width is used.
+        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(
+            testContext, getCustomAttributesSet(materialMinWidth * 2, materialMinWidth, 500)))
 
-        dynamicRecyclerView.setReconciledDimensions(60, 100)
+        dynamicRecyclerView.setReconciledDimensions(childrenWidth, 500)
 
-        verify(dynamicRecyclerView).callSetMeasuredDimension(60, 100)
+        verify(dynamicRecyclerView).callSetMeasuredDimension(childrenWidth, 500)
     }
 
     @Test
-    fun `setReconciledDimensions() must set maxWidth even if children width is bigger`() {
-        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(testContext, getCustomAttributesSet(100, 50, 100)))
+    @Config(qualifiers = "w500dp")
+    @Suppress("UnnecessaryVariable")
+    fun `setReconciledDimensions() must set maxWidth when children width is bigger`() {
+        val materialMaxWidth = 500 - DynamicWidthRecyclerView.MATERIAL_MINIMUM_TAP_AREA_DP
+        val childrenWidth = materialMaxWidth
+        val maxWidth = materialMaxWidth - 10
+        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(
+            testContext, getCustomAttributesSet(1000, 100, maxWidth)))
 
-        dynamicRecyclerView.setReconciledDimensions(60, 100)
+        dynamicRecyclerView.setReconciledDimensions(childrenWidth, 100)
 
-        verify(dynamicRecyclerView).callSetMeasuredDimension(60, 100)
+        verify(dynamicRecyclerView).callSetMeasuredDimension(maxWidth, 100)
     }
 
     @Test
-    @Config(qualifiers = "w33dp")
-    fun `setReconciledDimensions() must set the width to as much as screen width even if maxWidth is bigger`() {
-        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(testContext, getCustomAttributesSet(100, 50, 100)))
+    @Config(qualifiers = "w500dp")
+    fun `setReconciledDimensions must set material maximum width when children width is bigger`() {
+        val materialMaxWidth = 500 - DynamicWidthRecyclerView.MATERIAL_MINIMUM_TAP_AREA_DP
+        val maxWidth = 500
+        val childrenWidth = maxWidth + 10
+        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(
+            testContext, getCustomAttributesSet(1000, 100, maxWidth)))
 
-        dynamicRecyclerView.setReconciledDimensions(60, 100)
+        dynamicRecyclerView.setReconciledDimensions(childrenWidth, 100)
 
-        verify(dynamicRecyclerView).callSetMeasuredDimension(33, 100)
+        verify(dynamicRecyclerView).callSetMeasuredDimension(materialMaxWidth, 100)
     }
 
     private fun getCustomAttributesSet(layoutWidth: Int, minWidth: Int? = null, maxWidth: Int? = null): AttributeSet {

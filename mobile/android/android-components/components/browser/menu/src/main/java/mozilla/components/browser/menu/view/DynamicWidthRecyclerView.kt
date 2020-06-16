@@ -10,6 +10,7 @@ import android.util.AttributeSet
 import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.menu.R
+import mozilla.components.support.ktx.android.util.dpToPx
 
 /**
  * [RecylerView] with automatically set width between widthMin / widthMax xml attributes.
@@ -48,18 +49,27 @@ class DynamicWidthRecyclerView @JvmOverloads constructor(
         desiredWidth: Int,
         desiredHeight: Int
     ) {
-        val minimumWidth = desiredWidth.coerceAtLeast(minWidth)
-
-        val reconciledWidth = minimumWidth
+        val reconciledWidth = desiredWidth
+            .coerceAtLeast(minWidth)
+            // Follow material guidelines where the minimum width is 112dp.
+            .coerceAtLeast(getMaterialMinimumItemWidthInPx())
             .coerceAtMost(maxWidth)
-            // Sanity check our xml set maxWidth.
-            .coerceAtMost(getScreenWidth())
+            // Leave at least 48dp as a tappable “exit area” available whenever the menu is open.
+            .coerceAtMost(getScreenWidth() - getMaterialMinimumTapAreaInPx())
 
         callSetMeasuredDimension(reconciledWidth, desiredHeight)
     }
 
     @VisibleForTesting()
     internal fun getScreenWidth(): Int = resources.displayMetrics.widthPixels
+
+    @VisibleForTesting()
+    internal fun getMaterialMinimumTapAreaInPx() =
+        MATERIAL_MINIMUM_TAP_AREA_DP.dpToPx(resources.displayMetrics)
+
+    @VisibleForTesting()
+    internal fun getMaterialMinimumItemWidthInPx() =
+        MATERIAL_MINIMUM_ITEM_WIDTH_DP.dpToPx(resources.displayMetrics)
 
     @SuppressLint("WrongCall")
     @VisibleForTesting()
@@ -72,5 +82,11 @@ class DynamicWidthRecyclerView @JvmOverloads constructor(
     // Used for testing final protected setMeasuredDimension(..) calls were executed
     internal fun callSetMeasuredDimension(width: Int, height: Int) {
         setMeasuredDimension(width, height)
+    }
+
+    @VisibleForTesting()
+    internal companion object {
+        const val MATERIAL_MINIMUM_TAP_AREA_DP = 48
+        const val MATERIAL_MINIMUM_ITEM_WIDTH_DP = 112
     }
 }
