@@ -91,10 +91,7 @@ void GeckoViewHistory::QueryVisitedStateInContentProcess(
       continue;
     }
     ObservingLinks& links = entry.Data();
-    nsTObserverArray<Link*>::BackwardIterator linksIter(links.mLinks);
-    while (linksIter.HasMore()) {
-      Link* link = linksIter.GetNext();
-
+    for (Link* link : links.mLinks.BackwardRange()) {
       nsIWidget* widget = nsContentUtils::WidgetForContent(link->GetElement());
       if (!widget) {
         continue;
