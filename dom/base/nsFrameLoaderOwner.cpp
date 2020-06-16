@@ -116,11 +116,9 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
     // If we already have a Frameloader, destroy it, possibly preserving its
     // browsing context.
     if (mFrameLoader) {
-      if (aContextType != ChangeRemotenessContextType::DONT_PRESERVE) {
-        bc = mFrameLoader->GetBrowsingContext();
-        if (aContextType == ChangeRemotenessContextType::PRESERVE) {
-          mFrameLoader->SetWillChangeProcess();
-        }
+      bc = mFrameLoader->GetExtantBrowsingContext();
+      if (aContextType == ChangeRemotenessContextType::PRESERVE) {
+        mFrameLoader->SetWillChangeProcess();
       }
 
       // Preserve the networkCreated status, as nsDocShells created after a
