@@ -63,6 +63,7 @@ add_task(async function setup() {
       ["browser.contentblocking.report.mobile-ios.url", ""],
       ["browser.contentblocking.report.mobile-android.url", ""],
       ["browser.contentblocking.report.monitor.home_page_url", ""],
+      ["browser.contentblocking.report.monitor.preferences_url", ""],
     ],
   });
 
@@ -592,6 +593,54 @@ add_task(async function checkTelemetryClickEvents() {
   );
   is(events.length, 1, `recorded telemetry for resolve breaches button`);
 
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const monitorKnownBreachesBlock = await ContentTaskUtils.waitForCondition(
+      () => {
+        return content.document.getElementById("monitor-known-breaches-link");
+      },
+      "Monitor card known breaches block exists"
+    );
+
+    monitorKnownBreachesBlock.click();
+  });
+
+  events = await waitForTelemetryEventCount(27);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mtr_report_link" &&
+      e[4] == "known_resolved_breaches"
+  );
+  is(events.length, 1, `recorded telemetry for monitor known breaches block`);
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const monitorExposedPasswordsBlock = await ContentTaskUtils.waitForCondition(
+      () => {
+        return content.document.getElementById(
+          "monitor-exposed-passwords-link"
+        );
+      },
+      "Monitor card exposed passwords block exists"
+    );
+
+    monitorExposedPasswordsBlock.click();
+  });
+
+  events = await waitForTelemetryEventCount(28);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mtr_report_link" &&
+      e[4] == "exposed_passwords_unresolved_breaches"
+  );
+  is(
+    events.length,
+    1,
+    `recorded telemetry for monitor exposed passwords block`
+  );
+
   // Add breached logins and no resolved breaches.
   AboutProtectionsParent.setTestOverride(
     mockGetMonitorData({
@@ -614,7 +663,7 @@ add_task(async function checkTelemetryClickEvents() {
     manageBreachesButton.click();
   });
 
-  events = await waitForTelemetryEventCount(29);
+  events = await waitForTelemetryEventCount(31);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -645,7 +694,7 @@ add_task(async function checkTelemetryClickEvents() {
     viewReportButton.click();
   });
 
-  events = await waitForTelemetryEventCount(32);
+  events = await waitForTelemetryEventCount(34);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -676,7 +725,7 @@ add_task(async function checkTelemetryClickEvents() {
     viewReportButton.click();
   });
 
-  events = await waitForTelemetryEventCount(35);
+  events = await waitForTelemetryEventCount(37);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -686,6 +735,73 @@ add_task(async function checkTelemetryClickEvents() {
   );
   is(events.length, 2, `recorded telemetry for view report button`);
 
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const monitorEmailBlock = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("monitor-stored-emails-link");
+    }, "Monitor card email block exists");
+
+    monitorEmailBlock.click();
+  });
+
+  events = await waitForTelemetryEventCount(38);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mtr_report_link" &&
+      e[4] == "stored_emails"
+  );
+  is(events.length, 1, `recorded telemetry for monitor email block`);
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const monitorKnownBreachesBlock = await ContentTaskUtils.waitForCondition(
+      () => {
+        return content.document.getElementById("monitor-known-breaches-link");
+      },
+      "Monitor card known breaches block exists"
+    );
+
+    monitorKnownBreachesBlock.click();
+  });
+
+  events = await waitForTelemetryEventCount(39);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mtr_report_link" &&
+      e[4] == "known_unresolved_breaches"
+  );
+  is(events.length, 1, `recorded telemetry for monitor known breaches block`);
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const monitorExposedPasswordsBlock = await ContentTaskUtils.waitForCondition(
+      () => {
+        return content.document.getElementById(
+          "monitor-exposed-passwords-link"
+        );
+      },
+      "Monitor card exposed passwords block exists"
+    );
+
+    monitorExposedPasswordsBlock.click();
+  });
+
+  events = await waitForTelemetryEventCount(40);
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "mtr_report_link" &&
+      e[4] == "exposed_passwords_all_breaches"
+  );
+  is(
+    events.length,
+    1,
+    `recorded telemetry for monitor exposed passwords block`
+  );
+
+  // Clean up.
   AboutProtectionsParent.setTestOverride(null);
   await BrowserTestUtils.removeTab(tab);
 });
