@@ -15,13 +15,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesSearchAutocompleteProvider:
-    "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
   Services: "resource://gre/modules/Services.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -303,7 +302,7 @@ class UrlbarProviderExtension extends UrlbarProvider {
         engine = Services.search.getEngineByName(extResult.payload.engine);
       } else if (extResult.payload.keyword) {
         // Look up the engine by its alias.
-        engine = await PlacesSearchAutocompleteProvider.engineForAlias(
+        engine = await UrlbarSearchUtils.engineForAlias(
           extResult.payload.keyword
         );
       } else if (extResult.payload.url) {
@@ -313,9 +312,7 @@ class UrlbarProviderExtension extends UrlbarProvider {
           host = new URL(extResult.payload.url).hostname;
         } catch (err) {}
         if (host) {
-          engine = await PlacesSearchAutocompleteProvider.engineForDomainPrefix(
-            host
-          );
+          engine = await UrlbarSearchUtils.engineForDomainPrefix(host);
         }
       }
       if (!engine) {

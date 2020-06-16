@@ -15,8 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
-  PlacesSearchAutocompleteProvider:
-    "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -24,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -264,15 +263,16 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     let engine;
     if (aliasEngine) {
       engine = aliasEngine.engine;
+    } else if (queryContext.engineName) {
+      engine = Services.search.getEngineByName(queryContext.engineName);
+    } else if (queryContext.isPrivate) {
+      engine = Services.search.defaultPrivateEngine;
     } else {
-      engine = queryContext.engineName
-        ? Services.search.getEngineByName(queryContext.engineName)
-        : await PlacesSearchAutocompleteProvider.currentEngine(
-            queryContext.isPrivate
-          );
-      if (!engine) {
-        return;
-      }
+      engine = Services.search.defaultEngine;
+    }
+
+    if (!engine) {
+      return;
     }
 
     let alias = (aliasEngine && aliasEngine.alias) || "";
@@ -503,9 +503,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     }
 
     // Check if the user entered an engine alias directly.
-    let engineMatch = await PlacesSearchAutocompleteProvider.engineForAlias(
-      possibleAlias
-    );
+    let engineMatch = await UrlbarSearchUtils.engineForAlias(possibleAlias);
     if (engineMatch) {
       return {
         engine: engineMatch,
@@ -518,25 +516,6 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       };
     }
 
-    // Check if the user is matching a token alias.
-    let engines = await PlacesSearchAutocompleteProvider.tokenAliasEngines();
-    if (!engines || !engines.length) {
-      return null;
-    }
-
-    for (let { engine, tokenAliases } of engines) {
-      if (tokenAliases.includes(possibleAlias)) {
-        return {
-          engine,
-          alias: possibleAlias,
-          query: UrlbarUtils.substringAfter(
-            queryContext.searchString,
-            possibleAlias
-          ).trim(),
-          isTokenAlias: true,
-        };
-      }
-    }
     return null;
   }
 }

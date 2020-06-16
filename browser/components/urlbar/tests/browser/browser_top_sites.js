@@ -6,8 +6,6 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
-  PlacesSearchAutocompleteProvider:
-    "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
 });
 
 const EN_US_TOPSITES =
