@@ -22,6 +22,7 @@
 #include "mozilla/layers/SharedSurfacesChild.h"  // for SharedSurfacesAnimation
 #include "mozilla/layers/SharedRGBImage.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsISupportsUtils.h"  // for NS_IF_ADDREF
 #include "YCbCrUtils.h"        // for YCbCr conversions
@@ -422,6 +423,19 @@ void ImageContainer::EnsureRecycleAllocatorForRDD(
 
   if (mRecycleAllocator &&
       aKnowsCompositor == mRecycleAllocator->GetKnowsCompositor()) {
+    return;
+  }
+
+  bool useRecycleAllocator =
+      StaticPrefs::layers_recycle_allocator_rdd_AtStartup();
+#ifdef XP_MACOSX
+  // Disable RecycleAllocator for RDD on MacOS without WebRender.
+  // Recycling caused rendering artifact on a MacOS PC with OpenGL compositor.
+  if (!gfxVars::UseWebRender()) {
+    useRecycleAllocator = false;
+  }
+#endif
+  if (!useRecycleAllocator) {
     return;
   }
 

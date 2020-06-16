@@ -5314,6 +5314,11 @@
   value: true
   mirror: once
 
+- name: layers.recycle-allocator-rdd
+  type: bool
+  value: true
+  mirror: once
+
 #---------------------------------------------------------------------------
 # Prefs starting with "layout."
 #---------------------------------------------------------------------------
