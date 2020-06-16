@@ -44,6 +44,8 @@ struct HttpChannelOnStartRequestArgs
   uint32_t? multiPartID;
   bool isLastPartOfMultiPart;
   CrossOriginOpenerPolicy openerPolicy;
+  nsCString appCacheGroupId;
+  nsCString appCacheClientId;
 };
 
 } // namespace ipc

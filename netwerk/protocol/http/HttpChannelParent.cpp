@@ -1438,12 +1438,8 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
       httpChannelImpl->GetApplicationCache(getter_AddRefs(appCache));
       nsCString appCacheGroupId;
       nsCString appCacheClientId;
-      appCache->GetGroupID(appCacheGroupId);
-      appCache->GetClientID(appCacheClientId);
-      if (mIPCClosed ||
-          !SendAssociateApplicationCache(appCacheGroupId, appCacheClientId)) {
-        return NS_ERROR_UNEXPECTED;
-      }
+      appCache->GetGroupID(args.appCacheGroupId());
+      appCache->GetClientID(args.appCacheClientId());
     }
   }
 
