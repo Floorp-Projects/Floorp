@@ -586,7 +586,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
                     # Differentiate Raptor `pageload` tests from `browsertime-pageload`
                     # tests while we compare and contrast.
-                    new_result["type"] = "browsertime-pageload"
+                    new_result["type"] = "pageload"
 
                     # All Browsertime measurements are elapsed times in milliseconds.
                     new_result["subtest_lower_is_better"] = True
