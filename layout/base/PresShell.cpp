@@ -3405,8 +3405,8 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
 
   const nsMargin scrollPadding =
       (aScrollFlags & ScrollFlags::IgnoreMarginAndPadding)
-      ? nsMargin()
-      : aFrameAsScrollable->GetScrollPadding();
+          ? nsMargin()
+          : aFrameAsScrollable->GetScrollPadding();
 
   const nsRect rectToScrollIntoView = [&] {
     nsRect r(aRect);
@@ -3438,8 +3438,8 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
       nscoord maxHeight;
       scrollPt.y = ComputeWhereToScroll(
           aVertical.mWhereToScroll, scrollPt.y, rectToScrollIntoView.y,
-          rectToScrollIntoView.YMost(),
-          visibleRect.y, visibleRect.YMost(), &allowedRange.y, &maxHeight);
+          rectToScrollIntoView.YMost(), visibleRect.y, visibleRect.YMost(),
+          &allowedRange.y, &maxHeight);
       allowedRange.height = maxHeight - allowedRange.y;
     }
   }
@@ -3468,9 +3468,9 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
 
   ScrollMode scrollMode = ScrollMode::Instant;
   bool autoBehaviorIsSmooth = aFrameAsScrollable->IsSmoothScroll();
-  bool smoothScroll = (aScrollFlags & ScrollFlags::ScrollSmooth) ||
-                      ((aScrollFlags & ScrollFlags::ScrollSmoothAuto) &&
-                       autoBehaviorIsSmooth);
+  bool smoothScroll =
+      (aScrollFlags & ScrollFlags::ScrollSmooth) ||
+      ((aScrollFlags & ScrollFlags::ScrollSmoothAuto) && autoBehaviorIsSmooth);
   if (StaticPrefs::layout_css_scroll_behavior_enabled() && smoothScroll) {
     scrollMode = ScrollMode::SmoothMsd;
   }

@@ -214,8 +214,7 @@ bool OSVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState,
     // Ensure that tests using the VR Puppet do not find real hardware
     return false;
   }
-  if (!StaticPrefs::dom_vr_enabled() ||
-      !StaticPrefs::dom_vr_osvr_enabled()) {
+  if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::dom_vr_osvr_enabled()) {
     return false;
   }
   if (mOSVRInitialized) {

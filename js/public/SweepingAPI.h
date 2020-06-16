@@ -24,9 +24,7 @@ class AutoLockStoreBuffer {
   explicit AutoLockStoreBuffer(StoreBuffer* sb) : sb(sb) {
     LockStoreBuffer(sb);
   }
-  ~AutoLockStoreBuffer() {
-    UnlockStoreBuffer(sb);
-  }
+  ~AutoLockStoreBuffer() { UnlockStoreBuffer(sb); }
 };
 
 }  // namespace gc

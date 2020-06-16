@@ -131,11 +131,12 @@ void CompositorThreadHolder::Shutdown() {
     return finished;
   });
 
-// At this point, the CompositorThreadHolder instance will have been destroyed,
-// but the compositor thread itself may still be running due to APZ/Canvas code
-// holding a reference to the underlying nsIThread/nsISerialEventTarget. Any
-// tasks scheduled to run on the compositor thread earlier in this function will
-// have been run to completion.
+  // At this point, the CompositorThreadHolder instance will have been
+  // destroyed, but the compositor thread itself may still be running due to
+  // APZ/Canvas code holding a reference to the underlying
+  // nsIThread/nsISerialEventTarget. Any tasks scheduled to run on the
+  // compositor thread earlier in this function will have been run to
+  // completion.
   CompositorBridgeParent::FinishShutdown();
 }
 

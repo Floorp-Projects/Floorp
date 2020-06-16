@@ -24,10 +24,10 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/Telemetry.h"  // for Accumulate
 #include "mozilla/ToString.h"
-#include "mozilla/gfx/2D.h"        // for DrawTarget
-#include "mozilla/gfx/BaseSize.h"  // for BaseSize
-#include "mozilla/gfx/Matrix.h"    // for Matrix4x4
-#include "mozilla/gfx/Polygon.h"   // for Polygon
+#include "mozilla/gfx/2D.h"                     // for DrawTarget
+#include "mozilla/gfx/BaseSize.h"               // for BaseSize
+#include "mozilla/gfx/Matrix.h"                 // for Matrix4x4
+#include "mozilla/gfx/Polygon.h"                // for Polygon
 #include "mozilla/layers/BSPTree.h"             // for BSPTree
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/Compositor.h"          // for Compositor

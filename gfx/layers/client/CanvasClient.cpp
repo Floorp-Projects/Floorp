@@ -6,9 +6,9 @@
 
 #include "CanvasClient.h"
 
-#include "ClientCanvasLayer.h"  // for ClientCanvasLayer
-#include "gfx2DGlue.h"    // for ImageFormatToSurfaceFormat
-#include "gfxPlatform.h"  // for gfxPlatform
+#include "ClientCanvasLayer.h"     // for ClientCanvasLayer
+#include "gfx2DGlue.h"             // for ImageFormatToSurfaceFormat
+#include "gfxPlatform.h"           // for gfxPlatform
 #include "mozilla/gfx/BaseSize.h"  // for BaseSize
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/BufferTexture.h"
@@ -19,7 +19,7 @@
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
-#include "nsDebug.h"  // for printf_stderr, NS_ASSERTION
+#include "nsDebug.h"      // for printf_stderr, NS_ASSERTION
 #include "nsXULAppAPI.h"  // for XRE_GetProcessType, etc
 
 using namespace mozilla::gfx;

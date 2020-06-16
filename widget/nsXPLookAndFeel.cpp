@@ -224,7 +224,6 @@ const char nsXPLookAndFeel::sColorPrefs[][41] = {
     "ui.-moz-colheadertext",
     "ui.-moz-colheaderhovertext"};
 
-
 int32_t nsXPLookAndFeel::sCachedColors[size_t(LookAndFeel::ColorID::End)] = {0};
 int32_t nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 

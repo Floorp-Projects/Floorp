@@ -190,9 +190,7 @@ class NurseryAwareHashMap {
     nurseryEntries.clear();
   }
 
-  void sweep() {
-    map.sweep();
-  }
+  void sweep() { map.sweep(); }
 
   void clear() {
     map.clear();

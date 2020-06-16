@@ -160,7 +160,8 @@ void nsHistory::Go(int32_t aDelta, ErrorResult& aRv) {
   if (StaticPrefs::dom_window_history_async()) {
     session_history->AsyncGo(aDelta, /* aRequireUserInteraction = */ false);
   } else {
-    session_history->Go(aDelta, /* aRequireUserInteraction = */ false, IgnoreErrors());
+    session_history->Go(aDelta, /* aRequireUserInteraction = */ false,
+                        IgnoreErrors());
   }
 }
 

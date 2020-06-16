@@ -37,9 +37,7 @@ BorrowedSourceSurface::~BorrowedSourceSurface() {
 
 CanvasRenderer::CanvasRenderer() { MOZ_COUNT_CTOR(CanvasRenderer); }
 
-CanvasRenderer::~CanvasRenderer() {
-  MOZ_COUNT_DTOR(CanvasRenderer);
-}
+CanvasRenderer::~CanvasRenderer() { MOZ_COUNT_DTOR(CanvasRenderer); }
 
 void CanvasRenderer::Initialize(const CanvasRendererData& aData) {
   mData = aData;

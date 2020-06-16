@@ -10,8 +10,8 @@
 #include "CanvasRenderer.h"
 #include "mozilla/mozalloc.h"  // for operator new
 #include "mozilla/Maybe.h"
-#include "nsCOMPtr.h"          // for already_AddRefed
-#include "nsISupportsImpl.h"   // for Layer::AddRef, etc
+#include "nsCOMPtr.h"         // for already_AddRefed
+#include "nsISupportsImpl.h"  // for Layer::AddRef, etc
 #include "gfx2DGlue.h"
 #include "GLScreenBuffer.h"
 #include "GLContext.h"
