@@ -128,6 +128,10 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     return super._onProcessAvailable({ targetFront });
   }
 
+  _shouldDestroyTargetsOnNavigation() {
+    return !!this.targetList.destroyServiceWorkersOnNavigation;
+  }
+
   _onProcessDestroyed({ targetFront }) {
     this._processTargets.delete(targetFront);
     return super._onProcessDestroyed({ targetFront });
@@ -135,9 +139,11 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
 
   _onNavigate() {
     const allServiceWorkerTargets = this._getAllServiceWorkerTargets();
+    const shouldDestroy = this._shouldDestroyTargetsOnNavigation();
+
     for (const target of allServiceWorkerTargets) {
       const isRegisteredBefore = this.targetList.isTargetRegistered(target);
-      if (isRegisteredBefore) {
+      if (shouldDestroy && isRegisteredBefore) {
         this.onTargetDestroyed(target);
       }
 
