@@ -81,9 +81,8 @@ class BackgroundServices(
         // Enabling this for all channels is tracked in https://github.com/mozilla-mobile/fenix/issues/6704
         secureStateAtRest = Config.channel.isNightlyOrDebug
     )
-    // If sync has been turned off on the server then disable syncing.
-    @Suppress("ConstantConditionIf")
-    @VisibleForTesting(otherwise = PRIVATE)
+
+    @VisibleForTesting
     val supportedEngines = if (FeatureFlags.syncedTabs) {
         setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords, SyncEngine.Tabs)
     } else {
