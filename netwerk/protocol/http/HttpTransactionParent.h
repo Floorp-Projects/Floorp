@@ -6,6 +6,7 @@
 #ifndef HttpTransactionParent_h__
 #define HttpTransactionParent_h__
 
+#include "mozilla/Mutex.h"
 #include "mozilla/net/HttpTransactionShell.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/PHttpTransactionParent.h"
@@ -35,7 +36,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                                     public nsIRequest,
                                     public nsIThreadRetargetableRequest {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_HTTPTRANSACTIONSHELL
   NS_DECL_NSIREQUEST
   NS_DECL_NSITHREADRETARGETABLEREQUEST
@@ -104,10 +105,15 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       Maybe<TransactionObserverResult>&& aTransactionObserverResult,
       const int64_t& aRequestSize);
   void DoNotifyListener();
+  // Get event target for ODA.
+  already_AddRefed<nsIEventTarget> GetODATarget();
+  void CancelOnMainThread(nsresult aRv);
 
   nsCOMPtr<nsITransportEventSink> mEventsink;
   nsCOMPtr<nsIStreamListener> mChannel;
   nsCOMPtr<nsIEventTarget> mTargetThread;
+  nsCOMPtr<nsIEventTarget> mODATarget;
+  Mutex mEventTargetMutex;
   nsCOMPtr<nsISupports> mSecurityInfo;
   UniquePtr<nsHttpResponseHead> mResponseHead;
   UniquePtr<nsHttpHeaderArray> mResponseTrailers;
