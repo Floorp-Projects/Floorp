@@ -31,15 +31,20 @@ add_task(async function() {
   snapshot = Services.telemetry.getSnapshotForHistograms("main", true);
   Assert.notEqual(histValue(LABELS_STARTUP_CACHE_REQUESTS.HitMemory), 0);
   Assert.equal(histValue(LABELS_STARTUP_CACHE_REQUESTS.HitDisk), 0);
-  Assert.less(histValue(LABELS_STARTUP_CACHE_REQUESTS.Miss), 9);
+
+  // Here and below, 50 is just a nice round number that should be well over
+  // what we should observe under normal circumstances, and well under what
+  // we should see if something is seriously wrong. It won't catch everything,
+  // but it's better than nothing, and better than a test that cries wolf.
+  Assert.less(histValue(LABELS_STARTUP_CACHE_REQUESTS.Miss), 50);
   await BrowserTestUtils.closeWindow(newWin);
 
   Services.obs.notifyObservers(null, "startupcache-invalidate", "memoryOnly");
   newWin = await BrowserTestUtils.openNewBrowserWindow();
   snapshot = Services.telemetry.getSnapshotForHistograms("main", true);
-  Assert.less(histValue(LABELS_STARTUP_CACHE_REQUESTS.HitMemory), 4);
+  Assert.less(histValue(LABELS_STARTUP_CACHE_REQUESTS.HitMemory), 50);
   Assert.notEqual(histValue(LABELS_STARTUP_CACHE_REQUESTS.HitDisk), 0);
   // Some misses can come through - just ensure it's a small number
-  Assert.less(histValue(LABELS_STARTUP_CACHE_REQUESTS.Miss), 5);
+  Assert.less(histValue(LABELS_STARTUP_CACHE_REQUESTS.Miss), 50);
   await BrowserTestUtils.closeWindow(newWin);
 });
