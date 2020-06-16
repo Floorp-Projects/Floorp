@@ -64,6 +64,7 @@ const mockGetMonitorData = data => {
         passwords: 8,
         potentiallyBreachedLogins: data.potentiallyBreachedLogins,
         numBreachesResolved: data.numBreachesResolved,
+        passwordsResolved: 1,
         error: false,
       };
     },
