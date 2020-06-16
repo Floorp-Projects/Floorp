@@ -209,7 +209,8 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
       Some(aDocument->CookieJarSettings()->GetCookieBehavior()));
   txn.SetIsOnContentBlockingAllowList(
       aDocument->CookieJarSettings()->GetIsOnContentBlockingAllowList());
-  txn.SetIsThirdPartyWindow(aDocument->HasThirdPartyChannel());
+  txn.SetIsThirdPartyWindow(nsContentUtils::IsThirdPartyWindowOrChannel(
+      mWindowGlobal, nullptr, nullptr));
   txn.SetIsThirdPartyTrackingResourceWindow(
       nsContentUtils::IsThirdPartyTrackingResourceWindow(mWindowGlobal));
   txn.SetIsSecureContext(mWindowGlobal->IsSecureContext());
