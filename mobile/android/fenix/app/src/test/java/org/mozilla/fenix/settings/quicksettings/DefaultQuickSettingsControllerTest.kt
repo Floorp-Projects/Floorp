@@ -6,7 +6,6 @@ package org.mozilla.fenix.settings.quicksettings
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
-import io.mockk.MockKMatcherScope
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -53,7 +52,7 @@ class DefaultQuickSettingsControllerTest {
     private val controller = spyk(DefaultQuickSettingsController(
         context = context,
         quickSettingsStore = store,
-        coroutineScope = coroutinesScope,
+        ioScope = coroutinesScope,
         navController = navController,
         session = browserSession,
         sitePermissions = sitePermissions,
@@ -85,7 +84,7 @@ class DefaultQuickSettingsControllerTest {
         controller.handlePermissionToggled(websitePermission)
 
         verify {
-            controller.handleAndroidPermissionRequest(eqArray(cameraFeature.androidPermissionsList))
+            controller.handleAndroidPermissionRequest(cameraFeature.androidPermissionsList)
         }
     }
 
@@ -117,7 +116,7 @@ class DefaultQuickSettingsControllerTest {
         val invalidSitePermissionsController = DefaultQuickSettingsController(
             context = context,
             quickSettingsStore = store,
-            coroutineScope = coroutinesScope,
+            ioScope = coroutinesScope,
             navController = navController,
             session = browserSession,
             sitePermissions = null,
@@ -166,7 +165,7 @@ class DefaultQuickSettingsControllerTest {
 
         controller.handleAndroidPermissionRequest(testPermissions)
 
-        verify { requestPermissions(eqArray(testPermissions)) }
+        verify { requestPermissions(testPermissions) }
     }
 
     @Test
@@ -175,13 +174,11 @@ class DefaultQuickSettingsControllerTest {
         val testPermissions = mockk<SitePermissions>()
 
         controller.handlePermissionsChange(testPermissions)
+        advanceUntilIdle()
 
         verifyOrder {
             permissionStorage.updateSitePermissions(testPermissions)
             reload(browserSession)
         }
     }
-
-    private inline fun <reified T> MockKMatcherScope.eqArray(value: Array<T>): Array<T> =
-        match { it contentEquals value }
 }

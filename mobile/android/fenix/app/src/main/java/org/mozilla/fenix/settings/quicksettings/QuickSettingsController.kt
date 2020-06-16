@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
@@ -54,7 +53,7 @@ interface QuickSettingsController {
  * @param context [Context] used for various Android interactions.
  * @param quickSettingsStore [QuickSettingsFragmentStore] holding the State for all Views displayed
  * in this Controller's Fragment.
- * @param coroutineScope [CoroutineScope] used for structed concurrency.
+ * @param ioScope [CoroutineScope] with an IO dispatcher used for structured concurrency.
  * @param navController NavController] used for navigation.
  * @param session [Session]? current browser state.
  * @param sitePermissions [SitePermissions]? list of website permissions and their status.
@@ -71,7 +70,7 @@ interface QuickSettingsController {
 class DefaultQuickSettingsController(
     private val context: Context,
     private val quickSettingsStore: QuickSettingsFragmentStore,
-    private val coroutineScope: CoroutineScope,
+    private val ioScope: CoroutineScope,
     private val navController: NavController,
     private val session: Session?,
     private var sitePermissions: SitePermissions?,
@@ -143,7 +142,7 @@ class DefaultQuickSettingsController(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun handlePermissionsChange(updatedPermissions: SitePermissions) {
-        coroutineScope.launch(Dispatchers.IO) {
+        ioScope.launch {
             permissionStorage.updateSitePermissions(updatedPermissions)
             reload(session)
         }

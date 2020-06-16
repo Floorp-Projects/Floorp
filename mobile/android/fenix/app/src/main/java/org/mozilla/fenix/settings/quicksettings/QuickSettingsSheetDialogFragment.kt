@@ -27,7 +27,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.*
 import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.view.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.plus
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
@@ -75,7 +77,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         quickSettingsController = DefaultQuickSettingsController(
             context = context,
             quickSettingsStore = quickSettingsStore,
-            coroutineScope = viewLifecycleOwner.lifecycleScope,
+            ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
             navController = findNavController(),
             session = context.components.core.sessionManager.findSessionById(args.sessionId),
             sitePermissions = args.sitePermissions,

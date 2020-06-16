@@ -8,6 +8,7 @@ import androidx.annotation.UiThread
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.private.NoReasonCodes
@@ -75,12 +76,13 @@ object StartupTimeline {
  */
 internal class StartupHomeActivityLifecycleObserver(
     private val frameworkStartMeasurement: StartupFrameworkStartMeasurement,
-    private val startupTimeline: PingType<NoReasonCodes> = Pings.startupTimeline
+    private val startupTimeline: PingType<NoReasonCodes> = Pings.startupTimeline,
+    private val scope: CoroutineScope = GlobalScope
 ) : LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onStop() {
-        GlobalScope.launch { // use background thread due to expensive metrics.
+        scope.launch { // use background thread due to expensive metrics.
             // Ensure any last metrics are set before submission.
             frameworkStartMeasurement.setExpensiveMetric()
 

@@ -17,19 +17,19 @@ import org.junit.Test
 @ExperimentalCoroutinesApi
 class StartupHomeActivityLifecycleObserverTest {
 
-    private lateinit var observer: StartupHomeActivityLifecycleObserver
     @MockK(relaxed = true) private lateinit var frameworkStartMeasurement: StartupFrameworkStartMeasurement
     @MockK(relaxed = true) private lateinit var startupTimeline: PingType<NoReasonCodes>
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        observer = StartupHomeActivityLifecycleObserver(frameworkStartMeasurement, startupTimeline)
     }
 
     @Test
     fun `WHEN onStop is called THEN the metrics are set and the ping is submitted`() = runBlockingTest {
+        val observer = StartupHomeActivityLifecycleObserver(frameworkStartMeasurement, startupTimeline, this)
         observer.onStop()
+
         verifySequence {
             frameworkStartMeasurement.setExpensiveMetric()
             startupTimeline.submit()
