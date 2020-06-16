@@ -139,9 +139,9 @@ void MacroAssembler::xorPtr(Imm32 imm, Register dest) { ma_xor(dest, imm); }
 // ===============================================================
 // Swap instructions
 
-void MacroAssembler::swap64(Register64 reg) {
-  swap32(reg.high);
-  swap32(reg.low);
+void MacroAssembler::byteSwap64(Register64 reg) {
+  byteSwap32(reg.high);
+  byteSwap32(reg.low);
 
   // swap reg.high and reg.low.
   ma_xor(reg.high, reg.low);
