@@ -329,11 +329,9 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     if (winData) {
-      nsTObserverArray<AudioChannelAgent*>::ForwardIterator iter(
-          winData->mAgents);
-      while (iter.HasMore()) {
-        iter.GetNext()->WindowVolumeChanged(winData->mConfig.mVolume,
-                                            winData->mConfig.mMuted);
+      for (AudioChannelAgent* agent : winData->mAgents.ForwardRange()) {
+        agent->WindowVolumeChanged(winData->mConfig.mVolume,
+                                   winData->mConfig.mMuted);
       }
     }
   }
@@ -356,9 +354,8 @@ void AudioChannelService::RefreshAgents(
     return;
   }
 
-  nsTObserverArray<AudioChannelAgent*>::ForwardIterator iter(winData->mAgents);
-  while (iter.HasMore()) {
-    aFunc(iter.GetNext());
+  for (AudioChannelAgent* agent : winData->mAgents.ForwardRange()) {
+    aFunc(agent);
   }
 }
 
@@ -405,10 +402,8 @@ void AudioChannelService::SetWindowAudioCaptured(nsPIDOMWindowOuter* aWindow,
 
   if (aCapture != winData->mIsAudioCaptured) {
     winData->mIsAudioCaptured = aCapture;
-    nsTObserverArray<AudioChannelAgent*>::ForwardIterator iter(
-        winData->mAgents);
-    while (iter.HasMore()) {
-      iter.GetNext()->WindowAudioCaptureChanged(aInnerWindowID, aCapture);
+    for (AudioChannelAgent* agent : winData->mAgents.ForwardRange()) {
+      agent->WindowAudioCaptureChanged(aInnerWindowID, aCapture);
     }
   }
 }
@@ -429,12 +424,10 @@ AudioChannelService::GetOrCreateWindowData(nsPIDOMWindowOuter* aWindow) {
 
 AudioChannelService::AudioChannelWindow* AudioChannelService::GetWindowData(
     uint64_t aWindowID) const {
-  nsTObserverArray<UniquePtr<AudioChannelWindow>>::ForwardIterator iter(
-      mWindows);
-  while (iter.HasMore()) {
-    AudioChannelWindow* next = iter.GetNext().get();
+  // XXX We could use a NonObservingRange here and std::find_if.
+  for (const auto& next : mWindows.ForwardRange()) {
     if (next->mWindowID == aWindowID) {
-      return next;
+      return next.get();
     }
   }
 
