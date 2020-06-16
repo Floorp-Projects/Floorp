@@ -36,6 +36,7 @@
 #include "ArrayUtils.h"
 #include "BigEndian.h"
 #include "ClearKeyBase64.h"
+#include "mozilla/Sprintf.h"
 #include "pk11pub.h"
 #include "prerror.h"
 #include "psshparser/PsshParser.h"
@@ -74,7 +75,7 @@ void CK_Log(const char* aFmt, ...) {
   va_start(ap, aFmt);
   const size_t len = 1024;
   char buf[len];
-  vsnprintf(buf, len, aFmt, ap);
+  VsprintfLiteral(buf, aFmt, ap);
   va_end(ap);
 
   fprintf(out, "%s\n", buf);
