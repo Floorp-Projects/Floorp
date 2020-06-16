@@ -20,11 +20,11 @@ add_task(async function() {
   expectedPattern =
     "text-align: left;[\\r\\n]+" +
     "element[\\r\\n]+" +
-    "this.style[\\r\\n]+" +
+    "Best Match this.style[\\r\\n]+" +
     "left[\\r\\n]+" +
     "width: 25px;[\\r\\n]+" +
     "element[\\r\\n]+" +
-    "this.style[\\r\\n]+" +
+    "Best Match this.style[\\r\\n]+" +
     "25px[\\r\\n]*";
 
   info("Expanding computed view properties");
