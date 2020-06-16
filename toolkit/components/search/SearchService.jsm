@@ -15,13 +15,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
-  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   getVerificationHash: "resource://gre/modules/SearchEngine.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  SearchCache: "resource://gre/modules/SearchCache.jsm",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
@@ -59,11 +59,6 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   });
 });
 
-// A text encoder to UTF8, used whenever we commit the cache to disk.
-XPCOMUtils.defineLazyGetter(this, "gEncoder", function() {
-  return new TextEncoder();
-});
-
 // Directory service keys
 const NS_APP_DISTRIBUTION_SEARCH_DIR_LIST = "SrchPluginsDistDL";
 
@@ -76,14 +71,6 @@ const EXT_SIGNING_ADDRESS = "search.mozilla.org";
 
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
 const QUIT_APPLICATION_TOPIC = "quit-application";
-
-// The following constants are left undocumented in nsISearchService.idl
-// For the moment, they are meant for testing/debugging purposes only.
-
-// Delay for batching invalidation of the JSON cache (ms)
-const CACHE_INVALIDATION_DELAY = 1000;
-
-const CACHE_FILENAME = "search.json.mozlz4";
 
 // The default engine update interval, in days. This is only used if an engine
 // specifies an updateURL, but not an updateInterval.
@@ -120,12 +107,13 @@ var ensureKnownRegion = async function(ss) {
   try {
     if (gGeoSpecificDefaultsEnabled && !gModernConfig) {
       // The territory default we have already fetched may have expired.
-      let expired = (ss.getGlobalAttr("searchDefaultExpir") || 0) <= Date.now();
+      let expired =
+        (ss._cache.getAttribute("searchDefaultExpir") || 0) <= Date.now();
       // If we have a default engine or a list of visible default engines
       // saved, the hashes should be valid, verify them now so that we can
       // refetch if they have been tampered with.
-      let defaultEngine = ss.getVerifiedGlobalAttr("searchDefault");
-      let visibleDefaultEngines = ss.getVerifiedGlobalAttr(
+      let defaultEngine = ss._cache.getVerifiedAttribute("searchDefault");
+      let visibleDefaultEngines = ss._cache.getVerifiedAttribute(
         "visibleDefaultEngines"
       );
       let hasValidHashes =
@@ -231,7 +219,7 @@ var fetchRegionDefault = ss =>
         logConsole.debug("fetchRegionDefault failed with HTTP code ", status);
         let retryAfter = request.getResponseHeader("retry-after");
         if (retryAfter) {
-          ss.setGlobalAttr(
+          ss._cache.setAttribute(
             "searchDefaultExpir",
             Date.now() + retryAfter * 1000
           );
@@ -251,7 +239,7 @@ var fetchRegionDefault = ss =>
 
       if (response.settings && response.settings.searchDefault) {
         let defaultEngine = response.settings.searchDefault;
-        ss.setVerifiedGlobalAttr("searchDefault", defaultEngine);
+        ss._cache.setVerifiedAttribute("searchDefault", defaultEngine);
         logConsole.debug(
           "fetchRegionDefault saved searchDefault:",
           defaultEngine
@@ -261,7 +249,7 @@ var fetchRegionDefault = ss =>
       if (response.settings && response.settings.visibleDefaultEngines) {
         let visibleDefaultEngines = response.settings.visibleDefaultEngines;
         let string = visibleDefaultEngines.join(",");
-        ss.setVerifiedGlobalAttr("visibleDefaultEngines", string);
+        ss._cache.setVerifiedAttribute("visibleDefaultEngines", string);
         logConsole.debug(
           "fetchRegionDefault saved visibleDefaultEngines:",
           string
@@ -270,7 +258,7 @@ var fetchRegionDefault = ss =>
 
       let interval = response.interval || SEARCH_GEO_DEFAULT_UPDATE_INTERVAL;
       let milliseconds = interval * 1000; // |interval| is in seconds.
-      ss.setGlobalAttr("searchDefaultExpir", Date.now() + milliseconds);
+      ss._cache.setAttribute("searchDefaultExpir", Date.now() + milliseconds);
 
       logConsole.debug(
         "fetchRegionDefault got success response in",
@@ -364,6 +352,7 @@ const gEmptyParseSubmissionResult = Object.freeze(
 function SearchService() {
   this._initObservers = PromiseUtils.defer();
   this._engines = new Map();
+  this._cache = new SearchCache(this);
 }
 
 SearchService.prototype = {
@@ -380,13 +369,6 @@ SearchService.prototype = {
   _engineSelector: null,
 
   _ensureKnownRegionPromise: null,
-
-  // Reading the JSON cache file is the first thing done during initialization.
-  // During the async init, we save it in a field so that if we have to do a
-  // sync init before the async init finishes, we can avoid reading the cache
-  // with sync disk I/O and handling lz4 decompression synchronously.
-  // This is set back to null as soon as the initialization is finished.
-  _cacheFileJSON: null,
 
   /**
    * Various search engines may be ignored if their submission urls contain a
@@ -451,27 +433,6 @@ SearchService.prototype = {
    * during init().
    */
   _startupExtensions: new Set(),
-
-  /**
-   * The current metadata stored in the cache. This stores:
-   *   - current
-   *       The current user-set default engine. The associated hash is called
-   *       'hash'.
-   *   - private
-   *       The current user-set private engine. The associated hash is called
-   *       'privateHash'.
-   *   - searchDefault
-   *       The current default engine (if any) specified by the region server.
-   *   - searchDefaultExpir
-   *       The expiry time for the default engine when the region server should
-   *       be re-checked.
-   *   - visibleDefaultEngines
-   *       The list of visible default engines supplied by the region server.
-   *
-   * All of the above except `searchDefaultExpir` have associated hash fields
-   * to validate the value is set by the application.
-   */
-  _metaData: {},
 
   // A reference to the handler for the default override allow list.
   _defaultOverrideAllowlist: null,
@@ -566,7 +527,7 @@ SearchService.prototype = {
       }
 
       // See if we have a cache file so we don't have to parse a bunch of XML.
-      let cache = await this._readCacheFile();
+      let cache = await this._cache.get();
 
       // The init flow is not going to block on a fetch from an external service,
       // but we're kicking it off as soon as possible to prevent UI flickering as
@@ -597,7 +558,7 @@ SearchService.prototype = {
 
       // Make sure the current list of engines is persisted, without the need to wait.
       logConsole.debug("_init: engines loaded, writing cache");
-      this._buildCache();
+      this._cache.write();
       this._addObservers();
     } catch (ex) {
       this._initRV = ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE;
@@ -815,28 +776,6 @@ SearchService.prototype = {
     this.idleService.addIdleObserver(this, REINIT_IDLE_TIME_SEC);
   },
 
-  setGlobalAttr(name, val) {
-    this._metaData[name] = val;
-    this.batchTask.disarm();
-    this.batchTask.arm();
-  },
-  setVerifiedGlobalAttr(name, val) {
-    this.setGlobalAttr(name, val);
-    this.setGlobalAttr(name + "Hash", getVerificationHash(val));
-  },
-
-  getGlobalAttr(name) {
-    return this._metaData[name] || undefined;
-  },
-  getVerifiedGlobalAttr(name) {
-    let val = this.getGlobalAttr(name);
-    if (val && this.getGlobalAttr(name + "Hash") != getVerificationHash(val)) {
-      logConsole.warn("getVerifiedGlobalAttr, invalid hash for", name);
-      return "";
-    }
-    return val;
-  },
-
   _listJSONURL: `${EXT_SEARCH_PREFIX}list.json`,
 
   get _sortedEngines() {
@@ -884,7 +823,7 @@ SearchService.prototype = {
 
     // Legacy configuration
 
-    let defaultEngineName = this.getVerifiedGlobalAttr(
+    let defaultEngineName = this._cache.getVerifiedAttribute(
       privateMode ? "searchDefaultPrivate" : "searchDefault"
     );
     if (!defaultEngineName) {
@@ -964,71 +903,6 @@ SearchService.prototype = {
     let originalDefaultEngine = this.originalDefaultEngine;
     originalDefaultEngine.hidden = false;
     this.defaultEngine = originalDefaultEngine;
-  },
-
-  async _buildCache() {
-    if (this._batchTask) {
-      this._batchTask.disarm();
-    }
-
-    let cache = {};
-    let locale = Services.locale.requestedLocale;
-    let buildID = Services.appinfo.platformBuildID;
-    let appVersion = Services.appinfo.version;
-
-    // Allows us to force a cache refresh should the cache format change.
-    cache.version = SearchUtils.CACHE_VERSION;
-    // We don't want to incur the costs of stat()ing each plugin on every
-    // startup when the only (supported) time they will change is during
-    // app updates (where the buildID is obviously going to change).
-    // Extension-shipped plugins are the only exception to this, but their
-    // directories are blown away during updates, so we'll detect their changes.
-    cache.buildID = buildID;
-    // Store the appVersion as well so we can do extra things during major updates.
-    cache.appVersion = appVersion;
-    cache.locale = locale;
-
-    if (gModernConfig) {
-      cache.builtInEngineList = this._searchOrder;
-      // For built-in engines we don't want to store all their data in the cache
-      // so just store the relevant metadata.
-      cache.engines = [...this._engines.values()].map(engine => {
-        if (!engine._isBuiltin) {
-          return engine;
-        }
-        return {
-          _name: engine.name,
-          _isBuiltin: true,
-          _metaData: engine._metaData,
-        };
-      });
-    } else {
-      cache.visibleDefaultEngines = this._visibleDefaultEngines;
-      cache.engines = [...this._engines.values()];
-    }
-    cache.metaData = this._metaData;
-
-    try {
-      if (!cache.engines.length) {
-        throw new Error("cannot write without any engine.");
-      }
-
-      logConsole.debug("_buildCache: Writing to cache file.");
-      let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
-      let data = gEncoder.encode(JSON.stringify(cache));
-      await OS.File.writeAtomic(path, data, {
-        compression: "lz4",
-        tmpPath: path + ".tmp",
-      });
-      logConsole.debug("_buildCache: cache file written to disk.");
-      Services.obs.notifyObservers(
-        null,
-        SearchUtils.TOPIC_SEARCH_SERVICE,
-        "write-cache-to-disk-complete"
-      );
-    } catch (ex) {
-      logConsole.error("_buildCache: Could not write to cache file:", ex);
-    }
   },
 
   /**
@@ -1441,12 +1315,7 @@ SearchService.prototype = {
       return;
     }
 
-    // Before we read the cache file, first make sure all pending tasks are clear.
-    if (this._batchTask) {
-      let task = this._batchTask;
-      this._batchTask = null;
-      await task.finalize();
-    }
+    await this._cache.ensurePendingWritesCompleted();
 
     // Capture the current engine state, in case we need to notify below.
     const prevCurrentEngine = this._currentEngine;
@@ -1458,9 +1327,9 @@ SearchService.prototype = {
     // of appending new engines to the end and fixing the
     // engine order.
     this.__sortedEngines = null;
-    await this._loadEngines(await this._readCacheFile(), true);
+    await this._loadEngines(await this._cache.get(), true);
     // Make sure the current list of engines is persisted.
-    await this._buildCache();
+    await this._cache.write();
 
     // If the defaultEngine has changed between the previous load and this one,
     // dispatch the appropriate notifications.
@@ -1525,18 +1394,7 @@ SearchService.prototype = {
         }
 
         this._initObservers = PromiseUtils.defer();
-        if (this._batchTask) {
-          logConsole.debug("finalizing batch task");
-          let task = this._batchTask;
-          this._batchTask = null;
-          // Tests manipulate the cache directly, so let's not double-write with
-          // stale cache data here.
-          if (origin == "test") {
-            task.disarm();
-          } else {
-            await task.finalize();
-          }
-        }
+        await this._cache.ensurePendingWritesCompleted(origin);
 
         // Clear the engines, too, so we don't stick with the stale ones.
         this._resetLocalData();
@@ -1549,7 +1407,7 @@ SearchService.prototype = {
           "uninit-complete"
         );
 
-        let cache = await this._readCacheFile();
+        let cache = await this._cache.get();
         // The init flow is not going to block on a fetch from an external service,
         // but we're kicking it off as soon as possible to prevent UI flickering as
         // much as possible.
@@ -1577,7 +1435,7 @@ SearchService.prototype = {
         }
 
         // Make sure the current list of engines is persisted.
-        await this._buildCache();
+        await this._cache.write();
 
         // Typically we'll re-init as a result of a pref observer,
         // so signal to 'callers' that we're done.
@@ -1615,53 +1473,6 @@ SearchService.prototype = {
     this._initObservers = PromiseUtils.defer();
     this._initStarted = null;
     this._startupExtensions = new Set();
-  },
-
-  /**
-   * Read the cache file asynchronously.
-   */
-  async _readCacheFile() {
-    let json;
-    try {
-      let cacheFilePath = OS.Path.join(
-        OS.Constants.Path.profileDir,
-        CACHE_FILENAME
-      );
-      let bytes = await OS.File.read(cacheFilePath, { compression: "lz4" });
-      json = JSON.parse(new TextDecoder().decode(bytes));
-      if (!json.engines || !json.engines.length) {
-        throw new Error("no engine in the file");
-      }
-      // Reset search default expiration on major releases
-      if (
-        !gModernConfig &&
-        json.appVersion != Services.appinfo.version &&
-        gGeoSpecificDefaultsEnabled &&
-        json.metaData
-      ) {
-        json.metaData.searchDefaultExpir = 0;
-      }
-    } catch (ex) {
-      logConsole.error("_readCacheFile: Error reading cache file:", ex);
-      json = {};
-    }
-    if (!gInitialized && json.metaData) {
-      this._metaData = json.metaData;
-    }
-
-    return json;
-  },
-
-  _batchTask: null,
-  get batchTask() {
-    if (!this._batchTask) {
-      let task = async () => {
-        logConsole.debug("batchTask: Invalidating engine cache");
-        await this._buildCache();
-      };
-      this._batchTask = new DeferredTask(task, CACHE_INVALIDATION_DELAY);
-    }
-    return this._batchTask;
   },
 
   _addEngineToStore(engine) {
@@ -1973,7 +1784,7 @@ SearchService.prototype = {
     // This will only be set if we got the list from the Mozilla search server;
     // it will not be set for distributions.
     let engineNames;
-    let visibleDefaultEngines = this.getVerifiedGlobalAttr(
+    let visibleDefaultEngines = this._cache.getVerifiedAttribute(
       "visibleDefaultEngines"
     );
     if (visibleDefaultEngines) {
@@ -2994,11 +2805,11 @@ SearchService.prototype = {
       ? "_currentPrivateEngine"
       : "_currentEngine";
     if (!this[currentEngine]) {
-      let name = this.getGlobalAttr(privateMode ? "private" : "current");
+      let name = this._cache.getAttribute(privateMode ? "private" : "current");
       let engine = this.getEngineByName(name);
       if (
         engine &&
-        (this.getGlobalAttr(privateMode ? "privateHash" : "hash") ==
+        (this._cache.getAttribute(privateMode ? "privateHash" : "hash") ==
           getVerificationHash(name) ||
           engine.isAppProvided)
       ) {
@@ -3128,8 +2939,8 @@ SearchService.prototype = {
       newName = "";
     }
 
-    this.setGlobalAttr(privateMode ? "private" : "current", newName);
-    this.setGlobalAttr(
+    this._cache.setAttribute(privateMode ? "private" : "current", newName);
+    this._cache.setAttribute(
       privateMode ? "privateHash" : "hash",
       getVerificationHash(newName)
     );
@@ -3507,8 +3318,7 @@ SearchService.prototype = {
           case SearchUtils.MODIFIED_TYPE.ADDED:
           case SearchUtils.MODIFIED_TYPE.CHANGED:
           case SearchUtils.MODIFIED_TYPE.REMOVED:
-            this.batchTask.disarm();
-            this.batchTask.arm();
+            this._cache.delayedWrite();
             // Invalidate the map used to parse URLs to search engines.
             this._parseSubmissionMap = null;
             break;
@@ -3649,23 +3459,12 @@ SearchService.prototype = {
             return;
           }
 
-          if (this._batchTask) {
-            shutdownState.step = "Finalizing batched task";
-            try {
-              await this._batchTask.finalize();
-              shutdownState.step = "Batched task finalized";
-            } catch (ex) {
-              shutdownState.step = "Batched task failed to finalize";
-
-              shutdownState.latestError.message = "" + ex;
-              if (ex && typeof ex == "object") {
-                shutdownState.latestError.stack = ex.stack || undefined;
-              }
-
-              // Ensure that error is reported and that it causes tests
-              // to fail.
-              Promise.reject(ex);
-            }
+          try {
+            await this._cache.shutdown(shutdownState);
+          } catch (ex) {
+            // Ensure that error is reported and that it causes tests
+            // to fail, otherwise ignore it.
+            Promise.reject(ex);
           }
         })(),
 
