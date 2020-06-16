@@ -117,6 +117,9 @@ class TabTrayView(
             TabsTouchHelper(tray.tabsAdapter).attachToRecyclerView(tray)
             (tray.tabsAdapter as? FenixTabsAdapter)?.also { adapter ->
                 adapter.onTabsUpdated = {
+                    if (hasAccessibilityEnabled) {
+                        adapter.notifyDataSetChanged()
+                    }
                     if (!hasLoaded) {
                         hasLoaded = true
                         tray.layoutManager?.scrollToPosition(selectedBrowserTabIndex)

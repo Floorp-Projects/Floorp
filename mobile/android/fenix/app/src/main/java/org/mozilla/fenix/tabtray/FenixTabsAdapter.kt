@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabtray
 
 import android.content.Context
 import android.view.LayoutInflater
+import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.TabsAdapter
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.support.images.loader.ImageLoader
@@ -26,9 +27,17 @@ class FenixTabsAdapter(
     }
 ) {
     var onTabsUpdated: (() -> Unit)? = null
+    var tabCount = 0
 
     override fun updateTabs(tabs: Tabs) {
         super.updateTabs(tabs)
         onTabsUpdated?.invoke()
+        tabCount = tabs.list.size
+    }
+
+    override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
+        super.onBindViewHolder(holder, position)
+        val newIndex = tabCount - position - 1
+        (holder as TabTrayViewHolder).updateAccessibilityRowIndex(holder.itemView, newIndex)
     }
 }

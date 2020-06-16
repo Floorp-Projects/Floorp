@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabtray
 
 import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
@@ -174,6 +175,28 @@ class TabTrayViewHolder(
     private fun updateCloseButtonDescription(title: String) {
         closeView.contentDescription =
             closeView.context.getString(R.string.close_tab_title, title)
+    }
+
+    internal fun updateAccessibilityRowIndex(item: View, newIndex: Int) {
+        item.setAccessibilityDelegate(object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(
+                host: View?,
+                info: AccessibilityNodeInfo?
+            ) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info?.let {
+                    val initialInfo = info.collectionItemInfo
+                    info.collectionItemInfo = AccessibilityNodeInfo.CollectionItemInfo.obtain(
+                        newIndex,
+                        initialInfo.rowSpan,
+                        initialInfo.columnIndex,
+                        initialInfo.columnSpan,
+                        false,
+                        initialInfo.isSelected
+                    )
+                }
+            }
+        })
     }
 
     companion object {
