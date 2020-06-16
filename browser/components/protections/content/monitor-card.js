@@ -36,23 +36,37 @@ export default class MonitorClass {
       this.doc.sendTelemetryEvent("click", "mtr_about_link");
     });
 
-    const storedEmailLink = this.doc.querySelector(".monitor-block.email a");
+    const storedEmailLink = this.doc.getElementById(
+      "monitor-stored-emails-link"
+    );
     storedEmailLink.href = MONITOR_PREFERENCES_URL;
+    storedEmailLink.addEventListener(
+      "click",
+      this.onClickMonitorButton.bind(this)
+    );
 
-    const knownBreachesLink = this.doc.querySelector(
-      ".monitor-block.breaches a"
+    const knownBreachesLink = this.doc.getElementById(
+      "monitor-known-breaches-link"
     );
     knownBreachesLink.href = MONITOR_HOME_PAGE_URL;
+    knownBreachesLink.addEventListener(
+      "click",
+      this.onClickMonitorButton.bind(this)
+    );
 
-    const exposedPasswordsLink = this.doc.querySelector(
-      ".monitor-block.passwords a"
+    const exposedPasswordsLink = this.doc.getElementById(
+      "monitor-exposed-passwords-link"
     );
     exposedPasswordsLink.href = MONITOR_HOME_PAGE_URL;
+    exposedPasswordsLink.addEventListener(
+      "click",
+      this.onClickMonitorButton.bind(this)
+    );
   }
 
   onClickMonitorButton(evt) {
     RPMSendAsyncMessage("ClearMonitorCache");
-    switch (evt.target.id) {
+    switch (evt.currentTarget.id) {
       case "monitor-partial-breaches-link":
         this.doc.sendTelemetryEvent(
           "click",
@@ -61,7 +75,7 @@ export default class MonitorClass {
         );
         break;
       case "monitor-breaches-link":
-        if (evt.target.classList.contains("no-breaches-resolved")) {
+        if (evt.currentTarget.classList.contains("no-breaches-resolved")) {
           this.doc.sendTelemetryEvent(
             "click",
             "mtr_report_link",
@@ -72,6 +86,57 @@ export default class MonitorClass {
             "click",
             "mtr_report_link",
             "view_report"
+          );
+        }
+        break;
+      case "monitor-stored-emails-link":
+        this.doc.sendTelemetryEvent(
+          "click",
+          "mtr_report_link",
+          "stored_emails"
+        );
+        break;
+      case "monitor-known-breaches-link":
+        const knownBreaches = this.doc.querySelector(
+          "span[data-type='known-breaches']"
+        );
+        if (knownBreaches.classList.contains("known-resolved-breaches")) {
+          this.doc.sendTelemetryEvent(
+            "click",
+            "mtr_report_link",
+            "known_resolved_breaches"
+          );
+        } else if (
+          knownBreaches.classList.contains("known-unresolved-breaches")
+        ) {
+          this.doc.sendTelemetryEvent(
+            "click",
+            "mtr_report_link",
+            "known_unresolved_breaches"
+          );
+        }
+        break;
+      case "monitor-exposed-passwords-link":
+        const exposedPasswords = this.doc.querySelector(
+          "span[data-type='exposed-passwords']"
+        );
+        if (
+          exposedPasswords.classList.contains("passwords-exposed-all-breaches")
+        ) {
+          this.doc.sendTelemetryEvent(
+            "click",
+            "mtr_report_link",
+            "exposed_passwords_all_breaches"
+          );
+        } else if (
+          exposedPasswords.classList.contains(
+            "passwords-exposed-unresolved-breaches"
+          )
+        ) {
+          this.doc.sendTelemetryEvent(
+            "click",
+            "mtr_report_link",
+            "exposed_passwords_unresolved_breaches"
           );
         }
         break;
@@ -192,12 +257,18 @@ export default class MonitorClass {
       if (!numBreachesResolved) {
         partialBreachesWrapper.classList.add("hidden");
         knownBreaches.textContent = numBreaches;
+        knownBreaches.classList.add("known-unresolved-breaches");
+        knownBreaches.classList.remove("known-resolved-breaches");
         this.doc.l10n.setAttributes(
           infoKnownBreaches,
           "info-known-breaches-found",
           { count: numBreaches }
         );
         exposedPasswords.textContent = passwords;
+        exposedPasswords.classList.add("passwords-exposed-all-breaches");
+        exposedPasswords.classList.remove(
+          "passwords-exposed-unresolved-breaches"
+        );
         this.doc.l10n.setAttributes(
           infoExposedPasswords,
           "info-exposed-passwords-found",
@@ -224,6 +295,8 @@ export default class MonitorClass {
       } else if (numBreaches == numBreachesResolved) {
         partialBreachesWrapper.classList.add("hidden");
         knownBreaches.textContent = numBreachesResolved;
+        knownBreaches.classList.remove("known-unresolved-breaches");
+        knownBreaches.classList.add("known-resolved-breaches");
         this.doc.l10n.setAttributes(
           infoKnownBreaches,
           "info-known-breaches-resolved",
@@ -231,6 +304,8 @@ export default class MonitorClass {
         );
         let unresolvedPasswords = passwords - passwordsResolved;
         exposedPasswords.textContent = unresolvedPasswords;
+        exposedPasswords.classList.remove("passwords-exposed-all-breaches");
+        exposedPasswords.classList.add("passwords-exposed-unresolved-breaches");
         this.doc.l10n.setAttributes(
           infoExposedPasswords,
           "info-exposed-passwords-resolved",
@@ -253,6 +328,8 @@ export default class MonitorClass {
       } else {
         breachesWrapper.classList.add("hidden");
         knownBreaches.textContent = numBreachesResolved;
+        knownBreaches.classList.remove("known-unresolved-breaches");
+        knownBreaches.classList.add("known-resolved-breaches");
         this.doc.l10n.setAttributes(
           infoKnownBreaches,
           "info-known-breaches-resolved",
@@ -260,6 +337,8 @@ export default class MonitorClass {
         );
         let unresolvedPasswords = passwords - passwordsResolved;
         exposedPasswords.textContent = unresolvedPasswords;
+        exposedPasswords.classList.remove("passwords-exposed-all-breaches");
+        exposedPasswords.classList.add("passwords-exposed-unresolved-breaches");
         this.doc.l10n.setAttributes(
           infoExposedPasswords,
           "info-exposed-passwords-resolved",
@@ -339,12 +418,18 @@ export default class MonitorClass {
     } else {
       partialBreachesWrapper.classList.add("hidden");
       knownBreaches.textContent = numBreaches;
+      knownBreaches.classList.add("known-unresolved-breaches");
+      knownBreaches.classList.remove("known-resolved-breaches");
       this.doc.l10n.setAttributes(
         infoKnownBreaches,
         "info-known-breaches-found",
         { count: numBreaches }
       );
       exposedPasswords.textContent = passwords;
+      exposedPasswords.classList.add("passwords-exposed-all-breaches");
+      exposedPasswords.classList.remove(
+        "passwords-exposed-unresolved-breaches"
+      );
       this.doc.l10n.setAttributes(
         infoExposedPasswords,
         "info-exposed-passwords-found",
