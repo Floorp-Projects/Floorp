@@ -216,6 +216,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             'cloudabi',
             'Inflector',
             'mach',
+            'qlog',
         ],
         'BSD-3-Clause': [
         ]
