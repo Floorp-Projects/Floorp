@@ -89,10 +89,11 @@ const WebRTCIndicator = {
 
     this.updateWindowAttr("sharingvideo", webrtcUI.showCameraIndicator);
     this.updateWindowAttr("sharingaudio", webrtcUI.showMicrophoneIndicator);
-    this.updateWindowAttr(
-      "sharingscreen",
-      webrtcUI.showScreenSharingIndicator.startsWith("Screen")
+
+    let sharingScreen = webrtcUI.showScreenSharingIndicator.startsWith(
+      "Screen"
     );
+    this.updateWindowAttr("sharingscreen", sharingScreen);
 
     // We don't currently support the browser-tab sharing case, so we don't
     // check if the screen sharing indicator starts with "Browser".
@@ -123,6 +124,30 @@ const WebRTCIndicator = {
       this.updateWindowAttr("sharingbrowserwindow");
       this.sharingBrowserWindow = false;
     }
+
+    // The label that's displayed when sharing a display followed a priority.
+    // The more "risky" we deem the display is for sharing, the higher priority.
+    // This gives us the following priorities, from highest to lowest.
+    //
+    // 1. Screen
+    // 2. Browser window
+    // 3. Other application window
+    // 4. Browser tab (unimplemented)
+    //
+    // The CSS for the indicator does the work of showing or hiding these labels
+    // for us, but we need to update the aria-labelledby attribute on the container
+    // of those labels to make it clearer for screenreaders which one the user cares
+    // about.
+    let displayShare = document.getElementById("display-share");
+    let labelledBy;
+    if (sharingScreen) {
+      labelledBy = "screen-share-info";
+    } else if (this.sharingBrowserWindow) {
+      labelledBy = "browser-window-share-info";
+    } else if (sharingWindow) {
+      labelledBy = "window-share-info";
+    }
+    displayShare.setAttribute("aria-labelledby", labelledBy);
 
     // Resize and ensure the window position is correct
     // (sizeToContent messes with our position).
