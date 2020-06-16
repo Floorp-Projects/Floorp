@@ -2954,7 +2954,6 @@ void GCRuntime::requestMajorGC(JS::GCReason reason) {
 
 void Nursery::requestMinorGC(JS::GCReason reason) const {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
-  MOZ_ASSERT(!CurrentThreadIsPerformingGC());
 
   if (minorGCRequested()) {
     return;
