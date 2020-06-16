@@ -399,7 +399,7 @@ CssComputedView.prototype = {
     ) {
       let selectorText = "";
 
-      for (const child of node.childNodes[0].childNodes) {
+      for (const child of node.childNodes[1].childNodes) {
         if (child.nodeType === node.TEXT_NODE) {
           selectorText += child.textContent;
         }
@@ -1082,12 +1082,21 @@ PropertyView.prototype = {
     // Build the twisty expand/collapse
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
     this.matchedExpander.className = "computed-expander theme-twisty";
+    this.matchedExpander.setAttribute("role", "button");
+    this.matchedExpander.setAttribute(
+      "aria-label",
+      STYLE_INSPECTOR_L10N.getStr("rule.twistyExpand.label")
+    );
     this.matchedExpander.addEventListener("click", this.onMatchedToggle);
     nameContainer.appendChild(this.matchedExpander);
 
     // Build the style name element
     this.nameNode = doc.createElementNS(HTML_NS, "span");
     this.nameNode.classList.add("computed-property-name", "theme-fg-color3");
+
+    // Give it a heading role for screen readers.
+    this.nameNode.setAttribute("role", "heading");
+
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
     this.nameNode.setAttribute("tabindex", "");
@@ -1160,6 +1169,10 @@ PropertyView.prototype = {
       this.matchedSelectorsContainer.parentNode.hidden = true;
       this.matchedSelectorsContainer.textContent = "";
       this.matchedExpander.removeAttribute("open");
+      this.matchedExpander.setAttribute(
+        "aria-label",
+        STYLE_INSPECTOR_L10N.getStr("rule.twistyExpand.label")
+      );
       return;
     }
 
@@ -1208,6 +1221,10 @@ PropertyView.prototype = {
 
           this._buildMatchedSelectors();
           this.matchedExpander.setAttribute("open", "");
+          this.matchedExpander.setAttribute(
+            "aria-label",
+            STYLE_INSPECTOR_L10N.getStr("rule.twistyCollapse.label")
+          );
           this.tree.inspector.emit("computed-view-property-expanded");
         })
         .catch(console.error);
@@ -1215,6 +1232,10 @@ PropertyView.prototype = {
 
     this.matchedSelectorsContainer.innerHTML = "";
     this.matchedExpander.removeAttribute("open");
+    this.matchedExpander.setAttribute(
+      "aria-label",
+      STYLE_INSPECTOR_L10N.getStr("rule.twistyExpand.label")
+    );
     this.tree.inspector.emit("computed-view-property-collapsed");
     return promise.resolve(undefined);
   },
@@ -1250,6 +1271,14 @@ PropertyView.prototype = {
         dir: "ltr",
         class: "rule-text theme-fg-color3 " + selector.statusClass,
         title: selector.statusText,
+      });
+
+      // Add an explicit status text span for screen readers.
+      // They won't pick up the title from the status span.
+      createChild(status, "span", {
+        dir: "ltr",
+        class: "visually-hidden",
+        textContent: selector.statusText + " ",
       });
 
       createChild(status, "div", {
