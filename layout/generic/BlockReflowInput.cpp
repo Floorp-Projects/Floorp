@@ -711,8 +711,13 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
   if (StyleClear::None != floatDisplay->mBreakType) {
     // XXXldb Does this handle vertical margins correctly?
     auto [bCoord, result] = ClearFloats(mBCoord, floatDisplay->mBreakType);
+    if (result == ClearFloatsResult::FloatsPushedOrSplit) {
+      PushFloatPastBreak(aFloat);
+      return false;
+    }
     mBCoord = bCoord;
   }
+
   // Get the band of available space with respect to margin box.
   nsFlowAreaRect floatAvailableSpace =
       GetFloatAvailableSpaceForPlacingFloat(mBCoord);
@@ -1052,7 +1057,7 @@ void BlockReflowInput::PlaceBelowCurrentLineFloats(nsLineBox* aLine) {
 
 std::tuple<nscoord, BlockReflowInput::ClearFloatsResult>
 BlockReflowInput::ClearFloats(nscoord aBCoord, StyleClear aBreakType,
-                              nsIFrame* aReplacedBlock, uint32_t aFlags) {
+                              nsIFrame* aReplacedBlock) {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
@@ -1073,15 +1078,11 @@ BlockReflowInput::ClearFloats(nscoord aBCoord, StyleClear aBreakType,
   nscoord newBCoord = aBCoord;
 
   if (aBreakType != StyleClear::None) {
-    if (!(aFlags & nsFloatManager::DONT_CLEAR_PUSHED_FLOATS) &&
-        FloatManager()->ClearContinues(aBreakType)) {
-      // FIXME bug 1574046. This makes no sense! we set aState.mBCoord from this
-      // result which will eventually make our parent's size nscoord_MAX!
-      // This is wallpapered over in nsBlockFrame::ComputeFinalSize for now...
-      return {nscoord_MAX, ClearFloatsResult::FloatsPushedOrSplit};
-    }
-
     newBCoord = FloatManager()->ClearFloats(newBCoord, aBreakType);
+
+    if (FloatManager()->ClearContinues(aBreakType)) {
+      return {newBCoord, ClearFloatsResult::FloatsPushedOrSplit};
+    }
   }
 
   if (aReplacedBlock) {
