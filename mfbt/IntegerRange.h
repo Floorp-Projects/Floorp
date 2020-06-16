@@ -12,6 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ReverseIterator.h"
 
+#include <iterator>
 #include <type_traits>
 
 namespace mozilla {
@@ -21,6 +22,18 @@ namespace detail {
 template <typename IntTypeT>
 class IntegerIterator {
  public:
+  // It is disputable whether these type definitions are correct, since
+  // operator* doesn't return a reference at all. Also, the iterator_category
+  // can be at most std::input_iterator_tag (rather than
+  // std::bidrectional_iterator_tag, as it might seem), because it is a stashing
+  // iterator. See also, e.g.,
+  // https://stackoverflow.com/questions/50909701/what-should-be-iterator-category-for-a-stashing-iterator
+  using value_type = const IntTypeT;
+  using pointer = const value_type*;
+  using reference = const value_type&;
+  using difference_type = std::make_signed_t<IntTypeT>;
+  using iterator_category = std::input_iterator_tag;
+
   template <typename IntType>
   explicit IntegerIterator(IntType aCurrent) : mCurrent(aCurrent) {}
 
@@ -28,6 +41,10 @@ class IntegerIterator {
   explicit IntegerIterator(const IntegerIterator<IntType>& aOther)
       : mCurrent(aOther.mCurrent) {}
 
+  // This intentionally returns a value rather than a reference, to make
+  // mozilla::ReverseIterator work with it. Still, std::reverse_iterator cannot
+  // be used with IntegerIterator because it still is a "stashing iterator". See
+  // Bug 1175485.
   IntTypeT operator*() const { return mCurrent; }
 
   /* Increment and decrement operators */
@@ -130,9 +147,9 @@ class IntegerRange {
   const_iterator cbegin() const { return begin(); }
   iterator end() const { return iterator(mEnd); }
   const_iterator cend() const { return end(); }
-  reverse_iterator rbegin() const { return reverse_iterator(mEnd); }
+  reverse_iterator rbegin() const { return reverse_iterator(iterator(mEnd)); }
   const_reverse_iterator crbegin() const { return rbegin(); }
-  reverse_iterator rend() const { return reverse_iterator(mBegin); }
+  reverse_iterator rend() const { return reverse_iterator(iterator(mBegin)); }
   const_reverse_iterator crend() const { return rend(); }
 
  private:

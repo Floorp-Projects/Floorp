@@ -10,11 +10,12 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ArrayIterator.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ReverseIterator.h"
 
 #include "nsCycleCollectionNoteChild.h"
 #include "nsTArray.h"
 #include "nsISupports.h"
+
+#include <iterator>
 
 // See below for the definition of nsCOMArray<T>
 
@@ -207,8 +208,8 @@ class nsCOMArray : public nsCOMArray_base {
   typedef int32_t index_type;
   typedef mozilla::ArrayIterator<T*, nsCOMArray> iterator;
   typedef mozilla::ArrayIterator<const T*, nsCOMArray> const_iterator;
-  typedef mozilla::ReverseIterator<iterator> reverse_iterator;
-  typedef mozilla::ReverseIterator<const_iterator> const_reverse_iterator;
+  typedef std::reverse_iterator<iterator> reverse_iterator;
+  typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
   nsCOMArray() = default;
   explicit nsCOMArray(int32_t aCount) : nsCOMArray_base(aCount) {}
