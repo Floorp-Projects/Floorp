@@ -4,21 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 46.0.0-SNAPSHOT (In Development)
+# 47.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v44.0.0...master)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v46.0.0...master)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/106?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
-# 45.0.0
+# 46.0.0
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v44.0.0...v45.0.0)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v44.0.0...v46.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/105?closed=1)
-* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v45.0.0/buildSrc/src/main/java/Dependencies.kt)
-* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v45.0.0/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v45.0.0/buildSrc/src/main/java/Config.kt)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v46.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v46.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v46.0.0/buildSrc/src/main/java/Config.kt)
 
 * **concept-engine**
   * Exposed `GeckoRuntimeSettings#setLoginAutofillEnabled` to control whether login forms should be automatically filled in suitable situations
@@ -94,6 +94,10 @@ permalink: /changelog/
   * DynamicWidthRecyclerView will still be able to have a dynamic width between xml set minWidth and maxWidth attributes but we'll now enforce the following:
     - minimum width 112 dp
     - maximum width - screen width minus a 48dp tappable “exit area”
+
+# 45.0.0
+
+* ⚠️ This release can't be used due to a bad build.
 
 # 44.0.0
 
