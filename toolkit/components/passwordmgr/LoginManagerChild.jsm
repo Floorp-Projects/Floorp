@@ -14,6 +14,9 @@
 const EXPORTED_SYMBOLS = ["LoginManagerChild"];
 
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
+// The amount of time a context menu event supresses showing a
+// popup from a focus event in ms. This matches the threshold in
+// toolkit/components/satchel/nsFormFillController.cpp
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
 const AUTOFILL_STATE = "-moz-autofill";
 
@@ -236,6 +239,9 @@ const observer = {
           log("Ignoring change event on form that hasn't been user-modified");
           break;
         }
+
+        this._storeUserInput(docState, aEvent.target);
+
         if (aEvent.target.hasBeenTypePassword) {
           let triggeredByFillingGenerated = docState.generatedPasswordFields.has(
             aEvent.target
@@ -390,6 +396,20 @@ const observer = {
       default: {
         throw new Error("Unexpected event");
       }
+    }
+  },
+
+  _storeUserInput(docState, field) {
+    if (
+      !Services.prefs.getBoolPref("signon.capture.inputChanges.enabled", false)
+    ) {
+      return;
+    }
+
+    if (LoginHelper.isPasswordFieldType(field)) {
+      docState.possiblePasswords.add(field.value);
+    } else if (LoginHelper.isUsernameFieldType(field)) {
+      docState.possibleUsernames.add(field.value);
     }
   },
 };
@@ -906,6 +926,14 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         lastSubmittedValuesByRootElement: new WeakMap(),
         fieldModificationsByRootElement: new WeakMap(),
         loginFormRootElements: new WeakSet(),
+        /**
+         * Anything entered into an <input> that we think might be a username
+         */
+        possibleUsernames: new Set(),
+        /**
+         * Anything entered into an <input> that we think might be a password
+         */
+        possiblePasswords: new Set(),
       };
       this._loginFormStateByDocument.set(document, loginFormState);
     }
@@ -1702,6 +1730,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         oldPasswordField: mockOldPassword,
         dismissedPrompt,
         triggeredByFillingGenerated,
+        possibleValues: {
+          usernames: docState.possibleUsernames,
+          passwords: docState.possiblePasswords,
+        },
         messageSent: true,
       };
 
