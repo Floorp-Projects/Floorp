@@ -23,12 +23,38 @@ var TargetActorRegistry = {
     browsingContextTargetActors.delete(targetActor);
   },
 
+  /**
+   * Return the target actor matching the passed browsing context id. Returns null if
+   * no matching target actors could be found.
+   *
+   * @param {Integer} browsingContextID
+   * @returns {TargetActor|null}
+   */
   getTargetActor(browsingContextID) {
     for (const actor of browsingContextTargetActors) {
-      if (actor.browsingContextID == browsingContextID) {
+      if (
+        actor.browsingContextID == browsingContextID ||
+        (browsingContextID === null && actor.typeName === "parentProcessTarget")
+      ) {
         return actor;
       }
     }
+    return null;
+  },
+
+  /**
+   * Return the parent process target actor. Returns null if it couldn't be found.
+   *
+   * @param {Integer} browsingContextID
+   * @returns {TargetActor|null}
+   */
+  getParentProcessTargetActor() {
+    for (const actor of browsingContextTargetActors) {
+      if (actor.typeName === "parentProcessTarget") {
+        return actor;
+      }
+    }
+
     return null;
   },
 };
