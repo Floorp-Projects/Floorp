@@ -700,6 +700,53 @@ add_task(async function test_devicelist_pushendpointexpired() {
         type: "desktop",
         isCurrentDevice: true,
         pushEndpointExpired: true,
+        pushCallback: "https://example.com",
+      },
+    ]);
+  };
+
+  await fxa.device.refreshDeviceList();
+
+  Assert.equal(spy.getDeviceList.count, 1);
+  Assert.equal(spy.updateDevice.count, 1);
+  await fxa.signOut(true);
+});
+
+add_task(async function test_devicelist_nopushcallback() {
+  const deviceId = "mydeviceid";
+  const credentials = getTestUser("baz");
+  credentials.verified = true;
+  const fxa = await MockFxAccounts(credentials);
+  await updateUserAccountData(fxa, {
+    uid: credentials.uid,
+    device: {
+      id: deviceId,
+      registeredCommandsKeys: [],
+      registrationVersion: 1,
+    },
+  });
+
+  const spy = {
+    updateDevice: { count: 0, args: [] },
+    getDeviceList: { count: 0, args: [] },
+  };
+  const client = fxa._internal.fxAccountsClient;
+  client.updateDevice = function() {
+    spy.updateDevice.count += 1;
+    spy.updateDevice.args.push(arguments);
+    return Promise.resolve({});
+  };
+  client.getDeviceList = function() {
+    spy.getDeviceList.count += 1;
+    spy.getDeviceList.args.push(arguments);
+    return Promise.resolve([
+      {
+        id: "mydeviceid",
+        name: "foo",
+        type: "desktop",
+        isCurrentDevice: true,
+        pushEndpointExpired: false,
+        pushCallback: null,
       },
     ]);
   };
