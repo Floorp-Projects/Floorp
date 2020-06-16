@@ -15,7 +15,6 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
-#include "mozilla/StaticPrefs_security.h"
 #include "nsXULAppAPI.h"
 
 #include "nsExternalHelperAppService.h"
@@ -926,13 +925,12 @@ static const char kExternalProtocolDefaultPref[] =
 
 NS_IMETHODIMP
 nsExternalHelperAppService::LoadURI(nsIURI* aURI,
-                                    nsIPrincipal* aTriggeringPrincipal,
                                     BrowsingContext* aBrowsingContext) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
-        aURI, aTriggeringPrincipal, aBrowsingContext);
+        aURI, aBrowsingContext);
     return NS_OK;
   }
 
@@ -969,36 +967,6 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
     return NS_OK;  // explicitly denied
   }
 
-  // Now check if the principal is allowed to access the navigated context.
-  // We allow navigating subframes, even if not same-origin - non-external
-  // links can always navigate everywhere, so this is a minor additional
-  // restriction, only aiming to prevent some types of spoofing attacks
-  // from otherwise disjoint browsingcontext trees.
-  if (aBrowsingContext && aTriggeringPrincipal &&
-      !StaticPrefs::security_allow_disjointed_external_uri_loads() &&
-      !aTriggeringPrincipal->IsSystemPrincipal()) {
-    RefPtr<BrowsingContext> bc = aBrowsingContext;
-    WindowGlobalParent* wgp = bc->Canonical()->GetCurrentWindowGlobal();
-    bool foundAccessibleFrame = false;
-
-    // Also allow this load if the target is a toplevel BC and contains a
-    // non-web-controlled about:blank document
-    if (bc->IsTop() && !bc->HadOriginalOpener()) {
-      RefPtr<nsIURI> uri = wgp->GetDocumentURI();
-      foundAccessibleFrame =
-          uri && uri->GetSpecOrDefault().EqualsLiteral("about:blank");
-    }
-
-    while (wgp && !foundAccessibleFrame) {
-      foundAccessibleFrame =
-          aTriggeringPrincipal->Subsumes(wgp->DocumentPrincipal());
-      wgp = wgp->GetParentWindowContext();
-    }
-    if (!foundAccessibleFrame) {
-      return NS_OK;  // deny the load.
-    }
-  }
-
   nsCOMPtr<nsIHandlerInfo> handler;
   rv = GetProtocolHandlerInfo(scheme, getter_AddRefs(handler));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1025,7 +993,7 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
       do_CreateInstance("@mozilla.org/content-dispatch-chooser;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return chooser->Ask(handler, uri, aTriggeringPrincipal, aBrowsingContext,
+  return chooser->Ask(handler, aBrowsingContext, uri,
                       nsIContentDispatchChooser::REASON_CANNOT_HANDLE);
 }
 

@@ -8481,13 +8481,6 @@
   value: true
   mirror: always
 
-# Whether window A is allowed to navigate cross-origin window B (that is not
-# a descendant frame of A) to a URI that loads externally.
-- name: security.allow_disjointed_external_uri_loads
-  type: bool
-  value: false
-  mirror: always
-
 # Allowed by default so it doesn't affect Thunderbird/SeaMonkey, but
 # not allowed for Firefox Desktop in firefox.js
 - name: security.allow_parent_unrestricted_js_loads
