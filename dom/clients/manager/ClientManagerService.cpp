@@ -75,7 +75,8 @@ RefPtr<GenericPromise> OnShutdown() {
 
   nsCOMPtr<nsIRunnable> r =
       NS_NewRunnableFunction("ClientManagerServer::OnShutdown", [ref]() {
-        nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+        nsCOMPtr<nsIAsyncShutdownService> svc =
+            services::GetAsyncShutdownService();
         if (!svc) {
           ref->Resolve(true, __func__);
           return;

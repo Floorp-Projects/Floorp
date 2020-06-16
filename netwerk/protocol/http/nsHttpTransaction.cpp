@@ -272,7 +272,7 @@ nsresult nsHttpTransaction::Init(
 
   mTrafficCategory = trafficCategory;
 
-  mActivityDistributor = services::GetActivityDistributor();
+  mActivityDistributor = services::GetHttpActivityDistributor();
   if (!mActivityDistributor) {
     return NS_ERROR_NOT_AVAILABLE;
   }

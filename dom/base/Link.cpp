@@ -140,7 +140,7 @@ EventStates Link::LinkState() const {
     // Make sure the href attribute has a valid link (bug 23209).
     // If we have a good href, register with History if available.
     if (mHistory && hrefURI) {
-      if (nsCOMPtr<IHistory> history = services::GetHistoryService()) {
+      if (nsCOMPtr<IHistory> history = services::GetHistory()) {
         self->mRegistered = true;
         history->RegisterVisitedCallback(hrefURI, self);
         // And make sure we are in the document's link map.
@@ -552,7 +552,7 @@ void Link::UnregisterFromHistory() {
 
   // And tell History to stop tracking us.
   if (mHistory && mCachedURI) {
-    if (nsCOMPtr<IHistory> history = services::GetHistoryService()) {
+    if (nsCOMPtr<IHistory> history = services::GetHistory()) {
       history->UnregisterVisitedCallback(mCachedURI, this);
       mRegistered = false;
     }

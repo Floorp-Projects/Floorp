@@ -23,7 +23,7 @@ PlacesShutdownBlocker::PlacesShutdownBlocker(const nsString& aName)
   // Create a barrier that will be exposed to clients through GetClient(), so
   // they can block Places shutdown.
   nsCOMPtr<nsIAsyncShutdownService> asyncShutdown =
-      services::GetAsyncShutdown();
+      services::GetAsyncShutdownService();
   MOZ_ASSERT(asyncShutdown);
   if (asyncShutdown) {
     nsCOMPtr<nsIAsyncShutdownBarrier> barrier;

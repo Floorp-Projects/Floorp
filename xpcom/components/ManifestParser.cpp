@@ -642,8 +642,7 @@ void ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       }
 
       if (!nsChromeRegistry::gChromeRegistry) {
-        nsCOMPtr<nsIChromeRegistry> cr =
-            mozilla::services::GetChromeRegistryService();
+        nsCOMPtr<nsIChromeRegistry> cr = mozilla::services::GetChromeRegistry();
         if (!nsChromeRegistry::gChromeRegistry) {
           LogMessageWithContext(aFile, line,
                                 "Chrome registry isn't available yet.");

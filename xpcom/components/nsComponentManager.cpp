@@ -1933,8 +1933,7 @@ NS_IMETHODIMP
 nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation) {
   NS_ENSURE_ARG_POINTER(aLocation);
 
-  nsCOMPtr<nsIChromeRegistry> cr =
-      mozilla::services::GetChromeRegistryService();
+  nsCOMPtr<nsIChromeRegistry> cr = mozilla::services::GetChromeRegistry();
   if (!cr) {
     return NS_ERROR_FAILURE;
   }

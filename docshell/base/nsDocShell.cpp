@@ -11104,7 +11104,7 @@ void nsDocShell::SaveLastVisit(nsIChannel* aChannel, nsIURI* aURI,
     return;
   }
 
-  nsCOMPtr<IHistory> history = services::GetHistoryService();
+  nsCOMPtr<IHistory> history = services::GetHistory();
 
   if (history) {
     uint32_t visitURIFlags = 0;
@@ -12241,7 +12241,7 @@ void nsDocShell::UpdateGlobalHistoryTitle(nsIURI* aURI) {
     return;
   }
 
-  if (nsCOMPtr<IHistory> history = services::GetHistoryService()) {
+  if (nsCOMPtr<IHistory> history = services::GetHistory()) {
     history->SetURITitle(aURI, mTitle);
   }
 }

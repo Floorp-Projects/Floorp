@@ -2282,7 +2282,7 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyAlertsObserver(
 // touch pages. See GetSpecificMessageEventTarget.
 mozilla::ipc::IPCResult ContentChild::RecvNotifyVisited(
     nsTArray<VisitedQueryResult>&& aURIs) {
-  nsCOMPtr<IHistory> history = services::GetHistoryService();
+  nsCOMPtr<IHistory> history = services::GetHistory();
   if (!history) {
     return IPC_OK();
   }

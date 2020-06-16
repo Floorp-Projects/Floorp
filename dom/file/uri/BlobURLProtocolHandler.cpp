@@ -492,7 +492,7 @@ class ReleasingTimerHolder final : public Runnable,
   }
 
   static nsCOMPtr<nsIAsyncShutdownClient> GetShutdownPhase() {
-    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
     NS_ENSURE_TRUE(!!svc, nullptr);
 
     nsCOMPtr<nsIAsyncShutdownClient> phase;

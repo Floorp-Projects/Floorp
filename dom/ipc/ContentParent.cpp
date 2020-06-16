@@ -3122,7 +3122,7 @@ static StaticRefPtr<nsIAsyncShutdownClient> sProfileBeforeChangeClient;
 static void InitClients() {
   if (!sXPCOMShutdownClient) {
     nsresult rv;
-    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
 
     nsCOMPtr<nsIAsyncShutdownClient> client;
     rv = svc->GetXpcomWillShutdown(getter_AddRefs(client));
@@ -3934,7 +3934,7 @@ mozilla::ipc::IPCResult ContentParent::RecvPSpeechSynthesisConstructor(
 
 mozilla::ipc::IPCResult ContentParent::RecvStartVisitedQueries(
     const nsTArray<RefPtr<nsIURI>>& aUris) {
-  nsCOMPtr<IHistory> history = services::GetHistoryService();
+  nsCOMPtr<IHistory> history = services::GetHistory();
   if (!history) {
     return IPC_OK();
   }
@@ -3952,7 +3952,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetURITitle(nsIURI* uri,
   if (!uri) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsCOMPtr<IHistory> history = services::GetHistoryService();
+  nsCOMPtr<IHistory> history = services::GetHistory();
   if (history) {
     history->SetURITitle(uri, title);
   }
