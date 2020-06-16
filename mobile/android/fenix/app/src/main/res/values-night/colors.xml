@@ -64,6 +64,9 @@
     <color name="top_site_border">@color/top_site_border_dark_theme</color>
     <color name="top_site_title_text">@color/top_site_title_text_dark_theme</color>
 
+    <!-- Synced tabs colors-->
+    <color name="synced_tabs_separator">@color/synced_tabs_separator_dark_theme</color>
+
     <!-- Collection icons-->
     <color name="collection_icon_color_violet">@color/collection_icon_color_violet_dark_theme</color>
     <color name="collection_icon_color_blue">@color/collection_icon_color_blue_dark_theme</color>

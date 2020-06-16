@@ -8,34 +8,31 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="60dp"
-    android:paddingEnd="20dp"
-    android:minHeight="@dimen/library_item_height"
     android:background="?android:attr/selectableItemBackground">
 
     <TextView
         android:id="@+id/synced_tab_item_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:ellipsize="end"
+        android:layout_marginStart="72dp"
+        android:layout_marginEnd="48dp"
+        android:layout_marginTop="6dp"
         android:singleLine="true"
         android:textAlignment="viewStart"
         android:textColor="?primaryText"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toTopOf="@+id/synced_tab_item_url"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed"
         tools:text="Tab Title" />
 
     <TextView
         android:id="@+id/synced_tab_item_url"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:ellipsize="end"
+        android:layout_marginStart="72dp"
+        android:layout_marginEnd="48dp"
+        android:layout_marginTop="2dp"
         android:singleLine="true"
         android:textAlignment="viewStart"
         android:textColor="?secondaryText"
@@ -43,21 +40,18 @@
         tools:text="https://example.com/"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/synced_tab_item_title"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/synced_tab_item_title" />
 
     <View
         android:id="@+id/synced_tab_item_separator"
-        android:layout_width="0dp"
-        android:layout_height="2dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="7dp"
+        android:background="?syncedTabsSeparator"
         android:importantForAccessibility="no"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
-        android:background="?neutralFaded"
-        android:visibility="gone"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/synced_tab_item_url" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

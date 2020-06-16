@@ -6,7 +6,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/history_wrapper"
+    android:id="@+id/synced_tabs_wrapper"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <ProgressBar
@@ -43,7 +43,7 @@
             android:id="@+id/synced_tabs_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:listitem="@layout/history_list_item"/>
+            tools:listitem="@layout/sync_tabs_list_item"/>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

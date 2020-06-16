@@ -47,6 +47,7 @@
     <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="top_site_background_light_theme">@android:color/white</color>
     <color name="top_site_border_light_theme">@color/light_grey_30</color>
+    <color name="synced_tabs_separator_light_theme">@color/light_grey_30</color>
     <color name="top_site_title_text_light_theme">@color/light_grey_80</color>
     <color name="collection_icon_color_violet_light_theme">#7542E5</color>
     <color name="collection_icon_color_blue_light_theme">#0250BB</color>
@@ -104,6 +105,7 @@
     <color name="scrimEnd_dark_theme">#F515141A</color>
     <color name="top_site_background_dark_theme">@color/dark_grey_50</color>
     <color name="top_site_border_dark_theme">@color/dark_grey_10</color>
+    <color name="synced_tabs_separator_dark_theme">@color/dark_grey_10</color>
     <color name="top_site_title_text_dark_theme">@color/light_grey_90</color>
     <color name="collection_icon_color_violet_dark_theme">#AB71FF</color>
     <color name="collection_icon_color_blue_dark_theme">#00B3F4</color>
@@ -249,6 +251,9 @@
     <color name="top_site_background">@color/top_site_background_light_theme</color>
     <color name="top_site_border">@color/top_site_border_light_theme</color>
     <color name="top_site_title_text">@color/top_site_title_text_light_theme</color>
+
+    <!-- Synced tabs colors-->
+    <color name="synced_tabs_separator">@color/synced_tabs_separator_light_theme</color>
 
     <!-- Collection icons-->
     <color name="collection_icon_color_violet">@color/collection_icon_color_violet_light_theme</color>

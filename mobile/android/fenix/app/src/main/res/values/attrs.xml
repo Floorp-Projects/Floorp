@@ -51,6 +51,7 @@
     <attr name="addOnPrivateBrowsingInteriorIconBackground" format="reference"/>
     <attr name="readerModeStartGradient" format="reference"/>
     <attr name="readerModeEndGradient" format="reference"/>
+    <attr name="syncedTabsSeparator" format="reference"/>
 
     <!-- Tab tray -->
     <attr name="tabTrayItemBackground" format="reference" />
