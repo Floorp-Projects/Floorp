@@ -4,22 +4,29 @@
 
 import json
 import os
+import re
 import signal
 import six
 import subprocess
 
+from distutils.version import StrictVersion
 from mozfile import which
 from mozlint import result
 from mozlint.pathutils import get_ancestors_by_name
 from mozprocess import ProcessHandler
 
 
-CLIPPY_NOT_FOUND = """
-Could not find clippy! Install clippy and try again.
+CLIPPY_WRONG_VERSION = """
+You are probably using an old version of clippy.
+Expected version is {version}.
 
+To install it:
     $ rustup component add clippy
 
-And make sure that it is in the PATH
+Or to update it:
+    $ rustup update
+
+And make sure that 'cargo' is in the PATH
 """.strip()
 
 
@@ -98,7 +105,7 @@ def get_cargo_binary(log):
     return which("cargo")
 
 
-def is_clippy_installed(log, binary):
+def get_clippy_version(log, binary):
     """
     Check if we are running the deprecated rustfmt
     """
@@ -118,7 +125,9 @@ def is_clippy_installed(log, binary):
         )
     )
 
-    return output.strip().startswith("clippy ")
+    version = re.findall(r'(\d+-\d+-\d+)', output)[0].replace("-", ".")
+    version = StrictVersion(version)
+    return version
 
 
 class clippyProcess(ProcessHandler):
@@ -155,11 +164,18 @@ def lint(paths, config, fix=None, **lintargs):
             return 1
         return []
 
-    if not is_clippy_installed(log, cargo):
-        print(CLIPPY_NOT_FOUND)
-        if 'MOZ_AUTOMATION' in os.environ:
-            return 1
-        return []
+    min_version_str = config.get('min_clippy_version')
+    min_version = StrictVersion(min_version_str)
+    actual_version = get_clippy_version(log, cargo)
+    log.debug(
+        "Found version: {}. Minimal expected version: {}".format(
+            actual_version, min_version
+        )
+    )
+
+    if actual_version < min_version:
+        print(CLIPPY_WRONG_VERSION.format(version=min_version_str))
+        return 1
 
     cmd_args_clean = [cargo]
     cmd_args_clean.append("clean")
