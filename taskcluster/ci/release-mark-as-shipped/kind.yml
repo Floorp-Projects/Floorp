@@ -11,7 +11,7 @@ transforms:
 
 kind-dependencies:
     - release-balrog-scheduling
-    - release-bouncer-aliases-nazgul
+    - release-bouncer-aliases
     - release-version-bump
 
 job-defaults:
