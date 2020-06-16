@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Element.h"  // StringToCORSMode
 #include "mozilla/css/SheetLoadData.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "nsIPrincipal.h"
 #include "nsIReferrerInfo.h"
 
@@ -105,14 +106,14 @@ PreloadHashKey PreloadHashKey::CreateAsScript(
 
 // static
 PreloadHashKey PreloadHashKey::CreateAsStyle(
-    nsIURI* aURI, nsIPrincipal* aPrincipal, nsIReferrerInfo* aReferrerInfo,
+    nsIURI* aURI, nsIPrincipal* aPrincipal, dom::ReferrerPolicy aReferrerPolicy,
     CORSMode aCORSMode, css::SheetParsingMode aParsingMode) {
   PreloadHashKey key(aURI, ResourceType::STYLE);
+  key.mReferrerPolicy = aReferrerPolicy;
   key.mCORSMode = aCORSMode;
   key.mPrincipal = aPrincipal;
 
   key.mStyle.mParsingMode = aParsingMode;
-  key.mStyle.mReferrerInfo = aReferrerInfo;
 
   return key;
 }
@@ -121,7 +122,7 @@ PreloadHashKey PreloadHashKey::CreateAsStyle(
 PreloadHashKey PreloadHashKey::CreateAsStyle(
     css::SheetLoadData& aSheetLoadData) {
   return CreateAsStyle(aSheetLoadData.mURI, aSheetLoadData.mTriggeringPrincipal,
-                       aSheetLoadData.ReferrerInfo(),
+                       aSheetLoadData.ReferrerInfo()->ReferrerPolicy(),
                        aSheetLoadData.mSheet->GetCORSMode(),
                        aSheetLoadData.mSheet->ParsingMode());
 }
@@ -200,12 +201,6 @@ bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
       break;
     case ResourceType::STYLE: {
       if (mStyle.mParsingMode != aOther->mStyle.mParsingMode) {
-        return false;
-      }
-      bool eq;
-      if (NS_FAILED(mStyle.mReferrerInfo->Equals(aOther->mStyle.mReferrerInfo,
-                                                 &eq)) ||
-          !eq) {
         return false;
       }
       break;
