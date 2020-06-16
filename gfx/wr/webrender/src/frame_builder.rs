@@ -121,10 +121,6 @@ pub struct FrameBuilder {
     /// that can optionally be consumed by this frame builder.
     pending_retained_tiles: RetainedTiles,
     pub globals: FrameGlobalResources,
-    // A vector that is cleared and re-built each frame. We keep it
-    // here to avoid reallocations.
-    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(skip))]
-    surfaces: Vec<SurfaceInfo>,
 }
 
 pub struct FrameVisibilityContext<'a> {
@@ -241,7 +237,6 @@ impl FrameBuilder {
         FrameBuilder {
             pending_retained_tiles: RetainedTiles::new(),
             globals: FrameGlobalResources::empty(),
-            surfaces: Vec::new(),
         }
     }
 
@@ -260,10 +255,6 @@ impl FrameBuilder {
         self.pending_retained_tiles.merge(retained_tiles);
     }
 
-    pub fn memory_pressure(&mut self) {
-        self.surfaces = Vec::new();
-    }
-
     /// Compute the contribution (bounding rectangles, and resources) of layers and their
     /// primitives in screen space.
     fn build_layer_screen_rects_and_cull_layers(
@@ -278,6 +269,7 @@ impl FrameBuilder {
         scene_properties: &SceneProperties,
         transform_palette: &mut TransformPalette,
         data_stores: &mut DataStores,
+        surfaces: &mut Vec<SurfaceInfo>,
         scratch: &mut PrimitiveScratchBuffer,
         debug_flags: DebugFlags,
         texture_cache_profile: &mut TextureCacheProfileCounters,
@@ -335,7 +327,7 @@ impl FrameBuilder {
             global_device_pixel_scale,
             (1.0, 1.0),
         );
-        self.surfaces.push(root_surface);
+        surfaces.push(root_surface);
 
         let mut retained_tiles = mem::replace(
             &mut self.pending_retained_tiles,
@@ -350,7 +342,7 @@ impl FrameBuilder {
         // which surfaces have valid cached surfaces that don't need to
         // be rendered this frame.
         PictureUpdateState::update_all(
-            &mut self.surfaces,
+            surfaces,
             scene.root_pic_index,
             &mut scene.prim_store.pictures,
             &frame_context,
@@ -368,7 +360,7 @@ impl FrameBuilder {
                 global_device_pixel_scale,
                 spatial_tree: &scene.spatial_tree,
                 global_screen_world_rect,
-                surfaces: &self.surfaces,
+                surfaces,
                 debug_flags,
                 scene_properties,
                 config: scene.config,
@@ -434,7 +426,7 @@ impl FrameBuilder {
             gpu_cache,
             transforms: transform_palette,
             segment_builder: SegmentBuilder::new(),
-            surfaces: &mut self.surfaces,
+            surfaces,
             dirty_region_stack: Vec::new(),
             composite_state,
         };
@@ -535,8 +527,6 @@ impl FrameBuilder {
         profile_scope!("build");
         profile_marker!("BuildFrame");
 
-        self.surfaces.clear();
-
         let mut profile_counters = FrameProfileCounters::new();
         profile_counters
             .total_primitives
@@ -559,6 +549,7 @@ impl FrameBuilder {
             stamp.frame_id(),
             render_task_counters,
         );
+        let mut surfaces = Vec::new();
 
         let output_size = scene.output_rect.size.to_i32();
         let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
@@ -596,6 +587,7 @@ impl FrameBuilder {
             scene_properties,
             &mut transform_palette,
             data_stores,
+            &mut surfaces,
             scratch,
             debug_flags,
             &mut resource_profile.texture_cache,
@@ -633,7 +625,7 @@ impl FrameBuilder {
                     batch_lookback_count: scene.config.batch_lookback_count,
                     spatial_tree: &scene.spatial_tree,
                     data_stores,
-                    surfaces: &self.surfaces,
+                    surfaces: &surfaces,
                     scratch,
                     screen_world_rect,
                     globals: &self.globals,
