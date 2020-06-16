@@ -2231,7 +2231,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
       return false;
     }
 
-    atom = drainCharBufferIntoAtom();
+    atom = drainCharBufferIntoAtom(anyCharsAccess().cx);
   } else {
     // Escape-free identifiers can be created directly from sourceUnits.
     const Unit* chars = identStart;
@@ -2247,7 +2247,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
       }
     }
 
-    atom = atomizeSourceChars(MakeSpan(chars, length));
+    atom = atomizeSourceChars(anyCharsAccess().cx, MakeSpan(chars, length));
   }
   if (!atom) {
     return false;
@@ -3668,7 +3668,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
     }
   }
 
-  JSAtom* atom = drainCharBufferIntoAtom();
+  JSAtom* atom = drainCharBufferIntoAtom(anyCharsAccess().cx);
   if (!atom) {
     return false;
   }
