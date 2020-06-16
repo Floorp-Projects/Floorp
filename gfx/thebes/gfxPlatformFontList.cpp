@@ -1295,12 +1295,9 @@ gfxFontEntry* gfxPlatformFontList::FindFontForFamily(
 
 gfxFontEntry* gfxPlatformFontList::GetOrCreateFontEntry(
     fontlist::Face* aFace, const fontlist::Family* aFamily) {
-  gfxFontEntry* fe = mFontEntries.GetWeak(aFace);
-  if (!fe) {
-    fe = CreateFontEntry(aFace, aFamily);
-    mFontEntries.Put(aFace, RefPtr{fe});
-  }
-  return fe;
+  return mFontEntries.LookupForAdd(aFace).OrInsert([=]() {
+    return CreateFontEntry(aFace, aFamily);
+  });
 }
 
 void gfxPlatformFontList::AddOtherFamilyName(
