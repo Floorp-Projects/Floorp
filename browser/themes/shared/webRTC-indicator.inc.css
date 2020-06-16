@@ -176,7 +176,3 @@ button {
   fill-opacity: 0.4;
   margin: 5px;
 }
-
-:-moz-any(#microphone-button, #camera-button, .stop-button):-moz-focusring {
-  outline: none;
-}
