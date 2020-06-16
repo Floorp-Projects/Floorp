@@ -166,12 +166,8 @@ void BaseHistory::NotifyVisitedInThisProcess(nsIURI* aURI,
   // These will fire asynchronously in the correct DocGroup.
 
   const bool visited = aStatus == VisitedStatus::Visited;
-  {
-    ObserverArray::BackwardIterator iter(links.mLinks);
-    while (iter.HasMore()) {
-      Link* link = iter.GetNext();
-      link->VisitedQueryFinished(visited);
-    }
+  for (Link* link : links.mLinks.BackwardRange()) {
+    link->VisitedQueryFinished(visited);
   }
 
   // We never go from visited -> unvisited.
