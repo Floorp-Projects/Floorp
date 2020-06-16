@@ -385,10 +385,8 @@ void EventListenerService::NotifyPendingChanges() {
   mPendingListenerChanges.swap(changes);
   mPendingListenerChangesSet.Clear();
 
-  nsTObserverArray<nsCOMPtr<nsIListenerChangeListener>>::EndLimitedIterator
-      iter(mChangeListeners);
-  while (iter.HasMore()) {
-    nsCOMPtr<nsIListenerChangeListener> listener = iter.GetNext();
+  for (nsCOMPtr<nsIListenerChangeListener> listener :
+       mChangeListeners.EndLimitedRange()) {
     listener->ListenersChanged(changes);
   }
 }
