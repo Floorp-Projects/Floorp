@@ -1171,63 +1171,6 @@ class Buildsymbols(MachCommandBase):
 
 
 @CommandProvider
-class Makefiles(MachCommandBase):
-    @Command('empty-makefiles', category='build-dev',
-             description='Find empty Makefile.in in the tree.')
-    def empty(self):
-        import pymake.parser
-        import pymake.parserdata
-
-        IGNORE_VARIABLES = {
-            'DEPTH': ('@DEPTH@',),
-            'topsrcdir': ('@top_srcdir@',),
-            'srcdir': ('@srcdir@',),
-            'relativesrcdir': ('@relativesrcdir@',),
-            'VPATH': ('@srcdir@',),
-        }
-
-        IGNORE_INCLUDES = [
-            'include $(DEPTH)/config/autoconf.mk',
-            'include $(topsrcdir)/config/config.mk',
-            'include $(topsrcdir)/config/rules.mk',
-        ]
-
-        def is_statement_relevant(s):
-            if isinstance(s, pymake.parserdata.SetVariable):
-                exp = s.vnameexp
-                if not exp.is_static_string:
-                    return True
-
-                if exp.s not in IGNORE_VARIABLES:
-                    return True
-
-                return s.value not in IGNORE_VARIABLES[exp.s]
-
-            if isinstance(s, pymake.parserdata.Include):
-                if s.to_source() in IGNORE_INCLUDES:
-                    return False
-
-            return True
-
-        for path in self._makefile_ins():
-            relpath = os.path.relpath(path, self.topsrcdir)
-            try:
-                statements = [s for s in pymake.parser.parsefile(path)
-                              if is_statement_relevant(s)]
-
-                if not statements:
-                    print(relpath)
-            except pymake.parser.SyntaxError:
-                print('Warning: Could not parse %s' % relpath, file=sys.stderr)
-
-    def _makefile_ins(self):
-        for root, dirs, files in os.walk(self.topsrcdir):
-            for f in files:
-                if f == 'Makefile.in':
-                    yield os.path.join(root, f)
-
-
-@CommandProvider
 class MachDebug(MachCommandBase):
     @Command('environment', category='build-dev',
              description='Show info about the mach and build environment.')
