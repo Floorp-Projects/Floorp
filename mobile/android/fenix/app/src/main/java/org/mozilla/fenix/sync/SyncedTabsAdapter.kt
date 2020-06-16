@@ -6,10 +6,13 @@ package org.mozilla.fenix.sync
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import org.mozilla.fenix.sync.SyncedTabsViewHolder.DeviceViewHolder
+import org.mozilla.fenix.sync.SyncedTabsViewHolder.ErrorViewHolder
+import org.mozilla.fenix.sync.SyncedTabsViewHolder.SignInViewHolder
 import org.mozilla.fenix.sync.SyncedTabsViewHolder.TabViewHolder
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.concept.sync.Device as SyncDevice
@@ -24,6 +27,8 @@ class SyncedTabsAdapter(
         return when (viewType) {
             DeviceViewHolder.LAYOUT_ID -> DeviceViewHolder(itemView)
             TabViewHolder.LAYOUT_ID -> TabViewHolder(itemView)
+            ErrorViewHolder.LAYOUT_ID -> ErrorViewHolder(itemView)
+            SignInViewHolder.LAYOUT_ID -> SignInViewHolder(itemView)
             else -> throw IllegalStateException()
         }
     }
@@ -35,6 +40,8 @@ class SyncedTabsAdapter(
     override fun getItemViewType(position: Int) = when (getItem(position)) {
         is AdapterItem.Device -> DeviceViewHolder.LAYOUT_ID
         is AdapterItem.Tab -> TabViewHolder.LAYOUT_ID
+        is AdapterItem.Error -> ErrorViewHolder.LAYOUT_ID
+        is AdapterItem.SignIn -> SignInViewHolder.LAYOUT_ID
     }
 
     fun updateData(syncedTabs: List<SyncedDeviceTabs>) {
@@ -55,7 +62,7 @@ class SyncedTabsAdapter(
             when (oldItem) {
                 is AdapterItem.Device ->
                     newItem is AdapterItem.Device && oldItem.device.id == newItem.device.id
-                is AdapterItem.Tab ->
+                is AdapterItem.Tab, AdapterItem.Error, AdapterItem.SignIn ->
                     oldItem == newItem
             }
 
@@ -67,5 +74,7 @@ class SyncedTabsAdapter(
     sealed class AdapterItem {
         data class Device(val device: SyncDevice) : AdapterItem()
         data class Tab(val tab: SyncTab) : AdapterItem()
+        data class SignIn(val navController: NavController) : AdapterItem()
+        data class Error(val errorResId: Int) : AdapterItem()
     }
 }

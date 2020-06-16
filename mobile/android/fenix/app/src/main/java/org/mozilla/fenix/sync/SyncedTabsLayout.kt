@@ -6,8 +6,10 @@ package org.mozilla.fenix.sync
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
 import android.widget.FrameLayout
+import androidx.annotation.StringRes
+import androidx.fragment.app.findFragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.component_sync_tabs.view.*
 import kotlinx.coroutines.CoroutineScope
