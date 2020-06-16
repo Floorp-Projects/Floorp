@@ -435,12 +435,6 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
       return *this;
     }
 
-    STLIterator operator++(int) {
-      auto res = *this;
-      ++res;
-      return res;
-    }
-
     value_type* operator->() { return mCurrent; }
     U& operator*() { return *mCurrent; }
 
