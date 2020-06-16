@@ -53,6 +53,7 @@ test-verify:
             (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: ['try']
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
             default: ['autoland', 'try']
+    built-projects-only: true
     target:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
@@ -125,6 +126,7 @@ test-verify-gpu:
             (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: ['try']
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
             default: ['autoland', 'try']
+    built-projects-only: true
     tier: 2
     mozharness:
         script:
