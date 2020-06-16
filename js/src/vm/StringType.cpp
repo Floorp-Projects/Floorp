@@ -1152,7 +1152,9 @@ bool js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes,
 }
 
 template <typename CharT>
-bool js::CheckStringIsIndex(const CharT* s, size_t length, uint32_t* indexp) {
+/* static */
+bool JSLinearString::isIndexSlow(const CharT* s, size_t length,
+                                 uint32_t* indexp) {
   MOZ_ASSERT(length > 0);
   MOZ_ASSERT(length <= UINT32_CHAR_BUFFER_LENGTH);
   MOZ_ASSERT(IsAsciiDigit(*s),
@@ -1190,18 +1192,6 @@ bool js::CheckStringIsIndex(const CharT* s, size_t length, uint32_t* indexp) {
   }
 
   return false;
-}
-
-template bool js::CheckStringIsIndex(const Latin1Char* s, size_t length,
-                                     uint32_t* indexp);
-template bool js::CheckStringIsIndex(const char16_t* s, size_t length,
-                                     uint32_t* indexp);
-
-template <typename CharT>
-/* static */
-bool JSLinearString::isIndexSlow(const CharT* s, size_t length,
-                                 uint32_t* indexp) {
-  return js::CheckStringIsIndex(s, length, indexp);
 }
 
 template bool JSLinearString::isIndexSlow(const Latin1Char* s, size_t length,
