@@ -407,35 +407,54 @@ mpl_get_bits(const mp_int *a, mp_size lsbNum, mp_size numBits)
     return (mp_err)mask;
 }
 
+#define LZCNTLOOP(i)                               \
+    do {                                           \
+        x = d >> (i);                              \
+        mask = (0 - x);                            \
+        mask = (0 - (mask >> (MP_DIGIT_BIT - 1))); \
+        bits += (i)&mask;                          \
+        d ^= (x ^ d) & mask;                       \
+    } while (0)
+
 /*
   mpl_significant_bits
-  returns number of significnant bits in abs(a).
+  returns number of significant bits in abs(a).
+  In other words: floor(lg(abs(a))) + 1.
   returns 1 if value is zero.
  */
 mp_size
 mpl_significant_bits(const mp_int *a)
 {
-    mp_size bits = 0;
+    /*
+      start bits at 1.
+      lg(0) = 0 => bits = 1 by function semantics.
+      below does a binary search for the _position_ of the top bit set,
+      which is floor(lg(abs(a))) for a != 0.
+     */
+    mp_size bits = 1;
     int ix;
 
     ARGCHK(a != NULL, MP_BADARG);
 
     for (ix = MP_USED(a); ix > 0;) {
-        mp_digit d;
-        d = MP_DIGIT(a, --ix);
-        if (d) {
-            while (d) {
-                ++bits;
-                d >>= 1;
-            }
-            break;
-        }
+        mp_digit d, x, mask;
+        if ((d = MP_DIGIT(a, --ix)) == 0)
+            continue;
+#if !defined(MP_USE_UINT_DIGIT)
+        LZCNTLOOP(32);
+#endif
+        LZCNTLOOP(16);
+        LZCNTLOOP(8);
+        LZCNTLOOP(4);
+        LZCNTLOOP(2);
+        LZCNTLOOP(1);
+        break;
     }
     bits += ix * MP_DIGIT_BIT;
-    if (!bits)
-        bits = 1;
     return bits;
 }
+
+#undef LZCNTLOOP
 
 /*------------------------------------------------------------------------*/
 /* HERE THERE BE DRAGONS                                                  */

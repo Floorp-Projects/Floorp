@@ -267,6 +267,7 @@ mp_size mp_trailing_zeros(const mp_int *mp);
 void freebl_cpuid(unsigned long op, unsigned long *eax,
                   unsigned long *ebx, unsigned long *ecx,
                   unsigned long *edx);
+mp_err mp_cswap(mp_digit condition, mp_int *a, mp_int *b, mp_size numdigits);
 
 #define MP_CHECKOK(x)          \
     if (MP_OKAY > (res = (x))) \
