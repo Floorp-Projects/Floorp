@@ -60,7 +60,6 @@ clippy:
         - gfx/wr/webrender_api/
         - gfx/wr/wrench/
         - gfx/wgpu/wgpu-core/
-        - gfx/wgpu/player/
         - gfx/wgpu_bindings/
         # not_unsafe_ptr_arg_deref
         - modules/libpref/parser/
