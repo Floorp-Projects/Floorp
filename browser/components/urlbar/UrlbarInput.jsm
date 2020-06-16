@@ -1889,6 +1889,7 @@ class UrlbarInput {
     }
 
     let pasteAndGo = this.document.createXULElement("menuitem");
+    pasteAndGo.id = "paste-and-go";
     let label = Services.strings
       .createBundle("chrome://browser/locale/browser.properties")
       .GetStringFromName("pasteAndGo.label");
