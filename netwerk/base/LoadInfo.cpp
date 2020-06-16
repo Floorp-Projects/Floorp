@@ -1123,6 +1123,12 @@ LoadInfo::GetIsInThirdPartyContext(bool* aIsInThirdPartyContext) {
 }
 
 NS_IMETHODIMP
+LoadInfo::SetIsInThirdPartyContext(bool aIsInThirdPartyContext) {
+  mIsThirdPartyContext = aIsInThirdPartyContext;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LoadInfo::GetIsThirdPartyContextToTopWindow(
     bool* aIsThirdPartyContextToTopWindow) {
   *aIsThirdPartyContextToTopWindow = mIsThirdPartyContextToTopWindow;
