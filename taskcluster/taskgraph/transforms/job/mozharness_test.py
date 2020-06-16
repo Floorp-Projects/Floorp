@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
+import re
 
 import six
 from six import text_type
@@ -175,8 +176,10 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'task-reference': six.ensure_text(json.dumps(extra_config, sort_keys=True))
     }
 
-    # Bug 1634554 - pass in decision task URL for manifest/test mapping for WPT.
-    if 'web-platform-tests' in test['suite'] or 'test-verify-wpt' in test['suite']:
+    # Bug 1634554 - pass in decision task artifact URL to mozharness for WPT.
+    # Bug 1645974 - test-verify-wpt and test-coverage-wpt need artifact URL.
+    if ('web-platform-tests' in test['suite'] or
+        re.match('test-(coverage|verify)-wpt', test['suite'])):
         env['TESTS_BY_MANIFEST_URL'] = {
             'artifact-reference': '<decision/public/tests-by-manifest.json.gz>'}
 
@@ -318,8 +321,10 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         'task-reference': six.ensure_text(json.dumps(extra_config, sort_keys=True))
     }
 
-    # Bug 1634554 - pass in decision task URL for manifest/test mapping for WPT.
-    if 'web-platform-tests' in test['suite'] or 'test-verify-wpt' in test['suite']:
+    # Bug 1634554 - pass in decision task artifact URL to mozharness for WPT.
+    # Bug 1645974 - test-verify-wpt and test-coverage-wpt need artifact URL.
+    if ('web-platform-tests' in test['suite'] or
+        re.match('test-(coverage|verify)-wpt', test['suite'])):
         env['TESTS_BY_MANIFEST_URL'] = {
             'artifact-reference': '<decision/public/tests-by-manifest.json.gz>'}
 
@@ -473,8 +478,10 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
         'task-reference': six.ensure_text(json.dumps(extra_config, sort_keys=True))
     }
 
-    # Bug 1634554 - pass in decision task URL for manifest/test mapping for WPT.
-    if 'web-platform-tests' in test['suite'] or 'test-verify-wpt' in test['suite']:
+    # Bug 1634554 - pass in decision task artifact URL to mozharness for WPT.
+    # Bug 1645974 - test-verify-wpt and test-coverage-wpt need artifact URL.
+    if ('web-platform-tests' in test['suite'] or
+        re.match('test-(coverage|verify)-wpt', test['suite'])):
         env['TESTS_BY_MANIFEST_URL'] = {
             'artifact-reference': '<decision/public/tests-by-manifest.json.gz>'}
 
