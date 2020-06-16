@@ -12251,6 +12251,7 @@ class MWasmStackResult : public MUnaryInstruction, public NoTypePolicy::Data {
   MWasmStackResult(MWasmStackResultArea* resultArea, size_t idx)
       : MUnaryInstruction(classOpcode, resultArea), resultIdx_(idx) {
     setResultType(result().type());
+    setCallResultCapture();
   }
 
  public:
