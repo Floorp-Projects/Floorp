@@ -1492,10 +1492,9 @@ impl GpuCacheTexture {
         //           RGBAF32 render target. These devices will currently fail
         //           to resize the GPU cache texture.
         let supports_copy_image_sub_data = device.get_capabilities().supports_copy_image_sub_data;
-        let rt_info =  if supports_copy_image_sub_data {
-            None
-        } else {
-            Some(RenderTargetInfo { has_depth: false })
+        let rt_info =  match self.bus {
+            GpuCacheBus::PixelBuffer { .. } if supports_copy_image_sub_data => None,
+            _ => Some(RenderTargetInfo { has_depth: false }),
         };
         let mut texture = device.create_texture(
             TextureTarget::Default,
@@ -2420,11 +2419,19 @@ impl Renderer {
         // We want a better solution long-term, but for now this is a significant performance
         // improvement on HD4600 era GPUs, and shouldn't hurt performance in a noticeable
         // way on other systems running under ANGLE.
-        let is_angle = device.get_capabilities().renderer_name.contains("ANGLE");
+        let is_software = device.get_capabilities().renderer_name.starts_with("Software");
+
+        // On other GL platforms, like macOS or Android, creating many PBOs is very inefficient.
+        // This is what happens in GPU cache updates in PBO path. Instead, we switch everything
+        // except software GL to use the GPU scattered updates.
+        let supports_scatter = match gl_type {
+            gl::GlType::Gl => true,
+            gl::GlType::Gles => device.supports_extension("GL_EXT_color_buffer_float"),
+        };
 
         let gpu_cache_texture = GpuCacheTexture::new(
             &mut device,
-            is_angle,
+            supports_scatter && !is_software,
         )?;
 
         device.end_frame();
