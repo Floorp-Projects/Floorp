@@ -252,6 +252,18 @@ add_task(async function testOpenDetailView() {
   card.querySelector('[action="expand"]').click();
   await loaded;
 
+  await goBack(win);
+
+  // Test click on add-on name.
+  card = getAddonCard(doc, id2);
+  ok(!card.querySelector("addon-details"), "The card isn't expanded");
+  let addonName = card.querySelector(".addon-name");
+  loaded = waitForViewLoad(win);
+  EventUtils.synthesizeMouseAtCenter(addonName, {}, win);
+  await loaded;
+  card = getAddonCard(doc, id2);
+  ok(card.querySelector("addon-details"), "The card is expanded");
+
   await closeView(win);
   await extension.unload();
   await extension2.unload();
@@ -272,6 +284,14 @@ add_task(async function testOpenDetailView() {
       "aboutAddons",
       "detail",
       { type: "extension", addonId: id },
+    ],
+    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
+    [
+      "addonsManager",
+      "view",
+      "aboutAddons",
+      "detail",
+      { type: "extension", addonId: id2 },
     ],
     ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
     [

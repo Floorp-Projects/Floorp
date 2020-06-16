@@ -2937,6 +2937,7 @@ class AddonCard extends HTMLElement {
             !this.expanded &&
             (e.target === this.addonNameEl || !e.target.closest("a"))
           ) {
+            e.preventDefault();
             loadViewFn(`detail/${this.addon.id}`);
           } else if (
             e.target.localName == "a" &&
