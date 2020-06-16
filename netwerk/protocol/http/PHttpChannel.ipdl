@@ -149,10 +149,6 @@ child:
   // Called if redirect successful so that child can complete setup.
   async Redirect3Complete();
 
-  // Associate the child with an application ids
-  async AssociateApplicationCache(nsCString groupID,
-                                  nsCString clientID);
-
   // Report a security message to the console associated with this
   // channel.
   async ReportSecurityMessage(nsString messageTag, nsString messageCategory);

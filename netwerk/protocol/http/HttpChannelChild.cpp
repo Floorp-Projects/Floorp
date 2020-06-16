@@ -380,16 +380,6 @@ void HttpChannelChild::OnBackgroundChildDestroyed(
   }
 }
 
-mozilla::ipc::IPCResult HttpChannelChild::RecvAssociateApplicationCache(
-    const nsCString& aGroupID, const nsCString& aClientID) {
-  LOG(("HttpChannelChild::RecvAssociateApplicationCache [this=%p]\n", this));
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aGroupID, aClientID]() {
-        self->AssociateApplicationCache(aGroupID, aClientID);
-      }));
-  return IPC_OK();
-}
-
 void HttpChannelChild::AssociateApplicationCache(const nsCString& aGroupID,
                                                  const nsCString& aClientID) {
   LOG(("HttpChannelChild::AssociateApplicationCache [this=%p]\n", this));
@@ -543,6 +533,12 @@ void HttpChannelChild::OnStartRequest(
 
   mMultiPartID = aArgs.multiPartID();
   mIsLastPartOfMultiPart = aArgs.isLastPartOfMultiPart();
+
+  if (!aArgs.appCacheGroupId().IsEmpty() &&
+      !aArgs.appCacheClientId().IsEmpty()) {
+    AssociateApplicationCache(aArgs.appCacheGroupId(),
+                              aArgs.appCacheClientId());
+  }
 
   DoOnStartRequest(this, nullptr);
 }
