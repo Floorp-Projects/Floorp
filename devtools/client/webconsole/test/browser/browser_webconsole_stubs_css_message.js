@@ -66,19 +66,20 @@ async function generateCssMessageStubs() {
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
   // resource to `handleErrorMessage`, dynamically updated for each command.
-  let handleCSSMessage = function() {};
+  let handleErrorMessage = function() {};
 
-  const onCSSMessageAvailable = ({ resource }) => {
-    handleCSSMessage(resource);
+  const onErrorMessageAvailable = ({ resource }) => {
+    handleErrorMessage(resource);
   };
 
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
-    onAvailable: onCSSMessageAvailable,
+  /* CSS errors are considered as pageError on the server */
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
+    onAvailable: onErrorMessageAvailable,
   });
 
   for (const code of getCommands()) {
     const received = new Promise(resolve => {
-      handleCSSMessage = function(packet) {
+      handleErrorMessage = function(packet) {
         const key = packet.pageError.errorMessage;
         stubs.set(key, getCleanedPacket(key, packet));
         resolve();
@@ -97,8 +98,8 @@ async function generateCssMessageStubs() {
     await received;
   }
 
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
-    onAvailable: onCSSMessageAvailable,
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
+    onAvailable: onErrorMessageAvailable,
   });
 
   await closeTabAndToolbox().catch(() => {});

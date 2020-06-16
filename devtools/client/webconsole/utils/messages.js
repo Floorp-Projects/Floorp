@@ -111,10 +111,6 @@ function transformResource(resource) {
       return transformPageErrorResource(resource);
     }
 
-    case ResourceWatcher.TYPES.CSS_MESSAGE: {
-      return transformCSSMessageResource(resource);
-    }
-
     case "networkEvent": {
       return transformNetworkEventResource(resource);
     }
@@ -309,7 +305,7 @@ function transformPlatformMessageResource(platformMessageResource) {
   });
 }
 
-function transformPageErrorResource(pageErrorResource, override = {}) {
+function transformPageErrorResource(pageErrorResource) {
   const { pageError, targetFront } = pageErrorResource;
   let level = MESSAGE_LEVEL.ERROR;
   if (pageError.warning) {
@@ -327,37 +323,30 @@ function transformPageErrorResource(pageErrorResource, override = {}) {
       }
     : null;
 
-  return new ConsoleMessage(
-    Object.assign(
-      {
-        targetFront,
-        innerWindowID: pageError.innerWindowID,
-        source: MESSAGE_SOURCE.JAVASCRIPT,
-        type: MESSAGE_TYPE.LOG,
-        level,
-        category: pageError.category,
-        messageText: pageError.errorMessage,
-        stacktrace: pageError.stacktrace ? pageError.stacktrace : null,
-        frame,
-        errorMessageName: pageError.errorMessageName,
-        exceptionDocURL: pageError.exceptionDocURL,
-        hasException: pageError.hasException,
-        parameters: pageError.hasException ? [pageError.exception] : null,
-        timeStamp: pageError.timeStamp,
-        notes: pageError.notes,
-        private: pageError.private,
-        chromeContext: pageError.chromeContext,
-        isPromiseRejection: pageError.isPromiseRejection,
-      },
-      override
-    )
-  );
-}
-
-function transformCSSMessageResource(cssMessageResource) {
-  return transformPageErrorResource(cssMessageResource, {
-    cssSelectors: cssMessageResource.cssSelectors,
-    source: MESSAGE_SOURCE.CSS,
+  const matchesCSS = pageError.category == "CSS Parser";
+  const messageSource = matchesCSS
+    ? MESSAGE_SOURCE.CSS
+    : MESSAGE_SOURCE.JAVASCRIPT;
+  return new ConsoleMessage({
+    targetFront,
+    innerWindowID: pageError.innerWindowID,
+    source: messageSource,
+    type: MESSAGE_TYPE.LOG,
+    level,
+    category: pageError.category,
+    messageText: pageError.errorMessage,
+    stacktrace: pageError.stacktrace ? pageError.stacktrace : null,
+    frame,
+    errorMessageName: pageError.errorMessageName,
+    exceptionDocURL: pageError.exceptionDocURL,
+    hasException: pageError.hasException,
+    parameters: pageError.hasException ? [pageError.exception] : null,
+    timeStamp: pageError.timeStamp,
+    notes: pageError.notes,
+    private: pageError.private,
+    chromeContext: pageError.chromeContext,
+    cssSelectors: pageError.cssSelectors,
+    isPromiseRejection: pageError.isPromiseRejection,
   });
 }
 

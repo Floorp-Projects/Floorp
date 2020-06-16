@@ -44,13 +44,11 @@ module.exports = async function({
 
   // On older server (< v77), we're also getting LogMessage cached messages, so we need
   // to ignore those.
-  // On server < v79, we're also getting CSS Messages that we need to filter out.
   messages = messages.filter(message => {
     return (
-      (webConsoleFront.traits.newCacheStructure ||
-        !message._type ||
-        message._type == "PageError") &&
-      message.pageError.category !== "CSS Parser"
+      webConsoleFront.traits.newCacheStructure ||
+      !message._type ||
+      message._type == "PageError"
     );
   });
 
@@ -71,11 +69,6 @@ module.exports = async function({
   onAvailable(messages);
 
   webConsoleFront.on("pageError", message => {
-    // On server < v79, we're getting CSS Messages that we need to filter out.
-    if (message.pageError.category === "CSS Parser") {
-      return;
-    }
-
     message.resourceType = ResourceWatcher.TYPES.ERROR_MESSAGE;
     onAvailable([message]);
   });
