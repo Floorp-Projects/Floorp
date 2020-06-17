@@ -46,7 +46,7 @@ window.addEventListener("message", function (aEvent) {
   if (data.type === "todo_is") {
     SimpleTest.todo_is(data.actual, data.expected, data.message);
     window.postMessage("pong", "*");
-    
+
   }
 });
 

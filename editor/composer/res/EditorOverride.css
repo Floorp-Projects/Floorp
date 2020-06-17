@@ -6,8 +6,8 @@
   -moz-user-modify: read-write;
 }
 
-/* Styles to alter look of things in the Editor content window 
- *  that should NOT be removed when we display in completely WYSIWYG 
+/* Styles to alter look of things in the Editor content window
+ *  that should NOT be removed when we display in completely WYSIWYG
  *  "Browser Preview" mode.
  *  Anything that should change, like appearance of table borders
  *  and Named Anchors, should be placed in EditorContent.css instead of here.
@@ -19,13 +19,13 @@
   cursor: text;
 }
 
-/* Use default arrow over objects with size that 
+/* Use default arrow over objects with size that
    are selected when clicked on.
    Override the browser's pointer cursor over links
 */
 
 img, img[usemap], area,
-object, object[usemap], 
+object, object[usemap],
 applet, hr, button, input, textarea, select,
 a:link img, a:visited img, a:active img,
 a[name]:-moz-only-whitespace {
@@ -41,7 +41,7 @@ a:link img, a:visited img {
   -moz-user-input: none;
 }
 
-/* We suppress user/author's prefs for link underline, 
+/* We suppress user/author's prefs for link underline,
    so we must set explicitly. This isn't good!
 */
 a:link {

@@ -37,7 +37,7 @@ function getUncontrolledClients(sw) {
 }
 
 addEventListener('load', function(event) {
-  if (!navigator.serviceWorker.controller) {  
+  if (!navigator.serviceWorker.controller) {
     return fail(window.location.href + ' is not controlled!');
   }
 

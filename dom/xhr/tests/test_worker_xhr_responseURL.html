@@ -52,7 +52,7 @@ worker.addEventListener("message", function (aEvent) {
     }
     if (data.status === "end") {
       SpecialPowers.removeObserver(requestObserver, "specialpowers-http-notify-request");
-      
+
     }
   }
 });

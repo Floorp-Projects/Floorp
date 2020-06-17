@@ -58,7 +58,7 @@
       y.addEventListener("MozAfterPaint", handleMozAfterPaint, true);
       y.addEventListener("MozScrolledAreaChanged", handleMozScrolledAreaChanged, true);
     }
-    
+
     function loadURL(url) {
       document.getElementById('page').setAttribute('src', url);
     }
@@ -77,7 +77,7 @@
     function openWindow() {
       window.open('chrome://global/content/test-ipc.xhtml', '_blank', 'chrome,resizable,width=800,height=800');
     }
-    
+
     function closeWindow() {
       window.close();
     }
@@ -96,32 +96,32 @@
         alert("Should have two child processes!");
       }
       var childprocessmm = ppm.getChildAt(1); // 0 is the in-process child process mm
-      
+
       childprocessmm.addMessageListener("ppm-sync",
         function(m) {
           if (m.target != childprocessmm) alert("Wrong target!");
-          document.getElementById("messageLog").value += "[SYNC1 PPM]"; 
+          document.getElementById("messageLog").value += "[SYNC1 PPM]";
         }
       );
-      
+
       ppm.addMessageListener("ppm-sync",
         function(m) {
           // Check that global process message manager gets the per-process mm as target.
           if (m.target != childprocessmm) alert("Wrong target!");
-          document.getElementById("messageLog").value += "[SYNC2 PPM]"; 
+          document.getElementById("messageLog").value += "[SYNC2 PPM]";
         }
       );
       childprocessmm.addMessageListener("ppm-async",
         function(m) {
           if (m.target != childprocessmm) alert("Wrong target!");
-          document.getElementById("messageLog").value += "[ASYNC1 PPM]"; 
+          document.getElementById("messageLog").value += "[ASYNC1 PPM]";
         }
       );
       ppm.addMessageListener("ppm-async",
         function(m) {
           // Check that global process message manager gets the per-process mm as target.
           if (m.target != childprocessmm) alert("Wrong target!");
-          document.getElementById("messageLog").value += "[ASYNC2 PPM]"; 
+          document.getElementById("messageLog").value += "[ASYNC2 PPM]";
         }
       );
       messageManager.loadFrameScript("chrome://global/content/remote-test-ipc.js", true);
@@ -130,7 +130,7 @@
       // 2. Test that adding message listener works, and that receiving a sync message works.
       messageManager.addMessageListener("linkclick",
         function(m) {
-          // This checks that json sending works in sync messages. 
+          // This checks that json sending works in sync messages.
           document.getElementById("messageLog").value = m.name + ": " + m.json.href;
           return { message: "linkclick-received" };
         });
