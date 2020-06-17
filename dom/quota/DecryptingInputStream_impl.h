@@ -418,6 +418,32 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Seek(const int32_t aWhence,
   return NS_OK;
 }
 
+template <typename CipherStrategy>
+NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Clone(
+    nsIInputStream** _retval) {
+  if (!mBaseStream) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  if (!(*mBaseCloneableInputStream)->GetCloneable()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIInputStream> clonedStream;
+  nsresult rv =
+      (*mBaseCloneableInputStream)->Clone(getter_AddRefs(clonedStream));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  *_retval =
+      MakeAndAddRef<DecryptingInputStream>(WrapNotNull(std::move(clonedStream)),
+                                           mBlockSize, mCipherStrategy, mKey)
+          .take();
+
+  return NS_OK;
+}
+
 }  // namespace mozilla::dom::quota
 
 #endif

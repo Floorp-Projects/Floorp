@@ -15,6 +15,8 @@ NS_IMPL_RELEASE(DecryptingInputStreamBase);
 NS_INTERFACE_MAP_BEGIN(DecryptingInputStreamBase)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
+                                     mBaseCloneableInputStream || !mBaseStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
@@ -26,6 +28,13 @@ DecryptingInputStreamBase::DecryptingInputStreamBase(
   MOZ_ASSERT(seekableStream &&
              SameCOMIdentity(mBaseStream->get(), seekableStream));
   mBaseSeekableStream.init(WrapNotNullUnchecked(seekableStream));
+
+  const nsCOMPtr<nsICloneableInputStream> cloneableInputStream =
+      do_QueryInterface(mBaseStream->get());
+  if (cloneableInputStream &&
+      SameCOMIdentity(mBaseStream->get(), cloneableInputStream)) {
+    mBaseCloneableInputStream.init(WrapNotNullUnchecked(cloneableInputStream));
+  }
 }
 
 NS_IMETHODIMP DecryptingInputStreamBase::Read(char* aBuf, uint32_t aCount,
@@ -42,6 +51,11 @@ NS_IMETHODIMP DecryptingInputStreamBase::SetEOF() {
   // Cannot truncate a read-only stream.
 
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DecryptingInputStreamBase::GetCloneable(bool* aCloneable) {
+  *aCloneable = true;
+  return NS_OK;
 }
 
 size_t DecryptingInputStreamBase::PlainLength() const {
