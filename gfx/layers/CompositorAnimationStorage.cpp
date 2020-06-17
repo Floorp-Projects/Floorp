@@ -20,6 +20,9 @@ namespace layers {
 
 void CompositorAnimationStorage::Clear() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  // This function should only be called via the non Webrender version of
+  // SampleAnimations.
+  mLock.AssertCurrentThreadOwns();
 
   mAnimatedValues.Clear();
   mAnimations.clear();
@@ -27,6 +30,7 @@ void CompositorAnimationStorage::Clear() {
 
 void CompositorAnimationStorage::ClearById(const uint64_t& aId) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  MutexAutoLock lock(mLock);
 
   mAnimatedValues.Remove(aId);
   mAnimations.erase(aId);
@@ -35,10 +39,14 @@ void CompositorAnimationStorage::ClearById(const uint64_t& aId) {
 AnimatedValue* CompositorAnimationStorage::GetAnimatedValue(
     const uint64_t& aId) const {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  mLock.AssertCurrentThreadOwns();
+
   return mAnimatedValues.Get(aId);
 }
 
 OMTAValue CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const {
+  MutexAutoLock lock(mLock);
+
   OMTAValue omtaValue = mozilla::null_t();
   auto animatedValue = GetAnimatedValue(aId);
   if (!animatedValue) {
@@ -75,6 +83,8 @@ void CompositorAnimationStorage::SetAnimatedValue(
     gfx::Matrix4x4&& aTransformInDevSpace, gfx::Matrix4x4&& aFrameTransform,
     const TransformData& aData) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  mLock.AssertCurrentThreadOwns();
+
   if (!aPreviousValue) {
     MOZ_ASSERT(!mAnimatedValues.Contains(aId));
     mAnimatedValues.Put(
@@ -93,6 +103,8 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                                   AnimatedValue* aPreviousValue,
                                                   nscolor aColor) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  mLock.AssertCurrentThreadOwns();
+
   if (!aPreviousValue) {
     MOZ_ASSERT(!mAnimatedValues.Contains(aId));
     mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(aColor));
@@ -108,6 +120,8 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                                   AnimatedValue* aPreviousValue,
                                                   float aOpacity) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  mLock.AssertCurrentThreadOwns();
+
   if (!aPreviousValue) {
     MOZ_ASSERT(!mAnimatedValues.Contains(aId));
     mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(aOpacity));
@@ -122,12 +136,16 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
 void CompositorAnimationStorage::SetAnimations(uint64_t aId,
                                                const AnimationArray& aValue) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  MutexAutoLock lock(mLock);
+
   mAnimations[aId] = std::make_unique<AnimationStorageData>(
       AnimationHelper::ExtractAnimations(aValue));
 }
 
 bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
                                                   TimeStamp aCurrentFrameTime) {
+  MutexAutoLock lock(mLock);
+
   bool isAnimating = false;
 
   // Do nothing if there are no compositor animations
@@ -206,6 +224,8 @@ bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
 }
 
 WrAnimations CompositorAnimationStorage::CollectWebRenderAnimations() const {
+  MutexAutoLock lock(mLock);
+
   WrAnimations animations;
 
   for (auto iter = mAnimatedValues.ConstIter(); !iter.Done(); iter.Next()) {
@@ -254,6 +274,8 @@ static gfx::Matrix4x4 FrameTransformToTransformInDevice(
 void CompositorAnimationStorage::ApplyAnimatedValue(
     Layer* aLayer, nsCSSPropertyID aProperty, AnimatedValue* aPreviousValue,
     const nsTArray<RefPtr<RawServoAnimationValue>>& aValues) {
+  mLock.AssertCurrentThreadOwns();
+
   MOZ_ASSERT(!aValues.IsEmpty());
 
   HostLayer* layerCompositor = aLayer->AsHostLayer();
@@ -321,6 +343,8 @@ void CompositorAnimationStorage::ApplyAnimatedValue(
 bool CompositorAnimationStorage::SampleAnimations(Layer* aRoot,
                                                   TimeStamp aPreviousFrameTime,
                                                   TimeStamp aCurrentFrameTime) {
+  MutexAutoLock lock(mLock);
+
   bool isAnimating = false;
 
   auto autoClearAnimationStorage = MakeScopeExit([&] {
