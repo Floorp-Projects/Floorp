@@ -71,7 +71,11 @@
     },
     "cta_type": {
       "description": "Type of url open action",
-      "enum": ["OPEN_URL", "OPEN_ABOUT_PAGE"]
+      "enum": ["OPEN_URL", "OPEN_ABOUT_PAGE", "OPEN_PROTECTION_REPORT"]
+    },
+    "cta_where": {
+      "description": "How to open the cta: new window, tab, focused, unfocused.",
+      "enum": ["current", "tabshifted", "tab", "save", "window"]
     },
     "icon_url": {
       "description": "(optional) URL for the What's New message icon.",

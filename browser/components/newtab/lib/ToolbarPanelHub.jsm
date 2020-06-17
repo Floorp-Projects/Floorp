@@ -240,7 +240,7 @@ class _ToolbarPanelHub {
         type: message.content.cta_type,
         data: {
           args: url,
-          where: "tabshifted",
+          where: message.content.cta_where || "tabshifted",
         },
       },
       win.browser
