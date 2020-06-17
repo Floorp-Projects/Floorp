@@ -1905,8 +1905,11 @@ static bool InstantiateScriptStencils(JSContext* cx,
     } else if (funbox->isAsmJSModule()) {
       MOZ_ASSERT(funbox->function()->isAsmJSNative());
     } else if (funbox->function()->isIncomplete()) {
-      // Lazy functions are generally only allocated in the initial parse.
-      MOZ_ASSERT(compilationInfo.lazy == nullptr);
+      // Lazy functions are generally only allocated in the initial parse. The
+      // exception to this is BinAST which does not allocate lazy functions
+      // inside lazy functions until delazification occurs.
+      MOZ_ASSERT(compilationInfo.lazy == nullptr ||
+                 compilationInfo.lazy->isBinAST());
 
       if (!CreateLazyScript(cx, compilationInfo, funbox)) {
         return false;

@@ -13,6 +13,7 @@ clippy:
         - gfx/wr/webrender_build/
         - gfx/wr/wr_malloc_size_of/
         - js/src/
+        - js/src/frontend/binast/
         - js/src/frontend/smoosh/
         - js/src/rust/shared/
         - js/src/wasm/cranelift/

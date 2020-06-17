@@ -5701,7 +5701,13 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       return false;
     }
 
-    BytecodeEmitter bce2(this, parser, funbox, compilationInfo, emitterMode);
+    EmitterMode nestedMode = emitterMode;
+    if (nestedMode == BytecodeEmitter::LazyFunction) {
+      MOZ_ASSERT(compilationInfo.sourceObject->source()->hasBinASTSource());
+      nestedMode = BytecodeEmitter::Normal;
+    }
+
+    BytecodeEmitter bce2(this, parser, funbox, compilationInfo, nestedMode);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
@@ -10807,8 +10813,15 @@ bool BytecodeEmitter::intoScriptStencil(ScriptStencil* stencil) {
     // FunctionBox.
     stencil->immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
                                     funbox->hasMappedArgsObj());
-    stencil->immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
-                                    funbox->isLikelyConstructorWrapper());
+
+    // While IsLikelyConstructorWrapper is required to be the same between
+    // syntax and normal parsing, BinAST cannot ensure this. Work around this by
+    // using the existing value if this is delazification.
+    if (emitterMode != BytecodeEmitter::LazyFunction) {
+      stencil->immutableFlags.setFlag(
+          ImmutableFlags::IsLikelyConstructorWrapper,
+          funbox->isLikelyConstructorWrapper());
+    }
   } /* isFunctionBox */
 
   return true;

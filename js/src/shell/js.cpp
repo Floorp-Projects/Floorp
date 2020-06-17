@@ -71,6 +71,9 @@
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
 #include "debugger/DebugAPI.h"
+#if defined(JS_BUILD_BINAST)
+#  include "frontend/BinASTParser.h"
+#endif  // defined(JS_BUILD_BINAST)
 #include "frontend/CompilationInfo.h"
 #ifdef JS_ENABLE_SMOOSH
 #  include "frontend/Frontend2.h"
@@ -962,6 +965,38 @@ static MOZ_MUST_USE bool RunFile(JSContext* cx, const char* filename,
   return true;
 }
 
+#if defined(JS_BUILD_BINAST)
+
+static MOZ_MUST_USE bool RunBinAST(JSContext* cx, const char* filename,
+                                   FILE* file, bool compileOnly,
+                                   JS::BinASTFormat format) {
+  RootedScript script(cx);
+
+  {
+    CompileOptions options(cx);
+    options.setFileAndLine(filename, 0)
+        .setIsRunOnce(true)
+        .setNoScriptRval(true);
+
+    script = JS::DecodeBinAST(cx, options, file, format);
+    if (!script) {
+      return false;
+    }
+  }
+
+  if (!RegisterScriptPathWithModuleLoader(cx, script, filename)) {
+    return false;
+  }
+
+  if (compileOnly) {
+    return true;
+  }
+
+  return JS_ExecuteScript(cx, script);
+}
+
+#endif  // JS_BUILD_BINAST
+
 static MOZ_MUST_USE bool RunModule(JSContext* cx, const char* filename,
                                    bool compileOnly) {
   ShellContext* sc = GetShellContext(cx);
@@ -1440,6 +1475,8 @@ enum FileKind {
   FileScript,       // UTF-8, directly parsed as such
   FileScriptUtf16,  // FileScript, but inflate to UTF-16 before parsing
   FileModule,
+  FileBinASTMultipart,
+  FileBinASTContext,
 };
 
 static void ReportCantOpenErrorUnknownEncoding(JSContext* cx,
@@ -1492,6 +1529,20 @@ static MOZ_MUST_USE bool Process(JSContext* cx, const char* filename,
           return false;
         }
         break;
+#if defined(JS_BUILD_BINAST)
+      case FileBinASTMultipart:
+        if (!RunBinAST(cx, filename, file, compileOnly,
+                       JS::BinASTFormat::Multipart)) {
+          return false;
+        }
+        break;
+      case FileBinASTContext:
+        if (!RunBinAST(cx, filename, file, compileOnly,
+                       JS::BinASTFormat::Context)) {
+          return false;
+        }
+        break;
+#endif  // JS_BUILD_BINAST
       default:
         MOZ_CRASH("Impossible FileKind!");
     }
@@ -5120,6 +5171,146 @@ static bool SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+#if defined(JS_BUILD_BINAST)
+
+template <typename Tok>
+static bool ParseBinASTData(JSContext* cx, uint8_t* buf_data,
+                            uint32_t buf_length,
+                            js::frontend::GlobalSharedContext* globalsc,
+                            js::frontend::CompilationInfo& compilationInfo,
+                            const JS::ReadOnlyCompileOptions& options) {
+  MOZ_ASSERT(globalsc);
+
+  // Note: We need to keep `reader` alive as long as we can use `parsed`.
+  js::frontend::BinASTParser<Tok> reader(cx, compilationInfo, options);
+
+  JS::Result<js::frontend::ParseNode*> parsed =
+      reader.parse(globalsc, buf_data, buf_length);
+
+  if (parsed.isErr()) {
+    return false;
+  }
+
+#  ifdef DEBUG
+  Fprinter out(stderr);
+  DumpParseTree(parsed.unwrap(), out);
+#  endif
+
+  return true;
+}
+
+static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "parseBin", 1)) {
+    return false;
+  }
+
+  // Extract argument 1: ArrayBuffer.
+
+  if (!args[0].isObject()) {
+    const char* typeName = InformalValueTypeName(args[0]);
+    JS_ReportErrorASCII(cx, "expected object (ArrayBuffer) to parse, got %s",
+                        typeName);
+    return false;
+  }
+
+  RootedObject objBuf(cx, &args[0].toObject());
+  if (!JS::IsArrayBufferObject(objBuf)) {
+    const char* typeName = InformalValueTypeName(args[0]);
+    JS_ReportErrorASCII(cx, "expected ArrayBuffer to parse, got %s", typeName);
+    return false;
+  }
+
+  uint32_t buf_length = 0;
+  bool buf_isSharedMemory = false;
+  uint8_t* buf_data = nullptr;
+  JS::GetArrayBufferLengthAndData(objBuf, &buf_length, &buf_isSharedMemory,
+                                  &buf_data);
+  MOZ_ASSERT(buf_data);
+
+  // Extract argument 2: Options.
+
+  // BinAST currently supports 2 formats, multipart and context.
+  enum {
+    Multipart,
+    Context,
+  } mode = Multipart;
+
+  if (args.length() >= 2) {
+    if (!args[1].isObject()) {
+      const char* typeName = InformalValueTypeName(args[1]);
+      JS_ReportErrorASCII(cx, "expected object (options) to parse, got %s",
+                          typeName);
+      return false;
+    }
+    RootedObject objOptions(cx, &args[1].toObject());
+
+    RootedValue optionFormat(cx);
+    if (!JS_GetProperty(cx, objOptions, "format", &optionFormat)) {
+      return false;
+    }
+
+    if (!optionFormat.isUndefined()) {
+      RootedLinearString linearFormat(
+          cx, optionFormat.toString()->ensureLinear(cx));
+      if (!linearFormat) {
+        return false;
+      }
+      // Currently not used, reserved for future.
+      if (StringEqualsLiteral(linearFormat, "multipart")) {
+        mode = Multipart;
+      } else if (StringEqualsLiteral(linearFormat, "context")) {
+        mode = Context;
+      } else {
+        UniqueChars printable = QuoteString(cx, linearFormat, '\'');
+        if (!printable) {
+          return false;
+        }
+
+        JS_ReportErrorASCII(
+            cx,
+            "Unknown value for option `format`, expected 'multipart', got %s",
+            printable.get());
+        return false;
+      }
+    } else {
+      const char* typeName = InformalValueTypeName(optionFormat);
+      JS_ReportErrorASCII(cx, "option `format` should be a string, got %s",
+                          typeName);
+      return false;
+    }
+  }
+
+  CompileOptions options(cx);
+  options.setIntroductionType("js shell bin parse")
+      .setFileAndLine("<ArrayBuffer>", 1);
+
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  js::frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+  if (!compilationInfo.init(cx)) {
+    return false;
+  }
+
+  js::SourceExtent extent = js::SourceExtent::makeGlobalExtent(0, options);
+  js::frontend::Directives directives(false);
+  js::frontend::GlobalSharedContext globalsc(
+      cx, ScopeKind::Global, compilationInfo, directives, extent);
+
+  auto parseFunc = mode == Multipart
+                       ? ParseBinASTData<frontend::BinASTTokenReaderMultipart>
+                       : ParseBinASTData<frontend::BinASTTokenReaderContext>;
+  if (!parseFunc(cx, buf_data, buf_length, &globalsc, compilationInfo,
+                 options)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+#endif  // defined(JS_BUILD_BINAST)
+
 template <typename Unit>
 static bool FullParseTest(JSContext* cx,
                           const JS::ReadOnlyCompileOptions& options,
@@ -8552,6 +8743,17 @@ JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
 "  module loader for testing purposes. This hook is used to look up a\n"
 "  previously loaded module object."),
 
+#if defined(JS_BUILD_BINAST)
+
+JS_FN_HELP("parseBin", BinParse, 1, 0,
+"parseBin(arraybuffer, [options])",
+"  Parses a Binary AST, potentially throwing. If present, |options| may\n"
+"  have properties saying how the passed |arraybuffer| should be handled:\n"
+"      format: the format of the BinAST file\n"
+"        (\"multipart\" or \"context\")"),
+
+#endif // defined(JS_BUILD_BINAST)
+
     JS_FN_HELP("parse", Parse, 1, 0,
 "parse(code)",
 "  Parses a string, potentially throwing."),
@@ -9913,9 +10115,24 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   MultiStringRange utf16FilePaths = op->getMultiStringOption('u');
   MultiStringRange codeChunks = op->getMultiStringOption('e');
   MultiStringRange modulePaths = op->getMultiStringOption('m');
+  MultiStringRange binASTPaths(nullptr, nullptr);
+  FileKind binASTFileKind = FileBinASTMultipart;
+#if defined(JS_BUILD_BINAST)
+  binASTPaths = op->getMultiStringOption('B');
+  if (const char* str = op->getStringOption("binast-format")) {
+    if (strcmp(str, "multipart") == 0) {
+      binASTFileKind = FileBinASTMultipart;
+    } else if (strcmp(str, "context") == 0) {
+      binASTFileKind = FileBinASTContext;
+    } else {
+      return OptionFailure("binast-format", str);
+    }
+  }
+#endif  // JS_BUILD_BINAST
 
   if (filePaths.empty() && utf16FilePaths.empty() && codeChunks.empty() &&
-      modulePaths.empty() && !op->getStringArg("script")) {
+      modulePaths.empty() && binASTPaths.empty() &&
+      !op->getStringArg("script")) {
     // Always use the interactive shell when -i is used. Without -i we let
     // Process figure it out based on isatty.
     bool forceTTY = op->getBoolOption('i');
@@ -9945,14 +10162,16 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   }
 
   while (!filePaths.empty() || !utf16FilePaths.empty() || !codeChunks.empty() ||
-         !modulePaths.empty()) {
+         !modulePaths.empty() || !binASTPaths.empty()) {
     size_t fpArgno = filePaths.empty() ? SIZE_MAX : filePaths.argno();
     size_t ufpArgno =
         utf16FilePaths.empty() ? SIZE_MAX : utf16FilePaths.argno();
     size_t ccArgno = codeChunks.empty() ? SIZE_MAX : codeChunks.argno();
     size_t mpArgno = modulePaths.empty() ? SIZE_MAX : modulePaths.argno();
+    size_t baArgno = binASTPaths.empty() ? SIZE_MAX : binASTPaths.argno();
 
-    if (fpArgno < ufpArgno && fpArgno < ccArgno && fpArgno < mpArgno) {
+    if (fpArgno < ufpArgno && fpArgno < ccArgno && fpArgno < mpArgno &&
+        fpArgno < baArgno) {
       char* path = filePaths.front();
       if (!Process(cx, path, false, FileScript)) {
         return false;
@@ -9962,7 +10181,8 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       continue;
     }
 
-    if (ufpArgno < fpArgno && ufpArgno < ccArgno && ufpArgno < mpArgno) {
+    if (ufpArgno < fpArgno && ufpArgno < ccArgno && ufpArgno < mpArgno &&
+        ufpArgno < baArgno) {
       char* path = utf16FilePaths.front();
       if (!Process(cx, path, false, FileScriptUtf16)) {
         return false;
@@ -9972,7 +10192,8 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       continue;
     }
 
-    if (ccArgno < fpArgno && ccArgno < ufpArgno && ccArgno < mpArgno) {
+    if (ccArgno < fpArgno && ccArgno < ufpArgno && ccArgno < mpArgno &&
+        ccArgno < baArgno) {
       const char* code = codeChunks.front();
 
       JS::CompileOptions opts(cx);
@@ -9996,7 +10217,19 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       continue;
     }
 
-    MOZ_ASSERT(mpArgno < fpArgno && mpArgno < ufpArgno && mpArgno < ccArgno);
+    if (baArgno < fpArgno && baArgno < ufpArgno && baArgno < ccArgno &&
+        baArgno < mpArgno) {
+      char* path = binASTPaths.front();
+      if (!Process(cx, path, false, binASTFileKind)) {
+        return false;
+      }
+
+      binASTPaths.popFront();
+      continue;
+    }
+
+    MOZ_ASSERT(mpArgno < fpArgno && mpArgno < ufpArgno && mpArgno < ccArgno &&
+               mpArgno < baArgno);
 
     char* path = modulePaths.front();
     if (!Process(cx, path, false, FileModule)) {
@@ -10831,6 +11064,14 @@ int main(int argc, char** argv, char** envp) {
           "File path to run, inflating the file's UTF-8 contents to UTF-16 and "
           "then parsing that") ||
       !op.addMultiStringOption('m', "module", "PATH", "Module path to run") ||
+#if defined(JS_BUILD_BINAST)
+      !op.addMultiStringOption('B', "binast", "PATH", "BinAST path to run") ||
+      !op.addStringOption('\0', "binast-format", "[format]",
+                          "Format of BinAST file (multipart/context)") ||
+#else
+      !op.addMultiStringOption('B', "binast", "", "No-op") ||
+      !op.addStringOption('\0', "binast-format", "[format]", "No-op") ||
+#endif  // JS_BUILD_BINAST
       !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run") ||
       !op.addBoolOption('i', "shell", "Enter prompt after running code") ||
       !op.addBoolOption('c', "compileonly",
