@@ -35,7 +35,9 @@ add_task(async function setup() {
     id: `HEARTBEAT_MESSAGE_${Date.now()}`,
   };
   const client = RemoteSettings("cfr");
-  await client.db.importChanges({}, 42, [testMessage], { clear: true });
+  await client.db.clear();
+  await client.db.create(testMessage);
+  await client.db.saveLastModified(42); // Prevent from loading JSON dump.
 
   // Reload the providers
   await BrowserTestUtils.waitForCondition(async () => {
@@ -87,7 +89,9 @@ add_task(async function test_heartbeat_tactic_2() {
     userPreferences: ["browser.userPreference.messaging-experiments"],
   };
   const client = RemoteSettings("message-groups");
-  await client.db.importChanges({}, 42, [groupConfiguration], { clear: true });
+  await client.db.clear();
+  await client.db.create(groupConfiguration);
+  await client.db.saveLastModified(42); // Prevent from loading JSON dump.
 
   // Reload the providers
   await ASRouter._updateMessageProviders();

@@ -17,11 +17,10 @@ async function clear_state() {
 }
 
 async function createRecords(records) {
-  const withId = records.map((record, i) => ({
-    id: `record-${i}`,
-    ...record,
-  }));
-  return client.db.importChanges({}, 42, withId);
+  for (const record of records) {
+    await client.db.create(record);
+  }
+  client.db.saveLastModified(42); // Simulate sync (and prevent load dump).
 }
 
 function run_test() {

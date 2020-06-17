@@ -342,9 +342,9 @@ class RemoteSettingsClient extends EventEmitter {
     let { verifySignature = false } = options;
 
     if (syncIfEmpty && !(await Utils.hasLocalData(this))) {
-      // .get() was called before we had the chance to synchronize the local database.
-      // We'll try to avoid returning an empty list.
       try {
+        // .get() was called before we had the chance to synchronize the local database.
+        // We'll try to avoid returning an empty list.
         const importedFromDump = gLoadDump ? await this._importJSONDump() : -1;
         if (importedFromDump < 0) {
           // There is no JSON dump to load, force a synchronization from the server.
@@ -508,7 +508,7 @@ class RemoteSettingsClient extends EventEmitter {
             const metadata = await this.httpClient().getData({
               query: { _expected: expectedTimestamp },
             });
-            await this.db.importChanges(metadata);
+            await this.db.saveMetadata(metadata);
             // We don't bother validating the signature if the dump was just loaded. We do
             // if the dump was loaded at some other point (eg. from .get()).
             if (this.verifySignature && importedFromDump.length == 0) {
@@ -737,11 +737,6 @@ class RemoteSettingsClient extends EventEmitter {
         "duration"
       );
     }
-    if (result < 0) {
-      console.debug(`${this.identifier} no dump available`);
-    } else {
-      console.info(`${this.identifier} imported ${result} records from dump`);
-    }
     return result;
   }
 
@@ -849,10 +844,20 @@ class RemoteSettingsClient extends EventEmitter {
       return syncResult;
     }
 
+    // Separate tombstones from creations/updates.
+    const toDelete = remoteRecords.filter(r => r.deleted);
+    const toInsert = remoteRecords.filter(r => !r.deleted);
+    console.debug(
+      `${this.identifier} ${toDelete.length} to delete, ${toInsert.length} to insert`
+    );
+
     const start = Cu.now() * 1000;
-    await this.db.importChanges(metadata, remoteTimestamp, remoteRecords, {
-      clear: retry,
-    });
+    // Delete local records for each tombstone.
+    await this.db.deleteBulk(toDelete);
+    // Overwrite all other data.
+    await this.db.importBulk(toInsert);
+    await this.db.saveLastModified(remoteTimestamp);
+    await this.db.saveMetadata(metadata);
     if (gTimingEnabled) {
       const end = Cu.now() * 1000;
       PerformanceCounters.storeExecutionTime(
@@ -904,11 +909,12 @@ class RemoteSettingsClient extends EventEmitter {
           console.debug(`${this.identifier} previous data was invalid`);
         }
 
+        // Signature failed, clear local DB because it contains
+        // bad data (local + remote changes).
+        console.debug(`${this.identifier} clear local data`);
+        await this.db.clear();
+
         if (!localTrustworthy && !retry) {
-          // Signature failed, clear local DB because it contains
-          // bad data (local + remote changes).
-          console.debug(`${this.identifier} clear local data`);
-          await this.db.clear();
           // Local data was tampered, throw and it will retry from empty DB.
           console.error(`${this.identifier} local data was corrupted`);
           throw new CorruptedDataError(this.identifier);
@@ -916,22 +922,16 @@ class RemoteSettingsClient extends EventEmitter {
           // We retried already, we will restore the previous local data
           // before throwing eventually.
           if (localTrustworthy) {
-            await this.db.importChanges(
-              localMetadata,
-              localTimestamp,
-              localRecords,
-              {
-                clear: true, // clear before importing.
-              }
+            // Signature of data before importing changes was good.
+            console.debug(
+              `${this.identifier} Restore previous data (timestamp=${localTimestamp})`
             );
+            await this.db.importBulk(localRecords);
+            await this.db.saveLastModified(localTimestamp);
+            await this.db.saveMetadata(localMetadata);
           } else {
             // Restore the dump if available (no-op if no dump)
-            const imported = await this._importJSONDump();
-            // _importJSONDump() only clears DB if dump is available,
-            // therefore do it here!
-            if (imported < 0) {
-              await this.db.clear();
-            }
+            await this._importJSONDump();
           }
         }
         throw e;
