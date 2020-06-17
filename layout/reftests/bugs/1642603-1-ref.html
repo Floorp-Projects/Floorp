@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Reference: Bug 1642603 - scrollIntoView() should work on empty rects, even inside transforms</title>
+
+<style>
+
+body {
+  margin: 0;
+}
+
+.container {
+  overflow: auto;
+  perspective: 5px;
+  border: 1px solid black;
+  width: 300px;
+  height: 300px;
+}
+
+.absoluteElement {
+  transform: translateX(0);
+}
+
+.spacer {
+  height: 500px;
+}
+
+.zeroSizeBox {
+  margin-left: 30px;
+  width: 0;
+  height: 20px;
+}
+
+</style>
+
+<div class="container">
+  <div class="absoluteElement">
+    <div class="spacer"></div>
+    <p>This text should be visible.</p>
+    <div class="zeroSizeBox"></div>
+  </div>
+</div>
+
+<script>
+document.querySelector('.container').scrollTop = 1000; // scroll to the end
+</script>
