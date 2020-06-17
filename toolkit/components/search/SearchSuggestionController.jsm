@@ -9,14 +9,12 @@ var EXPORTED_SYMBOLS = ["SearchSuggestionController"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
-
-const SEARCH_RESPONSE_SUGGESTION_JSON = "application/x-suggestions+json";
 const DEFAULT_FORM_HISTORY_PARAM = "searchbar-history";
 const HTTP_OK = 200;
 const BROWSER_SUGGEST_PREF = "browser.search.suggest.enabled";
@@ -245,7 +243,7 @@ SearchSuggestionController.prototype = {
       this.suggestionsEnabled &&
       (!privateMode || this.suggestionsInPrivateBrowsingEnabled) &&
       this.maxRemoteResults &&
-      engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON)
+      engine.supportsResponseType(SearchUtils.URL_TYPE.SUGGEST_JSON)
     ) {
       this._deferredRemoteResult = this._fetchRemote(
         searchTerm,
@@ -397,7 +395,7 @@ SearchSuggestionController.prototype = {
     this._request = new XMLHttpRequest();
     let submission = engine.getSubmission(
       searchTerm,
-      SEARCH_RESPONSE_SUGGESTION_JSON
+      SearchUtils.URL_TYPE.SUGGEST_JSON
     );
     let method = submission.postData ? "POST" : "GET";
     this._request.open(method, submission.uri.spec, true);
@@ -687,7 +685,7 @@ SearchSuggestionController.prototype = {
  * @returns {boolean} True if the engine offers suggestions and false otherwise.
  */
 SearchSuggestionController.engineOffersSuggestions = function(engine) {
-  return engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON);
+  return engine.supportsResponseType(SearchUtils.URL_TYPE.SUGGEST_JSON);
 };
 
 /**
