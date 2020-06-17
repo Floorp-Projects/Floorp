@@ -230,7 +230,7 @@ nsChildView::nsChildView()
       mView(nullptr),
       mParentView(nil),
       mParentWidget(nullptr),
-      mViewTearDownLock("ChildViewTearDown"),
+      mCompositingLock("ChildViewCompositing"),
       mBackingScaleFactor(0.0),
       mVisible(false),
       mDrawing(false),
@@ -392,7 +392,7 @@ void nsChildView::Destroy() {
 
   // Make sure that no composition is in progress while disconnecting
   // ourselves from the view.
-  MutexAutoLock lock(mViewTearDownLock);
+  MutexAutoLock lock(mCompositingLock);
 
   if (mOnDestroyCalled) return;
   mOnDestroyCalled = true;
@@ -1379,10 +1379,14 @@ void nsChildView::HandleMainThreadCATransaction() {
     PaintWindow(LayoutDeviceIntRegion(GetBounds()));
   }
 
-  // Apply the changes inside mNativeLayerRoot to the underlying CALayers. Now is a
-  // good time to call this because we know we're currently inside a main thread
-  // CATransaction.
-  mNativeLayerRoot->CommitToScreen();
+  {
+    // Apply the changes inside mNativeLayerRoot to the underlying CALayers. Now is a
+    // good time to call this because we know we're currently inside a main thread
+    // CATransaction, and the lock makes sure that no composition is currently in
+    // progress, so we won't present half-composited state to the screen.
+    MutexAutoLock lock(mCompositingLock);
+    mNativeLayerRoot->CommitToScreen();
+  }
 
   MaybeScheduleUnsuspendAsyncCATransactions();
 }
@@ -1707,7 +1711,7 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
   // The lock makes sure that we don't attempt to tear down the view while
   // compositing. That would make us unable to call postRender on it when the
   // composition is done, thus keeping the GL context locked forever.
-  mViewTearDownLock.Lock();
+  mCompositingLock.Lock();
 
   if (aContext->mGL && gfxPlatform::CanMigrateMacGPUs()) {
     GLContextCGL::Cast(aContext->mGL)->MigrateToActiveGPU();
@@ -1716,7 +1720,7 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
   return true;
 }
 
-void nsChildView::PostRender(WidgetRenderingContext* aContext) { mViewTearDownLock.Unlock(); }
+void nsChildView::PostRender(WidgetRenderingContext* aContext) { mCompositingLock.Unlock(); }
 
 RefPtr<layers::NativeLayerRoot> nsChildView::GetNativeLayerRoot() { return mNativeLayerRoot; }
 
