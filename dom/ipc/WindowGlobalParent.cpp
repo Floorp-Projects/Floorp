@@ -499,6 +499,10 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
 
     Unused << managerAsListener->OnContentBlockingEvent(webProgress, aRequest,
                                                         event.value());
+    if (GetBrowsingContext()->Top()->GetWebProgress()) {
+      GetBrowsingContext()->Top()->GetWebProgress()->OnContentBlockingEvent(
+          webProgress, aRequest, event.value());
+    }
   }
 }
 
