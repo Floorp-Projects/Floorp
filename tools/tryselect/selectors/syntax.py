@@ -74,12 +74,6 @@ class SyntaxParser(BaseTryParser):
           'help': 'Print detailed information about the resulting test selection '
                   'and commands performed.',
           }],
-        [['--detect-paths'],
-         {'dest': 'detect_paths',
-          'action': 'store_true',
-          'default': False,
-          'help': 'Provide test paths based on files changed in the working copy.',
-          }],
     ]
 
     # Arguments we will accept on the command line and pass through to try
@@ -547,13 +541,8 @@ class AutoTry(object):
 
     def run(self, **kwargs):
         if not any(kwargs[item] for item in ("paths", "tests", "tags")):
-            if kwargs['detect_paths']:
-                res = self.resolver.get_outgoing_metadata()
-                kwargs['paths'] = res['paths']
-                kwargs['tags'] = res['tags']
-            else:
-                kwargs['paths'] = set()
-                kwargs['tags'] = set()
+            kwargs['paths'] = set()
+            kwargs['tags'] = set()
 
         builds, platforms, tests, talos, jobs, paths, tags, extra = self.validate_args(**kwargs)
 

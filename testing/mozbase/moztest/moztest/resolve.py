@@ -850,24 +850,6 @@ class TestResolver(MozbuildObject):
             else:
                 yield test
 
-    def get_outgoing_metadata(self):
-        paths, tags, flavors = set(), set(), set()
-        changed_files = self.repository.get_outgoing_files('AM')
-        if changed_files:
-            reader = self.mozbuild_reader(config_mode='empty')
-            files_info = reader.files_info(changed_files)
-
-            for path, info in six.iteritems(files_info):
-                paths |= info.test_files
-                tags |= info.test_tags
-                flavors |= info.test_flavors
-
-        return {
-            'paths': paths,
-            'tags': tags,
-            'flavors': flavors,
-        }
-
     def resolve_metadata(self, what):
         """Resolve tests based on the given metadata. If not specified, metadata
         from outgoing files will be used instead.
