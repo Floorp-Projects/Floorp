@@ -2710,9 +2710,6 @@ void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
       channel->GetContentType(currentContentType);
       if (!StringBeginsWith(currentContentType,
                             NS_LITERAL_CSTRING("application/"))) {
-        Telemetry::AccumulateCategorical(
-            mozilla::Telemetry::LABELS_XCTO_NOSNIFF_TOPLEVEL_NAV_EXCEPTIONS::
-                NoException);
         return;
       }
     }
