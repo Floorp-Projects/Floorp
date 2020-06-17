@@ -15,13 +15,16 @@
     <string name="content_description_disable_private_browsing_button">Poista yksityinen selaus käytöstä</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Hae tai kirjoita osoite</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Ei avoimia välilehtiä</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Avoimet välilehdet näytetään tässä.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Yksityiset välilehdet näkyvät tässä.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 avoin välilehti. Napauta vaihtaaksesi.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s avointa välilehteä. Napauta vaihtaaksesi.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s on Mozillan tuote.</string>
@@ -299,7 +302,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Kirjautumistiedot</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Välilehdet</string>
+    <string name="preferences_sync_tabs_2">Avoimet välilehdet</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Kirjaudu ulos</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -472,6 +475,8 @@
     <string name="tab_tray_menu_open_new_tab">Uusi välilehti</string>
     <!-- Shortcut action to open the home screen -->
     <string name="tab_tray_menu_home">Siirry kotiin</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Vaihda välilehtitilaa</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Poista välilehti kokoelmasta</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -485,7 +490,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Jaa välilehdet</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Tallenna kokoelmaan</string>
+    <string name="tabs_menu_save_to_collection1">Tallenna välilehdet kokoelmaan</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Välilehtivalikko</string>
     <!-- Tab menu item to share the tab -->
@@ -701,16 +706,14 @@
     <string name="delete_browsing_data_quit_off">Pois</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Kerää merkitykselliset asiat yhteen. Aloita tallentamalla avoimet välilehdet uudeksi kokoelmaksi.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kokoelmat</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Kokoelmavalikko</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Ei kokoelmia</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Kokoelmasi näytetään tässä.</string>
+    <string name="no_collections_header1">Kerää yhteen sinulle tärkeät asiat</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Kokoa yhteen samanlaiset haut, sivustot ja välilehdet nopeaa käyttöä varten.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Valitse välilehdet</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -739,6 +742,9 @@
     <string name="create_collection_close">Sulje</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Tallenna</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Näytä</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Kokoelma %d</string>
@@ -919,8 +925,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly saa päivityksiä joka yö ja se sisältää kokeellisia uusia ominaisuuksia.
         Se saattaa kuitenkin olla betaversiota epävakaampi. Lataa betavaiheen selain Nightlya vakaamman kokemuksen saamiseksi.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Hanki Mozilla Firefox -selain</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Hanki Firefoxin betaversio Androidille</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly on muuttanut</string>
@@ -975,12 +982,19 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Sisäänkirjautuminen epäonnistui</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Automaattinen yksityisyys</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Tietosuoja- ja suojausasetukset estävät seuraimia, haittaohjelmia ja sinua seuraavia yrityksiä.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Tavallinen (oletus)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Estää vähemmän seuraimia. Sivut latautuvat normaalisti.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Tiukka (suositeltu)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Tiukka</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Estää enemmän seuraimia, mainoksia ja ponnahdusikkunoita. Sivut latautuvat nopeammin, mutta osa toiminnoista ei välttämättä toimi.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1069,10 +1083,14 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lue lisää</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Tavallinen (oletus)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Estää vähemmän seuraimia. Sivut latautuvat normaalisti.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mitä tavallinen seurannan suojaus estää</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Tiukka</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Estää enemmän seuraimia, mainoksia ja ponnahdusikkunoita. Sivut latautuvat nopeammin, mutta osa toiminnoista ei välttämättä toimi.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mitä tiukka seurannan suojaus estää</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1127,6 +1145,8 @@
     <string name="etp_tracking_content_title">Seurantaan tarkoitettu sisältö</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Estää lataamasta ulkopuolisia mainoksia, videoita ja muuta sisältöä, joka sisältää seurantakoodin. Voi vaikuttaa joidenkin verkkosivustojen toimimiseen.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Aina kun kilven väri on violetti, %s on estänyt seuraimia sivustolla. Napauta saadaksesi lisätietoja.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Suojaukset ovat PÄÄLLÄ tällä sivustolla</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1413,6 +1433,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Puhu nyt</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Kirjautumistieto tällä käyttäjänimellä on jo olemassa</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Yhdistä Firefox-tilillä.</string>
@@ -1422,5 +1445,19 @@
     <string name="synced_tabs_reauth">Tunnistaudu uudelleen.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Ota välilehtien synkronointi käyttöön.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Sinulla ei ole muilla laitteilla avoimia välilehtiä Firefoxissa.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Katso välilehtilistaus muilta laitteiltasi.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Kirjaudu sisään synkronoidaksesi</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Ykkössivustojen määrä täynnä</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Lisätäksesi uuden ykkössivuston, poista yksi olemassa oleva. Paina pitkään sivustoa ja valitse poista.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Selvä</string>
 
 </resources>

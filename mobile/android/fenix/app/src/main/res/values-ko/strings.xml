@@ -996,7 +996,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">이 휴대폰의 다른 Firefox 브라우저에서 %s로 로그인했습니다. 이 계정으로 로그인 하시겠습니까?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_2">이 휴대폰의 다른 Firefox 브라우저에서 %s로 로그인했습니다. 이 계정으로 로그인하시겠습니까?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">예, 로그인함</string>
     <!-- text for the automatic sign-in button while signing in is in process -->

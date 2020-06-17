@@ -658,17 +658,112 @@
     <string name="quick_settings_sheet">Ñanj \'na\' sa ga\'ue nāgi\'iô\' hīo doj</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Sā sà\'a huin ânj</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Gānikāj ñu\'ūnj sa achín nì\'iaj nīkāj sîtio</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Nādure\' nej sa achín nì\'iaj</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Nādure\' sa achín nì\'iaj</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Nādure\' nej sa achín nì\'iaj riña daran\' nej sîtio</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Nānùn ma\'an man</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kâmara</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Aga\' uxun nanèe</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Danè\' huin</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Sa atāj nan\'ānj an</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Gāchinj nì\'iaj</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Nitāj si hūaj nāyi\'nïn</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Gā\'ue</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Nitāj si hūaj nāyi\'nïn \'iaj Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Sa huā gi\'iát</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="tracking_protection_on">Nāchrūn</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Dūnâ\’àj</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Gā\'nïn gī\'iaj sun sa unïnt ngà sa ni\'iājt</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Nārán riña sa unïnt ngà sa ni\'iājt ngà datô si āgâ\'t li</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Nānùn sa unïnt ngà sa ni\'iājt ngà Wi-Fi</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Màn riña sa unïnt nārán</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Nārán riña sa unïnt ngà sa ni\'iājt</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Nāchrūn</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Dūnâ\’àj</string>
 
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Koleksiôn</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Si menû koleksiûn</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Nāran\' daran\' sa ni\'ñānj ruhuât</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Nāgi\'iaj chrē\' sa nana\'uî\'t, sitio nī nej rakïj ñanj guñā hua da\' ga\'ue gātū hìot ne\' rūkù.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Nāguī nej rakïj ñanj</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Nāguī sa màn yì\'nïn\'ïn</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Si yugui sa màn yì\'nïn\'ïn</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Nūtà\' \'ngō yi\'nïn\' nākàa</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Gīda\'a daran\'anj</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Nā\'nïnj ra\'a daran\'anj</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Nāguī nej rakïj ñanj ruhuât nā\'nïnj sà\'t</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d nej rakïj ñanj naguit</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d rakïj ñanj naguit</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Nej rakïj ñanj na\'nín sà\'t</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Rakïj ñanj na\'nïnj sà\'t</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Nārán</string>
+
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Nā\'nïnj sà\'</string>
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Ni\'iāj</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Sa nachra chrē\'t %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Gā\'nïnj gan\'an nī dūyinga\'</string>
+
+    <!-- Share screen header -->
+    <string name="share_header_2">Dūyingô\'</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Dūyingô\'</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Dūyingô\' \'ngō lînk</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Gā\'nïnj riña aga\'</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Daran\' sun huā</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Nārán</string>

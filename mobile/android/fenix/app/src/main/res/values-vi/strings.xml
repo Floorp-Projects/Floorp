@@ -1432,4 +1432,9 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Đã đạt đến giới hạn trang web hàng đầu</string>
-    </resources>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Để thêm một trang web hàng đầu mới, loại bỏ một cái cũ trước. Chạm và giữ trang web và chọn xóa.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">OK, đã hiểu</string>
+
+</resources>

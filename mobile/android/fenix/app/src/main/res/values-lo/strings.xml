@@ -13,8 +13,6 @@
     <string name="content_description_disable_private_browsing_button">ປຶດນຳໃຊ້ການທ່ອງເວັບແບບສ່ວນຕົວ</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ຄົ້ນຫາ ຫລື ປ້ອນທີ່ຢູ່ໃສ່</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">ບໍ່ມີແທັບທີ່ເປີດຢູ່</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">ແທັບທີ່ເປີດຂອງທ່ານຈະຖືກສະແດງຢູ່ບ່ອນນີ້.</string>
 
@@ -268,7 +266,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">ລັອກອິນ</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">ແທັບ</string>
+    <string name="preferences_sync_tabs_2">ເປີດແທັບ</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">ອອກ​ຈາກ​ລະ​ບົບ</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -280,6 +278,8 @@
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">ການ sync ລົ້ມເຫລວ. ການ sync ສຳເລັດຄັ້ງສຸດທ້າຍ: %s</string>
 
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">ການ sync ລົ້ມເຫລວ. ການ sync ຄັ້ງສຸດທ້າຍ: ຍັງບໍ່ເຄີຍ sync</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Sync ຄັ້ງຫລ້າສຸດ: %s</string>
     <!-- Label summary showing never synced -->
@@ -375,24 +375,35 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">ເຂັ້ມ</string>
 
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">ເຊດຊັນ</string>
     <!-- Option in Library to open Screenshots page -->
     <string name="library_screenshots">ພາບຫນ້າຈໍ</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">ດາວໂຫລດ</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">ບຸກມາກ</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">ບຸກມາກເດສກທັອບ</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">ເມນູບຸກມາກ</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">ແຖບເຄື່ອງມືບຸກມາກ</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">ບຸກມາກອື່ນໆ</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">ປະຫວັດການໃຊ້ງານ</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">ແທັບ Synced</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">ລາຍການອ່ານ</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">ຄົ້ນຫາ</string>
     <!-- Settings Page Title -->
     <string name="settings_title">ການຕັ້ງຄ່າ</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">ເມນູລາຍການປະຫວັດການໃຊ້ງານ</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">ປິດ</string>
 
@@ -400,13 +411,31 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">ເປີດແທັບ</string>
     <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">ເຊດຊັນສ່ວນຕົວ</string>
+    <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">ແທັບສ່ວນຕົວ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ເພີ່ມແທັບ</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">ເພີ່ມແທັບສ່ວນຕົວ</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">ສ່ວນຕົວ</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">ເປີດແທັບ</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">ແບ່ງປັນແທັບທັງໝົດ</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">ປິດແທັບທັງຫມົດ</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">ແທັບໃຫມ່</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">ໄປຫນ້າທຳອິດ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ປິດແທັບ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
     <string name="close_tab_title">ປິດແທັບ %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">ເປີດເມນູແທັບ</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">ປິດແທັບທັງຫມົດ</string>
     <!-- Open tabs menu item to share all tabs -->
@@ -427,9 +456,57 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">ລຶບ</string>
 
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (ໂຫມດສ່ວນຕົວ)</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">ລຶບປະຫວັດການໃຊ້ງານ</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">ທ່ານຫມັ້ນໃຈແລ້ວບໍ່ວ່າທ່ານຕ້ອງການລົບລ້າງປະຫວັດການໃຊ້ງານຂອງທ່ານ?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">ລຶບປະຫວັດການໃຊ້ງານແລ້ວ</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">ລຶບ %1$s ແລ້ວ</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">ລົບລ້າງ</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">ສຳເນົາ</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">ແບ່ງປັນ</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">ເປີດໃນແທັບໃຫມ່</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">ເປີດໃນແທັບສ່ວນຕົວ</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">ລຶບ</string>
+
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">ເລືອກ %1$d ແລ້ວ</string>
+
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">ລຶບໄອເທັມ %1$d</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">24 ຊົ່ວໂມງທີ່ຜ່ານມາ</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">7 ມື້ທີ່ຜ່ານມາ</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">30 ມື້ທີ່ຜ່ານມາ</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">ເກົ່າກວ່າ</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">ບໍ່ມີປະຫວັດການໃຊ້ງານຢູ່ນີ້</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">ຂໍ​ອະໄພ. %1$s ບໍ່ສາມາດໂຫລດໜ້າເວັບນັ້ນໄດ້.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">ທ່ານສາມາດພະຍາຍາມກູ້ຄືນ ຫຼື ປິດແຖບຂ້າງລຸ່ມນີ້.</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">ປິດແທັບ</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">ກູ້ຄືນແທັບ</string>
 
     </resources>

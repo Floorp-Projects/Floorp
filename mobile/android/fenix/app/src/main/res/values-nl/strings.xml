@@ -22,6 +22,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Uw privétabbladen worden hier weergegeven.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 open tabblad. Tik om tussen tabbladen te wisselen.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s open tabbladen. Tik om tussen tabbladen te wisselen.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s is gemaakt door Mozilla.</string>
 
@@ -484,6 +489,8 @@
     <string name="tabs_menu_close_all_tabs">Alle tabbladen sluiten</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Tabbladen delen</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Tabbladen in collectie opslaan</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Tabbladmenu</string>
     <!-- Tab menu item to share the tab -->
@@ -700,6 +707,10 @@
     <string name="collections_header">Collecties</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Collectiesmenu</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Verzamel de dingen die belangrijk voor u zijn</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Groepeer vergelijkbare zoekopdrachten, websites en tabbladen voor snelle toegang later.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Tabbladen selecteren</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1416,6 +1427,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Nu spreken</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Er bestaat al een aanmelding met die gebruikersnaam</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Verbinden met een Firefox-account.</string>
@@ -1430,6 +1444,14 @@
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Bekijk een lijst met tabbladen van uw overige apparaten.</string>
 
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Aanmelden om te synchroniseren</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Limiet voor topwebsites bereikt</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Verwijder een topwebsite om een nieuwe toe te voegen. Houd de website ingedrukt en selecteer Verwijderen.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, begrepen</string>
 
