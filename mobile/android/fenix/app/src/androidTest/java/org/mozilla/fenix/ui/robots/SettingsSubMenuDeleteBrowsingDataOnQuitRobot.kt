@@ -83,7 +83,7 @@ private fun assertAllTheCheckBoxesText() {
     onView(withText(R.string.preferences_delete_browsing_data_tabs_title_2))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    onView(withText(R.string.preferences_delete_browsing_data_on_quit_browsing_history))
+    onView(withText(R.string.preferences_delete_browsing_data_browsing_data_title))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     onView(withText(R.string.preferences_delete_browsing_data_cookies))
