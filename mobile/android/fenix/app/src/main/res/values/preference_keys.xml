@@ -26,6 +26,11 @@
     <string name="pref_key_delete_cookies_on_quit" translatable="false">pref_key_delete_cookies_on_quit</string>
     <string name="pref_key_delete_caches_on_quit" translatable="false">pref_key_delete_caches_on_quit</string>
     <string name="pref_key_delete_permissions_on_quit" translatable="false">pref_key_delete_permissions_on_quit</string>
+    <string name="pref_key_delete_open_tabs_now" translatable="false">pref_key_delete_open_tabs_now</string>
+    <string name="pref_key_delete_browsing_history_now" translatable="false">pref_key_delete_browsing_history_now</string>
+    <string name="pref_key_delete_cookies_now" translatable="false">pref_key_delete_cookies_now</string>
+    <string name="pref_key_delete_caches_now" translatable="false">pref_key_delete_caches_now</string>
+    <string name="pref_key_delete_permissions_now" translatable="false">pref_key_delete_permissions_now</string>
     <string name="pref_key_delete_browsing_data_on_quit_categories" translatable="false">pref_key_delete_browsing_data_on_quit_categories</string>
     <string name="pref_key_last_known_mode_private" translatable="false">pref_key_last_known_mode_private</string>
     <string name="pref_key_addons" translatable="false">pref_key_addons</string>
