@@ -948,7 +948,7 @@ static JSAtom* GetUnclonedSelfHostedFunctionName(JSFunction* fun) {
   return &name.toString()->asAtom();
 }
 
-JSAtom* js::GetClonedSelfHostedFunctionName(JSFunction* fun) {
+JSAtom* js::GetClonedSelfHostedFunctionName(const JSFunction* fun) {
   if (!fun->isExtended()) {
     return nullptr;
   }
@@ -2788,6 +2788,16 @@ void JSRuntime::traceSelfHostingGlobal(JSTracer* trc) {
   }
 }
 
+GeneratorKind JSRuntime::getSelfHostedFunctionGeneratorKind(JSAtom* name) {
+  NativeObject* selfHostedObject = selfHostingGlobal_.ref();
+  Shape* shape = selfHostedObject->lookupPure(JS::PropertyKey::fromNonIntAtom(name));
+  MOZ_RELEASE_ASSERT(shape);
+  MOZ_ASSERT(shape->isDataProperty());
+  Value funVal = selfHostedObject->getSlot(shape->slot());
+  MOZ_RELEASE_ASSERT(funVal.isObject());
+  return funVal.toObject().as<JSFunction>().generatorKind();
+}
+
 static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
                        MutableHandleValue vp);
 
@@ -3101,9 +3111,6 @@ bool JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx,
   if (!sourceFun) {
     return false;
   }
-  // JSFunction::generatorKind can't handle lazy self-hosted functions, so we
-  // make sure there aren't any.
-  MOZ_ASSERT(!sourceFun->isGenerator() && !sourceFun->isAsync());
   MOZ_ASSERT(targetFun->isExtended());
   MOZ_ASSERT(targetFun->hasSelfHostedLazyScript());
 
