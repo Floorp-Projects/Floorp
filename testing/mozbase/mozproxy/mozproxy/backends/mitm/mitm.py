@@ -464,7 +464,7 @@ class MitmproxyDesktop(Mitmproxy):
             # read autoconfig file, confirm mitmproxy cert is in there
             contents = self.read_policies_json(self.policies_dir)
             LOG.info("Firefox policies file contents:")
-            LOG.info(contents)
+            LOG.info("{contents}", contents=contents)
             if (
                 POLICIES_CONTENT_ON
                 % {"cert": self.cert_path, "host": self.host, "port": self.port}
