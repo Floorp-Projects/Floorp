@@ -187,11 +187,6 @@ def main(argv):
     op.add_argument('--test-reflect-stringify', dest="test_reflect_stringify",
                     help="instead of running tests, use them to test the "
                     "Reflect.stringify code in specified file")
-    op.add_argument('--run-binast', action='store_true',
-                    dest="run_binast",
-                    help="By default BinAST testcases encoded from JS "
-                    "testcases are skipped. If specified, BinAST testcases "
-                    "are also executed.")
     # --enable-webrender is ignored as it is not relevant for JIT
     # tests, but is required for harness compatibility.
     op.add_argument('--enable-webrender', action='store_true',
@@ -227,22 +222,10 @@ def main(argv):
     test_list = []
     read_all = True
 
-    if options.run_binast:
-        code = 'print(getBuildConfiguration().binast)'
-        is_binast_enabled = subprocess.check_output(
-            [js_shell, '-e', code]
-        ).decode(errors='replace')
-        if not is_binast_enabled.startswith('true'):
-            print("While --run-binast is specified, BinAST is not enabled.",
-                  file=sys.stderr)
-            print("BinAST testcases will be skipped.",
-                  file=sys.stderr)
-            options.run_binast = False
-
     if test_args:
         read_all = False
         for arg in test_args:
-            test_list += jittests.find_tests(arg, run_binast=options.run_binast)
+            test_list += jittests.find_tests(arg)
 
     if options.read_tests:
         read_all = False
@@ -262,7 +245,7 @@ def main(argv):
                 sys.stderr.write('---\n')
 
     if read_all:
-        test_list = jittests.find_tests(run_binast=options.run_binast)
+        test_list = jittests.find_tests()
 
     if options.exclude_from:
         with open(options.exclude_from) as fh:
@@ -274,7 +257,7 @@ def main(argv):
     if options.exclude:
         exclude_list = []
         for exclude in options.exclude:
-            exclude_list += jittests.find_tests(exclude, run_binast=options.run_binast)
+            exclude_list += jittests.find_tests(exclude)
         test_list = [test for test in test_list
                      if test not in set(exclude_list)]
 
@@ -326,11 +309,6 @@ def main(argv):
                 for line in f.readlines():
                     path = line.strip('\n')
                     ignore.add(path)
-
-                    binjs_path = path.replace('.js', '.binjs')
-                    # Do not use os.path.join to always use '/'.
-                    ignore.add('binast/nonlazy/{}'.format(binjs_path))
-                    ignore.add('binast/lazy/{}'.format(binjs_path))
                 options.ignore_timeouts = ignore
         except IOError:
             sys.exit("Error reading file: " + options.ignore_timeouts)
