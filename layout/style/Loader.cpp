@@ -1518,6 +1518,21 @@ RefPtr<StyleSheet> Loader::LookupInlineSheetInCache(const nsAString& aBuffer) {
   return result.Data()->Clone(nullptr, nullptr, nullptr, nullptr);
 }
 
+bool Loader::MaybeNotifyPreloadUsed(const PreloadHashKey& aKey) {
+  if (!mDocument) {
+    return false;
+  }
+
+  RefPtr<PreloaderBase> preload =
+      mDocument->Preloads().LookupPreload(const_cast<PreloadHashKey*>(&aKey));
+  if (!preload) {
+    return false;
+  }
+
+  preload->NotifyUsage();
+  return true;
+}
+
 Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     const SheetInfo& aInfo, const nsAString& aBuffer, uint32_t aLineNumber,
     nsICSSLoaderObserver* aObserver) {
@@ -1698,6 +1713,12 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
       this, aInfo.mTitle, aInfo.mURI, sheet, syncLoad, aInfo.mContent,
       isAlternate, matched, IsPreload::No, aObserver, principal,
       aInfo.mReferrerInfo, context);
+
+  if (MaybeNotifyPreloadUsed(PreloadHashKey::CreateAsStyle(*data))) {
+    MOZ_DIAGNOSTIC_ASSERT(state != SheetState::NeedsParser,
+                          "We found a preload, but the sheet cache disagrees");
+  }
+
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete: 0x%p", sheet.get()));
     if (aObserver || !mObservers.IsEmpty() || aInfo.mContent) {
@@ -1848,6 +1869,17 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
 
   MOZ_ASSERT(sheet);
   InsertChildSheet(*sheet, aParentSheet);
+
+  nsIReferrerInfo* referrerInfo = aParentSheet.GetReferrerInfo();
+  auto referrerPolicy = referrerInfo ? referrerInfo->ReferrerPolicy()
+                                     : dom::ReferrerPolicy::_empty;
+
+  if (MaybeNotifyPreloadUsed(PreloadHashKey::CreateAsStyle(
+          aURL, principal, referrerPolicy, sheet->GetCORSMode(),
+          sheet->ParsingMode()))) {
+    MOZ_DIAGNOSTIC_ASSERT(state != SheetState::NeedsParser,
+                          "We found a preload, but the sheet cache disagrees");
+  }
 
   auto data = MakeRefPtr<SheetLoadData>(
       this, aURL, sheet, aParentData, observer, principal,
