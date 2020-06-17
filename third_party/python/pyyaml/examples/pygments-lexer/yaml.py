@@ -217,7 +217,7 @@ class YAMLLexer(ExtendedRegexLexer):
         'indentation': [
             # trailing whitespaces are ignored
             (r'[ ]*$', something(Text.Blank), '#pop:2'),
-            # whitespaces preceeding block collection indicators
+            # whitespaces preceding block collection indicators
             (r'[ ]+(?=[?:-](?:[ ]|$))', save_indent(Text.Indent)),
             # block collection indicators
             (r'[?:-](?=[ ]|$)', set_indent(Punctuation.Indicator)),

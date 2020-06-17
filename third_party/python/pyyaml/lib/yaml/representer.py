@@ -3,11 +3,12 @@ __all__ = ['BaseRepresenter', 'SafeRepresenter', 'Representer',
     'RepresenterError']
 
 from error import *
+
 from nodes import *
 
 import datetime
 
-import sys, copy_reg, types
+import copy_reg, types
 
 class RepresenterError(YAMLError):
     pass
@@ -17,9 +18,10 @@ class BaseRepresenter(object):
     yaml_representers = {}
     yaml_multi_representers = {}
 
-    def __init__(self, default_style=None, default_flow_style=None):
+    def __init__(self, default_style=None, default_flow_style=False, sort_keys=True):
         self.default_style = default_style
         self.default_flow_style = default_flow_style
+        self.sort_keys = sort_keys
         self.represented_objects = {}
         self.object_keeper = []
         self.alias_key = None
@@ -117,7 +119,8 @@ class BaseRepresenter(object):
         best_style = True
         if hasattr(mapping, 'items'):
             mapping = mapping.items()
-            mapping.sort()
+            if self.sort_keys:
+                mapping.sort()
         for item_key, item_value in mapping:
             node_key = self.represent_data(item_key)
             node_value = self.represent_data(item_value)
@@ -246,7 +249,7 @@ class SafeRepresenter(BaseRepresenter):
         return self.represent_mapping(tag, state, flow_style=flow_style)
 
     def represent_undefined(self, data):
-        raise RepresenterError("cannot represent an object: %s" % data)
+        raise RepresenterError("cannot represent an object", data)
 
 SafeRepresenter.add_representer(type(None),
         SafeRepresenter.represent_none)
@@ -411,7 +414,7 @@ class Representer(SafeRepresenter):
         elif hasattr(data, '__reduce__'):
             reduce = data.__reduce__()
         else:
-            raise RepresenterError("cannot represent object: %r" % data)
+            raise RepresenterError("cannot represent an object", data)
         reduce = (list(reduce)+[None]*5)[:5]
         function, args, state, listitems, dictitems = reduce
         args = list(args)
