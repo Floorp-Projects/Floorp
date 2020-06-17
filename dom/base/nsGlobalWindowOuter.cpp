@@ -2458,10 +2458,49 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   PreloadLocalStorage();
 
-  mStorageAccessPermissionGranted = ContentBlocking::ShouldAllowAccessFor(
-      newInnerWindow, aDocument->GetDocumentURI(), nullptr);
+  mStorageAccessPermissionGranted =
+      CheckStorageAccessPermission(aDocument, newInnerWindow);
 
   return NS_OK;
+}
+
+bool nsGlobalWindowOuter::CheckStorageAccessPermission(
+    Document* aDocument, nsGlobalWindowInner* aInnerWindow) {
+  if (!aInnerWindow) {
+    return false;
+  }
+
+  nsIURI* uri = aDocument->GetDocumentURI();
+  if (!aDocument->CookieJarSettings()->GetRejectThirdPartyContexts() ||
+      !nsContentUtils::IsThirdPartyWindowOrChannel(aInnerWindow, nullptr,
+                                                   uri)) {
+    return false;
+  }
+
+  uint32_t cookieBehavior = aDocument->CookieJarSettings()->GetCookieBehavior();
+
+  // Grant storage access by default if the first-party storage access
+  // permission has been granted already.  Don't notify in this case, since we
+  // would be notifying the user needlessly.
+  bool checkStorageAccess = false;
+  if (net::CookieJarSettings::IsRejectThirdPartyWithExceptions(
+          cookieBehavior)) {
+    checkStorageAccess = true;
+  } else {
+    MOZ_ASSERT(
+        cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+        cookieBehavior ==
+            nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
+    if (nsContentUtils::IsThirdPartyTrackingResourceWindow(aInnerWindow)) {
+      checkStorageAccess = true;
+    }
+  }
+
+  if (checkStorageAccess) {
+    return ContentBlocking::ShouldAllowAccessFor(aInnerWindow, uri, nullptr);
+  }
+
+  return false;
 }
 
 /* static */
