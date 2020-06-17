@@ -434,11 +434,7 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#if defined(JS_BUILD_BINAST)
-  value = BooleanValue(true);
-#else
   value = BooleanValue(false);
-#endif
   if (!JS_SetProperty(cx, info, "binast", value)) {
     return false;
   }
