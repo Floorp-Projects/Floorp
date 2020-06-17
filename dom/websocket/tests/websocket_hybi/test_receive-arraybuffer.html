@@ -13,7 +13,7 @@
 
 <script class="testbody" type="text/javascript">
 
-function debug(msg) { 
+function debug(msg) {
    ok(1, msg);
 }
 
@@ -67,7 +67,7 @@ var responseType;
 function check(index)
 {
     debug("Checking message #" + index + ".");
-    ok(receivedMessages[index] instanceof ArrayBuffer, 
+    ok(receivedMessages[index] instanceof ArrayBuffer,
        "Should receive an arraybuffer!");
     checkArrayBuffer(index, receivedMessages[index], expectedValues[index]);
 }

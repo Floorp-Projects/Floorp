@@ -7,7 +7,7 @@ body   {
 }
 
 #xulharness {
-  position: fixed; 
+  position: fixed;
   top: 30px;
   bottom: 0;
   right: 0px;
@@ -30,7 +30,7 @@ li, li.test, li.dir {
   line-height: 15px;
 }
 
-ul { 
+ul {
   list-style: none;
   margin: 0;
   margin-left: 1em;
@@ -38,7 +38,7 @@ ul {
   border: none;
 }
 
-ul.top { 
+ul.top {
   padding: 0;
   padding-left: 1em;
 }
@@ -57,7 +57,7 @@ a#runtests, a {
   color: #3333cc;
 }
 
-li.non-test a { 
+li.non-test a {
   color: #999999;
 }
 

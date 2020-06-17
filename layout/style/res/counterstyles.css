@@ -315,7 +315,7 @@
 
 /* Ge'ez set of Ethiopic ordered list. There are other locale-dependent sets.
  * For the time being, let's implement two Ge'ez sets only
- * per Momoi san's suggestion in bug 102252. 
+ * per Momoi san's suggestion in bug 102252.
  * For details, refer to http://www.ethiopic.org/Collation/OrderedLists.html. */
 @counter-style -moz-ethiopic-halehame {
   system: alphabetic;

@@ -41,9 +41,9 @@ function testWindowlessBrowser(chromePrivileged) {
   ok(win.screenY == 0, "window.screenY should be 0 in a windowless browser");
   ok(win.outerWidth == 0, "window.outerWidth should be 0 in a windowless browser");
   ok(win.outerHeight == 0, "window.outerHeight should be 0 in a windowless browser");
-  
+
   ok(win.external, "window.external should be defined");
-  
+
   var exception;
 
   try {
@@ -51,7 +51,7 @@ function testWindowlessBrowser(chromePrivileged) {
   } catch(e) {
     exception = e;
   }
-  
+
   ok(!exception, "window.external.AddSearchProvider should be ignore withour raising an exception");
 
   webNav.close();
