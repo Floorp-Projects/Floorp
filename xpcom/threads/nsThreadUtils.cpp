@@ -6,7 +6,6 @@
 
 #include "nsThreadUtils.h"
 
-#include "chrome/common/ipc_message.h"  // for IPC::Message
 #include "LeakRefPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
@@ -40,8 +39,6 @@ static LazyLogModule sEventDispatchAndRunLog("events");
 #endif
 #define LOG1(args) \
   MOZ_LOG(sEventDispatchAndRunLog, mozilla::LogLevel::Error, args)
-#define LOG1_ENABLED() \
-  MOZ_LOG_TEST(sEventDispatchAndRunLog, mozilla::LogLevel::Error)
 
 using namespace mozilla;
 
@@ -616,42 +613,10 @@ void LogTaskBase<T>::LogDispatch(T* aEvent) {
   LOG1(("DISP %p", aEvent));
 }
 
-template <>
-void LogTaskBase<IPC::Message>::LogDispatchWithPid(IPC::Message* aEvent,
-                                                   int32_t aPid) {
-  if (aEvent->seqno() && aPid > 0) {
-    LOG1(("SEND %p %d %d", aEvent, aEvent->seqno(), aPid));
-  }
-}
-
 template <typename T>
 LogTaskBase<T>::Run::Run(T* aEvent, bool aWillRunAgain)
     : mEvent(aEvent), mWillRunAgain(aWillRunAgain) {
   LOG1(("EXEC %p", mEvent));
-}
-
-template <>
-LogTaskBase<nsIRunnable>::Run::Run(nsIRunnable* aEvent, bool aWillRunAgain)
-    : mEvent(aEvent), mWillRunAgain(aWillRunAgain) {
-  if (!LOG1_ENABLED()) {
-    return;
-  }
-
-  nsCOMPtr<nsINamed> named(do_QueryInterface(aEvent));
-  if (!named) {
-    LOG1(("EXEC %p", mEvent));
-    return;
-  }
-
-  nsAutoCString name;
-  named->GetName(name);
-  LOG1(("EXEC %p [%s]", aEvent, name.BeginReading()));
-}
-
-template <>
-LogTaskBase<IPC::Message>::Run::Run(IPC::Message* aMessage, bool aWillRunAgain)
-    : mEvent(aMessage), mWillRunAgain(aWillRunAgain) {
-  LOG1(("RECV %p %d [%s]", aMessage, aMessage->seqno(), aMessage->name()));
 }
 
 template <typename T>
@@ -660,8 +625,6 @@ LogTaskBase<T>::Run::~Run() {
 }
 
 template class LogTaskBase<nsIRunnable>;
-template class LogTaskBase<MicroTaskRunnable>;
-template class LogTaskBase<IPC::Message>;
 
 }  // namespace mozilla
 
