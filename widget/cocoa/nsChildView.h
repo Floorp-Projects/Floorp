@@ -556,9 +556,10 @@ class nsChildView final : public nsBaseWidget {
   nsWeakPtr mAccessible;
 #endif
 
-  // Protects the view from being teared down while a composition is in
-  // progress on the compositor thread.
-  mozilla::Mutex mViewTearDownLock;
+  // Held while the compositor (or WR renderer) thread is compositing.
+  // Protects from tearing down the view during compositing and from presenting
+  // half-composited layers to the screen.
+  mozilla::Mutex mCompositingLock;
 
   mozilla::ViewRegion mNonDraggableRegion;
 
