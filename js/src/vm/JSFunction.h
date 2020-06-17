@@ -78,27 +78,27 @@ class JSFunction : public js::NativeObject {
     } scripted;
   } u;
 
-  // The |atom_| field can have different meanings depending on the function
+  // The `atom_` field can have different meanings depending on the function
   // type and flags. It is used for diagnostics, decompiling, and
   //
   // 1. If the function is not a bound function:
   //   a. If HAS_GUESSED_ATOM is not set, to store the initial value of the
   //      "name" property of functions. But also see RESOLVED_NAME.
-  //   b. If HAS_GUESSED_ATOM is set, |atom_| is only used for diagnostics,
+  //   b. If HAS_GUESSED_ATOM is set, `atom_` is only used for diagnostics,
   //      but must not be used for the "name" property.
   //   c. If HAS_INFERRED_NAME is set, the function wasn't given an explicit
-  //      name in the source text, e.g. |function fn(){}|, but instead it
+  //      name in the source text, e.g. `function fn(){}`, but instead it
   //      was inferred based on how the function was defined in the source
   //      text. The exact name inference rules are defined in the ECMAScript
   //      specification.
   //      Name inference can happen at compile-time, for example in
-  //      |var fn = function(){}|, or it can happen at runtime, for example
-  //      in |var o = {[Symbol.iterator]: function(){}}|. When it happens at
+  //      `var fn = function(){}`, or it can happen at runtime, for example
+  //      in `var o = {[Symbol.iterator]: function(){}}`. When it happens at
   //      compile-time, the HAS_INFERRED_NAME is set directly in the
   //      bytecode emitter, when it happens at runtime, the flag is set when
   //      evaluating the JSOp::SetFunName bytecode.
   //   d. HAS_GUESSED_ATOM and HAS_INFERRED_NAME cannot both be set.
-  //   e. |atom_| can be null if neither an explicit, nor inferred, nor a
+  //   e. `atom_` can be null if neither an explicit, nor inferred, nor a
   //      guessed name was set.
   //   f. HAS_INFERRED_NAME can be set for cloned singleton function, even
   //      though the clone shouldn't receive an inferred name. See the
@@ -106,11 +106,22 @@ class JSFunction : public js::NativeObject {
   //
   // 2. If the function is a bound function:
   //   a. To store the initial value of the "name" property.
-  //   b. If HAS_BOUND_FUNCTION_NAME_PREFIX is not set, |atom_| doesn't
+  //   b. If HAS_BOUND_FUNCTION_NAME_PREFIX is not set, `atom_` doesn't
   //      contain the "bound " prefix which is prepended to the "name"
   //      property of bound functions per ECMAScript.
   //   c. Bound functions can never have an inferred or guessed name.
-  //   d. |atom_| is never null for bound functions.
+  //   d. `atom_` is never null for bound functions.
+  //
+  // Self-hosted functions have two names. For example, Array.prototype.sort
+  // has the standard name "sort", but the implementation in Array.js is named
+  // "ArraySort".
+  //
+  // -   In the self-hosting realm, these functions have `_atom` set to the
+  //     implementation name.
+  //
+  // -   When we clone these functions into normal realms, we set `_atom` to
+  //     the standard name. (The self-hosted name is also stored on the clone,
+  //     in another slot; see GetClonedSelfHostedFunctionName().)
   js::GCPtrAtom atom_;
 
  public:
@@ -469,8 +480,13 @@ class JSFunction : public js::NativeObject {
     if (hasBaseScript()) {
       return baseScript()->generatorKind();
     }
+    if (hasSelfHostedLazyScript()) {
+      return clonedSelfHostedGeneratorKind();
+    }
     return js::GeneratorKind::NotGenerator;
   }
+
+  js::GeneratorKind clonedSelfHostedGeneratorKind() const;
 
   bool isGenerator() const {
     return generatorKind() == js::GeneratorKind::Generator;
