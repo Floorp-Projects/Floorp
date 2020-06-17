@@ -208,7 +208,7 @@ inline nsresult GetKeyLengthForAlgorithm(JSContext* aCx,
 
     if (params.mLength != 128 && params.mLength != 192 &&
         params.mLength != 256) {
-      return NS_ERROR_DOM_DATA_ERR;
+      return NS_ERROR_DOM_OPERATION_ERR;
     }
 
     aLength = params.mLength;
