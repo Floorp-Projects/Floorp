@@ -5744,6 +5744,11 @@ MDefinition* MGetFirstDollarIndex::foldsTo(TempAllocator& alloc) {
 
 MDefinition* MTypedArrayIndexToInt32::foldsTo(TempAllocator& alloc) {
   MDefinition* input = getOperand(0);
+
+  if (input->isToDouble() && input->getOperand(0)->type() == MIRType::Int32) {
+    return input->getOperand(0);
+  }
+
   if (!input->isConstant() || input->type() != MIRType::Double) {
     return this;
   }

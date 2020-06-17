@@ -451,7 +451,11 @@ bool WarpCacheIRTranspiler::emitGuardToInt32Index(ValOperandId inputId,
 bool WarpCacheIRTranspiler::emitGuardToTypedArrayIndex(
     ValOperandId inputId, Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
-  auto* ins = MTypedArrayIndexToInt32::New(alloc(), input);
+
+  auto* number = MUnbox::New(alloc(), input, MIRType::Double, MUnbox::Fallible);
+  add(number);
+
+  auto* ins = MTypedArrayIndexToInt32::New(alloc(), number);
   add(ins);
 
   return defineOperand(resultId, ins);
