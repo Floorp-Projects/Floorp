@@ -20,7 +20,6 @@ Tests for page-load performance. (WX: WebExtension, BT: Browsertime, FF: Firefox
 * google-slides (BT)
 * raptor-tp6-amazon (WX, FF, CH, CU)
 * raptor-tp6-apple (WX, FF, CH, CU)
-* raptor-tp6-binast-instagram-firefox (WX, FF)
 * raptor-tp6-bing (WX, FF, CH, CU)
 * raptor-tp6-docs (WX, FF, CH, CU)
 * raptor-tp6-ebay (WX, FF, CH, CU)

@@ -204,15 +204,6 @@ raptor-tp6:
                     default: 2
             default: 2
 
-raptor-tp6-binast-firefox:
-    description: "Raptor Binast on Firefox"
-    variants: ["fission"]
-    try-name: raptor-tp6-binast
-    treeherder-symbol: Rap(binast)
-    mozharness:
-        extra-options:
-            - --test=raptor-tp6-binast-instagram-firefox
-
 raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
     variants: ["fission"]
