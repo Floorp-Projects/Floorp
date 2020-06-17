@@ -259,6 +259,8 @@ let JSWINDOWACTORS = {
         "MozDOMPointerLock:Exited": {},
       },
     },
+
+    messageManagerGroups: ["browsers"],
   },
 
   ClickHandler: {
