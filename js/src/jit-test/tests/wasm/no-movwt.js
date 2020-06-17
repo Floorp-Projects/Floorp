@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !this.setARMHwCapFlags
+
 setARMHwCapFlags('vfp');
 
 if (typeof WebAssembly !== "undefined") {
