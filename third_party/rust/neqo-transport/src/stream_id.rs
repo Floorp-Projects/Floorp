@@ -43,6 +43,10 @@ impl StreamIndexes {
 pub struct StreamId(u64);
 
 impl StreamId {
+    pub const fn new(id: u64) -> Self {
+        Self(id)
+    }
+
     pub fn is_bidi(self) -> bool {
         self.0 & 0x02 == 0
     }
@@ -102,7 +106,7 @@ impl StreamId {
 
 impl From<u64> for StreamId {
     fn from(val: u64) -> Self {
-        Self(val)
+        Self::new(val)
     }
 }
 

@@ -16,7 +16,6 @@ use crate::ssl::{
 
 use std::cell::RefCell;
 use std::convert::TryFrom;
-use std::ops::DerefMut;
 use std::os::raw::{c_uint, c_void};
 use std::pin::Pin;
 use std::rc::Rc;
@@ -72,7 +71,7 @@ impl ExtensionTracker {
     {
         let handler_ptr = arg as *mut BoxedExtensionHandler;
         let rc = handler_ptr.as_mut().unwrap();
-        f(rc.borrow_mut().deref_mut())
+        f(&mut *rc.borrow_mut())
     }
 
     #[allow(clippy::cast_possible_truncation)]

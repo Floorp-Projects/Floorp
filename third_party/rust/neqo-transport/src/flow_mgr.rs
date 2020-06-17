@@ -176,41 +176,27 @@ impl FlowMgr {
 
     pub(crate) fn acked(
         &mut self,
-        token: FlowControlRecoveryToken,
+        token: &FlowControlRecoveryToken,
         send_streams: &mut SendStreams,
     ) {
-        if let Frame::ResetStream {
-            stream_id,
-            application_error_code,
-            final_size,
-        } = token
-        {
-            qinfo!(
-                "Reset received stream={} err={} final_size={}",
-                stream_id.as_u64(),
-                application_error_code,
-                final_size
-            );
+        const RESET_STREAM: &Frame = &Frame::ResetStream {
+            stream_id: StreamId::new(0),
+            application_error_code: 0,
+            final_size: 0,
+        };
+
+        if let Frame::ResetStream { stream_id, .. } = token {
+            qinfo!("Reset received stream={}", stream_id.as_u64());
 
             if self
                 .from_streams
-                .remove(&(
-                    stream_id,
-                    mem::discriminant(&Frame::ResetStream {
-                        stream_id,
-                        application_error_code,
-                        final_size,
-                    }),
-                ))
+                .remove(&(*stream_id, mem::discriminant(RESET_STREAM)))
                 .is_some()
             {
-                qinfo!(
-                    "Queued ResetStream for {} removed because previous ResetStream was acked",
-                    stream_id.as_u64()
-                );
+                qinfo!("Removed RESET_STREAM frame for {}", stream_id.as_u64());
             }
 
-            send_streams.reset_acked(stream_id);
+            send_streams.reset_acked(*stream_id);
         }
     }
 
@@ -277,11 +263,9 @@ impl FlowMgr {
                 stream_id,
                 application_error_code,
             } => self.stop_sending(stream_id, application_error_code),
-            // Resend MaxStreamData if not SizeKnown
-            // (maybe_send_flowc_update() checks this.)
             Frame::MaxStreamData { stream_id, .. } => {
                 if let Some(rs) = recv_streams.get_mut(&stream_id) {
-                    rs.maybe_send_flowc_update()
+                    rs.flowc_lost()
                 }
             }
             Frame::PathResponse { .. } => qinfo!("Path Response lost, not re-sent"),

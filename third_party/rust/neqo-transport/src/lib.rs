@@ -48,7 +48,7 @@ const ERROR_APPLICATION_CLOSE: TransportError = 12;
 pub enum Error {
     NoError,
     InternalError,
-    ServerBusy,
+    ConnectionRefused,
     FlowControlError,
     StreamLimitError,
     StreamStateError,
@@ -101,7 +101,7 @@ impl Error {
             | Self::IdleTimeout
             | Self::PeerError(_)
             | Self::PeerApplicationError(_) => 0,
-            Self::ServerBusy => 2,
+            Self::ConnectionRefused => 2,
             Self::FlowControlError => 3,
             Self::StreamLimitError => 4,
             Self::StreamStateError => 5,
