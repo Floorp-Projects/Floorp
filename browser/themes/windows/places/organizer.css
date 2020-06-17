@@ -191,7 +191,7 @@
     -moz-appearance: none;
     color: var(--organizer-text-primary-color);
   }
-  #placesMenu > menu:hover, 
+  #placesMenu > menu:hover,
   #placesMenu > menu[_moz-menuactive="true"] {
     border-color: var(--organizer-background-color-content);
     background-color: var(--organizer-background-color-content);
@@ -216,7 +216,7 @@
     background-color: var(--organizer-background-primary-color);
   }
   #detailsDeck {
-    border-top: 1px solid var(--organizer-background-color-content); 
+    border-top: 1px solid var(--organizer-background-color-content);
     background-color: var(--organizer-background-intermediate-color);
     color: var(--organizer-text-primary-color);
   }

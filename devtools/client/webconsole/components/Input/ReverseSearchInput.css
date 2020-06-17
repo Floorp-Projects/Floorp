@@ -14,8 +14,8 @@
 }
 
 
-/* Add a border radius match the borders of the window on Mac OS 
- * and hide the border radius on the right if the sidebar or editor 
+/* Add a border radius match the borders of the window on Mac OS
+ * and hide the border radius on the right if the sidebar or editor
  * is open. */
 :root[platform="mac"] .webconsole-app .reverse-search {
   border-bottom-left-radius: 5px;

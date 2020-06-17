@@ -31,24 +31,24 @@ add_task(async function test_tabs_sendMessage_to_extension_page_frame() {
       browser.runtime.onMessage.addListener(async (msg, sender) => {
         browser.test.assertEq(msg, "page-script-ready");
         browser.test.assertEq(sender.url, browser.runtime.getURL("page.html"));
-        
+
         let tabId = sender.tab.id;
         let response = await browser.tabs.sendMessage(tabId, "tab-sendMessage");
 
         switch (response) {
-          case "extension-tab": 
+          case "extension-tab":
             browser.test.assertEq(tab.id, tabId, "Extension tab responded");
             browser.test.assertEq(sender.frameId, 0, "Response from top level");
             await browser.tabs.remove(tab.id);
             browser.test.sendMessage("extension-tab-responded");
             break;
-          
+
           case "extension-frame":
             browser.test.assertTrue(sender.frameId > 0, "Response from iframe");
             browser.test.sendMessage("extension-frame-responded");
             break;
 
-          default: 
+          default:
             browser.test.fail("Unexpected response: " + response);
         }
       });

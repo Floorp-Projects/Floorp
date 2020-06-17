@@ -21,7 +21,7 @@
   --num14_alpha: #59667780;
   --num16: #E7EAF0;
   --num19: #FFFFFF;
-  
+
   --secure: #f7ce4d;
 }
 
@@ -36,19 +36,19 @@ body {
   fill: var(--num06);
 }
 .icon_container:hover {
-  background-color: var(--num01);  
+  background-color: var(--num01);
   fill: var(--num06);
 }
 .icon_container:active {
-  background-color: var(--num04);  
+  background-color: var(--num04);
   fill: var(--num06);
 }
 .icon_container:disabled {
-  background-color: var(--num16);  
+  background-color: var(--num16);
   fill: var(--num14);
 }
 
-.urlbar_container {  
+.urlbar_container {
   border-color: transparent;
   background-color: var(--num02);
 }
@@ -64,7 +64,7 @@ body {
   fill: var(--secure);
 }
 
-.urlbar_input {  
+.urlbar_input {
   color: var(--num06);
 }
 .urlbar_input::selection {

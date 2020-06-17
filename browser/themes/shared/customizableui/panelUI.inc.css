@@ -1984,7 +1984,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   width: 32px;
   margin: 14px auto;
   display: grid;
-  grid-column-start: 2; 
+  grid-column-start: 2;
 }
 
 #PanelUI-whatsNew .whatsNew-message-title,
@@ -1994,7 +1994,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   font-weight: 600;
   line-height: 1.4em;
   margin: 14px 0 0;
-  grid-column-start: 1; 
+  grid-column-start: 1;
 }
 
 #PanelUI-whatsNew .whatsNew-message-title-large {

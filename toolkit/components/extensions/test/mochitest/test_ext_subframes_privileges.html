@@ -306,7 +306,7 @@ add_task(async function test_sub_subframe_conduit_verified_env() {
   async function expectErrors(ext, log) {
     let err = await ext.awaitMessage("content_child");
     is(err, "Bad sender context envType: content_child");
-  
+
     err = await ext.awaitMessage("addon_child");
     is(err, "Unknown sender or wrong actor for recvCreateProxyContext");
   }
@@ -319,7 +319,7 @@ add_task(async function test_sub_subframe_conduit_verified_env() {
 
   let extension = ExtensionTestUtils.loadExtension({ manifest, files });
   await extension.startup();
-  
+
   if (remote) {
     info("Need OOP to spoof from a web iframe inside background page.");
     await expectErrors(extension);

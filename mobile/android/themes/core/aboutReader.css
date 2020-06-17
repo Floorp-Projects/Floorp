@@ -50,7 +50,7 @@ body.serif {
 
 body.light > .container > .header > .domain {
   color: #ee7600;
-  border-bottom-color: #d0d0d0; 
+  border-bottom-color: #d0d0d0;
 }
 
 body.light > .container > .header > h1 {
@@ -63,7 +63,7 @@ body.light > .container > .header > .credits {
 
 body.dark > .container > .header > .domain {
   color: #ff9400;
-  border-bottom-color: #777777; 
+  border-bottom-color: #777777;
 }
 
 body.dark > .container > .header > h1 {
@@ -460,7 +460,7 @@ table {
   margin: 5px;
 }
 
-/* Covers all images showing edge-to-edge using a 
+/* Covers all images showing edge-to-edge using a
    an optional caption text */
 .moz-reader-content .wp-caption,
 .moz-reader-content figure {
