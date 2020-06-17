@@ -461,8 +461,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
     return GetBrowsingContext()->HadOriginalOpener();
   }
 
-  bool IsTopLevelWindow();
-
   virtual void FirePopupBlockedEvent(
       Document* aDoc, nsIURI* aPopupURI, const nsAString& aPopupWindowName,
       const nsAString& aPopupWindowFeatures) override;
@@ -1186,11 +1184,6 @@ inline nsGlobalWindowInner* nsGlobalWindowOuter::GetCurrentInnerWindowInternal()
 
 inline nsGlobalWindowInner* nsGlobalWindowOuter::EnsureInnerWindowInternal() {
   return nsGlobalWindowInner::Cast(EnsureInnerWindow());
-}
-
-inline bool nsGlobalWindowOuter::IsTopLevelWindow() {
-  nsPIDOMWindowOuter* parentWindow = GetInProcessScriptableTop();
-  return parentWindow == this;
 }
 
 inline bool nsGlobalWindowOuter::IsFrame() {
