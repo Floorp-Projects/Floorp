@@ -75,8 +75,15 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Μη έγκυρη διεύθυνση</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Η διεύθυνση δεν είναι σε αναγνωρισμένη μορφή. Παρακαλούμε ελέγξτε τη γραμμή διευθύνσεων για λάθη και δοκιμάστε ξανά.</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Η διεύθυνση δεν είναι έγκυρη</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Οι διευθύνσεις ιστού γράφονται συνήθως ως εξής: <strong>http://www.example.com/</strong></li>
+        <li>Βεβαιωθείτε ότι χρησιμοποιείτε τις σωστές καθέτους (δηλ. <strong>/</strong>).</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Άγνωστο πρωτόκολλο</string>
@@ -86,6 +93,10 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Άρνηση πρόσβασης στο αρχείο</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Ίσως έχει αφαιρεθεί, μετακινηθεί ή τα δικαιώματα αρχείου εμποδίζουν την πρόσβαση.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Άρνηση σύνδεσης διαμεσολαβητή</string>

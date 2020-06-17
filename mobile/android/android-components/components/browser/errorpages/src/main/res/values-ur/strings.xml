@@ -30,6 +30,12 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">قابل بھروسا کنکشن ناکام ہو گیا ہے</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>یہ سرور کانفیگوریشن کا کوئی مسلہ ہو سکتا ہے یا ہو سکتا ہے کی کوئی سرور کی نکل کرنے کی کوشش کر رہا ہو۔</li>
+        <li>اگر آپ ماضی میں اس سرور سے جڑیں ہیں تو ہو سکتا ہے خرابی کچھ وقت کے لئے ہو اور آپ کچھ دیر میں پھر سے کوشش کر سکتے ہیں۔</li>
+      </ul>]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">اعلٰی…</string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
