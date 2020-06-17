@@ -43,7 +43,7 @@ inline bool CanReuseFunctionForClone(JSContext* cx, HandleFunction fun) {
 
 inline JSFunction* CloneFunctionObjectIfNotSingleton(
     JSContext* cx, HandleFunction fun, HandleObject enclosingEnv,
-    HandleObject proto = nullptr, NewObjectKind newKind = GenericObject) {
+    HandleObject proto = nullptr) {
   /*
    * For attempts to clone functions at a function definition opcode,
    * try to avoid the the clone if the function has singleton type. This
@@ -71,8 +71,7 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
   gc::AllocKind kind = fun->isExtended() ? extendedFinalizeKind : finalizeKind;
 
   if (CanReuseScriptForClone(cx->realm(), fun, enclosingEnv)) {
-    return CloneFunctionReuseScript(cx, fun, enclosingEnv, kind, newKind,
-                                    proto);
+    return CloneFunctionReuseScript(cx, fun, enclosingEnv, kind, proto);
   }
 
   RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));

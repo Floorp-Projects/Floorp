@@ -840,7 +840,6 @@ extern bool CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
 extern JSFunction* CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
                                             HandleObject enclosingEnv,
                                             gc::AllocKind kind,
-                                            NewObjectKind newKindArg,
                                             HandleObject proto);
 
 // Functions whose scripts are cloned are always given singleton types.
