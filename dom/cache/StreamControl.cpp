@@ -40,11 +40,10 @@ void StreamControl::CloseReadStreams(const nsID& aId) {
   uint32_t closedCount = 0;
 #endif
 
-  ReadStreamList::ForwardIterator iter(mReadStreamList);
-  while (iter.HasMore()) {
-    RefPtr<ReadStream::Controllable> stream = iter.GetNext();
+  for (const auto& stream : mReadStreamList.ForwardRange()) {
     if (stream->MatchId(aId)) {
-      stream->CloseStream();
+      const auto pinnedStream = stream;
+      pinnedStream->CloseStream();
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       closedCount += 1;
 #endif
@@ -63,28 +62,26 @@ void StreamControl::CloseAllReadStreams() {
   // 2. the this pointer is deleted by CacheStreamControlParent::Shutdown
   //    (called transitively)
   auto readStreamList = mReadStreamList.Clone();
-  ReadStreamList::ForwardIterator iter(readStreamList);
-  while (iter.HasMore()) {
-    iter.GetNext()->CloseStream();
+  for (const auto& stream : readStreamList.ForwardRange()) {
+    stream->CloseStream();
   }
 }
 
 void StreamControl::CloseAllReadStreamsWithoutReporting() {
   AssertOwningThread();
 
-  ReadStreamList::ForwardIterator iter(mReadStreamList);
-  while (iter.HasMore()) {
-    RefPtr<ReadStream::Controllable> stream = iter.GetNext();
+  for (const auto& stream : mReadStreamList.ForwardRange()) {
+    const auto pinnedStream = stream;
     // Note, we cannot trigger IPC traffic here.  So use
     // CloseStreamWithoutReporting().
-    stream->CloseStreamWithoutReporting();
+    pinnedStream->CloseStreamWithoutReporting();
   }
 }
 
 bool StreamControl::HasEverBeenRead() const {
-  ReadStreamList::ForwardIterator iter(mReadStreamList);
-  while (iter.HasMore()) {
-    if (iter.GetNext()->HasEverBeenRead()) {
+  // XXX We could use a NonObservingRange here, and then use std::any_of.
+  for (const auto& stream : mReadStreamList.ForwardRange()) {
+    if (stream->HasEverBeenRead()) {
       return true;
     }
   }

@@ -167,9 +167,9 @@ void PrincipalVerifier::VerifyOnMainThread() {
 
 void PrincipalVerifier::CompleteOnInitiatingThread() {
   AssertIsOnBackgroundThread();
-  ListenerList::ForwardIterator iter(mListenerList);
-  while (iter.HasMore()) {
-    iter.GetNext()->OnPrincipalVerified(mResult, mManagerId);
+
+  for (auto* listener : mListenerList.ForwardRange()) {
+    listener->OnPrincipalVerified(mResult, mManagerId);
   }
 
   // The listener must clear its reference in OnPrincipalVerified()

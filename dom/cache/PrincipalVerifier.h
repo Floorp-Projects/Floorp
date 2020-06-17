@@ -60,8 +60,7 @@ class PrincipalVerifier final : public Runnable {
   void DispatchToInitiatingThread(nsresult aRv);
 
   // Weak reference cleared by RemoveListener()
-  typedef nsTObserverArray<Listener*> ListenerList;
-  ListenerList mListenerList;
+  nsTObserverArray<Listener*> mListenerList;
 
   // set in originating thread at construction, but must be accessed and
   // released on main thread
