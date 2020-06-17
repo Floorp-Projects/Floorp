@@ -96,6 +96,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   already_AddRefed<CanonicalBrowsingContext> GetParentCrossChromeBoundary();
 
+  Nullable<WindowProxyHolder> GetTopChromeWindow();
+
   nsISHistory* GetSessionHistory();
   UniquePtr<SessionHistoryInfoAndId> CreateSessionHistoryEntryForLoad(
       nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
