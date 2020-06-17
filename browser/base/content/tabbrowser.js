@@ -52,10 +52,6 @@
       }
 
       let messageManager = window.getGroupMessageManager("browsers");
-
-      if (gMultiProcessBrowser) {
-        messageManager.addMessageListener("Browser:Init", this);
-      }
       messageManager.addMessageListener("RefreshBlocker:Blocked", this);
 
       this._setFindbarData();
@@ -4022,13 +4018,6 @@
       // Swap the docshells
       ourBrowser.swapDocShells(aOtherBrowser);
 
-      if (ourBrowser.isRemoteBrowser) {
-        // Switch outerWindowIDs for remote browsers.
-        let ourOuterWindowID = ourBrowser._outerWindowID;
-        ourBrowser._outerWindowID = aOtherBrowser._outerWindowID;
-        aOtherBrowser._outerWindowID = ourOuterWindowID;
-      }
-
       // Swap permanentKey properties.
       let ourPermanentKey = ourBrowser.permanentKey;
       ourBrowser.permanentKey = aOtherBrowser.permanentKey;
@@ -4071,9 +4060,17 @@
 
     announceWindowCreated(browser, userContextId) {
       let tab = this.getTabForBrowser(browser);
-      if (tab && userContextId) {
-        ContextualIdentityService.telemetry(userContextId);
-        tab.setUserContextId(userContextId);
+      if (tab) {
+        if (userContextId) {
+          ContextualIdentityService.telemetry(userContextId);
+          tab.setUserContextId(userContextId);
+        }
+
+        browser.sendMessageToActor(
+          "Browser:AppTab",
+          { isAppTab: tab.pinned },
+          "BrowserTab"
+        );
       }
 
       // We don't want to update the container icon and identifier if
@@ -5114,19 +5111,6 @@
       let browser = aMessage.target;
 
       switch (aMessage.name) {
-        case "Browser:Init": {
-          let tab = this.getTabForBrowser(browser);
-          if (!tab) {
-            return undefined;
-          }
-
-          browser.sendMessageToActor(
-            "Browser:AppTab",
-            { isAppTab: tab.pinned },
-            "BrowserTab"
-          );
-          break;
-        }
         case "RefreshBlocker:Blocked": {
           // The data object is expected to contain the following properties:
           //  - URI (string)

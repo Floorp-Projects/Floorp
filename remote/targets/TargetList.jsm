@@ -9,9 +9,6 @@ var EXPORTED_SYMBOLS = ["TargetList"];
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
-const { MessagePromise } = ChromeUtils.import(
-  "chrome://remote/content/Sync.jsm"
-);
 const { TabTarget } = ChromeUtils.import(
   "chrome://remote/content/targets/TabTarget.jsm"
 );
@@ -52,15 +49,7 @@ class TargetList {
     }
     this.tabObserver = new TabObserver({ registerExisting: true });
     this.tabObserver.on("open", async (eventName, tab) => {
-      const browser = tab.linkedBrowser;
-      // The tab may just have been created and not fully initialized yet.
-      // Target class expects BrowserElement.browsingContext to be defined
-      // whereas it is asynchronously set by the custom element class.
-      // At least ensure that this property is set before instantiating the target.
-      if (!browser.browsingContext) {
-        await new MessagePromise(browser.messageManager, "Browser:Init");
-      }
-      const target = new TabTarget(this, browser);
+      const target = new TabTarget(this, tab.linkedBrowser);
       this.registerTarget(target);
     });
     this.tabObserver.on("close", (eventName, tab) => {

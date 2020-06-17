@@ -230,8 +230,6 @@
 
       this._fastFind = null;
 
-      this._outerWindowID = null;
-
       this._innerWindowID = null;
 
       this._lastSearchString = null;
@@ -583,10 +581,7 @@
     }
 
     get outerWindowID() {
-      if (this.isRemoteBrowser) {
-        return this._outerWindowID;
-      }
-      return this.docShell.outerWindowID;
+      return this.browsingContext?.currentWindowGlobal?.outerWindowId;
     }
 
     get innerWindowID() {
@@ -1102,8 +1097,6 @@
         // we should re-evaluate the CSP here.
         this._csp = null;
 
-        this.messageManager.addMessageListener("Browser:Init", this);
-
         let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
         let { RemoteWebProgressManager } = ChromeUtils.import(jsm, {});
 
@@ -1213,19 +1206,6 @@
 
       if (!this.isRemoteBrowser) {
         this.removeEventListener("pagehide", this.onPageHide, true);
-      }
-    }
-
-    receiveMessage(aMessage) {
-      if (this.isRemoteBrowser) {
-        const data = aMessage.data;
-        switch (aMessage.name) {
-          case "Browser:Init":
-            this._outerWindowID = data.outerWindowID;
-            break;
-          default:
-            break;
-        }
       }
     }
 

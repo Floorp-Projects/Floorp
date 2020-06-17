@@ -84,16 +84,6 @@ function _handleEvent(event) {
   }
 }
 
-function _handleMessage(message) {
-  let browser = message.target;
-  if (
-    message.name === "Browser:Init" &&
-    browser === browser.ownerGlobal.gBrowser.selectedBrowser
-  ) {
-    _updateCurrentContentOuterWindowID(browser);
-  }
-}
-
 function _trackWindowOrder(window) {
   if (window.windowState == window.STATE_MINIMIZED) {
     let firstMinimizedWindow = _trackedWindows.findIndex(
@@ -126,9 +116,6 @@ var WindowHelper = {
       window.addEventListener(event, _handleEvent);
     });
 
-    let messageManager = window.getGroupMessageManager("browsers");
-    messageManager.addMessageListener("Browser:Init", _handleMessage);
-
     _trackWindowOrder(window);
 
     // Update the selected tab's content outer window ID.
@@ -145,9 +132,6 @@ var WindowHelper = {
     WINDOW_EVENTS.forEach(function(event) {
       window.removeEventListener(event, _handleEvent);
     });
-
-    let messageManager = window.getGroupMessageManager("browsers");
-    messageManager.removeMessageListener("Browser:Init", _handleMessage);
   },
 
   onActivate(window) {
@@ -186,6 +170,12 @@ this.BrowserWindowTracker = {
       }
     }
     return null;
+  },
+
+  windowCreated(browser) {
+    if (browser === browser.ownerGlobal.gBrowser.selectedBrowser) {
+      _updateCurrentContentOuterWindowID(browser);
+    }
   },
 
   /**
