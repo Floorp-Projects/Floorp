@@ -399,6 +399,7 @@ class WebRenderBridgeParent final
   bool ShouldParentObserveEpoch();
   mozilla::ipc::IPCResult HandleShutdown();
 
+  void ResetPreviousSampleTime();
   // Returns true if there is any animation (including animations in delay
   // phase).
   bool AdvanceAnimations();
