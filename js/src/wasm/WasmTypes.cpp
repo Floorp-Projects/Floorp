@@ -634,7 +634,7 @@ size_t wasm::ComputeMappedSize(uint32_t maxSize) {
 
 /* static */
 DebugFrame* DebugFrame::from(Frame* fp) {
-  MOZ_ASSERT(fp->instance()->code().metadata().debugEnabled);
+  MOZ_ASSERT(fp->tls->instance->code().metadata().debugEnabled);
   auto* df =
       reinterpret_cast<DebugFrame*>((uint8_t*)fp - DebugFrame::offsetOfFrame());
   MOZ_ASSERT(fp->instance() == df->instance());

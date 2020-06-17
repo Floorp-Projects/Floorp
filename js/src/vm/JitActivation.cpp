@@ -231,9 +231,9 @@ void js::jit::JitActivation::startWasmTrap(wasm::Trap trap,
   MOZ_ASSERT(unwound == (trap == wasm::Trap::IndirectCallBadSig));
 
   void* pc = unwindState.pc;
-  const wasm::Frame* fp = wasm::Frame::fromUntaggedWasmExitFP(unwindState.fp);
+  wasm::Frame* fp = unwindState.fp;
 
-  const wasm::Code& code = fp->instance()->code();
+  const wasm::Code& code = fp->tls->instance->code();
   MOZ_RELEASE_ASSERT(&code == wasm::LookupCode(pc));
 
   // If the frame was unwound, the bytecodeOffset must be recovered from the
