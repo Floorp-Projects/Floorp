@@ -93,8 +93,7 @@ impl Pacer {
             .as_nanos()
             .saturating_mul(u128::try_from(cwnd * PACER_SPEEDUP).unwrap())
             .checked_div(rtt.as_nanos())
-            .map(|i| usize::try_from(i).ok())
-            .flatten()
+            .and_then(|i| usize::try_from(i).ok())
             .unwrap_or(self.m);
 
         // Add the capacity up to a limit of `self.m`, then subtract `count`.

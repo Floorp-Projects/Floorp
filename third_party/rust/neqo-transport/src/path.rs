@@ -45,17 +45,6 @@ impl Path {
         }
     }
 
-    /// Create a path based on a received packet.
-    pub fn from_datagram(d: &Datagram, remote_cid: ConnectionId) -> Self {
-        Self {
-            local: d.destination(),
-            remote: d.source(),
-            local_cids: Vec::new(),
-            remote_cid,
-            reset_token: None,
-        }
-    }
-
     pub fn received_on(&self, d: &Datagram) -> bool {
         self.local == d.destination() && self.remote == d.source()
     }

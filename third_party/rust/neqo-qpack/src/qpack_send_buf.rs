@@ -128,7 +128,7 @@ impl QPData {
 impl Deref for QPData {
     type Target = [u8];
     fn deref(&self) -> &Self::Target {
-        self.buf.deref()
+        &*self.buf
     }
 }
 

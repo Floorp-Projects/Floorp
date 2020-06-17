@@ -10,10 +10,9 @@ use crate::crypto::{CryptoDxState, CryptoStates};
 use crate::tracking::PNSpace;
 use crate::{Error, Res};
 
-use neqo_common::{hex, hex_with_len, qerror, qtrace, Decoder, Encoder};
-use neqo_crypto::{aead::Aead, hkdf, random, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
+use neqo_common::{hex, hex_with_len, qtrace, Decoder, Encoder};
+use neqo_crypto::random;
 
-use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::ExactSizeIterator;
@@ -35,6 +34,8 @@ const PACKET_HP_MASK_SHORT: u8 = 0x1f;
 
 const SAMPLE_SIZE: usize = 16;
 const SAMPLE_OFFSET: usize = 4;
+
+mod retry;
 
 pub type PacketNumber = u64;
 type Version = u32;
@@ -67,6 +68,7 @@ impl PacketType {
 pub enum QuicVersion {
     Draft27,
     Draft28,
+    Draft29,
 }
 
 impl QuicVersion {
@@ -74,13 +76,14 @@ impl QuicVersion {
         match self {
             Self::Draft27 => 0xff00_0000 + 27,
             Self::Draft28 => 0xff00_0000 + 28,
+            Self::Draft29 => 0xff00_0000 + 29,
         }
     }
 }
 
 impl Default for QuicVersion {
     fn default() -> Self {
-        Self::Draft28
+        Self::Draft29
     }
 }
 
@@ -92,39 +95,15 @@ impl TryFrom<Version> for QuicVersion {
             Ok(Self::Draft27)
         } else if ver == 0xff00_0000 + 28 {
             Ok(Self::Draft28)
+        } else if ver == 0xff00_0000 + 29 {
+            Ok(Self::Draft29)
         } else {
             Err(Error::VersionNegotiation)
         }
     }
 }
 
-/// The AEAD used for Retry is fixed, so use this.
-fn make_retry_aead() -> Aead {
-    #[cfg(debug_assertions)]
-    ::neqo_crypto::assert_initialized();
-
-    let secret = hkdf::import_key(
-        TLS_VERSION_1_3,
-        TLS_AES_128_GCM_SHA256,
-        &[
-            0x65, 0x6e, 0x61, 0xe3, 0x36, 0xae, 0x94, 0x17, 0xf7, 0xf0, 0xed, 0xd8, 0xd7, 0x8d,
-            0x46, 0x1e, 0x2a, 0xa7, 0x08, 0x4a, 0xba, 0x7a, 0x14, 0xc1, 0xe9, 0xf7, 0x26, 0xd5,
-            0x57, 0x09, 0x16, 0x9a,
-        ],
-    )
-    .unwrap();
-    Aead::new(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256, &secret, "quic ").unwrap()
-}
-thread_local!(static RETRY_AEAD: RefCell<Aead> = RefCell::new(make_retry_aead()));
-fn retry_expansion() -> usize {
-    if let Ok(ex) = RETRY_AEAD.try_with(|aead| aead.borrow().expansion()) {
-        ex
-    } else {
-        panic!("Unable to access Retry AEAD")
-    }
-}
-
-struct PacketBuilderoffsets {
+struct PacketBuilderOffsets {
     /// The bits of the first octet that need masking.
     first_byte_mask: u8,
     /// The offset of the length field.
@@ -139,7 +118,7 @@ pub struct PacketBuilder {
     encoder: Encoder,
     pn: PacketNumber,
     header: Range<usize>,
-    offsets: PacketBuilderoffsets,
+    offsets: PacketBuilderOffsets,
 }
 
 impl PacketBuilder {
@@ -153,7 +132,7 @@ impl PacketBuilder {
             encoder,
             pn: u64::max_value(),
             header: header_start..header_start,
-            offsets: PacketBuilderoffsets {
+            offsets: PacketBuilderOffsets {
                 first_byte_mask: PACKET_HP_MASK_SHORT,
                 pn: 0..0,
                 len: 0,
@@ -180,7 +159,7 @@ impl PacketBuilder {
             encoder,
             pn: u64::max_value(),
             header: header_start..header_start,
-            offsets: PacketBuilderoffsets {
+            offsets: PacketBuilderOffsets {
                 first_byte_mask: PACKET_HP_MASK_LONG,
                 pn: 0..0,
                 len: 0,
@@ -297,15 +276,10 @@ impl PacketBuilder {
         encoder.encode_vec(1, scid);
         debug_assert_ne!(token.len(), 0);
         encoder.encode(token);
-        let tag = RETRY_AEAD
-            .try_with(|aead| -> Res<Vec<u8>> {
-                let mut buf = vec![0; aead.borrow().expansion()];
-                Ok(aead.borrow().encrypt(0, &encoder, &[], &mut buf)?.to_vec())
-            })
-            .map_err(|e| {
-                qerror!("Unable to access Retry AEAD: {:?}", e);
-                Error::InternalError
-            })??;
+        let tag = retry::use_aead(quic_version, |aead| {
+            let mut buf = vec![0; aead.expansion()];
+            Ok(aead.encrypt(0, &encoder, &[], &mut buf)?.to_vec())
+        })?;
         encoder.encode(&tag);
         let mut complete: Vec<u8> = encoder.into();
         Ok(complete.split_off(start))
@@ -322,6 +296,7 @@ impl PacketBuilder {
         encoder.encode_vec(1, scid);
         encoder.encode_uint(4, QuicVersion::Draft27.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft28.as_u32());
+        encoder.encode_uint(4, QuicVersion::Draft29.as_u32());
         // Add a greased version, using the randomness already generated.
         for g in &mut grease[..4] {
             *g = *g & 0xf0 | 0x0a;
@@ -383,13 +358,14 @@ impl<'a> PublicPacket<'a> {
     /// Decode the type-specific portions of a long header.
     /// This includes reading the length and the remainder of the packet.
     /// Returns a tuple of any token and the length of the header.
-    fn decode_type_specific(
+    fn decode_long(
         decoder: &mut Decoder<'a>,
         packet_type: PacketType,
+        quic_version: QuicVersion,
     ) -> Res<(&'a [u8], usize)> {
         if packet_type == PacketType::Retry {
             let header_len = decoder.offset();
-            let expansion = retry_expansion();
+            let expansion = retry::expansion(quic_version);
             let token = Self::opt(decoder.decode(decoder.remaining() - expansion))?;
             if token.is_empty() {
                 return Err(Error::InvalidPacket);
@@ -492,7 +468,7 @@ impl<'a> PublicPacket<'a> {
         };
 
         // The type-specific code includes a token.  This consumes the remainder of the packet.
-        let (token, header_len) = Self::decode_type_specific(&mut decoder, packet_type)?;
+        let (token, header_len) = Self::decode_long(&mut decoder, packet_type, quic_version)?;
         let end = data.len() - decoder.remaining();
         let (data, remainder) = data.split_at(end);
         Ok((
@@ -514,7 +490,8 @@ impl<'a> PublicPacket<'a> {
         if self.packet_type != PacketType::Retry {
             return false;
         }
-        let expansion = retry_expansion();
+        let version = self.quic_version.unwrap();
+        let expansion = retry::expansion(version);
         if self.data.len() <= expansion {
             return false;
         }
@@ -522,19 +499,11 @@ impl<'a> PublicPacket<'a> {
         let mut encoder = Encoder::with_capacity(self.data.len());
         encoder.encode_vec(1, odcid);
         encoder.encode(header);
-        RETRY_AEAD
-            .try_with(|aead| -> bool {
-                let mut buf = vec![0; expansion];
-                if let Ok(v) = aead.borrow().decrypt(0, &encoder, tag, &mut buf) {
-                    v.is_empty()
-                } else {
-                    false
-                }
-            })
-            .unwrap_or_else(|e| {
-                qerror!("Unable to access Retry AEAD: {:?}", e);
-                false
-            })
+        retry::use_aead(version, |aead| {
+            let mut buf = vec![0; expansion];
+            Ok(aead.decrypt(0, &encoder, tag, &mut buf)?.is_empty())
+        })
+        .unwrap_or(false)
     }
 
     pub fn is_valid_initial(&self) -> bool {
@@ -726,24 +695,24 @@ mod tests {
     }
 
     const SAMPLE_INITIAL_PAYLOAD: &[u8] = &[
-        0x0d, 0x00, 0x00, 0x00, 0x00, 0x18, 0x41, 0x0a, 0x02, 0x00, 0x00, 0x56, 0x03, 0x03, 0xee,
-        0xfc, 0xe7, 0xf7, 0xb3, 0x7b, 0xa1, 0xd1, 0x63, 0x2e, 0x96, 0x67, 0x78, 0x25, 0xdd, 0xf7,
-        0x39, 0x88, 0xcf, 0xc7, 0x98, 0x25, 0xdf, 0x56, 0x6d, 0xc5, 0x43, 0x0b, 0x9a, 0x04, 0x5a,
-        0x12, 0x00, 0x13, 0x01, 0x00, 0x00, 0x2e, 0x00, 0x33, 0x00, 0x24, 0x00, 0x1d, 0x00, 0x20,
-        0x9d, 0x3c, 0x94, 0x0d, 0x89, 0x69, 0x0b, 0x84, 0xd0, 0x8a, 0x60, 0x99, 0x3c, 0x14, 0x4e,
-        0xca, 0x68, 0x4d, 0x10, 0x81, 0x28, 0x7c, 0x83, 0x4d, 0x53, 0x11, 0xbc, 0xf3, 0x2b, 0xb9,
-        0xda, 0x1a, 0x00, 0x2b, 0x00, 0x02, 0x03, 0x04,
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x40, 0x5a, 0x02, 0x00, 0x00, 0x56, 0x03, 0x03,
+        0xee, 0xfc, 0xe7, 0xf7, 0xb3, 0x7b, 0xa1, 0xd1, 0x63, 0x2e, 0x96, 0x67, 0x78, 0x25, 0xdd,
+        0xf7, 0x39, 0x88, 0xcf, 0xc7, 0x98, 0x25, 0xdf, 0x56, 0x6d, 0xc5, 0x43, 0x0b, 0x9a, 0x04,
+        0x5a, 0x12, 0x00, 0x13, 0x01, 0x00, 0x00, 0x2e, 0x00, 0x33, 0x00, 0x24, 0x00, 0x1d, 0x00,
+        0x20, 0x9d, 0x3c, 0x94, 0x0d, 0x89, 0x69, 0x0b, 0x84, 0xd0, 0x8a, 0x60, 0x99, 0x3c, 0x14,
+        0x4e, 0xca, 0x68, 0x4d, 0x10, 0x81, 0x28, 0x7c, 0x83, 0x4d, 0x53, 0x11, 0xbc, 0xf3, 0x2b,
+        0xb9, 0xda, 0x1a, 0x00, 0x2b, 0x00, 0x02, 0x03, 0x04,
     ];
     const SAMPLE_INITIAL: &[u8] = &[
-        0xc9, 0xff, 0x00, 0x00, 0x1c, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
-        0x00, 0x40, 0x74, 0x16, 0x8b, 0xf2, 0x2b, 0x70, 0x02, 0x59, 0x6f, 0x99, 0xae, 0x67, 0xab,
-        0xf6, 0x5a, 0x58, 0x52, 0xf5, 0x4f, 0x58, 0xc3, 0x7c, 0x80, 0x86, 0x82, 0xe2, 0xe4, 0x04,
-        0x92, 0xd8, 0xa3, 0x89, 0x9f, 0xb0, 0x4f, 0xc0, 0xaf, 0xe9, 0xaa, 0xbc, 0x87, 0x67, 0xb1,
-        0x8a, 0x0a, 0xa4, 0x93, 0x53, 0x74, 0x26, 0x37, 0x3b, 0x48, 0xd5, 0x02, 0x21, 0x4d, 0xd8,
-        0x56, 0xd6, 0x3b, 0x78, 0xce, 0xe3, 0x7b, 0xc6, 0x64, 0xb3, 0xfe, 0x86, 0xd4, 0x87, 0xac,
-        0x7a, 0x77, 0xc5, 0x30, 0x38, 0xa3, 0xcd, 0x32, 0xf0, 0xb5, 0x00, 0x4d, 0x9f, 0x57, 0x54,
-        0xc4, 0xf7, 0xf2, 0xd1, 0xf3, 0x5c, 0xf3, 0xf7, 0x11, 0x63, 0x51, 0xc9, 0x2b, 0xda, 0x5b,
-        0x23, 0xc8, 0x10, 0x34, 0xab, 0x74, 0xf5, 0x4c, 0xb1, 0xbd, 0x72, 0x95, 0x12, 0x56,
+        0xc7, 0xff, 0x00, 0x00, 0x1d, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
+        0x00, 0x40, 0x75, 0xfb, 0x12, 0xff, 0x07, 0x82, 0x3a, 0x5d, 0x24, 0x53, 0x4d, 0x90, 0x6c,
+        0xe4, 0xc7, 0x67, 0x82, 0xa2, 0x16, 0x7e, 0x34, 0x79, 0xc0, 0xf7, 0xf6, 0x39, 0x5d, 0xc2,
+        0xc9, 0x16, 0x76, 0x30, 0x2f, 0xe6, 0xd7, 0x0b, 0xb7, 0xcb, 0xeb, 0x11, 0x7b, 0x4d, 0xdb,
+        0x7d, 0x17, 0x34, 0x98, 0x44, 0xfd, 0x61, 0xda, 0xe2, 0x00, 0xb8, 0x33, 0x8e, 0x1b, 0x93,
+        0x29, 0x76, 0xb6, 0x1d, 0x91, 0xe6, 0x4a, 0x02, 0xe9, 0xe0, 0xee, 0x72, 0xe3, 0xa6, 0xf6,
+        0x3a, 0xba, 0x4c, 0xee, 0xee, 0xc5, 0xbe, 0x2f, 0x24, 0xf2, 0xd8, 0x60, 0x27, 0x57, 0x29,
+        0x43, 0x53, 0x38, 0x46, 0xca, 0xa1, 0x3e, 0x6f, 0x16, 0x3f, 0xb2, 0x57, 0x47, 0x3d, 0xcc,
+        0xa2, 0x53, 0x96, 0xe8, 0x87, 0x24, 0xf1, 0xe5, 0xd9, 0x64, 0xde, 0xde, 0xe9, 0xb6, 0x33,
     ];
 
     #[test]
@@ -815,8 +784,8 @@ mod tests {
     }
 
     const SAMPLE_SHORT: &[u8] = &[
-        0x4c, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0x55, 0x80, 0x33, 0xda, 0x1a, 0x01,
-        0x19, 0x47, 0x57, 0xe2, 0x23, 0xcf, 0xe8, 0xde, 0x58, 0xce, 0x8b, 0xab, 0xc5, 0x19,
+        0x55, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0x99, 0x9c, 0xbd, 0x77, 0xf5, 0xd7,
+        0x0a, 0x28, 0xe8, 0xfb, 0xc3, 0xed, 0xf5, 0x71, 0xb1, 0x04, 0x32, 0x2a, 0xae, 0xae,
     ];
     const SAMPLE_SHORT_PAYLOAD: &[u8] = &[0; 3];
 
@@ -835,6 +804,7 @@ mod tests {
 
     #[test]
     fn decode_short() {
+        fixture_init();
         let (packet, remainder) = PublicPacket::decode(SAMPLE_SHORT, &cid_mgr()).unwrap();
         assert_eq!(packet.packet_type(), PacketType::Short);
         assert!(remainder.is_empty());
@@ -926,20 +896,16 @@ mod tests {
         0x92, 0x0e, 0x6f, 0xdf, 0x1d, 0x63,
     ];
 
+    const SAMPLE_RETRY_29: &[u8] = &[
+        0xff, 0xff, 0x00, 0x00, 0x1d, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
+        0x74, 0x6f, 0x6b, 0x65, 0x6e, 0xd1, 0x69, 0x26, 0xd8, 0x1f, 0x6f, 0x9c, 0xa2, 0x95, 0x3a,
+        0x8a, 0xa4, 0x57, 0x5e, 0x1e, 0x49,
+    ];
+
     const RETRY_TOKEN: &[u8] = b"token";
 
-    fn pick_retry_version() -> (&'static [u8], QuicVersion) {
-        if random(1)[0] % 2 == 0 {
-            (SAMPLE_RETRY_27, QuicVersion::Draft27)
-        } else {
-            (SAMPLE_RETRY_28, QuicVersion::Draft28)
-        }
-    }
-
-    #[test]
-    fn build_retry_single() {
+    fn build_retry_single(quic_version: QuicVersion, sample_retry: &[u8]) {
         fixture_init();
-        let (sample_retry, quic_version) = pick_retry_version();
         let retry =
             PacketBuilder::retry(quic_version, &[], SERVER_CID, RETRY_TOKEN, CLIENT_CID).unwrap();
 
@@ -960,16 +926,18 @@ mod tests {
     }
 
     #[test]
-    fn decode_retry() {
-        fixture_init();
-        let (sample_retry, _) = pick_retry_version();
-        let (packet, remainder) =
-            PublicPacket::decode(sample_retry, &FixedConnectionIdManager::new(5)).unwrap();
-        assert!(packet.is_valid_retry(&ConnectionId::from(CLIENT_CID)));
-        assert!(packet.dcid().is_empty());
-        assert_eq!(&packet.scid()[..], SERVER_CID);
-        assert_eq!(packet.token(), RETRY_TOKEN);
-        assert!(remainder.is_empty());
+    fn build_retry_27() {
+        build_retry_single(QuicVersion::Draft27, SAMPLE_RETRY_27);
+    }
+
+    #[test]
+    fn build_retry_28() {
+        build_retry_single(QuicVersion::Draft28, SAMPLE_RETRY_28);
+    }
+
+    #[test]
+    fn build_retry_29() {
+        build_retry_single(QuicVersion::Draft29, SAMPLE_RETRY_29);
     }
 
     #[test]
@@ -977,25 +945,53 @@ mod tests {
         // Run the build_retry test a few times.
         // This increases the chance that the full comparison happens.
         for _ in 0..32 {
-            build_retry_single();
+            build_retry_27();
+            build_retry_28();
+            build_retry_29();
         }
+    }
+
+    fn decode_retry(quic_version: QuicVersion, sample_retry: &[u8]) {
+        fixture_init();
+        let (packet, remainder) =
+            PublicPacket::decode(sample_retry, &FixedConnectionIdManager::new(5)).unwrap();
+        assert!(packet.is_valid_retry(&ConnectionId::from(CLIENT_CID)));
+        assert_eq!(Some(quic_version), packet.quic_version);
+        assert!(packet.dcid().is_empty());
+        assert_eq!(&packet.scid()[..], SERVER_CID);
+        assert_eq!(packet.token(), RETRY_TOKEN);
+        assert!(remainder.is_empty());
+    }
+
+    #[test]
+    fn decode_retry_27() {
+        decode_retry(QuicVersion::Draft27, SAMPLE_RETRY_27);
+    }
+
+    #[test]
+    fn decode_retry_28() {
+        decode_retry(QuicVersion::Draft28, SAMPLE_RETRY_28);
+    }
+
+    #[test]
+    fn decode_retry_29() {
+        decode_retry(QuicVersion::Draft29, SAMPLE_RETRY_29);
     }
 
     /// Check some packets that are clearly not valid Retry packets.
     #[test]
     fn invalid_retry() {
         fixture_init();
-        let (sample_retry, _) = pick_retry_version();
         let cid_mgr = FixedConnectionIdManager::new(5);
         let odcid = ConnectionId::from(CLIENT_CID);
 
         assert!(PublicPacket::decode(&[], &cid_mgr).is_err());
 
-        let (packet, remainder) = PublicPacket::decode(sample_retry, &cid_mgr).unwrap();
+        let (packet, remainder) = PublicPacket::decode(SAMPLE_RETRY_28, &cid_mgr).unwrap();
         assert!(remainder.is_empty());
         assert!(packet.is_valid_retry(&odcid));
 
-        let mut damaged_retry = sample_retry.to_vec();
+        let mut damaged_retry = SAMPLE_RETRY_28.to_vec();
         let last = damaged_retry.len() - 1;
         damaged_retry[last] ^= 66;
         let (packet, remainder) = PublicPacket::decode(&damaged_retry, &cid_mgr).unwrap();
@@ -1018,7 +1014,7 @@ mod tests {
     const SAMPLE_VN: &[u8] = &[
         0x80, 0x00, 0x00, 0x00, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0x08,
         0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08, 0xff, 0x00, 0x00, 0x1b, 0xff, 0x00, 0x00,
-        0x1c, 0x0a, 0x0a, 0x0a, 0x0a,
+        0x1c, 0xff, 0x00, 0x00, 0x1d, 0x0a, 0x0a, 0x0a, 0x0a,
     ];
 
     #[test]

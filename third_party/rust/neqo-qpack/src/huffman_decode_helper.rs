@@ -14,7 +14,7 @@ pub struct HuffmanDecoderNode {
 }
 
 lazy_static! {
-    pub static ref HUFFMAN_DECODE_ROOT: HuffmanDecoderNode = { make_huffman_tree(0, 0) };
+    pub static ref HUFFMAN_DECODE_ROOT: HuffmanDecoderNode = make_huffman_tree(0, 0);
 }
 
 fn make_huffman_tree(prefix: u32, len: u8) -> HuffmanDecoderNode {
