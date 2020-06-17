@@ -53,6 +53,12 @@ pane-sync-title2 = { -sync-brand-short-name }
 category-sync2 =
     .tooltiptext = { pane-sync-title2 }
 
+pane-experimental-title = { -brand-short-name } Experiments
+category-experimental =
+    .tooltiptext = { -brand-short-name } Experiments
+pane-experimental-subtitle = Proceed with Caution
+pane-experimental-description = Changing advanced configuration preferences can impact { -brand-short-name } performance or security.
+
 help-button-label = { -brand-short-name } Support
 addons-button-label = Extensions & Themes
 
