@@ -4036,7 +4036,7 @@
 
 - name: gfx.e10s.font-list.shared
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: once
 
 # Disable antialiasing of Ahem, for use in tests.
