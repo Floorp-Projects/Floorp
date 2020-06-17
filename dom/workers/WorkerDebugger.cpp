@@ -482,7 +482,7 @@ RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
       top = outer->GetInProcessTop();
       if (top) {
         windowID = top->WindowID();
-        isTopLevel = outer->IsTopLevelWindow();
+        isTopLevel = outer->GetBrowsingContext()->IsTop();
       }
     }
   }

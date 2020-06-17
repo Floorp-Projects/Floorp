@@ -746,7 +746,7 @@ DocInfo::DocInfo(nsPIDOMWindowOuter* aWindow)
 bool DocInfo::IsTopLevel() const {
   if (mIsTopLevel.isNothing()) {
     struct Matcher {
-      bool operator()(Window aWin) { return aWin->IsTopLevelWindow(); }
+      bool operator()(Window aWin) { return aWin->GetBrowsingContext()->IsTop(); }
       bool operator()(LoadInfo aLoadInfo) {
         return aLoadInfo->GetIsTopLevelLoad();
       }
@@ -757,7 +757,7 @@ bool DocInfo::IsTopLevel() const {
 }
 
 bool WindowShouldMatchActiveTab(nsPIDOMWindowOuter* aWin) {
-  if (aWin->IsTopLevelWindow()) {
+  if (aWin->GetBrowsingContext()->IsTopContent()) {
     return true;
   }
 

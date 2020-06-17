@@ -5674,7 +5674,7 @@ nsIPrincipal* nsGlobalWindowInner::GetTopLevelStorageAreaPrincipal() {
     return nullptr;
   }
 
-  if (!outerWindow->IsTopLevelWindow()) {
+  if (!outerWindow->GetBrowsingContext()->IsTop()) {
     return nullptr;
   }
 

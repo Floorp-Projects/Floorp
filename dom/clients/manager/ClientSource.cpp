@@ -271,7 +271,7 @@ nsresult ClientSource::WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow) {
   NS_ENSURE_TRUE(outer, NS_ERROR_UNEXPECTED);
 
   FrameType frameType = FrameType::Top_level;
-  if (!outer->IsTopLevelWindow()) {
+  if (!outer->GetBrowsingContext()->IsTop()) {
     frameType = FrameType::Nested;
   } else if (outer->HadOriginalOpener()) {
     frameType = FrameType::Auxiliary;
@@ -313,7 +313,7 @@ nsresult ClientSource::DocShellExecutionReady(nsIDocShell* aDocShell) {
 
   // TODO: dedupe this with WindowExecutionReady
   FrameType frameType = FrameType::Top_level;
-  if (!outer->IsTopLevelWindow()) {
+  if (!outer->GetBrowsingContext()->IsTop()) {
     frameType = FrameType::Nested;
   } else if (outer->HadOriginalOpener()) {
     frameType = FrameType::Auxiliary;
