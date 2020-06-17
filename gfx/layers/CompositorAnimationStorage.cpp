@@ -8,10 +8,12 @@
 
 #include "AnimationHelper.h"
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
+#include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/webrender/WebRenderTypes.h"  // for ToWrTransformProperty, etc
 #include "nsDeviceContext.h"  // for AppUnitsPerCSSPixel
 #include "nsDisplayList.h"    // for nsDisplayTransform, etc
+#include "TreeTraversal.h"  // for ForEachNode, BreadthFirstSearch
 
 namespace mozilla {
 namespace layers {
@@ -224,6 +226,220 @@ WrAnimations CompositorAnimationStorage::CollectWebRenderAnimations() const {
   }
 
   return animations;
+}
+
+static gfx::Matrix4x4 FrameTransformToTransformInDevice(
+    const gfx::Matrix4x4& aFrameTransform, Layer* aLayer,
+    const TransformData& aTransformData) {
+  gfx::Matrix4x4 transformInDevice = aFrameTransform;
+  // If our parent layer is a perspective layer, then the offset into reference
+  // frame coordinates is already on that layer. If not, then we need to ask
+  // for it to be added here.
+  if (!aLayer->GetParent() ||
+      !aLayer->GetParent()->GetTransformIsPerspective()) {
+    nsLayoutUtils::PostTranslate(
+        transformInDevice, aTransformData.origin(),
+        aTransformData.appUnitsPerDevPixel(),
+        aLayer->GetContentFlags() & Layer::CONTENT_SNAP_TO_GRID);
+  }
+
+  if (ContainerLayer* c = aLayer->AsContainerLayer()) {
+    transformInDevice.PostScale(c->GetInheritedXScale(),
+                                c->GetInheritedYScale(), 1);
+  }
+
+  return transformInDevice;
+}
+
+static void ApplyAnimatedValue(
+    Layer* aLayer, CompositorAnimationStorage* aStorage,
+    nsCSSPropertyID aProperty, AnimatedValue* aPreviousValue,
+    const nsTArray<RefPtr<RawServoAnimationValue>>& aValues) {
+  MOZ_ASSERT(!aValues.IsEmpty());
+
+  HostLayer* layerCompositor = aLayer->AsHostLayer();
+  switch (aProperty) {
+    case eCSSProperty_background_color: {
+      MOZ_ASSERT(aValues.Length() == 1);
+      // We don't support 'color' animations on the compositor yet so we never
+      // meet currentColor on the compositor.
+      nscolor color =
+          Servo_AnimationValue_GetColor(aValues[0], NS_RGBA(0, 0, 0, 0));
+      aLayer->AsColorLayer()->SetColor(gfx::ToDeviceColor(color));
+      aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
+                                 aPreviousValue, color);
+
+      layerCompositor->SetShadowOpacity(aLayer->GetOpacity());
+      layerCompositor->SetShadowOpacitySetByAnimation(false);
+      layerCompositor->SetShadowBaseTransform(aLayer->GetBaseTransform());
+      layerCompositor->SetShadowTransformSetByAnimation(false);
+      break;
+    }
+    case eCSSProperty_opacity: {
+      MOZ_ASSERT(aValues.Length() == 1);
+      float opacity = Servo_AnimationValue_GetOpacity(aValues[0]);
+      layerCompositor->SetShadowOpacity(opacity);
+      layerCompositor->SetShadowOpacitySetByAnimation(true);
+      aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
+                                 aPreviousValue, opacity);
+
+      layerCompositor->SetShadowBaseTransform(aLayer->GetBaseTransform());
+      layerCompositor->SetShadowTransformSetByAnimation(false);
+      break;
+    }
+    case eCSSProperty_rotate:
+    case eCSSProperty_scale:
+    case eCSSProperty_translate:
+    case eCSSProperty_transform:
+    case eCSSProperty_offset_path:
+    case eCSSProperty_offset_distance:
+    case eCSSProperty_offset_rotate:
+    case eCSSProperty_offset_anchor: {
+      MOZ_ASSERT(aLayer->GetTransformData());
+      const TransformData& transformData = *aLayer->GetTransformData();
+      gfx::Matrix4x4 frameTransform =
+          AnimationHelper::ServoAnimationValueToMatrix4x4(
+              aValues, transformData, aLayer->CachedMotionPath());
+
+      gfx::Matrix4x4 transform = FrameTransformToTransformInDevice(
+          frameTransform, aLayer, transformData);
+
+      layerCompositor->SetShadowBaseTransform(transform);
+      layerCompositor->SetShadowTransformSetByAnimation(true);
+      aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
+                                 aPreviousValue, std::move(transform),
+                                 std::move(frameTransform), transformData);
+
+      layerCompositor->SetShadowOpacity(aLayer->GetOpacity());
+      layerCompositor->SetShadowOpacitySetByAnimation(false);
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled animated property");
+  }
+}
+
+bool CompositorAnimationStorage::SampleAnimations(Layer* aRoot,
+                                                  TimeStamp aPreviousFrameTime,
+                                                  TimeStamp aCurrentFrameTime) {
+  bool isAnimating = false;
+
+  auto autoClearAnimationStorage = MakeScopeExit([&] {
+    if (!isAnimating) {
+      // Clean up the CompositorAnimationStorage because
+      // there are no active animations running
+      Clear();
+    }
+  });
+
+  ForEachNode<ForwardIterator>(aRoot, [&](Layer* layer) {
+    auto& propertyAnimationGroups = layer->GetPropertyAnimationGroups();
+    if (propertyAnimationGroups.IsEmpty()) {
+      return;
+    }
+
+    isAnimating = true;
+    AnimatedValue* previousValue =
+        GetAnimatedValue(layer->GetCompositorAnimationsId());
+
+    AutoTArray<RefPtr<RawServoAnimationValue>, 1> animationValues;
+    AnimationHelper::SampleResult sampleResult =
+        AnimationHelper::SampleAnimationForEachNode(
+            aPreviousFrameTime, aCurrentFrameTime, previousValue,
+            propertyAnimationGroups, animationValues);
+
+    const PropertyAnimationGroup& lastPropertyAnimationGroup =
+        propertyAnimationGroups.LastElement();
+
+    switch (sampleResult) {
+      case AnimationHelper::SampleResult::Sampled:
+        // We assume all transform like properties (on the same frame) live in
+        // a single same layer, so using the transform data of the last element
+        // should be fine.
+        ApplyAnimatedValue(layer, this, lastPropertyAnimationGroup.mProperty,
+                           previousValue, animationValues);
+        break;
+      case AnimationHelper::SampleResult::Skipped:
+        switch (lastPropertyAnimationGroup.mProperty) {
+          case eCSSProperty_background_color:
+          case eCSSProperty_opacity: {
+            if (lastPropertyAnimationGroup.mProperty == eCSSProperty_opacity) {
+              MOZ_ASSERT(
+                  layer->AsHostLayer()->GetShadowOpacitySetByAnimation());
+#ifdef DEBUG
+              // Disable this assertion until the root cause is fixed in bug
+              // 1459775.
+              // MOZ_ASSERT(FuzzyEqualsMultiplicative(
+              //   Servo_AnimationValue_GetOpacity(animationValue),
+              //   *(GetAnimationOpacity(layer->GetCompositorAnimationsId()))));
+#endif
+            }
+            // Even if opacity or background-color  animation value has
+            // unchanged, we have to set the shadow base transform value
+            // here since the value might have been changed by APZC.
+            HostLayer* layerCompositor = layer->AsHostLayer();
+            layerCompositor->SetShadowBaseTransform(layer->GetBaseTransform());
+            layerCompositor->SetShadowTransformSetByAnimation(false);
+            break;
+          }
+          case eCSSProperty_rotate:
+          case eCSSProperty_scale:
+          case eCSSProperty_translate:
+          case eCSSProperty_transform:
+          case eCSSProperty_offset_path:
+          case eCSSProperty_offset_distance:
+          case eCSSProperty_offset_rotate:
+          case eCSSProperty_offset_anchor: {
+            MOZ_ASSERT(
+                layer->AsHostLayer()->GetShadowTransformSetByAnimation());
+            MOZ_ASSERT(previousValue);
+            MOZ_ASSERT(layer->GetTransformData());
+#ifdef DEBUG
+            gfx::Matrix4x4 frameTransform =
+                AnimationHelper::ServoAnimationValueToMatrix4x4(
+                    animationValues, *layer->GetTransformData(),
+                    layer->CachedMotionPath());
+            gfx::Matrix4x4 transformInDevice =
+                FrameTransformToTransformInDevice(frameTransform, layer,
+                                                  *layer->GetTransformData());
+            MOZ_ASSERT(previousValue->Transform()
+                           .mTransformInDevSpace.FuzzyEqualsMultiplicative(
+                               transformInDevice));
+#endif
+            // In the case of transform we have to set the unchanged
+            // transform value again because APZC might have modified the
+            // previous shadow base transform value.
+            HostLayer* layerCompositor = layer->AsHostLayer();
+            layerCompositor->SetShadowBaseTransform(
+                // FIXME: Bug 1459775: It seems possible that we somehow try
+                // to sample animations and skip it even if the previous value
+                // has been discarded from the animation storage when we enable
+                // layer tree cache. So for the safety, in the case where we
+                // have no previous animation value, we set non-animating value
+                // instead.
+                previousValue ? previousValue->Transform().mTransformInDevSpace
+                              : layer->GetBaseTransform());
+            break;
+          }
+          default:
+            MOZ_ASSERT_UNREACHABLE("Unsupported properties");
+            break;
+        }
+        break;
+      case AnimationHelper::SampleResult::None: {
+        HostLayer* layerCompositor = layer->AsHostLayer();
+        layerCompositor->SetShadowBaseTransform(layer->GetBaseTransform());
+        layerCompositor->SetShadowTransformSetByAnimation(false);
+        layerCompositor->SetShadowOpacity(layer->GetOpacity());
+        layerCompositor->SetShadowOpacitySetByAnimation(false);
+        break;
+      }
+      default:
+        break;
+    }
+  });
+
+  return isAnimating;
 }
 
 }  // namespace layers
