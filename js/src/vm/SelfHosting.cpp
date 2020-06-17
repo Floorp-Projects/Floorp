@@ -959,7 +959,8 @@ js::PropertyName* js::GetClonedSelfHostedFunctionName(const JSFunction* fun) {
   return name.toString()->asAtom().asPropertyName();
 }
 
-js::PropertyName* js::GetClonedSelfHostedFunctionNameOffMainThread(JSFunction* fun) {
+js::PropertyName* js::GetClonedSelfHostedFunctionNameOffMainThread(
+    JSFunction* fun) {
   Value name = fun->getExtendedSlotOffMainThread(LAZY_FUNCTION_NAME_SLOT);
   if (!name.isString()) {
     return nullptr;
@@ -3064,8 +3065,7 @@ static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
 
 bool JSRuntime::createLazySelfHostedFunctionClone(
     JSContext* cx, HandlePropertyName selfHostedName, HandleAtom name,
-    unsigned nargs, HandleObject proto, NewObjectKind newKind,
-    MutableHandleFunction fun) {
+    unsigned nargs, NewObjectKind newKind, MutableHandleFunction fun) {
   MOZ_ASSERT(newKind != GenericObject);
 
   RootedAtom funName(cx, name);
@@ -3080,6 +3080,12 @@ bool JSRuntime::createLazySelfHostedFunctionClone(
     MOZ_ASSERT(GetUnclonedSelfHostedFunctionName(selfHostedFun) ==
                selfHostedName);
     funName = selfHostedFun->explicitName();
+  }
+
+  RootedObject proto(cx);
+  if (!GetFunctionPrototype(cx, selfHostedFun->generatorKind(),
+                            selfHostedFun->asyncKind(), &proto)) {
+    return false;
   }
 
   fun.set(NewScriptedFunction(cx, nargs, FunctionFlags::BASESCRIPT, funName,
