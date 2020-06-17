@@ -309,7 +309,7 @@ body {
     display: grid;
     grid-gap: 24px;
     grid-template-columns: repeat(5, auto);
-    margin: 0 auto; }
+    margin: 10px auto; }
     @media (max-width: 610px) {
       .multistageContainer .tiles-section {
         grid-template-columns: repeat(3, auto); } }
@@ -347,7 +347,7 @@ body {
     .multistageContainer button.primary {
       font-size: 16px;
       margin-inline-start: 12px;
-      margin: 26px 0 0;
+      margin: 20px 0 0;
       padding: 12px 20px;
       white-space: nowrap;
       background-color: var(--newtab-button-primary-color);
