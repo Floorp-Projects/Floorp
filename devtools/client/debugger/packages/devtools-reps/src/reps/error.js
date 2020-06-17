@@ -23,6 +23,7 @@ ErrorRep.propTypes = {
   mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
   // An optional function that will be used to render the Error stacktrace.
   renderStacktrace: PropTypes.func,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 /**
@@ -36,12 +37,12 @@ ErrorRep.propTypes = {
  * depth is 0. This is because we don't want error in previews or in object to be
  * displayed unlike other objects:
  *      - Object { err: Error }
- *      - ▼ {
+ *      - â–¼ {
  *            err: Error: "blah"
  *        }
  */
 function ErrorRep(props) {
-  const { object, mode, depth } = props;
+  const { object, mode, shouldRenderTooltip, depth } = props;
   const preview = object.preview;
   const customFormat = props.customFormat && mode !== MODE.TINY && !depth;
 
@@ -101,6 +102,7 @@ function ErrorRep(props) {
       className: `objectBox-stackTrace ${
         customFormat ? "reps-custom-format" : ""
       }`,
+      title: shouldRenderTooltip ? `${name}: "${preview.message}"` : null,
     },
     ...content
   );

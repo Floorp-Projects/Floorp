@@ -27,20 +27,36 @@ describe("Promise - Pending", () => {
   });
 
   it("renders as expected", () => {
-    let component = renderRep(object, { mode: undefined });
+    let component = renderRep(object, {
+      mode: undefined,
+      shouldRenderTooltip: true,
+    });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe("Promise");
     expectActorAttribute(component, object.actor);
 
-    component = renderRep(object, { mode: MODE.TINY });
+    component = renderRep(object, {
+      mode: MODE.TINY,
+      shouldRenderTooltip: true,
+    });
     expect(component.text()).toBe('Promise { "pending" }');
+    expect(component.prop("title")).toBe("Promise");
     expectActorAttribute(component, object.actor);
 
-    component = renderRep(object, { mode: MODE.SHORT });
+    component = renderRep(object, {
+      mode: MODE.SHORT,
+      shouldRenderTooltip: true,
+    });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe("Promise");
     expectActorAttribute(component, object.actor);
 
-    component = renderRep(object, { mode: MODE.LONG });
+    component = renderRep(object, {
+      mode: MODE.LONG,
+      shouldRenderTooltip: true,
+    });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe("Promise");
     expectActorAttribute(component, object.actor);
   });
 });

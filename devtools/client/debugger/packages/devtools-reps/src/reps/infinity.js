@@ -11,14 +11,25 @@ const { getGripType, wrapRender } = require("./rep-utils");
 /**
  * Renders a Infinity object
  */
+
 InfinityRep.propTypes = {
   object: PropTypes.object.isRequired,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function InfinityRep(props) {
-  const { object } = props;
+  const { object, shouldRenderTooltip } = props;
 
-  return span({ className: "objectBox objectBox-number" }, object.type);
+  const config = getElementConfig(shouldRenderTooltip, object);
+
+  return span(config, object.type);
+}
+
+function getElementConfig(shouldRenderTooltip, object) {
+  return {
+    className: "objectBox objectBox-number",
+    title: shouldRenderTooltip ? object.type : null,
+  };
 }
 
 function supportsObject(object, noGrip = false) {

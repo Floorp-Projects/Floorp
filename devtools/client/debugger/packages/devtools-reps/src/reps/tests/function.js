@@ -19,30 +19,69 @@ describe("Function - Named", () => {
   const object = stubs.get("Named");
 
   it("renders named function as expected", () => {
-    expect(renderRep(object, { mode: undefined }).text()).toBe(
-      "function testName()"
-    );
-    expect(renderRep({ ...object, parameterNames: [] }).text()).toBe(
-      "function testName()"
-    );
-    expect(renderRep({ ...object, parameterNames: ["a"] }).text()).toBe(
-      "function testName(a)"
-    );
     expect(
-      renderRep({ ...object, parameterNames: ["a", "b", "c"] }).text()
+      renderRep(object, { mode: undefined, shouldRenderTooltip: true }).text()
+    ).toBe("function testName()");
+    expect(
+      renderRep(object, { mode: undefined, shouldRenderTooltip: true }).prop(
+        "title"
+      )
+    ).toBe("function testName()");
+    expect(
+      renderRep(
+        { ...object, parameterNames: [] },
+        { shouldRenderTooltip: true }
+      ).text()
+    ).toBe("function testName()");
+    expect(
+      renderRep(
+        { ...object, parameterNames: [] },
+        { shouldRenderTooltip: true }
+      ).prop("title")
+    ).toBe("function testName()");
+    expect(
+      renderRep(
+        { ...object, parameterNames: ["a"] },
+        { shouldRenderTooltip: true }
+      ).text()
+    ).toBe("function testName(a)");
+    expect(
+      renderRep(
+        { ...object, parameterNames: ["a"] },
+        { shouldRenderTooltip: true }
+      ).prop("title")
+    ).toBe("function testName(a)");
+    expect(
+      renderRep(
+        { ...object, parameterNames: ["a", "b", "c"] },
+        { shouldRenderTooltip: true }
+      ).text()
     ).toBe("function testName(a, b, c)");
     expect(
-      renderRep(object, {
-        mode: MODE.TINY,
-      }).text()
+      renderRep(
+        { ...object, parameterNames: ["a", "b", "c"] },
+        { shouldRenderTooltip: true }
+      ).prop("title")
+    ).toBe("function testName(a, b, c)");
+    expect(
+      renderRep(object, { mode: MODE.TINY, shouldRenderTooltip: true }).text()
+    ).toBe("testName()");
+    expect(
+      renderRep(object, { mode: MODE.TINY, shouldRenderTooltip: true }).prop(
+        "title"
+      )
     ).toBe("testName()");
     expect(
       renderRep(
         { ...object, parameterNames: ["a", "b", "c"] },
-        {
-          mode: MODE.TINY,
-        }
+        { mode: MODE.TINY, shouldRenderTooltip: true }
       ).text()
+    ).toBe("testName(a, b, c)");
+    expect(
+      renderRep(
+        { ...object, parameterNames: ["a", "b", "c"] },
+        { mode: MODE.TINY, shouldRenderTooltip: true }
+      ).prop("title")
     ).toBe("testName(a, b, c)");
 
     expectActorAttribute(renderRep(object), object.actor);
@@ -484,20 +523,39 @@ describe("Function - Class constructor", () => {
   const object = stubs.get("EmptyClass");
 
   it("renders empty class as expected", () => {
-    expect(renderRep(object, { mode: undefined }).text()).toBe(
-      "class EmptyClass {}"
-    );
+    expect(
+      renderRep(object, { mode: undefined, shouldRenderTooltip: true }).text()
+    ).toBe("class EmptyClass {}");
+    expect(
+      renderRep(object, { mode: undefined, shouldRenderTooltip: true }).prop(
+        "title"
+      )
+    ).toBe("class EmptyClass {}");
   });
 
   it("renders empty class in MODE.TINY as expected", () => {
-    expect(renderRep(object, { mode: MODE.TINY }).text()).toBe(
-      "class EmptyClass"
-    );
+    expect(
+      renderRep(object, { mode: MODE.TINY, shouldRenderTooltip: true }).text()
+    ).toBe("class EmptyClass");
+    expect(
+      renderRep(object, { mode: MODE.TINY, shouldRenderTooltip: true }).prop(
+        "title"
+      )
+    ).toBe("class EmptyClass");
   });
 
   it("renders class with constructor as expected", () => {
     expect(
-      renderRep({ ...object, parameterNames: ["a", "b", "c"] }).text()
+      renderRep(
+        { ...object, parameterNames: ["a", "b", "c"] },
+        { shouldRenderTooltip: true }
+      ).text()
+    ).toBe("class EmptyClass { constructor(a, b, c) }");
+    expect(
+      renderRep(
+        { ...object, parameterNames: ["a", "b", "c"] },
+        { shouldRenderTooltip: true }
+      ).prop("title")
     ).toBe("class EmptyClass { constructor(a, b, c) }");
   });
 
@@ -505,8 +563,14 @@ describe("Function - Class constructor", () => {
     expect(
       renderRep(
         { ...object, parameterNames: ["a", "b", "c"] },
-        { mode: MODE.TINY }
+        { mode: MODE.TINY, shouldRenderTooltip: true }
       ).text()
+    ).toBe("class EmptyClass");
+    expect(
+      renderRep(
+        { ...object, parameterNames: ["a", "b", "c"] },
+        { mode: MODE.TINY, shouldRenderTooltip: true }
+      ).prop("title")
     ).toBe("class EmptyClass");
   });
 });

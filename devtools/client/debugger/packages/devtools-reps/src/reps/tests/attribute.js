@@ -23,9 +23,13 @@ describe("Attribute", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
     expect(renderedComponent.text()).toEqual(
+      'class="autocomplete-suggestions"'
+    );
+    expect(renderedComponent.prop("title")).toBe(
       'class="autocomplete-suggestions"'
     );
     expectActorAttribute(renderedComponent, stub.actor);

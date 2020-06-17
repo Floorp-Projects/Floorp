@@ -38,6 +38,7 @@ exports[`ObjectInspector - classnames has the expected class 1`] = `
       </span>
       <span
         className="objectBox objectBox-number"
+        title={null}
       >
         42
       </span>
@@ -84,6 +85,7 @@ exports[`ObjectInspector - classnames has the inline class when inline prop is t
       </span>
       <span
         className="objectBox objectBox-number"
+        title={null}
       >
         42
       </span>
@@ -130,6 +132,7 @@ exports[`ObjectInspector - classnames has the nowrap class when disableWrap prop
       </span>
       <span
         className="objectBox objectBox-number"
+        title={null}
       >
         42
       </span>

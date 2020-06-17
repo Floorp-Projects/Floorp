@@ -5,14 +5,32 @@
 // Dependencies
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
 const { getGripType, wrapRender } = require("./rep-utils");
 
 /**
  * Renders undefined value
  */
-const Undefined = function() {
-  return span({ className: "objectBox objectBox-undefined" }, "undefined");
+
+Undefined.propTypes = {
+  shouldRenderTooltip: PropTypes.bool,
 };
+
+function Undefined(props) {
+  const shouldRenderTooltip = props.shouldRenderTooltip;
+
+  const config = getElementConfig(shouldRenderTooltip);
+
+  return span(config, "undefined");
+}
+
+function getElementConfig(shouldRenderTooltip) {
+  return {
+    className: "objectBox objectBox-undefined",
+    title: shouldRenderTooltip ? "undefined" : null,
+  };
+}
 
 function supportsObject(object, noGrip = false) {
   if (noGrip === true) {

@@ -19,9 +19,13 @@ describe("ObjectWithURL", () => {
     const renderedComponent = shallow(
       ObjectWithURL.rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
     expect(renderedComponent.text()).toBe(
+      "Location https://www.mozilla.org/en-US/"
+    );
+    expect(renderedComponent.prop("title")).toBe(
       "Location https://www.mozilla.org/en-US/"
     );
     expect(renderedComponent.hasClass("objectBox-Location")).toBe(true);

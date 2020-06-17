@@ -40,4 +40,14 @@ describe("Test Undefined", () => {
       true
     );
   });
+
+  it("Undefined rep has expected title", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+        shouldRenderTooltip: true,
+      })
+    );
+    expect(renderedComponent.prop("title")).toEqual("undefined");
+  });
 });

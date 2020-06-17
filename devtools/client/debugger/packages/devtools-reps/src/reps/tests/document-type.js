@@ -20,10 +20,12 @@ describe("DocumentType", () => {
     const renderedComponent = shallow(
       DocumentType.rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("<!DOCTYPE html>");
+    expect(renderedComponent.prop("title")).toEqual("<!DOCTYPE html>");
     expectActorAttribute(renderedComponent, stub.actor);
   });
 
@@ -32,9 +34,11 @@ describe("DocumentType", () => {
     const renderedComponent = shallow(
       DocumentType.rep({
         object: unnamedStub,
+        shouldRenderTooltip: true,
       })
     );
     expect(renderedComponent.text()).toEqual("<!DOCTYPE>");
+    expect(renderedComponent.prop("title")).toEqual("<!DOCTYPE>");
     expectActorAttribute(renderedComponent, unnamedStub.actor);
   });
 });

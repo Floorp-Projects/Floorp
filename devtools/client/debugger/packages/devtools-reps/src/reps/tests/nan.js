@@ -25,4 +25,14 @@ describe("NaN", () => {
     );
     expect(renderedComponent).toMatchSnapshot();
   });
+
+  it("NaN rep renders with the correct title element", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+        shouldRenderTooltip: true,
+      })
+    );
+    expect(renderedComponent.prop("title")).toBe("NaN");
+  });
 });

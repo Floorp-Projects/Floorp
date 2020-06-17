@@ -15,12 +15,18 @@ const MAX_STRING_LENGTH = 50;
 /**
  * Renders a symbol.
  */
+
 SymbolRep.propTypes = {
   object: PropTypes.object.isRequired,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function SymbolRep(props) {
-  const { className = "objectBox objectBox-symbol", object } = props;
+  const {
+    className = "objectBox objectBox-symbol",
+    object,
+    shouldRenderTooltip,
+  } = props;
   const { name } = object;
 
   let symbolText = name || "";
@@ -33,15 +39,26 @@ function SymbolRep(props) {
     });
   }
 
-  return span(
+  const config = getElementConfig(
     {
+      shouldRenderTooltip,
       className,
-      "data-link-actor-id": object.actor,
+      symbolText,
     },
-    "Symbol(",
-    symbolText,
-    ")"
+    object
   );
+
+  return span(config, "Symbol(", symbolText, ")");
+}
+
+function getElementConfig(opts, object) {
+  const { shouldRenderTooltip, className, symbolText } = opts;
+
+  return {
+    "data-link-actor-id": object.actor,
+    className: className,
+    title: shouldRenderTooltip ? `Symbol(${symbolText})` : null,
+  };
 }
 
 function supportsObject(object, noGrip = false) {
