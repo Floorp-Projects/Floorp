@@ -5,7 +5,6 @@
 package mozilla.components.feature.readerview
 
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -18,20 +17,18 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
+import mozilla.components.feature.readerview.internal.ReaderViewConfig
 import mozilla.components.feature.readerview.internal.ReaderViewControlsInteractor
 import mozilla.components.feature.readerview.internal.ReaderViewControlsPresenter
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
-import mozilla.components.feature.readerview.ReaderViewFeature.ColorScheme.LIGHT
-import mozilla.components.feature.readerview.ReaderViewFeature.FontType.SERIF
 import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Locale
-import kotlin.properties.Delegates.observable
 
 typealias onReaderViewStatusChange = (available: Boolean, active: Boolean) -> Unit
 
@@ -65,45 +62,16 @@ class ReaderViewFeature(
     internal var extensionController = WebExtensionController(READER_VIEW_EXTENSION_ID, READER_VIEW_EXTENSION_URL)
 
     @VisibleForTesting
-    internal val config = Config(context.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE))
+    internal val config = ReaderViewConfig(context) { message ->
+        val engineSession = store.state.selectedTab?.engineState?.engineSession
+        extensionController.sendContentMessage(message, engineSession)
+    }
 
     private val controlsPresenter = ReaderViewControlsPresenter(controlsView, config)
     private val controlsInteractor = ReaderViewControlsInteractor(controlsView, config)
 
     enum class FontType(val value: String) { SANSSERIF("sans-serif"), SERIF("serif") }
     enum class ColorScheme { LIGHT, SEPIA, DARK }
-
-    inner class Config(private val prefs: SharedPreferences) {
-
-        var colorScheme by observable(ColorScheme.valueOf(prefs.getString(COLOR_SCHEME_KEY, LIGHT.name)!!)) {
-            _, old, new -> if (old != new) {
-                val message = JSONObject().put(ACTION_MESSAGE_KEY, ACTION_SET_COLOR_SCHEME).put(ACTION_VALUE, new.name)
-                sendConfigMessage(message)
-                prefs.edit().putString(COLOR_SCHEME_KEY, new.name).apply()
-            }
-        }
-
-        var fontType by observable(FontType.valueOf(prefs.getString(FONT_TYPE_KEY, SERIF.name)!!)) {
-            _, old, new -> if (old != new) {
-                val message = JSONObject().put(ACTION_MESSAGE_KEY, ACTION_SET_FONT_TYPE).put(ACTION_VALUE, new.value)
-                sendConfigMessage(message)
-                prefs.edit().putString(FONT_TYPE_KEY, new.name).apply()
-            }
-        }
-
-        var fontSize by observable(prefs.getInt(FONT_SIZE_KEY, FONT_SIZE_DEFAULT)) {
-            _, old, new -> if (old != new) {
-                val message = JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHANGE_FONT_SIZE).put(ACTION_VALUE, new - old)
-                sendConfigMessage(message)
-                prefs.edit().putInt(FONT_SIZE_KEY, new).apply()
-            }
-        }
-
-        private fun sendConfigMessage(message: JSONObject) {
-            val engineSession = store.state.selectedTab?.engineState?.engineSession
-            extensionController.sendContentMessage(message, engineSession)
-        }
-    }
 
     override fun start() {
         ensureExtensionInstalled()
@@ -246,7 +214,7 @@ class ReaderViewFeature(
         // attached to has a longer lifespan than the feature instance i.e. a tab can remain open,
         // but we don't want to prevent the feature (and therefore its context/fragment) from
         // being garbage collected. The config has references to both the context and feature.
-        private val config: WeakReference<Config>
+        private val config: WeakReference<ReaderViewConfig>
     ) : MessageHandler {
         override fun onPortConnected(port: Port) {
             port.postMessage(createCheckReaderStateMessage())
@@ -305,7 +273,7 @@ class ReaderViewFeature(
             return JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READER_STATE)
         }
 
-        private fun createShowReaderMessage(config: Config): JSONObject {
+        private fun createShowReaderMessage(config: ReaderViewConfig): JSONObject {
             val configJson = JSONObject()
                 .put(ACTION_VALUE_SHOW_FONT_SIZE, config.fontSize)
                 .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase(Locale.ROOT))

@@ -225,7 +225,7 @@ class ReaderViewFeatureTest {
 
     @Test
     fun `notifies readerable state changes of selected tab`() {
-        var readerViewStatusChanges = mutableListOf<Pair<Boolean, Boolean>>()
+        val readerViewStatusChanges = mutableListOf<Pair<Boolean, Boolean>>()
         val onReaderViewStatusChange: onReaderViewStatusChange = {
             readerable, active -> readerViewStatusChanges.add(Pair(readerable, active))
         }
