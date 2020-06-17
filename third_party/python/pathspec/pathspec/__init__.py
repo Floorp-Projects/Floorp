@@ -24,7 +24,7 @@ The following functions are also imported:
 from __future__ import unicode_literals
 
 __author__ = "Caleb P. Burns"
-__copyright__ = "Copyright © 2013-2018 Caleb P. Burns"
+__copyright__ = "Copyright © 2013-2020 Caleb P. Burns"
 __created__ = "2013-10-12"
 __credits__ = [
 	"dahlia <https://github.com/dahlia>",
@@ -46,13 +46,15 @@ __credits__ = [
 	"mroutis <https://github.com/mroutis>",
 	"jdufresne <https://github.com/jdufresne>",
 	"groodt <https://github.com/groodt>",
+	"ftrofin <https://github.com/ftrofin>",
+	"pykong <https://github.com/pykong>",
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2019-12-27"
-__version__ = "0.7.0"
+__updated__ = "2020-04-09"
+__version__ = "0.8.0"
 
 from .pathspec import PathSpec
 from .pattern import Pattern, RegexPattern

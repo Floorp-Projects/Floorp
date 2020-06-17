@@ -13,6 +13,7 @@ if sys.version_info[0] < 3:
 	unicode = unicode
 	string_types = (basestring,)
 
+	from collections import Iterable
 	from itertools import izip_longest
 
 	def iterkeys(mapping):
@@ -23,6 +24,7 @@ else:
 	unicode = str
 	string_types = (unicode,)
 
+	from collections.abc import Iterable
 	from itertools import zip_longest as izip_longest
 
 	def iterkeys(mapping):
@@ -30,7 +32,7 @@ else:
 
 try:
 	# Python 3.6+.
-	from collections.abc import Collection as collection_type
+	from collections.abc import Collection
 except ImportError:
 	# Python 2.7 - 3.5.
-	from collections import Container as collection_type
+	from collections import Container as Collection
