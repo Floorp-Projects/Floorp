@@ -124,6 +124,19 @@ typedef Vector<char, 0, SystemAllocPolicy> UTF8Bytes;
 typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
 typedef Vector<UniqueChars, 0, SystemAllocPolicy> UniqueCharsVector;
 
+// Bit set as the lowest bit of a frame pointer, used in two different mutually
+// exclusive situations:
+// - either it's a low bit tag in a FramePointer value read from the
+// Frame::callerFP of an inner wasm frame. This indicates the previous call
+// frame has been set up by a JIT caller that directly called into a wasm
+// function's body. This is only stored in Frame::callerFP for a wasm frame
+// called from JIT code, and thus it can not appear in a JitActivation's
+// exitFP.
+// - or it's the low big tag set when exiting wasm code in JitActivation's
+// exitFP.
+
+constexpr uintptr_t ExitOrJitEntryFPTag = 0x1;
+
 // To call Vector::shrinkStorageToFit , a type must specialize mozilla::IsPod
 // which is pretty verbose to do within js::wasm, so factor that process out
 // into a macro.
@@ -3190,14 +3203,16 @@ static_assert(MaxInlineMemoryFillLength < MinOffsetGuardLimit, "precondition");
 // are counted by masm.framePushed. Thus, the stack alignment at any point in
 // time is (sizeof(wasm::Frame) + masm.framePushed) % WasmStackAlignment.
 
-struct Frame {
-  // The caller's Frame*. See GenerateCallableEpilogue for why this must be
+class Frame {
+  // See GenerateCallableEpilogue for why this must be
   // the first field of wasm::Frame (in a downward-growing stack).
-  Frame* callerFP;
+  // It's either the caller's Frame*, for wasm callers, or the JIT caller frame
+  // plus a tag otherwise.
+  uint8_t* callerFP_;
 
   // The saved value of WasmTlsReg on entry to the function. This is
   // effectively the callee's instance.
-  TlsData* tls;
+  TlsData* tls_;
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_ARM64)
   // Double word aligned frame ensures:
@@ -3205,20 +3220,74 @@ struct Frame {
   //   stack alignment to be more than word size.
   // - correct stack alignment on architectures that require the SP alignment
   //   to be more than word size.
+ protected:  // suppress -Wunused-private-field
   uintptr_t padding_;
+
+ private:
 #endif
 
   // The return address pushed by the call (in the case of ARM/MIPS the return
   // address is pushed by the first instruction of the prologue).
-  void* returnAddress;
+  void* returnAddress_;
 
-  // Helper functions:
+ public:
+  static constexpr uint32_t tlsOffset() { return offsetof(Frame, tls_); }
+  static constexpr uint32_t callerFPOffset() {
+    return offsetof(Frame, callerFP_);
+  }
+  static constexpr uint32_t returnAddressOffset() {
+    return offsetof(Frame, returnAddress_);
+  }
 
-  Instance* instance() const { return tls->instance; }
+  uint8_t* returnAddress() const {
+    return reinterpret_cast<uint8_t*>(returnAddress_);
+  }
+
+  void** addressOfReturnAddress() {
+    return reinterpret_cast<void**>(&returnAddress_);
+  }
+
+  uint8_t* rawCaller() const { return callerFP_; }
+  TlsData* tls() const { return tls_; }
+  Instance* instance() const { return tls()->instance; }
+
+  Frame* wasmCaller() const {
+    MOZ_ASSERT(!callerIsExitOrJitEntryFP());
+    return reinterpret_cast<Frame*>(callerFP_);
+  }
+
+  bool callerIsExitOrJitEntryFP() const {
+    return isExitOrJitEntryFP(callerFP_);
+  }
+
+  uint8_t* jitEntryCaller() const { return toJitEntryCaller(callerFP_); }
+
+  static const Frame* fromUntaggedWasmExitFP(const void* savedFP) {
+    MOZ_ASSERT(!isExitOrJitEntryFP(savedFP));
+    return reinterpret_cast<const Frame*>(savedFP);
+  }
+
+  static bool isExitOrJitEntryFP(const void* fp) {
+    return reinterpret_cast<uintptr_t>(fp) & ExitOrJitEntryFPTag;
+  }
+
+  static uint8_t* toJitEntryCaller(const void* fp) {
+    MOZ_ASSERT(isExitOrJitEntryFP(fp));
+    return reinterpret_cast<uint8_t*>(reinterpret_cast<uintptr_t>(fp) &
+                                      ~ExitOrJitEntryFPTag);
+  }
+
+  static uint8_t* addExitOrJitEntryFPTag(const Frame* fp) {
+    MOZ_ASSERT(!isExitOrJitEntryFP(fp));
+    return reinterpret_cast<uint8_t*>(reinterpret_cast<uintptr_t>(fp) |
+                                      ExitOrJitEntryFPTag);
+  }
 };
 
+static_assert(!std::is_polymorphic_v<Frame>, "Frame doesn't need a vtable.");
+
 #if defined(JS_CODEGEN_ARM64)
-static_assert(sizeof(Frame) % 16 == 0, "frame size");
+static_assert(sizeof(Frame) % 16 == 0, "frame is aligned");
 #endif
 
 // A DebugFrame is a Frame with additional fields that are added after the
