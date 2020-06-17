@@ -122,9 +122,7 @@ void StorageObserver::RemoveSink(StorageObserverSink* aObs) {
 void StorageObserver::Notify(const char* aTopic,
                              const nsAString& aOriginAttributesPattern,
                              const nsACString& aOriginScope) {
-  nsTObserverArray<StorageObserverSink*>::ForwardIterator iter(mSinks);
-  while (iter.HasMore()) {
-    StorageObserverSink* sink = iter.GetNext();
+  for (auto* sink : mSinks.ForwardRange()) {
     sink->Observe(aTopic, aOriginAttributesPattern, aOriginScope);
   }
 }
