@@ -51,3 +51,8 @@ function assert_not_equals(actual, not_expected, description) {
     };
     assertEq(caught, true, "assert_not_equals failed: " + description);
 }
+
+// Make it possible to run wasm spec tests with --fuzzing-safe
+if (typeof console == 'undefined') {
+    console = { log() {} }
+}
