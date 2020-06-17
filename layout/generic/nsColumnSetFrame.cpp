@@ -284,9 +284,11 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
       ColumnUtils::GetColumnGap(this, aReflowInput.ComputedISize());
   int32_t numColumns = colStyle->mColumnCount;
 
-  // If column-fill is set to 'balance', then we want to balance the columns.
-  bool isBalancing =
-      colStyle->mColumnFill == StyleColumnFill::Balance && !aForceAuto;
+  // If column-fill is set to 'balance' or we have a column-span sibling, then
+  // we want to balance the columns.
+  bool isBalancing = (colStyle->mColumnFill == StyleColumnFill::Balance ||
+                      HasColumnSpanSiblings()) &&
+                     !aForceAuto;
   if (isBalancing) {
     const uint32_t kMaxNestedColumnBalancingDepth = 2;
     const uint32_t balancingDepth =
