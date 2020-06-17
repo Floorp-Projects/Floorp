@@ -118,7 +118,7 @@ impl TransportParameter {
                 _ => return Err(Error::TransportParameterError),
             },
             ACTIVE_CONNECTION_ID_LIMIT => match d.decode_varint() {
-                Some(v) if v <= 2 => Self::Integer(v),
+                Some(v) if v >= 2 => Self::Integer(v),
                 _ => return Err(Error::TransportParameterError),
             },
 

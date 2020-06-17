@@ -21,7 +21,7 @@ use neqo_crypto::{
 };
 
 use crate::frame::Frame;
-use crate::packet::PacketNumber;
+use crate::packet::{PacketNumber, QuicVersion};
 use crate::recovery::RecoveryToken;
 use crate::recv_stream::RxStreamOrderer;
 use crate::send_stream::TxBuffer;
@@ -201,7 +201,7 @@ impl Crypto {
         Ok(())
     }
 
-    pub fn acked(&mut self, token: CryptoRecoveryToken) {
+    pub fn acked(&mut self, token: &CryptoRecoveryToken) {
         qinfo!(
             "Acked crypto frame space={} offset={} length={}",
             token.space,
@@ -282,17 +282,31 @@ impl CryptoDxState {
         }
     }
 
-    pub fn new_initial(direction: CryptoDxDirection, label: &str, dcid: &[u8]) -> Self {
-        const INITIAL_SALT: &[u8] = &[
+    pub fn new_initial(
+        quic_version: QuicVersion,
+        direction: CryptoDxDirection,
+        label: &str,
+        dcid: &[u8],
+    ) -> Self {
+        qtrace!("new_initial for {:?}", quic_version);
+        const INITIAL_SALT_27: &[u8] = &[
             0xc3, 0xee, 0xf7, 0x12, 0xc7, 0x2e, 0xbb, 0x5a, 0x11, 0xa7, 0xd2, 0x43, 0x2b, 0xb4,
             0x63, 0x65, 0xbe, 0xf9, 0xf5, 0x02,
         ];
+        const INITIAL_SALT_29: &[u8] = &[
+            0xaf, 0xbf, 0xec, 0x28, 0x99, 0x93, 0xd2, 0x4c, 0x9e, 0x97, 0x86, 0xf1, 0x9c, 0x61,
+            0x11, 0xe0, 0x43, 0x90, 0xa8, 0x99,
+        ];
+        let salt = match quic_version {
+            QuicVersion::Draft27 | QuicVersion::Draft28 => INITIAL_SALT_27,
+            QuicVersion::Draft29 => INITIAL_SALT_29,
+        };
         let cipher = TLS_AES_128_GCM_SHA256;
         let initial_secret = hkdf::extract(
             TLS_VERSION_1_3,
             cipher,
             Some(
-                hkdf::import_key(TLS_VERSION_1_3, cipher, INITIAL_SALT)
+                hkdf::import_key(TLS_VERSION_1_3, cipher, salt)
                     .as_ref()
                     .unwrap(),
             ),
@@ -450,7 +464,12 @@ impl CryptoDxState {
     pub(crate) fn test_default() -> Self {
         // This matches the value in packet.rs
         const CLIENT_CID: &[u8] = &[0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08];
-        Self::new_initial(CryptoDxDirection::Write, "server in", CLIENT_CID)
+        Self::new_initial(
+            QuicVersion::default(),
+            CryptoDxDirection::Write,
+            "server in",
+            CLIENT_CID,
+        )
     }
 }
 
@@ -593,7 +612,7 @@ impl CryptoStates {
     }
 
     /// Create the initial crypto state.
-    pub fn init(&mut self, role: Role, dcid: &[u8]) {
+    pub fn init(&mut self, quic_version: QuicVersion, role: Role, dcid: &[u8]) {
         const CLIENT_INITIAL_LABEL: &str = "client in";
         const SERVER_INITIAL_LABEL: &str = "server in";
 
@@ -604,14 +623,14 @@ impl CryptoStates {
             hex(dcid)
         );
 
-        let (write_label, read_label) = match role {
+        let (write, read) = match role {
             Role::Client => (CLIENT_INITIAL_LABEL, SERVER_INITIAL_LABEL),
             Role::Server => (SERVER_INITIAL_LABEL, CLIENT_INITIAL_LABEL),
         };
 
         let mut initial = CryptoState {
-            tx: CryptoDxState::new_initial(CryptoDxDirection::Write, write_label, dcid),
-            rx: CryptoDxState::new_initial(CryptoDxDirection::Read, read_label, dcid),
+            tx: CryptoDxState::new_initial(quic_version, CryptoDxDirection::Write, write, dcid),
+            rx: CryptoDxState::new_initial(quic_version, CryptoDxDirection::Read, read, dcid),
         };
         if let Some(prev) = &self.initial {
             qinfo!(
@@ -914,7 +933,7 @@ impl CryptoStreams {
         self.get_mut(space).unwrap().rx.read_to_end(buf)
     }
 
-    pub fn acked(&mut self, token: CryptoRecoveryToken) {
+    pub fn acked(&mut self, token: &CryptoRecoveryToken) {
         self.get_mut(token.space)
             .unwrap()
             .tx

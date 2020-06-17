@@ -73,9 +73,9 @@
 //! ## Writing out logs
 //! As events occur during the connection, the application appends them to the
 //! trace. The qlog crate supports two modes of writing logs: the buffered mode
-//! stores everything in memory and requires the application to serialize and write
-//! the output, the streaming mode progressively writes serialized JSON output to a
-//! writer designated by the application.
+//! stores everything in memory and requires the application to serialize and
+//! write the output, the streaming mode progressively writes serialized JSON
+//! output to a writer designated by the application.
 //!
 //! ### Creating a Trace
 //!
@@ -378,7 +378,6 @@
 //! );
 //!
 //! streamer.add_event(event).ok();
-//!
 //! ```
 //!
 //! In this example, the frames contained in the QUIC packet
@@ -420,7 +419,6 @@
 //! streamer.add_frame(padding, false).ok();
 //!
 //! streamer.finish_frames().ok();
-//!
 //! ```
 //!
 //! Once all events have have been written, the log
@@ -479,10 +477,8 @@
 //! [`add_frame()`]: struct.QlogStreamer.html#method.add_frame
 //! [`finish_frames()`]: struct.QlogStreamer.html#method.finish_frames
 //! [`finish_log()`]: struct.QlogStreamer.html#method.finish_log
-use serde::{
-    Deserialize,
-    Serialize,
-};
+
+use serde::Serialize;
 
 /// A quiche qlog error.
 #[derive(Debug)]
@@ -516,7 +512,7 @@ impl std::convert::From<std::io::Error> for Error {
     }
 }
 
-pub const QLOG_VERSION: &str = "draft-01";
+pub const QLOG_VERSION: &str = "draft-02-wip";
 
 /// A specialized [`Result`] type for quiche qlog operations.
 ///
@@ -574,7 +570,7 @@ pub enum StreamerState {
 /// [`Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
 pub struct QlogStreamer {
     start_time: std::time::Instant,
-    writer: Box<dyn std::io::Write>,
+    writer: Box<dyn std::io::Write + Send>,
     qlog: Qlog,
     state: StreamerState,
     first_event: bool,
@@ -593,7 +589,7 @@ impl QlogStreamer {
     pub fn new(
         qlog_version: String, title: Option<String>, description: Option<String>,
         summary: Option<String>, start_time: std::time::Instant, trace: Trace,
-        writer: Box<dyn std::io::Write>,
+        writer: Box<dyn std::io::Write + Send>,
     ) -> Self {
         let qlog = Qlog {
             qlog_version,
@@ -790,7 +786,7 @@ impl QlogStreamer {
 
     /// Returns the writer.
     #[allow(clippy::borrowed_box)]
-    pub fn writer(&self) -> &Box<dyn std::io::Write> {
+    pub fn writer(&self) -> &Box<dyn std::io::Write + Send> {
         &self.writer
     }
 }
@@ -1458,6 +1454,7 @@ pub enum EventData {
     H3DataMoved {
         stream_id: String,
         offset: Option<String>,
+        length: Option<u64>,
 
         from: Option<H3DataRecipient>,
         to: Option<H3DataRecipient>,
@@ -1650,12 +1647,13 @@ pub enum QuicFrameTypeName {
     PathResponse,
     ConnectionClose,
     ApplicationClose,
+    HandshakeDone,
     Unknown,
 }
 
 // TODO: search for pub enum Error { to see how best to encode errors in qlog.
 #[serde_with::skip_serializing_none]
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize)]
 pub struct PacketHeader {
     pub packet_number: String,
     pub packet_size: Option<u64>,
@@ -1960,6 +1958,10 @@ pub enum QuicFrame {
         trigger_frame_type: Option<String>,
     },
 
+    HandshakeDone {
+        frame_type: QuicFrameTypeName,
+    },
+
     Unknown {
         frame_type: QuicFrameTypeName,
         raw_frame_type: u64,
@@ -2134,6 +2136,12 @@ impl QuicFrame {
             raw_error_code,
             reason,
             trigger_frame_type,
+        }
+    }
+
+    pub fn handshake_done() -> Self {
+        QuicFrame::HandshakeDone {
+            frame_type: QuicFrameTypeName::HandshakeDone,
         }
     }
 
@@ -2862,7 +2870,10 @@ mod tests {
         });
 
         // Some events hold frames, can't write any more events until frame
-        // writing is concluded.
+        // writing is concluded. Store event add time so that we can substitute
+        // it back into the qlog test output and avoid time-base flappiness.
+        let event_add_time =
+            format!("\"{}\"", s.start_time.elapsed().as_millis().to_string());
         assert!(match s.add_event(event2.clone()) {
             Ok(true) => true,
             _ => false,
@@ -2895,8 +2906,8 @@ mod tests {
         let r = s.writer();
         let w: &Box<std::io::Cursor<Vec<u8>>> = unsafe { std::mem::transmute(r) };
 
-        let log_string = r#"{"qlog_version":"version","title":"title","description":"description","traces":[{"vantage_point":{"type":"server"},"title":"Quiche qlog trace","description":"Quiche qlog trace description","configuration":{"time_units":"ms","time_offset":"0"},"event_fields":["relative_time","category","event","data"],"events":[["0","transport","packet_sent",{"packet_type":"handshake","header":{"packet_number":"0","packet_size":1251,"payload_length":1224,"version":"ff000018","scil":"8","dcil":"8","scid":"7e37e4dcc6682da8","dcid":"36ce104eee50101c"},"frames":[{"frame_type":"stream","stream_id":"40","offset":"40","length":"400","fin":true}]}],["0","transport","packet_sent",{"packet_type":"initial","header":{"packet_number":"0","packet_size":1251,"payload_length":1224,"version":"ff000018","scil":"8","dcil":"8","scid":"7e37e4dcc6682da8","dcid":"36ce104eee50101c"},"frames":[{"frame_type":"stream","stream_id":"0","offset":"0","length":"100","fin":true}]}]]}]}"#;
-
+        let log_string = r#"{"qlog_version":"version","title":"title","description":"description","traces":[{"vantage_point":{"type":"server"},"title":"Quiche qlog trace","description":"Quiche qlog trace description","configuration":{"time_units":"ms","time_offset":"0"},"event_fields":["relative_time","category","event","data"],"events":[["0","transport","packet_sent",{"packet_type":"handshake","header":{"packet_number":"0","packet_size":1251,"payload_length":1224,"version":"ff000018","scil":"8","dcil":"8","scid":"7e37e4dcc6682da8","dcid":"36ce104eee50101c"},"frames":[{"frame_type":"stream","stream_id":"40","offset":"40","length":"400","fin":true}]}],[event_add_time,"transport","packet_sent",{"packet_type":"initial","header":{"packet_number":"0","packet_size":1251,"payload_length":1224,"version":"ff000018","scil":"8","dcil":"8","scid":"7e37e4dcc6682da8","dcid":"36ce104eee50101c"},"frames":[{"frame_type":"stream","stream_id":"0","offset":"0","length":"100","fin":true}]}]]}]}"#;
+        let log_string = log_string.replace("event_add_time", &event_add_time);
         let written_string = std::str::from_utf8(w.as_ref().get_ref()).unwrap();
 
         assert_eq!(log_string, written_string);

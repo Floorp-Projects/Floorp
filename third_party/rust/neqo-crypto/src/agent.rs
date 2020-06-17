@@ -73,7 +73,7 @@ fn get_alpn(fd: *mut ssl::PRFileDesc, pre: bool) -> Res<Option<String>> {
         (true, ssl::SSLNextProtoState::SSL_NEXT_PROTO_EARLY_VALUE)
         | (false, ssl::SSLNextProtoState::SSL_NEXT_PROTO_NEGOTIATED)
         | (false, ssl::SSLNextProtoState::SSL_NEXT_PROTO_SELECTED) => {
-            chosen.truncate(chosen_len as usize);
+            chosen.truncate(usize::try_from(chosen_len)?);
             Some(match String::from_utf8(chosen) {
                 Ok(a) => a,
                 _ => return Err(Error::InternalError),
@@ -164,8 +164,8 @@ impl SecretAgentInfo {
         })?;
         let info = unsafe { info.assume_init() };
         Ok(Self {
-            version: info.protocolVersion as Version,
-            cipher: info.cipherSuite as Cipher,
+            version: info.protocolVersion,
+            cipher: info.cipherSuite,
             group: Group::try_from(info.keaGroup)?,
             resumed: info.resumed != 0,
             early_data: info.earlyDataAccepted != 0,
@@ -326,7 +326,7 @@ impl SecretAgent {
 
         self.now.bind(self.fd)?;
         self.configure()?;
-        secstatus_to_res(unsafe { ssl::SSL_ResetHandshake(self.fd, is_server as ssl::PRBool) })
+        secstatus_to_res(unsafe { ssl::SSL_ResetHandshake(self.fd, ssl::PRBool::from(is_server)) })
     }
 
     /// Default configuration.
@@ -718,8 +718,9 @@ impl Client {
     ) -> ssl::SECStatus {
         let resumption_ptr = arg as *mut Option<Vec<u8>>;
         let resumption = resumption_ptr.as_mut().unwrap();
-        let mut v = Vec::with_capacity(len as usize);
-        v.extend_from_slice(std::slice::from_raw_parts(token, len as usize));
+        let len = usize::try_from(len).unwrap();
+        let mut v = Vec::with_capacity(len);
+        v.extend_from_slice(std::slice::from_raw_parts(token, len));
         qinfo!(
             [format!("{:p}", fd)],
             "Got resumption token {}",
@@ -869,7 +870,7 @@ impl Server {
         let token = if client_token.is_null() {
             &[]
         } else {
-            std::slice::from_raw_parts(client_token, client_token_len as usize)
+            std::slice::from_raw_parts(client_token, usize::try_from(client_token_len).unwrap())
         };
         match check_state.checker.check(token) {
             ZeroRttCheckResult::Accept => ssl::SSLHelloRetryRequestAction::ssl_hello_retry_accept,
@@ -882,7 +883,7 @@ impl Server {
                 assert!(tok.len() <= usize::try_from(retry_token_max).unwrap());
                 let slc = std::slice::from_raw_parts_mut(retry_token, tok.len());
                 slc.copy_from_slice(&tok);
-                *retry_token_len = c_uint::try_from(tok.len()).expect("token was way too big");
+                *retry_token_len = c_uint::try_from(tok.len()).unwrap();
                 ssl::SSLHelloRetryRequestAction::ssl_hello_retry_request
             }
         }
@@ -967,8 +968,8 @@ impl Deref for Agent {
 impl DerefMut for Agent {
     fn deref_mut(&mut self) -> &mut SecretAgent {
         match self {
-            Self::Client(c) => c.deref_mut(),
-            Self::Server(s) => s.deref_mut(),
+            Self::Client(c) => &mut *c,
+            Self::Server(s) => &mut *s,
         }
     }
 }

@@ -461,26 +461,37 @@ impl RecvStream {
 
     /// If we should tell the sender they have more credit, return an offset
     pub fn maybe_send_flowc_update(&mut self) {
+        // Only ever needed if actively receiving and not in SizeKnown state
         if let RecvStreamState::Recv {
             max_bytes,
             max_stream_data,
             recv_buf,
         } = &mut self.state
         {
-            {
-                // Algo: send an update if app has consumed more than half
-                // the data in the current window
-                // TODO(agrover@mozilla.com): This algo is not great but
-                // should prevent Silly Window Syndrome. Spec refers to using
-                // highest seen offset somehow? RTT maybe?
-                let maybe_new_max = recv_buf.retired() + *max_bytes;
-                if maybe_new_max > (*max_bytes / 2) + *max_stream_data {
-                    *max_stream_data = maybe_new_max;
-                    self.flow_mgr
-                        .borrow_mut()
-                        .max_stream_data(self.stream_id, maybe_new_max)
-                }
+            // Algo: send an update if app has consumed more than half
+            // the data in the current window
+            // TODO(agrover@mozilla.com): This algo is not great but
+            // should prevent Silly Window Syndrome. Spec refers to using
+            // highest seen offset somehow? RTT maybe?
+            let maybe_new_max = recv_buf.retired() + *max_bytes;
+            if maybe_new_max > (*max_bytes / 2) + *max_stream_data {
+                *max_stream_data = maybe_new_max;
+                self.flow_mgr
+                    .borrow_mut()
+                    .max_stream_data(self.stream_id, maybe_new_max)
             }
+        }
+    }
+
+    /// MAX_STREAM_DATA was lost. Send it again if still blocked.
+    pub fn flowc_lost(&self) {
+        if let RecvStreamState::Recv {
+            max_stream_data, ..
+        } = &self.state
+        {
+            self.flow_mgr
+                .borrow_mut()
+                .max_stream_data(self.stream_id, *max_stream_data)
         }
     }
 
@@ -795,5 +806,37 @@ mod tests {
         s.inbound_stream_frame(true, RX_STREAM_DATA_WINDOW, vec![])
             .unwrap();
         assert!(matches!(s.flow_mgr.borrow().peek(), None));
+    }
+
+    #[test]
+    fn resend_flowc_if_lost() {
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        let conn_events = ConnectionEvents::default();
+
+        let frame1 = vec![0; RX_STREAM_DATA_WINDOW as usize];
+
+        let mut s = RecvStream::new(
+            67.into(),
+            RX_STREAM_DATA_WINDOW,
+            Rc::clone(&flow_mgr),
+            conn_events,
+        );
+
+        // A flow control update is queued
+        s.inbound_stream_frame(false, 0, frame1).unwrap();
+        flow_mgr.borrow_mut().max_stream_data(67.into(), 100);
+        // Generates frame
+        assert!(matches!(
+            s.flow_mgr.borrow_mut().next().unwrap(),
+            Frame::MaxStreamData { .. }
+        ));
+        // Nothing else queued
+        assert!(matches!(s.flow_mgr.borrow().peek(), None));
+        // Asking for another one won't get you one
+        s.maybe_send_flowc_update();
+        assert!(matches!(s.flow_mgr.borrow().peek(), None));
+        // But if lost, another frame is generated
+        s.flowc_lost();
+        assert!(matches!(s.flow_mgr.borrow_mut().next().unwrap(), Frame::MaxStreamData{..}));
     }
 }

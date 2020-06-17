@@ -684,7 +684,7 @@ mod tests {
             enc_inner.encode(&[0xa5; 65]);
         });
         let mut v: Vec<u8> = enc.into();
-        v.split_off(3);
+        let _ = v.split_off(3);
         assert_eq!(v, vec![0x40, 0x41, 0xa5]);
     }
 

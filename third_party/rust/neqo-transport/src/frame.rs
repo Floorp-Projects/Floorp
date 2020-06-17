@@ -477,7 +477,7 @@ impl Frame {
     pub fn decode_ack_frame(
         largest_acked: u64,
         first_ack_range: u64,
-        ack_ranges: Vec<AckRange>,
+        ack_ranges: &[AckRange],
     ) -> Res<Vec<(u64, u64)>> {
         let mut acked_ranges = Vec::new();
 
@@ -1053,7 +1053,7 @@ mod tests {
 
     #[test]
     fn test_decode_ack_frame() {
-        let res = Frame::decode_ack_frame(7, 2, vec![AckRange { gap: 0, range: 3 }]);
+        let res = Frame::decode_ack_frame(7, 2, &[AckRange { gap: 0, range: 3 }]);
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), vec![(7, 5), (3, 0)]);
     }
