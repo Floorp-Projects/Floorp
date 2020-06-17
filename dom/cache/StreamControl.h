@@ -73,8 +73,7 @@ class StreamControl {
  private:
   // Hold strong references to ReadStream object.  When the stream is closed
   // it should call NoteClosed() or ForgetReadStream() to release this ref.
-  typedef nsTObserverArray<RefPtr<ReadStream::Controllable>> ReadStreamList;
-  ReadStreamList mReadStreamList;
+  nsTObserverArray<RefPtr<ReadStream::Controllable>> mReadStreamList;
 };
 
 }  // namespace cache
