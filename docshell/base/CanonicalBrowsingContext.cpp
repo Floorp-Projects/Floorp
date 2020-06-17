@@ -29,6 +29,7 @@
 #include "nsSHistory.h"
 #include "nsSecureBrowserUI.h"
 #include "nsQueryObject.h"
+#include "nsBrowserStatusFilter.h"
 #include "nsIBrowser.h"
 
 using namespace mozilla::ipc;
@@ -126,6 +127,28 @@ nsISecureBrowserUI* CanonicalBrowsingContext::GetSecureBrowserUI() {
     mSecureBrowserUI = new nsSecureBrowserUI(this);
   }
   return mSecureBrowserUI;
+}
+
+void CanonicalBrowsingContext::MaybeAddAsProgressListener(
+    nsIWebProgress* aWebProgress) {
+  if (!GetWebProgress()) {
+    return;
+  }
+  if (!mStatusFilter) {
+    mStatusFilter = new nsBrowserStatusFilter();
+    mStatusFilter->AddProgressListener(GetWebProgress(),
+                                       nsIWebProgress::NOTIFY_ALL);
+  }
+  aWebProgress->AddProgressListener(mStatusFilter, nsIWebProgress::NOTIFY_ALL);
+}
+
+void CanonicalBrowsingContext::ReplacedBy(
+    CanonicalBrowsingContext* aNewContext) {
+  if (mStatusFilter) {
+    mStatusFilter->RemoveProgressListener(mWebProgress);
+    mStatusFilter = nullptr;
+  }
+  aNewContext->mWebProgress = std::move(mWebProgress);
 }
 
 void CanonicalBrowsingContext::
