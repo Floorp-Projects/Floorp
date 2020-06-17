@@ -44,19 +44,19 @@ typedef char char_path_t;
 // Initially false to make concurrent consumers acquire the lock and sync.
 // The plain bool is synchronized with sMutex, the atomic one is for a quick
 // check w/o the need to acquire the lock on the hot path.
-static bool sBlacklistEmpty = false;
-static Atomic<bool, Relaxed> sBlacklistEmptyQuickCheck{false};
+static bool sForbiddenPathsEmpty = false;
+static Atomic<bool, Relaxed> sForbiddenPathsEmptyQuickCheck{false};
 
 typedef nsTArray<nsTString<char_path_t>> Paths;
-static StaticAutoPtr<Paths> sBlacklist;
+static StaticAutoPtr<Paths> sForbiddenPaths;
 
-static Paths& PathBlacklist() {
+static Paths& ForbiddenPaths() {
   sMutex.AssertCurrentThreadOwns();
-  if (!sBlacklist) {
-    sBlacklist = new nsTArray<nsTString<char_path_t>>();
-    ClearOnShutdown(&sBlacklist);
+  if (!sForbiddenPaths) {
+    sForbiddenPaths = new nsTArray<nsTString<char_path_t>>();
+    ClearOnShutdown(&sForbiddenPaths);
   }
-  return *sBlacklist;
+  return *sForbiddenPaths;
 }
 
 static void AllowUNCDirectory(char const* directory) {
@@ -89,33 +89,34 @@ void InitPrefs() {
   sBlockUNCPaths =
       Preferences::GetBool("network.file.disable_unc_paths", false);
 
-  nsTAutoString<char_path_t> blacklist;
+  nsTAutoString<char_path_t> forbidden;
 #ifdef XP_WIN
-  Preferences::GetString("network.file.path_blacklist", blacklist);
+  Preferences::GetString("network.file.path_blacklist", forbidden);
 #else
-  Preferences::GetCString("network.file.path_blacklist", blacklist);
+  Preferences::GetCString("network.file.path_blacklist", forbidden);
 #endif
 
   StaticMutexAutoLock lock(sMutex);
 
-  if (blacklist.IsEmpty()) {
-    sBlacklistEmptyQuickCheck = (sBlacklistEmpty = true);
+  if (forbidden.IsEmpty()) {
+    sForbiddenPathsEmptyQuickCheck = (sForbiddenPathsEmpty = true);
     return;
   }
 
-  PathBlacklist().Clear();
-  TTokenizer<char_path_t> p(blacklist);
+  ForbiddenPaths().Clear();
+  TTokenizer<char_path_t> p(forbidden);
   while (!p.CheckEOF()) {
     nsTString<char_path_t> path;
     Unused << p.ReadUntil(TTokenizer<char_path_t>::Token::Char(','), path);
     path.Trim(" ");
     if (!path.IsEmpty()) {
-      PathBlacklist().AppendElement(path);
+      ForbiddenPaths().AppendElement(path);
     }
     Unused << p.CheckChar(',');
   }
 
-  sBlacklistEmptyQuickCheck = (sBlacklistEmpty = PathBlacklist().Length() == 0);
+  sForbiddenPathsEmptyQuickCheck =
+      (sForbiddenPathsEmpty = ForbiddenPaths().Length() == 0);
 }
 
 void InitDirectoriesWhitelist() {
@@ -307,19 +308,19 @@ bool IsAllowedPath(const nsTSubstring<char_path_t>& aFilePath) {
   typedef TNormalizer<char_path_t> Normalizer;
 
   // An atomic quick check out of the lock, because this is mostly `true`.
-  if (sBlacklistEmptyQuickCheck) {
+  if (sForbiddenPathsEmptyQuickCheck) {
     return true;
   }
 
   StaticMutexAutoLock lock(sMutex);
 
-  if (sBlacklistEmpty) {
+  if (sForbiddenPathsEmpty) {
     return true;
   }
 
-  // If sBlacklist has been cleared at shutdown, we must avoid calling
-  // PathBlacklist() again, as that will recreate the array and we will leak.
-  if (!sBlacklist) {
+  // If sForbidden has been cleared at shutdown, we must avoid calling
+  // ForbiddenPaths() again, as that will recreate the array and we will leak.
+  if (!sForbiddenPaths) {
     return true;
   }
 
@@ -330,7 +331,7 @@ bool IsAllowedPath(const nsTSubstring<char_path_t>& aFilePath) {
     return false;
   }
 
-  for (const auto& prefix : PathBlacklist()) {
+  for (const auto& prefix : ForbiddenPaths()) {
     if (StringBeginsWith(normalized, prefix)) {
       if (normalized.Length() > prefix.Length() &&
           normalized[prefix.Length()] != kPathSeparator) {
