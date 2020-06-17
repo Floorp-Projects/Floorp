@@ -1094,8 +1094,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void ScrollTo(const mozilla::CSSIntPoint& aScroll,
                 const mozilla::dom::ScrollOptions& aOptions);
 
-  bool IsFrame();
-
   already_AddRefed<nsIWidget> GetMainWidget();
   nsIWidget* GetNearestWidget() const;
 
@@ -1498,10 +1496,6 @@ inline bool nsGlobalWindowInner::IsPopupSpamWindow() {
   }
 
   return GetOuterWindowInternal()->mIsPopupSpam;
-}
-
-inline bool nsGlobalWindowInner::IsFrame() {
-  return GetInProcessParentInternal() != nullptr;
 }
 
 #endif /* nsGlobalWindowInner_h___ */

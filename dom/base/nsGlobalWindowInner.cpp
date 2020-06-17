@@ -6995,7 +6995,8 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
    * just treat this the way we would an IDL replaceable property.
    */
   nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  if (!outer || !outer->CanMoveResizeWindows(aCallerType) || outer->IsFrame()) {
+  if (!outer || !outer->CanMoveResizeWindows(aCallerType) ||
+      mBrowsingContext->IsFrame()) {
     RedefineProperty(aCx, aPropName, aValue, aError);
     return;
   }

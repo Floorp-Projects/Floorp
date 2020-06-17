@@ -1686,10 +1686,10 @@ nsresult nsGlobalWindowOuter::EnsureScriptEnvironment() {
                "No cached wrapper, but we have an inner window?");
   NS_ASSERTION(!mContext, "Will overwrite mContext!");
 
-  // If this window is a [i]frame, don't bother GC'ing when the frame's context
+  // If this window is an [i]frame, don't bother GC'ing when the frame's context
   // is destroyed since a GC will happen when the frameset or host document is
   // destroyed anyway.
-  mContext = new nsJSContext(!IsFrame(), this);
+  mContext = new nsJSContext(mBrowsingContext->IsTop(), this);
   return NS_OK;
 }
 
@@ -5268,7 +5268,7 @@ void nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
    * prevent window.moveTo() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
     return;
   }
 
@@ -5325,7 +5325,7 @@ void nsGlobalWindowOuter::MoveByOuter(int32_t aXDif, int32_t aYDif,
    * prevent window.moveBy() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
     return;
   }
 
@@ -5376,7 +5376,7 @@ void nsGlobalWindowOuter::ResizeToOuter(int32_t aWidth, int32_t aHeight,
    * prevent window.resizeTo() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
     return;
   }
 
@@ -5404,7 +5404,7 @@ void nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
    * prevent window.resizeBy() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
     return;
   }
 
@@ -5450,7 +5450,7 @@ void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
    * prevent window.sizeToContent() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
     return;
   }
 
@@ -6066,7 +6066,7 @@ bool nsGlobalWindowOuter::CanClose() {
 }
 
 void nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller) {
-  if (!mDocShell || IsInModalState() || IsFrame()) {
+  if (!mDocShell || IsInModalState() || mBrowsingContext->IsFrame()) {
     // window.close() is called on a frame in a frameset, on a window
     // that's already closed, or on a window for which there's
     // currently a modal dialog open. Ignore such calls.
@@ -6162,7 +6162,7 @@ nsresult nsGlobalWindowOuter::Close() {
 void nsGlobalWindowOuter::ForceClose() {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
-  if (IsFrame() || !mDocShell) {
+  if (mBrowsingContext->IsFrame() || !mDocShell) {
     // This may be a frame in a frameset, or a window that's already closed.
     // Ignore such calls.
     return;
