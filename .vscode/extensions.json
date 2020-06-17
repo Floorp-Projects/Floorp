@@ -19,6 +19,8 @@
     // Web app and extension debugging.
     "firefox-devtools.vscode-firefox-debug",
     // IDL language support
-    "mythmon.idl"
+    "mythmon.idl",
+    // Mercurial support
+    "mrcrowl.hg"
   ]
 }
