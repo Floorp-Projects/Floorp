@@ -147,9 +147,20 @@ class CompositorAnimationStorage final {
    */
   void SetAnimations(uint64_t aId, const AnimationArray& aAnimations);
 
-  const AnimationsTable& Animations() const { return mAnimations; }
-
-  bool HasAnimations() const { return !mAnimations.empty(); }
+  /**
+   * Sample animation based the given timestamps and store them in this
+   * CompositorAnimationStorage. The animated values after sampling will be
+   * stored in CompositorAnimationStorage as well.
+   *
+   * Returns true if there is any animation.
+   * Note that even if there are only in-delay phase animations (i.e. not
+   * visually effective), this function returns true to ensure we composite
+   * again on the next tick.
+   *
+   * Note: This is called only by WebRender.
+   */
+  bool SampleAnimations(TimeStamp aPreviousFrameTime,
+                        TimeStamp aCurrentFrameTime);
 
   /**
    * Clear AnimatedValues and Animations data

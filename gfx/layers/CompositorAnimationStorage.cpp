@@ -8,8 +8,9 @@
 
 #include "AnimationHelper.h"
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
-#include "nsDeviceContext.h"                  // for AppUnitsPerCSSPixel
-#include "nsDisplayList.h"                    // for nsDisplayTransform, etc
+#include "mozilla/ServoStyleConsts.h"
+#include "nsDeviceContext.h"  // for AppUnitsPerCSSPixel
+#include "nsDisplayList.h"    // for nsDisplayTransform, etc
 
 namespace mozilla {
 namespace layers {
@@ -120,6 +121,85 @@ void CompositorAnimationStorage::SetAnimations(uint64_t aId,
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mAnimations[aId] = std::make_unique<AnimationStorageData>(
       AnimationHelper::ExtractAnimations(aValue));
+}
+
+bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
+                                                  TimeStamp aCurrentFrameTime) {
+  bool isAnimating = false;
+
+  // Do nothing if there are no compositor animations
+  if (mAnimations.empty()) {
+    return isAnimating;
+  }
+
+  for (const auto& iter : mAnimations) {
+    const auto& animationStorageData = iter.second;
+    if (animationStorageData->mAnimation.IsEmpty()) {
+      continue;
+    }
+
+    isAnimating = true;
+    AutoTArray<RefPtr<RawServoAnimationValue>, 1> animationValues;
+    AnimatedValue* previousValue = GetAnimatedValue(iter.first);
+    AnimationHelper::SampleResult sampleResult =
+        AnimationHelper::SampleAnimationForEachNode(
+            aPreviousFrameTime, aCurrentFrameTime, previousValue,
+            animationStorageData->mAnimation, animationValues);
+
+    if (sampleResult != AnimationHelper::SampleResult::Sampled) {
+      continue;
+    }
+
+    const PropertyAnimationGroup& lastPropertyAnimationGroup =
+        animationStorageData->mAnimation.LastElement();
+
+    // Store the AnimatedValue
+    switch (lastPropertyAnimationGroup.mProperty) {
+      case eCSSProperty_background_color: {
+        SetAnimatedValue(iter.first, previousValue,
+                         Servo_AnimationValue_GetColor(animationValues[0],
+                                                       NS_RGBA(0, 0, 0, 0)));
+        break;
+      }
+      case eCSSProperty_opacity: {
+        MOZ_ASSERT(animationValues.Length() == 1);
+        SetAnimatedValue(iter.first, previousValue,
+                         Servo_AnimationValue_GetOpacity(animationValues[0]));
+        break;
+      }
+      case eCSSProperty_rotate:
+      case eCSSProperty_scale:
+      case eCSSProperty_translate:
+      case eCSSProperty_transform:
+      case eCSSProperty_offset_path:
+      case eCSSProperty_offset_distance:
+      case eCSSProperty_offset_rotate:
+      case eCSSProperty_offset_anchor: {
+        MOZ_ASSERT(animationStorageData->mTransformData);
+
+        const TransformData& transformData =
+            *animationStorageData->mTransformData;
+        MOZ_ASSERT(transformData.origin() == nsPoint());
+
+        gfx::Matrix4x4 transform =
+            AnimationHelper::ServoAnimationValueToMatrix4x4(
+                animationValues, transformData,
+                animationStorageData->mCachedMotionPath);
+        gfx::Matrix4x4 frameTransform = transform;
+
+        transform.PostScale(transformData.inheritedXScale(),
+                            transformData.inheritedYScale(), 1);
+
+        SetAnimatedValue(iter.first, previousValue, std::move(transform),
+                         std::move(frameTransform), transformData);
+        break;
+      }
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unhandled animated property");
+    }
+  }
+
+  return isAnimating;
 }
 
 }  // namespace layers

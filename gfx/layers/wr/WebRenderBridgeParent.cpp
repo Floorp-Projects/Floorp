@@ -1950,14 +1950,14 @@ bool WebRenderBridgeParent::AdvanceAnimations() {
       // refresh mode, on the testing mode animations on the compositor are
       // synchronously composed, so we don't need to worry about the time gap
       // between the main thread and compositor thread.
-      return AnimationHelper::SampleAnimations(mAnimStorage, *testingTimeStamp,
-                                               *testingTimeStamp);
+      return mAnimStorage->SampleAnimations(*testingTimeStamp,
+                                            *testingTimeStamp);
     }
   }
 
   TimeStamp lastComposeTime = mCompositorScheduler->GetLastComposeTime();
-  const bool isAnimating = AnimationHelper::SampleAnimations(
-      mAnimStorage, mPreviousFrameTimeStamp, lastComposeTime);
+  const bool isAnimating =
+      mAnimStorage->SampleAnimations(mPreviousFrameTimeStamp, lastComposeTime);
 
   // Reset the previous time stamp if we don't already have any running
   // animations to avoid using the time which is far behind for newly
