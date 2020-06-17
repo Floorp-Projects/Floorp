@@ -39,7 +39,7 @@ def register_sentry(topsrcdir=None):
 
 
 def _process_event(sentry_event, topsrcdir):
-    for map_fn in (_settle_mach_module_id, _patch_absolute_paths):
+    for map_fn in (_settle_mach_module_id, _patch_absolute_paths, _delete_server_name):
         sentry_event = map_fn(sentry_event, topsrcdir)
     return sentry_event
 
@@ -106,6 +106,11 @@ def _patch_absolute_paths(sentry_event, topsrcdir):
         if needle is None:
             continue  # topsrcdir isn't always defined
         sentry_event = recursive_patch(sentry_event, needle, replacement)
+    return sentry_event
+
+
+def _delete_server_name(sentry_event, _):
+    sentry_event.pop("server_name")
     return sentry_event
 
 
