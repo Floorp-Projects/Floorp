@@ -67,7 +67,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Telemetry.h"
@@ -590,16 +589,16 @@ ProcessID GetTelemetryProcessID(const nsAString& remoteType) {
 
 }  // anonymous namespace
 
-nsDataHashtable<nsUint32HashKey, ContentParent*>*
+UniquePtr<nsDataHashtable<nsUint32HashKey, ContentParent*>>
     ContentParent::sJSPluginContentParents;
-nsTArray<ContentParent*>* ContentParent::sPrivateContent;
-StaticAutoPtr<LinkedList<ContentParent>> ContentParent::sContentParents;
+UniquePtr<nsTArray<ContentParent*>> ContentParent::sPrivateContent;
+UniquePtr<LinkedList<ContentParent>> ContentParent::sContentParents;
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 UniquePtr<SandboxBrokerPolicyFactory>
     ContentParent::sSandboxBrokerPolicyFactory;
 #endif
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-StaticAutoPtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
+UniquePtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
 #endif
 
 // Whether a private docshell has been seen before.
@@ -671,7 +670,7 @@ void ContentParent::StartUp() {
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  sMacSandboxParams = new std::vector<std::string>;
+  sMacSandboxParams = MakeUnique<std::vector<std::string>>();
 #endif
 }
 
@@ -1128,7 +1127,7 @@ already_AddRefed<ContentParent> ContentParent::GetNewOrUsedJSPluginProcess(
     p = sJSPluginContentParents->Get(aPluginID);
   } else {
     sJSPluginContentParents =
-        new nsDataHashtable<nsUint32HashKey, ContentParent*>();
+        MakeUnique<nsDataHashtable<nsUint32HashKey, ContentParent*>>();
   }
 
   if (p) {
@@ -1668,7 +1667,6 @@ void ContentParent::RemoveFromList() {
     if (sJSPluginContentParents) {
       sJSPluginContentParents->Remove(mJSPluginID);
       if (!sJSPluginContentParents->Count()) {
-        delete sJSPluginContentParents;
         sJSPluginContentParents = nullptr;
       }
     }
@@ -1678,7 +1676,6 @@ void ContentParent::RemoveFromList() {
   if (sPrivateContent) {
     sPrivateContent->RemoveElement(this);
     if (!sPrivateContent->Length()) {
-      delete sPrivateContent;
       sPrivateContent = nullptr;
     }
   }
@@ -2448,7 +2445,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
       mHangMonitorActor(nullptr) {
   // Insert ourselves into the global linked list of ContentParent objects.
   if (!sContentParents) {
-    sContentParents = new LinkedList<ContentParent>();
+    sContentParents = MakeUnique<LinkedList<ContentParent>>();
   }
   sContentParents->insertBack(this);
 
@@ -4349,7 +4346,7 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
 mozilla::ipc::IPCResult ContentParent::RecvPrivateDocShellsExist(
     const bool& aExist) {
   if (!sPrivateContent) {
-    sPrivateContent = new nsTArray<ContentParent*>();
+    sPrivateContent = MakeUnique<nsTArray<ContentParent*>>();
     if (!sHasSeenPrivateDocShell) {
       sHasSeenPrivateDocShell = true;
       Telemetry::ScalarSet(
@@ -4369,7 +4366,6 @@ mozilla::ipc::IPCResult ContentParent::RecvPrivateDocShellsExist(
       nsCOMPtr<nsIObserverService> obs =
           mozilla::services::GetObserverService();
       obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
-      delete sPrivateContent;
       sPrivateContent = nullptr;
     }
   }
