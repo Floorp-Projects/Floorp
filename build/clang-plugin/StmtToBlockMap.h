@@ -18,7 +18,7 @@ inline SmallVector<const Stmt *, 1> getParentStmts(const Stmt *S,
                                                    ASTContext *Context) {
   SmallVector<const Stmt *, 1> Result;
 
-  ASTContext::DynTypedNodeList Parents = Context->getParents(*S);
+  auto Parents = Context->getParents(*S);
 
   SmallVector<ast_type_traits::DynTypedNode, 1> NodesToProcess(Parents.begin(),
                                                                Parents.end());
