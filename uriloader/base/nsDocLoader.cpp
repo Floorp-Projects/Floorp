@@ -1018,18 +1018,8 @@ nsDocLoader::GetInnerDOMWindowID(uint64_t* aResult) {
 
 NS_IMETHODIMP
 nsDocLoader::GetIsTopLevel(bool* aResult) {
-  *aResult = false;
-
-  nsCOMPtr<mozIDOMWindowProxy> window;
-  GetDOMWindow(getter_AddRefs(window));
-  if (window) {
-    nsCOMPtr<nsPIDOMWindowOuter> piwindow = nsPIDOMWindowOuter::From(window);
-    NS_ENSURE_STATE(piwindow);
-
-    nsCOMPtr<nsPIDOMWindowOuter> topWindow = piwindow->GetInProcessTop();
-    *aResult = piwindow == topWindow;
-  }
-
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(this);
+  *aResult = docShell && docShell->GetBrowsingContext()->IsTop();
   return NS_OK;
 }
 
