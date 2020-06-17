@@ -4966,8 +4966,6 @@ Downloader.prototype = {
       }
     }
 
-    // XXX ehsan shouldShowPrompt should always be false here.
-    // But what happens when there is already a UI showing?
     var state = this._patch.state;
     var shouldShowPrompt = false;
     var shouldRegisterOnlineObserver = false;
@@ -5008,9 +5006,7 @@ Downloader.prototype = {
         } else {
           state = STATE_PENDING;
         }
-        if (this.background) {
-          shouldShowPrompt = !getCanStageUpdates();
-        }
+        shouldShowPrompt = !getCanStageUpdates();
         AUSTLMY.pingDownloadCode(this.isCompleteUpdate, AUSTLMY.DWNLD_SUCCESS);
 
         // Tell the updater.exe we're ready to apply.
@@ -5288,9 +5284,7 @@ Downloader.prototype = {
           LOG(
             "Downloader:onStopRequest - failed to stage update. Exception: " + e
           );
-          if (this.background) {
-            shouldShowPrompt = true;
-          }
+          shouldShowPrompt = true;
         }
       }
     }
