@@ -68,22 +68,25 @@ text += ` (func (export "run") (result i32) call 100)\n`;
 text += `)`;
 var code = wasmTextToBinary(text);
 
-assertEq(code.length > 1000, true);
-for ([delayMillis, chunkSize] of [[0, 10], [1, 10], [0, 100], [1, 100], [0, 1000], [1, 1000], [10, 1000]]) {
-    setBufferStreamParams(delayMillis, chunkSize);
-    testBoth(code, 'run', 5050);
-}
+// fuzzing-safe disables setBufferStreamParams
+if (typeof setBufferStreamParams == 'function') {
+    assertEq(code.length > 1000, true);
+    for ([delayMillis, chunkSize] of [[0, 10], [1, 10], [0, 100], [1, 100], [0, 1000], [1, 1000], [10, 1000]]) {
+        setBufferStreamParams(delayMillis, chunkSize);
+        testBoth(code, 'run', 5050);
+    }
 
-setBufferStreamParams(1, 100);
-var arr = [];
-for (var i = 0; i < 10; i++)
-    arr.push(WebAssembly.instantiateStreaming(code));
-var results;
-Promise.all(arr).then(r => results = r);
-drainJobQueue();
-assertEq(results.length === 10, true);
-for (var i = 0; i < 10; i++)
-    assertEq(results[i].instance.exports.run(), 5050);
+    setBufferStreamParams(1, 100);
+    var arr = [];
+    for (var i = 0; i < 10; i++)
+        arr.push(WebAssembly.instantiateStreaming(code));
+    var results;
+    Promise.all(arr).then(r => results = r);
+    drainJobQueue();
+    assertEq(results.length === 10, true);
+    for (var i = 0; i < 10; i++)
+        assertEq(results[i].instance.exports.run(), 5050);
+}
 
 // No code section, but data section:
 var code = wasmTextToBinary('(module (memory (import "js" "mem") 1) (data (i32.const 0) "a"))');

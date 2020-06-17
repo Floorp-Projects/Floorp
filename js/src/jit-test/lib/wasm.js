@@ -344,3 +344,7 @@ WasmHelpers.assertEqPreciseStacks = (observed, expectedStacks) => {
 Expected one of:
 ${expectedStacks.map(stacks => stacks.join("/")).join('\n')}`);
 }
+
+function fuzzingSafe() {
+    return typeof getErrorNotes == 'undefined';
+}
