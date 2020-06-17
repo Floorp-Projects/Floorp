@@ -3772,9 +3772,8 @@ void WorkerPrivate::NotifyWorkerRefs(WorkerStatus aStatus) {
 
   NS_ASSERTION(aStatus > Closing, "Bad status!");
 
-  nsTObserverArray<WorkerRef*>::ForwardIterator iter(data->mWorkerRefs);
-  while (iter.HasMore()) {
-    iter.GetNext()->Notify();
+  for (auto* workerRef : data->mWorkerRefs.ForwardRange()) {
+    workerRef->Notify();
   }
 
   AutoTArray<WorkerPrivate*, 10> children;
@@ -5146,9 +5145,8 @@ void WorkerPrivate::AssertIsOnWorkerThread() const {
 void WorkerPrivate::DumpCrashInformation(nsACString& aString) {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
 
-  nsTObserverArray<WorkerRef*>::ForwardIterator iter(data->mWorkerRefs);
-  while (iter.HasMore()) {
-    WorkerRef* workerRef = iter.GetNext();
+  // XXX We could use a NonObservingRange here.
+  for (const auto* workerRef : data->mWorkerRefs.ForwardRange()) {
     if (workerRef->IsPreventingShutdown()) {
       aString.Append("|");
       aString.Append(workerRef->Name());
