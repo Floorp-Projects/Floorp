@@ -923,7 +923,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 .monitor-partial-breaches-link-wrapper,
 .monitor-breaches-link-wrapper {
   -moz-appearance: button;
-  background-color: var(--in-content-primary-button-background);  
+  background-color: var(--in-content-primary-button-background);
   border: 1px solid transparent;
   border-radius: 2px;
   text-decoration: none;

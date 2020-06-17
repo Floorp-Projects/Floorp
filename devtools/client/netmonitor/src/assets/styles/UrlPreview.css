@@ -24,7 +24,7 @@
   outline: none;
 }
 .url-preview td.splitter {
-  /* This makes sure that the column spans the width of the 
+  /* This makes sure that the column spans the width of the
     side bar so the contained horizontal splitter is visible */
   width: 100vw !important;
 }

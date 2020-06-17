@@ -18,7 +18,7 @@ body {
   width: 100%;
 
   margin-block: 15px;
-  
+
   display: flex;
   flex-direction: row;
 }
@@ -33,11 +33,11 @@ body {
 
   border-radius: 22px;
   border-width: 2px;
-  border-style: solid;  
+  border-style: solid;
 
   background-size: 22px;
   background-repeat: no-repeat;
-  background-position: center;  
+  background-position: center;
   background-color: inherit;
 
   -moz-context-properties: fill;
@@ -96,22 +96,22 @@ body {
 
 .urlbar_secure_icon {
   -moz-context-properties: fill;
-  
+
   height: 32px;
   padding: 2px;
-  
+
   visibility: hidden;
 
   display: inline-block;
 }
 
 .urlbar_input {
-  background-color: transparent;  
+  background-color: transparent;
 
   flex-grow: 1;
 
   border: none;
-  
+
   font-size: 18px;
   font-family: 'Open Sans', sans-serif;
 

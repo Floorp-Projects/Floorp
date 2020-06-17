@@ -63,7 +63,7 @@ th {
 
 th + th,
 td + td {
-  border-inline-start: 1px dotted ThreeDShadow; 
+  border-inline-start: 1px dotted ThreeDShadow;
 }
 
 td {
