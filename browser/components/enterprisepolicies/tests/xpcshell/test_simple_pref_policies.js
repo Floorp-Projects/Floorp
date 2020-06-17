@@ -714,6 +714,69 @@ const POLICIES_TESTS = [
       "media.videocontrols.picture-in-picture.video-toggle.enabled": false,
     },
   },
+
+  // POLICY: DisabledCiphers
+  {
+    policies: {
+      DisabledCiphers: {
+        TLS_DHE_RSA_WITH_AES_128_CBC_SHA: false,
+        TLS_DHE_RSA_WITH_AES_256_CBC_SHA: false,
+        TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA: false,
+        TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA: false,
+        TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256: false,
+        TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256: false,
+        TLS_RSA_WITH_AES_128_CBC_SHA: false,
+        TLS_RSA_WITH_AES_256_CBC_SHA: false,
+        TLS_RSA_WITH_3DES_EDE_CBC_SHA: false,
+        TLS_RSA_WITH_AES_128_GCM_SHA256: false,
+        TLS_RSA_WITH_AES_256_GCM_SHA384: false,
+      },
+    },
+    lockedPrefs: {
+      "security.ssl3.dhe_rsa_aes_128_sha": true,
+      "security.ssl3.dhe_rsa_aes_256_sha": true,
+      "security.ssl3.ecdhe_rsa_aes_128_sha": true,
+      "security.ssl3.ecdhe_rsa_aes_256_sha": true,
+      "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256": true,
+      "security.ssl3.ecdhe_ecdsa_aes_128_gcm_sha256": true,
+      "security.ssl3.rsa_aes_128_sha": true,
+      "security.ssl3.rsa_aes_256_sha": true,
+      "security.ssl3.rsa_des_ede3_sha": true,
+      "security.ssl3.rsa_aes_128_gcm_sha256": true,
+      "security.ssl3.rsa_aes_256_gcm_sha384": true,
+    },
+  },
+
+  {
+    policies: {
+      DisabledCiphers: {
+        TLS_DHE_RSA_WITH_AES_128_CBC_SHA: true,
+        TLS_DHE_RSA_WITH_AES_256_CBC_SHA: true,
+        TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA: true,
+        TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA: true,
+        TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256: true,
+        TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256: true,
+        TLS_RSA_WITH_AES_128_CBC_SHA: true,
+        TLS_RSA_WITH_AES_256_CBC_SHA: true,
+        TLS_RSA_WITH_3DES_EDE_CBC_SHA: true,
+        TLS_RSA_WITH_AES_128_GCM_SHA256: true,
+        TLS_RSA_WITH_AES_256_GCM_SHA384: true,
+      },
+    },
+    lockedPrefs: {
+      "security.ssl3.dhe_rsa_aes_128_sha": false,
+      "security.ssl3.dhe_rsa_aes_256_sha": false,
+      "security.ssl3.ecdhe_rsa_aes_128_sha": false,
+      "security.ssl3.ecdhe_rsa_aes_256_sha": false,
+      "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256": false,
+      "security.ssl3.ecdhe_ecdsa_aes_128_gcm_sha256": false,
+      "security.ssl3.rsa_aes_128_sha": false,
+      "security.ssl3.rsa_aes_256_sha": false,
+      "security.ssl3.rsa_des_ede3_sha": false,
+      "security.ssl3.rsa_aes_128_gcm_sha256": false,
+      "security.ssl3.rsa_aes_256_gcm_sha384": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {
