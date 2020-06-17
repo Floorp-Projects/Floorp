@@ -430,6 +430,9 @@ partial interface Window {
 
   [ChromeOnly] readonly attribute nsIDocShell? docShell;
 
+  [ChromeOnly, Constant, CrossOriginReadable, BinaryName="getBrowsingContext"]
+  readonly attribute BrowsingContext browsingContext;
+
   [Throws, NeedsCallerType]
   readonly attribute float mozInnerScreenX;
   [Throws, NeedsCallerType]
