@@ -1259,9 +1259,6 @@ MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoPermanentAtom(
 
 namespace js {
 
-template <typename CharT>
-bool CheckStringIsIndex(const CharT* s, size_t length, uint32_t* indexp);
-
 /**
  * An indexable characters class exposing unaligned, little-endian encoded
  * char16_t data.
