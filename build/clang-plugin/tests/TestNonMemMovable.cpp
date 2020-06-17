@@ -789,7 +789,7 @@ void specialization() {
     These entries contain an element which is SpecializedNonMovable, and are non-movable
     as there is no valid specialization, and their member is non-memmovable
   */
-  NeedyTemplate1<Template_Inline<SpecializedNonMovable> > b1;  // expected-note {{instantiation of 'NeedyTemplate1<Template_Inline<SpecializedNonMovable> >' requested here}}
+  NeedyTemplate1<Template_Inline<SpecializedNonMovable> > b1;  // expected-note-re {{instantiation of 'NeedyTemplate1<Template_Inline<SpecializedNonMovable>{{ ?}}>' requested here}}
   S_NeedyTemplate2<Template_Inline<SpecializedNonMovable> > b2;
   W_NeedyTemplate3<Template_Inline<SpecializedNonMovable> > b3;
   WS_NeedyTemplate4<Template_Inline<SpecializedNonMovable> > b4;

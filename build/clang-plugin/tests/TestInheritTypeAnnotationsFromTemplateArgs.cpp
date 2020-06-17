@@ -31,9 +31,9 @@ class MOZ_NEEDS_MEMMOVABLE_TYPE Mover { // expected-error-re 8 {{Cannot instanti
 class IndirectTemplatePointery : Template<Pointery> {}; // expected-note {{'IndirectTemplatePointery' is a non-memmove()able type because it inherits from a non-memmove()able type 'Template<Pointery>'}}
 class ContainsTemplatePointery { Template<Pointery> m; }; // expected-note {{'ContainsTemplatePointery' is a non-memmove()able type because member 'm' is a non-memmove()able type 'Template<Pointery>'}}
 
-static Mover<Template<Pointery>> n; // expected-note {{instantiation of 'Mover<Template<Pointery> >' requested here}}
-static Mover<Template<IndirectPointery>> o; // expected-note {{instantiation of 'Mover<Template<IndirectPointery> >' requested here}}
-static Mover<Template<ContainsPointery>> p; // expected-note {{instantiation of 'Mover<Template<ContainsPointery> >' requested here}}
+static Mover<Template<Pointery>> n; // expected-note-re {{instantiation of 'Mover<Template<Pointery>{{ ?}}>' requested here}}
+static Mover<Template<IndirectPointery>> o; // expected-note-re {{instantiation of 'Mover<Template<IndirectPointery>{{ ?}}>' requested here}}
+static Mover<Template<ContainsPointery>> p; // expected-note-re {{instantiation of 'Mover<Template<ContainsPointery>{{ ?}}>' requested here}}
 static Mover<IndirectTemplatePointery> q; // expected-note {{instantiation of 'Mover<IndirectTemplatePointery>' requested here}}
 static Mover<ContainsTemplatePointery> r; // expected-note {{instantiation of 'Mover<ContainsTemplatePointery>' requested here}}
 static Mover<Template<Normal>> s;
@@ -41,6 +41,6 @@ static Mover<Template<Normal>> s;
 template<class T, class... Ts>
 class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS ManyTs {}; // expected-note-re 3 {{'ManyTs<{{.*}}>' is a non-memmove()able type because it has a template argument non-memmove()able type '{{.*}}'}}
 
-static Mover<ManyTs<Pointery>> t; // expected-note {{instantiation of 'Mover<ManyTs<Pointery> >' requested here}}
-static Mover<ManyTs<Normal, Pointery>> u; // expected-note {{instantiation of 'Mover<ManyTs<Normal, Pointery> >' requested here}}
-static Mover<ManyTs<Normal, Normal, Pointery>> v; // expected-note {{instantiation of 'Mover<ManyTs<Normal, Normal, Pointery> >' requested here}}
+static Mover<ManyTs<Pointery>> t; // expected-note-re {{instantiation of 'Mover<ManyTs<Pointery>{{ ?}}>' requested here}}
+static Mover<ManyTs<Normal, Pointery>> u; // expected-note-re {{instantiation of 'Mover<ManyTs<Normal, Pointery>{{ ?}}>' requested here}}
+static Mover<ManyTs<Normal, Normal, Pointery>> v; // expected-note-re {{instantiation of 'Mover<ManyTs<Normal, Normal, Pointery>{{ ?}}>' requested here}}
