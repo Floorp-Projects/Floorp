@@ -205,14 +205,13 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     friend class CanonicalBrowsingContext;
 
     ~PendingRemotenessChange();
-    void ProcessReady();
-    void Finish();
+    void ProcessReady(ContentParent* aContentParent);
+    void Finish(ContentParent* aContentParent);
     void Clear();
 
     RefPtr<CanonicalBrowsingContext> mTarget;
     RefPtr<RemotenessPromise::Private> mPromise;
     RefPtr<GenericPromise> mPrepareToChangePromise;
-    RefPtr<ContentParent> mContentParent;
 
     uint64_t mPendingSwitchId;
     bool mReplaceBrowsingContext;
