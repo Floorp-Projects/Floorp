@@ -184,14 +184,18 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
     mContext->SetCompositableHost(compositableHost);
   }
 
-  void Present(const ObjectId fb, const layers::TextureType t) const {
-    return (void)mContext->Present(AutoResolve(fb), t);
+  void Present(const ObjectId xrFb, const layers::TextureType t,
+               const bool webvr) const {
+    return (void)mContext->Present(AutoResolve(xrFb), t, webvr);
   }
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(ObjectId fb) const;
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(ObjectId xrFb,
+                                                  const bool webvr) const;
 
   RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot() const {
     return mContext->GetFrontBufferSnapshot();
   }
+
+  void ClearVRSwapChain() { mContext->ClearVRSwapChain(); }
 
   void Resize(const uvec2& size) { return mContext->Resize(size); }
 

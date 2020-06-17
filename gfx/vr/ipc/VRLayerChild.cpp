@@ -92,8 +92,8 @@ void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
       texType = layers::TextureType::AndroidNativeWindow;
     }
 
-    webgl->Present(mFramebuffer, texType);
-    mThisFrameTextureDesc = webgl->GetFrontBuffer(mFramebuffer);
+    webgl->Present(mFramebuffer, texType, true);
+    mThisFrameTextureDesc = webgl->GetFrontBuffer(mFramebuffer, true);
   }
 
   mLastSubmittedFrameId = frameId;
@@ -112,6 +112,10 @@ bool VRLayerChild::IsIPCOpen() { return mIPCOpen; }
 void VRLayerChild::ClearSurfaces() {
   mThisFrameTextureDesc = Nothing();
   mLastFrameTextureDesc = Nothing();
+  const auto& webgl = mCanvasElement->GetWebGLContext();
+  if (!mFramebuffer && webgl) {
+    webgl->ClearVRSwapChain();
+  }
 }
 
 void VRLayerChild::ActorDestroy(ActorDestroyReason aWhy) { mIPCOpen = false; }

@@ -172,6 +172,7 @@ DEFINE_ASYNC(HostWebGLContext::EndQuery)
 DEFINE_ASYNC(HostWebGLContext::QueryCounter)
 DEFINE_SYNC(HostWebGLContext::GetQueryParameter)
 DEFINE_ASYNC(HostWebGLContext::SetFramebufferIsInOpaqueRAF)
+DEFINE_ASYNC(HostWebGLContext::ClearVRSwapChain)
 
 #undef DEFINE_METHOD_HELPER
 #undef DEFINE_ASYNC

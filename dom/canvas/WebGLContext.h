@@ -483,13 +483,15 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   // Present to compositor
  private:
   bool PresentInto(gl::SwapChain& swapChain);
-  bool PresentIntoXR(gl::SwapChain& swapChain, const gl::MozFramebuffer& fb);
+  bool PresentIntoXR(gl::SwapChain& swapChain, const gl::MozFramebuffer& xrFb);
 
  public:
-  void Present(WebGLFramebuffer*, layers::TextureType);
+  void Present(WebGLFramebuffer*, layers::TextureType, const bool webvr);
   RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot();
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*);
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
+                                                  const bool webvr);
 
+  void ClearVRSwapChain();
   void RunContextLossTimer();
   void CheckForContextLoss();
 
@@ -1214,6 +1216,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   mutable UniquePtr<gl::MozFramebuffer> mResolvedDefaultFB;
 
   gl::SwapChain mSwapChain;
+  gl::SwapChain mWebVRSwapChain;
 
   // --
 
