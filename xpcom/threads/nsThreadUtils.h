@@ -772,7 +772,7 @@ class nsRunnableMethod
 
   virtual void Revoke() = 0;
 
-  // These ReturnTypeEnforcer classes set up a blacklist for return types that
+  // These ReturnTypeEnforcer classes disallow return types that
   // we know are not safe. The default ReturnTypeEnforcer compiles just fine but
   // already_AddRefed will not.
   template <typename OtherReturnType>
