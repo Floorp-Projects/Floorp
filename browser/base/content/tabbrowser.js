@@ -4984,7 +4984,11 @@
           if (contentPid) {
             label += " (pid " + contentPid + ")";
             if (gFissionBrowser) {
-              label += " [F " + framePids.join(", ") + "]";
+              label += " [F";
+              if (framePids.length) {
+                label += " " + framePids.join(", ");
+              }
+              label += "]";
             }
           }
         }
