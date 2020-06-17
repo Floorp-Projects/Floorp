@@ -1119,3 +1119,25 @@ richlistitem .text-link:hover {
   display: flex;
   align-items: center;
 }
+
+#pane-experimental-featureGates {
+  margin-top: 16px;
+}
+
+.featureGate {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  margin-bottom: 16px;
+}
+
+.featureGateCheckbox {
+  align-self: center;
+}
+
+.featureGateTitle {
+  font-size: 1.14em;
+}
+
+.featureGateDescription {
+  grid-column: 2;
+}

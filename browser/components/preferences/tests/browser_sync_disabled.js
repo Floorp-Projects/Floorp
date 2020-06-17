@@ -15,10 +15,6 @@ add_task(async function() {
     leaveOpen: true,
   });
   ok(
-    !gBrowser.contentDocument.getElementById("template-paneSync"),
-    "sync pane removed"
-  );
-  ok(
     gBrowser.contentDocument.getElementById("category-sync").hidden,
     "sync category hidden"
   );
