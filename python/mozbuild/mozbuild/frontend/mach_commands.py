@@ -128,16 +128,15 @@ class MozbuildFileCommands(MachCommandBase):
             json.dump(data, sys.stdout, sort_keys=True, indent=2)
             return
         elif fmt == 'plain':
-            data = sorted(components.items(),
-                          key=lambda x: (x is None, x))
-            for component, files in data:
-                if component:
-                    s = '%s :: %s' % (component.product, component.component)
-                else:
-                    s = 'UNKNOWN'
-
-                print(s)
-                for f in sorted(files):
+            comp_to_file = sorted(
+                ('UNKNOWN' if component is None
+                 else '%s :: %s' % (component.product, component.component),
+                 sorted(files))
+                for component, files in components.items()
+            )
+            for component, files in comp_to_file:
+                print(component)
+                for f in files:
                     print('  %s' % f)
         else:
             print('unhandled output format: %s' % fmt)
