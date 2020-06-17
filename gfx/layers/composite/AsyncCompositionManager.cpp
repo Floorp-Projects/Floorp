@@ -22,6 +22,7 @@
 #include "mozilla/layers/APZSampler.h"  // for APZSampler
 #include "mozilla/layers/APZUtils.h"    // for CompleteAsyncTransform
 #include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/CompositorAnimationStorage.h"  // for CompositorAnimationStorage
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent, etc
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerAnimationUtils.h"  // for TimingFunctionToComputedTimingFunction

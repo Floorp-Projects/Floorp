@@ -15,7 +15,8 @@
 #include "mozilla/layers/AnimationHelper.h"  // for GetAnimatedPropValue
 #include "mozilla/layers/CanvasLayerComposite.h"
 #include "mozilla/layers/ColorLayerComposite.h"
-#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/Compositor.h"                  // for Compositor
+#include "mozilla/layers/CompositorAnimationStorage.h"  // for CompositorAnimationStorage
 #include "mozilla/layers/ContainerLayerComposite.h"
 #include "mozilla/layers/ImageBridgeParent.h"  // for ImageBridgeParent
 #include "mozilla/layers/ImageLayerComposite.h"
