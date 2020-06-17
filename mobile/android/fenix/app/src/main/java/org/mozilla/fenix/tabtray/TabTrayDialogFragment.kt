@@ -22,25 +22,21 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.concept.engine.prompt.ShareData
-import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.utils.allowUndo
-import org.mozilla.fenix.components.TabCollectionStorage
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
+class TabTrayDialogFragment : AppCompatDialogFragment() {
     private val tabsFeature = ViewBoundFeatureWrapper<TabsFeature>()
     private var _tabTrayView: TabTrayView? = null
     private val tabTrayView: TabTrayView
@@ -108,10 +104,19 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
         _tabTrayView = TabTrayView(
             view.tabLayout,
-            this,
-            isPrivate,
-            requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
-            viewLifecycleOwner.lifecycleScope
+            interactor = TabTrayFragmentInteractor(
+                DefaultTabTrayController(
+                    activity = (activity as HomeActivity),
+                    navController = findNavController(),
+                    dismissTabTray = ::dismissAllowingStateLoss,
+                    showUndoSnackbar = ::showUndoSnackbar,
+                    registerCollectionStorageObserver = ::registerCollectionStorageObserver
+                )
+            ),
+            isPrivate = isPrivate,
+            startingInLandscape = requireContext().resources.configuration.orientation ==
+                    Configuration.ORIENTATION_LANDSCAPE,
+            lifecycleScope = viewLifecycleOwner.lifecycleScope
         ) { tabsFeature.get()?.filterTabs(it) }
 
         tabsFeature.set(
@@ -195,96 +200,6 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
         }
     }
 
-    override fun onNewTabTapped(private: Boolean) {
-        (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.fromBoolean(private)
-        findNavController().navigate(TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
-        dismissAllowingStateLoss()
-    }
-
-    override fun onTabTrayDismissed() {
-        dismissAllowingStateLoss()
-    }
-
-    override fun onSaveToCollectionClicked() {
-        val tabs = getListOfSessions(false)
-        val tabIds = tabs.map { it.id }.toList().toTypedArray()
-        val tabCollectionStorage = (activity as HomeActivity).components.core.tabCollectionStorage
-        val navController = findNavController()
-
-        val step = when {
-            // Show the SelectTabs fragment if there are multiple opened tabs to select which tabs
-            // you want to save to a collection.
-            tabs.size > 1 -> SaveCollectionStep.SelectTabs
-            // If there is an existing tab collection, show the SelectCollection fragment to save
-            // the selected tab to a collection of your choice.
-            tabCollectionStorage.cachedTabCollections.isNotEmpty() -> SaveCollectionStep.SelectCollection
-            // Show the NameCollection fragment to create a new collection for the selected tab.
-            else -> SaveCollectionStep.NameCollection
-        }
-
-        if (navController.currentDestination?.id == R.id.collectionCreationFragment) return
-
-        // Only register the observer right before moving to collection creation
-        registerCollectionStorageObserver()
-
-        val directions = TabTrayDialogFragmentDirections.actionGlobalCollectionCreationFragment(
-            tabIds = tabIds,
-            saveCollectionStep = step,
-            selectedTabIds = tabIds
-        )
-        navController.navigate(directions)
-    }
-
-    override fun onShareTabsClicked(private: Boolean) {
-        val tabs = getListOfSessions(private)
-        val data = tabs.map {
-            ShareData(url = it.url, title = it.title)
-        }
-        val directions = TabTrayDialogFragmentDirections.actionGlobalShareFragment(
-            data = data.toTypedArray()
-        )
-        findNavController().navigate(directions)
-    }
-
-    override fun onCloseAllTabsClicked(private: Boolean) {
-        val sessionManager = requireContext().components.core.sessionManager
-        val tabs = getListOfSessions(private)
-
-        val selectedIndex = sessionManager
-            .selectedSession?.let { sessionManager.sessions.indexOf(it) } ?: 0
-
-        val snapshot = tabs
-            .map(sessionManager::createSessionSnapshot)
-            .map { it.copy(engineSession = null, engineSessionState = it.engineSession?.saveState()) }
-            .let { SessionManager.Snapshot(it, selectedIndex) }
-
-        tabs.forEach {
-            sessionManager.remove(it)
-        }
-
-        val snackbarMessage = if (tabTrayView.isPrivateModeSelected) {
-            getString(R.string.snackbar_private_tabs_closed)
-        } else {
-            getString(R.string.snackbar_tabs_closed)
-        }
-
-        viewLifecycleOwner.lifecycleScope.allowUndo(
-            requireView(),
-            snackbarMessage,
-            getString(R.string.snackbar_deleted_undo),
-            {
-                sessionManager.restore(snapshot)
-            },
-            operation = { },
-            elevation = ELEVATION
-        )
-    }
-
-    private fun getListOfSessions(private: Boolean): List<Session> {
-        return requireContext().components.core.sessionManager.sessionsOfType(private = private)
-            .toList()
-    }
-
     private fun navigateHomeIfNeeded(state: BrowserState) {
         val shouldPop = if (tabTrayView.isPrivateModeSelected) {
             state.privateTabs.isEmpty()
@@ -299,6 +214,21 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
     private fun registerCollectionStorageObserver() {
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
+    }
+
+    private fun showUndoSnackbar(snackbarMessage: String, snapshot: SessionManager.Snapshot) {
+        view?.let {
+            viewLifecycleOwner.lifecycleScope.allowUndo(
+                it,
+                snackbarMessage,
+                getString(R.string.snackbar_deleted_undo),
+                {
+                    context?.components?.core?.sessionManager?.restore(snapshot)
+                },
+                operation = { },
+                elevation = ELEVATION
+            )
+        }
     }
 
     private fun showCollectionSnackbar() {
@@ -328,7 +258,9 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
         fun show(fragmentManager: FragmentManager) {
             // If we've killed the fragmentManager. Let's not try to show the tabs tray.
-            if (fragmentManager.isDestroyed) { return }
+            if (fragmentManager.isDestroyed) {
+                return
+            }
 
             // We want to make sure we don't accidentally show the dialog twice if
             // a user somehow manages to trigger `show()` twice before we present the dialog.

@@ -32,13 +32,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
-interface TabTrayInteractor {
-    fun onNewTabTapped(private: Boolean)
-    fun onTabTrayDismissed()
-    fun onShareTabsClicked(private: Boolean)
-    fun onSaveToCollectionClicked()
-    fun onCloseAllTabsClicked(private: Boolean)
-}
 /**
  * View that contains and configures the BrowserAwesomeBar
  */
