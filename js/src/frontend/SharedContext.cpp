@@ -240,6 +240,8 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
 }
 
 JSFunction* FunctionBox::createFunction(JSContext* cx) {
+  // Determine the new function's proto. This must be done for singleton
+  // functions.
   RootedObject proto(cx);
   if (!GetFunctionPrototype(cx, generatorKind(), asyncKind(), &proto)) {
     return nullptr;
