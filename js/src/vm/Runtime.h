@@ -630,7 +630,6 @@ struct JSRuntime {
   bool createLazySelfHostedFunctionClone(JSContext* cx,
                                          js::HandlePropertyName selfHostedName,
                                          js::HandleAtom name, unsigned nargs,
-                                         js::HandleObject proto,
                                          js::NewObjectKind newKind,
                                          js::MutableHandleFunction fun);
   bool cloneSelfHostedFunctionScript(JSContext* cx,

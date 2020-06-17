@@ -1070,8 +1070,7 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
 
   RootedFunction fun(cx);
   if (!cx->runtime()->createLazySelfHostedFunctionClone(
-          cx, selfHostedName, name, nargs,
-          /* proto = */ nullptr, SingletonObject, &fun)) {
+          cx, selfHostedName, name, nargs, SingletonObject, &fun)) {
     return false;
   }
   funVal.setObject(*fun);
