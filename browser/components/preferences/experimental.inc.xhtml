@@ -1,0 +1,19 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- Experimental panel -->
+
+<script src="chrome://browser/content/preferences/experimental.js"/>
+<html:template id="template-paneExperimental">
+<html:div id="firefoxExperimentalCategory"
+          class="subcategory"
+          hidden="true"
+          data-category="paneExperimental">
+  <html:h1 style="-moz-box-flex: 1;"
+           data-l10n-id="pane-experimental-title"/>
+  <html:h2 id="pane-experimental-subtitle"
+           data-l10n-id="pane-experimental-subtitle"/>
+  <html:p data-l10n-id="pane-experimental-description"/>
+</html:div>
+</html:template>
