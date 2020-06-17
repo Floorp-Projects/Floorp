@@ -725,7 +725,9 @@ bool gfxPlatformGtk::UseWaylandDMABufTextures() {
   return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufTexturesEnabled();
 }
 bool gfxPlatformGtk::UseWaylandDMABufVideoTextures() {
-  return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufVideoTexturesEnabled();
+  return IsWaylandDisplay() &&
+         (nsWaylandDisplay::IsDMABufVideoTexturesEnabled() ||
+          nsWaylandDisplay::IsDMABufVAAPIEnabled());
 }
 bool gfxPlatformGtk::UseWaylandDMABufWebGL() {
   return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufWebGLEnabled();
