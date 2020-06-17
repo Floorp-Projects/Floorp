@@ -255,7 +255,7 @@ mstyle[displaystyle="true" i] {
 /*
    The mfrac element sets displaystyle to "false", or if it was already false
    increments scriptlevel by 1, within numerator and denominator.
-*/   
+*/
 mfrac > * {
     -moz-script-level: auto;
     -moz-math-display: inline;

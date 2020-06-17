@@ -65,13 +65,13 @@
       { type    : "Files",
         data    : null }
     ]];
-    
+
     function doOnDrop(aEvent) {
       gData = aEvent.dataTransfer.getData(dragDrop[0][0].type);
       aEvent.preventDefault(); // cancels event and keeps dropEffect
                                // as was before event.
     }
-    
+
     function doOnDragStart(aEvent) {
       var dt = aEvent.dataTransfer;
       switch (aEvent.currentTarget.id) {
@@ -93,7 +93,7 @@
       aEvent.dataTransfer.effectAllowed = "all";
       aEvent.preventDefault(); // sets target this element
     }
-    
+
     function doOnDragOver(aEvent) {
       gOver = true;
       if (gSetDropEffect)
