@@ -40,16 +40,15 @@ Interface members const/method/attribute conform to the following pattern:
 
 
 # XXX(nika): Fix the IDL files which do this so we can remove this list?
-def rustBlacklistedForward(s):
+def rustPreventForward(s):
     """These types are foward declared as interfaces, but never actually defined
     in IDL files. We don't want to generate references to them in rust for that
     reason."""
-    blacklisted = [
+    return s in (
         "nsIFrame",
         "nsIObjectFrame",
         "nsSubDocumentFrame",
-    ]
-    return s in blacklisted
+    )
 
 
 def attlistToIDL(attlist):
@@ -465,7 +464,7 @@ class Forward(object):
         return "%s *%s" % (self.name, '*' if 'out' in calltype else '')
 
     def rustType(self, calltype):
-        if rustBlacklistedForward(self.name):
+        if rustPreventForward(self.name):
             raise RustNoncompat("forward declaration %s is unsupported" % self.name)
         if calltype == 'element':
             return 'RefPtr<%s>' % self.name

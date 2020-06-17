@@ -887,7 +887,7 @@ with modules["DOM_XPATH"]:
 with modules["URILOADER"]:
     errors["NS_ERROR_WONT_HANDLE_CONTENT"] = FAILURE(1)
     # The load has been cancelled because it was found on a malware or phishing
-    # blacklist.
+    # list.
     errors["NS_ERROR_MALWARE_URI"] = FAILURE(30)
     errors["NS_ERROR_PHISHING_URI"] = FAILURE(31)
     errors["NS_ERROR_TRACKING_URI"] = FAILURE(34)
