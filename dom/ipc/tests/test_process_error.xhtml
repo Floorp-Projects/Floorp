@@ -9,7 +9,7 @@
   SimpleTest.waitForExplicitFinish();
   SimpleTest.expectChildProcessCrash();
 
-  var w = docShell.rootTreeItem.domWindow.openDialog('process_error.xhtml', '_blank', 'chrome,resizable=yes,width=400,height=600', window);
+  var w = window.browsingContext.topChromeWindow.openDialog('process_error.xhtml', '_blank', 'chrome,resizable=yes,width=400,height=600', window);
 
   function done()
   {

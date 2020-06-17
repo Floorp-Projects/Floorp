@@ -28,7 +28,7 @@
   // When the round begins, this will be initialized.
   var testsleftinround = 0;
   var currentround = "";
-  var mainWindow = window.docShell.rootTreeItem.domWindow;
+  var mainWindow = window.browsingContext.topChromeWindow;
 
   SpecialPowers.Services.prefs.setIntPref("browser.startup.page", 0);
 

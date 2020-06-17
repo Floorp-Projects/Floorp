@@ -47,7 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
     ok(!contentWin.passed, "untrusted QI should not be called");
 
     // Try with a dialog.
-    docShell.rootTreeItem.domWindow.openDialog("bug503926.xhtml", "chromeDialog", "modal", window);
+    window.browsingContext.topChromeWindow.openDialog("bug503926.xhtml", "chromeDialog", "modal", window);
     SimpleTest.finish();
   }
 

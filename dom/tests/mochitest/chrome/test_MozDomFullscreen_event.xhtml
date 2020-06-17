@@ -38,7 +38,7 @@ SpecialPowers.pushPrefEnv({"set": [
 ]}, setup);
 
 function setup() {
-   newwindow = docShell.rootTreeItem.domWindow.openDialog(
+   newwindow = window.browsingContext.topChromeWindow.openDialog(
       "MozDomFullscreen_chrome.xhtml", "_blank","chrome,dialog=no,resizable=yes,width=400,height=400", window);
 }
 

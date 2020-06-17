@@ -35,7 +35,7 @@ let fullscreenChanged = false;
 let childHasFocused = false;
 
 function openFullscreenWindow() {
-    win = window.docShell.rootTreeItem.domWindow
+    win = window.browsingContext.topChromeWindow
                 .openDialog("bug665540_window.xhtml", "_blank", "resizable=yes,chrome");
 
     win.addEventListener("sizemodechange", () => {

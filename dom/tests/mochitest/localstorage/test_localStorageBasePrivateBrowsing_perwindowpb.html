@@ -15,7 +15,7 @@ prefBranch.setIntPref("browser.startup.page", 0);
 prefBranch.setCharPref("browser.startup.homepage_override.mstone", "ignore");
 
 function startTest() {
-  mainWindow = window.docShell.rootTreeItem.domWindow;
+  mainWindow = window.browsingContext.topChromeWindow;
 
   doTest();
 }

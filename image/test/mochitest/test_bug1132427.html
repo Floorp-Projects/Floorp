@@ -53,14 +53,17 @@ function continueTest() {
   // we need to drawWindow the chrome window so we can get a dump of the retained widget layers
   // if we have to repaint to fulfill this drawWindow request then it will be impossible to
   // observe the bug
-  var chromewin = SpecialPowers.wrap(win).docShell.rootTreeItem.domWindow;
+  // XXX(kmag): This test has not had access to a chrome window since the dawn
+  // of e10s. I'm not sure how accurate the above comment was even before that
+  // point, but it certainly is not accurate now.
+  var topWin = SpecialPowers.wrap(win).top;
 
   var el = window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-  el.width = chromewin.innerWidth;
-  el.height = chromewin.innerHeight;
+  el.width = topWin.innerWidth;
+  el.height = topWin.innerHeight;
   var ctx = el.getContext("2d");
   // pass the correct flags so we don't have to flush the retained layers
-  SpecialPowers.wrap(ctx).drawWindow(chromewin, 0, 0, chromewin.innerWidth, chromewin.innerHeight, "rgba(0,0,0,0)",
+  SpecialPowers.wrap(ctx).drawWindow(topWin, 0, 0, topWin.innerWidth, topWin.innerHeight, "rgba(0,0,0,0)",
     ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_DRAW_CARET);
 
   var leftbox = win.document.getElementById("left").getBoundingClientRect();

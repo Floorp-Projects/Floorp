@@ -34,7 +34,7 @@ SimpleTest.waitForFocus(function () {
     return;
   }
 
-  var win = docShell.rootTreeItem.domWindow.open(
+  var win = window.browsingContext.topChromeWindow.open(
       "window_bug538242.xhtml", "_blank", 
       "chrome,width=400,height=300,left=100,top=100");
   SimpleTest.waitForFocus(function () {

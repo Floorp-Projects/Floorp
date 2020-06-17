@@ -21,7 +21,7 @@ const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/Browser
 ;
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
-var mainWindow = window.docShell.rootTreeItem.domWindow;
+var mainWindow = window.browsingContext.topChromeWindow;
 const SJS = "mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs";
 const BASE_URL = "http://" + SJS + "?";
 

@@ -25,7 +25,7 @@
   let remotes = [];
   SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 3]]}, function() {
     for (let i = 0; i < numRemotes; i++) {
-      let w = remotes[i] = docShell.rootTreeItem.domWindow.open("remote.xhtml", "", "chrome");
+      let w = remotes[i] = window.browsingContext.topChromeWindow.open("remote.xhtml", "", "chrome");
 
       w.addEventListener("load", function loadHandler() {
         w.removeEventListener("load", loadHandler);

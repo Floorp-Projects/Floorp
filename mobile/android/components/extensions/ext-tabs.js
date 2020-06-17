@@ -21,7 +21,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 const getBrowserWindow = window => {
-  return window.docShell.rootTreeItem.domWindow;
+  return window.browsingContext.topChromeWindow;
 };
 
 const tabListener = {

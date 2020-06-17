@@ -22,7 +22,7 @@ Test that arguments can be passed to dialogs.
   }
 
   SimpleTest.waitForExplicitFinish();
-  let win = window.docShell.rootTreeItem.domWindow.openDialog("file_test_dialog.html", "_blank", "width=100,height=100", TEST_ITEM, window);
+  let win = window.browsingContext.topChromeWindow.openDialog("file_test_dialog.html", "_blank", "width=100,height=100", TEST_ITEM, window);
   </script>
 </head>
 <body>

@@ -54,7 +54,7 @@
       ];
 
 
-      this.invoke = () => gDialog = window.docShell.rootTreeItem.domWindow.openDialog(aURL);
+      this.invoke = () => gDialog = window.browsingContext.topChromeWindow.openDialog(aURL);
 
       this.finalCheck = () => {
         const accTree = {

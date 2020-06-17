@@ -28,7 +28,7 @@ function finish() {
   SimpleTest.finish();
 }
 
-var mainWindow = window.docShell.rootTreeItem.domWindow;
+var mainWindow = window.browsingContext.topChromeWindow;
 
 var offscreenWindow = mainWindow.openDialog("window_bug593307_offscreen.xhtml", "",
                                             "dialog=no,chrome,width=200,height=200,screenX=-3000,screenY=-3000",
