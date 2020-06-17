@@ -2077,6 +2077,15 @@ JSFunction* js::NewFunctionWithProto(
 bool js::GetFunctionPrototype(JSContext* cx, js::GeneratorKind generatorKind,
                               js::FunctionAsyncKind asyncKind,
                               js::MutableHandleObject proto) {
+  // Self-hosted functions have null [[Prototype]]. This allows self-hosting to
+  // support generators, despite this loop in the builtin object graph:
+  // - %Generator%.prototype.[[Prototype]] is Iterator.prototype;
+  // - Iterator.prototype has self-hosted methods (iterator helpers).
+  if (cx->realm()->isSelfHostingRealm()) {
+    proto.set(nullptr);
+    return true;
+  }
+
   if (generatorKind == js::GeneratorKind::NotGenerator) {
     if (asyncKind == js::FunctionAsyncKind::SyncFunction) {
       proto.set(nullptr);
