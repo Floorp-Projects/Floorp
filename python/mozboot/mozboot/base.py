@@ -834,9 +834,8 @@ class BaseBootstrapper(object):
         java = self.which('java', *extra_search_dirs)
 
         if not java:
-            raise Exception('You need to have Java version 1.8 installed. '
-                            'Please visit http://www.java.com/en/download '
-                            'to get version 1.8.')
+            raise Exception('You need to have Java Development Kit version 1.8 installed. '
+                            'Please install it from https://adoptopenjdk.net/?variant=openjdk8')
 
         try:
             output = subprocess.check_output([java,
@@ -852,20 +851,20 @@ class BaseBootstrapper(object):
             # but has been around since at least 2011.
             version = [line for line in output.splitlines()
                        if 'java.specification.version' in line]
+
+            unknown_version_exception = Exception('You need to have Java Development Kit version '
+                                                  '1.8 installed (found {} but could not parse '
+                                                  'version "{}"). Check the JAVA_HOME environment '
+                                                  'variable. Please install JDK 1.8 from '
+                                                  'https://adoptopenjdk.net/?variant=openjdk8.'
+                                                  .format(java, output))
+
             if not len(version) == 1:
-                raise Exception('You need to have Java version 1.8 installed '
-                                '(found {} but could not parse version "{}"). '
-                                'Check the JAVA_HOME environment variable. '
-                                'Please visit http://www.java.com/en/download '
-                                'to get version 1.8.'.format(java, output))
+                raise unknown_version_exception
 
             version = version[0].split(' = ')[-1]
             if version not in ['1.8', '8']:
-                raise Exception('You need to have Java version 1.8 installed '
-                                '(found {} with version "{}"). '
-                                'Check the JAVA_HOME environment variable. '
-                                'Please visit http://www.java.com/en/download '
-                                'to get version 1.8.'.format(java, version))
+                raise unknown_version_exception
         except subprocess.CalledProcessError as e:
             raise Exception('Failed to get java version from {}: {}'.format(java, e.output))
 

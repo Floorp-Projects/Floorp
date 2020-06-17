@@ -17,10 +17,6 @@ project. If you want to get started using GeckoView in your app then you
 should refer to the
 `wiki <https://wiki.mozilla.org/Mobile/GeckoView#Get_Started>`_.
 
-You may also be interested in how to get up and running with `Firefox
-For
-Android <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_for_Android_build>`_.
-
 Get set up with Mozilla Central
 -------------------------------
 
@@ -46,6 +42,9 @@ Bootstrap configures everything for GeckoView and Fennec (Firefox for Android) d
 .. code:: bash
 
    git checkout central/default
+
+If you are on Windows, you will need to install the
+`Java 1.8 SDK <https://adoptopenjdk.net/?variant=openjdk8>`__.
 
 If you are on a mac, you will need to have the Xcode build tools
 installed. You can do this by either `installing
