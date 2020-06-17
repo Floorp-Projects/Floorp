@@ -57,6 +57,14 @@ TEST(Matrix, TransformAndClipRect)
   EXPECT_TRUE(
       m2.TransformAndClipBounds(Rect(0, 0, 100, 100), Rect(1024, 1024, 0, 0))
           .IsEmpty());
+
+  // Empty rectangles should still have meaningful corners.
+  EXPECT_TRUE(m.TransformAndClipBounds(Rect(150, 50, 0, 200), c)
+                  .IsEqualEdges(Rect(150, 100, 0, 100)));
+  EXPECT_TRUE(m.TransformAndClipBounds(Rect(150, 150, 0, 0), c)
+                  .IsEqualEdges(Rect(150, 150, 0, 0)));
+  EXPECT_TRUE(m.TransformAndClipBounds(Rect(150, 100, 300, 0), c)
+                  .IsEqualEdges(Rect(150, 100, 50, 0)));
 }
 
 TEST(Matrix4x4Flagged, Mult)

@@ -837,10 +837,6 @@ class Matrix4x4Typed {
   size_t TransformAndClipRect(const RectTyped<SourceUnits, F>& aRect,
                               const RectTyped<TargetUnits, F>& aClip,
                               PointTyped<TargetUnits, F>* aVerts) const {
-    if (aRect.IsEmpty() || aClip.IsEmpty()) {
-      return 0;
-    }
-
     typedef Point4DTyped<UnknownUnits, F> P4D;
 
     // The initial polygon is made up by the corners of aRect in homogenous
