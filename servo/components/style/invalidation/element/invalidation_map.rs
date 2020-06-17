@@ -11,7 +11,7 @@ use crate::selector_map::{
 };
 use crate::selector_parser::SelectorImpl;
 use crate::{Atom, LocalName, Namespace};
-use fallible::{FallibleVec, FallibleHashMap};
+use fallible::{FallibleHashMap, FallibleVec};
 use hashbrown::CollectionAllocErr;
 use selectors::attr::NamespaceConstraint;
 use selectors::parser::{Combinator, Component};
