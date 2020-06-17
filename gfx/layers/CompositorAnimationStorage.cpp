@@ -251,9 +251,8 @@ static gfx::Matrix4x4 FrameTransformToTransformInDevice(
   return transformInDevice;
 }
 
-static void ApplyAnimatedValue(
-    Layer* aLayer, CompositorAnimationStorage* aStorage,
-    nsCSSPropertyID aProperty, AnimatedValue* aPreviousValue,
+void CompositorAnimationStorage::ApplyAnimatedValue(
+    Layer* aLayer, nsCSSPropertyID aProperty, AnimatedValue* aPreviousValue,
     const nsTArray<RefPtr<RawServoAnimationValue>>& aValues) {
   MOZ_ASSERT(!aValues.IsEmpty());
 
@@ -266,8 +265,8 @@ static void ApplyAnimatedValue(
       nscolor color =
           Servo_AnimationValue_GetColor(aValues[0], NS_RGBA(0, 0, 0, 0));
       aLayer->AsColorLayer()->SetColor(gfx::ToDeviceColor(color));
-      aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
-                                 aPreviousValue, color);
+      SetAnimatedValue(aLayer->GetCompositorAnimationsId(), aPreviousValue,
+                       color);
 
       layerCompositor->SetShadowOpacity(aLayer->GetOpacity());
       layerCompositor->SetShadowOpacitySetByAnimation(false);
@@ -280,8 +279,8 @@ static void ApplyAnimatedValue(
       float opacity = Servo_AnimationValue_GetOpacity(aValues[0]);
       layerCompositor->SetShadowOpacity(opacity);
       layerCompositor->SetShadowOpacitySetByAnimation(true);
-      aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
-                                 aPreviousValue, opacity);
+      SetAnimatedValue(aLayer->GetCompositorAnimationsId(), aPreviousValue,
+                       opacity);
 
       layerCompositor->SetShadowBaseTransform(aLayer->GetBaseTransform());
       layerCompositor->SetShadowTransformSetByAnimation(false);
@@ -306,9 +305,9 @@ static void ApplyAnimatedValue(
 
       layerCompositor->SetShadowBaseTransform(transform);
       layerCompositor->SetShadowTransformSetByAnimation(true);
-      aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
-                                 aPreviousValue, std::move(transform),
-                                 std::move(frameTransform), transformData);
+      SetAnimatedValue(aLayer->GetCompositorAnimationsId(), aPreviousValue,
+                       std::move(transform), std::move(frameTransform),
+                       transformData);
 
       layerCompositor->SetShadowOpacity(aLayer->GetOpacity());
       layerCompositor->SetShadowOpacitySetByAnimation(false);
@@ -356,7 +355,7 @@ bool CompositorAnimationStorage::SampleAnimations(Layer* aRoot,
         // We assume all transform like properties (on the same frame) live in
         // a single same layer, so using the transform data of the last element
         // should be fine.
-        ApplyAnimatedValue(layer, this, lastPropertyAnimationGroup.mProperty,
+        ApplyAnimatedValue(layer, lastPropertyAnimationGroup.mProperty,
                            previousValue, animationValues);
         break;
       case AnimationHelper::SampleResult::Skipped:

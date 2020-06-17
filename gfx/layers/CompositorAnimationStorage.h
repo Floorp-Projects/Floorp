@@ -109,34 +109,6 @@ class CompositorAnimationStorage final {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorAnimationStorage)
  public:
-  /**
-   * Set the animation transform based on the unique id and also
-   * set up |aFrameTransform| and |aData| for OMTA testing.
-   * If |aPreviousValue| is not null, the animation transform replaces the value
-   * in the |aPreviousValue|.
-   * NOTE: |aPreviousValue| should be the value for the |aId|.
-   */
-  void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
-                        gfx::Matrix4x4&& aTransformInDevSpace,
-                        gfx::Matrix4x4&& aFrameTransform,
-                        const TransformData& aData);
-
-  /**
-   * Similar to above but for opacity.
-   */
-  void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
-                        float aOpacity);
-
-  /**
-   * Similar to above but for color.
-   */
-  void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
-                        nscolor aColor);
-
-  /**
-   * Return the animated value if a given id can map to its animated value
-   */
-  AnimatedValue* GetAnimatedValue(const uint64_t& aId) const;
 
   OMTAValue GetOMTAValue(const uint64_t& aId) const;
 
@@ -176,11 +148,45 @@ class CompositorAnimationStorage final {
   /**
    * Clear AnimatedValues and Animations data
    */
-  void Clear();
   void ClearById(const uint64_t& aId);
 
  private:
   ~CompositorAnimationStorage(){};
+
+  /**
+   * Return the animated value if a given id can map to its animated value
+   */
+  AnimatedValue* GetAnimatedValue(const uint64_t& aId) const;
+
+  /**
+   * Set the animation transform based on the unique id and also
+   * set up |aFrameTransform| and |aData| for OMTA testing.
+   * If |aPreviousValue| is not null, the animation transform replaces the value
+   * in the |aPreviousValue|.
+   * NOTE: |aPreviousValue| should be the value for the |aId|.
+   */
+  void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
+                        gfx::Matrix4x4&& aTransformInDevSpace,
+                        gfx::Matrix4x4&& aFrameTransform,
+                        const TransformData& aData);
+
+  /**
+   * Similar to above but for opacity.
+   */
+  void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
+                        float aOpacity);
+
+  /**
+   * Similar to above but for color.
+   */
+  void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
+                        nscolor aColor);
+
+  void ApplyAnimatedValue(
+      Layer* aLayer, nsCSSPropertyID aProperty, AnimatedValue* aPreviousValue,
+      const nsTArray<RefPtr<RawServoAnimationValue>>& aValues);
+
+  void Clear();
 
  private:
   AnimatedValueTable mAnimatedValues;
