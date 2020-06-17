@@ -122,10 +122,8 @@ class DelayedScheduler {
   void Reset() {
     MOZ_ASSERT(mTargetThread->IsCurrentThreadIn(),
                "Must be on target thread to disconnect");
-    if (IsScheduled()) {
-      mRequest.Disconnect();
-      mTarget = TimeStamp();
-    }
+    mRequest.DisconnectIfExists();
+    mTarget = TimeStamp();
   }
 
   template <typename ResolveFunc, typename RejectFunc>
