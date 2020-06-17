@@ -661,7 +661,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredPredict(
   nsresult rv = NS_OK;
   nsCOMPtr<nsINetworkPredictor> predictor =
       do_GetService("@mozilla.org/network/predictor;1", &rv);
-  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   nsCOMPtr<nsINetworkPredictorVerifier> verifier;
   if (hasVerifier) {
@@ -679,7 +679,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredLearn(
   nsresult rv = NS_OK;
   nsCOMPtr<nsINetworkPredictor> predictor =
       do_GetService("@mozilla.org/network/predictor;1", &rv);
-  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   predictor->LearnNative(aTargetURI, aSourceURI, aReason, aOriginAttributes);
   return IPC_OK();
@@ -690,7 +690,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredReset() {
   nsresult rv = NS_OK;
   nsCOMPtr<nsINetworkPredictor> predictor =
       do_GetService("@mozilla.org/network/predictor;1", &rv);
-  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   predictor->Reset();
   return IPC_OK();
