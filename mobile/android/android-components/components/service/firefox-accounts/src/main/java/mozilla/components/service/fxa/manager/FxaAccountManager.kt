@@ -51,6 +51,7 @@ import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.WorkManagerSyncManager
+import mozilla.components.service.fxa.sync.clearSyncState
 import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
@@ -622,6 +623,7 @@ open class FxaAccountManager(
                         // and extra overhead is quite small.
                         SyncAuthInfoCache(context).clear()
                         SyncEnginesStorage(context).clear()
+                        clearSyncState(context)
                         // Re-initialize account.
                         account = createAccount(serverConfig)
 
