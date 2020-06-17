@@ -167,13 +167,7 @@ class ScriptLoadRequest
 
   bool IsUnknownDataType() const { return mDataType == DataType::eUnknown; }
   bool IsTextSource() const { return mDataType == DataType::eTextSource; }
-  bool IsBinASTSource() const {
-#ifdef JS_BUILD_BINAST
-    return mDataType == DataType::eBinASTSource;
-#else
-    return false;
-#endif
-  }
+  bool IsBinASTSource() const { return false; }
   bool IsSource() const { return IsTextSource() || IsBinASTSource(); }
   bool IsBytecode() const { return mDataType == DataType::eBytecode; }
 

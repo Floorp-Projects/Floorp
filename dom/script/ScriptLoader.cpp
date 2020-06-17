@@ -2273,13 +2273,6 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     if (!JS::CanCompileOffThread(cx, options, aRequest->ScriptTextLength())) {
       return NS_OK;
     }
-#ifdef JS_BUILD_BINAST
-  } else if (aRequest->IsBinASTSource()) {
-    if (!JS::CanDecodeBinASTOffThread(cx, options,
-                                      aRequest->ScriptBinASTData().length())) {
-      return NS_OK;
-    }
-#endif
   } else {
     MOZ_ASSERT(aRequest->IsBytecode());
     size_t length =
@@ -2318,16 +2311,6 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
             OffThreadScriptLoaderCallback, static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-#ifdef JS_BUILD_BINAST
-  } else if (aRequest->IsBinASTSource()) {
-    MOZ_ASSERT(aRequest->IsSource());
-    if (!JS::DecodeBinASTOffThread(
-            cx, options, aRequest->ScriptBinASTData().begin(),
-            aRequest->ScriptBinASTData().length(), JS::BinASTFormat::Multipart,
-            OffThreadScriptLoaderCallback, static_cast<void*>(runnable))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-#endif
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
     MaybeSourceText maybeSource;
