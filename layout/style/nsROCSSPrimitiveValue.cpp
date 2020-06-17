@@ -17,7 +17,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue() : CSSValue(), mType(CSS_PX) {
-  mValue.mAppUnits = 0;
+  mValue.mFloat = 0.0f;
 }
 
 nsROCSSPrimitiveValue::~nsROCSSPrimitiveValue() { Reset(); }
@@ -28,8 +28,7 @@ void nsROCSSPrimitiveValue::GetCssText(nsString& aCssText, ErrorResult& aRv) {
 
   switch (mType) {
     case CSS_PX: {
-      float val = nsPresContext::AppUnitsToFloatCSSPixels(mValue.mAppUnits);
-      nsStyleUtil::AppendCSSNumber(val, tmpStr);
+      nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
       tmpStr.AppendLiteral("px");
       break;
     }
@@ -141,8 +140,12 @@ void nsROCSSPrimitiveValue::SetDegree(float aValue) {
 }
 
 void nsROCSSPrimitiveValue::SetAppUnits(nscoord aValue) {
+  SetPixels(nsPresContext::AppUnitsToFloatCSSPixels(aValue));
+}
+
+void nsROCSSPrimitiveValue::SetPixels(float aValue) {
   Reset();
-  mValue.mAppUnits = aValue;
+  mValue.mFloat = aValue;
   mType = CSS_PX;
 }
 
