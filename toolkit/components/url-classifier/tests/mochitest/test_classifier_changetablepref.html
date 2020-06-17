@@ -16,7 +16,7 @@
 <script src="head.js"></script>
 <script class="testbody" type="text/javascript">
 
-var mainWindow = window.docShell.rootTreeItem.domWindow;
+var mainWindow = window.browsingContext.topChromeWindow;
 var contentPage = "http://mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/bug_1281083.html";
 
 const testTable = "moz-track-digest256";

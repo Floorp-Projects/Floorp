@@ -14,7 +14,7 @@
 <script>
 SimpleTest.waitForExplicitFinish();
 
-let chromeWindow = docShell.rootTreeItem.domWindow;
+let chromeWindow = window.browsingContext.topChromeWindow;
 
 var attempts = 0;
 

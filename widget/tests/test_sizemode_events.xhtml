@@ -56,7 +56,7 @@ function startTest() {
 }
 
 function openWindow() {
-  gWindow = window.docShell.rootTreeItem.domWindow
+  gWindow = window.browsingContext.topChromeWindow
                   .open('empty_window.xhtml', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200,resizable');
   SimpleTest.waitForFocus(runTest, gWindow);
 }

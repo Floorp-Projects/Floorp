@@ -81,7 +81,7 @@
     const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-    var win = docShell.rootTreeItem.domWindow.open("about:blank", "_blank", "chrome, width=500, height=200");
+    var win = window.browsingContext.topChromeWindow.open("about:blank", "_blank", "chrome, width=500, height=200");
     ok(win, "should open window");
     is(PrivateBrowsingUtils.isContentWindowPrivate(win), false, "used correct window context");
 

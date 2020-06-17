@@ -181,7 +181,7 @@ nsUnknownContentTypeDialog.prototype = {
   reallyShow() {
     try {
       let docShell = this.mContext.getInterface(Ci.nsIDocShell);
-      let rootWin = docShell.rootTreeItem.domWindow;
+      let rootWin = docShell.browsingContext.topChromeWindow;
       this.mDialog = Services.ww.openWindow(
         rootWin,
         "chrome://mozapps/content/downloads/unknownContentType.xhtml",
