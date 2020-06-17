@@ -81,6 +81,12 @@ struct AnimatedValue final {
   AnimatedValueType mValue;
 };
 
+struct WrAnimations {
+  nsTArray<wr::WrOpacityProperty> mOpacityArrays;
+  nsTArray<wr::WrTransformProperty> mTransformArrays;
+  nsTArray<wr::WrColorProperty> mColorArrays;
+};
+
 // CompositorAnimationStorage stores the animations and animated values
 // keyed by a CompositorAnimationsId. The "animations" are a representation of
 // an entire animation over time, while the "animated values" are values sampled
@@ -134,13 +140,9 @@ class CompositorAnimationStorage final {
   OMTAValue GetOMTAValue(const uint64_t& aId) const;
 
   /**
-   * Return the iterator of animated value table
+   * Collect all animations in this class as WebRender type properties.
    */
-  AnimatedValueTable::Iterator ConstAnimatedValueTableIter() const {
-    return mAnimatedValues.ConstIter();
-  }
-
-  uint32_t AnimatedValueCount() const { return mAnimatedValues.Count(); }
+  WrAnimations CollectWebRenderAnimations() const;
 
   /**
    * Set the animations based on the unique id
