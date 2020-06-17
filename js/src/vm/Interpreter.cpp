@@ -295,10 +295,8 @@ JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
       cx, derived ? cx->names().DefaultDerivedClassConstructor
                   : cx->names().DefaultBaseClassConstructor);
   RootedFunction sourceFun(
-      cx, cx->runtime()->getUnclonedSelfHostedFunction(cx, selfHostedName));
-  if (!sourceFun) {
-    return nullptr;
-  }
+      cx, cx->runtime()->getUnclonedSelfHostedFunction(selfHostedName.get()));
+  MOZ_ASSERT(sourceFun);
   RootedScript sourceScript(cx, sourceFun->nonLazyScript());
 
   // Create the new class constructor function.
