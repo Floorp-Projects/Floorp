@@ -138,7 +138,8 @@ bool CacheIRHealth::rateMyCacheIR(HandleScript script) {
         return false;
       }
 
-      if (entry) {
+      if (entry && (entry->firstStub()->isFallback() ||
+                    ICStub::IsCacheIRKind(entry->firstStub()->kind()))) {
         spewHealthForStubsInCacheIREntry(entry);
       }
 
