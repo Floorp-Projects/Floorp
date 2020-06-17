@@ -149,7 +149,6 @@ class JitTest:
         # Exit status or error output.
         self.expect_crash = False
         self.is_module = False
-        self.is_binast = False
         # Reflect.stringify implementation to test
         self.test_reflect_stringify = None
 
@@ -180,7 +179,6 @@ class JitTest:
         t.test_reflect_stringify = self.test_reflect_stringify
         t.enable = True
         t.is_module = self.is_module
-        t.is_binast = self.is_binast
         t.skip_if_cond = self.skip_if_cond
         t.skip_variant_if_cond = self.skip_variant_if_cond
         return t
@@ -242,18 +240,7 @@ class JitTest:
             cls.Directives[dir_name] = dir_meta
 
         filename, file_extension = os.path.splitext(path)
-        if file_extension == '.binjs':
-            # BinAST does not have an inline comment format, so it's hard
-            # to parse file-by-file directives. Allow foo.binjs to use foo.dir
-            # as an adjacent file to specify.
-            meta_file_name = filename + '.dir'
-            if os.path.exists(meta_file_name):
-                meta = cls.find_directives(meta_file_name)
-            else:
-                meta = ''
-            test.is_binast = True
-        else:
-            meta = cls.find_directives(path)
+        meta = cls.find_directives(path)
 
         if meta != '' or dir_meta != '':
             meta = meta + dir_meta
@@ -378,10 +365,6 @@ class JitTest:
         cmd += ['--module-load-path', moduledir]
         if self.is_module:
             cmd += ['--module', path]
-        elif self.is_binast:
-            # In builds with BinAST, this will run the test file. In builds without,
-            # It's a no-op and the tests will silently pass.
-            cmd += ['-B', path]
         elif self.test_reflect_stringify is None:
             cmd += ['-f', path]
         else:
@@ -403,7 +386,7 @@ class JitTest:
         return self.command(prefix, LIB_DIR, MODULE_DIR)
 
 
-def find_tests(substring=None, run_binast=False):
+def find_tests(substring=None):
     ans = []
     for dirpath, dirnames, filenames in os.walk(TEST_DIR):
         dirnames.sort()
@@ -411,16 +394,8 @@ def find_tests(substring=None, run_binast=False):
         if dirpath == '.':
             continue
 
-        if not run_binast:
-            if os.path.join('binast', 'lazy') in dirpath:
-                continue
-            if os.path.join('binast', 'nonlazy') in dirpath:
-                continue
-            if os.path.join('binast', 'invalid') in dirpath:
-                continue
-
         for filename in filenames:
-            if not (filename.endswith('.js') or filename.endswith('.binjs')):
+            if not filename.endswith('.js'):
                 continue
             if filename in ('shell.js', 'browser.js'):
                 continue

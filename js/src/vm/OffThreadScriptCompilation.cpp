@@ -27,14 +27,13 @@ using mozilla::Utf8Unit;
 
 using JS::ReadOnlyCompileOptions;
 
-enum class OffThread { Compile, Decode, DecodeBinAST };
+enum class OffThread { Compile, Decode };
 
 static bool CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
                            size_t length, OffThread what) {
   static const size_t TINY_LENGTH = 5 * 1000;
   static const size_t HUGE_SRC_LENGTH = 100 * 1000;
   static const size_t HUGE_BC_LENGTH = 367 * 1000;
-  static const size_t HUGE_BINAST_LENGTH = 70 * 1000;
 
   // These are heuristics which the caller may choose to ignore (e.g., for
   // testing purposes).
@@ -53,9 +52,6 @@ static bool CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
         return false;
       }
       if (what == OffThread::Decode && length < HUGE_BC_LENGTH) {
-        return false;
-      }
-      if (what == OffThread::DecodeBinAST && length < HUGE_BINAST_LENGTH) {
         return false;
       }
     }

@@ -1570,9 +1570,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
   size_t sourceLength = lazy->sourceEnd() - lazy->sourceStart();
   bool hadLazyScriptData = lazy->hasPrivateScriptData();
 
-  if (ss->hasBinASTSource()) {
-    MOZ_CRASH("Trying to delazify BinAST function in non-BinAST build");
-  } else {
+  {
     MOZ_ASSERT(ss->hasSourceText());
 
     // Parse and compile the script from source.

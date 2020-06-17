@@ -1783,11 +1783,6 @@ class ScriptSource::LoadSourceMatcher {
     return true;
   }
 
-  bool operator()(const BinAST&) const {
-    *loaded_ = false;
-    return true;
-  }
-
  private:
   bool tryLoadAndSetSource(const Utf8Unit&, size_t* length) const {
     char* utf8Source;
@@ -2280,7 +2275,7 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
   // occur, that function may require changes.
 
   if (!hasUncompressedSource()) {
-    // This excludes compressed, missing, retrievable, and BinAST source.
+    // This excludes compressed, missing, and retrievable source.
     return true;
   }
 
@@ -2415,7 +2410,6 @@ template bool ScriptSource::assignSource(JSContext* cx,
 
 void ScriptSource::trace(JSTracer* trc) {
   // This should be kept in sync with ScriptSource::finalizeGCData below.
-  MOZ_ASSERT(!data.is<BinAST>());
   if (xdrEncoder_) {
     xdrEncoder_->trace(trc);
   }
@@ -2443,7 +2437,6 @@ ScriptSource::~ScriptSource() {
   // GC pointers must have been cleared earlier, because this destructor could
   // be called off-thread by SweepCompressionTasks. See above.
   MOZ_ASSERT(!xdrEncoder_);
-  MOZ_ASSERT_IF(hasBinASTSource(), !data.as<BinAST>().metadata);
 }
 
 static MOZ_MUST_USE bool reallocUniquePtr(UniqueChars& unique, size_t size) {
@@ -2545,7 +2538,7 @@ struct SourceCompressionTask::PerformTaskWork {
   void operator()(const T&) {
     MOZ_CRASH(
         "why are we compressing missing, missing-but-retrievable, "
-        "already-compressed, or BinAST source?");
+        "or already-compressed source?");
   }
 };
 
@@ -2908,13 +2901,6 @@ void ScriptSource::codeRetrievable(ScriptSource* const ss) {
   }
 }
 
-template <XDRMode mode>
-/* static */
-XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
-                                       ScriptSource* const ss) {
-  return xdr->fail(JS::TranscodeResult_Throw);
-}
-
 template <typename Unit, XDRMode mode>
 /* static */
 void ScriptSource::codeRetrievableData(ScriptSource* ss) {
@@ -2946,7 +2932,6 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     RetrievableUtf8,
     RetrievableUtf16,
     Missing,
-    BinAST,
   };
 
   DataType tag;
@@ -2993,7 +2978,6 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
         return DataType::RetrievableUtf16;
       }
       DataType operator()(const Missing&) { return DataType::Missing; }
-      DataType operator()(const BinAST&) { return DataType::BinAST; }
     };
 
     uint8_t type;
@@ -3002,7 +2986,7 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     }
     MOZ_TRY(xdr->codeUint8(&type));
 
-    if (type > static_cast<uint8_t>(DataType::BinAST)) {
+    if (type > static_cast<uint8_t>(DataType::Missing)) {
       // Fail in debug, but only soft-fail in release, if the type is invalid.
       MOZ_ASSERT_UNREACHABLE("bad tag");
       return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
@@ -3056,9 +3040,6 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     case DataType::RetrievableUtf16:
       ScriptSource::codeRetrievableData<char16_t, mode>(ss);
       return Ok();
-
-    case DataType::BinAST:
-      return codeBinASTData(xdr, ss);
   }
 
   // The range-check on |type| far above ought ensure the above |switch| is
@@ -3693,9 +3674,8 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
   MOZ_ASSERT(stencil.gcThings.length() <= INDEX_LIMIT);
 
   // Note: These flags should already be correct when the BaseScript was
-  // allocated, except that lazy BinAST parsing has incomplete set of flags.
-  MOZ_ASSERT_IF(!script->isBinAST(),
-                script->immutableFlags() == stencil.immutableFlags);
+  // allocated.
+  MOZ_ASSERT(script->immutableFlags() == stencil.immutableFlags);
   script->resetImmutableFlags(stencil.immutableFlags);
 
   // Derive initial mutable flags
