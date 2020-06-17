@@ -47,7 +47,7 @@ class ReverseIterator {
 
   /* Difference operator */
   difference_type operator-(const ReverseIterator& aOther) const {
-    return -(aOther.mCurrent - mCurrent);
+    return aOther.mCurrent - mCurrent;
   }
 
   /* Increments and decrements operators */
