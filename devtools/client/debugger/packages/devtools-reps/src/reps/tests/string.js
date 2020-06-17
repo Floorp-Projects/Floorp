@@ -2,10 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { shallow } = require("enzyme");
+const { shallow, mount } = require("enzyme");
 const { ELLIPSIS } = require("../rep-utils");
 const { REPS } = require("../rep");
 const { Rep } = REPS;
+
+const renderRep = (string, props) =>
+  mount(
+    Rep({
+      object: string,
+      ...props,
+    })
+  );
 
 const testCases = [
   {
@@ -164,4 +172,16 @@ describe("test String", () => {
       expect(renderedComponent.text()).toEqual(testCase.result);
     });
   }
+
+  it("If shouldRenderTooltip, StringRep displays a tooltip title on the span element.", () => {
+    const tooltipText = "This is a tooltip";
+    const element = renderRep(tooltipText, { shouldRenderTooltip: true });
+    expect(element.prop("title")).toBe('"This is a tooltip"');
+  });
+
+  it("If !shouldRenderTooltip, StringRep doesn't display a tooltip title.", () => {
+    const noTooltip = "There is no tooltip";
+    const element = renderRep(noTooltip, { shouldRenderTooltip: false });
+    expect(element.prop("title")).toBe(undefined);
+  });
 });

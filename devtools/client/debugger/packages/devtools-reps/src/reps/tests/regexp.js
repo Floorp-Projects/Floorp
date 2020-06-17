@@ -20,10 +20,12 @@ describe("test RegExp", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("/ab+c/i");
+    expect(renderedComponent.prop("title")).toEqual("/ab+c/i");
     expectActorAttribute(renderedComponent, stub.actor);
   });
 

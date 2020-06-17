@@ -17,16 +17,18 @@ const ModePropType = PropTypes.oneOf(
  * Renders an array. The array is enclosed by left and right bracket
  * and the max number of rendered items depends on the current mode.
  */
+
 ArrayRep.propTypes = {
   mode: ModePropType,
   object: PropTypes.array.isRequired,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function ArrayRep(props) {
-  const { object, mode = MODE.SHORT } = props;
+  const { object, mode = MODE.SHORT, shouldRenderTooltip = true } = props;
 
-  let items;
   let brackets;
+  let items;
   const needSpace = function(space) {
     return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
   };
@@ -40,7 +42,6 @@ function ArrayRep(props) {
         span(
           {
             className: "more-ellipsis",
-            title: "more…",
           },
           "…"
         ),
@@ -55,6 +56,7 @@ function ArrayRep(props) {
   return span(
     {
       className: "objectBox objectBox-array",
+      title: shouldRenderTooltip ? "Array" : null,
     },
     span(
       {
@@ -103,7 +105,6 @@ function arrayIterator(props, array, max) {
       span(
         {
           className: "more-ellipsis",
-          title: "more…",
         },
         "…"
       )
@@ -116,6 +117,7 @@ function arrayIterator(props, array, max) {
 /**
  * Renders array item. Individual values are separated by a comma.
  */
+
 ItemRep.propTypes = {
   object: PropTypes.any.isRequired,
   delim: PropTypes.string.isRequired,

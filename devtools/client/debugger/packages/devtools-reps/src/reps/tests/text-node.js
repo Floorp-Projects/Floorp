@@ -23,20 +23,24 @@ describe("TextNode", () => {
 
     const defaultOutput = '#text "hello world"';
 
-    let component = renderRep({ mode: undefined });
+    let component = renderRep({ shouldRenderTooltip: true, mode: undefined });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.TINY });
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.TINY });
     expect(component.text()).toBe("#text");
+    expect(component.prop("title")).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.SHORT });
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.SHORT });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.LONG });
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.LONG });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
   });
 

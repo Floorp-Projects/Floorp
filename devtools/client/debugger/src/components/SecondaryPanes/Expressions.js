@@ -279,6 +279,7 @@ class Expressions extends Component<Props, State> {
             onInspectIconClick={grip => openElementInInspector(grip)}
             onDOMNodeMouseOver={grip => highlightDomElement(grip)}
             onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
+            shouldRenderTooltip={true}
           />
           <div className="expression-container__close-btn">
             <CloseButton

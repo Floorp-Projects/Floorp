@@ -14,20 +14,30 @@ const String = require("./string").rep;
 /**
  * Renders a grip object with textual data.
  */
+
 ObjectWithText.propTypes = {
   object: PropTypes.object.isRequired,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function ObjectWithText(props) {
   const grip = props.object;
-  return span(
-    {
-      "data-link-actor-id": grip.actor,
-      className: `objectTitle objectBox objectBox-${getType(grip)}`,
-    },
-    `${getType(grip)} `,
-    getDescription(grip)
-  );
+  const config = getElementConfig(props);
+
+  return span(config, `${getType(grip)} `, getDescription(grip));
+}
+
+function getElementConfig(opts) {
+  const shouldRenderTooltip = opts.shouldRenderTooltip;
+  const grip = opts.object;
+
+  return {
+    "data-link-actor-id": grip.actor,
+    className: `objectTitle objectBox objectBox-${getType(grip)}`,
+    title: shouldRenderTooltip
+      ? `${getType(grip)} "${grip.preview.text}"`
+      : null,
+  };
 }
 
 function getType(grip) {

@@ -22,7 +22,9 @@ describe("Array", () => {
 
     const defaultOutput = "[]";
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
+    expect(renderRep({ mode: undefined }).prop("title")).toBe("Array");
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(defaultOutput);
+    expect(renderRep({ mode: MODE.TINY }).prop("title")).toBe("Array");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -33,7 +35,9 @@ describe("Array", () => {
 
     const defaultOutput = '[ 1, "foo", {} ]';
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
+    expect(renderRep({ mode: undefined }).prop("title")).toBe("Array");
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("[…]");
+    expect(renderRep({ mode: MODE.TINY }).prop("title")).toBe("Array");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -79,7 +83,9 @@ describe("Array", () => {
 
     const defaultOutput = "[ 1, […] ]";
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
+    expect(renderRep({ mode: undefined }).prop("title")).toBe("Array");
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("[…]");
+    expect(renderRep({ mode: MODE.TINY }).prop("title")).toBe("Array");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -97,7 +103,9 @@ describe("Array", () => {
 
     const defaultOutput = "[ {…} ]";
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
+    expect(renderRep({ mode: undefined }).prop("title")).toBe("Array");
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("[…]");
+    expect(renderRep({ mode: MODE.TINY }).prop("title")).toBe("Array");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });

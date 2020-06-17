@@ -19,10 +19,12 @@ describe("BigInt", () => {
       const renderedComponent = shallow(
         Rep({
           object: stub,
+          shouldRenderTooltip: true,
         })
       );
 
       expect(renderedComponent.text()).toEqual("1n");
+      expect(renderedComponent.prop("title")).toBe("1n");
     });
   });
 
@@ -37,10 +39,12 @@ describe("BigInt", () => {
       const renderedComponent = shallow(
         Rep({
           object: stub,
+          shouldRenderTooltip: true,
         })
       );
 
       expect(renderedComponent.text()).toEqual("-2n");
+      expect(renderedComponent.prop("title")).toBe("-2n");
     });
   });
 

@@ -41,10 +41,12 @@ describe("ElementNode - BodyNode", () => {
       ElementNode.rep({
         object: stub,
         mode: MODE.TINY,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("body#body-id.body-class");
+    expect(renderedComponent.prop("title")).toEqual("body#body-id.body-class");
     expectActorAttribute(renderedComponent, stub.actor);
   });
 });
@@ -415,6 +417,7 @@ describe("ElementNode - Element attribute cropping", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
     expect(
@@ -427,10 +430,10 @@ describe("ElementNode - Element attribute cropping", () => {
 
   it("renders partial value for long attribute", () => {
     const stub = stubs.get("NodeWithLongAttribute");
-
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
@@ -451,6 +454,7 @@ describe("ElementNode - Element attribute cropping", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
@@ -477,10 +481,12 @@ describe("ElementNode - : Marker pseudo element", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("::marker");
+    expect(renderedComponent.prop("title")).toEqual("::marker");
   });
 
   it("renders with expected text content in tiny mode", () => {
@@ -488,10 +494,12 @@ describe("ElementNode - : Marker pseudo element", () => {
       ElementNode.rep({
         object: stub,
         mode: MODE.TINY,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("::marker");
+    expect(renderedComponent.prop("title")).toEqual("::marker");
   });
 });
 
@@ -563,6 +571,7 @@ describe("ElementNode - Inspect icon title", () => {
       ElementNode.rep({
         inspectIconTitle,
         object: stub,
+        shouldRenderTooltip: true,
         onInspectIconClick: jest.fn(),
       })
     );

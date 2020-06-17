@@ -25,6 +25,16 @@ describe("testInfinity", () => {
     );
     expect(renderedComponent.text()).toEqual("Infinity");
   });
+
+  it("Infinity rep has expected title content for Infinity", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+        shouldRenderTooltip: true,
+      })
+    );
+    expect(renderedComponent.prop("title")).toEqual("Infinity");
+  });
 });
 
 describe("testNegativeInfinity", () => {
@@ -41,5 +51,15 @@ describe("testNegativeInfinity", () => {
       })
     );
     expect(renderedComponent.text()).toEqual("-Infinity");
+  });
+
+  it("Infinity rep has expected title content for negative Infinity", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+        shouldRenderTooltip: true,
+      })
+    );
+    expect(renderedComponent.prop("title")).toEqual("-Infinity");
   });
 });

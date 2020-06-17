@@ -12,6 +12,9 @@ const { wrapRender } = require("./rep-utils");
  * Renders a caption. This template is used by other components
  * that needs to distinguish between a simple text/value and a label.
  */
+
+// TODO: Is this file actually used anywhere? I can't seem to find a reference to the caption function...
+
 Caption.propTypes = {
   object: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
 };

@@ -12,7 +12,16 @@ const { MODE } = require("./constants");
 /**
  * Renders an map entry. A map entry is represented by its key,
  * a column and its value.
+ *
+ * tooltipTitle Notes:
+ * ---
+ * 1. Renders a Map Entry.
+ * 2. Implements tooltipTitle: <TODO>
+ * 3. ElementTitle = <TODO>
+ *      POTENTIAL: full key/value pair for display
+ * 4. Chrome: chrome displays full key-value pair
  */
+
 GripMapEntry.propTypes = {
   object: PropTypes.object,
   // @TODO Change this to Object.values when supported in Node's version of V8

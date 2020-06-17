@@ -4,13 +4,32 @@
 
 // Dependencies
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
 const { wrapRender } = require("./rep-utils");
 
 /**
  * Renders null value
  */
+
+Null.PropTypes = {
+  shouldRenderTooltip: PropTypes.bool,
+};
+
 function Null(props) {
-  return span({ className: "objectBox objectBox-null" }, "null");
+  const shouldRenderTooltip = props.shouldRenderTooltip;
+
+  const config = getElementConfig(shouldRenderTooltip);
+
+  return span(config, "null");
+}
+
+function getElementConfig(shouldRenderTooltip) {
+  return {
+    className: "objectBox objectBox-null",
+    title: shouldRenderTooltip ? "null" : null,
+  };
 }
 
 function supportsObject(object, noGrip = false) {

@@ -43,6 +43,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
       <span
         className="objectBox objectBox-Window"
         data-link-actor-id="server1.conn3.obj198"
+        title={null}
       >
         <span
           className="objectTitle"
@@ -129,6 +130,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
       <span
         className="objectBox objectBox-Window"
         data-link-actor-id="server1.conn3.obj198"
+        title={null}
       >
         <span
           className="objectTitle"
@@ -184,6 +186,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
       <span
         className="objectBox objectBox-Window"
         data-link-actor-id="server1.conn3.obj198"
+        title={null}
       >
         <span
           className="objectTitle"
@@ -240,6 +243,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
       <span
         className="objectBox objectBox-Window"
         data-link-actor-id="server1.conn3.obj198"
+        title={null}
       >
         <span
           className="objectTitle"
@@ -280,6 +284,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
       </span>
       <span
         className="objectBox objectBox-object"
+        title={null}
       >
         <span
           className="objectLeftBrace"

@@ -29,4 +29,14 @@ describe("testNull", () => {
     );
     expect(renderedComponent.text()).toEqual("null");
   });
+
+  it("Null rep displays null for title", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+        shouldRenderTooltip: true,
+      })
+    );
+    expect(renderedComponent.prop("title")).toEqual("null");
+  });
 });

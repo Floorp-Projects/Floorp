@@ -13,27 +13,44 @@ const { rep: StringRep } = require("./string");
 /**
  * Renders DOM attribute
  */
+
 Attribute.propTypes = {
   object: PropTypes.object.isRequired,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function Attribute(props) {
-  const { object } = props;
+  const { object, shouldRenderTooltip } = props;
   const value = object.preview.value;
+  const attrName = getTitle(object);
+
+  const config = getElementConfig({
+    attrName,
+    shouldRenderTooltip,
+    value,
+    object,
+  });
 
   return span(
-    {
-      "data-link-actor-id": object.actor,
-      className: "objectBox-Attr",
-    },
-    span({ className: "attrName" }, getTitle(object)),
+    config,
+    span({ className: "attrName" }, attrName),
     span({ className: "attrEqual" }, "="),
-    StringRep({ className: "attrValue", object: value, title: value })
+    StringRep({ className: "attrValue", object: value })
   );
 }
 
 function getTitle(grip) {
   return grip.preview.nodeName;
+}
+
+function getElementConfig(opts) {
+  const { attrName, shouldRenderTooltip, value, object } = opts;
+
+  return {
+    "data-link-actor-id": object.actor,
+    className: "objectBox-Attr",
+    title: shouldRenderTooltip ? `${attrName}="${value}"` : null,
+  };
 }
 
 // Registration

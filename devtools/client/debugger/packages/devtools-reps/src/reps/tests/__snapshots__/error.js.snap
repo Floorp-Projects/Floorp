@@ -4,6 +4,7 @@ exports[`Error - Error with V8-like stack renders with expected text 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1020"
+  title={null}
 >
   Error: 
   <span
@@ -39,6 +40,7 @@ exports[`Error - Error with invalid stack renders with expected text 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1020"
+  title={null}
 >
   Error: 
   <span
@@ -57,10 +59,12 @@ exports[`Error - Error with undefined-grip message renders with expected text 1`
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
 >
   Error: 
   <span
     className="objectBox objectBox-undefined"
+    title={null}
   >
     undefined
   </span>
@@ -92,6 +96,7 @@ exports[`Error - Error with undefined-grip message renders with expected text 2`
 <span
   className="objectBox-stackTrace "
   data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
 >
   <span
     className="objectTitle"
@@ -106,6 +111,7 @@ exports[`Error - Error with undefined-grip name renders with expected text 1`] =
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
 >
   Error: 
   <span
@@ -141,6 +147,7 @@ exports[`Error - Error with undefined-grip name renders with expected text 2`] =
 <span
   className="objectBox-stackTrace "
   data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
 >
   <span
     className="objectTitle"
@@ -155,6 +162,7 @@ exports[`Error - Error with undefined-grip stack renders with expected text 1`] 
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server0.conn0.child1/obj88"
+  title={null}
 >
   InternalError: 
   <span
@@ -173,6 +181,7 @@ exports[`Error - Eval error renders with expected text for an EvalError 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1022"
+  title={null}
 >
   EvalError: 
   <span
@@ -208,6 +217,7 @@ exports[`Error - Internal error renders with expected text for an InternalError 
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1023"
+  title={null}
 >
   InternalError: 
   <span
@@ -243,6 +253,7 @@ exports[`Error - Multi line stack error renders with expected text for Error obj
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
 >
   Error: 
   <span
@@ -310,6 +321,7 @@ exports[`Error - Range error renders with expected text for RangeError 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1024"
+  title={null}
 >
   RangeError: 
   <span
@@ -345,6 +357,7 @@ exports[`Error - Reference error renders with expected text for ReferenceError 1
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1025"
+  title={null}
 >
   ReferenceError: 
   <span
@@ -380,6 +393,7 @@ exports[`Error - Simple error renders with error type and preview message when i
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
 >
   Error: 
   <span
@@ -447,6 +461,7 @@ exports[`Error - Simple error renders with error type only when customFormat pro
 <span
   className="objectBox-stackTrace "
   data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
 >
   <span
     className="objectTitle"
@@ -466,6 +481,7 @@ exports[`Error - Simple error renders with error type only when depth is > 0 1`]
 <span
   className="objectBox-stackTrace "
   data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
 >
   <span
     className="objectTitle"
@@ -485,10 +501,12 @@ exports[`Error - Simple error renders with expected text for simple error 1`] = 
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1020"
+  title="Error: \\"Error message\\""
 >
   Error: 
   <span
     className="objectBox objectBox-string"
+    title="Error message"
   >
     Error message
   </span>
@@ -520,6 +538,7 @@ exports[`Error - Syntax error renders with expected text for SyntaxError 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1026"
+  title={null}
 >
   SyntaxError: 
   <span
@@ -555,6 +574,7 @@ exports[`Error - Type error renders with expected text for TypeError 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1027"
+  title={null}
 >
   TypeError: 
   <span
@@ -590,6 +610,7 @@ exports[`Error - URI error renders with expected text for URIError 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1028"
+  title={null}
 >
   URIError: 
   <span
@@ -625,6 +646,7 @@ exports[`Error - base-loader.js renders as expected in tiny mode 1`] = `
 <span
   className="objectBox-stackTrace "
   data-link-actor-id="server1.conn1.child1/obj1020"
+  title={null}
 >
   <span
     className="objectTitle"
@@ -639,6 +661,7 @@ exports[`Error - base-loader.js renders as expected without mode 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1020"
+  title={null}
 >
   Error: 
   <span
@@ -722,6 +745,7 @@ exports[`Error - longString stacktrace - cut-off location renders as expected 1`
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj33"
+  title={null}
 >
   InternalError: 
   <span
@@ -853,6 +877,7 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn2.child1/obj33"
+  title={null}
 >
   Error: 
   <span
@@ -1030,6 +1055,7 @@ exports[`Error - renderStacktrace prop uses renderStacktrace prop when provided 
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
 >
   Error: 
   <span
@@ -1062,6 +1088,7 @@ exports[`Error - renderStacktrace prop uses renderStacktrace with longString err
 <span
   className="objectBox-stackTrace reps-custom-format"
   data-link-actor-id="server1.conn1.child1/obj33"
+  title={null}
 >
   InternalError: 
   <span

@@ -23,10 +23,12 @@ describe("Object with text - CSSStyleRule", () => {
     const renderedComponent = shallow(
       Rep({
         object: gripStub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual('CSSStyleRule ".Shadow"');
+    expect(renderedComponent.prop("title")).toEqual('CSSStyleRule ".Shadow"');
     expectActorAttribute(renderedComponent, gripStub.actor);
   });
 });
@@ -44,12 +46,14 @@ describe("Object with text - CSSMediaRule", () => {
     const renderedComponent = shallow(
       Rep({
         object: gripStub,
+        shouldRenderTooltip: true,
       })
     );
 
     const text =
       'CSSMediaRule "(min-height: 680px), screen and (orientation: portrait)"';
     expect(renderedComponent.text()).toEqual(text);
+    expect(renderedComponent.prop("title")).toEqual(text);
     expectActorAttribute(renderedComponent, gripStub.actor);
   });
 });

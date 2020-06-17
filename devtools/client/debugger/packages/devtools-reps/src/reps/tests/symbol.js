@@ -15,10 +15,12 @@ describe("test Symbol", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("Symbol(foo)");
+    expect(renderedComponent.prop("title")).toBe("Symbol(foo)");
     expectActorAttribute(renderedComponent, stub.actor);
   });
 });

@@ -107,10 +107,30 @@ describe("Grip - String object", () => {
     const renderRep = props => shallowRenderRep(object, props);
     const defaultOutput = 'String { "foo" }';
 
-    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.TINY }).text()).toBe("String");
-    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).prop("title")
+    ).toBe("String");
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).text()
+    ).toBe("String");
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
+    ).toBe("String");
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).prop("title")
+    ).toBe("String");
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).prop("title")
+    ).toBe("String");
   });
 });
 
@@ -149,10 +169,30 @@ describe("Grip - ArrayBuffer", () => {
     const renderRep = props => shallowRenderRep(object, props);
     const defaultOutput = "ArrayBuffer { byteLength: 10 }";
 
-    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.TINY }).text()).toBe("ArrayBuffer");
-    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).prop("title")
+    ).toBe("ArrayBuffer");
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).text()
+    ).toBe("ArrayBuffer");
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
+    ).toBe("ArrayBuffer");
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).prop("title")
+    ).toBe("ArrayBuffer");
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).prop("title")
+    ).toBe("ArrayBuffer");
   });
 });
 
@@ -232,12 +272,32 @@ describe("Grip - Object with more than short mode max props", () => {
     const renderRep = props => shallowRenderRep(object, props);
     const defaultOutput = "Object { b: 1, more: 2, d: 3, … }";
 
-    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).prop("title")
+    ).toBe("Object");
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).text()
+    ).toBe("{…}");
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
+    ).toBe("Object");
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).prop("title")
+    ).toBe("Object");
 
     const longOutput = "Object { a: undefined, b: 1, more: 2, d: 3 }";
-    expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).text()
+    ).toBe(longOutput);
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).prop("title")
+    ).toBe("Object");
   });
 });
 

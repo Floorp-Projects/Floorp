@@ -96,13 +96,21 @@ describe("Event - mouse event", () => {
   });
 
   it("renders with expected text", () => {
-    expect(renderRep().text()).toEqual(
+    expect(renderRep({ shouldRenderTooltip: true }).text()).toEqual(
       "click { target: div#test, clientX: 62, clientY: 18, … }"
     );
-    expect(renderRep({ mode: MODE.LONG }).text()).toEqual(
+    expect(renderRep({ shouldRenderTooltip: true }).prop("title")).toEqual(
+      "click"
+    );
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).text()
+    ).toEqual(
       "click { target: div#test, buttons: 0, clientX: 62, clientY: 18, " +
         "layerX: 0, layerY: 0 }"
     );
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).prop("title")
+    ).toEqual("click");
   });
 
   it("renders an inspect icon", () => {

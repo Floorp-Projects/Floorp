@@ -123,6 +123,7 @@
 
 .expression-content .object-node {
   padding-inline-start: 0px;
+  cursor: default;
 }
 
 .expressions-list .tree.object-inspector .node.object-node {

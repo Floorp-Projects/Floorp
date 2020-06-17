@@ -20,10 +20,14 @@ describe("Document", () => {
     const renderedComponent = shallow(
       Document.rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual(
+      "HTMLDocument https://www.mozilla.org/en-US/firefox/new/"
+    );
+    expect(renderedComponent.prop("title")).toEqual(
       "HTMLDocument https://www.mozilla.org/en-US/firefox/new/"
     );
     expectActorAttribute(renderedComponent, stub.actor);

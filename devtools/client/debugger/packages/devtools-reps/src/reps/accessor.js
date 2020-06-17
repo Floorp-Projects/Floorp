@@ -15,13 +15,20 @@ const { MODE } = require("./constants");
  * Renders an object. An object is represented by a list of its
  * properties enclosed in curly brackets.
  */
+
 Accessor.propTypes = {
   object: PropTypes.object.isRequired,
   mode: PropTypes.oneOf(Object.values(MODE)),
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function Accessor(props) {
-  const { object, evaluation, onInvokeGetterButtonClick } = props;
+  const {
+    object,
+    evaluation,
+    onInvokeGetterButtonClick,
+    shouldRenderTooltip,
+  } = props;
 
   if (evaluation) {
     const { Rep, Grip } = require("./rep");
@@ -58,9 +65,14 @@ function Accessor(props) {
     accessors.push("Setter");
   }
 
+  const accessorsString = accessors.join(" & ");
+
   return span(
-    { className: "objectBox objectBox-accessor objectTitle" },
-    accessors.join(" & ")
+    {
+      className: "objectBox objectBox-accessor objectTitle",
+      title: shouldRenderTooltip ? accessorsString : null,
+    },
+    accessorsString
   );
 }
 

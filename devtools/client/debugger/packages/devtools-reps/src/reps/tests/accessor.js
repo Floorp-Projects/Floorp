@@ -18,8 +18,11 @@ describe("Accessor - getter", () => {
   });
 
   it("Accessor rep has expected text content", () => {
-    const renderedComponent = shallow(Rep({ object }));
+    const renderedComponent = shallow(
+      Rep({ object, shouldRenderTooltip: true })
+    );
     expect(renderedComponent.text()).toEqual("Getter");
+    expect(renderedComponent.prop("title")).toEqual("Getter");
 
     const node = renderedComponent.find(".jump-definition");
     expect(node.exists()).toBeFalsy();
@@ -34,8 +37,11 @@ describe("Accessor - setter", () => {
   });
 
   it("Accessor rep has expected text content", () => {
-    const renderedComponent = shallow(Rep({ object }));
+    const renderedComponent = shallow(
+      Rep({ object, shouldRenderTooltip: true })
+    );
     expect(renderedComponent.text()).toEqual("Setter");
+    expect(renderedComponent.prop("title")).toEqual("Setter");
 
     const node = renderedComponent.find(".jump-definition");
     expect(node.exists()).toBeFalsy();
@@ -50,8 +56,11 @@ describe("Accessor - getter & setter", () => {
   });
 
   it("Accessor rep has expected text content", () => {
-    const renderedComponent = shallow(Rep({ object }));
+    const renderedComponent = shallow(
+      Rep({ object, shouldRenderTooltip: true })
+    );
     expect(renderedComponent.text()).toEqual("Getter & Setter");
+    expect(renderedComponent.prop("title")).toEqual("Getter & Setter");
 
     const node = renderedComponent.find(".jump-definition");
     expect(node.exists()).toBeFalsy();
@@ -71,7 +80,7 @@ describe("Accessor - Invoke getter", () => {
       type: "click",
       stopPropagation: () => {},
     });
-
+    expect(node.prop("title")).toEqual("Invoke getter");
     expect(node.exists()).toBeTruthy();
     expect(onInvokeGetterButtonClick.mock.calls).toHaveLength(1);
   });

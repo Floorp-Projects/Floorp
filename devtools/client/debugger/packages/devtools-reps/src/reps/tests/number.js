@@ -18,10 +18,12 @@ describe("Int", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("5");
+    expect(renderedComponent.prop("title")).toBe("5");
   });
 });
 
@@ -37,20 +39,24 @@ describe("Boolean", () => {
     const renderedComponent = shallow(
       Rep({
         object: stubTrue,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("true");
+    expect(renderedComponent.prop("title")).toBe("true");
   });
 
   it("renders with expected text content for boolean false", () => {
     const renderedComponent = shallow(
       Rep({
         object: stubFalse,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("false");
+    expect(renderedComponent.prop("title")).toBe("false");
   });
 });
 
@@ -70,20 +76,24 @@ describe("Negative Zero", () => {
     const renderedComponent = shallow(
       Rep({
         object: stubNegativeZeroGrip,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("-0");
+    expect(renderedComponent.prop("title")).toBe("-0");
   });
 
   it("renders with expected text content for negative zero value", () => {
     const renderedComponent = shallow(
       Rep({
         object: stubNegativeZeroValue,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("-0");
+    expect(renderedComponent.prop("title")).toBe("-0");
   });
 });
 
@@ -96,10 +106,12 @@ describe("Zero", () => {
     const renderedComponent = shallow(
       Rep({
         object: 0,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("0");
+    expect(renderedComponent.prop("title")).toBe("0");
   });
 });
 
@@ -110,9 +122,11 @@ describe("Unsafe Int", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("900719925474099100");
+    expect(renderedComponent.prop("title")).toBe("900719925474099100");
   });
 });

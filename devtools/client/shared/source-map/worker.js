@@ -2055,7 +2055,7 @@ exports.encode = function(number) {
  * * https://bugzilla.mozilla.org/show_bug.cgi?id=1374505
  * * https://bugs.chromium.org/p/chromium/issues/detail?id=734880
  */
-module.exports = __webpack_require__(523).URL;
+module.exports = __webpack_require__(533).URL;
 
 
 /***/ }),
@@ -4873,7 +4873,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 523:
+/***/ 533:
 /***/ (function(module, exports) {
 
 module.exports = 

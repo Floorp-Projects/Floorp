@@ -23,7 +23,15 @@ describe("Object - Basic", () => {
     expect(renderComponent(object, { mode: undefined }).text()).toEqual(
       defaultOutput
     );
+    expect(renderComponent(object, { mode: undefined }).prop("title")).toEqual(
+      "Object"
+    );
+
     expect(renderComponent(object, { mode: MODE.TINY }).text()).toEqual("{}");
+    expect(renderComponent(object, { mode: MODE.TINY }).prop("title")).toEqual(
+      "Object"
+    );
+
     expect(renderComponent(object, { mode: MODE.SHORT }).text()).toEqual(
       defaultOutput
     );
@@ -169,8 +177,18 @@ describe("Object - Custom Title", () => {
       renderComponent(object, { mode: undefined, title: customTitle }).text()
     ).toEqual(defaultOutput);
     expect(
+      renderComponent(object, { mode: undefined, title: customTitle }).prop(
+        "title"
+      )
+    ).toEqual(customTitle);
+    expect(
       renderComponent(object, { mode: MODE.TINY, title: customTitle }).text()
-    ).toEqual("MyCustomObject");
+    ).toEqual(customTitle);
+    expect(
+      renderComponent(object, { mode: MODE.TINY, title: customTitle }).prop(
+        "title"
+      )
+    ).toEqual(customTitle);
     expect(
       renderComponent(object, { mode: MODE.SHORT, title: customTitle }).text()
     ).toEqual(defaultOutput);

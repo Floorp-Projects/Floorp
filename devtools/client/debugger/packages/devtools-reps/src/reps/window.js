@@ -19,29 +19,55 @@ const { MODE } = require("./constants");
 /**
  * Renders a grip representing a window.
  */
+
 WindowRep.propTypes = {
   // @TODO Change this to Object.values when supported in Node's version of V8
   mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
   object: PropTypes.object.isRequired,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function WindowRep(props) {
   const { mode, object } = props;
 
-  const config = {
-    "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-Window",
-  };
-
   if (mode === MODE.TINY) {
-    return span(config, getTitle(object));
+    const tinyTitle = getTitle(object);
+    const title = getTitle(object, true);
+    const location = getLocation(object);
+    const config = getElementConfig({ ...props, title, location });
+
+    return span(
+      config,
+      span({ className: tinyTitle.className }, tinyTitle.content)
+    );
   }
+
+  const title = getTitle(object, true);
+  const location = getLocation(object);
+  const config = getElementConfig({ ...props, title, location });
 
   return span(
     config,
-    getTitle(object, true),
-    span({ className: "location" }, getLocation(object))
+    span({ className: title.className }, title.content),
+    span({ className: "location" }, location)
   );
+}
+
+function getElementConfig(opts) {
+  const { object, shouldRenderTooltip, title, location } = opts;
+  let tooltip;
+
+  if (location) {
+    tooltip = `${title.content}${location}`;
+  } else {
+    tooltip = `${title.content}`;
+  }
+
+  return {
+    "data-link-actor-id": object.actor,
+    className: "objectBox objectBox-Window",
+    title: shouldRenderTooltip ? tooltip : null,
+  };
 }
 
 function getTitle(object, trailingSpace) {
@@ -49,7 +75,10 @@ function getTitle(object, trailingSpace) {
   if (trailingSpace === true) {
     title = `${title} `;
   }
-  return span({ className: "objectTitle" }, title);
+  return {
+    className: "objectTitle",
+    content: title,
+  };
 }
 
 function getLocation(object) {

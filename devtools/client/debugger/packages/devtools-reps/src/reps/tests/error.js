@@ -25,11 +25,13 @@ describe("Error - Simple error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
+        shouldRenderTooltip: true,
         customFormat: true,
       })
     );
 
     expect(renderedComponent).toMatchSnapshot();
+    expect(renderedComponent.prop("title")).toBe('Error: "Error message"');
     expectActorAttribute(renderedComponent, stub.actor);
   });
 

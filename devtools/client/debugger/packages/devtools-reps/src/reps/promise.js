@@ -15,6 +15,7 @@ const { MODE } = require("./constants");
 /**
  * Renders a DOM Promise object.
  */
+
 PromiseRep.propTypes = {
   object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values when supported in Node's version of V8
@@ -22,15 +23,18 @@ PromiseRep.propTypes = {
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
   onInspectIconClick: PropTypes.func,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function PromiseRep(props) {
   const object = props.object;
+  const shouldRenderTooltip = props.shouldRenderTooltip;
   const { promiseState } = object;
 
   const config = {
     "data-link-actor-id": object.actor,
     className: "objectBox objectBox-object",
+    title: shouldRenderTooltip ? "Promise" : null,
   };
 
   if (props.mode === MODE.TINY) {

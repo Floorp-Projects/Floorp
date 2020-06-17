@@ -29,6 +29,19 @@ describe("CommentNode", () => {
     expect(renderedComponent.hasClass("objectBox theme-comment")).toBe(true);
   });
 
+  it("renders with correct title tooltip", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub,
+        shouldRenderTooltip: true,
+      })
+    );
+
+    expect(renderedComponent.prop("title")).toBe(
+      "<!-- test\nand test\nand test\nand test\nand test\nand test\nand test -->"
+    );
+  });
+
   it("renders as expected", () => {
     const object = stubs.get("Comment");
     const renderRep = props => shallow(CommentNode.rep({ object, ...props }));

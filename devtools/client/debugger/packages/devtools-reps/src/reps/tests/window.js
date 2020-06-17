@@ -33,10 +33,12 @@ describe("test Window", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("Window about:newtab");
+    expect(renderedComponent.prop("title")).toEqual("Window about:newtab");
   });
 
   it("renders with correct inner HTML structure and content", () => {
@@ -54,10 +56,12 @@ describe("test Window", () => {
       Rep({
         object: stub,
         mode: MODE.TINY,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("Window");
+    expect(renderedComponent.prop("title")).toEqual("Window about:newtab");
   });
 
   it("renders with expected text in LONG mode", () => {
@@ -65,10 +69,12 @@ describe("test Window", () => {
       Rep({
         object: stub,
         mode: MODE.LONG,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("Window about:newtab");
+    expect(renderedComponent.prop("title")).toEqual("Window about:newtab");
   });
 
   it("renders expected text in TINY mode with Custom display class", () => {
