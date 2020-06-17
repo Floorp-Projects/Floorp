@@ -27,6 +27,7 @@
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/SharedIntlData.h"
 #endif
+#include "frontend/BinASTRuntimeSupport.h"
 #include "frontend/NameCollections.h"
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"
@@ -1023,6 +1024,14 @@ struct JSRuntime {
       scriptPrivateReleaseHook(value);
     }
   }
+
+ public:
+#if defined(JS_BUILD_BINAST)
+  js::BinaryASTSupport& binast() { return binast_; }
+
+ private:
+  js::BinaryASTSupport binast_;
+#endif  // defined(JS_BUILD_BINAST)
 
  public:
 #if defined(NIGHTLY_BUILD)

@@ -445,6 +445,22 @@ set_config('ENABLE_PIPELINE_OPERATOR', enable_pipeline_operator)
 set_define('ENABLE_PIPELINE_OPERATOR', enable_pipeline_operator)
 
 
+
+# Experimental support for BinAST
+# ==============================================================
+
+@depends(milestone.is_nightly)
+def default_binast(is_nightly):
+    return is_nightly
+
+js_option('--enable-binast',
+          default=default_binast,
+          help="{Enable|Disable} BinAST support")
+
+set_config('JS_BUILD_BINAST', depends_if('--enable-binast')(lambda x: True))
+set_define('JS_BUILD_BINAST', depends_if('--enable-binast')(lambda x: True))
+
+
 # SIMD acceleration for encoding_rs
 # ==============================================================
 

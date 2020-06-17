@@ -670,6 +670,34 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   }
 }
 
+#if defined(JS_BUILD_BINAST)
+
+BinASTDecodeTask::BinASTDecodeTask(JSContext* cx, const uint8_t* buf,
+                                   size_t length, JS::BinASTFormat format,
+                                   JS::OffThreadCompileCallback callback,
+                                   void* callbackData)
+    : ParseTask(ParseTaskKind::BinAST, cx, callback, callbackData),
+      data(buf, length),
+      format(format) {}
+
+void BinASTDecodeTask::parse(JSContext* cx) {
+  MOZ_ASSERT(cx->isHelperThreadContext());
+
+  RootedScriptSourceObject sourceObject(cx);
+
+  JSScript* script = frontend::CompileGlobalBinASTScript(
+      cx, options, data.begin().get(), data.length(), format,
+      &sourceObject.get());
+  if (script) {
+    scripts.infallibleAppend(script);
+    if (sourceObject) {
+      sourceObjects.infallibleAppend(sourceObject);
+    }
+  }
+}
+
+#endif /* JS_BUILD_BINAST */
+
 MultiScriptsDecodeTask::MultiScriptsDecodeTask(
     JSContext* cx, JS::TranscodeSources& sources,
     JS::OffThreadCompileCallback callback, void* callbackData)
@@ -1027,6 +1055,29 @@ bool js::StartOffThreadDecodeMultiScripts(JSContext* cx,
 
   return StartOffThreadParseTask(cx, std::move(task), options);
 }
+
+#if defined(JS_BUILD_BINAST)
+
+bool js::StartOffThreadDecodeBinAST(JSContext* cx,
+                                    const ReadOnlyCompileOptions& options,
+                                    const uint8_t* buf, size_t length,
+                                    JS::BinASTFormat format,
+                                    JS::OffThreadCompileCallback callback,
+                                    void* callbackData) {
+  if (!cx->runtime()->binast().ensureBinTablesInitialized(cx)) {
+    return false;
+  }
+
+  auto task = cx->make_unique<BinASTDecodeTask>(cx, buf, length, format,
+                                                callback, callbackData);
+  if (!task) {
+    return false;
+  }
+
+  return StartOffThreadParseTask(cx, std::move(task), options);
+}
+
+#endif /* JS_BUILD_BINAST */
 
 void js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt) {
   MOZ_ASSERT(!OffThreadParsingMustWaitForGC(rt));
@@ -1893,6 +1944,17 @@ JSScript* GlobalHelperThreadState::finishScriptDecodeTask(
   MOZ_ASSERT_IF(script, script->isGlobalCode());
   return script;
 }
+
+#if defined(JS_BUILD_BINAST)
+
+JSScript* GlobalHelperThreadState::finishBinASTDecodeTask(
+    JSContext* cx, JS::OffThreadToken* token) {
+  JSScript* script = finishSingleParseTask(cx, ParseTaskKind::BinAST, token);
+  MOZ_ASSERT_IF(script, script->isGlobalCode());
+  return script;
+}
+
+#endif /* JS_BUILD_BINAST */
 
 bool GlobalHelperThreadState::finishMultiScriptsDecodeTask(
     JSContext* cx, JS::OffThreadToken* token,

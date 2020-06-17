@@ -38,6 +38,7 @@ suites:
             raptor-tp6-pinterest: "WX, FF, CH, CU"
             raptor-tp6-paypal: "WX, FF, CH, CU"
             raptor-tp6-tumblr: "WX, FF, CH, CU"
+            raptor-tp6-binast-instagram-firefox: "WX, FF"
             amazon: "BT"
             bing-search: "BT"
             facebook: "BT"

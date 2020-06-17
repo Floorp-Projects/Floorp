@@ -24,6 +24,7 @@
 
 #include "ds/Fifo.h"
 #include "jit/JitContext.h"
+#include "js/BinASTFormat.h"  // JS::BinASTFormat
 #include "js/CompileOptions.h"
 #include "js/SourceText.h"
 #include "js/TypeDecls.h"
@@ -52,7 +53,13 @@ namespace wasm {
 struct Tier2GeneratorTask;
 }  // namespace wasm
 
-enum class ParseTaskKind { Script, Module, ScriptDecode, MultiScriptsDecode };
+enum class ParseTaskKind {
+  Script,
+  Module,
+  ScriptDecode,
+  BinAST,
+  MultiScriptsDecode
+};
 
 namespace wasm {
 
@@ -324,6 +331,10 @@ class GlobalHelperThreadState {
   bool finishMultiScriptsDecodeTask(JSContext* cx, JS::OffThreadToken* token,
                                     MutableHandle<ScriptVector> scripts);
   JSObject* finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token);
+
+#if defined(JS_BUILD_BINAST)
+  JSScript* finishBinASTDecodeTask(JSContext* cx, JS::OffThreadToken* token);
+#endif
 
   bool hasActiveThreads(const AutoLockHelperThreadState&);
   void waitForAllThreads();
@@ -625,6 +636,17 @@ bool StartOffThreadDecodeScript(JSContext* cx,
                                 JS::OffThreadCompileCallback callback,
                                 void* callbackData);
 
+#if defined(JS_BUILD_BINAST)
+
+bool StartOffThreadDecodeBinAST(JSContext* cx,
+                                const JS::ReadOnlyCompileOptions& options,
+                                const uint8_t* buf, size_t length,
+                                JS::BinASTFormat format,
+                                JS::OffThreadCompileCallback callback,
+                                void* callbackData);
+
+#endif /* JS_BUILD_BINAST */
+
 bool StartOffThreadDecodeMultiScripts(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
                                       JS::TranscodeSources& sources,
@@ -764,6 +786,20 @@ struct ScriptDecodeTask : public ParseTask {
                    JS::OffThreadCompileCallback callback, void* callbackData);
   void parse(JSContext* cx) override;
 };
+
+#if defined(JS_BUILD_BINAST)
+
+struct BinASTDecodeTask : public ParseTask {
+  mozilla::Range<const uint8_t> data;
+  JS::BinASTFormat format;
+
+  BinASTDecodeTask(JSContext* cx, const uint8_t* buf, size_t length,
+                   JS::BinASTFormat format,
+                   JS::OffThreadCompileCallback callback, void* callbackData);
+  void parse(JSContext* cx) override;
+};
+
+#endif /* JS_BUILD_BINAST */
 
 struct MultiScriptsDecodeTask : public ParseTask {
   JS::TranscodeSources* sources;

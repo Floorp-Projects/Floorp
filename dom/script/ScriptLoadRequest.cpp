@@ -190,7 +190,15 @@ void ScriptLoadRequest::SetTextSource() {
   }
 }
 
-void ScriptLoadRequest::SetBinASTSource() { MOZ_CRASH("BinAST not supported"); }
+void ScriptLoadRequest::SetBinASTSource() {
+#ifdef JS_BUILD_BINAST
+  MOZ_ASSERT(IsUnknownDataType());
+  mDataType = DataType::eBinASTSource;
+  mScriptData.emplace(VariantType<BinASTSourceBuffer>());
+#else
+  MOZ_CRASH("BinAST not supported");
+#endif
+}
 
 void ScriptLoadRequest::SetBytecode() {
   MOZ_ASSERT(IsUnknownDataType());
@@ -198,7 +206,24 @@ void ScriptLoadRequest::SetBytecode() {
 }
 
 bool ScriptLoadRequest::ShouldAcceptBinASTEncoding() const {
+#ifdef JS_BUILD_BINAST
+  // We accept the BinAST encoding if we're using a secure connection.
+
+  if (!mURI->SchemeIs("https")) {
+    return false;
+  }
+
+  if (StaticPrefs::dom_script_loader_binast_encoding_domain_restrict()) {
+    if (!nsContentUtils::IsURIInPrefList(
+            mURI, "dom.script_loader.binast_encoding.domain.restrict.list")) {
+      return false;
+    }
+  }
+
+  return true;
+#else
   MOZ_CRASH("BinAST not supported");
+#endif
 }
 
 void ScriptLoadRequest::ClearScriptSource() {

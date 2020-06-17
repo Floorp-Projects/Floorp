@@ -27,13 +27,14 @@ using mozilla::Utf8Unit;
 
 using JS::ReadOnlyCompileOptions;
 
-enum class OffThread { Compile, Decode };
+enum class OffThread { Compile, Decode, DecodeBinAST };
 
 static bool CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
                            size_t length, OffThread what) {
   static const size_t TINY_LENGTH = 5 * 1000;
   static const size_t HUGE_SRC_LENGTH = 100 * 1000;
   static const size_t HUGE_BC_LENGTH = 367 * 1000;
+  static const size_t HUGE_BINAST_LENGTH = 70 * 1000;
 
   // These are heuristics which the caller may choose to ignore (e.g., for
   // testing purposes).
@@ -52,6 +53,9 @@ static bool CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
         return false;
       }
       if (what == OffThread::Decode && length < HUGE_BC_LENGTH) {
+        return false;
+      }
+      if (what == OffThread::DecodeBinAST && length < HUGE_BINAST_LENGTH) {
         return false;
       }
     }
@@ -196,4 +200,40 @@ JS_PUBLIC_API void JS::CancelMultiOffThreadScriptsDecoder(
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   HelperThreadState().cancelParseTask(cx->runtime(),
                                       ParseTaskKind::MultiScriptsDecode, token);
+}
+
+JS_PUBLIC_API bool JS::CanDecodeBinASTOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options, size_t length) {
+#ifdef JS_BUILD_BINAST
+  return CanDoOffThread(cx, options, length, OffThread::DecodeBinAST);
+#else   // !JS_BUILD_BINAST
+  return false;
+#endif  // JS_BUILD_BINAST
+}
+
+JS_PUBLIC_API bool JS::DecodeBinASTOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
+    size_t length, JS::BinASTFormat format, OffThreadCompileCallback callback,
+    void* callbackData) {
+#ifdef JS_BUILD_BINAST
+  return StartOffThreadDecodeBinAST(cx, options, buf, length, format, callback,
+                                    callbackData);
+#else   // !JS_BUILD_BINAST
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_SUPPORT_NOT_ENABLED, "BinAST");
+  return false;
+#endif  // JS_BUILD_BINAST
+}
+
+JS_PUBLIC_API JSScript* JS::FinishOffThreadBinASTDecode(
+    JSContext* cx, JS::OffThreadToken* token) {
+#ifdef JS_BUILD_BINAST
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+  return HelperThreadState().finishBinASTDecodeTask(cx, token);
+#else   // !JS_BUILD_BINAST
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_SUPPORT_NOT_ENABLED, "BinAST");
+  return nullptr;
+#endif  // JS_BUILD_BINAST
 }

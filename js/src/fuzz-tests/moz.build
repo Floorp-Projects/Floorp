@@ -17,6 +17,11 @@ UNIFIED_SOURCES += [
     'testWasm.cpp',
 ]
 
+if CONFIG['JS_BUILD_BINAST']:
+    UNIFIED_SOURCES += [
+        'testBinASTReader.cpp',
+    ]
+
 DEFINES['EXPORT_JS_API'] = True
 
 LOCAL_INCLUDES += [

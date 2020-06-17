@@ -104,6 +104,14 @@
     "unpack": true
   },
   {
+    "size": 5501545,
+    "visibility": "public",
+    "digest": "a5c441b3ede7d7c0da2ed5414761929c17863e3bb03612a396fd40259eca767bd344ea1d64d2b7d3bea88aee75172406766b9bd4a7cd2c02d3b0a9a4993eb61b",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-instagram-binast.zip",
+    "unpack": true
+  },
+  {
     "size": 4210445,
     "visibility": "public",
     "digest": "62f980b5f1a1d6f896667ae5480d9637bd7dd2c059abc8a449c7212cded3a5078450c804c50c65fa6328eeadd4edd04536b4a9be0bc634f8d538c088c1410684",
