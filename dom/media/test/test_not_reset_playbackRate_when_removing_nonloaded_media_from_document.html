@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Do not reset playback rate when removing non-loaded media from a document</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+/**
+ * When removing media from a document, it should only trigger internal pause,
+ * instead of the pause method, which would trigger loading process and reset
+ * the media's playback rate for non-loaded media.
+ */
+async function startTest() {
+  info(`create a media and append it to a document`);
+  const audio = document.createElement("audio");
+  document.body.appendChild(audio);
+
+  info(`change audio's playbackRate and remove it from a document`);
+  const expectedRate = 0.1;
+  audio.playbackRate = expectedRate;
+  await once(audio, "ratechange");
+  is(audio.playbackRate, expectedRate,
+    `${audio.playbackRate} is equal to ${expectedRate}`);
+  audio.remove();
+
+  info(`queue a macrotask to check if the playback rate is still unchanged`);
+  setTimeout(() => {
+    // If we unexpectedly reset the playback rate, it would happen in a
+    // microtask when removing media from a document [1] (Await a stable state),
+    // which would always be run before the macrotask.
+    // [1] https://html.spec.whatwg.org/#playing-the-media-resource:remove-an-element-from-a-document
+    is(audio.playbackRate, expectedRate,
+      `${audio.playbackRate} is equal to ${expectedRate}`);
+    SimpleTest.finish();
+  }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = startTest;
+
+</script>
+</body>
+</html>
