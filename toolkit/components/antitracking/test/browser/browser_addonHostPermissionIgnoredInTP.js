@@ -31,14 +31,13 @@ add_task(async function() {
 
   info("Verify the number of script nodes found");
   await ContentTask.spawn(browser, [], async function(obj) {
-    await new Promise(resolve => {
-      // Need to wait a bit for cross-process postMessage...
-      content.setTimeout(() => {
-        let count = content.document.documentElement.getAttribute("count");
-        is(count, 3, "Expected script nodes found");
-        resolve();
-      }, 10);
-    });
+    // Need to wait a bit for cross-process postMessage...
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.documentElement.getAttribute("count") !== null,
+      "waiting for 'count' attribute"
+    );
+    let count = content.document.documentElement.getAttribute("count");
+    is(count, 3, "Expected script nodes found");
   });
 
   info("Removing the tab");
