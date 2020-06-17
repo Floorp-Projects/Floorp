@@ -16,6 +16,7 @@
 namespace mozilla {
 namespace layers {
 class Animation;
+class Layers;
 
 typedef nsTArray<layers::Animation> AnimationArray;
 
@@ -162,6 +163,14 @@ class CompositorAnimationStorage final {
    * Note: This is called only by WebRender.
    */
   bool SampleAnimations(TimeStamp aPreviousFrameTime,
+                        TimeStamp aCurrentFrameTime);
+
+  /**
+   * Non WebRender version of above SampleAnimations.
+   *
+   * Note: This is called only by non WebRender.
+   */
+  bool SampleAnimations(Layer* aRoot, TimeStamp aPreviousFrameTime,
                         TimeStamp aCurrentFrameTime);
 
   /**
