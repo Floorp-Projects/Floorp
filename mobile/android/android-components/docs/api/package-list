@@ -264,6 +264,10 @@ mozilla.components.lib.push.firebase
 mozilla.components.lib.state
 mozilla.components.lib.state.ext
 mozilla.components.lib.state.helpers
+mozilla.components.service.digitalassetlinks
+mozilla.components.service.digitalassetlinks.api
+mozilla.components.service.digitalassetlinks.ext
+mozilla.components.service.digitalassetlinks.local
 mozilla.components.service.experiments
 mozilla.components.service.experiments.debug
 mozilla.components.service.fretboard
