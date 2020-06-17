@@ -12,6 +12,7 @@
 
 #include "builtin/MapObject.h"
 #include "debugger/DebugAPI.h"
+#include "frontend/BinASTParserBase.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/ClearEdgesTracer.h"

@@ -26,6 +26,7 @@
 
 #include "jstypes.h"
 
+#include "frontend/BinASTRuntimeSupport.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/SourceNotes.h"  // SrcNote
 #include "gc/Barrier.h"
@@ -84,8 +85,6 @@ class FunctionIndex;
 class FunctionBox;
 class ModuleSharedContext;
 class ScriptStencil;
-
-class BinASTSourceMetadata {};
 }  // namespace frontend
 
 class ScriptCounts {
@@ -375,10 +374,10 @@ enum class SourceRetrievable { Yes, No };
 //
 // This class abstracts over the source we used to compile from. The current
 // representation may transition to different modes in order to save memory.
-// Abstractly the source may be one of UTF-8 or UTF-16. The data itself may be
-// unavailable, retrieveable-using-source-hook, compressed, or uncompressed. If
-// source is retrieved or decompressed for use, we may update the ScriptSource
-// to hold the result.
+// Abstractly the source may be one of UTF-8, UTF-16, or BinAST. The data
+// itself may be unavailable, retrieveable-using-source-hook, compressed, or
+// uncompressed. If source is retrieved or decompressed for use, we may update
+// the ScriptSource to hold the result.
 class ScriptSource {
   // NOTE: While ScriptSources may be compressed off thread, they are only
   // modified by the main thread, and all members are always safe to access
@@ -487,6 +486,16 @@ class ScriptSource {
     using Base::Base;
   };
 
+  // BinAST source.
+  struct BinAST {
+    SharedImmutableString string;
+    UniquePtr<frontend::BinASTSourceMetadata> metadata;
+
+    BinAST(SharedImmutableString&& str,
+           UniquePtr<frontend::BinASTSourceMetadata> metadata)
+        : string(std::move(str)), metadata(std::move(metadata)) {}
+  };
+
   // The set of currently allowed encoding modes.
   using SourceType =
       mozilla::Variant<Compressed<mozilla::Utf8Unit, SourceRetrievable::Yes>,
@@ -498,7 +507,7 @@ class ScriptSource {
                        Compressed<char16_t, SourceRetrievable::No>,
                        Uncompressed<char16_t, SourceRetrievable::No>,
                        Retrievable<mozilla::Utf8Unit>, Retrievable<char16_t>,
-                       Missing>;
+                       Missing, BinAST>;
 
   //
   // Start of fields.
@@ -656,6 +665,16 @@ class ScriptSource {
   bool hasSourceText() const {
     return hasUncompressedSource() || hasCompressedSource();
   }
+  bool hasBinASTSource() const { return data.is<BinAST>(); }
+
+  void setBinASTSourceMetadata(frontend::BinASTSourceMetadata* metadata) {
+    MOZ_ASSERT(hasBinASTSource());
+    data.as<BinAST>().metadata.reset(metadata);
+  }
+  frontend::BinASTSourceMetadata* binASTSourceMetadata() const {
+    MOZ_ASSERT(hasBinASTSource());
+    return data.as<BinAST>().metadata.get();
+  }
 
  private:
   template <typename Unit>
@@ -706,6 +725,24 @@ class ScriptSource {
   }
 
  private:
+  struct BinASTDataMatcher {
+    void* operator()(const BinAST& b) {
+      return const_cast<char*>(b.string.chars());
+    }
+
+    void notBinAST() { MOZ_CRASH("ScriptSource isn't backed by BinAST data"); }
+
+    template <typename T>
+    void* operator()(const T&) {
+      notBinAST();
+      return nullptr;
+    }
+  };
+
+ public:
+  void* binASTData() { return data.match(BinASTDataMatcher()); }
+
+ private:
   struct HasUncompressedSource {
     template <typename Unit, SourceRetrievable CanRetrieve>
     bool operator()(const Uncompressed<Unit, CanRetrieve>&) {
@@ -721,6 +758,8 @@ class ScriptSource {
     bool operator()(const Retrievable<Unit>&) {
       return false;
     }
+
+    bool operator()(const BinAST&) { return false; }
 
     bool operator()(const Missing&) { return false; }
   };
@@ -811,6 +850,11 @@ class ScriptSource {
       return false;
     }
 
+    bool operator()(const BinAST&) {
+      MOZ_CRASH("doesn't make sense to ask source type of BinAST data");
+      return false;
+    }
+
     bool operator()(const Missing&) {
       MOZ_CRASH("doesn't make sense to ask source type when missing");
       return false;
@@ -841,6 +885,8 @@ class ScriptSource {
       return 0;
     }
 
+    size_t operator()(const BinAST& b) { return b.string.length(); }
+
     size_t operator()(const Missing& m) {
       MOZ_CRASH("ScriptSource::length on a missing source");
       return 0;
@@ -849,7 +895,7 @@ class ScriptSource {
 
  public:
   size_t length() const {
-    MOZ_ASSERT(hasSourceText());
+    MOZ_ASSERT(hasSourceText() || hasBinASTSource());
     return data.match(UncompressedLengthMatcher());
   }
 
@@ -915,6 +961,20 @@ class ScriptSource {
   MOZ_MUST_USE bool initializeWithUnretrievableCompressedSource(
       JSContext* cx, UniqueChars&& raw, size_t rawLength, size_t sourceLength);
 
+#if defined(JS_BUILD_BINAST)
+
+  /*
+   * Do not take ownership of the given `buf`. Store the canonical, shared
+   * and de-duplicated version. If there is no extant shared version of
+   * `buf`, make a copy.
+   */
+  MOZ_MUST_USE bool setBinASTSourceCopy(JSContext* cx, const uint8_t* buf,
+                                        size_t len);
+
+  const uint8_t* binASTSource();
+
+#endif /* JS_BUILD_BINAST */
+
  private:
   void performTaskWork(SourceCompressionTask* task);
 
@@ -943,6 +1003,10 @@ class ScriptSource {
     template <typename Unit>
     void operator()(const Retrievable<Unit>&) {
       MOZ_CRASH("shouldn't compressing unloaded-but-retrievable source");
+    }
+
+    void operator()(const BinAST&) {
+      MOZ_CRASH("doesn't make sense to set compressed source for BinAST data");
     }
 
     void operator()(const Missing&) {
@@ -1065,6 +1129,10 @@ class ScriptSource {
   template <typename Unit, XDRMode mode>
   static MOZ_MUST_USE XDRResult codeCompressedData(XDRState<mode>* const xdr,
                                                    ScriptSource* const ss);
+
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult codeBinASTData(XDRState<mode>* const xdr,
+                                               ScriptSource* const ss);
 
   template <typename Unit, XDRMode mode>
   static void codeRetrievableData(ScriptSource* ss);
@@ -1736,6 +1804,8 @@ class BaseScript : public gc::TenuredCell {
   const char* maybeForwardedFilename() const {
     return maybeForwardedScriptSource()->filename();
   }
+
+  bool isBinAST() const { return scriptSource()->hasBinASTSource(); }
 
   uint32_t sourceStart() const { return extent_.sourceStart; }
   uint32_t sourceEnd() const { return extent_.sourceEnd; }

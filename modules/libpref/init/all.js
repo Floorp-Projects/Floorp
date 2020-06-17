@@ -300,6 +300,14 @@ pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode.addl", "")
 // explanation for the detail.
 pref("dom.mouseevent.click.hack.use_legacy_non-primary_dispatch", "");
 
+#ifdef JS_BUILD_BINAST
+  // Until we're satisfied that it works nicely, we're restricting
+  // BinAST to a few partner sites:
+  // - A subset of Facebook
+  // - A subset of Cloudflare
+  pref("dom.script_loader.binast_encoding.domain.restrict.list", "*.facebook.com,static.xx.fbcdn.net,*.cloudflare.com,*.cloudflarestream.com,unpkg.com");
+#endif
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
