@@ -1967,32 +1967,12 @@ bool WebRenderBridgeParent::AdvanceAnimations() {
   return isAnimating;
 }
 
-bool WebRenderBridgeParent::SampleAnimations(WrAnimations& aAnimations) {
+std::pair<WrAnimations, bool> WebRenderBridgeParent::SampleAnimations() {
   const bool isAnimating = AdvanceAnimations();
 
-  // return the animated data if has
-  if (mAnimStorage->AnimatedValueCount()) {
-    for (auto iter = mAnimStorage->ConstAnimatedValueTableIter(); !iter.Done();
-         iter.Next()) {
-      AnimatedValue* value = iter.UserData();
-      value->Value().match(
-          [&](const AnimationTransform& aTransform) {
-            aAnimations.mTransformArrays.AppendElement(
-                wr::ToWrTransformProperty(iter.Key(),
-                                          aTransform.mTransformInDevSpace));
-          },
-          [&](const float& aOpacity) {
-            aAnimations.mOpacityArrays.AppendElement(
-                wr::ToWrOpacityProperty(iter.Key(), aOpacity));
-          },
-          [&](const nscolor& aColor) {
-            aAnimations.mColorArrays.AppendElement(wr::ToWrColorProperty(
-                iter.Key(), ToDeviceColor(gfx::sRGBColor::FromABGR(aColor))));
-          });
-    }
-  }
+  WrAnimations animations = mAnimStorage->CollectWebRenderAnimations();
 
-  return isAnimating;
+  return std::make_pair(std::move(animations), isAnimating);
 }
 
 void WebRenderBridgeParent::CompositeIfNeeded() {
@@ -2094,8 +2074,8 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     return;
   }
 
-  WrAnimations animations;
-  if (SampleAnimations(animations)) {
+  auto [animations, isAnimating] = SampleAnimations();
+  if (isAnimating) {
     ScheduleGenerateFrame();
   }
   // We do this even if the arrays are empty, because it will clear out any

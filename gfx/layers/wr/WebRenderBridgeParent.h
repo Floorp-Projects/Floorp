@@ -51,6 +51,7 @@ class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
 class AsyncImagePipelineManager;
 class WebRenderImageHost;
+struct WrAnimations;
 
 class PipelineIdAndEpochHashEntry : public PLDHashEntryHdr {
  public:
@@ -401,12 +402,7 @@ class WebRenderBridgeParent final
   // phase).
   bool AdvanceAnimations();
 
-  struct WrAnimations {
-    nsTArray<wr::WrOpacityProperty> mOpacityArrays;
-    nsTArray<wr::WrTransformProperty> mTransformArrays;
-    nsTArray<wr::WrColorProperty> mColorArrays;
-  };
-  bool SampleAnimations(WrAnimations& aAnimations);
+  std::pair<WrAnimations, bool> SampleAnimations();
 
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;
 

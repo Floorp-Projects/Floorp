@@ -9,6 +9,7 @@
 #include "AnimationHelper.h"
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
 #include "mozilla/ServoStyleConsts.h"
+#include "mozilla/webrender/WebRenderTypes.h"  // for ToWrTransformProperty, etc
 #include "nsDeviceContext.h"  // for AppUnitsPerCSSPixel
 #include "nsDisplayList.h"    // for nsDisplayTransform, etc
 
@@ -200,6 +201,29 @@ bool CompositorAnimationStorage::SampleAnimations(TimeStamp aPreviousFrameTime,
   }
 
   return isAnimating;
+}
+
+WrAnimations CompositorAnimationStorage::CollectWebRenderAnimations() const {
+  WrAnimations animations;
+
+  for (auto iter = mAnimatedValues.ConstIter(); !iter.Done(); iter.Next()) {
+    AnimatedValue* value = iter.UserData();
+    value->Value().match(
+        [&](const AnimationTransform& aTransform) {
+          animations.mTransformArrays.AppendElement(wr::ToWrTransformProperty(
+              iter.Key(), aTransform.mTransformInDevSpace));
+        },
+        [&](const float& aOpacity) {
+          animations.mOpacityArrays.AppendElement(
+              wr::ToWrOpacityProperty(iter.Key(), aOpacity));
+        },
+        [&](const nscolor& aColor) {
+          animations.mColorArrays.AppendElement(wr::ToWrColorProperty(
+              iter.Key(), ToDeviceColor(gfx::sRGBColor::FromABGR(aColor))));
+        });
+  }
+
+  return animations;
 }
 
 }  // namespace layers
