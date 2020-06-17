@@ -201,13 +201,18 @@ add_task(async function test_selector_db_modification() {
   const engineSelector = new SearchEngineSelector();
   // Fill the database with some values that we can use to test that it is cleared.
   const db = await RemoteSettings(SearchUtils.SETTINGS_KEY).db;
-  await db.clear();
-  await db.create({
-    default: "yes",
-    engineName: "askjeeves",
-    appliesTo: [{ included: { everywhere: true } }],
-  });
-  await db.saveLastModified(42);
+  await db.importChanges(
+    {},
+    42,
+    [
+      {
+        default: "yes",
+        engineName: "askjeeves",
+        appliesTo: [{ included: { everywhere: true } }],
+      },
+    ],
+    { clear: true }
+  );
 
   // Stub the get() so that the first call simulates a signature error, and
   // the second simulates success reading from the dump.
@@ -242,13 +247,20 @@ add_task(async function test_selector_db_modification_never_succeeds() {
   const engineSelector = new SearchEngineSelector();
   // Fill the database with some values that we can use to test that it is cleared.
   const db = RemoteSettings(SearchUtils.SETTINGS_KEY).db;
-  await db.clear();
-  await db.create({
-    default: "yes",
-    engineName: "askjeeves",
-    appliesTo: [{ included: { everywhere: true } }],
-  });
-  await db.saveLastModified(42);
+  await db.importChanges(
+    {},
+    42,
+    [
+      {
+        default: "yes",
+        engineName: "askjeeves",
+        appliesTo: [{ included: { everywhere: true } }],
+      },
+    ],
+    {
+      clear: true,
+    }
+  );
 
   // Now simulate the condition where for some reason we never get a
   // valid result.
@@ -277,13 +289,20 @@ add_task(async function test_empty_results() {
   const engineSelector = new SearchEngineSelector();
   // Fill the database with some values that we can use to test that it is cleared.
   const db = await RemoteSettings(SearchUtils.SETTINGS_KEY).db;
-  await db.clear();
-  await db.create({
-    default: "yes",
-    engineName: "askjeeves",
-    appliesTo: [{ included: { everywhere: true } }],
-  });
-  await db.saveLastModified(42);
+  await db.importChanges(
+    {},
+    42,
+    [
+      {
+        default: "yes",
+        engineName: "askjeeves",
+        appliesTo: [{ included: { everywhere: true } }],
+      },
+    ],
+    {
+      clear: true,
+    }
+  );
 
   // Stub the get() so that the first call simulates an empty database, and
   // the second simulates success reading from the dump.

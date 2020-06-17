@@ -28,16 +28,20 @@ add_task(async function test_with_rs_messages() {
   );
   const initialMessageCount = ASRouter.state.messages.length;
   const client = RemoteSettings("cfr");
-  await client.db.clear();
-  await client.db.create({
-    // Modify targeting and randomize message name to work around the message
-    // getting blocked (for --verify)
-    ...msg,
-    id: `MOMENTS_MOCHITEST_${Date.now()}`,
-    targeting: "true",
-  });
-  await client.db.saveLastModified(42); // Prevent from loading JSON dump.
-
+  await client.db.importChanges(
+    {},
+    42,
+    [
+      {
+        // Modify targeting and randomize message name to work around the message
+        // getting blocked (for --verify)
+        ...msg,
+        id: `MOMENTS_MOCHITEST_${Date.now()}`,
+        targeting: "true",
+      },
+    ],
+    { clear: true }
+  );
   // Reload the provider
   await ASRouter._updateMessageProviders();
   // Wait to load the WNPanel messages
@@ -67,8 +71,7 @@ add_task(async function test_with_rs_messages() {
       id: `MOMENTS_MOCHITEST_${Date.now()}`,
       priority: 2,
       targeting: "true",
-    },
-    { useRecordId: true }
+    }
   );
 
   // Reset so we can `await` for the pref value to be set again
