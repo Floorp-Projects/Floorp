@@ -6,6 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["BrowserTabChild"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 ChromeUtils.defineModuleGetter(
   this,
   "E10SUtils",
@@ -30,6 +32,8 @@ class BrowserTabChild extends JSWindowActorChild {
         let context = this.manager.browsingContext;
         let loadContext = context.docShell.QueryInterface(Ci.nsILoadContext);
         let userContextId = loadContext.originAttributes.userContextId;
+
+        this.initializeRPM();
 
         this.sendAsyncMessage("Browser:WindowCreated", { userContextId });
         break;
@@ -108,6 +112,26 @@ class BrowserTabChild extends JSWindowActorChild {
         docShell.charset = message.data.value;
         docShell.gatherCharsetMenuTelemetry();
         break;
+    }
+  }
+
+  // Creates a new PageListener for this process. This will listen for page loads
+  // and for those that match URLs provided by the parent process will set up
+  // a dedicated message port and notify the parent process.
+  // Note: this is part of the old message-manager based RPM and is only still
+  // used by newtab and talos tests.
+  initializeRPM() {
+    // Strip the hash from the URL, because it's not part of the origin.
+    let url = this.document.documentURI.replace(/[\#?].*$/, "");
+
+    let registeredURLs = Services.cpmm.sharedData.get("RemotePageManager:urls");
+
+    if (registeredURLs && registeredURLs.has(url)) {
+      let { ChildMessagePort } = ChromeUtils.import(
+        "resource://gre/modules/remotepagemanager/RemotePageManagerChild.jsm"
+      );
+      // Set up the child side of the message port
+      new ChildMessagePort(this.contentWindow);
     }
   }
 }
