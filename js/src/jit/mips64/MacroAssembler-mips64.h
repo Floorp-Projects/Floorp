@@ -756,6 +756,8 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
                  Register dest);
   void cmpPtrSet(Assembler::Condition cond, Register lhs, Address rhs,
                  Register dest);
+  void cmpPtrSet(Assembler::Condition cond, Address lhs, Register rhs,
+                 Register dest);
 
   void cmp32Set(Assembler::Condition cond, Register lhs, Address rhs,
                 Register dest);
