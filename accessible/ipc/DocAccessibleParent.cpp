@@ -395,6 +395,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvVirtualCursorChangeEvent(
     const uint64_t& aNewPositionID, const int32_t& aNewStartOffset,
     const int32_t& aNewEndOffset, const int16_t& aReason,
     const int16_t& aBoundaryType, const bool& aFromUser) {
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
   ProxyAccessible* target = GetAccessible(aID);
   ProxyAccessible* oldPosition = GetAccessible(aOldPositionID);
   ProxyAccessible* newPosition = GetAccessible(aNewPositionID);
@@ -431,8 +435,11 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
     const uint64_t& aID, const uint64_t& aType, const uint32_t& aScrollX,
     const uint32_t& aScrollY, const uint32_t& aMaxScrollX,
     const uint32_t& aMaxScrollY) {
-  ProxyAccessible* target = GetAccessible(aID);
+  if (mShutdown) {
+    return IPC_OK();
+  }
 
+  ProxyAccessible* target = GetAccessible(aID);
   if (!target) {
     NS_ERROR("no proxy for event!");
     return IPC_OK();
@@ -465,8 +472,11 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
 mozilla::ipc::IPCResult DocAccessibleParent::RecvAnnouncementEvent(
     const uint64_t& aID, const nsString& aAnnouncement,
     const uint16_t& aPriority) {
-  ProxyAccessible* target = GetAccessible(aID);
+  if (mShutdown) {
+    return IPC_OK();
+  }
 
+  ProxyAccessible* target = GetAccessible(aID);
   if (!target) {
     NS_ERROR("no proxy for event!");
     return IPC_OK();
