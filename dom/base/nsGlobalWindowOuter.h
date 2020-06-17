@@ -851,8 +851,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   nsRect GetInnerScreenRect();
   static Maybe<mozilla::CSSIntSize> GetRDMDeviceSize(const Document& aDocument);
 
-  bool IsFrame();
-
   // Outer windows only.
   // If aLookForCallerOnJSStack is true, this method will look at the JS stack
   // to determine who the caller is.  If it's false, it'll use |this| as the
@@ -1184,10 +1182,6 @@ inline nsGlobalWindowInner* nsGlobalWindowOuter::GetCurrentInnerWindowInternal()
 
 inline nsGlobalWindowInner* nsGlobalWindowOuter::EnsureInnerWindowInternal() {
   return nsGlobalWindowInner::Cast(EnsureInnerWindow());
-}
-
-inline bool nsGlobalWindowOuter::IsFrame() {
-  return GetInProcessParentInternal() != nullptr;
 }
 
 inline void nsGlobalWindowOuter::MaybeClearInnerWindow(
