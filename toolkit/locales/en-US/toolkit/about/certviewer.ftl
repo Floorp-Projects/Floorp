@@ -66,7 +66,7 @@ certificate-viewer-version = Version
 certificate-viewer-business-category = Business Category
 certificate-viewer-subject-name = Subject Name
 certificate-viewer-issuer-name = Issuer Name
-certificate-viewer-validity = Validity 
+certificate-viewer-validity = Validity
 certificate-viewer-subject-alt-names = Subject Alt Names
 certificate-viewer-public-key-info = Public Key Info
 certificate-viewer-miscellaneous = Miscellaneous
@@ -75,14 +75,14 @@ certificate-viewer-basic-constraints = Basic Constraints
 certificate-viewer-key-usages = Key Usages
 certificate-viewer-extended-key-usages = Extended Key Usages
 certificate-viewer-ocsp-stapling = OCSP Stapling
-certificate-viewer-subject-key-id = Subject Key ID 
+certificate-viewer-subject-key-id = Subject Key ID
 certificate-viewer-authority-key-id = Authority Key ID
-certificate-viewer-authority-info-aia = Authority Info (AIA) 
+certificate-viewer-authority-info-aia = Authority Info (AIA)
 certificate-viewer-certificate-policies = Certificate Policies
 certificate-viewer-embedded-scts = Embedded SCTs
 certificate-viewer-crl-endpoints = CRL Endpoints
 
-# This message is used as a row header in the Miscellaneous section. 
+# This message is used as a row header in the Miscellaneous section.
 # The associated data cell contains links to download the certificate.
 certificate-viewer-download = Download
 # This message is used to replace boolean values (true/false) in several certificate fields, e.g. Certificate Authority

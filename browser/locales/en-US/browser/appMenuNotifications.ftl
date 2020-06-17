@@ -39,7 +39,7 @@ appmenu-addon-post-install-message = Manage your add-ons by clicking <image data
 appmenu-addon-post-install-incognito-checkbox =
     .label = Allow this extension to run in Private Windows
     .accesskey = A
-    
+
 appmenu-new-tab-controlled =
     .label = Your New Tab has changed.
     .buttonlabel = Keep Changes

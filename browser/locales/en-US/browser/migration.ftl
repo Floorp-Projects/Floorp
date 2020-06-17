@@ -149,7 +149,7 @@ browser-data-bookmarks-label =
      [edge] Favorites
     *[other] Bookmarks
   }
-  
+
 browser-data-otherdata-checkbox =
   .label = Other Data
 browser-data-otherdata-label =
