@@ -1908,12 +1908,12 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
   //
   // Dynamic area
 
-  static const size_t StackSizeOfPtr = ABIResult::StackSizeOfPtr;
-  static const size_t StackSizeOfInt64 = ABIResult::StackSizeOfInt64;
-  static const size_t StackSizeOfFloat = ABIResult::StackSizeOfFloat;
-  static const size_t StackSizeOfDouble = ABIResult::StackSizeOfDouble;
+  static constexpr size_t StackSizeOfPtr = ABIResult::StackSizeOfPtr;
+  static constexpr size_t StackSizeOfInt64 = ABIResult::StackSizeOfInt64;
+  static constexpr size_t StackSizeOfFloat = ABIResult::StackSizeOfFloat;
+  static constexpr size_t StackSizeOfDouble = ABIResult::StackSizeOfDouble;
 #ifdef ENABLE_WASM_SIMD
-  static const size_t StackSizeOfV128 = ABIResult::StackSizeOfV128;
+  static constexpr size_t StackSizeOfV128 = ABIResult::StackSizeOfV128;
 #endif
 
   uint32_t pushPtr(Register r) {
@@ -2170,12 +2170,13 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     popBytes(bytesToPop);
   }
 
-  void storeImmediateToStack(int32_t imm, uint32_t destHeight, Register temp) {
+ private:
+  void store32BitsToStack(int32_t imm, uint32_t destHeight, Register temp) {
     masm.move32(Imm32(imm), temp);
     masm.store32(temp, Address(sp_, stackOffset(destHeight)));
   }
 
-  void storeImmediateToStack(int64_t imm, uint32_t destHeight, Register temp) {
+  void store64BitsToStack(int64_t imm, uint32_t destHeight, Register temp) {
 #ifdef JS_PUNBOX64
     masm.move64(Imm64(imm), Register64(temp));
     masm.store64(Register64(temp), Address(sp_, stackOffset(destHeight)));
@@ -2185,13 +2186,55 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
       int32_t i32[2];
     } bits = {.i64 = imm};
     static_assert(sizeof(bits) == 8);
-    storeImmediateToStack(bits.i32[0], destHeight, temp);
-    storeImmediateToStack(bits.i32[1], destHeight - sizeof(int32_t), temp);
+    store32BitsToStack(bits.i32[0], destHeight, temp);
+    store32BitsToStack(bits.i32[1], destHeight - sizeof(int32_t), temp);
 #endif
   }
 
+ public:
+  void storeImmediatePtrToStack(intptr_t imm, uint32_t destHeight,
+                                Register temp) {
+#ifdef JS_PUNBOX64
+    static_assert(StackSizeOfPtr == 8);
+    store64BitsToStack(imm, destHeight, temp);
+#else
+    static_assert(StackSizeOfPtr == 4);
+    store32BitsToStack(int32_t(imm), destHeight, temp);
+#endif
+  }
+
+  void storeImmediateI64ToStack(int64_t imm, uint32_t destHeight,
+                                Register temp) {
+    store64BitsToStack(imm, destHeight, temp);
+  }
+
+  void storeImmediateF32ToStack(float imm, uint32_t destHeight, Register temp) {
+    union {
+      int32_t i32;
+      float f32;
+    } bits = {.f32 = imm};
+    static_assert(sizeof(bits) == 4);
+    // Do not store 4 bytes if StackSizeOfFloat == 8.  It's probably OK to do
+    // so, but it costs little to store something predictable.
+    if (StackSizeOfFloat == 4) {
+      store32BitsToStack(bits.i32, destHeight, temp);
+    } else {
+      store64BitsToStack(uint32_t(bits.i32), destHeight, temp);
+    }
+  }
+
+  void storeImmediateF64ToStack(double imm, uint32_t destHeight,
+                                Register temp) {
+    union {
+      int64_t i64;
+      double f64;
+    } bits = {.f64 = imm};
+    static_assert(sizeof(bits) == 8);
+    store64BitsToStack(bits.i64, destHeight, temp);
+  }
+
 #ifdef ENABLE_WASM_SIMD
-  void storeImmediateToStack(V128 imm, uint32_t destHeight, Register temp) {
+  void storeImmediateV128ToStack(V128 imm, uint32_t destHeight, Register temp) {
     union {
       int32_t i32[4];
       uint8_t bytes[16];
@@ -2199,8 +2242,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     static_assert(sizeof(bits) == 16);
     memcpy(bits.bytes, imm.bytes, 16);
     for (unsigned i = 0; i < 4; i++) {
-      storeImmediateToStack(bits.i32[i], destHeight - i * sizeof(int32_t),
-                            temp);
+      store32BitsToStack(bits.i32[i], destHeight - i * sizeof(int32_t), temp);
     }
   }
 #endif
@@ -4658,27 +4700,24 @@ class BaseCompiler final : public BaseCompilerInterface {
       Stk& v = stk_.back();
       switch (v.kind()) {
         case Stk::ConstI32:
+          fr.storeImmediatePtrToStack(uint32_t(v.i32val_), resultHeight, temp);
+          break;
         case Stk::ConstF32:
-          // Rely on the fact that Stk stores its immediate values in a union,
-          // and that the bits of an f32 will be in the i32.
-          fr.storeImmediateToStack(v.i32val_, resultHeight, temp);
+          fr.storeImmediateF32ToStack(v.f32val_, resultHeight, temp);
           break;
         case Stk::ConstI64:
+          fr.storeImmediateI64ToStack(v.i64val_, resultHeight, temp);
+          break;
         case Stk::ConstF64:
-          // Likewise, rely on f64 bits being punned to i64.
-          fr.storeImmediateToStack(v.i64val_, resultHeight, temp);
+          fr.storeImmediateF64ToStack(v.f64val_, resultHeight, temp);
           break;
 #ifdef ENABLE_WASM_SIMD
         case Stk::ConstV128:
-          fr.storeImmediateToStack(v.v128val_, resultHeight, temp);
+          fr.storeImmediateV128ToStack(v.v128val_, resultHeight, temp);
           break;
 #endif
         case Stk::ConstRef:
-          if (sizeof(intptr_t) == sizeof(int32_t)) {
-            fr.storeImmediateToStack(int32_t(v.refval_), resultHeight, temp);
-          } else {
-            fr.storeImmediateToStack(int64_t(v.refval_), resultHeight, temp);
-          }
+          fr.storeImmediatePtrToStack(v.refval_, resultHeight, temp);
           break;
         case Stk::MemRef:
           // Update bookkeeping as we pop the Stk entry.
@@ -9977,11 +10016,7 @@ bool BaseCompiler::pushStackResultsForCall(const ResultType& type, RegPtr temp,
       push(v);
       if (v.kind() == Stk::MemRef) {
         stackMapGenerator_.memRefsOnStk++;
-        if (sizeof(intptr_t) == sizeof(int32_t)) {
-          fr.storeImmediateToStack(int32_t(0), v.offs(), temp);
-        } else {
-          fr.storeImmediateToStack(int64_t(0), v.offs(), temp);
-        }
+        fr.storeImmediatePtrToStack(intptr_t(0), v.offs(), temp);
       }
     }
   }
