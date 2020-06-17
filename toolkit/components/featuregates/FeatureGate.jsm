@@ -76,6 +76,14 @@ function evaluateTargetedValue(targetedValue, targetingFacts) {
   return targetedValue.default;
 }
 
+function buildFeatureGateImplementation(definition) {
+  const targetValueKeys = ["defaultValue", "isPublic"];
+  for (const key of targetValueKeys) {
+    definition[key] = evaluateTargetedValue(definition[key], kTargetFacts);
+  }
+  return new FeatureGateImplementation(definition);
+}
+
 const kFeatureGateCache = new Map();
 
 /** A high level control for turning features on and off. */
@@ -111,12 +119,29 @@ class FeatureGate {
     }
 
     // Make a copy of the definition, since we are about to modify it
-    const definition = { ...featureDefinitions.get(id) };
-    const targetValueKeys = ["defaultValue", "isPublic"];
-    for (const key of targetValueKeys) {
-      definition[key] = evaluateTargetedValue(definition[key], kTargetFacts);
+    return buildFeatureGateImplementation({ ...featureDefinitions.get(id) });
+  }
+
+  /**
+   * Constructs feature gate objects for each of the definitions in ``Features.toml``.
+   * @param {string} testDefinitionsUrl A URL from which definitions can be fetched. Only use this in tests.
+   */
+  static async all(testDefinitionsUrl = undefined) {
+    let featureDefinitions;
+    if (testDefinitionsUrl) {
+      featureDefinitions = await fetchFeatureDefinitions(testDefinitionsUrl);
+    } else {
+      featureDefinitions = await gFeatureDefinitionsPromise;
     }
-    return new FeatureGateImplementation(definition);
+
+    let definitions = [];
+    for (let definition of featureDefinitions.values()) {
+      // Make a copy of the definition, since we are about to modify it
+      definitions[definitions.length] = buildFeatureGateImplementation(
+        Object.assign({}, definition)
+      );
+    }
+    return definitions;
   }
 
   /**
