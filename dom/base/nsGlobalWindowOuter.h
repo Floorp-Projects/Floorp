@@ -1038,6 +1038,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   bool IsOnlyTopLevelDocumentInSHistory();
 
+  bool CheckStorageAccessPermission(Document* aDocument,
+                                    nsGlobalWindowInner* aInnerWindow);
+
  public:
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
