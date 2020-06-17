@@ -816,7 +816,8 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
       cookieJarSettingsArgs, aLoadInfo->GetRequestBlockingReason(),
       aLoadInfo->GetHasStoragePermission(),
-      aLoadInfo->GetIsThirdPartyContextToTopWindow());
+      aLoadInfo->GetIsThirdPartyContextToTopWindow(),
+      aLoadInfo->GetIsInThirdPartyContext());
 }
 
 nsresult MergeParentLoadInfoForwarder(
@@ -889,6 +890,10 @@ nsresult MergeParentLoadInfoForwarder(
 
   rv = aLoadInfo->SetIsThirdPartyContextToTopWindow(
       aForwarderArgs.isThirdPartyContextToTopWindow());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aLoadInfo->SetIsInThirdPartyContext(
+      aForwarderArgs.isInThirdPartyContext());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
