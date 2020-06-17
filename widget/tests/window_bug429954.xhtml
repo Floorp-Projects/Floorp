@@ -14,7 +14,7 @@
 
 function ok(aCondition, aMessage)
 {
-  docShell.rootTreeItem.domWindow.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+  window.browsingContext.topChromeWindow.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
 }
 
 function is(aLeft, aRight, aMessage)

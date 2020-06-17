@@ -18,7 +18,7 @@
     });
 
     // No instant-apply for this test
-    var prefWindow = window.docShell.rootTreeItem.domWindow.openDialog("window_preferences_beforeaccept.xhtml", "", "", windowOnload);
+    var prefWindow = window.browsingContext.topChromeWindow.openDialog("window_preferences_beforeaccept.xhtml", "", "", windowOnload);
 
     function windowOnload() {
       var dialogShown = prefWindow.Preferences.get("tests.beforeaccept.dialogShown");

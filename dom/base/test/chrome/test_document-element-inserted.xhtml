@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1411707
     // expect both events to fire with the docs in the correct state.
     async function testEvents() {
       info(`Waiting for events after loading ${OUTER_URL}`);
-      let win = docShell.rootTreeItem.domWindow.openDialog(OUTER_URL, "_blank", "chrome,dialog=no,all");
+      let win = window.browsingContext.topChromeWindow.openDialog(OUTER_URL, "_blank", "chrome,dialog=no,all");
       await waitForEvent(OUTER_URL);
       await waitForEvent(INNER_URL);
       win.close();

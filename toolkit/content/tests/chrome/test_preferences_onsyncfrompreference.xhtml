@@ -24,7 +24,7 @@
     }
 
     let counter = 0;
-    let prefWindow = window.docShell.rootTreeItem.domWindow.openDialog("window_preferences_onsyncfrompreference.xhtml", "", "", onSync);
+    let prefWindow = window.browsingContext.topChromeWindow.openDialog("window_preferences_onsyncfrompreference.xhtml", "", "", onSync);
 
     SimpleTest.registerCleanupFunction(() => {
       for (let pref of PREFS) {

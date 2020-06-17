@@ -130,7 +130,7 @@ nsContentDispatchChooser.prototype = {
   // nsIContentDispatchChooser
 
   ask: function ask(aHandler, aURI, aPrincipal, aBrowsingContext, aReason) {
-    let window = aBrowsingContext?.top?.embedderElement?.ownerGlobal || null;
+    let window = aBrowsingContext?.topChromeWindow || null;
 
     if (aBrowsingContext) {
       const topBC = aBrowsingContext.top;

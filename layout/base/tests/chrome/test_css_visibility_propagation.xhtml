@@ -12,10 +12,10 @@ const baseURL = "chrome://mochitests/content/chrome/layout/base/tests/chrome/";
 // Tests that browser visibility is updated when it's swapped.
 add_task(async () => {
   // Open two new windows to swap iframes.
-  const window1 = docShell.rootTreeItem.domWindow.open(
+  const window1 = window.browsingContext.topChromeWindow.open(
       baseURL + "window_css_visibility_propagation-1.xhtml",
       "_blank", "chrome");
-  const window2 = docShell.rootTreeItem.domWindow.open(
+  const window2 = window.browsingContext.topChromeWindow.open(
       baseURL + "window_css_visibility_propagation-2.xhtml",
       "_blank", "chrome");
 

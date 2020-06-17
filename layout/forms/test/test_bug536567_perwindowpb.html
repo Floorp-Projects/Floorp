@@ -129,7 +129,7 @@ function endTest() {
   SimpleTest.finish();
 }
 
-var mainWindow = window.docShell.rootTreeItem.domWindow;
+var mainWindow = window.browsingContext.topChromeWindow;
 var contentPage = "http://mochi.test:8888/chrome/layout/forms/test/bug536567_iframe.html";
 
 function whenDelayedStartupFinished(aWindow, aCallback) {

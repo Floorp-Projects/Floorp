@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1460639
       // first loading about:blank and then navigating to window_navigate_persist.html.
       const PERSIST_SIZE = 200;
       // First, load the document and resize it so the size is persisted.
-      let win = window.docShell.rootTreeItem.domWindow
+      let win = window.browsingContext.topChromeWindow
                       .openDialog("window_navigate_persist.html", "_blank", `chrome,all,dialog=no`);
       await SimpleTest.promiseFocus(win);
       await resize(win, PERSIST_SIZE);
@@ -53,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1460639
       win.close();
 
       // Now mimic early first paint.
-      win = window.docShell.rootTreeItem.domWindow
+      win = window.browsingContext.topChromeWindow
                   .openDialog("about:blank", "_blank", `chrome,all,dialog=no`);
       await SimpleTest.promiseFocus(win, true);
       isnot(win.outerWidth, PERSIST_SIZE, "Initial window width is not the persisted size");

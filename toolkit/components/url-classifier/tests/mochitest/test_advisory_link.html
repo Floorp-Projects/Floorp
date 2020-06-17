@@ -20,7 +20,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
-var mainWindow = window.docShell.rootTreeItem.domWindow;
+var mainWindow = window.browsingContext.topChromeWindow;
 
 var testDatas = [
   { url: "itisaphishingsite.org/phishing.html",
