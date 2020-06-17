@@ -6,7 +6,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -135,10 +140,18 @@ var SearchTestUtils = Object.freeze({
    *
    * @param {object} scope
    *  The global scope of the test being run.
+   * @param {*} usePrivilegedSignatures
+   *  How to sign created addons.
    */
-  initXPCShellAddonManager(scope) {
+  initXPCShellAddonManager(scope, usePrivilegedSignatures = false) {
+    let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
+    Services.prefs.setIntPref("extensions.enabledScopes", scopes);
+    Services.prefs.setBoolPref(
+      "extensions.webextensions.background-delayed-startup",
+      false
+    );
     ExtensionTestUtils.init(scope);
-    AddonTestUtils.usePrivilegedSignatures = false;
+    AddonTestUtils.usePrivilegedSignatures = usePrivilegedSignatures;
     AddonTestUtils.overrideCertDB();
   },
 
@@ -148,46 +161,151 @@ var SearchTestUtils = Object.freeze({
    * Note: You should call `initXPCShellAddonManager` before calling this.
    *
    * @param {object} [options]
+   */
+  async installSearchExtension(options = {}) {
+    options.id = (options.id ?? "example") + "@tests.mozilla.org";
+    let extensionInfo = {
+      useAddonManager: "permanent",
+      manifest: this.createEngineManifest(options),
+    };
+
+    let extension = ExtensionTestUtils.loadExtension(extensionInfo);
+    await extension.startup();
+    await AddonTestUtils.waitForSearchProviderStartup(extension);
+    return extension;
+  },
+
+  /**
+   * Install a search engine as a system extension to simulate
+   * Normandy updates. For xpcshell-tests only.
+   *
+   * Note: You should call `initXPCShellAddonManager` before calling this.
+   *
+   * @param {object} [options]
+   */
+  async installSystemSearchExtension(options = {}) {
+    options.id = (options.id ?? "example") + "@search.mozilla.org";
+    let xpi = await AddonTestUtils.createTempWebExtensionFile({
+      manifest: this.createEngineManifest(options),
+      background() {
+        // eslint-disable-next-line no-undef
+        browser.test.sendMessage("started");
+      },
+    });
+    let wrapper = ExtensionTestUtils.expectExtension(options.id);
+
+    const install = await AddonManager.getInstallForURL(`file://${xpi.path}`, {
+      useSystemLocation: true,
+    });
+
+    install.install();
+
+    await wrapper.awaitStartup();
+    await wrapper.awaitMessage("started");
+
+    return wrapper;
+  },
+
+  /**
+   * Create a search engine extension manifest.
+   *
+   * @param {object} [options]
    * @param {string} [options.id]
-   *   The id to use for the WebExtension (postfixed by `@tests.mozilla.org`).
+   *   The id to use for the WebExtension.
    * @param {string} [options.name]
    *   The display name to use for the WebExtension.
    * @param {string} [options.version]
    *   The version to use for the WebExtension.
    * @param {string} [options.keyword]
    *   The keyword to use for the WebExtension.
+   * @returns {object}
+   *   The generated manifest.
    */
-  async installSearchExtension(options = {}) {
-    options.id = options.id ?? "example";
+  createEngineManifest(options = {}) {
+    options.id = options.id ?? "example@tests.mozilla.org";
     options.name = options.name ?? "Example";
     options.version = options.version ?? "1.0";
-
-    let extensionInfo = {
-      useAddonManager: "permanent",
-      manifest: {
-        version: options.version,
-        applications: {
-          gecko: {
-            id: options.id + "@tests.mozilla.org",
-          },
+    let manifest = {
+      version: options.version,
+      applications: {
+        gecko: {
+          id: options.id,
         },
-        chrome_settings_overrides: {
-          search_provider: {
-            name: options.name,
-            search_url: "https://example.com/",
-            search_url_get_params: "?q={searchTerms}",
-          },
+      },
+      chrome_settings_overrides: {
+        search_provider: {
+          name: options.name,
+          search_url: "https://example.com/",
+          search_url_get_params: "?q={searchTerms}",
         },
       },
     };
     if (options.keyword) {
-      extensionInfo.manifest.chrome_settings_overrides.search_provider.keyword =
+      manifest.chrome_settings_overrides.search_provider.keyword =
         options.keyword;
     }
+    return manifest;
+  },
 
-    let extension = ExtensionTestUtils.loadExtension(extensionInfo);
-    await extension.startup();
-    await AddonTestUtils.waitForSearchProviderStartup(extension);
-    return extension;
+  /**
+   * A mock idleService that allows us to simulate RemoteSettings
+   * configuration updates.
+   */
+  idleService: {
+    _observers: new Set(),
+
+    _reset() {
+      this._observers.clear();
+    },
+
+    _fireObservers(state) {
+      for (let observer of this._observers.values()) {
+        observer.observe(observer, state, null);
+      }
+    },
+
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIIdleService]),
+    idleTime: 19999,
+
+    addIdleObserver(observer, time) {
+      this._observers.add(observer);
+    },
+
+    removeIdleObserver(observer, time) {
+      this._observers.delete(observer);
+    },
+  },
+
+  /**
+   * Register the mock idleSerice.
+   *
+   * @param {Fun} registerCleanupFunction
+   */
+  useMockIdleService(registerCleanupFunction) {
+    let fakeIdleService = MockRegistrar.register(
+      "@mozilla.org/widget/idleservice;1",
+      SearchTestUtils.idleService
+    );
+    registerCleanupFunction(() => {
+      MockRegistrar.unregister(fakeIdleService);
+    });
+  },
+
+  /**
+   * Simulates an update to the RemoteSettings configuration.
+   *
+   * @param {object} config
+   *  The new configuration.
+   */
+  async updateRemoteSettingsConfig(config) {
+    const reloadObserved = SearchTestUtils.promiseSearchNotification(
+      "engines-reloaded"
+    );
+    await RemoteSettings(SearchUtils.SETTINGS_KEY).emit("sync", {
+      data: { current: config },
+    });
+
+    this.idleService._fireObservers("idle");
+    await reloadObserved;
   },
 });

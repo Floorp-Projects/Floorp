@@ -774,15 +774,16 @@ EngineURL.prototype = {
  *   The file URI that points to the search engine data.
  * @param {nsIURI|string} [options.uri]
  *   Represents the location of the search engine data file.
- * @param {boolean} options.isBuiltin
- *   Indicates whether the engine is a app-provided or not. If it is, it will
+ * @param {boolean} options.isAppProvided
+ *   Indicates whether the engine is provided by Firefox, either
+ *   shipped in omni.ja or via Normandy. If it is, it will
  *   be treated as read-only.
  */
 function SearchEngine(options = {}) {
-  if (!("isBuiltin" in options)) {
-    throw new Error("isBuiltin missing from options.");
+  if (!("isAppProvided" in options)) {
+    throw new Error("isAppProvided missing from options.");
   }
-  this._isBuiltin = options.isBuiltin;
+  this._isAppProvided = options.isAppProvided;
   // The alias coming from the engine definition (via webextension
   // keyword field for example) may be overridden in the metaData
   // with a user defined alias.
@@ -840,7 +841,7 @@ function SearchEngine(options = {}) {
       shortName = file.leafName;
     } else if (uri && uri instanceof Ci.nsIURL) {
       if (
-        this._isBuiltin ||
+        this._isAppProvided ||
         (gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR") &&
           uri.scheme == "resource")
       ) {
@@ -910,7 +911,7 @@ SearchEngine.prototype = {
   // The locale, or "DEFAULT", if required.
   _locale: null,
   // Whether the engine is provided by the application.
-  _isBuiltin: false,
+  _isAppProvided: false,
   // The order hint from the configuration (if any).
   _orderHint: null,
   // The telemetry id from the configuration (if any).
@@ -1859,7 +1860,7 @@ SearchEngine.prototype = {
       _iconMapObj: this._iconMapObj,
       _metaData: this._metaData,
       _urls: this._urls,
-      _isBuiltin: this._isBuiltin,
+      _isAppProvided: this._isAppProvided,
       _orderHint: this._orderHint,
       _telemetryId: this._telemetryId,
     };
@@ -2108,11 +2109,11 @@ SearchEngine.prototype = {
     // For the modern configuration, distribution engines are app-provided as
     // well and we don't have xml files as app-provided engines.
     if (gModernConfig) {
-      return !!(this._extensionID && this._isBuiltin);
+      return !!(this._extensionID && this._isAppProvided);
     }
 
     if (this._extensionID) {
-      return this._isBuiltin || this._isDistribution;
+      return this._isAppProvided || this._isDistribution;
     }
 
     // If we don't have a shortName, the engine is being parsed from a

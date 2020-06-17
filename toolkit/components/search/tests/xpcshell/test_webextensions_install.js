@@ -3,8 +3,12 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
+});
+
 const {
-  createAppInfo,
   promiseRestartManager,
   promiseShutdownManager,
   promiseStartupManager,

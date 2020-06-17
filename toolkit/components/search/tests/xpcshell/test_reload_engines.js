@@ -94,32 +94,6 @@ const DEFAULT = "Test search engine";
 // Default engine with region set to FR.
 const FR_DEFAULT = "engine-pref";
 
-// The mock idle service.
-var idleService = {
-  _observers: new Set(),
-
-  _reset() {
-    this._observers.clear();
-  },
-
-  _fireObservers(state) {
-    for (let observer of this._observers.values()) {
-      observer.observe(observer, state, null);
-    }
-  },
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIIdleService]),
-  idleTime: 19999,
-
-  addIdleObserver(observer, time) {
-    this._observers.add(observer);
-  },
-
-  removeIdleObserver(observer, time) {
-    this._observers.delete(observer);
-  },
-};
-
 function listenFor(name, key) {
   let notifyObserved = false;
   let obs = (subject, topic, data) => {
@@ -143,14 +117,7 @@ add_task(async function setup() {
     true
   );
 
-  let fakeIdleService = MockRegistrar.register(
-    "@mozilla.org/widget/idleservice;1",
-    idleService
-  );
-  registerCleanupFunction(() => {
-    MockRegistrar.unregister(fakeIdleService);
-  });
-
+  SearchTestUtils.useMockIdleService(registerCleanupFunction);
   await useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
 });
@@ -263,7 +230,7 @@ add_task(async function test_config_updated_engine_changes() {
     },
   });
 
-  idleService._fireObservers("idle");
+  SearchTestUtils.idleService._fireObservers("idle");
 
   await reloadObserved;
   Services.obs.removeObserver(

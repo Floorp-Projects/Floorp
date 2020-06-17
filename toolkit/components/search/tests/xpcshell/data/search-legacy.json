@@ -30,7 +30,7 @@
           ]
         }
       ],
-      "_isBuiltin": true,
+      "_isAppProvided": true,
       "queryCharset": "UTF-8",
       "extensionID": "engine1@search.mozilla.org"
     },
@@ -61,7 +61,7 @@
           ]
         }
       ],
-      "_isBuiltin": true,
+      "_isAppProvided": true,
       "queryCharset": "UTF-8",
       "extensionID": "engine2@search.mozilla.org"
     },
