@@ -1774,10 +1774,12 @@ struct Import {
 typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 
 // Export describes the export of a definition in a Module to a field in the
-// export object. For functions, Export stores an index into the
-// FuncExportVector in Metadata. For memory and table exports, there is
-// at most one (default) memory/table so no index is needed. Note: a single
-// definition can be exported by multiple Exports in the ExportVector.
+// export object. The Export stores the index of the exported item in the
+// appropriate type-specific module data structure (function table, global
+// table, table table, and - eventually - memory table).
+//
+// Note a single definition can be exported by multiple Exports in the
+// ExportVector.
 //
 // ExportVector is built incrementally by ModuleGenerator and then stored
 // immutably by Module.

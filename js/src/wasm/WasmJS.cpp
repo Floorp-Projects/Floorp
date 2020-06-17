@@ -1250,10 +1250,6 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  const FuncExportVector& funcExports =
-      module->metadata(module->code().stableTier()).funcExports;
-
-  size_t numFuncExport = 0;
   for (const Export& exp : module->exports()) {
     Rooted<IdValueVector> props(cx, IdValueVector(cx));
     if (!props.reserve(2)) {
@@ -1275,8 +1271,9 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
         IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
     if (fuzzingSafe && exp.kind() == DefinitionKind::Function) {
-      JSString* ftStr =
-          FuncTypeToString(cx, funcExports[numFuncExport++].funcType());
+      const FuncExport& fe = module->metadata(module->code().stableTier())
+                                 .lookupFuncExport(exp.funcIndex());
+      JSString* ftStr = FuncTypeToString(cx, fe.funcType());
       if (!ftStr) {
         return false;
       }
