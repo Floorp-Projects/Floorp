@@ -21,39 +21,20 @@ android {
     }
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    kotlinOptions.freeCompilerArgs += [
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
-    ]
-}
-
 dependencies {
-    implementation project(':browser-menu')
-    implementation project(':browser-session')
-    implementation project(':browser-toolbar')
-    implementation project(':concept-engine')
-    implementation project(':concept-fetch')
-    implementation project(':feature-session')
-    implementation project(':feature-intent')
-    implementation project(':service-digitalassetlinks')
-    implementation project(':support-base')
-    implementation project(':support-ktx')
-    implementation project(':support-utils')
-    implementation project(':ui-icons')
-
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
 
-    api Dependencies.androidx_browser
-
-    testImplementation project(':support-test')
+    implementation project(':concept-fetch')
+    implementation project(':support-base')
+    implementation project(':support-ktx')
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
-    testImplementation Dependencies.testing_coroutines
+    testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation project(':support-test')
 }
 
 apply from: '../../../publish.gradle'
