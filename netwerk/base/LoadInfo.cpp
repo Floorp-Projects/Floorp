@@ -230,10 +230,13 @@ LoadInfo::LoadInfo(
 
         mDocumentHasLoaded = innerWindow->IsDocumentLoaded();
 
-        if (innerWindow->IsFrame()) {
+        if (bc->IsFrame()) {
           // For resources within iframes, we actually want the
           // top-level document's flag, not the iframe document's.
           mDocumentHasLoaded = false;
+          // FIXME: This is not Fission-compatible. The flag needs to be moved
+          // from the document to the WindowContext, and the check updated
+          // accordingly.
           nsGlobalWindowOuter* topOuter =
               innerWindow->GetInProcessScriptableTopInternal();
           if (topOuter) {
