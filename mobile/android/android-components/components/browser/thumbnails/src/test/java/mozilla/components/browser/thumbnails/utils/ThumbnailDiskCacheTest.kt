@@ -11,6 +11,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -43,5 +44,35 @@ class ThumbnailDiskCacheTest {
         val data = cache.getThumbnailData(testContext, sessionIdOrUrl)
         assertNotNull(data!!)
         Assert.assertEquals("Hello World", String(data))
+    }
+
+    @Test
+    fun `Removing bitmap from disk cache`() {
+        val cache = ThumbnailDiskCache()
+        val sessionIdOrUrl = "123"
+        val bitmap: Bitmap = mock()
+
+        cache.putThumbnailBitmap(testContext, sessionIdOrUrl, bitmap)
+        var data = cache.getThumbnailData(testContext, sessionIdOrUrl)
+        assertNotNull(data!!)
+
+        cache.removeThumbnailData(testContext, sessionIdOrUrl)
+        data = cache.getThumbnailData(testContext, sessionIdOrUrl)
+        assertNull(data)
+    }
+
+    @Test
+    fun `Clearing bitmap from disk cache`() {
+        val cache = ThumbnailDiskCache()
+        val sessionIdOrUrl = "123"
+        val bitmap: Bitmap = mock()
+
+        cache.putThumbnailBitmap(testContext, sessionIdOrUrl, bitmap)
+        var data = cache.getThumbnailData(testContext, sessionIdOrUrl)
+        assertNotNull(data!!)
+
+        cache.clear(testContext)
+        data = cache.getThumbnailData(testContext, sessionIdOrUrl)
+        assertNull(data)
     }
 }

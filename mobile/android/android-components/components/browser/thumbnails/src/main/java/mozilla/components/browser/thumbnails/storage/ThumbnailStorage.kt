@@ -43,6 +43,25 @@ class ThumbnailStorage(
     private val scope = CoroutineScope(jobDispatcher)
 
     /**
+     * Clears all the stored thumbnails in the disk cache.
+     */
+    fun clearThumbnails(): Job =
+        scope.launch {
+            logger.debug("Cleared all thumbnails from disk")
+            sharedDiskCache.clear(context)
+        }
+
+    /**
+     * Deletes the given thumbnail [Bitmap] from the disk cache with the provided session ID or url
+     * as its key.
+     */
+    fun deleteThumbnail(sessionIdOrUrl: String): Job =
+        scope.launch {
+            logger.debug("Removed thumbnail from disk (sessionIdOrUrl = $sessionIdOrUrl)")
+            sharedDiskCache.removeThumbnailData(context, sessionIdOrUrl)
+        }
+
+    /**
      * Asynchronously loads a thumbnail [Bitmap] for the given session ID or url.
      */
     fun loadThumbnail(sessionIdOrUrl: String): Deferred<Bitmap?> = scope.async {

@@ -31,6 +31,40 @@ class ThumbnailStorageTest {
     }
 
     @Test
+    fun `clearThumbnails`() = runBlocking {
+        val bitmap: Bitmap = mock()
+        val thumbnailStorage = spy(ThumbnailStorage(testContext))
+
+        thumbnailStorage.saveThumbnail("test-tab1", bitmap).joinBlocking()
+        thumbnailStorage.saveThumbnail("test-tab2", bitmap).joinBlocking()
+        var thumbnail1 = thumbnailStorage.loadThumbnail("test-tab1").await()
+        var thumbnail2 = thumbnailStorage.loadThumbnail("test-tab2").await()
+        assertNotNull(thumbnail1)
+        assertNotNull(thumbnail2)
+
+        thumbnailStorage.clearThumbnails()
+        thumbnail1 = thumbnailStorage.loadThumbnail("test-tab1").await()
+        thumbnail2 = thumbnailStorage.loadThumbnail("test-tab2").await()
+        assertNull(thumbnail1)
+        assertNull(thumbnail2)
+    }
+
+    @Test
+    fun `deleteThumbnail`() = runBlocking {
+        val sessionIdOrUrl = "test-tab1"
+        val bitmap: Bitmap = mock()
+        val thumbnailStorage = spy(ThumbnailStorage(testContext))
+
+        thumbnailStorage.saveThumbnail(sessionIdOrUrl, bitmap).joinBlocking()
+        var thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
+        assertNotNull(thumbnail)
+
+        thumbnailStorage.deleteThumbnail(sessionIdOrUrl).joinBlocking()
+        thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
+        assertNull(thumbnail)
+    }
+
+    @Test
     fun `saveThumbnail`() = runBlocking {
         val sessionIdOrUrl = "test-tab1"
         val bitmap: Bitmap = mock()

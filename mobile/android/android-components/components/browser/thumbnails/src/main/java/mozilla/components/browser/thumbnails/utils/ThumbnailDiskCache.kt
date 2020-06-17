@@ -6,7 +6,6 @@ package mozilla.components.browser.thumbnails.utils
 
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.annotation.VisibleForTesting
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
@@ -24,10 +23,11 @@ class ThumbnailDiskCache {
     private var thumbnailCache: DiskLruCache? = null
     private val thumbnailCacheWriteLock = Any()
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun clear(context: Context) {
-        getThumbnailCache(context).delete()
-        thumbnailCache = null
+        synchronized(thumbnailCacheWriteLock) {
+            getThumbnailCache(context).delete()
+            thumbnailCache = null
+        }
     }
 
     /**
@@ -71,6 +71,22 @@ class ThumbnailDiskCache {
             }
         } catch (e: IOException) {
             logger.info("Failed to save thumbnail bitmap to disk", e)
+        }
+    }
+
+    /**
+     * Removes the given session ID or URL's thumbnail [Bitmap] from the disk cache.
+     *
+     * @param context the application [Context].
+     * @param sessionIdOrUrl the session ID or URL.
+     */
+    internal fun removeThumbnailData(context: Context, sessionIdOrUrl: String) {
+        try {
+            synchronized(thumbnailCacheWriteLock) {
+                getThumbnailCache(context).remove(sessionIdOrUrl)
+            }
+        } catch (e: IOException) {
+            logger.info("Failed to remove thumbnail bitmap from disk", e)
         }
     }
 
