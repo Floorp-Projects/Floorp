@@ -209,7 +209,7 @@ var whitelist = [
     isFromDevTools: true,
   },
   { file: "chrome://devtools/skin/images/next.svg", isFromDevTools: true },
-  
+
   // Bug 1526672
   {
     file: "resource://app/localization/en-US/browser/touchbar/touchbar.ftl",
