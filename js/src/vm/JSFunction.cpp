@@ -1674,11 +1674,10 @@ bool JSFunction::delazifySelfHostedLazyFunction(JSContext* cx,
 
   /* Lazily cloned self-hosted script. */
   MOZ_ASSERT(fun->isSelfHostedBuiltin());
-  RootedAtom funAtom(cx, GetClonedSelfHostedFunctionName(fun));
-  if (!funAtom) {
+  Rooted<PropertyName*> funName(cx, GetClonedSelfHostedFunctionName(fun));
+  if (!funName) {
     return false;
   }
-  Rooted<PropertyName*> funName(cx, funAtom->asPropertyName());
   return cx->runtime()->cloneSelfHostedFunctionScript(cx, funName, fun);
 }
 
@@ -1742,7 +1741,7 @@ js::GeneratorKind JSFunction::clonedSelfHostedGeneratorKind() const {
   // `this->flags_` does not contain the generator kind. Consult the
   // implementation in the self-hosting realm, which has a BaseScript.
   MOZ_RELEASE_ASSERT(isExtended());
-  JSAtom* name = GetClonedSelfHostedFunctionName(this);
+  PropertyName* name = GetClonedSelfHostedFunctionName(this);
   return runtimeFromMainThread()->getSelfHostedFunctionGeneratorKind(name);
 }
 
