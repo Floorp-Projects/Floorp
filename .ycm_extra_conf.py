@@ -36,7 +36,12 @@ def _is_likely_cpp_header(filename):
 def Settings(**kwargs):
     if kwargs[ 'language' ] == 'cfamily':
         return FlagsForFile(kwargs['filename'])
-    return {}
+    # This is useful for generic language server protocols, like rust-analyzer,
+    # to discover the right project root instead of guessing based on where the
+    # closest Cargo.toml is.
+    return {
+      'project_directory': '.',
+    }
 
 
 def FlagsForFile(filename):
