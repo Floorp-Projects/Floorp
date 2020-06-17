@@ -26,7 +26,7 @@ bool IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name);
  * This returns a non-null value only when this is a top level function
  * declaration in the self-hosted global.
  */
-JSAtom* GetClonedSelfHostedFunctionName(const JSFunction* fun);
+PropertyName* GetClonedSelfHostedFunctionName(const JSFunction* fun);
 
 /*
  * Same as GetClonedSelfHostedFunctionName, but `fun` is guaranteed to be an
@@ -38,7 +38,7 @@ JSAtom* GetClonedSelfHostedFunctionName(const JSFunction* fun);
  *
  * See Also: WrappedFunction.isExtended_
  */
-JSAtom* GetClonedSelfHostedFunctionNameOffMainThread(JSFunction* fun);
+PropertyName* GetClonedSelfHostedFunctionNameOffMainThread(JSFunction* fun);
 
 /*
  * Uncloned self-hosted functions with `$` prefix are allocated as
