@@ -2703,8 +2703,11 @@ nsresult nsStandardURL::SetFilePath(const nsACString& input) {
     mSpec.Cut(mPath.mPos + 1, mFilepath.mLen - 1);
     // left shift query, and ref
     ShiftFromQuery(1 - mFilepath.mLen);
+    // One character for '/', and if we have a query or ref we add their
+    // length and one extra for each '?' or '#' characters
+    mPath.mLen = 1 + (mQuery.mLen >= 0 ? (mQuery.mLen + 1) : 0) +
+                 (mRef.mLen >= 0 ? (mRef.mLen + 1) : 0);
     // these contain only a '/'
-    mPath.mLen = 1;
     mDirectory.mLen = 1;
     mFilepath.mLen = 1;
     // these are no longer defined
