@@ -4232,7 +4232,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
    * Process any queued source compressions during the start of a major
    * GC.
    */
-  {
+  if (!IsShutdownGC(reason) && reason != JS::GCReason::ROOTS_REMOVED) {
     AutoLockHelperThreadState helperLock;
     HelperThreadState().startHandlingCompressionTasks(
         helperLock, GlobalHelperThreadState::ScheduleCompressionTask::GC);
