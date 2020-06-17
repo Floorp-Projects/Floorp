@@ -817,11 +817,8 @@ void Context::CancelAll() {
 
   mState = STATE_CONTEXT_CANCELED;
   mPendingActions.Clear();
-  {
-    ActivityList::ForwardIterator iter(mActivityList);
-    while (iter.HasMore()) {
-      iter.GetNext()->Cancel();
-    }
+  for (auto* activity : mActivityList.ForwardRange()) {
+    activity->Cancel();
   }
   AllowToClose();
 }
@@ -853,9 +850,7 @@ void Context::CancelForCacheId(CacheId aCacheId) {
   });
 
   // Cancel activities and let them remove themselves
-  ActivityList::ForwardIterator iter(mActivityList);
-  while (iter.HasMore()) {
-    Activity* activity = iter.GetNext();
+  for (auto* activity : mActivityList.ForwardRange()) {
     if (activity->MatchesCacheId(aCacheId)) {
       activity->Cancel();
     }

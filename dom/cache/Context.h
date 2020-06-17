@@ -198,8 +198,7 @@ class Context final : public SafeRefCounted<Context> {
 
   // Weak refs since activites must remove themselves from this list before
   // being destroyed by calling RemoveActivity().
-  typedef nsTObserverArray<Activity*> ActivityList;
-  ActivityList mActivityList;
+  nsTObserverArray<Activity*> mActivityList;
 
   // The ThreadsafeHandle may have a strong ref back to us.  This creates
   // a ref-cycle that keeps the Context alive.  The ref-cycle is broken
