@@ -38,6 +38,51 @@ def is_aarch64_host():
     return nativeMachine.value == IMAGE_FILE_MACHINE_ARM64
 
 
+def get_oracle_jdk_8_path():
+    try:
+        import _winreg
+    except ImportError:
+        import winreg as _winreg
+
+    try:
+        with _winreg.OpenKeyEx(_winreg.HKEY_LOCAL_MACHINE,
+                               r'SOFTWARE\JavaSoft\Java Development Kit\1.8') as key:
+            path, _ = _winreg.QueryValueEx(key, 'JavaHome')
+            return path
+    except FileNotFoundError:
+        return None
+
+
+def get_adopt_open_jdk_8_path():
+    try:
+        import _winreg
+    except ImportError:
+        import winreg as _winreg
+
+    try:
+        # The registry key name looks like:
+        # HKLM\SOFTWARE\AdoptOpenJDK\JDK\8.0.252.09\hotspot\MSI:Path
+        #                                ^^^^^^^^^^
+        # Due to the very precise version in the path, we can't just OpenKey("<static path>").
+        # Instead, we need to enumerate the list of JDKs, find the one that seems to be what
+        # we're looking for (JDK 1.8), then get the path from there.
+        with _winreg.OpenKeyEx(_winreg.HKEY_LOCAL_MACHINE,
+                               r'SOFTWARE\AdoptOpenJDK\JDK') as jdk_key:
+            index = 0
+            while True:
+                version_key_name = _winreg.EnumKey(jdk_key, index)
+                if not version_key_name.startswith('8.'):
+                    index += 1
+                    continue
+
+                with _winreg.OpenKeyEx(jdk_key,
+                                       r'{}\hotspot\MSI'.format(version_key_name)) as msi_key:
+                    path, _ = _winreg.QueryValueEx(msi_key, 'Path')
+                    return path
+    except (FileNotFoundError, OSError):
+        return None
+
+
 class MozillaBuildBootstrapper(BaseBootstrapper):
     '''Bootstrapper for MozillaBuild to install rustup.'''
     def __init__(self, no_interactive=False, no_system_changes=False):
@@ -73,19 +118,13 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         self.ensure_mobile_android_packages(artifact_mode=True)
 
     def ensure_mobile_android_packages(self, artifact_mode=False):
-        # Get java path from registry key
-        try:
-            import _winreg
-        except ImportError:
-            import winreg as _winreg
+        java_path = get_oracle_jdk_8_path() or get_adopt_open_jdk_8_path()
 
-        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
-                              r'SOFTWARE\JavaSoft\Java Development Kit\1.8')
-        java_path, regtype = _winreg.QueryValueEx(key, 'JavaHome')
-        _winreg.CloseKey(key)
-        from mach.util import setenv
-        setenv('PATH', '{}{}{}'.format(os.path.join(java_path, 'bin'), os.pathsep,
-                                       os.environ['PATH']))
+        if java_path:
+            from mach.util import setenv
+            setenv('PATH', '{}{}{}'.format(os.path.join(java_path, 'bin'), os.pathsep,
+                                           os.environ['PATH']))
+
         self.ensure_java()
 
         from mozboot import android
