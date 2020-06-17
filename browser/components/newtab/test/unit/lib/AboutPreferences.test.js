@@ -305,6 +305,13 @@ describe("AboutPreferences Feed", () => {
 
         assert.calledWith(node.setAttribute, "data-l10n-id", titleString);
       });
+      it("should set node hidden to true", () => {
+        prefStructure[0].pref.nestedPrefs[0].hidden = true;
+
+        testRender();
+
+        assert.isTrue(node.hidden);
+      });
       it("should add a change event", () => {
         testRender();
 

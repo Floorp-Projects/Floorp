@@ -111,6 +111,10 @@ const BUILT_IN_SECTIONS = {
         {
           name: "section.highlights.includePocket",
           titleString: "home-prefs-highlights-option-saved-to-pocket",
+          hidden: !Services.prefs.getBoolPref(
+            "extensions.pocket.enabled",
+            true
+          ),
         },
       ],
     },
