@@ -921,6 +921,8 @@ class nsLayoutUtils {
    * aAncestor. Computes the bounding-box of the true quadrilateral.
    * Pass non-null aPreservesAxisAlignedRectangles and it will be set to true if
    * we only need to use a 2d transform that PreservesAxisAlignedRectangles().
+   * The corner positions of aRect are treated as meaningful even if aRect is
+   * empty.
    *
    * |aMatrixCache| allows for optimizations in recomputing the same matrix over
    * and over. The argument can be one of the following values:

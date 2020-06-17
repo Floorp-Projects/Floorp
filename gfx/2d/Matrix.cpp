@@ -122,7 +122,7 @@ Span<Point4DTyped<UnknownUnits, F>> IntersectPolygon(
     Span<Point4DTyped<UnknownUnits, F>> aPoints,
     const Point4DTyped<UnknownUnits, F>& aPlaneNormal,
     Span<Point4DTyped<UnknownUnits, F>> aDestBuffer) {
-  if (aPoints.Length() < 3 || aDestBuffer.Length() < 3) {
+  if (aPoints.Length() < 1 || aDestBuffer.Length() < 1) {
     return {};
   }
 
