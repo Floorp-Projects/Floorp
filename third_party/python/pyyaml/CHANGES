@@ -1,21 +1,101 @@
 
-For a complete changelog, see https://github.com/yaml/pyyaml/commits/
+For a complete changelog, see:
+
+* https://github.com/yaml/pyyaml/commits/
+* https://bitbucket.org/xi/pyyaml/commits/
+
+5.3.1 (2020-03-18)
+
+* https://github.com/yaml/pyyaml/pull/386 -- Prevents arbitrary code execution during python/object/new constructor
+
+5.3 (2020-01-06)
+
+* https://github.com/yaml/pyyaml/pull/290 -- Use `is` instead of equality for comparing with `None`
+* https://github.com/yaml/pyyaml/pull/270 -- fix typos and stylistic nit
+* https://github.com/yaml/pyyaml/pull/309 -- Fix up small typo
+* https://github.com/yaml/pyyaml/pull/161 -- Fix handling of __slots__
+* https://github.com/yaml/pyyaml/pull/358 -- Allow calling add_multi_constructor with None
+* https://github.com/yaml/pyyaml/pull/285 -- Add use of safe_load() function in README
+* https://github.com/yaml/pyyaml/pull/351 -- Fix reader for Unicode code points over 0xFFFF
+* https://github.com/yaml/pyyaml/pull/360 -- Enable certain unicode tests when maxunicode not > 0xffff
+* https://github.com/yaml/pyyaml/pull/359 -- Use full_load in yaml-highlight example
+* https://github.com/yaml/pyyaml/pull/244 -- Document that PyYAML is implemented with Cython
+* https://github.com/yaml/pyyaml/pull/329 -- Fix for Python 3.10
+* https://github.com/yaml/pyyaml/pull/310 -- increase size of index, line, and column fields
+* https://github.com/yaml/pyyaml/pull/260 -- remove some unused imports
+* https://github.com/yaml/pyyaml/pull/163 -- Create timezone-aware datetimes when parsed as such
+* https://github.com/yaml/pyyaml/pull/363 -- Add tests for timezone
+
+5.2 (2019-12-02)
+------------------
+
+* Repair incompatibilities introduced with 5.1. The default Loader was changed,
+  but several methods like add_constructor still used the old default
+  https://github.com/yaml/pyyaml/pull/279 -- A more flexible fix for custom tag constructors
+  https://github.com/yaml/pyyaml/pull/287 -- Change default loader for yaml.add_constructor
+  https://github.com/yaml/pyyaml/pull/305 -- Change default loader for add_implicit_resolver, add_path_resolver
+* Make FullLoader safer by removing python/object/apply from the default FullLoader
+  https://github.com/yaml/pyyaml/pull/347 -- Move constructor for object/apply to UnsafeConstructor
+* Fix bug introduced in 5.1 where quoting went wrong on systems with sys.maxunicode <= 0xffff
+  https://github.com/yaml/pyyaml/pull/276 -- Fix logic for quoting special characters
+* Other PRs:
+  https://github.com/yaml/pyyaml/pull/280 -- Update CHANGES for 5.1
+
+5.1.2 (2019-07-30)
+------------------
+
+* Re-release of 5.1 with regenerated Cython sources to build properly for Python 3.8b2+
+
+5.1.1 (2019-06-05)
+------------------
+
+* Re-release of 5.1 with regenerated Cython sources to build properly for Python 3.8b1
+
+5.1 (2019-03-13)
+----------------
+
+* https://github.com/yaml/pyyaml/pull/35 -- Some modernization of the test running
+* https://github.com/yaml/pyyaml/pull/42 -- Install tox in a virtualenv
+* https://github.com/yaml/pyyaml/pull/45 -- Allow colon in a plain scalar in a flow context
+* https://github.com/yaml/pyyaml/pull/48 -- Fix typos
+* https://github.com/yaml/pyyaml/pull/55 -- Improve RepresenterError creation
+* https://github.com/yaml/pyyaml/pull/59 -- Resolves #57, update readme issues link
+* https://github.com/yaml/pyyaml/pull/60 -- Document and test Python 3.6 support
+* https://github.com/yaml/pyyaml/pull/61 -- Use Travis CI built in pip cache support
+* https://github.com/yaml/pyyaml/pull/62 -- Remove tox workaround for Travis CI
+* https://github.com/yaml/pyyaml/pull/63 -- Adding support to Unicode characters over codepoint 0xffff
+* https://github.com/yaml/pyyaml/pull/75 -- add 3.12 changelog
+* https://github.com/yaml/pyyaml/pull/76 -- Fallback to Pure Python if Compilation fails
+* https://github.com/yaml/pyyaml/pull/84 -- Drop unsupported Python 3.3
+* https://github.com/yaml/pyyaml/pull/102 -- Include license file in the generated wheel package
+* https://github.com/yaml/pyyaml/pull/105 -- Removed Python 2.6 & 3.3 support
+* https://github.com/yaml/pyyaml/pull/111 -- Remove commented out Psyco code
+* https://github.com/yaml/pyyaml/pull/129 -- Remove call to `ord` in lib3 emitter code
+* https://github.com/yaml/pyyaml/pull/149 -- Test on Python 3.7-dev
+* https://github.com/yaml/pyyaml/pull/158 -- Support escaped slash in double quotes "\/"
+* https://github.com/yaml/pyyaml/pull/175 -- Updated link to pypi in release announcement
+* https://github.com/yaml/pyyaml/pull/181 -- Import Hashable from collections.abc
+* https://github.com/yaml/pyyaml/pull/194 -- Reverting https://github.com/yaml/pyyaml/pull/74
+* https://github.com/yaml/pyyaml/pull/195 -- Build libyaml on travis
+* https://github.com/yaml/pyyaml/pull/196 -- Force cython when building sdist
+* https://github.com/yaml/pyyaml/pull/254 -- Allow to turn off sorting keys in Dumper (2)
+* https://github.com/yaml/pyyaml/pull/256 -- Make default_flow_style=False
+* https://github.com/yaml/pyyaml/pull/257 -- Deprecate yaml.load and add FullLoader and UnsafeLoader classes
+* https://github.com/yaml/pyyaml/pull/261 -- Skip certain unicode tests when maxunicode not > 0xffff
+* https://github.com/yaml/pyyaml/pull/263 -- Windows Appveyor build
 
 3.13 (2018-07-05)
 -----------------
 
-* Rebuilt with the latest Cython to support the new Python 3.7 release.
-* No functionality is different from PyYAML 3.12 in this release.
+* Resolved issues around PyYAML working in Python 3.7.
 
 3.12 (2016-08-28)
 -----------------
 
 * Wheel packages for Windows binaries.
-* Adding an implicit resolver to a derived loader should not affect the base
-  loader (fixes issue #57).
-* Uniform representation for OrderedDict across different versions of Python
-  (fixes issue #61).
-* Fixed comparison to None warning (closes issue #64).
+* Adding an implicit resolver to a derived loader should not affect the base loader.
+* Uniform representation for OrderedDict? across different versions of Python.
+* Fixed comparison to None warning.
 
 3.11 (2014-03-26)
 -----------------
@@ -121,7 +201,7 @@ For a complete changelog, see https://github.com/yaml/pyyaml/commits/
   as lists of pairs instead of dictionaries.  No longer check
   for duplicate mapping keys as it didn't work correctly anyway.
 * Fix invalid output of single-quoted scalars in cases when a single
-  quote is not escaped when preceeded by whitespaces or line breaks.
+  quote is not escaped when preceded by whitespaces or line breaks.
 * To make porting easier, rewrite Parser not using generators.
 * Fix handling of unexpected block mapping values.
 * Fix a bug in Representer.represent_object: copy_reg.dispatch_table
@@ -157,6 +237,6 @@ For a complete changelog, see https://github.com/yaml/pyyaml/commits/
 -----------------
 
 * Initial release.  The version number reflects the codename
-  of the project (PyYAML 3000) and differenciates it from
-  the abandoned PyYaml module. 
+  of the project (PyYAML 3000) and differentiates it from
+  the abandoned PyYaml module.
 

@@ -8,8 +8,12 @@
 
 __all__ = ['Emitter', 'EmitterError']
 
+import sys
+
 from error import YAMLError
 from events import *
+
+has_ucs4 = sys.maxunicode > 0xffff
 
 class EmitterError(YAMLError):
     pass
@@ -41,7 +45,7 @@ class Emitter(object):
         # The stream should have the methods `write` and possibly `flush`.
         self.stream = stream
 
-        # Encoding can be overriden by STREAM-START.
+        # Encoding can be overridden by STREAM-START.
         self.encoding = None
 
         # Emitter is a state machine with a stack of states to handle nested
@@ -655,7 +659,7 @@ class Emitter(object):
             flow_indicators = True
 
         # First character or preceded by a whitespace.
-        preceeded_by_whitespace = True
+        preceded_by_whitespace = True
 
         # Last character or followed by a whitespace.
         followed_by_whitespace = (len(scalar) == 1 or
@@ -674,7 +678,7 @@ class Emitter(object):
             # Check for indicators.
             if index == 0:
                 # Leading indicators are special characters.
-                if ch in u'#,[]{}&*!|>\'\"%@`': 
+                if ch in u'#,[]{}&*!|>\'\"%@`':
                     flow_indicators = True
                     block_indicators = True
                 if ch in u'?:':
@@ -692,7 +696,7 @@ class Emitter(object):
                     flow_indicators = True
                     if followed_by_whitespace:
                         block_indicators = True
-                if ch == u'#' and preceeded_by_whitespace:
+                if ch == u'#' and preceded_by_whitespace:
                     flow_indicators = True
                     block_indicators = True
 
@@ -701,7 +705,8 @@ class Emitter(object):
                 line_breaks = True
             if not (ch == u'\n' or u'\x20' <= ch <= u'\x7E'):
                 if (ch == u'\x85' or u'\xA0' <= ch <= u'\uD7FF'
-                        or u'\uE000' <= ch <= u'\uFFFD') and ch != u'\uFEFF':
+                        or u'\uE000' <= ch <= u'\uFFFD'
+                        or (u'\U00010000' <= ch < u'\U0010ffff')) and ch != u'\uFEFF':
                     unicode_characters = True
                     if not self.allow_unicode:
                         special_characters = True
@@ -733,7 +738,7 @@ class Emitter(object):
 
             # Prepare for the next character.
             index += 1
-            preceeded_by_whitespace = (ch in u'\0 \t\r\n\x85\u2028\u2029')
+            preceded_by_whitespace = (ch in u'\0 \t\r\n\x85\u2028\u2029')
             followed_by_whitespace = (index+1 >= len(scalar) or
                     scalar[index+1] in u'\0 \t\r\n\x85\u2028\u2029')
 
@@ -1137,4 +1142,3 @@ class Emitter(object):
                 spaces = (ch == u' ')
                 breaks = (ch in u'\n\x85\u2028\u2029')
             end += 1
-

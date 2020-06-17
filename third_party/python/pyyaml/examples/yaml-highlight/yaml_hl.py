@@ -37,7 +37,7 @@ yaml.add_path_resolver(u'tag:yaml.org,2002:pairs',
 class YAMLHighlight:
 
     def __init__(self, options):
-        config = yaml.load(file(options.config, 'rb').read())
+        config = yaml.full_load(file(options.config, 'rb').read())
         self.style = config[options.style]
         if options.input:
             self.input = file(options.input, 'rb')
