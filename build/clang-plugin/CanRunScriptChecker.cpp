@@ -358,7 +358,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   // If we have an invalid argument in the call, we emit the diagnostic to
   // signal it.
   if (InvalidArg) {
-    const std::string invalidArgText = Lexer::getSourceText(
+    const StringRef invalidArgText = Lexer::getSourceText(
         CharSourceRange::getTokenRange(InvalidArg->getSourceRange()),
         Result.Context->getSourceManager(), Result.Context->getLangOpts());
     diag(InvalidArg->getExprLoc(), ErrorInvalidArg, DiagnosticIDs::Error)
