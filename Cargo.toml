@@ -8,7 +8,6 @@ members = [
   "js/rust",
   "js/src",
   "js/src/frontend/smoosh",
-  "js/src/frontend/binast", # Code generator.
   "js/src/rust",
   "js/src/wasm/cranelift",
   "netwerk/test/http3server",
