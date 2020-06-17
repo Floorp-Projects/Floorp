@@ -1024,9 +1024,19 @@ struct nsGridContainerFrame::TrackSizingFunctions {
     if (!aIsSubgrid) {
       ExpandNonRepeatAutoTracks();
     }
-    MOZ_ASSERT(!mHasRepeatAuto ||
-               (mExpandedTracks.Length() >= 1 &&
-                mRepeatAutoStart < mExpandedTracks.Length()));
+
+#ifdef DEBUG
+    if (mHasRepeatAuto) {
+      MOZ_ASSERT(mExpandedTracks.Length() >= 1);
+      const unsigned maxTrack = kMaxLine - 1;
+      // If the exanded tracks are out of range of the maximum track, we
+      // can't compare the repeat-auto start. It will be removed later during
+      // grid item placement in that situation.
+      if (mExpandedTracks.Length() < maxTrack) {
+        MOZ_ASSERT(mRepeatAutoStart < mExpandedTracks.Length());
+      }
+    }
+#endif
   }
 
  public:
@@ -1102,21 +1112,31 @@ struct nsGridContainerFrame::TrackSizingFunctions {
   }
 
   /**
-   * Initialize the number of auto-fill/fit tracks to use and return that.
-   * (zero if no auto-fill/fit track was specified)
+   * Initialize the number of auto-fill/fit tracks to use.
+   * This can be zero if no auto-fill/fit track was specified, or if the repeat
+   * begins after the maximum allowed track.
    */
-  uint32_t InitRepeatTracks(const NonNegativeLengthPercentageOrNormal& aGridGap,
-                            nscoord aMinSize, nscoord aSize, nscoord aMaxSize) {
-    const uint32_t repeatTracks =
+  void InitRepeatTracks(const NonNegativeLengthPercentageOrNormal& aGridGap,
+                        nscoord aMinSize, nscoord aSize, nscoord aMaxSize) {
+    const uint32_t maxTrack = kMaxLine - 1;
+    // Check for a repeat after the maximum allowed track.
+    if (MOZ_UNLIKELY(mRepeatAutoStart >= maxTrack)) {
+      mHasRepeatAuto = false;
+      mRepeatAutoStart = 0;
+      mRepeatAutoEnd = 0;
+      return;
+    }
+    uint32_t repeatTracks =
         CalculateRepeatFillCount(aGridGap, aMinSize, aSize, aMaxSize) *
         NumRepeatTracks();
+    // Clamp the number of repeat tracks to the maximum possible track.
+    repeatTracks = std::min(repeatTracks, maxTrack - mRepeatAutoStart);
     SetNumRepeatTracks(repeatTracks);
     // Blank out the removed flags for each of these tracks.
     mRemovedRepeatTracks.SetLength(repeatTracks);
     for (auto& track : mRemovedRepeatTracks) {
       track = false;
     }
-    return repeatTracks;
   }
 
   uint32_t CalculateRepeatFillCount(
@@ -1125,13 +1145,23 @@ struct nsGridContainerFrame::TrackSizingFunctions {
     if (!mHasRepeatAuto) {
       return 0;
     }
+    // At this point no tracks will have been collapsed, so the RepeatEndDelta
+    // should not be negative.
+    MOZ_ASSERT(RepeatEndDelta() >= 0);
     // Note that this uses NumRepeatTracks and mRepeatAutoStart/End, although
     // the result of this method is used to change those values to a fully
     // expanded value. Spec quotes are from
     // https://drafts.csswg.org/css-grid/#repeat-notation
-    const uint32_t repeatDelta = mHasRepeatAuto ? NumRepeatTracks() - 1 : 0;
-    const uint32_t numTracks = mExpandedTracks.Length() + repeatDelta;
+    const uint32_t numTracks = mExpandedTracks.Length() + RepeatEndDelta();
     MOZ_ASSERT(numTracks >= 1, "expected at least the repeat() track");
+    if (MOZ_UNLIKELY(numTracks >= kMaxLine)) {
+      // The fixed tracks plus an entire repetition is either larger or as
+      // large as the maximum track, so we do not need to measure how many
+      // repetitions will fit. This also avoids needing to check for if
+      // kMaxLine - numTracks would underflow at the end where we clamp the
+      // result.
+      return 1;
+    }
     nscoord maxFill = aSize != NS_UNCONSTRAINEDSIZE ? aSize : aMaxSize;
     if (maxFill == NS_UNCONSTRAINEDSIZE && aMinSize == 0) {
       // "Otherwise, the specified track list repeats only once."
@@ -1191,7 +1221,6 @@ struct nsGridContainerFrame::TrackSizingFunctions {
     // Clamp the number of repeat tracks so that the last line <= kMaxLine.
     // (note that |numTracks| already includes one repeat() track)
     MOZ_ASSERT(numTracks >= NumRepeatTracks());
-    MOZ_ASSERT(kMaxLine > numTracks);
     const uint32_t maxRepeatTrackCount = kMaxLine - numTracks;
     const uint32_t maxRepetitions = maxRepeatTrackCount / NumRepeatTracks();
     return std::min(numRepeatTracks, maxRepetitions);
