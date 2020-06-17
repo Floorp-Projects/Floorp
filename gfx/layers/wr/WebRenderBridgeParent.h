@@ -395,6 +395,7 @@ class WebRenderBridgeParent final
       wr::TransactionBuilder& aTxn);
 
   void ClearResources();
+  void ClearAnimationResources();
   bool ShouldParentObserveEpoch();
   mozilla::ipc::IPCResult HandleShutdown();
 
