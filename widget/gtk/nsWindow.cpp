@@ -1820,6 +1820,9 @@ static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
 
   Atom property = XInternAtom(xdisplay, "_NET_SUPPORTING_WM_CHECK", true);
   Atom req_type = XInternAtom(xdisplay, "WINDOW", true);
+  if (!property || !req_type) {
+    return false;
+  }
   int result =
       XGetWindowProperty(xdisplay, root_win, property,
                          0L,                  // offset
@@ -1838,6 +1841,9 @@ static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
 
   property = XInternAtom(xdisplay, "_NET_WM_NAME", true);
   req_type = XInternAtom(xdisplay, "UTF8_STRING", true);
+  if (!property || !req_type) {
+    return false;
+  }
   result =
       XGetWindowProperty(xdisplay, wmWindow, property,
                          0L,         // offset
