@@ -217,6 +217,7 @@ include = [
   "SVGWidth",
   "TextAlign",
   "TextAlignLast",
+  "FontSizeKeyword",
   "AspectRatio",
 ]
 item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]

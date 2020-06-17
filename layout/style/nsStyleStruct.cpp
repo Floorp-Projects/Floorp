@@ -245,7 +245,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mSize(ZoomText(aDocument, mFont.size)),
       mFontSizeFactor(1.0),
       mFontSizeOffset(0),
-      mFontSizeKeyword(StyleFontSize::Medium),
+      mFontSizeKeyword(StyleFontSizeKeyword::Medium),
       mGenericID(StyleGenericFontFamily::None),
       mScriptLevel(0),
       mMathVariant(NS_MATHML_MATHVARIANT_NONE),

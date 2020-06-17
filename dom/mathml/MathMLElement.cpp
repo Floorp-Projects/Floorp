@@ -528,8 +528,9 @@ void MathMLElement::MapMathMLAttributesInto(
     if (!ParseNumericValue(str, fontSize, flags, nullptr) &&
         parseSizeKeywords) {
       static const char sizes[3][7] = {"small", "normal", "big"};
-      static const StyleFontSize values[MOZ_ARRAY_LENGTH(sizes)] = {
-          StyleFontSize::Small, StyleFontSize::Medium, StyleFontSize::Large};
+      static const StyleFontSizeKeyword values[MOZ_ARRAY_LENGTH(sizes)] = {
+          StyleFontSizeKeyword::Small, StyleFontSizeKeyword::Medium,
+          StyleFontSizeKeyword::Large};
       str.CompressWhitespace();
       for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
         if (str.EqualsASCII(sizes[i])) {
