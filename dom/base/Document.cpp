@@ -2643,24 +2643,17 @@ already_AddRefed<nsIPrincipal> Document::MaybeDowngradePrincipal(
     return do_AddRef(expanded->AllowList().LastElement());
   }
 
-  if (aPrincipal->IsSystemPrincipal()) {
+  if (aPrincipal->IsSystemPrincipal() && mDocumentContainer) {
     // We basically want the parent document here, but because this is very
     // early in the load, GetInProcessParentDocument() returns null, so we use
     // the docshell hierarchy to get this information instead.
-    if (mDocumentContainer) {
-      nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
-      mDocumentContainer->GetInProcessParent(
-          getter_AddRefs(parentDocShellItem));
-      nsCOMPtr<nsIDocShell> parentDocShell =
-          do_QueryInterface(parentDocShellItem);
-      if (parentDocShell) {
-        nsCOMPtr<Document> parentDoc;
-        parentDoc = parentDocShell->GetDocument();
-        if (!parentDoc || !parentDoc->NodePrincipal()->IsSystemPrincipal()) {
-          nsCOMPtr<nsIPrincipal> nullPrincipal =
-              do_CreateInstance("@mozilla.org/nullprincipal;1");
-          return nullPrincipal.forget();
-        }
+    if (RefPtr<BrowsingContext> parent =
+            mDocumentContainer->GetBrowsingContext()->GetParent()) {
+      auto* parentWin = nsGlobalWindowOuter::Cast(parent->GetDOMWindow());
+      if (!parentWin || !parentWin->GetPrincipal()->IsSystemPrincipal()) {
+        nsCOMPtr<nsIPrincipal> nullPrincipal =
+            do_CreateInstance("@mozilla.org/nullprincipal;1");
+        return nullPrincipal.forget();
       }
     }
   }
