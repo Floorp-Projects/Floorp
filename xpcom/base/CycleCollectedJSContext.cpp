@@ -559,8 +559,6 @@ void CycleCollectedJSContext::DispatchToMicroTask(
   MOZ_ASSERT(runnable);
 
   JS::JobQueueMayNotBeEmpty(Context());
-
-  LogMicroTaskRunnable::LogDispatch(runnable.get());
   mPendingMicroTaskRunnables.push(std::move(runnable));
 }
 
@@ -639,10 +637,7 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
         JS::JobQueueIsEmpty(Context());
       }
       didProcess = true;
-
-      LogMicroTaskRunnable::Run log(runnable.get());
       runnable->Run(aso);
-      runnable = nullptr;
     }
   }
 
@@ -675,8 +670,6 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
     RefPtr<MicroTaskRunnable> runnable = std::move(microtaskQueue->front());
     MOZ_ASSERT(runnable);
 
-    LogMicroTaskRunnable::Run log(runnable.get());
-
     // This function can re-enter, so we remove the element before calling.
     microtaskQueue->pop();
 
@@ -684,7 +677,6 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
       JS::JobQueueIsEmpty(Context());
     }
     runnable->Run(aso);
-    runnable = nullptr;
   }
 
   AfterProcessMicrotasks();
