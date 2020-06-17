@@ -21,7 +21,6 @@
 
 #include "jstypes.h"
 #include "mozmemory.h"
-#include "js/TypeDecls.h"
 
 /* The public JS engine namespace. */
 namespace JS {}
@@ -651,7 +650,6 @@ struct FreePolicy {
 
 typedef mozilla::UniquePtr<char[], JS::FreePolicy> UniqueChars;
 typedef mozilla::UniquePtr<char16_t[], JS::FreePolicy> UniqueTwoByteChars;
-typedef mozilla::UniquePtr<JS::Latin1Char[], JS::FreePolicy> UniqueLatin1Chars;
 
 }  // namespace JS
 
