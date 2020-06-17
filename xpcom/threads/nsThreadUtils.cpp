@@ -625,6 +625,7 @@ LogTaskBase<T>::Run::~Run() {
 }
 
 template class LogTaskBase<nsIRunnable>;
+template class LogTaskBase<MicroTaskRunnable>;
 
 }  // namespace mozilla
 

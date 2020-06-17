@@ -1905,7 +1905,10 @@ class LogTaskBase {
   };
 };
 
+class MicroTaskRunnable;
+
 typedef LogTaskBase<nsIRunnable> LogRunnable;
+typedef LogTaskBase<MicroTaskRunnable> LogMicroTaskRunnable;
 // If you add new types don't forget to add:
 // `template class LogTaskBase<YourType>;` to nsThreadUtils.cpp
 
