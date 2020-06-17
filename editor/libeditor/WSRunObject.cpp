@@ -1757,6 +1757,8 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
           atPreviousCharOfPreviousCharOfEndOfRun =
               GetPreviousEditableCharPoint(atPreviousCharOfEndOfRun);
           isPreviousCharASCIIWhiteSpace =
+              atPreviousCharOfPreviousCharOfEndOfRun.IsSet() &&
+              !atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer() &&
               atPreviousCharOfPreviousCharOfEndOfRun.IsCharASCIISpace();
           followedByVisibleContentOrBRElement = true;
         }
