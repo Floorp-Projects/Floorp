@@ -1406,6 +1406,9 @@ def set_test_verify_chunks(config, tasks):
 def set_test_manifests(config, tasks):
     """Determine the set of test manifests that should run in this task."""
 
+    loader_cls = manifest_loaders[config.params['test_manifest_loader']]
+    loader = loader_cls(config.params)
+
     for task in tasks:
         if task['suite'] in CHUNK_SUITES_BLACKLIST:
             yield task
@@ -1429,8 +1432,6 @@ def set_test_manifests(config, tasks):
 
         mozinfo = guess_mozinfo_from_task(task)
 
-        loader_cls = manifest_loaders[config.params['test_manifest_loader']]
-        loader = loader_cls(config.params)
         task['test-manifests'] = loader.get_manifests(
             task['suite'],
             frozenset(mozinfo.items()),
