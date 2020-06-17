@@ -7491,7 +7491,6 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(
 Matrix4x4 nsDisplayTransform::GetResultingTransformMatrix(
     const FrameTransformProperties& aProperties, TransformReferenceBox& aRefBox,
     float aAppUnitsPerPixel) {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   return GetResultingTransformMatrixInternal(aProperties, aRefBox, nsPoint(),
                                              aAppUnitsPerPixel, 0);
 }

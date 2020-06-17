@@ -45,11 +45,11 @@ class WebRenderAPI;
 
 namespace layers {
 
+class AsyncImagePipelineManager;
 class Compositor;
-class CompositorAnimationStorage;
 class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
-class AsyncImagePipelineManager;
+class OMTASampler;
 class WebRenderImageHost;
 struct WrAnimations;
 
@@ -89,6 +89,15 @@ class PipelineIdAndEpochHashEntry : public PLDHashEntryHdr {
   std::pair<wr::PipelineId, wr::Epoch> mValue;
 };
 
+struct CompositorAnimationIdsForEpoch {
+  CompositorAnimationIdsForEpoch(const wr::Epoch& aEpoch,
+                                 nsTArray<uint64_t>&& aIds)
+      : mEpoch(aEpoch), mIds(std::move(aIds)) {}
+
+  wr::Epoch mEpoch;
+  nsTArray<uint64_t> mIds;
+};
+
 class WebRenderBridgeParent final
     : public PWebRenderBridgeParent,
       public CompositorVsyncSchedulerOwner,
@@ -103,7 +112,6 @@ class WebRenderBridgeParent final
                         CompositorVsyncScheduler* aScheduler,
                         RefPtr<wr::WebRenderAPI>&& aApi,
                         RefPtr<AsyncImagePipelineManager>&& aImageMgr,
-                        RefPtr<CompositorAnimationStorage>&& aAnimStorage,
                         TimeDuration aVsyncRate);
 
   static WebRenderBridgeParent* CreateDestroyed(
@@ -282,7 +290,6 @@ class WebRenderBridgeParent final
   wr::Epoch UpdateWebRender(
       CompositorVsyncScheduler* aScheduler, RefPtr<wr::WebRenderAPI>&& aApi,
       AsyncImagePipelineManager* aImageMgr,
-      CompositorAnimationStorage* aAnimStorage,
       const TextureFactoryIdentifier& aTextureFactoryIdentifier);
 
   void RemoveEpochDataPriorTo(const wr::Epoch& aRenderedEpoch);
@@ -400,11 +407,9 @@ class WebRenderBridgeParent final
   mozilla::ipc::IPCResult HandleShutdown();
 
   void ResetPreviousSampleTime();
-  // Returns true if there is any animation (including animations in delay
-  // phase).
-  bool AdvanceAnimations();
 
-  std::pair<WrAnimations, bool> SampleAnimations();
+  void SetOMTASampleTime();
+  RefPtr<OMTASampler> GetOMTASampler() const;
 
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;
 
@@ -474,22 +479,12 @@ class WebRenderBridgeParent final
     nsTArray<CompositionPayload> mPayloads;
   };
 
-  struct CompositorAnimationIdsForEpoch {
-    CompositorAnimationIdsForEpoch(const wr::Epoch& aEpoch,
-                                   nsTArray<uint64_t>&& aIds)
-        : mEpoch(aEpoch), mIds(std::move(aIds)) {}
-
-    wr::Epoch mEpoch;
-    nsTArray<uint64_t> mIds;
-  };
-
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
   wr::PipelineId mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
   RefPtr<wr::WebRenderAPI> mApi;
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
-  RefPtr<CompositorAnimationStorage> mAnimStorage;
   // mActiveAnimations is used to avoid leaking animations when
   // WebRenderBridgeParent is destroyed abnormally and Tab move between
   // different windows.

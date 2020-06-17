@@ -146,6 +146,8 @@ class CompositorAnimationStorage final {
   bool SampleAnimations(Layer* aRoot, TimeStamp aPreviousFrameTime,
                         TimeStamp aCurrentFrameTime);
 
+  bool HasAnimations() const;
+
   /**
    * Clear AnimatedValues and Animations data
    */
