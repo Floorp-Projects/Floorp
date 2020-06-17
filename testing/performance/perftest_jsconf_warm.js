@@ -1,4 +1,4 @@
-async function test(context, commands) {
+module.exports = async function(context, commands) {
   let rootUrl = "https://2019.jsconf.eu/";
 
   await commands.navigate(rootUrl);
@@ -20,11 +20,4 @@ async function test(context, commands) {
 
   // Stop and collect the measurement
   await commands.measure.stop();
-}
-
-module.exports = {
-  test,
-  owner: "Performance Team",
-  name: "JSConf (warm)",
-  description: "Measures time to load JSConf page (warm)",
 };
