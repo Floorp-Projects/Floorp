@@ -1,41 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_downloads_notification_channel">Shkarkime</string>
+    <string name="mozac_feature_downloads_notification_channel">Preuzimanja</string>
 
     <!-- Text shown on the second row of a paused download notification. -->
-    <string name="mozac_feature_downloads_paused_notification_text">Shkarkim i ndalur</string>
+    <string name="mozac_feature_downloads_paused_notification_text">Preuzimanje pauzirano</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_completed_notification_text2">Shkarkim i plotësuar</string>
+    <string name="mozac_feature_downloads_completed_notification_text2">Preuzimanje završeno</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_failed_notification_text2">Shkarkim i dështuar</string>
+    <string name="mozac_feature_downloads_failed_notification_text2">Neuspjelo preuzimanje</string>
 
     <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
-    <string name="mozac_feature_downloads_dialog_title2">Shkarkim (%1$s)</string>
+    <string name="mozac_feature_downloads_dialog_title2">Preuzimanje (%1$s)</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
-    <string name="mozac_feature_downloads_dialog_download">Shkarkoje</string>
+    <string name="mozac_feature_downloads_dialog_download">Preuzmi</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
-    <string name="mozac_feature_downloads_dialog_cancel">Anuloje</string>
+    <string name="mozac_feature_downloads_dialog_cancel">Otkaži</string>
+
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
-    <string name="mozac_feature_downloads_file_not_supported2">%1$s s’mund ta shkarkojë këtë lloj kartelash</string>
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s ne može preuzeti ovaj tip fajla</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
-    <string name="mozac_feature_downloads_could_not_open_file">S’hapet dot kartelë</string>
+    <string name="mozac_feature_downloads_could_not_open_file">Ne mogu otvoriti fajl.</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported">S’u gjet aplikacion për hapje kartelash %1$s</string>
+    <string name="mozac_feature_downloads_open_not_supported">Nije pronađena aplikacija za otvaranje %1$s fajlova</string>
 
     <!-- Button that pauses the download when pressed -->
-    <string name="mozac_feature_downloads_button_pause">Ndale</string>
+    <string name="mozac_feature_downloads_button_pause">Pauziraj</string>
     <!-- Button that resumes the download when pressed -->
-    <string name="mozac_feature_downloads_button_resume">Vazhdoje</string>
+    <string name="mozac_feature_downloads_button_resume">Nastavi</string>
     <!-- Button that cancels the download when pressed -->
-    <string name="mozac_feature_downloads_button_cancel">Anuloje</string>
+    <string name="mozac_feature_downloads_button_cancel">Otkaži</string>
     <!-- Button that opens the downloaded file when pressed -->
-    <string name="mozac_feature_downloads_button_open">Hape</string>
+    <string name="mozac_feature_downloads_button_open">Otvori</string>
     <!-- Button that restarts the download after a failed attempt -->
-    <string name="mozac_feature_downloads_button_try_again">Riprovo</string>
+    <string name="mozac_feature_downloads_button_try_again">Pokušaj ponovo</string>
 
     <!-- Content description for close button -->
-    <string name="mozac_feature_downloads_button_close">Mbylle</string>
+    <string name="mozac_feature_downloads_button_close">Zatvori</string>
 </resources>
