@@ -2322,12 +2322,16 @@ nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
         ("HttpBaseChannel::HasCrossOriginOpenerPolicyMismatch - "
          "doc:%d result:%d - compare:%d\n",
          documentPolicy, resultPolicy, compareResult));
-    nsAutoCString docOrigin;
+    nsAutoCString docOrigin("(null)");
     nsCOMPtr<nsIURI> uri = documentOrigin->GetURI();
-    uri->GetSpec(docOrigin);
-    nsAutoCString resOrigin;
+    if (uri) {
+      uri->GetSpec(docOrigin);
+    }
+    nsAutoCString resOrigin("(null)");
     uri = resultOrigin->GetURI();
-    uri->GetSpec(resOrigin);
+    if (uri) {
+      uri->GetSpec(resOrigin);
+    }
     LOG(("doc origin:%s - res origin: %s\n", docOrigin.get(), resOrigin.get()));
   }
 
