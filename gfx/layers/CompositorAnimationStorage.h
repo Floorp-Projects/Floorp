@@ -109,6 +109,7 @@ class CompositorAnimationStorage final {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorAnimationStorage)
  public:
+  CompositorAnimationStorage() : mLock("CompositorAnimationStorage::mLock") {}
 
   OMTAValue GetOMTAValue(const uint64_t& aId) const;
 
@@ -191,6 +192,7 @@ class CompositorAnimationStorage final {
  private:
   AnimatedValueTable mAnimatedValues;
   AnimationsTable mAnimations;
+  mutable Mutex mLock;
 };
 
 }  // namespace layers
