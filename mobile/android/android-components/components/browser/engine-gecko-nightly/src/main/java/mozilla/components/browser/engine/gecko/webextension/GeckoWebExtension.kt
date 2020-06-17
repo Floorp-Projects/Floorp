@@ -279,6 +279,17 @@ class GeckoWebExtension(
                 )
                 return GeckoResult.fromValue(geckoEngineSession.geckoSession)
             }
+
+            override fun onOpenOptionsPage(ext: GeckoNativeWebExtension) {
+                ext.metaData?.optionsPageUrl?.let { optionsPageUrl ->
+                    tabHandler.onNewTab(
+                        this@GeckoWebExtension,
+                        GeckoEngineSession(runtime),
+                        false,
+                        optionsPageUrl
+                    )
+                }
+            }
         }
 
         nativeExtension.tabDelegate = tabDelegate
