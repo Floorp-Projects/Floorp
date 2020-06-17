@@ -95,6 +95,11 @@ void apz_sample_transforms(
     mozilla::wr::WrWindowId aWindowId, mozilla::wr::Transaction* aTransaction,
     const mozilla::wr::WrPipelineIdEpochs* aPipelineEpochs);
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
+
+void omta_register_sampler(mozilla::wr::WrWindowId aWindowId);
+void omta_sample(mozilla::wr::WrWindowId aWindowId,
+                 mozilla::wr::Transaction* aTransaction);
+void omta_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 }  // extern "C"
 
 // Work-around wingdi.h define which conflcits with WR color constant
