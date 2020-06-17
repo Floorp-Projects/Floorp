@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { gDevTools } = require("devtools/client/framework/devtools");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
 const {
@@ -413,8 +414,7 @@ class WebConsoleUI {
     // Also ignore workers as they are not supported yet. (see bug 1592584)
     const isContentToolbox = this.hud.targetList.targetFront.isLocalTab;
     const listenForFrames =
-      isContentToolbox &&
-      Services.prefs.getBoolPref("devtools.contenttoolbox.fission");
+      isContentToolbox && gDevTools.isFissionContentToolboxEnabled();
     if (
       targetFront.targetType != this.hud.targetList.TYPES.PROCESS &&
       (targetFront.targetType != this.hud.targetList.TYPES.FRAME ||

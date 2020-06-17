@@ -153,6 +153,11 @@ requireHacker.global_hook("default", (path, module) => {
     "devtools/server/actors/reflow": () => "{}",
     "devtools/shared/layout/utils": () => "{getCurrentZoom = () => {}}",
     "resource://gre/modules/AppConstants.jsm": () => "module.exports = {};",
+    "devtools/client/framework/devtools": () => `module.exports = {
+      gDevTools: {
+        isFissionContentToolboxEnabled: () => false,
+      }
+    };`,
   };
 
   if (paths.hasOwnProperty(path)) {
