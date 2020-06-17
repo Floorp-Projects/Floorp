@@ -2,13 +2,14 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/top_site_item"
     android:layout_width="64dp"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:padding="8dp"
+    android:orientation="vertical">
 
     <FrameLayout
         android:id="@+id/favicon_wrapper"
@@ -16,11 +17,8 @@
         android:layout_height="40dp"
         android:padding="4dp"
         android:background="@drawable/top_sites_background"
-        app:layout_constraintBottom_toTopOf="@id/top_site_title"
-        app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_gravity="center"
+       >
         <ImageView
             android:id="@+id/favicon_image"
             android:layout_width="24dp"
@@ -33,16 +31,12 @@
 
     <TextView
         android:id="@+id/top_site_title"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:singleLine="true"
         android:textColor="@color/top_site_title_text"
         android:textSize="10sp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/favicon_wrapper" />
+        android:layout_marginTop="8dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
