@@ -145,6 +145,7 @@ xpcAccessibleDocument* DocManager::GetXPCDocument(DocAccessibleParent* aDoc) {
                               xpcAccessibleDocument>;
   }
 
+  MOZ_ASSERT(!aDoc->IsShutdown(), "Adding a shutdown doc to remote XPC cache");
   doc = new xpcAccessibleDocument(aDoc,
                                   Interfaces::DOCUMENT | Interfaces::HYPERTEXT);
   sRemoteXPCDocumentCache->Put(aDoc, RefPtr{doc});
