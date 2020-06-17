@@ -263,6 +263,7 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
     case PREPARING_HEADERS:
     case SENDING_BODY:
     case EARLY_RESPONSE:
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
       break;
     case READING_HEADERS: {
       // SetResponseHeaders should have been previously called.
