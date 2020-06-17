@@ -83,11 +83,11 @@ def _patch_absolute_paths(sentry_event, topsrcdir):
         elif isinstance(value, dict):
             for key in list(value.keys()):
                 next_value = value.pop(key)
-                key = key.replace(needle, replacement)
+                key = needle.sub(replacement, key)
                 value[key] = recursive_patch(next_value, needle, replacement)
             return value
         elif isinstance(value, string_types):
-            return value.replace(needle, replacement)
+            return needle.sub(replacement, value)
         else:
             return value
 
@@ -105,7 +105,8 @@ def _patch_absolute_paths(sentry_event, topsrcdir):
     ):
         if needle is None:
             continue  # topsrcdir isn't always defined
-        sentry_event = recursive_patch(sentry_event, needle, replacement)
+        needle_regex = re.compile(re.escape(needle), re.IGNORECASE)
+        sentry_event = recursive_patch(sentry_event, needle_regex, replacement)
     return sentry_event
 
 
