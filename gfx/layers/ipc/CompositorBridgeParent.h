@@ -91,6 +91,7 @@ class GeckoContentController;
 class HostLayerManager;
 class IAPZCTreeManager;
 class LayerTransactionParent;
+class OMTASampler;
 class PAPZParent;
 class ContentCompositorBridgeParent;
 class CompositorThreadHolder;
@@ -652,8 +653,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   PAPZParent* AllocPAPZParent(const LayersId& aLayersId) override;
   bool DeallocPAPZParent(PAPZParent* aActor) override;
 
-  RefPtr<APZSampler> GetAPZSampler();
-  RefPtr<APZUpdater> GetAPZUpdater();
+  RefPtr<APZSampler> GetAPZSampler() const;
+  RefPtr<APZUpdater> GetAPZUpdater() const;
+  RefPtr<OMTASampler> GetOMTASampler() const;
 
   CompositorOptions GetOptions() const { return mOptions; }
 
@@ -851,6 +853,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   RefPtr<APZCTreeManager> mApzcTreeManager;
   RefPtr<APZSampler> mApzSampler;
   RefPtr<APZUpdater> mApzUpdater;
+  RefPtr<OMTASampler> mOMTASampler;
 
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   // This makes sure the compositorParent is not destroyed before receiving

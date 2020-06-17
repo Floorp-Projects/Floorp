@@ -28,6 +28,7 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
+#include "mozilla/layers/OMTASampler.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
@@ -330,15 +331,13 @@ WebRenderBridgeParent::WebRenderBridgeParent(
     CompositorBridgeParentBase* aCompositorBridge,
     const wr::PipelineId& aPipelineId, widget::CompositorWidget* aWidget,
     CompositorVsyncScheduler* aScheduler, RefPtr<wr::WebRenderAPI>&& aApi,
-    RefPtr<AsyncImagePipelineManager>&& aImageMgr,
-    RefPtr<CompositorAnimationStorage>&& aAnimStorage, TimeDuration aVsyncRate)
+    RefPtr<AsyncImagePipelineManager>&& aImageMgr, TimeDuration aVsyncRate)
     : mCompositorBridge(aCompositorBridge),
       mPipelineId(aPipelineId),
       mWidget(aWidget),
       mApi(aApi),
       mAsyncImageManager(aImageMgr),
       mCompositorScheduler(aScheduler),
-      mAnimStorage(aAnimStorage),
       mVsyncRate(aVsyncRate),
       mChildLayersObserverEpoch{0},
       mParentLayersObserverEpoch{0},
@@ -355,7 +354,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(
       mDisablingNativeCompositor(false),
       mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {
   MOZ_ASSERT(mAsyncImageManager);
-  MOZ_ASSERT(mAnimStorage);
   mAsyncImageManager->AddPipeline(mPipelineId, this);
   if (IsRootWebRenderBridgeParent()) {
     MOZ_ASSERT(!mCompositorScheduler);
@@ -865,23 +863,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvDeleteCompositorAnimations(
 
 void WebRenderBridgeParent::RemoveEpochDataPriorTo(
     const wr::Epoch& aRenderedEpoch) {
-  while (!mCompositorAnimationsToDelete.empty()) {
-    if (aRenderedEpoch < mCompositorAnimationsToDelete.front().mEpoch) {
-      break;
-    }
-    for (uint64_t id : mCompositorAnimationsToDelete.front().mIds) {
-      const auto activeAnim = mActiveAnimations.find(id);
-      if (activeAnim == mActiveAnimations.end()) {
-        NS_ERROR("Tried to delete invalid animation");
-        continue;
-      }
-      // Check if animation delete request is still valid.
-      if (activeAnim->second <= mCompositorAnimationsToDelete.front().mEpoch) {
-        mAnimStorage->ClearById(id);
-        mActiveAnimations.erase(activeAnim);
-      }
-    }
-    mCompositorAnimationsToDelete.pop();
+  if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
+    sampler->RemoveEpochDataPriorTo(mCompositorAnimationsToDelete,
+                                    mActiveAnimations, aRenderedEpoch);
   }
 }
 
@@ -1402,13 +1386,15 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
           return false;
         }
         if (data.animations().Length()) {
-          mAnimStorage->SetAnimations(data.id(), data.animations());
-          const auto activeAnim = mActiveAnimations.find(data.id());
-          if (activeAnim == mActiveAnimations.end()) {
-            mActiveAnimations.emplace(data.id(), mWrEpoch);
-          } else {
-            // Update wr::Epoch if the animation already exists.
-            activeAnim->second = mWrEpoch;
+          if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
+            sampler->SetAnimations(data.id(), data.animations());
+            const auto activeAnim = mActiveAnimations.find(data.id());
+            if (activeAnim == mActiveAnimations.end()) {
+              mActiveAnimations.emplace(data.id(), mWrEpoch);
+            } else {
+              // Update wr::Epoch if the animation already exists.
+              activeAnim->second = mWrEpoch;
+            }
           }
         }
         break;
@@ -1741,13 +1727,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
 wr::Epoch WebRenderBridgeParent::UpdateWebRender(
     CompositorVsyncScheduler* aScheduler, RefPtr<wr::WebRenderAPI>&& aApi,
     AsyncImagePipelineManager* aImageMgr,
-    CompositorAnimationStorage* aAnimStorage,
     const TextureFactoryIdentifier& aTextureFactoryIdentifier) {
   MOZ_ASSERT(!IsRootWebRenderBridgeParent());
   MOZ_ASSERT(aScheduler);
   MOZ_ASSERT(aApi);
   MOZ_ASSERT(aImageMgr);
-  MOZ_ASSERT(aAnimStorage);
 
   if (mDestroyed) {
     return mWrEpoch;
@@ -1775,7 +1759,6 @@ wr::Epoch WebRenderBridgeParent::UpdateWebRender(
   mCompositorScheduler = aScheduler;
   mApi = aApi;
   mAsyncImageManager = aImageMgr;
-  mAnimStorage = aAnimStorage;
 
   // Register pipeline to updated AsyncImageManager.
   mAsyncImageManager->AddPipeline(mPipelineId, this);
@@ -1888,14 +1871,16 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetAnimationValue(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  MOZ_ASSERT(mAnimStorage);
-  if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
-    root->AdvanceAnimations();
-  } else {
-    AdvanceAnimations();
+  if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
+    Maybe<TimeStamp> testingTimeStamp;
+    if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
+      testingTimeStamp = cbp->GetTestingTimeStamp();
+    }
+
+    sampler->SampleForTesting(testingTimeStamp);
+    *aValue = sampler->GetOMTAValue(aCompositorAnimationsId);
   }
 
-  *aValue = mAnimStorage->GetOMTAValue(aCompositorAnimationsId);
   return IPC_OK();
 }
 
@@ -1937,45 +1922,24 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetAPZTestData(
 void WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy) { Destroy(); }
 
 void WebRenderBridgeParent::ResetPreviousSampleTime() {
-  mPreviousFrameTimeStamp = TimeStamp();
+  if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
+    sampler->ResetPreviousSampleTime();
+  }
 }
 
-bool WebRenderBridgeParent::AdvanceAnimations() {
-  if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
-    Maybe<TimeStamp> testingTimeStamp = cbp->GetTestingTimeStamp();
-    if (testingTimeStamp) {
-      // If we are on testing refresh mode, use the testing time stamp.  And
-      // also we don't update mPreviousFrameTimeStamp since unlike normal
-      // refresh mode, on the testing mode animations on the compositor are
-      // synchronously composed, so we don't need to worry about the time gap
-      // between the main thread and compositor thread.
-      return mAnimStorage->SampleAnimations(*testingTimeStamp,
-                                            *testingTimeStamp);
-    }
+RefPtr<OMTASampler> WebRenderBridgeParent::GetOMTASampler() const {
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  if (!cbp) {
+    return nullptr;
   }
-
-  TimeStamp lastComposeTime = mCompositorScheduler->GetLastComposeTime();
-  const bool isAnimating =
-      mAnimStorage->SampleAnimations(mPreviousFrameTimeStamp, lastComposeTime);
-
-  if (isAnimating) {
-    mPreviousFrameTimeStamp = lastComposeTime;
-  } else {
-    // Reset the previous time stamp if we don't already have any running
-    // animations to avoid using the time which is far behind for newly
-    // started animations.
-    ResetPreviousSampleTime();
-  }
-
-  return isAnimating;
+  return cbp->GetOMTASampler();
 }
 
-std::pair<WrAnimations, bool> WebRenderBridgeParent::SampleAnimations() {
-  const bool isAnimating = AdvanceAnimations();
-
-  WrAnimations animations = mAnimStorage->CollectWebRenderAnimations();
-
-  return std::make_pair(std::move(animations), isAnimating);
+void WebRenderBridgeParent::SetOMTASampleTime() {
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
+  if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
+    sampler->SetSampleTime(mCompositorScheduler->GetLastComposeTime());
+  }
 }
 
 void WebRenderBridgeParent::CompositeIfNeeded() {
@@ -2077,16 +2041,13 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     return;
   }
 
-  auto [animations, isAnimating] = SampleAnimations();
-  if (isAnimating) {
-    ScheduleGenerateFrame();
+  if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
+    if (sampler->HasAnimations()) {
+      ScheduleGenerateFrame();
+    }
   }
-  // We do this even if the arrays are empty, because it will clear out any
-  // previous properties store on the WR side, which is desirable.
-  fastTxn.UpdateDynamicProperties(animations.mOpacityArrays,
-                                  animations.mTransformArrays,
-                                  animations.mColorArrays);
 
+  SetOMTASampleTime();
   SetAPZSampleTime();
 
   wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId(), aId, start);
@@ -2365,7 +2326,6 @@ void WebRenderBridgeParent::ClearResources() {
     mCompositorScheduler->Destroy();
   }
 
-  mAnimStorage = nullptr;
   mCompositorScheduler = nullptr;
   mAsyncImageManager = nullptr;
   mApi = nullptr;
@@ -2373,8 +2333,8 @@ void WebRenderBridgeParent::ClearResources() {
 }
 
 void WebRenderBridgeParent::ClearAnimationResources() {
-  for (const auto& id : mActiveAnimations) {
-    mAnimStorage->ClearById(id.first);
+  if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
+    sampler->ClearActiveAnimations(mActiveAnimations);
   }
   mActiveAnimations.clear();
   std::queue<CompositorAnimationIdsForEpoch>().swap(

@@ -248,10 +248,9 @@ ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
 
   api = api->Clone();
   RefPtr<AsyncImagePipelineManager> holder = root->AsyncImageManager();
-  RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage();
   WebRenderBridgeParent* parent = new WebRenderBridgeParent(
       this, aPipelineId, nullptr, root->CompositorScheduler(), std::move(api),
-      std::move(holder), std::move(animStorage), cbp->GetVsyncInterval());
+      std::move(holder), cbp->GetVsyncInterval());
   parent->AddRef();  // IPDL reference
 
   {  // scope lock

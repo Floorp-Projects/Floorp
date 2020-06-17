@@ -207,6 +207,10 @@ class TransactionWrapper final {
  public:
   explicit TransactionWrapper(Transaction* aTxn);
 
+  void UpdateDynamicProperties(
+      const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+      const nsTArray<wr::WrTransformProperty>& aTransformArray,
+      const nsTArray<wr::WrColorProperty>& aColorArray);
   void AppendTransformProperties(
       const nsTArray<wr::WrTransformProperty>& aTransformArray);
   void UpdateScrollPosition(

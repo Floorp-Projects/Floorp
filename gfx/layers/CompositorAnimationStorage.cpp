@@ -36,9 +36,15 @@ void CompositorAnimationStorage::ClearById(const uint64_t& aId) {
   mAnimations.erase(aId);
 }
 
+bool CompositorAnimationStorage::HasAnimations() const {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  MutexAutoLock lock(mLock);
+
+  return !mAnimations.empty();
+}
+
 AnimatedValue* CompositorAnimationStorage::GetAnimatedValue(
     const uint64_t& aId) const {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mLock.AssertCurrentThreadOwns();
 
   return mAnimatedValues.Get(aId);
@@ -82,7 +88,6 @@ void CompositorAnimationStorage::SetAnimatedValue(
     uint64_t aId, AnimatedValue* aPreviousValue,
     gfx::Matrix4x4&& aTransformInDevSpace, gfx::Matrix4x4&& aFrameTransform,
     const TransformData& aData) {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mLock.AssertCurrentThreadOwns();
 
   if (!aPreviousValue) {
@@ -102,7 +107,6 @@ void CompositorAnimationStorage::SetAnimatedValue(
 void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                                   AnimatedValue* aPreviousValue,
                                                   nscolor aColor) {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mLock.AssertCurrentThreadOwns();
 
   if (!aPreviousValue) {
@@ -119,7 +123,6 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
 void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                                   AnimatedValue* aPreviousValue,
                                                   float aOpacity) {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mLock.AssertCurrentThreadOwns();
 
   if (!aPreviousValue) {
