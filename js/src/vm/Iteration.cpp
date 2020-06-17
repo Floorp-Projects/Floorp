@@ -1532,12 +1532,22 @@ bool GlobalObject::initIteratorProto(JSContext* cx,
 
   RootedObject proto(
       cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto ||
-      !DefinePropertiesAndFunctions(cx, proto, nullptr, iterator_methods)) {
+  if (!proto) {
     return false;
   }
 
+  // %IteratorPrototype%.map.[[Prototype]] is %Generator% and
+  // %Generator%.prototype.[[Prototype]] is %IteratorPrototype%.
+  // Populate the slot early, to prevent runaway mutual recursion.
   global->setReservedSlot(ITERATOR_PROTO, ObjectValue(*proto));
+
+  if (!DefinePropertiesAndFunctions(cx, proto, nullptr, iterator_methods)) {
+    // In this case, we leave a partially initialized object in the
+    // slot. There's no obvious way to do better, since this object may already
+    // be in the prototype chain of %GeneratorPrototype%.
+    return false;
+  }
+
   return true;
 }
 
