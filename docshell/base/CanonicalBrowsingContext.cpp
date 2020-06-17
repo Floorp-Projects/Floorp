@@ -231,6 +231,18 @@ CanonicalBrowsingContext::GetParentCrossChromeBoundary() {
   return nullptr;
 }
 
+Nullable<WindowProxyHolder> CanonicalBrowsingContext::GetTopChromeWindow() {
+  RefPtr<CanonicalBrowsingContext> bc(this);
+  while (RefPtr<CanonicalBrowsingContext> parent =
+             bc->GetParentCrossChromeBoundary()) {
+    bc = parent.forget();
+  }
+  if (bc->IsChrome()) {
+    return WindowProxyHolder(bc.forget());
+  }
+  return nullptr;
+}
+
 nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
   if (!IsTop()) {
     return Cast(Top())->GetSessionHistory();
