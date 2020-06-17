@@ -371,9 +371,15 @@ file-whitespace:
             - '**/*.c'
             - '**/*.cc'
             - '**/*.cpp'
+            - '**/*.css'
+            - '**/*.dtd'
+            - '**/*.ftl'
             - '**/*.h'
+            - '**/*.html'
+            - '**/*.properties'
             - '**/*.py'
             - '**/*.rs'
+            - '**/*.xhtml'
             - 'tools/lint/file-whitespace.yml'
 
 
