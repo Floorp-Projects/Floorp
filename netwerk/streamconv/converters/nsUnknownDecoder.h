@@ -11,7 +11,6 @@
 #include "nsIContentSniffer.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Telemetry.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
