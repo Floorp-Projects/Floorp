@@ -419,7 +419,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
     return instructions_.rbegin(at);
   }
   MInstructionReverseIterator rend() { return instructions_.rend(); }
+
   bool isLoopHeader() const { return kind_ == LOOP_HEADER; }
+  bool isPendingLoopHeader() const { return kind_ == PENDING_LOOP_HEADER; }
+
   bool hasUniqueBackedge() const {
     MOZ_ASSERT(isLoopHeader());
     MOZ_ASSERT(numPredecessors() >= 2);
