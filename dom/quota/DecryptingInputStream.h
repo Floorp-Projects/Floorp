@@ -9,6 +9,7 @@
 
 #include "mozilla/InitializedOnce.h"
 #include "nsCOMPtr.h"
+#include "nsICloneableInputStream.h"
 #include "nsIInputStream.h"
 #include "nsISeekableStream.h"
 
@@ -17,7 +18,8 @@
 namespace mozilla::dom::quota {
 
 class DecryptingInputStreamBase : public nsIInputStream,
-                                  public nsISeekableStream {
+                                  public nsISeekableStream,
+                                  public nsICloneableInputStream {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -25,6 +27,9 @@ class DecryptingInputStreamBase : public nsIInputStream,
   NS_IMETHOD IsNonBlocking(bool* _retval) final;
 
   NS_IMETHOD SetEOF() final;
+
+  using nsICloneableInputStream::GetCloneable;
+  NS_IMETHOD GetCloneable(bool* aCloneable) final;
 
  protected:
   DecryptingInputStreamBase(MovingNotNull<nsCOMPtr<nsIInputStream>> aBaseStream,
@@ -40,6 +45,8 @@ class DecryptingInputStreamBase : public nsIInputStream,
 
   InitializedOnce<const NotNull<nsCOMPtr<nsIInputStream>>> mBaseStream;
   LazyInitializedOnce<const NotNull<nsISeekableStream*>> mBaseSeekableStream;
+  LazyInitializedOnce<const NotNull<nsICloneableInputStream*>>
+      mBaseCloneableInputStream;
 
   // Number of bytes of plain data in mBuffer.
   size_t mPlainBytes = 0;
@@ -73,6 +80,8 @@ class DecryptingInputStream final : public DecryptingInputStreamBase {
   NS_DECL_NSITELLABLESTREAM
 
   NS_IMETHOD Seek(int32_t aWhence, int64_t aOffset) override;
+
+  NS_IMETHOD Clone(nsIInputStream** _retval) override;
 
  private:
   ~DecryptingInputStream();
