@@ -112,6 +112,10 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // This flag is set after Close() is run on the channel.
   bool closed_;
 
+  // We keep track of the PID of the other side of this channel so that we can
+  // record this when generating logs of IPC messages.
+  int32_t other_pid_ = -1;
+
   // This variable is updated so it matches output_queue_.size(), except we can
   // read output_queue_length_ from any thread (if we're OK getting an
   // occasional out-of-date or bogus value).  We use output_queue_length_ to
