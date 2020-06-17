@@ -157,11 +157,12 @@ def validate_rule_conf(rule, conf):
                     raise YamlLintConfigError(
                         'invalid config: option "%s" of "%s" should be in %s'
                         % (optkey, rule.ID, options[optkey]))
-            # Example: CONF = {option: ['flag1', 'flag2']}
-            #          → {option: [flag1]}      → {option: [flag1, flag2]}
+            # Example: CONF = {option: ['flag1', 'flag2', int]}
+            #          → {option: [flag1]}      → {option: [42, flag1, flag2]}
             elif isinstance(options[optkey], list):
                 if (type(conf[optkey]) is not list or
-                        any(flag not in options[optkey]
+                        any(flag not in options[optkey] and
+                            type(flag) not in options[optkey]
                             for flag in conf[optkey])):
                     raise YamlLintConfigError(
                         ('invalid config: option "%s" of "%s" should only '
@@ -177,6 +178,12 @@ def validate_rule_conf(rule, conf):
         for optkey in options:
             if optkey not in conf:
                 conf[optkey] = options_default[optkey]
+
+        if hasattr(rule, 'VALIDATE'):
+            res = rule.VALIDATE(conf)
+            if res:
+                raise YamlLintConfigError('invalid config: %s: %s' %
+                                          (rule.ID, res))
     else:
         raise YamlLintConfigError(('invalid config: rule "%s": should be '
                                    'either "enable", "disable" or a dict')
