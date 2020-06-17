@@ -421,8 +421,7 @@ void CanonicalBrowsingContext::LoadURI(const nsAString& aURI,
   LoadURI(loadState, true);
 }
 
-void CanonicalBrowsingContext::PendingRemotenessChange::ProcessReady(
-    ContentParent* aContentParent) {
+void CanonicalBrowsingContext::PendingRemotenessChange::ProcessReady() {
   if (!mPromise) {
     return;
   }
@@ -431,18 +430,15 @@ void CanonicalBrowsingContext::PendingRemotenessChange::ProcessReady(
   if (mPrepareToChangePromise) {
     mPrepareToChangePromise->Then(
         GetMainThreadSerialEventTarget(), __func__,
-        [self = RefPtr{this}, contentParent = RefPtr{aContentParent}](bool) {
-          self->Finish(contentParent);
-        },
+        [self = RefPtr{this}](bool) { self->Finish(); },
         [self = RefPtr{this}](nsresult aRv) { self->Cancel(aRv); });
     return;
   }
 
-  Finish(aContentParent);
+  Finish();
 }
 
-void CanonicalBrowsingContext::PendingRemotenessChange::Finish(
-    ContentParent* aContentParent) {
+void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
   if (!mPromise) {
     return;
   }
@@ -482,13 +478,13 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish(
     // browser to determine if it is remote, so update the value.
     browserElement->SetAttr(
         kNameSpaceID_None, nsGkAtoms::remote,
-        aContentParent ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"),
+        mContentParent ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"),
         /* notify */ true);
 
     // The process has been created, hand off to nsFrameLoaderOwner to finish
     // the process switch.
     ErrorResult error;
-    frameLoaderOwner->ChangeRemotenessToProcess(aContentParent,
+    frameLoaderOwner->ChangeRemotenessToProcess(mContentParent,
                                                 mReplaceBrowsingContext, error);
     if (error.Failed()) {
       Cancel(error.StealNSResult());
@@ -507,7 +503,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish(
     RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
     RefPtr<BrowserParent> newBrowser = frameLoader->GetBrowserParent();
     if (!newBrowser) {
-      if (aContentParent) {
+      if (mContentParent) {
         // Failed to create the BrowserParent somehow! Abort the process switch
         // attempt.
         Cancel(NS_ERROR_UNEXPECTED);
@@ -537,7 +533,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish(
     return;
   }
 
-  if (NS_WARN_IF(!aContentParent)) {
+  if (NS_WARN_IF(!mContentParent)) {
     Cancel(NS_ERROR_FAILURE);
     return;
   }
@@ -575,7 +571,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish(
   // Update which process is considered the current owner
   uint64_t inFlightProcessId = target->OwnerProcessId();
   target->SetInFlightProcessId(inFlightProcessId);
-  target->SetOwnerProcessId(aContentParent->ChildID());
+  target->SetOwnerProcessId(mContentParent->ChildID());
 
   auto resetInFlightId = [target, inFlightProcessId] {
     if (target->GetInFlightProcessId() == inFlightProcessId) {
@@ -608,7 +604,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish(
   // Create and initialize our new BrowserBridgeParent.
   TabId tabId(nsContentUtils::GenerateTabId());
   RefPtr<BrowserBridgeParent> bridge = new BrowserBridgeParent();
-  nsresult rv = bridge->InitWithProcess(embedderBrowser, aContentParent,
+  nsresult rv = bridge->InitWithProcess(embedderBrowser, mContentParent,
                                         windowInit, chromeFlags, tabId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Cancel(rv);
@@ -659,6 +655,13 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
   if (mTarget) {
     MOZ_DIAGNOSTIC_ASSERT(mTarget->mPendingRemotenessChange == this);
     mTarget->mPendingRemotenessChange = nullptr;
+  }
+
+  // When this PendingRemotenessChange was created, it was given a
+  // `mContentParent`.
+  if (mContentParent) {
+    mContentParent->RemoveKeepAlive();
+    mContentParent = nullptr;
   }
 
   mPromise = nullptr;
@@ -765,23 +768,27 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsAString& aRemoteType,
   }
 
   if (aRemoteType.IsEmpty()) {
-    change->ProcessReady(nullptr);
+    change->ProcessReady();
   } else {
-    ContentParent::GetNewOrUsedBrowserProcessAsync(
+    change->mContentParent = ContentParent::GetNewOrUsedLaunchingBrowserProcess(
         /* aFrameElement = */ nullptr,
         /* aRemoteType = */ aRemoteType,
         /* aPriority = */ hal::PROCESS_PRIORITY_FOREGROUND,
         /* aOpener = */ nullptr,
-        /* aPreferUsed = */ false)
-        ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [change](ContentParent* aContentParent) {
-              MOZ_RELEASE_ASSERT(
-                  aContentParent,
-                  "Null process from GetNewOrUsedBrowserProcessAsync");
-              change->ProcessReady(aContentParent);
-            },
-            [change](LaunchError aError) { change->Cancel(NS_ERROR_FAILURE); });
+        /* aPreferUsed = */ false);
+    if (!change->mContentParent) {
+      change->Cancel(NS_ERROR_FAILURE);
+      return promise.forget();
+    }
+
+    // Add a KeepAlive used by this ContentParent, which will be cleared when
+    // the change is complete. This should prevent the process dying before
+    // we're ready to use it.
+    change->mContentParent->AddKeepAlive();
+    change->mContentParent->WaitForLaunchAsync()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [change](ContentParent*) { change->ProcessReady(); },
+        [change](LaunchError) { change->Cancel(NS_ERROR_FAILURE); });
   }
   return promise.forget();
 }
