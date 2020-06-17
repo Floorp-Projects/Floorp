@@ -1524,8 +1524,6 @@ void ContentParent::Init() {
   RefPtr<GeckoMediaPluginServiceParent> gmps(
       GeckoMediaPluginServiceParent::GetSingleton());
   gmps->UpdateContentProcessGMPCapabilities();
-
-  mScriptableHelper = new ScriptableCPInfo(this);
 }
 
 void ContentParent::MaybeAsyncSendShutDownMessage() {
@@ -1557,11 +1555,6 @@ void ContentParent::MaybeAsyncSendShutDownMessage() {
 }
 
 void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
-  if (mScriptableHelper) {
-    static_cast<ScriptableCPInfo*>(mScriptableHelper.get())->ProcessDied();
-    mScriptableHelper = nullptr;
-  }
-
   // Shutting down by sending a shutdown message works differently than the
   // other methods. We first call Shutdown() in the child. After the child is
   // ready, it calls FinishShutdown() on us. Then we close the channel.
@@ -1732,6 +1725,11 @@ void ContentParent::MarkAsDead() {
         }));
   }
 #endif
+
+  if (mScriptableHelper) {
+    static_cast<ScriptableCPInfo*>(mScriptableHelper.get())->ProcessDied();
+    mScriptableHelper = nullptr;
+  }
 
   mLifecycleState = LifecycleState::DEAD;
 }
@@ -2500,6 +2498,10 @@ ContentParent::ContentParent(ContentParent* aOpener,
           ("CreateSubprocess: ContentParent %p mSubprocess %p handle %ld", this,
            mSubprocess,
            mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
+
+  // This is safe to do in the constructor, as it doesn't take a strong
+  // reference.
+  mScriptableHelper = new ScriptableCPInfo(this);
 }
 
 ContentParent::~ContentParent() {
@@ -2527,6 +2529,13 @@ ContentParent::~ContentParent() {
              this, mSubprocess,
              mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
     mSubprocess->Destroy();
+  }
+
+  // Make sure to clear the connection from `mScriptableHelper` if it hasn't
+  // been cleared yet.
+  if (mScriptableHelper) {
+    static_cast<ScriptableCPInfo*>(mScriptableHelper.get())->ProcessDied();
+    mScriptableHelper = nullptr;
   }
 }
 
