@@ -10932,19 +10932,6 @@
     "n_values": 3,
     "description": "A simple counter of daily mixed-content unblock operations and top documents loaded"
   },
-  "XCTO_NOSNIFF_TOPLEVEL_NAV_EXCEPTIONS" : {
-    "record_in_processes": ["main","content"],
-    "products": ["firefox"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "sstreich@mozilla.com"],
-    "bug_numbers": [1428473],
-    "expires_in_version": "80",
-    "kind": "categorical",
-    "labels": [
-      "NoException",
-      "Exception",
-      "ExceptionScriptable"],
-    "description": "Page Navigations (top-level, iframe loads) setting 'XCTO: nosniff' without a Content-Type"
-  },
   "MIXED_CONTENT_HSTS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

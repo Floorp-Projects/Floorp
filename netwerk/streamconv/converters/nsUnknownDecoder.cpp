@@ -288,29 +288,6 @@ nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   if (contentTypeEmpty) {
     DetermineContentType(request);
 
-    /*
-     * In Case we did Sniff Unknown Content with XTCO: nosniff enabled,
-     * add an Telemetry-Entry whether the sniffed content is able to
-     * execute Script.
-     */
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    if (channel) {
-      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-      if (loadInfo->GetSkipContentSniffing()) {
-        if (mContentType.EqualsLiteral("text/html") ||
-            mContentType.EqualsLiteral("text/xml") ||
-            mContentType.EqualsLiteral("aplication/pdf")) {
-          Telemetry::AccumulateCategorical(
-              mozilla::Telemetry::LABELS_XCTO_NOSNIFF_TOPLEVEL_NAV_EXCEPTIONS::
-                  ExceptionScriptable);
-        } else {
-          Telemetry::AccumulateCategorical(
-              mozilla::Telemetry::LABELS_XCTO_NOSNIFF_TOPLEVEL_NAV_EXCEPTIONS::
-                  Exception);
-        }
-      }
-    }
-
     // Make sure channel listeners see channel as pending while we call
     // OnStartRequest/OnDataAvailable, even though the underlying channel
     // has already hit OnStopRequest.
