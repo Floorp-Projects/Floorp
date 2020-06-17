@@ -2282,18 +2282,9 @@ void HelperThread::handleCompressionWorkload(
   {
     AutoUnlockHelperThreadState unlock(locked);
 
-    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-    AutoTraceLog logCompile(logger, TraceLogger_CompressSource);
-
-    task->runTask();
-  }
-
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!HelperThreadState().compressionFinishedList(locked).append(
-            std::move(task))) {
-      oomUnsafe.crash("handleCompressionWorkload");
-    }
+    // release the pointer, inside runTask the SourceCompressTask pointer will
+    // be stored in compressionFinishedList.
+    task.release()->runTask();
   }
 
   currentTask.reset();

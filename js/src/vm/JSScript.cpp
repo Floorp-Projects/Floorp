@@ -2597,14 +2597,23 @@ void ScriptSource::performTaskWork(SourceCompressionTask* task) {
 }
 
 void SourceCompressionTask::runTask() {
-  if (shouldCancel()) {
-    return;
+  if (!shouldCancel()) {
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
+    AutoTraceLog logCompile(logger, TraceLogger_CompressSource);
+
+    ScriptSource* source = sourceHolder_.get();
+    MOZ_ASSERT(source->hasUncompressedSource());
+
+    source->performTaskWork(this);
   }
 
-  ScriptSource* source = sourceHolder_.get();
-  MOZ_ASSERT(source->hasUncompressedSource());
-
-  source->performTaskWork(this);
+  {
+    AutoLockHelperThreadState lock;
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!HelperThreadState().compressionFinishedList(lock).append(this)) {
+      oomUnsafe.crash("handleCompressionWorkload");
+    }
+  }
 }
 
 void ScriptSource::triggerConvertToCompressedSourceFromTask(
@@ -2671,7 +2680,7 @@ bool js::SynchronouslyCompressSource(JSContext* cx,
     // Attempt to compress.  This may not succeed if OOM happens, but (because
     // it ordinarily happens on a helper thread) no error will ever be set here.
     MOZ_ASSERT(!cx->isExceptionPending());
-    task->runTask();
+    ss->performTaskWork(task.get());
     MOZ_ASSERT(!cx->isExceptionPending());
 
     // Convert |ss| from uncompressed to compressed data.
