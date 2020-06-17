@@ -1885,26 +1885,33 @@ bool TypeAnalyzer::specializePhis() {
     // loop header phi types to preheader phis.
     MBasicBlock* preHeader = graph.osrPreHeaderBlock();
     MBasicBlock* header = preHeader->getSingleSuccessor();
-    MOZ_ASSERT(header->isLoopHeader());
 
-    for (MPhiIterator phi(header->phisBegin()); phi != header->phisEnd();
-         phi++) {
-      MPhi* preHeaderPhi = phi->getOperand(0)->toPhi();
-      MOZ_ASSERT(preHeaderPhi->block() == preHeader);
+    if (header->isLoopHeader()) {
+      for (MPhiIterator phi(header->phisBegin()); phi != header->phisEnd();
+           phi++) {
+        MPhi* preHeaderPhi = phi->getOperand(0)->toPhi();
+        MOZ_ASSERT(preHeaderPhi->block() == preHeader);
 
-      if (preHeaderPhi->type() == MIRType::Value) {
-        // Already includes everything.
-        continue;
+        if (preHeaderPhi->type() == MIRType::Value) {
+          // Already includes everything.
+          continue;
+        }
+
+        MIRType loopType = phi->type();
+        if (!respecialize(preHeaderPhi, loopType)) {
+          return false;
+        }
       }
-
-      MIRType loopType = phi->type();
-      if (!respecialize(preHeaderPhi, loopType)) {
+      if (!propagateAllPhiSpecializations()) {
         return false;
       }
-    }
-
-    if (!propagateAllPhiSpecializations()) {
-      return false;
+    } else {
+      // Edge case: the header is a 'pending' loop header when control flow in
+      // the loop body is terminated unconditionally and there's no backedge.
+      // In this case the header only has the preheader as predecessor and we
+      // don't need to do anything.
+      MOZ_ASSERT(header->isPendingLoopHeader());
+      MOZ_ASSERT(header->numPredecessors() == 1);
     }
   }
 
