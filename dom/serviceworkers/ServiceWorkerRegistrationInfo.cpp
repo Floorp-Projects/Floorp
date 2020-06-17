@@ -434,11 +434,9 @@ void ServiceWorkerRegistrationInfo::UpdateRegistrationState(
 
   mDescriptor.SetUpdateViaCache(aUpdateViaCache);
 
-  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(
-      mInstanceList);
-  while (it.HasMore()) {
-    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
-    target->UpdateState(mDescriptor);
+  for (RefPtr<ServiceWorkerRegistrationListener> pinnedTarget :
+       mInstanceList.ForwardRange()) {
+    pinnedTarget->UpdateState(mDescriptor);
   }
 }
 
@@ -734,20 +732,16 @@ uint32_t ServiceWorkerRegistrationInfo::GetUpdateDelay(
 }
 
 void ServiceWorkerRegistrationInfo::FireUpdateFound() {
-  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(
-      mInstanceList);
-  while (it.HasMore()) {
-    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
-    target->FireUpdateFound();
+  for (RefPtr<ServiceWorkerRegistrationListener> pinnedTarget :
+       mInstanceList.ForwardRange()) {
+    pinnedTarget->FireUpdateFound();
   }
 }
 
 void ServiceWorkerRegistrationInfo::NotifyCleared() {
-  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(
-      mInstanceList);
-  while (it.HasMore()) {
-    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
-    target->RegistrationCleared();
+  for (RefPtr<ServiceWorkerRegistrationListener> pinnedTarget :
+       mInstanceList.ForwardRange()) {
+    pinnedTarget->RegistrationCleared();
   }
 }
 
