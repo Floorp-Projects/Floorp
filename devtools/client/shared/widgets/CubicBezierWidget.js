@@ -256,12 +256,28 @@ function CubicBezierWidget(
   this._onPointKeyDown = this._onPointKeyDown.bind(this);
   this._onCurveClick = this._onCurveClick.bind(this);
   this._onNewCoordinates = this._onNewCoordinates.bind(this);
+  this.onPrefersReducedMotionChange = this.onPrefersReducedMotionChange.bind(
+    this
+  );
 
   // Add preset preview menu
   this.presets = new CubicBezierPresetWidget(parent);
 
   // Add the timing function previewer
-  this.timingPreview = new TimingFunctionPreviewWidget(parent);
+  // if prefers-reduced-motion is not set
+  this.reducedMotion = parent.ownerGlobal.matchMedia(
+    "(prefers-reduced-motion)"
+  );
+  if (!this.reducedMotion.matches) {
+    this.timingPreview = new TimingFunctionPreviewWidget(parent);
+  }
+
+  // add event listener to change prefers-reduced-motion
+  // of the timing function preview during runtime
+  this.reducedMotion.addEventListener(
+    "change",
+    this.onPrefersReducedMotionChange
+  );
 
   this._initEvents();
 }
@@ -301,6 +317,19 @@ CubicBezierWidget.prototype = {
       p2,
       curve,
     };
+  },
+
+  onPrefersReducedMotionChange: function(event) {
+    // if prefers-reduced-motion is enabled destroy timing function preview
+    // else create it if it does not exist
+    if (event.matches) {
+      if (this.timingPreview) {
+        this.timingPreview.destroy();
+      }
+      this.timingPreview = undefined;
+    } else if (!this.timingPreview) {
+      this.timingPreview = new TimingFunctionPreviewWidget(this.parent);
+    }
   },
 
   _removeMarkup: function() {
@@ -452,7 +481,9 @@ CubicBezierWidget.prototype = {
     this.bezierCanvas.plot();
     this.emit("updated", this.bezierCanvas.bezier);
 
-    this.timingPreview.preview(this.bezierCanvas.bezier.toString());
+    if (this.timingPreview) {
+      this.timingPreview.preview(this.bezierCanvas.bezier.toString());
+    }
   },
 
   /**
@@ -493,7 +524,17 @@ CubicBezierWidget.prototype = {
     this._removeEvents();
     this._removeMarkup();
 
-    this.timingPreview.destroy();
+    // remove prefers-reduced-motion event listener
+    this.reducedMotion.removeEventListener(
+      "change",
+      this.onPrefersReducedMotionChange
+    );
+    this.reducedMotion = null;
+
+    if (this.timingPreview) {
+      this.timingPreview.destroy();
+      this.timingPreview = null;
+    }
     this.presets.destroy();
 
     this.curve = this.p1 = this.p2 = null;
