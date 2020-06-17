@@ -527,30 +527,30 @@ impl Parse for Display {
         input: &mut Parser<'i, 't>,
     ) -> Result<Display, ParseError<'i>> {
         // Parse all combinations of <display-inside/outside>? and `list-item`? first.
-        let mut got_list_item = input.try(parse_list_item).is_ok();
+        let mut got_list_item = input.try_parse(parse_list_item).is_ok();
         let mut inside = if got_list_item {
-            input.try(parse_display_inside_for_list_item)
+            input.try_parse(parse_display_inside_for_list_item)
         } else {
-            input.try(parse_display_inside)
+            input.try_parse(parse_display_inside)
         };
         // <display-listitem> = <display-outside>? && [ flow | flow-root ]? && list-item
         // https://drafts.csswg.org/css-display/#typedef-display-listitem
         if !got_list_item && is_valid_inside_for_list_item(&inside) {
-            got_list_item = input.try(parse_list_item).is_ok();
+            got_list_item = input.try_parse(parse_list_item).is_ok();
         }
-        let outside = input.try(parse_display_outside);
+        let outside = input.try_parse(parse_display_outside);
         if outside.is_ok() {
             if !got_list_item && (inside.is_err() || is_valid_inside_for_list_item(&inside)) {
-                got_list_item = input.try(parse_list_item).is_ok();
+                got_list_item = input.try_parse(parse_list_item).is_ok();
             }
             if inside.is_err() {
                 inside = if got_list_item {
-                    input.try(parse_display_inside_for_list_item)
+                    input.try_parse(parse_display_inside_for_list_item)
                 } else {
-                    input.try(parse_display_inside)
+                    input.try_parse(parse_display_inside)
                 };
                 if !got_list_item && is_valid_inside_for_list_item(&inside) {
-                    got_list_item = input.try(parse_list_item).is_ok();
+                    got_list_item = input.try_parse(parse_list_item).is_ok();
                 }
             }
         }
@@ -676,7 +676,8 @@ impl Parse for VerticalAlign {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        if let Ok(lp) = input.try(|i| LengthPercentage::parse_quirky(context, i, AllowQuirks::Yes))
+        if let Ok(lp) =
+            input.try_parse(|i| LengthPercentage::parse_quirky(context, i, AllowQuirks::Yes))
         {
             return Ok(GenericVerticalAlign::Length(lp));
         }
@@ -696,7 +697,7 @@ impl Parse for AnimationIterationCount {
         input: &mut ::cssparser::Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         if input
-            .try(|input| input.expect_ident_matching("infinite"))
+            .try_parse(|input| input.expect_ident_matching("infinite"))
             .is_ok()
         {
             return Ok(GenericAnimationIterationCount::Infinite);
@@ -760,7 +761,7 @@ impl Parse for AnimationName {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        if let Ok(name) = input.try(|input| KeyframesName::parse(context, input)) {
+        if let Ok(name) = input.try_parse(|input| KeyframesName::parse(context, input)) {
             return Ok(AnimationName(Some(name)));
         }
 
@@ -859,7 +860,7 @@ impl Parse for ScrollSnapType {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         if input
-            .try(|input| input.expect_ident_matching("none"))
+            .try_parse(|input| input.expect_ident_matching("none"))
             .is_ok()
         {
             return Ok(ScrollSnapType::none());
@@ -867,7 +868,7 @@ impl Parse for ScrollSnapType {
 
         let axis = ScrollSnapAxis::parse(input)?;
         let strictness = input
-            .try(ScrollSnapStrictness::parse)
+            .try_parse(ScrollSnapStrictness::parse)
             .unwrap_or(ScrollSnapStrictness::Proximity);
         Ok(Self { axis, strictness })
     }
@@ -954,7 +955,9 @@ impl Parse for ScrollSnapAlign {
         input: &mut Parser<'i, 't>,
     ) -> Result<ScrollSnapAlign, ParseError<'i>> {
         let block = ScrollSnapAlignKeyword::parse(input)?;
-        let inline = input.try(ScrollSnapAlignKeyword::parse).unwrap_or(block);
+        let inline = input
+            .try_parse(ScrollSnapAlignKeyword::parse)
+            .unwrap_or(block);
         Ok(ScrollSnapAlign { block, inline })
     }
 }
@@ -1149,7 +1152,7 @@ impl Parse for WillChange {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         if input
-            .try(|input| input.expect_ident_matching("auto"))
+            .try_parse(|input| input.expect_ident_matching("auto"))
             .is_ok()
         {
             return Ok(Self::default());
@@ -1237,14 +1240,14 @@ impl Parse for TouchAction {
             "none" => Ok(TouchAction::NONE),
             "manipulation" => Ok(TouchAction::MANIPULATION),
             "pan-x" => {
-                if input.try(|i| i.expect_ident_matching("pan-y")).is_ok() {
+                if input.try_parse(|i| i.expect_ident_matching("pan-y")).is_ok() {
                     Ok(TouchAction::PAN_X | TouchAction::PAN_Y)
                 } else {
                     Ok(TouchAction::PAN_X)
                 }
             },
             "pan-y" => {
-                if input.try(|i| i.expect_ident_matching("pan-x")).is_ok() {
+                if input.try_parse(|i| i.expect_ident_matching("pan-x")).is_ok() {
                     Ok(TouchAction::PAN_X | TouchAction::PAN_Y)
                 } else {
                     Ok(TouchAction::PAN_Y)
@@ -1322,7 +1325,7 @@ impl Parse for Contain {
         input: &mut Parser<'i, 't>,
     ) -> Result<Contain, ParseError<'i>> {
         let mut result = Contain::empty();
-        while let Ok(name) = input.try(|i| i.expect_ident_cloned()) {
+        while let Ok(name) = input.try_parse(|i| i.expect_ident_cloned()) {
             let flag = match_ignore_ascii_case! { &name,
                 "size" => Some(Contain::SIZE),
                 "layout" => Some(Contain::LAYOUT),
