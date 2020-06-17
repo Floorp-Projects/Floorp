@@ -7470,10 +7470,6 @@ int16_t nsGlobalWindowOuter::Orientation(CallerType aCallerType) const {
 }
 #endif
 
-bool nsPIDOMWindowOuter::IsTopLevelWindow() {
-  return nsGlobalWindowOuter::Cast(this)->IsTopLevelWindow();
-}
-
 bool nsPIDOMWindowOuter::HadOriginalOpener() const {
   return nsGlobalWindowOuter::Cast(this)->HadOriginalOpener();
 }

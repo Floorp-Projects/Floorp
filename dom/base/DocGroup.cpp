@@ -238,7 +238,7 @@ RefPtr<PerformanceInfoPromise> DocGroup::ReportPerformanceInfo() {
       continue;
     }
     windowID = top->WindowID();
-    isTopLevel = win->IsTopLevelWindow();
+    isTopLevel = win->GetBrowsingContext()->IsTop();
     mainThread = AbstractMainThreadFor(TaskCategory::Performance);
     break;
   }
