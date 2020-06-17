@@ -55,7 +55,11 @@ class ProxyRunner(Layer):
             prefs["network.proxy.ssl_port"] = port
             prefs["network.proxy.no_proxies_on"] = "localhost"
             browser_prefs = metadata.get_options("browser_prefs")
-            browser_prefs.update(prefs)
+            if "prefs" in browser_prefs:
+                browser_prefs["prefs"].update(prefs)
+            else:
+                browser_prefs["prefs"] = prefs
+            metadata.update_options("browser_prefs", browser_prefs)
 
         return metadata
 
