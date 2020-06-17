@@ -143,10 +143,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // This flag is set after we've closed the channel.
   bool closed_;
 
-  // We keep track of the PID of the other side of this channel so that we can
-  // record this when generating logs of IPC messages.
-  int32_t other_pid_ = -1;
-
 #if defined(OS_MACOSX)
   struct PendingDescriptors {
     uint32_t id;
