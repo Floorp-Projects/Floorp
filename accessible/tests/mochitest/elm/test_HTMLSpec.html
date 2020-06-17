@@ -23,7 +23,7 @@
           src="../name.js"></script>
 
   <script type="application/javascript">
-    function doTest() {
+    async function doTest() {
       // ////////////////////////////////////////////////////////////////////////
       // HTML:a@href
 
@@ -419,7 +419,16 @@
       // ////////////////////////////////////////////////////////////////////////
       // HTML:dialog
 
-      ok(isAccessible("dialog"), "dialog element is not accessible");
+      // XXX: Remove the pushing of the pref and just run the test once the
+      // dialog element is enabled by default.
+      await SpecialPowers.pushPrefEnv({ set: [["dom.dialog_element.enabled", true]] });
+      obj = {
+        role: ROLE_DIALOG,
+        children: [
+          { role: ROLE_TEXT_LEAF },
+        ],
+      };
+      testElm("dialog", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       // HTML:div
