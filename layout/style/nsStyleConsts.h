@@ -374,21 +374,6 @@ enum class StyleFlexWrap : uint8_t {
 // (rather than an internal numerical representation of some keyword).
 #define NS_STYLE_ORDER_INITIAL 0
 
-// See nsStyleFont
-enum class StyleFontSize : uint8_t {
-  Xxsmall = 0,
-  Xsmall,
-  Small,
-  Medium,
-  Large,
-  Xlarge,
-  Xxlarge,
-  Xxxlarge,
-  Larger,
-  Smaller,
-  NoKeyword  // Used by Servo to track the "no keyword" case
-};
-
 #define NS_STYLE_MASONRY_PLACEMENT_PACK (1 << 0)
 #define NS_STYLE_MASONRY_ORDER_DEFINITE_FIRST (1 << 1)
 #define NS_STYLE_MASONRY_AUTO_FLOW_INITIAL_VALUE \
