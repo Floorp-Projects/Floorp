@@ -7044,13 +7044,6 @@
     "n_buckets": 10,
     "description": "Firefox: Time to initialize the bookmarks toolbar view (ms)"
   },
-  "FX_BROWSER_FULLSCREEN_USED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "46",
-    "kind": "count",
-    "description": "The number of times that a session enters browser fullscreen (f11-fullscreen)"
-  },
   "FX_NEW_WINDOW_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],

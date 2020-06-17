@@ -4791,6 +4791,24 @@ firstStartup:
     record_in_processes:
       - main
 
+fullscreen:
+    used:
+      bug_numbers:
+        - 1201374
+        - 1645460
+      description: >
+        The number of times that a session enters browser fullscreen (f11-fullscreen).
+      expires: "86"
+      kind: uint
+      notification_emails:
+        - emalysz@mozilla.com
+        - rtestard@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
 # The following section is for the "deletion-request" ping (bug 1585410). All the
 # extra identifiers other than `client_id` could be added here.
 deletion.request:

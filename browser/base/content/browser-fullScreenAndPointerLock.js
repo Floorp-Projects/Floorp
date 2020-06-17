@@ -340,7 +340,7 @@ var FullScreen = {
     }
 
     if (enterFS && !document.fullscreenElement) {
-      Services.telemetry.getHistogramById("FX_BROWSER_FULLSCREEN_USED").add(1);
+      Services.telemetry.scalarAdd("fullscreen.used", 1);
     }
   },
 
