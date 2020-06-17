@@ -4,6 +4,11 @@ file-whitespace:
     include:
         - .
     exclude:
+        - accessible/tests/crashtests
+        - accessible/tests/mochitest
+        - browser/locales/en-US/chrome/browser/uiDensity.properties
+        - build/pgo/blueprint
+        - build/pgo/js-input
         - build/pymake/pymake/command.py
         - build/pymake/pymake/data.py
         - build/pymake/pymake/functions.py
@@ -12,6 +17,18 @@ file-whitespace:
         - build/pymake/pymake/process.py
         - build/pymake/pymake/util.py
         - build/pymake/tests/runtests.py
+        - devtools/client/debugger/test
+        - devtools/client/inspector/markup/test
+        - devtools/client/inspector/rules/test
+        - devtools/client/inspector/test
+        - devtools/client/shared/test/doc_inline-debugger-statement.html
+        - devtools/client/webconsole/test/browser/test-message-categories-css-parser.css
+        - devtools/shared/webconsole/test/chrome/test_jsterm.html
+        - devtools/shared/webconsole/test/chrome/test_object_actor_native_getters.html
+        - docshell/base/crashtests
+        - docshell/test
+        - dom/base/crashtests
+        - dom/base/test
         - dom/bindings/Codegen.py
         - dom/bindings/Configuration.py
         - dom/bindings/parser/WebIDL.py
@@ -23,19 +40,87 @@ file-whitespace:
         - dom/bindings/parser/tests/test_special_methods.py
         - dom/bindings/parser/tests/test_toJSON.py
         - dom/bindings/parser/tests/test_typedef.py
+        - dom/canvas/crashtests
+        - dom/canvas/test
+        - dom/events/crashtests
+        - dom/events/test
+        - dom/file/tests/file_mozfiledataurl_inner.html
+        - dom/html/crashtests
+        - dom/html/reftests
+        - dom/html/test
+        - dom/jsurl/crashtests/344996-1.xhtml
+        - dom/jsurl/test
         - dom/media/gtest/AudioGenerator.cpp
         - dom/media/gtest/AudioGenerator.h
-        - dom/security/test/csp/file_websocket_self_wsh.py
+        - dom/media/mediasource/test/crashtests/926665.html
+        - dom/media/test
+        - dom/media/tests
+        - dom/media/webaudio/test
+        - dom/media/webspeech/synth/test
+        - dom/plugins/test
+        - dom/smil/crashtests
+        - dom/smil/test
+        - dom/security/test
+        - dom/svg/crashtests
+        - dom/svg/test
         - dom/webauthn/winwebauthn/webauthn.h
         - dom/websocket/tests/file_websocket_wsh.py
+        - dom/tests/mochitest
+        - dom/xml/crashtests
+        - dom/xml/test
+        - dom/xslt/crashtests
+        - dom/xslt/tests
+        - dom/xul/crashtests
+        - dom/xul/test
+        - editor/composer/test
+        - editor/composer/crashtests/removing-editable-xslt.html
+        - editor/libeditor/tests
+        - editor/libeditor/crashtests
+        - editor/reftests
+        - extensions/universalchardet
+        - gfx/tests/crashtests
         - gfx/vr/nsFxrCommandLineHandler.cpp
         - gfx/vr/vrhost/vrhostapi.cpp
+        - image/test/crashtests
+        - image/test/mochitest
+        - image/test/reftest
+        - intl/lwbrk/crashtests
+        - intl/uconv/crashtests
+        - intl/uconv/tests
+        - intl/strres/tests/unit/397093.properties
+        - intl/strres/tests/unit/strres.properties
+        - js/xpconnect/crashtests
+        - js/xpconnect/tests
         - js/src/frontend/BytecodeEmitter.cpp
         - js/src/frontend/SharedContext.h
-        - layout/reftests/fonts/gsubtest/makegsubfonts.py
-        - layout/reftests/fonts/mark-generate.py
+        - layout/base/crashtests
+        - layout/base/tests
+        - layout/forms/crashtests
+        - layout/forms/test
+        - layout/generic/crashtests
+        - layout/generic/test
+        - layout/inspector/tests
+        - layout/mathml/tests
+        - layout/mathml/crashtests
+        - layout/painting/crashtests/1405881-1.html
+        - layout/painting/crashtests/1407470-1.html
+        - layout/reftests
+        - layout/style/crashtests
+        - layout/style/test
+        - layout/svg/crashtests
+        - layout/tables/test/test_bug337124.html
+        - layout/tables/crashtests
+        - layout/xul/crashtests
+        - layout/xul/grid/crashtests
+        - layout/xul/reftest
+        - layout/xul/test
+        - layout/xul/tree
         - media/mtransport/nricectx.cpp
+        - modules/libjar/zipwriter/test/unit/data/test_bug399727.html
+        - netwerk/test/crashtests
         - netwerk/dns/prepare_tlds.py
+        - parser/htmlparser/tests
+        - parser/html/java/named-character-references.html
         - python/devtools/migrate-l10n/migrate/main.py
         - python/l10n/convert_xul_to_fluent/convert.py
         - python/l10n/convert_xul_to_fluent/lib/__init__.py
@@ -50,11 +135,16 @@ file-whitespace:
         - testing/mozharness/configs/web_platform_tests/test_config_windows.py
         - testing/mozharness/external_tools/virtualenv/virtualenv_embedded/distutils-init.py
         - testing/talos/talos/cmanager_base.py
+        - testing/talos/talos/pageloader/chrome/pageloader.xhtml
+        - testing/talos/talos/tests
         - testing/talos/talos/unittests/conftest.py
         - testing/talos/talos/unittests/test_test.py
         - testing/talos/talos/unittests/test_xtalos.py
-        - testing/web-platform/tests/content-security-policy/embedded-enforcement/support/echo-allow-csp-from.py
-        - testing/web-platform/tests/content-security-policy/embedded-enforcement/support/echo-policy-multiple.py
+        - testing/web-platform/mozilla/tests/editor
+        - testing/web-platform/mozilla/tests/focus
+        - testing/web-platform/tests
+        - testing/web-platform/tests/conformance-checkers
+        - testing/web-platform/tests/content-security-policy
         - testing/web-platform/tests/css/tools/apiclient/apiclient/__init__.py
         - testing/web-platform/tests/css/tools/apiclient/apiclient/apiclient.py
         - testing/web-platform/tests/css/tools/apiclient/apiclient/uritemplate.py
@@ -67,24 +157,46 @@ file-whitespace:
         - testing/web-platform/tests/css/tools/w3ctestlib/Suite.py
         - testing/web-platform/tests/css/tools/w3ctestlib/Utils.py
         - testing/web-platform/tests/css/tools/w3ctestlib/__init__.py
+        - testing/web-platform/tests/css/tools/w3ctestlib/templates/indices.css
+        - testing/web-platform/tests/css/vendor-imports
+        - testing/web-platform/tests/html
         - testing/web-platform/tests/tools/webdriver/webdriver/transport.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/browsers/edgechromium.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/executors/executoredgechromium.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/manifestupdate.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/metadata.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/tests/test_update.py
+        - testing/web-platform/tests/tools/lint/tests/dummy/broken.html
+        - testing/web-platform/tests/tools/lint/tests/dummy/broken_ignored.html
+        - toolkit/locales/en-US/chrome/global/mozilla.dtd
         - toolkit/components/telemetry/build_scripts/setup.py
         - toolkit/components/telemetry/tests/marionette/mach_commands.py
+        - toolkit/content/tests/chrome
         - toolkit/mozapps/installer/windows/nsis/preprocess-locale.py
+        - tools/jprof/README.html
+        - tools/lint/eslint
+        - view/crashtests
+        - widget/cocoa/crashtests
         - widget/nsFilePickerProxy.cpp
+        - widget/tests
         - widget/windows/tests/TestUrisToValidate.h
+        - xpcom/reflect/xptcall/porting.html
+        - xpcom/reflect/xptcall/status.html
+        - xpcom/tests/test.properties
+        - xpcom/tests/unit/data/bug121341.properties
     extensions:
         - .c
         - .cc
         - .cpp
+        - .css
+        - .dtd
+        - .ftl
         - .h
+        - .html
         - .py
+        - .properties
         - .rs
+        - .xhtml
     support-files:
         - 'tools/lint/file-whitespace/**'
     type: external
