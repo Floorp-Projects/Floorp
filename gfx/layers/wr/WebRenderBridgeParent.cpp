@@ -22,6 +22,7 @@
 #include "mozilla/layers/APZUpdater.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorAnimationStorage.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorVsyncScheduler.h"
 #include "mozilla/layers/ImageBridgeParent.h"
