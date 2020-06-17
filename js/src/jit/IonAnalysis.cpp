@@ -4939,6 +4939,9 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
       }
 
       // Combine the load and unbox into a single MIR instruction.
+      if (!graph.alloc().ensureBallast()) {
+        return false;
+      }
 
       MIRType type = unbox->type();
       MUnbox::Mode mode = unbox->mode();
