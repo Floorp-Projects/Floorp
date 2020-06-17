@@ -972,16 +972,20 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
   return true;
 }
 
-void WebGLContext::Present(WebGLFramebuffer* const fb,
-                           const layers::TextureType consumerType) {
+void WebGLContext::Present(WebGLFramebuffer* const xrFb,
+                           const layers::TextureType consumerType,
+                           const bool webvr) {
   const FuncScope funcScope(*this, "<Present>");
   if (IsContextLost()) return;
 
-  auto swapChain = &mSwapChain;
+  auto swapChain = webvr ? &mWebVRSwapChain : &mSwapChain;
+  if (xrFb) {
+    swapChain = &xrFb->mOpaqueSwapChain;
+  }
   const gl::MozFramebuffer* maybeFB = nullptr;
-  if (fb) {
-    swapChain = &fb->mOpaqueSwapChain;
-    maybeFB = fb->mOpaque.get();
+  if (xrFb) {
+    swapChain = &xrFb->mOpaqueSwapChain;
+    maybeFB = xrFb->mOpaque.get();
   } else {
     mResolvedDefaultFB = nullptr;
   }
@@ -1006,10 +1010,10 @@ void WebGLContext::Present(WebGLFramebuffer* const fb,
 }
 
 Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
-    WebGLFramebuffer* const fb) {
-  auto swapChain = &mSwapChain;
-  if (fb) {
-    swapChain = &fb->mOpaqueSwapChain;
+    WebGLFramebuffer* const xrFb, const bool webvr) {
+  auto swapChain = webvr ? &mWebVRSwapChain : &mSwapChain;
+  if (xrFb) {
+    swapChain = &xrFb->mOpaqueSwapChain;
   }
   const auto& front = swapChain->FrontBuffer();
   if (!front) return {};
@@ -1089,6 +1093,8 @@ RefPtr<gfx::DataSourceSurface> WebGLContext::GetFrontBufferSnapshot() {
 
   return surf;
 }
+
+void WebGLContext::ClearVRSwapChain() { mWebVRSwapChain.ClearPool(); }
 
 // ------------------------
 

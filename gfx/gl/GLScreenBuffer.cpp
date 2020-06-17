@@ -16,15 +16,43 @@ namespace mozilla::gl {
 // -
 // SwapChainPresenter
 
+// We need to apply pooling on Android because of the AndroidSurface slow
+// destructor bugs. They cause a noticeable performance hit. See bug
+// #1646073.
+static constexpr size_t kPoolSize =
+#if defined(MOZ_WIDGET_ANDROID)
+    4;
+#else
+    0;
+#endif
+
 UniquePtr<SwapChainPresenter> SwapChain::Acquire(const gfx::IntSize& size) {
   MOZ_ASSERT(mFactory);
-  auto back = mFactory->CreateShared(size);
-  if (!back) return nullptr;
+
+  std::shared_ptr<SharedSurface> surf;
+  if (!mPool.empty() && mPool.front()->mDesc.size != size) {
+    mPool = {};
+  }
+  if (kPoolSize && mPool.size() == kPoolSize) {
+    surf = mPool.front();
+    mPool.pop();
+  }
+  if (!surf) {
+    auto uniquePtrSurf = mFactory->CreateShared(size);
+    if (!uniquePtrSurf) return nullptr;
+    surf.reset(uniquePtrSurf.release());
+  }
+  mPool.push(surf);
+  while (mPool.size() > kPoolSize) {
+    mPool.pop();
+  }
 
   auto ret = MakeUnique<SwapChainPresenter>(*this);
-  ret->SwapBackBuffer(std::move(back));
+  ret->SwapBackBuffer(std::move(surf));
   return ret;
 }
+
+void SwapChain::ClearPool() { mPool = {}; }
 
 // -
 
@@ -45,8 +73,8 @@ SwapChainPresenter::~SwapChainPresenter() {
   }
 }
 
-UniquePtr<SharedSurface> SwapChainPresenter::SwapBackBuffer(
-    UniquePtr<SharedSurface> back) {
+std::shared_ptr<SharedSurface> SwapChainPresenter::SwapBackBuffer(
+    std::shared_ptr<SharedSurface> back) {
   if (mBackBuffer) {
     mBackBuffer->UnlockProd();
     mBackBuffer->ProducerRelease();

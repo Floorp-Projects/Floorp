@@ -992,10 +992,14 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   }
   void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
-  void Present(WebGLFramebufferJS*, layers::TextureType);
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebufferJS*);
+  void Present(WebGLFramebufferJS*, layers::TextureType,
+               const bool webvr = false);
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebufferJS*,
+                                                  const bool webvr = false);
   RefPtr<gfx::SourceSurface> GetFrontBufferSnapshot(
       bool requireAlphaPremult = true) override;
+
+  void ClearVRSwapChain();
 
  private:
   RefPtr<gfx::DataSourceSurface> BackBufferSnapshot();
