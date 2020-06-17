@@ -545,10 +545,6 @@ ifndef HAVE_INT128_SUPPORT
     DEFINES += -DKRML_VERIFIED_UINT128
 endif
 
-ifndef NSS_DISABLE_DEPRECATED_SEED
-	CSRCS += deprecated/seed.c
-endif
-
 ifndef NSS_DISABLE_CHACHAPOLY
     ifeq ($(CPU_ARCH),x86_64)
         ifndef NSS_DISABLE_AVX2
