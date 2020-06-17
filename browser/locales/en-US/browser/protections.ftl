@@ -65,9 +65,9 @@ cryptominer-tab-content = Cryptominers use your system’s computing power to mi
 protections-close-button2 =
   .aria-label = Close
   .title = Close
-  
+
 mobile-app-title = Block ad trackers across more devices
-mobile-app-card-content = Use the mobile browser with built-in protection against ad tracking. 
+mobile-app-card-content = Use the mobile browser with built-in protection against ad tracking.
 mobile-app-links = { -brand-product-name } Browser for <a data-l10n-name="android-mobile-inline-link">Android</a> and <a data-l10n-name="ios-mobile-inline-link">iOS</a>
 
 lockwise-title = Never forget a password again
@@ -84,7 +84,7 @@ lockwise-app-links = { -lockwise-brand-name } for <a data-l10n-name="lockwise-an
 
 # Variables:
 # $count (Number) - Number of passwords exposed in data breaches.
-lockwise-scanned-text-breached-logins = 
+lockwise-scanned-text-breached-logins =
   { $count ->
       [one] 1 password may have been exposed in a data breach.
      *[other] { $count } passwords may have been exposed in a data breach.
@@ -178,7 +178,7 @@ monitor-breaches-resolved-description = If your email appears in any new breache
 # Variables:
 # $numBreachesResolved (Number) - Number of breaches marked as resolved by the user on Monitor.
 # $numBreaches (Number) - Number of breaches in which a user's data was involved, detected by Monitor.
-monitor-partial-breaches-title = 
+monitor-partial-breaches-title =
   { $numBreaches ->
    *[other] { $numBreachesResolved } out of { $numBreaches } breaches marked as resolved
   }
