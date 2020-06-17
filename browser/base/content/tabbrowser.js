@@ -55,11 +55,6 @@
 
       if (gMultiProcessBrowser) {
         messageManager.addMessageListener("Browser:Init", this);
-      } else {
-        this._outerWindowIDBrowserMap.set(
-          this.selectedBrowser.outerWindowID,
-          this.selectedBrowser
-        );
       }
       messageManager.addMessageListener("RefreshBlocker:Blocked", this);
 
@@ -100,8 +95,6 @@
     _tabFilters: new Map(),
 
     _isBusy: false,
-
-    _outerWindowIDBrowserMap: new Map(),
 
     arrowKeysShouldWrap: AppConstants == "macosx",
 
@@ -763,7 +756,13 @@
     },
 
     getBrowserForOuterWindowID(aID) {
-      return this._outerWindowIDBrowserMap.get(aID);
+      for (let b of this.browsers) {
+        if (b.outerWindowID == aID) {
+          return b;
+        }
+      }
+
+      return null;
     },
 
     getTabForBrowser(aBrowser) {
@@ -1809,9 +1808,6 @@
 
       let wasActive = document.activeElement == aBrowser;
 
-      // Unmap the old outerWindowID.
-      this._outerWindowIDBrowserMap.delete(aBrowser.outerWindowID);
-
       // Unhook our progress listener.
       let filter = this._tabFilters.get(tab);
       let listener = this._tabListeners.get(tab);
@@ -1917,9 +1913,6 @@
           { isAppTab: tab.pinned },
           "BrowserTab"
         );
-
-        // Register the new outerWindowID.
-        this._outerWindowIDBrowserMap.set(aBrowser.outerWindowID, aBrowser);
       }
 
       if (wasActive) {
@@ -2213,11 +2206,7 @@
         }
       }
 
-      let {
-        uriIsAboutBlank,
-        remoteType,
-        usingPreloadedContent,
-      } = aTab._browserParams;
+      let { uriIsAboutBlank, usingPreloadedContent } = aTab._browserParams;
       delete aTab._browserParams;
       delete aTab._cachedCurrentURI;
 
@@ -2269,15 +2258,6 @@
       // docShell to inactive.
       if (!usingPreloadedContent) {
         browser.docShellIsActive = false;
-      }
-
-      // When addTab() is called with an URL that is not "about:blank" we
-      // set the "nodefaultsrc" attribute that prevents a frameLoader
-      // from being created as soon as the linked <browser> is inserted
-      // into the DOM. We thus have to register the new outerWindowID
-      // for non-remote browsers after we have called browser.loadURI().
-      if (remoteType == E10SUtils.NOT_REMOTE) {
-        this._outerWindowIDBrowserMap.set(browser.outerWindowID, browser);
       }
 
       // If we transitioned from one browser to two browsers, we need to set
@@ -2357,8 +2337,6 @@
       };
 
       SessionStore.resetBrowserToLazyState(aTab);
-
-      this._outerWindowIDBrowserMap.delete(browser.outerWindowID);
 
       // Remove the tab's filter and progress listener.
       let filter = this._tabFilters.get(aTab);
@@ -3652,8 +3630,6 @@
       var browser = this.getBrowserForTab(aTab);
 
       if (aTab.linkedPanel) {
-        this._outerWindowIDBrowserMap.delete(browser.outerWindowID);
-
         // Because of the fact that we are setting JS properties on
         // the browser elements, and we have code in place
         // to preserve the JS objects for any elements that have
@@ -4033,14 +4009,7 @@
       // Make sure to unregister any open URIs.
       this._swapRegisteredOpenURIs(ourBrowser, aOtherBrowser);
 
-      // Unmap old outerWindowIDs.
-      this._outerWindowIDBrowserMap.delete(ourBrowser.outerWindowID);
       let remoteBrowser = aOtherBrowser.ownerGlobal.gBrowser;
-      if (remoteBrowser) {
-        remoteBrowser._outerWindowIDBrowserMap.delete(
-          aOtherBrowser.outerWindowID
-        );
-      }
 
       // If switcher is active, it will intercept swap events and
       // react as needed.
@@ -4058,15 +4027,6 @@
         let ourOuterWindowID = ourBrowser._outerWindowID;
         ourBrowser._outerWindowID = aOtherBrowser._outerWindowID;
         aOtherBrowser._outerWindowID = ourOuterWindowID;
-      }
-
-      // Register new outerWindowIDs.
-      this._outerWindowIDBrowserMap.set(ourBrowser.outerWindowID, ourBrowser);
-      if (remoteBrowser) {
-        remoteBrowser._outerWindowIDBrowserMap.set(
-          aOtherBrowser.outerWindowID,
-          aOtherBrowser
-        );
       }
 
       // Swap permanentKey properties.
@@ -5160,7 +5120,6 @@
             return undefined;
           }
 
-          this._outerWindowIDBrowserMap.set(browser.outerWindowID, browser);
           browser.sendMessageToActor(
             "Browser:AppTab",
             { isAppTab: tab.pinned },
@@ -5666,9 +5625,6 @@
 
         let wasActive = document.activeElement == browser;
 
-        // Unmap the old outerWindowId
-        this._outerWindowIDBrowserMap.delete(browser.outerWindowID);
-
         // Unhook our progress listener.
         let filter = this._tabFilters.get(tab);
         let oldListener = this._tabListeners.get(tab);
@@ -5752,9 +5708,6 @@
               { isAppTab: tab.pinned },
               "BrowserTab"
             );
-
-            // Register the new outerWindowID.
-            this._outerWindowIDBrowserMap.set(browser.outerWindowID, browser);
           }
 
           if (wasActive) {
