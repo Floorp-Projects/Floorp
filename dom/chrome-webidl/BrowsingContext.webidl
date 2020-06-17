@@ -126,6 +126,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
 
   readonly attribute WindowGlobalParent? currentWindowGlobal;
 
+  readonly attribute WindowProxy? topChromeWindow;
+
   // XXX(nika): This feels kinda hacky, but will do for now while we don't
   // synchronously create WindowGlobalParent. It can throw if somehow the
   // content process has died.
