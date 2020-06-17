@@ -61,6 +61,8 @@ MARKUPMAP(del, New_HyperText, roles::CONTENT_DELETION)
 
 MARKUPMAP(details, New_HyperText, roles::DETAILS)
 
+MARKUPMAP(dialog, New_HyperText, roles::DIALOG)
+
 MARKUPMAP(
     div,
     [](Element* aElement, Accessible* aContext) -> Accessible* {
