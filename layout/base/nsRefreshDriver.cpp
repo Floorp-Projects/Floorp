@@ -1455,10 +1455,8 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
   if (mMostRecentRefresh != newMostRecentRefresh) {
     mMostRecentRefresh = newMostRecentRefresh;
 
-    nsTObserverArray<nsATimerAdjustmentObserver*>::EndLimitedIterator iter(
-        mTimerAdjustmentObservers);
-    while (iter.HasMore()) {
-      nsATimerAdjustmentObserver* obs = iter.GetNext();
+    for (nsATimerAdjustmentObserver* obs :
+         mTimerAdjustmentObservers.EndLimitedRange()) {
       obs->NotifyTimerAdjusted(mMostRecentRefresh);
     }
   }
@@ -1980,9 +1978,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   for (uint32_t i = 0; i < ArrayLength(mObservers); ++i) {
     AutoRecordPhase phaseRecord(&phaseMetrics[i]);
 
-    ObserverArray::EndLimitedIterator etor(mObservers[i]);
-    while (etor.HasMore()) {
-      RefPtr<nsARefreshObserver> obs = etor.GetNext();
+    for (RefPtr<nsARefreshObserver> obs : mObservers[i].EndLimitedRange()) {
       obs->WillRefresh(aNowTime);
 
       if (!mPresContext || !mPresContext->GetPresShell()) {
@@ -2248,10 +2244,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     mPresContext->NotifyDOMContentFlushed();
   }
 
-  nsTObserverArray<nsAPostRefreshObserver*>::ForwardIterator iter(
-      mPostRefreshObservers);
-  while (iter.HasMore()) {
-    nsAPostRefreshObserver* observer = iter.GetNext();
+  for (nsAPostRefreshObserver* observer :
+       mPostRefreshObservers.ForwardRange()) {
     observer->DidRefresh();
   }
 
