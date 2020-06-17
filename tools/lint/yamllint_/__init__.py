@@ -54,6 +54,12 @@ def get_yamllint_binary(mc_root):
     return os.path.join(mc_root, 'third_party', 'python', 'yamllint', 'yamllint')
 
 
+def get_yamllint_version(binary):
+    return subprocess.check_output([which('python'), binary, "--version"],
+                                   universal_newlines=True,
+                                   stderr=subprocess.STDOUT)
+
+
 def _run_pip(*args):
     """
     Helper function that runs pip with subprocess
@@ -89,6 +95,8 @@ def lint(files, config, **lintargs):
     log = lintargs['log']
 
     binary = get_yamllint_binary(lintargs['root'])
+
+    log.debug("Version: {}".format(get_yamllint_version(binary)))
 
     cmdargs = [
         which('python'),
