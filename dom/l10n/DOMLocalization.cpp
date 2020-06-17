@@ -485,6 +485,14 @@ bool DOMLocalization::ApplyTranslations(
       hasMissingTranslation = true;
       continue;
     }
+    // If we have a proto, we expect all elements are connected up.
+    // If they're not, they may have been removed by earlier translations.
+    // We will have added an error in L10nOverlays in this case.
+    // This is an error in fluent use, but shouldn't be crashing. There's
+    // also no point translating the element - skip it:
+    if (aProto && !elem->IsInComposedDoc()) {
+      continue;
+    }
     L10nOverlays::TranslateElement(*elem, aTranslations[i].Value(), errors,
                                    aRv);
     if (NS_WARN_IF(aRv.Failed())) {
