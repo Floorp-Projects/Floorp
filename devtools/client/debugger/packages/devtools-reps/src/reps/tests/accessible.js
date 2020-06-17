@@ -21,10 +21,12 @@ describe("Accessible - Document", () => {
     const renderedComponent = shallow(
       Accessible.rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual('"New Tab": document');
+    expect(renderedComponent.prop("title")).toEqual('"New Tab": document');
   });
 });
 
@@ -116,10 +118,12 @@ describe("Accessible - No Name Accessible", () => {
     const renderedComponent = shallow(
       Accessible.rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("text container");
+    expect(renderedComponent.prop("title")).toEqual("text container");
     expect(renderedComponent.find(".separator").exists()).toBeFalsy();
     expect(renderedComponent.find(".accessible-namer").exists()).toBeFalsy();
   });

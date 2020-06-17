@@ -5,13 +5,31 @@
 // Dependencies
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
 const { getGripType, wrapRender } = require("./rep-utils");
 
 /**
  * Renders a NaN object
  */
+
+NaNRep.PropTypes = {
+  shouldRenderTooltip: PropTypes.bool,
+};
+
 function NaNRep(props) {
-  return span({ className: "objectBox objectBox-nan" }, "NaN");
+  const shouldRenderTooltip = props.shouldRenderTooltip;
+
+  const config = getElementConfig(shouldRenderTooltip);
+
+  return span(config, "NaN");
+}
+
+function getElementConfig(shouldRenderTooltip) {
+  return {
+    className: "objectBox objectBox-nan",
+    title: shouldRenderTooltip ? "NaN" : null,
+  };
 }
 
 function supportsObject(object, noGrip = false) {

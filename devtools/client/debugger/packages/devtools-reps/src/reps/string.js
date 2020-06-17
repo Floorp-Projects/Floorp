@@ -25,6 +25,7 @@ const {
 /**
  * Renders a string. String value is enclosed within quotes.
  */
+
 StringRep.propTypes = {
   useQuotes: PropTypes.bool,
   escapeWhitespace: PropTypes.bool,
@@ -37,6 +38,7 @@ StringRep.propTypes = {
   className: PropTypes.string,
   title: PropTypes.string,
   isInContentPage: PropTypes.bool,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function StringRep(props) {
@@ -53,6 +55,7 @@ function StringRep(props) {
     title,
     isInContentPage,
     transformEmptyString = false,
+    shouldRenderTooltip,
   } = props;
 
   let text = object;
@@ -65,7 +68,11 @@ function StringRep(props) {
 
   if (text == "" && transformEmptyString && !useQuotes) {
     return span(
-      { ...config, className: `${config.className} objectBox-empty-string` },
+      {
+        ...config,
+        title: "<empty string>",
+        className: `${config.className} objectBox-empty-string`,
+      },
       "<empty string>"
     );
   }
@@ -96,6 +103,10 @@ function StringRep(props) {
     },
     text
   );
+
+  if (shouldRenderTooltip) {
+    config.title = text;
+  }
 
   if (!isLong) {
     if (containsURL(text)) {

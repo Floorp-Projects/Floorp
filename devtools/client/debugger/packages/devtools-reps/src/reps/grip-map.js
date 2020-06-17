@@ -21,6 +21,7 @@ const { ModePropType } = require("./array");
  * Renders an map. A map is represented by a list of its
  * entries enclosed in curly brackets.
  */
+
 GripMap.propTypes = {
   object: PropTypes.object,
   // @TODO Change this to Object.values when supported in Node's version of V8
@@ -30,14 +31,16 @@ GripMap.propTypes = {
   onDOMNodeMouseOut: PropTypes.func,
   onInspectIconClick: PropTypes.func,
   title: PropTypes.string,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function GripMap(props) {
-  const { mode, object } = props;
+  const { mode, object, shouldRenderTooltip } = props;
 
   const config = {
     "data-link-actor-id": object.actor,
     className: "objectBox objectBox-object",
+    title: shouldRenderTooltip ? getTooltip(object, props) : null,
   };
 
   const title = getTitle(props, object);
@@ -83,6 +86,12 @@ function getTitle(props, object) {
       showZeroLength: true,
     })
   );
+}
+
+function getTooltip(object, props) {
+  const tooltip =
+    props.title || (object && object.class ? object.class : "Map");
+  return `${tooltip}(${getLength(object)})`;
 }
 
 function safeEntriesIterator(props, object, max) {

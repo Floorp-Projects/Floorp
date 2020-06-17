@@ -36,20 +36,24 @@ describe("GripArray - basic", () => {
     const length = getGripLengthBubbleText(object);
     const defaultOutput = `Array${length} []`;
 
-    let component = renderRep({ mode: undefined });
+    let component = renderRep({ mode: undefined, shouldRenderTooltip: true });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe("Array");
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.TINY });
+    component = renderRep({ mode: MODE.TINY, shouldRenderTooltip: true });
     expect(component.text()).toBe("[]");
+    expect(component.prop("title")).toBe("Array");
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.SHORT });
+    component = renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe("Array");
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.LONG });
+    component = renderRep({ mode: MODE.LONG, shouldRenderTooltip: true });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe("Array");
     expectActorAttribute(component, object.actor);
   });
 });
@@ -129,12 +133,30 @@ describe("GripArray - more than long mode max props", () => {
       .fill('"test string"')
       .join(", ");
 
-    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
-    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.LONG }).text()).toBe(
-      `Array${length} [ ${longContent}, … ]`
-    );
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).prop("title")
+    ).toBe("Array");
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).text()
+    ).toBe(`${length} […]`);
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
+    ).toBe("Array");
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).prop("title")
+    ).toBe("Array");
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).text()
+    ).toBe(`Array${length} [ ${longContent}, … ]`);
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).prop("title")
+    ).toBe("Array");
   });
 });
 

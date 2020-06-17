@@ -12,20 +12,33 @@ const { isGrip, getURLDisplayString, wrapRender } = require("./rep-utils");
 /**
  * Renders a grip object with URL data.
  */
+
 ObjectWithURL.propTypes = {
   object: PropTypes.object.isRequired,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function ObjectWithURL(props) {
   const grip = props.object;
+  const config = getElementConfig(props);
+
   return span(
-    {
-      "data-link-actor-id": grip.actor,
-      className: `objectBox objectBox-${getType(grip)}`,
-    },
+    config,
     getTitle(grip),
     span({ className: "objectPropValue" }, getDescription(grip))
   );
+}
+
+function getElementConfig(opts) {
+  const grip = opts.object;
+  const shouldRenderTooltip = opts.shouldRenderTooltip;
+  const tooltip = `${getType(grip)} ${getDescription(grip)}`;
+
+  return {
+    "data-link-actor-id": grip.actor,
+    className: `objectBox objectBox-${getType(grip)}`,
+    title: shouldRenderTooltip ? tooltip : null,
+  };
 }
 
 function getTitle(grip) {

@@ -35,6 +35,7 @@ exports[`Expressions should always have unique keys 1`] = `
             },
           ]
         }
+        shouldRenderTooltip={true}
       />
       <div
         className="expression-container__close-btn"
@@ -77,6 +78,7 @@ exports[`Expressions should always have unique keys 1`] = `
             },
           ]
         }
+        shouldRenderTooltip={true}
       />
       <div
         className="expression-container__close-btn"
@@ -126,6 +128,7 @@ exports[`Expressions should render 1`] = `
             },
           ]
         }
+        shouldRenderTooltip={true}
       />
       <div
         className="expression-container__close-btn"
@@ -168,6 +171,7 @@ exports[`Expressions should render 1`] = `
             },
           ]
         }
+        shouldRenderTooltip={true}
       />
       <div
         className="expression-container__close-btn"

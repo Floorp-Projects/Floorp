@@ -19,10 +19,14 @@ describe("Test StyleSheet", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual(
+      "StyleSheet https://example.com/styles.css"
+    );
+    expect(renderedComponent.prop("title")).toEqual(
       "StyleSheet https://example.com/styles.css"
     );
     expectActorAttribute(renderedComponent, stub.actor);

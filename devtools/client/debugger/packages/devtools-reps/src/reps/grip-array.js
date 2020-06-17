@@ -23,6 +23,7 @@ const DEFAULT_TITLE = "Array";
  * Renders an array. The array is enclosed by left and right bracket
  * and the max number of rendered items depends on the current mode.
  */
+
 GripArray.propTypes = {
   object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values when supported in Node's version of V8
@@ -31,10 +32,11 @@ GripArray.propTypes = {
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
   onInspectIconClick: PropTypes.func,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function GripArray(props) {
-  const { object, mode = MODE.SHORT } = props;
+  const { object, mode = MODE.SHORT, shouldRenderTooltip } = props;
 
   let brackets;
   const needSpace = function(space) {
@@ -44,6 +46,7 @@ function GripArray(props) {
   const config = {
     "data-link-actor-id": object.actor,
     className: "objectBox objectBox-array",
+    title: shouldRenderTooltip ? "Array" : null,
   };
 
   const title = getTitle(props, object);
@@ -81,10 +84,7 @@ function GripArray(props) {
   brackets = needSpace(items.length > 0);
 
   return span(
-    {
-      "data-link-actor-id": object.actor,
-      className: "objectBox objectBox-array",
-    },
+    config,
     title,
     span(
       {

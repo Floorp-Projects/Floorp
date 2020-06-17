@@ -671,7 +671,17 @@
       "../../babel-loader/lib/index.js??ref--1!../../devtools-modules/src/saveAs.js": 520,
       "../../punycode/punycode.js": 521,
       "../../babel-loader/lib/index.js??ref--1!../../../../../shared/dom-node-constants.js": 522,
-      "external \"\\n(() => {\\n  let factory;\\n  function define(...args) {\\n    if (factory) {\\n      throw new Error(\\\"expected a single define call\\\");\\n    }\\n\\n    if (\\n      args.length !== 2 ||\\n      !Array.isArray(args[0]) ||\\n      args[0].length !== 0 ||\\n      typeof args[1] !== \\\"function\\\"\\n    ) {\\n      throw new Error(\\\"whatwg-url had unexpected factory arguments.\\\");\\n    }\\n\\n    factory = args[1];\\n  }\\n  define.amd = true;\\n\\n  const existingDefine = Object.getOwnPropertyDescriptor(globalThis, \\\"define\\\");\\n  globalThis.define = define;\\n  let err;\\n  try {\\n    importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n\\n    if (!factory) {\\n      throw new Error(\\\"Failed to load whatwg-url factory\\\");\\n    }\\n  } finally {\\n    if (existingDefine) {\\n      Object.defineProperty(globalThis, \\\"define\\\", existingDefine);\\n    } else {\\n      delete globalThis.define;\\n    }\\n\\n  }\\n\\n  return factory();\\n})()\\n\"": 523
+      "../../@babel/helper-validator-identifier/lib/index.js": 523,
+      "../../@babel/helper-validator-identifier/lib/identifier.js": 524,
+      "../../@babel/helper-validator-identifier/lib/keyword.js": 525,
+      "../../@babel/types/lib/clone/cloneDeepWithoutLoc.js": 526,
+      "../../../packages/devtools-reps/node_modules/React/index.js": 527,
+      "../../../packages/devtools-reps/node_modules/React/cjs/react.production.min.js": 528,
+      "../../object-assign/index.js": 529,
+      "../../fbjs/lib/invariant.js": 530,
+      "../../fbjs/lib/emptyObject.js": 531,
+      "../../fbjs/lib/emptyFunction.js": 532,
+      "external \"\\n(() => {\\n  let factory;\\n  function define(...args) {\\n    if (factory) {\\n      throw new Error(\\\"expected a single define call\\\");\\n    }\\n\\n    if (\\n      args.length !== 2 ||\\n      !Array.isArray(args[0]) ||\\n      args[0].length !== 0 ||\\n      typeof args[1] !== \\\"function\\\"\\n    ) {\\n      throw new Error(\\\"whatwg-url had unexpected factory arguments.\\\");\\n    }\\n\\n    factory = args[1];\\n  }\\n  define.amd = true;\\n\\n  const existingDefine = Object.getOwnPropertyDescriptor(globalThis, \\\"define\\\");\\n  globalThis.define = define;\\n  let err;\\n  try {\\n    importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n\\n    if (!factory) {\\n      throw new Error(\\\"Failed to load whatwg-url factory\\\");\\n    }\\n  } finally {\\n    if (existingDefine) {\\n      Object.defineProperty(globalThis, \\\"define\\\", existingDefine);\\n    } else {\\n      delete globalThis.define;\\n    }\\n\\n  }\\n\\n  return factory();\\n})()\\n\"": 533
     },
     "usedIds": {
       "0": 0,
@@ -1197,7 +1207,17 @@
       "520": 520,
       "521": 521,
       "522": 522,
-      "523": 523
+      "523": 523,
+      "524": 524,
+      "525": 525,
+      "526": 526,
+      "527": 527,
+      "528": 528,
+      "529": 529,
+      "530": 530,
+      "531": 531,
+      "532": 532,
+      "533": 533
     }
   },
   "chunks": {

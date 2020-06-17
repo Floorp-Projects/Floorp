@@ -12,20 +12,28 @@ const { getGripType, isGrip, wrapRender, ELLIPSIS } = require("./rep-utils");
 /**
  * Renders a grip object with regular expression.
  */
+
 RegExp.propTypes = {
   object: PropTypes.object.isRequired,
+  shouldRenderTooltip: PropTypes.bool,
 };
 
 function RegExp(props) {
   const { object } = props;
+  const config = getElementConfig(props);
 
-  return span(
-    {
-      "data-link-actor-id": object.actor,
-      className: "objectBox objectBox-regexp regexpSource",
-    },
-    getSource(object)
-  );
+  return span(config, getSource(object));
+}
+
+function getElementConfig(opts) {
+  const { object, shouldRenderTooltip } = opts;
+  const text = getSource(object);
+
+  return {
+    "data-link-actor-id": object.actor,
+    className: "objectBox objectBox-regexp regexpSource",
+    title: shouldRenderTooltip ? text : null,
+  };
 }
 
 function getSource(grip) {

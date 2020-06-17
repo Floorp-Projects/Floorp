@@ -252,6 +252,7 @@ class Scopes extends PureComponent<Props, State> {
             setExpanded={(path, expand) => setExpandedScope(cx, path, expand)}
             initiallyExpanded={initiallyExpanded}
             renderItemActions={this.renderWatchpointButton}
+            shouldRenderTooltip={true}
           />
         </div>
       );

@@ -23,13 +23,16 @@ describe("test DateTime", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     const expectedDate = new Date(
       "Date Thu Mar 31 2016 00:17:24 GMT+0300 (EAT)"
     ).toString();
+
     expect(renderedComponent.text()).toEqual(`Date ${expectedDate}`);
+    expect(renderedComponent.prop("title")).toEqual(`Date ${expectedDate}`);
     expectActorAttribute(renderedComponent, stub.actor);
   });
 });
@@ -41,9 +44,11 @@ describe("test invalid DateTime", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
+        shouldRenderTooltip: true,
       })
     );
 
     expect(renderedComponent.text()).toEqual("Invalid Date");
+    expect(renderedComponent.prop("title")).toEqual("Invalid Date");
   });
 });

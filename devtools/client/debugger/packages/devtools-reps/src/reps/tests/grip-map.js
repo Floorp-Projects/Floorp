@@ -14,7 +14,7 @@ const {
   getSelectableInInspectorGrips,
   getMapLengthBubbleText,
 } = require("./test-helpers");
-const { maxLengthMap } = GripMap;
+const { maxLengthMap, getLength } = GripMap;
 
 function shallowRenderRep(object, props = {}) {
   return shallow(
@@ -37,20 +37,24 @@ describe("GripMap - empty map", () => {
     const length = getMapLengthBubbleText(object);
     const defaultOutput = `Map${length}`;
 
-    let component = renderRep({ mode: undefined });
+    let component = renderRep({ mode: undefined, shouldRenderTooltip: true });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(`Map(${getLength(object)})`);
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.TINY });
+    component = renderRep({ mode: MODE.TINY, shouldRenderTooltip: true });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(`Map(${getLength(object)})`);
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.SHORT });
+    component = renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(`Map(${getLength(object)})`);
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.LONG });
+    component = renderRep({ mode: MODE.LONG, shouldRenderTooltip: true });
     expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(`Map(${getLength(object)})`);
     expectActorAttribute(component, object.actor);
   });
 });
@@ -91,21 +95,49 @@ describe("GripMap - WeakMap", () => {
     const renderRep = props => shallowRenderRep(object, props);
     let length = getMapLengthBubbleText(object);
     const defaultOutput = `WeakMap${length} { {…} → "value-a" }`;
-    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: undefined, shouldRenderTooltip: true }).prop("title")
+    ).toBe(`WeakMap(${getLength(object)})`);
 
     length = getMapLengthBubbleText(object, { mode: MODE.TINY });
-    expect(renderRep({ mode: MODE.TINY }).text()).toBe(`WeakMap${length}`);
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).text()
+    ).toBe(`WeakMap${length}`);
+    expect(
+      renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
+    ).toBe(`WeakMap(${getLength(object)})`);
 
-    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).prop("title")
+    ).toBe(`WeakMap(${getLength(object)})`);
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).text()
+    ).toBe(defaultOutput);
+    expect(
+      renderRep({ mode: MODE.LONG, shouldRenderTooltip: true }).prop("title")
+    ).toBe(`WeakMap(${getLength(object)})`);
 
     length = getMapLengthBubbleText(object, { mode: MODE.LONG });
+
     expect(
       renderRep({
         mode: MODE.LONG,
         title: "CustomTitle",
       }).text()
     ).toBe(`CustomTitle${length} { {…} → "value-a" }`);
+    expect(
+      renderRep({
+        mode: MODE.LONG,
+        title: "CustomTitle",
+        shouldRenderTooltip: true,
+      }).prop("title")
+    ).toBe(`CustomTitle(${getLength(object)})`);
   });
 });
 
