@@ -3700,8 +3700,9 @@ void MacroAssembler::memoryBarrierAfter(const Synchronization& sync) {
 }
 
 void MacroAssembler::loadWasmTlsRegFromFrame(Register dest) {
-  loadPtr(Address(getStackPointer(), framePushed() + wasm::Frame::tlsOffset()),
-          dest);
+  loadPtr(
+      Address(getStackPointer(), framePushed() + offsetof(wasm::Frame, tls)),
+      dest);
 }
 
 void MacroAssembler::BranchGCPtr::emit(MacroAssembler& masm) {
