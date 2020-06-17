@@ -5,7 +5,11 @@
 // @flow
 
 import { prepareSourcePayload, createThread, createFrame } from "./create";
-import { addThreadEventListeners, clientEvents } from "./events";
+import {
+  addThreadEventListeners,
+  clientEvents,
+  removeThreadEventListeners,
+} from "./events";
 import { makePendingLocationId } from "../../utils/breakpoint";
 
 import Reps from "devtools-reps";
@@ -505,6 +509,13 @@ export async function attachTarget(targetFront: Target, options: Object) {
 }
 
 function removeThread(thread: Thread) {
+  const targetFront = targets[thread.actor];
+  if (targetFront) {
+    // Note that if the target is already fully destroyed, threadFront will be
+    // null, but event listeners will already have been removed.
+    removeThreadEventListeners(targetFront.threadFront);
+  }
+
   delete targets[thread.actor];
 }
 

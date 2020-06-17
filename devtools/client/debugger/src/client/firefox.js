@@ -5,11 +5,7 @@
 // @flow
 
 import { setupCommands, clientCommands } from "./firefox/commands";
-import {
-  removeEventsTopTarget,
-  setupEvents,
-  clientEvents,
-} from "./firefox/events";
+import { setupEvents, clientEvents } from "./firefox/events";
 import { features, prefs } from "../utils/prefs";
 
 let actions;
@@ -98,7 +94,6 @@ function onTargetDestroyed({ targetFront }): void {
   if (targetFront.isTopLevel) {
     targetFront.off("will-navigate", actions.willNavigate);
     targetFront.off("navigate", actions.navigated);
-    removeEventsTopTarget(targetFront);
   }
   actions.removeTarget(targetFront);
 }
