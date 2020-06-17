@@ -125,8 +125,7 @@ def get_rustfmt_version(binary):
         output = e.output
 
     version = re.findall(r'\d.\d+.\d+', output)[0]
-    version = StrictVersion(version)
-    return version
+    return StrictVersion(version)
 
 
 def lint(paths, config, fix=None, **lintargs):
@@ -139,6 +138,13 @@ def lint(paths, config, fix=None, **lintargs):
         return []
 
     binary = get_rustfmt_binary()
+
+    if not binary:
+        print(RUSTFMT_NOT_FOUND)
+        if "MOZ_AUTOMATION" in os.environ:
+            return 1
+        return []
+
     min_version_str = config.get('min_rustfmt_version')
     min_version = StrictVersion(min_version_str)
     actual_version = get_rustfmt_version(binary)
@@ -151,12 +157,6 @@ def lint(paths, config, fix=None, **lintargs):
     if actual_version < min_version:
         print(RUSTFMT_WRONG_VERSION.format(version=min_version_str))
         return 1
-
-    if not binary:
-        print(RUSTFMT_NOT_FOUND)
-        if "MOZ_AUTOMATION" in os.environ:
-            return 1
-        return []
 
     cmd_args = [binary]
     if not fix:
