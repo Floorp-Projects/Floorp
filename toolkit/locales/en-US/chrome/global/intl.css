@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * This file contains all localizable skin settings such as 
+ * This file contains all localizable skin settings such as
  *   font, layout, and geometry
  */
-window { 
+window {
   font: 3mm tahoma,arial,helvetica,sans-serif;
 }

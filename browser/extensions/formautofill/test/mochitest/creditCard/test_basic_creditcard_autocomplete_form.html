@@ -161,7 +161,7 @@ add_task(async function check_fields_after_form_autofill() {
 
   synthesizeKey("KEY_ArrowDown");
   // The popup doesn't auto-show on focus because the field isn't empty
-  await expectPopup(); 
+  await expectPopup();
   checkMenuEntries(MOCK_STORAGE.slice(1).map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-year"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
