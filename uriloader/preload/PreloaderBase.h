@@ -11,6 +11,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRedirectResultListener.h"
+#include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsTArray.h"
 #include "nsProxyRelease.h"
@@ -141,6 +142,7 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
 
  private:
   void NotifyNodeEvent(nsINode* aNode);
+  void CancelUsageTimer();
 
   // A helper class that will update the PreloaderBase.mChannel member when a
   // redirect happens, so that we can reprioritize or cancel when needed.
@@ -168,6 +170,21 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
     nsCOMPtr<nsIChannel> mRedirectChannel;
   };
 
+  // A timer callback to trigger the unuse warning for this preload
+  class UsageTimer final : public nsITimerCallback {
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSITIMERCALLBACK
+
+    UsageTimer(PreloaderBase* aPreload, dom::Document* aDocument)
+        : mDocument(aDocument), mPreload(aPreload) {}
+
+   private:
+    ~UsageTimer() = default;
+
+    WeakPtr<dom::Document> mDocument;
+    WeakPtr<PreloaderBase> mPreload;
+  };
+
  private:
   // Reference to HTMLLinkElement DOM nodes to deliver onload and onerror
   // notifications to.
@@ -175,6 +192,10 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
 
   // History of redirects.
   nsTArray<RedirectRecord> mRedirectRecords;
+
+  // Usage timer, emits warning when the preload is not used in time.  Started
+  // in NotifyOpen and stopped in NotifyUsage.
+  nsCOMPtr<nsITimer> mUsageTimer;
 
   // The key this preload has been registered under.  We want to remember it to
   // be able to deregister itself from the document's preloads.
