@@ -423,7 +423,11 @@ class IpdlProducer final : public SupportsWeakPtr<IpdlProducer<_Actor>> {
   template <typename Arg>
   QueueStatus WriteObject(size_t aRead, size_t* aWrite, const Arg& arg,
                           size_t aArgSize) {
-    // TODO: Queue needs one extra byte for PCQ (fixme).
+    if (mSerializedData.Length() < (*aWrite) + aArgSize) {
+      // Previous MinSizeOfArgs estimate was insufficient.  Resize the
+      // buffer to accomodate our real needs.
+      mSerializedData.SetLength(*aWrite + aArgSize);
+    }
     return mozilla::webgl::Marshaller::WriteObject(
         mSerializedData.Elements(), mSerializedData.Length() + 1, aRead, aWrite,
         arg, aArgSize);
