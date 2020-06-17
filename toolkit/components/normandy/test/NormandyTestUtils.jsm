@@ -191,7 +191,7 @@ const NormandyTestUtils = {
 
         // last modified needs to be some positive integer
         let lastModified = await db.getLastModified();
-        await db.importChanges({}, lastModified + 1);
+        await db.saveLastModified(lastModified + 1);
 
         const collectionHelper = {
           async addRecipes(newRecipes) {
@@ -212,7 +212,7 @@ const NormandyTestUtils = {
               });
             }
             lastModified = (await db.getLastModified()) || 0;
-            await db.importChanges({}, lastModified + 1);
+            await db.saveLastModified(lastModified + 1);
           },
         };
 
@@ -222,7 +222,7 @@ const NormandyTestUtils = {
           db = await RecipeRunner._remoteSettingsClientForTesting.db;
           await db.clear();
           lastModified = await db.getLastModified();
-          await db.importChanges({}, lastModified + 1);
+          await db.saveLastModified(lastModified + 1);
         }
       };
     };

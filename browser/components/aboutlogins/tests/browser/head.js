@@ -88,7 +88,7 @@ add_task(async function setup_head() {
       useRecordId: true,
     });
   }
-  await db.importChanges({}, 42);
+  await db.saveLastModified(42);
   if (EXPECTED_BREACH) {
     await RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).emit(
       "sync",
