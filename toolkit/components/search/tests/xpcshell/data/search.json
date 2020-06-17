@@ -9,7 +9,7 @@
       "_metaData": {
         "alias": "testAlias"
       },
-      "_isBuiltin": true
+      "_isAppProvided": true
     },
     {
       "_name": "engine2",
@@ -17,7 +17,7 @@
         "alias": null,
         "hidden": true
       },
-      "_isBuiltin": true
+      "_isAppProvided": true
     },
     {
       "_name": "Test search engine",

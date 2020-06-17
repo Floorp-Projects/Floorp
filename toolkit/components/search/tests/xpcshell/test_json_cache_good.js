@@ -45,12 +45,12 @@ const enginesCache = {
   engines: [
     {
       _metaData: { alias: null },
-      _isBuiltin: true,
+      _isAppProvided: true,
       _name: "engine1",
     },
     {
       _metaData: { alias: null },
-      _isBuiltin: true,
+      _isAppProvided: true,
       _name: "engine2",
     },
   ],

@@ -688,7 +688,7 @@ SearchService.prototype = {
         canInstallEngine: !engine?.hidden,
       };
     }
-    let params = this.getEngineParams(
+    let params = await this.getEngineParams(
       extension,
       extension.manifest,
       SearchUtils.DEFAULT_TAG
@@ -948,7 +948,7 @@ SearchService.prototype = {
 
       if (
         !rebuildCache &&
-        cache.engines.filter(e => e._isBuiltin).length !=
+        cache.engines.filter(e => e._isAppProvided).length !=
           cache.builtInEngineList.length
       ) {
         rebuildCache = true;
@@ -1045,7 +1045,7 @@ SearchService.prototype = {
       if (
         !rebuildCache &&
         SearchUtils.distroID == "" &&
-        cache.engines.filter(e => e._isBuiltin).length !=
+        cache.engines.filter(e => e._isAppProvided).length !=
           cache.visibleDefaultEngines.length
       ) {
         rebuildCache = true;
@@ -1564,7 +1564,7 @@ SearchService.prototype = {
     }
   },
 
-  _loadEnginesFromCache(cache, skipBuiltIn) {
+  _loadEnginesFromCache(cache, skipAppProvided) {
     if (!cache.engines) {
       return;
     }
@@ -1577,7 +1577,7 @@ SearchService.prototype = {
 
     let skippedEngines = 0;
     for (let engine of cache.engines) {
-      if (skipBuiltIn && engine._isBuiltin) {
+      if (skipAppProvided && engine._isAppProvided) {
         ++skippedEngines;
         continue;
       }
@@ -1598,7 +1598,9 @@ SearchService.prototype = {
     try {
       let engine = new SearchEngine({
         shortName: json._shortName,
-        isBuiltin: !!json._isBuiltin,
+        // We renamed isBuiltin to isAppProvided in 1631898,
+        // keep checking isBuiltin for older caches.
+        isAppProvided: !!json._isAppProvided || !!json._isBuiltin,
       });
       engine._initWithJSON(json);
       this._addEngineToStore(engine);
@@ -1651,7 +1653,7 @@ SearchService.prototype = {
         file.initWithPath(osfile.path);
         addedEngine = new SearchEngine({
           fileURI: file,
-          isBuiltin: true,
+          isAppProvided: true,
         });
         await addedEngine._initFromFile(file);
         engines.push(addedEngine);
@@ -2285,11 +2287,11 @@ SearchService.prototype = {
     logConsole.debug("addEngineWithDetails: Adding", name);
     let isCurrent = false;
 
-    let isBuiltin = !!params.isBuiltin;
+    let isAppProvided = !!params.isAppProvided;
     // We install search extensions during the init phase, both built in
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
-    if (!gInitialized && !isBuiltin && !params.initEngine) {
+    if (!gInitialized && !isAppProvided && !params.initEngine) {
       await this.init();
     }
     let existingEngine = this._engines.get(name);
@@ -2325,7 +2327,7 @@ SearchService.prototype = {
 
     let newEngine = new SearchEngine({
       name,
-      isBuiltin,
+      isAppProvided,
     });
     newEngine._initFromMetadata(name, params);
     newEngine._loadPath = "[other]addEngineWithDetails";
@@ -2343,35 +2345,61 @@ SearchService.prototype = {
     return newEngine;
   },
 
+  /**
+   * Called from the AddonManager when it either installs a new
+   * extension containing a search engine definition or an upgrade
+   * to an existing one.
+   *
+   * @param {object} extension
+   *   An Extension object containing data about the extension.
+   */
   async addEnginesFromExtension(extension) {
-    if (extension.addonData.builtIn) {
-      logConsole.debug(
-        "addEnginesFromExtension: Ignoring builtIn engine:",
-        extension.id
-      );
+    logConsole.debug("addEnginesFromExtension: " + extension.id);
+    if (extension.startupReason == "ADDON_UPGRADE") {
+      return this._upgradeExtensionEngine(extension);
+    }
+
+    let addon = await AddonManager.getAddonByID(extension.id);
+    if (addon.isBuiltin || addon.isSystem) {
+      let inConfig = this._searchOrder.filter(el => el.id == extension.id);
+      if (gInitialized && inConfig.length) {
+        return this._installExtensionEngine(
+          extension,
+          inConfig.map(el => el.locale)
+        );
+      }
+      logConsole.debug("addEnginesFromExtension: Ignoring builtIn engine.");
       return [];
     }
-    logConsole.debug("addEnginesFromExtension:", extension.id);
+
     // If we havent started SearchService yet, store this extension
     // to install in SearchService.init().
     if (!gInitialized) {
       this._startupExtensions.add(extension);
       return [];
     }
-    if (extension.startupReason == "ADDON_UPGRADE") {
-      let engines = await this.getEnginesByExtensionID(extension.id);
-      for (let engine of engines) {
-        let manifest = extension.manifest;
-        let locale = engine._locale || SearchUtils.DEFAULT_TAG;
-        if (locale != SearchUtils.DEFAULT_TAG) {
-          manifest = await extension.getLocalizedManifest(locale);
-        }
-        let params = this.getEngineParams(extension, manifest, locale);
-        engine._updateFromMetadata(params);
-      }
-      return engines;
-    }
+
     return this._installExtensionEngine(extension, [SearchUtils.DEFAULT_TAG]);
+  },
+
+  /**
+   * Called when we see an upgrade to an existing search extension.
+   *
+   * @param {object} extension
+   *   An Extension object containing data about the extension.
+   */
+  async _upgradeExtensionEngine(extension) {
+    let engines = await this.getEnginesByExtensionID(extension.id);
+    for (let engine of engines) {
+      let manifest = extension.manifest;
+      let locale = engine._locale || SearchUtils.DEFAULT_TAG;
+      if (locale != SearchUtils.DEFAULT_TAG) {
+        manifest = await extension.getLocalizedManifest(locale);
+      }
+      let params = await this.getEngineParams(extension, manifest, locale);
+      engine._updateFromMetadata(params);
+    }
+    return engines;
   },
 
   /**
@@ -2432,7 +2460,7 @@ SearchService.prototype = {
       manifest = await policy.extension.getLocalizedManifest(locale);
     }
 
-    let engineParams = this.getEngineParams(
+    let engineParams = await this.getEngineParams(
       policy.extension,
       manifest,
       locale,
@@ -2443,7 +2471,7 @@ SearchService.prototype = {
       // No need to sanitize the name, as shortName uses the WebExtension id
       // which should already be sanitized.
       shortName: engineParams.shortName,
-      isBuiltin: engineParams.isBuiltin,
+      isAppProvided: engineParams.isAppProvided,
     });
     engine._initFromMetadata(engineParams.name, engineParams);
     engine._loadPath = "[other]addEngineWithDetails";
@@ -2493,13 +2521,13 @@ SearchService.prototype = {
     initEngine = false,
     isReload
   ) {
-    let params = this.getEngineParams(extension, manifest, locale, {
+    let params = await this.getEngineParams(extension, manifest, locale, {
       initEngine,
     });
     return this.addEngineWithDetails(params.name, params, isReload);
   },
 
-  getEngineParams(extension, manifest, locale, engineParams = {}) {
+  async getEngineParams(extension, manifest, locale, engineParams = {}) {
     let { IconDetails } = ExtensionParent;
 
     // General set of icons for an engine.
@@ -2557,6 +2585,8 @@ SearchService.prototype = {
       "";
     let mozParams = engineParams.extraParams || searchProvider.params || [];
 
+    let addon = await AddonManager.getAddonByID(extension.id);
+    let isAppProvided = addon.isBuiltin || addon.isSystem;
     let params = {
       name: searchProvider.name.trim(),
       shortName,
@@ -2572,7 +2602,7 @@ SearchService.prototype = {
       alias: searchProvider.keyword,
       extensionID: extension.id,
       locale,
-      isBuiltin: extension.addonData.builtIn,
+      isAppProvided,
       orderHint: engineParams.orderHint,
       // suggest_url doesn't currently get encoded.
       suggestURL: searchProvider.suggest_url,
@@ -2594,7 +2624,7 @@ SearchService.prototype = {
     try {
       var engine = new SearchEngine({
         uri: engineURL,
-        isBuiltin: false,
+        isAppProvided: false,
       });
       engine._setIcon(iconURL, false);
       engine._confirm = confirm;
@@ -2671,7 +2701,7 @@ SearchService.prototype = {
       this._currentPrivateEngine = null;
     }
 
-    if (engineToRemove._isBuiltin) {
+    if (engineToRemove._isAppProvided) {
       // Just hide it (the "hidden" setter will notify) and remove its alias to
       // avoid future conflicts with other engines.
       engineToRemove.hidden = true;
@@ -3531,7 +3561,7 @@ var engineUpdateService = {
       logConsole.debug("updating", engine.name, updateURI.spec);
       testEngine = new SearchEngine({
         uri: updateURI,
-        isBuiltin: false,
+        isAppProvided: false,
       });
       testEngine._engineToUpdate = engine;
       testEngine._initFromURIAndLoad(updateURI);
