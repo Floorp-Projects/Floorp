@@ -3526,12 +3526,17 @@ printing:
       - 1600623
     description: >
       A counter incremented every time the user prints to a certain target
-      type.  For the most part, the 'unknown' count will be prints to a
-      physical printer, but we can't know for sure since third party drivers
-      could also be print to file drivers.
+      type.  The 'pdf_unknown' count is for printers with names that we don't
+      know about/check for, but that have 'pdf' in their name, and is mainly a
+      sanity check that we're not missing significant counts in 'pdf_file'.
+      For the most part, the 'unknown' count will be prints to a physical
+      printer, but we can't know for sure since third party drivers could also
+      be print to file drivers that we don't otherwise catch in the other
+      counts.  
     keyed: true
     keys:
       - 'pdf_file'
+      - 'pdf_unknown'
       - 'xps_file'
       - 'unknown'
     expires: never

@@ -181,8 +181,16 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
                          NS_LITERAL_STRING("xps_file"), 1);
   } else {
-    Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
-                         NS_LITERAL_STRING("unknown"), 1);
+    nsAString::const_iterator start, end;
+    printerName.BeginReading(start);
+    printerName.EndReading(end);
+    if (CaseInsensitiveFindInReadable(NS_LITERAL_STRING("pdf"), start, end)) {
+      Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
+                           NS_LITERAL_STRING("pdf_unknown"), 1);
+    } else {
+      Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
+                           NS_LITERAL_STRING("unknown"), 1);
+    }
   }
 
   nsresult rv = NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
