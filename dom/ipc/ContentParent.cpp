@@ -949,6 +949,16 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
       p->mRemoteType.Assign(aRemoteType);
       // Specialize this process for the appropriate eTLD+1
       Unused << p->SendRemoteType(p->mRemoteType);
+
+      nsCOMPtr<nsIObserverService> obs =
+          mozilla::services::GetObserverService();
+
+      if (obs) {
+        nsAutoString cpId;
+        cpId.AppendInt(static_cast<uint64_t>(p->ChildID()));
+        obs->NotifyObservers(static_cast<nsIObserver*>(p), "process-type-set",
+                             cpId.get());
+      }
     } else {
       // we only allow "web" to "web" for security reasons
       MOZ_RELEASE_ASSERT(p->mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
