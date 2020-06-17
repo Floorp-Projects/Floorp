@@ -51,7 +51,7 @@ void APZSampler::SetWebRenderWindowId(const wr::WindowId& aWindowId) {
   if (!sWindowIdMap) {
     sWindowIdMap = new std::unordered_map<uint64_t, RefPtr<APZSampler>>();
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "APZUpdater::ClearOnShutdown", [] { ClearOnShutdown(&sWindowIdMap); }));
+        "APZSampler::ClearOnShutdown", [] { ClearOnShutdown(&sWindowIdMap); }));
   }
   (*sWindowIdMap)[wr::AsUint64(aWindowId)] = this;
 }
