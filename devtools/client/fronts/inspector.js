@@ -5,6 +5,7 @@
 "use strict";
 
 const Services = require("Services");
+const { gDevTools } = require("devtools/client/framework/devtools");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {
   FrontClassWithSpec,
@@ -18,7 +19,6 @@ const TELEMETRY_EYEDROPPER_OPENED_MENU =
   "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT";
 const SHOW_ALL_ANONYMOUS_CONTENT_PREF =
   "devtools.inspector.showAllAnonymousContent";
-const CONTENT_FISSION_ENABLED_PREF = "devtools.contenttoolbox.fission";
 
 const telemetry = new Telemetry();
 
@@ -45,16 +45,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       this._getPageStyle(),
       this._startChangesFront(),
     ]);
-  }
-
-  get isContentFissionEnabled() {
-    if (this._isContentFissionEnabled === undefined) {
-      this._isContentFissionEnabled = Services.prefs.getBoolPref(
-        CONTENT_FISSION_ENABLED_PREF
-      );
-    }
-
-    return this._isContentFissionEnabled;
   }
 
   async _getWalker() {
@@ -171,7 +161,10 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   async getNodeFrontFromNodeGrip(grip) {
     const gripHasContentDomReference = "contentDomReference" in grip;
 
-    if (!this.isContentFissionEnabled || !gripHasContentDomReference) {
+    if (
+      !gDevTools.isFissionContentToolboxEnabled() ||
+      !gripHasContentDomReference
+    ) {
       // Backward compatibility ( < Firefox 71):
       // If the grip does not have a contentDomReference, we can't know in which browsing
       // context id the node lives. We fall back on gripToNodeFront that might retrieve
@@ -188,7 +181,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     // current one, we can directly use the current walker.
     if (
       this.targetFront.browsingContextID === browsingContextId ||
-      !this.isContentFissionEnabled
+      !gDevTools.isFissionContentToolboxEnabled()
     ) {
       return this.walker.getNodeActorFromContentDomReference(
         contentDomReference
