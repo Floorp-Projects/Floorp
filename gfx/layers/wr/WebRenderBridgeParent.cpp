@@ -1936,6 +1936,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetAPZTestData(
 
 void WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy) { Destroy(); }
 
+void WebRenderBridgeParent::ResetPreviousSampleTime() {
+  mPreviousFrameTimeStamp = TimeStamp();
+}
+
 bool WebRenderBridgeParent::AdvanceAnimations() {
   if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
     Maybe<TimeStamp> testingTimeStamp = cbp->GetTestingTimeStamp();
@@ -1954,10 +1958,14 @@ bool WebRenderBridgeParent::AdvanceAnimations() {
   const bool isAnimating =
       mAnimStorage->SampleAnimations(mPreviousFrameTimeStamp, lastComposeTime);
 
-  // Reset the previous time stamp if we don't already have any running
-  // animations to avoid using the time which is far behind for newly
-  // started animations.
-  mPreviousFrameTimeStamp = isAnimating ? lastComposeTime : TimeStamp();
+  if (isAnimating) {
+    mPreviousFrameTimeStamp = lastComposeTime;
+  } else {
+    // Reset the previous time stamp if we don't already have any running
+    // animations to avoid using the time which is far behind for newly
+    // started animations.
+    ResetPreviousSampleTime();
+  }
 
   return isAnimating;
 }
@@ -1990,7 +1998,7 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
 
   AUTO_PROFILER_TRACING_MARKER("Paint", "CompositeToTarget", GRAPHICS);
   if (mPaused || !mReceivedDisplayList) {
-    mPreviousFrameTimeStamp = TimeStamp();
+    ResetPreviousSampleTime();
     return;
   }
 
@@ -1999,7 +2007,7 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
     // Render thread is busy, try next time.
     mSkippedComposite = true;
     mSkippedCompositeId = aId;
-    mPreviousFrameTimeStamp = TimeStamp();
+    ResetPreviousSampleTime();
 
     // Record that we skipped presenting a frame for
     // all pending transactions that have finished scene building.
@@ -2065,7 +2073,7 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
 
   if (!generateFrame) {
     // Could skip generating frame now.
-    mPreviousFrameTimeStamp = TimeStamp();
+    ResetPreviousSampleTime();
     return;
   }
 
