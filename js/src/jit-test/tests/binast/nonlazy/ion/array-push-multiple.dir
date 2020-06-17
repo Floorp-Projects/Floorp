@@ -1,1 +1,0 @@
-// |jit-test| --no-threads; skip-if: !('oomAtAllocation' in this)
