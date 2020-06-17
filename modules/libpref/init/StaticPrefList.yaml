@@ -2448,18 +2448,6 @@
   value: true
   mirror: always
 
-#ifdef JS_BUILD_BINAST
--   name: dom.script_loader.binast_encoding.domain.restrict
-    type: bool
-    value: true
-    mirror: always
-
--   name: dom.script_loader.binast_encoding.enabled
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-#endif
-
 # Whether to enable the JavaScript start-up cache. This causes one of the first
 # execution to record the bytecode of the JavaScript function used, and save it
 # in the existing cache entry. On the following loads of the same script, the

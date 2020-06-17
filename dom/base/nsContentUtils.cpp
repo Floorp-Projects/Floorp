@@ -6988,13 +6988,6 @@ bool nsContentUtils::IsJavascriptMIMEType(const nsAString& aMIMEType) {
     }
   }
 
-#ifdef JS_BUILD_BINAST
-  if (nsJSUtils::BinASTEncodingEnabled() &&
-      aMIMEType.LowerCaseEqualsASCII(APPLICATION_JAVASCRIPT_BINAST)) {
-    return true;
-  }
-#endif
-
   return false;
 }
 

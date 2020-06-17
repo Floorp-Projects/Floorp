@@ -12,9 +12,6 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "builtin/ModuleObject.h"
-#if defined(JS_BUILD_BINAST)
-#  include "frontend/BinASTParser.h"
-#endif  // JS_BUILD_BINAST
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/EitherParser.h"
@@ -704,86 +701,6 @@ ScriptSourceObject* frontend::CreateScriptSourceObject(
   return sso;
 }
 
-#if defined(JS_BUILD_BINAST)
-
-template <class ParserT>
-static JSScript* CompileGlobalBinASTScriptImpl(
-    JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* src,
-    size_t len, JS::BinASTFormat format, ScriptSourceObject** sourceObjectOut) {
-  AutoAssertReportedException assertException(cx);
-
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope, options);
-  if (!compilationInfo.init(cx)) {
-    return nullptr;
-  }
-
-  if (!compilationInfo.sourceObject->source()->setBinASTSourceCopy(cx, src,
-                                                                   len)) {
-    return nullptr;
-  }
-
-  SourceExtent extent = SourceExtent::makeGlobalExtent(len);
-  extent.lineno = 0;
-  GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
-                               compilationInfo.directives, extent);
-
-  frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options);
-
-  // Metadata stores internal pointers, so we must use the same buffer every
-  // time, including for lazy parses
-  ScriptSource* ss = compilationInfo.sourceObject->source();
-  BinASTSourceMetadata* metadata = nullptr;
-  auto parsed =
-      parser.parse(&globalsc, ss->binASTSource(), ss->length(), &metadata);
-
-  if (parsed.isErr()) {
-    return nullptr;
-  }
-
-  compilationInfo.sourceObject->source()->setBinASTSourceMetadata(metadata);
-
-  BytecodeEmitter bce(nullptr, &parser, &globalsc, compilationInfo);
-
-  if (!bce.init()) {
-    return nullptr;
-  }
-
-  ParseNode* pn = parsed.unwrap();
-  if (!bce.emitScript(pn)) {
-    return nullptr;
-  }
-
-  if (!compilationInfo.instantiateStencils()) {
-    return nullptr;
-  }
-
-  if (sourceObjectOut) {
-    *sourceObjectOut = compilationInfo.sourceObject;
-  }
-
-  tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
-                                  compilationInfo.script);
-
-  assertException.reset();
-  return compilationInfo.script;
-}
-
-JSScript* frontend::CompileGlobalBinASTScript(
-    JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* src,
-    size_t len, JS::BinASTFormat format, ScriptSourceObject** sourceObjectOut) {
-  if (format == JS::BinASTFormat::Multipart) {
-    return CompileGlobalBinASTScriptImpl<BinASTTokenReaderMultipart>(
-        cx, options, src, len, format, sourceObjectOut);
-  }
-
-  MOZ_ASSERT(format == JS::BinASTFormat::Context);
-  return CompileGlobalBinASTScriptImpl<BinASTTokenReaderContext>(
-      cx, options, src, len, format, sourceObjectOut);
-}
-
-#endif  // JS_BUILD_BINAST
-
 template <typename Unit>
 static ModuleObject* InternalParseModule(
     JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
@@ -972,87 +889,6 @@ bool frontend::CompileLazyFunction(JSContext* cx, Handle<BaseScript*> lazy,
                                    const Utf8Unit* units, size_t length) {
   return CompileLazyFunctionImpl(cx, lazy, units, length);
 }
-
-#ifdef JS_BUILD_BINAST
-
-template <class ParserT>
-static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
-                                          Handle<BaseScript*> lazy,
-                                          const uint8_t* buf, size_t length) {
-  MOZ_ASSERT(cx->compartment() == lazy->compartment());
-
-  // We can only compile functions whose parents have previously been
-  // compiled, because compilation requires full information about the
-  // function's immediately enclosing scope.
-  MOZ_ASSERT(lazy->isReadyForDelazification());
-  MOZ_ASSERT(lazy->isBinAST());
-
-  AutoAssertReportedException assertException(cx);
-  Rooted<JSFunction*> fun(cx, lazy->function());
-
-  mozilla::DebugOnly<bool> lazyIsLikelyConstructorWrapper =
-      lazy->isLikelyConstructorWrapper();
-
-  CompileOptions options(cx);
-  options.setMutedErrors(lazy->mutedErrors())
-      .setFileAndLine(lazy->filename(), lazy->lineno())
-      .setColumn(lazy->column())
-      .setScriptSourceOffset(lazy->sourceStart())
-      .setNoScriptRval(false)
-      .setSelfHostingMode(false);
-
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope, options);
-  compilationInfo.initFromLazy(lazy);
-
-  frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options, lazy);
-
-  auto parsed =
-      parser.parseLazyFunction(lazy->scriptSource(), lazy->sourceStart());
-
-  if (parsed.isErr()) {
-    return false;
-  }
-
-  FunctionNode* pn = parsed.unwrap();
-
-  BytecodeEmitter bce(nullptr, &parser, pn->funbox(), compilationInfo,
-                      BytecodeEmitter::LazyFunction);
-
-  if (!bce.init(pn->pn_pos)) {
-    return false;
-  }
-
-  if (!bce.emitFunctionScript(pn, TopLevelFunction::Yes)) {
-    return false;
-  }
-
-  if (!compilationInfo.instantiateStencils()) {
-    return false;
-  }
-
-  // This value *must* not change after the lazy function is first created.
-  MOZ_ASSERT(lazyIsLikelyConstructorWrapper ==
-             compilationInfo.script->isLikelyConstructorWrapper());
-
-  assertException.reset();
-  return true;
-}
-
-bool frontend::CompileLazyBinASTFunction(JSContext* cx,
-                                         Handle<BaseScript*> lazy,
-                                         const uint8_t* buf, size_t length) {
-  if (lazy->scriptSource()->binASTSourceMetadata()->isMultipart()) {
-    return CompileLazyBinASTFunctionImpl<BinASTTokenReaderMultipart>(
-        cx, lazy, buf, length);
-  }
-
-  MOZ_ASSERT(lazy->scriptSource()->binASTSourceMetadata()->isContext());
-  return CompileLazyBinASTFunctionImpl<BinASTTokenReaderContext>(cx, lazy, buf,
-                                                                 length);
-}
-
-#endif  // JS_BUILD_BINAST
 
 static JSFunction* CompileStandaloneFunction(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,

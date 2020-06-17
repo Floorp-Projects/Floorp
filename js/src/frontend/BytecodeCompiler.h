@@ -13,7 +13,6 @@
 #include "NamespaceImports.h"
 
 #include "frontend/FunctionSyntaxKind.h"
-#include "js/BinASTFormat.h"  // JS::BinASTFormat
 #include "js/CompileOptions.h"
 #include "js/SourceText.h"
 #include "vm/Scope.h"
@@ -108,19 +107,6 @@ namespace frontend {
 class ErrorReporter;
 class FunctionBox;
 class ParseNode;
-
-#if defined(JS_BUILD_BINAST)
-
-JSScript* CompileGlobalBinASTScript(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    const uint8_t* src, size_t len, JS::BinASTFormat format,
-    ScriptSourceObject** sourceObjectOut = nullptr);
-
-MOZ_MUST_USE bool CompileLazyBinASTFunction(JSContext* cx,
-                                            Handle<BaseScript*> lazy,
-                                            const uint8_t* buf, size_t length);
-
-#endif  // JS_BUILD_BINAST
 
 // Compile a module of the given source using the given options.
 ModuleObject* CompileModule(JSContext* cx,
