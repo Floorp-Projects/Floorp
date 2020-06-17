@@ -2628,8 +2628,7 @@ void nsGlobalWindowOuter::SetDocShell(nsDocShell* aDocShell) {
   MOZ_RELEASE_ASSERT(!parentContext ||
                      GetBrowsingContextGroup() == parentContext->Group());
 
-  mTopLevelOuterContentWindow =
-      !mIsChrome && GetInProcessScriptableTopInternal() == this;
+  mTopLevelOuterContentWindow = mBrowsingContext->IsTopContent();
 
   // Get our enclosing chrome shell and retrieve its global window impl, so
   // that we can do some forwarding to the chrome document.
