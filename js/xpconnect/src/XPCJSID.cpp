@@ -10,7 +10,9 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
 #include "js/Symbol.h"
+#include "nsContentUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace JS;
 
@@ -47,11 +49,33 @@ static const JSClass sID_Class = {
 static bool IID_HasInstance(JSContext* aCx, unsigned aArgc, Value* aVp);
 static bool IID_GetName(JSContext* aCx, unsigned aArgc, Value* aVp);
 
+static bool IID_NewEnumerate(JSContext* cx, HandleObject obj,
+                             MutableHandleIdVector properties,
+                             bool enumerableOnly);
+static bool IID_Resolve(JSContext* cx, HandleObject obj, HandleId id,
+                        bool* resolvedp);
+static bool IID_MayResolve(const JSAtomState& names, jsid id,
+                           JSObject* maybeObj);
+
+static const JSClassOps sIID_ClassOps = {
+    nullptr,           // addProperty
+    nullptr,           // delProperty
+    nullptr,           // enumerate
+    IID_NewEnumerate,  // newEnumerate
+    IID_Resolve,       // resolve
+    IID_MayResolve,    // mayResolve
+    nullptr,           // finalize
+    nullptr,           // call
+    nullptr,           // hasInstance
+    nullptr,           // construct
+    nullptr,           // trace
+};
+
 // Interface ID objects use a single reserved slot containing a pointer to the
 // nsXPTInterfaceInfo object for the interface in question.
 enum { kIID_InfoSlot, kIID_SlotCount };
 static const JSClass sIID_Class = {
-    "nsJSIID", JSCLASS_HAS_RESERVED_SLOTS(kIID_SlotCount), JS_NULL_CLASS_OPS};
+    "nsJSIID", JSCLASS_HAS_RESERVED_SLOTS(kIID_SlotCount), &sIID_ClassOps};
 
 /******************************************************************************
  * # Contract IDs #
@@ -155,6 +179,12 @@ static JSObject* GetIDObject(HandleValue aVal, const JSClass* aClass) {
   return nullptr;
 }
 
+static const nsXPTInterfaceInfo* GetInterfaceInfo(JSObject* obj) {
+  MOZ_ASSERT(js::GetObjectClass(obj) == &sIID_Class);
+  return static_cast<const nsXPTInterfaceInfo*>(
+      js::GetReservedSlot(obj, kIID_InfoSlot).toPrivate());
+}
+
 /**
  * Unwrap an nsID object from a JSValue.
  *
@@ -187,8 +217,7 @@ Maybe<nsID> JSValue2ID(JSContext* aCx, HandleValue aVal) {
     memcpy(id.ptr(), &rawid, sizeof(nsID));
   } else if (js::GetObjectClass(obj) == &sIID_Class) {
     // IfaceID objects store a nsXPTInterfaceInfo* pointer.
-    auto* info = static_cast<const nsXPTInterfaceInfo*>(
-        js::GetReservedSlot(obj, kIID_InfoSlot).toPrivate());
+    const nsXPTInterfaceInfo* info = GetInterfaceInfo(obj);
     id.emplace(info->IID());
   } else if (js::GetObjectClass(obj) == &sCID_Class) {
     // ContractID objects store a ContractID string.
@@ -251,22 +280,6 @@ bool IfaceID2JSValue(JSContext* aCx, const nsXPTInterfaceInfo& aInfo,
   RootedObject obj(aCx, NewIDObjectHelper(aCx, &sIID_Class));
   if (!obj) {
     return false;
-  }
-
-  // Define any constants defined on the interface on the ID object.
-  //
-  // NOTE: When InterfaceIDs were implemented using nsIXPCScriptable and
-  // XPConnect, this was implemented using a 'resolve' hook. It has been
-  // changed to happen at creation-time as most interfaces shouldn't have many
-  // constants, and this is likely to turn out cheaper.
-  RootedValue constant(aCx);
-  for (uint16_t i = 0; i < aInfo.ConstantCount(); ++i) {
-    constant.set(aInfo.Constant(i).JSValue());
-    if (!JS_DefineProperty(
-            aCx, obj, aInfo.Constant(i).Name(), constant,
-            JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
-      return false;
-    }
   }
 
   // The InterfaceInfo is stored in a reserved slot.
@@ -463,9 +476,7 @@ static bool IID_GetName(JSContext* aCx, unsigned aArgc, Value* aVp) {
     return Throw(aCx, NS_ERROR_XPC_BAD_CONVERT_JS);
   }
 
-  auto* info =
-      (const nsXPTInterfaceInfo*)js::GetReservedSlot(obj, kIID_InfoSlot)
-          .toPrivate();
+  const nsXPTInterfaceInfo* info = GetInterfaceInfo(obj);
 
   // Name property is the name of the interface this nsIID was created from.
   JSString* name = JS_NewStringCopyZ(aCx, info->Name());
@@ -475,6 +486,73 @@ static bool IID_GetName(JSContext* aCx, unsigned aArgc, Value* aVp) {
 
   args.rval().setString(name);
   return true;
+}
+
+static bool IID_NewEnumerate(JSContext* cx, HandleObject obj,
+                             MutableHandleIdVector properties,
+                             bool enumerableOnly) {
+  const nsXPTInterfaceInfo* info = GetInterfaceInfo(obj);
+
+  if (!properties.reserve(info->ConstantCount())) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+
+  RootedId id(cx);
+  RootedString name(cx);
+  for (uint16_t i = 0; i < info->ConstantCount(); ++i) {
+    name = JS_AtomizeString(cx, info->Constant(i).Name());
+    if (!name || !JS_StringToId(cx, name, &id)) {
+      return false;
+    }
+    properties.infallibleAppend(id);
+  }
+
+  return true;
+}
+
+static bool IID_Resolve(JSContext* cx, HandleObject obj, HandleId id,
+                        bool* resolvedp) {
+  *resolvedp = false;
+  if (!JSID_IS_STRING(id)) {
+    return true;
+  }
+
+  JSLinearString* name = JSID_TO_LINEAR_STRING(id);
+  const nsXPTInterfaceInfo* info = GetInterfaceInfo(obj);
+  for (uint16_t i = 0; i < info->ConstantCount(); ++i) {
+    if (JS_LinearStringEqualsAscii(name, info->Constant(i).Name())) {
+      *resolvedp = true;
+
+      RootedValue constant(cx, info->Constant(i).JSValue());
+      return JS_DefinePropertyById(
+          cx, obj, id, constant,
+          JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
+    }
+  }
+  return true;
+}
+
+static bool IID_MayResolve(const JSAtomState& names, jsid id,
+                           JSObject* maybeObj) {
+  if (!JSID_IS_STRING(id)) {
+    return false;
+  }
+
+  if (!maybeObj) {
+    // Each interface object has its own set of constants, so if we don't know
+    // the object, assume any string property may be resolved.
+    return true;
+  }
+
+  JSLinearString* name = JSID_TO_LINEAR_STRING(id);
+  const nsXPTInterfaceInfo* info = GetInterfaceInfo(maybeObj);
+  for (uint16_t i = 0; i < info->ConstantCount(); ++i) {
+    if (JS_LinearStringEqualsAscii(name, info->Constant(i).Name())) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Common code for CID_CreateInstance and CID_GetService
