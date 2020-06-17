@@ -1,1 +1,0 @@
-// |jit-test| --ion-eager; --no-threads; --arm-sim-icache-checks; --gc-zeal=14
