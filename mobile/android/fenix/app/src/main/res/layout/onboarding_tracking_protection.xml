@@ -31,7 +31,6 @@
         android:minHeight="48dp"
         app:layout_constraintBottom_toBottomOf="@id/header_text"
         app:layout_constraintEnd_toEndOf="parent"
-        android:theme="@style/Checkable.Colored"
         app:layout_constraintTop_toTopOf="@id/header_text" />
 
     <TextView
