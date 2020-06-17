@@ -510,8 +510,9 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
   // modified during iteration.
   auto NonObservingRange() const {
     return mozilla::detail::IteratorRange<
-        typename AutoTArray<T, N>::const_iterator>{mArray.cbegin(),
-                                                   mArray.cend()};
+        typename AutoTArray<T, N>::const_iterator,
+        typename AutoTArray<T, N>::const_reverse_iterator>{mArray.cbegin(),
+                                                           mArray.cend()};
   }
 
  protected:

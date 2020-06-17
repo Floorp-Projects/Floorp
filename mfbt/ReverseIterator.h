@@ -134,13 +134,14 @@ bool operator>=(const ReverseIterator<Iterator1>& aIter1,
 
 namespace detail {
 
-template <typename IteratorT>
+template <typename IteratorT,
+          typename ReverseIteratorT = ReverseIterator<IteratorT>>
 class IteratorRange {
  public:
   typedef IteratorT iterator;
   typedef IteratorT const_iterator;
-  typedef ReverseIterator<IteratorT> reverse_iterator;
-  typedef ReverseIterator<IteratorT> const_reverse_iterator;
+  typedef ReverseIteratorT reverse_iterator;
+  typedef ReverseIteratorT const_reverse_iterator;
 
   template <typename Iterator1, typename Iterator2>
   MOZ_IMPLICIT IteratorRange(Iterator1 aIterBegin, Iterator2 aIterEnd)
