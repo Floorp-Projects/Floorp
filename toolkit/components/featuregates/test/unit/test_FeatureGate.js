@@ -64,6 +64,23 @@ class DefinitionServer {
 }
 
 // ============================================================================
+add_task(async function testReadAll() {
+  const server = new DefinitionServer();
+  let ids = ["test-featureA", "test-featureB", "test-featureC"];
+  for (let id of ids) {
+    server.addDefinition({ id });
+  }
+  let sortedIds = ids.sort();
+  const features = await FeatureGate.all(server.definitionsUrl);
+  for (let feature of features) {
+    equal(
+      feature.id,
+      sortedIds.shift(),
+      "Features are returned in order of definition"
+    );
+  }
+  equal(sortedIds.length, 0, "All features are returned when calling all()");
+});
 
 // The getters and setters should read correctly from the definition
 add_task(async function testReadFromDefinition() {
