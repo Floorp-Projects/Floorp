@@ -22,6 +22,9 @@
 #include "mozilla/UniquePtr.h"
 #include "SurfaceTypes.h"
 
+#include <queue>
+#include <memory>
+
 namespace mozilla {
 namespace gl {
 
@@ -33,7 +36,7 @@ class SwapChainPresenter final {
   friend class SwapChain;
 
   SwapChain* mSwapChain;
-  UniquePtr<SharedSurface> mBackBuffer;
+  std::shared_ptr<SharedSurface> mBackBuffer;
 
  public:
   explicit SwapChainPresenter(SwapChain& swapChain);
@@ -41,7 +44,7 @@ class SwapChainPresenter final {
 
   const auto& BackBuffer() const { return mBackBuffer; }
 
-  UniquePtr<SharedSurface> SwapBackBuffer(UniquePtr<SharedSurface>);
+  std::shared_ptr<SharedSurface> SwapBackBuffer(std::shared_ptr<SharedSurface>);
   GLuint Fb() const;
 };
 
@@ -54,13 +57,17 @@ class SwapChain final {
   UniquePtr<SurfaceFactory> mFactory;
 
  private:
-  UniquePtr<SharedSurface> mFrontBuffer;
+  std::shared_ptr<SharedSurface> mFrontBuffer;
   SwapChainPresenter* mPresenter = nullptr;
+
+ private:
+  std::queue<std::shared_ptr<SharedSurface>> mPool;
 
  public:
   SwapChain();
   virtual ~SwapChain();
 
+  void ClearPool();
   const auto& FrontBuffer() const { return mFrontBuffer; }
   UniquePtr<SwapChainPresenter> Acquire(const gfx::IntSize&);
 };

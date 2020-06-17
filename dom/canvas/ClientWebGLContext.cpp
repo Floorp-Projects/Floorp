@@ -413,18 +413,23 @@ void ClientWebGLContext::EndComposition() {
 
 // -
 
-void ClientWebGLContext::Present(WebGLFramebufferJS* const fb,
-                                 const layers::TextureType type) {
-  if (!mIsCanvasDirty && !fb) return;
-  mIsCanvasDirty = false;
+void ClientWebGLContext::Present(WebGLFramebufferJS* const xrFb,
+                                 const layers::TextureType type,
+                                 const bool webvr) {
+  if (!mIsCanvasDirty && !xrFb) return;
+  if (!xrFb) {
+    mIsCanvasDirty = false;
+  }
 
-  Run<RPROC(Present)>(fb ? fb->mId : 0, type);
+  Run<RPROC(Present)>(xrFb ? xrFb->mId : 0, type, webvr);
 }
 
 Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
-    WebGLFramebufferJS* const fb) {
-  return Run<RPROC(GetFrontBuffer)>(fb ? fb->mId : 0);
+    WebGLFramebufferJS* const fb, bool vr) {
+  return Run<RPROC(GetFrontBuffer)>(fb ? fb->mId : 0, vr);
 }
+
+void ClientWebGLContext::ClearVRSwapChain() { Run<RPROC(ClearVRSwapChain)>(); }
 
 // -
 
