@@ -46,9 +46,3 @@ addMessageListener("BrowserElement:CreateAboutBlank", message => {
   );
   docShell.createAboutBlankContentViewer(principal, partitionedPrincipal);
 });
-
-// We may not get any responses to Browser:Init if the browser element
-// is torn down too quickly.
-var outerWindowID = docShell.outerWindowID;
-var browsingContextId = docShell.browsingContext.id;
-sendAsyncMessage("Browser:Init", { outerWindowID, browsingContextId });
