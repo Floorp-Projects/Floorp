@@ -1,0 +1,8 @@
+<div contenteditable>&nbsp;a</div>
+<script>
+let editor = document.querySelector("div[contenteditable]");
+editor.insertBefore(document.createTextNode(""), editor.firstChild);
+let selection = getSelection();
+selection.collapse(editor.firstChild.nextSibling, 2);
+document.execCommand("delete", false);
+</script>
