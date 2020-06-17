@@ -1,0 +1,11 @@
+[android-components](../../index.md) / [mozilla.components.service.digitalassetlinks.api](../index.md) / [DigitalAssetLinksApi](index.md) / [checkRelationship](./check-relationship.md)
+
+# checkRelationship
+
+`fun checkRelationship(source: `[`Web`](../../mozilla.components.service.digitalassetlinks/-asset-descriptor/-web/index.md)`, relation: `[`Relation`](../../mozilla.components.service.digitalassetlinks/-relation/index.md)`, target: `[`AssetDescriptor`](../../mozilla.components.service.digitalassetlinks/-asset-descriptor/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/digitalassetlinks/src/main/java/mozilla/components/service/digitalassetlinks/api/DigitalAssetLinksApi.kt#L33)
+
+Overrides [RelationChecker.checkRelationship](../../mozilla.components.service.digitalassetlinks/-relation-checker/check-relationship.md)
+
+Performs a check to ensure a directional relationships exists between the specified
+[source](../../mozilla.components.service.digitalassetlinks/-relation-checker/check-relationship.md#mozilla.components.service.digitalassetlinks.RelationChecker$checkRelationship(mozilla.components.service.digitalassetlinks.AssetDescriptor.Web, mozilla.components.service.digitalassetlinks.Relation, mozilla.components.service.digitalassetlinks.AssetDescriptor)/source) and [target](../../mozilla.components.service.digitalassetlinks/-relation-checker/check-relationship.md#mozilla.components.service.digitalassetlinks.RelationChecker$checkRelationship(mozilla.components.service.digitalassetlinks.AssetDescriptor.Web, mozilla.components.service.digitalassetlinks.Relation, mozilla.components.service.digitalassetlinks.AssetDescriptor)/target) assets. The relationship must match the [relation](../../mozilla.components.service.digitalassetlinks/-relation-checker/check-relationship.md#mozilla.components.service.digitalassetlinks.RelationChecker$checkRelationship(mozilla.components.service.digitalassetlinks.AssetDescriptor.Web, mozilla.components.service.digitalassetlinks.Relation, mozilla.components.service.digitalassetlinks.AssetDescriptor)/relation) type given.
+
