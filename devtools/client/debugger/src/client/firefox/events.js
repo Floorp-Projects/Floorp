@@ -57,10 +57,6 @@ function setupEvents(dependencies: Dependencies): void {
   threadFrontListeners = new WeakMap();
 }
 
-function removeEventsTopTarget(targetFront: Target): void {
-  removeThreadEventListeners(targetFront.threadFront);
-}
-
 async function paused(
   threadFront: ThreadFront,
   packet: PausedPacket
@@ -120,9 +116,9 @@ const clientEvents = {
 };
 
 export {
-  removeEventsTopTarget,
   setupEvents,
   clientEvents,
   addThreadEventListeners,
+  removeThreadEventListeners,
   attachAllTargets,
 };
