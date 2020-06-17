@@ -944,7 +944,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
              NS_ConvertUTF16toUTF8(aRemoteType).get()));
     p->mOpener = aOpener;
     p->mActivateTS = TimeStamp::Now();
-    aContentParents.AppendElement(p);
+    p->AddToPool(aContentParents);
     if (preallocated) {
       p->mRemoteType.Assign(aRemoteType);
       // Specialize this process for the appropriate eTLD+1
@@ -1020,7 +1020,7 @@ ContentParent::GetNewOrUsedBrowserProcessInternal(Element* aFrameElement,
     return nullptr;
   }
   // Store this process for future reuse.
-  contentParents.AppendElement(contentParent);
+  contentParent->AddToPool(contentParents);
 
   // Until the new process is ready let's not allow to start up any
   // preallocated processes. The blocker will be removed once we receive
@@ -1635,6 +1635,34 @@ void ContentParent::ShutDownMessageManager() {
   mMessageManager = nullptr;
 }
 
+void ContentParent::AddToPool(nsTArray<ContentParent*>& aPool) {
+  MOZ_DIAGNOSTIC_ASSERT(!mIsInPool);
+  aPool.AppendElement(this);
+  mIsInPool = true;
+}
+
+void ContentParent::RemoveFromPool(nsTArray<ContentParent*>& aPool) {
+  MOZ_DIAGNOSTIC_ASSERT(mIsInPool);
+  aPool.RemoveElement(this);
+  mIsInPool = false;
+}
+
+void ContentParent::AssertNotInPool() {
+  MOZ_RELEASE_ASSERT(!mIsInPool);
+
+  MOZ_RELEASE_ASSERT(!sPrivateContent || !sPrivateContent->Contains(this));
+  if (IsForJSPlugin()) {
+    MOZ_RELEASE_ASSERT(!sJSPluginContentParents ||
+                       !sJSPluginContentParents->Get(mJSPluginID));
+  } else {
+    MOZ_RELEASE_ASSERT(
+        !sBrowserContentParents ||
+        !sBrowserContentParents->Contains(mRemoteType) ||
+        !sBrowserContentParents->Get(mRemoteType)->Contains(this) ||
+        !sCanLaunchSubprocesses);  // aka in shutdown - avoid timing issues
+  }
+}
+
 void ContentParent::RemoveFromList() {
   if (IsForJSPlugin()) {
     if (sJSPluginContentParents) {
@@ -1644,18 +1672,7 @@ void ContentParent::RemoveFromList() {
         sJSPluginContentParents = nullptr;
       }
     }
-  } else if (sBrowserContentParents) {
-    if (auto entry = sBrowserContentParents->Lookup(mRemoteType)) {
-      const auto& contentParents = entry.Data();
-      contentParents->RemoveElement(this);
-      if (contentParents->IsEmpty()) {
-        entry.Remove();
-      }
-    }
-    if (sBrowserContentParents->IsEmpty()) {
-      delete sBrowserContentParents;
-      sBrowserContentParents = nullptr;
-    }
+    return;
   }
 
   if (sPrivateContent) {
@@ -1663,6 +1680,27 @@ void ContentParent::RemoveFromList() {
     if (!sPrivateContent->Length()) {
       delete sPrivateContent;
       sPrivateContent = nullptr;
+    }
+  }
+
+  if (!mIsInPool) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    AssertNotInPool();
+#endif
+    return;
+  }
+
+  if (sBrowserContentParents) {
+    if (auto entry = sBrowserContentParents->Lookup(mRemoteType)) {
+      const auto& contentParents = entry.Data();
+      RemoveFromPool(*contentParents);
+      if (contentParents->IsEmpty()) {
+        entry.Remove();
+      }
+    }
+    if (sBrowserContentParents->IsEmpty()) {
+      delete sBrowserContentParents;
+      sBrowserContentParents = nullptr;
     }
   }
 }
@@ -2406,6 +2444,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
       mIPCOpen(true),
       mIsRemoteInputEventQueueEnabled(false),
       mIsInputPriorityEventEnabled(false),
+      mIsInPool(false),
       mHangMonitorActor(nullptr) {
   // Insert ourselves into the global linked list of ContentParent objects.
   if (!sContentParents) {
@@ -2454,17 +2493,7 @@ ContentParent::~ContentParent() {
   }
 
   // We should be removed from all these lists in ActorDestroy.
-  MOZ_ASSERT(!sPrivateContent || !sPrivateContent->Contains(this));
-  if (IsForJSPlugin()) {
-    MOZ_ASSERT(!sJSPluginContentParents ||
-               !sJSPluginContentParents->Get(mJSPluginID));
-  } else {
-    MOZ_ASSERT(!sBrowserContentParents ||
-               !sBrowserContentParents->Contains(mRemoteType) ||
-               !sBrowserContentParents->Get(mRemoteType)->Contains(this) ||
-               sCanLaunchSubprocesses ==
-                   false);  // aka in shutdown - avoid timing issues
-  }
+  AssertNotInPool();
 
   // Normally mSubprocess is destroyed in ActorDestroy, but that won't
   // happen if the process wasn't launched or if it failed to launch.
