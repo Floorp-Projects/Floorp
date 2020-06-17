@@ -214,6 +214,28 @@ class ContentParent final
       ContentParent* aOpener = nullptr, bool aPreferUsed = false);
 
   /**
+   * Get or create a content process, but without waiting for the process
+   * launch to have completed. The returned `ContentParent` may still be in the
+   * "Launching" state.
+   *
+   * Can return `nullptr` in the case of an error.
+   *
+   * Use the `WaitForLaunchAsync` or `WaitForLaunchSync` methods to wait for
+   * the process to be fully launched.
+   */
+  static already_AddRefed<ContentParent> GetNewOrUsedLaunchingBrowserProcess(
+      Element* aFrameElement, const nsAString& aRemoteType,
+      hal::ProcessPriority aPriority =
+          hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
+      ContentParent* aOpener = nullptr, bool aPreferUsed = false);
+
+  RefPtr<ContentParent::LaunchPromise> WaitForLaunchAsync(
+      hal::ProcessPriority aPriority =
+          hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND);
+  bool WaitForLaunchSync(hal::ProcessPriority aPriority =
+                             hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND);
+
+  /**
    * Get or create a content process for a JS plugin. aPluginID is the id of the
    * JS plugin
    * (@see nsFakePlugin::mId). There is a maximum of one process per JS plugin.
@@ -356,6 +378,11 @@ class ContentParent final
 
   /** Notify that a tab was destroyed during normal operation. */
   void NotifyTabDestroyed(const TabId& aTabId, bool aNotifiedDestroying);
+
+  // Manage the set of `KeepAlive`s on this ContentParent which are preventing
+  // it from being destroyed.
+  void AddKeepAlive();
+  void RemoveKeepAlive();
 
   TestShellParent* CreateTestShell();
 
@@ -751,18 +778,9 @@ class ContentParent final
   // Common implementation of LaunchSubprocess{Sync,Async}.
   // Return `true` in case of success, `false` if launch was
   // aborted because of shutdown.
-  bool BeginSubprocessLaunch(bool aIsSync, ProcessPriority aPriority);
+  bool BeginSubprocessLaunch(ProcessPriority aPriority);
   void LaunchSubprocessReject();
   bool LaunchSubprocessResolve(bool aIsSync, ProcessPriority aPriority);
-  // Return `nullptr` in case of error.
-  // Return a `ContentParent` in case of success. This `ContentParent`
-  // may either be ready and initialized or in the process of initializing
-  // asynchronously. In the latter case, the caller is responsible for
-  // finishing initialization.
-  static already_AddRefed<ContentParent> GetNewOrUsedBrowserProcessInternal(
-      Element* aFrameElement, const nsAString& aRemoteType,
-      ProcessPriority aPriority, ContentParent* aOpener, bool aPreferUsed,
-      bool aIsSync);
 
   // Common initialization after sub process launch.
   bool InitInternal(ProcessPriority aPriority);
@@ -1402,6 +1420,8 @@ class ContentParent final
   // sequence.  Precisely, how many BrowserParents have called
   // NotifyTabDestroying() but not called NotifyTabDestroyed().
   int32_t mNumDestroyingTabs;
+
+  uint32_t mNumKeepaliveCalls;
 
   // The process starts in the LAUNCHING state, and transitions to
   // ALIVE once it can accept IPC messages.  It remains ALIVE only
