@@ -35,15 +35,15 @@
 #include "mozilla/ipc/Transport.h"  // for Transport
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
-#include "mozilla/layers/AnimationHelper.h"  // for CompositorAnimationStorage
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZSampler.h"             // for APZSampler
 #include "mozilla/layers/APZThreadUtils.h"         // for APZThreadUtils
 #include "mozilla/layers/APZUpdater.h"             // for APZUpdater
 #include "mozilla/layers/AsyncCompositionManager.h"
-#include "mozilla/layers/BasicCompositor.h"          // for BasicCompositor
-#include "mozilla/layers/CompositionRecorder.h"      // for CompositionRecorder
-#include "mozilla/layers/Compositor.h"               // for Compositor
+#include "mozilla/layers/BasicCompositor.h"      // for BasicCompositor
+#include "mozilla/layers/CompositionRecorder.h"  // for CompositionRecorder
+#include "mozilla/layers/Compositor.h"           // for Compositor
+#include "mozilla/layers/CompositorAnimationStorage.h"  // for CompositorAnimationStorage
 #include "mozilla/layers/CompositorManagerParent.h"  // for CompositorManagerParent
 #include "mozilla/layers/CompositorOGL.h"            // for CompositorOGL
 #include "mozilla/layers/CompositorThread.h"
