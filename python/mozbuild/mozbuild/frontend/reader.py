@@ -45,12 +45,6 @@ from mozbuild.util import (
     ReadOnlyDefaultDict,
 )
 
-from mozbuild.testing import (
-    TEST_MANIFESTS,
-    REFTEST_FLAVORS,
-    WEB_PLATFORM_TESTS_FLAVORS,
-)
-
 from mozbuild.backend.configenvironment import ConfigEnvironment
 
 from mozpack.files import FileFinder
@@ -1351,20 +1345,6 @@ class BuildReader(object):
         """
         paths, _ = self.read_relevant_mozbuilds(paths)
 
-        # For thousands of inputs (say every file in a sub-tree),
-        # test_defaults_for_path() gets called with the same contexts multiple
-        # times (once for every path in a directory that doesn't have any
-        # test metadata). So, we cache the function call.
-        defaults_cache = {}
-
-        def test_defaults_for_path(ctxs):
-            key = tuple(ctx.current_path or ctx.main_path for ctx in ctxs)
-
-            if key not in defaults_cache:
-                defaults_cache[key] = self.test_defaults_for_path(ctxs)
-
-            return defaults_cache[key]
-
         r = {}
 
         # Only do wildcard matching if the '*' character is present.
@@ -1401,40 +1381,6 @@ class BuildReader(object):
                 if any(path_matches_pattern(relpath, p) for p in ctx.patterns):
                     flags += ctx
 
-            if not any([flags.test_tags, flags.test_files, flags.test_flavors]):
-                flags += test_defaults_for_path(ctxs)
-
             r[path] = flags
 
         return r
-
-    def test_defaults_for_path(self, ctxs):
-        # This names the context keys that will end up emitting a test
-        # manifest.
-        test_manifest_contexts = set(
-            ['%s_MANIFESTS' % key for key in TEST_MANIFESTS] +
-            ['%s_MANIFESTS' % flavor.upper() for flavor in REFTEST_FLAVORS] +
-            ['%s_MANIFESTS' % flavor.upper().replace('-', '_')
-             for flavor in WEB_PLATFORM_TESTS_FLAVORS]
-        )
-
-        result_context = Files(Context())
-        for ctx in ctxs:
-            for key in ctx:
-                if key not in test_manifest_contexts:
-                    continue
-                for paths, obj in ctx[key]:
-                    if isinstance(paths, tuple):
-                        path, tests_root = paths
-                        tests_root = mozpath.join(ctx.relsrcdir, tests_root)
-                        for t in (mozpath.join(tests_root, it[0]) for it in obj):
-                            result_context.test_files.add(mozpath.dirname(t) + '/**')
-                    else:
-                        for t in obj.tests:
-                            if 'relpath' in t:
-                                relpath = t['relpath']
-                            else:
-                                relpath = mozpath.relpath(t['path'],
-                                                          self.config.topsrcdir)
-                            result_context.test_files.add(mozpath.dirname(relpath) + '/**')
-        return result_context

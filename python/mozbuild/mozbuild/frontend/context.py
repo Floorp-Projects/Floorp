@@ -1139,16 +1139,9 @@ class Files(SubContext):
         super(Files, self).__init__(parent)
         self.patterns = patterns
         self.finalized = set()
-        self.test_files = set()
-        self.test_tags = set()
-        self.test_flavors = set()
 
     def __iadd__(self, other):
         assert isinstance(other, Files)
-
-        self.test_files |= other.test_files
-        self.test_tags |= other.test_tags
-        self.test_flavors |= other.test_flavors
 
         for k, v in other.items():
             if k == 'SCHEDULES' and 'SCHEDULES' in self:
