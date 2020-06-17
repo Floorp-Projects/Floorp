@@ -64,6 +64,9 @@ As long as that is installed and you have run :code:`./mach build` or
 :code:`./mach configure`, it should work out of the box. Configuration for this lives
 in :code:`.ycm_extra_conf` at the root of the repo.
 
+Rust auto-completion should work both with the default completer (RLS, as of
+this writing), or with `rust-analyzer <https://rust-analyzer.github.io/manual.html#youcompleteme>`__.
+
 ESLint
 ~~~~~~
 
