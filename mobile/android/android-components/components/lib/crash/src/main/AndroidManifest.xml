@@ -19,10 +19,14 @@
             android:process=":mozilla.components.lib.crash.CrashHandler"
             android:exported="false" />
 
+        <!-- Separate process to avoid starting the application when starting this service -->
         <service android:name=".service.SendCrashReportService"
+            android:process=":crashReportingProcess"
             android:exported="false" />
 
+        <!-- Separate process to avoid starting the application when starting this service -->
         <service android:name=".service.SendCrashTelemetryService"
+            android:process=":crashReportingProcess"
             android:exported="false" />
     </application>
 
