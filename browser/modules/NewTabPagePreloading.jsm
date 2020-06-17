@@ -92,20 +92,12 @@ let NewTabPagePreloading = {
 
     let newBrowser = this._createBrowser(window);
 
-    oldWin.gBrowser._outerWindowIDBrowserMap.delete(oldBrowser.outerWindowID);
-    window.gBrowser._outerWindowIDBrowserMap.delete(newBrowser.outerWindowID);
-
     oldBrowser.swapBrowsers(newBrowser);
 
     // Switch outerWindowIDs for remote browsers.
     if (newBrowser.isRemoteBrowser) {
       newBrowser._outerWindowID = oldBrowser._outerWindowID;
     }
-
-    window.gBrowser._outerWindowIDBrowserMap.set(
-      newBrowser.outerWindowID,
-      newBrowser
-    );
     newBrowser.permanentKey = oldBrowser.permanentKey;
 
     oldWin.gBrowser.getPanel(oldBrowser).remove();
