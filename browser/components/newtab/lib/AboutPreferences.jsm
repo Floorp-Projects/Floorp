@@ -245,6 +245,7 @@ this.AboutPreferences = class AboutPreferences {
         linkPref(subcheck, nested.name, "bool");
         subChecks.push(subcheck);
         subcheck.disabled = !pref._value;
+        subcheck.hidden = nested.hidden;
       });
 
       // Disable any nested checkboxes if the parent pref is not enabled.
