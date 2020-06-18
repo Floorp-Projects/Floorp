@@ -796,6 +796,7 @@ impl FontSizeKeyword {
             FontSizeKeyword::XLarge => medium * 3.0 / 2.0,
             FontSizeKeyword::XXLarge => medium * 2.0,
             FontSizeKeyword::XXXLarge => medium * 3.0,
+            FontSizeKeyword::None => unreachable!(),
         })
     }
 
