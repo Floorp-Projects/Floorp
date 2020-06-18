@@ -117,6 +117,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_RegExp:
     case JSProto_Error:
     case JSProto_InternalError:
+    case JSProto_AggregateError:
     case JSProto_EvalError:
     case JSProto_RangeError:
     case JSProto_ReferenceError:
@@ -213,13 +214,6 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_Iterator:
     case JSProto_AsyncIterator:
       return !cx->realm()->creationOptions().getIteratorHelpersEnabled();
-
-    case JSProto_AggregateError:
-#ifndef NIGHTLY_BUILD
-      return true;
-#else
-      return false;
-#endif
 
     default:
       MOZ_CRASH("unexpected JSProtoKey");
