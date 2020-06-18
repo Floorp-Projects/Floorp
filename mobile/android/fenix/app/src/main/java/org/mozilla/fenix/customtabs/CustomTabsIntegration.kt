@@ -5,8 +5,6 @@
 package org.mozilla.fenix.customtabs
 
 import android.app.Activity
-import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -23,7 +21,6 @@ class CustomTabsIntegration(
     toolbar: BrowserToolbar,
     sessionId: String,
     activity: Activity,
-    engineLayout: View,
     onItemTapped: (ToolbarMenu.Item) -> Unit = {},
     shouldReverseItems: Boolean,
     isPrivate: Boolean
@@ -32,14 +29,6 @@ class CustomTabsIntegration(
     init {
         // Remove toolbar shadow
         toolbar.elevation = 0f
-
-        // Reduce margin height of EngineView from the top for the toolbar
-        engineLayout.run {
-            (layoutParams as ViewGroup.MarginLayoutParams).apply {
-                val toolbarHeight = resources.getDimension(R.dimen.browser_toolbar_height).toInt()
-                setMargins(0, toolbarHeight, 0, 0)
-            }
-        }
 
         val uncoloredEtpShield = AppCompatResources.getDrawable(
             activity,
