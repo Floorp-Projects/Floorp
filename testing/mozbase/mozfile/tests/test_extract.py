@@ -119,5 +119,13 @@ def test_extract_non_archive(tarpath, zippath):
     assert isinstance(exception, Exception)
 
 
+def test_extract_ignore(tmpdir, bundlepath):
+    dest = tmpdir.mkdir('dest').strpath
+    ignore = ('foo', '**/fleem.txt', 'read*.txt')
+    mozfile.extract(bundlepath, dest, ignore=ignore)
+
+    assert sorted(os.listdir(dest)) == ['bar.txt', 'foo.txt']
+
+
 if __name__ == '__main__':
     mozunit.main()

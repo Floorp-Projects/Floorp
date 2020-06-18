@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function
 
 import errno
 import os
+import re
 import stat
 import sys
 import time
@@ -26,6 +27,7 @@ __all__ = [
     "is_url",
     "load",
     "copy_contents",
+    "match",
     "move",
     "remove",
     "rmtree",
@@ -38,7 +40,7 @@ __all__ = [
 # utilities for extracting archives
 
 
-def extract_tarball(src, dest):
+def extract_tarball(src, dest, ignore=None):
     """extract a .tar file"""
 
     import tarfile
@@ -47,13 +49,15 @@ def extract_tarball(src, dest):
         namelist = []
 
         for m in bundle:
+            if ignore and any(match(m.name, i) for i in ignore):
+                continue
             bundle.extract(m, path=dest)
             namelist.append(m.name)
 
     return namelist
 
 
-def extract_zip(src, dest):
+def extract_zip(src, dest, ignore=None):
     """extract a zip file"""
 
     import zipfile
@@ -70,6 +74,9 @@ def extract_zip(src, dest):
     namelist = bundle.namelist()
 
     for name in namelist:
+        if ignore and any(match(name, i) for i in ignore):
+            continue
+
         bundle.extract(name, dest)
         filename = os.path.realpath(os.path.join(dest, name))
         mode = bundle.getinfo(name).external_attr >> 16 & 0x1FF
@@ -80,7 +87,7 @@ def extract_zip(src, dest):
     return namelist
 
 
-def extract(src, dest=None):
+def extract(src, dest=None, ignore=None):
     """
     Takes in a tar or zip file and extracts it to dest
 
@@ -101,9 +108,9 @@ def extract(src, dest=None):
     assert not os.path.isfile(dest), "dest cannot be a file"
 
     if tarfile.is_tarfile(src):
-        namelist = extract_tarball(src, dest)
+        namelist = extract_tarball(src, dest, ignore=ignore)
     elif zipfile.is_zipfile(src):
-        namelist = extract_zip(src, dest)
+        namelist = extract_zip(src, dest, ignore=ignore)
     else:
         raise Exception("mozfile.extract: no archive format found for '%s'" % src)
 
@@ -559,3 +566,48 @@ def load(resource):
         return open(resource)
 
     return urllib.request.urlopen(resource)
+
+
+# We can't depend on mozpack.path here, so copy the 'match' function over.
+
+re_cache = {}
+# Python versions < 3.7 return r'\/' for re.escape('/').
+if re.escape('/') == '/':
+    MATCH_STAR_STAR_RE = re.compile(r'(^|/)\\\*\\\*/')
+    MATCH_STAR_STAR_END_RE = re.compile(r'(^|/)\\\*\\\*$')
+else:
+    MATCH_STAR_STAR_RE = re.compile(r'(^|\\\/)\\\*\\\*\\\/')
+    MATCH_STAR_STAR_END_RE = re.compile(r'(^|\\\/)\\\*\\\*$')
+
+
+def match(path, pattern):
+    '''
+    Return whether the given path matches the given pattern.
+    An asterisk can be used to match any string, including the null string, in
+    one part of the path:
+
+        ``foo`` matches ``*``, ``f*`` or ``fo*o``
+
+    However, an asterisk matching a subdirectory may not match the null string:
+
+        ``foo/bar`` does *not* match ``foo/*/bar``
+
+    If the pattern matches one of the ancestor directories of the path, the
+    patch is considered matching:
+
+        ``foo/bar`` matches ``foo``
+
+    Two adjacent asterisks can be used to match files and zero or more
+    directories and subdirectories.
+
+        ``foo/bar`` matches ``foo/**/bar``, or ``**/bar``
+    '''
+    if not pattern:
+        return True
+    if pattern not in re_cache:
+        p = re.escape(pattern)
+        p = MATCH_STAR_STAR_RE.sub(r'\1(?:.+/)?', p)
+        p = MATCH_STAR_STAR_END_RE.sub(r'(?:\1.+)?', p)
+        p = p.replace(r'\*', '[^/]*') + '(?:/.*)?$'
+        re_cache[pattern] = re.compile(p)
+    return re_cache[pattern].match(path) is not None
