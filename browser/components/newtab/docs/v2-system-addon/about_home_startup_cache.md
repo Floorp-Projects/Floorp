@@ -73,7 +73,7 @@ It's possible that the composition or layout of `about:home` will change over ti
 
 To do this, we set a version number on the cache entry, and ensure that the version number is equal to our expectations on startup. If the version number does not match our expectation, then the cache is discarded and the `about:home` document will be rendered dynamically.
 
-The version number is statically defined inside of `AboutHomeStartupCache`. Simply increase that number to invalidate caches with lesser version numbers.
+The version number is currently set to the application build ID. This means that when the application updates, the cache is invalidated on the first restart after a browser update is applied.
 
 ## Handling errors
 
