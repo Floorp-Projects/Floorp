@@ -2166,8 +2166,6 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   if (mLoadInfo->GetExternalContentPolicyType() ==
           nsIContentPolicy::TYPE_DOCUMENT ||
       mLoadInfo->GetExternalContentPolicyType() ==
-          nsIContentPolicy::TYPE_SUBDOCUMENT ||
-      mLoadInfo->GetExternalContentPolicyType() ==
           nsIContentPolicy::TYPE_WEBSOCKET) {
     return NS_OK;
   }
@@ -2182,9 +2180,17 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Resource_Policy,
                                      content);
 
-  // 3.2.1.6 If policy is null, and embedder policy is "require-corp", set
-  // policy to "same-origin".
   if (StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
+    // 3.2.1.2 when request targets a nested browsing context then embedder
+    // policy value is "unsafe-none", then return allowed.
+    if (mLoadInfo->GetExternalContentPolicyType() ==
+            nsIContentPolicy::TYPE_SUBDOCUMENT &&
+        mLoadInfo->GetLoadingEmbedderPolicy() ==
+            nsILoadInfo::EMBEDDER_POLICY_NULL) {
+      return NS_OK;
+    }
+    // 3.2.1.6 If policy is null, and embedder policy is "require-corp", set
+    // policy to "same-origin".
     // Note that we treat invalid value as "cross-origin", which spec
     // indicates. We might want to make that stricter.
     if (content.IsEmpty() && mLoadInfo->GetLoadingEmbedderPolicy() ==
