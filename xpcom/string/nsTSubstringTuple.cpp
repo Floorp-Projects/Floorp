@@ -65,3 +65,21 @@ bool nsTSubstringTuple<T>::IsDependentOn(const char_type* aStart,
 
   return mFragA->IsDependentOn(aStart, aEnd);
 }
+
+template <typename T>
+auto nsTSubstringTuple<T>::IsDependentOnWithLength(const char_type* aStart,
+                                                   const char_type* aEnd) const
+    -> std::pair<bool, size_type> {
+  const auto [leftDependentOn, leftLen] =
+      mHead ? mHead->IsDependentOnWithLength(aStart, aEnd)
+            : std::pair{mFragA->IsDependentOn(aStart, aEnd), mFragA->Length()};
+
+  const auto checkedLen =
+      mozilla::CheckedInt<size_type>{leftLen} + mFragB->Length();
+  MOZ_RELEASE_ASSERT(checkedLen.isValid(), "Substring tuple length is invalid");
+  return {leftDependentOn | mFragB->IsDependentOn(aStart, aEnd),
+          checkedLen.value()};
+}
+
+template class nsTSubstringTuple<char>;
+template class nsTSubstringTuple<char16_t>;
