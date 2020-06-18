@@ -545,7 +545,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   };
 
   // ensure our collection hasn't been replaced with an older, empty one
-  equal((await client.get()).length, 2);
+  equal((await client.get()).length, 2, "collection was restored");
 
   registerHandlers(badSigGoodOldResponses);
 
@@ -558,7 +558,7 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   // Local data was unchanged, since it was never than the one returned by the server,
   // thus the sync event is not sent.
-  equal(syncEventSent, false);
+  equal(syncEventSent, false, "event was not sent");
 
   //
   // 7.
@@ -595,14 +595,18 @@ add_task(async function test_check_synchronization_with_signatures() {
   // properly contains created, updated, and deleted records.
   // the local DB contains same id as RECORD2 and a fake record.
   // the final server collection contains RECORD2 and RECORD3
-  await client.db.clear();
-  await client.db.saveMetadata({ signature: { x5u, signature: "abc" } });
-  await client.db.create(
-    { ...RECORD2, last_modified: 1234567890, serialNumber: "abc" },
-    { synced: true, useRecordId: true }
-  );
   const localId = "0602b1b2-12ab-4d3a-b6fb-593244e7b035";
-  await client.db.create({ id: localId }, { synced: true, useRecordId: true });
+  await client.db.importChanges(
+    { signature: { x5u, signature: "abc" } },
+    null,
+    [
+      { ...RECORD2, last_modified: 1234567890, serialNumber: "abc" },
+      { id: localId },
+    ],
+    {
+      clear: true,
+    }
+  );
 
   let syncData = null;
   client.on("sync", ({ data }) => {
@@ -787,15 +791,21 @@ add_task(async function test_check_synchronization_with_signatures() {
       ][i++];
     },
   };
-  // Pull changes from above tests.
-  await client.db.saveLastModified(4000);
-  await client.db.saveMetadata({ signature: { x5u, signature: "aa" } });
   // Create an extra record. It will have a valid signature locally
   // thanks to the verifier mock.
-  await client.db.create({
-    id: "extraId",
-    last_modified: 42,
-  });
+  await client.db.importChanges(
+    {
+      signature: { x5u, signature: "aa" },
+    },
+    4000,
+    [
+      {
+        id: "extraId",
+        last_modified: 42,
+      },
+    ]
+  );
+
   equal((await client.get()).length, 1);
 
   // Now sync, but importing changes will have failing signature,
