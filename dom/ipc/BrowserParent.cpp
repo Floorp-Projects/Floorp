@@ -2051,10 +2051,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
     widget->ClearCachedCursor();
   }
 
-  if (!mTabSetsCursor) {
-    return IPC_OK();
-  }
-
   nsCOMPtr<imgIContainer> cursorImage;
   if (aHasCustomCursor) {
     if (aHeight * aStride != aCursorData.Length() ||
@@ -2072,12 +2068,16 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
     cursorImage = image::ImageOps::CreateFromDrawable(drawable);
   }
 
-  widget->SetCursor(aCursor, cursorImage, aHotspotX, aHotspotY);
   mCursor = aCursor;
   mCustomCursor = cursorImage;
   mCustomCursorHotspotX = aHotspotX;
   mCustomCursorHotspotY = aHotspotY;
 
+  if (!mTabSetsCursor) {
+    return IPC_OK();
+  }
+
+  widget->SetCursor(aCursor, cursorImage, aHotspotX, aHotspotY);
   return IPC_OK();
 }
 
