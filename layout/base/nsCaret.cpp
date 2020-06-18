@@ -383,14 +383,10 @@ nsIFrame* nsCaret::GetFrameAndOffset(Selection* aSelection,
   nsIContent* contentNode = focusNode->AsContent();
   nsFrameSelection* frameSelection = aSelection->GetFrameSelection();
   nsBidiLevel bidiLevel = frameSelection->GetCaretBidiLevel();
-  nsIFrame* frame;
-  nsresult rv = nsCaret::GetCaretFrameForNodeOffset(
+
+  return nsCaret::GetCaretFrameForNodeOffset(
       frameSelection, contentNode, focusOffset, frameSelection->GetHint(),
-      bidiLevel, &frame, aUnadjustedFrame, aFrameOffset);
-  if (NS_FAILED(rv) || !frame) {
-    return nullptr;
-  }
-  return frame;
+      bidiLevel, aUnadjustedFrame, aFrameOffset);
 }
 
 /* static */
@@ -609,27 +605,32 @@ void nsCaret::StopBlinking() {
   }
 }
 
-nsresult nsCaret::GetCaretFrameForNodeOffset(
+nsIFrame* nsCaret::GetCaretFrameForNodeOffset(
     nsFrameSelection* aFrameSelection, nsIContent* aContentNode,
     int32_t aOffset, CaretAssociationHint aFrameHint, nsBidiLevel aBidiLevel,
-    nsIFrame** aReturnFrame, nsIFrame** aReturnUnadjustedFrame,
-    int32_t* aReturnOffset) {
-  if (!aFrameSelection) return NS_ERROR_FAILURE;
+    nsIFrame** aReturnUnadjustedFrame, int32_t* aReturnOffset) {
+  if (!aFrameSelection) {
+    return nullptr;
+  }
+
   PresShell* presShell = aFrameSelection->GetPresShell();
   if (!presShell) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
   if (!aContentNode || !aContentNode->IsInComposedDoc() ||
-      presShell->GetDocument() != aContentNode->GetComposedDoc())
-    return NS_ERROR_FAILURE;
+      presShell->GetDocument() != aContentNode->GetComposedDoc()) {
+    return nullptr;
+  }
 
   nsIFrame* theFrame = nullptr;
   int32_t theFrameOffset = 0;
 
   theFrame = nsFrameSelection::GetFrameForNodeOffset(
       aContentNode, aOffset, aFrameHint, &theFrameOffset);
-  if (!theFrame) return NS_ERROR_FAILURE;
+  if (!theFrame) {
+    return nullptr;
+  }
 
   if (aReturnUnadjustedFrame) {
     *aReturnUnadjustedFrame = theFrame;
@@ -776,9 +777,8 @@ nsresult nsCaret::GetCaretFrameForNodeOffset(
     }
   }
 
-  *aReturnFrame = theFrame;
   *aReturnOffset = theFrameOffset;
-  return NS_OK;
+  return theFrame;
 }
 
 size_t nsCaret::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {

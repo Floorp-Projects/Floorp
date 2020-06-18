@@ -1301,11 +1301,10 @@ nsIFrame* Selection::GetPrimaryFrameForFocusNode(bool aVisual,
     aOffsetUsed = &frameOffset;
   }
 
-  nsIFrame* returnFrame;
-  nsresult rv = GetPrimaryOrCaretFrameForNodeOffset(
-      content, FocusOffset(), &returnFrame, aOffsetUsed, aVisual);
-  if (NS_SUCCEEDED(rv)) {
-    return returnFrame;
+  nsIFrame* frame = GetPrimaryOrCaretFrameForNodeOffset(content, FocusOffset(),
+                                                        aOffsetUsed, aVisual);
+  if (frame) {
+    return frame;
   }
 
   // If content is whitespace only, we promote focus node to parent because
@@ -1321,23 +1320,18 @@ nsIFrame* Selection::GetPrimaryFrameForFocusNode(bool aVisual,
   }
   int32_t offset = parent->ComputeIndexOf(content);
 
-  GetPrimaryOrCaretFrameForNodeOffset(parent, offset, &returnFrame, aOffsetUsed,
-                                      aVisual);
-  return returnFrame;  // nullptr if failed
+  return GetPrimaryOrCaretFrameForNodeOffset(parent, offset, aOffsetUsed,
+                                             aVisual);
 }
 
-nsresult Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
-                                                        uint32_t aOffset,
-                                                        nsIFrame** aReturnFrame,
-                                                        int32_t* aOffsetUsed,
-                                                        bool aVisual) const {
-  MOZ_ASSERT(aReturnFrame);
+nsIFrame* Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
+                                                         uint32_t aOffset,
+                                                         int32_t* aOffsetUsed,
+                                                         bool aVisual) const {
   MOZ_ASSERT(aOffsetUsed);
 
-  *aReturnFrame = nullptr;
-
   if (!mFrameSelection) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
   CaretAssociationHint hint = mFrameSelection->GetHint();
@@ -1346,17 +1340,12 @@ nsresult Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
     nsBidiLevel caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
 
     return nsCaret::GetCaretFrameForNodeOffset(
-        mFrameSelection, aContent, aOffset, hint, caretBidiLevel, aReturnFrame,
+        mFrameSelection, aContent, aOffset, hint, caretBidiLevel,
         /* aReturnUnadjustedFrame = */ nullptr, aOffsetUsed);
   }
 
-  *aReturnFrame = nsFrameSelection::GetFrameForNodeOffset(aContent, aOffset,
-                                                          hint, aOffsetUsed);
-  if (!*aReturnFrame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return nsFrameSelection::GetFrameForNodeOffset(aContent, aOffset, hint,
+                                                 aOffsetUsed);
 }
 
 void Selection::SelectFramesOf(nsIContent* aContent, bool aSelected) const {
