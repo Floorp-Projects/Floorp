@@ -14,7 +14,7 @@ use crate::gpu_cache::{GpuCache, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::{LayoutPrimitiveInfo};
 use crate::prim_store::{
-    EdgeAaSegmentMask, OpacityBindingIndex, PrimitiveInstanceKind,
+    EdgeAaSegmentMask, PrimitiveInstanceKind,
     PrimitiveOpacity, PrimKey,
     PrimTemplate, PrimTemplateCommonData, PrimitiveStore, SegmentInstanceIndex,
     SizeKey, InternablePrimitive,
@@ -62,7 +62,6 @@ pub struct ImageCacheKey {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ImageInstance {
-    pub opacity_binding_index: OpacityBindingIndex,
     pub segment_instance_index: SegmentInstanceIndex,
     pub tight_local_clip_rect: LayoutRect,
     pub visible_tiles: Vec<VisibleImageTile>,
@@ -308,7 +307,6 @@ impl InternablePrimitive for Image {
         // TODO(gw): Refactor this to not need a separate image
         //           instance (see ImageInstance struct).
         let image_instance_index = prim_store.images.push(ImageInstance {
-            opacity_binding_index: OpacityBindingIndex::INVALID,
             segment_instance_index: SegmentInstanceIndex::INVALID,
             tight_local_clip_rect: LayoutRect::zero(),
             visible_tiles: Vec::new(),

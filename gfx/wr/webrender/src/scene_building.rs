@@ -3471,10 +3471,6 @@ impl<'a> SceneBuilder<'a> {
             if cur_instance.is_chased() {
                 println!("\tis a composite picture for a stacking context with {:?}", filter);
             }
-
-            // Run the optimize pass on this picture, to see if we can
-            // collapse opacity and avoid drawing to an off-screen surface.
-            self.prim_store.optimize_picture_if_possible(current_pic_index);
         }
 
         if !filter_primitives.is_empty() {
@@ -3541,10 +3537,6 @@ impl<'a> SceneBuilder<'a> {
             if cur_instance.is_chased() {
                 println!("\tis a composite picture for a stacking context with an SVG filter");
             }
-
-            // Run the optimize pass on this picture, to see if we can
-            // collapse opacity and avoid drawing to an off-screen surface.
-            self.prim_store.optimize_picture_if_possible(current_pic_index);
         }
         (current_pic_index, cur_instance)
     }

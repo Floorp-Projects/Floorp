@@ -870,50 +870,11 @@ impl InternablePrimitive for PrimitiveKeyKind {
                 };
                 PrimitiveInstanceKind::Rectangle {
                     data_handle,
-                    opacity_binding_index: OpacityBindingIndex::INVALID,
                     segment_instance_index: SegmentInstanceIndex::INVALID,
                     color_binding_index,
                 }
             }
         }
-    }
-}
-
-// Maintains a list of opacity bindings that have been collapsed into
-// the color of a single primitive. This is an important optimization
-// that avoids allocating an intermediate surface for most common
-// uses of opacity filters.
-#[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-pub struct OpacityBinding {
-    pub bindings: Vec<PropertyBinding<f32>>,
-    pub current: f32,
-}
-
-impl OpacityBinding {
-    pub fn new() -> OpacityBinding {
-        OpacityBinding {
-            bindings: Vec::new(),
-            current: 1.0,
-        }
-    }
-
-    // Add a new opacity value / binding to the list
-    pub fn push(&mut self, binding: PropertyBinding<f32>) {
-        self.bindings.push(binding);
-    }
-
-    // Resolve the current value of each opacity binding, and
-    // store that as a single combined opacity.
-    pub fn update(&mut self, scene_properties: &SceneProperties) {
-        let mut new_opacity = 1.0;
-
-        for binding in &self.bindings {
-            let opacity = scene_properties.resolve_float(binding);
-            new_opacity = new_opacity * opacity;
-        }
-
-        self.current = new_opacity;
     }
 }
 
@@ -1382,7 +1343,6 @@ pub enum PrimitiveInstanceKind {
     Rectangle {
         /// Handle to the common interned data for this primitive.
         data_handle: PrimitiveDataHandle,
-        opacity_binding_index: OpacityBindingIndex,
         segment_instance_index: SegmentInstanceIndex,
         color_binding_index: ColorBindingIndex,
     },
@@ -1639,8 +1599,6 @@ pub struct SegmentedInstance {
 pub type GlyphKeyStorage = storage::Storage<GlyphKey>;
 pub type TextRunIndex = storage::Index<TextRunPrimitive>;
 pub type TextRunStorage = storage::Storage<TextRunPrimitive>;
-pub type OpacityBindingIndex = storage::Index<OpacityBinding>;
-pub type OpacityBindingStorage = storage::Storage<OpacityBinding>;
 pub type ColorBindingIndex = storage::Index<PropertyBinding<ColorU>>;
 pub type ColorBindingStorage = storage::Storage<PropertyBinding<ColorU>>;
 pub type BorderHandleStorage = storage::Storage<RenderTaskCacheEntryHandle>;
@@ -1779,7 +1737,6 @@ impl PrimitiveScratchBuffer {
 pub struct PrimitiveStoreStats {
     picture_count: usize,
     text_run_count: usize,
-    opacity_binding_count: usize,
     image_count: usize,
     linear_gradient_count: usize,
     color_binding_count: usize,
@@ -1790,7 +1747,6 @@ impl PrimitiveStoreStats {
         PrimitiveStoreStats {
             picture_count: 0,
             text_run_count: 0,
-            opacity_binding_count: 0,
             image_count: 0,
             linear_gradient_count: 0,
             color_binding_count: 0,
@@ -1809,8 +1765,6 @@ pub struct PrimitiveStore {
     /// for other types.
     pub images: ImageInstanceStorage,
 
-    /// List of animated opacity bindings for a primitive.
-    pub opacity_bindings: OpacityBindingStorage,
     /// animated color bindings for this primitive.
     pub color_bindings: ColorBindingStorage,
 }
@@ -1821,7 +1775,6 @@ impl PrimitiveStore {
             pictures: Vec::with_capacity(stats.picture_count),
             text_runs: TextRunStorage::new(stats.text_run_count),
             images: ImageInstanceStorage::new(stats.image_count),
-            opacity_bindings: OpacityBindingStorage::new(stats.opacity_binding_count),
             color_bindings: ColorBindingStorage::new(stats.color_binding_count),
             linear_gradients: LinearGradientStorage::new(stats.linear_gradient_count),
         }
@@ -1832,7 +1785,6 @@ impl PrimitiveStore {
             picture_count: self.pictures.len(),
             text_run_count: self.text_runs.len(),
             image_count: self.images.len(),
-            opacity_binding_count: self.opacity_bindings.len(),
             linear_gradient_count: self.linear_gradients.len(),
             color_binding_count: self.color_bindings.len(),
         }
@@ -2128,9 +2080,7 @@ impl PrimitiveStore {
                             frame_state.clip_store,
                             &self.pictures,
                             frame_state.resource_cache,
-                            &self.opacity_bindings,
                             &self.color_bindings,
-                            &self.images,
                             &frame_state.surface_stack,
                             &mut frame_state.composite_state,
                         ) {
@@ -2502,138 +2452,6 @@ impl PrimitiveStore {
             }
             _ => {}
         }
-    }
-
-    pub fn get_opacity_binding(
-        &self,
-        opacity_binding_index: OpacityBindingIndex,
-    ) -> f32 {
-        if opacity_binding_index == OpacityBindingIndex::INVALID {
-            1.0
-        } else {
-            self.opacity_bindings[opacity_binding_index].current
-        }
-    }
-
-    // Internal method that retrieves the primitive index of a primitive
-    // that can be the target for collapsing parent opacity filters into.
-    fn get_opacity_collapse_prim(
-        &self,
-        pic_index: PictureIndex,
-    ) -> Option<PictureIndex> {
-        let pic = &self.pictures[pic_index.0];
-
-        // We can only collapse opacity if there is a single primitive, otherwise
-        // the opacity needs to be applied to the primitives as a group.
-        if pic.prim_list.clusters.len() != 1 {
-            return None;
-        }
-
-        let cluster = &pic.prim_list.clusters[0];
-        if cluster.prim_instances.len() != 1 {
-            return None;
-        }
-
-        let prim_instance = &cluster.prim_instances[0];
-
-        // For now, we only support opacity collapse on solid rects and images.
-        // This covers the most common types of opacity filters that can be
-        // handled by this optimization. In the future, we can easily extend
-        // this to other primitives, such as text runs and gradients.
-        match prim_instance.kind {
-            // If we find a single rect or image, we can use that
-            // as the primitive to collapse the opacity into.
-            PrimitiveInstanceKind::Rectangle { .. } |
-            PrimitiveInstanceKind::Image { .. } => {
-                return Some(pic_index);
-            }
-            PrimitiveInstanceKind::Clear { .. } |
-            PrimitiveInstanceKind::TextRun { .. } |
-            PrimitiveInstanceKind::NormalBorder { .. } |
-            PrimitiveInstanceKind::ImageBorder { .. } |
-            PrimitiveInstanceKind::YuvImage { .. } |
-            PrimitiveInstanceKind::LinearGradient { .. } |
-            PrimitiveInstanceKind::RadialGradient { .. } |
-            PrimitiveInstanceKind::ConicGradient { .. } |
-            PrimitiveInstanceKind::LineDecoration { .. } |
-            PrimitiveInstanceKind::Backdrop { .. } => {
-                // These prims don't support opacity collapse
-            }
-            PrimitiveInstanceKind::Picture { pic_index, .. } => {
-                let pic = &self.pictures[pic_index.0];
-
-                // If we encounter a picture that is a pass-through
-                // (i.e. no composite mode), then we can recurse into
-                // that to try and find a primitive to collapse to.
-                if pic.requested_composite_mode.is_none() {
-                    return self.get_opacity_collapse_prim(pic_index);
-                }
-            }
-        }
-
-        None
-    }
-
-    // Apply any optimizations to drawing this picture. Currently,
-    // we just support collapsing pictures with an opacity filter
-    // by pushing that opacity value into the color of a primitive
-    // if that picture contains one compatible primitive.
-    pub fn optimize_picture_if_possible(
-        &mut self,
-        pic_index: PictureIndex,
-    ) {
-        // Only handle opacity filters for now.
-        let binding = match self.pictures[pic_index.0].requested_composite_mode {
-            Some(PictureCompositeMode::Filter(Filter::Opacity(binding, _))) => {
-                binding
-            }
-            _ => {
-                return;
-            }
-        };
-
-        // See if this picture contains a single primitive that supports
-        // opacity collapse.
-        match self.get_opacity_collapse_prim(pic_index) {
-            Some(pic_index) => {
-                let pic = &mut self.pictures[pic_index.0];
-                let prim_instance = &mut pic.prim_list.clusters[0].prim_instances[0];
-                match prim_instance.kind {
-                    PrimitiveInstanceKind::Image { image_instance_index, .. } => {
-                        let image_instance = &mut self.images[image_instance_index];
-                        // By this point, we know we should only have found a primitive
-                        // that supports opacity collapse.
-                        if image_instance.opacity_binding_index == OpacityBindingIndex::INVALID {
-                            image_instance.opacity_binding_index = self.opacity_bindings.push(OpacityBinding::new());
-                        }
-                        let opacity_binding = &mut self.opacity_bindings[image_instance.opacity_binding_index];
-                        opacity_binding.push(binding);
-                    }
-                    PrimitiveInstanceKind::Rectangle { ref mut opacity_binding_index, .. } => {
-                        // By this point, we know we should only have found a primitive
-                        // that supports opacity collapse.
-                        if *opacity_binding_index == OpacityBindingIndex::INVALID {
-                            *opacity_binding_index = self.opacity_bindings.push(OpacityBinding::new());
-                        }
-                        let opacity_binding = &mut self.opacity_bindings[*opacity_binding_index];
-                        opacity_binding.push(binding);
-                    }
-                    _ => {
-                        unreachable!();
-                    }
-                }
-            }
-            None => {
-                return;
-            }
-        }
-
-        // The opacity filter has been collapsed, so mark this picture
-        // as a pass though. This means it will no longer allocate an
-        // intermediate surface or incur an extra blend / blit. Instead,
-        // the collapsed primitive will be drawn directly into the
-        // parent picture.
-        self.pictures[pic_index.0].requested_composite_mode = None;
     }
 
     fn prepare_prim_for_render(
@@ -3069,7 +2887,7 @@ impl PrimitiveStore {
                 // cache with any shared template data.
                 prim_data.kind.update(&mut prim_data.common, frame_state);
             }
-            PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, opacity_binding_index, color_binding_index, .. } => {
+            PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, color_binding_index, .. } => {
                 profile_scope!("Rectangle");
                 let prim_data = &mut data_stores.prim[*data_handle];
                 prim_data.common.may_need_repetition = false;
@@ -3099,12 +2917,6 @@ impl PrimitiveStore {
                 // cache with any shared template data.
                 prim_data.update(
                     frame_state,
-                    frame_context.scene_properties,
-                );
-
-                update_opacity_binding(
-                    &mut self.opacity_bindings,
-                    *opacity_binding_index,
                     frame_context.scene_properties,
                 );
 
@@ -3160,12 +2972,6 @@ impl PrimitiveStore {
                 image_data.update(common_data, frame_state);
 
                 let image_instance = &mut self.images[*image_instance_index];
-
-                update_opacity_binding(
-                    &mut self.opacity_bindings,
-                    image_instance.opacity_binding_index,
-                    frame_context.scene_properties,
-                );
 
                 write_segment(
                     image_instance.segment_instance_index,
@@ -4479,17 +4285,6 @@ pub fn get_line_decoration_size(
         LineOrientation::Horizontal => LayoutSize::new(parallel, perpendicular),
         LineOrientation::Vertical => LayoutSize::new(perpendicular, parallel),
     })
-}
-
-fn update_opacity_binding(
-    opacity_bindings: &mut OpacityBindingStorage,
-    opacity_binding_index: OpacityBindingIndex,
-    scene_properties: &SceneProperties,
-) {
-    if opacity_binding_index != OpacityBindingIndex::INVALID {
-        let binding = &mut opacity_bindings[opacity_binding_index];
-        binding.update(scene_properties);
-    }
 }
 
 /// Trait for primitives that are directly internable.

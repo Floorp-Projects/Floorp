@@ -1982,15 +1982,11 @@ impl BatchBuilder {
                     ctx,
                 );
             }
-            PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, opacity_binding_index, .. } => {
+            PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, .. } => {
                 let prim_data = &ctx.data_stores.prim[data_handle];
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
-                let opacity_binding = ctx.prim_store.get_opacity_binding(opacity_binding_index);
 
-                let opacity = PrimitiveOpacity::from_alpha(opacity_binding);
-                let opacity = opacity.combine(prim_data.opacity);
-
-                let non_segmented_blend_mode = if !opacity.is_opaque ||
+                let non_segmented_blend_mode = if !prim_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex
                 {
@@ -2002,7 +1998,7 @@ impl BatchBuilder {
                 let batch_params = BrushBatchParameters::shared(
                     BrushBatchKind::Solid,
                     BatchTextures::no_texture(),
-                    [get_shader_opacity(opacity_binding), 0, 0, 0],
+                    [get_shader_opacity(1.0), 0, 0, 0],
                     0,
                 );
 
@@ -2029,7 +2025,7 @@ impl BatchBuilder {
 
                 self.add_segmented_prim_to_batch(
                     segments,
-                    opacity,
+                    prim_data.opacity,
                     &batch_params,
                     specified_blend_mode,
                     non_segmented_blend_mode,
@@ -2183,7 +2179,6 @@ impl BatchBuilder {
                 let image_data = &ctx.data_stores.image[data_handle].kind;
                 let common_data = &ctx.data_stores.image[data_handle].common;
                 let image_instance = &ctx.prim_store.images[image_instance_index];
-                let opacity_binding = ctx.prim_store.get_opacity_binding(image_instance.opacity_binding_index);
                 let specified_blend_mode = match image_data.alpha_type {
                     AlphaType::PremultipliedAlpha => BlendMode::PremultipliedAlpha,
                     AlphaType::Alpha => BlendMode::Alpha,
@@ -2197,7 +2192,7 @@ impl BatchBuilder {
                     color_mode: ShaderColorMode::Image,
                     alpha_type: image_data.alpha_type,
                     raster_space: RasterizationSpace::Local,
-                    opacity: opacity_binding,
+                    opacity: 1.0,
                 }.encode();
 
                 if image_instance.visible_tiles.is_empty() {
@@ -2226,10 +2221,7 @@ impl BatchBuilder {
 
                     let textures = BatchTextures::color(cache_item.texture_id);
 
-                    let opacity = PrimitiveOpacity::from_alpha(opacity_binding);
-                    let opacity = opacity.combine(common_data.opacity);
-
-                    let non_segmented_blend_mode = if !opacity.is_opaque ||
+                    let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
                         prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                         transform_kind == TransformedRectKind::Complex
                     {
@@ -2269,7 +2261,7 @@ impl BatchBuilder {
 
                     self.add_segmented_prim_to_batch(
                         segments,
-                        opacity,
+                        common_data.opacity,
                         &batch_params,
                         specified_blend_mode,
                         non_segmented_blend_mode,
