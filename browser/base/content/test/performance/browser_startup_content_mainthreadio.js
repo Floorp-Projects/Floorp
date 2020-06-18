@@ -343,12 +343,6 @@ add_task(async function() {
         continue;
       }
 
-      // Ignore pipe I/Os (probably from IPC) on Windows.
-      // FIXME: This should be removed when bug 1640325 lands.
-      if (WIN && filename.startsWith("\\??\\pipe\\")) {
-        continue;
-      }
-
       // Shared memory uses temporary files on MacOS <= 10.11 to avoid
       // a kernel security bug that will never be patched (see
       // https://crbug.com/project-zero/1671 for details).  This can
