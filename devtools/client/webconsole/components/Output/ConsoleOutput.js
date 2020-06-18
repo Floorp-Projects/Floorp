@@ -61,6 +61,7 @@ class ConsoleOutput extends Component {
       visibleMessages: PropTypes.array.isRequired,
       networkMessageActiveTabId: PropTypes.string.isRequired,
       onFirstMeaningfulPaint: PropTypes.func.isRequired,
+      editorMode: PropTypes.bool.isRequired,
     };
   }
 
@@ -69,7 +70,7 @@ class ConsoleOutput extends Component {
     this.onContextMenu = this.onContextMenu.bind(this);
     this.maybeScrollToBottom = this.maybeScrollToBottom.bind(this);
 
-    this.resizeObserver = new ResizeObserver(() => {
+    this.resizeObserver = new ResizeObserver(entries => {
       // If we don't have the outputNode reference, or if the outputNode isn't connected
       // anymore, we disconnect the resize observer (componentWillUnmount is never called
       // on this component, so we have to do it here).
@@ -100,7 +101,7 @@ class ConsoleOutput extends Component {
       { root: this.outputNode, threshold: [0.5] }
     );
 
-    this.resizeObserver.observe(this.outputNode);
+    this.resizeObserver.observe(this.getElementToObserve());
 
     const { serviceContainer, onFirstMeaningfulPaint, dispatch } = this.props;
     serviceContainer.attachRefToWebConsoleUI("outputScroller", this.outputNode);
@@ -119,6 +120,10 @@ class ConsoleOutput extends Component {
   }
 
   componentWillUpdate(nextProps, nextState) {
+    if (nextProps.editorMode !== this.props.editorMode) {
+      this.resizeObserver.disconnect();
+    }
+
     const { outputNode } = this;
     if (!outputNode?.lastChild) {
       // Force a scroll to bottom when messages are added to an empty console.
@@ -166,10 +171,14 @@ class ConsoleOutput extends Component {
       (this.scrolledToBottom && visibleMessagesDelta > 0 && !isOpeningGroup);
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     this.maybeScrollToBottom();
     if (this?.outputNode?.lastChild) {
       this.lastMessageIntersectionObserver.observe(this.outputNode.lastChild);
+    }
+
+    if (prevProps.editorMode !== this.props.editorMode) {
+      this.resizeObserver.observe(this.getElementToObserve());
     }
   }
 
@@ -185,6 +194,15 @@ class ConsoleOutput extends Component {
     }
 
     this.scrolledToBottom = true;
+  }
+
+  getElementToObserve() {
+    // In inline mode, we need to observe the output node parent, which contains both the
+    // output and the input, so we don't trigger the resizeObserver callback when only the
+    // output size changes (e.g. when a network request is expanded).
+    return this.props.editorMode
+      ? this.outputNode
+      : this.outputNode?.parentNode;
   }
 
   onContextMenu(e) {

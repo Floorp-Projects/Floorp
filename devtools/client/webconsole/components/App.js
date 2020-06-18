@@ -319,12 +319,13 @@ class App extends Component {
   }
 
   renderConsoleOutput() {
-    const { onFirstMeaningfulPaint, serviceContainer } = this.props;
+    const { onFirstMeaningfulPaint, serviceContainer, editorMode } = this.props;
 
     return ConsoleOutput({
       key: "console-output",
       serviceContainer,
       onFirstMeaningfulPaint,
+      editorMode,
     });
   }
 
