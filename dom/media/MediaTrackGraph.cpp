@@ -8,6 +8,7 @@
 #include "mozilla/Unused.h"
 
 #include "AudioSegment.h"
+#include "CrossGraphTrack.h"
 #include "VideoSegment.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
@@ -3305,6 +3306,22 @@ ProcessedMediaTrack* MediaTrackGraph::CreateForwardedInputTrack(
 
 AudioCaptureTrack* MediaTrackGraph::CreateAudioCaptureTrack() {
   AudioCaptureTrack* track = new AudioCaptureTrack(GraphRate());
+  AddTrack(track);
+  return track;
+}
+
+CrossGraphTransmitter* MediaTrackGraph::CreateCrossGraphTransmitter(
+    CrossGraphReceiver* aReceiver) {
+  CrossGraphTransmitter* track =
+      new CrossGraphTransmitter(GraphRate(), aReceiver);
+  AddTrack(track);
+  return track;
+}
+
+CrossGraphReceiver* MediaTrackGraph::CreateCrossGraphReceiver(
+    TrackRate aTransmitterRate) {
+  CrossGraphReceiver* track =
+      new CrossGraphReceiver(GraphRate(), aTransmitterRate);
   AddTrack(track);
   return track;
 }

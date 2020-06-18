@@ -27,6 +27,8 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 class AsyncLogger;
 class AudioCaptureTrack;
+class CrossGraphTransmitter;
+class CrossGraphReceiver;
 };  // namespace mozilla
 
 extern mozilla::AsyncLogger gMTGTraceLogger;
@@ -382,6 +384,8 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   virtual ProcessedMediaTrack* AsProcessedTrack() { return nullptr; }
   virtual AudioNodeTrack* AsAudioNodeTrack() { return nullptr; }
   virtual ForwardedInputTrack* AsForwardedInputTrack() { return nullptr; }
+  virtual CrossGraphTransmitter* AsCrossGraphTransmitter() { return nullptr; }
+  virtual CrossGraphReceiver* AsCrossGraphReceiver() { return nullptr; }
 
   // These Impl methods perform the core functionality of the control methods
   // above, on the media graph thread.
@@ -1064,6 +1068,10 @@ class MediaTrackGraph {
    * Create a track that will mix all its audio inputs.
    */
   AudioCaptureTrack* CreateAudioCaptureTrack();
+
+  CrossGraphTransmitter* CreateCrossGraphTransmitter(
+      CrossGraphReceiver* aReceiver);
+  CrossGraphReceiver* CreateCrossGraphReceiver(TrackRate aTransmitterRate);
 
   /**
    * Add a new track to the graph.  Main thread.

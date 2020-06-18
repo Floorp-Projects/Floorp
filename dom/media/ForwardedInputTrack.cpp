@@ -14,7 +14,6 @@
 #include "GeckoProfiler.h"
 #include "ImageContainer.h"
 #include "MediaTrackGraphImpl.h"
-#include "MediaTrackListener.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"

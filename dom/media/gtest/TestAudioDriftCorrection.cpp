@@ -330,3 +330,29 @@ TEST(TestAudioDriftCorrection, MonoToStereoInput)
   testMonoToStereoInput(48000, 44100);
   testMonoToStereoInput(44100, 48000);
 }
+
+TEST(TestAudioDriftCorrection, NotEnoughFrames)
+{
+  const int32_t sampleRateTransmitter = 48000;
+  const int32_t sampleRateReceiver = 48000;
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
+  const int32_t targetFrames = sampleRateReceiver / 100;
+
+  for (int i = 0; i < 7; ++i) {
+    // Input is something small, 10 frames here, in order to dry out fast,
+    // after 4 iterations
+    AudioChunk chunk = CreateAudioChunk<float>(10, 1, AUDIO_FORMAT_FLOAT32);
+    AudioSegment inSegment;
+    inSegment.AppendAndConsumeChunk(&chunk);
+
+    AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
+    EXPECT_EQ(outSegment.GetDuration(), targetFrames);
+    if (i < 5) {
+      EXPECT_FALSE(outSegment.IsNull());
+    } else {
+      // Last 2 iterations, the 5th and 6th, will be null. It has used all
+      // buffered data so the output is silence.
+      EXPECT_TRUE(outSegment.IsNull());
+    }
+  }
+}
