@@ -236,26 +236,6 @@ add_task(async function() {
   );
 
   info(
-    "Check that typing a multiline expression in the input keep the output scrolled to bottom"
-  );
-  await setInputValue(hud, "hello\nworld\n!\n");
-  // Wait until the output is scrolled to the bottom.
-  await waitFor(
-    () => isScrolledToBottom(outputContainer),
-    "Output does not scroll to the bottom after typing a multiline expression"
-  );
-  ok(
-    true,
-    "The console is scrolled to the bottom after typing a multiline expression in the input"
-  );
-
-  await setInputValue(hud, "");
-  ok(
-    isScrolledToBottom(outputContainer),
-    "The console is scrolled to the bottom after clearing the input"
-  );
-
-  info(
     "Check that switching between editor and inline mode keep the output scrolled to bottom"
   );
   await toggleLayout(hud);
@@ -279,6 +259,35 @@ add_task(async function() {
   ok(
     true,
     "The console is scrolled to the bottom after switching back to inline mode"
+  );
+
+  info(
+    "Check that expanding a large object does not scroll the output to the bottom"
+  );
+  // Clear the output so we only have the object
+  await clearOutput(hud);
+  // Evaluate an object with a hundred properties
+  const result = await executeAndWaitForMessage(
+    hud,
+    `Array.from({length: 100}, (_, i) => i)
+      .reduce(
+        (acc, item) => {acc["item-" + item] = item; return acc;},
+        {}
+      )`,
+    "Object",
+    ".message.result"
+  );
+  // Expand the object
+  result.node.querySelector(".arrow").click();
+  // Wait until we have 102 nodes (the root node, 100 properties + <prototype>)
+  await waitFor(() => result.node.querySelectorAll(".node").length === 102);
+  // wait for a bit to give time to the resize observer callback to be triggered
+  await wait(500);
+  ok(hasVerticalOverflow(outputContainer), "The output does overflow");
+  is(
+    isScrolledToBottom(outputContainer),
+    false,
+    "The output was not scrolled to the bottom"
   );
 });
 
