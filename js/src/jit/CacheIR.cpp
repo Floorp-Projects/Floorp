@@ -5775,12 +5775,8 @@ AttachDecision CallIRGenerator::tryAttachMathRound(HandleFunction callee) {
 }
 
 AttachDecision CallIRGenerator::tryAttachMathSqrt(HandleFunction callee) {
-  // Need one argument.
-  if (argc_ != 1) {
-    return AttachDecision::NoAction;
-  }
-
-  if (!args_[0].isNumber()) {
+  // Need one (number) argument.
+  if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
   }
 
@@ -5800,6 +5796,31 @@ AttachDecision CallIRGenerator::tryAttachMathSqrt(HandleFunction callee) {
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("MathSqrt");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachMathFRound(HandleFunction callee) {
+  // Need one (number) argument.
+  if (argc_ != 1 || !args_[0].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'fround' native function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId argumentId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  NumberOperandId numberId = writer.guardIsNumber(argumentId);
+  writer.mathFRoundNumberResult(numberId);
+
+  // Math.fround always returns a double so we don't need type monitoring.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("MathFRound");
   return AttachDecision::Attach;
 }
 
@@ -6224,6 +6245,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachMathRound(callee);
     case InlinableNative::MathSqrt:
       return tryAttachMathSqrt(callee);
+    case InlinableNative::MathFRound:
+      return tryAttachMathFRound(callee);
     case InlinableNative::MathATan2:
       return tryAttachMathATan2(callee);
     case InlinableNative::MathSin:

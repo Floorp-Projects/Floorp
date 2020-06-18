@@ -891,6 +891,13 @@
   args:
     input: NumberId
 
+- name: MathFRoundNumberResult
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    input: NumberId
+
 # Because Baseline stub code is shared by all realms in the Zone, this
 # instruction loads a pointer to the RNG from a stub field.
 - name: MathRandomResult
