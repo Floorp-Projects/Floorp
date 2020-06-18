@@ -204,9 +204,9 @@ class Clobber(MachCommandBase):
         the source directory and will remove untracked files from well-known
         directories containing Python packages. Run this to remove .pyc files,
         compiled C extensions, etc. Note: all files not tracked or ignored by
-        version control in well-known Python package directories will be
-        deleted. Run the `status` command of your VCS to see if any untracked
-        files you haven't committed yet will be deleted.
+        version control in third_party/python will be deleted. Run the `status`
+        command of your VCS to see if any untracked files you haven't committed
+        yet will be deleted.
 
         The `gradle` target will remove the "gradle" subdirectory of the object
         directory.
@@ -237,10 +237,10 @@ class Clobber(MachCommandBase):
             if conditions.is_hg(self):
                 cmd = ['hg', '--config', 'extensions.purge=', 'purge', '--all',
                        '-I', 'glob:**.py[cdo]', '-I', 'glob:**/__pycache__',
-                       '-I', 'path:python/', '-I', 'path:third_party/python/']
+                       '-I', 'path:third_party/python/']
             elif conditions.is_git(self):
                 cmd = ['git', 'clean', '-d', '-f', '-x', '*.py[cdo]', '*/__pycache__',
-                       'python/', 'third_party/python/']
+                       'third_party/python/']
             else:
                 # We don't know what is tracked/untracked if we don't have VCS.
                 # So we can't clean python/ and third_party/python/.
