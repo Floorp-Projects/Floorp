@@ -6,7 +6,7 @@
 use crate::codec::Codec;
 use crate::messages::AssocRawPlatformHandle;
 use bytes::{Bytes, BytesMut, IntoBuf};
-use futures::{AsyncSink, Poll, Sink, StartSend, Stream};
+use futures::{AsyncSink, Poll, Sink, StartSend, Stream, task};
 use std::collections::VecDeque;
 use std::{fmt, io};
 use tokio_io::{AsyncRead, AsyncWrite};
@@ -179,11 +179,13 @@ where
         if let Some((handles, target_pid)) = item.platform_handles() {
             got_handles = true;
             let remote_handles = unsafe {
-                [
-                    duplicate_platformhandle(handles[0], target_pid)?,
-                    duplicate_platformhandle(handles[1], target_pid)?,
-                    duplicate_platformhandle(handles[2], target_pid)?,
-                ]
+                // Attempt to duplicate all 3 handles before checking
+                // result, since we rely on duplicate_platformhandle closing
+                // our source handles.
+                let r1 = duplicate_platformhandle(handles[0], target_pid);
+                let r2 = duplicate_platformhandle(handles[1], target_pid);
+                let r3 = duplicate_platformhandle(handles[2], target_pid);
+                [r1?, r2?, r3?]
             };
             trace!(
                 "item handles: {:?} remote_handles: {:?}",
@@ -216,7 +218,9 @@ where
     }
 
     fn close(&mut self) -> Poll<(), Self::SinkError> {
-        try_ready!(self.poll_complete());
+        if task::is_in_task() {
+            try_ready!(self.poll_complete());
+        }
         self.io.shutdown()
     }
 }
@@ -263,6 +267,7 @@ unsafe fn duplicate_platformhandle(
         FALSE,
         winnt::DUPLICATE_CLOSE_SOURCE | winnt::DUPLICATE_SAME_ACCESS,
     );
+    handleapi::CloseHandle(target);
     if ok == FALSE {
         return Err(std::io::Error::new(
             std::io::ErrorKind::Other,
