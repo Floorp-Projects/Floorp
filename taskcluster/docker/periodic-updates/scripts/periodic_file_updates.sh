@@ -29,7 +29,6 @@ DONTBUILD=false
 APPROVAL=false
 COMMIT_AUTHOR='ffxbld <ffxbld@mozilla.com>'
 REPODIR=''
-APP_DIR=''
 HGHOST="hg.mozilla.org"
 STAGEHOST="archive.mozilla.org"
 WGET="wget -nv"
@@ -42,8 +41,6 @@ HG="$(command -v hg)"
 DATADIR="${BASEDIR}/data"
 mkdir -p "${DATADIR}"
 
-VERSION=''
-MCVERSION=''
 USE_MC=false
 USE_TC=true
 JQ="$(command -v jq)"
@@ -87,26 +84,6 @@ SUFFIX_LIST_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${SUFFIX_LIST_DIFF_ARTIFACT:-"effect
 # duplicate the functionality of taskcluster-lib-urls, but in bash..
 queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
 index_base="$TASKCLUSTER_ROOT_URL/api/index/v1"
-
-# Get the current in-tree version for a code branch.
-function get_version {
-  VERSION_REPO=$1
-  VERSION_FILE='version.txt'
-
-  # TODO bypass temporary file
-
-  cd "${BASEDIR}"
-  VERSION_URL_HG="${VERSION_REPO}/raw-file/default/${APP_DIR}/config/version.txt"
-  rm -f ${VERSION_FILE}
-  ${WGET} -O "${VERSION_FILE}" "${VERSION_URL_HG}"
-  PARSED_VERSION=$(cat version.txt)
-  if [ "${PARSED_VERSION}" == "" ]; then
-    echo "ERROR: Unable to parse version from $VERSION_FILE" >&2
-    exit 21
-  fi
-  rm -f ${VERSION_FILE}
-  echo "${PARSED_VERSION}"
-}
 
 # Cleanup common artifacts.
 function preflight_cleanup {
@@ -506,11 +483,9 @@ fi
 # per-product constants
 case "${PRODUCT}" in
   thunderbird)
-    APP_DIR="mail"
     COMMIT_AUTHOR="tbirdbld <tbirdbld@thunderbird.net>"
     ;;
   firefox)
-    APP_DIR="browser"
     ;;
   *)
     echo "Error: Invalid product specified"
@@ -535,30 +510,8 @@ case "${BRANCH}" in
     ;;
 esac
 
-MCREPO="https://${HGHOST}/mozilla-central"
-
-# Remove once 52esr is off support
-VERSION=$(get_version "${HGREPO}")
-MAJOR_VERSION="${VERSION%%.*}"
-echo "INFO: parsed version is ${VERSION}"
-if [ "${USE_MC}" == "true" ]; then
-  MCVERSION=$(get_version "${MCREPO}")
-  echo "INFO: parsed mozilla-central version is ${MCVERSION}"
-  MAJOR_VERSION="${MCVERSION%%.*}"
-fi
-
-BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.common.tests.tar.gz"
-if [ "${USE_MC}" == "true" ]; then
-  BROWSER_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-  TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.common.tests.tar.gz"
-fi
-# Simple name builds on >=53.0.0
-if [ "${MAJOR_VERSION}" -ge 53 ] ; then
-  BROWSER_ARCHIVE="target.${PLATFORM_EXT}"
-  TESTS_ARCHIVE="target.common.tests.tar.gz"
-fi
-# End 'remove once 52esr is off support'
+BROWSER_ARCHIVE="target.${PLATFORM_EXT}"
+TESTS_ARCHIVE="target.common.tests.tar.gz"
 
 preflight_cleanup
 if [ "${DO_HSTS}" == "true" ] || [ "${DO_HPKP}" == "true" ] || [ "${DO_PRELOAD_PINSET}" == "true" ]
