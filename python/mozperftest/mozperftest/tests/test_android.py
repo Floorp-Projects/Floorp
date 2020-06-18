@@ -6,12 +6,25 @@ from unittest import mock
 from mozperftest.tests.support import get_running_env, requests_content, temp_file
 from mozperftest.environment import SYSTEM
 from mozperftest.system.android import DeviceError
+from mozperftest.system.android_perf_tuner import PerformanceTuner
 from mozperftest.utils import silence
 
 
 class FakeDevice:
     def __init__(self, **args):
         self.apps = []
+        self._logger = mock.MagicMock()
+        self._have_su = True
+        self._have_android_su = True
+
+    def clear_logcat(self, *args, **kwargs):
+        return True
+
+    def shell_output(self, *args, **kwargs):
+        return "A Fake Device"
+
+    def shell_bool(self, *args, **kwargs):
+        return True
 
     def uninstall_app(self, apk_name):
         return True
@@ -39,6 +52,57 @@ def test_android():
     system = env.layers[SYSTEM]
     with system as android, silence(system):
         android(metadata)
+
+
+@mock.patch("mozperftest.system.android.ADBLoggedDevice")
+def test_android_perf_tuning_rooted(device):
+    # Check to make sure that performance tuning runs
+    # on rooted devices correctly
+    device._have_su = True
+    device._have_android_su = True
+    with mock.patch(
+        "mozperftest.system.android_perf_tuner.PerformanceTuner.set_kernel_performance_parameters"
+    ) as mockfunc:
+        tuner = PerformanceTuner(device)
+        tuner.tune_performance()
+        mockfunc.assert_called()
+
+
+@mock.patch("mozperftest.system.android.ADBLoggedDevice")
+def test_android_perf_tuning_nonrooted(device):
+    # Check to make sure that performance tuning runs
+    # on non-rooted devices correctly
+    device._have_su = False
+    device._have_android_su = False
+    with mock.patch(
+        "mozperftest.system.android_perf_tuner.PerformanceTuner.set_kernel_performance_parameters"
+    ) as mockfunc:
+        tuner = PerformanceTuner(device)
+        tuner.tune_performance()
+        mockfunc.assert_not_called()
+
+
+@mock.patch("mozperftest.system.android_perf_tuner.PerformanceTuner")
+@mock.patch("mozperftest.system.android.ADBLoggedDevice")
+def test_android_with_perftuning(device, tuner):
+    args = {
+        "flavor": "mobile-browser",
+        "android-install-apk": ["this.apk"],
+        "android": True,
+        "android-timeout": 30,
+        "android-capture-adb": "stdout",
+        "android-app-name": "org.mozilla.fenix",
+        "android-perf-tuning": True,
+    }
+    tuner.return_value = tuner
+
+    mach_cmd, metadata, env = get_running_env(**args)
+    system = env.layers[SYSTEM]
+    with system as android, silence(system):
+        android(metadata)
+
+    # Make sure the tuner was actually called
+    tuner.tune_performance.assert_called()
 
 
 def test_android_failure():

@@ -8,6 +8,7 @@ from pathlib import Path
 import mozlog
 from mozdevice import ADBDevice, ADBError
 from mozperftest.layers import Layer
+from mozperftest.system.android_perf_tuner import tune_performance
 from mozperftest.utils import download_file
 
 
@@ -84,6 +85,14 @@ class AndroidDevice(Layer):
             "type": str,
             "default": None,
             "help": "Captures the logcat to the provided path.",
+        },
+        "perf-tuning": {
+            "action": "store_true",
+            "default": False,
+            "help": (
+                "If set, device will be tuned for performance. "
+                "This helps with decreasing the noise."
+            ),
         },
         "intent": {"type": str, "default": None, "help": "Intent to use"},
         "activity": {"type": str, "default": None, "help": "Activity to use"},
@@ -182,6 +191,9 @@ class AndroidDevice(Layer):
         # checking that the app is installed
         if not self.device.is_app_installed(self.app_name):
             raise Exception("%s is not installed" % self.app_name)
+
+        if self.get_arg("android-perf-tuning", False):
+            tune_performance(self.device)
 
         # set up default activity with the app name if none given
         if self.android_activity is None:
