@@ -87,7 +87,7 @@ const OOP_FRAME_DOCUMENT_SNAPSHOT = {
         display: "block",
         formatting: "block",
         level: "1",
-        "margin-bottom": "21.4333px",
+        "margin-bottom": "21.44px",
         "margin-left": "0px",
         "margin-right": "0px",
         "margin-top": "0px",
