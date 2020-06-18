@@ -100,6 +100,10 @@ pathlib2==2.3.2 \
     --hash=sha256:8eb170f8d0d61825e09a95b38be068299ddeda82f35e96c3301a8a5e7604cb83 \
     --hash=sha256:d1aa2a11ba7b8f7b21ab852b1fb5afb277e1bb99d5dfc663380b5015c0d80c5a \
     # via -r requirements-mach-vendor-python.in
+pathspec==0.8 \
+    --hash=sha256:7d91249d21749788d07a2d0f94147accd8f845507400749ea19c1ec9054a12b0 \
+    --hash=sha256:da45173eb3a6f2a5a487efba21f050af2b41948be6ab52b6a1e3ff22bb8b7061 \
+    # via -r requirements-mach-vendor-python.in
 pip-tools==4.5.1 \
     --hash=sha256:693f30e451875796b1b25203247f0b4cf48a4c4a5ab7341f4f33ffd498cdcc98 \
     --hash=sha256:be9c796aa88b2eec5cabf1323ba1cb60a08212b84bfb75b8b4037a8ef8cb8cb6 \
