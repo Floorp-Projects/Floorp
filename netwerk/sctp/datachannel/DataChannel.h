@@ -221,11 +221,6 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
   bool SendDeferredMessages();
 
-#ifdef SCTP_DTLS_SUPPORTED
-  int SctpDtlsOutput(void* addr, void* buffer, size_t length, uint8_t tos,
-                     uint8_t set_df);
-#endif
-
  protected:
   // Avoid cycles with PeerConnectionImpl
   // Use from main thread only as WeakPtr is not threadsafe
@@ -254,6 +249,8 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   void SendPacket(std::unique_ptr<MediaPacket>&& packet);
   void SctpDtlsInput(const std::string& aTransportId,
                      const MediaPacket& packet);
+  static int SctpDtlsOutput(void* addr, void* buffer, size_t length,
+                            uint8_t tos, uint8_t set_df);
 #endif
   DataChannel* FindChannelByStream(uint16_t stream);
   uint16_t FindFreeStream();
@@ -397,7 +394,6 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mShutdown;
 #endif
-  uintptr_t mId = 0;
 };
 
 #define ENSURE_DATACONNECTION \
