@@ -216,16 +216,16 @@ add_task(async function navigate_around() {
       // The following 3 sandbox prefs are covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1600189
       whitelist["security.sandbox.content.write_path_whitelist"] = {
-        min: 50,
-        max: 51,
+        min: 49,
+        max: 55,
       };
       whitelist["security.sandbox.content.read_path_whitelist"] = {
-        min: 50,
-        max: 51,
+        min: 49,
+        max: 55,
       };
       whitelist["security.sandbox.content.force-namespace"] = {
-        min: 50,
-        max: 51,
+        min: 49,
+        max: 55,
       };
     } else if (AppConstants.platform == "win") {
       // The following 2 graphics prefs are covered by
@@ -241,12 +241,12 @@ add_task(async function navigate_around() {
       // The following 2 sandbox prefs are covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1639494
       whitelist["security.sandbox.content.read_path_whitelist"] = {
-        min: 50,
-        max: 51,
+        min: 49,
+        max: 55,
       };
       whitelist["security.sandbox.logging.enabled"] = {
-        min: 50,
-        max: 51,
+        min: 49,
+        max: 55,
       };
     }
   }
