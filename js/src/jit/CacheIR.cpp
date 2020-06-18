@@ -2300,6 +2300,24 @@ static Scalar::Type TypedThingElementType(JSObject* obj) {
                                      : PrimitiveArrayTypedObjectType(obj);
 }
 
+// For Uint32Array we let the stub return a double only if the current result is
+// a double, to allow better codegen in Warp.
+static bool AllowDoubleForUint32Array(TypedArrayObject* tarr, uint32_t index) {
+  if (TypedThingElementType(tarr) != Scalar::Type::Uint32) {
+    // Return value is only relevant for Uint32Array.
+    return false;
+  }
+
+  if (index >= tarr->length()) {
+    return false;
+  }
+
+  Value res;
+  MOZ_ALWAYS_TRUE(tarr->getElementPure(index, &res));
+  MOZ_ASSERT(res.isNumber());
+  return res.isDouble();
+}
+
 AttachDecision GetPropIRGenerator::tryAttachTypedElement(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId) {
@@ -2324,9 +2342,11 @@ AttachDecision GetPropIRGenerator::tryAttachTypedElement(
   // Don't handle out-of-bounds accesses here because we have to ensure the
   // |undefined| type is monitored. See also tryAttachTypedArrayNonInt32Index.
   if (layout == TypedThingLayout::TypedArray) {
-    writer.loadTypedArrayElementResult(objId, indexId,
-                                       TypedThingElementType(obj),
-                                       /* handleOOB = */ false);
+    TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
+    bool allowDoubleForUint32 = AllowDoubleForUint32Array(tarr, index);
+    writer.loadTypedArrayElementResult(
+        objId, indexId, TypedThingElementType(obj),
+        /* handleOOB = */ false, allowDoubleForUint32);
   } else {
     writer.loadTypedObjectElementResult(objId, indexId, layout,
                                         TypedThingElementType(obj));
@@ -2354,13 +2374,27 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayNonInt32Index(
     return AttachDecision::NoAction;
   }
 
+  TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
+
+  // Try to convert the number to a typed array index. Use NumberEqualsInt32
+  // because ToPropertyKey(-0) is 0. If the number is not representable as an
+  // int32 the result will be |undefined| so we leave |allowDoubleForUint32| as
+  // false.
+  bool allowDoubleForUint32 = false;
+  int32_t indexInt32;
+  if (mozilla::NumberEqualsInt32(idVal_.toNumber(), &indexInt32)) {
+    uint32_t index = uint32_t(indexInt32);
+    allowDoubleForUint32 = AllowDoubleForUint32Array(tarr, index);
+  }
+
   ValOperandId keyId = getElemKeyValueId();
   Int32OperandId indexId = writer.guardToTypedArrayIndex(keyId);
 
-  writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
+  writer.guardShapeForClass(objId, tarr->shape());
 
   writer.loadTypedArrayElementResult(objId, indexId, TypedThingElementType(obj),
-                                     /* handleOOB = */ true);
+                                     /* handleOOB = */ true,
+                                     allowDoubleForUint32);
 
   // Always monitor the result when out-of-bounds accesses are expected.
   writer.typeMonitorResult();

@@ -756,7 +756,8 @@ class MOZ_RAII CacheIRCompiler {
 
   bool emitLoadTypedElementResult(ObjOperandId objId, Int32OperandId indexId,
                                   TypedThingLayout layout,
-                                  Scalar::Type elementType, bool handleOOB);
+                                  Scalar::Type elementType, bool handleOOB,
+                                  bool allowDoubleForUint32);
 
   bool emitStoreTypedElement(ObjOperandId objId, TypedThingLayout layout,
                              Scalar::Type elementType, Int32OperandId indexId,

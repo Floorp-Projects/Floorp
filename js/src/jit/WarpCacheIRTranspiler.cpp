@@ -756,14 +756,13 @@ bool WarpCacheIRTranspiler::emitLoadDenseElementHoleResult(
 
 bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
     ObjOperandId objId, Int32OperandId indexId, Scalar::Type elementType,
-    bool handleOOB) {
+    bool handleOOB, bool allowDoubleForUint32) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
 
   if (handleOOB) {
-    bool allowDouble = true;
-    auto* load = MLoadTypedArrayElementHole::New(alloc(), obj, index,
-                                                 elementType, allowDouble);
+    auto* load = MLoadTypedArrayElementHole::New(
+        alloc(), obj, index, elementType, allowDoubleForUint32);
     add(load);
 
     pushResult(load);
@@ -779,8 +778,8 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
   add(elements);
 
   auto* load = MLoadUnboxedScalar::New(alloc(), elements, index, elementType);
-  // TODO: Uint32 always loaded as double.
-  load->setResultType(MIRTypeForArrayBufferViewRead(elementType, true));
+  load->setResultType(
+      MIRTypeForArrayBufferViewRead(elementType, allowDoubleForUint32));
   add(load);
 
   pushResult(load);
