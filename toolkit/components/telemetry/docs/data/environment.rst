@@ -391,6 +391,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``security.tls.version.enable-deprecated``: True if deprecated versions of TLS (1.0 and 1.1) have been enabled by the user. Defaults to false.
 
+- ``toolkit.telemetry.pioneerId``: The state of the Pioneer ID. If set, then user is enrolled in Pioneer. Note that this does *not* collect the value.
+
 attribution
 ~~~~~~~~~~~
 
