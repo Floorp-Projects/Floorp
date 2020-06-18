@@ -282,8 +282,7 @@ add_task(async function test_setBreachesFromRemoteSettingsSync() {
   );
   gBrowserGlue.observe(null, "browser-glue-test", "add-breaches-sync-handler");
   const db = await RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).db;
-  await db.create(nowExampleIsInBreachedRecords[0]);
-  await db.saveLastModified(42);
+  await db.importChanges({}, 42, [nowExampleIsInBreachedRecords[0]]);
   await emitSync();
 
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
