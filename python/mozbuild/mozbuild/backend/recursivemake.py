@@ -724,8 +724,6 @@ class RecursiveMakeBackend(MakeBackend):
                     if deps:
                         rule.add_dependencies(
                             '%s/%s' % (d, tier) for d in sorted(deps) if d)
-                    if dir in self._idl_dirs and tier == 'export':
-                        rule.add_dependencies(['xpcom/xpidl/%s' % tier])
             rule = root_deps_mk.create_rule(['recurse_%s' % tier])
             if main:
                 rule.add_dependencies('%s/%s' % (d, tier) for d in sorted(main))
