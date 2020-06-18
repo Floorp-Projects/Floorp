@@ -59,7 +59,7 @@ class PreloadService {
   already_AddRefed<nsIURI> GetPreloadURI(const nsAString& aURL);
 
   already_AddRefed<PreloaderBase> PreloadLinkElement(
-      dom::HTMLLinkElement* aLinkElement, nsContentPolicyType aPolicyType,
+      dom::HTMLLinkElement* aLink, nsContentPolicyType aPolicyType,
       nsIReferrerInfo* aReferrerInfo);
 
   already_AddRefed<PreloaderBase> PreloadLinkHeader(
@@ -99,8 +99,7 @@ class PreloadService {
       const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
       const nsAString& aSrcset, const nsAString& aSizes,
       const nsAString& aIntegrity, const nsAString& aCORS,
-      dom::ReferrerPolicy aReferrerPolicy,
-      const nsAString& aReferrerPolicyAttr);
+      const nsAString& aReferrerPolicy);
 
  private:
   nsRefPtrHashtable<PreloadHashKey, PreloaderBase> mPreloads;

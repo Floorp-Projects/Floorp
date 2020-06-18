@@ -10,8 +10,6 @@
 #include "nsIPrincipal.h"
 #include "nsIReferrerInfo.h"
 
-#define IGNORE_REFERRER_POLICY_FOR_PRELOAD_COALESCING true
-
 namespace mozilla {
 
 PreloadHashKey::PreloadHashKey(const nsIURI* aKey, ResourceType aAs)
@@ -26,7 +24,6 @@ PreloadHashKey::PreloadHashKey(PreloadHashKey&& aToMove)
     : nsURIHashKey(std::move(aToMove)) {
   mAs = std::move(aToMove.mAs);
   mCORSMode = std::move(aToMove.mCORSMode);
-  mReferrerPolicy = std::move(aToMove.mReferrerPolicy);
   mPrincipal = std::move(aToMove.mPrincipal);
 
   switch (mAs) {
@@ -55,7 +52,6 @@ PreloadHashKey& PreloadHashKey::operator=(const PreloadHashKey& aOther) {
 
   mAs = aOther.mAs;
   mCORSMode = aOther.mCORSMode;
-  mReferrerPolicy = aOther.mReferrerPolicy;
   mPrincipal = aOther.mPrincipal;
 
   switch (mAs) {
@@ -79,12 +75,10 @@ PreloadHashKey& PreloadHashKey::operator=(const PreloadHashKey& aOther) {
 }
 
 // static
-PreloadHashKey PreloadHashKey::CreateAsScript(
-    nsIURI* aURI, const CORSMode& aCORSMode, const dom::ScriptKind& aScriptKind,
-    const dom::ReferrerPolicy& aReferrerPolicy) {
+PreloadHashKey PreloadHashKey::CreateAsScript(nsIURI* aURI, CORSMode aCORSMode,
+                                              dom::ScriptKind aScriptKind) {
   PreloadHashKey key(aURI, ResourceType::SCRIPT);
   key.mCORSMode = aCORSMode;
-  key.mReferrerPolicy = aReferrerPolicy;
 
   key.mScript.mScriptKind = aScriptKind;
 
@@ -92,24 +86,22 @@ PreloadHashKey PreloadHashKey::CreateAsScript(
 }
 
 // static
-PreloadHashKey PreloadHashKey::CreateAsScript(
-    nsIURI* aURI, const nsAString& aCrossOrigin, const nsAString& aType,
-    const dom::ReferrerPolicy& aReferrerPolicy) {
+PreloadHashKey PreloadHashKey::CreateAsScript(nsIURI* aURI,
+                                              const nsAString& aCrossOrigin,
+                                              const nsAString& aType) {
   dom::ScriptKind scriptKind = dom::ScriptKind::eClassic;
   if (aType.LowerCaseEqualsASCII("module")) {
     scriptKind = dom::ScriptKind::eModule;
   }
   CORSMode crossOrigin = dom::Element::StringToCORSMode(aCrossOrigin);
-
-  return CreateAsScript(aURI, crossOrigin, scriptKind, aReferrerPolicy);
+  return CreateAsScript(aURI, crossOrigin, scriptKind);
 }
 
 // static
 PreloadHashKey PreloadHashKey::CreateAsStyle(
-    nsIURI* aURI, nsIPrincipal* aPrincipal, dom::ReferrerPolicy aReferrerPolicy,
-    CORSMode aCORSMode, css::SheetParsingMode aParsingMode) {
+    nsIURI* aURI, nsIPrincipal* aPrincipal, CORSMode aCORSMode,
+    css::SheetParsingMode aParsingMode) {
   PreloadHashKey key(aURI, ResourceType::STYLE);
-  key.mReferrerPolicy = aReferrerPolicy;
   key.mCORSMode = aCORSMode;
   key.mPrincipal = aPrincipal;
 
@@ -122,17 +114,15 @@ PreloadHashKey PreloadHashKey::CreateAsStyle(
 PreloadHashKey PreloadHashKey::CreateAsStyle(
     css::SheetLoadData& aSheetLoadData) {
   return CreateAsStyle(aSheetLoadData.mURI, aSheetLoadData.mTriggeringPrincipal,
-                       aSheetLoadData.ReferrerInfo()->ReferrerPolicy(),
                        aSheetLoadData.mSheet->GetCORSMode(),
                        aSheetLoadData.mSheet->ParsingMode());
 }
 
 // static
-PreloadHashKey PreloadHashKey::CreateAsImage(
-    nsIURI* aURI, nsIPrincipal* aPrincipal, CORSMode aCORSMode,
-    dom::ReferrerPolicy const& aReferrerPolicy) {
+PreloadHashKey PreloadHashKey::CreateAsImage(nsIURI* aURI,
+                                             nsIPrincipal* aPrincipal,
+                                             CORSMode aCORSMode) {
   PreloadHashKey key(aURI, ResourceType::IMAGE);
-  key.mReferrerPolicy = aReferrerPolicy;
   key.mCORSMode = aCORSMode;
   key.mPrincipal = aPrincipal;
 
@@ -140,29 +130,21 @@ PreloadHashKey PreloadHashKey::CreateAsImage(
 }
 
 // static
-PreloadHashKey PreloadHashKey::CreateAsFetch(
-    nsIURI* aURI, const CORSMode aCORSMode,
-    const dom::ReferrerPolicy& aReferrerPolicy) {
+PreloadHashKey PreloadHashKey::CreateAsFetch(nsIURI* aURI, CORSMode aCORSMode) {
   PreloadHashKey key(aURI, ResourceType::FETCH);
-  key.mReferrerPolicy = aReferrerPolicy;
   key.mCORSMode = aCORSMode;
 
   return key;
 }
 
 // static
-PreloadHashKey PreloadHashKey::CreateAsFetch(
-    nsIURI* aURI, const nsAString& aCrossOrigin,
-    const dom::ReferrerPolicy& aReferrerPolicy) {
-  return CreateAsFetch(aURI, dom::Element::StringToCORSMode(aCrossOrigin),
-                       aReferrerPolicy);
+PreloadHashKey PreloadHashKey::CreateAsFetch(nsIURI* aURI,
+                                             const nsAString& aCrossOrigin) {
+  return CreateAsFetch(aURI, dom::Element::StringToCORSMode(aCrossOrigin));
 }
 
-PreloadHashKey PreloadHashKey::CreateAsFont(
-    nsIURI* aURI, const CORSMode aCORSMode,
-    const dom::ReferrerPolicy& aReferrerPolicy) {
+PreloadHashKey PreloadHashKey::CreateAsFont(nsIURI* aURI, CORSMode aCORSMode) {
   PreloadHashKey key(aURI, ResourceType::FONT);
-  key.mReferrerPolicy = aReferrerPolicy;
   key.mCORSMode = aCORSMode;
 
   return key;
@@ -172,12 +154,6 @@ bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
   if (mAs != aOther->mAs || mCORSMode != aOther->mCORSMode) {
     return false;
   }
-
-#if !IGNORE_REFERRER_POLICY_FOR_PRELOAD_COALESCING
-  if (mReferrerPolicy != aOther->mReferrerPolicy) {
-    return false;
-  }
-#endif
 
   if (!mPrincipal != !aOther->mPrincipal) {
     // One or the other has a principal, but not both... not equal
@@ -230,10 +206,6 @@ PLDHashNumber PreloadHashKey::HashKey(KeyTypePointer aKey) {
   // Enough to use the common attributes
   hash = AddToHash(hash, static_cast<uint32_t>(aKey->mAs));
   hash = AddToHash(hash, static_cast<uint32_t>(aKey->mCORSMode));
-
-#if !IGNORE_REFERRER_POLICY_FOR_PRELOAD_COALESCING
-  hash = AddToHash(hash, static_cast<uint32_t>(aKey->mReferrerPolicy));
-#endif
 
   return hash;
 }

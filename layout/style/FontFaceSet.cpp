@@ -574,9 +574,8 @@ nsresult FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   nsCOMPtr<nsIStreamLoader> streamLoader;
   RefPtr<nsFontFaceLoader> fontLoader;
 
-  auto preloadKey = PreloadHashKey::CreateAsFont(
-      aFontFaceSrc->mURI->get(), CORS_ANONYMOUS,
-      aFontFaceSrc->mReferrerInfo->ReferrerPolicy());
+  auto preloadKey =
+      PreloadHashKey::CreateAsFont(aFontFaceSrc->mURI->get(), CORS_ANONYMOUS);
   RefPtr<PreloaderBase> preload =
       mDocument->Preloads().LookupPreload(&preloadKey);
 

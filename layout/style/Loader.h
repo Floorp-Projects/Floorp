@@ -63,7 +63,6 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
       : mURI(aKey->mURI),
         mPrincipal(aKey->mPrincipal),
         mLoaderPrincipal(aKey->mLoaderPrincipal),
-        mReferrerInfo(aKey->mReferrerInfo),
         mEncodingGuess(aKey->mEncodingGuess),
         mCORSMode(aKey->mCORSMode),
         mParsingMode(aKey->mParsingMode),
@@ -75,7 +74,6 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
 
   SheetLoadDataHashKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
                        nsIPrincipal* aLoaderPrincipal,
-                       nsIReferrerInfo* aReferrerInfo,
                        NotNull<const Encoding*> aEncodingGuess,
                        CORSMode aCORSMode, css::SheetParsingMode aParsingMode,
                        nsCompatibility aCompatMode,
@@ -84,7 +82,6 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
       : mURI(aURI),
         mPrincipal(aPrincipal),
         mLoaderPrincipal(aLoaderPrincipal),
-        mReferrerInfo(aReferrerInfo),
         mEncodingGuess(aEncodingGuess),
         mCORSMode(aCORSMode),
         mParsingMode(aParsingMode),
@@ -101,7 +98,6 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
       : mURI(std::move(toMove.mURI)),
         mPrincipal(std::move(toMove.mPrincipal)),
         mLoaderPrincipal(std::move(toMove.mLoaderPrincipal)),
-        mReferrerInfo(std::move(toMove.mReferrerInfo)),
         mEncodingGuess(std::move(toMove.mEncodingGuess)),
         mCORSMode(std::move(toMove.mCORSMode)),
         mParsingMode(std::move(toMove.mParsingMode)),
@@ -158,13 +154,6 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
       return false;
     }
 
-    // FIXME: Should we _really_ miss the cache here for different referrer
-    // policies? Missing the cache for different referrers would be sad.
-    if (mReferrerInfo->ReferrerPolicy() !=
-        aKey.mReferrerInfo->ReferrerPolicy()) {
-      return false;
-    }
-
     // Consuming stylesheet tags must never coalesce to <link preload> initiated
     // speculative loads with a weaker SRI hash or its different value.  This
     // check makes sure that regular loads will never find such a weaker preload
@@ -206,7 +195,6 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
   const nsCOMPtr<nsIURI> mURI;
   const nsCOMPtr<nsIPrincipal> mPrincipal;
   const nsCOMPtr<nsIPrincipal> mLoaderPrincipal;
-  const nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   // The encoding guess is the encoding the sheet would get if the request
   // didn't have any encoding information like @charset or a Content-Encoding
   // header.
@@ -533,7 +521,7 @@ class Loader final {
                                             ? aInfo.mTriggeringPrincipal.get()
                                             : LoaderPrincipal();
     return CreateSheet(aInfo.mURI, aInfo.mContent, triggeringPrincipal,
-                       aParsingMode, aInfo.mCORSMode, aInfo.mReferrerInfo,
+                       aParsingMode, aInfo.mCORSMode,
                        /* aPreloadOrParentDataEncoding = */ nullptr,
                        aInfo.mIntegrity, aSyncLoad, aIsPreload);
   }
@@ -544,7 +532,6 @@ class Loader final {
   std::tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
       nsIURI* aURI, nsIContent* aLinkingContent,
       nsIPrincipal* aTriggeringPrincipal, css::SheetParsingMode, CORSMode,
-      nsIReferrerInfo* aLoadingReferrerInfo,
       const Encoding* aPreloadOrParentDataEncoding, const nsAString& aIntegrity,
       bool aSyncLoad, IsPreload aIsPreload);
 
