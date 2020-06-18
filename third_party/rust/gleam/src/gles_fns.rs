@@ -107,7 +107,16 @@ impl Gl for GlesFns {
         dst_buffer: &mut [u8],
     ) {
         // Assumes that the user properly allocated the size for dst_buffer.
-        assert!(calculate_length(width, height, format, pixel_type) == dst_buffer.len());
+        let mut row_length = 0;
+        unsafe {
+            self.ffi_gl_.GetIntegerv(ffi::PACK_ROW_LENGTH, &mut row_length as _);
+        }
+        if row_length == 0 {
+            row_length = width;
+        } else {
+            assert!(row_length >= width);
+        }
+        assert_eq!(calculate_length(row_length, height, format, pixel_type), dst_buffer.len());
 
         unsafe {
             // We don't want any alignment padding on pixel rows.
