@@ -5,9 +5,15 @@
 "use strict";
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
 
 const {
   updateSettingsVisibility,
@@ -33,22 +39,33 @@ class Footer extends PureComponent {
     };
   }
 
-  _renderButton(icon, label, onClick) {
-    return dom.button(
+  _renderButton(icon, labelId, titleId, onClick) {
+    return Localized(
       {
-        className: "compatibility-footer__button",
-        title: label,
-        onClick,
+        id: titleId,
+        attrs: { title: true },
       },
-      dom.img({
-        className: "compatibility-footer__icon",
-        src: icon,
-      }),
-      dom.label(
+      dom.button(
         {
-          className: "compatibility-footer__label",
+          className: "compatibility-footer__button",
+          title: titleId,
+          onClick,
         },
-        label
+        dom.img({
+          className: "compatibility-footer__icon",
+          src: icon,
+        }),
+        Localized(
+          {
+            id: labelId,
+          },
+          dom.label(
+            {
+              className: "compatibility-footer__label",
+            },
+            labelId
+          )
+        )
       )
     );
   }
@@ -60,11 +77,15 @@ class Footer extends PureComponent {
       },
       this._renderButton(
         SETTINGS_ICON,
-        "Settings",
+        "compatibility-settings-button-label",
+        "compatibility-settings-button-title",
         this.props.updateSettingsVisibility
       ),
-      this._renderButton(REPORT_ICON, "Feedback", () =>
-        openDocLink(FEEDBACK_LINK)
+      this._renderButton(
+        REPORT_ICON,
+        "compatibility-feedback-button-label",
+        "compatibility-feedback-button-title",
+        () => openDocLink(FEEDBACK_LINK)
       )
     );
   }
