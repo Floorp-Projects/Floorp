@@ -682,18 +682,22 @@ bool nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
 template <typename T>
 void nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
                               const substring_tuple_type& aTuple) {
-  if (aTuple.IsDependentOn(this->mData, this->mData + this->mLength)) {
-    nsTAutoString<T> temp(aTuple);
+  const auto [isDependentOnThis, tupleLength] =
+      aTuple.IsDependentOnWithLength(this->mData, this->mData + this->mLength);
+
+  if (isDependentOnThis) {
+    nsTAutoString<T> temp;
+    if (!temp.AssignNonDependent(aTuple, tupleLength, mozilla::fallible)) {
+      AllocFailed(tupleLength);
+    }
     Replace(aCutStart, aCutLength, temp);
     return;
   }
 
-  size_type length = aTuple.Length();
-
   aCutStart = XPCOM_MIN(aCutStart, this->Length());
 
-  if (ReplacePrep(aCutStart, aCutLength, length) && length > 0) {
-    aTuple.WriteTo(this->mData + aCutStart, length);
+  if (ReplacePrep(aCutStart, aCutLength, tupleLength) && tupleLength > 0) {
+    aTuple.WriteTo(this->mData + aCutStart, tupleLength);
   }
 }
 
