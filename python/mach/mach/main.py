@@ -319,9 +319,9 @@ To see more help for a specific command, run:
         """
         if self.populate_context_handler:
             topsrcdir = self.populate_context_handler('topdir')
-            register_sentry(topsrcdir)
+            register_sentry(argv, topsrcdir)
         else:
-            register_sentry()
+            register_sentry(argv)
 
         # If no encoding is defined, we default to UTF-8 because without this
         # Python 2.7 will assume the default encoding of ASCII. This will blow
