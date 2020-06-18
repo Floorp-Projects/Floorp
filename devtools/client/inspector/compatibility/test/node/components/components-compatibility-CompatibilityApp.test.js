@@ -25,8 +25,11 @@ describe("CompatibilityApp component", () => {
         topLevelTargetIssues: [],
       },
     });
-    const wrapper = shallow(CompatibilityApp({ store })).dive();
-    expect(wrapper).toMatchSnapshot();
+
+    const withLocalizationWrapper = shallow(CompatibilityApp({ store }));
+    const connectWrapper = withLocalizationWrapper.dive();
+    const targetComponent = connectWrapper.dive();
+    expect(targetComponent).toMatchSnapshot();
   });
 
   it("renders with settings", () => {
@@ -38,7 +41,10 @@ describe("CompatibilityApp component", () => {
         topLevelTargetIssues: [],
       },
     });
-    const wrapper = shallow(CompatibilityApp({ store })).dive();
-    expect(wrapper).toMatchSnapshot();
+
+    const withLocalizationWrapper = shallow(CompatibilityApp({ store }));
+    const connectWrapper = withLocalizationWrapper.dive();
+    const targetComponent = connectWrapper.dive();
+    expect(targetComponent).toMatchSnapshot();
   });
 });
