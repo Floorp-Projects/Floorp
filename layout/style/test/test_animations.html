@@ -646,7 +646,7 @@ is(cs.paddingTop, "25px", "kf_cascade1 at 8s");
 advance_clock(500);
 is(cs.paddingTop, "30px", "kf_cascade1 at 8.5s");
 advance_clock(10);
-is_approx(px_to_num(cs.paddingTop), 60, 0.001, "kf_cascade1 at 8.51s");
+is(cs.paddingTop, "60px", "kf_cascade1 at 8.51s");
 advance_clock(745);
 is(cs.paddingTop, "65px", "kf_cascade1 at 9.2505s");
 done_div();
