@@ -61,7 +61,6 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
   void SetNumber(uint32_t aValue);
   void SetPercent(float aValue);
   void SetDegree(float aValue);
-  void SetPixels(float aValue);
   void SetAppUnits(nscoord aValue);
   void SetAppUnits(float aValue);
   void SetString(const nsACString& aString);
@@ -82,6 +81,7 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
   uint16_t mType;
 
   union {
+    nscoord mAppUnits;
     float mFloat;
     int32_t mInt32;
     uint32_t mUint32;
