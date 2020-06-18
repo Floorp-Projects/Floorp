@@ -23,6 +23,7 @@ from mozpack.executables import (
 
 
 STDCXX_MAX_VERSION = Version('3.4.19')
+CXXABI_MAX_VERSION = Version('1.3.7')
 GLIBC_MAX_VERSION = Version('2.17')
 LIBGCC_MAX_VERSION = Version('4.8')
 
@@ -96,11 +97,8 @@ def iter_symbols(binary):
                 continue
             addr = int(m.group(0), 16)
             # The second "column" is 7 one-character items that can be
-            # whitespaces.
-            flags = line[m.end():][:7]
-            # We're only interested whether the symbol might be weak.
-            weak = 'w' in flags
-
+            # whitespaces. We don't have use for their value, so just skip
+            # those.
             rest = line[m.end() + 9:].split()
             # The number of remaining colums will vary between ELF and MACHO.
             # On ELF, we have:
@@ -119,7 +117,6 @@ def iter_symbols(binary):
                 'size': int(rest[1], 16) if ty == ELF else 0,
                 'name': name,
                 'version': ver or None,
-                'weak': weak,
             }
     else:
         export_table = False
@@ -147,7 +144,6 @@ def iter_symbols(binary):
                 'size': 0,
                 'name': name,
                 'version': None,
-                'weak': None,
             }
 
 
@@ -167,11 +163,6 @@ def check_dep_versions(target, binary, lib, prefix, max_version):
         for sym in at_least_one(iter_symbols(binary)):
             # Only check versions on undefined symbols
             if sym['addr'] != 0:
-                continue
-
-            # Versions for weak symbols don't matter, since the code must
-            # handle the case where they're not defined.
-            if sym['weak']:
                 continue
 
             # No version to check
@@ -195,6 +186,8 @@ def check_dep_versions(target, binary, lib, prefix, max_version):
 def check_stdcxx(target, binary):
     check_dep_versions(
         target, binary, 'libstdc++', 'GLIBCXX', STDCXX_MAX_VERSION)
+    check_dep_versions(
+        target, binary, 'libstdc++', 'CXXABI', CXXABI_MAX_VERSION)
 
 
 def check_libgcc(target, binary):
