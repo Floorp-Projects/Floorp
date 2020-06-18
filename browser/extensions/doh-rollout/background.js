@@ -607,6 +607,7 @@ const setup = {
 
   // Run Migration First, to continue to run rest of start up logic
   await rollout.migrateLocalStoragePrefs();
+  await browser.experiments.preferences.migrateNextDNSEndpoint();
 
   log("Watching `doh-rollout.enabled` pref");
   browser.experiments.preferences.onPrefChanged.addListener(async () => {

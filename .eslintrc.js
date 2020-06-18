@@ -840,7 +840,7 @@ module.exports = {
         "browser/extensions/doh-rollout/experiments/doorhanger/api.js",
         "browser/extensions/doh-rollout/experiments/doorhanger/api.js",
         "browser/extensions/doh-rollout/test/browser/browser_policyOverride.js",
-        "browser/extensions/doh-rollout/test/unit/test_localStorageMigration.js",
+        "browser/extensions/doh-rollout/test/unit/test_migrations.js",
         "browser/extensions/formautofill/test/unit/head.js",
         "browser/extensions/formautofill/test/unit/test_creditCardRecords.js",
         "browser/extensions/formautofill/test/unit/test_migrateRecords.js",
