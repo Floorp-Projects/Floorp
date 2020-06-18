@@ -215,7 +215,7 @@ TEST_SUITES = {
         'mach_command': 'web-platform-tests',
         'build_flavor': 'web-platform-tests',
         'kwargs': {'subsuite': 'testharness'},
-        'task_regex': ['web-platform-tests($|.*(-1|[^0-9])$)',
+        'task_regex': ['web-platform-tests(?!-crashtest|-reftest|-wdspec)($|.*(-1|[^0-9])$)',
                        'test-verify-wpt'],
     },
     'web-platform-tests-crashtest': {
