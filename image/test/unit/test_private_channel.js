@@ -34,8 +34,9 @@ function imageHandler(metadata, response) {
   response.setHeader("Cache-Control", "max-age=10000", false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "image/png", false);
-  var body =
-    "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=";
+  var body = atob(
+    "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII="
+  );
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -126,6 +127,10 @@ function run_loadImage_tests() {
     });
   }
 
+  for (let loader of [gPublicLoader, gPrivateLoader]) {
+    loader.QueryInterface(Ci.imgICache).clearCache(true);
+    loader.QueryInterface(Ci.imgICache).clearCache(false);
+  }
   Services.obs.addObserver(observer, "cacheservice:empty-cache");
   let cs = Services.cache2;
   cs.clear();
