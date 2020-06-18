@@ -498,6 +498,8 @@ impl ToComputedValue for FontStretch {
     ToCss,
     ToResolvedValue,
     ToShmem,
+    Serialize,
+    Deserialize,
 )]
 #[allow(missing_docs)]
 #[repr(u8)]
@@ -545,6 +547,8 @@ impl Default for FontSizeKeyword {
     ToCss,
     ToResolvedValue,
     ToShmem,
+    Serialize,
+    Deserialize,
 )]
 /// Additional information for keyword-derived font sizes.
 pub struct KeywordInfo {
