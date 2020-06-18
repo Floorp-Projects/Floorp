@@ -5,13 +5,16 @@ import json
 import importlib.util
 import inspect
 import sys
+import pathlib
 
+from jsonschema import validate
 from .logger import NotebookLogger
 from mozperftest.metrics.exceptions import (
     NotebookInvalidTransformError,
     NotebookInvalidPathError,
     NotebookDuplicateTransformsError,
 )
+from mozperftest.runner import HERE
 
 logger = NotebookLogger()
 
@@ -43,6 +46,9 @@ class Transformer(object):
                 )
 
         self._custom_transformer = custom_transformer
+
+        with pathlib.Path(HERE, "schemas", "transformer_schema.json").open() as f:
+            self.schema = json.load(f)
 
     @property
     def files(self):
@@ -115,6 +121,7 @@ class Transformer(object):
             for e in merged:
                 e["name"] = name
 
+        validate(instance=merged, schema=self.schema)
         return merged
 
 
