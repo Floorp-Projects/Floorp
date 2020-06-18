@@ -38,7 +38,7 @@ class ReaderViewControlsInteractorTest {
 
     @Test
     fun `update config on change`() {
-        val config: ReaderViewFeature.Config = mock()
+        val config: ReaderViewConfig = mock()
         val interactor = ReaderViewControlsInteractor(mock(), config)
 
         interactor.onFontChanged(ReaderViewFeature.FontType.SANSSERIF)
@@ -52,7 +52,7 @@ class ReaderViewControlsInteractorTest {
 
     @Test
     fun `update config when font size increased`() {
-        val config: ReaderViewFeature.Config = mock()
+        val config: ReaderViewConfig = mock()
         val interactor = ReaderViewControlsInteractor(mock(), config)
 
         whenever(config.fontSize).thenReturn(7)
@@ -71,7 +71,7 @@ class ReaderViewControlsInteractorTest {
 
     @Test
     fun `update config when font size decreased`() {
-        val config: ReaderViewFeature.Config = mock()
+        val config: ReaderViewConfig = mock()
         val interactor = ReaderViewControlsInteractor(mock(), config)
 
         whenever(config.fontSize).thenReturn(3)
