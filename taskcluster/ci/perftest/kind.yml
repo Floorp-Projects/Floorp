@@ -77,12 +77,14 @@ jobs:
                 --android-activity org.mozilla.fenix.IntentReceiverActivity
                 --android-clear-logcat
                 --android-capture-logcat logcat
+                --android-perf-tuning
                 --perfherder-metrics processLaunchToNavStart
                 --android-install-apk fenix_nightlysim_multicommit_armeabi_v7a
                 --hooks testing/performance/hooks_applink.py
                 --perfherder
                 --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --browsertime-iterations 10
                 --output $MOZ_FETCHES_DIR/../artifacts
                 --verbose
                 testing/performance/perftest_applink.js
@@ -108,10 +110,12 @@ jobs:
                 --android-activity org.mozilla.fenix.IntentReceiverActivity
                 --android-clear-logcat
                 --android-capture-logcat logcat
+                --android-perf-tuning
                 --hooks testing/performance/hooks_applink.py
                 --perfherder
                 --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --browsertime-iterations 10
                 --output $MOZ_FETCHES_DIR/../artifacts
                 --verbose
                 testing/performance/perftest_applink.js
@@ -135,12 +139,14 @@ jobs:
                 --android-activity org.mozilla.geckoview_example.GeckoViewActivity
                 --android-clear-logcat
                 --android-capture-logcat logcat
+                --android-perf-tuning
                 --perfherder-metrics processLaunchToNavStart
                 --android-install-apk gve_nightly_api16
                 --hooks testing/performance/hooks_applink.py
                 --perfherder
                 --perfherder-app geckoview
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --browsertime-iterations 10
                 --output $MOZ_FETCHES_DIR/../artifacts
                 --verbose
                 testing/performance/perftest_applink.js
@@ -164,12 +170,14 @@ jobs:
                 --android-capture-logcat logcat
                 --android-app-name org.mozilla.geckoview_example
                 --android-activity org.mozilla.geckoview_example.GeckoViewActivity
+                --android-perf-tuning
                 --perfherder-metrics processLaunchToNavStart
                 --android-install-apk gve_nightly_api16
                 --hooks testing/performance/hooks_applink.py
                 --perfherder
                 --perfherder-app geckoview
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+                --browsertime-iterations 10
                 --output $MOZ_FETCHES_DIR/../artifacts
                 --verbose
                 testing/performance/perftest_applink.js
