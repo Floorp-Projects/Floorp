@@ -51,6 +51,7 @@ use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile, ResolvedExternalSurface};
 use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeSurfaceFormat, ResolvedExternalSurfaceColorData};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation};
+use crate::c_str;
 use crate::debug_colors;
 use crate::debug_render::{DebugItem, DebugRenderer};
 use crate::device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
@@ -95,7 +96,6 @@ use crate::render_target::{RenderTarget, TextureCacheRenderTarget, RenderTargetL
 use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
 use crate::render_task_graph::RenderPassKind;
 use crate::util::drain_filter;
-use crate::c_str;
 
 use std;
 use std::cmp;
@@ -3669,6 +3669,12 @@ impl Renderer {
 
         if self.debug_flags.contains(DebugFlags::ECHO_DRIVER_MESSAGES) {
             self.device.echo_driver_messages();
+        }
+
+        if thread_is_being_profiled() {
+            let duration = Duration::new(0,0);
+            let message = self.profile_counters.get_draw_calls().to_string();
+            add_text_marker(cstr!("NumDrawCalls"), &message, duration);
         }
 
         results.stats.texture_upload_kb = self.profile_counters.texture_data_uploaded.get();
