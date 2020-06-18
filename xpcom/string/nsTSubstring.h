@@ -1271,6 +1271,11 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
       size_type aOldSuffixStart = 0, size_type aNewSuffixStart = 0);
 
  private:
+  void AssignOwned(self_type&& aStr);
+  bool AssignNonDependent(const substring_tuple_type& aTuple,
+                          size_type aTupleLength,
+                          const mozilla::fallible_t& aFallible);
+
   /**
    * Do not call this except from within FinishBulkWriteImpl() and
    * SetCapacity().
