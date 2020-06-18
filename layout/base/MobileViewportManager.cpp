@@ -522,6 +522,11 @@ void MobileViewportManager::UpdateVisualViewportSizeByDynamicToolbar(
   mContext->PostVisualViewportResizeEventByDynamicToolbar();
 }
 
+void MobileViewportManager::
+    UpdateVisualViewportSizeForPotentialScrollbarChange() {
+  RefreshVisualViewportSize();
+}
+
 void MobileViewportManager::UpdateDisplayPortMargins() {
   if (!mContext) {
     return;
