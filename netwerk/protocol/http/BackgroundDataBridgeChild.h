@@ -17,13 +17,12 @@ class BackgroundDataBridgeChild final : public PBackgroundDataBridgeChild {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BackgroundDataBridgeChild, override)
 
   explicit BackgroundDataBridgeChild(HttpBackgroundChannelChild* aBgChild);
-  void Destroy();
 
  protected:
   virtual ~BackgroundDataBridgeChild();
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RefPtr<HttpBackgroundChannelChild> mBgChild;
-  nsCOMPtr<nsIThread> mBackgroundThread;
 
  public:
   mozilla::ipc::IPCResult RecvOnTransportAndData(const uint64_t& offset,
