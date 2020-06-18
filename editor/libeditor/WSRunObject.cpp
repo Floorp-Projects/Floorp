@@ -748,11 +748,24 @@ nsresult WSRunScanner::GetWSNodes() {
     editableBlockParentOrTopmotEditableInlineContent = scanStartContent;
   }
 
+  InitializeRangeStart(mScanStartPoint,
+                       *editableBlockParentOrTopmotEditableInlineContent);
+  InitializeRangeEnd(mScanStartPoint,
+                     *editableBlockParentOrTopmotEditableInlineContent);
+  return NS_OK;
+}
+
+void WSRunScanner::InitializeRangeStart(
+    const EditorDOMPoint& aPoint,
+    const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent) {
+  MOZ_ASSERT(aPoint.IsSetAndValid());
+
+  EditorDOMPoint start(aPoint);
   // first look backwards to find preceding ws nodes
-  if (Text* textNode = mScanStartPoint.GetContainerAsText()) {
+  if (Text* textNode = aPoint.GetContainerAsText()) {
     const nsTextFragment* textFrag = &textNode->TextFragment();
-    if (!mScanStartPoint.IsStartOfContainer()) {
-      for (uint32_t i = mScanStartPoint.Offset(); i; i--) {
+    if (!aPoint.IsStartOfContainer()) {
+      for (uint32_t i = aPoint.Offset(); i; i--) {
         // sanity bounds check the char position.  bug 136165
         if (i > textFrag->GetLength()) {
           MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
@@ -765,7 +778,7 @@ nsresult WSRunScanner::GetWSNodes() {
             mStartOffset = i;
             mStartReason = WSType::NormalText;
             mStartReasonContent = textNode;
-            break;
+            return;
           }
           // as we look backwards update our earliest found nbsp
           mFirstNBSPNode = textNode;
@@ -785,7 +798,7 @@ nsresult WSRunScanner::GetWSNodes() {
     // we haven't found the start of ws yet.  Keep looking
     nsIContent* previousLeafContentOrBlock =
         HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-            start, *editableBlockParentOrTopmotEditableInlineContent,
+            start, aEditableBlockParentOrTopmostEditableInlineContent,
             mEditingHost);
     if (previousLeafContentOrBlock) {
       if (HTMLEditUtils::IsBlockElement(*previousLeafContentOrBlock)) {
@@ -817,7 +830,7 @@ nsresult WSRunScanner::GetWSNodes() {
                 mStartOffset = pos + 1;
                 mStartReason = WSType::NormalText;
                 mStartReasonContent = textNode;
-                break;
+                return;
               }
               // as we look backwards update our earliest found nbsp
               mFirstNBSPNode = textNode;
@@ -845,16 +858,24 @@ nsresult WSRunScanner::GetWSNodes() {
       }
     } else {
       // no prior node means we exhausted
-      // editableBlockParentOrTopmotEditableInlineContent
+      // aEditableBlockParentOrTopmostEditableInlineContent
       mStartNode = start.GetContainer();
       mStartOffset = start.Offset();
       mStartReason = WSType::CurrentBlockBoundary;
       // mStartReasonContent can be either a block element or any non-editable
       // content in this case.
-      mStartReasonContent = editableBlockParentOrTopmotEditableInlineContent;
+      mStartReasonContent = const_cast<nsIContent*>(
+          &aEditableBlockParentOrTopmostEditableInlineContent);
     }
   }
+}
 
+void WSRunScanner::InitializeRangeEnd(
+    const EditorDOMPoint& aPoint,
+    const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent) {
+  MOZ_ASSERT(aPoint.IsSetAndValid());
+
+  EditorDOMPoint end(aPoint);
   // then look ahead to find following ws nodes
   if (Text* textNode = end.GetContainerAsText()) {
     // don't need to put it on list. it already is from code above
@@ -873,7 +894,7 @@ nsresult WSRunScanner::GetWSNodes() {
             mEndOffset = i;
             mEndReason = WSType::NormalText;
             mEndReasonContent = textNode;
-            break;
+            return;
           }
           // as we look forwards update our latest found nbsp
           mLastNBSPNode = textNode;
@@ -893,7 +914,7 @@ nsresult WSRunScanner::GetWSNodes() {
     // we haven't found the end of ws yet.  Keep looking
     nsIContent* nextLeafContentOrBlock =
         HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-            end, *editableBlockParentOrTopmotEditableInlineContent,
+            end, aEditableBlockParentOrTopmostEditableInlineContent,
             mEditingHost);
     if (nextLeafContentOrBlock) {
       if (HTMLEditUtils::IsBlockElement(*nextLeafContentOrBlock)) {
@@ -926,7 +947,7 @@ nsresult WSRunScanner::GetWSNodes() {
                 mEndOffset = pos;
                 mEndReason = WSType::NormalText;
                 mEndReasonContent = textNode;
-                break;
+                return;
               }
               // as we look forwards update our latest found nbsp
               mLastNBSPNode = textNode;
@@ -955,17 +976,16 @@ nsresult WSRunScanner::GetWSNodes() {
       }
     } else {
       // no next node means we exhausted
-      // editableBlockParentOrTopmotEditableInlineContent
+      // aEditableBlockParentOrTopmostEditableInlineContent
       mEndNode = end.GetContainer();
       mEndOffset = end.Offset();
       mEndReason = WSType::CurrentBlockBoundary;
       // mEndReasonContent can be either a block element or any non-editable
       // content in this case.
-      mEndReasonContent = editableBlockParentOrTopmotEditableInlineContent;
+      mEndReasonContent = const_cast<nsIContent*>(
+          &aEditableBlockParentOrTopmostEditableInlineContent);
     }
   }
-
-  return NS_OK;
 }
 
 void WSRunScanner::GetRuns() {

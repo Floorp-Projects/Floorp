@@ -638,6 +638,12 @@ class MOZ_STACK_CLASS WSRunScanner {
       WSFragment::Visible aIsVisible,
       WSFragment::StartOfHardLine aIsStartOfHardLine,
       WSFragment::EndOfHardLine aIsEndOfHardLine);
+  void InitializeRangeStart(
+      const EditorDOMPoint& aPoint,
+      const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent);
+  void InitializeRangeEnd(
+      const EditorDOMPoint& aPoint,
+      const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent);
 
   // The node passed to our constructor.
   EditorDOMPoint mScanStartPoint;

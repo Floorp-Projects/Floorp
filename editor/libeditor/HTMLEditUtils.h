@@ -262,8 +262,8 @@ class HTMLEditUtils final {
    *                            aStartContent is not a descendant of this.
    */
   static nsIContent* GetNextLeafContentOrNextBlockElement(
-      nsIContent& aStartContent, nsIContent& aCurrentBlock,
-      Element* aAncestorLimiter = nullptr) {
+      const nsIContent& aStartContent, const nsIContent& aCurrentBlock,
+      const Element* aAncestorLimiter = nullptr) {
     if (&aStartContent == aAncestorLimiter) {
       return nullptr;
     }
@@ -315,8 +315,9 @@ class HTMLEditUtils final {
    */
   template <typename PT, typename CT>
   static nsIContent* GetNextLeafContentOrNextBlockElement(
-      const EditorDOMPointBase<PT, CT>& aStartPoint, nsIContent& aCurrentBlock,
-      Element* aAncestorLimiter = nullptr) {
+      const EditorDOMPointBase<PT, CT>& aStartPoint,
+      const nsIContent& aCurrentBlock,
+      const Element* aAncestorLimiter = nullptr) {
     MOZ_ASSERT(aStartPoint.IsSet());
 
     if (!aStartPoint.IsInContentNode()) {
@@ -374,8 +375,8 @@ class HTMLEditUtils final {
    *                            aStartContent is not a descendant of this.
    */
   static nsIContent* GetPreviousLeafContentOrPreviousBlockElement(
-      nsIContent& aStartContent, nsIContent& aCurrentBlock,
-      Element* aAncestorLimiter = nullptr) {
+      const nsIContent& aStartContent, const nsIContent& aCurrentBlock,
+      const Element* aAncestorLimiter = nullptr) {
     if (&aStartContent == aAncestorLimiter) {
       return nullptr;
     }
@@ -427,8 +428,9 @@ class HTMLEditUtils final {
    */
   template <typename PT, typename CT>
   static nsIContent* GetPreviousLeafContentOrPreviousBlockElement(
-      const EditorDOMPointBase<PT, CT>& aStartPoint, nsIContent& aCurrentBlock,
-      Element* aAncestorLimiter = nullptr) {
+      const EditorDOMPointBase<PT, CT>& aStartPoint,
+      const nsIContent& aCurrentBlock,
+      const Element* aAncestorLimiter = nullptr) {
     MOZ_ASSERT(aStartPoint.IsSet());
 
     if (!aStartPoint.IsInContentNode()) {
