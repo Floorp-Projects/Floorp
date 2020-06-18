@@ -10,27 +10,27 @@ namespace net {
 
 BackgroundDataBridgeChild::BackgroundDataBridgeChild(
     HttpBackgroundChannelChild* aBgChild)
-    : mBgChild(aBgChild), mBackgroundThread(NS_GetCurrentThread()) {
+    : mBgChild(aBgChild) {
   MOZ_ASSERT(aBgChild);
 }
 
 BackgroundDataBridgeChild::~BackgroundDataBridgeChild() = default;
 
-void BackgroundDataBridgeChild::Destroy() {
-  RefPtr<BackgroundDataBridgeChild> self = this;
-  MOZ_ALWAYS_SUCCEEDS(mBackgroundThread->Dispatch(
-      NS_NewRunnableFunction("BackgroundDataBridgeParent::Destroy",
-                             [self]() {
-                               if (self->CanSend()) {
-                                 Unused << self->Send__delete__(self);
-                               }
-                             }),
-      NS_DISPATCH_NORMAL));
+void BackgroundDataBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
+  mBgChild = nullptr;
 }
 
 mozilla::ipc::IPCResult BackgroundDataBridgeChild::RecvOnTransportAndData(
     const uint64_t& offset, const uint32_t& count, const nsCString& data) {
-  MOZ_ASSERT(mBgChild);
+  if (!mBgChild) {
+    return IPC_OK();
+  }
+
+  if (mBgChild->ChannelClosed()) {
+    Unused << Send__delete__(this);
+    return IPC_OK();
+  }
+
   return mBgChild->RecvOnTransportAndData(NS_OK, NS_NET_STATUS_RECEIVING_FROM,
                                           offset, count, data, true);
 }

@@ -49,17 +49,21 @@ nsresult HttpBackgroundChannelChild::Init(HttpChannelChild* aChannelChild) {
 
 void HttpBackgroundChannelChild::CreateDataBridge() {
   MOZ_ASSERT(OnSocketThread());
+
+  if (!mChannelChild) {
+    return;
+  }
+
   PBackgroundChild* actorChild =
       BackgroundChild::GetOrCreateSocketActorForCurrentThread();
   if (NS_WARN_IF(!actorChild)) {
     return;
   }
 
-  mDataBridgeChild = new BackgroundDataBridgeChild(this);
-  if (!actorChild->SendPBackgroundDataBridgeConstructor(
-          mDataBridgeChild, mChannelChild->ChannelId())) {
-    mDataBridgeChild = nullptr;
-  }
+  RefPtr<BackgroundDataBridgeChild> dataBridgeChild =
+      new BackgroundDataBridgeChild(this);
+  Unused << actorChild->SendPBackgroundDataBridgeConstructor(
+      dataBridgeChild, mChannelChild->ChannelId());
 }
 
 void HttpBackgroundChannelChild::OnChannelClosed() {
@@ -71,11 +75,12 @@ void HttpBackgroundChannelChild::OnChannelClosed() {
 
   // Remove pending IPC messages as well.
   mQueuedRunnables.Clear();
+}
 
-  if (mDataBridgeChild) {
-    mDataBridgeChild->Destroy();
-    mDataBridgeChild = nullptr;
-  }
+bool HttpBackgroundChannelChild::ChannelClosed() {
+  MOZ_ASSERT(OnSocketThread());
+
+  return !mChannelChild;
 }
 
 void HttpBackgroundChannelChild::OnStartRequestReceived() {

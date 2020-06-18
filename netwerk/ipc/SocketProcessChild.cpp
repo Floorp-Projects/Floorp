@@ -176,6 +176,11 @@ void SocketProcessChild::CleanUp() {
       iter.Data()->Close();
     }
   }
+
+  {
+    MutexAutoLock lock(mMutex);
+    mBackgroundDataBridgeMap.Clear();
+  }
   NS_ShutdownXPCOM(nullptr);
 }
 
