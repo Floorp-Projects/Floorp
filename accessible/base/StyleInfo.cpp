@@ -53,8 +53,18 @@ void StyleInfo::Margin(Side aSide, nsAString& aValue) {
              " mElement->GetPrimaryFrame() needs to be valid pointer");
   aValue.Truncate();
 
-  nscoord coordVal = mElement->GetPrimaryFrame()->GetUsedMargin().Side(aSide);
-  aValue.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(coordVal));
+  nsIFrame* frame = mElement->GetPrimaryFrame();
+
+  // This is here only to guarantee that we do the same as getComputedStyle
+  // does, so that we don't hit precision errors in tests.
+  auto& margin = frame->StyleMargin()->mMargin.Get(aSide);
+  if (margin.ConvertsToLength()) {
+    aValue.AppendFloat(margin.AsLengthPercentage().ToLengthInCSSPixels());
+  } else {
+    nscoord coordVal = frame->GetUsedMargin().Side(aSide);
+    aValue.AppendFloat(CSSPixel::FromAppUnits(coordVal));
+  }
+
   aValue.AppendLiteral("px");
 }
 
