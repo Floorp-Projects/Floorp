@@ -3650,6 +3650,7 @@ FileDescriptor Preferences::EnsureSnapshot(size_t* aSize) {
     Unused << HashTable()->reserve(kHashTableInitialLengthContent);
 
     PrefNameArena().Clear();
+    gCallbackPref = nullptr;
   }
 
   *aSize = gSharedMap->MapSize();
