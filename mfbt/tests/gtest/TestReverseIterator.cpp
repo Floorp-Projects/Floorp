@@ -15,7 +15,7 @@ TEST(ReverseIterator, Const_RangeBasedFor)
   const std::vector<int> in = {1, 2, 3, 4};
   const auto reversedRange =
       detail::IteratorRange<ReverseIterator<std::vector<int>::const_iterator>>{
-          in.end(), in.begin()};
+          ReverseIterator{in.end()}, ReverseIterator{in.begin()}};
 
   const std::vector<int> expected = {4, 3, 2, 1};
   std::vector<int> out;
@@ -31,7 +31,7 @@ TEST(ReverseIterator, NonConst_RangeBasedFor)
   std::vector<int> in = {1, 2, 3, 4};
   auto reversedRange =
       detail::IteratorRange<ReverseIterator<std::vector<int>::iterator>>{
-          in.end(), in.begin()};
+          ReverseIterator{in.end()}, ReverseIterator{in.begin()}};
 
   const std::vector<int> expected = {-1, -2, -3, -4};
   for (auto& i : reversedRange) {

@@ -30,12 +30,7 @@ class ReverseIterator {
   using difference_type = typename IteratorT::difference_type;
   using iterator_category = typename IteratorT::iterator_category;
 
-  template <typename Iterator>
-  explicit ReverseIterator(Iterator aIter) : mCurrent(aIter) {}
-
-  template <typename Iterator>
-  MOZ_IMPLICIT ReverseIterator(const ReverseIterator<Iterator>& aOther)
-      : mCurrent(aOther.mCurrent) {}
+  explicit ReverseIterator(IteratorT aIter) : mCurrent(std::move(aIter)) {}
 
   // The return type is not reference, but rather the return type of
   // Iterator::operator*(), which might be value_type, to allow this to work
@@ -143,13 +138,8 @@ class IteratorRange {
   typedef ReverseIteratorT reverse_iterator;
   typedef ReverseIteratorT const_reverse_iterator;
 
-  template <typename Iterator1, typename Iterator2>
-  MOZ_IMPLICIT IteratorRange(Iterator1 aIterBegin, Iterator2 aIterEnd)
-      : mIterBegin(aIterBegin), mIterEnd(aIterEnd) {}
-
-  template <typename Iterator>
-  MOZ_IMPLICIT IteratorRange(const IteratorRange<Iterator>& aOther)
-      : mIterBegin(aOther.mIterBegin), mIterEnd(aOther.mIterEnd) {}
+  IteratorRange(IteratorT aIterBegin, IteratorT aIterEnd)
+      : mIterBegin(std::move(aIterBegin)), mIterEnd(std::move(aIterEnd)) {}
 
   iterator begin() const { return mIterBegin; }
   const_iterator cbegin() const { return begin(); }
