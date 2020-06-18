@@ -44,8 +44,7 @@ for (var test in tests) {
     var cm1 = getComputedStyle(p, "").marginLeft;
     p.style.marginLeft = equiv;
     var cm2 = getComputedStyle(p, "").marginLeft;
-
-    ok(Math.abs(parseFloat(cm1, 10) - parseFloat(cm2, 10)) <= 0.0001, test + " should compute to the same as " + equiv + ", modulo floating point math error");
+    is(cm1, cm2, test + " should compute to the same as " + equiv);
   }
 }
 
