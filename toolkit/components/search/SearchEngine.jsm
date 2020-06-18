@@ -1842,10 +1842,10 @@ SearchEngine.prototype = {
   toJSON() {
     // For built-in engines we don't want to store all their data in the cache
     // so just store the relevant metadata.
-    if (gModernConfig && this._isBuiltin) {
+    if (gModernConfig && this._isAppProvided) {
       return {
         _name: this.name,
-        _isBuiltin: true,
+        _isAppProvided: true,
         _metaData: this._metaData,
       };
     }
