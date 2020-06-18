@@ -20,6 +20,7 @@ RELEASE_PROJECTS = {
     'mozilla-beta',
     'mozilla-release',
     'mozilla-esr68',
+    'mozilla-esr78',
     'comm-central',
     'comm-beta',
     'comm-esr68',

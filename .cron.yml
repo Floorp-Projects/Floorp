@@ -141,6 +141,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr68
+          - mozilla-esr78
       when:
           - {hour: 10, minute: 0}
 
@@ -178,6 +179,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr68
+          - mozilla-esr78
       when:
           by-project:
               # No default branch
@@ -193,6 +195,9 @@ jobs:
               mozilla-esr68:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
+              mozilla-esr78:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
 
     - name: periodic-update
       job:
@@ -204,6 +209,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr68
+          - mozilla-esr78
       when:
           - {weekday: 'Monday', hour: 10, minute: 0}
           - {weekday: 'Thursday', hour: 10, minute: 0}
@@ -259,6 +265,7 @@ jobs:
           - mozilla-central
           - mozilla-beta
           - mozilla-esr68
+          # no mozilla-esr78
       when:
           - {minute: 45}
 
