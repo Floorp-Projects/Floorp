@@ -29,7 +29,6 @@ open class TabCounter @JvmOverloads constructor(
         val inflater = LayoutInflater.from(context)
         inflater.inflate(R.layout.mozac_ui_tabcounter_layout, this)
 
-        counter_text.text = DEFAULT_TABS_COUNTER_TEXT
         val shiftThreeDp = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP, TWO_DIGIT_PADDING, context.resources.displayMetrics
         ).toInt()
@@ -198,6 +197,7 @@ open class TabCounter @JvmOverloads constructor(
 
     private fun formatForDisplay(count: Int): String {
         return if (count > MAX_VISIBLE_TABS) {
+            counter_text.setPadding(0,0,0,6)
             SO_MANY_TABS_OPEN
         } else NumberFormat.getInstance().format(count.toLong())
     }
@@ -220,7 +220,6 @@ open class TabCounter @JvmOverloads constructor(
         internal const val MAX_VISIBLE_TABS = 99
 
         internal const val SO_MANY_TABS_OPEN = "∞"
-        internal const val DEFAULT_TABS_COUNTER_TEXT = ":)"
 
         internal const val ONE_DIGIT_SIZE_RATIO = 0.5f
         internal const val TWO_DIGITS_SIZE_RATIO = 0.4f
