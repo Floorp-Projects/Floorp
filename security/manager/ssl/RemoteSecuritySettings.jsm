@@ -428,9 +428,7 @@ class IntermediatePreloads {
       }
       const toReset = current.filter(record => record.cert_import_complete);
       try {
-        await this.client.db.importChanges(
-          undefined, // do not touch metadata.
-          undefined, // do not touch collection timestamp.
+        await this.client.db.importBulk(
           toReset.map(r => ({ ...r, cert_import_complete: false }))
         );
       } catch (err) {
@@ -497,9 +495,7 @@ class IntermediatePreloads {
       return;
     }
     try {
-      await this.client.db.importChanges(
-        undefined, // do not touch metadata.
-        undefined, // do not touch collection timestamp.
+      await this.client.db.importBulk(
         recordsToUpdate.map(r => ({ ...r, cert_import_complete: true }))
       );
     } catch (err) {
@@ -525,7 +521,6 @@ class IntermediatePreloads {
     const finalWaiting = finalCurrent.filter(
       record => !record.cert_import_complete
     );
-
     const countPreloaded = finalCurrent.length - finalWaiting.length;
 
     TelemetryStopwatch.finish(INTERMEDIATES_UPDATE_MS_TELEMETRY);

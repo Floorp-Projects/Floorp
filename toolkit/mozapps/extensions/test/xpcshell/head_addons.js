@@ -1196,6 +1196,7 @@ async function mockGfxBlocklistItems(items) {
     Services.prefs.getCharPref("services.blocklist.gfx.collection"),
     { bucketNamePref: "services.blocklist.bucket" }
   );
+  await client.db.clear();
   const records = items.map(item => {
     if (item.id && item.last_modified) {
       return item;
@@ -1209,9 +1210,8 @@ async function mockGfxBlocklistItems(items) {
     };
   });
   const collectionTimestamp = Math.max(...records.map(r => r.last_modified));
-  await client.db.importChanges({}, collectionTimestamp, records, {
-    clear: true,
-  });
+  await client.db.importBulk(records);
+  await client.db.saveLastModified(collectionTimestamp);
   let rv = await bsPass.GfxBlocklistRS.checkForEntries();
   return rv;
 }
