@@ -1432,7 +1432,7 @@ class JsepSessionTest : public JsepSessionTestBase,
         ValidateDisabledMSection(&msection);
         continue;
       }
-      if (!mSdpHelper.IsBundleSlave(*sdp, i)) {
+      if (mSdpHelper.HasOwnTransport(*sdp, i)) {
         const SdpAttributeList& attrs = msection.GetAttributeList();
 
         ASSERT_FALSE(attrs.GetIceUfrag().empty());
