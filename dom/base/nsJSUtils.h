@@ -15,7 +15,6 @@
  */
 
 #include "mozilla/Assertions.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "GeckoProfiler.h"
