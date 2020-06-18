@@ -149,6 +149,9 @@ class PerftestOutput(object):
                 new_subtest["alertThreshold"] = value_info.get("alertThreshold", 2.0)
                 new_subtest["unit"] = value_info.get("unit", data_set["unit"])
 
+                if "shouldAlert" in value_info:
+                    new_subtest["shouldAlert"] = value_info.get("shouldAlert")
+
                 subtests.append(new_subtest)
                 vals.append([new_subtest["value"], new_subtest["name"]])
 
