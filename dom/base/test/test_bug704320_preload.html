@@ -28,17 +28,6 @@ var tests = (function*() {
   // reset the counter
   yield resetCounter();
 
-  // load the first test frame
-  // it will call back into this function via postMessage when it finishes loading.
-  // and continue beyond the yield.
-  yield iframe.src = 'file_bug704320_preload_noreuse.html';
-
-  // check the first test
-  yield checkResults(finalizePreloadNoreuse);
-
-  // reset the counter
-  yield resetCounter();
-
   // load the second test frame
   // it will call back into this function via postMessage when it finishes loading.
   // and continue beyond the yield.
@@ -58,59 +47,11 @@ var tests = (function*() {
   // check the third test
   yield checkResults(finalizePreloadReferrerPolicyAttr);
 
-  // reset the counter
-  yield resetCounter();
-
-  // it will call back into this function via postMessage when it finishes loading.
-  // and continue beyond the yield.
-  yield iframe.src = 'file_bug704320_preload_comment_meta.html';
-
-  // check the test result
-  yield checkResults(finalizePreloadCommentMeta);
-
   // complete.
   SimpleTest.finish();
 })();
 
 // Helper functions below.
-
-/**
- * This checks the first test: a test where the preloads should not
- * be reused.  * we expect two requests for each image, script, js request
- * since the referrer policy changed after speculative loads were started.
- * Problem is that the "origin"/revised loads won't necessarily happen,
- * so we test for one or two loads (both are OK) and make the 'origin'
- * referrer optional.
- */
-function finalizePreloadNoreuse(results) {
-  console.log("<br/><pre>" + JSON.stringify(results) + "</pre>");
-  var expected = {'css': {'count': 2, 'referrers': ['full', 'origin']},
-                  'img': {'count': 2, 'referrers': ['full', 'origin']},
-                  'js':  {'count': 2, 'referrers': ['full', 'origin']}};
-
-  for (var x in expected) {
-    ok(x in results, "some " + x + " loads required in results object.");
-
-    ok(results[x].count == 1 || results[x].count == 2,
-       "Expected 1-2  loads for " + x + " requests.");
-
-    // the 'full' preload is optional, but required if count > 1
-    if (results[x].count > 1) {
-      ok(results[x].referrers.includes('full'),
-         "More than one load for " + x + ", so expected an 'full' referrer preload.")
-    }
-
-    // 'origin' (final load) is required
-    ok(results[x].referrers.includes('origin'),
-       "One load for " + x + " should have had 'origin' referrer.");
-
-    // no other values should be in the referrers.
-    is(results[x].referrers.indexOf('none'), -1,
-       "No loads for " + x + " should have a missing referrer.");
-  }
-
-  advance();
-}
 
 /**
  * This checks the second test: a test where preloads SHOULD be reused.
@@ -168,36 +109,6 @@ function finalizePreloadReferrerPolicyAttr(results) {
     is(results[x].referrers.indexOf('full'), -1,
        "No loads for " + x + " should have an 'full' referrer.")
   }
-
-  advance();
-}
-
-function finalizePreloadCommentMeta(results) {
-  var expected = {"css": {"count": 2, "referrers": ["origin", "full"]},
-                  "img": {"count": 2, "referrers": ["origin", "full"]},
-                  "js":  {"count": 2, "referrers": ["origin", "full"]}};
-
-  for (var x in expected) {
-    ok(x in results, "some " + x + " loads required in results object.");
-
-    ok(results[x].count == 1 || results[x].count == 2,
-       "Expected 1-2  loads for " + x + " requests.");
-
-    // the 'origin' preload is optional, but required if count > 1
-    if (results[x].count > 1) {
-      ok(results[x].referrers.includes('origin'),
-         "More than one load for " + x + ", so expected an 'origin' referrer preload.")
-    }
-
-    // 'full' (final load) is required
-    ok(results[x].referrers.includes('full'),
-       "One load for " + x + " should have had 'full' referrer.");
-
-    // no other values should be in the referrers.
-    is(results[x].referrers.indexOf('none'), -1,
-       "No loads for " + x + " should have a missing referrer.");
-  }
-
 
   advance();
 }
