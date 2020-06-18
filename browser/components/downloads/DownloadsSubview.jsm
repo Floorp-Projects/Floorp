@@ -386,7 +386,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
     let item = button.closest(".subviewbutton.download");
 
     let command = "downloadsCmd_open";
-    let openWhere = "current";
+    let openWhere;
     if (button.classList.contains("action-button")) {
       command = item.hasAttribute("canShow")
         ? "downloadsCmd_show"
