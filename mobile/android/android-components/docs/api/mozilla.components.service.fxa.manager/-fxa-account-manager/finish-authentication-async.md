@@ -2,7 +2,7 @@
 
 # finishAuthenticationAsync
 
-`fun finishAuthenticationAsync(authData: `[`FxaAuthData`](../../mozilla.components.service.fxa/-fxa-auth-data/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L497)
+`fun finishAuthenticationAsync(authData: `[`FxaAuthData`](../../mozilla.components.service.fxa/-fxa-auth-data/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L498)
 
 Finalize authentication that was started via [beginAuthenticationAsync](begin-authentication-async.md).
 

@@ -2,7 +2,7 @@
 
 # WillRetry
 
-`WillRetry` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L121)
+`WillRetry` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L122)
 
 Sign-in failed due to an intermittent problem (such as a network failure). A retry attempt will
 be performed automatically during account manager initialization, or as a side-effect of certain

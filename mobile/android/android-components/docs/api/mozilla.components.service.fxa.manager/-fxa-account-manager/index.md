@@ -2,7 +2,7 @@
 
 # FxaAccountManager
 
-`open class FxaAccountManager : `[`Closeable`](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`AccountObserver`](../../mozilla.components.concept.sync/-account-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L150)
+`open class FxaAccountManager : `[`Closeable`](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`AccountObserver`](../../mozilla.components.concept.sync/-account-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L151)
 
 An account manager which encapsulates various internal details of an account lifecycle and provides
 an observer interface along with a public API for interacting with an account.
