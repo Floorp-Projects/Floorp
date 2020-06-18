@@ -268,7 +268,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   // Sets the fullscreen event state on aElement to aIsFullscreen.
   static void SetFullscreenState(dom::Element* aElement, bool aIsFullscreen);
 
-  static bool IsRemoteTarget(nsIContent* aTarget);
+  static bool IsRemoteTarget(nsIContent* target);
+
+  static bool IsTopLevelRemoteTarget(nsIContent* aTarget);
 
   // Returns the kind of APZ action the given WidgetWheelEvent will perform.
   static Maybe<layers::APZWheelAction> APZWheelActionFor(
