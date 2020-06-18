@@ -8,6 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.ext.settings
@@ -156,6 +157,7 @@ class StrictEnhancedTrackingProtectionTest {
         }
     }
 
+    @Ignore("Instrumentation crash: https://github.com/mozilla-mobile/fenix/issues/11642")
     @Test
     fun testStrictVisitDisableExceptionToggle() {
         val trackingProtectionTest =

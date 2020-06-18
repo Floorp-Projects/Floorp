@@ -56,6 +56,7 @@ class TabbedBrowsingTest {
         mockWebServer.shutdown()
     }
 
+    @Ignore("Intermittent failures: https://github.com/mozilla-mobile/fenix/issues/10642")
     @Test
     fun openNewTabTest() {
         homeScreen { }.dismissOnboarding()
@@ -75,6 +76,7 @@ class TabbedBrowsingTest {
         }
     }
 
+    @Ignore("Intermittent failures: https://github.com/mozilla-mobile/fenix/issues/10642")
     @Test
     fun openNewPrivateTabTest() {
         homeScreen { }.dismissOnboarding()
