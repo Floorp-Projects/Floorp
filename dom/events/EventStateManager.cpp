@@ -1320,12 +1320,14 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1549355), we probably
       // don't need to check mReason then.
       BrowserParent* oldRemote = BrowserParent::GetLastMouseRemoteTarget();
-      if (mouseEvent->mReason == WidgetMouseEvent::eReal && oldRemote &&
+      if (mouseEvent->mReason == WidgetMouseEvent::eReal &&
           remote != oldRemote) {
-        UniquePtr<WidgetMouseEvent> mouseExitEvent =
-            CreateMouseOrPointerWidgetEvent(mouseEvent, eMouseExitFromWidget,
-                                            mouseEvent->mRelatedTarget);
-        oldRemote->SendRealMouseEvent(*mouseExitEvent);
+        if (oldRemote) {
+          UniquePtr<WidgetMouseEvent> mouseExitEvent =
+              CreateMouseOrPointerWidgetEvent(mouseEvent, eMouseExitFromWidget,
+                                              mouseEvent->mRelatedTarget);
+          oldRemote->SendRealMouseEvent(*mouseExitEvent);
+        }
 
         if (mouseEvent->mMessage != eMouseExitFromWidget &&
             mouseEvent->mMessage != eMouseEnterIntoWidget) {
