@@ -1211,6 +1211,10 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
         'mips-unknown-linux-gnu': big_endian + {
             '__mips__': 1,
         },
+        'riscv64-unknown-linux-gnu': little_endian + {
+            '__riscv': 1,
+            '__riscv_xlen': 64,
+        },
         'sh4-unknown-linux-gnu': little_endian + {
             '__sh__': 1,
         },

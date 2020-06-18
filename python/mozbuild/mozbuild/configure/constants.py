@@ -50,6 +50,7 @@ CPU_bitness = {
     'mips64': 64,
     'ppc': 32,
     'ppc64': 64,
+    'riscv64': 64,
     's390': 32,
     's390x': 64,
     'sh4': 32,
@@ -89,6 +90,7 @@ CPU_preprocessor_checks = OrderedDict((
     ('m68k', '__m68k__'),
     ('mips64', '__mips64'),
     ('mips32', '__mips__'),
+    ('riscv64', '__riscv && __riscv_xlen == 64'),
     ('sh4', '__sh__'),
 ))
 
