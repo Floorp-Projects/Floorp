@@ -557,7 +557,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Upon getting, returns the canonical encoding label of the document
    * currently loaded into this docshell.
    *
-   * Upon setting, sets forcedCharset for compatibility with legacy callers.
+   * Upon setting, sets the forced encoding for compatibility with legacy callers.
    */
   attribute ACString charset;
 
@@ -567,11 +567,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    * extensions adding noise to the data.
    */
   void gatherCharsetMenuTelemetry();
-
-  /**
-   * The charset forced by the user.
-   */
-  attribute ACString forcedCharset;
 
   /**
    * In a child docshell, this is the charset of the parent docshell
