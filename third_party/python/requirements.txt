@@ -103,7 +103,7 @@ pathlib2==2.3.2 \
 pathspec==0.8 \
     --hash=sha256:7d91249d21749788d07a2d0f94147accd8f845507400749ea19c1ec9054a12b0 \
     --hash=sha256:da45173eb3a6f2a5a487efba21f050af2b41948be6ab52b6a1e3ff22bb8b7061 \
-    # via -r requirements-mach-vendor-python.in
+    # via -r requirements-mach-vendor-python.in, yamllint
 pip-tools==4.5.1 \
     --hash=sha256:693f30e451875796b1b25203247f0b4cf48a4c4a5ab7341f4f33ffd498cdcc98 \
     --hash=sha256:be9c796aa88b2eec5cabf1323ba1cb60a08212b84bfb75b8b4037a8ef8cb8cb6 \
@@ -167,7 +167,7 @@ pyyaml==5.3.1 \
     --hash=sha256:b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d \
     --hash=sha256:cc8955cfbfc7a115fa81d85284ee61147059a753344bc51098f3ccd69b0d7e0c \
     --hash=sha256:d13155f591e6fcc1ec3b30685d50bf0711574e2c0dfffd7644babf8b5102ca1a \
-    # via -r requirements-mach-vendor-python.in
+    # via -r requirements-mach-vendor-python.in, yamllint
 redo==2.0.3 \
     --hash=sha256:36784bf8ae766e14f9db0e377ccfa02835d648321d2007b6ae0bf4fd612c0f94 \
     --hash=sha256:71161cb0e928d824092a5f16203939bbc0867ce4c4685db263cf22c3ae7634a8 \
@@ -203,6 +203,10 @@ virtualenv==16.7.8 \
 voluptuous==0.11.5 \
     --hash=sha256:303542b3fc07fb52ec3d7a1c614b329cdbee13a9d681935353d8ea56a7bfa9f1 \
     --hash=sha256:567a56286ef82a9d7ae0628c5842f65f516abcb496e74f3f59f1d7b28df314ef \
+    # via -r requirements-mach-vendor-python.in
+yamllint==1.23 \
+    --hash=sha256:0fa69bf8a86182b7fe14918bdd3a30354c869966bbc7cbfff176af71bda9c806 \
+    --hash=sha256:59f3ff77f44e7f46be6aecdb985830f73a1c51e290b7082a7d38c2ae1940f4a9 \
     # via -r requirements-mach-vendor-python.in
 
 # WARNING: The following packages were not pinned, but pip requires them to be

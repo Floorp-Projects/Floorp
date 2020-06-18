@@ -48,3 +48,4 @@ sentry-sdk==0.14.3
 six==1.13.0
 virtualenv==16.7.8
 voluptuous==0.11.5
+yamllint==1.23
