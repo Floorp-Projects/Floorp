@@ -11,6 +11,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 const Types = require("devtools/client/inspector/compatibility/types");
 
 const IssueList = createFactory(
@@ -28,9 +31,12 @@ class IssuePane extends PureComponent {
   }
 
   _renderNoIssues() {
-    return dom.p(
-      { className: "devtools-sidepanel-no-result" },
-      "No compatibility issues found."
+    return Localized(
+      { id: "compatibility-no-issues-found" },
+      dom.p(
+        { className: "devtools-sidepanel-no-result" },
+        "compatibility-no-issues-found"
+      )
     );
   }
 
