@@ -6,3 +6,7 @@
 
 compatibility-selected-element-header = Selected Element
 compatibility-all-elements-header = All Issues
+
+##
+
+compatibility-no-issues-found = No compatibility issues found.
