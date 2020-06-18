@@ -9,8 +9,7 @@ const { AppConstants } = ChromeUtils.import(
 const { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
 );
-
-const IS_ANDROID = AppConstants.platform == "android";
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
@@ -22,6 +21,8 @@ const { UptakeTelemetry } = ChromeUtils.import(
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
+
+const IS_ANDROID = AppConstants.platform == "android";
 
 const BinaryInputStream = CC(
   "@mozilla.org/binaryinputstream;1",
@@ -257,6 +258,21 @@ add_task(async function test_get_does_not_load_dump_when_pref_is_false() {
 });
 add_task(clear_state);
 
+add_task(async function test_get_loads_dump_only_once_if_called_in_parallel() {
+  const backup = clientWithDump._importJSONDump;
+  let callCount = 0;
+  clientWithDump._importJSONDump = async () => {
+    callCount++;
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return 42;
+  };
+  await Promise.all([clientWithDump.get(), clientWithDump.get()]);
+  equal(callCount, 1, "JSON dump was called more than once");
+  clientWithDump._importJSONDump = backup;
+});
+add_task(clear_state);
+
 add_task(async function test_get_does_not_sync_if_empty_dump_is_provided() {
   if (IS_ANDROID) {
     // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
@@ -409,6 +425,26 @@ add_task(async function test_get_does_not_verify_signature_if_load_dump() {
   ok(Object.keys(metadata).length > 0, "metadata was fetched");
   ok(called, "signature was verified for the data that was in dump");
 });
+add_task(clear_state);
+
+add_task(
+  async function test_get_does_verify_signature_if_json_loaded_in_parallel() {
+    const backup = clientWithDump._verifier;
+    let callCount = 0;
+    clientWithDump._verifier = {
+      async asyncVerifyContentSignature(serialized, signature) {
+        callCount++;
+        return true;
+      },
+    };
+    await Promise.all([
+      clientWithDump.get({ verifySignature: true }),
+      clientWithDump.get({ verifySignature: true }),
+    ]);
+    equal(callCount, 0, "No need to verify signatures if JSON dump is loaded");
+    clientWithDump._verifier = backup;
+  }
+);
 add_task(clear_state);
 
 add_task(async function test_sync_runs_once_only() {

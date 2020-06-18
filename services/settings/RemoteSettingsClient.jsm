@@ -342,24 +342,36 @@ class RemoteSettingsClient extends EventEmitter {
     let { verifySignature = false } = options;
 
     if (syncIfEmpty && !(await Utils.hasLocalData(this))) {
+      // .get() was called before we had the chance to synchronize the local database.
+      // We'll try to avoid returning an empty list.
+      if (!this._importingPromise) {
+        // Prevent parallel loading when .get() is called multiple times.
+        this._importingPromise = (async () => {
+          const importedFromDump = gLoadDump
+            ? await this._importJSONDump()
+            : -1;
+          if (importedFromDump < 0) {
+            // There is no JSON dump to load, force a synchronization from the server.
+            console.debug(
+              `${this.identifier} Local DB is empty, pull data from server`
+            );
+            await this.sync({ loadDump: false });
+          }
+        })();
+      }
       try {
-        // .get() was called before we had the chance to synchronize the local database.
-        // We'll try to avoid returning an empty list.
-        const importedFromDump = gLoadDump ? await this._importJSONDump() : -1;
-        if (importedFromDump < 0) {
-          // There is no JSON dump to load, force a synchronization from the server.
-          console.debug(
-            `${this.identifier} Local DB is empty, pull data from server`
-          );
-          await this.sync({ loadDump: false });
-        }
-        // Either from trusted dump, or already done during sync.
-        verifySignature = false;
+        await this._importingPromise;
       } catch (e) {
         // Report but return an empty list since there will be no data anyway.
         Cu.reportError(e);
         return [];
+      } finally {
+        // then delete this promise again, as now we should have local data:
+        delete this._importingPromise;
       }
+      // No need to verify signature, because either we've just load a trusted
+      // dump (here or in a parallel call), or it was verified during sync.
+      verifySignature = false;
     }
 
     // Read from the local DB.
