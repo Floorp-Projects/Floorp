@@ -231,6 +231,14 @@ class FxAccountsDevice {
               ourDevice &&
               (ourDevice.pushCallback === null || ourDevice.pushEndpointExpired)
             ) {
+              let pushState = ourDevice.pushEndpointExpired
+                ? "expiredCallback"
+                : "noCallback";
+              Services.telemetry.keyedScalarAdd(
+                "identity.fxaccounts.push_state_this_device",
+                pushState,
+                1
+              );
               await this._fxai.fxaPushService.unsubscribe();
               await this._registerOrUpdateDevice(currentState, accountData);
             }

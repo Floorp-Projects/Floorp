@@ -54,6 +54,19 @@ class FxAccountsCommands {
     const { sessionToken } = await this._fxai.getUserAccountData([
       "sessionToken",
     ]);
+    let pushState;
+    if (!device.pushCallback) {
+      pushState = "noCallback";
+    } else if (device.pushEndpointExpired) {
+      pushState = "expiredCallback";
+    } else {
+      pushState = "ok";
+    }
+    Services.telemetry.keyedScalarAdd(
+      "identity.fxaccounts.push_state_command_target",
+      pushState,
+      1
+    );
     const client = this._fxai.fxAccountsClient;
     const now = Date.now();
     if (now < this._invokeRateLimitExpiry) {
