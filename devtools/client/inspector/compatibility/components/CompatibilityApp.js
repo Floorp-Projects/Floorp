@@ -12,6 +12,8 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+
 const Types = require("devtools/client/inspector/compatibility/types");
 
 const Accordion = createFactory(
@@ -30,6 +32,8 @@ const Settings = createFactory(
 class CompatibilityApp extends PureComponent {
   static get propTypes() {
     return {
+      // getString prop is injected by the withLocalization wrapper
+      getString: PropTypes.func.isRequired,
       isSettingsVisibile: PropTypes.bool.isRequired,
       isTopLevelTargetProcessing: PropTypes.bool.isRequired,
       selectedNodeIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
@@ -44,6 +48,7 @@ class CompatibilityApp extends PureComponent {
 
   render() {
     const {
+      getString,
       isSettingsVisibile,
       isTopLevelTargetProcessing,
       selectedNodeIssues,
@@ -88,13 +93,13 @@ class CompatibilityApp extends PureComponent {
           items: [
             {
               id: "compatibility-app--selected-element-pane",
-              header: "Selected Element",
+              header: getString("compatibility-selected-element-header"),
               component: selectedNodeIssuePane,
               opened: true,
             },
             {
               id: "compatibility-app--all-elements-pane",
-              header: "All Issues",
+              header: getString("compatibility-all-elements-header"),
               component: [topLevelTargetIssuePane, throbber],
               opened: true,
             },
@@ -117,4 +122,6 @@ const mapStateToProps = state => {
     topLevelTargetIssues: state.compatibility.topLevelTargetIssues,
   };
 };
-module.exports = connect(mapStateToProps)(CompatibilityApp);
+module.exports = FluentReact.withLocalization(
+  connect(mapStateToProps)(CompatibilityApp)
+);
