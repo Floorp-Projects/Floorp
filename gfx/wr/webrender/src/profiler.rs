@@ -926,6 +926,10 @@ impl RendererProfileCounters {
         }
     }
 
+    pub fn get_draw_calls(&mut self) -> u64 {
+        self.draw_calls.accum
+    }
+
     pub fn reset(&mut self) {
         self.draw_calls.reset();
         self.vertices.reset();
