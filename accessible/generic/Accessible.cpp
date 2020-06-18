@@ -646,8 +646,8 @@ nsRect Accessible::BoundsInAppUnits() const {
   unionRectTwips.MoveBy(-viewportOffset);
 
   // We need to take into account a non-1 resolution set on the presshell.
-  // This happens in mobile platforms with async pinch zooming. Here we
-  // scale the bounds before adding the screen-relative offset.
+  // This happens with async pinch zooming. Here we scale the bounds before
+  // adding the screen-relative offset.
   unionRectTwips.ScaleRoundOut(presShell->GetResolution());
   // We have the union of the rectangle, now we need to put it in absolute
   // screen coords.
