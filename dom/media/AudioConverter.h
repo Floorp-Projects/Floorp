@@ -233,6 +233,7 @@ class AudioConverter {
   bool CanReorderAudio() const {
     return mIn.Layout().MappingTable(mOut.Layout());
   }
+  static bool CanConvert(const AudioConfig& aIn, const AudioConfig& aOut);
 
   const AudioConfig& InputConfig() const { return mIn; }
   const AudioConfig& OutputConfig() const { return mOut; }
