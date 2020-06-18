@@ -120,7 +120,6 @@ use plane_split::{Clipper, Polygon, Splitter};
 use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PrimitiveTemplateKind};
 use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer};
-use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex};
 use crate::prim_store::{ColorBindingStorage, ColorBindingIndex, PrimitiveVisibilityFlags};
 use crate::print_tree::{PrintTree, PrintTreePrinter};
 use crate::render_backend::{DataStores, FrameId};
@@ -3183,9 +3182,7 @@ impl TileCacheInstance {
         clip_store: &ClipStore,
         pictures: &[PicturePrimitive],
         resource_cache: &mut ResourceCache,
-        opacity_binding_store: &OpacityBindingStorage,
         color_bindings: &ColorBindingStorage,
-        image_instances: &ImageInstanceStorage,
         surface_stack: &[SurfaceIndex],
         composite_state: &mut CompositeState,
     ) -> Option<PrimitiveVisibilityFlags> {
@@ -3321,39 +3318,30 @@ impl TileCacheInstance {
                     prim_info.opacity_bindings.push(binding.into());
                 }
             }
-            PrimitiveInstanceKind::Rectangle { data_handle, opacity_binding_index, color_binding_index, .. } => {
-                if opacity_binding_index == OpacityBindingIndex::INVALID {
-                    // Rectangles can only form a backdrop candidate if they are known opaque.
-                    // TODO(gw): We could resolve the opacity binding here, but the common
-                    //           case for background rects is that they don't have animated opacity.
-                    let color = match data_stores.prim[data_handle].kind {
-                        PrimitiveTemplateKind::Rectangle { color, .. } => {
-                            frame_context.scene_properties.resolve_color(&color)
-                        }
-                        _ => unreachable!(),
-                    };
-                    if color.a >= 1.0 {
-                        backdrop_candidate = Some(BackdropInfo {
-                            opaque_rect: pic_clip_rect,
-                            kind: Some(BackdropKind::Color { color }),
-                        });
+            PrimitiveInstanceKind::Rectangle { data_handle, color_binding_index, .. } => {
+                // Rectangles can only form a backdrop candidate if they are known opaque.
+                // TODO(gw): We could resolve the opacity binding here, but the common
+                //           case for background rects is that they don't have animated opacity.
+                let color = match data_stores.prim[data_handle].kind {
+                    PrimitiveTemplateKind::Rectangle { color, .. } => {
+                        frame_context.scene_properties.resolve_color(&color)
                     }
-                } else {
-                    let opacity_binding = &opacity_binding_store[opacity_binding_index];
-                    for binding in &opacity_binding.bindings {
-                        prim_info.opacity_bindings.push(OpacityBinding::from(*binding));
-                    }
+                    _ => unreachable!(),
+                };
+                if color.a >= 1.0 {
+                    backdrop_candidate = Some(BackdropInfo {
+                        opaque_rect: pic_clip_rect,
+                        kind: Some(BackdropKind::Color { color }),
+                    });
                 }
 
                 if color_binding_index != ColorBindingIndex::INVALID {
                     prim_info.color_binding = Some(color_bindings[color_binding_index].into());
                 }
             }
-            PrimitiveInstanceKind::Image { data_handle, image_instance_index, ref mut is_compositor_surface, .. } => {
+            PrimitiveInstanceKind::Image { data_handle, ref mut is_compositor_surface, .. } => {
                 let image_key = &data_stores.image[data_handle];
                 let image_data = &image_key.kind;
-                let image_instance = &image_instances[image_instance_index];
-                let opacity_binding_index = image_instance.opacity_binding_index;
 
                 let mut promote_to_surface = false;
                 let mut promote_with_flip_y = false;
@@ -3373,25 +3361,18 @@ impl TileCacheInstance {
                     }
                 }
 
-                if opacity_binding_index == OpacityBindingIndex::INVALID {
-                    if let Some(image_properties) = resource_cache.get_image_properties(image_data.key) {
-                        // For an image to be a possible opaque backdrop, it must:
-                        // - Have a valid, opaque image descriptor
-                        // - Not use tiling (since they can fail to draw)
-                        // - Not having any spacing / padding
-                        if image_properties.descriptor.is_opaque() &&
-                           image_properties.tiling.is_none() &&
-                           image_data.tile_spacing == LayoutSize::zero() {
-                            backdrop_candidate = Some(BackdropInfo {
-                                opaque_rect: pic_clip_rect,
-                                kind: None,
-                            });
-                        }
-                    }
-                } else {
-                    let opacity_binding = &opacity_binding_store[opacity_binding_index];
-                    for binding in &opacity_binding.bindings {
-                        prim_info.opacity_bindings.push(OpacityBinding::from(*binding));
+                if let Some(image_properties) = resource_cache.get_image_properties(image_data.key) {
+                    // For an image to be a possible opaque backdrop, it must:
+                    // - Have a valid, opaque image descriptor
+                    // - Not use tiling (since they can fail to draw)
+                    // - Not having any spacing / padding
+                    if image_properties.descriptor.is_opaque() &&
+                       image_properties.tiling.is_none() &&
+                       image_data.tile_spacing == LayoutSize::zero() {
+                        backdrop_candidate = Some(BackdropInfo {
+                            opaque_rect: pic_clip_rect,
+                            kind: None,
+                        });
                     }
                 }
 
