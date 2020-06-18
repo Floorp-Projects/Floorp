@@ -21,6 +21,10 @@ indentation, etc.
 
 Written in Python (compatible with Python 2 & 3).
 
+⚠ Python 2 upstream support stopped on January 1, 2020. yamllint will keep
+best-effort support for Python 2.7 until January 1, 2021. Passed that date,
+yamllint will drop all Python 2-related code.
+
 Documentation
 -------------
 
