@@ -85,12 +85,13 @@ EOF
 mv fzf /usr/local/bin
 
 ###
-# Flake8 Setup
+# Flake8/pylint Setup
 ###
 
 cd /setup
 
 pip3 install --require-hashes -r /tmp/flake8_requirements.txt
+pip3 install --require-hashes -r /tmp/pylint_requirements.txt
 
 ###
 # codespell Setup
