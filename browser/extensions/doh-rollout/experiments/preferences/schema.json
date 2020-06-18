@@ -130,6 +130,13 @@
           }
         ],
         "async": true
+      },
+      {
+        "name": "migrateNextDNSEndpoint",
+        "type": "function",
+        "description": "Migrates any occurrances of old NextDNS endpoint URL in pref values to the new endpoint.",
+        "parameters": [],
+        "async": true
       }
     ]
   }

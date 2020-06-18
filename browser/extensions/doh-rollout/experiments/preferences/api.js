@@ -38,6 +38,33 @@ var preferences = class preferences extends ExtensionAPI {
             return Services.prefs.prefHasUserValue(name);
           },
 
+          async migrateNextDNSEndpoint() {
+            // NextDNS endpoint changed from trr.dns.nextdns.io to firefox.dns.nextdns.io
+            // This migration updates any pref values that might be using the old value
+            // to the new one. We support values that match the exact URL that shipped
+            // in the network.trr.resolvers pref in prior versions of the browser.
+            // The migration is a direct static replacement of the string.
+            let oldURL = "https://trr.dns.nextdns.io/";
+            let newURL = "https://firefox.dns.nextdns.io/";
+            let prefsToMigrate = [
+              "network.trr.resolvers",
+              "network.trr.uri",
+              "network.trr.custom_uri",
+              "doh-rollout.trr-selection.dry-run-result",
+              "doh-rollout.uri",
+            ];
+
+            for (let pref of prefsToMigrate) {
+              if (!Services.prefs.prefHasUserValue(pref)) {
+                continue;
+              }
+              Services.prefs.setCharPref(
+                pref,
+                Services.prefs.getCharPref(pref).replaceAll(oldURL, newURL)
+              );
+            }
+          },
+
           onPrefChanged: new ExtensionCommon.EventManager({
             context,
             name: "preferences.onPrefChanged",
