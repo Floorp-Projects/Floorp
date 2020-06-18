@@ -8,8 +8,6 @@
 const TEST_URL = `data:text/html;charset=utf-8,<div id="test"></div>`;
 
 add_task(async function() {
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-
   const tab = await addTab(TEST_URL);
   const target = await TargetFactory.forTab(tab);
   await target.attach();
