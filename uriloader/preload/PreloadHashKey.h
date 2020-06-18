@@ -32,8 +32,8 @@ class PreloadHashKey : public nsURIHashKey {
  public:
   enum class ResourceType : uint8_t { NONE, SCRIPT, STYLE, IMAGE, FONT, FETCH };
 
-  typedef PreloadHashKey* KeyType;
-  typedef const PreloadHashKey* KeyTypePointer;
+  using KeyType = const PreloadHashKey&;
+  using KeyTypePointer = const PreloadHashKey*;
 
   PreloadHashKey() = default;
   PreloadHashKey(const nsIURI* aKey, ResourceType aAs);
@@ -67,9 +67,9 @@ class PreloadHashKey : public nsURIHashKey {
   // Construct key for "font"
   static PreloadHashKey CreateAsFont(nsIURI* aURI, CORSMode aCORSMode);
 
-  KeyType GetKey() const { return const_cast<PreloadHashKey*>(this); }
+  KeyType GetKey() const { return *this; }
   KeyTypePointer GetKeyPointer() const { return this; }
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
 
   bool KeyEquals(KeyTypePointer aOther) const;
   static PLDHashNumber HashKey(KeyTypePointer aKey);

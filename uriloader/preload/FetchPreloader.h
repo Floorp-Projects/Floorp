@@ -24,7 +24,7 @@ class FetchPreloader : public PreloaderBase, public nsIStreamListener {
   NS_DECL_NSISTREAMLISTENER
 
   FetchPreloader();
-  nsresult OpenChannel(PreloadHashKey* aKey, nsIURI* aURI,
+  nsresult OpenChannel(const PreloadHashKey& aKey, nsIURI* aURI,
                        const CORSMode aCORSMode,
                        const dom::ReferrerPolicy& aReferrerPolicy,
                        dom::Document* aDocument);

@@ -32,7 +32,7 @@ FetchPreloader::FetchPreloader()
 FetchPreloader::FetchPreloader(nsContentPolicyType aContentPolicyType)
     : mContentPolicyType(aContentPolicyType) {}
 
-nsresult FetchPreloader::OpenChannel(PreloadHashKey* aKey, nsIURI* aURI,
+nsresult FetchPreloader::OpenChannel(const PreloadHashKey& aKey, nsIURI* aURI,
                                      const CORSMode aCORSMode,
                                      const dom::ReferrerPolicy& aReferrerPolicy,
                                      dom::Document* aDocument) {
