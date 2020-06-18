@@ -8,7 +8,7 @@ use crate::cmsg;
 use crate::codec::Codec;
 use crate::messages::AssocRawPlatformHandle;
 use bytes::{Bytes, BytesMut, IntoBuf};
-use futures::{AsyncSink, Poll, Sink, StartSend, Stream};
+use futures::{AsyncSink, Poll, Sink, StartSend, Stream, task};
 use std::collections::VecDeque;
 use std::os::unix::io::RawFd;
 use std::{fmt, io, mem};
@@ -268,7 +268,9 @@ where
     }
 
     fn close(&mut self) -> Poll<(), Self::SinkError> {
-        try_ready!(self.poll_complete());
+        if task::is_in_task() {
+            try_ready!(self.poll_complete());
+        }
         self.io.shutdown()
     }
 }
