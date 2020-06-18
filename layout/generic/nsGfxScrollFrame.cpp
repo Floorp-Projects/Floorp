@@ -4239,6 +4239,9 @@ nsSize ScrollFrameHelper::GetVisualViewportSize() const {
 nsPoint ScrollFrameHelper::GetVisualViewportOffset() const {
   PresShell* presShell = mOuter->PresShell();
   if (mIsRoot && presShell->IsVisualViewportSizeSet()) {
+    if (auto pendingUpdate = presShell->GetPendingVisualScrollUpdate()) {
+      return pendingUpdate->mVisualScrollOffset;
+    }
     return presShell->GetVisualViewportOffset();
   }
   return GetScrollPosition();
@@ -4669,6 +4672,7 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
   // RestoreState(), since the scrollable rect (which the clamping depends
   // on) can change over the course of the restoration process.
   nsPoint layoutRestorePos = GetLayoutScrollRange().ClampPoint(mRestorePos);
+  nsPoint visualRestorePos = GetVisualScrollRange().ClampPoint(mRestorePos);
 
   // Continue restoring until both the layout and visual scroll positions
   // reach the destination. (Note that the two can only be different for
@@ -4680,9 +4684,10 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
 
   SCROLLRESTORE_LOG(
       "%p: ScrollToRestoredPosition (mRestorePos.y=%d, mLastPos.y=%d, "
-      "layoutRestorePos.y=%d, logicalLayoutScrollPos.y=%d, "
+      "layoutRestorePos.y=%d, visualRestorePos.y=%d, "
+      "logicalLayoutScrollPos.y=%d, "
       "GetLogicalVisualViewportOffset().y=%d)\n",
-      this, mRestorePos.y, mLastPos.y, layoutRestorePos.y,
+      this, mRestorePos.y, mLastPos.y, layoutRestorePos.y, visualRestorePos.y,
       logicalLayoutScrollPos.y, GetLogicalVisualViewportOffset().y);
 
   // if we didn't move, we still need to restore
@@ -4697,7 +4702,7 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
       if (state == LoadingState::Stopped && !NS_SUBTREE_DIRTY(mOuter)) {
         return;
       }
-      nsPoint visualScrollToPos = mRestorePos;
+      nsPoint visualScrollToPos = visualRestorePos;
       nsPoint layoutScrollToPos = layoutRestorePos;
       if (!IsPhysicalLTR()) {
         // convert from logical to physical scroll position
