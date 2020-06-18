@@ -112,6 +112,11 @@ PER_PROJECT_PARAMETERS = {
         'release_type': 'release',
     },
 
+    'comm-esr78': {
+        'target_tasks_method': 'mozilla_esr78_tasks',
+        'release_type': 'release',
+    },
+
     'pine': {
         'target_tasks_method': 'pine_tasks',
     },
