@@ -7,7 +7,6 @@
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/css/SheetParsingMode.h"
-#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/ScriptKind.h"
 #include "nsURIHashKey.h"
 
@@ -44,38 +43,29 @@ class PreloadHashKey : public nsURIHashKey {
   PreloadHashKey& operator=(const PreloadHashKey& aOther);
 
   // Construct key for "script"
-  static PreloadHashKey CreateAsScript(
-      nsIURI* aURI, const CORSMode& aCORSMode,
-      const dom::ScriptKind& aScriptKind,
-      const dom::ReferrerPolicy& aReferrerPolicy);
-  static PreloadHashKey CreateAsScript(
-      nsIURI* aURI, const nsAString& aCrossOrigin, const nsAString& aType,
-      const dom::ReferrerPolicy& aReferrerPolicy);
+  static PreloadHashKey CreateAsScript(nsIURI* aURI, CORSMode aCORSMode,
+                                       dom::ScriptKind aScriptKind);
+  static PreloadHashKey CreateAsScript(nsIURI* aURI,
+                                       const nsAString& aCrossOrigin,
+                                       const nsAString& aType);
 
   // Construct key for "style"
   static PreloadHashKey CreateAsStyle(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                      dom::ReferrerPolicy aReferrerPolicy,
                                       CORSMode aCORSMode,
                                       css::SheetParsingMode aParsingMode);
   static PreloadHashKey CreateAsStyle(css::SheetLoadData&);
 
   // Construct key for "image"
-  static PreloadHashKey CreateAsImage(
-      nsIURI* aURI, nsIPrincipal* aPrincipal, CORSMode aCORSMode,
-      dom::ReferrerPolicy const& aReferrerPolicy);
+  static PreloadHashKey CreateAsImage(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                                      CORSMode aCORSMode);
 
   // Construct key for "fetch"
-  static PreloadHashKey CreateAsFetch(
-      nsIURI* aURI, const CORSMode aCORSMode,
-      const dom::ReferrerPolicy& aReferrerPolicy);
-  static PreloadHashKey CreateAsFetch(
-      nsIURI* aURI, const nsAString& aCrossOrigin,
-      const dom::ReferrerPolicy& aReferrerPolicy);
+  static PreloadHashKey CreateAsFetch(nsIURI* aURI, CORSMode aCORSMode);
+  static PreloadHashKey CreateAsFetch(nsIURI* aURI,
+                                      const nsAString& aCrossOrigin);
 
   // Construct key for "font"
-  static PreloadHashKey CreateAsFont(
-      nsIURI* aURI, const CORSMode aCORSMode,
-      const dom::ReferrerPolicy& aReferrerPolicy);
+  static PreloadHashKey CreateAsFont(nsIURI* aURI, CORSMode aCORSMode);
 
   KeyType GetKey() const { return const_cast<PreloadHashKey*>(this); }
   KeyTypePointer GetKeyPointer() const { return this; }
@@ -98,7 +88,6 @@ class PreloadHashKey : public nsURIHashKey {
   ResourceType mAs = ResourceType::NONE;
 
   CORSMode mCORSMode = CORS_NONE;
-  enum dom::ReferrerPolicy mReferrerPolicy = dom::ReferrerPolicy::_empty;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   struct {
