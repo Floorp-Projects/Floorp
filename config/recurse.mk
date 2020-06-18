@@ -160,10 +160,6 @@ recurse:
 	$(LOOP_OVER_DIRS)
 
 ifeq (.,$(DEPTH))
-# Interdependencies for parallel export.
-js/xpconnect/src/export: dom/bindings/export xpcom/xpidl/export
-accessible/xpcom/export: xpcom/xpidl/export
-
 # The Android SDK bindings needs to build the Java generator code
 # source code in order to write the SDK bindings.
 widget/android/bindings/export: mobile/android/base/export
