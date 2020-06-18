@@ -7,6 +7,7 @@
 #define MOZILLA_FORWARDEDINPUTTRACK_H_
 
 #include "MediaTrackGraph.h"
+#include "MediaTrackListener.h"
 #include <algorithm>
 
 namespace mozilla {
