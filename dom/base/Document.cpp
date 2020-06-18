@@ -11413,8 +11413,8 @@ void Document::MaybePreLoadImage(nsIURI* aUri,
     // Check if the image was already preloaded in this document to avoid
     // duplicate preloading.
     PreloadHashKey key = PreloadHashKey::CreateAsImage(
-        aUri, NodePrincipal(), dom::Element::StringToCORSMode(aCrossOriginAttr),
-        aReferrerPolicy);
+        aUri, NodePrincipal(),
+        dom::Element::StringToCORSMode(aCrossOriginAttr));
     if (!mPreloadService.PreloadExists(&key)) {
       PreLoadImage(aUri, aCrossOriginAttr, aReferrerPolicy, aIsImgSet,
                    aLinkPreload);

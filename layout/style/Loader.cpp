@@ -135,7 +135,6 @@ SheetLoadDataHashKey::SheetLoadDataHashKey(const css::SheetLoadData& aLoadData)
     : mURI(aLoadData.mURI),
       mPrincipal(aLoadData.mTriggeringPrincipal),
       mLoaderPrincipal(aLoadData.mLoader->LoaderPrincipal()),
-      mReferrerInfo(aLoadData.ReferrerInfo()),
       mEncodingGuess(aLoadData.mGuessedEncoding),
       mCORSMode(aLoadData.mSheet->GetCORSMode()),
       mParsingMode(aLoadData.mSheet->ParsingMode()),
@@ -854,9 +853,8 @@ void Loader::DidHitCompleteSheetCache(const SheetLoadDataHashKey& aKey,
 std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
     nsIURI* aURI, nsIContent* aLinkingContent,
     nsIPrincipal* aTriggeringPrincipal, css::SheetParsingMode aParsingMode,
-    CORSMode aCORSMode, nsIReferrerInfo* aLoadingReferrerInfo,
-    const Encoding* aPreloadOrParentDataEncoding, const nsAString& aIntegrity,
-    bool aSyncLoad, IsPreload aIsPreload) {
+    CORSMode aCORSMode, const Encoding* aPreloadOrParentDataEncoding,
+    const nsAString& aIntegrity, bool aSyncLoad, IsPreload aIsPreload) {
   MOZ_ASSERT(aURI, "This path is not taken for inline stylesheets");
   LOG(("css::Loader::CreateSheet(%s)", aURI->GetSpecOrDefault().get()));
 
@@ -873,11 +871,11 @@ std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
   }
 
   if (mSheets) {
-    SheetLoadDataHashKey key(
-        aURI, aTriggeringPrincipal, LoaderPrincipal(), aLoadingReferrerInfo,
-        GetFallbackEncoding(*this, aLinkingContent,
-                            aPreloadOrParentDataEncoding),
-        aCORSMode, aParsingMode, mCompatMode, sriMetadata, aIsPreload);
+    SheetLoadDataHashKey key(aURI, aTriggeringPrincipal, LoaderPrincipal(),
+                             GetFallbackEncoding(*this, aLinkingContent,
+                                                 aPreloadOrParentDataEncoding),
+                             aCORSMode, aParsingMode, mCompatMode, sriMetadata,
+                             aIsPreload);
     auto cacheResult = mSheets->Lookup(*this, key, aSyncLoad);
     if (const auto& [styleSheet, sheetState] = cacheResult; styleSheet) {
       LOG(("  Hit cache with state: %s", gStateStrings[size_t(sheetState)]));
@@ -1838,8 +1836,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
     // For now, use CORS_NONE for child sheets
     std::tie(sheet, state) =
         CreateSheet(aURL, nullptr, principal, aParentSheet.ParsingMode(),
-                    CORS_NONE, aParentSheet.GetReferrerInfo(),
-                    aParentData ? aParentData->mEncoding : nullptr,
+                    CORS_NONE, aParentData ? aParentData->mEncoding : nullptr,
                     EmptyString(),  // integrity is only checked on main sheet
                     aParentData && aParentData->mSyncLoad, IsPreload::No);
     PrepareSheet(*sheet, EmptyString(), EmptyString(), aMedia, IsAlternate::No,
@@ -1931,9 +1928,9 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   }
 
   bool syncLoad = !aObserver;
-  auto [sheet, state] = CreateSheet(
-      aURL, nullptr, triggeringPrincipal, aParsingMode, aCORSMode,
-      aReferrerInfo, aPreloadEncoding, aIntegrity, syncLoad, aIsPreload);
+  auto [sheet, state] =
+      CreateSheet(aURL, nullptr, triggeringPrincipal, aParsingMode, aCORSMode,
+                  aPreloadEncoding, aIntegrity, syncLoad, aIsPreload);
 
   PrepareSheet(*sheet, EmptyString(), EmptyString(), nullptr, IsAlternate::No,
                IsExplicitlyEnabled::No);

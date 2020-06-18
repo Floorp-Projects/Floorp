@@ -1522,8 +1522,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto key = PreloadHashKey::CreateAsScript(
-      aRequest->mURI, aRequest->CORSMode(), aRequest->mKind,
-      aRequest->ReferrerPolicy());
+      aRequest->mURI, aRequest->CORSMode(), aRequest->mKind);
   aRequest->NotifyOpen(&key, channel, mDocument,
                        aRequest->IsLinkPreloadScript());
 
@@ -1976,11 +1975,9 @@ ScriptLoadRequest* ScriptLoader::LookupPreloadRequest(
   // we have now.
   nsAutoString elementCharset;
   aElement->GetScriptCharset(elementCharset);
-  ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
 
   if (!elementCharset.Equals(preloadCharset) ||
       aElement->GetCORSMode() != request->CORSMode() ||
-      referrerPolicy != request->ReferrerPolicy() ||
       aScriptKind != request->mKind) {
     // Drop the preload.
     request->Cancel();
