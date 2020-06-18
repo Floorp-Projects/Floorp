@@ -1,4 +1,4 @@
-module.exports = async function(context, commands) {
+async function test(context, commands) {
   let rootUrl = "https://www.bbc.com/";
 
   await commands.navigate(rootUrl);
@@ -14,4 +14,11 @@ module.exports = async function(context, commands) {
 
   // Stop and collect the measurement
   await commands.measure.stop();
+}
+
+module.exports = {
+  test,
+  owner: "Performance Team",
+  name: "BBC Link",
+  description: "Measures time to load BBC homepage",
 };
