@@ -109,7 +109,7 @@ nsresult nsXULPopupListener::HandleEvent(Event* aEvent) {
   {
     EventTarget* originalTarget = mouseEvent->GetOriginalTarget();
     nsCOMPtr<nsIContent> content = do_QueryInterface(originalTarget);
-    if (content && EventStateManager::IsRemoteTarget(content)) {
+    if (content && EventStateManager::IsTopLevelRemoteTarget(content)) {
       return NS_OK;
     }
   }

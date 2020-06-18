@@ -428,7 +428,7 @@ bool WidgetEvent::WillBeSentToRemoteProcess() const {
   }
 
   nsCOMPtr<nsIContent> originalTarget = do_QueryInterface(mOriginalTarget);
-  return EventStateManager::IsRemoteTarget(originalTarget);
+  return EventStateManager::IsTopLevelRemoteTarget(originalTarget);
 }
 
 bool WidgetEvent::IsRetargetedNativeEventDelivererForPlugin() const {

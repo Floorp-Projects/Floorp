@@ -375,8 +375,7 @@ nsresult IMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
 nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
                                                 nsIContent* aContent,
                                                 InputContextAction aAction) {
-  bool remoteHasFocus =
-      BrowserParent::GetFrom(aContent) || BrowserBridgeChild::GetFrom(aContent);
+  bool remoteHasFocus = EventStateManager::IsRemoteTarget(aContent);
 
   MOZ_LOG(sISMLog, LogLevel::Info,
           ("OnChangeFocusInternal(aPresContext=0x%p (available: %s), "

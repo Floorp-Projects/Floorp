@@ -735,7 +735,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         // back to this process.  So, only when this process receives a reply
         // eKeyPress event in BrowserParent, we should handle accesskey in this
         // process.
-        if (IsRemoteTarget(GetFocusedContent())) {
+        if (IsTopLevelRemoteTarget(GetFocusedContent())) {
           // However, if there is no accesskey target for the key combination,
           // we don't need to wait reply from the remote process.  Otherwise,
           // Mark the event as waiting reply from remote process and stop
@@ -789,7 +789,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // because PresShell needs to check if it's marked as so before
       // dispatching events into the DOM tree.
       if (aEvent->IsWaitingReplyFromRemoteProcess() &&
-          !aEvent->PropagationStopped() && !IsRemoteTarget(content)) {
+          !aEvent->PropagationStopped() && !IsTopLevelRemoteTarget(content)) {
         aEvent->ResetWaitingReplyFromRemoteProcessState();
       }
     } break;
@@ -1390,6 +1390,10 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
 }
 
 bool EventStateManager::IsRemoteTarget(nsIContent* target) {
+  return BrowserParent::GetFrom(target) || BrowserBridgeChild::GetFrom(target);
+}
+
+bool EventStateManager::IsTopLevelRemoteTarget(nsIContent* target) {
   return !!BrowserParent::GetFrom(target);
 }
 
@@ -1469,8 +1473,8 @@ bool EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
 void EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
                                              nsIFrame* inDownFrame,
                                              WidgetGUIEvent* inMouseDownEvent) {
-  if (!inMouseDownEvent->IsTrusted() || IsRemoteTarget(mGestureDownContent) ||
-      sIsPointerLocked) {
+  if (!inMouseDownEvent->IsTrusted() ||
+      IsTopLevelRemoteTarget(mGestureDownContent) || sIsPointerLocked) {
     return;
   }
 
@@ -2881,7 +2885,7 @@ void EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
     // e10s - mark remote content as pannable. This is a work around since
     // we don't have access to remote frame scroll info here. Apz data may
     // assist is solving this.
-    if (current && IsRemoteTarget(current->GetContent())) {
+    if (current && IsTopLevelRemoteTarget(current->GetContent())) {
       panDirection = WidgetGestureNotifyEvent::ePanBoth;
       // We don't know when we reach bounds, so just disable feedback for now.
       displayPanFeedback = false;
@@ -3885,7 +3889,9 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                      WidgetEvent* aEvent,
                                      nsIFrame* aTargetFrame,
                                      nsEventStatus* aStatus) {
-  if (aTargetFrame && IsRemoteTarget(aTargetFrame->GetContent())) {
+  // XXXedgar, we should not allow to update cursor if the mouse is over a
+  // fission OOP iframe.
+  if (aTargetFrame && IsTopLevelRemoteTarget(aTargetFrame->GetContent())) {
     return;
   }
 
@@ -4210,7 +4216,7 @@ nsIFrame* EventStateManager::DispatchMouseOrPointerEvent(
 
     // If we are entering/leaving remote content, dispatch a mouse enter/exit
     // event to the remote frame.
-    if (IsRemoteTarget(targetContent)) {
+    if (IsTopLevelRemoteTarget(targetContent)) {
       if (aMessage == eMouseOut) {
         // For remote content, send a "top-level" widget mouse exit event.
         UniquePtr<WidgetMouseEvent> remoteEvent =
@@ -4709,7 +4715,8 @@ void EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
           nsIContent* target = sLastDragOverFrame
                                    ? sLastDragOverFrame.GetFrame()->GetContent()
                                    : nullptr;
-          if (IsRemoteTarget(target)) {
+          // XXXedgar, look like we need to consider fission OOP iframe, too.
+          if (IsTopLevelRemoteTarget(target)) {
             // Dragging something and moving from web content to chrome only
             // fires dragexit and dragleave to xul:browser. We have to forward
             // dragexit to sLastDragOverFrame when its content is a remote
