@@ -111,9 +111,8 @@ if [ $(echo "$newdir" | grep -c '\/$') = 1 ]; then
   newdir=$(echo "$newdir" | sed -e 's:\/$::')
 fi
 workdir="$(mktemp -d)"
-updatemanifestv2="$workdir/updatev2.manifest"
 updatemanifestv3="$workdir/updatev3.manifest"
-archivefiles="updatev2.manifest updatev3.manifest"
+archivefiles="updatev3.manifest"
 
 mkdir -p "$workdir"
 
@@ -148,10 +147,8 @@ popd
 # Add the type of update to the beginning of the update manifests.
 notice ""
 notice "Adding type instruction to update manifests"
-> $updatemanifestv2
 > $updatemanifestv3
 notice "       type partial"
-echo "type \"partial\"" >> $updatemanifestv2
 echo "type \"partial\"" >> $updatemanifestv3
 
 notice ""
@@ -182,7 +179,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       mkdir -p `dirname "$workdir/$f"`
       $XZ $XZ_OPT --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
       copy_perm "$newdir/$f" "$workdir/$f"
-      make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3" 1
+      make_add_instruction "$f" "$updatemanifestv3" 1
       archivefiles="$archivefiles \"$f\""
       continue 1
     fi
@@ -227,12 +224,12 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       fullsize=$(get_file_size "$workdir/$f")
 
       if [ $patchsize -lt $fullsize ]; then
-        make_patch_instruction "$f" "$updatemanifestv2" "$updatemanifestv3"
+        make_patch_instruction "$f" "$updatemanifestv3"
         mv -f "$patchfile" "$workdir/$f.patch"
         rm -f "$workdir/$f"
         archivefiles="$archivefiles \"$f.patch\""
       else
-        make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3"
+        make_add_instruction "$f" "$updatemanifestv3"
         rm -f "$patchfile"
         archivefiles="$archivefiles \"$f\""
       fi
@@ -269,7 +266,7 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
   if check_for_add_if_not_update "$f"; then
     make_add_if_not_instruction "$f" "$updatemanifestv3"
   else
-    make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3"
+    make_add_instruction "$f" "$updatemanifestv3"
   fi
 
 
@@ -281,14 +278,13 @@ notice "Adding file remove instructions to update manifests"
 for ((i=0; $i<$num_removes; i=$i+1)); do
   f="${remove_array[$i]}"
   verbose_notice "     remove \"$f\""
-  echo "remove \"$f\"" >> $updatemanifestv2
   echo "remove \"$f\"" >> $updatemanifestv3
 done
 
 # Add remove instructions for any dead files.
 notice ""
 notice "Adding file and directory remove instructions from file 'removed-files'"
-append_remove_instructions "$newdir" "$updatemanifestv2" "$updatemanifestv3"
+append_remove_instructions "$newdir" "$updatemanifestv3"
 
 notice ""
 notice "Adding directory remove instructions for directories that no longer exist"
@@ -299,12 +295,10 @@ for ((i=0; $i<$num_olddirs; i=$i+1)); do
   # If this dir doesn't exist in the new directory remove it.
   if [ ! -d "$newdir/$f" ]; then
     verbose_notice "      rmdir $f/"
-    echo "rmdir \"$f/\"" >> $updatemanifestv2
     echo "rmdir \"$f/\"" >> $updatemanifestv3
   fi
 done
 
-$XZ $XZ_OPT --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$updatemanifestv2" && mv -f "$updatemanifestv2.xz" "$updatemanifestv2"
 $XZ $XZ_OPT --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$updatemanifestv3" && mv -f "$updatemanifestv3.xz" "$updatemanifestv3"
 
 mar_command="$mar_command -C \"$workdir\" -c output.mar"
