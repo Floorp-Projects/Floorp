@@ -6,10 +6,8 @@ from __future__ import absolute_import
 
 import os
 import re
-import sys
 from os.path import expanduser
 
-import mozpack.path as mozpath
 import sentry_sdk
 from mozboot.util import get_state_dir
 from six import string_types
@@ -63,11 +61,6 @@ def _settle_mach_module_id(sentry_event, _):
     return sentry_event
 
 
-def _resolve_topobjdir():
-    topobjdir = os.path.join(os.path.dirname(sys.prefix), "..")
-    return mozpath.normsep(os.path.normpath(topobjdir))
-
-
 def _patch_absolute_paths(sentry_event, topsrcdir):
     # As discussed here (https://bugzilla.mozilla.org/show_bug.cgi?id=1636251#c28),
     # we remove usernames from file names with a best-effort basis. The most likely
@@ -93,7 +86,6 @@ def _patch_absolute_paths(sentry_event, topsrcdir):
 
     for (needle, replacement) in (
             (get_state_dir(), "<statedir>"),
-            (_resolve_topobjdir(), "<topobjdir>"),
             (topsrcdir, "<topsrcdir>"),
             (expanduser("~"), "~"),
             # Sentry converts "vars" to their "representations". When paths are in local
