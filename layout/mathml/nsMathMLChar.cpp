@@ -64,7 +64,7 @@ static void NormalizeDefaultFont(nsFont& aFont, float aFontSizeInflation) {
     aFont.fontlist.SetFontlist(std::move(names));
     aFont.fontlist.SetDefaultFontType(StyleGenericFontFamily::None);
   }
-  aFont.size = NSToCoordRound(aFont.size * aFontSizeInflation);
+  aFont.size.ScaleBy(aFontSizeInflation);
 }
 
 // -----------------------------------------------------------------------------

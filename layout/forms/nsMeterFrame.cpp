@@ -194,7 +194,8 @@ LogicalSize nsMeterFrame::ComputeAutoSize(
 
   const WritingMode wm = GetWritingMode();
   LogicalSize autoSize(wm);
-  autoSize.BSize(wm) = autoSize.ISize(wm) = fontMet->Font().size;  // 1em
+  autoSize.BSize(wm) = autoSize.ISize(wm) =
+      fontMet->Font().size.ToAppUnits();  // 1em
 
   if (ResolvedOrientationIsVertical() == wm.IsVertical()) {
     autoSize.ISize(wm) *= 5;  // 5em
@@ -209,7 +210,7 @@ nscoord nsMeterFrame::GetMinISize(gfxContext* aRenderingContext) {
   RefPtr<nsFontMetrics> fontMet =
       nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
 
-  nscoord minISize = fontMet->Font().size;  // 1em
+  nscoord minISize = fontMet->Font().size.ToAppUnits();  // 1em
 
   if (ResolvedOrientationIsVertical() == GetWritingMode().IsVertical()) {
     // The orientation is inline
