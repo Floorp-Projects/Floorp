@@ -192,6 +192,21 @@ struct CubebContextState {
 
 thread_local!(static CONTEXT_KEY: RefCell<Option<CubebContextState>> = RefCell::new(None));
 
+fn cubeb_init_from_context_params() -> cubeb::Result<cubeb::Context> {
+    let params = super::G_CUBEB_CONTEXT_PARAMS.lock().unwrap();
+    let context_name = Some(params.context_name.as_c_str());
+    let backend_name = if let Some(ref name) = params.backend_name {
+        Some(name.as_c_str())
+    } else {
+        None
+    };
+    let r = cubeb::Context::init(context_name, backend_name);
+    r.map_err(|e| {
+        info!("cubeb::Context::init failed r={:?}", e);
+        e
+    })
+}
+
 fn with_local_context<T, F>(f: F) -> T
 where
     F: FnOnce(&cubeb::Result<cubeb::Context>, &mut CubebDeviceCollectionManager) -> T,
@@ -199,20 +214,17 @@ where
     CONTEXT_KEY.with(|k| {
         let mut state = k.borrow_mut();
         if state.is_none() {
-            let params = super::G_CUBEB_CONTEXT_PARAMS.lock().unwrap();
-            let context_name = Some(params.context_name.as_c_str());
-            let backend_name = if let Some(ref name) = params.backend_name {
-                Some(name.as_c_str())
-            } else {
-                None
-            };
-            audioipc::server_platform_init();
-            let context = cubeb::Context::init(context_name, backend_name);
-            let manager = CubebDeviceCollectionManager::new();
-            *state = Some(CubebContextState { context, manager });
+            *state = Some(CubebContextState {
+                context: cubeb_init_from_context_params(),
+                manager: CubebDeviceCollectionManager::new(),
+            });
         }
-        let state = state.as_mut().unwrap();
-        f(&state.context, &mut state.manager)
+        let CubebContextState { context, manager } = state.as_mut().unwrap();
+        // Always reattempt to initialize cubeb, OS config may have changed.
+        if context.is_err() {
+            *context = cubeb_init_from_context_params();
+        }
+        f(context, manager)
     })
 }
 
@@ -379,6 +391,9 @@ impl rpc::Server for CubebServer {
     >;
 
     fn process(&mut self, req: Self::Request) -> Self::Future {
+        if let ServerMessage::ClientConnect(pid) = req {
+            self.remote_pid = Some(pid);
+        }
         let resp = with_local_context(|context, manager| match *context {
             Err(_) => error(cubeb::Error::error()),
             Ok(ref context) => self.process_msg(context, manager, &req),
@@ -424,8 +439,9 @@ impl CubebServer {
         msg: &ServerMessage,
     ) -> ClientMessage {
         let resp: ClientMessage = match *msg {
-            ServerMessage::ClientConnect(pid) => {
-                self.remote_pid = Some(pid);
+            ServerMessage::ClientConnect(_) => {
+                // remote_pid is set before cubeb initialization, just verify here.
+                assert!(self.remote_pid.is_some());
                 ClientMessage::ClientConnected
             }
 
