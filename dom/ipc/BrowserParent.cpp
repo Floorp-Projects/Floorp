@@ -215,7 +215,7 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mDocShellIsActive(false),
       mMarkedDestroying(false),
       mIsDestroyed(false),
-      mTabSetsCursor(false),
+      mRemoteTargetSetsCursor(false),
       mPreserveLayers(false),
       mRenderLayers(true),
       mActiveInPriorityManager(false),
@@ -1352,9 +1352,9 @@ void BrowserParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
 void BrowserParent::MouseEnterIntoWidget() {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
-    // When we mouseenter the tab, the tab's cursor should
+    // When we mouseenter the remote target, the remote target's cursor should
     // become the current cursor.  When we mouseexit, we stop.
-    mTabSetsCursor = true;
+    mRemoteTargetSetsCursor = true;
     if (mCursor != eCursorInvalid) {
       widget->SetCursor(mCursor, mCustomCursor, mCustomCursorHotspotX,
                         mCustomCursorHotspotY);
@@ -1393,16 +1393,16 @@ void BrowserParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
-    // When we mouseenter the tab, the tab's cursor should
+    // When we mouseenter the remote target, the remote target's cursor should
     // become the current cursor.  When we mouseexit, we stop.
     if (eMouseEnterIntoWidget == aEvent.mMessage) {
-      mTabSetsCursor = true;
+      mRemoteTargetSetsCursor = true;
       if (mCursor != eCursorInvalid) {
         widget->SetCursor(mCursor, mCustomCursor, mCustomCursorHotspotX,
                           mCustomCursorHotspotY);
       }
     } else if (eMouseExitFromWidget == aEvent.mMessage) {
-      mTabSetsCursor = false;
+      mRemoteTargetSetsCursor = false;
     }
   }
   if (!mIsReadyToHandleInputEvents) {
@@ -2073,7 +2073,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
   mCustomCursorHotspotX = aHotspotX;
   mCustomCursorHotspotY = aHotspotY;
 
-  if (!mTabSetsCursor) {
+  if (!mRemoteTargetSetsCursor) {
     return IPC_OK();
   }
 
