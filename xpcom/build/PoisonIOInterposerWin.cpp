@@ -15,12 +15,10 @@
 #include <winternl.h>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FileUtilsWin.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "nsWindowsDllInterceptor.h"
 #include "plstr.h"
@@ -107,155 +105,6 @@ typedef NTSTATUS(NTAPI* NtQueryFullAttributesFileFn)(
 
 /*************************** Auxiliary Declarations ***************************/
 
-// Array-based LRU cache, thread-safe.
-// Optimized for cases where `FetchOrAdd` is used with the same key most
-// recently, and assuming the cost of running the value-builder function is much
-// more expensive than going through the whole list.
-// Note: No time limits on keeping items.
-// TODO: Move to more public place, if this could be used elsewhere; make sure
-// the cost/benefits are highlighted.
-// Uncomment the next line to get shutdown stats about cache usage.
-// #define LRUCACHE_STATS
-template <typename Key, typename Value, unsigned LRUCapacity>
-class LRUCache {
- public:
-  static_assert(std::is_default_constructible_v<Key>);
-  static_assert(std::is_trivially_constructible_v<Key>);
-  static_assert(std::is_trivially_copyable_v<Key>);
-  static_assert(std::is_default_constructible_v<Value>);
-  static_assert(LRUCapacity <= 1024,
-                "This seems a bit big, is this the right cache for your use?");
-
-  void Clear() {
-    mozilla::MutexAutoLock lock(mMutex);
-    for (KeyAndValue* item = &mLRUArray[0]; item != &mLRUArray[mSize]; ++item) {
-      item->mValue = Value{};
-    }
-    mSize = 0;
-  }
-
-  // Add a key-value.
-  template <typename ToValue>
-  void Add(Key aKey, ToValue&& aValue) {
-    mozilla::MutexAutoLock lock(mMutex);
-
-    // Quick add to the front, don't remove possible duplicate handles later in
-    // the list, they will eventually drop off the end.
-    KeyAndValue* const item0 = &mLRUArray[0];
-    mSize = std::min(mSize + 1, LRUCapacity);
-    if (MOZ_LIKELY(mSize != 1)) {
-      // List is not empty.
-      // Make a hole at the start.
-      std::move_backward(item0, item0 + mSize - 1, item0 + mSize);
-    }
-    item0->mKey = aKey;
-    item0->mValue = std::forward<ToValue>(aValue);
-    return;
-  }
-
-  // Look for the value associated with `aKey` in the cache.
-  // If not found, run `aValueFunction()`, add it in the cache before returning.
-  template <typename ValueFunction>
-  Value FetchOrAdd(Key aKey, ValueFunction&& aValueFunction) {
-    Value value;
-    mozilla::MutexAutoLock lock(mMutex);
-
-    KeyAndValue* const item0 = &mLRUArray[0];
-    if (MOZ_UNLIKELY(mSize == 0)) {
-      // List is empty.
-      value = std::forward<ValueFunction>(aValueFunction)();
-      item0->mKey = aKey;
-      item0->mValue = value;
-      return value;
-    }
-
-    if (MOZ_LIKELY(item0->mKey == aKey)) {
-      // This is already at the beginning of the list, we're done.
-#ifdef LRUCACHE_STATS
-      ++mCacheFoundAt[0];
-#endif  // LRUCACHE_STATS
-      value = item0->mValue;
-      return value;
-    }
-
-    for (KeyAndValue* item = item0 + 1; item != item0 + mSize; ++item) {
-      if (item->mKey == aKey) {
-        // Found handle in the middle.
-#ifdef LRUCACHE_STATS
-        ++mCacheFoundAt[unsigned(item - item0)];
-#endif  // LRUCACHE_STATS
-        value = item->mValue;
-        // Move this item to the start of the list.
-        std::rotate(item0, item, item + 1);
-        return value;
-      }
-    }
-
-    // Handle was not in the list.
-#ifdef LRUCACHE_STATS
-    ++mCacheFoundAt[LRUCapacity];
-#endif  // LRUCACHE_STATS
-    {
-      // Don't lock while doing the potentially-expensive ValueFunction().
-      // This means that the list could change when we lock again, but
-      // it's okay because we'll want to add the new entry at the beginning
-      // anyway, whatever else is in the list then.
-      // In the worst case, it could be the same handle as another `FetchOrAdd`
-      // in parallel, it just means it will be duplicated, so it's a little bit
-      // less efficient (using the extra space), but not wrong (the next
-      // `FetchOrAdd` will find the first one).
-      mozilla::MutexAutoUnlock unlock(mMutex);
-      value = std::forward<ValueFunction>(aValueFunction)();
-    }
-    // Make a hole at the start, and put the value there.
-    mSize = std::min(mSize + 1, LRUCapacity);
-    std::move_backward(item0, item0 + mSize - 1, item0 + mSize);
-    item0->mKey = aKey;
-    item0->mValue = value;
-    return value;
-  }
-
-#ifdef LRUCACHE_STATS
-  ~LRUCache() {
-    if (mSize != 0) {
-      fprintf(stderr, "***** LRUCache stats: (position -> hit count)\n");
-      for (unsigned i = 0; i < mSize; ++i) {
-        fprintf(stderr, "***** %3u -> %6u\n", i, mCacheFoundAt[i]);
-      }
-      fprintf(stderr, "***** not found -> %6u\n", mCacheFoundAt[LRUCapacity]);
-    }
-  }
-#endif  // LRUCACHE_STATS
-
- private:
-  struct KeyAndValue {
-    Key mKey;
-    Value mValue;
-
-    KeyAndValue() = default;
-    KeyAndValue(KeyAndValue&&) = default;
-    KeyAndValue& operator=(KeyAndValue&&) = default;
-  };
-
-  mozilla::Mutex mMutex{"LRU cache"};
-  unsigned mSize = 0;
-  KeyAndValue mLRUArray[LRUCapacity];
-#ifdef LRUCACHE_STATS
-  // Hit count for each position in the case. +1 for counting not-found cases.
-  unsigned mCacheFoundAt[LRUCapacity + 1] = {0u};
-#endif  // LRUCACHE_STATS
-};
-
-// Cache of filenames associated with handles.
-// `static` to be shared between all calls to `Filename()`.
-// This assumes handles are not reused, at least within a windows of 32
-// handles.
-// Profiling showed that during startup, around half of `Filename()` calls are
-// resolved with the first entry (best case), and 32 entries cover >95% of
-// cases, reducing the average `Filename()` cost by 5-10x.
-using HandleToFilenameCache = LRUCache<HANDLE, nsString, 32>;
-static mozilla::UniquePtr<HandleToFilenameCache> sHandleToFilenameCache;
-
 /**
  * RAII class for timing the duration of an I/O call and reporting the result
  * to the mozilla::IOInterposeObserver API.
@@ -292,15 +141,6 @@ class WinIOAutoObservation : public mozilla::IOInterposeObserver::Observation {
     }
   }
 
-  void SetHandle(HANDLE aFileHandle) {
-    mFileHandle = aFileHandle;
-    if (aFileHandle && mHasQueriedFilename) {
-      // `mHasQueriedFilename` indicates we already have a filename, add it to
-      // the cache with the now-known handle.
-      sHandleToFilenameCache->Add(aFileHandle, mFilename);
-    }
-  }
-
   // Custom implementation of
   // mozilla::IOInterposeObserver::Observation::Filename
   void Filename(nsAString& aFilename) override;
@@ -326,16 +166,10 @@ void WinIOAutoObservation::Filename(nsAString& aFilename) {
     return;
   }
 
-  if (mFileHandle) {
-    mFilename = sHandleToFilenameCache->FetchOrAdd(mFileHandle, [&]() {
-      nsString filename;
-      if (!mozilla::HandleToFilename(mFileHandle, mOffset, filename)) {
-        // HandleToFilename could fail (return false) but still have added
-        // something to `filename`, so it should be cleared in this case.
-        filename.Truncate();
-      }
-      return filename;
-    });
+  nsAutoString filename;
+  if (mFileHandle &&
+      mozilla::HandleToFilename(mFileHandle, mOffset, filename)) {
+    mFilename = filename;
   }
   mHasQueriedFilename = true;
 
@@ -380,12 +214,10 @@ static NTSTATUS NTAPI InterposedNtCreateFile(
   MOZ_ASSERT(gOriginalNtCreateFile);
 
   // Execute original function
-  NTSTATUS status = gOriginalNtCreateFile(
-      aFileHandle, aDesiredAccess, aObjectAttributes, aIoStatusBlock,
-      aAllocationSize, aFileAttributes, aShareAccess, aCreateDisposition,
-      aCreateOptions, aEaBuffer, aEaLength);
-  timer.SetHandle(*aFileHandle);
-  return status;
+  return gOriginalNtCreateFile(aFileHandle, aDesiredAccess, aObjectAttributes,
+                               aIoStatusBlock, aAllocationSize, aFileAttributes,
+                               aShareAccess, aCreateDisposition, aCreateOptions,
+                               aEaBuffer, aEaLength);
 }
 
 static NTSTATUS NTAPI InterposedNtReadFile(HANDLE aFileHandle, HANDLE aEvent,
@@ -511,11 +343,6 @@ void InitPoisonIOInterposer() {
   }
   sIOPoisoned = true;
 
-  if (!sHandleToFilenameCache) {
-    sHandleToFilenameCache = mozilla::MakeUnique<HandleToFilenameCache>();
-    mozilla::ClearOnShutdown(&sHandleToFilenameCache);
-  }
-
   // Stdout and Stderr are OK.
   MozillaRegisterDebugFD(1);
   MozillaRegisterDebugFD(2);
@@ -553,7 +380,6 @@ void ClearPoisonIOInterposer() {
     // Destroy the DLL interceptor
     sIOPoisoned = false;
     sNtDllInterceptor.Clear();
-    sHandleToFilenameCache->Clear();
   }
 }
 
