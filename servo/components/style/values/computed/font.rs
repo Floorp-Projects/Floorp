@@ -93,9 +93,8 @@ impl From<FontWeight> for FontKitFontWeight {
     ToAnimatedZero,
     ToCss,
     ToResolvedValue,
-    Serialize,
-    Deserialize,
 )]
+#[cfg_attr(feature = "servo", derive(Serialize, Deserialize))]
 /// The computed value of font-size
 pub struct FontSize {
     /// The size.
@@ -482,15 +481,15 @@ impl From<&SingleFontFamily> for FontKitFamilyName {
 #[derive(
     Clone,
     Debug,
+    Deserialize,
     Eq,
     Hash,
     MallocSizeOf,
     PartialEq,
+    Serialize,
     ToComputedValue,
     ToResolvedValue,
     ToShmem,
-    Serialize,
-    Deserialize,
 )]
 /// A list of SingleFontFamily
 pub struct FontFamilyList(Box<[SingleFontFamily]>);
