@@ -32,7 +32,7 @@ def before_iterations(kw):
         return
 
     # Get the builds to test
-    build_url = get_multi_tasks_url(NIGHTLY_SIM_ROUTE)
+    build_url = get_multi_tasks_url(NIGHTLY_SIM_ROUTE, day=kw["test_date"])
     tmpfile = pathlib.Path(tempfile.mkdtemp(), "alltasks.json")
     download_file(build_url, tmpfile)
 

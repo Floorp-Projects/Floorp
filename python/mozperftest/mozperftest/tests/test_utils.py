@@ -15,6 +15,7 @@ from mozperftest.utils import (
     download_file,
     install_package,
     build_test_list,
+    get_multi_tasks_url,
 )
 from mozperftest.tests.support import temp_file, requests_content, EXAMPLE_TESTS_DIR
 
@@ -85,6 +86,25 @@ def test_build_test_list():
         assert len(files) == 2
     finally:
         shutil.rmtree(tmp_dir)
+
+
+def test_multibuild_url():
+    route = "FakeBuildRoute"
+    day = "2020.06.08"
+    buildurl = get_multi_tasks_url(route, day=day)
+    assert day in buildurl and route in buildurl
+
+    with mock.patch("mozperftest.utils.date") as mockeddate:
+        mockeddate.today.return_value = mockeddate
+        mockeddate.strftime.return_value = "2020.07.09"
+        buildurl = get_multi_tasks_url(route, day="today")
+        assert "2020.07.09" in buildurl and route in buildurl
+
+        with mock.patch("mozperftest.utils.timedelta"):
+            mockeddate.__sub__.return_value = mockeddate
+            mockeddate.strftime.return_value = "2020.08.09"
+            buildurl = get_multi_tasks_url(route)
+            assert "2020.08.09" in buildurl and route in buildurl
 
 
 if __name__ == "__main__":
