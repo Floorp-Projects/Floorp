@@ -1,10 +1,29 @@
-# there are currently no feature gates
-[demo-feature]
-title = "Demo Feature"
-description = "A no-op feature to demo the feature gate system."
+[css-masonry]
+title = "CSS Masonry Layout"
+description = "Enables support for the experimental CSS Masonry Layout feature"
 restart-required = false
-preference = "foo.bar.baz"
+preference = "layout.css.grid-template-masonry-value.enabled"
 type = "boolean"
-bug-numbers = [1479127]
+bug-numbers = [1607954]
 is-public = true
+default-value = false
+
+[web-gpu]
+title = "WebGPU"
+description = "Experimental API for graphics and computing on the Web"
+restart-required = true
+preference = "dom.webgpu.enabled"
+type = "boolean"
+bug-numbers = [1602129]
+is-public = {default = false, nightly = true}
+default-value = false
+
+[avif]
+title = "AVIF"
+description = "Experimental support for AVIF: AV1 Image File Format"
+restart-required = false
+preference = "image.avif.enabled"
+type = "boolean"
+bug-numbers = [1443863]
+is-public = {default = false, nightly = true}
 default-value = false
