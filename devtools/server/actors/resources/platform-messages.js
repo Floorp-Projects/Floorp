@@ -15,60 +15,64 @@ const {
 const { stringIsLong } = require("devtools/server/actors/object/utils");
 const { LongStringActor } = require("devtools/server/actors/string");
 
-const listeners = new WeakMap();
-
-/**
- * Start watching for all console messages related to a given Target Actor.
- * This will notify about existing console messages, but also the one created in future.
- *
- * @param TargetActor targetActor
- *        The target actor from which we should observe console messages
- * @param Object options
- *        Dictionary object with following attributes:
- *        - onAvailable: mandatory function
- *          This will be called for each resource.
- */
-function watch(targetActor, { onAvailable }) {
-  if (listeners.has(targetActor)) {
-    throw new Error(
-      "Already listening to console messages for this target actor"
-    );
-  }
-
-  // Platform messages can only be listened on process actors
-  if (!targetActor.isRootActor) {
-    return;
-  }
-
-  // Create the consoleListener.
-  const listener = {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener]),
-    observe(message) {
-      if (!shouldHandleMessage(message)) {
-        return;
-      }
-
-      onAvailable([buildResourceFromMessage(targetActor, message)]);
-    },
-  };
-
-  // Retrieve the cached messages just before registering the listener, so we don't get
-  // duplicated messages.
-  const cachedMessages = Services.console.getMessageArray();
-  Services.console.registerListener(listener);
-  listeners.set(targetActor, listener);
-
-  // Remove unwanted cache messages and send an array of resources.
-  const messages = [];
-  for (const message of cachedMessages) {
-    if (!shouldHandleMessage(message)) {
-      continue;
+class PlatformMessageWatcher {
+  /**
+   * Start watching for all console messages related to a given Target Actor.
+   * This will notify about existing console messages, but also the one created in future.
+   *
+   * @param TargetActor targetActor
+   *        The target actor from which we should observe console messages
+   * @param Object options
+   *        Dictionary object with following attributes:
+   *        - onAvailable: mandatory function
+   *          This will be called for each resource.
+   */
+  constructor(targetActor, { onAvailable }) {
+    // Platform messages can only be listened on process actors
+    if (!targetActor.isRootActor) {
+      return;
     }
 
-    messages.push(buildResourceFromMessage(targetActor, message));
+    // Create the consoleListener.
+    const listener = {
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener]),
+      observe(message) {
+        if (!shouldHandleMessage(message)) {
+          return;
+        }
+
+        onAvailable([buildResourceFromMessage(targetActor, message)]);
+      },
+    };
+
+    // Retrieve the cached messages just before registering the listener, so we don't get
+    // duplicated messages.
+    const cachedMessages = Services.console.getMessageArray();
+    Services.console.registerListener(listener);
+    this.listener = listener;
+
+    // Remove unwanted cache messages and send an array of resources.
+    const messages = [];
+    for (const message of cachedMessages) {
+      if (!shouldHandleMessage(message)) {
+        continue;
+      }
+
+      messages.push(buildResourceFromMessage(targetActor, message));
+    }
+    onAvailable(messages);
   }
-  onAvailable(messages);
+
+  /**
+   * Stop watching for console messages.
+   */
+  destroy() {
+    if (this.listener) {
+      Services.console.unregisterListener(this.listener);
+    }
+  }
 }
+module.exports = PlatformMessageWatcher;
 
 /**
  * Returns true if the message is considered a platform message, and as a result, should
@@ -100,26 +104,6 @@ function buildResourceFromMessage(targetActor, message) {
     resourceType: PLATFORM_MESSAGE,
   };
 }
-
-/**
- * Stop watching for console messages related to a given Target Actor.
- *
- * @param TargetActor targetActor
- *        The target actor from which we should stop observing console messages
- */
-function unwatch(targetActor) {
-  const listener = listeners.get(targetActor);
-  if (!listener) {
-    return;
-  }
-  Services.console.unregisterListener(listener);
-  listeners.delete(targetActor);
-}
-
-module.exports = {
-  watch,
-  unwatch,
-};
 
 /**
  * Create a grip for the given string.
