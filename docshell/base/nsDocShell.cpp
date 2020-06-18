@@ -1356,12 +1356,6 @@ nsDocShell::GatherCharsetMenuTelemetry() {
 
 NS_IMETHODIMP
 nsDocShell::SetCharset(const nsACString& aCharset) {
-  // set the charset override
-  return SetForcedCharset(aCharset);
-}
-
-NS_IMETHODIMP
-nsDocShell::SetForcedCharset(const nsACString& aCharset) {
   if (aCharset.IsEmpty()) {
     mForcedCharset = nullptr;
     return NS_OK;
@@ -1376,16 +1370,6 @@ nsDocShell::SetForcedCharset(const nsACString& aCharset) {
     return NS_ERROR_INVALID_ARG;
   }
   mForcedCharset = encoding;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetForcedCharset(nsACString& aResult) {
-  if (mForcedCharset) {
-    mForcedCharset->Name(aResult);
-  } else {
-    aResult.Truncate();
-  }
   return NS_OK;
 }
 

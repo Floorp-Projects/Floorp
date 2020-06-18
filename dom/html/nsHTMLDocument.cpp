@@ -235,7 +235,7 @@ void nsHTMLDocument::TryUserForcedCharset(nsIContentViewer* aCv,
       }
       aEncoding = WrapNotNull(encoding);
       aCharsetSource = kCharsetFromUserForced;
-      aDocShell->SetForcedCharset(NS_LITERAL_CSTRING(""));
+      aDocShell->SetCharset(EmptyCString());
     }
   }
 }
