@@ -44,6 +44,7 @@ use api::{RenderApiSender, RenderNotifier, TextureTarget, SharedFontInstanceMap}
 use api::ExternalImage;
 use api::units::*;
 pub use api::DebugFlags;
+use core::time::Duration;
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
@@ -76,7 +77,8 @@ use crate::picture::{RecordedDirtyRegion, tile_cache_sizes, ResolvedSurfaceTextu
 use crate::prim_store::DeferredResolve;
 use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
-use crate::profiler::{Profiler, ChangeIndicator, ProfileStyle, add_event_marker, thread_is_being_profiled};
+use crate::profiler::{Profiler, ChangeIndicator, ProfileStyle, add_event_marker,
+                add_text_marker, thread_is_being_profiled};
 use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use crate::render_backend::{FrameId, RenderBackend};
@@ -112,7 +114,6 @@ use std::thread;
 use std::cell::RefCell;
 use tracy_rs::register_thread_with_profiler;
 use time::precise_time_ns;
-use std::ffi::CString;
 
 cfg_if! {
     if #[cfg(feature = "debugger")] {
@@ -3517,9 +3518,9 @@ impl Renderer {
 
                 // Profile marker for the number of invalidated picture cache
                 if thread_is_being_profiled() {
-                    let num_invalidated = self.profile_counters.rendered_picture_cache_tiles.get_accum();
-                    let message = format!("NumPictureCacheInvalidated: {}", num_invalidated);
-                    add_event_marker(&(CString::new(message).unwrap()));
+                    let duration = Duration::new(0,0);
+                    let message = self.profile_counters.rendered_picture_cache_tiles.get_accum().to_string();
+                    add_text_marker(cstr!("NumPictureCacheInvalidated"), &message, duration);
                 }
 
                 if device_size.is_some() {
