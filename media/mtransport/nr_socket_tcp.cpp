@@ -156,6 +156,10 @@ int NrTcpSocket::write(const void* aBuffer, size_t aCount, size_t* aWrote) {
     return R_FAILED;
   }
 
+  if (NS_WARN_IF(!mWebrtcTCPSocket)) {
+    return R_FAILED;
+  }
+
   *aWrote = aCount;
 
   if (aCount > 0) {
