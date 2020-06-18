@@ -1,4 +1,4 @@
-module.exports = async function(context, commands) {
+async function test(context, commands) {
   await commands.navigate("https://www.example.com");
   await commands.wait.byTime(15000);
 
@@ -37,4 +37,11 @@ module.exports = async function(context, commands) {
 
   // Stop and collect the measurement before the next page we want to measure
   await commands.measure.stop();
+}
+
+module.exports = {
+  test,
+  owner: "Performance Team",
+  name: "Facebook",
+  description: "Measures time to log in to Facebook",
 };
