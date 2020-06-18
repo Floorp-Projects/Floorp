@@ -4156,11 +4156,9 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
   masm.bind(&done);
 }
 
-bool CacheIRCompiler::emitLoadTypedElementResult(ObjOperandId objId,
-                                                 Int32OperandId indexId,
-                                                 TypedThingLayout layout,
-                                                 Scalar::Type elementType,
-                                                 bool handleOOB) {
+bool CacheIRCompiler::emitLoadTypedElementResult(
+    ObjOperandId objId, Int32OperandId indexId, TypedThingLayout layout,
+    Scalar::Type elementType, bool handleOOB, bool allowDoubleForUint32) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
@@ -4249,8 +4247,9 @@ bool CacheIRCompiler::emitLoadTypedElementResult(ObjOperandId objId,
 
       masm.tagValue(JSVAL_TYPE_BIGINT, *bigInt, output.valueReg());
     } else {
+      bool allowDouble = *allowDoubleResult_ && allowDoubleForUint32;
       masm.loadFromTypedArray(elementType, source, output.valueReg(),
-                              *allowDoubleResult_, scratch1, failure->label());
+                              allowDouble, scratch1, failure->label());
     }
   } else {
     bool needGpr =
@@ -4285,19 +4284,20 @@ bool CacheIRCompiler::emitLoadTypedElementResult(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitLoadTypedArrayElementResult(ObjOperandId objId,
-                                                      Int32OperandId indexId,
-                                                      Scalar::Type elementType,
-                                                      bool handleOOB) {
-  return emitLoadTypedElementResult(
-      objId, indexId, TypedThingLayout::TypedArray, elementType, handleOOB);
+bool CacheIRCompiler::emitLoadTypedArrayElementResult(
+    ObjOperandId objId, Int32OperandId indexId, Scalar::Type elementType,
+    bool handleOOB, bool allowDoubleForUint32) {
+  return emitLoadTypedElementResult(objId, indexId,
+                                    TypedThingLayout::TypedArray, elementType,
+                                    handleOOB, allowDoubleForUint32);
 }
 
 bool CacheIRCompiler::emitLoadTypedObjectElementResult(
     ObjOperandId objId, Int32OperandId indexId, TypedThingLayout layout,
     Scalar::Type elementType) {
   return emitLoadTypedElementResult(objId, indexId, layout, elementType,
-                                    /* handleOOB = */ false);
+                                    /* handleOOB = */ false,
+                                    /* allowDoubleForUint32 = */ true);
 }
 
 bool CacheIRCompiler::emitStoreTypedObjectScalarProperty(
