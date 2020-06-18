@@ -311,6 +311,19 @@ merge-automation:
             from-branch: 'release'
             to-repo: 'https://hg.mozilla.org/releases/mozilla-esr68'
             to-branch: 'esr68'
+        release-to-esr78:
+            fetch-version-from: "browser/config/version.txt"
+            version-files: []
+            replacements:
+                - - "build/mozconfig.common"
+                  - "# Enable enforcing that add-ons are signed by the trusted root"
+                  - "# Disable enforcing that add-ons are signed by the trusted root"
+            merge-old-head: false
+            base-tag: "FIREFOX_ESR_{major_version}_BASE"
+            from-repo: 'https://hg.mozilla.org/releases/mozilla-release'
+            from-branch: 'release'
+            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr78'
+            to-branch: 'esr78'
         bump-central:
             fetch-version-from: "browser/config/version.txt"
             version-files:
@@ -359,6 +372,19 @@ merge-automation:
             merge-old-head: false
             to-repo: 'https://hg.mozilla.org/releases/mozilla-esr68'
             to-branch: 'esr68'
+        bump-esr78:
+            fetch-version-from: "browser/config/version.txt"
+            version-files:
+                - filename: "config/milestone.txt"
+                  version-bump: "minor"
+                - filename: "browser/config/version.txt"
+                  version-bump: "minor"
+                - filename: "browser/config/version_display.txt"
+                  version-bump: "minor"
+            replacements: []
+            merge-old-head: false
+            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr78'
+            to-branch: 'esr78'
 
 scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
@@ -375,7 +401,7 @@ partner-urls:
                         by-release-level:
                             production: 'git@github.com:mozilla-partners/repack-manifests.git'
                             staging: 'git@github.com:moz-releng-automation-stage/repack-manifests.git'
-                    esr(60|68):
+                    esr.*:
                         by-release-level:
                             production: 'git@github.com:mozilla-partners/esr-repack-manifests.git'
                             staging: 'git@github.com:moz-releng-automation-stage/esr-repack-manifests.git'
