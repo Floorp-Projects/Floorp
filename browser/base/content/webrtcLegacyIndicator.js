@@ -108,7 +108,7 @@ function onPopupMenuShowing(event) {
   if (popup.getAttribute("type") == "Devices") {
     activeStreams = webrtcUI.getActiveStreams(true, true, false);
   } else {
-    activeStreams = webrtcUI.getActiveStreams(false, false, true);
+    activeStreams = webrtcUI.getActiveStreams(false, false, true, true);
   }
   if (activeStreams.length) {
     let index = activeStreams.length - 1;
@@ -139,7 +139,7 @@ function onPopupMenuCommand(event) {
 
 function onFirefoxButtonClick(event) {
   event.target.blur();
-  let activeStreams = webrtcUI.getActiveStreams(true, true, true);
+  let activeStreams = webrtcUI.getActiveStreams(true, true, true, true);
   activeStreams[0].browser.ownerGlobal.focus();
 }
 
