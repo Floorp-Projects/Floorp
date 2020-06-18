@@ -1099,7 +1099,7 @@ static nscoord GetInterFrameSpacing(int32_t aScriptLevel,
 }
 
 static nscoord GetThinSpace(const nsStyleFont* aStyleFont) {
-  return NSToCoordRound(float(aStyleFont->mFont.size) * float(3) / float(18));
+  return aStyleFont->mFont.size.ScaledBy(3.0f / 18.0f).ToAppUnits();
 }
 
 class nsMathMLContainerFrame::RowChildFrameIterator {

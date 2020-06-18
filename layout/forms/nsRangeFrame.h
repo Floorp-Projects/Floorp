@@ -141,7 +141,7 @@ class nsRangeFrame final : public nsContainerFrame,
  private:
   // Return our preferred size in the cross-axis (the axis perpendicular
   // to the direction of movement of the thumb).
-  nscoord AutoCrossSize(nscoord aEm);
+  nscoord AutoCrossSize(mozilla::Length aEm);
 
   nsresult MakeAnonymousDiv(Element** aResult, PseudoStyleType aPseudoType,
                             nsTArray<ContentInfo>& aElements);

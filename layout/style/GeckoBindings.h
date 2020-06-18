@@ -501,24 +501,24 @@ void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont,
 void Gecko_nsStyleFont_PrioritizeUserFonts(
     nsStyleFont* font, mozilla::StyleGenericFontFamily aDefaultGeneric);
 
-nscoord Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont*,
-                                         const mozilla::dom::Document*);
+mozilla::Length Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont*,
+                                                 const mozilla::dom::Document*);
 
 // Computes the default generic font for a generic family and language.
 mozilla::StyleGenericFontFamily Gecko_nsStyleFont_ComputeDefaultFontType(
     const mozilla::dom::Document*,
     mozilla::StyleGenericFontFamily generic_family, nsAtom* language);
 
-mozilla::FontSizePrefs Gecko_GetBaseSize(nsAtom* lang);
+mozilla::StyleDefaultFontSizes Gecko_GetBaseSize(nsAtom* lang);
 
 struct GeckoFontMetrics {
-  nscoord mChSize;  // -1.0 indicates not found
-  nscoord mXSize;
+  mozilla::Length mXSize;
+  mozilla::Length mChSize;  // negatives indicate not found.
 };
 
 GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext*, bool is_vertical,
                                       const nsStyleFont* font,
-                                      nscoord font_size,
+                                      mozilla::Length font_size,
                                       bool use_user_font_set);
 
 mozilla::StyleSheet* Gecko_StyleSheet_Clone(

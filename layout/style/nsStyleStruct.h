@@ -14,6 +14,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ServoStyleConstsInlines.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleColorInlines.h"
 #include "mozilla/UniquePtr.h"
@@ -84,24 +85,27 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   nsChangeHint CalcDifference(const nsStyleFont& aNewData) const;
 
   /**
-   * Return aSize multiplied by the current text zoom factor (in aPresContext).
-   * aSize is allowed to be negative, but the caller is expected to deal with
-   * negative results.  The result is clamped to nscoord_MIN .. nscoord_MAX.
+   * Return a given size multiplied by the current text zoom factor (in
+   * aPresContext).
+   *
+   * The size is allowed to be negative, but the caller is expected to deal with
+   * negative results.
    */
-  static nscoord ZoomText(const mozilla::dom::Document&, nscoord aSize);
+  static mozilla::Length ZoomText(const mozilla::dom::Document&,
+                                  mozilla::Length);
 
   nsFont mFont;
-  nscoord mSize;  // Our "computed size". Can be different
-                  // from mFont.size which is our "actual size" and is
-                  // enforced to be >= the user's preferred min-size.
-                  // mFont.size should be used for display purposes
-                  // while mSize is the value to return in
-                  // getComputedStyle() for example.
+
+  // Our "computed size". Can be different from mFont.size which is our "actual
+  // size" and is enforced to be >= the user's preferred min-size.  mFont.size
+  // should be used for display purposes while mSize is the value to return in
+  // getComputedStyle() for example.
+  mozilla::NonNegativeLength mSize;
 
   // In stylo these three track whether the size is keyword-derived
   // and if so if it has been modified by a factor/offset
   float mFontSizeFactor;
-  nscoord mFontSizeOffset;
+  mozilla::Length mFontSizeOffset;
   mozilla::StyleFontSizeKeyword mFontSizeKeyword;
 
   mozilla::StyleGenericFontFamily mGenericID;
@@ -125,8 +129,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   bool mAllowZoomAndMinSize;
 
   // The value mSize would have had if scriptminsize had never been applied
-  nscoord mScriptUnconstrainedSize;
-  nscoord mScriptMinSize;  // length
+  mozilla::NonNegativeLength mScriptUnconstrainedSize;
+  mozilla::Length mScriptMinSize;
   float mScriptSizeMultiplier;
   RefPtr<nsAtom> mLanguage;
 };

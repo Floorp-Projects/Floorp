@@ -426,11 +426,11 @@ TextAttrsMgr::FontSizeTextAttr::FontSizeTextAttr(nsIFrame* aRootFrame,
     : TTextAttr<nscoord>(!aFrame) {
   mDC = aRootFrame->PresContext()->DeviceContext();
 
-  mRootNativeValue = aRootFrame->StyleFont()->mSize;
+  mRootNativeValue = aRootFrame->StyleFont()->mSize.ToAppUnits();
   mIsRootDefined = true;
 
   if (aFrame) {
-    mNativeValue = aFrame->StyleFont()->mSize;
+    mNativeValue = aFrame->StyleFont()->mSize.ToAppUnits();
     mIsDefined = true;
   }
 }
@@ -441,7 +441,7 @@ bool TextAttrsMgr::FontSizeTextAttr::GetValueFor(Accessible* aAccessible,
   if (el) {
     nsIFrame* frame = el->GetPrimaryFrame();
     if (frame) {
-      *aValue = frame->StyleFont()->mSize;
+      *aValue = frame->StyleFont()->mSize.ToAppUnits();
       return true;
     }
   }
