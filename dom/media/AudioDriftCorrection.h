@@ -167,7 +167,8 @@ class AudioDriftCorrection final {
    * possible resampling) is not possible due to lack of input data an empty
    * AudioSegment will be returned. Not thread-safe.
    */
-  AudioSegment RequestFrames(const AudioSegment& aInput, int aOutputFrames) {
+  AudioSegment RequestFrames(const AudioSegment& aInput,
+                             int32_t aOutputFrames) {
     // Very important to go first since the Dynamic will get the sample format
     // from the chunk.
     if (aInput.GetDuration()) {
@@ -180,7 +181,11 @@ class AudioDriftCorrection final {
     // Update resampler's rate if there is a new correction.
     mResampler.UpdateOutRate(receivingRate);
     // If it does not have enough frames the result will be an empty segment.
-    return mResampler.Resample(aOutputFrames);
+    AudioSegment output = mResampler.Resample(aOutputFrames);
+    if (output.IsEmpty()) {
+      output.AppendNullData(aOutputFrames);
+    }
+    return output;
   }
 
  private:
