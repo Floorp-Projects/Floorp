@@ -277,7 +277,7 @@ class JsepTrack {
 
   void AddToMsection(const std::vector<JsConstraints>& constraintsList,
                      sdp::Direction direction, SsrcGenerator& ssrcGenerator,
-                     bool requireRtxSsrcs, SdpMediaSection* msection);
+                     bool rtxEnabled, SdpMediaSection* msection);
 
   // See Bug 1642419, this can be removed when all sites are working with RTX.
   void SetRtxIsAllowed(bool aRtxIsAllowed) { mRtxIsAllowed = aRtxIsAllowed; }
