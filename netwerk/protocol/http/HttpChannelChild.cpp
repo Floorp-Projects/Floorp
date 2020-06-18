@@ -2006,6 +2006,7 @@ void HttpChannelChild::CleanupRedirectingChannel(nsresult rv) {
     mInterceptListener = nullptr;
   }
   ReleaseListeners();
+  CleanupBackgroundChannel();
 }
 
 //-----------------------------------------------------------------------------
