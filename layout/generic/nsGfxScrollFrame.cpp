@@ -3495,7 +3495,10 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  mAddClipRectToLayer = true;
+  // Root scrollframes have FrameMetrics and clipping on their container
+  // layers, so don't apply clipping again.
+  mAddClipRectToLayer =
+      !(mIsRoot && mOuter->PresShell()->GetIsViewportOverridden());
 
   // Whether we might want to build a scrollable layer for this scroll frame
   // at some point in the future. This controls whether we add the information

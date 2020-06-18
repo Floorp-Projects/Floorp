@@ -34,5 +34,3 @@ skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruc
 # layout viewport.
 pref(apz.allow_zooming,true) == pinch-zoom-position-fixed.html pinch-zoom-position-fixed-ref.html
 pref(apz.allow_zooming,true) == pinch-zoom-position-sticky.html pinch-zoom-position-sticky-ref.html
-
-== root-scrollbars-1.html root-scrollbars-1-ref.html
