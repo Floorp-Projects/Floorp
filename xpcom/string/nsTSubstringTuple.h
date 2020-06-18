@@ -59,14 +59,6 @@ class MOZ_TEMPORARY_CLASS nsTSubstringTuple {
    */
   bool IsDependentOn(const char_type* aStart, const char_type* aEnd) const;
 
-  /**
-   * returns a pair of the results of IsDependentOn() and Length(). This is more
-   * efficient than calling both functions subsequently, as this traverses the
-   * tree only once.
-   */
-  std::pair<bool, size_type> IsDependentOnWithLength(
-      const char_type* aStart, const char_type* aEnd) const;
-
  private:
   const self_type* const mHead;
   const base_string_type* const mFragA;

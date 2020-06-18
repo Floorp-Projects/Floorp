@@ -508,24 +508,6 @@ void nsTSubstring<T>::Assign(self_type&& aStr) {
 }
 
 template <typename T>
-void nsTSubstring<T>::AssignOwned(self_type&& aStr) {
-  NS_ASSERTION(aStr.mDataFlags & (DataFlags::REFCOUNTED | DataFlags::OWNED),
-               "neither shared nor owned");
-
-  // If they have a REFCOUNTED or OWNED buffer, we can avoid a copy - so steal
-  // their buffer and reset them to the empty string.
-
-  // |aStr| should be null-terminated
-  NS_ASSERTION(aStr.mDataFlags & DataFlags::TERMINATED,
-               "shared or owned, but not terminated");
-
-  ::ReleaseData(this->mData, this->mDataFlags);
-
-  SetData(aStr.mData, aStr.mLength, aStr.mDataFlags);
-  aStr.SetToEmptyBuffer();
-}
-
-template <typename T>
 bool nsTSubstring<T>::Assign(self_type&& aStr, const fallible_t& aFallible) {
   // We're moving |aStr| in this method, so we need to try to steal the data,
   // and in the fallback perform a copy-assignment followed by a truncation of
@@ -537,7 +519,17 @@ bool nsTSubstring<T>::Assign(self_type&& aStr, const fallible_t& aFallible) {
   }
 
   if (aStr.mDataFlags & (DataFlags::REFCOUNTED | DataFlags::OWNED)) {
-    AssignOwned(std::move(aStr));
+    // If they have a REFCOUNTED or OWNED buffer, we can avoid a copy - so steal
+    // their buffer and reset them to the empty string.
+
+    // |aStr| should be null-terminated
+    NS_ASSERTION(aStr.mDataFlags & DataFlags::TERMINATED,
+                 "shared or owned, but not terminated");
+
+    ::ReleaseData(this->mData, this->mDataFlags);
+
+    SetData(aStr.mData, aStr.mLength, aStr.mDataFlags);
+    aStr.SetToEmptyBuffer();
     return true;
   }
 
@@ -558,38 +550,24 @@ void nsTSubstring<T>::Assign(const substring_tuple_type& aTuple) {
 }
 
 template <typename T>
-bool nsTSubstring<T>::AssignNonDependent(const substring_tuple_type& aTuple,
-                                         size_type aTupleLength,
-                                         const mozilla::fallible_t& aFallible) {
-  NS_ASSERTION(aTuple.Length() == aTupleLength, "wrong length passed");
+bool nsTSubstring<T>::Assign(const substring_tuple_type& aTuple,
+                             const fallible_t& aFallible) {
+  if (aTuple.IsDependentOn(this->mData, this->mData + this->mLength)) {
+    // take advantage of sharing here...
+    return Assign(string_type(aTuple), aFallible);
+  }
 
-  mozilla::Result<uint32_t, nsresult> r = StartBulkWriteImpl(aTupleLength);
+  size_type length = aTuple.Length();
+
+  mozilla::Result<uint32_t, nsresult> r = StartBulkWriteImpl(length);
   if (r.isErr()) {
     return false;
   }
 
-  aTuple.WriteTo(this->mData, aTupleLength);
+  aTuple.WriteTo(this->mData, length);
 
-  FinishBulkWriteImpl(aTupleLength);
+  FinishBulkWriteImpl(length);
   return true;
-}
-
-template <typename T>
-bool nsTSubstring<T>::Assign(const substring_tuple_type& aTuple,
-                             const fallible_t& aFallible) {
-  const auto [isDependentOnThis, tupleLength] =
-      aTuple.IsDependentOnWithLength(this->mData, this->mData + this->mLength);
-  if (isDependentOnThis) {
-    string_type temp;
-    self_type& tempSubstring = temp;
-    if (!tempSubstring.AssignNonDependent(aTuple, tupleLength, aFallible)) {
-      return false;
-    }
-    AssignOwned(std::move(temp));
-    return true;
-  }
-
-  return AssignNonDependent(aTuple, tupleLength, aFallible);
 }
 
 template <typename T>
@@ -682,22 +660,18 @@ bool nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
 template <typename T>
 void nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
                               const substring_tuple_type& aTuple) {
-  const auto [isDependentOnThis, tupleLength] =
-      aTuple.IsDependentOnWithLength(this->mData, this->mData + this->mLength);
-
-  if (isDependentOnThis) {
-    nsTAutoString<T> temp;
-    if (!temp.AssignNonDependent(aTuple, tupleLength, mozilla::fallible)) {
-      AllocFailed(tupleLength);
-    }
+  if (aTuple.IsDependentOn(this->mData, this->mData + this->mLength)) {
+    nsTAutoString<T> temp(aTuple);
     Replace(aCutStart, aCutLength, temp);
     return;
   }
 
+  size_type length = aTuple.Length();
+
   aCutStart = XPCOM_MIN(aCutStart, this->Length());
 
-  if (ReplacePrep(aCutStart, aCutLength, tupleLength) && tupleLength > 0) {
-    aTuple.WriteTo(this->mData + aCutStart, tupleLength);
+  if (ReplacePrep(aCutStart, aCutLength, length) && length > 0) {
+    aTuple.WriteTo(this->mData + aCutStart, length);
   }
 }
 
@@ -853,8 +827,7 @@ void nsTSubstring<T>::Append(const substring_tuple_type& aTuple) {
 template <typename T>
 bool nsTSubstring<T>::Append(const substring_tuple_type& aTuple,
                              const fallible_t& aFallible) {
-  const auto [isDependentOnThis, tupleLength] =
-      aTuple.IsDependentOnWithLength(this->mData, this->mData + this->mLength);
+  size_type tupleLength = aTuple.Length();
 
   if (MOZ_UNLIKELY(!tupleLength)) {
     // Avoid undoing the effect of SetCapacity() if both
@@ -862,7 +835,8 @@ bool nsTSubstring<T>::Append(const substring_tuple_type& aTuple,
     return true;
   }
 
-  if (MOZ_UNLIKELY(isDependentOnThis)) {
+  if (MOZ_UNLIKELY(
+          aTuple.IsDependentOn(this->mData, this->mData + this->mLength))) {
     return Append(string_type(aTuple), aFallible);
   }
 
