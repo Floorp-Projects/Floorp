@@ -28,7 +28,7 @@ job-defaults:
                 default: https://hg.mozilla.org/mozilla-central
         l10n-bump-info:
             by-release-type:
-                esr.*:
+                esr68:
                     name: Fennec l10n changesets
                     path: mobile/locales/l10n-changesets.json
                     version-path: mobile/android/config/version-files/release/version.txt
