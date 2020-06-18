@@ -1,5 +1,6 @@
 import mozunit
 import pytest
+from jsonschema import ValidationError
 from mozperftest.tests.support import HERE
 from mozperftest.metrics.notebook.transformer import Transformer, get_transformers
 from mozperftest.tests.data.perftestetl_plugin import (
@@ -58,6 +59,24 @@ def test_open_data(data, files):
     # Test failure
     with pytest.raises(Exception):
         tfm.open_data("fail")
+
+
+def test_jsonschema_valitate_failure(files):
+    class BadTransformer:
+        def transform(self, data):
+            return {"bad data": "bad data"}
+
+        def merge(self, sde):
+            return {"bad data": "bad data"}
+
+    files = files["resources"]
+    file_1 = files["file_1"]
+    file_2 = files["file_2"]
+
+    tfm = Transformer([], BadTransformer())
+    tfm.files = [file_1, file_2]
+    with pytest.raises(ValidationError):
+        tfm.process("name")
 
 
 def test_get_transformers():

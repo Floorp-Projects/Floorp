@@ -42,6 +42,8 @@ def silence(layer=None):
     oldout, olderr = sys.stdout, sys.stderr
     try:
         sys.stdout, sys.stderr = StringIO(), StringIO()
+        sys.stdout.buffer = sys.stdout
+        sys.stderr.buffer = sys.stderr
         sys.stdout.fileno = sys.stderr.fileno = lambda: -1
         yield sys.stdout, sys.stderr
     finally:
