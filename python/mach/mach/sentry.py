@@ -17,7 +17,7 @@ from six.moves.configparser import SafeConfigParser, NoOptionError
 _SENTRY_DSN = "https://8228c9aff64949c2ba4a2154dc515f55@sentry.prod.mozaws.net/525"
 
 
-def register_sentry(topsrcdir=None):
+def register_sentry(argv, topsrcdir=None):
     cfg_file = os.path.join(get_state_dir(), 'machrc')
     config = SafeConfigParser()
 
@@ -34,6 +34,7 @@ def register_sentry(topsrcdir=None):
 
     sentry_sdk.init(_SENTRY_DSN,
                     before_send=lambda event, _: _process_event(event, topsrcdir))
+    sentry_sdk.add_breadcrumb(message="./mach {}".format(" ".join(argv)))
 
 
 def _process_event(sentry_event, topsrcdir):
