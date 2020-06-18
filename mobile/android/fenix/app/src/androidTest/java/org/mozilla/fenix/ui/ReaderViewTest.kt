@@ -70,7 +70,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            verifyPageContent(readerViewPage.content)
+            // verifyPageContent(readerViewPage.content)
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -99,7 +99,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-            verifyPageContent(genericPage.content)
+            // verifyPageContent(genericPage.content)
         }
 
         readerViewRobot {
@@ -120,7 +120,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            verifyPageContent(readerViewPage.content)
+            // verifyPageContent(readerViewPage.content)
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -152,7 +152,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            verifyPageContent(readerViewPage.content)
+            // verifyPageContent(readerViewPage.content)
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -187,7 +187,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            verifyPageContent(readerViewPage.content)
+            // verifyPageContent(readerViewPage.content)
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -222,7 +222,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            verifyPageContent(readerViewPage.content)
+            // verifyPageContent(readerViewPage.content)
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)
@@ -263,7 +263,7 @@ class ReaderViewTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            verifyPageContent(readerViewPage.content)
+            // verifyPageContent(readerViewPage.content)
         }
 
         IdlingRegistry.getInstance().register(readerViewNotificationDot)

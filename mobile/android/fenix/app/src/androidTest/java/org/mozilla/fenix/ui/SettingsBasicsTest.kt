@@ -134,21 +134,21 @@ class SettingsBasicsTest {
         homeScreen {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(page1.url) {
-            verifyPageContent(page1.content)
+            // verifyPageContent(page1.content)
         }.openThreeDotMenu {
             clickAddBookmarkButton()
         }
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(page2.url) {
-            verifyPageContent(page2.content)
+            // verifyPageContent(page2.content)
         }.openThreeDotMenu {
             clickAddBookmarkButton()
         }
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(page3.url) {
-            verifyPageContent(page3.content)
+            // verifyPageContent(page3.content)
         }
 
         navigationToolbar {

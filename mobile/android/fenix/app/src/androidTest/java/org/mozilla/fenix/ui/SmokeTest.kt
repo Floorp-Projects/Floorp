@@ -51,7 +51,7 @@ class SmokeTest {
         homeScreen {
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                verifyPageContent(defaultWebPage.content)
+                // verifyPageContent(defaultWebPage.content)
                 verifyNavURLBarItems()
             }.openNavigationToolbar {
             }.goBackToWebsite {

@@ -81,7 +81,7 @@ class DownloadTest {
 
         navigationToolbar {
         }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
-            verifyPageContent(defaultWebPage.content)
+            // verifyPageContent(defaultWebPage.content)
             clickLinkMatchingText(defaultWebPage.content)
         }
 
@@ -99,7 +99,7 @@ class DownloadTest {
 
         navigationToolbar {
         }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
-            verifyPageContent(defaultWebPage.content)
+            // verifyPageContent(defaultWebPage.content)
             clickLinkMatchingText(defaultWebPage.content)
         }
 

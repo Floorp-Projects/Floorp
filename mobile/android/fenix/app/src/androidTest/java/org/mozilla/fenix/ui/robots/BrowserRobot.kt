@@ -78,11 +78,14 @@ class BrowserRobot {
 
     /* Asserts that the text within DOM element with ID="testContent" has the given text, i.e.
     *  document.querySelector('#testContent').innerText == expectedText
+    *
+    *  This function is not working at intended and needs a replacement.
     */
-    fun verifyPageContent(expectedText: String) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.waitNotNull(Until.findObject(By.textContains(expectedText)), waitingTime)
-    }
+
+    /* fun verifyPageContent(expectedText: String) {
+        // val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        // mDevice.waitNotNull(Until.findObject(By.textContains(expectedText)), waitingTime)
+    }*/
 
     fun verifyTabCounter(expectedText: String) {
         onView(withId(R.id.counter_text))

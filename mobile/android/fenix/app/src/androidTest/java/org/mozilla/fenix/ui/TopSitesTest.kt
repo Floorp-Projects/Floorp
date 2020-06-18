@@ -53,7 +53,7 @@ class TopSitesTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            verifyPageContent(defaultWebPage.content)
+            // verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             verifyAddFirefoxHome()
         }.addToFirefoxHome {
@@ -72,7 +72,7 @@ class TopSitesTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            verifyPageContent(defaultWebPage.content)
+            // verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             verifyAddFirefoxHome()
         }.addToFirefoxHome {
@@ -82,7 +82,7 @@ class TopSitesTest {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openTopSiteTabWithTitle(title = defaultWebPageTitle) {
-            verifyPageContent(defaultWebPage.content)
+            // verifyPageContent(defaultWebPage.content)
             verifyUrl(defaultWebPage.url.toString().replace("http://", ""))
         }.openTabDrawer {
         }.openHomeScreen {
@@ -103,7 +103,7 @@ class TopSitesTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            verifyPageContent(defaultWebPage.content)
+            // verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             verifyAddFirefoxHome()
         }.addToFirefoxHome {
@@ -126,7 +126,7 @@ class TopSitesTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            verifyPageContent(defaultWebPage.content)
+            // verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
             verifyAddFirefoxHome()
         }.addToFirefoxHome {
