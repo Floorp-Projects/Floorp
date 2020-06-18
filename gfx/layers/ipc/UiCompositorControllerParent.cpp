@@ -273,7 +273,7 @@ void UiCompositorControllerParent::Initialize() {
       CompositorBridgeParent::GetIndirectShadowTree(mRootLayerTreeId);
   MOZ_ASSERT(state);
   MOZ_ASSERT(state->mParent);
-  if (!state->mParent) {
+  if (!state || !state->mParent) {
     return;
   }
   state->mUiControllerParent = this;
