@@ -827,7 +827,8 @@ void nsTSubstring<T>::Append(const substring_tuple_type& aTuple) {
 template <typename T>
 bool nsTSubstring<T>::Append(const substring_tuple_type& aTuple,
                              const fallible_t& aFallible) {
-  size_type tupleLength = aTuple.Length();
+  const auto [isDependentOnThis, tupleLength] =
+      aTuple.IsDependentOnWithLength(this->mData, this->mData + this->mLength);
 
   if (MOZ_UNLIKELY(!tupleLength)) {
     // Avoid undoing the effect of SetCapacity() if both
@@ -835,8 +836,7 @@ bool nsTSubstring<T>::Append(const substring_tuple_type& aTuple,
     return true;
   }
 
-  if (MOZ_UNLIKELY(
-          aTuple.IsDependentOn(this->mData, this->mData + this->mLength))) {
+  if (MOZ_UNLIKELY(isDependentOnThis)) {
     return Append(string_type(aTuple), aFallible);
   }
 

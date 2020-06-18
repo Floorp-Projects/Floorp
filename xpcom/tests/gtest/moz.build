@@ -47,6 +47,7 @@ UNIFIED_SOURCES += [
     'TestStorageStream.cpp',
     'TestStrings.cpp',
     'TestStringStream.cpp',
+    'TestSubstringTuple.cpp',
     'TestSynchronization.cpp',
     'TestTArray.cpp',
     'TestTArray2.cpp',
