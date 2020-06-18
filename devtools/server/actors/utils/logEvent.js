@@ -5,11 +5,10 @@
 "use strict";
 
 const { formatDisplayName } = require("devtools/server/actors/frame");
-loader.lazyRequireGetter(
-  this,
-  "ConsoleMessages",
-  "devtools/server/actors/resources/console-messages"
-);
+const {
+  TYPES,
+  getResourceWatcher,
+} = require("devtools/server/actors/resources/index");
 
 // Get a string message to display when a frame evaluation throws.
 function getThrownMessage(completion) {
@@ -73,7 +72,20 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
   };
 
   const targetActor = threadActor._parent;
-  ConsoleMessages.onLogPoint(targetActor, message);
+  // Note that only BrowsingContextTarget actor support resource watcher
+  // This is still missing for worker and content processes
+  const consoleMessageWatcher = getResourceWatcher(
+    targetActor,
+    TYPES.CONSOLE_MESSAGE
+  );
+  if (consoleMessageWatcher) {
+    consoleMessageWatcher.onLogPoint(message);
+  } else {
+    // Bug 1642296: Once we enable ConsoleMessage resource on the server, we should remove onConsoleAPICall
+    // from the WebConsoleActor, and only support the ConsoleMessageWatcher codepath.
+    targetActor._consoleActor.onConsoleAPICall(message);
+  }
+
   return undefined;
 }
 
