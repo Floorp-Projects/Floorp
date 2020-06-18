@@ -25,7 +25,7 @@ const TestCases = [
     expected: {
       downloadCount: 1,
       newWindow: false,
-      opensTab: false,
+      opensTab: true,
       tabSelected: true,
     },
   },
@@ -40,7 +40,7 @@ const TestCases = [
     expected: {
       downloadCount: 1,
       newWindow: false,
-      opensTab: false,
+      opensTab: true,
       tabSelected: true,
     },
   },
@@ -59,7 +59,7 @@ const TestCases = [
     },
   },
   {
-    name: "Download panel, open foreground tab",
+    name: "Download panel, open foreground tab", // duplicates the default behavior
     whichUI: "downloadPanel",
     itemSelector: "#downloadsListBox richlistitem .downloadMainArea",
     async userEvents(itemTarget, win) {
@@ -105,7 +105,7 @@ const TestCases = [
     expected: {
       downloadCount: 1,
       newWindow: false,
-      opensTab: false,
+      opensTab: true,
       tabSelected: true,
     },
   },
@@ -119,7 +119,7 @@ const TestCases = [
     expected: {
       downloadCount: 1,
       newWindow: false,
-      opensTab: false,
+      opensTab: true,
       tabSelected: true,
     },
   },
@@ -138,7 +138,7 @@ const TestCases = [
     },
   },
   {
-    name: "Library all downloads dialog, open foreground tab",
+    name: "Library all downloads dialog, open foreground tab", // duplicates default behavior
     whichUI: "allDownloads",
     async userEvents(itemTarget, win) {
       // double click
@@ -185,7 +185,7 @@ const TestCases = [
     expected: {
       downloadCount: 1,
       newWindow: false,
-      opensTab: false,
+      opensTab: true,
       tabSelected: true,
     },
   },

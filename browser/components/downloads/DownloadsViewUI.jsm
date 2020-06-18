@@ -755,7 +755,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     this.download.confirmBlock().catch(Cu.reportError);
   },
 
-  downloadsCmd_open(openWhere = "current") {
+  downloadsCmd_open(openWhere = "tab") {
     DownloadsCommon.openDownload(this.download, {
       openWhere,
     });

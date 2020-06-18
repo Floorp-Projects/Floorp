@@ -173,12 +173,15 @@ this.DownloadsManager = class DownloadsManager {
         break;
       case at.OPEN_DOWNLOAD_FILE:
         const win = action._target.browser.ownerGlobal;
-        const openWhere = action.data.event
-          ? win.whereToOpenLink(action.data.event)
-          : "current";
+        const openWhere =
+          action.data.event && win.whereToOpenLink(action.data.event);
         doDownloadAction(download => {
           DownloadsCommon.openDownload(download, {
-            openWhere,
+            // Replace "current" or unknown value with "tab" as the default behavior
+            // for opening downloads when handled internally
+            openWhere: ["window", "tab", "tabshifted"].includes(openWhere)
+              ? openWhere
+              : "tab",
           });
         });
         break;

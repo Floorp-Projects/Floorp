@@ -433,7 +433,7 @@ var DownloadsCommon = {
    *        A Download object or the initial properties of a serialized download
    * @param options.openWhere
    *        Optional string indicating how to handle opening a download target file URI.
-   *        One of "current", "window", "tab", "tabshifted".
+   *        One of "window", "tab", "tabshifted".
    * @return {Promise}
    * @resolves When the instruction to launch the file has been
    *           successfully given to the operating system or handled internally
