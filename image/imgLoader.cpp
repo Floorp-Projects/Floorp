@@ -1689,7 +1689,7 @@ bool imgLoader::ValidateRequestWithNewChannel(
         proxy->PrioritizeAsPreload();
         auto preloadKey = PreloadHashKey::CreateAsImage(
             aURI, aTriggeringPrincipal, ConvertToCORSMode(aCORSMode));
-        proxy->NotifyOpen(&preloadKey, aLoadingDocument, true);
+        proxy->NotifyOpen(preloadKey, aLoadingDocument, true);
       }
 
       // Attach the proxy without notifying
@@ -1756,7 +1756,7 @@ bool imgLoader::ValidateRequestWithNewChannel(
     req->PrioritizeAsPreload();
     auto preloadKey = PreloadHashKey::CreateAsImage(
         aURI, aTriggeringPrincipal, ConvertToCORSMode(aCORSMode));
-    req->NotifyOpen(&preloadKey, aLoadingDocument, true);
+    req->NotifyOpen(preloadKey, aLoadingDocument, true);
   }
 
   // Add the proxy without notifying
@@ -2220,7 +2220,7 @@ nsresult imgLoader::LoadImage(
     auto key = PreloadHashKey::CreateAsImage(aURI, aTriggeringPrincipal,
                                              ConvertToCORSMode(corsmode));
     if (RefPtr<PreloaderBase> preload =
-            aLoadingDocument->Preloads().LookupPreload(&key)) {
+            aLoadingDocument->Preloads().LookupPreload(key)) {
       RefPtr<imgRequestProxy> proxy = do_QueryObject(preload);
       MOZ_ASSERT(proxy);
 
@@ -2449,7 +2449,7 @@ nsresult imgLoader::LoadImage(
       proxy->PrioritizeAsPreload();
       auto preloadKey = PreloadHashKey::CreateAsImage(
           aURI, aTriggeringPrincipal, ConvertToCORSMode(corsmode));
-      proxy->NotifyOpen(&preloadKey, aLoadingDocument, true);
+      proxy->NotifyOpen(preloadKey, aLoadingDocument, true);
     }
 
     // Note that it's OK to add here even if the request is done.  If it is,

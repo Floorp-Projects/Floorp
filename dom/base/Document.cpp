@@ -11415,7 +11415,7 @@ void Document::MaybePreLoadImage(nsIURI* aUri,
     PreloadHashKey key = PreloadHashKey::CreateAsImage(
         aUri, NodePrincipal(),
         dom::Element::StringToCORSMode(aCrossOriginAttr));
-    if (!mPreloadService.PreloadExists(&key)) {
+    if (!mPreloadService.PreloadExists(key)) {
       PreLoadImage(aUri, aCrossOriginAttr, aReferrerPolicy, aIsImgSet,
                    aLinkPreload);
     }

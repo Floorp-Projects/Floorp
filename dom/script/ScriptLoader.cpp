@@ -1523,7 +1523,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
 
   auto key = PreloadHashKey::CreateAsScript(
       aRequest->mURI, aRequest->CORSMode(), aRequest->mKind);
-  aRequest->NotifyOpen(&key, channel, mDocument,
+  aRequest->NotifyOpen(key, channel, mDocument,
                        aRequest->IsLinkPreloadScript());
 
   rv = channel->AsyncOpen(loader);

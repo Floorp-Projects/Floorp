@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-bool PreloadService::RegisterPreload(PreloadHashKey* aKey,
+bool PreloadService::RegisterPreload(const PreloadHashKey& aKey,
                                      PreloaderBase* aPreload) {
   if (PreloadExists(aKey)) {
     return false;
@@ -26,20 +26,20 @@ bool PreloadService::RegisterPreload(PreloadHashKey* aKey,
   return true;
 }
 
-void PreloadService::DeregisterPreload(PreloadHashKey* aKey) {
+void PreloadService::DeregisterPreload(const PreloadHashKey& aKey) {
   mPreloads.Remove(aKey);
 }
 
 void PreloadService::ClearAllPreloads() { mPreloads.Clear(); }
 
-bool PreloadService::PreloadExists(PreloadHashKey* aKey) {
+bool PreloadService::PreloadExists(const PreloadHashKey& aKey) {
   bool found;
   mPreloads.GetWeak(aKey, &found);
   return found;
 }
 
 already_AddRefed<PreloaderBase> PreloadService::LookupPreload(
-    PreloadHashKey* aKey) const {
+    const PreloadHashKey& aKey) const {
   return mPreloads.Get(aKey);
 }
 
@@ -155,28 +155,24 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadOrCoalesce(
     return nullptr;
   }
 
-  RefPtr<PreloaderBase> preload = LookupPreload(&preloadKey);
-  if (!preload) {
-    if (aAs.LowerCaseEqualsASCII("script")) {
-      PreloadScript(uri, aType, aCharset, aCORS, aReferrerPolicy, aIntegrity,
-                    true /* isInHead - TODO */);
-    } else if (aAs.LowerCaseEqualsASCII("style")) {
-      PreloadStyle(uri, aCharset, aCORS, aReferrerPolicy, aIntegrity);
-    } else if (aAs.LowerCaseEqualsASCII("image")) {
-      PreloadImage(uri, aCORS, aReferrerPolicy, isImgSet);
-    } else if (aAs.LowerCaseEqualsASCII("font")) {
-      PreloadFont(uri, aCORS, aReferrerPolicy);
-    } else if (aAs.LowerCaseEqualsASCII("fetch")) {
-      PreloadFetch(uri, aCORS, aReferrerPolicy);
-    }
-
-    preload = LookupPreload(&preloadKey);
-    if (!preload) {
-      return nullptr;
-    }
+  if (RefPtr<PreloaderBase> preload = LookupPreload(preloadKey)) {
+    return preload.forget();
   }
 
-  return preload.forget();
+  if (aAs.LowerCaseEqualsASCII("script")) {
+    PreloadScript(uri, aType, aCharset, aCORS, aReferrerPolicy, aIntegrity,
+                  true /* isInHead - TODO */);
+  } else if (aAs.LowerCaseEqualsASCII("style")) {
+    PreloadStyle(uri, aCharset, aCORS, aReferrerPolicy, aIntegrity);
+  } else if (aAs.LowerCaseEqualsASCII("image")) {
+    PreloadImage(uri, aCORS, aReferrerPolicy, isImgSet);
+  } else if (aAs.LowerCaseEqualsASCII("font")) {
+    PreloadFont(uri, aCORS, aReferrerPolicy);
+  } else if (aAs.LowerCaseEqualsASCII("fetch")) {
+    PreloadFetch(uri, aCORS, aReferrerPolicy);
+  }
+
+  return LookupPreload(preloadKey);
 }
 
 void PreloadService::PreloadScript(nsIURI* aURI, const nsAString& aType,
@@ -217,7 +213,7 @@ void PreloadService::PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,
 
   RefPtr<FontPreloader> preloader = new FontPreloader();
   dom::ReferrerPolicy referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
-  preloader->OpenChannel(&key, aURI, cors, referrerPolicy, mDocument);
+  preloader->OpenChannel(key, aURI, cors, referrerPolicy, mDocument);
 }
 
 void PreloadService::PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
@@ -230,7 +226,7 @@ void PreloadService::PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
 
   RefPtr<FetchPreloader> preloader = new FetchPreloader();
   dom::ReferrerPolicy referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
-  preloader->OpenChannel(&key, aURI, cors, referrerPolicy, mDocument);
+  preloader->OpenChannel(key, aURI, cors, referrerPolicy, mDocument);
 }
 
 // static

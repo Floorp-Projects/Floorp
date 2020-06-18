@@ -47,9 +47,9 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
   // Called by resource loaders to register this preload in the document's
   // preload service to provide coalescing, and access to the preload when it
   // should be used for an actual load.
-  void NotifyOpen(PreloadHashKey* aKey, dom::Document* aDocument,
+  void NotifyOpen(const PreloadHashKey& aKey, dom::Document* aDocument,
                   bool aIsPreload);
-  void NotifyOpen(PreloadHashKey* aKey, nsIChannel* aChannel,
+  void NotifyOpen(const PreloadHashKey& aKey, nsIChannel* aChannel,
                   dom::Document* aDocument, bool aIsPreload);
 
   // Called when the load is about to be started all over again and thus this

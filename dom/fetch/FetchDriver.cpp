@@ -411,7 +411,7 @@ already_AddRefed<PreloaderBase> FetchDriver::FindPreload(nsIURI* aURI) {
   // OK, this request can be satisfied by a preloaded response, try to find one.
 
   auto preloadKey = PreloadHashKey::CreateAsFetch(aURI, cors);
-  return mDocument->Preloads().LookupPreload(&preloadKey);
+  return mDocument->Preloads().LookupPreload(preloadKey);
 }
 
 void FetchDriver::UpdateReferrerInfoFromNewChannel(nsIChannel* aChannel) {
