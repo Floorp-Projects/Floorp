@@ -120,15 +120,18 @@ class NativeLayer {
 
   virtual gfx::IntRect GetRect() = 0;
 
-  // The valid rect is stored here, but applied in the compositor code
-  // by combining it with the surface clip rect.
-  virtual void SetValidRect(const gfx::IntRect& aValidRect) = 0;
-  virtual gfx::IntRect GetValidRect() = 0;
-
   // Set an optional clip rect on the layer. The clip rect is in the same
   // coordinate space as the layer rect.
   virtual void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) = 0;
   virtual Maybe<gfx::IntRect> ClipRect() = 0;
+
+  // Returns the "display rect", in content coordinates, of the current front
+  // surface. This rect acts as an extra clip and prevents invalid content from
+  // getting to the screen. The display rect starts out empty before the first
+  // call to NextSurface*. Note the different coordinate space from the regular
+  // clip rect: the clip rect is "outside" the layer position, the display rect
+  // is "inside" the layer position (moves with the layer).
+  virtual gfx::IntRect CurrentSurfaceDisplayRect() = 0;
 
   // Whether the surface contents are flipped vertically compared to this
   // layer's coordinate system. Can be set on any thread at any time.
@@ -143,10 +146,17 @@ class NativeLayer {
   // until after NotifySurfaceReady has been called. Can be called on any
   // thread. When used from multiple threads, callers need to make sure that
   // they still only call NextSurface* and NotifySurfaceReady alternatingly and
-  // not in any other order. aUpdateRegion must not extend beyond the layer
-  // size.
+  // not in any other order. aUpdateRegion and aDisplayRect are in "content
+  // coordinates" and must not extend beyond the layer size. If aDisplayRect
+  // contains parts that were not valid before, then those parts must be updated
+  // (must be part of aUpdateRegion), so that the entirety of aDisplayRect is
+  // valid after the update. The display rect determines the parts of the
+  // surface that will be shown; this allows using surfaces with only
+  // partially-valid content, as long as none of the invalid content is included
+  // in the display rect.
   virtual RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
-      const gfx::IntRegion& aUpdateRegion, gfx::BackendType aBackendType) = 0;
+      const gfx::IntRect& aDisplayRect, const gfx::IntRegion& aUpdateRegion,
+      gfx::BackendType aBackendType) = 0;
 
   // Returns a GLuint for a framebuffer that can be used for drawing to the
   // surface. The size of the framebuffer will be the same as the size of this
@@ -170,9 +180,16 @@ class NativeLayer {
   // used from multiple threads, callers need to make sure that they still only
   // call NextSurface and NotifySurfaceReady alternatingly and not in any other
   // order.
-  // aUpdateRegion must not extend beyond the layer size.
+  // aUpdateRegion and aDisplayRect are in "content coordinates" and must not
+  // extend beyond the layer size. If aDisplayRect contains parts that were not
+  // valid before, then those parts must be updated (must be part of
+  // aUpdateRegion), so that the entirety of aDisplayRect is valid after the
+  // update. The display rect determines the parts of the surface that will be
+  // shown; this allows using surfaces with only partially-valid content, as
+  // long as none of the invalid content is included in the display rect.
   virtual Maybe<GLuint> NextSurfaceAsFramebuffer(
-      const gfx::IntRegion& aUpdateRegion, bool aNeedsDepth) = 0;
+      const gfx::IntRect& aDisplayRect, const gfx::IntRegion& aUpdateRegion,
+      bool aNeedsDepth) = 0;
 
   // Indicates that the surface which has been returned from the most recent
   // call to NextSurface* is now finished being drawn to and can be displayed on

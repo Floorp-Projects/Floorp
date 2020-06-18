@@ -853,13 +853,15 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
     }
 
     mGPUStatsLayer->SetPosition(IntPoint(2, 5));
+    IntRect bounds({}, size);
     RefPtr<DrawTarget> dt = mGPUStatsLayer->NextSurfaceAsDrawTarget(
-        IntRect({}, size), BackendType::SKIA);
+        bounds, bounds, BackendType::SKIA);
     mTextRenderer->RenderTextToDrawTarget(dt, text, 600,
                                           TextRenderer::FontType::FixedWidth);
     mGPUStatsLayer->NotifySurfaceReady();
     mNativeLayerRoot->AppendLayer(mGPUStatsLayer);
 
+    IntSize square(20, 20);
     // The two warning layers are created on demand and their content is only
     // drawn once. After that, they only get moved (if the window size changes)
     // and conditionally shown.
@@ -868,11 +870,11 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
       // If we have an unused APZ transform on this composite, draw a 20x20 red
       // box in the top-right corner.
       if (!mUnusedTransformWarningLayer) {
-        mUnusedTransformWarningLayer = mNativeLayerRoot->CreateLayer(
-            IntSize(20, 20), true, mSurfacePoolHandle);
+        mUnusedTransformWarningLayer =
+            mNativeLayerRoot->CreateLayer(square, true, mSurfacePoolHandle);
         RefPtr<DrawTarget> dt =
             mUnusedTransformWarningLayer->NextSurfaceAsDrawTarget(
-                IntRect(0, 0, 20, 20), BackendType::SKIA);
+                IntRect({}, square), IntRect({}, square), BackendType::SKIA);
         dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(DeviceColor(1, 0, 0, 1)));
         mUnusedTransformWarningLayer->NotifySurfaceReady();
       }
@@ -889,11 +891,11 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
       // in the top-right corner, to the left of the unused-apz-transform
       // warning box.
       if (!mDisabledApzWarningLayer) {
-        mDisabledApzWarningLayer = mNativeLayerRoot->CreateLayer(
-            IntSize(20, 20), true, mSurfacePoolHandle);
+        mDisabledApzWarningLayer =
+            mNativeLayerRoot->CreateLayer(square, true, mSurfacePoolHandle);
         RefPtr<DrawTarget> dt =
             mDisabledApzWarningLayer->NextSurfaceAsDrawTarget(
-                IntRect(0, 0, 20, 20), BackendType::SKIA);
+                IntRect({}, square), IntRect({}, square), BackendType::SKIA);
         dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(DeviceColor(1, 1, 0, 1)));
         mDisabledApzWarningLayer->NotifySurfaceReady();
       }

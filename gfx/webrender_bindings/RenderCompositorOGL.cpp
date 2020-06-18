@@ -104,8 +104,8 @@ bool RenderCompositorOGL::BeginFrame() {
   }
   if (mNativeLayerForEntireWindow) {
     gfx::IntRect bounds({}, bufferSize);
-    Maybe<GLuint> fbo =
-        mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(bounds, true);
+    Maybe<GLuint> fbo = mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(
+        bounds, bounds, true);
     if (!fbo) {
       return false;
     }
@@ -258,12 +258,11 @@ void RenderCompositorOGL::Bind(wr::NativeTileId aId,
 
   gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
                          aValidRect.size.width, aValidRect.size.height);
-  layer->SetValidRect(validRect);
-
   gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
                          aDirtyRect.size.width, aDirtyRect.size.height);
 
-  Maybe<GLuint> fbo = layer->NextSurfaceAsFramebuffer(dirtyRect, true);
+  Maybe<GLuint> fbo =
+      layer->NextSurfaceAsFramebuffer(validRect, dirtyRect, true);
   MOZ_RELEASE_ASSERT(fbo);  // TODO: make fallible
   mCurrentlyBoundNativeLayer = layer;
 
@@ -347,20 +346,19 @@ void RenderCompositorOGL::AddSurface(wr::NativeSurfaceId aId,
        it != surface.mNativeLayers.end(); ++it) {
     RefPtr<layers::NativeLayer> layer = it->second;
     gfx::IntSize layerSize = layer->GetSize();
-    gfx::IntRect layerRect(
+    gfx::IntPoint layerPosition(
         aPosition.x + surface.mTileSize.width * it->first.mX,
-        aPosition.y + surface.mTileSize.height * it->first.mY, layerSize.width,
-        layerSize.height);
-    gfx::IntRect validRect = layer->GetValidRect() + layerRect.TopLeft();
+        aPosition.y + surface.mTileSize.height * it->first.mY);
+    layer->SetPosition(layerPosition);
     gfx::IntRect clipRect(aClipRect.origin.x, aClipRect.origin.y,
                           aClipRect.size.width, aClipRect.size.height);
-    gfx::IntRect realClip = clipRect.Intersect(validRect);
-    layer->SetPosition(layerRect.TopLeft());
-    layer->SetClipRect(Some(realClip));
+    layer->SetClipRect(Some(clipRect));
     mAddedLayers.AppendElement(layer);
 
-    mAddedPixelCount += layerRect.Area();
-    mAddedClippedPixelCount += realClip.Intersect(layerRect).Area();
+    mAddedPixelCount += layerSize.width * layerSize.height;
+    gfx::IntRect visibleRect =
+        clipRect.Intersect(layer->CurrentSurfaceDisplayRect() + layerPosition);
+    mAddedClippedPixelCount += visibleRect.Area();
   }
 }
 

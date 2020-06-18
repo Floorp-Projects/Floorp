@@ -1353,7 +1353,8 @@ void nsChildView::PaintWindowInContentLayer() {
   EnsureContentLayerForMainThreadPainting();
   mPoolHandle->OnBeginFrame();
   RefPtr<DrawTarget> dt = mContentLayer->NextSurfaceAsDrawTarget(
-      mContentLayerInvalidRegion.ToUnknownRegion(), gfx::BackendType::SKIA);
+      gfx::IntRect({}, mContentLayer->GetSize()), mContentLayerInvalidRegion.ToUnknownRegion(),
+      gfx::BackendType::SKIA);
   if (!dt) {
     return;
   }
