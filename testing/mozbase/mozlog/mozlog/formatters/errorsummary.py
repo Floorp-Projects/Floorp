@@ -34,7 +34,8 @@ class ErrorSummaryFormatter(BaseFormatter):
                 "status": item["status"],
                 "expected": item["expected"],
                 "message": item.get("message"),
-                "stack": item.get("stack")}
+                "stack": item.get("stack"),
+                "known_intermittent": item.get("known_intermittent", [])}
         return self._output("test_result", data)
 
     def _update_results(self, item):
