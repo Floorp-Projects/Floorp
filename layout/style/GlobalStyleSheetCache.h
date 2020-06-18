@@ -46,14 +46,6 @@ class GlobalStyleSheetCache final : public nsIObserver,
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
-  StyleSheet* GetGeckoViewSheet() {
-#ifdef ANDROID
-    return GeckoViewSheet();
-#else
-    return nullptr;
-#endif
-  }
-
   StyleSheet* GetUserContentSheet();
   StyleSheet* GetUserChromeSheet();
   StyleSheet* ChromePreferenceSheet();

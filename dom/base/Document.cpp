@@ -2811,12 +2811,6 @@ void Document::FillStyleSetUserAndUASheets() {
   mStyleSet->AppendStyleSheet(*cache->ScrollbarsSheet());
   mStyleSet->AppendStyleSheet(*cache->PluginProblemSheet());
 
-  if (StyleSheet* sheet = cache->GetGeckoViewSheet()) {
-    if (!StaticPrefs::widget_disable_native_theme_for_content()) {
-      mStyleSet->AppendStyleSheet(*sheet);
-    }
-  }
-
   for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
     mStyleSet->AppendStyleSheet(*sheet);
   }
