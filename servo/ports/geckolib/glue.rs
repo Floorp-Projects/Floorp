@@ -5495,7 +5495,7 @@ fn create_context_for_animation<'a>(
 ) -> Context<'a> {
     Context {
         builder: StyleBuilder::for_animation(per_doc_data.stylist.device(), style, parent_style),
-        font_metrics_provider: font_metrics_provider,
+        font_metrics_provider,
         cached_system_font: None,
         in_media_query: false,
         quirks_mode: per_doc_data.stylist.quirks_mode(),
@@ -6359,7 +6359,7 @@ pub extern "C" fn Servo_HasPendingRestyleAncestor(
     let mut has_yet_to_be_styled = false;
     let mut element = Some(GeckoElement(element));
     while let Some(e) = element {
-        if e.has_animations() {
+        if e.has_any_animation() {
             return true;
         }
 
