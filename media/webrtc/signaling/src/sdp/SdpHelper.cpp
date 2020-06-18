@@ -668,28 +668,6 @@ void SdpHelper::AddCommonExtmaps(
   }
 }
 
-SdpHelper::MsectionBundleType SdpHelper::GetMsectionBundleType(
-    const Sdp& sdp, uint16_t level, BundledMids& bundledMids,
-    std::string* masterMid) const {
-  const SdpMediaSection& msection = sdp.GetMediaSection(level);
-  if (msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute)) {
-    std::string mid(msection.GetAttributeList().GetMid());
-    if (bundledMids.count(mid)) {
-      const SdpMediaSection* masterBundleMsection(bundledMids[mid]);
-      if (msection.GetLevel() != masterBundleMsection->GetLevel()) {
-        return kSlaveBundle;
-      }
-
-      // allow the caller not to care about the masterMid
-      if (masterMid) {
-        *masterMid = mid;
-      }
-      return kMasterBundle;
-    }
-  }
-  return kNoBundle;
-}
-
 static bool AttributeListMatch(const SdpAttributeList& list1,
                                const SdpAttributeList& list2) {
   // TODO: Consider adding telemetry in this function to record which
