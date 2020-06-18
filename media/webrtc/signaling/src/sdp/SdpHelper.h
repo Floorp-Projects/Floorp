@@ -24,8 +24,6 @@ class Sdp;
 
 class SdpHelper {
  public:
-  enum MsectionBundleType { kNoBundle, kSlaveBundle, kMasterBundle };
-
   // Takes a std::string* into which error strings will be written for the
   // lifetime of the SdpHelper.
   explicit SdpHelper(std::string* errorDest) : mLastError(*errorDest) {}
@@ -72,9 +70,6 @@ class SdpHelper {
                            uint16_t defaultRtcpCandidatePort,
                            SdpMediaSection* msection);
   void SetupMsidSemantic(const std::vector<std::string>& msids, Sdp* sdp) const;
-  MsectionBundleType GetMsectionBundleType(const Sdp& sdp, uint16_t level,
-                                           BundledMids& bundledMids,
-                                           std::string* masterMid) const;
 
   std::string GetCNAME(const SdpMediaSection& msection) const;
 
