@@ -3889,9 +3889,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                      WidgetEvent* aEvent,
                                      nsIFrame* aTargetFrame,
                                      nsEventStatus* aStatus) {
-  // XXXedgar, we should not allow to update cursor if the mouse is over a
-  // fission OOP iframe.
-  if (aTargetFrame && IsTopLevelRemoteTarget(aTargetFrame->GetContent())) {
+  if (aTargetFrame && IsRemoteTarget(aTargetFrame->GetContent())) {
     return;
   }
 
