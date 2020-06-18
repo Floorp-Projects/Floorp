@@ -36,18 +36,16 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 class OriginVerifierFeatureTest {
 
-    private val apiKey = "XXXXXXXXX"
-
     @Test
     fun `verify fails if no creatorPackageName is saved`() = runBlockingTest {
-        val feature = OriginVerifierFeature(mock(), mock(), apiKey, mock())
+        val feature = OriginVerifierFeature(mock(), mock(), mock())
 
         assertFalse(feature.verify(CustomTabState(), mock(), RELATION_HANDLE_ALL_URLS, mock()))
     }
 
     @Test
     fun `verify returns existing relationship`() = runBlockingTest {
-        val feature = OriginVerifierFeature(mock(), mock(), apiKey, mock())
+        val feature = OriginVerifierFeature(mock(), mock(), mock())
         val origin = "https://example.com".toUri()
         val state = CustomTabState(
             creatorPackageName = "com.example.twa",
@@ -66,7 +64,7 @@ class OriginVerifierFeatureTest {
     fun `verify checks new relationships`() = runBlockingTest {
         val store: CustomTabsServiceStore = mock()
         val verifier: OriginVerifier = mock()
-        val feature = spy(OriginVerifierFeature(mock(), mock(), apiKey) { store.dispatch(it) })
+        val feature = spy(OriginVerifierFeature(mock(), mock()) { store.dispatch(it) })
         doReturn(verifier).`when`(feature).getVerifier(anyString(), anyInt())
         doReturn(true).`when`(verifier).verifyOrigin(any())
 

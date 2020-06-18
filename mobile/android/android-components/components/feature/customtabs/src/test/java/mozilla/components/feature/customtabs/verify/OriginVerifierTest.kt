@@ -11,12 +11,10 @@ import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Response
 import mozilla.components.service.digitalassetlinks.AssetDescriptor
 import mozilla.components.service.digitalassetlinks.Relation
 import mozilla.components.service.digitalassetlinks.RelationChecker
-import mozilla.components.support.test.any
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -31,12 +29,10 @@ import org.mockito.MockitoAnnotations.initMocks
 @ExperimentalCoroutinesApi
 class OriginVerifierTest {
 
-    private val apiKey = "XXXXXXXXX"
     private val androidAsset = AssetDescriptor.Android(
         packageName = "com.app.name",
         sha256CertFingerprint = "AA:BB:CC:10:20:30:01:02"
     )
-    @Mock private lateinit var client: Client
     @Mock private lateinit var packageManager: PackageManager
     @Mock private lateinit var response: Response
     @Mock private lateinit var body: Response.Body
@@ -47,7 +43,6 @@ class OriginVerifierTest {
     fun setup() {
         initMocks(this)
 
-        doReturn(response).`when`(client).fetch(any())
         doReturn(body).`when`(response).body
         doReturn(200).`when`(response).status
         doReturn("{\"linked\":true}").`when`(body).string()
@@ -76,8 +71,6 @@ class OriginVerifierTest {
             "com.app.name",
             relation,
             packageManager,
-            client,
-            apiKey,
             checker
         ))
         doReturn(androidAsset).`when`(verifier).androidAsset

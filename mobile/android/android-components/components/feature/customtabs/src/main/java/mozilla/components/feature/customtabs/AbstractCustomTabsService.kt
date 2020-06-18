@@ -17,10 +17,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.feature.OriginVerifierFeature
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.customtabs.store.SaveCreatorPackageNameAction
+import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -37,18 +37,13 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     private val scope = MainScope()
 
     abstract val engine: Engine
-    open val customTabsServiceStore: CustomTabsServiceStore? = null
-    open val httpClient: Client? = null
-    open val apiKey: String? = null
+    abstract val customTabsServiceStore: CustomTabsServiceStore
+    open val relationChecker: RelationChecker? = null
 
     @VisibleForTesting
     internal val verifier by lazy {
-        val client = httpClient
-        val store = customTabsServiceStore
-        if (client != null && store != null) {
-            OriginVerifierFeature(client, packageManager, apiKey) { store.dispatch(it) }
-        } else {
-            null
+        relationChecker?.let { checker ->
+            OriginVerifierFeature(packageManager, checker) { customTabsServiceStore.dispatch(it) }
         }
     }
 
@@ -79,7 +74,7 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
         val packageName = packageManager.getPackagesForUid(uid)?.singleOrNull()
 
         if (!packageName.isNullOrEmpty()) {
-            customTabsServiceStore?.dispatch(SaveCreatorPackageNameAction(sessionToken, packageName))
+            customTabsServiceStore.dispatch(SaveCreatorPackageNameAction(sessionToken, packageName))
         }
         return true
     }
@@ -117,7 +112,7 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
         extras: Bundle?
     ): Boolean {
         val verifier = verifier
-        val state = customTabsServiceStore?.state?.tabs?.getOrElse(sessionToken) { null }
+        val state = customTabsServiceStore.state.tabs[sessionToken]
         return if (verifier != null && state != null) {
             scope.launch(Main) {
                 val result = verifier.verify(state, sessionToken, relation, origin)
