@@ -60,9 +60,7 @@ class HistoryFragmentStoreTest {
     fun finishSync() = runBlocking {
         val initialState = HistoryFragmentState(
             items = listOf(),
-            mode = HistoryFragmentState.Mode.Syncing,
-            pendingDeletionIds = emptySet(),
-            isDeletingItems = false
+            mode = HistoryFragmentState.Mode.Syncing
         )
         val store = HistoryFragmentStore(initialState)
 
@@ -73,22 +71,16 @@ class HistoryFragmentStoreTest {
 
     private fun emptyDefaultState(): HistoryFragmentState = HistoryFragmentState(
         items = listOf(),
-        mode = HistoryFragmentState.Mode.Normal,
-        pendingDeletionIds = emptySet(),
-        isDeletingItems = false
+        mode = HistoryFragmentState.Mode.Normal
     )
 
     private fun oneItemEditState(): HistoryFragmentState = HistoryFragmentState(
         items = listOf(),
-        mode = HistoryFragmentState.Mode.Editing(setOf(historyItem)),
-        pendingDeletionIds = emptySet(),
-        isDeletingItems = false
+        mode = HistoryFragmentState.Mode.Editing(setOf(historyItem))
     )
 
     private fun twoItemEditState(): HistoryFragmentState = HistoryFragmentState(
         items = listOf(),
-        mode = HistoryFragmentState.Mode.Editing(setOf(historyItem, newHistoryItem)),
-        pendingDeletionIds = emptySet(),
-        isDeletingItems = false
+        mode = HistoryFragmentState.Mode.Editing(setOf(historyItem, newHistoryItem))
     )
 }

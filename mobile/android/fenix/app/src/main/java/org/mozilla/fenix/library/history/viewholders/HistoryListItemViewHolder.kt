@@ -11,13 +11,13 @@ import kotlinx.android.synthetic.main.library_site_item.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
+import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.history.HistoryFragmentState
 import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryItem
 import org.mozilla.fenix.library.history.HistoryItemMenu
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
-import org.mozilla.fenix.utils.Do
 
 class HistoryListItemViewHolder(
     view: View,
@@ -44,15 +44,8 @@ class HistoryListItemViewHolder(
         item: HistoryItem,
         timeGroup: HistoryItemTimeGroup?,
         showDeleteButton: Boolean,
-        mode: HistoryFragmentState.Mode,
-        isPendingDeletion: Boolean = false
+        mode: HistoryFragmentState.Mode
     ) {
-        if (isPendingDeletion) {
-            itemView.history_layout.visibility = View.GONE
-        } else {
-            itemView.history_layout.visibility = View.VISIBLE
-        }
-
         itemView.history_layout.titleView.text = item.title
         itemView.history_layout.urlView.text = item.url
 

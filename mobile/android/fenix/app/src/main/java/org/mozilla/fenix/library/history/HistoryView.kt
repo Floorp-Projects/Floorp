@@ -90,6 +90,7 @@ class HistoryView(
     val view: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_history, container, true)
 
+    private var items: List<HistoryItem> = listOf()
     var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
         private set
 
@@ -115,15 +116,12 @@ class HistoryView(
     fun update(state: HistoryFragmentState) {
         val oldMode = mode
 
-        view.progress_bar.isVisible = state.isDeletingItems
+        view.progress_bar.isVisible = state.mode === HistoryFragmentState.Mode.Deleting
         view.swipe_refresh.isRefreshing = state.mode === HistoryFragmentState.Mode.Syncing
         view.swipe_refresh.isEnabled =
             state.mode === HistoryFragmentState.Mode.Normal || state.mode === HistoryFragmentState.Mode.Syncing
+        items = state.items
         mode = state.mode
-
-        historyAdapter.updatePendingDeletionIds(state.pendingDeletionIds)
-
-        updateEmptyState(state.pendingDeletionIds.size != historyAdapter.currentList?.size)
 
         historyAdapter.updateMode(state.mode)
         val first = layoutManager.findFirstVisibleItemPosition()

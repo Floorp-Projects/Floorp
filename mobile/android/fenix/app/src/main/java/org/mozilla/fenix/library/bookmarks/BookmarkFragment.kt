@@ -274,17 +274,13 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     }
 
     private fun deleteMulti(selected: Set<BookmarkNode>, eventType: Event = Event.RemoveBookmarks) {
-        selected.forEach { if (it.type == BookmarkNodeType.FOLDER) {
-            showRemoveFolderDialog(selected)
-            return
-        } }
         updatePendingBookmarksToDelete(selected)
 
         pendingBookmarkDeletionJob = getDeleteOperation(eventType)
 
         val message = when (eventType) {
             is Event.RemoveBookmarks -> {
-                getRemoveBookmarksSnackBarMessage(selected, containsFolders = false)
+                getRemoveBookmarksSnackBarMessage(selected)
             }
             is Event.RemoveBookmarkFolder,
             is Event.RemoveBookmark -> {
@@ -305,16 +301,9 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         )
     }
 
-    private fun getRemoveBookmarksSnackBarMessage(
-        selected: Set<BookmarkNode>,
-        containsFolders: Boolean
-    ): String {
+    private fun getRemoveBookmarksSnackBarMessage(selected: Set<BookmarkNode>): String {
         return if (selected.size > 1) {
-            return if (containsFolders) {
-                getString(R.string.bookmark_deletion_multiple_snackbar_message_3)
-            } else {
-                getString(R.string.bookmark_deletion_multiple_snackbar_message_2)
-            }
+            getString(R.string.bookmark_deletion_multiple_snackbar_message_2)
         } else {
             val bookmarkNode = selected.first()
             getString(
@@ -325,38 +314,29 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         }
     }
 
-    private fun getDialogConfirmationMessage(selected: Set<BookmarkNode>): String {
-        return if (selected.size > 1) {
-            getString(R.string.bookmark_delete_multiple_folders_confirmation_dialog, getString(R.string.app_name))
-        } else {
-            getString(R.string.bookmark_delete_folder_confirmation_dialog)
-        }
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _bookmarkInteractor = null
     }
 
-    private fun showRemoveFolderDialog(selected: Set<BookmarkNode>) {
+    private fun showRemoveFolderDialog(selected: BookmarkNode) {
         activity?.let { activity ->
             AlertDialog.Builder(activity).apply {
-                val dialogConfirmationMessage = getDialogConfirmationMessage(selected)
-                setMessage(dialogConfirmationMessage)
+                setMessage(R.string.bookmark_delete_folder_confirmation_dialog)
                 setNegativeButton(R.string.delete_browsing_data_prompt_cancel) { dialog: DialogInterface, _ ->
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
-                    updatePendingBookmarksToDelete(selected)
+                    updatePendingBookmarksToDelete(setOf(selected))
                     pendingBookmarkDeletionJob = getDeleteOperation(Event.RemoveBookmarkFolder)
                     dialog.dismiss()
-                    val snackbarMessage = getRemoveBookmarksSnackBarMessage(selected, containsFolders = true)
+                    val message = getDeleteDialogString(selected)
                     viewLifecycleOwner.lifecycleScope.allowUndo(
                         requireView(),
-                        snackbarMessage,
+                        message,
                         getString(R.string.bookmark_undo_deletion),
                         {
-                            undoPendingDeletion(selected)
+                            undoPendingDeletion(setOf(selected))
                         },
                         operation = getDeleteOperation(Event.RemoveBookmarkFolder)
                     )
@@ -371,6 +351,14 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         pendingBookmarksToDelete.addAll(selected)
         val bookmarkTree = sharedViewModel.selectedFolder!! - pendingBookmarksToDelete
         bookmarkInteractor.onBookmarksChanged(bookmarkTree)
+    }
+
+    private fun getDeleteDialogString(selected: BookmarkNode): String {
+        return getString(
+            R.string.bookmark_deletion_snackbar_message,
+            context?.components?.publicSuffixList?.let { selected.url?.toShortUrl(it) }
+                ?: selected.title
+        )
     }
 
     private suspend fun undoPendingDeletion(selected: Set<BookmarkNode>) {
