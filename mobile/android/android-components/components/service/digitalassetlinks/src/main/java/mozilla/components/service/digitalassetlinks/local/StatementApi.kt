@@ -63,9 +63,13 @@ class StatementApi(private val httpClient: Client) : StatementListFetcher {
             connectTimeout = TIMEOUT,
             readTimeout = TIMEOUT
         )
-        val response = httpClient.safeFetch(request)?.let {
-            val contentTypes = it.headers.getAll(CONTENT_TYPE)
-            if (CONTENT_TYPE_APPLICATION_JSON in contentTypes) it else null
+        val response = httpClient.safeFetch(request)?.let { res ->
+            val contentTypes = res.headers.getAll(CONTENT_TYPE)
+            if (contentTypes.any { it.contains(CONTENT_TYPE_APPLICATION_JSON, ignoreCase = true) }) {
+                res
+            } else {
+                null
+            }
         }
 
         val statements = response?.let { parseStatementResponse(response) }.orEmpty()
