@@ -253,6 +253,10 @@ function compare_hpkp_files {
     echo "${HPKP_PRELOAD_OUTPUT} is empty. That's less good." >&2
     exit 52
   fi
+  if ! grep kPreloadPKPinsExpirationTime "${HPKP_PRELOAD_OUTPUT}"; then
+    echo "${HPKP_PRELOAD_OUTPUT} is missing an expiration time. Truncated?" >&2
+    exit 53
+  fi
   cd "${BASEDIR}"
 
   echo "INFO: diffing old/new HPKP preload lists..."
