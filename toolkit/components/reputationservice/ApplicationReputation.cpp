@@ -214,6 +214,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".deb",         // Linux package
     ".definition",  // Automator action
     ".desktop",     // A shortcut that runs other files
+    //".der", exec  // Signed certificate
     ".dex",         // Android
     ".dht",         // HTML
     ".dhtm",        // HTML

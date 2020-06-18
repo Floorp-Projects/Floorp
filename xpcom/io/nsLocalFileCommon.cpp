@@ -23,7 +23,7 @@
 // Extensions that should be considered 'executable', ie will not allow users
 // to open immediately without first saving to disk, and potentially provoke
 // other warnings. PLEASE read the longer comment in
-// toolkit/components/reputationservice/ApplicationReputation.h
+// toolkit/components/reputationservice/ApplicationReputation.cpp
 // before modifying this list!
 /* static */
 const char* const sExecutableExts[] = {
@@ -42,6 +42,7 @@ const char* const sExecutableExts[] = {
   ".com",
   ".cpl",
   ".crt",
+  ".der",
   ".exe",
   ".fxp",         // FoxPro compiled app
   ".hlp",

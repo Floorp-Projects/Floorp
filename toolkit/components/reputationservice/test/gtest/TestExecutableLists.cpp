@@ -56,6 +56,7 @@ static const char* const kTestFileExtensions[] = {
     ".dc42",           // Apple DiskCopy Image
     ".deb",            // Linux package
     ".definition",     // Automator action
+    ".der",            // Signed certificate file
     ".desktop",        // A shortcut that runs other files
     ".dex",            // Android
     ".dht",            // HTML
