@@ -173,6 +173,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
       },
     });
     this.dbg = this.makeDebugger();
+    this.onResourceAvailable = this.onResourceAvailable.bind(this);
   },
 
   get window() {
@@ -240,5 +241,9 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
       this._descriptorActorPool.removeActor(actor);
     }
     delete this._extraActors[name];
+  },
+
+  onResourceAvailable(resources) {
+    this.emit("resource-available-form", resources);
   },
 });

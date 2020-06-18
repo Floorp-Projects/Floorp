@@ -8,7 +8,7 @@
  * Check that conditions are respected when specified in a logpoint.
  */
 
-const ConsoleMessages = require("devtools/server/actors/resources/console-messages");
+const Resources = require("devtools/server/actors/resources/index");
 
 add_task(
   threadFrontTest(async ({ threadActor, threadFront, debuggee, client }) => {
@@ -21,13 +21,18 @@ add_task(
         lastExpression = expression;
       },
     };
-    // But both tabs and workers will be going through the ConsoleMessages module
-    ConsoleMessages.watch(targetActor, {
-      onAvailable: messages => {
-        if (messages.length > 0) {
-          lastMessage = messages[0].message;
-        }
-      },
+    // But both tabs and processes will be going through the ConsoleMessages module
+    // We force watching for console message first,
+    Resources.watchTargetResources(targetActor, [
+      Resources.TYPES.CONSOLE_MESSAGE,
+    ]);
+    // And then listen for resource RDP event.
+    // Bug 1646677: But we should probably migrate this test to ResourceWatcher so that
+    // we don't have to hack the server side via Resource.watchTargetResources call.
+    targetActor.on("resource-available-form", resources => {
+      if (resources[0].resourceType == Resources.TYPES.CONSOLE_MESSAGE) {
+        lastMessage = resources[0].message;
+      }
     });
 
     const packet = await executeOnNextTickAndWaitForPause(

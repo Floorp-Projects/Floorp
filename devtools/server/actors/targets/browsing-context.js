@@ -310,67 +310,41 @@ const browsingContextTargetPrototype = {
     this._onWorkerTargetActorListChanged = this._onWorkerTargetActorListChanged.bind(
       this
     );
+    this.onResourceAvailable = this.onResourceAvailable.bind(this);
 
     TargetActorRegistry.registerTargetActor(this);
 
-    // Record the list of all resource types we are currently effectively listening to.
-    // Resource types are strings.
-    this._watchedResources = new Set();
+    // Map of all resource watchers.
+    // Keys are resource types
+    // Values are instances of resource watcher
+    this._resourceWatchers = new Map();
   },
 
   /**
-   * Start watching for a new list of resource types.
-   * This will also emit all already existing resources before resolving.
+   * These two methods will create and destroy resource watchers
+   * for each resource type. This will end up calling `onResourceAvailable`
+   * whenever new resources are observed.
    *
-   * This is public interface as this may be called by DevToolsFrameChild.
-   *
-   * @param Array<String> resourceTypes
-   *        List of all type of resource to listen to.
+   * We have these shortcut methods in this module, because this is called from DevToolsFrameChild
+   * which is a JSM and doesn't have a reference to a DevTools Loader.
    */
   watchTargetResources(resourceTypes) {
-    for (const resourceType of resourceTypes) {
-      // Ignore resources we're already listening to
-      if (this._watchedResources.has(resourceType)) {
-        continue;
-      }
-      this._watchedResources.add(resourceType);
-      this._watchResource(resourceType);
-    }
+    return Resources.watchTargetResources(this, resourceTypes);
+  },
+
+  unwatchTargetResources(resourceTypes) {
+    return Resources.unwatchTargetResources(this, resourceTypes);
   },
 
   /**
-   * Stop watching for a list of resource types.
+   * Called by Watchers, when new resources are available.
    *
-   * This is public interface as this may be called by DevToolsFrameChild.
-   *
-   * @param Array<String> resourceTypes
-   *        List of all type of resource to stop listening to.
+   * @param Array<json> resources
+   *        List of all available resources. A resource is a JSON object piped over to the client.
+   *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
    */
-  unwatchTargetResources(resourceTypes) {
-    for (const resourceType of resourceTypes) {
-      if (!this._watchedResources.has(resourceType)) {
-        continue;
-      }
-      this._watchedResources.delete(resourceType);
-      this._unwatchResource(resourceType);
-    }
-  },
-
-  _watchResource(resourceType) {
-    if (!(resourceType in Resources.LISTENERS)) {
-      throw new Error(`Unsupported resource type '${resourceType}'`);
-    }
-    const onAvailable = resources => {
-      this.emit("resource-available-form", resources);
-    };
-    Resources.LISTENERS[resourceType].watch(this, { onAvailable });
-  },
-
-  _unwatchResource(resourceType) {
-    if (!(resourceType in Resources.LISTENERS)) {
-      throw new Error(`Unsupported resource type '${resourceType}'`);
-    }
-    Resources.LISTENERS[resourceType].unwatch(this);
+  onResourceAvailable(resources) {
+    this.emit("resource-available-form", resources);
   },
 
   traits: null,
@@ -627,8 +601,8 @@ const browsingContextTargetPrototype = {
     this.exit();
     Actor.prototype.destroy.call(this);
     TargetActorRegistry.unregisterTargetActor(this);
-    if (this._watchedResources) {
-      this.unwatchTargetResources([...this._watchedResources]);
+    if (this._resourceWatchers) {
+      this.unwatchTargetResources([...this._resourceWatchers.keys()]);
     }
   },
 
