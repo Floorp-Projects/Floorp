@@ -67,10 +67,7 @@ python ${topsrcdir}/js/src/tests/non262/String/make-normalize-generateddata-inpu
 
 # Update our moz.build files in config/external/icu, and build a new ICU data
 # file.
-#
-# icu_sources_data.py depends on mozbuild and pymake, neither of which works
-# with Python 3 yet.  ಠ_ಠ
-python2 `dirname $0`/icu_sources_data.py $topsrcdir
+python `dirname $0`/icu_sources_data.py $topsrcdir
 
 hg addremove "${icu_dir}/source" "${icu_dir}/GIT-INFO" ${topsrcdir}/config/external/icu
 
