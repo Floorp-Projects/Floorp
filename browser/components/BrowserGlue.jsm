@@ -4923,11 +4923,9 @@ var AboutHomeStartupCache = {
   // we want to invalidate any pre-existing caches. We do this by setting
   // this meta key in the nsICacheEntry for the page.
   //
-  // If you want to invalidate the cache, simply bump the CACHE_VERSION,
-  // and the existing cache will be ignored and discarded, and a new one
-  // eventually created.
+  // The version is currently set to the build ID, meaning that the cache
+  // is invalidated after every upgrade (like the main startup cache).
   CACHE_VERSION_META_KEY: "version",
-  CACHE_VERSION: 1,
 
   LOG_NAME: "AboutHomeStartupCache",
 
@@ -5246,7 +5244,7 @@ var AboutHomeStartupCache = {
 
     this.log.info("Version retrieved is", version);
 
-    if (parseInt(version, 10) != this.CACHE_VERSION) {
+    if (version != Services.appinfo.appBuildID) {
       this.log.info("Version does not match! Dooming and closing streams.\n");
       // This cache is no good - doom it, and prepare for a new one.
       this.clearCache();
@@ -5415,14 +5413,14 @@ var AboutHomeStartupCache = {
             try {
               this._cacheEntry.setMetaDataElement(
                 "version",
-                String(this.CACHE_VERSION)
+                Services.appinfo.appBuildID
               );
             } catch (e) {
               this.log.error("Failed to write version.");
               reject(e);
               return;
             }
-            this.log.trace(`Version is set to ${this.CACHE_VERSION}.`);
+            this.log.trace(`Version is set to ${Services.appinfo.appBuildID}.`);
             this.log.info("Caching of page and script is done.");
             resolve();
           }

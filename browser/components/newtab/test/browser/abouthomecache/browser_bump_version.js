@@ -14,6 +14,11 @@ add_task(async function test_bump_version() {
     await simulateRestart(browser);
 
     let cacheEntry = await AboutHomeStartupCache.ensureCacheEntry();
+    Assert.equal(
+      cacheEntry.getMetaDataElement("version"),
+      Services.appinfo.appBuildID,
+      "Cache entry should be versioned on the build ID"
+    );
     cacheEntry.setMetaDataElement("version", "somethingnew");
     await simulateRestart(browser, false /* withAutoShutdownWrite */);
     await ensureDynamicAboutHome(browser);
