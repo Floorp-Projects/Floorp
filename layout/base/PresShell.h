@@ -1461,6 +1461,8 @@ class PresShell final : public nsStubDocumentObserver,
    */
   void MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty);
 
+  void MaybeReflowForInflationScreenSizeChange();
+
   // This function handles all the work after VisualViewportSize is set
   // or reset.
   void CompleteChangeToVisualViewportSize();

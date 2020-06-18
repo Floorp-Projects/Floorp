@@ -148,7 +148,9 @@ void GeckoMVMContext::SetResolutionAndScaleTo(float aResolution,
 
 void GeckoMVMContext::SetVisualViewportSize(const CSSSize& aSize) {
   MOZ_ASSERT(mPresShell);
-  nsLayoutUtils::SetVisualViewportSize(mPresShell, aSize);
+  mPresShell->SetVisualViewportSize(
+      nsPresContext::CSSPixelsToAppUnits(aSize.width),
+      nsPresContext::CSSPixelsToAppUnits(aSize.height));
 }
 
 void GeckoMVMContext::PostVisualViewportResizeEventByDynamicToolbar() {

@@ -2877,13 +2877,6 @@ class nsLayoutUtils {
   static bool HasDocumentLevelListenersForApzAwareEvents(PresShell* aPresShell);
 
   /**
-   * Set the viewport size for the purpose of clamping the scroll position
-   * for the root scroll frame of this document
-   * (see nsIDOMWindowUtils.setVisualViewportSize).
-   */
-  static void SetVisualViewportSize(PresShell* aPresShell, CSSSize aSize);
-
-  /**
    * Returns true if the given scroll origin is "higher priority" than APZ.
    * In general any content programmatic scrolls (e.g. scrollTo calls) are
    * higher priority, and take precedence over APZ scrolling. This function

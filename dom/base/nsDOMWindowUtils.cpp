@@ -3167,7 +3167,8 @@ nsDOMWindowUtils::SetVisualViewportSize(float aWidth, float aHeight) {
     return NS_ERROR_FAILURE;
   }
 
-  nsLayoutUtils::SetVisualViewportSize(presShell, CSSSize(aWidth, aHeight));
+  presShell->SetVisualViewportSize(nsPresContext::CSSPixelsToAppUnits(aWidth),
+                                   nsPresContext::CSSPixelsToAppUnits(aHeight));
 
   return NS_OK;
 }
