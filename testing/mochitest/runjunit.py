@@ -209,6 +209,10 @@ class JUnitTestRunner(MochitestDesktop):
             env["MOZ_WEBRENDER"] = '1'
         else:
             env["MOZ_WEBRENDER"] = '0'
+        # Add additional env variables
+        for [key, value] in [p.split('=', 1) for p in self.options.add_env]:
+            env[key] = value
+
         for (env_count, (env_key, env_val)) in enumerate(env.iteritems()):
             cmd = cmd + " -e env%d %s=%s" % (env_count, env_key, env_val)
         # runner
@@ -396,6 +400,9 @@ class JunitArgumentParser(argparse.ArgumentParser):
                           help="adb serial number of remote device. This is required "
                                "when more than one device is connected to the host. "
                                "Use 'adb devices' to see connected devices. ")
+        self.add_argument("--setenv",
+                          dest='add_env', action='append', default=[],
+                          help='Set target environment variable, like FOO=BAR')
         self.add_argument("--remoteTestRoot",
                           action="store",
                           type=str,
