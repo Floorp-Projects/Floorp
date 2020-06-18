@@ -135,6 +135,9 @@
 #elif defined __m68k__
 #  define RETURN_INSTR 0x4E754E75 /* rts; rts */
 
+#elif defined __riscv
+#  define RETURN_INSTR 0x80828082 /* ret; ret */
+
 #elif defined __sparc || defined __sparcv9
 #  define RETURN_INSTR 0x81c3e008 /* retl */
 
