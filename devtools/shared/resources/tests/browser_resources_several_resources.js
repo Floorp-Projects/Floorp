@@ -19,7 +19,6 @@ add_task(async function() {
   await pushPref("devtools.browsertoolbox.fission", true);
 
   // Open a test tab
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   const tab = await addTab("data:text/html,Root Node tests");
 
   const {
