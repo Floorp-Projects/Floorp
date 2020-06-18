@@ -3,161 +3,120 @@
 from __future__ import absolute_import, print_function
 
 import os
-import shutil
 import tarfile
 import tempfile
-import unittest
 import zipfile
 
 import mozunit
+import pytest
 
 import mozfile
 
 import stubs
 
 
-class TestExtract(unittest.TestCase):
-    """test extracting archives"""
+@pytest.fixture
+def ensure_directory_contents():
+    """ensure the directory contents match"""
 
-    def ensure_directory_contents(self, directory):
-        """ensure the directory contents match"""
+    def inner(directory):
         for f in stubs.files:
             path = os.path.join(directory, *f)
             exists = os.path.exists(path)
             if not exists:
                 print("%s does not exist" % (os.path.join(f)))
-            self.assertTrue(exists)
+            assert exists
             if exists:
                 contents = open(path).read().strip()
-                self.assertTrue(contents == f[-1])
+                assert contents == f[-1]
 
-    def test_extract_zipfile(self):
-        """test extracting a zipfile"""
-        _zipfile = self.create_zip()
-        self.assertTrue(os.path.exists(_zipfile))
-        try:
-            dest = tempfile.mkdtemp()
-            try:
-                mozfile.extract_zip(_zipfile, dest)
-                self.ensure_directory_contents(dest)
-            finally:
-                shutil.rmtree(dest)
-        finally:
-            os.remove(_zipfile)
+    return inner
 
-    def test_extract_zipfile_missing_file_attributes(self):
-        """if files do not have attributes set the default permissions have to be inherited."""
-        _zipfile = os.path.join(os.path.dirname(__file__), 'files', 'missing_file_attributes.zip')
-        self.assertTrue(os.path.exists(_zipfile))
+
+@pytest.fixture(scope="module")
+def tarpath(tmpdir_factory):
+    """create a stub tarball for testing"""
+    tmpdir = tmpdir_factory.mktemp("test_extract")
+
+    tempdir = tmpdir.join("stubs").strpath
+    stubs.create_stub(tempdir)
+    filename = tmpdir.join('bundle.tar').strpath
+    archive = tarfile.TarFile(filename, mode='w')
+    for path in stubs.files:
+        archive.add(os.path.join(tempdir, *path), arcname=os.path.join(*path))
+    archive.close()
+
+    assert os.path.exists(filename)
+    return filename
+
+
+@pytest.fixture(scope="module")
+def zippath(tmpdir_factory):
+    """create a stub zipfile for testing"""
+    tmpdir = tmpdir_factory.mktemp("test_extract")
+
+    tempdir = tmpdir.join("stubs").strpath
+    stubs.create_stub(tempdir)
+    filename = tmpdir.join('bundle.zip').strpath
+    archive = zipfile.ZipFile(filename, mode='w')
+    for path in stubs.files:
+        archive.write(os.path.join(tempdir, *path), arcname=os.path.join(*path))
+    archive.close()
+
+    assert os.path.exists(filename)
+    return filename
+
+
+@pytest.fixture(scope="module", params=["tar", "zip"])
+def bundlepath(request, tarpath, zippath):
+    if request.param == "tar":
+        return tarpath
+    else:
+        return zippath
+
+
+def test_extract(tmpdir, bundlepath, ensure_directory_contents):
+    """test extracting a zipfile"""
+    dest = tmpdir.mkdir('dest').strpath
+    mozfile.extract(bundlepath, dest)
+    ensure_directory_contents(dest)
+
+
+def test_extract_zipfile_missing_file_attributes(tmpdir):
+    """if files do not have attributes set the default permissions have to be inherited."""
+    _zipfile = os.path.join(os.path.dirname(__file__), 'files', 'missing_file_attributes.zip')
+    assert os.path.exists(_zipfile)
+    dest = tmpdir.mkdir('dest').strpath
+
+    # Get the default file permissions for the user
+    fname = os.path.join(dest, 'foo')
+    with open(fname, 'w'):
+        pass
+    default_stmode = os.stat(fname).st_mode
+
+    files = mozfile.extract_zip(_zipfile, dest)
+    for filename in files:
+        assert os.stat(os.path.join(dest, filename)).st_mode == default_stmode
+
+
+def test_extract_non_archive(tarpath, zippath):
+    """test the generalized extract function"""
+    # test extracting some non-archive; this should fail
+    fd, filename = tempfile.mkstemp()
+    os.write(fd, b'This is not a zipfile or tarball')
+    os.close(fd)
+    exception = None
+
+    try:
         dest = tempfile.mkdtemp()
-        try:
-            # Get the default file permissions for the user
-            fname = os.path.join(dest, 'foo')
-            with open(fname, 'w'):
-                pass
-            default_stmode = os.stat(fname).st_mode
+        mozfile.extract(filename, dest)
+    except Exception as exc:
+        exception = exc
+    finally:
+        os.remove(filename)
+        os.rmdir(dest)
 
-            files = mozfile.extract_zip(_zipfile, dest)
-            for filename in files:
-                self.assertEqual(os.stat(os.path.join(dest, filename)).st_mode,
-                                 default_stmode)
-        finally:
-            shutil.rmtree(dest)
-
-    def test_extract_tarball(self):
-        """test extracting a tarball"""
-        tarball = self.create_tarball()
-        self.assertTrue(os.path.exists(tarball))
-        try:
-            dest = tempfile.mkdtemp()
-            try:
-                mozfile.extract_tarball(tarball, dest)
-                self.ensure_directory_contents(dest)
-            finally:
-                shutil.rmtree(dest)
-        finally:
-            os.remove(tarball)
-
-    def test_extract(self):
-        """test the generalized extract function"""
-
-        # test extracting a tarball
-        tarball = self.create_tarball()
-        self.assertTrue(os.path.exists(tarball))
-        try:
-            dest = tempfile.mkdtemp()
-            try:
-                mozfile.extract(tarball, dest)
-                self.ensure_directory_contents(dest)
-            finally:
-                shutil.rmtree(dest)
-        finally:
-            os.remove(tarball)
-
-        # test extracting a zipfile
-        _zipfile = self.create_zip()
-        self.assertTrue(os.path.exists(_zipfile))
-        try:
-            dest = tempfile.mkdtemp()
-            try:
-                mozfile.extract_zip(_zipfile, dest)
-                self.ensure_directory_contents(dest)
-            finally:
-                shutil.rmtree(dest)
-        finally:
-            os.remove(_zipfile)
-
-        # test extracting some non-archive; this should fail
-        fd, filename = tempfile.mkstemp()
-        os.write(fd, b'This is not a zipfile or tarball')
-        os.close(fd)
-        exception = None
-
-        try:
-            dest = tempfile.mkdtemp()
-            mozfile.extract(filename, dest)
-        except Exception as exc:
-            exception = exc
-        finally:
-            os.remove(filename)
-            os.rmdir(dest)
-
-        self.assertTrue(isinstance(exception, Exception))
-
-    # utility functions
-
-    def create_tarball(self):
-        """create a stub tarball for testing"""
-        tempdir = stubs.create_stub()
-        filename = tempfile.mktemp(suffix='.tar')
-        archive = tarfile.TarFile(filename, mode='w')
-        try:
-            for path in stubs.files:
-                archive.add(os.path.join(tempdir, *path), arcname=os.path.join(*path))
-        except BaseException:
-            os.remove(archive)
-            raise
-        finally:
-            shutil.rmtree(tempdir)
-        archive.close()
-        return filename
-
-    def create_zip(self):
-        """create a stub zipfile for testing"""
-
-        tempdir = stubs.create_stub()
-        filename = tempfile.mktemp(suffix='.zip')
-        archive = zipfile.ZipFile(filename, mode='w')
-        try:
-            for path in stubs.files:
-                archive.write(os.path.join(tempdir, *path), arcname=os.path.join(*path))
-        except BaseException:
-            os.remove(filename)
-            raise
-        finally:
-            shutil.rmtree(tempdir)
-        archive.close()
-        return filename
+    assert isinstance(exception, Exception)
 
 
 if __name__ == '__main__':
