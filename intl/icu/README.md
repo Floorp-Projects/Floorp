@@ -81,7 +81,7 @@ New ICU versions are announced on the [icu-announce](https://lists.sourceforge.n
 ```bash
 $ cd "$topsrcdir/intl"
 $ # Ensure certain Python modules in the tree are accessible when updating.
-$ export PYTHONPATH="$topsrcdir/build/pymake/:$topsrcdir/python/mozbuild/"
+$ export PYTHONPATH="$topsrcdir/python/mozbuild/"
 $ #               <URL to ICU Git>                       <release tag name>
 $ ./update-icu.sh https://github.com/unicode-org/icu.git release-67-1
 ```
@@ -93,7 +93,7 @@ But usually you'll want to update to the latest commit from the corresponding IC
 ```bash
 $ cd "$topsrcdir/intl"
 $ # Ensure certain Python modules in the tree are accessible when updating.
-$ export PYTHONPATH="$topsrcdir/build/pymake/:$topsrcdir/python/mozbuild/"
+$ export PYTHONPATH="$topsrcdir/python/mozbuild/"
 $ #               <URL to ICU Git>                       <maintenance name>
 $ ./update-icu.sh https://github.com/unicode-org/icu.git maint/maint-67
 ```
