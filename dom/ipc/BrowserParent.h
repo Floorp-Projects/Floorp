@@ -962,8 +962,8 @@ class BrowserParent final : public PBrowserParent,
   // anymore.
   bool mIsDestroyed : 1;
   // True if the cursor changes from the BrowserChild should change the widget
-  // cursor.  This happens whenever the cursor is in the tab's region.
-  bool mTabSetsCursor : 1;
+  // cursor.  This happens whenever the cursor is in the remote target's region.
+  bool mRemoteTargetSetsCursor : 1;
 
   // If this flag is set, then the tab's layers will be preserved even when
   // the tab's docshell is inactive.
