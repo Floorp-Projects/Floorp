@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "data": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string"
+                    },
+                    "value": {},
+                    "xaxis": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "file",
+                    "value",
+                    "xaxis"
+                ]
+            }
+        },
+        "dict": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/data"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "subtest": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "data",
+                "name",
+                "subtest"
+            ]
+        }
+    },
+    "oneOf": [
+        {
+            "$ref": "#/definitions/dict"
+        },
+        {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/dict"
+            }
+        }
+    ]
+}
