@@ -61,6 +61,7 @@ SIGNING_SCOPE_ALIAS_TO_PROJECT = [[
         'mozilla-esr78',
         'comm-beta',
         'comm-esr68',
+        'comm-esr78',
     ])
 ]]
 
@@ -99,6 +100,7 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
         'mozilla-esr78',
         'comm-beta',
         'comm-esr68',
+        'comm-esr78',
     ])
 ]]
 
@@ -141,6 +143,7 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [[
     'release', set([
         'mozilla-release',
         'comm-esr68',
+        'comm-esr78',
     ])
 ], [
     'esr68', set([
