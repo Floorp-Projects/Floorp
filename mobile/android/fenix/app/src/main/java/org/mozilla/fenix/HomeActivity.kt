@@ -84,6 +84,7 @@ import org.mozilla.fenix.settings.search.EditCustomSearchEngineFragmentDirection
 import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
 import org.mozilla.fenix.sync.SyncedTabsFragmentDirections
 import org.mozilla.fenix.tabtray.FenixTabsAdapter
+import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
@@ -216,8 +217,18 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         intent ?: return
 
         val intentProcessors = listOf(CrashReporterIntentProcessor()) + externalSourceIntentProcessors
-        intentProcessors.any { it.process(intent, navHost.navController, this.intent) }
+        val intentHandled = intentProcessors.any { it.process(intent, navHost.navController, this.intent) }
         browsingModeManager.mode = getModeFromIntentOrLastKnown(intent)
+
+        if (intentHandled) {
+            supportFragmentManager
+                .primaryNavigationFragment
+                ?.childFragmentManager
+                ?.fragments
+                ?.lastOrNull()
+                ?.let { it as? TabTrayDialogFragment }
+                ?.also { it.dismissAllowingStateLoss() }
+        }
     }
 
     /**
