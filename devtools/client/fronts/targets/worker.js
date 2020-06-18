@@ -98,13 +98,15 @@ class WorkerTargetFront extends TargetMixin(
     let response;
     try {
       response = await super.detach();
+
+      if (this.registration) {
+        // Bug 1644772 - Sometimes, the Browser Toolbox fails opening with a connection timeout
+        // with an exception related to this call to allowShutdown and its usage of detachDebugger API.
+        await this.registration.allowShutdown();
+        this.registration = null;
+      }
     } catch (e) {
       this.logDetachError(e, "worker");
-    }
-
-    if (this.registration) {
-      await this.registration.allowShutdown();
-      this.registration = null;
     }
 
     return response;
