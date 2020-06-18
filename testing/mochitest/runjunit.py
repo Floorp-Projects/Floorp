@@ -209,8 +209,6 @@ class JUnitTestRunner(MochitestDesktop):
             env["MOZ_WEBRENDER"] = '1'
         else:
             env["MOZ_WEBRENDER"] = '0'
-        # Add additional env variables
-        env.update(self.options.addEnv)
         for (env_count, (env_key, env_val)) in enumerate(env.iteritems()):
             cmd = cmd + " -e env%d %s=%s" % (env_count, env_key, env_val)
         # runner
