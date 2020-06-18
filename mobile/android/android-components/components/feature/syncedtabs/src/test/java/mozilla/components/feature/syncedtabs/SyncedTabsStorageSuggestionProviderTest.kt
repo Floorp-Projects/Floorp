@@ -82,7 +82,7 @@ class SyncedTabsStorageSuggestionProviderTest {
                 )
             )
         )
-        whenever(syncedTabs.getSyncedTabs()).thenReturn(listOf(deviceTabs1, deviceTabs2))
+        whenever(syncedTabs.getSyncedDeviceTabs()).thenReturn(listOf(deviceTabs1, deviceTabs2))
 
         val suggestions = provider.onInputChanged("bobo")
         assertEquals(3, suggestions.size)

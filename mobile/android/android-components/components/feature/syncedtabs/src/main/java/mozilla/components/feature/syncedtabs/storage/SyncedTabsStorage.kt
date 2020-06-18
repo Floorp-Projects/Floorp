@@ -60,9 +60,9 @@ class SyncedTabsStorage(
     }
 
     /**
-     * See [SyncedTabsProvider.getSyncedTabs].
+     * See [SyncedTabsProvider.getSyncedDeviceTabs].
      */
-    override suspend fun getSyncedTabs(): List<SyncedDeviceTabs> {
+    override suspend fun getSyncedDeviceTabs(): List<SyncedDeviceTabs> {
         val otherDevices = syncClients() ?: return emptyList()
         return tabsStorage.getAll()
             .mapNotNull { (client, tabs) ->

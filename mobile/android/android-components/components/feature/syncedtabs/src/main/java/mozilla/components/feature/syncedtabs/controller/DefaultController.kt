@@ -32,14 +32,16 @@ internal class DefaultController(
 
         scope.launch {
             accountManager.withConstellation {
-                val syncedTabs = provider.getSyncedTabs()
+                val syncedDeviceTabs = provider.getSyncedDeviceTabs()
                 val otherDevices = state()?.otherDevices
 
                 scope.launch(Dispatchers.Main) {
-                    if (syncedTabs.isEmpty() && otherDevices?.isEmpty() == true) {
+                    if (syncedDeviceTabs.isEmpty() && otherDevices?.isEmpty() == true) {
                         view.onError(ErrorType.MULTIPLE_DEVICES_UNAVAILABLE)
+                    } else if (!syncedDeviceTabs.any { it.tabs.isNotEmpty() }) {
+                        view.onError(ErrorType.NO_TABS_AVAILABLE)
                     } else {
-                        view.displaySyncedTabs(syncedTabs)
+                        view.displaySyncedTabs(syncedDeviceTabs)
                     }
                 }
             }
