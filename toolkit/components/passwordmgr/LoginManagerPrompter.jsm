@@ -72,6 +72,27 @@ class LoginManagerPrompter {
     return ChromeUtils.generateQI([Ci.nsILoginManagerPrompter]);
   }
 
+  /**
+   * Called when we detect a password or username that is not yet saved as
+   * an existing login.
+   *
+   * @param {Element} aBrowser
+   *                  The browser element that the request came from.
+   * @param {nsILoginInfo} aLogin
+   *                       The new login from the page form.
+   * @param {boolean} [dismissed = false]
+   *                  If the prompt should be automatically dismissed on being shown.
+   * @param {boolean} [notifySaved = false]
+   *                  Whether the notification should indicate that a login has been saved
+   * @param {string} [autoSavedLoginGuid = ""]
+   *                 A guid value for the old login to be removed if the changes match it
+   *                 to a different login
+   * @param {object} possibleValues
+   *                 Contains values from anything that we think, but are not sure, might be
+   *                 a username or password.  Has two properties, 'usernames' and 'passwords'.
+   * @param {Set<String>} possibleValues.usernames
+   * @param {Set<String>} possibleValues.passwords
+   */
   promptToSavePassword(
     aBrowser,
     aLogin,
@@ -765,6 +786,9 @@ class LoginManagerPrompter {
 
   /* ---------- Internal Methods ---------- */
 
+  /**
+   * Helper method to update and persist an existing nsILoginInfo object with new property values.
+   */
   static _updateLogin(login, aNewLogin) {
     var now = Date.now();
     var propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
