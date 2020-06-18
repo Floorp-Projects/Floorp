@@ -10,6 +10,12 @@ const flags = require("devtools/shared/flags");
 const {
   wildcardToRegExp,
 } = require("devtools/server/actors/network-monitor/utils/wildcard-to-regexp");
+loader.lazyRequireGetter(
+  this,
+  "ChannelMap",
+  "devtools/server/actors/network-monitor/utils/channel-map",
+  true
+);
 
 loader.lazyRequireGetter(
   this,
@@ -157,8 +163,8 @@ function NetworkObserver(filters, owner) {
   this.filters = filters;
   this.owner = owner;
 
-  this.openRequests = new WeakMap();
-  this.openResponses = new WeakMap();
+  this.openRequests = new ChannelMap();
+  this.openResponses = new ChannelMap();
 
   this.blockedURLs = [];
 
@@ -468,10 +474,13 @@ NetworkObserver.prototype = {
       // If this is a cached response, there never was a request event
       // so we need to construct one here so the frontend gets all the
       // expected events.
-      const httpActivity = this._createNetworkEvent(channel, {
-        fromCache: !fromServiceWorker,
-        fromServiceWorker: fromServiceWorker,
-      });
+      let httpActivity = this.createOrGetActivityObject(channel);
+      if (!httpActivity.owner) {
+        httpActivity = this._createNetworkEvent(channel, {
+          fromCache: !fromServiceWorker,
+          fromServiceWorker: fromServiceWorker,
+        });
+      }
       httpActivity.owner.addResponseStart(
         {
           httpVersion: response.httpVersion,
@@ -862,7 +871,7 @@ NetworkObserver.prototype = {
    *        The HTTP activity object, or null if it is not found.
    */
   _findActivityObject: function(channel) {
-    return this.openRequests.get(channel) || null;
+    return this.openRequests.getChannelById(channel.channelId);
   },
 
   /**
