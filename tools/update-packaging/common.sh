@@ -67,13 +67,7 @@ copy_perm() {
 
 make_add_instruction() {
   f="$1"
-  filev2="$2"
-  # The third param will be an empty string when a file add instruction is only
-  # needed in the version 2 manifest. This only happens when the file has an
-  # add-if-not instruction in the version 3 manifest. This is due to the
-  # precomplete file prior to the version 3 manifest having a remove instruction
-  # for this file so the file is removed before applying a complete update.
-  filev3="$3"
+  filev3="$2"
 
   # Used to log to the console
   if [ $4 ]; then
@@ -88,16 +82,10 @@ make_add_instruction() {
     # before performing this add instruction.
     testdir=$(echo "$f" | sed 's/\(.*distribution\/extensions\/[^\/]*\)\/.*/\1/')
     verbose_notice "     add-if \"$testdir\" \"$f\""
-    echo "add-if \"$testdir\" \"$f\"" >> "$filev2"
-    if [ ! $filev3 = "" ]; then
-      echo "add-if \"$testdir\" \"$f\"" >> "$filev3"
-    fi
+    echo "add-if \"$testdir\" \"$f\"" >> "$filev3"
   else
     verbose_notice "        add \"$f\"$forced"
-    echo "add \"$f\"" >> "$filev2"
-    if [ ! "$filev3" = "" ]; then
-      echo "add \"$f\"" >> "$filev3"
-    fi
+    echo "add \"$f\"" >> "$filev3"
   fi
 }
 
@@ -106,17 +94,6 @@ check_for_add_if_not_update() {
 
   if [ `basename $add_if_not_file_chk` = "channel-prefs.js" -o \
        `basename $add_if_not_file_chk` = "update-settings.ini" ]; then
-    ## "true" *giggle*
-    return 0;
-  fi
-  ## 'false'... because this is bash. Oh yay!
-  return 1;
-}
-
-check_for_add_to_manifestv2() {
-  add_if_not_file_chk="$1"
-
-  if [ `basename $add_if_not_file_chk` = "update-settings.ini" ]; then
     ## "true" *giggle*
     return 0;
   fi
@@ -134,8 +111,7 @@ make_add_if_not_instruction() {
 
 make_patch_instruction() {
   f="$1"
-  filev2="$2"
-  filev3="$3"
+  filev3="$2"
 
   is_extension=$(echo "$f" | grep -c 'distribution/extensions/.*/')
   if [ $is_extension = "1" ]; then
@@ -143,19 +119,16 @@ make_patch_instruction() {
     # before performing this add instruction.
     testdir=$(echo "$f" | sed 's/\(.*distribution\/extensions\/[^\/]*\)\/.*/\1/')
     verbose_notice "   patch-if \"$testdir\" \"$f.patch\" \"$f\""
-    echo "patch-if \"$testdir\" \"$f.patch\" \"$f\"" >> "$filev2"
     echo "patch-if \"$testdir\" \"$f.patch\" \"$f\"" >> "$filev3"
   else
     verbose_notice "      patch \"$f.patch\" \"$f\""
-    echo "patch \"$f.patch\" \"$f\"" >> "$filev2"
     echo "patch \"$f.patch\" \"$f\"" >> "$filev3"
   fi
 }
 
 append_remove_instructions() {
   dir="$1"
-  filev2="$2"
-  filev3="$3"
+  filev3="$2"
 
   if [ -f "$dir/removed-files" ]; then
     listfile="$dir/removed-files"
@@ -177,17 +150,14 @@ append_remove_instructions() {
         if [ ! $(echo "$f" | grep -c '^#') = 1 ]; then
           if [ $(echo "$f" | grep -c '\/$') = 1 ]; then
             verbose_notice "      rmdir \"$f\""
-            echo "rmdir \"$f\"" >> "$filev2"
             echo "rmdir \"$f\"" >> "$filev3"
           elif [ $(echo "$f" | grep -c '\/\*$') = 1 ]; then
             # Remove the *
             f=$(echo "$f" | sed -e 's:\*$::')
             verbose_notice "    rmrfdir \"$f\""
-            echo "rmrfdir \"$f\"" >> "$filev2"
             echo "rmrfdir \"$f\"" >> "$filev3"
           else
             verbose_notice "     remove \"$f\""
-            echo "remove \"$f\"" >> "$filev2"
             echo "remove \"$f\"" >> "$filev3"
           fi
         fi
