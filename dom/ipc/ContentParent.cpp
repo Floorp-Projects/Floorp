@@ -163,6 +163,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDocShell.h"
 #include "nsEmbedCID.h"
+#include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashPropertyBag.h"
@@ -859,6 +860,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
   RefPtr<ContentParent> p;
   if (aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
       (p = PreallocatedProcessManager::Take()) && !p->mShutdownPending) {
+    MOZ_DIAGNOSTIC_ASSERT(!p->IsDead());
     // For pre-allocated process we have not set the opener yet.
     p->mOpener = aOpener;
     aContentParents.AppendElement(p);
@@ -1557,6 +1559,8 @@ void ContentParent::MarkAsDead() {
   if (!mShutdownPending) {
     RemoveFromList();
   }
+
+  PreallocatedProcessManager::Erase(this);
 
 #ifdef MOZ_WIDGET_ANDROID
   if (mLifecycleState == LifecycleState::ALIVE) {

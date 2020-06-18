@@ -9,6 +9,7 @@
 
 #include "base/basictypes.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
 namespace dom {
@@ -54,6 +55,7 @@ class PreallocatedProcessManager final {
   static already_AddRefed<ContentParent> Take();
 
   static bool Provide(ContentParent* aParent);
+  static void Erase(ContentParent* aParent);
 
  private:
   PreallocatedProcessManager();
