@@ -7,7 +7,7 @@ const TRR_URI_PREF = "network.trr.uri";
 const TRR_RESOLVERS_PREF = "network.trr.resolvers";
 const TRR_CUSTOM_URI_PREF = "network.trr.custom_uri";
 const DEFAULT_RESOLVER_VALUE = "https://mozilla.cloudflare-dns.com/dns-query";
-const NEXTDNS_RESOLVER_VALUE = "https://trr.dns.nextdns.io/";
+const NEXTDNS_RESOLVER_VALUE = "https://firefox.dns.nextdns.io/";
 
 const modeCheckboxSelector = "#networkDnsOverHttps";
 const uriTextboxSelector = "#networkCustomDnsOverHttpsInput";

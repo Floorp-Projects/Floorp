@@ -129,3 +129,43 @@ add_task(async function testLocalStorageMigration() {
     Preferences.reset(key);
   }
 });
+
+add_task(async function testNextDNSMigration() {
+  let oldURL = "https://trr.dns.nextdns.io/";
+  let newURL = "https://firefox.dns.nextdns.io/";
+
+  let prefChangePromises = [];
+  let prefsToMigrate = {
+    "network.trr.resolvers": `[{ "name": "Other Provider", "url": "https://sometrr.com/query" }, { "name": "NextDNS", "url": "${oldURL}" }]`,
+    "network.trr.uri": oldURL,
+    "network.trr.custom_uri": oldURL,
+    "doh-rollout.trr-selection.dry-run-result": oldURL,
+    "doh-rollout.uri": oldURL,
+  };
+
+  for (let [pref, value] of Object.entries(prefsToMigrate)) {
+    Preferences.set(pref, value);
+
+    prefChangePromises.push(
+      new Promise(resolve => {
+        Preferences.observe(pref, function obs() {
+          Preferences.ignore(pref, obs);
+          resolve();
+        });
+      })
+    );
+  }
+
+  let migrationDone = Promise.all(prefChangePromises);
+  let addon = await AddonManager.getAddonByID(ADDON_ID);
+  await addon.reload();
+  await migrationDone;
+
+  for (let [pref, value] of Object.entries(prefsToMigrate)) {
+    Assert.equal(
+      Preferences.get(pref),
+      value.replaceAll(oldURL, newURL),
+      "Pref correctly migrated"
+    );
+  }
+});

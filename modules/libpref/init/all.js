@@ -4193,7 +4193,7 @@ pref("network.trr.mode", 0);
 pref("network.trr.uri", "https://mozilla.cloudflare-dns.com/dns-query");
 // List of DNS-over-HTTP resolver service providers. This pref populates the
 // drop-down list in the Network Settings dialog box in about:preferences.
-pref("network.trr.resolvers", "[{ \"name\": \"Cloudflare\", \"url\": \"https://mozilla.cloudflare-dns.com/dns-query\" },{ \"name\": \"NextDNS\", \"url\": \"https://trr.dns.nextdns.io/\" }]");
+pref("network.trr.resolvers", "[{ \"name\": \"Cloudflare\", \"url\": \"https://mozilla.cloudflare-dns.com/dns-query\" },{ \"name\": \"NextDNS\", \"url\": \"https://firefox.dns.nextdns.io/\" }]");
 // credentials to pass to DOH end-point
 pref("network.trr.credentials", "");
 pref("network.trr.custom_uri", "");
