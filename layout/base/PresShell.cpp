@@ -11077,6 +11077,40 @@ void PresShell::MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty) {
   }
 }
 
+void PresShell::MaybeReflowForInflationScreenSizeChange() {
+  nsPresContext* pc = GetPresContext();
+  const bool fontInflationWasEnabled = FontSizeInflationEnabled();
+  RecomputeFontSizeInflationEnabled();
+  bool changed = false;
+  if (FontSizeInflationEnabled() && FontSizeInflationMinTwips() != 0) {
+    pc->ScreenSizeInchesForFontInflation(&changed);
+  }
+
+  changed = changed || fontInflationWasEnabled != FontSizeInflationEnabled();
+  if (!changed) {
+    return;
+  }
+  if (nsCOMPtr<nsIDocShell> docShell = pc->GetDocShell()) {
+    nsCOMPtr<nsIContentViewer> cv;
+    docShell->GetContentViewer(getter_AddRefs(cv));
+    if (!cv) {
+      return;
+    }
+    nsTArray<nsCOMPtr<nsIContentViewer>> array;
+    cv->AppendSubtree(array);
+    for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
+      nsCOMPtr<nsIContentViewer> cv = array[i];
+      if (RefPtr<PresShell> descendantPresShell = cv->GetPresShell()) {
+        nsIFrame* rootFrame = descendantPresShell->GetRootFrame();
+        if (rootFrame) {
+          descendantPresShell->FrameNeedsReflow(
+              rootFrame, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
+        }
+      }
+    }
+  }
+}
+
 void PresShell::CompleteChangeToVisualViewportSize() {
   // This can get called during reflow, if the caller wants to get the latest
   // visual viewport size after scrollbars have been added/removed. In such a
@@ -11093,6 +11127,8 @@ void PresShell::CompleteChangeToVisualViewportSize() {
     MarkFixedFramesForReflow(IntrinsicDirty::Resize);
   }
 
+  MaybeReflowForInflationScreenSizeChange();
+
   if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
     window->VisualViewport()->PostResizeEvent();
   }
@@ -11104,6 +11140,8 @@ void PresShell::CompleteChangeToVisualViewportSize() {
 }
 
 void PresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
+  MOZ_ASSERT(aWidth >= 0.0 && aHeight >= 0.0);
+
   if (!mVisualViewportSizeSet || mVisualViewportSize.width != aWidth ||
       mVisualViewportSize.height != aHeight) {
     mVisualViewportSizeSet = true;
