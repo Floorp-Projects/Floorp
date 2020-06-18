@@ -634,11 +634,10 @@ class Selection final : public nsSupportsWeakReference,
   // This is helper method for GetPrimaryFrameForFocusNode.
   // If aVisual is true, this returns caret frame.
   // If false, this returns primary frame.
-  nsresult GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
-                                               uint32_t aOffset,
-                                               nsIFrame** aReturnFrame,
-                                               int32_t* aOffsetUsed,
-                                               bool aVisual) const;
+  nsIFrame* GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
+                                                uint32_t aOffset,
+                                                int32_t* aOffsetUsed,
+                                                bool aVisual) const;
 
   // Get the cached value for nsTextFrame::GetPointFromOffset.
   nsresult GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,
