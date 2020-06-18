@@ -39,6 +39,7 @@ pyflakes==2.2.0
 pytest==3.6.2
 python-hglib==2.4
 pytoml==0.1.10
+pyyaml==5.3.1
 redo==2.0.3
 requests==2.9.1
 responses==0.10.6
