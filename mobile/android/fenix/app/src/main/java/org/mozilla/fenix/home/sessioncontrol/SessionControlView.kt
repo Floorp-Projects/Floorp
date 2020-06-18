@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
-import android.os.Build
 import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -142,13 +141,8 @@ class SessionControlView(
     }
 
     fun update(state: HomeFragmentState) {
-        // Workaround for list not updating until scroll on Android 5 + 6
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            sessionControlAdapter.submitList(null)
-        }
 
         val stateAdapterList = state.toAdapterList()
-
         if (homeScreenViewModel.shouldScrollToTopSites) {
             sessionControlAdapter.submitList(stateAdapterList) {
 

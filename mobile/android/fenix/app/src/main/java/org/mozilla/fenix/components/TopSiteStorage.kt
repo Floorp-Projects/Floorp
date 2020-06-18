@@ -14,6 +14,7 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSiteStorage
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.observeOnce
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.advanced.getSelectedLocale
@@ -84,6 +85,12 @@ class TopSiteStorage(private val context: Context) {
                 }
             }
             context.settings().defaultTopSitesAdded = true
+        }
+    }
+
+    fun prefetch() {
+        getTopSites().observeOnce {
+            cachedTopSites = it
         }
     }
 }

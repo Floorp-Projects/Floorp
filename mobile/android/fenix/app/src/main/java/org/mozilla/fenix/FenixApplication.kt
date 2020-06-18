@@ -142,6 +142,7 @@ open class FenixApplication : LocaleAwareApplication() {
             }
         }
 
+        prefetchForHomeFragment()
         setupLeakCanary()
         if (settings().isTelemetryEnabled) {
             components.analytics.metrics.start(MetricServiceType.Data)
@@ -228,6 +229,13 @@ open class FenixApplication : LocaleAwareApplication() {
         // no-op, LeakCanary is disabled by default
     }
 
+    // This is for issue https://github.com/mozilla-mobile/fenix/issues/11660. We prefetch our info for startup
+    // so that we're sure that we have all the data available as our fragment is launched.
+    private fun prefetchForHomeFragment() {
+        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+            components.core.topSiteStorage.prefetch()
+        }
+    }
     private fun setupPush() {
         // Sets the PushFeature as the singleton instance for push messages to go to.
         // We need the push feature setup here to deliver messages in the case where the service

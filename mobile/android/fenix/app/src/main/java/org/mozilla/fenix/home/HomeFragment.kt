@@ -215,11 +215,10 @@ class HomeFragment : Fragment() {
             sessionControlInteractor,
             homeViewModel
         )
-        activity.themeManager.applyStatusBarTheme(activity)
 
-        view.consumeFrom(homeFragmentStore, viewLifecycleOwner) {
-            sessionControlView?.update(it)
-        }
+        updateSessionControlView(view)
+
+        activity.themeManager.applyStatusBarTheme(activity)
 
         view.consumeFrom(requireComponents.core.store, viewLifecycleOwner) {
             val tabCount = if (currentMode.getCurrentMode() == Mode.Normal) {
@@ -232,6 +231,20 @@ class HomeFragment : Fragment() {
         }
 
         return view
+    }
+
+    /**
+     * The [SessionControlView] is forced to update with our current state when we call
+     * [HomeFragment.onCreateView] in order to be able to draw everything at once with the current
+     * data in our store. The [View.consumeFrom] coroutine dispatch
+     * doesn't get run right away which means that we won't draw on the first layout pass.
+     */
+    fun updateSessionControlView(view: View) {
+        sessionControlView?.update(homeFragmentStore.state)
+
+        view.consumeFrom(homeFragmentStore, viewLifecycleOwner) {
+            sessionControlView?.update(it)
+        }
     }
 
     private fun updateLayout(view: View) {
