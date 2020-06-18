@@ -6,6 +6,7 @@
 
 const protocol = require("devtools/shared/protocol");
 const { watcherSpec } = require("devtools/shared/specs/watcher");
+const Services = require("Services");
 
 const Resources = require("devtools/server/actors/resources/index");
 const {
@@ -69,6 +70,11 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   form() {
+    const enableServerWatcher = Services.prefs.getBoolPref(
+      "devtools.testing.enableServerWatcherSupport",
+      false
+    );
+
     return {
       actor: this.actorID,
       traits: {
@@ -82,8 +88,9 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           // In bug 1642295, we will only enable it for content toolboxes because we don't support
           // content process targets yet. Bug 1620248 should help supporting them and enable
           // this more broadly.
-          [Resources.TYPES.CONSOLE_MESSAGE]: false,
-          [Resources.TYPES.PLATFORM_MESSAGE]: false,
+          [Resources.TYPES.CONSOLE_MESSAGE]:
+            enableServerWatcher && !!this._browser,
+          [Resources.TYPES.PLATFORM_MESSAGE]: enableServerWatcher,
         },
       },
     };
