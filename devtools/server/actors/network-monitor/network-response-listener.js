@@ -410,10 +410,14 @@ NetworkResponseListener.prototype = {
     }
 
     const channel = this.httpActivity.channel;
-    const openResponse = this.owner.openResponses.get(channel);
+    const openResponse = this.owner.openResponses.getChannelById(
+      channel.channelId
+    );
+
     if (!openResponse) {
       return;
     }
+
     this._foundOpenResponse = true;
     this.owner.openResponses.delete(channel);
 
