@@ -1,0 +1,24 @@
+---
+pylint:
+    description: A second Python linter
+    include:
+        - configure.py
+        - client.py
+        - security/
+        - accessible/
+        - docs/
+        - dom/base/
+        - mozglue/
+    exclude:
+        - dom/bindings/Codegen.py
+        - dom/bindings/Configuration.py
+        - security/manager/tools/crtshToIdentifyingStruct/crtshToIdentifyingStruct.py
+        - security/manager/ssl/tests/unit/test_content_signing/pysign.py
+        - security/ct/tests/gtest/createSTHTestData.py
+    extensions: ['py']
+    support-files:
+        - '**/.pylint'
+        - 'tools/lint/python/pylint*'
+    type: external
+    payload: python.pylint:lint
+    setup: python.pylint:setup
