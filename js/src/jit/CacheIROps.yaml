@@ -1201,6 +1201,7 @@
     index: Int32Id
     elementType: ScalarTypeImm
     handleOOB: BoolImm
+    allowDoubleForUint32: BoolImm
 
 - name: LoadTypedObjectElementResult
   shared: true
