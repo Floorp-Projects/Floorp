@@ -203,10 +203,9 @@ nsresult SdpHelper::GetBundledMids(const Sdp& sdp, BundledMids* bundledMids) {
       continue;
     }
 
-    const SdpMediaSection* masterBundleMsection(
-        FindMsectionByMid(sdp, group.tags[0]));
+    const SdpMediaSection* msection(FindMsectionByMid(sdp, group.tags[0]));
 
-    if (!masterBundleMsection) {
+    if (!msection) {
       SDP_SET_ERROR(
           "mid specified for bundle transport in group attribute"
           " does not exist in the SDP. (mid="
@@ -214,7 +213,7 @@ nsresult SdpHelper::GetBundledMids(const Sdp& sdp, BundledMids* bundledMids) {
       return NS_ERROR_INVALID_ARG;
     }
 
-    if (MsectionIsDisabled(*masterBundleMsection)) {
+    if (MsectionIsDisabled(*msection)) {
       SDP_SET_ERROR(
           "mid specified for bundle transport in group attribute"
           " points at a disabled m-section. (mid="
@@ -230,7 +229,7 @@ nsresult SdpHelper::GetBundledMids(const Sdp& sdp, BundledMids* bundledMids) {
         return NS_ERROR_INVALID_ARG;
       }
 
-      (*bundledMids)[mid] = masterBundleMsection;
+      (*bundledMids)[mid] = msection;
     }
   }
 
