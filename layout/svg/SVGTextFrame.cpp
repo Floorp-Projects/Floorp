@@ -5140,9 +5140,7 @@ bool SVGTextFrame::UpdateFontSizeScaleFactor() {
   nsPresContext* presContext = PresContext();
 
   bool geometricPrecision = false;
-  CSSCoord min = std::numeric_limits<float>::max();
-  CSSCoord max = std::numeric_limits<float>::min();
-  bool anyText = false;
+  nscoord min = nscoord_MAX, max = nscoord_MIN;
 
   // Find the minimum and maximum font sizes used over all the
   // nsTextFrames.
@@ -5155,24 +5153,25 @@ bool SVGTextFrame::UpdateFontSizeScaleFactor() {
       geometricPrecision = f->StyleText()->mTextRendering ==
                            StyleTextRendering::Geometricprecision;
     }
-    const auto& fontSize = f->StyleFont()->mFont.size;
-    if (!fontSize.IsZero()) {
-      min = std::min(min, fontSize.ToCSSPixels());
-      max = std::max(max, fontSize.ToCSSPixels());
-      anyText = true;
+    nscoord size = f->StyleFont()->mFont.size;
+    if (size) {
+      min = std::min(min, size);
+      max = std::max(max, size);
     }
     f = it.Next();
   }
 
-  if (!anyText) {
+  if (min == nscoord_MAX) {
     // No text, so no need for scaling.
     mFontSizeScaleFactor = 1.0;
     return mFontSizeScaleFactor != oldFontSizeScaleFactor;
   }
 
+  double minSize = nsPresContext::AppUnitsToFloatCSSPixels(min);
+
   if (geometricPrecision) {
     // We want to ensure minSize is scaled to PRECISE_SIZE.
-    mFontSizeScaleFactor = PRECISE_SIZE / min;
+    mFontSizeScaleFactor = PRECISE_SIZE / minSize;
     return mFontSizeScaleFactor != oldFontSizeScaleFactor;
   }
 
@@ -5190,6 +5189,8 @@ bool SVGTextFrame::UpdateFontSizeScaleFactor() {
   }
   mLastContextScale = contextScale;
 
+  double maxSize = nsPresContext::AppUnitsToFloatCSSPixels(max);
+
   // But we want to ignore any scaling required due to HiDPI displays, since
   // regular CSS text frames will still create text runs using the font size
   // in CSS pixels, and we want SVG text to have the same rendering as HTML
@@ -5198,14 +5199,14 @@ bool SVGTextFrame::UpdateFontSizeScaleFactor() {
       presContext->AppUnitsPerDevPixel());
   contextScale *= cssPxPerDevPx;
 
-  double minTextRunSize = min * contextScale;
-  double maxTextRunSize = max * contextScale;
+  double minTextRunSize = minSize * contextScale;
+  double maxTextRunSize = maxSize * contextScale;
 
   if (minTextRunSize >= CLAMP_MIN_SIZE && maxTextRunSize <= CLAMP_MAX_SIZE) {
     // We are already in the ideal font size range for all text frames,
     // so we only have to take into account the contextScale.
     mFontSizeScaleFactor = contextScale;
-  } else if (max / min > CLAMP_MAX_SIZE / CLAMP_MIN_SIZE) {
+  } else if (maxSize / minSize > CLAMP_MAX_SIZE / CLAMP_MIN_SIZE) {
     // We can't scale the font sizes so that all of the text frames lie
     // within our ideal font size range.
     // Heuristically, if the maxTextRunSize is within the CLAMP_MAX_SIZE
@@ -5213,18 +5214,18 @@ bool SVGTextFrame::UpdateFontSizeScaleFactor() {
     // get a valid font for the maxTextRunSize one, we should honor it.
     // The same for minTextRunSize.
     if (maxTextRunSize <= CLAMP_MAX_SIZE) {
-      mFontSizeScaleFactor = CLAMP_MAX_SIZE / max;
+      mFontSizeScaleFactor = CLAMP_MAX_SIZE / maxSize;
     } else if (minTextRunSize >= CLAMP_MIN_SIZE) {
-      mFontSizeScaleFactor = CLAMP_MIN_SIZE / min;
+      mFontSizeScaleFactor = CLAMP_MIN_SIZE / minSize;
     } else {
       // So maxTextRunSize is too big, minTextRunSize is too small,
       // we can't really do anything for this case, just leave it as is.
       mFontSizeScaleFactor = contextScale;
     }
   } else if (minTextRunSize < CLAMP_MIN_SIZE) {
-    mFontSizeScaleFactor = CLAMP_MIN_SIZE / min;
+    mFontSizeScaleFactor = CLAMP_MIN_SIZE / minSize;
   } else {
-    mFontSizeScaleFactor = CLAMP_MAX_SIZE / max;
+    mFontSizeScaleFactor = CLAMP_MAX_SIZE / maxSize;
   }
 
   return mFontSizeScaleFactor != oldFontSizeScaleFactor;

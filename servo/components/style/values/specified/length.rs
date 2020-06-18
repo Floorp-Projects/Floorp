@@ -241,7 +241,7 @@ impl FontRelativeLength {
                 let reference_size = if context.builder.is_root_element || context.in_media_query {
                     reference_font_size
                 } else {
-                    context.device().root_font_size()
+                    computed::Length::new(context.device().root_font_size().to_f32_px())
                 };
                 (reference_size, length)
             },

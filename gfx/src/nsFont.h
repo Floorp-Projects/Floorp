@@ -15,7 +15,6 @@
 #include "gfxFontVariations.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/ServoStyleConstsInlines.h"
 #include "mozilla/StyleColorInlines.h"  // for StyleRGBA
 #include "nsCoord.h"                    // for nscoord
 #include "nsTArray.h"                   // for nsTArray
@@ -38,8 +37,8 @@ struct nsFont final {
   // Font variations from CSS font-variation-settings
   CopyableTArray<gfxFontVariation> fontVariationSettings;
 
-  // The logical size of the font, in CSS Pixels
-  mozilla::NonNegativeLength size{0};
+  // The logical size of the font, in nscoord units
+  nscoord size = 0;
 
   // The aspect-value (ie., the ratio actualsize:actualxheight) that any
   // actual physical font created from this font structure must have when
@@ -95,10 +94,10 @@ struct nsFont final {
   bool systemFont = false;
 
   // initialize the font with a fontlist
-  nsFont(const mozilla::FontFamilyList& aFontlist, mozilla::Length aSize);
+  nsFont(const mozilla::FontFamilyList& aFontlist, nscoord aSize);
 
   // initialize the font with a single generic
-  nsFont(mozilla::StyleGenericFontFamily, mozilla::Length aSize);
+  nsFont(mozilla::StyleGenericFontFamily, nscoord aSize);
 
   // Make a copy of the given font
   nsFont(const nsFont& aFont);

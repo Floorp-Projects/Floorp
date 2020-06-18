@@ -8,7 +8,6 @@
 #include "gfxFont.h"          // for gfxFontStyle
 #include "gfxFontFeatures.h"  // for gfxFontFeature, etc
 #include "gfxFontUtils.h"     // for TRUETYPE_TAG
-#include "mozilla/ServoStyleConstsInlines.h"
 #include "nsCRT.h"            // for nsCRT
 #include "nsDebug.h"          // for NS_ASSERTION
 #include "nsISupports.h"
@@ -19,10 +18,10 @@
 
 using namespace mozilla;
 
-nsFont::nsFont(const FontFamilyList& aFontlist, mozilla::Length aSize)
+nsFont::nsFont(const FontFamilyList& aFontlist, nscoord aSize)
     : fontlist(aFontlist), size(aSize) {}
 
-nsFont::nsFont(StyleGenericFontFamily aGenericType, mozilla::Length aSize)
+nsFont::nsFont(StyleGenericFontFamily aGenericType, nscoord aSize)
     : fontlist(aGenericType), size(aSize) {}
 
 nsFont::nsFont(const nsFont& aOther) = default;
@@ -280,7 +279,10 @@ void nsFont::AddFontVariationsToStyle(gfxFontStyle* aStyle) const {
   const uint32_t kTagOpsz = TRUETYPE_TAG('o', 'p', 's', 'z');
   if (opticalSizing == NS_FONT_OPTICAL_SIZING_AUTO &&
       !fontVariationSettings.Contains(kTagOpsz, VariationTagComparator())) {
-    gfxFontVariation opsz = {kTagOpsz, size.ToCSSPixels()};
+    gfxFontVariation opsz = {
+        kTagOpsz,
+        // size is in app units, but we want a floating-point px size
+        float(size) / float(AppUnitsPerCSSPixel())};
     aStyle->variationSettings.AppendElement(opsz);
   }
 

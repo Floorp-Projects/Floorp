@@ -211,10 +211,8 @@ nscoord nsMathMLFrame::CalcLength(nsPresContext* aPresContext,
 
   if (eCSSUnit_EM == unit) {
     const nsStyleFont* font = aComputedStyle->StyleFont();
-    return font->mFont.size.ScaledBy(aCSSValue.GetFloatValue()).ToAppUnits();
-  }
-
-  if (eCSSUnit_XHeight == unit) {
+    return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font->mFont.size);
+  } else if (eCSSUnit_XHeight == unit) {
     aPresContext->SetUsesExChUnits(true);
     RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForComputedStyle(
         aComputedStyle, aPresContext, aFontSizeInflation);
