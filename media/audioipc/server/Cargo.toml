@@ -12,7 +12,7 @@ edition = "2018"
 audio_thread_priority = "0.22"
 audioipc = { path = "../audioipc" }
 cubeb-core = "0.7.0"
-futures = "0.1.18"
+futures = "0.1.29"
 once_cell = "1.2.0"
 log = "0.4"
 slab = "0.4"
