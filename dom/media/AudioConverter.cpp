@@ -21,14 +21,8 @@ namespace mozilla {
 
 AudioConverter::AudioConverter(const AudioConfig& aIn, const AudioConfig& aOut)
     : mIn(aIn), mOut(aOut), mResampler(nullptr) {
-  MOZ_DIAGNOSTIC_ASSERT(
-      aIn.Format() == aOut.Format() && aIn.Interleaved() == aOut.Interleaved(),
-      "No format or rate conversion is supported at this stage");
-  MOZ_DIAGNOSTIC_ASSERT(
-      aOut.Channels() <= 2 || aIn.Channels() == aOut.Channels(),
-      "Only down/upmixing to mono or stereo is supported at this stage");
-  MOZ_DIAGNOSTIC_ASSERT(aOut.Interleaved(),
-                        "planar audio format not supported");
+  MOZ_DIAGNOSTIC_ASSERT(CanConvert(aIn, aOut),
+                        "The conversion is not supported");
   mIn.Layout().MappingTable(mOut.Layout(), &mChannelOrderMap);
   if (aIn.Rate() != aOut.Rate()) {
     RecreateResampler();
@@ -40,6 +34,25 @@ AudioConverter::~AudioConverter() {
     speex_resampler_destroy(mResampler);
     mResampler = nullptr;
   }
+}
+
+bool AudioConverter::CanConvert(const AudioConfig& aIn,
+                                const AudioConfig& aOut) {
+  if (aIn.Format() != aOut.Format() ||
+      aIn.Interleaved() != aOut.Interleaved()) {
+    NS_WARNING("No format conversion is supported at this stage");
+    return false;
+  }
+  if (aIn.Channels() != aOut.Channels() && aOut.Channels() > 2) {
+    NS_WARNING(
+        "Only down/upmixing to mono or stereo is supported at this stage");
+    return false;
+  }
+  if (!aOut.Interleaved()) {
+    NS_WARNING("planar audio format not supported");
+    return false;
+  }
+  return true;
 }
 
 bool AudioConverter::CanWorkInPlace() const {
