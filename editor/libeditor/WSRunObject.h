@@ -552,7 +552,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   };
 
   /**
-   * FindNearestRun() looks for a WSFragment which is closest to specified
+   * FindNearestFragment() looks for a WSFragment which is closest to specified
    * direction from aPoint.
    *
    * @param aPoint      The point to start to look for.
@@ -573,8 +573,8 @@ class MOZ_STACK_CLASS WSRunScanner {
    *                      if aPoint is after the last run, returns the last run.
    */
   template <typename PT, typename CT>
-  WSFragment* FindNearestRun(const EditorDOMPointBase<PT, CT>& aPoint,
-                             bool aForward) const;
+  const WSFragment* FindNearestFragment(
+      const EditorDOMPointBase<PT, CT>& aPoint, bool aForward) const;
 
   /**
    * GetInclusiveNextEditableCharPoint() returns aPoint if it points a character
