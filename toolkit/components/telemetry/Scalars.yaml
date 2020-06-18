@@ -1000,18 +1000,49 @@ extensions.updates:
 identity.fxaccounts:
   missed_commands_fetched:
     bug_numbers:
-      - 1496638
+      - 1644598
     description: >
       The number of missed FxA commands we have recovered.
-    expires: "68"
+    expires: "85"
     kind: uint
     keyed: false
     notification_emails:
-      - fxa-staff@mozilla.com
+      - sync-team@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
-      - 'fennec'
+    record_in_processes:
+      - main
+  push_state_command_target:
+    bug_numbers:
+      - 1644598
+    description: >
+      The push state of the device we are sending a command to.
+    expires: "85"
+    kind: uint
+    keyed: true
+    keys: ["ok", "expiredCallback", "noCallback"]
+    notification_emails:
+      - sync-team@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  push_state_this_device:
+    bug_numbers:
+      - 1644598
+    description: >
+      The reason why the push state for this device is in a bad shape.
+    expires: "85"
+    kind: uint
+    keyed: true
+    keys: ["expiredCallback", "noCallback"]
+    notification_emails:
+      - sync-team@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
     record_in_processes:
       - main
 
