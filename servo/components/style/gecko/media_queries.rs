@@ -11,7 +11,6 @@ use crate::gecko_bindings::structs;
 use crate::media_queries::MediaType;
 use crate::properties::ComputedValues;
 use crate::string_cache::Atom;
-use crate::values::computed::Length;
 use crate::values::specified::font::FONT_MEDIUM_PX;
 use crate::values::{CustomIdent, KeyframesName};
 use app_units::{Au, AU_PER_PX};
@@ -20,7 +19,7 @@ use euclid::default::Size2D;
 use euclid::{Scale, SideOffsets2D};
 use servo_arc::Arc;
 use std::fmt;
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicUsize, Ordering};
 use style_traits::viewport::ViewportConstraints;
 use style_traits::{CSSPixel, DevicePixel};
 
@@ -31,16 +30,15 @@ pub struct Device {
     /// `Device`, so having a raw document pointer here is fine.
     document: *const structs::Document,
     default_values: Arc<ComputedValues>,
-    /// The font size of the root element.
+    /// The font size of the root element
+    /// This is set when computing the style of the root
+    /// element, and used for rem units in other elements.
     ///
-    /// This is set when computing the style of the root element, and used for
-    /// rem units in other elements.
-    ///
-    /// When computing the style of the root element, there can't be any other
-    /// style being computed at the same time, given we need the style of the
-    /// parent to compute everything else. So it is correct to just use a
-    /// relaxed atomic here.
-    root_font_size: AtomicU32,
+    /// When computing the style of the root element, there can't be any
+    /// other style being computed at the same time, given we need the style of
+    /// the parent to compute everything else. So it is correct to just use
+    /// a relaxed atomic here.
+    root_font_size: AtomicIsize,
     /// The body text color, stored as an `nscolor`, used for the "tables
     /// inherit from body" quirk.
     ///
@@ -87,7 +85,8 @@ impl Device {
         Device {
             document,
             default_values: ComputedValues::default_values(doc),
-            root_font_size: AtomicU32::new(FONT_MEDIUM_PX.to_bits()),
+            // FIXME(bz): Seems dubious?
+            root_font_size: AtomicIsize::new(Au::from_px(FONT_MEDIUM_PX as i32).0 as isize),
             body_text_color: AtomicUsize::new(prefs.mDefaultColor as usize),
             used_root_font_size: AtomicBool::new(false),
             used_viewport_size: AtomicBool::new(false),
@@ -132,15 +131,15 @@ impl Device {
     }
 
     /// Get the font size of the root element (for rem)
-    pub fn root_font_size(&self) -> Length {
+    pub fn root_font_size(&self) -> Au {
         self.used_root_font_size.store(true, Ordering::Relaxed);
-        Length::new(f32::from_bits(self.root_font_size.load(Ordering::Relaxed)))
+        Au::new(self.root_font_size.load(Ordering::Relaxed) as i32)
     }
 
     /// Set the font size of the root element (for rem)
-    pub fn set_root_font_size(&self, size: Length) {
+    pub fn set_root_font_size(&self, size: Au) {
         self.root_font_size
-            .store(size.px().to_bits(), Ordering::Relaxed)
+            .store(size.0 as isize, Ordering::Relaxed)
     }
 
     /// Sets the body text color for the "inherit color from body" quirk.
@@ -299,13 +298,13 @@ impl Device {
 
     /// Applies text zoom to a font-size or line-height value (see nsStyleFont::ZoomText).
     #[inline]
-    pub fn zoom_text(&self, size: Length) -> Length {
+    pub fn zoom_text(&self, size: Au) -> Au {
         size.scale_by(self.effective_text_zoom())
     }
 
     /// Un-apply text zoom.
     #[inline]
-    pub fn unzoom_text(&self, size: Length) -> Length {
+    pub fn unzoom_text(&self, size: Au) -> Au {
         size.scale_by(1. / self.effective_text_zoom())
     }
 

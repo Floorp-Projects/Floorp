@@ -249,6 +249,7 @@ typedef gfx::Matrix4x4Typed<ParentLayerPixel, RenderTargetPixel>
  */
 struct CSSPixel {
   // Conversions from app units
+
   static CSSCoord FromAppUnits(nscoord aCoord) {
     return NSAppUnitsToFloatPixels(aCoord, float(AppUnitsPerCSSPixel()));
   }
@@ -354,12 +355,6 @@ struct CSSPixel {
                                 float(AppUnitsPerCSSPixel())),
         NSToCoordRoundWithClamp(float(aRect.Height()) *
                                 float(AppUnitsPerCSSPixel())));
-  }
-
-  // Conversion from a given CSS point value.
-  static CSSCoord FromPoints(float aCoord) {
-    // One inch / 72.
-    return aCoord * 96.0f / 72.0f;
   }
 };
 

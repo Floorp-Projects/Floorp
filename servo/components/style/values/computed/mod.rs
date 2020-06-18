@@ -231,7 +231,7 @@ impl<'a> Context<'a> {
         // -x-text-zoom property, which leads to a false value
         // in mAllowZoomAndMinSize
         if self.style().get_font().gecko.mAllowZoomAndMinSize {
-            self.device().zoom_text(size)
+            self.device().zoom_text(Au::from(size)).into()
         } else {
             size
         }

@@ -238,7 +238,7 @@ class nsMathMLFrame : public nsIMathMLFrame {
     // should switch to this API in order to scale with changes of TextZoom
     emHeight = fm->EmHeight();
 #else
-    emHeight = fm->Font().size.ToAppUnits();
+    emHeight = NSToCoordRound(float(fm->Font().size));
 #endif
   }
 

@@ -244,7 +244,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
           StyleGenericFontFamily::None)),
       mSize(ZoomText(aDocument, mFont.size)),
       mFontSizeFactor(1.0),
-      mFontSizeOffset{0},
+      mFontSizeOffset(0),
       mFontSizeKeyword(StyleFontSizeKeyword::Medium),
       mGenericID(StyleGenericFontFamily::None),
       mScriptLevel(0),
@@ -254,18 +254,17 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mExplicitLanguage(false),
       mAllowZoomAndMinSize(true),
       mScriptUnconstrainedSize(mSize),
-      mScriptMinSize(Length::FromPixels(
-          CSSPixel::FromPoints(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT))),
+      mScriptMinSize(nsPresContext::CSSTwipsToAppUnits(
+          NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT))),
       mScriptSizeMultiplier(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER),
       mLanguage(aDocument.GetLanguageForStyle()) {
   MOZ_COUNT_CTOR(nsStyleFont);
   MOZ_ASSERT(NS_IsMainThread());
   mFont.size = mSize;
   if (!nsContentUtils::IsChromeDoc(&aDocument)) {
-    Length minimumFontSize =
+    nscoord minimumFontSize =
         aDocument.GetFontPrefsForLang(mLanguage)->mMinimumFontSize;
-    mFont.size = Length::FromPixels(
-        std::max(mSize.ToCSSPixels(), minimumFontSize.ToCSSPixels()));
+    mFont.size = std::max(mSize, minimumFontSize);
   }
 }
 
@@ -304,11 +303,14 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
   return nsChangeHint(0);
 }
 
-Length nsStyleFont::ZoomText(const Document& aDocument, Length aSize) {
+nscoord nsStyleFont::ZoomText(const Document& aDocument, nscoord aSize) {
+  float textZoom = 1.0;
   if (auto* pc = aDocument.GetPresContext()) {
-    aSize.ScaleBy(pc->EffectiveTextZoom());
+    textZoom = pc->EffectiveTextZoom();
   }
-  return aSize;
+  // aSize can be negative (e.g.: calc(-1px)) so we can't assert that here.
+  // The caller is expected deal with that.
+  return NSToCoordTruncClamped(float(aSize) * textZoom);
 }
 
 template <typename T>
