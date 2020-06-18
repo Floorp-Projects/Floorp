@@ -265,6 +265,24 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
+    fun `verify that a COMPLETED download contains a file size`() {
+        val downloadState = DownloadState(url = "mozilla.org/mozilla.txt", contentLength = 0L)
+        val downloadJobState = DownloadJobState(
+                job = null,
+                state = downloadState,
+                currentBytesCopied = 50,
+                status = ACTIVE,
+                foregroundServiceId = 1,
+                downloadDeleted = false
+        )
+
+        service.downloadJobs[downloadJobState.state.id] = downloadJobState
+        service.verifyDownload(downloadJobState)
+
+        assertEquals(downloadJobState.state.contentLength, service.downloadJobs[downloadJobState.state.id]!!.state.contentLength)
+    }
+
+    @Test
     fun `broadcastReceiver handles ACTION_PAUSE`() = runBlocking {
         val download = DownloadState("https://example.com/file.txt", "file.txt")
         val response = Response(
