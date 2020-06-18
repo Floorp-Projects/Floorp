@@ -487,10 +487,6 @@ bool StyleCSSPixelLength::IsZero() const { return _0 == 0.0f; }
 
 void StyleCSSPixelLength::ScaleBy(float aScale) { _0 *= aScale; }
 
-StyleCSSPixelLength StyleCSSPixelLength::ScaledBy(float aScale) const {
-  return FromPixels(ToCSSPixels() * aScale);
-}
-
 nscoord StyleCSSPixelLength::ToAppUnits() const {
   // We want to resolve the length part of the calc() expression rounding 0.5
   // away from zero, instead of the default behavior of

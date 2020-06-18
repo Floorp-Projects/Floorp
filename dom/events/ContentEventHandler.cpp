@@ -934,8 +934,8 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
           nsAutoCString name;
           fontName.AppendToString(name, false);
           AppendUTF8toUTF16(name, fontRange->mFontName);
-          fontRange->mFontSize = frame->PresContext()->CSSPixelsToDevPixels(
-              font.size.ToCSSPixels());
+          fontRange->mFontSize =
+              frame->PresContext()->AppUnitsToDevPixels(font.size);
         }
       }
       baseOffset += GetBRLength(aLineBreakType);

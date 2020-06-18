@@ -632,7 +632,7 @@ void MathMLTextRunFactory::RebuildTextRun(
 
   // Get the correct gfxFontGroup that corresponds to the earlier font changes.
   if (length) {
-    font.size = font.size.ScaledBy(mFontInflation);
+    font.size = NSToCoordRound(font.size * mFontInflation);
     nsPresContext* pc = styles[0]->mPresContext;
     nsFontMetrics::Params params;
     params.language = styles[0]->mLanguage;

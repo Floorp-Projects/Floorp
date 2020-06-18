@@ -613,7 +613,7 @@ nsresult nsRangeFrame::AttributeChanged(int32_t aNameSpaceID,
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
-nscoord nsRangeFrame::AutoCrossSize(Length aEm) {
+nscoord nsRangeFrame::AutoCrossSize(nscoord aEm) {
   nscoord minCrossSize(0);
   if (IsThemed()) {
     bool unused;
@@ -624,12 +624,7 @@ nscoord nsRangeFrame::AutoCrossSize(Length aEm) {
     minCrossSize =
         pc->DevPixelsToAppUnits(IsHorizontal() ? size.height : size.width);
   }
-  return std::max(minCrossSize, aEm.ScaledBy(CROSS_AXIS_EM_SIZE).ToAppUnits());
-}
-
-static mozilla::Length OneEm(nsRangeFrame* aFrame) {
-  return aFrame->StyleFont()->mFont.size.ScaledBy(
-      nsLayoutUtils::FontSizeInflationFor(aFrame));
+  return std::max(minCrossSize, NSToCoordRound(CROSS_AXIS_EM_SIZE * aEm));
 }
 
 LogicalSize nsRangeFrame::ComputeAutoSize(
@@ -638,16 +633,16 @@ LogicalSize nsRangeFrame::ComputeAutoSize(
     const LogicalSize& aBorder, const LogicalSize& aPadding,
     ComputeSizeFlags aFlags) {
   bool isInlineOriented = IsInlineOriented();
-  auto em = OneEm(this);
+  auto em = StyleFont()->mFont.size * nsLayoutUtils::FontSizeInflationFor(this);
 
   const WritingMode wm = GetWritingMode();
   LogicalSize autoSize(wm);
   if (isInlineOriented) {
-    autoSize.ISize(wm) = em.ScaledBy(MAIN_AXIS_EM_SIZE).ToAppUnits();
+    autoSize.ISize(wm) = NSToCoordRound(MAIN_AXIS_EM_SIZE * em);
     autoSize.BSize(wm) = AutoCrossSize(em);
   } else {
     autoSize.ISize(wm) = AutoCrossSize(em);
-    autoSize.BSize(wm) = em.ScaledBy(MAIN_AXIS_EM_SIZE).ToAppUnits();
+    autoSize.BSize(wm) = NSToCoordRound(MAIN_AXIS_EM_SIZE * em);
   }
 
   return autoSize.ConvertTo(aWM, wm);
@@ -666,11 +661,9 @@ nscoord nsRangeFrame::GetMinISize(gfxContext* aRenderingContext) {
 }
 
 nscoord nsRangeFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  auto em = OneEm(this);
-  if (IsInlineOriented()) {
-    return em.ScaledBy(MAIN_AXIS_EM_SIZE).ToAppUnits();
-  }
-  return AutoCrossSize(em);
+  bool isInline = IsInlineOriented();
+  auto em = StyleFont()->mFont.size * nsLayoutUtils::FontSizeInflationFor(this);
+  return isInline ? NSToCoordRound(em * MAIN_AXIS_EM_SIZE) : AutoCrossSize(em);
 }
 
 bool nsRangeFrame::IsHorizontal() const {

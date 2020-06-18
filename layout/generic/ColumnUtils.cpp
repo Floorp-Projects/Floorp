@@ -20,7 +20,7 @@ nscoord ColumnUtils::GetColumnGap(const nsContainerFrame* aFrame,
                                   nscoord aPercentageBasis) {
   const auto& columnGap = aFrame->StylePosition()->mColumnGap;
   if (columnGap.IsNormal()) {
-    return aFrame->StyleFont()->mFont.size.ToAppUnits();
+    return aFrame->StyleFont()->mFont.size;
   }
   return nsLayoutUtils::ResolveGapToLength(columnGap, aPercentageBasis);
 }

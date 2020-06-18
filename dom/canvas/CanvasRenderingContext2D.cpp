@@ -2359,7 +2359,7 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
         mPresContext(aPresContext) {}
 
   virtual float GetEmLength() const override {
-    return mFont.size.ToCSSPixels();
+    return NSAppUnitsToFloatPixels(mFont.size, AppUnitsPerCSSPixel());
   }
 
   virtual float GetExLength() const override {
@@ -3211,7 +3211,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   // pixels to CSS pixels, to adjust for the difference in expectations from
   // other nsFontMetrics clients.
   resizedFont.size =
-      fontStyle->mSize.ScaledBy(1.0f / c->CSSToDevPixelScale().scale);
+      (fontStyle->mSize * c->AppUnitsPerDevPixel()) / AppUnitsPerCSSPixel();
 
   c->Document()->FlushUserFontSet();
 

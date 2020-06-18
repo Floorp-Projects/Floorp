@@ -2181,7 +2181,7 @@ bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
     fCoord /= presContext->EffectiveTextZoom();
   }
   if (font->mFont.size != font->mSize) {
-    fCoord *= font->mSize.ToCSSPixels() / font->mFont.size.ToCSSPixels();
+    fCoord = fCoord * (float(font->mSize) / float(font->mFont.size));
   }
   aCoord = NSToCoordRound(fCoord);
 

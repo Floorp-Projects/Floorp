@@ -376,6 +376,18 @@ def set_gecko_property(ffi_name, expr):
 <%call expr="impl_simple_clone(ident, gecko_ffi_name)"></%call>
 </%def>
 
+<%def name="impl_absolute_length(ident, gecko_ffi_name)">
+    #[allow(non_snake_case)]
+    pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
+        ${set_gecko_property(gecko_ffi_name, "v.to_i32_au()")}
+    }
+    <%call expr="impl_simple_copy(ident, gecko_ffi_name)"></%call>
+    #[allow(non_snake_case)]
+    pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
+        Au(self.gecko.${gecko_ffi_name}).into()
+    }
+</%def>
+
 <%def name="impl_non_negative_length(ident, gecko_ffi_name, inherit_from=None,
                                      round_to_pixels=False)">
     #[allow(non_snake_case)]
@@ -581,6 +593,11 @@ impl Clone for ${style_struct.gecko_struct_name} {
     longhands = [x for x in style_struct.longhands
                 if not (skip_longhands == "*" or x.name in skip_longhands.split())]
 
+    # Types used with predefined_type()-defined properties that we can auto-generate.
+    predefined_types = {
+        "MozScriptMinSize": impl_absolute_length,
+    }
+
     def longhand_method(longhand):
         args = dict(ident=longhand.ident, gecko_ffi_name=longhand.gecko_ffi_name)
 
@@ -593,6 +610,8 @@ impl Clone for ${style_struct.gecko_struct_name} {
             args.update(keyword=longhand.keyword)
             if "font" in longhand.ident:
                 args.update(cast_type=longhand.cast_type)
+        elif longhand.predefined_type in predefined_types:
+            method = predefined_types[longhand.predefined_type]
         else:
             method = impl_simple
 
@@ -901,10 +920,9 @@ fn static_assert() {
     }
 
     pub fn unzoom_fonts(&mut self, device: &Device) {
-        use crate::values::generics::NonNegative;
-        self.gecko.mSize = NonNegative(device.unzoom_text(self.gecko.mSize.0));
-        self.gecko.mScriptUnconstrainedSize = NonNegative(device.unzoom_text(self.gecko.mScriptUnconstrainedSize.0));
-        self.gecko.mFont.size = NonNegative(device.unzoom_text(self.gecko.mFont.size.0));
+        self.gecko.mSize = device.unzoom_text(Au(self.gecko.mSize)).0;
+        self.gecko.mScriptUnconstrainedSize = device.unzoom_text(Au(self.gecko.mScriptUnconstrainedSize)).0;
+        self.gecko.mFont.size = device.unzoom_text(Au(self.gecko.mFont.size)).0;
     }
 
     pub fn copy_font_size_from(&mut self, other: &Self) {
@@ -924,27 +942,25 @@ fn static_assert() {
     }
 
     pub fn set_font_size(&mut self, v: FontSize) {
-        let size = v.size;
-        self.gecko.mScriptUnconstrainedSize = size;
+        let size = Au::from(v.size());
+        self.gecko.mScriptUnconstrainedSize = size.0;
 
         // These two may be changed from Cascade::fixup_font_stuff.
-        self.gecko.mSize = size;
-        self.gecko.mFont.size = size;
-
+        self.gecko.mSize = size.0;
+        self.gecko.mFont.size = size.0;
         self.gecko.mFontSizeKeyword = v.keyword_info.kw;
         self.gecko.mFontSizeFactor = v.keyword_info.factor;
-        self.gecko.mFontSizeOffset = v.keyword_info.offset;
+        self.gecko.mFontSizeOffset = v.keyword_info.offset.to_i32_au();
     }
 
     pub fn clone_font_size(&self) -> FontSize {
         use crate::values::specified::font::KeywordInfo;
-
         FontSize {
-            size: self.gecko.mSize,
+            size: Au(self.gecko.mSize).into(),
             keyword_info: KeywordInfo {
                 kw: self.gecko.mFontSizeKeyword,
                 factor: self.gecko.mFontSizeFactor,
-                offset: self.gecko.mFontSizeOffset,
+                offset: Au(self.gecko.mFontSizeOffset).into()
             }
         }
     }

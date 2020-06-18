@@ -10550,7 +10550,8 @@ void ReflowCountMgr::PaintCount(const char* aName,
 
       // We don't care about the document language or user fonts here;
       // just get a default Latin font.
-      nsFont font(StyleGenericFontFamily::Serif, Length::FromPixels(11));
+      nsFont font(StyleGenericFontFamily::Serif,
+                  nsPresContext::CSSPixelsToAppUnits(11));
       nsFontMetrics::Params params;
       params.language = nsGkAtoms::x_western;
       params.textPerf = aPresContext->GetTextPerfMetrics();

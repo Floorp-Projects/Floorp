@@ -1682,7 +1682,8 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
         return fieldFontStyle.size;
       }();
 
-      const gfxFloat fontSize = aFrame->StyleFont()->mFont.size.ToCSSPixels();
+      const gfxFloat fontSize =
+          CSSPixel::FromAppUnits(aFrame->StyleFont()->mFont.size);
       if (fieldFontSizeInCSSPixels > fontSize) {
         contentHeight =
             std::round(contentHeight * fontSize / fieldFontSizeInCSSPixels);

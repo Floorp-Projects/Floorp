@@ -551,8 +551,8 @@ class nsPresContext : public nsISupports,
   }
   void SetOverridePrefersColorScheme(const Maybe<StylePrefersColorScheme>&);
 
-  mozilla::CSSCoord GetAutoQualityMinFontSize() const {
-    return DevPixelsToFloatCSSPixels(mAutoQualityMinFontSizePixelsPref);
+  nscoord GetAutoQualityMinFontSize() {
+    return DevPixelsToAppUnits(mAutoQualityMinFontSizePixelsPref);
   }
 
   /**
