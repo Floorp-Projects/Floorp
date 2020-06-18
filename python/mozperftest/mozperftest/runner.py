@@ -52,7 +52,7 @@ SEARCH_PATHS = [
     "third_party/python/importlib_metadata",
     "third_party/python/jsonschema",
     "third_party/python/pyrsistent",
-    "third_party/python/pyyaml/lib3",
+    "third_party/python/PyYAML/lib3",
     "third_party/python/redo",
     "third_party/python/requests",
     "third_party/python/six",
