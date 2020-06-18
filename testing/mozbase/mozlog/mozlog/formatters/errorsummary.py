@@ -46,7 +46,11 @@ class ErrorSummaryFormatter(BaseFormatter):
         if item["status"] == "SKIP":
             if group not in self.group_results:
                 self.group_results[group] = "SKIP"
-        elif "expected" not in item or item["status"] == item["expected"]:
+        elif (
+            "expected" not in item
+            or item["status"] == item["expected"]
+            or item["status"] in item.get("known_intermittent", [])
+        ):
             if group not in self.group_results or self.group_results[group] == "SKIP":
                 self.group_results[group] = "OK"
         else:
