@@ -2,7 +2,7 @@
 
 # accountMigrationInFlight
 
-`fun accountMigrationInFlight(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L439)
+`fun accountMigrationInFlight(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L440)
 
 Checks if there's an in-flight account migration. An in-flight migration means that we've tried to "migrate"
 via [signInWithShareableAccountAsync](sign-in-with-shareable-account-async.md) and failed for intermittent (e.g. network) reasons.

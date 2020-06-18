@@ -2,7 +2,7 @@
 
 # SignInWithShareableAccountResult
 
-`enum class SignInWithShareableAccountResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L113)
+`enum class SignInWithShareableAccountResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L114)
 
 Describes a result of running [FxaAccountManager.signInWithShareableAccountAsync](../-fxa-account-manager/sign-in-with-shareable-account-async.md).
 

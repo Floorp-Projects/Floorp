@@ -2,7 +2,7 @@
 
 # Failure
 
-`Failure` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L132)
+`Failure` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L133)
 
 Sign-in failed due to non-recoverable issues.
 
