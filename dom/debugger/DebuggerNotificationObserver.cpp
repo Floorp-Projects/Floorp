@@ -111,11 +111,11 @@ bool DebuggerNotificationObserver::AddListener(
 
 bool DebuggerNotificationObserver::RemoveListener(
     DebuggerNotificationCallback& aHandlerFn) {
-  nsTObserverArray<RefPtr<DebuggerNotificationCallback>>::ForwardIterator iter(
-      mEventListenerCallbacks);
-  for (uint32_t i = 0; iter.HasMore(); i++) {
+  for (nsTObserverArray<RefPtr<DebuggerNotificationCallback>>::ForwardIterator
+           iter(mEventListenerCallbacks);
+       iter.HasMore();) {
     if (*iter.GetNext().get() == aHandlerFn) {
-      mEventListenerCallbacks.RemoveElementAt(i);
+      iter.Remove();
       return true;
     }
   }
