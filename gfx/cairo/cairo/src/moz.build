@@ -207,7 +207,7 @@ DEFINES['HAVE_UINT64_T'] = True
 
 if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['HAVE_FT_LIBRARY_SETLCDFILTER'] = True
-    DEFINES['FT_LCD_FILTER_H'] = '%s/modules/freetype2/include/freetype/ftlcdfil.h' % TOPSRCDIR
+    DEFINES['FT_LCD_FILTER_H'] = '../../../modules/freetype2/include/freetype/ftlcdfil.h'
 
 # Suppress warnings in third-party code.
 CFLAGS += [
