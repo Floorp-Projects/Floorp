@@ -36,6 +36,7 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   void RemoveBlocker(ContentParent* aParent);
   already_AddRefed<ContentParent> Take();
   bool Provide(ContentParent* aParent);
+  void Erase(ContentParent* aParent);
 
  private:
   static const char* const kObserverTopics[];
@@ -58,8 +59,6 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   void Disable();
   void CloseProcess();
 
-  void ObserveProcessShutdown(nsISupports* aSubject);
-
   bool mEnabled;
   bool mShutdown;
   bool mLaunchInProgress;
@@ -70,7 +69,6 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
 };
 
 const char* const PreallocatedProcessManagerImpl::kObserverTopics[] = {
-    "ipc:content-shutdown",
     "memory-pressure",
     "profile-change-teardown",
     NS_XPCOM_SHUTDOWN_OBSERVER_ID,
@@ -120,9 +118,7 @@ NS_IMETHODIMP
 PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
                                         const char* aTopic,
                                         const char16_t* aData) {
-  if (!strcmp("ipc:content-shutdown", aTopic)) {
-    ObserveProcessShutdown(aSubject);
-  } else if (!strcmp("nsPref:changed", aTopic)) {
+  if (!strcmp("nsPref:changed", aTopic)) {
     // The only other observer we registered was for our prefs.
     RereadPrefs();
   } else if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic) ||
@@ -189,6 +185,13 @@ bool PreallocatedProcessManagerImpl::Provide(ContentParent* aParent) {
   // with the same ContentParent. Returning true here for both calls is
   // important to avoid the cached process to be destroyed.
   return aParent == mPreallocatedProcess;
+}
+
+void PreallocatedProcessManagerImpl::Erase(ContentParent* aParent) {
+  if (mPreallocatedProcess == aParent) {
+    mBlockers.RemoveEntry(aParent->ChildID());
+    mPreallocatedProcess = nullptr;
+  }
 }
 
 void PreallocatedProcessManagerImpl::Enable() {
@@ -294,22 +297,6 @@ void PreallocatedProcessManagerImpl::CloseProcess() {
   }
 }
 
-void PreallocatedProcessManagerImpl::ObserveProcessShutdown(
-    nsISupports* aSubject) {
-  nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE_VOID(props);
-
-  uint64_t childID = CONTENT_PROCESS_ID_UNKNOWN;
-  props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
-  NS_ENSURE_TRUE_VOID(childID != CONTENT_PROCESS_ID_UNKNOWN);
-
-  if (mPreallocatedProcess && childID == mPreallocatedProcess->ChildID()) {
-    mPreallocatedProcess = nullptr;
-  }
-
-  mBlockers.RemoveEntry(childID);
-}
-
 inline PreallocatedProcessManagerImpl* GetPPMImpl() {
   return PreallocatedProcessManagerImpl::Singleton();
 }
@@ -332,6 +319,11 @@ already_AddRefed<ContentParent> PreallocatedProcessManager::Take() {
 /* static */
 bool PreallocatedProcessManager::Provide(ContentParent* aParent) {
   return GetPPMImpl()->Provide(aParent);
+}
+
+/* static */
+void PreallocatedProcessManager::Erase(ContentParent* aParent) {
+  return GetPPMImpl()->Erase(aParent);
 }
 
 }  // namespace mozilla
