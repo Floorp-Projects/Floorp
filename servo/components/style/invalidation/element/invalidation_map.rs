@@ -35,7 +35,7 @@ use smallvec::SmallVec;
 /// We generate a Dependency for both |a _ b:X _| and |a _ b:X _ c _ d:Y _|,
 /// even though those selectors may not appear on their own in any stylesheet.
 /// This allows us to quickly scan through the dependency sites of all style
-/// rules and determine the maximum effect that a given state or attributef
+/// rules and determine the maximum effect that a given state or attribute
 /// change may have on the style of elements in the document.
 #[derive(Clone, Debug, MallocSizeOf)]
 pub struct Dependency {
