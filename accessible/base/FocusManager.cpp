@@ -386,7 +386,8 @@ nsINode* FocusManager::FocusedDOMNode() const {
   // residing in chrome process because it means an element in content process
   // keeps the focus.
   if (focusedElm) {
-    if (EventStateManager::IsRemoteTarget(focusedElm)) {
+    // XXXedgar, do we need to return null if focus is in fission OOP iframe?
+    if (EventStateManager::IsTopLevelRemoteTarget(focusedElm)) {
       return nullptr;
     }
     return focusedElm;

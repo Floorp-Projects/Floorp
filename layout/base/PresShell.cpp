@@ -7691,8 +7691,9 @@ nsIFrame* PresShell::EventHandler::ComputeRootFrameToHandleEventWithPopup(
 
   // If a remote browser is currently capturing input break out if we
   // detect a chrome generated popup.
+  // XXXedgar, do we need to check fission OOP iframe?
   if (aCapturingContent &&
-      EventStateManager::IsRemoteTarget(aCapturingContent)) {
+      EventStateManager::IsTopLevelRemoteTarget(aCapturingContent)) {
     *aIsCapturingContentIgnored = true;
   }
 
