@@ -459,12 +459,11 @@ class GitRepository(Repository):
 
     @property
     def base_ref(self):
-        refs = self._run('for-each-ref', 'refs/heads', 'refs/remotes',
-                         '--format=%(objectname)').splitlines()
-        head = self.head_ref
-        if head in refs:
-            refs.remove(head)
-        return self._run('merge-base', 'HEAD', *refs).strip()
+        refs = self._run('rev-list', 'HEAD', '--topo-order', '--boundary',
+                         '--not', '--remotes').splitlines()
+        if refs:
+            return refs[-1][1:]  # boundary starts with a prefix `-`
+        return self.head_ref
 
     @property
     def has_git_cinnabar(self):
