@@ -21,10 +21,10 @@ def create_empty_stub():
     return tempdir
 
 
-def create_stub():
+def create_stub(tempdir=None):
     """create a stub directory"""
 
-    tempdir = tempfile.mkdtemp()
+    tempdir = tempdir or tempfile.mkdtemp()
     try:
         for path in files:
             fullpath = os.path.join(tempdir, *path)
