@@ -366,17 +366,20 @@ class Mitmproxy(Playback):
                             "values": data["confidence"],
                             "subtest-prefix-type": False,
                             "unit": "%",
+                            "shouldAlert": True,
                             "lowerIsBetter": False
                         },
                         "not-replayed": {
                             "values": data["not-replayed"],
                             "subtest-prefix-type": False,
+                            "shouldAlert": False,
                             "unit": "a.u."
                         },
                         "replayed": {
                             "values": data["replayed"],
                             "subtest-prefix-type": False,
                             "unit": "a.u.",
+                            "shouldAlert": False,
                             "lowerIsBetter": False
                         }
                     }
