@@ -4,35 +4,61 @@ exports[`Footer component renders 1`] = `
 <footer
   className="compatibility-footer"
 >
-  <button
-    className="compatibility-footer__button"
-    onClick={[Function]}
-    title="Settings"
+  <Localized
+    attrs={
+      Object {
+        "title": true,
+      }
+    }
+    id="compatibility-settings-button-title"
   >
-    <img
-      className="compatibility-footer__icon"
-      src="chrome://devtools/skin/images/settings.svg"
-    />
-    <label
-      className="compatibility-footer__label"
+    <button
+      className="compatibility-footer__button"
+      onClick={[Function]}
+      title="compatibility-settings-button-title"
     >
-      Settings
-    </label>
-  </button>
-  <button
-    className="compatibility-footer__button"
-    onClick={[Function]}
-    title="Feedback"
+      <img
+        className="compatibility-footer__icon"
+        src="chrome://devtools/skin/images/settings.svg"
+      />
+      <Localized
+        id="compatibility-settings-button-label"
+      >
+        <label
+          className="compatibility-footer__label"
+        >
+          compatibility-settings-button-label
+        </label>
+      </Localized>
+    </button>
+  </Localized>
+  <Localized
+    attrs={
+      Object {
+        "title": true,
+      }
+    }
+    id="compatibility-feedback-button-title"
   >
-    <img
-      className="compatibility-footer__icon"
-      src="chrome://devtools/skin/images/report.svg"
-    />
-    <label
-      className="compatibility-footer__label"
+    <button
+      className="compatibility-footer__button"
+      onClick={[Function]}
+      title="compatibility-feedback-button-title"
     >
-      Feedback
-    </label>
-  </button>
+      <img
+        className="compatibility-footer__icon"
+        src="chrome://devtools/skin/images/report.svg"
+      />
+      <Localized
+        id="compatibility-feedback-button-label"
+      >
+        <label
+          className="compatibility-footer__label"
+        >
+          compatibility-feedback-button-label
+        </label>
+      </Localized>
+    </button>
+  </Localized>
 </footer>
 `;

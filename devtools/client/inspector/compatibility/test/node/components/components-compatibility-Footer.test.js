@@ -20,7 +20,8 @@ describe("Footer component", () => {
   it("renders", () => {
     const mockStore = configureStore([thunk]);
     const store = mockStore({});
-    const wrapper = shallow(Footer({ store })).dive();
-    expect(wrapper).toMatchSnapshot();
+    const connectWrapper = shallow(Footer({ store }));
+    const targetComponent = connectWrapper.dive();
+    expect(targetComponent).toMatchSnapshot();
   });
 });

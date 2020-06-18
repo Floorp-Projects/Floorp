@@ -13,6 +13,15 @@ compatibility-issue-deprecated = (deprecated)
 compatibility-issue-experimental = (experimental)
 compatibility-issue-deprecated-experimental = (deprecated, experimental)
 
+## Messages used as labels and titles for buttons in the footer
+
+compatibility-settings-button-label = Settings
+compatibility-settings-button-title =
+    .title = Settings
+compatibility-feedback-button-label = Feedback
+compatibility-feedback-button-title =
+    .title = Feedback
+
 ##
 
 # Text used as the label for the number of nodes where the issue occurred
