@@ -118,6 +118,14 @@ class MobileViewportManager final : public nsIDOMEventListener,
     return mVisualViewportSizeUpdatedByDynamicToolbar;
   }
 
+  /*
+   * This refreshes the visual viewport size based on the most recently
+   * available information. It is intended to be called in particular after
+   * the root scrollframe does a reflow, which may make scrollbars appear or
+   * disappear if the content changed size.
+   */
+  void UpdateVisualViewportSizeForPotentialScrollbarChange();
+
  private:
   ~MobileViewportManager();
 
