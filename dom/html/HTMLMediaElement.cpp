@@ -13,6 +13,7 @@
 #include "AudioStreamTrack.h"
 #include "AutoplayPolicy.h"
 #include "ChannelMediaDecoder.h"
+#include "CrossGraphTrack.h"
 #include "DOMMediaStream.h"
 #include "DecoderDoctorDiagnostics.h"
 #include "DecoderDoctorLogger.h"
@@ -5163,12 +5164,6 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
       mMediaStreamRenderer->Start();
     }
 
-    if (mSink.second) {
-      NS_WARNING(
-          "setSinkId() when playing a MediaStream is not supported yet and "
-          "will be ignored");
-    }
-
     if (mSelectedVideoStreamTrack && GetVideoFrameContainer()) {
       MaybeBeginCloningVisually();
     }
@@ -5239,6 +5234,9 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
   mWatchManager.Watch(mMediaStreamRenderer->CurrentGraphTime(),
                       &HTMLMediaElement::UpdateSrcStreamTime);
   SetVolumeInternal();
+  if (mSink.second) {
+    SetSrcMediaStreamSink(mSink.second);
+  }
 
   UpdateSrcMediaStreamPlaying();
   UpdateSrcStreamPotentiallyPlaying();
@@ -7689,9 +7687,20 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
                   });
               return p;
             }
-            if (self->mSrcAttrStream) {
-              // Set Sink Id through MTG is not supported yet.
-              return SinkInfoPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+            if (self->mSrcStream) {
+              RefPtr<SinkInfoPromise> p =
+                  self->SetSrcMediaStreamSink(aInfo)->Then(
+                      self->mAbstractMainThread, __func__,
+                      [aInfo](
+                          const GenericPromise::ResolveOrRejectValue& aValue) {
+                        if (aValue.IsResolve()) {
+                          return SinkInfoPromise::CreateAndResolve(aInfo,
+                                                                   __func__);
+                        }
+                        return SinkInfoPromise::CreateAndReject(
+                            aValue.RejectValue(), __func__);
+                      });
+              return p;
             }
             // No media attached to the element save it for later.
             return SinkInfoPromise::CreateAndResolve(aInfo, __func__);
@@ -7727,6 +7736,51 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
 
   aRv = NS_OK;
   return promise.forget();
+}
+
+RefPtr<GenericPromise> HTMLMediaElement::SetSrcMediaStreamSink(
+    AudioDeviceInfo* aSink) {
+  MOZ_ASSERT(mSrcStream);
+  nsTArray<RefPtr<AudioStreamTrack>> audioTracks;
+  mSrcStream->GetAudioTracks(audioTracks);
+  if (audioTracks.Length() == 0) {
+    // Save it for later. At the moment the element does not contain any audio
+    // track. Nevertheless, the requested sink-id is saved to be used when the
+    // first audio track is available.
+    return GenericPromise::CreateAndResolve(true, __func__);
+  }
+
+  nsTArray<RefPtr<GenericPromise>> promises;
+  for (const auto& audioTrack : audioTracks) {
+    if (audioTrack->Ended()) {
+      continue;
+    }
+    if (!mPaused) {
+      audioTrack->RemoveAudioOutput(this);
+    }
+    promises.AppendElement(audioTrack->SetAudioOutputDevice(this, aSink));
+    if (!mPaused) {
+      audioTrack->AddAudioOutput(this);
+      audioTrack->SetAudioOutputVolume(this, ComputedVolume());
+    }
+  }
+
+  if (!promises.Length()) {
+    // Not active track, save it for later
+    return GenericPromise::CreateAndResolve(true, __func__);
+  }
+
+  RefPtr<GenericPromise> p =
+      GenericPromise::All(GetCurrentThreadSerialEventTarget(), promises)
+          ->Then(
+              GetCurrentThreadSerialEventTarget(), __func__,
+              [](const nsTArray<bool>&) {
+                return GenericPromise::CreateAndResolve(true, __func__);
+              },
+              [](nsresult rv) {
+                return GenericPromise::CreateAndReject(rv, __func__);
+              });
+  return p;
 }
 
 void HTMLMediaElement::NotifyTextTrackModeChanged() {
