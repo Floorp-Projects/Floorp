@@ -73,7 +73,6 @@ mozilla.pth:third_party/python/yamllint
 mozilla.pth:third_party/python/zipp
 mozilla.pth:build
 objdir:build
-mozilla.pth:build/pymake
 mozilla.pth:config
 mozilla.pth:config/mozunit
 mozilla.pth:dom/bindings

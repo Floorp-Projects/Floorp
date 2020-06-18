@@ -3,7 +3,6 @@ browser/components/pocket/content/panels/js/vendor/
 browser/components/translation/cld2/
 browser/extensions/formautofill/content/third-party/
 browser/extensions/screenshots/build/raven.js
-build/pymake
 devtools/client/debugger/flow-typed/npm/
 devtools/client/inspector/markup/test/lib_*
 devtools/client/jsonview/lib/require.js

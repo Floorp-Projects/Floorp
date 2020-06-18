@@ -38,8 +38,6 @@ $(RUNNABLE_TIERS)::
 binaries::
 	+$(MAKE) recurse_compile
 
-# Carefully avoid $(eval) type of rule generation, which makes pymake slower
-# than necessary.
 # Get current tier and corresponding subtiers from the data in root.mk.
 CURRENT_TIER := $(filter $(foreach tier,$(RUNNABLE_TIERS) $(non_default_tiers),recurse_$(tier) $(tier)-deps),$(MAKECMDGOALS))
 ifneq (,$(filter-out 0 1,$(words $(CURRENT_TIER))))
