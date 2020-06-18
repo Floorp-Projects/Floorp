@@ -29,34 +29,34 @@ const aside = {
 };
 
 const release = {
-  title: "What’s New in DevTools (Firefox 77)",
+  title: "What’s New in DevTools (Firefox 78)",
   linkText: "Read more",
   linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/77?${utmParams}`,
   features: [
     {
-      header: `Faster, leaner debugging`,
-      description: `Performance improvements that not only speed up pausing and stepping in the Debugger but also cut down on memory usage over time.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger?${utmParams}`,
+      header: `Better logs for uncaught promise rejections`,
+      description: `Framework and promise errors are now logged with detailed error stacks, names, and properties, especially improving Angular debugging.`,
+      href: `https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises?${utmParams}#Promise_rejection_events`,
     },
     {
-      header: `Source Maps that just work`,
-      description: `Firefox 77 has the most fixes yet to make source maps faster and more dependable so that your original CSS and JavaScript/TypeScript/etc code is always at hand. Especially improved: build outputs which previously failed to load source maps.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_a_source_map?${utmParams}`,
+      header: `Faster DOM navigation in Inspector`,
+      description: `Loading and navigating the DOM on sites with many CSS variables is much snappier.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector?${utmParams}`,
     },
     {
-      header: `Step JavaScript in the selected stack frame`,
-      description: `Stepping in the currently selected stack makes the debugging code execution flow more intuitive and makes it less likely for you to miss an important line.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Step_through_code?${utmParams}`,
+      header: `Source-mapped variables in Logpoints`,
+      description: `Logpoints can log any variable in original and source-mapped files by automatically finding references to minified names. Make sure to enable the "Map" option in Debugger’s "Scopes" pane.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/Set_a_logpoint?${utmParams}`,
     },
     {
-      header: `Overflow settings for Network and Debugger`,
-      description: `Making for a leaner toolbar, Network and Debugger follow Console’s example in combining existing and new checkboxes into a new settings menu. This puts powerful options like “Disable JavaScript” right at your fingertips.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor?${utmParams}`,
+      header: `Better support for blocked network requests`,
+      description: `Network requests blocked by Enhanced Tracking Protection, add-ons, and CORS are now captured in the Network panel and include detailed blocking reasons.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}`,
     },
     {
-      header: `Pause on property read & write`,
-      description: `Understanding state changes is core to debugging. Pausing when a script references a property is now easier with a new Watchpoints option that combines get/set.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_watchpoints?${utmParams}`,
+      header: `URL bar & reload in Remote Debugging`,
+      description: `Navigate your mobile Firefox browser from the remote debugging UI, avoiding fiddling on tiny device screens.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}`,
     },
   ],
 };
@@ -67,9 +67,19 @@ const dev = {
   linkText: "Get DevEdition",
   features: [
     {
-      header: `Cross-browser CSS compatibility audit`,
-      description: `Analyze your CSS for cross-browser compatibility with a new sidepanel in the Inspector. Let us know how well it worked for your projects via the Feedback option!`,
-      href: `https://discourse.mozilla.org/t/new-in-devedition-77-css-compatibility-in-inspector/60669`,
+      header: `Async stacks in Console & Debugger`,
+      description: `Step through event, timeout, and promise-based function calls over time with the full-featured async stacks in Debugger.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/UI_Tour?${utmParams}#Call_stack`,
+    },
+    {
+      header: `Correct references to source-mapped JS/CSS`,
+      description: `Source-mapped file references in the Inspector and Console now link more reliably to the right file.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_a_source_map?${utmParams}`,
+    },
+    {
+      header: `Console shows failed requests`,
+      description: `Network requests with 4xx/5xx status codes now log as errors in the Console and can be inspected using the embedded network details.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console?${utmParams}`,
     },
   ],
 };
