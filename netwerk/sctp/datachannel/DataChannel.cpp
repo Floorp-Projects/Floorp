@@ -44,6 +44,7 @@
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "mozilla/RandomNum.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
@@ -69,6 +70,8 @@
     } while (0)
 #endif
 
+static bool sctp_initialized;
+
 namespace mozilla {
 
 LazyLogModule gDataChannelLog("DataChannel");
@@ -77,55 +80,43 @@ static LazyLogModule gSCTPLog("SCTP");
 #define SCTP_LOG(args) \
   MOZ_LOG(mozilla::gSCTPLog, mozilla::LogLevel::Debug, args)
 
-static void debug_printf(const char* format, ...) {
-  va_list ap;
-  char buffer[1024];
-
-  if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
-    va_start(ap, format);
-#ifdef _WIN32
-    if (vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, format, ap) > 0) {
-#else
-    if (VsprintfLiteral(buffer, format, ap) > 0) {
-#endif
-      SCTP_LOG(("%s", buffer));
-    }
-    va_end(ap);
-  }
-}
-
-class DataChannelRegistry : public nsIObserver {
+class DataChannelConnectionShutdown : public nsITimerCallback {
  public:
+  explicit DataChannelConnectionShutdown(DataChannelConnection* aConnection)
+      : mConnection(aConnection) {
+    mTimer = NS_NewTimer();  // we'll crash if this fails
+    mTimer->InitWithCallback(this, 30 * 1000, nsITimer::TYPE_ONE_SHOT);
+  }
+
+  NS_IMETHODIMP Notify(nsITimer* aTimer) override;
+
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static uintptr_t Register(DataChannelConnection* aConnection) {
-    StaticMutexAutoLock lock(sInstanceMutex);
-    if (NS_WARN_IF(!Instance())) {
-      return 0;
-    }
-    return Instance()->RegisterImpl(aConnection);
-  }
-
-  static void Deregister(uintptr_t aId) {
-    StaticMutexAutoLock lock(sInstanceMutex);
-    if (NS_WARN_IF(!Instance())) {
-      return;
-    }
-    Instance()->DeregisterImpl(aId);
-  }
-
-  static RefPtr<DataChannelConnection> Lookup(uintptr_t aId) {
-    StaticMutexAutoLock lock(sInstanceMutex);
-    if (NS_WARN_IF(!Instance())) {
-      return nullptr;
-    }
-    return Instance()->LookupImpl(aId);
-  }
-
  private:
-  // This is a singleton class, so don't let just anyone create one of these
-  DataChannelRegistry() {
-    ASSERT_WEBRTC(NS_IsMainThread());
+  virtual ~DataChannelConnectionShutdown() { mTimer->Cancel(); }
+
+  RefPtr<DataChannelConnection> mConnection;
+  nsCOMPtr<nsITimer> mTimer;
+};
+
+class DataChannelShutdown;
+
+StaticRefPtr<DataChannelShutdown> sDataChannelShutdown;
+
+class DataChannelShutdown : public nsIObserver {
+ public:
+  // This needs to be tied to some object that is guaranteed to be
+  // around (singleton likely) unless we want to shutdown sctp whenever
+  // we're not using it (and in which case we'd keep a refcnt'd object
+  // ref'd by each DataChannelConnection to release the SCTP usrlib via
+  // sctp_finish). Right now, the single instance of this class is
+  // owned by the observer service and a StaticRefPtr.
+
+  NS_DECL_ISUPPORTS
+
+  DataChannelShutdown() = default;
+
+  void Init() {
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (!observerService) return;
@@ -136,129 +127,80 @@ class DataChannelRegistry : public nsIObserver {
     (void)rv;
   }
 
-  static RefPtr<DataChannelRegistry>& Instance() {
-    // Lazy-create static registry.
-    static RefPtr<DataChannelRegistry> sRegistry = new DataChannelRegistry;
-    return sRegistry;
-  }
-
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override {
-    ASSERT_WEBRTC(NS_IsMainThread());
+    // Note: MainThread
     if (strcmp(aTopic, "xpcom-will-shutdown") == 0) {
-      RefPtr<DataChannelRegistry> self = this;
-      {
-        StaticMutexAutoLock lock(sInstanceMutex);
-        Instance() = nullptr;
+      DC_DEBUG(("Shutting down SCTP"));
+      if (sctp_initialized) {
+        usrsctp_finish();
+        sctp_initialized = false;
       }
-
-      // |self| is the only reference now
-
-      if (NS_WARN_IF(!mConnections.empty())) {
-        MOZ_ASSERT(false);
-        mConnections.clear();
-        DeinitUsrSctp();
-      }
-
       nsCOMPtr<nsIObserverService> observerService =
           mozilla::services::GetObserverService();
-      if (NS_WARN_IF(!observerService)) {
-        return NS_ERROR_FAILURE;
-      }
+      if (!observerService) return NS_ERROR_FAILURE;
 
       nsresult rv =
           observerService->RemoveObserver(this, "xpcom-will-shutdown");
       MOZ_ASSERT(rv == NS_OK);
       (void)rv;
-    }
 
+      {
+        StaticMutexAutoLock lock(sLock);
+        sConnections = nullptr;  // clears as well
+      }
+      sDataChannelShutdown = nullptr;
+    }
     return NS_OK;
   }
 
-  uintptr_t RegisterImpl(DataChannelConnection* aConnection) {
-    ASSERT_WEBRTC(NS_IsMainThread());
-    if (mConnections.empty()) {
-      InitUsrSctp();
+  void CreateConnectionShutdown(DataChannelConnection* aConnection) {
+    StaticMutexAutoLock lock(sLock);
+    if (!sConnections) {
+      sConnections = new nsTArray<RefPtr<DataChannelConnectionShutdown>>();
     }
-    mConnections.emplace(mNextId, aConnection);
-    return mNextId++;
+    sConnections->AppendElement(new DataChannelConnectionShutdown(aConnection));
   }
 
-  void DeregisterImpl(uintptr_t aId) {
-    ASSERT_WEBRTC(NS_IsMainThread());
-    mConnections.erase(aId);
-    if (mConnections.empty()) {
-      DeinitUsrSctp();
+  void RemoveConnectionShutdown(
+      DataChannelConnectionShutdown* aConnectionShutdown) {
+    StaticMutexAutoLock lock(sLock);
+    if (sConnections) {
+      sConnections->RemoveElement(aConnectionShutdown);
     }
   }
 
-  RefPtr<DataChannelConnection> LookupImpl(uintptr_t aId) {
-    auto it = mConnections.find(aId);
-    if (NS_WARN_IF(it == mConnections.end())) {
-      return nullptr;
-    }
-    return it->second;
-  }
+ private:
+  // The only instance of DataChannelShutdown is owned by the observer
+  // service, so there is no need to call RemoveObserver here.
+  virtual ~DataChannelShutdown() = default;
 
-  virtual ~DataChannelRegistry() = default;
-
-#ifdef SCTP_DTLS_SUPPORTED
-  static int SctpDtlsOutput(void* addr, void* buffer, size_t length,
-                            uint8_t tos, uint8_t set_df) {
-    uintptr_t id = reinterpret_cast<uintptr_t>(addr);
-    RefPtr<DataChannelConnection> connection = DataChannelRegistry::Lookup(id);
-    if (NS_WARN_IF(!connection)) {
-      return 0;
-    }
-    return connection->SctpDtlsOutput(addr, buffer, length, tos, set_df);
-  }
-#endif
-
-  void InitUsrSctp() {
-    DC_DEBUG(("sctp_init"));
-#ifdef MOZ_PEERCONNECTION
-    usrsctp_init(0, DataChannelRegistry::SctpDtlsOutput, debug_printf);
-#else
-    MOZ_CRASH("Trying to use SCTP/DTLS without mtransport");
-#endif
-
-    // Set logging to SCTP:LogLevel::Debug to get SCTP debugs
-    if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
-      usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
-    }
-
-    // Do not send ABORTs in response to INITs (1).
-    // Do not send ABORTs for received Out of the Blue packets (2).
-    usrsctp_sysctl_set_sctp_blackhole(2);
-
-    // Disable the Explicit Congestion Notification extension (currently not
-    // supported by the Firefox code)
-    usrsctp_sysctl_set_sctp_ecn_enable(0);
-
-    // Enable interleaving messages for different streams (incoming)
-    // See: https://tools.ietf.org/html/rfc6458#section-8.1.20
-    usrsctp_sysctl_set_sctp_default_frag_interleave(2);
-
-    // Disabling authentication and dynamic address reconfiguration as neither
-    // of them are used for data channel and only result in additional code
-    // paths being used.
-    usrsctp_sysctl_set_sctp_asconf_enable(0);
-    usrsctp_sysctl_set_sctp_auth_enable(0);
-  }
-
-  void DeinitUsrSctp() {
-    DC_DEBUG(("Shutting down SCTP"));
-    usrsctp_finish();
-  }
-
-  uintptr_t mNextId = 1;
-  std::map<uintptr_t, RefPtr<DataChannelConnection>> mConnections;
-  static StaticMutex sInstanceMutex;
+  // protects sConnections
+  static StaticMutex sLock;
+  static StaticAutoPtr<nsTArray<RefPtr<DataChannelConnectionShutdown>>>
+      sConnections;
 };
 
-StaticMutex DataChannelRegistry::sInstanceMutex;
+StaticMutex DataChannelShutdown::sLock;
+StaticAutoPtr<nsTArray<RefPtr<DataChannelConnectionShutdown>>>
+    DataChannelShutdown::sConnections;
 
-NS_IMPL_ISUPPORTS(DataChannelRegistry, nsIObserver);
+NS_IMPL_ISUPPORTS(DataChannelShutdown, nsIObserver);
+
+NS_IMPL_ISUPPORTS(DataChannelConnectionShutdown, nsITimerCallback)
+
+NS_IMETHODIMP
+DataChannelConnectionShutdown::Notify(nsITimer* aTimer) {
+  // safely release reference to ourself
+  RefPtr<DataChannelConnectionShutdown> grip(this);
+  // Might not be set. We don't actually use the |this| pointer in
+  // RemoveConnectionShutdown right now, which makes this a bit gratuitous
+  // anyway...
+  if (sDataChannelShutdown) {
+    sDataChannelShutdown->RemoveConnectionShutdown(this);
+  }
+  return NS_OK;
+}
 
 OutgoingMsg::OutgoingMsg(struct sctp_sendv_spa& info, const uint8_t* data,
                          size_t length)
@@ -293,18 +235,12 @@ BufferedOutgoingMsg::~BufferedOutgoingMsg() {
 static int receive_cb(struct socket* sock, union sctp_sockstore addr,
                       void* data, size_t datalen, struct sctp_rcvinfo rcv,
                       int flags, void* ulp_info) {
-  DC_DEBUG(("In receive_cb, ulp_info=%p", ulp_info));
-  uintptr_t id = reinterpret_cast<uintptr_t>(ulp_info);
-  RefPtr<DataChannelConnection> connection = DataChannelRegistry::Lookup(id);
-  if (!connection) {
-    MOZ_ASSERT(false);
-    return 0;
-  }
+  DataChannelConnection* connection =
+      static_cast<DataChannelConnection*>(ulp_info);
   return connection->ReceiveCallback(sock, data, datalen, rcv, flags);
 }
 
-static RefPtr<DataChannelConnection> GetConnectionFromSocket(
-    struct socket* sock) {
+static DataChannelConnection* GetConnectionFromSocket(struct socket* sock) {
   struct sockaddr* addrs = nullptr;
   int naddrs = usrsctp_getladdrs(sock, 0, &addrs);
   if (naddrs <= 0 || addrs[0].sa_family != AF_CONN) {
@@ -317,8 +253,8 @@ static RefPtr<DataChannelConnection> GetConnectionFromSocket(
   // pointer that created them, so [0] is as good as any other.
   struct sockaddr_conn* sconn =
       reinterpret_cast<struct sockaddr_conn*>(&addrs[0]);
-  uintptr_t id = reinterpret_cast<uintptr_t>(sconn->sconn_addr);
-  RefPtr<DataChannelConnection> connection = DataChannelRegistry::Lookup(id);
+  DataChannelConnection* connection =
+      reinterpret_cast<DataChannelConnection*>(sconn->sconn_addr);
   usrsctp_freeladdrs(addrs);
 
   return connection;
@@ -326,13 +262,30 @@ static RefPtr<DataChannelConnection> GetConnectionFromSocket(
 
 // called when the buffer empties to the threshold value
 static int threshold_event(struct socket* sock, uint32_t sb_free) {
-  RefPtr<DataChannelConnection> connection = GetConnectionFromSocket(sock);
+  DataChannelConnection* connection = GetConnectionFromSocket(sock);
   if (connection) {
     connection->SendDeferredMessages();
   } else {
     DC_ERROR(("Can't find connection for socket %p", sock));
   }
   return 0;
+}
+
+static void debug_printf(const char* format, ...) {
+  va_list ap;
+  char buffer[1024];
+
+  if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
+    va_start(ap, format);
+#ifdef _WIN32
+    if (vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, format, ap) > 0) {
+#else
+    if (VsprintfLiteral(buffer, format, ap) > 0) {
+#endif
+      SCTP_LOG(("%s", buffer));
+    }
+    va_end(ap);
+  }
 }
 
 DataChannelConnection::~DataChannelConnection() {
@@ -401,18 +354,26 @@ void DataChannelConnection::DestroyOnSTS(struct socket* aMasterSocket,
   if (aSocket && aSocket != aMasterSocket) usrsctp_close(aSocket);
   if (aMasterSocket) usrsctp_close(aMasterSocket);
 
-  usrsctp_deregister_address(reinterpret_cast<void*>(mId));
-  DC_DEBUG(
-      ("Deregistered %p from the SCTP stack.", reinterpret_cast<void*>(mId)));
+  usrsctp_deregister_address(static_cast<void*>(this));
+  DC_DEBUG(("Deregistered %p from the SCTP stack.", static_cast<void*>(this)));
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mShutdown = true;
 #endif
 
   disconnect_all();
   mTransportHandler = nullptr;
-  GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
-      "DataChannelConnection::Destroy",
-      [id = mId]() { DataChannelRegistry::Deregister(id); }));
+
+  // we may have queued packet sends on STS after this; dispatch to ourselves
+  // before finishing here so we can be sure there aren't anymore runnables
+  // active that can try to touch the flow. DON'T use RUN_ON_THREAD, it
+  // queue-jumps!
+  mSTS->Dispatch(WrapRunnable(RefPtr<DataChannelConnection>(this),
+                              &DataChannelConnection::DestroyOnSTSFinal),
+                 NS_DISPATCH_NORMAL);
+}
+
+void DataChannelConnection::DestroyOnSTSFinal() {
+  sDataChannelShutdown->CreateConnectionShutdown(this);
 }
 
 Maybe<RefPtr<DataChannelConnection>> DataChannelConnection::Create(
@@ -463,9 +424,44 @@ bool DataChannelConnection::Init(const uint16_t aLocalPort,
     // MutexAutoLock lock(mLock); Not needed since we're on mainthread always
     mLocalPort = aLocalPort;
     SetMaxMessageSize(aMaxMessageSize.isSome(), aMaxMessageSize.valueOr(0));
-  }
 
-  mId = DataChannelRegistry::Register(this);
+    if (!sctp_initialized) {
+      DC_DEBUG(("sctp_init"));
+#ifdef MOZ_PEERCONNECTION
+      usrsctp_init(0, DataChannelConnection::SctpDtlsOutput, debug_printf);
+#else
+      MOZ_CRASH("Trying to use SCTP/DTLS without mtransport");
+#endif
+
+      // Set logging to SCTP:LogLevel::Debug to get SCTP debugs
+      if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
+        usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
+      }
+
+      // Do not send ABORTs in response to INITs (1).
+      // Do not send ABORTs for received Out of the Blue packets (2).
+      usrsctp_sysctl_set_sctp_blackhole(2);
+
+      // Disable the Explicit Congestion Notification extension (currently not
+      // supported by the Firefox code)
+      usrsctp_sysctl_set_sctp_ecn_enable(0);
+
+      // Enable interleaving messages for different streams (incoming)
+      // See: https://tools.ietf.org/html/rfc6458#section-8.1.20
+      usrsctp_sysctl_set_sctp_default_frag_interleave(2);
+
+      // Disabling authentication and dynamic address reconfiguration as neither
+      // of them are used for data channel and only result in additional code
+      // paths being used.
+      usrsctp_sysctl_set_sctp_asconf_enable(0);
+      usrsctp_sysctl_set_sctp_auth_enable(0);
+
+      sctp_initialized = true;
+
+      sDataChannelShutdown = new DataChannelShutdown();
+      sDataChannelShutdown->Init();
+    }
+  }
 
   // XXX FIX! make this a global we get once
   // Find the STS thread
@@ -476,8 +472,7 @@ bool DataChannelConnection::Init(const uint16_t aLocalPort,
   // Open sctp with a callback
   if ((mMasterSocket = usrsctp_socket(
            AF_CONN, SOCK_STREAM, IPPROTO_SCTP, receive_cb, threshold_event,
-           usrsctp_sysctl_get_sctp_sendspace() / 2,
-           reinterpret_cast<void*>(mId))) == nullptr) {
+           usrsctp_sysctl_get_sctp_sendspace() / 2, this)) == nullptr) {
     return false;
   }
 
@@ -595,13 +590,8 @@ bool DataChannelConnection::Init(const uint16_t aLocalPort,
   }
 
   mSocket = nullptr;
-  mSTS->Dispatch(
-      NS_NewRunnableFunction("DataChannelConnection::Init", [id = mId]() {
-        usrsctp_register_address(reinterpret_cast<void*>(id));
-        DC_DEBUG(("Registered %p within the SCTP stack.",
-                  reinterpret_cast<void*>(id)));
-      }));
-
+  usrsctp_register_address(static_cast<void*>(this));
+  DC_DEBUG(("Registered %p within the SCTP stack.", static_cast<void*>(this)));
   return true;
 
 error_cleanup:
@@ -831,7 +821,7 @@ void DataChannelConnection::CompleteConnect() {
   addr.sconn_len = sizeof(addr);
 #  endif
   addr.sconn_port = htons(mLocalPort);
-  addr.sconn_addr = reinterpret_cast<void*>(mId);
+  addr.sconn_addr = static_cast<void*>(this);
 
   DC_DEBUG(("Calling usrsctp_bind"));
   int r = usrsctp_bind(mMasterSocket, reinterpret_cast<struct sockaddr*>(&addr),
@@ -941,8 +931,7 @@ void DataChannelConnection::SctpDtlsInput(const std::string& aTransportId,
   }
   // Pass the data to SCTP
   MutexAutoLock lock(mLock);
-  usrsctp_conninput(reinterpret_cast<void*>(mId), packet.data(), packet.len(),
-                    0);
+  usrsctp_conninput(static_cast<void*>(this), packet.data(), packet.len(), 0);
 }
 
 void DataChannelConnection::SendPacket(std::unique_ptr<MediaPacket>&& packet) {
@@ -957,10 +946,12 @@ void DataChannelConnection::SendPacket(std::unique_ptr<MediaPacket>&& packet) {
       }));
 }
 
+/* static */
 int DataChannelConnection::SctpDtlsOutput(void* addr, void* buffer,
                                           size_t length, uint8_t tos,
                                           uint8_t set_df) {
-  MOZ_DIAGNOSTIC_ASSERT(!mShutdown);
+  DataChannelConnection* peer = static_cast<DataChannelConnection*>(addr);
+  MOZ_DIAGNOSTIC_ASSERT(!peer->mShutdown);
 
   if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
     char* buf;
@@ -981,12 +972,12 @@ int DataChannelConnection::SctpDtlsOutput(void* addr, void* buffer,
   packet->SetType(MediaPacket::SCTP);
   packet->Copy(static_cast<const uint8_t*>(buffer), length);
 
-  if (NS_IsMainThread() && mDeferSend) {
-    mDeferredSend.emplace_back(std::move(packet));
+  if (NS_IsMainThread() && peer->mDeferSend) {
+    peer->mDeferredSend.emplace_back(std::move(packet));
     return 0;
   }
 
-  SendPacket(std::move(packet));
+  peer->SendPacket(std::move(packet));
   return 0;  // cheat!  Packets can always be dropped later anyways
 }
 #endif
@@ -2364,7 +2355,6 @@ int DataChannelConnection::ReceiveCallback(struct socket* sock, void* data,
                                            size_t datalen,
                                            struct sctp_rcvinfo rcv, int flags) {
   ASSERT_WEBRTC(!NS_IsMainThread());
-  DC_DEBUG(("In ReceiveCallback"));
 
   if (!data) {
     DC_DEBUG(("ReceiveCallback: SCTP has finished shutting down"));
