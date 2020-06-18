@@ -1351,7 +1351,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
   }
 
   auto preloadKey = PreloadHashKey::CreateAsStyle(aLoadData);
-  streamLoader->NotifyOpen(&preloadKey, channel, mDocument,
+  streamLoader->NotifyOpen(preloadKey, channel, mDocument,
                            aLoadData.mIsPreload == IsPreload::FromLink);
 
   rv = channel->AsyncOpen(streamLoader);
