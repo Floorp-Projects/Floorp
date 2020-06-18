@@ -58,7 +58,9 @@ add_task(async function test_list_changes() {
 
   // Add some initial data.
   let db = await RemoteSettings(COLLECTION_NAME).db;
-  await db.importChanges({}, 42, records);
+  await db.create(records[0]);
+  await db.saveLastModified(42);
+
   let promise = waitForEvent(updateEvent, "update");
 
   skipListService.registerAndRunSkipListObserver(
@@ -183,7 +185,10 @@ add_task(async function test_list_init_data() {
 
   // Add some initial data.
   let db = await RemoteSettings(COLLECTION_NAME).db;
-  await db.importChanges({}, 42, records);
+  for (const record of records) {
+    await db.create(record);
+  }
+  await db.saveLastModified(42);
 
   // The first registered feature make SkipListService get the initial data
   // from remote setting.

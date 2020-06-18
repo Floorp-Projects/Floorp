@@ -26,15 +26,14 @@ add_task(async function test_with_rs_messages() {
   );
   const initialMessageCount = ASRouter.state.messages.length;
   const client = RemoteSettings("whats-new-panel");
-  await client.db.importChanges(
-    {},
-    42,
-    [
+  await client.db.clear();
+  for (const record of msgs) {
+    await client.db.create(
       // Modify targeting to ensure the messages always show up
-      { ...record, targeting: "true" },
-    ],
-    { clear: true }
-  );
+      { ...record, targeting: "true" }
+    );
+  }
+  await client.db.saveLastModified(42); // Prevent from loading JSON dump.
 
   const whatsNewBtn = document.getElementById("appMenu-whatsnew-button");
   Assert.equal(whatsNewBtn.hidden, true, "What's New btn doesn't exist");
