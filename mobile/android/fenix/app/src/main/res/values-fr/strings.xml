@@ -16,13 +16,16 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Recherche ou adresse</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Aucun onglet ouvert</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Vos onglets ouverts seront affichés ici.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Les onglets privés sont affichés ici.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 onglet ouvert. Appuyez pour changer d’onglet.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s onglets ouverts. Appuyez pour changer d’onglet.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s est réalisé par Mozilla.</string>
@@ -298,7 +301,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Identifiants</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Onglets</string>
+    <string name="preferences_sync_tabs_2">Onglets ouverts</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Déconnexion</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -489,7 +492,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Partager les onglets</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Enregistrer dans une collection</string>
+    <string name="tabs_menu_save_to_collection1">Enregistrer les onglets dans une collection</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menu de l’onglet</string>
     <!-- Tab menu item to share the tab -->
@@ -706,18 +709,15 @@
     <string name="delete_browsing_data_quit_off">Désactivé</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Recueillez les choses qui comptent pour vous. Pour commencer, enregistrez les onglets ouverts dans une nouvelle collection.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Collections</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu de la collection</string>
+
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Aucune collection</string>
-
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Vos collections seront affichées ici.</string>
-
+    <string name="no_collections_header1">Rassemblez ce qui compte pour vous</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Regroupez des recherches, des sites et des onglets similaires pour y accéder rapidement plus tard.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Sélectionner des onglets</string>
 
@@ -943,8 +943,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly est mis à jour chaque nuit et propose de nouvelles fonctionnalités expérimentales.
 Cependant, il peut être moins stable. Téléchargez la version bêta de notre navigateur pour une expérience plus stable.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Obtenir le navigateur Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Installer Firefox pour Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly a déménagé</string>
@@ -1450,6 +1451,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Vous pouvez parler</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Un identifiant avec ce nom d’utilisateur existe déjà</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Connectez-vous avec un compte Firefox.</string>
@@ -1459,5 +1463,19 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="synced_tabs_reauth">Veuillez vous authentifier à nouveau.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Veuillez activer la synchronisation des onglets.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Vous n’avez aucun onglet ouvert dans Firefox sur vos autres appareils.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Affichez la liste des onglets de vos autres appareils.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Se connecter pour synchroniser</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Nombre maximal de sites atteint</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Pour ajouter un nouveau site principal, supprimez-en un autre. Faites un appui long sur le site et sélectionnez supprimer.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">J’ai compris</string>
 
 </resources>

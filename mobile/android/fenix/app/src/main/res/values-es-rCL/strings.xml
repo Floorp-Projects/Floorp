@@ -19,6 +19,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Tus pestañas privadas se mostrarán aquí.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 pestaña abierta. Toca para cambiar de pestaña.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s pestañas abiertas. Toca para cambiar de pestaña.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s es producido por Mozilla.</string>
 
@@ -694,6 +699,10 @@
     <string name="collections_header">Colecciones</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menú de colecciones</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Recolecta lo que te importa</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agrupa búsquedas, sitios y pestañas similares para acceder a ellos rápidamente.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Seleccionar pestañas</string>
     <!-- Title for the "select collection" step of the collection creator -->

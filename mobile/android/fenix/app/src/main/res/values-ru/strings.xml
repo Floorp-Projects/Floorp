@@ -16,13 +16,16 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Введите запрос или адрес</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Нет открытых вкладок</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Открытые вами вкладки будут показаны здесь.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Ваши приватные вкладки будут показаны здесь.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 открытая вкладка. Нажмите, чтобы переключить вкладки.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">Открытых вкладок: %1$s. Нажмите, чтобы переключить вкладки.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s разработан Mozilla.</string>
@@ -301,7 +304,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Логины</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Вкладки</string>
+    <string name="preferences_sync_tabs_2">Открытые вкладки</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Выйти</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -489,7 +492,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Поделиться вкладками</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Сохранить в коллекцию</string>
+    <string name="tabs_menu_save_to_collection1">Сохранить вкладки в коллекцию</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Меню вкладок</string>
     <!-- Tab menu item to share the tab -->
@@ -706,17 +709,15 @@
     <string name="delete_browsing_data_quit_off">Отключено</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Собирайте то, что важно для вас. Чтобы начать, сохраните открытые вкладки в новую коллекцию.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Коллекции</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Меню коллекции</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Нет коллекций</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Ваши коллекции будут показаны здесь.</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Собирайте то, что важно для вас</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Объединяйте похожие запросы, сайты и вкладки, для быстрого доступа к ним в дальнейшем.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Выберите вкладки</string>
 
@@ -942,8 +943,9 @@
     <string name="tip_firefox_preview_moved_description">¶
  · Firefox Nightly обновляется каждую ночь и включает в себя новые, экспериментальные возможности.¶
  · Однако, он может быть менее стабилен. Если вы хотите более стабильной работы, загрузите нашу бета-версию браузера.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Получить браузер Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Загрузить Firefox для Android Бета</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly переехал</string>
@@ -1448,6 +1450,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Говорите</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Логин с таким именем пользователя уже существует</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Использовать Аккаунт Firefox.</string>
@@ -1457,5 +1462,19 @@
     <string name="synced_tabs_reauth">Пожалуйста, авторизуйтесь повторно.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Пожалуйста, включите синхронизацию вкладок.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">На ваших других устройствах в Firefox не открыто ни одной вкладки.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Просмотрите список вкладок с других устройств.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Войти в Синхронизацию</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Достигнут лимит топа сайтов</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Чтобы добавить новый сайт в топ, удалите другой. Долгим нажатием по нему откройте меню и нажмите удалить.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">OK, понятно</string>
 
 </resources>

@@ -20,6 +20,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Gizli sekmeleriniz burada gösterilecek.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 açık sekme. Sekme değiştirmek için dokunun.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s açık sekme. Sekme değiştirmek için dokunun.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s bir Mozilla ürünüdür.</string>
 
@@ -698,6 +703,8 @@
     <string name="collection_menu_button_content_description">Koleksiyon menüsü</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header1">Sizin için önemli olan şeyleri toplayın</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Benzer aramaları, siteleri ve sekmeleri gruplandırarak daha sonra onlara hızlıca erişebilirsiniz.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Sekmeleri seç</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -905,6 +912,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly her gece güncellenir ve yeni deneysel özelliklere sahiptir.
         Bununla birlikte, daha kararsız olabilir. Daha kararlı bir deneyim için beta tarayıcımızı indirebilirsiniz.</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Android için Firefox Beta’yı indirin</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly taşındı</string>
@@ -1405,6 +1415,9 @@
     <string name="voice_search_content_description">Sesle arama</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Şimdi konuşun</string>
+
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Bu kullanıcı adına sahip bir hesap zaten var</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->

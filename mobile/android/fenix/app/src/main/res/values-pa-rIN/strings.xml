@@ -15,10 +15,15 @@
     <string name="content_description_disable_private_browsing_button">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ ਕਰਨਾ ਅਸਮਰੱਥ ਕਰੋ</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ਖੋਜੋ ਜਾਂ ਸਿਰਨਾਵਾਂ ਦਿਓ</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">ਕੋਈ ਟੈਬ ਨਹੀਂ ਖੁੱਲ੍ਹੀ ਹੈ</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">ਤੁਹਾਡੀਆਂ ਖੁੱਲ੍ਹੀਆਂ ਟੈਬਾਂ ਨੂੰ ਇੱਥੇ ਵਿਖਾਇਆ ਜਾਵੇਗਾ।</string>
+
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">ਤੁਹਾਡੀਆਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਨੂੰ ਇੱਥੇ ਵਿਖਾਇਆ ਜਾਵੇਗਾ।</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 ਟੈਬ ਖੁੱਲ੍ਹੀ। ਟੈਬਾਂ ਲਈ ਸਵਿੱਚ ਕਰਨ ਵਾਸਤੇ ਟੈਪ ਕਰੋ।</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s ਟੈਬਾਂ ਖੁੱਲ੍ਹੀ। ਟੈਬਾਂ ਲਈ ਸਵਿੱਚ ਕਰਨ ਵਾਸਤੇ ਟੈਪ ਕਰੋ।</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ਮੌਜ਼ੀਲਾ ਵਲੋਂ ਤਿਆਰ ਕੀਤਾ</string>
@@ -32,13 +37,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">ਸ਼ੈਸ਼ਨ ਹਟਾਓ</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">ਤੁਹਾਡੀ ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਖੋਲ੍ਹਣ ਲਈ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ।</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">ਨਹੀਂ, ਧੰਨਵਾਦ</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">ਫਾਇਰਫਾਕਸ ਹੋਰ ਛੇਤੀ ਲਵੋ। ਆਪਣੀ ਮੁੱਖ ਸਕਰੀਨ ਉੱਤੇ ਵਿਜੈਟ ਜੋੜੋ।</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">ਵਿਜੈੱਟ ਜੋੜੋ</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">ਹੁਣੇ ਨਹੀਂ</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -82,6 +95,8 @@
     <string name="browser_menu_add_to_homescreen">ਮੁੱਖ ਸਕਰੀਨ ‘ਤੇ ਜੋੜੋ</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">ਇੰਸਟਾਲ ਕਰੋ</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ਸਫ਼ੇ ‘ਚ ਲੱਭੋ</string>
     <!-- Browser menu button that creates a private tab -->
@@ -91,8 +106,6 @@
 
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">ਭੰਡਾਰ ‘ਚ ਸੰਭਾਲੋ</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">ਸਾਈਟ ਮਸਲੇ ਬਾਰੇ ਰਿਪੋਰਟ ਕਰੋ</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">ਸਾਂਝਾ ਕਰੋ</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -107,12 +120,18 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">%1$s ਵਲੋਂ ਤਿਆਰ ਕੀਤਾ</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">ਪੜ੍ਹਾਕੂ ਝਲਕ</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">ਪੜ੍ਹਨ ਝਲਕ ਬੰਦ ਕਰੋ</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">ਐਪ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ਦਿੱਖ</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">ਕਨੈਕਟ ਕਰਨ ਲਈ ਅਸਮਰੱਥ। ਬੇਪਛਾਣ URL ਸਕੀਮ।</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -202,10 +221,14 @@
     <string name="preferences_private_browsing_options">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">ਲਿੰਕ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">ਪ੍ਰਾਈਵੇਟ ਬ੍ਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਸਕਰੀਨਸ਼ਾਟ ਮਨਜ਼ੂਰ ਕਰੋ</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ਅਸੈਸਬਿਲਟੀ</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">ਕਸਟਮ ਫਾਇਰਫਾਕਸ ਖਾਤਾ ਸਰਵਰ</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">ਪਸੰਦੀਦਾ ਸਿੰਕ ਸਰਵਰ</string>
     <!-- Preference category for account information -->
@@ -240,6 +263,8 @@
     <string name="preferences_show_search_shortcuts">ਖੋਜ ਸ਼ਾਰਟਕੱਟ ਵੇਖਾਓ</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">ਖੋਜ ਸੁਝਾਅ ਵੇਖਾਓ</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">ਅਵਾਜ਼ੀ ਖੋਜ ਵਿਖਾਓ</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">ਪ੍ਰਾਈਵੇਟ ਸ਼ੈਸ਼ਨ ਵਿੱਚ ਵੇਖਾਓ</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -268,6 +293,8 @@
     <string name="preferences_sync_bookmarks">ਬੁੱਕਮਾਰਕ</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">ਲਾਗਇਨ</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">ਟੈਬਾਂ ਖੋਲ੍ਹੋ</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">ਸਾਈਨ ਆਉਟ</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -360,9 +387,6 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">ਖਾਤਾ ਹਟਾਓ</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[ਆਪਣਾ QR ਕੋਡ ਲੈਣ ਲਈ ਆਪਣੇ ਕੰਪਿਊਟਰ ‘ਤੇ ਫਾਇਰਫਾਕਸ <b>firefox.com/pair</b> ਖੋਲ੍ਹੋ।]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">ਕੈਮਰਾ ਖੋਲ੍ਹੋ</string>
     <!-- Button to cancel pairing -->
@@ -405,12 +429,12 @@
     <string name="library_desktop_bookmarks_unfiled">ਹੋਰ ਬੁੱਕਮਾਰਕ</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">ਅਤੀਤ</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">ਪੜ੍ਹਨ ਸੂਚੀ</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">ਖੋਜੋ</string>
-    <!-- Library Page Title -->
-    <string name="library_title">ਲਾਇਬਰੇਰੀ</string>
     <!-- Settings Page Title -->
     <string name="settings_title">ਸੈਟਿੰਗਾਂ</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -427,6 +451,24 @@
     <string name="tabs_header_private_tabs_title">ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ਟੈਬ ਜੋੜੋ</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਜੋੜੋ</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">ਪ੍ਰਾਈਵੇਟ</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">ਟੈਬਾਂ ਖੋਲ੍ਹੋ</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">ਭੰਡਾਰ ਵਿੱਚ ਸੰਭਾਲੋ</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">ਸਾਰੀਆਂ ਟੈਬਾਂ ਸਾਂਝੀਆਂ ਕਰੋ</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">ਸਾਰੀਆਂ ਟੈਬਾਂ ਬੰਦ ਕਰੋ</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">ਨਵੀਂ ਟੈਬ</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">ਮੁੱਖ ਸਫ਼ੇ ਉੱਤੇ ਜਾਓ</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">ਟੈਬ ਨੂੰ ਭੰਡਾਰ ਵਿੱਚੋਂ ਹਟਾਓ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ਟੈਬ ਬੰਦ ਕਰੋ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -438,7 +480,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">ਟੈਬਾਂ ਸਾਂਝੀਆਂ ਕਰੋ</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">ਭੰਡਾਰ ‘ਚ ਸੰਭਾਲੋ</string>
+    <string name="tabs_menu_save_to_collection1">ਟੈਬਾਂ ਨੂੰ ਭੰਡਾਰ ਵਿੱਚ ਸੰਭਾਲੋ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">ਟੈਬ ਮੇਨੂ</string>
     <!-- Tab menu item to share the tab -->
@@ -638,6 +680,10 @@
 
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ਆਡੀਓ ਅਤੇ ਵੀਡਿਓ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">ਸਿਰਫ਼ ਸੈਲੂਲਰ ਡਾਟਾ ਤੋਂ ਆਡੀਓ ਅਤੇ ਵੀਡੀਓ ਉੱਤੇ ਰੋਕ ਲਾਓ</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Wi-Fi ਉੱਤੇ ਆਡੀਓ ਤੇ ਵੀਡੀਓ ਚਲਾਏ ਜਾਣਗੇ</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">ਸਿਰਫ਼ ਆਡੀਓ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਓ</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
@@ -648,16 +694,12 @@
     <string name="delete_browsing_data_quit_off">ਬੰਦ</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">ਜੋ ਚੀਜ਼ਾਂ ਤੁਹਾਡੇ ਲਈ ਮਹੱਤਵ ਰੱਖਦੀਆਂ ਹਨ, ਨੂੰ ਇਕੱਤਰ ਕਰੋ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਨਵੇਂ ਭੰਡਾਰ ਵਿੱਚ ਖੋਲ੍ਹੀਆਂ ਟੈਬਾਂ ਨੂੰ ਸੰਭਾਲੋ।</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">ਭੰਡਾਰ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">ਭੰਡਾਰ ਮੇਨੂ</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">ਕੋਈ ਭੰਡਾਰ ਨਹੀਂ ਹੈ</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">ਤੁਹਾਡੇ ਭੰਡਾਰ ਨੂੰ ਇੱਥੇ ਵਿਖਾਇਆ ਜਾਵੇਗਾ।</string>
+    <string name="no_collections_header1">ਚੀਜ਼ਾਂ ਇਕੱਤਰ ਕਰੋ, ਜੋ ਤੁਹਾਡੇ ਲਈ ਜ਼ਰੂਰੀ ਹਨ</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">ਟੈਬਾਂ ਚੁਣੋ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -686,6 +728,9 @@
     <string name="create_collection_close">ਬੰਦ ਕਰੋ</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">ਸੰਭਾਲੋ</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">ਵੇਖੋ</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">ਭੰਡਾਰ %d</string>
@@ -800,14 +845,14 @@
     <string name="preference_accessibility_font_size_title">ਫ਼ੋਂਟ ਦਾ ਆਕਾਰ</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">ਆਪਣੇ-ਆਪ ਫ਼ੋਂਟ ਦਾ ਆਕਾਰ ਬਣਾਓ</string>
+    <string name="preference_accessibility_auto_size_2">ਆਪਣੇ-ਆਪ ਫ਼ੋਂਟ ਆਕਾਰ</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">ਫ਼ੋਂਟ ਦਾ ਆਕਾਰ ਤੁਹਾਡੀਆਂ ਐਂਡਰਾਈਡ ਸੈਟਿੰਗਾਂ ਨਾਲ ਮਿਲਾਏਗਾ। ਫ਼ੋਂਟ ਦਾ ਆਕਾਰ ਇੱਥੇ ਇੰਤਜ਼ਾਮ ਕਰਨ ਲਈ ਅਸਮਰੱਥ ਕਰੋ।</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">ਬਰਾਊਜ਼ਰ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਹਟਾਓ</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">ਟੈਬ ਖੋਲ੍ਹੋ</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">ਟੈਬਾਂ ਖੋਲ੍ਹੋ</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ਟੈਬਾਂ</string>
 
@@ -860,8 +905,11 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">…ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਹਟਾਇਆ ਜਾ ਰਿਹਾ ਹੈ</string>
 
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Mozilla Firefox Browser ਲਵੋ</string>
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">ਫਾਇਰਫਾਕਸ ਪ੍ਰੀਵਿਊ ਹੁਣ ਫਾਇਰਫਾਕਸ ਨਾਈਟਲੀ ਹੈ</string>
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">ਐਂਡਰਾਇਡ ਬੀਟਾ ਲਈ ਫਾਇਰਫਾਕਸ ਲਵੋ</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly ਬਦਲਿਆ</string>
@@ -911,18 +959,17 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ਸਾਈਨ-ਇਨ ਲਈ ਅਸਫ਼ਲ</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">ਖੁਦ ਨੂੰ ਸੁਰੱਖਿਅਤ ਰੱਖੋ</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s ਤੁਹਾਨੂੰ ਆਨਲਾਈਨ ਟਰੈਕ ਹੋਣ ਤੋਂ ਵੈੱਬਸਾਈਟਾਂ ਨੂੰ ਰੋਕਣ ਲਈ ਮਦਦ ਕਰਦਾ ਹੈ।</string>
+    <string name="onboarding_tracking_protection_header_2">ਆਪਣੇ-ਆਪ ਪਰਦੇਦਾਰੀ</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">ਮਿਆਰੀ</string>
+    <string name="onboarding_tracking_protection_standard_button_2">ਸਟੈਂਡਰਡ (ਮੂਲ)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">ਕੁਝ ਕੁ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਉਂਦਾ ਹੈ, ਪਰ ਸਫ਼ਿਆਂ ਨੂੰ ਆਮ ਵਾਂਗ ਲੋਡ ਹੋਣ ਲਈ ਸਹਿਮਤੀ ਦਿੰਦਾ ਹੈ।</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">ਕੁਝ ਕੁ ਟਰੈਕਰਾਂ ਉੱਤੇ ਰੋਕ ਲਾਉਂਦਾ ਹੈ। ਸਫ਼ੇ ਆਮ ਵਾਂਗ ਲੋਡ ਹੋਣਗੇ।</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">ਸਖ਼ਤ (ਸਿਫਾਰਸ਼ੀ)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">ਸਖ਼ਤ</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">ਵੱਧ ਸੁਰੱਖਿਆ ਅਤੇ ਕਾਰਗੁਜ਼ਾਰੀ ਲਈ ਵੱਧ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਉਂਦਾ ਹੈ, ਪਰ ਕੁਝ ਸਾਈਟਾਂ ਦੇ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਾ ਕਰਨ ਦਾ ਕਾਰਨ ਹੋ ਸਕਦਾ ਹੈ</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">ਬਹੁਤੇ ਟਰੈਕਰਾਂ, ਇਸ਼ਤਿਹਾਰ ਤੇ ਪੋਪਅੱਪ ਉੱਤੇ ਰੋਕ ਲਗਾਉਂਦਾ ਹੈ। ਸਫ਼ੇ ਵੱਧ ਤੇਜ਼ੀ ਨਾਲ ਲੋਡ ਹੁੰਦੇ ਹਨ, ਪਰ ਕੁਝ ਚੀਜ਼ਾਂ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਹੀਂ ਕਰ ਸਕਦੀਆਂ ਹਨ।</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1006,31 +1053,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ਹੋਰ ਸਿੱਖੋ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">ਮਿਆਰੀ</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">ਮਿਆਰੀ (ਸਿਫਾਰਸ਼ੀ)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">ਸਟੈਂਡਰਡ (ਮੂਲ)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">ਸੁਰੱਖਿਆ ਅਤੇ ਕਾਰਗੁਜ਼ਾਰੀ ਲਈ ਸੰਤੁਲਿਤ ਕੀਤਾ।</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">ਸਫ਼ਿਆਂ ਨੂੰ ਆਮ ਵਾਂਗ ਲੋਡ ਕੀਤਾ ਜਾਂਦਾ ਹੈ, ਪਰ ਕੁਝ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ।</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">ਕੁਝ ਕੁ ਟਰੈਕਰਾਂ ਉੱਤੇ ਰੋਕ ਲਾਉਂਦਾ ਹੈ। ਸਫ਼ੇ ਆਮ ਵਾਂਗ ਲੋਡ ਹੋਣਗੇ।</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ਮਿਆਰੀ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਰਾਹੀਂ ਕਿਸ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ਸਖ਼ਤ</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">ਸਖ਼ਤ (ਮੂਲ)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">ਮਜ਼ਬੂਤ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਅਤੇ ਵੱਧ ਤੇਜ਼ ਕਾਰਗੁਜ਼ਜਾਰੀ, ਪਰ ਕੁਝ ਸਾਈਟਾਂ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਹੀਂ ਕਰਨਗੀਆਂ।</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">ਸਖ਼ਤ (ਸਿਫਾਰਸ਼ੀ)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">ਮਜ਼ਬੂਤ ਸੁਰੱਖਿਆ, ਪਰ ਕੁਝ ਸਾਈਟਾਂ ਜਾਂ ਸਮੱਗਰੀ ਦੇ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਾ ਕਰਨ ਦਾ ਕਾਰਨ ਹੋ ਸਕਦਾ ਹੈ।</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">ਬਹੁਤੇ ਟਰੈਕਰਾਂ, ਇਸ਼ਤਿਹਾਰ ਤੇ ਪੋਪਅੱਪ ਉੱਤੇ ਰੋਕ ਲਗਾਉਂਦਾ ਹੈ। ਸਫ਼ੇ ਵੱਧ ਤੇਜ਼ੀ ਨਾਲ ਲੋਡ ਹੁੰਦੇ ਹਨ, ਪਰ ਕੁਝ ਚੀਜ਼ਾਂ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਹੀਂ ਕਰ ਸਕਦੀਆਂ ਹਨ।</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ਸਖ਼ਤ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਰਾਹੀਂ ਕਿਸ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">ਕਸਟਮ</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">ਚੁਣੋ ਕਿ ਕਿਹੜੇ ਟਰੈਕਰਾਂ ਅਤੇ ਸਕ੍ਰਿਪਟਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਉਣੀ ਹੈ</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">ਚੁਣੋ ਕਿ ਕਿਹੜੇ ਟਰੈਕਰਾਂ ਅਤੇ ਸਕ੍ਰਿਪਟਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਉਣੀ ਹੈ।</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">ਕਸਟਮ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਰਾਹੀਂ ਕਿਸ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1079,8 +1116,6 @@
     <string name="etp_tracking_content_title">ਸਮੱਗਰੀ ਟਰੈਕ ਕਰਨ ਵਾਲੇ</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">ਬਾਹਰੀ ਇਸ਼ਤਿਹਾਰ, ਵਿਡੀਓ ਅਤੇ ਹੋਰ ਸਮੱਗਰੀ ਨੂੰ ਰੋਕਦਾ ਹੈ, ਜਿਸ ‘ਚ ਟਰੈਕ ਕਰਨ ਵਾਲਾ ਕੋਡ ਹੁੰਦਾ ਹੈ। ਕੁਝ ਵੈੱਬਸਾਈਟਾਂ ਦਾ ਕੰਮਕਾਜ ਪ੍ਰਭਾਵਿਤ ਹੋ ਸਕਦਾ ਹੈ।</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s ਨੇ ਇਸ ਸਾਈਟ ਉੱਤੇ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਈ ਹੈ, ਜਦੋਂ ਢਾਲ ਵੈਂਗਣੀ ਹੁੰਦੀ ਹੈ। ਕਿਸ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਈ ਹੈ, ਇਹ ਵੇਖਣ ਲਈ ਇਸ ਨੂੰ ਛੂਹੋ।</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ਇਸ ਸਾਈਟ ਲਈ ਸੁਰੱਖਿਆ ਚਾਲੂ ਹੈ</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1102,6 +1137,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">ਸਹਿਯੋਗ</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">ਕਰੈਸ਼</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
     <!-- About page link text to open know your rights link -->
@@ -1230,6 +1267,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">ਚੂੰਢੀ ਭਰਨ ਤੇ ਜ਼ੂਮ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣ ਲਈ ਸਮਰੱਥ ਕਰੋ, ਭਾਵੇਂ ਵੈੱਬਸਾਈਟਾਂ ਇਸ ਸੰਕੇਤ ਤੋਂ ਰੋਕਦੀਆਂ ਹੋਣ।</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">ਨਾਂ (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">ਆਖਰੀ ਵਰਤੋਂ</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ਲਾਗਇਨ ਲੜੀਬਧ ਮੇਨੂ</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ਖੋਜ ਇੰਜਣ ਜੋੜੋ</string>
     <!-- Title of the Edit search engine screen -->
@@ -1321,8 +1365,41 @@
     <string name="certificate_info_verified_by">ਤਸਦੀਕ ਕੀਤਾ: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">ਹਟਾਓ</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">ਸੋਧੋ</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">ਕੀ ਤੁਸੀਂ ਇਹ ਲਾਗਇਨ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ਹਟਾਓ</string>
+
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">ਲਾਗਇਨ ਚੋਣਾਂ</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">ਤਬਦੀਲੀਆਂ ਨੂੰ ਲਾਗਇਨ ਲਈ ਸੰਭਾਲੋ।</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">ਤਬਦੀਲੀਆਂ ਅਣਡਿੱਠੀਆਂ ਕਰੋ</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">ਸੋਧੋ</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">ਪਾਸਵਰਡ ਚਾਹੀਦਾ ਹੈ</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">ਆਵਾਜ਼ ਰਾਹੀਂ ਖੋਜੋ</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">ਹੁਣੇ ਬੋਲੋ</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">ਉਸ ਵਰਤੋਂਕਾਰ ਨਾਲ ਲਾਗਇਨ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Firefox Account ਨਾਲ ਕਨੈਕਟ ਕਰੋ।</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">ਹੋਰ ਡਿਵਾਈਸ ਨਾਲ ਕਨੈਕਟ ਕਰੋ।</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">ਮੁੜ-ਪ੍ਰਮਾਣਿਤ ਕਰੋ।</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">ਠੀਕ ਹੈ, ਸਮਝ ਗਏ</string>
+
 </resources>

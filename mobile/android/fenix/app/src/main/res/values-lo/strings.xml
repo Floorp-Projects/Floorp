@@ -504,9 +504,87 @@
     <string name="tab_crash_title_2">ຂໍ​ອະໄພ. %1$s ບໍ່ສາມາດໂຫລດໜ້າເວັບນັ້ນໄດ້.</string>
     <!-- Description text displayed on the tab crash page -->
     <string name="tab_crash_description">ທ່ານສາມາດພະຍາຍາມກູ້ຄືນ ຫຼື ປິດແຖບຂ້າງລຸ່ມນີ້.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">ສົ່ງລາຍງານການຂັດຂ້ອງໄປຫາ Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">ປິດແທັບ</string>
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">ກູ້ຄືນແທັບ</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">ເມນູບຸກມາກ</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">ແກ້ໄຂບຸກມາກ</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">ເລືອກໂຟລເດີ</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">ທ່ານແນ່ໃຈບໍ່ວ່າທ່ານຕ້ອງການລຶບໂຟລເດີນີ້?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">ລຶບ %1$s ແລ້ວ</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">ເພີ່ມໂຟລເດີ</string>
+
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">ສ້າງບຸກມາກແລ້ວ.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">ບັນທຶກບຸກມາກແລ້ວ!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">ແກ້ໄຂ</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">ແກ້ໄຂ</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">ເລືອກ</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">ສຳເນົາ</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">ແບ່ງປັນ</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">ເປີດໃນແທັບໃຫມ່</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">ເປີດໃນແທັບສ່ວນຕົວ</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">ລຶບ</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">ບັນທຶກ</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">ເລືອກ %1$d ແລ້ວ</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">ແກ້ໄຂບຸກມາກ</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">ແກ້ໄຂໂຟລເດີ</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">ເຂົ້າສູ່ລະບົບເພື່ອເບິ່ງບຸກມາກທີ່ຖືກ sync ແລ້ວ</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">ໂຟ​ລ​ເດີ</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">ຊື່</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">ເພີ່ມໂຟລເດີ</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">ເລືອກໂຟລເດີ</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">ຕ້ອງມີຊື່</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">URL ບໍ່ຖືກຕ້ອງ</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">ບໍ່ມີບຸກມາກຢູ່ນີ້</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">ລຶບ %1$s ແລ້ວ</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">ລຶບບຸກມາກແລ້ວ</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">ເອົາກັບຄືນ</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">ສິດອະນຸຍາດ</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">ໄປທີ່ການຕັ້ງຄ່າ</string>
 
     </resources>

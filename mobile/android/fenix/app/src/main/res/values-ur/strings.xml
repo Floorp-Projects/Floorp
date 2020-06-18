@@ -20,6 +20,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">آپ کے نجی ٹیبز یہاں دکھائے جائیں گے۔</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 کھلا ٹیب۔ ٹیبز بدلنے کے لئے دبائیں۔</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s کھلے ٹیب۔ ٹیب بدلنے کے لئے دبائیں۔</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ءMozilla کے ذریعہ تیار کیا گیا ہے۔</string>
 
@@ -382,6 +387,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">اکائونٹ ہٹائیں</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[<b>firefox.com/pair</b> پر دیے گئے QR کوڈ کو سکین کریں]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">کیمرا کھولیں</string>
     <!-- Button to cancel pairing -->
@@ -475,6 +483,8 @@
     <string name="tabs_menu_close_all_tabs">تمام ٹیبز بند کریں</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">ٹیبز شیئر کریں</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">ٹیبز کو مجموعہ میں محفوظ کریں</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">ٹیب مینو</string>
     <!-- Tab menu item to share the tab -->
@@ -694,6 +704,8 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">مجموعہ کا مینو</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">آپ کے لئے اہم چیزیں جمع کریں</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">ٹیب کو منتخب کریں</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -836,6 +848,8 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">حرف کا سائز</string>
 
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">خود کار فونٹ سائز تبدیلی</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">فونٹ سائز آپکے Android کی سیٹنگس سے مشابہ ہوگا۔ یہاں فونٹ سائز بدلنے کے لیے غیر فعال کریں۔</string>
 
@@ -869,6 +883,10 @@
     <string name="preferences_delete_browsing_data_button">براؤزنگ کا ڈیٹا مٹائیں</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">بند کرنے پر براؤزنگ کا ڈیٹا مٹائیں</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">جب آپ مین مینو سے &quot;چھوڑیں&quot; کو منتخب کرتے ہیں تو براؤزنگ کا ڈیٹا خودبخود حذف ہو جاتا ہے</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">جب آپ مین مینو سے \&quot;چھوڑیں\&quot; کو منتخب کرتے ہیں تو براؤزنگ کا ڈیٹا خودبخود حذف ہو جاتا ہے</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">براؤزنگ سابقات</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -935,8 +953,15 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync چالو ہے</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">سائن ان کرنے میں ناکام</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">خودکار رازداری</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">رازداری اور سلامتی سیٹنگز ٹریکرز، مالویئر، اور آپ کا پیچھا کرنے والی کمپنیوں کو روکتی ہیں۔</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">معیاری (پہلے سے طے شدہ)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">چند ٹریکروں کو روکتا ہے۔ صفحات عام طور پر لوڈ ہوں گے۔</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">سخت (سفارش شدا)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
