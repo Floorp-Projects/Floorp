@@ -1,16 +1,5 @@
-case "$PERFHERDER_EXTRA_OPTIONS" in
-base-toolchains*)
-  # Don't enable stdc++ compat on base toolchain builds because that's only really strictly
-  # needed on shippable builds, although there are technical constraints that make it sometimes
-  # necessary, but those don't apply to base toolchain builds.
-  # On the flip side, GCC base toolchain builds would need extra compatibility hacks that are
-  # not worth implementing, so not enabling stdc++ compat is simpler.
-  ;;
-*)
-  # Avoid dependency on libstdc++ 4.7
-  export MOZ_STDCXX_COMPAT=1
-  ;;
-esac
+# Avoid dependency on libstdc++ 4.7
+export MOZ_STDCXX_COMPAT=1
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
