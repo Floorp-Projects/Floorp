@@ -50,7 +50,8 @@ SVGElement::NumberAttributesInfo SVGStopElement::GetNumberInfo() {
 
 NS_IMETHODIMP_(bool)
 SVGStopElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {sGradientStopMap};
+  static const MappedAttributeEntry* const map[] = {sColorMap,
+                                                    sGradientStopMap};
 
   return FindAttributeDependence(name, map) ||
          SVGStopElementBase::IsAttributeMapped(name);
