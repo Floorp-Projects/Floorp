@@ -209,8 +209,9 @@ LogicalSize nsProgressFrame::ComputeAutoSize(
   const WritingMode wm = GetWritingMode();
   LogicalSize autoSize(wm);
   autoSize.BSize(wm) = autoSize.ISize(wm) =
-      NSToCoordRound(StyleFont()->mFont.size *
-                     nsLayoutUtils::FontSizeInflationFor(this));  // 1em
+      StyleFont()
+          ->mFont.size.ScaledBy(nsLayoutUtils::FontSizeInflationFor(this))
+          .ToAppUnits();  // 1em
 
   if (ResolvedOrientationIsVertical() == wm.IsVertical()) {
     autoSize.ISize(wm) *= 10;  // 10em
@@ -225,7 +226,7 @@ nscoord nsProgressFrame::GetMinISize(gfxContext* aRenderingContext) {
   RefPtr<nsFontMetrics> fontMet =
       nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
 
-  nscoord minISize = fontMet->Font().size;  // 1em
+  nscoord minISize = fontMet->Font().size.ToAppUnits();  // 1em
 
   if (ResolvedOrientationIsVertical() == GetWritingMode().IsVertical()) {
     // The orientation is inline
