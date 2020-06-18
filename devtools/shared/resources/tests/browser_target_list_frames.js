@@ -93,7 +93,6 @@ async function testBrowserFrames(mainRoot) {
 
   /* NOT READY YET, need to implement frame listening
   // Open a new tab and see if the frame target is reported by watchTargets and getAllTargets
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   const tab = await addTab(TEST_URL);
 
   is(targets.length, frames.length + 1, "Opening a tab reported a new frame");
@@ -111,7 +110,6 @@ async function testTabFrames(mainRoot) {
   info("Test TargetList against frames via a tab target");
 
   // Create a TargetList for a given test tab
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   const tab = await addTab(FISSION_TEST_URL);
   const descriptor = await mainRoot.getTab({ tab });
   const target = await descriptor.getTarget();

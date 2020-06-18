@@ -12,8 +12,6 @@ const TEST_URL = `data:text/html;charset=utf-8,<div id="test"></div>`;
 
 // Test against Tab targets
 add_task(async function() {
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-
   const tab = await addTab(TEST_URL);
 
   const client = await setupDebuggerClient();

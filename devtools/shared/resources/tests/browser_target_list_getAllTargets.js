@@ -23,7 +23,6 @@ add_task(async function() {
   const client = await createLocalClient();
   const mainRoot = client.mainRoot;
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   await addTab(FISSION_TEST_URL);
 
   // Instantiate a worker in the parent process

@@ -13,7 +13,6 @@ const {
 
 add_task(async function() {
   // Open a test tab
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   const tab = await addTab("data:text/html,Console Messages");
 
   const {
