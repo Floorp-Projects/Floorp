@@ -71,6 +71,12 @@ class Options:
             "default": False,
             "help": "Running the test on try",
         },
+        "--test-date": {
+            "type": str,
+            "default": "yesterday",
+            "help": "Used in multi-commit testing, it specifies the day to get test builds from. "
+            "Must follow the format `YYYY.MM.DD`.",
+        },
     }
 
     args = copy.deepcopy(general_args)
