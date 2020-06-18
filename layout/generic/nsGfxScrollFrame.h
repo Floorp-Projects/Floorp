@@ -662,6 +662,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool mIsScrollParent : 1;
 
   // If true, add clipping in ScrollFrameHelper::ClipLayerToDisplayPort.
+  // XXX this flag needs some auditing and better documentation, bug 1646686.
   bool mAddClipRectToLayer : 1;
 
   // True if this frame has been scrolled at least once
