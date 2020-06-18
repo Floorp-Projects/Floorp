@@ -30,6 +30,7 @@ jsmin==2.1.0
 json-e==2.7.0
 mozilla-version==0.3.0
 pathlib2==2.3.2
+pathspec==0.8
 pip-tools==4.5.1
 pipenv==2018.5.18
 ply==3.10
