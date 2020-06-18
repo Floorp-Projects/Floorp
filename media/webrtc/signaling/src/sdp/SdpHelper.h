@@ -42,7 +42,7 @@ class SdpHelper {
   bool MsectionIsDisabled(const SdpMediaSection& msection) const;
   static void DisableMsection(Sdp* sdp, SdpMediaSection* msection);
 
-  // Maps each mid to the m-section that is the master of its bundle.
+  // Maps each mid to the m-section that owns its bundle transport.
   // Mids that do not appear in an a=group:BUNDLE do not appear here.
   typedef std::map<std::string, const SdpMediaSection*> BundledMids;
 
