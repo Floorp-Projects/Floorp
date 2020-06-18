@@ -1,6 +1,6 @@
 Metadata-Version: 1.2
 Name: yamllint
-Version: 1.20.0
+Version: 1.23.0
 Summary: A linter for YAML files.
 Home-page: https://github.com/adrienverge/yamllint
 Author: Adrien Vergé
