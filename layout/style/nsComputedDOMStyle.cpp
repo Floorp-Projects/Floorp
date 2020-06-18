@@ -1231,7 +1231,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTransformOrigin() {
   SetValueToPosition(position, valueList);
   if (!origin.depth.IsZero()) {
     RefPtr<nsROCSSPrimitiveValue> depth = new nsROCSSPrimitiveValue;
-    depth->SetAppUnits(origin.depth.ToAppUnits());
+    depth->SetPixels(origin.depth.ToCSSPixels());
     valueList->AppendCSSValue(depth.forget());
   }
   return valueList.forget();
@@ -1828,7 +1828,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
 
   auto& lh = StyleText()->mLineHeight;
   if (lh.IsLength()) {
-    val->SetAppUnits(lh.AsLength().ToAppUnits());
+    val->SetPixels(lh.AsLength().ToCSSPixels());
   } else if (lh.IsNumber()) {
     val->SetNumber(lh.AsNumber());
   } else if (lh.IsMozBlockHeight()) {
@@ -2025,12 +2025,27 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetNonStaticPositionOffset(
     coord = positionData->mOffset.Get(NS_OPPOSITE_SIDE(aSide));
     sign = -1;
   }
+  if (!coord.IsLengthPercentage()) {
+    val->SetPixels(0.0f);
+    return val.forget();
+  }
+
+  auto& lp = coord.AsLengthPercentage();
+  if (lp.ConvertsToLength()) {
+    val->SetPixels(sign * lp.ToLengthInCSSPixels());
+    return val.forget();
+  }
 
   PercentageBaseGetter baseGetter = (aSide == eSideLeft || aSide == eSideRight)
                                         ? aWidthGetter
                                         : aHeightGetter;
-
-  val->SetAppUnits(sign * StyleCoordToNSCoord(coord, baseGetter, 0, false));
+  nscoord percentageBase;
+  if (!(this->*baseGetter)(percentageBase)) {
+    val->SetPixels(0.0f);
+    return val.forget();
+  }
+  nscoord result = lp.Resolve(percentageBase);
+  val->SetAppUnits(sign * result);
   return val.forget();
 }
 
@@ -2273,11 +2288,11 @@ void nsComputedDOMStyle::SetValueToLengthPercentage(
     nsROCSSPrimitiveValue* aValue, const mozilla::LengthPercentage& aLength,
     bool aClampNegativeCalc) {
   if (aLength.ConvertsToLength()) {
-    nscoord result = aLength.ToLength();
+    CSSCoord length = aLength.ToLengthInCSSPixels();
     if (aClampNegativeCalc) {
-      result = std::max(result, 0);
+      length = std::max(float(length), 0.0f);
     }
-    return aValue->SetAppUnits(result);
+    return aValue->SetPixels(length);
   }
   if (aLength.ConvertsToPercentage()) {
     float result = aLength.ToPercentage();
@@ -2290,33 +2305,6 @@ void nsComputedDOMStyle::SetValueToLengthPercentage(
   nsAutoString result;
   Servo_LengthPercentage_ToCss(&aLength, &result);
   aValue->SetString(result);
-}
-
-nscoord nsComputedDOMStyle::StyleCoordToNSCoord(
-    const LengthPercentage& aCoord, PercentageBaseGetter aPercentageBaseGetter,
-    nscoord aDefaultValue, bool aClampNegativeCalc) {
-  MOZ_ASSERT(aPercentageBaseGetter, "Must have a percentage base getter");
-  if (aCoord.ConvertsToLength()) {
-    return aCoord.ToLength();
-  }
-  nscoord percentageBase;
-  if ((this->*aPercentageBaseGetter)(percentageBase)) {
-    nscoord result = aCoord.Resolve(percentageBase);
-    if (aClampNegativeCalc && result < 0) {
-      // It's expected that we can get a negative value here with calc().
-      // We can also get a negative value with a percentage value if
-      // percentageBase is negative; this isn't expected, but can happen
-      // when large length values overflow.
-      NS_WARNING_ASSERTION(percentageBase >= 0,
-                           "percentage base value overflowed to become "
-                           "negative for a property "
-                           "that disallows negative values");
-      result = 0;
-    }
-    return result;
-  }
-
-  return aDefaultValue;
 }
 
 bool nsComputedDOMStyle::GetCBContentWidth(nscoord& aWidth) {
