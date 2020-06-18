@@ -10,7 +10,7 @@ const ROLLOUT_ENABLED_PREF = "doh-rollout.enabled";
 const ROLLOUT_SELF_ENABLED_PREF = "doh-rollout.self-enabled";
 const HEURISTICS_DISABLED_PREF = "doh-rollout.disable-heuristics";
 const DEFAULT_RESOLVER_VALUE = "https://mozilla.cloudflare-dns.com/dns-query";
-const NEXTDNS_RESOLVER_VALUE = "https://trr.dns.nextdns.io/";
+const NEXTDNS_RESOLVER_VALUE = "https://firefox.dns.nextdns.io/";
 
 const modeCheckboxSelector = "#networkDnsOverHttps";
 const uriTextboxSelector = "#networkCustomDnsOverHttpsInput";
