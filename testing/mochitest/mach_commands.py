@@ -466,9 +466,7 @@ class GeckoviewJunitCommands(MachCommandBase):
                      'running (default: False)',
                      action='store_true',
                      default=False)
-    @CommandArgument('--setenv', dest='add_env', action='append', default=[],
-                     help='Set target environment variable, like FOO=BAR')
-    def run_junit(self, no_install, add_env, **kwargs):
+    def run_junit(self, no_install, **kwargs):
         self._ensure_state_subdir_exists('.')
 
         from mozrunner.devices.android_device import (get_adb_path,
@@ -493,10 +491,4 @@ class GeckoviewJunitCommands(MachCommandBase):
                                           {default_format: sys.stdout}, format_args)
 
         mochitest = self._spawn(MochitestRunner)
-
-        custom_env = {}
-        for [key, value] in [p.split('=', 1) for p in add_env]:
-            custom_env[key] = value
-        kwargs['addEnv'] = custom_env
-
         return mochitest.run_geckoview_junit_test(self._mach_context, **kwargs)
