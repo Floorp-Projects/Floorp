@@ -48,6 +48,9 @@ Review groups
    * - #geckoview-reviewers
      - Changes to GeckoView
      - `Member list <https://phabricator.services.mozilla.com/project/members/92/>`__
+   * - #gfx-reviewers
+     - Changes to Graphics code
+     - `Member list <https://phabricator.services.mozilla.com/project/members/122/>`__
    * - #intermittent-reviewers
      - Test manifest changes
      - `Member list <https://phabricator.services.mozilla.com/project/members/110/>`__
