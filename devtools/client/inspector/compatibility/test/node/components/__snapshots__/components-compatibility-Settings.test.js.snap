@@ -7,30 +7,47 @@ exports[`Settings component renders default browsers with a selected browsers 1`
   <header
     className="compatibility-settings__header"
   >
-    <label
-      className="compatibility-settings__header-label"
+    <Localized
+      id="compatibility-settings-header"
     >
-      Settings
-    </label>
-    <button
-      className="compatibility-settings__header-button"
-      onClick={[Function]}
-      title="Close settings"
+      <label
+        className="compatibility-settings__header-label"
+      >
+        compatibility-settings-header
+      </label>
+    </Localized>
+    <Localized
+      attrs={
+        Object {
+          "title": true,
+        }
+      }
+      id="compatibility-close-settings-button"
     >
-      <img
-        className="compatibility-settings__header-icon"
-        src="chrome://devtools/skin/images/close.svg"
-      />
-    </button>
+      <button
+        className="compatibility-settings__header-button"
+        onClick={[Function]}
+        title="compatibility-close-settings-button"
+      >
+        <img
+          className="compatibility-settings__header-icon"
+          src="chrome://devtools/skin/images/close.svg"
+        />
+      </button>
+    </Localized>
   </header>
   <section
     className="compatibility-settings__target-browsers"
   >
-    <header
-      className="compatibility-settings__target-browsers-header"
+    <Localized
+      id="compatibility-target-browsers-header"
     >
-      Target Browsers
-    </header>
+      <header
+        className="compatibility-settings__target-browsers-header"
+      >
+        compatibility-target-browsers-header
+      </header>
+    </Localized>
     <ul
       className="compatibility-settings__target-browsers-list"
     >
@@ -112,30 +129,47 @@ exports[`Settings component renders default browsers with full selected browsers
   <header
     className="compatibility-settings__header"
   >
-    <label
-      className="compatibility-settings__header-label"
+    <Localized
+      id="compatibility-settings-header"
     >
-      Settings
-    </label>
-    <button
-      className="compatibility-settings__header-button"
-      onClick={[Function]}
-      title="Close settings"
+      <label
+        className="compatibility-settings__header-label"
+      >
+        compatibility-settings-header
+      </label>
+    </Localized>
+    <Localized
+      attrs={
+        Object {
+          "title": true,
+        }
+      }
+      id="compatibility-close-settings-button"
     >
-      <img
-        className="compatibility-settings__header-icon"
-        src="chrome://devtools/skin/images/close.svg"
-      />
-    </button>
+      <button
+        className="compatibility-settings__header-button"
+        onClick={[Function]}
+        title="compatibility-close-settings-button"
+      >
+        <img
+          className="compatibility-settings__header-icon"
+          src="chrome://devtools/skin/images/close.svg"
+        />
+      </button>
+    </Localized>
   </header>
   <section
     className="compatibility-settings__target-browsers"
   >
-    <header
-      className="compatibility-settings__target-browsers-header"
+    <Localized
+      id="compatibility-target-browsers-header"
     >
-      Target Browsers
-    </header>
+      <header
+        className="compatibility-settings__target-browsers-header"
+      >
+        compatibility-target-browsers-header
+      </header>
+    </Localized>
     <ul
       className="compatibility-settings__target-browsers-list"
     >
@@ -217,30 +251,47 @@ exports[`Settings component renders default browsers with no selected browsers 1
   <header
     className="compatibility-settings__header"
   >
-    <label
-      className="compatibility-settings__header-label"
+    <Localized
+      id="compatibility-settings-header"
     >
-      Settings
-    </label>
-    <button
-      className="compatibility-settings__header-button"
-      onClick={[Function]}
-      title="Close settings"
+      <label
+        className="compatibility-settings__header-label"
+      >
+        compatibility-settings-header
+      </label>
+    </Localized>
+    <Localized
+      attrs={
+        Object {
+          "title": true,
+        }
+      }
+      id="compatibility-close-settings-button"
     >
-      <img
-        className="compatibility-settings__header-icon"
-        src="chrome://devtools/skin/images/close.svg"
-      />
-    </button>
+      <button
+        className="compatibility-settings__header-button"
+        onClick={[Function]}
+        title="compatibility-close-settings-button"
+      >
+        <img
+          className="compatibility-settings__header-icon"
+          src="chrome://devtools/skin/images/close.svg"
+        />
+      </button>
+    </Localized>
   </header>
   <section
     className="compatibility-settings__target-browsers"
   >
-    <header
-      className="compatibility-settings__target-browsers-header"
+    <Localized
+      id="compatibility-target-browsers-header"
     >
-      Target Browsers
-    </header>
+      <header
+        className="compatibility-settings__target-browsers-header"
+      >
+        compatibility-target-browsers-header
+      </header>
+    </Localized>
     <ul
       className="compatibility-settings__target-browsers-list"
     >
