@@ -210,7 +210,7 @@ bool WindowsSMTCProvider::Open() {
     bool controlAttribs =
         SetControlAttributes(SMTCControlAttributes::EnableAll());
     SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
-    bool metadata = SetMusicMetadata(Nothing(), L"Mozilla Firefox", Nothing());
+    bool metadata = SetMusicMetadata(nullptr, L"Mozilla Firefox", nullptr);
     bool update = Update();
     LOG("Initialization - Enabling All Control Attributes: %s, Setting "
         "Metadata: %s, Update: %s",
@@ -348,9 +348,9 @@ bool WindowsSMTCProvider::SetThumbnail(const wchar_t* aUrl) {
   return SUCCEEDED(mDisplay->put_Thumbnail(thumbnail.Get()));
 }
 
-bool WindowsSMTCProvider::SetMusicMetadata(
-    mozilla::Maybe<const wchar_t*> aArtist, const wchar_t* aTitle,
-    mozilla::Maybe<const wchar_t*> aAlbumArtist) {
+bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
+                                           const wchar_t* aTitle,
+                                           const wchar_t* aAlbumArtist) {
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(aTitle);
   ComPtr<IMusicDisplayProperties> musicProps;
@@ -365,26 +365,16 @@ bool WindowsSMTCProvider::SetMusicMetadata(
     return false;
   }
 
-  if (aArtist.isSome()) {
-    hr = musicProps->put_Artist(HStringReference(aArtist.value()).Get());
-  } else {
-    hr = musicProps->put_Artist(
-        nullptr);  // clearing the previously stored value
-  }
-
+  hr = musicProps->put_Artist(aArtist ? HStringReference(aArtist).Get()
+                                      : nullptr);
   MOZ_ASSERT(SUCCEEDED(hr));
   // When building for release, hr is never read
   Unused << hr;
 
   musicProps->put_Title(HStringReference(aTitle).Get());
-  if (aAlbumArtist.isSome()) {
-    hr = musicProps->put_AlbumArtist(
-        HStringReference(aAlbumArtist.value()).Get());
-  } else {
-    hr = musicProps->put_AlbumArtist(
-        nullptr);  // clearing the previously stored value
-  }
 
+  hr = musicProps->put_AlbumArtist(
+      aAlbumArtist ? HStringReference(aAlbumArtist).Get() : nullptr);
   MOZ_ASSERT(SUCCEEDED(hr));
   // When building for release, hr is never read
   Unused << hr;
@@ -394,8 +384,8 @@ bool WindowsSMTCProvider::SetMusicMetadata(
 
 void WindowsSMTCProvider::SetMediaMetadata(
     const mozilla::dom::MediaMetadataBase& aMetadata) {
-  SetMusicMetadata(Some(aMetadata.mArtist.get()), aMetadata.mTitle.get(),
-                   Some(aMetadata.mAlbum.get()));
+  SetMusicMetadata(aMetadata.mArtist.get(), aMetadata.mTitle.get(),
+                   aMetadata.mAlbum.get());
   Update();
 }
 
