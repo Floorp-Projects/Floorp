@@ -12,8 +12,10 @@
 #  include <Windows.Media.h>
 #  include <wrl.h>
 
+#  include "mozilla/dom/FetchImageHelper.h"
 #  include "mozilla/dom/MediaController.h"
 #  include "mozilla/dom/MediaControlKeySource.h"
+#  include "mozilla/UniquePtr.h"
 
 using ISMTC = ABI::Windows::Media::ISystemMediaTransportControls;
 using SMTCProperty = ABI::Windows::Media::SystemMediaTransportControlsProperty;
@@ -86,6 +88,7 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   // Sets the Thumbnail to the image stored in mImageStream
   // Note: This method does not call update(), you need to do that manually
   bool SetThumbnail();
+  void ClearThumbnail();
 
   bool mInitialized = false;
   ComPtr<ISMTC> mControls;
@@ -97,6 +100,12 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   ComPtr<IDataWriter> mImageDataWriter;
   ComPtr<IRandomAccessStream> mImageStream;
   ComPtr<IRandomAccessStreamReference> mImageStreamReference;
+  // The URL of the current image
+  nsString mImageSrc;
+
+  mozilla::UniquePtr<mozilla::dom::FetchImageHelper> mImageFetcher;
+  mozilla::MozPromiseRequestHolder<mozilla::dom::ImagePromise>
+      mImageFetchRequest;
 
   HWND mWindow;  // handle to the invisible window
 

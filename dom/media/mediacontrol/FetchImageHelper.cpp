@@ -67,14 +67,11 @@ bool FetchImageHelper::IsFetchingImage() const {
 }
 
 void FetchImageHelper::HandleFetchSuccess(imgIContainer* aImage) {
+  MOZ_ASSERT(aImage);
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsFetchingImage());
   LOG("Finished decoding image");
-  RefPtr<SourceSurface> surface = aImage->GetFrame(
-      imgIContainer::FRAME_FIRST,
-      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
-  RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
-  mPromise.Resolve(dataSurface, __func__);
+  mPromise.Resolve(aImage, __func__);
   ClearListenerIfNeeded();
 }
 

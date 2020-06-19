@@ -19,17 +19,16 @@ namespace dom {
  * MediaImage is defined by websites by using MediaSession API [1].
  *
  * By using `FetchImage()`, it would return a promise that would resolve with a
- * `DataSourceSurface`, then we can get the decoded image data from the surface.
+ * `imgIContainer`, then we can get the image data from the container.
  *
  * [1] https://w3c.github.io/mediasession/#dictdef-mediaimage
  */
-using ImagePromise = MozPromise<RefPtr<mozilla::gfx::DataSourceSurface>, bool,
+using ImagePromise = MozPromise<nsCOMPtr<imgIContainer>, bool,
                                 /* IsExclusive = */ true>;
 class FetchImageHelper final {
  public:
-  NS_INLINE_DECL_REFCOUNTING(FetchImageHelper)
-
   explicit FetchImageHelper(const MediaImage& aImage);
+  ~FetchImageHelper();
 
   // Return a promise which would be resolved with the decoded image surface
   // when we finish fetching and decoding image data, and it would be rejected
@@ -74,8 +73,6 @@ class FetchImageHelper final {
     nsCOMPtr<nsIChannel> mChannel;
     nsCOMPtr<imgIContainer> mImage;
   };
-
-  ~FetchImageHelper();
 
   void ClearListenerIfNeeded();
   void HandleFetchSuccess(imgIContainer* aImage);
