@@ -19,7 +19,6 @@ import mozilla.components.support.ktx.android.view.onNextGlobalLayout
 import mozilla.components.support.utils.DrawableUtils
 import java.text.NumberFormat
 
-@Suppress("LargeClass")
 open class TabCounter @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -35,7 +34,6 @@ open class TabCounter @JvmOverloads constructor(
     internal var currentTextRatio: Float = 0.toFloat()
 
     init {
-
         // Default TabCounter tint, could be override by the caller
         @ColorInt val defaultTabCounterTint = ContextCompat.getColor(context, R.color.mozac_ui_tabcounter_default_tint)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.TabCounter, defStyle, 0)
@@ -48,10 +46,8 @@ open class TabCounter @JvmOverloads constructor(
         box = findViewById(R.id.counter_box)
         bar = findViewById(R.id.counter_bar)
         text = findViewById(R.id.counter_text)
-        text.text = DEFAULT_TABS_COUNTER_TEXT
-        val shiftOneDpForDefaultText = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, 1f, context.resources.displayMetrics).toInt()
-        text.setPadding(0, 0, 0, shiftOneDpForDefaultText)
+
+        setCount(count)
 
         if (tabCounterTint != defaultTabCounterTint) {
             tintDrawables(tabCounterTint)
@@ -60,6 +56,9 @@ open class TabCounter @JvmOverloads constructor(
         animationSet = createAnimatorSet()
     }
 
+    /**
+     * Returns current tab count from tab counter view.
+     */
     fun getText(): CharSequence {
         return text.text
     }
@@ -182,7 +181,7 @@ open class TabCounter @JvmOverloads constructor(
         // Fadeout in 66ms, after firstAnimator with delay 32ms (54~58, 4 frames).
         val fadeOut = ObjectAnimator.ofFloat(bar, "alpha",
             ANIM_BAR_FADEOUT_FROM, ANIM_BAR_FADEOUT_TO).setDuration(ANIM_BAR_FADEOUT_DURATION)
-        fadeOut.startDelay = (ANIM_BAR_FADEOUT_DELAY).toLong() // delay 3 frames after firstAnimator
+        fadeOut.startDelay = (ANIM_BAR_FADEOUT_DELAY) // delay 3 frames after firstAnimator
 
         // Move down on y-axis, from -7.0 to 0 in 16ms, after fadeOut (58~59 1 frame).
         val moveDown2 = ObjectAnimator.ofFloat(bar, "translationY",
@@ -216,7 +215,7 @@ open class TabCounter @JvmOverloads constructor(
         // FadeIn in 66 ms, after fadeOut with delay 96ms (57~61, 4 frames).
         val fadeIn = ObjectAnimator.ofFloat(text, "alpha",
             ANIM_TEXT_FADEIN_FROM, ANIM_TEXT_FADEIN_TO).setDuration(ANIM_TEXT_FADEIN_DURATION)
-        fadeIn.startDelay = (ANIM_TEXT_FADEIN_DELAY).toLong() // delay 6 frames after fadeOut
+        fadeIn.startDelay = (ANIM_TEXT_FADEIN_DELAY) // delay 6 frames after fadeOut
 
         // Move down on y-axis, from 0 to 4.4 in 66ms, with fadeIn (57~61, 4 frames).
         val moveDown = ObjectAnimator.ofFloat(text, "translationY",
@@ -259,11 +258,9 @@ open class TabCounter @JvmOverloads constructor(
     }
 
     companion object {
-
         internal const val MAX_VISIBLE_TABS = 99
 
         internal const val SO_MANY_TABS_OPEN = "∞"
-        internal const val DEFAULT_TABS_COUNTER_TEXT = ":)"
 
         internal const val ONE_DIGIT_SIZE_RATIO = 0.6f
         internal const val TWO_DIGITS_SIZE_RATIO = 0.5f
