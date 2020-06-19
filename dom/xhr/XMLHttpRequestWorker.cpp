@@ -120,6 +120,8 @@ class Proxy final : public nsIDOMEventListener {
   bool mLastUploadLengthComputable;
   bool mSeenLoadStart;
   bool mSeenUploadLoadStart;
+  bool mDispatchPrematureAbortEvent;
+  bool mDispatchPrematureAbortEventToUpload;
 
   // Only touched on the main thread.
   bool mUploadEventListenersAttached;
@@ -151,6 +153,8 @@ class Proxy final : public nsIDOMEventListener {
         mLastUploadLengthComputable(false),
         mSeenLoadStart(false),
         mSeenUploadLoadStart(false),
+        mDispatchPrematureAbortEvent(false),
+        mDispatchPrematureAbortEventToUpload(false),
         mUploadEventListenersAttached(false),
         mMainThreadSeenLoadStart(false),
         mInOpen(false) {}
@@ -262,13 +266,13 @@ enum {
   STRING_loadstart,
   STRING_progress,
   STRING_timeout,
-  STRING_readystatechange,
   STRING_loadend,
+  STRING_readystatechange,
 
   STRING_COUNT,
 
-  STRING_LAST_XHR = STRING_loadend,
-  STRING_LAST_EVENTTARGET = STRING_timeout
+  STRING_LAST_XHR = STRING_readystatechange,
+  STRING_LAST_EVENTTARGET = STRING_loadend
 };
 
 static_assert(STRING_LAST_XHR >= STRING_LAST_EVENTTARGET, "Bad string setup!");
@@ -282,10 +286,10 @@ const char* const sEventStrings[] = {
     "loadstart",
     "progress",
     "timeout",
+    "loadend",
 
     // XMLHttpRequest event types, supported only by XHR.
     "readystatechange",
-    "loadend",
 };
 
 static_assert(MOZ_ARRAY_LENGTH(sEventStrings) == STRING_COUNT,
@@ -1070,16 +1074,20 @@ bool EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
   } else if (mType.EqualsASCII(sEventStrings[STRING_loadend])) {
     if (mUploadEvent) {
       mProxy->mSeenUploadLoadStart = false;
-    } else {
-      if (!mProxy->mSeenLoadStart) {
+      if (mProxy->mDispatchPrematureAbortEventToUpload) {
         // We've already dispatched premature abort events.
         return true;
       }
+    } else {
       mProxy->mSeenLoadStart = false;
+      if (mProxy->mDispatchPrematureAbortEvent) {
+        // We've already dispatched premature abort events.
+        return true;
+      }
     }
   } else if (mType.EqualsASCII(sEventStrings[STRING_abort])) {
-    if ((mUploadEvent && !mProxy->mSeenUploadLoadStart) ||
-        (!mUploadEvent && !mProxy->mSeenLoadStart)) {
+    if ((mUploadEvent && mProxy->mDispatchPrematureAbortEventToUpload) ||
+        (!mUploadEvent && mProxy->mDispatchPrematureAbortEvent)) {
       // We've already dispatched premature abort events.
       return true;
     }
@@ -1498,6 +1506,7 @@ void XMLHttpRequestWorker::MaybeDispatchPrematureAbortEvents(ErrorResult& aRv) {
     }
 
     mProxy->mSeenUploadLoadStart = false;
+    mProxy->mDispatchPrematureAbortEventToUpload = true;
   }
 
   if (mProxy->mSeenLoadStart) {
@@ -1526,6 +1535,7 @@ void XMLHttpRequestWorker::MaybeDispatchPrematureAbortEvents(ErrorResult& aRv) {
     }
 
     mProxy->mSeenLoadStart = false;
+    mProxy->mDispatchPrematureAbortEvent = true;
   }
 }
 
@@ -1643,6 +1653,8 @@ void XMLHttpRequestWorker::SendInternal(const BodyExtractorBase* aBody,
   }
 
   mProxy->mOuterChannelId++;
+  mProxy->mDispatchPrematureAbortEvent = false;
+  mProxy->mDispatchPrematureAbortEventToUpload = false;
 
   sendRunnable->SetSyncLoopTarget(syncLoopTarget);
   sendRunnable->SetHaveUploadListeners(hasUploadListeners);
