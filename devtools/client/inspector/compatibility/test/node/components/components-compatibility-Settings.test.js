@@ -31,8 +31,10 @@ describe("Settings component", () => {
         targetBrowsers: [],
       },
     });
-    const wrapper = shallow(Settings({ store })).dive();
-    expect(wrapper).toMatchSnapshot();
+
+    const connectWrapper = shallow(Settings({ store }));
+    const targetComponent = connectWrapper.dive();
+    expect(targetComponent).toMatchSnapshot();
   });
 
   it("renders default browsers with a selected browsers", () => {
@@ -43,8 +45,10 @@ describe("Settings component", () => {
         targetBrowsers: [DEFAULT_BROWSERS[1]],
       },
     });
-    const wrapper = shallow(Settings({ store })).dive();
-    expect(wrapper).toMatchSnapshot();
+
+    const connectWrapper = shallow(Settings({ store }));
+    const targetComponent = connectWrapper.dive();
+    expect(targetComponent).toMatchSnapshot();
   });
 
   it("renders default browsers with full selected browsers", () => {
@@ -55,7 +59,9 @@ describe("Settings component", () => {
         targetBrowsers: DEFAULT_BROWSERS,
       },
     });
-    const wrapper = shallow(Settings({ store })).dive();
-    expect(wrapper).toMatchSnapshot();
+
+    const connectWrapper = shallow(Settings({ store }));
+    const targetComponent = connectWrapper.dive();
+    expect(targetComponent).toMatchSnapshot();
   });
 });
