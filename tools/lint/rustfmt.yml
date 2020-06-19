@@ -12,6 +12,7 @@ rust:
         - gfx/wgpu/
         - gfx/wr/wr_malloc_size_of/
         - media/audioipc/audioipc/src/
+        - media/audioipc/client/src/
         - media/audioipc/server/src/
         - media/mp4parse-rust/
         - servo/
