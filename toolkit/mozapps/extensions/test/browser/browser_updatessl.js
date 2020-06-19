@@ -126,7 +126,10 @@ function run_update_tests(callback) {
 }
 
 // Runs tests with built-in certificates required and no certificate exceptions.
-add_test(function() {
+add_test(async function test_builtin_required() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[PREF_UPDATE_REQUIREBUILTINCERTS, true]],
+  });
   // Tests that a simple update.json retrieval works as expected.
   add_update_test(HTTP, null, SUCCESS);
   add_update_test(HTTPS, null, DOWNLOAD_ERROR);
@@ -188,7 +191,7 @@ add_test(function() {
 
 // Runs tests without requiring built-in certificates and no certificate
 // exceptions.
-add_test(async function() {
+add_test(async function test_builtin_not_required() {
   await SpecialPowers.pushPrefEnv({
     set: [[PREF_UPDATE_REQUIREBUILTINCERTS, false]],
   });
@@ -258,9 +261,9 @@ add_test(() => {
 });
 
 // Runs tests with built-in certificates required and all certificate exceptions.
-add_test(async function() {
+add_test(async function test_builtin_required_overrides() {
   await SpecialPowers.pushPrefEnv({
-    clear: [[PREF_UPDATE_REQUIREBUILTINCERTS]],
+    set: [[PREF_UPDATE_REQUIREBUILTINCERTS, true]],
   });
 
   // Tests that a simple update.json retrieval works as expected.
@@ -324,7 +327,7 @@ add_test(async function() {
 
 // Runs tests without requiring built-in certificates and all certificate
 // exceptions.
-add_test(async function() {
+add_test(async function test_builtin_not_required_overrides() {
   await SpecialPowers.pushPrefEnv({
     set: [[PREF_UPDATE_REQUIREBUILTINCERTS, false]],
   });
