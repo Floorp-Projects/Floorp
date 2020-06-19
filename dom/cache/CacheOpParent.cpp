@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/CacheOpParent.h"
 
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/ManagerId.h"
@@ -220,6 +221,9 @@ already_AddRefed<nsIInputStream> CacheOpParent::DeserializeCacheStream(
 
 void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
     ErrorResult& aRv, const nsTArray<SavedResponse>& aResponses) {
+  if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
+    return;
+  }
   // Only checking for match/matchAll.
   nsILoadInfo::CrossOriginEmbedderPolicy loadingCOEP =
       nsILoadInfo::EMBEDDER_POLICY_NULL;
