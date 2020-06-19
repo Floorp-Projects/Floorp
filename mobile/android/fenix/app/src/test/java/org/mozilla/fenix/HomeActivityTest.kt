@@ -5,11 +5,14 @@
 package org.mozilla.fenix
 
 import android.content.Intent
+import android.os.Bundle
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.toSafeIntent
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity.Companion.PRIVATE_BROWSING_MODE
@@ -57,5 +60,39 @@ class HomeActivityTest {
 
         assertNotEquals(testContext.settings().lastKnownMode, activity.getModeFromIntentOrLastKnown(intent))
         assertEquals(BrowsingMode.Private, activity.getModeFromIntentOrLastKnown(intent))
+    }
+
+    @Test
+    fun `isActivityColdStarted returns true for null savedInstanceState and not launched from history`() {
+        val activity = HomeActivity()
+
+        assertTrue(activity.isActivityColdStarted(Intent(), null))
+    }
+
+    @Test
+    fun `isActivityColdStarted returns false for valid savedInstanceState and not launched from history`() {
+        val activity = HomeActivity()
+
+        assertFalse(activity.isActivityColdStarted(Intent(), Bundle()))
+    }
+
+    @Test
+    fun `isActivityColdStarted returns false for null savedInstanceState and launched from history`() {
+        val activity = HomeActivity()
+        val startingIntent = Intent().apply {
+            flags = flags or Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
+        }
+
+        assertFalse(activity.isActivityColdStarted(startingIntent, null))
+    }
+
+    @Test
+    fun `isActivityColdStarted returns false for null savedInstanceState and not launched from history`() {
+        val activity = HomeActivity()
+        val startingIntent = Intent().apply {
+            flags = flags or Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
+        }
+
+        assertFalse(activity.isActivityColdStarted(startingIntent, Bundle()))
     }
 }

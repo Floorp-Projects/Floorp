@@ -154,7 +154,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
         sessionObserver = UriOpenedObserver(this)
 
-        externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
+        if (isActivityColdStarted(intent, savedInstanceState)) {
+            externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
+        }
 
         Performance.processIntentIfPerformanceTest(intent, this)
 
@@ -475,6 +477,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         isVisuallyComplete = true
         this.visualCompletenessQueue = visualCompletenessQueue
     }
+
+    @VisibleForTesting
+    internal fun isActivityColdStarted(startingIntent: Intent, activityIcicle: Bundle?): Boolean =
+        // First time opening this activity in the task.
+        // Cold start / start from Recents after back press.
+        activityIcicle == null &&
+        // Activity was restarted from Recents after it was destroyed by Android while in background
+        // in cases of memory pressure / "Don't keep activities".
+        startingIntent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
 
     companion object {
         const val OPEN_TO_BROWSER = "open_to_browser"
