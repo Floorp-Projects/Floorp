@@ -206,13 +206,10 @@ bool WindowsSMTCProvider::Open() {
   mInitialized = RegisterEvents();
 
   if (mInitialized) {
-    bool controlAttribs =
-        SetControlAttributes(SMTCControlAttributes::EnableAll());
     SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
-    bool update = Update();
-    LOG("Initialization - Enabling All Control Attributes: %s, Update: %s",
-        controlAttribs ? "true" : "false", update ? "true" : "false");
-    mInitialized = controlAttribs && update;
+    mInitialized = SetControlAttributes(SMTCControlAttributes::EnableAll());
+    LOG("Enabling all control attributes: %s",
+        mInitialized ? "successfully" : "failed");
   }
 
   MOZ_ASSERT(mInitialized);  // Assert that we could successfully Open
