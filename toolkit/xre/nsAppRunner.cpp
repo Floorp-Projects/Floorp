@@ -5064,7 +5064,8 @@ bool BrowserTabsRemoteAutostart() {
 
 bool FissionAutostart() {
   return !gSafeMode &&
-         StaticPrefs::fission_autostart_AtStartup_DoNotUseDirectly();
+         (StaticPrefs::fission_autostart_AtStartup_DoNotUseDirectly() ||
+          EnvHasValue("MOZ_FORCE_ENABLE_FISSION"));
 }
 
 uint32_t GetMaxWebProcessCount() {
