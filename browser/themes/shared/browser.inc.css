@@ -298,6 +298,7 @@ menupopup::part(drop-indicator) {
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button-container {
   float: inline-end;
   background-color: transparent;
+  flex-direction: row-reverse;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button {
@@ -306,6 +307,7 @@ menupopup::part(drop-indicator) {
   border-radius: 2px;
   margin: 4px;
   padding: 3px 12px;
+  flex: 1;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:after {
@@ -327,6 +329,31 @@ menupopup::part(drop-indicator) {
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:active {
   background-color: rgba(216, 216, 216, 0.5);
 }
+
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-secondary-button {
+  margin: 3px;
+  border: none;
+  border-radius: 2px;
+  background-image: url(chrome://browser/skin/stop.svg);
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px;
+  -moz-context-properties: fill;
+  fill: white;
+  height: 22px;
+  width: 22px;
+  padding: 0;
+  align-self: center;
+  flex: none;
+  display: block;
+  font-size: 0;
+}
+
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-secondary-button:hover {
+  background-color: rgba(216, 216, 216, 0.4);
+}
+
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-header-container {
   color: white;
