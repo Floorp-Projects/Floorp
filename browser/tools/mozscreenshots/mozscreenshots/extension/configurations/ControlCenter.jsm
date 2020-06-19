@@ -297,6 +297,8 @@ async function openIdentityPopup(expand) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
   let gBrowser = browserWindow.gBrowser;
   let { gIdentityHandler } = gBrowser.ownerGlobal;
+  // Ensure the popup is available, if it's never been opened.
+  gIdentityHandler._initializePopup();
   gIdentityHandler._identityPopup.hidePopup();
   // Disable the popup shadow on OSX until we have figured out bug 1425253.
   if (AppConstants.platform == "macosx") {

@@ -743,10 +743,7 @@ var gTests = [
       await indicator;
       await checkSharingUI({ video: true });
 
-      ok(
-        gIdentityHandler._identityPopup.hidden,
-        "control center should be hidden"
-      );
+      ok(identityPopupHidden(), "control center should be hidden");
       if (USING_LEGACY_INDICATOR && IS_MAC) {
         let activeStreams = webrtcUI.getActiveStreams(true, false, false);
         webrtcUI.showSharingDoorhanger(activeStreams[0]);
@@ -763,16 +760,11 @@ var gTests = [
 
         let elt = win.document.getElementById(buttonID);
         EventUtils.synthesizeMouseAtCenter(elt, {}, win);
-        await TestUtils.waitForCondition(
-          () => !gIdentityHandler._identityPopup.hidden
-        );
       }
-      ok(
-        !gIdentityHandler._identityPopup.hidden,
-        "control center should be open"
-      );
+      await TestUtils.waitForCondition(() => !identityPopupHidden());
+      ok(!identityPopupHidden(), "control center should be open");
 
-      gIdentityHandler._identityPopup.hidden = true;
+      gIdentityHandler._identityPopup.hidePopup();
 
       await closeStream();
     },
