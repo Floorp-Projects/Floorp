@@ -1119,22 +1119,6 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       }
     }
 
-    if (StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
-      nsILoadInfo::CrossOriginEmbedderPolicy respectedCOEP =
-          mWorkerPrivate->GetEmbedderPolicy();
-      if (mWorkerPrivate->IsDedicatedWorker() &&
-          respectedCOEP == nsILoadInfo::EMBEDDER_POLICY_NULL) {
-        respectedCOEP = mWorkerPrivate->GetOwnerEmbedderPolicy();
-      }
-
-      nsCOMPtr<nsILoadInfo> channelLoadInfo;
-      rv = channel->GetLoadInfo(getter_AddRefs(channelLoadInfo));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      channelLoadInfo->SetLoadingEmbedderPolicy(respectedCOEP);
-    }
-
     if (loadInfo.mCacheStatus != ScriptLoadInfo::ToBeCached) {
       rv = channel->AsyncOpen(loader);
       if (NS_WARN_IF(NS_FAILED(rv))) {
