@@ -95,7 +95,6 @@ class NavigationToolbarTest {
         }
     }
 
-    @Ignore("Intermittent failures: https://github.com/mozilla-mobile/fenix/issues/10642")
     @Test
     fun refreshPageTest() {
         val refreshWebPage = TestAssetHelper.getRefreshAsset(mockWebServer)
