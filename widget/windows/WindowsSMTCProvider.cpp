@@ -25,6 +25,7 @@
 
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Media;
+using namespace ABI::Windows::Storage::Streams;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 using namespace mozilla;
@@ -196,6 +197,7 @@ void WindowsSMTCProvider::SetMediaMetadata(
   SetMusicMetadata(aMetadata.mArtist.get(), aMetadata.mTitle.get(),
                    aMetadata.mAlbum.get());
   RefreshDisplay();
+  LoadThumbnail(aMetadata.mArtwork);
 }
 
 void WindowsSMTCProvider::UnregisterEvents() {
@@ -346,57 +348,132 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
   return true;
 }
 
-bool WindowsSMTCProvider::SetThumbnail(const wchar_t* aUrl) {
+void WindowsSMTCProvider::LoadThumbnail(
+    const nsTArray<mozilla::dom::MediaImage>& aArtwork) {
+  // TODO: Use FetchImageHelper to fetch one of the image in aArtwork, then set
+  // it to the thumbnail via LoadImage()
+}
+
+void WindowsSMTCProvider::LoadImage(const char* aImageData,
+                                    uint32_t aDataSize) {
+  // 1. Use mImageDataWriter to write the binary data of image into mImageStream
+  // 2. Refer the image by mImageStreamReference and then set it to the SMTC
+  // In case of the race condition between they are being destroyed and the
+  // async operation for image loading, mImageDataWriter, mImageStream, and
+  // mImageStreamReference are member variables
+
+  HRESULT hr = ActivateInstance(
+      HStringReference(
+          RuntimeClass_Windows_Storage_Streams_InMemoryRandomAccessStream)
+          .Get(),
+      mImageStream.GetAddressOf());
+  if (FAILED(hr)) {
+    LOG("Failed to make mImageStream refer to an instance of "
+        "InMemoryRandomAccessStream");
+    return;
+  }
+
+  ComPtr<IOutputStream> outputStream;
+  hr = mImageStream.As(&outputStream);
+  if (FAILED(hr)) {
+    LOG("Failed when query IOutputStream interface from mImageStream");
+    return;
+  }
+
+  ComPtr<IDataWriterFactory> dataWriterFactory;
+  hr = GetActivationFactory(
+      HStringReference(RuntimeClass_Windows_Storage_Streams_DataWriter).Get(),
+      dataWriterFactory.GetAddressOf());
+  if (FAILED(hr)) {
+    LOG("Failed to get an activation factory for IDataWriterFactory");
+    return;
+  }
+
+  hr = dataWriterFactory->CreateDataWriter(outputStream.Get(),
+                                           mImageDataWriter.GetAddressOf());
+  if (FAILED(hr)) {
+    LOG("Failed to create mImageDataWriter that writes data to mImageStream");
+    return;
+  }
+
+  hr = mImageDataWriter->WriteBytes(
+      aDataSize, reinterpret_cast<BYTE*>(const_cast<char*>(aImageData)));
+  if (FAILED(hr)) {
+    LOG("Failed to write data to mImageStream");
+    return;
+  }
+
+  ComPtr<IAsyncOperation<unsigned int>> storeAsyncOperation;
+  hr = mImageDataWriter->StoreAsync(&storeAsyncOperation);
+  if (FAILED(hr)) {
+    LOG("Failed to commit the written data to mImageStream, asynchronously");
+    return;
+  }
+
+  // Upon the image is stored in mImageStream, set the image to the SMTC
+  // interface
+  auto onStoreCompleted = Callback<
+      IAsyncOperationCompletedHandler<unsigned int>>(
+      [this, self = RefPtr<WindowsSMTCProvider>(this)](
+          IAsyncOperation<unsigned int>* aAsyncOp, AsyncStatus aStatus) {
+        if (aStatus != AsyncStatus::Completed) {
+          LOG("Asynchronous operation is not completed");
+          return E_ABORT;
+        }
+
+        IAsyncInfo* asyncInfo;
+        HRESULT hr = aAsyncOp->QueryInterface(
+            IID_IAsyncInfo, reinterpret_cast<void**>(&asyncInfo));
+        if (FAILED(hr)) {
+          LOG("Failed when query IAsyncInfo from aAsyncOp");
+          return hr;
+        }
+
+        MOZ_ASSERT(asyncInfo);
+        asyncInfo->get_ErrorCode(&hr);
+        if (FAILED(hr)) {
+          LOG("Failed to get termination status of the asynchronous operation");
+          return hr;
+        }
+
+        if (!SetThumbnail() || !RefreshDisplay()) {
+          LOG("Failed to update thumbnail");
+        }
+
+        return S_OK;
+      });
+
+  hr = storeAsyncOperation->put_Completed(onStoreCompleted.Get());
+  if (FAILED(hr)) {
+    LOG("Failed to set callback on completeing the asynchronous operation");
+  }
+}
+
+bool WindowsSMTCProvider::SetThumbnail() {
   MOZ_ASSERT(mDisplay);
-  ComPtr<IActivationFactory> streamRefFactory;
+  MOZ_ASSERT(mImageStream);
+
+  ComPtr<IRandomAccessStreamReferenceStatics> streamRefFactory;
+
   HRESULT hr = GetActivationFactory(
       HStringReference(
           RuntimeClass_Windows_Storage_Streams_RandomAccessStreamReference)
           .Get(),
-      &streamRefFactory);
+      streamRefFactory.GetAddressOf());
   if (FAILED(hr)) {
-    LOG("SystemMediaTransportControls: Failed at "
-        "setThumbnail.GetActivationFactory(&StreamRefFactory)");
+    LOG("Failed to get an activation factory for "
+        "IRandomAccessStreamReferenceStatics type");
     return false;
   }
 
-  ComPtr<ABI::Windows::Storage::Streams::IRandomAccessStreamReferenceStatics>
-      streamRefStatic;
-  hr = streamRefFactory.As(&streamRefStatic);
+  hr = streamRefFactory->CreateFromStream(mImageStream.Get(),
+                                          mImageStreamReference.GetAddressOf());
   if (FAILED(hr)) {
-    LOG("SystemMediaTransportControls: Failed at "
-        "setThumbnail.StreamRefFactory.As()");
+    LOG("Failed to create mImageStreamReference from mImageStream");
     return false;
   }
 
-  ComPtr<IUriRuntimeClass> uri;
-  ComPtr<IUriRuntimeClassFactory> uriFactory;
-  hr = GetActivationFactory(
-      HStringReference(RuntimeClass_Windows_Foundation_Uri).Get(), &uriFactory);
-  if (FAILED(hr)) {
-    LOG("SystemMediaTransportControls: Failed at "
-        "setThumbnail.GetActivationFactory(&uriFactory)");
-    return false;
-  }
-
-  hr = uriFactory->CreateUri(HStringReference(aUrl).Get(), uri.GetAddressOf());
-  if (FAILED(hr)) {
-    LOG("SystemMediaTransportControls: Failed at setThumbnail.CreateUri()");
-    return false;
-  }
-
-  ComPtr<ABI::Windows::Storage::Streams::IRandomAccessStreamReference>
-      thumbnail;
-  // When Thumbnail would be a local file: CreateFromFile(file.Get(),
-  // &streamRef);
-  hr = streamRefStatic->CreateFromUri(uri.Get(), thumbnail.GetAddressOf());
-  if (FAILED(hr)) {
-    LOG("SystemMediaTransportControls: Failed at "
-        "setThumbnail.CreateFromUri()");
-    return false;
-  }
-
-  return SUCCEEDED(mDisplay->put_Thumbnail(thumbnail.Get()));
+  return SUCCEEDED(mDisplay->put_Thumbnail(mImageStreamReference.Get()));
 }
 
 #endif  // __MINGW32__

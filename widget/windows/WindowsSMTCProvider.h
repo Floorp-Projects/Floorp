@@ -20,6 +20,11 @@ using SMTCProperty = ABI::Windows::Media::SystemMediaTransportControlsProperty;
 using ISMTCDisplayUpdater =
     ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
 
+using ABI::Windows::Storage::Streams::IDataWriter;
+using ABI::Windows::Storage::Streams::IRandomAccessStream;
+using ABI::Windows::Storage::Streams::IRandomAccessStreamReference;
+using Microsoft::WRL::ComPtr;
+
 struct SMTCControlAttributes {
   bool mEnabled;
   bool mPlayPauseEnabled;
@@ -35,7 +40,7 @@ struct SMTCControlAttributes {
 };
 
 class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
-  NS_INLINE_DECL_REFCOUNTING(WindowsSMTCProvider, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WindowsSMTCProvider, override)
 
  public:
   WindowsSMTCProvider();
@@ -73,13 +78,26 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   bool SetMusicMetadata(const wchar_t* aArtist, const wchar_t* aTitle,
                         const wchar_t* aAlbumArtist);
 
-  // Sets the Thumbnail for the currently playing media to the given URL
+  // Sets one of the artwork to the SMTC interface asynchronously
+  void LoadThumbnail(const nsTArray<mozilla::dom::MediaImage>& aArtwork);
+  // Stores the raw binary data of an image to mImageStream and set it to the
+  // Thumbnail asynchronously
+  void LoadImage(const char* aImageData, uint32_t aDataSize);
+  // Sets the Thumbnail to the image stored in mImageStream
   // Note: This method does not call update(), you need to do that manually
-  bool SetThumbnail(const wchar_t* aUrl);
+  bool SetThumbnail();
 
   bool mInitialized = false;
-  Microsoft::WRL::ComPtr<ISMTC> mControls;
-  Microsoft::WRL::ComPtr<ISMTCDisplayUpdater> mDisplay;
+  ComPtr<ISMTC> mControls;
+  ComPtr<ISMTCDisplayUpdater> mDisplay;
+
+  // Use mImageDataWriter to write the binary data of image into mImageStream
+  // and refer the image by mImageStreamReference and then set it to the SMTC
+  // interface
+  ComPtr<IDataWriter> mImageDataWriter;
+  ComPtr<IRandomAccessStream> mImageStream;
+  ComPtr<IRandomAccessStreamReference> mImageStreamReference;
+
   HWND mWindow;  // handle to the invisible window
 
   // EventRegistrationTokens are used to have a handle on a callback (to remove
