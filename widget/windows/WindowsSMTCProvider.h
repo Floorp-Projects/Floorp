@@ -45,22 +45,8 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   bool Open() override;
   void Close() override;
 
-  // Sets the state of the UI Panel (enabled, can use PlayPause, Next, Previous
-  // Buttons)
-  bool SetControlAttributes(SMTCControlAttributes aAttributes);
-
   void SetPlaybackState(
       mozilla::dom::MediaSessionPlaybackState aState) override;
-
-  // Sets the Thumbnail for the currently playing media to the given URL.
-  // Note: This method does not call update(), you need to do that manually.
-  bool SetThumbnail(const wchar_t* aUrl);
-
-  // Sets the Metadata for the currently playing media and sets the playback
-  // type to "MUSIC" Note: This method does not call update(), you need to do
-  // that manually.
-  bool SetMusicMetadata(const wchar_t* aArtist, const wchar_t* aTitle,
-                        const wchar_t* aAlbumArtist);
 
   void SetMediaMetadata(
       const mozilla::dom::MediaMetadataBase& aMetadata) override;
@@ -74,6 +60,20 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   bool RegisterEvents();
   bool InitDisplayAndControls();
   void OnButtonPressed(mozilla::dom::MediaControlKey aKey);
+
+  // Sets the state of the UI Panel (enabled, can use PlayPause, Next, Previous
+  // Buttons)
+  bool SetControlAttributes(SMTCControlAttributes aAttributes);
+
+  // Sets the Metadata for the currently playing media and sets the playback
+  // type to "MUSIC" Note: This method does not call update(), you need to do
+  // that manually.
+  bool SetMusicMetadata(const wchar_t* aArtist, const wchar_t* aTitle,
+                        const wchar_t* aAlbumArtist);
+
+  // Sets the Thumbnail for the currently playing media to the given URL.
+  // Note: This method does not call update(), you need to do that manually.
+  bool SetThumbnail(const wchar_t* aUrl);
 
   // This method flushes the changed Media Metadata to the OS.
   bool Update();
