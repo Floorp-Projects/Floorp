@@ -54,6 +54,9 @@ Review groups
    * - #intermittent-reviewers
      - Test manifest changes
      - `Member list <https://phabricator.services.mozilla.com/project/members/110/>`__
+   * - #layout-reviewers
+     - Layout changes.
+     - `Member list <https://phabricator.services.mozilla.com/project/members/126/>`__
    * - #linter-reviewers
      - tools/lint/*
      - `Member list <https://phabricator.services.mozilla.com/project/members/119/>`__
