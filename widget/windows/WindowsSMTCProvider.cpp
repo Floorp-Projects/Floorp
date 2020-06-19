@@ -198,21 +198,24 @@ bool WindowsSMTCProvider::Open() {
   }
 
   if (!InitDisplayAndControls()) {
+    LOG("Failed to initialize the SMTC and its display");
     return false;
   }
 
-  // Note: SetControlAttributes has to assert mInitialized, because it can be
-  // called after this is open, thus we temporarly set mInit = true
-  mInitialized = RegisterEvents();
-
-  if (mInitialized) {
-    SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
-    mInitialized = SetControlAttributes(SMTCControlAttributes::EnableAll());
-    LOG("Enabling all control attributes: %s",
-        mInitialized ? "successfully" : "failed");
+  if (!RegisterEvents()) {
+    LOG("Failed to register SMTC key-event listener");
+    return false;
   }
 
-  MOZ_ASSERT(mInitialized);  // Assert that we could successfully Open
+  mInitialized = true;
+  if (!SetControlAttributes(SMTCControlAttributes::EnableAll())) {
+    LOG("Failed to set control attributes");
+    UnregisterEvents();
+    mInitialized = false;
+    return false;
+  }
+
+  SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
 
   return mInitialized;
 }
