@@ -7,7 +7,6 @@
 
 #include "imgIContainer.h"
 #include "imgITools.h"
-#include "imgINotificationObserver.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/MozPromise.h"
 
@@ -48,8 +47,7 @@ class FetchImageHelper final {
    * image data (via `OnImageReady()`) and finishing decoding image data (via
    * `Notify()`).
    */
-  class ImageFetchListener final : public imgIContainerCallback,
-                                   public imgINotificationObserver {
+  class ImageFetchListener final : public imgIContainerCallback {
    public:
     NS_DECL_ISUPPORTS
     ImageFetchListener() = default;
@@ -61,17 +59,14 @@ class FetchImageHelper final {
     void Clear();
     bool IsFetchingImage() const;
 
-    // Methods of imgIContainerCallback and imgINotificationObserver
+    // Method of imgIContainerCallback
     NS_IMETHOD OnImageReady(imgIContainer* aImage, nsresult aStatus) override;
-    void Notify(imgIRequest* aRequest, int32_t aType,
-                const nsIntRect* aData) override;
 
    private:
     ~ImageFetchListener();
 
     FetchImageHelper* MOZ_NON_OWNING_REF mHelper = nullptr;
     nsCOMPtr<nsIChannel> mChannel;
-    nsCOMPtr<imgIContainer> mImage;
   };
 
   void ClearListenerIfNeeded();

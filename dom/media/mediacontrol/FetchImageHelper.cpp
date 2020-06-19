@@ -70,7 +70,7 @@ void FetchImageHelper::HandleFetchSuccess(imgIContainer* aImage) {
   MOZ_ASSERT(aImage);
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsFetchingImage());
-  LOG("Finished decoding image");
+  LOG("Finished fetching image");
   mPromise.Resolve(aImage, __func__);
   ClearListenerIfNeeded();
 }
@@ -86,8 +86,7 @@ void FetchImageHelper::HandleFetchFail() {
 /**
  * Implementation for FetchImageHelper::ImageFetchListener
  */
-NS_IMPL_ISUPPORTS(FetchImageHelper::ImageFetchListener, imgIContainerCallback,
-                  imgINotificationObserver)
+NS_IMPL_ISUPPORTS(FetchImageHelper::ImageFetchListener, imgIContainerCallback)
 
 FetchImageHelper::ImageFetchListener::~ImageFetchListener() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -96,7 +95,7 @@ FetchImageHelper::ImageFetchListener::~ImageFetchListener() {
 
 nsresult FetchImageHelper::ImageFetchListener::FetchDecodedImageFromURI(
     nsIURI* aURI, FetchImageHelper* aHelper) {
-  MOZ_ASSERT(!mHelper && !mChannel && !mImage,
+  MOZ_ASSERT(!mHelper && !mChannel,
              "Should call Clear() berfore running another fetching process!");
   RefPtr<nsIPrincipal> nullPrincipal =
       NullPrincipal::CreateWithoutOriginAttributes();
@@ -113,7 +112,7 @@ nsresult FetchImageHelper::ImageFetchListener::FetchDecodedImageFromURI(
     return NS_ERROR_FAILURE;
   }
 
-  rv = imgTools->DecodeImageFromChannelAsync(aURI, channel, this, this);
+  rv = imgTools->DecodeImageFromChannelAsync(aURI, channel, this, nullptr);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -130,7 +129,6 @@ void FetchImageHelper::ImageFetchListener::Clear() {
     mChannel = nullptr;
   }
   mHelper = nullptr;
-  mImage = nullptr;
 }
 
 bool FetchImageHelper::ImageFetchListener::IsFetchingImage() const {
@@ -154,29 +152,9 @@ NS_IMETHODIMP FetchImageHelper::ImageFetchListener::OnImageReady(
     return aStatus;
   }
 
-  mImage = aImage;
-  nsresult rv = mImage->StartDecoding(
-      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY,
-      imgIContainer::FRAME_FIRST);
-  if (NS_FAILED(rv)) {
-    mHelper->HandleFetchFail();
-    Clear();
-    return rv;
-  }
-  return NS_OK;
-}
+  mHelper->HandleFetchSuccess(aImage);
 
-void FetchImageHelper::ImageFetchListener::Notify(imgIRequest* aRequest,
-                                                  int32_t aType,
-                                                  const nsIntRect* aData) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!IsFetchingImage() ||
-      aType != imgINotificationObserver::DECODE_COMPLETE) {
-    return;
-  }
-  MOZ_ASSERT(mHelper);
-  mHelper->HandleFetchSuccess(mImage);
-  Clear();
+  return NS_OK;
 }
 
 }  // namespace dom
