@@ -267,7 +267,6 @@ void WindowsSMTCProvider::SetPlaybackState(
       break;
   }
 
-  // When building for release, hr is never read
   MOZ_ASSERT(SUCCEEDED(hr));
   Unused << hr;
 }
@@ -357,7 +356,6 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
 
   HRESULT hr = mDisplay->put_Type(MediaPlaybackType::MediaPlaybackType_Music);
   MOZ_ASSERT(SUCCEEDED(hr));
-  // When building for release, hr is never read
   Unused << hr;
   hr = mDisplay->get_MusicProperties(musicProps.GetAddressOf());
   if (FAILED(hr)) {
@@ -368,7 +366,6 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
   hr = musicProps->put_Artist(aArtist ? HStringReference(aArtist).Get()
                                       : nullptr);
   MOZ_ASSERT(SUCCEEDED(hr));
-  // When building for release, hr is never read
   Unused << hr;
 
   musicProps->put_Title(HStringReference(aTitle).Get());
@@ -376,7 +373,6 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
   hr = musicProps->put_AlbumArtist(
       aAlbumArtist ? HStringReference(aAlbumArtist).Get() : nullptr);
   MOZ_ASSERT(SUCCEEDED(hr));
-  // When building for release, hr is never read
   Unused << hr;
 
   return true;
