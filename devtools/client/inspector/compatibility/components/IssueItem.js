@@ -12,6 +12,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 loader.lazyRequireGetter(
   this,
   "openDocLink",
@@ -83,22 +86,27 @@ class IssueItem extends PureComponent {
   _renderCauses() {
     const { deprecated, experimental } = this.props;
 
-    const causes = [];
-
-    if (deprecated) {
-      causes.push("deprecated");
+    if (!deprecated && !experimental) {
+      return null;
     }
 
-    if (experimental) {
-      causes.push("experimental");
+    let localizationId = "compatibility-issue-deprecated-experimental";
+
+    if (!deprecated) {
+      localizationId = "compatibility-issue-experimental";
+    } else if (!experimental) {
+      localizationId = "compatibility-issue-deprecated";
     }
 
-    return causes.length
-      ? dom.span(
-          { className: "compatibility-issue-item__causes" },
-          `(${causes.join(",")})`
-        )
-      : null;
+    return Localized(
+      {
+        id: localizationId,
+      },
+      dom.span(
+        { className: "compatibility-issue-item__causes" },
+        localizationId
+      )
+    );
   }
 
   _renderDescription() {
