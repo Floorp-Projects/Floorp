@@ -272,7 +272,11 @@ client, or opening a new URL.
 - extra: An object with the following attributes:
 
   - deviceID: A GUID which identifies the device the command is being sent to.
-  - flowID: A GUID which uniquely identifies this command invocation.
+  - flowID: A GUID which uniquely identifies this command invocation. This GUID
+            is the same for every device the tab is sent to.
+  - streamID: A GUID which uniquely identifies this command invocation's
+              specific target. This GUID is unique for every device the tab is
+              sent to (new in Firefox 79).
   - serverTime: (optional) Most recent server timestamp, as described above.
 
 processcommand
@@ -288,6 +292,9 @@ client. This is logically the "other end" of ``sendcommand``.
   - flowID: A GUID which uniquely identifies this command invocation. The value
             for this GUID will be the same as the flowID sent to the client via
             ``sendcommand``.
+  - streamID: A GUID which uniquely identifies this command invocation's
+              specific target. The value for this GUID will be the same as the
+              streamID sent to the client via ``sendcommand`` (new in Firefox 79).
   - serverTime: (optional) Most recent server timestamp, as described above.
 
 The ``migrations`` Array
