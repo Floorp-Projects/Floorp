@@ -118,6 +118,8 @@ input[type="url"]:read-only {
   -moz-context-properties: fill;
   fill: currentColor;
   min-width: auto;
+  /* See bug 1627164: In CJK locales, line break could happen in any letter of the button. The fix here is to explicitly specify flex property so that the button couldn't grow or shrink. */
+  flex: 0 0 auto;
 }
 
 .delete-button:dir(rtl),
