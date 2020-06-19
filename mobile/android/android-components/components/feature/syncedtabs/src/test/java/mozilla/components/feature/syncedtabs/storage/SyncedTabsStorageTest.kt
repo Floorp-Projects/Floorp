@@ -134,7 +134,7 @@ class SyncedTabsStorageTest {
             SyncClient("client-unknown") to listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0))
         ))
 
-        val result = feature.getSyncedTabs()
+        val result = feature.getSyncedDeviceTabs()
         assertEquals(device1, result[0].device)
         assertEquals(device2, result[1].device)
         assertEquals(tabsClient1, result[0].tabs)
@@ -151,7 +151,7 @@ class SyncedTabsStorageTest {
             )
         )
         doReturn(null).`when`(feature).syncClients()
-        assertEquals(emptyList<SyncedDeviceTabs>(), feature.getSyncedTabs())
+        assertEquals(emptyList<SyncedDeviceTabs>(), feature.getSyncedDeviceTabs())
     }
 
     @Test

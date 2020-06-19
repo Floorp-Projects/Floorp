@@ -61,6 +61,11 @@ interface SyncedTabsView {
     enum class ErrorType {
 
         /**
+         * Other devices found but there are no tabs to sync.
+         * */
+        NO_TABS_AVAILABLE,
+
+        /**
          * There are no other devices found with this account and therefore no tabs to sync.
          */
         MULTIPLE_DEVICES_UNAVAILABLE,

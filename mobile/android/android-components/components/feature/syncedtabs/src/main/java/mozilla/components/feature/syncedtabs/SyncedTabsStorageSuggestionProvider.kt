@@ -30,7 +30,7 @@ class SyncedTabsStorageSuggestionProvider(
         }
 
         val results = mutableListOf<ClientTabPair>()
-        for ((client, tabs) in syncedTabs.getSyncedTabs()) {
+        for ((client, tabs) in syncedTabs.getSyncedDeviceTabs()) {
             for (tab in tabs) {
                 val activeTabEntry = tab.active()
                 // This is a fairly naive match implementation, but this is what we do on Desktop 🤷.

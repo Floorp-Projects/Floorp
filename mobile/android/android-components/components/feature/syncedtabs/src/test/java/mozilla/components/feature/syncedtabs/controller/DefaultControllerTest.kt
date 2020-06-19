@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
@@ -26,9 +27,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
 
 @RunWith(AndroidJUnit4::class)
 class DefaultControllerTest {
@@ -69,7 +71,7 @@ class DefaultControllerTest {
     }
 
     @Test
-    fun `notify if there is only one device synced`() = runBlockingTest {
+    fun `notify if there are no other devices synced`() = runBlockingTest {
         val controller = DefaultController(
             storage,
             accountManager,
@@ -85,7 +87,7 @@ class DefaultControllerTest {
         `when`(constellation.state()).thenReturn(state)
         `when`(state.otherDevices).thenReturn(emptyList())
 
-        `when`(storage.getSyncedTabs()).thenReturn(emptyList())
+        `when`(storage.getSyncedDeviceTabs()).thenReturn(emptyList())
 
         controller.refreshSyncedTabs()
 
@@ -93,7 +95,7 @@ class DefaultControllerTest {
     }
 
     @Test
-    fun `display synced tabs`() = runBlockingTest {
+    fun `notify if there are no tabs from other devices to sync`() = runBlockingTest {
         val controller = DefaultController(
             storage,
             accountManager,
@@ -109,9 +111,40 @@ class DefaultControllerTest {
         `when`(constellation.state()).thenReturn(state)
         `when`(state.otherDevices).thenReturn(listOf(mock()))
 
-        `when`(storage.getSyncedTabs()).thenReturn(emptyList())
+        `when`(storage.getSyncedDeviceTabs()).thenReturn(emptyList())
 
         controller.refreshSyncedTabs()
+
+        verify(view, never()).onError(ErrorType.MULTIPLE_DEVICES_UNAVAILABLE)
+        verify(view).onError(ErrorType.NO_TABS_AVAILABLE)
+    }
+
+    @Test
+    fun `display synced tabs`() = runBlockingTest {
+        val controller = DefaultController(
+            storage,
+            accountManager,
+            view,
+            coroutineContext
+        )
+        val account: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
+        val state: ConstellationState = mock()
+        val syncedDeviceTabs = SyncedDeviceTabs(mock(), listOf(mock()))
+        val listOfSyncedDeviceTabs = listOf(syncedDeviceTabs)
+
+        `when`(accountManager.authenticatedAccount()).thenReturn(account)
+        `when`(account.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.state()).thenReturn(state)
+        `when`(state.otherDevices).thenReturn(listOf(mock()))
+
+        `when`(storage.getSyncedDeviceTabs()).thenReturn(listOfSyncedDeviceTabs)
+
+        controller.refreshSyncedTabs()
+
+        verify(view, never()).onError(ErrorType.MULTIPLE_DEVICES_UNAVAILABLE)
+        verify(view, never()).onError(ErrorType.NO_TABS_AVAILABLE)
+        verify(view).displaySyncedTabs(listOfSyncedDeviceTabs)
     }
 
     @Test

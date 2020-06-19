@@ -12,7 +12,7 @@ import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 interface SyncedTabsProvider {
 
     /**
-     * A list of [SyncedDeviceTabs] containing the tabs of the remote devices for the account.
+     * A list of [SyncedDeviceTabs], each containing a synced device and its current tabs.
      */
-    suspend fun getSyncedTabs(): List<SyncedDeviceTabs>
+    suspend fun getSyncedDeviceTabs(): List<SyncedDeviceTabs>
 }

@@ -147,7 +147,7 @@ data class Tab(
 }
 
 /**
- * A synced device and the list of tabs.
+ * A synced device and its list of tabs.
  */
 data class SyncedDeviceTabs(
     val device: Device,
