@@ -1901,10 +1901,11 @@ already_AddRefed<DocumentFragment> nsRange::ExtractContents(ErrorResult& rv) {
   return fragment.forget();
 }
 
-int16_t nsRange::CompareBoundaryPoints(uint16_t aHow, nsRange& aOtherRange,
-                                       ErrorResult& rv) {
+int16_t nsRange::CompareBoundaryPoints(uint16_t aHow,
+                                       const nsRange& aOtherRange,
+                                       ErrorResult& aRv) {
   if (!mIsPositioned || !aOtherRange.IsPositioned()) {
-    rv.Throw(NS_ERROR_NOT_INITIALIZED);
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return 0;
   }
 
@@ -1938,12 +1939,12 @@ int16_t nsRange::CompareBoundaryPoints(uint16_t aHow, nsRange& aOtherRange,
       break;
     default:
       // We were passed an illegal value
-      rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return 0;
   }
 
   if (mRoot != aOtherRange.GetRoot()) {
-    rv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
+    aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
     return 0;
   }
 
