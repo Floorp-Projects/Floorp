@@ -1268,6 +1268,17 @@ bool WarpCacheIRTranspiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMathFRoundNumberResult(
+    NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MToFloat32::New(alloc(), input);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathAtan2NumberResult(NumberOperandId yId,
                                                       NumberOperandId xId) {
   MDefinition* y = getOperand(yId);
