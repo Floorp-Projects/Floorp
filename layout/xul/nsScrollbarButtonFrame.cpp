@@ -87,11 +87,11 @@ bool nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   // Get the desired action for the scrollbar button.
   LookAndFeel::IntID tmpAction;
   uint16_t button = aEvent->AsMouseEvent()->mButton;
-  if (button == MouseButton::eLeft) {
+  if (button == MouseButton::ePrimary) {
     tmpAction = LookAndFeel::IntID::ScrollButtonLeftMouseButtonAction;
   } else if (button == MouseButton::eMiddle) {
     tmpAction = LookAndFeel::IntID::ScrollButtonMiddleMouseButtonAction;
-  } else if (button == MouseButton::eRight) {
+  } else if (button == MouseButton::eSecondary) {
     tmpAction = LookAndFeel::IntID::ScrollButtonRightMouseButtonAction;
   } else {
     return false;

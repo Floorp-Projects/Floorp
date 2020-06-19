@@ -445,7 +445,7 @@ NS_IMETHODIMP EditorEventListener::HandleEvent(Event* aEvent) {
     case eMouseClick: {
       WidgetMouseEvent* widgetMouseEvent = internalEvent->AsMouseEvent();
       // Don't handle non-primary click events
-      if (widgetMouseEvent->mButton != MouseButton::eLeft) {
+      if (widgetMouseEvent->mButton != MouseButton::ePrimary) {
         return NS_OK;
       }
       [[fallthrough]];

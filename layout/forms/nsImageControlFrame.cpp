@@ -133,7 +133,7 @@ nsresult nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
   *aEventStatus = nsEventStatus_eIgnore;
 
   if (aEvent->mMessage == eMouseUp &&
-      aEvent->AsMouseEvent()->mButton == MouseButton::eLeft) {
+      aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary) {
     // Store click point for HTMLInputElement::SubmitNamesValues
     // Do this on MouseUp because the specs don't say and that's what IE does
     nsIntPoint* lastClickPoint = static_cast<nsIntPoint*>(

@@ -91,7 +91,7 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     mHandlingEvent = true;
     switch (aVisitor.mEvent->mMessage) {
       case eMouseDown:
-        if (mouseEvent->mButton == MouseButton::eLeft) {
+        if (mouseEvent->mButton == MouseButton::ePrimary) {
           // We reset the mouse-down point on every event because there is
           // no guarantee we will reach the eMouseClick code below.
           LayoutDeviceIntPoint* curPoint =

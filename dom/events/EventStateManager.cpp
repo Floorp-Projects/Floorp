@@ -580,7 +580,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       break;
     case eMouseDown: {
       switch (mouseEvent->mButton) {
-        case MouseButton::eLeft:
+        case MouseButton::ePrimary:
           BeginTrackingDragGesture(aPresContext, mouseEvent, aTargetFrame);
           mLClickCount = mouseEvent->mClickCount;
           SetClickCount(mouseEvent, aStatus);
@@ -590,7 +590,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           mMClickCount = mouseEvent->mClickCount;
           SetClickCount(mouseEvent, aStatus);
           break;
-        case MouseButton::eRight:
+        case MouseButton::eSecondary:
           mRClickCount = mouseEvent->mClickCount;
           SetClickCount(mouseEvent, aStatus);
           break;
@@ -600,7 +600,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     case eMouseUp: {
       switch (mouseEvent->mButton) {
-        case MouseButton::eLeft:
+        case MouseButton::ePrimary:
           if (StaticPrefs::ui_click_hold_context_menus()) {
             KillClickHoldTimer();
           }
@@ -609,7 +609,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           sNormalLMouseEventInProcess = false;
           // then fall through...
           [[fallthrough]];
-        case MouseButton::eRight:
+        case MouseButton::eSecondary:
         case MouseButton::eMiddle:
           RefPtr<EventStateManager> esm =
               ESMFromContentOrThis(aOverrideClickTarget);
@@ -3129,7 +3129,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   switch (aEvent->mMessage) {
     case eMouseDown: {
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-      if (mouseEvent->mButton == MouseButton::eLeft &&
+      if (mouseEvent->mButton == MouseButton::ePrimary &&
           !sNormalLMouseEventInProcess) {
         // We got a mouseup event while a mousedown event was being processed.
         // Make sure that the capturing content is cleared.
@@ -3278,7 +3278,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
 
         // The rest is left button-specific.
-        if (mouseEvent->mButton != MouseButton::eLeft) {
+        if (mouseEvent->mButton != MouseButton::ePrimary) {
           break;
         }
 
@@ -4853,7 +4853,7 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
   }
 
   switch (aEvent->mButton) {
-    case MouseButton::eLeft:
+    case MouseButton::ePrimary:
       if (aEvent->mMessage == eMouseDown) {
         mLastLeftMouseDownContent = mouseContent;
       } else if (aEvent->mMessage == eMouseUp) {
@@ -4887,7 +4887,7 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
       }
       break;
 
-    case MouseButton::eRight:
+    case MouseButton::eSecondary:
       if (aEvent->mMessage == eMouseDown) {
         mLastRightMouseDownContent = mouseContent;
       } else if (aEvent->mMessage == eMouseUp) {
@@ -5065,7 +5065,7 @@ nsresult EventStateManager::DispatchClickEvents(
 
   bool notDispatchToContents =
       (aMouseUpEvent->mButton == MouseButton::eMiddle ||
-       aMouseUpEvent->mButton == MouseButton::eRight);
+       aMouseUpEvent->mButton == MouseButton::eSecondary);
 
   bool fireAuxClick = notDispatchToContents;
 
@@ -5576,7 +5576,7 @@ void EventStateManager::ContentRemoved(Document* aDocument,
 
 bool EventStateManager::EventStatusOK(WidgetGUIEvent* aEvent) {
   return !(aEvent->mMessage == eMouseDown &&
-           aEvent->AsMouseEvent()->mButton == MouseButton::eLeft &&
+           aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary &&
            !sNormalLMouseEventInProcess);
 }
 
