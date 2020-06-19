@@ -270,6 +270,8 @@
     <string name="preferences_sync_bookmarks">Marcadores</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Anicios de sesión</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Llingüetes abiertes</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Zarrar sesión</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -592,7 +594,9 @@
     <!-- Collections header on home fragment -->
     <string name="collections_header">Coleiciones</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Coleiciona les coses que t\'importa</string>
+    <string name="no_collections_header1">Coleiciona les coses que t\'importen</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agrupa guetes, sitios y llingüetes similares p\'acceder aína a ellos dempués.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Esbilla de llingüetes</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -719,7 +723,7 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Copióse la URL</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Esto ye un testu d\'exemplu. Ta equí p\'amosar cómo va apaecer cuando aumentes o amenorgues el tamañu con esti axuste.</string>
+    <string name="accessibility_text_size_sample_text_1">Esto ye un testu d\'exemplu. Ta equí p\'amosar cómo va apaecer cuando aumentes o amenorgues el so tamañu con esti axuste.</string>
 
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Agranda o apequeña\'l testu de los sitios web</string>
@@ -727,8 +731,15 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Tamañu de la fonte</string>
 
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Tamañu de fontes automáticu</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">El tamañu de les fontes van casar colos tos axustes d\'Android. Desactiva esta opción pa xestionar esi tamañu equí.</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Desaniciu de los datos de restolar</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Llingüetes abiertes</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d llingüetes</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -831,8 +842,19 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Privacidá automática</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Los axustes de privacidá y seguranza bloquien rastrexadores, malware y compañes que t\'escorren.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Estándar (por defeutu)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Bloquia dalgunos rastrexadores. Les páxines van cargar de mou normal.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (aconséyase)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Estricta</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Bloquia más rastrexadores, anuncios y ventanos emerxentes. Los páxines van cargar más rápido pero quiciabes dalgunes funcionalidaes nun funcionen.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -915,10 +937,16 @@
     <string name="preference_enhanced_tracking_protection_explanation">Curia los tos datos. %s protéxite de la mayoría de rastrexadores comunes que siguen lo que faes en llinia.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Deprender más</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Estándar (por defeutu)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Bloquia dalgunos rastrexadores. Les páxines van cargar de mou normal.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Qué se bloquia coles proteición estándar escontra\'l rastrexu</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloquia más rastrexadores, anuncios y ventanos emerxentes. Les páxines van cargar más rápido pero quiciabes dalgunes funcionalidaes nun funcionen.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Lo que la proteición estricta escontra\'l rastrexu bloquia</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -972,6 +1000,8 @@
     <string name="etp_tracking_content_title">Conteníu que rastrexa</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Para la carga d\'anuncios, vídeos y otru conteníu esternu que contenga códigu que rastrexe. Quiciabes afeute a la funcionalidá de dalgunos sitios web.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Cada vegada que l\'escudu tea moráu indica que %s bloquió rastrexadores nun sitiu. Tócalu pa más información.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ACTIVÓSE nesti sitiu</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1242,6 +1272,11 @@
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Nun tienes llingüetes abiertes nel Firefox de los demás preseos de to.</string>
 
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Algamóse la llende de sitios destacaos</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">P\'amestar sitios nuevos, desanicia dalgún. Ten primíu un sitiu y esbilla Desaniciar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Val, entendílo</string>
 

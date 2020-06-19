@@ -99,6 +99,9 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection"></string>
 
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">ఖాతా అమరికలు</string>
+
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">చరిత్ర</string>
     <!-- Preference for syncing bookmarks -->

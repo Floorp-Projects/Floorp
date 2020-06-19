@@ -1438,6 +1438,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Sık kullanılan site sınırına ulaşıldı</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Yeni bir sık kullanılan site eklemek için bir siteyi kaldırın. Siteye basılı tutup kaldır’ı seçin.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Tamam</string>
 

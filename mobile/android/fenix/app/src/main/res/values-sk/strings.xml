@@ -14,8 +14,6 @@
     <string name="content_description_disable_private_browsing_button">Zakázať súkromné prehliadanie</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Hľadať</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Žiadne otvorené karty</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Vaše otvorené karty budú zobrazené tu.</string>
 
@@ -105,8 +103,6 @@
     <string name="browser_menu_new_tab">Nová karta</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Uložiť do kolekcie</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Nahlásiť problém so stránkou</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Zdieľať</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -122,7 +118,7 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Poháňané aplikáciou %1$s</string>
 
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Zobrazenie Čítačka</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Otvoriť v aplikácii</string>
@@ -298,8 +294,6 @@
     <string name="preferences_sync_bookmarks">Záložky</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prihlasovacie údaje</string>
-    <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Karty</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odhlásiť sa</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -456,6 +450,8 @@
     <string name="tabs_header_private_tabs_title">Súkromné karty</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Pridať kartu</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Nová karta</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Odstrániť kartu z kolekcie</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -468,8 +464,6 @@
     <string name="tabs_menu_close_all_tabs">Zavrieť všetky karty</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Zdieľať karty</string>
-    <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Uložiť do kolekcie</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Ponuka kariet</string>
     <!-- Tab menu item to share the tab -->
@@ -683,16 +677,10 @@
     <string name="delete_browsing_data_quit_off">Vypnuté</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Ukladajte si stránky a karty, na ktorých vám záleží, do kolekcií.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kolekcie</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Ponuka kolekcií</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Nemáte žiadne kolekcie</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Vaše kolekcie budú zobrazené tu.</string>
 
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Výber kariet</string>
@@ -722,6 +710,9 @@
     <string name="create_collection_close">Zavrieť</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Uložiť</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Zobraziť</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Kolekcia %d</string>
@@ -899,8 +890,6 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly je aktualizovaný každý deň a obsahuje experimentálne funkcie.
         Môže však byť menej stabilný. Ak chcete stabilnejší prehliadač, prevezmite si beta verziu.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Prevezmite si prehliadač Mozilla Firefox</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly sa presunul</string>
@@ -953,21 +942,10 @@
     <string name="onboarding_firefox_account_sync_is_on">Synchronizácia je zapnutá</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Prihlásenie zlyhalo</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Chráňte sa</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s bráni webovým stránkam vo vašom sledovaní.</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Štandardná</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Blokuje menej sledovacích prvkov, no umožňuje normálne načítanie stránok</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Prísna (odporúčaná)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Prísna</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Blokuje viac sledovacích prvkov, vďaka čomu vám poskytuje väčšiu ochranu a výkon, no môže spôsobiť chybné fungovanie niektorých stránok</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1054,32 +1032,14 @@
     <string name="preference_enhanced_tracking_protection_explanation">%s vás chráni pred mnohými sledovacími prvkami, ktoré zbierajú informácie o tom, čo robíte na internete.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ďalšie informácie</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Štandardná</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Štandardná (odporúčaná)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Vyvážená ochrana a výkon.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Stránky sa budú načítavať normálne, no budú obsahovať menej sledovacích prvkov.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Čo blokuje štandardná ochrana pred sledovaním</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Prísna</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Prísna (predvolená)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Silnejšia ochrana, ktorá zrýchľuje načítavanie stránok. Môže však obmedziť ich fungovanie.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Prísna (odporúčaná)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Viac blokovaného obsahu zvyšuje pravdepodobnosť, že niektoré stránky nebudú správne fungovať.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Čo blokuje prísna ochrana pred sledovaním</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Vlastná</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Vyberte sledovacie prvky a skripty, ktoré chcete blokovať</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Čo blokuje vlastná ochrana pred sledovaním</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1128,8 +1088,6 @@
     <string name="etp_tracking_content_title">Sledovací obsah</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Blokuje načítanie reklám, videí a ďalšieho obsahu, ktorý obsahuje sledovací kód. To môže ovplyvniť fungovanie niektorých webových stránok.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">Ak je ikona štítu fialová, znamená to, že %s na stránke blokuje nejaké sledovacie prvky. Ťuknutím na ikonu zobrazíte ich zoznam.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ochrana je na tejto stránke zapnutá</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1422,5 +1380,10 @@
     <string name="synced_tabs_reauth">Prosím, znova overte totožnosť.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Prosím, zapnite synchronizovanie kariet.</string>
+
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Ak chcete pridať novú top stránku, musíte jednu odstrániť. Podržte na nej prst a vyberte možnosť Odstrániť.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Ok, rozumiem</string>
 
 </resources>

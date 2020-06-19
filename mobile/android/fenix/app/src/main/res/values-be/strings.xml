@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Увядзіце запыт або адрас</string>
+
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Выдаліць сеанс</string>
 
@@ -43,6 +46,10 @@
     <string name="browser_menu_settings">Налады</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Бібліятэка</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Версія для камп’ютара</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Дадаць на хатні экран</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Усталяваць</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
@@ -380,6 +387,8 @@
     <string name="collection_menu_button_content_description">Меню калекцыі</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header1">Збірайце важныя для вас рэчы</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Групуйце падобныя пошукі, сайты і карткі для хуткага доступу.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Выберыце карткі</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -485,5 +494,10 @@
 
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Дадаць</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Дадаць</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Захаваць</string>
 
     </resources>

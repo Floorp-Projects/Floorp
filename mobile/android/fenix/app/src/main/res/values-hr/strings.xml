@@ -14,13 +14,16 @@
     <string name="content_description_disable_private_browsing_button">Deaktiviraj privatno pregledavanje</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Traži ili upiši adresu</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Nema otvorenih kartica</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Ovdje će se prikazati tvoje otvorene kartice.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Ovdje će se prikazati tvoje privatne kartice.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 otvorena kartica. Dodirni za prebacivanje kartica.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s otvorene kartice. Dodirni za prebacivanje kartica.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s proizvodi Mozilla.</string>
@@ -103,8 +106,6 @@
     <string name="browser_menu_new_tab">Nova kartica</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Spremi u zbirku</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Prijavi problem sa stranicom</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Dijeli</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -118,8 +119,10 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Omogućuje %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Prikaz za čitanje</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Zatvori pogled čitača</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Otvori u aplikaciji</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -292,7 +295,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prijave</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Kartice</string>
+    <string name="preferences_sync_tabs_2">Otvorene kartice</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odjavi se</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -451,6 +454,24 @@
     <string name="tabs_header_private_tabs_title">Privatne kartice</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Dodaj karticu</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Dodaj privatnu karticu</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Privatno</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Otvorene kartice</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Spremi u zbirku</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Podijeli sve kartice</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Zatvori sve kartice</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Nova kartica</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Idi na početnu</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Promijeni vrstu kartice</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Ukloni karticu iz zbirke</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -464,7 +485,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Dijeli kartice</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Spremi u zbirku</string>
+    <string name="tabs_menu_save_to_collection1">Spremi kartice u zbirku</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Izbornik za kartice</string>
     <!-- Tab menu item to share the tab -->
@@ -681,17 +702,15 @@
     <string name="delete_browsing_data_quit_off">Isključeno</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Sakupi stvari koje su ti važne. Za početak spremi otvorene kartice u novu zbirku.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Zbirke</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Izbornik za zbirke</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Nema zbirki</string>
 
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Tvoje zbirke će se prikazati ovdje.</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Skupi stvari koje su ti bitne</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Grupiraj slične pretrage, stranice i kartice za brži pristup kasnije.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Odaberi kartice</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -720,6 +739,9 @@
     <string name="create_collection_close">Zatvori</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Spremi</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Prikaži</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Zbirka %d</string>
@@ -895,8 +917,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly se aktualizira svake večeri i sadrži nove eksperimentalne funkcije.
         Međutim, vjerojatno je manje stabilna verzija. Preuzmi naš beta preglednik za stabilnije iskustvo.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Nabavi Mozilla Firefox preglednik</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Preuzmite Firefox za Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly se preselio</string>
@@ -949,22 +972,22 @@
     <string name="onboarding_firefox_account_sync_is_on">Sinkronizacija je uključena</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Neuspjela prijava</string>
+
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Zaštiti se</string>
+    <string name="onboarding_tracking_protection_header_2">Automatska privatnost</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s pomaže spriječiti web-stranice da te prate putem interneta.</string>
-
+    <string name="onboarding_tracking_protection_description_2">Postavke za privatnost i sigurnost blokiraju softver za praćenje, zlonamjerni softver i tvrtke koje te prate.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Standardno</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Standardno (zadano)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Blokira manji broj programa za praćenje, ali omogućava normalno učitavanje stranica</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Blokira manje softvera za praćenje. Stranice se učitavaju normalno.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strogo (preporučeno)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strogo</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Blokira veći broj programa za praćenje i pruža bolju zaštitu i performanse, ali može prouzrokovati da neke web stranice ne rade ispravno</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Blokira više softvera za praćenje, oglasa i skočnih prozora. Stranice se brže učitavaju, ali neke značajke možda neće raditi.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1052,31 +1075,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saznaj više</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Standardno</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Standardno (preporučeno)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Standardno (zadano)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Uravnoteženo za zaštitu i performancu.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Stranice će se normalno učitati, ali blokiraju manji broj programa za praćenje.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokira manje softvera za praćenje. Stranice se učitavaju normalno.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Što se blokira standardnom zaštitom od praćenja</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strogo</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Strogo (standardno)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Jača zaštita od praćenja i brži rad, ali neke web-stranice možda neće ispravno raditi.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Strogo (preporučeno)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Jača zaštita, ali može prouzročiti probleme nekim web-stranicama ili sadržajima.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokira više softvera za praćenje, oglasa i skočnih prozora. Stranice se brže učitavaju, ali neke značajke možda neće raditi.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Što se blokira strogom zaštitom od praćenja</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Prilagođeno</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Odaberi programe za praćenje i skripte koje želiš blokirati.</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Odaberi koji softver za praćenje i skripte blokirati.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Što se blokira prilagođenom zaštitom od praćenja</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1126,9 +1139,9 @@
     <string name="etp_tracking_content_title">Praćenje sadržaja</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Zaustavlja učitavanje vanjskih oglasa, videozapisa i drugog sadržaja koji sadrži kod za praćenje. Može utjecati na neke funkcionalnosti web-stranice.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s blokira programe za praćenje na ovoj web-stranici kad je štit ljubičaste boje. Dodirni ga i vidi što je blokirano.</string>
 
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Svaki puta kada je štit ljubičast, %s je blokirao softver za praćenje na stranici. Dodirni za više informacija.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Za ovu web-stranicu zaštite su UKLJUČENE</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1418,6 +1431,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Govorite sada</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Prijava s tim korisničkim imenom već postoji</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Poveži s Firefox računom.</string>
@@ -1427,5 +1443,20 @@
     <string name="synced_tabs_reauth">Ponovite autorizaciju.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Omogućite sinkroniziranje kartica.</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Nemaš otvorene kartice u Firefoxu na drugim uređajima.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Pogledaj popis kartica s tvojih drugih uređaja.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Prijavi se za sinkronizaciju</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Dostignuto ograničenje za omiljene stranice</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Za dodavanje nove omiljene stranice, ukloni neku. Pritisni i drži stranicu, zatim odaberi ukloni.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">U redu, shvaćam</string>
 
 </resources>

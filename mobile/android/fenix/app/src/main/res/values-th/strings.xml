@@ -13,8 +13,6 @@
     <string name="content_description_disable_private_browsing_button">ปิดใช้งานการเรียกดูแบบส่วนตัว</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ค้นหาหรือป้อนที่อยู่</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">ไม่มีแท็บที่เปิดอยู่</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">แท็บที่คุณเปิดจะถูกแสดงที่นี่</string>
 
@@ -104,8 +102,6 @@
     <string name="browser_menu_new_tab">แท็บใหม่</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">บันทึกไปยังชุดสะสม</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">รายงานปัญหาไซต์</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">แบ่งปัน</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -119,7 +115,7 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">ขับเคลื่อนโดย %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">มุมมองผู้อ่าน</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">เปิดในแอป</string>
@@ -293,7 +289,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">การเข้าสู่ระบบ</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">แท็บ</string>
+    <string name="preferences_sync_tabs_2">แท็บที่เปิดอยู่</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">ลงชื่อออก</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -460,8 +456,6 @@
     <string name="tabs_menu_close_all_tabs">ปิดแท็บทั้งหมด</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">แบ่งปันแท็บ</string>
-    <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">บันทึกไปยังชุดสะสม</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">เมนูแท็บ</string>
     <!-- Tab menu item to share the tab -->
@@ -673,17 +667,10 @@
     <string name="delete_browsing_data_quit_off">ปิด</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">รวบรวมสิ่งที่สำคัญสำหรับคุณ เมื่อต้องการเริ่มต้น ให้บันทึกแท็บที่เปิดอยู่ไปยังชุดสะสมใหม่</string>
-
     <!-- Collections header on home fragment -->
     <string name="collections_header">ชุดสะสม</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">เมนูชุดสะสม</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">ไม่มีชุดสะสม</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">ชุดสะสมของคุณจะถูกแสดงที่นี่</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">เลือกแท็บ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -887,8 +874,6 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly อัปเดตทุกคืนและมีลูกเล่นใหม่ ๆ ทุกคืน
         อย่างไรก็ตามความเสถียรอาจลดลง ดาวน์โหลดเบราว์เซอร์เบต้าของเราเพื่อประสบการณ์ที่เสถียรยิ่งขึ้น</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">รับ Mozilla Firefox เบราว์เซอร์</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly ย้ายไปแล้ว</string>
@@ -941,21 +926,10 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync เปิดอยู่</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ไม่สามารถเข้าสู่ระบบ</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">ปกป้องตัวคุณเอง</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s ช่วยหยุดเว็บไซต์จากการติดตามคุณออนไลน์</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">มาตรฐาน</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">ปิดกันตัวติดตามน้อยลง แต่อนุญาตให้โหลดหน้าได้ตามปกติ</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">เข้มงวด (แนะนำ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">เข้มงวด</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">ปิดกันตัวติดตามมากขึ้นเพื่อการปกป้องและประสิทธิภาพที่ดีกว่า แต่ก็อาจทำให้บางไซต์ทำงานไม่สมบูรณ์</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1041,32 +1015,14 @@
     <string name="preference_enhanced_tracking_protection_explanation">เก็บข้อมูลของคุณไว้กับตัวคุณเอง %s ปกป้องคุณจากตัวติดตามที่พบบ่อยที่สุดซึ่งติดตามสิ่งที่คุณทำทางออนไลน์</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">เรียนรู้เพิ่มเติม</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">มาตรฐาน</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">มาตรฐาน (แนะนำ)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">การป้องกันและประสิทธิภาพแบบสมดุล</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">หน้าเว็บจะโหลดตามปกติ แต่ปิดกั้นตัวติดตามน้อยลง</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">สิ่งที่ถูกปิดกั้นโดยการป้องกันการติดตามแบบมาตรฐาน</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">เข้มงวด</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">เข้มงวด (ค่าเริ่มต้น)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">การป้องกันการติดตามที่แข็งแกร่งขึ้นและประสิทธิภาพที่เร็วขึ้น แต่บางไซต์อาจไม่ทำงานอย่างถูกต้อง</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">เข้มงวด (แนะนำ)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">การป้องกันที่แกร่งขึ้น แต่อาจทำให้บางไซต์หรือเนื้อหาหยุดทำงานได้</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">สิ่งที่ถูกปิดกั้นโดยการป้องกันการติดตามแบบเข้มงวด</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">กำหนดเอง</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">เลือกตัวติดตามหรือสคริปต์ที่ต้องการปิดกั้น</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">สิ่งที่ถูกปิดกั้นโดยการป้องกันการติดตามแบบกำหนดเอง</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1116,8 +1072,6 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">หยุดไม่ให้โหลดโฆษณาภายนอก, วิดีโอ, และเนื้อหาอื่น ๆ ที่มีรหัสการติดตาม อาจส่งผลต่อฟังก์ชันการทำงานของบางเว็บไซต์</string>
 
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s กำลังปิดกั้นตัวติดตามบนไซต์นี้เมื่อเกราะเป็นสีม่วง แตะเพื่อดูสิ่งที่ถูกปิดกั้น</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">การป้องกันถูก เปิด สำหรับไซต์นี้</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1399,4 +1353,5 @@
     <string name="synced_tabs_connect_to_sync_account">เชื่อมต่อกับบัญชี Firefox</string>
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">เชื่อมต่ออุปกรณ์อื่น</string>
+
     </resources>
