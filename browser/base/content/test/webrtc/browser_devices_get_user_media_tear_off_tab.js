@@ -48,21 +48,19 @@ var gTests = [
 
       // Clicking the global sharing indicator should open the control center in
       // the second window.
-      ok(
-        win.gIdentityHandler._identityPopup.hidden,
-        "control center should be hidden"
-      );
+      ok(identityPopupHidden(win), "control center should be hidden");
       let activeStreams = webrtcUI.getActiveStreams(true, false, false);
       webrtcUI.showSharingDoorhanger(activeStreams[0], "Devices");
+      await TestUtils.waitForCondition(() => !identityPopupHidden(win));
       ok(
-        !win.gIdentityHandler._identityPopup.hidden,
+        !identityPopupHidden(win),
         "control center should be open in the second window"
       );
+      win.gIdentityHandler._identityPopup.hidePopup();
       ok(
-        gIdentityHandler._identityPopup.hidden,
+        identityPopupHidden(window),
         "control center should be hidden in the first window"
       );
-      win.gIdentityHandler._identityPopup.hidden = true;
 
       await disableObserverVerification();
 

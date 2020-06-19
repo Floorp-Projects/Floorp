@@ -15,8 +15,10 @@ add_task(async function() {
 
   let { gIdentityHandler } = gBrowser.ownerGlobal;
   let promisePanelOpen = BrowserTestUtils.waitForEvent(
-    gIdentityHandler._identityPopup,
-    "popupshown"
+    gBrowser.ownerGlobal,
+    "popupshown",
+    true,
+    event => event.target == gIdentityHandler._identityPopup
   );
   gIdentityHandler._identityBox.click();
   await promisePanelOpen;
@@ -65,7 +67,7 @@ add_task(async function() {
     "Using expected icon image in the Control Center subview"
   );
 
-  gIdentityHandler._identityPopup.hidden = true;
+  gIdentityHandler._identityPopup.hidePopup();
 
   let certOverrideService = Cc[
     "@mozilla.org/security/certoverride;1"

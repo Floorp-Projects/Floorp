@@ -8,8 +8,10 @@ const { PermissionTestUtils } = ChromeUtils.import(
 
 function openIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(
-    gIdentityHandler._identityPopup,
-    "popupshown"
+    window,
+    "popupshown",
+    true,
+    event => event.target == gIdentityHandler._identityPopup
   );
   gIdentityHandler._identityBox.click();
   return promise;
