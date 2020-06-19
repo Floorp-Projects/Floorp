@@ -741,7 +741,7 @@ bool nsRange::IsPointComparableToRange(const nsINode& aContainer,
   return true;
 }
 
-bool nsRange::IsPointInRange(nsINode& aContainer, uint32_t aOffset,
+bool nsRange::IsPointInRange(const nsINode& aContainer, uint32_t aOffset,
                              ErrorResult& aRv) const {
   uint16_t compareResult = ComparePoint(aContainer, aOffset, aRv);
   // If the node isn't in the range's document, it clearly isn't in the range.

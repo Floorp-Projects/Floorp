@@ -225,8 +225,8 @@ class nsRange final : public mozilla::dom::AbstractRange,
   }
   void InsertNode(nsINode& aNode, ErrorResult& aErr);
   bool IntersectsNode(nsINode& aNode, ErrorResult& aRv);
-  bool IsPointInRange(nsINode& aContainer, uint32_t aOffset,
-                      ErrorResult& aErr) const;
+  bool IsPointInRange(const nsINode& aContainer, uint32_t aOffset,
+                      ErrorResult& aRv) const;
   void ToString(nsAString& aReturn, ErrorResult& aErr);
   void Detach();
 
