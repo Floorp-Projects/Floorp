@@ -12,9 +12,9 @@
 #  include <Windows.Media.h>
 #  include <wrl.h>
 
-#  include "mozilla\dom\MediaController.h"
-#  include "mozilla\dom\MediaControlKeySource.h"
-#  include "mozilla\Maybe.h"
+#  include "mozilla/dom/MediaController.h"
+#  include "mozilla/dom/MediaControlKeySource.h"
+#  include "mozilla/Maybe.h"
 
 using ISMTC = ABI::Windows::Media::ISystemMediaTransportControls;
 using SMTCProperty = ABI::Windows::Media::SystemMediaTransportControlsProperty;
