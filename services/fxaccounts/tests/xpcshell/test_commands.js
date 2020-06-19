@@ -86,6 +86,10 @@ add_task(async function test_sendtab_send() {
     { name: "Device 2" },
     { id: "dev3", name: "Device 3" },
   ];
+  // although we are sending to 3 devices, only 1 is successful - so there's
+  // only 1 streamID we care about. However, we've created IDs even for the
+  // failing items - so it's "4"
+  const expectedTelemetryStreamID = "4";
   const tab = { title: "Foo", url: "https://foo.bar/" };
   const report = await sendTab.send(to, tab);
   Assert.equal(report.succeeded.length, 1);
@@ -101,7 +105,7 @@ add_task(async function test_sendtab_send() {
       object: "command-sent",
       method: COMMAND_SENDTAB_TAIL,
       value: "dev3-san",
-      extra: { flowID: "1" },
+      extra: { flowID: "1", streamID: expectedTelemetryStreamID },
     },
   ]);
 });
@@ -182,6 +186,10 @@ add_task(async function test_sendtab_receive() {
 
   for (let { cmd, device, payload } of commands._invokes) {
     Assert.equal(cmd, COMMAND_SENDTAB);
+    // test we do the right thing with the "duplicated" flow ID.
+    Assert.equal(payload.flowID, "1");
+    // change it - ensure we still get what we expect in telemetry later.
+    payload.flowID = "ignore-me";
     Assert.deepEqual(await sendTab.handle(device.id, payload), {
       title: "tab title",
       uri: "http://example.com",
@@ -193,13 +201,40 @@ add_task(async function test_sendtab_receive() {
       object: "command-sent",
       method: COMMAND_SENDTAB_TAIL,
       value: "devid-san",
-      extra: { flowID: "1" },
+      extra: { flowID: "1", streamID: "2" },
     },
     {
       object: "command-received",
       method: COMMAND_SENDTAB_TAIL,
       value: "devid-san",
-      extra: { flowID: "1" },
+      extra: { flowID: "1", streamID: "2" },
+    },
+  ]);
+});
+
+// Test that a client which only sends the flowID in the envelope and not in the
+// encrypted body still gets recorded correctly.
+add_task(async function test_sendtab_receive_old_client() {
+  const fxai = FxaInternalMock();
+  const sendTab = new SendTab(null, fxai);
+  sendTab._decrypt = bytes => {
+    return bytes;
+  };
+  const data = { entries: [{ title: "title", url: "url" }] };
+  // No 'flowID' in the encrypted payload, no 'streamID' anywhere.
+  const payload = {
+    flowID: "flow-id",
+    encrypted: new TextEncoder("utf8").encode(JSON.stringify(data)),
+  };
+  await sendTab.handle("sender-id", payload);
+  Assert.deepEqual(fxai.telemetry._events, [
+    {
+      object: "command-received",
+      method: COMMAND_SENDTAB_TAIL,
+      value: "sender-id-san",
+      // deepEqual doesn't ignore undefined, but our telemetry code and
+      // JSON.stringify() do...
+      extra: { flowID: "flow-id", streamID: undefined },
     },
   ]);
 });
