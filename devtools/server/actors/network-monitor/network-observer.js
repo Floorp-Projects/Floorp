@@ -370,10 +370,15 @@ NetworkObserver.prototype = {
       // If the owner isn't set we need to create the network event and send
       // it to the client. This happens in case where the request has been
       // blocked (e.g. CORS) and "http-on-stop-request" is the first notification.
-      this._createNetworkEvent(subject, {
-        blockedReason: reason,
-        blockingExtension: id,
-      });
+
+      // Temp fix to land on 79 to uplift to 78, lets remove from 79 after
+      // eslint-disable-next-line no-lonely-if
+      if (id || reason) {
+        this._createNetworkEvent(subject, {
+          blockedReason: reason,
+          blockingExtension: id,
+        });
+      }
     }
   },
 
