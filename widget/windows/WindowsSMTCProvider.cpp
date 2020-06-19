@@ -205,18 +205,14 @@ bool WindowsSMTCProvider::Open() {
   // called after this is open, thus we temporarly set mInit = true
   mInitialized = RegisterEvents();
 
-  // We set some "default" metadata, until we have a dedicated API for that.
   if (mInitialized) {
     bool controlAttribs =
         SetControlAttributes(SMTCControlAttributes::EnableAll());
     SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
-    bool metadata = SetMusicMetadata(nullptr, L"Mozilla Firefox", nullptr);
     bool update = Update();
-    LOG("Initialization - Enabling All Control Attributes: %s, Setting "
-        "Metadata: %s, Update: %s",
-        controlAttribs ? "true" : "false", metadata ? "true" : "false",
-        update ? "true" : "false");
-    mInitialized = controlAttribs && metadata && update;
+    LOG("Initialization - Enabling All Control Attributes: %s, Update: %s",
+        controlAttribs ? "true" : "false", update ? "true" : "false");
+    mInitialized = controlAttribs && update;
   }
 
   MOZ_ASSERT(mInitialized);  // Assert that we could successfully Open
