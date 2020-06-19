@@ -18,7 +18,7 @@
 
 using ISMTC = ABI::Windows::Media::ISystemMediaTransportControls;
 using SMTCProperty = ABI::Windows::Media::SystemMediaTransportControlsProperty;
-using IMSTCDisplayUpdater =
+using ISMTCDisplayUpdater =
     ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
 
 struct SMTCControlAttributes {
@@ -80,7 +80,7 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
 
   bool mInitialized = false;
   Microsoft::WRL::ComPtr<ISMTC> mControls;
-  Microsoft::WRL::ComPtr<IMSTCDisplayUpdater> mDisplay;
+  Microsoft::WRL::ComPtr<ISMTCDisplayUpdater> mDisplay;
   HWND mWindow;  // handle to the invisible window
 
   // EventRegistrationTokens are used to have a handle on a callback (to remove
