@@ -113,6 +113,11 @@ class TestMozconfigLoader(unittest.TestCase):
             self.assertEqual(result['make_flags'], ['-j8', '-s'])
             self.assertEqual(result['make_extra'], ['FOO=BAR BAZ', 'BIZ=1'])
 
+    def test_read_no_mozconfig_objdir_environ(self):
+        os.environ['MOZ_OBJDIR'] = 'obj-firefox'
+        result = self.get_loader().read_mozconfig()
+        self.assertEqual(result['topobjdir'], 'obj-firefox')
+
     def test_read_empty_mozconfig_objdir_environ(self):
         os.environ['MOZ_OBJDIR'] = 'obj-firefox'
         with NamedTemporaryFile(mode='w') as mozconfig:

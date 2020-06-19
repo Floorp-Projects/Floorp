@@ -111,6 +111,8 @@ class MozconfigLoader(object):
         }
 
         if path is None:
+            if 'MOZ_OBJDIR' in os.environ:
+                result['topobjdir'] = os.environ['MOZ_OBJDIR']
             return result
 
         path = mozpath.normsep(path)
