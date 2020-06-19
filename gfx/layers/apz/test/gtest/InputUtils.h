@@ -98,24 +98,26 @@ APZEventResult SmoothWheel(const RefPtr<InputReceiver>& aTarget,
 template <class InputReceiver>
 APZEventResult MouseDown(const RefPtr<InputReceiver>& aTarget,
                          const ScreenIntPoint& aPoint, TimeStamp aTime) {
-  MouseInput input(MouseInput::MOUSE_DOWN, MouseInput::ButtonType::LEFT_BUTTON,
-                   0, 0, aPoint, MillisecondsSinceStartup(aTime), aTime, 0);
+  MouseInput input(MouseInput::MOUSE_DOWN,
+                   MouseInput::ButtonType::PRIMARY_BUTTON, 0, 0, aPoint,
+                   MillisecondsSinceStartup(aTime), aTime, 0);
   return aTarget->ReceiveInputEvent(input);
 }
 
 template <class InputReceiver>
 APZEventResult MouseMove(const RefPtr<InputReceiver>& aTarget,
                          const ScreenIntPoint& aPoint, TimeStamp aTime) {
-  MouseInput input(MouseInput::MOUSE_MOVE, MouseInput::ButtonType::LEFT_BUTTON,
-                   0, 0, aPoint, MillisecondsSinceStartup(aTime), aTime, 0);
+  MouseInput input(MouseInput::MOUSE_MOVE,
+                   MouseInput::ButtonType::PRIMARY_BUTTON, 0, 0, aPoint,
+                   MillisecondsSinceStartup(aTime), aTime, 0);
   return aTarget->ReceiveInputEvent(input);
 }
 
 template <class InputReceiver>
 APZEventResult MouseUp(const RefPtr<InputReceiver>& aTarget,
                        const ScreenIntPoint& aPoint, TimeStamp aTime) {
-  MouseInput input(MouseInput::MOUSE_UP, MouseInput::ButtonType::LEFT_BUTTON, 0,
-                   0, aPoint, MillisecondsSinceStartup(aTime), aTime, 0);
+  MouseInput input(MouseInput::MOUSE_UP, MouseInput::ButtonType::PRIMARY_BUTTON,
+                   0, 0, aPoint, MillisecondsSinceStartup(aTime), aTime, 0);
   return aTarget->ReceiveInputEvent(input);
 }
 
