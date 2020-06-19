@@ -2007,7 +2007,7 @@ security.doh.trrPerformance:
       - 1613790
     description: >
       How long it took to resolve a test domain using TRR.
-    expiry_version: "80"
+    expiry_version: never
     record_in_processes:
       - main
     release_channel_collection: opt-out
@@ -2031,7 +2031,7 @@ security.doh.trrPerformance:
       - 1631822
     description: >
       The URL of the DoH provider chosen by the TRR selection dry-run
-    expiry_version: "80"
+    expiry_version: never
     record_in_processes:
       - main
     release_channel_collection: opt-out
