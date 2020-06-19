@@ -19,10 +19,8 @@ add_task(async function testIdentityPopupFocusClick() {
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     let shown = BrowserTestUtils.waitForEvent(
-      window,
-      "popupshown",
-      true,
-      event => event.target == gIdentityHandler._identityPopup
+      gIdentityHandler._identityPopup,
+      "popupshown"
     );
     EventUtils.synthesizeMouseAtCenter(gIdentityHandler._identityBox, {});
     await shown;
@@ -39,10 +37,8 @@ add_task(async function testIdentityPopupFocusKeyboard() {
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     await focusIdentityBox();
     let shown = BrowserTestUtils.waitForEvent(
-      window,
-      "popupshown",
-      true,
-      event => event.target == gIdentityHandler._identityPopup
+      gIdentityHandler._identityPopup,
+      "popupshown"
     );
     EventUtils.sendString(" ");
     await shown;
@@ -61,10 +57,8 @@ add_task(async function testSiteSecurityTabOrder() {
     // 1. Access the identity popup.
     await focusIdentityBox();
     let shown = BrowserTestUtils.waitForEvent(
-      window,
-      "popupshown",
-      true,
-      event => event.target == gIdentityHandler._identityPopup
+      gIdentityHandler._identityPopup,
+      "popupshown"
     );
     EventUtils.sendString(" ");
     await shown;

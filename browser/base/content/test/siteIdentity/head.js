@@ -3,7 +3,6 @@ var { XPCOMUtils } = ChromeUtils.import(
 );
 
 function openIdentityPopup() {
-  gIdentityHandler._initializePopup();
   let mainView = document.getElementById("identity-popup-mainView");
   let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
   gIdentityHandler._identityBox.click();
@@ -242,10 +241,8 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
 
   // Make sure the identity popup has the correct mixedcontent states
   let promisePanelOpen = BrowserTestUtils.waitForEvent(
-    tabbrowser.ownerGlobal,
-    "popupshown",
-    true,
-    event => event.target == gIdentityHandler._identityPopup
+    gIdentityHandler._identityPopup,
+    "popupshown"
   );
   gIdentityHandler._identityBox.click();
   await promisePanelOpen;

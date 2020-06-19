@@ -78,10 +78,8 @@ add_task(async function() {
 
   // Check if the control center shows the correct permission.
   let shown = BrowserTestUtils.waitForEvent(
-    window,
-    "popupshown",
-    true,
-    event => event.target == gIdentityHandler._identityPopup
+    gIdentityHandler._identityPopup,
+    "popupshown"
   );
   gIdentityHandler._identityBox.click();
   await shown;

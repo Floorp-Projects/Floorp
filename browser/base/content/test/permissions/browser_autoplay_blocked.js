@@ -25,10 +25,8 @@ const AUTOPLAY_PERM = "autoplay-media";
 
 function openIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(
-    gBrowser.ownerGlobal,
-    "popupshown",
-    true,
-    event => event.target == gIdentityHandler._identityPopup
+    gIdentityHandler._identityPopup,
+    "popupshown"
   );
   gIdentityHandler._identityBox.click();
   return promise;

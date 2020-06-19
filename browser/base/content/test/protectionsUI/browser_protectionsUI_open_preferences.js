@@ -10,9 +10,11 @@ const TRACKING_PAGE =
 const COOKIE_PAGE =
   "http://tracking.example.com/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 
-async function waitAndAssertPreferencesShown(_spotlight) {
+async function waitAndAssertPreferencesShown(_spotlight, identityPopup) {
   await BrowserTestUtils.waitForEvent(
-    gProtectionsHandler._protectionsPopup,
+    identityPopup
+      ? gIdentityHandler._identityPopup
+      : gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
   await TestUtils.waitForCondition(
