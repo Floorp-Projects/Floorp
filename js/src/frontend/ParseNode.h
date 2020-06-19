@@ -1574,9 +1574,6 @@ class BigIntLiteral : public ParseNode {
   // Create a BigInt value of this BigInt literal.
   BigInt* create(JSContext* cx);
 
-  // Return the decimal string representation of this BigInt literal.
-  JSAtom* toAtom(JSContext* cx);
-
   bool isZero();
 };
 
