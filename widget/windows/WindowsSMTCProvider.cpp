@@ -347,7 +347,9 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
                                            const wchar_t* aTitle,
                                            const wchar_t* aAlbumArtist) {
   MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(aArtist);
   MOZ_ASSERT(aTitle);
+  MOZ_ASSERT(aAlbumArtist);
   ComPtr<IMusicDisplayProperties> musicProps;
 
   HRESULT hr = mDisplay->put_Type(MediaPlaybackType::MediaPlaybackType_Music);
@@ -359,8 +361,7 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
     return false;
   }
 
-  hr = musicProps->put_Artist(aArtist ? HStringReference(aArtist).Get()
-                                      : nullptr);
+  hr = musicProps->put_Artist(HStringReference(aArtist).Get());
   if (FAILED(hr)) {
     LOG("Failed to set the music's artist");
     return false;
@@ -372,8 +373,7 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
     return false;
   }
 
-  hr = musicProps->put_AlbumArtist(
-      aAlbumArtist ? HStringReference(aAlbumArtist).Get() : nullptr);
+  hr = musicProps->put_AlbumArtist(HStringReference(aAlbumArtist).Get());
   if (FAILED(hr)) {
     LOG("Failed to set the music's album");
     return false;
