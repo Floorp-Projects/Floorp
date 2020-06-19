@@ -310,7 +310,10 @@ class EventSourceImpl final : public nsIObserver,
     }
 
     ~EventSourceServiceNotifier() {
-      mEventSourceImpl->AssertIsOnTargetThread();
+      // It is safe to call this on any thread because
+      // EventSourceConnectionClosed method is thread safe and
+      // NS_ReleaseOnMainThread explicitly releases the service on the main
+      // thread.
       if (mConnectionOpened) {
         // We want to notify about connection being closed only if we told
         // it was ever opened. The check is needed if OnStartRequest is called
