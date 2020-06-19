@@ -812,6 +812,8 @@ def _get_desktop_run_parser():
                        help='Run the program with electrolysis disabled.')
     group.add_argument('--enable-crash-reporter', action='store_true',
                        help='Run the program with the crash reporter enabled.')
+    group.add_argument('--enable-fission', action='store_true',
+                       help='Run the program with fission (site isolation) enabled.')
     group.add_argument('--setpref', action='append', default=[],
                        help='Set the specified pref before starting the program. Can be set '
                        'multiple times. Prefs can also be set in ~/.mozbuild/machrc in the '
@@ -1011,8 +1013,9 @@ class RunProgram(MachCommandBase):
                                 pass_thru=True, append_env=extra_env)
 
     def _run_desktop(self, params, remote, background, noprofile, disable_e10s,
-                     enable_crash_reporter, setpref, temp_profile, macos_open, debug, debugger,
-                     debugger_args, dmd, mode, stacks, show_dump_stats):
+                     enable_crash_reporter, enable_fission, setpref, temp_profile,
+                     macos_open, debug, debugger, debugger_args, dmd, mode, stacks,
+                     show_dump_stats):
         from mozprofile import Profile, Preferences
 
         try:
@@ -1126,6 +1129,9 @@ class RunProgram(MachCommandBase):
 
         if disable_e10s:
             extra_env['MOZ_FORCE_DISABLE_E10S'] = '1'
+
+        if enable_fission:
+            extra_env['MOZ_FORCE_ENABLE_FISSION'] = '1'
 
         if some_debugging_option:
             if 'INSIDE_EMACS' in os.environ:
