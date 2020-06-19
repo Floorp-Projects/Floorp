@@ -3848,6 +3848,22 @@ bool CacheIRCompiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathFRoundNumberResult(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoAvailableFloatRegister scratch(*this, FloatReg0);
+  FloatRegister scratchFloat32 = scratch.get().asSingle();
+
+  allocator.ensureDoubleRegister(masm, inputId, scratch);
+
+  masm.convertDoubleToFloat32(scratch, scratchFloat32);
+  masm.convertFloat32ToDouble(scratchFloat32, scratch);
+
+  masm.boxDouble(scratch, output.valueReg(), scratch);
+  return true;
+}
+
 bool CacheIRCompiler::emitMathAtan2NumberResult(NumberOperandId yId,
                                                 NumberOperandId xId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

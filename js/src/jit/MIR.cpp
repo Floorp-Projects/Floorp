@@ -4046,6 +4046,12 @@ MDefinition* MToFloat32::foldsTo(TempAllocator& alloc) {
                                  float(input->toConstant()->numberToDouble()));
   }
 
+  // Fold ToFloat32(ToDouble(int32)) to ToFloat32(int32).
+  if (input->isToDouble() &&
+      input->toToDouble()->input()->type() == MIRType::Int32) {
+    return MToFloat32::New(alloc, input->toToDouble()->input());
+  }
+
   return this;
 }
 
