@@ -12,6 +12,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 const Types = require("devtools/client/inspector/compatibility/types");
 
 const BrowserIcon = createFactory(
@@ -70,11 +73,14 @@ class Settings extends PureComponent {
       {
         className: "compatibility-settings__target-browsers",
       },
-      dom.header(
-        {
-          className: "compatibility-settings__target-browsers-header",
-        },
-        "Target Browsers"
+      Localized(
+        { id: "compatibility-target-browsers-header" },
+        dom.header(
+          {
+            className: "compatibility-settings__target-browsers-header",
+          },
+          "compatibility-target-browsers-header"
+        )
       ),
       dom.ul(
         {
@@ -116,36 +122,47 @@ class Settings extends PureComponent {
       {
         className: "compatibility-settings__header",
       },
-      dom.label(
-        {
-          className: "compatibility-settings__header-label",
-        },
-        "Settings"
-      ),
-      dom.button(
-        {
-          className: "compatibility-settings__header-button",
-          title: "Close settings",
-          onClick: () => {
-            const { defaultTargetBrowsers } = this.props;
-            const { targetBrowsers } = this.state;
-
-            // Sort by ordering of default browsers.
-            const browsers = defaultTargetBrowsers.filter(b =>
-              targetBrowsers.find(t => t.id === b.id && t.status === b.status)
-            );
-
-            if (this.props.targetBrowsers.toString() !== browsers.toString()) {
-              this.props.updateTargetBrowsers(browsers);
-            }
-
-            this.props.updateSettingsVisibility();
+      Localized(
+        { id: "compatibility-settings-header" },
+        dom.label(
+          {
+            className: "compatibility-settings__header-label",
           },
+          "compatibility-settings-header"
+        )
+      ),
+      Localized(
+        {
+          id: "compatibility-close-settings-button",
+          attrs: { title: true },
         },
-        dom.img({
-          className: "compatibility-settings__header-icon",
-          src: CLOSE_ICON,
-        })
+        dom.button(
+          {
+            className: "compatibility-settings__header-button",
+            title: "compatibility-close-settings-button",
+            onClick: () => {
+              const { defaultTargetBrowsers } = this.props;
+              const { targetBrowsers } = this.state;
+
+              // Sort by ordering of default browsers.
+              const browsers = defaultTargetBrowsers.filter(b =>
+                targetBrowsers.find(t => t.id === b.id && t.status === b.status)
+              );
+
+              if (
+                this.props.targetBrowsers.toString() !== browsers.toString()
+              ) {
+                this.props.updateTargetBrowsers(browsers);
+              }
+
+              this.props.updateSettingsVisibility();
+            },
+          },
+          dom.img({
+            className: "compatibility-settings__header-icon",
+            src: CLOSE_ICON,
+          })
+        )
       )
     );
   }

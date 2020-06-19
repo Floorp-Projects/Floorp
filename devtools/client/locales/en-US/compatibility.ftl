@@ -22,6 +22,11 @@ compatibility-feedback-button-label = Feedback
 compatibility-feedback-button-title =
     .title = Feedback
 
+## Messages used as headers in settings pane
+
+compatibility-settings-header = Settings
+compatibility-target-browsers-header = Target Browsers
+
 ##
 
 # Text used as the label for the number of nodes where the issue occurred
@@ -34,3 +39,5 @@ compatibility-issue-occurrences =
     }
 
 compatibility-no-issues-found = No compatibility issues found.
+compatibility-close-settings-button =
+    .title = Close settings
