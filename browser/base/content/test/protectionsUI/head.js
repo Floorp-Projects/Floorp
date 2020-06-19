@@ -168,6 +168,13 @@ function promiseTabLoadEvent(tab, url) {
   return loaded;
 }
 
+function openIdentityPopup() {
+  let mainView = document.getElementById("identity-popup-mainView");
+  let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
+  gIdentityHandler._identityBox.click();
+  return viewShown;
+}
+
 function waitForSecurityChange(numChanges = 1, win = null) {
   if (!win) {
     win = window;

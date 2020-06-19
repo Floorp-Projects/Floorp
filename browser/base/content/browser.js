@@ -3550,7 +3550,7 @@ function BrowserReloadWithFlags(reloadFlags) {
     // Also reset DOS mitigations for the basic auth prompt on reload.
     delete tab.linkedBrowser.authPromptAbuseCounter;
   }
-  gIdentityHandler.hidePopup();
+  PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
 
   let handlingUserInput = window.windowUtils.isHandlingUserInput;
 
