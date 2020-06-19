@@ -7,7 +7,6 @@ package mozilla.components.feature.tabs.tabstray
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.browser.thumbnails.ThumbnailsUseCases
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.tabs.ext.toTabs
@@ -25,7 +24,6 @@ class TabsFeature(
     private val store: BrowserStore,
     selectTabUseCase: TabsUseCases.SelectTabUseCase,
     removeTabUseCase: TabsUseCases.RemoveTabUseCase,
-    thumbnailsUseCases: ThumbnailsUseCases? = null,
     private val defaultTabsFilter: (TabSessionState) -> Boolean = { true },
     closeTabsTray: () -> Unit
 ) : LifecycleAwareFeature {
@@ -33,7 +31,6 @@ class TabsFeature(
     internal var presenter = TabsTrayPresenter(
         tabsTray,
         store,
-        thumbnailsUseCases,
         defaultTabsFilter,
         closeTabsTray
     )

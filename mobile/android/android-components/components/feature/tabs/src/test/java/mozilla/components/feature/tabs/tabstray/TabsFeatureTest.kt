@@ -24,7 +24,14 @@ class TabsFeatureTest {
         val interactor: TabsTrayInteractor = mock()
         val selectTabUseCase: TabsUseCases.SelectTabUseCase = mock()
         val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mock()
-        val tabsFeature = spy(TabsFeature(mock(), store, selectTabUseCase, removeTabUseCase, mock(), mock(), mock()))
+        val tabsFeature = spy(TabsFeature(
+            mock(),
+            store,
+            selectTabUseCase,
+            removeTabUseCase,
+            mock(),
+            mock()
+        ))
 
         assertNotEquals(tabsFeature.interactor, interactor)
         assertNotEquals(tabsFeature.presenter, presenter)
@@ -43,7 +50,14 @@ class TabsFeatureTest {
         val interactor: TabsTrayInteractor = mock()
         val selectTabUseCase: TabsUseCases.SelectTabUseCase = mock()
         val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mock()
-        val tabsFeature = spy(TabsFeature(mock(), store, selectTabUseCase, removeTabUseCase, mock(), mock(), mock()))
+        val tabsFeature = spy(TabsFeature(
+            mock(),
+            store,
+            selectTabUseCase,
+            removeTabUseCase,
+            mock(),
+            mock()
+        ))
 
         tabsFeature.presenter = presenter
         tabsFeature.interactor = interactor
@@ -61,7 +75,14 @@ class TabsFeatureTest {
         val interactor: TabsTrayInteractor = mock()
         val selectTabUseCase: TabsUseCases.SelectTabUseCase = mock()
         val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mock()
-        val tabsFeature = spy(TabsFeature(mock(), store, selectTabUseCase, removeTabUseCase, mock(), mock(), mock()))
+        val tabsFeature = spy(TabsFeature(
+            mock(),
+            store,
+            selectTabUseCase,
+            removeTabUseCase,
+            mock(),
+            mock()
+        ))
 
         tabsFeature.presenter = presenter
         tabsFeature.interactor = interactor
@@ -79,7 +100,14 @@ class TabsFeatureTest {
         val interactor: TabsTrayInteractor = mock()
         val selectTabUseCase: TabsUseCases.SelectTabUseCase = mock()
         val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mock()
-        val tabsFeature = spy(TabsFeature(mock(), store, selectTabUseCase, removeTabUseCase, mock(), mock(), mock()))
+        val tabsFeature = spy(TabsFeature(
+            mock(),
+            store,
+            selectTabUseCase,
+            removeTabUseCase,
+            mock(),
+            mock()
+        ))
 
         tabsFeature.presenter = presenter
         tabsFeature.interactor = interactor
@@ -103,7 +131,6 @@ class TabsFeatureTest {
             store,
             selectTabUseCase,
             removeTabUseCase,
-            mock(),
             defaultTabsFilter = filter,
             closeTabsTray = mock()
         ))
