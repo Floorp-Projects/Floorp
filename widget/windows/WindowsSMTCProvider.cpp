@@ -17,6 +17,7 @@
 
 #  include "mozilla/Assertions.h"
 #  include "mozilla/Logging.h"
+#  include "mozilla/Maybe.h"
 #  include "mozilla/WidgetUtils.h"
 #  include "mozilla/WindowsVersion.h"
 
