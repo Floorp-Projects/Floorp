@@ -58,12 +58,15 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   ~WindowsSMTCProvider();
   void UnregisterEvents();
   bool RegisterEvents();
-  bool InitDisplayAndControls();
   void OnButtonPressed(mozilla::dom::MediaControlKey aKey);
+
+  bool InitDisplayAndControls();
 
   // Sets the state of the UI Panel (enabled, can use PlayPause, Next, Previous
   // Buttons)
   bool SetControlAttributes(SMTCControlAttributes aAttributes);
+
+  bool RefreshDisplay();
 
   // Sets the Metadata for the currently playing media and sets the playback
   // type to "MUSIC" Note: This method does not call update(), you need to do
@@ -74,9 +77,6 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   // Sets the Thumbnail for the currently playing media to the given URL.
   // Note: This method does not call update(), you need to do that manually.
   bool SetThumbnail(const wchar_t* aUrl);
-
-  // This method flushes the changed Media Metadata to the OS.
-  bool Update();
 
   bool mInitialized = false;
   Microsoft::WRL::ComPtr<ISMTC> mControls;
