@@ -630,6 +630,7 @@ add_task(
       category: "cfrFeatures",
       layout: "short_message",
       skip_address_bar_notifier: true,
+      use_single_secondary_button: true,
       heading_text: "Test Milestone Message",
       template: "milestone_message",
     });
@@ -651,11 +652,73 @@ add_task(
       PopupNotifications.panel,
       "popuphidden"
     );
+
     document
       .getElementById("contextual-feature-recommendation-notification")
       .button.click();
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
     await hidePanel;
+  }
+);
+
+add_task(
+  async function test_cfr_tracking_protection_milestone_notification_remove() {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.contentblocking.cfr-milestone.milestone-achieved", 1000],
+        [
+          "browser.newtabpage.activity-stream.asrouter.providers.cfr",
+          `{"id":"cfr","enabled":true,"type":"local","localProvider":"CFRMessageProvider","frequency":{"custom":[{"period":"daily","cap":10}]},"categories":["cfrAddons","cfrFeatures"],"updateCycleInMs":3600000}`,
+        ],
+      ],
+    });
+
+    // addRecommendation checks that scheme starts with http and host matches
+    let browser = gBrowser.selectedBrowser;
+    await BrowserTestUtils.loadURI(browser, "http://example.com/");
+    await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+    const showPanel = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popupshown"
+    );
+
+    const response = await trigger_cfr_panel(browser, "example.com", {
+      action: { type: "OPEN_PROTECTION_REPORT" },
+      category: "cfrFeatures",
+      layout: "short_message",
+      skip_address_bar_notifier: true,
+      use_single_secondary_button: true,
+      heading_text: "Test Milestone Message",
+      template: "milestone_message",
+    });
+    Assert.ok(
+      response,
+      "Should return true if addRecommendation checks were successful"
+    );
+    await showPanel;
+
+    const notification = document.getElementById(
+      "contextual-feature-recommendation-notification"
+    );
+    // checkCFRSocialTrackingProtection(notification);
+    checkCFRTrackingProtectionMilestone(notification);
+
+    Assert.ok(notification.secondaryButton);
+    let hidePanel = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popuphidden"
+    );
+
+    document
+      .getElementById("contextual-feature-recommendation-notification")
+      .secondaryButton.click();
+    await hidePanel;
+    Assert.equal(
+      PopupNotifications._currentNotifications.length,
+      0,
+      "Should have removed the notification"
+    );
   }
 );
 
