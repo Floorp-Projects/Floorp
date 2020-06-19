@@ -164,7 +164,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
    * Returns true if left click event.
    */
   bool IsLeftClickEvent() const {
-    return mMessage == eMouseClick && mButton == MouseButton::eLeft;
+    return mMessage == eMouseClick && mButton == MouseButton::ePrimary;
   }
 };
 
@@ -226,8 +226,8 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
         mClickCount(0),
         mUseLegacyNonPrimaryDispatch(false) {
     if (aMessage == eContextMenu) {
-      mButton = (mContextMenuTrigger == eNormal) ? MouseButton::eRight
-                                                 : MouseButton::eLeft;
+      mButton = (mContextMenuTrigger == eNormal) ? MouseButton::eSecondary
+                                                 : MouseButton::ePrimary;
     }
   }
 
@@ -236,8 +236,8 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
     NS_WARNING_ASSERTION(
         mMessage != eContextMenu ||
             (mButton == ((mContextMenuTrigger == eNormal)
-                             ? MouseButton::eRight
-                             : MouseButton::eLeft) &&
+                             ? MouseButton::eSecondary
+                             : MouseButton::ePrimary) &&
              (mContextMenuTrigger != eControlClick || IsControl())),
         "Wrong button set to eContextMenu event?");
   }

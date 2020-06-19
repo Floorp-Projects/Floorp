@@ -374,7 +374,7 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     }
 #endif
   } else if (aEvent->mMessage == eMouseDown &&
-             aEvent->AsMouseEvent()->mButton == MouseButton::eLeft &&
+             aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary &&
 #ifdef XP_MACOSX
              // On mac, ctrl-click will send a context menu event from the
              // widget, so we don't want to bring up the menu.
@@ -396,7 +396,7 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   } else if (
 #ifndef NSCONTEXTMENUISMOUSEUP
       (aEvent->mMessage == eMouseUp &&
-       aEvent->AsMouseEvent()->mButton == MouseButton::eRight) &&
+       aEvent->AsMouseEvent()->mButton == MouseButton::eSecondary) &&
 #else
       aEvent->mMessage == eContextMenu &&
 #endif
@@ -416,7 +416,7 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       Execute(aEvent);
     }
   } else if (aEvent->mMessage == eMouseUp &&
-             aEvent->AsMouseEvent()->mButton == MouseButton::eLeft &&
+             aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary &&
              !IsMenu() && !IsDisabled()) {
     // Execute the execute event handler.
     *aEventStatus = nsEventStatus_eConsumeNoDefault;

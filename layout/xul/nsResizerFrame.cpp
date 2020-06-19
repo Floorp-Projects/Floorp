@@ -63,7 +63,7 @@ nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     case eMouseDown: {
       if (aEvent->mClass == eTouchEventClass ||
           (aEvent->mClass == eMouseEventClass &&
-           aEvent->AsMouseEvent()->mButton == MouseButton::eLeft)) {
+           aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary)) {
         nsCOMPtr<nsIBaseWindow> window;
         mozilla::PresShell* presShell = aPresContext->GetPresShell();
         nsIContent* contentToResize =
@@ -121,7 +121,7 @@ nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     case eMouseUp: {
       if (aEvent->mClass == eTouchEventClass ||
           (aEvent->mClass == eMouseEventClass &&
-           aEvent->AsMouseEvent()->mButton == MouseButton::eLeft)) {
+           aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary)) {
         // we're done tracking.
         mTrackingMouseMove = false;
 
@@ -298,7 +298,7 @@ nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       break;
     }
     case eMouseDoubleClick:
-      if (aEvent->AsMouseEvent()->mButton == MouseButton::eLeft) {
+      if (aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary) {
         nsCOMPtr<nsIBaseWindow> window;
         mozilla::PresShell* presShell = aPresContext->GetPresShell();
         nsIContent* contentToResize =

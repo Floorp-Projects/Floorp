@@ -3940,7 +3940,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           // XXXsmaug Why?
           WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
           if (mouseEvent->mButton == MouseButton::eMiddle ||
-              mouseEvent->mButton == MouseButton::eRight) {
+              mouseEvent->mButton == MouseButton::eSecondary) {
             if (mType == NS_FORM_INPUT_BUTTON || mType == NS_FORM_INPUT_RESET ||
                 mType == NS_FORM_INPUT_SUBMIT) {
               if (aVisitor.mDOMEvent) {
@@ -3951,7 +3951,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             }
           }
           if (mType == NS_FORM_INPUT_NUMBER && aVisitor.mEvent->IsTrusted()) {
-            if (mouseEvent->mButton == MouseButton::eLeft &&
+            if (mouseEvent->mButton == MouseButton::ePrimary &&
                 !IgnoreInputEventWithModifier(*mouseEvent, false)) {
               nsNumberControlFrame* numberControlFrame =
                   do_QueryFrame(GetPrimaryFrame());

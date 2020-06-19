@@ -166,7 +166,7 @@ int16_t MouseEvent::Button() {
       return mEvent->AsMouseEventBase()->mButton;
     default:
       NS_WARNING("Tried to get mouse mButton for non-mouse event!");
-      return MouseButton::eLeft;
+      return MouseButton::ePrimary;
   }
 }
 

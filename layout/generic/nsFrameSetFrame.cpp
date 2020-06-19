@@ -617,7 +617,7 @@ nsresult nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
         MouseDrag(aPresContext, aEvent);
         break;
       case eMouseUp:
-        if (aEvent->AsMouseEvent()->mButton == MouseButton::eLeft) {
+        if (aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary) {
           EndMouseDrag(aPresContext);
         }
         break;
@@ -1448,7 +1448,7 @@ nsresult nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   if (aEvent->mMessage == eMouseDown &&
-      aEvent->AsMouseEvent()->mButton == MouseButton::eLeft) {
+      aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary) {
     nsHTMLFramesetFrame* parentFrame = do_QueryFrame(GetParent());
     if (parentFrame) {
       parentFrame->StartMouseDrag(aPresContext, this, aEvent);
