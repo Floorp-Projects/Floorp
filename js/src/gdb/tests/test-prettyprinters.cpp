@@ -14,9 +14,9 @@ class G {};
 class H : F, G {};
 
 FRAGMENT(prettyprinters, implemented_types) {
-  int i;
-  A a;
-  B b;
+  int i = 0;
+  A a = 0;
+  B b = 0;
   C c;
   C_ c_;
   E e;
