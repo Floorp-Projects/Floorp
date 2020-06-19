@@ -2230,7 +2230,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     try {
       let requireBuiltIn = Services.prefs.getBoolPref(
         PREF_INSTALL_REQUIREBUILTINCERTS,
-        true
+        !AppConstants.MOZ_REQUIRE_SIGNING
       );
       this.badCertHandler = new CertUtils.BadCertHandler(!requireBuiltIn);
 
@@ -2403,7 +2403,7 @@ var DownloadAddonInstall = class extends AddonInstall {
               aRequest,
               !Services.prefs.getBoolPref(
                 PREF_INSTALL_REQUIREBUILTINCERTS,
-                true
+                !AppConstants.MOZ_REQUIRE_SIGNING
               )
             );
           } catch (e) {
