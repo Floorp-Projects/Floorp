@@ -15,6 +15,8 @@
 #  include <winsdkver.h>
 #  include <wrl.h>
 
+#  include "imgIEncoder.h"
+#  include "nsMimeTypes.h"
 #  include "mozilla/Assertions.h"
 #  include "mozilla/Logging.h"
 #  include "mozilla/Maybe.h"
@@ -155,6 +157,11 @@ void WindowsSMTCProvider::Close() {
   }
 
   UnregisterEvents();
+
+  // Cancel the pending image fetch process
+  mImageFetchRequest.DisconnectIfExists();
+  // Clear the cached image URL in case that image fetching is cancelled
+  mImageSrc = EmptyString();
 }
 
 void WindowsSMTCProvider::SetPlaybackState(
@@ -348,10 +355,120 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
   return true;
 }
 
+// The image buffer would be allocated in aStream whose size is aSize and the
+// buffer head is aBuffer
+static nsresult GetEncodedImageBuffer(imgIContainer* aImage,
+                                      const nsACString& aMimeType,
+                                      nsIInputStream** aStream, uint32_t* aSize,
+                                      char** aBuffer) {
+  nsCOMPtr<imgITools> imgTools = do_GetService("@mozilla.org/image/tools;1");
+  if (!imgTools) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  nsresult rv = imgTools->EncodeImage(aImage, aMimeType, EmptyString(),
+                                      getter_AddRefs(inputStream));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!inputStream) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<imgIEncoder> encoder = do_QueryInterface(inputStream);
+  if (!encoder) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = encoder->GetImageBufferUsed(aSize);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = encoder->GetImageBuffer(aBuffer);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  encoder.forget(aStream);
+  return NS_OK;
+}
+
 void WindowsSMTCProvider::LoadThumbnail(
     const nsTArray<mozilla::dom::MediaImage>& aArtwork) {
-  // TODO: Use FetchImageHelper to fetch one of the image in aArtwork, then set
-  // it to the thumbnail via LoadImage()
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // We use the first image of aArtwork for now.
+  // TODO:
+  // 1. Give priorities to different images (e.g., sort by size or format)
+  // 2. Fetch the images by the priorities: If fetching for the top-priority
+  // image fails, try next one.
+  // 3. No need to fetch the default image and do image processing since the the
+  // default image is local file and it's trustworthy. For the default image, we
+  // can use `CreateFromFile` to create the IRandomAccessStream. We should
+  // probably cache it since it could be used very often.
+
+  // Bail out if the URL starts with "file:///" since they cannot be fetched
+  // below and may not be trustworthy.
+  if (aArtwork.IsEmpty() ||
+      aArtwork[0].mSrc.Find(NS_LITERAL_CSTRING("file:///"), false, 0, 0) == 0) {
+    LOG("Clear the thumbnail since there is no valid image url");
+    mImageFetchRequest.DisconnectIfExists();
+    mImageSrc = EmptyString();
+    ClearThumbnail();
+    RefreshDisplay();
+    return;
+  }
+
+  // Do nothing if the URL isn't changed. The image of the songs in the same
+  // list may be same (e.g., Spotify)
+  if (mImageSrc == aArtwork[0].mSrc) {
+    LOG("Keep the thumbnail since the image url is same");
+    return;
+  }
+
+  mImageFetchRequest.DisconnectIfExists();
+  mImageSrc = aArtwork[0].mSrc;
+
+  // Clean the out-of-dated thumbnail on the interface
+  ClearThumbnail();
+  RefreshDisplay();
+
+  mImageFetcher =
+      mozilla::MakeUnique<mozilla::dom::FetchImageHelper>(aArtwork[0]);
+  RefPtr<WindowsSMTCProvider> self = this;
+  mImageFetcher->FetchImage()
+      ->Then(
+          AbstractThread::MainThread(), __func__,
+          [this, self](const nsCOMPtr<imgIContainer>& aImage) {
+            LOG("The image is fetched successfully");
+            mImageFetchRequest.Complete();
+
+            // Although IMAGE_JPEG or IMAGE_BMP are valid types as well, but a
+            // png image with transparent background will be converted into a
+            // jpeg/bmp file with a colored background. IMAGE_PNG format seems
+            // to be the best choice for now.
+            uint32_t size = 0;
+            char* src = nullptr;
+            // Only used to hold the image data
+            nsCOMPtr<nsIInputStream> inputStream;
+            nsresult rv =
+                GetEncodedImageBuffer(aImage, NS_LITERAL_CSTRING(IMAGE_PNG),
+                                      getter_AddRefs(inputStream), &size, &src);
+            if (NS_FAILED(rv) || !inputStream || size == 0 || !src) {
+              LOG("Failed to get the image buffer info");
+              return;
+            }
+
+            LoadImage(src, size);
+          },
+          [this, self](bool) {
+            LOG("Failed to fetch image");
+            mImageFetchRequest.Complete();
+          })
+      ->Track(mImageFetchRequest);
 }
 
 void WindowsSMTCProvider::LoadImage(const char* aImageData,
@@ -474,6 +591,13 @@ bool WindowsSMTCProvider::SetThumbnail() {
   }
 
   return SUCCEEDED(mDisplay->put_Thumbnail(mImageStreamReference.Get()));
+}
+
+void WindowsSMTCProvider::ClearThumbnail() {
+  MOZ_ASSERT(mDisplay);
+  HRESULT hr = mDisplay->put_Thumbnail(nullptr);
+  MOZ_ASSERT(SUCCEEDED(hr));
+  Unused << hr;
 }
 
 #endif  // __MINGW32__
