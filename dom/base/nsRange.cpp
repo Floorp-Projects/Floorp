@@ -753,13 +753,13 @@ bool nsRange::IsPointInRange(nsINode& aContainer, uint32_t aOffset,
   return compareResult == 0;
 }
 
-int16_t nsRange::ComparePoint(nsINode& aContainer, uint32_t aOffset,
+int16_t nsRange::ComparePoint(const nsINode& aContainer, uint32_t aOffset,
                               ErrorResult& aRv) const {
   if (!IsPointComparableToRange(aContainer, aOffset, aRv)) {
     return 0;
   }
 
-  const RawRangeBoundary point{&aContainer, aOffset};
+  const RawRangeBoundary point{const_cast<nsINode*>(&aContainer), aOffset};
 
   MOZ_ASSERT(point.IsSetAndValid());
 

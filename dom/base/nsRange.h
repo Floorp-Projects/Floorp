@@ -211,8 +211,8 @@ class nsRange final : public mozilla::dom::AbstractRange,
       ErrorResult& aErr);
   int16_t CompareBoundaryPoints(uint16_t aHow, nsRange& aOther,
                                 ErrorResult& aErr);
-  int16_t ComparePoint(nsINode& aContainer, uint32_t aOffset,
-                       ErrorResult& aErr) const;
+  int16_t ComparePoint(const nsINode& aContainer, uint32_t aOffset,
+                       ErrorResult& aRv) const;
   void DeleteContents(ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DocumentFragment> ExtractContents(
       ErrorResult& aErr);
