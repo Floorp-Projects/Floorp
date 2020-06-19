@@ -266,7 +266,7 @@ class nsWindow final : public nsWindowBase {
   virtual bool DispatchMouseEvent(
       mozilla::EventMessage aEventMessage, WPARAM wParam, LPARAM lParam,
       bool aIsContextMenuKey = false,
-      int16_t aButton = mozilla::MouseButton::eLeft,
+      int16_t aButton = mozilla::MouseButton::ePrimary,
       uint16_t aInputSource =
           mozilla::dom::MouseEvent_Binding::MOZ_SOURCE_MOUSE,
       WinPointerInfo* aPointerInfo = nullptr);

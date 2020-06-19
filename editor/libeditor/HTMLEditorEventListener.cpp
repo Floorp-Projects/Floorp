@@ -391,12 +391,12 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
     return EditorEventListener::MouseDown(aMouseEvent);
   }
 
-  if (aMouseEvent->Button() == MouseButton::eLeft) {
+  if (aMouseEvent->Button() == MouseButton::ePrimary) {
     nsresult rv = HandlePrimaryMouseButtonDown(*htmlEditor, *aMouseEvent);
     if (NS_FAILED(rv)) {
       return rv;
     }
-  } else if (aMouseEvent->Button() == MouseButton::eRight) {
+  } else if (aMouseEvent->Button() == MouseButton::eSecondary) {
     nsresult rv = HandleSecondaryMouseButtonDown(*htmlEditor, *aMouseEvent);
     if (NS_FAILED(rv)) {
       return rv;

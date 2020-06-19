@@ -4481,7 +4481,7 @@ nsresult nsIFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   if ((aEvent->mClass == eMouseEventClass &&
-       aEvent->AsMouseEvent()->mButton == MouseButton::eLeft) ||
+       aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary) ||
       aEvent->mClass == eTouchEventClass) {
     if (aEvent->mMessage == eMouseDown || aEvent->mMessage == eTouchStart) {
       HandlePress(aPresContext, aEvent, aEventStatus);
@@ -4518,7 +4518,7 @@ nsresult nsIFrame::GetDataForTableSelection(
       selectingTableCells &&
       (aMouseEvent->mMessage == eMouseMove ||
        (aMouseEvent->mMessage == eMouseUp &&
-        aMouseEvent->mButton == MouseButton::eLeft) ||
+        aMouseEvent->mButton == MouseButton::ePrimary) ||
        aMouseEvent->IsShift());
 
   if (!doTableSelection) {

@@ -2896,7 +2896,7 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
 
   switch (aVisitor.mEvent->mMessage) {
     case eMouseDown: {
-      if (aVisitor.mEvent->AsMouseEvent()->mButton == MouseButton::eLeft &&
+      if (aVisitor.mEvent->AsMouseEvent()->mButton == MouseButton::ePrimary &&
           OwnerDoc()->LinkHandlingEnabled()) {
         aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
 
@@ -3119,7 +3119,7 @@ static const char* GetFullscreenError(CallerType aCallerType,
   // button
   if (StaticPrefs::full_screen_api_mouse_event_allow_left_button_only() &&
       (EventStateManager::sCurrentMouseBtn == MouseButton::eMiddle ||
-       EventStateManager::sCurrentMouseBtn == MouseButton::eRight)) {
+       EventStateManager::sCurrentMouseBtn == MouseButton::eSecondary)) {
     return "FullscreenDeniedMouseEventOnlyLeftBtn";
   }
 
