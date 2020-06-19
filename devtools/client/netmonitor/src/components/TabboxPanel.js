@@ -26,8 +26,8 @@ const CookiesPanel = createFactory(
 const HeadersPanel = createFactory(
   require("devtools/client/netmonitor/src/components/request-details/HeadersPanel")
 );
-const MessagesPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/messages/MessagesPanel")
+const MessagesView = createFactory(
+  require("devtools/client/netmonitor/src/components/messages/MessagesView")
 );
 const RequestPanel = createFactory(
   require("devtools/client/netmonitor/src/components/request-details/RequestPanel")
@@ -126,7 +126,7 @@ class TabboxPanel extends Component {
         "devtools.netmonitor.features.serverSentEvents"
       );
 
-    const showMessagesPanel =
+    const showMessagesView =
       (isWs || isSse) && showMessagesTab === undefined ? true : showMessagesTab;
 
     return Tabbar(
@@ -159,14 +159,14 @@ class TabboxPanel extends Component {
           targetSearchResult,
         })
       ),
-      showMessagesPanel &&
+      showMessagesView &&
         TabPanel(
           {
             id: PANELS.MESSAGES,
             title: MESSAGES_TITLE,
             className: "panel-with-code",
           },
-          MessagesPanel({
+          MessagesView({
             connector,
           })
         ),
