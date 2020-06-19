@@ -23,11 +23,16 @@ exports[`NodePane component renders some nodes 1`] = `
 <details
   className="compatibility-node-pane"
 >
-  <summary
-    className="compatibility-node-pane__summary"
+  <Localized
+    $number={2}
+    id="compatibility-issue-occurrences"
   >
-    2 occurrences
-  </summary>
+    <summary
+      className="compatibility-node-pane__summary"
+    >
+      compatibility-issue-occurrences
+    </summary>
+  </Localized>
   <NodeList
     nodes={
       Array [
