@@ -82,6 +82,9 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
 
   // Sets one of the artwork to the SMTC interface asynchronously
   void LoadThumbnail(const nsTArray<mozilla::dom::MediaImage>& aArtwork);
+  // Stores the image at index aIndex of the mArtwork to the Thumbnail
+  // asynchronously
+  void LoadImageAtIndex(const size_t aIndex);
   // Stores the raw binary data of an image to mImageStream and set it to the
   // Thumbnail asynchronously
   void LoadImage(const char* aImageData, uint32_t aDataSize);
@@ -102,6 +105,9 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   ComPtr<IRandomAccessStreamReference> mImageStreamReference;
   // The URL of the current image
   nsString mImageSrc;
+
+  // mArtwork can only be used in main thread in case of data racing
+  CopyableTArray<mozilla::dom::MediaImage> mArtwork;
 
   mozilla::UniquePtr<mozilla::dom::FetchImageHelper> mImageFetcher;
   mozilla::MozPromiseRequestHolder<mozilla::dom::ImagePromise>
