@@ -24,7 +24,7 @@ DevToolsModules(
     'MessageListHeaderContextMenu.js',
     'MessageListItem.js',
     'MessagePayload.js',
-    'MessagesPanel.js',
+    'MessagesView.js',
     'msgpack.js',
     'RawData.js',
     'StatusBar.js',

@@ -47,7 +47,7 @@ loader.lazyGetter(this, "MessagePayload", function() {
  * Renders a list of messages in table view.
  * Full payload is separated using a SplitBox.
  */
-class MessagesPanel extends Component {
+class MessagesView extends Component {
   static get propTypes() {
     return {
       connector: PropTypes.object.isRequired,
@@ -176,4 +176,4 @@ module.exports = connect(
   dispatch => ({
     openMessageDetailsTab: open => dispatch(Actions.openMessageDetails(open)),
   })
-)(MessagesPanel);
+)(MessagesView);
