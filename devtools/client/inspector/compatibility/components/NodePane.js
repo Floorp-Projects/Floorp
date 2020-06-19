@@ -11,6 +11,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 const Types = require("devtools/client/inspector/compatibility/types");
 
 const NodeList = createFactory(
@@ -33,9 +36,15 @@ class NodePane extends PureComponent {
     return nodes.length > 1
       ? dom.details(
           { className: "compatibility-node-pane" },
-          dom.summary(
-            { className: "compatibility-node-pane__summary" },
-            `${nodes.length} occurrences`
+          Localized(
+            {
+              id: "compatibility-issue-occurrences",
+              $number: nodes.length,
+            },
+            dom.summary(
+              { className: "compatibility-node-pane__summary" },
+              "compatibility-issue-occurrences"
+            )
           ),
           NodeList(this.props)
         )
