@@ -111,8 +111,7 @@ async function runTest(i, forward) {
   await loaded;
   await popupHidden;
   ok(
-    !gIdentityHandler._identityPopup ||
-      BrowserTestUtils.is_hidden(gIdentityHandler._identityPopup),
+    BrowserTestUtils.is_hidden(gIdentityHandler._identityPopup),
     "Control Center is hidden"
   );
 
@@ -133,10 +132,8 @@ async function runTest(i, forward) {
 
   // Open the Control Center and make sure it closes after nav (Bug 1207542).
   let popupShown = BrowserTestUtils.waitForEvent(
-    window,
-    "popupshown",
-    true,
-    event => event.target == gIdentityHandler._identityPopup
+    gIdentityHandler._identityPopup,
+    "popupshown"
   );
   gIdentityHandler._identityBox.click();
   info("Waiting for the Control Center to be shown");

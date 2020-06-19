@@ -550,7 +550,7 @@ async function stopSharing(
   }
 
   cancelButton.click();
-  aWindow.gIdentityHandler._identityPopup.hidePopup();
+  aWindow.gIdentityHandler._identityPopup.hidden = true;
 
   await promiseRecordingEvent;
   await observerPromise1;
@@ -725,7 +725,6 @@ async function checkSharingUI(
 
   // Then check the sharing indicators inside the control center panel.
   identityBox.click();
-  await TestUtils.waitForCondition(() => !identityPopupHidden(aWin));
   let permissions = doc.getElementById("identity-popup-permission-list");
   for (let id of ["microphone", "camera", "screen"]) {
     let convertId = idToConvert => {
@@ -764,8 +763,7 @@ async function checkSharingUI(
       is(icon.length, 1, "should not show more than 1 " + id + " icon");
     }
   }
-  aWin.gIdentityHandler._identityPopup.hidePopup();
-  await TestUtils.waitForCondition(() => identityPopupHidden(aWin));
+  aWin.gIdentityHandler._identityPopup.hidden = true;
 
   // Check the global indicators.
   await assertWebRTCIndicatorStatus(aExpectedGlobal || aExpected);
@@ -876,11 +874,6 @@ async function disableObserverVerification() {
   }
 }
 
-function identityPopupHidden(win = window) {
-  let popup = win.gIdentityHandler._identityPopup;
-  return !popup || popup.state == "closed";
-}
-
 async function runTests(tests, options = {}) {
   let browser = await openNewTestTab(options.relativeURI);
 
@@ -890,7 +883,7 @@ async function runTests(tests, options = {}) {
     "should start the test without any prior popup notification"
   );
   ok(
-    identityPopupHidden(),
+    gIdentityHandler._identityPopup.hidden,
     "should start the test with the control center hidden"
   );
 

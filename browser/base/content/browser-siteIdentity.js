@@ -148,26 +148,8 @@ var gIdentityHandler = {
     );
   },
 
-  _popupInitialized: false,
-  _initializePopup() {
-    if (!this._popupInitialized) {
-      let wrapper = document.getElementById("template-identity-popup");
-      wrapper.replaceWith(wrapper.content);
-      this._popupInitialized = true;
-    }
-  },
-
-  hidePopup() {
-    if (this._popupInitialized) {
-      PanelMultiView.hidePopup(this._identityPopup);
-    }
-  },
-
   // smart getters
   get _identityPopup() {
-    if (!this._popupInitialized) {
-      return null;
-    }
     delete this._identityPopup;
     return (this._identityPopup = document.getElementById("identity-popup"));
   },
@@ -434,9 +416,7 @@ var gIdentityHandler = {
     histogram.add(kMIXED_CONTENT_UNBLOCK_EVENT);
     // Reload the page with the content unblocked
     BrowserReloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT);
-    if (this._popupInitialized) {
-      PanelMultiView.hidePopup(this._identityPopup);
-    }
+    PanelMultiView.hidePopup(this._identityPopup);
   },
 
   enableMixedContentProtection() {
@@ -446,9 +426,7 @@ var gIdentityHandler = {
       "BrowserTab"
     );
     BrowserReload();
-    if (this._popupInitialized) {
-      PanelMultiView.hidePopup(this._identityPopup);
-    }
+    PanelMultiView.hidePopup(this._identityPopup);
   },
 
   removeCertException() {
@@ -462,9 +440,7 @@ var gIdentityHandler = {
     let port = this._uri.port > 0 ? this._uri.port : 443;
     this._overrideService.clearValidityOverride(host, port);
     BrowserReloadSkipCache();
-    if (this._popupInitialized) {
-      PanelMultiView.hidePopup(this._identityPopup);
-    }
+    PanelMultiView.hidePopup(this._identityPopup);
   },
 
   /**
@@ -525,7 +501,7 @@ var gIdentityHandler = {
     this.refreshIdentityBlock();
     // Handle a location change while the Control Center is focused
     // by closing the popup (bug 1207542)
-    if (shouldHidePopup && this._popupInitialized) {
+    if (shouldHidePopup) {
       PanelMultiView.hidePopup(this._identityPopup);
     }
 
@@ -591,7 +567,7 @@ var gIdentityHandler = {
       }
     }
 
-    if (this._popupInitialized && this._identityPopup.state != "closed") {
+    if (this._identityPopup.state == "open") {
       this.updateSitePermissions();
       PanelView.forNode(
         this._identityPopupMainView
@@ -1131,8 +1107,9 @@ var gIdentityHandler = {
   },
 
   _openPopup(event) {
-    // Make the popup available.
-    this._initializePopup();
+    // Make sure that the display:none style we set in xul is removed now that
+    // the popup is actually needed
+    this._identityPopup.hidden = false;
 
     // Remove the reload hint that we show after a user has cleared a permission.
     this._permissionReloadHint.setAttribute("hidden", "true");
@@ -1143,10 +1120,9 @@ var gIdentityHandler = {
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
 
-    // Check the panel state of other panels. Hide them if needed.
-    let openPanels = Array.from(document.querySelectorAll("panel[openpanel]"));
-    for (let panel of openPanels) {
-      PanelMultiView.hidePopup(panel);
+    // Check the panel state of the protections panel. Hide it if needed.
+    if (gProtectionsHandler._protectionsPopup.state != "closed") {
+      PanelMultiView.hidePopup(gProtectionsHandler._protectionsPopup);
     }
 
     // Now open the popup, anchored off the primary chrome element
@@ -1287,12 +1263,10 @@ var gIdentityHandler = {
   },
 
   onLocationChange() {
-    if (this._popupInitialized && this._identityPopup.state != "closed") {
-      this._permissionReloadHint.setAttribute("hidden", "true");
+    this._permissionReloadHint.setAttribute("hidden", "true");
 
-      if (!this._permissionList.hasChildNodes()) {
-        this._permissionEmptyHint.removeAttribute("hidden");
-      }
+    if (!this._permissionList.hasChildNodes()) {
+      this._permissionEmptyHint.removeAttribute("hidden");
     }
   },
 
