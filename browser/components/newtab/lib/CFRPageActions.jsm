@@ -520,7 +520,7 @@ class PageAction {
     this.maybeLoadCustomElement(this.window);
 
     let { content, id } = message;
-    let { primary } = content.buttons;
+    let { primary, secondary } = content.buttons;
 
     let dateFormat = new Services.intl.DateTimeFormat(
       this.window.gBrowser.ownerGlobal.navigator.language,
@@ -585,11 +585,30 @@ class PageAction {
       );
     };
 
+    let secondaryBtnString = await this.getStrings(secondary[0].label);
+    let secondaryActionsCallback = () => {
+      this.dispatchUserAction(secondary[0].action);
+      this._sendTelemetry({
+        message_id: id,
+        bucket_id: content.bucket_id,
+        event: "DISMISS",
+      });
+      RecommendationMap.delete(browser);
+    };
+
     let mainAction = {
       label: primaryBtnString,
       accessKey: primaryBtnString.attributes.accesskey,
       callback: primaryActionCallback,
     };
+
+    let secondaryActions = [
+      {
+        label: secondaryBtnString,
+        accessKey: secondaryBtnString.attributes.accesskey,
+        callback: secondaryActionsCallback,
+      },
+    ];
 
     let style = this.window.document.createElement("style");
     style.textContent = `
@@ -621,10 +640,11 @@ class PageAction {
       panelTitle,
       "cfr",
       mainAction,
-      null,
+      secondaryActions,
       {
         hideClose: true,
         eventCallback: manageClass,
+        persistWhileVisible: true,
       }
     );
     Services.prefs.setIntPref(

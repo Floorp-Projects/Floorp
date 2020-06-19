@@ -874,6 +874,13 @@ const CFR_MESSAGES = [
           action: { type: "OPEN_PROTECTION_REPORT" },
           event: "PROTECTION",
         },
+        secondary: [
+          {
+            label: { string_id: "cfr-doorhanger-milestone-close-button" },
+            action: { type: "CANCEL" },
+            event: "DISMISS",
+          },
+        ],
       },
     },
     targeting: "pageLoad >= 4",
