@@ -385,14 +385,6 @@ bool BigIntLiteral::isZero() {
   return compilationInfo_.bigIntData[index_].isZero();
 }
 
-JSAtom* BigIntLiteral::toAtom(JSContext* cx) {
-  RootedBigInt bi(cx, create(cx));
-  if (!bi) {
-    return nullptr;
-  }
-  return BigIntToAtom<CanGC>(cx, bi);
-}
-
 JSAtom* NumericLiteral::toAtom(JSContext* cx) const {
   return NumberToAtom(cx, value());
 }
