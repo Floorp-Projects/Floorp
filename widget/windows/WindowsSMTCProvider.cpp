@@ -399,22 +399,16 @@ static nsresult GetEncodedImageBuffer(imgIContainer* aImage,
 void WindowsSMTCProvider::LoadThumbnail(
     const nsTArray<mozilla::dom::MediaImage>& aArtwork) {
   MOZ_ASSERT(NS_IsMainThread());
+  // TODO: Sort the images by the preferred size or format.
+  mArtwork = aArtwork;
+  LoadImageAtIndex(0);
+}
 
-  // We use the first image of aArtwork for now.
-  // TODO:
-  // 1. Give priorities to different images (e.g., sort by size or format)
-  // 2. Fetch the images by the priorities: If fetching for the top-priority
-  // image fails, try next one.
-  // 3. No need to fetch the default image and do image processing since the the
-  // default image is local file and it's trustworthy. For the default image, we
-  // can use `CreateFromFile` to create the IRandomAccessStream. We should
-  // probably cache it since it could be used very often.
+void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
+  MOZ_ASSERT(NS_IsMainThread());
 
-  // Bail out if the URL starts with "file:///" since they cannot be fetched
-  // below and may not be trustworthy.
-  if (aArtwork.IsEmpty() ||
-      aArtwork[0].mSrc.Find(NS_LITERAL_CSTRING("file:///"), false, 0, 0) == 0) {
-    LOG("Clear the thumbnail since there is no valid image url");
+  if (aIndex >= mArtwork.Length()) {
+    LOG("Clear the thumbnail since there is no available image");
     mImageFetchRequest.DisconnectIfExists();
     mImageSrc = EmptyString();
     ClearThumbnail();
@@ -422,27 +416,40 @@ void WindowsSMTCProvider::LoadThumbnail(
     return;
   }
 
+  const mozilla::dom::MediaImage& image = mArtwork[aIndex];
+
   // Do nothing if the URL isn't changed. The image of the songs in the same
   // list may be same (e.g., Spotify)
-  if (mImageSrc == aArtwork[0].mSrc) {
+  if (mImageSrc == image.mSrc) {
     LOG("Keep the thumbnail since the image url is same");
     return;
   }
 
-  mImageFetchRequest.DisconnectIfExists();
-  mImageSrc = aArtwork[0].mSrc;
+  // TODO: No need to fetch the default image and do image processing since the
+  // the default image is local file and it's trustworthy. For the default
+  // image, we can use `CreateFromFile` to create the IRandomAccessStream. We
+  // should probably cache it since it could be used very often (Bug 1643102)
 
-  // Clean the out-of-dated thumbnail on the interface
+  if (image.mSrc.Find(NS_LITERAL_CSTRING("file:///"), false, 0, 0) == 0) {
+    LOG("Skip the local file. Try next");
+    mImageFetchRequest.DisconnectIfExists();
+    LoadImageAtIndex(aIndex + 1);
+    return;
+  }
+
+  mImageFetchRequest.DisconnectIfExists();
+  mImageSrc = image.mSrc;
+
+  // Remove the current thumbnail on the interface
   ClearThumbnail();
   RefreshDisplay();
 
-  mImageFetcher =
-      mozilla::MakeUnique<mozilla::dom::FetchImageHelper>(aArtwork[0]);
+  mImageFetcher = mozilla::MakeUnique<mozilla::dom::FetchImageHelper>(image);
   RefPtr<WindowsSMTCProvider> self = this;
   mImageFetcher->FetchImage()
       ->Then(
           AbstractThread::MainThread(), __func__,
-          [this, self](const nsCOMPtr<imgIContainer>& aImage) {
+          [this, self, aIndex](const nsCOMPtr<imgIContainer>& aImage) {
             LOG("The image is fetched successfully");
             mImageFetchRequest.Complete();
 
@@ -459,14 +466,16 @@ void WindowsSMTCProvider::LoadThumbnail(
                                       getter_AddRefs(inputStream), &size, &src);
             if (NS_FAILED(rv) || !inputStream || size == 0 || !src) {
               LOG("Failed to get the image buffer info");
+              LoadImageAtIndex(aIndex + 1);
               return;
             }
 
             LoadImage(src, size);
           },
-          [this, self](bool) {
-            LOG("Failed to fetch image");
+          [this, self, aIndex](bool) {
+            LOG("Failed to fetch image. Try next image");
             mImageFetchRequest.Complete();
+            LoadImageAtIndex(aIndex + 1);
           })
       ->Track(mImageFetchRequest);
 }
