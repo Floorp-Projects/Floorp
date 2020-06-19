@@ -359,21 +359,29 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
   Unused << hr;
   hr = mDisplay->get_MusicProperties(musicProps.GetAddressOf());
   if (FAILED(hr)) {
-    LOG("SystemMediaTransportControls: Failed at get_MusicProperties()");
+    LOG("Failed to get music properties");
     return false;
   }
 
   hr = musicProps->put_Artist(aArtist ? HStringReference(aArtist).Get()
                                       : nullptr);
-  MOZ_ASSERT(SUCCEEDED(hr));
-  Unused << hr;
+  if (FAILED(hr)) {
+    LOG("Failed to set the music's artist");
+    return false;
+  }
 
-  musicProps->put_Title(HStringReference(aTitle).Get());
+  hr = musicProps->put_Title(HStringReference(aTitle).Get());
+  if (FAILED(hr)) {
+    LOG("Failed to set the music's title");
+    return false;
+  }
 
   hr = musicProps->put_AlbumArtist(
       aAlbumArtist ? HStringReference(aAlbumArtist).Get() : nullptr);
-  MOZ_ASSERT(SUCCEEDED(hr));
-  Unused << hr;
+  if (FAILED(hr)) {
+    LOG("Failed to set the music's album");
+    return false;
+  }
 
   return true;
 }
