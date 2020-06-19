@@ -202,21 +202,18 @@ bool WindowsSMTCProvider::Open() {
     return false;
   }
 
+  if (!SetControlAttributes(SMTCControlAttributes::EnableAll())) {
+    LOG("Failed to set control attributes");
+    return false;
+  }
+
   if (!RegisterEvents()) {
     LOG("Failed to register SMTC key-event listener");
     return false;
   }
 
   mInitialized = true;
-  if (!SetControlAttributes(SMTCControlAttributes::EnableAll())) {
-    LOG("Failed to set control attributes");
-    UnregisterEvents();
-    mInitialized = false;
-    return false;
-  }
-
   SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
-
   return mInitialized;
 }
 
@@ -269,7 +266,7 @@ void WindowsSMTCProvider::SetPlaybackState(
 
 bool WindowsSMTCProvider::SetControlAttributes(
     SMTCControlAttributes aAttributes) {
-  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(mControls);
 
   if (FAILED(mControls->put_IsEnabled(aAttributes.mEnabled))) {
     return false;
