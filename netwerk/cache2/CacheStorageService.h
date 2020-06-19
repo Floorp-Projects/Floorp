@@ -327,8 +327,8 @@ class CacheStorageService final : public nsICacheStorageService,
     explicit MemoryPool(EType aType);
     ~MemoryPool();
 
-    nsTArray<RefPtr<CacheEntry> > mFrecencyArray;
-    nsTArray<RefPtr<CacheEntry> > mExpirationArray;
+    nsTArray<RefPtr<CacheEntry>> mFrecencyArray;
+    nsTArray<RefPtr<CacheEntry>> mExpirationArray;
     Atomic<uint32_t, Relaxed> mMemorySize;
 
     bool OnMemoryConsumptionChange(uint32_t aSavedMemorySize,
@@ -338,7 +338,7 @@ class CacheStorageService final : public nsICacheStorageService,
      */
     void PurgeOverMemoryLimit();
     void PurgeExpired();
-    void PurgeByFrecency(bool& aFrecencyNeedsSort, uint32_t aWhat);
+    void PurgeByFrecency(uint32_t aWhat);
     void PurgeAll(uint32_t aWhat);
 
    private:
