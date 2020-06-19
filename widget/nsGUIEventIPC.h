@@ -1178,7 +1178,7 @@ template <>
 struct ParamTraits<mozilla::MouseInput::ButtonType>
     : public ContiguousEnumSerializerInclusive<
           mozilla::MouseInput::ButtonType,
-          mozilla::MouseInput::ButtonType::LEFT_BUTTON,
+          mozilla::MouseInput::ButtonType::PRIMARY_BUTTON,
           mozilla::MouseInput::sHighestButtonType> {};
 
 template <>
