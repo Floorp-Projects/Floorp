@@ -28,6 +28,7 @@ RUN apt-get update && \
       python-pip \
       python-setuptools \
       python-virtualenv \
+      python3-dev \
       rsync \
       screen \
       sudo \
