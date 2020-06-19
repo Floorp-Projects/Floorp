@@ -288,7 +288,7 @@ bool WindowsSMTCProvider::SetControlAttributes(
 }
 
 bool WindowsSMTCProvider::SetThumbnail(const wchar_t* aUrl) {
-  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(mDisplay);
   ComPtr<IActivationFactory> streamRefFactory;
   HRESULT hr = GetActivationFactory(
       HStringReference(
@@ -343,7 +343,7 @@ bool WindowsSMTCProvider::SetThumbnail(const wchar_t* aUrl) {
 bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
                                            const wchar_t* aTitle,
                                            const wchar_t* aAlbumArtist) {
-  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(mDisplay);
   MOZ_ASSERT(aArtist);
   MOZ_ASSERT(aTitle);
   MOZ_ASSERT(aAlbumArtist);
@@ -381,6 +381,7 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
 
 void WindowsSMTCProvider::SetMediaMetadata(
     const mozilla::dom::MediaMetadataBase& aMetadata) {
+  MOZ_ASSERT(mInitialized);
   SetMusicMetadata(aMetadata.mArtist.get(), aMetadata.mTitle.get(),
                    aMetadata.mAlbum.get());
   Update();
@@ -393,7 +394,7 @@ void WindowsSMTCProvider::OnButtonPressed(mozilla::dom::MediaControlKey aKey) {
 }
 
 bool WindowsSMTCProvider::Update() {
-  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(mDisplay);
   return SUCCEEDED(mDisplay->Update());
 }
 
