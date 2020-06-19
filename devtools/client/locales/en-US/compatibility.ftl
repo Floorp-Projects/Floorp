@@ -15,4 +15,13 @@ compatibility-issue-deprecated-experimental = (deprecated, experimental)
 
 ##
 
+# Text used as the label for the number of nodes where the issue occurred
+# Variables:
+#   $number (Number) - The number of nodes where the issue occurred
+compatibility-issue-occurrences =
+    { $number ->
+        [one] { $number } occurrence
+       *[other] { $number } occurrences
+    }
+
 compatibility-no-issues-found = No compatibility issues found.
