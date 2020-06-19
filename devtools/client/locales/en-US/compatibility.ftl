@@ -7,6 +7,12 @@
 compatibility-selected-element-header = Selected Element
 compatibility-all-elements-header = All Issues
 
+## Message used as labels for the type of issue
+
+compatibility-issue-deprecated = (deprecated)
+compatibility-issue-experimental = (experimental)
+compatibility-issue-deprecated-experimental = (deprecated, experimental)
+
 ##
 
 compatibility-no-issues-found = No compatibility issues found.
