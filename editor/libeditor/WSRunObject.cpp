@@ -755,6 +755,38 @@ nsresult WSRunScanner::GetWSNodes() {
   return NS_OK;
 }
 
+bool WSRunScanner::InitializeRangeStartWithTextNode(
+    const EditorDOMPointInText& aPoint) {
+  MOZ_ASSERT(aPoint.IsSetAndValid());
+
+  const nsTextFragment& textFragment = aPoint.ContainerAsText()->TextFragment();
+  for (uint32_t i = std::min(aPoint.Offset(), textFragment.GetLength()); i;
+       i--) {
+    char16_t ch = textFragment.CharAt(i - 1);
+    if (nsCRT::IsAsciiSpace(ch)) {
+      continue;
+    }
+
+    if (ch == HTMLEditUtils::kNBSP) {
+      mFirstNBSPNode = aPoint.ContainerAsText();
+      mFirstNBSPOffset = i - 1;
+      if (!mLastNBSPNode) {
+        mLastNBSPNode = aPoint.ContainerAsText();
+        mLastNBSPOffset = i - 1;
+      }
+      continue;
+    }
+
+    mStartNode = aPoint.ContainerAsText();
+    mStartOffset = i;
+    mStartReason = WSType::NormalText;
+    mStartReasonContent = aPoint.ContainerAsText();
+    return true;
+  }
+
+  return false;
+}
+
 void WSRunScanner::InitializeRangeStart(
     const EditorDOMPoint& aPoint,
     const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent) {
@@ -762,36 +794,14 @@ void WSRunScanner::InitializeRangeStart(
 
   EditorDOMPoint start(aPoint);
   // first look backwards to find preceding ws nodes
-  if (Text* textNode = aPoint.GetContainerAsText()) {
-    const nsTextFragment* textFrag = &textNode->TextFragment();
-    if (!aPoint.IsStartOfContainer()) {
-      for (uint32_t i = aPoint.Offset(); i; i--) {
-        // sanity bounds check the char position.  bug 136165
-        if (i > textFrag->GetLength()) {
-          MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
-          continue;
-        }
-        char16_t theChar = textFrag->CharAt(i - 1);
-        if (!nsCRT::IsAsciiSpace(theChar)) {
-          if (theChar != kNBSP) {
-            mStartNode = textNode;
-            mStartOffset = i;
-            mStartReason = WSType::NormalText;
-            mStartReasonContent = textNode;
-            return;
-          }
-          // as we look backwards update our earliest found nbsp
-          mFirstNBSPNode = textNode;
-          mFirstNBSPOffset = i - 1;
-          // also keep track of latest nbsp so far
-          if (!mLastNBSPNode) {
-            mLastNBSPNode = textNode;
-            mLastNBSPOffset = i - 1;
-          }
-        }
-        start.Set(textNode, i - 1);
-      }
+  if (aPoint.IsInTextNode()) {
+    if (InitializeRangeStartWithTextNode(
+            EditorDOMPointInText(aPoint.ContainerAsText(), aPoint.Offset()))) {
+      return;
     }
+    // The text node does not have visible character, let's keep scanning
+    // preceding nodes.
+    start.Set(aPoint.ContainerAsText(), 0);
   }
 
   while (!mStartNode) {
@@ -808,42 +818,21 @@ void WSRunScanner::InitializeRangeStart(
         mStartReasonContent = previousLeafContentOrBlock;
       } else if (previousLeafContentOrBlock->IsText() &&
                  previousLeafContentOrBlock->IsEditable()) {
-        RefPtr<Text> textNode = previousLeafContentOrBlock->AsText();
-        const nsTextFragment* textFrag = &textNode->TextFragment();
-        uint32_t len = textNode->TextLength();
-
-        if (len < 1) {
+        if (!previousLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
           // Zero length text node. Set start point to it
           // so we can get past it!
-          start.Set(previousLeafContentOrBlock, 0);
-        } else {
-          for (int32_t pos = len - 1; pos >= 0; pos--) {
-            // sanity bounds check the char position.  bug 136165
-            if (uint32_t(pos) >= textFrag->GetLength()) {
-              MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
-              continue;
-            }
-            char16_t theChar = textFrag->CharAt(pos);
-            if (!nsCRT::IsAsciiSpace(theChar)) {
-              if (theChar != kNBSP) {
-                mStartNode = textNode;
-                mStartOffset = pos + 1;
-                mStartReason = WSType::NormalText;
-                mStartReasonContent = textNode;
-                return;
-              }
-              // as we look backwards update our earliest found nbsp
-              mFirstNBSPNode = textNode;
-              mFirstNBSPOffset = pos;
-              // also keep track of latest nbsp so far
-              if (!mLastNBSPNode) {
-                mLastNBSPNode = textNode;
-                mLastNBSPOffset = pos;
-              }
-            }
-            start.Set(textNode, pos);
-          }
+          start.Set(previousLeafContentOrBlock->AsText(), 0);
+          continue;
         }
+
+        if (InitializeRangeStartWithTextNode(EditorDOMPointInText::AtEndOf(
+                *previousLeafContentOrBlock->AsText()))) {
+          return;
+        }
+
+        // The text node does not have visible character, let's keep scanning
+        // preceding nodes.
+        start.Set(previousLeafContentOrBlock->AsText(), 0);
       } else {
         // it's a break or a special node, like <img>, that is not a block and
         // not a break but still serves as a terminator to ws runs.
@@ -870,44 +859,51 @@ void WSRunScanner::InitializeRangeStart(
   }
 }
 
+bool WSRunScanner::InitializeRangeEndWithTextNode(
+    const EditorDOMPointInText& aPoint) {
+  MOZ_ASSERT(aPoint.IsSetAndValid());
+
+  const nsTextFragment& textFragment = aPoint.ContainerAsText()->TextFragment();
+  for (uint32_t i = aPoint.Offset(); i < textFragment.GetLength(); i++) {
+    char16_t ch = textFragment.CharAt(i);
+    if (nsCRT::IsAsciiSpace(ch)) {
+      continue;
+    }
+
+    if (ch == HTMLEditUtils::kNBSP) {
+      mLastNBSPNode = aPoint.ContainerAsText();
+      mLastNBSPOffset = i;
+      if (!mFirstNBSPNode) {
+        mFirstNBSPNode = aPoint.ContainerAsText();
+        mFirstNBSPOffset = i;
+      }
+      continue;
+    }
+
+    mEndNode = aPoint.ContainerAsText();
+    mEndOffset = i;
+    mEndReason = WSType::NormalText;
+    mEndReasonContent = aPoint.ContainerAsText();
+    return true;
+  }
+
+  return false;
+}
+
 void WSRunScanner::InitializeRangeEnd(
     const EditorDOMPoint& aPoint,
     const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
   EditorDOMPoint end(aPoint);
-  // then look ahead to find following ws nodes
-  if (Text* textNode = end.GetContainerAsText()) {
-    // don't need to put it on list. it already is from code above
-    const nsTextFragment* textFrag = &textNode->TextFragment();
-    if (!end.IsEndOfContainer()) {
-      for (uint32_t i = end.Offset(); i < textNode->TextLength(); i++) {
-        // sanity bounds check the char position.  bug 136165
-        if (i >= textFrag->GetLength()) {
-          MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
-          continue;
-        }
-        char16_t theChar = textFrag->CharAt(i);
-        if (!nsCRT::IsAsciiSpace(theChar)) {
-          if (theChar != kNBSP) {
-            mEndNode = textNode;
-            mEndOffset = i;
-            mEndReason = WSType::NormalText;
-            mEndReasonContent = textNode;
-            return;
-          }
-          // as we look forwards update our latest found nbsp
-          mLastNBSPNode = textNode;
-          mLastNBSPOffset = i;
-          // also keep track of earliest nbsp so far
-          if (!mFirstNBSPNode) {
-            mFirstNBSPNode = textNode;
-            mFirstNBSPOffset = i;
-          }
-        }
-        end.Set(textNode, i + 1);
-      }
+  if (aPoint.IsInTextNode()) {
+    if (InitializeRangeEndWithTextNode(
+            EditorDOMPointInText(aPoint.ContainerAsText(), aPoint.Offset()))) {
+      return;
     }
+    // The text node does not have visible character, let's keep scanning
+    // following nodes.
+    end.SetToEndOf(aPoint.ContainerAsText());
   }
 
   while (!mEndNode) {
@@ -925,42 +921,21 @@ void WSRunScanner::InitializeRangeEnd(
         mEndReasonContent = nextLeafContentOrBlock;
       } else if (nextLeafContentOrBlock->IsText() &&
                  nextLeafContentOrBlock->IsEditable()) {
-        RefPtr<Text> textNode = nextLeafContentOrBlock->AsText();
-        const nsTextFragment* textFrag = &textNode->TextFragment();
-        uint32_t len = textNode->TextLength();
-
-        if (len < 1) {
+        if (!nextLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
           // Zero length text node. Set end point to it
           // so we can get past it!
-          end.Set(textNode, 0);
-        } else {
-          for (uint32_t pos = 0; pos < len; pos++) {
-            // sanity bounds check the char position.  bug 136165
-            if (pos >= textFrag->GetLength()) {
-              MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
-              continue;
-            }
-            char16_t theChar = textFrag->CharAt(pos);
-            if (!nsCRT::IsAsciiSpace(theChar)) {
-              if (theChar != kNBSP) {
-                mEndNode = textNode;
-                mEndOffset = pos;
-                mEndReason = WSType::NormalText;
-                mEndReasonContent = textNode;
-                return;
-              }
-              // as we look forwards update our latest found nbsp
-              mLastNBSPNode = textNode;
-              mLastNBSPOffset = pos;
-              // also keep track of earliest nbsp so far
-              if (!mFirstNBSPNode) {
-                mFirstNBSPNode = textNode;
-                mFirstNBSPOffset = pos;
-              }
-            }
-            end.Set(textNode, pos + 1);
-          }
+          end.Set(nextLeafContentOrBlock->AsText(), 0);
+          continue;
         }
+
+        if (InitializeRangeEndWithTextNode(
+                EditorDOMPointInText(nextLeafContentOrBlock->AsText(), 0))) {
+          return;
+        }
+
+        // The text node does not have visible character, let's keep scanning
+        // following nodes.
+        end.SetToEndOf(nextLeafContentOrBlock->AsText());
       } else {
         // we encountered a break or a special node, like <img>,
         // that is not a block and not a break but still

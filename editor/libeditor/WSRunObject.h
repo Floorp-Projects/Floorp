@@ -644,6 +644,8 @@ class MOZ_STACK_CLASS WSRunScanner {
   void InitializeRangeEnd(
       const EditorDOMPoint& aPoint,
       const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent);
+  bool InitializeRangeStartWithTextNode(const EditorDOMPointInText& aPoint);
+  bool InitializeRangeEndWithTextNode(const EditorDOMPointInText& aPoint);
 
   // The node passed to our constructor.
   EditorDOMPoint mScanStartPoint;
