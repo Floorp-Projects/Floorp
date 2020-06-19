@@ -11,6 +11,7 @@ import org.mozilla.fenix.helpers.HomeActivityTestRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
+import org.junit.Ignore
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.ui.robots.PRIVATE_SESSION_MESSAGE
@@ -116,6 +117,7 @@ class HomeScreenTest {
         }
     }
 
+    @Ignore("Instrumentation crash: https://github.com/mozilla-mobile/fenix/issues/11642")
     @Test
     fun privateModeScreenItemsTest() {
         homeScreen { }.dismissOnboarding()
