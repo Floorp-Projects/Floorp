@@ -384,7 +384,7 @@ def get_ftp_platform(platform):
     elif platform.startswith('linux64'):
         return 'linux-x86_64'
     else:
-        raise ValueError('Unimplemented platform %s'.format(platform))
+        raise ValueError('Unimplemented platform {}'.format(platform))
 
 
 # Ugh

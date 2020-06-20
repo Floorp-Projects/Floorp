@@ -270,8 +270,8 @@ class MachBrowsertime(MachCommandBase):
                 'to {new_upstream_url}')
 
             if not re.search('/tarball/[a-f0-9]{40}$', new_upstream_url):
-                raise ValueError("New upstream URL does not end with /tarball/[a-f0-9]{40}: '{}'"
-                                 .format(new_upstream_url))
+                raise ValueError("New upstream URL does not end with /tarball/[a-f0-9]{40}: '%s'"
+                                 % new_upstream_url)
 
             with open(package_json_path) as f:
                 existing_body = json.loads(f.read(), object_pairs_hook=collections.OrderedDict)

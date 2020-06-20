@@ -360,6 +360,7 @@ class ConfigureSandbox(dict):
         else:
             assert isinstance(logger, logging.Logger)
             moz_logger = None
+
             @contextmanager
             def queue_debug():
                 yield
@@ -1154,6 +1155,7 @@ class ConfigureSandbox(dict):
             func.__defaults__,
             closure
         ))
+
         @self.wraps(new_func)
         def wrapped(*args, **kwargs):
             if func in self._imports:
