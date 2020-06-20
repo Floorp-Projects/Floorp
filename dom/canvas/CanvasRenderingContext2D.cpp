@@ -3900,7 +3900,9 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   // if only measuring, don't need to do any more work
   if (aOp == TextDrawOperation::MEASURE) {
     aError = NS_OK;
-    double actualBoundingBoxLeft = processor.mBoundingBox.X() - offsetX;
+    // Note that actualBoundingBoxLeft measures the distance in the leftward
+    // direction, so its sign is reversed from our usual physical coordinates.
+    double actualBoundingBoxLeft = offsetX - processor.mBoundingBox.X();
     double actualBoundingBoxRight = processor.mBoundingBox.XMost() - offsetX;
     double actualBoundingBoxAscent =
         -processor.mBoundingBox.Y() - baselineAnchor;
