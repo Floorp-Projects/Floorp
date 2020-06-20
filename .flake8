@@ -118,6 +118,7 @@ per-file-ignores =
     memory/**: F821
     mozglue/**: F821
     python/mozbuild/**: F821
+    python/mozbuild/mozbuild/test/configure/test_checks_configure.py: E128
     python/mozversioncontrol/**: F821
     testing/mozharness/**: F821
     testing/talos/**: F821
