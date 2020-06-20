@@ -117,7 +117,7 @@ class Whitelist:
 
                 if filename not in errors:
                     errors[filename] = []
-                errors[filename].append("Duration %s > %S"
+                errors[filename].append("Duration %s > %s"
                                         % (row_value[file_duration_index]),
                                         DEFAULT_DURATION)
         return errors

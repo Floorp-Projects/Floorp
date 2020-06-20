@@ -337,15 +337,13 @@ def get_opcodes(dir):
                                 '(stack_nuses)'.format(
                                     op=op,
                                     nuses=nuses,
-                                    stack_nuses=stack_nuses,
-                                    stack_uses=opcode.stack_uses))
+                                    stack_nuses=stack_nuses))
             if ndefs != -1 and stack_ndefs != -1 and ndefs != stack_ndefs:
                 raise Exception('ndefs should match stack notation: {op}: '
                                 '{ndefs} != {stack_ndefs} '
                                 '(stack_ndefs)'.format(
                                     op=op,
                                     ndefs=ndefs,
-                                    stack_ndefs=stack_ndefs,
-                                    stack_defs=opcode.stack_defs))
+                                    stack_ndefs=stack_ndefs))
 
     return index, opcodes

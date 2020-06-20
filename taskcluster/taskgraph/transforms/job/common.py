@@ -198,8 +198,7 @@ def add_tooltool(config, job, taskdesc, internal=False):
     """
 
     if job['worker']['implementation'] in ('docker-worker',):
-        level = config.params['level']
-        add_cache(job, taskdesc, 'tooltool-cache'.format(level),
+        add_cache(job, taskdesc, 'tooltool-cache',
                   '{workdir}/tooltool-cache'.format(**job['run']))
 
         taskdesc['worker'].setdefault('env', {}).update({

@@ -1481,7 +1481,7 @@ class L10NCommands(MachCommandBase):
                      'Invoking `mach android archive-geckoview`')
             self.run_process(
                 [mozpath.join(self.topsrcdir, 'mach'), 'android',
-                 'archive-geckoview'.format(locale)],
+                 'archive-geckoview'],
                 append_env=append_env,
                 pass_thru=True,
                 ensure_exit_code=True,
