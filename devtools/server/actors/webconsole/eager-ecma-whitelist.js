@@ -26,7 +26,6 @@ module.exports = [
   Array.prototype.concat,
   Array.prototype.entries,
   Array.prototype.every,
-  Array.prototype.fill,
   Array.prototype.filter,
   Array.prototype.find,
   Array.prototype.findIndex,
