@@ -8,6 +8,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.images.ImageRequest
 import java.io.File
 import java.io.IOException
 
@@ -34,11 +35,11 @@ class ThumbnailDiskCache {
      * Retrieves the thumbnail data from the disk cache for the given session ID or URL.
      *
      * @param context the application [Context].
-     * @param sessionIdOrUrl the session ID or URL of the thumbnail to retrieve.
+     * @param request [ImageRequest] providing the session ID or URL of the thumbnail to retrieve.
      * @return the [ByteArray] of the thumbnail or null if the snapshot of the entry does not exist.
      */
-    internal fun getThumbnailData(context: Context, sessionIdOrUrl: String): ByteArray? {
-        val snapshot = getThumbnailCache(context).get(sessionIdOrUrl) ?: return null
+    internal fun getThumbnailData(context: Context, request: ImageRequest): ByteArray? {
+        val snapshot = getThumbnailCache(context).get(request.id) ?: return null
 
         return try {
             snapshot.getInputStream(0).use {
@@ -54,14 +55,14 @@ class ThumbnailDiskCache {
      * Stores the given session ID or URL's thumbnail [Bitmap] into the disk cache.
      *
      * @param context the application [Context].
-     * @param sessionIdOrUrl the session ID or URL.
+     * @param request [ImageRequest] providing the session ID or URL of the thumbnail to retrieve.
      * @param bitmap the thumbnail [Bitmap] to store.
      */
-    internal fun putThumbnailBitmap(context: Context, sessionIdOrUrl: String, bitmap: Bitmap) {
+    internal fun putThumbnailBitmap(context: Context, request: ImageRequest, bitmap: Bitmap) {
         try {
             synchronized(thumbnailCacheWriteLock) {
                 val editor = getThumbnailCache(context)
-                    .edit(sessionIdOrUrl) ?: return
+                    .edit(request.id) ?: return
 
                 editor.newOutputStream(0).use { stream ->
                     bitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, stream)

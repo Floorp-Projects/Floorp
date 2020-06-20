@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.support.images.ImageRequest
 import mozilla.components.support.images.loader.ImageLoader
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -161,11 +162,11 @@ class DefaultTabViewHolderTest {
 
         viewHolder.bind(tabWithThumbnail, false, mock())
 
-        verify(loader, never()).loadIntoView(any(), eq("123"), nullable(), nullable())
+        verify(loader, never()).loadIntoView(any(), eq(ImageRequest("123")), nullable(), nullable())
 
         viewHolder.bind(tab, false, mock())
 
-        verify(loader).loadIntoView(any(), eq("123"), nullable(), nullable())
+        verify(loader).loadIntoView(any(), eq(ImageRequest("123")), nullable(), nullable())
     }
 
     @Test

@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
+import mozilla.components.support.images.ImageRequest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -38,59 +39,60 @@ class ThumbnailStorageTest {
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
-        thumbnailStorage.saveThumbnail("test-tab1", bitmap).joinBlocking()
-        thumbnailStorage.saveThumbnail("test-tab2", bitmap).joinBlocking()
-        var thumbnail1 = thumbnailStorage.loadThumbnail("test-tab1").await()
-        var thumbnail2 = thumbnailStorage.loadThumbnail("test-tab2").await()
+        thumbnailStorage.saveThumbnail(ImageRequest("test-tab1"), bitmap).joinBlocking()
+        thumbnailStorage.saveThumbnail(ImageRequest("test-tab2"), bitmap).joinBlocking()
+        var thumbnail1 = thumbnailStorage.loadThumbnail(ImageRequest("test-tab1")).await()
+        var thumbnail2 = thumbnailStorage.loadThumbnail(ImageRequest("test-tab2")).await()
         assertNotNull(thumbnail1)
         assertNotNull(thumbnail2)
 
         thumbnailStorage.clearThumbnails()
-        thumbnail1 = thumbnailStorage.loadThumbnail("test-tab1").await()
-        thumbnail2 = thumbnailStorage.loadThumbnail("test-tab2").await()
+        thumbnail1 = thumbnailStorage.loadThumbnail(ImageRequest("test-tab1")).await()
+        thumbnail2 = thumbnailStorage.loadThumbnail(ImageRequest("test-tab2")).await()
         assertNull(thumbnail1)
         assertNull(thumbnail2)
     }
 
     @Test
     fun `deleteThumbnail`() = runBlocking {
-        val sessionIdOrUrl = "test-tab1"
+        val id = "test-tab1"
+        val request = ImageRequest(id)
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
-        thumbnailStorage.saveThumbnail(sessionIdOrUrl, bitmap).joinBlocking()
-        var thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
+        thumbnailStorage.saveThumbnail(request, bitmap).joinBlocking()
+        var thumbnail = thumbnailStorage.loadThumbnail(request).await()
         assertNotNull(thumbnail)
 
-        thumbnailStorage.deleteThumbnail(sessionIdOrUrl).joinBlocking()
-        thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
+        thumbnailStorage.deleteThumbnail(id).joinBlocking()
+        thumbnail = thumbnailStorage.loadThumbnail(request).await()
         assertNull(thumbnail)
     }
 
     @Test
     fun `saveThumbnail`() = runBlocking {
-        val sessionIdOrUrl = "test-tab1"
+        val request = ImageRequest("test-tab1")
         val bitmap: Bitmap = mock()
-        val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
-        var thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
+        val thumbnailStorage = spy(ThumbnailStorage(testContext))
+        var thumbnail = thumbnailStorage.loadThumbnail(request).await()
 
         assertNull(thumbnail)
 
-        thumbnailStorage.saveThumbnail(sessionIdOrUrl, bitmap).joinBlocking()
-        thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
+        thumbnailStorage.saveThumbnail(request, bitmap).joinBlocking()
+        thumbnail = thumbnailStorage.loadThumbnail(request).await()
         assertNotNull(thumbnail)
     }
 
     @Test
     fun `loadThumbnail`() = runBlocking {
-        val sessionIdOrUrl = "test-tab1"
+        val request = ImageRequest("test-tab1")
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
-        thumbnailStorage.saveThumbnail(sessionIdOrUrl, bitmap)
-        `when`(thumbnailStorage.loadThumbnail(sessionIdOrUrl)).thenReturn(CompletableDeferred(bitmap))
+        thumbnailStorage.saveThumbnail(request, bitmap)
+        `when`(thumbnailStorage.loadThumbnail(request)).thenReturn(CompletableDeferred(bitmap))
 
-        val thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
+        val thumbnail = thumbnailStorage.loadThumbnail(request).await()
         assertEquals(bitmap, thumbnail)
     }
 }

@@ -18,6 +18,7 @@ import mozilla.components.browser.thumbnails.R
 import mozilla.components.browser.thumbnails.utils.ThumbnailDiskCache
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.images.DesiredSize
+import mozilla.components.support.images.ImageRequest
 import mozilla.components.support.images.decoder.AndroidImageDecoder
 import java.util.concurrent.Executors
 
@@ -62,30 +63,30 @@ class ThumbnailStorage(
         }
 
     /**
-     * Asynchronously loads a thumbnail [Bitmap] for the given session ID or url.
+     * Asynchronously loads a thumbnail [Bitmap] for the given [ImageRequest].
      */
-    fun loadThumbnail(sessionIdOrUrl: String): Deferred<Bitmap?> = scope.async {
-        loadThumbnailInternal(sessionIdOrUrl).also { loadedThumbnail ->
+    fun loadThumbnail(request: ImageRequest): Deferred<Bitmap?> = scope.async {
+        loadThumbnailInternal(request).also { loadedThumbnail ->
             if (loadedThumbnail != null) {
                 logger.debug(
-                    "Loaded thumbnail from disk (sessionIdOrUrl = $sessionIdOrUrl, " +
+                    "Loaded thumbnail from disk (id = ${request.id}, " +
                         "generationId = ${loadedThumbnail.generationId})"
                 )
             } else {
-                logger.debug("No thumbnail loaded (sessionIdOrUrl = $sessionIdOrUrl)")
+                logger.debug("No thumbnail loaded (id = ${request.id})")
             }
         }
     }
 
     @WorkerThread
-    private fun loadThumbnailInternal(sessionIdOrUrl: String): Bitmap? {
+    private fun loadThumbnailInternal(request: ImageRequest): Bitmap? {
         val desiredSize = DesiredSize(
-            targetSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_thumbnails_size_default),
+            targetSize = context.resources.getDimensionPixelSize(request.size.dimen),
             maxSize = maximumSize,
             maxScaleFactor = MAXIMUM_SCALE_FACTOR
         )
 
-        val data = sharedDiskCache.getThumbnailData(context, sessionIdOrUrl)
+        val data = sharedDiskCache.getThumbnailData(context, request)
 
         if (data != null) {
             return decoders.decode(data, desiredSize)
@@ -95,15 +96,15 @@ class ThumbnailStorage(
     }
 
     /**
-     * Stores the given thumbnail [Bitmap] into the disk cache with the provided session ID or url
+     * Stores the given thumbnail [Bitmap] into the disk cache with the provided [ImageRequest]
      * as its key.
      */
-    fun saveThumbnail(sessionIdOrUrl: String, bitmap: Bitmap): Job =
+    fun saveThumbnail(request: ImageRequest, bitmap: Bitmap): Job =
         scope.launch {
             logger.debug(
-                "Saved thumbnail to disk (sessionIdOrUrl = $sessionIdOrUrl, " +
+                "Saved thumbnail to disk (id = ${request.id}, " +
                     "generationId = ${bitmap.generationId})"
             )
-            sharedDiskCache.putThumbnailBitmap(context, sessionIdOrUrl, bitmap)
+            sharedDiskCache.putThumbnailBitmap(context, request, bitmap)
         }
 }

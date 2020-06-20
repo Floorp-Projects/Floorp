@@ -14,6 +14,7 @@ import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.images.ImageRequest
 import mozilla.components.support.images.loader.ImageLoader
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
@@ -83,7 +84,7 @@ class DefaultTabViewHolder(
 
         // In the final else case, we have no cache or fresh screenshot; do nothing instead of clearing the image.
         if (thumbnailLoader != null && tab.thumbnail == null) {
-            thumbnailLoader.loadIntoView(thumbnailView, tab.id)
+            thumbnailLoader.loadIntoView(thumbnailView, ImageRequest(tab.id))
         } else if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
         }
