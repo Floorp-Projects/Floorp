@@ -130,7 +130,6 @@ def lint(paths, config, **lintargs):
         # now that doesn't appear to be necessary.
         filtered = [p for p in paths if not any(p.startswith(e) for e in config['exclude'])]
 
-        self.options.exclude = None
         self.args = self.args + list(expand_exclusions(filtered, config, root))
 
         if not self.args:
