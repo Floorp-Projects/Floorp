@@ -820,6 +820,18 @@
     <string name="snackbar_tab_closed">Ganarán riña rakïj ñanj</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Ganarán riña nej rakïj ñanj</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Ngà nañunj riña nej sitiô nīhià\' ruhuât doj</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Ngà narán riña rakïj ñanj huìi</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Ngà narán riña nej rakïj ñanj huìi</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Ngà ganare\' nej rakïj ñanj huìi</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">NĀNIKÀJ RŪKÙ</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Ngà ganare\' sîtio</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Dūre\'</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -827,15 +839,57 @@
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Gā\'nïn riña %1$s gā\'nïn %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">GA\'NĪN</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">SĪ GA\'NÏNJT</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Huā yītïnj ruhuât nādure\'t %1$s anj</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Nādūre\'</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
     <string name="tab_collection_dialog_negative">Dūyichin\'</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Hiàj nanunj da\' huā ngè riña aga\'a</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Ngà naka URL</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Ni\'iāj sò\' hua lechrâ nan. Dānaj gūruguì\'ij ni\'iājt sisī nāgi\'iaj yāchìjt asi nāgi\'iaj lít man.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Nāgi\'iaj yāchìj asi nāgi\'iaj lij lêchra riña nej sitio web</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Dàj yāchìj gā lêchra</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Dàj yāchìj hua niñā lêchra \'naj</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Gūñā gā lechrâ nan ngà sa nikāj Android. Si ruhuât nādūnāt man nī gūxūn opsiôn nan.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Nādure\' nej si datô riña sā nana\'uî\'t</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Nā\'nïn nej rakïj ñanj</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d nej rakïj ñanj</string>
+
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Sa gini\'iājt ngà gaché nunt nī si datô nej sîtio</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d nej direksiûn</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Sa gini’iājt</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d nej pâjina</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Nej kôki</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Gānarán sēsiûn riña gà\'ì nej sîtio</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Sa ni\'io\' nī archibô kāchê</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Nārán</string>
