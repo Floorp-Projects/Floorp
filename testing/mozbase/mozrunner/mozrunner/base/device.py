@@ -100,7 +100,7 @@ class DeviceRunner(BaseRunner):
 
             self.app_ctx.device.pkill(self.app_ctx.remote_process, sig=sig)
             if self.wait(timeout) is None and sig is not None:
-                print("timed out waiting for '%s' process to exit, trying "
+                print("timed out waiting for '{}' process to exit, trying "
                       "without signal {}".format(
                           self.app_ctx.remote_process, sig))
 
@@ -108,7 +108,7 @@ class DeviceRunner(BaseRunner):
             # restart the process
             self.app_ctx.stop_application()
             if self.wait(timeout) is None:
-                print("timed out waiting for '%s' process to exit".format(
+                print("timed out waiting for '{}' process to exit".format(
                     self.app_ctx.remote_process))
 
     @property

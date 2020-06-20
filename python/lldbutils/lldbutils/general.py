@@ -38,7 +38,7 @@ class TArraySyntheticChildrenProvider:
                 return None
         # Ideally we'd use the exception type, but it's unclear what that is
         # without knowing how to trigger the original exception.
-        except:  # NOQA: E501
+        except:  # NOQA: E501, E722
             pass
         return None
 

@@ -511,6 +511,7 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
 class TestMemoize(unittest.TestCase):
     def test_memoize(self):
         self._count = 0
+
         @memoize
         def wrapped(a, b):
             self._count += 1

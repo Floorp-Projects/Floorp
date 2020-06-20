@@ -27,7 +27,7 @@ from buildconfig import (
 
 def fake_short_path(path):
     if sys.platform.startswith('win'):
-        return '/'.join(p.split(' ', 1)[0] + '~1' if ' 'in p else p
+        return '/'.join(p.split(' ', 1)[0] + '~1' if ' ' in p else p
                         for p in mozpath.split(path))
     return path
 

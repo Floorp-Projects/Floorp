@@ -55,7 +55,7 @@ class Test(object):
         cmd = "{CXX} -c {source} -O3 -std=c++11 -fplugin={sixgill} -fplugin-arg-xgill-mangle=1 {options}".format(  # NOQA: E501
             source=self.infile(source),
             CXX=self.cfg.cxx, sixgill=self.cfg.sixgill_plugin,
-            options=options, env=env)
+            options=options)
         if self.cfg.verbose:
             print("Running %s" % cmd)
         subprocess.check_call(["sh", "-c", cmd])

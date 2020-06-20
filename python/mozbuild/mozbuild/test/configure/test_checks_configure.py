@@ -433,7 +433,7 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(config, {})
         self.assertEqual(out, textwrap.dedent('''\
             checking for a... '''  # noqa  # trailing whitespace...
-                '''
+                '''  # noqa: E128
             DEBUG: a: Trying known-a
             ERROR: Paths provided to find_program must be a list of strings, not %r
         ''' % mozpath.dirname(self.OTHER_A)))

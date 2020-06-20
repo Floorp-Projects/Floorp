@@ -319,6 +319,7 @@ def test_fail(name, opts, expected):
     print(result)
     assert result == expected
 
+
 @pytest.mark.parametrize("name,opts,expected", FORMATS['PRECONDITION_FAILED'],
                          ids=ids('PRECONDITION_FAILED'))
 def test_precondition_failed(name, opts, expected):
@@ -340,6 +341,7 @@ def test_precondition_failed(name, opts, expected):
     print("Dumping result for copy/paste:")
     print(result)
     assert result == expected
+
 
 @pytest.mark.parametrize("name,opts,expected", FORMATS['KNOWN-INTERMITTENT'],
                          ids=ids('KNOWN-INTERMITTENT'))
