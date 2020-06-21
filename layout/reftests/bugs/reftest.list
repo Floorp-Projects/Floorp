@@ -1913,10 +1913,10 @@ pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-8) == 113
 pref(apz.allow_zooming,true) skip-if(!Android) != 1133905-ref-vh-rtl.html about:blank # make sure it doesn't render blank
 == 1149304-1-transform-change.html 1149304-1-transform-change-ref.html
 == chrome://reftest/content/bugs/1150021-1.xhtml chrome://reftest/content/bugs/1150021-1-ref.xhtml
-fuzzy-if(webrender,0-128,0-22) == 1151145-1.html 1151145-1-ref.html # bug 1646527 for WR fuzz
+== 1151145-1.html 1151145-1-ref.html
 == 1151306-1.html 1151306-1-ref.html
 == 1153845-1.html 1153845-1-ref.html
-fuzzy-if(webrender,0-128,0-22) == 1155828-1.html 1155828-1-ref.html # bug 1646527 for WR fuzz
+== 1155828-1.html 1155828-1-ref.html
 fuzzy-if(skiaContent,0-7,0-84) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
 fuzzy-if(Android,0-6,0-6) == 1169331-1.html 1169331-1-ref.html
