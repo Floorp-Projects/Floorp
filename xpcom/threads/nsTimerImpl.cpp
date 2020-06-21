@@ -15,6 +15,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Sprintf.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "pratom.h"
@@ -676,8 +677,8 @@ void nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType,
         } else if (info.dli_fname) {
           // The "#0: " prefix is necessary for `fix_stacks.py` to interpret
           // this string as something to convert.
-          snprintf(buf, buflen, "#0: ???[%s +0x%" PRIxPTR "]\n", info.dli_fname,
-                   uintptr_t(addr) - uintptr_t(info.dli_fbase));
+          SprintfLiteral(buf, "#0: ???[%s +0x%" PRIxPTR "]\n", info.dli_fname,
+                         uintptr_t(addr) - uintptr_t(info.dli_fbase));
           name = buf;
 
         } else {
