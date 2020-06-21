@@ -298,14 +298,14 @@ if CONFIG['MOZ_X11']:
 
 if CONFIG['MOZ_WAYLAND']:
     EXPORTS.mozilla.layers += [
-        'opengl/WaylandDMABUFTextureClientOGL.h',
-        'opengl/WaylandDMABUFTextureHostOGL.h',
-        'WaylandDMABUFSurfaceImage.h',
+        'DMABUFSurfaceImage.h',
+        'opengl/DMABUFTextureClientOGL.h',
+        'opengl/DMABUFTextureHostOGL.h',
     ]
     SOURCES += [
-        'opengl/WaylandDMABUFTextureClientOGL.cpp',
-        'opengl/WaylandDMABUFTextureHostOGL.cpp',
-        'WaylandDMABUFSurfaceImage.cpp',
+        'DMABUFSurfaceImage.cpp',
+        'opengl/DMABUFTextureClientOGL.cpp',
+        'opengl/DMABUFTextureHostOGL.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

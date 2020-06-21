@@ -77,11 +77,11 @@ if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
 if CONFIG['MOZ_WAYLAND']:
     EXPORTS.mozilla.webrender += [
         'RenderCompositorEGL.h',
-        'RenderWaylandDMABUFTextureHostOGL.h',
+        'RenderDMABUFTextureHostOGL.h',
     ]
     SOURCES += [
         'RenderCompositorEGL.cpp',
-        'RenderWaylandDMABUFTextureHostOGL.cpp',
+        'RenderDMABUFTextureHostOGL.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk'):

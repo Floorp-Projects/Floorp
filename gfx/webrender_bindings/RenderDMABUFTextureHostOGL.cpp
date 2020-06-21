@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RenderWaylandDMABUFTextureHostOGL.h"
+#include "RenderDMABUFTextureHostOGL.h"
 
 #include "GLContextEGL.h"
 #include "mozilla/gfx/Logging.h"
@@ -12,31 +12,26 @@
 
 namespace mozilla::wr {
 
-RenderWaylandDMABUFTextureHostOGL::RenderWaylandDMABUFTextureHostOGL(
-    WaylandDMABufSurface* aSurface)
+RenderDMABUFTextureHostOGL::RenderDMABUFTextureHostOGL(DMABufSurface* aSurface)
     : mSurface(aSurface) {
-  MOZ_COUNT_CTOR_INHERITED(RenderWaylandDMABUFTextureHostOGL,
-                           RenderTextureHostOGL);
+  MOZ_COUNT_CTOR_INHERITED(RenderDMABUFTextureHostOGL, RenderTextureHostOGL);
 }
 
-RenderWaylandDMABUFTextureHostOGL::~RenderWaylandDMABUFTextureHostOGL() {
-  MOZ_COUNT_DTOR_INHERITED(RenderWaylandDMABUFTextureHostOGL,
-                           RenderTextureHostOGL);
+RenderDMABUFTextureHostOGL::~RenderDMABUFTextureHostOGL() {
+  MOZ_COUNT_DTOR_INHERITED(RenderDMABUFTextureHostOGL, RenderTextureHostOGL);
   DeleteTextureHandle();
 }
 
-GLuint RenderWaylandDMABUFTextureHostOGL::GetGLHandle(
-    uint8_t aChannelIndex) const {
+GLuint RenderDMABUFTextureHostOGL::GetGLHandle(uint8_t aChannelIndex) const {
   return mSurface->GetTexture(aChannelIndex);
 }
 
-gfx::IntSize RenderWaylandDMABUFTextureHostOGL::GetSize(
-    uint8_t aChannelIndex) const {
+gfx::IntSize RenderDMABUFTextureHostOGL::GetSize(uint8_t aChannelIndex) const {
   return gfx::IntSize(mSurface->GetWidth(aChannelIndex),
                       mSurface->GetHeight(aChannelIndex));
 }
 
-wr::WrExternalImage RenderWaylandDMABUFTextureHostOGL::Lock(
+wr::WrExternalImage RenderDMABUFTextureHostOGL::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
   if (mGL.get() != aGL) {
     if (mGL) {
@@ -74,9 +69,9 @@ wr::WrExternalImage RenderWaylandDMABUFTextureHostOGL::Lock(
                                         mSurface->GetHeight(aChannelIndex));
 }
 
-void RenderWaylandDMABUFTextureHostOGL::Unlock() {}
+void RenderDMABUFTextureHostOGL::Unlock() {}
 
-void RenderWaylandDMABUFTextureHostOGL::DeleteTextureHandle() {
+void RenderDMABUFTextureHostOGL::DeleteTextureHandle() {
   mSurface->ReleaseTextures();
 }
 

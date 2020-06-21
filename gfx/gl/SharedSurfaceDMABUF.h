@@ -7,7 +7,7 @@
 #define SHARED_SURFACE_DMABUF_H_
 
 #include "SharedSurface.h"
-#include "mozilla/widget/WaylandDMABufSurface.h"
+#include "mozilla/widget/DMABufSurface.h"
 
 namespace mozilla {
 namespace gl {
@@ -17,13 +17,13 @@ class GLLibraryEGL;
 
 class SharedSurface_DMABUF final : public SharedSurface {
  public:
-  const RefPtr<WaylandDMABufSurface> mSurface;
+  const RefPtr<DMABufSurface> mSurface;
 
   static UniquePtr<SharedSurface_DMABUF> Create(const SharedSurfaceDesc&);
 
  private:
   SharedSurface_DMABUF(const SharedSurfaceDesc&, UniquePtr<MozFramebuffer>,
-                       RefPtr<WaylandDMABufSurface>);
+                       RefPtr<DMABufSurface>);
 
   void UpdateProdTexture(const MutexAutoLock& curAutoLock);
 

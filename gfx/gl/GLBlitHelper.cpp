@@ -726,7 +726,7 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
     case ImageFormat::OVERLAY_IMAGE:
     case ImageFormat::SHARED_RGB:
     case ImageFormat::TEXTURE_WRAPPER:
-    case ImageFormat::WAYLAND_DMABUF:
+    case ImageFormat::DMABUF:
       return false;  // todo
   }
   return false;

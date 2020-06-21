@@ -4,29 +4,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WaylandDMABUFTextureHostOGL.h"
-#include "mozilla/widget/WaylandDMABufSurface.h"
-#include "mozilla/webrender/RenderWaylandDMABUFTextureHostOGL.h"
+#include "DMABUFTextureHostOGL.h"
+#include "mozilla/widget/DMABufSurface.h"
+#include "mozilla/webrender/RenderDMABUFTextureHostOGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "GLContextEGL.h"
 
 namespace mozilla::layers {
 
-WaylandDMABUFTextureHostOGL::WaylandDMABUFTextureHostOGL(
-    TextureFlags aFlags, const SurfaceDescriptor& aDesc)
+DMABUFTextureHostOGL::DMABUFTextureHostOGL(TextureFlags aFlags,
+                                           const SurfaceDescriptor& aDesc)
     : TextureHost(aFlags) {
-  MOZ_COUNT_CTOR(WaylandDMABUFTextureHostOGL);
+  MOZ_COUNT_CTOR(DMABUFTextureHostOGL);
 
-  mSurface = WaylandDMABufSurface::CreateDMABufSurface(
-      aDesc.get_SurfaceDescriptorDMABuf());
+  mSurface =
+      DMABufSurface::CreateDMABufSurface(aDesc.get_SurfaceDescriptorDMABuf());
 }
 
-WaylandDMABUFTextureHostOGL::~WaylandDMABUFTextureHostOGL() {
-  MOZ_COUNT_DTOR(WaylandDMABUFTextureHostOGL);
+DMABUFTextureHostOGL::~DMABUFTextureHostOGL() {
+  MOZ_COUNT_DTOR(DMABUFTextureHostOGL);
 }
 
-GLTextureSource* WaylandDMABUFTextureHostOGL::CreateTextureSourceForPlane(
+GLTextureSource* DMABUFTextureHostOGL::CreateTextureSourceForPlane(
     size_t aPlane) {
   MOZ_ASSERT(mSurface);
 
@@ -44,7 +44,7 @@ GLTextureSource* WaylandDMABUFTextureHostOGL::CreateTextureSourceForPlane(
       mSurface->GetFormatGL());
 }
 
-bool WaylandDMABUFTextureHostOGL::Lock() {
+bool DMABUFTextureHostOGL::Lock() {
   if (!gl() || !gl()->MakeCurrent() || !mSurface) {
     return false;
   }
@@ -64,9 +64,9 @@ bool WaylandDMABUFTextureHostOGL::Lock() {
   return true;
 }
 
-void WaylandDMABUFTextureHostOGL::Unlock() {}
+void DMABUFTextureHostOGL::Unlock() {}
 
-void WaylandDMABUFTextureHostOGL::SetTextureSourceProvider(
+void DMABUFTextureHostOGL::SetTextureSourceProvider(
     TextureSourceProvider* aProvider) {
   if (!aProvider || !aProvider->GetGLContext()) {
     mTextureSource = nullptr;
@@ -81,21 +81,21 @@ void WaylandDMABUFTextureHostOGL::SetTextureSourceProvider(
   }
 }
 
-gfx::SurfaceFormat WaylandDMABUFTextureHostOGL::GetFormat() const {
+gfx::SurfaceFormat DMABUFTextureHostOGL::GetFormat() const {
   if (!mSurface) {
     return gfx::SurfaceFormat::UNKNOWN;
   }
   return mSurface->GetFormat();
 }
 
-gfx::YUVColorSpace WaylandDMABUFTextureHostOGL::GetYUVColorSpace() const {
+gfx::YUVColorSpace DMABUFTextureHostOGL::GetYUVColorSpace() const {
   if (!mSurface) {
     return gfx::YUVColorSpace::UNKNOWN;
   }
   return mSurface->GetYUVColorSpace();
 }
 
-gfx::ColorRange WaylandDMABUFTextureHostOGL::GetColorRange() const {
+gfx::ColorRange DMABUFTextureHostOGL::GetColorRange() const {
   if (!mSurface) {
     return gfx::ColorRange::LIMITED;
   }
@@ -103,30 +103,30 @@ gfx::ColorRange WaylandDMABUFTextureHostOGL::GetColorRange() const {
                                  : gfx::ColorRange::LIMITED;
 }
 
-uint32_t WaylandDMABUFTextureHostOGL::NumSubTextures() {
+uint32_t DMABUFTextureHostOGL::NumSubTextures() {
   return mSurface->GetTextureCount();
 }
 
-gfx::IntSize WaylandDMABUFTextureHostOGL::GetSize() const {
+gfx::IntSize DMABUFTextureHostOGL::GetSize() const {
   if (!mSurface) {
     return gfx::IntSize();
   }
   return gfx::IntSize(mSurface->GetWidth(), mSurface->GetHeight());
 }
 
-gl::GLContext* WaylandDMABUFTextureHostOGL::gl() const {
+gl::GLContext* DMABUFTextureHostOGL::gl() const {
   return mProvider ? mProvider->GetGLContext() : nullptr;
 }
 
-void WaylandDMABUFTextureHostOGL::CreateRenderTexture(
+void DMABUFTextureHostOGL::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderWaylandDMABUFTextureHostOGL(mSurface);
+      new wr::RenderDMABUFTextureHostOGL(mSurface);
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
 }
 
-void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
+void DMABUFTextureHostOGL::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
     const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
   MOZ_ASSERT(mSurface);
@@ -168,7 +168,7 @@ void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
   }
 }
 
-void WaylandDMABUFTextureHostOGL::PushDisplayItems(
+void DMABUFTextureHostOGL::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
     const Range<wr::ImageKey>& aImageKeys,

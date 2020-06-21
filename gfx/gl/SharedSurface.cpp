@@ -106,7 +106,7 @@ UniquePtr<SurfaceFactory> SurfaceFactory::Create(
       return nullptr;
 #endif
 
-    case layers::TextureType::WaylandDMABUF:
+    case layers::TextureType::DMABUF:
 #ifdef MOZ_WAYLAND
       if (gl.GetContextType() != GLContextType::EGL) return nullptr;
       if (!gfxPlatformGtk::GetPlatform()->UseWaylandDMABufWebGL())

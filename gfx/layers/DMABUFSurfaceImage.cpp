@@ -4,24 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WaylandDMABUFSurfaceImage.h"
+#include "DMABUFSurfaceImage.h"
 #include "gfxPlatform.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/layers/WaylandDMABUFTextureClientOGL.h"
+#include "mozilla/layers/DMABUFTextureClientOGL.h"
 #include "mozilla/UniquePtr.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
-TextureClient* WaylandDMABUFSurfaceImage::GetTextureClient(
+TextureClient* DMABUFSurfaceImage::GetTextureClient(
     KnowsCompositor* aKnowsCompositor) {
   if (!mTextureClient) {
     BackendType backend = BackendType::NONE;
     mTextureClient = TextureClient::CreateWithData(
-        WaylandDMABUFTextureData::Create(mSurface, backend),
-        TextureFlags::DEFAULT, aKnowsCompositor->GetTextureForwarder());
+        DMABUFTextureData::Create(mSurface, backend), TextureFlags::DEFAULT,
+        aKnowsCompositor->GetTextureForwarder());
   }
   return mTextureClient;
 }
