@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Response tabpanel */
+/* Supports the single expand mode used for the accordion in the response panel */
+.network-monitor #response-panel .panel-container {
+    overflow-y: hidden;
+}
+
+/* The following styles should not override/affect accordion styles defined in MessagesView */
+.network-monitor #response-panel .panel-container .accordion {
+    position: relative;
+    overflow: hidden;
+}
+
+.network-monitor #response-panel .panel-container .accordion-item .accordion-content {
+    position: absolute;
+    top: calc(var(--theme-toolbar-height) + 1px);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+}
+
+.network-monitor #response-panel .panel-container .properties-view {
+    height: 100%;
+}
+
+.network-monitor #response-panel .panel-container .accordion-item {
+    position: relative;
+    height: auto;
+}
+
+.network-monitor #response-panel .panel-container .accordion-item.accordion-open {
+    height: 100%;
+}
