@@ -36,20 +36,20 @@ add_task(async function() {
   // Wait for all sent/received messages to be displayed in DevTools
   const wait = waitForDOM(
     document,
-    "#messages-panel .message-list-table .message-list-item",
+    "#messages-view .message-list-table .message-list-item",
     2
   );
 
-  // Click on the "Messages" panel
+  // Click on the "Response" panel
   EventUtils.sendMouseEvent(
     { type: "click" },
-    document.querySelector("#messages-tab")
+    document.querySelector("#response-tab")
   );
   await wait;
 
-  // Get all messages present in the "Messages" panel
+  // Get all messages present in the "Response" panel
   const frames = document.querySelectorAll(
-    "#messages-panel .message-list-table .message-list-item"
+    "#messages-view .message-list-table .message-list-item"
   );
 
   // Check expected results

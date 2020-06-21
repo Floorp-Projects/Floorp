@@ -239,12 +239,13 @@
 .network-monitor #response-panel .panel-container {
   overflow-y: hidden;
 }
-.network-monitor #response-panel .accordion {
+/* These styles donot override/affect accordion styles in MessagesView*/
+.network-monitor #response-panel .panel-container .accordion {
   position: relative;
   overflow: hidden;
 }
 
-.network-monitor #response-panel .accordion-item .accordion-content {
+.network-monitor #response-panel .panel-container .accordion-item .accordion-content {
   position: absolute;
   top: calc(var(--theme-toolbar-height) + 1px);
   bottom: 0;
@@ -253,16 +254,16 @@
   overflow: hidden;
 }
 
-.network-monitor #response-panel .properties-view {
+.network-monitor #response-panel .panel-container .properties-view {
   height: 100%;
 }
 
-.network-monitor #response-panel .accordion-item {
+.network-monitor #response-panel .panel-container .accordion-item {
   position: relative;
   height: auto;
 }
 
-.network-monitor #response-panel .accordion-item.accordion-open {
+.network-monitor #response-panel .panel-container .accordion-item.accordion-open {
   height: 100%;
 }
 

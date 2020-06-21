@@ -207,7 +207,7 @@ function NetworkEventMessage({
           }
         },
         hideToggleButton: true,
-        showMessagesTab: false,
+        showMessagesView: false,
       })
     );
 
