@@ -32,15 +32,15 @@ add_task(async function() {
   // Select the request to open the side panel.
   EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
-  // Click on the "Messages" panel
+  // Click on the "Response" panel
   EventUtils.sendMouseEvent(
     { type: "click" },
-    document.querySelector("#messages-tab")
+    document.querySelector("#response-tab")
   );
 
   const wait = waitForDOM(
     document,
-    "#messages-panel .msg-connection-closed-message"
+    "#messages-view .msg-connection-closed-message"
   );
 
   // Close WS connection
@@ -50,7 +50,7 @@ add_task(async function() {
   await wait;
 
   is(
-    !!document.querySelector("#messages-panel .msg-connection-closed-message"),
+    !!document.querySelector("#messages-view .msg-connection-closed-message"),
     true,
     "Connection closed message should be displayed"
   );

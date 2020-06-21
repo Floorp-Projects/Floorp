@@ -26,9 +26,6 @@ const CookiesPanel = createFactory(
 const HeadersPanel = createFactory(
   require("devtools/client/netmonitor/src/components/request-details/HeadersPanel")
 );
-const MessagesView = createFactory(
-  require("devtools/client/netmonitor/src/components/messages/MessagesView")
-);
 const RequestPanel = createFactory(
   require("devtools/client/netmonitor/src/components/request-details/RequestPanel")
 );
@@ -52,7 +49,6 @@ const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
 const CACHE_TITLE = L10N.getStr("netmonitor.tab.cache");
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
 const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
-const MESSAGES_TITLE = L10N.getStr("netmonitor.tab.messages");
 const REQUEST_TITLE = L10N.getStr("netmonitor.tab.request");
 const RESPONSE_TITLE = L10N.getStr("netmonitor.tab.response");
 const SECURITY_TITLE = L10N.getStr("netmonitor.tab.security");
@@ -76,11 +72,15 @@ class TabboxPanel extends Component {
       hideToggleButton: PropTypes.bool,
       toggleNetworkDetails: PropTypes.func,
       openNetworkDetails: PropTypes.func.isRequired,
-      showMessagesTab: PropTypes.bool,
+      showMessagesView: PropTypes.bool,
       targetSearchResult: PropTypes.object,
     };
   }
-
+  static get defaultProps() {
+    return {
+      showMessagesView: true,
+    };
+  }
   componentDidMount() {
     this.closeOnEscRef = this.closeOnEsc.bind(this);
     window.addEventListener("keydown", this.closeOnEscRef);
@@ -108,7 +108,6 @@ class TabboxPanel extends Component {
       selectTab,
       sourceMapURLService,
       toggleNetworkDetails,
-      showMessagesTab,
       targetSearchResult,
     } = this.props;
 
@@ -126,8 +125,7 @@ class TabboxPanel extends Component {
         "devtools.netmonitor.features.serverSentEvents"
       );
 
-    const showMessagesView =
-      (isWs || isSse) && showMessagesTab === undefined ? true : showMessagesTab;
+    const showMessagesView = (isWs || isSse) && this.props.showMessagesView;
 
     return Tabbar(
       {
@@ -159,17 +157,6 @@ class TabboxPanel extends Component {
           targetSearchResult,
         })
       ),
-      showMessagesView &&
-        TabPanel(
-          {
-            id: PANELS.MESSAGES,
-            title: MESSAGES_TITLE,
-            className: "panel-with-code",
-          },
-          MessagesView({
-            connector,
-          })
-        ),
       TabPanel(
         {
           id: PANELS.COOKIES,
@@ -206,6 +193,7 @@ class TabboxPanel extends Component {
           request,
           openLink,
           connector,
+          showMessagesView,
           targetSearchResult,
         })
       ),
