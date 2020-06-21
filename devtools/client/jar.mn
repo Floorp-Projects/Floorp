@@ -228,6 +228,7 @@ devtools.jar:
     content/netmonitor/src/assets/styles/NetworkActionBar.css (netmonitor/src/assets/styles/NetworkActionBar.css)
     content/netmonitor/src/assets/styles/RequestBlockingPanel.css (netmonitor/src/assets/styles/RequestBlockingPanel.css)
     content/netmonitor/src/assets/styles/NetworkDetailsBar.css (netmonitor/src/assets/styles/NetworkDetailsBar.css)
+    content/netmonitor/src/assets/styles/ResponsePanel.css (netmonitor/src/assets/styles/ResponsePanel.css)
     content/netmonitor/src/assets/styles/CustomRequestPanel.css (netmonitor/src/assets/styles/CustomRequestPanel.css)
     content/netmonitor/src/assets/styles/RequestList.css (netmonitor/src/assets/styles/RequestList.css)
     content/netmonitor/src/assets/styles/StatisticsPanel.css (netmonitor/src/assets/styles/StatisticsPanel.css)
