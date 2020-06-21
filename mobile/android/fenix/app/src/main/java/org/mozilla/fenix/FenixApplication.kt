@@ -398,7 +398,11 @@ open class FenixApplication : LocaleAwareApplication() {
         // are not triggered when also using createConfigurationContext like we do in LocaleManager
         // https://issuetracker.google.com/issues/143570309#comment3
         applicationContext.resources.configuration.uiMode = config.uiMode
-        super.onConfigurationChanged(config)
+
+        // random StrictMode onDiskRead violation even when Fenix is not running in the background.
+        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+            super.onConfigurationChanged(config)
+        }
     }
 
     companion object {

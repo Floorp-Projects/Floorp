@@ -6,6 +6,7 @@ package org.mozilla.fenix.browser
 
 import android.content.Context
 import android.os.Bundle
+import android.os.StrictMode
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -40,6 +41,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.shortcut.FirstTimePwaObserver
 import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
 
@@ -90,22 +92,24 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             browserToolbarView.view.addPageAction(readerModeAction)
 
             readerViewFeature.set(
-                feature = ReaderViewFeature(
-                    context,
-                    components.core.engine,
-                    components.core.store,
-                    view.readerViewControlsBar
-                ) { available, active ->
-                    if (available) {
-                        components.analytics.metrics.track(Event.ReaderModeAvailable)
-                    }
+                feature = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+                    ReaderViewFeature(
+                        context,
+                        components.core.engine,
+                        components.core.store,
+                        view.readerViewControlsBar
+                    ) { available, active ->
+                        if (available) {
+                            components.analytics.metrics.track(Event.ReaderModeAvailable)
+                        }
 
-                    readerModeAvailable = available
-                    readerModeAction.setSelected(active)
+                        readerModeAvailable = available
+                        readerModeAction.setSelected(active)
 
-                    runIfFragmentIsAttached {
-                        browserToolbarView.view.invalidateActions()
-                        browserToolbarView.toolbarIntegration.invalidateMenu()
+                        runIfFragmentIsAttached {
+                            browserToolbarView.view.invalidateActions()
+                            browserToolbarView.toolbarIntegration.invalidateMenu()
+                        }
                     }
                 },
                 owner = this,

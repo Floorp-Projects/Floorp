@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -15,6 +16,7 @@ import org.mozilla.fenix.components.IntentProcessorType
 import org.mozilla.fenix.components.getType
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
@@ -26,7 +28,10 @@ class IntentReceiverActivity : Activity() {
 
     @VisibleForTesting
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        // StrictMode violation on certain devices such as Samsung
+        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+            super.onCreate(savedInstanceState)
+        }
 
         MainScope().launch {
             // The intent property is nullable, but the rest of the code below
@@ -57,8 +62,10 @@ class IntentReceiverActivity : Activity() {
                 intentProcessorType.shouldOpenToBrowser(intent)
             )
         }
-
-        startActivity(intent)
+        // StrictMode violation on certain devices such as Samsung
+        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+            startActivity(intent)
+        }
         finish() // must finish() after starting the other activity
     }
 
