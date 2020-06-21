@@ -483,6 +483,14 @@ void MobileViewportManager::UpdateVisualViewportSize(
     return;
   }
 
+  // This early-exit is temporary, it should be removed as soon as all
+  // tests are green.
+  if (mManagerType == ManagerType::VisualViewportOnly &&
+      !mContext->AllowZoomingForDocument()) {
+    MVM_LOG("%p: Aborting before setting visual viewport size\n", this);
+    return;
+  }
+
   ScreenSize compositionSize = ScreenSize(GetCompositionSize(aDisplaySize));
 
   CSSSize compSize = compositionSize / aZoom;
@@ -536,10 +544,6 @@ void MobileViewportManager::RefreshVisualViewportSize() {
 
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
       mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
-
-  if (displaySize.width == 0 || displaySize.height == 0) {
-    return;
-  }
 
   UpdateVisualViewportSize(displaySize, GetZoom());
 }
