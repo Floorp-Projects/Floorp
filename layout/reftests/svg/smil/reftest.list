@@ -256,6 +256,8 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,0-1,0-2) == anim-gradient-attr-presen
 
 == min-1.svg lime.svg
 
+== shadow-dom-01.html lime.svg
+
 == smil-transitions-interaction-1a.svg lime.svg
 == smil-transitions-interaction-1b.svg lime.svg
 == smil-transitions-interaction-2a.svg lime.svg
