@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_RENDERWAYLANDDMABUFTEXTUREHOSTOGL_H
-#define MOZILLA_GFX_RENDERWAYLANDDMABUFTEXTUREHOSTOGL_H
+#ifndef MOZILLA_GFX_RENDERDMABUFTEXTUREHOSTOGL_H
+#define MOZILLA_GFX_RENDERDMABUFTEXTUREHOSTOGL_H
 
 #include "mozilla/layers/TextureHostOGL.h"
 #include "RenderTextureHostOGL.h"
-#include "mozilla/widget/WaylandDMABufSurface.h"
+#include "mozilla/widget/DMABufSurface.h"
 
 namespace mozilla {
 
@@ -19,9 +19,9 @@ class SurfaceDescriptorDMABuf;
 
 namespace wr {
 
-class RenderWaylandDMABUFTextureHostOGL final : public RenderTextureHostOGL {
+class RenderDMABUFTextureHostOGL final : public RenderTextureHostOGL {
  public:
-  explicit RenderWaylandDMABUFTextureHostOGL(WaylandDMABufSurface* aSurface);
+  explicit RenderDMABUFTextureHostOGL(DMABufSurface* aSurface);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
@@ -31,14 +31,14 @@ class RenderWaylandDMABUFTextureHostOGL final : public RenderTextureHostOGL {
   GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
  private:
-  virtual ~RenderWaylandDMABUFTextureHostOGL();
+  virtual ~RenderDMABUFTextureHostOGL();
   void DeleteTextureHandle();
 
-  RefPtr<WaylandDMABufSurface> mSurface;
+  RefPtr<DMABufSurface> mSurface;
   RefPtr<gl::GLContext> mGL;
 };
 
 }  // namespace wr
 }  // namespace mozilla
 
-#endif  // MOZILLA_GFX_RENDERWAYLANDDMABUFTEXTUREHOSTOGL_H
+#endif  // MOZILLA_GFX_RENDERDMABUFTEXTUREHOSTOGL_H

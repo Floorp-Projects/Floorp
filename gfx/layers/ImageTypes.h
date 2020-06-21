@@ -92,10 +92,10 @@ enum class ImageFormat {
   GPU_VIDEO,
 
   /**
-   * The WAYLAND_DMABUF format creates a SharedDMABUFImage, which stores YUV
-   * data in DMABUF memory. Used on Wayland by VAAPI decoder.
+   * The DMABUF format creates a SharedDMABUFImage, which stores YUV
+   * data in DMABUF memory. Used by VAAPI decoder on Linux.
    */
-  WAYLAND_DMABUF,
+  DMABUF,
 };
 
 enum class StereoMode {
