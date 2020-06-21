@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WaylandDMABufSurface_h__
-#define WaylandDMABufSurface_h__
+#ifndef DMABufSurface_h__
+#define DMABufSurface_h__
 
 #include <stdint.h>
 #include "GLContext.h"
@@ -36,25 +36,26 @@ typedef enum {
   // and complex internal structure (tiling/compression/etc.)
   // so we can't do direct rendering to it.
   DMABUF_USE_MODIFIERS = 1 << 3,
-} WaylandDMABufSurfaceFlags;
+} DMABufSurfaceFlags;
 
-class WaylandDMABufSurfaceRGBA;
-class WaylandDMABufSurfaceNV12;
+class DMABufSurfaceRGBA;
+class DMABufSurfaceYUV;
 
-class WaylandDMABufSurface {
+class DMABufSurface {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WaylandDMABufSurface)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DMABufSurface)
 
   enum SurfaceType {
     SURFACE_RGBA,
     SURFACE_NV12,
+    SURFACE_YUV420,
   };
 
   // Import surface from SurfaceDescriptor. This is usually
   // used to copy surface from another process over IPC.
   // When a global reference counter was created for the surface
   // (see bellow) it's automatically referenced.
-  static already_AddRefed<WaylandDMABufSurface> CreateDMABufSurface(
+  static already_AddRefed<DMABufSurface> CreateDMABufSurface(
       const mozilla::layers::SurfaceDescriptor& aDesc);
 
   // Export surface to another process via. SurfaceDescriptor.
@@ -78,12 +79,8 @@ class WaylandDMABufSurface {
   bool IsMapped(int aPlane = 0) { return (mMappedRegion[aPlane] != nullptr); };
   void Unmap(int aPlane = 0);
 
-  virtual WaylandDMABufSurfaceRGBA* GetAsWaylandDMABufSurfaceRGBA() {
-    return nullptr;
-  }
-  virtual WaylandDMABufSurfaceNV12* GetAsWaylandDMABufSurfaceNV12() {
-    return nullptr;
-  }
+  virtual DMABufSurfaceRGBA* GetAsDMABufSurfaceRGBA() { return nullptr; }
+  virtual DMABufSurfaceYUV* GetAsDMABufSurfaceYUV() { return nullptr; }
 
   virtual mozilla::gfx::YUVColorSpace GetYUVColorSpace() {
     return mozilla::gfx::YUVColorSpace::UNKNOWN;
@@ -126,7 +123,7 @@ class WaylandDMABufSurface {
   // Release all underlying data.
   virtual void ReleaseSurface() = 0;
 
-  WaylandDMABufSurface(SurfaceType aSurfaceType);
+  DMABufSurface(SurfaceType aSurfaceType);
 
  protected:
   virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
@@ -140,7 +137,7 @@ class WaylandDMABufSurface {
   void* MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
                     uint32_t* aStride, int aGbmFlags, int aPlane = 0);
 
-  virtual ~WaylandDMABufSurface();
+  virtual ~DMABufSurface();
 
   SurfaceType mSurfaceType;
   uint64_t mBufferModifier;
@@ -163,21 +160,21 @@ class WaylandDMABufSurface {
   uint32_t mUID;
 };
 
-class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
+class DMABufSurfaceRGBA : public DMABufSurface {
  public:
-  static already_AddRefed<WaylandDMABufSurfaceRGBA> CreateDMABufSurface(
-      int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
+  static already_AddRefed<DMABufSurfaceRGBA> CreateDMABufSurface(
+      int aWidth, int aHeight, int aDMABufSurfaceFlags);
 
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
 
-  WaylandDMABufSurfaceRGBA* GetAsWaylandDMABufSurfaceRGBA() { return this; }
+  DMABufSurfaceRGBA* GetAsDMABufSurfaceRGBA() { return this; }
 
   bool Resize(int aWidth, int aHeight);
   void Clear();
 
   void ReleaseSurface();
 
-  bool CopyFrom(class WaylandDMABufSurface* aSourceSurface);
+  bool CopyFrom(class DMABufSurface* aSourceSurface);
 
   int GetWidth(int aPlane = 0) { return mWidth; };
   int GetHeight(int aPlane = 0) { return mHeight; };
@@ -209,12 +206,12 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
   bool WLBufferIsAttached() { return mWLBufferAttached; };
   void WLBufferSetAttached() { mWLBufferAttached = true; };
 
-  WaylandDMABufSurfaceRGBA();
+  DMABufSurfaceRGBA();
 
  private:
-  ~WaylandDMABufSurfaceRGBA();
+  ~DMABufSurfaceRGBA();
 
-  bool Create(int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
+  bool Create(int aWidth, int aHeight, int aDMABufSurfaceFlags);
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
 
   bool CreateWLBuffer();
@@ -236,18 +233,18 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
   bool mFastWLBufferCreation;
 };
 
-class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
+class DMABufSurfaceYUV : public DMABufSurface {
  public:
-  static already_AddRefed<WaylandDMABufSurfaceNV12> CreateNV12Surface(
+  static already_AddRefed<DMABufSurfaceYUV> CreateYUVSurface(
       int aWidth, int aHeight, void** aPixelData = nullptr,
       int* aLineSizes = nullptr);
 
-  static already_AddRefed<WaylandDMABufSurfaceNV12> CreateNV12Surface(
+  static already_AddRefed<DMABufSurfaceYUV> CreateYUVSurface(
       const VADRMPRIMESurfaceDescriptor& aDesc);
 
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
 
-  WaylandDMABufSurfaceNV12* GetAsWaylandDMABufSurfaceNV12() { return this; };
+  DMABufSurfaceYUV* GetAsDMABufSurfaceYUV() { return this; };
 
   int GetWidth(int aPlane = 0) { return mWidth[aPlane]; }
   int GetHeight(int aPlane = 0) { return mHeight[aPlane]; }
@@ -271,18 +268,18 @@ class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
 
   bool IsFullRange() { return true; }
 
-  WaylandDMABufSurfaceNV12();
+  DMABufSurfaceYUV();
 
-  bool UpdateNV12Data(void** aPixelData, int* aLineSizes);
-  bool UpdateNV12Data(const VADRMPRIMESurfaceDescriptor& aDesc);
+  bool UpdateYUVData(void** aPixelData, int* aLineSizes);
+  bool UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc);
 
  private:
-  ~WaylandDMABufSurfaceNV12();
+  ~DMABufSurfaceYUV();
 
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
   bool Create(int aWidth, int aHeight, void** aPixelData, int* aLineSizes);
-  bool CreateNV12Plane(mozilla::widget::nsWaylandDisplay* display, int aPlane,
-                       int aWidth, int aHeight, int aDrmFormat);
+  bool CreateYUVPlane(mozilla::widget::nsWaylandDisplay* display, int aPlane,
+                      int aWidth, int aHeight, int aDrmFormat);
 
   void ImportSurfaceDescriptor(
       const mozilla::layers::SurfaceDescriptorDMABuf& aDesc);

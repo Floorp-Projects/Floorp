@@ -117,7 +117,7 @@ WindowBackBufferShm scheme:
   |  |WindowBackBufferDMABuf  |      |
   |  |                        |      |
   |  | ---------------------- |      |
-  |  | |WaylandDMABufSurface  |      |
+  |  | |DMABufSurface         |      |
   |  | ---------------------- |      |
   |  --------------------------      |
   |                                  |
@@ -125,7 +125,7 @@ WindowBackBufferShm scheme:
   |  |WindowBackBufferDMABuf  |      |
   |  |                        |      |
   |  | ---------------------- |      |
-  |  | |WaylandDMABufSurface  |      |
+  |  | |DMABufSurface         |      |
   |  | ---------------------- |      |
   |  --------------------------      |
   -----------------------------------
@@ -189,10 +189,10 @@ handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 WindowBackBufferDMABuf
 
 It's WindowBackBuffer implementation based on DMA Buffer.
-It owns wl_buffer object, owns WaylandDMABufSurface
+It owns wl_buffer object, owns DMABufSurface
 (which provides the DMA Buffer) and ties them together.
 
-WindowBackBufferDMABuf backend is used only when WaylandDMABufSurface is
+WindowBackBufferDMABuf backend is used only when DMABufSurface is
 available and widget.wayland_dmabuf_backend.enabled preference is set.
 
 */
@@ -422,7 +422,7 @@ already_AddRefed<gfx::DrawTarget> WindowBackBufferShm::Lock() {
 WindowBackBufferDMABuf::WindowBackBufferDMABuf(
     WindowSurfaceWayland* aWindowSurfaceWayland, int aWidth, int aHeight)
     : WindowBackBuffer(aWindowSurfaceWayland) {
-  mDMAbufSurface = WaylandDMABufSurfaceRGBA::CreateDMABufSurface(
+  mDMAbufSurface = DMABufSurfaceRGBA::CreateDMABufSurface(
       aWidth, aHeight, DMABUF_ALPHA | DMABUF_CREATE_WL_BUFFER);
   LOGWAYLAND(
       ("WindowBackBufferDMABuf::WindowBackBufferDMABuf [%p] Created DMABuf "

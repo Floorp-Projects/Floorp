@@ -13,7 +13,7 @@
 #include "mozilla/gfx/Types.h"
 #include "nsWaylandDisplay.h"
 #include "nsWindow.h"
-#include "WaylandDMABufSurface.h"
+#include "DMABufSurface.h"
 #include "WindowSurface.h"
 
 #define BACK_BUFFER_NUM 3
@@ -153,7 +153,7 @@ class WindowBackBufferDMABuf : public WindowBackBuffer {
   bool Resize(int aWidth, int aHeight);
 
  private:
-  RefPtr<WaylandDMABufSurfaceRGBA> mDMAbufSurface;
+  RefPtr<DMABufSurfaceRGBA> mDMAbufSurface;
 };
 
 class WindowImageSurface {

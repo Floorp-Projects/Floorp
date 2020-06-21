@@ -100,16 +100,16 @@ if CONFIG['MOZ_X11']:
 
 if CONFIG['MOZ_WAYLAND']:
     UNIFIED_SOURCES += [
+        'DMABufSurface.cpp',
         'MozContainerWayland.cpp',
         'nsClipboardWayland.cpp',
         'nsWaylandDisplay.cpp',
-        'WaylandDMABufSurface.cpp',
         'WindowSurfaceWayland.cpp',
     ]
     EXPORTS.mozilla.widget += [
+        'DMABufSurface.h',
         'MozContainerWayland.h',
         'nsWaylandDisplay.h',
-        'WaylandDMABufSurface.h',
     ]
 
 if CONFIG['ACCESSIBILITY']:
