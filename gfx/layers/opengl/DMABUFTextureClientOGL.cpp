@@ -4,28 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WaylandDMABUFTextureClientOGL.h"
-#include "mozilla/widget/WaylandDMABufSurface.h"
+#include "DMABUFTextureClientOGL.h"
+#include "mozilla/widget/DMABufSurface.h"
 #include "gfxPlatform.h"
 
 namespace mozilla::layers {
 
 using namespace gfx;
 
-WaylandDMABUFTextureData::WaylandDMABUFTextureData(
-    WaylandDMABufSurface* aSurface, BackendType aBackend)
+DMABUFTextureData::DMABUFTextureData(DMABufSurface* aSurface,
+                                     BackendType aBackend)
     : mSurface(aSurface), mBackend(aBackend) {
   MOZ_ASSERT(mSurface);
 }
 
-WaylandDMABUFTextureData::~WaylandDMABUFTextureData() = default;
+DMABUFTextureData::~DMABUFTextureData() = default;
 
-/* static */ WaylandDMABUFTextureData* WaylandDMABUFTextureData::Create(
+/* static */ DMABUFTextureData* DMABUFTextureData::Create(
     const IntSize& aSize, SurfaceFormat aFormat, BackendType aBackend) {
   if (aFormat != SurfaceFormat::B8G8R8A8 &&
       aFormat != SurfaceFormat::B8G8R8X8) {
     // TODO
-    NS_WARNING("WaylandDMABUFTextureData::Create() - wrong surface format!");
+    NS_WARNING("DMABUFTextureData::Create() - wrong surface format!");
     return nullptr;
   }
 
@@ -33,26 +33,25 @@ WaylandDMABUFTextureData::~WaylandDMABUFTextureData() = default;
   if (aFormat == SurfaceFormat::B8G8R8A8) {
     flags |= DMABUF_ALPHA;
   }
-  RefPtr<WaylandDMABufSurface> surf =
-      WaylandDMABufSurfaceRGBA::CreateDMABufSurface(aSize.width, aSize.height,
-                                                    flags);
-  return new WaylandDMABUFTextureData(surf, aBackend);
+  RefPtr<DMABufSurface> surf =
+      DMABufSurfaceRGBA::CreateDMABufSurface(aSize.width, aSize.height, flags);
+  return new DMABUFTextureData(surf, aBackend);
 }
 
-TextureData* WaylandDMABUFTextureData::CreateSimilar(
+TextureData* DMABUFTextureData::CreateSimilar(
     LayersIPCChannel* aAllocator, LayersBackend aLayersBackend,
     TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const {
-  return WaylandDMABUFTextureData::Create(
+  return DMABUFTextureData::Create(
       gfx::IntSize(mSurface->GetWidth(), mSurface->GetHeight()),
       mSurface->GetFormat(), mBackend);
 }
 
-bool WaylandDMABUFTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
+bool DMABUFTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   mSurface->Serialize(aOutDescriptor);
   return true;
 }
 
-void WaylandDMABUFTextureData::FillInfo(TextureData::Info& aInfo) const {
+void DMABUFTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = gfx::IntSize(mSurface->GetWidth(), mSurface->GetHeight());
   aInfo.format = mSurface->GetFormat();
   aInfo.hasIntermediateBuffer = false;
@@ -61,31 +60,31 @@ void WaylandDMABUFTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.canExposeMappedData = false;
 }
 
-bool WaylandDMABUFTextureData::Lock(OpenMode) {
-  auto surf = mSurface->GetAsWaylandDMABufSurfaceRGBA();
+bool DMABUFTextureData::Lock(OpenMode) {
+  auto surf = mSurface->GetAsDMABufSurfaceRGBA();
   MOZ_ASSERT(!surf->IsMapped(), "Already locked?");
   surf->Map();
   return true;
 }
 
-void WaylandDMABUFTextureData::Unlock() {
-  auto surf = mSurface->GetAsWaylandDMABufSurfaceRGBA();
+void DMABUFTextureData::Unlock() {
+  auto surf = mSurface->GetAsDMABufSurfaceRGBA();
   MOZ_ASSERT(surf->IsMapped(), "Already unlocked?");
   surf->Unmap();
 }
 
-already_AddRefed<DataSourceSurface> WaylandDMABUFTextureData::GetAsSurface() {
+already_AddRefed<DataSourceSurface> DMABUFTextureData::GetAsSurface() {
   // TODO: Update for debug purposes.
   return nullptr;
 }
 
-already_AddRefed<DrawTarget> WaylandDMABUFTextureData::BorrowDrawTarget() {
+already_AddRefed<DrawTarget> DMABUFTextureData::BorrowDrawTarget() {
   MOZ_ASSERT(mBackend != BackendType::NONE);
   if (mBackend == BackendType::NONE) {
     // shouldn't happen, but degrade gracefully
     return nullptr;
   }
-  auto surf = mSurface->GetAsWaylandDMABufSurfaceRGBA();
+  auto surf = mSurface->GetAsDMABufSurfaceRGBA();
   if (!surf->GetMappedRegion()) {
     return nullptr;
   }
@@ -95,13 +94,11 @@ already_AddRefed<DrawTarget> WaylandDMABUFTextureData::BorrowDrawTarget() {
       surf->GetMappedRegionStride(), surf->GetFormat(), true);
 }
 
-void WaylandDMABUFTextureData::Deallocate(LayersIPCChannel*) {
-  mSurface = nullptr;
-}
+void DMABUFTextureData::Deallocate(LayersIPCChannel*) { mSurface = nullptr; }
 
-void WaylandDMABUFTextureData::Forget(LayersIPCChannel*) { mSurface = nullptr; }
+void DMABUFTextureData::Forget(LayersIPCChannel*) { mSurface = nullptr; }
 
-bool WaylandDMABUFTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface) {
+bool DMABUFTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface) {
   RefPtr<DrawTarget> dt = BorrowDrawTarget();
   if (!dt) {
     return false;

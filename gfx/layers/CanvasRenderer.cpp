@@ -115,7 +115,7 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
   }
   if (kIsWayland) {
     if (gfxPlatform::GetPlatform()->UseWaylandDMABufWebGL()) {
-      return TextureType::WaylandDMABUF;
+      return TextureType::DMABUF;
     }
   }
   if (kIsAndroid) {

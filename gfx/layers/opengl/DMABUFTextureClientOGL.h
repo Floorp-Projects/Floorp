@@ -9,23 +9,23 @@
 
 #include "mozilla/layers/TextureClientOGL.h"
 
-class WaylandDMABufSurface;
+class DMABufSurface;
 
 namespace mozilla {
 namespace layers {
 
-class WaylandDMABUFTextureData : public TextureData {
+class DMABUFTextureData : public TextureData {
  public:
-  static WaylandDMABUFTextureData* Create(const gfx::IntSize& aSize,
-                                          gfx::SurfaceFormat aFormat,
-                                          gfx::BackendType aBackend);
+  static DMABUFTextureData* Create(const gfx::IntSize& aSize,
+                                   gfx::SurfaceFormat aFormat,
+                                   gfx::BackendType aBackend);
 
-  static WaylandDMABUFTextureData* Create(WaylandDMABufSurface* aSurface,
-                                          gfx::BackendType aBackend) {
-    return new WaylandDMABUFTextureData(aSurface, aBackend);
+  static DMABUFTextureData* Create(DMABufSurface* aSurface,
+                                   gfx::BackendType aBackend) {
+    return new DMABUFTextureData(aSurface, aBackend);
   }
 
-  ~WaylandDMABUFTextureData();
+  ~DMABUFTextureData();
 
   virtual TextureData* CreateSimilar(
       LayersIPCChannel* aAllocator, LayersBackend aLayersBackend,
@@ -52,10 +52,9 @@ class WaylandDMABUFTextureData : public TextureData {
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
 
  protected:
-  WaylandDMABUFTextureData(WaylandDMABufSurface* aSurface,
-                           gfx::BackendType aBackend);
+  DMABUFTextureData(DMABufSurface* aSurface, gfx::BackendType aBackend);
 
-  RefPtr<WaylandDMABufSurface> mSurface;
+  RefPtr<DMABufSurface> mSurface;
   gfx::BackendType mBackend;
 };
 

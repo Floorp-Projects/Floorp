@@ -58,7 +58,7 @@
 #  include <gtk/gtkx.h>
 
 #  include "gfxPlatformGtk.h"
-#  include "mozilla/layers/WaylandDMABUFTextureClientOGL.h"
+#  include "mozilla/layers/DMABUFTextureClientOGL.h"
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #endif
 
@@ -290,7 +290,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
        aLayersBackend == LayersBackend::LAYERS_WR) &&
       gfxPlatformGtk::GetPlatform()->UseWaylandDMABufTextures() &&
       aFormat != SurfaceFormat::A8) {
-    return TextureType::WaylandDMABUF;
+    return TextureType::DMABUF;
   }
 #endif
 
@@ -383,8 +383,8 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
 #endif
 
 #ifdef MOZ_WAYLAND
-    case TextureType::WaylandDMABUF:
-      return WaylandDMABUFTextureData::Create(aSize, aFormat, moz2DBackend);
+    case TextureType::DMABUF:
+      return DMABUFTextureData::Create(aSize, aFormat, moz2DBackend);
 #endif
 
 #ifdef MOZ_X11
