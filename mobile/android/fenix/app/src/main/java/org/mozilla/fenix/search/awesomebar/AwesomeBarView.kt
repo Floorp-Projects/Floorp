@@ -4,14 +4,11 @@
 
 package org.mozilla.fenix.search.awesomebar
 
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
-import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
@@ -82,14 +79,9 @@ interface AwesomeBarInteractor {
  */
 class AwesomeBarView(
     private val container: ViewGroup,
-    val interactor: AwesomeBarInteractor
-) : LayoutContainer {
-    val view: BrowserAwesomeBar = LayoutInflater.from(container.context)
-        .inflate(R.layout.component_awesomebar, container, true)
-        .findViewById(R.id.awesomeBar)
-
-    override val containerView: View?
-        get() = container
+    val interactor: AwesomeBarInteractor,
+    val view: BrowserAwesomeBar
+) {
 
     private val sessionProvider: SessionSuggestionProvider
     private val historyStorageProvider: HistoryStorageSuggestionProvider

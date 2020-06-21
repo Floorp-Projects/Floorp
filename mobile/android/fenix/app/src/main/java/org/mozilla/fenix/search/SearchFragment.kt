@@ -128,18 +128,19 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             searchController
         )
 
-        awesomeBarView = AwesomeBarView(view.scrollable_area, searchInteractor)
-
+        awesomeBarView = AwesomeBarView(view.scrollable_area, searchInteractor,
+            view.findViewById(R.id.awesomeBar))
         view.scrollView.setOnScrollChangeListener {
                 _: NestedScrollView, _: Int, _: Int, _: Int, _: Int ->
             view.hideKeyboard()
         }
 
         toolbarView = ToolbarView(
-            view.toolbar_component_wrapper,
+            requireContext(),
             searchInteractor,
             historyStorageProvider(),
             isPrivate,
+            view.toolbar,
             requireComponents.core.engine
         )
 

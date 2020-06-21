@@ -4,16 +4,12 @@
 
 package org.mozilla.fenix.search.toolbar
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.annotation.LayoutRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.Engine
@@ -23,7 +19,6 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentState
 import org.mozilla.fenix.theme.ThemeManager
 
@@ -55,27 +50,13 @@ interface ToolbarInteractor {
  * View that contains and configures the BrowserToolbar to only be used in its editing mode.
  */
 class ToolbarView(
-    private val container: ViewGroup,
+    private val context: Context,
     private val interactor: ToolbarInteractor,
     private val historyStorage: HistoryStorage?,
     private val isPrivate: Boolean,
+    val view: BrowserToolbar,
     engine: Engine
-) : LayoutContainer {
-
-    override val containerView: View?
-        get() = container
-
-    private val settings = container.context.settings()
-
-    @LayoutRes
-    private val toolbarLayout = when {
-        settings.shouldUseBottomToolbar -> R.layout.component_bottom_browser_toolbar
-        else -> R.layout.component_browser_top_toolbar
-    }
-
-    val view: BrowserToolbar = LayoutInflater.from(container.context)
-        .inflate(toolbarLayout, container, true)
-        .findViewById(R.id.toolbar)
+) {
 
     private var isInitialized = false
     private var hasBeenCanceled = false
@@ -97,7 +78,7 @@ class ToolbarView(
 
             background =
                 AppCompatResources.getDrawable(
-                    container.context, ThemeManager.resolveAttribute(R.attr.foundation, context)
+                    context, ThemeManager.resolveAttribute(R.attr.foundation, context)
                 )
 
             layoutParams.height = CoordinatorLayout.LayoutParams.MATCH_PARENT
@@ -105,17 +86,17 @@ class ToolbarView(
             edit.hint = context.getString(R.string.search_hint)
 
             edit.colors = edit.colors.copy(
-                text = container.context.getColorFromAttr(R.attr.primaryText),
-                hint = container.context.getColorFromAttr(R.attr.secondaryText),
+                text = context.getColorFromAttr(R.attr.primaryText),
+                hint = context.getColorFromAttr(R.attr.secondaryText),
                 suggestionBackground = ContextCompat.getColor(
-                    container.context,
+                    context,
                     R.color.suggestion_highlight_color
                 ),
-                clear = container.context.getColorFromAttr(R.attr.primaryText)
+                clear = context.getColorFromAttr(R.attr.primaryText)
             )
 
             edit.setUrlBackground(
-                AppCompatResources.getDrawable(container.context, R.drawable.search_url_background))
+                AppCompatResources.getDrawable(context, R.drawable.search_url_background))
 
             private = isPrivate
 
@@ -163,7 +144,7 @@ class ToolbarView(
             isInitialized = true
         }
 
-        val iconSize = container.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
+        val iconSize = context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
 
         val scaledIcon = Bitmap.createScaledBitmap(
             searchState.searchEngineSource.searchEngine.icon,
@@ -171,7 +152,7 @@ class ToolbarView(
             iconSize,
             true)
 
-        val icon = BitmapDrawable(container.resources, scaledIcon)
+        val icon = BitmapDrawable(context.resources, scaledIcon)
 
         view.edit.setIcon(icon, searchState.searchEngineSource.searchEngine.name)
     }
