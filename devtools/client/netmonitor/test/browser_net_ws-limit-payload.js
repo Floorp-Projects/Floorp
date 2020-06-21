@@ -35,23 +35,23 @@ add_task(async function() {
   // Wait for all sent/received messages to be displayed in DevTools
   const wait = waitForDOM(
     document,
-    "#messages-panel .message-list-table .message-list-item",
+    "#messages-view .message-list-table .message-list-item",
     2
   );
 
   // Select the first request
   EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
-  // Click on the "Messages" panel
+  // Click on the "Response" panel
   EventUtils.sendMouseEvent(
     { type: "click" },
-    document.querySelector("#messages-tab")
+    document.querySelector("#response-tab")
   );
   await wait;
 
-  // Get all messages present in the "Messages" panel
+  // Get all messages present in the "Response" panel
   const frames = document.querySelectorAll(
-    "#messages-panel .message-list-table .message-list-item"
+    "#messages-view .message-list-table .message-list-item"
   );
 
   // Check expected results
@@ -61,14 +61,14 @@ add_task(async function() {
   await waitForTick();
   EventUtils.sendMouseEvent({ type: "mousedown" }, frames[0]);
 
-  await waitForDOM(document, "#messages-panel .truncated-data-message");
+  await waitForDOM(document, "#messages-view .truncated-data-message");
 
   ok(
-    document.querySelector("#messages-panel .truncated-data-message"),
+    document.querySelector("#messages-view .truncated-data-message"),
     "Truncated data header shown"
   );
   is(
-    document.querySelector("#messages-panel .message-rawData-payload")
+    document.querySelector("#messages-view .message-rawData-payload")
       .textContent.length,
     100,
     "Payload size is kept to the limit"

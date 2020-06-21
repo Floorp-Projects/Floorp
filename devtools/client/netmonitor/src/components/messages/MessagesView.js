@@ -134,7 +134,7 @@ class MessagesView extends Component {
     );
 
     return div(
-      { className: "monitor-panel" },
+      { id: "messages-view", className: "monitor-panel" },
       Toolbar({
         searchboxRef,
       }),

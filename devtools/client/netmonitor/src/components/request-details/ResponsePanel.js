@@ -36,6 +36,9 @@ const SourcePreview = createFactory(
 const HtmlPreview = createFactory(
   require("devtools/client/netmonitor/src/components/previews/HtmlPreview")
 );
+const MessagesView = createFactory(
+  require("devtools/client/netmonitor/src/components/messages/MessagesView")
+);
 const Accordion = createFactory(
   require("devtools/client/shared/components/Accordion")
 );
@@ -68,6 +71,7 @@ class ResponsePanel extends Component {
       openLink: PropTypes.func,
       targetSearchResult: PropTypes.object,
       connector: PropTypes.object.isRequired,
+      showMessagesView: PropTypes.bool,
     };
   }
 
@@ -173,9 +177,18 @@ class ResponsePanel extends Component {
   }
 
   render() {
-    const { request, targetSearchResult } = this.props;
+    const {
+      connector,
+      showMessagesView,
+      request,
+      targetSearchResult,
+    } = this.props;
     const { responseContent, url } = request;
     const { filterText } = this.state;
+
+    if (showMessagesView) {
+      return MessagesView({ connector });
+    }
 
     if (
       !responseContent ||
