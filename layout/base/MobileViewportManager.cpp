@@ -545,6 +545,10 @@ void MobileViewportManager::RefreshVisualViewportSize() {
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
       mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
 
+  if (displaySize.width == 0 || displaySize.height == 0) {
+    return;
+  }
+
   UpdateVisualViewportSize(displaySize, GetZoom());
 }
 
