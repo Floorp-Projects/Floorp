@@ -13,7 +13,7 @@
 #include "mozilla/layers/KnowsCompositor.h"
 #ifdef MOZ_WAYLAND_USE_VAAPI
 #  include "gfxPlatformGtk.h"
-#  include "mozilla/layers/WaylandDMABUFSurfaceImage.h"
+#  include "mozilla/layers/DMABUFSurfaceImage.h"
 #  include "H264.h"
 #endif
 
@@ -122,8 +122,8 @@ static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
   return AV_PIX_FMT_NONE;
 }
 
-DMABufSurface::DMABufSurface(WaylandDMABufSurface* aSurface,
-                             FFmpegLibWrapper* aLib)
+DMABufSurfaceWrapper::DMABufSurfaceWrapper(DMABufSurface* aSurface,
+                                           FFmpegLibWrapper* aLib)
     : mSurface(aSurface),
       mLib(aLib),
       mAVHWFramesContext(nullptr),
@@ -132,12 +132,13 @@ DMABufSurface::DMABufSurface(WaylandDMABufSurface* aSurface,
   // gects rendering engine. We can't release it until it's used
   // by GL compositor / WebRender.
   mSurface->GlobalRefCountCreate();
-  FFMPEG_LOG("DMABufSurface: creating surface UID = %d", mSurface->GetUID());
+  FFMPEG_LOG("DMABufSurfaceWrapper: creating surface UID = %d",
+             mSurface->GetUID());
 }
 
-void DMABufSurface::LockVAAPIData(AVCodecContext* aAVCodecContext,
-                                  AVFrame* aAVFrame) {
-  FFMPEG_LOG("DMABufSurface: VAAPI locking dmabuf surface UID = %d",
+void DMABufSurfaceWrapper::LockVAAPIData(AVCodecContext* aAVCodecContext,
+                                         AVFrame* aAVFrame) {
+  FFMPEG_LOG("DMABufSurfaceWrapper: VAAPI locking dmabuf surface UID = %d",
              mSurface->GetUID());
   if (aAVCodecContext && aAVFrame) {
     mAVHWFramesContext = mLib->av_buffer_ref(aAVCodecContext->hw_frames_ctx);
@@ -145,8 +146,8 @@ void DMABufSurface::LockVAAPIData(AVCodecContext* aAVCodecContext,
   }
 }
 
-void DMABufSurface::ReleaseVAAPIData() {
-  FFMPEG_LOG("DMABufSurface: VAAPI releasing dmabuf surface UID = %d",
+void DMABufSurfaceWrapper::ReleaseVAAPIData() {
+  FFMPEG_LOG("DMABufSurfaceWrapper: VAAPI releasing dmabuf surface UID = %d",
              mSurface->GetUID());
   if (mHWAVBuffer && mAVHWFramesContext) {
     mLib->av_buffer_unref(&mHWAVBuffer);
@@ -155,8 +156,8 @@ void DMABufSurface::ReleaseVAAPIData() {
   mSurface->ReleaseSurface();
 }
 
-DMABufSurface::~DMABufSurface() {
-  FFMPEG_LOG("DMABufSurface: deleting dmabuf surface UID = %d",
+DMABufSurfaceWrapper::~DMABufSurfaceWrapper() {
+  FFMPEG_LOG("DMABufSurfaceWrapper: deleting dmabuf surface UID = %d",
              mSurface->GetUID());
   ReleaseVAAPIData();
 }
@@ -684,7 +685,8 @@ void FFmpegVideoDecoder<LIBAV_VER>::ReleaseUnusedVAAPIFrames() {
   }
 }
 
-DMABufSurface* FFmpegVideoDecoder<LIBAV_VER>::GetUnusedDMABufSurface() {
+DMABufSurfaceWrapper*
+FFmpegVideoDecoder<LIBAV_VER>::GetUnusedDMABufSurfaceWrapper() {
   int len = mDMABufSurfaces.Length();
   for (int i = 0; i < len; i++) {
     if (!mDMABufSurfaces[i].IsUsed()) {
@@ -740,58 +742,54 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
         RESULT_DETAIL("Unable to get frame by vaExportSurfaceHandle()"));
   }
 
-  RefPtr<WaylandDMABufSurfaceNV12> waylandSurface;
+  RefPtr<DMABufSurfaceYUV> surface;
 
-  DMABufSurface* surface = GetUnusedDMABufSurface();
-  if (!surface) {
+  DMABufSurfaceWrapper* surfaceWrapper = GetUnusedDMABufSurfaceWrapper();
+  if (!surfaceWrapper) {
     if (mVAAPIDeviceContext) {
-      waylandSurface = WaylandDMABufSurfaceNV12::CreateNV12Surface(vaDesc);
+      surface = DMABufSurfaceYUV::CreateYUVSurface(vaDesc);
     } else {
-      waylandSurface = WaylandDMABufSurfaceNV12::CreateNV12Surface(
+      surface = DMABufSurfaceYUV::CreateYUVSurface(
           mFrame->width, mFrame->height, (void**)mFrame->data,
           mFrame->linesize);
     }
-    if (!waylandSurface) {
-      return MediaResult(
-          NS_ERROR_OUT_OF_MEMORY,
-          RESULT_DETAIL("Unable to get WaylandDMABufSurfaceNV12"));
+    if (!surface) {
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                         RESULT_DETAIL("Unable to get DMABufSurfaceYUV"));
     }
 
 #  ifdef MOZ_LOGGING
     static int uid = 0;
-    waylandSurface->SetUID(++uid);
-    FFMPEG_LOG("Created new WaylandDMABufSurface UID = %d", uid);
+    surface->SetUID(++uid);
+    FFMPEG_LOG("Created new DMABufSurface UID = %d", uid);
 #  endif
-    mDMABufSurfaces.AppendElement(DMABufSurface(waylandSurface, mLib));
-    surface = &(mDMABufSurfaces[mDMABufSurfaces.Length() - 1]);
+    mDMABufSurfaces.AppendElement(DMABufSurfaceWrapper(surface, mLib));
+    surfaceWrapper = &(mDMABufSurfaces[mDMABufSurfaces.Length() - 1]);
   } else {
-    waylandSurface = surface->GetWaylandDMABufSurface();
+    surface = surfaceWrapper->GetDMABufSurface();
     bool ret;
 
     if (mVAAPIDeviceContext) {
-      ret = waylandSurface->UpdateNV12Data(vaDesc);
+      ret = surface->UpdateYUVData(vaDesc);
     } else {
-      ret = waylandSurface->UpdateNV12Data((void**)mFrame->data,
-                                           mFrame->linesize);
+      ret = surface->UpdateYUVData((void**)mFrame->data, mFrame->linesize);
     }
 
     if (!ret) {
       return MediaResult(
           NS_ERROR_OUT_OF_MEMORY,
-          RESULT_DETAIL("Unable to upload data to WaylandDMABufSurfaceNV12"));
+          RESULT_DETAIL("Unable to upload data to DMABufSurfaceYUV"));
     }
-    FFMPEG_LOG("Reusing WaylandDMABufSurface UID = %d",
-               waylandSurface->GetUID());
+    FFMPEG_LOG("Reusing DMABufSurface UID = %d", surface->GetUID());
   }
 
   if (mVAAPIDeviceContext) {
-    surface->LockVAAPIData(mCodecContext, mFrame);
+    surfaceWrapper->LockVAAPIData(mCodecContext, mFrame);
   }
 
-  waylandSurface->SetYUVColorSpace(GetFrameColorSpace());
+  surface->SetYUVColorSpace(GetFrameColorSpace());
 
-  RefPtr<layers::Image> im =
-      new layers::WaylandDMABUFSurfaceImage(waylandSurface);
+  RefPtr<layers::Image> im = new layers::DMABUFSurfaceImage(surface);
 
   RefPtr<VideoData> vp = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
