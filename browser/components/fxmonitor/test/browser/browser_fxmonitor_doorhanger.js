@@ -66,7 +66,7 @@ add_task(async function test_main_flow() {
       1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
-  await db.importChanges({}, 1234567);
+  await db.saveLastModified(1234567);
 
   // Trigger a sync.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
@@ -103,7 +103,7 @@ add_task(async function test_main_flow() {
 
   // Reset state.
   await db.clear();
-  await db.importChanges({}, 1234567);
+  await db.saveLastModified(1234567);
   await clearWarnedHosts();
   await SpecialPowers.pushPrefEnv({
     clear: [["extensions.fxmonitor.firstAlertShown"]],
@@ -133,7 +133,7 @@ add_task(async function test_main_flow() {
 
   // Reset state (but not firstAlertShown).
   await db.clear();
-  await db.importChanges({}, 1234567);
+  await db.saveLastModified(1234567);
   await clearWarnedHosts();
 
   info(
@@ -151,7 +151,7 @@ add_task(async function test_main_flow() {
       1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
-  await db.importChanges({}, 1234567);
+  await db.saveLastModified(1234567);
 
   // Trigger a sync.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
@@ -169,7 +169,7 @@ add_task(async function test_main_flow() {
   // Reset state (but not firstAlertShown).
   AddedDate.setMonth(AddedDate.getMonth() + 3);
   await db.clear();
-  await db.importChanges({}, 1234567);
+  await db.saveLastModified(1234567);
   await clearWarnedHosts();
 
   info("Test that we do show the second alert for a recent breach.");
@@ -184,7 +184,7 @@ add_task(async function test_main_flow() {
       1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
-  await db.importChanges({}, 1234567);
+  await db.saveLastModified(1234567);
 
   // Trigger a sync.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
@@ -201,7 +201,7 @@ add_task(async function test_main_flow() {
 
   // Reset state (including firstAlertShown)
   await db.clear();
-  await db.importChanges({}, 1234567);
+  await db.saveLastModified(1234567);
   await clearWarnedHosts();
   await SpecialPowers.pushPrefEnv({
     clear: [["extensions.fxmonitor.firstAlertShown"]],
@@ -222,7 +222,7 @@ add_task(async function test_main_flow() {
       1}-${AddedDate.getDate()}`,
     PwnCount: 1000000,
   });
-  await db.importChanges({}, 1234567);
+  await db.saveLastModified(1234567);
 
   // Trigger a sync.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
@@ -240,7 +240,7 @@ add_task(async function test_main_flow() {
   // Clean up.
   BrowserTestUtils.removeTab(tab);
   await db.clear();
-  await db.importChanges({}, 1234567);
+  await db.saveLastModified(1234567);
   // Trigger a sync to clear.
   await RemoteSettings(kRemoteSettingsKey).emit("sync", {
     data: {

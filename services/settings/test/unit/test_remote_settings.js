@@ -102,12 +102,6 @@ add_task(async function test_records_obtained_from_server_are_stored_in_db() {
   // Our test data has a single record; it should be in the local collection
   const list = await client.get();
   equal(list.length, 1);
-
-  const timestamp = await client.db.getLastModified();
-  equal(timestamp, 3000, "timestamp was stored");
-
-  const { signature } = await client.db.getMetadata();
-  equal(signature.signature, "abcdef", "metadata was stored");
 });
 add_task(clear_state);
 
@@ -223,10 +217,13 @@ add_task(clear_state);
 add_task(
   async function test_records_changes_are_overwritten_by_server_changes() {
     // Create some local conflicting data, and make sure it syncs without error.
-    await client.db.create({
-      website: "",
-      id: "9d500963-d80e-3a91-6e74-66f3811b99cc",
-    });
+    await client.db.create(
+      {
+        website: "",
+        id: "9d500963-d80e-3a91-6e74-66f3811b99cc",
+      },
+      { useRecordId: true }
+    );
 
     await client.maybeSync(2000);
 
@@ -717,7 +714,7 @@ add_task(async function test_telemetry_reports_if_application_fails() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_if_sync_fails() {
-  await client.db.importChanges({}, 9999);
+  await client.db.saveLastModified(9999);
 
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
 
@@ -732,7 +729,7 @@ add_task(async function test_telemetry_reports_if_sync_fails() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_if_parsing_fails() {
-  await client.db.importChanges({}, 10000);
+  await client.db.saveLastModified(10000);
 
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
 
@@ -747,7 +744,7 @@ add_task(async function test_telemetry_reports_if_parsing_fails() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_if_fetching_signature_fails() {
-  await client.db.importChanges({}, 11000);
+  await client.db.saveLastModified(11000);
 
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
 
