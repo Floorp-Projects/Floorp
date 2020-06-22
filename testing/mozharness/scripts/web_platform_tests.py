@@ -329,6 +329,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         test_type_suite = {
             "testharness": "web-platform-tests",
             "crashtest": "web-platform-tests-crashtest",
+            "print-reftest": "web-platform-tests-print-reftest",
             "reftest": "web-platform-tests-reftest",
             "wdspec": "web-platform-tests-wdspec",
         }
