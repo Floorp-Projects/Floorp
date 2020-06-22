@@ -38,7 +38,7 @@ function reflectURL(aElement, aAttr)
   ok(idl in aElement, idl + " should be available in " + elmtName);
 
   // Default values.
-  is(aElement[idl], doc, "." + idl + " default value should be the document's URL");
+  is(aElement[idl].split("?")[0], doc, "." + idl + " default value should be the document's URL");
   is(aElement.getAttribute(attr), null,
      "@" + attr + " default value should be null");
 

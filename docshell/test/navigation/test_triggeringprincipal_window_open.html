@@ -39,10 +39,10 @@ httpWin.onload = function() {
   var httpTriggeringPrincipal = httpChannel.loadInfo.triggeringPrincipal.URI.asciiSpec;
   var httpLoadingPrincipal = httpChannel.loadInfo.loadingPrincipal;
 
-  is(httpTriggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
+  is(httpTriggeringPrincipal.split("?")[0], TRIGGERING_PRINCIPAL_URI,
      "TriggeringPrincipal for window.open(http:) should be the principal of the document");
 
-  is(httpWin.document.referrer, TRIGGERING_PRINCIPAL_URI,
+  is(httpWin.document.referrer.split("?")[0], TRIGGERING_PRINCIPAL_URI,
      "Referrer for window.open(http:) should be the principal of the document");
 
   is(httpLoadingPrincipal, null,
@@ -60,7 +60,7 @@ jsWin.onload = function() {
   var jsTriggeringPrincipal = jsChannel.loadInfo.triggeringPrincipal.URI.asciiSpec;
   var jsLoadingPrincipal = jsChannel.loadInfo.loadingPrincipal;
 
-  is(jsTriggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
+  is(jsTriggeringPrincipal.split("?")[0], TRIGGERING_PRINCIPAL_URI,
      "TriggeringPrincipal for window.open(javascript:) should be the principal of the document");
 
   is(jsWin.document.referrer, "",

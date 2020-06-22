@@ -61,7 +61,7 @@ function checkResults() {
   is(frameA.contentDocument.referrer, TRIGGERING_PRINCIPAL_URI,
     "Referrer for targeted window.open() should be the principal of the iframe triggering the load");
 
-  is(loadingPrincipal, LOADING_PRINCIPAL_URI,
+  is(loadingPrincipal.split("?")[0], LOADING_PRINCIPAL_URI,
     "LoadingPrincipal for targeted window.open() should be the containing document");
 
   SimpleTest.finish();
