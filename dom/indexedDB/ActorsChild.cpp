@@ -1098,7 +1098,6 @@ class BackgroundRequestChild::PreprocessHelper final
 
   const nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   RefPtr<TaskQueue> mTaskQueue;
-  nsCOMPtr<nsIEventTarget> mTaskQueueEventTarget;
   nsCOMPtr<nsIInputStream> mStream;
   UniquePtr<JSStructuredCloneData> mCloneData;
   BackgroundRequestChild* mActor;
@@ -2677,7 +2676,6 @@ nsresult BackgroundRequestChild::PreprocessHelper::Init(
   // in the correct order. This is not guaranteed in case we use the I/O thread
   // directly.
   mTaskQueue = MakeRefPtr<TaskQueue>(target.forget());
-  mTaskQueueEventTarget = mTaskQueue->WrapAsEventTarget();
 
   ErrorResult errorResult;
 
@@ -2700,7 +2698,7 @@ nsresult BackgroundRequestChild::PreprocessHelper::Dispatch() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::Initial);
 
-  nsresult rv = mTaskQueueEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+  nsresult rv = mTaskQueue->Dispatch(this, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2729,7 +2727,7 @@ nsresult BackgroundRequestChild::PreprocessHelper::Start() {
 
   nsCOMPtr<nsIAsyncFileMetadata> asyncFileMetadata = do_QueryInterface(mStream);
   if (asyncFileMetadata) {
-    rv = asyncFileMetadata->AsyncFileMetadataWait(this, mTaskQueueEventTarget);
+    rv = asyncFileMetadata->AsyncFileMetadataWait(this, mTaskQueue);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2742,7 +2740,7 @@ nsresult BackgroundRequestChild::PreprocessHelper::Start() {
     return NS_ERROR_NO_INTERFACE;
   }
 
-  rv = asyncStream->AsyncWait(this, 0, 0, mTaskQueueEventTarget);
+  rv = asyncStream->AsyncWait(this, 0, 0, mTaskQueue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
