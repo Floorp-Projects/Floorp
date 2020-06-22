@@ -9,8 +9,10 @@
 #define mozilla_net_TRRServiceChannel_h
 
 #include "HttpBaseChannel.h"
+#include "mozilla/DataMutex.h"
 #include "nsIDNSListener.h"
 #include "nsIProtocolProxyCallback.h"
+#include "nsIProxiedChannel.h"
 #include "nsIStreamListener.h"
 #include "nsWeakReference.h"
 
