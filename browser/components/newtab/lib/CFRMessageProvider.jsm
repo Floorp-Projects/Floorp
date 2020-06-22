@@ -543,53 +543,6 @@ const CFR_MESSAGES = [
     trigger: { id: "frequentVisits", params: PINNED_TABS_TARGET_SITES },
   },
   {
-    id: "DOH_ROLLOUT_CONFIRMATION",
-    targeting: `
-      "doh-rollout.enabled"|preferenceValue &&
-      !"doh-rollout.disable-heuristics"|preferenceValue &&
-      !"doh-rollout.skipHeuristicsCheck"|preferenceValue &&
-      !"doh-rollout.doorhanger-decision"|preferenceValue
-    `,
-    template: "cfr_doorhanger",
-    content: {
-      skip_address_bar_notifier: true,
-      anchor_id: "PanelUI-menu-button",
-      layout: "icon_and_message",
-      text: { string_id: "cfr-doorhanger-doh-body" },
-      icon: "chrome://browser/skin/connection-secure.svg",
-      buttons: {
-        secondary: [
-          {
-            label: { string_id: "cfr-doorhanger-doh-secondary-button" },
-            action: {
-              type: "DISABLE_DOH",
-            },
-          },
-        ],
-        primary: {
-          label: { string_id: "cfr-doorhanger-doh-primary-button" },
-          action: {
-            type: "ACCEPT_DOH",
-          },
-        },
-      },
-      bucket_id: "DOH_ROLLOUT_CONFIRMATION",
-      heading_text: { string_id: "cfr-doorhanger-doh-header" },
-      info_icon: {
-        label: {
-          string_id: "cfr-doorhanger-extension-sumo-link",
-        },
-        sumo_path: "extensionrecommendations",
-      },
-      notification_text: "Message from Firefox",
-      category: "cfrFeatures",
-    },
-    trigger: {
-      id: "openURL",
-      patterns: ["*://*/*"],
-    },
-  },
-  {
     id: "SAVE_LOGIN",
     frequency: {
       lifetime: 3,
