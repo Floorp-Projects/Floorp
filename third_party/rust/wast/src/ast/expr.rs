@@ -412,7 +412,7 @@ instructions! {
         TableGrow(TableArg<'a>) : [0xfc, 0x0f] : "table.grow",
 
         RefNull(RefType<'a>) : [0xd0] : "ref.null",
-        RefIsNull(RefType<'a>) : [0xd1] : "ref.is_null",
+        RefIsNull : [0xd1] : "ref.is_null",
         RefExtern(u32) : [0xff] : "ref.extern", // only used in test harness
         RefFunc(ast::Index<'a>) : [0xd2] : "ref.func",
 
