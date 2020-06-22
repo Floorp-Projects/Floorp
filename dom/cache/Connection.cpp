@@ -39,7 +39,15 @@ Connection::Close() {
 
   // If we are closing here, then Cache must not have a transaction
   // open anywhere else.  This should be guaranteed to succeed.
-  MOZ_ALWAYS_SUCCEEDS(db::IncrementalVacuum(this));
+  nsresult rv = db::IncrementalVacuum(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // In non-diagnostic builds, just ignore that vacuuming failed, and continue
+    // to close the connection.
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+    MOZ_CRASH_UNSAFE_PRINTF("db::IncrementalVacuum failed with result 0x%08x",
+                            static_cast<uint32_t>(rv));
+#endif
+  }
 
   return mBase->Close();
 }
