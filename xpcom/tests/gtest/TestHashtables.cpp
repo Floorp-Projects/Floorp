@@ -719,6 +719,54 @@ TEST(Hashtables, ClassHashtable_LookupForAdd)
   ASSERT_TRUE(0 == EntToUniClass.Count());
 }
 
+TEST(Hashtables, ClassHashtable_LookupOrAdd_Present)
+{
+  nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
+
+  for (const auto& entity : gEntities) {
+    EntToUniClass.Put(nsDependentCString(entity.mStr),
+                      mozilla::MakeUnique<TestUniCharDerived>(entity.mUnicode));
+  }
+
+  auto* entry = EntToUniClass.LookupOrAdd(NS_LITERAL_CSTRING("uml"), 42);
+  EXPECT_EQ(168u, entry->GetChar());
+}
+
+TEST(Hashtables, ClassHashtable_LookupOrAdd_NotPresent)
+{
+  nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
+
+  // This is going to insert a TestUniChar.
+  auto* entry = EntToUniClass.LookupOrAdd(NS_LITERAL_CSTRING("uml"), 42);
+  EXPECT_EQ(42u, entry->GetChar());
+}
+
+TEST(Hashtables, ClassHashtable_LookupOrAddFromFactory_Present)
+{
+  nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
+
+  for (const auto& entity : gEntities) {
+    EntToUniClass.Put(nsDependentCString(entity.mStr),
+                      mozilla::MakeUnique<TestUniCharDerived>(entity.mUnicode));
+  }
+
+  auto* entry = EntToUniClass.LookupOrAddFromFactory(
+      NS_LITERAL_CSTRING("uml"),
+      [] { return mozilla::MakeUnique<TestUniCharDerived>(42); });
+  EXPECT_EQ(168u, entry->GetChar());
+}
+
+TEST(Hashtables, ClassHashtable_LookupOrAddFromFactory_NotPresent)
+{
+  nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
+
+  // This is going to insert a TestUniCharDerived.
+  auto* entry = EntToUniClass.LookupOrAddFromFactory(
+      NS_LITERAL_CSTRING("uml"),
+      [] { return mozilla::MakeUnique<TestUniCharDerived>(42); });
+  EXPECT_EQ(42u, entry->GetChar());
+}
+
 TEST(Hashtables, RefPtrHashtable)
 {
   // check a RefPtr-hashtable

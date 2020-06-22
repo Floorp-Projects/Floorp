@@ -49,9 +49,7 @@ class nsClassHashtable : public nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>,
   using base_type::Remove;
 
   nsClassHashtable() = default;
-  explicit nsClassHashtable(uint32_t aInitLength)
-      : nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>, T*,
-                        nsUniquePtrConverter<T>>(aInitLength) {}
+  explicit nsClassHashtable(uint32_t aInitLength) : base_type(aInitLength) {}
 
   /**
    * Looks up aKey in the hash table. If it doesn't exist a new object of
@@ -59,6 +57,14 @@ class nsClassHashtable : public nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>,
    */
   template <typename... Args>
   UserDataType LookupOrAdd(KeyType aKey, Args&&... aConstructionArgs);
+
+  /**
+   * Looks up aKey in the hash table. If it doesn't exist a new object of
+   * KeyClass will be created (using the factory function provided, whose return
+   * value must be convertible to UniquePtr<T>) and then returned.
+   */
+  template <typename Factory>
+  UserDataType LookupOrAddFromFactory(KeyType aKey, const Factory& aFactory);
 
   /**
    * @copydoc nsBaseHashtable::Get
@@ -106,11 +112,19 @@ template <class KeyClass, class T>
 template <typename... Args>
 T* nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
                                               Args&&... aConstructionArgs) {
+  return LookupOrAddFromFactory(std::move(aKey), [&] {
+    return mozilla::MakeUnique<T>(std::forward<Args>(aConstructionArgs)...);
+  });
+}
+
+template <class KeyClass, class T>
+template <typename Factory>
+T* nsClassHashtable<KeyClass, T>::LookupOrAddFromFactory(
+    KeyType aKey, const Factory& aFactory) {
   auto count = this->Count();
   typename base_type::EntryType* ent = this->PutEntry(aKey);
   if (count != this->Count()) {
-    ent->SetData(
-        mozilla::MakeUnique<T>(std::forward<Args>(aConstructionArgs)...));
+    ent->SetData(aFactory());
   }
   return ent->GetData().get();
 }
