@@ -190,6 +190,8 @@ nsresult NS_NewFileURI(
 
 nsresult NS_GetURIWithNewRef(nsIURI* aInput, const nsACString& aRef,
                              nsIURI** aOutput) {
+  MOZ_DIAGNOSTIC_ASSERT(aRef.IsEmpty() || aRef[0] == '#');
+
   if (NS_WARN_IF(!aInput || !aOutput)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -206,8 +208,12 @@ nsresult NS_GetURIWithNewRef(nsIURI* aInput, const nsACString& aRef,
   // Also, if the GetRef failed (it could return NS_ERROR_NOT_IMPLEMENTED)
   // we can assume SetRef would fail as well, so returning the original
   // URI is OK.
+  //
+  // Note that aRef contains the hash, but ref doesn't, so need to account for
+  // that in the equality check.
   if (NS_FAILED(rv) || (!hasRef && aRef.IsEmpty()) ||
-      (!aRef.IsEmpty() && aRef == ref)) {
+      (!aRef.IsEmpty() && hasRef &&
+       Substring(aRef.Data() + 1, aRef.Length() - 1) == ref)) {
     nsCOMPtr<nsIURI> uri = aInput;
     uri.forget(aOutput);
     return NS_OK;
