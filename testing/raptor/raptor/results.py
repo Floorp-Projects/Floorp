@@ -620,7 +620,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
                     # Differentiate Raptor `pageload` tests from other `browsertime`
                     # tests while we compare and contrast.
-                    new_result["type"] = "browsertime-%s" % test["type"]
+                    new_result["type"] = "benchmark"
 
                     # Try to get subtest values or use the defaults
                     # If values not available use the defaults
