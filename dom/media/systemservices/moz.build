@@ -30,6 +30,16 @@ if CONFIG['MOZ_WEBRTC']:
             'android_video_capture/device_info_android.cc',
             'android_video_capture/video_capture_android.cc',
         ]
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        UNIFIED_SOURCES += [
+            'objc_video_capture/device_info.mm',
+            'objc_video_capture/device_info_objc.mm',
+            'objc_video_capture/rtc_video_capture_objc.mm',
+            'objc_video_capture/video_capture.mm',
+        ]
+        CMMFLAGS += [
+            '-fobjc-arc',
+        ]
 
     if CONFIG['OS_TARGET'] != 'Android':
         UNIFIED_SOURCES += [
