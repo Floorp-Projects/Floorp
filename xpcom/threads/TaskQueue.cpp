@@ -6,56 +6,9 @@
 
 #include "mozilla/TaskQueue.h"
 
-#include "nsISerialEventTarget.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
-
-class TaskQueue::EventTargetWrapper final : public nsISerialEventTarget {
-  RefPtr<TaskQueue> mTaskQueue;
-
-  ~EventTargetWrapper() = default;
-
- public:
-  explicit EventTargetWrapper(TaskQueue* aTaskQueue) : mTaskQueue(aTaskQueue) {
-    MOZ_ASSERT(mTaskQueue);
-  }
-
-  NS_IMETHOD
-  DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags) override {
-    nsCOMPtr<nsIRunnable> ref = aEvent;
-    return Dispatch(ref.forget(), aFlags);
-  }
-
-  NS_IMETHOD
-  Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) override {
-    nsCOMPtr<nsIRunnable> runnable = aEvent;
-    MonitorAutoLock mon(mTaskQueue->mQueueMonitor);
-    return mTaskQueue->DispatchLocked(/* passed by ref */ runnable, aFlags,
-                                      NormalDispatch);
-  }
-
-  NS_IMETHOD
-  DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t aFlags) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  NS_IMETHOD
-  IsOnCurrentThread(bool* aResult) override {
-    *aResult = mTaskQueue->IsCurrentThreadIn();
-    return NS_OK;
-  }
-
-  NS_IMETHOD_(bool)
-  IsOnCurrentThreadInfallible() override {
-    return mTaskQueue->mTarget->IsOnCurrentThread();
-  }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS(TaskQueue::EventTargetWrapper, nsIEventTarget,
-                  nsISerialEventTarget)
 
 TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
                      const char* aName, bool aRequireTailDispatch,
@@ -178,11 +131,6 @@ bool TaskQueue::IsEmpty() {
 bool TaskQueue::IsCurrentThreadIn() const {
   bool in = mRunningThread == PR_GetCurrentThread();
   return in;
-}
-
-already_AddRefed<nsISerialEventTarget> TaskQueue::WrapAsEventTarget() {
-  nsCOMPtr<nsISerialEventTarget> ref = new EventTargetWrapper(this);
-  return ref.forget();
 }
 
 nsresult TaskQueue::Runner::Run() {
