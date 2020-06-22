@@ -3666,11 +3666,7 @@ GeckoDriver.prototype.setupReftest = async function(cmd) {
     );
   }
 
-  let {
-    urlCount = {},
-    screenshot = "unexpected",
-    isPrint = false,
-  } = cmd.parameters;
+  let { urlCount = {}, screenshot = "unexpected" } = cmd.parameters;
   if (!["always", "fail", "unexpected"].includes(screenshot)) {
     throw new InvalidArgumentError(
       "Value of `screenshot` should be 'always', 'fail' or 'unexpected'"
@@ -3678,20 +3674,12 @@ GeckoDriver.prototype.setupReftest = async function(cmd) {
   }
 
   this._reftest = new reftest.Runner(this);
-  this._reftest.setup(urlCount, screenshot, isPrint);
+  this._reftest.setup(urlCount, screenshot);
 };
 
 /** Run a reftest. */
 GeckoDriver.prototype.runReftest = async function(cmd) {
-  let {
-    test,
-    references,
-    expected,
-    timeout,
-    width,
-    height,
-    pageRanges,
-  } = cmd.parameters;
+  let { test, references, expected, timeout, width, height } = cmd.parameters;
 
   if (!this._reftest) {
     throw new UnsupportedOperationError(
@@ -3709,7 +3697,6 @@ GeckoDriver.prototype.runReftest = async function(cmd) {
       references,
       expected,
       timeout,
-      pageRanges,
       width,
       height
     ),
