@@ -257,6 +257,7 @@ CHUNK_SUITES_BLACKLIST = (
     'test-verify-wpt',
     'web-platform-tests-backlog',
     'web-platform-tests-crashtest',
+    'web-platform-tests-print-reftest',
     'web-platform-tests-reftest-backlog',
     'web-platform-tests-wdspec',
 )
