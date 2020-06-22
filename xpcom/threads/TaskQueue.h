@@ -53,11 +53,10 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
 
  public:
   explicit TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
-                     bool aSupportsTailDispatch = false,
-                     bool aRetainFlags = false);
+                     bool aSupportsTailDispatch = false);
 
   TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
-            bool aSupportsTailDispatch = false, bool aRetainFlags = false);
+            bool aSupportsTailDispatch = false);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDIRECTTASKDISPATCHER
@@ -195,11 +194,6 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   };
 
   TaskDispatcher* mTailDispatcher;
-
-  // TaskQueues should specify if they want all tasks to dispatch with their
-  // original flags included, which means the flags will be retained in the
-  // TaskStruct.
-  bool mShouldRetainFlags;
 
   // True if we've dispatched an event to the target to execute events from
   // the queue.
