@@ -20,6 +20,7 @@ HB_BASE_sources = \
 	hb-algs.hh \
 	hb-array.hh \
 	hb-atomic.hh \
+	hb-bimap.hh \
 	hb-blob.cc \
 	hb-blob.hh \
 	hb-buffer-serialize.cc \
@@ -47,7 +48,6 @@ HB_BASE_sources = \
 	hb-machinery.hh \
 	hb-map.cc \
 	hb-map.hh \
-	hb-bimap.hh \
 	hb-meta.hh \
 	hb-mutex.hh \
 	hb-null.hh \
@@ -57,9 +57,9 @@ HB_BASE_sources = \
 	hb-open-file.hh \
 	hb-open-type.hh \
 	hb-ot-cff-common.hh \
+	hb-ot-cff1-std-str.hh \
 	hb-ot-cff1-table.cc \
 	hb-ot-cff1-table.hh \
-	hb-ot-cff1-std-str.hh \
 	hb-ot-cff2-table.cc \
 	hb-ot-cff2-table.hh \
 	hb-ot-cmap-table.hh \
@@ -69,9 +69,9 @@ HB_BASE_sources = \
 	hb-ot-color-sbix-table.hh \
 	hb-ot-color-svg-table.hh \
 	hb-ot-color.cc \
+	hb-ot-face-table-list.hh \
 	hb-ot-face.cc \
 	hb-ot-face.hh \
-	hb-ot-face-table-list.hh \
 	hb-ot-font.cc \
 	hb-ot-gasp-table.hh \
 	hb-ot-glyf-table.hh \
@@ -159,6 +159,7 @@ HB_BASE_sources = \
 	hb-shaper.hh \
 	hb-static.cc \
 	hb-string-array.hh \
+	hb-style.cc \
 	hb-ucd-table.hh \
 	hb-ucd.cc \
 	hb-unicode-emoji-table.hh \
@@ -213,6 +214,7 @@ HB_BASE_headers = \
 	hb-set.h \
 	hb-shape-plan.h \
 	hb-shape.h \
+	hb-style.h \
 	hb-unicode.h \
 	hb-version.h \
 	hb.h \

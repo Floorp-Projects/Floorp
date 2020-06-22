@@ -820,7 +820,6 @@ struct hb_aat_apply_context_t :
 
   /* Unused. For debug tracing only. */
   unsigned int lookup_index;
-  unsigned int debug_depth;
 
   HB_INTERNAL hb_aat_apply_context_t (const hb_ot_shape_plan_t *plan_,
 				      hb_font_t *font_,

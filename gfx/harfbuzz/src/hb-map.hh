@@ -117,9 +117,8 @@ struct hb_hashmap_t
       successful = false;
       return false;
     }
-    + hb_iter (new_items, new_size)
-    | hb_apply (&item_t::clear)
-    ;
+    for (auto &_ : hb_iter (new_items, new_size))
+      _.clear ();
 
     unsigned int old_size = mask + 1;
     item_t *old_items = items;
@@ -175,9 +174,8 @@ struct hb_hashmap_t
     if (unlikely (hb_object_is_immutable (this)))
       return;
     if (items)
-      + hb_iter (items, mask + 1)
-      | hb_apply (&item_t::clear)
-      ;
+      for (auto &_ : hb_iter (items, mask + 1))
+	_.clear ();
 
     population = occupancy = 0;
   }

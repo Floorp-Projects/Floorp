@@ -32,6 +32,7 @@
 #include "hb-ot-glyf-table.hh"
 #include "hb-ot-layout-gdef-table.hh"
 #include "hb-ot-layout-gpos-table.hh"
+#include "hb-ot-layout-gsub-table.hh"
 #include "hb-ot-cff1-table.hh"
 #include "hb-ot-color-colr-table.hh"
 #include "hb-ot-var-fvar-table.hh"
@@ -54,7 +55,6 @@ _add_cff_seac_components (const OT::cff1::accelerator_t &cff,
 #endif
 
 #ifndef HB_NO_SUBSET_LAYOUT
-#ifdef HB_EXPERIMENTAL_API
 static void
 _remap_indexes (const hb_set_t *indexes,
 		hb_map_t       *mapping /* OUT */)
@@ -65,7 +65,6 @@ _remap_indexes (const hb_set_t *indexes,
     mapping->set (_.first, _.second);
 
 }
-#endif
 
 static inline void
 _gsub_closure_glyphs_lookups_features (hb_face_t *face,
@@ -83,21 +82,17 @@ _gsub_closure_glyphs_lookups_features (hb_face_t *face,
   hb_ot_layout_lookups_substitute_closure (face,
 					   &lookup_indices,
 					   gids_to_retain);
-#ifdef HB_EXPERIMENTAL_API
-  hb_ot_layout_closure_lookups (face,
-				HB_OT_TAG_GSUB,
-				gids_to_retain,
-				&lookup_indices);
+  hb_blob_ptr_t<OT::GSUB> gsub = hb_sanitize_context_t ().reference_table<OT::GSUB> (face);
+  gsub->closure_lookups (face,
+			 gids_to_retain,
+			 &lookup_indices);
   _remap_indexes (&lookup_indices, gsub_lookups);
 
   //closure features
   hb_set_t feature_indices;
-  hb_ot_layout_closure_features (face,
-				 HB_OT_TAG_GSUB,
-				 gsub_lookups,
-				 &feature_indices);
+  gsub->closure_features (gsub_lookups, &feature_indices);
   _remap_indexes (&feature_indices, gsub_features);
-#endif
+  gsub.destroy ();
 }
 
 static inline void
@@ -113,21 +108,17 @@ _gpos_closure_lookups_features (hb_face_t      *face,
 				nullptr,
 				nullptr,
 				&lookup_indices);
-#ifdef HB_EXPERIMENTAL_API
-  hb_ot_layout_closure_lookups (face,
-				HB_OT_TAG_GPOS,
-				gids_to_retain,
-				&lookup_indices);
+  hb_blob_ptr_t<OT::GPOS> gpos = hb_sanitize_context_t ().reference_table<OT::GPOS> (face);
+  gpos->closure_lookups (face,
+			 gids_to_retain,
+			 &lookup_indices);
   _remap_indexes (&lookup_indices, gpos_lookups);
 
   //closure features
   hb_set_t feature_indices;
-  hb_ot_layout_closure_features (face,
-				 HB_OT_TAG_GPOS,
-				 gpos_lookups,
-				 &feature_indices);
+  gpos->closure_features (gpos_lookups, &feature_indices);
   _remap_indexes (&feature_indices, gpos_features);
-#endif
+  gpos.destroy ();
 }
 #endif
 
@@ -301,7 +292,7 @@ static void
 _nameid_closure (hb_face_t *face,
 		 hb_set_t  *nameids)
 {
-#ifndef HB_NO_STAT
+#ifndef HB_NO_STYLE
   face->table.STAT->collect_name_ids (nameids);
 #endif
 #ifndef HB_NO_VAR
