@@ -23,7 +23,6 @@ py2commands="
     geckodriver
     geckodriver-test
     geckoview-junit
-    gradle
     hazards
     jsapi-tests
     jsshell-bench
