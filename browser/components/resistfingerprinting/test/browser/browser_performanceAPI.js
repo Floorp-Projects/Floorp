@@ -31,52 +31,6 @@ const PERFORMANCE_TIMINGS = [
   "loadEventEnd",
 ];
 
-let isRounded = (x, expectedPrecision) => {
-  let rounded = Math.floor(x / expectedPrecision) * expectedPrecision;
-  // First we do the perfectly normal check that should work just fine
-  if (rounded === x || x === 0) {
-    return true;
-  }
-
-  // When we're diving by non-whole numbers, we may not get perfect
-  // multiplication/division because of floating points.
-  // When dealing with ms since epoch, a double's precision is on the order
-  // of 1/5 of a microsecond, so we use a value a little higher than that as
-  // our epsilon.
-  // To be clear, this error is introduced in our re-calculation of 'rounded'
-  // above in JavaScript.
-  if (Math.abs(rounded - x + expectedPrecision) < 0.0005) {
-    return true;
-  } else if (Math.abs(rounded - x) < 0.0005) {
-    return true;
-  }
-
-  // Then we handle the case where you're sub-millisecond and the timer is not
-  // We check that the timer is not sub-millisecond by assuming it is not if it
-  // returns an even number of milliseconds
-  if (expectedPrecision < 1 && Math.round(x) == x) {
-    if (Math.round(rounded) == x) {
-      return true;
-    }
-  }
-
-  ok(
-    false,
-    "Looming Test Failure, Additional Debugging Info: Expected Precision: " +
-      expectedPrecision +
-      " Measured Value: " +
-      x +
-      " Rounded Vaue: " +
-      rounded +
-      " Fuzzy1: " +
-      Math.abs(rounded - x + expectedPrecision) +
-      " Fuzzy 2: " +
-      Math.abs(rounded - x)
-  );
-
-  return false;
-};
-
 let setupTest = async function(
   resistFingerprinting,
   reduceTimerPrecision,
@@ -118,7 +72,7 @@ let setupTest = async function(
       {
         list: PERFORMANCE_TIMINGS,
         precision: expectedPrecision,
-        isRoundedFunc: isRounded.toString(),
+        isRoundedFunc: isTimeValueRounded.toString(),
         workerCall,
       },
     ],

@@ -4,6 +4,111 @@
 
 "use strict";
 
+let isTimeValueRounded = (x, expectedPrecision) => {
+  let rounded = Math.floor(x / expectedPrecision) * expectedPrecision;
+  // First we do the perfectly normal check that should work just fine
+  if (rounded === x || x === 0) {
+    return true;
+  }
+
+  // When we're diving by non-whole numbers, we may not get perfect
+  // multiplication/division because of floating points.
+  // When dealing with ms since epoch, a double's precision is on the order
+  // of 1/5 of a microsecond, so we use a value a little higher than that as
+  // our epsilon.
+  // To be clear, this error is introduced in our re-calculation of 'rounded'
+  // above in JavaScript.
+  if (Math.abs(rounded - x + expectedPrecision) < 0.0005) {
+    return true;
+  } else if (Math.abs(rounded - x) < 0.0005) {
+    return true;
+  }
+
+  // Then we handle the case where you're sub-millisecond and the timer is not
+  // We check that the timer is not sub-millisecond by assuming it is not if it
+  // returns an even number of milliseconds
+  if (expectedPrecision < 1 && Math.round(x) == x) {
+    if (Math.round(rounded) == x) {
+      return true;
+    }
+  }
+
+  ok(
+    false,
+    "Looming Test Failure, Additional Debugging Info: Expected Precision: " +
+      expectedPrecision +
+      " Measured Value: " +
+      x +
+      " Rounded Vaue: " +
+      rounded +
+      " Fuzzy1: " +
+      Math.abs(rounded - x + expectedPrecision) +
+      " Fuzzy 2: " +
+      Math.abs(rounded - x)
+  );
+
+  return false;
+};
+
+let setupAndRunCrossOriginIsolatedTest = async function(
+  resistFingerprinting,
+  reduceTimerPrecision,
+  crossOriginIsolated,
+  expectedPrecision,
+  runTests,
+  workerCall
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", resistFingerprinting],
+      ["privacy.reduceTimerPrecision", reduceTimerPrecision],
+      [
+        "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
+        expectedPrecision * 1000,
+      ],
+      ["browser.tabs.remote.useCrossOriginOpenerPolicy", crossOriginIsolated],
+      ["browser.tabs.remote.useCrossOriginEmbedderPolicy", crossOriginIsolated],
+      ["browser.tabs.documentchannel", crossOriginIsolated],
+    ],
+  });
+
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    `https://example.com/browser/browser/components/resistfingerprinting` +
+      `/test/browser/coop_header.sjs?crossOriginIsolated=${crossOriginIsolated}`
+  );
+
+  // No matter what we set the precision to, if we're in ResistFingerprinting
+  // mode we use the larger of the precision pref and the constant 100ms
+  if (resistFingerprinting) {
+    expectedPrecision = expectedPrecision < 100 ? 100 : expectedPrecision;
+  }
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [
+      {
+        precision: expectedPrecision,
+        isRoundedFunc: isTimeValueRounded.toString(),
+        workerCall,
+        resistFingerprinting,
+        reduceTimerPrecision,
+      },
+    ],
+    runTests
+  );
+
+  if (crossOriginIsolated) {
+    let remoteType = tab.linkedBrowser.remoteType;
+    ok(
+      remoteType.startsWith(E10SUtils.WEB_REMOTE_COOP_COEP_TYPE_PREFIX),
+      `${remoteType} expected to be coop+coep`
+    );
+  }
+
+  await BrowserTestUtils.closeWindow(win);
+};
+
 // This function calculates the maximum available window dimensions and returns
 // them as an object.
 async function calcMaximumAvailSize(aChromeWidth, aChromeHeight) {
