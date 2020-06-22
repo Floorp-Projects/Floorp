@@ -3052,6 +3052,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 
 [[package]]
+name = "naga"
+version = "0.1.0"
+source = "git+https://github.com/gfx-rs/naga?rev=bce6358eb1026c13d2f1c6d365af37afe8869a86#bce6358eb1026c13d2f1c6d365af37afe8869a86"
+dependencies = [
+ "bitflags",
+ "fxhash",
+ "log",
+ "num-traits",
+ "spirv_headers",
+]
+
+[[package]]
 name = "neqo-common"
 version = "0.4.3"
 source = "git+https://github.com/mozilla/neqo?tag=v0.4.3#7406cc1798ed5274cd8540b93bb3443ff4cc26e5"
@@ -4457,6 +4469,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "spirv_headers"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f1418983d16481227ffa3ab3cf44ef92eebc9a76c092fbcd4c51a64ff032622"
+dependencies = [
+ "bitflags",
+ "num-traits",
+]
+
+[[package]]
 name = "sql-support"
 version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=61dcc364ac0d6d0816ab88a494bbf20d824b009b#61dcc364ac0d6d0816ab88a494bbf20d824b009b"
@@ -5543,11 +5565,13 @@ dependencies = [
  "gfx-hal",
  "gfx-memory",
  "log",
+ "naga",
  "parking_lot",
  "peek-poke 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ron",
  "serde",
  "smallvec",
+ "spirv_headers",
  "vec_map",
  "wgpu-types",
 ]

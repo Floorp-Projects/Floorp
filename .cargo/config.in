@@ -52,6 +52,11 @@ git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
 rev = "3541e3818fdc7c2a24f87e3459151a4ce955a67a"
 
+[source."https://github.com/gfx-rs/naga"]
+git = "https://github.com/gfx-rs/naga"
+replace-with = "vendored-sources"
+rev = "bce6358eb1026c13d2f1c6d365af37afe8869a86"
+
 [source."https://github.com/djg/cubeb-pulse-rs"]
 git = "https://github.com/djg/cubeb-pulse-rs"
 replace-with = "vendored-sources"

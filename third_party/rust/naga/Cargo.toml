@@ -1,0 +1,22 @@
+[package]
+name = "naga"
+version = "0.1.0"
+authors = ["Dzmitry Malyshau <kvarkus@gmail.com>"]
+edition = "2018"
+description = "Shader translation infrastructure"
+homepage = "https://github.com/gfx-rs/naga"
+repository = "https://github.com/gfx-rs/naga"
+keywords = ["shader", "SPIR-V"]
+license = "MPL-2.0"
+
+[dependencies]
+bitflags = "1"
+fxhash = "0.2"
+log = "0.4"
+num-traits = "0.2"
+spirv = { package = "spirv_headers", version = "1" }
+
+[dev-dependencies]
+env_logger = "0.6"
+ron = "0.5"
+serde = { version = "1", features = ["serde_derive"] }
