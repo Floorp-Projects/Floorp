@@ -108,7 +108,7 @@ use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTi
 use crate::prim_store::{PointKey, SizeKey, RectangleKey};
 use crate::render_task_cache::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
-use crate::util::{clamp_to_scale_factor, extract_inner_rect_safe, project_rect, ScaleOffset, VecHelper};
+use crate::util::{clamp_to_scale_factor, extract_inner_rect_safe, project_rect, ScaleOffset};
 use euclid::approxeq::ApproxEq;
 use std::{iter, ops, u32};
 use smallvec::SmallVec;
@@ -833,25 +833,6 @@ impl ClipChainStack {
             ],
             clips: Vec::new(),
             clip_counts: Vec::new(),
-        }
-    }
-
-    pub fn clear(&mut self) {
-        self.clips.clear();
-        self.clip_counts.clear();
-        self.levels.clear();
-        self.levels.push(ClipChainLevel {
-            shared_clips: Vec::new(),
-            first_clip_index: 0,
-            initial_clip_counts_len: 0,
-        });
-    }
-
-    pub fn take(&mut self) -> Self {
-        ClipChainStack {
-            levels: self.levels.take(),
-            clips: self.clips.take(),
-            clip_counts: self.clip_counts.take(),
         }
     }
 
