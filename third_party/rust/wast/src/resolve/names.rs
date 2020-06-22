@@ -563,7 +563,7 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolver.resolve_valtype(&mut s.to)
             }
 
-            RefNull(ty) | RefIsNull(ty) => self.resolver.resolve_reftype(ty),
+            RefNull(ty) => self.resolver.resolve_reftype(ty),
 
             _ => Ok(()),
         }
