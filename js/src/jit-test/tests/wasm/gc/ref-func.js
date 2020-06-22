@@ -11,7 +11,7 @@ wasmFullPass(`
 		(elem declare $run)
 		(func $run (result i32)
 			ref.func $run
-			ref.is_null func
+			ref.is_null
 		)
 		(export "run" (func $run))
 	)

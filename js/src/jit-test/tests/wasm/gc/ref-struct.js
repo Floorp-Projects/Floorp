@@ -53,7 +53,7 @@ function checkInvalid(body, errorMessage) {
                 (call $accum (global.get $g)))
 
           (func $accum (param $w (ref opt $wabbit)) (result i32)
-                (if (result i32) (ref.is_null opt $wabbit (local.get $w))
+                (if (result i32) (ref.is_null (local.get $w))
                     (i32.const 0)
                     (i32.add (struct.get $wabbit 0 (local.get $w))
                              (i32.sub (call $accum (struct.get $wabbit 1 (local.get $w)))
@@ -64,7 +64,7 @@ function checkInvalid(body, errorMessage) {
 
           (func $reverse (param $w (ref opt $wabbit))
                 (local $tmp (ref opt $wabbit))
-                (if (i32.eqz (ref.is_null opt $wabbit (local.get $w)))
+                (if (i32.eqz (ref.is_null (local.get $w)))
                     (block
                      (struct.set $wabbit 0 (local.get $w) (i32.mul (i32.const 2) (struct.get $wabbit 0 (local.get $w))))
                      (local.set $tmp (struct.get $wabbit 1 (local.get $w)))
@@ -77,7 +77,7 @@ function checkInvalid(body, errorMessage) {
                 (call $pr (global.get $g)))
 
           (func $pr (param $w (ref opt $wabbit))
-                (if (i32.eqz (ref.is_null opt $wabbit (local.get $w)))
+                (if (i32.eqz (ref.is_null (local.get $w)))
                     (block
                      (call $print_lp)
                      (call $print_int (struct.get $wabbit 0 (local.get $w)))
@@ -262,7 +262,7 @@ assertEq(wasmEvalText(
           (func (export "make") (param $n i32) (result anyref)
            (struct.new $node (local.get $n)))
           (func (export "coerce") (param $p anyref) (result i32)
-           (ref.is_null opt $node (struct.narrow anyref (ref opt $node) (local.get $p)))))`;
+           (ref.is_null (struct.narrow anyref (ref opt $node) (local.get $p)))))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(txt));
     let ins1 = new WebAssembly.Instance(mod).exports;
     let ins2 = new WebAssembly.Instance(mod).exports;
