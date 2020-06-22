@@ -836,6 +836,8 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
 
 
 class MarionetteRefTestExecutor(RefTestExecutor):
+    is_print = False
+
     def __init__(self, logger, browser, server_config, timeout_multiplier=1,
                  screenshot_cache=None, close_after_done=True,
                  debug_info=None, reftest_internal=False,
@@ -966,7 +968,7 @@ class InternalRefTestImplementation(RefTestImplementation):
         return self.executor.logger
 
     def setup(self, screenshot="unexpected"):
-        data = {"screenshot": screenshot}
+        data = {"screenshot": screenshot, "isPrint": self.executor.is_print}
         if self.executor.group_metadata is not None:
             data["urlCount"] = {urljoin(self.executor.server_url(key[0]), key[1]):value
                                 for key, value in iteritems(
@@ -1094,10 +1096,13 @@ class MarionetteCrashtestExecutor(CrashtestExecutor):
 
 
 class MarionettePrintRefTestExecutor(MarionetteRefTestExecutor):
+    is_print = True
+
     def __init__(self, logger, browser, server_config, timeout_multiplier=1,
                  screenshot_cache=None, close_after_done=True,
                  debug_info=None, reftest_screenshot="unexpected", ccov=False,
-                 group_metadata=None, capabilities=None, debug=False, **kwargs):
+                 group_metadata=None, capabilities=None, debug=False,
+                 reftest_internal=False, **kwargs):
         """Marionette-based executor for reftests"""
         MarionetteRefTestExecutor.__init__(self,
                                            logger,
@@ -1108,7 +1113,7 @@ class MarionettePrintRefTestExecutor(MarionetteRefTestExecutor):
                                            close_after_done=close_after_done,
                                            debug_info=debug_info,
                                            reftest_screenshot=reftest_screenshot,
-                                           reftest_internal=False,
+                                           reftest_internal=reftest_internal,
                                            ccov=ccov,
                                            group_metadata=group_metadata,
                                            capabilities=capabilities,
@@ -1117,7 +1122,12 @@ class MarionettePrintRefTestExecutor(MarionetteRefTestExecutor):
 
     def setup(self, runner):
         super(MarionettePrintRefTestExecutor, self).setup(runner)
-        self.protocol.pdf_print.load_runner()
+        if not isinstance(self.implementation, InternalRefTestImplementation):
+            self.protocol.pdf_print.load_runner()
+
+    def get_implementation(self, reftest_internal):
+        return (InternalRefTestImplementation if reftest_internal
+                else RefTestImplementation)(self)
 
     def screenshot(self, test, viewport_size, dpi, page_ranges):
         # https://github.com/web-platform-tests/wpt/issues/7140
