@@ -742,15 +742,18 @@ DecodeItem(void* dest,
                     switch (tagnum) {
                         /* special cases of primitive types */
                         case SEC_ASN1_INTEGER: {
-                            /* remove leading zeroes if the caller requested
-                               siUnsignedInteger
-                               This is to allow RSA key operations to work */
                             SECItem* destItem = (SECItem*)((char*)dest +
                                                            templateEntry->offset);
                             if (destItem && (siUnsignedInteger == destItem->type)) {
-                                while (temp.len > 1 && temp.data[0] == 0) { /* leading 0 */
+                                /* A leading 0 is only allowed when a value
+                                 * would otherwise be interpreted as negative. */
+                                if (temp.len > 1 && temp.data[0] == 0) {
                                     temp.data++;
                                     temp.len--;
+                                    if (!(temp.data[0] & 0x80)) {
+                                        PORT_SetError(SEC_ERROR_BAD_DER);
+                                        rv = SECFailure;
+                                    }
                                 }
                             }
                             break;
