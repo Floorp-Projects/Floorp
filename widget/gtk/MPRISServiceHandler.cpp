@@ -651,6 +651,9 @@ GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
     g_variant_builder_add(
         &builder, "{sv}", "xesam:title",
         g_variant_new_string(NS_ConvertUTF16toUTF8(mMetadata->mTitle).get()));
+    g_variant_builder_add(
+        &builder, "{sv}", "xesam:album",
+        g_variant_new_string(NS_ConvertUTF16toUTF8(mMetadata->mAlbum).get()));
     GVariantBuilder artistBuilder;  // Artists is a list.
     g_variant_builder_init(&artistBuilder, G_VARIANT_TYPE("as"));
     g_variant_builder_add(&artistBuilder, "s",
