@@ -7,10 +7,12 @@
 #include "SFNTData.h"
 
 #include <algorithm>
+#include <numeric>
 
 #include "BigEndianInts.h"
 #include "Logging.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Span.h"
 #include "SFNTNameTable.h"
 
 namespace mozilla {
@@ -57,6 +59,17 @@ class SFNTData::Font {
         mEndOfDirEntries(mFirstDirEntry + aOffsetTable->numTables),
         mDataLength(aDataLength) {}
 
+  Span<const uint8_t> GetHeadTableBytes() const {
+    const TableDirEntry* dirEntry =
+        GetDirEntry(TRUETYPE_TAG('h', 'e', 'a', 'd'));
+    if (!dirEntry) {
+      gfxWarning() << "Head table entry not found.";
+      return nullptr;
+    }
+
+    return MakeSpan(mFontData + dirEntry->offset, dirEntry->length);
+  }
+
   bool GetU16FullName(mozilla::u16string& aU16FullName) {
     const TableDirEntry* dirEntry =
         GetDirEntry(TRUETYPE_TAG('n', 'a', 'm', 'e'));
@@ -75,7 +88,7 @@ class SFNTData::Font {
   }
 
  private:
-  const TableDirEntry* GetDirEntry(const uint32_t aTag) {
+  const TableDirEntry* GetDirEntry(const uint32_t aTag) const {
     const TableDirEntry* foundDirEntry =
         std::lower_bound(mFirstDirEntry, mEndOfDirEntries, aTag);
 
@@ -143,14 +156,13 @@ UniquePtr<SFNTData> SFNTData::Create(const uint8_t* aFontData,
 /* static */
 uint64_t SFNTData::GetUniqueKey(const uint8_t* aFontData, uint32_t aDataLength,
                                 uint32_t aVarDataSize, const void* aVarData) {
-  uint64_t hash;
+  uint64_t hash = 0;
   UniquePtr<SFNTData> sfntData = SFNTData::Create(aFontData, aDataLength);
-  mozilla::u16string firstName;
-  if (sfntData && sfntData->GetU16FullName(0, firstName)) {
-    hash = HashString(firstName.c_str(), firstName.length());
+  if (sfntData) {
+    hash = sfntData->HashHeadTables();
   } else {
-    gfxWarning() << "Failed to get name from font data hashing whole font.";
-    hash = HashString(aFontData, aDataLength);
+    gfxWarning() << "Failed to create SFNTData from data, hashing whole font.";
+    hash = HashBytes(aFontData, aDataLength);
   }
 
   if (aVarDataSize) {
@@ -158,7 +170,6 @@ uint64_t SFNTData::GetUniqueKey(const uint8_t* aFontData, uint32_t aDataLength,
   }
 
   return hash << 32 | aDataLength;
-  ;
 }
 
 SFNTData::~SFNTData() {
@@ -231,6 +242,16 @@ bool SFNTData::AddFont(const uint8_t* aFontData, uint32_t aDataLength,
   }
 
   return mFonts.append(new Font(offsetTable, aFontData, aDataLength));
+}
+
+uint32_t SFNTData::HashHeadTables() {
+  uint32_t headTableHash = std::accumulate(
+      mFonts.begin(), mFonts.end(), 0U, [](uint32_t hash, Font* font) {
+        Span<const uint8_t> headBytes = font->GetHeadTableBytes();
+        return AddToHash(hash, HashBytes(headBytes.data(), headBytes.size()));
+      });
+
+  return headTableHash;
 }
 
 }  // namespace gfx
