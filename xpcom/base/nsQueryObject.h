@@ -61,12 +61,12 @@ inline nsQueryObject<T> do_QueryObject(T* aRawPtr) {
 }
 
 template <class T>
-inline nsQueryObject<T> do_QueryObject(nsCOMPtr<T>& aRawPtr) {
+inline nsQueryObject<T> do_QueryObject(const nsCOMPtr<T>& aRawPtr) {
   return nsQueryObject<T>(aRawPtr);
 }
 
 template <class T>
-inline nsQueryObject<T> do_QueryObject(RefPtr<T>& aRawPtr) {
+inline nsQueryObject<T> do_QueryObject(const RefPtr<T>& aRawPtr) {
   return nsQueryObject<T>(aRawPtr);
 }
 
@@ -77,13 +77,13 @@ inline nsQueryObjectWithError<T> do_QueryObject(T* aRawPtr,
 }
 
 template <class T>
-inline nsQueryObjectWithError<T> do_QueryObject(nsCOMPtr<T>& aRawPtr,
+inline nsQueryObjectWithError<T> do_QueryObject(const nsCOMPtr<T>& aRawPtr,
                                                 nsresult* aErrorPtr) {
   return nsQueryObjectWithError<T>(aRawPtr, aErrorPtr);
 }
 
 template <class T>
-inline nsQueryObjectWithError<T> do_QueryObject(RefPtr<T>& aRawPtr,
+inline nsQueryObjectWithError<T> do_QueryObject(const RefPtr<T>& aRawPtr,
                                                 nsresult* aErrorPtr) {
   return nsQueryObjectWithError<T>(aRawPtr, aErrorPtr);
 }
