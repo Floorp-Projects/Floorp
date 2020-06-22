@@ -1063,6 +1063,21 @@ this.FormAutofillHeuristics = {
     const getElementStrings = this._getElementStrings(element);
     for (let regexp of regexps) {
       for (let string of getElementStrings) {
+        // The original regexp "(?<!united )state|county|region|province" for
+        // "address-line1" wants to exclude any "united state" string, so the
+        // following code is to remove all "united state" string before applying
+        // "addess-level1" regexp.
+        //
+        // Since "united state" string matches to the regexp of address-line2&3,
+        // the two regexps should be excluded here.
+        if (
+          ["address-level1", "address-line2", "address-line3"].includes(regexp)
+        ) {
+          string = string
+            .toLowerCase()
+            .split("united state")
+            .join("");
+        }
         if (this.RULES[regexp].test(string)) {
           return regexp;
         }
