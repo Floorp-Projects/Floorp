@@ -59,7 +59,7 @@ const char* FeatureStatusToString(FeatureStatus aStatus) {
     case FeatureStatus::Denied:
       return "denied";
     case FeatureStatus::Blocklisted:
-      return "blacklisted";
+      return "blocklisted";
     case FeatureStatus::OptIn:
       return "opt-in";
     case FeatureStatus::Failed:
