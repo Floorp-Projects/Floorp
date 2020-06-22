@@ -135,13 +135,15 @@ add_task(async function test_loading_experimentsAPI() {
     ],
   });
   const client = RemoteSettings("messaging-experiments");
-  await client.db.clear();
-  await client.db.create(
-    // Modify targeting to ensure the messages always show up
-    { ...EXPERIMENT_PAYLOAD }
+  await client.db.importChanges(
+    {},
+    42,
+    [
+      // Modify targeting to ensure the messages always show up
+      { ...EXPERIMENT_PAYLOAD },
+    ],
+    { clear: true }
   );
-  await client.db.saveLastModified(42); // Prevent from loading JSON dump.
-
   // Fetch the new recipe from RS
   await RemoteSettingsExperimentLoader.updateRecipes();
   await BrowserTestUtils.waitForCondition(

@@ -892,6 +892,21 @@ var AddonTestUtils = {
       plugins: bsPass.PluginBlocklistRS,
     };
 
+    // Since we load the specified test data, we shouldn't let the
+    // packaged JSON dumps to interfere.
+    const pref = "services.settings.load_dump";
+    const backup = Services.prefs.getBoolPref(pref, null);
+    Services.prefs.setBoolPref(pref, false);
+    if (this.testScope) {
+      this.testScope.registerCleanupFunction(() => {
+        if (backup === null) {
+          Services.prefs.clearUserPref(pref);
+        } else {
+          Services.prefs.setBoolPref(pref, backup);
+        }
+      });
+    }
+
     for (const [dataProp, blocklistObj] of Object.entries(blocklistMapping)) {
       let newData = data[dataProp];
       if (!newData) {
@@ -914,12 +929,12 @@ var AddonTestUtils = {
       }
       blocklistObj.ensureInitialized();
       let db = await blocklistObj._client.db;
-      await db.clear();
       const collectionTimestamp = Math.max(
         ...newData.map(r => r.last_modified)
       );
-      await db.saveLastModified(collectionTimestamp);
-      await db.importBulk(newData);
+      await db.importChanges({}, collectionTimestamp, newData, {
+        clear: true,
+      });
       // We manually call _onUpdate... which is evil, but at the moment kinto doesn't have
       // a better abstraction unless you want to mock your own http server to do the update.
       await blocklistObj._onUpdate();
