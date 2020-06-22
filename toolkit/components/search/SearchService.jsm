@@ -495,8 +495,6 @@ SearchService.prototype = {
    *   A Components.results success code on success, otherwise a failure code.
    */
   async _init() {
-    logConsole.debug("_init start");
-
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "_separatePrivateDefaultPrefValue",
