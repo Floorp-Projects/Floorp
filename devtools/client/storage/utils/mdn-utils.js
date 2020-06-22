@@ -4,7 +4,8 @@
 
 "use strict";
 
-const MDN_BASE_URL = "https://developer.mozilla.org/Tools/Storage_Inspector/";
+const MDN_BASE_URL =
+  "https://developer.mozilla.org/docs/Tools/Storage_Inspector/";
 
 /**
  * Get the MDN URL for the specified storage type.
