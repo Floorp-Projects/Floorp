@@ -90,6 +90,8 @@ if (config.testRoot == "chrome" || config.testRoot == "a11y") {
   }
   params = config;
   params.baseurl = "chrome://mochitests/content";
+} else if (params.xOriginTests) {
+  params.baseurl = "http://mochi.test:8888/tests/";
 } else {
   params.baseurl = "";
 }
@@ -100,6 +102,9 @@ if (params.testRoot == "browser") {
   params.testPrefix = "chrome://mochitests/content/chrome/";
 } else if (params.testRoot == "a11y") {
   params.testPrefix = "chrome://mochitests/content/a11y/";
+} else if (params.xOriginTests) {
+  params.testPrefix = "http://mochi.test:8888/tests/";
+  params.httpsBaseUrl = "https://example.org:443/tests/";
 } else {
   params.testPrefix = "/tests/";
 }
@@ -173,6 +178,11 @@ if (params.maxTimeouts) {
 
 if (params.cleanupCrashes) {
   TestRunner.cleanupCrashes = true;
+}
+
+if (params.xOriginTests) {
+  TestRunner.xOriginTests = true;
+  TestRunner.setXOriginEventHandler();
 }
 
 // Log things to the console if appropriate.
