@@ -401,6 +401,7 @@ html|*#webRTC-previewVideo {
 
 /* UPDATE */
 .popup-notification-icon[popupid="update-available"],
+.popup-notification-icon[popupid="update-downloading"],
 .popup-notification-icon[popupid="update-manual"],
 .popup-notification-icon[popupid="update-restart"] {
   background: #74BF43 url(chrome://browser/skin/notification-icons/update.svg) no-repeat center;

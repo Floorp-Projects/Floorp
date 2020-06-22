@@ -3,11 +3,11 @@
 
 "use strict";
 
-// Test for About Dialog background check for updates
-// with the About Dialog opened during downloading.
-add_task(async function aboutDialog_backgroundCheck_downloading() {
+// Test for About Dialog background check for updates with the
+// "notify during download" feature turned on.
+add_task(async function aboutDialog_backgroundCheck_downloading_notify() {
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_APP_UPDATE_NOTIFYDURINGDOWNLOAD, false]],
+    set: [[PREF_APP_UPDATE_NOTIFYDURINGDOWNLOAD, true]],
   });
 
   let downloadInfo = [];
@@ -25,15 +25,20 @@ add_task(async function aboutDialog_backgroundCheck_downloading() {
     waitForUpdateState: STATE_DOWNLOADING,
   };
   await runAboutDialogUpdateTest(params, [
-    async function aboutDialog_downloading() {
+    async function aboutDialog_downloading_notification() {
       is(
         PanelUI.notificationPanel.state,
         "closed",
         "The window's doorhanger is closed."
       );
       ok(
-        !PanelUI.menuButton.hasAttribute("badge-status"),
-        "The window does not have a badge."
+        PanelUI.menuButton.hasAttribute("badge-status"),
+        "The window has a badge."
+      );
+      is(
+        PanelUI.menuButton.getAttribute("badge-status"),
+        "update-downloading",
+        "The downloading badge is showing for the background window"
       );
     },
     {

@@ -40,6 +40,7 @@ const PREF_APP_UPDATE_INTERVAL = "app.update.interval";
 const PREF_APP_UPDATE_LASTUPDATETIME =
   "app.update.lastUpdateTime.background-update-timer";
 const PREF_APP_UPDATE_LOG = "app.update.log";
+const PREF_APP_UPDATE_NOTIFYDURINGDOWNLOAD = "app.update.notifyDuringDownload";
 const PREF_APP_UPDATE_PROMPTWAITTIME = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_RETRYTIMEOUT = "app.update.socket.retryTimeout";
 const PREF_APP_UPDATE_SERVICE_ENABLED = "app.update.service.enabled";

@@ -59,6 +59,7 @@ const PREF_APP_UPDATE_ELEVATE_ATTEMPTS = "app.update.elevate.attempts";
 const PREF_APP_UPDATE_ELEVATE_MAXATTEMPTS = "app.update.elevate.maxAttempts";
 const PREF_APP_UPDATE_LOG = "app.update.log";
 const PREF_APP_UPDATE_LOG_FILE = "app.update.log.file";
+const PREF_APP_UPDATE_NOTIFYDURINGDOWNLOAD = "app.update.notifyDuringDownload";
 const PREF_APP_UPDATE_PROMPTWAITTIME = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SERVICE_ENABLED = "app.update.service.enabled";
 const PREF_APP_UPDATE_SERVICE_ERRORS = "app.update.service.errors";
@@ -4433,6 +4434,24 @@ Downloader.prototype = {
   },
 
   /**
+   * Whether or not the user wants to be notified that an update is being
+   * downloaded.
+   */
+  get _notifyDuringDownload() {
+    return Services.prefs.getBoolPref(
+      PREF_APP_UPDATE_NOTIFYDURINGDOWNLOAD,
+      false
+    );
+  },
+
+  _notifyDownloadStatusObservers: function Downloader_notifyDownloadStatusObservers() {
+    if (this._notifyDuringDownload) {
+      let status = this.updateService.isDownloading ? "downloading" : "idle";
+      Services.obs.notifyObservers(this._update, "update-downloading", status);
+    }
+  },
+
+  /**
    * Whether or not we are currently downloading something.
    */
   get isBusy() {
@@ -4673,6 +4692,9 @@ Downloader.prototype = {
         .getService(Ci.nsIUpdateManager)
         .saveUpdates();
     }
+
+    this._notifyDownloadStatusObservers();
+
     return STATE_DOWNLOADING;
   },
 
@@ -5174,6 +5196,11 @@ Downloader.prototype = {
     }
 
     this._request = null;
+
+    // This notification must happen after _request is set to null so that
+    // the correct this.updateService.isDownloading value is available in
+    // _notifyDownloadStatusObservers().
+    this._notifyDownloadStatusObservers();
 
     if (state == STATE_DOWNLOAD_FAILED) {
       var allFailed = true;
