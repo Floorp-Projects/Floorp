@@ -302,6 +302,30 @@ class PSMutex : private ::mozilla::detail::MutexImpl {
     mOwningThreadId = tid;
   }
 
+  [[nodiscard]] bool TryLock() {
+    const int tid = profiler_current_thread_id();
+    MOZ_ASSERT(tid != 0);
+
+    // This is only designed to catch recursive locking:
+    // - If the current thread doesn't own the mutex, `mOwningThreadId` must be
+    //   zero or a different thread id written by another thread; it may change
+    //   again at any time, but never to the current thread's id.
+    // - If the current thread owns the mutex, `mOwningThreadId` must be its id.
+    MOZ_ASSERT(mOwningThreadId != tid);
+
+    if (!::mozilla::detail::MutexImpl::tryLock()) {
+      // Failed to lock, nothing more to do.
+      return false;
+    }
+
+    // We now hold the mutex, it should have been in the unlocked state before.
+    MOZ_ASSERT(mOwningThreadId == 0);
+    // And we can write our own thread id.
+    mOwningThreadId = tid;
+
+    return true;
+  }
+
   void Unlock() {
     // This should never trigger! But check just in case something has gone
     // very wrong (e.g., memory corruption).
@@ -350,7 +374,45 @@ class MOZ_RAII PSAutoLock {
   ~PSAutoLock() { mMutex.Unlock(); }
 
  private:
+  // Allow PSAutoTryLock to call the following `PSAutoLock(PSMutex&, int)`
+  // constructor through `Maybe<const PSAutoLock>::emplace()`.
+  friend class Maybe<const PSAutoLock>;
+
+  // Special constructor taking an already-locked mutex. The `int` parameter is
+  // necessary to distinguish it from the main constructor.
+  PSAutoLock(PSMutex& aAlreadyLockedMutex, int) : mMutex(aAlreadyLockedMutex) {
+    mMutex.AssertCurrentThreadOwns();
+  }
+
   PSMutex& mMutex;
+};
+
+// RAII class that attempts to lock the profiler mutex. Example usage:
+//   PSAutoTryLock tryLock(gPSMutex);
+//   if (tryLock.IsLocked()) { locked_foo(tryLock.LockRef()); }
+class MOZ_RAII PSAutoTryLock {
+ public:
+  explicit PSAutoTryLock(PSMutex& aMutex) {
+    if (aMutex.TryLock()) {
+      mMaybePSAutoLock.emplace(aMutex, 0);
+    }
+  }
+
+  // Return true if the mutex was aquired and locked.
+  [[nodiscard]] bool IsLocked() const { return mMaybePSAutoLock.isSome(); }
+
+  // Assuming the mutex is locked, return a reference to a `PSAutoLock` for that
+  // mutex, which can be passed as proof-of-lock.
+  [[nodiscard]] const PSAutoLock& LockRef() const {
+    MOZ_ASSERT(IsLocked());
+    return mMaybePSAutoLock.ref();
+  }
+
+ private:
+  // `mMaybePSAutoLock` is `Nothing` if locking failed, otherwise it contains a
+  // `const PSAutoLock` holding the locked mutex, and whose reference may be
+  // passed to functions expecting a proof-of-lock.
+  Maybe<const PSAutoLock> mMaybePSAutoLock;
 };
 
 // Only functions that take a PSLockRef arg can access CorePS's and ActivePS's

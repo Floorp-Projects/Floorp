@@ -53,6 +53,19 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
     mOwningThreadId = tid;
   }
 
+  [[nodiscard]] bool TryLock() {
+    const int tid = baseprofiler::profiler_current_thread_id();
+    MOZ_ASSERT(tid != 0);
+    MOZ_ASSERT(!IsLockedOnCurrentThread(), "Recursive locking");
+    if (!::mozilla::detail::MutexImpl::tryLock()) {
+      // Failed to lock, nothing more to do.
+      return false;
+    }
+    MOZ_ASSERT(mOwningThreadId == 0, "Not unlocked properly");
+    mOwningThreadId = tid;
+    return true;
+  }
+
   void Unlock() {
     MOZ_ASSERT(IsLockedOnCurrentThread(), "Unlocking when not locked here");
     // We're still holding the mutex here, so it's safe to just reset
