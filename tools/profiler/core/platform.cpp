@@ -5029,20 +5029,6 @@ bool profiler_is_locked_on_current_thread() {
          CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread();
 }
 
-bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
-                                           uintptr_t aMemoryAddress) {
-  if (!profiler_can_accept_markers()) {
-    return false;
-  }
-  AUTO_PROFILER_STATS(add_marker_with_NativeAllocationMarkerPayload);
-  profiler_add_marker_for_thread(
-      aMainThreadId, JS::ProfilingCategoryPair::OTHER, "Native allocation",
-      NativeAllocationMarkerPayload(TimeStamp::Now(), aSize, aMemoryAddress,
-                                    profiler_current_thread_id(),
-                                    profiler_get_backtrace()));
-  return true;
-}
-
 void profiler_add_network_marker(
     nsIURI* aURI, int32_t aPriority, uint64_t aChannelId, NetworkLoadType aType,
     mozilla::TimeStamp aStart, mozilla::TimeStamp aEnd, int64_t aCount,
@@ -5137,6 +5123,34 @@ void profiler_add_marker_for_mainthread(JS::ProfilingCategoryPair aCategoryPair,
                                         const ProfilerMarkerPayload& aPayload) {
   profiler_add_marker_for_thread(CorePS::MainThreadId(), aCategoryPair,
                                  aMarkerName, aPayload);
+}
+
+bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
+                                           uintptr_t aMemoryAddress) {
+  if (!profiler_can_accept_markers()) {
+    return false;
+  }
+
+  // Because native allocations may be intercepted anywhere, blocking while
+  // locking the profiler mutex here could end up causing a deadlock if another
+  // mutex is taken, which the profiler may indirectly need elsewhere.
+  // See bug 1642726 for such a scenario.
+  // So instead we only try to lock, and bail out if the mutex is already
+  // locked. Native allocations are statistically sampled anyway, so missing a
+  // few because of this is acceptable.
+  PSAutoTryLock tryLock(gPSMutex);
+  if (!tryLock.IsLocked()) {
+    return false;
+  }
+
+  AUTO_PROFILER_STATS(add_marker_with_NativeAllocationMarkerPayload);
+  maybelocked_profiler_add_marker_for_thread(
+      aMainThreadId, JS::ProfilingCategoryPair::OTHER, "Native allocation",
+      NativeAllocationMarkerPayload(
+          TimeStamp::Now(), aSize, aMemoryAddress, profiler_current_thread_id(),
+          locked_profiler_get_backtrace(tryLock.LockRef())),
+      &tryLock.LockRef());
+  return true;
 }
 
 void profiler_tracing_marker(const char* aCategoryString,
