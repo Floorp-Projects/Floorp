@@ -12,11 +12,11 @@
 #  error "This file requires ARC support."
 #endif
 
-#include "modules/video_capture/objc/device_info_objc.h"
-#include "modules/video_capture/objc/rtc_video_capture_objc.h"
-#include "rtc_base/refcount.h"
-#include "rtc_base/refcountedobject.h"
-#include "rtc_base/scoped_ref_ptr.h"
+#include "device_info_objc.h"
+#include "rtc_video_capture_objc.h"
+#include "webrtc/rtc_base/refcount.h"
+#include "webrtc/rtc_base/refcountedobject.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 
 using namespace webrtc;
 using namespace videocapturemodule;

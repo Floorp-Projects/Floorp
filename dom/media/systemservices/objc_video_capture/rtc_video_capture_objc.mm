@@ -17,8 +17,8 @@
 #  import <UIKit/UIKit.h>
 #endif
 
-#import "modules/video_capture/objc/device_info_objc.h"
-#import "modules/video_capture/objc/rtc_video_capture_objc.h"
+#import "device_info_objc.h"
+#import "rtc_video_capture_objc.h"
 
 #include "rtc_base/logging.h"
 

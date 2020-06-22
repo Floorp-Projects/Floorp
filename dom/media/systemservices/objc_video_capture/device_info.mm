@@ -16,8 +16,8 @@
 
 #include <string>
 
-#include "modules/video_capture/objc/device_info.h"
-#include "modules/video_capture/objc/device_info_objc.h"
+#include "device_info.h"
+#include "device_info_objc.h"
 #include "modules/video_capture/video_capture_impl.h"
 #include "rtc_base/logging.h"
 
