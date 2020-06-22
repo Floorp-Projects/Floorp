@@ -39,6 +39,7 @@ class SyncedTabsLayout @JvmOverloads constructor(
             SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE -> R.string.synced_tabs_enable_tab_syncing
             SyncedTabsView.ErrorType.SYNC_UNAVAILABLE -> R.string.synced_tabs_connect_to_sync_account
             SyncedTabsView.ErrorType.SYNC_NEEDS_REAUTHENTICATION -> R.string.synced_tabs_reauth
+            SyncedTabsView.ErrorType.NO_TABS_AVAILABLE -> R.string.synced_tabs_no_tabs
         }
 
         sync_tabs_status.text = context.getText(stringResId)
