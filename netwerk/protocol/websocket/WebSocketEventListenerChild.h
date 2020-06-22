@@ -21,7 +21,7 @@ class WebSocketEventListenerChild final : public PWebSocketEventListenerChild,
   NS_INLINE_DECL_REFCOUNTING(WebSocketEventListenerChild)
 
   explicit WebSocketEventListenerChild(uint64_t aInnerWindowID,
-                                       nsIEventTarget* aTarget);
+                                       nsISerialEventTarget* aTarget);
 
   mozilla::ipc::IPCResult RecvWebSocketCreated(
       const uint32_t& aWebSocketSerialID, const nsString& aURI,

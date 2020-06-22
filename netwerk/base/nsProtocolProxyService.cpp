@@ -225,7 +225,7 @@ class nsAsyncResolveRequest final : public nsIRunnable,
     nsCOMPtr<nsIProxyInfo> mProxyInfo;
 
     // The logic is written as non-thread safe, assert single-thread usage.
-    nsCOMPtr<nsIEventTarget> mProcessingThread;
+    nsCOMPtr<nsISerialEventTarget> mProcessingThread;
   };
 
   void EnsureResolveFlagsMatch() {
@@ -1352,7 +1352,7 @@ bool nsProtocolProxyService::IsProxyDisabled(nsProxyInfo* pi) {
 }
 
 nsresult nsProtocolProxyService::SetupPACThread(
-    nsIEventTarget* mainThreadEventTarget) {
+    nsISerialEventTarget* mainThreadEventTarget) {
   if (mIsShutdown) {
     return NS_ERROR_FAILURE;
   }
@@ -1505,7 +1505,7 @@ NS_IMPL_ISUPPORTS0(nsAsyncBridgeRequest)
 nsresult nsProtocolProxyService::AsyncResolveInternal(
     nsIChannel* channel, uint32_t flags, nsIProtocolProxyCallback* callback,
     nsICancelable** result, bool isSyncOK,
-    nsIEventTarget* mainThreadEventTarget) {
+    nsISerialEventTarget* mainThreadEventTarget) {
   NS_ENSURE_ARG_POINTER(channel);
   NS_ENSURE_ARG_POINTER(callback);
 
@@ -1564,19 +1564,18 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
 
 // nsIProtocolProxyService
 NS_IMETHODIMP
-nsProtocolProxyService::AsyncResolve2(nsIChannel* channel, uint32_t flags,
-                                      nsIProtocolProxyCallback* callback,
-                                      nsIEventTarget* mainThreadEventTarget,
-                                      nsICancelable** result) {
+nsProtocolProxyService::AsyncResolve2(
+    nsIChannel* channel, uint32_t flags, nsIProtocolProxyCallback* callback,
+    nsISerialEventTarget* mainThreadEventTarget, nsICancelable** result) {
   return AsyncResolveInternal(channel, flags, callback, result, true,
                               mainThreadEventTarget);
 }
 
 NS_IMETHODIMP
-nsProtocolProxyService::AsyncResolve(nsISupports* channelOrURI, uint32_t flags,
-                                     nsIProtocolProxyCallback* callback,
-                                     nsIEventTarget* mainThreadEventTarget,
-                                     nsICancelable** result) {
+nsProtocolProxyService::AsyncResolve(
+    nsISupports* channelOrURI, uint32_t flags,
+    nsIProtocolProxyCallback* callback,
+    nsISerialEventTarget* mainThreadEventTarget, nsICancelable** result) {
   nsresult rv;
   // Check if we got a channel:
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(channelOrURI);

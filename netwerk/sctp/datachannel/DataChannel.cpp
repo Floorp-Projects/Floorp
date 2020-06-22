@@ -424,7 +424,7 @@ void DataChannelConnection::DestroyOnSTS(struct socket* aMasterSocket,
 
 Maybe<RefPtr<DataChannelConnection>> DataChannelConnection::Create(
     DataChannelConnection::DataConnectionListener* aListener,
-    nsIEventTarget* aTarget, MediaTransportHandler* aHandler,
+    nsISerialEventTarget* aTarget, MediaTransportHandler* aHandler,
     const uint16_t aLocalPort, const uint16_t aNumStreams,
     const Maybe<uint64_t>& aMaxMessageSize) {
   ASSERT_WEBRTC(NS_IsMainThread());
@@ -438,7 +438,7 @@ Maybe<RefPtr<DataChannelConnection>> DataChannelConnection::Create(
 
 DataChannelConnection::DataChannelConnection(
     DataChannelConnection::DataConnectionListener* aListener,
-    nsIEventTarget* aTarget, MediaTransportHandler* aHandler)
+    nsISerialEventTarget* aTarget, MediaTransportHandler* aHandler)
     : NeckoTargetHolder(aTarget),
       mLock("netwerk::sctp::DataChannelConnection"),
       mListener(aListener),
