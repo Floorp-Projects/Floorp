@@ -23,10 +23,6 @@ namespace layers {
 class ImageClient;
 class TextureClient;
 
-already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
-                                             gfx::IntSize aSize,
-                                             gfxImageFormat aImageFormat);
-
 /**
  * Stores RGB data in shared memory
  * It is assumed that the image width and stride are equal
