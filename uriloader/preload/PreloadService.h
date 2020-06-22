@@ -19,6 +19,7 @@ namespace dom {
 class HTMLLinkElement;
 class Document;
 enum class ReferrerPolicy : uint8_t;
+enum class SheetPreloadStatus : uint8_t;
 
 }  // namespace dom
 
@@ -63,21 +64,23 @@ class PreloadService {
       dom::HTMLLinkElement* aLink, nsContentPolicyType aPolicyType,
       nsIReferrerInfo* aReferrerInfo);
 
-  already_AddRefed<PreloaderBase> PreloadLinkHeader(
-      nsIURI* aURI, const nsAString& aURL, nsContentPolicyType aPolicyType,
-      const nsAString& aAs, const nsAString& aType, const nsAString& aIntegrity,
-      const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aCORS,
-      const nsAString& aReferrerPolicy, nsIReferrerInfo* aReferrerInfo);
+  void PreloadLinkHeader(nsIURI* aURI, const nsAString& aURL,
+                         nsContentPolicyType aPolicyType, const nsAString& aAs,
+                         const nsAString& aType, const nsAString& aIntegrity,
+                         const nsAString& aSrcset, const nsAString& aSizes,
+                         const nsAString& aCORS,
+                         const nsAString& aReferrerPolicy,
+                         nsIReferrerInfo* aReferrerInfo);
 
   void PreloadScript(nsIURI* aURI, const nsAString& aType,
                      const nsAString& aCharset, const nsAString& aCrossOrigin,
                      const nsAString& aReferrerPolicy,
                      const nsAString& aIntegrity, bool aScriptFromHead);
 
-  void PreloadStyle(nsIURI* aURI, const nsAString& aCharset,
-                    const nsAString& aCrossOrigin,
-                    const nsAString& aReferrerPolicy,
-                    const nsAString& aIntegrity);
+  dom::SheetPreloadStatus PreloadStyle(nsIURI* aURI, const nsAString& aCharset,
+                                       const nsAString& aCrossOrigin,
+                                       const nsAString& aReferrerPolicy,
+                                       const nsAString& aIntegrity);
 
   void PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
                     const nsAString& aImageReferrerPolicy, bool aIsImgSet);
@@ -95,7 +98,12 @@ class PreloadService {
   bool CheckReferrerURIScheme(nsIReferrerInfo* aReferrerInfo);
   nsIURI* BaseURIForPreload();
 
-  already_AddRefed<PreloaderBase> PreloadOrCoalesce(
+  struct PreloadOrCoalesceResult {
+    RefPtr<PreloaderBase> mPreloader;
+    bool mAlreadyComplete;
+  };
+
+  PreloadOrCoalesceResult PreloadOrCoalesce(
       nsIURI* aURI, const nsAString& aURL, nsContentPolicyType aPolicyType,
       const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
       const nsAString& aSrcset, const nsAString& aSizes,

@@ -464,6 +464,17 @@ class ExternalResourceMap {
   bool mHaveShutDown;
 };
 
+// The current status for a preload.
+enum class SheetPreloadStatus : uint8_t {
+  // There's no need to preload anything, the sheet is already in-memory.
+  AlreadyComplete,
+  // The load is in-progress. There's no guarantee that a load was started, it
+  // could be coalesced with other redundant loads.
+  InProgress,
+  // Something went wrong, and we errored out.
+  Errored,
+};
+
 //----------------------------------------------------------------------
 
 // Document interface.  This is implemented by all document objects in
@@ -2872,10 +2883,11 @@ class Document : public nsINode,
    * Called by nsParser to preload style sheets.  aCrossOriginAttr should be a
    * void string if the attr is not present.
    */
-  void PreloadStyle(nsIURI* aURI, const Encoding* aEncoding,
-                    const nsAString& aCrossOriginAttr,
-                    ReferrerPolicyEnum aReferrerPolicy,
-                    const nsAString& aIntegrity, bool aIsLinkPreload);
+  SheetPreloadStatus PreloadStyle(nsIURI* aURI, const Encoding* aEncoding,
+                                  const nsAString& aCrossOriginAttr,
+                                  ReferrerPolicyEnum aReferrerPolicy,
+                                  const nsAString& aIntegrity,
+                                  bool aIsLinkPreload);
 
   /**
    * Called by the chrome registry to load style sheets.
