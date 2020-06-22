@@ -355,36 +355,26 @@ function getContentProperty(prop) {
 
 /**
  * Retrieve all frames for the current tab as flattened list.
+ *
+ * @return {Map<number, Frame>}
+ *     Flattened list of frames as Map
  */
-function getFlattendFrameList() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    const frames = new Map();
+async function getFlattenedFrameTree(client) {
+  const { Page } = client;
 
-    function getFrameDetails(context) {
-      const frame = {
-        id: context.id.toString(),
-        parentId: context.parent ? context.parent.id.toString() : null,
-        loaderId: null,
-        name: null,
-        url: context.docShell.domWindow.location.href,
-        securityOrigin: null,
-        mimeType: null,
-      };
-
-      if (context.parent) {
-        frame.parentId = context.parent.id.toString();
+  function flatten(frames) {
+    return frames.reduce((result, current) => {
+      result.set(current.frame.id, current.frame);
+      if (current.childFrames) {
+        const frames = flatten(current.childFrames);
+        result = new Map([...result, ...frames]);
       }
+      return result;
+    }, new Map());
+  }
 
-      frames.set(context.id.toString(), frame);
-
-      for (const childContext of context.children) {
-        getFrameDetails(childContext);
-      }
-    }
-
-    getFrameDetails(content.docShell.browsingContext);
-    return frames;
-  });
+  const { frameTree } = await Page.getFrameTree();
+  return flatten(Array(frameTree));
 }
 
 /**

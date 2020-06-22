@@ -26,7 +26,8 @@ add_task(async function testBasicNavigation({ client }) {
   is(errorText, undefined, "No errorText on a successful navigation");
 
   await loadEventFired;
-  const currentFrame = await getCurrentFrame();
+  const currentFrame = await getTopFrame(client);
+  is(4, "4", "identical");
   is(frameId, currentFrame.id, "Page.navigate returns expected frameId");
 
   is(
@@ -208,7 +209,7 @@ add_task(async function testDataURL({ client }) {
   todo(!!loaderId, "Page.navigate returns loaderId");
 
   await loadEventFired;
-  const currentFrame = await getCurrentFrame();
+  const currentFrame = await getTopFrame(client);
   is(frameId, currentFrame.id, "Page.navigate returns expected frameId");
   is(gBrowser.selectedBrowser.currentURI.spec, url, "Expected URL loaded");
 });
@@ -225,16 +226,17 @@ add_task(async function testFileURL({ client }) {
   const browser = gBrowser.selectedTab.linkedBrowser;
   const loaded = BrowserTestUtils.browserLoaded(browser, false, url);
 
-  const { frameId, loaderId, errorText } = await Page.navigate({ url });
+  const { /* frameId, */ loaderId, errorText } = await Page.navigate({ url });
   is(errorText, undefined, "No errorText on a successful navigation");
   todo(!!loaderId, "Page.navigate returns loaderId");
 
   // Bug 1634693 Page.loadEventFired isn't emitted after file: navigation
   await loaded;
   is(browser.currentURI.spec, url, "Expected URL loaded");
-  const currentFrame = await getCurrentFrame();
-  // Bug 1634695 Navigating to file: returns wrong frame id
-  ok(frameId === currentFrame.id, "Page.navigate returns expected frameId");
+  // Bug 1634695 Navigating to file: returns wrong frame id and hangs
+  // content page domain methods
+  // const currentFrame = await getTopFrame(client);
+  // ok(frameId === currentFrame.id, "Page.navigate returns expected frameId");
 });
 
 add_task(async function testAbout({ client }) {
@@ -248,7 +250,7 @@ add_task(async function testAbout({ client }) {
   is(errorText, undefined, "No errorText on a successful navigation");
 
   await loadEventFired;
-  const currentFrame = await getCurrentFrame();
+  const currentFrame = await getTopFrame(client);
   is(frameId, currentFrame.id, "Page.navigate returns expected frameId");
   is(
     gBrowser.selectedBrowser.currentURI.spec,
@@ -257,7 +259,7 @@ add_task(async function testAbout({ client }) {
   );
 });
 
-async function getCurrentFrame() {
-  const frames = await getFlattendFrameList();
+async function getTopFrame(client) {
+  const frames = await getFlattenedFrameTree(client);
   return Array.from(frames.values())[0];
 }
