@@ -181,6 +181,22 @@ var HeuristicsRegExp = {
     ),
 
     // ==== Name Fields ====
+    // Note: We place the `cc-name` field for Credit Card first, because
+    // it is more specific than the `name` field below and we want to check
+    // for it before we catch the more generic one.
+    "cc-name": new RegExp(
+      "card.?(?:holder|owner)|name.*(\\b)?on(\\b)?.*card" +
+      "|(?:card|cc).?name|cc.?full.?name" +
+      "|karteninhaber" + // de-DE
+      "|nombre.*tarjeta" + // es
+      "|nom.*carte" + // fr-FR
+      "|nome.*cart" + // it-IT
+      "|名前" + // ja-JP
+      "|Имя.*карты" + // ru
+      "|信用卡开户名|开户名|持卡人姓名" + // zh-CN
+        "|持卡人姓名", // zh-TW
+      "iu"
+    ),
     name: new RegExp(
       "^name|full.?name|your.?name|customer.?name|bill.?name|ship.?name" +
       "|name.*first.*last|firstandlastname" +
@@ -233,19 +249,8 @@ var HeuristicsRegExp = {
     ),
 
     // ==== Credit Card Fields ====
-    "cc-name": new RegExp(
-      "card.?(?:holder|owner)|name.*(\\b)?on(\\b)?.*card" +
-      "|(?:card|cc).?name|cc.?full.?name" +
-      "|karteninhaber" + // de-DE
-      "|nombre.*tarjeta" + // es
-      "|nom.*carte" + // fr-FR
-      "|nome.*cart" + // it-IT
-      "|名前" + // ja-JP
-      "|Имя.*карты" + // ru
-      "|信用卡开户名|开户名|持卡人姓名" + // zh-CN
-        "|持卡人姓名", // zh-TW
-      "iu"
-    ),
+    // Note: `cc-name` expression has been moved up, above `name`, in
+    // order to handle specialization through ordering.
     "cc-number": new RegExp(
       "(add)?(?:card|cc|acct).?(?:number|#|no|num|field)" +
       "|(cc|kk)nr" + // Extra rules by Firefox for de-DE
