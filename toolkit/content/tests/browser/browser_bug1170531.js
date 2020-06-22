@@ -61,6 +61,9 @@ add_task(async function() {
       await BrowserTestUtils.browserLoaded(browser);
       browser.focus();
       await new Promise(resolve => waitForFocus(resolve, window));
+      await new Promise(resolve =>
+        window.requestAnimationFrame(() => executeSoon(resolve))
+      );
       await new Promise(openMenu);
       menu_cut_disabled =
         menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
@@ -78,6 +81,9 @@ add_task(async function() {
       await BrowserTestUtils.browserLoaded(browser);
       browser.focus();
       await new Promise(resolve => waitForFocus(resolve, window));
+      await new Promise(resolve =>
+        window.requestAnimationFrame(() => executeSoon(resolve))
+      );
       await new Promise(openMenu);
       menu_cut_disabled =
         menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
@@ -92,6 +98,9 @@ add_task(async function() {
       await BrowserTestUtils.browserLoaded(browser);
       browser.focus();
       await new Promise(resolve => waitForFocus(resolve, window));
+      await new Promise(resolve =>
+        window.requestAnimationFrame(() => executeSoon(resolve))
+      );
       await new Promise(openMenu);
       menu_cut_disabled =
         menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
