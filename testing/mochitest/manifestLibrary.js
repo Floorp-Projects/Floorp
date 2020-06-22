@@ -34,6 +34,9 @@ function parseTestManifest(testManifest, params, callback) {
       };
     } else {
       let name = params.testPrefix + path;
+      if (params.xOriginTests && obj.scheme == "https") {
+        name = params.httpsBaseUrl + path;
+      }
       paths.push({
         test: {
           url: name,
