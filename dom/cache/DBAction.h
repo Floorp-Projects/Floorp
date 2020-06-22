@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
+nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                           mozIStorageConnection** aConnOut);
 
 class DBAction : public Action {
