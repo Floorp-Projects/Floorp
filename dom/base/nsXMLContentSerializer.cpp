@@ -165,16 +165,16 @@ nsresult nsXMLContentSerializer::AppendTextData(nsIContent* aNode,
                      NS_ERROR_OUT_OF_MEMORY);
     }
   } else {
+    nsAutoString utf16;
+    if (!CopyASCIItoUTF16(MakeSpan(frag->Get1b() + aStartOffset, length), utf16,
+                          mozilla::fallible_t())) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     if (aTranslateEntities) {
-      NS_ENSURE_TRUE(
-          AppendAndTranslateEntities(
-              NS_ConvertASCIItoUTF16(frag->Get1b() + aStartOffset, length),
-              aStr),
-          NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendAndTranslateEntities(utf16, aStr),
+                     NS_ERROR_OUT_OF_MEMORY);
     } else {
-      NS_ENSURE_TRUE(aStr.Append(NS_ConvertASCIItoUTF16(
-                                     frag->Get1b() + aStartOffset, length),
-                                 mozilla::fallible),
+      NS_ENSURE_TRUE(aStr.Append(utf16, mozilla::fallible),
                      NS_ERROR_OUT_OF_MEMORY);
     }
   }
