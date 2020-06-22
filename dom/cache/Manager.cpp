@@ -26,7 +26,7 @@
 #include "nsIInputStream.h"
 #include "nsID.h"
 #include "nsIFile.h"
-#include "nsISerialEventTarget.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 #include "QuotaClientImpl.h"
@@ -252,11 +252,8 @@ class Manager::Factory {
         return Err(rv);
       }
 
-      ref = MakeSafeRefPtr<Manager>(
-          aManagerId.clonePtr(),
-          AbstractThread::CreateXPCOMThreadWrapper(
-              ioThread, false /* aRequireTailDispatch */),
-          ConstructorGuard{});
+      ref = MakeSafeRefPtr<Manager>(aManagerId.clonePtr(), ioThread.forget(),
+                                    ConstructorGuard{});
 
       // There may be an old manager for this origin in the process of
       // cleaning up.  We need to tell the new manager about this so
@@ -1892,10 +1889,11 @@ void Manager::ExecutePutAll(
 }
 
 Manager::Manager(SafeRefPtr<ManagerId> aManagerId,
-                 already_AddRefed<nsISerialEventTarget> aIOThread,
-                 const ConstructorGuard&)
+                 already_AddRefed<nsIThread> aIOThread, const ConstructorGuard&)
     : mManagerId(std::move(aManagerId)),
       mIOThread(aIOThread),
+      mIOAbstractThread(AbstractThread::CreateXPCOMThreadWrapper(
+          mIOThread, false /* aRequireTailDispatch */)),
       mContext(nullptr),
       mShuttingDown(false),
       mState(Open) {
@@ -1907,6 +1905,14 @@ Manager::~Manager() {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_DIAGNOSTIC_ASSERT(mState == Closing);
   MOZ_DIAGNOSTIC_ASSERT(!mContext);
+
+  nsCOMPtr<nsIThread> ioThread;
+  mIOThread.swap(ioThread);
+
+  // Don't spin the event loop in the destructor waiting for the thread to
+  // shutdown.  Defer this to the main thread, instead.
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NewRunnableMethod(
+      "nsIThread::AsyncShutdown", ioThread, &nsIThread::AsyncShutdown)));
 }
 
 void Manager::Init(Maybe<Manager&> aOldManager) {
