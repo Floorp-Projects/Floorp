@@ -508,7 +508,7 @@ license file's hash.
             return dump.strip()
 
         cargo_config = os.path.join(self.topsrcdir, ".cargo", "config.in")
-        with open(cargo_config, "w") as fh:
+        with open(cargo_config, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(
                 CARGO_CONFIG_TEMPLATE.format(
                     config=toml_dump(config),
