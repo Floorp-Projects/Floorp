@@ -10,6 +10,7 @@
 #include "mozilla/css/Loader.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/PreloaderBase.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIThreadInternal.h"
@@ -37,7 +38,9 @@ static_assert(eAuthorSheetFeatures == 0 && eUserSheetFeatures == 1 &&
               "sheet parsing mode constants won't fit "
               "in SheetLoadData::mParsingMode");
 
-class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
+class SheetLoadData final : public PreloaderBase,
+                            public nsIRunnable,
+                            public nsIThreadObserver {
   using MediaMatched = dom::LinkStyle::MediaMatched;
   using IsAlternate = dom::LinkStyle::IsAlternate;
   using IsPreload = Loader::IsPreload;
@@ -47,6 +50,10 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   virtual ~SheetLoadData();
 
  public:
+  // PreloaderBase
+  static void PrioritizeAsPreload(nsIChannel* aChannel);
+  void PrioritizeAsPreload() final;
+
   // Data for loading a sheet linked from a document
   SheetLoadData(Loader* aLoader, const nsAString& aTitle, nsIURI* aURI,
                 StyleSheet* aSheet, bool aSyncLoad, nsINode* aOwningNode,
