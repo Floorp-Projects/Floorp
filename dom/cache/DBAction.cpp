@@ -33,18 +33,12 @@ using mozilla::dom::quota::PersistenceType;
 
 namespace {
 
-nsresult WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile) {
+nsresult WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
+                      nsIFile* aDBDir) {
   MOZ_DIAGNOSTIC_ASSERT(aDBFile);
+  MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
-  nsCOMPtr<nsIFile> dbDir;
-  nsresult rv = aDBFile->GetParent(getter_AddRefs(dbDir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(dbDir);
-
-  rv = RemoveNsIFile(aQuotaInfo, aDBFile);
+  nsresult rv = RemoveNsIFile(aQuotaInfo, aDBFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -53,12 +47,12 @@ nsresult WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile) {
   // the new database is created.  No need to explicitly delete it here.
 
   // Delete the morgue as well.
-  rv = BodyDeleteDir(aQuotaInfo, dbDir);
+  rv = BodyDeleteDir(aQuotaInfo, aDBDir);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = WipePaddingFile(aQuotaInfo, dbDir);
+  rv = WipePaddingFile(aQuotaInfo, aDBDir);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -150,18 +144,9 @@ nsresult DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
     }
   }
 
-  nsCOMPtr<nsIFile> dbFile;
-  rv = aDBDir->Clone(getter_AddRefs(dbFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  rv = OpenDBConnection(aQuotaInfo, aDBDir, aConnOut);
 
-  rv = dbFile->Append(kCachesSQLiteFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return OpenDBConnection(aQuotaInfo, dbFile, aConnOut);
+  return rv;
 }
 
 SyncDBAction::SyncDBAction(Mode aMode) : DBAction(aMode) {}
@@ -182,25 +167,44 @@ void SyncDBAction::RunWithDBOnTarget(Resolver* aResolver,
 }
 
 // static
-nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
+nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                           mozIStorageConnection** aConnOut) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aQuotaInfo.mDirectoryLockId >= -1);
-  MOZ_DIAGNOSTIC_ASSERT(aDBFile);
+  MOZ_DIAGNOSTIC_ASSERT(aDBDir);
   MOZ_DIAGNOSTIC_ASSERT(aConnOut);
+
+  nsCOMPtr<mozIStorageConnection> conn;
+
+  nsCOMPtr<nsIFile> dbFile;
+  nsresult rv = aDBDir->Clone(getter_AddRefs(dbFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = dbFile->Append(NS_LITERAL_STRING("caches.sqlite"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists = false;
+  rv = dbFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // Use our default file:// protocol handler directly to construct the database
   // URL.  This avoids any problems if a plugin registers a custom file://
   // handler.  If such a custom handler used javascript, then we would have a
   // bad time running off the main thread here.
   RefPtr<nsFileProtocolHandler> handler = new nsFileProtocolHandler();
-  nsresult rv = handler->Init();
+  rv = handler->Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   nsCOMPtr<nsIURIMutator> mutator;
-  rv = handler->NewFileURIMutator(aDBFile, getter_AddRefs(mutator));
+  rv = handler->NewFileURIMutator(dbFile, getter_AddRefs(mutator));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -227,7 +231,6 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<mozIStorageConnection> conn;
   rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(conn));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     NS_WARNING("Cache database corrupted. Recreating empty database.");
@@ -236,7 +239,7 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
 
     // There is nothing else we can do to recover.  Also, this data can
     // be deleted by QuotaManager at any time anyways.
-    rv = WipeDatabase(aQuotaInfo, aDBFile);
+    rv = WipeDatabase(aQuotaInfo, dbFile, aDBDir);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -255,7 +258,7 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
   }
   if (schemaVersion > 0 && schemaVersion < db::kFirstShippedSchemaVersion) {
     conn = nullptr;
-    rv = WipeDatabase(aQuotaInfo, aDBFile);
+    rv = WipeDatabase(aQuotaInfo, dbFile, aDBDir);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
