@@ -144,11 +144,13 @@ void CanonicalBrowsingContext::MaybeAddAsProgressListener(
 
 void CanonicalBrowsingContext::ReplacedBy(
     CanonicalBrowsingContext* aNewContext) {
+  MOZ_ASSERT(!aNewContext->EverAttached());
   if (mStatusFilter) {
     mStatusFilter->RemoveProgressListener(mWebProgress);
     mStatusFilter = nullptr;
   }
   aNewContext->mWebProgress = std::move(mWebProgress);
+  aNewContext->mFields.SetWithoutSyncing<IDX_BrowserId>(GetBrowserId());
 }
 
 void CanonicalBrowsingContext::
