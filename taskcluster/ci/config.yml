@@ -300,11 +300,16 @@ merge-automation:
             to-branch: 'release'
         release-to-esr:
             fetch-version-from: "browser/config/version.txt"
-            version-files: []
+            version-files:
+                - filename: "browser/config/version_display.txt"
+                  new-suffix: 'esr'
             replacements:
                 - - "build/mozconfig.common"
                   - "# Enable enforcing that add-ons are signed by the trusted root"
                   - "# Disable enforcing that add-ons are signed by the trusted root"
+                - - build/mozconfig.common
+                  - 'MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}'
+                  - 'MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}'
             merge-old-head: false
             base-tag: "FIREFOX_ESR_{major_version}_BASE"
             from-repo: 'https://hg.mozilla.org/releases/mozilla-release'
@@ -313,11 +318,16 @@ merge-automation:
             to-branch: 'esr68'
         release-to-esr78:
             fetch-version-from: "browser/config/version.txt"
-            version-files: []
+            version-files:
+                - filename: "browser/config/version_display.txt"
+                  new-suffix: 'esr'
             replacements:
                 - - "build/mozconfig.common"
                   - "# Enable enforcing that add-ons are signed by the trusted root"
                   - "# Disable enforcing that add-ons are signed by the trusted root"
+                - - build/mozconfig.common
+                  - 'MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}'
+                  - 'MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}'
             merge-old-head: false
             base-tag: "FIREFOX_ESR_{major_version}_BASE"
             from-repo: 'https://hg.mozilla.org/releases/mozilla-release'
