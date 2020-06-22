@@ -113,7 +113,8 @@ class BookmarksRobot {
             .check(matches(isDisplayed()))
     }
 
-    fun verifySignInToSyncButton() = signInToSyncButton().check(matches(isDisplayed()))
+    fun verifySignInToSyncButton() =
+        signInToSyncButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
     fun verifyDeleteFolderConfirmationMessage() = assertDeleteFolderConfirmationMessage()
 
