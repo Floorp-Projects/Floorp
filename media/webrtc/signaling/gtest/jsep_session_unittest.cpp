@@ -3085,11 +3085,7 @@ TEST_F(JsepSessionTest, OfferAnswerRecvOnlyLines) {
     const auto& msection =
         parsedOffer->GetMediaSection(transceiver->GetLevel());
     const auto& ssrcs = msection.GetAttributeList().GetSsrc().mSsrcs;
-    if (msection.GetMediaType() == SdpMediaSection::kVideo) {
-      ASSERT_EQ(2U, ssrcs.size());
-    } else {
-      ASSERT_EQ(1U, ssrcs.size());
-    }
+    ASSERT_EQ(1U, ssrcs.size());
   }
 }
 
