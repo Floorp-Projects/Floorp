@@ -34,7 +34,7 @@ var observer = {
   observe(subject, topic, data) {
     ok(topic == "net:failed-to-process-uri-content", "wrong topic");
     subject = subject.QueryInterface(Ci.nsIURI);
-    is(subject.asciiSpec, "http://mochi.test:8888/tests/image/test/mochitest/invalid.jpg", "wrong subject");
+    is(subject.asciiSpec, `${location.origin}/tests/image/test/mochitest/invalid.jpg`, "wrong subject");
 
     obs.removeObserver(this, "net:failed-to-process-uri-content");
 

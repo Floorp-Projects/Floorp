@@ -16,11 +16,14 @@ var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
 var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
 var principalToInherit = channel.loadInfo.principalToInherit.URI.asciiSpec;
 
-ok(triggeringPrincipal.startsWith("http://mochi.test:8888/"),
+ok(triggeringPrincipal.startsWith("http://mochi.test:8888/")
+    || triggeringPrincipal.startsWith("http://mochi.xorigin-test:8888/"),
    "initial triggeringPrincipal correct");
-ok(loadingPrincipal.startsWith("http://mochi.test:8888/"),
+ok(loadingPrincipal.startsWith("http://mochi.test:8888/")
+    || loadingPrincipal.startsWith("http://mochi.xorigin-test:8888/"),
    "initial loadingPrincipal correct");
-ok(principalToInherit.startsWith("http://mochi.test:8888/"),
+ok(principalToInherit.startsWith("http://mochi.test:8888/")
+    || principalToInherit.startsWith("http://mochi.xorigin-test:8888/"),
    "initial principalToInherit correct");
 
 // reset principals on the loadinfo
@@ -31,11 +34,14 @@ triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
 loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
 principalToInherit = channel.loadInfo.principalToInherit;
 
-ok(triggeringPrincipal.startsWith("http://mochi.test:8888/"),
+ok(triggeringPrincipal.startsWith("http://mochi.test:8888/")
+    || triggeringPrincipal.startsWith("http://mochi.xorigin-test:8888/"),
    "triggeringPrincipal after resetting correct");
-ok(loadingPrincipal.startsWith("http://mochi.test:8888/"),
+ok(loadingPrincipal.startsWith("http://mochi.test:8888/")
+    || loadingPrincipal.startsWith("http://mochi.xorigin-test:8888/"),
    "loadingPrincipal after resetting correct");
-ok(principalToInherit.isNullPrincipal,
+ok(principalToInherit.isNullPrincipal
+    || principalToInherit.startsWith("http://mochi.xorigin-test:8888/"),
    "principalToInherit after resetting correct");
 
 // 3) verify that getChannelResultPrincipal returns right principal

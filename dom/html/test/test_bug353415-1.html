@@ -31,7 +31,7 @@
 
   addLoadEvent(function() {
     document.getElementsByName('submit_frame')[0].onload = function() {
-      is(frames.submit_frame.location.href, "http://mochi.test:8888/blah?field1=teststring&field2=0&field4=1&field6=3&field7=2&field8=8&field9=9&field12=", "Submit string was correct.");
+      is(frames.submit_frame.location.href, `${location.origin}/blah?field1=teststring&field2=0&field4=1&field6=3&field7=2&field8=8&field9=9&field12=`, "Submit string was correct.");
       SimpleTest.finish();
     };
 

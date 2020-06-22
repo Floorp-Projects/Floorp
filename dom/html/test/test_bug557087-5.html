@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557087
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(runTest);
 
-const BASE_URI = "http://mochi.test:8888/tests/dom/html/test/dummy_page.html";
+const BASE_URI = `${location.origin}/tests/dom/html/test/dummy_page.html`;
 var testResults = [
   BASE_URI + "?",
   BASE_URI + "?",

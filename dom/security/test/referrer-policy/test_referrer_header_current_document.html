@@ -12,7 +12,7 @@
   -->
 
   <script type="application/javascript">
-    const IFRAME_URL = "http://mochi.test:8888/tests/dom/security/test/referrer-policy/referrer_header_current_document_iframe.html";
+    const IFRAME_URL = `${location.origin}/tests/dom/security/test/referrer-policy/referrer_header_current_document_iframe.html`;
     SimpleTest.waitForExplicitFinish();
     window.addEventListener("message", (event) => {
       SimpleTest.is(event.data, IFRAME_URL, "Must have the original iframe as the referrer!"); 

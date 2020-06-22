@@ -38,13 +38,13 @@ function checkResults() {
   testframe.removeEventListener("load", checkResults);
 
   var channel = SpecialPowers.wrap(testframe.contentWindow).docShell.currentDocumentChannel;
-  var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
-  var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
+  var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec.split("?")[0];
+    var loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec.split("?")[0];
 
   is(triggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
     "TriggeringPrincipal for targeted window.open() should be the principal of the document");
 
-  is(testframe.contentDocument.referrer, TRIGGERING_PRINCIPAL_URI,
+  is(testframe.contentDocument.referrer.split("?")[0], TRIGGERING_PRINCIPAL_URI,
     "Referrer for targeted window.open() should be the principal of the document");
 
   is(loadingPrincipal, LOADING_PRINCIPAL_URI,

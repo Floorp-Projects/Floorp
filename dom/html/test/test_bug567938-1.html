@@ -49,7 +49,7 @@ function runTests()
 {
   document.getElementById('iframe').addEventListener('load', function(aEvent) {
     is(frames.submit_frame.location.href,
-       "http://mochi.test:8888/tests/dom/html/test/" + gTestData[gCurrentTest] + "?",
+       `${location.origin}/tests/dom/html/test/${gTestData[gCurrentTest]}?`,
        "The form should have been submitted");
     gCurrentTest++;
     if (gCurrentTest < gTestData.length) {

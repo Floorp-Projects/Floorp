@@ -279,10 +279,10 @@ function testSecurityErrors() {
         ok(false, "Did not get SecurityError with unclean source. ImageBitmap was created successfully.");
       } catch (ex) {
         if (ex == "SecurityError: The operation is insecure.") {
-          ok(true, ex);
+          ok(true, ex.message);
         }
         else {
-          ok(false, "Did not get SecurityError with unclean source. Error Message: " + ex);
+          ok(false, "Did not get SecurityError with unclean source. Error Message: " + ex.message);
         }
       }
     });
