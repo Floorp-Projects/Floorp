@@ -18,10 +18,12 @@ enum class ElevationState {
   eNormalUser = 0,
   eElevated = (1 << 0),
   eHighIntegrityNoUAC = (1 << 1),
+  eHighIntegrityByAppCompat = (1 << 2),
 };
 
 LauncherResult<ElevationState> GetElevationState(
-    LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken);
+    const wchar_t* aExecutablePath, LauncherFlags aFlags,
+    nsAutoHandle& aOutMediumIlToken);
 
 LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]);
 
