@@ -10,7 +10,6 @@ import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
-import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.BuildConfig
@@ -49,9 +48,6 @@ val Context.searchEngineManager: SearchEngineManager
 
 fun Context.asActivity() = (this as? ContextThemeWrapper)?.baseContext as? Activity
     ?: this as? Activity
-
-fun Context.asFragmentActivity() = (this as? ContextThemeWrapper)?.baseContext as? FragmentActivity
-    ?: this as? FragmentActivity
 
 fun Context.getPreferenceKey(@StringRes resourceId: Int): String =
     resources.getString(resourceId)
