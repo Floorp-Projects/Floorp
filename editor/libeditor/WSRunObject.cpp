@@ -792,74 +792,76 @@ void WSRunScanner::InitializeRangeStart(
     const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  EditorDOMPoint start(aPoint);
   // first look backwards to find preceding ws nodes
-  if (aPoint.IsInTextNode()) {
+  if (aPoint.IsInTextNode() && !aPoint.IsStartOfContainer()) {
     if (InitializeRangeStartWithTextNode(
             EditorDOMPointInText(aPoint.ContainerAsText(), aPoint.Offset()))) {
       return;
     }
     // The text node does not have visible character, let's keep scanning
     // preceding nodes.
-    start.Set(aPoint.ContainerAsText(), 0);
+    InitializeRangeStart(EditorDOMPoint(aPoint.ContainerAsText(), 0),
+                         aEditableBlockParentOrTopmostEditableInlineContent);
+    return;
   }
 
-  while (!mStartNode) {
-    // we haven't found the start of ws yet.  Keep looking
-    nsIContent* previousLeafContentOrBlock =
-        HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-            start, aEditableBlockParentOrTopmostEditableInlineContent,
-            mEditingHost);
-    if (!previousLeafContentOrBlock) {
-      // no prior node means we exhausted
-      // aEditableBlockParentOrTopmostEditableInlineContent
-      mStartNode = start.GetContainer();
-      mStartOffset = start.Offset();
-      mStartReason = WSType::CurrentBlockBoundary;
-      // mStartReasonContent can be either a block element or any non-editable
-      // content in this case.
-      mStartReasonContent = const_cast<nsIContent*>(
-          &aEditableBlockParentOrTopmostEditableInlineContent);
-      return;
-    }
-
-    if (HTMLEditUtils::IsBlockElement(*previousLeafContentOrBlock)) {
-      mStartNode = start.GetContainer();
-      mStartOffset = start.Offset();
-      mStartReason = WSType::OtherBlockBoundary;
-      mStartReasonContent = previousLeafContentOrBlock;
-      return;
-    }
-
-    if (!previousLeafContentOrBlock->IsText() ||
-        !previousLeafContentOrBlock->IsEditable()) {
-      // it's a break or a special node, like <img>, that is not a block and
-      // not a break but still serves as a terminator to ws runs.
-      mStartNode = start.GetContainer();
-      mStartOffset = start.Offset();
-      mStartReason = previousLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
-                         ? WSType::BRElement
-                         : WSType::SpecialContent;
-      mStartReasonContent = previousLeafContentOrBlock;
-      return;
-    }
-
-    if (!previousLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
-      // Zero length text node. Set start point to it
-      // so we can get past it!
-      start.Set(previousLeafContentOrBlock->AsText(), 0);
-      continue;
-    }
-
-    if (InitializeRangeStartWithTextNode(EditorDOMPointInText::AtEndOf(
-            *previousLeafContentOrBlock->AsText()))) {
-      return;
-    }
-
-    // The text node does not have visible character, let's keep scanning
-    // preceding nodes.
-    start.Set(previousLeafContentOrBlock->AsText(), 0);
+  // we haven't found the start of ws yet.  Keep looking
+  nsIContent* previousLeafContentOrBlock =
+      HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+          aPoint, aEditableBlockParentOrTopmostEditableInlineContent,
+          mEditingHost);
+  if (!previousLeafContentOrBlock) {
+    // no prior node means we exhausted
+    // aEditableBlockParentOrTopmostEditableInlineContent
+    mStartNode = aPoint.GetContainer();
+    mStartOffset = aPoint.Offset();
+    mStartReason = WSType::CurrentBlockBoundary;
+    // mStartReasonContent can be either a block element or any non-editable
+    // content in this case.
+    mStartReasonContent = const_cast<nsIContent*>(
+        &aEditableBlockParentOrTopmostEditableInlineContent);
+    return;
   }
+
+  if (HTMLEditUtils::IsBlockElement(*previousLeafContentOrBlock)) {
+    mStartNode = aPoint.GetContainer();
+    mStartOffset = aPoint.Offset();
+    mStartReason = WSType::OtherBlockBoundary;
+    mStartReasonContent = previousLeafContentOrBlock;
+    return;
+  }
+
+  if (!previousLeafContentOrBlock->IsText() ||
+      !previousLeafContentOrBlock->IsEditable()) {
+    // it's a break or a special node, like <img>, that is not a block and
+    // not a break but still serves as a terminator to ws runs.
+    mStartNode = aPoint.GetContainer();
+    mStartOffset = aPoint.Offset();
+    mStartReason = previousLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
+                       ? WSType::BRElement
+                       : WSType::SpecialContent;
+    mStartReasonContent = previousLeafContentOrBlock;
+    return;
+  }
+
+  if (!previousLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
+    // Zero length text node. Set start point to it
+    // so we can get past it!
+    InitializeRangeStart(
+        EditorDOMPoint(previousLeafContentOrBlock->AsText(), 0),
+        aEditableBlockParentOrTopmostEditableInlineContent);
+    return;
+  }
+
+  if (InitializeRangeStartWithTextNode(EditorDOMPointInText::AtEndOf(
+          *previousLeafContentOrBlock->AsText()))) {
+    return;
+  }
+
+  // The text node does not have visible character, let's keep scanning
+  // preceding nodes.
+  InitializeRangeStart(EditorDOMPoint(previousLeafContentOrBlock->AsText(), 0),
+                       aEditableBlockParentOrTopmostEditableInlineContent);
 }
 
 bool WSRunScanner::InitializeRangeEndWithTextNode(
@@ -898,75 +900,76 @@ void WSRunScanner::InitializeRangeEnd(
     const nsIContent& aEditableBlockParentOrTopmostEditableInlineContent) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  EditorDOMPoint end(aPoint);
-  if (aPoint.IsInTextNode()) {
+  if (aPoint.IsInTextNode() && !aPoint.IsEndOfContainer()) {
     if (InitializeRangeEndWithTextNode(
             EditorDOMPointInText(aPoint.ContainerAsText(), aPoint.Offset()))) {
       return;
     }
     // The text node does not have visible character, let's keep scanning
     // following nodes.
-    end.SetToEndOf(aPoint.ContainerAsText());
+    InitializeRangeEnd(EditorDOMPoint::AtEndOf(*aPoint.ContainerAsText()),
+                       aEditableBlockParentOrTopmostEditableInlineContent);
+    return;
   }
 
-  while (!mEndNode) {
-    // we haven't found the end of ws yet.  Keep looking
-    nsIContent* nextLeafContentOrBlock =
-        HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-            end, aEditableBlockParentOrTopmostEditableInlineContent,
-            mEditingHost);
-    if (!nextLeafContentOrBlock) {
-      // no next node means we exhausted
-      // aEditableBlockParentOrTopmostEditableInlineContent
-      mEndNode = end.GetContainer();
-      mEndOffset = end.Offset();
-      mEndReason = WSType::CurrentBlockBoundary;
-      // mEndReasonContent can be either a block element or any non-editable
-      // content in this case.
-      mEndReasonContent = const_cast<nsIContent*>(
-          &aEditableBlockParentOrTopmostEditableInlineContent);
-      return;
-    }
-
-    if (HTMLEditUtils::IsBlockElement(*nextLeafContentOrBlock)) {
-      // we encountered a new block.  therefore no more ws.
-      mEndNode = end.GetContainer();
-      mEndOffset = end.Offset();
-      mEndReason = WSType::OtherBlockBoundary;
-      mEndReasonContent = nextLeafContentOrBlock;
-      return;
-    }
-
-    if (!nextLeafContentOrBlock->IsText() ||
-        !nextLeafContentOrBlock->IsEditable()) {
-      // we encountered a break or a special node, like <img>,
-      // that is not a block and not a break but still
-      // serves as a terminator to ws runs.
-      mEndNode = end.GetContainer();
-      mEndOffset = end.Offset();
-      mEndReason = nextLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
-                       ? WSType::BRElement
-                       : WSType::SpecialContent;
-      mEndReasonContent = nextLeafContentOrBlock;
-      return;
-    }
-
-    if (!nextLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
-      // Zero length text node. Set end point to it
-      // so we can get past it!
-      end.Set(nextLeafContentOrBlock->AsText(), 0);
-      continue;
-    }
-
-    if (InitializeRangeEndWithTextNode(
-            EditorDOMPointInText(nextLeafContentOrBlock->AsText(), 0))) {
-      return;
-    }
-
-    // The text node does not have visible character, let's keep scanning
-    // following nodes.
-    end.SetToEndOf(nextLeafContentOrBlock->AsText());
+  // we haven't found the end of ws yet.  Keep looking
+  nsIContent* nextLeafContentOrBlock =
+      HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+          aPoint, aEditableBlockParentOrTopmostEditableInlineContent,
+          mEditingHost);
+  if (!nextLeafContentOrBlock) {
+    // no next node means we exhausted
+    // aEditableBlockParentOrTopmostEditableInlineContent
+    mEndNode = aPoint.GetContainer();
+    mEndOffset = aPoint.Offset();
+    mEndReason = WSType::CurrentBlockBoundary;
+    // mEndReasonContent can be either a block element or any non-editable
+    // content in this case.
+    mEndReasonContent = const_cast<nsIContent*>(
+        &aEditableBlockParentOrTopmostEditableInlineContent);
+    return;
   }
+
+  if (HTMLEditUtils::IsBlockElement(*nextLeafContentOrBlock)) {
+    // we encountered a new block.  therefore no more ws.
+    mEndNode = aPoint.GetContainer();
+    mEndOffset = aPoint.Offset();
+    mEndReason = WSType::OtherBlockBoundary;
+    mEndReasonContent = nextLeafContentOrBlock;
+    return;
+  }
+
+  if (!nextLeafContentOrBlock->IsText() ||
+      !nextLeafContentOrBlock->IsEditable()) {
+    // we encountered a break or a special node, like <img>,
+    // that is not a block and not a break but still
+    // serves as a terminator to ws runs.
+    mEndNode = aPoint.GetContainer();
+    mEndOffset = aPoint.Offset();
+    mEndReason = nextLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
+                     ? WSType::BRElement
+                     : WSType::SpecialContent;
+    mEndReasonContent = nextLeafContentOrBlock;
+    return;
+  }
+
+  if (!nextLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
+    // Zero length text node. Set end point to it
+    // so we can get past it!
+    InitializeRangeEnd(EditorDOMPoint(nextLeafContentOrBlock->AsText(), 0),
+                       aEditableBlockParentOrTopmostEditableInlineContent);
+    return;
+  }
+
+  if (InitializeRangeEndWithTextNode(
+          EditorDOMPointInText(nextLeafContentOrBlock->AsText(), 0))) {
+    return;
+  }
+
+  // The text node does not have visible character, let's keep scanning
+  // following nodes.
+  InitializeRangeEnd(EditorDOMPoint::AtEndOf(*nextLeafContentOrBlock->AsText()),
+                     aEditableBlockParentOrTopmostEditableInlineContent);
 }
 
 void WSRunScanner::GetRuns() {
