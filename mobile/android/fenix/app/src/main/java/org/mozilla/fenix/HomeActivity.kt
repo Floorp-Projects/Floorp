@@ -196,8 +196,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     final override fun onPause() {
         if (settings().lastKnownMode.isPrivate) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
         super.onPause()
 

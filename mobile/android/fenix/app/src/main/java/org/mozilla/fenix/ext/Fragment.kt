@@ -57,14 +57,12 @@ fun Fragment.hideToolbar() {
 /**
  * Pops the backstack to force users to re-auth if they put the app in the background and return to it
  * while being inside the saved logins flow
- * It also updates the FLAG_SECURE status for the activity's window
  *
  * Does nothing if the user is currently navigating to any of the [destinations] given as a parameter
  *
  */
 fun Fragment.redirectToReAuth(destinations: List<Int>, currentDestination: Int?) {
     if (currentDestination !in destinations) {
-        activity?.let { it.checkAndUpdateScreenshotPermission(it.settings()) }
         findNavController().popBackStack(R.id.savedLoginsAuthFragment, false)
     }
 }
