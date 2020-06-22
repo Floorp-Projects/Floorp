@@ -330,9 +330,7 @@ const rollout = {
     }
   },
 
-  async enterprisePolicyCheck(event, results) {
-    results.evaluateReason = event;
-
+  async enterprisePolicyCheck() {
     // Check for Policies before running the rest of the heuristics
     let policyEnableDoH = await browser.experiments.heuristics.checkEnterprisePolicies();
 
@@ -352,8 +350,6 @@ const rollout = {
 
     // Don't check for prefHasUserValue if policy is set to disable DoH
     await this.setSetting(DOH_SKIP_HEURISTICS_PREF, true);
-
-    browser.experiments.heuristics.sendHeuristicsPing(policyEnableDoH, results);
   },
 
   async migrateLocalStoragePrefs() {
@@ -429,24 +425,12 @@ const rollout = {
   async init() {
     log("calling init");
 
-    // Check if the add-on has run before
-    let doneFirstRun = await this.getSetting(DOH_DONE_FIRST_RUN_PREF, false);
+    await this.setSetting(DOH_DONE_FIRST_RUN_PREF, true);
 
     // Register the events for sending pings
     browser.experiments.heuristics.setupTelemetry();
 
-    // Cache runHeuristics results for first run/start up checks
-    let results = await runHeuristics();
-
-    if (!doneFirstRun) {
-      log("first run!");
-      await this.setSetting(DOH_DONE_FIRST_RUN_PREF, true);
-      await this.enterprisePolicyCheck("first_run", results);
-    } else {
-      log("not first run!");
-      await this.enterprisePolicyCheck("startup", results);
-    }
-
+    await this.enterprisePolicyCheck();
     await this.trrPrefUserModifiedCheck();
 
     if (!(await stateManager.shouldRunHeuristics())) {
