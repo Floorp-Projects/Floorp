@@ -37,6 +37,16 @@
    fun:FcPatternObjectInsertElt
    ...
 }
+{
+   Bug 1533462 (comment 9)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcNameParseCharSet
+   fun:FcNameConvert
+   fun:FcNameParse
+   ...
+}
 # With older versions of fontconfig (e.g. 2.8.0 on taskcluster systems),
 # there's an uninitialized memory usage and leak when loading app fonts.
 {
