@@ -189,13 +189,11 @@ bool BrowsingContext::SameOriginWithTop() {
 /* static */
 already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     nsGlobalWindowInner* aParent, BrowsingContext* aOpener,
-    const nsAString& aName, Type aType, uint64_t aBrowserId) {
+    const nsAString& aName, Type aType) {
   if (aParent) {
     MOZ_DIAGNOSTIC_ASSERT(aParent->GetWindowContext());
     MOZ_DIAGNOSTIC_ASSERT(aParent->GetBrowsingContext()->mType == aType);
-    MOZ_DIAGNOSTIC_ASSERT(aParent->GetBrowsingContext()->GetBrowserId() == 0 ||
-                          aParent->GetBrowsingContext()->GetBrowserId() ==
-                              aBrowserId);
+    MOZ_DIAGNOSTIC_ASSERT(aParent->GetBrowsingContext()->GetBrowserId() != 0);
   }
 
   MOZ_DIAGNOSTIC_ASSERT(aType != Type::Chrome || XRE_IsParentProcess());
@@ -251,7 +249,9 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   context->mFields.SetWithoutSyncing<IDX_OpenerPolicy>(
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE);
 
-  context->mFields.SetWithoutSyncing<IDX_BrowserId>(aBrowserId);
+  uint64_t browserId =
+      parentBC ? parentBC->GetBrowserId() : nsContentUtils::GenerateBrowserId();
+  context->mFields.SetWithoutSyncing<IDX_BrowserId>(browserId);
 
   if (aOpener && aOpener->SameOriginWithTop()) {
     // We inherit the opener policy if there is a creator and if the creator's
@@ -336,10 +336,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
 
 already_AddRefed<BrowsingContext> BrowsingContext::CreateIndependent(
     Type aType) {
-  uint64_t browserId =
-      aType == Type::Content ? nsContentUtils::GenerateBrowserId() : 0;
   RefPtr<BrowsingContext> bc(
-      CreateDetached(nullptr, nullptr, EmptyString(), aType, browserId));
+      CreateDetached(nullptr, nullptr, EmptyString(), aType));
   bc->mWindowless = bc->IsContent();
   bc->EnsureAttached();
   return bc.forget();
@@ -510,29 +508,6 @@ static bool OwnerAllowsFullscreen(const Element& aEmbedder) {
 
 void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
   mEmbeddedByThisProcess = true;
-
-  // Update the browser ID on the embedder if necessary. We currently don't care
-  // about browser IDs for chrome-type BrowsingContexts.
-  if (RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(aEmbedder);
-      owner && !IsChrome()) {
-    uint64_t browserId = GetBrowserId();
-    uint64_t frameBrowserId = owner->GetBrowserId();
-
-    MOZ_DIAGNOSTIC_ASSERT(browserId != 0);
-
-    if (frameBrowserId == 0) {
-      // We'll arrive here if we're a top-level BrowsingContext for a window
-      // or tab that was opened in a content process. There should be no
-      // children to update at this point. This ID was generated in
-      // ContentChild::ProvideWindowCommon.
-      MOZ_DIAGNOSTIC_ASSERT(IsTopContent());
-      MOZ_DIAGNOSTIC_ASSERT(Children().IsEmpty());
-      owner->SetBrowserId(browserId);
-    } else {
-      // We would've inherited or generated an ID in CreateBrowsingContext.
-      MOZ_DIAGNOSTIC_ASSERT(browserId == frameBrowserId);
-    }
-  }
 
   // Update embedder-element-specific fields in a shared transaction.
   // Don't do this when clearing our embedder, as we're being destroyed either

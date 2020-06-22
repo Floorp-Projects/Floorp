@@ -39,7 +39,7 @@ class XULFrameElement final : public nsXULElement, public nsFrameLoaderOwner {
   already_AddRefed<nsIWebNavigation> GetWebNavigation();
   Nullable<WindowProxyHolder> GetContentWindow();
   Document* GetContentDocument();
-  uint64_t BrowserId() { return GetBrowserId(); }
+  uint64_t BrowserId();
 
   void SwapFrameLoaders(mozilla::dom::HTMLIFrameElement& aOtherLoaderOwner,
                         mozilla::ErrorResult& rv);
