@@ -410,6 +410,9 @@ void XRSession::Shutdown() {
   mViewerPosePoolIndex = 0;
   mFramePool.Clear();
   mFramePoolIndex = 0;
+  mActiveRenderState = nullptr;
+  mPendingRenderState = nullptr;
+  mFrameRequestCallbacks.Clear();
 
   // Unregister from nsRefreshObserver
   if (mRefreshDriver) {
