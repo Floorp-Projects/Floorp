@@ -552,7 +552,7 @@ gfxPlatformFontList* gfxWindowsPlatform::CreatePlatformFontList() {
   gfxPlatformFontList* pfl;
 
   // bug 630201 - older pre-RTM versions of Direct2D/DirectWrite cause odd
-  // crashers so blacklist them altogether
+  // crashers so block them altogether
   if (IsNotWin7PreRTM() && DWriteEnabled()) {
     pfl = new gfxDWriteFontList();
     if (NS_SUCCEEDED(pfl->InitFontList())) {
@@ -1262,7 +1262,7 @@ static void InitializeANGLEConfig() {
   nsCString failureId;
   if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE,
                                         &message, failureId)) {
-    d3d11ANGLE.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
+    d3d11ANGLE.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   }
 }
 
@@ -1312,13 +1312,13 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
     gfxInfo = services::GetGfxInfo();
     nsAutoString adaptorId;
     gfxInfo->GetAdapterDeviceID(adaptorId);
-    // Blacklist Intel HD Graphics 510/520/530 on Windows 7 without platform
+    // Blocklist Intel HD Graphics 510/520/530 on Windows 7 without platform
     // update due to the crashes in Bug 1351349.
     if (adaptorId.EqualsLiteral("0x1912") ||
         adaptorId.EqualsLiteral("0x1916") ||
         adaptorId.EqualsLiteral("0x1902")) {
 #ifdef RELEASE_OR_BETA
-      d3d11.Disable(FeatureStatus::Blacklisted, "Blacklisted, see bug 1351349",
+      d3d11.Disable(FeatureStatus::Blocklisted, "Blacklisted, see bug 1351349",
                     NS_LITERAL_CSTRING("FEATURE_FAILURE_BUG_1351349"));
 #else
       Preferences::SetBool("gfx.compositor.clearstate", true);
@@ -1331,7 +1331,7 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
   if (StaticPrefs::layers_d3d11_enable_blacklist_AtStartup() &&
       !gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS,
                                         &message, failureId)) {
-    d3d11.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
+    d3d11.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   }
 }
 
@@ -1362,7 +1362,7 @@ void gfxWindowsPlatform::InitializeAdvancedLayersConfig() {
   nsCString message, failureId;
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_ADVANCED_LAYERS, &message,
                            failureId)) {
-    al.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
+    al.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   } else if (gfxVars::UseWebRender()) {
     al.Disable(FeatureStatus::Blocked,
                "Blocked from fallback candidate by WebRender usage",
@@ -1468,9 +1468,9 @@ void gfxWindowsPlatform::InitializeDevices() {
 
 void gfxWindowsPlatform::InitializeD3D11() {
   // This function attempts to initialize our D3D11 devices, if the hardware
-  // is not blacklisted for D3D11 layers. This first attempt will try to create
+  // is not blocklisted for D3D11 layers. This first attempt will try to create
   // a hardware accelerated device. If this creation fails or the hardware is
-  // blacklisted, then this function will abort if WARP is disabled, causing us
+  // blocklisted, then this function will abort if WARP is disabled, causing us
   // to fallback to Basic layers. If WARP is not disabled it will use a WARP
   // device which should always be available on Windows 7 and higher.
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
@@ -1514,7 +1514,7 @@ void gfxWindowsPlatform::InitializeD2DConfig() {
   nsCString failureId;
   if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D, &message,
                                         failureId)) {
-    d2d1.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
+    d2d1.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   }
 
   if (!d2d1.IsEnabled() &&
@@ -1595,7 +1595,7 @@ bool gfxWindowsPlatform::InitGPUProcessSupport() {
   nsCString failureId;
   if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_GPU_PROCESS,
                                         &message, failureId)) {
-    gpuProc.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
+    gpuProc.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
     return false;
   }
 
