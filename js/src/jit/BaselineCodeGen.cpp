@@ -538,8 +538,10 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   // We don't use every ICEntry and we can skip unreachable ops, so we have
   // to loop until we find an ICEntry for the current pc.
   const ICEntry* entry;
+  uint32_t entryIndex;
   do {
     entry = &script->jitScript()->icEntry(handler.icEntryIndex());
+    entryIndex = handler.icEntryIndex();
     handler.moveToNextICEntry();
   } while (entry->pcOffset() < pcOffset);
 
@@ -547,8 +549,14 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   MOZ_ASSERT_IF(!entry->isForPrologue(), BytecodeOpHasIC(JSOp(*handler.pc())));
 
   // Load stub pointer into ICStubReg.
-  masm.loadPtr(AbsoluteAddress(entry).offset(ICEntry::offsetOfFirstStub()),
-               ICStubReg);
+  if (JitOptions.warpBuilder) {
+    masm.loadPtr(frame.addressOfICScript(), ICStubReg);
+    size_t firstStubOffset = ICScript::offsetOfFirstStub(entryIndex);
+    masm.loadPtr(Address(ICStubReg, firstStubOffset), ICStubReg);
+  } else {
+    masm.loadPtr(AbsoluteAddress(entry).offset(ICEntry::offsetOfFirstStub()),
+                 ICStubReg);
+  }
 
   CodeOffset returnOffset;
   EmitCallIC(masm, &returnOffset);
