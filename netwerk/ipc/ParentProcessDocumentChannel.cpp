@@ -298,7 +298,7 @@ NS_IMETHODIMP
 ParentChannelWrapper::NotifyFlashPluginStateChanged(
     nsIHttpChannel::FlashPluginState aState) {
   // For now, only HttpChannel use this attribute.
-  RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(mChannel.get());
+  RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(mChannel);
   if (httpChannel) {
     httpChannel->SetFlashPluginState(aState);
   }

@@ -201,7 +201,7 @@ void DOMSVGStringList::AppendItem(const nsAString& aNewItem, nsAString& aRetval,
 
 SVGStringList& DOMSVGStringList::InternalList() const {
   if (mIsConditionalProcessingAttribute) {
-    nsCOMPtr<dom::SVGTests> tests = do_QueryObject(mElement.get());
+    nsCOMPtr<dom::SVGTests> tests = do_QueryObject(mElement);
     return tests->mStringListAttributes[mAttrEnum];
   }
   return mElement->GetStringListInfo().mStringLists[mAttrEnum];
