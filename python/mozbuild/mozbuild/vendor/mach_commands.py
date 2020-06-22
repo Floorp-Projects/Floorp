@@ -149,13 +149,20 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     @SubCommand(
         "vendor",
         "python",
-        description="Vendor Python packages from pypi.org into third_party/python",
+        description="Vendor Python packages from pypi.org into third_party/python. "
+                    "Some extra files like docs and tests will automatically be excluded.",
     )
     @CommandArgument(
         "--with-windows-wheel",
         action="store_true",
         help="Vendor a wheel for Windows along with the source package",
         default=False,
+    )
+    @CommandArgument(
+        "--keep-extra-files",
+        action="store_true",
+        default=False,
+        help="Keep all files, including tests and documentation.",
     )
     @CommandArgument(
         "packages",

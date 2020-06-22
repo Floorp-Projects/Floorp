@@ -16,7 +16,7 @@ from mozpack.files import FileFinder
 
 
 class VendorPython(MozbuildObject):
-    def vendor(self, packages=None, with_windows_wheel=False):
+    def vendor(self, packages=None, with_windows_wheel=False, keep_extra_files=False):
         self.populate_logger()
         self.log_manager.enable_unstructured()
 
@@ -99,7 +99,7 @@ class VendorPython(MozbuildObject):
                             packages[0],
                         ]
                     )
-                self._extract(tmp, vendor_dir)
+                self._extract(tmp, vendor_dir, keep_extra_files)
 
             shutil.copyfile(tmpspec_absolute, spec)
             self.repository.add_remove_files(vendor_dir)
@@ -133,8 +133,17 @@ class VendorPython(MozbuildObject):
                     f.write("{}\n".format("\n".join(comments)))
                 f.write("{}=={}\n".format(name, version))
 
-    def _extract(self, src, dest):
+    def _extract(self, src, dest, keep_extra_files=False):
         """extract source distribution into vendor directory"""
+
+        ignore = ()
+        if not keep_extra_files:
+            ignore = (
+                '*/doc',
+                '*/docs',
+                '*/test',
+                '*/tests',
+            )
         finder = FileFinder(src)
         for path, _ in finder.find("*"):
             base, ext = os.path.splitext(path)
@@ -150,10 +159,10 @@ class VendorPython(MozbuildObject):
                 target = os.path.join(dest, "-".join(bits))
                 mozfile.remove(target)  # remove existing version of vendored package
                 os.mkdir(target)
-                mozfile.extract(os.path.join(finder.base, path), target)
+                mozfile.extract(os.path.join(finder.base, path), target, ignore=ignore)
             else:
                 # packages extract into package-version directory name and we strip the version
-                tld = mozfile.extract(os.path.join(finder.base, path), dest)[0]
+                tld = mozfile.extract(os.path.join(finder.base, path), dest, ignore=ignore)[0]
                 target = os.path.join(dest, tld.rpartition("-")[0])
                 mozfile.remove(target)  # remove existing version of vendored package
                 mozfile.move(tld, target)
