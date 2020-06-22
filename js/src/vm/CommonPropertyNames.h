@@ -430,6 +430,7 @@
   MACRO(ToNumeric, ToNumeric, "ToNumeric")                                     \
   MACRO(toSource, toSource, "toSource")                                        \
   MACRO(toString, toString, "toString")                                        \
+  MACRO(ToString, ToString, "ToString")                                        \
   MACRO(toUTCString, toUTCString, "toUTCString")                               \
   MACRO(true, true_, "true")                                                   \
   MACRO(try, try_, "try")                                                      \

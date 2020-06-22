@@ -364,8 +364,6 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineToInteger(callInfo);
     case InlinableNative::IntrinsicToLength:
       return inlineToLength(callInfo);
-    case InlinableNative::IntrinsicToString:
-      return inlineToString(callInfo);
     case InlinableNative::IntrinsicIsConstructing:
       return inlineIsConstructing(callInfo);
     case InlinableNative::IntrinsicSubstringKernel:
@@ -3431,25 +3429,6 @@ IonBuilder::InliningResult IonBuilder::inlineToLength(CallInfo& callInfo) {
   current->add(max);
   current->push(max);
 
-  return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningResult IonBuilder::inlineToString(CallInfo& callInfo) {
-  MOZ_ASSERT(!callInfo.constructing());
-  MOZ_ASSERT(callInfo.argc() == 1);
-
-  if (getInlineReturnType() != MIRType::String) {
-    return InliningStatus_NotInlined;
-  }
-
-  callInfo.setImplicitlyUsedUnchecked();
-  MToString* toString = MToString::New(
-      alloc(), callInfo.getArg(0), MToString::SideEffectHandling::Supported);
-  current->add(toString);
-  current->push(toString);
-  if (toString->isEffectful()) {
-    MOZ_TRY(resumeAfter(toString));
-  }
   return InliningStatus_Inlined;
 }
 

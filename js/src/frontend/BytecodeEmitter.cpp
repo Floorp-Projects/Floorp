@@ -7249,6 +7249,23 @@ bool BytecodeEmitter::emitSelfHostedToNumeric(BinaryNode* callNode) {
   return emit1(JSOp::ToNumeric);
 }
 
+bool BytecodeEmitter::emitSelfHostedToString(BinaryNode* callNode) {
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+
+  if (argsList->count() != 1) {
+    reportNeedMoreArgsError(callNode, "ToString", "1", "", argsList);
+    return false;
+  }
+
+  ParseNode* argNode = argsList->head();
+
+  if (!emitTree(argNode)) {
+    return false;
+  }
+
+  return emit1(JSOp::ToString);
+}
+
 #ifdef DEBUG
 bool BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot(
     BinaryNode* callNode) {
@@ -7749,6 +7766,9 @@ bool BytecodeEmitter::emitCallOrNew(
     }
     if (calleeName == cx->names().ToNumeric) {
       return emitSelfHostedToNumeric(callNode);
+    }
+    if (calleeName == cx->names().ToString) {
+      return emitSelfHostedToString(callNode);
     }
 #ifdef DEBUG
     if (calleeName == cx->names().UnsafeGetReservedSlot ||
