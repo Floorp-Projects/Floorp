@@ -9,6 +9,7 @@
 
 #include "base/basictypes.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
 namespace dom {
