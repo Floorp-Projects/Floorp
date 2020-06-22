@@ -4338,29 +4338,6 @@ Element* nsContentUtils::MatchElementId(nsIContent* aContent,
 }
 
 /* static */
-Document* nsContentUtils::GetSubdocumentWithOuterWindowId(
-    Document* aDocument, uint64_t aOuterWindowId) {
-  if (!aDocument || !aOuterWindowId) {
-    return nullptr;
-  }
-
-  RefPtr<nsGlobalWindowOuter> window =
-      nsGlobalWindowOuter::GetOuterWindowWithId(aOuterWindowId);
-  if (!window) {
-    return nullptr;
-  }
-
-  RefPtr<Document> foundDoc = window->GetDoc();
-  if (nsContentUtils::ContentIsCrossDocDescendantOf(foundDoc, aDocument)) {
-    // Note that ContentIsCrossDocDescendantOf will return true if
-    // foundDoc == aDocument.
-    return foundDoc;
-  }
-
-  return nullptr;
-}
-
-/* static */
 void nsContentUtils::RegisterShutdownObserver(nsIObserver* aObserver) {
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
