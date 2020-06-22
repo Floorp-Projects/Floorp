@@ -37,6 +37,7 @@ using mozilla::Telemetry::LABELS_HTTP_CHILD_OMT_STATS;
 
 class nsIEventTarget;
 class nsInputStreamPump;
+class nsISerialEventTarget;
 class nsIInterceptedBodyCallback;
 
 #define HTTP_CHANNEL_CHILD_IID                       \
@@ -208,7 +209,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   };
 
   // Get event target for processing network events.
-  already_AddRefed<nsIEventTarget> GetNeckoTarget() override;
+  already_AddRefed<nsISerialEventTarget> GetNeckoTarget() override;
 
   virtual mozilla::ipc::IPCResult RecvLogBlockedCORSRequest(
       const nsString& aMessage, const nsCString& aCategory) override;

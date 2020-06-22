@@ -18,20 +18,20 @@ namespace net {
 // channels should inherit this class in order to get a labeled event target.
 class NeckoTargetHolder {
  public:
-  explicit NeckoTargetHolder(nsIEventTarget* aNeckoTarget)
+  explicit NeckoTargetHolder(nsISerialEventTarget* aNeckoTarget)
       : mNeckoTarget(aNeckoTarget) {}
 
  protected:
   virtual ~NeckoTargetHolder() = default;
   // Get event target for processing network events.
-  virtual already_AddRefed<nsIEventTarget> GetNeckoTarget();
+  virtual already_AddRefed<nsISerialEventTarget> GetNeckoTarget();
   // When |mNeckoTarget| is not null, use it to dispatch the runnable.
   // Otherwise, dispatch the runnable to the main thread.
   nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable,
                     uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 
   // EventTarget for labeling networking events.
-  nsCOMPtr<nsIEventTarget> mNeckoTarget;
+  nsCOMPtr<nsISerialEventTarget> mNeckoTarget;
 };
 
 }  // namespace net

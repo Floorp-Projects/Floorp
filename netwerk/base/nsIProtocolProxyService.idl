@@ -13,7 +13,7 @@ interface nsIProtocolProxyChannelFilter;
 interface nsIProxyInfo;
 interface nsIChannel;
 interface nsIURI;
-interface nsIEventTarget;
+interface nsISerialEventTarget;
 
 /**
  * nsIProtocolProxyService provides methods to access information about
@@ -101,9 +101,10 @@ interface nsIProtocolProxyService : nsISupports
      *
      * @see nsIProxiedProtocolHandler::newProxiedChannel
      */
-    nsICancelable asyncResolve(in nsISupports aChannelOrURI, in unsigned long aFlags,
-                               in nsIProtocolProxyCallback aCallback,
-                               [optional] in nsIEventTarget aMainThreadTarget);
+    nsICancelable asyncResolve(
+        in nsISupports aChannelOrURI, in unsigned long aFlags,
+        in nsIProtocolProxyCallback aCallback,
+        [optional] in nsISerialEventTarget aMainThreadTarget);
 
     /**
      * This method may be called to construct a nsIProxyInfo instance from
