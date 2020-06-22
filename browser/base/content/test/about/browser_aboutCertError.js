@@ -502,11 +502,12 @@ add_task(async function checkSandboxedIframe() {
     // and in result the translation may be applied later.
     // We want to return the textContent of the element only after
     // the translation completes, so let's wait for it here.
-    let elements = [
-      doc.querySelector(".title-text"),
-      doc.getElementById("errorCode"),
-    ];
     await ContentTaskUtils.waitForCondition(() => {
+      let elements = [
+        doc.querySelector(".title-text"),
+        doc.getElementById("errorCode"),
+      ];
+
       return elements.every(elem => !!elem.textContent.trim().length);
     });
 
