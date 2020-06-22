@@ -3049,13 +3049,15 @@ struct InnerTextAccumulator {
 };
 
 static bool IsVisibleAndNotInReplacedElement(nsIFrame* aFrame) {
-  if (!aFrame || !aFrame->StyleVisibility()->IsVisible()) {
+  if (!aFrame || !aFrame->StyleVisibility()->IsVisible() ||
+      aFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     return false;
   }
   for (nsIFrame* f = aFrame->GetParent(); f; f = f->GetParent()) {
     if (f->IsFrameOfType(nsIFrame::eReplaced) &&
-        !f->GetContent()->IsHTMLElement(nsGkAtoms::button) &&
-        !f->GetContent()->IsHTMLElement(nsGkAtoms::select)) {
+        !f->GetContent()->IsAnyOfHTMLElements(nsGkAtoms::button,
+                                              nsGkAtoms::select) &&
+        !f->GetContent()->IsSVGElement()) {
       return false;
     }
   }
