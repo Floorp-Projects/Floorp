@@ -112,6 +112,7 @@ Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
       mUseH2Deps(false),
       mAttemptingEarlyData(attemptingEarlyData),
       mOriginFrameActivated(false),
+      mCntActivated(0),
       mTlsHandshakeFinished(false),
       mCheckNetworkStallsWithTFO(false),
       mLastRequestBytesSentTime(0),
@@ -186,7 +187,7 @@ Http2Session::~Http2Session() {
     Telemetry::Accumulate(Telemetry::DNS_TRR_REQUEST_PER_CONN, mTrrStreams);
   }
   Telemetry::Accumulate(Telemetry::SPDY_PARALLEL_STREAMS, mConcurrentHighWater);
-  Telemetry::Accumulate(Telemetry::SPDY_REQUEST_PER_CONN_2, mCntActivated);
+  Telemetry::Accumulate(Telemetry::SPDY_REQUEST_PER_CONN_3, mCntActivated);
   Telemetry::Accumulate(Telemetry::SPDY_SERVER_INITIATED_STREAMS,
                         mServerPushedResources);
   Telemetry::Accumulate(Telemetry::SPDY_GOAWAY_LOCAL, mClientGoAwayReason);
