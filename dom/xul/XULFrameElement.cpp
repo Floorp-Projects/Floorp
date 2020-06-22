@@ -69,6 +69,13 @@ Document* XULFrameElement::GetContentDocument() {
   return nullptr;
 }
 
+uint64_t XULFrameElement::BrowserId() {
+  if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
+    return bc->GetBrowserId();
+  }
+  return 0;
+}
+
 void XULFrameElement::LoadSrc() {
   if (!IsInUncomposedDoc() || !OwnerDoc()->GetRootElement()) {
     return;
@@ -154,7 +161,6 @@ void XULFrameElement::UnbindFromTree(bool aNullParent) {
   }
   mFrameLoader = nullptr;
 
-  nsFrameLoaderOwner::UnbindFromTree();
   nsXULElement::UnbindFromTree(aNullParent);
 }
 
