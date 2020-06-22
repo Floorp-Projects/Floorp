@@ -10246,8 +10246,9 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
       //    always use 2 points smaller than what the browser has defined as
       //    the default proportional font.
       // Assumption: system defined font is proportional
-      aSystemFont->size = Length::FromPixels(
-          std::max(aDefaultVariableFont->size.ToCSSPixels() - 2.0f, 0.0f));
+      auto newSize =
+          aDefaultVariableFont->size.ToCSSPixels() - CSSPixel::FromPoints(2.0f);
+      aSystemFont->size = Length::FromPixels(std::max(float(newSize), 0.0f));
     }
 #endif
   }
