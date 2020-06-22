@@ -123,11 +123,8 @@ DevToolsServerConnection.prototype = {
    *
    * @param ActorPool actorPool
    *        The ActorPool instance you want to remove.
-   * @param boolean noCleanup [optional]
-   *        True if you don't want to destroy each actor from the pool, false
-   *        otherwise.
    */
-  removeActorPool(actorPool, noCleanup) {
+  removeActorPool(actorPool) {
     // When a connection is closed, it removes each of its actor pools. When an
     // actor pool is removed, it calls the destroy method on each of its
     // actors. Some actors, such as ThreadActor, manage their own actor pools.
@@ -150,10 +147,7 @@ DevToolsServerConnection.prototype = {
     }
     const index = this._extraPools.lastIndexOf(actorPool);
     if (index > -1) {
-      const pool = this._extraPools.splice(index, 1);
-      if (!noCleanup) {
-        pool.forEach(p => p.destroy());
-      }
+      this._extraPools.splice(index, 1);
     }
   },
 
