@@ -230,9 +230,10 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
     return true;
   }
 
-  // See nsTArray::RemoveElementsBy.
+  // See nsTArray::RemoveElementsBy. Neither the predicate nor the removal of
+  // elements from the array must have any side effects that modify the array.
   template <typename Predicate>
-  void RemoveElementsBy(Predicate aPredicate) {
+  void NonObservingRemoveElementsBy(Predicate aPredicate) {
     index_type i = 0;
     mArray.RemoveElementsBy([&](const elem_type& aItem) {
       if (aPredicate(aItem)) {
