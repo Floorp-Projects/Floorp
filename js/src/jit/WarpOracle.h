@@ -22,22 +22,20 @@ class MOZ_STACK_CLASS WarpOracle {
   JSContext* cx_;
   MIRGenerator& mirGen_;
   TempAllocator& alloc_;
-  HandleScript script_;
-
-  mozilla::GenericErrorResult<AbortReason> abort(AbortReason r);
-  mozilla::GenericErrorResult<AbortReason> abort(AbortReason r,
-                                                 const char* message, ...);
-
-  AbortReasonOr<WarpEnvironment> createEnvironment(HandleScript script);
-  AbortReasonOr<WarpScriptSnapshot*> createScriptSnapshot(HandleScript script);
-
-  AbortReasonOr<Ok> maybeInlineIC(WarpOpSnapshotList& snapshots,
-                                  HandleScript script, BytecodeLocation loc);
+  HandleScript outerScript_;
 
  public:
-  WarpOracle(JSContext* cx, MIRGenerator& mirGen, HandleScript script);
+  WarpOracle(JSContext* cx, MIRGenerator& mirGen, HandleScript outerScript);
+
+  MIRGenerator& mirGen() { return mirGen_; }
 
   AbortReasonOr<WarpSnapshot*> createSnapshot();
+
+  mozilla::GenericErrorResult<AbortReason> abort(HandleScript script,
+                                                 AbortReason r);
+  mozilla::GenericErrorResult<AbortReason> abort(HandleScript script,
+                                                 AbortReason r,
+                                                 const char* message, ...);
 };
 
 }  // namespace jit
