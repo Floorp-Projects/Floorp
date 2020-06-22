@@ -1760,7 +1760,7 @@ bool Navigator::HasUserMediaSupport(JSContext* cx, JSObject* obj) {
 
 /* static */
 bool Navigator::HasShareSupport(JSContext* cx, JSObject* obj) {
-  if (!Preferences::GetBool("dom.webshare.enabled")) {
+  if (!StaticPrefs::dom_webshare_enabled()) {
     return false;
   }
 #if defined(XP_WIN) && !defined(__MINGW32__)
