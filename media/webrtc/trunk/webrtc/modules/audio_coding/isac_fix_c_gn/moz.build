@@ -61,34 +61,49 @@ UNIFIED_SOURCES += [
     "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/transform_tables.c"
 ]
 
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
     DEFINES["NDEBUG"] = True
     DEFINES["NVALGRIND"] = True
 
-if CONFIG["MOZ_DEBUG"] == "1":
+if CONFIG["OS_TARGET"] == "FreeBSD":
 
-    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
-    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
 
-if CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "DragonFly":
 
-    DEFINES["ANDROID"] = True
-    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
-    DEFINES["DISABLE_NACL"] = True
-    DEFINES["HAVE_SYS_UIO_H"] = True
-    DEFINES["NO_TCMALLOC"] = True
-    DEFINES["USE_OPENSSL_CERTS"] = "1"
-    DEFINES["WEBRTC_ANDROID"] = True
-    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["USE_NSS_CERTS"] = "1"
+    DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
-    DEFINES["__GNU_SOURCE"] = "1"
 
     OS_LIBS += [
-        "log"
+        "rt"
     ]
 
 if CONFIG["OS_TARGET"] == "Darwin":
@@ -110,47 +125,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
     UNIFIED_SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
-
-if CONFIG["OS_TARGET"] == "DragonFly":
-
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_BSD"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["OS_TARGET"] == "FreeBSD":
-
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_BSD"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
-
-if CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["USE_NSS_CERTS"] = "1"
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_LINUX"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
-
-    OS_LIBS += [
-        "rt"
-    ]
-
-if CONFIG["OS_TARGET"] == "NetBSD":
-
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_BSD"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
@@ -196,6 +170,52 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
+if CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["ANDROID"] = True
+    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["USE_OPENSSL_CERTS"] = "1"
+    DEFINES["WEBRTC_ANDROID"] = True
+    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["__GNU_SOURCE"] = "1"
+
+    OS_LIBS += [
+        "log"
+    ]
+
+if CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+if CONFIG["CPU_ARCH"] == "ppc64":
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
@@ -210,30 +230,6 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
-
-if CONFIG["CPU_ARCH"] == "mips64":
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "ppc64":
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["_FORTIFY_SOURCE"] = "2"
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Darwin":
 
@@ -251,11 +247,15 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
@@ -265,68 +265,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
-
-    CFLAGS += [
-        "-msse2"
-    ]
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
-
-    CFLAGS += [
-        "-msse2"
-    ]
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["DISABLE_NACL"] = True
-    DEFINES["NO_TCMALLOC"] = True
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
@@ -350,7 +289,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
@@ -360,41 +299,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
-
-    CFLAGS += [
-        "-msse2"
-    ]
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
-
-    SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
     SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
@@ -419,6 +324,101 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
+
+    CFLAGS += [
+        "-msse2"
+    ]
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    CFLAGS += [
+        "-msse2"
+    ]
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    CFLAGS += [
+        "-msse2"
+    ]
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
 
     SOURCES += [
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"

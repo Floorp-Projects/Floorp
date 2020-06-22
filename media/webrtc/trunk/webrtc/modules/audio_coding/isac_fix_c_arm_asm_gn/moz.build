@@ -36,16 +36,32 @@ SOURCES += [
     "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_armv6.S"
 ]
 
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
     DEFINES["NDEBUG"] = True
     DEFINES["NVALGRIND"] = True
 
-if CONFIG["MOZ_DEBUG"] == "1":
+if CONFIG["OS_TARGET"] == "FreeBSD":
 
-    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
-    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+
+if CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["USE_NSS_CERTS"] = "1"
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_LINUX"] = True
+
+if CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
 
 if CONFIG["OS_TARGET"] == "Android":
 
@@ -60,36 +76,20 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["__GNU_SOURCE"] = "1"
 
-if CONFIG["OS_TARGET"] == "FreeBSD":
-
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_BSD"] = True
-
-if CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["USE_NSS_CERTS"] = "1"
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_LINUX"] = True
-
 if CONFIG["OS_TARGET"] == "NetBSD":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
-
-if CONFIG["OS_TARGET"] == "OpenBSD":
-
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_BSD"] = True
-
-if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["_FORTIFY_SOURCE"] = "2"
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 

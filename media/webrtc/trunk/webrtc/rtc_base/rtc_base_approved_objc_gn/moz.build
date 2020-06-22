@@ -39,16 +39,16 @@ UNIFIED_SOURCES += [
     "/media/webrtc/trunk/webrtc/rtc_base/logging_mac.mm"
 ]
 
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
     DEFINES["NDEBUG"] = True
     DEFINES["NVALGRIND"] = True
     DEFINES["_FORTIFY_SOURCE"] = "2"
-
-if CONFIG["MOZ_DEBUG"] == "1":
-
-    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
-    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
 
 Library("rtc_base_approved_objc_gn")

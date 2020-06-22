@@ -103,7 +103,6 @@ DIRS += [
     "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/rtp_rtcp_format_gn",
     "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/rtp_rtcp_gn",
     "/media/webrtc/trunk/webrtc/modules/utility/utility_gn",
-    "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn",
     "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_module_gn",
     "/media/webrtc/trunk/webrtc/modules/video_coding/codec_globals_headers_gn",
     "/media/webrtc/trunk/webrtc/modules/video_coding/video_coding_gn",
@@ -152,7 +151,7 @@ if CONFIG["OS_TARGET"] == "Darwin":
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_objc_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_objc_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn",
         "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn",
         "/media/webrtc/trunk/webrtc/rtc_base/rtc_base_approved_objc_gn",
         "/media/webrtc/trunk/webrtc/rtc_base/rtc_base_objc_gn"
@@ -169,6 +168,7 @@ if CONFIG["OS_TARGET"] == "DragonFly":
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn",
         "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn"
     ]
 
@@ -177,7 +177,8 @@ if CONFIG["OS_TARGET"] == "FreeBSD":
     DIRS += [
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn"
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn"
     ]
 
 if CONFIG["OS_TARGET"] == "Linux":
@@ -186,6 +187,7 @@ if CONFIG["OS_TARGET"] == "Linux":
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn",
         "/media/webrtc/trunk/webrtc/system_wrappers/cpu_features_linux_gn"
     ]
 
@@ -194,7 +196,8 @@ if CONFIG["OS_TARGET"] == "NetBSD":
     DIRS += [
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn"
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -202,7 +205,8 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DIRS += [
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn"
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn"
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
@@ -212,7 +216,8 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/media/webrtc/trunk/webrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn"
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_capture/video_capture_internal_impl_gn"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":

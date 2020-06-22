@@ -50,38 +50,18 @@ UNIFIED_SOURCES += [
     "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_finder.cc"
 ]
 
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
     DEFINES["NDEBUG"] = True
     DEFINES["NVALGRIND"] = True
 
-if CONFIG["MOZ_DEBUG"] == "1":
-
-    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
-    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
-
-if CONFIG["OS_TARGET"] == "Darwin":
-
-    DEFINES["CR_XCODE_VERSION"] = "0920"
-    DEFINES["NO_TCMALLOC"] = True
-    DEFINES["WEBRTC_MAC"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
-
-    OS_LIBS += [
-        "-framework Foundation"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_configuration_monitor.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_device_info_mac.mm",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/scoped_pixel_buffer_object.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/window_list_utils.cc"
-    ]
-
-if CONFIG["OS_TARGET"] == "DragonFly":
+if CONFIG["OS_TARGET"] == "FreeBSD":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
@@ -118,7 +98,7 @@ if CONFIG["OS_TARGET"] == "DragonFly":
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_capturer_linux.cc"
     ]
 
-if CONFIG["OS_TARGET"] == "FreeBSD":
+if CONFIG["OS_TARGET"] == "DragonFly":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
@@ -194,41 +174,24 @@ if CONFIG["OS_TARGET"] == "Linux":
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_capturer_linux.cc"
     ]
 
-if CONFIG["OS_TARGET"] == "NetBSD":
+if CONFIG["OS_TARGET"] == "Darwin":
 
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["CR_XCODE_VERSION"] = "0920"
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
 
     OS_LIBS += [
-        "X11",
-        "X11-xcb",
-        "xcb",
-        "Xcomposite",
-        "Xcursor",
-        "Xdamage",
-        "Xext",
-        "Xfixes",
-        "Xi",
-        "Xrender"
+        "-framework Foundation"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/desktop_device_info_x11.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/shared_x_display.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/shared_x_util.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/window_capturer_x11.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/window_finder_x11.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/window_list_utils.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/x_atom_cache.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/x_error_trap.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/x_server_pixel_buffer.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/screen_capturer_linux.cc",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_capturer_linux.cc"
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_configuration_monitor.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_device_info_mac.mm",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/scoped_pixel_buffer_object.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/window_list_utils.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -331,6 +294,43 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_finder_win.cc"
     ]
 
+if CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+    OS_LIBS += [
+        "X11",
+        "X11-xcb",
+        "xcb",
+        "Xcomposite",
+        "Xcursor",
+        "Xdamage",
+        "Xext",
+        "Xfixes",
+        "Xi",
+        "Xrender"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/desktop_device_info_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/shared_x_display.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/shared_x_util.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/window_capturer_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/window_finder_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/window_list_utils.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/x_atom_cache.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/x_error_trap.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/x_server_pixel_buffer.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/screen_capturer_linux.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_capturer_linux.cc"
+    ]
+
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
@@ -366,18 +366,13 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
         "-msse2"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["DISABLE_NACL"] = True
-    DEFINES["NO_TCMALLOC"] = True
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     CXXFLAGS += [
         "-msse2"
@@ -389,10 +384,15 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
         "-msse2"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     CXXFLAGS += [
         "-msse2"
     ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
 
 Library("desktop_capture_generic_gn")

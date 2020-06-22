@@ -10981,7 +10981,6 @@
                 "WEBRTC_MAC"
             ],
             "deps": [
-                "//modules/video_capture:video_capture_internal_impl_objc",
                 "//modules/video_capture:video_capture_module",
                 "//rtc_base:rtc_base_approved",
                 "//system_wrappers:system_wrappers"
@@ -10997,96 +10996,6 @@
                 "Foundation.framework"
             ],
             "sources": [],
-            "type": "source_set"
-        },
-        "//modules/video_capture:video_capture_internal_impl_objc": {
-            "cflags": [
-                "-fobjc-arc",
-                "-fno-strict-aliasing",
-                "-fstack-protector-strong",
-                "-Wno-builtin-macro-redefined",
-                "-D__DATE__=",
-                "-D__TIME__=",
-                "-D__TIMESTAMP__=",
-                "-fcolor-diagnostics",
-                "-arch",
-                "x86_64",
-                "-Wall",
-                "-Werror",
-                "-Wextra",
-                "-Wpartial-availability",
-                "-Wno-missing-field-initializers",
-                "-Wno-unused-parameter",
-                "-Wno-c++11-narrowing",
-                "-Wno-covered-switch-default",
-                "-Wno-unneeded-internal-declaration",
-                "-Wno-inconsistent-missing-override",
-                "-Wno-undefined-var-template",
-                "-Wno-nonportable-include-path",
-                "-Wno-address-of-packed-member",
-                "-Wno-unused-lambda-capture",
-                "-Wno-user-defined-warnings",
-                "-O0",
-                "-fno-omit-frame-pointer",
-                "-gdwarf-2",
-                "-isysroot",
-                "../../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
-                "-mmacosx-version-min=10.9",
-                "-fvisibility=hidden",
-                "-Wheader-hygiene",
-                "-Wstring-conversion",
-                "-Wtautological-overlap-compare",
-                "-Wextra",
-                "-Wno-unused-parameter",
-                "-Wno-missing-field-initializers",
-                "-Wno-strict-overflow",
-                "-Wc++11-narrowing",
-                "-Wimplicit-fallthrough",
-                "-Wthread-safety",
-                "-Winconsistent-missing-override",
-                "-Wundef",
-                "-Wunused-lambda-capture"
-            ],
-            "defines": [
-                "V8_DEPRECATION_WARNINGS",
-                "NO_TCMALLOC",
-                "CHROMIUM_BUILD",
-                "CR_XCODE_VERSION=0920",
-                "__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE=0",
-                "DYNAMIC_ANNOTATIONS_ENABLED=1",
-                "WTF_USE_DYNAMIC_ANNOTATIONS=1",
-                "WEBRTC_ENABLE_PROTOBUF=0",
-                "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_MOZILLA_BUILD",
-                "WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS=0",
-                "WEBRTC_POSIX",
-                "WEBRTC_MAC"
-            ],
-            "deps": [
-                "//modules/video_capture:video_capture_module",
-                "//rtc_base:rtc_base_approved",
-                "//system_wrappers:system_wrappers"
-            ],
-            "include_dirs": [
-                "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin17.7.0/media/webrtc/trunk/webrtc/gn-output/gen/"
-            ],
-            "libs": [
-                "AVFoundation.framework",
-                "CoreMedia.framework",
-                "CoreVideo.framework",
-                "Foundation.framework"
-            ],
-            "sources": [
-                "//modules/video_capture/objc/device_info.h",
-                "//modules/video_capture/objc/device_info.mm",
-                "//modules/video_capture/objc/device_info_objc.h",
-                "//modules/video_capture/objc/device_info_objc.mm",
-                "//modules/video_capture/objc/rtc_video_capture_objc.h",
-                "//modules/video_capture/objc/rtc_video_capture_objc.mm",
-                "//modules/video_capture/objc/video_capture.h",
-                "//modules/video_capture/objc/video_capture.mm"
-            ],
             "type": "source_set"
         },
         "//modules/video_capture:video_capture_module": {
