@@ -47,10 +47,10 @@ var gExperimentalPane = {
       checkbox.setAttribute("preference", feature.preference);
       checkbox.id = feature.id;
       let title = template.querySelector(".featureGateTitle");
-      title.textContent = feature.title;
+      document.l10n.setAttributes(title, feature.title);
       title.setAttribute("control", feature.id);
       let description = template.querySelector(".featureGateDescription");
-      description.textContent = feature.description;
+      document.l10n.setAttributes(description, feature.description);
       description.setAttribute("control", feature.id);
       frag.appendChild(template);
       let preference = Preferences.add({

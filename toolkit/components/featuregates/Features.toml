@@ -1,6 +1,6 @@
 [css-masonry]
-title = "CSS Masonry Layout"
-description = "Enables support for the experimental CSS Masonry Layout feature"
+title = "experimental-features-css-masonry-title"
+description = "experimental-features-css-masonry-description"
 restart-required = false
 preference = "layout.css.grid-template-masonry-value.enabled"
 type = "boolean"
@@ -9,8 +9,8 @@ is-public = true
 default-value = false
 
 [web-gpu]
-title = "WebGPU"
-description = "Experimental API for graphics and computing on the Web"
+title = "experimental-features-web-gpu-title"
+description = "experimental-features-web-gpu-description"
 restart-required = true
 preference = "dom.webgpu.enabled"
 type = "boolean"
@@ -19,8 +19,8 @@ is-public = {default = false, nightly = true}
 default-value = false
 
 [avif]
-title = "AVIF"
-description = "Experimental support for AVIF: AV1 Image File Format"
+title = "experimental-features-avif-title"
+description = "experimental-features-avif-description"
 restart-required = false
 preference = "image.avif.enabled"
 type = "boolean"
