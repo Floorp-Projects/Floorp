@@ -452,8 +452,15 @@ bool WarpCacheIRTranspiler::emitGuardToTypedArrayIndex(
     ValOperandId inputId, Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
 
-  auto* number = MUnbox::New(alloc(), input, MIRType::Double, MUnbox::Fallible);
-  add(number);
+  MDefinition* number;
+  if (input->type() == MIRType::Int32 || input->type() == MIRType::Double) {
+    number = input;
+  } else {
+    auto* unbox =
+        MUnbox::New(alloc(), input, MIRType::Double, MUnbox::Fallible);
+    add(unbox);
+    number = unbox;
+  }
 
   auto* ins = MTypedArrayIndexToInt32::New(alloc(), number);
   add(ins);
