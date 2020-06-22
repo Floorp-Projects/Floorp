@@ -129,6 +129,7 @@ static mozilla::LazyLogModule gSriPRLog("SRI");
 // And some convenience strings...
 static const char* const gStateStrings[] = {"NeedsParser", "Pending", "Loading",
                                             "Complete"};
+
 namespace mozilla {
 
 SheetLoadDataHashKey::SheetLoadDataHashKey(const css::SheetLoadData& aLoadData)
@@ -1449,11 +1450,7 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
                                         aStatus);
     }
 
-    nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver>>::ForwardIterator iter(
-        mObservers);
-    nsCOMPtr<nsICSSLoaderObserver> obs;
-    while (iter.HasMore()) {
-      obs = iter.GetNext();
+    for (nsCOMPtr<nsICSSLoaderObserver> obs : mObservers.ForwardRange()) {
       LOG(("  Notifying global observer %p for data %p.  deferred: %d",
            obs.get(), &aData, aData.ShouldDefer()));
       obs->StyleSheetLoaded(aData.mSheet, aData.ShouldDefer(), aStatus);
@@ -2054,11 +2051,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Loader)
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "Inline sheet cache in Loader");
     cb.NoteXPCOMChild(iter.UserData());
   }
-  nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver>>::ForwardIterator it(
-      tmp->mObservers);
-  while (it.HasMore()) {
-    ImplCycleCollectionTraverse(cb, it.GetNext(),
-                                "mozilla::css::Loader.mObservers");
+  for (nsCOMPtr<nsICSSLoaderObserver>& obs : tmp->mObservers.ForwardRange()) {
+    ImplCycleCollectionTraverse(cb, obs, "mozilla::css::Loader.mObservers");
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
