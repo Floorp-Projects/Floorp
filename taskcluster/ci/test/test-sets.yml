@@ -19,6 +19,7 @@ web-platform-tests:
     - web-platform-tests
     - web-platform-tests-backlog
     - web-platform-tests-crashtest
+    - web-platform-tests-print-reftest
     - web-platform-tests-reftest
     - web-platform-tests-reftest-backlog
     - web-platform-tests-wdspec
@@ -415,6 +416,7 @@ macosx1014-64-tests:
     - web-platform-tests
     - web-platform-tests-backlog
     - web-platform-tests-crashtest
+    - web-platform-tests-print-reftest
     - web-platform-tests-reftest
     - web-platform-tests-reftest-backlog
     - web-platform-tests-wdspec
