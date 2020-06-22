@@ -43,14 +43,19 @@ class TabCounter @JvmOverloads constructor(
     }
 
     fun setCountWithAnimation(count: Int) {
-        setCount(count)
-
         // No need to animate on these cases.
         when {
-            INTERNAL_COUNT == 0 -> return // Initial state.
-            INTERNAL_COUNT == count -> return // There isn't any tab added or removed.
-            INTERNAL_COUNT > MAX_VISIBLE_TABS -> return // There are still over MAX_VISIBLE_TABS tabs open.
+            count == INTERNAL_COUNT -> return // There isn't any tab added or removed.
+            INTERNAL_COUNT == 0 -> {
+                setCount(count)
+                return
+            } // Initial state.
+            count > MAX_VISIBLE_TABS && INTERNAL_COUNT > MAX_VISIBLE_TABS -> {
+                INTERNAL_COUNT = count
+                return
+            } // There are still over MAX_VISIBLE_TABS tabs open.
         }
+        setCount(count)
 
         // Cancel previous animations if necessary.
         if (animationSet.isRunning) {
