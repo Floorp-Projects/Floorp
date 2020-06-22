@@ -443,7 +443,7 @@ class BookmarksTest {
             confirmFolderDeletion()
             verifyDeleteSnackBarText()
             verifyFolderTitle("3")
-        }.goBack {
+        }.closeMenu {
         }
 
         homeScreen {
@@ -523,6 +523,16 @@ class BookmarksTest {
 
             longTapDesktopFolder("Desktop Bookmarks")
             verifySelectDefaultFolderSnackBarText()
+        }
+    }
+
+    @Test
+    fun verifyCloseMenu() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+        }.closeMenu {
+            verifyHomeScreen()
         }
     }
 }

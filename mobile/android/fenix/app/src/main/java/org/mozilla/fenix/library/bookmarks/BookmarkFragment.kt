@@ -192,6 +192,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.close_bookmarks -> {
+                invokePendingDeletion()
+                close()
+                true
+            }
             R.id.add_bookmark_folder -> {
                 navigate(
                     BookmarkFragmentDirections

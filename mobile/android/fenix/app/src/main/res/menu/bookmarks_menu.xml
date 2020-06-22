@@ -10,4 +10,11 @@
         app:iconTint="?primaryText"
         android:title="@string/bookmark_add_folder"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/close_bookmarks"
+        android:icon="@drawable/ic_close"
+        app:iconTint="?primaryText"
+        android:title="@string/content_description_close_button"
+        app:showAsAction="ifRoom" />
 </menu>

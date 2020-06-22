@@ -10,7 +10,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
@@ -84,8 +83,8 @@ class HistoryRobot {
     }
 
     class Transition {
-        fun goBack(interact: HistoryRobot.() -> Unit): Transition {
-            goBackButton().click()
+        fun closeMenu(interact: HistoryRobot.() -> Unit): Transition {
+            closeButton().click()
 
             HistoryRobot().interact()
             return Transition()
@@ -107,7 +106,7 @@ fun historyMenu(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
     return HistoryRobot.Transition()
 }
 
-private fun goBackButton() = onView(withContentDescription("Navigate up"))
+private fun closeButton() = onView(withId(R.id.close_history))
 
 private fun testPageTitle() = onView(allOf(withId(R.id.title), withText("Test_Page_1")))
 

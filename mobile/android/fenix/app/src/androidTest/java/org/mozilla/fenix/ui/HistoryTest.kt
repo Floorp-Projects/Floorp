@@ -293,11 +293,11 @@ class HistoryTest {
     }
 
     @Test
-    fun verifyBackNavigation() {
+    fun verifyCloseMenu() {
         homeScreen {
         }.openThreeDotMenu {
         }.openHistory {
-        }.goBack {
+        }.closeMenu {
             verifyHomeScreen()
         }
     }

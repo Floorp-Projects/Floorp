@@ -72,7 +72,7 @@ class ThreeDotMenuMainTest {
         }.openThreeDotMenu {
         }.openBookmarks {
             verifyBookmarksMenuView()
-        }.goBack {
+        }.closeMenu {
         }
 
         homeScreen {

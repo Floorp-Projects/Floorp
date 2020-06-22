@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 import kotlinx.android.synthetic.main.component_history.*
 import kotlinx.android.synthetic.main.component_history.view.*
 import mozilla.components.support.base.feature.UserInteractionHandler
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibraryPageView
 import org.mozilla.fenix.library.SelectionInteractor
@@ -141,12 +142,18 @@ class HistoryView(
         }
 
         when (val mode = state.mode) {
-            is HistoryFragmentState.Mode.Normal ->
+            is HistoryFragmentState.Mode.Normal -> {
+                (activity as HomeActivity).setupNavigationToolbar(R.id.historyFragment)
                 setUiForNormalMode(
-                    context.getString(R.string.library_history))
-            is HistoryFragmentState.Mode.Editing ->
+                    context.getString(R.string.library_history)
+                )
+            }
+            is HistoryFragmentState.Mode.Editing -> {
+                (activity as HomeActivity).setupNavigationToolbar()
                 setUiForSelectingMode(
-                    context.getString(R.string.history_multi_select_title, mode.selectedItems.size))
+                    context.getString(R.string.history_multi_select_title, mode.selectedItems.size)
+                )
+            }
         }
     }
 

@@ -128,6 +128,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         )
     }
 
+    private lateinit var navigationToolbar: Toolbar
+
     final override fun onCreate(savedInstanceState: Bundle?) {
         StrictModeManager.changeStrictModePolicies(supportFragmentManager)
         // There is disk read violations on some devices such as samsung and pixel for android 9/10
@@ -329,22 +331,27 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     fun getSupportActionBarAndInflateIfNecessary(): ActionBar {
         // Add ids to this that we don't want to have a toolbar back button
         if (!isToolbarInflated) {
-            val navigationToolbar = navigationToolbarStub.inflate() as Toolbar
+            navigationToolbar = navigationToolbarStub.inflate() as Toolbar
 
             setSupportActionBar(navigationToolbar)
-
-            NavigationUI.setupWithNavController(
-                navigationToolbar,
-                navHost.navController,
-                AppBarConfiguration.Builder().build()
-            )
-            navigationToolbar.setNavigationOnClickListener {
-                onBackPressed()
-            }
+            setupNavigationToolbar()
 
             isToolbarInflated = true
         }
         return supportActionBar!!
+    }
+
+    @Suppress("SpreadOperator")
+    fun setupNavigationToolbar(vararg topLevelDestinationIds: Int) {
+        NavigationUI.setupWithNavController(
+            navigationToolbar,
+            navHost.navController,
+            AppBarConfiguration.Builder(*topLevelDestinationIds).build()
+        )
+
+        navigationToolbar.setNavigationOnClickListener {
+            onBackPressed()
+        }
     }
 
     protected open fun getIntentSessionId(intent: SafeIntent): String? = null
