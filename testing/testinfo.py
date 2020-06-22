@@ -732,7 +732,6 @@ class TestInfoReport(TestInfo):
                            {"not": {"regex": {"result.test": "[a-g].*"}}}]),
             "web-platform-tests-wdspec": (self.path_mod_wpt, [None]),
             "web-platform-tests-crashtest": (self.path_mod_wpt, [None]),
-            "web-platform-tests-print-reftest": (self.path_mod_wpt, [None]),
             "xpcshell": (self.path_mod_xpcshell, [None]),
             "mochitest-plain": (None, [None]),
             "mochitest-browser-chrome": (None, [None]),

@@ -66,7 +66,6 @@ EXCLUSIVE_COMPONENTS = [
     'mochitest-chrome',
     'mochitest-plain',
     'web-platform-tests-crashtest',
-    'web-platform-tests-print-reftest',
     'web-platform-tests-reftest',
     'web-platform-tests-wdspec',
     # webrender enabled

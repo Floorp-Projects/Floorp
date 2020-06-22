@@ -453,8 +453,7 @@ class ReftestTest(Test):
     test_type = "reftest"
 
     def __init__(self, tests_root, url, inherit_metadata, test_metadata, references,
-                 timeout=None, path=None, viewport_size=None, dpi=None, fuzzy=None, protocol="http",
-                 quic=False):
+                 timeout=None, path=None, viewport_size=None, dpi=None, fuzzy=None, protocol="http", quic=False):
         Test.__init__(self, tests_root, url, inherit_metadata, test_metadata, timeout,
                       path, protocol, quic)
 
@@ -466,13 +465,6 @@ class ReftestTest(Test):
         self.viewport_size = self.get_viewport_size(viewport_size)
         self.dpi = dpi
         self._fuzzy = fuzzy or {}
-
-    @classmethod
-    def cls_kwargs(cls, manifest_test):
-        return {"viewport_size": manifest_test.viewport_size,
-                "dpi": manifest_test.dpi,
-                "protocol": server_protocol(manifest_test),
-                "fuzzy": manifest_test.fuzzy}
 
     @classmethod
     def from_manifest(cls,
@@ -493,8 +485,11 @@ class ReftestTest(Test):
                    [],
                    timeout=timeout,
                    path=manifest_test.path,
-                   quic=quic,
-                   **cls.cls_kwargs(manifest_test))
+                   viewport_size=manifest_test.viewport_size,
+                   dpi=manifest_test.dpi,
+                   protocol=server_protocol(manifest_test),
+                   fuzzy=manifest_test.fuzzy,
+                   quic=quic)
 
         refs_by_type = defaultdict(list)
 
@@ -597,36 +592,13 @@ class ReftestTest(Test):
                 values[key] = data
         return values
 
-    @property
-    def page_ranges(self):
-        return {}
-
 
 class PrintReftestTest(ReftestTest):
     test_type = "print-reftest"
 
-    def __init__(self, tests_root, url, inherit_metadata, test_metadata, references,
-                 timeout=None, path=None, viewport_size=None, dpi=None, fuzzy=None,
-                 page_ranges=None, protocol="http", quic=False):
-        super(PrintReftestTest, self).__init__(tests_root, url, inherit_metadata, test_metadata,
-                                               references, timeout, path, viewport_size, dpi,
-                                               fuzzy, protocol, quic=quic)
-        self._page_ranges = page_ranges
-
-    @classmethod
-    def cls_kwargs(cls, manifest_test):
-        rv = super(PrintReftestTest, cls).cls_kwargs(manifest_test)
-        rv["page_ranges"] = manifest_test.page_ranges
-        return rv
-
     def get_viewport_size(self, override):
         assert override is None
         return (5*2.54, 3*2.54)
-
-    @property
-    def page_ranges(self):
-        return self._page_ranges
-
 
 class WdspecTest(Test):
     result_cls = WdspecResult
