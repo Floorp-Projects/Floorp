@@ -1178,8 +1178,12 @@ class HiddenXULWindow {
     }
 
     chromeDoc.documentElement.appendChild(browser);
-    await awaitFrameLoader;
 
+    // Forcibly flush layout so that we get a pres shell soon enough, see
+    // bug 1274775.
+    browser.getBoundingClientRect();
+
+    await awaitFrameLoader;
     return browser;
   }
 }
