@@ -4904,22 +4904,13 @@ double profiler_time() {
   return delta.ToMilliseconds();
 }
 
-UniqueProfilerBacktrace profiler_get_backtrace() {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  // Fast racy early return.
-  if (!profiler_is_active()) {
-    return nullptr;
-  }
-
-  PSAutoLock lock(gPSMutex);
-
-  if (!ActivePS::Exists(lock)) {
+static UniqueProfilerBacktrace locked_profiler_get_backtrace(PSLockRef aLock) {
+  if (!ActivePS::Exists(aLock)) {
     return nullptr;
   }
 
   RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(lock);
+      TLSRegisteredThread::RegisteredThread(aLock);
   if (!registeredThread) {
     // If this was called from a non-registered thread, return a nullptr
     // and do no more work. This can happen from a memory hook. Before
@@ -4944,10 +4935,23 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
       MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
   auto buffer = MakeUnique<ProfileBuffer>(*bufferManager);
 
-  DoSyncSample(lock, *registeredThread, now, regs, *buffer.get());
+  DoSyncSample(aLock, *registeredThread, now, regs, *buffer);
 
   return UniqueProfilerBacktrace(new ProfilerBacktrace(
       "SyncProfile", tid, std::move(bufferManager), std::move(buffer)));
+}
+
+UniqueProfilerBacktrace profiler_get_backtrace() {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  // Fast racy early return.
+  if (!profiler_is_active()) {
+    return nullptr;
+  }
+
+  PSAutoLock lock(gPSMutex);
+
+  return locked_profiler_get_backtrace(lock);
 }
 
 void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
