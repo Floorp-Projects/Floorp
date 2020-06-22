@@ -117,6 +117,8 @@ impl FrameGlobalResources {
 pub struct FrameScratchBuffer {
     surfaces: Vec<SurfaceInfo>,
     dirty_region_stack: Vec<DirtyRegion>,
+    surface_stack: Vec<SurfaceIndex>,
+    clip_chain_stack: ClipChainStack,
 }
 
 impl Default for FrameScratchBuffer {
@@ -124,6 +126,8 @@ impl Default for FrameScratchBuffer {
         FrameScratchBuffer {
             surfaces: Vec::new(),
             dirty_region_stack: Vec::new(),
+            surface_stack: Vec::new(),
+            clip_chain_stack: ClipChainStack::new(),
         }
     }
 }
@@ -132,6 +136,8 @@ impl FrameScratchBuffer {
     pub fn begin_frame(&mut self) {
         self.surfaces.clear();
         self.dirty_region_stack.clear();
+        self.surface_stack.clear();
+        self.clip_chain_stack.clear();
     }
 
     pub fn recycle(&mut self, recycler: &mut Recycler) {
@@ -165,6 +171,10 @@ pub struct FrameVisibilityContext<'a> {
 }
 
 pub struct FrameVisibilityState<'a> {
+    pub clip_chain_stack: ClipChainStack,
+    /// A stack of currently active off-screen surfaces during the
+    /// visibility frame traversal.
+    pub surface_stack: Vec<SurfaceIndex>,
     pub clip_store: &'a mut ClipStore,
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
@@ -172,12 +182,8 @@ pub struct FrameVisibilityState<'a> {
     pub tile_cache: Option<Box<TileCacheInstance>>,
     pub retained_tiles: &'a mut RetainedTiles,
     pub data_stores: &'a mut DataStores,
-    pub clip_chain_stack: ClipChainStack,
     pub render_tasks: &'a mut RenderTaskGraph,
     pub composite_state: &'a mut CompositeState,
-    /// A stack of currently active off-screen surfaces during the
-    /// visibility frame traversal.
-    pub surface_stack: Vec<SurfaceIndex>,
 }
 
 impl<'a> FrameVisibilityState<'a> {
@@ -399,6 +405,8 @@ impl FrameBuilder {
             };
 
             let mut visibility_state = FrameVisibilityState {
+                clip_chain_stack: scratch.frame.clip_chain_stack.take(),
+                surface_stack: scratch.frame.surface_stack.take(),
                 resource_cache,
                 gpu_cache,
                 clip_store: &mut scene.clip_store,
@@ -406,12 +414,8 @@ impl FrameBuilder {
                 tile_cache: None,
                 retained_tiles: &mut retained_tiles,
                 data_stores,
-                clip_chain_stack: ClipChainStack::new(),
                 render_tasks,
                 composite_state,
-                /// Try to avoid allocating during frame traversal - it's unlikely to have a
-                /// surface stack depth of > 16 in most cases.
-                surface_stack: Vec::with_capacity(16),
             };
 
             scene.prim_store.update_visibility(
@@ -448,6 +452,9 @@ impl FrameBuilder {
                     visibility_state.resource_cache.destroy_compositor_surface(external_surface.native_surface_id)
                 }
             }
+
+            visibility_state.scratch.frame.clip_chain_stack = visibility_state.clip_chain_stack.take();
+            visibility_state.scratch.frame.surface_stack = visibility_state.surface_stack.take();
         }
 
         let mut frame_state = FrameBuildingState {
