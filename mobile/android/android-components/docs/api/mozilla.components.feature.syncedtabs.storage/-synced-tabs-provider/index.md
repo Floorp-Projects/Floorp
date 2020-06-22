@@ -10,7 +10,7 @@ Provides tabs from remote Firefox Sync devices.
 
 | Name | Summary |
 |---|---|
-| [getSyncedTabs](get-synced-tabs.md) | `abstract suspend fun getSyncedTabs(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`SyncedDeviceTabs`](../../mozilla.components.browser.storage.sync/-synced-device-tabs/index.md)`>`<br>A list of [SyncedDeviceTabs](../../mozilla.components.browser.storage.sync/-synced-device-tabs/index.md) containing the tabs of the remote devices for the account. |
+| [getSyncedDeviceTabs](get-synced-device-tabs.md) | `abstract suspend fun getSyncedDeviceTabs(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`SyncedDeviceTabs`](../../mozilla.components.browser.storage.sync/-synced-device-tabs/index.md)`>`<br>A list of [SyncedDeviceTabs](../../mozilla.components.browser.storage.sync/-synced-device-tabs/index.md), each containing a synced device and its current tabs. |
 
 ### Extension Functions
 

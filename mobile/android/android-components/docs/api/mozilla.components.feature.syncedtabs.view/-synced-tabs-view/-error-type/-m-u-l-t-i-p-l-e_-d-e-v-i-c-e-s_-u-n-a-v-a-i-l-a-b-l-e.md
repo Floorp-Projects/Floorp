@@ -2,7 +2,7 @@
 
 # MULTIPLE_DEVICES_UNAVAILABLE
 
-`MULTIPLE_DEVICES_UNAVAILABLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/view/SyncedTabsView.kt#L66)
+`MULTIPLE_DEVICES_UNAVAILABLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/view/SyncedTabsView.kt#L71)
 
 There are no other devices found with this account and therefore no tabs to sync.
 

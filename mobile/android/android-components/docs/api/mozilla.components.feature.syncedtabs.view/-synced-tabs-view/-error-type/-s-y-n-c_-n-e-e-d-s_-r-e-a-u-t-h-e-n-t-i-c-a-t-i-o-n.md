@@ -2,7 +2,7 @@
 
 # SYNC_NEEDS_REAUTHENTICATION
 
-`SYNC_NEEDS_REAUTHENTICATION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/view/SyncedTabsView.kt#L82)
+`SYNC_NEEDS_REAUTHENTICATION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/view/SyncedTabsView.kt#L87)
 
 The Firefox Sync account requires user-intervention to re-authenticate the account.
 
