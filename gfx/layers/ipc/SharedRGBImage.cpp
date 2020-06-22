@@ -50,32 +50,6 @@ class TextureClientForRawBufferAccessAllocationHelper
   }
 };
 
-already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
-                                             gfx::IntSize aSize,
-                                             gfxImageFormat aImageFormat) {
-  NS_ASSERTION(aImageFormat == gfx::SurfaceFormat::A8R8G8B8_UINT32 ||
-                   aImageFormat == gfx::SurfaceFormat::X8R8G8B8_UINT32 ||
-                   aImageFormat == gfx::SurfaceFormat::R5G6B5_UINT16,
-               "RGB formats supported only");
-
-  if (!aImageContainer) {
-    NS_WARNING("No ImageContainer to allocate SharedRGBImage");
-    return nullptr;
-  }
-
-  RefPtr<SharedRGBImage> rgbImage = aImageContainer->CreateSharedRGBImage();
-  if (!rgbImage) {
-    NS_WARNING("Failed to create SharedRGBImage");
-    return nullptr;
-  }
-  if (!rgbImage->Allocate(aSize,
-                          gfx::ImageFormatToSurfaceFormat(aImageFormat))) {
-    NS_WARNING("Failed to allocate a shared image");
-    return nullptr;
-  }
-  return rgbImage.forget();
-}
-
 SharedRGBImage::SharedRGBImage(ImageClient* aCompositable)
     : Image(nullptr, ImageFormat::SHARED_RGB), mCompositable(aCompositable) {
   MOZ_COUNT_CTOR(SharedRGBImage);
