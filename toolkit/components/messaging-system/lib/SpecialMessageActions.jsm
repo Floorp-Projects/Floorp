@@ -9,6 +9,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const DOH_DOORHANGER_DECISION_PREF = "doh-rollout.doorhanger-decision";
+const NETWORK_TRR_MODE_PREF = "network.trr.mode";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -182,6 +184,17 @@ const SpecialMessageActions = {
           "FINGERPRINTERS_PROTECTION",
           "CRYPTOMINERS_PROTECTION",
         ]);
+        break;
+      case "DISABLE_DOH":
+        Services.prefs.setStringPref(
+          DOH_DOORHANGER_DECISION_PREF,
+          "UIDisabled"
+        );
+        Services.prefs.setIntPref(NETWORK_TRR_MODE_PREF, 5);
+        await this.blockMessageById("DOH_ROLLOUT_CONFIRMATION");
+        break;
+      case "ACCEPT_DOH":
+        Services.prefs.setStringPref(DOH_DOORHANGER_DECISION_PREF, "UIOk");
         break;
       case "CANCEL":
         // A no-op used by CFRs that minimizes the notification but does not
