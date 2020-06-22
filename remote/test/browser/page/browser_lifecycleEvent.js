@@ -3,200 +3,204 @@
 
 "use strict";
 
-// Test the Page lifecycle events
+const DOC = toDataURL("<div>foo</div>");
+const DOC_IFRAME_MULTI = toDataURL(`
+  <iframe src='data:text/html,foo'></iframe>
+  <iframe src='data:text/html,bar'></iframe>
+`);
+const DOC_IFRAME_NESTED = toDataURL(`
+  <iframe src="${DOC_IFRAME_MULTI}"></iframe>
+`);
 
-const DOC = toDataURL("default-test-page");
 const PAGE_URL =
   "http://example.com/browser/remote/test/browser/page/doc_empty.html";
 
-add_task(async function noInitialEvents({ client }) {
-  const { Page } = client;
-  await Page.enable();
-  info("Page domain has been enabled");
-
-  const promise = recordPromises(Page, ["init", "DOMContentLoaded", "load"]);
-  info("Lifecycle events are not enabled");
-
-  let pageLoaded = Page.loadEventFired();
-  const { frameId } = await Page.navigate({ url: DOC });
-  await pageLoaded;
-  info("A new page has been loaded");
-
-  await assertNavigationLifecycleEvents({ promise, frameId, timeout: 1000 });
+add_task(async function noEventsWhenPageDomainDisabled({ client }) {
+  await runPageLifecycleTest(client, 0, async () => {
+    info("Navigate to a page with nested iframes");
+    await loadURL(DOC_IFRAME_NESTED);
+  });
 });
 
-add_task(async function noEventsAfterDisable({ client }) {
+add_task(async function noEventAfterPageDomainDisabled({ client }) {
   const { Page } = client;
-  await Page.enable();
-  info("Page domain has been enabled");
 
+  await Page.enable();
+  await Page.disable();
+
+  await runPageLifecycleTest(client, 0, async () => {
+    info("Navigate to a page with nested iframes");
+    await loadURL(DOC_IFRAME_NESTED);
+  });
+});
+
+add_task(async function noEventWhenLifeCycleDisabled({ client }) {
+  const { Page } = client;
+
+  await Page.enable();
+
+  await runPageLifecycleTest(client, 0, async () => {
+    info("Navigate to a page with nested iframes");
+    await loadURL(DOC_IFRAME_NESTED);
+  });
+});
+
+add_task(async function noEventAfterLifeCycleDisabled({ client }) {
+  const { Page } = client;
+
+  await Page.enable();
   await Page.setLifecycleEventsEnabled({ enabled: true });
   await Page.setLifecycleEventsEnabled({ enabled: false });
-  const promise = recordPromises(Page, ["init", "DOMContentLoaded", "load"]);
-  info("Lifecycle events are not enabled");
 
-  let pageLoaded = Page.loadEventFired();
-  const { frameId } = await Page.navigate({ url: DOC });
-  await pageLoaded;
-  info("A new page has been loaded");
-
-  await assertNavigationLifecycleEvents({ promise, frameId, timeout: 1000 });
+  await runPageLifecycleTest(client, 0, async () => {
+    info("Navigate to a page with nested iframes");
+    await loadURL(DOC_IFRAME_NESTED);
+  });
 });
 
-add_task(async function navigateToDataURLEvents({ client }) {
+add_task(async function eventsWhenNavigatingWithNoFrames({ client }) {
   const { Page } = client;
+
   await Page.enable();
-  info("Page domain has been enabled");
-
   await Page.setLifecycleEventsEnabled({ enabled: true });
-  const promise = recordPromises(Page, ["init", "DOMContentLoaded", "load"]);
-  info("Lifecycle events have been enabled");
 
-  let pageLoaded = Page.loadEventFired();
-  const { frameId, loaderId } = await Page.navigate({ url: DOC });
-  // Bug 1632007 return a loaderId for data: url
-  todo(!!loaderId, "Page.navigate returns a loaderId");
-  await pageLoaded;
-  info("A new page has been loaded");
-
-  await assertNavigationLifecycleEvents({ promise, frameId, loaderId });
+  await runPageLifecycleTest(client, 1, async () => {
+    info("Navigate to a page with no iframes");
+    await loadURL(DOC);
+  });
 });
 
-add_task(async function navigateToPageURLEvents({ client }) {
+add_task(async function eventsWhenNavigatingToURLWithNoFrames({ client }) {
   const { Page } = client;
+
   await Page.enable();
-  info("Page domain has been enabled");
-
   await Page.setLifecycleEventsEnabled({ enabled: true });
-  const promise = recordPromises(Page, ["init", "DOMContentLoaded", "load"]);
-  info("Lifecycle events have been enabled");
 
-  let pageLoaded = Page.loadEventFired();
-  const { frameId, loaderId } = await Page.navigate({ url: PAGE_URL });
-  ok(!!loaderId, "Page.navigate returns a loaderId");
-
-  await pageLoaded;
-  info("A new page has been loaded");
-
-  await assertNavigationLifecycleEvents({ promise, frameId, loaderId });
+  await runPageLifecycleTest(client, 1, async () => {
+    info("Navigate to a URL with no frames");
+    await loadURL(PAGE_URL);
+  });
 });
 
-add_task(async function navigateEventsOnReload({ client }) {
+add_task(async function eventsWhenNavigatingToSameURLWithNoFrames({ client }) {
   const { Page } = client;
+
+  info("Navigate to a page with no iframes");
+  await loadURL(PAGE_URL);
+
   await Page.enable();
-  info("Page domain has been enabled");
-
-  let pageLoaded = Page.loadEventFired();
-  const { frameId } = await Page.navigate({ url: DOC });
-  await pageLoaded;
-  info("Initial page has been loaded");
-
   await Page.setLifecycleEventsEnabled({ enabled: true });
-  const promise = recordPromises(Page, ["init", "DOMContentLoaded", "load"]);
-  info("Lifecycle events have been enabled");
 
-  pageLoaded = Page.loadEventFired();
-  await Page.reload();
-  await pageLoaded;
-  info("The page has been reloaded");
-
-  await assertNavigationLifecycleEvents({ promise, frameId });
+  await runPageLifecycleTest(client, 1, async () => {
+    info("Navigate to the same page with no iframes");
+    await loadURL(PAGE_URL);
+  });
 });
 
-add_task(async function navigateEventsOnNavigateToSameURL({ client }) {
+add_task(async function eventsWhenReloadingSameURLWithNoFrames({ client }) {
   const { Page } = client;
+
+  info("Navigate to a page with no iframes");
+  await loadURL(PAGE_URL);
+
   await Page.enable();
-  info("Page domain has been enabled");
-
-  let pageLoaded = Page.loadEventFired();
-  const { frameId } = await Page.navigate({ url: DOC });
-  await pageLoaded;
-  info("Initial page has been loaded");
-
   await Page.setLifecycleEventsEnabled({ enabled: true });
-  const promise = recordPromises(Page, ["init", "DOMContentLoaded", "load"]);
-  info("Lifecycle events have been enabled");
 
-  pageLoaded = Page.loadEventFired();
-  await Page.navigate({ url: DOC });
-  await pageLoaded;
-  info("The page has been reloaded");
-
-  await assertNavigationLifecycleEvents({ promise, frameId });
+  await runPageLifecycleTest(client, 1, async () => {
+    info("Reload page with no iframes");
+    const pageLoaded = Page.loadEventFired();
+    await Page.reload();
+    await pageLoaded;
+  });
 });
 
-function recordPromises(Page, names) {
-  return new Promise(resolve => {
-    const resolutions = new Map();
+add_task(async function eventsWhenNavigatingWithFrames({ client }) {
+  const { Page } = client;
 
-    const unsubscribe = Page.lifecycleEvent(event => {
-      info(`Received Page.lifecycleEvent for ${event.name}`);
-      resolutions.set(event.name, event);
+  await Page.enable();
+  await Page.setLifecycleEventsEnabled({ enabled: true });
 
-      if (event.name == names[names.length - 1]) {
-        unsubscribe();
-        resolve(resolutions);
+  await runPageLifecycleTest(client, 3, async () => {
+    info("Navigate to a page with iframes");
+    await loadURL(DOC_IFRAME_MULTI);
+  });
+});
+
+add_task(async function eventsWhenNavigatingWithNestedFrames({ client }) {
+  const { Page } = client;
+
+  await Page.enable();
+  await Page.setLifecycleEventsEnabled({ enabled: true });
+
+  await runPageLifecycleTest(client, 4, async () => {
+    info("Navigate to a page with nested iframes");
+    await loadURL(DOC_IFRAME_NESTED);
+  });
+});
+
+async function runPageLifecycleTest(client, expectedEventSets, callback) {
+  const { Page } = client;
+
+  const LIFECYCLE = "Page.lifecycleEvent";
+  const LIFECYCLE_EVENTS = ["init", "DOMContentLoaded", "load"];
+
+  const expectedEventCount = expectedEventSets * LIFECYCLE_EVENTS.length;
+  const history = new RecordEvents(expectedEventCount);
+  history.addRecorder({
+    event: Page.lifecycleEvent,
+    eventName: LIFECYCLE,
+    messageFn: payload => {
+      return (
+        `Received "${payload.name}" ${LIFECYCLE} ` +
+        `for frame id ${payload.frameId}`
+      );
+    },
+  });
+
+  await callback();
+
+  const flattenedFrameTree = await getFlattenedFrameTree(client);
+
+  const lifecycleEvents = await history.record();
+  is(
+    lifecycleEvents.length,
+    expectedEventCount,
+    "Got expected amount of lifecycle events"
+  );
+
+  if (expectedEventCount == 0) {
+    return;
+  }
+
+  // Check lifecycle events for each frame
+  for (const frame of flattenedFrameTree.values()) {
+    info(`Check frame id ${frame.id}`);
+
+    const frameEvents = lifecycleEvents.filter(({ payload }) => {
+      return payload.frameId == frame.id;
+    });
+
+    Assert.deepEqual(
+      frameEvents.map(event => event.payload.name),
+      LIFECYCLE_EVENTS,
+      "Received various lifecycle events in the expected order"
+    );
+
+    // Check data as exposed by each of these events
+    let lastTimestamp = lifecycleEvents[0].payload.timestamp;
+    lifecycleEvents.forEach(({ payload }, index) => {
+      ok(
+        payload.timestamp >= lastTimestamp,
+        "timestamp succeeds the one from the former event"
+      );
+      lastTimestamp = payload.timestamp;
+
+      // Bug 1632007 return a loaderId for data: url
+      if (frame.url.startsWith("data:")) {
+        todo(!!payload.loaderId, "Event has a loaderId");
+      } else {
+        is(payload.loaderId, frame.loaderId, `event has expected loaderId`);
       }
     });
-  });
-}
-
-async function assertNavigationLifecycleEvents(options = {}) {
-  const { promise, frameId, loaderId, timeout } = options;
-  // Wait for all the promises to resolve
-  const promises = [promise];
-
-  if (timeout) {
-    promises.push(timeoutPromise(timeout));
   }
-
-  const resolutions = await Promise.race(promises);
-
-  if (timeout) {
-    is(resolutions, undefined, "No lifecycle events have been recorded");
-    return;
-  }
-
-  // Assert the order in which they resolved
-  const expectedResolutions = ["init", "DOMContentLoaded", "load"];
-  Assert.deepEqual(
-    [...resolutions.keys()],
-    expectedResolutions,
-    "Received various lifecycle events in the expected order"
-  );
-
-  // Now assert the data exposed by each of these events
-  const init = resolutions.get("init");
-  is(init.frameId, frameId, "init frameId is the same one");
-
-  const DOMContentLoaded = resolutions.get("DOMContentLoaded");
-  is(
-    DOMContentLoaded.frameId,
-    frameId,
-    "DOMContentLoaded frameId is the same one"
-  );
-
-  const load = resolutions.get("load");
-  is(load.frameId, frameId, "load frameId is the same one");
-
-  ok(init.timestamp, "init has a timestamp");
-  ok(
-    init.timestamp <= DOMContentLoaded.timestamp,
-    "init precedes DOMContentLoaded"
-  );
-  ok(
-    DOMContentLoaded.timestamp <= load.timestamp,
-    "DOMContentLoaded precedes load"
-  );
-
-  if (!loaderId) {
-    return;
-  }
-  is(init.loaderId, loaderId, "init has expected loaderId");
-  is(load.loaderId, loaderId, "load has expected loaderId");
-  is(
-    DOMContentLoaded.loaderId,
-    loaderId,
-    "DOMContentLoaded has expected loaderId"
-  );
 }

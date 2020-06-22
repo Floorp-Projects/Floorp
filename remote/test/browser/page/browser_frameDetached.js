@@ -9,8 +9,7 @@ const DOC_IFRAME_MULTI = toDataURL(`
   <iframe src='data:text/html,bar'></iframe>
 `);
 const DOC_IFRAME_NESTED = toDataURL(`
-  <iframe src="data:text/html,<iframe src='data:text/html,foo'></iframe>">
-  </iframe>
+  <iframe src="${DOC_IFRAME_MULTI}"></iframe>
 `);
 
 // Disable bfcache to force documents to be destroyed on navigation
@@ -20,7 +19,8 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function noEventWhenPageDomainDisabled({ client }) {
-  await loadURL(DOC_IFRAME_MULTI);
+  info("Navigate to a page with nested iframes");
+  await loadURL(DOC_IFRAME_NESTED);
 
   await runFrameDetachedTest(client, 0, async () => {
     info("Navigate away from a page with an iframe");
@@ -31,14 +31,14 @@ add_task(async function noEventWhenPageDomainDisabled({ client }) {
 add_task(async function noEventAfterPageDomainDisabled({ client }) {
   const { Page } = client;
 
+  info("Navigate to a page with nested iframes");
+  await loadURL(DOC_IFRAME_NESTED);
+
   await Page.enable();
-
-  await loadURL(DOC_IFRAME_MULTI);
-
   await Page.disable();
 
   await runFrameDetachedTest(client, 0, async () => {
-    info("Navigate away from a page with an iframe");
+    info("Navigate away to a page with no iframes");
     await loadURL(DOC);
   });
 });
@@ -48,10 +48,11 @@ add_task(async function noEventWhenNavigatingWithNoFrames({ client }) {
 
   await Page.enable();
 
+  info("Navigate to a page with no iframes");
   await loadURL(DOC);
 
   await runFrameDetachedTest(client, 0, async () => {
-    info("Navigate away from a page with no iframes");
+    info("Navigate away to a page with no iframes");
     await loadURL(DOC);
   });
 });
@@ -59,12 +60,13 @@ add_task(async function noEventWhenNavigatingWithNoFrames({ client }) {
 add_task(async function eventWhenNavigatingWithFrames({ client }) {
   const { Page } = client;
 
-  await Page.enable();
-
+  info("Navigate to a page with iframes");
   await loadURL(DOC_IFRAME_MULTI);
 
+  await Page.enable();
+
   await runFrameDetachedTest(client, 2, async () => {
-    info("Navigate away from a page with an iframe");
+    info("Navigate away to a page with no iframes");
     await loadURL(DOC);
   });
 });
@@ -72,12 +74,13 @@ add_task(async function eventWhenNavigatingWithFrames({ client }) {
 add_task(async function eventWhenNavigatingWithNestedFrames({ client }) {
   const { Page } = client;
 
-  await Page.enable();
-
+  info("Navigate to a page with nested iframes");
   await loadURL(DOC_IFRAME_NESTED);
 
-  await runFrameDetachedTest(client, 2, async () => {
-    info("Navigate away from a page with nested iframes");
+  await Page.enable();
+
+  await runFrameDetachedTest(client, 3, async () => {
+    info("Navigate away to a page with no iframes");
     await loadURL(DOC);
   });
 });
@@ -85,9 +88,10 @@ add_task(async function eventWhenNavigatingWithNestedFrames({ client }) {
 add_task(async function eventWhenDetachingFrame({ client }) {
   const { Page } = client;
 
-  await Page.enable();
-
+  info("Navigate to a page with iframes");
   await loadURL(DOC_IFRAME_MULTI);
+
+  await Page.enable();
 
   await runFrameDetachedTest(client, 1, async () => {
     // Remove the single frame from the page
@@ -101,14 +105,15 @@ add_task(async function eventWhenDetachingFrame({ client }) {
 add_task(async function eventWhenDetachingNestedFrames({ client }) {
   const { Page, Runtime } = client;
 
-  await Page.enable();
-
+  info("Navigate to a page with nested iframes");
   await loadURL(DOC_IFRAME_NESTED);
 
+  await Page.enable();
   await Runtime.enable();
+
   const { context } = await Runtime.executionContextCreated();
 
-  await runFrameDetachedTest(client, 2, async () => {
+  await runFrameDetachedTest(client, 3, async () => {
     // Remove top-frame, which also removes any nested frames
     await evaluate(client, context.id, async () => {
       const frame = document.getElementsByTagName("iframe")[0];
@@ -131,9 +136,9 @@ async function runFrameDetachedTest(client, expectedEventCount, callback) {
     },
   });
 
-  const framesBefore = await getFlattendFrameList();
+  const framesBefore = await getFlattenedFrameTree(client);
   await callback();
-  const framesAfter = await getFlattendFrameList();
+  const framesAfter = await getFlattenedFrameTree(client);
 
   const frameDetachedEvents = await history.record();
 
@@ -163,7 +168,7 @@ async function runFrameDetachedTest(client, expectedEventCount, callback) {
   frameDetachedEvents.forEach(({ payload }) => {
     const { frameId } = payload;
 
-    console.log(`Check frame id ${frameId}`);
+    info(`Check frame id ${frameId}`);
     const expectedFrame = expectedFrames.get(frameId);
 
     is(

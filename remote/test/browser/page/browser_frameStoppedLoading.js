@@ -13,7 +13,7 @@ const DOC_IFRAME_NESTED = toDataURL(`
 `);
 
 add_task(async function noEventWhenPageDomainDisabled({ client }) {
-  await runFrameNavigatedTest(client, 0, async () => {
+  await runFrameStoppedLoadingTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
     await loadURL(DOC_IFRAME_NESTED);
   });
@@ -25,7 +25,7 @@ add_task(async function noEventAfterPageDomainDisabled({ client }) {
   await Page.enable();
   await Page.disable();
 
-  await runFrameNavigatedTest(client, 0, async () => {
+  await runFrameStoppedLoadingTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
     await loadURL(DOC_IFRAME_NESTED);
   });
@@ -36,7 +36,7 @@ add_task(async function eventWhenNavigatingWithNoFrames({ client }) {
 
   await Page.enable();
 
-  await runFrameNavigatedTest(client, 1, async () => {
+  await runFrameStoppedLoadingTest(client, 1, async () => {
     info("Navigate to a page with no iframes");
     await loadURL(DOC);
   });
@@ -47,45 +47,49 @@ add_task(async function eventsWhenNavigatingWithFrames({ client }) {
 
   await Page.enable();
 
-  await runFrameNavigatedTest(client, 3, async () => {
+  await runFrameStoppedLoadingTest(client, 3, async () => {
     info("Navigate to a page with iframes");
     await loadURL(DOC_IFRAME_MULTI);
   });
 });
 
-add_task(async function eventWhenNavigatingWithNestedFrames({ client }) {
+add_task(async function eventsWhenNavigatingWithNestedFrames({ client }) {
   const { Page } = client;
 
   await Page.enable();
 
-  await runFrameNavigatedTest(client, 4, async () => {
+  await runFrameStoppedLoadingTest(client, 4, async () => {
     info("Navigate to a page with nested iframes");
     await loadURL(DOC_IFRAME_NESTED);
   });
 });
 
-async function runFrameNavigatedTest(client, expectedEventCount, callback) {
+async function runFrameStoppedLoadingTest(
+  client,
+  expectedEventCount,
+  callback
+) {
   const { Page } = client;
 
-  const NAVIGATED = "Page.frameNavigated";
+  const STOPPED_LOADING = "Page.frameStoppedLoading";
 
   const history = new RecordEvents(expectedEventCount);
   history.addRecorder({
-    event: Page.frameNavigated,
-    eventName: NAVIGATED,
+    event: Page.frameStoppedLoading,
+    eventName: STOPPED_LOADING,
     messageFn: payload => {
-      return `Received ${NAVIGATED} for frame id ${payload.frame.id}`;
+      return `Received ${STOPPED_LOADING} for frame id ${payload.frameId}`;
     },
   });
 
   await callback();
 
-  const frameNavigatedEvents = await history.record();
+  const frameStoppedLoadingEvents = await history.record();
 
   is(
-    frameNavigatedEvents.length,
+    frameStoppedLoadingEvents.length,
     expectedEventCount,
-    "Got expected amount of frameNavigated events"
+    "Got expected amount of frameStoppedLoading events"
   );
   if (expectedEventCount == 0) {
     return;
@@ -93,10 +97,17 @@ async function runFrameNavigatedTest(client, expectedEventCount, callback) {
 
   const frames = await getFlattenedFrameTree(client);
 
-  frameNavigatedEvents.forEach(({ payload }) => {
-    const { frame } = payload;
+  frameStoppedLoadingEvents.forEach(({ payload }) => {
+    const { frameId } = payload;
 
-    const expectedFrame = frames.get(frame.id);
-    Assert.deepEqual(frame, expectedFrame, "Got expected frame details");
+    info(`Check frame id ${frameId}`);
+    const expectedFrame = frames.get(frameId);
+
+    ok(expectedFrame, `Found expected frame with id ${frameId}`);
+    is(
+      frameId,
+      expectedFrame.id,
+      "Got expected frame id for frameStartedLoading event"
+    );
   });
 }
