@@ -40,41 +40,6 @@ class SFNTData final {
 
   ~SFNTData();
 
-  /**
-   * Gets the full name from the name table of the font corresponding to the
-   * index. If the full name string is not present it will use the family space
-   * concatenated with the style.
-   * This will only read names that are already UTF16.
-   *
-   * @param aFontData SFNT data.
-   * @param aDataLength length of aFontData.
-   * @param aU16FullName string to be populated with the full name.
-   * @return true if the full name is successfully read.
-   */
-  bool GetU16FullName(uint32_t aIndex, mozilla::u16string& aU16FullName);
-
-  /**
-   * Populate a Vector with the first UTF16 full name from each name table of
-   * the fonts. If the full name string is not present it will use the family
-   * space concatenated with the style.
-   * This will only read names that are already UTF16.
-   *
-   * @param aU16FullNames the Vector to be populated.
-   * @return true if at least one name found otherwise false.
-   */
-  bool GetU16FullNames(Vector<mozilla::u16string>& aU16FullNames);
-
-  /**
-   * Returns the index for the first UTF16 name matching aU16FullName.
-   *
-   * @param aU16FullName full name to find.
-   * @param aIndex out param for the index if found.
-   * @param aTruncatedLen length to truncate the compared font name to.
-   * @return true if the full name is successfully read.
-   */
-  bool GetIndexForU16Name(const mozilla::u16string& aU16FullName,
-                          uint32_t* aIndex, size_t aTruncatedLen = 0);
-
  private:
   SFNTData() = default;
 
