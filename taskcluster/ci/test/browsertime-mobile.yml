@@ -131,15 +131,18 @@ browsertime-tp6m:
                         by-pageload:
                             cold:
                                 by-test-platform:
+                                    &android-cold-settings
+                                    # Ignore platforms without `shippable` in the name
                                     android-hw-.*(?<!-shippable)/opt: []
-                                    android-hw-p2-.*api-16/pgo: []
-                                    android-hw-p2-.*api-16-shippable/opt: []
+                                    # Exclude api-16 P2 builds
+                                    android-hw-p2-.*api-16.*: []
+                                    # Run tests on G5 arm, and P2 aarch64 shippable builds
                                     default: ['trunk', 'mozilla-beta']
                             warm:
                                 by-test-platform:
-                                    android-hw-p2-.*-api-16/(?!opt).*: []
-                                    android-hw-p2-.*-api-16-shippable/opt: []
-                                    android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
+                                    &android-warm-settings
+                                    android-hw-.*(?<!-shippable)/opt: []
+                                    android-hw-p2-.*api-16.*: []
                                     default: ['mozilla-central']
                     default:
                         by-test-platform:
@@ -154,17 +157,9 @@ browsertime-tp6m:
                     geckoview:
                         by-pageload:
                             cold:
-                                by-test-platform:
-                                    android-hw-.*(?<!-shippable)/opt: []
-                                    android-hw-p2-.*api-16/pgo: []
-                                    android-hw-p2-.*api-16-shippable/opt: []
-                                    default: ['trunk', 'mozilla-beta']
+                                by-test-platform: *android-cold-settings
                             warm:
-                                by-test-platform:
-                                    android-hw-p2-.*-api-16/(?!opt).*: []
-                                    android-hw-p2-.*-api-16-shippable/opt: []
-                                    android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
-                                    default: ['mozilla-central']
+                                by-test-platform: *android-warm-settings
                     default:
                         by-test-platform:
                             android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
@@ -175,20 +170,12 @@ browsertime-tp6m:
                     cold:
                         by-app:
                             geckoview:
-                                by-test-platform:
-                                    android-hw-.*(?<!-shippable)/opt: []
-                                    android-hw-p2-.*api-16/pgo: []
-                                    android-hw-p2-.*api-16-shippable/opt: []
-                                    default: ['trunk', 'mozilla-beta']
+                                by-test-platform: *android-cold-settings
                             default: []
                     warm:
                         by-app:
                             geckoview:
-                                by-test-platform:
-                                    android-hw-p2-.*-api-16/(?!opt).*: []
-                                    android-hw-p2-.*-api-16-shippable/opt: []
-                                    android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
-                                    default: ['mozilla-central']
+                                by-test-platform: *android-warm-settings
                             default: []
     pageload:
         by-app:
