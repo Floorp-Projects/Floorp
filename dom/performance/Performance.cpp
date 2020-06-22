@@ -596,13 +596,11 @@ void Performance::QueueEntry(PerformanceEntry* aEntry) {
   }
 
   nsTObserverArray<PerformanceObserver*> interestedObservers;
-  /// XXX We could use a NonObservingRange here and then
-  /// TransformIf(IntoNewArray).
-  for (PerformanceObserver* observer : mObservers.ForwardRange()) {
-    if (observer->ObservesTypeOfEntry(aEntry)) {
-      interestedObservers.AppendElement(observer);
-    }
-  }
+  const auto [begin, end] = mObservers.NonObservingRange();
+  std::copy_if(begin, end, MakeBackInserter(interestedObservers),
+               [aEntry](PerformanceObserver* observer) {
+                 return observer->ObservesTypeOfEntry(aEntry);
+               });
 
   if (interestedObservers.IsEmpty()) {
     return;

@@ -79,13 +79,10 @@ void StreamControl::CloseAllReadStreamsWithoutReporting() {
 }
 
 bool StreamControl::HasEverBeenRead() const {
-  // XXX We could use a NonObservingRange here, and then use std::any_of.
-  for (const auto& stream : mReadStreamList.ForwardRange()) {
-    if (stream->HasEverBeenRead()) {
-      return true;
-    }
-  }
-  return false;
+  const auto range = mReadStreamList.NonObservingRange();
+  return std::any_of(range.begin(), range.end(), [](const auto& stream) {
+    return stream->HasEverBeenRead();
+  });
 }
 
 }  // namespace cache
