@@ -627,11 +627,13 @@ class HomeFragment : Fragment() {
         val isPrivate = (activity as HomeActivity).browsingModeManager.mode == BrowsingMode.Private
         val menuItems = listOf(
             BrowserMenuImageText(
-                label = context.getString(if (isPrivate) {
-                    R.string.browser_menu_new_tab
-                } else {
-                    R.string.home_screen_shortcut_open_new_private_tab_2
-                }),
+                label = context.getString(
+                    if (isPrivate) {
+                        R.string.browser_menu_new_tab
+                    } else {
+                        R.string.home_screen_shortcut_open_new_private_tab_2
+                    }
+                ),
                 imageResource = if (isPrivate) {
                     R.drawable.ic_new
                 } else {
@@ -640,6 +642,15 @@ class HomeFragment : Fragment() {
                 iconTintColorResource = primaryTextColor,
                 textColorResource = primaryTextColor
             ) {
+                requireComponents.analytics.metrics.track(
+                    Event.TabCounterMenuItemTapped(
+                        if (isPrivate) {
+                            Event.TabCounterMenuItemTapped.Item.NEW_TAB
+                        } else {
+                            Event.TabCounterMenuItemTapped.Item.NEW_PRIVATE_TAB
+                        }
+                    )
+                )
                 (activity as HomeActivity).browsingModeManager.mode =
                     BrowsingMode.fromBoolean(!isPrivate)
             }
