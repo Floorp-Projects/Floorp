@@ -9632,7 +9632,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberCall(
     } else if (prop == cx_->names().call) {
       op = JSOp::FunCall;
     }
-  } else if (tt == TokenKind::LeftParen) {
+  } else if (tt == TokenKind::LeftParen &&
+             optionalKind == OptionalKind::NonOptional) {
     if (handler_.isAsyncKeyword(lhs, cx_)) {
       // |async (| can be the start of an async arrow
       // function, so we need to defer reporting possible
