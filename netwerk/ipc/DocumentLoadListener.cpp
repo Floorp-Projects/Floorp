@@ -986,7 +986,7 @@ void DocumentLoadListener::SerializeRedirectData(
   nsCOMPtr<nsIPrincipal> principalToInherit;
   channelLoadInfo->GetPrincipalToInherit(getter_AddRefs(principalToInherit));
 
-  const RefPtr<nsHttpChannel> baseChannel = do_QueryObject(mChannel.get());
+  const RefPtr<nsHttpChannel> baseChannel = do_QueryObject(mChannel);
 
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(mChannel, loadContext);
@@ -1074,7 +1074,7 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.newLoadFlags() = aLoadFlags;
   aArgs.redirectFlags() = aRedirectFlags;
   aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
-  aArgs.properties() = do_QueryObject(mChannel.get());
+  aArgs.properties() = do_QueryObject(mChannel);
   aArgs.srcdocData() = mSrcdocData;
   aArgs.baseUri() = mBaseURI;
   aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
