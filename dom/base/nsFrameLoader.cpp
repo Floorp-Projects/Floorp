@@ -266,7 +266,10 @@ static bool IsTopContent(BrowsingContext* aParent, Element* aOwner) {
 }
 
 static already_AddRefed<BrowsingContext> CreateBrowsingContext(
-    Element* aOwner, nsIOpenWindowInfo* aOpenWindowInfo) {
+    Element* aOwner, nsIOpenWindowInfo* aOpenWindowInfo,
+    BrowsingContextGroup* aSpecificGroup) {
+  MOZ_ASSERT(!aOpenWindowInfo || !aSpecificGroup);
+
   // If we've got a pending BrowserParent from the content process, use the
   // BrowsingContext which was created for it.
   if (aOpenWindowInfo && aOpenWindowInfo->GetNextRemoteBrowser()) {
@@ -326,7 +329,8 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
 
     // Create toplevel content without a parent & as Type::Content.
     return BrowsingContext::CreateDetached(
-        nullptr, opener, frameName, BrowsingContext::Type::Content, browserId);
+        nullptr, opener, aSpecificGroup, frameName,
+        BrowsingContext::Type::Content, browserId);
   }
 
   MOZ_ASSERT(!aOpenWindowInfo,
@@ -338,8 +342,10 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
     owner->SetBrowserId(browserId);
   }
 
-  return BrowsingContext::CreateDetached(parentInner, nullptr, frameName,
-                                         parentBC->GetType(), browserId);
+  MOZ_ASSERT(!aSpecificGroup,
+             "Can't force BrowsingContextGroup for non-toplevel context");
+  return BrowsingContext::CreateDetached(
+      parentInner, nullptr, nullptr, frameName, parentBC->GetType(), browserId);
 }
 
 static bool InitialLoadIsRemote(Element* aOwner) {
@@ -440,8 +446,8 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
                       doc->IsStaticDocument()),
                  nullptr);
 
-  RefPtr<BrowsingContext> context =
-      CreateBrowsingContext(aOwner, aOpenWindowInfo);
+  RefPtr<BrowsingContext> context = CreateBrowsingContext(
+      aOwner, aOpenWindowInfo, /* specificGroup */ nullptr);
   NS_ENSURE_TRUE(context, nullptr);
 
   bool isRemoteFrame = InitialLoadIsRemote(aOwner);
@@ -456,8 +462,9 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
 
 /* static */
 already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
-    mozilla::dom::Element* aOwner, BrowsingContext* aContext, bool aIsRemote,
-    bool aNetworkCreated, bool aPreserveContext) {
+    mozilla::dom::Element* aOwner, BrowsingContext* aContext,
+    BrowsingContextGroup* aSpecificGroup, bool aIsRemote, bool aNetworkCreated,
+    bool aPreserveContext) {
   NS_ENSURE_TRUE(aOwner, nullptr);
 
 #ifdef DEBUG
@@ -471,7 +478,8 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
 
   RefPtr<BrowsingContext> context = aContext;
   if (!context || !aPreserveContext) {
-    context = CreateBrowsingContext(aOwner, /* openWindowInfo */ nullptr);
+    context = CreateBrowsingContext(aOwner, /* openWindowInfo */ nullptr,
+                                    aSpecificGroup);
     if (aContext) {
       MOZ_ASSERT(
           XRE_IsParentProcess(),
