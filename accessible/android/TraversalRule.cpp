@@ -252,7 +252,6 @@ uint16_t TraversalRule::DefaultMatch(Accessible* aAccessible) {
       break;
     case roles::MENUITEM:
     case roles::LINK:
-    case roles::LABEL:
     case roles::PAGETAB:
     case roles::PUSHBUTTON:
     case roles::CHECKBUTTON:
