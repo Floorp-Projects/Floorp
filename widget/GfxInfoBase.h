@@ -158,7 +158,7 @@ class GfxInfoBase : public nsIGfxInfo,
 
   bool IsFeatureAllowlisted(int32_t aFeature) const;
 
-  void EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo);
+  void EvaluateDownloadedBlocklist(nsTArray<GfxDriverInfo>& aDriverInfo);
 
   bool BuildFeatureStateLog(JSContext* aCx, const gfx::FeatureState& aFeature,
                             JS::MutableHandle<JS::Value> aOut);
