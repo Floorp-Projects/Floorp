@@ -13,6 +13,10 @@ const { Troubleshoot } = ChromeUtils.import(
   "resource://gre/modules/Troubleshoot.jsm"
 );
 
+const { FeatureGate } = ChromeUtils.import(
+  "resource://featuregates/FeatureGate.jsm"
+);
+
 function test() {
   waitForExplicitFinish();
   function doNextTest() {
@@ -39,6 +43,39 @@ var tests = [
         ok(true, "The snapshot should conform to the schema.");
       } catch (err) {
         ok(false, "Schema mismatch, " + err);
+      }
+      done();
+    });
+  },
+
+  async function experimentalFeatures(done) {
+    let featureGates = await FeatureGate.all();
+    ok(featureGates.length, "Should be at least one FeatureGate");
+    for (let gate of featureGates) {
+      ok(
+        !Services.prefs.getBoolPref(gate.preference),
+        "Features should be disabled by default"
+      );
+    }
+
+    Troubleshoot.snapshot(snapshot => {
+      for (let i = 0; i < snapshot.experimentalFeatures.length; i++) {
+        let experimentalFeature = snapshot.experimentalFeatures[i];
+        is(
+          experimentalFeature[0],
+          featureGates[i].title,
+          "The first item in the array should be the title's l10n-id of the FeatureGate"
+        );
+        is(
+          experimentalFeature[1],
+          featureGates[i].preference,
+          "The second item in the array should be the preference name for the FeatureGate"
+        );
+        is(
+          experimentalFeature[2],
+          Services.prefs.getBoolPref(featureGates[i].preference),
+          "The third item in the array should be the preference value of the FeatureGate"
+        );
       }
       done();
     });
@@ -281,6 +318,10 @@ const SNAPSHOT_SCHEMA = {
           type: "object",
         },
       },
+    },
+    experimentalFeatures: {
+      required: true,
+      type: "array",
     },
     modifiedPreferences: {
       required: true,
