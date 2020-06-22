@@ -1221,9 +1221,10 @@ contentblocking:
     bug_numbers:
       - 1577030
       - 1610894
+      - 1645088
     description: >
       A count of the number of tracking events blocked.
-    expires: "80"
+    expires: "86"
     kind: uint
     notification_emails:
       - ewright@mozilla.com
