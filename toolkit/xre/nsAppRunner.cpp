@@ -101,6 +101,7 @@
 #  include <intrin.h>
 #  include <math.h>
 #  include "cairo/cairo-features.h"
+#  include "mozilla/DllPrefetchExperimentRegistryInfo.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WindowsProcessMitigations.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
@@ -1559,6 +1560,28 @@ static void RegisterApplicationRestartChanged(const char* aPref, void* aData) {
   } else if (wasRegistered) {
     ::UnregisterApplicationRestart();
   }
+}
+
+static void OnAlteredPrefetchPrefChanged(const char* aPref, void* aData) {
+  int32_t prefVal = Preferences::GetInt(PREF_WIN_ALTERED_DLL_PREFETCH, 0);
+
+  mozilla::DllPrefetchExperimentRegistryInfo prefetchRegInfo;
+  mozilla::DebugOnly<mozilla::Result<Ok, nsresult>> reflectResult =
+      prefetchRegInfo.ReflectPrefToRegistry(prefVal);
+
+  MOZ_ASSERT(reflectResult.value.isOk());
+}
+
+static void SetupAlteredPrefetchPref() {
+  mozilla::DllPrefetchExperimentRegistryInfo prefetchRegInfo;
+
+  mozilla::DebugOnly<mozilla::Result<Ok, nsresult>> reflectResult =
+      prefetchRegInfo.ReflectPrefToRegistry(
+          Preferences::GetInt(PREF_WIN_ALTERED_DLL_PREFETCH, 0));
+  MOZ_ASSERT(reflectResult.value.isOk());
+
+  Preferences::RegisterCallback(&OnAlteredPrefetchPrefChanged,
+                                PREF_WIN_ALTERED_DLL_PREFETCH);
 }
 
 #  if defined(MOZ_LAUNCHER_PROCESS)
@@ -3600,14 +3623,12 @@ static void ReadAheadSystemDll(const wchar_t* dllName) {
   }
 }
 
-#  ifdef NIGHTLY_BUILD
 static void ReadAheadPackagedDll(const wchar_t* dllName,
                                  const wchar_t* aGREDir) {
   wchar_t dllPath[MAX_PATH];
   swprintf(dllPath, MAX_PATH, L"%s\\%s", aGREDir, dllName);
   ReadAheadLib(dllPath);
 }
-#  endif
 
 static void PR_CALLBACK ReadAheadDlls_ThreadStart(void* arg) {
   UniquePtr<wchar_t[]> greDir(static_cast<wchar_t*>(arg));
@@ -3618,32 +3639,32 @@ static void PR_CALLBACK ReadAheadDlls_ThreadStart(void* arg) {
   // retention (see Bug 1640087). Before we place this within a pref,
   // we should ensure this feature only ships to the nightly channel
   // and monitor results from that subset.
-#  ifdef NIGHTLY_BUILD
-  // Prefetch the DLLs shipped with firefox
-  ReadAheadPackagedDll(L"libegl.dll", greDir.get());
-  ReadAheadPackagedDll(L"libGLESv2.dll", greDir.get());
-  ReadAheadPackagedDll(L"nssckbi.dll", greDir.get());
-  ReadAheadPackagedDll(L"freebl3.dll", greDir.get());
-  ReadAheadPackagedDll(L"softokn3.dll", greDir.get());
+  if (greDir) {
+    // Prefetch the DLLs shipped with firefox
+    ReadAheadPackagedDll(L"libegl.dll", greDir.get());
+    ReadAheadPackagedDll(L"libGLESv2.dll", greDir.get());
+    ReadAheadPackagedDll(L"nssckbi.dll", greDir.get());
+    ReadAheadPackagedDll(L"freebl3.dll", greDir.get());
+    ReadAheadPackagedDll(L"softokn3.dll", greDir.get());
 
-  // Prefetch the system DLLs
-  ReadAheadSystemDll(L"DWrite.dll");
-  ReadAheadSystemDll(L"D3DCompiler_47.dll");
-#  else
-  // Load DataExchange.dll and twinapi.appcore.dll for
-  // nsWindow::EnableDragDrop
-  ReadAheadSystemDll(L"DataExchange.dll");
-  ReadAheadSystemDll(L"twinapi.appcore.dll");
+    // Prefetch the system DLLs
+    ReadAheadSystemDll(L"DWrite.dll");
+    ReadAheadSystemDll(L"D3DCompiler_47.dll");
+  } else {
+    // Load DataExchange.dll and twinapi.appcore.dll for
+    // nsWindow::EnableDragDrop
+    ReadAheadSystemDll(L"DataExchange.dll");
+    ReadAheadSystemDll(L"twinapi.appcore.dll");
 
-  // Load twinapi.dll for WindowsUIUtils::UpdateTabletModeState
-  ReadAheadSystemDll(L"twinapi.dll");
+    // Load twinapi.dll for WindowsUIUtils::UpdateTabletModeState
+    ReadAheadSystemDll(L"twinapi.dll");
 
-  // Load explorerframe.dll for WinTaskbar::Initialize
-  ReadAheadSystemDll(L"ExplorerFrame.dll");
+    // Load explorerframe.dll for WinTaskbar::Initialize
+    ReadAheadSystemDll(L"ExplorerFrame.dll");
 
-  // Load WinTypes.dll for nsOSHelperAppService::GetApplicationDescription
-  ReadAheadSystemDll(L"WinTypes.dll");
-#  endif
+    // Load WinTypes.dll for nsOSHelperAppService::GetApplicationDescription
+    ReadAheadSystemDll(L"WinTypes.dll");
+  }
 }
 #endif
 
@@ -4335,14 +4356,29 @@ nsresult XREMain::XRE_mainRun() {
   }
 
 #ifdef XP_WIN
-  if (!PR_GetEnv("XRE_NO_DLL_READAHEAD")) {
+  mozilla::DllPrefetchExperimentRegistryInfo prefetchRegInfo;
+  mozilla::AlteredDllPrefetchMode dllPrefetchMode =
+      prefetchRegInfo.GetAlteredDllPrefetchMode();
+
+  if (!PR_GetEnv("XRE_NO_DLL_READAHEAD") &&
+      dllPrefetchMode != mozilla::AlteredDllPrefetchMode::NoPrefetch) {
     nsCOMPtr<nsIFile> greDir = mDirProvider.GetGREDir();
     nsAutoString path;
     rv = greDir->GetPath(path);
     if (NS_SUCCEEDED(rv)) {
       PRThread* readAheadThread;
-      wchar_t* pathRaw = new wchar_t[MAX_PATH];
-      wcscpy_s(pathRaw, MAX_PATH, path.get());
+      wchar_t* pathRaw;
+
+      // We use the presence of a path argument inside the thread to determine
+      // which list of Dlls to use. The old list does not need access to the
+      // GRE dir, so the path argument is set to a null pointer.
+      if (dllPrefetchMode ==
+          mozilla::AlteredDllPrefetchMode::OptimizedPrefetch) {
+        pathRaw = new wchar_t[MAX_PATH];
+        wcscpy_s(pathRaw, MAX_PATH, path.get());
+      } else {
+        pathRaw = nullptr;
+      }
       readAheadThread = PR_CreateThread(
           PR_USER_THREAD, ReadAheadDlls_ThreadStart, (void*)pathRaw,
           PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
@@ -4550,6 +4586,7 @@ nsresult XREMain::XRE_mainRun() {
 #ifdef XP_WIN
     Preferences::RegisterCallbackAndCall(RegisterApplicationRestartChanged,
                                          PREF_WIN_REGISTER_APPLICATION_RESTART);
+    SetupAlteredPrefetchPref();
 #  if defined(MOZ_LAUNCHER_PROCESS)
     SetupLauncherProcessPref();
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)

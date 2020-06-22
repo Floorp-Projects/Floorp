@@ -47,6 +47,7 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.mozilla += [
         'AssembleCmdLine.h',
+        'DllPrefetchExperimentRegistryInfo.h',
         'ModuleVersionInfo.h',
         'PolicyChecks.h',
         'UntrustedModulesProcessor.h',
@@ -55,6 +56,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
     UNIFIED_SOURCES += [
         '/toolkit/mozapps/update/common/updateutils_win.cpp',
+        'DllPrefetchExperimentRegistryInfo.cpp',
         'ModuleEvaluator.cpp',
         'ModuleVersionInfo.cpp',
         'nsNativeAppSupportWin.cpp',

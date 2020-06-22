@@ -124,6 +124,8 @@ BOOL WinLaunchChild(const wchar_t* exePath, int argc, char** argv,
 #  define PREF_WIN_REGISTER_APPLICATION_RESTART \
     "toolkit.winRegisterApplicationRestart"
 
+#  define PREF_WIN_ALTERED_DLL_PREFETCH "startup.experiments.alteredDllPrefetch"
+
 #  if defined(MOZ_LAUNCHER_PROCESS)
 #    define PREF_WIN_LAUNCHER_PROCESS_ENABLED "browser.launcherProcess.enabled"
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)
