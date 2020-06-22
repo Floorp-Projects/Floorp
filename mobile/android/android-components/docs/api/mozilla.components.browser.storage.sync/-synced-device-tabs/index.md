@@ -4,13 +4,13 @@
 
 `data class SyncedDeviceTabs` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/RemoteTabsStorage.kt#L152)
 
-A synced device and the list of tabs.
+A synced device and its list of tabs.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SyncedDeviceTabs(device: `[`Device`](../../mozilla.components.concept.sync/-device/index.md)`, tabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Tab`](../-tab/index.md)`>)`<br>A synced device and the list of tabs. |
+| [&lt;init&gt;](-init-.md) | `SyncedDeviceTabs(device: `[`Device`](../../mozilla.components.concept.sync/-device/index.md)`, tabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Tab`](../-tab/index.md)`>)`<br>A synced device and its list of tabs. |
 
 ### Properties
 

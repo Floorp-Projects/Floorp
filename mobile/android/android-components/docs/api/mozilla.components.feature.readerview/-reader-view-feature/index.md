@@ -2,7 +2,7 @@
 
 # ReaderViewFeature
 
-`class ReaderViewFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`UserInteractionHandler`](../../mozilla.components.support.base.feature/-user-interaction-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewFeature.kt#L53)
+`class ReaderViewFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`UserInteractionHandler`](../../mozilla.components.support.base.feature/-user-interaction-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewFeature.kt#L50)
 
 Feature implementation that provides a reader view for the selected
 session, based on a web extension.
@@ -12,7 +12,6 @@ session, based on a web extension.
 | Name | Summary |
 |---|---|
 | [ColorScheme](-color-scheme/index.md) | `enum class ColorScheme` |
-| [Config](-config/index.md) | `inner class Config` |
 | [FontType](-font-type/index.md) | `enum class FontType` |
 
 ### Constructors

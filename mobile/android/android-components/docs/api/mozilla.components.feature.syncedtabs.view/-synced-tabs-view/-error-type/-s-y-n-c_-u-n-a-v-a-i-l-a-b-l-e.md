@@ -2,7 +2,7 @@
 
 # SYNC_UNAVAILABLE
 
-`SYNC_UNAVAILABLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/view/SyncedTabsView.kt#L77)
+`SYNC_UNAVAILABLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/view/SyncedTabsView.kt#L82)
 
 There is no Firefox Sync account available. A user needs to sign-in before this feature.
 

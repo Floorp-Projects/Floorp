@@ -2,7 +2,7 @@
 
 # hideReaderView
 
-`fun hideReaderView(session: `[`TabSessionState`](../../mozilla.components.browser.state.state/-tab-session-state/index.md)`? = store.state.selectedTab): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewFeature.kt#L168)
+`fun hideReaderView(session: `[`TabSessionState`](../../mozilla.components.browser.state.state/-tab-session-state/index.md)`? = store.state.selectedTab): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/ReaderViewFeature.kt#L136)
 
 Hides the reader view UI.
 

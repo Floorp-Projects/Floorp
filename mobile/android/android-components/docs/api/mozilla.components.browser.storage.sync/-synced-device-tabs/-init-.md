@@ -4,5 +4,5 @@
 
 `SyncedDeviceTabs(device: `[`Device`](../../mozilla.components.concept.sync/-device/index.md)`, tabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Tab`](../-tab/index.md)`>)`
 
-A synced device and the list of tabs.
+A synced device and its list of tabs.
 

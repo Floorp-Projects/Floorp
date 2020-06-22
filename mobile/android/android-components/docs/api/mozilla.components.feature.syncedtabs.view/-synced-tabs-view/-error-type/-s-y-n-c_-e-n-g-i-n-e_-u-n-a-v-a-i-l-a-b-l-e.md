@@ -2,7 +2,7 @@
 
 # SYNC_ENGINE_UNAVAILABLE
 
-`SYNC_ENGINE_UNAVAILABLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/view/SyncedTabsView.kt#L72)
+`SYNC_ENGINE_UNAVAILABLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/view/SyncedTabsView.kt#L77)
 
 The engine for syncing tabs is unavailable. This is mostly due to a user turning off the feature on the
 Firefox Sync account.
