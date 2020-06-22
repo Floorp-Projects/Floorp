@@ -9,12 +9,12 @@
  */
 
 #if !defined(__has_feature) || !__has_feature(objc_arc)
-#error "This file requires ARC support."
+#  error "This file requires ARC support."
 #endif
 
 #import <AVFoundation/AVFoundation.h>
 #ifdef WEBRTC_IOS
-#import <UIKit/UIKit.h>
+#  import <UIKit/UIKit.h>
 #endif
 
 #import "modules/video_capture/objc/device_info_objc.h"
@@ -277,8 +277,8 @@ using namespace webrtc::videocapturemodule;
 
   // now create capture session input out of AVCaptureDevice
   NSError* deviceError = nil;
-  AVCaptureDeviceInput* newCaptureInput =
-      [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&deviceError];
+  AVCaptureDeviceInput* newCaptureInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice
+                                                                                error:&deviceError];
 
   if (!newCaptureInput) {
     const char* errorMessage = [[deviceError localizedDescription] UTF8String];
