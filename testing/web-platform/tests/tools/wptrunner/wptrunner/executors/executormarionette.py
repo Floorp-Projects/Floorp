@@ -566,12 +566,6 @@ class MarionettePrintProtocolPart(PrintProtocolPart):
         self.runner_handle = self.marionette.current_window_handle
 
     def render_as_pdf(self, width, height):
-        page_ranges = self.marionette.execute_script(
-            """
-let elem = document.querySelector("meta[name=reftest-pages]");
-return elem ? elem.content : null;
-""",
-            new_sandbox=False, sandbox=None)
         margin = 0.5 * 2.54
         body = {
             "page": {
@@ -587,16 +581,16 @@ return elem ? elem.content : null;
             "shrinkToFit": False,
             "printBackground": True,
         }
-        return self.marionette._send_message("WebDriver:Print", body, key="value"), page_ranges
+        return self.marionette._send_message("WebDriver:Print", body, key="value")
 
-    def pdf_to_png(self, pdf_base64, ranges):
+    def pdf_to_png(self, pdf_base64, page_ranges):
         handle = self.marionette.current_window_handle
         self.marionette.switch_to_window(self.runner_handle)
         try:
             rv = self.marionette.execute_async_script("""
 let callback = arguments[arguments.length - 1];
 render('%s').then(result => callback(result))""" % pdf_base64, new_sandbox=False, sandbox=None)
-            page_numbers = get_pages(ranges, len(rv))
+            page_numbers = get_pages(page_ranges, len(rv))
             rv = [item for i, item in enumerate(rv) if i + 1 in page_numbers]
             return rv
         finally:
@@ -933,7 +927,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
 
         return self.convert_result(test, result)
 
-    def screenshot(self, test, viewport_size, dpi):
+    def screenshot(self, test, viewport_size, dpi, page_ranges):
         # https://github.com/web-platform-tests/wpt/issues/7135
         assert viewport_size is None
         assert dpi is None
@@ -995,7 +989,8 @@ class InternalRefTestImplementation(RefTestImplementation):
                                                               "expected": test.expected(),
                                                               "timeout": timeout,
                                                               "width": 800,
-                                                              "height": 600})["value"]
+                                                              "height": 600,
+                                                              "pageRanges": test.page_ranges})["value"]
         return rv
 
     def get_references(self, root_test, node):
@@ -1124,7 +1119,7 @@ class MarionettePrintRefTestExecutor(MarionetteRefTestExecutor):
         super(MarionettePrintRefTestExecutor, self).setup(runner)
         self.protocol.pdf_print.load_runner()
 
-    def screenshot(self, test, viewport_size, dpi):
+    def screenshot(self, test, viewport_size, dpi, page_ranges):
         # https://github.com/web-platform-tests/wpt/issues/7140
         assert dpi is None
 
@@ -1132,6 +1127,7 @@ class MarionettePrintRefTestExecutor(MarionetteRefTestExecutor):
         timeout = self.timeout_multiplier * test.timeout if self.debug_info is None else None
 
         test_url = self.test_url(test)
+        self.page_ranges = page_ranges.get(test)
 
         return ExecuteAsyncScriptRun(self.logger,
                                      self._render,
@@ -1145,8 +1141,8 @@ class MarionettePrintRefTestExecutor(MarionetteRefTestExecutor):
 
         protocol.base.execute_script(self.wait_script, asynchronous=True)
 
-        pdf, page_ranges = protocol.pdf_print.render_as_pdf(*self.viewport_size)
-        screenshots = protocol.pdf_print.pdf_to_png(pdf, page_ranges)
+        pdf = protocol.pdf_print.render_as_pdf(*self.viewport_size)
+        screenshots = protocol.pdf_print.pdf_to_png(pdf, self.page_ranges)
         for i, screenshot in enumerate(screenshots):
             # strip off the data:img/png, part of the url
             if screenshot.startswith("data:image/png;base64,"):
