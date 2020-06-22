@@ -3388,17 +3388,15 @@ double profiler_time() {
   return delta.ToMilliseconds();
 }
 
-UniqueProfilerBacktrace profiler_get_backtrace() {
+static UniqueProfilerBacktrace locked_profiler_get_backtrace(PSLockRef aLock) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock;
-
-  if (!ActivePS::Exists(lock)) {
+  if (!ActivePS::Exists(aLock)) {
     return nullptr;
   }
 
   RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(lock);
+      TLSRegisteredThread::RegisteredThread(aLock);
   if (!registeredThread) {
     MOZ_ASSERT(registeredThread);
     return nullptr;
@@ -3420,10 +3418,18 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
       MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
   auto buffer = MakeUnique<ProfileBuffer>(*bufferManager);
 
-  DoSyncSample(lock, *registeredThread, now, regs, *buffer.get());
+  DoSyncSample(aLock, *registeredThread, now, regs, *buffer);
 
   return UniqueProfilerBacktrace(new ProfilerBacktrace(
       "SyncProfile", tid, std::move(bufferManager), std::move(buffer)));
+}
+
+UniqueProfilerBacktrace profiler_get_backtrace() {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  PSAutoLock lock;
+
+  return locked_profiler_get_backtrace(lock);
 }
 
 void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
