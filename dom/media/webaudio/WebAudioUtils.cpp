@@ -113,7 +113,7 @@ void WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID,
   }
 
   nsAutoString spec;
-  uint32_t aLineNumber, aColumnNumber;
+  uint32_t aLineNumber = 0, aColumnNumber = 0;
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   if (cx) {
     nsJSUtils::GetCallingLocation(cx, spec, &aLineNumber, &aColumnNumber);
