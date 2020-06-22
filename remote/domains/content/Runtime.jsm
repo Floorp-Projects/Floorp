@@ -434,7 +434,7 @@ class Runtime extends ContentProcessDomain {
    *     The execution context id to destroy.
    * @param {number} windowId
    *     The inner-window id of the execution context to destroy.
-   * @param {string} frameId
+   * @param {number} frameId
    *     The frame id of execution context to destroy.
    * Either `id` or `frameId` or `windowId` is passed.
    */

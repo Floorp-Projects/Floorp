@@ -62,6 +62,7 @@ class Page extends Domain {
     this._onRequest = this._onRequest.bind(this);
 
     this.enabled = false;
+
     this.session.networkObserver.startTrackingBrowserNetwork(
       this.session.target.browser
     );

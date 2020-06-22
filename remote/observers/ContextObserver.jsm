@@ -32,13 +32,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { executeSoon } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 
-// Temporary flag to not emit frame related events until everything
-// has been completely implemented, and Puppeteer is no longer busted.
-const FRAMES_ENABLED = Services.prefs.getBoolPref(
-  "remote.frames.enabled",
-  false
-);
-
 class ContextObserver {
   constructor(chromeEventHandler) {
     this.chromeEventHandler = chromeEventHandler;
@@ -58,10 +51,8 @@ class ContextObserver {
 
     Services.obs.addObserver(this, "inner-window-destroyed");
 
-    if (FRAMES_ENABLED) {
-      Services.obs.addObserver(this, "webnavigation-create");
-      Services.obs.addObserver(this, "webnavigation-destroy");
-    }
+    Services.obs.addObserver(this, "webnavigation-create");
+    Services.obs.addObserver(this, "webnavigation-destroy");
   }
 
   destructor() {
@@ -77,20 +68,14 @@ class ContextObserver {
 
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
-    if (FRAMES_ENABLED) {
-      Services.obs.removeObserver(this, "webnavigation-create");
-      Services.obs.removeObserver(this, "webnavigation-destroy");
-    }
+    Services.obs.removeObserver(this, "webnavigation-create");
+    Services.obs.removeObserver(this, "webnavigation-destroy");
   }
 
   handleEvent({ type, target, persisted }) {
     const window = target.defaultView;
-    const frameId = window.docShell.browsingContext.id.toString();
+    const frameId = window.docShell.browsingContext.id;
     const id = window.windowUtils.currentInnerWindowID;
-
-    if (window != this.chromeEventHandler.ownerGlobal && !FRAMES_ENABLED) {
-      return;
-    }
 
     switch (type) {
       case "DOMWindowCreated":

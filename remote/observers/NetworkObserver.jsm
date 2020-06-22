@@ -366,7 +366,7 @@ class NetworkObserver {
       this._windowIdToFrameIdMap.clear();
     }
 
-    let frameId = loadContext.id?.toString();
+    let frameId = loadContext.id;
     if (frameId) {
       this._windowIdToFrameIdMap.set(wrappedChannel.windowId, frameId);
     } else {

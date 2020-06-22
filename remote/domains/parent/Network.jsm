@@ -406,7 +406,7 @@ class Network extends Domain {
       initiator: undefined,
       redirectResponse: undefined,
       type: LOAD_CAUSE_STRINGS[data.cause] || "unknown",
-      frameId: data.frameId,
+      frameId: data.frameId.toString(),
       hasUserGesture: undefined,
     });
   }
@@ -438,7 +438,7 @@ class Network extends Domain {
         // unknown, neutral, insecure, secure, info, insecure-broken
         securityState: "unknown",
       },
-      frameId: data.frameId,
+      frameId: data.frameId.toString(),
     });
   }
 }

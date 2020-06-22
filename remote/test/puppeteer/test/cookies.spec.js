@@ -403,7 +403,6 @@ describe('Cookie specs', () => {
         'localhost-cookie=best'
       );
       expect(await page.frames()[1].evaluate('document.cookie')).toBe('');
-
       expect(await page.cookies()).toEqual([
         {
           name: 'localhost-cookie',
@@ -417,7 +416,6 @@ describe('Cookie specs', () => {
           session: true,
         },
       ]);
-
       expect(await page.cookies(server.CROSS_PROCESS_PREFIX)).toEqual([
         {
           name: '127-cookie',
