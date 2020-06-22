@@ -18,7 +18,6 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.webkit.MimeTypeMap
@@ -29,15 +28,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTab
@@ -54,9 +48,7 @@ import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.downloads.share.ShareDownloadFeature
 import mozilla.components.feature.findinpage.view.FindInPageBar
 import mozilla.components.feature.prompts.PromptFeature
-import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
-import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -77,6 +69,7 @@ import org.mozilla.focus.browser.binding.SecurityInfoBinding
 import org.mozilla.focus.browser.binding.ToolbarButtonBinding
 import org.mozilla.focus.browser.binding.UrlBinding
 import org.mozilla.focus.browser.integration.FindInPageIntegration
+import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.contentState
@@ -99,7 +92,6 @@ import org.mozilla.focus.utils.createTab
 import org.mozilla.focus.widget.AnimatedProgressBar
 import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
-import kotlin.coroutines.CoroutineContext
 
 /**
  * Fragment for displaying the browser UI.
@@ -107,24 +99,21 @@ import kotlin.coroutines.CoroutineContext
 @Suppress("LargeClass", "TooManyFunctions")
 class BrowserFragment :
     LocaleAwareFragment(),
-    LifecycleObserver,
     View.OnClickListener,
     View.OnLongClickListener,
-    BiometricAuthenticationDialogFragment.BiometricAuthenticationListener,
-    CoroutineScope {
+    BiometricAuthenticationDialogFragment.BiometricAuthenticationListener {
 
     private var urlView: TextView? = null
     private var statusBar: View? = null
     private var urlBar: View? = null
     private var popupTint: FrameLayout? = null
 
-    private var toolbarView: DisplayToolbar? = null
     private var engineView: EngineView? = null
 
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
+    private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
 
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
-    private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val promptFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
@@ -140,17 +129,6 @@ class BrowserFragment :
 
     private var biometricController: BiometricAuthenticationHandler? = null
 
-    private var job = Job()
-    override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Main
-
-    // The url property is used for things like sharing the current URL. We could try to use the webview,
-    // but sometimes it's null, and sometimes it returns a null URL. Sometimes it returns a data:
-    // URL for error pages. The URL we show in the toolbar is (A) always correct and (B) what the
-    // user is probably expecting to share, so lets use that here:
-    val url: String
-        get() = urlView!!.text.toString()
-
     var openedFromExternalLink: Boolean = false
 
     lateinit var session: Session
@@ -158,7 +136,6 @@ class BrowserFragment :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
         val sessionUUID = arguments!!.getString(ARGUMENT_SESSION_UUID) ?: throw IllegalAccessError("No session exists")
 
@@ -176,11 +153,6 @@ class BrowserFragment :
         menuBinding.get()?.pause()
     }
 
-    override fun onStop() {
-        job.cancel()
-        super.onStop()
-    }
-
     @Suppress("LongMethod", "ComplexMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
@@ -192,8 +164,6 @@ class BrowserFragment :
 
         urlView = view.findViewById<View>(R.id.display_url) as TextView
         urlView!!.setOnLongClickListener(this)
-
-        toolbarView = view.findViewById<DisplayToolbar>(R.id.appbar)
 
         LoadTimeObserver.addObservers(session, this)
 
@@ -219,6 +189,7 @@ class BrowserFragment :
         val menuView = view.findViewById<View>(R.id.menuView) as ImageButton
         val blockView = view.findViewById<View>(R.id.block) as FrameLayout
         val securityView = view.findViewById<ImageView>(R.id.security_info)
+        val toolbarView = view.findViewById<DisplayToolbar>(R.id.appbar)
 
         findInPageIntegration.set(FindInPageIntegration(
             components.store,
@@ -226,12 +197,14 @@ class BrowserFragment :
             engineView!!
         ), this, view)
 
-        fullScreenFeature.set(FullScreenFeature(
+        fullScreenIntegration.set(FullScreenIntegration(
+            requireActivity(),
             components.store,
-            SessionUseCases(components.store, components.sessionManager),
+            components.sessionManager,
             session.id,
-            ::viewportFitChanged,
-            ::fullScreenChanged
+            toolbarView!!,
+            engineView!!,
+            statusBar!!
         ), this, view)
 
         contextMenuFeature.set(ContextMenuFeature(
@@ -379,33 +352,6 @@ class BrowserFragment :
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.P)
-    private fun viewportFitChanged(viewportFit: Int) {
-        requireActivity().window.attributes.layoutInDisplayCutoutMode = viewportFit
-    }
-
-    private fun fullScreenChanged(enabled: Boolean) {
-        if (enabled) {
-            toolbarView?.visibility = View.GONE
-
-            toolbarView!!.setExpanded(false, true)
-            statusBar!!.visibility = View.GONE
-
-            engineView?.setDynamicToolbarMaxHeight(0)
-
-            switchToImmersiveMode()
-        } else {
-            toolbarView?.visibility = View.VISIBLE
-
-            toolbarView!!.setExpanded(true, true)
-            statusBar!!.visibility = View.VISIBLE
-
-            engineView?.setDynamicToolbarMaxHeight(toolbarView?.measuredHeight ?: 0)
-
-            exitImmersiveModeIfNeeded()
-        }
-    }
-
     private fun initialiseNormalBrowserUi(view: View) {
         val eraseButton = view.findViewById<FloatingEraseButton>(R.id.erase)
         eraseButton.setOnClickListener(this)
@@ -496,7 +442,7 @@ class BrowserFragment :
             actionButton.setOnClickListener {
                 try {
                     val intent = Intent()
-                    intent.data = Uri.parse(url)
+                    intent.data = Uri.parse(session.url)
 
                     pendingIntent.send(context, 0, intent)
                 } catch (e: PendingIntent.CanceledException) {
@@ -529,46 +475,12 @@ class BrowserFragment :
         menuBinding.get()?.updateIcon(menuIcon)
     }
 
-    /**
-     * Hide system bars. They can be revealed temporarily with system gestures, such as swiping from
-     * the top of the screen. These transient system bars will overlay app’s content, may have some
-     * degree of transparency, and will automatically hide after a short timeout.
-     */
-    private fun switchToImmersiveMode() {
-        val activity = activity ?: return
-
-        val window = activity.window
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            or View.SYSTEM_UI_FLAG_FULLSCREEN
-            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-    }
-
-    /**
-     * Show the system bars again.
-     */
-    private fun exitImmersiveModeIfNeeded() {
-        val activity = activity ?: return
-
-        if (WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON and activity.window.attributes.flags == 0) {
-            // We left immersive mode already.
-            return
-        }
-
-        val window = activity.window
-        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-    }
-
     override fun onDestroy() {
         super.onDestroy()
 
         // This fragment might get destroyed before the user left immersive mode (e.g. by opening another URL from an
         // app). In this case let's leave immersive mode now when the fragment gets destroyed.
-        exitImmersiveModeIfNeeded()
+        fullScreenIntegration.get()?.exitImmersiveModeIfNeeded()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -736,10 +648,6 @@ class BrowserFragment :
     override fun onResume() {
         super.onResume()
 
-        if (job.isCancelled) {
-            job = Job()
-        }
-
         StatusBarUtils.getStatusBarHeight(statusBar) { statusBarHeight ->
             statusBar!!.layoutParams.height = statusBarHeight
         }
@@ -794,7 +702,7 @@ class BrowserFragment :
     fun onBackPressed(): Boolean {
         if (findInPageIntegration.onBackPressed()) {
             return true
-        } else if (fullScreenFeature.onBackPressed()) {
+        } else if (fullScreenIntegration.onBackPressed()) {
             return true
         } else if (sessionFeature.get()?.onBackPressed() == true) {
             return true
@@ -937,14 +845,14 @@ class BrowserFragment :
             R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
 
             R.id.open_default -> {
-                val browsers = Browsers(requireContext(), url)
+                val browsers = Browsers(requireContext(), session.url)
 
                 val defaultBrowser = browsers.defaultBrowser
                     ?: throw IllegalStateException("<Open with \$Default> was shown when no default browser is set")
                     // We only add this menu item when a third party default exists, in
                     // BrowserMenuAdapter.initializeMenu()
 
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(session.url))
                 intent.setPackage(defaultBrowser.packageName)
                 startActivity(intent)
 
@@ -956,7 +864,7 @@ class BrowserFragment :
             }
 
             R.id.open_select_browser -> {
-                val browsers = Browsers(requireContext(), url)
+                val browsers = Browsers(requireContext(), session.url)
 
                 val apps = browsers.installedBrowsers
                 val store = if (browsers.hasFirefoxBrandedBrowserInstalled())
@@ -966,7 +874,7 @@ class BrowserFragment :
 
                 val fragment = OpenWithFragment.newInstance(
                     apps,
-                    url,
+                    session.url,
                     store
                 )
                 @Suppress("DEPRECATION")
@@ -1001,7 +909,7 @@ class BrowserFragment :
             }
 
             R.id.report_site_issue -> {
-                val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, url)
+                val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, session.url)
                 val session = createTab(reportUrl, source = SessionState.Source.MENU)
                 requireComponents.sessionManager.add(session, selected = true)
 
@@ -1062,7 +970,7 @@ class BrowserFragment :
 
             if (session.isCustomTabSession()) {
                 val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val uri = Uri.parse(url)
+                val uri = Uri.parse(session.url)
                 clipBoard.setPrimaryClip(ClipData.newRawUri("Uri", uri))
                 Toast.makeText(context, getString(R.string.custom_tab_copy_url_action), Toast.LENGTH_SHORT).show()
             }

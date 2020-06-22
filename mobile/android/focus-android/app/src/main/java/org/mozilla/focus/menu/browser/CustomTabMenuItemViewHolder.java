@@ -43,7 +43,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper;
 
         try {
             final Intent intent = new Intent();
-            intent.setData(Uri.parse(browserFragment.getUrl()));
+            intent.setData(Uri.parse(browserFragment.getSession().getUrl()));
 
             pendingIntent.send(view.getContext(), 0, intent);
         } catch (PendingIntent.CanceledException e) {
