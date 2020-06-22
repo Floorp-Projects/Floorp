@@ -1341,22 +1341,22 @@ void Gecko_nsStyleFont_PrioritizeUserFonts(
   }
 }
 
-nscoord Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont* aFont,
-                                         const Document* aDocument) {
+Length Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont* aFont,
+                                        const Document* aDocument) {
   // Don't change font-size:0, since that would un-hide hidden text,
   // or SVG text, or chrome docs, we assume those know what they do.
-  if (aFont->mSize == 0 || !aFont->mAllowZoomAndMinSize ||
+  if (aFont->mSize.IsZero() || !aFont->mAllowZoomAndMinSize ||
       nsContentUtils::IsChromeDoc(aDocument)) {
-    return 0;
+    return {0};
   }
 
-  nscoord minFontSize;
+  Length minFontSize;
   bool needsCache = false;
 
   auto MinFontSize = [&](bool* aNeedsToCache) {
     auto* prefs =
         aDocument->GetFontPrefsForLang(aFont->mLanguage, aNeedsToCache);
-    return prefs ? prefs->mMinimumFontSize : 0;
+    return prefs ? prefs->mMinimumFontSize : Length{0};
   };
 
   {
@@ -1369,30 +1369,23 @@ nscoord Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont* aFont,
     minFontSize = MinFontSize(nullptr);
   }
 
-  if (minFontSize < 0) {
-    return 0;
+  if (minFontSize.ToCSSPixels() <= 0.0f) {
+    return {0};
   }
 
-  return (minFontSize * aFont->mMinFontSizeRatio) / 100;
+  minFontSize.ScaleBy(aFont->mMinFontSizeRatio);
+  minFontSize.ScaleBy(1.0f / 100.0f);
+  return minFontSize;
 }
 
-void FontSizePrefs::CopyFrom(const LangGroupFontPrefs& prefs) {
-  mDefaultVariableSize = prefs.mDefaultVariableFont.size;
-  mDefaultSerifSize = prefs.mDefaultSerifFont.size;
-  mDefaultSansSerifSize = prefs.mDefaultSansSerifFont.size;
-  mDefaultMonospaceSize = prefs.mDefaultMonospaceFont.size;
-  mDefaultCursiveSize = prefs.mDefaultCursiveFont.size;
-  mDefaultFantasySize = prefs.mDefaultFantasyFont.size;
-}
-
-FontSizePrefs Gecko_GetBaseSize(nsAtom* aLanguage) {
+StyleDefaultFontSizes Gecko_GetBaseSize(nsAtom* aLanguage) {
   LangGroupFontPrefs prefs;
   nsStaticAtom* langGroupAtom =
       StaticPresData::Get()->GetUncachedLangGroup(aLanguage);
   prefs.Initialize(langGroupAtom);
-  FontSizePrefs sizes;
-  sizes.CopyFrom(prefs);
-  return sizes;
+  return {prefs.mDefaultVariableFont.size,  prefs.mDefaultSerifFont.size,
+          prefs.mDefaultSansSerifFont.size, prefs.mDefaultMonospaceFont.size,
+          prefs.mDefaultCursiveFont.size,   prefs.mDefaultFantasyFont.size};
 }
 
 static StaticRefPtr<UACacheReporter> gUACacheReporter;
@@ -1431,9 +1424,8 @@ void AssertIsMainThreadOrServoFontMetricsLocked() {
 GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
                                       bool aIsVertical,
                                       const nsStyleFont* aFont,
-                                      nscoord aFontSize, bool aUseUserFontSet) {
+                                      Length aFontSize, bool aUseUserFontSet) {
   AutoWriteLock guard(*sServoFFILock);
-  GeckoFontMetrics ret;
 
   // Getting font metrics can require some main thread only work to be
   // done, such as work that needs to touch non-threadsafe refcounted
@@ -1448,18 +1440,19 @@ GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
 
   nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
   presContext->SetUsesExChUnits(true);
+
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetMetricsFor(
       presContext, aIsVertical, aFont, aFontSize, aUseUserFontSet);
+  const auto& metrics =
+      fm->GetThebesFontGroup()->GetFirstValidFont()->GetMetrics(
+          fm->Orientation());
 
-  ret.mXSize = fm->XHeight();
-  gfxFloat zeroWidth = fm->GetThebesFontGroup()
-                           ->GetFirstValidFont()
-                           ->GetMetrics(fm->Orientation())
-                           .zeroWidth;
-  ret.mChSize = zeroWidth >= 0.0
-                    ? NS_round(aPresContext->AppUnitsPerDevPixel() * zeroWidth)
-                    : -1.0;
-  return ret;
+  int32_t d2a = aPresContext->AppUnitsPerDevPixel();
+  auto ToLength = [](nscoord aLen) {
+      return Length::FromPixels(CSSPixel::FromAppUnits(aLen));
+  };
+  return {ToLength(NS_round(metrics.xHeight * d2a)),
+          ToLength(NS_round(metrics.zeroWidth * d2a))};
 }
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(SheetLoadDataHolder, SheetLoadDataHolder);

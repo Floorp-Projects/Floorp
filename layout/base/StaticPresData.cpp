@@ -92,8 +92,8 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
   nsAutoCString langGroup;
   aLangGroupAtom->ToUTF8String(langGroup);
 
-  mDefaultVariableFont.size = nsPresContext::CSSPixelsToAppUnits(16);
-  mDefaultMonospaceFont.size = nsPresContext::CSSPixelsToAppUnits(13);
+  mDefaultVariableFont.size = Length::FromPixels(16.0f);
+  mDefaultMonospaceFont.size = Length::FromPixels(13.0f);
 
   nsAutoCString pref;
 
@@ -102,7 +102,7 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
   MAKE_FONT_PREF_KEY(pref, "font.minimum-size.", langGroup);
 
   int32_t size = Preferences::GetInt(pref.get());
-  mMinimumFontSize = nsPresContext::CSSPixelsToAppUnits(size);
+  mMinimumFontSize = Length::FromPixels(size);
 
   // clang-format off
   nsFont* fontTypes[] = {
@@ -186,7 +186,7 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
     MAKE_FONT_PREF_KEY(pref, "font.size", generic_dot_langGroup);
     size = Preferences::GetInt(pref.get());
     if (size > 0) {
-      font->size = nsPresContext::CSSPixelsToAppUnits(size);
+      font->size = Length::FromPixels(size);
     }
 
     // get font.size-adjust.[generic].[langGroup]

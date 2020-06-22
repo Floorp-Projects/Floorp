@@ -117,12 +117,13 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
       mTextRunRTL(false),
       mVertical(false),
       mTextOrientation(mozilla::StyleTextOrientation::Mixed) {
-  gfxFontStyle style(
-      aFont.style, aFont.weight, aFont.stretch, gfxFloat(aFont.size) / mP2A,
-      aParams.language, aParams.explicitLanguage, aFont.sizeAdjust,
-      aFont.systemFont, mDeviceContext->IsPrinterContext(),
-      aFont.synthesis & NS_FONT_SYNTHESIS_WEIGHT,
-      aFont.synthesis & NS_FONT_SYNTHESIS_STYLE, aFont.languageOverride);
+  gfxFontStyle style(aFont.style, aFont.weight, aFont.stretch,
+                     gfxFloat(aFont.size.ToAppUnits()) / mP2A, aParams.language,
+                     aParams.explicitLanguage, aFont.sizeAdjust,
+                     aFont.systemFont, mDeviceContext->IsPrinterContext(),
+                     aFont.synthesis & NS_FONT_SYNTHESIS_WEIGHT,
+                     aFont.synthesis & NS_FONT_SYNTHESIS_STYLE,
+                     aFont.languageOverride);
 
   aFont.AddFontFeaturesToStyle(&style, mOrientation == eVertical);
   style.featureValueLookup = aParams.featureValueLookup;

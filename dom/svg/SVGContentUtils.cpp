@@ -388,8 +388,7 @@ float SVGContentUtils::GetFontSize(ComputedStyle* aComputedStyle,
   MOZ_ASSERT(aComputedStyle);
   MOZ_ASSERT(aPresContext);
 
-  nscoord fontSize = aComputedStyle->StyleFont()->mSize;
-  return nsPresContext::AppUnitsToFloatCSSPixels(fontSize) /
+  return aComputedStyle->StyleFont()->mSize.ToCSSPixels() /
          aPresContext->EffectiveTextZoom();
 }
 
