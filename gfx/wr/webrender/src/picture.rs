@@ -133,7 +133,7 @@ use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::collections::hash_map::Entry;
 use crate::texture_cache::TextureCacheHandle;
-use crate::util::{MaxRect, VecHelper, RectHelpers, MatrixHelpers, Recycler};
+use crate::util::{MaxRect, VecHelper, RectHelpers, MatrixHelpers};
 use crate::filterdata::{FilterDataHandle};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use ron;
@@ -2512,9 +2512,7 @@ impl TileCacheInstance {
         // which will provide a local clip rect. This is useful for establishing things
         // like whether the backdrop rect supplied by Gecko can be considered opaque.
         if self.shared_clip_chain != ClipChainId::NONE {
-            let shared_clips = &mut frame_state.scratch.picture.clip_chain_ids;
-            shared_clips.clear();
-
+            let mut shared_clips = Vec::new();
             let mut current_clip_chain_id = self.shared_clip_chain;
             while current_clip_chain_id != ClipChainId::NONE {
                 shared_clips.push(current_clip_chain_id);
@@ -3814,39 +3812,10 @@ impl TileCacheInstance {
         // When under test, record a copy of the dirty region to support
         // invalidation testing in wrench.
         if frame_context.config.testing {
-            frame_state.scratch.primitive.recorded_dirty_regions.push(self.dirty_region.record());
+            frame_state.scratch.recorded_dirty_regions.push(self.dirty_region.record());
         }
     }
 }
-
-pub struct PictureScratchBuffer {
-    surface_stack: Vec<SurfaceIndex>,
-    picture_stack: Vec<PictureInfo>,
-    clip_chain_ids: Vec<ClipChainId>,
-}
-
-impl Default for PictureScratchBuffer {
-    fn default() -> Self {
-        PictureScratchBuffer {
-            surface_stack: Vec::new(),
-            picture_stack: Vec::new(),
-            clip_chain_ids: Vec::new(),
-        }
-    }
-}
-
-impl PictureScratchBuffer {
-    pub fn begin_frame(&mut self) {
-        self.surface_stack.clear();
-        self.picture_stack.clear();
-        self.clip_chain_ids.clear();
-    }
-
-    pub fn recycle(&mut self, recycler: &mut Recycler) {
-        recycler.recycle_vec(&mut self.surface_stack);
-        recycler.recycle_vec(&mut self.picture_stack);
-    }
- }
 
 /// Maintains a stack of picture and surface information, that
 /// is used during the initial picture traversal.
@@ -3860,7 +3829,6 @@ pub struct PictureUpdateState<'a> {
 
 impl<'a> PictureUpdateState<'a> {
     pub fn update_all(
-        buffers: &mut PictureScratchBuffer,
         surfaces: &'a mut Vec<SurfaceInfo>,
         pic_index: PictureIndex,
         picture_primitives: &mut [PicturePrimitive],
@@ -3875,13 +3843,11 @@ impl<'a> PictureUpdateState<'a> {
 
         let mut state = PictureUpdateState {
             surfaces,
-            surface_stack: buffers.surface_stack.take().cleared(),
-            picture_stack: buffers.picture_stack.take().cleared(),
+            surface_stack: vec![SurfaceIndex(0)],
+            picture_stack: Vec::new(),
             are_raster_roots_assigned: true,
             composite_state,
         };
-
-        state.surface_stack.push(SurfaceIndex(0));
 
         state.update(
             pic_index,
@@ -3899,9 +3865,6 @@ impl<'a> PictureUpdateState<'a> {
                 ROOT_SPATIAL_NODE_INDEX,
             );
         }
-
-        buffers.surface_stack = state.surface_stack.take();
-        buffers.picture_stack = state.picture_stack.take();
     }
 
     /// Return the current surface

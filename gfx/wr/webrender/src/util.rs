@@ -66,9 +66,6 @@ pub trait VecHelper<T> {
     /// Equivalent to `mem::replace(&mut vec, Vec::new())`
     fn take(&mut self) -> Self;
 
-    /// Call clear and return self (useful for chaining with calls that move the vector).
-    fn cleared(self) -> Self;
-
     /// Functionally equivalent to `mem::replace(&mut vec, Vec::new())` but tries
     /// to keep the allocation in the caller if it is empty or replace it with a
     /// pre-allocated vector.
@@ -100,12 +97,6 @@ impl<T> VecHelper<T> for Vec<T> {
 
     fn take(&mut self) -> Self {
         replace(self, Vec::new())
-    }
-
-    fn cleared(mut self) -> Self {
-        self.clear();
-
-        self
     }
 
     fn take_and_preallocate(&mut self) -> Self {
