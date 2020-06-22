@@ -68,6 +68,31 @@ const URL_ROOT_SSL = CHROME_URL_ROOT.replace(
   "https://example.com/"
 );
 
+// Add aliases which make it more explicit that URL_ROOT uses a com TLD.
+const URL_ROOT_COM = URL_ROOT;
+const URL_ROOT_COM_SSL = URL_ROOT_SSL;
+
+// Also expose http://example.org, http://example.net, https://example.org to
+// test Fission scenarios easily.
+// Note: example.net is not available for https.
+const URL_ROOT_ORG = CHROME_URL_ROOT.replace(
+  "chrome://mochitests/content/",
+  "http://example.org/"
+);
+const URL_ROOT_ORG_SSL = CHROME_URL_ROOT.replace(
+  "chrome://mochitests/content/",
+  "https://example.org/"
+);
+const URL_ROOT_NET = CHROME_URL_ROOT.replace(
+  "chrome://mochitests/content/",
+  "http://example.org/"
+);
+// mochi.test:8888 is the actual primary location where files are served.
+const URL_ROOT_MOCHI_8888 = CHROME_URL_ROOT.replace(
+  "chrome://mochitests/content/",
+  "http://mochi.test:8888/"
+);
+
 try {
   Services.scriptloader.loadSubScript(
     "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js",
