@@ -396,7 +396,7 @@ var bin = wasmTextToBinary(
        (global.set $g (struct.get $cons 1 (global.get $g))))
 
       (func (export "is_empty") (result i32)
-       (ref.is_null opt $cons (global.get $g)))
+       (ref.is_null (global.get $g)))
 
       )`);
 
