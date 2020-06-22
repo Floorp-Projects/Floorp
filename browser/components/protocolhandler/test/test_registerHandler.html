@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402788
     return true;
   }
 
-  // helper function to build URLs since hostname differs 
+  // helper function to build URLs since hostname differs
   // based on whether the test is running in a cross-origin  iframe
   function buildUrl(protocol="http", addFormat=true) {
     return `${protocol}://${window.location.hostname}:${window.location.port}${addFormat ? "/%s" : "/"}`;
