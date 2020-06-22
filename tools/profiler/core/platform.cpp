@@ -5076,10 +5076,10 @@ void profiler_add_network_marker(
                            std::move(aSource), aContentType));
 }
 
-void profiler_add_marker_for_thread(int aThreadId,
-                                    JS::ProfilingCategoryPair aCategoryPair,
-                                    const char* aMarkerName,
-                                    const ProfilerMarkerPayload& aPayload) {
+static void maybelocked_profiler_add_marker_for_thread(
+    int aThreadId, JS::ProfilingCategoryPair aCategoryPair,
+    const char* aMarkerName, const ProfilerMarkerPayload& aPayload,
+    const PSAutoLock* aLockOrNull) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   if (!profiler_can_accept_markers()) {
@@ -5087,16 +5087,15 @@ void profiler_add_marker_for_thread(int aThreadId,
   }
 
 #ifdef DEBUG
-  {
-    PSAutoLock lock(gPSMutex);
-    if (!ActivePS::Exists(lock)) {
+  auto checkThreadId = [](int aThreadId, const PSAutoLock& aLock) {
+    if (!ActivePS::Exists(aLock)) {
       return;
     }
 
     // Assert that our thread ID makes sense
     bool realThread = false;
     const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
-        CorePS::RegisteredThreads(lock);
+        CorePS::RegisteredThreads(aLock);
     for (auto& thread : registeredThreads) {
       RefPtr<ThreadInfo> info = thread->Info();
       if (info->ThreadId() == aThreadId) {
@@ -5105,6 +5104,13 @@ void profiler_add_marker_for_thread(int aThreadId,
       }
     }
     MOZ_ASSERT(realThread, "Invalid thread id");
+  };
+
+  if (aLockOrNull) {
+    checkThreadId(aThreadId, *aLockOrNull);
+  } else {
+    PSAutoLock lock(gPSMutex);
+    checkThreadId(aThreadId, lock);
   }
 #endif
 
@@ -5116,6 +5122,14 @@ void profiler_add_marker_for_thread(int aThreadId,
       ProfileBufferEntry::Kind::MarkerData, aThreadId,
       WrapProfileBufferUnownedCString(aMarkerName),
       static_cast<uint32_t>(aCategoryPair), &aPayload, delta.ToMilliseconds());
+}
+
+void profiler_add_marker_for_thread(int aThreadId,
+                                    JS::ProfilingCategoryPair aCategoryPair,
+                                    const char* aMarkerName,
+                                    const ProfilerMarkerPayload& aPayload) {
+  return maybelocked_profiler_add_marker_for_thread(
+      aThreadId, aCategoryPair, aMarkerName, aPayload, nullptr);
 }
 
 void profiler_add_marker_for_mainthread(JS::ProfilingCategoryPair aCategoryPair,
