@@ -14,17 +14,24 @@ var HeuristicsRegExp = {
   // These regular expressions are from Chromium source codes [1]. Most of them
   // converted to JS format have the same meaning with the original ones except
   // the first line of "address-level1".
-  // [1] https://cs.chromium.org/chromium/src/components/autofill/core/browser/autofill_regex_constants.cc
+  // [1] https://source.chromium.org/chromium/chromium/src/+/master:components/autofill/core/common/autofill_regex_constants.cc
   RULES: {
     // ==== Email ====
     email: new RegExp(
       "e.?mail" +
       "|courriel" + // fr
+      "|correo.*electr(o|ó)nico" + // es-ES
       "|メールアドレス" + // ja-JP
       "|Электронной.?Почты" + // ru
       "|邮件|邮箱" + // zh-CN
       "|電郵地址" + // zh-TW
-        "|(?:이메일|전자.?우편|[Ee]-?mail)(.?주소)?", // ko-KR
+      "|ഇ-മെയില്‍|ഇലക്ട്രോണിക്.?" +
+      "മെയിൽ" + // ml
+      "|ایمیل|پست.*الکترونیک" + // fa
+      "|ईमेल|इलॅक्ट्रॉनिक.?मेल" + // hi
+      "|(\\b|_)eposta(\\b|_)" + // tr
+        "|(?:이메일|전자.?우편|[Ee]-?mail)(.?주소)?" // ko-KR
+          .normalize("NFKC"), // Handle decomposed characters
       "iu"
     ),
 
@@ -37,7 +44,10 @@ var HeuristicsRegExp = {
       "|電話" + // ja-JP
       "|telefone|telemovel" + // pt-BR, pt-PT
       "|телефон" + // ru
+      "|मोबाइल" + // hi for mobile
+      "|(\\b|_|\\*)telefon(\\b|_|\\*)" + // tr
       "|电话" + // zh-CN
+      "|മൊബൈല്‍" + // ml for mobile
         "|(?:전화|핸드폰|휴대폰|휴대전화)(?:.?번호)?", // ko-KR
       "iu"
     ),
@@ -45,13 +55,14 @@ var HeuristicsRegExp = {
     // ==== Address Fields ====
     organization: new RegExp(
       "company|business|organization|organisation" +
-      "|firma|firmenname" + // de-DE
+      "|(?<!con)firma|firmenname" + // de-DE
       "|empresa" + // es
       "|societe|société" + // fr-FR
       "|ragione.?sociale" + // it-IT
       "|会社" + // ja-JP
       "|название.?компании" + // ru
       "|单位|公司" + // zh-CN
+      "|شرکت" + // fa
         "|회사|직장", // ko-KR
       "iu"
     ),
@@ -66,9 +77,10 @@ var HeuristicsRegExp = {
       "|adresse" + // fr-FR
       "|indirizzo" + // it-IT
       "|^住所$|住所1" + // ja-JP
-      "|morada|endereço" + // pt-BR, pt-PT
+      "|morada|((?<!identificação do )endereço)" + // pt-BR, pt-PT
       "|Адрес" + // ru
       "|地址" + // zh-CN
+      "|(\\b|_)adres(?! (başlığı(nız)?|tarifi))(\\b|_)" + // tr
         "|^주소.?$|주소.?1", // ko-KR
       "iu"
     ),
@@ -112,22 +124,30 @@ var HeuristicsRegExp = {
       "|Город" + // ru
       "|市" + // zh-CN
       "|分區" + // zh-TW
-        "|^시[^도·・]|시[·・]?군[·・]?구", // ko-KR
+      "|شهر" + // fa
+      "|शहर" + // hi for city
+      "|ग्राम|गाँव" + // hi for village
+      "|നഗരം|ഗ്രാമം" + // ml for town|village
+      "|((\\b|_|\\*)([İii̇]l[cç]e(miz|niz)?)(\\b|_|\\*))" + // tr
+        "|^시[^도·・]|시[·・]?군[·・]?구" // ko-KR
+          .normalize("NFKC"), // Handle decomposed characters
       "iu"
     ),
     "address-level1": new RegExp(
-      // JS does not support backward matching, so the following pattern is
-      // applied in FormAutofillHeuristics.getInfo() rather than regexp.
-      // "(?<!united )state|county|region|province"
-      "state|county|region|province" +
-      "|land" + // de-DE
+      "(?<!(united|hist|history).?)state|county|region|province" +
+      "|land" + // de-DE - Extra rules by Firefox
       "|county|principality" + // en-UK
       "|都道府県" + // ja-JP
       "|estado|provincia" + // pt-BR, pt-PT
       "|область" + // ru
       "|省" + // zh-CN
       "|地區" + // zh-TW
-        "|^시[·・]?도", // ko-KR
+      "|സംസ്ഥാനം" + // ml
+      "|استان" + // fa
+      "|राज्य" + // hi
+      "|((\\b|_|\\*)(eyalet|[şs]ehir|[İii̇]l(imiz)?|kent)(\\b|_|\\*))" + // tr
+        "|^시[·・]?도" // ko-KR
+          .normalize("NFKC"), // Handle decomposed characters
       "iu"
     ),
     "postal-code": new RegExp(
@@ -140,17 +160,23 @@ var HeuristicsRegExp = {
       "|郵便番号" + // ja-JP
       "|codigo|codpos|\\bcep\\b" + // pt-BR, pt-PT
       "|Почтовый.?Индекс" + // ru
+      "|पिन.?कोड" + // hi
+      "|പിന്‍കോഡ്" + // ml
       "|邮政编码|邮编" + // zh-CN
       "|郵遞區號" + // zh-TW
+      "|(\\b|_)posta kodu(\\b|_)" + // tr
         "|우편.?번호", // ko-KR
       "iu"
     ),
     country: new RegExp(
       "country|countries" +
       "|país|pais" + // es
-      "|国" + // ja-JP
+      "|(\\b|_)land(\\b|_)(?!.*(mark.*))" + // de-DE landmark is a type in india.
+      "|(?<!(入|出))国" + // ja-JP
       "|国家" + // zh-CN
-        "|국가|나라", // ko-KR
+      "|국가|나라" + // ko-KR
+      "|(\\b|_)(ülke|ulce|ulke)(\\b|_)" + // tr
+        "|کشور", // fa
       "iu"
     ),
 
@@ -159,10 +185,12 @@ var HeuristicsRegExp = {
       "^name|full.?name|your.?name|customer.?name|bill.?name|ship.?name" +
       "|name.*first.*last|firstandlastname" +
       "|nombre.*y.*apellidos" + // es
-      "|^nom" + // fr-FR
+      "|^nom(?!bre)" + // fr-FR
       "|お名前|氏名" + // ja-JP
       "|^nome" + // pt-BR, pt-PT
+      "|نام.*نام.*خانوادگی" + // fa
       "|姓名" + // zh-CN
+      "|(\\b|_|\\*)ad[ı]? soyad[ı]?(\\b|_|\\*)" + // tr
         "|성명", // ko-KR
       "iu"
     ),
@@ -174,25 +202,32 @@ var HeuristicsRegExp = {
       "|名" + // ja-JP
       "|nome" + // pt-BR, pt-PT
       "|Имя" + // ru
-        "|이름", // ko-KR
+      "|نام" + // fa
+      "|이름" + // ko-KR
+      "|പേര്" + // ml
+      "|(\\b|_|\\*)(isim|ad|ad(i|ı|iniz|ınız)?)(\\b|_|\\*)" + // tr
+        "|नाम", // hi
       "iu"
     ),
     "additional-name": new RegExp(
       "middle.*name|mname|middle$" +
-      "|apellido.?materno|lastlastname" + // es
-        // This rule is for middle initial.
-        "middle.*initial|m\\.i\\.|mi$|\\bmi\\b",
+      "|apellido.?materno|lastlastname" + // Extra rules by Firefox
+        "middle.*initial|m\\.i\\.|mi$|\\bmi\\b", // es
       "iu"
     ),
     "family-name": new RegExp(
       "last.*name|lname|surname|last$|secondname|family.*name" +
       "|nachname" + // de-DE
-      "|apellido" + // es
-      "|famille|^nom" + // fr-FR
+      "|apellidos?" + // es
+      "|famille|^nom(?!bre)" + // fr-FR
       "|cognome" + // it-IT
       "|姓" + // ja-JP
-      "|morada|apelidos|surename|sobrenome" + // pt-BR, pt-PT
+      "|apelidos|surename|sobrenome" + // pt-BR, pt-PT
       "|Фамилия" + // ru
+      "|نام.*خانوادگی" + // fa
+      "|उपनाम" + // hi
+      "|മറുപേര്" + // ml
+      "|(\\b|_|\\*)(soyisim|soyad(i|ı|iniz|ınız)?)(\\b|_|\\*)" + // tr
         "|\\b성(?:[^명]|\\b)", // ko-KR
       "iu"
     ),
@@ -214,14 +249,14 @@ var HeuristicsRegExp = {
     "cc-number": new RegExp(
       "(add)?(?:card|cc|acct).?(?:number|#|no|num|field)" +
       "|(cc|kk)nr" + // Extra rules by Firefox for de-DE
-      "|nummer" + // de-DE
-      "|credito|numero|número" + // es
-      "|numéro" + // fr-FR
+      "|(?<!telefon|haus|person|fødsels)nummer" + // de-DE, sv-SE, no
       "|カード番号" + // ja-JP
       "|Номер.*карты" + // ru
       "|信用卡号|信用卡号码" + // zh-CN
       "|信用卡卡號" + // zh-TW
-        "|카드", // ko-KR
+      "|카드" + // ko-KR
+        // es/pt/fr
+        "|(numero|número|numéro)(?!.*(document|fono|phone|réservation))",
       "iu"
     ),
     "cc-exp-month": new RegExp(
@@ -234,7 +269,7 @@ var HeuristicsRegExp = {
       "|有効期限" + // ja-JP
       "|validade" + // pt-BR, pt-PT
       "|Срок действия карты" + // ru
-        "|月", // zh-CN,
+        "|月", // zh-CN
       "iu"
     ),
     "cc-exp-year": new RegExp(
