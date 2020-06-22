@@ -17,7 +17,7 @@
     <string name="no_open_tabs_description">Тут з’являтимуться ваші відкриті вкладки.</string>
 
     <!-- No Private Tabs Message Description -->
-    <string name="no_private_tabs_description">Тут будуть ваші приватні вкладки.</string>
+    <string name="no_private_tabs_description">Тут зʼявлятимуться ваші приватні вкладки.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 відкрита вкладка. Торкніться, щоб перемкнути вкладки.</string>
@@ -1137,7 +1137,7 @@
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Криптомайнери</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_description">Перешкоджає доступу зловмисних скриптів до вашого пристрою для видобутку цифрової валюти.</string>
+    <string name="etp_cryptominers_description">Перешкоджає доступу зловмисних скриптів до вашого пристрою для добування криптовалют.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Зчитування цифрового відбитка</string>
 

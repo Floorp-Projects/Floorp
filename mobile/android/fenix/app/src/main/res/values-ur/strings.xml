@@ -1342,6 +1342,12 @@
     <string name="dialog_delete_positive">حذف کریں</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">لاگ ان اختیارات</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">لاگ ان کے ویب ایڈریس کے لئے یہ تدوین کر سکتے ہیں۔</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">لاگ ان کے صارف نام کے لئے یہ تدوین کر سکتے ہیں۔</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">لاگ ان کے پاس ورڈ کے لئے یہ تدوین کر سکتے ہیں۔</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">لاگ ان میں تبدیلیاں محفوظ کریں۔</string>
     <!--  The button description to discard changes to an edited login. -->
@@ -1371,6 +1377,8 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">sync کے لئے سائن ان کریں</string>
 
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">نئی ٹاپ سائٹ شامل کرنے کے لئے ، ایک سائٹ کو ہٹائیں۔ سائٹ پر دیر تک دبائیں اور ہٹانا منتخب کریں۔</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ٹھیک ہے سمجھ گیا</string>
 

@@ -13,13 +13,16 @@
     <string name="content_description_disable_private_browsing_button">პირადი თვალიერების გამორთვა</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">მოძებნეთ ან შეიყვანეთ მისამართი</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">გახსნილი ჩანართები არაა</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">თქვენი გახსნილი ჩანართები გამოჩნდება აქ.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">თქვენი პირადი ჩანართები გამოჩნდება აქ.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 გახსნილი ჩანართი. შეეხეთ ჩანართების გადასართველად.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s გახსნილი ჩანართი. შეეხეთ ჩანართების გადასართველად.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s შექმნა Mozilla-მ.</string>
@@ -103,8 +106,6 @@
     <string name="browser_menu_new_tab">ახალი ჩანართი</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">კრებულში შენახვა</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">მოხსენება საიტზე</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">გაზიარება</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -118,8 +119,10 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">უზრუნველყოფს %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">კითხვის რეჟიმი</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">კითხვის რეჟიმის დახურვა</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">გახსნა პროგრამით</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -293,7 +296,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">ანგარიშები</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">ჩანართები</string>
+    <string name="preferences_sync_tabs_2">გახსნილი ჩანართები</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">გამოსვლა</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -449,6 +452,24 @@
     <string name="tabs_header_private_tabs_title">პირადი ჩანართები</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ჩანართის დამატება</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">პირადი ჩანართის დამატება</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">პირადი</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">გახსნილი ჩანართები</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">კრებულში შენახვა</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">ყველა ჩანართის გაზიარება</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">ყველა ჩანართის დახურვა</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">ახალი ჩანართი</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">მთავარზე გადასვლა</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">ჩანართის რეჟიმის გადართვა</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">ჩანართის მოცილება კრებულიდან</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -462,7 +483,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">ჩანართების გაზიარება</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">კრებულში შენახვა</string>
+    <string name="tabs_menu_save_to_collection1">ჩანართების კრებულში შენახვა</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">ჩანართის მენიუ</string>
     <!-- Tab menu item to share the tab -->
@@ -675,17 +696,14 @@
     <string name="delete_browsing_data_quit_off">გამორთ.</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">შეკრიბეთ რაც მნიშვნელოვანია თქვენთვის. დასაწყებად, შეინახეთ გახსნილი ჩანართები ახალ კრებულში.</string>
-
     <!-- Collections header on home fragment -->
     <string name="collections_header">კრებულები</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">კრებულის მენიუ</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">კრებულები არაა</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">თქვენი კრებულები გამოჩნდება აქ.</string>
+    <string name="no_collections_header1">შეაგროვეთ, რაც თქვენთვის მნიშვნელოვანია</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">თავი მოუყარეთ მოძიებულ მასალებს, საიტებს, ჩანართებს, სწრაფი წვდომისთვის.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">ჩანართების შერჩევა</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -714,6 +732,9 @@
     <string name="create_collection_close">დახურვა</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">შენახვა</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">ჩვენება</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">კრებული %d</string>
@@ -889,8 +910,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly ახლდება ყოველ ღამე და აქვს საცდელი შესაძლებლობები.
         თუმცა, შესაძლოა ნაკლებ მდგრადი იყოს. ჩამოტვირთეთ beta მეტი მდგრადობისთვის.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">გადმოწერეთ Mozilla Firefox-ბრაუზერი</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">გადმოწერეთ Firefox Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly ჩანაცვლებულია</string>
@@ -943,22 +965,22 @@
     <string name="onboarding_firefox_account_sync_is_on">სინქრონიზაცია ჩართულია</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">შესვლა ვერ მოხერხდა</string>
+
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">დაიცავით თავი</string>
+    <string name="onboarding_tracking_protection_header_2">თავისთავადი პირადულობა</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s დაგეხმარებათ აირიდოთ თვალთვალი ვებსაიტებისგან.</string>
+    <string name="onboarding_tracking_protection_description_2">პირადულობისა და უსაფრთხოების პარამეტრები უზღუდავს მეთვალყურეებს, მავნებლებს და კომპანიებს, თქვენზე თვალის დევნებას.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">ჩვეულებრივი</string>
-
+    <string name="onboarding_tracking_protection_standard_button_2">ჩვეულებრივი (ნაგულისხმევი)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">შეიზღუდება ნაკლები მეთვალყურე, მაგრამ გვერდები ჩვეულებრივ გაიხსნება</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">ზღუდავს ნაკლებ მეთვალყურეს. გვერდები ჩვეულებრივ გაიხსნება.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">მკაცრი (სასურველი)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">მკაცრი</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">შეიზღუდება მეტი მეთვალყურე უკეთესი დაცვისა და სიჩქარისთვის, მაგრამ შესაძლოა ზოგიერთი საიტის გაუმართაობა გამოიწვიოს</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">ზღუდავს მეტ მეთვალყურეს, ამომხტომს, რეკლამას. გვერდები უფრო სწრაფად გაიხსნება, მაგრამ შესაძლოა, ოდნავ გაუმართავი იყოს.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1046,31 +1068,21 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ვრცლად</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">ჩვეულებრივი</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">ჩვეულებრივი (სასურველი)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">ჩვეულებრივი (ნაგულისხმევი)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">წონასწორული, უსაფრთხოებასა და წარმადობას შორის.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">გვერდები ჩაიტვირთება ჩვეულებრივ, მაგრამ ნაკლები მეთვალყურე იზღუდება.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">ზღუდავს ნაკლებ მეთვალყურეს. გვერდები ჩვეულებრივ გაიხსნება.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">რა იზღუდება თვალთვალისგან ჩვეულებრივი დაცვით</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">მკაცრი</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">მკაცრი (ნაგულისხმევი)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">მეტად მძლავრი დაცვა თვალთვალისგან და მეტი სისწრაფე, მაგრამ საიტების ნაწილმა, შესაძლოა გაუმართავად იმუშაოს.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">მკაცრი (სასურველი)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">მძლავრი დაცვა, თუმცა გამოიწვევს საიტების ან შიგთავსის ნაწილის გაუმართაობას.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">ზღუდავს მეტ მეთვალყურეს, ამომხტომს, რეკლამას. გვერდები უფრო სწრაფად გაიხსნება, მაგრამ შესაძლოა, ოდნავ გაუმართავი იყოს.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">რა იზღუდება თვალთვალისგან მკაცრი დაცვით</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">მორგებული</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">აირჩიეთ, რომელი მეთვალყურე საშუალებები შეიზღუდოს</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">აირჩიეთ, რომელი მეთვალყურე საშუალებები შეიზღუდოს.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">რა იზღუდება თვალთვალისგან მორგებული დაცვით</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1122,7 +1134,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">აჩერებს გარეშე რეკლამების, ვიდეოებისა და სხვა მეთვალყურე კოდის შემცველი შიგთავსის ჩატვირთვას. შეიძლება გავლენა იქონიოს ვებგვერდის ზოგიერთ შესაძლებლობაზე.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s ზღუდავს მეთვალყურეებს საიტზე, როცა ფარი იისფერია. შეეხეთ, რომ იხილოთ რა იზღუდება.</string>
+    <string name="etp_onboarding_cfr_message">როცა ფარი იისფერია, ნიშნავს რომ %s ზღუდავს მეთვალყურეებს საიტზე. შეეხეთ ვრცლად სანახავად.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">დაცვა ჩართულია ამ საიტზე</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1408,6 +1420,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">წარმოთქვით</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">ანგარიში ამ სახელით უკვე არსებობს</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">დაკავშირება Firefox-ანგარიშით</string>
@@ -1417,5 +1432,20 @@
     <string name="synced_tabs_reauth">გთხოვთ, ხელახლა შეხვიდეთ.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">გთხოვთ, ჩართოთ ჩანართების სინქრონიზაცია.</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">თქვენ არ გაქვთ, Firefox-ის გახსნილი ჩანართები, სხვა მოწყობილობებზე.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">იხილეთ ჩანართების სია თქვენი სხვა მოწყობილობებიდან.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">სინქრონიზაციაში შესვლა</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">რჩეული საიტების ზღვარი მიღწეულია</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">ახალი რჩეული საიტის დასამატებლად, წაშალეთ წინა. მასზე დიდხანს დაჭერით და მოცილებით.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">კარგი, გასაგებია</string>
 
 </resources>

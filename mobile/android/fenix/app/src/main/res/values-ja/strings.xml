@@ -16,10 +16,11 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">検索語またはアドレスを入力</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">表示タブなし</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">開いているタブがここに表示されます。</string>
+
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">プライベートタブがここに表示されます。</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s は Mozilla の製品です。</string>
@@ -36,13 +37,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">セッションを削除</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">プライベートタブを開くショートカットをホーム画面に追加します。</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">ショートカットを追加</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">追加しない</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Firefox にすばやくアクセス。ウィジェットをホーム画面に追加してください。</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">ウィジェットを追加</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">後で</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -86,6 +95,8 @@
     <string name="browser_menu_add_to_homescreen">ホーム画面に追加</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">インストール</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">同期したタブ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ページ内検索</string>
     <!-- Browser menu button that creates a private tab -->
@@ -94,8 +105,6 @@
     <string name="browser_menu_new_tab">新しいタブ</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">コレクションに保存</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">サイトの問題を報告</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">共有</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -111,8 +120,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Powered by %1$s</string>
 
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">リーダービュー</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">リーダービューを閉じる</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">アプリで開く</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -256,6 +267,8 @@
     <string name="preferences_show_search_shortcuts">検索ショートカットを表示</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">検索語句の候補を表示</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">音声検索を表示</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">プライベートセッションで表示する</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -284,6 +297,8 @@
     <string name="preferences_sync_bookmarks">ブックマーク</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">ログイン情報</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">タブを開く</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">ログアウト</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -378,7 +393,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Firefox で <b>firefox.com/pair</b> のサイトにアクセスして QR コードを取得してください。]]></string>
+    <string name="pair_instructions_2"><![CDATA[<b>firefox.com/pair</b> で表示された QR コードをスキャンしてください]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">カメラを開く</string>
     <!-- Button to cancel pairing -->
@@ -419,12 +434,12 @@
     <string name="library_desktop_bookmarks_unfiled">他のブックマーク</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">履歴</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">同期したタブ</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">リーディングリスト</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">検索</string>
-    <!-- Library Page Title -->
-    <string name="library_title">ブラウジングライブラリー</string>
     <!-- Settings Page Title -->
     <string name="settings_title">設定</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -441,6 +456,26 @@
     <string name="tabs_header_private_tabs_title">プライベートタブ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">タブを追加</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">プライベートタブを追加</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">プライベート</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">開いているタブ</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">コレクションに保存</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">すべてのタブを共有</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">すべてのタブを閉じる</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">新しいタブ</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">ホーム画面を開く</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">タブモードを切り替え</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">タブをコレクションから削除</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">タブを閉じる</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -452,7 +487,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">タブを共有</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">コレクションに保存</string>
+    <string name="tabs_menu_save_to_collection1">タブをコレクションに保存</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">タブメニュー</string>
     <!-- Tab menu item to share the tab -->
@@ -671,16 +706,10 @@
     <string name="delete_browsing_data_quit_off">オフ</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">あなたにとって価値のあるものを収集します。開始するには、開いているタブを新しいコレクションに保存します。</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">コレクション</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">コレクションメニュー</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">コレクションはありません</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">あなたのコレクションがここに表示されます。</string>
 
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">タブの選択</string>
@@ -826,14 +855,14 @@
     <string name="preference_accessibility_font_size_title">フォントサイズ</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">フォントサイズを自動設定</string>
+    <string name="preference_accessibility_auto_size_2">フォントサイズを自動調整</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">フォントサイズは Android の設定に従います。このフォントサイズの管理は無効化されます。</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">ブラウジングデータを削除</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">開いているタブ</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">開いているタブ</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d 個のタブ</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -890,8 +919,6 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly は毎晩更新され、実験的な新しい機能がテストされています。
         しかし、これは安定性に欠けるため、より安定したバージョンを使用したい場合はベータ版のダウンロードをおすすめします。</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Mozilla Firefox ブラウザーを入手しましょう</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly は移転しました</string>
@@ -944,19 +971,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync が有効です</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ログインに失敗しました</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">自己防衛しよう</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s がウェブサイトによるオンラインでのユーザー追跡を止めるのに役立ちます。</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">標準</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">ブロックするトラッカーの数は少なくなりますが、ページを正常に読み込めます</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">厳格 (推奨)</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">ユーザー保護とパフォーマンス向上のために、より多くのトラッカーをブロックしますが、一部のサイトが正常に動作しない可能性があります。</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1040,32 +1056,14 @@
     <string name="preference_enhanced_tracking_protection_explanation">個人データの収集を防止します。%s はオンラインでのあなたの行動を追跡するよく知られた数多くのトラッカーからあなたを守ります。</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">詳細情報</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">標準</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">標準 (推奨)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">追跡防止とパフォーマンスを均等にします。</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">ページは正常に読み込まれますが、ブロックされるトラッカーが少なくなります。</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">標準のトラッキング防止でブロックされるもの</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">厳格</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">厳格 (既定)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">トラッキング防止を強力にし、パフォーマンスを高速化します。ただし、一部のサイトが正常に機能しなくなる可能性があります。</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">厳格 (推奨)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">強力な追跡防止。ただし、一部のサイトまたはコンテンツが破損する可能性があります。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">厳格なトラッキング防止でブロックされるもの</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">カスタム</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">ブロックするトラッカーとスクリプトを選択してください</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">カスタム設定のトラッキング防止でブロックされるもの</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1114,8 +1112,6 @@
     <string name="etp_tracking_content_title">トラッキングコンテンツ</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">追跡コードを含む外部の広告、動画、その他のコンテンツの読み込みを停止します。一部のウェブサイトの機能に影響する場合があります。</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">盾が紫色の時は、%s がこのサイト上のトラッカーをブロックしています。ブロックしているものを確認するには盾をタップしてください。</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">このサイトでは保護が有効になっています</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1137,6 +1133,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">サポート</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">クラッシュ</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">個人情報保護方針</string>
     <!-- About page link text to open know your rights link -->
@@ -1274,6 +1272,13 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">ピンチとズームを有効にします。このジェスチャーが止められているウェブサイトでも有効です。</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">名前 (昇順)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">最終使用日時</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ログイン情報メニューの並べ替え</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">検索エンジンの追加</string>
     <!-- Title of the Edit search engine screen -->
@@ -1365,8 +1370,40 @@
     <string name="certificate_info_verified_by">認証局: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">削除</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">編集</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">このログイン情報を削除してもよろしいですか？</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">削除</string>
-</resources>
+
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">ログインオプション</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">ログイン情報のウェブアドレスの編集可能なテキストフィールド。</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">ログイン情報のユーザー名の編集可能なテキストフィールド。</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">ログイン情報のパスワードの編集可能なテキストフィールド。</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">変更を保存してログインします。</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">変更を破棄</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">編集</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">パスワードが必要です</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">音声検索</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">話してください</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Firefox アカウントで接続してください。</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">他の端末を接続してください。</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">再認証してください。</string>
+
+    </resources>

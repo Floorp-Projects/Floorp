@@ -15,13 +15,16 @@
     <string name="content_description_disable_private_browsing_button">Desactiva la navegació privada</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Escriviu una cerca o adreça</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">No hi ha cap pestanya oberta</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Les pestanyes obertes es mostraran aquí.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Les pestanyes privades es mostraran aquí.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 pestanya oberta. Toqueu per canviar de pestanya.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s pestanyes obertes. Toqueu per canviar de pestanya.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">El %1$s està creat per Mozilla.</string>
@@ -296,7 +299,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Inicis de sessió</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Pestanyes</string>
+    <string name="preferences_sync_tabs_2">Pestanyes obertes</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Tanca la sessió</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -482,7 +485,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Comparteix les pestanyes</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Desa a la col·lecció</string>
+    <string name="tabs_menu_save_to_collection1">Desa les pestanyes a la col·lecció</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menú de pestanya</string>
     <!-- Tab menu item to share the tab -->
@@ -695,16 +698,14 @@
     <string name="delete_browsing_data_quit_off">Desactivat</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Recolliu allò que us importa. Per començar, deseu les pestanyes obertes en una col·lecció nova.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Col·leccions</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menú de col·lecció</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Cap col·lecció</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Les vostres col·leccions es mostraran aquí.</string>
+    <string name="no_collections_header1">Recolliu tot allò que us insteressa</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agrupeu les cerques, els llocs i les pestanyes similars per accedir-hi ràpidament en el futur.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Trieu les pestanyes</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -913,8 +914,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">El Firefox Nightly s’actualitza cada nit i té característiques noves experimentals.
         Tot i això, pot ser menys estable. Baixeu el navegador beta per a una experiència més estable.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Baixeu el navegador Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Baixeu el Firefox per a l’Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">El Firefox Nightly s’ha traslladat</string>
@@ -1420,6 +1422,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Parleu ara</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Ja existeix un inici de sessió amb aquest nom d’usuari</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Connecteu-vos amb un Compte del Firefox.</string>
@@ -1429,5 +1434,20 @@
     <string name="synced_tabs_reauth">Torneu a autenticar-vos.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Activeu la sincronització de pestanyes.</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">No teniu cap pestanya oberta al Firefox dels altres dispositius.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Vegeu una llista de les pestanyes que teniu obertes en altres dispositius.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Inicia la sessió per sincronitzar</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">S’ha arribat al límit de llocs principals</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Per afegir un lloc principal nou, primer cal que n’elimineu algun altre. Manteniu premut el lloc i seleccioneu eliminar-lo.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Entesos</string>
 
 </resources>
