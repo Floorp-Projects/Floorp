@@ -143,7 +143,6 @@
   _(IntrinsicIsCrossRealmArrayConstructor)         \
   _(IntrinsicToInteger)                            \
   _(IntrinsicToLength)                             \
-  _(IntrinsicToString)                             \
   _(IntrinsicIsConstructing)                       \
   _(IntrinsicSubstringKernel)                      \
   _(IntrinsicObjectHasPrototype)                   \

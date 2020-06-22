@@ -5108,42 +5108,6 @@ AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachToString(HandleFunction callee,
-                                                  InlinableNative native) {
-  // Need a single string argument.
-  // TODO(Warp): Support all or more conversions to strings.
-  // Note: Unlike String, ToString requires exactly one argument.
-  if (argc_ != 1 || !args_[0].isString()) {
-    return AttachDecision::NoAction;
-  }
-
-  // Initialize the input operand.
-  Int32OperandId argcId(writer.setInputOperandId(0));
-
-  // Guard callee is the 'ToString' or 'String' function.
-  emitNativeCalleeGuard(callee);
-
-  // Guard that the argument is a string.
-  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  StringOperandId strId = writer.guardToString(argId);
-
-  // Return the string.
-  writer.loadStringResult(strId);
-
-  // This stub does not need to be monitored, because it always
-  // returns a string.
-  writer.returnFromIC();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
-
-  if (native == InlinableNative::IntrinsicToString) {
-    trackAttached("ToString");
-  } else {
-    MOZ_ASSERT(native == InlinableNative::String);
-    trackAttached("String");
-  }
-  return AttachDecision::Attach;
-}
-
 AttachDecision CallIRGenerator::tryAttachToObject(HandleFunction callee,
                                                   InlinableNative native) {
   // Need a single object argument.
@@ -5517,6 +5481,35 @@ AttachDecision CallIRGenerator::tryAttachSubstringKernel(
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("SubstringKernel");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachString(HandleFunction callee) {
+  // Need a single string argument.
+  // TODO(Warp): Support all or more conversions to strings.
+  if (argc_ != 1 || !args_[0].isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'String' function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard that the argument is a string.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  StringOperandId strId = writer.guardToString(argId);
+
+  // Return the string.
+  writer.loadStringResult(strId);
+
+  // This stub does not need to be monitored, because it always
+  // returns a string.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("String");
   return AttachDecision::Attach;
 }
 
@@ -6186,8 +6179,6 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Intrinsics.
     case InlinableNative::IntrinsicIsSuspendedGenerator:
       return tryAttachIsSuspendedGenerator(callee);
-    case InlinableNative::IntrinsicToString:
-      return tryAttachToString(callee, native);
     case InlinableNative::IntrinsicToObject:
       return tryAttachToObject(callee, native);
     case InlinableNative::IntrinsicToInteger:
@@ -6224,7 +6215,7 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
 
     // String natives.
     case InlinableNative::String:
-      return tryAttachToString(callee, native);
+      return tryAttachString(callee);
     case InlinableNative::StringCharCodeAt:
       return tryAttachStringCharCodeAt(callee);
     case InlinableNative::StringCharAt:
