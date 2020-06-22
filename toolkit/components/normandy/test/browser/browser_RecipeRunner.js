@@ -290,20 +290,20 @@ decorate_task(
     };
 
     const db = await RecipeRunner._remoteSettingsClientForTesting.db;
-    await db.clear();
     const fakeSig = { signature: "abc" };
-    await db.create({ id: "match", recipe: matchRecipe, signature: fakeSig });
-    await db.create({
-      id: "noMatch",
-      recipe: noMatchRecipe,
-      signature: fakeSig,
-    });
-    await db.create({
-      id: "missing",
-      recipe: missingRecipe,
-      signature: fakeSig,
-    });
-    await db.saveLastModified(42);
+    await db.importChanges({}, 42, [
+      { id: "match", recipe: matchRecipe, signature: fakeSig },
+      {
+        id: "noMatch",
+        recipe: noMatchRecipe,
+        signature: fakeSig,
+      },
+      {
+        id: "missing",
+        recipe: missingRecipe,
+        signature: fakeSig,
+      },
+    ]);
 
     let recipesFromRS = (
       await RecipeRunner._remoteSettingsClientForTesting.get()
@@ -366,19 +366,26 @@ decorate_task(
     };
 
     const db = await RecipeRunner._remoteSettingsClientForTesting.db;
-    await db.clear();
     const fakeSig = { signature: "abc" };
-    await db.create({
-      id: "match",
-      recipe: compatibleRecipe,
-      signature: fakeSig,
-    });
-    await db.create({
-      id: "noMatch",
-      recipe: incompatibleRecipe,
-      signature: fakeSig,
-    });
-    await db.saveLastModified(42);
+    await db.importChanges(
+      {},
+      42,
+      [
+        {
+          id: "match",
+          recipe: compatibleRecipe,
+          signature: fakeSig,
+        },
+        {
+          id: "noMatch",
+          recipe: incompatibleRecipe,
+          signature: fakeSig,
+        },
+      ],
+      {
+        clear: true,
+      }
+    );
 
     await RecipeRunner.run();
 

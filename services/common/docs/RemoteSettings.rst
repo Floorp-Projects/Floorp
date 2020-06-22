@@ -435,7 +435,7 @@ And records can be created manually (as if they were synchronized from the serve
       domain: "website.com",
       usernameSelector: "#login-account",
       passwordSelector: "#pass-signin",
-    }, { synced: true });
+    });
 
 If no timestamp is set, any call to ``.get()`` will trigger the load of initial data (JSON dump) if any, or a synchronization will be triggered. To avoid that, store a fake timestamp:
 
