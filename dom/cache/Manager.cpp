@@ -403,14 +403,15 @@ class Manager::Factory {
     // Iterate in reverse to find the most recent, matching Manager.  This
     // is important when looking for a Closing Manager.  If a new Manager
     // chains to an old Manager we want it to be the most recent one.
-    // XXX We could use a reversed NonObservingRange here and std::find_if.
-    for (auto* manager : sFactory->mManagerList.BackwardRange()) {
-      if (aState == manager->GetState() && *manager->mManagerId == aManagerId) {
-        return {manager, AcquireStrongRefFromRawPtr{}};
-      }
-    }
-
-    return nullptr;
+    const auto range = Reversed(sFactory->mManagerList.NonObservingRange());
+    const auto foundIt = std::find_if(
+        range.begin(), range.end(), [aState, &aManagerId](const auto* manager) {
+          return aState == manager->GetState() &&
+                 *manager->mManagerId == aManagerId;
+        });
+    return foundIt != range.end()
+               ? SafeRefPtr{*foundIt, AcquireStrongRefFromRawPtr{}}
+               : nullptr;
   }
 
   // Singleton created on demand and deleted when last Manager is cleared

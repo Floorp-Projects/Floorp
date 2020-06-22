@@ -96,12 +96,12 @@ bool DebuggerNotificationObserver::Disconnect(
 
 bool DebuggerNotificationObserver::AddListener(
     DebuggerNotificationCallback& aHandlerFn) {
-  // XXX We could use a NonObservingRange here and std::any_of.
-  for (const RefPtr<DebuggerNotificationCallback>& callback :
-       mEventListenerCallbacks.ForwardRange()) {
-    if (*callback == aHandlerFn) {
-      return false;
-    }
+  const auto [begin, end] = mEventListenerCallbacks.NonObservingRange();
+  if (std::any_of(begin, end,
+                  [&](const RefPtr<DebuggerNotificationCallback>& callback) {
+                    return *callback == aHandlerFn;
+                  })) {
+    return false;
   }
 
   RefPtr<DebuggerNotificationCallback> handlerFn(&aHandlerFn);

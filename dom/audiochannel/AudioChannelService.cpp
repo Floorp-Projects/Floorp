@@ -424,14 +424,11 @@ AudioChannelService::GetOrCreateWindowData(nsPIDOMWindowOuter* aWindow) {
 
 AudioChannelService::AudioChannelWindow* AudioChannelService::GetWindowData(
     uint64_t aWindowID) const {
-  // XXX We could use a NonObservingRange here and std::find_if.
-  for (const auto& next : mWindows.ForwardRange()) {
-    if (next->mWindowID == aWindowID) {
-      return next.get();
-    }
-  }
-
-  return nullptr;
+  const auto [begin, end] = mWindows.NonObservingRange();
+  const auto foundIt = std::find_if(begin, end, [aWindowID](const auto& next) {
+    return next->mWindowID == aWindowID;
+  });
+  return foundIt != end ? foundIt->get() : nullptr;
 }
 
 bool AudioChannelService::IsWindowActive(nsPIDOMWindowOuter* aWindow) {

@@ -1332,17 +1332,15 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     if (IsDeviceType(aEvent->mMessage)) {
       // This is a device-type event, we need to check whether we can
       // disable device after removing the once listeners.
-      bool hasAnyListener = false;
-      // XXX We could use a NonObservingRange here and std::any_of.
-      for (Listener& listenerRef : mListeners.ForwardRange()) {
-        Listener* listener = &listenerRef;
-        if (EVENT_TYPE_EQUALS(listener, aEvent->mMessage,
-                              aEvent->mSpecifiedEventType,
-                              /* all events */ false)) {
-          hasAnyListener = true;
-          break;
-        }
-      }
+      const auto [begin, end] = mListeners.NonObservingRange();
+      const bool hasAnyListener =
+          std::any_of(begin, end, [aEvent](const Listener& listenerRef) {
+            const Listener* listener = &listenerRef;
+            return EVENT_TYPE_EQUALS(listener, aEvent->mMessage,
+                                     aEvent->mSpecifiedEventType,
+                                     /* all events */ false);
+          });
+
       if (!hasAnyListener) {
         DisableDevice(aEvent->mMessage);
       }
