@@ -556,6 +556,20 @@ struct AlternateSet
     return_trace (true);
   }
 
+  unsigned
+  get_alternates (unsigned        start_offset,
+		  unsigned       *alternate_count  /* IN/OUT.  May be NULL. */,
+		  hb_codepoint_t *alternate_glyphs /* OUT.     May be NULL. */) const
+  {
+    if (alternates.len && alternate_count)
+    {
+      + alternates.sub_array (start_offset, alternate_count)
+      | hb_sink (hb_array (alternate_glyphs, *alternate_count))
+      ;
+    }
+    return alternates.len;
+  }
+
   template <typename Iterator,
 	    hb_requires (hb_is_source_of (Iterator, hb_codepoint_t))>
   bool serialize (hb_serialize_context_t *c,
@@ -627,6 +641,14 @@ struct AlternateSubstFormat1
 
   bool would_apply (hb_would_apply_context_t *c) const
   { return c->len == 1 && (this+coverage).get_coverage (c->glyphs[0]) != NOT_COVERED; }
+
+  unsigned
+  get_glyph_alternates (hb_codepoint_t  gid,
+			unsigned        start_offset,
+			unsigned       *alternate_count  /* IN/OUT.  May be NULL. */,
+			hb_codepoint_t *alternate_glyphs /* OUT.     May be NULL. */) const
+  { return (this+alternateSet[(this+coverage).get_coverage (gid)])
+	   .get_alternates (start_offset, alternate_count, alternate_glyphs); }
 
   bool apply (hb_ot_apply_context_t *c) const
   {
@@ -1205,7 +1227,9 @@ struct ReverseChainSingleSubstFormat1
     const OffsetArrayOf<Coverage> &lookahead = StructAfter<OffsetArrayOf<Coverage>> (backtrack);
     const ArrayOf<HBGlyphID> &substitute = StructAfter<ArrayOf<HBGlyphID>> (lookahead);
 
-  unsigned int start_index = 0, end_index = 0;
+    if (unlikely (index >= substitute.len)) return_trace (false);
+
+    unsigned int start_index = 0, end_index = 0;
     if (match_backtrack (c,
 			 backtrack.len, (HBUINT16 *) backtrack.arrayZ,
 			 match_coverage, this,
@@ -1547,8 +1571,13 @@ struct GSUB : GSUBGPOS
   bool sanitize (hb_sanitize_context_t *c) const
   { return GSUBGPOS::sanitize<SubstLookup> (c); }
 
-  HB_INTERNAL bool is_blacklisted (hb_blob_t *blob,
+  HB_INTERNAL bool is_blocklisted (hb_blob_t *blob,
 				   hb_face_t *face) const;
+
+  void closure_lookups (hb_face_t      *face,
+                        const hb_set_t *glyphs,
+                        hb_set_t       *lookup_indexes /* IN/OUT */) const
+  { GSUBGPOS::closure_lookups<SubstLookup> (face, glyphs, lookup_indexes); }
 
   typedef GSUBGPOS::accelerator_t<GSUB> accelerator_t;
 };

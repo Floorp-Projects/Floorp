@@ -43,6 +43,7 @@
 #include "hb-shape.cc"
 #include "hb-shaper.cc"
 #include "hb-static.cc"
+#include "hb-style.cc"
 #include "hb-ucd.cc"
 #include "hb-unicode.cc"
 #include "hb-glib.cc"

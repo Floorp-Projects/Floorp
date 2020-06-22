@@ -514,7 +514,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
     {
       active_feature_t feature;
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1010
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
       const hb_aat_feature_mapping_t * mapping = hb_aat_layout_find_feature_mapping (features[i].tag);
       if (!mapping)
 	continue;
@@ -573,7 +573,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 	  /* active_features.qsort (); */
 	  for (unsigned int j = 0; j < active_features.length; j++)
 	  {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1010
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
 	    CFStringRef keys[] = {
 	      kCTFontFeatureTypeIdentifierKey,
 	      kCTFontFeatureSelectorIdentifierKey
