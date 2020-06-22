@@ -11,18 +11,10 @@
 const { TargetList } = require("devtools/shared/resources/target-list");
 const { TYPES } = TargetList;
 
-const URL_ROOT_COM = CHROME_URL_ROOT.replace(
-  "chrome://mochitests/content/",
-  "https://example.com/"
-);
-const URL_ROOT_ORG = CHROME_URL_ROOT.replace(
-  "chrome://mochitests/content/",
-  "https://example.org/"
-);
-const COM_PAGE_URL = URL_ROOT_COM + "test_sw_page.html";
-const COM_WORKER_URL = URL_ROOT_COM + "test_sw_page_worker.js";
-const ORG_PAGE_URL = URL_ROOT_ORG + "test_sw_page.html";
-const ORG_WORKER_URL = URL_ROOT_ORG + "test_sw_page_worker.js";
+const COM_PAGE_URL = URL_ROOT_SSL + "test_sw_page.html";
+const COM_WORKER_URL = URL_ROOT_SSL + "test_sw_page_worker.js";
+const ORG_PAGE_URL = URL_ROOT_ORG_SSL + "test_sw_page.html";
+const ORG_WORKER_URL = URL_ROOT_ORG_SSL + "test_sw_page_worker.js";
 
 /**
  * This test will navigate between two pages, both controlled by different
