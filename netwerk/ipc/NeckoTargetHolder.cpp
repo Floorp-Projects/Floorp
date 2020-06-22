@@ -12,11 +12,11 @@
 namespace mozilla {
 namespace net {
 
-already_AddRefed<nsIEventTarget> NeckoTargetHolder::GetNeckoTarget() {
-  nsCOMPtr<nsIEventTarget> target = mNeckoTarget;
+already_AddRefed<nsISerialEventTarget> NeckoTargetHolder::GetNeckoTarget() {
+  nsCOMPtr<nsISerialEventTarget> target = mNeckoTarget;
 
   if (!target) {
-    target = GetMainThreadEventTarget();
+    target = GetMainThreadSerialEventTarget();
   }
   return target.forget();
 }
@@ -27,7 +27,8 @@ nsresult NeckoTargetHolder::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable,
     return mNeckoTarget->Dispatch(std::move(aRunnable), aDispatchFlags);
   }
 
-  nsCOMPtr<nsIEventTarget> mainThreadTarget = GetMainThreadEventTarget();
+  nsCOMPtr<nsISerialEventTarget> mainThreadTarget =
+      GetMainThreadSerialEventTarget();
   MOZ_ASSERT(mainThreadTarget);
 
   return mainThreadTarget->Dispatch(std::move(aRunnable), aDispatchFlags);

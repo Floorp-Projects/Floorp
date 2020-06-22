@@ -355,7 +355,7 @@ static uint32_t sThreadLocalIndex = 0xdeadbeef;  // out of range
 static const char* kPACIncludePath =
     "network.proxy.autoconfig_url.include_path";
 
-nsPACMan::nsPACMan(nsIEventTarget* mainThreadEventTarget)
+nsPACMan::nsPACMan(nsISerialEventTarget* mainThreadEventTarget)
     : NeckoTargetHolder(mainThreadEventTarget),
       mLoadPending(false),
       mShutdown(false),

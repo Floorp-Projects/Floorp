@@ -5,7 +5,7 @@
 #include "StunAddrsRequestChild.h"
 
 #include "mozilla/net/NeckoChild.h"
-#include "nsIEventTarget.h"
+#include "nsISerialEventTarget.h"
 
 using namespace mozilla::ipc;
 
@@ -13,7 +13,7 @@ namespace mozilla {
 namespace net {
 
 StunAddrsRequestChild::StunAddrsRequestChild(
-    StunAddrsListener* listener, nsIEventTarget* mainThreadEventTarget)
+    StunAddrsListener* listener, nsISerialEventTarget* mainThreadEventTarget)
     : mListener(listener) {
   if (mainThreadEventTarget) {
     gNeckoChild->SetEventTargetForActor(this, mainThreadEventTarget);

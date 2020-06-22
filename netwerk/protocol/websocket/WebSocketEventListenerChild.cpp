@@ -13,7 +13,7 @@ namespace mozilla {
 namespace net {
 
 WebSocketEventListenerChild::WebSocketEventListenerChild(
-    uint64_t aInnerWindowID, nsIEventTarget* aTarget)
+    uint64_t aInnerWindowID, nsISerialEventTarget* aTarget)
     : NeckoTargetHolder(aTarget),
       mService(WebSocketEventService::GetOrCreate()),
       mInnerWindowID(aInnerWindowID) {}
