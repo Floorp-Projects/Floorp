@@ -230,6 +230,8 @@ static uint32_t StartupExtraDefaultFeatures() {
   return ProfilerFeature::MainThreadIO;
 }
 
+class MOZ_RAII PSAutoTryLock;
+
 // The auto-lock/unlock mutex that guards accesses to CorePS and ActivePS.
 // Use `PSAutoLock lock;` to take the lock until the end of the enclosing block.
 // External profilers may use this same lock for their own data, but as the lock
@@ -249,7 +251,44 @@ class MOZ_RAII PSAutoLock {
   }
 
  private:
+  // Allow PSAutoTryLock to access gPSMutex, and to call the following
+  // `PSAutoLock(int)` constructor through `Maybe<const PSAutoLock>::emplace()`.
+  friend class PSAutoTryLock;
+  friend class Maybe<const PSAutoLock>;
+
+  // Special constructor for an already-locked gPSMutex. The `int` parameter is
+  // necessary to distinguish it from the main constructor.
+  explicit PSAutoLock(int) { gPSMutex.AssertCurrentThreadOwns(); }
+
   static detail::BaseProfilerMutex gPSMutex;
+};
+
+// RAII class that attempts to lock the profiler mutex. Example usage:
+//   PSAutoTryLock tryLock;
+//   if (tryLock.IsLocked()) { locked_foo(tryLock.LockRef()); }
+class MOZ_RAII PSAutoTryLock {
+ public:
+  PSAutoTryLock() {
+    if (PSAutoLock::gPSMutex.TryLock()) {
+      mMaybePSAutoLock.emplace(0);
+    }
+  }
+
+  // Return true if the mutex was aquired and locked.
+  [[nodiscard]] bool IsLocked() const { return mMaybePSAutoLock.isSome(); }
+
+  // Assuming the mutex is locked, return a reference to a `PSAutoLock` for that
+  // mutex, which can be passed as proof-of-lock.
+  [[nodiscard]] const PSAutoLock& LockRef() const {
+    MOZ_ASSERT(IsLocked());
+    return mMaybePSAutoLock.ref();
+  }
+
+ private:
+  // `mMaybePSAutoLock` is `Nothing` if locking failed, otherwise it contains a
+  // `const PSAutoLock` holding the locked mutex, and whose reference may be
+  // passed to functions expecting a proof-of-lock.
+  Maybe<const PSAutoLock> mMaybePSAutoLock;
 };
 
 detail::BaseProfilerMutex PSAutoLock::gPSMutex;
