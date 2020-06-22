@@ -11,19 +11,17 @@
 namespace mozilla {
 
 TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
-                     const char* aName, bool aRequireTailDispatch,
-                     bool aRetainFlags)
+                     const char* aName, bool aRequireTailDispatch)
     : AbstractThread(aRequireTailDispatch),
       mTarget(aTarget),
       mQueueMonitor("TaskQueue::Queue"),
       mTailDispatcher(nullptr),
-      mShouldRetainFlags(aRetainFlags),
       mIsRunning(false),
       mIsShutdown(false),
       mName(aName) {}
 
 TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
-                     bool aSupportsTailDispatch, bool aRetainFlags)
+                     bool aSupportsTailDispatch)
     : TaskQueue(std::move(aTarget), "Unnamed", aSupportsTailDispatch) {}
 
 TaskQueue::~TaskQueue() {
@@ -57,11 +55,8 @@ nsresult TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
     return currentThread->TailDispatcher().AddTask(this, aRunnable.forget());
   }
 
-  // If the task queue cares about individual flags, retain them in the struct.
-  uint32_t retainFlags = mShouldRetainFlags ? aFlags : 0;
-
   LogRunnable::LogDispatch(aRunnable);
-  mTasks.push({std::move(aRunnable), retainFlags});
+  mTasks.push({std::move(aRunnable), aFlags});
 
   if (mIsRunning) {
     return NS_OK;
