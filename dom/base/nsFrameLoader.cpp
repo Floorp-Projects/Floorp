@@ -399,9 +399,13 @@ static void GetInitialRemoteTypeAndProcess(Element* aOwner,
     return;
   }
   RefPtr<ContentParent> contentParent = browserParent->Manager();
-  MOZ_DIAGNOSTIC_ASSERT(
-      !hasRemoteType || contentParent->GetRemoteType() == aRemoteType,
-      "If specified, remoteType attribute must match sameProcessAsFrameLoader");
+
+  // NOTE: This assertion is known to fail in the wild. It is being kept around
+  // only to ensure that we don't land and test new code which breaks this
+  // desired invariant. (bug 1646328)
+  MOZ_ASSERT(!hasRemoteType || contentParent->GetRemoteType() == aRemoteType,
+             "If specified, remoteType attribute should match "
+             "sameProcessAsFrameLoader");
   aRemoteType = contentParent->GetRemoteType();
   *aChildID = contentParent->ChildID();
 }
