@@ -6,17 +6,11 @@ const { RemoteSettings } = ChromeUtils.import(
 let client;
 
 async function createRecords(records) {
-  await client.db.importChanges(
-    {},
-    42,
-    records.map((record, i) => ({
-      id: `record-${i}`,
-      ...record,
-    })),
-    {
-      clear: true,
-    }
-  );
+  await client.db.clear();
+  for (const record of records) {
+    await client.db.create(record);
+  }
+  await client.db.saveLastModified(42); // Prevent from loading JSON dump.
 }
 
 function run_test() {
@@ -44,12 +38,10 @@ add_task(async function test_returns_all_without_target() {
 
 add_task(async function test_filters_can_be_disabled() {
   const c = RemoteSettings("no-jexl", { filterFunc: null });
-  await c.db.importChanges({}, 42, [
-    {
-      id: "abc",
-      filter_expression: "1 == 2",
-    },
-  ]);
+  await c.db.create({
+    filter_expression: "1 == 2",
+  });
+  await c.db.saveLastModified(42); // Prevent from loading JSON dump.
 
   const list = await c.get();
   equal(list.length, 1);
