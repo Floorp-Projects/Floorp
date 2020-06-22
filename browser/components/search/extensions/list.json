@@ -59,25 +59,25 @@
       },
       "KZ": {
         "visibleDefaultEngines": [
-          "amazondotcom", "bing", "google", "wikipedia", "ddg", "yandex-en"
+          "amazondotcom", "bing", "google-b-d", "wikipedia", "ddg", "yandex-en"
         ],
         "searchDefault": "Yandex"
       },
       "BY": {
         "visibleDefaultEngines": [
-          "amazondotcom", "bing", "google", "wikipedia", "ddg", "yandex-en"
+          "amazondotcom", "bing", "google-b-d", "wikipedia", "ddg", "yandex-en"
         ],
         "searchDefault": "Yandex"
       },
       "RU": {
         "visibleDefaultEngines": [
-          "amazondotcom", "bing", "google", "wikipedia", "ddg", "yandex-en"
+          "amazondotcom", "bing", "google-b-d", "wikipedia", "ddg", "yandex-en"
         ],
         "searchDefault": "Yandex"
       },
       "TR": {
         "visibleDefaultEngines": [
-          "amazondotcom", "bing", "google", "wikipedia", "ddg", "yandex-en"
+          "amazondotcom", "bing", "google-b-d", "wikipedia", "ddg", "yandex-en"
         ],
         "searchDefault": "Yandex"
       },
