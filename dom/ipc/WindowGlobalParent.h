@@ -196,9 +196,8 @@ class WindowGlobalParent final : public WindowContext,
 
   nsITransportSecurityInfo* GetSecurityInfo() { return mSecurityInfo; }
 
-  const nsAString& GetRemoteType() override;
-
  protected:
+  const nsAString& GetRemoteType() override;
   JSActor::Type GetSide() override { return JSActor::Type::Parent; }
 
   // IPC messages

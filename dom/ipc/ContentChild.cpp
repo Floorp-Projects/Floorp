@@ -951,8 +951,7 @@ nsresult ContentChild::ProvideWindowCommon(
 
   uint64_t browserId(nsContentUtils::GenerateBrowserId());
   RefPtr<BrowsingContext> browsingContext = BrowsingContext::CreateDetached(
-      nullptr, openerBC, nullptr, aName, BrowsingContext::Type::Content,
-      browserId);
+      nullptr, openerBC, aName, BrowsingContext::Type::Content, browserId);
   MOZ_ALWAYS_SUCCEEDS(browsingContext->SetRemoteTabs(true));
   MOZ_ALWAYS_SUCCEEDS(browsingContext->SetRemoteSubframes(useRemoteSubframes));
   MOZ_ALWAYS_SUCCEEDS(browsingContext->SetOriginAttributes(
