@@ -1114,42 +1114,31 @@ static bool IsLargeAllocationLoad(CanonicalBrowsingContext* aBrowsingContext,
 #endif
 }
 
-bool DocumentLoadListener::MaybeTriggerProcessSwitch(
-    bool* aWillSwitchToRemote) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_DIAGNOSTIC_ASSERT(!mDoingProcessSwitch,
-                        "Already in the middle of switching?");
-  MOZ_DIAGNOSTIC_ASSERT(mChannel);
-  MOZ_DIAGNOSTIC_ASSERT(mParentChannelListener);
-  MOZ_DIAGNOSTIC_ASSERT(aWillSwitchToRemote);
-
-  LOG(("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p]", this));
-
-  // Get the BrowsingContext which will be switching processes.
-  RefPtr<CanonicalBrowsingContext> browsingContext =
-      mParentChannelListener->GetBrowsingContext();
-  if (NS_WARN_IF(!browsingContext)) {
+static bool ContextCanProcessSwitch(
+    CanonicalBrowsingContext* aBrowsingContext) {
+  if (NS_WARN_IF(!aBrowsingContext)) {
     LOG(("Process Switch Abort: no browsing context"));
     return false;
   }
-  if (!browsingContext->IsContent()) {
+  if (!aBrowsingContext->IsContent()) {
     LOG(("Process Switch Abort: non-content browsing context"));
     return false;
   }
-  if (browsingContext->GetParent() && !browsingContext->UseRemoteSubframes()) {
+  if (aBrowsingContext->GetParent() &&
+      !aBrowsingContext->UseRemoteSubframes()) {
     LOG(("Process Switch Abort: remote subframes disabled"));
     return false;
   }
 
-  if (browsingContext->GetParentWindowContext() &&
-      browsingContext->GetParentWindowContext()->IsInProcess()) {
+  if (aBrowsingContext->GetParentWindowContext() &&
+      aBrowsingContext->GetParentWindowContext()->IsInProcess()) {
     LOG(("Process Switch Abort: Subframe with in-process parent"));
     return false;
   }
 
   // Determine what process switching behaviour is being requested by the root
   // <browser> element.
-  Element* browserElement = browsingContext->Top()->GetEmbedderElement();
+  Element* browserElement = aBrowsingContext->Top()->GetEmbedderElement();
   if (!browserElement) {
     LOG(("Process Switch Abort: cannot get embedder element"));
     return false;
@@ -1176,101 +1165,123 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     LOG(("Process Switch Abort: switch disabled by <browser>"));
     return false;
   }
-  if (browsingContext->IsTop() &&
+  if (aBrowsingContext->IsTop() &&
       processBehavior == nsIBrowser::PROCESS_BEHAVIOR_SUBFRAME_ONLY) {
     LOG(("Process Switch Abort: toplevel switch disabled by <browser>"));
     return false;
   }
 
-  bool isPreloadSwitch = false;
-  nsAutoString isPreloadBrowserStr;
-  if (browserElement->GetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
-                              isPreloadBrowserStr) &&
-      isPreloadBrowserStr.EqualsLiteral("consumed")) {
-    nsCOMPtr<nsIURI> originalURI;
-    if (NS_SUCCEEDED(mChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
-        !originalURI->GetSpecOrDefault().EqualsLiteral("about:newtab")) {
-      LOG(("Process Switch: leaving preloaded browser"));
-      isPreloadSwitch = true;
-      browserElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
-                                true);
-    }
-  }
+  return true;
+}
 
-  // Get information about the current document loaded in our BrowsingContext.
-  nsCOMPtr<nsIPrincipal> currentPrincipal;
-  if (RefPtr<WindowGlobalParent> wgp =
-          browsingContext->GetCurrentWindowGlobal()) {
-    currentPrincipal = wgp->DocumentPrincipal();
+bool DocumentLoadListener::MaybeTriggerProcessSwitch(
+    bool* aWillSwitchToRemote) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_DIAGNOSTIC_ASSERT(!mDoingProcessSwitch,
+                        "Already in the middle of switching?");
+  MOZ_DIAGNOSTIC_ASSERT(mChannel);
+  MOZ_DIAGNOSTIC_ASSERT(mParentChannelListener);
+  MOZ_DIAGNOSTIC_ASSERT(aWillSwitchToRemote);
+
+  LOG(("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p]", this));
+
+  // Get the BrowsingContext which will be switching processes.
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      mParentChannelListener->GetBrowsingContext();
+  if (!ContextCanProcessSwitch(browsingContext)) {
+    return false;
   }
-  RefPtr<ContentParent> contentParent = browsingContext->GetContentParent();
-  MOZ_ASSERT(!OtherPid() || contentParent,
-             "Only PPDC is allowed to not have an existing ContentParent");
 
   // Get the final principal, used to select which process to load into.
   nsCOMPtr<nsIPrincipal> resultPrincipal;
-  rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+  nsresult rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
       mChannel, getter_AddRefs(resultPrincipal));
   if (NS_FAILED(rv)) {
     LOG(("Process Switch Abort: failed to get channel result principal"));
     return false;
   }
 
-  // Determine our COOP status, which will be used to determine our preferred
-  // remote type.
-  bool isCOOPSwitch = HasCrossOriginOpenerPolicyMismatch();
-  nsILoadInfo::CrossOriginOpenerPolicy coop =
-      nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
-  if (!browsingContext->IsTop()) {
-    coop = browsingContext->Top()->GetOpenerPolicy();
-  } else if (nsCOMPtr<nsIHttpChannelInternal> httpChannel =
-                 do_QueryInterface(mChannel)) {
-    MOZ_ALWAYS_SUCCEEDS(httpChannel->GetCrossOriginOpenerPolicy(&coop));
+  nsAutoString currentRemoteType(VoidString());
+  if (RefPtr<ContentParent> contentParent =
+          browsingContext->GetContentParent()) {
+    currentRemoteType = contentParent->GetRemoteType();
+  }
+  MOZ_ASSERT_IF(currentRemoteType.IsEmpty(), !OtherPid());
+
+  // Determine what type of content process this load should finish in.
+  nsAutoString preferredRemoteType(currentRemoteType);
+  bool replaceBrowsingContext = false;
+  uint64_t specificGroupId = 0;
+
+  // If we're in a preloaded browser, force browsing context replacement to
+  // ensure the current process is re-selected.
+  {
+    Element* browserElement = browsingContext->Top()->GetEmbedderElement();
+
+    nsAutoString isPreloadBrowserStr;
+    if (browserElement->GetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
+                                isPreloadBrowserStr) &&
+        isPreloadBrowserStr.EqualsLiteral("consumed")) {
+      nsCOMPtr<nsIURI> originalURI;
+      if (NS_SUCCEEDED(mChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
+          !originalURI->GetSpecOrDefault().EqualsLiteral("about:newtab")) {
+        LOG(("Process Switch: leaving preloaded browser"));
+        replaceBrowsingContext = true;
+        browserElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
+                                  true);
+      }
+    }
   }
 
-  nsAutoString currentRemoteType;
-  if (contentParent) {
-    currentRemoteType = contentParent->GetRemoteType();
-  } else {
-    currentRemoteType = VoidString();
+  // Update the preferred final process for our load based on the
+  // Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers.
+  {
+    bool isCOOPSwitch = HasCrossOriginOpenerPolicyMismatch();
+    replaceBrowsingContext |= isCOOPSwitch;
+
+    // Determine our COOP status, which will be used to determine our preferred
+    // remote type.
+    nsILoadInfo::CrossOriginOpenerPolicy coop =
+        nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
+    if (!browsingContext->IsTop()) {
+      coop = browsingContext->Top()->GetOpenerPolicy();
+    } else if (nsCOMPtr<nsIHttpChannelInternal> httpChannel =
+                   do_QueryInterface(mChannel)) {
+      MOZ_ALWAYS_SUCCEEDS(httpChannel->GetCrossOriginOpenerPolicy(&coop));
+    }
+
+    if (coop ==
+        nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) {
+      // We want documents with SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP COOP
+      // policy to be loaded in a separate process in which we can enable
+      // high-resolution timers.
+      nsAutoCString siteOrigin;
+      resultPrincipal->GetSiteOrigin(siteOrigin);
+      preferredRemoteType =
+          NS_LITERAL_STRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX);
+      AppendUTF8toUTF16(siteOrigin, preferredRemoteType);
+    } else if (isCOOPSwitch) {
+      // If we're doing a COOP switch, we do not need any affinity to the
+      // current remote type. Clear it back to the default value.
+      preferredRemoteType = NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE);
+    }
   }
-  nsAutoString preferredRemoteType = currentRemoteType;
 
   // If we're performing a large allocation load, override the remote type
   // with `LARGE_ALLOCATION_REMOTE_TYPE` to move it into an exclusive content
   // process. If we're already in one, and don't otherwise we force ourselves
   // out of that content process.
-  bool isLargeAllocSwitch = false;
   if (browsingContext->IsTop() &&
       browsingContext->Group()->Toplevels().Length() == 1) {
     if (IsLargeAllocationLoad(browsingContext, mChannel)) {
-      preferredRemoteType.Assign(
-          NS_LITERAL_STRING(LARGE_ALLOCATION_REMOTE_TYPE));
-      isLargeAllocSwitch = true;
+      preferredRemoteType = NS_LITERAL_STRING(LARGE_ALLOCATION_REMOTE_TYPE);
+      replaceBrowsingContext = true;
     } else if (preferredRemoteType.EqualsLiteral(
                    LARGE_ALLOCATION_REMOTE_TYPE)) {
-      preferredRemoteType.Assign(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
-      isLargeAllocSwitch = true;
+      preferredRemoteType = NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE);
+      replaceBrowsingContext = true;
     }
   }
-
-  if (coop ==
-      nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) {
-    // We want documents with SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP COOP
-    // policy to be loaded in a separate process in which we can enable
-    // high-resolution timers.
-    nsAutoCString siteOrigin;
-    resultPrincipal->GetSiteOrigin(siteOrigin);
-    preferredRemoteType.Assign(
-        NS_LITERAL_STRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX));
-    preferredRemoteType.Append(NS_ConvertUTF8toUTF16(siteOrigin));
-  } else if (isCOOPSwitch) {
-    // If we're doing a COOP switch, we do not need any affinity to the current
-    // remote type. Clear it back to the default value.
-    preferredRemoteType.Assign(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
-  }
-  MOZ_DIAGNOSTIC_ASSERT(!contentParent || !preferredRemoteType.IsEmpty(),
-                        "Unexpected empty remote type!");
 
   LOG(
       ("DocumentLoadListener GetRemoteTypeForPrincipal "
@@ -1283,6 +1294,12 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   if (!e10sUtils) {
     LOG(("Process Switch Abort: Could not import E10SUtils"));
     return false;
+  }
+
+  // Get information about the current document loaded in our BrowsingContext.
+  nsCOMPtr<nsIPrincipal> currentPrincipal;
+  if (auto* wgp = browsingContext->GetCurrentWindowGlobal()) {
+    currentPrincipal = wgp->DocumentPrincipal();
   }
 
   nsAutoString remoteType;
@@ -1300,8 +1317,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
        NS_ConvertUTF16toUTF8(remoteType).get()));
 
   // Check if a process switch is needed.
-  if (currentRemoteType == remoteType && !isCOOPSwitch && !isPreloadSwitch &&
-      !isLargeAllocSwitch) {
+  if (currentRemoteType == remoteType && !replaceBrowsingContext) {
     LOG(("Process Switch Abort: type (%s) is compatible",
          NS_ConvertUTF16toUTF8(remoteType).get()));
     return false;
@@ -1325,8 +1341,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   LOG(("Process Switch: Calling ChangeRemoteness"));
   browsingContext
       ->ChangeRemoteness(remoteType, mCrossProcessRedirectIdentifier,
-                         isCOOPSwitch || isLargeAllocSwitch,
-                         /* specificGroup */ 0)
+                         replaceBrowsingContext, specificGroupId)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self = RefPtr{this}](BrowserParent* aBrowserParent) {
