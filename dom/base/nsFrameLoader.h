@@ -99,6 +99,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   typedef mozilla::dom::BrowserParent BrowserParent;
   typedef mozilla::dom::BrowserBridgeChild BrowserBridgeChild;
   typedef mozilla::dom::BrowsingContext BrowsingContext;
+  typedef mozilla::dom::BrowsingContextGroup BrowsingContextGroup;
 
  public:
   // Called by Frame Elements to create a new FrameLoader.
@@ -108,11 +109,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   // Called by nsFrameLoaderOwner::ChangeRemoteness when switching out
   // FrameLoaders.
-  static already_AddRefed<nsFrameLoader> Recreate(Element* aOwner,
-                                                  BrowsingContext* aContext,
-                                                  bool aIsRemote,
-                                                  bool aNetworkCreated,
-                                                  bool aPreserveContext);
+  static already_AddRefed<nsFrameLoader> Recreate(
+      Element* aOwner, BrowsingContext* aContext, BrowsingContextGroup* aGroup,
+      bool aIsRemote, bool aNetworkCreated, bool aPreserveContext);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FRAMELOADER_IID)
 

@@ -86,8 +86,10 @@ nsFrameLoaderOwner::ShouldPreserveBrowsingContext(
 
 void nsFrameLoaderOwner::ChangeRemotenessCommon(
     const ChangeRemotenessContextType& aContextType,
-    bool aSwitchingInProgressLoad, bool aIsRemote,
+    bool aSwitchingInProgressLoad, bool aIsRemote, BrowsingContextGroup* aGroup,
     std::function<void()>& aFrameLoaderInit, mozilla::ErrorResult& aRv) {
+  MOZ_ASSERT_IF(aGroup, aContextType != ChangeRemotenessContextType::PRESERVE);
+
   RefPtr<mozilla::dom::BrowsingContext> bc;
   bool networkCreated = false;
 
@@ -129,7 +131,7 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
     }
 
     mFrameLoader = nsFrameLoader::Recreate(
-        owner, bc, aIsRemote, networkCreated,
+        owner, bc, aGroup, aIsRemote, networkCreated,
         aContextType == ChangeRemotenessContextType::PRESERVE);
     if (NS_WARN_IF(!mFrameLoader)) {
       aRv.Throw(NS_ERROR_FAILURE);
@@ -205,7 +207,7 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   auto shouldPreserve = ShouldPreserveBrowsingContext(
       isRemote, /* replaceBrowsingContext */ false);
   ChangeRemotenessCommon(shouldPreserve, aOptions.mSwitchingInProgressLoad,
-                         isRemote, frameLoaderInit, rv);
+                         isRemote, /* group */ nullptr, frameLoaderInit, rv);
 }
 
 void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
@@ -225,13 +227,15 @@ void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
 
   ChangeRemotenessCommon(ChangeRemotenessContextType::PRESERVE,
                          /* inProgress */ true,
-                         /* isRemote */ true, frameLoaderInit, rv);
+                         /* isRemote */ true, /* group */ nullptr,
+                         frameLoaderInit, rv);
 }
 
 void nsFrameLoaderOwner::ChangeRemotenessToProcess(
     ContentParent* aContentParent, bool aReplaceBrowsingContext,
-    mozilla::ErrorResult& rv) {
+    BrowsingContextGroup* aGroup, mozilla::ErrorResult& rv) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT_IF(aGroup, aReplaceBrowsingContext);
   bool isRemote = aContentParent != nullptr;
 
   std::function<void()> frameLoaderInit = [&] {
@@ -253,7 +257,7 @@ void nsFrameLoaderOwner::ChangeRemotenessToProcess(
   auto shouldPreserve =
       ShouldPreserveBrowsingContext(isRemote, aReplaceBrowsingContext);
   ChangeRemotenessCommon(shouldPreserve, /* inProgress */ true, isRemote,
-                         frameLoaderInit, rv);
+                         aGroup, frameLoaderInit, rv);
 }
 
 void nsFrameLoaderOwner::SubframeCrashed() {
@@ -281,8 +285,8 @@ void nsFrameLoaderOwner::SubframeCrashed() {
   };
 
   ChangeRemotenessCommon(ChangeRemotenessContextType::PRESERVE,
-                         /* inProgress */ false,
-                         /* isRemote */ false, frameLoaderInit, IgnoreErrors());
+                         /* inProgress */ false, /* isRemote */ false,
+                         /* group */ nullptr, frameLoaderInit, IgnoreErrors());
 }
 
 void nsFrameLoaderOwner::UnbindFromTree() {

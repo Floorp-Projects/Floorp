@@ -1325,7 +1325,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   LOG(("Process Switch: Calling ChangeRemoteness"));
   browsingContext
       ->ChangeRemoteness(remoteType, mCrossProcessRedirectIdentifier,
-                         isCOOPSwitch || isLargeAllocSwitch)
+                         isCOOPSwitch || isLargeAllocSwitch,
+                         /* specificGroup */ 0)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self = RefPtr{this}](BrowserParent* aBrowserParent) {
