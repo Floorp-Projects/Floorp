@@ -68,7 +68,7 @@ enum {
 
 }  // namespace
 
-class nsIEventTarget;
+class nsISerialEventTarget;
 
 namespace mozilla {
 class SchedulerGroup;
@@ -210,16 +210,17 @@ class IProtocol : public HasResultCodes {
   // SetEventTargetForActor is called. The receiver when calling
   // SetEventTargetForActor must be the actor that will be the manager for
   // aActor.
-  void SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget);
+  void SetEventTargetForActor(IProtocol* aActor,
+                              nsISerialEventTarget* aEventTarget);
 
   // Replace the event target for the messages of aActor. There must not be
   // any messages of aActor in the task queue, or we might run into some
   // unexpected behavior.
   void ReplaceEventTargetForActor(IProtocol* aActor,
-                                  nsIEventTarget* aEventTarget);
+                                  nsISerialEventTarget* aEventTarget);
 
-  nsIEventTarget* GetActorEventTarget();
-  already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor);
+  nsISerialEventTarget* GetActorEventTarget();
+  already_AddRefed<nsISerialEventTarget> GetActorEventTarget(IProtocol* aActor);
 
   ProcessId OtherPid() const;
 
@@ -411,11 +412,11 @@ class IToplevelProtocol : public IProtocol {
 
   // NOTE: The target actor's Manager must already be set.
   void SetEventTargetForActorInternal(IProtocol* aActor,
-                                      nsIEventTarget* aEventTarget);
+                                      nsISerialEventTarget* aEventTarget);
   void ReplaceEventTargetForActor(IProtocol* aActor,
-                                  nsIEventTarget* aEventTarget);
-  nsIEventTarget* GetActorEventTarget();
-  already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor);
+                                  nsISerialEventTarget* aEventTarget);
+  nsISerialEventTarget* GetActorEventTarget();
+  already_AddRefed<nsISerialEventTarget> GetActorEventTarget(IProtocol* aActor);
 
   ProcessId OtherPid() const;
   void SetOtherProcessId(base::ProcessId aOtherPid);
@@ -432,7 +433,7 @@ class IToplevelProtocol : public IProtocol {
   bool Open(MessageChannel* aChannel, MessageLoop* aMessageLoop,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
-  bool Open(MessageChannel* aChannel, nsIEventTarget* aEventTarget,
+  bool Open(MessageChannel* aChannel, nsISerialEventTarget* aEventTarget,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
   // Open a toplevel actor such that both ends of the actor's channel are on
@@ -513,7 +514,8 @@ class IToplevelProtocol : public IProtocol {
 
   void OnIPCChannelOpened() { ActorConnected(); }
 
-  already_AddRefed<nsIEventTarget> GetMessageEventTarget(const Message& aMsg);
+  already_AddRefed<nsISerialEventTarget> GetMessageEventTarget(
+      const Message& aMsg);
 
  private:
   base::ProcessId OtherPidMaybeInvalid() const { return mOtherPid; }
@@ -535,7 +537,7 @@ class IToplevelProtocol : public IProtocol {
   // worthwhile to remove it before people start depending on it for other weird
   // things.
   Mutex mEventTargetMutex;
-  IDMap<nsCOMPtr<nsIEventTarget>> mEventTargetMap;
+  IDMap<nsCOMPtr<nsISerialEventTarget>> mEventTargetMap;
 
   MessageChannel mChannel;
 };
