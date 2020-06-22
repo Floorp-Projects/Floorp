@@ -557,10 +557,10 @@ static nsCString GetMouseButtonsName(int16_t aButtons) {
     return NS_LITERAL_CSTRING("no buttons");
   }
   nsCString names;
-  if (aButtons & MouseButtonsFlag::eLeftFlag) {
+  if (aButtons & MouseButtonsFlag::ePrimaryFlag) {
     names = "LeftButton";
   }
-  if (aButtons & MouseButtonsFlag::eRightFlag) {
+  if (aButtons & MouseButtonsFlag::eSecondaryFlag) {
     ADD_SEPARATOR_IF_NECESSARY(names);
     names += "RightButton";
   }
