@@ -303,12 +303,11 @@ class ImageBridgeChild final : public PImageBridgeChild,
    */
   bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
-  PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
-                               const ReadLockDescriptor& aReadLock,
-                               LayersBackend aLayersBackend,
-                               TextureFlags aFlags, uint64_t aSerial,
-                               wr::MaybeExternalImageId& aExternalImageId,
-                               nsIEventTarget* aTarget = nullptr) override;
+  PTextureChild* CreateTexture(
+      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
+      wr::MaybeExternalImageId& aExternalImageId,
+      nsISerialEventTarget* aTarget = nullptr) override;
 
   bool IsSameProcess() const override;
 

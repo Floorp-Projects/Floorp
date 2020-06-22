@@ -39,7 +39,7 @@ void VRDisplayPresentation::UpdateXRWebGLLayer(dom::XRWebGLLayer* aLayer) {
   }
 
   dom::HTMLCanvasElement* canvasElement = aLayer->GetCanvas();
-  nsCOMPtr<nsIEventTarget> target =
+  nsCOMPtr<nsISerialEventTarget> target =
       canvasElement->OwnerDoc()->EventTargetFor(TaskCategory::Other);
 
   if (mLayers.Length() == 0) {
@@ -103,7 +103,7 @@ void VRDisplayPresentation::CreateLayers() {
       continue;
     }
 
-    nsCOMPtr<nsIEventTarget> target =
+    nsCOMPtr<nsISerialEventTarget> target =
         canvasElement->OwnerDoc()->EventTargetFor(TaskCategory::Other);
 
     if (mLayers.Length() <= iLayer) {

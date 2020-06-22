@@ -79,7 +79,7 @@ class TextureForwarder : public LayersIPCChannel {
       const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
       LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
       wr::MaybeExternalImageId& aExternalImageId,
-      nsIEventTarget* aTarget = nullptr) = 0;
+      nsISerialEventTarget* aTarget = nullptr) = 0;
 
   /**
    * Returns the CanvasChild for this TextureForwarder.
