@@ -75,6 +75,16 @@ function flattenArguments(lst /* ...*/) {
   return res;
 }
 
+function testInXOriginFrame() {
+  // Check if the test running in an iframe is a cross origin test.
+  try {
+    $("testframe").contentWindow.origin;
+    return false;
+  } catch (e) {
+    return true;
+  }
+}
+
 /**
  * TestRunner: A test runner for SimpleTest
  * TODO:
@@ -356,7 +366,30 @@ TestRunner._makeIframe = function(url, retry) {
     );
   }
   window.scrollTo(0, $("indicator").offsetTop);
-  iframe.src = url;
+  try {
+    let urlObj = new URL(url);
+    if (TestRunner.xOriginTests) {
+      // The test will run in a xorigin iframe, so we pass in additional test params in the
+      // URL since the content process won't be able to access them from the parentRunner
+      // directly.
+      let params = TestRunner.getParameterInfo();
+      urlObj.searchParams.append(
+        "currentTestURL",
+        urlObj.pathname.replace("/tests/", "")
+      );
+      urlObj.searchParams.append("closeWhenDone", params.closeWhenDone);
+      urlObj.searchParams.append("showTestReport", TestRunner.showTestReport);
+      urlObj.searchParams.append("expected", TestRunner.expected);
+      iframe.src = urlObj.href;
+    } else {
+      iframe.src = url;
+    }
+  } catch {
+    // If the provided `url` is not a valid URL (i.e. doesn't include a protocol)
+    // then the new URL() constructor will raise a TypeError. This is expected in the
+    // usual case (i.e. non-xorigin iFrame tests) so set the URL in the usual way.
+    iframe.src = url;
+  }
   iframe.name = url;
   iframe.width = "500";
 };
@@ -367,12 +400,15 @@ TestRunner._makeIframe = function(url, retry) {
  * being finished first.
  */
 TestRunner.getLoadedTestURL = function() {
-  var prefix = "";
-  // handle mochitest-chrome URIs
-  if ($("testframe").contentWindow.location.protocol == "chrome:") {
-    prefix = "chrome://mochitests";
+  if (!testInXOriginFrame()) {
+    var prefix = "";
+    // handle mochitest-chrome URIs
+    if ($("testframe").contentWindow.location.protocol == "chrome:") {
+      prefix = "chrome://mochitests";
+    }
+    return prefix + $("testframe").contentWindow.location.pathname;
   }
-  return prefix + $("testframe").contentWindow.location.pathname;
+  return TestRunner.currentTestURL;
 };
 
 TestRunner.setParameterInfo = function(params) {
@@ -704,34 +740,39 @@ TestRunner.testFinished = function(tests) {
       }
 
       var interstitialURL;
-      if ($("testframe").contentWindow.location.protocol == "chrome:") {
+      if (
+        !testInXOriginFrame() &&
+        $("testframe").contentWindow.location.protocol == "chrome:"
+      ) {
         interstitialURL = "tests/SimpleTest/iframe-between-tests.html";
       } else {
         interstitialURL = "/tests/SimpleTest/iframe-between-tests.html";
       }
       // check if there were test run after SimpleTest.finish, which should never happen
-      $("testframe").contentWindow.addEventListener("unload", function() {
-        var testwin = $("testframe").contentWindow;
-        if (
-          testwin.SimpleTest &&
-          testwin.SimpleTest._tests.length != testwin.SimpleTest.testsLength
-        ) {
-          var wrongtestlength =
-            testwin.SimpleTest._tests.length - testwin.SimpleTest.testsLength;
-          var wrongtestname = "";
-          for (var i = 0; i < wrongtestlength; i++) {
-            wrongtestname =
-              testwin.SimpleTest._tests[testwin.SimpleTest.testsLength + i]
-                .name;
-            TestRunner.structuredLogger.error(
-              TestRunner.currentTestURL +
-                " logged result after SimpleTest.finish(): " +
-                wrongtestname
-            );
+      if (!testInXOriginFrame()) {
+        $("testframe").contentWindow.addEventListener("unload", function() {
+          var testwin = $("testframe").contentWindow;
+          if (
+            testwin.SimpleTest &&
+            testwin.SimpleTest._tests.length != testwin.SimpleTest.testsLength
+          ) {
+            var wrongtestlength =
+              testwin.SimpleTest._tests.length - testwin.SimpleTest.testsLength;
+            var wrongtestname = "";
+            for (var i = 0; i < wrongtestlength; i++) {
+              wrongtestname =
+                testwin.SimpleTest._tests[testwin.SimpleTest.testsLength + i]
+                  .name;
+              TestRunner.structuredLogger.error(
+                TestRunner.currentTestURL +
+                  " logged result after SimpleTest.finish(): " +
+                  wrongtestname
+              );
+            }
+            TestRunner.updateUI([{ result: false }]);
           }
-          TestRunner.updateUI([{ result: false }]);
-        }
-      });
+        });
+      }
       TestRunner._makeIframe(interstitialURL, 0);
     }
 
@@ -890,4 +931,44 @@ TestRunner.updateUI = function(tests) {
   if (TestRunner.repeat > 0) {
     TestRunner.displayLoopErrors("fail-table", tests);
   }
+};
+
+// XOrigin Tests
+// If "--enable-xorigin-tests" is set, mochitests are run in a cross origin iframe.
+// The parent process will run at http://mochi.xorigin-test:8888", and individual
+// mochitests will be launched in a cross-origin iframe at http://mochi.test:8888.
+
+var xOriginDispatchMap = {
+  runner: TestRunner,
+  logger: TestRunner.structuredLogger,
+  addFailedTest: TestRunner.addFailedTest,
+  expectAssertions: TestRunner.expectAssertions,
+  requestLongerTimeout: TestRunner.requestLongerTimeout,
+  testUnloaded: TestRunner.testUnloaded,
+  "structuredLogger.deactivateBuffering":
+    TestRunner.structuredLogger.deactivateBuffering,
+  "structuredLogger.activateBuffering":
+    TestRunner.structuredLogger.activateBuffering,
+  "structuredLogger.testStatus": TestRunner.structuredLogger.testStatus,
+  "structuredLogger.info": TestRunner.structuredLogger.info,
+  testFinished: TestRunner.testFinished,
+};
+
+function xOriginTestRunnerHandler(event) {
+  if (event.data.harnessType != "SimpleTest") {
+    return;
+  }
+  if (event.data.command in xOriginDispatchMap) {
+    xOriginDispatchMap[event.data.command].apply(
+      xOriginDispatchMap[event.data.applyOn],
+      event.data.params
+    );
+  } else {
+    TestRunner.error(`Command ${event.data.command} not found
+      in xOriginDispatchMap`);
+  }
+}
+
+TestRunner.setXOriginEventHandler = function() {
+  window.addEventListener("message", xOriginTestRunnerHandler);
 };

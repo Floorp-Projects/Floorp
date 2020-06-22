@@ -199,7 +199,7 @@ class MessageLogger(object):
     def _fix_test_name(self, message):
         """Normalize a logged test path to match the relative path from the sourcedir.
         """
-        if 'test' in message:
+        if message.get('test') is not None:
             test = message['test']
             for prefix in MessageLogger.TEST_PATH_PREFIXES:
                 if test.startswith(prefix):
@@ -307,7 +307,6 @@ class MessageLogger(object):
 
         if message['action'] == 'test_start':
             self.is_test_running = True
-
             if self.restore_buffering:
                 self.restore_buffering = False
                 self.buffering = True
@@ -1086,6 +1085,11 @@ class MochitestDesktop(object):
                 self.urlOpts.append("jscovDirPrefix=%s" % options.jscov_dir_prefix)
             if options.cleanupCrashes:
                 self.urlOpts.append("cleanupCrashes=true")
+            if "MOZ_XORIGIN_MOCHITEST" in env and \
+                    env["MOZ_XORIGIN_MOCHITEST"] == "1":
+                options.xOriginTests = True
+            if options.xOriginTests:
+                self.urlOpts.append("xOriginTests=true")
 
     def normflavor(self, flavor):
         """
@@ -1129,6 +1133,8 @@ class MochitestDesktop(object):
     def buildTestURL(self, options, scheme='http'):
         if scheme == 'https':
             testHost = "https://example.com:443"
+        elif options.xOriginTests:
+            testHost = "http://mochi.xorigin-test:8888"
         else:
             testHost = "http://mochi.test:8888"
         testURL = "/".join([testHost, self.TEST_PATH])
@@ -2647,6 +2653,7 @@ toolbar#nav-bar {
                 'network.process.enabled', False),
             "verify": options.verify,
             "webrender": options.enable_webrender,
+            "xorigin": options.xOriginTests,
         })
 
         self.setTestRoot(options)
@@ -2918,6 +2925,8 @@ toolbar#nav-bar {
                 self.log.info("runtests.py | Running with e10s: {}".format(options.e10s))
                 self.log.info("runtests.py | Running with fission: {}".format(
                     mozinfo.info.get('fission', False)))
+                self.log.info("runtests.py | Running with cross-origin iframes: {}".format(
+                    mozinfo.info.get('xorigin', False)))
                 self.log.info("runtests.py | Running with serviceworker_e10s: {}".format(
                     mozinfo.info.get('serviceworker_e10s', False)))
                 self.log.info("runtests.py | Running with socketprocess_e10s: {}".format(

@@ -418,6 +418,12 @@ class MochitestArguments(ArgumentContainer):
           "default": False,
           "help": "Run tests with fission (site isolation) enabled.",
           }],
+        [["--enable-xorigin-tests"],
+         {"action": "store_true",
+          "default": False,
+          "dest": "xOriginTests",
+          "help": "Run tests in a cross origin iframe.",
+          }],
         [["--store-chrome-manifest"],
          {"action": "store",
           "help": "Destination path to write a copy of any chrome manifest "
