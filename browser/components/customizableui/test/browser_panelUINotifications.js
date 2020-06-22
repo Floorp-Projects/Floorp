@@ -157,6 +157,68 @@ add_task(async function testSecondaryActionWorkflow() {
 });
 
 /**
+ * This tests that the PanelUI update downloading badge and banner
+ * notification are correctly displayed and that clicking the banner
+ * item calls the main action.
+ */
+add_task(async function testDownloadingBadge() {
+  let options = {
+    gBrowser: window.gBrowser,
+    url: "about:blank",
+  };
+
+  await BrowserTestUtils.withNewTab(options, async function(browser) {
+    let mainActionCalled = false;
+    let mainAction = {
+      callback: () => {
+        mainActionCalled = true;
+      },
+    };
+    // The downloading notification is always displayed in a dismissed state.
+    AppMenuNotifications.showNotification(
+      "update-downloading",
+      mainAction,
+      undefined,
+      { dismissed: true }
+    );
+    is(PanelUI.notificationPanel.state, "closed", "doorhanger is closed.");
+
+    is(
+      PanelUI.menuButton.getAttribute("badge-status"),
+      "update-downloading",
+      "Downloading badge is displaying on PanelUI button."
+    );
+
+    await gCUITestUtils.openMainMenu();
+    isnot(
+      PanelUI.menuButton.getAttribute("badge-status"),
+      "update-downloading",
+      "Downloading badge is hidden on PanelUI button."
+    );
+    let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
+    is(
+      menuItem.label,
+      menuItem.getAttribute("label-update-downloading"),
+      "Showing correct label (downloading)"
+    );
+    is(menuItem.hidden, false, "update-downloading menu item is showing.");
+
+    await gCUITestUtils.hideMainMenu();
+    is(
+      PanelUI.menuButton.getAttribute("badge-status"),
+      "update-downloading",
+      "Downloading badge is shown on PanelUI button."
+    );
+
+    await gCUITestUtils.openMainMenu();
+    menuItem.click();
+    ok(mainActionCalled, "Main action callback was called");
+
+    AppMenuNotifications.removeNotification(/.*/);
+  });
+});
+
+/**
  * We want to ensure a few things with this:
  * - Adding a doorhanger will make a badge disappear
  * - once the notification for the doorhanger is resolved (removed, not just dismissed),

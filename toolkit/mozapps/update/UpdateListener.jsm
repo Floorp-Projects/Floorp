@@ -113,16 +113,18 @@ var UpdateListener = {
     mainAction,
     beforeShowDoorhanger
   ) {
+    const addTelemetry = id => {
+      // No telemetry for the "downloading" state.
+      if (type !== "downloading") {
+        Services.telemetry.getHistogramById(id).add(type);
+      }
+    };
     let action = {
       callback(win, fromDoorhanger) {
         if (fromDoorhanger) {
-          Services.telemetry
-            .getHistogramById("UPDATE_NOTIFICATION_MAIN_ACTION_DOORHANGER")
-            .add(type);
+          addTelemetry("UPDATE_NOTIFICATION_MAIN_ACTION_DOORHANGER");
         } else {
-          Services.telemetry
-            .getHistogramById("UPDATE_NOTIFICATION_MAIN_ACTION_MENU")
-            .add(type);
+          addTelemetry("UPDATE_NOTIFICATION_MAIN_ACTION_MENU");
         }
         mainAction(win);
       },
@@ -131,13 +133,10 @@ var UpdateListener = {
 
     let secondaryAction = {
       callback() {
-        Services.telemetry
-          .getHistogramById("UPDATE_NOTIFICATION_DISMISSED")
-          .add(type);
+        addTelemetry("UPDATE_NOTIFICATION_DISMISSED");
       },
       dismiss: true,
     };
-
     AppMenuNotifications.showNotification(
       "update-" + type,
       action,
@@ -145,13 +144,9 @@ var UpdateListener = {
       { dismissed, beforeShowDoorhanger }
     );
     if (dismissed) {
-      Services.telemetry
-        .getHistogramById("UPDATE_NOTIFICATION_BADGE_SHOWN")
-        .add(type);
+      addTelemetry("UPDATE_NOTIFICATION_BADGE_SHOWN");
     } else {
-      Services.telemetry
-        .getHistogramById("UPDATE_NOTIFICATION_SHOWN")
-        .add(type);
+      addTelemetry("UPDATE_NOTIFICATION_SHOWN");
     }
   },
 
@@ -203,6 +198,15 @@ var UpdateListener = {
         this.openUnsupportedUpdateUrl(win, url)
       );
     }
+  },
+
+  showUpdateDownloadingNotification() {
+    this.showUpdateNotification("downloading", true, true, () => {
+      // The user clicked on the "Downloading update" app menu item.
+      // Code in browser/components/customizableui/content/panelUI.js
+      // receives the following notification and opens the about dialog.
+      Services.obs.notifyObservers(null, "show-update-progress");
+    });
   },
 
   handleUpdateError(update, status) {
@@ -287,6 +291,17 @@ var UpdateListener = {
     }
   },
 
+  handleUpdateDownloading(status) {
+    switch (status) {
+      case "downloading":
+        this.showUpdateDownloadingNotification();
+        break;
+      case "idle":
+        this.reset();
+        break;
+    }
+  },
+
   observe(subject, topic, status) {
     let update = subject && subject.QueryInterface(Ci.nsIUpdate);
 
@@ -298,6 +313,9 @@ var UpdateListener = {
           Services.prefs.clearUserPref(PREF_APP_UPDATE_UNSUPPORTED_URL);
         }
         this.handleUpdateAvailable(update, status);
+        break;
+      case "update-downloading":
+        this.handleUpdateDownloading(status);
         break;
       case "update-staged":
       case "update-downloaded":
