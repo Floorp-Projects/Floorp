@@ -33,6 +33,12 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   initialize: function(conn, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._browser = options && options.browser;
+
+    if (this._browser) {
+      // The browsing context might change over time, which makes this code not ideal.
+      // This should be fixed in Bug 1625027.
+      this.browsingContextID = this._browser.browsingContext.id;
+    }
   },
 
   destroy: function() {
@@ -45,17 +51,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
     // Destroy the actor at the end so that its actorID keeps being defined.
     protocol.Actor.prototype.destroy.call(this);
-  },
-
-  /**
-   * If this Watcher is related to a precise BrowsingContext,
-   * return its Browsing Context ID.
-   *
-   * @return {Integer|null}
-   *         The related browsing context ID, or null if we observe all of them.
-   */
-  get browsingContextID() {
-    return this._browser ? this._browser.browsingContext.id : null;
   },
 
   /*
