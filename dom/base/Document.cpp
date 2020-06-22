@@ -13590,6 +13590,11 @@ static const char* GetFullscreenError(Document* aDoc, CallerType aCallerType) {
     return "FullscreenDeniedHidden";
   }
 
+  if (!FeaturePolicyUtils::IsFeatureAllowed(aDoc,
+                                            NS_LITERAL_STRING("fullscreen"))) {
+    return "FullscreenDeniedFeaturePolicy";
+  }
+
   // Ensure that all containing elements are <iframe> and have allowfullscreen
   // attribute set.
   BrowsingContext* bc = aDoc->GetBrowsingContext();
