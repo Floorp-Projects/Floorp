@@ -445,7 +445,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   // We sometimes use this constructor for security checks for outer windows
   // that aren't top level.
   if (aSecurityFlags != nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK) {
-    MOZ_ASSERT(aOuterWindow->GetInProcessScriptableParent() == aOuterWindow);
+    MOZ_ASSERT(aOuterWindow->GetBrowsingContext()->IsTop());
     MOZ_ASSERT(mTopOuterWindowID == FindTopOuterWindowID(aOuterWindow));
   }
 
