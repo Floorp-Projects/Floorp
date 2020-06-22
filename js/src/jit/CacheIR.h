@@ -1538,8 +1538,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachUnsafeGetReservedSlot(HandleFunction callee,
                                                 InlinableNative native);
   AttachDecision tryAttachIsSuspendedGenerator(HandleFunction callee);
-  AttachDecision tryAttachToString(HandleFunction callee,
-                                   InlinableNative native);
   AttachDecision tryAttachToObject(HandleFunction callee,
                                    InlinableNative native);
   AttachDecision tryAttachToInteger(HandleFunction callee);
@@ -1555,6 +1553,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachRegExpPrototypeOptimizable(HandleFunction callee);
   AttachDecision tryAttachRegExpInstanceOptimizable(HandleFunction callee);
   AttachDecision tryAttachSubstringKernel(HandleFunction callee);
+  AttachDecision tryAttachString(HandleFunction callee);
   AttachDecision tryAttachStringChar(HandleFunction callee, StringChar kind);
   AttachDecision tryAttachStringCharCodeAt(HandleFunction callee);
   AttachDecision tryAttachStringCharAt(HandleFunction callee);
