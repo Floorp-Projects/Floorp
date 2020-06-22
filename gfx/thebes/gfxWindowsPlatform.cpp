@@ -1318,7 +1318,7 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
         adaptorId.EqualsLiteral("0x1916") ||
         adaptorId.EqualsLiteral("0x1902")) {
 #ifdef RELEASE_OR_BETA
-      d3d11.Disable(FeatureStatus::Blocklisted, "Blacklisted, see bug 1351349",
+      d3d11.Disable(FeatureStatus::Blocklisted, "Blocklisted, see bug 1351349",
                     NS_LITERAL_CSTRING("FEATURE_FAILURE_BUG_1351349"));
 #else
       Preferences::SetBool("gfx.compositor.clearstate", true);
