@@ -1241,9 +1241,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       This scalar reports the value of the network.cookie.lifetimePolicy pref.
-    expires: "80"
+    expires: "86"
     kind: uint
     notification_emails:
       - ewright@mozilla.com
@@ -1257,9 +1258,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.sanitize.sanitizeOnShutdown pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1273,9 +1275,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.clearOnShutdown.cookies pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1289,9 +1292,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.clearOnShutdown.history pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1305,9 +1309,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.clearOnShutdown.formdata pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1321,9 +1326,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.clearOnShutdown.downloads pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1337,9 +1343,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.clearOnShutdown.cache pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1353,9 +1360,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.clearOnShutdown.sessions pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1369,9 +1377,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.clearOnShutdown.offlineApps pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1385,9 +1394,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.clearOnShutdown.siteSettings pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1401,9 +1411,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A boolean reporting the value of the privacy.clearOnShutdown.openWindows pref.
-    expires: "80"
+    expires: "86"
     kind: boolean
     notification_emails:
       - ewright@mozilla.com
@@ -1417,9 +1428,10 @@ datasanitization:
     bug_numbers:
       - 1589753
       - 1617241
+      - 1645089
     description: >
       A count of how many "session" cookie exceptions a user has set.
-    expires: "80"
+    expires: "86"
     kind: uint
     notification_emails:
       - ewright@mozilla.com
