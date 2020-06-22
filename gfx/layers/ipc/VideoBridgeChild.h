@@ -48,12 +48,11 @@ class VideoBridgeChild final : public PVideoBridgeChild,
   bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   // TextureForwarder
-  PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
-                               const ReadLockDescriptor& aReadLock,
-                               LayersBackend aLayersBackend,
-                               TextureFlags aFlags, uint64_t aSerial,
-                               wr::MaybeExternalImageId& aExternalImageId,
-                               nsIEventTarget* aTarget = nullptr) override;
+  PTextureChild* CreateTexture(
+      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
+      wr::MaybeExternalImageId& aExternalImageId,
+      nsISerialEventTarget* aTarget = nullptr) override;
 
   // ClientIPCAllocator
   base::ProcessId GetParentPid() const override { return OtherPid(); }
