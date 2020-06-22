@@ -43,7 +43,10 @@
 #searchbar {
   background-color: -moz-Field;
   background-clip: padding-box;
-  border: 1px solid @fieldBorderColor@;
+  /* We use 0.01px because borders are always at least one device pixel, but
+   * 1px may be more than that on higher-resolution displays, and we don't want
+   * fractional-pixel borders */
+  border: 0.01px solid @fieldBorderColor@;
   border-radius: var(--toolbarbutton-border-radius);
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
 }
@@ -161,7 +164,7 @@
 
 #urlbar-input-container {
   /* Match urlbar-background's border. */
-  border: 1px solid transparent;
+  border: 0.01px solid transparent;
 }
 
 #urlbar-container[breakout] {
@@ -719,7 +722,7 @@
   padding: 0 8px;
   border-radius: 1em;
   background-color: hsla(0,0%,0%,.05);
-  border: 1px solid hsla(210,4%,50%,.3);
+  border: 0.01px solid hsla(210,4%,50%,.3);
 }
 
 @keyframes urlbar-zoom-reset-pulse {
