@@ -546,8 +546,12 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   MOZ_RELEASE_ASSERT(entry->pcOffset() == pcOffset);
   MOZ_ASSERT_IF(!entry->isForPrologue(), BytecodeOpHasIC(JSOp(*handler.pc())));
 
+  // Load stub pointer into ICStubReg.
+  masm.loadPtr(AbsoluteAddress(entry).offset(ICEntry::offsetOfFirstStub()),
+               ICStubReg);
+
   CodeOffset returnOffset;
-  EmitCallIC(masm, entry, &returnOffset);
+  EmitCallIC(masm, &returnOffset);
 
   RetAddrEntry::Kind kind = entry->isForPrologue()
                                 ? RetAddrEntry::Kind::PrologueIC
