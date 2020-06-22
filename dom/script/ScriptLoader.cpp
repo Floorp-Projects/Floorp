@@ -229,7 +229,9 @@ ScriptLoader::~ScriptLoader() {
     mPendingChildLoaders[j]->RemoveParserBlockingScriptExecutionBlocker();
   }
 
+  // Cancel any unused preload requests
   for (size_t i = 0; i < mPreloads.Length(); i++) {
+    mPreloads[i].mRequest->Cancel();
     AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::NotUsed);
   }
 }
@@ -2118,8 +2120,7 @@ nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
 
   // Async scripts and blocking scripts can be executed right away.
   if (aRequest->IsAsyncScript() || aRequest->IsBlockingScript()) {
-    nsresult rv = ProcessRequest(aRequest);
-    return rv;
+    return ProcessRequest(aRequest);
   }
 
   // Process other scripts in the proper order.
