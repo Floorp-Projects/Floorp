@@ -35,7 +35,6 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.settings.SupportUtils
 import java.util.Locale
@@ -102,7 +101,6 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
 
         toggleCustomForm(selectedIndex == CUSTOM_INDEX)
 
-        custom_search_engines_learn_more.increaseTapArea(DPS_TO_INCREASE)
         custom_search_engines_learn_more.setOnClickListener {
             (activity as HomeActivity).openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getSumoURLForTopic(

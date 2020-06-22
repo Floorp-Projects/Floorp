@@ -25,7 +25,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
-import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
@@ -55,7 +54,6 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
         val decodedUrl = Uri.decode(searchEngine.buildSearchUrl("%s"))
         edit_search_string.setText(decodedUrl)
 
-        custom_search_engines_learn_more.increaseTapArea(DPS_TO_INCREASE)
         custom_search_engines_learn_more.setOnClickListener {
             (activity as HomeActivity).openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getSumoURLForTopic(
