@@ -3050,13 +3050,13 @@ Span<const ElementType> MakeSpan(
   return aTArray;
 }
 
-template <typename T>
+template <typename T, typename ArrayT>
 class nsTArrayBackInserter
     : public std::iterator<std::output_iterator_tag, void, void, void, void> {
-  nsTArray<T>* mArray;
+  ArrayT* mArray;
 
  public:
-  explicit nsTArrayBackInserter(nsTArray<T>& aArray) : mArray{&aArray} {}
+  explicit nsTArrayBackInserter(ArrayT& aArray) : mArray{&aArray} {}
 
   nsTArrayBackInserter& operator=(const T& aValue) {
     mArray->AppendElement(aValue);
@@ -3076,7 +3076,7 @@ class nsTArrayBackInserter
 
 template <typename T>
 auto MakeBackInserter(nsTArray<T>& aArray) {
-  return nsTArrayBackInserter<T>{aArray};
+  return nsTArrayBackInserter<T, nsTArray<T>>{aArray};
 }
 
 template <typename E, class Alloc>

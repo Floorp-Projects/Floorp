@@ -286,17 +286,10 @@ void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
       continue;
     }
 
-    /// XXX We could use a NonObservingRange here and then
-    /// std::any_of.
-    bool found = false;
-    for (const Group& group : client->mGroups.ForwardRange()) {
-      if (group.mName == groupName) {
-        found = true;
-        break;
-      }
-    }
-
-    if (found) {
+    const auto [begin, end] = client->mGroups.NonObservingRange();
+    if (std::any_of(begin, end, [&groupName](const Group& group) {
+          return group.mName == groupName;
+        })) {
       LogToConsoleDuplicateGroup(aChannel, aURI, groupName);
       continue;
     }
@@ -511,12 +504,15 @@ void ReportingHeader::GetEndpointForReport(const nsAString& aGroupName,
     return;
   }
 
-  for (const Group& group : client->mGroups.ForwardRange()) {
-    if (group.mName == aGroupName) {
-      GetEndpointForReportInternal(group, aEndpointURI);
-      break;
-    }
+  const auto [begin, end] = client->mGroups.NonObservingRange();
+  const auto foundIt = std::find_if(
+      begin, end,
+      [&aGroupName](const Group& group) { return group.mName == aGroupName; });
+  if (foundIt != end) {
+    GetEndpointForReportInternal(*foundIt, aEndpointURI);
   }
+
+  // XXX More explicitly report an error if not found?
 }
 
 /* static */
@@ -535,8 +531,7 @@ void ReportingHeader::GetEndpointForReportInternal(
   int64_t minPriority = -1;
   uint32_t totalWeight = 0;
 
-  /// XXX We could use a NonObservingRange here.
-  for (const Endpoint& endpoint : aGroup.mEndpoints.ForwardRange()) {
+  for (const Endpoint& endpoint : aGroup.mEndpoints.NonObservingRange()) {
     if (minPriority == -1 || minPriority > endpoint.mPriority) {
       minPriority = endpoint.mPriority;
       totalWeight = endpoint.mWeight;
@@ -565,13 +560,16 @@ void ReportingHeader::GetEndpointForReportInternal(
 
   totalWeight = randomNumber % totalWeight;
 
-  /// XXX We could use a NonObservingRange here.
-  for (const Endpoint& endpoint : aGroup.mEndpoints.ForwardRange()) {
-    if (minPriority == endpoint.mPriority && totalWeight < endpoint.mWeight) {
-      Unused << NS_WARN_IF(NS_FAILED(endpoint.mUrl->GetSpec(aEndpointURI)));
-      break;
-    }
+  const auto [begin, end] = aGroup.mEndpoints.NonObservingRange();
+  const auto foundIt = std::find_if(
+      begin, end, [minPriority, totalWeight](const Endpoint& endpoint) {
+        return minPriority == endpoint.mPriority &&
+               totalWeight < endpoint.mWeight;
+      });
+  if (foundIt != end) {
+    Unused << NS_WARN_IF(NS_FAILED(foundIt->mUrl->GetSpec(aEndpointURI)));
   }
+  // XXX More explicitly report an error if not found?
 }
 
 /* static */

@@ -545,6 +545,11 @@ class nsTObserverArray : public nsAutoTObserverArray<T, 0> {
 };
 
 template <typename T, size_t N>
+auto MakeBackInserter(nsAutoTObserverArray<T, N>& aArray) {
+  return mozilla::nsTArrayBackInserter<T, nsAutoTObserverArray<T, N>>{aArray};
+}
+
+template <typename T, size_t N>
 inline void ImplCycleCollectionUnlink(nsAutoTObserverArray<T, N>& aField) {
   aField.Clear();
 }

@@ -5145,8 +5145,7 @@ void WorkerPrivate::AssertIsOnWorkerThread() const {
 void WorkerPrivate::DumpCrashInformation(nsACString& aString) {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
 
-  // XXX We could use a NonObservingRange here.
-  for (const auto* workerRef : data->mWorkerRefs.ForwardRange()) {
+  for (const auto* workerRef : data->mWorkerRefs.NonObservingRange()) {
     if (workerRef->IsPreventingShutdown()) {
       aString.Append("|");
       aString.Append(workerRef->Name());

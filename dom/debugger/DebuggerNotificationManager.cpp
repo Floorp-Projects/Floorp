@@ -44,14 +44,10 @@ bool DebuggerNotificationManager::Detach(
 }
 
 bool DebuggerNotificationManager::HasListeners() {
-  // XXX We could use a NonObservingRange here and std::any_of.
-  for (const auto& observer : mNotificationObservers.ForwardRange()) {
-    if (observer->HasListeners()) {
-      return true;
-    }
-  }
-
-  return false;
+  const auto [begin, end] = mNotificationObservers.NonObservingRange();
+  return std::any_of(begin, end, [](const auto& observer) {
+    return observer->HasListeners();
+  });
 }
 
 void DebuggerNotificationManager::NotifyListeners(
