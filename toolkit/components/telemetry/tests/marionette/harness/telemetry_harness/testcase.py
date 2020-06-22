@@ -107,19 +107,23 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
             msg="UUID does not match regular expression",
         )
 
-    def wait_for_pings(self, action_func, ping_filter, count):
+    def wait_for_pings(self, action_func, ping_filter, count, ping_server=None):
         """Call the given action and wait for pings to come in and return
         the `count` number of pings, that match the given filter.
         """
+
+        if ping_server is None:
+            ping_server = self.ping_server
+
         # Keep track of the current number of pings
-        current_num_pings = len(self.ping_server.pings)
+        current_num_pings = len(ping_server.pings)
 
         # New list to store new pings that satisfy the filter
         filtered_pings = []
 
         def wait_func(*args, **kwargs):
-            # Ignore existing pings in self.ping_server.pings
-            new_pings = self.ping_server.pings[current_num_pings:]
+            # Ignore existing pings in ping_server.pings
+            new_pings = ping_server.pings[current_num_pings:]
 
             # Filter pings to make sure we wait for the correct ping type
             filtered_pings[:] = [p for p in new_pings if ping_filter(p)]
@@ -142,11 +146,11 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
 
         return filtered_pings[:count]
 
-    def wait_for_ping(self, action_func, ping_filter):
+    def wait_for_ping(self, action_func, ping_filter, ping_server=None):
         """Call wait_for_pings() with the given action_func and ping_filter and
         return the first result.
         """
-        [ping] = self.wait_for_pings(action_func, ping_filter, 1)
+        [ping] = self.wait_for_pings(action_func, ping_filter, 1, ping_server=ping_server)
         return ping
 
     def restart_browser(self):
