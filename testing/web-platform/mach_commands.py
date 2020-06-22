@@ -349,8 +349,14 @@ class MachCommands(MachCommandBase):
             if params["product"] is None:
                 params["product"] = "firefox_android"
         if "test_objects" in params:
+            include = []
+            test_types = set()
             for item in params["test_objects"]:
-                params["include"].append(item["name"])
+                include.append(item["name"])
+                test_types.add(item.get("subsuite"))
+            if None not in test_types:
+                params["test_types"] = list(test_types)
+            params["include"] = include
             del params["test_objects"]
         if params.get('debugger', None):
             import mozdebug
