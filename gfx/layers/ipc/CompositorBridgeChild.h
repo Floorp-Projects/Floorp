@@ -126,7 +126,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
                                LayersBackend aLayersBackend,
                                TextureFlags aFlags, uint64_t aSerial,
                                wr::MaybeExternalImageId& aExternalImageId,
-                               nsIEventTarget* aTarget) override;
+                               nsISerialEventTarget* aTarget) override;
 
   already_AddRefed<CanvasChild> GetCanvasChild() final;
 

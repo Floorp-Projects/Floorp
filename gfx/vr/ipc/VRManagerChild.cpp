@@ -369,7 +369,7 @@ bool VRManagerChild::EnumerateVRDisplays() {
 void VRManagerChild::DetectRuntimes() { Unused << SendDetectRuntimes(); }
 
 PVRLayerChild* VRManagerChild::CreateVRLayer(uint32_t aDisplayID,
-                                             nsIEventTarget* aTarget,
+                                             nsISerialEventTarget* aTarget,
                                              uint32_t aGroup) {
   PVRLayerChild* vrLayerChild = AllocPVRLayerChild(aDisplayID, aGroup);
   // Do the DOM labeling.
