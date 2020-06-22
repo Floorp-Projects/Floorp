@@ -75,6 +75,9 @@ show-dir-label =
         [windows] Open Folder
        *[other] Open Directory
     }
+experimental-features-title = Experimental Features
+experimental-features-name = Name
+experimental-features-value = Value
 modified-key-prefs-title = Important Modified Preferences
 modified-prefs-name = Name
 modified-prefs-value = Value

@@ -17,6 +17,11 @@ const { E10SUtils } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+const { FeatureGate } = ChromeUtils.import(
+  "resource://featuregates/FeatureGate.jsm"
+);
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
 // We use a preferences whitelist to make sure we only show preferences that
@@ -404,6 +409,23 @@ var dataProviders = {
     };
 
     done(data);
+  },
+
+  async experimentalFeatures(done) {
+    if (AppConstants.platform == "android") {
+      done();
+      return;
+    }
+    let gates = await FeatureGate.all();
+    done(
+      gates.map(gate => {
+        return [
+          gate.title,
+          gate.preference,
+          Services.prefs.getBoolPref(gate.preference),
+        ];
+      })
+    );
   },
 
   modifiedPreferences: function modifiedPreferences(done) {
