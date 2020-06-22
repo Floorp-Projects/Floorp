@@ -938,10 +938,10 @@ def set_tier(config, tasks):
                 'macosx1014-64-qr/opt',
                 'macosx1014-64-shippable-qr/opt',
                 'macosx1014-64-qr/debug',
-                'android-em-7.0-x86_64/opt',
+                'android-em-7.0-x86_64-shippable/opt',
                 'android-em-7.0-x86_64/debug',
-                'android-em-7.0-x86/opt',
-                'android-em-7.0-x86_64-qr/opt',
+                'android-em-7.0-x86-shippable/opt',
+                'android-em-7.0-x86_64-shippable-qr/opt',
                 'android-em-7.0-x86_64-qr/debug'
             ]:
                 task['tier'] = 1
