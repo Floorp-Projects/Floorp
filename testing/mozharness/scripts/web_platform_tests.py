@@ -281,8 +281,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd.append("--skip-implementation-status=%s" % implementation_status)
 
         # Bug 1643177 - reduce timeout multiplier for web-platform-tests backlog
-        if ('testharness' in test_types and
-            'backlog' not in c["skip_implementation_status"]):
+        if 'backlog' not in c["skip_implementation_status"] and (
+           'testharness' in test_types or 'reftest' in test_types):
             cmd.append("--timeout-multiplier=0.25")
 
         test_paths = set()

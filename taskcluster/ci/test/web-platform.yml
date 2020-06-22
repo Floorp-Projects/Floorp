@@ -155,13 +155,7 @@ web-platform-tests-reftest-backlog:
         by-test-platform:
             windows10-64(?:-pgo|-shippable)?-qr/.*: virtual-with-gpu
             default: virtual
-    chunks:
-        by-test-platform:
-            linux1804-64(-qr|-asan)/.*: 2
-            macosx10.*-64/debug: 2
-            windows.*-(32|64)(-qr)?/debug: 2
-            android.*: 2
-            default: 1
+    chunks: 1
     variants: []
     e10s: true
     run-on-projects:
