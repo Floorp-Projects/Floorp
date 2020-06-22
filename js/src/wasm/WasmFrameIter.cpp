@@ -423,12 +423,11 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
     *entry = masm.currentOffset();
 
     masm.subFromStackPtr(Imm32(sizeof(Frame)));
-    masm.storePtr(ra, Address(StackPointer, Frame::returnAddressOffset())));
+    masm.storePtr(ra, Address(StackPointer, Frame::returnAddressOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
-    masm.storePtr(WasmTlsReg, Address(StackPointer, Frame::tlsOffset())));
+    masm.storePtr(WasmTlsReg, Address(StackPointer, Frame::tlsOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
-    masm.storePtr(FramePointer,
-                  Address(StackPointer, Frame::callerFPOffset())));
+    masm.storePtr(FramePointer, Address(StackPointer, Frame::callerFPOffset()));
     MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
     masm.moveStackPtrTo(FramePointer);
     MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
@@ -495,11 +494,11 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 
-  masm.loadPtr(Address(StackPointer, Frame::callerFPOffset())), FramePointer);
+  masm.loadPtr(Address(StackPointer, Frame::callerFPOffset()), FramePointer);
   poppedFP = masm.currentOffset();
-  masm.loadPtr(Address(StackPointer, Frame::tlsOffset())), WasmTlsReg);
+  masm.loadPtr(Address(StackPointer, Frame::tlsOffset()), WasmTlsReg);
   poppedTlsReg = masm.currentOffset();
-  masm.loadPtr(Address(StackPointer, Frame::returnAddressOffset())), ra);
+  masm.loadPtr(Address(StackPointer, Frame::returnAddressOffset()), ra);
 
   *ret = masm.currentOffset();
   masm.as_jr(ra);
@@ -998,7 +997,9 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         fixedPC = pc;
         fixedFP = fp;
         *unwoundCaller = false;
-        AssertMatchesCallSite(fp->returnAddress, fp->callerFP);
+        AssertMatchesCallSite(
+            Frame::fromUntaggedWasmExitFP(fp)->returnAddress(),
+            Frame::fromUntaggedWasmExitFP(fp)->rawCaller());
       } else if (offsetFromEntry < PushedFP) {
         // On MIPS we rely on register state instead of state saved on
         // stack until the wasm::Frame is completely built.
