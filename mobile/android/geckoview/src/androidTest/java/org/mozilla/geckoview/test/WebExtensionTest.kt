@@ -1101,6 +1101,37 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
+    fun redirectToExtensionResource() {
+        val result = GeckoResult<String>()
+        val messageDelegate = object : WebExtension.MessageDelegate {
+            override fun onMessage(nativeApp: String, message: Any,
+                                   sender: WebExtension.MessageSender): GeckoResult<Any>? {
+                assertEquals(message, "setupReadyStartTest")
+                result.complete(null)
+                return null
+            }
+        }
+
+        val extension = sessionRule.waitForResult(controller.installBuiltIn(
+                "resource://android/assets/web_extensions/redirect-to-android-resource/"))
+
+        extension.setMessageDelegate(messageDelegate, "browser")
+        sessionRule.waitForResult(result)
+
+        // Extension has set up some webRequest listeners to redirect requests.
+        // Open the test page and verify that the extension has redirected the
+        // scripts as expected.
+        mainSession.loadTestPath(TRACKERS_PATH)
+        sessionRule.waitForPageStop()
+
+        val textContent = mainSession.evaluateJS("document.body.textContent.replace(/\\s/g, '')")
+        assertThat("The extension should have rewritten the script requests and the body",
+                textContent as String, equalTo("start,extension-was-here,end"))
+
+        sessionRule.waitForResult(controller.uninstall(extension))
+    }
+
+    @Test
     fun loadWebExtensionPage() {
         val result = GeckoResult<String>()
         var extension: WebExtension? = null
