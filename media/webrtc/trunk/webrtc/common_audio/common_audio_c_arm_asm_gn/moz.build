@@ -26,48 +26,25 @@ LOCAL_INCLUDES += [
     "/media/webrtc/trunk/webrtc/"
 ]
 
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
     DEFINES["NDEBUG"] = True
     DEFINES["NVALGRIND"] = True
 
-if CONFIG["MOZ_DEBUG"] == "1":
-
-    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
-    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
-
-if CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["ANDROID"] = True
-    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
-    DEFINES["DISABLE_NACL"] = True
-    DEFINES["HAVE_SYS_UIO_H"] = True
-    DEFINES["NO_TCMALLOC"] = True
-    DEFINES["USE_OPENSSL_CERTS"] = "1"
-    DEFINES["WEBRTC_ANDROID"] = True
-    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
-    DEFINES["WEBRTC_LINUX"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
-    DEFINES["__GNU_SOURCE"] = "1"
-
-if CONFIG["OS_TARGET"] == "Darwin":
-
-    DEFINES["CR_XCODE_VERSION"] = "0920"
-    DEFINES["NO_TCMALLOC"] = True
-    DEFINES["WEBRTC_MAC"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
-
-if CONFIG["OS_TARGET"] == "DragonFly":
+if CONFIG["OS_TARGET"] == "FreeBSD":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
-if CONFIG["OS_TARGET"] == "FreeBSD":
+if CONFIG["OS_TARGET"] == "DragonFly":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
@@ -82,12 +59,13 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
-if CONFIG["OS_TARGET"] == "NetBSD":
+if CONFIG["OS_TARGET"] == "Darwin":
 
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["CR_XCODE_VERSION"] = "0920"
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
@@ -121,6 +99,28 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["_WINDOWS"] = True
     DEFINES["__STD_C"] = True
 
+if CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["ANDROID"] = True
+    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["USE_OPENSSL_CERTS"] = "1"
+    DEFINES["WEBRTC_ANDROID"] = True
+    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["__GNU_SOURCE"] = "1"
+
+if CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
@@ -138,10 +138,6 @@ if CONFIG["CPU_ARCH"] == "arm":
         "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor_arm.S"
     ]
 
-if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["_FORTIFY_SOURCE"] = "2"
-
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
@@ -155,6 +151,10 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 

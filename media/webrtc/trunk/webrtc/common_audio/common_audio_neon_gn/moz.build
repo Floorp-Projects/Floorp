@@ -32,35 +32,16 @@ UNIFIED_SOURCES += [
     "/media/webrtc/trunk/webrtc/common_audio/resampler/sinc_resampler_neon.cc"
 ]
 
-if not CONFIG["MOZ_DEBUG"]:
-
-    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
-    DEFINES["NDEBUG"] = True
-    DEFINES["NVALGRIND"] = True
-
 if CONFIG["MOZ_DEBUG"] == "1":
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
 
-if CONFIG["OS_TARGET"] == "Android":
+if not CONFIG["MOZ_DEBUG"]:
 
-    DEFINES["ANDROID"] = True
-    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
-    DEFINES["DISABLE_NACL"] = True
-    DEFINES["HAVE_SYS_UIO_H"] = True
-    DEFINES["NO_TCMALLOC"] = True
-    DEFINES["USE_OPENSSL_CERTS"] = "1"
-    DEFINES["WEBRTC_ANDROID"] = True
-    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
-    DEFINES["WEBRTC_LINUX"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
-    DEFINES["__GNU_SOURCE"] = "1"
-
-    OS_LIBS += [
-        "log"
-    ]
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
+    DEFINES["NDEBUG"] = True
+    DEFINES["NVALGRIND"] = True
 
 if CONFIG["OS_TARGET"] == "FreeBSD":
 
@@ -80,13 +61,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     OS_LIBS += [
         "rt"
     ]
-
-if CONFIG["OS_TARGET"] == "NetBSD":
-
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_BSD"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
@@ -125,6 +99,32 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "winmm"
     ]
 
+if CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["ANDROID"] = True
+    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["USE_OPENSSL_CERTS"] = "1"
+    DEFINES["WEBRTC_ANDROID"] = True
+    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["__GNU_SOURCE"] = "1"
+
+    OS_LIBS += [
+        "log"
+    ]
+
+if CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
 if CONFIG["CPU_ARCH"] == "arm":
 
     CXXFLAGS += [
@@ -134,10 +134,6 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
 
-if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["_FORTIFY_SOURCE"] = "2"
-
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
@@ -146,9 +142,21 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
 
@@ -162,14 +170,6 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["DISABLE_NACL"] = True
     DEFINES["NO_TCMALLOC"] = True
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":
-
-    DEFINES["WEBRTC_ARCH_ARM64"] = True
-
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
-
     DEFINES["WEBRTC_ARCH_ARM64"] = True
 
 Library("common_audio_neon_gn")
