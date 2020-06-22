@@ -1775,6 +1775,13 @@ class CreditCards extends AutofillRecords {
       return hasNewComputedFields;
     }
 
+    if ("cc-number" in creditCard && !("cc-type" in creditCard)) {
+      let type = CreditCard.getType(creditCard["cc-number"]);
+      if (type) {
+        creditCard["cc-type"] = type;
+      }
+    }
+
     // Compute split names
     if (!("cc-given-name" in creditCard)) {
       let nameParts = FormAutofillNameUtils.splitName(creditCard["cc-name"]);
