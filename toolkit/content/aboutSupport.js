@@ -326,6 +326,23 @@ var snapshotFormatters = {
     }
   },
 
+  experimentalFeatures(data) {
+    if (!data) {
+      return;
+    }
+    $.append(
+      $("experimental-features-tbody"),
+      data.map(function([titleL10nId, pref, value]) {
+        let title = document.createElement("span");
+        title.setAttribute("data-l10n-id", titleL10nId);
+        return $.new("tr", [
+          $.new("td", [title, new Text(` (${pref})`)], "pref-name"),
+          $.new("td", value, "pref-value"),
+        ]);
+      })
+    );
+  },
+
   modifiedPreferences(data) {
     $.append(
       $("prefs-tbody"),
