@@ -1,5 +1,6 @@
 function f(ta, i) {
-    return ta[i] + ta[i | 0];
+    var x = i + 0.2;
+    return ta[i] + ta[i | 0] + ta[x - 0.2];
 }
 
 var ta = new Int32Array(10);
