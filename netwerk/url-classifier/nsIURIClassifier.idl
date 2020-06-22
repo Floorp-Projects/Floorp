@@ -12,7 +12,7 @@
 [ref] native StringArrayRef(nsTArray<nsCString>);
 
 interface nsIChannel;
-interface nsIEventTarget;
+interface nsISerialEventTarget;
 interface nsIPrincipal;
 interface nsIURI;
 interface nsIUrlClassifierFeatureCallback;
@@ -58,7 +58,7 @@ interface nsIURIClassifier : nsISupports
    * @param aPrincipal
    *        The principal that should be checked by the URI classifier.
    *
-   * @param nsIEventTarget
+   * @param nsISerialEventTarget
    *        Event target for constructing actor in content process.
    *        The event target should be tied to Docgroup/Tabgroup by
    *        using EventTargetFor
@@ -73,7 +73,7 @@ interface nsIURIClassifier : nsISupports
    *         callback will be called.
    */
   boolean classify(in nsIPrincipal aPrincipal,
-                   in nsIEventTarget aEventTarget,
+                   in nsISerialEventTarget aEventTarget,
                    in nsIURIClassifierCallback aCallback);
 
   /**

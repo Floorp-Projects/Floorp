@@ -1695,7 +1695,7 @@ nsresult nsUrlClassifierDBService::Init() {
 // nsChannelClassifier is the only consumer of this interface.
 NS_IMETHODIMP
 nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
-                                   nsIEventTarget* aEventTarget,
+                                   nsISerialEventTarget* aEventTarget,
                                    nsIURIClassifierCallback* c, bool* aResult) {
   NS_ENSURE_ARG(aPrincipal);
   NS_ENSURE_ARG(aResult);
