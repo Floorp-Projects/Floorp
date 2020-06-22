@@ -75,6 +75,31 @@ struct AxisRecord
     AXIS_FLAG_HIDDEN	= 0x0001,
   };
 
+#ifndef HB_DISABLE_DEPRECATED
+  void get_axis_deprecated (hb_ot_var_axis_t *info) const
+  {
+    info->tag = axisTag;
+    info->name_id = axisNameID;
+    info->default_value = defaultValue / 65536.f;
+    /* Ensure order, to simplify client math. */
+    info->min_value = hb_min (info->default_value, minValue / 65536.f);
+    info->max_value = hb_max (info->default_value, maxValue / 65536.f);
+  }
+#endif
+
+  void get_axis_info (unsigned axis_index, hb_ot_var_axis_info_t *info) const
+  {
+    info->axis_index = axis_index;
+    info->tag = axisTag;
+    info->name_id = axisNameID;
+    info->flags = (hb_ot_var_axis_flags_t) (unsigned int) flags;
+    info->default_value = defaultValue / 65536.f;
+    /* Ensure order, to simplify client math. */
+    info->min_value = hb_min (info->default_value, minValue / 65536.f);
+    info->max_value = hb_max (info->default_value, maxValue / 65536.f);
+    info->reserved = 0;
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -115,44 +140,15 @@ struct fvar
   unsigned int get_axis_count () const { return axisCount; }
 
 #ifndef HB_DISABLE_DEPRECATED
-  void get_axis_deprecated (unsigned int axis_index,
-				   hb_ot_var_axis_t *info) const
-  {
-    const AxisRecord &axis = get_axes ()[axis_index];
-    info->tag = axis.axisTag;
-    info->name_id =  axis.axisNameID;
-    info->default_value = axis.defaultValue / 65536.f;
-    /* Ensure order, to simplify client math. */
-    info->min_value = hb_min (info->default_value, axis.minValue / 65536.f);
-    info->max_value = hb_max (info->default_value, axis.maxValue / 65536.f);
-  }
-#endif
-
-  void get_axis_info (unsigned int axis_index,
-		      hb_ot_var_axis_info_t *info) const
-  {
-    const AxisRecord &axis = get_axes ()[axis_index];
-    info->axis_index = axis_index;
-    info->tag = axis.axisTag;
-    info->name_id =  axis.axisNameID;
-    info->flags = (hb_ot_var_axis_flags_t) (unsigned int) axis.flags;
-    info->default_value = axis.defaultValue / 65536.f;
-    /* Ensure order, to simplify client math. */
-    info->min_value = hb_min (info->default_value, axis.minValue / 65536.f);
-    info->max_value = hb_max (info->default_value, axis.maxValue / 65536.f);
-    info->reserved = 0;
-  }
-
-#ifndef HB_DISABLE_DEPRECATED
   unsigned int get_axes_deprecated (unsigned int      start_offset,
 				    unsigned int     *axes_count /* IN/OUT */,
 				    hb_ot_var_axis_t *axes_array /* OUT */) const
   {
     if (axes_count)
     {
-      hb_array_t<const AxisRecord> arr = hb_array (&(this+firstAxis), axisCount).sub_array (start_offset, axes_count);
+      hb_array_t<const AxisRecord> arr = get_axes ().sub_array (start_offset, axes_count);
       for (unsigned i = 0; i < arr.length; ++i)
-	get_axis_deprecated (start_offset + i, axes_array + i);
+	arr[i].get_axis_deprecated (&axes_array[i]);
     }
     return axisCount;
   }
@@ -164,26 +160,24 @@ struct fvar
   {
     if (axes_count)
     {
-      hb_array_t<const AxisRecord> arr = hb_array (&(this+firstAxis), axisCount).sub_array (start_offset, axes_count);
+      hb_array_t<const AxisRecord> arr = get_axes ().sub_array (start_offset, axes_count);
       for (unsigned i = 0; i < arr.length; ++i)
-	get_axis_info (start_offset + i, axes_array + i);
+	arr[i].get_axis_info (start_offset + i, &axes_array[i]);
     }
     return axisCount;
   }
 
 #ifndef HB_DISABLE_DEPRECATED
-  bool find_axis_deprecated (hb_tag_t tag,
-			     unsigned int *axis_index,
-			     hb_ot_var_axis_t *info) const
+  bool
+  find_axis_deprecated (hb_tag_t tag, unsigned *axis_index, hb_ot_var_axis_t *info) const
   {
-    const AxisRecord *axes = get_axes ();
-    unsigned int count = get_axis_count ();
-    for (unsigned int i = 0; i < count; i++)
+    hb_array_t<const AxisRecord> axes = get_axes ();
+    for (unsigned i = 0; i < axes.length; i++)
       if (axes[i].axisTag == tag)
       {
 	if (axis_index)
 	  *axis_index = i;
-	get_axis_deprecated (i, info);
+	axes[i].get_axis_deprecated (info);
 	return true;
       }
     if (axis_index)
@@ -192,15 +186,14 @@ struct fvar
   }
 #endif
 
-  bool find_axis_info (hb_tag_t tag,
-		       hb_ot_var_axis_info_t *info) const
+  bool
+  find_axis_info (hb_tag_t tag, hb_ot_var_axis_info_t *info) const
   {
-    const AxisRecord *axes = get_axes ();
-    unsigned int count = get_axis_count ();
-    for (unsigned int i = 0; i < count; i++)
+    hb_array_t<const AxisRecord> axes = get_axes ();
+    for (unsigned i = 0; i < axes.length; i++)
       if (axes[i].axisTag == tag)
       {
-	get_axis_info (i, info);
+	axes[i].get_axis_info (i, info);
 	return true;
       }
     return false;
@@ -209,7 +202,7 @@ struct fvar
   int normalize_axis_value (unsigned int axis_index, float v) const
   {
     hb_ot_var_axis_info_t axis;
-    get_axis_info (axis_index, &axis);
+    get_axes ()[axis_index].get_axis_info (axis_index, &axis);
 
     v = hb_clamp (v, axis.min_value, axis.max_value);
 
@@ -225,7 +218,7 @@ struct fvar
   float unnormalize_axis_value (unsigned int axis_index, float v) const
   {
     hb_ot_var_axis_info_t axis;
-    get_axis_info (axis_index, &axis);
+    get_axes ()[axis_index].get_axis_info (axis_index, &axis);
 
     if (v == 0)
       return axis.default_value;

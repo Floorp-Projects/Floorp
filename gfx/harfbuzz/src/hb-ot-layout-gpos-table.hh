@@ -1692,6 +1692,12 @@ struct CursivePosFormat1
     else
       pos[child].x_offset = x_offset;
 
+    /* If parent was attached to child, break them free.
+     * https://github.com/harfbuzz/harfbuzz/issues/2469
+     */
+    if (unlikely (pos[parent].attach_chain() == -pos[child].attach_chain()))
+      pos[parent].attach_chain() = 0;
+
     buffer->idx++;
     return_trace (true);
   }
@@ -2559,7 +2565,7 @@ struct GPOS : GSUBGPOS
   bool sanitize (hb_sanitize_context_t *c) const
   { return GSUBGPOS::sanitize<PosLookup> (c); }
 
-  HB_INTERNAL bool is_blacklisted (hb_blob_t *blob,
+  HB_INTERNAL bool is_blocklisted (hb_blob_t *blob,
 				   hb_face_t *face) const;
 
   void collect_variation_indices (hb_collect_variation_indices_context_t *c) const
@@ -2571,6 +2577,11 @@ struct GPOS : GSUBGPOS
       l.dispatch (c);
     }
   }
+
+  void closure_lookups (hb_face_t      *face,
+			const hb_set_t *glyphs,
+			hb_set_t       *lookup_indexes /* IN/OUT */) const
+  { GSUBGPOS::closure_lookups<PosLookup> (face, glyphs, lookup_indexes); }
 
   typedef GSUBGPOS::accelerator_t<GPOS> accelerator_t;
 };

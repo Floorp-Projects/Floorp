@@ -42,26 +42,22 @@ namespace OT {
 
 
 struct hb_intersects_context_t :
-       hb_dispatch_context_t<hb_intersects_context_t, bool, 0>
+       hb_dispatch_context_t<hb_intersects_context_t, bool>
 {
-  const char *get_name () { return "INTERSECTS"; }
   template <typename T>
   return_t dispatch (const T &obj) { return obj.intersects (this->glyphs); }
   static return_t default_return_value () { return false; }
   bool stop_sublookup_iteration (return_t r) const { return r; }
 
   const hb_set_t *glyphs;
-  unsigned int debug_depth;
 
   hb_intersects_context_t (const hb_set_t *glyphs_) :
-			     glyphs (glyphs_),
-			     debug_depth (0) {}
+			     glyphs (glyphs_) {}
 };
 
 struct hb_closure_context_t :
-       hb_dispatch_context_t<hb_closure_context_t, hb_empty_t, 0>
+       hb_dispatch_context_t<hb_closure_context_t>
 {
-  const char *get_name () { return "CLOSURE"; }
   typedef return_t (*recurse_func_t) (hb_closure_context_t *c, unsigned int lookup_index);
   template <typename T>
   return_t dispatch (const T &obj) { obj.closure (this); return hb_empty_t (); }
@@ -102,7 +98,6 @@ struct hb_closure_context_t :
   hb_set_t output[1];
   recurse_func_t recurse_func;
   unsigned int nesting_level_left;
-  unsigned int debug_depth;
 
   hb_closure_context_t (hb_face_t *face_,
 			hb_set_t *glyphs_,
@@ -112,7 +107,6 @@ struct hb_closure_context_t :
 			  glyphs (glyphs_),
 			  recurse_func (nullptr),
 			  nesting_level_left (nesting_level_left_),
-			  debug_depth (0),
 			  done_lookups (done_lookups_),
 			  lookup_count (0)
   {}
@@ -134,9 +128,8 @@ struct hb_closure_context_t :
 };
 
 struct hb_closure_lookups_context_t :
-       hb_dispatch_context_t<hb_closure_lookups_context_t, hb_empty_t, 0>
+       hb_dispatch_context_t<hb_closure_lookups_context_t>
 {
-  const char *get_name () { return "CLOSURE_LOOKUPS"; }
   typedef return_t (*recurse_func_t) (hb_closure_lookups_context_t *c, unsigned lookup_index);
   template <typename T>
   return_t dispatch (const T &obj) { obj.closure_lookups (this); return hb_empty_t (); }
@@ -177,7 +170,6 @@ struct hb_closure_lookups_context_t :
   const hb_set_t *glyphs;
   recurse_func_t recurse_func;
   unsigned int nesting_level_left;
-  unsigned int debug_depth;
 
   hb_closure_lookups_context_t (hb_face_t *face_,
 				const hb_set_t *glyphs_,
@@ -188,7 +180,6 @@ struct hb_closure_lookups_context_t :
 				glyphs (glyphs_),
 				recurse_func (nullptr),
 				nesting_level_left (nesting_level_left_),
-				debug_depth (0),
 				visited_lookups (visited_lookups_),
 				inactive_lookups (inactive_lookups_),
 				lookup_count (0) {}
@@ -202,9 +193,8 @@ struct hb_closure_lookups_context_t :
 };
 
 struct hb_would_apply_context_t :
-       hb_dispatch_context_t<hb_would_apply_context_t, bool, 0>
+       hb_dispatch_context_t<hb_would_apply_context_t, bool>
 {
-  const char *get_name () { return "WOULD_APPLY"; }
   template <typename T>
   return_t dispatch (const T &obj) { return obj.would_apply (this); }
   static return_t default_return_value () { return false; }
@@ -214,7 +204,6 @@ struct hb_would_apply_context_t :
   const hb_codepoint_t *glyphs;
   unsigned int len;
   bool zero_context;
-  unsigned int debug_depth;
 
   hb_would_apply_context_t (hb_face_t *face_,
 			    const hb_codepoint_t *glyphs_,
@@ -223,15 +212,12 @@ struct hb_would_apply_context_t :
 			      face (face_),
 			      glyphs (glyphs_),
 			      len (len_),
-			      zero_context (zero_context_),
-			      debug_depth (0) {}
+			      zero_context (zero_context_) {}
 };
 
-
 struct hb_collect_glyphs_context_t :
-       hb_dispatch_context_t<hb_collect_glyphs_context_t, hb_empty_t, 0>
+       hb_dispatch_context_t<hb_collect_glyphs_context_t>
 {
-  const char *get_name () { return "COLLECT_GLYPHS"; }
   typedef return_t (*recurse_func_t) (hb_collect_glyphs_context_t *c, unsigned int lookup_index);
   template <typename T>
   return_t dispatch (const T &obj) { obj.collect_glyphs (this); return hb_empty_t (); }
@@ -282,7 +268,6 @@ struct hb_collect_glyphs_context_t :
   recurse_func_t recurse_func;
   hb_set_t *recursed_lookups;
   unsigned int nesting_level_left;
-  unsigned int debug_depth;
 
   hb_collect_glyphs_context_t (hb_face_t *face_,
 			       hb_set_t  *glyphs_before, /* OUT.  May be NULL */
@@ -297,8 +282,7 @@ struct hb_collect_glyphs_context_t :
 			      output (glyphs_output ? glyphs_output : hb_set_get_empty ()),
 			      recurse_func (nullptr),
 			      recursed_lookups (hb_set_create ()),
-			      nesting_level_left (nesting_level_left_),
-			      debug_depth (0) {}
+			      nesting_level_left (nesting_level_left_) {}
   ~hb_collect_glyphs_context_t () { hb_set_destroy (recursed_lookups); }
 
   void set_recurse_func (recurse_func_t func) { recurse_func = func; }
@@ -308,10 +292,9 @@ struct hb_collect_glyphs_context_t :
 
 template <typename set_t>
 struct hb_collect_coverage_context_t :
-       hb_dispatch_context_t<hb_collect_coverage_context_t<set_t>, const Coverage &, HB_DEBUG_GET_COVERAGE>
+       hb_dispatch_context_t<hb_collect_coverage_context_t<set_t>, const Coverage &>
 {
-  const char *get_name () { return "GET_COVERAGE"; }
-  typedef const Coverage &return_t;
+  typedef const Coverage &return_t; // Stoopid that we have to dupe this here.
   template <typename T>
   return_t dispatch (const T &obj) { return obj.get_coverage (); }
   static return_t default_return_value () { return Null (Coverage); }
@@ -322,11 +305,9 @@ struct hb_collect_coverage_context_t :
   }
 
   hb_collect_coverage_context_t (set_t *set_) :
-				   set (set_),
-				   debug_depth (0) {}
+				   set (set_) {}
 
   set_t *set;
-  unsigned int debug_depth;
 };
 
 
@@ -549,7 +530,6 @@ struct hb_ot_apply_context_t :
   unsigned int lookup_index;
   unsigned int lookup_props;
   unsigned int nesting_level_left;
-  unsigned int debug_depth;
 
   bool has_glyph_classes;
   bool auto_zwnj;
@@ -579,7 +559,6 @@ struct hb_ot_apply_context_t :
 			lookup_index ((unsigned int) -1),
 			lookup_props (0),
 			nesting_level_left (HB_MAX_NESTING_LEVEL),
-			debug_depth (0),
 			has_glyph_classes (gdef.has_glyph_classes ()),
 			auto_zwnj (true),
 			auto_zwj (true),
@@ -701,7 +680,7 @@ struct hb_ot_apply_context_t :
 
 
 struct hb_get_subtables_context_t :
-       hb_dispatch_context_t<hb_get_subtables_context_t, hb_empty_t, HB_DEBUG_APPLY>
+       hb_dispatch_context_t<hb_get_subtables_context_t>
 {
   template <typename Type>
   static inline bool apply_to (const void *obj, OT::hb_ot_apply_context_t *c)
@@ -737,7 +716,6 @@ struct hb_get_subtables_context_t :
   typedef hb_vector_t<hb_applicable_t> array_t;
 
   /* Dispatch interface. */
-  const char *get_name () { return "GET_SUBTABLES"; }
   template <typename T>
   return_t dispatch (const T &obj)
   {
@@ -748,11 +726,9 @@ struct hb_get_subtables_context_t :
   static return_t default_return_value () { return hb_empty_t (); }
 
   hb_get_subtables_context_t (array_t &array_) :
-			      array (array_),
-			      debug_depth (0) {}
+			      array (array_) {}
 
   array_t &array;
-  unsigned int debug_depth;
 };
 
 
@@ -3277,6 +3253,21 @@ struct GSUBGPOS
   }
 
   template <typename TLookup>
+  void closure_lookups (hb_face_t      *face,
+			const hb_set_t *glyphs,
+                        hb_set_t       *lookup_indexes /* IN/OUT */) const
+  {
+    hb_set_t visited_lookups, inactive_lookups;
+    OT::hb_closure_lookups_context_t c (face, glyphs, &visited_lookups, &inactive_lookups);
+
+    for (unsigned lookup_index : + hb_iter (lookup_indexes))
+      reinterpret_cast<const TLookup &> (get_lookup (lookup_index)).closure_lookups (&c, lookup_index);
+
+    hb_set_union (lookup_indexes, &visited_lookups);
+    hb_set_subtract (lookup_indexes, &inactive_lookups);
+  }
+
+  template <typename TLookup>
   bool subset (hb_subset_layout_context_t *c) const
   {
     TRACE_SUBSET (this);
@@ -3364,7 +3355,7 @@ struct GSUBGPOS
     void init (hb_face_t *face)
     {
       this->table = hb_sanitize_context_t ().reference_table<T> (face);
-      if (unlikely (this->table->is_blacklisted (this->table.get_blob (), face)))
+      if (unlikely (this->table->is_blocklisted (this->table.get_blob (), face)))
       {
 	hb_blob_destroy (this->table.get_blob ());
 	this->table = hb_blob_get_empty ();

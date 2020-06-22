@@ -91,15 +91,10 @@ typedef struct OffsetTable
   {
     if (table_count)
     {
-      if (start_offset >= tables.len)
-	*table_count = 0;
-      else
-	*table_count = hb_min (*table_count, tables.len - start_offset);
-
-      const TableRecord *sub_tables = tables.arrayZ + start_offset;
-      unsigned int count = *table_count;
-      for (unsigned int i = 0; i < count; i++)
-	table_tags[i] = sub_tables[i].tag;
+      + tables.sub_array (start_offset, table_count)
+      | hb_map (&TableRecord::tag)
+      | hb_sink (hb_array (table_tags, *table_count))
+      ;
     }
     return tables.len;
   }

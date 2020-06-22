@@ -53,9 +53,10 @@ struct lcarFormat0
     const LigCaretClassEntry& array = entry_offset ? base+*entry_offset : Null (LigCaretClassEntry);
     if (caret_count)
     {
-      hb_array_t<const HBINT16> arr = array.sub_array (start_offset, caret_count);
-      for (unsigned int i = 0; i < arr.length; ++i)
-	caret_array[i] = font->em_scale_dir (arr[i], direction);
+      + array.sub_array (start_offset, caret_count)
+      | hb_map ([&] (int v) { return font->em_scale_dir (v, direction); })
+      | hb_sink (hb_array (caret_array, *caret_count))
+      ;
     }
     return array.len;
   }
@@ -88,13 +89,15 @@ struct lcarFormat1
     const LigCaretClassEntry& array = entry_offset ? base+*entry_offset : Null (LigCaretClassEntry);
     if (caret_count)
     {
-      hb_array_t<const HBINT16> arr = array.sub_array (start_offset, caret_count);
-      for (unsigned int i = 0; i < arr.length; ++i)
-      {
-	hb_position_t x = 0, y = 0;
-	font->get_glyph_contour_point_for_origin (glyph, arr[i], direction, &x, &y);
-	caret_array[i] = HB_DIRECTION_IS_HORIZONTAL (direction) ? x : y;
-      }
+      + array.sub_array (start_offset, caret_count)
+      | hb_map ([&] (unsigned int point_index)
+		{
+		  hb_position_t x = 0, y = 0;
+		  font->get_glyph_contour_point_for_origin (glyph, point_index, direction, &x, &y);
+		  return HB_DIRECTION_IS_HORIZONTAL (direction) ? x : y;
+		})
+      | hb_sink (hb_array (caret_array, *caret_count))
+      ;
     }
     return array.len;
   }

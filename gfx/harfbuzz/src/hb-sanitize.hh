@@ -121,7 +121,6 @@ struct hb_sanitize_context_t :
        hb_dispatch_context_t<hb_sanitize_context_t, bool, HB_DEBUG_SANITIZE>
 {
   hb_sanitize_context_t () :
-	debug_depth (0),
 	start (nullptr), end (nullptr),
 	max_ops (0), max_subtables (0),
 	writable (false), edit_count (0),
@@ -387,7 +386,6 @@ struct hb_sanitize_context_t :
     return sanitize_blob<Type> (hb_face_reference_table (face, tableTag));
   }
 
-  mutable unsigned int debug_depth;
   const char *start, *end;
   mutable int max_ops, max_subtables;
   private:

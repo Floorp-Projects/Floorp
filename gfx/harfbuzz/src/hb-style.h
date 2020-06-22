@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009  Red Hat, Inc.
+ * Copyright © 2019  Ebrahim Byagowi
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -20,31 +20,24 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- * Red Hat Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_H
-#define HB_H
-#define HB_H_IN
+#ifndef HB_H_IN
+#error "Include <hb.h> instead."
+#endif
 
-#include "hb-blob.h"
-#include "hb-buffer.h"
-#include "hb-common.h"
-#include "hb-deprecated.h"
-#include "hb-draw.h"
-#include "hb-face.h"
-#include "hb-font.h"
-#include "hb-map.h"
-#include "hb-set.h"
-#include "hb-shape.h"
-#include "hb-shape-plan.h"
-#include "hb-style.h"
-#include "hb-unicode.h"
-#include "hb-version.h"
+#ifndef HB_STYLE_H
+#define HB_STYLE_H
+
+#include "hb.h"
 
 HB_BEGIN_DECLS
+
+#ifdef HB_EXPERIMENTAL_API
+HB_EXTERN float
+hb_style_get_value (hb_font_t *font, hb_tag_t style_tag);
+#endif
+
 HB_END_DECLS
 
-#undef HB_H_IN
-#endif /* HB_H */
+#endif /* HB_STYLE_H */

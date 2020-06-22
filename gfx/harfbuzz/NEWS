@@ -1,3 +1,16 @@
+Overview of changes leading to 2.6.8
+Monday, June 22, 2020
+====================================
+- New API to fetch glyph alternates from GSUB table.
+- hb-coretext build fix for macOS < 10.10.
+- Meson build fixes, cmake port removal is postponed but please prepare for
+  it and give us feedback.
+  Autotools is still our main build system however please consider
+  experimenting with meson also for packaging the library.
+- New API:
++hb_ot_layout_lookup_get_glyph_alternates()
+
+
 Overview of changes leading to 2.6.7
 Wednesday, June 3, 2020
 ====================================

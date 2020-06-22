@@ -101,25 +101,23 @@ struct hmtxvmtx
 		  unsigned num_advances)
   {
     unsigned idx = 0;
-    + it
-    | hb_apply ([c, &idx, num_advances] (const hb_item_type<Iterator>& _)
-		{
-		  if (idx < num_advances)
-		  {
-		    LongMetric lm;
-		    lm.advance = _.first;
-		    lm.sb = _.second;
-		    if (unlikely (!c->embed<LongMetric> (&lm))) return;
-		  }
-		  else
-		  {
-		    FWORD *sb = c->allocate_size<FWORD> (FWORD::static_size);
-		    if (unlikely (!sb)) return;
-		    *sb = _.second;
-		  }
-		  idx++;
-		})
-    ;
+    for (auto _ : it)
+    {
+      if (idx < num_advances)
+      {
+	LongMetric lm;
+	lm.advance = _.first;
+	lm.sb = _.second;
+	if (unlikely (!c->embed<LongMetric> (&lm))) return;
+      }
+      else
+      {
+	FWORD *sb = c->allocate_size<FWORD> (FWORD::static_size);
+	if (unlikely (!sb)) return;
+	*sb = _.second;
+      }
+      idx++;
+    }
   }
 
   bool subset (hb_subset_context_t *c) const
