@@ -171,13 +171,13 @@
     "PASS"
   ],
   "Page.click should click the button inside an iframe (click.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Page.click should click the button with fixed position inside an iframe (click.spec.js)": [
     "SKIP"
   ],
   "Page.click should click the button with deviceScaleFactor set (click.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Cookie specs Page.cookies should return no cookies in pristine browser context (cookies.spec.js)": [
     "PASS"
@@ -267,7 +267,7 @@
     "FAIL"
   ],
   "ElementHandle specs ElementHandle.boundingBox should handle nested frames (elementhandle.spec.js)": [
-    "FAIL"
+    "PASS", "FAIL"
   ],
   "ElementHandle specs ElementHandle.boundingBox should return null for invisible elements (elementhandle.spec.js)": [
     "FAIL"
@@ -279,13 +279,13 @@
     "PASS"
   ],
   "ElementHandle specs ElementHandle.boxModel should work (elementhandle.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "ElementHandle specs ElementHandle.boxModel should return null for invisible elements (elementhandle.spec.js)": [
     "FAIL"
   ],
   "ElementHandle specs ElementHandle.contentFrame should work (elementhandle.spec.js)": [
-    "TIMEOUT"
+    "PASS"
   ],
   "ElementHandle specs ElementHandle.click should work (elementhandle.spec.js)": [
     "PASS"
@@ -489,7 +489,7 @@
     "PASS"
   ],
   "Evaluation specs Page.evaluate should throw if elementHandles are from other frames (evaluation.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Evaluation specs Page.evaluate should simulate a user gesture (evaluation.spec.js)": [
     "FAIL"
@@ -513,10 +513,10 @@
     "FAIL"
   ],
   "Evaluation specs Frame.evaluate should have different execution contexts (evaluation.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Evaluation specs Frame.evaluate should have correct execution contexts (evaluation.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Evaluation specs Frame.evaluate should execute after cross-site navigation (evaluation.spec.js)": [
     "PASS"
@@ -531,16 +531,16 @@
     "PASS"
   ],
   "Frame specs Frame.executionContext should work (frame.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Frame specs Frame.evaluateHandle should work (frame.spec.js)": [
     "PASS"
   ],
   "Frame specs Frame.evaluate should throw for detached frames (frame.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Frame specs Frame Management should handle nested frames (frame.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Frame specs Frame Management should send events when frames are manipulated dynamically (frame.spec.js)": [
     "FAIL"
@@ -561,16 +561,16 @@
     "FAIL"
   ],
   "Frame specs Frame Management should report frame from-inside shadow DOM (frame.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Frame specs Frame Management should report frame.name() (frame.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Frame specs Frame Management should report frame.parent() (frame.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Frame specs Frame Management should report different frame instance when frame re-attaches (frame.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "ignoreHTTPSErrors should work (ignorehttpserrors.spec.js)": [
     "PASS"
@@ -579,7 +579,7 @@
     "FAIL"
   ],
   "ignoreHTTPSErrors should work with mixed content (ignorehttpserrors.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "ignoreHTTPSErrors Response.securityDetails should work (ignorehttpserrors.spec.js)": [
     "FAIL"
@@ -660,7 +660,7 @@
     "PASS"
   ],
   "Keyboard should press the metaKey (keyboard.spec.js)": [
-    "FAIL"
+    "PASS, FAIL"
   ],
   "Keyboard should move with the arrow keys (keyboard.spec.js)": [
     "PASS"
@@ -675,7 +675,7 @@
     "FAIL"
   ],
   "Keyboard should report shiftKey (keyboard.spec.js)": [
-    "PASS"
+    "PASS", "FAIL"
   ],
   "Keyboard should report multiple modifiers (keyboard.spec.js)": [
     "PASS"
@@ -708,7 +708,7 @@
     "FAIL"
   ],
   "Keyboard should press the meta key (keyboard.spec.js)": [
-    "FAIL"
+    "PASS", "FAIL"
   ],
   "Launcher specs Puppeteer BrowserFetcher should download and extract chrome linux binary (launcher.spec.js)": [
     "PASS"
@@ -756,7 +756,7 @@
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should have custom URL when launching browser (launcher.spec.js)": [
-    "TIMEOUT"
+    "PASS", "TIMEOUT"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should set the default viewport (launcher.spec.js)": [
     "PASS"
@@ -786,7 +786,7 @@
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.connect should be able to reconnect to a disconnected browser (launcher.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.connect should be able to connect to the same page simultaneously (launcher.spec.js)": [
     "FAIL"
@@ -816,7 +816,7 @@
     "FAIL", "PASS"
   ],
   "Mouse should trigger hover state (mouse.spec.js)": [
-    "FAIL"
+    "PASS", "FAIL"
   ],
   "Mouse should trigger hover state with removed window.Node (mouse.spec.js)": [
     "FAIL"
@@ -825,7 +825,7 @@
     "PASS"
   ],
   "Mouse should tween mouse movement (mouse.spec.js)": [
-    "FAIL"
+    "PASS", "FAIL"
   ],
   "Mouse should work with mobile viewports and cross process navigations (mouse.spec.js)": [
     "PASS"
@@ -846,7 +846,7 @@
     "PASS"
   ],
   "navigation Page.goto should work with subframes return 204 (navigation.spec.js)": [
-    "PASS"
+    "TIMEOUT"
   ],
   "navigation Page.goto should fail when server returns 204 (navigation.spec.js)": [
     "TIMEOUT"
@@ -963,7 +963,7 @@
     "FAIL"
   ],
   "navigation Frame.goto should reject when frame detaches (navigation.spec.js)": [
-    "FAIL"
+    "TIMEOUT"
   ],
   "navigation Frame.goto should return matching responses (navigation.spec.js)": [
     "TIMEOUT"
@@ -972,7 +972,7 @@
     "FAIL"
   ],
   "navigation Frame.waitForNavigation should fail when frame detaches (navigation.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "navigation Page.reload should work (navigation.spec.js)": [
     "PASS"
@@ -990,7 +990,7 @@
     "PASS"
   ],
   "network Request.frame should work for subframe navigation request (network.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "network Request.frame should work for fetch requests (network.spec.js)": [
     "PASS"
@@ -1821,13 +1821,13 @@
     "PASS"
   ],
   "waittask specs Frame.waitForSelector Page.waitForSelector is shortcut for main frame (waittask.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "waittask specs Frame.waitForSelector should run in specified frame (waittask.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "waittask specs Frame.waitForSelector should throw when frame is detached (waittask.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "waittask specs Frame.waitForSelector should survive cross-process navigation (waittask.spec.js)": [
     "PASS"
@@ -1872,10 +1872,10 @@
     "PASS"
   ],
   "waittask specs Frame.waitForXPath should run in specified frame (waittask.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "waittask specs Frame.waitForXPath should throw when frame is detached (waittask.spec.js)": [
-    "FAIL"
+    "PASS"
   ],
   "waittask specs Frame.waitForXPath hidden should wait for display: none (waittask.spec.js)": [
     "PASS"
