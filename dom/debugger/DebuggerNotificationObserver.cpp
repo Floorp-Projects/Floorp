@@ -96,10 +96,10 @@ bool DebuggerNotificationObserver::Disconnect(
 
 bool DebuggerNotificationObserver::AddListener(
     DebuggerNotificationCallback& aHandlerFn) {
-  nsTObserverArray<RefPtr<DebuggerNotificationCallback>>::ForwardIterator iter(
-      mEventListenerCallbacks);
-  while (iter.HasMore()) {
-    if (*iter.GetNext().get() == aHandlerFn) {
+  // XXX We could use a NonObservingRange here and std::any_of.
+  for (const RefPtr<DebuggerNotificationCallback>& callback :
+       mEventListenerCallbacks.ForwardRange()) {
+    if (*callback == aHandlerFn) {
       return false;
     }
   }
@@ -139,12 +139,9 @@ void DebuggerNotificationObserver::NotifyListeners(
   RefPtr<DebuggerNotification> debuggerNotification(
       aNotification->CloneInto(mOwnerGlobal));
 
-  nsTObserverArray<RefPtr<DebuggerNotificationCallback>>::ForwardIterator iter(
-      mEventListenerCallbacks);
-
-  while (iter.HasMore()) {
-    RefPtr<DebuggerNotificationCallback> cb(iter.GetNext());
-    cb->Call(*debuggerNotification);
+  for (RefPtr<DebuggerNotificationCallback> callback :
+       mEventListenerCallbacks.ForwardRange()) {
+    callback->Call(*debuggerNotification);
   }
 }
 
