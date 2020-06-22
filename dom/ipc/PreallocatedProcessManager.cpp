@@ -62,8 +62,6 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   void Disable();
   void CloseProcesses();
 
-  void ObserveProcessShutdown(nsISupports* aSubject);
-
   bool IsEmpty() const {
     return mPreallocatedProcesses.empty() && !mLaunchInProgress;
   }
@@ -85,7 +83,6 @@ uint32_t PreallocatedProcessManagerImpl::sNumBlockers = 0;
 bool PreallocatedProcessManagerImpl::sShutdown = false;
 
 const char* const PreallocatedProcessManagerImpl::kObserverTopics[] = {
-    "ipc:content-shutdown",
     "memory-pressure",
     "profile-change-teardown",
     NS_XPCOM_SHUTDOWN_OBSERVER_ID,
@@ -140,9 +137,7 @@ NS_IMETHODIMP
 PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
                                         const char* aTopic,
                                         const char16_t* aData) {
-  if (!strcmp("ipc:content-shutdown", aTopic)) {
-    ObserveProcessShutdown(aSubject);
-  } else if (!strcmp("nsPref:changed", aTopic)) {
+  if (!strcmp("nsPref:changed", aTopic)) {
     // The only other observer we registered was for our prefs.
     RereadPrefs();
   } else if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic) ||
@@ -202,7 +197,7 @@ already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
     if (process) {
       MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
               ("Reuse " DEFAULT_REMOTE_TYPE " process %p",
-               mPreallocatedE10SProcess.get()));
+               process.get()));
     }
   }
   if (!process && !mPreallocatedProcesses.empty()) {
@@ -245,6 +240,13 @@ bool PreallocatedProcessManagerImpl::Provide(ContentParent* aParent) {
 
 void PreallocatedProcessManagerImpl::Erase(ContentParent* aParent) {
   // Ensure this ContentParent isn't cached
+  for (auto it = mPreallocatedProcesses.begin();
+       it != mPreallocatedProcesses.end(); it++) {
+    if (*it == aParent) {
+      mPreallocatedProcesses.erase(it);
+      break;
+    }
+  }
   if (mPreallocatedE10SProcess == aParent) {
     mPreallocatedE10SProcess = nullptr;
   }
@@ -385,25 +387,6 @@ void PreallocatedProcessManagerImpl::CloseProcesses() {
         ContentParent::SEND_SHUTDOWN_MESSAGE);
     mPreallocatedE10SProcess = nullptr;
   }
-}
-
-void PreallocatedProcessManagerImpl::ObserveProcessShutdown(
-    nsISupports* aSubject) {
-  nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE_VOID(props);
-
-  uint64_t childID = CONTENT_PROCESS_ID_UNKNOWN;
-  props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
-  NS_ENSURE_TRUE_VOID(childID != CONTENT_PROCESS_ID_UNKNOWN);
-
-  for (auto it = mPreallocatedProcesses.begin();
-       it != mPreallocatedProcesses.end(); it++) {
-    if (childID == (*it)->ChildID()) {
-      mPreallocatedProcesses.erase(it);
-      break;
-    }
-  }
-  // The ContentParent is responsible for removing itself as a blocker
 }
 
 inline PreallocatedProcessManagerImpl*

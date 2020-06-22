@@ -164,6 +164,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDocShell.h"
 #include "nsEmbedCID.h"
+#include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashPropertyBag.h"
@@ -922,6 +923,8 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
       !aRemoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE) &&  // Bug 1638119
       (p = PreallocatedProcessManager::Take(aRemoteType)) &&
       !p->mShutdownPending) {
+    MOZ_DIAGNOSTIC_ASSERT(!p->IsDead());
+
     // p may be a preallocated process, or (if not PREALLOC_REMOTE_TYPE)
     // a perviously-used process that's being recycled.  Currently this is
     // only done for short-duration web (DEFAULT_REMOTE_TYPE) processes
@@ -1635,6 +1638,9 @@ void ContentParent::ShutDownMessageManager() {
 
 void ContentParent::AddToPool(nsTArray<ContentParent*>& aPool) {
   MOZ_DIAGNOSTIC_ASSERT(!mIsInPool);
+  MOZ_DIAGNOSTIC_ASSERT(!IsDead());
+  MOZ_DIAGNOSTIC_ASSERT(!mShutdownPending);
+  MOZ_DIAGNOSTIC_ASSERT(!mCalledKillHard);
   aPool.AppendElement(this);
   mIsInPool = true;
 }
@@ -1707,6 +1713,8 @@ void ContentParent::MarkAsDead() {
   if (!mShutdownPending) {
     RemoveFromList();
   }
+
+  PreallocatedProcessManager::Erase(this);
 
 #ifdef MOZ_WIDGET_ANDROID
   if (mLifecycleState == LifecycleState::ALIVE) {
@@ -1939,7 +1947,6 @@ bool ContentParent::TryToRecycle() {
        (unsigned int)ChildID(), (TimeStamp::Now() - mActivateTS).ToSeconds()));
 
   if (mShutdownPending || mCalledKillHard || !IsAlive() ||
-      !mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) ||
       (TimeStamp::Now() - mActivateTS).ToSeconds() > kMaxLifeSpan) {
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("TryToRecycle did not take ownership of %p", this));
