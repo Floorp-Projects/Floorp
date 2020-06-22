@@ -21,6 +21,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/URLPreloader.h"
 #include "nsIRunnable.h"
+#include "nsISupportsPriority.h"
 #include "nsITimedChannel.h"
 #include "nsICachingChannel.h"
 #include "nsSyncLoadService.h"
@@ -411,6 +412,14 @@ SheetLoadData::AfterProcessNextEvent(nsIThreadInternal* aThread,
   FireLoadEvent(aThread);
   return NS_OK;
 }
+
+void SheetLoadData::PrioritizeAsPreload(nsIChannel* aChannel) {
+  if (nsCOMPtr<nsISupportsPriority> sp = do_QueryInterface(aChannel)) {
+    sp->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
+  }
+}
+
+void SheetLoadData::PrioritizeAsPreload() { PrioritizeAsPreload(Channel()); }
 
 void SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread) {
   // First remove ourselves as a thread observer.  But we need to keep
@@ -1239,6 +1248,9 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
 
   SheetLoadDataHashKey key(aLoadData);
   mLoadsPerformed.PutEntry(key);
+
+  auto preloadKey = PreloadHashKey::CreateAsStyle(aLoadData);
+  bool coalescedLoad = false;
   if (mSheets) {
     // If we have at least one other load ongoing, then we can defer it until
     // all non-pending loads are done.
@@ -1249,15 +1261,21 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
       mSheets->DeferSheetLoad(aLoadData);
       return NS_OK;
     }
-    if (mSheets->CoalesceLoad(key, aLoadData, aSheetState)) {
+
+    if ((coalescedLoad = mSheets->CoalesceLoad(key, aLoadData, aSheetState))) {
       if (aSheetState == SheetState::Pending) {
         ++mPendingLoadCount;
+        return NS_OK;
       }
-
-      // All done here; once the load completes we'll be marked complete
-      // automatically
-      return NS_OK;
     }
+  }
+
+  aLoadData.NotifyOpen(preloadKey, mDocument,
+                       aLoadData.mIsPreload == IsPreload::FromLink);
+  if (coalescedLoad) {
+    // All done here; once the load completes we'll be marked complete
+    // automatically.
+    return NS_OK;
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup;
@@ -1339,8 +1357,8 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
       cos->AddClassFlags(nsIClassOfService::Leader);
     }
     if (aLoadData.mIsPreload == IsPreload::FromLink) {
-      StreamLoader::PrioritizeAsPreload(channel);
-      StreamLoader::AddLoadBackgroundFlag(channel);
+      SheetLoadData::PrioritizeAsPreload(channel);
+      SheetLoadData::AddLoadBackgroundFlag(channel);
     }
   }
 
@@ -1414,16 +1432,12 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
                         nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, mDocument);
   }
 
-  auto preloadKey = PreloadHashKey::CreateAsStyle(aLoadData);
-  streamLoader->NotifyOpen(preloadKey, channel, mDocument,
-                           aLoadData.mIsPreload == IsPreload::FromLink);
-
   rv = channel->AsyncOpen(streamLoader);
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to create stream loader"));
-    // ChannelOpenFailed makes sure that <link preload> nodes will get the
-    // proper notification about not being able to load this resource.
     streamLoader->ChannelOpenFailed(rv);
+    // NOTE: NotifyStop will be done in SheetComplete -> NotifyObservers.
+    aLoadData.NotifyStart(channel);
     SheetComplete(aLoadData, rv);
     return rv;
   }
@@ -1497,6 +1511,7 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
   if (aData.mURI) {
     MOZ_DIAGNOSTIC_ASSERT(mOngoingLoadCount);
     --mOngoingLoadCount;
+    aData.NotifyStop(aStatus);
   }
 
   if (aData.mMustNotify) {
