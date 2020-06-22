@@ -9,6 +9,7 @@
 #include "BasicLayers.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
@@ -2630,6 +2631,10 @@ void WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData() {
           break;
         case WebRenderUserData::UserDataType::eLocalCanvas:
           mLastLocalCanvasDatas.RemoveEntry(data->AsLocalCanvasData());
+          break;
+        case WebRenderUserData::UserDataType::eAnimation:
+          EffectCompositor::ClearIsRunningOnCompositor(
+              frame, GetDisplayItemTypeFromKey(data->GetDisplayItemKey()));
           break;
         default:
           break;
