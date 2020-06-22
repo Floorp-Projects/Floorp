@@ -1325,7 +1325,7 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     // the loop above, we need to clean up them here. Note that, this
     // could clear once listeners handled in some outer level as well,
     // but that should not affect the result.
-    mListeners.RemoveElementsBy([](const Listener& aListener) {
+    mListeners.NonObservingRemoveElementsBy([](const Listener& aListener) {
       return aListener.mListenerType == Listener::eNoListener;
     });
     NotifyEventListenerRemoved(aEvent->mSpecifiedEventType);
