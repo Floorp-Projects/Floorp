@@ -258,7 +258,7 @@ class ICEntry {
     return script->offsetToPC(pcOffset());
   }
 
-  static inline size_t offsetOfFirstStub() {
+  static constexpr size_t offsetOfFirstStub() {
     return offsetof(ICEntry, firstStub_);
   }
 
