@@ -667,12 +667,7 @@ def set_defaults(config, tasks):
         task.setdefault('loopback-audio', False)
         task.setdefault('loopback-video', False)
         task.setdefault('limit-platforms', [])
-        # Bug 1602863 - temporarily in place while ubuntu1604 and ubuntu1804
-        # both exist in the CI.
-        if ('linux1804' in task['test-platform']):
-            task.setdefault('docker-image', {'in-tree': 'ubuntu1804-test'})
-        else:
-            task.setdefault('docker-image', {'in-tree': 'desktop1604-test'})
+        task.setdefault('docker-image', {'in-tree': 'ubuntu1804-test'})
         task.setdefault('checkout', False)
         task.setdefault('require-signed-extensions', False)
         task.setdefault('variants', [])
