@@ -29,7 +29,7 @@ use crate::resource_cache::{ResourceCache};
 use crate::scene::{BuiltScene, SceneProperties};
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
-use crate::util::MaxRect;
+use crate::util::{MaxRect, VecHelper};
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -126,6 +126,8 @@ pub struct FrameBuilder {
     // We keep them here to avoid reallocations.
     #[cfg_attr(any(feature = "capture", feature = "replay"), serde(skip))]
     surfaces: Vec<SurfaceInfo>,
+    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(skip))]
+    dirty_region_stack: Vec<DirtyRegion>,
     #[cfg_attr(any(feature = "capture", feature = "replay"), serde(skip))]
     picture_update_buffers: PictureUpdateStateBuffers,
 }
@@ -245,6 +247,7 @@ impl FrameBuilder {
             pending_retained_tiles: RetainedTiles::new(),
             globals: FrameGlobalResources::empty(),
             surfaces: Vec::new(),
+            dirty_region_stack: Vec::new(),
             picture_update_buffers: PictureUpdateStateBuffers::default(),
         }
     }
@@ -441,7 +444,7 @@ impl FrameBuilder {
             transforms: transform_palette,
             segment_builder: SegmentBuilder::new(),
             surfaces: &mut self.surfaces,
-            dirty_region_stack: Vec::new(),
+            dirty_region_stack: self.dirty_region_stack.take().cleared(),
             composite_state,
         };
 
@@ -508,6 +511,8 @@ impl FrameBuilder {
         );
 
         frame_state.pop_dirty_region();
+
+        self.dirty_region_stack = frame_state.dirty_region_stack.take();
 
         {
             profile_marker!("BlockOnResources");
