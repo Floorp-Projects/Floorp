@@ -17,11 +17,13 @@
 
 web-platform-tests:
     - web-platform-tests
-    - web-platform-tests-backlog
     - web-platform-tests-crashtest
     - web-platform-tests-reftest
-    - web-platform-tests-reftest-backlog
     - web-platform-tests-wdspec
+
+web-platform-tests-backlog:
+    - web-platform-tests-backlog
+    - web-platform-tests-reftest-backlog
 
 web-platform-tests-wdspec-headless:
     - web-platform-tests-wdspec-headless
@@ -412,12 +414,6 @@ macosx1014-64-tests:
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
-    - web-platform-tests
-    - web-platform-tests-backlog
-    - web-platform-tests-crashtest
-    - web-platform-tests-reftest
-    - web-platform-tests-reftest-backlog
-    - web-platform-tests-wdspec
     - xpcshell
 
 macosx1014-64-qr-tests:
