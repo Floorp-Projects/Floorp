@@ -1654,8 +1654,8 @@ pub struct PrimitiveScratchBuffer {
     pub debug_items: Vec<DebugItem>,
 }
 
-impl PrimitiveScratchBuffer {
-    pub fn new() -> Self {
+impl Default for PrimitiveScratchBuffer {
+    fn default() -> Self {
         PrimitiveScratchBuffer {
             clip_mask_instances: Vec::new(),
             glyph_keys: GlyphKeyStorage::new(0),
@@ -1668,7 +1668,9 @@ impl PrimitiveScratchBuffer {
             prim_info: Vec::new(),
         }
     }
+}
 
+impl PrimitiveScratchBuffer {
     pub fn recycle(&mut self, recycler: &mut Recycler) {
         recycler.recycle_vec(&mut self.clip_mask_instances);
         recycler.recycle_vec(&mut self.prim_info);
@@ -1990,9 +1992,9 @@ impl PrimitiveStore {
                 };
 
                 if is_passthrough {
-                    let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.prim_info.len() as u32);
+                    let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.primitive.prim_info.len() as u32);
 
-                    frame_state.scratch.prim_info.push(
+                    frame_state.scratch.primitive.prim_info.push(
                         PrimitiveVisibility {
                             clipped_world_rect: WorldRect::max_rect(),
                             clip_chain: ClipChainInstance::empty(),
@@ -2191,7 +2193,7 @@ impl PrimitiveStore {
                         };
                         if debug_color.a != 0.0 {
                             let debug_rect = clipped_world_rect * frame_context.global_device_pixel_scale;
-                            frame_state.scratch.push_debug_rect(debug_rect, debug_color, debug_color.scale_alpha(0.5));
+                            frame_state.scratch.primitive.push_debug_rect(debug_rect, debug_color, debug_color.scale_alpha(0.5));
                         }
                     } else if frame_context.debug_flags.contains(::api::DebugFlags::OBSCURE_IMAGES) {
                         let is_image = matches!(
@@ -2202,17 +2204,17 @@ impl PrimitiveStore {
                             // We allow "small" images, since they're generally UI elements.
                             let rect = clipped_world_rect * frame_context.global_device_pixel_scale;
                             if rect.size.width > 70.0 && rect.size.height > 70.0 {
-                                frame_state.scratch.push_debug_rect(rect, debug_colors::PURPLE, debug_colors::PURPLE);
+                                frame_state.scratch.primitive.push_debug_rect(rect, debug_colors::PURPLE, debug_colors::PURPLE);
                             }
                         }
                     }
 
-                    let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.prim_info.len() as u32);
+                    let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.primitive.prim_info.len() as u32);
                     if prim_instance.is_chased() {
                         println!("\tvisible {:?} with {:?}", vis_index, combined_local_clip_rect);
                     }
 
-                    frame_state.scratch.prim_info.push(
+                    frame_state.scratch.primitive.prim_info.push(
                         PrimitiveVisibility {
                             clipped_world_rect,
                             clip_chain,
@@ -2365,7 +2367,7 @@ impl PrimitiveStore {
                         // Tighten the clip rect because decomposing the repeated image can
                         // produce primitives that are partially covering the original image
                         // rect and we want to clip these extra parts out.
-                        let prim_info = &frame_state.scratch.prim_info[prim_instance.visibility_info.0 as usize];
+                        let prim_info = &frame_state.scratch.primitive.prim_info[prim_instance.visibility_info.0 as usize];
                         let tight_clip_rect = prim_info
                             .combined_local_clip_rect
                             .intersection(&common_data.prim_rect).unwrap();

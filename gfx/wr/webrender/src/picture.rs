@@ -133,7 +133,7 @@ use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::collections::hash_map::Entry;
 use crate::texture_cache::TextureCacheHandle;
-use crate::util::{MaxRect, VecHelper, RectHelpers, MatrixHelpers};
+use crate::util::{MaxRect, VecHelper, RectHelpers, MatrixHelpers, Recycler};
 use crate::filterdata::{FilterDataHandle};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use ron;
@@ -3812,31 +3812,36 @@ impl TileCacheInstance {
         // When under test, record a copy of the dirty region to support
         // invalidation testing in wrench.
         if frame_context.config.testing {
-            frame_state.scratch.recorded_dirty_regions.push(self.dirty_region.record());
+            frame_state.scratch.primitive.recorded_dirty_regions.push(self.dirty_region.record());
         }
     }
 }
 
-pub struct PictureUpdateStateBuffers {
+pub struct PictureScratchBuffer {
     surface_stack: Vec<SurfaceIndex>,
     picture_stack: Vec<PictureInfo>,
 }
 
-impl Default for PictureUpdateStateBuffers {
+impl Default for PictureScratchBuffer {
     fn default() -> Self {
-        PictureUpdateStateBuffers {
+        PictureScratchBuffer {
             surface_stack: Vec::new(),
             picture_stack: Vec::new(),
         }
     }
 }
 
-impl PictureUpdateStateBuffers {
-    pub fn memory_pressure(&mut self) {
-        self.surface_stack = Vec::new();
-        self.picture_stack = Vec::new();
+impl PictureScratchBuffer {
+    pub fn begin_frame(&mut self) {
+        self.surface_stack.clear();
+        self.picture_stack.clear();
     }
-}
+
+    pub fn recycle(&mut self, recycler: &mut Recycler) {
+        recycler.recycle_vec(&mut self.surface_stack);
+        recycler.recycle_vec(&mut self.picture_stack);
+    }
+ }
 
 /// Maintains a stack of picture and surface information, that
 /// is used during the initial picture traversal.
@@ -3850,7 +3855,7 @@ pub struct PictureUpdateState<'a> {
 
 impl<'a> PictureUpdateState<'a> {
     pub fn update_all(
-        buffers: &mut PictureUpdateStateBuffers,
+        buffers: &mut PictureScratchBuffer,
         surfaces: &'a mut Vec<SurfaceInfo>,
         pic_index: PictureIndex,
         picture_primitives: &mut [PicturePrimitive],
