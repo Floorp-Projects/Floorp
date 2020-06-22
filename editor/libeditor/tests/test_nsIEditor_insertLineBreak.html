@@ -39,7 +39,7 @@ SimpleTest.waitForFocus(async () => {
   }
 
   function checkInputEvent(aEvent, aInputType, aTargetRanges, aDescription) {
-    ok(aEvent, `aEvent is null (${aDescription})`);
+    ok(aEvent != null, `aEvent is null (${aDescription})`);
     ok(aEvent instanceof InputEvent,
        `"${aEvent.type}" event should be dispatched with InputEvent interface (${aDescription})`);
     is(aEvent.cancelable, aEvent.type === "beforeinput",
@@ -83,7 +83,7 @@ SimpleTest.waitForFocus(async () => {
   try {
     getPlaintextEditor(input).insertLineBreak();
   } catch (e) {
-    ok(true, e);
+    ok(true, e.message);
   }
   input.removeEventListener("beforeinput", onBeforeInput);
   input.removeEventListener("input", onInput);

@@ -312,7 +312,7 @@ function checkNotResetableAndFormSubmission(aElement)
 
   document.getElementsByName('submit_frame')[0].addEventListener("load", function() {
     is(frames.submit_frame.location.href,
-      'http://mochi.test:8888/tests/dom/html/test/forms/foo?a=tulip',
+      `${location.origin}/tests/dom/html/test/forms/foo?a=tulip`,
        "The meter element value should not be submitted");
 
     checkNotResetable();

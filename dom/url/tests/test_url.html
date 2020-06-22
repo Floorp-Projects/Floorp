@@ -378,7 +378,7 @@
     var url = URL.createObjectURL(blob);
 
     var u = new URL(url);
-    is(u.origin, "http://mochi.test:8888", "The URL generated from a blob URI has an origin");
+    is(u.origin, location.origin, "The URL generated from a blob URI has an origin");
   </script>
 
   <script>
@@ -387,7 +387,7 @@
 
     var a = document.createElement("A");
     a.href = url;
-    is(a.origin, "http://mochi.test:8888", "The 'a' element has the correct origin");
+    is(a.origin, location.origin, "The 'a' element has the correct origin");
   </script>
 
   <script>

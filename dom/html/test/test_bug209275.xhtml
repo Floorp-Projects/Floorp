@@ -128,7 +128,7 @@ function* run() {
   let win = window.open("http://example.com/" + rand, "_blank");
 
   // Make sure things are what as we expect them at the beginning.
-  link123HrefIs("http://mochi.test:8888/", 1);
+  link123HrefIs(`${location.origin}/`, 1);
   is($('link4').href, loc + "#", "link 4 test 1");
   is($('link5').href, loc + "#", "link 5 test 1");
 
@@ -166,13 +166,13 @@ function* run() {
   // Should be interpreted relative to current URI (not the current base), so
   // base should now be http://mochi.test:8888/foo/
 
-  link123HrefIs("http://mochi.test:8888/", 3);
+  link123HrefIs(`${location.origin}/`, 3);
   is($('link4').href, path + "foo/#", "link 4 test 3");
 
   // Changing base2 shouldn't affect anything, because it's not the first base
   // tag.
   $('base2').href = "http://example.org/bar/";
-  link123HrefIs("http://mochi.test:8888/", 4);
+  link123HrefIs(`${location.origin}/`, 4);
   is($('link4').href, path + "foo/#", "link 4 test 4");
 
   // If we unset base1's href attribute, the document's base should come from
@@ -208,13 +208,13 @@ function* run() {
   base3.remove();
   base4.remove();
 
-  link123HrefIs("http://mochi.test:8888/", 9);
+  link123HrefIs(`${location.origin}/`, 9);
   is($('link4').href, loc + "#", "link 4 test 9");
 
   // Setting the href of base0 shouldn't do anything because it's not in the
   // XHTML namespace.
   $('base0').href = "http://bar.com";
-  link123HrefIs("http://mochi.test:8888/", 10);
+  link123HrefIs(`${location.origin}/`, 10);
   is($('link4').href, loc + "#", "link 4 test 10");
 
   // We load into an iframe a document with a <base href="...">, then remove
@@ -232,7 +232,7 @@ function* run() {
   iframeCw.location = "file_bug209275_2.html";
   yield undefined; // wait for callback from child
   is(iframeCw.document.getElementById("link").href,
-     "http://mochi.test:8888/",
+     `${location.origin}/`,
      "Wrong href after nuking document second time.");
 
   // Make sure that document.open() makes the document forget about any <base>

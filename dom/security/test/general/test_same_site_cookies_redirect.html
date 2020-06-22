@@ -22,7 +22,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-const SAME_ORIGIN = "http://mochi.test:8888/"
+const SAME_ORIGIN = location.origin + "/";
 const CROSS_ORIGIN = "http://example.com/";
 const PATH = "tests/dom/security/test/general/file_same_site_cookies_redirect.sjs";
 

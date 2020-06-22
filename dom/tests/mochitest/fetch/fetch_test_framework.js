@@ -159,10 +159,12 @@ function testScript(script) {
       return Promise.resolve();
     })
     .then(function() {
-      if (parent && parent.finishTest) {
-        parent.finishTest();
-      } else {
-        SimpleTest.finish();
-      }
+      try {
+        if (parent && parent.finishTest) {
+          parent.finishTest();
+          return;
+        }
+      } catch {}
+      SimpleTest.finish();
     });
 }

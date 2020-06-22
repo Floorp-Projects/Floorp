@@ -57,8 +57,7 @@ function runTestsForNextInputType()
 function checkValueSubmittedIsValid()
 {
   is(frames.submit_frame.location.href,
-     'http://mochi.test:8888/tests/dom/html/test/forms/foo?i='
-     + urlify(gValidData[valueIndex++]),
+     `${location.origin}/tests/dom/html/test/forms/foo?i=${urlify(gValidData[valueIndex++])}`,
      "The submitted value should not have been sanitized");
 
   input.value = "";
@@ -80,7 +79,7 @@ function checkValueSubmittedIsValid()
 function checkValueSubmittedIsInvalid()
 {
   is(frames.submit_frame.location.href,
-     'http://mochi.test:8888/tests/dom/html/test/forms/foo?i=',
+     `${location.origin}/tests/dom/html/test/forms/foo?i=`,
      "The submitted value should have been sanitized");
 
   valueIndex++;

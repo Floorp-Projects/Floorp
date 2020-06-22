@@ -70,7 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566160
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
 
-const BASE_URI = "http://mochi.test:8888/tests/dom/html/test/forms/PASS.html";
+const BASE_URI = `${location.origin}/tests/dom/html/test/forms/PASS.html`;
 var gTestResults = {
   frame1: BASE_URI + "?foo=foo",
   frame2: BASE_URI + "?bar=bar&x=0&y=0",

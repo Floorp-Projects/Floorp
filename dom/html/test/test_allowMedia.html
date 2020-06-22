@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=759964
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(runNextTest);
 
-var SJS = "http://mochi.test:8888/tests/dom/html/test/allowMedia.sjs";
+var SJS = `${location.origin}/tests/dom/html/test/allowMedia.sjs`;
 var TEST_PAGE = "data:text/html,<audio src='" + SJS + "?audio'></audio>";
 
 function runNextTest() {
