@@ -44,6 +44,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/RemoteWebProgress.h"
 #include "mozilla/dom/RemoteWebProgressRequest.h"
+#include "mozilla/ExtensionPolicyService.h"
 
 #ifdef ANDROID
 #  include "mozilla/widget/nsWindow.h"
@@ -1283,6 +1284,31 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     }
   }
 
+  // Put toplevel BrowsingContexts which load within the extension process into
+  // a specific BrowsingContextGroup.
+  if (auto* addonPolicy = BasePrincipal::Cast(resultPrincipal)->AddonPolicy()) {
+    if (browsingContext->IsTop()) {
+      // Toplevel extension BrowsingContexts must be loaded in the extension
+      // browsing context group, within the extension content process.
+      if (ExtensionPolicyService::GetSingleton().UseRemoteExtensions()) {
+        preferredRemoteType = NS_LITERAL_STRING(EXTENSION_REMOTE_TYPE);
+      } else {
+        preferredRemoteType = VoidString();
+      }
+
+      if (browsingContext->Group()->Id() !=
+          addonPolicy->GetBrowsingContextGroupId()) {
+        replaceBrowsingContext = true;
+        specificGroupId = addonPolicy->GetBrowsingContextGroupId();
+      }
+    } else {
+      // As a temporary measure, extension iframes must be loaded within the
+      // same process as their parent document.
+      preferredRemoteType =
+          browsingContext->GetParentWindowContext()->GetRemoteType();
+    }
+  }
+
   LOG(
       ("DocumentLoadListener GetRemoteTypeForPrincipal "
        "[this=%p, contentParent=%s, preferredRemoteType=%s]",
@@ -1310,6 +1336,14 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Process Switch Abort: getRemoteTypeForPrincipal threw an exception"));
     return false;
+  }
+
+  // If the final decision is to switch from an 'extension' remote type to any
+  // other remote type, ensure the browsing context is replaced so that we leave
+  // the extension-specific BrowsingContextGroup.
+  if (browsingContext->IsTop() && currentRemoteType != remoteType &&
+      currentRemoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
+    replaceBrowsingContext = true;
   }
 
   LOG(("GetRemoteTypeForPrincipal -> current:%s remoteType:%s",
