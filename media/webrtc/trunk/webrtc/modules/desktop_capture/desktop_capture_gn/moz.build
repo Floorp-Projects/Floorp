@@ -26,33 +26,18 @@ LOCAL_INCLUDES += [
     "/media/webrtc/trunk/webrtc/"
 ]
 
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
     DEFINES["NDEBUG"] = True
     DEFINES["NVALGRIND"] = True
 
-if CONFIG["MOZ_DEBUG"] == "1":
-
-    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
-    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
-
-if CONFIG["OS_TARGET"] == "Darwin":
-
-    DEFINES["CR_XCODE_VERSION"] = "0920"
-    DEFINES["NO_TCMALLOC"] = True
-    DEFINES["WEBRTC_MAC"] = True
-    DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
-
-    OS_LIBS += [
-        "-framework AppKit",
-        "-framework Foundation",
-        "-framework IOKit",
-        "-framework OpenGL"
-    ]
-
-if CONFIG["OS_TARGET"] == "DragonFly":
+if CONFIG["OS_TARGET"] == "FreeBSD":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
@@ -72,7 +57,7 @@ if CONFIG["OS_TARGET"] == "DragonFly":
         "Xrender"
     ]
 
-if CONFIG["OS_TARGET"] == "FreeBSD":
+if CONFIG["OS_TARGET"] == "DragonFly":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
@@ -114,24 +99,19 @@ if CONFIG["OS_TARGET"] == "Linux":
         "Xrender"
     ]
 
-if CONFIG["OS_TARGET"] == "NetBSD":
+if CONFIG["OS_TARGET"] == "Darwin":
 
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["CR_XCODE_VERSION"] = "0920"
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
 
     OS_LIBS += [
-        "X11",
-        "X11-xcb",
-        "xcb",
-        "Xcomposite",
-        "Xcursor",
-        "Xdamage",
-        "Xext",
-        "Xfixes",
-        "Xi",
-        "Xrender"
+        "-framework AppKit",
+        "-framework Foundation",
+        "-framework IOKit",
+        "-framework OpenGL"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -183,6 +163,26 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "d3d11",
         "dxgi",
         "winmm"
+    ]
+
+if CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+    OS_LIBS += [
+        "X11",
+        "X11-xcb",
+        "xcb",
+        "Xcomposite",
+        "Xcursor",
+        "Xdamage",
+        "Xext",
+        "Xfixes",
+        "Xi",
+        "Xrender"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":
