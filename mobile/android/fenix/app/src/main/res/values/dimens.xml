@@ -156,5 +156,7 @@
     <dimen name="saved_logins_detail_menu_vertical_padding">5dp</dimen>
     <dimen name="saved_logins_end_icon_drawable_padding">16dp</dimen>
 
+    <!-- a11y -->
+    <dimen name="accessibility_min_height">48dp</dimen>
 
 </resources>

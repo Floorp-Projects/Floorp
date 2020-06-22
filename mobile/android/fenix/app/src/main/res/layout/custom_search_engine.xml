@@ -60,9 +60,10 @@
 
     <TextView
         android:id="@+id/custom_search_engines_learn_more"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/exceptions_empty_message_learn_more_link"
+        android:minHeight="@dimen/accessibility_min_height"
         android:textColor="?accent"
         android:visibility="visible"
         android:contentDescription="@string/search_add_custom_engine_learn_more_description"
