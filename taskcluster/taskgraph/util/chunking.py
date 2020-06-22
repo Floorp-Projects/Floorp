@@ -84,8 +84,8 @@ def guess_mozinfo_from_task(task):
 
 @memoize
 def get_runtimes(platform, suite_name):
-    if not suite_name:
-        raise TypeError('suite_name should be a value.')
+    if not suite_name or not platform:
+        raise TypeError('suite_name and platform cannot be empty.')
 
     base = os.path.join(GECKO, 'testing', 'runtimes', 'manifest-runtimes-{}.json')
     for key in ('android', 'windows'):
@@ -95,8 +95,11 @@ def get_runtimes(platform, suite_name):
     else:
         path = base.format('unix')
 
+    if not os.path.exists(path):
+        raise IOError('manifest runtime file at {} not found.'.format(path))
+
     with open(path, 'r') as fh:
-        return json.load(fh).get(suite_name)
+        return json.load(fh)[suite_name]
 
 
 def chunk_manifests(suite, platform, chunks, manifests):
