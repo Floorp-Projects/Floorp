@@ -72,6 +72,11 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
     return icEntries()[index];
   }
 
+  static constexpr size_t offsetOfFirstStub(uint32_t entryIndex) {
+    return sizeof(ICScript) + entryIndex * sizeof(ICEntry) +
+           ICEntry::offsetOfFirstStub();
+  }
+
   static constexpr Offset offsetOfWarmUpCount() {
     return offsetof(ICScript, warmUpCount_);
   }
