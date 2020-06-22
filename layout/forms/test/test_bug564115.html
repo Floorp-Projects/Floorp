@@ -25,25 +25,27 @@ addLoadEvent(function() {
 
     // Focus the input box, and wait for the focus to actually happen
     input.focus();
-    setTimeout(function() {
-      // Scroll down a bit
-      win.scrollTo(0, 5000);
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        // Scroll down a bit
+        win.scrollTo(0, 5000);
 
-      setTimeout(function() {
-        is(Math.round(win.pageYOffset), 5000, "Page should be scrolled correctly");
+        setTimeout(function() {
+          is(Math.round(win.pageYOffset), 5000, "Page should be scrolled correctly");
 
-        // Refocus the window
-        SimpleTest.waitForFocus(function() {
+          // Refocus the window
           SimpleTest.waitForFocus(function() {
-            is(Math.round(win.pageYOffset), 5000,
-               "The page's scroll offset should not have been changed");
+            SimpleTest.waitForFocus(function() {
+              is(Math.round(win.pageYOffset), 5000,
+                 "The page's scroll offset should not have been changed");
 
-            win.close();
-            SimpleTest.finish();
-          }, win);
-        });
-      }, 0);
-    }, 0);
+              win.close();
+              SimpleTest.finish();
+            }, win);
+          });
+        }, 0);
+      });
+    });
   }, win);
 });
 
