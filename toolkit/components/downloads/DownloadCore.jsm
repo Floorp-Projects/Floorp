@@ -1351,6 +1351,12 @@ DownloadSource.prototype = {
   allowHttpStatus: null,
 
   /**
+   * Represents the loadingPrincipal of the download source,
+   * could be null, in which case the system principal is used instead.
+   */
+  loadingPrincipal: null,
+
+  /**
    * Returns a static representation of the current object state.
    *
    * @return A JavaScript object that can be serialized to JSON.
@@ -1382,6 +1388,12 @@ DownloadSource.prototype = {
       serializable.referrerInfo = E10SUtils.serializeReferrerInfo(
         this.referrerInfo
       );
+    }
+
+    if (this.loadingPrincipal) {
+      serializable.loadingPrincipal = isString(this.loadingPrincipal)
+        ? this.loadingPrincipal
+        : E10SUtils.serializePrincipal(this.loadingPrincipal);
     }
 
     serializeUnknownProperties(this, serializable);
@@ -1445,6 +1457,17 @@ DownloadSource.fromSerializable = function(aSerializable) {
       } else {
         source.referrerInfo = E10SUtils.deserializeReferrerInfo(
           aSerializable.referrerInfo
+        );
+      }
+    }
+    if ("loadingPrincipal" in aSerializable) {
+      // Quick pass, pass directly nsIPrincipal, we don't need to serialize
+      // and deserialize
+      if (aSerializable.loadingPrincipal instanceof Ci.nsIPrincipal) {
+        source.loadingPrincipal = aSerializable.loadingPrincipal;
+      } else {
+        source.loadingPrincipal = E10SUtils.deserializePrincipal(
+          aSerializable.loadingPrincipal
         );
       }
     }
@@ -2216,11 +2239,21 @@ DownloadCopySaver.prototype = {
       const open = async () => {
         // Create a channel from the source, and listen to progress
         // notifications.
-        const channel = NetUtil.newChannel({
-          uri: download.source.url,
-          loadUsingSystemPrincipal: true,
-          contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
-        });
+        let channel;
+        if (download.source.loadingPrincipal) {
+          channel = NetUtil.newChannel({
+            uri: download.source.url,
+            contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
+            loadingPrincipal: download.source.loadingPrincipal,
+            securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+          });
+        } else {
+          channel = NetUtil.newChannel({
+            uri: download.source.url,
+            contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
+            loadUsingSystemPrincipal: true,
+          });
+        }
         if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
           channel.setPrivate(download.source.isPrivate);
         }
