@@ -1,0 +1,7 @@
+<!doctype html>
+<div contenteditable>abc<span></span><span></span></div>
+<script>
+let editor = document.querySelector("div[contenteditable]");
+getSelection().collapse(editor, 3);
+document.execCommand("inserttext", false, " ");
+</script>
