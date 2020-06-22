@@ -5344,18 +5344,18 @@ checksum = "32fddd575d477c6e9702484139cf9f23dcd554b06d185ed0f56c857dd3a47aa6"
 
 [[package]]
 name = "wast"
-version = "18.0.0"
+version = "20.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01b1f23531740a81f9300bd2febd397a95c76bfa4aa4bfaf4ca8b1ee3438f337"
+checksum = "5fb95ce157a8c779ec301ef3e4c0a7caeb6f9f902f813f1f5f7e464367048924"
 dependencies = [
  "leb128",
 ]
 
 [[package]]
 name = "wat"
-version = "1.0.19"
+version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4006d418d59293172aebfeeadb7673459dc151874a79135946ea7996b6a98515"
+checksum = "9afa9815ddfb592fb97bb2b817a514c6995e5c171b05037b91d0d831f3a2a9c0"
 dependencies = [
  "wast",
 ]
