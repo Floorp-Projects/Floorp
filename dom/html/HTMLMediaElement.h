@@ -772,6 +772,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   void PlayInternal(bool aHandlingUserInput);
 
+  // See spec, https://html.spec.whatwg.org/#internal-pause-steps
+  void PauseInternal();
+
   /** Use this method to change the mReadyState member, so required
    * events can be fired.
    */

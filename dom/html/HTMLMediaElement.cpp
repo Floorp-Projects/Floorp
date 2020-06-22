@@ -3270,10 +3270,14 @@ void HTMLMediaElement::Pause(ErrorResult& aRv) {
   if (mNetworkState == NETWORK_EMPTY) {
     LOG(LogLevel::Debug, ("Loading due to Pause()"));
     DoLoad();
-  } else if (mDecoder) {
+  }
+  PauseInternal();
+}
+
+void HTMLMediaElement::PauseInternal() {
+  if (mDecoder && mNetworkState != NETWORK_EMPTY) {
     mDecoder->Pause();
   }
-
   bool oldPaused = mPaused;
   mPaused = true;
   mAutoplaying = false;
@@ -4884,7 +4888,7 @@ void HTMLMediaElement::UnbindFromTree(bool aNullParent) {
       NS_NewRunnableFunction("dom::HTMLMediaElement::UnbindFromTree",
                              [self = RefPtr<HTMLMediaElement>(this)]() {
                                if (!self->IsInComposedDoc()) {
-                                 self->Pause();
+                                 self->PauseInternal();
                                }
                              });
   RunInStableState(task);
