@@ -376,9 +376,10 @@ bool wasm::Init() {
   cranelift_initialize();
 #endif
 
+  AutoEnterOOMUnsafeRegion oomUnsafe;
   ProcessCodeSegmentMap* map = js_new<ProcessCodeSegmentMap>();
   if (!map) {
-    return false;
+    oomUnsafe.crash("js::wasm::Init");
   }
 
   sProcessCodeSegmentMap = map;
