@@ -451,7 +451,7 @@ void PointerEventHandler::InitPointerEventFromTouch(
 
   int16_t buttons = aTouchEvent->mMessage == eTouchEnd
                         ? MouseButtonsFlag::eNoButtons
-                        : MouseButtonsFlag::eLeftFlag;
+                        : MouseButtonsFlag::ePrimaryFlag;
 
   aPointerEvent->mIsPrimary = aIsPrimary;
   aPointerEvent->pointerId = aTouch->Identifier();

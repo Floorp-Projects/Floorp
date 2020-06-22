@@ -3631,10 +3631,10 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   NSUInteger mouseButtons = [NSEvent pressedMouseButtons];
 
   if (mouseButtons & 0x01) {
-    mouseEvent->mButtons |= MouseButtonsFlag::eLeftFlag;
+    mouseEvent->mButtons |= MouseButtonsFlag::ePrimaryFlag;
   }
   if (mouseButtons & 0x02) {
-    mouseEvent->mButtons |= MouseButtonsFlag::eRightFlag;
+    mouseEvent->mButtons |= MouseButtonsFlag::eSecondaryFlag;
   }
   if (mouseButtons & 0x04) {
     mouseEvent->mButtons |= MouseButtonsFlag::eMiddleFlag;

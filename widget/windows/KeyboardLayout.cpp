@@ -918,10 +918,10 @@ void ModifierKeyState::InitMouseEvent(WidgetInputEvent& aMouseEvent) const {
   WidgetMouseEventBase& mouseEvent = *aMouseEvent.AsMouseEventBase();
   mouseEvent.mButtons = 0;
   if (::GetKeyState(VK_LBUTTON) < 0) {
-    mouseEvent.mButtons |= MouseButtonsFlag::eLeftFlag;
+    mouseEvent.mButtons |= MouseButtonsFlag::ePrimaryFlag;
   }
   if (::GetKeyState(VK_RBUTTON) < 0) {
-    mouseEvent.mButtons |= MouseButtonsFlag::eRightFlag;
+    mouseEvent.mButtons |= MouseButtonsFlag::eSecondaryFlag;
   }
   if (::GetKeyState(VK_MBUTTON) < 0) {
     mouseEvent.mButtons |= MouseButtonsFlag::eMiddleFlag;
