@@ -270,7 +270,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
 
   nsAutoHandle mediumIlToken;
   LauncherResult<ElevationState> elevationState =
-      GetElevationState(flags, mediumIlToken);
+      GetElevationState(argv[0], flags, mediumIlToken);
   if (elevationState.isErr()) {
     HandleLauncherError(elevationState);
     return Nothing();
