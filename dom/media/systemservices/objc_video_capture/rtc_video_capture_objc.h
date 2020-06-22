@@ -16,7 +16,7 @@
 #  import <UIKit/UIKit.h>
 #endif
 
-#include "modules/video_capture/objc/video_capture.h"
+#include "video_capture.h"
 
 // The following class listens to a notification with name:
 // 'StatusBarOrientationDidChange'.
