@@ -69,7 +69,7 @@ new WebAssembly.Module(wasmTextToBinary(`
 (module
  (type $s (struct))
  (func $null (param (ref opt $s)) (result i32)
-   (ref.is_null opt $s (local.get 0))))
+   (ref.is_null (local.get 0))))
 `))
 
 // Automatic upcast to anyref

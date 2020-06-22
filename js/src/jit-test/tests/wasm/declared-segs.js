@@ -37,7 +37,7 @@ wasmAssert(`
 		(func $at (param i32) (result i32)
 			local.get 0
 			table.get 0
-			ref.is_null func
+			ref.is_null
 		)
 		(export "at" (func $at))
 	)

@@ -297,6 +297,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool popStackType(StackType* type, Value* value);
   MOZ_MUST_USE bool popWithType(ValType expected, Value* value);
   MOZ_MUST_USE bool popWithType(ResultType expected, ValueVector* values);
+  MOZ_MUST_USE bool popWithRefType(Value* value);
   MOZ_MUST_USE bool popThenPushType(ResultType expected, ValueVector* values);
 
   MOZ_MUST_USE bool pushControl(LabelKind kind, BlockType type);
@@ -674,6 +675,30 @@ inline bool OpIter<Policy>::popWithType(ResultType expected,
     }
   }
   return true;
+}
+
+// This function pops exactly one value from the stack, checking that it is a
+// reference type.
+template <typename Policy>
+inline bool OpIter<Policy>::popWithRefType(Value* value) {
+  StackType stackType;
+  if (!popStackType(&stackType, value)) {
+    return false;
+  }
+
+  if (stackType.isTVar() || stackType.valType().isReference()) {
+    return true;
+  }
+
+  UniqueChars actualText = ToString(stackType.valType());
+  UniqueChars error(JS_smprintf(
+      "type mismatch: expression has type %s but expected a reference type",
+      actualText.get()));
+  if (!error) {
+    return false;
+  }
+
+  return fail(error.get());
 }
 
 // This function is an optimization of the sequence:
@@ -1643,11 +1668,7 @@ template <typename Policy>
 inline bool OpIter<Policy>::readRefIsNull(Value* input) {
   MOZ_ASSERT(Classify(op_) == OpKind::Conversion);
 
-  RefType type;
-  if (!readRefType(&type)) {
-    return false;
-  }
-  if (!popWithType(type, input)) {
+  if (!popWithRefType(input)) {
     return false;
   }
   return push(ValType::I32);

@@ -42,7 +42,7 @@ let simpleTests = [
     "(module (func $test (param anyref)))",
     "(module (func $test (result anyref) (ref.null extern)))",
     "(module (func $test (block (result anyref) (unreachable)) unreachable))",
-    "(module (func $test (result i32) (local anyref) (ref.is_null extern (local.get 0))))",
+    "(module (func $test (result i32) (local anyref) (ref.is_null (local.get 0))))",
     `(module (import "a" "b" (func (param anyref))))`,
     `(module (import "a" "b" (func (result anyref))))`,
     `(module (global anyref (ref.null extern)))`,
@@ -59,7 +59,7 @@ for (let src of simpleTests) {
 let { exports } = wasmEvalText(`(module
     (func (export "is_null") (result i32)
         ref.null extern
-        ref.is_null extern
+        ref.is_null
     )
 
     (func $sum (param i32) (result i32)
@@ -73,7 +73,7 @@ let { exports } = wasmEvalText(`(module
         i32.const 58
         call $sum
         drop
-        ref.is_null extern
+        ref.is_null
     )
 
     (func (export "is_null_local") (result i32) (local anyref)
@@ -83,7 +83,7 @@ let { exports } = wasmEvalText(`(module
         call $sum
         drop
         local.get 0
-        ref.is_null extern
+        ref.is_null
     )
     )`);
 
@@ -96,7 +96,7 @@ assertEq(exports.is_null_local(), 1);
 exports = wasmEvalText(`(module
     (func (export "is_null") (param $ref anyref) (result i32)
         local.get $ref
-        ref.is_null extern
+        ref.is_null
     )
 
     (func (export "ref_or_null") (param $ref anyref) (param $selector i32) (result anyref)
@@ -478,7 +478,7 @@ wasmEvalText(
     `(module
        (func (param anyref)
          (return)
-         (ref.is_null extern (get_local 0))
+         (ref.is_null (get_local 0))
          (drop)
         )
     )`);
