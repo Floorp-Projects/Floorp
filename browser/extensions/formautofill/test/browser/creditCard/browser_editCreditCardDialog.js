@@ -322,8 +322,8 @@ add_task(async function test_editCardWithInvalidNetwork() {
   );
   is(
     creditCards[0]["cc-type"],
-    undefined,
-    "unknown cc-type removed upon manual save"
+    "visa",
+    "unknown cc-type removed and next autodetected to visa upon manual save"
   );
   await removeCreditCards([creditCards[0].guid]);
 

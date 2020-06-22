@@ -21,6 +21,38 @@ const SUPPORTED_NETWORKS = Object.freeze([
   "visa",
 ]);
 
+// Based on https://en.wikipedia.org/wiki/Payment_card_number
+//
+// Notice:
+//   - CarteBancaire (`4035`, `4360`) is now recognized as Visa.
+//   - UnionPay (`63--`) is now recognized as Discover.
+// This means that the order matters.
+// First we'll try to match more specific card,
+// and if that doesn't match we'll test against the more generic range.
+const CREDIT_CARD_IIN = [
+  { type: "amex", start: 34, end: 34, length: 15 },
+  { type: "amex", start: 37, end: 37, length: 15 },
+  { type: "cartebancaire", start: 4035, end: 4035, length: 16 },
+  { type: "cartebancaire", start: 4360, end: 4360, length: 16 },
+  { type: "diners", start: 300, end: 305, length: 16 },
+  { type: "diners", start: 3095, end: 3095, length: 16 },
+  { type: "diners", start: 36, end: 36, length: 14 },
+  { type: "diners", start: 38, end: 39, length: 16 },
+  { type: "diners", start: 54, end: 55, length: 16 },
+  { type: "discover", start: 6011, end: 6011, length: 16 },
+  { type: "discover", start: 622126, end: 622925, length: 16 },
+  { type: "discover", start: 624000, end: 626999, length: 16 },
+  { type: "discover", start: 628200, end: 628899, length: 16 },
+  { type: "discover", start: 64, end: 65, length: 16 },
+  { type: "jcb", start: 3528, end: 3589, length: 16 },
+  { type: "mastercard", start: 2221, end: 2720, length: 16 },
+  { type: "mastercard", start: 51, end: 55, length: 16 },
+  { type: "mir", start: 2200, end: 2204, length: 16 },
+  { type: "unionpay", start: 62, end: 62, length: 16 },
+  { type: "unionpay", start: 81, end: 81, length: 16 },
+  { type: "visa", start: 4, end: 4, length: 16 },
+].sort((a, b) => b.start - a.start);
+
 class CreditCard {
   /**
    * A CreditCard object represents a credit card, with
@@ -176,6 +208,27 @@ class CreditCard {
       total += ch;
     }
     return total % 10 == 0;
+  }
+
+  /**
+   * Attempts to match the number against known network identifiers.
+   *
+   * @param {string} ccNumber
+   *
+   * @returns {string|null}
+   */
+  static getType(ccNumber) {
+    for (let i = 0; i < CREDIT_CARD_IIN.length; i++) {
+      const range = CREDIT_CARD_IIN[i];
+      if (ccNumber.length == range.length) {
+        const prefixLength = Math.floor(Math.log10(range.start)) + 1;
+        const prefix = parseInt(ccNumber.substring(0, prefixLength), 10);
+        if (prefix >= range.start && prefix <= range.end) {
+          return range.type;
+        }
+      }
+    }
+    return null;
   }
 
   /**
