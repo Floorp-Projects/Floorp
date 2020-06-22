@@ -13,7 +13,6 @@
 #include "Logging.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Span.h"
-#include "SFNTNameTable.h"
 
 namespace mozilla {
 namespace gfx {
@@ -68,23 +67,6 @@ class SFNTData::Font {
     }
 
     return MakeSpan(mFontData + dirEntry->offset, dirEntry->length);
-  }
-
-  bool GetU16FullName(mozilla::u16string& aU16FullName) {
-    const TableDirEntry* dirEntry =
-        GetDirEntry(TRUETYPE_TAG('n', 'a', 'm', 'e'));
-    if (!dirEntry) {
-      gfxWarning() << "Name table entry not found.";
-      return false;
-    }
-
-    UniquePtr<SFNTNameTable> nameTable =
-        SFNTNameTable::Create((mFontData + dirEntry->offset), dirEntry->length);
-    if (!nameTable) {
-      return false;
-    }
-
-    return nameTable->GetU16FullName(aU16FullName);
   }
 
  private:
@@ -176,53 +158,6 @@ SFNTData::~SFNTData() {
   for (size_t i = 0; i < mFonts.length(); ++i) {
     delete mFonts[i];
   }
-}
-
-bool SFNTData::GetU16FullName(uint32_t aIndex,
-                              mozilla::u16string& aU16FullName) {
-  if (aIndex >= mFonts.length()) {
-    gfxWarning() << "aIndex to font data too high.";
-    return false;
-  }
-
-  return mFonts[aIndex]->GetU16FullName(aU16FullName);
-}
-
-bool SFNTData::GetU16FullNames(Vector<mozilla::u16string>& aU16FullNames) {
-  bool fontFound = false;
-  for (size_t i = 0; i < mFonts.length(); ++i) {
-    mozilla::u16string name;
-    if (mFonts[i]->GetU16FullName(name)) {
-      fontFound = true;
-    }
-    if (!aU16FullNames.append(std::move(name))) {
-      return false;
-    }
-  }
-
-  return fontFound;
-}
-
-bool SFNTData::GetIndexForU16Name(const mozilla::u16string& aU16FullName,
-                                  uint32_t* aIndex, size_t aTruncatedLen) {
-  for (size_t i = 0; i < mFonts.length(); ++i) {
-    mozilla::u16string name;
-    if (!mFonts[i]->GetU16FullName(name)) {
-      continue;
-    }
-
-    if (aTruncatedLen) {
-      MOZ_ASSERT(aU16FullName.length() <= aTruncatedLen);
-      name = name.substr(0, aTruncatedLen);
-    }
-
-    if (name == aU16FullName) {
-      *aIndex = i;
-      return true;
-    }
-  }
-
-  return false;
 }
 
 bool SFNTData::AddFont(const uint8_t* aFontData, uint32_t aDataLength,

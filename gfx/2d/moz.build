@@ -189,7 +189,6 @@ UNIFIED_SOURCES += [
     'Scale.cpp',
     'ScaledFontBase.cpp',
     'SFNTData.cpp',
-    'SFNTNameTable.cpp',
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceCapture.cpp',
     'SourceSurfaceRawData.cpp',
