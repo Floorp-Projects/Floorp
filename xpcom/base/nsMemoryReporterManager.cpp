@@ -643,59 +643,35 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
 }
 
 #  define HAVE_SYSTEM_HEAP_REPORTER 1
-// Windows can have multiple separate heaps. During testing there were multiple
-// heaps present but the non-default ones had sizes no more than a few 10s of
-// KiBs. So we combine their sizes into a single measurement.
+// Windows can have multiple separate heaps, but we should not touch non-default
+// heaps because they may be destroyed at anytime while we hold a handle.  So we
+// count only the default heap.
 [[nodiscard]] static nsresult SystemHeapSize(int64_t* aSizeOut) {
-  // Get the number of heaps.
-  DWORD nHeaps = GetProcessHeaps(0, nullptr);
-  NS_ENSURE_TRUE(nHeaps != 0, NS_ERROR_FAILURE);
+  HANDLE heap = GetProcessHeap();
 
-  // Get handles to all heaps, checking that the number of heaps hasn't
-  // changed in the meantime.
-  UniquePtr<HANDLE[]> heaps(new HANDLE[nHeaps]);
-  DWORD nHeaps2 = GetProcessHeaps(nHeaps, heaps.get());
-  NS_ENSURE_TRUE(nHeaps2 != 0 && nHeaps2 == nHeaps, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(HeapLock(heap), NS_ERROR_FAILURE);
 
-  // Lock and iterate over each heap to get its size.
-  int64_t heapsSize = 0;
-  for (DWORD i = 0; i < nHeaps; i++) {
-    HANDLE heap = heaps[i];
-
-    // Bug 1235982: When Control Flow Guard is enabled for the process,
-    // GetProcessHeap may return some protected heaps that are in read-only
-    // memory and thus crash in HeapLock. Ignore such heaps.
-    MEMORY_BASIC_INFORMATION mbi = {0};
-    if (VirtualQuery(heap, &mbi, sizeof(mbi)) && mbi.Protect == PAGE_READONLY) {
-      continue;
+  int64_t heapSize = 0;
+  PROCESS_HEAP_ENTRY entry;
+  entry.lpData = nullptr;
+  while (HeapWalk(heap, &entry)) {
+    // We don't count entry.cbOverhead, because we just want to measure the
+    // space available to the program.
+    if (entry.wFlags & PROCESS_HEAP_ENTRY_BUSY) {
+      heapSize += entry.cbData;
     }
-
-    NS_ENSURE_TRUE(HeapLock(heap), NS_ERROR_FAILURE);
-
-    int64_t heapSize = 0;
-    PROCESS_HEAP_ENTRY entry;
-    entry.lpData = nullptr;
-    while (HeapWalk(heap, &entry)) {
-      // We don't count entry.cbOverhead, because we just want to measure the
-      // space available to the program.
-      if (entry.wFlags & PROCESS_HEAP_ENTRY_BUSY) {
-        heapSize += entry.cbData;
-      }
-    }
-
-    // Check this result only after unlocking the heap, so that we don't leave
-    // the heap locked if there was an error.
-    DWORD lastError = GetLastError();
-
-    // I have no idea how things would proceed if unlocking this heap failed...
-    NS_ENSURE_TRUE(HeapUnlock(heap), NS_ERROR_FAILURE);
-
-    NS_ENSURE_TRUE(lastError == ERROR_NO_MORE_ITEMS, NS_ERROR_FAILURE);
-
-    heapsSize += heapSize;
   }
 
-  *aSizeOut = heapsSize;
+  // Check this result only after unlocking the heap, so that we don't leave
+  // the heap locked if there was an error.
+  DWORD lastError = GetLastError();
+
+  // I have no idea how things would proceed if unlocking this heap failed...
+  NS_ENSURE_TRUE(HeapUnlock(heap), NS_ERROR_FAILURE);
+
+  NS_ENSURE_TRUE(lastError == ERROR_NO_MORE_ITEMS, NS_ERROR_FAILURE);
+
+  *aSizeOut = heapSize;
   return NS_OK;
 }
 
