@@ -248,7 +248,12 @@ class ContentPage {
 
     chromeDoc.documentElement.appendChild(browser);
 
+    // Forcibly flush layout so that we get a pres shell soon enough, see
+    // bug 1274775.
+    browser.getBoundingClientRect();
+
     await awaitFrameLoader;
+
     this.browser = browser;
 
     this.loadFrameScript(frameScript);
