@@ -148,6 +148,69 @@ SheetLoadDataHashKey::SheetLoadDataHashKey(const css::SheetLoadData& aLoadData)
   aLoadData.mSheet->GetIntegrity(mSRIMetadata);
 }
 
+bool SheetLoadDataHashKey::KeyEquals(const SheetLoadDataHashKey& aKey) const {
+  {
+    bool eq;
+    if (NS_FAILED(mURI->Equals(aKey.mURI, &eq)) || !eq) {
+      return false;
+    }
+  }
+
+  LOG_URI("KeyEquals(%s)\n", mURI);
+
+  // The loader principal doesn't really need to match to be a cache hit, it's
+  // just useful for cache-eviction purposes.
+
+  if (!mPrincipal->Equals(aKey.mPrincipal)) {
+    LOG((" > Principal mismatch\n"));
+    return false;
+  }
+
+  if (mCORSMode != aKey.mCORSMode) {
+    LOG((" > CORS mismatch\n"));
+    return false;
+  }
+
+  if (mParsingMode != aKey.mParsingMode) {
+    LOG((" > Parsing mode mismatch\n"));
+    return false;
+  }
+
+  if (mCompatMode != aKey.mCompatMode) {
+    LOG((" > Quirks mismatch\n"));
+    return false;
+  }
+
+  // If encoding differs, then don't reuse the cache.
+  //
+  // TODO(emilio): When the encoding is determined from the request (either
+  // BOM or Content-Length or @charset), we could do a bit better,
+  // theoretically.
+  if (mEncodingGuess != aKey.mEncodingGuess) {
+    LOG((" > Encoding guess mismatch\n"));
+    return false;
+  }
+
+  // Consuming stylesheet tags must never coalesce to <link preload> initiated
+  // speculative loads with a weaker SRI hash or its different value.  This
+  // check makes sure that regular loads will never find such a weaker preload
+  // and rather start a new, independent load with new, stronger SRI checker
+  // set up, so that integrity is ensured.
+  if (mIsLinkPreload != aKey.mIsLinkPreload) {
+    const auto& linkPreloadMetadata =
+        mIsLinkPreload ? mSRIMetadata : aKey.mSRIMetadata;
+    const auto& consumerPreloadMetadata =
+        mIsLinkPreload ? aKey.mSRIMetadata : mSRIMetadata;
+
+    if (!consumerPreloadMetadata.CanTrustBeDelegatedTo(linkPreloadMetadata)) {
+      LOG((" > Preload SRI metadata mismatch\n"));
+      return false;
+    }
+  }
+
+  return true;
+}
+
 namespace css {
 
 static NotNull<const Encoding*> GetFallbackEncoding(
