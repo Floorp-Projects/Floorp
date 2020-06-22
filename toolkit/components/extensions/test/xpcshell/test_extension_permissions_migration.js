@@ -5,6 +5,13 @@ const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
 
+add_task(async function setup() {
+  // Bug 1646182: Force ExtensionPermissions to run in rkv mode, because this
+  // test does not make sense with the legacy method (which will be removed in
+  // the above bug).
+  await ExtensionPermissions._uninit();
+});
+
 const GOOD_JSON_FILE = {
   "wikipedia@search.mozilla.org": {
     permissions: ["internal:privateBrowsingAllowed"],
