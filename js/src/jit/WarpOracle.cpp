@@ -42,6 +42,10 @@ class MOZ_STACK_CLASS WarpScriptOracle {
   TempAllocator& alloc_;
   HandleScript script_;
 
+  // Index of the next ICEntry for getICEntry. This assumes the script's
+  // bytecode is processed from first to last instruction.
+  uint32_t icEntryIndex_ = 0;
+
   template <typename... Args>
   mozilla::GenericErrorResult<AbortReason> abort(Args&&... args) {
     return oracle_->abort(script_, args...);
@@ -60,6 +64,8 @@ class MOZ_STACK_CLASS WarpScriptOracle {
         script_(script) {}
 
   AbortReasonOr<WarpScriptSnapshot*> createScriptSnapshot();
+
+  const ICEntry& getICEntry(BytecodeLocation loc);
 };
 
 WarpOracle::WarpOracle(JSContext* cx, MIRGenerator& mirGen,
@@ -153,6 +159,19 @@ static MOZ_MUST_USE bool AddWarpGetImport(TempAllocator& alloc,
 
   return AddOpSnapshot<WarpGetImport>(alloc, snapshots, offset, targetEnv,
                                       numFixedSlots, slot, needsLexicalCheck);
+}
+
+const ICEntry& WarpScriptOracle::getICEntry(BytecodeLocation loc) {
+  const uint32_t offset = loc.bytecodeToOffset(script_);
+
+  const ICEntry* entry;
+  do {
+    entry = &script_->jitScript()->icEntry(icEntryIndex_);
+    icEntryIndex_++;
+  } while (entry->pcOffset() < offset);
+
+  MOZ_ASSERT(entry->pcOffset() == offset);
+  return *entry;
 }
 
 AbortReasonOr<WarpEnvironment> WarpScriptOracle::createEnvironment() {
@@ -416,8 +435,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       }
 
       case JSOp::Rest: {
-        const ICEntry& entry =
-            script_->jitScript()->icEntryFromPCOffset(offset);
+        const ICEntry& entry = getICEntry(loc);
         ICRest_Fallback* stub = entry.fallbackStub()->toRest_Fallback();
         if (!AddOpSnapshot<WarpRest>(alloc_, opSnapshots, offset,
                                      stub->templateObject())) {
@@ -427,9 +445,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       }
 
       case JSOp::NewArray: {
-        // TODO: optimize ICEntry lookup.
-        const ICEntry& entry =
-            script_->jitScript()->icEntryFromPCOffset(offset);
+        const ICEntry& entry = getICEntry(loc);
         auto* stub = entry.fallbackStub()->toNewArray_Fallback();
         if (ArrayObject* templateObj = stub->templateObject()) {
           // Only inline elements are supported without a VM call.
@@ -448,9 +464,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::NewObject:
       case JSOp::NewObjectWithGroup:
       case JSOp::NewInit: {
-        // TODO: optimize ICEntry lookup.
-        const ICEntry& entry =
-            script_->jitScript()->icEntryFromPCOffset(offset);
+        const ICEntry& entry = getICEntry(loc);
         auto* stub = entry.fallbackStub()->toNewObject_Fallback();
         if (JSObject* templateObj = stub->templateObject()) {
           if (!AddOpSnapshot<WarpNewObject>(alloc_, opSnapshots, offset,
@@ -696,11 +710,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   MOZ_ASSERT(loc.opHasIC());
 
-  uint32_t offset = loc.bytecodeToOffset(script_);
-
-  // TODO: slow. Should traverse ICEntries as we go, like BaselineCompiler.
-  const ICEntry& entry = script_->jitScript()->icEntryFromPCOffset(offset);
-
+  const ICEntry& entry = getICEntry(loc);
   ICStub* stub = entry.firstStub();
 
   if (stub->isFallback()) {
@@ -828,6 +838,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   JitCode* jitCode = stub->jitCode();
 
+  uint32_t offset = loc.bytecodeToOffset(script_);
   if (!AddOpSnapshot<WarpCacheIR>(alloc_, snapshots, offset, jitCode, stubInfo,
                                   stubDataCopy)) {
     return abort(AbortReason::Alloc);
