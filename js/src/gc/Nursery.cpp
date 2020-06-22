@@ -1015,7 +1015,7 @@ void js::Nursery::collect(JS::GCReason reason) {
   maybeResizeNursery(reason);
 
   // Poison/initialise the first chunk.
-  if (isEnabled() && previousGC.nurseryUsedBytes) {
+  if (previousGC.nurseryUsedBytes) {
     // In most cases Nursery::clear() has not poisoned this chunk or marked it
     // as NoAccess; so we only need to poison the region used during the last
     // cycle.  Also, if the heap was recently expanded we don't want to
