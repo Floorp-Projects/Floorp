@@ -2128,7 +2128,7 @@ APZEventResult APZCTreeManager::ProcessTouchInputForScrollbarDrag(
   MouseInput mouseInput{MultiTouchTypeToMouseType(aTouchInput.mType),
                         MouseInput::LEFT_BUTTON,
                         dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH,
-                        MouseButtonsFlag::eLeftFlag,
+                        MouseButtonsFlag::ePrimaryFlag,
                         aTouchInput.mTouches[0].mScreenPoint,
                         aTouchInput.mTime,
                         aTouchInput.mTimeStamp,

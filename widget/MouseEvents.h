@@ -135,10 +135,10 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   uint16_t mInputSource;
 
   bool IsLeftButtonPressed() const {
-    return !!(mButtons & MouseButtonsFlag::eLeftFlag);
+    return !!(mButtons & MouseButtonsFlag::ePrimaryFlag);
   }
   bool IsRightButtonPressed() const {
-    return !!(mButtons & MouseButtonsFlag::eRightFlag);
+    return !!(mButtons & MouseButtonsFlag::eSecondaryFlag);
   }
   bool IsMiddleButtonPressed() const {
     return !!(mButtons & MouseButtonsFlag::eMiddleFlag);

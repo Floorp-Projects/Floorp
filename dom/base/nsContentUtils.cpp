@@ -7745,11 +7745,11 @@ int16_t nsContentUtils::GetButtonsFlagForButton(int32_t aButton) {
     case -1:
       return MouseButtonsFlag::eNoButtons;
     case MouseButton::ePrimary:
-      return MouseButtonsFlag::eLeftFlag;
+      return MouseButtonsFlag::ePrimaryFlag;
     case MouseButton::eMiddle:
       return MouseButtonsFlag::eMiddleFlag;
     case MouseButton::eSecondary:
-      return MouseButtonsFlag::eRightFlag;
+      return MouseButtonsFlag::eSecondaryFlag;
     case 4:
       return MouseButtonsFlag::e4thFlag;
     case 5:

@@ -8617,8 +8617,8 @@ bool nsWindow::OnPointerEvents(UINT msg, WPARAM aWParam, LPARAM aLParam) {
   // 1024. Convert it to float.
   float pressure = penInfo.pressure ? (float)penInfo.pressure / 1024 : 0;
   int16_t buttons = sPointerDown ? button == MouseButton::ePrimary
-                                       ? MouseButtonsFlag::eLeftFlag
-                                       : MouseButtonsFlag::eRightFlag
+                                       ? MouseButtonsFlag::ePrimaryFlag
+                                       : MouseButtonsFlag::eSecondaryFlag
                                  : MouseButtonsFlag::eNoButtons;
   WinPointerInfo pointerInfo(pointerId, penInfo.tiltX, penInfo.tiltY, pressure,
                              buttons);
