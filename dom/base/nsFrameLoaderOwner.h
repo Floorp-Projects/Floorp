@@ -70,7 +70,6 @@ class nsFrameLoaderOwner : public nsISupports {
   // disabled for this process switch.
   void ChangeRemotenessToProcess(mozilla::dom::ContentParent* aContentParent,
                                  bool aReplaceBrowsingContext,
-                                 mozilla::dom::BrowsingContextGroup* aGroup,
                                  mozilla::ErrorResult& rv);
 
   void SubframeCrashed();
@@ -99,7 +98,6 @@ class nsFrameLoaderOwner : public nsISupports {
 
   void ChangeRemotenessCommon(const ChangeRemotenessContextType& aContextType,
                               bool aSwitchingInProgressLoad, bool aIsRemote,
-                              mozilla::dom::BrowsingContextGroup* aGroup,
                               std::function<void()>& aFrameLoaderInit,
                               mozilla::ErrorResult& aRv);
 

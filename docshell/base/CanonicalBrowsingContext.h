@@ -143,8 +143,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   using RemotenessPromise = MozPromise<RefPtr<BrowserParent>, nsresult, false>;
   RefPtr<RemotenessPromise> ChangeRemoteness(const nsAString& aRemoteType,
                                              uint64_t aPendingSwitchId,
-                                             bool aReplaceBrowsingContext,
-                                             uint64_t aSpecificGroupId);
+                                             bool aReplaceBrowsingContext);
 
   // Return a media controller from the top-level browsing context that can
   // control all media belonging to this browsing context tree. Return nullptr
@@ -198,8 +197,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     PendingRemotenessChange(CanonicalBrowsingContext* aTarget,
                             RemotenessPromise::Private* aPromise,
                             uint64_t aPendingSwitchId,
-                            bool aReplaceBrowsingContext,
-                            uint64_t aSpecificGroupId);
+                            bool aReplaceBrowsingContext);
 
     void Cancel(nsresult aRv);
 
@@ -217,7 +215,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     RefPtr<ContentParent> mContentParent;
 
     uint64_t mPendingSwitchId;
-    uint64_t mSpecificGroupId;
     bool mReplaceBrowsingContext;
   };
 
