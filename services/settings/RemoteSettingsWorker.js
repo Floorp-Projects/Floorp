@@ -199,8 +199,6 @@ async function importDumpIDB(bucket, collection, records) {
       [IDB_RECORDS_STORE, IDB_TIMESTAMPS_STORE],
       "readwrite",
       ([recordsStore, timestampStore], rejectTransaction) => {
-        // Wipe before loading
-        recordsStore.delete(IDBKeyRange.bound([cid], [cid, []], false, true));
         IDBHelpers.bulkOperationHelper(
           recordsStore,
           {
