@@ -65,6 +65,7 @@ const PanelUI = {
 
     Services.obs.addObserver(this, "fullscreen-nav-toolbox");
     Services.obs.addObserver(this, "appMenu-notifications");
+    Services.obs.addObserver(this, "show-update-progress");
 
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -182,6 +183,7 @@ const PanelUI = {
 
     Services.obs.removeObserver(this, "fullscreen-nav-toolbox");
     Services.obs.removeObserver(this, "appMenu-notifications");
+    Services.obs.removeObserver(this, "show-update-progress");
 
     window.removeEventListener("MozDOMFullscreen:Entered", this);
     window.removeEventListener("MozDOMFullscreen:Exited", this);
@@ -270,6 +272,9 @@ const PanelUI = {
         }
         this._notifications = AppMenuNotifications.notifications;
         this._updateNotifications(true);
+        break;
+      case "show-update-progress":
+        openAboutDialog();
         break;
     }
   },

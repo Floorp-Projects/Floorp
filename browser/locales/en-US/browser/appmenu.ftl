@@ -4,6 +4,8 @@
 
 ## App Menu
 
+appmenuitem-update-banner =
+    .label-update-downloading = Downloading { -brand-shorter-name } update
 appmenuitem-protection-dashboard-title = Protections Dashboard
 appmenuitem-customize-mode =
     .label = Customize…

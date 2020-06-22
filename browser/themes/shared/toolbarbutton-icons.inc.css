@@ -290,6 +290,7 @@ toolbar[brighttext] {
 }
 
 #PanelUI-menu-button[badge-status="update-available"],
+#PanelUI-menu-button[badge-status="update-downloading"],
 #PanelUI-menu-button[badge-status="update-manual"],
 #PanelUI-menu-button[badge-status="update-restart"] {
   list-style-image: url("chrome://browser/skin/menu-badged.svg");
