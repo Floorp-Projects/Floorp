@@ -823,6 +823,7 @@ this.downloads = class extends ExtensionAPI {
               const source = {
                 url: options.url,
                 isPrivate: options.incognito,
+                loadingPrincipal: context.principal,
               };
 
               // Unless the API user explicitly wants errors ignored,
