@@ -1228,7 +1228,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
      * It should be noted here that more specialized rules on certain features
      * should be inserted -before- more generalized restriction. As the first
      * match for feature/OS/device found in the list will be used for the final
-     * blacklisting call.
+     * blocklisting call.
      */
 
     /*
@@ -1287,7 +1287,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // There are a several reports of strange rendering corruptions with this
     // driver version, with and without webrender. We weren't able to
     // reproduce these problems, but the users were able to update their
-    // drivers and it went away. So just to be safe, let's blacklist all
+    // drivers and it went away. So just to be safe, let's blocklist all
     // gpu use with this particular (very old) driver, restricted
     // to Win10 since we only have reports from that platform.
     APPEND_TO_DRIVER_BLOCKLIST2(
@@ -1517,7 +1517,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // Bug 1548410. Disable hardware accelerated video decoding on
     // Qualcomm drivers used on Windows on ARM64 which are known to
     // cause BSOD's and output suprious green frames while decoding video.
-    // Bug 1592826 expands the blacklist.
+    // Bug 1592826 expands the blocklist.
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows10, DeviceFamily::QualcommAll,
         nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
