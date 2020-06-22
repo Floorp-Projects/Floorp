@@ -1279,11 +1279,19 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   Register scriptReg = R2.scratchReg();
   Register countReg = R0.scratchReg();
 
-  // Load the JitScript* in scriptReg.
-  masm.movePtr(ImmPtr(script->jitScript()), scriptReg);
+  uint32_t warmUpCountOffset;
+  if (JitOptions.warpBuilder) {
+    // Load the ICScript* in scriptReg.
+    masm.loadPtr(frame.addressOfICScript(), scriptReg);
+    warmUpCountOffset = ICScript::offsetOfWarmUpCount();
+  } else {
+    // Load the JitScript* in scriptReg.
+    masm.movePtr(ImmPtr(script->jitScript()), scriptReg);
+    warmUpCountOffset = JitScript::offsetOfWarmUpCount();
+  }
 
   // Bump warm-up counter.
-  Address warmUpCounterAddr(scriptReg, JitScript::offsetOfWarmUpCount());
+  Address warmUpCounterAddr(scriptReg, warmUpCountOffset);
   masm.load32(warmUpCounterAddr, countReg);
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
@@ -1303,6 +1311,11 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
       IonOptimizations.get(IonOptimizations.firstLevel());
   uint32_t warmUpThreshold = info->compilerWarmUpThreshold(script, pc);
   masm.branch32(Assembler::LessThan, countReg, Imm32(warmUpThreshold), &done);
+
+  if (JitOptions.warpBuilder) {
+    // Load the JitScript* in scriptReg.
+    masm.movePtr(ImmPtr(script->jitScript()), scriptReg);
+  }
 
   // Do nothing if Ion is already compiling this script off-thread or if Ion has
   // been disabled for this script.
