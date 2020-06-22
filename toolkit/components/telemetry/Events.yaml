@@ -1959,7 +1959,7 @@ pictureinpicture:
       - main
     bug_numbers:
       - 1560590
-    expiry_version: "78"
+    expiry_version: "86"
     release_channel_collection: opt-out
   resize:
     objects: ["player"]
@@ -1978,7 +1978,7 @@ pictureinpicture:
       - main
     bug_numbers:
       - 1560590
-    expiry_version: "78"
+    expiry_version: "86"
     release_channel_collection: opt-out
   move:
     objects: ["player"]
@@ -1997,7 +1997,7 @@ pictureinpicture:
       - main
     bug_numbers:
       - 1560590
-    expiry_version: "78"
+    expiry_version: "86"
     release_channel_collection: opt-out
 
 security.doh.trrPerformance:
