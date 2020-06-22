@@ -780,6 +780,18 @@ pwmgr:
       - "firefox"
     record_in_processes: [content, main]
 
+jsonfile:
+  load:
+    description: >
+      Records when JSONFile.jsm consumers are trying to access a missing or corrupt json file.
+      For example, Login Store trying to access logins.json when it has gone missing or corrupt.
+    objects: ["logins", "autofillprofiles"]
+    bug_numbers: [1599567]
+    expiry_version: never
+    products: ["firefox"]
+    record_in_processes: [main] 
+    notification_emails: ["prathiksha@mozilla.com", "passwords-dev@mozilla.org"]
+
 fxa:
   connect:
     objects: ["account"]
