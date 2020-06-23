@@ -17,7 +17,9 @@ use {
 /// Contains all the information necessary to update the metrics on the main
 /// process.
 #[derive(Debug)]
-pub struct IPCPayload {}
+pub struct IPCPayload {
+    pub counters: HashMap<MetricId, i32>,
+}
 
 /// Uniquely identifies a single metric within its metric type.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -36,7 +38,11 @@ impl MetricId {
 }
 
 /// Global singleton: pending IPC payload.
-static PAYLOAD: Lazy<Mutex<IPCPayload>> = Lazy::new(|| Mutex::new(IPCPayload {}));
+static PAYLOAD: Lazy<Mutex<IPCPayload>> = Lazy::new(|| {
+    Mutex::new(IPCPayload {
+        counters: HashMap::new(),
+    })
+});
 
 pub fn with_ipc_payload<F, R>(f: F) -> R
 where
