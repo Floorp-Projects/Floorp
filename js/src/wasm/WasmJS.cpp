@@ -860,9 +860,8 @@ static bool EnforceRangeU32(JSContext* cx, HandleValue v, const char* kind,
   return true;
 }
 
-static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial,
-                      uint32_t maxMaximum, const char* kind, Limits* limits,
-                      Shareable allowShared) {
+static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
+                      const char* kind, Limits* limits, Shareable allowShared) {
   JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
   if (!initialAtom) {
     return false;
@@ -880,7 +879,7 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial,
   }
   limits->initial = initial;
 
-  if (limits->initial > maxInitial) {
+  if (limits->initial > maximumField) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
                              kind, "initial size");
     return false;
@@ -905,7 +904,7 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial,
     }
     limits->maximum = Some(maximum);
 
-    if (*limits->maximum > maxMaximum || limits->initial > *limits->maximum) {
+    if (*limits->maximum > maximumField || limits->initial > *limits->maximum) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_BAD_RANGE, kind, "maximum size");
       return false;
@@ -2058,8 +2057,8 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject obj(cx, &args[0].toObject());
   Limits limits;
-  if (!GetLimits(cx, obj, MaxMemoryLimitField, MaxMemoryLimitField, "Memory",
-                 &limits, Shareable::True)) {
+  if (!GetLimits(cx, obj, MaxMemoryLimitField, "Memory", &limits,
+                 Shareable::True)) {
     return false;
   }
 
@@ -2515,8 +2514,8 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Limits limits;
-  if (!GetLimits(cx, obj, MaxTableLimitField, MaxTableLimitField, "Table",
-                 &limits, Shareable::False)) {
+  if (!GetLimits(cx, obj, MaxTableLimitField, "Table", &limits,
+                 Shareable::False)) {
     return false;
   }
 
