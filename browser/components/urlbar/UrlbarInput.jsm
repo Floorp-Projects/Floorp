@@ -753,10 +753,25 @@ class UrlbarInput {
             Cu.reportError(`Provider not found: ${result.providerName}`);
             return;
           }
-          provider.tryMethod("pickResult", result);
+          provider.tryMethod("pickResult", result, element);
           return;
         }
         break;
+      }
+      case UrlbarUtils.RESULT_TYPE.DYNAMIC: {
+        this.handleRevert();
+        this.controller.engagementEvent.record(event, {
+          selIndex,
+          numChars: this._lastSearchString.length,
+          selType: this.controller.engagementEvent.typeFromElement(element),
+        });
+        let provider = UrlbarProvidersManager.getProvider(result.providerName);
+        if (!provider) {
+          Cu.reportError(`Provider not found: ${result.providerName}`);
+          return;
+        }
+        provider.tryMethod("pickResult", result, element);
+        return;
       }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
         this.controller.engagementEvent.record(event, {

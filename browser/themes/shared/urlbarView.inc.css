@@ -81,7 +81,7 @@
   padding-block: 6px;
 }
 
-:root[uidensity=touch] .urlbarView-row:not([type=tip]) {
+:root[uidensity=touch] .urlbarView-row:not([type=tip]):not([type=dynamic]) {
   padding-block: 11px;
 }
 
@@ -146,12 +146,12 @@
   flex-wrap: wrap;
 }
 
-.urlbarView-row:not([type=tip]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow],
+.urlbarView-row:not([type=tip]):not([type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow],
 .urlbarView-url[overflow] {
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
-.urlbarView-row:not([type=tip]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl) {
+.urlbarView-row:not([type=tip]):not([type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent, black 2em);
 }
 
@@ -160,11 +160,11 @@
   direction: ltr !important;
 }
 
-.urlbarView-row:not([type=tip]):hover > .urlbarView-row-inner {
+.urlbarView-row:not([type=tip]):not([type=dynamic]):hover > .urlbarView-row-inner {
   background: var(--arrowpanel-dimmed);
 }
 
-.urlbarView-row:not([type=tip])[selected] > .urlbarView-row-inner {
+.urlbarView-row:not([type=tip]):not([type=dynamic])[selected] > .urlbarView-row-inner {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
   fill-opacity: 1;

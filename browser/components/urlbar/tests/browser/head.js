@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
 /* import-globals-from head-common.js */

@@ -127,11 +127,16 @@ this.urlbar = class extends ExtensionAPI {
           inputHandling: true,
           register: (fire, providerName) => {
             let provider = UrlbarProviderExtension.getOrCreate(providerName);
-            provider.setEventListener("resultPicked", async resultPayload => {
-              return fire.async(resultPayload).catch(error => {
-                throw context.normalizeError(error);
-              });
-            });
+            provider.setEventListener(
+              "resultPicked",
+              async (resultPayload, dynamicElementName) => {
+                return fire
+                  .async(resultPayload, dynamicElementName)
+                  .catch(error => {
+                    throw context.normalizeError(error);
+                  });
+              }
+            );
             return () => provider.setEventListener("resultPicked", null);
           },
         }).api(),

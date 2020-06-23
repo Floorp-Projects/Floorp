@@ -15,9 +15,11 @@ add_task(async function test() {
     Assert.notEqual(gURLBar.value, "", "Input is not empty");
     Assert.equal(gURLBar.getAttribute("pageproxystate"), "valid");
 
-    let ext = await loadExtension(async () => {
-      await browser.experiments.urlbar.clearInput();
-      browser.test.sendMessage("done");
+    let ext = await loadExtension({
+      background: async () => {
+        await browser.experiments.urlbar.clearInput();
+        browser.test.sendMessage("done");
+      },
     });
     await ext.awaitMessage("done");
 

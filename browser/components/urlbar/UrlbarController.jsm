@@ -551,6 +551,9 @@ class UrlbarController {
       case UrlbarUtils.RESULT_TYPE.TIP:
         telemetryType = "tip";
         break;
+      case UrlbarUtils.RESULT_TYPE.DYNAMIC:
+        telemetryType = "dynamic";
+        break;
       default:
         Cu.reportError(`Unknown Result Type ${result.type}`);
         return;
@@ -908,6 +911,8 @@ class TelemetryEvent {
             return "tiphelp";
           }
           return "tip";
+        case UrlbarUtils.RESULT_TYPE.DYNAMIC:
+          return "dynamic";
       }
     }
     return "none";
