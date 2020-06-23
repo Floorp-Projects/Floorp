@@ -5,7 +5,7 @@
 use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF};
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
-use crate::clip::{ClipStore, ClipChainStack, ClipInstance};
+use crate::clip::{ClipStore, ClipChainStack};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState};
 use crate::debug_render::DebugItem;
@@ -13,11 +13,11 @@ use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, SavedTargetIndex};
-use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex, RecordedDirtyRegion};
-use crate::picture::{RetainedTiles, TileCacheInstance, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
-use crate::picture::{BackdropKind, TileCacheLogger};
+use crate::picture::{PictureUpdateState, ROOT_SURFACE_INDEX, SurfaceIndex, RecordedDirtyRegion};
+use crate::picture::{RetainedTiles, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
+use crate::picture::{BackdropKind, TileCacheLogger, SurfaceInfo};
 use crate::prim_store::{SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
-use crate::prim_store::{DeferredResolve, PrimitiveVisibilityMask};
+use crate::prim_store::{DeferredResolve};
 use crate::profiler::{FrameProfileCounters, TextureCacheProfileCounters, ResourceProfileCounters};
 use crate::render_backend::{DataStores, FrameStamp, FrameId};
 use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget};
@@ -30,6 +30,8 @@ use crate::scene::{BuiltScene, SceneProperties};
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use crate::util::MaxRect;
+use crate::visibility::{update_primitive_visibility, FrameVisibilityState, FrameVisibilityContext};
+use crate::visibility::{PrimitiveVisibilityMask};
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -121,49 +123,6 @@ pub struct FrameBuilder {
     /// that can optionally be consumed by this frame builder.
     pending_retained_tiles: RetainedTiles,
     pub globals: FrameGlobalResources,
-}
-
-pub struct FrameVisibilityContext<'a> {
-    pub spatial_tree: &'a SpatialTree,
-    pub global_screen_world_rect: WorldRect,
-    pub global_device_pixel_scale: DevicePixelScale,
-    pub surfaces: &'a [SurfaceInfo],
-    pub debug_flags: DebugFlags,
-    pub scene_properties: &'a SceneProperties,
-    pub config: FrameBuilderConfig,
-}
-
-pub struct FrameVisibilityState<'a> {
-    pub clip_store: &'a mut ClipStore,
-    pub resource_cache: &'a mut ResourceCache,
-    pub gpu_cache: &'a mut GpuCache,
-    pub scratch: &'a mut PrimitiveScratchBuffer,
-    pub tile_cache: Option<Box<TileCacheInstance>>,
-    pub retained_tiles: &'a mut RetainedTiles,
-    pub data_stores: &'a mut DataStores,
-    pub clip_chain_stack: ClipChainStack,
-    pub render_tasks: &'a mut RenderTaskGraph,
-    pub composite_state: &'a mut CompositeState,
-    /// A stack of currently active off-screen surfaces during the
-    /// visibility frame traversal.
-    pub surface_stack: Vec<SurfaceIndex>,
-}
-
-impl<'a> FrameVisibilityState<'a> {
-    pub fn push_surface(
-        &mut self,
-        surface_index: SurfaceIndex,
-        shared_clips: &[ClipInstance],
-        spatial_tree: &SpatialTree,
-    ) {
-        self.surface_stack.push(surface_index);
-        self.clip_chain_stack.push_surface(shared_clips, spatial_tree);
-    }
-
-    pub fn pop_surface(&mut self) {
-        self.surface_stack.pop().unwrap();
-        self.clip_chain_stack.pop_surface();
-    }
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -382,7 +341,8 @@ impl FrameBuilder {
                 surface_stack: Vec::with_capacity(16),
             };
 
-            scene.prim_store.update_visibility(
+            update_primitive_visibility(
+                &mut scene.prim_store,
                 scene.root_pic_index,
                 ROOT_SURFACE_INDEX,
                 &global_screen_world_rect,
