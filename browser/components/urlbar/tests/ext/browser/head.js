@@ -50,10 +50,12 @@ add_task(async function loadSource() {
  *
  * @param {function} background
  *   This function is serialized and becomes the background script.
+ * @param {object} extraFiles
+ *   Extra files to load in the extension.
  * @returns {object}
  *   The extension.
  */
-async function loadExtension(background) {
+async function loadExtension({ background, extraFiles = {} }) {
   let ext = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["urlbar"],
@@ -71,6 +73,7 @@ async function loadExtension(background) {
     files: {
       [SCHEMA_BASENAME]: schemaSource,
       [SCRIPT_BASENAME]: scriptSource,
+      ...extraFiles,
     },
     isPrivileged: true,
     background,
@@ -88,7 +91,7 @@ function add_settings_tasks(prefName, background) {
   });
 
   add_task(async function get() {
-    let ext = await loadExtension(background);
+    let ext = await loadExtension({ background });
 
     defaultPreferences.set(prefName, false);
     ext.sendMessage("get", {});
@@ -104,7 +107,7 @@ function add_settings_tasks(prefName, background) {
   });
 
   add_task(async function set() {
-    let ext = await loadExtension(background);
+    let ext = await loadExtension({ background });
 
     defaultPreferences.set(prefName, false);
     ext.sendMessage("set", { value: true });
@@ -123,7 +126,7 @@ function add_settings_tasks(prefName, background) {
   add_task(async function clear() {
     // no set()
     defaultPreferences.set(prefName, false);
-    let ext = await loadExtension(background);
+    let ext = await loadExtension({ background });
     ext.sendMessage("clear", {});
     let result = await ext.awaitMessage("done");
     Assert.strictEqual(result, false);
@@ -132,7 +135,7 @@ function add_settings_tasks(prefName, background) {
 
     // false -> true
     defaultPreferences.set(prefName, false);
-    ext = await loadExtension(background);
+    ext = await loadExtension({ background });
     ext.sendMessage("set", { value: true });
     await ext.awaitMessage("done");
     ext.sendMessage("clear", {});
@@ -143,7 +146,7 @@ function add_settings_tasks(prefName, background) {
 
     // true -> false
     defaultPreferences.set(prefName, true);
-    ext = await loadExtension(background);
+    ext = await loadExtension({ background });
     ext.sendMessage("set", { value: false });
     await ext.awaitMessage("done");
     ext.sendMessage("clear", {});
@@ -154,7 +157,7 @@ function add_settings_tasks(prefName, background) {
 
     // false -> false
     defaultPreferences.set(prefName, false);
-    ext = await loadExtension(background);
+    ext = await loadExtension({ background });
     ext.sendMessage("set", { value: false });
     await ext.awaitMessage("done");
     ext.sendMessage("clear", {});
@@ -165,7 +168,7 @@ function add_settings_tasks(prefName, background) {
 
     // true -> true
     defaultPreferences.set(prefName, true);
-    ext = await loadExtension(background);
+    ext = await loadExtension({ background });
     ext.sendMessage("set", { value: true });
     await ext.awaitMessage("done");
     ext.sendMessage("clear", {});
@@ -178,13 +181,13 @@ function add_settings_tasks(prefName, background) {
   add_task(async function shutdown() {
     // no set()
     defaultPreferences.set(prefName, false);
-    let ext = await loadExtension(background);
+    let ext = await loadExtension({ background });
     await ext.unload();
     Assert.strictEqual(defaultPreferences.get(prefName), false);
 
     // false -> true
     defaultPreferences.set(prefName, false);
-    ext = await loadExtension(background);
+    ext = await loadExtension({ background });
     ext.sendMessage("set", { value: true });
     await ext.awaitMessage("done");
     await ext.unload();
@@ -192,7 +195,7 @@ function add_settings_tasks(prefName, background) {
 
     // true -> false
     defaultPreferences.set(prefName, true);
-    ext = await loadExtension(background);
+    ext = await loadExtension({ background });
     ext.sendMessage("set", { value: false });
     await ext.awaitMessage("done");
     await ext.unload();
@@ -200,7 +203,7 @@ function add_settings_tasks(prefName, background) {
 
     // false -> false
     defaultPreferences.set(prefName, false);
-    ext = await loadExtension(background);
+    ext = await loadExtension({ background });
     ext.sendMessage("set", { value: false });
     await ext.awaitMessage("done");
     await ext.unload();
@@ -208,7 +211,7 @@ function add_settings_tasks(prefName, background) {
 
     // true -> true
     defaultPreferences.set(prefName, true);
-    ext = await loadExtension(background);
+    ext = await loadExtension({ background });
     ext.sendMessage("set", { value: true });
     await ext.awaitMessage("done");
     await ext.unload();

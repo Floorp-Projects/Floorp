@@ -1,0 +1,50 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+#urlbar {
+  --testDynamicResult1: ok1;
+}
+
+.urlbarView-row[dynamicType=test] > .urlbarView-row-inner {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  width: 100%;
+}
+
+.urlbarView-dynamic-test-buttonBox {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.urlbarView-dynamic-test-text {
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 10px;
+}
+
+.urlbarView-dynamic-test-selectable,
+.urlbarView-dynamic-test-button1,
+.urlbarView-dynamic-test-button2 {
+  min-height: 16px;
+  padding: 8px;
+  border: none;
+  border-radius: 2px;
+  font-size: 0.93em;
+  color: inherit;
+  background-color: var(--urlbarView-button-background);
+  min-width: 8.75em;
+  text-align: center;
+  flex-basis: initial;
+  flex-shrink: 0;
+  margin-inline-end: 10px;
+}
+
+.urlbarView-dynamic-test-selectable[selected],
+.urlbarView-dynamic-test-button1[selected],
+.urlbarView-dynamic-test-button2[selected] {
+  color: white;
+  background-color: var(--urlbarView-primary-button-background);
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
