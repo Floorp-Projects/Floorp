@@ -1151,12 +1151,6 @@ class AsyncTabSwitcher {
     }
   }
 
-  addMarker(marker) {
-    if (Services.profiler) {
-      Services.profiler.AddMarker(marker);
-    }
-  }
-
   /*
    * Debug related logging for switcher.
    */
@@ -1367,7 +1361,7 @@ class AsyncTabSwitcher {
           );
         }
       }
-      this.addMarker("AsyncTabSwitch:Composited");
+      ChromeUtils.addProfilerMarker("AsyncTabSwitch:Composited");
       this.switchPaintId = -1;
     }
   }
@@ -1410,7 +1404,7 @@ class AsyncTabSwitcher {
       TelemetryStopwatch.cancel("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
     }
     TelemetryStopwatch.start("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
-    this.addMarker("AsyncTabSwitch:Start");
+    ChromeUtils.addProfilerMarker("AsyncTabSwitch:Start");
   }
 
   noteFinishTabSwitch() {
@@ -1423,7 +1417,7 @@ class AsyncTabSwitcher {
     if (time != -1) {
       TelemetryStopwatch.finish("FX_TAB_SWITCH_TOTAL_E10S_MS", this.window);
       this.log("DEBUG: tab switch time = " + time);
-      this.addMarker("AsyncTabSwitch:Finish");
+      ChromeUtils.addProfilerMarker("AsyncTabSwitch:Finish");
     }
   }
 
@@ -1438,7 +1432,7 @@ class AsyncTabSwitcher {
       "FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS",
       this.window
     );
-    this.addMarker("AsyncTabSwitch:SpinnerShown");
+    ChromeUtils.addProfilerMarker("AsyncTabSwitch:SpinnerShown");
     Services.telemetry
       .getHistogramById("FX_TAB_SWITCH_SPINNER_VISIBLE_TRIGGER")
       .add(this._loadTimerClearedBy);
@@ -1461,7 +1455,7 @@ class AsyncTabSwitcher {
       "FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS",
       this.window
     );
-    this.addMarker("AsyncTabSwitch:SpinnerHidden");
+    ChromeUtils.addProfilerMarker("AsyncTabSwitch:SpinnerHidden");
     // we do not get a onPaint after displaying the spinner
     this._loadTimerClearedBy = "none";
   }
