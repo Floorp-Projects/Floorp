@@ -1046,7 +1046,7 @@
 
 - name: CallInt32ToString
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     input: Int32Id
@@ -1054,7 +1054,7 @@
 
 - name: CallNumberToString
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     input: NumberId
@@ -1062,7 +1062,7 @@
 
 - name: BooleanToString
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     input: Int32Id
