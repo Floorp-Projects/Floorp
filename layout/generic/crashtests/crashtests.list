@@ -323,7 +323,7 @@ load 467493-1.html
 load 467493-2.html
 load 467875-1.xhtml
 load 467914-1.html
-load 468207-1.html
+asserts-if(winWidget,0-2) load 468207-1.html # bug 1647811
 load 468771-1.xhtml
 load 468771-2.xhtml
 load 469859-1.xhtml # bug 1323665
@@ -512,7 +512,7 @@ load 810726.html
 load 812822-1.html
 load 812879-1.html
 load 812879-2.html
-asserts(4-26) asserts-if(Android,4-34) load 812893.html # bug 1581653
+asserts-if(winWidget,4-26) asserts-if(Android,4-34) load 812893.html # bug 1581653
 load 814995.html
 load 822910.xhtml
 load 824297-1.html
@@ -573,7 +573,7 @@ load chrome://reftest/content/crashtests/layout/generic/crashtests/1003441.xhtml
 load 1015562.html
 asserts(1-3) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
-asserts-if(Android,48) load 1015844.html
+load 1015844.html
 asserts-if(Android,0-358) pref(font.size.inflation.minTwips,200) load 1032450.html # Bug 1607658
 load 1032613-1.svg
 load 1032613-2.html
