@@ -32,6 +32,7 @@ class nsIPrincipal;
 
 namespace mozilla {
 
+class PreloadHashKey;
 class SharedStyleSheetCache;
 class SheetLoadDataHashKey;
 class StyleSheet;
@@ -564,6 +565,10 @@ class Loader final {
   // given loader, in case they were marked as canceled.
   static void MarkLoadTreeFailed(SheetLoadData&,
                                  Loader* aOnlyForLoader = nullptr);
+
+  // A shorthand to mark a possible link preload as used to supress "unused"
+  // warning in the console.
+  void MaybeNotifyPreloadUsed(SheetLoadData&);
 
   nsRefPtrHashtable<nsStringHashKey, StyleSheet> mInlineSheets;
 
