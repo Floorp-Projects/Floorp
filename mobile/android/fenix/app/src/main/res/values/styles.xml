@@ -561,7 +561,8 @@
         <item name="shapeAppearance">@style/BottomSheetShapeAppearance</item>
         <item name="behavior_fitToContents">false</item>
         <item name="behavior_expandedOffset">80</item>
-        <item name="behavior_skipCollapsed">true</item>
+        <item name="behavior_skipCollapsed">false</item>
+        <item name="behavior_halfExpandedRatio">0.4</item>
     </style>
 
     <style name="TabTrayFab" parent="Widget.MaterialComponents.ExtendedFloatingActionButton">
