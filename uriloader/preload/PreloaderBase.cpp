@@ -5,6 +5,7 @@
 #include "PreloaderBase.h"
 
 #include "mozilla/dom/Document.h"
+#include "nsContentUtils.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
@@ -111,7 +112,9 @@ void PreloaderBase::NotifyOpen(const PreloadHashKey& aKey, nsIChannel* aChannel,
   NotifyOpen(aKey, aDocument, aIsPreload);
   mChannel = aChannel;
 
-  // * Start the usage timer if aIsPreload.
+  auto callback = MakeRefPtr<UsageTimer>(this, aDocument);
+  NS_NewTimerWithCallback(getter_AddRefs(mUsageTimer), callback, 10000,
+                          nsITimer::TYPE_ONE_SHOT);
 
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
   mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
@@ -146,8 +149,7 @@ void PreloaderBase::NotifyUsage(LoadBackground aLoadBackground) {
   }
 
   mIsUsed = true;
-
-  // * Cancel the usage timer.
+  CancelUsageTimer();
 }
 
 void PreloaderBase::RemoveSelf(dom::Document* aDocument) {
@@ -160,6 +162,8 @@ void PreloaderBase::NotifyRestart(dom::Document* aDocument,
                                   PreloaderBase* aNewPreloader) {
   RemoveSelf(aDocument);
   mKey = PreloadHashKey();
+
+  CancelUsageTimer();
 
   if (aNewPreloader) {
     aNewPreloader->mNodes = std::move(mNodes);
@@ -254,6 +258,13 @@ void PreloaderBase::NotifyNodeEvent(nsINode* aNode) {
       aNode, mShouldFireLoadEvent || NS_SUCCEEDED(*mOnStopStatus));
 }
 
+void PreloaderBase::CancelUsageTimer() {
+  if (mUsageTimer) {
+    mUsageTimer->Cancel();
+    mUsageTimer = nullptr;
+  }
+}
+
 nsresult PreloaderBase::AsyncConsume(nsIStreamListener* aListener) {
   // We want to return an error so that consumers can't ever use a preload to
   // consume data unless it's properly implemented.
@@ -273,6 +284,40 @@ nsCString PreloaderBase::RedirectRecord::Fragment() const {
   nsCString fragment;
   mURI->GetRef(fragment);
   return fragment;
+}
+
+// PreloaderBase::UsageTimer
+
+NS_IMPL_ISUPPORTS(PreloaderBase::UsageTimer, nsITimerCallback)
+
+NS_IMETHODIMP PreloaderBase::UsageTimer::Notify(nsITimer* aTimer) {
+  if (!mPreload || !mDocument) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(aTimer == mPreload->mUsageTimer);
+  mPreload->mUsageTimer = nullptr;
+
+  if (mPreload->IsUsed()) {
+    // Left in the hashtable, but marked as used.  This is a valid case, and we
+    // don't want to emit a warning for this preload then.
+    return NS_OK;
+  }
+
+  // PreloadHashKey overrides GetKey, we need to use the nsURIHashKey one to get
+  // the URI.
+  nsIURI* uri = static_cast<nsURIHashKey*>(&mPreload->mKey)->GetKey();
+  if (!uri) {
+    return NS_OK;
+  }
+  nsString spec = NS_ConvertUTF8toUTF16(uri->GetSpecOrDefault());
+
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), mDocument,
+      nsContentUtils::eDOM_PROPERTIES, "UnusedLinkPreloadPending",
+      nsTArray<nsString>({spec}));
+
+  return NS_OK;
 }
 
 }  // namespace mozilla
