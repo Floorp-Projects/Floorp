@@ -106,9 +106,6 @@ var whitelist = [
   // modules/libpref/Preferences.cpp
   { file: "resource://gre/greprefs.js" },
 
-  // browser/extensions/pdfjs/content/web/viewer.js
-  { file: "resource://pdf.js/build/pdf.worker.js" },
-
   // layout/mathml/nsMathMLChar.cpp
   { file: "resource://gre/res/fonts/mathfontSTIXGeneral.properties" },
   { file: "resource://gre/res/fonts/mathfontUnicode.properties" },
