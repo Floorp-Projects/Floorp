@@ -1219,6 +1219,15 @@ extern "C" {
     fn wr_compositor_enable_native_compositor(compositor: *mut c_void, enable: bool);
     fn wr_compositor_deinit(compositor: *mut c_void);
     fn wr_compositor_get_capabilities(compositor: *mut c_void) -> CompositorCapabilities;
+    fn wr_compositor_map_tile(
+        compositor: *mut c_void,
+        id: NativeTileId,
+        dirty_rect: DeviceIntRect,
+        valid_rect: DeviceIntRect,
+        data: &mut *mut c_void,
+        stride: &mut i32,
+    );
+    fn wr_compositor_unmap_tile(compositor: *mut c_void);
 }
 
 pub struct WrCompositor(*mut c_void);
@@ -1315,6 +1324,58 @@ impl Compositor for WrCompositor {
     }
 }
 
+/// Information about the underlying data buffer of a mapped tile.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct MappedTileInfo {
+    pub data: *mut c_void,
+    pub stride: i32,
+}
+
+/// WrCompositor-specific extensions to the basic Compositor interface.
+impl WrCompositor {
+    /// Map a tile's underlying buffer so it can be used as the backing for
+    /// a SWGL framebuffer. This is intended to be a replacement for 'bind'
+    /// in any compositors that intend to directly interoperate with SWGL
+    /// while supporting some form of native layers.
+    pub fn map_tile(
+        &mut self,
+        id: NativeTileId,
+        dirty_rect: DeviceIntRect,
+        valid_rect: DeviceIntRect,
+    ) -> Option<MappedTileInfo> {
+        let mut tile_info = MappedTileInfo {
+            data: ptr::null_mut(),
+            stride: 0,
+        };
+
+        unsafe {
+            wr_compositor_map_tile(
+                self.0,
+                id,
+                dirty_rect,
+                valid_rect,
+                &mut tile_info.data,
+                &mut tile_info.stride,
+            );
+        }
+
+        if tile_info.data != ptr::null_mut() && tile_info.stride != 0 {
+            Some(tile_info)
+        } else {
+            None
+        }
+    }
+
+    /// Unmap a tile that was was previously mapped via map_tile to signal
+    /// that SWGL is done rendering to the buffer.
+    pub fn unmap_tile(&mut self) {
+        unsafe {
+            wr_compositor_unmap_tile(self.0);
+        }
+    }
+}
+
 // Call MakeCurrent before this.
 #[no_mangle]
 pub extern "C" fn wr_window_new(
@@ -1405,8 +1466,8 @@ pub extern "C" fn wr_window_new(
     };
 
     let compositor_config = if software {
-        let wr_compositor: Option<Box<dyn Compositor>> = if compositor != ptr::null_mut() {
-            Some(Box::new(WrCompositor(compositor)))
+        let wr_compositor = if compositor != ptr::null_mut() {
+            Some(WrCompositor(compositor))
         } else {
             None
         };
