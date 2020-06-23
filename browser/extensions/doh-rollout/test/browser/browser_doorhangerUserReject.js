@@ -20,16 +20,13 @@ add_task(async function testDoorhangerUserReject() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
-  is(
-    Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
-    undefined,
-    "Doorhanger shown pref undefined before user interaction."
-  );
 
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
-  prefPromise = TestUtils.waitForPrefChange(prefs.DOH_DOORHANGER_SHOWN_PREF);
+  prefPromise = TestUtils.waitForPrefChange(
+    prefs.DOH_DOORHANGER_USER_DECISION_PREF
+  );
 
   // Click the doorhanger's "reject" button.
   let button = panel.querySelector(".popup-notification-secondary-button");
@@ -40,25 +37,20 @@ add_task(async function testDoorhangerUserReject() {
   await prefPromise;
 
   is(
-    Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
-    true,
-    "Doorhanger shown pref saved."
-  );
-  is(
     Preferences.get(prefs.DOH_DOORHANGER_USER_DECISION_PREF),
     "UIDisabled",
     "Doorhanger decision saved."
-  );
-  is(
-    Preferences.get(prefs.DOH_SELF_ENABLED_PREF),
-    undefined,
-    "Breadcrumb cleared."
   );
 
   BrowserTestUtils.removeTab(tab);
 
   await ensureTRRMode(undefined);
-  await checkHeuristicsTelemetry("disable_doh", "doorhangerDecline");
+  ensureNoHeuristicsTelemetry();
+  is(
+    Preferences.get(prefs.DOH_SELF_ENABLED_PREF),
+    undefined,
+    "Breadcrumb cleared."
+  );
 
   // Simulate a network change.
   simulateNetworkChange();
