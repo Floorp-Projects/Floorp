@@ -1658,16 +1658,20 @@ import android.view.inputmethod.EditorInfo;
             }
         }
 
-        if (actionHint.equalsIgnoreCase("go")) {
+        if (actionHint.equals("enter")) {
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
+        } else if (actionHint.equals("go")) {
             outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
-        } else if (actionHint.equalsIgnoreCase("done")) {
+        } else if (actionHint.equals("done")) {
             outAttrs.imeOptions = EditorInfo.IME_ACTION_DONE;
-        } else if (actionHint.equalsIgnoreCase("next")) {
+        } else if (actionHint.equals("next") || actionHint.equals("maybenext")) {
             outAttrs.imeOptions = EditorInfo.IME_ACTION_NEXT;
-        } else if (actionHint.equalsIgnoreCase("search") ||
-                typeHint.equalsIgnoreCase("search")) {
+        } else if (actionHint.equals("previous")) {
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_PREVIOUS;
+        } else if (actionHint.equals("search") ||
+                typeHint.equals("search")) {
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
-        } else if (actionHint.equalsIgnoreCase("send")) {
+        } else if (actionHint.equals("send")) {
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
         } else if (actionHint.length() > 0) {
             if (DEBUG)
