@@ -26,18 +26,6 @@ NS_IMETHODIMP RemoteWebProgress::Init(nsIWebProgress* aManager,
   return NS_OK;
 }
 
-NS_IMETHODIMP RemoteWebProgress::Update(uint64_t aOuterDOMWindowID,
-                                        uint64_t aInnerDOMWindowID,
-                                        uint32_t aLoadType,
-                                        bool aIsLoadingDocument) {
-  mOuterDOMWindowID = aOuterDOMWindowID;
-  mInnerDOMWindowID = aInnerDOMWindowID;
-  mLoadType = aLoadType;
-  mIsLoadingDocument = aIsLoadingDocument;
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP RemoteWebProgress::AddProgressListener(
     nsIWebProgressListener* aListener, uint32_t aNotifyMask) {
   if (mManager) {
@@ -62,17 +50,6 @@ NS_IMETHODIMP RemoteWebProgress::RemoveProgressListener(
 
 NS_IMETHODIMP RemoteWebProgress::GetDOMWindow(mozIDOMWindowProxy** aDOMWindow) {
   return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP RemoteWebProgress::GetDOMWindowID(uint64_t* aDOMWindowID) {
-  *aDOMWindowID = mOuterDOMWindowID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP RemoteWebProgress::GetInnerDOMWindowID(
-    uint64_t* aInnerDOMWindowID) {
-  *aInnerDOMWindowID = mInnerDOMWindowID;
-  return NS_OK;
 }
 
 NS_IMETHODIMP RemoteWebProgress::GetIsTopLevel(bool* aIsTopLevel) {
