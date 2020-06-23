@@ -349,13 +349,8 @@ void SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded(
   }
 
   if (!aData.mURI) {
-    LOG(("  Inline style sheet, bailing"));
+    LOG(("  Inline or constructable style sheet, bailing"));
     // Inline sheet caching happens in Loader::mInlineSheets.
-    return;
-  }
-
-  if (aData.mSheet->IsConstructed()) {
-    LOG(("  Constructable style sheet, bailing"));
     // Constructable sheets are not worth caching, they're always unique.
     return;
   }

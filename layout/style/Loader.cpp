@@ -1494,13 +1494,7 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
 
 void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
   RecordUseCountersIfNeeded(mDocument, aData.mUseCounters.get());
-
-  // Constructable sheets do get here via StyleSheet::Replace, but they don't
-  // count like a regular sheet load.
-  //
-  // TODO(emilio, 1642227): They don't set mMustNotify, should they notify
-  // global observers? If not, maybe this can be simplified.
-  if (!aData.mSheet->IsConstructed()) {
+  if (aData.mURI) {
     MOZ_DIAGNOSTIC_ASSERT(mOngoingLoadCount);
     --mOngoingLoadCount;
   }
@@ -1659,8 +1653,6 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
         matched, IsPreload::No, aObserver, principal, aInfo.mReferrerInfo,
         aInfo.mContent);
     data->mLineNumber = aLineNumber;
-
-    ++mOngoingLoadCount;
 
     // Parse completion releases the load data.
     //

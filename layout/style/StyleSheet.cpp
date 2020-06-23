@@ -697,9 +697,11 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
   // 3. Disallow modifications until finished.
   SetModificationDisallowed(true);
 
+  // TODO(emilio, 1642227): Should constructable stylesheets notify global
+  // observers (i.e., set mMustNotify to true)?
   auto* loader = mConstructorDocument->CSSLoader();
   auto loadData = MakeRefPtr<css::SheetLoadData>(
-      loader, GetBaseURI(), this, /* aSyncLoad */ false,
+      loader, nullptr, this, /* aSyncLoad */ false,
       css::Loader::UseSystemPrincipal::No, css::Loader::IsPreload::No,
       /* aPreloadEncoding */ nullptr,
       /* aObserver */ nullptr, mConstructorDocument->NodePrincipal(),
