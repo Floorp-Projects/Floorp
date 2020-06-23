@@ -1364,6 +1364,8 @@ class ContentParent final
   void RemoveFromPool(nsTArray<ContentParent*>&);
   void AssertNotInPool();
 
+  void AssertAlive();
+
  private:
   // Released in ActorDealloc; deliberately not exposed to the CC.
   RefPtr<ContentParent> mSelfRef;
