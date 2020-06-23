@@ -1221,9 +1221,9 @@ class GraphWalker {
  private:
   Visitor mVisitor;
 
-  void DoWalk(nsDeque<PtrInfo>& aQueue);
+  void DoWalk(nsDeque& aQueue);
 
-  void CheckedPush(nsDeque<PtrInfo>& aQueue, PtrInfo* aPi) {
+  void CheckedPush(nsDeque& aQueue, PtrInfo* aPi) {
     if (!aPi) {
       MOZ_CRASH();
     }
@@ -1280,14 +1280,14 @@ static void ToParticipant(void* aParti, nsCycleCollectionParticipant** aCp) {
 
 template <class Visitor>
 MOZ_NEVER_INLINE void GraphWalker<Visitor>::Walk(PtrInfo* aPi) {
-  nsDeque<PtrInfo> queue;
+  nsDeque queue;
   CheckedPush(queue, aPi);
   DoWalk(queue);
 }
 
 template <class Visitor>
 MOZ_NEVER_INLINE void GraphWalker<Visitor>::WalkFromRoots(CCGraph& aGraph) {
-  nsDeque<PtrInfo> queue;
+  nsDeque queue;
   NodePool::Enumerator etor(aGraph.mNodes);
   for (uint32_t i = 0; i < aGraph.mRootCount; ++i) {
     CheckedPush(queue, etor.GetNext());
@@ -1296,11 +1296,11 @@ MOZ_NEVER_INLINE void GraphWalker<Visitor>::WalkFromRoots(CCGraph& aGraph) {
 }
 
 template <class Visitor>
-MOZ_NEVER_INLINE void GraphWalker<Visitor>::DoWalk(nsDeque<PtrInfo>& aQueue) {
+MOZ_NEVER_INLINE void GraphWalker<Visitor>::DoWalk(nsDeque& aQueue) {
   // Use a aQueue to match the breadth-first traversal used when we
   // built the graph, for hopefully-better locality.
   while (aQueue.GetSize() > 0) {
-    PtrInfo* pi = aQueue.PopFront();
+    PtrInfo* pi = static_cast<PtrInfo*>(aQueue.PopFront());
 
     if (pi->WasTraversed() && mVisitor.ShouldVisitNode(pi)) {
       mVisitor.VisitNode(pi);

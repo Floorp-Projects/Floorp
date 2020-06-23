@@ -172,9 +172,12 @@ typedef nsClassHashtable<nsCStringHashKey, BFSTableData> BFSHashTable;
 
 // nsObjectHashtable enumerator functions.
 
-class CStreamConvDeallocator : public nsDequeFunctor<nsCString> {
+class CStreamConvDeallocator : public nsDequeFunctor {
  public:
-  void operator()(nsCString* anObject) override { delete anObject; }
+  void operator()(void* anObject) override {
+    nsCString* string = (nsCString*)anObject;
+    delete string;
+  }
 };
 
 // walks the graph using a breadth-first-search algorithm which generates a

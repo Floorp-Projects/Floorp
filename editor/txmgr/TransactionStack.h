@@ -15,7 +15,7 @@ namespace mozilla {
 
 class TransactionItem;
 
-class TransactionStack : private nsDeque<TransactionItem> {
+class TransactionStack : private nsDeque {
  public:
   enum Type { FOR_UNDO, FOR_REDO };
 

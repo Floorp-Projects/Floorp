@@ -381,10 +381,10 @@ class Http2Session final : public ASpdySession,
   nsClassHashtable<nsPtrHashKey<nsAHttpTransaction>, Http2Stream>
       mStreamTransactionHash;
 
-  nsDeque<Http2Stream> mReadyForWrite;
-  nsDeque<Http2Stream> mQueuedStreams;
-  nsDeque<Http2Stream> mPushesReadyForRead;
-  nsDeque<Http2Stream> mSlowConsumersReadyForRead;
+  nsDeque mReadyForWrite;
+  nsDeque mQueuedStreams;
+  nsDeque mPushesReadyForRead;
+  nsDeque mSlowConsumersReadyForRead;
   nsTArray<Http2PushedStream*> mPushedStreams;
 
   // Compression contexts for header transport.
@@ -527,7 +527,7 @@ class Http2Session final : public ASpdySession,
   bool mPreviousUsed;                     // true when backup is used
 
   // used as a temporary buffer while enumerating the stream hash during GoAway
-  nsDeque<Http2Stream> mGoAwayStreamsToRestart;
+  nsDeque mGoAwayStreamsToRestart;
 
   // Each session gets a unique serial number because the push cache is
   // correlated by the load group and the serial number can be used as part of

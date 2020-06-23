@@ -1162,15 +1162,12 @@ WebSocketChannel::~WebSocketChannel() {
   free(mDynamicOutput);
   delete mCurrentOut;
 
-  while ((mCurrentOut = mOutgoingPingMessages.PopFront())) {
+  while ((mCurrentOut = (OutboundMessage*)mOutgoingPingMessages.PopFront()))
     delete mCurrentOut;
-  }
-  while ((mCurrentOut = mOutgoingPongMessages.PopFront())) {
+  while ((mCurrentOut = (OutboundMessage*)mOutgoingPongMessages.PopFront()))
     delete mCurrentOut;
-  }
-  while ((mCurrentOut = mOutgoingMessages.PopFront())) {
+  while ((mCurrentOut = (OutboundMessage*)mOutgoingMessages.PopFront()))
     delete mCurrentOut;
-  }
 
   mListenerMT = nullptr;
 
@@ -1888,7 +1885,7 @@ void WebSocketChannel::GeneratePong(uint8_t* payload, uint32_t len) {
                          new OutboundMessage(kMsgTypePong, buf));
 }
 
-void WebSocketChannel::EnqueueOutgoingMessage(nsDeque<OutboundMessage>& aQueue,
+void WebSocketChannel::EnqueueOutgoingMessage(nsDeque& aQueue,
                                               OutboundMessage* aMsg) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -1924,16 +1921,16 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
 
   nsresult rv = NS_OK;
 
-  mCurrentOut = mOutgoingPongMessages.PopFront();
+  mCurrentOut = (OutboundMessage*)mOutgoingPongMessages.PopFront();
   if (mCurrentOut) {
     MOZ_ASSERT(mCurrentOut->GetMsgType() == kMsgTypePong, "Not pong message!");
   } else {
-    mCurrentOut = mOutgoingPingMessages.PopFront();
+    mCurrentOut = (OutboundMessage*)mOutgoingPingMessages.PopFront();
     if (mCurrentOut)
       MOZ_ASSERT(mCurrentOut->GetMsgType() == kMsgTypePing,
                  "Not ping message!");
     else
-      mCurrentOut = mOutgoingMessages.PopFront();
+      mCurrentOut = (OutboundMessage*)mOutgoingMessages.PopFront();
   }
 
   if (!mCurrentOut) return;

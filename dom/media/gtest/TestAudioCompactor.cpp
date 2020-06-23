@@ -11,13 +11,14 @@ using mozilla::AudioData;
 using mozilla::AudioDataValue;
 using mozilla::MediaQueue;
 
-class MemoryFunctor : public nsDequeFunctor<AudioData> {
+class MemoryFunctor : public nsDequeFunctor {
  public:
   MemoryFunctor() : mSize(0) {}
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
-  void operator()(AudioData* aObject) override {
-    mSize += aObject->SizeOfIncludingThis(MallocSizeOf);
+  void operator()(void* aObject) override {
+    const AudioData* audioData = static_cast<const AudioData*>(aObject);
+    mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
   }
 
   size_t mSize;

@@ -24,7 +24,7 @@
 namespace mozilla {
 namespace net {
 
-static nsDeque<nvPair>* gStaticHeaders = nullptr;
+static nsDeque* gStaticHeaders = nullptr;
 
 class HpackStaticTableReporter final : public nsIMemoryReporter {
  public:
@@ -104,7 +104,7 @@ static void AddStaticElement(const nsCString& name) {
 static void InitializeStaticHeaders() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (!gStaticHeaders) {
-    gStaticHeaders = new nsDeque<nvPair>();
+    gStaticHeaders = new nsDeque();
     gStaticReporter = new HpackStaticTableReporter();
     RegisterStrongMemoryReporter(gStaticReporter);
     AddStaticElement(NS_LITERAL_CSTRING(":authority"));
@@ -198,7 +198,7 @@ void nvFIFO::AddElement(const nsCString& name) {
 }
 
 void nvFIFO::RemoveElement() {
-  nvPair* pair = mTable.Pop();
+  nvPair* pair = static_cast<nvPair*>(mTable.Pop());
   if (pair) {
     mByteCount -= pair->Size();
     delete pair;
@@ -217,9 +217,7 @@ size_t nvFIFO::StaticLength() const { return gStaticHeaders->GetSize(); }
 
 void nvFIFO::Clear() {
   mByteCount = 0;
-  while (mTable.GetSize()) {
-    delete mTable.Pop();
-  }
+  while (mTable.GetSize()) delete static_cast<nvPair*>(mTable.Pop());
 }
 
 const nvPair* nvFIFO::operator[](size_t index) const {
@@ -231,9 +229,10 @@ const nvPair* nvFIFO::operator[](size_t index) const {
     return nullptr;
   }
   if (index >= gStaticHeaders->GetSize()) {
-    return mTable.ObjectAt(index - gStaticHeaders->GetSize());
+    return static_cast<nvPair*>(
+        mTable.ObjectAt(index - gStaticHeaders->GetSize()));
   }
-  return gStaticHeaders->ObjectAt(index);
+  return static_cast<nvPair*>(gStaticHeaders->ObjectAt(index));
 }
 
 Http2BaseCompressor::Http2BaseCompressor()
