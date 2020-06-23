@@ -764,7 +764,7 @@ void HttpChannelChild::OnTransportAndData(const nsresult& aChannelStatus,
     return;
   }
 
-  if (mCanceled) {
+  if (mCanceled || NS_FAILED(mStatus)) {
     return;
   }
 
