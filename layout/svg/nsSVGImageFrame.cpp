@@ -408,7 +408,7 @@ bool nsSVGImageFrame::CreateWebRenderCommands(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder, nsDisplaySVGGeometry* aItem,
+    nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGGeometry* aItem,
     bool aDryRun) {
   if (!StyleVisibility()->IsVisible()) {
     return true;

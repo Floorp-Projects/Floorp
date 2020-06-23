@@ -15,12 +15,16 @@
 #include "SVGObserverUtils.h"
 #include "SVGFilters.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 
+nsIFrame* NS_NewSVGFEImageFrame(mozilla::PresShell* aPresShell,
+                                mozilla::ComputedStyle* aStyle);
+
+namespace mozilla {
+
 class SVGFEImageFrame final : public nsFrame {
-  friend nsIFrame* NS_NewSVGFEImageFrame(mozilla::PresShell* aPresShell,
-                                         ComputedStyle* aStyle);
+  friend nsIFrame* ::NS_NewSVGFEImageFrame(mozilla::PresShell* aPresShell,
+                                           ComputedStyle* aStyle);
 
  protected:
   explicit SVGFEImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
@@ -69,9 +73,15 @@ class SVGFEImageFrame final : public nsFrame {
   }
 };
 
-nsIFrame* NS_NewSVGFEImageFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) SVGFEImageFrame(aStyle, aPresShell->GetPresContext());
+}  // namespace mozilla
+
+nsIFrame* NS_NewSVGFEImageFrame(mozilla::PresShell* aPresShell,
+                                mozilla::ComputedStyle* aStyle) {
+  return new (aPresShell)
+      mozilla::SVGFEImageFrame(aStyle, aPresShell->GetPresContext());
 }
+
+namespace mozilla {
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEImageFrame)
 
@@ -159,3 +169,5 @@ void SVGFEImageFrame::OnVisibilityChange(
 
   nsFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
+
+}  // namespace mozilla

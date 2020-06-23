@@ -11,11 +11,11 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/SVGGeometryFrame.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Types.h"
-#include "mozilla/layout/SVGGeometryFrame.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/ClipManager.h"
 #include "mozilla/layers/ImageClient.h"
@@ -1113,7 +1113,7 @@ static bool IsItemProbablyActive(
       return true;
     }
     case DisplayItemType::TYPE_SVG_GEOMETRY: {
-      auto* svgItem = static_cast<nsDisplaySVGGeometry*>(aItem);
+      auto* svgItem = static_cast<DisplaySVGGeometry*>(aItem);
       return svgItem->ShouldBeActive(aBuilder, aResources, aSc, aManager,
                                      aDisplayListBuilder);
     }

@@ -53,9 +53,9 @@ NS_QUERYFRAME_HEAD(SVGGeometryFrame)
   NS_QUERYFRAME_ENTRY(SVGGeometryFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 
-void nsDisplaySVGGeometry::HitTest(nsDisplayListBuilder* aBuilder,
-                                   const nsRect& aRect, HitTestState* aState,
-                                   nsTArray<nsIFrame*>* aOutFrames) {
+void DisplaySVGGeometry::HitTest(nsDisplayListBuilder* aBuilder,
+                                 const nsRect& aRect, HitTestState* aState,
+                                 nsTArray<nsIFrame*>* aOutFrames) {
   SVGGeometryFrame* frame = static_cast<SVGGeometryFrame*>(mFrame);
   nsPoint pointRelativeToReferenceFrame = aRect.Center();
   // ToReferenceFrame() includes frame->GetPosition(), our user space position.
@@ -69,8 +69,8 @@ void nsDisplaySVGGeometry::HitTest(nsDisplayListBuilder* aBuilder,
   }
 }
 
-void nsDisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
-                                 gfxContext* aCtx) {
+void DisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
+                               gfxContext* aCtx) {
   uint32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 
   // ToReferenceFrame includes our mRect offset, but painting takes
@@ -89,7 +89,7 @@ void nsDisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
-void nsDisplaySVGGeometry::ComputeInvalidationRegion(
+void DisplaySVGGeometry::ComputeInvalidationRegion(
     nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
     nsRegion* aInvalidRegion) const {
   auto geometry =
@@ -205,7 +205,7 @@ void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     return;
   }
   DisplayOutline(aBuilder, aLists);
-  aLists.Content()->AppendNewToTop<nsDisplaySVGGeometry>(aBuilder, this);
+  aLists.Content()->AppendNewToTop<DisplaySVGGeometry>(aBuilder, this);
 }
 
 //----------------------------------------------------------------------

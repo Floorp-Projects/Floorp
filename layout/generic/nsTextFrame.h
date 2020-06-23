@@ -31,11 +31,11 @@
 class nsTextPaintStyle;
 struct SelectionDetails;
 class nsTextFragment;
-class SVGTextFrame;
 
 namespace mozilla {
 class SVGContextPaint;
-};
+class SVGTextFrame;
+}  // namespace mozilla
 
 class nsTextFrame : public nsFrame {
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;

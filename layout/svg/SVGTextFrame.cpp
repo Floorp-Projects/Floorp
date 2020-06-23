@@ -54,11 +54,12 @@
 #include <cmath>
 #include <limits>
 
-using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGTextContentElement_Binding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
+
+namespace mozilla {
 
 // ============================================================================
 // Utility functions
@@ -363,8 +364,6 @@ static double GetContextScale(const gfxMatrix& aMatrix) {
 
 // ============================================================================
 // Utility classes
-
-namespace mozilla {
 
 // ----------------------------------------------------------------------------
 // TextRenderedRun
@@ -2675,26 +2674,24 @@ void SVGTextDrawPathCallbacks::StrokeGeometry() {
   }
 }
 
-}  // namespace mozilla
-
 // ============================================================================
 // SVGTextFrame
 
 // ----------------------------------------------------------------------------
 // Display list item
 
-class nsDisplaySVGText final : public nsPaintedDisplayItem {
+class DisplaySVGText final : public nsPaintedDisplayItem {
  public:
-  nsDisplaySVGText(nsDisplayListBuilder* aBuilder, SVGTextFrame* aFrame)
+  DisplaySVGText(nsDisplayListBuilder* aBuilder, SVGTextFrame* aFrame)
       : nsPaintedDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplaySVGText);
+    MOZ_COUNT_CTOR(DisplaySVGText);
     MOZ_ASSERT(aFrame, "Must have a frame!");
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplaySVGText)
+  MOZ_COUNTED_DTOR_OVERRIDE(DisplaySVGText)
 #endif
 
-  NS_DISPLAY_DECL_NAME("nsDisplaySVGText", TYPE_SVG_TEXT)
+  NS_DISPLAY_DECL_NAME("DisplaySVGText", TYPE_SVG_TEXT)
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
@@ -2712,9 +2709,9 @@ class nsDisplaySVGText final : public nsPaintedDisplayItem {
   }
 };
 
-void nsDisplaySVGText::HitTest(nsDisplayListBuilder* aBuilder,
-                               const nsRect& aRect, HitTestState* aState,
-                               nsTArray<nsIFrame*>* aOutFrames) {
+void DisplaySVGText::HitTest(nsDisplayListBuilder* aBuilder,
+                             const nsRect& aRect, HitTestState* aState,
+                             nsTArray<nsIFrame*>* aOutFrames) {
   SVGTextFrame* frame = static_cast<SVGTextFrame*>(mFrame);
   nsPoint pointRelativeToReferenceFrame = aRect.Center();
   // ToReferenceFrame() includes frame->GetPosition(), our user space position.
@@ -2731,7 +2728,7 @@ void nsDisplaySVGText::HitTest(nsDisplayListBuilder* aBuilder,
   }
 }
 
-void nsDisplaySVGText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
+void DisplaySVGText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
                                                     IsSubpixelAADisabled());
 
@@ -2761,12 +2758,17 @@ NS_QUERYFRAME_HEAD(SVGTextFrame)
   NS_QUERYFRAME_ENTRY(SVGTextFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 
+}  // namespace mozilla
+
 // ---------------------------------------------------------------------
 // Implementation
 
 nsIFrame* NS_NewSVGTextFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) SVGTextFrame(aStyle, aPresShell->GetPresContext());
+  return new (aPresShell)
+      mozilla::SVGTextFrame(aStyle, aPresShell->GetPresContext());
 }
+
+namespace mozilla {
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGTextFrame)
 
@@ -2803,7 +2805,7 @@ void SVGTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     return;
   }
   DisplayOutline(aBuilder, aLists);
-  aLists.Content()->AppendNewToTop<nsDisplaySVGText>(aBuilder, this);
+  aLists.Content()->AppendNewToTop<DisplaySVGText>(aBuilder, this);
 }
 
 nsresult SVGTextFrame::AttributeChanged(int32_t aNameSpaceID,
@@ -5372,3 +5374,5 @@ void SVGTextFrame::AppendDirectlyOwnedAnonBoxes(
   MOZ_ASSERT(PrincipalChildList().FirstChild(), "Must have our anon box");
   aResult.AppendElement(OwnedAnonBox(PrincipalChildList().FirstChild()));
 }
+
+}  // namespace mozilla

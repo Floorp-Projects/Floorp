@@ -18,12 +18,16 @@
 #include "nsSVGUtils.h"
 
 namespace mozilla {
+
+class DisplaySVGGeometry;
+class PresShell;
 class SVGGeometryFrame;
 class SVGMarkerObserver;
-class nsDisplaySVGGeometry;
+
 namespace gfx {
 class DrawTarget;
 }  // namespace gfx
+
 }  // namespace mozilla
 
 class gfxContext;
@@ -32,10 +36,6 @@ class nsIFrame;
 class nsSVGMarkerFrame;
 
 struct nsRect;
-
-namespace mozilla {
-class PresShell;
-}  // namespace mozilla
 
 nsIFrame* NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
@@ -48,7 +48,7 @@ class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
   friend nsIFrame* ::NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
                                             ComputedStyle* aStyle);
 
-  friend class nsDisplaySVGGeometry;
+  friend class DisplaySVGGeometry;
 
  protected:
   SVGGeometryFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
@@ -124,7 +124,7 @@ class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder, nsDisplaySVGGeometry* aItem,
+      nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGGeometry* aItem,
       bool aDryRun) {
     MOZ_RELEASE_ASSERT(aDryRun, "You shouldn't be calling this directly");
     return false;
@@ -140,20 +140,20 @@ class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
 //----------------------------------------------------------------------
 // Display list item:
 
-class nsDisplaySVGGeometry final : public nsPaintedDisplayItem {
+class DisplaySVGGeometry final : public nsPaintedDisplayItem {
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
  public:
-  nsDisplaySVGGeometry(nsDisplayListBuilder* aBuilder, SVGGeometryFrame* aFrame)
+  DisplaySVGGeometry(nsDisplayListBuilder* aBuilder, SVGGeometryFrame* aFrame)
       : nsPaintedDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplaySVGGeometry);
+    MOZ_COUNT_CTOR(DisplaySVGGeometry);
     MOZ_ASSERT(aFrame, "Must have a frame!");
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplaySVGGeometry() { MOZ_COUNT_DTOR(nsDisplaySVGGeometry); }
+  virtual ~DisplaySVGGeometry() { MOZ_COUNT_DTOR(DisplaySVGGeometry); }
 #endif
 
-  NS_DISPLAY_DECL_NAME("nsDisplaySVGGeometry", TYPE_SVG_GEOMETRY)
+  NS_DISPLAY_DECL_NAME("DisplaySVGGeometry", TYPE_SVG_GEOMETRY)
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,

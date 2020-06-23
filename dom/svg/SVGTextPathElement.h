@@ -29,7 +29,7 @@ static const uint16_t TEXTPATH_SIDETYPE_RIGHT = 2;
 typedef SVGTextContentElement SVGTextPathElementBase;
 
 class SVGTextPathElement final : public SVGTextPathElementBase {
-  friend class ::SVGTextFrame;
+  friend class mozilla::SVGTextFrame;
 
  protected:
   friend nsresult(::NS_NewSVGTextPathElement(
