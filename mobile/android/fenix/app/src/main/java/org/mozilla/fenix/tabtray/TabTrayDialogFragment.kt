@@ -94,6 +94,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         tabTrayView.setTopOffset(isLandscape)
 
         if (isLandscape) {
+            tabTrayView.dismissMenu()
             tabTrayView.expand()
         }
     }

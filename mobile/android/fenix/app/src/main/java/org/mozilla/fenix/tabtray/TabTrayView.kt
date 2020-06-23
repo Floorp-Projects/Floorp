@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.normalTabs
@@ -54,7 +55,8 @@ class TabTrayView(
 
     private val behavior = BottomSheetBehavior.from(view.tab_wrapper)
 
-    private var tabTrayItemMenu: TabTrayItemMenu
+    private val tabTrayItemMenu: TabTrayItemMenu
+    private var menu: BrowserMenu? = null
 
     private var hasLoaded = false
 
@@ -149,10 +151,9 @@ class TabTrayView(
         }
 
         view.tab_tray_overflow.setOnClickListener {
-            tabTrayItemMenu.menuBuilder
-                .build(view.context)
-                .show(anchor = it)
-                .also { pu ->
+            menu = tabTrayItemMenu.menuBuilder.build(container.context)
+            menu?.show(it)
+                ?.also { pu ->
                     (pu.contentView as? CardView)?.setCardBackgroundColor(ContextCompat.getColor(
                         view.context,
                         R.color.foundation_normal_theme
@@ -239,6 +240,10 @@ class TabTrayView(
         }
 
         behavior.setExpandedOffset(topOffset)
+    }
+
+    fun dismissMenu() {
+        menu?.dismiss()
     }
 
     companion object {
