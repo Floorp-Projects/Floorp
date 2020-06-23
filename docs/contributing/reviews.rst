@@ -84,6 +84,9 @@ Review groups
    * - #style or #firefox-style-system-reviewers
      - Firefox style system (servo, layout/style).
      - `Member list <https://phabricator.services.mozilla.com/project/members/90/>`__
+   * - #webcompat-reviewers
+     - System addons maintained by the Web Compatibility team
+     - `Member list <https://phabricator.services.mozilla.com/project/members/124/>`__
    * - #webdriver-reviewers
      - Marionette and Geckodriver in Firefox
      - `Member list <https://phabricator.services.mozilla.com/project/members/103/>`__
