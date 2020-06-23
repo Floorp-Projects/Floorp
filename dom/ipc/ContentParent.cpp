@@ -52,6 +52,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/DataStorage.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoginReputationIPC.h"
@@ -6902,7 +6903,10 @@ NS_IMETHODIMP ContentParent::GetActor(const nsACString& aName,
   return NS_OK;
 }
 
-IPCResult ContentParent::RecvFOGData(ByteBuf&& buf) { return IPC_OK(); }
+IPCResult ContentParent::RecvFOGData(ByteBuf&& buf) {
+  glean::FOGData(std::move(buf));
+  return IPC_OK();
+}
 
 }  // namespace dom
 }  // namespace mozilla
