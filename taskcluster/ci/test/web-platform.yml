@@ -287,6 +287,17 @@ web-platform-tests-crashtest:
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
 
+web-platform-tests-print-reftest:
+    description: "Web platform print-reftest run"
+    schedules-component: web-platform-tests-print-reftest
+    treeherder-symbol: W(Wp)
+    chunks: 1
+    tier: 2
+    run-on-projects: built-projects
+    mozharness:
+        extra-options:
+            - --test-type=print-reftest
+
 test-verify-wpt:
     description: "Extra verification of web-platform tests modified on this push"
     suite:

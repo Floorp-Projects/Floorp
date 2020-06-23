@@ -225,6 +225,13 @@ TEST_SUITES = {
         'task_regex': ['web-platform-tests-crashtest($|.*(-1|[^0-9])$)',
                        'test-verify-wpt'],
     },
+    'web-platform-tests-print-reftest': {
+        'aliases': ('wpt',),
+        'mach_command': 'web-platform-tests',
+        'kwargs': {'include': []},
+        'task_regex': ['web-platform-tests-print-reftest($|.*(-1|[^0-9])$)',
+                       'test-verify-wpt'],
+    },
     'web-platform-tests-reftest': {
         'aliases': ('wpt',),
         'mach_command': 'web-platform-tests',
