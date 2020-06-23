@@ -4101,7 +4101,7 @@
       SitePermissions.clearTemporaryPermissions(browser);
       // Also reset DOS mitigations for the basic auth prompt on reload.
       delete browser.authPromptAbuseCounter;
-      PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
+      gIdentityHandler.hidePopup();
       browser.reload();
     },
 
