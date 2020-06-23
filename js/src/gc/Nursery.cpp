@@ -999,8 +999,12 @@ void js::Nursery::collect(JS::GCReason reason) {
   previousGC.tenuredBytes = 0;
   previousGC.tenuredCells = 0;
 
+  // If it isn't empty, it will call doCollection, and possibly after that
+  // isEmpty() will become true, so use another variable to keep track of the
+  // old empty state.
+  bool wasEmpty = isEmpty();
   TenureCountCache tenureCounts;
-  if (!isEmpty()) {
+  if (!wasEmpty) {
     CollectionResult result = doCollection(reason, tenureCounts);
     previousGC.reason = reason;
     previousGC.tenuredBytes = result.tenuredBytes;
@@ -1045,7 +1049,7 @@ void js::Nursery::collect(JS::GCReason reason) {
   gc->incMinorGcNumber();
 
   TimeDuration totalTime = profileDurations_[ProfileKey::Total];
-  sendTelemetry(reason, totalTime, pretenureCount, promotionRate);
+  sendTelemetry(reason, totalTime, wasEmpty, pretenureCount, promotionRate);
 
   stats().endNurseryCollection(reason);
   gcprobes::MinorGCEnd();
@@ -1062,7 +1066,8 @@ void js::Nursery::collect(JS::GCReason reason) {
 }
 
 void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
-                                size_t pretenureCount, double promotionRate) {
+                                bool wasEmpty, size_t pretenureCount,
+                                double promotionRate) {
   JSRuntime* rt = runtime();
   rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, uint32_t(reason));
   if (totalTime.ToMilliseconds() > 1.0) {
@@ -1070,9 +1075,13 @@ void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
   }
   rt->addTelemetry(JS_TELEMETRY_GC_MINOR_US, totalTime.ToMicroseconds());
   rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, committed());
-  rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
-  rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT_2, pretenureCount);
-  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE, promotionRate * 100);
+
+  if (!wasEmpty) {
+    rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
+    rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT_2, pretenureCount);
+    rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE,
+                     promotionRate * 100);
+  }
 }
 
 void js::Nursery::printCollectionProfile(JS::GCReason reason,
