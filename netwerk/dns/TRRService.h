@@ -15,6 +15,7 @@
 class nsDNSService;
 class nsIPrefBranch;
 class nsINetworkLinkService;
+class nsIObserverService;
 
 namespace mozilla {
 namespace net {
@@ -82,7 +83,8 @@ class TRRService : public TRRServiceBase,
 
   friend class TRRServiceChild;
   friend class TRRServiceParent;
-  static void AddObserver(nsIObserver* aObserver);
+  static void AddObserver(nsIObserver* aObserver,
+                          nsIObserverService* aObserverService = nullptr);
   static bool CheckCaptivePortalIsPassed();
   static bool GetParentalControlEnabledInternal();
   static bool CheckPlatformDNSStatus(nsINetworkLinkService* aLinkService);
@@ -109,6 +111,7 @@ class TRRService : public TRRServiceBase,
   // or false if mPrivateURI already had that value.
   bool MaybeSetPrivateURI(const nsACString& aURI) override;
   void ClearEntireCache();
+  void InitTRRBLStorage(DataStorage* aInitedStorage);
 
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mTRRBlacklistExpireTime;

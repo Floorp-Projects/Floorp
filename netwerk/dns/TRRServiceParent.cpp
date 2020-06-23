@@ -41,7 +41,10 @@ void TRRServiceParent::Init() {
     return;
   }
 
-  TRRService::AddObserver(this);
+  nsCOMPtr<nsIObserverService> obs =
+      static_cast<nsIObserverService*>(gIOService);
+  TRRService::AddObserver(this, obs);
+
   bool captiveIsPassed = TRRService::CheckCaptivePortalIsPassed();
   bool parentalControlEnabled = TRRService::GetParentalControlEnabledInternal();
 
@@ -58,59 +61,31 @@ void TRRServiceParent::Init() {
 
   Unused << socketParent->SendPTRRServiceConstructor(
       this, captiveIsPassed, parentalControlEnabled, suffixList);
+
+  RefPtr<DataStorage> storage =
+      DataStorage::Get(DataStorageClass::TRRBlacklist);
+  if (!storage) {
+    return;
+  }
+
+  if (NS_FAILED(storage->Init(nullptr))) {
+    return;
+  }
+
+  psm::DataStorageEntry entry;
+  storage->GetAll(&entry.items());
+
+  RefPtr<TRRServiceParent> self = this;
+  storage->AsyncTakeFileDesc([self, entry](ipc::FileDescriptor&& aWriteFd) {
+    Unused << self->SendInitTRRBLStorage(entry, aWriteFd);
+  });
 }
 
 NS_IMETHODIMP
 TRRServiceParent::Observe(nsISupports* aSubject, const char* aTopic,
                           const char16_t* aData) {
-  if (!strcmp(aTopic, kOpenCaptivePortalLoginEvent)) {
-    Unused << SendNotifyObserver(
-        nsDependentCString(aTopic),
-        aData ? nsDependentString(aData) : VoidString());
-  } else if (!strcmp(aTopic, NS_CAPTIVE_PORTAL_CONNECTIVITY)) {
-    if (!mTRRBLStorageInited) {
-      RefPtr<DataStorage> storage =
-          DataStorage::Get(DataStorageClass::TRRBlacklist);
-      if (storage) {
-        nsresult rv = storage->Init(nullptr);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          Unused << SendNotifyObserver(
-              nsDependentCString(aTopic),
-              aData ? nsDependentString(aData) : VoidString());
-          return NS_OK;
-        }
-
-        psm::DataStorageEntry entry;
-        storage->GetAll(&entry.items());
-
-        RefPtr<TRRServiceParent> self = this;
-        nsCString topic(aTopic);
-        nsString data(aData);
-        rv = storage->AsyncTakeFileDesc(
-            [self, entry, topic, data](ipc::FileDescriptor&& aWriteFd) {
-              // We need to send this message before
-              // NS_CAPTIVE_PORTAL_CONNECTIVITY notification to make sure
-              // TRRBLStorage got inited properly.
-              Unused << self->SendInitTRRBLStorage(entry, aWriteFd);
-              Unused << self->SendNotifyObserver(topic, data);
-              self->mTRRBLStorageInited = true;
-            });
-
-        if (NS_SUCCEEDED(rv)) {
-          return NS_OK;
-        }
-      }
-    }
-
-    Unused << SendNotifyObserver(
-        nsDependentCString(aTopic),
-        aData ? nsDependentString(aData) : VoidString());
-  } else if (!strcmp(aTopic, kClearPrivateData) || !strcmp(aTopic, kPurge)) {
-    Unused << SendNotifyObserver(
-        nsDependentCString(aTopic),
-        aData ? nsDependentString(aData) : VoidString());
-  } else if (!strcmp(aTopic, NS_DNS_SUFFIX_LIST_UPDATED_TOPIC) ||
-             !strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
+  if (!strcmp(aTopic, NS_DNS_SUFFIX_LIST_UPDATED_TOPIC) ||
+      !strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
     nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
     // The network link service notification normally passes itself as the
     // subject, but some unit tests will sometimes pass a null subject.
@@ -123,9 +98,6 @@ TRRServiceParent::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC) && mURISetByDetection) {
-      Unused << SendNotifyObserver(
-          nsDependentCString(aTopic),
-          aData ? nsDependentString(aData) : VoidString());
       CheckURIPrefs();
     }
   }

@@ -20,10 +20,10 @@ class TRRServiceParent : public TRRServiceBase,
                          public nsSupportsWeakReference,
                          public PTRRServiceParent {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  explicit TRRServiceParent() : mTRRBLStorageInited(false) {}
+  TRRServiceParent() = default;
   void Init();
   void UpdateParentalControlEnabled();
   static void PrefsChanged(const char* aName, void* aSelf);
@@ -35,8 +35,6 @@ class TRRServiceParent : public TRRServiceBase,
   virtual ~TRRServiceParent() = default;
   virtual void ActorDestroy(ActorDestroyReason why) override;
   void prefsChanged(const char* aName);
-
-  bool mTRRBLStorageInited;
 };
 
 }  // namespace net
