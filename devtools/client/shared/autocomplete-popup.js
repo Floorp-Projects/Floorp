@@ -343,8 +343,11 @@ AutocompletePopup.prototype = {
       maxLabelLength = Math.max(label.length, maxLabelLength);
     });
 
+    const fragmentClone = fragment.cloneNode(true);
     this.list.style.width = maxLabelLength + 3 + "ch";
     this.list.appendChild(fragment);
+    // Update the clone content to match the current list content.
+    this._listClone.appendChild(fragmentClone);
 
     this.selectItemAtIndex(selectedIndex, options);
   },
@@ -375,6 +378,9 @@ AutocompletePopup.prototype = {
   clearItems: function() {
     if (this._list) {
       this._list.innerHTML = "";
+    }
+    if (this._listClone) {
+      this._listClone.innerHTML = "";
     }
 
     this.items = [];
@@ -423,14 +429,6 @@ AutocompletePopup.prototype = {
     ) {
       anchorDoc.documentElement.appendChild(this._listClone);
     }
-
-    // Update the clone content to match the current list content.
-    const clone = this.list.cloneNode(true);
-    clone.className = "devtools-autocomplete-list-aria-clone";
-    this._listClone.replaceWith(clone);
-
-    // We also need to update the reference.
-    this._listClone = clone;
 
     this._activeElement.setAttribute("aria-activedescendant", id);
   },

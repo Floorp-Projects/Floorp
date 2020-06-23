@@ -45,37 +45,40 @@ add_task(async function() {
   );
   is(popup.selectedIndex, 0, "Index of the first item from top is selected.");
   is(popup.selectedItem, items[0], "First item from top is selected");
-  checkActiveDescendant(popup, input);
+  // Make sure the list containing the active descendant doesn't get rebuilt
+  // when the selected item changes.
+  const listClone = getListFromActiveDescendant(popup, input);
+  checkActiveDescendant(popup, input, listClone);
 
   popup.selectItemAtIndex(1);
 
   is(popup.selectedIndex, 1, "index 1 is selected");
   is(popup.selectedItem, items[1], "item1 is selected");
-  checkActiveDescendant(popup, input);
+  checkActiveDescendant(popup, input, listClone);
 
   popup.selectedItem = items[2];
 
   is(popup.selectedIndex, 2, "index 2 is selected");
   is(popup.selectedItem, items[2], "item2 is selected");
-  checkActiveDescendant(popup, input);
+  checkActiveDescendant(popup, input, listClone);
 
   is(popup.selectPreviousItem(), items[1], "selectPreviousItem() works");
 
   is(popup.selectedIndex, 1, "index 1 is selected");
   is(popup.selectedItem, items[1], "item1 is selected");
-  checkActiveDescendant(popup, input);
+  checkActiveDescendant(popup, input, listClone);
 
   is(popup.selectNextItem(), items[2], "selectNextItem() works");
 
   is(popup.selectedIndex, 2, "index 2 is selected");
   is(popup.selectedItem, items[2], "item2 is selected");
-  checkActiveDescendant(popup, input);
+  checkActiveDescendant(popup, input, listClone);
 
   ok(popup.selectNextItem(), "selectNextItem() works");
 
   is(popup.selectedIndex, 0, "index 0 is selected");
   is(popup.selectedItem, items[0], "item0 is selected");
-  checkActiveDescendant(popup, input);
+  checkActiveDescendant(popup, input, listClone);
 
   popup.clearItems();
   is(popup.itemCount, 0, "items cleared");
@@ -90,7 +93,14 @@ function stripNS(text) {
   return text.replace(RegExp(' xmlns="http://www.w3.org/1999/xhtml"', "g"), "");
 }
 
-function checkActiveDescendant(popup, input) {
+function getListFromActiveDescendant(popup, input) {
+  const activeElement = input.ownerDocument.activeElement;
+  const descendantId = activeElement.getAttribute("aria-activedescendant");
+  const cloneItem = input.ownerDocument.querySelector("#" + descendantId);
+  return cloneItem.parentNode;
+}
+
+function checkActiveDescendant(popup, input, list) {
   const activeElement = input.ownerDocument.activeElement;
   const descendantId = activeElement.getAttribute("aria-activedescendant");
   const popupItem = popup._tooltip.panel.querySelector("#" + descendantId);
@@ -98,6 +108,11 @@ function checkActiveDescendant(popup, input) {
 
   ok(popupItem, "Active descendant is found in the popup list");
   ok(cloneItem, "Active descendant is found in the list clone");
+  is(
+    cloneItem.parentNode,
+    list,
+    "Active descendant is a child of the expected list"
+  );
   is(
     stripNS(popupItem.outerHTML),
     cloneItem.outerHTML,
