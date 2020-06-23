@@ -7,21 +7,31 @@
 
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
+#include "nsIRemoteWebProgressRequest.h"
 
 namespace mozilla {
 namespace dom {
 
-class RemoteWebProgressRequest final : public nsIChannel,
+class RemoteWebProgressRequest final : public nsIRemoteWebProgressRequest,
+                                       public nsIChannel,
                                        public nsIClassifiedChannel {
  public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIREMOTEWEBPROGRESSREQUEST
   NS_DECL_NSICHANNEL
   NS_DECL_NSICLASSIFIEDCHANNEL
   NS_DECL_NSIREQUEST
 
+  RemoteWebProgressRequest()
+      : mURI(nullptr), mOriginalURI(nullptr), mMatchedList(VoidCString()) {}
+
   RemoteWebProgressRequest(nsIURI* aURI, nsIURI* aOriginalURI,
-                           const nsACString& aMatchedList)
-      : mURI(aURI), mOriginalURI(aOriginalURI), mMatchedList(aMatchedList) {}
+                           const nsACString& aMatchedList,
+                           const Maybe<uint64_t>& aMaybeElapsedLoadTimeMS)
+      : mURI(aURI),
+        mOriginalURI(aOriginalURI),
+        mMatchedList(aMatchedList),
+        mMaybeElapsedLoadTimeMS(aMaybeElapsedLoadTimeMS) {}
 
  protected:
   ~RemoteWebProgressRequest() = default;
@@ -30,6 +40,13 @@ class RemoteWebProgressRequest final : public nsIChannel,
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mOriginalURI;
   nsCString mMatchedList;
+
+  // This field is only Some(...) when the RemoteWebProgressRequest
+  // is created at a time that the document whose progress is being
+  // described by this request is top level and its status changes
+  // from loading to completely loaded.
+  // See BrowserChild::OnStateChange.
+  Maybe<uint64_t> mMaybeElapsedLoadTimeMS;
 };
 
 }  // namespace dom
