@@ -305,7 +305,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvInternalLoad(
   // FIXME: We should really initiate the load in the parent before bouncing
   // back down to the child.
 
-  targetBC->InternalLoad(aLoadState, nullptr, nullptr);
+  targetBC->InternalLoad(aLoadState);
   return IPC_OK();
 }
 

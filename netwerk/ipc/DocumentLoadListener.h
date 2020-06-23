@@ -137,7 +137,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // and clean up.
   static bool OpenFromParent(dom::CanonicalBrowsingContext* aBrowsingContext,
                              nsDocShellLoadState* aLoadState,
-                             uint64_t aOuterWindowId, uint64_t* aOutIdent);
+                             uint64_t aOuterWindowId);
 
   // Ensures that a load identifier allocated by OpenFromParent has
   // been deregistered if it hasn't already been claimed.
@@ -227,6 +227,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              bool aIsCrossProcess, uint32_t aRedirectFlags,
                              uint32_t aLoadFlags,
                              dom::ContentParent* aParent) const;
+
+  uint64_t GetLoadIdentifier() const { return mLoadIdentifier; }
 
  protected:
   virtual ~DocumentLoadListener();
@@ -439,6 +441,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // This identifier is set by MaybeTriggerProcessSwitch, and is later
   // passed to the childChannel in order to identify it in the new process.
   uint64_t mCrossProcessRedirectIdentifier = 0;
+
+  // The id of the currently pending load.
+  uint64_t mLoadIdentifier = 0;
 
   // True if cancelled.
   bool mCancelled = false;

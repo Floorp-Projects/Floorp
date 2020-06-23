@@ -3433,8 +3433,8 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   }
 
   RefPtr<nsDocShellLoadState> loadState;
-  rv = nsDocShellLoadState::CreateFromPendingChannel(newChannel,
-                                                     getter_AddRefs(loadState));
+  rv = nsDocShellLoadState::CreateFromPendingChannel(
+      newChannel, aArgs.loadIdentifier(), getter_AddRefs(loadState));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_OK();
   }
@@ -4073,7 +4073,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInternalLoad(
   }
   BrowsingContext* context = aContext.get();
 
-  context->InternalLoad(aLoadState, nullptr, nullptr);
+  context->InternalLoad(aLoadState);
 
   if (aTakeFocus) {
     if (nsCOMPtr<nsPIDOMWindowOuter> domWin = context->GetDOMWindow()) {

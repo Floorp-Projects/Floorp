@@ -46,8 +46,10 @@ class nsDocShellLoadState final {
   explicit nsDocShellLoadState(
       const mozilla::dom::DocShellLoadStateInit& aLoadState);
   explicit nsDocShellLoadState(const nsDocShellLoadState& aOther);
+  nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier);
 
   static nsresult CreateFromPendingChannel(nsIChannel* aPendingChannel,
+                                           uint64_t aLoadIdentifier,
                                            nsDocShellLoadState** aResult);
 
   static nsresult CreateFromLoadURIOptions(
@@ -160,6 +162,12 @@ class nsDocShellLoadState final {
 
   void SetSourceBrowsingContext(BrowsingContext* aSourceBrowsingContext);
 
+  const MaybeDiscarded<BrowsingContext>& TargetBrowsingContext() const {
+    return mTargetBrowsingContext;
+  }
+
+  void SetTargetBrowsingContext(BrowsingContext* aTargetBrowsingContext);
+
   nsIURI* BaseURI() const;
 
   void SetBaseURI(nsIURI* aBaseURI);
@@ -238,8 +246,13 @@ class nsDocShellLoadState final {
     return mCancelContentJSEpoch;
   }
 
-  void SetLoadIdentifier(uint64_t aIdent) { mLoadIdentifier = aIdent; }
   uint64_t GetLoadIdentifier() const { return mLoadIdentifier; }
+
+  void SetChannelInitialized(bool aInitilized) {
+    mChannelInitialized = aInitilized;
+  }
+
+  bool GetChannelInitialized() const { return mChannelInitialized; }
 
   // When loading a document through nsDocShell::LoadURI(), a special set of
   // flags needs to be set based on other values in nsDocShellLoadState. This
@@ -357,6 +370,10 @@ class nsDocShellLoadState final {
   // Target for load, like _content, _blank etc.
   nsString mTarget;
 
+  // When set, this is the Target Browsing Context for the navigation
+  // after retargeting.
+  MaybeDiscarded<BrowsingContext> mTargetBrowsingContext;
+
   // Post data stream (if POSTing)
   nsCOMPtr<nsIInputStream> mPostDataStream;
 
@@ -411,11 +428,14 @@ class nsDocShellLoadState final {
   // when initiating the load.
   mozilla::Maybe<int32_t> mCancelContentJSEpoch;
 
-  // An optional identifier that refers to a DocumentLoadListener
-  // created in the parent process for this loads. DocumentChannels
-  // created in the content process can use this to find and attach
-  // to the in progress load.
-  uint64_t mLoadIdentifier;
+  // An identifier to make it possible to examine if two loads are
+  // equal, and which browsing context they belong to (see
+  // BrowsingContext::{Get, Set}CurrentLoadIdentifier)
+  const uint64_t mLoadIdentifier;
+
+  // Optional value to indicate that a channel has been
+  // pre-initialized in the parent process.
+  bool mChannelInitialized;
 };
 
 #endif /* nsDocShellLoadState_h__ */
