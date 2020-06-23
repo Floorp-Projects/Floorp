@@ -386,21 +386,11 @@ function runImageBitmapTestInternal(bitmaps, alphaVal, internalFormat, pixelForm
 
 function runImageBitmapTest(source, alphaVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, is3D)
 {
-    var p1 = createImageBitmap(source, {imageOrientation: "none", premultiplyAlpha: "premultiply"})
-                .then(cur => { cur.flipY = false; cur.premultiply = true; return cur; });
-    var p2 = createImageBitmap(source, {imageOrientation: "none", premultiplyAlpha: "none"})
-                .then(cur => { cur.flipY = false; cur.premultiply = false; return cur; });
-    var p3 = createImageBitmap(source, {imageOrientation: "flipY", premultiplyAlpha: "premultiply"})
-                .then(cur => { cur.flipY = true; cur.premultiply = true; return cur; });
-    var p4 = createImageBitmap(source, {imageOrientation: "flipY", premultiplyAlpha: "none"})
-                .then(cur => { cur.flipY = true; cur.premultiply = false; return cur; });
-    return Promise.all([p1, p2, p3, p4])
-        .catch( () => {
-            testPassed("createImageBitmap with options may be rejected if it is not supported. Retrying without options.");
-            var p = createImageBitmap(source)
-                .then(cur => { cur.flipY = false; cur.premultiply = false; return cur; });
-            return Promise.all([p]);
-        }).then( bitmaps => {
+    var p = createImageBitmap(source)
+        .then(cur => { cur.flipY = false; cur.premultiply = false; return cur; });
+
+    return Promise.all([p])
+        .then( bitmaps => {
             bufferedLogToConsole("All createImageBitmap promises are resolved");
             runImageBitmapTestInternal(bitmaps, alphaVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, is3D);
         }, (e) => {
