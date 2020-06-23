@@ -37,6 +37,7 @@
 # keep this file list in sync with l10n.toml and filter.py
 relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/aboutReader.properties          (%chrome/global/aboutReader.properties)
+  locale/@AB_CD@/browser/overrides/charsetMenu.properties          (%chrome/global/charsetMenu.properties)
   locale/@AB_CD@/browser/overrides/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
   locale/@AB_CD@/browser/overrides/intl.properties                 (%chrome/global/intl.properties)
   locale/@AB_CD@/browser/overrides/intl.css                        (%chrome/global/intl.css)
