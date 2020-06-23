@@ -19,7 +19,6 @@ class SandboxBroker;
 
 namespace net {
 
-class OfflineObserver;
 class SocketProcessParent;
 
 // SocketProcessHost is the "parent process" container for a subprocess handle
@@ -122,7 +121,6 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   bool mShutdownRequested;
   bool mChannelClosed;
 
-  RefPtr<OfflineObserver> mOfflineObserver;
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   UniquePtr<SandboxBroker> mSandboxBroker;
 #endif

@@ -139,6 +139,7 @@ child:
                     bool aParentalControlEnabled,
                     nsCString[] aDNSSuffixList);
   async PNativeDNSResolverOverride();
+  async NotifyObserver(nsCString aTopic, nsString aData);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);

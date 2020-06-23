@@ -120,6 +120,9 @@ class SocketProcessChild final
   mozilla::ipc::IPCResult RecvPNativeDNSResolverOverrideConstructor(
       PNativeDNSResolverOverrideChild* aActor) override;
 
+  mozilla::ipc::IPCResult RecvNotifyObserver(const nsCString& aTopic,
+                                             const nsString& aData);
+
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();
