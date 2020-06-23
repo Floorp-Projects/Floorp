@@ -162,8 +162,7 @@ bool IonSpewer::init() {
   if (usePid && *usePid != 0) {
     uint32_t pid = getpid();
     size_t len;
-    len = snprintf(jsonBuffer, bufferLength,
-                   JIT_SPEW_DIR "/ion%" PRIu32 ".json", pid);
+    len = SprintfLiteral(jsonBuffer, JIT_SPEW_DIR "/ion%" PRIu32 ".json", pid);
     if (bufferLength <= len) {
       fprintf(stderr, "Warning: IonSpewer::init: Cannot serialize file name.");
       return false;
