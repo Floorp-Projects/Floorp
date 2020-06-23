@@ -497,7 +497,7 @@ impl<'a> SceneBuilder<'a> {
             }
 
             // Step through each prim instance, in order to collect shared clips for the slice.
-            for instance in &main_prim_list.prim_instances[cluster.prim_range()] {
+            for instance in &cluster.prim_instances {
                 // If the primitive clip chain is different, then we need to rebuild prim_clips.
                 update_shared_clips |= last_prim_clip_chain_id != instance.clip_chain_id;
                 last_prim_clip_chain_id = instance.clip_chain_id;
@@ -542,10 +542,8 @@ impl<'a> SceneBuilder<'a> {
             );
 
             // Finally, add this cluster to the current slice
-            slices.last_mut().unwrap().prim_list.add_cluster(cluster, &main_prim_list.prim_instances);
+            slices.last_mut().unwrap().prim_list.add_cluster(cluster);
         }
-
-        main_prim_list.clear();
 
         // Step through the slices, creating picture cache wrapper instances.
         for (slice_index, slice) in slices.drain(..).enumerate() {
@@ -3687,7 +3685,7 @@ impl FlattenedStackingContext {
                             // also allows us to retain subpixel AA in these cases. For these types of
                             // slices, the intra-slice dirty rect handling typically works quite well
                             // (a common case is parallax scrolling effects).
-                            for prim_instance in &self.prim_list.prim_instances[cluster.prim_range()] {
+                            for prim_instance in &cluster.prim_instances {
                                 let mut current_clip_chain_id = prim_instance.clip_chain_id;
 
                                 while current_clip_chain_id != ClipChainId::NONE {

@@ -110,17 +110,17 @@ use crate::debug_colors;
 use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D, SideOffsets2D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
-use crate::frame_builder::FrameBuilderConfig;
+use crate::frame_builder::{FrameBuilderConfig, FrameVisibilityContext, FrameVisibilityState};
 use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{UvRectKind, ZBufferId};
 use plane_split::{Clipper, Polygon, Splitter};
-use crate::prim_store::{SpaceMapper, PrimitiveTemplateKind};
+use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PrimitiveTemplateKind};
 use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer};
-use crate::prim_store::{ColorBindingStorage, ColorBindingIndex};
+use crate::prim_store::{ColorBindingStorage, ColorBindingIndex, PrimitiveVisibilityFlags};
 use crate::print_tree::{PrintTree, PrintTreePrinter};
 use crate::render_backend::{DataStores, FrameId};
 use crate::render_task_graph::RenderTaskId;
@@ -132,11 +132,9 @@ use smallvec::SmallVec;
 use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::collections::hash_map::Entry;
-use std::ops::Range;
 use crate::texture_cache::TextureCacheHandle;
 use crate::util::{MaxRect, VecHelper, RectHelpers, MatrixHelpers};
 use crate::filterdata::{FilterDataHandle};
-use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibilityFlags, FrameVisibilityContext, FrameVisibilityState};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use ron;
 #[cfg(feature = "capture")]
@@ -3927,23 +3925,22 @@ impl<'a> PictureUpdateState<'a> {
             frame_context,
         ) {
             for cluster in &prim_list.clusters {
-                if !cluster.flags.contains(ClusterFlags::IS_PICTURE) {
-                    continue;
-                }
-                for prim_instance in &prim_list.prim_instances[cluster.prim_range()] {
-                    let child_pic_index = match prim_instance.kind {
-                        PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
-                        _ => unreachable!(),
-                    };
+                if cluster.flags.contains(ClusterFlags::IS_PICTURE) {
+                    for prim_instance in &cluster.prim_instances {
+                        let child_pic_index = match prim_instance.kind {
+                            PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
+                            _ => unreachable!(),
+                        };
 
-                    self.update(
-                        child_pic_index,
-                        picture_primitives,
-                        frame_context,
-                        gpu_cache,
-                        clip_store,
-                        data_stores,
-                    );
+                        self.update(
+                            child_pic_index,
+                            picture_primitives,
+                            frame_context,
+                            gpu_cache,
+                            clip_store,
+                            data_stores,
+                        );
+                    }
                 }
             }
 
@@ -3982,19 +3979,18 @@ impl<'a> PictureUpdateState<'a> {
         };
 
         for cluster in &picture.prim_list.clusters {
-            if !cluster.flags.contains(ClusterFlags::IS_PICTURE) {
-                continue;
-            }
-            for instance in &picture.prim_list.prim_instances[cluster.prim_range()] {
-                let child_pic_index = match instance.kind {
-                    PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
-                    _ => unreachable!(),
-                };
-                self.assign_raster_roots(
-                    child_pic_index,
-                    picture_primitives,
-                    new_fallback,
-                );
+            if cluster.flags.contains(ClusterFlags::IS_PICTURE) {
+                for instance in &cluster.prim_instances {
+                    let child_pic_index = match instance.kind {
+                        PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
+                        _ => unreachable!(),
+                    };
+                    self.assign_raster_roots(
+                        child_pic_index,
+                        picture_primitives,
+                        new_fallback,
+                    );
+                }
             }
         }
     }
@@ -4277,8 +4273,8 @@ pub struct PrimitiveCluster {
     /// during the first picture traversal, which is needed for local scale
     /// determination, and render task size calculations.
     bounding_rect: LayoutRect,
-    /// The range of primitive instance indices associated with this cluster.
-    pub prim_range: Range<usize>,
+    /// The list of primitive instances in this cluster.
+    pub prim_instances: Vec<PrimitiveInstance>,
     /// Various flags / state for this cluster.
     pub flags: ClusterFlags,
     /// An optional scroll root to use if this cluster establishes a picture cache slice.
@@ -4290,14 +4286,13 @@ impl PrimitiveCluster {
     fn new(
         spatial_node_index: SpatialNodeIndex,
         flags: ClusterFlags,
-        first_instance_index: usize,
     ) -> Self {
         PrimitiveCluster {
             bounding_rect: LayoutRect::zero(),
             spatial_node_index,
             flags,
+            prim_instances: Vec::new(),
             cache_scroll_root: None,
-            prim_range: first_instance_index..first_instance_index
         }
     }
 
@@ -4317,19 +4312,18 @@ impl PrimitiveCluster {
         self.flags == flags && self.spatial_node_index == spatial_node_index
     }
 
-    pub fn prim_range(&self) -> Range<usize> {
-        self.prim_range.clone()
-    }
-
     /// Add a primitive instance to this cluster, at the start or end
-    fn add_instance(
+    fn push(
         &mut self,
-        culling_rect: &LayoutRect,
-        instance_index: usize,
+        prim_instance: PrimitiveInstance,
+        prim_rect: LayoutRect,
     ) {
-        debug_assert_eq!(instance_index, self.prim_range.end);
-        self.bounding_rect = self.bounding_rect.union(culling_rect);
-        self.prim_range.end += 1;
+        let culling_rect = prim_instance.local_clip_rect
+            .intersection(&prim_rect)
+            .unwrap_or_else(LayoutRect::zero);
+
+        self.bounding_rect = self.bounding_rect.union(&culling_rect);
+        self.prim_instances.push(prim_instance);
     }
 }
 
@@ -4341,7 +4335,6 @@ impl PrimitiveCluster {
 pub struct PrimitiveList {
     /// List of primitives grouped into clusters.
     pub clusters: Vec<PrimitiveCluster>,
-    pub prim_instances: Vec<PrimitiveInstance>,
 }
 
 impl PrimitiveList {
@@ -4352,7 +4345,6 @@ impl PrimitiveList {
     pub fn empty() -> Self {
         PrimitiveList {
             clusters: Vec::new(),
-            prim_instances: Vec::new(),
         }
     }
 
@@ -4393,16 +4385,9 @@ impl PrimitiveList {
             flags.insert(ClusterFlags::PREFER_COMPOSITOR_SURFACE);
         }
 
-        let culling_rect = prim_instance.local_clip_rect
-            .intersection(&prim_rect)
-            .unwrap_or_else(LayoutRect::zero);
-
-        let instance_index = self.prim_instances.len();
-        self.prim_instances.push(prim_instance);
-
         if let Some(cluster) = self.clusters.last_mut() {
             if cluster.is_compatible(spatial_node_index, flags) {
-                cluster.add_instance(&culling_rect, instance_index);
+                cluster.push(prim_instance, prim_rect);
                 return;
             }
         }
@@ -4410,10 +4395,8 @@ impl PrimitiveList {
         let mut cluster = PrimitiveCluster::new(
             spatial_node_index,
             flags,
-            instance_index,
         );
-
-        cluster.add_instance(&culling_rect, instance_index);
+        cluster.push(prim_instance, prim_rect);
         self.clusters.push(cluster);
     }
 
@@ -4423,30 +4406,13 @@ impl PrimitiveList {
     }
 
     /// Add an existing cluster to this prim list
-    pub fn add_cluster(&mut self, mut cluster: PrimitiveCluster, prim_instances: &[PrimitiveInstance]) {
-        let start = self.prim_instances.len();
-        self.prim_instances.extend_from_slice(&prim_instances[cluster.prim_range()]);
-        let end = self.prim_instances.len();
-
-        cluster.prim_range = start..end;
+    pub fn add_cluster(&mut self, cluster: PrimitiveCluster) {
         self.clusters.push(cluster);
     }
 
     /// Merge another primitive list into this one
-    pub fn extend(&mut self, mut prim_list: PrimitiveList) {
-        let offset = self.prim_instances.len();
-        for cluster in &mut prim_list.clusters {
-            cluster.prim_range.start += offset;
-            cluster.prim_range.end += offset;
-        }
-
-        self.prim_instances.extend(prim_list.prim_instances);
+    pub fn extend(&mut self, prim_list: PrimitiveList) {
         self.clusters.extend(prim_list.clusters);
-    }
-
-    pub fn clear(&mut self) {
-        self.prim_instances.clear();
-        self.clusters.clear();
     }
 }
 
@@ -4559,15 +4525,14 @@ impl PicturePrimitive {
         pt.add_item(format!("requested_composite_mode: {:?}", self.requested_composite_mode));
 
         for cluster in &self.prim_list.clusters {
-            if !cluster.flags.contains(ClusterFlags::IS_PICTURE) {
-                continue;
-            }
-            for instance in &self.prim_list.prim_instances[cluster.prim_range()] {
-                let index = match instance.kind {
-                    PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
-                    _ => unreachable!(),
-                };
-                pictures[index.0].print(pictures, index, pt);
+            if cluster.flags.contains(ClusterFlags::IS_PICTURE) {
+                for instance in &cluster.prim_instances {
+                    let index = match instance.kind {
+                        PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
+                        _ => unreachable!(),
+                    };
+                    pictures[index.0].print(pictures, index, pt);
+                }
             }
         }
 
@@ -6071,7 +6036,7 @@ impl PicturePrimitive {
                     frame_context.spatial_tree,
                 );
 
-                for prim_instance in &mut self.prim_list.prim_instances[cluster.prim_range()] {
+                for prim_instance in &mut cluster.prim_instances {
                     match prim_instance.kind {
                         PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
                             // The actual size and clip rect of this primitive are determined by computing the bounding
