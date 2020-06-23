@@ -214,24 +214,26 @@ impl Http3Connection {
         }
     }
 
-    /// This function handles reading from all streams, i.e. control, qpack, request/response
-    /// stream and unidi stream that are still do not have a type.
-    /// The function cannot handle:
-    /// 1) a Push stream (if an unknown unidi stream is decoded to be a push stream)
-    /// 2) frames `MaxPushId` or `Goaway` must be handled by `Http3Client`/`Server`.
-    /// The function returns `HandleReadableOutput`.
-    pub fn handle_stream_readable(
-        &mut self,
-        conn: &mut Connection,
-        stream_id: u64,
-    ) -> Res<HandleReadableOutput> {
-        qtrace!([self], "Readable stream {}.", stream_id);
+    fn recv_decoder(&mut self, conn: &mut Connection, stream_id: u64) -> Res<bool> {
+        if self.qpack_decoder.is_recv_stream(stream_id) {
+            qdebug!(
+                [self],
+                "The qpack decoder stream ({}) is readable.",
+                stream_id
+            );
+            let unblocked_streams = self.qpack_decoder.receive(conn, stream_id)?;
+            for stream_id in unblocked_streams {
+                qdebug!([self], "Stream {} is unblocked", stream_id);
+                self.handle_read_stream(conn, stream_id)?;
+            }
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
 
-        let label = ::neqo_common::log_subject!(::log::Level::Debug, self);
-        if self.handle_read_stream(conn, stream_id)? {
-            qdebug!([label], "Request/response stream {} read.", stream_id);
-            Ok(HandleReadableOutput::NoOutput)
-        } else if self
+    fn recv_control(&mut self, conn: &mut Connection, stream_id: u64) -> Res<HandleReadableOutput> {
+        if self
             .control_stream_remote
             .receive_if_this_stream(conn, stream_id)?
         {
@@ -257,6 +259,31 @@ impl Http3Connection {
             } else {
                 Ok(HandleReadableOutput::ControlFrames(control_frames))
             }
+        } else {
+            debug_assert!(false, "Must be a control stream");
+            Ok(HandleReadableOutput::NoOutput)
+        }
+    }
+
+    /// This function handles reading from all streams, i.e. control, qpack, request/response
+    /// stream and unidi stream that are still do not have a type.
+    /// The function cannot handle:
+    /// 1) a Push stream (if an unknown unidi stream is decoded to be a push stream)
+    /// 2) frames `MaxPushId` or `Goaway` must be handled by `Http3Client`/`Server`.
+    /// The function returns `HandleReadableOutput`.
+    pub fn handle_stream_readable(
+        &mut self,
+        conn: &mut Connection,
+        stream_id: u64,
+    ) -> Res<HandleReadableOutput> {
+        qtrace!([self], "Readable stream {}.", stream_id);
+
+        let label = ::neqo_common::log_subject!(::log::Level::Debug, self);
+        if self.handle_read_stream(conn, stream_id)? {
+            qdebug!([label], "Request/response stream {} read.", stream_id);
+            Ok(HandleReadableOutput::NoOutput)
+        } else if self.control_stream_remote.is_recv_stream(stream_id) {
+            self.recv_control(conn, stream_id)
         } else if self.qpack_encoder.recv_if_encoder_stream(conn, stream_id)? {
             qdebug!(
                 [self],
@@ -264,17 +291,7 @@ impl Http3Connection {
                 stream_id
             );
             Ok(HandleReadableOutput::NoOutput)
-        } else if self.qpack_decoder.is_recv_stream(stream_id) {
-            qdebug!(
-                [self],
-                "The qpack decoder stream ({}) is readable.",
-                stream_id
-            );
-            let unblocked_streams = self.qpack_decoder.receive(conn, stream_id)?;
-            for stream_id in unblocked_streams {
-                qinfo!([self], "Stream {} is unblocked", stream_id);
-                self.handle_read_stream(conn, stream_id)?;
-            }
+        } else if self.recv_decoder(conn, stream_id)? {
             Ok(HandleReadableOutput::NoOutput)
         } else if let Some(ns) = self.new_streams.get_mut(&stream_id) {
             let stream_type = ns.get_type(conn, stream_id);
@@ -284,10 +301,21 @@ impl Http3Connection {
             }
             if let Some(t) = stream_type {
                 self.new_streams.remove(&stream_id);
-                let push = self.decode_new_stream(conn, t, stream_id)?;
-                if push {
-                    return Ok(HandleReadableOutput::PushStream);
-                }
+                self.decode_new_stream(conn, t, stream_id)?;
+                // Make sure to read from this stream because DataReadable will not be set again.
+                return match t {
+                    HTTP3_UNI_STREAM_TYPE_CONTROL => self.recv_control(conn, stream_id),
+                    QPACK_UNI_STREAM_TYPE_DECODER => {
+                        self.qpack_encoder.recv_if_encoder_stream(conn, stream_id)?;
+                        Ok(HandleReadableOutput::NoOutput)
+                    }
+                    QPACK_UNI_STREAM_TYPE_ENCODER => {
+                        self.recv_decoder(conn, stream_id)?;
+                        Ok(HandleReadableOutput::NoOutput)
+                    }
+                    HTTP3_UNI_STREAM_TYPE_PUSH => Ok(HandleReadableOutput::PushStream),
+                    _ => Ok(HandleReadableOutput::NoOutput),
+                };
             }
 
             Ok(HandleReadableOutput::NoOutput)

@@ -17,7 +17,7 @@ use neqo_common::{
     Role,
 };
 use neqo_crypto::{agent::CertificateInfo, AuthenticationStatus, SecretAgentInfo};
-use neqo_qpack::QpackSettings;
+use neqo_qpack::{stats::Stats, QpackSettings};
 use neqo_transport::{
     AppError, Connection, ConnectionEvent, ConnectionIdManager, Output, QuicVersion, StreamId,
     StreamType, ZeroRttState,
@@ -408,24 +408,21 @@ impl Http3Client {
         while let Some(e) = self.conn.next_event() {
             qdebug!([self], "check_connection_events - event {:?}.", e);
             match e {
-                ConnectionEvent::NewStream {
-                    stream_id,
-                    stream_type,
-                } => match stream_type {
+                ConnectionEvent::NewStream { stream_id } => match stream_id.stream_type() {
                     StreamType::BiDi => return Err(Error::HttpStreamCreation),
                     StreamType::UniDi => {
                         if self
                             .base_handler
-                            .handle_new_unidi_stream(&mut self.conn, stream_id)?
+                            .handle_new_unidi_stream(&mut self.conn, stream_id.as_u64())?
                         {
                             return Err(Error::HttpId);
                         }
                     }
                 },
                 ConnectionEvent::SendStreamWritable { stream_id } => {
-                    if let Some(s) = self.base_handler.send_streams.get_mut(&stream_id) {
+                    if let Some(s) = self.base_handler.send_streams.get_mut(&stream_id.as_u64()) {
                         if s.is_state_sending_data() {
-                            self.events.data_writable(stream_id);
+                            self.events.data_writable(stream_id.as_u64());
                         }
                     }
                 }
@@ -590,6 +587,16 @@ impl Http3Client {
 
         Ok(())
     }
+
+    #[must_use]
+    pub fn qpack_decoder_stats(&self) -> &Stats {
+        self.base_handler.qpack_decoder.stats()
+    }
+
+    #[must_use]
+    pub fn qpack_encoder_stats(&self) -> &Stats {
+        self.base_handler.qpack_encoder.stats()
+    }
 }
 
 #[cfg(test)]
@@ -662,6 +669,10 @@ mod tests {
 
     const PUSH_STREAM_DATA: &[u8] = &[0x1];
 
+    const CLIENT_SIDE_CONTROL_STREAM_ID: u64 = 2;
+    const CLIENT_SIDE_ENCODER_STREAM_ID: u64 = 6;
+    const CLIENT_SIDE_DECODER_STREAM_ID: u64 = 10;
+
     struct TestServer {
         settings: HFrame,
         conn: Connection,
@@ -671,33 +682,186 @@ mod tests {
         decoder_stream_id: Option<u64>,
     }
 
-    fn make_server(server_settings: &[HSetting]) -> TestServer {
-        fixture_init();
-        TestServer {
-            settings: HFrame::Settings {
-                settings: HSettings::new(server_settings),
-            },
-            conn: default_server(),
-            control_stream_id: None,
-            encoder: QPackEncoder::new(
-                QpackSettings {
-                    max_table_size_encoder: 128,
-                    max_table_size_decoder: 0,
-                    max_blocked_streams: 0,
-                },
-                true,
-            ),
-            encoder_stream_id: None,
-            decoder_stream_id: None,
+    impl TestServer {
+        pub fn new() -> Self {
+            Self::new_with_settings(&[
+                HSetting::new(HSettingType::MaxTableCapacity, 100),
+                HSetting::new(HSettingType::BlockedStreams, 100),
+                HSetting::new(HSettingType::MaxHeaderListSize, 10000),
+            ])
         }
-    }
 
-    fn make_default_server() -> TestServer {
-        make_server(&[
-            HSetting::new(HSettingType::MaxTableCapacity, 100),
-            HSetting::new(HSettingType::BlockedStreams, 100),
-            HSetting::new(HSettingType::MaxHeaderListSize, 10000),
-        ])
+        pub fn new_with_settings(server_settings: &[HSetting]) -> Self {
+            fixture_init();
+            Self {
+                settings: HFrame::Settings {
+                    settings: HSettings::new(server_settings),
+                },
+                conn: default_server(),
+                control_stream_id: None,
+                encoder: QPackEncoder::new(
+                    QpackSettings {
+                        max_table_size_encoder: 128,
+                        max_table_size_decoder: 0,
+                        max_blocked_streams: 0,
+                    },
+                    true,
+                ),
+                encoder_stream_id: None,
+                decoder_stream_id: None,
+            }
+        }
+
+        pub fn new_with_conn(conn: Connection) -> Self {
+            Self {
+                settings: HFrame::Settings {
+                    settings: HSettings::new(&[]),
+                },
+                conn,
+                control_stream_id: None,
+                encoder: QPackEncoder::new(
+                    QpackSettings {
+                        max_table_size_encoder: 128,
+                        max_table_size_decoder: 0,
+                        max_blocked_streams: 0,
+                    },
+                    true,
+                ),
+                encoder_stream_id: None,
+                decoder_stream_id: None,
+            }
+        }
+
+        pub fn create_qpack_streams(&mut self) {
+            // Create a QPACK encoder stream
+            self.encoder_stream_id = Some(self.conn.stream_create(StreamType::UniDi).unwrap());
+            self.encoder
+                .add_send_stream(self.encoder_stream_id.unwrap());
+            self.encoder.send(&mut self.conn).unwrap();
+
+            // Create decoder stream
+            self.decoder_stream_id = Some(self.conn.stream_create(StreamType::UniDi).unwrap());
+            assert_eq!(
+                self.conn
+                    .stream_send(self.decoder_stream_id.unwrap(), DECODER_STREAM_DATA)
+                    .unwrap(),
+                1
+            );
+        }
+
+        pub fn create_control_stream(&mut self) {
+            // Create control stream
+            self.control_stream_id = Some(self.conn.stream_create(StreamType::UniDi).unwrap());
+            // Send stream type on the control stream.
+            assert_eq!(
+                self.conn
+                    .stream_send(self.control_stream_id.unwrap(), CONTROL_STREAM_TYPE)
+                    .unwrap(),
+                1
+            );
+
+            // Encode a settings frame and send it.
+            let mut enc = Encoder::default();
+            self.settings.encode(&mut enc);
+            assert_eq!(
+                self.conn
+                    .stream_send(self.control_stream_id.unwrap(), &enc[..])
+                    .unwrap(),
+                enc[..].len()
+            );
+        }
+
+        pub fn check_client_control_qpack_streams_no_resumption(&mut self) {
+            self.check_client_control_qpack_streams(ENCODER_STREAM_DATA, false, true);
+        }
+
+        pub fn check_control_qpack_request_streams_resumption(
+            &mut self,
+            expect_encoder_stream_data: &[u8],
+            expect_request: bool,
+        ) {
+            self.check_client_control_qpack_streams(
+                expect_encoder_stream_data,
+                expect_request,
+                false,
+            );
+        }
+
+        // Check that server has received correct settings and qpack streams.
+        pub fn check_client_control_qpack_streams(
+            &mut self,
+            expect_encoder_stream_data: &[u8],
+            expect_request: bool,
+            expect_connected: bool,
+        ) {
+            let mut connected = false;
+            let mut control_stream = false;
+            let mut qpack_decoder_stream = false;
+            let mut qpack_encoder_stream = false;
+            let mut request = false;
+            while let Some(e) = self.conn.next_event() {
+                match e {
+                    ConnectionEvent::NewStream { stream_id }
+                    | ConnectionEvent::SendStreamWritable { stream_id } => {
+                        if expect_request {
+                            assert!(matches!(stream_id.as_u64(), 2 | 6 | 10 | 0));
+                        } else {
+                            assert!(matches!(stream_id.as_u64(), 2 | 6 | 10));
+                        }
+                    }
+                    ConnectionEvent::RecvStreamReadable { stream_id } => {
+                        if stream_id == CLIENT_SIDE_CONTROL_STREAM_ID {
+                            // the control stream
+                            self.read_and_check_stream_data(stream_id, CONTROL_STREAM_DATA, false);
+                            control_stream = true;
+                        } else if stream_id == CLIENT_SIDE_ENCODER_STREAM_ID {
+                            // the qpack encoder stream
+                            self.read_and_check_stream_data(
+                                stream_id,
+                                expect_encoder_stream_data,
+                                false,
+                            );
+                            qpack_encoder_stream = true;
+                        } else if stream_id == CLIENT_SIDE_DECODER_STREAM_ID {
+                            // the qpack decoder stream
+                            self.read_and_check_stream_data(stream_id, DECODER_STREAM_DATA, false);
+                            qpack_decoder_stream = true;
+                        } else if stream_id == 0 {
+                            assert!(expect_request);
+                            self.read_and_check_stream_data(
+                                stream_id,
+                                EXPECTED_REQUEST_HEADER_FRAME,
+                                true,
+                            );
+                            request = true;
+                        } else {
+                            panic!("unexpected event");
+                        }
+                    }
+                    ConnectionEvent::StateChange(State::Connected) => connected = true,
+                    ConnectionEvent::StateChange(_) => {}
+                    _ => panic!("unexpected event"),
+                }
+            }
+            assert_eq!(connected, expect_connected);
+            assert!(control_stream);
+            assert!(qpack_encoder_stream);
+            assert!(qpack_decoder_stream);
+            assert_eq!(request, expect_request);
+        }
+
+        pub fn read_and_check_stream_data(
+            &mut self,
+            stream_id: u64,
+            expected_data: &[u8],
+            expected_fin: bool,
+        ) {
+            let mut buf = [0_u8; 100];
+            let (amount, fin) = self.conn.stream_recv(stream_id, &mut buf).unwrap();
+            assert_eq!(fin, expected_fin);
+            assert_eq!(amount, expected_data.len());
+            assert_eq!(&buf[..amount], expected_data);
+        }
     }
 
     // Perform only Quic transport handshake.
@@ -730,52 +894,28 @@ mod tests {
     // Perform only Quic transport handshake.
     fn connect_only_transport() -> (Http3Client, TestServer) {
         let mut client = default_http3_client();
-        let mut server = make_default_server();
+        let mut server = TestServer::new();
         connect_only_transport_with(&mut client, &mut server);
         (client, server)
+    }
+
+    fn send_and_receive_client_settings(client: &mut Http3Client, server: &mut TestServer) {
+        // send and receive client settings
+        let out = client.process(None, now());
+        let _ = server.conn.process(out.dgram(), now());
+        server.check_client_control_qpack_streams_no_resumption();
     }
 
     // Perform Quic transport handshake and exchange Http3 settings.
     fn connect_with(client: &mut Http3Client, server: &mut TestServer) {
         connect_only_transport_with(client, server);
 
-        // send and receive client settings
-        let out = client.process(None, now());
-        server.conn.process(out.dgram(), now());
-        check_control_qpack_streams(&mut server.conn);
+        send_and_receive_client_settings(client, server);
 
-        // send and receive server settings
+        server.create_control_stream();
 
-        // Create control stream
-        server.control_stream_id = Some(server.conn.stream_create(StreamType::UniDi).unwrap());
-        let mut enc = Encoder::default();
-        server.settings.encode(&mut enc);
-        // Send stream type on the control stream.
-        let mut sent = server
-            .conn
-            .stream_send(server.control_stream_id.unwrap(), CONTROL_STREAM_TYPE);
-        assert_eq!(sent.unwrap(), 1);
-        // Encode a settings frame and send it.
-        let mut enc = Encoder::default();
-        server.settings.encode(&mut enc);
-        sent = server
-            .conn
-            .stream_send(server.control_stream_id.unwrap(), &enc[..]);
-        assert_eq!(sent.unwrap(), enc[..].len());
-        // Create a QPACK encoder stream
-        server.encoder_stream_id = Some(server.conn.stream_create(StreamType::UniDi).unwrap());
-        server
-            .encoder
-            .add_send_stream(server.encoder_stream_id.unwrap());
-        server.encoder.send(&mut server.conn).unwrap();
-
-        // Create decoder stream
-        server.decoder_stream_id = Some(server.conn.stream_create(StreamType::UniDi).unwrap());
-        sent = server
-            .conn
-            .stream_send(server.decoder_stream_id.unwrap(), DECODER_STREAM_DATA);
-        assert_eq!(sent, Ok(1));
-        // Actually send all above data
+        server.create_qpack_streams();
+        // Send the server's control and qpack streams data.
         let out = server.conn.process(None, now());
         client.process(out.dgram(), now());
 
@@ -786,72 +926,9 @@ mod tests {
     // Perform Quic transport handshake and exchange Http3 settings.
     fn connect() -> (Http3Client, TestServer) {
         let mut client = default_http3_client();
-        let mut server = make_default_server();
+        let mut server = TestServer::new();
         connect_with(&mut client, &mut server);
         (client, server)
-    }
-
-    fn read_and_check_stream_data(
-        server: &mut Connection,
-        stream_id: u64,
-        expected_data: &[u8],
-        expected_fin: bool,
-    ) {
-        let mut buf = [0_u8; 100];
-        let (amount, fin) = server.stream_recv(stream_id, &mut buf).unwrap();
-        assert_eq!(fin, expected_fin);
-        assert_eq!(amount, expected_data.len());
-        assert_eq!(&buf[..amount], expected_data);
-    }
-
-    const CLIENT_SIDE_CONTROL_STREAM_ID: u64 = 2;
-    const CLIENT_SIDE_ENCODER_STREAM_ID: u64 = 6;
-    const CLIENT_SIDE_DECODER_STREAM_ID: u64 = 10;
-
-    // Check that server has received correct settings and qpack streams.
-    fn check_control_qpack_streams(server: &mut Connection) {
-        let mut connected = false;
-        let mut control_stream = false;
-        let mut qpack_decoder_stream = false;
-        let mut qpack_encoder_stream = false;
-        while let Some(e) = server.next_event() {
-            match e {
-                ConnectionEvent::NewStream {
-                    stream_id,
-                    stream_type,
-                } => {
-                    assert!(matches!(stream_id, 2 | 6 | 10));
-                    assert_eq!(stream_type, StreamType::UniDi);
-                }
-                ConnectionEvent::RecvStreamReadable { stream_id } => {
-                    if stream_id == CLIENT_SIDE_CONTROL_STREAM_ID {
-                        // the control stream
-                        read_and_check_stream_data(server, stream_id, CONTROL_STREAM_DATA, false);
-                        control_stream = true;
-                    } else if stream_id == CLIENT_SIDE_ENCODER_STREAM_ID {
-                        // the qpack encoder stream
-                        read_and_check_stream_data(server, stream_id, ENCODER_STREAM_DATA, false);
-                        qpack_encoder_stream = true;
-                    } else if stream_id == CLIENT_SIDE_DECODER_STREAM_ID {
-                        // the qpack decoder stream
-                        read_and_check_stream_data(server, stream_id, DECODER_STREAM_DATA, false);
-                        qpack_decoder_stream = true;
-                    } else {
-                        panic!("unexpected event");
-                    }
-                }
-                ConnectionEvent::SendStreamWritable { stream_id } => {
-                    assert!(matches!(stream_id, 2 | 6 | 10));
-                }
-                ConnectionEvent::StateChange(State::Connected) => connected = true,
-                ConnectionEvent::StateChange(_) => {}
-                _ => panic!("unexpected event"),
-            }
-        }
-        assert!(connected);
-        assert!(control_stream);
-        assert!(qpack_encoder_stream);
-        assert!(qpack_decoder_stream);
     }
 
     // Fetch request fetch("GET", "https", "something.com", "/", &[]).
@@ -933,22 +1010,18 @@ mod tests {
         assert_eq!(request_stream_id, 0);
 
         let out = client.process(None, now());
-        server.conn.process(out.dgram(), now());
+        let _ = server.conn.process(out.dgram(), now());
 
         // find the new request/response stream and send frame v on it.
         while let Some(e) = server.conn.next_event() {
             match e {
-                ConnectionEvent::NewStream {
-                    stream_id,
-                    stream_type,
-                } => {
-                    assert_eq!(stream_id, request_stream_id);
-                    assert_eq!(stream_type, StreamType::BiDi);
+                ConnectionEvent::NewStream { stream_id } => {
+                    assert_eq!(stream_id.as_u64(), request_stream_id);
+                    assert_eq!(stream_id.stream_type(), StreamType::BiDi);
                 }
                 ConnectionEvent::RecvStreamReadable { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
-                    read_and_check_stream_data(
-                        &mut server.conn,
+                    server.read_and_check_stream_data(
                         stream_id,
                         EXPECTED_REQUEST_HEADER_FRAME,
                         close_sending_side,
@@ -1145,7 +1218,7 @@ mod tests {
             .stream_send(new_stream_id, &[0x41, 0x19, 0x4, 0x4, 0x6, 0x0, 0x8, 0x0]);
         let out = server.conn.process(None, now());
         let out = client.process(out.dgram(), now());
-        server.conn.process(out.dgram(), now());
+        let _ = server.conn.process(out.dgram(), now());
 
         // check for stop-sending with Error::HttpStreamCreation.
         let mut stop_sending_event_found = false;
@@ -1174,7 +1247,7 @@ mod tests {
         let _ = server.conn.stream_send(push_stream_id, PUSH_STREAM_DATA);
         let out = server.conn.process(None, now());
         let out = client.process(out.dgram(), now());
-        server.conn.process(out.dgram(), now());
+        let _ = server.conn.process(out.dgram(), now());
 
         assert_closed(&client, &Error::HttpId);
     }
@@ -1411,17 +1484,14 @@ mod tests {
         let _ = client.stream_close_send(request_stream_id);
 
         let out = client.process(None, now());
-        server.conn.process(out.dgram(), now());
+        let _ = server.conn.process(out.dgram(), now());
 
         // find the new request/response stream and send response on it.
         while let Some(e) = server.conn.next_event() {
             match e {
-                ConnectionEvent::NewStream {
-                    stream_id,
-                    stream_type,
-                } => {
-                    assert_eq!(stream_id, request_stream_id);
-                    assert_eq!(stream_type, StreamType::BiDi);
+                ConnectionEvent::NewStream { stream_id } => {
+                    assert_eq!(stream_id.as_u64(), request_stream_id);
+                    assert_eq!(stream_id.stream_type(), StreamType::BiDi);
                 }
                 ConnectionEvent::RecvStreamReadable { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -2086,7 +2156,7 @@ mod tests {
         assert_eq!(request_stream_id_3, 8);
 
         let out = client.process(None, now());
-        server.conn.process(out.dgram(), now());
+        let _ = server.conn.process(out.dgram(), now());
 
         let _ = server
             .conn
@@ -2160,7 +2230,7 @@ mod tests {
         assert_eq!(request_stream_id_3, 8);
 
         let out = client.process(None, now());
-        server.conn.process(out.dgram(), now());
+        let _ = server.conn.process(out.dgram(), now());
 
         // First send a Goaway frame with an higher number
         let _ = server
@@ -2792,73 +2862,6 @@ mod tests {
         assert!(recv_header);
     }
 
-    fn check_control_qpack_request_streams_resumption(
-        server: &mut Connection,
-        expect_encoder_stream_data: &[u8],
-        expect_request: bool,
-    ) {
-        let mut control_stream = false;
-        let mut qpack_decoder_stream = false;
-        let mut qpack_encoder_stream = false;
-        let mut request = false;
-        while let Some(e) = server.next_event() {
-            match e {
-                ConnectionEvent::NewStream {
-                    stream_id,
-                    stream_type,
-                } => {
-                    assert!(matches!(stream_id, 2 | 6 | 10 | 0));
-                    if stream_id == 0 {
-                        assert_eq!(stream_type, StreamType::BiDi);
-                    } else {
-                        assert_eq!(stream_type, StreamType::UniDi);
-                    }
-                }
-                ConnectionEvent::RecvStreamReadable { stream_id } => {
-                    if stream_id == 2 {
-                        // the control stream
-                        read_and_check_stream_data(server, stream_id, CONTROL_STREAM_DATA, false);
-                        control_stream = true;
-                    } else if stream_id == 6 {
-                        let mut buf = [0_u8; 100];
-                        let (amount, fin) = server.stream_recv(stream_id, &mut buf).unwrap();
-                        assert_eq!(fin, false);
-                        assert_eq!(amount, expect_encoder_stream_data.len());
-                        assert_eq!(&buf[..amount], expect_encoder_stream_data);
-                        qpack_encoder_stream = true;
-                    } else if stream_id == 10 {
-                        let mut buf = [0_u8; 100];
-                        let (amount, fin) = server.stream_recv(stream_id, &mut buf).unwrap();
-                        assert_eq!(fin, false);
-                        assert_eq!(amount, DECODER_STREAM_DATA.len());
-                        assert_eq!(&buf[..amount], DECODER_STREAM_DATA);
-                        qpack_decoder_stream = true;
-                    } else if stream_id == 0 {
-                        assert!(expect_request);
-                        read_and_check_stream_data(
-                            server,
-                            stream_id,
-                            EXPECTED_REQUEST_HEADER_FRAME,
-                            true,
-                        );
-                        request = true;
-                    } else {
-                        panic!("unexpected event");
-                    }
-                }
-                ConnectionEvent::SendStreamWritable { stream_id } => {
-                    assert!(matches!(stream_id, 2 | 6 | 10));
-                }
-                ConnectionEvent::StateChange(_) => (),
-                _ => panic!("unexpected event"),
-            }
-        }
-        assert!(control_stream);
-        assert!(qpack_encoder_stream);
-        assert!(qpack_decoder_stream);
-        assert_eq!(request, expect_request);
-    }
-
     fn exchange_token(client: &mut Http3Client, server: &mut Connection) -> Vec<u8> {
         server.send_ticket(now(), &[]).expect("can send ticket");
         let out = server.process_output(now());
@@ -2874,7 +2877,7 @@ mod tests {
 
         let mut client = default_http3_client();
 
-        let server = make_default_server();
+        let server = TestServer::new();
 
         assert_eq!(client.state(), Http3State::Initializing);
         client
@@ -2900,8 +2903,7 @@ mod tests {
         // SETTINGS frame has been received.
         // Also qpack encoder stream will send "change capacity" instruction because it has
         // the peer settings already.
-        check_control_qpack_request_streams_resumption(
-            &mut server.conn,
+        server.check_control_qpack_request_streams_resumption(
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
             false,
         );
@@ -2934,8 +2936,7 @@ mod tests {
         // SETTINGS frame has been received.
         // Also qpack encoder stream will send "change capacity" instruction because it has
         // the peer settings already.
-        check_control_qpack_request_streams_resumption(
-            &mut server.conn,
+        server.check_control_qpack_request_streams_resumption(
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
             true,
         );
@@ -3026,7 +3027,7 @@ mod tests {
 
         // Client will send Setting frame and open new qpack streams.
         let _ = server.process(client_out.dgram(), now());
-        check_control_qpack_streams(&mut server);
+        TestServer::new_with_conn(server).check_client_control_qpack_streams_no_resumption();
 
         // Check that we can send a request and that the stream_id starts again from 0.
         assert_eq!(make_request(&mut client, false), 0);
@@ -3040,13 +3041,13 @@ mod tests {
         expected_encoder_stream_data: &[u8],
     ) {
         let mut client = default_http3_client();
-        let mut server = make_server(original_settings);
+        let mut server = TestServer::new_with_settings(original_settings);
         // Connect and get a token
         connect_with(&mut client, &mut server);
         let token = exchange_token(&mut client, &mut server.conn);
 
         let mut client = default_http3_client();
-        let mut server = make_server(resumption_settings);
+        let mut server = TestServer::new_with_settings(resumption_settings);
         assert_eq!(client.state(), Http3State::Initializing);
         client
             .set_resumption_token(now(), &token)
@@ -3061,11 +3062,7 @@ mod tests {
         // Check that control and qpack streams anda SETTINGS frame are received.
         // Also qpack encoder stream will send "change capacity" instruction because it has
         // the peer settings already.
-        check_control_qpack_request_streams_resumption(
-            &mut server.conn,
-            expected_encoder_stream_data,
-            false,
-        );
+        server.check_control_qpack_request_streams_resumption(expected_encoder_stream_data, false);
 
         assert_eq!(*server.conn.state(), State::Handshaking);
         let out = client.process(out.dgram(), now());
@@ -3620,5 +3617,66 @@ mod tests {
                 .unwrap()
         );
         assert!(!client.events().any(data_readable_event));
+    }
+
+    #[test]
+    fn stream_blocked_no_remote_encoder_stream() {
+        let (mut client, mut server) = connect_only_transport();
+
+        send_and_receive_client_settings(&mut client, &mut server);
+
+        server.create_control_stream();
+        // Send the server's control stream data.
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+
+        server.create_qpack_streams();
+        let qpack_pkt1 = server.conn.process(None, now());
+        // delay delivery of this packet.
+
+        let request_stream_id = make_request(&mut client, true);
+        let out = client.process(None, now());
+        let _ = server.conn.process(out.dgram(), now());
+
+        server.encoder.set_max_capacity(100).unwrap();
+        server.encoder.set_max_blocked_streams(100).unwrap();
+        server.encoder.send(&mut server.conn).unwrap();
+
+        let headers = vec![
+            (String::from(":status"), String::from("200")),
+            (String::from("my-header"), String::from("my-header")),
+            (String::from("content-length"), String::from("3")),
+        ];
+        let encoded_headers = server
+            .encoder
+            .encode_header_block(&mut server.conn, &headers, request_stream_id)
+            .unwrap();
+        let hframe = HFrame::Headers {
+            header_block: encoded_headers.to_vec(),
+        };
+
+        // Send the encoder instructions,
+        let out = server.conn.process(None, now());
+        client.process(out.dgram(), now());
+
+        // Send response
+        let mut d = Encoder::default();
+        hframe.encode(&mut d);
+        let d_frame = HFrame::Data { len: 3 };
+        d_frame.encode(&mut d);
+        d.encode(&[0x61, 0x62, 0x63]);
+        let _ = server.conn.stream_send(request_stream_id, &d[..]);
+        server.conn.stream_close_send(request_stream_id).unwrap();
+
+        let out = server.conn.process(None, now());
+        let _out = client.process(out.dgram(), now());
+
+        let header_ready_event = |e| matches!(e, Http3ClientEvent::HeaderReady { .. });
+        assert!(!client.events().any(header_ready_event));
+
+        // Let client receive the encoder instructions.
+        let _out = client.process(qpack_pkt1.dgram(), now());
+
+        assert!(client.events().any(header_ready_event));
     }
 }

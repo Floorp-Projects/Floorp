@@ -296,21 +296,18 @@ mod tests {
         let out = neqo_trans_conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
         assert_connected(&mut hconn);
-        neqo_trans_conn.process(out.dgram(), now());
+        let _ = neqo_trans_conn.process(out.dgram(), now());
 
         let mut connected = false;
         while let Some(e) = neqo_trans_conn.next_event() {
             match e {
-                ConnectionEvent::NewStream {
-                    stream_id,
-                    stream_type,
-                } => {
+                ConnectionEvent::NewStream { stream_id } => {
                     assert!(
-                        (stream_id == SERVER_SIDE_CONTROL_STREAM_ID)
-                            || (stream_id == SERVER_SIDE_ENCODER_STREAM_ID)
-                            || (stream_id == SERVER_SIDE_DECODER_STREAM_ID)
+                        (stream_id.as_u64() == SERVER_SIDE_CONTROL_STREAM_ID)
+                            || (stream_id.as_u64() == SERVER_SIDE_ENCODER_STREAM_ID)
+                            || (stream_id.as_u64() == SERVER_SIDE_DECODER_STREAM_ID)
                     );
-                    assert_eq!(stream_type, StreamType::UniDi);
+                    assert_eq!(stream_id.stream_type(), StreamType::UniDi);
                 }
                 ConnectionEvent::RecvStreamReadable { stream_id } => {
                     if stream_id == CLIENT_SIDE_CONTROL_STREAM_ID
@@ -397,7 +394,7 @@ mod tests {
         assert_eq!(sent, Ok(1));
         let out1 = neqo_trans_conn.process(None, now());
         let out2 = hconn.process(out1.dgram(), now());
-        neqo_trans_conn.process(out2.dgram(), now());
+        let _ = neqo_trans_conn.process(out2.dgram(), now());
 
         // assert no error occured.
         assert_not_closed(&mut hconn);
@@ -503,9 +500,9 @@ mod tests {
             .stream_send(new_stream_id, &[0x41, 0x19, 0x4, 0x4, 0x6, 0x0, 0x8, 0x0]);
         let out = peer_conn.conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
-        peer_conn.conn.process(out.dgram(), now());
+        let _ = peer_conn.conn.process(out.dgram(), now());
         let out = hconn.process(None, now());
-        peer_conn.conn.process(out.dgram(), now());
+        let _ = peer_conn.conn.process(out.dgram(), now());
 
         // check for stop-sending with Error::HttpStreamCreation.
         let mut stop_sending_event_found = false;
@@ -534,7 +531,7 @@ mod tests {
         let _ = peer_conn.conn.stream_send(push_stream_id, &[0x1]);
         let out = peer_conn.conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
-        peer_conn.conn.process(out.dgram(), now());
+        let _ = peer_conn.conn.process(out.dgram(), now());
         assert_closed(&mut hconn, &Error::HttpStreamCreation);
     }
 

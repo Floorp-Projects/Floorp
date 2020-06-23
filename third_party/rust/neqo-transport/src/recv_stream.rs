@@ -330,6 +330,15 @@ impl RecvStreamState {
             _ => None,
         }
     }
+
+    fn max_stream_data(&self) -> Option<u64> {
+        match self {
+            Self::Recv {
+                max_stream_data, ..
+            } => Some(*max_stream_data),
+            _ => None,
+        }
+    }
 }
 
 /// Implement a QUIC receive stream.
@@ -483,16 +492,8 @@ impl RecvStream {
         }
     }
 
-    /// MAX_STREAM_DATA was lost. Send it again if still blocked.
-    pub fn flowc_lost(&self) {
-        if let RecvStreamState::Recv {
-            max_stream_data, ..
-        } = &self.state
-        {
-            self.flow_mgr
-                .borrow_mut()
-                .max_stream_data(self.stream_id, *max_stream_data)
-        }
+    pub fn max_stream_data(&self) -> Option<u64> {
+        self.state.max_stream_data()
     }
 
     pub fn is_terminal(&self) -> bool {
@@ -836,7 +837,7 @@ mod tests {
         s.maybe_send_flowc_update();
         assert!(matches!(s.flow_mgr.borrow().peek(), None));
         // But if lost, another frame is generated
-        s.flowc_lost();
+        flow_mgr.borrow_mut().max_stream_data(67.into(), 100);
         assert!(matches!(s.flow_mgr.borrow_mut().next().unwrap(), Frame::MaxStreamData{..}));
     }
 }

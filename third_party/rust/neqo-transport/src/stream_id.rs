@@ -47,8 +47,12 @@ impl StreamId {
         Self(id)
     }
 
+    pub fn as_u64(self) -> u64 {
+        self.0
+    }
+
     pub fn is_bidi(self) -> bool {
-        self.0 & 0x02 == 0
+        self.as_u64() & 0x02 == 0
     }
 
     pub fn is_uni(self) -> bool {
@@ -64,7 +68,7 @@ impl StreamId {
     }
 
     pub fn is_client_initiated(self) -> bool {
-        self.0 & 0x01 == 0
+        self.as_u64() & 0x01 == 0
     }
 
     pub fn is_server_initiated(self) -> bool {
@@ -98,15 +102,23 @@ impl StreamId {
     pub fn is_recv_only(self, my_role: Role) -> bool {
         self.is_uni() && self.is_remote_initiated(my_role)
     }
-
-    pub fn as_u64(self) -> u64 {
-        self.0
-    }
 }
 
 impl From<u64> for StreamId {
     fn from(val: u64) -> Self {
         Self::new(val)
+    }
+}
+
+impl PartialEq<u64> for StreamId {
+    fn eq(&self, other: &u64) -> bool {
+        self.as_u64() == *other
+    }
+}
+
+impl ::std::fmt::Display for StreamId {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{}", self.as_u64())
     }
 }
 
