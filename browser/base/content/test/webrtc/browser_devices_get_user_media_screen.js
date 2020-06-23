@@ -664,10 +664,7 @@ var gTests = [
       await indicator;
       await checkSharingUI({ screen: "Screen" });
 
-      ok(
-        gIdentityHandler._identityPopup.hidden,
-        "control center should be hidden"
-      );
+      ok(identityPopupHidden(), "control center should be hidden");
       if (IS_MAC) {
         let activeStreams = webrtcUI.getActiveStreams(false, false, true);
         webrtcUI.showSharingDoorhanger(activeStreams[0]);
@@ -677,16 +674,14 @@ var gTests = [
         );
         let elt = win.document.getElementById("screenShareButton");
         EventUtils.synthesizeMouseAtCenter(elt, {}, win);
-        await TestUtils.waitForCondition(
-          () => !gIdentityHandler._identityPopup.hidden
-        );
       }
-      ok(
-        !gIdentityHandler._identityPopup.hidden,
-        "control center should be open"
+      await TestUtils.waitForCondition(
+        () => !identityPopupHidden(),
+        "wait for control center to open"
       );
+      ok(!identityPopupHidden(), "control center should be open");
 
-      gIdentityHandler._identityPopup.hidden = true;
+      gIdentityHandler._identityPopup.hidePopup();
 
       await closeStream();
     },
