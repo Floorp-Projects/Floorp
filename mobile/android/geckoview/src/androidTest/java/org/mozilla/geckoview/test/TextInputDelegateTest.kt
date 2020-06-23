@@ -770,6 +770,44 @@ class TextInputDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun editorInfo_enterKeyHint() {
+        // no way to set enterkeyhint on designmode.
+        assumeThat("Not in designmode", id, not(equalTo("#designmode")))
+
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.forms.enterkeyhint" to true))
+
+        mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
+
+        mainSession.loadTestPath(INPUTS_PATH)
+        mainSession.waitForPageStop()
+
+        textContent = ""
+        val values = listOf("enter", "done", "go", "previous", "next", "search", "send")
+        for (enterkeyhint in values) {
+            mainSession.evaluateJS("""
+                document.querySelector('$id').enterKeyHint = '$enterkeyhint';
+                document.querySelector('$id').focus()""")
+            mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+
+            val editorInfo = EditorInfo()
+            mainSession.textInput.onCreateInputConnection(editorInfo)
+            assertThat("EditorInfo.imeOptions by $enterkeyhint", editorInfo.imeOptions and EditorInfo.IME_MASK_ACTION, equalTo(
+                when (enterkeyhint) {
+                    "done" -> EditorInfo.IME_ACTION_DONE
+                    "go" -> EditorInfo.IME_ACTION_GO
+                    "next" -> EditorInfo.IME_ACTION_NEXT
+                    "previous" -> EditorInfo.IME_ACTION_PREVIOUS
+                    "search" -> EditorInfo.IME_ACTION_SEARCH
+                    "send" -> EditorInfo.IME_ACTION_SEND
+                    else -> EditorInfo.IME_ACTION_NONE
+                }))
+
+            mainSession.evaluateJS("document.querySelector('$id').blur()")
+            mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+        }
+    }
+
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun bug1613804_finishComposingText() {
         mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
 
