@@ -49,7 +49,7 @@ async function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "15.0", "8");
   await promiseStartupManager();
 
-  function checkBlacklist() {
+  function checkBlocklist() {
     var failureId = {};
     var status;
 
@@ -164,7 +164,7 @@ async function run_test() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     // If we wait until after we go through the event loop, gfxInfo is sure to
     // have processed the gfxItems event.
-    executeSoon(checkBlacklist);
+    executeSoon(checkBlocklist);
   }, "blocklist-data-gfxItems");
 
   mockGfxBlocklistItemsFromDisk("../data/test_gfxBlacklist_AllOS.json");
