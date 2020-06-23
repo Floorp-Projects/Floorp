@@ -169,16 +169,65 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Nepoznat protokol</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Adresa navodi protokol (npr., <q>wxyz://</q>) koji browser ne prepoznaje, pa se browser ne može pravilno povezati na stranicu.</p>
+      <ul>
+        <li>Da li pokušavate pristupiti multimediji ili drugim netekstualnim servisima? Provjerite stranicu za dodatne zahtjeve.</li>
+        <li>Neki protokoli mogu zahtijevati softver trećeg lica ili plugine prije nego ih browser može prepoznati.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Fajl nije pronađen</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Da li je stavka preimenovana, uklonjena ili premještena?</li>
+        <li>Da li postoji pravopisna ili neka druga greška u adresi?</li>
+        <li>Da li imate potrebne dozvole za pristup zatraženoj stavci?</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Pristup fajlu je odbijen</string>
 
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Možda je uklonjen, premješten ili vam dozvole za fajl onemogućuju pristup.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proxy server je odbio povezivanje</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Browser je konfigurisan da koristi proxy server, ali je proxy odbio povezivanje.</p>
+      <ul>
+        <li>Da li je proxy konfiguracija browsera ispravna? Provjerite postavke i pokušajte ponovo.</li>
+        <li>Da li proxy usluga dozvoljava povezivanje sa ove mreže?</li>
+        <li>I dalje imate problem? Posavjetujte se sa vašim mrežnim administratorom ili Internet provajderom.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy server nije pronađen</string>
 
-    </resources>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Browser je konfigurisan da koristi proxy server, ali je proxy odbio povezivanje.</p>
+      <ul>
+        <li>Da li je proxy konfiguracija browsera ispravna? Provjerite postavke i pokušajte ponovo.</li>
+        <li>Da li je uređan povezan na aktivnu mrežu?</li>
+        <li>I dalje imate problem? Posavjetujte se sa vašim mrežnim administratorom ili Internet provajderom.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problem sa malware stranicom</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Stranica %1$s je prijavljena kao napadačka i blokirana je na osnovu vaših sigurnosnih postavki.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problem sa neželjenom stranicom</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Stranica %1$s je prijavljena da servira neželjeni softver i blokirana je na osnovu vaših sigurnosnih postavki.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problem sa štetnom stranicom</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Stranica %1$s je prijavljena kao potencijalno štetna i blokirana je na osnovu vaših sigurnosnih postavki.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problem sa obmanjujućom stranicom</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Stranica %1$s je prijavljena kao obmanjujuća i blokirana je na osnovu vaših sigurnosnih postavki.</p>]]></string>
+</resources>

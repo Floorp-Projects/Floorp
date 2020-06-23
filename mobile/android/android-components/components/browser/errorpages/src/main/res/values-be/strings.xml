@@ -198,4 +198,34 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Проксі-сервер адмовіўся злучацца</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Браўзер наладжаны карыстацца проксі-серверам, але проксі адхіліў злучэнне.</p>
+      <ul>
+        <li>Ці налады проксі браўзера правільныя? Праверце налады і паспрабуйце зноў.</li>
+        <li>Ці дазваляе проксі-сервер падлучэнні з гэтай сеткі?</li>
+        <li>Дагэтуль маеце праблемы? Парайцеся з адміністратарам сеткі або пастаўшчыком паслуг Інтэрнэту.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Проксі-сервер не знойдзены</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Браўзер наладжаны карыстацца проксі-серверам, але проксі не знойдзены.</p>
+      <ul>
+        <li>Ці налады проксі браўзера правільныя? Праверце налады і паспрабуйце зноў.</li>
+        <li>Ці падключана прылада да дзейнай сеткі?</li>
+        <li>Дагэтуль маеце праблемы? Парайцеся з адміністратарам сеткі або пастаўшчыком паслуг Інтэрнэту.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Шкоднасны сайт</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Сайт %1$s вядомы як нападнік і заблакаваны згодна з вашымі наладамі бяспекі.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Непажаданы сайт</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Шкоднасны сайт</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Падроблены сайт</string>
     </resources>

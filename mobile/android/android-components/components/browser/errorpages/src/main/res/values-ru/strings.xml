@@ -19,12 +19,10 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Не удалось установить защищённое соединение</string>
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
-      <ul>
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
         <li>Страница, которую вы пытаетесь просмотреть, не может быть отображена, так как достоверность полученных данных не может быть проверена.</li>
-        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и проинформируйте их об этой проблеме.</li>
-      </ul>
-    ]]></string>
+        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Не удалось установить защищённое соединение</string>
@@ -131,39 +129,31 @@
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Небезопасный тип файла</string>
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
-    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
-      <ul>
-        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и проинформируйте их об этой проблеме.</li>
-      </ul>
-    ]]></string>
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Содержимое искажено</string>
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
-    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
-      <p>Страница, которую вы пытаетесь просмотреть, не может быть показана, так как была обнаружена ошибка при передаче данных.</p>
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Страница, которую вы пытаетесь просмотреть, не может быть показана, так как была обнаружена ошибка при передаче данных.</p>
       <ul>
-        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и проинформируйте их об этой проблеме.</li>
-      </ul>
-    ]]></string>
+        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Содержимое повреждено</string>
-    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
-      <p>Страница, которую вы пытаетесь просмотреть, не может быть показана, так как была обнаружена ошибка при передаче данных.</p>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Страница, которую вы пытаетесь просмотреть, не может быть показана, так как была обнаружена ошибка при передаче данных.</p>
       <ul>
-        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и проинформируйте их об этой проблеме.</li>
-      </ul>
-    ]]></string>
+        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Неверный алгоритм сжатия</string>
-    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
-      <p>Страница, которую вы пытаетесь просмотреть, не может быть показана, так как она использует неверный или неподдерживаемый алгоритм сжатия данных.</p>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Страница, которую вы пытаетесь просмотреть, не может быть показана, так как она использует неверный или неподдерживаемый алгоритм сжатия данных.</p>
       <ul>
-        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и проинформируйте их об этой проблеме.</li>
-      </ul>
-    ]]></string>
+        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Адрес не найден</string>
