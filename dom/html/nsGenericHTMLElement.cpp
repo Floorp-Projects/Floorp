@@ -122,6 +122,24 @@ static const nsAttrValue::EnumTable kInputmodeTable[] = {
     {"search", NS_INPUTMODE_SEARCH},
     {nullptr, 0}};
 
+static const uint8_t NS_ENTERKEYHINT_ENTER = 1;
+static const uint8_t NS_ENTERKEYHINT_DONE = 2;
+static const uint8_t NS_ENTERKEYHINT_GO = 3;
+static const uint8_t NS_ENTERKEYHINT_NEXT = 4;
+static const uint8_t NS_ENTERKEYHINT_PREVIOUS = 5;
+static const uint8_t NS_ENTERKEYHINT_SEARCH = 6;
+static const uint8_t NS_ENTERKEYHINT_SEND = 7;
+
+static const nsAttrValue::EnumTable kEnterKeyHintTable[] = {
+    {"enter", NS_ENTERKEYHINT_ENTER},
+    {"done", NS_ENTERKEYHINT_DONE},
+    {"go", NS_ENTERKEYHINT_GO},
+    {"next", NS_ENTERKEYHINT_NEXT},
+    {"previous", NS_ENTERKEYHINT_PREVIOUS},
+    {"search", NS_ENTERKEYHINT_SEARCH},
+    {"send", NS_ENTERKEYHINT_SEND},
+    {nullptr, 0}};
+
 nsresult nsGenericHTMLElement::CopyInnerTo(Element* aDst) {
   MOZ_ASSERT(!aDst->GetUncomposedDoc(),
              "Should not CopyInnerTo an Element in a document");
@@ -856,6 +874,10 @@ bool nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
 
     if (aAttribute == nsGkAtoms::inputmode) {
       return aResult.ParseEnumValue(aValue, kInputmodeTable, false);
+    }
+
+    if (aAttribute == nsGkAtoms::enterkeyhint) {
+      return aResult.ParseEnumValue(aValue, kEnterKeyHintTable, false);
     }
   }
 
