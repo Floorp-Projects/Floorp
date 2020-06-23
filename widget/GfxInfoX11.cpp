@@ -23,6 +23,7 @@
 #include <gdk/gdkx.h>
 #ifdef MOZ_WAYLAND
 #  include "mozilla/widget/nsWaylandDisplay.h"
+#  include "mozilla/widget/DMABufLibWrapper.h"
 #endif
 
 #ifdef DEBUG
@@ -338,7 +339,7 @@ void GfxInfo::GetData() {
   mIsWayland = gdk_display_get_default() &&
                !GDK_IS_X11_DISPLAY(gdk_display_get_default());
   if (mIsWayland) {
-    mIsWaylandDRM = nsWaylandDisplay::IsDMABufEnabled();
+    mIsWaylandDRM = GetDMABufDevice()->IsDMABufEnabled();
   }
 #endif
 

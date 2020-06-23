@@ -314,7 +314,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
                       mGmbFormat->mModifiersCount > 0;
   if (useModifiers) {
     mGbmBufferObject[0] = nsGbmLib::CreateWithModifiers(
-        display->GetGbmDevice(), mWidth, mHeight, mGmbFormat->mFormat,
+        GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight, mGmbFormat->mFormat,
         mGmbFormat->mModifiers, mGmbFormat->mModifiersCount);
     if (mGbmBufferObject[0]) {
       mBufferModifier = nsGbmLib::GetModifier(mGbmBufferObject[0]);
@@ -330,13 +330,14 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
       mGbmBufferFlags |= GBM_BO_USE_TEXTURING;
     }
 
-    if (!nsGbmLib::DeviceIsFormatSupported(
-            display->GetGbmDevice(), mGmbFormat->mFormat, mGbmBufferFlags)) {
+    if (!nsGbmLib::DeviceIsFormatSupported(GetDMABufDevice()->GetGbmDevice(),
+                                           mGmbFormat->mFormat,
+                                           mGbmBufferFlags)) {
       mGbmBufferFlags &= ~GBM_BO_USE_SCANOUT;
     }
 
     mGbmBufferObject[0] =
-        nsGbmLib::Create(display->GetGbmDevice(), mWidth, mHeight,
+        nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight,
                          mGmbFormat->mFormat, mGbmBufferFlags);
 
     mBufferModifier = DRM_FORMAT_MOD_INVALID;
@@ -356,8 +357,8 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
 
     for (int i = 0; i < mBufferPlaneCount; i++) {
       uint32_t handle = nsGbmLib::GetHandleForPlane(mGbmBufferObject[0], i).u32;
-      int ret = nsGbmLib::DrmPrimeHandleToFD(display->GetGbmDeviceFd(), handle,
-                                             0, &mDmabufFds[i]);
+      int ret = nsGbmLib::DrmPrimeHandleToFD(
+          GetDMABufDevice()->GetGbmDeviceFd(), handle, 0, &mDmabufFds[i]);
       if (ret < 0 || mDmabufFds[i] < 0) {
         ReleaseSurface();
         return false;
@@ -774,8 +775,8 @@ bool DMABufSurfaceYUV::CreateYUVPlane(nsWaylandDisplay* display, int aPlane,
   mDrmFormats[aPlane] = aDrmFormat;
 
   mGbmBufferObject[aPlane] =
-      nsGbmLib::Create(display->GetGbmDevice(), aWidth, aHeight, aDrmFormat,
-                       GBM_BO_USE_LINEAR | GBM_BO_USE_TEXTURING);
+      nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), aWidth, aHeight,
+                       aDrmFormat, GBM_BO_USE_LINEAR | GBM_BO_USE_TEXTURING);
   if (!mGbmBufferObject[aPlane]) {
     return false;
   }
