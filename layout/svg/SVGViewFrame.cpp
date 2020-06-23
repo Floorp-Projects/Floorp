@@ -12,8 +12,12 @@
 #include "nsGkAtoms.h"
 #include "nsSVGOuterSVGFrame.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+
+nsIFrame* NS_NewSVGViewFrame(mozilla::PresShell* aPresShell,
+                             ComputedStyle* aStyle);
+
+namespace mozilla {
 
 /**
  * While views are not directly rendered in SVG they can be linked to
@@ -22,8 +26,8 @@ using namespace mozilla::dom;
  * the view receives to the overridden <svg> element (if there is one).
  **/
 class SVGViewFrame final : public nsFrame {
-  friend nsIFrame* NS_NewSVGViewFrame(mozilla::PresShell* aPresShell,
-                                      ComputedStyle* aStyle);
+  friend nsIFrame* ::NS_NewSVGViewFrame(mozilla::PresShell* aPresShell,
+                                        ComputedStyle* aStyle);
 
  protected:
   explicit SVGViewFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
@@ -62,9 +66,15 @@ class SVGViewFrame final : public nsFrame {
   }
 };
 
-nsIFrame* NS_NewSVGViewFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) SVGViewFrame(aStyle, aPresShell->GetPresContext());
+}  // namespace mozilla
+
+nsIFrame* NS_NewSVGViewFrame(mozilla::PresShell* aPresShell,
+                             ComputedStyle* aStyle) {
+  return new (aPresShell)
+      mozilla::SVGViewFrame(aStyle, aPresShell->GetPresContext());
 }
+
+namespace mozilla {
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGViewFrame)
 
@@ -104,3 +114,5 @@ nsresult SVGViewFrame::AttributeChanged(int32_t aNameSpaceID,
 
   return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
+
+}  // namespace mozilla
