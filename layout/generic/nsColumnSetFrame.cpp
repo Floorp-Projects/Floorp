@@ -999,6 +999,14 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
   // search)
   bool maybeContinuousBreakingDetected = false;
 
+  // This is the extra block-size added to the optimal column block-size
+  // estimation which is calculated in the while-loop by dividing
+  // aColData.mSumBSize into N columns.
+  //
+  // FIXME: The constant of 600 app units is arbitrary. It's about two
+  // line-heights.
+  const nscoord extraBlockSize = 600;
+
   while (!aPresContext->HasPendingInterrupt()) {
     nscoord lastKnownFeasibleBSize = aConfig.mKnownFeasibleBSize;
 
@@ -1065,8 +1073,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
 
     nscoord nextGuess =
         (aConfig.mKnownFeasibleBSize + aConfig.mKnownInfeasibleBSize) / 2;
-    // The constant of 600 twips is arbitrary. It's about two line-heights.
-    if (aConfig.mKnownFeasibleBSize - nextGuess < 600 &&
+    if (aConfig.mKnownFeasibleBSize - nextGuess < extraBlockSize &&
         !maybeContinuousBreakingDetected) {
       // We're close to our target, so just try shrinking just the
       // minimum amount that will cause one of our columns to break
@@ -1074,9 +1081,8 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
       nextGuess = aConfig.mKnownFeasibleBSize - 1;
     } else if (aUnboundedLastColumn) {
       // Make a guess by dividing that into N columns. Add some slop
-      // to try to make it on the feasible side.  The constant of
-      // 600 twips is arbitrary. It's about two line-heights.
-      nextGuess = aColData.mSumBSize / aConfig.mUsedColCount + 600;
+      // to try to make it on the feasible side.
+      nextGuess = aColData.mSumBSize / aConfig.mUsedColCount + extraBlockSize;
       // Sanitize it
       nextGuess = clamped(nextGuess, aConfig.mKnownInfeasibleBSize + 1,
                           aConfig.mKnownFeasibleBSize - 1);
@@ -1084,7 +1090,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
       // This can happen when we had a next-in-flow so we didn't
       // want to do an unbounded block-size measuring step. Let's just increase
       // from the infeasible block-size by some reasonable amount.
-      nextGuess = aConfig.mKnownInfeasibleBSize * 2 + 600;
+      nextGuess = aConfig.mKnownInfeasibleBSize * 2 + extraBlockSize;
     }
     // Don't bother guessing more than our block-size constraint.
     nextGuess = std::min(availableContentBSize, nextGuess);
