@@ -238,6 +238,9 @@ class InspectorUtils {
 
   static Element* ContainingBlockOf(GlobalObject&, Element&);
 
+  static already_AddRefed<nsINodeList> GetOverflowingChildrenOfElement(
+      GlobalObject& aGlobal, Element& element);
+
   /**
    * Parse CSS and update the style sheet in place.
    *
