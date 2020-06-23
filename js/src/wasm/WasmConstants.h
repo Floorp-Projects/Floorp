@@ -852,6 +852,7 @@ static const unsigned MaxDataSegments = 100000;
 static const unsigned MaxDataSegmentLengthPages = 16384;
 static const unsigned MaxElemSegments = 10000000;
 static const unsigned MaxElemSegmentLength = 10000000;
+static const unsigned MaxTableLimitField = UINT32_MAX;
 static const unsigned MaxTableLength = 10000000;
 static const unsigned MaxLocals = 50000;
 static const unsigned MaxParams = 1000;
@@ -867,7 +868,6 @@ static const unsigned MaxFunctionBytes = 7654321;
 
 // These limits pertain to our WebAssembly implementation only.
 
-static const unsigned MaxTableInitialLength = 10000000;
 static const unsigned MaxBrTableElems = 1000000;
 static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
 static const unsigned MaxResultsForJitEntry = 1;

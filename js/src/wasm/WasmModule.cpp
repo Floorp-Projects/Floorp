@@ -823,6 +823,12 @@ bool Module::instantiateImportedTable(JSContext* cx, const TableDesc& td,
 bool Module::instantiateLocalTable(JSContext* cx, const TableDesc& td,
                                    WasmTableObjectVector* tableObjs,
                                    SharedTableVector* tables) const {
+  if (td.initialLength > MaxTableLength) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_TABLE_IMP_LIMIT);
+    return false;
+  }
+
   SharedTable table;
   Rooted<WasmTableObject*> tableObj(cx);
   if (td.importedOrExported) {
