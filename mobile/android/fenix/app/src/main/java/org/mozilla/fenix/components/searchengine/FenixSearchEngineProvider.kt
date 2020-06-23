@@ -7,6 +7,7 @@ package org.mozilla.fenix.components.searchengine
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -17,6 +18,7 @@ import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.SearchEngineList
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
+import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
 import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
@@ -49,6 +51,13 @@ open class FenixSearchEngineProvider(
         AssetsSearchEngineProvider(localizationProvider).loadSearchEngines(context)
     }
 
+    // https://github.com/mozilla-mobile/fenix/issues/9935
+    // Adds a Locale search engine provider as a fallback in case the MLS lookup takes longer
+    // than the time it takes for a user to try to search.
+    private val fallBackEngines = async {
+        AssetsSearchEngineProvider(LocaleSearchLocalizationProvider()).loadSearchEngines(context)
+    }
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     open val bundledSearchEngines = async {
         val defaultEngineIdentifiers = baseSearchEngines.await().list.map { it.identifier }.toSet()
@@ -71,6 +80,17 @@ open class FenixSearchEngineProvider(
 
     private var loadedSearchEngines = refreshAsync()
 
+    // https://github.com/mozilla-mobile/fenix/issues/9935
+    // Create new getter that will return the fallback SearchEngineList if
+    // the main one hasn't completed yet
+    private val searchEngines: Deferred<SearchEngineList>
+        get() =
+            if (loadedSearchEngines.isCompleted) {
+                loadedSearchEngines
+            } else {
+                fallBackEngines
+            }
+
     fun getDefaultEngine(context: Context): SearchEngine {
         val engines = installedSearchEngines(context)
         val selectedName = context.settings().defaultSearchEngineName
@@ -84,7 +104,7 @@ open class FenixSearchEngineProvider(
      */
     fun installedSearchEngines(context: Context): SearchEngineList = runBlocking {
         val installedIdentifiers = installedSearchEngineIdentifiers(context)
-        val engineList = loadedSearchEngines.await()
+        val engineList = searchEngines.await()
 
         engineList.copy(
             list = engineList.list.filter {
