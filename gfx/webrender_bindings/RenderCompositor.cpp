@@ -92,6 +92,19 @@ void wr_compositor_deinit(void* aCompositor) {
   compositor->DeInit();
 }
 
+void wr_compositor_map_tile(void* aCompositor, wr::NativeTileId aId,
+                            wr::DeviceIntRect aDirtyRect,
+                            wr::DeviceIntRect aValidRect, void** aData,
+                            int32_t* aStride) {
+  RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
+  compositor->MapTile(aId, aDirtyRect, aValidRect, aData, aStride);
+}
+
+void wr_compositor_unmap_tile(void* aCompositor) {
+  RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
+  compositor->UnmapTile();
+}
+
 /* static */
 UniquePtr<RenderCompositor> RenderCompositor::Create(
     RefPtr<widget::CompositorWidget>&& aWidget) {

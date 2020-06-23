@@ -45,7 +45,6 @@ RenderCompositorOGL::RenderCompositorOGL(
       mNativeLayerRoot(GetWidget()->GetNativeLayerRoot()),
       mPreviousFrameDoneSync(nullptr),
       mThisFrameDoneSync(nullptr) {
-  MOZ_ASSERT(mGL);
   if (mNativeLayerRoot) {
 #ifdef XP_MACOSX
     auto pool = RenderThread::Get()->SharedSurfacePool();
@@ -65,7 +64,7 @@ RenderCompositorOGL::~RenderCompositorOGL() {
     mNativeLayerRoot = nullptr;
   }
 
-  if (!mGL->MakeCurrent()) {
+  if (mGL && !mGL->MakeCurrent()) {
     gfxCriticalNote
         << "Failed to make render context current during destroying.";
     // Leak resources!
@@ -83,7 +82,7 @@ RenderCompositorOGL::~RenderCompositorOGL() {
 }
 
 bool RenderCompositorOGL::BeginFrame() {
-  if (!mGL->MakeCurrent()) {
+  if (mGL && !mGL->MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
     return false;
   }
@@ -104,31 +103,45 @@ bool RenderCompositorOGL::BeginFrame() {
   }
   if (mNativeLayerForEntireWindow) {
     gfx::IntRect bounds({}, bufferSize);
-    Maybe<GLuint> fbo = mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(
-        bounds, bounds, true);
-    if (!fbo) {
+    if (mGL) {
+      Maybe<GLuint> fbo = mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(
+          bounds, bounds, true);
+      if (!fbo) {
+        return false;
+      }
+      mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, *fbo);
+    } else if (!MapNativeLayer(mNativeLayerForEntireWindow, bounds, bounds)) {
       return false;
     }
-    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, *fbo);
-  } else {
+  } else if (mGL) {
     mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGL->GetDefaultFramebuffer());
   }
 
   return true;
 }
 
+void RenderCompositorOGL::CancelFrame() {
+  if (mNativeLayerForEntireWindow && mLayerTarget) {
+    UnmapNativeLayer();
+  }
+}
+
 RenderedFrameId RenderCompositorOGL::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
   RenderedFrameId frameId = GetNextRenderFrameId();
-  InsertFrameDoneSync();
 
-  if (!mNativeLayerRoot) {
-    mGL->SwapBuffers();
-    return frameId;
+  if (mGL) {
+    InsertFrameDoneSync();
+    if (!mNativeLayerRoot) {
+      mGL->SwapBuffers();
+    } else if (mNativeLayerForEntireWindow) {
+      mGL->fFlush();
+    }
+  } else if (mNativeLayerForEntireWindow && mLayerTarget) {
+    UnmapNativeLayer();
   }
 
   if (mNativeLayerForEntireWindow) {
-    mGL->fFlush();
     mNativeLayerForEntireWindow->NotifySurfaceReady();
     mNativeLayerRoot->CommitToScreen();
   }
@@ -189,7 +202,9 @@ bool RenderCompositorOGL::MaybeReadback(const gfx::IntSize& aReadbackSize,
 
   // ReadbackPixels might have changed the current context. Make sure mGL is
   // current again.
-  mGL->MakeCurrent();
+  if (mGL) {
+    mGL->MakeCurrent();
+  }
 
   return success;
 }
@@ -236,16 +251,18 @@ void RenderCompositorOGL::CompositorEndFrame() {
 #endif
   mDrawnPixelCount = 0;
 
+  if (mGL) {
+    mGL->fFlush();
+  }
+
   mNativeLayerRoot->SetLayers(mAddedLayers);
-  mGL->fFlush();
   mNativeLayerRoot->CommitToScreen();
   mSurfacePoolHandle->OnEndFrame();
 }
 
-void RenderCompositorOGL::Bind(wr::NativeTileId aId,
-                               wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
-                               wr::DeviceIntRect aDirtyRect,
-                               wr::DeviceIntRect aValidRect) {
+void RenderCompositorOGL::BindNativeLayer(wr::NativeTileId aId,
+                                          wr::DeviceIntRect aDirtyRect,
+                                          wr::DeviceIntRect aValidRect) {
   MOZ_RELEASE_ASSERT(!mCurrentlyBoundNativeLayer);
 
   auto surfaceCursor = mSurfaces.find(aId.surface_id);
@@ -256,28 +273,109 @@ void RenderCompositorOGL::Bind(wr::NativeTileId aId,
   MOZ_RELEASE_ASSERT(layerCursor != surface.mNativeLayers.end());
   RefPtr<layers::NativeLayer> layer = layerCursor->second;
 
+  gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
+                         aDirtyRect.size.width, aDirtyRect.size.height);
+
+  mCurrentlyBoundNativeLayer = layer;
+
+  mDrawnPixelCount += dirtyRect.Area();
+}
+
+void RenderCompositorOGL::UnbindNativeLayer() {
+  MOZ_RELEASE_ASSERT(mCurrentlyBoundNativeLayer);
+
+  mCurrentlyBoundNativeLayer->NotifySurfaceReady();
+  mCurrentlyBoundNativeLayer = nullptr;
+}
+
+void RenderCompositorOGL::Bind(wr::NativeTileId aId,
+                               wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
+                               wr::DeviceIntRect aDirtyRect,
+                               wr::DeviceIntRect aValidRect) {
+  BindNativeLayer(aId, aDirtyRect, aValidRect);
+
   gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
                          aValidRect.size.width, aValidRect.size.height);
   gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
                          aDirtyRect.size.width, aDirtyRect.size.height);
 
-  Maybe<GLuint> fbo =
-      layer->NextSurfaceAsFramebuffer(validRect, dirtyRect, true);
+  Maybe<GLuint> fbo = mCurrentlyBoundNativeLayer->NextSurfaceAsFramebuffer(
+      validRect, dirtyRect, true);
   MOZ_RELEASE_ASSERT(fbo);  // TODO: make fallible
-  mCurrentlyBoundNativeLayer = layer;
 
   *aFboId = *fbo;
   *aOffset = wr::DeviceIntPoint{0, 0};
-
-  mDrawnPixelCount += dirtyRect.Area();
 }
 
 void RenderCompositorOGL::Unbind() {
-  MOZ_RELEASE_ASSERT(mCurrentlyBoundNativeLayer);
-
   mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
-  mCurrentlyBoundNativeLayer->NotifySurfaceReady();
-  mCurrentlyBoundNativeLayer = nullptr;
+
+  UnbindNativeLayer();
+}
+
+bool RenderCompositorOGL::MapNativeLayer(layers::NativeLayer* aLayer,
+                                         const gfx::IntRect& aDirtyRect,
+                                         const gfx::IntRect& aValidRect) {
+  uint8_t* data = nullptr;
+  gfx::IntSize size;
+  int32_t stride = 0;
+  gfx::SurfaceFormat format = gfx::SurfaceFormat::UNKNOWN;
+  RefPtr<gfx::DrawTarget> dt = aLayer->NextSurfaceAsDrawTarget(
+      aValidRect, gfx::IntRegion(aDirtyRect), gfx::BackendType::SKIA);
+  if (!dt || !dt->LockBits(&data, &size, &stride, &format)) {
+    return false;
+  }
+  MOZ_ASSERT(format == gfx::SurfaceFormat::B8G8R8A8 ||
+             format == gfx::SurfaceFormat::B8G8R8X8);
+  mLayerTarget = std::move(dt);
+  mLayerData = data;
+  mLayerStride = stride;
+  return true;
+}
+
+void RenderCompositorOGL::UnmapNativeLayer() {
+  MOZ_ASSERT(mLayerTarget && mLayerData);
+  mLayerTarget->ReleaseBits(mLayerData);
+  mLayerTarget = nullptr;
+  mLayerData = nullptr;
+  mLayerStride = 0;
+}
+
+bool RenderCompositorOGL::GetMappedBuffer(uint8_t** aData, int32_t* aStride) {
+  if (mNativeLayerForEntireWindow && mLayerData) {
+    *aData = mLayerData;
+    *aStride = mLayerStride;
+    return true;
+  }
+  return false;
+}
+
+bool RenderCompositorOGL::MapTile(wr::NativeTileId aId,
+                                  wr::DeviceIntRect aDirtyRect,
+                                  wr::DeviceIntRect aValidRect,
+                                  void** aData, int32_t* aStride) {
+  if (!mNativeLayerRoot || mNativeLayerForEntireWindow) {
+    return false;
+  }
+  BindNativeLayer(aId, aDirtyRect, aValidRect);
+  gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
+                         aDirtyRect.size.width, aDirtyRect.size.height);
+  gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
+                         aValidRect.size.width, aValidRect.size.height);
+  if (!MapNativeLayer(mCurrentlyBoundNativeLayer, dirtyRect, validRect)) {
+    UnbindNativeLayer();
+    return false;
+  }
+  *aData = mLayerData;
+  *aStride = mLayerStride;
+  return true;
+}
+
+void RenderCompositorOGL::UnmapTile() {
+  if (!mNativeLayerForEntireWindow && mCurrentlyBoundNativeLayer) {
+    UnmapNativeLayer();
+    UnbindNativeLayer();
+  }
 }
 
 void RenderCompositorOGL::CreateSurface(wr::NativeSurfaceId aId,

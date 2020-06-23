@@ -100,6 +100,12 @@ class RenderCompositor {
                     uint32_t* aFboId, wr::DeviceIntRect aDirtyRect,
                     wr::DeviceIntRect aValidRect) {}
   virtual void Unbind() {}
+  virtual bool MapTile(wr::NativeTileId aId, wr::DeviceIntRect aDirtyRect,
+                       wr::DeviceIntRect aValidRect, void** aData,
+                       int32_t* aStride) {
+    return false;
+  }
+  virtual void UnmapTile() {}
   virtual void CreateSurface(wr::NativeSurfaceId aId,
                              wr::DeviceIntPoint aVirtualOffset,
                              wr::DeviceIntSize aTileSize, bool aIsOpaque) {}

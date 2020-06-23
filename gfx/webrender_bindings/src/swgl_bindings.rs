@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use bindings::WrCompositor;
 use gleam::{gl, gl::Gl};
 use std::collections::hash_map::HashMap;
 use std::os::raw::c_void;
@@ -210,7 +211,7 @@ impl DrawTileHelper {
 pub struct SwCompositor {
     gl: swgl::Context,
     native_gl: Option<Rc<dyn gl::Gl>>,
-    compositor: Option<Box<dyn Compositor>>,
+    compositor: Option<WrCompositor>,
     surfaces: HashMap<NativeSurfaceId, SwSurface>,
     frame_surfaces: Vec<(NativeSurfaceId, DeviceIntPoint, DeviceIntRect)>,
     cur_tile: NativeTileId,
@@ -218,7 +219,7 @@ pub struct SwCompositor {
 }
 
 impl SwCompositor {
-    pub fn new(gl: swgl::Context, native_gl: Option<Rc<dyn gl::Gl>>, compositor: Option<Box<dyn Compositor>>) -> Self {
+    pub fn new(gl: swgl::Context, native_gl: Option<Rc<dyn gl::Gl>>, compositor: Option<WrCompositor>) -> Self {
         SwCompositor {
             gl,
             compositor,
@@ -411,8 +412,14 @@ impl Compositor for SwCompositor {
                     return surface_info;
                 }
 
+                let mut stride = 0;
                 let mut buf = ptr::null_mut();
-                if let Some(native_gl) = &self.native_gl {
+                if let Some(compositor) = &mut self.compositor {
+                    if let Some(tile_info) = compositor.map_tile(id, dirty_rect, valid_rect) {
+                        stride = tile_info.stride;
+                        buf = tile_info.data;
+                    }
+                } else if let Some(native_gl) = &self.native_gl {
                     if tile.pbo_id != 0 {
                         native_gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, tile.pbo_id);
                         buf = native_gl.map_buffer_range(
@@ -421,7 +428,9 @@ impl Compositor for SwCompositor {
                             valid_rect.size.area() as isize * 4 + 16,
                             gl::MAP_WRITE_BIT | gl::MAP_INVALIDATE_BUFFER_BIT,
                         ); // | gl::MAP_UNSYNCHRONIZED_BIT);
-                        if buf == ptr::null_mut() {
+                        if buf != ptr::null_mut() {
+                            stride = valid_rect.size.width * 4;
+                        } else {
                             native_gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
                             native_gl.delete_buffers(&[tile.pbo_id]);
                             tile.pbo_id = 0;
@@ -433,7 +442,7 @@ impl Compositor for SwCompositor {
                     gl::RGBA8,
                     valid_rect.size.width,
                     valid_rect.size.height,
-                    valid_rect.size.width * 4,
+                    stride,
                     buf,
                     surface.tile_size.width,
                     surface.tile_size.height,
@@ -457,17 +466,23 @@ impl Compositor for SwCompositor {
     }
 
     fn unbind(&mut self) {
-        let native_gl = match &self.native_gl {
-            Some(native_gl) => native_gl,
-            None => return,
-        };
-
         let id = self.cur_tile;
         if let Some(surface) = self.surfaces.get_mut(&id.surface_id) {
             if let Some(tile) = surface.tiles.iter().find(|t| t.x == id.x && t.y == id.y) {
                 if tile.valid_rect.is_empty() {
                     return;
                 }
+
+                if let Some(compositor) = &mut self.compositor {
+                    compositor.unmap_tile();
+                    return;
+                }
+
+                let native_gl = match &self.native_gl {
+                    Some(native_gl) => native_gl,
+                    None => return,
+                };
+
                 let (swbuf, _, _, stride) = self.gl.get_color_buffer(tile.fbo_id, true);
                 assert!(stride % 4 == 0);
                 let buf = if tile.pbo_id != 0 {
