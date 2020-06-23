@@ -31,6 +31,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
+  ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.jsm",
   Management: "resource://gre/modules/Extension.jsm",
@@ -652,6 +653,25 @@ var GeckoViewWebExtension = {
     return scope.extension;
   },
 
+  async ensureBuiltIn(aUri, aId) {
+    const extensionData = new ExtensionData(aUri);
+    const [manifest, extension] = await Promise.all([
+      extensionData.loadManifest(),
+      this.extensionById(aId),
+    ]);
+
+    if (!extension || manifest.version != extension.version) {
+      return this.installBuiltIn(aUri);
+    }
+
+    const exported = await exportExtension(
+      extension,
+      extension.userPermissions,
+      aUri
+    );
+    return { extension: exported };
+  },
+
   async installBuiltIn(aUri) {
     const addon = await AddonManager.installBuiltinAddon(aUri.spec);
     const exported = await exportExtension(addon, addon.userPermissions, aUri);
@@ -818,6 +838,30 @@ var GeckoViewWebExtension = {
     return promise;
   },
 
+  validateBuiltInLocation(aLocationUri, aCallback) {
+    let uri;
+    try {
+      uri = Services.io.newURI(aLocationUri);
+    } catch (ex) {
+      aCallback.onError(`Could not parse uri: ${aLocationUri}. Error: ${ex}`);
+      return null;
+    }
+
+    if (uri.scheme !== "resource" || uri.host !== "android") {
+      aCallback.onError(`Only resource://android/... URIs are allowed.`);
+      return null;
+    }
+
+    if (uri.fileName !== "") {
+      aCallback.onError(
+        `This URI does not point to a folder. Note: folders URIs must end with a "/".`
+      );
+      return null;
+    }
+
+    return uri;
+  },
+
   /* eslint-disable complexity */
   async onEvent(aEvent, aData, aCallback) {
     debug`onEvent ${aEvent} ${aData}`;
@@ -952,27 +996,31 @@ var GeckoViewWebExtension = {
         break;
       }
 
-      case "GeckoView:WebExtension:InstallBuiltIn": {
-        const { locationUri } = aData;
-        let uri;
+      case "GeckoView:WebExtension:EnsureBuiltIn": {
+        const { locationUri, webExtensionId } = aData;
+        const uri = this.validateBuiltInLocation(locationUri, aCallback);
+        if (!uri) {
+          return;
+        }
+
         try {
-          uri = Services.io.newURI(locationUri);
+          const result = await this.ensureBuiltIn(uri, webExtensionId);
+          if (result.extension) {
+            aCallback.onSuccess(result);
+          } else {
+            aCallback.onError(result);
+          }
         } catch (ex) {
-          aCallback.onError(
-            `Could not parse uri: ${locationUri}. Error: ${ex}`
-          );
-          return;
+          debug`Install exception error ${ex}`;
+          aCallback.onError(`Unexpected error: ${ex}`);
         }
 
-        if (uri.scheme !== "resource" || uri.host !== "android") {
-          aCallback.onError(`Only resource://android/... URIs are allowed.`);
-          return;
-        }
+        break;
+      }
 
-        if (uri.fileName !== "") {
-          aCallback.onError(
-            `This URI does not point to a folder. Note: folders URIs must end with a "/".`
-          );
+      case "GeckoView:WebExtension:InstallBuiltIn": {
+        const uri = this.validateBuiltInLocation(aData.locationUri, aCallback);
+        if (!uri) {
           return;
         }
 
