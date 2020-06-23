@@ -104,7 +104,7 @@ def _install_host_utils(build_obj):
         _tooltool_fetch(build_obj.substs)
         xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
         for path in xre_path:
-            if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
+            if os.path.isdir(path) and os.path.isfile(os.path.join(path, _get_xpcshell_name())):
                 os.environ['MOZ_HOST_BIN'] = path
                 installed = True
                 break
@@ -113,6 +113,16 @@ def _install_host_utils(build_obj):
     else:
         _log_warning(
             "Unable to install host utilities -- your platform is not supported!")
+
+
+def _get_xpcshell_name():
+    """
+       Returns the xpcshell binary's name as a string (dependent on operating system).
+    """
+    xpcshell_binary = 'xpcshell'
+    if os.name == 'nt':
+        xpcshell_binary = 'xpcshell.exe'
+    return xpcshell_binary
 
 
 def _maybe_update_host_utils(build_obj):
@@ -125,7 +135,7 @@ def _maybe_update_host_utils(build_obj):
     existing_path = None
     xre_paths = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
     for path in xre_paths:
-        if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
+        if os.path.isdir(path) and os.path.isfile(os.path.join(path, _get_xpcshell_name())):
             existing_path = path
             break
     if existing_path is None:
@@ -276,14 +286,16 @@ def verify_android_device(build_obj, install=InstallIntent.NO, xre=False, debugg
                   "containing host xpcshell"
         elif not os.path.isdir(xre_path):
             err = '$MOZ_HOST_BIN does not specify a directory'
-        elif not os.path.isfile(os.path.join(xre_path, 'xpcshell')):
+        elif not os.path.isfile(os.path.join(xre_path, _get_xpcshell_name())):
             err = '$MOZ_HOST_BIN/xpcshell does not exist'
         if err:
             _maybe_update_host_utils(build_obj)
             xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
             for path in xre_path:
-                if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
-                    os.environ['MOZ_HOST_BIN'] = path
+                if os.path.isdir(path) and os.path.isfile(
+                    os.path.join(path, _get_xpcshell_name())
+                ):
+                    os.environ["MOZ_HOST_BIN"] = path
                     err = None
                     break
         if err:

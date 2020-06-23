@@ -259,16 +259,19 @@ def setup_junit_argument_parser():
 
 def verify_host_bin():
     # validate MOZ_HOST_BIN environment variables for Android tests
+    xpcshell_binary = 'xpcshell'
+    if os.name == 'nt':
+        xpcshell_binary = 'xpcshell.exe'
     MOZ_HOST_BIN = os.environ.get('MOZ_HOST_BIN')
     if not MOZ_HOST_BIN:
         print('environment variable MOZ_HOST_BIN must be set to a directory containing host '
-              'xpcshell')
+              '%s' % xpcshell_binary)
         return 1
     elif not os.path.isdir(MOZ_HOST_BIN):
         print('$MOZ_HOST_BIN does not specify a directory')
         return 1
-    elif not os.path.isfile(os.path.join(MOZ_HOST_BIN, 'xpcshell')):
-        print('$MOZ_HOST_BIN/xpcshell does not exist')
+    elif not os.path.isfile(os.path.join(MOZ_HOST_BIN, xpcshell_binary)):
+        print('$MOZ_HOST_BIN/%s does not exist' % xpcshell_binary)
         return 1
     return 0
 
