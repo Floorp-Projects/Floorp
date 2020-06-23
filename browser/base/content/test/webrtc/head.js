@@ -88,8 +88,10 @@ async function assertWebRTCIndicatorStatus(expected) {
   if (!expected && ui.showGlobalIndicator) {
     // It seems the global indicator is not always removed synchronously
     // in some cases.
-    info("waiting for the global indicator to be hidden");
-    await TestUtils.waitForCondition(() => !ui.showGlobalIndicator);
+    await TestUtils.waitForCondition(
+      () => !ui.showGlobalIndicator,
+      "waiting for the global indicator to be hidden"
+    );
   }
   is(ui.showGlobalIndicator, !!expected, msg);
 
@@ -524,6 +526,13 @@ async function stopSharing(
     aFrameBC
   );
   aWindow.gIdentityHandler._identityBox.click();
+  let popup = aWindow.gIdentityHandler._identityPopup;
+  // If the popup gets hidden before being shown, by stray focus/activate
+  // events, don't bother failing the test. It's enough to know that we
+  // started showing the popup.
+  let hiddenEvent = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+  let shownEvent = BrowserTestUtils.waitForEvent(popup, "popupshown");
+  await Promise.race([hiddenEvent, shownEvent]);
   let doc = aWindow.document;
   let permissions = doc.getElementById("identity-popup-permission-list");
   let cancelButton = permissions.querySelector(
@@ -550,7 +559,7 @@ async function stopSharing(
   }
 
   cancelButton.click();
-  aWindow.gIdentityHandler._identityPopup.hidden = true;
+  popup.hidePopup();
 
   await promiseRecordingEvent;
   await observerPromise1;
@@ -725,6 +734,13 @@ async function checkSharingUI(
 
   // Then check the sharing indicators inside the control center panel.
   identityBox.click();
+  let popup = aWin.gIdentityHandler._identityPopup;
+  // If the popup gets hidden before being shown, by stray focus/activate
+  // events, don't bother failing the test. It's enough to know that we
+  // started showing the popup.
+  let hiddenEvent = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+  let shownEvent = BrowserTestUtils.waitForEvent(popup, "popupshown");
+  await Promise.race([hiddenEvent, shownEvent]);
   let permissions = doc.getElementById("identity-popup-permission-list");
   for (let id of ["microphone", "camera", "screen"]) {
     let convertId = idToConvert => {
@@ -763,7 +779,11 @@ async function checkSharingUI(
       is(icon.length, 1, "should not show more than 1 " + id + " icon");
     }
   }
-  aWin.gIdentityHandler._identityPopup.hidden = true;
+  aWin.gIdentityHandler._identityPopup.hidePopup();
+  await TestUtils.waitForCondition(
+    () => identityPopupHidden(aWin),
+    "identity popup should be hidden"
+  );
 
   // Check the global indicators.
   await assertWebRTCIndicatorStatus(aExpectedGlobal || aExpected);
@@ -874,6 +894,11 @@ async function disableObserverVerification() {
   }
 }
 
+function identityPopupHidden(win = window) {
+  let popup = win.gIdentityHandler._identityPopup;
+  return !popup || popup.state == "closed";
+}
+
 async function runTests(tests, options = {}) {
   let browser = await openNewTestTab(options.relativeURI);
 
@@ -883,7 +908,7 @@ async function runTests(tests, options = {}) {
     "should start the test without any prior popup notification"
   );
   ok(
-    gIdentityHandler._identityPopup.hidden,
+    identityPopupHidden(),
     "should start the test with the control center hidden"
   );
 

@@ -2191,9 +2191,10 @@ var gProtectionsHandler = {
     // for styling.
     this._trackingProtectionIconContainer.setAttribute("open", "true");
 
-    // Check the panel state of the identity panel. Hide it if needed.
-    if (gIdentityHandler._identityPopup.state != "closed") {
-      PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
+    // Check the panel state of other panels. Hide them if needed.
+    let openPanels = Array.from(document.querySelectorAll("panel[openpanel]"));
+    for (let panel of openPanels) {
+      PanelMultiView.hidePopup(panel);
     }
 
     // Now open the popup, anchored off the primary chrome element
