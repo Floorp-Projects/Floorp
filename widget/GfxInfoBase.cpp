@@ -119,90 +119,89 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS(GfxInfoBase, nsIGfxInfo, nsIObserver,
                   nsISupportsWeakReference)
 
-#define BLACKLIST_PREF_BRANCH "gfx.blacklist."
-#define SUGGESTED_VERSION_PREF BLACKLIST_PREF_BRANCH "suggested-driver-version"
-#define BLACKLIST_ENTRY_TAG_NAME "gfxBlacklistEntry"
+#define BLOCKLIST_PREF_BRANCH "gfx.blacklist."
+#define SUGGESTED_VERSION_PREF BLOCKLIST_PREF_BRANCH "suggested-driver-version"
 
 static const char* GetPrefNameForFeature(int32_t aFeature) {
   const char* name = nullptr;
   switch (aFeature) {
     case nsIGfxInfo::FEATURE_DIRECT2D:
-      name = BLACKLIST_PREF_BRANCH "direct2d";
+      name = BLOCKLIST_PREF_BRANCH "direct2d";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS:
-      name = BLACKLIST_PREF_BRANCH "layers.direct3d9";
+      name = BLOCKLIST_PREF_BRANCH "layers.direct3d9";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS:
-      name = BLACKLIST_PREF_BRANCH "layers.direct3d10";
+      name = BLOCKLIST_PREF_BRANCH "layers.direct3d10";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS:
-      name = BLACKLIST_PREF_BRANCH "layers.direct3d10-1";
+      name = BLOCKLIST_PREF_BRANCH "layers.direct3d10-1";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS:
-      name = BLACKLIST_PREF_BRANCH "layers.direct3d11";
+      name = BLOCKLIST_PREF_BRANCH "layers.direct3d11";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
-      name = BLACKLIST_PREF_BRANCH "direct3d11angle";
+      name = BLOCKLIST_PREF_BRANCH "direct3d11angle";
       break;
     case nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING:
-      name = BLACKLIST_PREF_BRANCH "hardwarevideodecoding";
+      name = BLOCKLIST_PREF_BRANCH "hardwarevideodecoding";
       break;
     case nsIGfxInfo::FEATURE_OPENGL_LAYERS:
-      name = BLACKLIST_PREF_BRANCH "layers.opengl";
+      name = BLOCKLIST_PREF_BRANCH "layers.opengl";
       break;
     case nsIGfxInfo::FEATURE_WEBGL_OPENGL:
-      name = BLACKLIST_PREF_BRANCH "webgl.opengl";
+      name = BLOCKLIST_PREF_BRANCH "webgl.opengl";
       break;
     case nsIGfxInfo::FEATURE_WEBGL_ANGLE:
-      name = BLACKLIST_PREF_BRANCH "webgl.angle";
+      name = BLOCKLIST_PREF_BRANCH "webgl.angle";
       break;
     case nsIGfxInfo::FEATURE_WEBGL_MSAA:
-      name = BLACKLIST_PREF_BRANCH "webgl.msaa";
+      name = BLOCKLIST_PREF_BRANCH "webgl.msaa";
       break;
     case nsIGfxInfo::FEATURE_STAGEFRIGHT:
-      name = BLACKLIST_PREF_BRANCH "stagefright";
+      name = BLOCKLIST_PREF_BRANCH "stagefright";
       break;
     case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_H264:
-      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.h264";
+      name = BLOCKLIST_PREF_BRANCH "webrtc.hw.acceleration.h264";
       break;
     case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE:
-      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.encode";
+      name = BLOCKLIST_PREF_BRANCH "webrtc.hw.acceleration.encode";
       break;
     case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE:
-      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.decode";
+      name = BLOCKLIST_PREF_BRANCH "webrtc.hw.acceleration.decode";
       break;
     case nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION:
-      name = BLACKLIST_PREF_BRANCH "canvas2d.acceleration";
+      name = BLOCKLIST_PREF_BRANCH "canvas2d.acceleration";
       break;
     case nsIGfxInfo::FEATURE_DX_INTEROP2:
-      name = BLACKLIST_PREF_BRANCH "dx.interop2";
+      name = BLOCKLIST_PREF_BRANCH "dx.interop2";
       break;
     case nsIGfxInfo::FEATURE_GPU_PROCESS:
-      name = BLACKLIST_PREF_BRANCH "gpu.process";
+      name = BLOCKLIST_PREF_BRANCH "gpu.process";
       break;
     case nsIGfxInfo::FEATURE_WEBGL2:
-      name = BLACKLIST_PREF_BRANCH "webgl2";
+      name = BLOCKLIST_PREF_BRANCH "webgl2";
       break;
     case nsIGfxInfo::FEATURE_ADVANCED_LAYERS:
-      name = BLACKLIST_PREF_BRANCH "layers.advanced";
+      name = BLOCKLIST_PREF_BRANCH "layers.advanced";
       break;
     case nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX:
-      name = BLACKLIST_PREF_BRANCH "d3d11.keyed.mutex";
+      name = BLOCKLIST_PREF_BRANCH "d3d11.keyed.mutex";
       break;
     case nsIGfxInfo::FEATURE_WEBRENDER:
-      name = BLACKLIST_PREF_BRANCH "webrender";
+      name = BLOCKLIST_PREF_BRANCH "webrender";
       break;
     case nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR:
-      name = BLACKLIST_PREF_BRANCH "webrender.compositor";
+      name = BLOCKLIST_PREF_BRANCH "webrender.compositor";
       break;
     case nsIGfxInfo::FEATURE_DX_NV12:
-      name = BLACKLIST_PREF_BRANCH "dx.nv12";
+      name = BLOCKLIST_PREF_BRANCH "dx.nv12";
       break;
     case nsIGfxInfo::FEATURE_DX_P010:
-      name = BLACKLIST_PREF_BRANCH "dx.p010";
+      name = BLOCKLIST_PREF_BRANCH "dx.p010";
       break;
     case nsIGfxInfo::FEATURE_DX_P016:
-      name = BLACKLIST_PREF_BRANCH "dx.p016";
+      name = BLOCKLIST_PREF_BRANCH "dx.p016";
       break;
     case nsIGfxInfo::FEATURE_VP8_HW_DECODE:
     case nsIGfxInfo::FEATURE_VP9_HW_DECODE:
@@ -210,10 +209,10 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
       // not handling downloadable blocklist.
       break;
     case nsIGfxInfo::FEATURE_GL_SWIZZLE:
-      name = BLACKLIST_PREF_BRANCH "gl.swizzle";
+      name = BLOCKLIST_PREF_BRANCH "gl.swizzle";
       break;
     case nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS:
-      name = BLACKLIST_PREF_BRANCH "webrender.scissored_cache_clears";
+      name = BLOCKLIST_PREF_BRANCH "webrender.scissored_cache_clears";
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
