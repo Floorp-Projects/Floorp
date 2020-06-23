@@ -134,6 +134,9 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // BeginConnect.
   void OverrideReferrerInfoDuringBeginConnect(nsIReferrerInfo* aReferrerInfo);
 
+  bool AttachStreamFilter(
+      Endpoint<extensions::PStreamFilterParent>&& aEndpoint);
+
  protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
@@ -355,6 +358,12 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // Defaults to false. Is set to true at the begining of OnStartRequest.
   // Used to ensure methods can't be called before OnStartRequest.
   uint8_t mAfterOnStartRequestBegun : 1;
+
+  // Set if the channel is attached with a stream filter and will send
+  // OnStartRequestSent to keep the order with OnStartRequest.
+  // AttachStreamFilter should be handled before OnStartRequest goes to the
+  // listener in child process, which could be racy with OnStartRequest.
+  uint8_t mStreamFilterAttached : 1;
 
   // Number of events to wait before actually invoking AsyncOpen on the main
   // channel. For each asynchronous step required before InvokeAsyncOpen, should

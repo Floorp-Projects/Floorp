@@ -463,9 +463,9 @@ class HttpChannelChild final : public PHttpChannelChild,
   // True if RecvOnStartRequestSent was received.
   uint8_t mRecvOnStartRequestSentCalled : 1;
 
-  // True if this channel is suspened by waiting for permission and cookie. That
-  // is, RecvOnStartRequestSent is received.
-  uint8_t mSuspendedByWaitingForPermissionAndCookie : 1;
+  // True if this channel is suspened by waiting for permission, cookie or
+  // stream filter. That is, RecvOnStartRequestSent is received.
+  uint8_t mSuspendedByWaitingForPermissionCookieStreamFilter : 1;
 
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);

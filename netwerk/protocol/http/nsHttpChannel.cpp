@@ -7068,6 +7068,9 @@ base::ProcessId nsHttpChannel::ProcessId() {
 
 auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
     -> RefPtr<ChildEndpointPromise> {
+  LOG(("nsHttpChannel::AttachStreamFilter [this=%p]", this));
+  MOZ_ASSERT(!mOnStartRequestCalled);
+
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
 
@@ -7088,7 +7091,7 @@ auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
   }
 
   if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel)) {
-    if (httpParent->SendAttachStreamFilter(std::move(parent))) {
+    if (httpParent->AttachStreamFilter(std::move(parent))) {
       return ChildEndpointPromise::CreateAndResolve(std::move(child), __func__);
     }
     return ChildEndpointPromise::CreateAndReject(false, __func__);
@@ -7100,7 +7103,7 @@ auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
 
 NS_IMETHODIMP
 nsHttpChannel::GetNavigationStartTimeStamp(TimeStamp* aTimeStamp) {
-  LOG(("nsHttpChannel::GetNavigationStartTimeStamp %p", this));
+  LOG(("nsHttpChannel::GetNavigationStartTimeStamp [this=%p]", this));
   MOZ_ASSERT(aTimeStamp);
   *aTimeStamp = mNavigationStartTimeStamp;
   return NS_OK;
@@ -7108,7 +7111,7 @@ nsHttpChannel::GetNavigationStartTimeStamp(TimeStamp* aTimeStamp) {
 
 NS_IMETHODIMP
 nsHttpChannel::SetNavigationStartTimeStamp(TimeStamp aTimeStamp) {
-  LOG(("nsHttpChannel::SetNavigationStartTimeStamp %p", this));
+  LOG(("nsHttpChannel::SetNavigationStartTimeStamp [this=%p]", this));
   mNavigationStartTimeStamp = aTimeStamp;
   return NS_OK;
 }
