@@ -571,7 +571,7 @@ void Http3Session::ProcessPending() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   Http3Stream* stream;
-  while ((stream = mQueuedStreams.PopFront())) {
+  while ((stream = static_cast<Http3Stream*>(mQueuedStreams.PopFront()))) {
     LOG3(("Http3Session::ProcessPending %p stream %p woken from queue.", this,
           stream));
     MOZ_ASSERT(stream->Queued());
@@ -583,11 +583,10 @@ void Http3Session::ProcessPending() {
   }
 }
 
-static void RemoveStreamFromQueue(Http3Stream* aStream,
-                                  nsDeque<Http3Stream>& queue) {
+static void RemoveStreamFromQueue(Http3Stream* aStream, nsDeque& queue) {
   size_t size = queue.GetSize();
   for (size_t count = 0; count < size; ++count) {
-    Http3Stream* stream = queue.PopFront();
+    Http3Stream* stream = static_cast<Http3Stream*>(queue.PopFront());
     if (stream != aStream) {
       queue.Push(stream);
     }
@@ -760,7 +759,7 @@ nsresult Http3Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
   while (
       (mState ==
        CONNECTED) &&  // Do not send transaction data untill we are connected.
-      (stream = mReadyForWrite.PopFront())) {
+      (stream = static_cast<Http3Stream*>(mReadyForWrite.PopFront()))) {
     LOG(
         ("Http3Session::ReadSegmentsAgain call ReadSegments from stream=%p "
          "[this=%p]",

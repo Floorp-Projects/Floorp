@@ -140,8 +140,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
                                        uint32_t length,
                                        nsIInputStream* aStream = nullptr);
 
-  void EnqueueOutgoingMessage(nsDeque<OutboundMessage>& aQueue,
-                              OutboundMessage* aMsg);
+  void EnqueueOutgoingMessage(nsDeque& aQueue, OutboundMessage* aMsg);
 
   void PrimeNewOutgoingMessage();
   void DeleteCurrentOutGoingMessage();
@@ -285,9 +284,9 @@ class WebSocketChannel : public BaseWebSocketChannel,
 
   OutboundMessage* mCurrentOut;
   uint32_t mCurrentOutSent;
-  nsDeque<OutboundMessage> mOutgoingMessages;
-  nsDeque<OutboundMessage> mOutgoingPingMessages;
-  nsDeque<OutboundMessage> mOutgoingPongMessages;
+  nsDeque mOutgoingMessages;
+  nsDeque mOutgoingPingMessages;
+  nsDeque mOutgoingPongMessages;
   uint32_t mHdrOutToSend;
   uint8_t* mHdrOut;
   uint8_t mOutHeader[kCopyBreak + 16];
