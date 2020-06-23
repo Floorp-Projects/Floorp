@@ -15,8 +15,7 @@ namespace mozilla {
 class MediaTransportParent::Impl : public sigslot::has_slots<> {
  public:
   explicit Impl(MediaTransportParent* aParent)
-      : mHandler(
-            MediaTransportHandler::Create(GetCurrentThreadSerialEventTarget())),
+      : mHandler(MediaTransportHandler::Create(GetCurrentSerialEventTarget())),
         mParent(aParent) {
     mHandler->SignalCandidate.connect(this,
                                       &MediaTransportParent::Impl::OnCandidate);
@@ -94,7 +93,7 @@ MediaTransportParent::~MediaTransportParent() {}
 mozilla::ipc::IPCResult MediaTransportParent::RecvGetIceLog(
     const nsCString& pattern, GetIceLogResolver&& aResolve) {
   mImpl->mHandler->GetIceLog(pattern)->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       // IPDL doesn't give us a reject function, so we cannot reject async, so
       // we are forced to resolve with an empty result. Laaaaaaame.
       [aResolve = std::move(aResolve)](
@@ -217,7 +216,7 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvGetIceStats(
     GetIceStatsResolver&& aResolve) {
   mImpl->mHandler->GetIceStats(transportId, now)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           // IPDL doesn't give us a reject function, so we cannot reject async,
           // so we are forced to resolve with an unmodified result. Laaaaaaame.
           [aResolve = std::move(aResolve)](

@@ -486,7 +486,7 @@ auto DocumentLoadListener::Open(
   if (promise) {
     RefPtr<DocumentLoadListener> self = this;
     promise->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [=](const MozPromise<bool, bool, false>::ResolveOrRejectValue& aValue) {
           if (aValue.IsResolve()) {
             bool handled = aValue.ResolveValue();
@@ -1516,7 +1516,7 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
   RedirectToRealChannel(redirectFlags, newLoadFlags, aDestinationProcess,
                         std::move(parentEndpoints))
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self, requests = std::move(mStreamFilterRequests)](
               const nsresult& aResponse) mutable {
             for (StreamFilterRequest& request : requests) {
@@ -1876,7 +1876,7 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   if (promise) {
     RefPtr<nsIAsyncVerifyRedirectCallback> cb = aCallback;
     promise->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [=](const MozPromise<bool, bool, false>::ResolveOrRejectValue& aValue) {
           if (aValue.IsResolve()) {
             bool handled = aValue.ResolveValue();

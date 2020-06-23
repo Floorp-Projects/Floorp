@@ -47,7 +47,7 @@ RefPtr<RawIdPromise> WebGPUChild::InstanceRequestAdapter(
 
   return SendInstanceRequestAdapter(aOptions, sharedIds)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [](const RawId& aId) {
             if (aId == 0) {
               return RawIdPromise::CreateAndReject(Nothing(), __func__);

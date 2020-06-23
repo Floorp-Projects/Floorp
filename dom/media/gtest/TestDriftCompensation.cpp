@@ -17,8 +17,7 @@ class DriftCompensatorTest : public ::testing::Test {
 
   DriftCompensatorTest()
       : mStart(TimeStamp::Now()),
-        mComp(MakeRefPtr<DriftCompensator>(GetCurrentThreadEventTarget(),
-                                           mRate)) {
+        mComp(MakeRefPtr<DriftCompensator>(GetCurrentEventTarget(), mRate)) {
     mComp->NotifyAudioStart(mStart);
     // NotifyAudioStart dispatched a runnable to update the audio mStart time on
     // the video thread. Because this is a test, the video thread is the current

@@ -30,7 +30,7 @@ class nsAsyncDoomEvent : public mozilla::Runnable {
       : mozilla::Runnable("nsAsyncDoomEvent") {
     mDescriptor = descriptor;
     mListener = listener;
-    mEventTarget = GetCurrentThreadEventTarget();
+    mEventTarget = GetCurrentEventTarget();
     // We addref the listener here and release it in nsNotifyDoomListener
     // on the callers thread. If posting of nsNotifyDoomListener event fails
     // we leak the listener which is better than releasing it on a wrong

@@ -317,7 +317,7 @@ void WebCryptoTask::DispatchWithPromise(Promise* aResultPromise) {
   }
 
   // Store calling thread
-  mOriginalEventTarget = GetCurrentThreadSerialEventTarget();
+  mOriginalEventTarget = GetCurrentSerialEventTarget();
 
   // If we are running on a worker thread we must hold the worker
   // alive while we work on the thread pool.  Otherwise the worker

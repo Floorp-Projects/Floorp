@@ -454,7 +454,7 @@ mozilla::ipc::IPCResult Parent<Super>::RecvGetPrincipalKey(
         return PrincipalKeyPromise::CreateAndResolve(result, __func__);
       })
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [aResolve](const PrincipalKeyPromise::ResolveOrRejectValue& aValue) {
             if (aValue.IsReject()) {
               aResolve(NS_LITERAL_CSTRING(""));

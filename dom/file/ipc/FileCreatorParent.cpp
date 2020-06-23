@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 FileCreatorParent::FileCreatorParent()
-    : mBackgroundEventTarget(GetCurrentThreadEventTarget()), mIPCActive(true) {}
+    : mBackgroundEventTarget(GetCurrentEventTarget()), mIPCActive(true) {}
 
 FileCreatorParent::~FileCreatorParent() = default;
 

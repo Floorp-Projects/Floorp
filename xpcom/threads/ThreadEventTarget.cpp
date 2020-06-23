@@ -128,7 +128,7 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
   LogRunnable::LogDispatch(event.get());
 
   if (aFlags & DISPATCH_SYNC) {
-    nsCOMPtr<nsIEventTarget> current = GetCurrentThreadEventTarget();
+    nsCOMPtr<nsIEventTarget> current = GetCurrentEventTarget();
     if (NS_WARN_IF(!current)) {
       return NS_ERROR_NOT_AVAILABLE;
     }

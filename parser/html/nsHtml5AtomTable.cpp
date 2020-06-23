@@ -7,7 +7,7 @@
 
 nsHtml5AtomTable::nsHtml5AtomTable() : mRecentlyUsedParserAtoms{} {
 #ifdef DEBUG
-  mPermittedLookupEventTarget = mozilla::GetCurrentThreadSerialEventTarget();
+  mPermittedLookupEventTarget = mozilla::GetCurrentSerialEventTarget();
 #endif
 }
 

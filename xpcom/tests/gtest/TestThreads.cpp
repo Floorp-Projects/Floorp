@@ -262,14 +262,14 @@ TEST(Threads, StressNSPR)
   }
 }
 
-TEST(Threads, GetCurrentThreadSerialEventTarget)
+TEST(Threads, GetCurrentSerialEventTarget)
 {
   nsCOMPtr<nsIThread> thread;
   nsresult rv =
-      NS_NewNamedThread("test", getter_AddRefs(thread),
-                        NS_NewRunnableFunction("test::check", []() {
+      NS_NewNamedThread("Testing Thread", getter_AddRefs(thread),
+                        NS_NewRunnableFunction("Testing Thread::check", []() {
                           nsCOMPtr<nsISerialEventTarget> serialEventTarget =
-                              GetCurrentThreadSerialEventTarget();
+                              GetCurrentSerialEventTarget();
                           nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
                           EXPECT_EQ(thread.get(), serialEventTarget.get());
                         }));

@@ -78,7 +78,7 @@ void StreamFilter::Connect() {
   if (cc) {
     cc->SendInitStreamFilter(mChannelId, addonId)
         ->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
+            GetCurrentSerialEventTarget(), __func__,
             [self](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
               self->FinishConnect(std::move(aEndpoint));
             },
@@ -88,7 +88,7 @@ void StreamFilter::Connect() {
   } else {
     StreamFilterParent::Create(nullptr, mChannelId, addonId)
         ->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
+            GetCurrentSerialEventTarget(), __func__,
             [self](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
               self->FinishConnect(std::move(aEndpoint));
             },

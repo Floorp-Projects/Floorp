@@ -1079,7 +1079,7 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::WaitForLaunchAsync(
   // against whoever launched it (and whoever else is already racing). Once
   // the race is complete, the winner will finish the initialization.
   return mSubprocess->WhenProcessHandleReady()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       // On resolve.
       [self = RefPtr{this}, aPriority]() {
         if (self->IsLaunching()) {
@@ -2435,7 +2435,7 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::LaunchSubprocessAsync(
   mLaunchYieldTS = TimeStamp::Now();
 
   return ready->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [self, aInitialPriority](
           const ProcessHandlePromise::ResolveOrRejectValue& aValue) {
         if (aValue.IsResolve() &&
@@ -3875,7 +3875,7 @@ mozilla::ipc::IPCResult ContentParent::RecvInitStreamFilter(
     InitStreamFilterResolver&& aResolver) {
   extensions::StreamFilterParent::Create(this, aChannelId, aAddonId)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [aResolver](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
             aResolver(std::move(aEndpoint));
           },
@@ -6057,7 +6057,7 @@ ContentParent::RecvStorageAccessPermissionGrantedForOrigin(
       aTopLevelWindowId, aParentContext.get_canonical(), aTrackingPrincipal,
       aTrackingOrigin, aAllowMode)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [aResolver = std::move(aResolver)](
               ContentBlocking::ParentAccessGrantPromise::ResolveOrRejectValue&&
                   aValue) {
@@ -6082,7 +6082,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCompleteAllowAccessFor(
   ContentBlocking::CompleteAllowAccessFor(
       aParentContext.get_canonical(), aTopLevelWindowId, aTrackingPrincipal,
       aTrackingOrigin, aCookieBehavior, aReason, nullptr)
-      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+      ->Then(GetCurrentSerialEventTarget(), __func__,
              [aResolver = std::move(aResolver)](
                  ContentBlocking::StorageAccessPermissionGrantPromise::
                      ResolveOrRejectValue&& aValue) {

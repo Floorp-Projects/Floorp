@@ -45,7 +45,7 @@ class VideoConduitTest : public ::testing::Test {
 
     mVideoConduit = new WebrtcVideoConduit(
         WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
-        GetCurrentThreadSerialEventTarget());
+        GetCurrentSerialEventTarget());
     mVideoConduit->SetLocalSSRCs({42}, {43});
   }
 

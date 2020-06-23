@@ -1405,7 +1405,7 @@ nsDocShell::GetHasTrackingContentBlocked(Promise** aPromise) {
       doc->GetContentBlockingEvents();
   if (promise) {
     promise->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [retPromise](const Document::GetContentBlockingEventsPromise::
                          ResolveOrRejectValue& aValue) {
           if (aValue.IsResolve()) {

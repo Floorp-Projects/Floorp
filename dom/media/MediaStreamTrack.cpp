@@ -361,7 +361,7 @@ already_AddRefed<Promise> MediaStreamTrack::ApplyConstraints(
   GetSource()
       .ApplyConstraints(aConstraints, aCallerType)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [this, self, promise, aConstraints](bool aDummy) {
             if (!mWindow || !mWindow->IsCurrentInnerWindow()) {
               return;  // Leave Promise pending after navigation by design.

@@ -67,7 +67,7 @@ void ServiceWorkerProxy::StopListeningOnMainThread() {
 ServiceWorkerProxy::ServiceWorkerProxy(
     const ServiceWorkerDescriptor& aDescriptor)
     : mActor(nullptr),
-      mEventTarget(GetCurrentThreadSerialEventTarget()),
+      mEventTarget(GetCurrentSerialEventTarget()),
       mDescriptor(aDescriptor) {}
 
 void ServiceWorkerProxy::Init(ServiceWorkerParent* aActor) {

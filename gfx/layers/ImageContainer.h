@@ -116,7 +116,7 @@ class nsAutoRefTraits<nsOwningThreadSourceSurfaceRef> {
   }
   void AddRef(RawRef aRawRef) {
     MOZ_ASSERT(!mOwningEventTarget);
-    mOwningEventTarget = mozilla::GetCurrentThreadSerialEventTarget();
+    mOwningEventTarget = mozilla::GetCurrentSerialEventTarget();
     aRawRef->AddRef();
   }
 

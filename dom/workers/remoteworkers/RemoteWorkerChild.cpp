@@ -251,7 +251,7 @@ RemoteWorkerChild::RemoteWorkerChild(const RemoteWorkerData& aData)
     : mState(VariantType<Pending>(), "RemoteWorkerChild::mState"),
       mIsServiceWorker(aData.serviceWorkerData().type() ==
                        OptionalServiceWorkerData::TServiceWorkerData),
-      mOwningEventTarget(GetCurrentThreadSerialEventTarget()) {
+      mOwningEventTarget(GetCurrentSerialEventTarget()) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
   MOZ_ASSERT(mOwningEventTarget);
 }
@@ -1019,7 +1019,7 @@ RemoteWorkerChild::MaybeSendSetServiceWorkerSkipWaitingFlag() {
     }
 
     self->SendSetServiceWorkerSkipWaitingFlag()->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [promise](
             const SetServiceWorkerSkipWaitingFlagPromise::ResolveOrRejectValue&
                 aResult) {

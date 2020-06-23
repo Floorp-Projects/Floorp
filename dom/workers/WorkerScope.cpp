@@ -922,7 +922,7 @@ already_AddRefed<Promise> ServiceWorkerGlobalScope::SkipWaiting(
     auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<MozPromiseType>>(this);
 
     mWorkerPrivate->SetServiceWorkerSkipWaitingFlag()
-        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+        ->Then(GetCurrentSerialEventTarget(), __func__,
                [holder, promise](const MozPromiseType::ResolveOrRejectValue&) {
                  holder->Complete();
                  promise->MaybeResolveWithUndefined();

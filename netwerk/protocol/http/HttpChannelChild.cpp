@@ -3590,7 +3590,7 @@ HttpChannelChild::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
 
   nsCOMPtr<nsIEventTarget> target = mODATarget;
   if (!mODATarget) {
-    target = GetCurrentThreadEventTarget();
+    target = GetCurrentEventTarget();
   }
   target.forget(aEventTarget);
   return NS_OK;
@@ -4010,7 +4010,7 @@ void HttpChannelChild::MaybeConnectToSocketProcess() {
 
   RefPtr<HttpBackgroundChannelChild> bgChild = mBgChild;
   SocketProcessBridgeChild::GetSocketProcessBridge()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [bgChild]() {
         gSocketTransportService->Dispatch(
             NewRunnableMethod("HttpBackgroundChannelChild::CreateDataBridge",

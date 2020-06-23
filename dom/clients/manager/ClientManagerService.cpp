@@ -124,7 +124,7 @@ ClientManagerService::ClientManagerService() : mShutdown(false) {
     // shutdown at the first sign it has begun.  Since we handle normal shutdown
     // gracefully we don't really need to block anything here.  We just begin
     // destroying our IPC actors immediately.
-    OnShutdown()->Then(GetCurrentThreadSerialEventTarget(), __func__, []() {
+    OnShutdown()->Then(GetCurrentSerialEventTarget(), __func__, []() {
       // Look up the latest service instance, if it exists.  This may
       // be different from the instance that registered the shutdown
       // handler.
@@ -356,7 +356,7 @@ class PromiseListHolder final {
   RefPtr<ClientOpPromise> GetResultPromise() {
     RefPtr<PromiseListHolder> kungFuDeathGrip = this;
     return mResultPromise->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [kungFuDeathGrip](const ClientOpPromise::ResolveOrRejectValue& aValue) {
           return ClientOpPromise::CreateAndResolveOrReject(aValue, __func__);
         });
@@ -369,7 +369,7 @@ class PromiseListHolder final {
 
     RefPtr<PromiseListHolder> self(this);
     mPromiseList.LastElement()->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [self](const ClientOpResult& aResult) {
           // TODO: This is pretty clunky.  Try to figure out a better
           //       wait for MatchAll() and Claim() to share this code
@@ -560,7 +560,7 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
 
     // rejection ultimately converted to `undefined` in Clients::Get
     return source->ExecutionReadyPromise()->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [self, aArgs]() -> RefPtr<ClientOpPromise> {
           ClientSourceParent* source =
               self->FindSource(aArgs.id(), aArgs.principalInfo());

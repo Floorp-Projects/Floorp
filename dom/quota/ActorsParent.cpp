@@ -1154,7 +1154,7 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
 
  protected:
   explicit OriginOperationBase(
-      nsIEventTarget* aOwningThread = GetCurrentThreadEventTarget())
+      nsIEventTarget* aOwningThread = GetCurrentEventTarget())
       : BackgroundThreadObject(aOwningThread),
         Runnable("dom::quota::OriginOperationBase"),
         mResultCode(NS_OK),
@@ -1911,7 +1911,7 @@ nsresult MaybeUpdateGroupForOrigin(const nsACString& aOrigin,
 }  // namespace
 
 BackgroundThreadObject::BackgroundThreadObject()
-    : mOwningThread(GetCurrentThreadEventTarget()) {
+    : mOwningThread(GetCurrentEventTarget()) {
   AssertIsOnOwningThread();
 }
 

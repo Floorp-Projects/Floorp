@@ -17,7 +17,7 @@ SpeechTrackListener::SpeechTrackListener(SpeechRecognition* aRecognition)
       mRemovedPromise(
           mRemovedHolder.Ensure("SpeechTrackListener::mRemovedPromise")) {
   MOZ_ASSERT(NS_IsMainThread());
-  mRemovedPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+  mRemovedPromise->Then(GetCurrentSerialEventTarget(), __func__,
                         [self = RefPtr<SpeechTrackListener>(this), this] {
                           mRecognition = nullptr;
                         });

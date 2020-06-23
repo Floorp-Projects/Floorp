@@ -1079,7 +1079,7 @@ CamerasParent::CamerasParent()
     sThreadMonitor = new Monitor("CamerasParent::sThreadMonitor");
   }
 
-  mPBackgroundEventTarget = GetCurrentThreadSerialEventTarget();
+  mPBackgroundEventTarget = GetCurrentSerialEventTarget();
   MOZ_ASSERT(mPBackgroundEventTarget != nullptr,
              "GetCurrentThreadEventTarget failed");
 

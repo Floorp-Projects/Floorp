@@ -83,14 +83,13 @@ TEST(TaskQueue, EventOrder)
   tq3->AwaitShutdownAndIdle();
 }
 
-TEST(TaskQueue, GetCurrentThreadSerialEventTarget)
+TEST(TaskQueue, GetCurrentSerialEventTarget)
 {
   RefPtr<TaskQueue> tq1 =
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK), false);
   Unused << tq1->Dispatch(NS_NewRunnableFunction(
       "TestTaskQueue::TestCurrentSerialEventTarget::TestBody", [tq1]() {
-        nsCOMPtr<nsISerialEventTarget> thread =
-            GetCurrentThreadSerialEventTarget();
+        nsCOMPtr<nsISerialEventTarget> thread = GetCurrentSerialEventTarget();
         EXPECT_EQ(thread, tq1);
       }));
   tq1->BeginShutdown();

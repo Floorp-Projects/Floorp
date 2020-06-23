@@ -90,7 +90,7 @@ class ChannelEventRunnable final : public ChannelEventWrapper {
  *****************************************************************************/
 
 StreamFilterParent::StreamFilterParent()
-    : mMainThread(GetCurrentThreadEventTarget()),
+    : mMainThread(GetCurrentEventTarget()),
       mIOThread(mMainThread),
       mQueue(new ChannelEventQueue(static_cast<nsIStreamListener*>(this))),
       mBufferMutex("StreamFilter buffer mutex"),

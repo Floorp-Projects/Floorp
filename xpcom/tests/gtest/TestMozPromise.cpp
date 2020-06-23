@@ -432,7 +432,7 @@ TEST(MozPromise, XPCOMEventTarget)
 {
   TestPromise::CreateAndResolve(42, __func__)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [](int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); },
           DO_FAIL);
 
@@ -457,7 +457,7 @@ TEST(MozPromise, ChainTo)
   RefPtr<TestPromise> promise1 = TestPromise::CreateAndResolve(42, __func__);
   RefPtr<TestPromise::Private> promise2 = new TestPromise::Private(__func__);
   promise2->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [&](int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); },
       DO_FAIL);
 
@@ -476,7 +476,7 @@ TEST(MozPromise, SynchronousTaskDispatch1)
   promise->Resolve(42, __func__);
   EXPECT_EQ(value, false);
   promise->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [&](int aResolveValue) -> void {
         EXPECT_EQ(aResolveValue, 42);
         value = true;
@@ -492,7 +492,7 @@ TEST(MozPromise, SynchronousTaskDispatch2)
       new TestPromiseExcl::Private(__func__);
   promise->UseSynchronousTaskDispatch(__func__);
   promise->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [&](int aResolveValue) -> void {
         EXPECT_EQ(aResolveValue, 42);
         value = true;
@@ -511,9 +511,9 @@ TEST(MozPromise, DirectTaskDispatch)
   // For direct task dispatch to be working, we must be within a
   // nested event loop. So the test itself must be dispatched within
   // a task.
-  GetCurrentThreadSerialEventTarget()->Dispatch(
+  GetCurrentSerialEventTarget()->Dispatch(
       NS_NewRunnableFunction("test", [&]() {
-        GetCurrentThreadSerialEventTarget()->Dispatch(
+        GetCurrentSerialEventTarget()->Dispatch(
             NS_NewRunnableFunction("test", [&]() {
               EXPECT_EQ(value1, true);
               value2 = true;
@@ -525,7 +525,7 @@ TEST(MozPromise, DirectTaskDispatch)
         promise->Resolve(42, __func__);
         EXPECT_EQ(value1, false);
         promise->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
+            GetCurrentSerialEventTarget(), __func__,
             [&](int aResolveValue) -> void {
               EXPECT_EQ(aResolveValue, 42);
               EXPECT_EQ(value2, false);
@@ -547,9 +547,9 @@ TEST(MozPromise, ChainedDirectTaskDispatch)
   // For direct task dispatch to be working, we must be within a
   // nested event loop. So the test itself must be dispatched within
   // a task.
-  GetCurrentThreadSerialEventTarget()->Dispatch(
+  GetCurrentSerialEventTarget()->Dispatch(
       NS_NewRunnableFunction("test", [&]() {
-        GetCurrentThreadSerialEventTarget()->Dispatch(
+        GetCurrentSerialEventTarget()->Dispatch(
             NS_NewRunnableFunction("test", [&]() {
               EXPECT_EQ(value1, true);
               value2 = true;
@@ -562,7 +562,7 @@ TEST(MozPromise, ChainedDirectTaskDispatch)
         EXPECT_EQ(value1, false);
         promise1
             ->Then(
-                GetCurrentThreadSerialEventTarget(), __func__,
+                GetCurrentSerialEventTarget(), __func__,
                 [&](int aResolveValue) -> RefPtr<TestPromise> {
                   EXPECT_EQ(aResolveValue, 42);
                   EXPECT_EQ(value2, false);
@@ -574,7 +574,7 @@ TEST(MozPromise, ChainedDirectTaskDispatch)
                 },
                 DO_FAIL)
             ->Then(
-                GetCurrentThreadSerialEventTarget(), __func__,
+                GetCurrentSerialEventTarget(), __func__,
                 [&](int aResolveValue) -> void {
                   EXPECT_EQ(aResolveValue, 43);
                   EXPECT_EQ(value2, false);
@@ -596,9 +596,9 @@ TEST(MozPromise, ChainToDirectTaskDispatch)
   // For direct task dispatch to be working, we must be within a
   // nested event loop. So the test itself must be dispatched within
   // a task.
-  GetCurrentThreadSerialEventTarget()->Dispatch(
+  GetCurrentSerialEventTarget()->Dispatch(
       NS_NewRunnableFunction("test", [&]() {
-        GetCurrentThreadSerialEventTarget()->Dispatch(
+        GetCurrentSerialEventTarget()->Dispatch(
             NS_NewRunnableFunction("test", [&]() {
               EXPECT_EQ(value1, true);
               value2 = true;
@@ -611,7 +611,7 @@ TEST(MozPromise, ChainToDirectTaskDispatch)
         RefPtr<TestPromise::Private> promise2 =
             new TestPromise::Private(__func__);
         promise2->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
+            GetCurrentSerialEventTarget(), __func__,
             [&](int aResolveValue) -> void {
               EXPECT_EQ(aResolveValue, 42);
               EXPECT_EQ(value2, false);

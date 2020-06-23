@@ -1523,7 +1523,7 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
     ContentChild* cc = ContentChild::GetSingleton();
     MOZ_ASSERT(cc);
     cc->SendAddCertException(certSerialized, flags, host, port, aIsTemporary)
-        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+        ->Then(GetCurrentSerialEventTarget(), __func__,
                [promise](const mozilla::MozPromise<
                          nsresult, mozilla::ipc::ResponseRejectReason,
                          true>::ResolveOrRejectValue& aValue) {
@@ -15769,7 +15769,7 @@ Document::GetContentBlockingEvents() {
   }
 
   return wgc->SendGetContentBlockingEvents()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [](const WindowGlobalChild::GetContentBlockingEventsPromise::
              ResolveOrRejectValue& aValue) {
         if (aValue.IsResolve()) {
@@ -15929,7 +15929,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
         }
 
         self->AutomaticStorageAccessPermissionCanBeGranted()->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
+            GetCurrentSerialEventTarget(), __func__,
             [p, pr, sapr,
              inner](const AutomaticStorageAccessPermissionGrantPromise::
                         ResolveOrRejectValue& aValue) -> void {
@@ -15964,7 +15964,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                     p->Resolve(choice, __func__);
                   } else {
                     sapr->MaybeDelayAutomaticGrants()->Then(
-                        GetCurrentThreadSerialEventTarget(), __func__,
+                        GetCurrentSerialEventTarget(), __func__,
                         [p, choice] { p->Resolve(choice, __func__); },
                         [p] { p->Reject(false, __func__); });
                   }
@@ -15985,7 +15985,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
           NodePrincipal(), bc, ContentBlockingNotifier::eStorageAccessAPI,
           performFinalChecks)
           ->Then(
-              GetCurrentThreadSerialEventTarget(), __func__,
+              GetCurrentSerialEventTarget(), __func__,
               [outer, promise] {
                 // Step 10. Grant the document access to cookies and store
                 // that fact for
@@ -16020,7 +16020,7 @@ Document::AutomaticStorageAccessPermissionCanBeGranted() {
     return cc
         ->SendAutomaticStorageAccessPermissionCanBeGranted(
             IPC::Principal(NodePrincipal()))
-        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+        ->Then(GetCurrentSerialEventTarget(), __func__,
                [](const ContentChild::
                       AutomaticStorageAccessPermissionCanBeGrantedPromise::
                           ResolveOrRejectValue& aValue) {
