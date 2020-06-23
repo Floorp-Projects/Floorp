@@ -51,6 +51,17 @@ GetContentMediaControllerFromBrowsingContext(
   return controller.forget();
 }
 
+static already_AddRefed<BrowsingContext> GetBrowsingContextForAgent(
+    uint64_t aBrowsingContextId) {
+  // The content media agent would only be created after having `sControllers`.
+  // If the `sControllers` doesn't exist, which means XPCOM has been shutdown
+  // and we're not able to access browsing context as well.
+  if (!sControllers) {
+    return nullptr;
+  }
+  return BrowsingContext::Get(aBrowsingContextId);
+}
+
 /* static */
 ContentMediaControlKeyReceiver* ContentMediaControlKeyReceiver::Get(
     BrowsingContext* aBC) {
@@ -74,7 +85,7 @@ ContentMediaAgent* ContentMediaAgent::Get(BrowsingContext* aBC) {
 void ContentMediaAgent::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
                                                    MediaPlaybackState aState) {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -97,7 +108,7 @@ void ContentMediaAgent::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
 void ContentMediaAgent::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
                                                   MediaAudibleState aState) {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -121,7 +132,7 @@ void ContentMediaAgent::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
 void ContentMediaAgent::SetIsInPictureInPictureMode(
     uint64_t aBrowsingContextId, bool aIsInPictureInPictureMode) {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -144,7 +155,7 @@ void ContentMediaAgent::SetIsInPictureInPictureMode(
 
 void ContentMediaAgent::SetDeclaredPlaybackState(
     uint64_t aBrowsingContextId, MediaSessionPlaybackState aState) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -165,7 +176,7 @@ void ContentMediaAgent::SetDeclaredPlaybackState(
 }
 
 void ContentMediaAgent::NotifySessionCreated(uint64_t aBrowsingContextId) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -184,7 +195,7 @@ void ContentMediaAgent::NotifySessionCreated(uint64_t aBrowsingContextId) {
 }
 
 void ContentMediaAgent::NotifySessionDestroyed(uint64_t aBrowsingContextId) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -204,7 +215,7 @@ void ContentMediaAgent::NotifySessionDestroyed(uint64_t aBrowsingContextId) {
 
 void ContentMediaAgent::UpdateMetadata(
     uint64_t aBrowsingContextId, const Maybe<MediaMetadataBase>& aMetadata) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -224,7 +235,7 @@ void ContentMediaAgent::UpdateMetadata(
 
 void ContentMediaAgent::EnableAction(uint64_t aBrowsingContextId,
                                      MediaSessionAction aAction) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -246,7 +257,7 @@ void ContentMediaAgent::EnableAction(uint64_t aBrowsingContextId,
 
 void ContentMediaAgent::DisableAction(uint64_t aBrowsingContextId,
                                       MediaSessionAction aAction) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;
   }
