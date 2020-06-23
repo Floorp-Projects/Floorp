@@ -226,6 +226,8 @@ struct Texture {
   int depth = 0;
   char* buf = nullptr;
   size_t buf_size = 0;
+  uint32_t buf_stride = 0;
+  uint8_t buf_bpp = 0;
   GLenum min_filter = GL_NEAREST;
   GLenum mag_filter = GL_LINEAR;
 
@@ -275,32 +277,54 @@ struct Texture {
     }
   }
 
-  int bpp() const { return bytes_for_internal_format(internal_format); }
+  int bpp() const { return buf_bpp; }
+  void set_bpp() { buf_bpp = bytes_for_internal_format(internal_format); }
 
-  size_t stride(int b = 0, int min_width = 0) const {
-    return aligned_stride((b ? b : bpp()) * max(width, min_width));
-  }
+  size_t stride() const { return buf_stride; }
+  void set_stride() { buf_stride = aligned_stride(buf_bpp * width); }
 
-  size_t layer_stride(int b = 0, int min_width = 0, int min_height = 0) const {
-    return stride(b ? b : bpp(), min_width) * max(height, min_height);
+  // Set an external backing buffer of this texture.
+  void set_buffer(void* new_buf, size_t new_stride) {
+    assert(!should_free());
+    // Ensure that the supplied stride is at least as big as the internally
+    // calculated aligned stride.
+    set_bpp();
+    set_stride();
+    assert(new_stride >= buf_stride);
+
+    buf = (char *)new_buf;
+    buf_size = 0;
+    buf_stride = new_stride;
   }
 
   bool allocate(bool force = false, int min_width = 0, int min_height = 0) {
+    // Check if there is either no buffer currently or if we forced validation
+    // of the buffer size because some dimension might have changed.
     if ((!buf || force) && should_free()) {
-      size_t size = layer_stride(bpp(), min_width, min_height) * max(depth, 1);
+      // Initialize the buffer's BPP and stride, since they may have changed.
+      set_bpp();
+      set_stride();
+      // Compute new size based on the maximum potential stride, rather than
+      // the current stride, to hopefully avoid reallocations when size would
+      // otherwise change too much...
+      size_t max_stride = max(buf_stride, aligned_stride(buf_bpp * min_width));
+      size_t size = max_stride * max(height, min_height) * max(depth, 1);
       if (!buf || size > buf_size) {
         // Allocate with a SIMD register-sized tail of padding at the end so we
         // can safely read or write past the end of the texture with SIMD ops.
         char* new_buf = (char*)realloc(buf, size + sizeof(Float));
         assert(new_buf);
         if (new_buf) {
+          // Successfully reallocated the buffer, so go ahead and set it.
           buf = new_buf;
           buf_size = size;
           return true;
         }
+        // Allocation failed, so ensure we don't leave stale buffer state.
         cleanup();
       }
     }
+    // Nothing changed...
     return false;
   }
 
@@ -309,6 +333,8 @@ struct Texture {
       free(buf);
       buf = nullptr;
       buf_size = 0;
+      buf_bpp = 0;
+      buf_stride = 0;
     }
     disable_delayed_clear();
   }
@@ -325,16 +351,8 @@ struct Texture {
   }
 
   // Get a pointer for sampling at the given offset
-  char* sample_ptr(int x, int y, int z, int bpp, size_t stride) const {
-    return buf + (height * z + y) * stride + x * bpp;
-  }
-
-  char* sample_ptr(int x, int y, int z, int bpp) const {
-    return sample_ptr(x, y, z, bpp, stride(bpp));
-  }
-
-  char* sample_ptr(int x, int y, int z) const {
-    return sample_ptr(x, y, z, bpp());
+  char* sample_ptr(int x, int y, int z = 0) const {
+    return buf + (height * z + y) * stride() + x * bpp();
   }
 
   // Get a pointer for sampling the requested region and limit to the provided
@@ -377,19 +395,19 @@ struct Program {
 // for GL defines to fully expand
 #define CONCAT_KEY(prefix, x, y, z, w, ...) prefix##x##y##z##w
 #define BLEND_KEY(...) CONCAT_KEY(BLEND_, __VA_ARGS__, 0, 0)
-#define FOR_EACH_BLEND_KEY(macro)                                              \
-  macro(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE)                  \
-      macro(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, 0, 0)                              \
-          macro(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, 0, 0)                         \
-              macro(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE)          \
-                  macro(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA, 0, 0) macro(          \
-                      GL_ZERO, GL_SRC_COLOR, 0, 0) macro(GL_ONE, GL_ONE, 0, 0) \
-                      macro(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)    \
-                          macro(GL_ONE, GL_ZERO, 0, 0) macro(                  \
-                              GL_ONE_MINUS_DST_ALPHA, GL_ONE, GL_ZERO, GL_ONE) \
-                              macro(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR, \
-                                    0, 0)                                      \
-                                  macro(GL_ONE, GL_ONE_MINUS_SRC1_COLOR, 0, 0)
+#define FOR_EACH_BLEND_KEY(macro)                             \
+  macro(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE) \
+  macro(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, 0, 0)                 \
+  macro(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, 0, 0)                \
+  macro(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE)     \
+  macro(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA, 0, 0)                \
+  macro(GL_ZERO, GL_SRC_COLOR, 0, 0)                          \
+  macro(GL_ONE, GL_ONE, 0, 0)                                 \
+  macro(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)       \
+  macro(GL_ONE, GL_ZERO, 0, 0)                                \
+  macro(GL_ONE_MINUS_DST_ALPHA, GL_ONE, GL_ZERO, GL_ONE)      \
+  macro(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR, 0, 0)      \
+  macro(GL_ONE, GL_ONE_MINUS_SRC1_COLOR, 0, 0)
 
 #define DEFINE_BLEND_KEY(...) BLEND_KEY(__VA_ARGS__),
 enum BlendKey : uint8_t {
@@ -625,9 +643,8 @@ static inline void init_sampler(S* s, Texture& t) {
   prepare_texture(t);
   s->width = t.width;
   s->height = t.height;
-  int bpp = t.bpp();
-  s->stride = t.stride(bpp);
-  if (bpp >= 4) s->stride /= 4;
+  s->stride = t.stride();
+  if (t.bpp() >= 4) s->stride /= 4;
   // Use uint32_t* for easier sampling, but need to cast to uint8_t* for formats
   // with bpp < 4.
   s->buf = (uint32_t*)t.buf;
@@ -1284,7 +1301,7 @@ void TexStorage3D(GLenum target, GLint levels, GLenum internal_format,
 
 static void set_tex_storage(Texture& t, GLenum internal_format,
                             GLsizei width, GLsizei height,
-                            bool should_free = true, void* buf = nullptr,
+                            void* buf = nullptr, GLsizei stride = 0,
                             GLsizei min_width = 0, GLsizei min_height = 0) {
   internal_format = remap_internal_format(internal_format);
   bool changed = false;
@@ -1296,13 +1313,17 @@ static void set_tex_storage(Texture& t, GLenum internal_format,
     t.height = height;
     t.depth = 0;
   }
-  if (t.should_free() != should_free || buf != nullptr) {
-    if (t.should_free()) {
-      t.cleanup();
-    }
+  // If we are changed from an internally managed buffer to an externally
+  // supplied one or vice versa, ensure that we clean up old buffer state.
+  bool should_free = buf == nullptr;
+  if (t.should_free() != should_free) {
+    changed = true;
+    t.cleanup();
     t.set_should_free(should_free);
-    t.buf = (char*)buf;
-    t.buf_size = 0;
+  }
+  // If now an external buffer, explicitly set it...
+  if (!should_free) {
+    t.set_buffer(buf, stride);
   }
   t.disable_delayed_clear();
   t.allocate(changed, min_width, min_height);
@@ -1389,8 +1410,8 @@ void TexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
   assert(t.internal_format == internal_format_for_data(format, ty));
   int bpp = t.bpp();
   if (!bpp || !t.buf) return;
-  size_t dest_stride = t.stride(bpp);
-  char* dest = t.sample_ptr(xoffset, yoffset, 0, bpp, dest_stride);
+  size_t dest_stride = t.stride();
+  char* dest = t.sample_ptr(xoffset, yoffset);
   char* src = (char*)data;
   for (int y = 0; y < height; y++) {
     if (t.internal_format == GL_RGBA8 && format != GL_BGRA) {
@@ -1435,9 +1456,9 @@ void TexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
   assert(xoffset + width <= t.width);
   assert(yoffset + height <= t.height);
   assert(zoffset + depth <= t.depth);
-  size_t dest_stride = t.stride(bpp);
+  size_t dest_stride = t.stride();
   for (int z = 0; z < depth; z++) {
-    char* dest = t.sample_ptr(xoffset, yoffset, zoffset + z, bpp, dest_stride);
+    char* dest = t.sample_ptr(xoffset, yoffset, zoffset + z);
     for (int y = 0; y < height; y++) {
       if (t.internal_format == GL_RGBA8 && format != GL_BGRA) {
         copy_bgra8_to_rgba8((uint32_t*)dest, (uint32_t*)src, width);
@@ -1797,14 +1818,14 @@ static void clear_buffer(Texture& t, T value, int layer, IntRect bb,
   skip_start = max(skip_start, bb.x0);
   skip_end = max(skip_end, skip_start);
   assert(sizeof(T) == t.bpp());
-  size_t stride = t.stride(sizeof(T));
+  size_t stride = t.stride();
   // When clearing multiple full-width rows, collapse them into a single
   // large "row" to avoid redundant setup from clearing each row individually.
   if (bb.width() == t.width && bb.height() > 1 && skip_start >= skip_end) {
     bb.x1 += (stride / sizeof(T)) * (bb.height() - 1);
     bb.y1 = bb.y0 + 1;
   }
-  T* buf = (T*)t.sample_ptr(bb.x0, bb.y0, layer, sizeof(T), stride);
+  T* buf = (T*)t.sample_ptr(bb.x0, bb.y0, layer);
   uint32_t chunk = clear_chunk(value);
   for (int rows = bb.height(); rows > 0; rows--) {
     if (bb.x0 < skip_start) {
@@ -1831,7 +1852,7 @@ static inline void force_clear_row(Texture& t, int y, int skip_start = 0,
   assert(t.buf != nullptr);
   assert(sizeof(T) == t.bpp());
   assert(skip_start <= skip_end);
-  T* buf = (T*)t.sample_ptr(0, y, 0, sizeof(T));
+  T* buf = (T*)t.sample_ptr(0, y);
   uint32_t chunk = clear_chunk((T)t.clear_val);
   if (skip_start > 0) {
     clear_row<T>(buf, skip_start, t.clear_val, chunk);
@@ -1914,29 +1935,26 @@ static void prepare_texture(Texture& t, const IntRect* skip) {
 
 extern "C" {
 
-void InitDefaultFramebuffer(int width, int height) {
+void InitDefaultFramebuffer(int width, int height, int stride, void* buf) {
   Framebuffer& fb = ctx->framebuffers[0];
   if (!fb.color_attachment) {
     GenTextures(1, &fb.color_attachment);
     fb.layer = 0;
   }
+  // If the dimensions or buffer properties changed, we need to reallocate
+  // the underlying storage for the color buffer texture.
   Texture& colortex = ctx->textures[fb.color_attachment];
-  if (colortex.width != width || colortex.height != height) {
-    colortex.cleanup();
-    set_tex_storage(colortex, GL_RGBA8, width, height);
-  }
+  set_tex_storage(colortex, GL_RGBA8, width, height, buf, stride);
   if (!fb.depth_attachment) {
     GenTextures(1, &fb.depth_attachment);
   }
+  // Ensure dimensions of the depth buffer match the color buffer.
   Texture& depthtex = ctx->textures[fb.depth_attachment];
-  if (depthtex.width != width || depthtex.height != height) {
-    depthtex.cleanup();
-    set_tex_storage(depthtex, GL_DEPTH_COMPONENT16, width, height);
-  }
+  set_tex_storage(depthtex, GL_DEPTH_COMPONENT16, width, height);
 }
 
 void* GetColorBuffer(GLuint fbo, GLboolean flush, int32_t* width,
-                     int32_t* height) {
+                     int32_t* height, int32_t* stride) {
   Framebuffer* fb = ctx->framebuffers.find(fbo);
   if (!fb || !fb->color_attachment) {
     return nullptr;
@@ -1947,15 +1965,16 @@ void* GetColorBuffer(GLuint fbo, GLboolean flush, int32_t* width,
   }
   *width = colortex.width;
   *height = colortex.height;
+  *stride = colortex.stride();
   return colortex.buf ? colortex.sample_ptr(0, 0, fb->layer) : nullptr;
 }
 
 void SetTextureBuffer(GLuint texid, GLenum internal_format, GLsizei width,
-                      GLsizei height, void* buf, GLsizei min_width,
-                      GLsizei min_height) {
+                      GLsizei height, GLsizei stride, void* buf,
+                      GLsizei min_width, GLsizei min_height) {
   Texture& t = ctx->textures[texid];
-  set_tex_storage(t, internal_format, width, height, !buf, buf, min_width,
-                  min_height);
+  set_tex_storage(t, internal_format, width, height, buf, stride,
+                  min_width, min_height);
 }
 
 GLenum CheckFramebufferStatus(GLenum target) {
@@ -2061,8 +2080,8 @@ void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
   }
   int bpp = t.bpp();
   char* dest = (char*)data;
-  size_t src_stride = t.stride(bpp);
-  char* src = t.sample_ptr(x, y, fb->layer, bpp, src_stride);
+  size_t src_stride = t.stride();
+  char* src = t.sample_ptr(x, y, fb->layer);
   for (; height > 0; height--) {
     if (t.internal_format == GL_RGBA8 && format != GL_BGRA) {
       copy_bgra8_to_rgba8((uint32_t*)dest, (uint32_t*)src, width);
@@ -2106,11 +2125,11 @@ void CopyImageSubData(GLuint srcName, GLenum srcTarget, UNUSED GLint srcLevel,
   assert(dstY + srcHeight <= dsttex.height);
   assert(dstZ + srcDepth <= max(dsttex.depth, 1));
   int bpp = srctex.bpp();
-  int src_stride = srctex.stride(bpp);
-  int dest_stride = dsttex.stride(bpp);
+  int src_stride = srctex.stride();
+  int dest_stride = dsttex.stride();
   for (int z = 0; z < srcDepth; z++) {
-    char* dest = dsttex.sample_ptr(dstX, dstY, dstZ + z, bpp, dest_stride);
-    char* src = srctex.sample_ptr(srcX, srcY, srcZ + z, bpp, src_stride);
+    char* dest = dsttex.sample_ptr(dstX, dstY, dstZ + z);
+    char* src = srctex.sample_ptr(srcX, srcY, srcZ + z);
     for (int y = 0; y < srcHeight; y++) {
       memcpy(dest, src, srcWidth * bpp);
       dest += dest_stride;
@@ -2916,9 +2935,8 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
   Edge left(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
   Edge right(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
   // Get pointer to color buffer and depth buffer at current Y
-  P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer, sizeof(P));
-  uint16_t* fdepth =
-    (uint16_t*)depthtex.sample_ptr(0, int(y), 0, sizeof(uint16_t));
+  P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer);
+  uint16_t* fdepth = (uint16_t*)depthtex.sample_ptr(0, int(y));
   // Loop along advancing Ys, rasterizing spans at each row
   float checkY = min(min(l1.y, r1.y), clipRect.y1);
   for (;;) {
@@ -3100,8 +3118,8 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
     left.nextRow();
     right.nextRow();
     // Advance buffers to next row.
-    fbuf += colortex.stride(sizeof(P)) / sizeof(P);
-    fdepth += depthtex.stride(sizeof(uint16_t)) / sizeof(uint16_t);
+    fbuf += colortex.stride() / sizeof(P);
+    fdepth += depthtex.stride() / sizeof(uint16_t);
   }
 }
 
@@ -3208,9 +3226,8 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
   Edge left(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
   Edge right(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
   // Get pointer to color buffer and depth buffer at current Y
-  P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer, sizeof(P));
-  uint16_t* fdepth =
-    (uint16_t*)depthtex.sample_ptr(0, int(y), 0, sizeof(uint16_t));
+  P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer);
+  uint16_t* fdepth = (uint16_t*)depthtex.sample_ptr(0, int(y));
   // Loop along advancing Ys, rasterizing spans at each row
   float checkY = min(min(l1.y, r1.y), clipRect.y1);
   for (;;) {
@@ -3319,8 +3336,8 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
     left.nextRow();
     right.nextRow();
     // Advance buffers to next row.
-    fbuf += colortex.stride(sizeof(P)) / sizeof(P);
-    fdepth += depthtex.stride(sizeof(uint16_t)) / sizeof(uint16_t);
+    fbuf += colortex.stride() / sizeof(P);
+    fdepth += depthtex.stride() / sizeof(uint16_t);
   }
 }
 
@@ -3737,8 +3754,8 @@ static void scale_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
     .scale(dstWidth, dstHeight, srcWidth, srcHeight);
   // Calculate source and dest pointers from clamped offsets
   int bpp = srctex.bpp();
-  int srcStride = srctex.stride(bpp);
-  int destStride = dsttex.stride(bpp);
+  int srcStride = srctex.stride();
+  int destStride = dsttex.stride();
   char* dest = dsttex.sample_ptr(dstReq, dstBounds, dstZ, invertY);
   char* src = srctex.sample_ptr(srcReq, srcBounds, srcZ);
   // Inverted Y must step downward along dest rows
@@ -3838,7 +3855,7 @@ static void linear_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
   srcDUV *= 128.0f;
   // Calculate dest pointer from clamped offsets
   int bpp = dsttex.bpp();
-  int destStride = dsttex.stride(bpp);
+  int destStride = dsttex.stride();
   char* dest = dsttex.sample_ptr(dstReq, dstBounds, dstZ, invertY);
   // Inverted Y must step downward along dest rows
   if (invertY) {
@@ -3948,8 +3965,8 @@ void Composite(GLuint srcId, GLint srcX, GLint srcY, GLsizei srcWidth,
   if (!dsttex.buf) return;
   assert(srctex.bpp() == 4);
   const int bpp = 4;
-  size_t src_stride = srctex.stride(bpp);
-  size_t dest_stride = dsttex.stride(bpp);
+  size_t src_stride = srctex.stride();
+  size_t dest_stride = dsttex.stride();
   if (srcY < 0) {
     dstY -= srcY;
     srcHeight += srcY;
@@ -3969,8 +3986,8 @@ void Composite(GLuint srcId, GLint srcX, GLint srcY, GLsizei srcWidth,
   IntRect skip = {dstX, dstY, dstX + srcWidth, dstY + srcHeight};
   prepare_texture(dsttex, &skip);
   char* dest = dsttex.sample_ptr(dstX, flip ? dsttex.height - 1 - dstY : dstY,
-                                 fb.layer, bpp, dest_stride);
-  char* src = srctex.sample_ptr(srcX, srcY, 0, bpp, src_stride);
+                                 fb.layer);
+  char* src = srctex.sample_ptr(srcX, srcY);
   if (flip) {
     dest_stride = -dest_stride;
   }
