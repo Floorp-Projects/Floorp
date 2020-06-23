@@ -43,6 +43,14 @@ def main(request, response):
         } catch (e) {
           parent.postMessage(e.name, "*");
         }
+      } else if (e.data.command === "access location.href") {
+        const destinationFrameWindow = parent.frames[e.data.indexIntoParentFrameOfDestination];
+        try {
+          destinationFrameWindow.location.href;
+          parent.postMessage("accessed location.href successfully", "*");
+        } catch (e) {
+          parent.postMessage(e.name, "*");
+        }
       }
 
       // We could also receive e.data === "WebAssembly.Module message received",
