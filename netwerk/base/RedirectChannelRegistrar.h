@@ -33,13 +33,12 @@ class RedirectChannelRegistrar final : public nsIRedirectChannelRegistrar {
   static void Shutdown();
 
  protected:
-  typedef nsInterfaceHashtable<nsUint32HashKey, nsIChannel> ChannelHashtable;
-  typedef nsInterfaceHashtable<nsUint32HashKey, nsIParentChannel>
-      ParentChannelHashtable;
+  using ChannelHashtable = nsInterfaceHashtable<nsUint64HashKey, nsIChannel>;
+  using ParentChannelHashtable =
+      nsInterfaceHashtable<nsUint64HashKey, nsIParentChannel>;
 
   ChannelHashtable mRealChannels;
   ParentChannelHashtable mParentChannels;
-  uint32_t mId;
   Mutex mLock;
 
   static StaticRefPtr<RedirectChannelRegistrar> gSingleton;

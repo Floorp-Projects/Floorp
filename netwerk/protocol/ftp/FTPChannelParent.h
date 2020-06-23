@@ -82,7 +82,7 @@ class FTPChannelParent final : public PFTPChannelParent,
 
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during HTTP->FTP redirects.
-  bool ConnectChannel(const uint32_t& channelId);
+  bool ConnectChannel(const uint64_t& channelId);
 
   void DivertOnDataAvailable(const nsCString& data, const uint64_t& offset,
                              const uint32_t& count);

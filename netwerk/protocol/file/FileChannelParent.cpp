@@ -14,10 +14,10 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(FileChannelParent, nsIParentChannel, nsIStreamListener)
 
-bool FileChannelParent::Init(const uint32_t& channelId) {
+bool FileChannelParent::Init(const uint64_t& aChannelId) {
   nsCOMPtr<nsIChannel> channel;
   MOZ_ALWAYS_SUCCEEDS(
-      NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel)));
+      NS_LinkRedirectChannels(aChannelId, this, getter_AddRefs(channel)));
 
   return true;
 }

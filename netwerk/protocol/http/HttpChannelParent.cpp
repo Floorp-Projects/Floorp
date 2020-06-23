@@ -1994,10 +1994,12 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
       RedirectChannelRegistrar::GetOrCreate();
   MOZ_ASSERT(registrar);
 
-  rv = registrar->RegisterChannel(newChannel, &mRedirectChannelId);
+  mRedirectChannelId = nsContentUtils::GenerateLoadIdentifier();
+  rv = registrar->RegisterChannel(newChannel, mRedirectChannelId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(("Registered %p channel under id=%d", newChannel, mRedirectChannelId));
+  LOG(("Registered %p channel under id=%" PRIx64, newChannel,
+       mRedirectChannelId));
 
   if (mIPCClosed) {
     return NS_BINDING_ABORTED;
@@ -2588,7 +2590,7 @@ HttpChannelParent::OnRedirectResult(bool succeeded) {
                                      getter_AddRefs(redirectChannel));
     if (NS_FAILED(rv) || !redirectChannel) {
       // Redirect might get canceled before we got AsyncOnChannelRedirect
-      LOG(("Registered parent channel not found under id=%d",
+      LOG(("Registered parent channel not found under id=%" PRIx64,
            mRedirectChannelId));
 
       nsCOMPtr<nsIChannel> newChannel;

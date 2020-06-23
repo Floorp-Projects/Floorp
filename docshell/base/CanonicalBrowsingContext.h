@@ -151,7 +151,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   MediaController* GetMediaController();
 
   bool AttemptLoadURIInParent(nsDocShellLoadState* aLoadState,
-                              uint32_t* aLoadIdentifier);
+                              uint64_t* aLoadIdentifier);
 
   // Get or create a secure browser UI for this BrowsingContext
   nsISecureBrowserUI* GetSecureBrowserUI();

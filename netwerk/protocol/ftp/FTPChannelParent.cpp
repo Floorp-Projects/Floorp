@@ -165,10 +165,11 @@ bool FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
   return true;
 }
 
-bool FTPChannelParent::ConnectChannel(const uint32_t& channelId) {
+bool FTPChannelParent::ConnectChannel(const uint64_t& channelId) {
   nsresult rv;
 
-  LOG(("Looking for a registered channel [this=%p, id=%d]", this, channelId));
+  LOG(("Looking for a registered channel [this=%p, id=%" PRIx64 "]", this,
+       channelId));
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel));

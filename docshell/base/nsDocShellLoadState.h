@@ -238,8 +238,8 @@ class nsDocShellLoadState final {
     return mCancelContentJSEpoch;
   }
 
-  void SetLoadIdentifier(uint32_t aIdent) { mLoadIdentifier = aIdent; }
-  uint32_t GetLoadIdentifier() const { return mLoadIdentifier; }
+  void SetLoadIdentifier(uint64_t aIdent) { mLoadIdentifier = aIdent; }
+  uint64_t GetLoadIdentifier() const { return mLoadIdentifier; }
 
   // When loading a document through nsDocShell::LoadURI(), a special set of
   // flags needs to be set based on other values in nsDocShellLoadState. This
@@ -415,7 +415,7 @@ class nsDocShellLoadState final {
   // created in the parent process for this loads. DocumentChannels
   // created in the content process can use this to find and attach
   // to the in progress load.
-  uint32_t mLoadIdentifier;
+  uint64_t mLoadIdentifier;
 };
 
 #endif /* nsDocShellLoadState_h__ */

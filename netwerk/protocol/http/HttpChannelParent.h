@@ -309,7 +309,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   // Corresponding redirect channel registrar Id. 0 means redirection is not
   // started.
-  uint32_t mRedirectChannelId = 0;
+  uint64_t mRedirectChannelId = 0;
 
   PBOverrideStatus mPBOverride;
 

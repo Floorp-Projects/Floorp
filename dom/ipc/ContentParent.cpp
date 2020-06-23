@@ -4090,7 +4090,7 @@ mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvExtProtocolChannelConnectParent(
-    const uint32_t& registrarId) {
+    const uint64_t& registrarId) {
   nsresult rv;
 
   // First get the real channel created before redirect on the parent.
