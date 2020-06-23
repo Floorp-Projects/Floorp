@@ -21,15 +21,26 @@ class SitePermissionsWifiIntegration(
 ) : LifecycleAwareFeature {
 
     /**
-     * Adds listener for autplay setting [AUTOPLAY_ALLOW_ON_WIFI]. Sets all autoplay to allowed when
+     * Adds listener for autoplay setting [AUTOPLAY_ALLOW_ON_WIFI]. Sets all autoplay to allowed when
      * WIFI is connected, blocked otherwise.
      */
     private val wifiConnectedListener: ((Boolean) -> Unit) by lazy {
         { connected: Boolean ->
             val setting =
                 if (connected) SitePermissionsRules.Action.ALLOWED else SitePermissionsRules.Action.BLOCKED
-            settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_AUDIBLE, setting)
-            settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_INAUDIBLE, setting)
+            if (settings.getAutoplayUserSetting(default = AUTOPLAY_BLOCK_ALL) == AUTOPLAY_ALLOW_ON_WIFI) {
+                settings.setSitePermissionsPhoneFeatureAction(
+                    PhoneFeature.AUTOPLAY_AUDIBLE,
+                    setting
+                )
+                settings.setSitePermissionsPhoneFeatureAction(
+                    PhoneFeature.AUTOPLAY_INAUDIBLE,
+                    setting
+                )
+            } else {
+                // The autoplay setting has changed, we can remove the listener
+                removeWifiConnectedListener()
+            }
         }
     }
 
@@ -55,7 +66,11 @@ class SitePermissionsWifiIntegration(
     // only works while WIFI is active, so we are not using AUTOPLAY_ALLOW_ON_WIFI (or this class).
     // Once that is fixed, [start] and [maybeAddWifiConnectedListener] will need to be called on
     // activity startup.
-    override fun start() { wifiConnectionMonitor.start() }
+    override fun start() {
+        wifiConnectionMonitor.start()
+    }
 
-    override fun stop() { wifiConnectionMonitor.stop() }
+    override fun stop() {
+        wifiConnectionMonitor.stop()
+    }
 }

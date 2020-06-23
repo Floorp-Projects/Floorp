@@ -184,7 +184,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
             AUTOPLAY_ALLOW_ALL,
             AUTOPLAY_ALLOW_ON_WIFI -> {
                 settings.setAutoplayUserSetting(AUTOPLAY_ALLOW_ON_WIFI)
-                return
+                BLOCKED to BLOCKED
             }
             AUTOPLAY_BLOCK_AUDIBLE -> BLOCKED to ALLOWED
             AUTOPLAY_BLOCK_ALL -> BLOCKED to BLOCKED
