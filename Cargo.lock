@@ -1944,6 +1944,7 @@ dependencies = [
  "once_cell",
  "tempfile",
  "uuid",
+ "xpcom",
 ]
 
 [[package]]
