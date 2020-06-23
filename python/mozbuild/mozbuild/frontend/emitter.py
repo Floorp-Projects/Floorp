@@ -840,7 +840,8 @@ class TreeMetadataEmitter(LoggingMixin):
                         defines = lib.defines.get_defines()
                     yield GeneratedFile(context, script,
                                         'generate_symbols_file', lib.symbols_file,
-                                        [symbols_file], defines)
+                                        [symbols_file], defines,
+                                        required_during_compile=[symbols_file])
             if static_lib:
                 is_rust_library = context.get('IS_RUST_LIBRARY')
                 if is_rust_library:
