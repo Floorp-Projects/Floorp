@@ -55,7 +55,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIWebProgress.h"
 #include "nsIDocShell.h"
 #include "nsIPromptService.h"
 #include "nsISecurityUITelemetry.h"
@@ -154,7 +153,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLFormElement,
                                              nsGenericHTMLElement, nsIForm,
-                                             nsIWebProgressListener,
                                              nsIRadioGroupContainer)
 
 // EventTarget
@@ -2022,64 +2020,6 @@ void HTMLFormElement::UpdateValidity(bool aElementValidity) {
   }
 
   UpdateState(true);
-}
-
-// nsIWebProgressListener
-NS_IMETHODIMP
-HTMLFormElement::OnStateChange(nsIWebProgress* aWebProgress,
-                               nsIRequest* aRequest, uint32_t aStateFlags,
-                               nsresult aStatus) {
-  // If STATE_STOP is never fired for any reason (redirect?  Failed state
-  // change?) the form element will leak.  It will be kept around by the
-  // nsIWebProgressListener (assuming it keeps a strong pointer).  We will
-  // consequently leak the request.
-  if (aRequest == mSubmittingRequest &&
-      aStateFlags & nsIWebProgressListener::STATE_STOP) {
-    ForgetCurrentSubmission();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLFormElement::OnProgressChange(nsIWebProgress* aWebProgress,
-                                  nsIRequest* aRequest,
-                                  int32_t aCurSelfProgress,
-                                  int32_t aMaxSelfProgress,
-                                  int32_t aCurTotalProgress,
-                                  int32_t aMaxTotalProgress) {
-  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLFormElement::OnLocationChange(nsIWebProgress* aWebProgress,
-                                  nsIRequest* aRequest, nsIURI* location,
-                                  uint32_t aFlags) {
-  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLFormElement::OnStatusChange(nsIWebProgress* aWebProgress,
-                                nsIRequest* aRequest, nsresult aStatus,
-                                const char16_t* aMessage) {
-  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLFormElement::OnSecurityChange(nsIWebProgress* aWebProgress,
-                                  nsIRequest* aRequest, uint32_t aState) {
-  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLFormElement::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
-                                        nsIRequest* aRequest, uint32_t aEvent) {
-  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
-  return NS_OK;
 }
 
 NS_IMETHODIMP_(int32_t)

@@ -15,7 +15,6 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIWebProgressListener.h"
 #include "nsIRadioGroupContainer.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
@@ -36,7 +35,6 @@ class HTMLImageElement;
 class FormData;
 
 class HTMLFormElement final : public nsGenericHTMLElement,
-                              public nsIWebProgressListener,
                               public nsIForm,
                               public nsIRadioGroupContainer {
   friend class HTMLFormControlsCollection;
@@ -51,9 +49,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIWebProgressListener
-  NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIForm
   NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const override;
