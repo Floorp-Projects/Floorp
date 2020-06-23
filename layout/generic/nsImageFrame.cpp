@@ -1782,7 +1782,7 @@ void nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   if (aBuilder->ShouldSyncDecodeImages() || oldImageIsDifferent) {
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
-  if (aBuilder->IsPaintingToWindow()) {
+  if (aBuilder->UseHighQualityScaling()) {
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
 
@@ -1950,7 +1950,7 @@ bool nsDisplayImage::CreateWebRenderCommands(
   if (aDisplayListBuilder->ShouldSyncDecodeImages() || oldImageIsDifferent) {
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
-  if (aDisplayListBuilder->IsPaintingToWindow()) {
+  if (aDisplayListBuilder->UseHighQualityScaling()) {
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
 

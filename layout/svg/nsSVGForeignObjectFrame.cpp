@@ -271,6 +271,9 @@ void nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   if (aImgParams.imageFlags & imgIContainer::FLAG_SYNC_DECODE) {
     flags |= PaintFrameFlags::SyncDecodeImages;
   }
+  if (aImgParams.imageFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING) {
+    flags |= PaintFrameFlags::UseHighQualityScaling;
+  }
   Unused << nsLayoutUtils::PaintFrame(
       &aContext, kid, nsRegion(kidDirtyRect), NS_RGBA(0, 0, 0, 0),
       nsDisplayListBuilderMode::Painting, flags);

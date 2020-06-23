@@ -3372,7 +3372,7 @@ ImgDrawResult nsTreeBodyFrame::PaintImage(
                                               opacity);
     }
 
-    uint32_t drawFlags = aBuilder && aBuilder->IsPaintingToWindow()
+    uint32_t drawFlags = aBuilder && aBuilder->UseHighQualityScaling()
                              ? imgIContainer::FLAG_HIGH_QUALITY_SCALING
                              : imgIContainer::FLAG_NONE;
     result &= nsLayoutUtils::DrawImage(

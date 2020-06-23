@@ -3022,6 +3022,9 @@ nsBackgroundLayerState nsCSSRendering::PrepareImageLayer(
   if (aFlags & nsCSSRendering::PAINTBG_TO_WINDOW) {
     irFlags |= nsImageRenderer::FLAG_PAINTING_TO_WINDOW;
   }
+  if (aFlags & nsCSSRendering::PAINTBG_HIGH_QUALITY_SCALING) {
+    irFlags |= nsImageRenderer::FLAG_HIGH_QUALITY_SCALING;
+  }
 
   nsBackgroundLayerState state(aForFrame, &aLayer.mImage, irFlags);
   if (!state.mImageRenderer.PrepareImage()) {
