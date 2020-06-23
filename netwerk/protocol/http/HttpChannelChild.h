@@ -209,11 +209,6 @@ class HttpChannelChild final : public PHttpChannelChild,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;
 
-  mozilla::ipc::IPCResult RecvOnProgress(const int64_t& aProgress,
-                                         const int64_t& aProgressMax) override;
-
-  mozilla::ipc::IPCResult RecvOnStatus(const nsresult& aStatus) override;
-
  private:
   // We want to handle failure result of AsyncOpen, hence AsyncOpen calls the
   // Internal method
@@ -271,6 +266,9 @@ class HttpChannelChild final : public PHttpChannelChild,
       const nsTArray<ConsoleReportCollected>& aConsoleReports);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
+  void ProcessOnProgress(const int64_t& aProgress, const int64_t& aProgressMax);
+
+  void ProcessOnStatus(const nsresult& aStatus);
 
   // Return true if we need to tell the parent the size of unreported received
   // data

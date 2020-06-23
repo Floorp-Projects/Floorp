@@ -1203,27 +1203,26 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 }
 
-mozilla::ipc::IPCResult HttpChannelChild::RecvOnProgress(
-    const int64_t& aProgress, const int64_t& aProgressMax) {
-  LOG(("HttpChannelChild::RecvOnProgress [this=%p]\n", this));
+void HttpChannelChild::ProcessOnProgress(const int64_t& aProgress,
+                                         const int64_t& aProgressMax) {
+  MOZ_ASSERT(OnSocketThread());
+  LOG(("HttpChannelChild::ProcessOnProgress [this=%p]\n", this));
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this,
       [self = UnsafePtr<HttpChannelChild>(this), aProgress, aProgressMax]() {
         AutoEventEnqueuer ensureSerialDispatch(self->mEventQ);
         self->DoOnProgress(self, aProgress, aProgressMax);
       }));
-  return IPC_OK();
 }
 
-mozilla::ipc::IPCResult HttpChannelChild::RecvOnStatus(
-    const nsresult& aStatus) {
-  LOG(("HttpChannelChild::RecvOnStatus [this=%p]\n", this));
+void HttpChannelChild::ProcessOnStatus(const nsresult& aStatus) {
+  MOZ_ASSERT(OnSocketThread());
+  LOG(("HttpChannelChild::ProcessOnStatus [this=%p]\n", this));
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aStatus]() {
         AutoEventEnqueuer ensureSerialDispatch(self->mEventQ);
         self->DoOnStatus(self, aStatus);
       }));
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvFailedAsyncOpen(
