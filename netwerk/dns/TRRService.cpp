@@ -280,6 +280,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
         (mConfirmationState > CONFIRM_TRYING)) {
       LOG(("TRR::ReadPrefs: restart confirmationNS state\n"));
       mConfirmationState = CONFIRM_TRYING;
+      MaybeConfirm_locked();
     }
   }
   if (!name || !strcmp(name, TRR_PREF("bootstrapAddress"))) {
