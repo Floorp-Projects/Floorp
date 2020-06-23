@@ -16,6 +16,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
 #include "nsCOMPtr.h"
@@ -1780,6 +1781,28 @@ extern "C" nsresult NS_CreateBackgroundTaskQueue(
     const char* aName, nsISerialEventTarget** aTarget);
 
 namespace mozilla {
+
+// RAII class that will set the TLS entry to return the currently running
+// nsISerialEventTarget.
+// It should be used from inner event loop implementation.
+class SerialEventTargetGuard {
+ public:
+  explicit SerialEventTargetGuard(nsISerialEventTarget* aThread)
+      : mLastCurrentThread(sCurrentThreadTLS.get()) {
+    sCurrentThreadTLS.set(aThread);
+  }
+
+  ~SerialEventTargetGuard() { sCurrentThreadTLS.set(mLastCurrentThread); }
+
+  static void InitTLS();
+  static nsISerialEventTarget* GetCurrentSerialEventTarget() {
+    return sCurrentThreadTLS.get();
+  }
+
+ private:
+  static MOZ_THREAD_LOCAL(nsISerialEventTarget*) sCurrentThreadTLS;
+  nsISerialEventTarget* mLastCurrentThread;
+};
 
 // These functions return event targets that can be used to dispatch to the
 // current or main thread. They can also be used to test if you're on those

@@ -154,6 +154,7 @@ nsresult TaskQueue::Runner::Run() {
     // in this task queue.
     {
       AutoTaskGuard g(mQueue);
+      SerialEventTargetGuard tg(mQueue);
       event.event->Run();
     }
 
