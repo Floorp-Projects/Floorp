@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Mozac.Browser.Menu2.Candidate.Container"
+    android:layout_width="match_parent"
+    android:orientation="horizontal"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/label"
+        style="@style/Mozac.Browser.Menu2.Candidate.Label"
+        android:layout_width="0dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:gravity="center_vertical"
+        android:background="@null"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:text="Item" />
+</androidx.constraintlayout.widget.ConstraintLayout>

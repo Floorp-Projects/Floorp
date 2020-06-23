@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu.ext
 
+import android.content.Context
 import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.HighlightableMenuItem
@@ -26,3 +27,9 @@ fun List<BrowserMenuItem>.getHighlight() = asSequence()
             is BrowserMenuHighlight.ClassicHighlight -> 0
         }
     }
+
+/**
+ * Converts the menu items into a menu candidate list.
+ */
+fun List<BrowserMenuItem>.asCandidateList(context: Context) =
+    mapNotNull { it.asCandidate(context) }

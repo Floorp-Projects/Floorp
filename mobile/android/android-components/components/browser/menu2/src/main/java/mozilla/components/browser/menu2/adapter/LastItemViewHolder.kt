@@ -15,7 +15,7 @@ internal abstract class LastItemViewHolder<T>(
     itemView: View
 ) : RecyclerView.ViewHolder(itemView) {
 
-    private var lastCandidate: T? = null
+    protected var lastCandidate: T? = null
 
     /**
      * Updates the held view to reflect changes in the menu option.

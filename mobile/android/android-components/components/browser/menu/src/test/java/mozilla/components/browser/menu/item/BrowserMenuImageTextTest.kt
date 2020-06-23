@@ -95,8 +95,9 @@ class BrowserMenuImageTextTest {
                 "label",
                 android.R.drawable.ic_menu_report_image,
                 listener = listener
-            ).asCandidate(context).run {
-                copy(start = (start as? DrawableMenuIcon)?.copy(drawable = null))
+            ).asCandidate(context).let {
+                val text = it as TextMenuCandidate
+                text.copy(start = (text.start as? DrawableMenuIcon)?.copy(drawable = null))
             }
         )
 
@@ -114,8 +115,9 @@ class BrowserMenuImageTextTest {
                 android.R.drawable.ic_menu_report_image,
                 android.R.color.black,
                 listener = listener
-            ).asCandidate(context).run {
-                copy(start = (start as? DrawableMenuIcon)?.copy(drawable = null))
+            ).asCandidate(context).let {
+                val text = it as TextMenuCandidate
+                text.copy(start = (text.start as? DrawableMenuIcon)?.copy(drawable = null))
             }
         )
     }

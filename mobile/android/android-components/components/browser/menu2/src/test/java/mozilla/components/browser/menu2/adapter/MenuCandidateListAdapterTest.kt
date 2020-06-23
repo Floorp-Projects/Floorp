@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.menu.candidate.CompoundMenuCandidate
 import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
 import mozilla.components.concept.menu.candidate.DividerMenuCandidate
+import mozilla.components.concept.menu.candidate.NestedMenuCandidate
 import mozilla.components.concept.menu.candidate.RowMenuCandidate
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.support.test.mock
@@ -25,13 +26,15 @@ class MenuCandidateListAdapterTest {
 
     private lateinit var layoutInflater: LayoutInflater
     private lateinit var dismiss: () -> Unit
+    private lateinit var reopenMenu: (NestedMenuCandidate) -> Unit
     private lateinit var adapter: MenuCandidateListAdapter
 
     @Before
     fun setup() {
         layoutInflater = spy(LayoutInflater.from(testContext))
         dismiss = mock()
-        adapter = MenuCandidateListAdapter(layoutInflater, dismiss)
+        reopenMenu = mock()
+        adapter = MenuCandidateListAdapter(layoutInflater, dismiss, reopenMenu)
     }
 
     @Test
