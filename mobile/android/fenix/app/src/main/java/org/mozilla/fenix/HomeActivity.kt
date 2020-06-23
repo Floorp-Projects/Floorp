@@ -58,7 +58,6 @@ import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
 import org.mozilla.fenix.ext.alreadyOnDestination
-import org.mozilla.fenix.ext.checkAndUpdateScreenshotPermission
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
@@ -140,7 +139,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         components.publicSuffixList.prefetch()
 
         setupThemeAndBrowsingMode(getModeFromIntentOrLastKnown(intent))
-        checkAndUpdateScreenshotPermission(settings())
         setContentView(R.layout.activity_home)
 
         // Must be after we set the content view
@@ -182,7 +180,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     @CallSuper
     override fun onResume() {
-        checkAndUpdateScreenshotPermission(settings())
         super.onResume()
 
         components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
