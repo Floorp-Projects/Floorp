@@ -458,10 +458,10 @@ struct IndexDataValue final {
     MOZ_COUNT_CTOR(IndexDataValue);
   }
 
-  explicit IndexDataValue(const IndexDataValue& aOther)
+  IndexDataValue(IndexDataValue&& aOther)
       : mIndexId(aOther.mIndexId),
-        mPosition(aOther.mPosition),
-        mLocaleAwarePosition(aOther.mLocaleAwarePosition),
+        mPosition(std::move(aOther.mPosition)),
+        mLocaleAwarePosition(std::move(aOther.mLocaleAwarePosition)),
         mUnique(aOther.mUnique) {
     MOZ_ASSERT(!aOther.mPosition.IsUnset());
 
@@ -642,34 +642,29 @@ void WriteCompressedNumber(uint64_t aNumber, uint8_t** aIterator) {
              CompressedByteCountForNumber(originalNumber));
 }
 
-uint64_t ReadCompressedNumber(const uint8_t** aIterator, const uint8_t* aEnd) {
-  MOZ_ASSERT(aIterator);
-  MOZ_ASSERT(*aIterator);
-  MOZ_ASSERT(aEnd);
-  MOZ_ASSERT(*aIterator < aEnd);
-
-  const uint8_t*& buffer = *aIterator;
-
+std::pair<uint64_t, mozilla::Span<const uint8_t>> ReadCompressedNumber(
+    const Span<const uint8_t> aSpan) {
   uint8_t shiftCounter = 0;
   uint64_t result = 0;
 
-  while (true) {
-    MOZ_ASSERT(shiftCounter <= 56, "Shifted too many bits!");
+  const auto end = aSpan.cend();
 
-    result += (uint64_t(*buffer & 0x7f) << shiftCounter);
-    shiftCounter += 7;
+  const auto newPos =
+      std::find_if(aSpan.cbegin(), end, [&result, &shiftCounter](uint8_t byte) {
+        MOZ_ASSERT(shiftCounter <= 56, "Shifted too many bits!");
 
-    if (!(*buffer++ & 0x80)) {
-      break;
-    }
+        result += (uint64_t(byte & 0x7f) << shiftCounter);
+        shiftCounter += 7;
 
-    if (NS_WARN_IF(buffer == aEnd)) {
-      MOZ_ASSERT(false);
-      break;
-    }
+        return !(byte & 0x80);
+      });
+
+  if (NS_WARN_IF(newPos == end)) {
+    MOZ_ASSERT(false);
+    // XXX Shouldn't we return an error in this case?
   }
 
-  return result;
+  return {result, Span{newPos + 1, end}};
 }
 
 void WriteCompressedIndexId(IndexOrObjectStoreId aIndexId, bool aUnique,
@@ -684,25 +679,13 @@ void WriteCompressedIndexId(IndexOrObjectStoreId aIndexId, bool aUnique,
   WriteCompressedNumber(indexId, aIterator);
 }
 
-void ReadCompressedIndexId(const uint8_t** aIterator, const uint8_t* aEnd,
-                           IndexOrObjectStoreId* aIndexId, bool* aUnique) {
-  MOZ_ASSERT(aIterator);
-  MOZ_ASSERT(*aIterator);
-  MOZ_ASSERT(aIndexId);
-  MOZ_ASSERT(aUnique);
-
-  uint64_t indexId = ReadCompressedNumber(aIterator, aEnd);
-
-  if (indexId % 2) {
-    *aUnique = true;
-    indexId--;
-  } else {
-    *aUnique = false;
-  }
+auto ReadCompressedIndexId(const Span<const uint8_t> aData) {
+  const auto [indexId, remainder] = ReadCompressedNumber(aData);
 
   MOZ_ASSERT(UINT64_MAX / 2 >= uint64_t(indexId), "Bad index id!");
 
-  *aIndexId = IndexOrObjectStoreId(indexId / 2);
+  return std::tuple{IndexOrObjectStoreId(indexId >> 1), indexId % 2 == 1,
+                    remainder};
 }
 
 // static
@@ -789,94 +772,95 @@ nsresult MakeCompressedIndexDataValues(
   return NS_OK;
 }
 
+// aOutIndexValues is an output parameter, since its storage is reused.
 nsresult ReadCompressedIndexDataValuesFromBlob(
-    const uint8_t* aBlobData, uint32_t aBlobDataLength,
-    nsTArray<IndexDataValue>& aIndexValues) {
+    const Span<const uint8_t> aBlobData,
+    nsTArray<IndexDataValue>& aOutIndexValues) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aBlobData);
-  MOZ_ASSERT(aBlobDataLength);
-  MOZ_ASSERT(aIndexValues.IsEmpty());
+  MOZ_ASSERT(!aBlobData.IsEmpty());
+  MOZ_ASSERT(aOutIndexValues.IsEmpty());
 
   AUTO_PROFILER_LABEL("ReadCompressedIndexDataValuesFromBlob", DOM);
 
-  if (uintptr_t(aBlobData) > UINTPTR_MAX - aBlobDataLength) {
+  // XXX Is this check still necessary with a Span? Or should it rather be moved
+  // to the caller?
+  if (uintptr_t(aBlobData.Elements()) > UINTPTR_MAX - aBlobData.LengthBytes()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  const uint8_t* blobDataIter = aBlobData;
-  const uint8_t* const blobDataEnd = aBlobData + aBlobDataLength;
+  for (auto remainder = aBlobData; !remainder.IsEmpty();) {
+    const auto [indexId, unique, remainderAfterIndexId] =
+        ReadCompressedIndexId(remainder);
 
-  while (blobDataIter < blobDataEnd) {
-    IndexOrObjectStoreId indexId;
-    bool unique;
-    ReadCompressedIndexId(&blobDataIter, blobDataEnd, &indexId, &unique);
-
-    if (NS_WARN_IF(blobDataIter == blobDataEnd)) {
+    if (NS_WARN_IF(remainderAfterIndexId.IsEmpty())) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_FILE_CORRUPTED;
     }
 
     // Read key buffer length.
-    const uint64_t keyBufferLength =
-        ReadCompressedNumber(&blobDataIter, blobDataEnd);
+    const auto [keyBufferLength, remainderAfterKeyBufferLength] =
+        ReadCompressedNumber(remainderAfterIndexId);
 
-    if (NS_WARN_IF(blobDataIter == blobDataEnd) ||
+    if (NS_WARN_IF(remainderAfterKeyBufferLength.IsEmpty()) ||
         NS_WARN_IF(keyBufferLength > uint64_t(UINT32_MAX)) ||
-        NS_WARN_IF(keyBufferLength > uintptr_t(blobDataEnd)) ||
-        NS_WARN_IF(blobDataIter > blobDataEnd - keyBufferLength)) {
+        NS_WARN_IF(keyBufferLength > remainderAfterKeyBufferLength.Length())
+        // XXX Does this sub-condition make any sense?
+        // || NS_WARN_IF(keyBufferLength > uintptr_t(blobDataEnd))
+    ) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_FILE_CORRUPTED;
     }
 
-    IndexDataValue idv(
-        indexId, unique,
-        Key{nsCString{reinterpret_cast<const char*>(blobDataIter),
-                      uint32_t(keyBufferLength)}});
-    blobDataIter += keyBufferLength;
+    const auto [keyBuffer, remainderAfterKeyBuffer] =
+        remainderAfterKeyBufferLength.SplitAt(keyBufferLength);
+    auto idv =
+        IndexDataValue{indexId, unique, Key{nsCString{AsChars(keyBuffer)}}};
 
     // Read sort key buffer length.
-    const uint64_t sortKeyBufferLength =
-        ReadCompressedNumber(&blobDataIter, blobDataEnd);
+    const auto [sortKeyBufferLength, remainderAfterSortKeyBufferLength] =
+        ReadCompressedNumber(remainderAfterKeyBuffer);
 
+    remainder = remainderAfterSortKeyBufferLength;
     if (sortKeyBufferLength > 0) {
-      if (NS_WARN_IF(blobDataIter == blobDataEnd) ||
+      if (NS_WARN_IF(remainder.IsEmpty()) ||
           NS_WARN_IF(sortKeyBufferLength > uint64_t(UINT32_MAX)) ||
-          NS_WARN_IF(sortKeyBufferLength > uintptr_t(blobDataEnd)) ||
-          NS_WARN_IF(blobDataIter > blobDataEnd - sortKeyBufferLength)) {
+          NS_WARN_IF(sortKeyBufferLength > remainder.Length())
+          // XXX Does this sub-condition make any sense?
+          // || NS_WARN_IF(sortKeyBufferLength > uintptr_t(blobDataEnd))
+      ) {
         IDB_REPORT_INTERNAL_ERR();
         return NS_ERROR_FILE_CORRUPTED;
       }
 
-      idv.mLocaleAwarePosition =
-          Key{nsCString{reinterpret_cast<const char*>(blobDataIter),
-                        uint32_t(sortKeyBufferLength)}};
-      blobDataIter += sortKeyBufferLength;
+      const auto [sortKeyBuffer, remainderAfterSortKeyBuffer] =
+          remainder.SplitAt(sortKeyBufferLength);
+      idv.mLocaleAwarePosition = Key{nsCString{AsChars(sortKeyBuffer)}};
+      remainder = remainderAfterSortKeyBuffer;
     }
 
-    if (NS_WARN_IF(!aIndexValues.InsertElementSorted(idv, fallible))) {
+    if (NS_WARN_IF(!aOutIndexValues.AppendElement(std::move(idv), fallible))) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-
-  MOZ_ASSERT(blobDataIter == blobDataEnd);
+  aOutIndexValues.Sort();
 
   return NS_OK;
 }
 
-// static
+// aOutIndexValues is an output parameter, since its storage is reused.
 template <typename T>
 nsresult ReadCompressedIndexDataValuesFromSource(
-    T* aSource, uint32_t aColumnIndex, nsTArray<IndexDataValue>& aIndexValues) {
+    T& aSource, uint32_t aColumnIndex,
+    nsTArray<IndexDataValue>& aOutIndexValues) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aSource);
-  MOZ_ASSERT(aIndexValues.IsEmpty());
+  MOZ_ASSERT(aOutIndexValues.IsEmpty());
 
   int32_t columnType;
-  nsresult rv = aSource->GetTypeOfIndex(aColumnIndex, &columnType);
+  nsresult rv = aSource.GetTypeOfIndex(aColumnIndex, &columnType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -889,7 +873,7 @@ nsresult ReadCompressedIndexDataValuesFromSource(
 
   const uint8_t* blobData;
   uint32_t blobDataLength;
-  rv = aSource->GetSharedBlob(aColumnIndex, &blobDataLength, &blobData);
+  rv = aSource.GetSharedBlob(aColumnIndex, &blobDataLength, &blobData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -899,8 +883,8 @@ nsresult ReadCompressedIndexDataValuesFromSource(
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  rv = ReadCompressedIndexDataValuesFromBlob(blobData, blobDataLength,
-                                             aIndexValues);
+  rv = ReadCompressedIndexDataValuesFromBlob(MakeSpan(blobData, blobDataLength),
+                                             aOutIndexValues);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -908,18 +892,25 @@ nsresult ReadCompressedIndexDataValuesFromSource(
   return NS_OK;
 }
 
-nsresult ReadCompressedIndexDataValues(mozIStorageStatement* aStatement,
-                                       uint32_t aColumnIndex,
-                                       nsTArray<IndexDataValue>& aIndexValues) {
+// aOutIndexValues is an output parameter, since its storage is reused.
+nsresult ReadCompressedIndexDataValues(
+    mozIStorageStatement& aStatement, uint32_t aColumnIndex,
+    nsTArray<IndexDataValue>& aOutIndexValues) {
   return ReadCompressedIndexDataValuesFromSource(aStatement, aColumnIndex,
-                                                 aIndexValues);
+                                                 aOutIndexValues);
 }
 
-nsresult ReadCompressedIndexDataValues(mozIStorageValueArray* aValues,
-                                       uint32_t aColumnIndex,
-                                       nsTArray<IndexDataValue>& aIndexValues) {
-  return ReadCompressedIndexDataValuesFromSource(aValues, aColumnIndex,
-                                                 aIndexValues);
+using IndexDataValuesAutoArray = AutoTArray<IndexDataValue, 32>;
+Result<IndexDataValuesAutoArray, nsresult> ReadCompressedIndexDataValues(
+    mozIStorageValueArray& aValues, uint32_t aColumnIndex) {
+  IndexDataValuesAutoArray result;
+  const nsresult rv =
+      ReadCompressedIndexDataValuesFromSource(aValues, aColumnIndex, result);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  return result;
 }
 
 nsresult CreateFileTables(mozIStorageConnection& aConnection) {
@@ -2522,14 +2513,13 @@ UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction::
 
   // Read out the previous value. It may be NULL, in which case we'll just end
   // up with an empty array.
-  AutoTArray<IndexDataValue, 32> indexValues;
-  nsresult rv = ReadCompressedIndexDataValues(aValues, 0, indexValues);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto indexValuesOrErr = ReadCompressedIndexDataValues(*aValues, 0);
+  if (NS_WARN_IF(indexValuesOrErr.isErr())) {
+    return indexValuesOrErr.unwrapErr();
   }
 
   IndexOrObjectStoreId indexId;
-  rv = aValues->GetInt64(1, &indexId);
+  nsresult rv = aValues->GetInt64(1, &indexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2545,6 +2535,8 @@ UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction::
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  auto indexValues = indexValuesOrErr.unwrap();
 
   // Update the array with the new addition.
   if (NS_WARN_IF(!indexValues.InsertElementSorted(
@@ -3483,9 +3475,9 @@ class UpgradeIndexDataValuesFunction final : public mozIStorageFunction {
  private:
   ~UpgradeIndexDataValuesFunction() { AssertIsOnIOThread(); }
 
-  nsresult ReadOldCompressedIDVFromBlob(const uint8_t* aBlobData,
-                                        uint32_t aBlobDataLength,
-                                        nsTArray<IndexDataValue>& aIndexValues);
+  using IndexDataValuesArray = IndexDataValuesAutoArray;
+  Result<IndexDataValuesArray, nsresult> ReadOldCompressedIDVFromBlob(
+      Span<const uint8_t> aBlobData);
 
   NS_IMETHOD
   OnFunctionCall(mozIStorageValueArray* aArguments,
@@ -3494,77 +3486,68 @@ class UpgradeIndexDataValuesFunction final : public mozIStorageFunction {
 
 NS_IMPL_ISUPPORTS(UpgradeIndexDataValuesFunction, mozIStorageFunction)
 
-nsresult UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
-    const uint8_t* aBlobData, uint32_t aBlobDataLength,
-    nsTArray<IndexDataValue>& aIndexValues) {
+Result<UpgradeIndexDataValuesFunction::IndexDataValuesArray, nsresult>
+UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
+    const Span<const uint8_t> aBlobData) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aBlobData);
-  MOZ_ASSERT(aBlobDataLength);
-  MOZ_ASSERT(aIndexValues.IsEmpty());
-
-  const uint8_t* blobDataIter = aBlobData;
-  const uint8_t* const blobDataEnd = aBlobData + aBlobDataLength;
 
   IndexOrObjectStoreId indexId;
   bool unique;
   bool nextIndexIdAlreadyRead = false;
 
-  while (blobDataIter < blobDataEnd) {
+  IndexDataValuesArray result;
+  for (auto remainder = aBlobData; !remainder.IsEmpty();) {
     if (!nextIndexIdAlreadyRead) {
-      ReadCompressedIndexId(&blobDataIter, blobDataEnd, &indexId, &unique);
+      std::tie(indexId, unique, remainder) = ReadCompressedIndexId(remainder);
     }
     nextIndexIdAlreadyRead = false;
 
-    if (NS_WARN_IF(blobDataIter == blobDataEnd)) {
+    if (NS_WARN_IF(remainder.IsEmpty())) {
       IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_FILE_CORRUPTED;
+      return Err(NS_ERROR_FILE_CORRUPTED);
     }
 
     // Read key buffer length.
-    const uint64_t keyBufferLength =
-        ReadCompressedNumber(&blobDataIter, blobDataEnd);
+    const auto [keyBufferLength, remainderAfterKeyBufferLength] =
+        ReadCompressedNumber(remainder);
 
-    if (NS_WARN_IF(blobDataIter == blobDataEnd) ||
+    if (NS_WARN_IF(remainderAfterKeyBufferLength.IsEmpty()) ||
         NS_WARN_IF(keyBufferLength > uint64_t(UINT32_MAX)) ||
-        NS_WARN_IF(blobDataIter + keyBufferLength > blobDataEnd)) {
+        NS_WARN_IF(keyBufferLength > remainderAfterKeyBufferLength.Length())) {
       IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_FILE_CORRUPTED;
+      return Err(NS_ERROR_FILE_CORRUPTED);
     }
 
-    IndexDataValue idv(
-        indexId, unique,
-        Key{nsCString{reinterpret_cast<const char*>(blobDataIter),
-                      uint32_t(keyBufferLength)}});
-    blobDataIter += keyBufferLength;
+    const auto [keyBuffer, remainderAfterKeyBuffer] =
+        remainderAfterKeyBufferLength.SplitAt(keyBufferLength);
+    if (NS_WARN_IF(!result.EmplaceBack(fallible, indexId, unique,
+                                       Key{nsCString{AsChars(keyBuffer)}}))) {
+      IDB_REPORT_INTERNAL_ERR();
+      return Err(NS_ERROR_OUT_OF_MEMORY);
+    }
 
-    if (blobDataIter < blobDataEnd) {
+    remainder = remainderAfterKeyBuffer;
+    if (!remainder.IsEmpty()) {
       // Read either a sort key buffer length or an index id.
-      uint64_t maybeIndexId = ReadCompressedNumber(&blobDataIter, blobDataEnd);
+      const auto [maybeIndexId, remainderAfterIndexId] =
+          ReadCompressedNumber(remainder);
 
       // Locale-aware indexes haven't been around long enough to have any users,
       // we can safely assume all sort key buffer lengths will be zero.
+      // XXX This duplicates logic from ReadCompressedIndexId.
       if (maybeIndexId != 0) {
-        if (maybeIndexId % 2) {
-          unique = true;
-          maybeIndexId--;
-        } else {
-          unique = false;
-        }
+        unique = maybeIndexId % 2 == 1;
         indexId = maybeIndexId / 2;
         nextIndexIdAlreadyRead = true;
       }
-    }
 
-    if (NS_WARN_IF(!aIndexValues.InsertElementSorted(idv, fallible))) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_OUT_OF_MEMORY;
+      remainder = remainderAfterIndexId;
     }
   }
+  result.Sort();
 
-  MOZ_ASSERT(blobDataIter == blobDataEnd);
-
-  return NS_OK;
+  return result;
 }
 
 NS_IMETHODIMP
@@ -3604,15 +3587,16 @@ UpgradeIndexDataValuesFunction::OnFunctionCall(
     return rv;
   }
 
-  AutoTArray<IndexDataValue, 32> oldIdv;
-  rv = ReadOldCompressedIDVFromBlob(oldBlob, oldBlobLength, oldIdv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto oldIdvOrErr =
+      ReadOldCompressedIDVFromBlob(MakeSpan(oldBlob, oldBlobLength));
+  if (NS_WARN_IF(oldIdvOrErr.isErr())) {
+    return oldIdvOrErr.unwrapErr();
   }
 
   UniqueFreePtr<uint8_t> newIdv;
   uint32_t newIdvLength;
-  rv = MakeCompressedIndexDataValues(oldIdv, newIdv, &newIdvLength);
+  rv = MakeCompressedIndexDataValues(oldIdvOrErr.unwrap(), newIdv,
+                                     &newIdvLength);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -19588,16 +19572,14 @@ nsresult DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
 
   for (const IndexUpdateInfo& updateInfo : aUpdateInfos) {
     const IndexOrObjectStoreId& indexId = updateInfo.indexId();
-    const Key& key = updateInfo.value();
-    const Key& sortKey = updateInfo.localizedValue();
 
     bool unique = false;
     MOZ_ALWAYS_TRUE(aUniqueIndexTable.Get(indexId, &unique));
 
-    IndexDataValue idv(indexId, unique, key, sortKey);
-
-    MOZ_ALWAYS_TRUE(aIndexValues.InsertElementSorted(idv, fallible));
+    aIndexValues.EmplaceBack(indexId, unique, updateInfo.value(),
+                             updateInfo.localizedValue());
   }
+  aIndexValues.Sort();
 
   return NS_OK;
 }
@@ -19866,7 +19848,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
   }
 
   DatabaseConnection::CachedStatement deleteStmt;
-  AutoTArray<IndexDataValue, 32> indexValues;
+  IndexDataValuesAutoArray indexValues;
 
   DebugOnly<uint32_t> resultCountDEBUG = 0;
 
@@ -19881,7 +19863,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
       indexValues.ClearAndRetainStorage();
     }
 
-    rv = ReadCompressedIndexDataValues(&*selectStmt, 0, indexValues);
+    rv = ReadCompressedIndexDataValues(*selectStmt, 0, indexValues);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24214,12 +24196,12 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
     return rv;
   }
 
-  AutoTArray<IndexDataValue, 32> indexValues;
-  rv = ReadCompressedIndexDataValues(aValues, 1, indexValues);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto indexValuesOrErr = ReadCompressedIndexDataValues(*aValues, 1);
+  if (NS_WARN_IF(indexValuesOrErr.isErr())) {
+    return indexValuesOrErr.unwrapErr();
   }
 
+  auto indexValues = indexValuesOrErr.unwrap();
   const bool hadPreviousIndexValues = !indexValues.IsEmpty();
 
   const uint32_t updateInfoCount = updateInfos.Length();
@@ -24550,7 +24532,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   DatabaseConnection::CachedStatement nullIndexDataValuesStmt;
 
   Key lastObjectStoreKey;
-  AutoTArray<IndexDataValue, 32> lastIndexValues;
+  IndexDataValuesAutoArray lastIndexValues;
 
   bool hasResult;
   while (NS_SUCCEEDED(rv = selectStmt->ExecuteStep(&hasResult)) && hasResult) {
@@ -24602,7 +24584,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       // And the |index_data_values| row if this isn't the only index.
       if (!mIsLastIndex) {
         lastIndexValues.ClearAndRetainStorage();
-        rv = ReadCompressedIndexDataValues(&*selectStmt, 2, lastIndexValues);
+        rv = ReadCompressedIndexDataValues(*selectStmt, 2, lastIndexValues);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -25037,9 +25019,9 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
   }
 
   if (hasResult) {
-    AutoTArray<IndexDataValue, 32> existingIndexValues;
-    rv = ReadCompressedIndexDataValues(&*indexValuesStmt, 0,
-                                       existingIndexValues);
+    IndexDataValuesAutoArray existingIndexValues;
+    rv =
+        ReadCompressedIndexDataValues(*indexValuesStmt, 0, existingIndexValues);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25415,7 +25397,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     MOZ_ASSERT(mUniqueIndexTable.isSome());
 
     // Write the index_data_values column.
-    AutoTArray<IndexDataValue, 32> indexValues;
+    IndexDataValuesAutoArray indexValues;
     rv = IndexDataValuesFromUpdateInfos(mParams.indexUpdateInfos(),
                                         mUniqueIndexTable.ref(), indexValues);
     if (NS_WARN_IF(NS_FAILED(rv))) {
