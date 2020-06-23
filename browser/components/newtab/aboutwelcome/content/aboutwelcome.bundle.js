@@ -384,18 +384,29 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     });
   }
 
+  highlightTheme(theme) {
+    const themes = document.querySelectorAll("button.theme");
+    themes.forEach(function (element) {
+      element.classList.remove("selected");
+
+      if (element.value === theme) {
+        element.classList.add("selected");
+      }
+    });
+  }
+
   async handleAction(event) {
     let {
       props
     } = this;
-    let targetContent = props.content[event.target.value];
+    let targetContent = props.content[event.currentTarget.value] || props.content.tiles;
 
     if (!(targetContent && targetContent.action)) {
       return;
     } // Send telemetry before waiting on actions
 
 
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, event.target.value);
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, event.currentTarget.value);
     let {
       action
     } = targetContent;
@@ -409,6 +420,12 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
         await window.AWWaitForMigrationClose();
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, "migrate_close");
       }
+    } // A special tiles.action.theme value indicates we should use the event's value vs provided value.
+
+
+    if (action.theme) {
+      this.highlightTheme(event.currentTarget.value);
+      window.AWSelectTheme(action.theme === "<event>" ? event.currentTarget.value : action.theme);
     }
 
     if (action.navigate) {
@@ -431,23 +448,47 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   }
 
   renderTiles() {
-    return this.props.content.tiles && this.props.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "tiles-section"
-    }, this.props.topSites.slice(0, 5).map(({
-      icon,
-      label
-    }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "site",
-      key: icon + label
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "icon",
-      style: icon ? {
-        backgroundColor: "transparent",
-        backgroundImage: `url(${icon})`
-      } : {}
-    }, icon ? "" : label[0].toUpperCase()), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "host"
-    }, label)))) : null;
+    switch (this.props.content.tiles.type) {
+      case "topsites":
+        return this.props.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: "tiles-topsites-section"
+        }, this.props.topSites.slice(0, 5).map(({
+          icon,
+          label
+        }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: "site",
+          key: icon + label
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: "icon",
+          style: icon ? {
+            backgroundColor: "transparent",
+            backgroundImage: `url(${icon})`
+          } : {}
+        }, icon ? "" : label[0].toUpperCase()), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: "host"
+        }, label)))) : null;
+
+      case "theme":
+        return this.props.content.tiles.data ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: "tiles-theme-section"
+        }, this.props.content.tiles.data.map(({
+          theme,
+          label
+        }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+          className: "theme",
+          key: theme + label,
+          value: theme,
+          onClick: this.handleAction
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: `icon ${theme}`
+        }), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+          text: label
+        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+          className: "text"
+        }))))) : null;
+    }
+
+    return null;
   }
 
   renderStepsIndicator() {

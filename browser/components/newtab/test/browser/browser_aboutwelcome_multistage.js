@@ -12,6 +12,22 @@ const TEST_MULTISTAGE_CONTENT = {
       order: 0,
       content: {
         title: "Step 1",
+        tiles: {
+          type: "theme",
+          action: {
+            theme: "<event>",
+          },
+          data: [
+            {
+              theme: "test-theme-1",
+              label: "theme-1",
+            },
+            {
+              theme: "test-theme-2",
+              label: "theme-2",
+            },
+          ],
+        },
         primary_button: {
           label: "Next",
           action: {
@@ -166,6 +182,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
       "main.AW_STEP1",
       "div.secondary-cta.top",
       "button.secondary",
+      "button.theme",
       "div.indicator.current",
     ],
     // Unexpected selectors:
@@ -395,5 +412,72 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
     eventCall.args[1].event_context.source,
     "secondary_button",
     "secondary button click source recorded in Telemetry"
+  );
+});
+
+add_task(async function test_AWMultistage_Themes() {
+  let browser = await openAboutWelcome();
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+  const sandbox = sinon.createSandbox();
+  // Stub AboutWelcomeParent Content Message Handler
+  sandbox
+    .stub(aboutWelcomeActor, "onContentMessage")
+    .resolves("")
+    .withArgs("AWPage:IMPORTABLE_SITES")
+    .resolves([]);
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+
+  await ContentTask.spawn(browser, "Themes", async () => {
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector("button.theme"),
+      "Theme Icons"
+    );
+    let themes = content.document.querySelectorAll("button.theme");
+    Assert.equal(themes.length, 2, "Two themes displayed");
+  });
+
+  await onButtonClick(browser, "button[value=test-theme-1]");
+
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+  ok(callCount >= 1, `${callCount} Stub was called`);
+
+  let actionCall;
+  let eventCall;
+  for (let i = 0; i < callCount; i++) {
+    const call = aboutWelcomeActor.onContentMessage.getCall(i);
+    info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+    if (call.calledWithMatch("SELECT_THEME")) {
+      actionCall = call;
+    } else if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
+      eventCall = call;
+    }
+  }
+
+  Assert.equal(
+    actionCall.args[0],
+    "AWPage:SELECT_THEME",
+    "Got call to handle select theme"
+  );
+  Assert.equal(
+    actionCall.args[1],
+    "TEST-THEME-1",
+    "Theme value passed as TEST-THEME-1"
+  );
+  Assert.equal(
+    eventCall.args[0],
+    "AWPage:TELEMETRY_EVENT",
+    "Got call to handle Telemetry event when theme tile clicked"
+  );
+  Assert.equal(
+    eventCall.args[1].event,
+    "CLICK_BUTTON",
+    "click button event recorded in Telemetry"
+  );
+  Assert.equal(
+    eventCall.args[1].event_context.source,
+    "test-theme-1",
+    "test-theme-1 click source recorded in Telemetry"
   );
 });
