@@ -187,7 +187,9 @@ HttpChannelChild::HttpChannelChild()
       mPostRedirectChannelShouldIntercept(false),
       mPostRedirectChannelShouldUpgrade(false),
       mShouldParentIntercept(false),
-      mSuspendParentAfterSynthesizeResponse(false) {
+      mSuspendParentAfterSynthesizeResponse(false),
+      mIsLastPartOfMultiPart(false),
+      mSuspendForWaitCompleteRedirectSetup(false) {
   LOG(("Creating HttpChannelChild @%p\n", this));
 
   mChannelCreationTime = PR_Now();
@@ -1313,6 +1315,14 @@ void HttpChannelChild::DoAsyncAbort(nsresult aStatus) {
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvDeleteSelf() {
   LOG(("HttpChannelChild::RecvDeleteSelf [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // The redirection is vetoed. No need to suspend the event queue.
+  if (mSuspendForWaitCompleteRedirectSetup) {
+    mSuspendForWaitCompleteRedirectSetup = false;
+    mEventQ->Resume();
+  }
+
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this,
       [self = UnsafePtr<HttpChannelChild>(this)]() { self->DeleteSelf(); }));
@@ -2009,12 +2019,17 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
 
   MaybeConnectToSocketProcess();
 
+  // Should wait for CompleteRedirectSetup to set the listener.
+  mEventQ->Suspend();
+  MOZ_ASSERT(!mSuspendForWaitCompleteRedirectSetup);
+  mSuspendForWaitCompleteRedirectSetup = true;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
-  LOG(("HttpChannelChild::FinishRedirectSetup [this=%p]\n", this));
+  LOG(("HttpChannelChild::CompleteRedirectSetup [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
 
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
@@ -2063,6 +2078,11 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
 
   // add ourselves to the load group.
   if (mLoadGroup) mLoadGroup->AddRequest(this, nullptr);
+
+  // Resume the suspension in ConnectParent.
+  MOZ_ASSERT(mSuspendForWaitCompleteRedirectSetup);
+  mEventQ->Resume();
+  mSuspendForWaitCompleteRedirectSetup = false;
 
   // We already have an open IPDL connection to the parent. If on-modify-request
   // listeners or load group observers canceled us, let the parent handle it
