@@ -166,7 +166,7 @@ class MOZ_RAII FallbackStubAllocator {
 
 // Helper method called by lambda expressions `addIC` and `addPrologueIC` in
 // `JitScript::initICEntriesAndBytecodeTypeMap`.
-static bool AddICImpl(JSContext* cx, JitScript* jitScript, uint32_t offset,
+static bool AddICImpl(JSContext* cx, ICScript* icScript, uint32_t offset,
                       ICStub* stub, uint32_t& icEntryIndex) {
   if (!stub) {
     MOZ_ASSERT(cx->isExceptionPending());
@@ -175,7 +175,7 @@ static bool AddICImpl(JSContext* cx, JitScript* jitScript, uint32_t offset,
   }
 
   // Initialize the ICEntry.
-  ICEntry& entryRef = jitScript->icEntry(icEntryIndex);
+  ICEntry& entryRef = icScript->icEntry(icEntryIndex);
   icEntryIndex++;
   new (&entryRef) ICEntry(stub, offset);
 
@@ -189,14 +189,13 @@ static bool AddICImpl(JSContext* cx, JitScript* jitScript, uint32_t offset,
   return true;
 }
 
-bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
-                                                JSScript* script) {
+bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(cx->realm()->jitRealm());
   MOZ_ASSERT(jit::IsBaselineInterpreterEnabled());
 
   MOZ_ASSERT(numICEntries() == script->numICEntries());
 
-  FallbackStubAllocator alloc(cx, fallbackStubSpace_);
+  FallbackStubAllocator alloc(cx, *fallbackStubSpace());
 
   // Index of the next ICEntry to initialize.
   uint32_t icEntryIndex = 0;
@@ -235,22 +234,9 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
     }
   }
 
-  // Index of the next bytecode type map entry to initialize.
-  uint32_t typeMapIndex = 0;
-  uint32_t* const typeMap =
-      IsTypeInferenceEnabled() ? bytecodeTypeMap() : nullptr;
-
   // For JOF_IC ops: initialize ICEntries and fallback stubs.
-  // For JOF_TYPESET ops: initialize bytecode type map entries.
   for (BytecodeLocation loc : js::AllBytecodesIterable(script)) {
     JSOp op = loc.getOp();
-    // Note: if the script is very large there will be more JOF_TYPESET ops
-    // than bytecode type sets. See JSScript::MaxBytecodeTypeSets.
-    if (BytecodeOpHasTypeSet(op) && typeMap &&
-        typeMapIndex < JSScript::MaxBytecodeTypeSets) {
-      typeMap[typeMapIndex] = loc.bytecodeToOffset(script);
-      typeMapIndex++;
-    }
 
     // Assert the frontend stored the correct IC index in jump target ops.
     MOZ_ASSERT_IF(BytecodeIsJumpTarget(op), loc.icIndex() == icEntryIndex);
@@ -532,11 +518,8 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
     }
   }
 
-  // Assert all ICEntries and type map entries have been initialized.
+  // Assert all ICEntries have been initialized.
   MOZ_ASSERT(icEntryIndex == numICEntries());
-  MOZ_ASSERT_IF(IsTypeInferenceEnabled(),
-                typeMapIndex == script->numBytecodeTypeSets());
-
   return true;
 }
 
