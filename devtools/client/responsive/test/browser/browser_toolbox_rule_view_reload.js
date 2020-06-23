@@ -35,6 +35,13 @@ addRDMTaskWithPreAndPost(
     await inspector.markup._waitForChildren();
     await onRuleViewRefreshed;
 
+    // Await two reflows of the Rule View window.
+    await new Promise(resolve => {
+      view.styleWindow.requestAnimationFrame(() => {
+        view.styleWindow.requestAnimationFrame(resolve);
+      });
+    });
+
     is(
       numberOfRules(view),
       2,
