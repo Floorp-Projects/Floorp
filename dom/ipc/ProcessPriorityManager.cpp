@@ -366,12 +366,12 @@ ProcessPriorityManagerImpl::ProcessPriorityManagerImpl() {
 ProcessPriorityManagerImpl::~ProcessPriorityManagerImpl() = default;
 
 void ProcessPriorityManagerImpl::Init() {
-  LOG("Starting up.  This is the master process.");
+  LOG("Starting up.  This is the parent process.");
 
-  // The master process's priority never changes; set it here and then forget
-  // about it.  We'll manage only subprocesses' priorities using the process
+  // The parent process's priority never changes; set it here and then forget
+  // about it. We'll manage only subprocesses' priorities using the process
   // priority manager.
-  hal::SetProcessPriority(getpid(), PROCESS_PRIORITY_MASTER);
+  hal::SetProcessPriority(getpid(), PROCESS_PRIORITY_PARENT_PROCESS);
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
@@ -892,7 +892,7 @@ NS_IMPL_ISUPPORTS(ProcessPriorityManagerChild, nsIObserver)
 
 ProcessPriorityManagerChild::ProcessPriorityManagerChild() {
   if (XRE_IsParentProcess()) {
-    mCachedPriority = PROCESS_PRIORITY_MASTER;
+    mCachedPriority = PROCESS_PRIORITY_PARENT_PROCESS;
   } else {
     mCachedPriority = PROCESS_PRIORITY_UNKNOWN;
   }

@@ -430,8 +430,8 @@ void SetProcessPriority(int aPid, ProcessPriority aPriority) {
 // From HalTypes.h.
 const char* ProcessPriorityToString(ProcessPriority aPriority) {
   switch (aPriority) {
-    case PROCESS_PRIORITY_MASTER:
-      return "MASTER";
+    case PROCESS_PRIORITY_PARENT_PROCESS:
+      return "PARENT_PROCESS";
     case PROCESS_PRIORITY_PREALLOC:
       return "PREALLOC";
     case PROCESS_PRIORITY_FOREGROUND_HIGH:
