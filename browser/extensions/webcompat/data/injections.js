@@ -264,20 +264,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1577270",
-    platform: "android",
-    domain: "binance.com",
-    bug: "1577270",
-    contentScripts: {
-      matches: ["*://*.binance.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1577270-binance.com-calc-height-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1577297",
     platform: "android",
     domain: "kitkat.com.au",
@@ -426,15 +412,46 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1633796",
-    platform: "android",
-    domain: "www.laposte.fr",
-    bug: "1633796",
+    id: "bug1644830",
+    platform: "desktop",
+    domain: "usps.com",
+    bug: "1644830",
     contentScripts: {
-      matches: ["https://www.laposte.fr/*"],
+      matches: ["https://*.usps.com/*"],
       css: [
         {
-          file: "injections/css/bug1633796-www-la-poste-fr-placeholder-fix.css",
+          file:
+            "injections/css/bug1644830-missingmail.usps.com-checkboxes-not-visible.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1645064",
+    platform: "desktop",
+    domain: "s-kanava.fi",
+    bug: "1645064",
+    contentScripts: {
+      matches: ["https://www.s-kanava.fi/*"],
+      css: [
+        {
+          file: "injections/css/bug1645064-s-kanava.fi-invisible-charts.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1641998",
+    platform: "desktop",
+    domain: "twitter.com",
+    bug: "1641998",
+    contentScripts: {
+      matches: ["https://twitter.com/i/videos/tweet/*"],
+      allFrames: true,
+      js: [
+        {
+          file:
+            "injections/js/bug1641998-embedded-twitter-videos-etp-indexeddb.js",
         },
       ],
     },
