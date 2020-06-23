@@ -23,6 +23,9 @@ permalink: /changelog/
 * **feature-pwa**
   * ⚠️ **This is a breaking change**: `TrustedWebActivityIntentProcessor` now requires a `RelationChecker` instead of `httpClient` and `apiKey`.
 
+* **browser-thumbnails**
+  * Deletes the tab's thumbnail from the storage when the sessions are removed.
+
 # 47.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v46.0.0...v47.0.0)
