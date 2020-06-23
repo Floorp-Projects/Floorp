@@ -432,7 +432,12 @@ struct nsCSSRendering {
      * When this flag is passed, painting will read properties of mask-image
      * style, instead of background-image.
      */
-    PAINTBG_MASK_IMAGE = 0x08
+    PAINTBG_MASK_IMAGE = 0x08,
+    /**
+     * When this flag is passed, images are downscaled during decode. This
+     * is also implied by PAINTBG_TO_WINDOW.
+     */
+    PAINTBG_HIGH_QUALITY_SCALING = 0x16,
   };
 
   struct PaintBGParams {

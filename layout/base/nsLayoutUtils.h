@@ -1208,6 +1208,7 @@ class nsLayoutUtils {
     NoComposite = 0x100,
     Compressed = 0x200,
     ForWebRender = 0x400,
+    UseHighQualityScaling = 0x800,
   };
 
   /**

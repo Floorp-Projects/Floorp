@@ -161,6 +161,7 @@ enum class RenderDocumentFlags {
   AsyncDecodeImages = 1 << 4,
   DocumentRelative = 1 << 5,
   DrawWindowNotFlushing = 1 << 6,
+  UseHighQualityScaling = 1 << 7,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RenderDocumentFlags)
