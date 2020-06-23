@@ -525,13 +525,13 @@ void HttpChannelChild::OnStartRequest(
   DoOnStartRequest(this, nullptr);
 }
 
-mozilla::ipc::IPCResult HttpChannelChild::RecvOnAfterLastPart(
-    const nsresult& aStatus) {
+void HttpChannelChild::ProcessOnAfterLastPart(const nsresult& aStatus) {
+  LOG(("HttpChannelChild::ProcessOnAfterLastPart [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aStatus]() {
         self->OnAfterLastPart(aStatus);
       }));
-  return IPC_OK();
 }
 
 void HttpChannelChild::OnAfterLastPart(const nsresult& aStatus) {

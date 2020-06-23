@@ -165,10 +165,6 @@ child:
 
   // Tell the child information of matched URL againts SafeBrowsing tracking list
   async SetClassifierMatchedTrackingInfo(ClassifierInfo info);
- 
-  // Forwards nsIMultiPartChannelListener::onAfterLastPart. Make sure we've
-  // disconnected our listeners, since we might not have on the last OnStopRequest.
-  async OnAfterLastPart(nsresult aStatus);
 
 both:
   // After receiving this message, the parent also calls
