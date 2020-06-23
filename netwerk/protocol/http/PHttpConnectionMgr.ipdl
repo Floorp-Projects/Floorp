@@ -21,9 +21,7 @@ async refcounted protocol PHttpConnectionMgr
 child:
   async __delete__();
 
-  async DoShiftReloadConnectionCleanup(HttpConnectionInfoCloneArgs? aArgs);
-  async PruneDeadConnections();
-  async AbortAndCloseAllConnections();
+  async DoShiftReloadConnectionCleanupWithConnInfo(HttpConnectionInfoCloneArgs aArgs);
   async UpdateCurrentTopLevelOuterContentWindowId(uint64_t aWindowId);
   async AddTransaction(PHttpTransaction aTrans, int32_t aPriority);
   async AddTransactionWithStickyConn(PHttpTransaction aTrans, int32_t aPriority,
@@ -32,8 +30,6 @@ child:
   async UpdateClassOfServiceOnTransaction(PHttpTransaction aTrans,
                                           uint32_t aClassOfService);
   async CancelTransaction(PHttpTransaction aTrans, nsresult aReason);
-  async VerifyTraffic();
-  async ClearConnectionHistory();
   async SpeculativeConnect(HttpConnectionInfoCloneArgs aConnInfo,
                            SpeculativeConnectionOverriderArgs? aOverriderArgs,
                            uint32_t aCaps, PAltSvcTransaction? aTrans);
