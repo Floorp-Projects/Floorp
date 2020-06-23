@@ -359,6 +359,7 @@ class TestharnessExecutor(TestExecutor):
 
 class RefTestExecutor(TestExecutor):
     convert_result = reftest_result_converter
+    is_print = False
 
     def __init__(self, logger, browser, server_config, timeout_multiplier=1, screenshot_cache=None,
                  debug_info=None, **kwargs):
@@ -375,6 +376,7 @@ class CrashtestExecutor(TestExecutor):
 
 class PrintRefTestExecutor(TestExecutor):
     convert_result = reftest_result_converter
+    is_print = True
 
 
 class RefTestImplementation(object):
@@ -398,7 +400,7 @@ class RefTestImplementation(object):
     def logger(self):
         return self.executor.logger
 
-    def get_hash(self, test, viewport_size, dpi):
+    def get_hash(self, test, viewport_size, dpi, page_ranges):
         key = (test.url, viewport_size, dpi)
 
         if key not in self.screenshot_cache:
@@ -498,7 +500,9 @@ class RefTestImplementation(object):
     def run_test(self, test):
         viewport_size = test.viewport_size
         dpi = test.dpi
+        page_ranges = test.page_ranges
         self.message = []
+
 
         # Depth-first search of reference tree, with the goal
         # of reachings a leaf node with only pass results
@@ -514,7 +518,7 @@ class RefTestImplementation(object):
             fuzzy = self.get_fuzzy(test, nodes, relation)
 
             for i, node in enumerate(nodes):
-                success, data = self.get_hash(node, viewport_size, dpi)
+                success, data = self.get_hash(node, viewport_size, dpi, page_ranges)
                 if success is False:
                     return {"status": data[0], "message": data[1]}
 
