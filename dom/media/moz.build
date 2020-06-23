@@ -117,6 +117,7 @@ EXPORTS += [
     'AudioSampleFormat.h',
     'AudioSegment.h',
     'AudioStream.h',
+    'AudioThreadRegistry.h',
     'AutoplayPolicy.h',
     'BackgroundVideoDecodingPermissionObserver.h',
     'Benchmark.h',
