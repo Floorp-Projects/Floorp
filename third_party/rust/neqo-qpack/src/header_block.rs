@@ -422,30 +422,30 @@ impl<'a> HeaderDecoder<'a> {
 #[cfg(test)]
 mod tests {
 
-    use super::{Deref, HeaderDecoder, HeaderDecoderResult, HeaderEncoder, HeaderTable};
+    use super::{HeaderDecoder, HeaderDecoderResult, HeaderEncoder, HeaderTable};
 
-    const INDEX_STATIC_TEST: [(u64, &[u8], &str, &str); 4] = [
+    const INDEX_STATIC_TEST: &[(u64, &[u8], &str, &str)] = &[
         (0, &[0x0, 0x0, 0xc0], ":authority", ""),
         (10, &[0x0, 0x0, 0xca], "last-modified", ""),
         (15, &[0x0, 0x0, 0xcf], ":method", "CONNECT"),
         (65, &[0x0, 0x0, 0xff, 0x02], ":status", "206"),
     ];
 
-    const INDEX_DYNAMIC_TEST: [(u64, &[u8], &str, &str); 4] = [
+    const INDEX_DYNAMIC_TEST: &[(u64, &[u8], &str, &str)] = &[
         (0, &[0x02, 0x41, 0xbf, 0x2], "header0", "0"),
         (10, &[0x0c, 0x37, 0xb7], "header10", "10"),
         (15, &[0x11, 0x32, 0xb2], "header15", "15"),
         (65, &[0x43, 0x0, 0x80], "header65", "65"),
     ];
 
-    const INDEX_DYNAMIC_POST_TEST: [(u64, &[u8], &str, &str); 4] = [
+    const INDEX_DYNAMIC_POST_TEST: &[(u64, &[u8], &str, &str)] = &[
         (0, &[0x02, 0x80, 0x10], "header0", "0"),
         (10, &[0x0c, 0x8a, 0x1a], "header10", "10"),
         (15, &[0x11, 0x8f, 0x1f, 0x00], "header15", "15"),
         (65, &[0x43, 0xc1, 0x1f, 0x32], "header65", "65"),
     ];
 
-    const NAME_REF_STATIC: [(u64, &[u8], &str, &str); 4] = [
+    const NAME_REF_STATIC: &[(u64, &[u8], &str, &str)] = &[
         (
             0,
             &[
@@ -482,7 +482,7 @@ mod tests {
         ),
     ];
 
-    const NAME_REF_DYNAMIC: [(u64, &[u8], &str, &str); 4] = [
+    const NAME_REF_DYNAMIC: &[(u64, &[u8], &str, &str)] = &[
         (
             0,
             &[
@@ -520,7 +520,7 @@ mod tests {
         ),
     ];
 
-    const NAME_REF_DYNAMIC_POST: [(u64, &[u8], &str, &str); 4] = [
+    const NAME_REF_DYNAMIC_POST: &[(u64, &[u8], &str, &str)] = &[
         (
             0,
             &[
@@ -558,7 +558,7 @@ mod tests {
         ),
     ];
 
-    const NAME_REF_DYNAMIC_HUFFMAN: [(u64, &[u8], &str, &str); 4] = [
+    const NAME_REF_DYNAMIC_HUFFMAN: &[(u64, &[u8], &str, &str)] = &[
         (
             0,
             &[
@@ -606,107 +606,73 @@ mod tests {
 
     const LITERAL_VALUE: &str = "custom-key";
 
-    const TEST_N_BIT: [(&[u8], &str, &str); 4] = [
-        (
-            &[
-                0x02, 0x41, 0x6f, 0x32, 0x0a, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b, 0x65,
-                0x79,
-            ],
-            "header0",
-            "custom-key",
-        ),
-        (
-            &[
-                0x02, 0x80, 0x08, 0x0a, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b, 0x65, 0x79,
-            ],
-            "header0",
-            "custom-key",
-        ),
-        (
-            &[
-                0x0, 0x42, 0x37, 0x03, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b, 0x65, 0x79,
-                0x0a, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b, 0x65, 0x79,
-            ],
-            "custom-key",
-            "custom-key",
-        ),
-        (
-            &[
-                0x0, 0x42, 0x3f, 0x01, 0x25, 0xa8, 0x49, 0xe9, 0x5b, 0xa9, 0x7d, 0x7f, 0x88, 0x25,
-                0xa8, 0x49, 0xe9, 0x5b, 0xa9, 0x7d, 0x7f,
-            ],
-            "custom-key",
-            "custom-key",
-        ),
-    ];
-
     #[test]
     fn test_encode_indexed_static() {
-        for (index, result, _, _) in &INDEX_STATIC_TEST {
+        for (index, result, _, _) in INDEX_STATIC_TEST {
             let mut encoded_h = HeaderEncoder::new(0, true, 1000);
             encoded_h.encode_indexed_static(*index);
             encoded_h.fix_header_block_prefix();
-            assert_eq!(&&encoded_h[..], result);
+            assert_eq!(&&*encoded_h, result);
         }
     }
 
     #[test]
     fn test_encode_indexed_dynamic() {
-        for (index, result, _, _) in &INDEX_DYNAMIC_TEST {
+        for (index, result, _, _) in INDEX_DYNAMIC_TEST {
             let mut encoded_h = HeaderEncoder::new(66, true, 1000);
             encoded_h.encode_indexed_dynamic(*index);
             encoded_h.fix_header_block_prefix();
-            assert_eq!(&encoded_h.deref(), result);
+            assert_eq!(&&*encoded_h, result);
         }
     }
 
     #[test]
     fn test_encode_indexed_dynamic_post() {
-        for (index, result, _, _) in &INDEX_DYNAMIC_POST_TEST {
+        for (index, result, _, _) in INDEX_DYNAMIC_POST_TEST {
             let mut encoded_h = HeaderEncoder::new(0, true, 1000);
             encoded_h.encode_indexed_dynamic(*index);
             encoded_h.fix_header_block_prefix();
-            assert_eq!(&encoded_h.deref(), result);
+            assert_eq!(&&*encoded_h, result);
         }
     }
 
     #[test]
     fn test_encode_literal_with_name_ref_static() {
-        for (index, result, _, _) in &NAME_REF_STATIC {
+        for (index, result, _, _) in NAME_REF_STATIC {
             let mut encoded_h = HeaderEncoder::new(0, false, 1000);
             encoded_h.encode_literal_with_name_ref(true, *index, VALUE);
             encoded_h.fix_header_block_prefix();
-            assert_eq!(&encoded_h.deref(), result);
+            assert_eq!(&&*encoded_h, result);
         }
     }
 
     #[test]
     fn test_encode_literal_with_name_ref_dynamic() {
-        for (index, result, _, _) in &NAME_REF_DYNAMIC {
+        for (index, result, _, _) in NAME_REF_DYNAMIC {
             let mut encoded_h = HeaderEncoder::new(66, false, 1000);
             encoded_h.encode_literal_with_name_ref(false, *index, VALUE);
             encoded_h.fix_header_block_prefix();
-            assert_eq!(&encoded_h.deref(), result);
+            assert_eq!(&&*encoded_h, result);
         }
     }
 
     #[test]
     fn test_encode_literal_with_name_ref_dynamic_post() {
-        for (index, result, _, _) in &NAME_REF_DYNAMIC_POST {
+        for (index, result, _, _) in NAME_REF_DYNAMIC_POST {
             let mut encoded_h = HeaderEncoder::new(0, false, 1000);
             encoded_h.encode_literal_with_name_ref(false, *index, VALUE);
             encoded_h.fix_header_block_prefix();
-            assert_eq!(&encoded_h.deref(), result);
+            assert_eq!(&&*encoded_h, result);
         }
     }
 
     #[test]
     fn test_encode_literal_with_name_ref_dynamic_huffman() {
-        for (index, result, _, _) in &NAME_REF_DYNAMIC_HUFFMAN {
+        for (index, result, _, _) in NAME_REF_DYNAMIC_HUFFMAN {
             let mut encoded_h = HeaderEncoder::new(66, true, 1000);
             encoded_h.encode_literal_with_name_ref(false, *index, VALUE);
             encoded_h.fix_header_block_prefix();
-            assert_eq!(&encoded_h.deref(), result);
+            assert_eq!(&&*encoded_h, result);
         }
     }
     #[test]
@@ -714,17 +680,17 @@ mod tests {
         let mut encoded_h = HeaderEncoder::new(66, false, 1000);
         encoded_h.encode_literal_with_name_literal(VALUE, VALUE);
         encoded_h.fix_header_block_prefix();
-        assert_eq!(&encoded_h.deref(), &LITERAL_LITERAL);
+        assert_eq!(&*encoded_h, LITERAL_LITERAL);
 
         let mut encoded_h = HeaderEncoder::new(66, true, 1000);
         encoded_h.encode_literal_with_name_literal(VALUE, VALUE);
         encoded_h.fix_header_block_prefix();
-        assert_eq!(&encoded_h.deref(), &LITERAL_LITERAL_HUFFMAN);
+        assert_eq!(&*encoded_h, LITERAL_LITERAL_HUFFMAN);
     }
 
     #[test]
     fn decode_indexed_static() {
-        for (_, encoded, decoded1, decoded2) in &INDEX_STATIC_TEST {
+        for (_, encoded, decoded1, decoded2) in INDEX_STATIC_TEST {
             let table = HeaderTable::new(false);
             let mut decoder_h = HeaderDecoder::new(encoded);
             if let HeaderDecoderResult::Headers(result) =
@@ -751,7 +717,7 @@ mod tests {
 
     #[test]
     fn decode_indexed_dynamic() {
-        for (_, encoded, decoded1, decoded2) in &INDEX_DYNAMIC_TEST {
+        for (_, encoded, decoded1, decoded2) in INDEX_DYNAMIC_TEST {
             let mut table = HeaderTable::new(false);
             fill_table(&mut table);
             let mut decoder_h = HeaderDecoder::new(encoded);
@@ -769,7 +735,7 @@ mod tests {
 
     #[test]
     fn decode_indexed_dynamic_post() {
-        for (_, encoded, decoded1, decoded2) in &INDEX_DYNAMIC_POST_TEST {
+        for (_, encoded, decoded1, decoded2) in INDEX_DYNAMIC_POST_TEST {
             let mut table = HeaderTable::new(false);
             fill_table(&mut table);
             let mut decoder_h = HeaderDecoder::new(encoded);
@@ -787,7 +753,7 @@ mod tests {
 
     #[test]
     fn decode_literal_with_name_ref_static() {
-        for (_, encoded, decoded1, decoded2) in &NAME_REF_STATIC {
+        for (_, encoded, decoded1, decoded2) in NAME_REF_STATIC {
             let table = HeaderTable::new(false);
             let mut decoder_h = HeaderDecoder::new(encoded);
             if let HeaderDecoderResult::Headers(result) =
@@ -804,7 +770,7 @@ mod tests {
 
     #[test]
     fn decode_literal_with_name_ref_dynamic() {
-        for (_, encoded, decoded1, decoded2) in &NAME_REF_DYNAMIC {
+        for (_, encoded, decoded1, decoded2) in NAME_REF_DYNAMIC {
             let mut table = HeaderTable::new(false);
             fill_table(&mut table);
             let mut decoder_h = HeaderDecoder::new(encoded);
@@ -822,7 +788,7 @@ mod tests {
 
     #[test]
     fn decode_literal_with_name_ref_dynamic_post() {
-        for (_, encoded, decoded1, decoded2) in &NAME_REF_DYNAMIC_POST {
+        for (_, encoded, decoded1, decoded2) in NAME_REF_DYNAMIC_POST {
             let mut table = HeaderTable::new(false);
             fill_table(&mut table);
             let mut decoder_h = HeaderDecoder::new(encoded);
@@ -840,7 +806,7 @@ mod tests {
 
     #[test]
     fn decode_literal_with_name_ref_dynamic_huffman() {
-        for (_, encoded, decoded1, decoded2) in &NAME_REF_DYNAMIC_HUFFMAN {
+        for (_, encoded, decoded1, decoded2) in NAME_REF_DYNAMIC_HUFFMAN {
             let mut table = HeaderTable::new(false);
             fill_table(&mut table);
             let mut decoder_h = HeaderDecoder::new(encoded);
@@ -886,7 +852,42 @@ mod tests {
     // Test that we are ignoring N-bit.
     #[test]
     fn decode_ignore_n_bit() {
-        for (encoded, decoded1, decoded2) in &TEST_N_BIT {
+        const TEST_N_BIT: &[(&[u8], &str, &str)] = &[
+            (
+                &[
+                    0x02, 0x41, 0x6f, 0x32, 0x0a, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b,
+                    0x65, 0x79,
+                ],
+                "header0",
+                "custom-key",
+            ),
+            (
+                &[
+                    0x02, 0x80, 0x08, 0x0a, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b, 0x65,
+                    0x79,
+                ],
+                "header0",
+                "custom-key",
+            ),
+            (
+                &[
+                    0x0, 0x42, 0x37, 0x03, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b, 0x65,
+                    0x79, 0x0a, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b, 0x65, 0x79,
+                ],
+                "custom-key",
+                "custom-key",
+            ),
+            (
+                &[
+                    0x0, 0x42, 0x3f, 0x01, 0x25, 0xa8, 0x49, 0xe9, 0x5b, 0xa9, 0x7d, 0x7f, 0x88,
+                    0x25, 0xa8, 0x49, 0xe9, 0x5b, 0xa9, 0x7d, 0x7f,
+                ],
+                "custom-key",
+                "custom-key",
+            ),
+        ];
+
+        for (encoded, decoded1, decoded2) in TEST_N_BIT {
             let mut table = HeaderTable::new(false);
             fill_table(&mut table);
             let mut decoder_h = HeaderDecoder::new(encoded);

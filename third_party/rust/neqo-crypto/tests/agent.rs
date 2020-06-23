@@ -141,7 +141,7 @@ fn chacha_client() {
     let mut client = Client::new("server.example").expect("should create client");
     let mut server = Server::new(&["key"]).expect("should create server");
     client
-        .enable_ciphers(&[TLS_CHACHA20_POLY1305_SHA256])
+        .set_ciphers(&[TLS_CHACHA20_POLY1305_SHA256])
         .expect("ciphers set");
 
     connect(&mut client, &mut server);

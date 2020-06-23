@@ -6,7 +6,7 @@
 
 use crate::hframe::{HFrame, HFrameReader};
 use crate::{Error, Res};
-use neqo_common::{qdebug, qinfo};
+use neqo_common::{matches, qdebug, qinfo};
 use neqo_transport::Connection;
 
 /// The remote control stream is responsible only for reading frames. The frames are handled by `Http3Connection`.
@@ -41,6 +41,11 @@ impl ControlStreamRemote {
         }
         self.stream_id = Some(stream_id);
         Ok(())
+    }
+
+    /// Check if `stream_id` is the remote control stream.
+    pub fn is_recv_stream(&self, stream_id: u64) -> bool {
+        matches!(self.stream_id, Some(id) if id == stream_id)
     }
 
     /// Check if a stream is the control stream and read received data.

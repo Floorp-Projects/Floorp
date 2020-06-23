@@ -24,7 +24,7 @@ const PACKET_TYPE_0RTT: u8 = 0x01;
 const PACKET_TYPE_HANDSHAKE: u8 = 0x2;
 const PACKET_TYPE_RETRY: u8 = 0x03;
 
-const PACKET_BIT_LONG: u8 = 0x80;
+pub const PACKET_BIT_LONG: u8 = 0x80;
 const PACKET_BIT_SHORT: u8 = 0x00;
 const PACKET_BIT_KEY_PHASE: u8 = 0x04;
 const PACKET_BIT_FIXED_QUIC: u8 = 0x40;
@@ -634,11 +634,22 @@ impl<'a> PublicPacket<'a> {
                     data: d,
                 })
             } else {
-                Err(Error::DecryptError)
+                Err(Error::KeysNotFound)
             }
         } else {
-            Err(Error::DecryptError)
+            Err(Error::KeysNotFound)
         }
+    }
+
+    pub fn supported_versions(&self) -> Res<Vec<Version>> {
+        assert_eq!(self.packet_type, PacketType::VersionNegotiation);
+        let mut decoder = Decoder::new(&self.data[self.header_len..]);
+        let mut res = Vec::new();
+        while decoder.remaining() > 0 {
+            let version = Version::try_from(Self::opt(decoder.decode_uint(4))?)?;
+            res.push(version);
+        }
+        Ok(res)
     }
 }
 
@@ -1080,5 +1091,23 @@ mod tests {
             PublicPacket::decode_pn(0x3fff_ffff_ffff_ffff, 2, 4),
             0x4000_0000_0000_0002
         );
+    }
+
+    #[test]
+    fn chacha20_sample() {
+        const PACKET: &[u8] = &[
+            0x4c, 0xfe, 0x41, 0x89, 0x65, 0x5e, 0x5c, 0xd5, 0x5c, 0x41, 0xf6, 0x90, 0x80, 0x57,
+            0x5d, 0x79, 0x99, 0xc2, 0x5a, 0x5b, 0xfb,
+        ];
+        fixture_init();
+        let (packet, slice) =
+            PublicPacket::decode(PACKET, &FixedConnectionIdManager::new(0)).unwrap();
+        assert!(slice.is_empty());
+        let decrypted = packet
+            .decrypt(&mut CryptoStates::test_chacha(), now())
+            .unwrap();
+        assert_eq!(decrypted.packet_type(), PacketType::Short);
+        assert_eq!(decrypted.pn(), 654_360_564);
+        assert_eq!(&decrypted[..], &[0x01]);
     }
 }

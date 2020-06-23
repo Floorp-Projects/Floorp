@@ -24,6 +24,7 @@ mod qlog;
 mod qpack_send_buf;
 pub mod reader;
 mod static_table;
+pub mod stats;
 mod table;
 
 pub type Header = (String, String);

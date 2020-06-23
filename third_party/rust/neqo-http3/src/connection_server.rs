@@ -121,17 +121,17 @@ impl Http3ServerHandler {
         while let Some(e) = conn.next_event() {
             qdebug!([self], "check_connection_events - event {:?}.", e);
             match e {
-                ConnectionEvent::NewStream {
-                    stream_id,
-                    stream_type,
-                } => match stream_type {
+                ConnectionEvent::NewStream { stream_id } => match stream_id.stream_type() {
                     StreamType::BiDi => self.base_handler.add_streams(
-                        stream_id,
-                        SendMessage::new(stream_id, Box::new(self.events.clone())),
-                        RecvMessage::new(stream_id, Box::new(self.events.clone()), None),
+                        stream_id.as_u64(),
+                        SendMessage::new(stream_id.as_u64(), Box::new(self.events.clone())),
+                        RecvMessage::new(stream_id.as_u64(), Box::new(self.events.clone()), None),
                     ),
                     StreamType::UniDi => {
-                        if self.base_handler.handle_new_unidi_stream(conn, stream_id)? {
+                        if self
+                            .base_handler
+                            .handle_new_unidi_stream(conn, stream_id.as_u64())?
+                        {
                             return Err(Error::HttpStreamCreation);
                         }
                     }
