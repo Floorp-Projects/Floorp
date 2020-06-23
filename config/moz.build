@@ -50,21 +50,21 @@ if CONFIG['WRAP_STL_INCLUDES']:
         # GeneratedFile.__init__ in python/mozbuild/mozbuild/frontend/data.py
         # might need to be updated accordingly as well.
         template_file = SRCDIR + '/%s-stl-wrapper.template.h' % stl_compiler
-        output_dir = '../dist/stl_wrappers'
+        output_dir = '/dist/stl_wrappers'
         # We have to use a sentinel file as the first file because the
         # file_generate action will create it for us, but we want to create all
         # the files in gen_wrappers()
         outputs = tuple(['stl.sentinel'] + ['%s/%s' % (output_dir, h) for h in stl_headers])
         GeneratedFile(
             *outputs, script='make-stl-wrappers.py', entry_point='gen_wrappers',
-            flags=[output_dir, stl_compiler, template_file] + stl_headers)
+            flags=[TOPOBJDIR + output_dir, stl_compiler, template_file] + stl_headers)
 
     # Wrap <windows.h> to make it easier to use correctly
     # NOTE: If we aren't wrapping STL includes, we're building part of the browser
     # which won't need this wrapper, such as L10N. Just don't try to generate the
     # wrapper in that case.
     if CONFIG['OS_TARGET'] == 'WINNT':
-        GeneratedFile('../dist/stl_wrappers/windows.h',
+        GeneratedFile('/dist/stl_wrappers/windows.h',
                       script='make-windows-h-wrapper.py',
                       entry_point='generate',
                       inputs = ['windows-h-constant.decls.h',
@@ -74,8 +74,8 @@ if CONFIG['WRAP_STL_INCLUDES']:
 
 if CONFIG['WRAP_SYSTEM_INCLUDES']:
     include('system-headers.mozbuild')
-    output_dir = '../dist/system_wrappers'
+    output_dir = '/dist/system_wrappers'
     outputs = tuple(['system-header.sentinel'] + ['%s/%s' % (output_dir, h) for h in stl_headers + system_headers])
     GeneratedFile(*outputs, script='make-system-wrappers.py',
                   entry_point='gen_wrappers',
-                  flags = [output_dir] + stl_headers + system_headers)
+                  flags = [TOPOBJDIR + output_dir] + stl_headers + system_headers)
