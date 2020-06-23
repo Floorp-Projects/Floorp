@@ -30,7 +30,6 @@ add_task(async function test() {
     });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: str,
     });
     EventUtils.synthesizeKey("KEY_Enter");

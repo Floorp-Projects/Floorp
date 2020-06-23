@@ -26,6 +26,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 var UrlbarTestUtils = {
   /**
+   * Running this init allows helpers to access test scope helpers, like Assert
+   * and SimpleTest. Note this initialization is not enforced, thus helpers
+   * should always check _testScope and provide a fallback path.
+   * @param {object} scope The global scope where tests are being run.
+   */
+  init(scope) {
+    this._testScope = scope;
+  },
+
+  /**
    * Waits to a search to be complete.
    * @param {object} win The window containing the urlbar
    * @returns {Promise} Resolved when done.
@@ -55,7 +65,11 @@ var UrlbarTestUtils = {
     selectionStart = -1,
     selectionEnd = -1,
   } = {}) {
-    await new Promise(resolve => waitForFocus(resolve, window));
+    if (this._testScope) {
+      await this._testScope.SimpleTest.promiseFocus(window);
+    } else {
+      await new Promise(resolve => waitForFocus(resolve, window));
+    }
     window.gURLBar.inputField.focus();
     // Using the value setter in some cases may trim and fetch unexpected
     // results, then pick an alternate path.
@@ -282,6 +296,9 @@ var UrlbarTestUtils = {
     if (win.gURLBar.view.isOpen) {
       return;
     }
+    if (this._testScope) {
+      this._testScope.info("Awaiting for the urlbar panel to open");
+    }
     await new Promise(resolve => {
       win.gURLBar.controller.addQueryListener({
         onViewOpen() {
@@ -307,6 +324,9 @@ var UrlbarTestUtils = {
     }
     if (!win.gURLBar.view.isOpen) {
       return;
+    }
+    if (this._testScope) {
+      this._testScope.info("Awaiting for the urlbar panel to close");
     }
     await new Promise(resolve => {
       win.gURLBar.controller.addQueryListener({

@@ -21,7 +21,6 @@ add_task(async function init() {
 add_task(async function downKey() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -50,7 +49,6 @@ add_task(async function downKey() {
 add_task(async function upKey() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -82,7 +80,6 @@ add_task(async function upKey() {
 add_task(async function pageDownKey() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -110,7 +107,6 @@ add_task(async function pageDownKey() {
 add_task(async function pageUpKey() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -138,7 +134,6 @@ add_task(async function pageUpKey() {
 add_task(async function pageDownKeyShowsView() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -152,7 +147,6 @@ add_task(async function pageDownKeyShowsView() {
 add_task(async function pageUpKeyShowsView() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });

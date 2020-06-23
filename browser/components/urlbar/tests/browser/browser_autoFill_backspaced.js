@@ -13,7 +13,6 @@ async function test_autocomplete(data) {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: typed,
     fireInputEvent: true,
   });

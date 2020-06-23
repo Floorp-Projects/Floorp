@@ -21,7 +21,6 @@ add_task(async function test_remove_history() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "from_urlbar",
   });
 
@@ -85,7 +84,6 @@ add_task(async function test_remove_form_history() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
 
@@ -154,7 +152,6 @@ add_task(async function test_remove_bookmark_doesnt() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "from_urlbar",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);

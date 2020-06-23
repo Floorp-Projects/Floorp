@@ -40,7 +40,6 @@ add_task(async function url() {
 add_task(async function userTyping() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
     fireInputEvent: true,
   });
@@ -59,7 +58,6 @@ add_task(async function userTyping() {
 add_task(async function empty() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "",
     fireInputEvent: true,
   });

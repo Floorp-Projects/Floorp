@@ -52,7 +52,6 @@ add_task(async function actionURILosslessDecode() {
   let url = "http://" + urlNoScheme;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: url,
   });
 
@@ -90,7 +89,6 @@ add_task(async function test_resultsDisplayDecoded() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "example",
   });
 
@@ -105,7 +103,6 @@ add_task(async function test_resultsDisplayDecoded() {
 async function checkInput(inputStr) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: inputStr,
   });
 

@@ -16,7 +16,6 @@ async function bumpScore(uri, searchString, counts, useMouseClick = false) {
     for (let i = 0; i < counts.picks; ++i) {
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        waitForFocus: SimpleTest.waitForFocus,
         value: searchString,
       });
       let promise = BrowserTestUtils.waitForDocLoadAndStopIt(
@@ -67,7 +66,6 @@ add_task(async function test_adaptive_with_search_terms() {
   await bumpScore(url2, "site", { visits: 3, picks: 3 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -83,7 +81,6 @@ add_task(async function test_adaptive_with_search_terms() {
   await bumpScore(url2, "si", { visits: 3, picks: 3 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -97,7 +94,6 @@ add_task(async function test_adaptive_with_search_terms() {
   await bumpScore(url2, "si", { visits: 3, picks: 1 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -111,7 +107,6 @@ add_task(async function test_adaptive_with_search_terms() {
   await bumpScore(url2, "si", { visits: 3, picks: 3 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -125,7 +120,6 @@ add_task(async function test_adaptive_with_search_terms() {
   await bumpScore(url2, "site", { visits: 3, picks: 1 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -139,7 +133,6 @@ add_task(async function test_adaptive_with_search_terms() {
   await bumpScore(url2, "site", { visits: 3, picks: 3 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -159,7 +152,6 @@ add_task(async function test_adaptive_with_decay() {
   await bumpScore(url2, "si", { visits: 3, picks: 3 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -174,7 +166,6 @@ add_task(async function test_adaptive_with_decay() {
   await bumpScore(url1, "si", { visits: 3, picks: 3 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -194,7 +185,6 @@ add_task(async function test_adaptive_limited() {
   await bumpScore(url2, "si", { visits: 3, picks: 3 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -209,7 +199,6 @@ add_task(async function test_adaptive_limited() {
   await bumpScore(url1, "si", { visits: 3, picks: 3 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -246,7 +235,6 @@ add_task(async function test_adaptive_limited() {
   let expectedBookmarkIndex = Math.floor(n / 4) + 2;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "site",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(
@@ -293,7 +281,6 @@ add_task(async function test_adaptive_behaviors() {
   });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "site",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -322,7 +309,6 @@ add_task(async function test_adaptive_mouse() {
   await bumpScore(url2, "site", { visits: 3, picks: 1 }, true);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -336,7 +322,6 @@ add_task(async function test_adaptive_mouse() {
   await bumpScore(url2, "site", { visits: 3, picks: 3 }, true);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "si",
   });
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
