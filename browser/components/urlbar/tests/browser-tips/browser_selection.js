@@ -35,7 +35,6 @@ add_task(async function tipIsSecondResult() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus,
   });
 
   Assert.equal(
@@ -144,7 +143,6 @@ add_task(async function tipIsOnlyResult() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus,
   });
 
   Assert.equal(
@@ -229,7 +227,6 @@ add_task(async function tipHasNoHelpButton() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus,
   });
 
   Assert.equal(

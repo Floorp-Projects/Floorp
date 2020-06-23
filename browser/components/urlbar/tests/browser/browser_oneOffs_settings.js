@@ -39,7 +39,6 @@ async function selectSettings(activateFn) {
     async browser => {
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        waitForFocus: SimpleTest.waitForFocus,
         value: "example.com",
       });
       await UrlbarTestUtils.waitForAutocompleteResultAt(

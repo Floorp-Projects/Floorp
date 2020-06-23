@@ -16,7 +16,6 @@ add_task(async function test() {
   // Search for "e".  It should autofill to example.com/.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "e",
     fireInputEvent: true,
   });

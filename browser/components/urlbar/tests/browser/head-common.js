@@ -9,11 +9,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
-  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -32,7 +30,21 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
-SearchTestUtils.init(Assert, registerCleanupFunction);
+XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+  const { UrlbarTestUtils: module } = ChromeUtils.import(
+    "resource://testing-common/UrlbarTestUtils.jsm"
+  );
+  module.init(this);
+  return module;
+});
+
+XPCOMUtils.defineLazyGetter(this, "SearchTestUtils", () => {
+  const { SearchTestUtils: module } = ChromeUtils.import(
+    "resource://testing-common/SearchTestUtils.jsm"
+  );
+  module.init(Assert, registerCleanupFunction);
+  return module;
+});
 
 /**
  * Initializes an HTTP Server, and runs a task with it.

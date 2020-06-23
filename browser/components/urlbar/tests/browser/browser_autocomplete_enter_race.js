@@ -30,7 +30,6 @@ add_task(
   taskWithNewTab(async function test_keyword() {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "keyword bear",
     });
     gURLBar.focus();
@@ -49,7 +48,6 @@ add_task(
   taskWithNewTab(async function test_sametext() {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "example.com",
       fireInputEvent: true,
     });
@@ -76,7 +74,6 @@ add_task(
   taskWithNewTab(async function test_after_empty_search() {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "",
     });
     gURLBar.focus();
@@ -145,7 +142,6 @@ add_task(
     // the user removed text from the end.
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "",
     });
     await UrlbarTestUtils.promisePopupClose(window);

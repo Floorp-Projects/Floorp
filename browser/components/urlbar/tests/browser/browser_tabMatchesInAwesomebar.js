@@ -182,7 +182,6 @@ async function checkAutocompleteResults(expected) {
   info("Searching open pages.");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: RESTRICT_TOKEN_OPENPAGE,
   });
 

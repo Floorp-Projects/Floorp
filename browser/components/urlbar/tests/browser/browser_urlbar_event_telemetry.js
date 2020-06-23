@@ -36,7 +36,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "x",
       fireInputEvent: true,
     });
@@ -63,7 +62,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "multi word query ",
       fireInputEvent: true,
     });
@@ -117,7 +115,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "moz",
       fireInputEvent: true,
     });
@@ -145,7 +142,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "moz",
       fireInputEvent: true,
     });
@@ -198,7 +194,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "kw test",
       fireInputEvent: true,
     });
@@ -276,7 +271,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "example",
       fireInputEvent: true,
     });
@@ -308,7 +302,6 @@ const tests = [
     );
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "exa",
       fireInputEvent: true,
     });
@@ -339,7 +332,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "exa",
       fireInputEvent: true,
     });
@@ -369,7 +361,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "exa",
       fireInputEvent: true,
     });
@@ -399,7 +390,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "foo",
       fireInputEvent: true,
     });
@@ -433,7 +423,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "foo",
       fireInputEvent: true,
     });
@@ -462,7 +451,6 @@ const tests = [
     win.gURLBar.select();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "@",
       fireInputEvent: true,
     });
@@ -737,7 +725,6 @@ const tests = [
     info("Reopen the view: type, blur, focus, confirm.");
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "search",
       fireInputEvent: true,
     });
@@ -785,7 +772,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "x",
       fireInputEvent: true,
     });
@@ -810,7 +796,6 @@ const tests = [
     info("Reopen the view: type, blur, focus, backspace, type, confirm.");
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "search",
       fireInputEvent: true,
     });
@@ -859,7 +844,6 @@ const tests = [
     info("Reopen the view: type, blur, focus, type (overwrite), confirm.");
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "search",
       fireInputEvent: true,
     });
@@ -908,7 +892,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "x",
       fireInputEvent: true,
     });
@@ -1026,7 +1009,6 @@ const noEventTests = [
         let promise = BrowserTestUtils.browserLoaded(browser);
         await UrlbarTestUtils.promiseAutocompleteResultPopup({
           window: win,
-          waitForFocus: SimpleTest.waitForFocus,
           value: "x",
           fireInputEvent: true,
         });
@@ -1046,7 +1028,6 @@ const noEventTests = [
         let promise = BrowserTestUtils.browserLoaded(browser);
         await UrlbarTestUtils.promiseAutocompleteResultPopup({
           window: win,
-          waitForFocus: SimpleTest.waitForFocus,
           value: "x",
           fireInputEvent: true,
         });

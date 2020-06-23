@@ -60,7 +60,6 @@ add_task(async function test_with_input_and_results() {
   // Test paste and go When there's some input and the results pane is open.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
   const url = "http://example.com/";

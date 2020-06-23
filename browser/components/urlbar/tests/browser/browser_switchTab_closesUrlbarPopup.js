@@ -32,7 +32,6 @@ add_task(async function() {
   // Now open the popup.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "",
   });
   // Check that the popup closes when we switch tab.

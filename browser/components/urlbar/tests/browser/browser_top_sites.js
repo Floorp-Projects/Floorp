@@ -45,7 +45,7 @@ async function checkDoesNotOpenOnFocus(win = window) {
   win.gURLBar.blur();
 
   // Focus with the mouse.
-  EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {});
+  EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
   // Because the panel opening may not be immediate, we must wait a bit.
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -421,7 +421,6 @@ add_task(async function topSitesDisabled() {
   // gets cleared.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: privateWin,
-    waitForFocus,
     value: "example",
   });
   privateWin.gURLBar.select();

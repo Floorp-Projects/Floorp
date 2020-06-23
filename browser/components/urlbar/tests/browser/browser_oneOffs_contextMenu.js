@@ -65,7 +65,6 @@ async function searchInTab(checkFn) {
   await BrowserTestUtils.withNewTab({ gBrowser }, async testBrowser => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "foo",
     });
 
@@ -152,7 +151,6 @@ add_task(async function switchDefaultEngine() {
   await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "foo",
     });
 

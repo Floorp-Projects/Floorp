@@ -23,7 +23,6 @@ add_task(async function test_autofill() {
   let typed = "ex";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: typed,
     fireInputEvent: true,
   });
@@ -43,7 +42,6 @@ add_task(async function test_complete_selection() {
   let typed = "ex";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: typed,
     fireInputEvent: true,
   });

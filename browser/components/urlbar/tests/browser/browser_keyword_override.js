@@ -25,7 +25,6 @@ add_task(async function() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "keyword search",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);

@@ -57,7 +57,6 @@ async function runURLBarSearchTest({
     value => {
       return UrlbarTestUtils.promiseAutocompleteResultPopup({
         window: aWindow,
-        waitForFocus,
         value,
       });
     },

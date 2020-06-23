@@ -44,7 +44,6 @@ add_task(async function() {
   let typedValue = "browser_urlbarOneOffs";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: typedValue,
     fireInputEvent: true,
   });
@@ -137,7 +136,6 @@ add_task(async function searchWith() {
   let typedValue = "foo";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: typedValue,
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -179,7 +177,6 @@ add_task(async function oneOffClick() {
   let typedValue = "foo.bar";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: typedValue,
   });
   await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -207,7 +204,6 @@ add_task(async function oneOffReturn() {
   let typedValue = "foo.bar";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: typedValue,
     fireInputEvent: true,
   });
@@ -244,7 +240,6 @@ add_task(async function hiddenOneOffs() {
   let typedValue = "foo";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: typedValue,
     fireInputEvent: true,
   });
@@ -266,7 +261,6 @@ add_task(async function hiddenWhenUsingSearchAlias() {
   let typedValue = "@example";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: typedValue,
     fireInputEvent: true,
   });
@@ -281,7 +275,6 @@ add_task(async function hiddenWhenUsingSearchAlias() {
   typedValue = "not an engine alias";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: typedValue,
     fireInputEvent: true,
   });

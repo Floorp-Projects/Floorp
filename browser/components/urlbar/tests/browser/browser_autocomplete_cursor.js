@@ -14,7 +14,6 @@ add_task(async function test_windowSwitch() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "www.mozilla.org",
   });
   await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);

@@ -40,7 +40,6 @@ add_task(async function setup() {
 async function testSearch(win, expectedName, expectedBaseUrl) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: win,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "open a search",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);

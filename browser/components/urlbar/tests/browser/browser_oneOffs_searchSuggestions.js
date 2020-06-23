@@ -62,7 +62,6 @@ async function withSuggestionOnce(useFormHistory, testFn) {
       window,
       value,
       fireInputEvent: true,
-      waitForFocus: SimpleTest.waitForFocus,
     });
     let index = await UrlbarTestUtils.promiseSuggestionsPresent(window);
     await assertState({
@@ -237,7 +236,6 @@ add_task(async function overridden_engine_not_reused() {
     let typedValue = "foo";
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: typedValue,
       fireInputEvent: true,
     });
@@ -272,7 +270,6 @@ add_task(async function overridden_engine_not_reused() {
     await UrlbarTestUtils.promisePopupClose(window);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: typedValue,
       fireInputEvent: true,
     });

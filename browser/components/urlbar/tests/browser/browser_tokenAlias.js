@@ -322,7 +322,6 @@ add_task(async function enterAutofillsAlias() {
   for (let value of [ALIAS.substring(0, ALIAS.length - 1), ALIAS]) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus,
       value,
       selectionStart: value.length,
       selectionEnd: value.length,
@@ -356,7 +355,6 @@ async function doSimpleTest(revertBetweenSteps) {
   // "@tes" -- not an alias, no highlight
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: ALIAS.substr(0, ALIAS.length - 1),
     fireInputEvent: true,
   });
@@ -371,7 +369,6 @@ async function doSimpleTest(revertBetweenSteps) {
   // "@test" -- alias, highlight
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: ALIAS,
     fireInputEvent: true,
   });
@@ -386,7 +383,6 @@ async function doSimpleTest(revertBetweenSteps) {
   // "@test foo" -- alias, highlight
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: ALIAS + " foo",
     fireInputEvent: true,
   });
@@ -401,7 +397,6 @@ async function doSimpleTest(revertBetweenSteps) {
   // "@test" -- alias, highlight
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: ALIAS,
     fireInputEvent: true,
   });
@@ -416,7 +411,6 @@ async function doSimpleTest(revertBetweenSteps) {
   // "@tes" -- not an alias, no highlight
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: ALIAS.substr(0, ALIAS.length - 1),
     fireInputEvent: true,
   });
@@ -485,7 +479,6 @@ function assertHighlighted(highlighted, expectedAlias) {
 add_task(async function hiddenEngine() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "@",
     fireInputEvent: true,
   });
@@ -513,7 +506,6 @@ add_task(async function hiddenEngine() {
   defaultEngine.hidden = true;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "@",
     fireInputEvent: true,
   });
@@ -544,7 +536,6 @@ add_task(async function hiddenEngine() {
 add_task(async function hiddenEngine() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "@",
     fireInptuEvent: true,
   });
@@ -572,7 +563,6 @@ add_task(async function hiddenEngine() {
   defaultEngine.hidden = true;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "@",
     fireInputEvent: true,
   });

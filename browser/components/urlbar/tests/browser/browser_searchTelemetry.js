@@ -46,7 +46,6 @@ add_task(async function heuristicResultMouse() {
     gURLBar.focus();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "heuristicResult",
     });
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -70,7 +69,6 @@ add_task(async function heuristicResultKeyboard() {
     gURLBar.focus();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "heuristicResult",
     });
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -93,7 +91,6 @@ add_task(async function searchSuggestionMouse() {
     gURLBar.focus();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "searchSuggestion",
     });
     let idx = await getFirstSuggestionIndex();
@@ -116,7 +113,6 @@ add_task(async function searchSuggestionKeyboard() {
     gURLBar.focus();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "searchSuggestion",
     });
     let idx = await getFirstSuggestionIndex();
@@ -139,7 +135,6 @@ add_task(async function formHistoryMouse() {
     gURLBar.focus();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "foo",
     });
     let index = await getFirstSuggestionIndex();
@@ -166,7 +161,6 @@ add_task(async function formHistoryKeyboard() {
     gURLBar.focus();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "foo",
     });
     let index = await getFirstSuggestionIndex();

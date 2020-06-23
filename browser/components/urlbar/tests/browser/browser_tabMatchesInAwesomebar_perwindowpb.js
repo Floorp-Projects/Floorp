@@ -86,7 +86,6 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
   let searchString = TEST_URL;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: aDestWindow,
-    waitForFocus: SimpleTest.waitForFocus,
     value: searchString,
   });
 

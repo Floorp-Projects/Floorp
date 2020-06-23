@@ -6,10 +6,6 @@
 const exampleSearch = "f oo  bar";
 const exampleUrl = "https://example.com/1";
 
-const { UrlbarTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlbarTestUtils.jsm"
-);
-
 function click(target) {
   let promise = BrowserTestUtils.waitForEvent(target, "click");
   EventUtils.synthesizeMouseAtCenter(target, {}, target.ownerGlobal);

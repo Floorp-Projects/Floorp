@@ -10,7 +10,6 @@
 async function promise_first_result(inputText) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: inputText,
   });
 

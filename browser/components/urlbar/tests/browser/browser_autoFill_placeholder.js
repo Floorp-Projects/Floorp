@@ -24,7 +24,6 @@ add_task(async function origin() {
   // initial value.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "ex",
     fireInputEvent: true,
   });
@@ -58,7 +57,6 @@ add_task(async function tokenAlias() {
   // initial value.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "@__ex",
     fireInputEvent: true,
   });
@@ -83,7 +81,6 @@ add_task(async function noMatch1() {
   // initial value.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "ex",
     fireInputEvent: true,
   });
@@ -106,7 +103,6 @@ add_task(async function noMatch1() {
   // won't happen.  It's not important for this test to check that.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "ex",
     fireInputEvent: true,
   });
@@ -135,7 +131,6 @@ add_task(async function noMatch2() {
   // initial value.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "moz",
     fireInputEvent: true,
   });
@@ -200,7 +195,6 @@ add_task(async function clear_placeholder_for_keyword_or_alias() {
   // initial value.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "e",
     fireInputEvent: true,
   });

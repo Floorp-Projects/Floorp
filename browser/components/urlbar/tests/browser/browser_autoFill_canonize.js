@@ -11,7 +11,6 @@ async function test_autocomplete(data) {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: typed,
   });
   Assert.equal(gURLBar.value, autofilled, "autofilled value is as expected");

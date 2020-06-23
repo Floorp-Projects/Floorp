@@ -33,7 +33,6 @@ add_task(async function setup() {
       info("Search keyword, then press enter");
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        waitForFocus: SimpleTest.waitForFocus,
         value: "bm",
       });
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -45,7 +44,6 @@ add_task(async function setup() {
       info("Search keyword with searchstring, then press enter");
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        waitForFocus: SimpleTest.waitForFocus,
         value: "bm a",
       });
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -56,7 +54,6 @@ add_task(async function setup() {
     async function() {
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        waitForFocus: SimpleTest.waitForFocus,
         value: "bm",
       });
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
@@ -69,7 +66,6 @@ add_task(async function setup() {
       info("Search keyword with searchstring, then click");
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        waitForFocus: SimpleTest.waitForFocus,
         value: "bm a",
       });
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);

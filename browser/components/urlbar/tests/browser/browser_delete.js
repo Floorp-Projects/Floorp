@@ -37,7 +37,6 @@ function sendDelete() {
 async function testDelete() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "bug1105244",
   });
 

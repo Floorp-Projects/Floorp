@@ -20,7 +20,6 @@ add_task(async function tabWithSearchString() {
   info("Tab with a search string");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -28,7 +27,6 @@ add_task(async function tabWithSearchString() {
   info("Reverse Tab with a search string");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -39,7 +37,6 @@ add_task(async function tabNoSearchString() {
   info("Tab without a search string");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "",
     fireInputEvent: true,
   });
@@ -47,7 +44,6 @@ add_task(async function tabNoSearchString() {
   info("Reverse Tab without a search string");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "",
     fireInputEvent: true,
   });
@@ -58,7 +54,6 @@ add_task(async function tabAfterBlur() {
   info("Tab after closing the view");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -108,7 +103,6 @@ add_task(async function tabRetainedResultMouseFocus() {
   info("Tab after retained results with mouse focus");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -124,7 +118,6 @@ add_task(async function tabRetainedResultsKeyboardFocus() {
   info("Tab after retained results with keyboard focus");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });
@@ -140,7 +133,6 @@ add_task(async function tabRetainedResults() {
   info("Tab with a search string after mouse focus.");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "exam",
     fireInputEvent: true,
   });

@@ -94,7 +94,7 @@ add_task(async function multipleInterventionsInOneEngagement() {
   );
 
   // Blur the urlbar so that the engagement is ended.
-  await UrlbarTestUtils.promisePopupClose(window, () => window.gURLBar.blur());
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
   // We should only record one impression for the Refresh tip. Although it was
@@ -120,7 +120,7 @@ add_task(async function tipsAreEnglishOnly() {
     result.payload.type,
     UrlbarProviderInterventions.TIP_TYPE.REFRESH
   );
-  await UrlbarTestUtils.promisePopupClose(window, () => window.gURLBar.blur());
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 
   // We will need to fetch new engines when we switch locales.
   let searchReinit = SearchTestUtils.promiseSearchNotification(
@@ -148,7 +148,7 @@ add_task(async function tipsAreEnglishOnly() {
 
   // Interventions should no longer work in the new locale.
   await awaitNoTip(SEARCH_STRINGS.CLEAR, window);
-  await UrlbarTestUtils.promisePopupClose(window, () => window.gURLBar.blur());
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 });
 
 /**

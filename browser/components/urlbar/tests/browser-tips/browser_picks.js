@@ -69,7 +69,6 @@ add_task(async function mouse_insideTipButNotOnButtons() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus,
     fireInputEvent: true,
   });
   let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
@@ -155,7 +154,6 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus,
     fireInputEvent: true,
   });
   let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);

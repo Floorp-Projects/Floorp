@@ -20,7 +20,7 @@ async function checkOpensOnFocus(win = window) {
 
   // Focus with the mouse.
   await UrlbarTestUtils.promisePopupOpen(win, () => {
-    EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {});
+    EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
   });
   await UrlbarTestUtils.promisePopupClose(win, () => {
     win.gURLBar.blur();
@@ -56,7 +56,7 @@ add_task(async function newtabAndHome() {
       async browser => {
         // We don't wait for load, but we must ensure to be on the expected url.
         await TestUtils.waitForCondition(
-          () => window.gBrowser.currentURI.spec == url,
+          () => gBrowser.currentURI.spec == url,
           "Ensure we're on the expected page"
         );
         await checkOpensOnFocus();

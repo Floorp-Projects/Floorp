@@ -15,7 +15,6 @@ add_task(async function() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "m",
   });
   assertOpen();
@@ -27,7 +26,6 @@ add_task(async function() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "m",
   });
   assertOpen();
