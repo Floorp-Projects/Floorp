@@ -56,33 +56,39 @@ nsresult HttpConnectionMgrParent::UpdateRequestTokenBucket(
   return NS_OK;
 }
 
-nsresult HttpConnectionMgrParent::DoShiftReloadConnectionCleanup(
+nsresult HttpConnectionMgrParent::DoShiftReloadConnectionCleanup() {
+  // Do nothing here. DoShiftReloadConnectionCleanup() will be triggered by
+  // observer notification or pref change in socket process.
+  return NS_OK;
+}
+
+nsresult HttpConnectionMgrParent::DoShiftReloadConnectionCleanupWithConnInfo(
     nsHttpConnectionInfo* aCi) {
-  Maybe<HttpConnectionInfoCloneArgs> optionArgs;
-  if (aCi) {
-    optionArgs.emplace();
-    nsHttpConnectionInfo::SerializeHttpConnectionInfo(aCi, optionArgs.ref());
+  if (!aCi) {
+    return NS_ERROR_INVALID_ARG;
   }
 
+  HttpConnectionInfoCloneArgs connInfoArgs;
+  nsHttpConnectionInfo::SerializeHttpConnectionInfo(aCi, connInfoArgs);
+
   RefPtr<HttpConnectionMgrParent> self = this;
-  auto task = [self, optionArgs{std::move(optionArgs)}]() {
-    Unused << self->SendDoShiftReloadConnectionCleanup(optionArgs);
+  auto task = [self, connInfoArgs{std::move(connInfoArgs)}]() {
+    Unused << self->SendDoShiftReloadConnectionCleanupWithConnInfo(
+        connInfoArgs);
   };
   gIOService->CallOrWaitForSocketProcess(std::move(task));
   return NS_OK;
 }
 
 nsresult HttpConnectionMgrParent::PruneDeadConnections() {
-  RefPtr<HttpConnectionMgrParent> self = this;
-  auto task = [self]() { Unused << self->SendPruneDeadConnections(); };
-  gIOService->CallOrWaitForSocketProcess(std::move(task));
+  // Do nothing here. PruneDeadConnections() will be triggered by
+  // observer notification or pref change in socket process.
   return NS_OK;
 }
 
 void HttpConnectionMgrParent::AbortAndCloseAllConnections(int32_t, ARefBase*) {
-  RefPtr<HttpConnectionMgrParent> self = this;
-  auto task = [self]() { Unused << self->SendAbortAndCloseAllConnections(); };
-  gIOService->CallOrWaitForSocketProcess(std::move(task));
+  // Do nothing here. AbortAndCloseAllConnections() will be triggered by
+  // observer notification in socket process.
 }
 
 nsresult HttpConnectionMgrParent::UpdateParam(nsParamName name,
@@ -228,9 +234,8 @@ nsresult HttpConnectionMgrParent::SpeculativeConnect(
 }
 
 nsresult HttpConnectionMgrParent::VerifyTraffic() {
-  RefPtr<HttpConnectionMgrParent> self = this;
-  auto task = [self]() { Unused << self->SendVerifyTraffic(); };
-  gIOService->CallOrWaitForSocketProcess(std::move(task));
+  // Do nothing here. VerifyTraffic() will be triggered by observer notification
+  // in socket process.
   return NS_OK;
 }
 
@@ -239,9 +244,8 @@ void HttpConnectionMgrParent::BlacklistSpdy(const nsHttpConnectionInfo* ci) {
 }
 
 nsresult HttpConnectionMgrParent::ClearConnectionHistory() {
-  RefPtr<HttpConnectionMgrParent> self = this;
-  auto task = [self]() { Unused << self->SendClearConnectionHistory(); };
-  gIOService->CallOrWaitForSocketProcess(std::move(task));
+  // Do nothing here. ClearConnectionHistory() will be triggered by
+  // observer notification in socket process.
   return NS_OK;
 }
 

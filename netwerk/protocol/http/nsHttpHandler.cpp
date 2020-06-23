@@ -547,7 +547,8 @@ nsresult nsHttpHandler::Init() {
       static_cast<nsISupports*>(static_cast<void*>(this)),
       NS_HTTP_STARTUP_TOPIC);
 
-  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  nsCOMPtr<nsIObserverService> obsService =
+      static_cast<nsIObserverService*>(gIOService);
   if (obsService) {
     // register the handler object as a weak callback as we don't need to worry
     // about shutdown ordering.
@@ -1136,7 +1137,7 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
   if (MULTI_PREF_CHANGED(SECURITY_PREFIX)) {
     LOG(("nsHttpHandler::PrefsChanged Security Pref Changed %s\n", pref));
     if (mConnMgr) {
-      rv = mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
+      rv = mConnMgr->DoShiftReloadConnectionCleanup();
       if (NS_FAILED(rv)) {
         LOG(
             ("nsHttpHandler::PrefsChanged "
@@ -2285,23 +2286,27 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     // depend on this value.
     mSessionStartTime = NowInSeconds();
 
-    if (!StaticPrefs::privacy_donottrackheader_enabled()) {
-      Telemetry::Accumulate(Telemetry::DNT_USAGE, 2);
-    } else {
-      Telemetry::Accumulate(Telemetry::DNT_USAGE, 1);
-    }
+    // Since nsHttpHandler::Observe() is also called in socket process, we don't
+    // want to do telemetry twice.
+    if (XRE_IsParentProcess()) {
+      if (!StaticPrefs::privacy_donottrackheader_enabled()) {
+        Telemetry::Accumulate(Telemetry::DNT_USAGE, 2);
+      } else {
+        Telemetry::Accumulate(Telemetry::DNT_USAGE, 1);
+      }
 
-    if (UseFastOpen()) {
-      Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 0);
-    } else if (!mFastOpenSupported) {
-      Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 1);
-    } else if (!mUseFastOpen) {
-      Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 2);
-    } else if (mFastOpenConsecutiveFailureCounter >=
-               mFastOpenConsecutiveFailureLimit) {
-      Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 3);
-    } else {
-      Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 4);
+      if (UseFastOpen()) {
+        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 0);
+      } else if (!mFastOpenSupported) {
+        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 1);
+      } else if (!mUseFastOpen) {
+        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 2);
+      } else if (mFastOpenConsecutiveFailureCounter >=
+                 mFastOpenConsecutiveFailureLimit) {
+        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 3);
+      } else {
+        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 4);
+      }
     }
   } else if (!strcmp(topic, "profile-change-net-restore")) {
     // initialize connection manager
@@ -2325,7 +2330,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     }
   } else if (!strcmp(topic, "net:prune-all-connections")) {
     if (mConnMgr) {
-      rv = mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
+      rv = mConnMgr->DoShiftReloadConnectionCleanup();
       if (NS_FAILED(rv)) {
         LOG(("    DoShiftReloadConnectionCleanup failed (%08x)\n",
              static_cast<uint32_t>(rv)));
@@ -2350,9 +2355,9 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
   } else if (!strcmp(topic, "browser:purge-session-history")) {
     if (mConnMgr) {
       Unused << mConnMgr->ClearConnectionHistory();
-      if (mAltSvcCache) {
-        mAltSvcCache->ClearAltServiceMappings();
-      }
+    }
+    if (mAltSvcCache) {
+      mAltSvcCache->ClearAltServiceMappings();
     }
   } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
     nsAutoCString converted = NS_ConvertUTF16toUTF8(data);
@@ -2373,26 +2378,29 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     // going to the background on android means we should close
     // down idle connections for power conservation
     if (mConnMgr) {
-      rv = mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
+      rv = mConnMgr->DoShiftReloadConnectionCleanup();
       if (NS_FAILED(rv)) {
         LOG(("    DoShiftReloadConnectionCleanup failed (%08x)\n",
              static_cast<uint32_t>(rv)));
       }
     }
   } else if (!strcmp(topic, "net:current-toplevel-outer-content-windowid")) {
-    nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(subject);
-    MOZ_RELEASE_ASSERT(wrapper);
+    // The window id will be updated by HttpConnectionMgrParent.
+    if (XRE_IsParentProcess()) {
+      nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(subject);
+      MOZ_RELEASE_ASSERT(wrapper);
 
-    uint64_t windowId = 0;
-    wrapper->GetData(&windowId);
-    MOZ_ASSERT(windowId);
+      uint64_t windowId = 0;
+      wrapper->GetData(&windowId);
+      MOZ_ASSERT(windowId);
 
-    static uint64_t sCurrentTopLevelOuterContentWindowId = 0;
-    if (sCurrentTopLevelOuterContentWindowId != windowId) {
-      sCurrentTopLevelOuterContentWindowId = windowId;
-      if (mConnMgr) {
-        mConnMgr->UpdateCurrentTopLevelOuterContentWindowId(
-            sCurrentTopLevelOuterContentWindowId);
+      static uint64_t sCurrentTopLevelOuterContentWindowId = 0;
+      if (sCurrentTopLevelOuterContentWindowId != windowId) {
+        sCurrentTopLevelOuterContentWindowId = windowId;
+        if (mConnMgr) {
+          mConnMgr->UpdateCurrentTopLevelOuterContentWindowId(
+              sCurrentTopLevelOuterContentWindowId);
+        }
       }
     }
   } else if (!strcmp(topic, "captive-portal-login") ||
@@ -2451,8 +2459,8 @@ static bool CanEnableSpeculativeConnect() {
 void nsHttpHandler::MaybeEnableSpeculativeConnect() {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
-  // We don't need to and can't check this in the child process.
-  if (IsNeckoChild()) {
+  // We don't need to and can't check this in the child and socket process.
+  if (!XRE_IsParentProcess()) {
     return;
   }
 
@@ -2870,9 +2878,10 @@ nsresult nsHttpHandler::CompleteUpgrade(
   return mConnMgr->CompleteUpgrade(aTrans, aUpgradeListener);
 }
 
-nsresult nsHttpHandler::DoShiftReloadConnectionCleanup(
+nsresult nsHttpHandler::DoShiftReloadConnectionCleanupWithConnInfo(
     nsHttpConnectionInfo* aCi) {
-  return mConnMgr->DoShiftReloadConnectionCleanup(aCi);
+  MOZ_ASSERT(aCi);
+  return mConnMgr->DoShiftReloadConnectionCleanupWithConnInfo(aCi);
 }
 
 void nsHttpHandler::ClearHostMapping(nsHttpConnectionInfo* aConnInfo) {

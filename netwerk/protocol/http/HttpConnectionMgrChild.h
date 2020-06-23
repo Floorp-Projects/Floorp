@@ -21,10 +21,8 @@ class HttpConnectionMgrChild final : public PHttpConnectionMgrChild {
   explicit HttpConnectionMgrChild();
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvDoShiftReloadConnectionCleanup(
-      const Maybe<HttpConnectionInfoCloneArgs>& aArgs);
-  mozilla::ipc::IPCResult RecvPruneDeadConnections();
-  mozilla::ipc::IPCResult RecvAbortAndCloseAllConnections();
+  mozilla::ipc::IPCResult RecvDoShiftReloadConnectionCleanupWithConnInfo(
+      const HttpConnectionInfoCloneArgs& aArgs);
   mozilla::ipc::IPCResult RecvUpdateCurrentTopLevelOuterContentWindowId(
       const uint64_t& aWindowId);
   mozilla::ipc::IPCResult RecvAddTransaction(PHttpTransactionChild* aTrans,
@@ -38,8 +36,6 @@ class HttpConnectionMgrChild final : public PHttpConnectionMgrChild {
       PHttpTransactionChild* aTrans, const uint32_t& aClassOfService);
   mozilla::ipc::IPCResult RecvCancelTransaction(PHttpTransactionChild* aTrans,
                                                 const nsresult& aReason);
-  mozilla::ipc::IPCResult RecvVerifyTraffic();
-  mozilla::ipc::IPCResult RecvClearConnectionHistory();
   mozilla::ipc::IPCResult RecvSpeculativeConnect(
       HttpConnectionInfoCloneArgs aConnInfo,
       Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps,
