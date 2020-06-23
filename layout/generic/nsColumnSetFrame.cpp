@@ -553,13 +553,12 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
   const nscoord computedBSize =
       aReflowInput.mParentReflowInput->ComputedBSize();
-  int columnCount = 0;
   nscoord contentBEnd = 0;
   bool reflowNext = false;
 
   while (child) {
     const bool isMeasuringFeasibleContentBSize =
-        aUnboundedLastColumn && columnCount == aConfig.mUsedColCount - 1 &&
+        aUnboundedLastColumn && colData.mColCount == aConfig.mUsedColCount &&
         aConfig.mIsBalancing;
 
     // Try to skip reflowing the child. We can't skip if the child is dirty. We
@@ -644,7 +643,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       childContentBEnd = nsLayoutUtils::CalculateContentBEnd(wm, child);
 
       COLUMN_SET_LOG("%s: Skipping child #%d %p (incremental %d): status=%s",
-                     __func__, columnCount, child, skipIncremental,
+                     __func__, colData.mColCount, child, skipIncremental,
                      ToString(aStatus).c_str());
     } else {
       LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColMaxBSize);
@@ -674,7 +673,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
       COLUMN_SET_LOG(
           "%s: Reflowing child #%d %p: availSize=(%d,%d), kidCBSize=(%d,%d)",
-          __func__, columnCount, child, availSize.ISize(wm),
+          __func__, colData.mColCount, child, availSize.ISize(wm),
           availSize.BSize(wm), kidCBSize.ISize(wm), kidCBSize.BSize(wm));
 
       // Note if the column's next in flow is not being changed by this
@@ -740,7 +739,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       COLUMN_SET_LOG(
           "%s: Reflowed child #%d %p: status=%s, desiredSize=(%d,%d), "
           "childContentBEnd=%d, CarriedOutBEndMargin=%d (ignored)",
-          __func__, columnCount, child, ToString(aStatus).c_str(),
+          __func__, colData.mColCount, child, ToString(aStatus).c_str(),
           kidDesiredSize.ISize(wm), kidDesiredSize.BSize(wm), childContentBEnd,
           kidDesiredSize.mCarriedOutBEndMargin.get());
     }
@@ -834,7 +833,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     //
     // Put simply, if either one of the above conditions is not met, we are
     // going to create more overflow columns until all our children are fit.
-    if (columnCount >= aConfig.mUsedColCount - 1 &&
+    if (colData.mColCount >= aConfig.mUsedColCount &&
         (aConfig.mIsBalancing ||
          (!aConfig.mForceAuto &&
           !aReflowInput.mFlags.mColumnSetWrapperHasNoBSizeLeft))) {
@@ -871,7 +870,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
     // Advance to the next column
     child = child->GetNextSibling();
-    ++columnCount;
+    ++colData.mColCount;
 
     if (child) {
       childOrigin.I(wm) += aConfig.mColISize + aConfig.mColGap;
@@ -1015,7 +1014,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
       // column can ever be feasible. (We might be able to reduce the
       // block-size of a non-last column by moving content to a later column,
       // but we can't do that with the last column.)
-      if (mFrames.GetLength() == aConfig.mUsedColCount) {
+      if (aColData.mColCount == aConfig.mUsedColCount) {
         aConfig.mKnownInfeasibleBSize =
             std::max(aConfig.mKnownInfeasibleBSize, aColData.mLastBSize - 1);
       }

@@ -139,6 +139,10 @@ class nsColumnSetFrame final : public nsContainerFrame {
     // their available block-size
     nscoord mMaxOverflowingBSize = 0;
 
+    // The number of columns (starting from 1 because we have at least one
+    // column). It can be less than ReflowConfig::mUsedColCount.
+    int32_t mColCount = 1;
+
     // This flag determines whether the last reflow of children exceeded the
     // computed block-size of the column set frame. If so, we set the bSize to
     // this maximum allowable bSize, and continue reflow without balancing.
