@@ -426,8 +426,24 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
 
     void Initialize();
 
+    /**
+     * @param aDepth the distance (number of `GetParent` calls) from aNode to
+     *               aRange's closest common inclusive ancestor.
+     */
     nsresult SerializeRangeNodes(const nsRange* aRange, nsINode* aNode,
                                  int32_t aDepth);
+
+    /**
+     * Serialize aContent's children from aStartOffset to aEndOffset.
+     *
+     * @param aDepth the distance (number of `GetParent` calls) from aContent to
+     *               aRange's closest common inclusive ancestor.
+     */
+    [[nodiscard]] nsresult SerializeChildrenOfContent(nsIContent& aContent,
+                                                      int32_t aStartOffset,
+                                                      int32_t aEndOffset,
+                                                      const nsRange* aRange,
+                                                      int32_t aDepth);
 
     nsresult SerializeRangeToString(const nsRange* aRange);
 
@@ -987,6 +1003,7 @@ nsresult nsDocumentEncoder::NodeSerializer::SerializeTextNode(
 nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
     const nsRange* const aRange, nsINode* const aNode, const int32_t aDepth) {
   MOZ_ASSERT(aDepth >= 0);
+  MOZ_ASSERT(aRange);
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
@@ -1085,29 +1102,10 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
       }
 
       if (endOffset) {
-        // serialize the children of this node that are in the range
-        nsIContent* childAsNode = content->GetFirstChild();
-        int32_t j = 0;
-
-        for (; j < startOffset && childAsNode; ++j) {
-          childAsNode = childAsNode->GetNextSibling();
-        }
-
-        MOZ_ASSERT(j == startOffset);
-
-        for (; childAsNode && j < endOffset; ++j) {
-          if ((j == startOffset) || (j == endOffset - 1)) {
-            rv = SerializeRangeNodes(aRange, childAsNode, aDepth + 1);
-          } else {
-            rv = mNodeSerializer.SerializeToStringRecursive(
-                childAsNode, NodeSerializer::SerializeRoot::eYes);
-          }
-
-          NS_ENSURE_SUCCESS(rv, rv);
-          childAsNode = childAsNode->GetNextSibling();
-        }
+        rv = SerializeChildrenOfContent(*content, startOffset, endOffset,
+                                        aRange, aDepth);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
-
       // serialize the end of this node
       if (aNode != mClosestCommonInclusiveAncestorOfRange) {
         rv = mNodeSerializer.SerializeNodeEnd(*aNode);
@@ -1115,6 +1113,38 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
       }
     }
   }
+  return NS_OK;
+}
+
+nsresult nsDocumentEncoder::RangeSerializer::SerializeChildrenOfContent(
+    nsIContent& aContent, int32_t aStartOffset, int32_t aEndOffset,
+    const nsRange* aRange, int32_t aDepth) {
+  // serialize the children of this node that are in the range
+  nsIContent* childAsNode = aContent.GetFirstChild();
+  int32_t j = 0;
+
+  for (; j < aStartOffset && childAsNode; ++j) {
+    childAsNode = childAsNode->GetNextSibling();
+  }
+
+  MOZ_ASSERT(j == aStartOffset);
+
+  for (; childAsNode && j < aEndOffset; ++j) {
+    nsresult rv{NS_OK};
+    if ((j == aStartOffset) || (j == aEndOffset - 1)) {
+      rv = SerializeRangeNodes(aRange, childAsNode, aDepth + 1);
+    } else {
+      rv = mNodeSerializer.SerializeToStringRecursive(
+          childAsNode, NodeSerializer::SerializeRoot::eYes);
+    }
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    childAsNode = childAsNode->GetNextSibling();
+  }
+
   return NS_OK;
 }
 
