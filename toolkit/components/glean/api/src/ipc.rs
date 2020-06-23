@@ -8,6 +8,8 @@ use crate::metrics::CommonMetricData;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+#[cfg(not(feature = "with_gecko"))]
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 #[cfg(feature = "with_gecko")]
 use {
@@ -73,9 +75,46 @@ pub fn need_ipc() -> bool {
     PROCESS_TYPE.load(Ordering::Relaxed) != nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32
 }
 
+/// An RAII that, on drop, restores the value used to determine whether FOG
+/// needs IPC. Used in tests.
+/// ```rust,ignore
+/// #[test]
+/// fn test_need_ipc_raii() {
+///     assert!(false == ipc::need_ipc());
+///     {
+///         let _raii = ipc::test_set_need_ipc(true);
+///         assert!(ipc::need_ipc());
+///     }
+///     assert!(false == ipc::need_ipc());
+/// }
+/// ```
+#[cfg(not(feature = "with_gecko"))]
+pub struct TestNeedIpcRAII {
+    prev_value: bool,
+}
+
+#[cfg(not(feature = "with_gecko"))]
+impl Drop for TestNeedIpcRAII {
+    fn drop(&mut self) {
+        TEST_NEED_IPC.store(self.prev_value, Ordering::Relaxed);
+    }
+}
+
+#[cfg(not(feature = "with_gecko"))]
+static TEST_NEED_IPC: AtomicBool = AtomicBool::new(false);
+
+/// Test-only API for telling FOG to use IPC mechanisms even if the test has
+/// only the one process. See TestNeedIpcRAII for an example.
+#[cfg(not(feature = "with_gecko"))]
+pub fn test_set_need_ipc(need_ipc: bool) -> TestNeedIpcRAII {
+    TestNeedIpcRAII {
+        prev_value: TEST_NEED_IPC.swap(need_ipc, Ordering::Relaxed),
+    }
+}
+
 #[cfg(not(feature = "with_gecko"))]
 pub fn need_ipc() -> bool {
-    false
+    TEST_NEED_IPC.load(Ordering::Relaxed)
 }
 
 pub fn take_buf() -> Option<Vec<u8>> {
