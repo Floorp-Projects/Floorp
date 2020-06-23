@@ -40,6 +40,16 @@ class Pool extends EventEmitter {
     return this.conn.poolFor(this.actorID);
   }
 
+  /**
+   * A pool is at the top of its pool hierarchy if it has:
+   * - no parent
+   * - or it is its own parent
+   */
+  isTopPool() {
+    const parent = this.getParent();
+    return !parent || parent === this;
+  }
+
   poolFor(actorID) {
     return this.conn.poolFor(actorID);
   }
