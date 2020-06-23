@@ -338,6 +338,12 @@ class nsContentUtils {
   static nsINode* GetCrossDocParentNode(nsINode* aChild);
 
   /**
+   * Like GetCrossDocParentNode, but skips any cross-process parent frames and
+   * continues with the nearest in-process frame in the hierarchy.
+   */
+  static nsINode* GetNearestInProcessCrossDocParentNode(nsINode* aChild);
+
+  /**
    * Similar to nsINode::IsInclusiveDescendantOf, except will treat an
    * HTMLTemplateElement or ShadowRoot as an ancestor of things in the
    * corresponding DocumentFragment. See the concept of "host-including
