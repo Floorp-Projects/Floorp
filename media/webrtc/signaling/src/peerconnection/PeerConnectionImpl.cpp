@@ -1831,6 +1831,11 @@ nsresult PeerConnectionImpl::DisablePacketDump(unsigned long level,
   return NS_OK;
 }
 
+void PeerConnectionImpl::StampTimecard(const char* aEvent) {
+  MOZ_ASSERT(NS_IsMainThread());
+  STAMP_TIMECARD(mTimeCard, aEvent);
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::ReplaceTrackNoRenegotiation(TransceiverImpl& aTransceiver,
                                                 MediaStreamTrack* aWithTrack) {
