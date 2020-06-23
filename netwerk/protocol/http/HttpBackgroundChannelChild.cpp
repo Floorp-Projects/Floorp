@@ -83,11 +83,12 @@ bool HttpBackgroundChannelChild::ChannelClosed() {
   return !mChannelChild;
 }
 
-void HttpBackgroundChannelChild::OnStartRequestReceived() {
+void HttpBackgroundChannelChild::OnStartRequestReceived(
+    Maybe<uint32_t> aMultiPartID) {
   LOG(("HttpBackgroundChannelChild::OnStartRequestReceived [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
   MOZ_ASSERT(mChannelChild);
-  MOZ_ASSERT(!mStartReceived);  // Should only be called once.
+  MOZ_ASSERT(!mStartReceived || *aMultiPartID > 0);
 
   mStartReceived = true;
 
@@ -149,7 +150,7 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
                                        aRequestHeaders, aArgs);
   // Allow to queue other runnable since OnStartRequest Event already hits the
   // child's mEventQ.
-  OnStartRequestReceived();
+  OnStartRequestReceived(aArgs.multiPartID());
 
   return IPC_OK();
 }
