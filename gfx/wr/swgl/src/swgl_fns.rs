@@ -253,18 +253,20 @@ extern "C" {
     fn GetString(name: GLenum) -> *const c_char;
     fn GetStringi(name: GLenum, index: GLuint) -> *const c_char;
     fn GetError() -> GLenum;
-    fn InitDefaultFramebuffer(width: i32, height: i32);
+    fn InitDefaultFramebuffer(width: i32, height: i32, stride: i32, buf: *mut c_void);
     fn GetColorBuffer(
         fbo: GLuint,
         flush: GLboolean,
         width: *mut i32,
         height: *mut i32,
+        stride: *mut i32,
     ) -> *mut c_void;
     fn SetTextureBuffer(
         tex: GLuint,
         internal_format: GLenum,
         width: GLsizei,
         height: GLsizei,
+        stride: GLsizei,
         buf: *mut c_void,
         min_width: GLsizei,
         min_height: GLsizei,
@@ -313,18 +315,19 @@ impl Context {
         }
     }
 
-    pub fn init_default_framebuffer(&self, width: i32, height: i32) {
+    pub fn init_default_framebuffer(&self, width: i32, height: i32, stride: i32, buf: *mut c_void) {
         unsafe {
-            InitDefaultFramebuffer(width, height);
+            InitDefaultFramebuffer(width, height, stride, buf);
         }
     }
 
-    pub fn get_color_buffer(&self, fbo: GLuint, flush: bool) -> (*mut c_void, i32, i32) {
+    pub fn get_color_buffer(&self, fbo: GLuint, flush: bool) -> (*mut c_void, i32, i32, i32) {
         unsafe {
             let mut width: i32 = 0;
             let mut height: i32 = 0;
-            let data_ptr = GetColorBuffer(fbo, flush as GLboolean, &mut width, &mut height);
-            (data_ptr, width, height)
+            let mut stride: i32 = 0;
+            let data_ptr = GetColorBuffer(fbo, flush as GLboolean, &mut width, &mut height, &mut stride);
+            (data_ptr, width, height, stride)
         }
     }
 
@@ -334,6 +337,7 @@ impl Context {
         internal_format: GLenum,
         width: GLsizei,
         height: GLsizei,
+        stride: GLsizei,
         buf: *mut c_void,
         min_width: GLsizei,
         min_height: GLsizei,
@@ -344,6 +348,7 @@ impl Context {
                 internal_format,
                 width,
                 height,
+                stride,
                 buf,
                 min_width,
                 min_height,

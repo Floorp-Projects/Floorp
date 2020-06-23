@@ -25,8 +25,9 @@ pub extern "C" fn wr_swgl_make_current(ctx: *mut c_void) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_swgl_init_default_framebuffer(ctx: *mut c_void, width: i32, height: i32) {
-    swgl::Context::from(ctx).init_default_framebuffer(width, height);
+pub extern "C" fn wr_swgl_init_default_framebuffer(ctx: *mut c_void, width: i32, height: i32,
+                                                   stride: i32, buf: *mut c_void) {
+    swgl::Context::from(ctx).init_default_framebuffer(width, height, stride, buf);
 }
 
 #[derive(Debug)]
@@ -311,6 +312,7 @@ impl Compositor for SwCompositor {
                 gl::RGBA8,
                 surface.tile_size.width,
                 surface.tile_size.height,
+                0,
                 ptr::null_mut(),
                 0,
                 0,
@@ -321,6 +323,7 @@ impl Compositor for SwCompositor {
                 gl::DEPTH_COMPONENT16,
                 surface.tile_size.width,
                 surface.tile_size.height,
+                0,
                 ptr::null_mut(),
                 0,
                 0,
@@ -430,6 +433,7 @@ impl Compositor for SwCompositor {
                     gl::RGBA8,
                     valid_rect.size.width,
                     valid_rect.size.height,
+                    valid_rect.size.width * 4,
                     buf,
                     surface.tile_size.width,
                     surface.tile_size.height,
@@ -439,6 +443,7 @@ impl Compositor for SwCompositor {
                     gl::DEPTH_COMPONENT16,
                     valid_rect.size.width,
                     valid_rect.size.height,
+                    0,
                     ptr::null_mut(),
                     surface.tile_size.width,
                     surface.tile_size.height,
@@ -463,7 +468,8 @@ impl Compositor for SwCompositor {
                 if tile.valid_rect.is_empty() {
                     return;
                 }
-                let (swbuf, w, _) = self.gl.get_color_buffer(tile.fbo_id, true);
+                let (swbuf, _, _, stride) = self.gl.get_color_buffer(tile.fbo_id, true);
+                assert!(stride % 4 == 0);
                 let buf = if tile.pbo_id != 0 {
                     native_gl.unmap_buffer(gl::PIXEL_UNPACK_BUFFER);
                     0 as *mut c_void
@@ -473,13 +479,13 @@ impl Compositor for SwCompositor {
                 let dirty = tile.dirty_rect;
                 let src = unsafe {
                     (buf as *mut u32).offset(
-                        (dirty.origin.y - tile.valid_rect.origin.y) as isize * w as isize
+                        (dirty.origin.y - tile.valid_rect.origin.y) as isize * (stride / 4) as isize
                             + (dirty.origin.x - tile.valid_rect.origin.x) as isize,
                     )
                 };
                 native_gl.active_texture(gl::TEXTURE0);
                 native_gl.bind_texture(gl::TEXTURE_2D, tile.tex_id);
-                native_gl.pixel_store_i(gl::UNPACK_ROW_LENGTH, w);
+                native_gl.pixel_store_i(gl::UNPACK_ROW_LENGTH, stride / 4);
                 native_gl.tex_sub_image_2d_pbo(
                     gl::TEXTURE_2D,
                     0,
@@ -534,7 +540,7 @@ impl Compositor for SwCompositor {
         if let Some(compositor) = &mut self.compositor {
             compositor.end_frame();
         } else if let Some(native_gl) = &self.native_gl {
-            let (_, fw, fh) = self.gl.get_color_buffer(0, false);
+            let (_, fw, fh, _) = self.gl.get_color_buffer(0, false);
             let viewport = DeviceIntRect::from_size(DeviceIntSize::new(fw, fh));
             let draw_tile = self.draw_tile.as_ref().unwrap();
             draw_tile.enable(&viewport);
