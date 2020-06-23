@@ -308,6 +308,7 @@ class nsHtml5AttributeName {
   static nsHtml5AttributeName* ATTR_DIRECTION;
   static nsHtml5AttributeName* ATTR_EDGEMODE;
   static nsHtml5AttributeName* ATTR_EDGE;
+  static nsHtml5AttributeName* ATTR_ENTERKEYHINT;
   static nsHtml5AttributeName* ATTR_FACE;
   static nsHtml5AttributeName* ATTR_INDEX;
   static nsHtml5AttributeName* ATTR_INTERCEPT;
