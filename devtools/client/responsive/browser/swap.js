@@ -462,20 +462,6 @@ function addXULBrowserDecorations(browser) {
       swapBrowser() {},
     };
   }
-  if (browser._remoteWebProgressManager == undefined) {
-    browser._remoteWebProgressManager = {
-      swapBrowser() {},
-      get progressListeners() {
-        return [];
-      },
-    };
-  }
-  if (browser._remoteWebProgress == undefined) {
-    browser._remoteWebProgress = {
-      addProgressListener() {},
-      removeProgressListener() {},
-    };
-  }
 }
 
 function tabLoaded(tab) {
