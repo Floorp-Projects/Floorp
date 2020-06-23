@@ -97,7 +97,11 @@ class nsImageRenderer {
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::ImageContainer ImageContainer;
 
-  enum { FLAG_SYNC_DECODE_IMAGES = 0x01, FLAG_PAINTING_TO_WINDOW = 0x02 };
+  enum {
+    FLAG_SYNC_DECODE_IMAGES = 0x01,
+    FLAG_PAINTING_TO_WINDOW = 0x02,
+    FLAG_HIGH_QUALITY_SCALING = 0x04
+  };
   enum FitType { CONTAIN, COVER };
 
   nsImageRenderer(nsIFrame* aForFrame, const mozilla::StyleImage* aImage,

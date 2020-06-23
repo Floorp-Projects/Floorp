@@ -409,7 +409,8 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   }
 
   uint32_t containerFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
-  if (aFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) {
+  if (aFlags & (nsImageRenderer::FLAG_PAINTING_TO_WINDOW |
+                nsImageRenderer::FLAG_HIGH_QUALITY_SCALING)) {
     containerFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
   if (aFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
@@ -502,7 +503,7 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
   uint32_t flags = imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   if (aBuilder->ShouldSyncDecodeImages())
     flags |= imgIContainer::FLAG_SYNC_DECODE;
-  if (aBuilder->IsPaintingToWindow())
+  if (aBuilder->UseHighQualityScaling())
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
 
   ImgDrawResult result = static_cast<nsImageBoxFrame*>(mFrame)->PaintImage(

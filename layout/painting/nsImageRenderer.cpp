@@ -416,7 +416,8 @@ static uint32_t ConvertImageRendererToDrawFlags(uint32_t aImageRendererFlags) {
   if (aImageRendererFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
     drawFlags |= imgIContainer::FLAG_SYNC_DECODE;
   }
-  if (aImageRendererFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) {
+  if (aImageRendererFlags & (nsImageRenderer::FLAG_PAINTING_TO_WINDOW |
+                             nsImageRenderer::FLAG_HIGH_QUALITY_SCALING)) {
     drawFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
   return drawFlags;
@@ -571,7 +572,8 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
     case StyleImage::Tag::Rect:
     case StyleImage::Tag::Url: {
       uint32_t containerFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
-      if (mFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) {
+      if (mFlags & (nsImageRenderer::FLAG_PAINTING_TO_WINDOW |
+                    nsImageRenderer::FLAG_HIGH_QUALITY_SCALING)) {
         containerFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
       }
       if (mFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {

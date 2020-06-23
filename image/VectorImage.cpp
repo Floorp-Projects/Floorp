@@ -303,6 +303,9 @@ bool SVGDrawingCallback::operator()(gfxContext* aContext,
   if (!(mImageFlags & imgIContainer::FLAG_SYNC_DECODE)) {
     renderDocFlags |= RenderDocumentFlags::AsyncDecodeImages;
   }
+  if (mImageFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING) {
+    renderDocFlags |= RenderDocumentFlags::UseHighQualityScaling;
+  }
 
   presShell->RenderDocument(svgRect, renderDocFlags,
                             NS_RGBA(0, 0, 0, 0),  // transparent
