@@ -123,6 +123,18 @@ interface nsIServiceWorkerManagerListener : nsISupports
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
+   * A testing helper that registers a service worker for testing purpose (e.g. used to test
+   * a remote worker that has to spawn a new process to be launched).
+   * This method can only be used when "dom.serviceWorkers.testing.enabled" is true and
+   * it doesn't support all the registration options (e.g. updateViaCache is set automatically
+   * to "imports").
+   */
+  [implicit_jscontext]
+  Promise registerForTest(in nsIPrincipal aPrincipal,
+                          in AString aScope, 
+                          in AString aScriptURL);
+
+  /**
    * Unregister an existing ServiceWorker registration for `aScope`.
    * It keeps aCallback alive until the operation is concluded.
    */
