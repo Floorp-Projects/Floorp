@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Test whether a machine which exactly matches the blacklist entry is
+// Test whether a machine which exactly matches the blocklist entry is
 // successfully blocked.
 // Uses test_gfxBlacklist_AllOS.json
 
