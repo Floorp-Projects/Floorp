@@ -30,6 +30,8 @@
     <string name="mozac_feature_downloads_button_pause">Прыпыніць</string>
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">Працягнуць</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">Адмяніць</string>
     <!-- Button that opens the downloaded file when pressed -->
     <string name="mozac_feature_downloads_button_open">Адкрыць</string>
 
