@@ -485,7 +485,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsresult CompleteUpgrade(HttpTransactionShell* aTrans,
                            nsIHttpUpgradeListener* aUpgradeListener);
 
-  nsresult DoShiftReloadConnectionCleanup(nsHttpConnectionInfo* aCI = nullptr);
+  nsresult DoShiftReloadConnectionCleanupWithConnInfo(
+      nsHttpConnectionInfo* aCI);
 
  private:
   nsHttpHandler();

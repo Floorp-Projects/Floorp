@@ -33,38 +33,18 @@ void HttpConnectionMgrChild::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult
-HttpConnectionMgrChild::RecvDoShiftReloadConnectionCleanup(
-    const Maybe<HttpConnectionInfoCloneArgs>& aArgs) {
-  nsresult rv;
-  if (aArgs) {
-    RefPtr<nsHttpConnectionInfo> cinfo =
-        nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(
-            aArgs.ref());
-    rv = mConnMgr->DoShiftReloadConnectionCleanup(cinfo);
-  } else {
-    rv = mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
-  }
+HttpConnectionMgrChild::RecvDoShiftReloadConnectionCleanupWithConnInfo(
+    const HttpConnectionInfoCloneArgs& aArgs) {
+  RefPtr<nsHttpConnectionInfo> cinfo =
+      nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(aArgs);
+  nsresult rv = mConnMgr->DoShiftReloadConnectionCleanupWithConnInfo(cinfo);
   if (NS_FAILED(rv)) {
     LOG(
-        ("HttpConnectionMgrChild::RecvDoShiftReloadConnectionCleanup failed "
+        ("HttpConnectionMgrChild::DoShiftReloadConnectionCleanupWithConnInfo "
+         "failed "
          "(%08x)\n",
          static_cast<uint32_t>(rv)));
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvPruneDeadConnections() {
-  nsresult rv = mConnMgr->PruneDeadConnections();
-  if (NS_FAILED(rv)) {
-    LOG(("HttpConnectionMgrChild::RecvPruneDeadConnections failed (%08x)\n",
-         static_cast<uint32_t>(rv)));
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-HttpConnectionMgrChild::RecvAbortAndCloseAllConnections() {
-  mConnMgr->AbortAndCloseAllConnections(0, nullptr);
   return IPC_OK();
 }
 
@@ -117,20 +97,6 @@ HttpConnectionMgrChild::RecvUpdateClassOfServiceOnTransaction(
 mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvCancelTransaction(
     PHttpTransactionChild* aTrans, const nsresult& aReason) {
   Unused << mConnMgr->CancelTransaction(ToRealHttpTransaction(aTrans), aReason);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvVerifyTraffic() {
-  nsresult rv = mConnMgr->VerifyTraffic();
-  if (NS_FAILED(rv)) {
-    LOG(("HttpConnectionMgrChild::RecvVerifyTraffic failed (%08x)\n",
-         static_cast<uint32_t>(rv)));
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvClearConnectionHistory() {
-  Unused << mConnMgr->ClearConnectionHistory();
   return IPC_OK();
 }
 

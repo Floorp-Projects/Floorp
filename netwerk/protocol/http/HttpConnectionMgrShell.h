@@ -73,9 +73,12 @@ class HttpConnectionMgrShell : public nsISupports {
       EventTokenBucket* aBucket) = 0;
 
   // Close all idle persistent connections and prevent any active connections
-  // from being reused. Optional connection info resets CI specific
+  // from being reused.
+  [[nodiscard]] virtual nsresult DoShiftReloadConnectionCleanup() = 0;
+
+  // Like DoShiftReloadConnectionCleanup() above, but also resets CI specific
   // information such as Happy Eyeballs history.
-  [[nodiscard]] virtual nsresult DoShiftReloadConnectionCleanup(
+  [[nodiscard]] virtual nsresult DoShiftReloadConnectionCleanupWithConnInfo(
       nsHttpConnectionInfo*) = 0;
 
   // called to force the connection manager to prune its list of idle
@@ -185,8 +188,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionMgrShell,
   virtual nsresult Shutdown() override;                                      \
   virtual nsresult UpdateRequestTokenBucket(EventTokenBucket* aBucket)       \
       override;                                                              \
-  virtual nsresult DoShiftReloadConnectionCleanup(nsHttpConnectionInfo*)     \
-      override;                                                              \
+  virtual nsresult DoShiftReloadConnectionCleanup() override;                \
+  virtual nsresult DoShiftReloadConnectionCleanupWithConnInfo(               \
+      nsHttpConnectionInfo*) override;                                       \
   virtual nsresult PruneDeadConnections() override;                          \
   virtual void AbortAndCloseAllConnections(int32_t, ARefBase*) override;     \
   virtual nsresult UpdateParam(nsParamName name, uint16_t value) override;   \
