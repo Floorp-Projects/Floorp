@@ -1804,35 +1804,31 @@ void HttpChannelChild::ProcessFlushedForDiversion() {
                         true);
 }
 
-mozilla::ipc::IPCResult HttpChannelChild::RecvNotifyClassificationFlags(
-    const uint32_t& aClassificationFlags, const bool& aIsThirdParty) {
+void HttpChannelChild::ProcessNotifyClassificationFlags(
+    uint32_t aClassificationFlags, bool aIsThirdParty) {
   LOG(
-      ("HttpChannelChild::RecvNotifyClassificationFlags thirdparty=%d "
+      ("HttpChannelChild::ProcessNotifyClassificationFlags thirdparty=%d "
        "flags=%" PRIu32 " [this=%p]\n",
        static_cast<int>(aIsThirdParty), aClassificationFlags, this));
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(OnSocketThread());
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aClassificationFlags,
-             aIsThirdParty] {
+             aIsThirdParty]() {
         self->AddClassificationFlags(aClassificationFlags, aIsThirdParty);
       }));
-
-  return IPC_OK();
 }
 
-mozilla::ipc::IPCResult HttpChannelChild::RecvNotifyFlashPluginStateChanged(
-    const nsIHttpChannel::FlashPluginState& aState) {
-  LOG(("HttpChannelChild::RecvNotifyFlashPluginStateChanged [this=%p]\n",
+void HttpChannelChild::ProcessNotifyFlashPluginStateChanged(
+    nsIHttpChannel::FlashPluginState aState) {
+  LOG(("HttpChannelChild::ProcessNotifyFlashPluginStateChanged [this=%p]\n",
        this));
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(OnSocketThread());
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aState] {
+      this, [self = UnsafePtr<HttpChannelChild>(this), aState]() {
         self->SetFlashPluginState(aState);
       }));
-
-  return IPC_OK();
 }
 
 void HttpChannelChild::FlushedForDiversion() {
@@ -1851,30 +1847,29 @@ void HttpChannelChild::FlushedForDiversion() {
   }
 }
 
-mozilla::ipc::IPCResult HttpChannelChild::RecvSetClassifierMatchedInfo(
-    const ClassifierInfo& aInfo) {
-  LOG(("HttpChannelChild::RecvSetClassifierMatchedInfo [this=%p]\n", this));
-  MOZ_ASSERT(NS_IsMainThread());
+void HttpChannelChild::ProcessSetClassifierMatchedInfo(
+    const nsCString& aList, const nsCString& aProvider,
+    const nsCString& aFullHash) {
+  LOG(("HttpChannelChild::ProcessSetClassifierMatchedInfo [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aInfo]() {
-        self->SetMatchedInfo(aInfo.list(), aInfo.provider(), aInfo.fullhash());
-      }));
-
-  return IPC_OK();
+      this,
+      [self = UnsafePtr<HttpChannelChild>(this), aList, aProvider,
+       aFullHash]() { self->SetMatchedInfo(aList, aProvider, aFullHash); }));
 }
 
-mozilla::ipc::IPCResult HttpChannelChild::RecvSetClassifierMatchedTrackingInfo(
-    const ClassifierInfo& aInfo) {
-  LOG(("HttpChannelChild::RecvSetClassifierMatchedTrackingInfo [this=%p]\n",
+void HttpChannelChild::ProcessSetClassifierMatchedTrackingInfo(
+    const nsCString& aLists, const nsCString& aFullHashes) {
+  LOG(("HttpChannelChild::ProcessSetClassifierMatchedTrackingInfo [this=%p]\n",
        this));
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(OnSocketThread());
 
   nsTArray<nsCString> lists, fullhashes;
-  for (const nsACString& token : aInfo.list().Split(',')) {
+  for (const nsACString& token : aLists.Split(',')) {
     lists.AppendElement(token);
   }
-  for (const nsACString& token : aInfo.fullhash().Split(',')) {
+  for (const nsACString& token : aFullHashes.Split(',')) {
     fullhashes.AppendElement(token);
   }
 
@@ -1884,8 +1879,6 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvSetClassifierMatchedTrackingInfo(
              fullhashes = CopyableTArray{std::move(fullhashes)}]() {
         self->SetMatchedTrackingInfo(lists, fullhashes);
       }));
-
-  return IPC_OK();
 }
 
 void HttpChannelChild::ProcessDivertMessages() {
