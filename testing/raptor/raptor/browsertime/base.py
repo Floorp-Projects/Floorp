@@ -219,12 +219,9 @@ class Browsertime(Perftest):
             # screenrecord` as well.  (There's no harm setting Firefox options for other browsers.)
             browsertime_options.extend([
                 "--video", "true",
+                # Bug 1635749, disable window recorder temporarily
+                "--firefox.windowRecorder", "false",
             ])
-            # Firefox window recorder is unavailable in fennec68
-            if "fennec" not in self.config["app"]:
-                browsertime_options.extend([
-                    "--firefox.windowRecorder", "true",
-                ])
         else:
             browsertime_options.extend([
                 "--video", "false",
