@@ -1701,7 +1701,7 @@ static void MaybeSetImplicitlyUsed(uint32_t numInstructionIdsBefore,
 
   // If the most recent use of 'input' is an instruction we just added, there is
   // nothing to do.
-  MDefinition* inputUse = input->maybeMostRecentDefUse();
+  MDefinition* inputUse = input->maybeMostRecentlyAddedDefUse();
   if (inputUse && inputUse->id() >= numInstructionIdsBefore) {
     return;
   }

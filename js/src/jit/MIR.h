@@ -784,11 +784,11 @@ class MDefinition : public MNode {
   // use's definition. Else returns nullptr.
   MDefinition* maybeSingleDefUse() const;
 
-  // Returns the most recent use (ignoring MResumePoints) for this MDefinition.
-  // Returns nullptr if there are no uses. Note that this relies on addUse
-  // adding new uses to the front of the list, and should only be called during
-  // MIR building (before optimization passes make changes to the uses).
-  MDefinition* maybeMostRecentDefUse() const;
+  // Returns the most recently added use (ignoring MResumePoints) for this
+  // MDefinition. Returns nullptr if there are no uses. Note that this relies on
+  // addUse adding new uses to the front of the list, and should only be called
+  // during MIR building (before optimization passes make changes to the uses).
+  MDefinition* maybeMostRecentlyAddedDefUse() const;
 
   void addUse(MUse* use) {
     MOZ_ASSERT(use->producer() == this);
