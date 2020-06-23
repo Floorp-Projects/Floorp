@@ -80,6 +80,8 @@ namespace InspectorUtils {
   boolean isElementThemed(Element element);
 
   Element? containingBlockOf(Element element);
+
+  [NewObject] NodeList getOverflowingChildrenOfElement(Element element);
 };
 
 dictionary PropertyNamesOptions {

@@ -703,5 +703,32 @@ Element* InspectorUtils::ContainingBlockOf(GlobalObject&, Element& aElement) {
   return Element::FromNodeOrNull(cb->GetContent());
 }
 
+already_AddRefed<nsINodeList> InspectorUtils::GetOverflowingChildrenOfElement(
+    GlobalObject& aGlobal, Element& aElement) {
+  RefPtr<nsSimpleContentList> list = new nsSimpleContentList(&aElement);
+  nsIFrame* scrollableFrame = aElement.GetPrimaryFrame();
+
+  std::function<void(const nsIFrame*)> GetOverflowingElement =
+      [&](const nsIFrame* aFrame) {
+        MOZ_ASSERT(aFrame, "we assume the passed-in frame is non-null");
+        for (const auto& childList : aFrame->ChildLists()) {
+          for (const nsIFrame* child : childList.mList) {
+            bool isBlameElem = true;  // change this so that it becomes true iff
+                                      // child is causing overflow.
+            if (!isBlameElem) {
+              GetOverflowingElement(child);
+            } else {
+              list->AppendElement(child->GetContent());
+            }
+          }
+        }
+      };
+
+  if (scrollableFrame) {
+    GetOverflowingElement(scrollableFrame);
+  }
+  return list.forget();
+}
+
 }  // namespace dom
 }  // namespace mozilla
