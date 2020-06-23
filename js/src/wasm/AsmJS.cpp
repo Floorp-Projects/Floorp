@@ -1975,7 +1975,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
   bool declareFuncPtrTable(FuncType&& sig, PropertyName* name,
                            uint32_t firstUse, uint32_t mask,
                            uint32_t* tableIndex) {
-    if (mask > MaxTableInitialLength) {
+    if (mask > MaxTableLength) {
       return failCurrentOffset("function pointer table too big");
     }
 

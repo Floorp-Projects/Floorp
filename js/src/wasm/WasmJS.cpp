@@ -2515,8 +2515,14 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Limits limits;
-  if (!GetLimits(cx, obj, MaxTableInitialLength, MaxTableLength, "Table",
+  if (!GetLimits(cx, obj, MaxTableLimitField, MaxTableLimitField, "Table",
                  &limits, Shareable::False)) {
+    return false;
+  }
+
+  if (limits.initial > MaxTableLength) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_TABLE_IMP_LIMIT);
     return false;
   }
 
@@ -2530,7 +2536,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // The rest of the runtime expects table limits to be within a 32-bit range.
-  static_assert(MaxTableLength <= UINT32_MAX, "invariant");
+  static_assert(MaxTableLimitField <= UINT32_MAX, "invariant");
   uint32_t initialLength = uint32_t(limits.initial);
   Maybe<uint32_t> maximumLength;
   if (limits.maximum) {
