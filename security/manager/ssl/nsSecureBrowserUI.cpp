@@ -51,6 +51,57 @@ nsSecureBrowserUI::GetState(uint32_t* aState) {
   return NS_OK;
 }
 
+static bool GetWebProgressListener(CanonicalBrowsingContext* aBrowsingContext,
+                                   nsIBrowser** aOutBrowser,
+                                   nsIWebProgress** aOutManager,
+                                   nsIWebProgressListener** aOutListener) {
+  MOZ_ASSERT(aOutBrowser);
+  MOZ_ASSERT(aOutManager);
+  MOZ_ASSERT(aOutListener);
+
+  nsCOMPtr<nsIBrowser> browser;
+  RefPtr<Element> currentElement = aBrowsingContext->GetEmbedderElement();
+
+  // In Responsive Design Mode, mFrameElement will be the <iframe mozbrowser>,
+  // but we want the <xul:browser> that it is embedded in.
+  while (currentElement) {
+    browser = currentElement->AsBrowser();
+    if (browser) {
+      break;
+    }
+
+    BrowsingContext* browsingContext =
+        currentElement->OwnerDoc()->GetBrowsingContext();
+    currentElement =
+        browsingContext ? browsingContext->GetEmbedderElement() : nullptr;
+  }
+
+  if (!browser) {
+    return false;
+  }
+
+  nsCOMPtr<nsIWebProgress> manager;
+  nsresult rv = browser->GetRemoteWebProgressManager(getter_AddRefs(manager));
+  if (NS_FAILED(rv)) {
+    browser.forget(aOutBrowser);
+    return true;
+  }
+
+  nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(manager);
+  if (!listener) {
+    // We are no longer remote so we cannot forward this event.
+    browser.forget(aOutBrowser);
+    manager.forget(aOutManager);
+    return true;
+  }
+
+  browser.forget(aOutBrowser);
+  manager.forget(aOutManager);
+  listener.forget(aOutListener);
+
+  return true;
+}
+
 void nsSecureBrowserUI::UpdateForLocationOrMixedContentChange() {
   // Our BrowsingContext either has a new WindowGlobalParent, or the
   // existing one has mutated its security state.
@@ -110,6 +161,26 @@ void nsSecureBrowserUI::UpdateForLocationOrMixedContentChange() {
     return;
   }
 
+  // This is a bit painful, as we need to do different things for
+  // in-process docshells vs OOP ones.
+  // Ideally we'd just call a function on 'browser' which would
+  // handle sending an event to all listeners, and we wouldn't
+  // need to bother with onSecurityChange.
+  nsCOMPtr<nsIBrowser> browser;
+  nsCOMPtr<nsIWebProgress> manager;
+  nsCOMPtr<nsIWebProgressListener> managerAsListener;
+  if (!GetWebProgressListener(ctx, getter_AddRefs(browser),
+                              getter_AddRefs(manager),
+                              getter_AddRefs(managerAsListener))) {
+    return;
+  }
+
+  // Do we need to construct a fake webprogress and request instance?
+  // Should we split this API out of nsIWebProgressListener to avoid
+  // that?
+  if (managerAsListener) {
+    Unused << managerAsListener->OnSecurityChange(nullptr, nullptr, mState);
+  }
   if (ctx->GetDocShell()) {
     nsDocShell* nativeDocShell = nsDocShell::Cast(ctx->GetDocShell());
     nativeDocShell->nsDocLoader::OnSecurityChange(nullptr, mState);

@@ -230,9 +230,13 @@
 
       this._fastFind = null;
 
+      this._innerWindowID = null;
+
       this._lastSearchString = null;
 
       this._remoteWebNavigation = null;
+
+      this._remoteWebProgress = null;
 
       this._characterSet = "";
 
@@ -581,7 +585,17 @@
     }
 
     get innerWindowID() {
-      return this.browsingContext?.currentWindowGlobal?.innerWindowId || null;
+      if (this.isRemoteBrowser) {
+        return this._innerWindowID;
+      }
+      try {
+        return this.contentWindow.windowUtils.currentInnerWindowID;
+      } catch (e) {
+        if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+          throw e;
+        }
+        return null;
+      }
     }
 
     get browsingContext() {
@@ -942,6 +956,22 @@
       );
     }
 
+    /**
+     * Move the previously-tracked web progress listeners to this <browser>'s
+     * current WebProgress.
+     */
+    restoreProgressListeners() {
+      let listeners = this.progressListeners;
+      this.progressListeners = [];
+
+      for (let { weakListener, mask } of listeners) {
+        let listener = weakListener.get();
+        if (listener) {
+          this.addProgressListener(listener, mask);
+        }
+      }
+    }
+
     onPageHide(aEvent) {
       if (!this.docShell || !this.fastFind) {
         return;
@@ -1067,6 +1097,27 @@
         // we should re-evaluate the CSP here.
         this._csp = null;
 
+        let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
+        let { RemoteWebProgressManager } = ChromeUtils.import(jsm, {});
+
+        let oldManager = this._remoteWebProgressManager;
+        this._remoteWebProgressManager = new RemoteWebProgressManager(this);
+        if (oldManager) {
+          // We're transitioning from one remote type to another. This means that
+          // the RemoteWebProgress listener is listening to the old message manager,
+          // and needs to be pointed at the new one.
+          this._remoteWebProgressManager.swapListeners(oldManager);
+        }
+
+        this._remoteWebProgress = this._remoteWebProgressManager.topLevelWebProgress;
+
+        if (!oldManager) {
+          // If we didn't have a manager, then we're transitioning from local to
+          // remote. Add all listeners from the previous <browser> to the new
+          // RemoteWebProgress.
+          this.restoreProgressListeners();
+        }
+
         this.messageManager.loadFrameScript(
           "chrome://global/content/browser-child.js",
           true
@@ -1114,6 +1165,13 @@
       } catch (e) {}
 
       if (!this.isRemoteBrowser) {
+        // If we've transitioned from remote to non-remote, we no longer need
+        // our RemoteWebProgress or its associated manager, but we'll need to
+        // add the progress listeners to the new non-remote WebProgress.
+        this._remoteWebProgressManager = null;
+        this._remoteWebProgress = null;
+        this.restoreProgressListeners();
+
         this.addEventListener("pagehide", this.onPageHide, true);
       }
     }
@@ -1151,6 +1209,10 @@
       }
     }
 
+    get remoteWebProgressManager() {
+      return this._remoteWebProgressManager;
+    }
+
     updateForStateChange(aCharset, aDocumentURI, aContentType) {
       if (this.isRemoteBrowser && this.messageManager) {
         if (aCharset != null) {
@@ -1186,6 +1248,7 @@
       aCSP,
       aReferrerInfo,
       aIsSynthetic,
+      aInnerWindowID,
       aHaveRequestContextID,
       aRequestContextID,
       aContentType
@@ -1208,6 +1271,7 @@
         this._csp = aCSP;
         this._referrerInfo = aReferrerInfo;
         this._isSyntheticDocument = aIsSynthetic;
+        this._innerWindowID = aInnerWindowID;
         this._contentRequestContextID = aHaveRequestContextID
           ? aRequestContextID
           : null;
@@ -1588,7 +1652,10 @@
         fieldsToSwap.push(
           ...[
             "_remoteWebNavigation",
+            "_remoteWebProgressManager",
+            "_remoteWebProgress",
             "_remoteFinder",
+            "_securityUI",
             "_documentURI",
             "_documentContentType",
             "_characterSet",
@@ -1597,6 +1664,7 @@
             "_contentPrincipal",
             "_contentPartitionedPrincipal",
             "_isSyntheticDocument",
+            "_innerWindowID",
           ]
         );
       }
@@ -1633,6 +1701,14 @@
         // Rewire the remote listeners
         this._remoteWebNavigation.swapBrowser(this);
         aOtherBrowser._remoteWebNavigation.swapBrowser(aOtherBrowser);
+
+        if (
+          this._remoteWebProgressManager &&
+          aOtherBrowser._remoteWebProgressManager
+        ) {
+          this._remoteWebProgressManager.swapBrowser(this);
+          aOtherBrowser._remoteWebProgressManager.swapBrowser(aOtherBrowser);
+        }
 
         if (this._remoteFinder) {
           this._remoteFinder.swapBrowser(this);

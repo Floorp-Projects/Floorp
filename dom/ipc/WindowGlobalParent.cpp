@@ -472,14 +472,37 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
 
   // Notify the OnContentBlockingEvent if necessary.
   if (event) {
-    if (!GetBrowsingContext()->GetWebProgress()) {
+    // Get the browser parent from the manager directly since the content
+    // blocking event could happen in the early stage of loading, i.e.
+    // accessing cookies for the http header. At this stage, the actor is
+    // not ready, so we would get a nullptr from GetBrowserParent(). But,
+    // we can actually get it from the manager.
+    RefPtr<BrowserParent> browserParent =
+        static_cast<BrowserParent*>(Manager());
+    if (NS_WARN_IF(!browserParent)) {
+      return;
+    }
+
+    nsCOMPtr<nsIBrowser> browser;
+    nsCOMPtr<nsIWebProgress> manager;
+    nsCOMPtr<nsIWebProgressListener> managerAsListener;
+
+    if (!browserParent->GetWebProgressListener(
+            getter_AddRefs(browser), getter_AddRefs(manager),
+            getter_AddRefs(managerAsListener))) {
       return;
     }
 
     nsCOMPtr<nsIWebProgress> webProgress =
-        new RemoteWebProgress(0, false, BrowsingContext()->IsTopContent());
-    GetBrowsingContext()->Top()->GetWebProgress()->OnContentBlockingEvent(
-        webProgress, aRequest, event.value());
+        new RemoteWebProgress(manager, OuterWindowId(), InnerWindowId(), 0,
+                              false, BrowsingContext()->IsTopContent());
+
+    Unused << managerAsListener->OnContentBlockingEvent(webProgress, aRequest,
+                                                        event.value());
+    if (GetBrowsingContext()->Top()->GetWebProgress()) {
+      GetBrowsingContext()->Top()->GetWebProgress()->OnContentBlockingEvent(
+          webProgress, aRequest, event.value());
+    }
   }
 }
 
