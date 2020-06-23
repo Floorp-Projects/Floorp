@@ -178,7 +178,9 @@ class StreamFilterParent final : public PStreamFilterParent,
   nsCOMPtr<nsISupports> mContext;
   uint64_t mOffset;
 
-  volatile State mState;
+  // Use Release-Acquire ordering to ensure the OMT ODA is not sent while
+  // the channel is disconnecting or closed.
+  Atomic<State, ReleaseAcquire> mState;
 };
 
 }  // namespace extensions
