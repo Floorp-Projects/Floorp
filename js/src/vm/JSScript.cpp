@@ -4802,7 +4802,7 @@ void JSScript::resetWarmUpCounterToDelayIonCompilation() {
     if (warmUpData_.isWarmUpCount()) {
       warmUpData_.resetWarmUpCount(newCount);
     } else {
-      warmUpData_.toJitScript()->warmUpCount_ = newCount;
+      warmUpData_.toJitScript()->resetWarmUpCount(newCount);
     }
   }
 }
