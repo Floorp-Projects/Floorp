@@ -108,7 +108,7 @@ void gfxConfigManager::ConfigureFromBlocklist(long aFeature,
 
   } else {
     if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-      aFeatureState->Disable(FeatureStatus::Blacklisted,
+      aFeatureState->Disable(FeatureStatus::Blocklisted,
                              "Blacklisted by gfxInfo", blockId);
     }
   }
@@ -154,7 +154,7 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
                                    failureId);
       break;
     default:
-      mFeatureWrQualified->Disable(FeatureStatus::Blacklisted,
+      mFeatureWrQualified->Disable(FeatureStatus::Blocklisted,
                                    "No qualified hardware", failureId);
       break;
     case nsIGfxInfo::FEATURE_STATUS_OK:
