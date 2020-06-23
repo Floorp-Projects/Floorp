@@ -235,7 +235,7 @@ inline bool TraceWeakEdge(JSTracer* trc, BarrieredBase<T>* thingp,
 // Trace all edges contained in the given array.
 
 template <typename T>
-void TraceRange(JSTracer* trc, size_t len, WriteBarriered<T>* vec,
+void TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* vec,
                 const char* name) {
   gc::TraceRangeInternal(
       trc, len, gc::ConvertToBase(vec[0].unsafeUnbarrieredForTracing()), name);
