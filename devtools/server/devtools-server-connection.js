@@ -476,7 +476,16 @@ DevToolsServerConnection.prototype = {
 
     this.emit("closed", status, this.prefix);
 
-    this._extraPools.forEach(p => p.destroy());
+    // Use filter in order to create a copy of the extraPools array,
+    // which might be modified by removeActorPool calls.
+    // The isTopLevel check ensures that the pools retrieved here will not be
+    // destroyed by another Pool::destroy. Non top-level pools will be destroyed
+    // by the recursive Pool::destroy mechanism.
+    // See test_connection_closes_all_pools.js for practical examples of Pool
+    // hierarchies.
+    const topLevelPools = this._extraPools.filter(p => p.isTopPool());
+    topLevelPools.forEach(p => p.destroy());
+
     this._extraPools = null;
 
     this.rootActor = null;

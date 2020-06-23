@@ -116,6 +116,12 @@ ActorPool.prototype = {
       console.log(`>> ${actor}`);
     }
   },
+
+  // For consistency with Pool.js
+  // Will be checked by devtools-server-connection.
+  isTopPool() {
+    return true;
+  },
 };
 
 exports.ActorPool = ActorPool;
