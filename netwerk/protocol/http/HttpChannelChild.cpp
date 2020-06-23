@@ -405,56 +405,6 @@ void HttpChannelChild::ProcessOnStartRequest(
                              aArgs);
       }));
 }
-
-mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
-    const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
-    const nsHttpHeaderArray& aRequestHeaders,
-    const HttpChannelOnStartRequestArgs& aArgs) {
-  AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
-  LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
-  // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
-  // stage, as they are set in the listener's OnStartRequest.
-  MOZ_RELEASE_ASSERT(
-      !mFlushedForDiversion,
-      "mFlushedForDiversion should be unset before OnStartRequest!");
-  MOZ_RELEASE_ASSERT(
-      !mDivertingToParent,
-      "mDivertingToParent should be unset before OnStartRequest!");
-
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
-             aUseResponseHead, aRequestHeaders, aArgs]() {
-        self->OnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
-                             aArgs);
-      }));
-
-  {
-    // Child's mEventQ is to control the execution order of the IPC messages
-    // from both main thread IPDL and PBackground IPDL.
-    // To guarantee the ordering, PBackground IPC messages that are sent after
-    // OnStartRequest will be throttled until OnStartRequest hits the Child's
-    // mEventQ.
-    MutexAutoLock lock(mBgChildMutex);
-
-    // We don't need to notify the background channel if this is a multipart
-    // stream, since all messages will be sent over the main-thread IPDL in
-    // that case.
-
-    // TODO: Never reach here. Remove later.
-
-    // if (mBgChild && !aArgs.multiPartID()) {
-    //   MOZ_RELEASE_ASSERT(gSocketTransportService);
-    //   DebugOnly<nsresult> rv = gSocketTransportService->Dispatch(
-    //       NewRunnableMethod(
-    //           "HttpBackgroundChannelChild::OnStartRequestReceived", mBgChild,
-    //           &HttpBackgroundChannelChild::OnStartRequestReceived),
-    //       NS_DISPATCH_NORMAL);
-    // }
-  }
-
-  return IPC_OK();
-}
-
 static void ResourceTimingStructArgsToTimingsStruct(
     const ResourceTimingStructArgs& aArgs, TimingStruct& aTimings) {
   aTimings.domainLookupStart = aArgs.domainLookupStart();
@@ -571,39 +521,6 @@ void HttpChannelChild::OnStartRequest(
   }
 
   DoOnStartRequest(this, nullptr);
-}
-
-mozilla::ipc::IPCResult HttpChannelChild::RecvOnTransportAndData(
-    const nsresult& aChannelStatus, const nsresult& aTransportStatus,
-    const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData) {
-  AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnTransportAndData", NETWORK);
-  LOG(("HttpChannelChild::RecvOnTransportAndData [this=%p]\n", this));
-
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus,
-             aTransportStatus, aOffset, aCount, aData]() {
-        self->OnTransportAndData(aChannelStatus, aTransportStatus, aOffset,
-                                 aCount, aData);
-      }));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult HttpChannelChild::RecvOnStopRequest(
-    const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
-    const TimeStamp& aLastActiveTabOptHit,
-    const nsHttpHeaderArray& aResponseTrailers,
-    nsTArray<ConsoleReportCollected>&& aConsoleReports) {
-  AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStopRequest", NETWORK);
-  LOG(("HttpChannelChild::RecvOnStopRequest [this=%p]\n", this));
-
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
-             aResponseTrailers,
-             consoleReports = CopyableTArray{std::move(aConsoleReports)}]() {
-        self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers,
-                            consoleReports);
-      }));
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvOnAfterLastPart(

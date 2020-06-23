@@ -103,31 +103,6 @@ parent:
   async __delete__();
 
 child:
-  async OnStartRequest(nsHttpResponseHead  responseHead,
-                       bool                useResponseHead,
-                       nsHttpHeaderArray   requestHeaders,
-                       HttpChannelOnStartRequestArgs args);
-
-  // Combines a single OnDataAvailable and its associated OnProgress &
-  // OnStatus calls into one IPDL message
-  // This is a duplicate of the message on PHttpBackgroundChannel, and gets
-  // used for multi-pary streams to make synchronization when we get OnStartRequest 
-  // multiple times easier.
-  async OnTransportAndData(nsresult  channelStatus,
-                           nsresult  transportStatus,
-                           uint64_t  offset,
-                           uint32_t  count,
-                           nsCString data);
-
-  // This is a duplicate of the message on PHttpBackgroundChannel, and gets
-  // used for multi-pary streams to make synchronization when we get OnStartRequest 
-  // multiple times easier.
-  async OnStopRequest(nsresult channelStatus,
-                      ResourceTimingStructArgs timing,
-                      TimeStamp lastActiveTabOptimization,
-                      nsHttpHeaderArray responseTrailers,
-                      ConsoleReportCollected[] consoleReport);
-
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.
   async FailedAsyncOpen(nsresult status);
