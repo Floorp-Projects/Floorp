@@ -12,11 +12,14 @@
 #include "SVGObserverUtils.h"
 #include "SVGFilters.h"
 
-using namespace mozilla;
+nsIFrame* NS_NewSVGFEUnstyledLeafFrame(mozilla::PresShell* aPresShell,
+                                       mozilla::ComputedStyle* aStyle);
+
+namespace mozilla {
 
 class SVGFEUnstyledLeafFrame final : public nsFrame {
-  friend nsIFrame* NS_NewSVGFEUnstyledLeafFrame(mozilla::PresShell* aPresShell,
-                                                ComputedStyle* aStyle);
+  friend nsIFrame* ::NS_NewSVGFEUnstyledLeafFrame(
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
  protected:
   explicit SVGFEUnstyledLeafFrame(ComputedStyle* aStyle,
@@ -54,11 +57,15 @@ class SVGFEUnstyledLeafFrame final : public nsFrame {
   }
 };
 
-nsIFrame* NS_NewSVGFEUnstyledLeafFrame(PresShell* aPresShell,
-                                       ComputedStyle* aStyle) {
+}  // namespace mozilla
+
+nsIFrame* NS_NewSVGFEUnstyledLeafFrame(mozilla::PresShell* aPresShell,
+                                       mozilla::ComputedStyle* aStyle) {
   return new (aPresShell)
-      SVGFEUnstyledLeafFrame(aStyle, aPresShell->GetPresContext());
+      mozilla::SVGFEUnstyledLeafFrame(aStyle, aPresShell->GetPresContext());
 }
+
+namespace mozilla {
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEUnstyledLeafFrame)
 
@@ -77,3 +84,5 @@ nsresult SVGFEUnstyledLeafFrame::AttributeChanged(int32_t aNameSpaceID,
 
   return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
+
+}  // namespace mozilla

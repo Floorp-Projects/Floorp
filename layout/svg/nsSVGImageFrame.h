@@ -56,7 +56,7 @@ class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
       const mozilla::layers::StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder,
-      mozilla::nsDisplaySVGGeometry* aItem, bool aDryRun) override;
+      mozilla::DisplaySVGGeometry* aItem, bool aDryRun) override;
 
  protected:
   explicit nsSVGImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)

@@ -13,15 +13,17 @@
 #include "SVGObserverUtils.h"
 #include "SVGFilters.h"
 
-using namespace mozilla;
+nsIFrame* NS_NewSVGFELeafFrame(mozilla::PresShell* aPresShell,
+                               mozilla::ComputedStyle* aStyle);
+namespace mozilla {
 
 /*
  * This frame is used by filter primitive elements that don't
  * have special child elements that provide parameters.
  */
 class SVGFELeafFrame final : public nsFrame {
-  friend nsIFrame* NS_NewSVGFELeafFrame(mozilla::PresShell* aPresShell,
-                                        ComputedStyle* aStyle);
+  friend nsIFrame* ::NS_NewSVGFELeafFrame(mozilla::PresShell* aPresShell,
+                                          ComputedStyle* aStyle);
 
  protected:
   explicit SVGFELeafFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
@@ -60,9 +62,15 @@ class SVGFELeafFrame final : public nsFrame {
   }
 };
 
-nsIFrame* NS_NewSVGFELeafFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) SVGFELeafFrame(aStyle, aPresShell->GetPresContext());
+}  // namespace mozilla
+
+nsIFrame* NS_NewSVGFELeafFrame(mozilla::PresShell* aPresShell,
+                               mozilla::ComputedStyle* aStyle) {
+  return new (aPresShell)
+      mozilla::SVGFELeafFrame(aStyle, aPresShell->GetPresContext());
 }
+
+namespace mozilla {
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFELeafFrame)
 
@@ -90,3 +98,5 @@ nsresult SVGFELeafFrame::AttributeChanged(int32_t aNameSpaceID,
 
   return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
+
+}  // namespace mozilla

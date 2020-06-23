@@ -10,19 +10,19 @@
 #include "SVGFilters.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
-class SVGFEImageFrame;
-
 nsresult NS_NewSVGFEImageElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
+class SVGFEImageFrame;
+
 namespace dom {
 
 typedef SVGFE SVGFEImageElementBase;
 
 class SVGFEImageElement final : public SVGFEImageElementBase,
                                 public nsImageLoadingContent {
-  friend class ::SVGFEImageFrame;
+  friend class mozilla::SVGFEImageFrame;
 
  protected:
   friend nsresult(::NS_NewSVGFEImageElement(
