@@ -566,6 +566,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mBuildAsyncZoomContainer(false),
       mContainsBackdropFilter(false),
       mIsRelativeToLayoutViewport(false),
+      mUseOverlayScrollbars(false),
       mHitTestArea(),
       mHitTestInfo(CompositorHitTestInvisibleToHit) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
@@ -573,6 +574,9 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting();
 
   ShouldRebuildDisplayListDueToPrefChange();
+
+  mUseOverlayScrollbars =
+      (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0);
 
   static_assert(
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
@@ -809,7 +813,16 @@ bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
   // (manually by the user, or during test setup).
   bool didBuildAsyncZoomContainer = mBuildAsyncZoomContainer;
   UpdateShouldBuildAsyncZoomContainer();
+
+  bool hadOverlayScrollbarsLastTime = mUseOverlayScrollbars;
+  mUseOverlayScrollbars =
+      (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0);
+
   if (didBuildAsyncZoomContainer != mBuildAsyncZoomContainer) {
+    return true;
+  }
+
+  if (hadOverlayScrollbarsLastTime != mUseOverlayScrollbars) {
     return true;
   }
 
