@@ -1058,7 +1058,7 @@ already_AddRefed<Promise> ChromeUtils::CollectPerfStats(GlobalObject& aGlobal,
       PerfStats::CollectPerfStatsJSON();
 
   extPromise->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [promise](const nsCString& aResult) {
         promise->MaybeResolve(NS_ConvertUTF8toUTF16(aResult));
       },

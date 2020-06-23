@@ -1511,7 +1511,7 @@ already_AddRefed<Promise> Navigator::GetVRDisplays(ErrorResult& aRv) {
     int browserID = browser->ChromeOuterWindowID();
 
     browser->SendIsWindowSupportingWebVR(browserID)->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [self, p](bool isSupported) {
           self->FinishGetVRDisplays(isSupported, p);
         },

@@ -439,7 +439,7 @@ bool RemoteWorkerController::PendingServiceWorkerOp::MaybeStart(
     MaybeReportServiceWorkerShutdownProgress(args);
 
     aOwner->mActor->SendExecServiceWorkerOp(args)->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [promise = std::move(mPromise)](
             PRemoteWorkerParent::ExecServiceWorkerOpPromise::
                 ResolveOrRejectValue&& aResult) {

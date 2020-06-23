@@ -65,7 +65,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
 
   RefPtr<DocumentChannelParent> self = this;
   promise->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [self](DocumentLoadListener::OpenPromiseSucceededType&& aResolveValue) {
         // The DLL is waiting for us to resolve the
         // PDocumentChannel::RedirectToRealChannelPromise given as parameter.

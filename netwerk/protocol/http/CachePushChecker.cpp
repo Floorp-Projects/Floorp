@@ -26,7 +26,7 @@ CachePushChecker::CachePushChecker(nsIURI* aPushedURL,
       mOriginAttributes(aOriginAttributes),
       mRequestString(aRequestString),
       mCallback(std::move(aCallback)),
-      mCurrentEventTarget(GetCurrentThreadEventTarget()) {}
+      mCurrentEventTarget(GetCurrentEventTarget()) {}
 
 nsresult CachePushChecker::DoCheck() {
   if (XRE_IsSocketProcess()) {
@@ -42,7 +42,7 @@ nsresult CachePushChecker::DoCheck() {
                                          self->mOriginAttributes,
                                          self->mRequestString)
                     ->Then(
-                        GetCurrentThreadSerialEventTarget(), __func__,
+                        GetCurrentSerialEventTarget(), __func__,
                         [self](bool aResult) { self->InvokeCallback(aResult); },
                         [](const mozilla::ipc::ResponseRejectReason) {});
               }

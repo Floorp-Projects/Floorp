@@ -76,7 +76,7 @@ class StorageDBThread::InitHelper final : public Runnable {
  public:
   InitHelper()
       : Runnable("dom::StorageDBThread::InitHelper"),
-        mOwningThread(GetCurrentThreadEventTarget()),
+        mOwningThread(GetCurrentEventTarget()),
         mMutex("InitHelper::mMutex"),
         mCondVar(mMutex, "InitHelper::mCondVar"),
         mMainThreadResultCode(NS_OK),
@@ -101,7 +101,7 @@ class StorageDBThread::NoteBackgroundThreadRunnable final : public Runnable {
  public:
   NoteBackgroundThreadRunnable()
       : Runnable("dom::StorageDBThread::NoteBackgroundThreadRunnable"),
-        mOwningThread(GetCurrentThreadEventTarget()) {}
+        mOwningThread(GetCurrentEventTarget()) {}
 
  private:
   ~NoteBackgroundThreadRunnable() override = default;

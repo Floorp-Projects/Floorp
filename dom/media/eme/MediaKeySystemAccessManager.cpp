@@ -163,7 +163,7 @@ void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
   MKSAM_LOG_DEBUG(
       "Checking with browser if this window supports protected media.");
   browser->DoesWindowSupportProtectedMedia()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [self, request = std::move(aRequest)](
           const BrowserChild::IsWindowSupportingProtectedMediaPromise::
               ResolveOrRejectValue& value) mutable {
@@ -271,7 +271,7 @@ void MediaKeySystemAccessManager::CheckDoesAppAllowProtectedMedia(
   RefPtr<MediaKeySystemAccessPermissionRequest::RequestPromise> p =
       appApprovalRequest->GetPromise();
   p->Then(
-       GetCurrentThreadSerialEventTarget(), __func__,
+       GetCurrentSerialEventTarget(), __func__,
        // Allow callback
        [this,
         self = RefPtr<MediaKeySystemAccessManager>(this)](bool aRequestResult) {

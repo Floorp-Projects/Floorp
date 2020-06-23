@@ -332,7 +332,7 @@ bool ServiceWorkerOp::MaybeStart(RemoteWorkerChild* aOwner,
 
   if (IsTerminationOp()) {
     aOwner->GetTerminationPromise()->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [self](
             const GenericNonExclusivePromise::ResolveOrRejectValue& aResult) {
           MaybeReportServiceWorkerShutdownProgress(self->mArgs, true);
@@ -398,7 +398,7 @@ ServiceWorkerOp::ServiceWorkerOp(
   RefPtr<ServiceWorkerOpPromise> promise = mPromiseHolder.Ensure(__func__);
 
   promise->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [callback = std::move(aCallback)](
           ServiceWorkerOpPromise::ResolveOrRejectValue&& aResult) mutable {
         if (NS_WARN_IF(aResult.IsReject())) {

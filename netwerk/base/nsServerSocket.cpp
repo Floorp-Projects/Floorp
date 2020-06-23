@@ -424,7 +424,7 @@ class ServerSocketListenerProxy final : public nsIServerSocketListener {
   explicit ServerSocketListenerProxy(nsIServerSocketListener* aListener)
       : mListener(new nsMainThreadPtrHolder<nsIServerSocketListener>(
             "ServerSocketListenerProxy::mListener", aListener)),
-        mTarget(GetCurrentThreadEventTarget()) {}
+        mTarget(GetCurrentEventTarget()) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERVERSOCKETLISTENER
@@ -510,7 +510,7 @@ nsServerSocket::AsyncListen(nsIServerSocketListener* aListener) {
   {
     MutexAutoLock lock(mLock);
     mListener = new ServerSocketListenerProxy(aListener);
-    mListenerTarget = GetCurrentThreadEventTarget();
+    mListenerTarget = GetCurrentEventTarget();
   }
 
   // Child classes may need to do additional setup just before listening begins

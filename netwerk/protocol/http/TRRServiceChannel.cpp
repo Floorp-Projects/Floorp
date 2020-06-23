@@ -89,7 +89,7 @@ TRRServiceChannel::TRRServiceChannel()
       mTopWindowOriginComputed(false),
       mPushedStreamId(0),
       mProxyRequest(nullptr, "TRRServiceChannel::mProxyRequest"),
-      mCurrentEventTarget(GetCurrentThreadEventTarget()) {
+      mCurrentEventTarget(GetCurrentEventTarget()) {
   LOG(("TRRServiceChannel ctor [this=%p]\n", this));
 }
 

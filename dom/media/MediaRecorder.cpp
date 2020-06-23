@@ -99,10 +99,9 @@ class MediaRecorderReporter final : public nsIMemoryReporter {
 
     nsCOMPtr<nsIHandleReportCallback> handleReport = aHandleReport;
     nsCOMPtr<nsISupports> data = aData;
-    MediaRecorder::SizeOfPromise::All(GetCurrentThreadSerialEventTarget(),
-                                      promises)
+    MediaRecorder::SizeOfPromise::All(GetCurrentSerialEventTarget(), promises)
         ->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
+            GetCurrentSerialEventTarget(), __func__,
             [handleReport, data](const nsTArray<size_t>& sizes) {
               nsCOMPtr<nsIMemoryReporterManager> manager =
                   do_GetService("@mozilla.org/memory-reporter-manager;1");
@@ -2055,9 +2054,9 @@ RefPtr<MediaRecorder::SizeOfPromise> MediaRecorder::SizeOfExcludingThis(
     promises.AppendElement(session->SizeOfExcludingThis(aMallocSizeOf));
   }
 
-  SizeOfPromise::All(GetCurrentThreadSerialEventTarget(), promises)
+  SizeOfPromise::All(GetCurrentSerialEventTarget(), promises)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [holder](const nsTArray<size_t>& sizes) {
             size_t total = 0;
             for (const size_t& size : sizes) {

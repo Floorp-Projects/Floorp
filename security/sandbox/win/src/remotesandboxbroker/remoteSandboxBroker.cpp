@@ -49,7 +49,7 @@ bool RemoteSandboxBroker::LaunchApp(
   // We should be on the IPC launch thread. We're shutdown on the IO thread,
   // so save a ref to the IPC launch thread here, so we can close the channel
   // on the IPC launch thread on shutdown.
-  mIPCLaunchThread = GetCurrentThreadEventTarget();
+  mIPCLaunchThread = GetCurrentEventTarget();
 
   mParameters.path() = nsDependentString(aPath);
   mParameters.args() = nsDependentString(aArguments);
@@ -78,7 +78,7 @@ bool RemoteSandboxBroker::LaunchApp(
   };
 
   mParent.Launch(mParameters.shareHandles())
-      ->Then(GetCurrentThreadSerialEventTarget(), __func__, std::move(resolve),
+      ->Then(GetCurrentSerialEventTarget(), __func__, std::move(resolve),
              std::move(reject));
 
   // Spin the event loop while the sandbox launcher process launches.

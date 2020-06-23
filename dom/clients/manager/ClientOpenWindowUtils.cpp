@@ -122,7 +122,7 @@ class WebProgressListener final : public nsIWebProgressListener,
     const nsID& id = info.ref().Id();
     const mozilla::ipc::PrincipalInfo& principal = info.ref().PrincipalInfo();
     ClientManager::GetInfoAndState(ClientGetInfoAndStateArgs(id, principal),
-                                   GetCurrentThreadSerialEventTarget())
+                                   GetCurrentSerialEventTarget())
         ->ChainTo(mPromise.forget(), __func__);
 
     return NS_OK;
@@ -415,7 +415,7 @@ RefPtr<ClientOpPromise> ClientOpenWindow(const ClientOpenWindowArgs& aArgs) {
   }
 
   browsingContextReadyPromise->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [argsValidated, promise](const RefPtr<BrowsingContext>& aBC) {
         WaitForLoad(argsValidated, aBC, promise);
       },

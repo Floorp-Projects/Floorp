@@ -71,7 +71,7 @@ RefPtr<BenchmarkScorePromise> DecoderBenchmark::Get(
   const nsCString name(aDecoderName);
   const nsCString key(aKey);
   return BenchmarkStorageChild::Instance()->SendGet(name, key)->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [](int32_t aResult) {
         return BenchmarkScorePromise::CreateAndResolve(aResult, __func__);
       },

@@ -27,7 +27,7 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
   auto handle = static_cast<ClientHandleParent*>(Manager());
   handle->EnsureSource()
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [this, args = std::move(aArgs)](ClientSourceParent* source) mutable {
             mSourcePromiseRequestHolder.Complete();
             RefPtr<ClientOpPromise> p;
@@ -67,7 +67,7 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
             // in ActorDestroy() which ensures neither lambda is called if the
             // actor is destroyed before the source operation completes.
             p->Then(
-                 GetCurrentThreadSerialEventTarget(), __func__,
+                 GetCurrentSerialEventTarget(), __func__,
                  [this](const ClientOpResult& aResult) {
                    mPromiseRequestHolder.Complete();
                    Unused << PClientHandleOpParent::Send__delete__(this,

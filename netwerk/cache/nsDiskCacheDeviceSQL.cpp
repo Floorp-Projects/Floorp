@@ -1067,7 +1067,7 @@ nsresult nsOfflineCacheDevice::InitWithSqlite(mozIStorageService* ss) {
   rv = ss->OpenDatabase(indexFile, getter_AddRefs(mDB));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mInitEventTarget = GetCurrentThreadEventTarget();
+  mInitEventTarget = GetCurrentEventTarget();
 
   mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF;"));
 

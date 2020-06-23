@@ -157,7 +157,7 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
   RequestHelper(LSObject* aObject, const LSRequestParams& aParams)
       : Runnable("dom::RequestHelper"),
         mObject(aObject),
-        mOwningEventTarget(GetCurrentThreadEventTarget()),
+        mOwningEventTarget(GetCurrentEventTarget()),
         mActor(nullptr),
         mParams(aParams),
         mResultCode(NS_OK),

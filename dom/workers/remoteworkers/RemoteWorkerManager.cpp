@@ -387,8 +387,7 @@ void RemoteWorkerManager::LaunchNewContentProcess(
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  nsCOMPtr<nsISerialEventTarget> bgEventTarget =
-      GetCurrentThreadSerialEventTarget();
+  nsCOMPtr<nsISerialEventTarget> bgEventTarget = GetCurrentSerialEventTarget();
 
   using CallbackParamType = ContentParent::LaunchPromise::ResolveOrRejectValue;
 
@@ -431,7 +430,7 @@ void RemoteWorkerManager::LaunchNewContentProcess(
         ContentParent::GetNewOrUsedBrowserProcessAsync(
             /* aFrameElement = */ nullptr,
             /* aRemoteType = */ NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))
-            ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+            ->Then(GetCurrentSerialEventTarget(), __func__,
                    [callback = std::move(callback)](
                        const CallbackParamType& aValue) mutable {
                      callback(aValue);

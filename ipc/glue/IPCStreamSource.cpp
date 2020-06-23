@@ -25,8 +25,7 @@ class IPCStreamSource::Callback final : public nsIInputStreamCallback,
                                         public nsICancelableRunnable {
  public:
   explicit Callback(IPCStreamSource* aSource)
-      : mSource(aSource),
-        mOwningEventTarget(GetCurrentThreadSerialEventTarget()) {
+      : mSource(aSource), mOwningEventTarget(GetCurrentSerialEventTarget()) {
     MOZ_ASSERT(mSource);
   }
 

@@ -85,7 +85,7 @@ void nsCacheEntry::SetData(nsISupports* data) {
 
   if (data) {
     NS_ADDREF(mData = data);
-    mEventTarget = GetCurrentThreadEventTarget();
+    mEventTarget = GetCurrentEventTarget();
   }
 }
 

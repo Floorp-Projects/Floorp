@@ -335,7 +335,7 @@ class FileHandleOp {
 
  protected:
   FileHandleOp(FileHandle* aFileHandle)
-      : mOwningEventTarget(GetCurrentThreadSerialEventTarget()),
+      : mOwningEventTarget(GetCurrentSerialEventTarget()),
         mFileHandle(aFileHandle)
 #ifdef DEBUG
         ,
@@ -608,7 +608,7 @@ nsresult ClampResultCode(nsresult aResultCode) {
  ******************************************************************************/
 
 FileHandleThreadPool::FileHandleThreadPool()
-    : mOwningEventTarget(GetCurrentThreadSerialEventTarget()),
+    : mOwningEventTarget(GetCurrentSerialEventTarget()),
       mShutdownRequested(false),
       mShutdownComplete(false) {
   AssertIsOnBackgroundThread();

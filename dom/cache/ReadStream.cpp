@@ -179,7 +179,7 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
                          nsIInputStream* aStream)
     : mControl(aControl),
       mId(aId),
-      mOwningEventTarget(GetCurrentThreadSerialEventTarget()),
+      mOwningEventTarget(GetCurrentSerialEventTarget()),
       mState(Open),
       mHasEverBeenRead(false),
       mAsyncOpenStarted(false),

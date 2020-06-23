@@ -3152,7 +3152,7 @@ nsCycleCollector::nsCycleCollector()
       mCCJSRuntime(nullptr),
       mIncrementalPhase(IdlePhase),
 #ifdef DEBUG
-      mEventTarget(GetCurrentThreadSerialEventTarget()),
+      mEventTarget(GetCurrentSerialEventTarget()),
 #endif
       mWhiteNodeCount(0),
       mBeforeUnlinkCB(nullptr),

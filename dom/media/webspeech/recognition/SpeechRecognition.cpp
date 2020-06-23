@@ -511,7 +511,7 @@ void SpeechRecognition::StopRecordingAndRecognize(SpeechEvent* aEvent) {
   // This will run SoundEnd on the service just before StopRecording begins
   // shutting the encode thread down.
   mSpeechListener->mRemovedPromise->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [service = mRecognitionService] { service->SoundEnd(); });
 
   StopRecording();
@@ -580,7 +580,7 @@ void SpeechRecognition::AbortSilently(SpeechEvent* aEvent) {
       // This will run Abort on the service just before StopRecording begins
       // shutting the encode thread down.
       mSpeechListener->mRemovedPromise->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [service = mRecognitionService] { service->Abort(); });
     } else {
       // Recording hasn't started yet. We can just call Abort().
@@ -589,7 +589,7 @@ void SpeechRecognition::AbortSilently(SpeechEvent* aEvent) {
   }
 
   StopRecording()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr<SpeechRecognition>(this), this] { ResetAndEnd(); });
 
   SetState(STATE_ABORTING);
@@ -661,7 +661,7 @@ RefPtr<GenericNonExclusivePromise> SpeechRecognition::StopRecording() {
   mStopRecordingPromise =
       mSpeechListener->mRemovedPromise
           ->Then(
-              GetCurrentThreadSerialEventTarget(), __func__,
+              GetCurrentSerialEventTarget(), __func__,
               [self = RefPtr<SpeechRecognition>(this), this] {
                 SR_LOG("Shutting down encoding thread");
                 return mEncodeTaskQueue->BeginShutdown();
@@ -671,7 +671,7 @@ RefPtr<GenericNonExclusivePromise> SpeechRecognition::StopRecording() {
                 return ShutdownPromise::CreateAndResolve(false, __func__);
               })
           ->Then(
-              GetCurrentThreadSerialEventTarget(), __func__,
+              GetCurrentSerialEventTarget(), __func__,
               [self = RefPtr<SpeechRecognition>(this), this] {
                 RefPtr<nsIAsyncShutdownClient> shutdown =
                     media::GetShutdownBarrier();
@@ -817,7 +817,7 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
     MediaManager::Get()
         ->GetUserMedia(GetOwner(), constraints, aCallerType)
         ->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
+            GetCurrentSerialEventTarget(), __func__,
             [this, self,
              generation = mStreamGeneration](RefPtr<DOMMediaStream>&& aStream) {
               nsTArray<RefPtr<AudioStreamTrack>> tracks;

@@ -63,7 +63,7 @@ PrincipalVerifier::PrincipalVerifier(Listener* aListener,
     : Runnable("dom::cache::PrincipalVerifier"),
       mActor(BackgroundParent::GetContentParent(aActor)),
       mPrincipalInfo(aPrincipalInfo),
-      mInitiatingEventTarget(GetCurrentThreadSerialEventTarget()),
+      mInitiatingEventTarget(GetCurrentSerialEventTarget()),
       mResult(NS_OK) {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(mInitiatingEventTarget);

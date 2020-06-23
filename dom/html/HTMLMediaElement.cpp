@@ -7775,9 +7775,9 @@ RefPtr<GenericPromise> HTMLMediaElement::SetSrcMediaStreamSink(
   }
 
   RefPtr<GenericPromise> p =
-      GenericPromise::All(GetCurrentThreadSerialEventTarget(), promises)
+      GenericPromise::All(GetCurrentSerialEventTarget(), promises)
           ->Then(
-              GetCurrentThreadSerialEventTarget(), __func__,
+              GetCurrentSerialEventTarget(), __func__,
               [](const nsTArray<bool>&) {
                 return GenericPromise::CreateAndResolve(true, __func__);
               },

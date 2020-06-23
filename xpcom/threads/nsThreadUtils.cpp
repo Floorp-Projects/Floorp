@@ -214,7 +214,7 @@ nsresult NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent) {
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
 #ifdef MOZILLA_INTERNAL_API
-  nsIEventTarget* thread = GetCurrentThreadEventTarget();
+  nsIEventTarget* thread = GetCurrentEventTarget();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -275,7 +275,7 @@ nsresult NS_DelayedDispatchToCurrentThread(
     already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs) {
   nsCOMPtr<nsIRunnable> event(aEvent);
 #ifdef MOZILLA_INTERNAL_API
-  nsIEventTarget* thread = GetCurrentThreadEventTarget();
+  nsIEventTarget* thread = GetCurrentEventTarget();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -397,7 +397,7 @@ extern nsresult NS_DispatchToThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
              aQueue == EventQueuePriority::DeferredTimers);
 
   // XXX Using current thread for now as the nsIEventTarget.
-  nsIEventTarget* target = mozilla::GetCurrentThreadEventTarget();
+  nsIEventTarget* target = mozilla::GetCurrentEventTarget();
   if (!target) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -570,7 +570,7 @@ nsAutoLowPriorityIO::~nsAutoLowPriorityIO() {
 
 namespace mozilla {
 
-nsIEventTarget* GetCurrentThreadEventTarget() {
+nsIEventTarget* GetCurrentEventTarget() {
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
   if (NS_FAILED(rv)) {
@@ -584,7 +584,7 @@ nsIEventTarget* GetMainThreadEventTarget() {
   return GetMainThreadSerialEventTarget();
 }
 
-nsISerialEventTarget* GetCurrentThreadSerialEventTarget() {
+nsISerialEventTarget* GetCurrentSerialEventTarget() {
   if (nsISerialEventTarget* current =
           SerialEventTargetGuard::GetCurrentSerialEventTarget()) {
     return current;
@@ -655,7 +655,7 @@ extern "C" {
 // that enable Rust code to get/create threads and dispatch runnables on them.
 
 nsresult NS_GetCurrentThreadEventTarget(nsIEventTarget** aResult) {
-  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentThreadEventTarget();
+  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentEventTarget();
   if (!target) {
     return NS_ERROR_UNEXPECTED;
   }

@@ -1340,7 +1340,7 @@ class GetUserMediaStreamRunnable : public Runnable {
       // Call GetPrincipalKey again, this time w/persist = true, to promote
       // deviceIds to persistent, in case they're not already. Fire'n'forget.
       media::GetPrincipalKey(mPrincipalInfo, true)
-          ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+          ->Then(GetCurrentSerialEventTarget(), __func__,
                  [](const media::PrincipalKeyPromise::ResolveOrRejectValue&
                         aValue) {
                    if (aValue.IsReject()) {
@@ -2207,7 +2207,7 @@ void MediaManager::DeviceListChanged() {
                       MediaSinkEnum::Speaker, DeviceEnumerationType::Normal,
                       DeviceEnumerationType::Normal, false, devices)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr<MediaManager>(this), this, devices](bool) {
             if (!MediaManager::GetIfExists()) {
               return;
@@ -2687,7 +2687,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                               MediaSinkEnum::Other, videoEnumerationType,
                               audioEnumerationType, true, devices)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self, windowID, c, windowListener, isChrome, devices](bool) {
             LOG("GetUserMedia: post enumeration promise success callback "
                 "starting");
@@ -2712,7 +2712,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                                                           __func__);
           })
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self, windowID, c, windowListener, sourceListener, askPermission,
            prefs, isSecure, isHandlingUserInput, callID, principalInfo,
            isChrome, devices,
@@ -3232,7 +3232,7 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
                               videoEnumerationType, audioEnumerationType, false,
                               devices)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr<MediaManager>(this), this, windowListener,
            sourceListener, devices](bool) {
             if (!IsWindowListenerStillActive(windowListener)) {
@@ -3319,7 +3319,7 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
                               DeviceEnumerationType::Normal,
                               DeviceEnumerationType::Normal, true, devices)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [aDeviceId, isSecure, devices](bool) {
             for (RefPtr<MediaDevice>& device : *devices) {
               if (aDeviceId.IsEmpty() && device->mSinkInfo->Preferred()) {

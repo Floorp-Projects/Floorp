@@ -335,7 +335,7 @@ void PreallocatedProcessManagerImpl::AllocateNow() {
   mLaunchInProgress = true;
 
   ContentParent::PreallocateProcess()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
 
       [self, this](const RefPtr<ContentParent>& process) {
         mLaunchInProgress = false;

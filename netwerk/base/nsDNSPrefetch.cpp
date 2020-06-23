@@ -71,7 +71,7 @@ nsresult nsDNSPrefetch::Prefetch(uint32_t flags) {
   // then our timing will be useless. However, in such a case,
   // mEndTimestamp will be a null timestamp and callers should check
   // TimingsValid() before using the timing.
-  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentThreadEventTarget();
+  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentEventTarget();
 
   flags |= nsIDNSService::GetFlagsFromTRRMode(mTRRMode);
 

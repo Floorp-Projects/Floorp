@@ -76,7 +76,7 @@ class AudioConduitTest : public ::testing::Test {
   AudioConduitTest() : mCall(new MockCall()) {
     mAudioConduit = new AudioConduitWithMockChannelProxy(
         WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
-        GetCurrentThreadSerialEventTarget());
+        GetCurrentSerialEventTarget());
     mAudioConduit->Init();
   }
 

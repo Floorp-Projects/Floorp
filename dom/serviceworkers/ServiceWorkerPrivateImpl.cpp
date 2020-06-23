@@ -401,7 +401,7 @@ nsresult ServiceWorkerPrivateImpl::CheckScriptEvaluation(
         // If a termination operation was already issued using `holder`...
         if (self->mControllerChild != holder) {
           holder->OnDestructor()->Then(
-              GetCurrentThreadSerialEventTarget(), __func__,
+              GetCurrentSerialEventTarget(), __func__,
               [callback = std::move(callback)](
                   const GenericPromise::ResolveOrRejectValue&) {
                 callback->SetResult(false);
@@ -422,7 +422,7 @@ nsresult ServiceWorkerPrivateImpl::CheckScriptEvaluation(
         swm->BlockShutdownOn(promise, shutdownStateId);
 
         promise->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
+            GetCurrentSerialEventTarget(), __func__,
             [callback = std::move(callback)](
                 const GenericNonExclusivePromise::ResolveOrRejectValue&) {
               callback->SetResult(false);
@@ -854,7 +854,7 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEventInternal(
   FetchEventOpChild::SendFetchEvent(
       mControllerChild->get(), std::move(aArgs), std::move(aChannel),
       std::move(aRegistration), mOuter->CreateEventKeepAliveToken())
-      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+      ->Then(GetCurrentSerialEventTarget(), __func__,
              [holder = std::move(holder)](
                  const GenericPromise::ResolveOrRejectValue& aResult) {
                Unused << NS_WARN_IF(aResult.IsReject());
@@ -1048,7 +1048,7 @@ nsresult ServiceWorkerPrivateImpl::ExecServiceWorkerOp(
    * can accept rvalue references rather than just const references.
    */
   mControllerChild->get()->SendExecServiceWorkerOp(aArgs)->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [self = std::move(self), holder = std::move(holder),
        token = std::move(token), onSuccess = std::move(aSuccessCallback),
        onFailure = std::move(aFailureCallback)](

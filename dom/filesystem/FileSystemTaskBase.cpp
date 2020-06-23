@@ -188,7 +188,7 @@ FileSystemTaskParentBase::FileSystemTaskParentBase(
       mErrorValue(NS_OK),
       mFileSystem(aFileSystem),
       mRequestParent(aParent),
-      mBackgroundEventTarget(GetCurrentThreadEventTarget()) {
+      mBackgroundEventTarget(GetCurrentEventTarget()) {
   MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
   MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
   MOZ_ASSERT(aParent);

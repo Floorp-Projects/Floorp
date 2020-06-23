@@ -36,7 +36,7 @@ struct InitParam {
 class MockDriftCompensator : public DriftCompensator {
  public:
   MockDriftCompensator()
-      : DriftCompensator(GetCurrentThreadEventTarget(), VIDEO_TRACK_RATE) {
+      : DriftCompensator(GetCurrentEventTarget(), VIDEO_TRACK_RATE) {
     ON_CALL(*this, GetVideoTime(_, _))
         .WillByDefault(Invoke([](TimeStamp, TimeStamp t) { return t; }));
   }

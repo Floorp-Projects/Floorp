@@ -822,7 +822,7 @@ class WorkerPermissionChallenge final : public Runnable {
 
     RefPtr<WorkerPermissionChallenge> self(this);
     browserChild->SendIndexedDBPermissionRequest(principal)->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [self](const uint32_t& aPermission) { self->OperationCompleted(); },
         [](const mozilla::ipc::ResponseRejectReason) {});
     return false;
@@ -1516,7 +1516,7 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
   MOZ_ASSERT(browserChild);
 
   browserChild->SendIndexedDBPermissionRequest(principal)->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [this](const uint32_t& aPermission) {
         this->AssertIsOnOwningThread();
         MaybeCollectGarbageOnIPCMessage();

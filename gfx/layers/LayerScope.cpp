@@ -1020,7 +1020,7 @@ void LayerScopeWebSocketManager::SocketHandler::OpenStream(
   nsCOMPtr<nsIInputStream> debugInputStream;
   mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(debugInputStream));
   mInputStream = do_QueryInterface(debugInputStream);
-  mInputStream->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
+  mInputStream->AsyncWait(this, 0, 0, GetCurrentEventTarget());
 }
 
 bool LayerScopeWebSocketManager::SocketHandler::WriteToStream(void* aPtr,
@@ -1091,7 +1091,7 @@ LayerScopeWebSocketManager::SocketHandler::OnInputStreamReady(
     if (WebSocketHandshake(protocolString)) {
       mState = HandshakeSuccess;
       mConnected = true;
-      mInputStream->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
+      mInputStream->AsyncWait(this, 0, 0, GetCurrentEventTarget());
     } else {
       mState = HandshakeFailed;
     }
@@ -1218,7 +1218,7 @@ nsresult LayerScopeWebSocketManager::SocketHandler::HandleSocketMessage(
     // TODO: combine packets if we have to read more than once
 
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-      mInputStream->AsyncWait(this, 0, 0, GetCurrentThreadEventTarget());
+      mInputStream->AsyncWait(this, 0, 0, GetCurrentEventTarget());
       return NS_OK;
     }
 

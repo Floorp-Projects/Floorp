@@ -47,7 +47,7 @@ IPCResult ServiceWorkerRegistrationParent::RecvUnregister(
   }
 
   mProxy->Unregister()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [aResolver](bool aSuccess) mutable {
         ResolveUnregister(std::move(aResolver), aSuccess, NS_OK);
       },
@@ -67,7 +67,7 @@ IPCResult ServiceWorkerRegistrationParent::RecvUpdate(
 
   mProxy->Update(aNewestWorkerScriptUrl)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [aResolver](const ServiceWorkerRegistrationDescriptor& aDescriptor) {
             aResolver(aDescriptor.ToIPC());
           },
