@@ -20,6 +20,8 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsIGfxInfo.h"
+#include "mozilla/Telemetry.h"
+#include "nsGkAtoms.h"
 
 #ifndef MOZ_WIDGET_ANDROID
 #  include "WebMSample.h"
