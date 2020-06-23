@@ -180,6 +180,18 @@ class UrlbarProviderExtension extends UrlbarProvider {
   }
 
   /**
+   * This is called only for dynamic result types, when the urlbar view updates
+   * the view of one of the results of the provider.  It should return an object
+   * describing the view update.  See the base UrlbarProvider class for more.
+   *
+   * @param {UrlbarResult} result The result whose view will be updated.
+   * @returns {object} An object describing the view update.
+   */
+  async getViewUpdate(result) {
+    return this._notifyListener("getViewUpdate", result);
+  }
+
+  /**
    * This method is called by the providers manager when a query starts to fetch
    * each extension provider's results.  It fires the resultsRequested event.
    *
@@ -220,9 +232,15 @@ class UrlbarProviderExtension extends UrlbarProvider {
    *
    * @param {UrlbarResult} result
    *   The result that was picked.
+   * @param {Element} element
+   *   The element in the result's view that was picked.
    */
-  pickResult(result) {
-    this._notifyListener("resultPicked", result.payload);
+  pickResult(result, element) {
+    let dynamicElementName = "";
+    if (element && result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC) {
+      dynamicElementName = element.getAttribute("name");
+    }
+    this._notifyListener("resultPicked", result.payload, dynamicElementName);
   }
 
   /**
@@ -351,6 +369,7 @@ class UrlbarProviderExtension extends UrlbarProvider {
 
 // Maps extension result type enums to internal result types.
 UrlbarProviderExtension.RESULT_TYPES = {
+  dynamic: UrlbarUtils.RESULT_TYPE.DYNAMIC,
   keyword: UrlbarUtils.RESULT_TYPE.KEYWORD,
   omnibox: UrlbarUtils.RESULT_TYPE.OMNIBOX,
   remote_tab: UrlbarUtils.RESULT_TYPE.REMOTE_TAB,

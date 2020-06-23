@@ -408,3 +408,6 @@ The following RESULT_TYPEs are supported:
     // If a tip is untranslated it's possible to provide text and buttonText.
     // Payload: { icon, textData, buttonTextData, [buttonUrl], [helpUrl] }
     TIP: 7,
+    // A type of result created at runtime, for example by an extension.
+    // Payload: { dynamicType }
+    DYNAMIC: 8,

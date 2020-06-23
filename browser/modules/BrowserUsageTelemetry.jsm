@@ -100,6 +100,7 @@ const URLBAR_SELECTED_RESULT_TYPES = {
   tip: 12,
   topsite: 13,
   formhistory: 14,
+  dynamic: 15,
   // n_values = 32, so you'll need to create a new histogram if you need more.
 };
 

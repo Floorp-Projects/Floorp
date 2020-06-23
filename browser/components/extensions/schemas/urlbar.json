@@ -86,8 +86,8 @@
       {
         "id": "ResultType",
         "type": "string",
-        "enum": ["remote_tab", "search", "tab", "tip", "url"],
-        "description": "Possible types of results. <code>remote_tab</code>: A synced tab from another device. <code>search</code>: A search suggestion from a search engine. <code>tab</code>: An open tab in the browser. <code>tip</code>: An actionable message to help the user with their query. <code>url</code>: A URL that's not one of the other types."
+        "enum": ["dynamic", "remote_tab", "search", "tab", "tip", "url"],
+        "description": "Possible types of results. <code>dynamic</code>: A result whose view and payload are specified by the extension. <code>remote_tab</code>: A synced tab from another device. <code>search</code>: A search suggestion from a search engine. <code>tab</code>: An open tab in the browser. <code>tip</code>: An actionable message to help the user with their query. <code>url</code>: A URL that's not one of the other types."
       },
       {
         "id": "SearchOptions",
@@ -255,12 +255,17 @@
       {
         "name": "onResultPicked",
         "type": "function",
-        "description": "Typically, a provider includes a <code>url</code> property in its results' payloads. When the user picks a result with a URL, Firefox automatically loads the URL. URLs don't make sense for every result type, however. When the user picks a result without a URL, this event is fired. The provider should take an appropriate action in response. Currently the only applicable <code>ResultType</code> is <code>tip</code>.",
+        "description": "Typically, a provider includes a <code>url</code> property in its results' payloads. When the user picks a result with a URL, Firefox automatically loads the URL. URLs don't make sense for every result type, however. When the user picks a result without a URL, this event is fired. The provider should take an appropriate action in response. Currently the only applicable <code>ResultTypes</code> are <code>dynamic</code> and <code>tip</code>.",
         "parameters": [
           {
             "name": "payload",
             "type": "object",
             "description": "The payload of the result that was picked."
+          },
+          {
+            "name": "elementName",
+            "type": "string",
+            "description": "If the result is a dynamic type, this is the name of the element in the result view that was picked. If the result is not a dynamic type, this is an empty string."
           }
         ],
         "extraParameters": [
