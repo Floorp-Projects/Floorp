@@ -76,8 +76,8 @@ class VendorRust(MozbuildObject):
 
     def check_cargo_version(self, cargo):
         """
-        Ensure that cargo is new enough. cargo 1.37 added support
-        for the vendor command.
+        Ensure that cargo is new enough. cargo 1.42 fixed some issue with
+        the vendor command.
         """
         out = (
             subprocess.check_output([cargo, "--version"])
@@ -86,7 +86,7 @@ class VendorRust(MozbuildObject):
         )
         if not out.startswith("cargo"):
             return False
-        return LooseVersion(out.split()[1]) >= "1.37"
+        return LooseVersion(out.split()[1]) >= "1.42"
 
     def check_modified_files(self):
         """
