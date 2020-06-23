@@ -2048,6 +2048,7 @@ class nsDisplayListBuilder {
   bool mBuildAsyncZoomContainer;
   bool mContainsBackdropFilter;
   bool mIsRelativeToLayoutViewport;
+  bool mUseOverlayScrollbars;
 
   nsRect mHitTestArea;
   CompositorHitTestInfo mHitTestInfo;
