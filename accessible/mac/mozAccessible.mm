@@ -188,7 +188,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 #pragma mark - MOXAccessible protocol
 
 - (BOOL)moxBlockSelector:(SEL)selector {
-  if (selector == @selector(performPress)) {
+  if (selector == @selector(moxPerformPress)) {
     uint8_t actionCount = mGeckoAccessible.IsAccessible()
                               ? mGeckoAccessible.AsAccessible()->ActionCount()
                               : mGeckoAccessible.AsProxy()->ActionCount();
