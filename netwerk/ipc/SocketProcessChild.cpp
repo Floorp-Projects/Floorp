@@ -454,5 +454,14 @@ SocketProcessChild::RecvPNativeDNSResolverOverrideConstructor(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult SocketProcessChild::RecvNotifyObserver(
+    const nsCString& aTopic, const nsString& aData) {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, aTopic.get(), aData.get());
+  }
+  return IPC_OK();
+}
+
 }  // namespace net
 }  // namespace mozilla
