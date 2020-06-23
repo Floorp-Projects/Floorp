@@ -21,12 +21,22 @@
 <form><input type="text" id="i1"><input type="text" disabled><input type="submit"></form>
 <input type="text" id="j1"><input type="text"><input type="button">
 <form><input type="text" id="k1"><a href="#foo">foo</a><input type="text"><input type="submit"></form>
+<form>
+  <input id="l1" enterkeyhint="enter">
+  <input id="l2" enterkeyhint="DONE">
+  <input id="l3" enterkeyhint="go">
+  <input id="l4" enterkeyhint="Next">
+  <input id="l5" enterkeyhint="Previous">
+  <input id="l6" enterkeyhint="search">
+  <textarea id="l7" enterkeyhint="send"></textarea>
+  <input id="l8" enterkeyhint="NONE">
+</form>
 </div>
 <pre id="test">
 <script class=testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-SimpleTest.waitForFocus(() => {
+SimpleTest.waitForFocus(async () => {
   const tests = [
     { id: "a1", hint: "next", desc: "next element is type=text" },
     { id: "a2", hint: "go", desc: "next element is type=submit" },
@@ -38,12 +48,23 @@ SimpleTest.waitForFocus(() => {
     // XXX Feel free to change this result if you get some bugs reports
     { id: "i1", hint: "go", desc: "next element is disabled" },
     { id: "j1", hint: "", desc: "no form element" },
+    { id: "l1", hint: "enter", desc: "enterkeyhint=enter" },
+    { id: "l2", hint: "done", desc: "enterkeyhint=DONE" },
+    { id: "l3", hint: "go", desc: "enterkeyhint=go" },
+    { id: "l4", hint: "next", desc: "enterkeyhint=Next" },
+    { id: "l5", hint: "previous", desc: "enterkeyhint=Previous" },
+    { id: "l6", hint: "search", desc: "enterkeyhint=search" },
+    { id: "l7", hint: "send", desc: "enterkeyhint=send" },
+    // Since enterkeyhint is invalid, we infer action hint. So feel free to change this.
+    { id: "l8", hint: "go", desc: "enterkeyhint is invalid" },
   ];
 
   const todo_tests = [
     { id: "f1", hint: "next", desc: "next element is type=date" },
     { id: "k1", hint: "", desc: "next is anchor link" },
   ];
+
+  await SpecialPowers.setBoolPref("dom.forms.enterkeyhint", true);
 
   for (let test of tests) {
     document.getElementById(test.id).focus();
@@ -55,6 +76,7 @@ SimpleTest.waitForFocus(() => {
     todo_is(SpecialPowers.DOMWindowUtils.focusedActionHint, test.hint, test.desc);
   }
 
+  SpecialPowers.clearUserPref("dom.forms.enterkeyhint");
   SimpleTest.finish();
 });
 </script>
