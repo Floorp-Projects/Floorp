@@ -22,13 +22,10 @@ add_task(async function testRollback() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
-  is(
-    Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
-    undefined,
-    "Doorhanger shown pref undefined before user interaction."
-  );
 
-  prefPromise = TestUtils.waitForPrefChange(prefs.DOH_DOORHANGER_SHOWN_PREF);
+  prefPromise = TestUtils.waitForPrefChange(
+    prefs.DOH_DOORHANGER_USER_DECISION_PREF
+  );
 
   // Click the doorhanger's "accept" button.
   let button = panel.querySelector(".popup-notification-primary-button");
@@ -40,11 +37,6 @@ add_task(async function testRollback() {
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
   await prefPromise;
-  is(
-    Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
-    true,
-    "Doorhanger shown pref saved."
-  );
   is(
     Preferences.get(prefs.DOH_DOORHANGER_USER_DECISION_PREF),
     "UIOk",

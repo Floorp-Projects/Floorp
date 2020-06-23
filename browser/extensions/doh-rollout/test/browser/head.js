@@ -8,6 +8,12 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
+  "ASRouter",
+  "resource://activity-stream/lib/ASRouter.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
   "Preferences",
   "resource://gre/modules/Preferences.jsm"
 );
@@ -58,6 +64,15 @@ const prefs = {
   PROFILE_CREATION_THRESHOLD_PREF: "doh-rollout.profileCreationThreshold",
 };
 
+const CFR_PREF = "browser.newtabpage.activity-stream.asrouter.providers.cfr";
+const CFR_JSON = {
+  id: "cfr",
+  enabled: true,
+  type: "local",
+  localProvider: "CFRMessageProvider",
+  categories: ["cfrAddons", "cfrFeatures"],
+};
+
 async function setup() {
   SpecialPowers.pushPrefEnv({
     set: [["security.notification_enable_delay", 0]],
@@ -66,10 +81,8 @@ async function setup() {
   Services.telemetry.canRecordExtended = true;
   Services.telemetry.clearEvents();
 
-  // Set the profile creation threshold to very far in the future by defualt,
-  // so that we can test the doorhanger. browser_doorhanger_newProfile.js
-  // overrides this.
-  Preferences.set(prefs.PROFILE_CREATION_THRESHOLD_PREF, "99999999999999");
+  // Enable the CFR.
+  Preferences.set(CFR_PREF, JSON.stringify(CFR_JSON));
 
   // Enable trr selection for tests. This is off by default so it can be
   // controlled via Normandy.
@@ -109,6 +122,12 @@ async function setup() {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.clearEvents();
     gDNSOverride.clearOverrides();
+    if (ASRouter.state.messageBlockList.includes("DOH_ROLLOUT_CONFIRMATION")) {
+      await ASRouter.unblockMessageById("DOH_ROLLOUT_CONFIRMATION");
+    }
+    // The CFR pref is set to an empty array in user.js for testing profiles,
+    // so "reset" it back to that value.
+    Preferences.set(CFR_PREF, "[]");
     await resetPrefsAndRestartAddon();
   });
 }
@@ -245,7 +264,8 @@ async function resetPrefsAndRestartAddon() {
 }
 
 async function waitForDoorhanger() {
-  const notificationID = "doh-first-time";
+  const popupID = "contextual-feature-recommendation";
+  const bucketID = "DOH_ROLLOUT_CONFIRMATION";
   let panel;
   await BrowserTestUtils.waitForEvent(document, "popupshown", true, event => {
     panel = event.originalTarget;
@@ -253,7 +273,8 @@ async function waitForDoorhanger() {
     return (
       popupNotification &&
       popupNotification.notification &&
-      popupNotification.notification.id == notificationID
+      popupNotification.notification.id == popupID &&
+      popupNotification.getAttribute("data-notification-bucket") == bucketID
     );
   });
   return panel;
