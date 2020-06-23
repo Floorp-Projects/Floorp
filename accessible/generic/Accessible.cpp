@@ -25,6 +25,7 @@
 #include "RootAccessible.h"
 #include "States.h"
 #include "StyleInfo.h"
+#include "TextRange.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
 #include "TreeWalker.h"
@@ -892,6 +893,27 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
           AccAnnouncementEvent* announcementEvent = downcast_accEvent(aEvent);
           ipcDoc->SendAnnouncementEvent(id, announcementEvent->Announcement(),
                                         announcementEvent->Priority());
+          break;
+        }
+        case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED: {
+          AccTextSelChangeEvent* textSelChangeEvent = downcast_accEvent(aEvent);
+          AutoTArray<TextRange, 1> ranges;
+          textSelChangeEvent->SelectionRanges(&ranges);
+          nsTArray<TextRangeData> textRangeData(ranges.Length());
+          for (size_t i = 0; i < ranges.Length(); i++) {
+            const TextRange& range = ranges.ElementAt(i);
+            Accessible* start = range.StartContainer();
+            Accessible* end = range.EndContainer();
+            textRangeData.AppendElement(TextRangeData(
+                start->IsDoc() && start->AsDoc()->IPCDoc()
+                    ? 0
+                    : reinterpret_cast<uint64_t>(start->UniqueID()),
+                end->IsDoc() && end->AsDoc()->IPCDoc()
+                    ? 0
+                    : reinterpret_cast<uint64_t>(end->UniqueID()),
+                range.StartOffset(), range.EndOffset()));
+          }
+          ipcDoc->SendTextSelectionChangeEvent(id, textRangeData);
           break;
         }
 #endif
