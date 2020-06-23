@@ -71,7 +71,8 @@ mod private {
         type Inner = glean_core::metrics::CounterMetric;
 
         fn from_inner(metric: Self::Inner) -> Self {
-            CounterMetric(metric)
+            assert!(!need_ipc());
+            CounterMetric::Parent(crate::metrics::counter::CounterMetricImpl(metric))
         }
 
         fn new_inner(meta: CommonMetricData) -> Self::Inner {
