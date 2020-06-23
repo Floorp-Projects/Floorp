@@ -436,6 +436,11 @@ class Bootstrapper(object):
                       'any time by editing the config file `{}`\n'.format(cfg_file))
 
     def bootstrap(self):
+        if sys.version_info[0] < 3:
+            print('This script must be run with Python 3. \n'
+                  'Try "python3 bootstrap.py".')
+            sys.exit(1)
+
         if self.choice is None:
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
             labels = ['%s. %s' % (i, name) for i, name in enumerate(APPLICATIONS.keys(), 1)]
