@@ -1594,6 +1594,20 @@ RefPtr<StyleSheet> Loader::LookupInlineSheetInCache(const nsAString& aBuffer) {
   return result.Data()->Clone(nullptr, nullptr, nullptr, nullptr);
 }
 
+void Loader::MaybeNotifyPreloadUsed(SheetLoadData& aData) {
+  if (!mDocument) {
+    return;
+  }
+
+  auto key = PreloadHashKey::CreateAsStyle(aData);
+  RefPtr<PreloaderBase> preload = mDocument->Preloads().LookupPreload(key);
+  if (!preload) {
+    return;
+  }
+
+  preload->NotifyUsage();
+}
+
 Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     const SheetInfo& aInfo, const nsAString& aBuffer, uint32_t aLineNumber,
     nsICSSLoaderObserver* aObserver) {
@@ -1772,6 +1786,9 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
       this, aInfo.mTitle, aInfo.mURI, sheet, syncLoad, aInfo.mContent,
       isAlternate, matched, IsPreload::No, aObserver, principal,
       aInfo.mReferrerInfo, context);
+
+  MaybeNotifyPreloadUsed(*data);
+
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete: 0x%p", sheet.get()));
     if (aObserver || !mObservers.IsEmpty() || aInfo.mContent) {
@@ -1925,6 +1942,8 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
   auto data = MakeRefPtr<SheetLoadData>(
       this, aURL, sheet, aParentData, observer, principal,
       aParentSheet.GetReferrerInfo(), context);
+
+  MaybeNotifyPreloadUsed(*data);
 
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete"));
