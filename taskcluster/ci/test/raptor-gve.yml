@@ -222,7 +222,7 @@ raptor-youtube-playback-geckoview:
             android-hw-g5.*/pgo: ['mozilla-central']
             android-hw-g5.*-shippable/opt: ['mozilla-central']
             default: []
-    max-run-time: 3000
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback
@@ -244,6 +244,7 @@ raptor-youtube-playback-av1-sfr-geckoview:
             android-hw-g5.*/pgo: ['mozilla-central']
             android-hw-g5.*-shippable/opt: ['mozilla-central']
             default: []
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-av1-sfr
@@ -262,6 +263,7 @@ raptor-youtube-playback-h264-sfr-geckoview:
             android-hw-g5.*/pgo: ['mozilla-central']
             android-hw-g5.*-shippable/opt: ['mozilla-central']
             default: []
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-sfr
@@ -280,6 +282,7 @@ raptor-youtube-playback-h264-geckoview:
             android-hw-g5.*/pgo: ['mozilla-central']
             android-hw-g5.*-shippable/opt: ['mozilla-central']
             default: []
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-std
@@ -296,6 +299,7 @@ raptor-youtube-playback-vp9-sfr-geckoview:
             android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
             android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
             default: []
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-vp9-sfr
@@ -308,7 +312,7 @@ raptor-youtube-playback-widevine-hfr-geckoview:
     try-name: raptor-youtube-playback-widevine-hfr-geckoview
     treeherder-symbol: Rap(ytp-widevine-hfr)
     run-on-projects: []
-    max-run-time: 3000
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-hfr
@@ -321,7 +325,7 @@ raptor-youtube-playback-widevine-h264-sfr-geckoview:
     try-name: raptor-youtube-playback-widevine-h264-sfr-geckoview
     treeherder-symbol: Rap(ytp-widevine-h264-sfr)
     run-on-projects: []
-    max-run-time: 3000
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-h264-sfr
@@ -334,7 +338,7 @@ raptor-youtube-playback-widevine-vp9-sfr-geckoview:
     try-name: raptor-youtube-playback-widevine-vp9-sfr-geckoview
     treeherder-symbol: Rap(ytp-widevine-vp9-sfr)
     run-on-projects: []
-    max-run-time: 3000
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-vp9-sfr

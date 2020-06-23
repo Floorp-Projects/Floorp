@@ -172,10 +172,7 @@ raptor-youtube-playback-av1-sfr-chrome:
     description: "Raptor YouTube Playback AV1 SFR on Chrome"
     try-name: raptor-youtube-playback-av1-sfr-chrome
     treeherder-symbol: Rap-ChR(ytp-av1-sfr)
-    max-run-time:
-        by-test-platform:
-            windows10-aarch64/opt: 3600
-            default: 1800
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-av1-sfr
