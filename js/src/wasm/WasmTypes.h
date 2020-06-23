@@ -3098,11 +3098,6 @@ extern bool IsValidARMImmediate(uint32_t i);
 
 extern uint64_t RoundUpToNextValidARMImmediate(uint64_t i);
 
-// The WebAssembly spec hard-codes the virtual page size to be 64KiB and
-// requires the size of linear memory to always be a multiple of 64KiB.
-
-static const unsigned PageSize = 64 * 1024;
-
 // Bounds checks always compare the base of the memory access with the bounds
 // check limit. If the memory access is unaligned, this means that, even if the
 // bounds check succeeds, a few bytes of the access can extend past the end of
