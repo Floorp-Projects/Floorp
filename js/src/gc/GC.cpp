@@ -4035,55 +4035,7 @@ void GCRuntime::purgeSourceURLsForShrinkingGC() {
   }
 }
 
-class ArenasToUnmark {
- public:
-  explicit ArenasToUnmark(GCRuntime* gc);
-
-  bool done() const { return arenas.isNothing(); }
-
-  ArenaListSegment get() const {
-    MOZ_ASSERT(!done());
-    return arenas.ref().get();
-  }
-
-  void next();
-
- private:
-  void settle();
-
-  GCZonesIter zones;
-  Maybe<ArenasToUpdate> arenas;
-};
-
-ArenasToUnmark::ArenasToUnmark(GCRuntime* gc) : zones(gc) { settle(); }
-
-void ArenasToUnmark::settle() {
-  MOZ_ASSERT(arenas.isNothing());
-
-  while (!zones.done()) {
-    arenas.emplace(zones.get());
-    if (!arenas.ref().done()) {
-      break;
-    }
-
-    arenas.reset();
-    zones.next();
-  }
-
-  MOZ_ASSERT(done() || !arenas.ref().done());
-}
-
-void ArenasToUnmark::next() {
-  MOZ_ASSERT(!done());
-
-  arenas.ref().next();
-
-  if (arenas.ref().done()) {
-    arenas.reset();
-    zones.next();
-    settle();
-  }
-}
+using ArenasToUnmark = NestedIterator<GCZonesIter, ArenasToUpdate>;
 
 static size_t UnmarkArenaListSegment(GCRuntime* gc,
                                      const ArenaListSegment& arenas) {
