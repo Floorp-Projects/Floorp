@@ -22,7 +22,7 @@ mod event;
 mod labeled;
 mod memory_distribution;
 mod ping;
-mod string;
+pub(crate) mod string;
 mod string_list;
 mod timespan;
 mod timing_distribution;
