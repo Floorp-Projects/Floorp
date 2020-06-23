@@ -969,6 +969,41 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Nārì\' daran\' sa nīkāj %s.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Ngà gayì\'ìt sēsiûn ngà %s riña a\'ngô sa nana\'ui\' Firefox riña aga\' nab. Ruhuât gāyi\'ìt sēsiûn ngà kuendâ nan anj.</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Gā\'ue, gāyì\'ìj sēsiûn</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Hīaj ayi\'ìj sēsiûn…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Gāyì\'ì sēsiûn riña Firefox</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Sī ginûnj riña sēsiûn</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Ngà nanûn Sync</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Gire\' riña ayì\'ìt sēsiûn</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">Sa huì \'iaj sun man\'an</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Riña nagi\'iát sa huìi nī sa dugûmin naran riña nej sa naga\'nāj a, nej aplikasiûn kïj huaa nī nej sa yi\'ì nikò\' sò\'.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Sa huā chre\' (dàj huaj \'naj)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Riña dòj sa naga\'nāj a naran.  Dàj rû\' nayi\'nïnj riña pâjina nāyi\'nïn nīñanj.</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Sa nùkuaj doj (dūgūnàj hua man)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Sa nùkuaj doj</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Narán man riña doj sa naga\'nāj a, nej nuguan\' nata\'a nī nej bēntanâ narugui\' man\'an. Hìo doj nayî\'nïnj riña nej pâjina, sanī huā sa sī ga\'ue gi\'iaj sun hue\'e.</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Ni\'iāj dàj gānïn ruhuât</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Nārán</string>
 

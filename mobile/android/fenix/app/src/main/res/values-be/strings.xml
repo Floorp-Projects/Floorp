@@ -15,6 +15,11 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Увядзіце запыт або адрас</string>
 
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Тут будуць паказаны вашы адкрытыя карткі.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Тут будуць паказаны вашы прыватныя карткі.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Вы ў прыватным сеансе</string>
@@ -22,6 +27,8 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Выдаліць сеанс</string>
 
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Дадаць цэтлік</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Не, дзякуй</string>
 
@@ -100,6 +107,8 @@
     <string name="a11y_selected_locale_content_description">Абраная мова</string>
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Пошук</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Мова прылады</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Пошук мовы</string>
 
@@ -224,6 +233,8 @@
     <string name="preferences_search_bookmarks">Пошук у закладках</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Налады ўліковага запісу</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Адкрываць спасылкі ў праграмах</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Дадаткі</string>
 
@@ -319,6 +330,9 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Цёмная</string>
 
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Тэма прылады</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Сеансы</string>
@@ -377,6 +391,8 @@
     <string name="tab_tray_menu_open_new_tab">Новая картка</string>
     <!-- Shortcut action to open the home screen -->
     <string name="tab_tray_menu_home">Дадому</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Пераключыць рэжым картак</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Выдаліць картку з калекцыі</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -452,6 +468,9 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Даўней</string>
 
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Няма гісторыі</string>
+
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Адправіць справаздачу аб краху ў Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -476,6 +495,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Вы ўпэўнены, што жадаеце выдаліць гэту папку?</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s выдалена</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Дадаць папку</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_created_snackbar">Закладка створана.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -516,6 +537,8 @@
     <string name="bookmark_add_folder_fragment_label">Дадаць папку</string>
     <!-- Bookmark select folder screen title -->
     <string name="bookmark_select_folder_fragment_label">Выбраць папку</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Павінна мець загаловак</string>
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">Несапраўдны URL</string>
     <!-- Bookmark screen message for empty bookmarks folder -->
@@ -556,6 +579,8 @@
     <string name="preference_phone_feature_location">Месцазнаходжанне</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Абвестка</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Запытваць дазвол</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Заблакавана Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
@@ -594,6 +619,8 @@
     <string name="create_collection_select_all">Вылучыць усе</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">Адмяніць выбар усіх</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Выберыце карткі для захавання</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Карткі захаваны!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -724,8 +751,10 @@
     <string name="preferences_delete_browsing_data_cookies">Кукі</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Дазволы для сайтаў</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Гісторыя аглядання</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Выдаліць звесткі аглядання</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Выдаляць звесткі аглядання пры выхадзе</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Выйсці</string>
 
@@ -909,15 +938,33 @@
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Выключэнні</string>
 
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Даведацца больш</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Дадаць пашукавік</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Дадаць</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description">Захаваць</string>
 
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Падрабязней</string>
+
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Спасылка на падрабязныя звесткі</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Увядзіце назву пошукавай сістэмы</string>
+
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Бяспечнае злучэнне</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Не бяспечнае злучэнне</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Падключыцеся да ўліковага запісу Firefox.</string>
 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, зразумела</string>
