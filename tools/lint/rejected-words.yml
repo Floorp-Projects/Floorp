@@ -220,11 +220,15 @@ avoid-blacklist-and-whitelist:
         - dom/smil/SMILTimeValueSpec.cpp
         - dom/tests/mochitest/dom-level0/idn_child.html
         - dom/tests/mochitest/dom-level0/test_setting_document.domain_idn.html
+        - gfx/config/gfxFeature.h
         - gfx/gl/GLContextProviderWGL.cpp
         - gfx/gl/GLUploadHelpers.cpp
         - gfx/ipc/GPUProcessManager.cpp
+        - gfx/src/gfxTelemetry.cpp
+        - gfx/src/gfxTelemetry.h
         - gfx/tests/mochitest/test_font_whitelist.html
         - gfx/thebes/gfxFT2FontList.cpp
+        - gfx/thebes/gfxFontEntry.h
         - gfx/thebes/gfxPlatform.cpp
         - gfx/thebes/gfxPlatformFontList.cpp
         - gfx/thebes/gfxPlatformFontList.h
@@ -461,7 +465,10 @@ avoid-blacklist-and-whitelist:
         - tools/tryselect/task_config.py
         - uriloader/prefetch/nsOfflineCacheUpdate.cpp
         - widget/GfxInfoBase.cpp
+        - widget/GfxInfoX11.cpp
+        - widget/android/GfxInfo.cpp
         - widget/gtk/IMContextWrapper.cpp
+        - widget/uikit/GfxInfo.cpp
         - widget/windows/GfxInfo.cpp
         - widget/windows/WinUtils.cpp
         - xpcom/base/CycleCollectedJSRuntime.cpp

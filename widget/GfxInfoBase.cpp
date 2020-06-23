@@ -119,89 +119,90 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS(GfxInfoBase, nsIGfxInfo, nsIObserver,
                   nsISupportsWeakReference)
 
-#define BLOCKLIST_PREF_BRANCH "gfx.blacklist."
-#define SUGGESTED_VERSION_PREF BLOCKLIST_PREF_BRANCH "suggested-driver-version"
+#define BLACKLIST_PREF_BRANCH "gfx.blacklist."
+#define SUGGESTED_VERSION_PREF BLACKLIST_PREF_BRANCH "suggested-driver-version"
+#define BLACKLIST_ENTRY_TAG_NAME "gfxBlacklistEntry"
 
 static const char* GetPrefNameForFeature(int32_t aFeature) {
   const char* name = nullptr;
   switch (aFeature) {
     case nsIGfxInfo::FEATURE_DIRECT2D:
-      name = BLOCKLIST_PREF_BRANCH "direct2d";
+      name = BLACKLIST_PREF_BRANCH "direct2d";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS:
-      name = BLOCKLIST_PREF_BRANCH "layers.direct3d9";
+      name = BLACKLIST_PREF_BRANCH "layers.direct3d9";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS:
-      name = BLOCKLIST_PREF_BRANCH "layers.direct3d10";
+      name = BLACKLIST_PREF_BRANCH "layers.direct3d10";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS:
-      name = BLOCKLIST_PREF_BRANCH "layers.direct3d10-1";
+      name = BLACKLIST_PREF_BRANCH "layers.direct3d10-1";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS:
-      name = BLOCKLIST_PREF_BRANCH "layers.direct3d11";
+      name = BLACKLIST_PREF_BRANCH "layers.direct3d11";
       break;
     case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
-      name = BLOCKLIST_PREF_BRANCH "direct3d11angle";
+      name = BLACKLIST_PREF_BRANCH "direct3d11angle";
       break;
     case nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING:
-      name = BLOCKLIST_PREF_BRANCH "hardwarevideodecoding";
+      name = BLACKLIST_PREF_BRANCH "hardwarevideodecoding";
       break;
     case nsIGfxInfo::FEATURE_OPENGL_LAYERS:
-      name = BLOCKLIST_PREF_BRANCH "layers.opengl";
+      name = BLACKLIST_PREF_BRANCH "layers.opengl";
       break;
     case nsIGfxInfo::FEATURE_WEBGL_OPENGL:
-      name = BLOCKLIST_PREF_BRANCH "webgl.opengl";
+      name = BLACKLIST_PREF_BRANCH "webgl.opengl";
       break;
     case nsIGfxInfo::FEATURE_WEBGL_ANGLE:
-      name = BLOCKLIST_PREF_BRANCH "webgl.angle";
+      name = BLACKLIST_PREF_BRANCH "webgl.angle";
       break;
     case nsIGfxInfo::FEATURE_WEBGL_MSAA:
-      name = BLOCKLIST_PREF_BRANCH "webgl.msaa";
+      name = BLACKLIST_PREF_BRANCH "webgl.msaa";
       break;
     case nsIGfxInfo::FEATURE_STAGEFRIGHT:
-      name = BLOCKLIST_PREF_BRANCH "stagefright";
+      name = BLACKLIST_PREF_BRANCH "stagefright";
       break;
     case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_H264:
-      name = BLOCKLIST_PREF_BRANCH "webrtc.hw.acceleration.h264";
+      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.h264";
       break;
     case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE:
-      name = BLOCKLIST_PREF_BRANCH "webrtc.hw.acceleration.encode";
+      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.encode";
       break;
     case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE:
-      name = BLOCKLIST_PREF_BRANCH "webrtc.hw.acceleration.decode";
+      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.decode";
       break;
     case nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION:
-      name = BLOCKLIST_PREF_BRANCH "canvas2d.acceleration";
+      name = BLACKLIST_PREF_BRANCH "canvas2d.acceleration";
       break;
     case nsIGfxInfo::FEATURE_DX_INTEROP2:
-      name = BLOCKLIST_PREF_BRANCH "dx.interop2";
+      name = BLACKLIST_PREF_BRANCH "dx.interop2";
       break;
     case nsIGfxInfo::FEATURE_GPU_PROCESS:
-      name = BLOCKLIST_PREF_BRANCH "gpu.process";
+      name = BLACKLIST_PREF_BRANCH "gpu.process";
       break;
     case nsIGfxInfo::FEATURE_WEBGL2:
-      name = BLOCKLIST_PREF_BRANCH "webgl2";
+      name = BLACKLIST_PREF_BRANCH "webgl2";
       break;
     case nsIGfxInfo::FEATURE_ADVANCED_LAYERS:
-      name = BLOCKLIST_PREF_BRANCH "layers.advanced";
+      name = BLACKLIST_PREF_BRANCH "layers.advanced";
       break;
     case nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX:
-      name = BLOCKLIST_PREF_BRANCH "d3d11.keyed.mutex";
+      name = BLACKLIST_PREF_BRANCH "d3d11.keyed.mutex";
       break;
     case nsIGfxInfo::FEATURE_WEBRENDER:
-      name = BLOCKLIST_PREF_BRANCH "webrender";
+      name = BLACKLIST_PREF_BRANCH "webrender";
       break;
     case nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR:
-      name = BLOCKLIST_PREF_BRANCH "webrender.compositor";
+      name = BLACKLIST_PREF_BRANCH "webrender.compositor";
       break;
     case nsIGfxInfo::FEATURE_DX_NV12:
-      name = BLOCKLIST_PREF_BRANCH "dx.nv12";
+      name = BLACKLIST_PREF_BRANCH "dx.nv12";
       break;
     case nsIGfxInfo::FEATURE_DX_P010:
-      name = BLOCKLIST_PREF_BRANCH "dx.p010";
+      name = BLACKLIST_PREF_BRANCH "dx.p010";
       break;
     case nsIGfxInfo::FEATURE_DX_P016:
-      name = BLOCKLIST_PREF_BRANCH "dx.p016";
+      name = BLACKLIST_PREF_BRANCH "dx.p016";
       break;
     case nsIGfxInfo::FEATURE_VP8_HW_DECODE:
     case nsIGfxInfo::FEATURE_VP9_HW_DECODE:
@@ -209,10 +210,10 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
       // not handling downloadable blocklist.
       break;
     case nsIGfxInfo::FEATURE_GL_SWIZZLE:
-      name = BLOCKLIST_PREF_BRANCH "gl.swizzle";
+      name = BLACKLIST_PREF_BRANCH "gl.swizzle";
       break;
     case nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS:
-      name = BLOCKLIST_PREF_BRANCH "webrender.scissored_cache_clears";
+      name = BLACKLIST_PREF_BRANCH "webrender.scissored_cache_clears";
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
@@ -241,7 +242,7 @@ static bool GetPrefValueForFeature(int32_t aFeature, int32_t& aValue,
   if (NS_SUCCEEDED(rv)) {
     aFailureId = failureValue.get();
   } else {
-    aFailureId = "FEATURE_FAILURE_BLOCKLIST_PREF";
+    aFailureId = "FEATURE_FAILURE_BLACKLIST_PREF";
   }
 
   return true;
@@ -288,7 +289,7 @@ static void RemovePrefForDriverVersion() {
   Preferences::ClearUser(SUGGESTED_VERSION_PREF);
 }
 
-static OperatingSystem BlocklistOSToOperatingSystem(const nsAString& os) {
+static OperatingSystem BlacklistOSToOperatingSystem(const nsAString& os) {
   if (os.EqualsLiteral("WINNT 6.1"))
     return OperatingSystem::Windows7;
   else if (os.EqualsLiteral("WINNT 6.2"))
@@ -330,7 +331,7 @@ static OperatingSystem BlocklistOSToOperatingSystem(const nsAString& os) {
   return OperatingSystem::Unknown;
 }
 
-static GfxDeviceFamily* BlocklistDevicesToDeviceFamily(
+static GfxDeviceFamily* BlacklistDevicesToDeviceFamily(
     nsTArray<nsCString>& devices) {
   if (devices.Length() == 0) return nullptr;
 
@@ -347,7 +348,7 @@ static GfxDeviceFamily* BlocklistDevicesToDeviceFamily(
   return deviceIds;
 }
 
-static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
+static int32_t BlacklistFeatureToGfxFeature(const nsAString& aFeature) {
   MOZ_ASSERT(!aFeature.IsEmpty());
   if (aFeature.EqualsLiteral("DIRECT2D"))
     return nsIGfxInfo::FEATURE_DIRECT2D;
@@ -412,7 +413,7 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   return -1;
 }
 
-static int32_t BlocklistFeatureStatusToGfxFeatureStatus(
+static int32_t BlacklistFeatureStatusToGfxFeatureStatus(
     const nsAString& aStatus) {
   if (aStatus.EqualsLiteral("STATUS_OK"))
     return nsIGfxInfo::FEATURE_STATUS_OK;
@@ -437,7 +438,7 @@ static int32_t BlocklistFeatureStatusToGfxFeatureStatus(
   return nsIGfxInfo::FEATURE_STATUS_OK;
 }
 
-static VersionComparisonOp BlocklistComparatorToComparisonOp(
+static VersionComparisonOp BlacklistComparatorToComparisonOp(
     const nsAString& op) {
   if (op.EqualsLiteral("LESS_THAN"))
     return DRIVER_LESS_THAN;
@@ -466,11 +467,11 @@ static VersionComparisonOp BlocklistComparatorToComparisonOp(
 }
 
 /*
-  Deserialize Blocklist entries from string.
+  Deserialize Blacklist entries from string.
   e.g:
   os:WINNT 6.0\tvendor:0x8086\tdevices:0x2582,0x2782\tfeature:DIRECT3D_10_LAYERS\tfeatureStatus:BLOCKED_DRIVER_VERSION\tdriverVersion:8.52.322.2202\tdriverVersionComparator:LESS_THAN_OR_EQUAL
 */
-static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
+static bool BlacklistEntryToDriverInfo(nsCString& aBlacklistEntry,
                                        GfxDriverInfo& aDriverInfo) {
   // If we get an application version to be zero, something is not working
   // and we are not going to bother checking the blocklist versions.
@@ -485,10 +486,10 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
   }
 
   nsTArray<nsCString> keyValues;
-  ParseString(aBlocklistEntry, '\t', keyValues);
+  ParseString(aBlacklistEntry, '\t', keyValues);
 
   aDriverInfo.mRuleId =
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLOCKLIST_NO_ID");
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLACKLIST_NO_ID");
 
   for (uint32_t i = 0; i < keyValues.Length(); ++i) {
     nsCString keyValue = keyValues[i];
@@ -513,10 +514,10 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
 
     if (key.EqualsLiteral("blockID")) {
       nsCString blockIdStr =
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLOCKLIST_") + value;
+          NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLACKLIST_") + value;
       aDriverInfo.mRuleId = blockIdStr.get();
     } else if (key.EqualsLiteral("os")) {
-      aDriverInfo.mOperatingSystem = BlocklistOSToOperatingSystem(dataValue);
+      aDriverInfo.mOperatingSystem = BlacklistOSToOperatingSystem(dataValue);
     } else if (key.EqualsLiteral("osversion")) {
       aDriverInfo.mOperatingSystemVersion = strtoul(value.get(), nullptr, 10);
     } else if (key.EqualsLiteral("desktopEnvironment")) {
@@ -528,7 +529,7 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
     } else if (key.EqualsLiteral("driverVendor")) {
       aDriverInfo.mDriverVendor = dataValue;
     } else if (key.EqualsLiteral("feature")) {
-      aDriverInfo.mFeature = BlocklistFeatureToGfxFeature(dataValue);
+      aDriverInfo.mFeature = BlacklistFeatureToGfxFeature(dataValue);
       if (aDriverInfo.mFeature < 0) {
         // If we don't recognize the feature, we do not want to proceed.
         gfxCriticalErrorOnce(CriticalLog::DefaultOptions(false))
@@ -537,7 +538,7 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
       }
     } else if (key.EqualsLiteral("featureStatus")) {
       aDriverInfo.mFeatureStatus =
-          BlocklistFeatureStatusToGfxFeatureStatus(dataValue);
+          BlacklistFeatureStatusToGfxFeatureStatus(dataValue);
     } else if (key.EqualsLiteral("driverVersion")) {
       uint64_t version;
       if (ParseDriverVersion(dataValue, &version))
@@ -547,7 +548,7 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
       if (ParseDriverVersion(dataValue, &version))
         aDriverInfo.mDriverVersionMax = version;
     } else if (key.EqualsLiteral("driverVersionComparator")) {
-      aDriverInfo.mComparisonOp = BlocklistComparatorToComparisonOp(dataValue);
+      aDriverInfo.mComparisonOp = BlacklistComparatorToComparisonOp(dataValue);
     } else if (key.EqualsLiteral("model")) {
       aDriverInfo.mModel = dataValue;
     } else if (key.EqualsLiteral("product")) {
@@ -585,7 +586,7 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
     } else if (key.EqualsLiteral("devices")) {
       nsTArray<nsCString> devices;
       ParseString(value, ',', devices);
-      GfxDeviceFamily* deviceIds = BlocklistDevicesToDeviceFamily(devices);
+      GfxDeviceFamily* deviceIds = BlacklistDevicesToDeviceFamily(devices);
       if (deviceIds) {
         // Get GfxDriverInfo to adopt the devices array we created.
         aDriverInfo.mDeleteDevices = true;
@@ -598,15 +599,15 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
   return true;
 }
 
-static void BlocklistEntriesToDriverInfo(nsTArray<nsCString>& aBlocklistEntries,
+static void BlacklistEntriesToDriverInfo(nsTArray<nsCString>& aBlacklistEntries,
                                          nsTArray<GfxDriverInfo>& aDriverInfo) {
   aDriverInfo.Clear();
-  aDriverInfo.SetLength(aBlocklistEntries.Length());
+  aDriverInfo.SetLength(aBlacklistEntries.Length());
 
-  for (uint32_t i = 0; i < aBlocklistEntries.Length(); ++i) {
-    nsCString blocklistEntry = aBlocklistEntries[i];
+  for (uint32_t i = 0; i < aBlacklistEntries.Length(); ++i) {
+    nsCString blacklistEntry = aBlacklistEntries[i];
     GfxDriverInfo di;
-    if (BlocklistEntryToDriverInfo(blocklistEntry, di)) {
+    if (BlacklistEntryToDriverInfo(blacklistEntry, di)) {
       aDriverInfo[i] = di;
       // Prevent di falling out of scope from destroying the devices.
       di.mDeleteDevices = false;
@@ -619,13 +620,13 @@ GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) {
   if (strcmp(aTopic, "blocklist-data-gfxItems") == 0) {
     nsTArray<GfxDriverInfo> driverInfo;
-    nsTArray<nsCString> blocklistEntries;
+    nsTArray<nsCString> blacklistEntries;
     nsCString utf8Data = NS_ConvertUTF16toUTF8(aData);
     if (utf8Data.Length() > 0) {
-      ParseString(utf8Data, '\n', blocklistEntries);
+      ParseString(utf8Data, '\n', blacklistEntries);
     }
-    BlocklistEntriesToDriverInfo(blocklistEntries, driverInfo);
-    EvaluateDownloadedBlocklist(driverInfo);
+    BlacklistEntriesToDriverInfo(blacklistEntries, driverInfo);
+    EvaluateDownloadedBlacklist(driverInfo);
   }
 
   return NS_OK;
@@ -1041,7 +1042,7 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
         if (!info[i].mRuleId.IsEmpty()) {
           aFailureId = info[i].mRuleId.get();
         } else {
-          aFailureId = "FEATURE_FAILURE_DL_BLOCKLIST_NO_ID";
+          aFailureId = "FEATURE_FAILURE_DL_BLACKLIST_NO_ID";
         }
         break;
       }
@@ -1241,7 +1242,7 @@ GfxInfoBase::GetFeatureSuggestedDriverVersion(int32_t aFeature,
                               discardFailureId);
 }
 
-void GfxInfoBase::EvaluateDownloadedBlocklist(
+void GfxInfoBase::EvaluateDownloadedBlacklist(
     nsTArray<GfxDriverInfo>& aDriverInfo) {
   int32_t features[] = {nsIGfxInfo::FEATURE_DIRECT2D,
                         nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS,
@@ -1274,9 +1275,9 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_GL_SWIZZLE,
                         0};
 
-  // For every feature we know about, we evaluate whether this blocklist has a
+  // For every feature we know about, we evaluate whether this blacklist has a
   // non-STATUS_OK status. If it does, we set the pref we evaluate in
-  // GetFeatureStatus above, so we don't need to hold on to this blocklist
+  // GetFeatureStatus above, so we don't need to hold on to this blacklist
   // anywhere permanent.
   int i = 0;
   while (features[i]) {
@@ -1648,7 +1649,7 @@ bool GfxInfoBase::InitFeatureObject(JSContext* aCx,
 
   nsCString status;
   auto value = aFeatureState.GetValue();
-  if (value == FeatureStatus::Blocklisted || value == FeatureStatus::Denied ||
+  if (value == FeatureStatus::Blacklisted || value == FeatureStatus::Denied ||
       value == FeatureStatus::Unavailable || value == FeatureStatus::Blocked) {
     status.AppendPrintf("%s:%s", FeatureStatusToString(value),
                         aFeatureState.GetFailureId().get());

@@ -58,8 +58,8 @@ const char* FeatureStatusToString(FeatureStatus aStatus) {
       return "blocked-release-channel-android";
     case FeatureStatus::Denied:
       return "denied";
-    case FeatureStatus::Blocklisted:
-      return "blocklisted";
+    case FeatureStatus::Blacklisted:
+      return "blacklisted";
     case FeatureStatus::OptIn:
       return "opt-in";
     case FeatureStatus::Failed:

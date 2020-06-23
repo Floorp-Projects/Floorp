@@ -1040,7 +1040,7 @@ void FT2FontEntry::AppendToFaceList(nsCString& aFaceList,
 }
 
 void FT2FontEntry::CheckForBrokenFont(gfxFontFamily* aFamily) {
-  // note if the family is in the "bad underline" blocklist
+  // note if the family is in the "bad underline" blacklist
   if (aFamily->IsBadUnderlineFamily()) {
     mIsBadUnderlineFont = true;
   }
