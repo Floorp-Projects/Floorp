@@ -241,7 +241,7 @@ static bool GetPrefValueForFeature(int32_t aFeature, int32_t& aValue,
   if (NS_SUCCEEDED(rv)) {
     aFailureId = failureValue.get();
   } else {
-    aFailureId = "FEATURE_FAILURE_BLACKLIST_PREF";
+    aFailureId = "FEATURE_FAILURE_BLOCKLIST_PREF";
   }
 
   return true;
@@ -488,7 +488,7 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
   ParseString(aBlocklistEntry, '\t', keyValues);
 
   aDriverInfo.mRuleId =
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLACKLIST_NO_ID");
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLOCKLIST_NO_ID");
 
   for (uint32_t i = 0; i < keyValues.Length(); ++i) {
     nsCString keyValue = keyValues[i];
@@ -513,7 +513,7 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
 
     if (key.EqualsLiteral("blockID")) {
       nsCString blockIdStr =
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLACKLIST_") + value;
+          NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLOCKLIST_") + value;
       aDriverInfo.mRuleId = blockIdStr.get();
     } else if (key.EqualsLiteral("os")) {
       aDriverInfo.mOperatingSystem = BlocklistOSToOperatingSystem(dataValue);
@@ -1041,7 +1041,7 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
         if (!info[i].mRuleId.IsEmpty()) {
           aFailureId = info[i].mRuleId.get();
         } else {
-          aFailureId = "FEATURE_FAILURE_DL_BLACKLIST_NO_ID";
+          aFailureId = "FEATURE_FAILURE_DL_BLOCKLIST_NO_ID";
         }
         break;
       }

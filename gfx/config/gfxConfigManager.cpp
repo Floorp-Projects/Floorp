@@ -109,7 +109,7 @@ void gfxConfigManager::ConfigureFromBlocklist(long aFeature,
   } else {
     if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
       aFeatureState->Disable(FeatureStatus::Blocklisted,
-                             "Blacklisted by gfxInfo", blockId);
+                             "Blocklisted by gfxInfo", blockId);
     }
   }
 }
