@@ -894,7 +894,7 @@ class gfxFontFamily {
     mFamilyCharacterMapInitialized = false;
   }
 
-  // mark this family as being in the "bad" underline offset blocklist
+  // mark this family as being in the "bad" underline offset blacklist
   void SetBadUnderlineFamily() {
     mIsBadUnderlineFamily = true;
     if (mHasStyles) {
@@ -953,7 +953,7 @@ class gfxFontFamily {
                                    hb_blob_t* aNameTable,
                                    bool useFullName = false);
 
-  // set whether this font family is in "bad" underline offset blocklist.
+  // set whether this font family is in "bad" underline offset blacklist.
   void SetBadUnderlineFonts() {
     uint32_t i, numFonts = mAvailableFonts.Length();
     for (i = 0; i < numFonts; i++) {

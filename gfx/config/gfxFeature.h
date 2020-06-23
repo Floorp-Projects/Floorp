@@ -129,7 +129,7 @@ class FeatureState {
   // The user state factors in any changes to preferences that the user made.
   //
   // The environment state factors in any additional decisions made, such as
-  // availability or blocklisting.
+  // availability or blacklisting.
   //
   // The runtime state factors in any problems discovered at runtime.
   Instance mDefault;

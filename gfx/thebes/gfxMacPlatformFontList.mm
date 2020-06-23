@@ -216,7 +216,7 @@ nsresult MacOSFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
 
     // Bug 1360309, 1393624: several of Apple's Chinese fonts have spurious
     // blank glyphs for obscure Tibetan and Arabic-script codepoints.
-    // Blocklist these so that font fallback will not use them.
+    // Blacklist these so that font fallback will not use them.
     if (mRequiresAAT &&
         (FamilyName().EqualsLiteral("Songti SC") || FamilyName().EqualsLiteral("Songti TC") ||
          FamilyName().EqualsLiteral("STSong") ||
@@ -872,7 +872,7 @@ void gfxMacPlatformFontList::AddFamily(const nsACString& aFamilyName, FontVisibi
   RefPtr<gfxFontFamily> familyEntry = new gfxMacFontFamily(aFamilyName, aVisibility, sizeHint);
   mFontFamilies.Put(key, RefPtr{familyEntry});
 
-  // check the bad underline blocklist
+  // check the bad underline blacklist
   if (mBadUnderlineFamilyNames.ContainsSorted(key)) {
     familyEntry->SetBadUnderlineFamily();
   }

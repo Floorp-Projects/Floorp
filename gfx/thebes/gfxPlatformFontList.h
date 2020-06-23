@@ -663,7 +663,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // commonly used fonts for which the name table should be loaded at startup
   virtual void PreloadNamesList();
 
-  // load the bad underline blocklist from pref.
+  // load the bad underline blacklist from pref.
   void LoadBadUnderlineList();
 
   void GenerateFontListKey(const nsACString& aKeyName, nsACString& aResult);

@@ -69,7 +69,7 @@ class GfxInfo::GLStrings {
 
     if (!gl) {
       // Setting mReady to true here means that we won't retry. Everything will
-      // remain blocklisted forever. Ideally, we would like to update that once
+      // remain blacklisted forever. Ideally, we would like to update that once
       // any GLContext is successfully created, like the compositor's GLContext.
       mReady = true;
       return;
@@ -399,7 +399,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     return NS_OK;
   }
 
-  // OpenGL layers are never blocklisted on Android.
+  // OpenGL layers are never blacklisted on Android.
   // This early return is so we avoid potentially slow
   // GLStrings initialization on startup when we initialize GL layers.
   if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
