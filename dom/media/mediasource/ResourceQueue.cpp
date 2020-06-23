@@ -31,14 +31,16 @@ size_t ResourceItem::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-class ResourceQueueDeallocator : public nsDequeFunctor {
-  void operator()(void* aObject) override {
-    delete static_cast<ResourceItem*>(aObject);
+class ResourceQueueDeallocator : public nsDequeFunctor<ResourceItem> {
+  void operator()(ResourceItem* aObject) override {
+    delete aObject;
   }
 };
 
 ResourceQueue::ResourceQueue()
-    : nsDeque(new ResourceQueueDeallocator()), mLogicalLength(0), mOffset(0) {}
+    : nsDeque<ResourceItem>(new ResourceQueueDeallocator()),
+      mLogicalLength(0),
+      mOffset(0) {}
 
 uint64_t ResourceQueue::GetOffset() { return mOffset; }
 
@@ -125,7 +127,7 @@ uint32_t ResourceQueue::EvictAll() {
 
 size_t ResourceQueue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   // Calculate the size of the internal deque.
-  size_t size = nsDeque::SizeOfExcludingThis(aMallocSizeOf);
+  size_t size = nsDeque<ResourceItem>::SizeOfExcludingThis(aMallocSizeOf);
 
   // Sum the ResourceItems. The ResourceItems's MediaSpans may share the
   // same underlying MediaByteBuffers, so we need to de-dupe the buffers
@@ -194,7 +196,7 @@ uint32_t ResourceQueue::GetAtOffset(uint64_t aOffset,
 }
 
 ResourceItem* ResourceQueue::PopFront() {
-  return static_cast<ResourceItem*>(nsDeque::PopFront());
+  return nsDeque<ResourceItem>::PopFront();
 }
 
 #undef SBR_DEBUG

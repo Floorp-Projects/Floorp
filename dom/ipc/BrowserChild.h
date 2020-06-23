@@ -886,7 +886,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // Hash table to track coalesced mousemove events for different pointers.
   nsClassHashtable<nsUint32HashKey, CoalescedMouseData> mCoalescedMouseData;
 
-  nsDeque mToBeDispatchedMouseData;
+  nsDeque<CoalescedMouseData> mToBeDispatchedMouseData;
 
   CoalescedWheelData mCoalescedWheelData;
   RefPtr<CoalescedMouseMoveFlusher> mCoalescedMouseEventFlusher;

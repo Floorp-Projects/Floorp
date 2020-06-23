@@ -261,7 +261,7 @@ class EventSourceImpl final : public nsIObserver,
   // EventSourceImpl on target thread but should only be used on target thread.
   nsString mLastEventID;
   UniquePtr<Message> mCurrentMessage;
-  nsDeque mMessagesToDispatch;
+  nsDeque<Message> mMessagesToDispatch;
   ParserStatus mStatus;
   mozilla::UniquePtr<mozilla::Decoder> mUnicodeDecoder;
   nsString mLastFieldName;
@@ -457,7 +457,7 @@ void EventSourceImpl::CloseInternal() {
   }
 
   while (mMessagesToDispatch.GetSize() != 0) {
-    delete static_cast<Message*>(mMessagesToDispatch.PopFront());
+    delete mMessagesToDispatch.PopFront();
   }
   SetFrozen(false);
   ResetDecoder();
@@ -1451,7 +1451,7 @@ void EventSourceImpl::DispatchAllMessageEvents() {
 
   while (mMessagesToDispatch.GetSize() > 0) {
     UniquePtr<Message> message(
-        static_cast<Message*>(mMessagesToDispatch.PopFront()));
+        mMessagesToDispatch.PopFront());
 
     if (message->mLastEventID.isSome()) {
       mLastEventID.Assign(message->mLastEventID.value());

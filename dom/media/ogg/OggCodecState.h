@@ -62,9 +62,9 @@ struct OggPacketDeletePolicy {
 using OggPacketPtr = UniquePtr<ogg_packet, OggPacketDeletePolicy>;
 
 // Deallocates a packet, used in OggPacketQueue below.
-class OggPacketDeallocator : public nsDequeFunctor {
-  virtual void operator()(void* aPacket) override {
-    OggPacketDeletePolicy()(static_cast<ogg_packet*>(aPacket));
+class OggPacketDeallocator : public nsDequeFunctor<ogg_packet> {
+  virtual void operator()(ogg_packet* aPacket) override {
+    OggPacketDeletePolicy()(aPacket);
   }
 };
 
@@ -78,29 +78,25 @@ class OggPacketDeallocator : public nsDequeFunctor {
 // frames/samples, reducing the amount of frames/samples we must decode to
 // determine start-time at a particular offset, and gives us finer control
 // over memory usage.
-class OggPacketQueue : private nsDeque {
+class OggPacketQueue : private nsDeque<ogg_packet> {
  public:
   OggPacketQueue() : nsDeque(new OggPacketDeallocator()) {}
   ~OggPacketQueue() { Erase(); }
-  bool IsEmpty() { return nsDeque::GetSize() == 0; }
+  bool IsEmpty() { return nsDeque<ogg_packet>::GetSize() == 0; }
   void Append(OggPacketPtr aPacket);
   OggPacketPtr PopFront() {
-    return OggPacketPtr(static_cast<ogg_packet*>(nsDeque::PopFront()));
+    return OggPacketPtr(nsDeque<ogg_packet>::PopFront());
   }
-  ogg_packet* PeekFront() {
-    return static_cast<ogg_packet*>(nsDeque::PeekFront());
-  }
-  OggPacketPtr Pop() {
-    return OggPacketPtr(static_cast<ogg_packet*>(nsDeque::Pop()));
-  }
+  ogg_packet* PeekFront() { return nsDeque<ogg_packet>::PeekFront(); }
+  OggPacketPtr Pop() { return OggPacketPtr(nsDeque<ogg_packet>::Pop()); }
   ogg_packet* operator[](size_t aIndex) const {
-    return static_cast<ogg_packet*>(nsDeque::ObjectAt(aIndex));
+    return nsDeque<ogg_packet>::ObjectAt(aIndex);
   }
-  size_t Length() const { return nsDeque::GetSize(); }
+  size_t Length() const { return nsDeque<ogg_packet>::GetSize(); }
   void PushFront(OggPacketPtr aPacket) {
-    nsDeque::PushFront(aPacket.release());
+    nsDeque<ogg_packet>::PushFront(aPacket.release());
   }
-  void Erase() { nsDeque::Erase(); }
+  void Erase() { nsDeque<ogg_packet>::Erase(); }
 };
 
 // Encapsulates the data required for decoding an ogg bitstream and for
