@@ -60,7 +60,7 @@ class UDPSocketChild : public mozilla::net::PUDPSocketChild,
                 const nsACString& aHost, uint16_t aPort, bool aAddressReuse,
                 bool aLoopback, uint32_t recvBufferSize,
                 uint32_t sendBufferSize,
-                nsIEventTarget* aMainThreadEventTarget);
+                nsISerialEventTarget* aMainThreadEventTarget);
 
   // Tell the chrome process to connect the UDP socket to a given remote host
   // and port

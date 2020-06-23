@@ -19,8 +19,8 @@
 #include "nsWrapperCache.h"
 
 class nsIGlobalObject;
-class nsIEventTarget;
 class nsIPrincipal;
+class nsISerialEventTarget;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
@@ -69,8 +69,8 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   indexedDB::BackgroundFactoryChild* mBackgroundActor;
 
   // It is either set to a DocGroup-specific EventTarget if created by
-  // CreateForWindow() or set to GetCurrentThreadEventTarget() otherwise.
-  nsCOMPtr<nsIEventTarget> mEventTarget;
+  // CreateForWindow() or set to GetCurrentSerialEventTarget() otherwise.
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
   uint64_t mInnerWindowID;
   uint32_t mActiveTransactionCount;
@@ -99,7 +99,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
 
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(IDBFactory); }
 
-  nsIEventTarget* EventTarget() const {
+  nsISerialEventTarget* EventTarget() const {
     AssertIsOnOwningThread();
     MOZ_RELEASE_ASSERT(mEventTarget);
     return mEventTarget;

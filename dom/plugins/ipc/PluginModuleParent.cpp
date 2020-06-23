@@ -2146,7 +2146,7 @@ nsresult PluginModuleParent::NPP_NewInternal(
   owner->GetDOMElement(getter_AddRefs(elt));
   if (elt) {
     RefPtr<dom::Document> doc = elt->OwnerDoc();
-    nsCOMPtr<nsIEventTarget> eventTarget =
+    nsCOMPtr<nsISerialEventTarget> eventTarget =
         doc->EventTargetFor(TaskCategory::Other);
     SetEventTargetForActor(parentInstance, eventTarget);
   }

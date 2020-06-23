@@ -59,7 +59,7 @@ nsresult TCPServerSocket::Init() {
   }
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    nsCOMPtr<nsIEventTarget> target;
+    nsCOMPtr<nsISerialEventTarget> target;
     if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
       target = global->EventTargetFor(TaskCategory::Other);
     }

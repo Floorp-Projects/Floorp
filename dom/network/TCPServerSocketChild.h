@@ -48,7 +48,7 @@ class TCPServerSocketChild : public mozilla::net::PTCPServerSocketChild,
 
   TCPServerSocketChild(TCPServerSocket* aServerSocket, uint16_t aLocalPort,
                        uint16_t aBacklog, bool aUseArrayBuffers,
-                       nsIEventTarget* aIPCEventTarget);
+                       nsISerialEventTarget* aIPCEventTarget);
   ~TCPServerSocketChild();
 
   void Close();

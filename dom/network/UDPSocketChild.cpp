@@ -68,7 +68,7 @@ nsresult UDPSocketChild::Bind(nsIUDPSocketInternal* aSocket,
                               uint16_t aPort, bool aAddressReuse,
                               bool aLoopback, uint32_t recvBufferSize,
                               uint32_t sendBufferSize,
-                              nsIEventTarget* aMainThreadEventTarget) {
+                              nsISerialEventTarget* aMainThreadEventTarget) {
   UDPSOCKET_LOG(
       ("%s: %s:%u", __FUNCTION__, PromiseFlatCString(aHost).get(), aPort));
 

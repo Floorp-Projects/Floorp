@@ -177,7 +177,7 @@ nsresult TCPSocket::CreateStream() {
       do_QueryInterface(mSocketInputStream);
   NS_ENSURE_TRUE(asyncStream, NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+  nsCOMPtr<nsISerialEventTarget> mainTarget = GetMainThreadSerialEventTarget();
   rv = asyncStream->AsyncWait(this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0,
                               mainTarget);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -206,7 +206,7 @@ nsresult TCPSocket::InitWithUnconnectedTransport(
 
   MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Content);
 
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
+  nsCOMPtr<nsISerialEventTarget> mainTarget = GetMainThreadSerialEventTarget();
   mTransport->SetEventSink(this, mainTarget);
 
   nsresult rv = CreateStream();
@@ -227,7 +227,7 @@ nsresult TCPSocket::Init() {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     mReadyState = TCPReadyState::Connecting;
 
-    nsCOMPtr<nsIEventTarget> target;
+    nsCOMPtr<nsISerialEventTarget> target;
     if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
       target = global->EventTargetFor(TaskCategory::Other);
     }
@@ -358,7 +358,7 @@ nsresult TCPSocket::EnsureCopying() {
   nsCOMPtr<nsISocketTransportService> sts =
       do_GetService("@mozilla.org/network/socket-transport-service;1");
 
-  nsCOMPtr<nsIEventTarget> target = do_QueryInterface(sts);
+  nsCOMPtr<nsISerialEventTarget> target = do_QueryInterface(sts);
   rv = copier->Init(stream, mSocketOutputStream, target,
                     true,               /* source buffered */
                     false,              /* sink buffered */
