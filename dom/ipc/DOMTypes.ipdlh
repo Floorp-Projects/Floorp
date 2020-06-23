@@ -277,7 +277,7 @@ struct DocShellLoadStateInit
   // bool mIsSrcDocLoad; // useless without sourcedocshell
   // nsIChannel pendingRedirectedChannel; // sent through other mechanism
 
-  uint32_t LoadIdentifier;
+  uint64_t LoadIdentifier;
 };
 
 struct TimedChannelInfo
