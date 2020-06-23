@@ -15,6 +15,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.app.links.AppLinksUseCases
+import mozilla.components.support.ktx.android.content.share
 
 /**
  * A candidate for an item to be displayed in the context menu.
@@ -60,6 +61,7 @@ data class ContextMenuCandidate(
             createCopyLinkCandidate(context, snackBarParentView, snackbarDelegate),
             createDownloadLinkCandidate(context, contextMenuUseCases),
             createShareLinkCandidate(context),
+            createShareImageCandidate(context),
             createOpenImageInNewTabCandidate(
                 context,
                 tabsUseCases,
@@ -272,6 +274,19 @@ data class ContextMenuCandidate(
 
                 context.startActivity(shareIntent)
             }
+        )
+
+        /**
+         * Context Menu item: "Share image"
+         */
+        fun createShareImageCandidate(
+            context: Context,
+            action: (SessionState, HitResult) -> Unit = { _, hitResult -> context.share(hitResult.src) }
+        ) = ContextMenuCandidate(
+            id = "mozac.feature.contextmenu.share_image",
+            label = context.getString(R.string.mozac_feature_contextmenu_share_image),
+            showFor = { _, hitResult -> hitResult.isImage() },
+            action = action
         )
 
         /**

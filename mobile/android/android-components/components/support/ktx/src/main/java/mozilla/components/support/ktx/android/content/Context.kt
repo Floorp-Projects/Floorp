@@ -11,7 +11,6 @@ import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_SUBJECT
 import android.content.Intent.EXTRA_TEXT
-import android.content.Intent.EXTRA_TITLE
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.hardware.camera2.CameraManager
@@ -84,7 +83,6 @@ fun Context.share(text: String, subject: String = getString(R.string.mozac_suppo
     return try {
         val intent = Intent(ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(EXTRA_TITLE, subject)
             putExtra(EXTRA_SUBJECT, subject)
             putExtra(EXTRA_TEXT, text)
             flags = FLAG_ACTIVITY_NEW_TASK

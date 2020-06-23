@@ -14,9 +14,6 @@ import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
-import mozilla.components.feature.app.links.AppLinksUseCases
-import mozilla.components.feature.contextmenu.ContextMenuCandidate
-import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.privatemode.feature.SecureWindowFeature
@@ -35,6 +32,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
+import org.mozilla.samples.browser.integration.ContextMenuIntegration
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.integration.P2PIntegration
 
@@ -47,6 +45,7 @@ import org.mozilla.samples.browser.integration.P2PIntegration
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val toolbarFeature = ViewBoundFeatureWrapper<ToolbarFeature>()
+    private val contextMenuIntegration = ViewBoundFeatureWrapper<ContextMenuIntegration>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
     private val promptFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
@@ -130,26 +129,18 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
 
         val scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 
-        val contextMenuCandidateAppLinksUseCases = AppLinksUseCases(
-            requireContext(),
-            { true }
-        )
-
-        val contextMenuCandidates = ContextMenuCandidate.defaultCandidates(
-            requireContext(),
-            components.tabsUseCases,
-            components.contextMenuUseCases,
-            layout) +
-            ContextMenuCandidate.createOpenInExternalAppCandidate(
-                requireContext(), contextMenuCandidateAppLinksUseCases)
-
-        val contextMenuFeature = ContextMenuFeature(
-            fragmentManager = requireFragmentManager(),
-            store = components.store,
-            candidates = contextMenuCandidates,
-            engineView = layout.engineView,
-            useCases = components.contextMenuUseCases,
-            tabId = sessionId)
+        contextMenuIntegration.set(
+            feature = ContextMenuIntegration(
+                context = requireContext(),
+                fragmentManager = requireFragmentManager(),
+                browserStore = components.store,
+                tabsUseCases = components.tabsUseCases,
+                contextMenuUseCases = components.contextMenuUseCases,
+                parentView = layout,
+                sessionId = sessionId
+            ),
+            owner = this,
+            view = layout)
 
         promptFeature.set(
             feature = PromptFeature(
@@ -216,7 +207,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
         // Observe the lifecycle for supported features
         lifecycle.addObservers(
             scrollFeature,
-            contextMenuFeature,
             menuUpdaterFeature,
             secureWindowFeature
         )
