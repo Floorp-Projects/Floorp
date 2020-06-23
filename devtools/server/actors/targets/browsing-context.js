@@ -344,11 +344,6 @@ const browsingContextTargetPrototype = {
    *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
    */
   onResourceAvailable(resources) {
-    if (!this.actorID) {
-      // Don't try to emit if the actor was destroyed.
-      return;
-    }
-
     this.emit("resource-available-form", resources);
   },
 
