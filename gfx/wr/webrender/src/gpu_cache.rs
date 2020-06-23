@@ -27,11 +27,12 @@
 use api::{DebugFlags, DocumentId, PremultipliedColorF};
 #[cfg(test)]
 use api::IdNamespace;
-use api::units::TexelRect;
+use api::units::*;
 use euclid::{HomogeneousVector, Rect};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::profiler::GpuCacheProfileCounters;
 use crate::render_backend::{FrameStamp, FrameId};
+use crate::prim_store::VECS_PER_SEGMENT;
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::{mem, u16, u32};
 use std::num::NonZeroU32;
@@ -655,6 +656,17 @@ impl<'a> GpuDataRequest<'a> {
         B: Into<GpuBlockData>,
     {
         self.texture.pending_blocks.push(block.into());
+    }
+
+    // Write the GPU cache data for an individual segment.
+    pub fn write_segment(
+        &mut self,
+        local_rect: LayoutRect,
+        extra_data: [f32; 4],
+    ) {
+        let _ = VECS_PER_SEGMENT;
+        self.push(local_rect);
+        self.push(extra_data);
     }
 
     pub fn current_used_block_num(&self) -> usize {
