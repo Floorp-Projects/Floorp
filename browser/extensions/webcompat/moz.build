@@ -49,7 +49,6 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
   'injections/css/bug1570119-teamcoco.com-scrollbar-width.css',
   'injections/css/bug1570328-developer-apple.com-transform-scale.css',
   'injections/css/bug1575000-apply.lloydsbank.co.uk-radio-buttons-fix.css',
-  'injections/css/bug1577270-binance.com-calc-height-fix.css',
   'injections/css/bug1577297-kitkat.com.au-slider-width-fix.css',
   'injections/css/bug1605611-maps.google.com-directions-time.css',
   'injections/css/bug1609991-cracked.com-flex-basis-fix.css',
@@ -57,7 +56,8 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
   'injections/css/bug1610344-directv.com.co-hide-unsupported-message.css',
   'injections/css/bug1631960-websube.ckbogazici.com.tr-table-row-fix.css',
   'injections/css/bug1632019-everyman.co-gallery-width-fix.css',
-  'injections/css/bug1633796-www-la-poste-fr-placeholder-fix.css',
+  'injections/css/bug1644830-missingmail.usps.com-checkboxes-not-visible.css',
+  'injections/css/bug1645064-s-kanava.fi-invisible-charts.css',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
@@ -71,6 +71,7 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
   'injections/js/bug1610358-pcloud.com-appVersion-change.js',
   'injections/js/bug1623375-salesforce-communities-hide-unsupported.js',
   'injections/js/bug1625224-sixt-neuwagen.de-window-netscape-shim.js',
+  'injections/js/bug1641998-embedded-twitter-videos-etp-indexeddb.js',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['lib'] += [
