@@ -24,9 +24,13 @@ exclude: true
 - ⚠️  [`RuntimeTelemetry#getSnapshots`][68.10] is removed after deprecation.
   Use Glean to handle Gecko telemetry.
   ([bug 1644447]({{bugzilla}}1644447))
+- Added [`ensureBuiltIn`][79.3] that ensures that a built-in extension is
+  installed without re-installing.
+  ([bug 1635564]({{bugzilla}}1635564))
 
 [79.1]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onOpenOptionsPage-org.mozilla.geckoview.WebExtension-
 [79.2]: {{javadoc_uri}}/WebNotification.html#source
+[79.3]: {{javadoc_uri}}/WebExtensionController.html#ensureBuiltIn-java.lang.String-java.lang.String-
 
 ## v78
 - Added [`WebExtensionController.installBuiltIn`][78.1] that allows installing an
@@ -727,4 +731,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 31b623383bf4311efa4e1cbb5f2a2b4bf7ce5c50
+[api-version]: c6aeb08c76ad537222627963671b4668ff596099
