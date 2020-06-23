@@ -13,7 +13,7 @@ use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
 use crate::picture::ResolvedSurfaceTexture;
-use crate::prim_store::PictureIndex;
+use crate::prim_store::{PictureIndex, PrimitiveVisibilityMask};
 use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
 #[cfg(feature = "debugger")]
@@ -23,7 +23,6 @@ use std::{usize, f32, i32, u32};
 use crate::render_target::{RenderTargetIndex, RenderTargetKind};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::render_task_cache::{RenderTaskCacheKey, RenderTaskCacheKeyKind};
-use crate::visibility::PrimitiveVisibilityMask;
 use smallvec::SmallVec;
 
 const RENDER_TASK_SIZE_SANITY_CHECK: i32 = 16000;
