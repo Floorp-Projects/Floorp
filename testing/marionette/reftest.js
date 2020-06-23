@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -20,6 +21,7 @@ const { InvalidArgumentError } = ChromeUtils.import(
   "chrome://marionette/content/error.js"
 );
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
+const { print } = ChromeUtils.import("chrome://marionette/content/print.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
@@ -31,6 +33,7 @@ ChromeUtils.defineModuleGetter(
 
 this.EXPORTED_SYMBOLS = ["reftest"];
 
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const PREF_E10S = "browser.tabs.remote.autostart";
 const PREF_FISSION = "fission.autostart";
@@ -51,6 +54,15 @@ const STATUS = {
 const DEFAULT_REFTEST_WIDTH = 600;
 const DEFAULT_REFTEST_HEIGHT = 600;
 
+// reftest-print page dimensions in cm
+const CM_PER_INCH = 2.54;
+const DEFAULT_PAGE_WIDTH = 5 * CM_PER_INCH;
+const DEFAULT_PAGE_HEIGHT = 3 * CM_PER_INCH;
+const DEFAULT_PAGE_MARGIN = 0.5 * CM_PER_INCH;
+
+// CSS 96 pixels per inch, compared to pdf.js default 72 pixels per inch
+const DEFAULT_PDF_RESOLUTION = 96 / 72;
+
 /**
  * Implements an fast runner for web-platform-tests format reftests
  * c.f. http://web-platform-tests.org/writing-tests/reftests.html.
@@ -67,6 +79,7 @@ reftest.Runner = class {
   constructor(driver) {
     this.driver = driver;
     this.canvasCache = new DefaultMap(undefined, () => new Map([[null, []]]));
+    this.isPrint = null;
     this.windowUtils = null;
     this.lastURL = null;
     this.useRemoteTabs = Preferences.get(PREF_E10S);
@@ -86,7 +99,9 @@ reftest.Runner = class {
    * @param {string} screenshotMode
    *     String enum representing when screenshots should be taken
    */
-  setup(urlCount, screenshotMode) {
+  setup(urlCount, screenshotMode, isPrint = false) {
+    this.isPrint = isPrint;
+
     this.parentWindow = assert.open(this.driver.getCurrentWindow());
 
     this.screenshotMode =
@@ -96,6 +111,10 @@ reftest.Runner = class {
       (map, key) => map.set(key, urlCount[key]),
       new Map()
     );
+
+    if (isPrint) {
+      this.loadPdfJs();
+    }
   }
 
   async ensureWindow(timeout, width, height) {
@@ -249,6 +268,7 @@ max-width: ${width}px; max-height: ${height}px`;
     references,
     expected,
     timeout,
+    pageRanges = {},
     width = DEFAULT_REFTEST_WIDTH,
     height = DEFAULT_REFTEST_HEIGHT
   ) {
@@ -268,6 +288,7 @@ max-width: ${width}px; max-height: ${height}px`;
           references,
           expected,
           timeout,
+          pageRanges,
           width,
           height
         );
@@ -291,7 +312,15 @@ max-width: ${width}px; max-height: ${height}px`;
     return result;
   }
 
-  async runTest(testUrl, references, expected, timeout, width, height) {
+  async runTest(
+    testUrl,
+    references,
+    expected,
+    timeout,
+    pageRanges,
+    width,
+    height
+  ) {
     let win = await this.ensureWindow(timeout, width, height);
 
     function toBase64(screenshot) {
@@ -328,6 +357,7 @@ max-width: ${width}px; max-height: ${height}px`;
           rhsUrl,
           relation,
           timeout,
+          pageRanges,
           extras
         );
       } catch (e) {
@@ -413,55 +443,115 @@ max-width: ${width}px; max-height: ${height}px`;
     return result;
   }
 
-  async compareUrls(win, lhsUrl, rhsUrl, relation, timeout, extras) {
+  async compareUrls(
+    win,
+    lhsUrl,
+    rhsUrl,
+    relation,
+    timeout,
+    pageRanges,
+    extras
+  ) {
     logger.info(`Testing ${lhsUrl} ${relation} ${rhsUrl}`);
 
-    // Take the reference screenshot first so that if we pause
-    // we see the test rendering
-    let rhs = await this.screenshot(win, rhsUrl, timeout);
-    let lhs = await this.screenshot(win, lhsUrl, timeout);
+    if (relation !== "==" && relation != "!=") {
+      throw new InvalidArgumentError("Reftest operator should be '==' or '!='");
+    }
 
-    logger.debug(`lhs canvas size ${lhs.canvas.width}x${lhs.canvas.height}`);
-    logger.debug(`rhs canvas size ${rhs.canvas.width}x${rhs.canvas.height}`);
+    let lhsIter, lhsCount, rhsIter, rhsCount;
+    if (!this.isPrint) {
+      // Take the reference screenshot first so that if we pause
+      // we see the test rendering
+      rhsIter = [await this.screenshot(win, rhsUrl, timeout)].values();
+      lhsIter = [await this.screenshot(win, lhsUrl, timeout)].values();
+      lhsCount = rhsCount = 1;
+    } else {
+      [rhsIter, rhsCount] = await this.screenshotPaginated(
+        win,
+        rhsUrl,
+        timeout,
+        pageRanges
+      );
+      [lhsIter, lhsCount] = await this.screenshotPaginated(
+        win,
+        lhsUrl,
+        timeout,
+        pageRanges
+      );
+    }
 
-    let passed;
+    let passed = null;
     let error = null;
     let pixelsDifferent = null;
     let maxDifferences = {};
     let msg = null;
 
-    try {
-      pixelsDifferent = this.windowUtils.compareCanvases(
-        lhs.canvas,
-        rhs.canvas,
-        maxDifferences
-      );
-    } catch (e) {
+    if (lhsCount != rhsCount) {
       passed = false;
-      error = e;
+      msg = `Got different numbers of pages; test has ${lhsCount}, ref has ${rhsCount}`;
     }
 
-    if (error === null) {
-      passed = this.isAcceptableDifference(
-        maxDifferences.value,
-        pixelsDifferent,
-        extras.fuzzy
-      );
-      switch (relation) {
-        case "==":
-          if (!passed) {
+    let lhs = null;
+    let rhs = null;
+    logger.debug(`Comparing ${lhsCount} pages`);
+    if (passed === null) {
+      for (let i = 0; i < lhsCount; i++) {
+        lhs = (await lhsIter.next()).value;
+        rhs = (await rhsIter.next()).value;
+        logger.debug(
+          `lhs canvas size ${lhs.canvas.width}x${lhs.canvas.height}`
+        );
+        logger.debug(
+          `rhs canvas size ${rhs.canvas.width}x${rhs.canvas.height}`
+        );
+        try {
+          pixelsDifferent = this.windowUtils.compareCanvases(
+            lhs.canvas,
+            rhs.canvas,
+            maxDifferences
+          );
+        } catch (e) {
+          error = e;
+          passed = false;
+          break;
+        }
+
+        let areEqual = this.isAcceptableDifference(
+          maxDifferences.value,
+          pixelsDifferent,
+          extras.fuzzy
+        );
+        logger.debug(
+          `Page ${i + 1} maxDifferences: ${maxDifferences.value} ` +
+            `pixelsDifferent: ${pixelsDifferent}`
+        );
+        logger.debug(
+          `Page ${i + 1} ${areEqual ? "compare equal" : "compare unequal"}`
+        );
+        if (!areEqual) {
+          if (relation == "==") {
+            passed = false;
             msg =
               `Found ${pixelsDifferent} pixels different, ` +
               `maximum difference per channel ${maxDifferences.value}`;
+            if (this.isPrint) {
+              msg += ` on page ${i + 1}`;
+            }
+          } else {
+            passed = true;
           }
           break;
-        case "!=":
-          passed = !passed;
-          break;
-        default:
-          throw new InvalidArgumentError(
-            "Reftest operator should be '==' or '!='"
-          );
+        }
+      }
+    }
+
+    // If passed isn't set we got to the end without finding differences
+    if (passed === null) {
+      if (relation == "==") {
+        passed = true;
+      } else {
+        msg = `mismatch reftest has no differences`;
+        passed = false;
       }
     }
     return { lhs, rhs, passed, error, msg };
@@ -527,6 +617,35 @@ max-width: ${width}px; max-height: ${height}px`;
     }
   }
 
+  async loadTestUrl(win, url, timeout) {
+    logger.debug(`Starting load of ${url}`);
+    let navigateOpts = {
+      commandId: this.driver.listener.activeMessageId,
+      pageTimeout: timeout,
+    };
+    if (this.lastURL === url) {
+      logger.debug(`Refreshing page`);
+      await this.driver.listener.refresh(navigateOpts);
+    } else {
+      // HACK: DocumentLoadListener currently doesn't know how to
+      // process-switch loads in a non-tabbed <browser>. We need to manually
+      // set the browser's remote type in order to ensure that the load
+      // happens in the correct process.
+      //
+      // See bug 1636169.
+      this.updateBrowserRemotenessByURL(win.gBrowser, url);
+
+      navigateOpts.url = url;
+      navigateOpts.loadEventExpected = false;
+      await this.driver.listener.get(navigateOpts);
+      this.lastURL = url;
+    }
+
+    this.ensureFocus(win);
+
+    await this.driver.listener.reftestWait(url, this.useRemoteTabs);
+  }
+
   async screenshot(win, url, timeout) {
     // On windows the above doesn't *actually* set the window to be the
     // reftest size; but *does* set the content area to be the right size;
@@ -584,31 +703,8 @@ browserRect.height: ${browserRect.height}`);
       }
 
       url = new URL(url).href; // normalize the URL
-      logger.debug(`Starting load of ${url}`);
-      let navigateOpts = {
-        commandId: this.driver.listener.activeMessageId,
-        pageTimeout: timeout,
-      };
-      if (this.lastURL === url) {
-        logger.debug(`Refreshing page`);
-        await this.driver.listener.refresh(navigateOpts);
-      } else {
-        // HACK: DocumentLoadListener currently doesn't know how to
-        // process-switch loads in a non-tabbed <browser>. We need to manually
-        // set the browser's remote type in order to ensure that the load
-        // happens in the correct process.
-        //
-        // See bug 1636169.
-        this.updateBrowserRemotenessByURL(win.gBrowser, url);
 
-        navigateOpts.url = url;
-        navigateOpts.loadEventExpected = false;
-        await this.driver.listener.get(navigateOpts);
-        this.lastURL = url;
-      }
-
-      this.ensureFocus(win);
-      await this.driver.listener.reftestWait(url, this.useRemoteTabs);
+      await this.loadTestUrl(win, url, timeout);
 
       canvas = await capture.canvas(
         win,
@@ -635,6 +731,129 @@ browserRect.height: ${browserRect.height}`);
     }
     this.urlCount.set(url, remainingCount - 1);
     return { canvas, reuseCanvas };
+  }
+
+  async screenshotPaginated(win, url, timeout, pageRanges) {
+    url = new URL(url).href; // normalize the URL
+    await this.loadTestUrl(win, url, timeout);
+
+    const [width, height] = [DEFAULT_PAGE_WIDTH, DEFAULT_PAGE_HEIGHT];
+    const margin = DEFAULT_PAGE_MARGIN;
+    const settings = print.addDefaultSettings({
+      page: {
+        width,
+        height,
+      },
+      margin: {
+        left: margin,
+        right: margin,
+        top: margin,
+        bottom: margin,
+      },
+      shrinkToFit: false,
+      printBackground: true,
+    });
+
+    const filePath = await print.printToFile(
+      win.gBrowser.frameLoader,
+      win.gBrowser.outerWindowID,
+      settings
+    );
+
+    const fp = await OS.File.open(filePath, { read: true });
+    try {
+      const pdf = await this.loadPdf(url, fp);
+      let pages = this.getPages(pageRanges, url, pdf.numPages);
+      return [this.renderPages(pdf, pages), pages.size];
+    } finally {
+      fp.close();
+      await OS.File.remove(filePath);
+    }
+  }
+
+  async loadPdfJs() {
+    // Ensure pdf.js is loaded in the opener window
+    await new Promise((resolve, reject) => {
+      const doc = this.parentWindow.document;
+      const script = doc.createElement("script");
+      script.src = "resource://pdf.js/build/pdf.js";
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("pdfjs load failed"));
+      doc.documentElement.appendChild(script);
+    });
+    this.parentWindow.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "resource://pdf.js/build/pdf.worker.js";
+  }
+
+  async loadPdf(url, fp) {
+    const data = await fp.read();
+    return this.parentWindow.pdfjsLib.getDocument({ data }).promise;
+  }
+
+  async *renderPages(pdf, pages) {
+    let canvas = null;
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      if (!pages.has(pageNumber)) {
+        logger.info(`Skipping page ${pageNumber}/${pdf.numPages}`);
+        continue;
+      }
+      logger.info(`Rendering page ${pageNumber}/${pdf.numPages}`);
+      let page = await pdf.getPage(pageNumber);
+      let viewport = page.getViewport({ scale: DEFAULT_PDF_RESOLUTION });
+      // Prepare canvas using PDF page dimensions
+      if (canvas === null) {
+        canvas = this.parentWindow.document.createElementNS(XHTML_NS, "canvas");
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+      }
+
+      // Render PDF page into canvas context
+      let context = canvas.getContext("2d");
+      let renderContext = {
+        canvasContext: context,
+        viewport,
+      };
+      await page.render(renderContext).promise;
+      yield { canvas, reuseCanvas: false };
+    }
+  }
+
+  getPages(pageRanges, url, totalPages) {
+    // Extract test id from URL without parsing
+    let afterHost = url.slice(url.indexOf(":") + 3);
+    afterHost = afterHost.slice(afterHost.indexOf("/"));
+    const ranges = pageRanges[afterHost];
+    let rv = new Set();
+
+    if (!ranges) {
+      for (let i = 1; i <= totalPages; i++) {
+        rv.add(i);
+      }
+      return rv;
+    }
+
+    for (let rangePart of ranges) {
+      if (rangePart.length === 1) {
+        rv.add(rangePart[0]);
+      } else {
+        if (rangePart.length !== 2) {
+          throw new Error(
+            `Page ranges must be <int> or <int> '-' <int>, got ${rangePart}`
+          );
+        }
+        let [lower, upper] = rangePart;
+        if (lower === null) {
+          lower = 1;
+        }
+        if (upper === null) {
+          upper = totalPages;
+        }
+        for (let i = lower; i <= upper; i++) {
+          rv.add(i);
+        }
+      }
+    }
+    return rv;
   }
 };
 
