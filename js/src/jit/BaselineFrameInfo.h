@@ -325,6 +325,11 @@ class CompilerFrameInfo : public FrameInfo {
                    BaselineFrame::reverseOffsetOfLocal(nlocals() + slot));
   }
 
+  Address addressOfICScript() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfCompilerICScript());
+  }
+
   void popValue(ValueOperand dest);
 
   void sync(StackValue* val);
