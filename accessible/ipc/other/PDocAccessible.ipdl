@@ -69,6 +69,14 @@ struct RelationTargets
   uint64_t[] Targets;
 };
 
+struct TextRangeData
+{
+  uint64_t StartID;
+  uint64_t EndID;
+  int32_t StartOffset;
+  int32_t EndOffset;
+};
+
 nested(upto inside_sync) sync protocol PDocAccessible
 {
   manager PBrowser;
@@ -104,6 +112,7 @@ parent:
   async AnnouncementEvent(uint64_t aID,
                           nsString aAnnouncement,
                           uint16_t aPriority);
+  async TextSelectionChangeEvent(uint64_t aID, TextRangeData[] aSelection);
 
   /*
    * Tell the parent document to bind the existing document as a new child

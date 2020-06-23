@@ -7,6 +7,7 @@
 #include "TextRange-inl.h"
 
 #include "Accessible-inl.h"
+#include "mozilla/dom/Selection.h"
 #include "nsAccUtils.h"
 
 namespace mozilla {
@@ -232,6 +233,37 @@ void TextRange::RemoveFromSelection() const {}
 void TextRange::Select() const {}
 
 void TextRange::ScrollIntoView(EHowToAlign aHow) const {}
+
+void TextRange::TextRangesFromSelection(dom::Selection* aSelection,
+                                        nsTArray<TextRange>* aRanges) {
+  MOZ_ASSERT(aRanges->Length() == 0, "TextRange array supposed to be empty");
+
+  aRanges->SetCapacity(aSelection->RangeCount());
+
+  for (uint32_t idx = 0; idx < aSelection->RangeCount(); idx++) {
+    const nsRange* DOMRange = aSelection->GetRangeAt(idx);
+    HyperTextAccessible* startContainer =
+        nsAccUtils::GetTextContainer(DOMRange->GetStartContainer());
+    HyperTextAccessible* endContainer =
+        nsAccUtils::GetTextContainer(DOMRange->GetEndContainer());
+    HyperTextAccessible* commonAncestor = nsAccUtils::GetTextContainer(
+        DOMRange->GetClosestCommonInclusiveAncestor());
+    if (!startContainer || !endContainer) {
+      continue;
+    }
+
+    int32_t startOffset = startContainer->DOMPointToOffset(
+        DOMRange->GetStartContainer(), DOMRange->StartOffset(), false);
+    int32_t endOffset = endContainer->DOMPointToOffset(
+        DOMRange->GetEndContainer(), DOMRange->EndOffset(), true);
+
+    TextRange tr(commonAncestor && commonAncestor->IsTextField()
+                     ? commonAncestor
+                     : startContainer->Document(),
+                 startContainer, startOffset, endContainer, endOffset);
+    *(aRanges->AppendElement()) = std::move(tr);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // pivate

@@ -1,0 +1,21 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIAccessibleEvent.idl"
+
+interface nsIArray;
+
+/**
+ * Fired when the caret changes position in text.
+ */
+[scriptable, builtinclass, uuid(011f98e2-2beb-4ec3-97a5-f154f624e112)]
+interface nsIAccessibleTextSelectionChangeEvent: nsIAccessibleEvent
+{
+  /**
+   * Return an array of disjoint ranges for selected text within the 
+   * source of this event.
+   */
+  readonly attribute nsIArray selectionRanges;
+};

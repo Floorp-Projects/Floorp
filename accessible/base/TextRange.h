@@ -214,6 +214,9 @@ class TextRange final {
     mStartOffset = aOffset;
   }
 
+  static void TextRangesFromSelection(dom::Selection* aSelection,
+                                      nsTArray<TextRange>* aRanges);
+
  private:
   TextRange(const TextRange& aRange) = delete;
   TextRange& operator=(const TextRange& aRange) = delete;
