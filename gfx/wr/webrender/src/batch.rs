@@ -17,9 +17,9 @@ use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId
 use crate::gpu_types::{ImageBrushData, get_shader_opacity};
 use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSource, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
-use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind};
+use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind, PrimitiveVisibilityIndex, PrimitiveVisibilityMask};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
-use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
+use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, PrimitiveVisibility, PrimitiveVisibilityFlags};
 use crate::prim_store::{VECS_PER_SEGMENT, SpaceMapper};
 use crate::prim_store::image::ImageSource;
 use crate::render_target::RenderTargetContext;
@@ -28,7 +28,6 @@ use crate::render_task::RenderTaskAddress;
 use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache};
-use crate::visibility::{PrimitiveVisibilityIndex, PrimitiveVisibilityMask, PrimitiveVisibility, PrimitiveVisibilityFlags};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use crate::util::{project_rect, TransformedRectKind};
@@ -761,12 +760,9 @@ impl BatchBuilder {
         composite_state: &mut CompositeState,
     ) {
         for cluster in &pic.prim_list.clusters {
-            for prim_instance in &pic.prim_list.prim_instances[cluster.prim_range()] {
-                if prim_instance.visibility_info == PrimitiveVisibilityIndex::INVALID {
-                    continue;
-                }
-
-                // Add each run in this picture to the batch.
+            profile_scope!("cluster");
+            // Add each run in this picture to the batch.
+            for prim_instance in &cluster.prim_instances {
                 self.add_prim_to_batch(
                     prim_instance,
                     cluster.spatial_node_index,
@@ -871,6 +867,10 @@ impl BatchBuilder {
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
     ) {
+        if prim_instance.visibility_info == PrimitiveVisibilityIndex::INVALID {
+            return;
+        }
+
         #[cfg(debug_assertions)] //TODO: why is this needed?
         debug_assert_eq!(prim_instance.prepared_frame_id, render_tasks.frame_id());
 
@@ -1286,7 +1286,8 @@ impl BatchBuilder {
                     // Convert all children of the 3D hierarchy root into batches.
                     Picture3DContext::In { root_data: Some(ref list), .. } => {
                         for child in list {
-                            let child_prim_instance = &picture.prim_list.prim_instances[child.anchor.instance_index];
+                            let cluster = &picture.prim_list.clusters[child.anchor.cluster_index];
+                            let child_prim_instance = &cluster.prim_instances[child.anchor.instance_index];
                             let child_prim_info = &ctx.scratch.prim_info[child_prim_instance.visibility_info.0 as usize];
 
                             let child_pic_index = match child_prim_instance.kind {
