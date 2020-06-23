@@ -773,7 +773,7 @@ MDefinition* MDefinition::maybeSingleDefUse() const {
   return useDef;
 }
 
-MDefinition* MDefinition::maybeMostRecentDefUse() const {
+MDefinition* MDefinition::maybeMostRecentlyAddedDefUse() const {
   MUseDefIterator use(this);
   if (!use) {
     // No def-uses.
@@ -782,13 +782,17 @@ MDefinition* MDefinition::maybeMostRecentDefUse() const {
 
   MDefinition* mostRecentUse = use.def();
 
-  // This function relies on addUse adding new uses to the front of the list.
-  // Check this invariant by asserting the next few uses are 'older'.
 #ifdef DEBUG
-  static constexpr size_t NumUsesToCheck = 3;
-  use++;
-  for (size_t i = 0; use && i < NumUsesToCheck; i++, use++) {
-    MOZ_ASSERT(use.def()->id() <= mostRecentUse->id());
+  // This function relies on addUse adding new uses to the front of the list.
+  // Check this invariant by asserting the next few uses are 'older'. Skip this
+  // for phis because setBackedge can add a new use for a loop phi even if the
+  // loop body has a use with an id greater than the loop phi's id.
+  if (!mostRecentUse->isPhi()) {
+    static constexpr size_t NumUsesToCheck = 3;
+    use++;
+    for (size_t i = 0; use && i < NumUsesToCheck; i++, use++) {
+      MOZ_ASSERT(use.def()->id() <= mostRecentUse->id());
+    }
   }
 #endif
 
