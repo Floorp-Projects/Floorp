@@ -80,4 +80,15 @@ class SecureWindowFeatureTest {
 
         verify(window).clearFlags(FLAG_SECURE)
     }
+
+    @Test
+    fun `remove flags on stop`() {
+        val store = BrowserStore()
+        val feature = SecureWindowFeature(window, store)
+
+        feature.start()
+        feature.stop()
+
+        verify(window).clearFlags(FLAG_SECURE)
+    }
 }
