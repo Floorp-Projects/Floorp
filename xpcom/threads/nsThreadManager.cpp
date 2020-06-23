@@ -202,6 +202,10 @@ void NS_SetMainThread() {
   }
   sTLSIsMainThread.set(true);
   MOZ_ASSERT(NS_IsMainThread());
+  // We initialize the SerialEventTargetGuard's TLS here for simplicity as it
+  // needs to be initialized around the same time you would initialize
+  // sTLSIsMainThread.
+  SerialEventTargetGuard::InitTLS();
 }
 
 #ifdef DEBUG

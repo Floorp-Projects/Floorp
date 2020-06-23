@@ -585,6 +585,11 @@ nsIEventTarget* GetMainThreadEventTarget() {
 }
 
 nsISerialEventTarget* GetCurrentThreadSerialEventTarget() {
+  if (nsISerialEventTarget* current =
+          SerialEventTargetGuard::GetCurrentSerialEventTarget()) {
+    return current;
+  }
+
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
   if (NS_FAILED(rv)) {
@@ -625,6 +630,15 @@ LogTaskBase<T>::Run::~Run() {
 }
 
 template class LogTaskBase<nsIRunnable>;
+
+MOZ_THREAD_LOCAL(nsISerialEventTarget*)
+SerialEventTargetGuard::sCurrentThreadTLS;
+void SerialEventTargetGuard::InitTLS() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!sCurrentThreadTLS.init()) {
+    MOZ_CRASH();
+  }
+}
 
 }  // namespace mozilla
 
