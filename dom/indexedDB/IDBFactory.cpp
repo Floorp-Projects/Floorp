@@ -265,7 +265,7 @@ Result<RefPtr<IDBFactory>, nsresult> IDBFactory::CreateInternal(
   auto factory = MakeRefPtr<IDBFactory>(IDBFactoryGuard{});
   factory->mPrincipalInfo = std::move(aPrincipalInfo);
   factory->mGlobal = aGlobal;
-  factory->mEventTarget = GetCurrentThreadEventTarget();
+  factory->mEventTarget = GetCurrentThreadSerialEventTarget();
   factory->mInnerWindowID = aInnerWindowID;
 
   return factory;

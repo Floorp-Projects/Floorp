@@ -479,7 +479,7 @@ nsresult UDPSocket::InitRemote(const nsAString& aLocalAddress,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIEventTarget> target;
+  nsCOMPtr<nsISerialEventTarget> target;
   if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
     target = global->EventTargetFor(TaskCategory::Other);
   }
