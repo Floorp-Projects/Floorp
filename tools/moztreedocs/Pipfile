@@ -17,7 +17,7 @@ sphinx-rtd-theme = "~=0.4.3"
 sphinxcontrib-mermaid = "~=0.4.0"
 sphinx = "~=2.2.2"
 tornado = "~=6.0.3"
-sphinx-copybutton = "~=0.2.11"
+sphinx-copybutton = "~=0.2.12"
 
 [requires]
 python_version = "3"
