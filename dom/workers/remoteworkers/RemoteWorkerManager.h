@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"
+#include "mozilla/dom/WorkerPrivate.h"  // WorkerType enum
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
@@ -34,6 +35,47 @@ class RemoteWorkerManager final {
   void Launch(RemoteWorkerController* aController,
               const RemoteWorkerData& aData, base::ProcessId aProcessId);
 
+  static bool MatchRemoteType(const nsAString& processRemoteType,
+                              const nsAString& workerRemoteType) {
+    if (processRemoteType.Equals(workerRemoteType)) {
+      return true;
+    }
+
+    // Respecting COOP and COEP requires processing headers in the parent
+    // process in order to choose an appropriate content process, but the
+    // workers' ScriptLoader processes headers in content processes. An
+    // intermediary step that provides security guarantees is to simply never
+    // allow SharedWorkers and ServiceWorkers to exist in a COOP+COEP process.
+    // The ultimate goal is to allow these worker types to be put in such
+    // processes based on their script response headers.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1595206
+    if (IsWebCoopCoepRemoteType(processRemoteType)) {
+      return false;
+    }
+
+    // A worker for a non privileged child process can be launched in
+    // any web child process that is not COOP and COEP.
+    if ((workerRemoteType.IsEmpty() || IsWebRemoteType(workerRemoteType)) &&
+        IsWebRemoteType(processRemoteType)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Get the child process RemoteType where a RemoteWorker should be
+   * launched.
+   */
+  static Result<nsString, nsresult> GetRemoteType(
+      const nsCOMPtr<nsIPrincipal>& aPrincipal, WorkerType aWorkerType);
+
+  /**
+   * Verify if a remote worker should be allowed to run in the current
+   * child process remoteType.
+   */
+  static bool IsRemoteTypeAllowed(const RemoteWorkerData& aData);
+
  private:
   RemoteWorkerManager();
   ~RemoteWorkerManager();
@@ -45,7 +87,7 @@ class RemoteWorkerManager final {
       const RemoteWorkerData& aData) const;
 
   RemoteWorkerServiceParent* SelectTargetActorForSharedWorker(
-      base::ProcessId aProcessId) const;
+      base::ProcessId aProcessId, const RemoteWorkerData& aData) const;
 
   void LaunchInternal(RemoteWorkerController* aController,
                       RemoteWorkerServiceParent* aTargetActor,
@@ -55,6 +97,9 @@ class RemoteWorkerManager final {
   void LaunchNewContentProcess(const RemoteWorkerData& aData);
 
   void AsyncCreationFailed(RemoteWorkerController* aController);
+
+  static nsString GetRemoteTypeForActor(
+      const RemoteWorkerServiceParent* aActor);
 
   // Iterate through all RemoteWorkerServiceParent actors, starting from a
   // random index (as if iterating through a circular array).
