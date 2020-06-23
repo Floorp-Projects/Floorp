@@ -41,7 +41,7 @@ body {
   'Helvetica Neue', sans-serif;
   font-size: 16px;
   position: relative;
-  /* these two rules fix test failures in 
+  /* these two rules fix test failures in
   "browser_ext_themes_ntp_colors" & "browser_ext_themes_ntp_colors_perwindow".*/
   color: var(--newtab-text-primary-color);
   background-color: var(--newtab-background-color);
@@ -303,7 +303,59 @@ body {
     }
   }
 
-  .tiles-section {
+  .tiles-theme-section {
+    display: flex;
+    margin: 10px auto;
+
+    .theme {
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      width: 180px;
+      height: 145px;
+      color: #000;
+      background-color: #FFF;
+      box-shadow: 0 1px 4px rgba(12, 12, 13, 0.1);
+      border-radius: 4px;
+      cursor: pointer;
+      margin-inline-end: 21px;
+
+      .icon {
+        background-size: cover;
+        height: 91px;
+
+        &.light {
+          background-image: url('chrome://mozapps/content/extensions/firefox-compact-light.svg');
+        }
+
+        &.dark {
+          background-image: url('chrome://mozapps/content/extensions/firefox-compact-dark.svg');
+        }
+      }
+
+      .text {
+        display: flex;
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 22px;
+        margin-inline-start: 12px;
+        margin-top: 9px;
+      }
+
+      &.selected {
+        outline: 4px solid #0090ED;
+        outline-offset: -4px;
+      }
+
+      &:focus,
+      &:active {
+        outline: 4px solid #0090ED;
+        outline-offset: -4px;
+      }
+    }
+  }
+
+  .tiles-topsites-section {
     $host-size: 12px;
     $tile-size: 96px;
 
