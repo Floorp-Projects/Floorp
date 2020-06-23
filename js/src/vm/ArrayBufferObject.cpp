@@ -687,7 +687,7 @@ static bool CreateSpecificWasmBuffer(
     // wasm::PageSize == 0
     if (!useHugeMemory &&
         clampedMaxSize.value() >= (UINT32_MAX - wasm::PageSize)) {
-      uint64_t clamp = (wasm::MaxMemoryMaximumPages - 2) * wasm::PageSize;
+      uint64_t clamp = (wasm::MaxMemoryLimitField - 2) * wasm::PageSize;
       MOZ_ASSERT(clamp < UINT32_MAX);
       MOZ_ASSERT(initialSize <= clamp);
       clampedMaxSize = Some(clamp);
@@ -806,8 +806,6 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
                           MutableHandleArrayBufferObjectMaybeShared buffer) {
   MOZ_ASSERT(memory.initial % wasm::PageSize == 0);
   MOZ_RELEASE_ASSERT(cx->wasmHaveSignalHandlers);
-  MOZ_RELEASE_ASSERT((memory.initial / wasm::PageSize) <=
-                     wasm::MaxMemoryInitialPages);
   MOZ_RELEASE_ASSERT(memory.initial <= ArrayBufferObject::MaxBufferByteLength);
   static_assert(ArrayBufferObject::MaxBufferByteLength <= UINT32_MAX,
                 "wasm memory uses uint32_t and is limited by"
