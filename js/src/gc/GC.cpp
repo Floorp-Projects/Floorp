@@ -470,8 +470,8 @@ inline size_t Arena::finalize(JSFreeOp* fop, AllocKind thingKind,
   FreeSpan* newListTail = &newListHead;
   size_t nmarked = 0;
 
-  for (ArenaCellIterUnderFinalize cell(this); !cell.done(); cell.next()) {
-    T* t = cell.as<T>();
+  for (ArenaCellIterUnderFinalize i(this); !i.done(); i.next()) {
+    T* t = i.get<T>();
     if (t->asTenured().isMarkedAny()) {
       uint_fast16_t thing = uintptr_t(t) & ArenaMask;
       if (thing != firstThingOrSuccessorOfLastMarkedThing) {
@@ -1945,14 +1945,14 @@ static void RelocateArena(Arena* arena, SliceBudget& sliceBudget) {
   AllocKind thingKind = arena->getAllocKind();
   size_t thingSize = arena->getThingSize();
 
-  for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
-    RelocateCell(zone, cell, thingKind, thingSize);
+  for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
+    RelocateCell(zone, i.getCell(), thingKind, thingSize);
     sliceBudget.step();
   }
 
 #ifdef DEBUG
-  for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
-    TenuredCell* src = cell;
+  for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
+    TenuredCell* src = i.getCell();
     MOZ_ASSERT(src->isForwarded());
     TenuredCell* dest = Forwarded(src);
     MOZ_ASSERT(src->isMarkedBlack() == dest->isMarkedBlack());
@@ -2209,8 +2209,8 @@ static inline void UpdateCellPointers(MovingTracer* trc, T* cell) {
 
 template <typename T>
 static void UpdateArenaPointersTyped(MovingTracer* trc, Arena* arena) {
-  for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
-    UpdateCellPointers(trc, cell.as<T>());
+  for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
+    UpdateCellPointers(trc, reinterpret_cast<T*>(i.getCell()));
   }
 }
 
@@ -4035,7 +4035,55 @@ void GCRuntime::purgeSourceURLsForShrinkingGC() {
   }
 }
 
-using ArenasToUnmark = NestedIterator<GCZonesIter, ArenasToUpdate>;
+class ArenasToUnmark {
+ public:
+  explicit ArenasToUnmark(GCRuntime* gc);
+
+  bool done() const { return arenas.isNothing(); }
+
+  ArenaListSegment get() const {
+    MOZ_ASSERT(!done());
+    return arenas.ref().get();
+  }
+
+  void next();
+
+ private:
+  void settle();
+
+  GCZonesIter zones;
+  Maybe<ArenasToUpdate> arenas;
+};
+
+ArenasToUnmark::ArenasToUnmark(GCRuntime* gc) : zones(gc) { settle(); }
+
+void ArenasToUnmark::settle() {
+  MOZ_ASSERT(arenas.isNothing());
+
+  while (!zones.done()) {
+    arenas.emplace(zones.get());
+    if (!arenas.ref().done()) {
+      break;
+    }
+
+    arenas.reset();
+    zones.next();
+  }
+
+  MOZ_ASSERT(done() || !arenas.ref().done());
+}
+
+void ArenasToUnmark::next() {
+  MOZ_ASSERT(!done());
+
+  arenas.ref().next();
+
+  if (arenas.ref().done()) {
+    arenas.reset();
+    zones.next();
+    settle();
+  }
+}
 
 static size_t UnmarkArenaListSegment(GCRuntime* gc,
                                      const ArenaListSegment& arenas) {
@@ -4157,7 +4205,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
 
     if (IsShutdownGC(reason)) {
       /* Clear any engine roots that may hold external data live. */
-      for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+      for (GCZonesIter zone(this, SkipAtoms); !zone.done(); zone.next()) {
         zone->clearRootsForShutdownGC();
       }
     }
@@ -4267,7 +4315,7 @@ void GCRuntime::updateMemoryCountersOnGCStart() {
   heapSize.updateOnGCStart();
 
   // Update memory counters for the zones we are collecting.
-  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+  for (GCZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     zone->updateMemoryCountersOnGCStart();
   }
 }
@@ -5613,8 +5661,8 @@ static bool SweepArenaList(JSFreeOp* fop, Arena** arenasToSweep,
   while (Arena* arena = *arenasToSweep) {
     MOZ_ASSERT(arena->zone->isGCSweeping());
 
-    for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
-      SweepThing(fop, cell.as<T>());
+    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
+      SweepThing(fop, i.get<T>());
     }
 
     Arena* next = arena->next;
@@ -7852,7 +7900,8 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
         // If we are currently collecting the target zone then we must
         // treat all merged things as if they were allocated during the
         // collection.
-        for (ArenaCellIter cell(arena); !cell.done(); cell.next()) {
+        for (ArenaCellIter iter(arena); !iter.done(); iter.next()) {
+          TenuredCell* cell = iter.getCell();
           MOZ_ASSERT(!cell->isMarkedAny());
           cell->markBlack();
         }
