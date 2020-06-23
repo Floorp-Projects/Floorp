@@ -79,7 +79,7 @@ startupRecorder.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   record(name) {
-    Services.profiler.AddMarker("startupRecorder:" + name);
+    ChromeUtils.addProfilerMarker("startupRecorder:" + name);
     this.data.code[name] = {
       components: Cu.loadedComponents,
       modules: Cu.loadedModules,
