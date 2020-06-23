@@ -59,6 +59,10 @@ raptor_description_schema = Schema({
         'raptor-test',
         test_description_schema['run-on-projects']
     ),
+    Optional('webrender-run-on-projects'): optionally_keyed_by(
+        'app',
+        test_description_schema['webrender-run-on-projects']
+    ),
     Optional('variants'): optionally_keyed_by(
         'app',
         test_description_schema['variants']
@@ -200,7 +204,8 @@ def handle_keyed_by(config, tests):
         'run-on-projects',
         'target',
         'tier',
-        'run-visual-metrics'
+        'run-visual-metrics',
+        'webrender-run-on-projects'
     ]
     for test in tests:
         for field in fields:
