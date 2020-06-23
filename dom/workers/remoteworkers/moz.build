@@ -9,7 +9,6 @@ EXPORTS.mozilla.dom += [
     'RemoteWorkerController.h',
     'RemoteWorkerControllerChild.h',
     'RemoteWorkerControllerParent.h',
-    'RemoteWorkerManager.h',
     'RemoteWorkerParent.h',
     'RemoteWorkerService.h',
     'RemoteWorkerServiceChild.h',
@@ -39,8 +38,6 @@ IPDL_SOURCES += [
     'PRemoteWorkerService.ipdl',
     'RemoteWorkerTypes.ipdlh',
 ]
-
-TEST_DIRS += ['gtest']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

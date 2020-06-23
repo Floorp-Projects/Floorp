@@ -70,9 +70,6 @@ struct RemoteWorkerData
   OptionalServiceWorkerData serviceWorkerData;
 
   nsID agentClusterId;
-
-  // Child process remote type where the worker should only run on.
-  nsString remoteType;
 };
 
 // ErrorData/ErrorDataNote correspond to WorkerErrorReport/WorkerErrorNote
