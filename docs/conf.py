@@ -13,6 +13,9 @@ from recommonmark.transform import AutoStructify
 OUR_DIR = os.path.dirname(__file__)
 topsrcdir = os.path.normpath(os.path.join(OUR_DIR, ".."))
 
+copybutton_prompt_text = ">>> |\\\\$ |\\[\\d*\\]: |\\.\\.\\.: "
+copybutton_prompt_is_regexp = True
+
 EXTRA_PATHS = (
     "layout/tools/reftest",
     "python/mach",
