@@ -6,6 +6,7 @@
 
 #include "nsWaylandDisplay.h"
 #include "WindowSurfaceWayland.h"
+#include "DMABufLibWrapper.h"
 
 #include "nsPrintfCString.h"
 #include "mozilla/gfx/2D.h"
@@ -546,7 +547,7 @@ WindowSurfaceWayland::~WindowSurfaceWayland() {
 
 bool WindowSurfaceWayland::UseDMABufBackend() {
   if (!mUseDMABufInitialized) {
-    mUseDMABuf = nsWaylandDisplay::IsDMABufBasicEnabled();
+    mUseDMABuf = GetDMABufDevice()->IsDMABufBasicEnabled();
     LOGWAYLAND(("WindowSurfaceWayland::UseDMABufBackend DMABuf state %d\n",
                 mUseDMABuf));
     mUseDMABufInitialized = true;

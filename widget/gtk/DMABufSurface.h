@@ -12,6 +12,7 @@
 #include "GLContextTypes.h"
 #include "mozilla/widget/nsWaylandDisplay.h"
 #include "mozilla/widget/va_drmcommon.h"
+#include "mozilla/widget/DMABufLibWrapper.h"
 
 typedef void* EGLImageKHR;
 typedef void* EGLSyncKHR;
