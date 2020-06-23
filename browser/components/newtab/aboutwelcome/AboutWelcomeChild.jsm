@@ -137,6 +137,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWGetImportableSites",
     });
 
+    Cu.exportFunction(this.AWSelectTheme.bind(this), window, {
+      defineAs: "AWSelectTheme",
+    });
+
     Cu.exportFunction(this.AWSendEventTelemetry.bind(this), window, {
       defineAs: "AWSendEventTelemetry",
     });
@@ -166,6 +170,12 @@ class AboutWelcomeChild extends JSWindowActorChild {
     return Cu.cloneInto(
       multiStageAboutWelcomeContent || {},
       this.contentWindow
+    );
+  }
+
+  AWSelectTheme(data) {
+    return this.wrapPromise(
+      this.sendQuery("AWPage:SELECT_THEME", data.toUpperCase())
     );
   }
 
