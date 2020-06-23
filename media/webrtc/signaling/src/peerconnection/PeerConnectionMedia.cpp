@@ -56,9 +56,12 @@ void PeerConnectionMedia::StunAddrsHandler::OnMDNSQueryComplete(
           }
         }
         std::string mungedCandidate = o.str();
+        pcm_->mParent->StampTimecard("Done looking up mDNS name");
         pcm_->mTransportHandler->AddIceCandidate(
             cand.mTransportId, mungedCandidate, cand.mUfrag, obfuscatedAddr);
       }
+    } else {
+      pcm_->mParent->StampTimecard("Failed looking up mDNS name");
     }
     pcm_->mQueriedMDNSHostnames.erase(itor);
   }
@@ -389,6 +392,7 @@ void PeerConnectionMedia::AddIceCandidate(const std::string& aCandidate,
               "PeerConnectionMedia::SendQueryMDNSHostname",
               [self = RefPtr<PeerConnectionMedia>(this), addr]() mutable {
                 if (self->mStunAddrsRequest) {
+                  self->mParent->StampTimecard("Look up mDNS name");
                   self->mStunAddrsRequest->SendQueryMDNSHostname(
                       nsCString(nsAutoCString(addr.c_str())));
                 }
