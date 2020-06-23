@@ -140,6 +140,8 @@ class WindowProxyHolder;
   FIELD(FullZoom, float)                                                     \
   FIELD(WatchedByDevToolsInternal, bool)                                     \
   FIELD(TextZoom, float)                                                     \
+  /* The current in-progress load. */                                        \
+  FIELD(CurrentLoadIdentifier, Maybe<uint64_t>)                              \
   /* See nsIRequest for possible flags. */                                   \
   FIELD(DefaultLoadFlags, uint32_t)                                          \
   /* Signals that session history is enabled for this browsing context tree. \
@@ -280,8 +282,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   nsresult LoadURI(nsDocShellLoadState* aLoadState,
                    bool aSetNavigating = false);
 
-  nsresult InternalLoad(nsDocShellLoadState* aLoadState,
-                        nsIDocShell** aDocShell, nsIRequest** aRequest);
+  nsresult InternalLoad(nsDocShellLoadState* aLoadState);
 
   // If the load state includes a source BrowsingContext has been passed, check
   // to see if we are sandboxed from it as the result of an iframe or CSP
@@ -407,6 +408,14 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   uint64_t BrowserId() const { return GetBrowserId(); }
 
   bool IsLoading();
+
+  bool IsLoadingIdentifier(uint64_t aLoadIdentifer) {
+    if (GetCurrentLoadIdentifier() &&
+        *GetCurrentLoadIdentifier() == aLoadIdentifer) {
+      return true;
+    }
+    return false;
+  }
 
   // ScreenOrientation related APIs
   void SetCurrentOrientation(OrientationType aType, float aAngle) {

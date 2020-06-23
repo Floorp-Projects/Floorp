@@ -1586,8 +1586,10 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
       // Attempt to initiate this load immediately in the parent, if it succeeds
       // it'll return a unique identifier so that we can find it later.
       uint64_t loadIdentifier = 0;
-      if (Canonical()->AttemptLoadURIInParent(aLoadState, &loadIdentifier)) {
-        aLoadState->SetLoadIdentifier(loadIdentifier);
+      if (Canonical()->AttemptLoadURIInParent(aLoadState)) {
+        MOZ_DIAGNOSTIC_ASSERT(GetCurrentLoadIdentifier().isSome());
+        loadIdentifier = GetCurrentLoadIdentifier().value();
+        aLoadState->SetChannelInitialized(true);
       }
 
       cp->TransmitBlobDataIfBlobURL(aLoadState->URI(),
@@ -1612,9 +1614,7 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
   return NS_OK;
 }
 
-nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState,
-                                       nsIDocShell** aDocShell,
-                                       nsIRequest** aRequest) {
+nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
   if (IsDiscarded()) {
     return NS_OK;
   }
@@ -1624,8 +1624,7 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState,
       sourceBC && sourceBC->GetIsActive() && !GetIsActive() &&
       !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
   if (mDocShell) {
-    nsresult rv = nsDocShell::Cast(mDocShell)->InternalLoad(
-        aLoadState, aDocShell, aRequest);
+    nsresult rv = nsDocShell::Cast(mDocShell)->InternalLoad(aLoadState);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Switch to target tab if we're currently focused window.
@@ -1650,6 +1649,8 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState,
   MOZ_TRY(CheckSandboxFlags(aLoadState));
 
   if (XRE_IsParentProcess()) {
+    SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier()));
+
     if (ContentParent* cp = Canonical()->GetContentParent()) {
       Unused << cp->SendInternalLoad(this, aLoadState, isActive);
     }
@@ -1661,12 +1662,15 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState,
       return NS_ERROR_DOM_PROP_ACCESS_DENIED;
     }
 
+    SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier()));
+
     nsCOMPtr<nsPIDOMWindowOuter> win(sourceBC->GetDOMWindow());
     if (WindowGlobalChild* wgc =
             win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
       wgc->SendInternalLoad(this, aLoadState);
     }
   }
+
   return NS_OK;
 }
 

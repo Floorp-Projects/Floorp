@@ -16,6 +16,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindContext.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFormControlsCollection.h"
@@ -27,6 +28,7 @@
 #include "nsContentList.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
+#include "nsDocShellLoadState.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLDocument.h"
@@ -102,7 +104,6 @@ HTMLFormElement::HTMLFormElement(
       mRequiredRadioButtonCounts(2),
       mValueMissingRadioGroups(2),
       mPendingSubmission(nullptr),
-      mSubmittingRequest(nullptr),
       mDefaultSubmitElement(nullptr),
       mFirstSubmitInElements(nullptr),
       mFirstSubmitNotInElements(nullptr),
@@ -113,7 +114,6 @@ HTMLFormElement::HTMLFormElement(
       mFormNumber(-1),
       mGeneratingSubmit(false),
       mGeneratingReset(false),
-      mIsSubmitting(false),
       mDeferSubmission(false),
       mNotifiedObservers(false),
       mNotifiedObserversResult(false),
@@ -142,10 +142,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLFormElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageNameLookupTable)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPastNameLookupTable)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectedRadioButtons)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTargetContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLFormElement,
                                                 nsGenericHTMLElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTargetContext)
   tmp->Clear();
   tmp->mExpandoAndGeneration.OwnerUnlinked();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -634,16 +636,14 @@ nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
     return NS_OK;
   }
 
-  if (mIsSubmitting) {
+  if (IsSubmitting()) {
     NS_WARNING("Preventing double form submission");
     // XXX Should this return an error?
     return NS_OK;
   }
 
-  // Mark us as submitting so that we don't try to submit again
-  mIsSubmitting = true;
-  NS_ASSERTION(!mWebProgress && !mSubmittingRequest,
-               "Web progress / submitting request should not exist here!");
+  mTargetContext = nullptr;
+  mCurrentLoadId = Nothing();
 
   UniquePtr<HTMLFormSubmission> submission;
 
@@ -655,14 +655,10 @@ nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
   // Don't raise an error if form cannot navigate.
   if (StaticPrefs::dom_formdata_event_enabled() &&
       rv == NS_ERROR_NOT_AVAILABLE) {
-    mIsSubmitting = false;
     return NS_OK;
   }
 
-  if (NS_FAILED(rv)) {
-    mIsSubmitting = false;
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // XXXbz if the script global is that for an sXBL/XBL2 doc, it won't
   // be a window...
@@ -678,8 +674,6 @@ nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
     // defer this submission. let's remember it and return
     // without submitting
     mPendingSubmission = std::move(submission);
-    // ensure reentrancy
-    mIsSubmitting = false;
     return NS_OK;
   }
 
@@ -687,7 +681,6 @@ nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
   // perform the submission
   //
   if (!submission) {
-    mIsSubmitting = false;
 #ifdef DEBUG
     HTMLDialogElement* dialog = nullptr;
     for (nsIContent* parent = GetParent(); parent;
@@ -764,7 +757,6 @@ nsresult HTMLFormElement::SubmitSubmission(
 
   nsCOMPtr<nsIURI> actionURI = aFormSubmission->GetActionURL();
   if (!actionURI) {
-    mIsSubmitting = false;
     return NS_OK;
   }
 
@@ -772,7 +764,6 @@ nsresult HTMLFormElement::SubmitSubmission(
   Document* doc = GetComposedDoc();
   nsCOMPtr<nsIDocShell> container = doc ? doc->GetDocShell() : nullptr;
   if (!container || IsEditable()) {
-    mIsSubmitting = false;
     return NS_OK;
   }
 
@@ -788,9 +779,6 @@ nsresult HTMLFormElement::SubmitSubmission(
   // we're not submitting when submitting to a JS URL.  That's kinda bogus, but
   // there we are.
   bool schemeIsJavaScript = actionURI->SchemeIs("javascript");
-  if (schemeIsJavaScript) {
-    mIsSubmitting = false;
-  }
 
   //
   // Notify observers of submit
@@ -804,7 +792,6 @@ nsresult HTMLFormElement::SubmitSubmission(
   }
 
   if (cancelSubmit) {
-    mIsSubmitting = false;
     return NS_OK;
   }
 
@@ -813,7 +800,6 @@ nsresult HTMLFormElement::SubmitSubmission(
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   if (cancelSubmit) {
-    mIsSubmitting = false;
     return NS_OK;
   }
 
@@ -821,6 +807,7 @@ nsresult HTMLFormElement::SubmitSubmission(
   // Submit
   //
   nsCOMPtr<nsIDocShell> docShell;
+  uint64_t currentLoadId = 0;
 
   {
     AutoPopupStatePusher popupStatePusher(mSubmitPopupState);
@@ -835,31 +822,29 @@ nsresult HTMLFormElement::SubmitSubmission(
 
     nsAutoString target;
     aFormSubmission->GetTarget(target);
-    rv = nsDocShell::Cast(container)->OnLinkClickSync(
-        this, actionURI, target, VoidString(), postDataStream, nullptr, false,
-        getter_AddRefs(docShell), getter_AddRefs(mSubmittingRequest),
-        aFormSubmission->IsInitiatedFromUserInput());
+
+    RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(actionURI);
+    loadState->SetTarget(target);
+    loadState->SetPostDataStream(postDataStream);
+    loadState->SetFirstParty(true);
+    loadState->SetIsFormSubmission(true);
+    loadState->SetTriggeringPrincipal(NodePrincipal());
+    loadState->SetPrincipalToInherit(NodePrincipal());
+    loadState->SetCsp(GetCsp());
+
+    rv = nsDocShell::Cast(container)->OnLinkClickSync(this, loadState, false,
+                                                      NodePrincipal());
     NS_ENSURE_SUBMIT_SUCCESS(rv);
+
+    mTargetContext = loadState->TargetBrowsingContext().GetMaybeDiscarded();
+    currentLoadId = loadState->GetLoadIdentifier();
   }
 
-  // Even if the submit succeeds, it's possible for there to be no docshell
-  // or request; for example, if it's to a named anchor within the same page
-  // the submit will not really do anything.
-  if (docShell) {
-    // If the channel is pending, we have to listen for web progress.
-    bool pending = false;
-    mSubmittingRequest->IsPending(&pending);
-    if (pending && !schemeIsJavaScript) {
-      nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
-      NS_ASSERTION(webProgress, "nsIDocShell not converted to nsIWebProgress!");
-      rv = webProgress->AddProgressListener(this,
-                                            nsIWebProgress::NOTIFY_STATE_ALL);
-      NS_ENSURE_SUBMIT_SUCCESS(rv);
-      mWebProgress = do_GetWeakReference(webProgress);
-      NS_ASSERTION(mWebProgress, "can't hold weak ref to webprogress!");
-    } else {
-      ForgetCurrentSubmission();
-    }
+  // Even if the submit succeeds, it's possible for there to be no
+  // browsing context; for example, if it's to a named anchor within
+  // the same page the submit will not really do anything.
+  if (mTargetContext && !mTargetContext->IsDiscarded() && !schemeIsJavaScript) {
+    mCurrentLoadId = Some(currentLoadId);
   } else {
     ForgetCurrentSubmission();
   }
@@ -869,8 +854,6 @@ nsresult HTMLFormElement::SubmitSubmission(
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#submit-dialog
 nsresult HTMLFormElement::SubmitDialog(DialogFormSubmission* aFormSubmission) {
-  mIsSubmitting = false;
-
   // Close the dialog subject. If there is a result, let that be the return
   // value.
   HTMLDialogElement* dialog = aFormSubmission->DialogElement();
@@ -1824,13 +1807,10 @@ int32_t HTMLFormElement::Length() { return mControls->Length(); }
 
 void HTMLFormElement::ForgetCurrentSubmission() {
   mNotifiedObservers = false;
-  mIsSubmitting = false;
   mSubmittingRequest = nullptr;
-  nsCOMPtr<nsIWebProgress> webProgress = do_QueryReferent(mWebProgress);
-  if (webProgress) {
-    webProgress->RemoveProgressListener(this);
-  }
-  mWebProgress = nullptr;
+
+  mTargetContext = nullptr;
+  mCurrentLoadId = Nothing();
 }
 
 bool HTMLFormElement::CheckFormValidity(
@@ -2495,6 +2475,13 @@ void HTMLFormElement::NodeInfoChanged(Document* aOldDoc) {
   // for parser inserted form controls, and we do that at the time the form
   // control element is inserted into its original document by the parser.
   mFormNumber = -1;
+}
+
+bool HTMLFormElement::IsSubmitting() const {
+  bool loading = mTargetContext && !mTargetContext->IsDiscarded() &&
+                 mCurrentLoadId &&
+                 mTargetContext->IsLoadingIdentifier(*mCurrentLoadId);
+  return loading;
 }
 
 }  // namespace dom

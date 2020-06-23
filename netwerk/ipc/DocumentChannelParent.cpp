@@ -36,7 +36,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
        loadState->URI()->GetSpecOrDefault().get()));
 
   RefPtr<DocumentLoadListener::OpenPromise> promise;
-  if (loadState->GetLoadIdentifier()) {
+  if (loadState->GetChannelInitialized()) {
     promise = DocumentLoadListener::ClaimParentLoad(
         getter_AddRefs(mDocumentLoadListener), loadState->GetLoadIdentifier());
     if (!promise) {

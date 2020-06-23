@@ -75,30 +75,11 @@ already_AddRefed<nsIURIFixupInfo> GetFixupURIInfo(const nsACString& aStringURI,
 }  // anonymous namespace
 
 nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
-    : mURI(aURI),
-      mResultPrincipalURIIsSome(false),
-      mKeepResultPrincipalURIIfSet(false),
-      mLoadReplace(false),
-      mInheritPrincipal(false),
-      mPrincipalIsExplicit(false),
-      mForceAllowDataURI(false),
-      mOriginalFrameSrc(false),
-      mIsFormSubmission(false),
-      mLoadType(LOAD_NORMAL),
-      mTarget(),
-      mSrcdocData(VoidString()),
-      mLoadFlags(0),
-      mFirstParty(false),
-      mHasValidUserGestureActivation(false),
-      mTypeHint(VoidCString()),
-      mFileName(VoidString()),
-      mIsFromProcessingFrameAttributes(false),
-      mLoadIdentifier(0) {
-  MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
-}
+    : nsDocShellLoadState(aURI, nsContentUtils::GenerateLoadIdentifier()) {}
 
 nsDocShellLoadState::nsDocShellLoadState(
-    const DocShellLoadStateInit& aLoadState) {
+    const DocShellLoadStateInit& aLoadState)
+    : mLoadIdentifier(aLoadState.LoadIdentifier()) {
   MOZ_ASSERT(aLoadState.URI(), "Cannot create a LoadState with a null URI!");
   mResultPrincipalURI = aLoadState.ResultPrincipalURI();
   mResultPrincipalURIIsSome = aLoadState.ResultPrincipalURIIsSome();
@@ -111,6 +92,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mIsFormSubmission = aLoadState.IsFormSubmission();
   mLoadType = aLoadState.LoadType();
   mTarget = aLoadState.Target();
+  mTargetBrowsingContext = aLoadState.SourceBrowsingContext();
   mLoadFlags = aLoadState.LoadFlags();
   mFirstParty = aLoadState.FirstParty();
   mHasValidUserGestureActivation = aLoadState.HasValidUserGestureActivation();
@@ -132,7 +114,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mPostDataStream = aLoadState.PostDataStream();
   mHeadersStream = aLoadState.HeadersStream();
   mSrcdocData = aLoadState.SrcdocData();
-  mLoadIdentifier = aLoadState.LoadIdentifier();
+  mChannelInitialized = aLoadState.ChannelInitialized();
 }
 
 nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
@@ -155,6 +137,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mLoadType(aOther.mLoadType),
       mSHEntry(aOther.mSHEntry),
       mTarget(aOther.mTarget),
+      mTargetBrowsingContext(aOther.mTargetBrowsingContext),
       mPostDataStream(aOther.mPostDataStream),
       mHeadersStream(aOther.mHeadersStream),
       mSrcdocData(aOther.mSrcdocData),
@@ -169,12 +152,38 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mPendingRedirectedChannel(aOther.mPendingRedirectedChannel),
       mOriginalURIString(aOther.mOriginalURIString),
       mCancelContentJSEpoch(aOther.mCancelContentJSEpoch),
-      mLoadIdentifier(aOther.mLoadIdentifier) {}
+      mLoadIdentifier(aOther.mLoadIdentifier),
+      mChannelInitialized(aOther.mChannelInitialized) {}
+
+nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
+    : mURI(aURI),
+      mResultPrincipalURIIsSome(false),
+      mKeepResultPrincipalURIIfSet(false),
+      mLoadReplace(false),
+      mInheritPrincipal(false),
+      mPrincipalIsExplicit(false),
+      mForceAllowDataURI(false),
+      mOriginalFrameSrc(false),
+      mIsFormSubmission(false),
+      mLoadType(LOAD_NORMAL),
+      mTarget(),
+      mSrcdocData(VoidString()),
+      mLoadFlags(0),
+      mFirstParty(false),
+      mHasValidUserGestureActivation(false),
+      mTypeHint(VoidCString()),
+      mFileName(VoidString()),
+      mIsFromProcessingFrameAttributes(false),
+      mLoadIdentifier(aLoadIdentifier),
+      mChannelInitialized(false) {
+  MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
+}
 
 nsDocShellLoadState::~nsDocShellLoadState() {}
 
 nsresult nsDocShellLoadState::CreateFromPendingChannel(
-    nsIChannel* aPendingChannel, nsDocShellLoadState** aResult) {
+    nsIChannel* aPendingChannel, uint64_t aLoadIdentifier,
+    nsDocShellLoadState** aResult) {
   // Create the nsDocShellLoadState object with default state pulled from the
   // passed-in channel.
   nsCOMPtr<nsIURI> uri;
@@ -183,7 +192,8 @@ nsresult nsDocShellLoadState::CreateFromPendingChannel(
     return rv;
   }
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(uri);
+  RefPtr<nsDocShellLoadState> loadState =
+      new nsDocShellLoadState(uri, aLoadIdentifier);
   loadState->mPendingRedirectedChannel = aPendingChannel;
 
   // Pull relevant state from the channel, and store it on the
@@ -535,6 +545,11 @@ void nsDocShellLoadState::SetSourceBrowsingContext(
   mSourceBrowsingContext = aSourceBrowsingContext;
 }
 
+void nsDocShellLoadState::SetTargetBrowsingContext(
+    BrowsingContext* aTargetBrowsingContext) {
+  mTargetBrowsingContext = aTargetBrowsingContext;
+}
+
 nsIURI* nsDocShellLoadState::BaseURI() const { return mBaseURI; }
 
 void nsDocShellLoadState::SetBaseURI(nsIURI* aBaseURI) { mBaseURI = aBaseURI; }
@@ -858,6 +873,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.IsFormSubmission() = mIsFormSubmission;
   loadState.LoadType() = mLoadType;
   loadState.Target() = mTarget;
+  loadState.TargetBrowsingContext() = mTargetBrowsingContext;
   loadState.LoadFlags() = mLoadFlags;
   loadState.FirstParty() = mFirstParty;
   loadState.HasValidUserGestureActivation() = mHasValidUserGestureActivation;
@@ -881,5 +897,6 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.SrcdocData() = mSrcdocData;
   loadState.ResultPrincipalURI() = mResultPrincipalURI;
   loadState.LoadIdentifier() = mLoadIdentifier;
+  loadState.ChannelInitialized() = mChannelInitialized;
   return loadState;
 }

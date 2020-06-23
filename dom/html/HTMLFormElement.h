@@ -10,6 +10,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
@@ -574,6 +575,12 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   /** The web progress object we are currently listening to */
   nsWeakPtr mWebProgress;
 
+  /** The target browsing context, if any. */
+  RefPtr<BrowsingContext> mTargetContext;
+  /** The load identifier for the pending request created for a
+   * submit, used to be able to block double submits. */
+  Maybe<uint64_t> mCurrentLoadId;
+
   /** The default submit element -- WEAK */
   nsGenericHTMLFormElement* mDefaultSubmitElement;
 
@@ -619,8 +626,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool mGeneratingSubmit;
   /** Whether we are currently processing a reset event or not */
   bool mGeneratingReset;
-  /** Whether we are submitting currently */
-  bool mIsSubmitting;
   /** Whether the submission is to be deferred in case a script triggers it */
   bool mDeferSubmission;
   /** Whether we notified NS_FORMSUBMIT_SUBJECT listeners already */
@@ -638,6 +643,8 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool mIsFiringSubmissionEvents;
 
  private:
+  bool IsSubmitting() const;
+
   NotNull<const Encoding*> GetSubmitEncoding();
   ~HTMLFormElement();
 };

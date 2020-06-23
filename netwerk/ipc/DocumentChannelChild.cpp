@@ -103,6 +103,9 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
           ->GetBrowsingContext()
           ->HasValidTransientUserGestureActivation();
 
+  GetDocShell()->GetBrowsingContext()->SetCurrentLoadIdentifier(
+      Some(mLoadState->GetLoadIdentifier()));
+
   gNeckoChild->SendPDocumentChannelConstructor(
       this, GetDocShell()->GetBrowsingContext(), args);
 

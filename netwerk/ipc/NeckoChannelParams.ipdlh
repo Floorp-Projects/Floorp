@@ -468,6 +468,7 @@ struct RedirectToRealChannelArgs {
   nsString srcdocData;
   nsIURI baseUri;
   SessionHistoryInfoAndId? sessionHistoryInfo;
+  uint64_t loadIdentifier;
 };
 
 struct TimingStructArgs {

@@ -807,9 +807,7 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
   MOZ_ASSERT(aLoadState->SHEntry() == nullptr,
              "SHEntry should be null when calling InternalLoad from LoadURI");
 
-  return InternalLoad(aLoadState,
-                      nullptr,   // no nsIDocShell
-                      nullptr);  // no nsIRequest
+  return InternalLoad(aLoadState);  // no nsIRequest
 }
 
 void nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState) {
@@ -3742,7 +3740,7 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
       mBrowsingContext &&
       mBrowsingContext->HasValidTransientUserGestureActivation());
 
-  return InternalLoad(loadState, nullptr, nullptr);
+  return InternalLoad(loadState);
 }
 
 NS_IMETHODIMP
@@ -3850,7 +3848,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
     loadState->SetHasValidUserGestureActivation(
         mBrowsingContext &&
         mBrowsingContext->HasValidTransientUserGestureActivation());
-    rv = InternalLoad(loadState, nullptr, nullptr);
+    rv = InternalLoad(loadState);
   }
 
   return rv;
@@ -7864,7 +7862,7 @@ class InternalLoadEvent : public Runnable {
     MOZ_ASSERT(mLoadState->TriggeringPrincipal(),
                "InternalLoadEvent: Should always have a principal here");
 #endif
-    return mDocShell->InternalLoad(mLoadState, nullptr, nullptr);
+    return mDocShell->InternalLoad(mLoadState);
   }
 
  private:
@@ -7909,9 +7907,7 @@ uint32_t nsDocShell::DetermineContentType() {
   return nsIContentPolicy::TYPE_INTERNAL_IFRAME;
 }
 
-nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
-                                        nsIDocShell** aDocShell,
-                                        nsIRequest** aRequest) {
+nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
   MOZ_ASSERT(aLoadState, "need a load state!");
   MOZ_ASSERT(!aLoadState->Target().IsEmpty(), "should have a target here!");
 
@@ -8101,6 +8097,8 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
 
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(targetContext, rv);
+
+  aLoadState->SetTargetBrowsingContext(targetContext);
   //
   // Transfer the load to the target BrowsingContext... Pass empty string as the
   // window target name from to prevent recursive retargeting!
@@ -8109,7 +8107,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
   aLoadState->SetTarget(EmptyString());
   // No forced download
   aLoadState->SetFileName(VoidString());
-  return targetContext->InternalLoad(aLoadState, aDocShell, aRequest);
+  return targetContext->InternalLoad(aLoadState);
 }
 
 bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
@@ -8416,9 +8414,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   return NS_OK;
 }
 
-nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
-                                  nsIDocShell** aDocShell,
-                                  nsIRequest** aRequest) {
+nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
   MOZ_ASSERT(aLoadState, "need a load state!");
   MOZ_ASSERT(aLoadState->TriggeringPrincipal(),
              "need a valid TriggeringPrincipal");
@@ -8437,14 +8433,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
           ("DOCSHELL %p InternalLoad %s\n", this,
            aLoadState->URI()->GetSpecOrDefault().get()));
 
-  // Initialize aDocShell/aRequest
-  if (aDocShell) {
-    *aDocShell = nullptr;
-  }
-  if (aRequest) {
-    *aRequest = nullptr;
-  }
-
   NS_ENSURE_TRUE(IsValidLoadType(aLoadState->LoadType()), NS_ERROR_INVALID_ARG);
 
   // Cancel loads coming from Docshells that are being destroyed.
@@ -8459,7 +8447,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
   // If we have a target to move to, do that now.
   if (!aLoadState->Target().IsEmpty()) {
-    return PerformRetargeting(aLoadState, aDocShell, aRequest);
+    return PerformRetargeting(aLoadState);
   }
 
   // If we don't have a target, we're loading into ourselves, and our load
@@ -8777,10 +8765,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
                    nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
 
   nsCOMPtr<nsIRequest> req;
-  rv = DoURILoad(aLoadState, aDocShell, getter_AddRefs(req));
-  if (req && aRequest) {
-    NS_ADDREF(*aRequest = req);
-  }
+  rv = DoURILoad(aLoadState, getter_AddRefs(req));
 
   if (NS_FAILED(rv)) {
     nsCOMPtr<nsIChannel> chan(do_QueryInterface(req));
@@ -9276,7 +9261,7 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
 }
 
 nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
-                               nsIDocShell** aDocShell, nsIRequest** aRequest) {
+                               nsIRequest** aRequest) {
   // Double-check that we're still around to load this URI.
   if (mIsBeingDestroyed) {
     // Return NS_OK despite not doing anything to avoid throwing exceptions
@@ -9381,16 +9366,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       outRequest.forget(aRequest);
     }
 
-    rv = OpenInitializedChannel(channel, uriLoader,
-                                nsIURILoader::REDIRECTED_CHANNEL);
-
-    // If the channel load failed, we failed and nsIWebProgress just ain't
-    // gonna happen.
-    if (NS_SUCCEEDED(rv) && aDocShell) {
-      nsCOMPtr<nsIDocShell> self = this;
-      self.forget(aDocShell);
-    }
-    return rv;
+    return OpenInitializedChannel(channel, uriLoader,
+                                  nsIURILoader::REDIRECTED_CHANNEL);
   }
 
   // There are two cases we care about:
@@ -9588,20 +9565,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   uint32_t openFlags =
       nsDocShell::ComputeURILoaderFlags(mBrowsingContext, mLoadType);
-  rv = OpenInitializedChannel(channel, uriLoader, openFlags);
-
-  //
-  // If the channel load failed, we failed and nsIWebProgress just ain't
-  // gonna happen.
-  //
-  if (NS_SUCCEEDED(rv)) {
-    if (aDocShell) {
-      *aDocShell = this;
-      NS_ADDREF(*aDocShell);
-    }
-  }
-
-  return rv;
+  return OpenInitializedChannel(channel, uriLoader, openFlags);
 }
 
 static nsresult AppendSegmentToString(nsIInputStream* aIn, void* aClosure,
@@ -10839,9 +10803,7 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
     return NS_ERROR_FAILURE;
   }
 
-  rv = InternalLoad(loadState,
-                    nullptr,   // No nsIDocShell
-                    nullptr);  // No nsIRequest
+  rv = InternalLoad(loadState);
   return rv;
 }
 
@@ -11567,13 +11529,9 @@ nsresult nsDocShell::EnsureCommandHandler() {
 
 class OnLinkClickEvent : public Runnable {
  public:
-  OnLinkClickEvent(nsDocShell* aHandler, nsIContent* aContent, nsIURI* aURI,
-                   const nsAString& aTargetSpec, const nsAString& aFileName,
-                   nsIInputStream* aPostDataStream,
-                   nsIInputStream* aHeadersDataStream, bool aNoOpenerImplied,
-                   bool aIsUserTriggered, bool aIsTrusted,
-                   nsIPrincipal* aTriggeringPrincipal,
-                   nsIContentSecurityPolicy* aCsp);
+  OnLinkClickEvent(nsDocShell* aHandler, nsIContent* aContent,
+                   nsDocShellLoadState* aLoadState, bool aNoOpenerImplied,
+                   bool aIsTrusted, nsIPrincipal* aTriggeringPrincipal);
 
   NS_IMETHOD Run() override {
     AutoPopupStatePusher popupStatePusher(mPopupState);
@@ -11586,50 +11544,34 @@ class OnLinkClickEvent : public Runnable {
     // concerned.
     AutoJSAPI jsapi;
     if (mIsTrusted || jsapi.Init(mContent->OwnerDoc()->GetScopeObject())) {
-      mHandler->OnLinkClickSync(mContent, mURI, mTargetSpec, mFileName,
-                                mPostDataStream, mHeadersDataStream,
-                                mNoOpenerImplied, nullptr, nullptr,
-                                mIsUserTriggered, mTriggeringPrincipal, mCsp);
+      mHandler->OnLinkClickSync(mContent, mLoadState, mNoOpenerImplied,
+                                mTriggeringPrincipal);
     }
     return NS_OK;
   }
 
  private:
   RefPtr<nsDocShell> mHandler;
-  nsCOMPtr<nsIURI> mURI;
-  nsString mTargetSpec;
-  nsString mFileName;
-  nsCOMPtr<nsIInputStream> mPostDataStream;
-  nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent> mContent;
+  RefPtr<nsDocShellLoadState> mLoadState;
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   PopupBlocker::PopupControlState mPopupState;
   bool mNoOpenerImplied;
-  bool mIsUserTriggered;
   bool mIsTrusted;
-  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
 };
 
-OnLinkClickEvent::OnLinkClickEvent(
-    nsDocShell* aHandler, nsIContent* aContent, nsIURI* aURI,
-    const nsAString& aTargetSpec, const nsAString& aFileName,
-    nsIInputStream* aPostDataStream, nsIInputStream* aHeadersDataStream,
-    bool aNoOpenerImplied, bool aIsUserTriggered, bool aIsTrusted,
-    nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp)
+OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler, nsIContent* aContent,
+                                   nsDocShellLoadState* aLoadState,
+                                   bool aNoOpenerImplied, bool aIsTrusted,
+                                   nsIPrincipal* aTriggeringPrincipal)
     : mozilla::Runnable("OnLinkClickEvent"),
       mHandler(aHandler),
-      mURI(aURI),
-      mTargetSpec(aTargetSpec),
-      mFileName(aFileName),
-      mPostDataStream(aPostDataStream),
-      mHeadersDataStream(aHeadersDataStream),
       mContent(aContent),
+      mLoadState(aLoadState),
+      mTriggeringPrincipal(aTriggeringPrincipal),
       mPopupState(PopupBlocker::GetPopupControlState()),
       mNoOpenerImplied(aNoOpenerImplied),
-      mIsUserTriggered(aIsUserTriggered),
-      mIsTrusted(aIsTrusted),
-      mTriggeringPrincipal(aTriggeringPrincipal),
-      mCsp(aCsp) {}
+      mIsTrusted(aIsTrusted) {}
 
 nsresult nsDocShell::OnLinkClick(
     nsIContent* aContent, nsIURI* aURI, const nsAString& aTargetSpec,
@@ -11676,10 +11618,20 @@ nsresult nsDocShell::OnLinkClick(
     target = aTargetSpec;
   }
 
-  nsCOMPtr<nsIRunnable> ev = new OnLinkClickEvent(
-      this, aContent, aURI, target, aFileName, aPostDataStream,
-      aHeadersDataStream, noOpenerImplied, aIsUserTriggered, aIsTrusted,
-      aTriggeringPrincipal, aCsp);
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
+  loadState->SetTarget(target);
+  loadState->SetFileName(aFileName);
+  loadState->SetPostDataStream(aPostDataStream);
+  loadState->SetHeadersStream(aHeadersDataStream);
+  loadState->SetFirstParty(true);
+  loadState->SetTriggeringPrincipal(
+      aTriggeringPrincipal ? aTriggeringPrincipal : aContent->NodePrincipal());
+  loadState->SetPrincipalToInherit(aContent->NodePrincipal());
+  loadState->SetCsp(aCsp ? aCsp : aContent->GetCsp());
+
+  nsCOMPtr<nsIRunnable> ev =
+      new OnLinkClickEvent(this, aContent, loadState, noOpenerImplied,
+                           aIsTrusted, aTriggeringPrincipal);
   return Dispatch(TaskCategory::UI, ev.forget());
 }
 
@@ -11689,21 +11641,11 @@ static bool IsElementAnchorOrArea(nsIContent* aContent) {
   return aContent->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area);
 }
 
-nsresult nsDocShell::OnLinkClickSync(
-    nsIContent* aContent, nsIURI* aURI, const nsAString& aTargetSpec,
-    const nsAString& aFileName, nsIInputStream* aPostDataStream,
-    nsIInputStream* aHeadersDataStream, bool aNoOpenerImplied,
-    nsIDocShell** aDocShell, nsIRequest** aRequest, bool aIsUserTriggered,
-    nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp) {
-  // Initialize the DocShell / Request
-  if (aDocShell) {
-    *aDocShell = nullptr;
-  }
-  if (aRequest) {
-    *aRequest = nullptr;
-  }
-
-  if (!IsNavigationAllowed() || !IsOKToLoadURI(aURI)) {
+nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
+                                     nsDocShellLoadState* aLoadState,
+                                     bool aNoOpenerImplied,
+                                     nsIPrincipal* aTriggeringPrincipal) {
+  if (!IsNavigationAllowed() || !IsOKToLoadURI(aLoadState->URI())) {
     return NS_OK;
   }
 
@@ -11730,7 +11672,7 @@ nsresult nsDocShell::OnLinkClickSync(
         do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
     if (extProtService) {
       nsAutoCString scheme;
-      aURI->GetScheme(scheme);
+      aLoadState->URI()->GetScheme(scheme);
       if (!scheme.IsEmpty()) {
         // if the URL scheme does not correspond to an exposed protocol, then
         // we need to hand this link click over to the external protocol
@@ -11739,22 +11681,17 @@ nsresult nsDocShell::OnLinkClickSync(
         nsresult rv =
             extProtService->IsExposedProtocol(scheme.get(), &isExposed);
         if (NS_SUCCEEDED(rv) && !isExposed) {
-          return extProtService->LoadURI(aURI, triggeringPrincipal,
+          return extProtService->LoadURI(aLoadState->URI(), triggeringPrincipal,
                                          mBrowsingContext);
         }
       }
     }
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp = aCsp;
-  if (!csp) {
-    // Currently, if no csp is passed explicitly we fall back to querying the
-    // CSP from the document.
-    csp = aContent->GetCsp();
-  }
-
   uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
   bool isElementAnchorOrArea = IsElementAnchorOrArea(aContent);
+  bool triggeringPrincipalIsSystemPrincipal =
+      aLoadState->TriggeringPrincipal()->IsSystemPrincipal();
   if (isElementAnchorOrArea) {
     MOZ_ASSERT(aContent->IsHTMLElement());
     nsAutoString relString;
@@ -11763,7 +11700,7 @@ nsresult nsDocShell::OnLinkClickSync(
     nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(
         relString);
 
-    bool targetBlank = aTargetSpec.LowerCaseEqualsLiteral("_blank");
+    bool targetBlank = aLoadState->Target().LowerCaseEqualsLiteral("_blank");
     bool explicitOpenerSet = false;
 
     // The opener behaviour follows a hierarchy, such that if a higher
@@ -11792,7 +11729,7 @@ nsresult nsDocShell::OnLinkClickSync(
     }
 
     if (targetBlank && StaticPrefs::dom_targetBlankNoOpener_enabled() &&
-        !explicitOpenerSet && !triggeringPrincipal->IsSystemPrincipal()) {
+        !explicitOpenerSet && !triggeringPrincipalIsSystemPrincipal) {
       flags |= INTERNAL_LOAD_FLAGS_NO_OPENER;
     }
 
@@ -11843,29 +11780,22 @@ nsresult nsDocShell::OnLinkClickSync(
       isElementAnchorOrArea ? new ReferrerInfo(*aContent->AsElement())
                             : new ReferrerInfo(*referrerDoc);
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
-  loadState->SetReferrerInfo(referrerInfo);
-  loadState->SetTriggeringPrincipal(triggeringPrincipal);
-  loadState->SetPrincipalToInherit(aContent->NodePrincipal());
-  loadState->SetCsp(csp);
-  loadState->SetLoadFlags(flags);
-  loadState->SetTarget(aTargetSpec);
-  loadState->SetTypeHint(NS_ConvertUTF16toUTF8(typeHint));
-  loadState->SetFileName(aFileName);
-  loadState->SetPostDataStream(aPostDataStream);
-  loadState->SetHeadersStream(aHeadersDataStream);
-  loadState->SetLoadType(loadType);
-  loadState->SetFirstParty(true);
-  loadState->SetSourceBrowsingContext(mBrowsingContext);
-  loadState->SetIsFormSubmission(aContent->IsHTMLElement(nsGkAtoms::form));
-  loadState->SetHasValidUserGestureActivation(
+  aLoadState->SetReferrerInfo(referrerInfo);
+  aLoadState->SetLoadFlags(flags);
+  aLoadState->SetTypeHint(NS_ConvertUTF16toUTF8(typeHint));
+  aLoadState->SetLoadType(loadType);
+  aLoadState->SetSourceBrowsingContext(mBrowsingContext);
+  aLoadState->SetHasValidUserGestureActivation(
       mBrowsingContext &&
       mBrowsingContext->HasValidTransientUserGestureActivation());
-  nsresult rv = InternalLoad(loadState, aDocShell, aRequest);
+
+  nsresult rv = InternalLoad(aLoadState);
 
   if (NS_SUCCEEDED(rv)) {
-    nsPingListener::DispatchPings(this, aContent, aURI, referrerInfo);
+    nsPingListener::DispatchPings(this, aContent, aLoadState->URI(),
+                                  referrerInfo);
   }
+
   return rv;
 }
 
@@ -12136,7 +12066,7 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
           }
         }
 
-        self->InternalLoad(aLoadState, nullptr, nullptr);
+        self->InternalLoad(aLoadState);
 
         for (auto& endpoint : aStreamFilterEndpoints) {
           extensions::StreamFilterParent::Attach(

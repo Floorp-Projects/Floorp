@@ -261,32 +261,16 @@ class nsDocShell final : public nsDocLoader,
    * through an event.
    *
    * @param aContent the content object used for triggering the link.
-   * @param aURI a URI obect that defines the destination for the link
-   * @param aTargetSpec indicates where the link is targeted (may be an empty
-   *        string)
-   * @param aFileName non-null when the link should be downloaded as the given
-   * file
-   * @param aPostDataStream the POST data to send
-   * @param aHeadersDataStream ??? (only used for plugins)
+   * @param aDocShellLoadState the extended load info for this load.
    * @param aNoOpenerImplied if the link implies "noopener"
-   * @param aDocShell (out-param) the DocShell that the request was opened on
-   * @param aRequest the request that was opened
    * @param aTriggeringPrincipal, if not passed explicitly we fall back to
    *        the document's principal.
-   * @param aCsp, the CSP to be used for the load, that is the CSP of the
-   *        entity responsible for causing the load to occur. Most likely
-   *        this is the CSP of the document that started the load. In case
-   *        aCsp was not passed explicitly we fall back to using
-   *        aContent's document's CSP if that document holds any.
    */
-  nsresult OnLinkClickSync(
-      nsIContent* aContent, nsIURI* aURI, const nsAString& aTargetSpec,
-      const nsAString& aFileName, nsIInputStream* aPostDataStream = nullptr,
-      nsIInputStream* aHeadersDataStream = nullptr,
-      bool aNoOpenerImplied = false, nsIDocShell** aDocShell = nullptr,
-      nsIRequest** aRequest = nullptr, bool aIsUserTriggered = false,
-      nsIPrincipal* aTriggeringPrincipal = nullptr,
-      nsIContentSecurityPolicy* aCsp = nullptr);
+  nsresult OnLinkClickSync(nsIContent* aContent,
+                           nsDocShellLoadState* aLoadState,
+                           bool aNoOpenerImplied,
+                           nsIPrincipal* aTriggeringPrincipal);
+
   /**
    * Process a mouse-over a link.
    *
@@ -418,8 +402,7 @@ class nsDocShell final : public nsDocLoader,
    * onLinkClickSync, which is triggered during form submission.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult InternalLoad(nsDocShellLoadState* aLoadState,
-                        nsIDocShell** aDocShell, nsIRequest** aRequest);
+  nsresult InternalLoad(nsDocShellLoadState* aLoadState);
 
   // Clear the document's storage access flag if needed.
   void MaybeClearStorageAccessFlag();
@@ -632,8 +615,7 @@ class nsDocShell final : public nsDocLoader,
   // originalURI on the channel that does the load. If OriginalURI is null, URI
   // will be set as the originalURI. If LoadReplace is true, LOAD_REPLACE flag
   // will be set on the nsIChannel.
-  nsresult DoURILoad(nsDocShellLoadState* aLoadState, nsIDocShell** aDocShell,
-                     nsIRequest** aRequest);
+  nsresult DoURILoad(nsDocShellLoadState* aLoadState, nsIRequest** aRequest);
 
   static nsresult AddHeadersToChannel(nsIInputStream* aHeadersData,
                                       nsIChannel* aChannel);
@@ -977,8 +959,7 @@ class nsDocShell final : public nsDocLoader,
 
   // If we are passed a named target during InternalLoad, this method handles
   // moving the load to the browsing context the target name resolves to.
-  nsresult PerformRetargeting(nsDocShellLoadState* aLoadState,
-                              nsIDocShell** aDocShell, nsIRequest** aRequest);
+  nsresult PerformRetargeting(nsDocShellLoadState* aLoadState);
 
   // Returns one of nsIContentPolicy::TYPE_DOCUMENT,
   // nsIContentPolicy::TYPE_INTERNAL_IFRAME, or

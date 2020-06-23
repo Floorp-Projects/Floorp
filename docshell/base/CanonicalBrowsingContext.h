@@ -150,8 +150,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // if the top-level browsing context has been discarded.
   MediaController* GetMediaController();
 
-  bool AttemptLoadURIInParent(nsDocShellLoadState* aLoadState,
-                              uint64_t* aLoadIdentifier);
+  bool AttemptLoadURIInParent(nsDocShellLoadState* aLoadState);
 
   // Get or create a secure browser UI for this BrowsingContext
   nsISecureBrowserUI* GetSecureBrowserUI();
@@ -225,7 +224,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // Called once DocumentLoadListener completes handling a load, and it
   // is either complete, or handed off to the final channel to deliver
   // data to the destination docshell.
-  void EndDocumentLoad(net::DocumentLoadListener* aLoad);
+  void EndDocumentLoad(bool aForProcessSwitch);
 
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
