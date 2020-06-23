@@ -7,6 +7,7 @@
 if CONFIG['MOZ_GLEAN']:
     UNIFIED_SOURCES += [
         'TestFogInit.cpp',
+        'TestFogIPC.cpp',
     ]
 
 FINAL_LIBRARY = 'xul-gtest'

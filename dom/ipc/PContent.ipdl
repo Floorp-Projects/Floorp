@@ -1708,6 +1708,18 @@ child:
     // WindowContext is managed using the PWindowGlobal actor's lifecycle.
     async CreateWindowContext(WindowContextInitializer aInit);
     async DiscardWindowContext(uint64_t aContextId) returns (bool unused);
+
+parent:
+    // Temporary (bug 1641989) conduit for Glean data in content processes.
+    // Sent from time-to-time to limit the amount of data vulnerable to loss.
+    // Buffer contains bincoded Rust structs.
+    async FOGData(ByteBuf buf);
+
+child:
+    // Temporary (bug 1641989) conduit for Glean data in content processes.
+    // Tells the child to flush any pending data. Used in tests and ping
+    // assembly. Buffer contains bincoded Rust structs.
+    async FlushFOGData() returns (ByteBuf buf);
 };
 
 }
