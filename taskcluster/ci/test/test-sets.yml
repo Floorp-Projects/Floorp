@@ -18,6 +18,7 @@
 web-platform-tests:
     - web-platform-tests
     - web-platform-tests-crashtest
+    - web-platform-tests-print-reftest
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
 
@@ -458,6 +459,7 @@ android-x86_64-tests:
     - web-platform-tests
     - web-platform-tests-backlog
     - web-platform-tests-crashtest
+    - web-platform-tests-print-reftest
     - web-platform-tests-reftest
     - web-platform-tests-reftest-backlog
     - xpcshell
