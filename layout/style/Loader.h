@@ -576,8 +576,10 @@ class Loader final {
 
   nsCOMPtr<nsIConsoleReportCollector> mReporter;
 
-  // Number of datas still waiting to be notified. This includes pending
-  // stylesheets whose load hasn't started yet but which we need to.
+  // Number of datas for asynchronous sheet loads still waiting to be notified.
+  // This includes pending stylesheets whose load hasn't started yet but which
+  // we need to, but not inline or constructable stylesheets, though the
+  // constructable stylesheets bit may change, see bug 1642227.
   uint32_t mOngoingLoadCount = 0;
 
   // The number of sheets that have been deferred / are in a pending state.
