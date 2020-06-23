@@ -1003,9 +1003,12 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
   // estimation which is calculated in the while-loop by dividing
   // aColData.mSumBSize into N columns.
   //
-  // FIXME: The constant of 600 app units is arbitrary. It's about two
-  // line-heights.
-  const nscoord extraBlockSize = 600;
+  // The constant is arbitrary. We use a half of line-height first.
+  nscoord extraBlockSize = aReflowInput.CalcLineHeight() / 2;
+
+  // We use divide-by-N to estimate the optimal column block-size only if the
+  // last column's available block-size is unbounded.
+  bool foundFeasibleBSizeCloserToBest = !aUnboundedLastColumn;
 
   while (!aPresContext->HasPendingInterrupt()) {
     nscoord lastKnownFeasibleBSize = aConfig.mKnownFeasibleBSize;
@@ -1079,13 +1082,16 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
       // minimum amount that will cause one of our columns to break
       // differently.
       nextGuess = aConfig.mKnownFeasibleBSize - 1;
-    } else if (aUnboundedLastColumn) {
-      // Make a guess by dividing that into N columns. Add some slop
-      // to try to make it on the feasible side.
+    } else if (!foundFeasibleBSizeCloserToBest) {
+      // Make a guess by dividing mSumBSize into N columns and adding
+      // extraBlockSize to try to make it on the feasible side.
       nextGuess = aColData.mSumBSize / aConfig.mUsedColCount + extraBlockSize;
       // Sanitize it
       nextGuess = clamped(nextGuess, aConfig.mKnownInfeasibleBSize + 1,
                           aConfig.mKnownFeasibleBSize - 1);
+      // We keep doubling extraBlockSize in every iteration until we find a
+      // feasible guess.
+      extraBlockSize *= 2;
     } else if (aConfig.mKnownFeasibleBSize == NS_UNCONSTRAINEDSIZE) {
       // This can happen when we had a next-in-flow so we didn't
       // want to do an unbounded block-size measuring step. Let's just increase
@@ -1105,6 +1111,10 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     MarkPrincipalChildrenDirty(this);
     aColData =
         ReflowColumns(aDesiredSize, aReflowInput, aStatus, aConfig, false);
+
+    if (!foundFeasibleBSizeCloserToBest && aColData.mFeasible) {
+      foundFeasibleBSizeCloserToBest = true;
+    }
 
     if (!aConfig.mIsBalancing) {
       // Looks like we had excess block-size when balancing, so we gave up on
