@@ -389,6 +389,26 @@ void HttpChannelChild::AssociateApplicationCache(const nsCString& aGroupID,
   mApplicationCache->InitAsHandle(aGroupID, aClientID);
 }
 
+void HttpChannelChild::ProcessOnStartRequest(
+    const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
+    const nsHttpHeaderArray& aRequestHeaders,
+    const HttpChannelOnStartRequestArgs& aArgs) {
+  LOG(("HttpChannelChild::ProcessOnStartRequest [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
+  MOZ_ASSERT(!mMultiPartID,
+             "Should only send OnStartRequest on the main-thread channel when "
+             "using multi-part!");
+  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+                     "Should not be receiving any more callbacks from parent!");
+
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+      this, [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
+             aUseResponseHead, aRequestHeaders, aArgs]() {
+        self->OnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
+                             aArgs);
+      }));
+}
+
 mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,

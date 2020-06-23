@@ -151,6 +151,32 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequestSent() {
   return IPC_OK();
 }
 
+IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
+    const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
+    const nsHttpHeaderArray& aRequestHeaders,
+    const HttpChannelOnStartRequestArgs& aArgs) {
+  LOG(("HttpBackgroundChannelChild::RecvOnStartRequest [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
+
+  MOZ_ASSERT(mChannelChild, "no channel child in RecvOnStartRequest");
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  // TODO: OnStartRequest is off-main-thread so it's unnecessary to dispatch
+  // another IPC message for sync reason. Directly call here to behave the same
+  // as before. This is no longer needed and removed in the next patches.
+  RecvOnStartRequestSent();
+
+  mChannelChild->ProcessOnStartRequest(aResponseHead, aUseResponseHead,
+                                       aRequestHeaders, aArgs);
+  // Allow to queue other runnable since OnStartRequest Event already hits the
+  // child's mEventQ.
+  OnStartRequestReceived();
+
+  return IPC_OK();
+}
+
 IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
     const nsresult& aChannelStatus, const nsresult& aTransportStatus,
     const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData,

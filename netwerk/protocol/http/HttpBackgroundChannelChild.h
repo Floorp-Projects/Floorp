@@ -51,6 +51,11 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 #endif
 
  protected:
+  IPCResult RecvOnStartRequest(const nsHttpResponseHead& aResponseHead,
+                               const bool& aUseResponseHead,
+                               const nsHttpHeaderArray& aRequestHeaders,
+                               const HttpChannelOnStartRequestArgs& aArgs);
+
   IPCResult RecvOnTransportAndData(const nsresult& aChannelStatus,
                                    const nsresult& aTransportStatus,
                                    const uint64_t& aOffset,
