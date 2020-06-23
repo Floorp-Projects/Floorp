@@ -169,6 +169,9 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
 
   gHttpHandler->OnOpeningDocumentRequest(this);
 
+  GetDocShell()->GetBrowsingContext()->SetCurrentLoadIdentifier(
+      Some(mLoadState->GetLoadIdentifier()));
+
   nsresult rv = NS_OK;
   Maybe<dom::ClientInfo> initialClientInfo = mInitialClientInfo;
   auto promise = mDocumentLoadListener->Open(

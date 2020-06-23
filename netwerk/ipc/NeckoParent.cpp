@@ -337,8 +337,9 @@ mozilla::ipc::IPCResult NeckoParent::RecvPDocumentChannelConstructor(
   }
 
   if (!p->Init(aContext.get_canonical(), aArgs)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Couldn't initialize DocumentChannel");
   }
+
   return IPC_OK();
 }
 
