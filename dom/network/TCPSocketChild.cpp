@@ -83,7 +83,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketChild::Release(void) {
 }
 
 TCPSocketChild::TCPSocketChild(const nsAString& aHost, const uint16_t& aPort,
-                               nsIEventTarget* aTarget)
+                               nsISerialEventTarget* aTarget)
     : mHost(aHost), mPort(aPort), mIPCEventTarget(aTarget) {}
 
 void TCPSocketChild::SendOpen(nsITCPSocketCallback* aSocket, bool aUseSSL,

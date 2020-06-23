@@ -140,7 +140,8 @@ void FileSystemTaskChildBase::Start() {
   }
 
   if (NS_IsMainThread()) {
-    nsIEventTarget* target = mGlobalObject->EventTargetFor(TaskCategory::Other);
+    nsISerialEventTarget* target =
+        mGlobalObject->EventTargetFor(TaskCategory::Other);
     MOZ_ASSERT(target);
 
     actor->SetEventTargetForActor(this, target);
