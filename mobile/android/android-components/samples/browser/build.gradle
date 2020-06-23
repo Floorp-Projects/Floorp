@@ -110,6 +110,8 @@ dependencies {
     // SDK. See bug 1592935 for more context.
     implementation project(':service-glean')
 
+    implementation project(':service-digitalassetlinks')
+
     implementation project(':support-utils')
     implementation project(':feature-downloads')
     implementation project(':support-images')

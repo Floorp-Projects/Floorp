@@ -18,7 +18,6 @@ import mozilla.components.service.digitalassetlinks.AssetDescriptor
 import mozilla.components.service.digitalassetlinks.Relation.HANDLE_ALL_URLS
 import mozilla.components.service.digitalassetlinks.Relation.USE_AS_ORIGIN
 import mozilla.components.service.digitalassetlinks.RelationChecker
-import mozilla.components.service.digitalassetlinks.api.DigitalAssetLinksApi
 
 /**
  * Used to verify postMessage origin for a designated package name.
@@ -27,14 +26,11 @@ import mozilla.components.service.digitalassetlinks.api.DigitalAssetLinksApi
  * It caches any origin that has been verified during the current application
  * lifecycle and reuses that without making any new network requests.
  */
-@Suppress("LongParameterList")
 class OriginVerifier(
     private val packageName: String,
     @Relation private val relation: Int,
     packageManager: PackageManager,
-    httpClient: Client,
-    apiKey: String?,
-    private val relationChecker: RelationChecker = DigitalAssetLinksApi(httpClient, apiKey)
+    private val relationChecker: RelationChecker
 ) {
 
     @VisibleForTesting

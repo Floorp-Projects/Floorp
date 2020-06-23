@@ -37,7 +37,6 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 class TrustedWebActivityIntentProcessorTest {
 
-    private val apiKey = "XXXXXXXXX"
     private lateinit var store: BrowserStore
     private lateinit var sessionManager: SessionManager
 
@@ -49,7 +48,7 @@ class TrustedWebActivityIntentProcessorTest {
 
     @Test
     fun `process checks if intent action is not valid`() = runBlockingTest {
-        val processor = TrustedWebActivityIntentProcessor(mock(), mock(), mock(), mock(), apiKey, mock())
+        val processor = TrustedWebActivityIntentProcessor(mock(), mock(), mock(), mock(), mock())
 
         assertFalse(processor.process(Intent(ACTION_VIEW_PWA)))
         assertFalse(processor.process(Intent(ACTION_VIEW)))
@@ -86,7 +85,7 @@ class TrustedWebActivityIntentProcessorTest {
         val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase = mock()
         val customTabsStore: CustomTabsServiceStore = mock()
 
-        val processor = TrustedWebActivityIntentProcessor(sessionManager, loadUrlUseCase, mock(), mock(), apiKey, customTabsStore)
+        val processor = TrustedWebActivityIntentProcessor(sessionManager, loadUrlUseCase, mock(), mock(), customTabsStore)
 
         assertTrue(processor.process(intent))
         val sessionState = store.state.customTabs.first()

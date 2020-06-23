@@ -20,7 +20,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
 import mozilla.components.feature.customtabs.feature.OriginVerifierFeature
 import mozilla.components.feature.customtabs.isTrustedWebActivityIntent
@@ -29,6 +28,7 @@ import mozilla.components.feature.intent.ext.putSessionId
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.pwa.ext.toOrigin
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
 
@@ -38,13 +38,12 @@ import mozilla.components.support.utils.toSafeIntent
 class TrustedWebActivityIntentProcessor(
     private val sessionManager: SessionManager,
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
-    httpClient: Client,
     packageManager: PackageManager,
-    apiKey: String?,
+    relationChecker: RelationChecker,
     private val store: CustomTabsServiceStore
 ) : IntentProcessor {
 
-    private val verifier = OriginVerifierFeature(httpClient, packageManager, apiKey) { store.dispatch(it) }
+    private val verifier = OriginVerifierFeature(packageManager, relationChecker) { store.dispatch(it) }
     private val scope = MainScope()
 
     private fun matches(intent: Intent): Boolean {

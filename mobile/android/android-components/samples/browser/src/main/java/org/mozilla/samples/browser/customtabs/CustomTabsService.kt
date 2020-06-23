@@ -5,13 +5,13 @@
 package org.mozilla.samples.browser.customtabs
 
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.AbstractCustomTabsService
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.service.digitalassetlinks.RelationChecker
 import org.mozilla.samples.browser.ext.components
 
 class CustomTabsService : AbstractCustomTabsService() {
     override val engine: Engine by lazy { components.engine }
-    override val httpClient: Client by lazy { components.client }
     override val customTabsServiceStore: CustomTabsServiceStore by lazy { components.customTabsStore }
+    override val relationChecker: RelationChecker by lazy { components.relationChecker }
 }

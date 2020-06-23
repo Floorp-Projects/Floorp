@@ -15,6 +15,14 @@ permalink: /changelog/
 * **feature-contextmenu**
   * Add "Share image" to context menu.
 
+* **feature-session**
+  * ⚠️ **This is a breaking change**: `AbstractCustomTabsService` now requires `CustomTabsServiceStore`.
+  * ⚠️ **This is a breaking change**: `httpClient` and `apiKey` have been removed from `AbstractCustomTabsService`. They should be replaced with building `DigitalAssetLinksApi` and passing it to `relationChecker`.
+  * Added `relationChecker` to customize Digital Asset Links handling.
+
+* **feature-pwa**
+  * ⚠️ **This is a breaking change**: `TrustedWebActivityIntentProcessor` now requires a `RelationChecker` instead of `httpClient` and `apiKey`.
+
 # 47.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v46.0.0...v47.0.0)
@@ -22,6 +30,9 @@ permalink: /changelog/
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v47.0.0/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/v47.0.0/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v47.0.0/buildSrc/src/main/java/Config.kt)
+
+* **service-digitalassetlinks**
+  * Added new component for listing and checking Digital Asset Links. Contains a local checker and a version that uses Google's API.
 
 # 46.0.0
 
