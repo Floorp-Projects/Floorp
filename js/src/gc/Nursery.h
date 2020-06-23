@@ -729,7 +729,8 @@ class Nursery {
   void freeChunksFrom(unsigned firstFreeChunk);
 
   void sendTelemetry(JS::GCReason reason, mozilla::TimeDuration totalTime,
-                     size_t pretenureCount, double promotionRate);
+                     bool wasEmpty, size_t pretenureCount,
+                     double promotionRate);
 
   void printCollectionProfile(JS::GCReason reason, double promotionRate);
   void printTenuringData(const gc::TenureCountCache& tenureCounts);
