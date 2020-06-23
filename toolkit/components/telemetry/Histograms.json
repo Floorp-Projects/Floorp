@@ -10900,7 +10900,7 @@
   "BROWSER_ATTRIBUTION_ERRORS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "80",
+    "expires_in_version": "86",
     "kind": "categorical",
     "labels": ["read_error", "decode_error"],
     "description": "Count for the number of errors encountered trying to read the attribution data from the stub installer.",
