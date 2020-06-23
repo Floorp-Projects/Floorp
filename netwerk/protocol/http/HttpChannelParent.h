@@ -356,13 +356,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // Used to ensure methods can't be called before OnStartRequest.
   uint8_t mAfterOnStartRequestBegun : 1;
 
-  // Set to true if we get OnStartRequest called with an nsIMultiPartChannel,
-  // and expect multiple OnStartRequest calls.
-  // When this happens we send OnTransportAndData and OnStopRequest over
-  // PHttpChannel instead of PHttpBackgroundChannel to make synchronizing all
-  // the parts easier.
-  uint8_t mIsMultiPart : 1;
-
   // Number of events to wait before actually invoking AsyncOpen on the main
   // channel. For each asynchronous step required before InvokeAsyncOpen, should
   // increase 1 to mAsyncOpenBarrier and invoke TryInvokeAsyncOpen after
