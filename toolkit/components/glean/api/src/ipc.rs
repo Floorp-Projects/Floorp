@@ -60,7 +60,7 @@ where
 /// Thread-safe.
 #[cfg(feature = "with_gecko")]
 static PROCESS_TYPE: Lazy<AtomicU32> = Lazy::new(|| {
-    if let Some(appinfo) = xpcom::services::get_AppInfoService() {
+    if let Some(appinfo) = xpcom::services::get_XULRuntime() {
         let mut process_type = nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32;
         let rv = unsafe { appinfo.GetProcessType(&mut process_type) };
         if rv.succeeded() {
