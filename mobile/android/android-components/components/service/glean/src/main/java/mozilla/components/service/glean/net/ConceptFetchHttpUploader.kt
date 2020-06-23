@@ -8,16 +8,16 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Header
-import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.toMutableHeaders
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.telemetry.glean.net.HeadersList
-import mozilla.telemetry.glean.net.PingUploader as CorePingUploader
-import mozilla.telemetry.glean.net.UploadResult
 import mozilla.telemetry.glean.net.HttpResponse
 import mozilla.telemetry.glean.net.RecoverableFailure
+import mozilla.telemetry.glean.net.UploadResult
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import mozilla.telemetry.glean.net.PingUploader as CorePingUploader
 
 typealias PingUploader = CorePingUploader
 
@@ -77,7 +77,7 @@ class ConceptFetchHttpUploader(
         data: ByteArray,
         headers: HeadersList
     ): Request {
-        val conceptHeaders = MutableHeaders(headers.map { Header(it.first, it.second) })
+        val conceptHeaders = headers.map { (name, value) -> Header(name, value) }.toMutableHeaders()
 
         return Request(
             url = url,
