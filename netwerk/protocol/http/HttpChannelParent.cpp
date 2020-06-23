@@ -1535,8 +1535,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (!mIPCClosed) {
     // TODO: For multipart channel, we would deliever everything across
     // pBackground as well.
-    // TODO: OnStartRequestSent is no longer needed since
-    // OnStartRequest/ODA/OnStopRequest are on the same thread.
     if (!mIsMultiPart) {
       ipcResult = mBgParent->OnStartRequest(
           *responseHead, useResponseHead,
@@ -1554,19 +1552,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (mIPCClosed || !ipcResult) {
     rv = NS_ERROR_UNEXPECTED;
   }
-
-  // OnStartRequest is sent to content process successfully.
-  // Notify PHttpBackgroundChannelChild that all following IPC mesasges
-  // should be run after OnStartRequest is handled.
-  // We don't send this if it's multipart, since we don't use the
-  // background channel in that case.
-  if (NS_SUCCEEDED(rv) && !multiPartID) {
-    MOZ_ASSERT(mBgParent);
-    if (!mBgParent->OnStartRequestSent()) {
-      rv = NS_ERROR_UNEXPECTED;
-    }
-  }
-
   return rv;
 }
 
