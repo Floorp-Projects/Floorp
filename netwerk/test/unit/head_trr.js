@@ -102,17 +102,13 @@ class TRRDNSListener {
     const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
       Ci.nsIDNSService
     );
-    const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-      Ci.nsIThreadManager
-    );
-    const currentThread = threadManager.currentThread;
 
     if (trrServer == "") {
       this.request = dns.asyncResolve(
         name,
         0,
         this,
-        currentThread,
+        Services.tm.currentThread,
         {} // defaultOriginAttributes
       );
     } else {
@@ -122,7 +118,7 @@ class TRRDNSListener {
           trrServer,
           0,
           this,
-          currentThread,
+          Services.tm.currentThread,
           {} // defaultOriginAttributes
         );
         Assert.ok(!expectEarlyFail);
