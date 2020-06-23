@@ -96,4 +96,19 @@ TEST(TaskQueue, GetCurrentSerialEventTarget)
   tq1->AwaitShutdownAndIdle();
 }
 
+TEST(AbstractThread, GetCurrentSerialEventTarget)
+{
+  RefPtr<AbstractThread> mainThread = AbstractThread::GetCurrent();
+  EXPECT_EQ(mainThread, AbstractThread::MainThread());
+  Unused << mainThread->Dispatch(NS_NewRunnableFunction(
+      "TestAbstractThread::TestCurrentSerialEventTarget::TestBody",
+      [mainThread]() {
+        nsCOMPtr<nsISerialEventTarget> thread = GetCurrentSerialEventTarget();
+        EXPECT_EQ(thread, mainThread);
+      }));
+
+  // Spin the event loop.
+  NS_ProcessPendingEvents(nullptr);
+}
+
 }  // namespace TestTaskQueue
