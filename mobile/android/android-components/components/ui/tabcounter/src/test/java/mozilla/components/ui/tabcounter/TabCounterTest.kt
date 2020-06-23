@@ -6,7 +6,6 @@ package mozilla.components.ui.tabcounter
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.ui.tabcounter.TabCounter.Companion.DEFAULT_TABS_COUNTER_TEXT
 import mozilla.components.ui.tabcounter.TabCounter.Companion.ONE_DIGIT_SIZE_RATIO
 import mozilla.components.ui.tabcounter.TabCounter.Companion.SO_MANY_TABS_OPEN
 import mozilla.components.ui.tabcounter.TabCounter.Companion.TWO_DIGITS_SIZE_RATIO
@@ -18,12 +17,12 @@ import org.junit.runner.RunWith
 class TabCounterTest {
 
     @Test
-    fun `Default tab count is a smiley face`() {
+    fun `Default tab count is 0`() {
         val tabCounter = TabCounter(testContext)
 
-        assertEquals(DEFAULT_TABS_COUNTER_TEXT, tabCounter.getText())
+        assertEquals("0", tabCounter.getText())
 
-        assertEquals(0.toFloat(), tabCounter.currentTextRatio)
+        assertEquals(ONE_DIGIT_SIZE_RATIO, tabCounter.currentTextRatio)
     }
 
     @Test
