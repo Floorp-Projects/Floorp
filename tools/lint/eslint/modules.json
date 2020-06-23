@@ -175,7 +175,6 @@
   "remote-settings.js": ["RemoteSettings", "jexlFilterFunc", "remoteSettingsBroadcastHandler"],
   "RemotePageManagerChild.jsm": ["ChildMessagePort"],
   "RemotePageManagerParent.jsm": ["RemotePages", "RemotePageManager"],
-  "RemoteWebProgress.jsm": ["RemoteWebProgressManager"],
   "resource.js": ["AsyncResource", "Resource"],
   "resource://services-common/utils.js": ["CommonUtils"],
   "resource://services-crypto/utils.js": ["CryptoUtils"],
