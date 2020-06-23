@@ -20,6 +20,10 @@
 #  include "mozilla/webrender/RenderCompositorEGL.h"
 #endif
 
+#ifdef XP_MACOSX
+#  include "mozilla/webrender/RenderCompositorNative.h"
+#endif
+
 namespace mozilla {
 namespace wr {
 
@@ -125,6 +129,9 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
 #if defined(MOZ_WIDGET_ANDROID)
   // RenderCompositorOGL is not used on android
   return nullptr;
+#elif defined(XP_MACOSX)
+  // Mac uses NativeLayerCA
+  return RenderCompositorNativeOGL::Create(std::move(aWidget));
 #else
   return RenderCompositorOGL::Create(std::move(aWidget));
 #endif
