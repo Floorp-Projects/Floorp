@@ -12,18 +12,7 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 add_task(async function() {
-  info("Test console messages legacy listener");
-  await testConsoleMessagesResources();
-  await testConsoleMessagesResourcesWithIgnoreExistingResources();
-
-  info("Test console messages server listener");
-  await pushPref("devtools.testing.enableServerWatcherSupport", true);
-  await testConsoleMessagesResources();
-  await testConsoleMessagesResourcesWithIgnoreExistingResources();
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
-});
-
-async function testConsoleMessagesResources() {
+  // Open a test tab
   const tab = await addTab("data:text/html,Console Messages");
 
   const {
@@ -32,65 +21,15 @@ async function testConsoleMessagesResources() {
     targetList,
   } = await initResourceWatcherAndTarget(tab);
 
-  info(
-    "Log some messages *before* calling ResourceWatcher.watchResources in order to " +
-      "assert the behavior of already existing messages."
-  );
-  await logExistingMessages(tab.linkedBrowser);
-
-  let runtimeDoneResolve;
-  const expectedExistingCalls = [...expectedExistingConsoleCalls];
-  const expectedRuntimeCalls = [...expectedRuntimeConsoleCalls];
-  const onRuntimeDone = new Promise(resolve => (runtimeDoneResolve = resolve));
-  const onAvailable = ({ resourceType, targetFront, resource }) => {
-    is(
-      resourceType,
-      ResourceWatcher.TYPES.CONSOLE_MESSAGE,
-      "Received a message"
-    );
-    ok(resource.message, "message is wrapped into a message attribute");
-    const expected = (expectedExistingCalls.length > 0
-      ? expectedExistingCalls
-      : expectedRuntimeCalls
-    ).shift();
-    checkConsoleAPICall(resource.message, expected);
-    if (expectedRuntimeCalls.length == 0) {
-      runtimeDoneResolve();
-    }
-  };
-
-  await resourceWatcher.watchResources(
-    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
-    {
-      onAvailable,
-    }
-  );
-  is(
-    expectedExistingCalls.length,
-    0,
-    "Got the expected number of existing messages"
-  );
-
-  info(
-    "Now log messages *after* the call to ResourceWatcher.watchResources and after having received all existing messages"
-  );
-  await logRuntimeMessages(tab.linkedBrowser);
-
-  info("Waiting for all runtime messages");
-  await onRuntimeDone;
-
-  is(
-    expectedRuntimeCalls.length,
-    0,
-    "Got the expected number of runtime messages"
-  );
+  await testMessages(tab.linkedBrowser, resourceWatcher);
 
   targetList.stopListening();
   await client.close();
-}
+});
 
-async function testConsoleMessagesResourcesWithIgnoreExistingResources() {
-  info("Test ignoreExistingResources option for console messages");
+add_task(async function() {
+  info("Test ignoreExistingResources option for CONSOLE_MESSAGE");
+
   const tab = await addTab("data:text/html,Console Messages");
 
   const {
@@ -138,6 +77,61 @@ async function testConsoleMessagesResourcesWithIgnoreExistingResources() {
 
   await targetList.stopListening();
   await client.close();
+});
+
+async function testMessages(browser, resourceWatcher) {
+  info(
+    "Log some messages *before* calling ResourceWatcher.watchResources in order to " +
+      "assert the behavior of already existing messages."
+  );
+  await logExistingMessages(browser);
+
+  let runtimeDoneResolve;
+  const expectedExistingCalls = [...expectedExistingConsoleCalls];
+  const expectedRuntimeCalls = [...expectedRuntimeConsoleCalls];
+  const onRuntimeDone = new Promise(resolve => (runtimeDoneResolve = resolve));
+  const onAvailable = ({ resourceType, targetFront, resource }) => {
+    is(
+      resourceType,
+      ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+      "Received a message"
+    );
+    ok(resource.message, "message is wrapped into a message attribute");
+    const expected = (expectedExistingCalls.length > 0
+      ? expectedExistingCalls
+      : expectedRuntimeCalls
+    ).shift();
+    checkConsoleAPICall(resource.message, expected);
+    if (expectedRuntimeCalls.length == 0) {
+      runtimeDoneResolve();
+    }
+  };
+
+  await resourceWatcher.watchResources(
+    [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
+    {
+      onAvailable,
+    }
+  );
+  is(
+    expectedExistingCalls.length,
+    0,
+    "Got the expected number of existing messages"
+  );
+
+  info(
+    "Now log messages *after* the call to ResourceWatcher.watchResources and after having received all existing messages"
+  );
+  await logRuntimeMessages(browser);
+
+  info("Waiting for all runtime messages");
+  await onRuntimeDone;
+
+  is(
+    expectedRuntimeCalls.length,
+    0,
+    "Got the expected number of runtime messages"
+  );
 }
 
 // For both existing and runtime messages, we execute console API

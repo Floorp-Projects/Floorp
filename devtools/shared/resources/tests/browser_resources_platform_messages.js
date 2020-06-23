@@ -15,18 +15,6 @@ add_task(async function() {
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
-  info("Test platform messages legacy listener");
-  await testPlatformMessagesResources();
-  await testPlatformMessagesResourcesWithIgnoreExistingResources();
-
-  info("Test platform messages server listener");
-  await pushPref("devtools.testing.enableServerWatcherSupport", true);
-  await testPlatformMessagesResources();
-  await testPlatformMessagesResourcesWithIgnoreExistingResources();
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
-});
-
-async function testPlatformMessagesResources() {
   const {
     client,
     resourceWatcher,
@@ -97,9 +85,15 @@ async function testPlatformMessagesResources() {
   Services.console.reset();
   targetList.stopListening();
   await client.close();
-}
+});
 
-async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
+add_task(async function() {
+  info("Test ignoreExistingResources option for PLATFORM_MESSAGE");
+
+  // Disable the preloaded process as it creates processes intermittently
+  // which forces the emission of RDP requests we aren't correctly waiting for.
+  await pushPref("dom.ipc.processPrelaunch.enabled", false);
+
   const {
     client,
     resourceWatcher,
@@ -149,4 +143,4 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   Services.console.reset();
   await targetList.stopListening();
   await client.close();
-}
+});
