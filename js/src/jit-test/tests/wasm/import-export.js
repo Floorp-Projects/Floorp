@@ -23,27 +23,6 @@ function assertSegmentFitError(f) {
     }
 }
 
-// Memory size consistency and internal limits.
-assertErrorMessage(() => new Memory({initial:2, maximum:1}), RangeError, /bad Memory maximum size/);
-
-try {
-    new Memory({initial:16384});
-} catch(e) {
-    assertEq(String(e).indexOf("out of memory") !== -1, true);
-}
-
-assertErrorMessage(() => new Memory({initial: 16385}), RangeError, /bad Memory initial size/);
-
-new Memory({initial: 0, maximum: 65536});
-assertErrorMessage(() => new Memory({initial: 0, maximum: 65537}), RangeError, /bad Memory maximum size/);
-
-// Table size consistency and internal limits.
-assertErrorMessage(() => new Table({initial:2, maximum:1, element:"funcref"}), RangeError, /bad Table maximum size/);
-new Table({ initial: 10000000, element:"funcref" });
-assertErrorMessage(() => new Table({initial:10000001, element:"funcref"}), RangeError, /bad Table initial size/);
-new Table({ initial: 0, maximum: 10000000, element:"funcref" });
-assertErrorMessage(() => new Table({initial:0, maximum: 10000001, element:"funcref"}), RangeError, /bad Table maximum size/);
-
 const m1 = new Module(wasmTextToBinary('(module (import "foo" "bar" (func)) (import "baz" "quux" (func)))'));
 assertErrorMessage(() => new Instance(m1), TypeError, /second argument must be an object/);
 assertErrorMessage(() => new Instance(m1, {foo:null}), TypeError, /import object field 'foo' is not an Object/);
