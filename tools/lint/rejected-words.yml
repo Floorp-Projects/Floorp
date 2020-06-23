@@ -25,7 +25,6 @@ avoid-blacklist-and-whitelist:
         - ftl
         - yml
     exclude:
-        - tools/lint/test/test_codespell.py
         - browser/app/profile/firefox.js
         - browser/app/winlauncher/LauncherProcessWin.cpp
         - browser/base/content/browser.js
@@ -35,14 +34,14 @@ avoid-blacklist-and-whitelist:
         - browser/base/content/test/general/browser_tab_drag_drop_perwindow.js
         - browser/base/content/test/performance/browser_appmenu.js
         - browser/base/content/test/performance/browser_preferences_usage.js
-        - browser/base/content/test/performance/browser_startup.js
         - browser/base/content/test/performance/browser_startup_content.js
         - browser/base/content/test/performance/browser_startup_content_mainthreadio.js
         - browser/base/content/test/performance/browser_startup_images.js
+        - browser/base/content/test/performance/browser_startup.js
         - browser/base/content/test/performance/browser_startup_mainthreadio.js
         - browser/base/content/test/performance/browser_startup_syncIPC.js
-        - browser/base/content/test/performance/browser_tabclose.js
         - browser/base/content/test/performance/browser_tabclose_grow.js
+        - browser/base/content/test/performance/browser_tabclose.js
         - browser/base/content/test/performance/browser_tabdetach.js
         - browser/base/content/test/performance/browser_tabopen.js
         - browser/base/content/test/performance/browser_tabopen_squeeze.js
@@ -50,9 +49,9 @@ avoid-blacklist-and-whitelist:
         - browser/base/content/test/performance/browser_tabswitch.js
         - browser/base/content/test/performance/browser_urlbar_keyed_search.js
         - browser/base/content/test/performance/browser_urlbar_search.js
-        - browser/base/content/test/performance/browser_window_resize.js
         - browser/base/content/test/performance/browser_windowclose.js
         - browser/base/content/test/performance/browser_windowopen.js
+        - browser/base/content/test/performance/browser_window_resize.js
         - browser/base/content/test/performance/head.js
         - browser/base/content/test/permissions/browser_temporary_permissions_expiry.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_cryptominers.js
@@ -60,6 +59,7 @@ avoid-blacklist-and-whitelist:
         - browser/base/content/test/protectionsUI/browser_protectionsUI_pbmode_exceptions.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_report_breakage.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_socialtracking.js
+        - browser/base/content/test/protectionsUI/browser_protectionsUI_state.js
         - browser/base/content/test/sanitize/browser_sanitize-offlineData.js
         - browser/base/content/test/siteIdentity/browser_no_mcb_for_loopback.js
         - browser/base/content/test/siteIdentity/browser_no_mcb_for_onions.js
@@ -78,8 +78,8 @@ avoid-blacklist-and-whitelist:
         - browser/components/extensions/test/browser/head.js
         - browser/components/migration/ChromeMigrationUtils.jsm
         - browser/components/migration/ChromeProfileMigrator.jsm
-        - browser/components/newtab/content-src/asrouter/README.md
         - browser/components/newtab/content-src/asrouter/docs/debugging-docs.md
+        - browser/components/newtab/content-src/asrouter/README.md
         - browser/components/newtab/data/content/activity-stream.bundle.js
         - browser/components/newtab/docs/v2-system-addon/preferences.md
         - browser/components/newtab/lib/ASRouter.jsm
@@ -88,6 +88,7 @@ avoid-blacklist-and-whitelist:
         - browser/components/newtab/test/unit/asrouter/ASRouter.test.js
         - browser/components/newtab/test/unit/asrouter/TargetingDocs.test.js
         - browser/components/newtab/test/unit/lib/PersonalityProvider/RecipeExecutor.test.js
+        - browser/components/pioneer/content/pioneer.js
         - browser/components/preferences/privacy.inc.xhtml
         - browser/components/preferences/privacy.js
         - browser/components/resistfingerprinting/test/mochitest/test_bug1354633_media_error.html
@@ -98,16 +99,20 @@ avoid-blacklist-and-whitelist:
         - browser/components/tests/unit/test_distribution.js
         - browser/components/translation/test/browser_translation_yandex.js
         - browser/components/uitour/UITourChild.jsm
-        - browser/components/urlbar/UrlbarInput.jsm
-        - browser/components/urlbar/UrlbarTokenizer.jsm
-        - browser/components/urlbar/tests/browser/browser_UrlbarInput_trimURLs.js
         - browser/components/urlbar/tests/browser/browser_searchSingleWordNotification.js
+        - browser/components/urlbar/tests/browser/browser_UrlbarInput_trimURLs.js
         - browser/components/urlbar/tests/unit/test_search_suggestions.js
         - browser/components/urlbar/tests/unit/test_tokenizer.js
+        - browser/components/urlbar/UrlbarInput.jsm
+        - browser/components/urlbar/UrlbarTokenizer.jsm
         - browser/extensions/formautofill/FormAutofillSync.jsm
+        - browser/extensions/screenshots/background/main.js
         - browser/modules/SitePermissions.jsm
         - browser/tools/mozscreenshots/mozscreenshots/extension/configurations/PermissionPrompts.jsm
         - build/clang-plugin/CustomMatchers.h
+        - build/clang-plugin/FopenUsageChecker.cpp
+        - build/clang-plugin/NaNExprChecker.cpp
+        - build/clang-plugin/NoPrincipalGetURI.cpp
         - build/clang-plugin/tests/TestNANTestingExpr.cpp
         - build/compare-mozconfig/compare-mozconfigs.py
         - build/moz.configure/bindgen.configure
@@ -131,11 +136,13 @@ avoid-blacklist-and-whitelist:
         - devtools/client/debugger/test/mochitest/examples/big-sourcemap_files/bundle.js
         - devtools/client/debugger/test/mochitest/examples/ember/quickstart/dist/assets/vendor.js
         - devtools/client/debugger/test/mochitest/examples/react/build/main.js
+        - devtools/client/debugger/test/mochitest/examples/react/build/service-worker.js
         - devtools/client/debugger/test/mochitest/helpers.js
-        - devtools/client/framework/browser-toolbox/test/browser_browser_toolbox.js
+        - devtools/client/definitions.js
         - devtools/client/framework/browser-toolbox/test/browser_browser_toolbox_debugger.js
         - devtools/client/framework/browser-toolbox/test/browser_browser_toolbox_fission_contentframe_inspector.js
         - devtools/client/framework/browser-toolbox/test/browser_browser_toolbox_fission_inspector.js
+        - devtools/client/framework/browser-toolbox/test/browser_browser_toolbox.js
         - devtools/client/framework/browser-toolbox/test/browser_browser_toolbox_rtl.js
         - devtools/client/framework/browser-toolbox/test/helpers-browser-toolbox.js
         - devtools/client/framework/test/browser_source_map-01.js
@@ -161,30 +168,38 @@ avoid-blacklist-and-whitelist:
         - devtools/server/actors/webconsole/eval-with-debugger.js
         - devtools/server/tests/xpcshell/test_extension_storage_actor.js
         - devtools/shared/webconsole/GeneratePureDOMFunctions.py
-        - docshell/base/URIFixup.jsm
         - docshell/base/nsDocShell.cpp
+        - docshell/base/URIFixup.jsm
         - docshell/test/unit/test_URIFixup_info.js
         - dom/base/Document.cpp
+        - dom/base/MaybeCrossOriginObject.cpp
+        - dom/base/MutationObservers.cpp
         - dom/base/nsContentUtils.cpp
         - dom/base/nsContentUtils.h
         - dom/base/nsDataDocumentContentPolicy.cpp
+        - dom/base/nsGlobalWindowOuter.cpp
+        - dom/base/nsGlobalWindowOuter.h
         - dom/base/nsTreeSanitizer.cpp
         - dom/base/nsTreeSanitizer.h
         - dom/base/test/browser_multiple_popups.js
         - dom/base/test/browser_timeout_throttling_with_audio_playback.js
         - dom/base/test/chrome/test_permission_isHandlingUserInput.xhtml
+        - dom/bindings/Codegen.py
         - dom/bindings/parser/WebIDL.py
+        - dom/bindings/RemoteObjectProxy.cpp
         - dom/canvas/WebGLContext.cpp
         - dom/events/EventStateManager.cpp
         - dom/events/KeyboardEvent.cpp
         - dom/html/MediaError.cpp
         - dom/indexedDB/ActorsParent.cpp
         - dom/ipc/ContentParent.cpp
+        - dom/ipc/fuzztest/content_parent_ipc_libfuzz.cpp
         - dom/ipc/URLClassifierParent.cpp
         - dom/media/AutoplayPolicy.cpp
-        - dom/media/MediaManager.cpp
         - dom/media/gmp/GMPChild.cpp
         - dom/media/ipc/RDDProcessManager.cpp
+        - dom/media/ipc/RemoteDecoderManagerParent.cpp
+        - dom/media/MediaManager.cpp
         - dom/media/mp4/MP4Decoder.cpp
         - dom/media/platforms/apple/AppleVTDecoder.cpp
         - dom/media/platforms/wmf/DXVA2Manager.cpp
@@ -194,14 +209,15 @@ avoid-blacklist-and-whitelist:
         - dom/media/test/test_autoplay_policy_permission.html
         - dom/media/webm/WebMDecoder.cpp
         - dom/plugins/base/nsPluginHost.h
+        - dom/plugins/ipc/PluginQuirks.cpp
         - dom/push/PushServiceWebSocket.jsm
-        - dom/security/ReferrerInfo.cpp
-        - dom/security/ReferrerInfo.h
         - dom/security/nsCSPContext.cpp
         - dom/security/nsCSPService.cpp
         - dom/security/nsCSPUtils.cpp
         - dom/security/nsCSPUtils.h
         - dom/security/nsMixedContentBlocker.cpp
+        - dom/security/ReferrerInfo.cpp
+        - dom/security/ReferrerInfo.h
         - dom/security/test/csp/file_bug802872.js
         - dom/security/test/csp/file_ignore_unsafe_inline.html
         - dom/security/test/csp/file_nonce_source.html
@@ -211,42 +227,63 @@ avoid-blacklist-and-whitelist:
         - dom/security/test/csp/test_path_matching_redirect.html
         - dom/security/test/csp/test_punycode_host_src.html
         - dom/security/test/csp/test_scheme_relative_sources.html
-        - dom/security/test/csp/test_strict_dynamic.html
         - dom/security/test/csp/test_strict_dynamic_default_src.html
+        - dom/security/test/csp/test_strict_dynamic.html
         - dom/security/test/csp/test_upgrade_insecure.html
         - dom/security/test/csp/test_win_open_blocked.html
         - dom/security/test/csp/test_worker_src.html
         - dom/security/test/unit/test_isOriginPotentiallyTrustworthy.js
         - dom/serviceworkers/test/test_error_reporting.html
         - dom/smil/SMILTimeValueSpec.cpp
+        - dom/smil/SMILTimeValueSpec.h
         - dom/tests/mochitest/dom-level0/idn_child.html
         - dom/tests/mochitest/dom-level0/test_setting_document.domain_idn.html
+        - dom/tests/mochitest/whatwg/test_postMessage_origin.xhtml
+        - gfx/config/gfxConfigManager.cpp
         - gfx/gl/GLContextProviderWGL.cpp
         - gfx/gl/GLUploadHelpers.cpp
         - gfx/ipc/GPUProcessManager.cpp
+        - gfx/layers/ipc/fuzztest/compositor_manager_parent_ipc_libfuzz.cpp
         - gfx/tests/mochitest/test_font_whitelist.html
+        - gfx/thebes/gfxDWriteFontList.cpp
+        - gfx/thebes/gfxFcPlatformFontList.cpp
+        - gfx/thebes/gfxFontEntry.h
         - gfx/thebes/gfxFT2FontList.cpp
         - gfx/thebes/gfxPlatform.cpp
         - gfx/thebes/gfxPlatformFontList.cpp
         - gfx/thebes/gfxPlatformFontList.h
         - gfx/thebes/gfxUserFontSet.cpp
         - gfx/thebes/gfxWindowsPlatform.cpp
+        - gfx/thebes/SharedFontList.cpp
         - gfx/vr/ipc/VRProcessManager.cpp
         - intl/strres/nsStringBundle.cpp
         - ipc/glue/GeckoChildProcessHost.cpp
         - js/src/debugger/DebugAPI.h
         - js/src/devtools/rootAnalysis/analyzeHeapWrites.js
+        - js/src/gc/Heap.h
+        - js/src/jit/CodeGenerator.cpp
         - js/src/jit-test/tests/auto-regress/bug687399.js
         - js/src/jit-test/tests/basic/bug908915.js
         - js/src/jit-test/tests/basic/missingArgTest2.js
         - js/src/tests/non262/regress/regress-450369.js
         - js/src/tests/test262/built-ins/JSON/stringify/replacer-array-proxy.js
         - js/xpconnect/src/Sandbox.cpp
+        - js/xpconnect/src/XPCJSRuntime.cpp
+        - js/xpconnect/src/xpcpublic.h
         - js/xpconnect/src/XPCWrappedNativeScope.cpp
+        - js/xpconnect/tests/unit/head_watchdog.js
+        - js/xpconnect/wrappers/FilteringWrapper.cpp
+        - js/xpconnect/wrappers/XrayWrapper.cpp
         - layout/base/PositionedEventTargeting.cpp
+        - layout/base/PresShell.cpp
+        - layout/base/PresShell.h
         - layout/reftests/css-placeholder/css-restrictions.html
+        - layout/style/test/test_computed_style_difference.html
+        - layout/tools/reftest/mach_commands.py
+        - layout/tools/reftest/mach_test_package_commands.py
         - layout/tools/reftest/reftestcommandline.py
         - layout/tools/reftest/runreftest.py
+        - layout/tools/reftest/selftest/conftest.py
         - media/mtransport/stun_socket_filter.cpp
         - media/mtransport/test/ice_unittest.cpp
         - media/webrtc/signaling/src/media-conduit/VideoConduit.cpp
@@ -256,24 +293,44 @@ avoid-blacklist-and-whitelist:
         - mobile/android/app/mobile.js
         - modules/libpref/docs/index.md
         - modules/libpref/init/all.js
+        - mozglue/baseprofiler/core/platform.cpp
+        - mozglue/build/AsanOptions.cpp
+        - mozglue/misc/StackWalk.cpp
         - netwerk/base/nsIOService.cpp
+        - netwerk/base/nsIOService.h
         - netwerk/base/nsURLHelper.cpp
         - netwerk/cache/nsDiskCacheDeviceSQL.cpp
         - netwerk/cookie/CookieCommons.h
-        - netwerk/dns/TRR.cpp
-        - netwerk/dns/TRR.h
-        - netwerk/dns/TRRService.cpp
         - netwerk/dns/nsDNSService2.cpp
         - netwerk/dns/nsHostResolver.cpp
         - netwerk/dns/nsHostResolver.h
         - netwerk/dns/nsIDNService.cpp
+        - netwerk/dns/nsIDNService.h
+        - netwerk/dns/TRR.cpp
+        - netwerk/dns/TRR.h
+        - netwerk/dns/TRRServiceChild.cpp
+        - netwerk/dns/TRRService.cpp
+        - netwerk/dns/TRRService.h
+        - netwerk/dns/TRRServiceParent.cpp
+        - netwerk/ipc/DocumentLoadListener.cpp
+        - netwerk/protocol/about/nsAboutProtocolHandler.cpp
+        - netwerk/protocol/http/Http2Session.cpp
+        - netwerk/protocol/http/HttpBaseChannel.cpp
+        - netwerk/protocol/http/HttpConnectionMgrParent.cpp
+        - netwerk/protocol/http/HttpConnectionMgrShell.h
         - netwerk/protocol/http/nsHttpChannel.cpp
         - netwerk/protocol/http/nsHttpConnectionMgr.cpp
+        - netwerk/protocol/http/nsHttpHandler.cpp
+        - netwerk/protocol/http/nsHttpHandler.h
+        - netwerk/protocol/http/TRRServiceChannel.cpp
         - netwerk/protocol/res/ExtensionProtocolHandler.cpp
         - netwerk/protocol/viewsource/nsViewSourceChannel.cpp
         - netwerk/protocol/websocket/BaseWebSocketChannel.cpp
         - netwerk/socket/nsSOCKSSocketProvider.cpp
+        - netwerk/test/gtest/TestCookie.cpp
         - netwerk/test/unit/head_trr.js
+        - netwerk/test/unit_ipc/test_esni_dns_fetch_wrap.js
+        - netwerk/test/unit_ipc/test_trr_httpssvc_wrap.js
         - netwerk/test/unit/test_bug396389.js
         - netwerk/test/unit/test_bug427957.js
         - netwerk/test/unit/test_bug464591.js
@@ -282,11 +339,11 @@ avoid-blacklist-and-whitelist:
         - netwerk/test/unit/test_esni_dns_fetch.js
         - netwerk/test/unit/test_idn_blacklist.js
         - netwerk/test/unit/test_idn_urls.js
-        - netwerk/test/unit/test_trr.js
         - netwerk/test/unit/test_trr_httpssvc.js
-        - netwerk/test/unit_ipc/test_esni_dns_fetch_wrap.js
-        - netwerk/test/unit_ipc/test_trr_httpssvc_wrap.js
+        - netwerk/test/unit/test_trr.js
         - netwerk/url-classifier/AsyncUrlChannelClassifier.cpp
+        - netwerk/url-classifier/nsChannelClassifier.cpp
+        - netwerk/url-classifier/nsChannelClassifier.h
         - netwerk/url-classifier/UrlClassifierCommon.cpp
         - netwerk/url-classifier/UrlClassifierCommon.h
         - netwerk/url-classifier/UrlClassifierFeatureBase.cpp
@@ -294,39 +351,48 @@ avoid-blacklist-and-whitelist:
         - netwerk/url-classifier/UrlClassifierFeatureCryptominingAnnotation.cpp
         - netwerk/url-classifier/UrlClassifierFeatureCryptominingProtection.cpp
         - netwerk/url-classifier/UrlClassifierFeatureCustomTables.cpp
+        - netwerk/url-classifier/UrlClassifierFeatureCustomTables.h
+        - netwerk/url-classifier/UrlClassifierFeatureFactory.cpp
+        - netwerk/url-classifier/UrlClassifierFeatureFactory.h
         - netwerk/url-classifier/UrlClassifierFeatureFingerprintingAnnotation.cpp
         - netwerk/url-classifier/UrlClassifierFeatureFingerprintingProtection.cpp
         - netwerk/url-classifier/UrlClassifierFeatureFlash.cpp
         - netwerk/url-classifier/UrlClassifierFeatureLoginReputation.cpp
+        - netwerk/url-classifier/UrlClassifierFeaturePhishingProtection.cpp
         - netwerk/url-classifier/UrlClassifierFeatureSocialTrackingAnnotation.cpp
         - netwerk/url-classifier/UrlClassifierFeatureSocialTrackingProtection.cpp
         - netwerk/url-classifier/UrlClassifierFeatureTrackingAnnotation.cpp
         - netwerk/url-classifier/UrlClassifierFeatureTrackingProtection.cpp
-        - netwerk/url-classifier/nsChannelClassifier.cpp
-        - netwerk/url-classifier/nsChannelClassifier.h
         - python/mach/mach/dispatcher.py
         - python/mozbuild/mozbuild/backend/recursivemake.py
         - python/mozbuild/mozbuild/configure/options.py
+        - python/mozbuild/mozbuild/vendor/moz_yaml.py
+        - python/mozbuild/mozbuild/vendor/vendor_rust.py
         - remote/Protocol.jsm
         - security/certverifier/NSSCertDBTrustDomain.cpp
         - security/certverifier/TrustOverrideUtils.h
+        - security/manager/ssl/DataStorageList.h
         - security/manager/ssl/nsNSSIOLayer.cpp
         - security/manager/ssl/tests/unit/test_ev_certs.js
         - security/manager/ssl/tests/unit/test_intermediate_preloads.js
         - security/manager/ssl/tests/unit/test_sanctions_symantec_apple_google.js
         - security/manager/ssl/tests/unit/tlsserver/cmd/SanctionsTestServer.cpp
-        - security/sandbox/linux/Sandbox.cpp
-        - security/sandbox/linux/SandboxFilter.cpp
-        - security/sandbox/linux/SandboxFilterUtil.h
         - security/sandbox/linux/broker/SandboxBroker.cpp
         - security/sandbox/linux/broker/SandboxBroker.h
         - security/sandbox/linux/broker/SandboxBrokerPolicyFactory.cpp
         - security/sandbox/linux/glue/SandboxPrefBridge.cpp
         - security/sandbox/linux/gtest/TestBroker.cpp
+        - security/sandbox/linux/launch/SandboxLaunch.cpp
+        - security/sandbox/linux/Sandbox.cpp
+        - security/sandbox/linux/SandboxFilter.cpp
+        - security/sandbox/linux/SandboxFilterUtil.h
+        - security/sandbox/linux/Sandbox.h
         - services/automation/ServicesAutomation.jsm
         - services/fxaccounts/FxAccountsCommon.js
+        - services/fxaccounts/FxAccounts.jsm
         - services/sync/modules/engines/addons.js
         - taskcluster/ci/docker-image/kind.yml
+        - taskcluster/taskgraph/actions/create_interactive.py
         - taskcluster/taskgraph/target_tasks.py
         - taskcluster/taskgraph/transforms/tests.py
         - taskcluster/taskgraph/try_option_syntax.py
@@ -334,7 +400,10 @@ avoid-blacklist-and-whitelist:
         - testing/condprofile/condprof/client.py
         - testing/condprofile/condprof/tests/profile/prefs.js
         - testing/condprofile/condprof/tests/test_client.py
+        - testing/firefox-ui/tests/functional/safebrowsing/test_initial_download.py
         - testing/marionette/client/marionette_driver/wait.py
+        - testing/mochitest/browser-test.js
+        - testing/mochitest/mach_test_package_commands.py
         - testing/mochitest/mochitest_options.py
         - testing/mochitest/runtests.py
         - testing/mochitest/tests/browser/browser_uncaught_rejection_expected.js
@@ -364,20 +433,23 @@ avoid-blacklist-and-whitelist:
         - toolkit/components/antitracking/test/browser/antitracking_head.js
         - toolkit/components/antitracking/test/browser/browser_siteSpecificWorkArounds.js
         - toolkit/components/antitracking/test/xpcshell/test_rejectForeignAllowList.js
+        - toolkit/components/crashes/CrashManager.jsm
         - toolkit/components/crashes/tests/xpcshell/test_crash_manager.js
         - toolkit/components/extensions/Extension.jsm
         - toolkit/components/extensions/test/browser/browser_ext_management_themes.js
         - toolkit/components/extensions/test/xpcshell/head.js
-        - toolkit/components/extensions/test/xpcshell/test_WebExtensionPolicy.js
         - toolkit/components/extensions/test/xpcshell/test_ext_storage_content_local.js
         - toolkit/components/extensions/test/xpcshell/test_ext_storage_content_sync.js
         - toolkit/components/extensions/test/xpcshell/test_ext_storage_content_sync_kinto.js
-        - toolkit/components/places/UnifiedComplete.jsm
+        - toolkit/components/extensions/test/xpcshell/test_WebExtensionPolicy.js
         - toolkit/components/places/tests/unifiedcomplete/test_visit_url.js
+        - toolkit/components/places/UnifiedComplete.jsm
         - toolkit/components/remotepagemanager/RemotePageManagerParent.jsm
         - toolkit/components/reputationservice/ApplicationReputation.cpp
-        - toolkit/components/reputationservice/LoginReputation.cpp
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
+        - toolkit/components/reputationservice/LoginReputation.cpp
+        - toolkit/components/reputationservice/LoginReputation.h
+        - toolkit/components/reputationservice/test/unit/head_download_manager.js
         - toolkit/components/reputationservice/test/unit/test_app_rep.js
         - toolkit/components/reputationservice/test/unit/test_app_rep_maclinux.js
         - toolkit/components/reputationservice/test/unit/test_app_rep_windows.js
@@ -387,48 +459,63 @@ avoid-blacklist-and-whitelist:
         - toolkit/components/search/tests/xpcshell/test_override_allowlist.js
         - toolkit/components/telemetry/docs/data/environment.rst
         - toolkit/components/url-classifier/LookupCache.cpp
-        - toolkit/components/url-classifier/SafeBrowsing.jsm
+        - toolkit/components/url-classifier/LookupCache.h
         - toolkit/components/url-classifier/nsUrlClassifierDBService.cpp
-        - toolkit/components/url-classifier/tests/UrlClassifierTestUtils.jsm
+        - toolkit/components/url-classifier/nsUrlClassifierUtils.cpp
+        - toolkit/components/url-classifier/SafeBrowsing.jsm
         - toolkit/components/url-classifier/tests/mochitest/features.js
         - toolkit/components/url-classifier/tests/mochitest/good.js
         - toolkit/components/url-classifier/tests/mochitest/test_annotation_vs_TP.html
+        - toolkit/components/url-classifier/tests/mochitest/test_classified_annotations.html
         - toolkit/components/url-classifier/tests/mochitest/test_classify_ping.html
         - toolkit/components/url-classifier/tests/mochitest/test_classify_track.html
-        - toolkit/components/url-classifier/tests/mochitest/test_cryptomining.html
         - toolkit/components/url-classifier/tests/mochitest/test_cryptomining_annotate.html
-        - toolkit/components/url-classifier/tests/mochitest/test_fingerprinting.html
+        - toolkit/components/url-classifier/tests/mochitest/test_cryptomining.html
         - toolkit/components/url-classifier/tests/mochitest/test_fingerprinting_annotate.html
+        - toolkit/components/url-classifier/tests/mochitest/test_fingerprinting.html
         - toolkit/components/url-classifier/tests/mochitest/test_privatebrowsing_trackingprotection.html
-        - toolkit/components/url-classifier/tests/mochitest/test_socialtracking.html
+        - toolkit/components/url-classifier/tests/mochitest/test_safebrowsing_bug1272239.html
         - toolkit/components/url-classifier/tests/mochitest/test_socialtracking_annotate.html
+        - toolkit/components/url-classifier/tests/mochitest/test_socialtracking.html
         - toolkit/components/url-classifier/tests/mochitest/test_trackingprotection_bug1312515.html
         - toolkit/components/url-classifier/tests/mochitest/test_trackingprotection_bug1580416.html
         - toolkit/components/url-classifier/tests/mochitest/test_trackingprotection_whitelist.html
         - toolkit/components/url-classifier/tests/mochitest/trackingRequest.html
+        - toolkit/components/url-classifier/tests/unit/head_urlclassifier.js
         - toolkit/components/url-classifier/tests/unit/test_digest256.js
         - toolkit/components/url-classifier/tests/unit/test_features.js
+        - toolkit/components/url-classifier/tests/unit/test_platform_specific_threats.js
+        - toolkit/components/url-classifier/tests/UrlClassifierTestUtils.jsm
+        - toolkit/content/aboutSupport.js
         - toolkit/content/aboutTelemetry.js
         - toolkit/content/aboutUrlClassifier.js
+        - toolkit/content/aboutUrlClassifier.xhtml
         - toolkit/content/tests/browser/browser_delay_autoplay_webAudio.js
         - toolkit/content/tests/browser/browser_mute_webAudio.js
+        - toolkit/crashreporter/client/ping.cpp
+        - toolkit/crashreporter/CrashAnnotations.cpp
         - toolkit/crashreporter/generate_crash_reporter_sources.py
         - toolkit/modules/BrowserUtils.jsm
         - toolkit/modules/E10SUtils.jsm
         - toolkit/modules/PermissionsUtils.jsm
         - toolkit/modules/RemotePageAccessManager.jsm
-        - toolkit/modules/Troubleshoot.jsm
         - toolkit/modules/tests/browser/browser_AsyncPrefs.js
         - toolkit/modules/tests/browser/browser_Troubleshoot.js
         - toolkit/modules/tests/browser/browser_web_channel.js
         - toolkit/modules/tests/modules/PromiseTestUtils.jsm
         - toolkit/modules/tests/xpcshell/test_PermissionsUtils.js
+        - toolkit/modules/third_party/jsesc/jsesc.js
+        - toolkit/modules/Troubleshoot.jsm
         - toolkit/mozapps/extensions/internal/XPIInstall.jsm
         - toolkit/mozapps/extensions/internal/XPIProvider.jsm
         - toolkit/mozapps/extensions/test/browser/browser_about_debugging_link.js
         - toolkit/mozapps/extensions/test/browser/browser_html_discover_view.js
         - toolkit/mozapps/extensions/test/browser/browser_manage_shortcuts.js
         - toolkit/mozapps/extensions/test/browser/browser_shortcuts_duplicate_check.js
+        - toolkit/mozapps/extensions/test/xpcshell/data/test_gfxBlacklist2.xml
+        - toolkit/mozapps/extensions/test/xpcshell/data/test_gfxBlacklist_AllOS.xml
+        - toolkit/mozapps/extensions/test/xpcshell/data/test_gfxBlacklist_OSVersion.xml
+        - toolkit/mozapps/extensions/test/xpcshell/data/test_gfxBlacklist.xml
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_Device.js
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_DriverNew.js
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_Equal_DriverNew.js
@@ -439,10 +526,12 @@ avoid-blacklist-and-whitelist:
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_No_Comparison.js
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_OK.js
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_OS.js
+        - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_OSVersion_match.js
+        - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_OSVersion_mismatch_DriverVersion.js
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_OSVersion_mismatch_OSVersion.js
+        - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_prefs.js
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_Vendor.js
         - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_Version.js
-        - toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/test_gfxBlacklist_prefs.js
         - toolkit/mozapps/extensions/test/xpcshell/test_delay_update_webextension.js
         - toolkit/mozapps/extensions/test/xpcshell/test_permissions.js
         - toolkit/mozapps/extensions/test/xpcshell/test_permissions_prefs.js
@@ -453,32 +542,42 @@ avoid-blacklist-and-whitelist:
         - toolkit/mozapps/extensions/test/xpinstall/browser_localfile4.js
         - toolkit/mozapps/extensions/test/xpinstall/browser_whitelist.js
         - toolkit/mozapps/extensions/test/xpinstall/head.js
+        - toolkit/xre/nsAppRunner.cpp
+        - toolkit/xre/nsEmbedFunctions.cpp
+        - toolkit/xre/nsXREDirProvider.cpp
         - tools/crashreporter/system-symbols/win/symsrv-fetch.py
         - tools/fuzzing/faulty/Faulty.cpp
         - tools/fuzzing/faulty/Faulty.h
         - tools/fuzzing/ipc/ProtocolFuzzer.cpp
+        - tools/fuzzing/ipc/ProtocolFuzzer.h
+        - tools/fuzzing/messagemanager/MessageManagerFuzzer.cpp
+        - tools/fuzzing/messagemanager/MessageManagerFuzzer.h
+        - tools/lint/eslint/eslint-plugin-mozilla/lib/rules/no-define-cc-etc.js
         - tools/lint/rejected-words.yml
+        - tools/lint/test/test_codespell.py
+        - tools/profiler/core/platform.cpp
         - tools/tryselect/selectors/chooser/__init__.py
         - tools/tryselect/task_config.py
         - uriloader/prefetch/nsOfflineCacheUpdate.cpp
+        - widget/android/GfxInfo.cpp
         - widget/GfxInfoBase.cpp
+        - widget/GfxInfoBase.h
         - widget/gtk/IMContextWrapper.cpp
+        - widget/gtk/nsAppShell.cpp
         - widget/windows/GfxInfo.cpp
         - widget/windows/WinUtils.cpp
+        - widget/windows/WinUtils.h
         - xpcom/base/CycleCollectedJSRuntime.cpp
         - xpcom/base/ErrorList.py
         - xpcom/idl-parser/xpidl/xpidl.py
         - xpcom/io/FilePreferences.cpp
+        - xpcom/io/FilePreferences.h
+        - xpcom/reflect/xptcall/md/unix/xptcinvoke_arm.cpp
+        - xpcom/reflect/xptcall/md/unix/xptcinvoke_linux_s390.cpp
+        - xpcom/reflect/xptcall/md/unix/xptcinvoke_linux_s390x.cpp
         - xpcom/tests/gtest/TestFilePreferencesUnix.cpp
+        - xpcom/tests/gtest/TestFilePreferencesWin.cpp
         - xpcom/threads/nsThreadUtils.h
-        - browser/base/content/test/protectionsUI/browser_protectionsUI_state.js
-        - gfx/thebes/SharedFontList.cpp
-        - netwerk/test/gtest/TestCookie.cpp
-        - python/mozbuild/mozbuild/vendor/moz_yaml.py
-        - python/mozbuild/mozbuild/vendor/vendor_rust.py
-        - toolkit/components/url-classifier/tests/mochitest/test_classified_annotations.html
-        - toolkit/xre/nsXREDirProvider.cpp
-
 
 # ---
 # Disable for now. Needs some dev to handle this
