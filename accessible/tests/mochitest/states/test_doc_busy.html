@@ -18,6 +18,9 @@
           src="../promisified-events.js"></script>
 
   <script type="application/javascript">
+    const { BrowserTestUtils } = ChromeUtils.import(
+      "resource://testing-common/BrowserTestUtils.jsm");
+
     function matchDocBusyChange(isBusy) {
       return function(event) {
         const scEvent = event.QueryInterface(nsIAccessibleStateChangeEvent);
@@ -34,10 +37,24 @@
         [EVENT_STATE_CHANGE, matchDocBusyChange(true)],
         [EVENT_STATE_CHANGE, matchDocBusyChange(false)]
       ]);
+      const downloadPromptOpened = BrowserTestUtils.domWindowOpened(null,
+        async win => {
+          info("Window opened, waiting for load event");
+          await BrowserTestUtils.waitForEvent(win, "load");
+          info("Window loaded, checking if download prompt");
+          return win.location &&
+            win.location.href == "chrome://mozapps/content/downloads/unknownContentType.xhtml";
+        }
+      );
       info("Clicking link to trigger download");
       synthesizeMouse(getNode("link"), 1, 1, {});
       info("Waiting for a11y busy events");
       await busyEvents;
+
+      info("Waiting for download prompt to open");
+      const downloadWin = await downloadPromptOpened;
+      info("Closing download prompt");
+      downloadWin.close();
 
       SimpleTest.finish();
     }
