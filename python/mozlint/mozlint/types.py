@@ -78,7 +78,7 @@ class LineType(BaseType):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def condition(payload, line):
+    def condition(payload, line, config):
         pass
 
     def _lint_dir(self, path, config, **lintargs):
@@ -106,7 +106,7 @@ class LineType(BaseType):
 
         errors = []
         for i, line in enumerate(lines):
-            if self.condition(payload, line):
+            if self.condition(payload, line, config):
                 errors.append(result.from_config(config, path=path, lineno=i+1))
 
         return errors
@@ -115,15 +115,19 @@ class LineType(BaseType):
 class StringType(LineType):
     """Linter type that checks whether a substring is found."""
 
-    def condition(self, payload, line):
+    def condition(self, payload, line, config):
         return payload in line
 
 
 class RegexType(LineType):
     """Linter type that checks whether a regex match is found."""
 
-    def condition(self, payload, line):
-        return re.search(payload, line)
+    def condition(self, payload, line, config):
+        flags = 0
+        if config.get("ignore-case"):
+            flags |= re.IGNORECASE
+
+        return re.search(payload, line, flags)
 
 
 class ExternalType(BaseType):
