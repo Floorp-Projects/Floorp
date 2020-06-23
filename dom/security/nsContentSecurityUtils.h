@@ -50,6 +50,12 @@ class nsContentSecurityUtils {
   // If any of the two disallows framing, the channel will be cancelled.
   static void PerformCSPFrameAncestorAndXFOCheck(nsIChannel* aChannel);
 
+  // Helper function to Check if a Download is allowed;
+  static bool IsDownloadAllowed(nsIChannel* aChannel,
+                                const nsAutoCString& aMimeTypeGuess);
+  // Logs an Error Message to the Console
+  static void LogMessageToConsole(nsIHttpChannel* aChannel, const char* aMsg);
+
 #if defined(DEBUG)
   static void AssertAboutPageHasCSP(mozilla::dom::Document* aDocument);
 #endif
