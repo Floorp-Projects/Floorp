@@ -59,6 +59,12 @@
 
 #endif /* MOZ_X11 */
 
+#ifdef MOZ_WAYLAND
+#  include <gdk/gdkwayland.h>
+#  include "mozilla/widget/nsWaylandDisplay.h"
+#  include "mozilla/widget/DMABufLibWrapper.h"
+#endif
+
 #include <fontconfig/fontconfig.h>
 
 #include "nsMathUtils.h"
@@ -722,18 +728,18 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 
 #ifdef MOZ_WAYLAND
 bool gfxPlatformGtk::UseWaylandDMABufTextures() {
-  return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufTexturesEnabled();
+  return IsWaylandDisplay() && GetDMABufDevice()->IsDMABufTexturesEnabled();
 }
 bool gfxPlatformGtk::UseWaylandDMABufVideoTextures() {
   return IsWaylandDisplay() &&
-         (nsWaylandDisplay::IsDMABufVideoTexturesEnabled() ||
-          nsWaylandDisplay::IsDMABufVAAPIEnabled());
+         (GetDMABufDevice()->IsDMABufVideoTexturesEnabled() ||
+          GetDMABufDevice()->IsDMABufVAAPIEnabled());
 }
 bool gfxPlatformGtk::UseWaylandDMABufWebGL() {
-  return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufWebGLEnabled();
+  return IsWaylandDisplay() && GetDMABufDevice()->IsDMABufWebGLEnabled();
 }
 bool gfxPlatformGtk::UseWaylandHardwareVideoDecoding() {
-  return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufVAAPIEnabled() &&
+  return IsWaylandDisplay() && GetDMABufDevice()->IsDMABufVAAPIEnabled() &&
          gfxPlatform::CanUseHardwareVideoDecoding();
 }
 #endif
