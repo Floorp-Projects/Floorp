@@ -577,6 +577,9 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStopRequest(
   LOG(("HttpTransactionParent::RecvOnStopRequest [this=%p status=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
+  if (mCanceled) {
+    return IPC_OK();
+  }
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
              aResponseIsComplete, aTransferSize, aTimings, aResponseTrailers,
@@ -713,17 +716,36 @@ HttpTransactionParent::Cancel(nsresult aStatus) {
 }
 
 void HttpTransactionParent::DoNotifyListener() {
+  LOG(("HttpTransactionParent::DoNotifyListener this=%p", this));
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mOnStartRequestCalled) {
-    mChannel->OnStartRequest(this);
+  if (mChannel && !mOnStartRequestCalled) {
+    nsCOMPtr<nsIStreamListener> listener = mChannel;
     mOnStartRequestCalled = true;
+    listener->OnStartRequest(this);
   }
+  mOnStartRequestCalled = true;
 
-  if (!mOnStopRequestCalled) {
-    mChannel->OnStopRequest(this, mStatus);
-    mOnStopRequestCalled = true;
+  // This is to make sure that ODA in the event queue can be processed before
+  // OnStopRequest.
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+      this, [self = UnsafePtr<HttpTransactionParent>(this)] {
+        self->ContinueDoNotifyListener();
+      }));
+}
+
+void HttpTransactionParent::ContinueDoNotifyListener() {
+  LOG(("HttpTransactionParent::ContinueDoNotifyListener this=%p", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mChannel && !mOnStopRequestCalled) {
+    nsCOMPtr<nsIStreamListener> listener = mChannel;
+    mOnStopRequestCalled = true;  // avoid reentrancy bugs by setting this now
+    listener->OnStopRequest(this, mStatus);
   }
+  mOnStopRequestCalled = true;
+
+  mChannel = nullptr;
 }
 
 NS_IMETHODIMP
@@ -744,8 +766,23 @@ HttpTransactionParent::Resume() {
   MOZ_ASSERT(mSuspendCount, "Resume called more than Suspend");
 
   // SendResume only once, when suspend count drops to 0.
-  if (mSuspendCount && !--mSuspendCount && CanSend()) {
-    Unused << SendResumePump();
+  if (mSuspendCount && !--mSuspendCount) {
+    if (CanSend()) {
+      Unused << SendResumePump();
+    }
+
+    if (mCallOnResume) {
+      nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+      MOZ_ASSERT(neckoTarget);
+
+      RefPtr<HttpTransactionParent> self = this;
+      std::function<void()> callOnResume = nullptr;
+      std::swap(callOnResume, mCallOnResume);
+      neckoTarget->Dispatch(
+          NS_NewRunnableFunction("net::HttpTransactionParent::mCallOnResume",
+                                 [callOnResume]() { callOnResume(); }),
+          NS_DISPATCH_NORMAL);
+    }
   }
   mEventQ->Resume();
   return NS_OK;
@@ -790,8 +827,30 @@ HttpTransactionParent::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
 void HttpTransactionParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("HttpTransactionParent::ActorDestroy [this=%p]\n", this));
   if (aWhy != Deletion) {
-    Cancel(NS_ERROR_FAILURE);
+    // Make sure all the messages are processed.
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
+
+    mStatus = NS_ERROR_FAILURE;
+    HandleAsyncAbort();
+
+    mCanceled = true;
   }
+}
+
+void HttpTransactionParent::HandleAsyncAbort() {
+  MOZ_ASSERT(!mCallOnResume, "How did that happen?");
+
+  if (mSuspendCount) {
+    LOG(
+        ("HttpTransactionParent Waiting until resume to do async notification "
+         "[this=%p]\n",
+         this));
+    RefPtr<HttpTransactionParent> self = this;
+    mCallOnResume = [self]() { self->HandleAsyncAbort(); };
+    return;
+  }
+
+  DoNotifyListener();
 }
 
 }  // namespace net
