@@ -176,8 +176,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvSetClassifierMatchedTrackingInfo(
       const ClassifierInfo& info) override;
 
-  mozilla::ipc::IPCResult RecvOnAfterLastPart(const nsresult& aStatus) override;
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void DoNotifyListenerCleanup() override;
@@ -266,6 +264,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const nsTArray<ConsoleReportCollected>& aConsoleReports);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
+  void ProcessOnAfterLastPart(const nsresult& aStatus);
   void ProcessOnProgress(const int64_t& aProgress, const int64_t& aProgressMax);
 
   void ProcessOnStatus(const nsresult& aStatus);

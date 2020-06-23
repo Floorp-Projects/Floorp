@@ -69,6 +69,8 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
       const nsHttpHeaderArray& aResponseTrailers,
       const nsTArray<ConsoleReportCollected>& aConsoleReports);
 
+  IPCResult RecvOnAfterLastPart(const nsresult& aStatus);
+
   IPCResult RecvOnProgress(const int64_t& aProgress,
                            const int64_t& aProgressMax);
 
