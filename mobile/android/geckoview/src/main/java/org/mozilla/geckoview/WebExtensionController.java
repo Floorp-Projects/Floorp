@@ -593,11 +593,48 @@ public class WebExtensionController {
     @AnyThread
     public GeckoResult<WebExtension> installBuiltIn(final @NonNull String uri) {
         WebExtensionInstallResult result = new WebExtensionInstallResult();
-        final GeckoBundle bundle = new GeckoBundle(2);
+        final GeckoBundle bundle = new GeckoBundle(1);
         bundle.putString("locationUri", uri);
-        bundle.putString("installId", result.installId);
         EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:InstallBuiltIn",
                         bundle, result);
+        return result.then(extension -> {
+            registerWebExtension(extension);
+            return GeckoResult.fromValue(extension);
+        });
+    }
+
+    /**
+     * Ensure that a built-in extension is installed.
+     *
+     * Similar to {@link #installBuiltIn}, except the extension is not re-installed if
+     * it's already present and it has the same version.
+     *
+     * Example: <p><code>
+     *    controller.ensureBuiltIn("resource://android/assets/example/", "example@example.com");
+     * </code></p>
+     *
+     * Will install the built-in extension located at
+     * <code>/assets/example/</code> in the app's APK.
+     *
+     * @param uri Folder where the extension is located. To ensure this folder
+     *            is inside the APK, only <code>resource://android</code> URIs
+     *            are allowed.
+     * @param id Extension ID as present in the manifest.json file.
+     *
+     * @see WebExtension.MessageDelegate
+     * @return A {@link GeckoResult} that completes with the extension once
+     *         it's installed.
+     */
+    @NonNull
+    @AnyThread
+    public GeckoResult<WebExtension> ensureBuiltIn(final @NonNull String uri,
+                                                   final @Nullable String id) {
+        WebExtensionInstallResult result = new WebExtensionInstallResult();
+        final GeckoBundle bundle = new GeckoBundle(2);
+        bundle.putString("locationUri", uri);
+        bundle.putString("webExtensionId", id);
+        EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:EnsureBuiltIn",
+                bundle, result);
         return result.then(extension -> {
             registerWebExtension(extension);
             return GeckoResult.fromValue(extension);
