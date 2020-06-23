@@ -58,14 +58,14 @@ async function run_test() {
       failureId
     );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_g1");
+    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLOCKLIST_g1");
 
     status = gfxInfo.getFeatureStatus(
       Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS,
       failureId
     );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_g2");
+    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLOCKLIST_g2");
 
     status = gfxInfo.getFeatureStatus(
       Ci.nsIGfxInfo.FEATURE_DIRECT3D_10_LAYERS,
@@ -91,18 +91,18 @@ async function run_test() {
       failureId
     );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_g11");
+    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLOCKLIST_g11");
 
     status = gfxInfo.getFeatureStatus(
       Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE,
       failureId
     );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_NO_ID");
+    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLOCKLIST_NO_ID");
 
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL2, failureId);
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_NO_ID");
+    Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLOCKLIST_NO_ID");
 
     status = gfxInfo.getFeatureStatus(
       Ci.nsIGfxInfo.FEATURE_WEBGL_MSAA,
