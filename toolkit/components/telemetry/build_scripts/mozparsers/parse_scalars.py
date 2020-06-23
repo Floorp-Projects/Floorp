@@ -195,7 +195,7 @@ class ScalarType:
             invalid = list(filter(lambda k: len(k) > MAX_KEY_LENGTH, keys))
             if len(invalid) > 0:
                 ParserError(self._name + ' - invalid key value' +
-                            '\n `keys` values are exceeding length {}:'.format(MAX_LENGTH_COUNT) +
+                            '\n `keys` values are exceeding length {}:'.format(MAX_KEY_LENGTH) +
                             ', '.join(invalid)).handle_later()
 
     def validate_values(self, definition):
