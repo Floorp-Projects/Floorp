@@ -14,7 +14,7 @@
 
   // Create iframe that is same-origin to the opener.
   var iframe = document.createElement("iframe");
-  iframe.src = host.HTTP_ORIGIN + window.location.pathname.replace(/\/[^\/]*$/, '/') + "split-origin-popup.html";
+  iframe.src = host.HTTP_ORIGIN + window.location.pathname.replace(/\/[^\/]*$/, '/') + "split-cache-popup.html";
   document.body.appendChild(iframe);
 
   window.addEventListener("message", function listener(event) {
