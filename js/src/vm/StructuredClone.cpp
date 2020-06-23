@@ -190,16 +190,20 @@ struct BufferIterator {
     return *this;
   }
 
+  MOZ_MUST_USE bool advance(size_t size = sizeof(T)) {
+    return mIter.AdvanceAcrossSegments(mBuffer, size);
+  }
+
   BufferIterator operator++(int) {
     BufferIterator ret = *this;
-    if (!mIter.AdvanceAcrossSegments(mBuffer, sizeof(T))) {
+    if (!advance(sizeof(T))) {
       MOZ_ASSERT(false, "Failed to read StructuredCloneData. Data incomplete");
     }
     return ret;
   }
 
   BufferIterator& operator+=(size_t size) {
-    if (!mIter.AdvanceAcrossSegments(mBuffer, size)) {
+    if (!advance(size)) {
       MOZ_ASSERT(false, "Failed to read StructuredCloneData. Data incomplete");
     }
     return *this;
@@ -208,12 +212,6 @@ struct BufferIterator {
   size_t operator-(const BufferIterator& other) {
     MOZ_ASSERT(&mBuffer == &other.mBuffer);
     return mBuffer.RangeLength(other.mIter, mIter);
-  }
-
-  void next() {
-    if (!mIter.AdvanceAcrossSegments(mBuffer, sizeof(T))) {
-      MOZ_ASSERT(false, "Failed to read StructuredCloneData. Data incomplete");
-    }
   }
 
   bool done() const { return mIter.Done(); }
@@ -363,7 +361,13 @@ class SCInput {
 
   const BufferIterator& tell() const { return point; }
   void seekTo(const BufferIterator& pos) { point = pos; }
-  void seekBy(size_t pos) { point += pos; }
+  MOZ_MUST_USE bool seekBy(size_t pos) {
+    if (!point.advance(pos)) {
+      reportTruncated();
+      return false;
+    }
+    return true;
+  }
 
   template <class T>
   MOZ_MUST_USE bool readArray(T* p, size_t nelems);
@@ -716,7 +720,7 @@ bool SCInput::read(uint64_t* p) {
     return reportTruncated();
   }
   *p = NativeEndian::swapFromLittleEndian(point.peek());
-  point.next();
+  MOZ_ALWAYS_TRUE(point.advance());
   return true;
 }
 
@@ -970,7 +974,7 @@ void JSStructuredCloneData::discardTransferables() {
   uint32_t tag, data;
   MOZ_RELEASE_ASSERT(point.canPeek());
   SCInput::getPair(point.peek(), &tag, &data);
-  point.next();
+  MOZ_ALWAYS_TRUE(point.advance());
 
   if (tag == SCTAG_HEADER) {
     if (point.done()) {
@@ -979,7 +983,7 @@ void JSStructuredCloneData::discardTransferables() {
 
     MOZ_RELEASE_ASSERT(point.canPeek());
     SCInput::getPair(point.peek(), &tag, &data);
-    point.next();
+    MOZ_ALWAYS_TRUE(point.advance());
   }
 
   if (tag != SCTAG_TRANSFER_MAP_HEADER) {
@@ -997,8 +1001,9 @@ void JSStructuredCloneData::discardTransferables() {
     return;
   }
 
+  MOZ_RELEASE_ASSERT(point.canPeek());
   uint64_t numTransferables = NativeEndian::swapFromLittleEndian(point.peek());
-  point.next();
+  MOZ_ALWAYS_TRUE(point.advance());
   while (numTransferables--) {
     if (!point.canPeek()) {
       return;
@@ -1006,7 +1011,7 @@ void JSStructuredCloneData::discardTransferables() {
 
     uint32_t ownership;
     SCInput::getPair(point.peek(), &tag, &ownership);
-    point.next();
+    MOZ_ALWAYS_TRUE(point.advance());
     MOZ_ASSERT(tag >= SCTAG_TRANSFER_MAP_PENDING_ENTRY);
     if (!point.canPeek()) {
       return;
@@ -1014,13 +1019,13 @@ void JSStructuredCloneData::discardTransferables() {
 
     void* content;
     SCInput::getPtr(point.peek(), &content);
-    point.next();
+    MOZ_ALWAYS_TRUE(point.advance());
     if (!point.canPeek()) {
       return;
     }
 
     uint64_t extraData = NativeEndian::swapFromLittleEndian(point.peek());
-    point.next();
+    MOZ_ALWAYS_TRUE(point.advance());
 
     if (ownership < JS::SCTAG_TMO_FIRST_OWNED) {
       continue;
@@ -1985,12 +1990,12 @@ bool JSStructuredCloneWriter::transferOwnership() {
     }
 
     point.write(NativeEndian::swapToLittleEndian(PairToUInt64(tag, ownership)));
-    point.next();
+    MOZ_ALWAYS_TRUE(point.advance());
     point.write(
         NativeEndian::swapToLittleEndian(reinterpret_cast<uint64_t>(content)));
-    point.next();
+    MOZ_ALWAYS_TRUE(point.advance());
     point.write(NativeEndian::swapToLittleEndian(extraData));
-    point.next();
+    MOZ_ALWAYS_TRUE(point.advance());
   }
 
 #if DEBUG
@@ -2832,7 +2837,9 @@ bool JSStructuredCloneReader::readTransferMap() {
       auto savedPos = in.tell();
       auto guard = mozilla::MakeScopeExit([&] { in.seekTo(savedPos); });
       in.seekTo(pos);
-      in.seekBy(static_cast<size_t>(extraData));
+      if (!in.seekBy(static_cast<size_t>(extraData))) {
+        return false;
+      }
 
       uint32_t tag, data;
       if (!in.readPair(&tag, &data)) {
