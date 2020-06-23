@@ -108,6 +108,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   MOZ_MUST_USE bool emitGuardTo(ValOperandId inputId, MIRType type);
 
+  MOZ_MUST_USE bool emitToString(OperandId inputId, StringOperandId resultId);
+
   template <typename T>
   MOZ_MUST_USE bool emitDoubleBinaryArithResult(NumberOperandId lhsId,
                                                 NumberOperandId rhsId);
@@ -481,6 +483,42 @@ bool WarpCacheIRTranspiler::emitGuardToInt32ModUint32(ValOperandId valId,
                                                       Int32OperandId resultId) {
   MDefinition* input = getOperand(valId);
   auto* ins = MTruncateToInt32::New(alloc(), input);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitToString(OperandId inputId,
+                                         StringOperandId resultId) {
+  MDefinition* input = getOperand(inputId);
+  auto* ins =
+      MToString::New(alloc(), input, MToString::SideEffectHandling::Bailout);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitCallInt32ToString(Int32OperandId inputId,
+                                                  StringOperandId resultId) {
+  return emitToString(inputId, resultId);
+}
+
+bool WarpCacheIRTranspiler::emitCallNumberToString(NumberOperandId inputId,
+                                                   StringOperandId resultId) {
+  return emitToString(inputId, resultId);
+}
+
+bool WarpCacheIRTranspiler::emitBooleanToString(Int32OperandId inputId,
+                                                StringOperandId resultId) {
+  MDefinition* input = getOperand(inputId);
+
+  // Remove the MToIntegerInt32 instruction added by emitGuardToBoolean.
+  // TODO: Bug 1647602 add a BooleanOperandId.
+  MDefinition* boolean = input->toToIntegerInt32()->input();
+  MOZ_ASSERT(boolean->type() == MIRType::Boolean);
+
+  auto* ins =
+      MToString::New(alloc(), boolean, MToString::SideEffectHandling::Bailout);
   add(ins);
 
   return defineOperand(resultId, ins);
