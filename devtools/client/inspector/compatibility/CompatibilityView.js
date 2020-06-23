@@ -10,6 +10,9 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
+
 const compatibilityReducer = require("devtools/client/inspector/compatibility/reducers/compatibility");
 const {
   initUserSettings,
@@ -28,6 +31,7 @@ class CompatibilityView {
 
     this.inspector.store.injectReducer("compatibility", compatibilityReducer);
 
+    this._parseMarkup = this._parseMarkup.bind(this);
     this._onChangeAdded = this._onChangeAdded.bind(this);
     this._onPanelSelected = this._onPanelSelected.bind(this);
     this._onSelectedNodeChanged = this._onSelectedNodeChanged.bind(this);
@@ -85,7 +89,13 @@ class CompatibilityView {
         id: "compatibilityview",
         store: this.inspector.store,
       },
-      compatibilityApp
+      LocalizationProvider(
+        {
+          bundles: this.inspector.fluentL10n.getBundles(),
+          parseMarkup: this._parseMarkup,
+        },
+        compatibilityApp
+      )
     );
 
     this.inspector.store.dispatch(initUserSettings());
@@ -115,6 +125,14 @@ class CompatibilityView {
       this.inspector.sidebar.getCurrentTabID() === "compatibilityview" &&
       this.inspector.selection &&
       this.inspector.selection.isConnected()
+    );
+  }
+
+  _parseMarkup(str) {
+    // Using a BrowserLoader for the inspector is currently blocked on performance regressions,
+    // see Bug 1471853.
+    throw new Error(
+      "The inspector cannot use tags in ftl strings because it does not run in a BrowserLoader"
     );
   }
 
