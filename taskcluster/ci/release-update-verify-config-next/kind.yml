@@ -53,7 +53,7 @@ job-defaults:
         product: firefox
         channel: "esr-localtest-next"
         include-version: esr78-next
-        last-watershed: "52.0esr"
+        last-watershed: "68.0esr"
 
 jobs:
     firefox-next-linux:
