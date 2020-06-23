@@ -37,9 +37,9 @@ static void IterateRealmsArenasCellsUnbarriered(
     for (ArenaIter aiter(zone, thingKind); !aiter.done(); aiter.next()) {
       Arena* arena = aiter.get();
       (*arenaCallback)(cx->runtime(), data, arena, traceKind, thingSize);
-      for (ArenaCellIter iter(arena); !iter.done(); iter.next()) {
-        (*cellCallback)(cx->runtime(), data,
-                        JS::GCCellPtr(iter.getCell(), traceKind), thingSize);
+      for (ArenaCellIter cell(arena); !cell.done(); cell.next()) {
+        (*cellCallback)(cx->runtime(), data, JS::GCCellPtr(cell, traceKind),
+                        thingSize);
       }
     }
   }

@@ -46,6 +46,8 @@ class NestedIterator {
     }
   }
 
+  const IteratorB& ref() const { return *b; }
+
   operator T() const { return get(); }
 
   T operator->() const { return get(); }
