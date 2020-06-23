@@ -221,6 +221,7 @@ TEST_SUITES = {
     'web-platform-tests-crashtest': {
         'aliases': ('wpt',),
         'mach_command': 'web-platform-tests',
+        'build_flavor': 'web-platform-tests',
         'kwargs': {'subsuite': 'crashtest'},
         'task_regex': ['web-platform-tests-crashtest($|.*(-1|[^0-9])$)',
                        'test-verify-wpt'],
@@ -243,6 +244,7 @@ TEST_SUITES = {
     'web-platform-tests-wdspec': {
         'aliases': ('wpt',),
         'mach_command': 'web-platform-tests',
+        'build_flavor': 'web-platform-tests',
         'kwargs': {'subsuite': 'wdspec'},
         'task_regex': ['web-platform-tests-wdspec($|.*(-1|[^0-9])$)',
                        'test-verify-wpt'],
