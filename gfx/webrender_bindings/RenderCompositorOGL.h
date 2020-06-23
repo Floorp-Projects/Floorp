@@ -32,10 +32,13 @@ class RenderCompositorOGL : public RenderCompositor {
   virtual ~RenderCompositorOGL();
 
   bool BeginFrame() override;
+  void CancelFrame() override;
   RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) final;
   bool WaitForGPU() override;
   void Pause() override;
   bool Resume() override;
+
+  bool GetMappedBuffer(uint8_t** aData, int32_t* aStride) override;
 
   gl::GLContext* gl() const override { return mGL; }
 
@@ -58,6 +61,10 @@ class RenderCompositorOGL : public RenderCompositor {
             wr::DeviceIntRect aDirtyRect,
             wr::DeviceIntRect aValidRect) override;
   void Unbind() override;
+  bool MapTile(wr::NativeTileId aId, wr::DeviceIntRect aDirtyRect,
+               wr::DeviceIntRect aValidRect, void** aData,
+               int32_t* aStride) override;
+  void UnmapTile() override;
   void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aVirtualOffset,
                      wr::DeviceIntSize aTileSize, bool aIsOpaque) override;
   void DestroySurface(NativeSurfaceId aId) override;
@@ -76,6 +83,15 @@ class RenderCompositorOGL : public RenderCompositor {
 
  protected:
   void InsertFrameDoneSync();
+
+  void BindNativeLayer(wr::NativeTileId aId, wr::DeviceIntRect aDirtyRect,
+                       wr::DeviceIntRect aValidRect);
+  void UnbindNativeLayer();
+
+  bool MapNativeLayer(layers::NativeLayer* aLayer,
+                      const gfx::IntRect& aDirtyRect,
+                      const gfx::IntRect& aValidRect);
+  void UnmapNativeLayer();
 
   RefPtr<gl::GLContext> mGL;
 
@@ -112,6 +128,9 @@ class RenderCompositorOGL : public RenderCompositor {
 
   // Used in native compositor mode:
   RefPtr<layers::NativeLayer> mCurrentlyBoundNativeLayer;
+  RefPtr<gfx::DrawTarget> mLayerTarget;
+  uint8_t* mLayerData = nullptr;
+  int32_t mLayerStride = 0;
   nsTArray<RefPtr<layers::NativeLayer>> mAddedLayers;
   uint64_t mTotalPixelCount = 0;
   uint64_t mAddedPixelCount = 0;
