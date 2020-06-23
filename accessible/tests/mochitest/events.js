@@ -2045,7 +2045,15 @@ function asyncCaretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg) {
 /**
  * Text selection change checker.
  */
-function textSelectionChecker(aID, aStartOffset, aEndOffset) {
+function textSelectionChecker(
+  aID,
+  aStartOffset,
+  aEndOffset,
+  aRangeStartContainer,
+  aRangeStartOffset,
+  aRangeEndContainer,
+  aRangeEndOffset
+) {
   this.__proto__ = new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID);
 
   this.check = function textSelectionChecker_check(aEvent) {
@@ -2053,6 +2061,24 @@ function textSelectionChecker(aID, aStartOffset, aEndOffset) {
       ok(true, "Collapsed selection triggered text selection change event.");
     } else {
       testTextGetSelection(aID, aStartOffset, aEndOffset, 0);
+
+      // Test selection test range
+      let selectionRanges = aEvent.QueryInterface(
+        nsIAccessibleTextSelectionChangeEvent
+      ).selectionRanges;
+      let range = selectionRanges.queryElementAt(0, nsIAccessibleTextRange);
+      is(
+        range.startContainer,
+        getAccessible(aRangeStartContainer),
+        "correct range start container"
+      );
+      is(range.startOffset, aRangeStartOffset, "correct range start offset");
+      is(range.endOffset, aRangeEndOffset, "correct range end offset");
+      is(
+        range.endContainer,
+        getAccessible(aRangeEndContainer),
+        "correct range end container"
+      );
     }
   };
 }

@@ -34,15 +34,15 @@
       gQueue = new eventQueue();
 
       gQueue.push(new synthClick("c1_p1", getOnclickSeq("c1_p1")));
-      gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 1), { shiftKey: true }));
-      gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 2), { shiftKey: true }));
+      gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 1, "c1_p1", 0, "c1_p2", 0), { shiftKey: true }));
+      gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 2, "c1_p1", 0, "c1_p2", 9), { shiftKey: true }));
 
       gQueue.push(new synthClick("ta1", getOnclickSeq("ta1")));
       gQueue.push(new synthRightKey("ta1",
-                                    new textSelectionChecker("ta1", 0, 1),
+                                    new textSelectionChecker("ta1", 0, 1, "ta1", 0, "ta1", 1),
                                     { shiftKey: true }));
       gQueue.push(new synthLeftKey("ta1",
-                                    [new textSelectionChecker("ta1", 0, 0),
+                                    [new textSelectionChecker("ta1", 0, 0, "ta1", 0, "ta1", 0),
                                      new caretMoveChecker(0, "ta1")]));
 
       gQueue.invoke(); // Will call SimpleTest.finish();

@@ -10,10 +10,14 @@
 #include "DocAccessible.h"
 #include "xpcAccEvents.h"
 #include "States.h"
+#include "TextRange.h"
 #include "xpcAccessibleDocument.h"
+#include "xpcAccessibleTextRange.h"
 
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/UserActivation.h"
+
+#include "nsIMutableArray.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -134,6 +138,11 @@ bool AccTextSelChangeEvent::IsCaretMoveOnly() const {
                       nsISelectionListener::COLLAPSETOEND_REASON)) == 0);
 }
 
+void AccTextSelChangeEvent::SelectionRanges(
+    nsTArray<TextRange>* aRanges) const {
+  TextRange::TextRangesFromSelection(mSel, aRanges);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // AccSelChangeEvent
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +241,24 @@ already_AddRefed<nsIAccessibleEvent> a11y::MakeXPCEvent(AccEvent* aEvent) {
     AccCaretMoveEvent* cm = downcast_accEvent(aEvent);
     xpEvent = new xpcAccCaretMoveEvent(type, ToXPC(acc), ToXPCDocument(doc),
                                        node, fromUser, cm->GetCaretOffset());
+    return xpEvent.forget();
+  }
+
+  if (eventGroup & (1 << AccEvent::eTextSelChangeEvent)) {
+    AccTextSelChangeEvent* tsc = downcast_accEvent(aEvent);
+    AutoTArray<TextRange, 1> ranges;
+    tsc->SelectionRanges(&ranges);
+
+    nsCOMPtr<nsIMutableArray> xpcRanges =
+        do_CreateInstance(NS_ARRAY_CONTRACTID);
+    uint32_t len = ranges.Length();
+    for (uint32_t idx = 0; idx < len; idx++) {
+      xpcRanges->AppendElement(
+          new xpcAccessibleTextRange(std::move(ranges[idx])));
+    }
+
+    xpEvent = new xpcAccTextSelectionChangeEvent(
+        type, ToXPC(acc), ToXPCDocument(doc), node, fromUser, xpcRanges);
     return xpEvent.forget();
   }
 

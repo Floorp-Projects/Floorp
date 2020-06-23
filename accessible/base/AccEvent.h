@@ -21,6 +21,7 @@ namespace a11y {
 
 class DocAccessible;
 class EventQueue;
+class TextRange;
 
 // Constants used to point whether the event is from user input.
 enum EIsFromUserInput {
@@ -379,6 +380,11 @@ class AccTextSelChangeEvent : public AccEvent {
    * Return true if the text selection change wasn't caused by pure caret move.
    */
   bool IsCaretMoveOnly() const;
+
+  /**
+   * Return selection ranges in document/control.
+   */
+  void SelectionRanges(nsTArray<a11y::TextRange>* aRanges) const;
 
  private:
   RefPtr<dom::Selection> mSel;
