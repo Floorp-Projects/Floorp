@@ -898,7 +898,7 @@ class StaticAnalysis(MachCommandBase):
             return (None, [])
         # create a temporary file in which we place all sources
         # this is used by the analysis command to only analyze certain files
-        f = tempfile.NamedTemporaryFile()
+        f = tempfile.NamedTemporaryFile(mode="wt")
         for source in sources:
             f.write(source+'\n')
         f.flush()
