@@ -849,7 +849,7 @@ bool MessageChannel::Open(MessageChannel* aTargetChan,
   //    - this will place a work item in B's worker loop (see next bullet)
   //      and then spins until PB->mChannelState becomes mChannelConnected
   //    - meanwhile, on PB's worker loop, the work item is removed and:
-  //      - invokes PB->SlaveOpen(PA, ...):
+  //      - invokes PB->OpenAsOtherThread(PA, ...):
   //        - sets its state and that of PA to Connected
   MOZ_ASSERT(aTargetChan, "Need a target channel");
   MOZ_ASSERT(ChannelClosed == mChannelState, "Not currently closed");
@@ -874,8 +874,8 @@ bool MessageChannel::Open(MessageChannel* aTargetChan,
   mChannelState = ChannelOpening;
   MOZ_ALWAYS_SUCCEEDS(
       aEventTarget->Dispatch(NewNonOwningRunnableMethod<MessageChannel*, Side>(
-          "ipc::MessageChannel::OnOpenAsSlave", aTargetChan,
-          &MessageChannel::OnOpenAsSlave, this, oppSide)));
+          "ipc::MessageChannel::OpenAsOtherThread", aTargetChan,
+          &MessageChannel::OpenAsOtherThread, this, oppSide)));
 
   while (ChannelOpening == mChannelState) mMonitor->Wait();
   MOZ_RELEASE_ASSERT(ChannelConnected == mChannelState,
@@ -883,7 +883,8 @@ bool MessageChannel::Open(MessageChannel* aTargetChan,
   return (ChannelConnected == mChannelState);
 }
 
-void MessageChannel::OnOpenAsSlave(MessageChannel* aTargetChan, Side aSide) {
+void MessageChannel::OpenAsOtherThread(MessageChannel* aTargetChan,
+                                       Side aSide) {
   // Invoked when the other side has begun the open.
   MOZ_ASSERT(ChannelClosed == mChannelState, "Not currently closed");
   MOZ_ASSERT(ChannelOpening == aTargetChan->mChannelState,

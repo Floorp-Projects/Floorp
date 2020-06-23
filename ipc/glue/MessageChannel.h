@@ -371,7 +371,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
 
  private:
   void CommonThreadOpenInit(MessageChannel* aTargetChan, Side aSide);
-  void OnOpenAsSlave(MessageChannel* aTargetChan, Side aSide);
+  void OpenAsOtherThread(MessageChannel* aTargetChan, Side aSide);
 
   void PostErrorNotifyTask();
   void OnNotifyMaybeChannelError();
