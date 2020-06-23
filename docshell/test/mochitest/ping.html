@@ -1,0 +1,6 @@
+<!doctype html>
+<script>
+  "use strict";
+  let target = (window.opener || window.parent);
+  target.postMessage("ping", "*");
+</script>

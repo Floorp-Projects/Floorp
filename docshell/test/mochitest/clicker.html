@@ -1,0 +1,7 @@
+<!doctype html>
+<script>
+  "use strict";
+  let target = window.opener ? window.opener : window.parent;
+
+  onmessage = ({data}) => target.postMessage({}, "*");
+</script>
