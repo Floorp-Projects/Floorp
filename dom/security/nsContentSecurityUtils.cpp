@@ -22,7 +22,6 @@
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/Document.h"
-#include "LoadInfo.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_dom.h"
 
@@ -1036,79 +1035,4 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
   // we're only reporting Telemetry. In the future we will assert in debug
   // builds and return false to prevent execution in non-debug builds.
   return true;
-}
-
-/* static */
-void nsContentSecurityUtils::LogMessageToConsole(nsIHttpChannel* aChannel,
-                                                 const char* aMsg) {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  uint64_t windowID = 0;
-  rv = aChannel->GetTopLevelContentWindowId(&windowID);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  if (!windowID) {
-    nsCOMPtr<nsILoadInfo> loadinfo;
-    aChannel->GetLoadInfo(getter_AddRefs(loadinfo));
-    loadinfo->GetInnerWindowID(&windowID);
-  }
-
-  nsAutoString localizedMsg;
-  nsAutoCString spec;
-  uri->GetSpec(spec);
-  AutoTArray<nsString, 1> params = {NS_ConvertUTF8toUTF16(spec)};
-  rv = nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eSECURITY_PROPERTIES, aMsg, params, localizedMsg);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  nsContentUtils::ReportToConsoleByWindowID(
-      localizedMsg, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
-      windowID, uri);
-}
-
-/* static */
-bool nsContentSecurityUtils::IsDownloadAllowed(
-    nsIChannel* aChannel, const nsAutoCString& aMimeTypeGuess) {
-  MOZ_ASSERT(aChannel, "IsDownloadAllowed without channel?");
-  if (!StaticPrefs::dom_block_download_insecure()) {
-    return true;
-  }
-
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
-    return true;
-  }
-
-  nsCOMPtr<nsIURI> contentLocation;
-  aChannel->GetURI(getter_AddRefs(contentLocation));
-
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = loadInfo->GetLoadingPrincipal();
-  // Creating a fake Loadinfo that is just used for the MCB check.
-  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
-      new LoadInfo(loadingPrincipal, loadInfo->TriggeringPrincipal(), nullptr,
-                   nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-                   nsIContentPolicy::TYPE_OTHER);
-
-  int16_t decission = nsIContentPolicy::ACCEPT;
-  nsMixedContentBlocker::ShouldLoad(false,  //  aHadInsecureImageRedirect
-                                    contentLocation,   //  aContentLocation,
-                                    secCheckLoadInfo,  //  aLoadinfo
-                                    aMimeTypeGuess,    //  aMimeGuess,
-                                    &decission         // aDecision
-  );
-  if (decission == nsIContentPolicy::ACCEPT) {
-    return true;
-  }
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    LogMessageToConsole(httpChannel, "MixedContentBlockedDownload");
-  }
-  return false;
 }
