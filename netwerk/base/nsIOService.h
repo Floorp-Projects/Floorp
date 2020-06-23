@@ -22,6 +22,7 @@
 #include "mozilla/Mutex.h"
 #include "prtime.h"
 #include "nsICaptivePortalService.h"
+#include "nsIObserverService.h"
 
 #define NS_N(x) (sizeof(x) / sizeof(*x))
 
@@ -58,7 +59,8 @@ class nsIOService final : public nsIIOService,
                           public nsINetUtil,
                           public nsISpeculativeConnect,
                           public nsSupportsWeakReference,
-                          public nsIIOServiceInternal {
+                          public nsIIOServiceInternal,
+                          public nsIObserverService {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIIOSERVICE
@@ -66,6 +68,7 @@ class nsIOService final : public nsIIOService,
   NS_DECL_NSINETUTIL
   NS_DECL_NSISPECULATIVECONNECT
   NS_DECL_NSIIOSERVICEINTERNAL
+  NS_DECL_NSIOBSERVERSERVICE
 
   // Gets the singleton instance of the IO Service, creating it as needed
   // Returns nullptr on out of memory or failure to initialize.
@@ -245,6 +248,14 @@ class nsIOService final : public nsIIOService,
   // dispatch these events while socket process fires OnProcessLaunchComplete.
   // Note: this array is accessed only on the main thread.
   nsTArray<std::function<void()>> mPendingEvents;
+
+  // The observer notifications need to be forwarded to socket process.
+  nsTHashtable<nsCStringHashKey> mObserverTopicForSocketProcess;
+  // Some noticications (e.g., NS_XPCOM_SHUTDOWN_OBSERVER_ID) are triggered in
+  // socket process, so we should not send the notifications again.
+  nsTHashtable<nsCStringHashKey> mSocketProcessTopicBlackList;
+
+  nsCOMPtr<nsIObserverService> mObserverService;
 
  public:
   // Used for all default buffer sizes that necko allocates.
