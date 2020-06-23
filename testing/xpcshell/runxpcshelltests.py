@@ -1700,8 +1700,11 @@ class XPCShellTests(object):
         tests_by_manifest = defaultdict(list)
         for test in self.alltests:
             group = test['manifest']
-            if 'ancestor_manifest' in test and '/' in normsep(test['ancestor_manifest']):
-                group = "{}:{}".format(test['ancestor_manifest'], group)
+            if 'ancestor_manifest' in test:
+                ancestor_manifest = normsep(test['ancestor_manifest'])
+                # Only change the group id if ancestor is not the generated root manifest.
+                if '/' in ancestor_manifest:
+                    group = "{}:{}".format(ancestor_manifest, group)
             tests_by_manifest[group].append(test['id'])
 
         self.log.suite_start(tests_by_manifest, name='xpcshell')
