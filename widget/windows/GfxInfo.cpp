@@ -2031,7 +2031,7 @@ void GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
     }
 
     val = JS::BooleanValue(blocklisted);
-    JS_SetProperty(aCx, obj, "blacklisted", val);
+    JS_SetProperty(aCx, obj, "blocklisted", val);
   }
 
   gfx::FeatureState& d2d = gfxConfig::GetFeature(Feature::DIRECT2D);
