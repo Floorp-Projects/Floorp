@@ -19,10 +19,11 @@ const HTML = `
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
 add_task(async function() {
-  Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("devtools.command-button-frames.enabled");
-  });
+  await pushPref("devtools.command-button-frames.enabled", true);
+
+  // Nested same-process iframes are broken with Fission +
+  // contenttoolbox.fission. See Bug 1647366.
+  await pushPref("devtools.contenttoolbox.fission", false);
 
   const tab = await addTab(TEST_URI);
   const testActor = await getTestActorWithoutToolbox(tab);
