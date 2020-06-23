@@ -97,7 +97,7 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   // The encoding we decided to use for the sheet
   const Encoding* mEncoding;
 
-  // URI we're loading.  Null for inline sheets
+  // URI we're loading.  Null for inline or constructable sheets.
   nsCOMPtr<nsIURI> mURI;
 
   // Should be 1 for non-inline sheets.
