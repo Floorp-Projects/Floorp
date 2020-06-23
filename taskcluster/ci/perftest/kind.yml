@@ -21,7 +21,7 @@ job-defaults:
         tier: 3
     worker:
         taskcluster-proxy: true
-        max-run-time: 3600
+        max-run-time: 10800
         env:
             USE_ARTIFACT: '1'
         artifacts:
@@ -86,7 +86,6 @@ jobs:
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --browsertime-iterations 10
                 --output $MOZ_FETCHES_DIR/../artifacts
-                --verbose
                 testing/performance/perftest_applink.js
 
     android-hw-p2-applink-fenix:
@@ -117,7 +116,6 @@ jobs:
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --browsertime-iterations 10
                 --output $MOZ_FETCHES_DIR/../artifacts
-                --verbose
                 testing/performance/perftest_applink.js
 
     android-hw-g5-applink-gv:
@@ -148,7 +146,6 @@ jobs:
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --browsertime-iterations 10
                 --output $MOZ_FETCHES_DIR/../artifacts
-                --verbose
                 testing/performance/perftest_applink.js
 
     android-hw-p2-applink-gv:
@@ -179,7 +176,6 @@ jobs:
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --browsertime-iterations 10
                 --output $MOZ_FETCHES_DIR/../artifacts
-                --verbose
                 testing/performance/perftest_applink.js
 
     android-hw-g5-main-fenix:
@@ -211,7 +207,6 @@ jobs:
                 --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
-                --verbose
                 --browsertime-iterations 14
                 testing/performance/perftest_home_activity.js
 
@@ -244,6 +239,5 @@ jobs:
                 --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
-                --verbose
                 --browsertime-iterations 14
                 testing/performance/perftest_home_activity.js
