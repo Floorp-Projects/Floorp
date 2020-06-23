@@ -127,6 +127,7 @@ mod storage;
 mod texture_allocator;
 mod texture_cache;
 mod util;
+mod visibility;
 
 mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));

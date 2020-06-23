@@ -17,7 +17,7 @@ use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurIns
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
 use crate::internal_types::{FastHashMap, TextureSource, LayerIndex, Swizzle, SavedTargetIndex};
 use crate::picture::{SurfaceInfo, ResolvedSurfaceTexture};
-use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer, PrimitiveVisibilityMask};
+use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use crate::prim_store::gradient::GRADIENT_FP_STOPS;
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress, ClearMode, BlitSource};
@@ -25,6 +25,7 @@ use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::resource_cache::ResourceCache;
 use crate::texture_allocator::{ArrayAllocationTracker, FreeRectSlice};
+use crate::visibility::PrimitiveVisibilityMask;
 use std::{cmp, mem};
 
 
