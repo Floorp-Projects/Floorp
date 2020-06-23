@@ -1814,9 +1814,7 @@ impl PrimitiveStore {
     pub fn prim_count(&self) -> usize {
         let mut prim_count = 0;
         for pic in &self.pictures {
-            for cluster in &pic.prim_list.clusters {
-                prim_count += cluster.prim_instances.len();
-            }
+            prim_count += pic.prim_list.prim_instances.len();
         }
         prim_count
     }
@@ -1911,7 +1909,7 @@ impl PrimitiveStore {
                 //           we should add a debug flag that validates the prim
                 //           instance is always reset every frame to catch similar
                 //           issues in future.
-                for prim_instance in &mut cluster.prim_instances {
+                for prim_instance in &mut prim_list.prim_instances[cluster.prim_range()] {
                     prim_instance.reset();
                 }
                 continue;
@@ -1922,7 +1920,7 @@ impl PrimitiveStore {
                 frame_context.spatial_tree,
             );
 
-            for prim_instance in &mut cluster.prim_instances {
+            for prim_instance in &mut prim_list.prim_instances[cluster.prim_range()] {
                 prim_instance.reset();
 
                 if prim_instance.is_chased() {
@@ -2618,7 +2616,8 @@ impl PrimitiveStore {
                 frame_context.spatial_tree,
             );
 
-            for (prim_instance_index, prim_instance) in cluster.prim_instances.iter_mut().enumerate() {
+            for (idx, prim_instance) in (&mut prim_list.prim_instances[cluster.prim_range()]).iter_mut().enumerate() {
+                let prim_instance_index = cluster.prim_range.start + idx;
                 if prim_instance.visibility_info == PrimitiveVisibilityIndex::INVALID {
                     continue;
                 }
