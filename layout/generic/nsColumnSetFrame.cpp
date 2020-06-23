@@ -706,13 +706,6 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
       reflowNext = aStatus.NextInFlowNeedsReflow();
 
-      COLUMN_SET_LOG(
-          "%s: Reflowed child #%d %p: status=%s,"
-          " desiredSize=(%d,%d), CarriedOutBEndMargin=%d (ignored)",
-          __func__, columnCount, child, ToString(aStatus).c_str(),
-          kidDesiredSize.ISize(wm), kidDesiredSize.BSize(wm),
-          kidDesiredSize.mCarriedOutBEndMargin.get());
-
       // The carried-out block-end margin of column content might be non-zero
       // when we try to find the best column balancing block size, but it should
       // never affect the size column set nor be further carried out. Set it to
@@ -743,6 +736,13 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
         colData.mMaxOverflowingBSize =
             std::max(childContentBEnd, colData.mMaxOverflowingBSize);
       }
+
+      COLUMN_SET_LOG(
+          "%s: Reflowed child #%d %p: status=%s, desiredSize=(%d,%d), "
+          "childContentBEnd=%d, CarriedOutBEndMargin=%d (ignored)",
+          __func__, columnCount, child, ToString(aStatus).c_str(),
+          kidDesiredSize.ISize(wm), kidDesiredSize.BSize(wm), childContentBEnd,
+          kidDesiredSize.mCarriedOutBEndMargin.get());
     }
 
     contentRect.UnionRect(contentRect, child->GetRect());
@@ -946,11 +946,13 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
   colData.mFeasible =
       allFit && aStatus.IsFullyComplete() && !aStatus.IsTruncated();
+
   COLUMN_SET_LOG(
       "%s: Done column reflow pass: %s, mMaxBSize=%d, mSumBSize=%d, "
-      "mMaxOverflowingBSize=%d",
+      "mLastBSize=%d, mMaxOverflowingBSize=%d",
       __func__, colData.mFeasible ? "Feasible :)" : "Infeasible :(",
-      colData.mMaxBSize, colData.mSumBSize, colData.mMaxOverflowingBSize);
+      colData.mMaxBSize, colData.mSumBSize, colData.mLastBSize,
+      colData.mMaxOverflowingBSize);
 
   return colData;
 }
@@ -991,6 +993,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
   // Termination of the algorithm below is guaranteed because
   // aConfig.knownFeasibleBSize - aConfig.knownInfeasibleBSize decreases in
   // every iteration.
+  int32_t iterationCount = 1;
 
   // We set this flag when we detect that we may contain a frame
   // that can break anywhere (thus foiling the linear decrease-by-one
@@ -1087,7 +1090,9 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     // Don't bother guessing more than our block-size constraint.
     nextGuess = std::min(availableContentBSize, nextGuess);
 
-    COLUMN_SET_LOG("%s: Choosing next guess=%d", __func__, nextGuess);
+    COLUMN_SET_LOG("%s: Choosing next guess=%d, iteration=%d", __func__,
+                   nextGuess, iterationCount);
+    ++iterationCount;
 
     aConfig.mColMaxBSize = nextGuess;
 
