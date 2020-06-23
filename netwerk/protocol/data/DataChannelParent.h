@@ -26,7 +26,7 @@ class DataChannelParent : public nsIParentChannel, public PDataChannelParent {
   NS_DECL_NSISTREAMLISTENER
 
       [[nodiscard]] bool
-      Init(const uint32_t& aArgs);
+      Init(const uint64_t& aChannelId);
 
  private:
   ~DataChannelParent() = default;

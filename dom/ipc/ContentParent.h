@@ -1036,7 +1036,7 @@ class ContentParent final
       nsIURI* uri, nsIPrincipal* triggeringPrincipal,
       const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvExtProtocolChannelConnectParent(
-      const uint32_t& registrarId);
+      const uint64_t& registrarId);
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMsg, const ClonedMessageData& aData,
