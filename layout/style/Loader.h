@@ -449,6 +449,20 @@ class Loader final {
   friend class StreamLoader;
 
   // Helpers to conditionally block onload if mDocument is non-null.
+  void IncrementOngoingLoadCount() {
+    if (!mOngoingLoadCount++) {
+      BlockOnload();
+    }
+  }
+
+  void DecrementOngoingLoadCount() {
+    MOZ_DIAGNOSTIC_ASSERT(mOngoingLoadCount);
+    MOZ_DIAGNOSTIC_ASSERT(mOngoingLoadCount > mPendingLoadCount);
+    if (!--mOngoingLoadCount) {
+      UnblockOnload(false);
+    }
+  }
+
   void BlockOnload();
   void UnblockOnload(bool aFireSync);
 
@@ -516,7 +530,8 @@ class Loader final {
 
   // Note: LoadSheet is responsible for setting the sheet to complete on
   // failure.
-  nsresult LoadSheet(SheetLoadData&, SheetState);
+  enum class PendingLoad { No, Yes };
+  nsresult LoadSheet(SheetLoadData&, SheetState, PendingLoad = PendingLoad::No);
 
   enum class AllowAsyncParse {
     Yes,

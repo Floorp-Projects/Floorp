@@ -1122,7 +1122,8 @@ void Loader::InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet) {
  * existing load for this URI and piggyback on it.  Failing all that,
  * a new load is kicked off asynchronously.
  */
-nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
+nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
+                           PendingLoad aPendingLoad) {
   LOG(("css::Loader::LoadSheet"));
   MOZ_ASSERT(aLoadData.mURI, "Need a URI to load");
   MOZ_ASSERT(aLoadData.mSheet, "Need a sheet to load into");
@@ -1132,9 +1133,16 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
 
   LOG_URI("  Load from: '%s'", aLoadData.mURI);
 
-  ++mOngoingLoadCount;
-  if (aLoadData.mParentData) {
-    ++aLoadData.mParentData->mPendingChildren;
+  // If we're firing a pending load, this load is already accounted for the
+  // first time it went through this function.
+  if (aPendingLoad == PendingLoad::No) {
+    IncrementOngoingLoadCount();
+
+    // We technically never defer non-top-level sheets, so this condition could
+    // be outside the branch, but conceptually it should be here.
+    if (aLoadData.mParentData) {
+      ++aLoadData.mParentData->mPendingChildren;
+    }
   }
 
   nsresult rv = NS_OK;
@@ -1490,16 +1498,15 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
 
   // This parse does not need to be synchronous. \o/
   //
-  // Note that we need to block onload because there may be no network requests
-  // pending.
-  BlockOnload();
+  // Note that load is already blocked from IncrementOngoingLoadCount(), and
+  // will be unblocked from SheetFinishedParsingAsync which will end up in
+  // NotifyObservers as needed.
   nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
   sheet->ParseSheet(*this, aBytes, aLoadData)
       ->Then(
           target, __func__,
           [loadData = RefPtr<SheetLoadData>(&aLoadData)](bool aDummy) {
             MOZ_ASSERT(NS_IsMainThread());
-            loadData->mLoader->UnblockOnload(/* aFireSync = */ false);
             loadData->SheetFinishedParsingAsync();
           },
           [] { MOZ_CRASH("rejected parse promise"); });
@@ -1509,9 +1516,11 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
 void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
   RecordUseCountersIfNeeded(mDocument, aData.mUseCounters.get());
   if (aData.mURI) {
-    MOZ_DIAGNOSTIC_ASSERT(mOngoingLoadCount);
-    --mOngoingLoadCount;
     aData.NotifyStop(aStatus);
+    // NOTE(emilio): This needs to happen before notifying observers, as
+    // FontFaceSet for example checks for pending sheet loads from the
+    // StyleSheetLoaded callback.
+    DecrementOngoingLoadCount();
   }
 
   if (aData.mMustNotify) {
@@ -2051,10 +2060,7 @@ nsresult Loader::PostLoadEvent(RefPtr<SheetLoadData> aLoadData) {
     NS_WARNING("failed to dispatch stylesheet load event");
     mPostedEvents.RemoveElement(aLoadData);
   } else {
-    ++mOngoingLoadCount;
-
-    // We'll unblock onload when we handle the event.
-    BlockOnload();
+    IncrementOngoingLoadCount();
 
     // We want to notify the observer for this data.
     aLoadData->mMustNotify = true;
@@ -2080,8 +2086,6 @@ void Loader::HandleLoadEvent(SheetLoadData& aEvent) {
 
   mPostedEvents.RemoveElement(&aEvent);
   SheetComplete(aEvent, NS_OK);
-
-  UnblockOnload(true);
 }
 
 void Loader::Stop() {
