@@ -288,16 +288,12 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel, nsIURI* aURI,
   if (!doForce) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     parentIsThird = loadInfo->GetIsInThirdPartyContext();
-    BasePrincipal* loadingPrincipal =
-        BasePrincipal::Cast(loadInfo->GetLoadingPrincipal());
-    if (!parentIsThird &&
-        loadInfo->GetExternalContentPolicyType() !=
-            nsIContentPolicy::TYPE_DOCUMENT &&
-        (!loadingPrincipal->AddonPolicy() ||
-         !loadingPrincipal->AddonAllowsLoad(channelURI))) {
+    if (!parentIsThird && loadInfo->GetExternalContentPolicyType() !=
+                              nsIContentPolicy::TYPE_DOCUMENT) {
       // Check if the channel itself is third-party to its own requestor.
       // Unforunately, we have to go through the loading principal.
-
+      BasePrincipal* loadingPrincipal =
+          BasePrincipal::Cast(loadInfo->GetLoadingPrincipal());
       rv = loadingPrincipal->IsThirdPartyURI(channelURI, &parentIsThird);
       if (NS_FAILED(rv)) {
         return rv;
