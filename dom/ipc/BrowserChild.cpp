@@ -3747,20 +3747,6 @@ nsresult BrowserChild::PrepareProgressListenerData(
     rv = aWebProgress->GetLoadType(&loadType);
     NS_ENSURE_SUCCESS(rv, rv);
     aWebProgressData->loadType() = loadType;
-
-    // The DOM Window ID getters here may throw if the inner or outer windows
-    // aren't created yet or are destroyed at the time we're making this call
-    // but that isn't fatal so ignore the exceptions here.
-    nsCOMPtr<mozIDOMWindowProxy> window;
-    rv = aWebProgress->GetDOMWindow(getter_AddRefs(window));
-    if (NS_SUCCEEDED(rv) && window) {
-      if (nsCOMPtr<nsPIDOMWindowOuter> outer =
-              nsPIDOMWindowOuter::From(window)) {
-        if (nsPIDOMWindowInner* inner = outer->GetCurrentInnerWindow()) {
-          aWebProgressData->innerDOMWindowID() = inner->WindowID();
-        }
-      }
-    }
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
