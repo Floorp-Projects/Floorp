@@ -22,18 +22,13 @@ class RemoteWebProgress final : public nsIRemoteWebProgress {
 
   RemoteWebProgress()
       : mManager(nullptr),
-        mOuterDOMWindowID(0),
-        mInnerDOMWindowID(0),
         mLoadType(0),
         mIsLoadingDocument(false),
         mIsTopLevel(false) {}
 
-  RemoteWebProgress(nsIWebProgress* aManager, uint64_t aOuterDOMWindowID,
-                    uint64_t aInnerDOMWindowID, uint32_t aLoadType,
+  RemoteWebProgress(nsIWebProgress* aManager, uint32_t aLoadType,
                     bool aIsLoadingDocument, bool aIsTopLevel)
       : mManager(aManager),
-        mOuterDOMWindowID(aOuterDOMWindowID),
-        mInnerDOMWindowID(aInnerDOMWindowID),
         mLoadType(aLoadType),
         mIsLoadingDocument(aIsLoadingDocument),
         mIsTopLevel(aIsTopLevel) {}
@@ -43,8 +38,6 @@ class RemoteWebProgress final : public nsIRemoteWebProgress {
 
   nsCOMPtr<nsIWebProgress> mManager;
 
-  uint64_t mOuterDOMWindowID;
-  uint64_t mInnerDOMWindowID;
   uint32_t mLoadType;
   bool mIsLoadingDocument;
   bool mIsTopLevel;
