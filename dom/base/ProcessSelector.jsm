@@ -39,19 +39,16 @@ MinTabSelector.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIContentProcessProvider]),
 
   provideProcess(aType, aOpener, aProcesses, aMaxCount) {
-    if (aProcesses.length < aMaxCount) {
-      return Ci.nsIContentProcessProvider.NEW_PROCESS;
-    }
-
     let min = Number.MAX_VALUE;
     let candidate = Ci.nsIContentProcessProvider.NEW_PROCESS;
 
-    // Note, that at this point aMaxCount is in the valid range and
-    // the reason for not using aProcesses.length here is because if we keep
-    // processes alive for testing but want a test to use only single
+    // The reason for not directly using aProcesses.length here is because if
+    // we keep processes alive for testing but want a test to use only single
     // content process we can just keep relying on dom.ipc.processCount = 1
     // this way.
-    for (let i = 0; i < aMaxCount; i++) {
+    let numIters = Math.min(aProcesses.length, aMaxCount);
+
+    for (let i = 0; i < numIters; i++) {
       let process = aProcesses[i];
       let tabCount = process.tabCount;
       if (process.opener === aOpener && tabCount < min) {
@@ -60,6 +57,13 @@ MinTabSelector.prototype = {
       }
     }
 
+    // If all current processes have at least one tab and we have not yet
+    // reached the maximum, spawn a new process.
+    if (min > 0 && aProcesses.length < aMaxCount) {
+      return Ci.nsIContentProcessProvider.NEW_PROCESS;
+    }
+
+    // Otherwise we use candidate.
     return candidate;
   },
 };
