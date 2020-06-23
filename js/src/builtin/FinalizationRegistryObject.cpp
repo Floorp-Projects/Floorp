@@ -154,7 +154,7 @@ const JSClassOps FinalizationRegistrationsObject::classOps_ = {
     nullptr,                                    // call
     nullptr,                                    // hasInstance
     nullptr,                                    // construct
-    nullptr,                                    // trace
+    FinalizationRegistrationsObject::trace,     // trace
 };
 
 /* static */
@@ -178,9 +178,20 @@ FinalizationRegistrationsObject* FinalizationRegistrationsObject::create(
 }
 
 /* static */
+void FinalizationRegistrationsObject::trace(JSTracer* trc, JSObject* obj) {
+  if (!trc->traceWeakEdges()) {
+    return;
+  }
+
+  auto* self = &obj->as<FinalizationRegistrationsObject>();
+  TraceRange(trc, self->records()->length(), self->records()->begin(),
+             "FinalizationRegistrationsObject records");
+}
+
+/* static */
 void FinalizationRegistrationsObject::finalize(JSFreeOp* fop, JSObject* obj) {
-  auto rv = &obj->as<FinalizationRegistrationsObject>();
-  fop->delete_(obj, rv->records(), MemoryUse::FinalizationRecordVector);
+  auto* self = &obj->as<FinalizationRegistrationsObject>();
+  fop->delete_(obj, self->records(), MemoryUse::FinalizationRecordVector);
 }
 
 inline WeakFinalizationRecordVector*
@@ -348,7 +359,9 @@ void FinalizationRegistryObject::trace(JSTracer* trc, JSObject* obj) {
     registrations->trace(trc);
   }
 
-  // The active record set is weakly held and is not traced.
+  // The active record set is weakly held and is not traced. For moving GC this
+  // is updated in sweep(), which is called for all FinalizationRegistryObjects
+  // in a zone.
 
   if (FinalizationRecordVector* records = registry->recordsToBeCleanedUp()) {
     records->trace(trc);
