@@ -993,10 +993,15 @@ items from that key's value."
             self.info('resource usage lacks duration; ignoring')
             return None
 
+        # We want to always collect metrics. But alerts with sccache enabled
+        # we should disable automatic alerting
+        should_alert = False if os.environ.get('USE_SCCACHE') == '1' else True
+
         data = {
             'name': 'build times',
             'value': resources['duration'],
             'extraOptions': self.perfherder_resource_options(),
+            'shouldAlert': should_alert,
             'subtests': [],
         }
 
@@ -1041,7 +1046,10 @@ items from that key's value."
             'value': hits,
             'subtests': [],
             'alertThreshold': 50.0,
-            'lowerIsBetter': False
+            'lowerIsBetter': False,
+            # We want to always collect metrics.
+            # But disable automatic alerting on it
+            'shouldAlert': False
         }
 
         yield {
