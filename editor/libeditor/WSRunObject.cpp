@@ -1013,21 +1013,22 @@ void WSRunScanner::GetRuns() {
       mStartRun->mEndNode = mEnd.PointRef().GetContainer();
       mStartRun->mEndOffset = mEnd.PointRef().Offset();
       mEndRun = mStartRun;
-    } else {
-      // set up next run
-      WSFragment* lastRun = new WSFragment();
-      lastRun->MarkAsEndOfHardLine();
-      if (mNBSPData.LastPointRef().IsSet()) {
-        lastRun->mStartNode = mNBSPData.LastPointRef().GetContainer();
-        lastRun->mStartOffset = mNBSPData.LastPointRef().Offset() + 1;
-      }
-      lastRun->SetStartFromNormalWhiteSpaces();
-      lastRun->mLeft = mStartRun;
-      lastRun->SetEndBy(mEnd.RawReason());
-      mEndRun = lastRun;
-      mStartRun->mRight = lastRun;
-      mStartRun->SetEndByTrailingWhiteSpaces();
+      return;
     }
+
+    // set up next run
+    WSFragment* lastRun = new WSFragment();
+    lastRun->MarkAsEndOfHardLine();
+    if (mNBSPData.LastPointRef().IsSet()) {
+      lastRun->mStartNode = mNBSPData.LastPointRef().GetContainer();
+      lastRun->mStartOffset = mNBSPData.LastPointRef().Offset() + 1;
+    }
+    lastRun->SetStartFromNormalWhiteSpaces();
+    lastRun->mLeft = mStartRun;
+    lastRun->SetEndBy(mEnd.RawReason());
+    mEndRun = lastRun;
+    mStartRun->mRight = lastRun;
+    mStartRun->SetEndByTrailingWhiteSpaces();
     return;
   }
 
