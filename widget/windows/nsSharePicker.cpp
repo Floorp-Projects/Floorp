@@ -71,7 +71,7 @@ nsSharePicker::Share(const nsACString& aTitle, const nsACString& aText,
                             NS_ConvertUTF8toUTF16_MaybeVoid(aText),
                             NS_ConvertUTF8toUTF16_MaybeVoid(urlString));
   mozPromise->Then(
-      mozilla::GetCurrentThreadSerialEventTarget(), __func__,
+      mozilla::GetCurrentSerialEventTarget(), __func__,
       [promise]() { promise->MaybeResolveWithUndefined(); },
       [promise]() { promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR); });
 

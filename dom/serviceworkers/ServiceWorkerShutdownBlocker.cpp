@@ -117,7 +117,7 @@ void ServiceWorkerShutdownBlocker::WaitOnPromise(
 
   RefPtr<ServiceWorkerShutdownBlocker> self = this;
 
-  aPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+  aPromise->Then(GetCurrentSerialEventTarget(), __func__,
                  [self = std::move(self), shutdownStateId = aShutdownStateId](
                      const GenericNonExclusivePromise::ResolveOrRejectValue&) {
                    // Progress reporting might race with aPromise settling.

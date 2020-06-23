@@ -310,7 +310,7 @@ void ClientNavigateOpChild::Init(const ClientNavigateOpConstructorArgs& aArgs) {
   // failure occurred, though, we may need to fall back to the current thread
   // target.
   if (!mSerialEventTarget) {
-    mSerialEventTarget = GetCurrentThreadSerialEventTarget();
+    mSerialEventTarget = GetCurrentSerialEventTarget();
   }
 
   // Capturing `this` is safe here since we clear the mPromiseRequestHolder in

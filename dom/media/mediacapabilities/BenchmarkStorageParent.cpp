@@ -71,7 +71,7 @@ IPCResult BenchmarkStorageParent::RecvPut(const nsCString& aDbName,
   // then to store the new aggregated value.
   mStorage->Get(aDbName, aKey)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [storage = mStorage, aDbName, aKey, aValue](int32_t aResult) {
             int32_t window = 0;
             int32_t average = 0;
@@ -97,7 +97,7 @@ IPCResult BenchmarkStorageParent::RecvGet(const nsCString& aDbName,
                                           GetResolver&& aResolve) {
   mStorage->Get(aDbName, aKey)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [aResolve](int32_t aResult) {
             int32_t window = 0;  // not used
             aResolve(aResult < 0 ? -1 : ParseStoredValue(aResult, window));
@@ -111,11 +111,11 @@ IPCResult BenchmarkStorageParent::RecvCheckVersion(const nsCString& aDbName,
                                                    int32_t aVersion) {
   mStorage->Get(aDbName, NS_LITERAL_CSTRING("Version"))
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [storage = mStorage, aDbName, aVersion](int32_t aResult) {
             if (aVersion != aResult) {
               storage->Clear(aDbName)->Then(
-                  GetCurrentThreadSerialEventTarget(), __func__,
+                  GetCurrentSerialEventTarget(), __func__,
                   [storage, aDbName, aVersion](bool) {
                     storage->Put(aDbName, NS_LITERAL_CSTRING("Version"),
                                  aVersion);

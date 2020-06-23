@@ -14,7 +14,7 @@
 #include "nsThreadUtils.h"
 #include "Helpers.h"
 
-using mozilla::GetCurrentThreadSerialEventTarget;
+using mozilla::GetCurrentSerialEventTarget;
 using mozilla::SpinEventLoopUntil;
 
 TEST(MultiplexInputStream, Seek_SET)
@@ -372,7 +372,7 @@ TEST(MultiplexInputStream, AsyncWait_withoutEventTarget_closureOnly)
   ASSERT_TRUE(cb->Called());
 }
 
-// AsyncWait - withEventTarget - closureOnly
+// AsyncWait - with EventTarget - closureOnly
 TEST(MultiplexInputStream, AsyncWait_withEventTarget_closureOnly)
 {
   nsCOMPtr<nsIInputStream> is = CreateStreamHelper();
@@ -771,7 +771,7 @@ TEST(MultiplexInputStream, LengthInputStream)
 
   // Let's read the size async.
   RefPtr<testing::LengthCallback> callback = new testing::LengthCallback();
-  rv = afsis->AsyncLengthWait(callback, GetCurrentThreadSerialEventTarget());
+  rv = afsis->AsyncLengthWait(callback, GetCurrentSerialEventTarget());
   ASSERT_EQ(NS_OK, rv);
 
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback->Called(); }));
@@ -799,11 +799,11 @@ TEST(MultiplexInputStream, LengthInputStream)
 
   // Let's read the size async.
   RefPtr<testing::LengthCallback> callback1 = new testing::LengthCallback();
-  rv = afsis->AsyncLengthWait(callback1, GetCurrentThreadSerialEventTarget());
+  rv = afsis->AsyncLengthWait(callback1, GetCurrentSerialEventTarget());
   ASSERT_EQ(NS_OK, rv);
 
   RefPtr<testing::LengthCallback> callback2 = new testing::LengthCallback();
-  rv = afsis->AsyncLengthWait(callback2, GetCurrentThreadSerialEventTarget());
+  rv = afsis->AsyncLengthWait(callback2, GetCurrentSerialEventTarget());
   ASSERT_EQ(NS_OK, rv);
 
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback2->Called(); }));

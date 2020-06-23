@@ -361,7 +361,7 @@ void U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
 
   mTokenManagerImpl->Register(aInfo, aForceNoneAttestation)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [tid, startTime](WebAuthnMakeCredentialResult&& aResult) {
             U2FTokenManager* mgr = U2FTokenManager::Get();
             mgr->MaybeConfirmRegister(tid, aResult);
@@ -420,7 +420,7 @@ void U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
   mTokenManagerImpl->Sign(aTransactionInfo)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [tid, startTime](WebAuthnGetAssertionResult&& aResult) {
             U2FTokenManager* mgr = U2FTokenManager::Get();
             mgr->MaybeConfirmSign(tid, aResult);

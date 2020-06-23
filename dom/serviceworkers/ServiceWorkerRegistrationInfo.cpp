@@ -773,7 +773,7 @@ void ServiceWorkerRegistrationInfo::ClearWhenIdle() {
    * Registration".
    */
   GetActive()->WorkerPrivate()->GetIdlePromise()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr<ServiceWorkerRegistrationInfo>(this)](
           const GenericPromise::ResolveOrRejectValue& aResult) {
         MOZ_ASSERT(aResult.IsResolve());

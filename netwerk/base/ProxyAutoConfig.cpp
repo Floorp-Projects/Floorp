@@ -449,7 +449,7 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
       nsIDNSService::GetFlagsFromTRRMode(nsIRequest::TRR_DISABLED_MODE);
 
   if (NS_FAILED(dns->AsyncResolveNative(aHostName, flags, helper,
-                                        GetCurrentThreadEventTarget(), attrs,
+                                        GetCurrentEventTarget(), attrs,
                                         getter_AddRefs(helper->mRequest)))) {
     return false;
   }

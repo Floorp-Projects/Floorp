@@ -89,7 +89,7 @@ void FetchEventOpProxyChild::Initialize(
   mOp = op;
 
   op->GetRespondWithPromise()
-      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+      ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = std::move(self)](
                  FetchEventRespondWithPromise::ResolveOrRejectValue&& aResult) {
                self->mRespondWithPromiseRequestHolder.Complete();

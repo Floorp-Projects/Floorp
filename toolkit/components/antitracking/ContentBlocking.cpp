@@ -357,7 +357,7 @@ ContentBlocking::AllowAccessFor(
       ->SendCompleteAllowAccessFor(aParentContext, topLevelWindowId,
                                    IPC::Principal(trackingPrincipal),
                                    trackingOrigin, behavior, aReason)
-      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+      ->Then(GetCurrentSerialEventTarget(), __func__,
              [bc, trackingOrigin, behavior,
               aReason](const ContentChild::CompleteAllowAccessForPromise::
                            ResolveOrRejectValue& aValue) {
@@ -510,7 +510,7 @@ ContentBlocking::CompleteAllowAccessFor(
                  aTopLevelWindowId, aParentContext, trackingPrincipal,
                  trackingOrigin, aAllowMode)
           ->Then(
-              GetCurrentThreadSerialEventTarget(), __func__,
+              GetCurrentSerialEventTarget(), __func__,
               [](ParentAccessGrantPromise::ResolveOrRejectValue&& aValue) {
                 if (aValue.IsResolve()) {
                   return StorageAccessPermissionGrantPromise::CreateAndResolve(
@@ -535,7 +535,7 @@ ContentBlocking::CompleteAllowAccessFor(
         ->SendStorageAccessPermissionGrantedForOrigin(
             aTopLevelWindowId, aParentContext,
             IPC::Principal(trackingPrincipal), trackingOrigin, aAllowMode)
-        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+        ->Then(GetCurrentSerialEventTarget(), __func__,
                [](const ContentChild::
                       StorageAccessPermissionGrantedForOriginPromise::
                           ResolveOrRejectValue& aValue) {
@@ -550,7 +550,7 @@ ContentBlocking::CompleteAllowAccessFor(
 
   if (aPerformFinalChecks) {
     return aPerformFinalChecks()->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [storePermission](
             StorageAccessPermissionGrantPromise::ResolveOrRejectValue&&
                 aValue) {

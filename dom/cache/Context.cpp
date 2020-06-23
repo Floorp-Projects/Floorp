@@ -97,7 +97,7 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
         mData(aData),
         mTarget(aTarget),
         mInitAction(aInitAction),
-        mInitiatingEventTarget(GetCurrentThreadEventTarget()),
+        mInitiatingEventTarget(GetCurrentEventTarget()),
         mResult(NS_OK),
         mState(STATE_INIT),
         mCanceled(false) {
@@ -469,7 +469,7 @@ class Context::ActionRunnable final : public nsIRunnable,
         mTarget(aTarget),
         mAction(aAction),
         mQuotaInfo(aQuotaInfo),
-        mInitiatingThread(GetCurrentThreadEventTarget()),
+        mInitiatingThread(GetCurrentEventTarget()),
         mState(STATE_INIT),
         mResult(NS_OK),
         mExecutingRunOnTarget(false) {
@@ -700,7 +700,7 @@ void Context::ThreadsafeHandle::InvalidateAndAllowToClose() {
 Context::ThreadsafeHandle::ThreadsafeHandle(SafeRefPtr<Context> aContext)
     : mStrongRef(std::move(aContext)),
       mWeakRef(mStrongRef.unsafeGetRawPtr()),
-      mOwningEventTarget(GetCurrentThreadSerialEventTarget()) {}
+      mOwningEventTarget(GetCurrentSerialEventTarget()) {}
 
 Context::ThreadsafeHandle::~ThreadsafeHandle() {
   // Normally we only touch mStrongRef on the owning thread.  This is safe,

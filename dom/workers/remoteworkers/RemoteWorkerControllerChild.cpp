@@ -104,7 +104,7 @@ IPCResult RemoteWorkerControllerChild::RecvSetServiceWorkerSkipWaitingFlag(
   if (mObserver) {
     static_cast<ServiceWorkerPrivateImpl*>(mObserver.get())
         ->SetSkipWaitingFlag()
-        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+        ->Then(GetCurrentSerialEventTarget(), __func__,
                [resolve = std::move(aResolve)](
                    const GenericPromise::ResolveOrRejectValue& aResult) {
                  resolve(aResult.IsResolve() ? aResult.ResolveValue() : false);
@@ -137,7 +137,7 @@ void RemoteWorkerControllerChild::MaybeSendDelete() {
   RefPtr<RemoteWorkerControllerChild> self = this;
 
   SendShutdown()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [self = std::move(self)](const ShutdownPromise::ResolveOrRejectValue&) {
         if (self->mIPCActive) {
           Unused << self->Send__delete__(self);

@@ -169,7 +169,7 @@ IPCResult RemoteWorkerParent::RecvSetServiceWorkerSkipWaitingFlag(
 
   if (mController) {
     mController->SetServiceWorkerSkipWaitingFlag()->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [resolve = aResolve](bool /* unused */) { resolve(true); },
         [resolve = aResolve](nsresult /* unused */) { resolve(false); });
   } else {

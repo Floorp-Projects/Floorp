@@ -468,7 +468,7 @@ class ChildImpl final : public BackgroundChildImpl {
 
   explicit ChildImpl()
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
-      : mOwningEventTarget(GetCurrentThreadSerialEventTarget())
+      : mOwningEventTarget(GetCurrentSerialEventTarget())
 #endif
 #ifdef DEBUG
         ,
@@ -615,7 +615,7 @@ class ChildImpl::SendInitBackgroundRunnable final : public CancelableRunnable {
       std::function<void(Endpoint<PBackgroundParent>&& aParent)>&& aFunc,
       unsigned int aThreadLocalIndex)
       : CancelableRunnable("Background::ChildImpl::SendInitBackgroundRunnable"),
-        mOwningEventTarget(GetCurrentThreadSerialEventTarget()),
+        mOwningEventTarget(GetCurrentSerialEventTarget()),
         mParent(std::move(aParent)),
         mMutex("SendInitBackgroundRunnable::mMutex"),
         mSentInitBackground(false),
@@ -1334,7 +1334,7 @@ void ParentImpl::ShutdownTimerCallback(nsITimer* aTimer, void* aClosure) {
                 }
                 return GenericPromise::CreateAndResolve(true, __func__);
               })
-      ->Then(GetCurrentThreadSerialEventTarget(), __func__, []() {
+      ->Then(GetCurrentSerialEventTarget(), __func__, []() {
         MOZ_ASSERT(sLiveActorCount);
         sLiveActorCount--;
       });

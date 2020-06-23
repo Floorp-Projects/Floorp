@@ -122,7 +122,7 @@ nsresult BackgroundFileSaver::Init() {
                    HasInfiniteBuffer() ? UINT32_MAX : 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mControlEventTarget = GetCurrentThreadEventTarget();
+  mControlEventTarget = GetCurrentEventTarget();
   NS_ENSURE_TRUE(mControlEventTarget, NS_ERROR_NOT_INITIALIZED);
 
   rv = NS_CreateBackgroundTaskQueue("BgFileSaver",

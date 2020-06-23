@@ -469,8 +469,8 @@ PRStatus nsSOCKSSocketInfo::StartDNS(PRFileDesc* fd) {
 
   mFD = fd;
   nsresult rv = dns->AsyncResolveNative(proxyHost, 0, this,
-                                        mozilla::GetCurrentThreadEventTarget(),
-                                        attrs, getter_AddRefs(mLookup));
+                                        mozilla::GetCurrentEventTarget(), attrs,
+                                        getter_AddRefs(mLookup));
 
   if (NS_FAILED(rv)) {
     LOGERROR(("socks: DNS lookup for SOCKS proxy %s failed", proxyHost.get()));

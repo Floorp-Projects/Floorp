@@ -357,7 +357,7 @@ class nsDoomEvent : public Runnable {
     mKey.Append(key);
     mStoragePolicy = session->StoragePolicy();
     mListener = listener;
-    mEventTarget = GetCurrentThreadEventTarget();
+    mEventTarget = GetCurrentEventTarget();
     // We addref the listener here and release it in nsNotifyDoomListener
     // on the callers thread. If posting of nsNotifyDoomListener event fails
     // we leak the listener which is better than releasing it on a wrong
@@ -908,7 +908,7 @@ nsresult nsCacheService::CreateRequest(nsCacheSession* session,
   if (!listener) return NS_OK;  // we're sync, we're done.
 
   // get the request's thread
-  (*request)->mEventTarget = GetCurrentThreadEventTarget();
+  (*request)->mEventTarget = GetCurrentEventTarget();
 
   return NS_OK;
 }

@@ -29,7 +29,7 @@ LazyIdleThread::LazyIdleThread(uint32_t aIdleTimeoutMS, const nsACString& aName,
                                ShutdownMethod aShutdownMethod,
                                nsIObserver* aIdleObserver)
     : mMutex("LazyIdleThread::mMutex"),
-      mOwningEventTarget(GetCurrentThreadSerialEventTarget()),
+      mOwningEventTarget(GetCurrentSerialEventTarget()),
       mIdleObserver(aIdleObserver),
       mQueuedRunnables(nullptr),
       mIdleTimeoutMS(aIdleTimeoutMS),

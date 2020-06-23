@@ -4206,7 +4206,7 @@ nsDOMWindowUtils::StartCompositionRecording(Promise** aOutPromise) {
   } else {
     cbc->SendBeginRecording(TimeStamp::Now())
         ->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
+            GetCurrentSerialEventTarget(), __func__,
             [promise](const bool& aSuccess) {
               if (aSuccess) {
                 promise->MaybeResolve(true);
@@ -4247,7 +4247,7 @@ nsDOMWindowUtils::StopCompositionRecording(bool aWriteToDisk,
     promise->MaybeReject(NS_ERROR_UNEXPECTED);
   } else if (aWriteToDisk) {
     cbc->SendEndRecordingToDisk()->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [promise](const bool& aSuccess) {
           if (aSuccess) {
             promise->MaybeResolveWithUndefined();
@@ -4262,7 +4262,7 @@ nsDOMWindowUtils::StopCompositionRecording(bool aWriteToDisk,
         });
   } else {
     cbc->SendEndRecordingToMemory()->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
+        GetCurrentSerialEventTarget(), __func__,
         [promise](Maybe<CollectedFramesParams>&& aFrames) {
           if (!aFrames) {
             promise->MaybeRejectWithUnknownError(

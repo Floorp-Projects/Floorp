@@ -26,14 +26,14 @@ TEST(TestKeyValueStorage, BasicPutGet)
 
   kvs->Put(name, key, value)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [&](bool) { return kvs->Get(name, key); },
           [](nsresult rv) {
             EXPECT_TRUE(false) << "Put promise has been rejected";
             return KeyValueStorage::GetPromise::CreateAndReject(rv, __func__);
           })
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [&](int32_t aValue) {
             EXPECT_EQ(aValue, value) << "Values are the same";
             mon.SetFinished();
@@ -56,7 +56,7 @@ TEST(TestKeyValueStorage, GetNonExistedKey)
   GMPTestMonitor mon;
 
   kvs->Get(name, key)->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [&mon](int32_t aValue) {
         EXPECT_EQ(aValue, -1) << "When key does not exist return -1";
         mon.SetFinished();
@@ -81,21 +81,21 @@ TEST(TestKeyValueStorage, Clear)
 
   kvs->Put(name, key, value)
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [&](bool) { return kvs->Clear(name); },
           [](nsresult rv) {
             EXPECT_TRUE(false) << "Put promise has been rejected";
             return GenericPromise::CreateAndReject(rv, __func__);
           })
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [&](bool) { return kvs->Get(name, key); },
           [](nsresult rv) {
             EXPECT_TRUE(false) << "Clear promise has been rejected";
             return KeyValueStorage::GetPromise::CreateAndReject(rv, __func__);
           })
       ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [&](int32_t aValue) {
             EXPECT_EQ(aValue, -1) << "After clear the key does not exist";
             mon.SetFinished();

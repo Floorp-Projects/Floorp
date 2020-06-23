@@ -1377,7 +1377,7 @@ nsFtpState::R_pasv() {
     LOG(("FTP:(%p) created DT (%s:%x)\n", this, host.get(), port));
 
     // hook ourself up as a proxy for status notifications
-    rv = mDataTransport->SetEventSink(this, GetCurrentThreadEventTarget());
+    rv = mDataTransport->SetEventSink(this, GetCurrentEventTarget());
     NS_ENSURE_SUCCESS(rv, FTP_ERROR);
 
     if (mAction == PUT) {

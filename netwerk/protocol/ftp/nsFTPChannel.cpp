@@ -120,7 +120,7 @@ class FTPEventSinkProxy final : public nsIFTPEventSink {
 
  public:
   explicit FTPEventSinkProxy(nsIFTPEventSink* aTarget)
-      : mTarget(aTarget), mEventTarget(GetCurrentThreadEventTarget()) {}
+      : mTarget(aTarget), mEventTarget(GetCurrentEventTarget()) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIFTPEVENTSINK
