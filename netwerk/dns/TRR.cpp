@@ -832,8 +832,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
     }
     uint16_t TYPE = get16bit(mResponse, index);
 
-    if ((TYPE != TRRTYPE_CNAME) && (TYPE != TRRTYPE_HTTPSSVC) &&
-        (TYPE != static_cast<uint16_t>(mType))) {
+    if ((TYPE != TRRTYPE_CNAME) && (TYPE != static_cast<uint16_t>(mType))) {
       // Not the same type as was asked for nor CNAME
       LOG(("TRR: Dohdecode:%d asked for type %d got %d\n", __LINE__, mType,
            TYPE));
@@ -1023,24 +1022,6 @@ nsresult TRR::DohDecode(nsCString& aHost) {
               continue;
             }
             parsed.mSvcFieldValue.AppendElement(value);
-          }
-
-          // Check for AliasForm
-          if (mCname.IsEmpty() && parsed.mSvcFieldPriority == 0) {
-            // Alias form SvcDomainName must not have the "." value (empty)
-            if (parsed.mSvcDomainName.IsEmpty()) {
-              return NS_ERROR_UNEXPECTED;
-            }
-            mCname = parsed.mSvcDomainName;
-            ToLowerCase(mCname);
-            LOG(("TRR::DohDecode HTTPSSVC AliasForm host %s => %s\n",
-                 host.get(), mCname.get()));
-            break;
-          }
-
-          if (mType != TRRTYPE_HTTPSSVC) {
-            // Ignore the entry that we just parsed if we didn't ask for it.
-            break;
           }
 
           if (!mResult.is<TypeRecordHTTPSSVC>()) {
@@ -1299,7 +1280,7 @@ nsresult TRR::On200Response(nsIChannel* aChannel) {
 
   if (NS_SUCCEEDED(rv)) {
     if (!mDNS.mAddresses.getFirst() && !mCname.IsEmpty() &&
-        mType != TRRTYPE_TXT) {
+        mType != TRRTYPE_TXT && mType != TRRTYPE_HTTPSSVC) {
       nsCString cname = mCname;
       LOG(("TRR: check for CNAME record for %s within previous response\n",
            cname.get()));
