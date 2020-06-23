@@ -14,11 +14,6 @@ FINAL_TARGET_FILES.features['doh-rollout@mozilla.org'] += [
   'manifest.json'
 ]
 
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["doorhanger"] += [
-  'experiments/doorhanger/api.js',
-  'experiments/doorhanger/schema.json'
-]
-
 FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["heuristics"] += [
   'experiments/heuristics/api.js',
   'experiments/heuristics/schema.json'
@@ -32,38 +27,6 @@ FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["preferenc
 FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["trrselect"] += [
   'experiments/trrselect/api.js',
   'experiments/trrselect/schema.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["de"] += [
-  '_locales/de/messages.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["en_US"] += [
-  '_locales/en_US/messages.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["es_ES"] += [
-  '_locales/es_ES/messages.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["es_MX"] += [
-  '_locales/es_MX/messages.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["fr"] += [
-  '_locales/fr/messages.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["it"] += [
-  '_locales/it/messages.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["ru"] += [
-  '_locales/ru/messages.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["zh_CN"] += [
-  '_locales/zh_CN/messages.json'
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
