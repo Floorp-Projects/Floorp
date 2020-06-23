@@ -224,7 +224,10 @@ SAVING PROFILE: ${file.path}
 To upload the profile, run the following commands:
 
   gzip ${file.path}
-  curl 'https://profile-store.appspot.com/compressed-store' --compressed --data-binary @${file.path}.gz | awk '{print "Hosted at: https://profiler.firefox.com/public/"$1}'
+  curl -O https://raw.githubusercontent.com/firefox-devtools/profiler-server/master/tools/decode_jwt_payload.py
+  curl 'https://api.profiler.firefox.com/compressed-store' --compressed --data-binary @${file.path}.gz --header 'Accept: application/vnd.firefox-profiler+json;version=1' \\
+    | python3 decode_jwt_payload.py \\
+    | awk '{print "Hosted at: https://profiler.firefox.com/public/"$1}'
 
 
 `);
