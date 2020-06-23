@@ -570,14 +570,6 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
     return NS_OK;
   }
 
-#ifdef MOZ_WAYLAND
-  // TODO: Wayland implementation of text/uri-list.
-  if (!mTargetDragContext) {
-    *aNumItems = 1;
-    return NS_OK;
-  }
-#endif
-
   bool isList = IsTargetContextList();
   if (isList)
     mSourceDataItems->GetLength(aNumItems);
@@ -1037,23 +1029,29 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
 bool nsDragService::IsTargetContextList(void) {
   bool retval = false;
 
-#ifdef MOZ_WAYLAND
-  // TODO: We need a wayland implementation here.
-  if (!mTargetDragContext) return retval;
-#endif
-
   // gMimeListType drags only work for drags within a single process. The
   // gtk_drag_get_source_widget() function will return nullptr if the source
   // of the drag is another app, so we use it to check if a gMimeListType
   // drop will work or not.
-  if (gtk_drag_get_source_widget(mTargetDragContext) == nullptr) return retval;
+  if (mTargetDragContext &&
+      gtk_drag_get_source_widget(mTargetDragContext) == nullptr) {
+    return retval;
+  }
 
-  GList* tmp;
+  GList* tmp = nullptr;
+  if (mTargetDragContext) {
+    tmp = gdk_drag_context_list_targets(mTargetDragContext);
+  }
+#ifdef MOZ_WAYLAND
+  GList* tmp_head = nullptr;
+  if (mTargetWaylandDragContext) {
+    tmp_head = tmp = mTargetWaylandDragContext->GetTargets();
+  }
+#endif
 
   // walk the list of context targets and see if one of them is a list
   // of items.
-  for (tmp = gdk_drag_context_list_targets(mTargetDragContext); tmp;
-       tmp = tmp->next) {
+  for (; tmp; tmp = tmp->next) {
     /* Bug 331198 */
     GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
     gchar* name = nullptr;
@@ -1062,6 +1060,15 @@ bool nsDragService::IsTargetContextList(void) {
     g_free(name);
     if (retval) break;
   }
+
+#ifdef MOZ_WAYLAND
+  // mTargetWaylandDragContext->GetTargets allocates the list
+  // so we need to free it here.
+  if (mTargetWaylandDragContext && tmp_head) {
+    g_list_free(tmp_head);
+  }
+#endif
+
   return retval;
 }
 
