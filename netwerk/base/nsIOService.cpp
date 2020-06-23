@@ -289,6 +289,12 @@ nsresult nsIOService::Init() {
   AddObserver(this, NS_NETWORK_ID_CHANGED_TOPIC, true);
   AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
 
+  // Register observers for sending notifications to nsSocketTransportService
+  if (XRE_IsParentProcess()) {
+    AddObserver(this, "profile-initial-state", true);
+    AddObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC, true);
+  }
+
   if (IsSocketProcessChild()) {
     Preferences::RegisterCallbacks(nsIOService::OnTLSPrefChange,
                                    gCallbackSecurityPrefs, this);
