@@ -2050,7 +2050,7 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
       mozilla::OriginAttributes oa;
       pushedWeak->GetOriginAttributes(&oa);
       RefPtr<Http2Session> session = self;
-      auto callback = [session, promisedID](bool aAccepted) {
+      auto cachePushCheckCallback = [session, promisedID](bool aAccepted) {
         MOZ_ASSERT(OnSocketThread());
 
         if (!aAccepted) {
@@ -2061,7 +2061,7 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
       RefPtr<CachePushChecker> checker = new CachePushChecker(
           pushedURL, oa,
           static_cast<Http2PushedStream*>(pushedWeak.get())->GetRequestString(),
-          std::move(callback));
+          std::move(cachePushCheckCallback));
       if (NS_FAILED(checker->DoCheck())) {
         LOG3(
             ("Http2Session::RecvPushPromise %p failed to open cache entry for "
@@ -2069,6 +2069,13 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
              self));
       }
     }
+  }
+
+  if (!pushedWeak) {
+    // We have an up to date entry in our cache, so the stream was closed
+    // and released in the cachePushCheckCallback above.
+    self->ResetDownstreamState();
+    return NS_OK;
   }
 
   pushedWeak->SetHTTPState(Http2Stream::RESERVED_BY_REMOTE);
