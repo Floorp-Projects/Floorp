@@ -44,7 +44,7 @@ const mockUpdateManager = {
     registrar.registerFactory(this._originalClassId, "", this.contractId, null);
   },
 
-  get updateCount() {
+  getUpdateCount() {
     return this._updates.length;
   },
 
@@ -120,7 +120,7 @@ add_task(async function() {
   // Test the update history numbers are correct
   is(
     updates.length,
-    mockUpdateManager.updateCount,
+    mockUpdateManager.getUpdateCount(),
     "The update count is incorrect."
   );
 

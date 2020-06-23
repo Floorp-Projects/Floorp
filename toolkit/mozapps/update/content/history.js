@@ -15,7 +15,7 @@ var gUpdateHistory = {
     var um = Cc["@mozilla.org/updates/update-manager;1"].getService(
       Ci.nsIUpdateManager
     );
-    var uc = um.updateCount;
+    var uc = um.getUpdateCount();
     if (uc) {
       while (this._view.hasChildNodes()) {
         this._view.firstChild.remove();

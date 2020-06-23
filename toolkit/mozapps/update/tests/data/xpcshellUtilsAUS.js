@@ -1285,7 +1285,7 @@ function checkUpdateManager(
       );
     }
     Assert.equal(
-      gUpdateManager.updateCount,
+      gUpdateManager.getUpdateCount(),
       aUpdateCount,
       msgTags[i] + "the update manager updateCount attribute" + MSG_SHOULD_EQUAL
     );
