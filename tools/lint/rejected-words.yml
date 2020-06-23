@@ -5,6 +5,7 @@ avoid-blacklist-and-whitelist:
     include: ['.']
     type: regex
     payload: (black|white)[-_]?list
+    ignore-case: true
     # same as codespell
     extensions:
         - js

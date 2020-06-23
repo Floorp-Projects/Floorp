@@ -20,9 +20,10 @@ class MinGWCapitalization(LineType):
             self.headers = fh.read().strip().splitlines()
         self.regex = re.compile("^#include\s*<(" + "|".join(self.headers) + ")>")
 
-    def condition(self, payload, line):
+    def condition(self, payload, line, config):
         if not line.startswith("#include"):
             return False
+
         if self.regex.search(line, re.I):
             return not self.regex.search(line)
 
