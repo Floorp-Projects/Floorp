@@ -12,6 +12,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
@@ -53,7 +56,7 @@ class ContextMenuCandidateTest {
         val candidates = ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock())
         // Just a sanity check: When changing the list of default candidates be aware that this will affect all
         // consumers of this component using the default list.
-        assertEquals(9, candidates.size)
+        assertEquals(10, candidates.size)
     }
 
     @Test
@@ -645,6 +648,40 @@ class ContextMenuCandidateTest {
         shareLink.action.invoke(
             store.state.tabs.first(),
             HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"))
+
+        verify(context).startActivity(any())
+    }
+
+    @Test
+    fun `Candidate "Share image"`() {
+        val context = spy(testContext)
+
+        val shareImage = ContextMenuCandidate.createShareImageCandidate(context)
+
+        // showFor
+
+        assertTrue(shareImage.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.IMAGE("https://www.mozilla.org")))
+
+        assertTrue(shareImage.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")))
+
+        assertFalse(shareImage.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.AUDIO("https://www.mozilla.org")))
+
+        // action
+
+        val store = BrowserStore(initialState = BrowserState(
+            tabs = listOf(TabSessionState("123", ContentState("https://www.mozilla.org")))
+        ))
+
+        shareImage.action.invoke(
+            store.state.tabs.first(),
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com")
+        )
 
         verify(context).startActivity(any())
     }
