@@ -31,7 +31,6 @@ add_task(async function() {
   info("Search in urlbar");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: win,
-    waitForFocus: SimpleTest.waitForFocus,
     value: urlbarTestValue,
     fireInputEvent: true,
   });

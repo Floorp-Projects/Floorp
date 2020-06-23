@@ -64,7 +64,6 @@ add_task(async function search_test() {
     info("Searching for 'foo'");
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "foo",
       fireInputEvent: true,
     });
@@ -99,7 +98,6 @@ add_task(async function popup_mousedown_test() {
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: searchString,
       fireInputEvent: true,
     });
@@ -140,7 +138,6 @@ add_task(async function test_autofill() {
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: searchString,
       fireInputEvent: true,
     });
@@ -171,7 +168,6 @@ add_task(async function test_autofill_privateContext() {
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: privateWin,
-      waitForFocus: SimpleTest.waitForFocus,
       value: searchString,
       fireInputEvent: true,
     });
@@ -192,7 +188,6 @@ add_task(async function test_no_heuristic_result() {
     info(`Searching for the empty string`);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus: SimpleTest.waitForFocus,
       value: "",
       fireInputEvent: true,
     });

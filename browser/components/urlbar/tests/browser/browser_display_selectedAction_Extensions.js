@@ -28,7 +28,6 @@ add_task(async function testSwitchToTabTextDisplay() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "omniboxtest ",
     fireInputEvent: true,
   });

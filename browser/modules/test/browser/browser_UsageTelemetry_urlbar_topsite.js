@@ -109,7 +109,7 @@ add_task(async function test() {
     const histograms = snapshotHistograms();
 
     await UrlbarTestUtils.promisePopupOpen(window, () => {
-      EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
+      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
     });
 
     await UrlbarTestUtils.promiseSearchComplete(window);
@@ -141,7 +141,7 @@ add_task(async function test() {
       URLBAR_SELECTED_RESULT_METHODS.arrowEnterSelection
     );
     await UrlbarTestUtils.promisePopupClose(window, () => {
-      window.gURLBar.blur();
+      gURLBar.blur();
     });
   });
 });

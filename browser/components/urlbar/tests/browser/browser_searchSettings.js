@@ -9,7 +9,6 @@ add_task(async function() {
     async function() {
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        waitForFocus,
         value: "a",
       });
 

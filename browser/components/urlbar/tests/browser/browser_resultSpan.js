@@ -58,7 +58,6 @@ add_task(async function oneTip() {
   let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus: SimpleTest.waitForFocus,
   });
 
   checkResults(context.results, expectedResults);
@@ -105,7 +104,6 @@ add_task(async function threeTips() {
   let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus: SimpleTest.waitForFocus,
   });
 
   checkResults(context.results, expectedResults);
@@ -147,7 +145,6 @@ add_task(async function oneTip_nonRestricting() {
   let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus: SimpleTest.waitForFocus,
   });
 
   checkResults(context.results, expectedResults);
@@ -203,7 +200,6 @@ add_task(async function threeTips_nonRestricting() {
   let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus: SimpleTest.waitForFocus,
   });
 
   checkResults(context.results, expectedResults);

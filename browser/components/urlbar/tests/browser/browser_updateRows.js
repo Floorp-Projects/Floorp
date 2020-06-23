@@ -42,7 +42,6 @@ add_task(async function urlToTip() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus,
   });
 
   // The result at index 1 should be the http://example.com/test visit.
@@ -145,7 +144,6 @@ add_task(async function tipToURL() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,
-    waitForFocus,
   });
 
   // The result at index 1 should be the tip from our provider.

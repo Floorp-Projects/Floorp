@@ -54,7 +54,6 @@ add_task(async function switchToTab() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "% robots",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
@@ -92,7 +91,6 @@ add_task(async function searchSuggestions() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
   let length = await UrlbarTestUtils.getResultCount(window);

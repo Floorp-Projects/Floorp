@@ -54,7 +54,6 @@ add_task(async function viewContainsStaleRows() {
   // view due to the heuristic result, but that's not important.)
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "x",
     fireInputEvent: true,
   });
@@ -185,7 +184,6 @@ add_task(async function staleReplacedWithFresh() {
   // Search for "tes" and wait for the search to finish.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "tes",
     fireInputEvent: true,
   });

@@ -18,7 +18,6 @@ add_task(async function test_switchTab_currentTab() {
         async () => {
           let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
             window,
-            waitForFocus: SimpleTest.waitForFocus,
             value: "robot",
           });
           Assert.ok(

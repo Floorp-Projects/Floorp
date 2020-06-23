@@ -41,7 +41,6 @@ add_task(async function suggestedIndex() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
 
@@ -93,7 +92,6 @@ add_task(async function suggestedIndex_append() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "bar",
   });
 

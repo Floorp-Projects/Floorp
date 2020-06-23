@@ -50,7 +50,6 @@ add_task(async function mainTest() {
       // and the two suggestions.
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        waitForFocus: SimpleTest.waitForFocus,
         value: "amp",
       });
       await TestUtils.waitForCondition(() => {

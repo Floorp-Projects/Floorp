@@ -39,7 +39,6 @@ add_task(async function clickSuggestion() {
   gURLBar.focus();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
   let [idx, suggestion, engineName] = await getFirstSuggestion();
@@ -80,7 +79,6 @@ async function testPressEnterOnSuggestion(
   gURLBar.focus();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
   let [idx, suggestion, engineName] = await getFirstSuggestion();
@@ -141,7 +139,6 @@ add_task(async function copySuggestionText() {
   gURLBar.focus();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
   let [idx, suggestion] = await getFirstSuggestion();
@@ -170,7 +167,6 @@ add_task(async function typeMaxChars() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value,
-    waitForFocus: SimpleTest.waitForFocus,
   });
 
   // Suggestions should be fetched since we allow them when typing, and the
@@ -268,7 +264,6 @@ add_task(async function heuristicAddsFormHistory() {
   gURLBar.focus();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "foo",
   });
 

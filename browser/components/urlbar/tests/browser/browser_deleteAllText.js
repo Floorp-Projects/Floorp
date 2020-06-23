@@ -29,7 +29,6 @@ async function runTest() {
   // Do an initial search for "x".
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "x",
     fireInputEvent: true,
   });
@@ -76,7 +75,7 @@ async function deleteInput() {
       EventUtils.synthesizeKey("KEY_Backspace");
     }
     Assert.ok(
-      window.gURLBar.view.isOpen,
+      gURLBar.view.isOpen,
       "View should remain open when deleting all input text"
     );
     let queryContext = await UrlbarTestUtils.promiseSearchComplete(window);

@@ -79,7 +79,6 @@ add_task(async function test_remotetab_opens() {
     async function() {
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        waitForFocus: SimpleTest.waitForFocus,
         value: "Test Remote",
       });
 

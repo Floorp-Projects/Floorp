@@ -23,7 +23,6 @@ add_task(async function() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "bug1060642",
   });
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);

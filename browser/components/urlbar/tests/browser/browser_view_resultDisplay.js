@@ -28,7 +28,6 @@ async function testResult(input, expected) {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: input.query,
   });
 

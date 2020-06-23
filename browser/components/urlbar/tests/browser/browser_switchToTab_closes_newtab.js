@@ -43,7 +43,6 @@ add_task(async function test_switchToTab_closes() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "dummy",
   });
 

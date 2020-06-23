@@ -24,7 +24,6 @@ add_task(async function origin() {
   ]);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "ExA",
     fireInputEvent: true,
   });
@@ -51,7 +50,6 @@ add_task(async function originPort() {
   ]);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "ExA",
     fireInputEvent: true,
   });
@@ -78,7 +76,6 @@ add_task(async function originScheme() {
   ]);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "http://ExA",
     fireInputEvent: true,
   });
@@ -105,7 +102,6 @@ add_task(async function originPortScheme() {
   ]);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "http://ExA",
     fireInputEvents: true,
   });
@@ -133,7 +129,6 @@ add_task(async function url() {
   ]);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "ExAmple.com/f",
     fireInputEvent: true,
   });
@@ -161,7 +156,6 @@ add_task(async function urlPort() {
   ]);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "ExAmple.com:8888/f",
     fireInputEvents: true,
   });
@@ -192,7 +186,6 @@ add_task(async function tokenAlias() {
   });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "@ExA",
     fireInputEvent: true,
   });
@@ -218,7 +211,6 @@ add_task(async function backspaceNoAutofill() {
   ]);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "ExA",
     fireInputEvent: true,
   });

@@ -38,7 +38,6 @@ add_task(async function test() {
   info("Search for the decoded string.");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: decoded,
   });
   Assert.equal(
@@ -52,7 +51,6 @@ add_task(async function test() {
   info("Search for the encoded string.");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: encodeURIComponent(decoded),
   });
   Assert.equal(

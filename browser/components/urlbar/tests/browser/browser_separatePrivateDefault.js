@@ -101,7 +101,6 @@ add_task(async function test_nonsearch() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "exa",
   });
   await AssertNoPrivateResult(window);
@@ -113,7 +112,6 @@ add_task(async function test_search() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "unique198273982173",
   });
   await AssertPrivateResult(window, await Services.search.getDefault(), false);
@@ -128,7 +126,6 @@ add_task(async function test_search_disabled_suggestions() {
   });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "unique198273982173",
   });
   await AssertPrivateResult(window, await Services.search.getDefault(), false);
@@ -141,7 +138,6 @@ add_task(async function test_oneoff_selected_keyboard() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "unique198273982173",
   });
   await AssertPrivateResult(window, await Services.search.getDefault(), false);
@@ -171,7 +167,6 @@ add_task(async function test_oneoff_selected_mouse() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "unique198273982173",
   });
   await AssertPrivateResult(window, await Services.search.getDefault(), false);
@@ -209,7 +204,6 @@ add_task(async function test_search_private_engine() {
   await Services.search.setDefaultPrivate(engine);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "unique198273982173",
   });
   await AssertPrivateResult(window, engine, true);
@@ -224,7 +218,6 @@ add_task(async function test_privateWindow() {
   });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: privateWin,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "unique198273982173",
   });
   await AssertNoPrivateResult(privateWin);
@@ -241,7 +234,6 @@ add_task(async function test_permanentPB() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: win,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "unique198273982173",
   });
   await AssertNoPrivateResult(win);
@@ -255,7 +247,6 @@ add_task(async function test_openPBWindow() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "unique198273982173",
   });
   await AssertPrivateResult(
@@ -286,7 +277,6 @@ add_task(async function test_oneoff_selected_with_private_engine_mouse() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "unique198273982173",
   });
   await AssertPrivateResult(
@@ -325,7 +315,6 @@ add_task(async function test_oneoff_selected_with_private_engine_keyboard() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "unique198273982173",
   });
   await AssertPrivateResult(
@@ -362,14 +351,12 @@ add_task(async function test_alias() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "alias",
   });
   await AssertNoPrivateResult(window);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "alias something",
   });
   await AssertNoPrivateResult(window);
@@ -381,21 +368,18 @@ add_task(async function test_restrict() {
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: UrlbarTokenizer.RESTRICT.SEARCH,
   });
   await AssertNoPrivateResult(window);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: UrlbarTokenizer.RESTRICT.SEARCH + " ",
   });
   await AssertNoPrivateResult(window);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: " " + UrlbarTokenizer.RESTRICT.SEARCH,
   });
   await AssertNoPrivateResult(window);
@@ -408,7 +392,6 @@ add_task(async function test_restrict_search() {
   let engine = await Services.search.getDefaultPrivate();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: UrlbarTokenizer.RESTRICT.SEARCH + "test",
   });
   let result = await AssertPrivateResult(window, engine, true);
@@ -416,7 +399,6 @@ add_task(async function test_restrict_search() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus,
     value: "test" + UrlbarTokenizer.RESTRICT.SEARCH,
   });
   result = await AssertPrivateResult(window, engine, true);

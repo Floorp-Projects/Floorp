@@ -69,7 +69,6 @@ add_task(async function() {
     let promise = promiseLoadURL();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      waitForFocus,
       value,
     });
     EventUtils.synthesizeKey("KEY_Enter");

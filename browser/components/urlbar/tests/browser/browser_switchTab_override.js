@@ -29,7 +29,6 @@ add_task(async function test_switchtab_override() {
   info("Wait for autocomplete");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    waitForFocus: SimpleTest.waitForFocus,
     value: "dummy_page",
   });
 
