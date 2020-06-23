@@ -1,4 +1,0 @@
--r ../dev-requirements.txt
-sphinx!=3.0.0
-alabaster
-requests>=2,<2.16
