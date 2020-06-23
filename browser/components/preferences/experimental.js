@@ -12,6 +12,9 @@ var gExperimentalPane = {
   inited: false,
   _template: null,
   _featureGatesContainer: null,
+  _boundRestartObserver: null,
+  _observedPrefs: [],
+  _shouldPromptForRestart: true,
 
   _featureGatePrefTypeToPrefServiceType(featureGatePrefType) {
     if (featureGatePrefType != "boolean") {
@@ -20,15 +23,46 @@ var gExperimentalPane = {
     return "bool";
   },
 
+  async _observeRestart(aSubject, aTopic, aData) {
+    if (!this._shouldPromptForRestart) {
+      return;
+    }
+    let prefValue = Services.prefs.getBoolPref(aData);
+    let buttonIndex = await confirmRestartPrompt(prefValue, 1, true, false);
+    if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+      Services.startup.quit(
+        Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+      );
+      return;
+    }
+    this._shouldPromptForRestart = false;
+    Services.prefs.setBoolPref(aData, !prefValue);
+    this._shouldPromptForRestart = true;
+  },
+
+  addPrefObserver(name, fn) {
+    this._observedPrefs.push({ name, fn });
+    Services.prefs.addObserver(name, fn);
+  },
+
+  removePrefObservers() {
+    for (let { name, fn } of this._observedPrefs) {
+      Services.prefs.removeObserver(name, fn);
+    }
+    this._observedPrefs = [];
+  },
+
   async init() {
     if (this.inited) {
       return;
     }
+    this.inited = true;
+    window.addEventListener("unload", () => this.removePrefObservers());
     this._template = document.getElementById("template-featureGate");
     this._featureGatesContainer = document.getElementById(
       "pane-experimental-featureGates"
     );
-    this.inited = true;
+    this._boundRestartObserver = this._observeRestart.bind(this);
     let features = await FeatureGate.all();
     let frag = document.createDocumentFragment();
     for (let feature of features) {
@@ -41,6 +75,9 @@ var gExperimentalPane = {
             "'"
         );
         continue;
+      }
+      if (feature.restartRequired) {
+        this.addPrefObserver(feature.preference, this._boundRestartObserver);
       }
       let template = this._template.content.cloneNode(true);
       let checkbox = template.querySelector(".featureGateCheckbox");
