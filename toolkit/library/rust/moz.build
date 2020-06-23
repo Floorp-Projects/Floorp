@@ -20,7 +20,8 @@ RUST_TESTS = [
 for feature in gkrust_features:
     # We don't want to enable refcount logging during rusttests, since the
     # relevant FFI symbols wouldn't be found.
-    if feature != 'gecko_refcount_logging':
+    # Nor do we want Glean to assume there are Gecko symbols.
+    if feature not in ('gecko_refcount_logging', 'glean_with_gecko'):
         RUST_TEST_FEATURES.append(feature)
 
 if CONFIG['CPU_ARCH'] != 'x86':
