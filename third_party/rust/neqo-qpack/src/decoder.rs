@@ -9,6 +9,7 @@ use crate::encoder_instructions::{DecodedEncoderInstruction, EncoderInstructionR
 use crate::header_block::{HeaderDecoder, HeaderDecoderResult};
 use crate::qpack_send_buf::QPData;
 use crate::reader::ReceiverConnWrapper;
+use crate::stats::Stats;
 use crate::table::HeaderTable;
 use crate::{Error, Header, QpackSettings, Res};
 use neqo_common::qdebug;
@@ -29,6 +30,7 @@ pub struct QPackDecoder {
     max_table_size: u64,
     max_blocked_streams: usize,
     blocked_streams: Vec<(u64, u64)>, //stream_id and requested inserts count.
+    stats: Stats,
 }
 
 impl QPackDecoder {
@@ -46,6 +48,7 @@ impl QPackDecoder {
             max_table_size: qpack_settings.max_table_size_decoder,
             max_blocked_streams: qpack_settings.max_blocked_streams.try_into().unwrap(),
             blocked_streams: Vec::new(),
+            stats: Stats::default(),
         }
     }
 
@@ -104,22 +107,26 @@ impl QPackDecoder {
                 self.table
                     .insert_with_name_ref(true, index, &value)
                     .map_err(|_| Error::EncoderStream)?;
+                self.stats.dynamic_table_inserts += 1;
             }
             DecodedEncoderInstruction::InsertWithNameRefDynamic { index, value } => {
                 self.table
                     .insert_with_name_ref(false, index, &value)
                     .map_err(|_| Error::EncoderStream)?;
+                self.stats.dynamic_table_inserts += 1;
             }
             DecodedEncoderInstruction::InsertWithNameLiteral { name, value } => {
                 self.table
                     .insert(&name, &value)
                     .map(|_| ())
                     .map_err(|_| Error::EncoderStream)?;
+                self.stats.dynamic_table_inserts += 1;
             }
             DecodedEncoderInstruction::Duplicate { index } => {
                 self.table
                     .duplicate(index)
                     .map_err(|_| Error::EncoderStream)?;
+                self.stats.dynamic_table_inserts += 1;
             }
             DecodedEncoderInstruction::NoInstruction => {
                 unreachable!("This can be call only with an instruction.")
@@ -186,6 +193,7 @@ impl QPackDecoder {
             Ok(HeaderDecoderResult::Headers(h)) => {
                 if decoder.get_req_insert_cnt() != 0 {
                     self.header_ack(stream_id, decoder.get_req_insert_cnt());
+                    self.stats.dynamic_table_references += 1;
                 }
                 Ok(Some(h))
             }
@@ -228,6 +236,11 @@ impl QPackDecoder {
     #[must_use]
     pub fn remote_stream_id(&self) -> Option<u64> {
         self.remote_stream_id
+    }
+
+    #[must_use]
+    pub fn stats(&self) -> &Stats {
+        &self.stats
     }
 }
 
@@ -290,7 +303,7 @@ mod tests {
             .peer_conn
             .stream_send(decoder.recv_stream_id, encoder_instruction);
         let out = decoder.peer_conn.process(None, now());
-        decoder.conn.process(out.dgram(), now());
+        let _ = decoder.conn.process(out.dgram(), now());
         assert_eq!(
             decoder
                 .decoder
@@ -302,7 +315,7 @@ mod tests {
     fn send_instructions_and_check(decoder: &mut TestDecoder, decoder_instruction: &[u8]) {
         decoder.decoder.send(&mut decoder.conn).unwrap();
         let out = decoder.conn.process(None, now());
-        decoder.peer_conn.process(out.dgram(), now());
+        let _ = decoder.peer_conn.process(out.dgram(), now());
         let mut buf = [0_u8; 100];
         let (amount, fin) = decoder
             .peer_conn

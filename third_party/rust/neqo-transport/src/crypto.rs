@@ -16,8 +16,9 @@ use neqo_crypto::aead::Aead;
 use neqo_crypto::hp::HpKey;
 use neqo_crypto::{
     hkdf, Agent, AntiReplay, Cipher, Epoch, HandshakeState, Record, RecordList, SymKey,
-    TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CT_HANDSHAKE, TLS_EPOCH_APPLICATION_DATA,
-    TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT, TLS_VERSION_1_3,
+    TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE,
+    TLS_EPOCH_APPLICATION_DATA, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT,
+    TLS_VERSION_1_3,
 };
 
 use crate::frame::Frame;
@@ -46,7 +47,11 @@ impl Crypto {
         anti_replay: Option<&AntiReplay>,
     ) -> Res<Self> {
         agent.set_version_range(TLS_VERSION_1_3, TLS_VERSION_1_3)?;
-        agent.enable_ciphers(&[TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384])?;
+        agent.set_ciphers(&[
+            TLS_AES_128_GCM_SHA256,
+            TLS_AES_256_GCM_SHA384,
+            TLS_CHACHA20_POLY1305_SHA256,
+        ])?;
         agent.set_alpn(protocols)?;
         agent.disable_end_of_early_data()?;
         match &mut agent {
@@ -532,7 +537,7 @@ impl CryptoDxAppData {
     pub fn next(&self) -> Res<Self> {
         if self.dx.epoch == usize::max_value() {
             // Guard against too many key updates.
-            return Err(Error::KeysNotFound);
+            return Err(Error::KeysExhausted);
         }
         let next_secret = Self::update_secret(self.cipher, &self.next_secret)?;
         Ok(Self {
@@ -851,6 +856,51 @@ impl CryptoStates {
             handshake: None,
             zero_rtt: None,
             cipher: TLS_AES_128_GCM_SHA256,
+            app_write: None,
+            app_read: Some(app_read()),
+            app_read_next: Some(app_read()),
+            read_update_time: None,
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_chacha() -> Self {
+        const SECRET: &[u8] = &[
+            0x9a, 0xc3, 0x12, 0xa7, 0xf8, 0x77, 0x46, 0x8e, 0xbe, 0x69, 0x42, 0x27, 0x48, 0xad,
+            0x00, 0xa1, 0x54, 0x43, 0xf1, 0x82, 0x03, 0xa0, 0x7d, 0x60, 0x60, 0xf6, 0x88, 0xf3,
+            0x0f, 0x21, 0x63, 0x2b,
+        ];
+        let secret =
+            hkdf::import_key(TLS_VERSION_1_3, TLS_CHACHA20_POLY1305_SHA256, SECRET).unwrap();
+        let app_read = || CryptoDxAppData {
+            dx: CryptoDxState {
+                direction: CryptoDxDirection::Read,
+                epoch: 0,
+                aead: Aead::new(
+                    TLS_VERSION_1_3,
+                    TLS_CHACHA20_POLY1305_SHA256,
+                    &secret,
+                    "quic ",
+                )
+                .unwrap(),
+                hpkey: HpKey::extract(
+                    TLS_VERSION_1_3,
+                    TLS_CHACHA20_POLY1305_SHA256,
+                    &secret,
+                    "quic hp",
+                )
+                .unwrap(),
+                used_pn: 0..645_971_972,
+                min_pn: 0,
+            },
+            cipher: TLS_CHACHA20_POLY1305_SHA256,
+            next_secret: secret.clone(),
+        };
+        Self {
+            initial: None,
+            handshake: None,
+            zero_rtt: None,
+            cipher: TLS_CHACHA20_POLY1305_SHA256,
             app_write: None,
             app_read: Some(app_read()),
             app_read_next: Some(app_read()),

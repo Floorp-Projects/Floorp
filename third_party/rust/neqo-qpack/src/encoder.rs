@@ -10,6 +10,7 @@ use crate::header_block::HeaderEncoder;
 use crate::qlog;
 use crate::qpack_send_buf::QPData;
 use crate::reader::ReceiverConnWrapper;
+use crate::stats::Stats;
 use crate::table::{HeaderTable, LookupResult, ADDITIONAL_TABLE_ENTRY_SIZE};
 use crate::Header;
 use crate::{Error, QpackSettings, Res};
@@ -37,6 +38,7 @@ pub struct QPackEncoder {
     unacked_header_blocks: HashMap<u64, VecDeque<HashSet<u64>>>,
     blocked_stream_cnt: u16,
     use_huffman: bool,
+    stats: Stats,
 }
 
 impl QPackEncoder {
@@ -54,6 +56,7 @@ impl QPackEncoder {
             unacked_header_blocks: HashMap::new(),
             blocked_stream_cnt: 0,
             use_huffman,
+            stats: Stats::default(),
         }
     }
 
@@ -248,6 +251,8 @@ impl QPackEncoder {
             return Err(Error::EncoderStreamBlocked);
         }
 
+        self.stats.dynamic_table_inserts += 1;
+
         match self.table.insert(name, value) {
             Ok(inx) => Ok(inx),
             Err(e) => {
@@ -387,6 +392,7 @@ impl QPackEncoder {
                 .entry(stream_id)
                 .or_insert_with(VecDeque::new)
                 .push_front(ref_entries);
+            self.stats.dynamic_table_references += 1;
         }
         Ok(encoded_h)
     }
@@ -410,6 +416,11 @@ impl QPackEncoder {
             self.remote_stream_id = Some(stream_id);
             Ok(())
         }
+    }
+
+    #[must_use]
+    pub fn stats(&self) -> &Stats {
+        &self.stats
     }
 
     #[must_use]
@@ -513,7 +524,7 @@ mod tests {
         encoder.encoder.send(&mut encoder.conn).unwrap();
         let out = encoder.conn.process(None, now());
         let out2 = encoder.peer_conn.process(out.dgram(), now());
-        encoder.conn.process(out2.dgram(), now());
+        let _ = encoder.conn.process(out2.dgram(), now());
         let mut buf = [0_u8; 100];
         let (amount, fin) = encoder
             .peer_conn
@@ -529,7 +540,7 @@ mod tests {
             .stream_send(encoder.recv_stream_id, decoder_instruction)
             .unwrap();
         let out = encoder.peer_conn.process(None, now());
-        encoder.conn.process(out.dgram(), now());
+        let _ = encoder.conn.process(out.dgram(), now());
         assert!(encoder
             .encoder
             .read_instructions(&mut encoder.conn, encoder.recv_stream_id)
@@ -1578,7 +1589,7 @@ mod tests {
 
         encoder.encoder.send(&mut encoder.conn).unwrap();
         let out = encoder.conn.process(None, now());
-        encoder.peer_conn.process(out.dgram(), now());
+        let _ = encoder.peer_conn.process(out.dgram(), now());
         // receive an insert count increment.
         recv_instruction(&mut encoder, &[0x01]);
 
