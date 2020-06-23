@@ -416,6 +416,16 @@ static const JSFunctionSpec async_iterator_proto_methods[] = {
     JS_SELF_HOSTED_SYM_FN(asyncIterator, "AsyncIteratorIdentity", 0, 0),
     JS_FS_END};
 
+static const JSFunctionSpec async_iterator_proto_methods_with_helpers[] = {
+    JS_SELF_HOSTED_FN("reduce", "AsyncIteratorReduce", 1, 0),
+    JS_SELF_HOSTED_FN("toArray", "AsyncIteratorToArray", 0, 0),
+    JS_SELF_HOSTED_FN("forEach", "AsyncIteratorForEach", 1, 0),
+    JS_SELF_HOSTED_FN("some", "AsyncIteratorSome", 1, 0),
+    JS_SELF_HOSTED_FN("every", "AsyncIteratorEvery", 1, 0),
+    JS_SELF_HOSTED_FN("find", "AsyncIteratorFind", 1, 0),
+    JS_SELF_HOSTED_SYM_FN(asyncIterator, "AsyncIteratorIdentity", 0, 0),
+    JS_FS_END};
+
 static const JSFunctionSpec async_from_sync_iter_methods[] = {
     JS_FN("next", AsyncFromSyncIteratorNext, 1, 0),
     JS_FN("throw", AsyncFromSyncIteratorThrow, 1, 0),
@@ -602,7 +612,7 @@ static const ClassSpec AsyncIteratorObjectClassSpec = {
     GenericCreatePrototype<AsyncIteratorObject>,
     nullptr,
     nullptr,
-    async_iterator_proto_methods,
+    async_iterator_proto_methods_with_helpers,
     nullptr,
     nullptr,
 };

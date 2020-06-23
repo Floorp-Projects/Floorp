@@ -836,6 +836,7 @@ bool GlobalObject::initSelfHostingBuiltins(JSContext* cx,
   };
 
   SymbolAndName wellKnownSymbols[] = {
+      {JS::SymbolCode::asyncIterator, "std_asyncIterator"},
       {JS::SymbolCode::isConcatSpreadable, "std_isConcatSpreadable"},
       {JS::SymbolCode::iterator, "std_iterator"},
       {JS::SymbolCode::match, "std_match"},
