@@ -1041,7 +1041,7 @@ void Statistics::beginGC(JSGCInvocationKind kind,
 
 void Statistics::measureInitialHeapSize() {
   MOZ_ASSERT(preCollectedHeapBytes == 0);
-  for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+  for (GCZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
     preCollectedHeapBytes += zone->gcHeapSize.bytes();
   }
 }

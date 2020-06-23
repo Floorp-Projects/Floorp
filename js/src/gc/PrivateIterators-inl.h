@@ -47,10 +47,11 @@ class GrayObjectIter : public ZoneAllCellIter<js::gc::TenuredCell> {
 };
 
 class GCZonesIter {
-  AllZonesIter zone;
+  ZonesIter zone;
 
  public:
-  explicit GCZonesIter(GCRuntime* gc) : zone(gc) {
+  explicit GCZonesIter(GCRuntime* gc, ZoneSelector selector = WithAtoms)
+      : zone(gc, selector) {
     MOZ_ASSERT(JS::RuntimeHeapIsBusy());
     MOZ_ASSERT_IF(gc->atomsZone->wasGCStarted(),
                   !gc->rt->hasHelperThreadZones());
@@ -59,7 +60,8 @@ class GCZonesIter {
       next();
     }
   }
-  explicit GCZonesIter(JSRuntime* rt) : GCZonesIter(&rt->gc) {}
+  explicit GCZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms)
+      : GCZonesIter(&rt->gc, selector) {}
 
   bool done() const { return zone.done(); }
 
@@ -86,20 +88,31 @@ using GCRealmsIter = CompartmentsOrRealmsIterT<GCZonesIter, RealmsInZoneIter>;
 /* Iterates over all zones in the current sweep group. */
 class SweepGroupZonesIter {
   JS::Zone* current;
+  ZoneSelector selector;
 
  public:
-  explicit SweepGroupZonesIter(GCRuntime* gc)
-      : current(gc->getCurrentSweepGroup()) {
+  explicit SweepGroupZonesIter(GCRuntime* gc, ZoneSelector selector = WithAtoms)
+      : selector(selector) {
     MOZ_ASSERT(CurrentThreadIsPerformingGC());
+    current = gc->getCurrentSweepGroup();
+    maybeSkipAtomsZone();
   }
-  explicit SweepGroupZonesIter(JSRuntime* rt)
-      : SweepGroupZonesIter(&rt->gc) {}
+  explicit SweepGroupZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms)
+      : SweepGroupZonesIter(&rt->gc, selector) {}
+
+  void maybeSkipAtomsZone() {
+    if (selector == SkipAtoms && current && current->isAtomsZone()) {
+      current = current->nextNodeInGroup();
+      MOZ_ASSERT_IF(current, !current->isAtomsZone());
+    }
+  }
 
   bool done() const { return !current; }
 
   void next() {
     MOZ_ASSERT(!done());
     current = current->nextNodeInGroup();
+    maybeSkipAtomsZone();
   }
 
   JS::Zone* get() const {

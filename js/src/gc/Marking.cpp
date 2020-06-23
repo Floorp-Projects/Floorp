@@ -2859,9 +2859,10 @@ void GCMarker::markDelayedChildren(Arena* arena, MarkColor color) {
   MOZ_ASSERT_IF(color == MarkColor::Gray, TraceKindCanBeMarkedGray(kind));
 
   AutoSetMarkColor setColor(*this, color);
-  for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
-    if (cell->isMarked(color)) {
-      js::TraceChildren(this, cell, kind);
+  for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
+    TenuredCell* t = i.getCell();
+    if (t->isMarked(color)) {
+      js::TraceChildren(this, t, kind);
     }
   }
 }
