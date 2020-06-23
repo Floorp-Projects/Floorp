@@ -135,7 +135,7 @@ void GPUProcessManager::OnXPCOMShutdown() {
 }
 
 void GPUProcessManager::OnPreferenceChange(const char16_t* aData) {
-  // A pref changed. If it's not on the blacklist, inform child processes.
+  // A pref changed. If it is useful to do so, inform child processes.
   if (!dom::ContentParent::ShouldSyncPreference(aData)) {
     return;
   }
