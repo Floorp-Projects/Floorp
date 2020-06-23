@@ -859,7 +859,8 @@ static const unsigned MaxParams = 1000;
 // `env->funcMaxResults()` to get the correct value for a module.
 static const unsigned MaxResults = 1000;
 static const unsigned MaxStructFields = 1000;
-static const unsigned MaxMemoryMaximumPages = 65536;
+static const unsigned MaxMemoryLimitField = 65536;
+static const unsigned MaxMemoryPages = 16384;
 static const unsigned MaxStringBytes = 100000;
 static const unsigned MaxModuleBytes = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes = 7654321;
@@ -868,7 +869,6 @@ static const unsigned MaxFunctionBytes = 7654321;
 
 static const unsigned MaxTableInitialLength = 10000000;
 static const unsigned MaxBrTableElems = 1000000;
-static const unsigned MaxMemoryInitialPages = 16384;
 static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
 static const unsigned MaxResultsForJitEntry = 1;
 static const unsigned MaxResultsForJitExit = 1;

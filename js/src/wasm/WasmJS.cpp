@@ -2058,8 +2058,14 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject obj(cx, &args[0].toObject());
   Limits limits;
-  if (!GetLimits(cx, obj, MaxMemoryInitialPages, MaxMemoryMaximumPages,
-                 "Memory", &limits, Shareable::True)) {
+  if (!GetLimits(cx, obj, MaxMemoryLimitField, MaxMemoryLimitField, "Memory",
+                 &limits, Shareable::True)) {
+    return false;
+  }
+
+  if (limits.initial > MaxMemoryPages) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_MEM_IMP_LIMIT);
     return false;
   }
 
