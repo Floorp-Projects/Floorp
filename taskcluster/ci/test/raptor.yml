@@ -674,10 +674,7 @@ raptor-youtube-playback-h264-firefox:
             windows10-64-ref-hw-2017/opt: ["mozilla-central", "try"]
             (linux|windows|macos)(?!.*shippable).*: []
             default: ["mozilla-central", "try"]
-    max-run-time:
-        by-test-platform:
-            windows10-aarch64/opt: 3600
-            default: 1800
+    max-run-time: 3600
     tier: 2
     mozharness:
         extra-options:
