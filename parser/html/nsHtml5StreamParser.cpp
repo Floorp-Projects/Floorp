@@ -177,8 +177,6 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mEventTarget(nsHtml5Module::GetStreamParserThread()->SerialEventTarget()),
       mExecutorFlusher(new nsHtml5ExecutorFlusher(aExecutor)),
       mLoadFlusher(new nsHtml5LoadFlusher(aExecutor)),
-      mJapaneseDetector(mozilla::JapaneseDetector::Create(true)),
-      mUseJapaneseDetector(false),
       mInitialEncodingWasFromParentFrame(false),
       mHasHadErrors(false),
       mDecodingLocalFileWithoutTokenizing(false),
@@ -232,7 +230,7 @@ nsresult nsHtml5StreamParser::GetChannel(nsIChannel** aChannel) {
 }
 
 void nsHtml5StreamParser::GuessEncoding(bool aEof, bool aInitial) {
-  if (mUseJapaneseDetector) {
+  if (mJapaneseDetector) {
     return;
   }
   if (!aInitial) {
@@ -299,7 +297,7 @@ void nsHtml5StreamParser::FeedJapaneseDetector(Span<const uint8_t> aBuffer,
 
 void nsHtml5StreamParser::FeedDetector(Span<const uint8_t> aBuffer,
                                        bool aLast) {
-  if (mUseJapaneseDetector) {
+  if (mJapaneseDetector) {
     FeedJapaneseDetector(aBuffer, aLast);
   } else {
     Unused << mDetector->Feed(aBuffer, aLast);
@@ -741,7 +739,9 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
           // Honor override
           if (mEncoding->IsJapaneseLegacy()) {
             mFeedChardet = true;
-            mUseJapaneseDetector = true;
+            if (!mJapaneseDetector) {
+              mJapaneseDetector = mozilla::JapaneseDetector::Create(true);
+            }
             FinalizeSniffingWithDetector(aFromSegment, countToSniffingLimit,
                                          false);
           } else {
@@ -762,7 +762,9 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
       // meta not found, honor override
       if (mEncoding->IsJapaneseLegacy()) {
         mFeedChardet = true;
-        mUseJapaneseDetector = true;
+        if (!mJapaneseDetector) {
+          mJapaneseDetector = mozilla::JapaneseDetector::Create(true);
+        }
         FinalizeSniffingWithDetector(aFromSegment, countToSniffingLimit, false);
       } else {
         DontGuessEncoding();
@@ -979,7 +981,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   // let's instantiate only if we make it out of this method with the
   // intent to use it.
   auto detectorCreator = MakeScopeExit([&] {
-    if (mFeedChardet && !mUseJapaneseDetector) {
+    if (mFeedChardet && !mJapaneseDetector) {
       mDetector = mozilla::EncodingDetector::Create();
     }
   });
@@ -1144,7 +1146,9 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
          mCharsetSource == kCharsetFromUserForced) &&
         mEncoding->IsJapaneseLegacy()) {
       // Japanese detector only
-      mUseJapaneseDetector = true;
+      if (!mJapaneseDetector) {
+        mJapaneseDetector = mozilla::JapaneseDetector::Create(true);
+      }
       mGuessEncoding = false;
     } else {
       DontGuessEncoding();
@@ -1154,9 +1158,11 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   // Compute various pref-based special cases
   if (!mDecodingLocalFileWithoutTokenizing && mFeedChardet) {
     if (mTLD.EqualsLiteral("jp")) {
-      mUseJapaneseDetector =
-          !StaticPrefs::intl_charset_detector_ng_jp_enabled();
-      if (mUseJapaneseDetector && mEncoding == WINDOWS_1252_ENCODING &&
+      if (!mJapaneseDetector &&
+          !StaticPrefs::intl_charset_detector_ng_jp_enabled()) {
+        mJapaneseDetector = mozilla::JapaneseDetector::Create(true);
+      }
+      if (mJapaneseDetector && mEncoding == WINDOWS_1252_ENCODING &&
           mCharsetSource <= kCharsetFromTopLevelDomain) {
         mCharsetSource = kCharsetFromTopLevelDomain;
         mEncoding = SHIFT_JIS_ENCODING;
