@@ -960,6 +960,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       interruptCallbacks_(this),
       interruptCallbackDisabled(this, false),
       interruptBits_(0),
+      inlinedICScript_(this, nullptr),
       ionReturnOverride_(this, MagicValue(JS_ARG_POISON)),
       jitStackLimit(UINTPTR_MAX),
       jitStackLimitNoInterrupt(this, UINTPTR_MAX),
