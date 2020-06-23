@@ -1374,6 +1374,17 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
     return nullptr;
   }
 
+  // null checked above
+  auto* doc = mWindow->GetExtantDoc();
+
+  if (StaticPrefs::dom_webshare_requireinteraction() &&
+      !doc->ConsumeTransientUserGestureActivation()) {
+    aRv.ThrowNotAllowedError(
+        "User activation was already consumed "
+        "or share() was not activated by a user gesture.");
+    return nullptr;
+  }
+
   // If none of data's members title, text, or url are present, reject p with
   // TypeError, and abort these steps.
   bool someMemberPassed = aData.mTitle.WasPassed() || aData.mText.WasPassed() ||
@@ -1383,9 +1394,6 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
         "Must have a title, text, or url in the ShareData dictionary");
     return nullptr;
   }
-
-  // null checked above
-  auto doc = mWindow->GetExtantDoc();
 
   // If data's url member is present, try to resolve it...
   nsCOMPtr<nsIURI> url;
@@ -1413,16 +1421,6 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
     text.Assign(NS_ConvertUTF16toUTF8(aData.mText.Value()));
   } else {
     text.SetIsVoid(true);
-  }
-
-  // The spec does the "triggered by user activation" after the data checks.
-  // Unfortunately, both Chrome and Safari behave this way, so interop wins.
-  // https://github.com/w3c/web-share/pull/118
-  if (StaticPrefs::dom_webshare_requireinteraction() &&
-      !UserActivation::IsHandlingUserInput()) {
-    NS_WARNING("Attempt to share not triggered by user activation");
-    aRv.Throw(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    return nullptr;
   }
 
   // Let mSharePromise be a new promise.
