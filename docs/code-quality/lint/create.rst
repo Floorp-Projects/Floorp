@@ -83,6 +83,7 @@ Each ``.yml`` file must have at least one linter defined in it. Here are the sup
 * setup - A function that sets up external dependencies (optional)
 * support-files - A list of glob patterns matching configuration files (optional)
 * find-dotfiles - If set to ``true``, run on dot files (.*) (optional)
+* ignore-case - If set to ``true`` and ``type`` is regex, ignore the case (optional)
 
 In addition to the above, some ``.yml`` files correspond to a single lint rule. For these, the
 following additional keys may be specified:
