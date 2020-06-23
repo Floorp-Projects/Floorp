@@ -12,7 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -42,11 +41,6 @@ const AWTerminate = {
   TAB_CLOSED: "welcome-tab-closed",
   APP_SHUT_DOWN: "app-shut-down",
   ADDRESS_BAR_NAVIGATED: "address-bar-navigated",
-};
-const LIGHT_WEIGHT_THEMES = {
-  DARK: "firefox-compact-dark@mozilla.org",
-  LIGHT: "firefox-compact-light@mozilla.org",
-  DEFAULT: "default-theme@mozilla.org",
 };
 
 async function getImportableSites() {
@@ -193,10 +187,6 @@ class AboutWelcomeParent extends JSWindowActorParent {
         this.AboutWelcomeObserver.terminateReason =
           AWTerminate.ADDRESS_BAR_NAVIGATED;
         break;
-      case "AWPage:SELECT_THEME":
-        return AddonManager.getAddonByID(
-          LIGHT_WEIGHT_THEMES[data]
-        ).then(addon => addon.enable());
       case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
         return new Promise(resolve =>
           Services.ww.registerNotification(function observer(subject, topic) {
