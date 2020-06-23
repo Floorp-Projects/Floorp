@@ -15,6 +15,7 @@ job-defaults:
                     android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
                     android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
                     default: []
+    webrender-run-on-projects: []
     tier: 3
     target:
         by-app:
@@ -67,6 +68,10 @@ job-defaults:
             - --browsertime
     optimization:
         push-interval-25: null
+    variants:
+        by-app:
+            chrome-m: []
+            default: ["webrender"]
 
 browsertime-tp6m:
     description: "Raptor (browsertime) tp6 page-load tests on android"

@@ -45,6 +45,7 @@ class WebExtension(Perftest):
             memory_test=self.config.get("memory_test"),
             no_conditioned_profile=self.config["no_conditioned_profile"],
             extra_prefs=self.config.get("extra_prefs"),
+            enable_webrender=self.config["enable_webrender"],
         )
         browser_name, browser_version = self.get_browser_meta()
         self.results_handler.add_browser_meta(self.config["app"], browser_version)

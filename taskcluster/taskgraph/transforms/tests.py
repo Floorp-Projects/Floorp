@@ -220,6 +220,13 @@ TEST_VARIANTS = {
                 ],
             }
         }
+    },
+    'webrender': {
+        'description': "{description} with webrender enabled",
+        'suffix': 'wr',
+        'merge': {
+            'webrender': True,
+        }
     }
 }
 
@@ -389,6 +396,9 @@ test_description_schema = Schema({
 
     # Whether the task should run with WebRender enabled or not.
     Optional('webrender'): bool,
+    Optional('webrender-run-on-projects'): optionally_keyed_by(
+        'app',
+        Any([text_type], 'default')),
 
     # The EC2 instance size to run these tests on.
     Required('instance-size'): optionally_keyed_by(
@@ -1002,6 +1012,7 @@ def handle_keyed_by(config, tasks):
         'fetches.fetch',
         'fetches.toolchain',
         'target',
+        'webrender-run-on-projects',
     ]
     for task in tasks:
         for field in fields:
@@ -1574,6 +1585,10 @@ def enable_webrender(config, tasks):
             # We only want to 'setpref' on tests that have a profile
             if not task['attributes']['unittest_category'] in ['cppunittest', 'gtest', 'raptor']:
                 extra_options.append("--setpref=layers.d3d11.enable-blacklist=false")
+
+            # run webrender variants on the projects specified on webrender-run-on-projects
+            if task.get("webrender-run-on-projects") is not None:
+                task["run-on-projects"] = task["webrender-run-on-projects"]
 
         yield task
 
