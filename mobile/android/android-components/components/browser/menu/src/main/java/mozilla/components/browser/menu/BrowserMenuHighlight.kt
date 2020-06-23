@@ -4,10 +4,15 @@
 
 package mozilla.components.browser.menu
 
+import android.content.Context
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.item.NO_ID
+import mozilla.components.concept.menu.candidate.HighPriorityHighlightEffect
+import mozilla.components.concept.menu.candidate.LowPriorityHighlightEffect
+import mozilla.components.concept.menu.candidate.MenuEffect
 
 /**
  * Describes how to display a [mozilla.components.browser.menu.item.BrowserMenuHighlightableItem]
@@ -16,6 +21,11 @@ import mozilla.components.browser.menu.item.NO_ID
 sealed class BrowserMenuHighlight {
     abstract val label: String?
     abstract val canPropagate: Boolean
+
+    /**
+     * Converts the highlight into a corresponding [MenuEffect] from concept-menu.
+     */
+    abstract fun asEffect(context: Context): MenuEffect
 
     /**
      * Displays a notification dot.
@@ -30,7 +40,11 @@ sealed class BrowserMenuHighlight {
         @ColorInt val notificationTint: Int,
         override val label: String? = null,
         override val canPropagate: Boolean = true
-    ) : BrowserMenuHighlight()
+    ) : BrowserMenuHighlight() {
+        override fun asEffect(context: Context) = LowPriorityHighlightEffect(
+            notificationTint = notificationTint
+        )
+    }
 
     /**
      * Changes the background of the menu item.
@@ -48,7 +62,11 @@ sealed class BrowserMenuHighlight {
         override val label: String? = null,
         val endImageResource: Int = NO_ID,
         override val canPropagate: Boolean = true
-    ) : BrowserMenuHighlight()
+    ) : BrowserMenuHighlight() {
+        override fun asEffect(context: Context) = HighPriorityHighlightEffect(
+            backgroundTint = backgroundTint
+        )
+    }
 
     /**
      * Described how to display a highlightable menu item when it is highlighted.
@@ -68,6 +86,10 @@ sealed class BrowserMenuHighlight {
         override val canPropagate: Boolean = true
     ) : BrowserMenuHighlight() {
         override val label: String? = null
+
+        override fun asEffect(context: Context) = HighPriorityHighlightEffect(
+            backgroundTint = ContextCompat.getColor(context, colorResource)
+        )
     }
 }
 

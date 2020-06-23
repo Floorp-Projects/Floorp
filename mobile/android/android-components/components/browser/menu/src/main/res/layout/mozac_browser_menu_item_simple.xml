@@ -8,8 +8,8 @@
     style="@style/Mozac.Browser.Menu.Item.Text"
     android:layout_width="match_parent"
     android:layout_height="@dimen/mozac_browser_menu_item_container_layout_height"
-    android:gravity="center_vertical"
-    android:textAlignment="viewStart"
-    android:paddingEnd="16dp"
+    android:gravity="start|center_vertical"
     android:paddingStart="16dp"
-    tools:ignore="RtlCompat" />
+    android:paddingEnd="16dp"
+    android:textAlignment="viewStart"
+    tools:text="Item" />
