@@ -31,6 +31,7 @@ class PerftestResultsHandler(object):
         app=None,
         no_conditioned_profile=False,
         cold=False,
+        enable_webrender=False,
         **kwargs
     ):
         self.gecko_profile = gecko_profile
@@ -46,6 +47,7 @@ class PerftestResultsHandler(object):
         self.fission_enabled = kwargs.get("extra_prefs", {}).get(
             "fission.autostart", False
         )
+        self.webrender_enabled = enable_webrender
         self.browser_version = None
         self.browser_name = None
         self.no_conditioned_profile = no_conditioned_profile
@@ -206,6 +208,8 @@ class RaptorResultsHandler(PerftestResultsHandler):
             new_result_json["extra_options"].append("nocondprof")
         if self.fission_enabled:
             new_result_json["extra_options"].append("fission")
+        if self.webrender_enabled:
+            new_result_json["extra_options"].append("webrender")
         self.results.append(new_result_json)
 
     def summarize_and_output(self, test_config, tests, test_names):
@@ -604,6 +608,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         new_result["extra_options"].append("gecko_profile")
                     if self.cold:
                         new_result["extra_options"].append("cold")
+                    if self.webrender_enabled:
+                        new_result["extra_options"].append("webrender")
 
                     return new_result
 
