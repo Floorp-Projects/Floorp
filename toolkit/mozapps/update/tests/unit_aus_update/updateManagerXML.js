@@ -81,7 +81,7 @@ function run_test() {
     "the update manager activeUpdate attribute" + MSG_SHOULD_EQUAL
   );
   Assert.equal(
-    gUpdateManager.updateCount,
+    gUpdateManager.getUpdateCount(),
     2,
     "the update manager updateCount attribute" + MSG_SHOULD_EQUAL
   );

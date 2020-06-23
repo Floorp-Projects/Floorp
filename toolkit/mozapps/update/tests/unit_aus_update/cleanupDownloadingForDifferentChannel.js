@@ -27,7 +27,7 @@ async function run_test() {
     "there should not be an active update"
   );
   Assert.equal(
-    gUpdateManager.updateCount,
+    gUpdateManager.getUpdateCount(),
     1,
     "the update manager update count" + MSG_SHOULD_EQUAL
   );
