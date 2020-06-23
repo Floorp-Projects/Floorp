@@ -459,6 +459,10 @@ class HttpChannelChild final : public PHttpChannelChild,
   // is currently being processed.
   uint8_t mIsLastPartOfMultiPart : 1;
 
+  // True if this channel is suspended by ConnectParent and not resumed by
+  // CompleteRedirectSetup/RecvDeleteSelf.
+  uint8_t mSuspendForWaitCompleteRedirectSetup : 1;
+
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
 
