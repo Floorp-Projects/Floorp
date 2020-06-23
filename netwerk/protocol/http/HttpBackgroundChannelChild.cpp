@@ -124,33 +124,15 @@ bool HttpBackgroundChannelChild::CreateBackgroundChannel() {
   return true;
 }
 
-bool HttpBackgroundChannelChild::IsWaitingOnStartRequest(
-    bool aDataFromSocketProcess) {
+bool HttpBackgroundChannelChild::IsWaitingOnStartRequest() {
   MOZ_ASSERT(OnSocketThread());
-
-  // When data is from socket process, it is possible that both mStartSent and
-  // mStartReceived are false here. We need to wait until OnStartRequest sent
-  // from parent process.
-  // TODO: We can remove this code when diversion is removed in bug 1604448.
-  if (aDataFromSocketProcess) {
-    return !mStartReceived;
-  }
 
   // Need to wait for OnStartRequest if it is sent by
   // parent process but not received by content process.
-  return (mStartSent && !mStartReceived);
+  return !mStartReceived;
 }
 
 // PHttpBackgroundChannelChild
-IPCResult HttpBackgroundChannelChild::RecvOnStartRequestSent() {
-  LOG(("HttpBackgroundChannelChild::RecvOnStartRequestSent [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
-  MOZ_ASSERT(!mStartSent);  // Should only receive this message once.
-
-  mStartSent = true;
-  return IPC_OK();
-}
-
 IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,
@@ -162,11 +144,6 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
   if (NS_WARN_IF(!mChannelChild)) {
     return IPC_OK();
   }
-
-  // TODO: OnStartRequest is off-main-thread so it's unnecessary to dispatch
-  // another IPC message for sync reason. Directly call here to behave the same
-  // as before. This is no longer needed and removed in the next patches.
-  RecvOnStartRequestSent();
 
   mChannelChild->ProcessOnStartRequest(aResponseHead, aUseResponseHead,
                                        aRequestHeaders, aArgs);
@@ -200,7 +177,8 @@ IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
     return IPC_OK();
   }
 
-  if (IsWaitingOnStartRequest(aDataFromSocketProcess)) {
+  // Bug 1641336: Race only happens if the data is from socket process.
+  if (IsWaitingOnStartRequest()) {
     LOG(("  > pending until OnStartRequest [offset=%" PRIu64 " count=%" PRIu32
          "]\n",
          aOffset, aCount));
