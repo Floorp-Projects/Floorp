@@ -132,6 +132,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   nsresult CrossProcessRedirectFinished(nsresult aStatus);
 
  protected:
+  mozilla::ipc::IPCResult RecvOnStartRequestSent() override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(
       const uint32_t& registrarId, const URIParams& newURI,
@@ -461,6 +462,13 @@ class HttpChannelChild final : public PHttpChannelChild,
   // True if this channel is suspended by ConnectParent and not resumed by
   // CompleteRedirectSetup/RecvDeleteSelf.
   uint8_t mSuspendForWaitCompleteRedirectSetup : 1;
+
+  // True if RecvOnStartRequestSent was received.
+  uint8_t mRecvOnStartRequestSentCalled : 1;
+
+  // True if this channel is suspened by waiting for permission and cookie. That
+  // is, RecvOnStartRequestSent is received.
+  uint8_t mSuspendedByWaitingForPermissionAndCookie : 1;
 
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);

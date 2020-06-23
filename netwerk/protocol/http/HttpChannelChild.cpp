@@ -189,7 +189,9 @@ HttpChannelChild::HttpChannelChild()
       mShouldParentIntercept(false),
       mSuspendParentAfterSynthesizeResponse(false),
       mIsLastPartOfMultiPart(false),
-      mSuspendForWaitCompleteRedirectSetup(false) {
+      mSuspendForWaitCompleteRedirectSetup(false),
+      mRecvOnStartRequestSentCalled(false),
+      mSuspendedByWaitingForPermissionAndCookie(false) {
   LOG(("Creating HttpChannelChild @%p\n", this));
 
   mChannelCreationTime = PR_Now();
@@ -391,6 +393,20 @@ void HttpChannelChild::AssociateApplicationCache(const nsCString& aGroupID,
   mApplicationCache->InitAsHandle(aGroupID, aClientID);
 }
 
+mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequestSent() {
+  LOG(("HttpChannelChild::RecvOnStartRequestSent [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mRecvOnStartRequestSentCalled);
+
+  mRecvOnStartRequestSentCalled = true;
+
+  if (mSuspendedByWaitingForPermissionAndCookie) {
+    mSuspendedByWaitingForPermissionAndCookie = false;
+    mEventQ->Resume();
+  }
+  return IPC_OK();
+}
+
 void HttpChannelChild::ProcessOnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,
@@ -407,6 +423,7 @@ void HttpChannelChild::ProcessOnStartRequest(
                              aArgs);
       }));
 }
+
 static void ResourceTimingStructArgsToTimingsStruct(
     const ResourceTimingStructArgs& aArgs, TimingStruct& aTimings) {
   aTimings.domainLookupStart = aArgs.domainLookupStart();
@@ -520,6 +537,20 @@ void HttpChannelChild::OnStartRequest(
     // overriding the referrer after BeginConnect().
     Unused << SetReferrerInfoInternal(aArgs.overrideReferrerInfo(), false, true,
                                       false);
+  }
+
+  if (aArgs.shouldWaitForOnStartRequestSent() &&
+      !mRecvOnStartRequestSentCalled) {
+    LOG(("  > pending DoOnStartRequest until RecvOnStartRequestSent\n"));
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mEventQ->Suspend();
+    mSuspendedByWaitingForPermissionAndCookie = true;
+    mEventQ->PrependEvent(MakeUnique<NeckoTargetChannelFunctionEvent>(
+        this, [self = UnsafePtr<HttpChannelChild>(this)]() {
+          self->DoOnStartRequest(self, nullptr);
+        }));
+    return;
   }
 
   DoOnStartRequest(this, nullptr);
