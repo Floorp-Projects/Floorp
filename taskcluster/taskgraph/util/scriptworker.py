@@ -160,6 +160,7 @@ BALROG_SERVER_SCOPES = {
     'beta': 'balrog:server:beta',
     'release': 'balrog:server:release',
     'esr68': 'balrog:server:esr',
+    'esr78': 'balrog:server:esr',
     'default': 'balrog:server:dep',
 }
 
