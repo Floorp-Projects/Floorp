@@ -2819,7 +2819,7 @@
     "n_buckets": 50,
     "description": "SPDY: Streams concurrent active per connection"
   },
-  "SPDY_REQUEST_PER_CONN_3": {
+  "SPDY_REQUEST_PER_CONN_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
@@ -2827,7 +2827,7 @@
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 50,
-    "bug_numbers": [1505500,1642559],
+    "bug_numbers": [1505500],
     "description": "SPDY: Streams created per connection"
   },
   "SPDY_SERVER_INITIATED_STREAMS": {
