@@ -7,11 +7,13 @@
 #ifndef mozilla_saferefptr_h__
 #define mozilla_saferefptr_h__
 
+#include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla {
 template <typename T>
@@ -430,6 +432,29 @@ inline RefPtr<T> StrongOrRawPtr(SafeRefPtr<S>&& aPtr) {
 }  // namespace dom
 
 }  // namespace mozilla
+
+template <class T>
+class nsTObserverArray<mozilla::SafeRefPtr<T>>
+    : public nsAutoTObserverArray<mozilla::SafeRefPtr<T>, 0> {
+ public:
+  using base_type = nsAutoTObserverArray<mozilla::SafeRefPtr<T>, 0>;
+  using size_type = nsTObserverArray_base::size_type;
+
+  // Initialization methods
+  nsTObserverArray() = default;
+
+  // Initialize this array and pre-allocate some number of elements.
+  explicit nsTObserverArray(size_type aCapacity) {
+    base_type::mArray.SetCapacity(aCapacity);
+  }
+
+  nsTObserverArray Clone() const {
+    auto result = nsTObserverArray{};
+    result.mArray = mozilla::TransformIntoNewArray(
+        this->mArray, [](const auto& ptr) { return ptr.clonePtr(); });
+    return result;
+  }
+};
 
 // Use MOZ_INLINE_DECL_SAFEREFCOUNTING_INHERITED in a 'Class' derived from a
 // 'Super' class which derives from (Atomic)SafeRefCounted, and from some other
