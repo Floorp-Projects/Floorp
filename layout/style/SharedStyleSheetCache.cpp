@@ -162,6 +162,15 @@ SharedStyleSheetCache::CacheResult SharedStyleSheetCache::Lookup(
   return {};
 }
 
+void SharedStyleSheetCache::WillStartPendingLoad(SheetLoadData& aData) {
+  SheetLoadData* curr = &aData;
+  do {
+    MOZ_DIAGNOSTIC_ASSERT(curr->mLoader->mPendingLoadCount,
+                          "Where did this pending load come from?");
+    --curr->mLoader->mPendingLoadCount;
+  } while ((curr = curr->mNext));
+}
+
 bool SharedStyleSheetCache::CoalesceLoad(const SheetLoadDataHashKey& aKey,
                                          SheetLoadData& aNewLoad,
                                          SheetState aExistingLoadState) {
@@ -184,6 +193,8 @@ bool SharedStyleSheetCache::CoalesceLoad(const SheetLoadDataHashKey& aKey,
     RefPtr<SheetLoadData> removedData;
     mPendingDatas.Remove(aKey, getter_AddRefs(removedData));
     MOZ_ASSERT(removedData == existingData, "Bad loading table");
+
+    WillStartPendingLoad(*removedData);
 
     // We insert to the front instead of the back, to keep the invariant that
     // the front sheet always is the one that triggers the load.
@@ -410,6 +421,8 @@ void SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded(
 
 void SharedStyleSheetCache::StartDeferredLoadsForLoader(
     css::Loader& aLoader, StartLoads aStartLoads) {
+  using PendingLoad = css::Loader::PendingLoad;
+
   LoadDataArray arr;
   for (auto iter = mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
     bool startIt = false;
@@ -432,7 +445,8 @@ void SharedStyleSheetCache::StartDeferredLoadsForLoader(
     }
   }
   for (auto& data : arr) {
-    data->mLoader->LoadSheet(*data, SheetState::NeedsParser);
+    WillStartPendingLoad(*data);
+    data->mLoader->LoadSheet(*data, SheetState::NeedsParser, PendingLoad::Yes);
   }
 }
 

@@ -120,6 +120,8 @@ class SharedStyleSheetCache final : public nsIMemoryReporter {
     bool Expired() const;
   };
 
+  void WillStartPendingLoad(css::SheetLoadData&);
+
   nsDataHashtable<SheetLoadDataHashKey, CompleteSheet> mCompleteSheets;
   nsRefPtrHashtable<SheetLoadDataHashKey, css::SheetLoadData> mPendingDatas;
   // The SheetLoadData pointers in mLoadingDatas below are weak references.
