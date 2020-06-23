@@ -180,6 +180,13 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     SetHTMLAttr(nsGkAtoms::inputmode, aValue, aRv);
   }
 
+  void GetEnterKeyHint(nsAString& aValue) {
+    GetEnumAttr(nsGkAtoms::enterkeyhint, nullptr, aValue);
+  }
+  void SetEnterKeyHint(const nsAString& aValue, ErrorResult& aRv) {
+    SetHTMLAttr(nsGkAtoms::enterkeyhint, aValue, aRv);
+  }
+
   /**
    * Determine whether an attribute is an event (onclick, etc.)
    * @param aName the attribute

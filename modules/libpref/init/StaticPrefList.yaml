@@ -2026,6 +2026,12 @@
   value: @IS_ANDROID@
   mirror: always
 
+# Is support for HTMLElement.enterKeyHint enabled?
+- name: dom.forms.enterkeyhint
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Is support for HTMLElement.inputMode enabled?
 - name: dom.forms.inputmode
   type: bool
