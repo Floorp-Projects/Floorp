@@ -32,15 +32,6 @@ void TRRServiceChild::Init(const bool& aCaptiveIsPassed,
   gTRRService->RebuildSuffixList(std::move(aDNSSuffixList));
 }
 
-mozilla::ipc::IPCResult TRRServiceChild::RecvNotifyObserver(
-    const nsCString& aTopic, const nsString& aData) {
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    obs->NotifyObservers(nullptr, aTopic.get(), aData.get());
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult TRRServiceChild::RecvUpdatePlatformDNSInformation(
     nsTArray<nsCString>&& aDNSSuffixList, const bool& aPlatformDisabledTRR) {
   gTRRService->RebuildSuffixList(std::move(aDNSSuffixList));
@@ -53,7 +44,9 @@ mozilla::ipc::IPCResult TRRServiceChild::RecvInitTRRBLStorage(
   RefPtr<DataStorage> storage =
       DataStorage::Get(DataStorageClass::TRRBlacklist);
   if (storage) {
-    storage->Init(&aEntry.items(), aWriteFd);
+    if (NS_SUCCEEDED(storage->Init(&aEntry.items(), aWriteFd))) {
+      gTRRService->InitTRRBLStorage(storage);
+    }
   }
   return IPC_OK();
 }

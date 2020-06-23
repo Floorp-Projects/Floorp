@@ -17,7 +17,6 @@ async refcounted protocol PTRRService
 
 child:
   async __delete__();
-  async NotifyObserver(nsCString aTopic, nsString aData);
   async UpdatePlatformDNSInformation(nsCString[] aSuffixList,
                                      bool aPlatformDisabledTRR);
   async InitTRRBLStorage(DataStorageEntry aEntry, FileDescriptor aWriteFd);
