@@ -125,6 +125,33 @@ bool HttpBackgroundChannelChild::CreateBackgroundChannel() {
   return true;
 }
 
+IPCResult HttpBackgroundChannelChild::RecvOnProgress(
+    const int64_t& aProgress, const int64_t& aProgressMax) {
+  LOG(("HttpBackgroundChannelChild::RecvOnProgress [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
+
+  MOZ_ASSERT(mChannelChild, "no channel child in RecvOnProgress");
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  mChannelChild->ProcessOnProgress(aProgress, aProgressMax);
+  return IPC_OK();
+}
+
+IPCResult HttpBackgroundChannelChild::RecvOnStatus(const nsresult& aStatus) {
+  LOG(("HttpBackgroundChannelChild::RecvOnStatus [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread());
+
+  MOZ_ASSERT(mChannelChild, "no channel child in RecvOnStatus");
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  mChannelChild->ProcessOnStatus(aStatus);
+  return IPC_OK();
+}
+
 bool HttpBackgroundChannelChild::IsWaitingOnStartRequest() {
   MOZ_ASSERT(OnSocketThread());
 
