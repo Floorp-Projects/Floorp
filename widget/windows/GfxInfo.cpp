@@ -2019,18 +2019,18 @@ void GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
     val = JS::BooleanValue(dm->TextureSharingWorks());
     JS_SetProperty(aCx, obj, "textureSharing", val);
 
-    bool blacklisted = false;
+    bool blocklisted = false;
     if (nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo()) {
       int32_t status;
       nsCString discardFailureId;
       if (SUCCEEDED(
               gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS,
                                         discardFailureId, &status))) {
-        blacklisted = (status != nsIGfxInfo::FEATURE_STATUS_OK);
+        blocklisted = (status != nsIGfxInfo::FEATURE_STATUS_OK);
       }
     }
 
-    val = JS::BooleanValue(blacklisted);
+    val = JS::BooleanValue(blocklisted);
     JS_SetProperty(aCx, obj, "blacklisted", val);
   }
 
