@@ -146,7 +146,7 @@ class BrowserMenuHighlightableItem(
     }
 
     override fun asCandidate(context: Context): TextMenuCandidate {
-        val base = super.asCandidate(context)
+        val base = super.asCandidate(context) as TextMenuCandidate
         if (!isHighlighted()) return base
 
         @Suppress("Deprecation")

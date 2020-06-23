@@ -13,9 +13,10 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu.ext.asCandidateList
 import mozilla.components.concept.menu.candidate.ContainerStyle
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
-import mozilla.components.concept.menu.candidate.TextMenuCandidate
+import mozilla.components.concept.menu.candidate.NestedMenuCandidate
 import mozilla.components.concept.menu.candidate.TextStyle
 
 /**
@@ -81,13 +82,15 @@ class ParentBrowserMenuItem(
         }
     }
 
-    override fun asCandidate(context: Context) = TextMenuCandidate(
-        label,
+    override fun asCandidate(context: Context) = NestedMenuCandidate(
+        id = hashCode(),
+        text = label,
         start = DrawableMenuIcon(
             context,
             resource = imageResource,
             tint = if (iconTintColorResource == NO_ID) null else ContextCompat.getColor(context, iconTintColorResource)
         ),
+        subMenuItems = subMenu.adapter.visibleItems.asCandidateList(context),
         textStyle = TextStyle(
             color = if (textColorResource == NO_ID) null else ContextCompat.getColor(context, textColorResource)
         ),

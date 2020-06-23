@@ -7,14 +7,13 @@ package mozilla.components.browser.menu.item
 import android.view.LayoutInflater
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
-import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuAdapter
 import mozilla.components.browser.menu.R
+import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
-import mozilla.components.concept.menu.candidate.TextMenuCandidate
-import mozilla.components.support.test.mock
+import mozilla.components.concept.menu.candidate.NestedMenuCandidate
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -108,36 +107,41 @@ class ParentBrowserMenuItemTest {
 
     @Test
     fun `menu item image text item can be converted to candidate`() {
+        val backPressMenuItem = BackPressMenuItem(
+            label = "back",
+            imageResource = R.drawable.mozac_ic_back
+        )
+        val subMenuItem = SimpleBrowserMenuItem("test")
+        val subMenuAdapter = BrowserMenuAdapter(testContext, listOf(backPressMenuItem, subMenuItem))
+        val subMenu = BrowserMenu(subMenuAdapter)
+        val menuItem = ParentBrowserMenuItem(
+            "label",
+            android.R.drawable.ic_menu_report_image,
+            subMenu = subMenu
+        )
+
+        val candidate = menuItem.asCandidate(testContext)
+
+        assertEquals(menuItem.hashCode(), candidate.id)
+        assertEquals("label", candidate.text)
+        assertEquals(2, candidate.subMenuItems!!.size)
+
+        val backCandidate = candidate.subMenuItems!![0] as NestedMenuCandidate
+        val testCandidate = candidate.subMenuItems!![1] as DecorativeTextMenuCandidate
         assertEquals(
-            TextMenuCandidate(
-                "label",
-                start = DrawableMenuIcon(null)
+            NestedMenuCandidate(
+                id = backPressMenuItem.hashCode(),
+                text = "back",
+                start = DrawableMenuIcon(null),
+                subMenuItems = null
             ),
-            ParentBrowserMenuItem(
-                "label",
-                android.R.drawable.ic_menu_report_image,
-                subMenu = mock()
-            ).asCandidate(testContext).run {
+            backCandidate.run {
                 copy(start = (start as? DrawableMenuIcon)?.copy(drawable = null))
             }
         )
-
         assertEquals(
-            TextMenuCandidate(
-                text = "label",
-                start = DrawableMenuIcon(
-                    drawable = null,
-                    tint = ContextCompat.getColor(testContext, android.R.color.black)
-                )
-            ),
-                ParentBrowserMenuItem(
-                "label",
-                android.R.drawable.ic_menu_report_image,
-                android.R.color.black,
-                subMenu = mock()
-            ).asCandidate(testContext).run {
-                copy(start = (start as? DrawableMenuIcon)?.copy(drawable = null))
-            }
+            DecorativeTextMenuCandidate("test"),
+            testCandidate
         )
     }
 }

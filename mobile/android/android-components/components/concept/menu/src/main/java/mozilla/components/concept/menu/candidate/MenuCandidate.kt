@@ -79,6 +79,30 @@ data class CompoundMenuCandidate(
 }
 
 /**
+ * Menu option that opens a nested sub menu.
+ *
+ * @property id Unique ID for this nested menu. Can be a resource ID.
+ * @property text Text to display.
+ * @property start Icon to display before the text.
+ * @property end Icon to display after the text.
+ * @property subMenuItems Nested menu items to display.
+ * If null, this item will instead return to the root menu.
+ * @property textStyle Styling to apply to the text.
+ * @property containerStyle Styling to apply to the container.
+ * @property effect Effects to apply to the option.
+ */
+data class NestedMenuCandidate(
+    val id: Int,
+    val text: String,
+    val start: MenuIcon? = null,
+    val end: DrawableMenuIcon? = null,
+    val subMenuItems: List<MenuCandidate>? = emptyList(),
+    val textStyle: TextStyle = TextStyle(),
+    override val containerStyle: ContainerStyle = ContainerStyle(),
+    val effect: MenuCandidateEffect? = null
+) : MenuCandidate()
+
+/**
  * Displays a row of small menu options.
  *
  * @property items Small menu options to display.

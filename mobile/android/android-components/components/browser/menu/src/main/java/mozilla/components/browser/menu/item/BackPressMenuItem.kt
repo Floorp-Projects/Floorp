@@ -4,10 +4,13 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import mozilla.components.browser.menu.BrowserMenu
+import mozilla.components.concept.menu.candidate.NestedMenuCandidate
+import mozilla.components.concept.menu.candidate.TextMenuCandidate
 
 /**
  * A back press menu item for a nested sub menu entry.
@@ -41,5 +44,17 @@ class BackPressMenuItem(
      */
     fun setListener(onClickListener: () -> Unit) {
         backPressListener = onClickListener
+    }
+
+    override fun asCandidate(context: Context): NestedMenuCandidate {
+        val parentCandidate = super.asCandidate(context) as TextMenuCandidate
+        return NestedMenuCandidate(
+            id = hashCode(),
+            text = parentCandidate.text,
+            start = parentCandidate.start,
+            subMenuItems = null,
+            textStyle = parentCandidate.textStyle,
+            containerStyle = parentCandidate.containerStyle
+        )
     }
 }

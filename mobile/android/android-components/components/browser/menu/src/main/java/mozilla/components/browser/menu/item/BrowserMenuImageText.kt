@@ -18,6 +18,7 @@ import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
 import mozilla.components.concept.menu.candidate.ContainerStyle
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
+import mozilla.components.concept.menu.candidate.MenuCandidate
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.menu.candidate.TextStyle
 
@@ -84,7 +85,7 @@ open class BrowserMenuImageText(
         }
     }
 
-    override fun asCandidate(context: Context) = TextMenuCandidate(
+    override fun asCandidate(context: Context): MenuCandidate = TextMenuCandidate(
         label,
         start = DrawableMenuIcon(
             context,
