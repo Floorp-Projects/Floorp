@@ -1187,7 +1187,7 @@ static void GetActionHint(nsIContent& aContent, nsAString& aActionHint) {
   }
 
   // If we don't have an action hint and
-  // return won't submit the form, use "next".
+  // return won't submit the form, use "maybenext".
   bool willSubmit = false;
   bool isLastElement = false;
   nsCOMPtr<nsIFormControl> control(do_QueryInterface(inputContent));
@@ -1224,7 +1224,7 @@ static void GetActionHint(nsIContent& aContent, nsAString& aActionHint) {
       if (IsNextFocusableElementTextControl(inputContent->AsElement())) {
         // This is focusable text control
         // XXX What good hint for read only field?
-        aActionHint.AssignLiteral("next");
+        aActionHint.AssignLiteral("maybenext");
         return;
       }
     }
