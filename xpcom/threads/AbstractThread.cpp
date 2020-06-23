@@ -190,6 +190,7 @@ class XPCOMThreadWrapper final : public AbstractThread,
     NS_IMETHOD Run() override {
       MOZ_ASSERT(mThread == AbstractThread::GetCurrent());
       MOZ_ASSERT(mThread->IsCurrentThreadIn());
+      SerialEventTargetGuard guard(mThread);
       return mRunnable->Run();
     }
 
