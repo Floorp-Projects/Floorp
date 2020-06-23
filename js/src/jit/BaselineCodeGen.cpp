@@ -1074,15 +1074,41 @@ bool BaselineCodeGen<Handler>::emitDebugPrologue() {
 
 template <>
 void BaselineCompilerCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
+  Register scratch = R0.scratchReg();
+  Register scratch2 = R2.scratchReg();
+  MOZ_ASSERT(nonFunctionEnv != scratch && nonFunctionEnv != scratch2);
+
   masm.store32(Imm32(0), frame.addressOfFlags());
   if (handler.function()) {
-    Register scratch = R0.scratchReg();
     masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), scratch);
     masm.loadPtr(Address(scratch, JSFunction::offsetOfEnvironment()), scratch);
     masm.storePtr(scratch, frame.addressOfEnvironmentChain());
   } else {
     masm.storePtr(nonFunctionEnv, frame.addressOfEnvironmentChain());
   }
+
+  if (!JitOptions.warpBuilder) {
+    // Trial inlining only supported in Warp.
+    return;
+  }
+
+  // If cx->inlinedICScript contains an inlined ICScript (passed from
+  // the caller), take that ICScript and store it in the frame, then
+  // overwrite cx->inlinedICScript with nullptr.
+  Label notInlined, done;
+  masm.movePtr(ImmPtr(cx->addressOfInlinedICScript()), scratch);
+  Address inlinedAddr(scratch, 0);
+  masm.branchPtr(Assembler::Equal, inlinedAddr, ImmWord(0), &notInlined);
+  masm.loadPtr(inlinedAddr, scratch2);
+  masm.storePtr(scratch2, frame.addressOfICScript());
+  masm.storePtr(ImmPtr(nullptr), inlinedAddr);
+  masm.jump(&done);
+
+  // Otherwise, store this script's default ICSCript in the frame.
+  masm.bind(&notInlined);
+  masm.storePtr(ImmPtr(handler.script()->jitScript()->icScript()),
+                frame.addressOfICScript());
+  masm.bind(&done);
 }
 
 template <>
@@ -5890,6 +5916,17 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
   masm.loadPtr(Address(scratch, JitScript::offsetOfBaselineScript()), scratch);
   masm.branchPtr(Assembler::BelowOrEqual, scratch,
                  ImmPtr(BaselineDisabledScriptPtr), &noBaselineScript);
+
+  if (JitOptions.warpBuilder) {
+    // Initialize the icScript slot in the baseline frame.
+    masm.loadJitScript(script, script);
+    masm.computeEffectiveAddress(Address(script, JitScript::offsetOfICScript()),
+                                 script);
+    Address icScriptAddr(BaselineFrameReg,
+                         BaselineFrame::reverseOffsetOfCompilerICScript());
+    masm.storePtr(script, icScriptAddr);
+  }
+
   masm.load32(Address(scratch, BaselineScript::offsetOfResumeEntriesOffset()),
               script);
   masm.addPtr(scratch, script);
