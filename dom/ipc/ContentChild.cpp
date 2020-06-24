@@ -2307,6 +2307,16 @@ mozilla::ipc::IPCResult ContentChild::RecvThemeChanged(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvUpdateSystemParameters(
+    nsTArray<SystemParameterKVPair>&& aUpdates) {
+#ifdef XP_WIN
+  widget::WinContentSystemParameters::GetSingleton()->SetContentValues(
+      aUpdates);
+#endif
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvLoadProcessScript(
     const nsString& aURL) {
   auto* global = ContentProcessMessageManager::Get();

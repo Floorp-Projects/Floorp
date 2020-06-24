@@ -556,6 +556,8 @@ child:
      */
     async ThemeChanged(LookAndFeelInt[] lookAndFeelIntCache);
 
+    async UpdateSystemParameters(SystemParameterKVPair[] aUpdates);
+
     async PreferenceUpdate(Pref pref);
     async VarUpdate(GfxVarUpdate var);
 
