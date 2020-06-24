@@ -17,9 +17,8 @@ class ProgressiveWebAppFacts {
      * Items that specify which portion of the [PwaFeature] was interacted with
      */
     object Items {
-        const val CLOSE = "close"
         const val HOMESCREEN_ICON_TAP = "homescreen_icon_tap"
-        const val FOREGROUND_TIMING = "foreground_timing"
+        const val DURATION_IN_BACKGROUND = "duration_in_background"
     }
 
     /**
@@ -45,8 +44,6 @@ private fun emitPwaFact(
     ).collect()
 }
 
-internal fun emitCloseFact() = emitPwaFact(Action.CLICK, ProgressiveWebAppFacts.Items.CLOSE)
-
 internal fun emitHomescreenIconTapFact() =
     emitPwaFact(
         Action.CLICK,
@@ -57,7 +54,7 @@ internal fun emitHomescreenIconTapFact() =
 internal fun emitForegroundTimingFact(timingNs: Long) =
     emitPwaFact(
         Action.INTERACTION,
-        ProgressiveWebAppFacts.Items.FOREGROUND_TIMING,
+        ProgressiveWebAppFacts.Items.DURATION_IN_BACKGROUND,
         metadata = mapOf(
             // We only care about millisecond precision here, so convert from ns to ms before emitting.
             ProgressiveWebAppFacts.MetadataKeys.BACKGROUND_DURATION to (timingNs / 1_000_000L)

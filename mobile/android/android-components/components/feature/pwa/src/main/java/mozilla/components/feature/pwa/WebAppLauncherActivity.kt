@@ -63,7 +63,6 @@ class WebAppLauncherActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         resetBackgroundTimer()
-        emitCloseFact()
         scope.cancel()
     }
 
