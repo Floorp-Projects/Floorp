@@ -307,7 +307,6 @@ class MOZ_STACK_CLASS WSRunScanner {
       : WSRunScanner(aHTMLEditor,
                      EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
                      EditorRawDOMPoint(aScanStartNode, aScanStartOffset)) {}
-  ~WSRunScanner();
 
   // ScanNextVisibleNodeOrBlockBoundaryForwardFrom() returns the first visible
   // node after aPoint.  If there is no visible nodes after aPoint, returns
@@ -428,7 +427,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   // WSFragment represents a single run of ws (all leadingws, or all normalws,
   // or all trailingws, or all leading+trailingws).  Note that this single run
   // may still span multiple nodes.
-  struct WSFragment final {
+  struct MOZ_STACK_CLASS WSFragment final {
     nsCOMPtr<nsINode> mStartNode;  // node where ws run starts
     nsCOMPtr<nsINode> mEndNode;    // node where ws run ends
     int32_t mStartOffset;          // offset where ws run starts
@@ -530,6 +529,8 @@ class MOZ_STACK_CLASS WSRunScanner {
     StartOfHardLine mIsStartOfHardLine;
     EndOfHardLine mIsEndOfHardLine;
   };
+
+  using WSFragmentArray = AutoTArray<WSFragment, 3>;
 
   /**
    * FindNearestFragment() looks for a WSFragment which is closest to specified
@@ -690,7 +691,6 @@ class MOZ_STACK_CLASS WSRunScanner {
   };
 
   void GetRuns();
-  void ClearRuns();
   void InitializeWithSingleFragment(
       WSFragment::Visible aIsVisible,
       WSFragment::StartOfHardLine aIsStartOfHardLine,
@@ -720,11 +720,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   // true if we are in preformatted white-space context.
   bool mPRE;
 
-  // The first WSFragment in the run.
-  WSFragment* mStartRun;
-
-  // The last WSFragment in the run, may be same as first.
-  WSFragment* mEndRun;
+  WSFragmentArray mFragments;
 
   // Non-owning.
   const HTMLEditor* mHTMLEditor;
