@@ -42,7 +42,12 @@ UniquePtr<RenderCompositor> RenderCompositorNativeOGL::Create(
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorNativeSWGL::Create(
     RefPtr<widget::CompositorWidget>&& aWidget) {
-  return MakeUnique<RenderCompositorNativeSWGL>(std::move(aWidget));
+  void* ctx = wr_swgl_create_context();
+  if (!ctx) {
+    gfxCriticalNote << "Failed SWGL context creation for WebRender";
+    return nullptr;
+  }
+  return MakeUnique<RenderCompositorNativeSWGL>(std::move(aWidget), ctx);
 }
 
 RenderCompositorNative::RenderCompositorNative(
@@ -90,8 +95,19 @@ RenderCompositorNativeOGL::~RenderCompositorNativeOGL() {
 }
 
 RenderCompositorNativeSWGL::RenderCompositorNativeSWGL(
-    RefPtr<widget::CompositorWidget>&& aWidget)
-    : RenderCompositorNative(std::move(aWidget)) {}
+    RefPtr<widget::CompositorWidget>&& aWidget, void* aContext)
+    : RenderCompositorNative(std::move(aWidget)), mContext(aContext) {
+  MOZ_ASSERT(mContext);
+}
+
+RenderCompositorNativeSWGL::~RenderCompositorNativeSWGL() {
+  wr_swgl_destroy_context(mContext);
+}
+
+bool RenderCompositorNativeSWGL::MakeCurrent() {
+  wr_swgl_make_current(mContext);
+  return true;
+}
 
 bool RenderCompositorNative::BeginFrame() {
   if (!MakeCurrent()) {
@@ -143,6 +159,8 @@ bool RenderCompositorNativeSWGL::InitDefaultFramebuffer(
     if (!MapNativeLayer(mNativeLayerForEntireWindow, aBounds, aBounds)) {
       return false;
     }
+    wr_swgl_init_default_framebuffer(mContext, aBounds.width, aBounds.height,
+                                     mLayerStride, mLayerData);
   }
   return true;
 }
@@ -365,16 +383,6 @@ void RenderCompositorNativeSWGL::UnmapNativeLayer() {
   mLayerTarget = nullptr;
   mLayerData = nullptr;
   mLayerStride = 0;
-}
-
-bool RenderCompositorNativeSWGL::GetMappedBuffer(uint8_t** aData,
-                                                 int32_t* aStride) {
-  if (mNativeLayerForEntireWindow && mLayerData) {
-    *aData = mLayerData;
-    *aStride = mLayerStride;
-    return true;
-  }
-  return false;
 }
 
 bool RenderCompositorNativeSWGL::MapTile(wr::NativeTileId aId,
