@@ -1140,6 +1140,10 @@ impl RenderBackend {
 
                 self.gpu_cache.clear();
 
+                for (_, doc) in &mut self.documents {
+                    doc.frame_builder.memory_pressure();
+                }
+
                 let resource_updates = self.resource_cache.pending_updates();
                 let msg = ResultMsg::UpdateResources {
                     resource_updates,
