@@ -782,7 +782,8 @@ class PrincipalsCollector {
           let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
             origin
           );
-          if (isSupportedPrincipal(principal)) {
+          let uri = principal.URI;
+          if (isSupportedURI(uri)) {
             list.push(principal);
           }
         }
@@ -950,13 +951,13 @@ async function sanitizeOnShutdown(progress) {
     }
 
     // We consider just permissions set for http, https and file URLs.
-    if (!isSupportedPrincipal(permission.principal)) {
+    if (!isSupportedURI(permission.principal.URI)) {
       continue;
     }
 
     log(
       "Custom session cookie permission detected for: " +
-        permission.principal.asciiSpec
+        permission.principal.URI.spec
     );
     exceptions++;
 
@@ -964,7 +965,7 @@ async function sanitizeOnShutdown(progress) {
     let principals = await principalsCollector.getAllPrincipals(progress);
     let selectedPrincipals = extractMatchingPrincipals(
       principals,
-      permission.principal.host
+      permission.principal.URI
     );
     await maybeSanitizeSessionPrincipals(progress, selectedPrincipals);
   }
@@ -973,9 +974,9 @@ async function sanitizeOnShutdown(progress) {
 }
 
 // Extracts the principals matching matchUri as root domain.
-function extractMatchingPrincipals(principals, matchHost) {
+function extractMatchingPrincipals(principals, matchUri) {
   return principals.filter(principal => {
-    return Services.eTLD.hasRootDomain(matchHost, principal.host);
+    return Services.eTLD.hasRootDomain(matchUri.host, principal.URI.host);
   });
 }
 
@@ -1002,7 +1003,7 @@ async function maybeSanitizeSessionPrincipals(progress, principals) {
 }
 
 function cookiesAllowedForDomainOrSubDomain(principal) {
-  log("Checking principal: " + principal.aciispec);
+  log("Checking principal: " + principal.URI.spec);
 
   // If we have the 'cookie' permission for this principal, let's return
   // immediately.
@@ -1032,13 +1033,15 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
     }
 
     // We consider just permissions set for http, https and file URLs.
-    if (!isSupportedPrincipal(perm.principal)) {
+    if (!isSupportedURI(perm.principal.URI)) {
       continue;
     }
 
     // We don't care about scheme, port, and anything else.
-    if (Services.eTLD.hasRootDomain(perm.principal.host, principal.host)) {
-      log("Recursive cookie check on principal: " + perm.principal.asciiSpec);
+    if (
+      Services.eTLD.hasRootDomain(perm.principal.URI.host, principal.URI.host)
+    ) {
+      log("Recursive cookie check on principal: " + perm.principal.URI.spec);
       return cookiesAllowedForDomainOrSubDomain(perm.principal);
     }
   }
@@ -1048,7 +1051,7 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
 }
 
 async function sanitizeSessionPrincipal(progress, principal) {
-  log("Sanitizing principal: " + principal.aciispec);
+  log("Sanitizing principal: " + principal.URI.spec);
 
   await new Promise(resolve => {
     progress.sanitizePrincipal = "started";
@@ -1158,6 +1161,6 @@ async function clearData(range, flags) {
   }
 }
 
-function isSupportedPrincipal(principal) {
-  return ["http", "https", "file"].some(scheme => principal.schemeIs(scheme));
+function isSupportedURI(uri) {
+  return uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file";
 }
