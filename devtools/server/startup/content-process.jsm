@@ -79,11 +79,8 @@ function init(msg) {
   const { ContentProcessTargetActor } = loader.require(
     "devtools/server/actors/targets/content-process"
   );
-  const { ActorPool } = loader.require("devtools/server/actors/common");
   const actor = new ContentProcessTargetActor(conn);
-  const actorPool = new ActorPool(conn, "content-process");
-  actorPool.addActor(actor);
-  conn.addActorPool(actorPool);
+  actor.manage(actor);
 
   const response = { actor: actor.form() };
   mm.sendAsyncMessage("debug:content-process-actor", response);

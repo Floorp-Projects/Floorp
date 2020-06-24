@@ -42,7 +42,6 @@ try {
     const DevToolsUtils = require("devtools/shared/DevToolsUtils");
     const { dumpn } = DevToolsUtils;
     const { DevToolsServer } = require("devtools/server/devtools-server");
-    const { ActorPool } = require("devtools/server/actors/common");
 
     DevToolsServer.init();
     // We want a special server without any root actor and only target-scoped actors.
@@ -84,10 +83,7 @@ try {
         // message manager.
         actor = new FrameTargetActor(conn, docShell);
       }
-
-      const actorPool = new ActorPool(conn, "frame-script");
-      actorPool.addActor(actor);
-      conn.addActorPool(actorPool);
+      actor.manage(actor);
 
       sendAsyncMessage("debug:actor", { actor: actor.form(), prefix: prefix });
     });
