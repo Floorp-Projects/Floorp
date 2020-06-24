@@ -161,11 +161,6 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
             category = NS_LITERAL_CSTRING("cookieBlockedForeign");
             break;
 
-          case nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN:
-            message = "CookiePartitionedForeign";
-            category = NS_LITERAL_CSTRING("cookiePartitionedForeign");
-            break;
-
           default:
             return;
         }
