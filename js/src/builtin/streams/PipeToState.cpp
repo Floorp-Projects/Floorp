@@ -119,6 +119,46 @@ static MOZ_MUST_USE bool Finalize(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+// Shutdown with an action, steps d-f:
+//   d. Let p be the result of performing action.
+//   e. Upon fulfillment of p, finalize, passing along originalError if it was
+//      given.
+//   f. Upon rejection of p with reason newError, finalize with newError.
+static MOZ_MUST_USE bool ActAndFinalize(JSContext* cx,
+                                        Handle<PipeToState*> state,
+                                        Handle<Maybe<Value>> error) {
+  // Step d: Let p be the result of performing action.
+  // Step e: Upon fulfillment of p, finalize, passing along originalError if it
+  //         was given.
+  // Step f: Upon rejection of p with reason newError, finalize with newError.
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
+                            "perform action then finalize");
+  return false;
+}
+
+static MOZ_MUST_USE bool ActAndFinalize(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
+  cx->check(state);
+
+  Rooted<Maybe<Value>> optionalError(cx, Nothing());
+  if (Value maybeError = ExtraValueFromHandler(args);
+      !maybeError.isMagic(JS_READABLESTREAM_PIPETO_FINALIZE_WITHOUT_ERROR)) {
+    optionalError = Some(maybeError);
+  }
+  cx->check(optionalError);
+
+  if (!ActAndFinalize(cx, state, optionalError)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 // Shutdown with an action: if any of the above requirements ask to shutdown
 // with an action action, optionally with an error originalError, then:
 static MOZ_MUST_USE bool ShutdownWithAction(
@@ -135,7 +175,7 @@ static MOZ_MUST_USE bool ShutdownWithAction(
   // Step b: Set shuttingDown to true.
   state->setShuttingDown();
 
-  // Save the action away for later -- potentially asynchronous -- use.
+  // Save the action away for later, potentially asynchronous, use.
   state->setShutdownAction(action);
 
   // Step c: If dest.[[state]] is "writable" and
@@ -147,20 +187,43 @@ static MOZ_MUST_USE bool ShutdownWithAction(
   if (WritableAndNotClosing(unwrappedDest)) {
     // Step c.i:  If any chunks have been read but not yet written, write them
     //            to dest.
+    //
+    // Any chunk that has been read, will have been processed and a pending
+    // write for it created by this point.  (A pending read has not been "read".
+    // And any pending read, will not be processed into a pending write because
+    // of the |state->setShuttingDown()| above in concert with the early exit
+    // in this case in |ReadFulfilled|.)
+
     // Step c.ii: Wait until every chunk that has been read has been written
     //            (i.e. the corresponding promises have settled).
+    if (PromiseObject* p = state->lastWriteRequest()) {
+      Rooted<PromiseObject*> lastWriteRequest(cx, p);
+
+      Rooted<Value> extra(
+          cx,
+          originalError.isSome()
+              ? *originalError.get()
+              : MagicValue(JS_READABLESTREAM_PIPETO_FINALIZE_WITHOUT_ERROR));
+
+      Rooted<JSFunction*> actAndfinalize(
+          cx, NewHandlerWithExtraValue(cx, ActAndFinalize, state, extra));
+      if (!actAndfinalize) {
+        return false;
+      }
+
+      return JS::AddPromiseReactions(cx, lastWriteRequest, actAndfinalize,
+                                     actAndfinalize);
+    }
+
+    // If no last write request was ever created, we can fall through and
+    // synchronously perform the remaining steps.
   }
 
   // Step d: Let p be the result of performing action.
   // Step e: Upon fulfillment of p, finalize, passing along originalError if it
   //         was given.
   // Step f: Upon rejection of p with reason newError, finalize with newError.
-
-  // XXX fill me in!
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
-                            "pipeTo shutdown with action");
-  return false;
+  return ActAndFinalize(cx, state, originalError);
 }
 
 // Shutdown: if any of the above requirements or steps ask to shutdown,
@@ -185,8 +248,8 @@ static MOZ_MUST_USE bool Shutdown(JSContext* cx, Handle<PipeToState*> state,
     return false;
   }
   if (WritableAndNotClosing(unwrappedDest)) {
-    // Step c.i:  If any chunks have been read but not yet written, write them
-    //            to dest.
+    // Step 1: If any chunks have been read but not yet written, write them to
+    //         dest.
     //
     // Any chunk that has been read, will have been processed and a pending
     // write for it created by this point.  (A pending read has not been "read".
@@ -194,25 +257,28 @@ static MOZ_MUST_USE bool Shutdown(JSContext* cx, Handle<PipeToState*> state,
     // of the |state->setShuttingDown()| above in concert with the early exit
     // in this case in |ReadFulfilled|.)
 
-    // Step c.ii: Wait until every chunk that has been read has been written
-    //            (i.e. the corresponding promises have settled).
+    // Step 2: Wait until every chunk that has been read has been written
+    //         (i.e. the corresponding promises have settled).
     if (PromiseObject* p = state->lastWriteRequest()) {
       Rooted<PromiseObject*> lastWriteRequest(cx, p);
 
-      Rooted<Value> optionalError(
+      Rooted<Value> extra(
           cx,
           error.isSome()
               ? *error.get()
               : MagicValue(JS_READABLESTREAM_PIPETO_FINALIZE_WITHOUT_ERROR));
 
       Rooted<JSFunction*> finalize(
-          cx, NewHandlerWithExtraValue(cx, Finalize, state, optionalError));
+          cx, NewHandlerWithExtraValue(cx, Finalize, state, extra));
       if (!finalize) {
         return false;
       }
 
       return JS::AddPromiseReactions(cx, lastWriteRequest, finalize, finalize);
     }
+
+    // If no last write request was ever created, we can fall through and
+    // synchronously perform the remaining steps.
   }
 
   // Step d: Finalize, passing along error if it was given.
