@@ -28,7 +28,6 @@ function isPixel(ctx, x,y, r,g,b,a, d) {
 <p>Canvas test: 2d.composite.canvaspattern.setTransform</p>
 <canvas id="ctx" width="100" height="50"><p class="fallback">FAIL
 (fallback content)</p></canvas>
-<svg id="svg1"></svg>
 <img src="image_rgrg-256x256.png" id="rgrg-256x256.png" width="32"
 height="32" class="resource">
 
@@ -42,8 +41,7 @@ function test_2d_canvaspattern_setTransform() {
   var img = document.getElementById("rgrg-256x256.png");
   var pat = ctx.createPattern(img,"repeat");
 
-  var svg = document.getElementById("svg1");
-  var mtx = svg1.createSVGMatrix();
+  var mtx = new DOMMatrix()
   pat.setTransform(mtx.rotate(-45).scale(0.1));
   ctx.fillStyle = pat;
   ctx.fillRect(0, 0, 100, 50);

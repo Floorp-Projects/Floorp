@@ -104,9 +104,7 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/SVGImageElement.h"
-#include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/TextMetrics.h"
-#include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/FloatingPoint.h"
 #include "nsGlobalWindow.h"
 #include "nsFilterInstance.h"
@@ -703,8 +701,18 @@ class AdjustedTarget {
   UniquePtr<AdjustedTargetForFilter> mFilterTarget;
 };
 
-void CanvasPattern::SetTransform(SVGMatrix& aMatrix) {
-  mTransform = ToMatrix(aMatrix.GetMatrix());
+void CanvasPattern::SetTransform(const DOMMatrix2DInit& aInit,
+                                 ErrorResult& aError) {
+  RefPtr<DOMMatrixReadOnly> matrix =
+      DOMMatrixReadOnly::FromMatrix(GetParentObject(), aInit, aError);
+  if (aError.Failed()) {
+    return;
+  }
+  const auto* matrix2D = matrix->GetInternal2D();
+  if (!matrix2D->IsFinite()) {
+    return;
+  }
+  mTransform = Matrix(*matrix2D);
 }
 
 void CanvasGradient::AddColorStop(float aOffset, const nsACString& aColorstr,

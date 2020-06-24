@@ -20,7 +20,7 @@ class SourceSurface;
 }  // namespace gfx
 
 namespace dom {
-class SVGMatrix;
+struct DOMMatrix2DInit;
 
 class CanvasPattern final : public nsWrapperCache {
   ~CanvasPattern() = default;
@@ -51,7 +51,7 @@ class CanvasPattern final : public nsWrapperCache {
   CanvasRenderingContext2D* GetParentObject() { return mContext; }
 
   // WebIDL
-  void SetTransform(SVGMatrix& matrix);
+  void SetTransform(const DOMMatrix2DInit& aInit, ErrorResult& aError);
 
   RefPtr<CanvasRenderingContext2D> mContext;
   RefPtr<gfx::SourceSurface> mSurface;
