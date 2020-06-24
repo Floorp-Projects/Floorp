@@ -1,9 +1,9 @@
 # [Android Components](../../../README.md) > Service > Glean
 
 A client-side telemetry SDK for collecting metrics and sending them to Mozilla's telemetry service.
-It is a replacment for the deprecated [service-telemetry](../telemetry/README.md).
+It is a replacement for the deprecated [service-telemetry](../telemetry/README.md).
 
-Visit the [complete Glean documentation](https://mozilla.github.io/glean/).
+Visit the [complete Glean SDK documentation](https://mozilla.github.io/glean/).
 
 ## Contact
 
