@@ -29,17 +29,6 @@ MediaDevices::~MediaDevices() {
   mDeviceChangeListener.DisconnectIfExists();
 }
 
-static bool IsSameOriginWithAllParentDocs(nsINode* aDoc) {
-  MOZ_ASSERT(aDoc);
-  nsINode* node = aDoc;
-  while ((node = nsContentUtils::GetCrossDocParentNode(node))) {
-    if (NS_FAILED(nsContentUtils::CheckSameOrigin(aDoc, node))) {
-      return false;
-    }
-  }
-  return true;
-}
-
 already_AddRefed<Promise> MediaDevices::GetUserMedia(
     const MediaStreamConstraints& aConstraints, CallerType aCallerType,
     ErrorResult& aRv) {
@@ -47,9 +36,6 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
     if (Document* doc = owner->GetExtantDoc()) {
       if (!owner->IsSecureContext()) {
         doc->SetUseCounter(eUseCounter_custom_GetUserMediaInsec);
-      }
-      if (!IsSameOriginWithAllParentDocs(doc)) {
-        doc->SetUseCounter(eUseCounter_custom_GetUserMediaXOrigin);
       }
       Document* topDoc = doc->GetTopLevelContentDocument();
       IgnoredErrorResult ignored;
@@ -150,13 +136,6 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
 already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
     const DisplayMediaStreamConstraints& aConstraints, CallerType aCallerType,
     ErrorResult& aRv) {
-  if (RefPtr<nsPIDOMWindowInner> owner = GetOwner()) {
-    if (Document* doc = owner->GetExtantDoc()) {
-      if (!IsSameOriginWithAllParentDocs(doc)) {
-        doc->SetUseCounter(eUseCounter_custom_GetDisplayMediaXOrigin);
-      }
-    }
-  }
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;

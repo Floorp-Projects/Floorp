@@ -1312,13 +1312,6 @@ void Navigator::MozGetUserMediaDevices(
     if (!mWindow->IsSecureContext()) {
       doc->SetUseCounter(eUseCounter_custom_MozGetUserMediaInsec);
     }
-    nsINode* node = doc;
-    while ((node = nsContentUtils::GetCrossDocParentNode(node))) {
-      if (NS_FAILED(nsContentUtils::CheckSameOrigin(doc, node))) {
-        doc->SetUseCounter(eUseCounter_custom_MozGetUserMediaXOrigin);
-        break;
-      }
-    }
   }
   RefPtr<MediaManager> manager = MediaManager::Get();
   // XXXbz aOnError seems to be unused?
