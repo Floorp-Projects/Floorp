@@ -1608,8 +1608,18 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     const auto repeatLineNames = autoRepeatValue->line_names.AsSpan();
     MOZ_ASSERT(repeatLineNames.Length() >= 2);
     // Number of tracks inside the repeat, not including any repetitions.
-    const uint32_t numRepeatTracks = autoRepeatValue->track_sizes.len;
-    MOZ_ASSERT(repeatLineNames.Length() == numRepeatTracks + 1);
+    // Check that if we have truncated the number of tracks due to overflowing
+    // the maximum track limit then we also truncate this repeat count.
+    MOZ_ASSERT(repeatLineNames.Length() ==
+               autoRepeatValue->track_sizes.len + 1);
+    // If we have truncated the first repetition of repeat tracks, then we
+    // can't index using autoRepeatValue->track_sizes.len, and
+    // aTrackInfo.mRemovedRepeatTracks.Length() will account for all repeat
+    // tracks that haven't been truncated.
+    const uint32_t numRepeatTracks =
+        std::min(aTrackInfo.mRemovedRepeatTracks.Length(),
+                 autoRepeatValue->track_sizes.len);
+    MOZ_ASSERT(repeatLineNames.Length() >= numRepeatTracks + 1);
     // The total of all tracks in all repetitions of the repeat.
     const uint32_t totalNumRepeatTracks =
         aTrackInfo.mRemovedRepeatTracks.Length();
