@@ -1344,8 +1344,9 @@ Search.prototype = {
 
       // We may not have auto-filled, but this may still look like a URL.
       // However, even if the input is a valid URL, we may not want to use
-      // it as such. This can happen if the host would require whitelisting,
-      // but isn't in the whitelist.
+      // it as such. This can happen if the host isn't using a known TLD
+      // and hasn't been added to a user-controlled list of known domains,
+      // and/or if it looks like an email address.
       let matched = await this._matchUnknownUrl();
       if (matched) {
         // Since we can't tell if this is a real URL and whether the user wants
@@ -1393,7 +1394,7 @@ Search.prototype = {
     let query, params;
     if (
       UrlbarTokenizer.looksLikeOrigin(this._searchString, {
-        ignoreWhitelist: true,
+        ignoreKnownDomains: true,
       })
     ) {
       [query, params] = this._originQuery;
@@ -1498,7 +1499,7 @@ Search.prototype = {
     }
     // If the search string looks more like a url than a domain, bail out.
     if (
-      !UrlbarTokenizer.looksLikeOrigin(searchStr, { ignoreWhitelist: true })
+      !UrlbarTokenizer.looksLikeOrigin(searchStr, { ignoreKnownDomains: true })
     ) {
       return false;
     }
