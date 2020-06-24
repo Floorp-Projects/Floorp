@@ -76,6 +76,12 @@ class MediaControlKeySource {
   // what kinds of buttons should be shown on the UI.
   virtual void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) = 0;
 
+  // Override these methods if the inherited key source want to know the change
+  // for following attributes. For example, GeckoView would use these methods
+  // to notify change to the embedded application.
+  virtual void SetEnableFullScreen(bool aIsEnabled){};
+  virtual void SetEnablePictureInPictureMode(bool aIsEnabled){};
+
  protected:
   virtual ~MediaControlKeySource() = default;
   nsTArray<RefPtr<MediaControlKeyListener>> mListeners;

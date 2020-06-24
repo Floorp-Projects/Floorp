@@ -123,6 +123,14 @@ class MediaController final : public DOMEventTargetHelper,
     return mSupportedKeysChangedEvent;
   }
 
+  MediaEventSource<bool>& FullScreenChangedEvent() {
+    return mFullScreenChangedEvent;
+  }
+
+  MediaEventSource<bool>& PictureInPictureModeChangedEvent() {
+    return mPictureInPictureModeChangedEvent;
+  }
+
   CopyableTArray<MediaControlKey> GetSupportedMediaKeys() const;
 
  private:
@@ -156,6 +164,9 @@ class MediaController final : public DOMEventTargetHelper,
   // the media keys, then determine the supported media keys.
   MediaEventListener mSupportedActionsChangedListener;
   MediaEventProducer<nsTArray<MediaControlKey>> mSupportedKeysChangedEvent;
+
+  MediaEventProducer<bool> mFullScreenChangedEvent;
+  MediaEventProducer<bool> mPictureInPictureModeChangedEvent;
   // Use copyable array so that we can use the result as a parameter for the
   // media event.
   CopyableTArray<MediaControlKey> mSupportedKeys;

@@ -145,6 +145,8 @@ class MediaControlService final : public nsIObserver {
     RefPtr<MediaControlKeySource> mSource;
     MediaEventListener mMetadataChangedListener;
     MediaEventListener mSupportedKeysChangedListener;
+    MediaEventListener mFullScreenChangedListener;
+    MediaEventListener mPictureInPictureModeChangedListener;
   };
 
   void Init();

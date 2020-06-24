@@ -367,11 +367,23 @@ void MediaControlService::ControllerManager::ConnectMainControllerEvents() {
           [this](const MediaKeysArray& aSupportedKeys) {
             mSource->SetSupportedMediaKeys(aSupportedKeys);
           });
+  mFullScreenChangedListener =
+      mMainController->FullScreenChangedEvent().Connect(
+          AbstractThread::MainThread(), [this](bool aIsEnabled) {
+            mSource->SetEnableFullScreen(aIsEnabled);
+          });
+  mPictureInPictureModeChangedListener =
+      mMainController->PictureInPictureModeChangedEvent().Connect(
+          AbstractThread::MainThread(), [this](bool aIsEnabled) {
+            mSource->SetEnablePictureInPictureMode(aIsEnabled);
+          });
 }
 
 void MediaControlService::ControllerManager::DisconnectMainControllerEvents() {
   mMetadataChangedListener.DisconnectIfExists();
   mSupportedKeysChangedListener.DisconnectIfExists();
+  mFullScreenChangedListener.DisconnectIfExists();
+  mPictureInPictureModeChangedListener.DisconnectIfExists();
 }
 
 MediaController* MediaControlService::ControllerManager::GetMainController()
