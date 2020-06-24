@@ -74,7 +74,6 @@ class WarpSnapshot;
 // WarpBuilder builds a MIR graph from WarpSnapshot. Unlike WarpOracle,
 // WarpBuilder can run off-thread.
 class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
-  WarpSnapshot& snapshot_;
   MIRGraph& graph_;
   const CompileInfo& info_;
   JSScript* script_;
@@ -99,7 +98,6 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
 
   MIRGraph& graph() { return graph_; }
   const CompileInfo& info() const { return info_; }
-  WarpSnapshot& snapshot() const { return snapshot_; }
 
   BytecodeSite* newBytecodeSite(BytecodeLocation loc);
 

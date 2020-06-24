@@ -24,8 +24,7 @@ using namespace js;
 using namespace js::jit;
 
 WarpBuilder::WarpBuilder(WarpSnapshot& snapshot, MIRGenerator& mirGen)
-    : WarpBuilderShared(mirGen, nullptr),
-      snapshot_(snapshot),
+    : WarpBuilderShared(snapshot, mirGen, nullptr),
       graph_(mirGen.graph()),
       info_(mirGen.outerInfo()),
       script_(snapshot.script()->script()),
@@ -363,7 +362,7 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
 }
 
 bool WarpBuilder::buildEnvironmentChain() {
-  const WarpEnvironment& env = snapshot_.script()->environment();
+  const WarpEnvironment& env = snapshot().script()->environment();
 
   if (env.is<NoEnvironment>()) {
     return true;
@@ -1683,8 +1682,9 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
   }
 
   // TODO: Consider using buildIC for this as well.
-  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
-    return TranspileCacheIRToMIR(mirGen(), loc, current, snapshot, callInfo);
+  if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return TranspileCacheIRToMIR(snapshot(), mirGen(), loc, current,
+                                 cacheIRSnapshot, callInfo);
   }
 
   // TODO: consider adding a Call IC like Baseline has.
@@ -1759,13 +1759,13 @@ bool WarpBuilder::build_FunctionThis(BytecodeLocation loc) {
 bool WarpBuilder::build_GlobalThis(BytecodeLocation loc) {
   MOZ_ASSERT(!script_->hasNonSyntacticScope(),
              "WarpOracle should have aborted compilation");
-  JSObject* obj = snapshot_.globalLexicalEnvThis();
+  JSObject* obj = snapshot().globalLexicalEnvThis();
   pushConstant(ObjectValue(*obj));
   return true;
 }
 
 MConstant* WarpBuilder::globalLexicalEnvConstant() {
-  JSObject* globalLexical = snapshot_.globalLexicalEnv();
+  JSObject* globalLexical = snapshot().globalLexicalEnv();
   return constant(ObjectValue(*globalLexical));
 }
 
@@ -2022,12 +2022,14 @@ void WarpBuilder::buildCheckLexicalOp(BytecodeLocation loc) {
   JSOp op = loc.getOp();
   MOZ_ASSERT(op == JSOp::CheckLexical || op == JSOp::CheckAliasedLexical);
 
-  // TODO: IonBuilder has code to mark not-movable if lexical checks failed
-  // before. We likely need a mechanism to prevent LICM/bailout loops.
   MDefinition* input = current->pop();
   MInstruction* lexicalCheck = MLexicalCheck::New(alloc(), input);
   current->add(lexicalCheck);
   current->push(lexicalCheck);
+
+  if (snapshot().bailoutInfo().failedLexicalCheck()) {
+    lexicalCheck->setNotMovable();
+  }
 
   if (op == JSOp::CheckLexical) {
     // Set the local slot so that a subsequent GetLocal without a CheckLexical
@@ -2110,7 +2112,7 @@ bool WarpBuilder::build_GetIntrinsic(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_ImportMeta(BytecodeLocation loc) {
-  ModuleObject* moduleObj = snapshot_.script()->moduleObject();
+  ModuleObject* moduleObj = snapshot().script()->moduleObject();
   MOZ_ASSERT(moduleObj);
 
   MModuleMetadata* ins = MModuleMetadata::New(alloc(), moduleObj);
@@ -2292,7 +2294,7 @@ bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
   MOZ_ASSERT(script_->isFunction());
   MOZ_ASSERT(info().funMaybeLazy());
 
-  if (snapshot_.script()->isArrowFunction()) {
+  if (snapshot().script()->isArrowFunction()) {
     MDefinition* callee = getCallee();
     MArrowNewTarget* ins = MArrowNewTarget::New(alloc(), callee);
     current->add(ins);
@@ -2572,19 +2574,19 @@ bool WarpBuilder::build_Debugger(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_InstrumentationActive(BytecodeLocation) {
-  bool active = snapshot_.script()->instrumentationActive();
+  bool active = snapshot().script()->instrumentationActive();
   pushConstant(BooleanValue(active));
   return true;
 }
 
 bool WarpBuilder::build_InstrumentationCallback(BytecodeLocation) {
-  JSObject* callback = snapshot_.script()->instrumentationCallback();
+  JSObject* callback = snapshot().script()->instrumentationCallback();
   pushConstant(ObjectValue(*callback));
   return true;
 }
 
 bool WarpBuilder::build_InstrumentationScriptId(BytecodeLocation) {
-  int32_t scriptId = snapshot_.script()->instrumentationScriptId();
+  int32_t scriptId = snapshot().script()->instrumentationScriptId();
   pushConstant(Int32Value(scriptId));
   return true;
 }
@@ -2748,12 +2750,13 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
   mozilla::DebugOnly<size_t> numInputs = inputs.size();
   MOZ_ASSERT(numInputs == NumInputsForCacheKind(kind));
 
-  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+  if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
     MDefinitionStackVector inputs_;
     if (!inputs_.append(inputs.begin(), inputs.end())) {
       return false;
     }
-    return TranspileCacheIRToMIR(mirGen(), loc, current, snapshot, inputs_);
+    return TranspileCacheIRToMIR(snapshot(), mirGen(), loc, current,
+                                 cacheIRSnapshot, inputs_);
   }
 
   // Work around std::initializer_list not defining operator[].

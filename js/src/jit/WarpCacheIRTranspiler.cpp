@@ -137,13 +137,13 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   CACHE_IR_TRANSPILER_GENERATED
 
  public:
-  WarpCacheIRTranspiler(MIRGenerator& mirGen, BytecodeLocation loc,
-                        MBasicBlock* current, CallInfo* callInfo,
-                        const WarpCacheIR* snapshot)
-      : WarpBuilderShared(mirGen, current),
+  WarpCacheIRTranspiler(WarpSnapshot& snapshot, MIRGenerator& mirGen,
+                        BytecodeLocation loc, MBasicBlock* current,
+                        CallInfo* callInfo, const WarpCacheIR* cacheIRSnapshot)
+      : WarpBuilderShared(snapshot, mirGen, current),
         loc_(loc),
-        stubInfo_(snapshot->stubInfo()),
-        stubData_(snapshot->stubData()),
+        stubInfo_(cacheIRSnapshot->stubInfo()),
+        stubData_(cacheIRSnapshot->stubData()),
         callInfo_(callInfo) {}
 
   MOZ_MUST_USE bool transpile(const MDefinitionStackVector& inputs);
@@ -672,6 +672,10 @@ bool WarpCacheIRTranspiler::emitLoadEnvironmentFixedSlotResult(
   auto* lexicalCheck = MLexicalCheck::New(alloc(), load);
   add(lexicalCheck);
 
+  if (snapshot().bailoutInfo().failedLexicalCheck()) {
+    lexicalCheck->setNotMovable();
+  }
+
   pushResult(lexicalCheck);
   return true;
 }
@@ -691,6 +695,10 @@ bool WarpCacheIRTranspiler::emitLoadEnvironmentDynamicSlotResult(
 
   auto* lexicalCheck = MLexicalCheck::New(alloc(), load);
   add(lexicalCheck);
+
+  if (snapshot().bailoutInfo().failedLexicalCheck()) {
+    lexicalCheck->setNotMovable();
+  }
 
   pushResult(lexicalCheck);
   return true;
@@ -734,6 +742,10 @@ MInstruction* WarpCacheIRTranspiler::addBoundsCheck(MDefinition* index,
                                                     MDefinition* length) {
   MInstruction* check = MBoundsCheck::New(alloc(), index, length);
   add(check);
+
+  if (snapshot().bailoutInfo().failedBoundsCheck()) {
+    check->setNotMovable();
+  }
 
   if (JitOptions.spectreIndexMasking) {
     // Use a separate MIR instruction for the index masking. Doing this as
@@ -1748,13 +1760,14 @@ static void MaybeSetImplicitlyUsed(uint32_t numInstructionIdsBefore,
   input->setImplicitlyUsed();
 }
 
-bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, BytecodeLocation loc,
-                                MBasicBlock* current,
-                                const WarpCacheIR* snapshot,
+bool jit::TranspileCacheIRToMIR(WarpSnapshot& snapshot, MIRGenerator& mirGen,
+                                BytecodeLocation loc, MBasicBlock* current,
+                                const WarpCacheIR* cacheIRSnapshot,
                                 const MDefinitionStackVector& inputs) {
   uint32_t numInstructionIdsBefore = mirGen.graph().getNumInstructionIds();
 
-  WarpCacheIRTranspiler transpiler(mirGen, loc, current, nullptr, snapshot);
+  WarpCacheIRTranspiler transpiler(snapshot, mirGen, loc, current, nullptr,
+                                   cacheIRSnapshot);
   if (!transpiler.transpile(inputs)) {
     return false;
   }
@@ -1766,9 +1779,9 @@ bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, BytecodeLocation loc,
   return true;
 }
 
-bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, BytecodeLocation loc,
-                                MBasicBlock* current,
-                                const WarpCacheIR* snapshot,
+bool jit::TranspileCacheIRToMIR(WarpSnapshot& snapshot, MIRGenerator& mirGen,
+                                BytecodeLocation loc, MBasicBlock* current,
+                                const WarpCacheIR* cacheIRSnapshot,
                                 CallInfo& callInfo) {
   uint32_t numInstructionIdsBefore = mirGen.graph().getNumInstructionIds();
 
@@ -1781,7 +1794,8 @@ bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, BytecodeLocation loc,
     return false;
   }
 
-  WarpCacheIRTranspiler transpiler(mirGen, loc, current, &callInfo, snapshot);
+  WarpCacheIRTranspiler transpiler(snapshot, mirGen, loc, current, &callInfo,
+                                   cacheIRSnapshot);
   if (!transpiler.transpile(inputs)) {
     return false;
   }

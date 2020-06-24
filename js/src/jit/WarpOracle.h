@@ -23,11 +23,13 @@ class MOZ_STACK_CLASS WarpOracle {
   MIRGenerator& mirGen_;
   TempAllocator& alloc_;
   HandleScript outerScript_;
+  WarpBailoutInfo bailoutInfo_;
 
  public:
   WarpOracle(JSContext* cx, MIRGenerator& mirGen, HandleScript outerScript);
 
   MIRGenerator& mirGen() { return mirGen_; }
+  WarpBailoutInfo& bailoutInfo() { return bailoutInfo_; }
 
   AbortReasonOr<WarpSnapshot*> createSnapshot();
 
