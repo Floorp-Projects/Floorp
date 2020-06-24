@@ -521,6 +521,7 @@ auto DocumentLoadListener::Open(
   mTiming = aTiming;
   mSrcdocData = aLoadState->SrcdocData();
   mBaseURI = aLoadState->BaseURI();
+  mOriginalUriString = aLoadState->GetOriginalURIString();
   if (StaticPrefs::fission_sessionHistoryInParent() &&
       browsingContext->GetSessionHistory()) {
     mSessionHistoryInfo =
@@ -1084,6 +1085,7 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.baseUri() = mBaseURI;
   aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
   aArgs.loadStateLoadType() = mLoadStateLoadType;
+  aArgs.originalUriString() = mOriginalUriString;
   if (mSessionHistoryInfo) {
     aArgs.sessionHistoryInfo().emplace(
         mSessionHistoryInfo->mId, MakeUnique<mozilla::dom::SessionHistoryInfo>(
