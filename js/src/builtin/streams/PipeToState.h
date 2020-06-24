@@ -94,7 +94,10 @@ class PipeToState : public NativeObject {
     Flag_PreventAbort = 0b0100,
     Flag_PreventCancel = 0b1000,
 
-    Flag_ReadPending = 0b1'0000,
+    Flag_PendingRead = 0b1'0000,
+#ifdef DEBUG
+    Flag_PendingReadWouldBeRejected = 0b10'0000,
+#endif
   };
 
   uint32_t flags() const { return getFixedSlot(Slot_Flags).toInt32(); }
@@ -145,15 +148,25 @@ class PipeToState : public NativeObject {
   bool preventAbort() const { return flags() & Flag_PreventAbort; }
   bool preventCancel() const { return flags() & Flag_PreventCancel; }
 
-  bool isReadPending() const { return flags() & Flag_ReadPending; }
-  void setReadPending() {
-    MOZ_ASSERT(!isReadPending());
-    setFlags(flags() | Flag_ReadPending);
+  bool hasPendingRead() const { return flags() & Flag_PendingRead; }
+  void setPendingRead() {
+    MOZ_ASSERT(!hasPendingRead());
+    setFlags(flags() | Flag_PendingRead);
   }
-  void clearReadPending() {
-    MOZ_ASSERT(isReadPending());
-    setFlags(flags() & ~Flag_ReadPending);
+  void clearPendingRead() {
+    MOZ_ASSERT(hasPendingRead());
+    setFlags(flags() & ~Flag_PendingRead);
   }
+
+#ifdef DEBUG
+  bool pendingReadWouldBeRejected() const {
+    return flags() & Flag_PendingReadWouldBeRejected;
+  }
+  void setPendingReadWouldBeRejected() {
+    MOZ_ASSERT(!pendingReadWouldBeRejected());
+    setFlags(flags() | Flag_PendingReadWouldBeRejected);
+  }
+#endif
 
   void initFlags(bool preventClose, bool preventAbort, bool preventCancel) {
     MOZ_ASSERT(getFixedSlot(Slot_Flags).isUndefined());
