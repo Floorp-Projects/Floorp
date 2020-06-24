@@ -446,6 +446,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // True if cancelled.
   bool mCancelled = false;
 
+  Maybe<nsCString> mOriginalUriString;
+
   // The process id of the content process that we are being called from
   // or 0 initiated from a parent process load.
   base::ProcessId mOtherPid = 0;
