@@ -87,6 +87,14 @@ var gExperimentalPane = {
       document.l10n.setAttributes(title, feature.title);
       title.setAttribute("control", feature.id);
       let description = template.querySelector(".featureGateDescription");
+      let descriptionLinks = feature.descriptionLinks || {};
+      for (let [key, value] of Object.entries(descriptionLinks)) {
+        let link = document.createElement("a");
+        link.setAttribute("data-l10n-name", key);
+        link.setAttribute("href", value);
+        link.setAttribute("target", "_blank");
+        description.append(link);
+      }
       document.l10n.setAttributes(description, feature.description);
       description.setAttribute("control", feature.id);
       frag.appendChild(template);

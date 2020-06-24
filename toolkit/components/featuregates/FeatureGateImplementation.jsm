@@ -28,6 +28,7 @@ class FeatureGateImplementation {
    * @param {string} definition.id
    * @param {string} definition.title
    * @param {string} definition.description
+   * @param {string} definition.descriptionLinks
    * @param {boolean} definition.restartRequired
    * @param {string} definition.type
    * @param {string} definition.preference
@@ -64,6 +65,10 @@ class FeatureGateImplementation {
    */
   get description() {
     return this._definition.description;
+  }
+
+  get descriptionLinks() {
+    return this._definition.descriptionLinks;
   }
 
   /**
