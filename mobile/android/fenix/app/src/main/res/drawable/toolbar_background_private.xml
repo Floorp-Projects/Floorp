@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+             <gradient
+                android:angle="45"
+                android:startColor="@color/toolbar_start_gradient_private_theme"
+                android:centerColor="@color/toolbar_center_gradient_private_theme"
+                android:endColor="@color/toolbar_end_gradient_private_theme"
+                android:type="linear" />
+        </shape>
+    </item>
+    <item android:gravity="top">
+        <shape android:shape="rectangle">
+            <size android:height="1dp" />
+            <solid android:color="@color/neutral_faded_private_theme" />
+        </shape>
+    </item>
+</layer-list>

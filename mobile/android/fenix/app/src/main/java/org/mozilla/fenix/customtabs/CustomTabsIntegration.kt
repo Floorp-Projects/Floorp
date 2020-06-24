@@ -5,7 +5,7 @@
 package org.mozilla.fenix.customtabs
 
 import android.app.Activity
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
@@ -30,16 +30,13 @@ class CustomTabsIntegration(
         // Remove toolbar shadow
         toolbar.elevation = 0f
 
-        val uncoloredEtpShield = AppCompatResources.getDrawable(
-            activity,
-            R.drawable.ic_tracking_protection_enabled
-        )!!
+        val uncoloredEtpShield = getDrawable(activity, R.drawable.ic_tracking_protection_enabled)!!
 
         toolbar.display.icons = toolbar.display.icons.copy(
             // Custom private tab backgrounds have bad contrast against the colored shield
             trackingProtectionTrackersBlocked = uncoloredEtpShield,
             trackingProtectionNothingBlocked = uncoloredEtpShield,
-            trackingProtectionException = AppCompatResources.getDrawable(
+            trackingProtectionException = getDrawable(
                 activity,
                 R.drawable.ic_tracking_protection_disabled
             )!!
@@ -70,10 +67,7 @@ class CustomTabsIntegration(
                 )
             }
 
-            toolbar.background = AppCompatResources.getDrawable(
-                activity,
-                R.drawable.toolbar_background
-            )
+            toolbar.background = getDrawable(activity, R.drawable.toolbar_background_private)
         }
     }
 
