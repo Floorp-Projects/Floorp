@@ -144,26 +144,26 @@ nsresult TaskQueue::Runner::Run() {
   }
   MOZ_ASSERT(event.event);
 
+  // Note that dropping the queue monitor before running the task, and
+  // taking the monitor again after the task has run ensures we have memory
+  // fences enforced. This means that if the object we're calling wasn't
+  // designed to be threadsafe, it will be, provided we're only calling it
+  // in this task queue.
   {
-    LogRunnable::Run log(event.event);
-
-    // Note that dropping the queue monitor before running the task, and
-    // taking the monitor again after the task has run ensures we have memory
-    // fences enforced. This means that if the object we're calling wasn't
-    // designed to be threadsafe, it will be, provided we're only calling it
-    // in this task queue.
+    AutoTaskGuard g(mQueue);
+    SerialEventTargetGuard tg(mQueue);
     {
-      AutoTaskGuard g(mQueue);
-      SerialEventTargetGuard tg(mQueue);
-      event.event->Run();
-    }
+      LogRunnable::Run log(event.event);
 
-    // Drop the reference to event. The event will hold a reference to the
-    // object it's calling, and we don't want to keep it alive, it may be
-    // making assumptions what holds references to it. This is especially
-    // the case if the object is waiting for us to shutdown, so that it
-    // can shutdown (like in the MediaDecoderStateMachine's SHUTDOWN case).
-    event.event = nullptr;
+      event.event->Run();
+
+      // Drop the reference to event. The event will hold a reference to the
+      // object it's calling, and we don't want to keep it alive, it may be
+      // making assumptions what holds references to it. This is especially
+      // the case if the object is waiting for us to shutdown, so that it
+      // can shutdown (like in the MediaDecoderStateMachine's SHUTDOWN case).
+      event.event = nullptr;
+    }
   }
 
   {
