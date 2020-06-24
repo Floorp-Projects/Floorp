@@ -11,6 +11,7 @@ const TEST_MULTISTAGE_CONTENT = {
       id: "AW_STEP1",
       order: 0,
       content: {
+        zap: true,
         title: "Step 1",
         tiles: {
           type: "theme",
@@ -180,6 +181,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
     [
       "div.multistageContainer",
       "main.AW_STEP1",
+      "h1.welcomeZap",
       "div.secondary-cta.top",
       "button.secondary",
       "button.theme",
@@ -196,7 +198,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
     // Expected selectors:
     ["div.multistageContainer", "main.AW_STEP2", "button.secondary"],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
+    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top", "h1.welcomeZap"]
   );
   await onButtonClick(browser, "button.primary");
   await test_screen_content(
