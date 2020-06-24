@@ -720,7 +720,6 @@ class SelectParent extends JSWindowActorParent {
         }
 
         let document = browser.ownerDocument;
-        let window = document.defaultView;
         let menulist = document.getElementById(
           browser.getAttribute("selectmenulist")
         );
@@ -734,13 +733,13 @@ class SelectParent extends JSWindowActorParent {
         let data = message.data;
         menulist.menupopup.style.direction = data.style.direction;
 
-        let zoom = window.ZoomManager.getZoomForBrowser(browser);
+        let { ZoomManager } = topBrowsingContext.topChromeWindow;
         SelectParentHelper.populate(
           menulist,
           data.options.options,
           data.options.uniqueStyles,
           data.selectedIndex,
-          zoom,
+          ZoomManager.getZoomForBrowser(browser),
           data.defaultStyle,
           data.style
         );
