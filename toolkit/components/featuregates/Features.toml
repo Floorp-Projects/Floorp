@@ -1,6 +1,7 @@
 [css-masonry]
 title = "experimental-features-css-masonry-title"
 description = "experimental-features-css-masonry-description"
+description-links = {explainer = "https://github.com/w3c/csswg-drafts/blob/master/css-grid-2/MASONRY-EXPLAINER.md", w3c-issue = "https://github.com/w3c/csswg-drafts/issues/4650", bug = "https://bugzilla.mozilla.org/show_bug.cgi?id=1607439"}
 restart-required = false
 preference = "layout.css.grid-template-masonry-value.enabled"
 type = "boolean"

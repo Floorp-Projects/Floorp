@@ -5,7 +5,7 @@
 # The title of the experiment should be kept in English as it may be referenced
 # by various online articles and is technical in nature.
 experimental-features-css-masonry-title = CSS Masonry Layout
-experimental-features-css-masonry-description = Enables support for the experimental CSS Masonry Layout feature
+experimental-features-css-masonry-description = Enables support for the experimental CSS Masonry Layout feature. See the <a data-l10n-name="explainer">explainer</a> for a high level description of the feature. To provide feedback, please comment in <a data-l10n-name="w3c-issue">this GitHub issue</a> or <a data-l10n-name="bug">this bug</a>.
 
 # The title of the experiment should be kept in English as it may be referenced
 # by various online articles and is technical in nature.
