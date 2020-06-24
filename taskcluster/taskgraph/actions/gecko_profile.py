@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 @register_callback_action(
     title='GeckoProfile',
     name='geckoprofile',
-    generic=True,
     symbol='Gp',
     description=('Take the label of the current task, '
                  'and trigger the task with that label '

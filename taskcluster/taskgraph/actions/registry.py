@@ -24,7 +24,7 @@ from mozbuild.util import memoize
 actions = []
 callbacks = {}
 
-Action = namedtuple('Action', ['order', 'cb_name', 'generic', 'action_builder'])
+Action = namedtuple('Action', ['order', 'cb_name', 'permission', 'action_builder'])
 
 
 def is_json(data):
@@ -54,7 +54,7 @@ def hash_taskcluster_yml(filename):
 
 def register_callback_action(name, title, symbol, description, order=10000,
                              context=[], available=lambda parameters: True,
-                             schema=None, generic=True, cb_name=None):
+                             schema=None, permission='generic', cb_name=None):
     """
     Register an action callback that can be triggered from supporting
     user interfaces, such as Treeherder.
@@ -110,13 +110,14 @@ def register_callback_action(name, title, symbol, description, order=10000,
     schema : dict
         JSON schema specifying input accepted by the action.
         This is optional and can be left ``null`` if no input is taken.
-    generic : boolean
-        Whether this is a generic action or has its own permissions.
+    permission : string
+        This defaults to ``generic` and needs to be set for actions that need
+        additional permissions. It appears appears in ci-configuration and
+        various role and hook
+        names.
     cb_name : string
         The name under which this function should be registered, defaulting to
-        `name`.  This is used to generation actionPerm for non-generic hook
-        actions, and thus appears in ci-configuration and various role and hook
-        names.  Unlike `name`, which can appear multiple times, cb_name must be
+        `name`.  Unlike `name`, which can appear multiple times, cb_name must be
         unique among all registered callbacks.
 
     Returns
@@ -131,12 +132,15 @@ def register_callback_action(name, title, symbol, description, order=10000,
     title = title.strip()
     description = description.strip()
 
+    if not cb_name:
+        cb_name = name
+
     # ensure that context is callable
     if not callable(context):
         context_value = context
         context = lambda params: context_value  # noqa
 
-    def register_callback(cb, cb_name=cb_name):
+    def register_callback(cb):
         assert isinstance(name, text_type), 'name must be a string'
         assert isinstance(order, int), 'order must be an integer'
         assert callable(schema) or is_json(schema), 'schema must be a JSON compatible object'
@@ -147,15 +151,11 @@ def register_callback_action(name, title, symbol, description, order=10000,
         assert isinstance(symbol, text_type), 'symbol must be a string'
 
         assert not mem['registered'], 'register_callback_action must be used as decorator'
-        if not cb_name:
-            cb_name = name
         assert cb_name not in callbacks, 'callback name {} is not unique'.format(cb_name)
 
         def action_builder(parameters, graph_config, decision_task_id):
             if not available(parameters):
                 return None
-
-            actionPerm = 'generic' if generic else cb_name
 
             # gather up the common decision-task-supplied data for this action
             repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
@@ -203,13 +203,13 @@ def register_callback_action(name, title, symbol, description, order=10000,
             # action was named `myaction/release`, then the `*` in the scope would also
             # match that action.  To prevent such an accident, we prohibit `/` in hook
             # names.
-            if '/' in actionPerm:
+            if '/' in permission:
                 raise Exception('`/` is not allowed in action names; use `-`')
 
             rv.update({
                 'kind': 'hook',
                 'hookGroupId': 'project-{}'.format(trustDomain),
-                'hookId': 'in-tree-action-{}-{}/{}'.format(level, actionPerm, tcyml_hash),
+                'hookId': 'in-tree-action-{}-{}/{}'.format(level, permission, tcyml_hash),
                 'hookPayload': {
                     # provide the decision-task parameters as context for triggerHook
                     "decision": {
@@ -226,13 +226,13 @@ def register_callback_action(name, title, symbol, description, order=10000,
                     }
                 },
                 'extra': {
-                    'actionPerm': actionPerm,
+                    'actionPerm': permission,
                 },
             })
 
             return rv
 
-        actions.append(Action(order, cb_name, generic, action_builder))
+        actions.append(Action(order, cb_name, permission, action_builder))
 
         mem['registered'] = True
         callbacks[cb_name] = cb
@@ -281,12 +281,10 @@ def sanity_check_task_scope(callback, parameters, graph_config):
     else:
         raise Exception('No action with cb_name {}'.format(callback))
 
-    actionPerm = 'generic' if action.generic else action.cb_name
-
     repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
     head_repository = parameters[repo_param]
     assert head_repository.startswith('https://hg.mozilla.org/')
-    expected_scope = 'assume:repo:{}:action:{}'.format(head_repository[8:], actionPerm)
+    expected_scope = 'assume:repo:{}:action:{}'.format(head_repository[8:], action.permission)
 
     # the scope should appear literally; no need for a satisfaction check. The use of
     # get_current_scopes here calls the auth service through the Taskcluster Proxy, giving

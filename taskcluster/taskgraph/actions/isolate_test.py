@@ -206,7 +206,6 @@ def create_isolate_failure_tasks(task_definition, failures, level, times):
 @register_callback_action(
     name='isolate-test-failures',
     title='Isolate test failures in job',
-    generic=True,
     symbol='it',
     description="Re-run Tests for original manifest, directories and tests for failing tests.",
     order=150,

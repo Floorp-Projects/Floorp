@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 @register_callback_action(
     name='run-all-talos',
     title='Run All Talos Tests',
-    generic=True,
     symbol='raT',
     description="Add all Talos tasks to a push.",
     order=150,
