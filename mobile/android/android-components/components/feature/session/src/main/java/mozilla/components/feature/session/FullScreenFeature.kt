@@ -4,33 +4,57 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.support.base.feature.UserInteractionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature implementation for handling fullscreen mode (exiting and back button presses).
  */
 open class FullScreenFeature(
-    sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val sessionUseCases: SessionUseCases,
-    private val sessionId: String? = null,
+    private val tabId: String? = null,
     private val viewportFitChanged: (Int) -> Unit = {},
     private val fullScreenChanged: (Boolean) -> Unit
-) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, UserInteractionHandler {
+) : LifecycleAwareFeature, UserInteractionHandler {
+    private var scope: CoroutineScope? = null
+    private var observation: Observation? = null
 
     /**
      * Starts the feature and a observer to listen for fullscreen changes.
      */
     override fun start() {
-        observeIdOrSelected(sessionId)
+        scope = store.flowScoped { flow ->
+            flow.map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
+                .map { tab -> tab?.toObservation() }
+                .ifChanged()
+                .collect { foo -> onChange(foo) }
+        }
     }
 
-    override fun onFullScreenChanged(session: Session, enabled: Boolean) = fullScreenChanged(enabled)
-    override fun onMetaViewportFitChanged(session: Session, layoutInDisplayCutoutMode: Int) {
-        viewportFitChanged(layoutInDisplayCutoutMode)
+    override fun stop() {
+        scope?.cancel()
+    }
+
+    private fun onChange(observation: Observation?) {
+        if (observation?.inFullScreen != this.observation?.inFullScreen) {
+            fullScreenChanged(observation?.inFullScreen ?: false)
+        }
+
+        if (observation?.layoutInDisplayCutoutMode != this.observation?.layoutInDisplayCutoutMode) {
+            viewportFitChanged(observation?.layoutInDisplayCutoutMode ?: 0)
+        }
+
+        this.observation = observation
     }
 
     /**
@@ -39,12 +63,25 @@ open class FullScreenFeature(
      * @return Returns true if the fullscreen mode was successfully exited; false if no effect was taken.
      */
     override fun onBackPressed(): Boolean {
-        activeSession?.let {
-            if (it.fullScreenMode) {
-                sessionUseCases.exitFullscreen(it)
+        observation?.let {
+            if (it.inFullScreen) {
+                sessionUseCases.exitFullscreen(it.tabId)
                 return true
             }
         }
         return false
     }
+}
+
+/**
+ * Simple holder data class to keep a reference to the last values we observed.
+ */
+private data class Observation(
+    val tabId: String,
+    val inFullScreen: Boolean,
+    val layoutInDisplayCutoutMode: Int
+)
+
+private fun SessionState.toObservation(): Observation {
+    return Observation(id, content.fullScreen, content.layoutInDisplayCutoutMode)
 }

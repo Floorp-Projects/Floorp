@@ -4,97 +4,386 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.EngineSession
+import android.view.WindowManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.whenever
+import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 class FullScreenFeatureTest {
+    private val testDispatcher = TestCoroutineDispatcher()
 
-    private val sessionManager: SessionManager = mock()
-    private val selectedSession: Session = mock()
-    private val useCases = spy(SessionUseCases(sessionManager))
+    @Before
+    @ExperimentalCoroutinesApi
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+    }
 
-    @Test
-    fun `start without a sessionId`() {
-        val fullscreenFeature = spy(FullScreenFeature(sessionManager, useCases) {})
-
-        fullscreenFeature.start()
-
-        verify(fullscreenFeature).observeIdOrSelected(null)
-        verify(sessionManager, never()).findSessionById(anyString())
-        verify(fullscreenFeature).observeSelected()
+    @After
+    @ExperimentalCoroutinesApi
+    fun tearDown() {
+        Dispatchers.resetMain()
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
-    fun `start with a sessionId`() {
-        val fullscreenFeature = spy(FullScreenFeature(sessionManager, useCases, "abc") {})
-        whenever(sessionManager.findSessionById(anyString())).thenReturn(selectedSession)
+    fun `Starting without tabs`() {
+        var viewPort: Int? = null
+        var fullscreen: Boolean? = null
 
-        fullscreenFeature.start()
+        val store = BrowserStore()
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = mock(),
+            tabId = null,
+            viewportFitChanged = { value -> viewPort = value },
+            fullScreenChanged = { value -> fullscreen = value }
+        )
 
-        verify(fullscreenFeature).observeIdOrSelected(anyString())
-        verify(sessionManager).findSessionById(anyString())
-        verify(fullscreenFeature).observeFixed(selectedSession)
+        feature.start()
+
+        testDispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        assertNull(viewPort)
+        assertNull(fullscreen)
     }
 
     @Test
-    fun `invoke listener when fullscreen observer invoked`() {
-        var fullscreenChanged = false
-        val fullscreenFeature = spy(FullScreenFeature(sessionManager, useCases) { b -> fullscreenChanged = b })
+    fun `Starting with selected tab`() {
+        var viewPort: Int? = null
+        var fullscreen: Boolean? = null
 
-        fullscreenFeature.onFullScreenChanged(mock(), true)
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
+            selectedTabId = "A"
+        ))
 
-        assertTrue(fullscreenChanged)
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = mock(),
+            tabId = null,
+            viewportFitChanged = { value -> viewPort = value },
+            fullScreenChanged = { value -> fullscreen = value }
+        )
+
+        feature.start()
+
+        testDispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        assertEquals(0, viewPort)
+        assertFalse(fullscreen!!)
     }
 
     @Test
-    fun `onBackPressed returns false with no activeSession`() {
-        val fullscreenFeature = spy(FullScreenFeature(sessionManager, useCases) {})
+    fun `Selected tab switching to fullscreen mode`() {
+        var viewPort: Int? = null
+        var fullscreen: Boolean? = null
 
-        assertFalse(fullscreenFeature.onBackPressed())
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
+            selectedTabId = "A"
+        ))
+
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = mock(),
+            tabId = null,
+            viewportFitChanged = { value -> viewPort = value },
+            fullScreenChanged = { value -> fullscreen = value }
+        )
+
+        feature.start()
+
+        store.dispatch(ContentAction.FullScreenChangedAction(
+            "A",
+            true
+        )).joinBlocking()
+
+        assertEquals(0, viewPort)
+        assertTrue(fullscreen!!)
     }
 
     @Test
-    fun `onBackPressed returns false with activeSession but not in fullscreen mode`() {
-        val fullscreenFeature = spy(FullScreenFeatureTest(sessionManager, useCases) {})
-        val activeSession: Session = mock()
+    fun `Selected tab changing viewport`() {
+        var viewPort: Int? = null
+        var fullscreen: Boolean? = null
 
-        whenever(fullscreenFeature.activeSession).thenReturn(activeSession)
-        whenever(activeSession.fullScreenMode).thenReturn(false)
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
+            selectedTabId = "A"
+        ))
 
-        assertFalse(fullscreenFeature.onBackPressed())
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = mock(),
+            tabId = null,
+            viewportFitChanged = { value -> viewPort = value },
+            fullScreenChanged = { value -> fullscreen = value }
+        )
+
+        feature.start()
+
+        store.dispatch(ContentAction.FullScreenChangedAction(
+            "A",
+            true
+        )).joinBlocking()
+
+        store.dispatch(ContentAction.ViewportFitChangedAction(
+            "A",
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        )).joinBlocking()
+
+        assertNotEquals(0, viewPort)
+        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES, viewPort)
+        assertTrue(fullscreen!!)
     }
 
     @Test
-    fun `onBackPressed returns true with activeSession and fullscreen mode`() {
-        val activeSession: Session = mock()
-        val engineSession: EngineSession = mock()
-        val fullscreenFeature = spy(FullScreenFeatureTest(sessionManager, useCases) {})
+    fun `Fixed tab switching to fullscreen mode and back`() {
+        var viewPort: Int? = null
+        var fullscreen: Boolean? = null
 
-        whenever(sessionManager.getOrCreateEngineSession(activeSession, false)).thenReturn(engineSession)
-        whenever(fullscreenFeature.activeSession).thenReturn(activeSession)
-        whenever(activeSession.fullScreenMode).thenReturn(true)
-        whenever(useCases.exitFullscreen).thenReturn(mock())
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "A"),
+                createTab("https://www.firefox.com", id = "B"),
+                createTab("https://getpocket.com", id = "C")
+            ),
+            selectedTabId = "A"
+        ))
 
-        assertTrue(fullscreenFeature.onBackPressed())
-        verify(useCases.exitFullscreen).invoke(activeSession)
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = mock(),
+            tabId = "B",
+            viewportFitChanged = { value -> viewPort = value },
+            fullScreenChanged = { value -> fullscreen = value }
+        )
+
+        feature.start()
+
+        store.dispatch(ContentAction.FullScreenChangedAction(
+            "B",
+            true
+        )).joinBlocking()
+
+        store.dispatch(ContentAction.ViewportFitChangedAction(
+            "B",
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        )).joinBlocking()
+
+        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES, viewPort)
+        assertTrue(fullscreen!!)
+
+        store.dispatch(ContentAction.FullScreenChangedAction(
+            "B",
+            false
+        )).joinBlocking()
+
+        store.dispatch(ContentAction.ViewportFitChangedAction(
+            "B",
+            0
+        )).joinBlocking()
+
+        assertEquals(0, viewPort)
+        assertFalse(fullscreen!!)
     }
 
-    private class FullScreenFeatureTest(
-        sessionManager: SessionManager,
-        sessionUseCases: SessionUseCases,
-        sessionId: String? = null,
-        fullScreenChanged: (Boolean) -> Unit
-    ) : FullScreenFeature(sessionManager, sessionUseCases, sessionId, fullScreenChanged = fullScreenChanged) {
-        public override var activeSession: Session? = null
+    @Test
+    fun `Callback functions no longer get invoked when stopped, but get new value on next start`() {
+        var viewPort: Int? = null
+        var fullscreen: Boolean? = null
+
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "A"),
+                createTab("https://www.firefox.com", id = "B"),
+                createTab("https://getpocket.com", id = "C")
+            ),
+            selectedTabId = "A"
+        ))
+
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = mock(),
+            tabId = "B",
+            viewportFitChanged = { value -> viewPort = value },
+            fullScreenChanged = { value -> fullscreen = value }
+        )
+
+        feature.start()
+
+        assertEquals(0, viewPort)
+        assertFalse(fullscreen!!)
+
+        feature.stop()
+
+        store.dispatch(ContentAction.FullScreenChangedAction(
+            "B",
+            true
+        )).joinBlocking()
+
+        store.dispatch(ContentAction.ViewportFitChangedAction(
+            "B",
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        )).joinBlocking()
+
+        assertEquals(0, viewPort)
+        assertFalse(fullscreen!!)
+
+        feature.start()
+
+        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES, viewPort)
+        assertTrue(fullscreen!!)
+    }
+
+    @Test
+    fun `onBackPressed will invoke usecase for active fullscreen mode`() {
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "A"),
+                createTab("https://www.firefox.com", id = "B"),
+                createTab("https://getpocket.com", id = "C")
+            ),
+            selectedTabId = "A"
+        ))
+
+        val exitUseCase: SessionUseCases.ExitFullScreenUseCase = mock()
+        val useCases: SessionUseCases = mock()
+        doReturn(exitUseCase).`when`(useCases).exitFullscreen
+
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = useCases,
+            tabId = "B",
+            fullScreenChanged = {}
+        )
+
+        feature.start()
+
+        store.dispatch(ContentAction.FullScreenChangedAction(
+            "B",
+            true
+        )).joinBlocking()
+
+        store.dispatch(ContentAction.ViewportFitChangedAction(
+            "B",
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        )).joinBlocking()
+
+        assertTrue(feature.onBackPressed())
+
+        verify(exitUseCase).invoke("B")
+    }
+
+    @Test
+    fun `Fullscreen tab gets removed`() {
+        var viewPort: Int? = null
+        var fullscreen: Boolean? = null
+
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
+            selectedTabId = "A"
+        ))
+
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = mock(),
+            tabId = null,
+            viewportFitChanged = { value -> viewPort = value },
+            fullScreenChanged = { value -> fullscreen = value }
+        )
+
+        feature.start()
+
+        store.dispatch(ContentAction.FullScreenChangedAction(
+            "A",
+            true
+        )).joinBlocking()
+
+        store.dispatch(ContentAction.ViewportFitChangedAction(
+            "A",
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        )).joinBlocking()
+
+        assertEquals(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES, viewPort)
+        assertTrue(fullscreen!!)
+
+        store.dispatch(
+            TabListAction.RemoveTabAction(tabId = "A")
+        ).joinBlocking()
+
+        assertEquals(0, viewPort)
+        assertFalse(fullscreen!!)
+    }
+
+    @Test
+    fun `onBackPressed will not invoke usecase if not in fullscreen mode`() {
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "A"),
+                createTab("https://www.firefox.com", id = "B"),
+                createTab("https://getpocket.com", id = "C")
+            ),
+            selectedTabId = "A"
+        ))
+
+        val exitUseCase: SessionUseCases.ExitFullScreenUseCase = mock()
+        val useCases: SessionUseCases = mock()
+        doReturn(exitUseCase).`when`(useCases).exitFullscreen
+
+        val feature = FullScreenFeature(
+            store = store,
+            sessionUseCases = useCases,
+            fullScreenChanged = {}
+        )
+
+        feature.start()
+
+        assertFalse(feature.onBackPressed())
+
+        verify(exitUseCase, never()).invoke("B")
+    }
+
+    @Test
+    fun `onBackPressed getting invoked without any tabs to observe`() {
+        val exitUseCase: SessionUseCases.ExitFullScreenUseCase = mock()
+        val useCases: SessionUseCases = mock()
+        doReturn(exitUseCase).`when`(useCases).exitFullscreen
+
+        val feature = FullScreenFeature(
+            store = BrowserStore(),
+            sessionUseCases = useCases,
+            fullScreenChanged = {}
+        )
+
+        // Invoking onBackPressed without fullscreen mode
+        assertFalse(feature.onBackPressed())
+
+        verify(exitUseCase, never()).invoke(ArgumentMatchers.anyString())
     }
 }

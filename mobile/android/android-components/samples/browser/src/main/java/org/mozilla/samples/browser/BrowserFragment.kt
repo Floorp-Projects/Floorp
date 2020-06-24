@@ -94,7 +94,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         fullScreenFeature.set(
             feature = FullScreenFeature(
-                components.sessionManager,
+                components.store,
                 SessionUseCases(components.sessionManager),
                 sessionId
             ) { inFullScreen ->
@@ -158,8 +158,13 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
     }
 
-    override fun onBackPressed(): Boolean =
-        readerViewFeature.onBackPressed() || super.onBackPressed()
+    override fun onBackPressed(): Boolean {
+        return when {
+            fullScreenFeature.onBackPressed() -> true
+            readerViewFeature.onBackPressed() -> true
+            else -> super.onBackPressed()
+        }
+    }
 
     companion object {
         fun create(sessionId: String? = null) = BrowserFragment().apply {
