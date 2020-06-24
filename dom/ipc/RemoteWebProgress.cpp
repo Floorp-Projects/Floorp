@@ -7,45 +7,22 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION(RemoteWebProgress, mManager)
+NS_IMPL_ADDREF(RemoteWebProgress)
+NS_IMPL_RELEASE(RemoteWebProgress)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(RemoteWebProgress)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(RemoteWebProgress)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoteWebProgress)
+NS_INTERFACE_MAP_BEGIN(RemoteWebProgress)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
-  NS_INTERFACE_MAP_ENTRY(nsIRemoteWebProgress)
 NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP RemoteWebProgress::Init(nsIWebProgress* aManager,
-                                      bool aIsTopLevel) {
-  mManager = aManager;
-  mIsTopLevel = aIsTopLevel;
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP RemoteWebProgress::AddProgressListener(
     nsIWebProgressListener* aListener, uint32_t aNotifyMask) {
-  if (mManager) {
-    return mManager->AddProgressListener(aListener, aNotifyMask);
-  } else {
-    NS_WARNING("RemoteWebProgres::mManager should not be null!");
-  }
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgress::RemoveProgressListener(
     nsIWebProgressListener* aListener) {
-  if (mManager) {
-    return mManager->RemoveProgressListener(aListener);
-  } else {
-    NS_WARNING("RemoteWebProgres::mManager should not be null!");
-  }
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgress::GetDOMWindow(mozIDOMWindowProxy** aDOMWindow) {

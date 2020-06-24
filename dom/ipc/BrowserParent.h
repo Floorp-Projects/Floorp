@@ -318,12 +318,10 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvNavigationFinished();
 
-  bool GetWebProgressListener(nsIBrowser** aOutBrowser,
-                              nsIWebProgress** aOutManager,
-                              nsIWebProgressListener** aOutListener);
+  already_AddRefed<nsIBrowser> GetBrowser();
 
   void ReconstructWebProgressAndRequest(
-      nsIWebProgress* aManager, const Maybe<WebProgressData>& aWebProgressData,
+      const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, nsIWebProgress** aOutWebProgress,
       nsIRequest** aOutRequest);
 
