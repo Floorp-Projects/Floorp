@@ -34,7 +34,6 @@ let extensionData = {
     let csp_value = undefined;
     browser.test.onMessage.addListener(function(msg, expectedCount) {
       csp_value = msg;
-      browser.test.sendMessage("csp-set");
     });
     browser.webRequest.onHeadersReceived.addListener(
       e => {
@@ -63,10 +62,8 @@ let extensionData = {
 /**
  * Test a combination of Content Security Policies against first/third party images/scripts.
  * @param {string} site_csp The CSP to be sent by the site, or null.
- * @param {string} ext1_csp The CSP to be sent by the first extension,
- *                          "" to remove the header, or null to not modify it.
- * @param {string} ext2_csp The CSP to be sent by the first extension,
- *                          "" to remove the header, or null to not modify it.
+ * @param {string} ext1_csp The CSP to be sent by the first extension, or null.
+ * @param {string} ext2_csp The CSP to be sent by the second extension, or null.
  * @param {Object} expect   Object containing information which resources are expected to be loaded.
  * @param {Object} expect.img1_loaded    image from a first party origin.
  * @param {Object} expect.img3_loaded    image from a third party origin.
@@ -78,10 +75,8 @@ async function test_csp(site_csp, ext1_csp, ext2_csp, expect) {
   let extension2 = await ExtensionTestUtils.loadExtension(extensionData);
   await extension1.startup();
   await extension2.startup();
-  extension1.sendMessage(ext1_csp);
-  extension2.sendMessage(ext2_csp);
-  await extension1.awaitMessage("csp-set");
-  await extension2.awaitMessage("csp-set");
+  await extension1.sendMessage(ext1_csp);
+  await extension2.sendMessage(ext2_csp);
 
   let csp_value = encodeURIComponent(site_csp || "");
   let contentPage = await ExtensionTestUtils.loadContentPage(
@@ -99,16 +94,10 @@ async function test_csp(site_csp, ext1_csp, ext2_csp, expect) {
     };
   });
 
-  await contentPage.close();
-  await extension1.unload();
-  await extension2.unload();
-
   let action = {
     true: "loaded",
     false: "blocked",
   };
-
-  info(`test_csp: From "${site_csp}" to "${ext1_csp}" to "${ext2_csp}"`);
 
   equal(
     expect.img1_loaded,
@@ -130,6 +119,10 @@ async function test_csp(site_csp, ext1_csp, ext2_csp, expect) {
     results.script3_loaded,
     `expected third party script to be ${action[expect.script3_loaded]}`
   );
+
+  await contentPage.close();
+  await extension1.unload();
+  await extension2.unload();
 }
 
 add_task(async function test_webRequest_mergecsp() {
@@ -168,44 +161,8 @@ add_task(async function test_webRequest_mergecsp() {
       script3_loaded: true,
     }
   );
-});
-
-add_task(async function test_remove_and_replace_csp() {
-  // CSP removed, CSP added.
   await test_csp("img-src 'self'", "", "img-src example.com", {
     img1_loaded: false,
-    img3_loaded: true,
-    script1_loaded: true,
-    script3_loaded: true,
-  });
-
-  // CSP removed, CSP added.
-  await test_csp("default-src 'none'", "", "img-src example.com", {
-    img1_loaded: false,
-    img3_loaded: true,
-    script1_loaded: true,
-    script3_loaded: true,
-  });
-
-  // CSP replaced - regression test for bug 1635781.
-  await test_csp("default-src 'none'", "img-src example.com", null, {
-    img1_loaded: false,
-    img3_loaded: true,
-    script1_loaded: true,
-    script3_loaded: true,
-  });
-
-  // CSP unchanged, CSP replaced - regression test for bug 1635781.
-  await test_csp("default-src 'none'", null, "img-src example.com", {
-    img1_loaded: false,
-    img3_loaded: true,
-    script1_loaded: true,
-    script3_loaded: true,
-  });
-
-  // CSP replaced, CSP removed.
-  await test_csp("default-src 'none'", "img-src example.com", "", {
-    img1_loaded: true,
     img3_loaded: true,
     script1_loaded: true,
     script3_loaded: true,
