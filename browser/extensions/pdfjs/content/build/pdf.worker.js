@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.24';
-const pdfjsBuild = 'a4fa4554d';
+const pdfjsVersion = '2.6.47';
+const pdfjsBuild = 'a91f24cda';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.24';
+    const workerVersion = '2.6.47';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -687,7 +687,6 @@ exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
 exports.isArrayEqual = isArrayEqual;
 exports.isBool = isBool;
-exports.isEmptyObj = isEmptyObj;
 exports.isNum = isNum;
 exports.isString = isString;
 exports.isSameOrigin = isSameOrigin;
@@ -1407,14 +1406,6 @@ function stringToUTF8String(str) {
 
 function utf8StringToString(str) {
   return unescape(encodeURIComponent(str));
-}
-
-function isEmptyObj(obj) {
-  for (const key in obj) {
-    return false;
-  }
-
-  return true;
 }
 
 function isBool(v) {
@@ -2366,9 +2357,9 @@ class ChunkedStreamManager {
     this.disableAutoFetch = args.disableAutoFetch;
     this.msgHandler = args.msgHandler;
     this.currRequestId = 0;
-    this.chunksNeededByRequest = Object.create(null);
-    this.requestsByChunk = Object.create(null);
-    this.promisesByRequest = Object.create(null);
+    this._chunksNeededByRequest = new Map();
+    this._requestsByChunk = new Map();
+    this._promisesByRequest = new Map();
     this.progressiveDataLength = 0;
     this.aborted = false;
     this._loadedStreamCapability = (0, _util.createPromiseCapability)();
@@ -2437,32 +2428,38 @@ class ChunkedStreamManager {
 
   _requestChunks(chunks) {
     const requestId = this.currRequestId++;
-    const chunksNeeded = Object.create(null);
-    this.chunksNeededByRequest[requestId] = chunksNeeded;
+    const chunksNeeded = new Set();
+
+    this._chunksNeededByRequest.set(requestId, chunksNeeded);
 
     for (const chunk of chunks) {
       if (!this.stream.hasChunk(chunk)) {
-        chunksNeeded[chunk] = true;
+        chunksNeeded.add(chunk);
       }
     }
 
-    if ((0, _util.isEmptyObj)(chunksNeeded)) {
+    if (chunksNeeded.size === 0) {
       return Promise.resolve();
     }
 
     const capability = (0, _util.createPromiseCapability)();
-    this.promisesByRequest[requestId] = capability;
+
+    this._promisesByRequest.set(requestId, capability);
+
     const chunksToRequest = [];
 
-    for (let chunk in chunksNeeded) {
-      chunk = chunk | 0;
+    for (const chunk of chunksNeeded) {
+      let requestIds = this._requestsByChunk.get(chunk);
 
-      if (!(chunk in this.requestsByChunk)) {
-        this.requestsByChunk[chunk] = [];
+      if (!requestIds) {
+        requestIds = [];
+
+        this._requestsByChunk.set(chunk, requestIds);
+
         chunksToRequest.push(chunk);
       }
 
-      this.requestsByChunk[chunk].push(requestId);
+      requestIds.push(requestId);
     }
 
     if (!chunksToRequest.length) {
@@ -2579,17 +2576,22 @@ class ChunkedStreamManager {
     const loadedRequests = [];
 
     for (let curChunk = beginChunk; curChunk < endChunk; ++curChunk) {
-      const requestIds = this.requestsByChunk[curChunk] || [];
-      delete this.requestsByChunk[curChunk];
+      const requestIds = this._requestsByChunk.get(curChunk);
+
+      if (!requestIds) {
+        continue;
+      }
+
+      this._requestsByChunk.delete(curChunk);
 
       for (const requestId of requestIds) {
-        const chunksNeeded = this.chunksNeededByRequest[requestId];
+        const chunksNeeded = this._chunksNeededByRequest.get(requestId);
 
-        if (curChunk in chunksNeeded) {
-          delete chunksNeeded[curChunk];
+        if (chunksNeeded.has(curChunk)) {
+          chunksNeeded.delete(curChunk);
         }
 
-        if (!(0, _util.isEmptyObj)(chunksNeeded)) {
+        if (chunksNeeded.size > 0) {
           continue;
         }
 
@@ -2597,7 +2599,7 @@ class ChunkedStreamManager {
       }
     }
 
-    if (!this.disableAutoFetch && (0, _util.isEmptyObj)(this.requestsByChunk)) {
+    if (!this.disableAutoFetch && this._requestsByChunk.size === 0) {
       let nextEmptyChunk;
 
       if (this.stream.numChunksLoaded === 1) {
@@ -2616,8 +2618,10 @@ class ChunkedStreamManager {
     }
 
     for (const requestId of loadedRequests) {
-      const capability = this.promisesByRequest[requestId];
-      delete this.promisesByRequest[requestId];
+      const capability = this._promisesByRequest.get(requestId);
+
+      this._promisesByRequest.delete(requestId);
+
       capability.resolve();
     }
 
@@ -2646,8 +2650,8 @@ class ChunkedStreamManager {
       this.pdfNetworkStream.cancelAllRequests(reason);
     }
 
-    for (const requestId in this.promisesByRequest) {
-      this.promisesByRequest[requestId].reject(reason);
+    for (const [, capability] of this._promisesByRequest) {
+      capability.reject(reason);
     }
   }
 
@@ -3021,7 +3025,7 @@ class Page {
     });
     const dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
     const pageListPromise = dataPromises.then(([contentStream]) => {
-      const opList = new _operator_list.OperatorList(intent, sink, this.pageIndex);
+      const opList = new _operator_list.OperatorList(intent, sink);
       handler.send("StartRenderPage", {
         transparency: partialEvaluator.hasBlendModes(this.resources),
         pageIndex: this.pageIndex,
@@ -20009,7 +20013,7 @@ var OperatorList = function OperatorListClosure() {
   var CHUNK_SIZE = 1000;
   var CHUNK_SIZE_ABOUT = CHUNK_SIZE - 5;
 
-  function OperatorList(intent, streamSink, pageIndex) {
+  function OperatorList(intent, streamSink) {
     this._streamSink = streamSink;
     this.fnArray = [];
     this.argsArray = [];
@@ -20020,10 +20024,8 @@ var OperatorList = function OperatorListClosure() {
       this.optimizer = new NullOptimizer(this);
     }
 
-    this.dependencies = Object.create(null);
+    this.dependencies = new Set();
     this._totalLength = 0;
-    this.pageIndex = pageIndex;
-    this.intent = intent;
     this.weight = 0;
     this._resolved = streamSink ? null : Promise.resolve();
   }
@@ -20055,17 +20057,17 @@ var OperatorList = function OperatorListClosure() {
     },
 
     addDependency(dependency) {
-      if (dependency in this.dependencies) {
+      if (this.dependencies.has(dependency)) {
         return;
       }
 
-      this.dependencies[dependency] = true;
+      this.dependencies.add(dependency);
       this.addOp(_util.OPS.dependency, [dependency]);
     },
 
     addDependencies(dependencies) {
-      for (var key in dependencies) {
-        this.addDependency(key);
+      for (const dependency of dependencies) {
+        this.addDependency(dependency);
       }
     },
 
@@ -20075,7 +20077,9 @@ var OperatorList = function OperatorListClosure() {
         return;
       }
 
-      Object.assign(this.dependencies, opList.dependencies);
+      for (const dependency of opList.dependencies) {
+        this.dependencies.add(dependency);
+      }
 
       for (var i = 0, ii = opList.length; i < ii; i++) {
         this.addOp(opList.fnArray[i], opList.argsArray[i]);
@@ -20129,7 +20133,7 @@ var OperatorList = function OperatorListClosure() {
         length
       }, 1, this._transfers);
 
-      this.dependencies = Object.create(null);
+      this.dependencies.clear();
       this.fnArray.length = 0;
       this.argsArray.length = 0;
       this.weight = 0;
@@ -20521,7 +20525,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       return false;
     },
 
-    async buildFormXObject(resources, xobj, smask, operatorList, task, initialState) {
+    async buildFormXObject(resources, xobj, smask, operatorList, task, initialState, localColorSpaceCache) {
       var dict = xobj.dict;
       var matrix = dict.getArray("Matrix");
       var bbox = dict.getArray("BBox");
@@ -20550,10 +20554,18 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           groupOptions.knockout = group.get("K") || false;
 
           if (group.has("CS")) {
-            colorSpace = await this.parseColorSpace({
-              cs: group.get("CS"),
-              resources
-            });
+            const cs = group.get("CS");
+            const localColorSpace = cs instanceof _primitives.Name && localColorSpaceCache.getByName(cs.name);
+
+            if (localColorSpace) {
+              colorSpace = localColorSpace;
+            } else {
+              colorSpace = await this.parseColorSpace({
+                cs,
+                resources,
+                localColorSpaceCache
+              });
+            }
           }
         }
 
@@ -20693,7 +20705,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         imgData = imageObj.createImageData(false);
         return this._sendImgData(objId, imgData, cacheGlobally);
       }).catch(reason => {
-        (0, _util.warn)("Unable to decode image: " + reason);
+        (0, _util.warn)(`Unable to decode image "${objId}": "${reason}".`);
         return this._sendImgData(objId, null, cacheGlobally);
       });
 
@@ -20726,7 +20738,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       return undefined;
     },
 
-    handleSMask: function PartialEvaluator_handleSmask(smask, resources, operatorList, task, stateManager) {
+    handleSMask: function PartialEvaluator_handleSmask(smask, resources, operatorList, task, stateManager, localColorSpaceCache) {
       var smaskContent = smask.get("G");
       var smaskOptions = {
         subtype: smask.get("S").name,
@@ -20748,7 +20760,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         smaskOptions.transferMap = transferMap;
       }
 
-      return this.buildFormXObject(resources, smaskContent, smaskOptions, operatorList, task, stateManager.state.clone());
+      return this.buildFormXObject(resources, smaskContent, smaskOptions, operatorList, task, stateManager.state.clone(), localColorSpaceCache);
     },
 
     handleTilingType(fn, args, resources, pattern, patternDict, operatorList, task) {
@@ -20853,7 +20865,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       throw reason;
     },
 
-    setGState: function PartialEvaluator_setGState(resources, gState, operatorList, task, stateManager) {
+    setGState: function PartialEvaluator_setGState(resources, gState, operatorList, task, stateManager, localColorSpaceCache) {
       var gStateObj = [];
       var gStateKeys = gState.getKeys();
       var promise = Promise.resolve();
@@ -20899,7 +20911,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
             if ((0, _primitives.isDict)(value)) {
               promise = promise.then(() => {
-                return this.handleSMask(value, resources, operatorList, task, stateManager);
+                return this.handleSMask(value, resources, operatorList, task, stateManager, localColorSpaceCache);
               });
               gStateObj.push([key, true]);
             } else {
@@ -21116,10 +21128,19 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
     parseColorSpace({
       cs,
-      resources
+      resources,
+      localColorSpaceCache
     }) {
       return new Promise(resolve => {
-        resolve(_colorspace.ColorSpace.parse(cs, this.xref, resources, this.pdfFunctionFactory));
+        const parsedColorSpace = _colorspace.ColorSpace.parse(cs, this.xref, resources, this.pdfFunctionFactory);
+
+        const csName = cs instanceof _primitives.Name ? cs.name : null;
+
+        if (csName) {
+          localColorSpaceCache.set(csName, null, parsedColorSpace);
+        }
+
+        resolve(parsedColorSpace);
       }).catch(reason => {
         if (reason instanceof _util.AbortException) {
           return null;
@@ -21180,6 +21201,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var xref = this.xref;
       let parsingText = false;
       const localImageCache = new _image_utils.LocalImageCache();
+      const localColorSpaceCache = new _image_utils.LocalImageCache();
 
       var xobjs = resources.get("XObject") || _primitives.Dict.empty;
 
@@ -21284,7 +21306,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
                 if (type.name === "Form") {
                   stateManager.save();
-                  self.buildFormXObject(resources, xobj, null, operatorList, task, stateManager.state.clone()).then(function () {
+                  self.buildFormXObject(resources, xobj, null, operatorList, task, stateManager.state.clone(), localColorSpaceCache).then(function () {
                     stateManager.restore();
                     resolveXObject();
                   }, rejectXObject);
@@ -21424,26 +21446,46 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               break;
 
             case _util.OPS.setFillColorSpace:
-              next(self.parseColorSpace({
-                cs: args[0],
-                resources
-              }).then(function (colorSpace) {
-                if (colorSpace) {
-                  stateManager.state.fillColorSpace = colorSpace;
+              {
+                const localColorSpace = args[0] instanceof _primitives.Name && localColorSpaceCache.getByName(args[0].name);
+
+                if (localColorSpace) {
+                  stateManager.state.fillColorSpace = localColorSpace;
+                  continue;
                 }
-              }));
-              return;
+
+                next(self.parseColorSpace({
+                  cs: args[0],
+                  resources,
+                  localColorSpaceCache
+                }).then(function (colorSpace) {
+                  if (colorSpace) {
+                    stateManager.state.fillColorSpace = colorSpace;
+                  }
+                }));
+                return;
+              }
 
             case _util.OPS.setStrokeColorSpace:
-              next(self.parseColorSpace({
-                cs: args[0],
-                resources
-              }).then(function (colorSpace) {
-                if (colorSpace) {
-                  stateManager.state.strokeColorSpace = colorSpace;
+              {
+                const localColorSpace = args[0] instanceof _primitives.Name && localColorSpaceCache.getByName(args[0].name);
+
+                if (localColorSpace) {
+                  stateManager.state.strokeColorSpace = localColorSpace;
+                  continue;
                 }
-              }));
-              return;
+
+                next(self.parseColorSpace({
+                  cs: args[0],
+                  resources,
+                  localColorSpaceCache
+                }).then(function (colorSpace) {
+                  if (colorSpace) {
+                    stateManager.state.strokeColorSpace = colorSpace;
+                  }
+                }));
+                return;
+              }
 
             case _util.OPS.setFillColor:
               cs = stateManager.state.fillColorSpace;
@@ -21544,7 +21586,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               }
 
               var gState = extGState.get(dictName.name);
-              next(self.setGState(resources, gState, operatorList, task, stateManager));
+              next(self.setGState(resources, gState, operatorList, task, stateManager, localColorSpaceCache));
               return;
 
             case _util.OPS.moveTo:
@@ -44852,7 +44894,7 @@ var PDFImage = function PDFImageClosure() {
     }
   }
 
-  PDFImage.buildImage = function ({
+  PDFImage.buildImage = async function ({
     xref,
     res,
     image,
@@ -44875,7 +44917,7 @@ var PDFImage = function PDFImageClosure() {
       }
     }
 
-    return Promise.resolve(new PDFImage({
+    return new PDFImage({
       xref,
       res,
       image: imageData,
@@ -44883,7 +44925,7 @@ var PDFImage = function PDFImageClosure() {
       smask: smaskData,
       mask: maskData,
       pdfFunctionFactory
-    }));
+    });
   };
 
   PDFImage.createMask = function ({
