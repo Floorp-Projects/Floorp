@@ -10,6 +10,7 @@ import androidx.navigation.NavController
 import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.appservices.places.BookmarkRoot
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -74,6 +75,30 @@ class DeepLinkIntentProcessorTest {
     }
 
     @Test
+    fun `process home_bookmarks deep link`() {
+        assertTrue(processor.process(testIntent("fenix://home_bookmarks"), navController, out))
+
+        verify { navController.navigate(NavGraphDirections.actionGlobalBookmarkFragment(BookmarkRoot.Root.id)) }
+        verify { out wasNot Called }
+    }
+
+    @Test
+    fun `process home_history deep link`() {
+        assertTrue(processor.process(testIntent("fenix://home_history"), navController, out))
+
+        verify { navController.navigate(NavGraphDirections.actionGlobalHistoryFragment()) }
+        verify { out wasNot Called }
+    }
+
+    @Test
+    fun `process home_collections deep link`() {
+        assertTrue(processor.process(testIntent("fenix://home_collections"), navController, out))
+
+        verify { navController.navigate(NavGraphDirections.actionGlobalHome()) }
+        verify { out wasNot Called }
+    }
+
+    @Test
     fun `process settings deep link`() {
         assertTrue(processor.process(testIntent("fenix://settings"), navController, out))
 
@@ -119,6 +144,38 @@ class DeepLinkIntentProcessorTest {
     }
 
     @Test
+    fun `process settings_addon_manager deep link`() {
+        assertTrue(processor.process(testIntent("fenix://settings_addon_manager"), navController, out))
+
+        verify { navController.navigate(NavGraphDirections.actionGlobalSettingsAddonsManagementFragment()) }
+        verify { out wasNot Called }
+    }
+
+    @Test
+    fun `process settings_logins deep link`() {
+        assertTrue(processor.process(testIntent("fenix://settings_logins"), navController, out))
+
+        verify { navController.navigate(NavGraphDirections.actionGlobalSavedLoginsAuthFragment()) }
+        verify { out wasNot Called }
+    }
+
+    @Test
+    fun `process settings_tracking_protection deep link`() {
+        assertTrue(processor.process(testIntent("fenix://settings_tracking_protection"), navController, out))
+
+        verify { navController.navigate(NavGraphDirections.actionGlobalTrackingProtectionFragment()) }
+        verify { out wasNot Called }
+    }
+
+    @Test
+    fun `process settings_privacy deep link`() {
+        assertTrue(processor.process(testIntent("fenix://settings_privacy"), navController, out))
+
+        verify { navController.navigate(NavGraphDirections.actionGlobalSettingsFragment()) }
+        verify { out wasNot Called }
+    }
+
+    @Test
     fun `process enable_private_browsing deep link`() {
         assertTrue(processor.process(testIntent("fenix://enable_private_browsing"), navController, out))
 
@@ -157,11 +214,12 @@ class DeepLinkIntentProcessorTest {
     }
 
     @Test
-    fun `process settings_addon_manager deep link`() {
-        assertTrue(processor.process(testIntent("fenix://settings_addon_manager"), navController, out))
+    fun `process settings_notifications deep link`() {
+        assertTrue(processor.process(testIntent("fenix://settings_notifications"), navController, out))
 
-        verify { navController.navigate(NavGraphDirections.actionGlobalSettingsAddonsManagementFragment()) }
+        verify { navController wasNot Called }
         verify { out wasNot Called }
+        verify { activity.startActivity(any()) }
     }
 
     private fun testIntent(uri: String) = Intent("", uri.toUri())
