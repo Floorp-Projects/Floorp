@@ -13,6 +13,7 @@ use crate::picture::{ImageDependency, ResolvedSurfaceTexture, TileCacheInstance,
 use crate::prim_store::DeferredResolve;
 use crate::renderer::ImageBufferKind;
 use crate::resource_cache::{ImageRequest, ResourceCache};
+use crate::util::Preallocator;
 use std::{ops, u64};
 
 /*
@@ -340,7 +341,49 @@ impl CompositeDescriptor {
     /// Construct an empty descriptor.
     pub fn empty() -> Self {
         CompositeDescriptor {
-            surfaces: Vec::with_capacity(8),
+            surfaces: Vec::new(),
+        }
+    }
+}
+
+pub struct CompositeStatePreallocator {
+    opaque_tiles: Preallocator,
+    alpha_tiles: Preallocator,
+    clear_tiles: Preallocator,
+    external_surfaces: Preallocator,
+    occluders: Preallocator,
+    descriptor_surfaces: Preallocator,
+}
+
+impl CompositeStatePreallocator {
+    pub fn record(&mut self, state: &CompositeState) {
+        self.opaque_tiles.record_vec(&state.opaque_tiles);
+        self.alpha_tiles.record_vec(&state.alpha_tiles);
+        self.clear_tiles.record_vec(&state.clear_tiles);
+        self.external_surfaces.record_vec(&state.external_surfaces);
+        self.occluders.record_vec(&state.occluders);
+        self.descriptor_surfaces.record_vec(&state.descriptor.surfaces);
+    }
+
+    pub fn preallocate(&self, state: &mut CompositeState) {
+        self.opaque_tiles.preallocate_vec(&mut state.opaque_tiles);
+        self.alpha_tiles.preallocate_vec(&mut state.alpha_tiles);
+        self.clear_tiles.preallocate_vec(&mut state.clear_tiles);
+        self.external_surfaces.preallocate_vec(&mut state.external_surfaces);
+        self.occluders.preallocate_vec(&mut state.occluders);
+        self.descriptor_surfaces.preallocate_vec(&mut state.descriptor.surfaces);
+    }
+}
+
+impl Default for CompositeStatePreallocator {
+    fn default() -> Self {
+        CompositeStatePreallocator {
+            opaque_tiles: Preallocator::new(40),
+            alpha_tiles: Preallocator::new(16),
+            clear_tiles: Preallocator::new(0),
+            external_surfaces: Preallocator::new(0),
+            occluders: Preallocator::new(16),
+            descriptor_surfaces: Preallocator::new(8),
         }
     }
 }
@@ -400,15 +443,15 @@ impl CompositeState {
         }
 
         CompositeState {
-            opaque_tiles: Vec::with_capacity(40),
-            alpha_tiles: Vec::with_capacity(16),
+            opaque_tiles: Vec::new(),
+            alpha_tiles: Vec::new(),
             clear_tiles: Vec::new(),
             z_generator: ZBufferIdGenerator::new(0, max_depth_ids),
             dirty_rects_are_valid: true,
             compositor_kind,
             picture_caching_is_enabled,
             global_device_pixel_scale,
-            occluders: Vec::with_capacity(16),
+            occluders: Vec::new(),
             descriptor: CompositeDescriptor::empty(),
             external_surfaces: Vec::new(),
         }
