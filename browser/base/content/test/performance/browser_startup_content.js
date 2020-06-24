@@ -22,8 +22,6 @@ const known_scripts = {
   modules: new Set([
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
 
-    "resource://gre/modules/ContentProcessSingleton.jsm",
-
     // General utilities
     "resource://gre/modules/AppConstants.jsm",
     "resource://gre/modules/DeferredTask.jsm",
@@ -48,7 +46,6 @@ const known_scripts = {
     "resource://gre/modules/Readerable.jsm",
 
     // Telemetry
-    "resource://gre/modules/TelemetryController.jsm", // bug 1470339
     "resource://gre/modules/TelemetryControllerBase.jsm", // bug 1470339
     "resource://gre/modules/TelemetryControllerContent.jsm", // bug 1470339
     "resource://gre/modules/TelemetryUtils.jsm", // bug 1470339

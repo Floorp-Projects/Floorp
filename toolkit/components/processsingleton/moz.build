@@ -12,7 +12,6 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    'ContentProcessSingleton.jsm',
     'CustomElementsListener.jsm',
     'MainProcessSingleton.jsm',
 ]
