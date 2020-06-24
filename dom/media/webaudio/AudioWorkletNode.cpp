@@ -494,6 +494,10 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
 
   AutoEntryScript aes(mGlobal, "Worklet Process");
   JSContext* cx = aes.cx();
+  auto produceSilenceWithError = MakeScopeExit([this, aTrack, cx, &aOutput] {
+    SendProcessorError(aTrack, cx);
+    ProduceSilence(aTrack, aOutput);
+  });
 
   JS::Rooted<JS::Value> process(cx);
   if (!JS_GetProperty(cx, mProcessor, "process", &process) ||
@@ -501,8 +505,6 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
       !PrepareBufferArrays(cx, aInput, &mInputs, ArrayElementInit::None) ||
       !PrepareBufferArrays(cx, aOutput, &mOutputs, ArrayElementInit::Zero)) {
     // process() not callable or OOM.
-    SendProcessorError(aTrack, cx);
-    ProduceSilence(aTrack, aOutput);
     return;
   }
 
@@ -538,8 +540,6 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
     // https://github.com/WebAudio/web-audio-api/issues/1933 and
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1619486
     if (length != WEBAUDIO_BLOCK_SIZE) {
-      SendProcessorError(aTrack, cx);
-      ProduceSilence(aTrack, aOutput);
       return;
     }
     JS::AutoCheckCannotGC nogc;
@@ -558,13 +558,11 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
 
   if (!CallProcess(aTrack, cx, process)) {
     // An exception occurred.
-    SendProcessorError(aTrack, cx);
     /**
      * https://webaudio.github.io/web-audio-api/#dom-audioworkletnode-onprocessorerror
      * Note that once an exception is thrown, the processor will output silence
      * throughout its lifetime.
      */
-    ProduceSilence(aTrack, aOutput);
     return;
   }
 
@@ -582,6 +580,8 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
       PodCopy(output->ChannelFloatsForWrite(c), src, WEBAUDIO_BLOCK_SIZE);
     }
   }
+
+  produceSilenceWithError.release();  // have output and no error
 }
 
 AudioWorkletNode::AudioWorkletNode(AudioContext* aAudioContext,
