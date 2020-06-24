@@ -1183,7 +1183,6 @@ class nsDocShell final : public nsDocLoader,
   bool mAllowMedia : 1;
   bool mAllowDNSPrefetch : 1;
   bool mAllowWindowControl : 1;
-  bool mUseErrorPages : 1;
   bool mCSSErrorReportingEnabled : 1;
   bool mAllowAuth : 1;
   bool mAllowKeywordFixup : 1;
