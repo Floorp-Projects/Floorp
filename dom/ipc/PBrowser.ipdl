@@ -106,7 +106,6 @@ struct WebProgressData
   bool isTopLevel;
   bool isLoadingDocument;
   uint32_t loadType;
-  uint64_t innerDOMWindowID;
 };
 
 struct RequestData
