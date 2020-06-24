@@ -222,6 +222,15 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
 #endif
 }
 
+// static
+void nsStandardURL::SanityCheck(const URLSegment& aSeg,
+                                const nsCString& aSpec) {
+  MOZ_RELEASE_ASSERT(aSeg.mLen >= -1);
+  MOZ_RELEASE_ASSERT(aSeg.mLen < 0 ||
+                     (aSeg.mPos + aSeg.mLen <= aSpec.Length() &&
+                      aSeg.mPos + aSeg.mLen >= aSeg.mPos));
+}
+
 nsStandardURL::~nsStandardURL() {
   LOG(("Destroying nsStandardURL @%p\n", this));
 
@@ -233,6 +242,19 @@ nsStandardURL::~nsStandardURL() {
     }
   }
 #endif
+
+  SanityCheck(mScheme, mSpec);
+  SanityCheck(mAuthority, mSpec);
+  SanityCheck(mUsername, mSpec);
+  SanityCheck(mPassword, mSpec);
+  SanityCheck(mHost, mSpec);
+  SanityCheck(mPath, mSpec);
+  SanityCheck(mFilepath, mSpec);
+  SanityCheck(mDirectory, mSpec);
+  SanityCheck(mBasename, mSpec);
+  SanityCheck(mExtension, mSpec);
+  SanityCheck(mQuery, mSpec);
+  SanityCheck(mRef, mSpec);
 }
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
@@ -1149,6 +1171,8 @@ nsresult nsStandardURL::WriteSegment(nsIBinaryOutputStream* stream,
       pos += diff;                         \
       MOZ_ASSERT(pos.isValid());           \
       what.mPos = pos.value();             \
+    } else {                               \
+      MOZ_RELEASE_ASSERT(what.mLen == -1); \
     }
 
 #define SHIFT_FROM_NEXT(name, what, next) \
