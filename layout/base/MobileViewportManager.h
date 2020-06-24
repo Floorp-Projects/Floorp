@@ -101,8 +101,7 @@ class MobileViewportManager final : public nsIDOMEventListener,
    * Shrink the content to fit it to the display width if no initial-scale is
    * specified and if the content is still wider than the display width.
    */
-  void ShrinkToDisplaySizeIfNeeded(nsViewportInfo& aViewportInfo,
-                                   const mozilla::ScreenIntSize& aDisplaySize);
+  void ShrinkToDisplaySizeIfNeeded();
 
   /*
    * Similar to UpdateVisualViewportSize but this should be called only when we
@@ -159,9 +158,7 @@ class MobileViewportManager final : public nsIDOMEventListener,
   enum class UpdateType { ViewportSize, ContentSize };
 
   /* Updates the presShell resolution and the visual viewport size. */
-  void UpdateResolution(const nsViewportInfo& aViewportInfo,
-                        const mozilla::ScreenIntSize& aDisplaySize,
-                        const mozilla::CSSSize& aViewportOrContentSize,
+  void UpdateResolution(const mozilla::CSSSize& aViewportOrContentSize,
                         const mozilla::Maybe<float>& aDisplayWidthChangeRatio,
                         UpdateType aType);
 
