@@ -112,7 +112,7 @@ class TabIntentProcessor(
      * @param intent the intent to process
      * @return true if the intent was processed, otherwise false.
      */
-    override suspend fun process(intent: Intent): Boolean {
+    override fun process(intent: Intent): Boolean {
         val safeIntent = SafeIntent(intent)
         return when (safeIntent.action) {
             ACTION_VIEW, ACTION_NDEF_DISCOVERED -> processViewIntent(safeIntent)

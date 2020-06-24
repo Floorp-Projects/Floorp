@@ -12,7 +12,6 @@ import androidx.browser.customtabs.TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_A
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.browser.state.store.BrowserStore
@@ -47,7 +46,7 @@ class TrustedWebActivityIntentProcessorTest {
     }
 
     @Test
-    fun `process checks if intent action is not valid`() = runBlockingTest {
+    fun `process checks if intent action is not valid`() {
         val processor = TrustedWebActivityIntentProcessor(mock(), mock(), mock(), mock(), mock())
 
         assertFalse(processor.process(Intent(ACTION_VIEW_PWA)))
@@ -76,7 +75,7 @@ class TrustedWebActivityIntentProcessorTest {
     }
 
     @Test
-    fun `process adds custom tab config`() = runBlockingTest {
+    fun `process adds custom tab config`() {
         val intent = Intent(ACTION_VIEW, "https://example.com".toUri()).apply {
             putExtra(EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, true)
             putExtra(EXTRA_SESSION, null as Bundle?)

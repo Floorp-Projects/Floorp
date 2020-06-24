@@ -16,5 +16,5 @@ interface IntentProcessor {
      * @param intent The intent to process.
      * @return True if the intent was processed, otherwise false.
      */
-    suspend fun process(intent: Intent): Boolean
+    fun process(intent: Intent): Boolean
 }

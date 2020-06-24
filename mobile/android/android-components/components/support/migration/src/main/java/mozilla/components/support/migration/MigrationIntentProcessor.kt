@@ -20,7 +20,7 @@ class MigrationIntentProcessor(private val store: MigrationStore) : IntentProces
      *
      * If this is true, we should show an instance of AbstractMigrationProgressActivity.
      */
-    override suspend fun process(intent: Intent): Boolean {
+    override fun process(intent: Intent): Boolean {
         return when (store.state.progress) {
             MigrationProgress.COMPLETED, MigrationProgress.NONE -> false
             MigrationProgress.MIGRATING -> true

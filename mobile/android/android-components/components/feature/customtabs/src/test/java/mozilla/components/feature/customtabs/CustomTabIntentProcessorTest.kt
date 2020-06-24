@@ -10,7 +10,6 @@ import android.provider.Browser
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
@@ -51,7 +50,7 @@ class CustomTabIntentProcessorTest {
     }
 
     @Test
-    fun processCustomTabIntentWithDefaultHandlers() = runBlockingTest {
+    fun processCustomTabIntentWithDefaultHandlers() {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
@@ -80,7 +79,7 @@ class CustomTabIntentProcessorTest {
     }
 
     @Test
-    fun processCustomTabIntentWithAdditionalHeaders() = runBlockingTest {
+    fun processCustomTabIntentWithAdditionalHeaders() {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
@@ -115,7 +114,7 @@ class CustomTabIntentProcessorTest {
     }
 
     @Test
-    fun processPrivateCustomTabIntentWithDefaultHandlers() = runBlockingTest {
+    fun processPrivateCustomTabIntentWithDefaultHandlers() {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession(), anyBoolean())
