@@ -1290,6 +1290,8 @@ add_task(async function test_node_type_change() {
   // Default to submitting each hour - we should still submit on node change.
   let telem = get_sync_test_telemetry();
   telem.submissionInterval = 60 * 60 * 1000;
+  // reset the node type from previous test or our first sync will submit.
+  telem.lastSyncNodeType = null;
   // do 2 syncs with the same node type.
   await Service.sync();
   await Service.sync();
@@ -1306,6 +1308,16 @@ add_task(async function test_node_type_change() {
   equal(pings[1].syncs.length, 1, "1 sync in second ping");
   equal(pings[1].syncNodeType, "second-node-type");
   await promiseStopServer(server);
+});
+
+add_task(async function test_ids() {
+  let telem = get_sync_test_telemetry();
+  Assert.ok(!telem._shouldSubmitForDataChange());
+  fxAccounts.telemetry._setHashedUID("new_uid");
+  Assert.ok(telem._shouldSubmitForDataChange());
+  telem.maybeSubmitForDataChange();
+  // now it's been submitted the new uid is current.
+  Assert.ok(!telem._shouldSubmitForDataChange());
 });
 
 add_task(async function test_deletion_request_ping() {
