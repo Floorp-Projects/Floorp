@@ -21,35 +21,6 @@
 namespace mozilla {
 namespace wr {
 
-/* static */
-UniquePtr<RenderCompositor> RenderCompositorNativeOGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget) {
-  RefPtr<gl::GLContext> gl = RenderThread::Get()->SharedGL();
-  if (!gl) {
-    gl = gl::GLContextProvider::CreateForCompositorWidget(
-        aWidget, /* aWebRender */ true, /* aForceAccelerated */ true);
-    RenderThread::MaybeEnableGLDebugMessage(gl);
-  }
-  if (!gl || !gl->MakeCurrent()) {
-    gfxCriticalNote << "Failed GL context creation for WebRender: "
-                    << gfx::hexa(gl.get());
-    return nullptr;
-  }
-  return MakeUnique<RenderCompositorNativeOGL>(std::move(aWidget),
-                                               std::move(gl));
-}
-
-/* static */
-UniquePtr<RenderCompositor> RenderCompositorNativeSWGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget) {
-  void* ctx = wr_swgl_create_context();
-  if (!ctx) {
-    gfxCriticalNote << "Failed SWGL context creation for WebRender";
-    return nullptr;
-  }
-  return MakeUnique<RenderCompositorNativeSWGL>(std::move(aWidget), ctx);
-}
-
 RenderCompositorNative::RenderCompositorNative(
     RefPtr<widget::CompositorWidget>&& aWidget, gl::GLContext* aGL)
     : RenderCompositor(std::move(aWidget)),
@@ -68,45 +39,6 @@ RenderCompositorNative::~RenderCompositorNative() {
   mNativeLayerForEntireWindow = nullptr;
   mNativeLayerRootSnapshotter = nullptr;
   mNativeLayerRoot = nullptr;
-}
-
-RenderCompositorNativeOGL::RenderCompositorNativeOGL(
-    RefPtr<widget::CompositorWidget>&& aWidget, RefPtr<gl::GLContext>&& aGL)
-    : RenderCompositorNative(std::move(aWidget), aGL), mGL(aGL) {
-  MOZ_ASSERT(mGL);
-}
-
-RenderCompositorNativeOGL::~RenderCompositorNativeOGL() {
-  if (!mGL->MakeCurrent()) {
-    gfxCriticalNote
-        << "Failed to make render context current during destroying.";
-    // Leak resources!
-    mPreviousFrameDoneSync = nullptr;
-    mThisFrameDoneSync = nullptr;
-    return;
-  }
-
-  if (mPreviousFrameDoneSync) {
-    mGL->fDeleteSync(mPreviousFrameDoneSync);
-  }
-  if (mThisFrameDoneSync) {
-    mGL->fDeleteSync(mThisFrameDoneSync);
-  }
-}
-
-RenderCompositorNativeSWGL::RenderCompositorNativeSWGL(
-    RefPtr<widget::CompositorWidget>&& aWidget, void* aContext)
-    : RenderCompositorNative(std::move(aWidget)), mContext(aContext) {
-  MOZ_ASSERT(mContext);
-}
-
-RenderCompositorNativeSWGL::~RenderCompositorNativeSWGL() {
-  wr_swgl_destroy_context(mContext);
-}
-
-bool RenderCompositorNativeSWGL::MakeCurrent() {
-  wr_swgl_make_current(mContext);
-  return true;
 }
 
 bool RenderCompositorNative::BeginFrame() {
@@ -138,52 +70,6 @@ bool RenderCompositorNative::BeginFrame() {
   return true;
 }
 
-bool RenderCompositorNativeOGL::InitDefaultFramebuffer(
-    const gfx::IntRect& aBounds) {
-  if (mNativeLayerForEntireWindow) {
-    Maybe<GLuint> fbo = mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(
-        aBounds, aBounds, true);
-    if (!fbo) {
-      return false;
-    }
-    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, *fbo);
-  } else {
-    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGL->GetDefaultFramebuffer());
-  }
-  return true;
-}
-
-bool RenderCompositorNativeSWGL::InitDefaultFramebuffer(
-    const gfx::IntRect& aBounds) {
-  if (mNativeLayerForEntireWindow) {
-    if (!MapNativeLayer(mNativeLayerForEntireWindow, aBounds, aBounds)) {
-      return false;
-    }
-    wr_swgl_init_default_framebuffer(mContext, aBounds.width, aBounds.height,
-                                     mLayerStride, mLayerData);
-  }
-  return true;
-}
-
-void RenderCompositorNativeSWGL::CancelFrame() {
-  if (mNativeLayerForEntireWindow && mLayerTarget) {
-    UnmapNativeLayer();
-  }
-}
-
-void RenderCompositorNativeOGL::DoSwap() {
-  InsertFrameDoneSync();
-  if (mNativeLayerForEntireWindow) {
-    mGL->fFlush();
-  }
-}
-
-void RenderCompositorNativeSWGL::DoSwap() {
-  if (mNativeLayerForEntireWindow && mLayerTarget) {
-    UnmapNativeLayer();
-  }
-}
-
 RenderedFrameId RenderCompositorNative::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
   RenderedFrameId frameId = GetNextRenderFrameId();
@@ -196,31 +82,6 @@ RenderedFrameId RenderCompositorNative::EndFrame(
   }
 
   return frameId;
-}
-
-void RenderCompositorNativeOGL::InsertFrameDoneSync() {
-#ifdef XP_MACOSX
-  // Only do this on macOS.
-  // On other platforms, SwapBuffers automatically applies back-pressure.
-  if (mThisFrameDoneSync) {
-    mGL->fDeleteSync(mThisFrameDoneSync);
-  }
-  mThisFrameDoneSync = mGL->fFenceSync(LOCAL_GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-#endif
-}
-
-bool RenderCompositorNativeOGL::WaitForGPU() {
-  if (mPreviousFrameDoneSync) {
-    AUTO_PROFILER_LABEL("Waiting for GPU to finish previous frame", GRAPHICS);
-    mGL->fClientWaitSync(mPreviousFrameDoneSync,
-                         LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT,
-                         LOCAL_GL_TIMEOUT_IGNORED);
-    mGL->fDeleteSync(mPreviousFrameDoneSync);
-  }
-  mPreviousFrameDoneSync = mThisFrameDoneSync;
-  mThisFrameDoneSync = nullptr;
-
-  return true;
 }
 
 void RenderCompositorNative::Pause() {}
@@ -271,8 +132,6 @@ void RenderCompositorNative::CompositorBeginFrame() {
   mBeginFrameTimeStamp = TimeStamp::NowUnfuzzed();
   mSurfacePoolHandle->OnBeginFrame();
 }
-
-void RenderCompositorNativeOGL::DoFlush() { mGL->fFlush(); }
 
 void RenderCompositorNative::CompositorEndFrame() {
 #ifdef MOZ_GECKO_PROFILER
@@ -329,88 +188,6 @@ void RenderCompositorNative::UnbindNativeLayer() {
 
   mCurrentlyBoundNativeLayer->NotifySurfaceReady();
   mCurrentlyBoundNativeLayer = nullptr;
-}
-
-void RenderCompositorNativeOGL::Bind(wr::NativeTileId aId,
-                                     wr::DeviceIntPoint* aOffset,
-                                     uint32_t* aFboId,
-                                     wr::DeviceIntRect aDirtyRect,
-                                     wr::DeviceIntRect aValidRect) {
-  gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
-                         aValidRect.size.width, aValidRect.size.height);
-  gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
-                         aDirtyRect.size.width, aDirtyRect.size.height);
-
-  BindNativeLayer(aId, dirtyRect);
-
-  Maybe<GLuint> fbo = mCurrentlyBoundNativeLayer->NextSurfaceAsFramebuffer(
-      validRect, dirtyRect, true);
-  MOZ_RELEASE_ASSERT(fbo);  // TODO: make fallible
-
-  *aFboId = *fbo;
-  *aOffset = wr::DeviceIntPoint{0, 0};
-}
-
-void RenderCompositorNativeOGL::Unbind() {
-  mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
-
-  UnbindNativeLayer();
-}
-
-bool RenderCompositorNativeSWGL::MapNativeLayer(
-    layers::NativeLayer* aLayer, const gfx::IntRect& aDirtyRect,
-    const gfx::IntRect& aValidRect) {
-  uint8_t* data = nullptr;
-  gfx::IntSize size;
-  int32_t stride = 0;
-  gfx::SurfaceFormat format = gfx::SurfaceFormat::UNKNOWN;
-  RefPtr<gfx::DrawTarget> dt = aLayer->NextSurfaceAsDrawTarget(
-      aValidRect, gfx::IntRegion(aDirtyRect), gfx::BackendType::SKIA);
-  if (!dt || !dt->LockBits(&data, &size, &stride, &format)) {
-    return false;
-  }
-  MOZ_ASSERT(format == gfx::SurfaceFormat::B8G8R8A8 ||
-             format == gfx::SurfaceFormat::B8G8R8X8);
-  mLayerTarget = std::move(dt);
-  mLayerData = data;
-  mLayerStride = stride;
-  return true;
-}
-
-void RenderCompositorNativeSWGL::UnmapNativeLayer() {
-  MOZ_ASSERT(mLayerTarget && mLayerData);
-  mLayerTarget->ReleaseBits(mLayerData);
-  mLayerTarget = nullptr;
-  mLayerData = nullptr;
-  mLayerStride = 0;
-}
-
-bool RenderCompositorNativeSWGL::MapTile(wr::NativeTileId aId,
-                                         wr::DeviceIntRect aDirtyRect,
-                                         wr::DeviceIntRect aValidRect,
-                                         void** aData, int32_t* aStride) {
-  if (mNativeLayerForEntireWindow) {
-    return false;
-  }
-  gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
-                         aDirtyRect.size.width, aDirtyRect.size.height);
-  gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
-                         aValidRect.size.width, aValidRect.size.height);
-  BindNativeLayer(aId, dirtyRect);
-  if (!MapNativeLayer(mCurrentlyBoundNativeLayer, dirtyRect, validRect)) {
-    UnbindNativeLayer();
-    return false;
-  }
-  *aData = mLayerData;
-  *aStride = mLayerStride;
-  return true;
-}
-
-void RenderCompositorNativeSWGL::UnmapTile() {
-  if (!mNativeLayerForEntireWindow && mCurrentlyBoundNativeLayer) {
-    UnmapNativeLayer();
-    UnbindNativeLayer();
-  }
 }
 
 void RenderCompositorNative::CreateSurface(wr::NativeSurfaceId aId,
@@ -504,6 +281,229 @@ CompositorCapabilities RenderCompositorNative::GetCompositorCapabilities() {
   caps.virtual_surface_size = 0;
 
   return caps;
+}
+
+/* static */
+UniquePtr<RenderCompositor> RenderCompositorNativeOGL::Create(
+    RefPtr<widget::CompositorWidget>&& aWidget) {
+  RefPtr<gl::GLContext> gl = RenderThread::Get()->SharedGL();
+  if (!gl) {
+    gl = gl::GLContextProvider::CreateForCompositorWidget(
+        aWidget, /* aWebRender */ true, /* aForceAccelerated */ true);
+    RenderThread::MaybeEnableGLDebugMessage(gl);
+  }
+  if (!gl || !gl->MakeCurrent()) {
+    gfxCriticalNote << "Failed GL context creation for WebRender: "
+                    << gfx::hexa(gl.get());
+    return nullptr;
+  }
+  return MakeUnique<RenderCompositorNativeOGL>(std::move(aWidget),
+                                               std::move(gl));
+}
+
+RenderCompositorNativeOGL::RenderCompositorNativeOGL(
+    RefPtr<widget::CompositorWidget>&& aWidget, RefPtr<gl::GLContext>&& aGL)
+    : RenderCompositorNative(std::move(aWidget), aGL), mGL(aGL) {
+  MOZ_ASSERT(mGL);
+}
+
+RenderCompositorNativeOGL::~RenderCompositorNativeOGL() {
+  if (!mGL->MakeCurrent()) {
+    gfxCriticalNote
+        << "Failed to make render context current during destroying.";
+    // Leak resources!
+    mPreviousFrameDoneSync = nullptr;
+    mThisFrameDoneSync = nullptr;
+    return;
+  }
+
+  if (mPreviousFrameDoneSync) {
+    mGL->fDeleteSync(mPreviousFrameDoneSync);
+  }
+  if (mThisFrameDoneSync) {
+    mGL->fDeleteSync(mThisFrameDoneSync);
+  }
+}
+
+bool RenderCompositorNativeOGL::InitDefaultFramebuffer(
+    const gfx::IntRect& aBounds) {
+  if (mNativeLayerForEntireWindow) {
+    Maybe<GLuint> fbo = mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(
+        aBounds, aBounds, true);
+    if (!fbo) {
+      return false;
+    }
+    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, *fbo);
+  } else {
+    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGL->GetDefaultFramebuffer());
+  }
+  return true;
+}
+
+void RenderCompositorNativeOGL::DoSwap() {
+  InsertFrameDoneSync();
+  if (mNativeLayerForEntireWindow) {
+    mGL->fFlush();
+  }
+}
+
+void RenderCompositorNativeOGL::DoFlush() { mGL->fFlush(); }
+
+void RenderCompositorNativeOGL::InsertFrameDoneSync() {
+#ifdef XP_MACOSX
+  // Only do this on macOS.
+  // On other platforms, SwapBuffers automatically applies back-pressure.
+  if (mThisFrameDoneSync) {
+    mGL->fDeleteSync(mThisFrameDoneSync);
+  }
+  mThisFrameDoneSync = mGL->fFenceSync(LOCAL_GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+#endif
+}
+
+bool RenderCompositorNativeOGL::WaitForGPU() {
+  if (mPreviousFrameDoneSync) {
+    AUTO_PROFILER_LABEL("Waiting for GPU to finish previous frame", GRAPHICS);
+    mGL->fClientWaitSync(mPreviousFrameDoneSync,
+                         LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT,
+                         LOCAL_GL_TIMEOUT_IGNORED);
+    mGL->fDeleteSync(mPreviousFrameDoneSync);
+  }
+  mPreviousFrameDoneSync = mThisFrameDoneSync;
+  mThisFrameDoneSync = nullptr;
+
+  return true;
+}
+
+void RenderCompositorNativeOGL::Bind(wr::NativeTileId aId,
+                                     wr::DeviceIntPoint* aOffset,
+                                     uint32_t* aFboId,
+                                     wr::DeviceIntRect aDirtyRect,
+                                     wr::DeviceIntRect aValidRect) {
+  gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
+                         aValidRect.size.width, aValidRect.size.height);
+  gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
+                         aDirtyRect.size.width, aDirtyRect.size.height);
+
+  BindNativeLayer(aId, dirtyRect);
+
+  Maybe<GLuint> fbo = mCurrentlyBoundNativeLayer->NextSurfaceAsFramebuffer(
+      validRect, dirtyRect, true);
+  MOZ_RELEASE_ASSERT(fbo);  // TODO: make fallible
+
+  *aFboId = *fbo;
+  *aOffset = wr::DeviceIntPoint{0, 0};
+}
+
+void RenderCompositorNativeOGL::Unbind() {
+  mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+
+  UnbindNativeLayer();
+}
+
+/* static */
+UniquePtr<RenderCompositor> RenderCompositorNativeSWGL::Create(
+    RefPtr<widget::CompositorWidget>&& aWidget) {
+  void* ctx = wr_swgl_create_context();
+  if (!ctx) {
+    gfxCriticalNote << "Failed SWGL context creation for WebRender";
+    return nullptr;
+  }
+  return MakeUnique<RenderCompositorNativeSWGL>(std::move(aWidget), ctx);
+}
+
+RenderCompositorNativeSWGL::RenderCompositorNativeSWGL(
+    RefPtr<widget::CompositorWidget>&& aWidget, void* aContext)
+    : RenderCompositorNative(std::move(aWidget)), mContext(aContext) {
+  MOZ_ASSERT(mContext);
+}
+
+RenderCompositorNativeSWGL::~RenderCompositorNativeSWGL() {
+  wr_swgl_destroy_context(mContext);
+}
+
+bool RenderCompositorNativeSWGL::MakeCurrent() {
+  wr_swgl_make_current(mContext);
+  return true;
+}
+
+bool RenderCompositorNativeSWGL::InitDefaultFramebuffer(
+    const gfx::IntRect& aBounds) {
+  if (mNativeLayerForEntireWindow) {
+    if (!MapNativeLayer(mNativeLayerForEntireWindow, aBounds, aBounds)) {
+      return false;
+    }
+    wr_swgl_init_default_framebuffer(mContext, aBounds.width, aBounds.height,
+                                     mLayerStride, mLayerData);
+  }
+  return true;
+}
+
+void RenderCompositorNativeSWGL::CancelFrame() {
+  if (mNativeLayerForEntireWindow && mLayerTarget) {
+    UnmapNativeLayer();
+  }
+}
+
+void RenderCompositorNativeSWGL::DoSwap() {
+  if (mNativeLayerForEntireWindow && mLayerTarget) {
+    UnmapNativeLayer();
+  }
+}
+
+bool RenderCompositorNativeSWGL::MapNativeLayer(
+    layers::NativeLayer* aLayer, const gfx::IntRect& aDirtyRect,
+    const gfx::IntRect& aValidRect) {
+  uint8_t* data = nullptr;
+  gfx::IntSize size;
+  int32_t stride = 0;
+  gfx::SurfaceFormat format = gfx::SurfaceFormat::UNKNOWN;
+  RefPtr<gfx::DrawTarget> dt = aLayer->NextSurfaceAsDrawTarget(
+      aValidRect, gfx::IntRegion(aDirtyRect), gfx::BackendType::SKIA);
+  if (!dt || !dt->LockBits(&data, &size, &stride, &format)) {
+    return false;
+  }
+  MOZ_ASSERT(format == gfx::SurfaceFormat::B8G8R8A8 ||
+             format == gfx::SurfaceFormat::B8G8R8X8);
+  mLayerTarget = std::move(dt);
+  mLayerData = data;
+  mLayerStride = stride;
+  return true;
+}
+
+void RenderCompositorNativeSWGL::UnmapNativeLayer() {
+  MOZ_ASSERT(mLayerTarget && mLayerData);
+  mLayerTarget->ReleaseBits(mLayerData);
+  mLayerTarget = nullptr;
+  mLayerData = nullptr;
+  mLayerStride = 0;
+}
+
+bool RenderCompositorNativeSWGL::MapTile(wr::NativeTileId aId,
+                                         wr::DeviceIntRect aDirtyRect,
+                                         wr::DeviceIntRect aValidRect,
+                                         void** aData, int32_t* aStride) {
+  if (mNativeLayerForEntireWindow) {
+    return false;
+  }
+  gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
+                         aDirtyRect.size.width, aDirtyRect.size.height);
+  gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
+                         aValidRect.size.width, aValidRect.size.height);
+  BindNativeLayer(aId, dirtyRect);
+  if (!MapNativeLayer(mCurrentlyBoundNativeLayer, dirtyRect, validRect)) {
+    UnbindNativeLayer();
+    return false;
+  }
+  *aData = mLayerData;
+  *aStride = mLayerStride;
+  return true;
+}
+
+void RenderCompositorNativeSWGL::UnmapTile() {
+  if (!mNativeLayerForEntireWindow && mCurrentlyBoundNativeLayer) {
+    UnmapNativeLayer();
+    UnbindNativeLayer();
+  }
 }
 
 }  // namespace wr
