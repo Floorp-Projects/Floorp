@@ -2,7 +2,7 @@
 
 # visible
 
-`var visible: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/ParentBrowserMenuItem.kt#L44)
+`var visible: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/ParentBrowserMenuItem.kt#L45)
 
 Overrides [AbstractParentBrowserMenuItem.visible](../-abstract-parent-browser-menu-item/visible.md)
 

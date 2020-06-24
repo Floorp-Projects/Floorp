@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`OriginVerifierFeature(httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, packageManager: <ERROR CLASS>, apiKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, dispatch: (`[`CustomTabsAction`](../../mozilla.components.feature.customtabs.store/-custom-tabs-action/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`
+`OriginVerifierFeature(packageManager: <ERROR CLASS>, relationChecker: `[`RelationChecker`](../../mozilla.components.service.digitalassetlinks/-relation-checker/index.md)`, dispatch: (`[`CustomTabsAction`](../../mozilla.components.feature.customtabs.store/-custom-tabs-action/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`

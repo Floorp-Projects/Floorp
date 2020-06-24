@@ -494,6 +494,7 @@
 | [mozilla.components.lib.nearby.NearbyConnection](../mozilla.components.lib.nearby/-nearby-connection/index.md) | A class that can be run on two devices to allow them to connect. This supports sending a single message at a time in each direction. It contains internal synchronization and may be accessed from any thread. |
 | [mozilla.components.lib.nearby.NearbyConnectionObserver](../mozilla.components.lib.nearby/-nearby-connection-observer/index.md) | Interface definition for observing changes in a [NearbyConnection](../mozilla.components.lib.nearby/-nearby-connection/index.md). |
 | [mozilla.components.browser.engine.gecko.NestedGeckoView](../mozilla.components.browser.engine.gecko/-nested-gecko-view/index.md) | geckoView that supports nested scrolls (for using in a CoordinatorLayout). |
+| [mozilla.components.concept.menu.candidate.NestedMenuCandidate](../mozilla.components.concept.menu.candidate/-nested-menu-candidate/index.md) | Menu option that opens a nested sub menu. |
 | [mozilla.components.browser.engine.system.NestedWebView](../mozilla.components.browser.engine.system/-nested-web-view/index.md) | WebView that supports nested scrolls (for using in a CoordinatorLayout). |
 | [mozilla.components.service.glean.private.NoExtraKeys](../mozilla.components.service.glean.private/-no-extra-keys.md) |  |
 | [mozilla.components.service.glean.private.NoReasonCodes](../mozilla.components.service.glean.private/-no-reason-codes.md) |  |

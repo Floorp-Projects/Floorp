@@ -2,7 +2,7 @@
 
 # TabCounter
 
-`open class TabCounter` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/tabcounter/src/main/java/mozilla/components/ui/tabcounter/TabCounter.kt#L23)
+`open class TabCounter` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/tabcounter/src/main/java/mozilla/components/ui/tabcounter/TabCounter.kt#L22)
 
 ### Constructors
 
@@ -14,7 +14,7 @@
 
 | Name | Summary |
 |---|---|
-| [getText](get-text.md) | `fun getText(): `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html) |
+| [getText](get-text.md) | `fun getText(): `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html)<br>Returns current tab count from tab counter view. |
 | [setCount](set-count.md) | `fun setCount(count: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [setCountWithAnimation](set-count-with-animation.md) | `fun setCountWithAnimation(count: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 

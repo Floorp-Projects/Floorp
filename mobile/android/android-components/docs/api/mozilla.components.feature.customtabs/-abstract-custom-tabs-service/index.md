@@ -16,10 +16,9 @@
 
 | Name | Summary |
 |---|---|
-| [apiKey](api-key.md) | `open val apiKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
-| [customTabsServiceStore](custom-tabs-service-store.md) | `open val customTabsServiceStore: `[`CustomTabsServiceStore`](../../mozilla.components.feature.customtabs.store/-custom-tabs-service-store/index.md)`?` |
+| [customTabsServiceStore](custom-tabs-service-store.md) | `abstract val customTabsServiceStore: `[`CustomTabsServiceStore`](../../mozilla.components.feature.customtabs.store/-custom-tabs-service-store/index.md) |
 | [engine](engine.md) | `abstract val engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md) |
-| [httpClient](http-client.md) | `open val httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`?` |
+| [relationChecker](relation-checker.md) | `open val relationChecker: `[`RelationChecker`](../../mozilla.components.service.digitalassetlinks/-relation-checker/index.md)`?` |
 
 ### Functions
 

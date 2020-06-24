@@ -2,7 +2,7 @@
 
 # BackPressMenuItem
 
-`class BackPressMenuItem : `[`BrowserMenuImageText`](../-browser-menu-image-text/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BackPressMenuItem.kt#L17)
+`class BackPressMenuItem : `[`BrowserMenuImageText`](../-browser-menu-image-text/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BackPressMenuItem.kt#L20)
 
 A back press menu item for a nested sub menu entry.
 
@@ -26,6 +26,7 @@ A back press menu item for a nested sub menu entry.
 
 | Name | Summary |
 |---|---|
+| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`NestedMenuCandidate`](../../mozilla.components.concept.menu.candidate/-nested-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [bind](bind.md) | `fun bind(menu: `[`BrowserMenu`](../../mozilla.components.browser.menu/-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Binds the view according to its super, but use [backPressListener](#) for on view clicks. |
 | [setListener](set-listener.md) | `fun setListener(onClickListener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets and replaces the existing [backPressListener](#) for the back press item. |
 
@@ -33,7 +34,6 @@ A back press menu item for a nested sub menu entry.
 
 | Name | Summary |
 |---|---|
-| [asCandidate](../-browser-menu-image-text/as-candidate.md) | `open fun asCandidate(context: <ERROR CLASS>): `[`TextMenuCandidate`](../../mozilla.components.concept.menu.candidate/-text-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [getLayoutResource](../-browser-menu-image-text/get-layout-resource.md) | `open fun getLayoutResource(): <ERROR CLASS>`<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
 
 ### Extension Functions

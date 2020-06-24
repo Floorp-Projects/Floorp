@@ -2,7 +2,7 @@
 
 # containerStyle
 
-`val containerStyle: `[`ContainerStyle`](../-container-style/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/menu/src/main/java/mozilla/components/concept/menu/candidate/MenuCandidate.kt#L98)
+`val containerStyle: `[`ContainerStyle`](../-container-style/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/menu/src/main/java/mozilla/components/concept/menu/candidate/MenuCandidate.kt#L122)
 
 Overrides [MenuCandidate.containerStyle](../-menu-candidate/container-style.md)
 
