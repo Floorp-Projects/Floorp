@@ -143,7 +143,7 @@ class MediaController final : public DOMEventTargetHelper,
 
   void UpdateDeactivationTimerIfNeeded();
 
-  bool mIsRegisteredToService = false;
+  bool mIsActive = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;
 
