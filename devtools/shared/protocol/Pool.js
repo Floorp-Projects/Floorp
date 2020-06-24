@@ -132,11 +132,6 @@ class Pool extends EventEmitter {
     return null;
   }
 
-  // True if this pool has no children.
-  isEmpty() {
-    return !this.__poolMap || this._poolMap.size == 0;
-  }
-
   // Generator that yields each non-self child of the pool.
   *poolChildren() {
     if (!this.__poolMap) {
@@ -203,14 +198,6 @@ class Pool extends EventEmitter {
     this.conn.removeActorPool(this);
     this.__poolMap.clear();
     this.__poolMap = null;
-  }
-
-  /**
-   * For getting along with the devtools server pools, should be removable
-   * eventually.
-   */
-  cleanup() {
-    this.destroy();
   }
 }
 

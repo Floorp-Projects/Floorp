@@ -121,8 +121,8 @@ DevToolsServerConnection.prototype = {
   /**
    * Remove a previously-added pool of actors to the connection.
    *
-   * @param ActorPool actorPool
-   *        The ActorPool instance you want to remove.
+   * @param Pool actorPool
+   *        The Pool instance you want to remove.
    */
   removeActorPool(actorPool) {
     // When a connection is closed, it removes each of its actor pools. When an
@@ -205,12 +205,9 @@ DevToolsServerConnection.prototype = {
       }
 
       if (typeof actor !== "object") {
-        // ActorPools should now contain only actor instances (i.e. objects)
+        // Pools should now contain only actor instances (i.e. objects)
         throw new Error(
-          "Unexpected actor constructor/function in ActorPool " +
-            "for actorID=" +
-            actorID +
-            "."
+          `Unexpected actor constructor/function in Pool for actorID "${actorID}".`
         );
       }
 
@@ -494,31 +491,24 @@ DevToolsServerConnection.prototype = {
   },
 
   dumpPool(pool, output = [], dumpedPools) {
-    let label;
-    let actorIds = [];
-    let children = [];
+    const actorIds = [];
+    const children = [];
 
     if (dumpedPools.has(pool)) {
       return;
     }
     dumpedPools.add(pool);
-    // TRUE if the pool is an ActorPool
-    if (pool._actors) {
-      actorIds = Object.keys(pool._actors);
-      children = Object.values(pool._actors);
-      label = pool.label || "";
-    }
 
     // TRUE if the pool is a Pool
-    else if (pool.__poolMap) {
-      for (const actor of pool.poolChildren()) {
-        children.push(actor);
-        actorIds.push(actor.actorID);
-      }
-      label = pool.label || pool.actorID;
-    } else {
+    if (!pool.__poolMap) {
       return;
     }
+
+    for (const actor of pool.poolChildren()) {
+      children.push(actor);
+      actorIds.push(actor.actorID);
+    }
+    const label = pool.label || pool.actorID;
 
     output.push([label, actorIds]);
     dump(`- ${label}: ${JSON.stringify(actorIds)}\n`);
