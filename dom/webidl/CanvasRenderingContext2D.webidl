@@ -348,8 +348,8 @@ interface CanvasPattern {
   // [Throws, LenientFloat] - could not do this overload because of bug 1020975
   // void setTransform(double a, double b, double c, double d, double e, double f);
 
-  // No throw necessary here - SVGMatrix is always good.
-  void setTransform(SVGMatrix matrix);
+  [Throws]
+  void setTransform(optional DOMMatrix2DInit matrix = {});
 };
 
 [Exposed=Window]
