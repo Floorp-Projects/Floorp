@@ -904,8 +904,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Nārè\' man\'an nej si datô riña sā nana\'uî\'t ngà gūru\'man ra\'ât riña tāj “Gāhuīt” riña menú ñāan</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Nārè\' man\'an nej si datô riña sā nana\'uî\'t ngà gūru\'man ra\'ât riña tāj \“Gāhuīt\” riña menú ñāan</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Nej sa gini\'iājt ngà gaché nunt</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Gāhuī</string>
 
@@ -1004,11 +1002,87 @@
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
     <string name="onboarding_toolbar_position_header">Ni\'iāj dàj gānïn ruhuât</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Gīni\'iāj dàj gāchē nu\' ngà \'ngō rïn ro\'ô\' ngà dukuán rasūn nù nīkà\'a asi dūsikî\'t gan\'an yātà\'a.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Gāchē nu huì</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Nā\'nïn ‘ngō rïn rakïj ñanj huìi: Gūru\'man ra’a riña %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Nā\'nïn yītïnj riña nej rakïj ñanj huìi: Nāgi\'iaj nākà riña nāgi\'iô\' nīkāj riña sā nana\'uî\'t.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Nā\'nïn riña sa nāgi\'iô\'</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Riña aché nu huìt</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Nagi\'iaj ñûnj %s da\' gīni\'in man\'ânt nùhuin si duyingâ\'
+        nga aché nunt nī sa duyin\'ngâ\' riña ñûnj.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Gahiā sa atāj na\'ānj ñûnj guendâ sa huìi</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Nārán</string>
 
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Gāyi\'ì gāchē nunt</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Nāguī si temât</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Dūgumî dòj ña\'an arâj sun si āgâ\'t nī dūgumî rune ñant si nāchrūnt gā rūmī\' riña si āgâ\'t.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Sa nañû ma\'an</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Nakāj dugui\'ij ngà daj hua riña si āgâ\'t</string>
+
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Temâ huā rūmin\'in</string>
+
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Temâ huā yigiïn</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Nej rakïj ñanj ngà gan\'ānj</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Rakïj ñanj ngà gan\'ānj</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Nu ga\'ue gan\'an</string>
+
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">GINÙ HUIN ÑÛ</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Dūyichin\'</string>
+
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Gāhuin chrūn doj</string>
+
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Sa nùkuaj doj</string>
+
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Nej kôki</string>
+    <string name="enhanced_tracking_protection_blocked">Nitāj si hūaj nāyi\'nïn</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Gā\'ue</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 rakïj ñanj</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d nej rakïj ñanj</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Gūxūn nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Gāchrūn</string>
+
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Dūyichin\'</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Nūtà\'</string>
 
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Nāchrūn</string>
@@ -1018,7 +1092,37 @@
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Gāhuin chrūn doj</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Nūtà\'</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Nā\'nïnj sà\'</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Nāgi\'iaj riñaj</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Nādūre\'</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">A\'ngoj</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Si yugui</string>
 
-    </resources>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Gāhuin chrūn doj</string>
+
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Nej da\'nga\' huìi</string>
+
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Nādūre\'</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Nāgi\'iaj riñaj</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Nādūre\'</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Nāgi\'iaj riñaj</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Ga\'ue, ngà garâj da\'nga\' ruhuâj</string>
+
+</resources>
