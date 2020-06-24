@@ -99,6 +99,9 @@
     <action
         android:id="@+id/action_global_tabTrayDialogFragment"
         app:destination="@id/tabTrayDialogFragment" />
+    <action
+        android:id="@+id/action_global_savedLoginsAuthFragment"
+        app:destination="@id/savedLoginsAuthFragment" />
 
     <dialog
         android:id="@+id/tabTrayDialogFragment"
