@@ -185,15 +185,16 @@ class TabTrayViewHolder(
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
                 info?.let {
-                    val initialInfo = info.collectionItemInfo
-                    info.collectionItemInfo = AccessibilityNodeInfo.CollectionItemInfo.obtain(
-                        newIndex,
-                        initialInfo.rowSpan,
-                        initialInfo.columnIndex,
-                        initialInfo.columnSpan,
-                        false,
-                        initialInfo.isSelected
-                    )
+                    info.collectionItemInfo = info.collectionItemInfo?.let { initialInfo ->
+                        AccessibilityNodeInfo.CollectionItemInfo.obtain(
+                            newIndex,
+                            initialInfo.rowSpan,
+                            initialInfo.columnIndex,
+                            initialInfo.columnSpan,
+                            false,
+                            initialInfo.isSelected
+                        )
+                    }
                 }
             }
         })
