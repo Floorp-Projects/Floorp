@@ -4235,6 +4235,10 @@ already_AddRefed<mozilla::dom::JSProcessActorChild> ContentChild::GetActor(
   return actor.forget();
 }
 
+IPCResult ContentChild::RecvFlushFOGData(FlushFOGDataResolver&& aResolver) {
+  return IPC_OK();
+}
+
 }  // namespace dom
 
 #if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
