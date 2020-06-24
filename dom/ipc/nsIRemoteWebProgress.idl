@@ -14,17 +14,4 @@ interface nsIRemoteWebProgress : nsIWebProgress {
    */
   void init(in nsIWebProgress aManager,
             in boolean aIsTopLevel);
-
-  /**
-   * Update the RemoteWebProgress with values from the content process.
-   *
-   * @param aOuterWindowID The outer window ID.
-   * @param aInnerWindowID The inner window ID.
-   * @param aLoadType The load type.
-   * @param aIsLoadingDocument Whether or not a document is being loaded.
-   */
-  void update(in uint64_t aOuterWindowID,
-              in uint64_t aInnerWindowID,
-              in uint32_t aLoadType,
-              in boolean aIsLoadingDocument);
 };
