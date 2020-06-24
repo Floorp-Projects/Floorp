@@ -17,16 +17,16 @@
 
 #include "builtin/Promise.h"  // js::RejectPromiseWithPendingError
 #include "builtin/streams/ReadableStream.h"        // js::ReadableStream
-#include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool, js::ReadableStreamDefaultReader
+#include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool, js::ReadableStreamDefaultReader, js::ReadableStreamReaderGenericRelease
 #include "builtin/streams/WritableStream.h"        // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter, js::WritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
-#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{GetDesiredSize,Write}
+#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{GetDesiredSize,Release,Write}
 #include "js/CallArgs.h"       // JS::CallArgsFromVp, JS::CallArgs
 #include "js/Class.h"          // JSClass, JSCLASS_HAS_RESERVED_SLOTS
 #include "js/Promise.h"        // JS::AddPromiseReactions
 #include "js/RootingAPI.h"     // JS::Handle, JS::Rooted
-#include "js/Value.h"          // JS::{,Int32,Magic,Object}Value
+#include "js/Value.h"  // JS::{,Int32,Magic,Object}Value, JS::UndefinedHandleValue
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler
@@ -47,6 +47,7 @@ using JS::Int32Value;
 using JS::MagicValue;
 using JS::ObjectValue;
 using JS::Rooted;
+using JS::UndefinedHandleValue;
 using JS::Value;
 
 using js::ExtraValueFromHandler;
@@ -57,12 +58,14 @@ using js::PipeToState;
 using js::PromiseObject;
 using js::ReadableStream;
 using js::ReadableStreamDefaultReader;
+using js::ReadableStreamReaderGenericRelease;
 using js::TargetFromHandler;
 using js::UnwrapReaderFromStream;
 using js::UnwrapStreamFromWriter;
 using js::UnwrapWriterFromStream;
 using js::WritableStream;
 using js::WritableStreamDefaultWriter;
+using js::WritableStreamDefaultWriterRelease;
 using js::WritableStreamDefaultWriterWrite;
 
 static ReadableStream* GetUnwrappedSource(JSContext* cx,
@@ -92,10 +95,37 @@ static bool WritableAndNotClosing(const WritableStream* unwrappedDest) {
 
 static MOZ_MUST_USE bool Finalize(JSContext* cx, Handle<PipeToState*> state,
                                   Handle<Maybe<Value>> error) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
-                            "finalize with optional error");
-  return false;
+  cx->check(state);
+  cx->check(error);
+
+  // Step 1: Perform ! WritableStreamDefaultWriterRelease(writer).
+  Rooted<WritableStreamDefaultWriter*> writer(cx, state->writer());
+  cx->check(writer);
+  if (!WritableStreamDefaultWriterRelease(cx, writer)) {
+    return false;
+  }
+
+  // Step 2: Perform ! ReadableStreamReaderGenericRelease(reader).
+  Rooted<ReadableStreamDefaultReader*> reader(cx, state->reader());
+  cx->check(reader);
+  if (!ReadableStreamReaderGenericRelease(cx, reader)) {
+    return false;
+  }
+
+  // Step 3: If signal is not undefined, remove abortAlgorithm from signal.
+  // XXX
+
+  Rooted<PromiseObject*> promise(cx, state->promise());
+  cx->check(promise);
+
+  // Step 4: If error was given, reject promise with error.
+  if (error.isSome()) {
+    Rooted<Value> errorVal(cx, *error.get());
+    return PromiseObject::reject(cx, promise, errorVal);
+  }
+
+  // Step 5: Otherwise, resolve promise with undefined.
+  return PromiseObject::resolve(cx, promise, UndefinedHandleValue);
 }
 
 static MOZ_MUST_USE bool Finalize(JSContext* cx, unsigned argc, Value* vp) {
