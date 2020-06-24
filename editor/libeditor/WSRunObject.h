@@ -527,6 +527,10 @@ class MOZ_STACK_CLASS WSRunScanner {
   };
 
   using WSFragmentArray = AutoTArray<WSFragment, 3>;
+  const WSFragmentArray& WSFragmentArrayRef() const {
+    const_cast<WSRunScanner*>(this)->EnsureWSFragments();
+    return mFragments;
+  }
 
   /**
    * FindNearestFragment() and FindNearestFragmentIndex() look for a WSFragment
@@ -696,7 +700,7 @@ class MOZ_STACK_CLASS WSRunScanner {
     EditorDOMPointInText mLast;
   };
 
-  void GetRuns();
+  void EnsureWSFragments();
   void InitializeWithSingleFragment(
       WSFragment::Visible aIsVisible,
       WSFragment::StartOfHardLine aIsStartOfHardLine,
@@ -726,8 +730,6 @@ class MOZ_STACK_CLASS WSRunScanner {
   // true if we are in preformatted white-space context.
   bool mPRE;
 
-  WSFragmentArray mFragments;
-
   // Non-owning.
   const HTMLEditor* mHTMLEditor;
 
@@ -735,6 +737,12 @@ class MOZ_STACK_CLASS WSRunScanner {
   BoundaryData mStart;
   BoundaryData mEnd;
   NoBreakingSpaceData mNBSPData;
+
+ private:
+  // Don't access `mFragments` directly.  Use `WSFragmentArrayRef()` when you
+  // want to access.  Then, it initializes all fragments for you if they has
+  // not been initialized yet.
+  WSFragmentArray mFragments;
 };
 
 class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
