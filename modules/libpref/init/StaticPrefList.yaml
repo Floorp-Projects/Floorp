@@ -1090,7 +1090,7 @@
 - name: browser.tabs.remote.useCrossOriginEmbedderPolicy
   type: RelaxedAtomicBool
 #if !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false # Blocked by DocumentChannel, see Bug 1589982.
 #endif
@@ -1101,7 +1101,7 @@
 - name: browser.tabs.remote.useCrossOriginOpenerPolicy
   type: RelaxedAtomicBool
 #if !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false # Blocked by DocumentChannel, see Bug 1589982.
 #endif
@@ -2297,7 +2297,7 @@
 - name: dom.postMessage.sharedArrayBuffer.withCOOP_COEP
   type: bool
 #if !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false # Blocked by DocumentChannel, see Bug 1589982.
 #endif
