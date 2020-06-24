@@ -5,6 +5,7 @@
 mod common;
 use common::*;
 
+use glean::ipc;
 use glean::metrics::{CommonMetricData, Lifetime, StringMetric};
 
 #[test]
@@ -28,4 +29,32 @@ fn sets_string_value() {
         "test_string_value",
         metric.test_get_value("store1").unwrap()
     );
+}
+
+#[test]
+fn string_ipc() {
+    // StringMetric doesn't support IPC.
+    let _lock = lock_test();
+    let store_names: Vec<String> = vec!["store1".into()];
+    let _raii = ipc::test_set_need_ipc(true);
+    let child_metric = StringMetric::new(CommonMetricData {
+        name: "string metric".into(),
+        category: "ipc".into(),
+        send_in_pings: store_names.clone(),
+        disabled: false,
+        lifetime: Lifetime::Ping,
+        ..Default::default()
+    });
+
+    // Instrumentation calls do not panic.
+    child_metric.set("test_string_value");
+
+    // (They also shouldn't do anything,
+    // but that's not something we can inspect in this test)
+
+    // Need to catch the panic so that our RAIIs drop nicely.
+    let result = std::panic::catch_unwind(move || {
+        child_metric.test_get_value("store1");
+    });
+    assert!(result.is_err());
 }
