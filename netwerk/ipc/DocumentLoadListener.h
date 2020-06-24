@@ -286,6 +286,12 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   void MaybeReportBlockedByURLClassifier(nsresult aStatus);
 
+  // Returns true if a channel with aStatus will display
+  // some sort of content (could be the actual channel data,
+  // attempt a uri fixup and new load, or an error page).
+  // Returns false if the docshell will ignore the load entirely.
+  bool DocShellWillDisplayContent(nsresult aStatus);
+
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
   //
