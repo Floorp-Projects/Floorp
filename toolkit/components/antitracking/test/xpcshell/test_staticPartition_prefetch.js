@@ -96,11 +96,16 @@ add_task(async () => {
 
   const tests = [
     {
+      // 2 hints because we have 2 different top-level origins, loading the
+      // same resource. This will end up creating 2 separate cache entries.
       hints: 2,
       originAttributes: { partitionKey: "(http,example.org)" },
       prefValue: true,
     },
     {
+      // 1 hint because, with network-state isolation, the cache entry will be
+      // reused for the second loading, even if the top-level origins are
+      // different.
       hints: 1,
       originAttributes: {},
       prefValue: false,
