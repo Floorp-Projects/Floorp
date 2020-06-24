@@ -24,8 +24,6 @@ if CONFIG['MOZ_GL_PROVIDER']:
     gl_provider = CONFIG['MOZ_GL_PROVIDER']
 
 EXPORTS += [
-    'AndroidNativeWindow.h',
-    'AndroidSurfaceTexture.h',
     'DecomposeIntoNoRepeatTriangles.h',
     'ForceDiscreteGPUHelperCGL.h',
     'GfxTexturesReporter.h',
@@ -75,6 +73,15 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SharedSurfaceD3D11Interop.cpp',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXPORTS += [
+        'AndroidNativeWindow.h',
+        'AndroidSurfaceTexture.h',
+    ]
+    UNIFIED_SOURCES += [
+        'AndroidSurfaceTexture.cpp',
+    ]
+
 if gl_provider == 'CGL':
     # These files include Mac headers that are unfriendly to unified builds
     SOURCES += [
@@ -122,7 +129,6 @@ if CONFIG['MOZ_WAYLAND']:
     ]
 
 UNIFIED_SOURCES += [
-    'AndroidSurfaceTexture.cpp',
     'DecomposeIntoNoRepeatTriangles.cpp',
     'GfxTexturesReporter.cpp',
     'GLBlitHelper.cpp',
