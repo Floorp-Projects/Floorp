@@ -23,7 +23,6 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
-import kotlinx.android.synthetic.main.fragment_installed_add_on_details.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -127,9 +126,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private var _browserToolbarView: BrowserToolbarView? = null
     protected val browserToolbarView: BrowserToolbarView
         get() = _browserToolbarView!!
-
-    private val sessionManager: SessionManager
-        get() = requireComponents.core.sessionManager
 
     protected val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
 
@@ -813,9 +809,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     protected open fun removeSessionIfNeeded(): Boolean {
         getSessionById()?.let { session ->
             val sessionManager = requireComponents.core.sessionManager
-            if (session.source == Session.Source.ACTION_VIEW) {
+            return if (session.source == Session.Source.ACTION_VIEW) {
                 activity?.finish()
                 sessionManager.remove(session)
+                true
             } else {
                 val isLastSession =
                     sessionManager.sessionsOfType(private = session.private).count() == 1
@@ -823,7 +820,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     sessionManager.remove(session, true)
                 }
                 val goToOverview = isLastSession || !session.hasParentSession
-                return !goToOverview
+                !goToOverview
             }
         }
         return false
