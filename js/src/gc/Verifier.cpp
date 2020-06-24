@@ -633,7 +633,9 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
     for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
          chunk.next()) {
       ChunkBitmap* bitmap = &chunk->bitmap;
-      ChunkBitmap* entry = map.lookup(chunk)->value().get();
+      auto ptr = map.lookup(chunk);
+      MOZ_RELEASE_ASSERT(ptr, "Chunk not found in map");
+      ChunkBitmap* entry = ptr->value().get();
       std::swap(*entry, *bitmap);
     }
   }
