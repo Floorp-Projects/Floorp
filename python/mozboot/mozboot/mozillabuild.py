@@ -88,7 +88,6 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
     def __init__(self, no_interactive=False, no_system_changes=False):
         BaseBootstrapper.__init__(self, no_interactive=no_interactive,
                                   no_system_changes=no_system_changes)
-        print("mach bootstrap is not fully implemented in MozillaBuild")
 
     def which(self, name, *extra_search_dirs):
         return BaseBootstrapper.which(self, name + '.exe', *extra_search_dirs)
