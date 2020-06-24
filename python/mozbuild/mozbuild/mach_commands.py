@@ -1424,13 +1424,6 @@ class L10NCommands(MachCommandBase):
     @CommandArgument('--verbose', action='store_true',
                      help='Log informative status messages.')
     def package_l10n(self, verbose=False, locales=[]):
-        backends = self.substs['BUILD_BACKENDS']
-        if 'RecursiveMake' not in backends:
-            self.log(logging.ERROR, 'package-multi-locale', {'backends': backends},
-                     "Multi-locale packaging requires the full (non-artifact) "
-                     "'RecursiveMake' build backend; got {backends}.")
-            return 1
-
         if 'en-US' not in locales:
             self.log(logging.WARN, 'package-multi-locale', {'locales': locales},
                      'List of locales does not include default locale "en-US": '
