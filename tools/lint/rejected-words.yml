@@ -83,8 +83,6 @@ avoid-blacklist-and-whitelist:
         - browser/components/urlbar/tests/browser/browser_UrlbarInput_trimURLs.js
         - browser/components/urlbar/tests/unit/test_search_suggestions.js
         - browser/components/urlbar/tests/unit/test_tokenizer.js
-        - browser/components/urlbar/UrlbarInput.jsm
-        - browser/components/urlbar/UrlbarTokenizer.jsm
         - browser/extensions/formautofill/FormAutofillSync.jsm
         - browser/extensions/screenshots/background/main.js
         - browser/modules/SitePermissions.jsm
@@ -421,7 +419,6 @@ avoid-blacklist-and-whitelist:
         - toolkit/components/extensions/test/xpcshell/test_ext_storage_content_sync_kinto.js
         - toolkit/components/extensions/test/xpcshell/test_WebExtensionPolicy.js
         - toolkit/components/places/tests/unifiedcomplete/test_visit_url.js
-        - toolkit/components/places/UnifiedComplete.jsm
         - toolkit/components/remotepagemanager/RemotePageManagerParent.jsm
         - toolkit/components/reputationservice/ApplicationReputation.cpp
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
