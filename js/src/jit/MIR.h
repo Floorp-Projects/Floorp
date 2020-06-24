@@ -4482,12 +4482,10 @@ class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
 };
 
 class MTypeOf : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  MIRType inputType_;
   bool inputMaybeCallableOrEmulatesUndefined_;
 
-  MTypeOf(MDefinition* def, MIRType inputType)
+  explicit MTypeOf(MDefinition* def)
       : MUnaryInstruction(classOpcode, def),
-        inputType_(inputType),
         inputMaybeCallableOrEmulatesUndefined_(true) {
     setResultType(MIRType::String);
     setMovable();
@@ -4496,8 +4494,6 @@ class MTypeOf : public MUnaryInstruction, public BoxInputsPolicy::Data {
  public:
   INSTRUCTION_HEADER(TypeOf)
   TRIVIAL_NEW_WRAPPERS
-
-  MIRType inputType() const { return inputType_; }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
   void cacheInputMaybeCallableOrEmulatesUndefined(
@@ -4514,9 +4510,6 @@ class MTypeOf : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isTypeOf()) {
-      return false;
-    }
-    if (inputType() != ins->toTypeOf()->inputType()) {
       return false;
     }
     if (inputMaybeCallableOrEmulatesUndefined() !=
