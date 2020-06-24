@@ -3540,13 +3540,13 @@ MDefinition* MBitNot::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
-  // Note: we can't use input->type() here, type analysis has
-  // boxed the input.
-  MOZ_ASSERT(input()->type() == MIRType::Value);
+  if (!input()->isBox()) {
+    return this;
+  }
 
+  MDefinition* unboxed = input()->toBox()->input();
   JSType type;
-
-  switch (inputType()) {
+  switch (unboxed->type()) {
     case MIRType::Double:
     case MIRType::Float32:
     case MIRType::Int32:
