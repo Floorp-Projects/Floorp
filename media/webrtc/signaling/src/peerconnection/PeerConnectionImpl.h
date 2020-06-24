@@ -446,8 +446,6 @@ class PeerConnectionImpl final
   // and multiple hostnames can be present, separated by commas.
   static bool HostnameInPref(const char* aPrefList, nsIURI* aDocURI);
 
-  void StampTimecard(const char* aEvent);
-
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
