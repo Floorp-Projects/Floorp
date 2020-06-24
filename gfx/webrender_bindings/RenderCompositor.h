@@ -38,6 +38,10 @@ class RenderCompositor {
 
   virtual bool BeginFrame() = 0;
 
+  // Optional handler in case the frame was aborted allowing the compositor
+  // to clean up relevant resources if required.
+  virtual void CancelFrame() {}
+
   // Called to notify the RenderCompositor that all of the commands for a frame
   // have been pushed to the queue.
   // @return a RenderedFrameId for the frame
@@ -55,6 +59,11 @@ class RenderCompositor {
 
   // Update FrameId when WR rendering does not happen.
   virtual RenderedFrameId UpdateFrameId() { return GetNextRenderFrameId(); }
+
+  // Return a data mapping of the underlying framebuffer if possible.
+  virtual bool GetMappedBuffer(uint8_t** aData, int32_t* aStride) {
+    return false;
+  }
 
   virtual void Pause() = 0;
   virtual bool Resume() = 0;

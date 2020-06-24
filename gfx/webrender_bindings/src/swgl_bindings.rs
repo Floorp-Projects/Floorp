@@ -589,7 +589,7 @@ impl Compositor for SwCompositor {
                                 rect.min_x(),
                                 rect.min_y(),
                                 surface.is_opaque,
-                                true,
+                                false,
                             );
                         }
                     }
