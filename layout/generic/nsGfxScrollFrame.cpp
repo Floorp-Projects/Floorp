@@ -6020,14 +6020,7 @@ bool ScrollFrameHelper::ReflowFinished() {
           presShell->GetMobileViewportManager();
       MOZ_ASSERT(manager);
 
-      ScreenIntSize displaySize = ViewAs<ScreenPixel>(
-          manager->DisplaySize(),
-          PixelCastJustification::LayoutDeviceIsScreenForBounds);
-
-      Document* doc = presShell->GetDocument();
-      MOZ_ASSERT(doc, "The document should be valid");
-      nsViewportInfo viewportInfo = doc->GetViewportInfo(displaySize);
-      manager->ShrinkToDisplaySizeIfNeeded(viewportInfo, displaySize);
+      manager->ShrinkToDisplaySizeIfNeeded();
       mMinimumScaleSizeChanged = false;
     }
 
