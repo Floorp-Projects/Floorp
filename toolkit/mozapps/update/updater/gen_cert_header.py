@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
-import os
 
 def file_byte_generator(filename, block_size = 512):
   with open(filename, "rb") as f:
@@ -17,7 +16,7 @@ def file_byte_generator(filename, block_size = 512):
 
 def create_header(out_fh, in_filename):
   assert out_fh.name.endswith('.h')
-  array_name = os.path.basename(out_fh.name)[:-2] + 'Data'
+  array_name = out_fh.name[:-2] + 'Data'
   hexified = ["0x%02x" % byte for byte in file_byte_generator(in_filename)]
 
   print("const uint8_t " + array_name + "[] = {", file=out_fh)
