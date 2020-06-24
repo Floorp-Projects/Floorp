@@ -286,6 +286,7 @@ add_task(async function webextension() {
         },
         sidebar_action: {
           default_panel: "sidebar.html",
+          open_at_install: false,
         },
       },
       files: {
@@ -428,6 +429,10 @@ add_task(async function webextension() {
     });
 
     await extension.unload();
+
+    // Clear the last opened ID so if this test runs again the sidebar won't
+    // automatically open when the extension is installed.
+    window.SidebarUI.lastOpenedId = null;
 
     // The second should retain its ID.
     click("random_addon2_example_com-browser-action");
