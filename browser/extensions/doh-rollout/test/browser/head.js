@@ -288,6 +288,7 @@ function simulateNetworkChange() {
   // TODO: Implement a mock NetworkLinkService and use it to also simulate
   // network down events.
   Services.obs.notifyObservers(null, "network:link-status-changed", "up");
+  Services.obs.notifyObservers(null, "captive-portal-login-success");
 }
 
 async function ensureTRRMode(mode) {
