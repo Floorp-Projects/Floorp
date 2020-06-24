@@ -48,7 +48,6 @@ const known_scripts = {
     // Telemetry
     "resource://gre/modules/TelemetryControllerBase.jsm", // bug 1470339
     "resource://gre/modules/TelemetryControllerContent.jsm", // bug 1470339
-    "resource://gre/modules/TelemetryUtils.jsm", // bug 1470339
 
     // Extensions
     "resource://gre/modules/ExtensionProcessScript.jsm",
