@@ -249,7 +249,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     const { DevToolsServer } = this.loader.require(
       "devtools/server/devtools-server"
     );
-    const { ActorPool } = this.loader.require("devtools/server/actors/common");
+
     const { FrameTargetActor } = this.loader.require(
       "devtools/server/actors/targets/frame"
     );
@@ -272,11 +272,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       followWindowGlobalLifeCycle: true,
       doNotFireFrameUpdates: true,
     });
-
-    // Add the newly created actor to the connection pool.
-    const actorPool = new ActorPool(connection, "frame-child");
-    actorPool.addActor(targetActor);
-    connection.addActorPool(actorPool);
+    targetActor.manage(targetActor);
 
     return { connection, targetActor };
   }
