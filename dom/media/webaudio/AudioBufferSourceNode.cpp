@@ -694,6 +694,9 @@ void AudioBufferSourceNode::Start(double aWhen, double aOffset,
   if (aWhen > 0.0) {
     ns->SetDoubleParameter(START, aWhen);
   }
+  if (mDuration != std::numeric_limits<double>::min()) {
+    ns->SetTrackTimeParameter(STOP, Context(), aWhen + mDuration);
+  }
 
   Context()->StartBlockedAudioContextIfAllowed();
 }
