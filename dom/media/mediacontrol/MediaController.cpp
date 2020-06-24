@@ -309,6 +309,7 @@ void MediaController::SetIsInPictureInPictureMode(
     service->NotifyControllerBeingUsedInPictureInPictureMode(this);
   }
   UpdateDeactivationTimerIfNeeded();
+  mPictureInPictureModeChangedEvent.Notify(mIsInPictureInPictureMode);
 }
 
 void MediaController::NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
@@ -319,6 +320,7 @@ void MediaController::NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
   LOG("%s fullscreen", aIsInFullScreen ? "Entered" : "Left");
   mIsInFullScreenMode = aIsInFullScreen;
   UpdateActivatedStateIfNeeded();
+  mFullScreenChangedEvent.Notify(mIsInFullScreenMode);
 }
 
 void MediaController::HandleActualPlaybackStateChanged() {
