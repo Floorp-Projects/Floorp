@@ -12,7 +12,6 @@
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/AutoResizeReflowSquasher.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EventDispatcher.h"
@@ -1941,11 +1940,6 @@ void PresShell::sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell) {
 
 nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
                                  ResizeReflowOptions aOptions) {
-  if (AutoResizeReflowSquasher::CaptureResizeReflow(this, aWidth, aHeight,
-                                                    aOptions)) {
-    return NS_OK;
-  }
-
   if (mZoomConstraintsClient) {
     // If we have a ZoomConstraintsClient and the available screen area
     // changed, then we might need to disable double-tap-to-zoom, so notify
