@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.createTestCoroutinesDispatcher
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -24,6 +25,8 @@ import org.mockito.Mockito.spy
 @RunWith(AndroidJUnit4::class)
 class ThumbnailStorageTest {
 
+    val testDispatcher = createTestCoroutinesDispatcher()
+
     @Before
     @After
     fun cleanUp() {
@@ -33,7 +36,7 @@ class ThumbnailStorageTest {
     @Test
     fun `clearThumbnails`() = runBlocking {
         val bitmap: Bitmap = mock()
-        val thumbnailStorage = spy(ThumbnailStorage(testContext))
+        val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
         thumbnailStorage.saveThumbnail("test-tab1", bitmap).joinBlocking()
         thumbnailStorage.saveThumbnail("test-tab2", bitmap).joinBlocking()
@@ -53,7 +56,7 @@ class ThumbnailStorageTest {
     fun `deleteThumbnail`() = runBlocking {
         val sessionIdOrUrl = "test-tab1"
         val bitmap: Bitmap = mock()
-        val thumbnailStorage = spy(ThumbnailStorage(testContext))
+        val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
         thumbnailStorage.saveThumbnail(sessionIdOrUrl, bitmap).joinBlocking()
         var thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
@@ -68,7 +71,7 @@ class ThumbnailStorageTest {
     fun `saveThumbnail`() = runBlocking {
         val sessionIdOrUrl = "test-tab1"
         val bitmap: Bitmap = mock()
-        val thumbnailStorage = spy(ThumbnailStorage(testContext))
+        val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
         var thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
 
         assertNull(thumbnail)
@@ -82,7 +85,7 @@ class ThumbnailStorageTest {
     fun `loadThumbnail`() = runBlocking {
         val sessionIdOrUrl = "test-tab1"
         val bitmap: Bitmap = mock()
-        val thumbnailStorage = spy(ThumbnailStorage(testContext))
+        val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
         thumbnailStorage.saveThumbnail(sessionIdOrUrl, bitmap)
         `when`(thumbnailStorage.loadThumbnail(sessionIdOrUrl)).thenReturn(CompletableDeferred(bitmap))
