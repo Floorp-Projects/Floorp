@@ -134,10 +134,12 @@ const kDocumentChannelDeniedSchemes = ["javascript"];
 const kDocumentChannelDeniedURIs = [
   "about:blank",
   "about:crashcontent",
+  "about:newtab",
+  "about:home",
   "about:printpreview",
 ];
 
-// Changes here should also be made in URIUsesDocChannel in DocumentChannel.cpp.
+// Changes here should also be made in URIUsesDocChannel in nsDocShell.cpp.
 function documentChannelPermittedForURI(aURI) {
   return (
     !kDocumentChannelDeniedSchemes.includes(aURI.scheme) &&
