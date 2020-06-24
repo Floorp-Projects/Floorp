@@ -1061,45 +1061,47 @@ void WSRunScanner::GetRuns() {
       normalRun->mEndOffset = mEnd.PointRef().Offset();
     }
     mEndRun = normalRun;
-  } else {
-    // we might have trailing ws.
-    // it so happens that *if* there is an nbsp at end,
-    // {mEndNode,mEndOffset-1} will point to it, even though in general
-    // start/end points not guaranteed to be in text nodes.
-    if (mNBSPData.LastPointRef().IsSet() && mEnd.PointRef().IsSet() &&
-        mNBSPData.LastPointRef().GetContainer() ==
-            mEnd.PointRef().GetContainer() &&
-        mNBSPData.LastPointRef().Offset() == mEnd.PointRef().Offset() - 1) {
-      // normal ws runs right up to adjacent block (nbsp next to block)
-      normalRun->SetEndBy(mEnd.RawReason());
-      normalRun->mEndNode = mEnd.PointRef().GetContainer();
-      normalRun->mEndOffset = mEnd.PointRef().Offset();
-      mEndRun = normalRun;
-    } else {
-      if (mNBSPData.LastPointRef().IsSet()) {
-        normalRun->mEndNode = mNBSPData.LastPointRef().GetContainer();
-        normalRun->mEndOffset = mNBSPData.LastPointRef().Offset() + 1;
-      }
-      normalRun->SetEndByTrailingWhiteSpaces();
-
-      // set up next run
-      WSFragment* lastRun = new WSFragment();
-      lastRun->MarkAsEndOfHardLine();
-      if (mNBSPData.LastPointRef().IsSet()) {
-        lastRun->mStartNode = mNBSPData.LastPointRef().GetContainer();
-        lastRun->mStartOffset = mNBSPData.LastPointRef().Offset() + 1;
-      }
-      if (mEnd.PointRef().IsSet()) {
-        lastRun->mEndNode = mEnd.PointRef().GetContainer();
-        lastRun->mEndOffset = mEnd.PointRef().Offset();
-      }
-      lastRun->SetStartFromNormalWhiteSpaces();
-      lastRun->mLeft = normalRun;
-      lastRun->SetEndBy(mEnd.RawReason());
-      mEndRun = lastRun;
-      normalRun->mRight = lastRun;
-    }
+    return;
   }
+
+  // we might have trailing ws.
+  // it so happens that *if* there is an nbsp at end,
+  // {mEndNode,mEndOffset-1} will point to it, even though in general
+  // start/end points not guaranteed to be in text nodes.
+  if (mNBSPData.LastPointRef().IsSet() && mEnd.PointRef().IsSet() &&
+      mNBSPData.LastPointRef().GetContainer() ==
+          mEnd.PointRef().GetContainer() &&
+      mNBSPData.LastPointRef().Offset() == mEnd.PointRef().Offset() - 1) {
+    // normal ws runs right up to adjacent block (nbsp next to block)
+    normalRun->SetEndBy(mEnd.RawReason());
+    normalRun->mEndNode = mEnd.PointRef().GetContainer();
+    normalRun->mEndOffset = mEnd.PointRef().Offset();
+    mEndRun = normalRun;
+    return;
+  }
+
+  if (mNBSPData.LastPointRef().IsSet()) {
+    normalRun->mEndNode = mNBSPData.LastPointRef().GetContainer();
+    normalRun->mEndOffset = mNBSPData.LastPointRef().Offset() + 1;
+  }
+  normalRun->SetEndByTrailingWhiteSpaces();
+
+  // set up next run
+  WSFragment* lastRun = new WSFragment();
+  lastRun->MarkAsEndOfHardLine();
+  if (mNBSPData.LastPointRef().IsSet()) {
+    lastRun->mStartNode = mNBSPData.LastPointRef().GetContainer();
+    lastRun->mStartOffset = mNBSPData.LastPointRef().Offset() + 1;
+  }
+  if (mEnd.PointRef().IsSet()) {
+    lastRun->mEndNode = mEnd.PointRef().GetContainer();
+    lastRun->mEndOffset = mEnd.PointRef().Offset();
+  }
+  lastRun->SetStartFromNormalWhiteSpaces();
+  lastRun->mLeft = normalRun;
+  lastRun->SetEndBy(mEnd.RawReason());
+  mEndRun = lastRun;
+  normalRun->mRight = lastRun;
 }
 
 void WSRunScanner::ClearRuns() {
