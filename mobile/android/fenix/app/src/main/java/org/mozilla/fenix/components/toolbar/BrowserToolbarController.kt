@@ -53,7 +53,6 @@ interface BrowserToolbarController {
     fun handleToolbarClick()
     fun handleTabCounterClick()
     fun handleTabCounterItemInteraction(item: TabCounterMenuItem)
-    fun handleBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>)
     fun handleReaderModePressed(enabled: Boolean)
 }
 
@@ -154,16 +153,6 @@ class DefaultBrowserToolbarController(
             is TabCounterMenuItem.NewTab -> {
                 activity.browsingModeManager.mode = BrowsingMode.fromBoolean(item.isPrivate)
                 navController.popBackStack(R.id.homeFragment, false)
-            }
-        }
-    }
-
-    override fun handleBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>) {
-        val settings = activity.settings()
-        lowPrioHighlightItems.forEach {
-            when (it) {
-                ToolbarMenu.Item.AddToHomeScreen -> settings.installPwaOpened = true
-                ToolbarMenu.Item.OpenInApp -> settings.openInAppOpened = true
             }
         }
     }

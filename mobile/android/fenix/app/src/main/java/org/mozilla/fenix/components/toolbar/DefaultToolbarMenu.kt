@@ -137,17 +137,6 @@ class DefaultToolbarMenu(
         BrowserMenuItemToolbar(listOf(bookmark, share, forward, refresh))
     }
 
-    internal fun getLowPrioHighlightItems(): List<ToolbarMenu.Item> {
-        val lowPrioHighlightItems: MutableList<ToolbarMenu.Item> = mutableListOf()
-        if (canInstall() && installToHomescreen.isHighlighted()) {
-            lowPrioHighlightItems.add(ToolbarMenu.Item.InstallToHomeScreen)
-        }
-        if (shouldShowOpenInApp() && openInApp.isHighlighted()) {
-            lowPrioHighlightItems.add(ToolbarMenu.Item.OpenInApp)
-        }
-        return lowPrioHighlightItems
-    }
-
     // Predicates that need to be repeatedly called as the session changes
     private fun canAddToHomescreen(): Boolean =
         session != null && context.components.useCases.webAppUseCases.isPinningSupported() &&
