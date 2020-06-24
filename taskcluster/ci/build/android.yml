@@ -152,6 +152,7 @@ android-api-16/opt:
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -280,6 +281,7 @@ android-x86_64/opt:
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
