@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.search
 
-import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.mockk.every
@@ -32,7 +31,6 @@ import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.search.DefaultSearchController.Companion.KEYBOARD_ANIMATION_DELAY
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.whatsnew.clear
@@ -49,7 +47,6 @@ class DefaultSearchControllerTest {
     private val searchEngine: SearchEngine = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val sessionManager: SessionManager = mockk(relaxed = true)
-    private val lifecycleScope: LifecycleCoroutineScope = mockk(relaxed = true)
     private val clearToolbarFocus: (() -> Unit) = mockk(relaxed = true)
 
     private lateinit var controller: DefaultSearchController
@@ -67,7 +64,6 @@ class DefaultSearchControllerTest {
             activity = activity,
             store = store,
             navController = navController,
-            viewLifecycleScope = lifecycleScope,
             clearToolbarFocus = clearToolbarFocus
         )
 
@@ -123,17 +119,13 @@ class DefaultSearchControllerTest {
             activity = activity,
             store = store,
             navController = navController,
-            viewLifecycleScope = this,
             clearToolbarFocus = clearToolbarFocus
         )
 
         controller.handleEditingCancelled()
 
-        advanceTimeBy(KEYBOARD_ANIMATION_DELAY)
-
         verify {
             clearToolbarFocus()
-            navController.popBackStack()
         }
     }
 

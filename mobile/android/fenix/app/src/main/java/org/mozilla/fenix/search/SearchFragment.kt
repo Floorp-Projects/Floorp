@@ -24,7 +24,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_search.*
@@ -120,7 +119,6 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             activity = activity,
             store = searchStore,
             navController = findNavController(),
-            viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
             clearToolbarFocus = ::clearToolbarFocus
         )
 
@@ -182,6 +180,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     }
 
     private fun clearToolbarFocus() {
+        toolbarView.view.hideKeyboard()
         toolbarView.view.clearFocus()
     }
 
@@ -347,14 +346,14 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     }
 
     override fun onBackPressed(): Boolean {
-        // Note: Actual navigation happens in `handleEditingCancelled` in SearchController
         return when {
             qrFeature.onBackPressed() -> {
                 toolbarView.view.edit.focus()
                 view?.search_scan_button?.isChecked = false
                 toolbarView.view.requestFocus()
+                true
             }
-            else -> true
+            else -> false
         }
     }
 
@@ -426,7 +425,6 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     }
 
     companion object {
-        private const val SHARED_TRANSITION_MS = 250L
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
 }

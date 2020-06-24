@@ -59,7 +59,6 @@ class ToolbarView(
 ) {
 
     private var isInitialized = false
-    private var hasBeenCanceled = false
 
     init {
         view.apply {
@@ -96,19 +95,18 @@ class ToolbarView(
             )
 
             edit.setUrlBackground(
-                AppCompatResources.getDrawable(context, R.drawable.search_url_background))
+                AppCompatResources.getDrawable(context, R.drawable.search_url_background)
+            )
 
             private = isPrivate
 
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onCancelEditing(): Boolean {
-                    // For some reason, this can be triggered twice on one back press. This only leads to
-                    // navigateUp, so let's make sure we only call it once
-                    if (!hasBeenCanceled) interactor.onEditingCanceled()
-                    hasBeenCanceled = true
+                    interactor.onEditingCanceled()
                     // We need to return false to not show display mode
                     return false
                 }
+
                 override fun onTextChanged(text: String) {
                     url = text
                     this@ToolbarView.interactor.onTextChanged(text)
@@ -144,13 +142,15 @@ class ToolbarView(
             isInitialized = true
         }
 
-        val iconSize = context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
+        val iconSize =
+            context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
 
         val scaledIcon = Bitmap.createScaledBitmap(
             searchState.searchEngineSource.searchEngine.icon,
             iconSize,
             iconSize,
-            true)
+            true
+        )
 
         val icon = BitmapDrawable(context.resources, scaledIcon)
 
