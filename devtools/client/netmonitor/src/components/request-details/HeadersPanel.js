@@ -22,6 +22,7 @@ const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   getHeadersURL,
   getTrackingProtectionURL,
+  getHTTPStatusCodeURL,
 } = require("devtools/client/netmonitor/src/utils/mdn-utils");
 const {
   fetchNetworkUpdatePacket,
@@ -86,6 +87,9 @@ const HEADERS_STATUS = L10N.getStr("netmonitor.headers.status");
 const HEADERS_VERSION = L10N.getStr("netmonitor.headers.version");
 const HEADERS_TRANSFERRED = L10N.getStr("netmonitor.toolbar.transferred");
 const SUMMARY_STATUS_LEARN_MORE = L10N.getStr("netmonitor.summary.learnMore");
+const SUMMARY_ETP_LEARN_MORE = L10N.getStr(
+  "netmonitor.enhancedTrackingProtection.learnMore"
+);
 const HEADERS_REFERRER = L10N.getStr("netmonitor.headers.referrerPolicy");
 const HEADERS_CONTENT_BLOCKING = L10N.getStr(
   "netmonitor.headers.contentBlocking"
@@ -662,7 +666,11 @@ class HeadersPanel extends Component {
           StatusCode({
             item: { fromCache, fromServiceWorker, status, statusText },
           }),
-          statusText
+          statusText,
+          MDNLink({
+            url: getHTTPStatusCodeURL(status),
+            title: SUMMARY_STATUS_LEARN_MORE,
+          })
         )
       );
     }
@@ -687,7 +695,7 @@ class HeadersPanel extends Component {
           trackingProtectionDocURL
             ? MDNLink({
                 url: trackingProtectionDocURL,
-                title: SUMMARY_STATUS_LEARN_MORE,
+                title: SUMMARY_ETP_LEARN_MORE,
               })
             : span({ className: "headers-summary learn-more-link" })
         )
