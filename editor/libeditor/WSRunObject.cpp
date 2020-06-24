@@ -605,11 +605,14 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
   // anything return start of ws.
   MOZ_ASSERT(aPoint.IsSet());
 
-  const WSFragment* run = FindNearestFragment(aPoint, false);
-
-  // Is there a visible run there or earlier?
-  for (; run; run = run->mLeft) {
-    if (run->IsVisibleAndMiddleOfHardLine()) {
+  WSFragmentArray::index_type index = FindNearestFragmentIndex(aPoint, false);
+  if (index != WSFragmentArray::NoIndex) {
+    // Is there a visible run there or earlier?
+    for (WSFragmentArray::index_type i = index + 1; i; i--) {
+      const WSFragment& fragment = mFragments[i - 1];
+      if (!fragment.IsVisibleAndMiddleOfHardLine()) {
+        continue;
+      }
       EditorDOMPointInText atPreviousChar =
           GetPreviousEditableCharPoint(aPoint);
       // When it's a non-empty text node, return it.
@@ -640,11 +643,14 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
   // anything return end of ws.
   MOZ_ASSERT(aPoint.IsSet());
 
-  const WSFragment* run = FindNearestFragment(aPoint, true);
-
-  // Is there a visible run there or later?
-  for (; run; run = run->mRight) {
-    if (run->IsVisibleAndMiddleOfHardLine()) {
+  WSFragmentArray::index_type index = FindNearestFragmentIndex(aPoint, true);
+  if (index != WSFragmentArray::NoIndex) {
+    // Is there a visible run there or later?
+    for (size_t i = index; i < mFragments.Length(); i++) {
+      const WSFragment& fragment = mFragments[i];
+      if (!fragment.IsVisibleAndMiddleOfHardLine()) {
+        continue;
+      }
       EditorDOMPointInText atNextChar =
           GetInclusiveNextEditableCharPoint(aPoint);
       // When it's a non-empty text node, return it.
@@ -1017,9 +1023,7 @@ void WSRunScanner::GetRuns() {
       lastRun->mStartOffset = mNBSPData.LastPointRef().Offset() + 1;
     }
     lastRun->SetStartFromNormalWhiteSpaces();
-    lastRun->mLeft = startRun;
     lastRun->SetEndBy(mEnd.RawReason());
-    startRun->mRight = lastRun;
     startRun->SetEndByTrailingWhiteSpaces();
     return;
   }
@@ -1041,14 +1045,12 @@ void WSRunScanner::GetRuns() {
 
   // set up next run
   WSFragment* normalRun = mFragments.AppendElement();
-  startRun->mRight = normalRun;
   normalRun->MarkAsVisible();
   if (mNBSPData.FirstPointRef().IsSet()) {
     normalRun->mStartNode = mNBSPData.FirstPointRef().GetContainer();
     normalRun->mStartOffset = mNBSPData.FirstPointRef().Offset();
   }
   normalRun->SetStartFromLeadingWhiteSpaces();
-  normalRun->mLeft = startRun;
   if (!EndsByBlockBoundary()) {
     // then no trailing ws.  this normal run ends the overall ws run.
     normalRun->SetEndBy(mEnd.RawReason());
@@ -1092,9 +1094,7 @@ void WSRunScanner::GetRuns() {
     lastRun->mEndOffset = mEnd.PointRef().Offset();
   }
   lastRun->SetStartFromNormalWhiteSpaces();
-  lastRun->mLeft = normalRun;
   lastRun->SetEndBy(mEnd.RawReason());
-  normalRun->mRight = lastRun;
 }
 
 void WSRunScanner::InitializeWithSingleFragment(
@@ -1610,11 +1610,13 @@ nsresult WSRunObject::ReplaceASCIIWhiteSpacesWithOneNBSP(
 }
 
 template <typename PT, typename CT>
-const WSRunScanner::WSFragment* WSRunScanner::FindNearestFragment(
-    const EditorDOMPointBase<PT, CT>& aPoint, bool aForward) const {
+WSRunScanner::WSFragmentArray::index_type
+WSRunScanner::FindNearestFragmentIndex(const EditorDOMPointBase<PT, CT>& aPoint,
+                                       bool aForward) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  for (const WSFragment& fragment : mFragments) {
+  for (WSFragmentArray::index_type i = 0; i < mFragments.Length(); i++) {
+    const WSFragment& fragment = mFragments[i];
     int32_t comp = fragment.mStartNode
                        ? *nsContentUtils::ComparePoints(
                              aPoint.ToRawRangeBoundary(),
@@ -1623,7 +1625,7 @@ const WSRunScanner::WSFragment* WSRunScanner::FindNearestFragment(
     if (comp <= 0) {
       // aPoint equals or before start of the fragment.
       // Return it if we're scanning forward, otherwise, nullptr.
-      return aForward ? &fragment : nullptr;
+      return aForward ? i : WSFragmentArray::NoIndex;
     }
 
     comp = fragment.mEndNode ? *nsContentUtils::ComparePoints(
@@ -1632,24 +1634,26 @@ const WSRunScanner::WSFragment* WSRunScanner::FindNearestFragment(
                              : -1;
     if (comp < 0) {
       // If aPoint is in the fragment, return it.
-      return &fragment;
+      return i;
     }
 
     if (!comp) {
       // If aPoint is at end of the fragment, return next fragment if we're
       // scanning forward, otherwise, return it.
-      return aForward ? fragment.mRight : &fragment;
+      return aForward ? (i + 1 < mFragments.Length() ? i + 1
+                                                     : WSFragmentArray::NoIndex)
+                      : i;
     }
 
-    if (!fragment.mRight) {
+    if (i == mFragments.Length() - 1) {
       // If the fragment is the last fragment and aPoint is after end of the
       // last fragment, return nullptr if we're scanning forward, otherwise,
       // return this last fragment.
-      return aForward ? nullptr : &fragment;
+      return aForward ? WSFragmentArray::NoIndex : i;
     }
   }
 
-  return nullptr;
+  return WSFragmentArray::NoIndex;
 }
 
 char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {

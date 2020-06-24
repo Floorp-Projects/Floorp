@@ -432,14 +432,10 @@ class MOZ_STACK_CLASS WSRunScanner {
     nsCOMPtr<nsINode> mEndNode;    // node where ws run ends
     int32_t mStartOffset;          // offset where ws run starts
     int32_t mEndOffset;            // offset where ws run ends
-    // other ws runs to left or right.  may be null.
-    WSFragment *mLeft, *mRight;
 
     WSFragment()
         : mStartOffset(0),
           mEndOffset(0),
-          mLeft(nullptr),
-          mRight(nullptr),
           mLeftWSType(WSType::NotInitialized),
           mRightWSType(WSType::NotInitialized),
           mIsVisible(Visible::No),
@@ -533,14 +529,14 @@ class MOZ_STACK_CLASS WSRunScanner {
   using WSFragmentArray = AutoTArray<WSFragment, 3>;
 
   /**
-   * FindNearestFragment() looks for a WSFragment which is closest to specified
-   * direction from aPoint.
+   * FindNearestFragment() and FindNearestFragmentIndex() look for a WSFragment
+   * which is closest to specified direction from aPoint.
    *
    * @param aPoint      The point to start to look for.
    * @param aForward    true if caller needs to look for a WSFragment after the
    *                    point in the DOM tree.  Otherwise, i.e., before the
    *                    point, false.
-   * @return            Found WSFragment instance.
+   * @return            Found WSFragment instance or index.
    *                    If aForward is true and:
    *                      if aPoint is end of a run, returns next run.
    *                      if aPoint is start of a run, returns the run.
@@ -555,6 +551,16 @@ class MOZ_STACK_CLASS WSRunScanner {
    */
   template <typename PT, typename CT>
   const WSFragment* FindNearestFragment(
+      const EditorDOMPointBase<PT, CT>& aPoint, bool aForward) const {
+    WSFragmentArray::index_type index =
+        FindNearestFragmentIndex(aPoint, aForward);
+    if (index == WSFragmentArray::NoIndex) {
+      return nullptr;
+    }
+    return &mFragments[index];
+  }
+  template <typename PT, typename CT>
+  WSFragmentArray::index_type FindNearestFragmentIndex(
       const EditorDOMPointBase<PT, CT>& aPoint, bool aForward) const;
 
   /**
