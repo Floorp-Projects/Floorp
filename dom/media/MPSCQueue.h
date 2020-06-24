@@ -22,7 +22,7 @@ namespace mozilla {
 // allows having a simpler design, we count on the fact that jemalloc will get
 // the memory from a thread-local source most of the time.  We'll replace
 // this with a fixed-size ring buffer if this becomes an issue.
-const size_t MPSC_MSG_RESERVERD = sizeof(void*);
+const size_t MPSC_MSG_RESERVERD = sizeof(std::atomic<void*>);
 
 template <typename T>
 class MPSCQueue {
@@ -32,8 +32,8 @@ class MPSCQueue {
     Message(const Message& aMessage) = delete;
     void operator=(const Message& aMessage) = delete;
 
-    T data;
     std::atomic<Message*> mNext;
+    T data;
   };
 
   // The goal here is to make it easy on the allocator. We pack a pointer in the
@@ -43,11 +43,9 @@ class MPSCQueue {
   // making it cheap and, more importantly, lock-free enough. This has been
   // measured to be cheap and reliable enough, but will be replaced in the
   // longer run.
-#if !defined(XP_WIN) && !defined(MOZ_WIDGET_ANDROID)
   static_assert(IsPowerOfTwo(sizeof(MPSCQueue<T>::Message)),
-                "MPSCQueue internal allocations must have a size that is a"
+                "MPSCQueue internal allocations must have a size that is a "
                 "power of two ");
-#endif
 
   // Creates a new MPSCQueue. Initially, the queue has a single sentinel node,
   // pointed to by both mHead and mTail.
