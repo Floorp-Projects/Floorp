@@ -281,7 +281,7 @@ def main(log, args):
     perf_data = {
         "framework": {"name": "browsertime"},
         "application": jobs_json["application"],
-        "type": "vismet",
+        "type": "pageload",
         "suites": suites,
     }
     for entry in suites:
