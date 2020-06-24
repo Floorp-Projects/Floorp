@@ -2868,12 +2868,11 @@ void BrowserParent::ReconstructWebProgressAndRequest(
 
   nsCOMPtr<nsIWebProgress> webProgress;
   if (aWebProgressData) {
-    webProgress = new RemoteWebProgress(
-        aManager, aWebProgressData->outerDOMWindowID(),
-        aWebProgressData->innerDOMWindowID(), aWebProgressData->loadType(),
-        aWebProgressData->isLoadingDocument(), aWebProgressData->isTopLevel());
+    webProgress = new RemoteWebProgress(aManager, aWebProgressData->loadType(),
+                                        aWebProgressData->isLoadingDocument(),
+                                        aWebProgressData->isTopLevel());
   } else {
-    webProgress = new RemoteWebProgress(aManager, 0, 0, 0, false, false);
+    webProgress = new RemoteWebProgress(aManager, 0, false, false);
   }
   webProgress.forget(aOutWebProgress);
 
