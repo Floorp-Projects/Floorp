@@ -493,9 +493,8 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
       return;
     }
 
-    nsCOMPtr<nsIWebProgress> webProgress =
-        new RemoteWebProgress(manager, OuterWindowId(), InnerWindowId(), 0,
-                              false, BrowsingContext()->IsTopContent());
+    nsCOMPtr<nsIWebProgress> webProgress = new RemoteWebProgress(
+        manager, 0, false, BrowsingContext()->IsTopContent());
 
     Unused << managerAsListener->OnContentBlockingEvent(webProgress, aRequest,
                                                         event.value());
