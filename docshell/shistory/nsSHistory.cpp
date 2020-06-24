@@ -1558,8 +1558,7 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
   // Get the uri for the entry we are about to visit
   nsCOMPtr<nsIURI> nextURI = nextEntry->GetURI();
 
-  MOZ_ASSERT((prevEntry && nextEntry && nextURI),
-             "prevEntry, nextEntry and nextURI can't be null");
+  MOZ_ASSERT(nextURI, "nextURI can't be null");
 
   // Send appropriate listener notifications.
   if (aHistCmd == HIST_CMD_GOTOINDEX) {
@@ -1569,7 +1568,8 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
 
   if (mRequestedIndex == mIndex) {
     // Possibly a reload case
-    return InitiateLoad(nextEntry, mRootBC, aLoadType, aLoadResults);
+    InitiateLoad(nextEntry, mRootBC, aLoadType, aLoadResults);
+    return NS_OK;
   }
 
   // Going back or forward.
@@ -1602,7 +1602,8 @@ nsresult nsSHistory::LoadDifferingEntries(
 
     // Set the Subframe flag if not navigating the root docshell.
     aNextEntry->SetIsSubFrame(aParent != mRootBC);
-    return InitiateLoad(aNextEntry, aParent, aLoadType, aLoadResults);
+    InitiateLoad(aNextEntry, aParent, aLoadType, aLoadResults);
+    return NS_OK;
   }
 
   // The entries are the same, so compare any child frames
@@ -1661,10 +1662,10 @@ nsresult nsSHistory::LoadDifferingEntries(
   return result;
 }
 
-nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
-                                  BrowsingContext* aFrameBC, long aLoadType,
-                                  nsTArray<LoadEntryResult>& aLoadResults) {
-  NS_ENSURE_STATE(aFrameBC && aFrameEntry);
+void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
+                              BrowsingContext* aFrameBC, long aLoadType,
+                              nsTArray<LoadEntryResult>& aLoadResults) {
+  MOZ_ASSERT(aFrameBC && aFrameEntry);
 
   LoadEntryResult* loadResult = aLoadResults.AppendElement();
   loadResult->mBrowsingContext = aFrameBC;
@@ -1695,8 +1696,6 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   loadState->SetCsp(csp);
 
   loadResult->mLoadState = std::move(loadState);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
