@@ -25,14 +25,14 @@ use crate::capture::CaptureConfig;
 use crate::composite::{CompositorKind, CompositeDescriptor};
 #[cfg(feature = "debugger")]
 use crate::debug_server;
-use crate::frame_builder::{FrameBuilder, FrameBuilderConfig};
+use crate::frame_builder::{FrameBuilder, FrameBuilderConfig, FrameScratchBuffer};
 use crate::glyph_rasterizer::{FontInstance};
 use crate::gpu_cache::GpuCache;
 use crate::hit_test::{HitTest, HitTester, SharedHitTester};
 use crate::intern::DataStore;
 use crate::internal_types::{DebugOutput, FastHashMap, RenderedDocument, ResultMsg};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
-use crate::picture::{RetainedTiles, TileCacheLogger};
+use crate::picture::{RetainedTiles, TileCacheLogger, PictureScratchBuffer};
 use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
 use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData, PrimitiveStore};
 use crate::prim_store::interned::*;
@@ -383,6 +383,34 @@ impl DataStores {
     }
 }
 
+#[derive(Default)]
+pub struct ScratchBuffer {
+    pub primitive: PrimitiveScratchBuffer,
+    pub picture: PictureScratchBuffer,
+    pub frame: FrameScratchBuffer,
+}
+
+impl ScratchBuffer {
+    pub fn begin_frame(&mut self) {
+        self.primitive.begin_frame();
+        self.picture.begin_frame();
+        self.frame.begin_frame();
+    }
+
+    pub fn recycle(&mut self, recycler: &mut Recycler) {
+        self.primitive.recycle(recycler);
+        self.picture.recycle(recycler);
+        self.frame.recycle(recycler);
+    }
+
+    pub fn memory_pressure(&mut self) {
+        // TODO: causes browser chrome test crahes on windows.
+        //self.primitive = Default::default();
+        self.picture = Default::default();
+        self.frame = Default::default();
+    }
+}
+
 struct Document {
     /// The id of this document
     id: DocumentId,
@@ -428,7 +456,7 @@ struct Document {
     /// Contains various vecs of data that is used only during frame building,
     /// where we want to recycle the memory each new display list, to avoid constantly
     /// re-allocating and moving memory around.
-    scratch: PrimitiveScratchBuffer,
+    scratch: ScratchBuffer,
     /// Keep track of the size of render task graph to pre-allocate memory up-front
     /// the next frame.
     render_task_counters: RenderTaskGraphCounters,
@@ -474,7 +502,7 @@ impl Document {
             rendered_frame_is_valid: false,
             has_built_scene: false,
             data_stores: DataStores::default(),
-            scratch: PrimitiveScratchBuffer::new(),
+            scratch: ScratchBuffer::default(),
             render_task_counters: RenderTaskGraphCounters::new(),
             #[cfg(feature = "replay")]
             loaded_scene: Scene::new(),
@@ -1141,7 +1169,7 @@ impl RenderBackend {
                 self.gpu_cache.clear();
 
                 for (_, doc) in &mut self.documents {
-                    doc.frame_builder.memory_pressure();
+                    doc.scratch.memory_pressure();
                 }
 
                 let resource_updates = self.resource_cache.pending_updates();
@@ -1757,7 +1785,7 @@ impl RenderBackend {
                 let file_name = format!("built-clips-{}-{}", id.namespace_id.0, id.id);
                 config.serialize_for_frame(&doc.scene.clip_store, file_name);
                 let file_name = format!("scratch-{}-{}", id.namespace_id.0, id.id);
-                config.serialize_for_frame(&doc.scratch, file_name);
+                config.serialize_for_frame(&doc.scratch.primitive, file_name);
                 let file_name = format!("render-tasks-{}-{}.svg", id.namespace_id.0, id.id);
                 let mut svg_file = fs::File::create(&config.file_path_for_frame(file_name, "svg"))
                     .expect("Failed to open the SVG file.");
@@ -1957,7 +1985,7 @@ impl RenderBackend {
                         rendered_frame_is_valid: false,
                         has_built_scene: false,
                         data_stores,
-                        scratch: PrimitiveScratchBuffer::new(),
+                        scratch: ScratchBuffer::default(),
                         render_task_counters: RenderTaskGraphCounters::new(),
                         loaded_scene: scene.clone(),
                         prev_composite_descriptor: CompositeDescriptor::empty(),
