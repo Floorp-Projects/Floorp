@@ -30,7 +30,7 @@ use crate::resource_cache::{ResourceCache};
 use crate::scene::{BuiltScene, SceneProperties};
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
-use crate::util::{MaxRect, VecHelper, Recycler};
+use crate::util::{MaxRect, VecHelper, Recycler, Preallocator};
 use crate::visibility::{update_primitive_visibility, FrameVisibilityState, FrameVisibilityContext};
 use crate::visibility::{PrimitiveVisibilityMask};
 
@@ -161,6 +161,8 @@ pub struct FrameBuilder {
     /// that can optionally be consumed by this frame builder.
     pending_retained_tiles: RetainedTiles,
     pub globals: FrameGlobalResources,
+    #[cfg_attr(feature = "capture", serde(skip))]
+    prim_headers_prealloc: Preallocator,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -234,6 +236,7 @@ impl FrameBuilder {
         FrameBuilder {
             pending_retained_tiles: RetainedTiles::new(),
             globals: FrameGlobalResources::empty(),
+            prim_headers_prealloc: Preallocator::new(0)
         }
     }
 
@@ -601,6 +604,8 @@ impl FrameBuilder {
         let mut deferred_resolves = vec![];
         let mut has_texture_cache_tasks = false;
         let mut prim_headers = PrimitiveHeaders::new();
+        self.prim_headers_prealloc.preallocate_vec(&mut prim_headers.headers_int);
+        self.prim_headers_prealloc.preallocate_vec(&mut prim_headers.headers_float);
 
         {
             profile_marker!("Batching");
@@ -665,6 +670,8 @@ impl FrameBuilder {
         render_tasks.write_task_data();
         *render_task_counters = render_tasks.counters();
         resource_cache.end_frame(&mut resource_profile.texture_cache);
+
+        self.prim_headers_prealloc.record_vec(&mut prim_headers.headers_int);
 
         Frame {
             content_origin: scene.output_rect.origin,
