@@ -145,7 +145,7 @@ class HeaderChanger {
     //
     // Multiple addons will be able to provide modifications to any headers
     // listed in the default set.
-    let headersAlreadySet = new Set(["content-security-policy"]);
+    let headersAlreadySet = new Set();
     for (let { name, value, binaryValue } of headers) {
       if (binaryValue) {
         value = String.fromCharCode(...binaryValue);
@@ -195,7 +195,15 @@ class RequestHeaderChanger extends HeaderChanger {
 }
 
 class ResponseHeaderChanger extends HeaderChanger {
+  didModifyCSP = false;
+
   setHeader(name, value, merge, opts, lowerCaseName) {
+    if (value && lowerCaseName === "content-security-policy") {
+      // When multiple add-ons change the CSP, enforce the combined (strictest)
+      // policy - see bug 1462989 for motivation.
+      merge = this.didModifyCSP;
+      this.didModifyCSP = true;
+    }
     try {
       this.channel.setResponseHeader(name, value, merge);
     } catch (e) {
