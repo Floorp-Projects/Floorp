@@ -72,8 +72,6 @@ child:
 
   async SaveStorageAccessPermissionGranted();
 
-  async AddBlockedFrameNodeByClassifier(MaybeDiscardedBrowsingContext aNode);
-
 both:
   async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData aData,
                    ClonedMessageData aStack);

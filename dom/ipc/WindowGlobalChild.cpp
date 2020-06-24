@@ -525,27 +525,6 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvDispatchSecurityPolicyViolation(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WindowGlobalChild::RecvAddBlockedFrameNodeByClassifier(
-    const MaybeDiscardedBrowsingContext& aNode) {
-  if (aNode.IsNullOrDiscarded()) {
-    return IPC_OK();
-  }
-
-  nsGlobalWindowInner* window = GetWindowGlobal();
-  if (!window) {
-    return IPC_OK();
-  }
-
-  Document* doc = window->GetDocument();
-  if (!doc) {
-    return IPC_OK();
-  }
-
-  MOZ_ASSERT(aNode.get()->GetEmbedderElement()->OwnerDoc() == doc);
-  doc->AddBlockedNodeByClassifier(aNode.get()->GetEmbedderElement());
-  return IPC_OK();
-}
-
 IPCResult WindowGlobalChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
                                             const ClonedMessageData& aData,
                                             const ClonedMessageData& aStack) {
