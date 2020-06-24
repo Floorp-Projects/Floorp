@@ -60,7 +60,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.Tab
@@ -183,22 +182,6 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleTabCounterClick()
 
         verify { onTabCounterClicked() }
-    }
-
-    @Test
-    fun `handle BrowserMenu dismissed with all options available`() = runBlockingTest {
-        val itemList: List<ToolbarMenu.Item> = listOf(
-            ToolbarMenu.Item.AddToHomeScreen,
-            ToolbarMenu.Item.OpenInApp
-        )
-
-        val activity = HomeActivity()
-
-        val controller = createController(scope = this, activity = activity)
-        controller.handleBrowserMenuDismissed(itemList)
-
-        assertEquals(true, activity.settings().installPwaOpened)
-        assertEquals(true, activity.settings().openInAppOpened)
     }
 
     @Test

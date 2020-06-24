@@ -54,7 +54,6 @@
     <string name="pref_key_experimentation" translatable="false">pref_key_experimentation</string>
     <string name="pref_key_showed_private_mode_cfr" translatable="false">pref_key_showed_private_mode_cfr</string>
     <string name="pref_key_private_mode_opened" translatable="false">pref_key_private_mode_opened</string>
-    <string name="pref_key_reader_mode_opened" translatable="false">pref_key_reader_mode_opened</string>
     <string name="pref_key_open_in_app_opened" translatable="false">pref_key_open_in_app_opened</string>
     <string name="pref_key_install_pwa_opened" translatable="false">pref_key_install_pwa_opened</string>
 

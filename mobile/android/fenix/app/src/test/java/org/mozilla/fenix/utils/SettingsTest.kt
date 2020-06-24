@@ -305,19 +305,6 @@ class SettingsTest {
     }
 
     @Test
-    fun shouldSetReaderModeOpened() {
-        // When
-        // Then
-        assertFalse(settings.readerModeOpened)
-
-        // When
-        settings.readerModeOpened = true
-
-        // Then
-        assertTrue(settings.readerModeOpened)
-    }
-
-    @Test
     fun shouldSetOpenInAppOpened() {
         // When
         // Then
