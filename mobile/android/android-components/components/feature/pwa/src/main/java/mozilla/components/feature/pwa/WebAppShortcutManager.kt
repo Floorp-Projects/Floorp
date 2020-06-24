@@ -197,20 +197,6 @@ class WebAppShortcutManager(
         }
 
     /**
-     * Uninstalls a set of PWAs from the user's device by disabling their
-     * shortcuts and removing the associated manifest data.
-     *
-     * @param startUrls List of manifest startUrls to remove.
-     * @param disabledMessage Message to display when a disable shortcut is tapped.
-     */
-    suspend fun uninstallShortcuts(context: Context, startUrls: List<String>, disabledMessage: String? = null) {
-        if (SDK_INT >= VERSION_CODES.N_MR1) {
-            context.getSystemService<ShortcutManager>()?.disableShortcuts(startUrls, disabledMessage)
-        }
-        storage.removeManifests(startUrls)
-    }
-
-    /**
      * Checks if there is a currently installed web app to which this URL belongs.
      *
      * @param url url that is covered by the scope of a web app installed by the user

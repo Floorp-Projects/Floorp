@@ -274,31 +274,6 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `uninstallShortcuts removes shortcut`() = runBlockingTest {
-        manager.uninstallShortcuts(context, listOf("https://mozilla.org"))
-        verify(shortcutManager, never()).disableShortcuts(listOf("https://mozilla.org"), null)
-        verify(storage).removeManifests(listOf("https://mozilla.org"))
-
-        clearInvocations(shortcutManager)
-        clearInvocations(storage)
-
-        setSdkInt(Build.VERSION_CODES.N_MR1)
-        manager.uninstallShortcuts(context, listOf("https://mozilla.org"))
-        verify(shortcutManager).disableShortcuts(listOf("https://mozilla.org"), null)
-        verify(storage).removeManifests(listOf("https://mozilla.org"))
-    }
-
-    @Test
-    fun `uninstallShortcuts sets disabledMessage`() = runBlockingTest {
-        setSdkInt(Build.VERSION_CODES.N_MR1)
-        val domains = listOf("https://mozilla.org", "https://firefox.com")
-        val message = "Can't touch this - its uninstalled."
-        WebAppShortcutManager(context, httpClient, storage).uninstallShortcuts(context, domains, message)
-
-        verify(shortcutManager).disableShortcuts(domains, message)
-    }
-
-    @Test
     fun `checking unknown url returns uninstalled state`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.N_MR1)
 
