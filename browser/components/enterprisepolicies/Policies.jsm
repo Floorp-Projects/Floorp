@@ -326,6 +326,25 @@ var Policies = {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("cookie", param.Allow, param.Block);
 
+      if (param.AllowSession) {
+        for (let origin of param.AllowSession) {
+          try {
+            Services.perms.addFromPrincipal(
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                origin
+              ),
+              "cookie",
+              Ci.nsICookiePermission.ACCESS_SESSION,
+              Ci.nsIPermissionManager.EXPIRE_POLICY
+            );
+          } catch (ex) {
+            log.error(
+              `Unable to add cookie session permission - ${origin.href}`
+            );
+          }
+        }
+      }
+
       if (param.Block) {
         const hosts = param.Block.map(url => url.hostname)
           .sort()
