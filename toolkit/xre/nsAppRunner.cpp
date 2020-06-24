@@ -325,6 +325,8 @@ void XRE_LibFuzzerSetDriver(LibFuzzerDriver aDriver) {
 
 namespace mozilla {
 int (*RunGTest)(int*, char**) = 0;
+
+bool RunningGTest() { return RunGTest; }
 }  // namespace mozilla
 
 using namespace mozilla;

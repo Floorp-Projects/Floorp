@@ -33,6 +33,7 @@
 #include "nsXULAppAPI.h"
 #include "nsIProtocolHandler.h"
 #include "GeckoProfiler.h"
+#include "nsAppRunner.h"
 
 #if defined(XP_WIN)
 #  include <windows.h>
@@ -83,6 +84,9 @@ static const size_t STARTUP_CACHE_RESERVE_CAPACITY = 450;
 // This is a hard limit which we will assert on, to ensure that we don't
 // have some bug causing runaway cache growth.
 static const size_t STARTUP_CACHE_MAX_CAPACITY = 5000;
+
+// Not const because we change it for gtests.
+static uint8_t STARTUP_CACHE_WRITE_TIMEOUT = 60;
 
 #define STARTUP_CACHE_NAME "startupCache." SC_WORDSIZE "." SC_ENDIAN
 
@@ -161,6 +165,10 @@ nsresult StartupCache::Init() {
       do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar"));
 
   nsresult rv;
+
+  if (mozilla::RunningGTest()) {
+    STARTUP_CACHE_WRITE_TIMEOUT = 3;
+  }
 
   // This allows to override the startup cache filename
   // which is useful from xpcshell, when there is no ProfLDS directory to keep
@@ -794,10 +802,10 @@ nsresult StartupCache::ResetStartupWriteTimerCheckingReadCount() {
   else
     rv = mTimer->Cancel();
   NS_ENSURE_SUCCESS(rv, rv);
-  // Wait for 60 seconds, then write out the cache.
-  mTimer->InitWithNamedFuncCallback(StartupCache::WriteTimeout, this, 60000,
-                                    nsITimer::TYPE_ONE_SHOT,
-                                    "StartupCache::WriteTimeout");
+  // Wait for the specified timeout, then write out the cache.
+  mTimer->InitWithNamedFuncCallback(
+      StartupCache::WriteTimeout, this, STARTUP_CACHE_WRITE_TIMEOUT * 1000,
+      nsITimer::TYPE_ONE_SHOT, "StartupCache::WriteTimeout");
   return NS_OK;
 }
 
@@ -809,10 +817,10 @@ nsresult StartupCache::ResetStartupWriteTimer() {
   else
     rv = mTimer->Cancel();
   NS_ENSURE_SUCCESS(rv, rv);
-  // Wait for 60 seconds, then write out the cache.
-  mTimer->InitWithNamedFuncCallback(StartupCache::WriteTimeout, this, 60000,
-                                    nsITimer::TYPE_ONE_SHOT,
-                                    "StartupCache::WriteTimeout");
+  // Wait for the specified timeout, then write out the cache.
+  mTimer->InitWithNamedFuncCallback(
+      StartupCache::WriteTimeout, this, STARTUP_CACHE_WRITE_TIMEOUT * 1000,
+      nsITimer::TYPE_ONE_SHOT, "StartupCache::WriteTimeout");
   return NS_OK;
 }
 

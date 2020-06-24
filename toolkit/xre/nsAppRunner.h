@@ -140,6 +140,8 @@ extern GeckoProcessType sChildProcessType;
 
 const char* PlatformBuildID();
 
+bool RunningGTest();
+
 }  // namespace mozilla
 
 /**
