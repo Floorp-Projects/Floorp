@@ -117,6 +117,9 @@ with Files('PrivateBrowsingUtils.jsm'):
 with Files('Promise*.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
+with Files('RemoteWebProgress.jsm'):
+    BUG_COMPONENT = ('Core', 'DOM: Navigation')
+
 with Files('ResponsivenessMonitor.jsm'):
     BUG_COMPONENT = ('Firefox', 'Migration')
 
@@ -206,6 +209,7 @@ EXTRA_JS_MODULES += [
     'PromiseUtils.jsm',
     'Region.jsm',
     'RemotePageAccessManager.jsm',
+    'RemoteWebProgress.jsm',
     'ResetProfile.jsm',
     'ResponsivenessMonitor.jsm',
     'ServiceRequest.jsm',
