@@ -1932,7 +1932,6 @@ class LogTaskBase {
     void WillRunAgain() { mWillRunAgain = true; }
 
    private:
-    T* mEvent;
     bool mWillRunAgain = false;
   };
 };
