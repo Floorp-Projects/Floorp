@@ -121,7 +121,7 @@ def median(series):
         return series[len(series)/2]
     else:
         # even
-        middle = len(series)/2  # the higher of the middle 2, actually
+        middle = int(len(series)/2)  # the higher of the middle 2, actually
         return 0.5*(series[middle-1] + series[middle])
 
 
