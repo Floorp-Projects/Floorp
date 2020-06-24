@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+[scriptable, uuid(e14ff4c2-7e26-4748-8755-dfd074b9c746)]
+interface nsIRemoteWebProgressRequest : nsISupports
+{
+  void init(in nsIURI aURI, in nsIURI aOriginalURI);
+
+  // This field is available to users in |OnStateChange| methods only
+  // when the document whose progress is being described by this progress
+  // request is top level and its status has just changed from loading to
+  // completely loaded; for invocations of |OnStateChange| before or after
+  // that transition, this field will throw |NS_ERROR_UNAVAILABLE|.
+  readonly attribute uint64_t elapsedLoadTimeMS;
+};

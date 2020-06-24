@@ -10,7 +10,26 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_ISUPPORTS(RemoteWebProgressRequest, nsIRequest, nsIChannel,
-                  nsIClassifiedChannel)
+                  nsIClassifiedChannel, nsIRemoteWebProgressRequest)
+
+NS_IMETHODIMP RemoteWebProgressRequest::Init(nsIURI* aURI,
+                                             nsIURI* aOriginalURI) {
+  mURI = aURI;
+  mOriginalURI = aOriginalURI;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP RemoteWebProgressRequest::GetElapsedLoadTimeMS(
+    uint64_t* aElapsedLoadTimeMS) {
+  NS_ENSURE_ARG_POINTER(aElapsedLoadTimeMS);
+  if (mMaybeElapsedLoadTimeMS) {
+    *aElapsedLoadTimeMS = *mMaybeElapsedLoadTimeMS;
+    return NS_OK;
+  }
+  *aElapsedLoadTimeMS = 0;
+  return NS_ERROR_NOT_AVAILABLE;
+}
 
 // nsIChannel methods
 
