@@ -18,7 +18,7 @@ class ProgressiveWebAppFacts {
      */
     object Items {
         const val HOMESCREEN_ICON_TAP = "homescreen_icon_tap"
-        const val DURATION_IN_BACKGROUND = "duration_in_background"
+        const val BACKGROUND_TIMING = "background_timing"
     }
 
     /**
@@ -51,10 +51,10 @@ internal fun emitHomescreenIconTapFact() =
     )
 
 @Suppress("MagicNumber")
-internal fun emitForegroundTimingFact(timingNs: Long) =
+internal fun emitBackgroundTimingFact(timingNs: Long) =
     emitPwaFact(
         Action.INTERACTION,
-        ProgressiveWebAppFacts.Items.DURATION_IN_BACKGROUND,
+        ProgressiveWebAppFacts.Items.BACKGROUND_TIMING,
         metadata = mapOf(
             // We only care about millisecond precision here, so convert from ns to ms before emitting.
             ProgressiveWebAppFacts.MetadataKeys.BACKGROUND_DURATION to (timingNs / 1_000_000L)

@@ -51,7 +51,7 @@ class WebAppLauncherActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         backgroundEndTime = SystemClock.elapsedRealtimeNanos()
-        emitForegroundTimingFact(backgroundEndTime - backgroundStartTime)
+        emitBackgroundTimingFact(backgroundEndTime - backgroundStartTime)
         resetBackgroundTimer()
     }
 
