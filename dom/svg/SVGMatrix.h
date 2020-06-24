@@ -67,10 +67,6 @@ class SVGMatrix final : public nsWrapperCache {
 
   explicit SVGMatrix(const gfxMatrix& aMatrix) : mMatrix(aMatrix) {}
 
-  const gfxMatrix& GetMatrix() const {
-    return mTransform ? mTransform->Matrixgfx() : mMatrix;
-  }
-
   // WebIDL
   DOMSVGTransform* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -104,6 +100,10 @@ class SVGMatrix final : public nsWrapperCache {
 
  private:
   ~SVGMatrix() = default;
+
+  const gfxMatrix& GetMatrix() const {
+    return mTransform ? mTransform->Matrixgfx() : mMatrix;
+  }
 
   void SetMatrix(const gfxMatrix& aMatrix) {
     if (mTransform) {
