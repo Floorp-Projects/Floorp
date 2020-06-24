@@ -40,7 +40,11 @@ export const Localized = ({ text, children }) => {
   } else if (typeof text === "string") {
     textNode = text;
   }
-  return children
-    ? React.cloneElement(children, props, textNode)
-    : React.createElement("span", props, textNode);
+
+  if (!children) {
+    return React.createElement("span", props, textNode);
+  } else if (textNode) {
+    return React.cloneElement(children, props, textNode);
+  }
+  return React.cloneElement(children, props);
 };

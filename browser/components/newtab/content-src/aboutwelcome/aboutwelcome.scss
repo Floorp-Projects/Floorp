@@ -267,6 +267,17 @@ body {
     }
   }
 
+  .welcomeZap span {
+    display: inline-block;
+    font-weight: bold;
+    background-image: url('../data/content/assets/zap.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+    content: '';
+    background-position-y: bottom;
+    padding-bottom: 8px;
+  }
+
   .welcome-text {
     display: flex;
     flex-direction: column;
