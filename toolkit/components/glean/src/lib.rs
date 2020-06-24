@@ -203,5 +203,9 @@ pub unsafe extern "C" fn fog_give_ipc_buf(buf: *mut u8, buf_len: usize) -> usize
 /// No ownership is transfered to Rust by this method: caller owns the memory at
 /// buf before and after this call.
 pub unsafe extern "C" fn fog_use_ipc_buf(buf: *const u8, buf_len: usize) {
-    glean::ipc::replay_from_buf(std::slice::from_raw_parts(buf, buf_len)).unwrap();
+    let slice = std::slice::from_raw_parts(buf, buf_len);
+    let _res = glean::ipc::replay_from_buf(slice);
+    /*if res.is_err() {
+        // TODO: Record the error.
+    }*/
 }

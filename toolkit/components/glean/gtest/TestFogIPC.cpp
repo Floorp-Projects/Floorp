@@ -18,7 +18,7 @@ using mozilla::ipc::ByteBuf;
 TEST(FOG, TestFlushFOGData)
 {
   // A "It doesn't explode" test.
-  std::function<void(ByteBuf &&)> resolver;
+  std::function<void(ByteBuf &&)> resolver = [](ByteBuf&& bufs) {};
   mozilla::glean::FlushFOGData(std::move(resolver));
 }
 
