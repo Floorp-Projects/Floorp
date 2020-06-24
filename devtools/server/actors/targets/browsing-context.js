@@ -542,14 +542,14 @@ const browsingContextTargetPrototype = {
   },
 
   _createExtraActors() {
-    // Always use the same ActorPool, so existing actor instances
+    // Always use the same Pool, so existing actor instances
     // (created in createExtraActors) are not lost.
     if (!this._targetScopedActorPool) {
       this._targetScopedActorPool = new LazyPool(this.conn);
     }
 
     // Walk over target-scoped actor factories and make sure they are all
-    // instantiated and added into the ActorPool.
+    // instantiated and added into the Pool.
     return createExtraActors(
       ActorRegistry.targetScopedActorFactories,
       this._targetScopedActorPool,
