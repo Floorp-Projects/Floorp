@@ -260,6 +260,9 @@ class nsStandardURL : public nsIFileURL,
   void FindHostLimit(nsACString::const_iterator& aStart,
                      nsACString::const_iterator& aEnd);
 
+  // Asserts that the URLSegment has sane values
+  static void SanityCheck(const URLSegment&, const nsCString&);
+
   // mSpec contains the normalized version of the URL spec (UTF-8 encoded).
   nsCString mSpec;
   int32_t mDefaultPort;
