@@ -1928,6 +1928,10 @@ class LogTaskBase {
   };
 };
 
+// Specialized constructor; must be explicitly declared.
+template <>
+LogTaskBase<nsIRunnable>::Run::Run(nsIRunnable* aEvent, bool aWillRunAgain);
+
 class MicroTaskRunnable;
 
 typedef LogTaskBase<nsIRunnable> LogRunnable;
