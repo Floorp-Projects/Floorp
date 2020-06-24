@@ -4924,7 +4924,7 @@ var SessionStoreInternal = {
     });
 
     // Focus the tab's content area.
-    if (aTab.selected && uri && !window.isBlankPageURL(uri)) {
+    if (aTab.selected && !window.isBlankPageURL(uri)) {
       browser.focus();
     }
   },
