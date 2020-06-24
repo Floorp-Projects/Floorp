@@ -1122,9 +1122,10 @@ security:
   tls_delegated_credentials_txn:
     bug_numbers:
       - 1564179
+      - 1645082
     description: >-
       Count of how many transactions used delegated credentials (ietf-draft-tls-subcerts)
-    expires: "80"
+    expires: "86"
     kind: uint
     notification_emails:
       - seceng-telemetry@mozilla.com
