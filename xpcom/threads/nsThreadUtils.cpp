@@ -631,37 +631,41 @@ void LogTaskBase<IPC::Message>::LogDispatchWithPid(IPC::Message* aEvent,
 
 template <typename T>
 LogTaskBase<T>::Run::Run(T* aEvent, bool aWillRunAgain)
-    : mEvent(aEvent), mWillRunAgain(aWillRunAgain) {
-  LOG1(("EXEC %p", mEvent));
+    : mWillRunAgain(aWillRunAgain) {
+  // Logging address of this RAII so that we can use it to identify the DONE log
+  // while not keeping any ref to the event that could be invalid at the dtor
+  // time.
+  LOG1(("EXEC %p %p", aEvent, this));
 }
 
 template <>
 LogTaskBase<nsIRunnable>::Run::Run(nsIRunnable* aEvent, bool aWillRunAgain)
-    : mEvent(aEvent), mWillRunAgain(aWillRunAgain) {
+    : mWillRunAgain(aWillRunAgain) {
   if (!LOG1_ENABLED()) {
     return;
   }
 
   nsCOMPtr<nsINamed> named(do_QueryInterface(aEvent));
   if (!named) {
-    LOG1(("EXEC %p", mEvent));
+    LOG1(("EXEC %p %p", aEvent, this));
     return;
   }
 
   nsAutoCString name;
   named->GetName(name);
-  LOG1(("EXEC %p [%s]", aEvent, name.BeginReading()));
+  LOG1(("EXEC %p %p [%s]", aEvent, this, name.BeginReading()));
 }
 
 template <>
 LogTaskBase<IPC::Message>::Run::Run(IPC::Message* aMessage, bool aWillRunAgain)
-    : mEvent(aMessage), mWillRunAgain(aWillRunAgain) {
-  LOG1(("RECV %p %d [%s]", aMessage, aMessage->seqno(), aMessage->name()));
+    : mWillRunAgain(aWillRunAgain) {
+  LOG1(("RECV %p %p %d [%s]", aMessage, this, aMessage->seqno(),
+        aMessage->name()));
 }
 
 template <typename T>
 LogTaskBase<T>::Run::~Run() {
-  LOG1((mWillRunAgain ? "INTERRUPTED %p" : "DONE %p", mEvent));
+  LOG1((mWillRunAgain ? "INTERRUPTED %p" : "DONE %p", this));
 }
 
 template class LogTaskBase<nsIRunnable>;
