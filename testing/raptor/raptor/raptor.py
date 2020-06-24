@@ -60,7 +60,7 @@ def main(args=sys.argv[1:]):
         args.enable_fission = True
 
     commandline.setup_logging("raptor", args, {"tbpl": sys.stdout})
-
+    LOG.info("Python version: %s" % sys.version)
     LOG.info("raptor-start")
 
     if args.debug_mode:
