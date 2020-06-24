@@ -68,14 +68,6 @@ interface nsIBrowser : nsISupports
    */
   readonly attribute boolean isRemoteBrowser;
 
-  /**
-   * The nsIWebProgress instance responsible for handling progress events
-   * from the content process.
-   *
-   * Will always be non-null when isRemoteBrowser is true.
-   */
-  readonly attribute nsIWebProgress remoteWebProgressManager;
-
   readonly attribute nsIPrincipal contentPrincipal;
   readonly attribute nsIPrincipal contentPartitionedPrincipal;
   readonly attribute nsIPrincipal contentBlockingAllowListPrincipal;
