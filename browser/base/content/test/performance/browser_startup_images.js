@@ -3,7 +3,14 @@
 
 "use strict";
 
-/* A whitelist of images that are loaded at startup but not shown.
+/**
+ * This test checks that any images we load on startup are actually used,
+ * so we don't waste IO and cycles loading images the user doesn't see.
+ * It has a list of known problematic images that we aim to reduce to
+ * empty.
+ */
+
+/* A list of images that are loaded at startup but not shown.
  * List items support the following attributes:
  *  - file: The location of the loaded image file.
  *  - hidpi: An alternative hidpi file location for retina screens, if one exists.
@@ -15,12 +22,14 @@
  *                           intermittently not loaded, e.g. because it is
  *                           loaded during the time we stop recording.
  *  - intermittentShown: An array of platforms where this image is
- *                       intermittently shown, contrary to what our
- *                       whitelist says.
+ *                       intermittently shown, even though the list implies
+ *                       it might not be shown.
  *
- * Please don't add items to this list. Please remove items from this list.
+ * PLEASE do not add items to this list.
+ *
+ * PLEASE DO remove items from this list.
  */
-const whitelist = [
+const knownUnshownImages = [
   {
     file: "chrome://global/skin/icons/arrow-left.svg",
     platforms: ["linux", "win", "macosx"],
@@ -74,7 +83,7 @@ add_task(async function() {
   await startupRecorder.done;
 
   let data = Cu.cloneInto(startupRecorder.data.images, {});
-  let filteredWhitelist = whitelist.filter(el => {
+  let knownImagesForPlatform = knownUnshownImages.filter(el => {
     return el.platforms.includes(AppConstants.platform);
   });
 
@@ -82,20 +91,20 @@ add_task(async function() {
   let shownImages = data["image-drawing"];
 
   for (let loaded of loadedImages.values()) {
-    let whitelistItem = filteredWhitelist.find(el => {
+    let knownImage = knownImagesForPlatform.find(el => {
       if (window.devicePixelRatio >= 2 && el.hidpi && el.hidpi == loaded) {
         return true;
       }
       return el.file == loaded;
     });
-    if (whitelistItem) {
+    if (knownImage) {
       if (
-        !whitelistItem.intermittentShown ||
-        !whitelistItem.intermittentShown.includes(AppConstants.platform)
+        !knownImage.intermittentShown ||
+        !knownImage.intermittentShown.includes(AppConstants.platform)
       ) {
         todo(
           shownImages.has(loaded),
-          `Whitelisted image ${loaded} should not have been shown.`
+          `Image ${loaded} should not have been shown.`
         );
       }
       continue;
@@ -106,8 +115,8 @@ add_task(async function() {
     );
   }
 
-  // Check for unneeded whitelist entries.
-  for (let item of filteredWhitelist) {
+  // Check for known images that are no longer used.
+  for (let item of knownImagesForPlatform) {
     if (
       !item.intermittentNotLoaded ||
       !item.intermittentNotLoaded.includes(AppConstants.platform)
@@ -116,13 +125,13 @@ add_task(async function() {
         if (item.hidpi != "<not loaded>") {
           ok(
             loadedImages.has(item.hidpi),
-            `Whitelisted image ${item.hidpi} should have been loaded.`
+            `Image ${item.hidpi} should have been loaded.`
           );
         }
       } else {
         ok(
           loadedImages.has(item.file),
-          `Whitelisted image ${item.file} should have been loaded.`
+          `Image ${item.file} should have been loaded.`
         );
       }
     }
