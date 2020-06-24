@@ -4,8 +4,11 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.topsites
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.view.MotionEvent
 import android.view.View
+import android.widget.PopupWindow
 import kotlinx.android.synthetic.main.top_site_item.*
 import kotlinx.android.synthetic.main.top_site_item.view.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -40,7 +43,10 @@ class TopSiteItemViewHolder(
         }
 
         top_site_item.setOnLongClickListener() {
-            topSiteMenu.menuBuilder.build(view.context).show(anchor = it.top_site_title)
+            val menu = topSiteMenu.menuBuilder.build(view.context).show(anchor = it.top_site_title)
+            it.setOnTouchListener @SuppressLint("ClickableViewAccessibility") { v, event ->
+                onTouchEvent(v, event, menu)
+            }
             return@setOnLongClickListener true
         }
     }
@@ -56,6 +62,17 @@ class TopSiteItemViewHolder(
                 itemView.context.components.core.icons.loadIntoView(favicon_image, topSite.url)
             }
         }
+    }
+
+    private fun onTouchEvent(
+        v: View,
+        event: MotionEvent,
+        menu: PopupWindow
+    ): Boolean {
+        if (event.action == MotionEvent.ACTION_CANCEL) {
+            menu.dismiss()
+        }
+        return v.onTouchEvent(event)
     }
 
     companion object {
