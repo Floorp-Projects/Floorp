@@ -168,8 +168,44 @@ add_task(async function test_webRequest_mergecsp() {
       script3_loaded: true,
     }
   );
+});
+
+add_task(async function test_remove_and_replace_csp() {
+  // CSP removed, CSP added.
   await test_csp("img-src 'self'", "", "img-src example.com", {
     img1_loaded: false,
+    img3_loaded: true,
+    script1_loaded: true,
+    script3_loaded: true,
+  });
+
+  // CSP removed, CSP added.
+  await test_csp("default-src 'none'", "", "img-src example.com", {
+    img1_loaded: false,
+    img3_loaded: true,
+    script1_loaded: true,
+    script3_loaded: true,
+  });
+
+  // CSP replaced - regression test for bug 1635781.
+  await test_csp("default-src 'none'", "img-src example.com", null, {
+    img1_loaded: false,
+    img3_loaded: true,
+    script1_loaded: true,
+    script3_loaded: true,
+  });
+
+  // CSP unchanged, CSP replaced - regression test for bug 1635781.
+  await test_csp("default-src 'none'", null, "img-src example.com", {
+    img1_loaded: false,
+    img3_loaded: true,
+    script1_loaded: true,
+    script3_loaded: true,
+  });
+
+  // CSP replaced, CSP removed.
+  await test_csp("default-src 'none'", "img-src example.com", "", {
+    img1_loaded: true,
     img3_loaded: true,
     script1_loaded: true,
     script3_loaded: true,
