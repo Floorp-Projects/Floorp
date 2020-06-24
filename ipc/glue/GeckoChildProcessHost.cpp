@@ -1414,24 +1414,6 @@ bool WindowsProcessLauncher::DoSetup() {
     mCmdLine->AppendLooseValue(UTF8ToWide(*it));
   }
 
-#  if defined(MOZ_WIDGET_ANDROID)
-  if (Omnijar::IsInitialized()) {
-    // Make sure the child process can find the omnijar
-    // See XRE_InitCommandLine in nsAppRunner.cpp
-    nsAutoString path;
-    nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
-    if (file && NS_SUCCEEDED(file->GetPath(path))) {
-      mCmdLine->AppendLooseValue(UTF8ToWide("-greomni"));
-      mCmdLine->AppendLooseValue(path.get());
-    }
-    file = Omnijar::GetPath(Omnijar::APP);
-    if (file && NS_SUCCEEDED(file->GetPath(path))) {
-      mCmdLine->AppendLooseValue(UTF8ToWide("-appomni"));
-      mCmdLine->AppendLooseValue(path.get());
-    }
-  }
-#  endif
-
 #  if defined(MOZ_SANDBOX)
 #    if defined(_ARM64_)
   if (isClearKey || isWidevine)
