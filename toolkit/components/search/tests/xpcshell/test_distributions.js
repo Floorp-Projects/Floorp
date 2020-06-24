@@ -27,6 +27,45 @@ tests.push({
 });
 
 tests.push({
+  distribution: "acer-g-003",
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MOZE") &&
+    hasDefault(engines, "Bing") &&
+    hasEnginesFirst(engines, ["Bing"]),
+});
+
+// Test a couple of locale/regions on Acer where Bing isn't normally present.
+tests.push({
+  locale: "pl",
+  region: "PL",
+  distribution: "acer-001",
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
+    hasDefault(engines, "Bing") &&
+    hasEnginesFirst(engines, ["Bing"]),
+});
+
+tests.push({
+  locale: "ru",
+  region: "RU",
+  distribution: "acer-002",
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MOZD") &&
+    hasDefault(engines, "Bing") &&
+    hasEnginesFirst(engines, ["Bing"]),
+});
+
+tests.push({
+  locale: "ru",
+  region: "RU",
+  distribution: "acer-g-003",
+  test: engines =>
+    hasParams(engines, "Bing", "searchbar", "pc=MOZE") &&
+    hasDefault(engines, "Bing") &&
+    hasEnginesFirst(engines, ["Bing"]),
+});
+
+tests.push({
   locale: "ru",
   distribution: "mailru-001",
   test: engines =>
