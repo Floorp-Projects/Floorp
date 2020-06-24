@@ -241,13 +241,17 @@ const SNAPSHOT_SCHEMA = {
         },
       },
     },
-    extensions: {
+    addons: {
       required: true,
       type: "array",
       items: {
         type: "object",
         properties: {
           name: {
+            required: true,
+            type: "string",
+          },
+          type: {
             required: true,
             type: "string",
           },

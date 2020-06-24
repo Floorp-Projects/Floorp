@@ -252,15 +252,16 @@ var snapshotFormatters = {
     );
   },
 
-  extensions(data) {
+  addons(data) {
     $.append(
-      $("extensions-tbody"),
-      data.map(function(extension) {
+      $("addons-tbody"),
+      data.map(function(addon) {
         return $.new("tr", [
-          $.new("td", extension.name),
-          $.new("td", extension.version),
-          $.new("td", extension.isActive),
-          $.new("td", extension.id),
+          $.new("td", addon.name),
+          $.new("td", addon.type),
+          $.new("td", addon.version),
+          $.new("td", addon.isActive),
+          $.new("td", addon.id),
         ]);
       })
     );
