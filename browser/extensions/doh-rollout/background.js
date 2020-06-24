@@ -396,24 +396,27 @@ const rollout = {
     try {
       captiveState = await browser.captivePortal.getState();
     } catch (e) {
-      // Captive Portal Service is disabled.
-    }
-
-    if (captiveState == "locked_portal") {
+      // Captive Portal Service is disabled. Run heuristics optimistically, but
+      // there's a chance the network is unavailable at this point. In that case
+      // we also wouldn't know when the network is back up. Worst case, we don't
+      // enable DoH in this case, but that's better than never enabling it.
+      await rollout.heuristics("netchange");
       return;
     }
 
-    // The network is up and we don't know that we're in a locked portal.
-    // Run heuristics. If we detect a portal later, we'll run heuristics again
-    // when it's unlocked. In that case, this run will likely have failed.
-    await rollout.heuristics("netchange");
+    // The network is up. If we know we are not captive or in an unlocked portal,
+    // run heuristics. If we detect a portal later, we'll run heuristics again
+    // when it's unlocked.
+    if (captiveState == "unlocked_portal" || captiveState == "not_captive") {
+      await rollout.heuristics("netchange");
+    }
   },
 
   async onCaptiveStateChanged({ state }) {
     log("onCaptiveStateChanged", state);
     // unlocked_portal means we were previously in a locked portal and then
     // network access was granted.
-    if (state == "unlocked_portal") {
+    if (state == "unlocked_portal" || state == "not_captive") {
       await rollout.heuristics("netchange");
     }
   },
