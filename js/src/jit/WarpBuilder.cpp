@@ -1525,9 +1525,8 @@ bool WarpBuilder::build_ToPropertyKey(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_Typeof(BytecodeLocation) {
-  // TODO: remove MTypeOf::inputType_ and unbox in foldsTo instead.
   MDefinition* input = current->pop();
-  MTypeOf* ins = MTypeOf::New(alloc(), input, MIRType::Value);
+  MTypeOf* ins = MTypeOf::New(alloc(), input);
   current->add(ins);
   current->push(ins);
   return true;

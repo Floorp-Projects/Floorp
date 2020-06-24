@@ -12110,7 +12110,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_globalthis() {
 
 AbortReasonOr<Ok> IonBuilder::jsop_typeof() {
   MDefinition* input = current->pop();
-  MTypeOf* ins = MTypeOf::New(alloc(), input, input->type());
+  MTypeOf* ins = MTypeOf::New(alloc(), input);
 
   ins->cacheInputMaybeCallableOrEmulatesUndefined(constraints());
 
