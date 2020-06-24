@@ -61,7 +61,7 @@ class Components(private val context: Context) {
             core.sessionManager,
             useCases.sessionUseCases,
             useCases.searchUseCases,
-            core.client,
+            core.relationChecker,
             core.customTabsStore,
             migrationStore,
             core.webAppManifestStorage

@@ -6,12 +6,10 @@ package org.mozilla.fenix.customtabs
 
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.customtabs.AbstractCustomTabsService
-import org.mozilla.fenix.BuildConfig.DIGITAL_ASSET_LINKS_TOKEN
 import org.mozilla.fenix.ext.components
 
 class CustomTabsService : AbstractCustomTabsService() {
-    override val engine: Engine by lazy { applicationContext.components.core.engine }
-    override val customTabsServiceStore by lazy { applicationContext.components.core.customTabsStore }
-    override val httpClient by lazy { applicationContext.components.core.client }
-    override val apiKey: String? = DIGITAL_ASSET_LINKS_TOKEN
+    override val engine: Engine by lazy { components.core.engine }
+    override val customTabsServiceStore by lazy { components.core.customTabsStore }
+    override val relationChecker by lazy { components.core.relationChecker }
 }

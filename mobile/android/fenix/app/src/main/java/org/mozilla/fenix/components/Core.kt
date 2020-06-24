@@ -41,8 +41,11 @@ import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.generateEncryptionKey
+import mozilla.components.service.digitalassetlinks.RelationChecker
+import mozilla.components.service.digitalassetlinks.api.DigitalAssetLinksApi
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import org.mozilla.fenix.AppRequestInterceptor
+import org.mozilla.fenix.BuildConfig.DIGITAL_ASSET_LINKS_TOKEN
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -135,6 +138,13 @@ class Core(private val context: Context) {
      * The [CustomTabsServiceStore] holds global custom tabs related data.
      */
     val customTabsStore by lazy { CustomTabsServiceStore() }
+
+    /**
+     * The [RelationChecker] checks Digital Asset Links relationships for Trusted Web Activities.
+     */
+    val relationChecker: RelationChecker by lazy {
+        DigitalAssetLinksApi(client, DIGITAL_ASSET_LINKS_TOKEN)
+    }
 
     /**
      * The session manager component provides access to a centralized registry of
