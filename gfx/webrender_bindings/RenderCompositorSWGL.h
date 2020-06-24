@@ -18,21 +18,17 @@ class RenderCompositorSWGL : public RenderCompositor {
   static UniquePtr<RenderCompositor> Create(
       RefPtr<widget::CompositorWidget>&& aWidget);
 
-  RenderCompositorSWGL(RefPtr<widget::CompositorWidget>&& aWidget);
+  RenderCompositorSWGL(RefPtr<widget::CompositorWidget>&& aWidget,
+                       void* aContext);
   virtual ~RenderCompositorSWGL();
+
+  void* swgl() const override { return mContext; }
+
+  bool MakeCurrent() override;
 
   bool BeginFrame() override;
   void CancelFrame() override;
   RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) final;
-
-  bool GetMappedBuffer(uint8_t** aData, int32_t* aStride) override {
-    if (mMappedData) {
-      *aData = mMappedData;
-      *aStride = mMappedStride;
-      return true;
-    }
-    return false;
-  }
 
   void Pause() override;
   bool Resume() override;
@@ -43,6 +39,7 @@ class RenderCompositorSWGL : public RenderCompositor {
   CompositorCapabilities GetCompositorCapabilities() override;
 
  private:
+  void* mContext = nullptr;
   RefPtr<DrawTarget> mDT;
   LayoutDeviceIntRegion mRegion;
   RefPtr<DataSourceSurface> mSurface;

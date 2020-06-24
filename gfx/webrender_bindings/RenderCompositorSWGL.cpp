@@ -14,20 +14,33 @@ namespace wr {
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorSWGL::Create(
     RefPtr<widget::CompositorWidget>&& aWidget) {
-  return MakeUnique<RenderCompositorSWGL>(std::move(aWidget));
+  void* ctx = wr_swgl_create_context();
+  if (!ctx) {
+    gfxCriticalNote << "Failed SWGL context creation for WebRender";
+    return nullptr;
+  }
+  return MakeUnique<RenderCompositorSWGL>(std::move(aWidget), ctx);
 }
 
 RenderCompositorSWGL::RenderCompositorSWGL(
-    RefPtr<widget::CompositorWidget>&& aWidget)
-    : RenderCompositor(std::move(aWidget)) {
+    RefPtr<widget::CompositorWidget>&& aWidget, void* aContext)
+    : RenderCompositor(std::move(aWidget)), mContext(aContext) {
+  MOZ_ASSERT(mContext);
 }
 
-RenderCompositorSWGL::~RenderCompositorSWGL() {}
+RenderCompositorSWGL::~RenderCompositorSWGL() {
+  wr_swgl_destroy_context(mContext);
+}
 
 void RenderCompositorSWGL::ClearMappedBuffer() {
   mMappedData = nullptr;
   mMappedStride = 0;
   mDT = nullptr;
+}
+
+bool RenderCompositorSWGL::MakeCurrent() {
+  wr_swgl_make_current(mContext);
+  return true;
 }
 
 bool RenderCompositorSWGL::BeginFrame() {
@@ -68,7 +81,7 @@ bool RenderCompositorSWGL::BeginFrame() {
       mSurface =
           Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
     }
-    gfx::DataSourceSurface::MappedSurface map = { nullptr, 0 };
+    gfx::DataSourceSurface::MappedSurface map = {nullptr, 0};
     if (!mSurface || !mSurface->Map(DataSourceSurface::READ_WRITE, &map)) {
       // We failed mapping the data surface, so need to cancel the frame.
       mWidget->EndRemoteDrawingInRegion(mDT, mRegion);
@@ -79,6 +92,9 @@ bool RenderCompositorSWGL::BeginFrame() {
     mMappedStride = map.mStride;
   }
   MOZ_ASSERT(mMappedData != nullptr && mMappedStride > 0);
+  wr_swgl_make_current(mContext);
+  wr_swgl_init_default_framebuffer(mContext, bounds.width, bounds.height,
+                                   mMappedStride, mMappedData);
   return true;
 }
 

@@ -50,14 +50,12 @@ void wr_renderer_unlock_external_image(void* aObj, wr::ExternalImageId aId,
 RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          UniquePtr<RenderCompositor> aCompositor,
                          wr::WindowId aWindowId, wr::Renderer* aRenderer,
-                         layers::CompositorBridgeParent* aBridge,
-                         void* aSoftwareContext)
+                         layers::CompositorBridgeParent* aBridge)
     : mThread(aThread),
       mCompositor(std::move(aCompositor)),
       mRenderer(aRenderer),
       mBridge(aBridge),
       mWindowId(aWindowId),
-      mSoftwareContext(aSoftwareContext),
       mDisableNativeCompositor(false) {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mCompositor);
@@ -68,18 +66,12 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
 
 RendererOGL::~RendererOGL() {
   MOZ_COUNT_DTOR(RendererOGL);
-  if (mSoftwareContext) {
-    wr_swgl_make_current(mSoftwareContext);
-  }
   if (!mCompositor->MakeCurrent()) {
     gfxCriticalNote
         << "Failed to make render context current during destroying.";
     // Leak resources!
   } else {
     wr_renderer_delete(mRenderer);
-  }
-  if (mSoftwareContext) {
-    wr_swgl_destroy_context(mSoftwareContext);
   }
 }
 
@@ -133,15 +125,6 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   }
 
   auto size = mCompositor->GetBufferSize();
-
-  if (mSoftwareContext) {
-    wr_swgl_make_current(mSoftwareContext);
-    uint8_t* data = nullptr;
-    int32_t stride = 0;
-    mCompositor->GetMappedBuffer(&data, &stride);
-    wr_swgl_init_default_framebuffer(mSoftwareContext, size.width, size.height,
-                                     stride, data);
-  }
 
   wr_renderer_update(mRenderer);
 
