@@ -312,6 +312,10 @@ class FormAutofillParent extends JSWindowActorParent {
       }
       case "FormAutofill:GetDecryptedString": {
         let { cipherText, reauth } = data;
+        if (!FormAutofillUtils._reauthEnabledByUser) {
+          log.debug("Reauth is disabled");
+          reauth = false;
+        }
         let string;
         try {
           string = await OSKeyStore.decrypt(cipherText, reauth);
