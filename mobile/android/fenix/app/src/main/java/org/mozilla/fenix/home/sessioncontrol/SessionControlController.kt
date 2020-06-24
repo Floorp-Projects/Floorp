@@ -136,7 +136,7 @@ class DefaultSessionControlController(
     private val getListOfTabs: () -> List<Tab>,
     private val hideOnboarding: () -> Unit,
     private val registerCollectionStorageObserver: () -> Unit,
-    private val showDeleteCollectionPrompt: (tabCollection: TabCollection) -> Unit,
+    private val showDeleteCollectionPrompt: (tabCollection: TabCollection, title: String?, message: String) -> Unit,
     private val openSettingsScreen: () -> Unit,
     private val openWhatsNewLink: () -> Unit,
     private val openPrivacyNotice: () -> Unit,
@@ -196,8 +196,14 @@ class DefaultSessionControlController(
     override fun handleCollectionRemoveTab(collection: TabCollection, tab: ComponentTab) {
         metrics.track(Event.CollectionTabRemoved)
 
-        viewLifecycleScope.launch(Dispatchers.IO) {
-            tabCollectionStorage.removeTabFromCollection(collection, tab)
+        if (collection.tabs.size == 1) {
+            val title = activity.resources.getString(R.string.delete_tab_and_collection_dialog_title, collection.title)
+            val message = activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
+            showDeleteCollectionPrompt(collection, title, message)
+        } else {
+            viewLifecycleScope.launch(Dispatchers.IO) {
+                tabCollectionStorage.removeTabFromCollection(collection, tab)
+            }
         }
     }
 
@@ -207,7 +213,8 @@ class DefaultSessionControlController(
     }
 
     override fun handleDeleteCollectionTapped(collection: TabCollection) {
-        showDeleteCollectionPrompt(collection)
+        val message = activity.resources.getString(R.string.tab_collection_dialog_message, collection.title)
+        showDeleteCollectionPrompt(collection, null, message)
     }
 
     override fun handleOpenInPrivateTabClicked(topSite: TopSite) {

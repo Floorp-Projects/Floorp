@@ -84,11 +84,7 @@ class TabCollectionStorage(
     }
 
     fun removeTabFromCollection(tabCollection: TabCollection, tab: Tab) {
-        if (tabCollection.tabs.size == 1) {
-            removeCollection(tabCollection)
-        } else {
-            collectionStorage.removeTabFromCollection(tabCollection, tab)
-        }
+        collectionStorage.removeTabFromCollection(tabCollection, tab)
     }
 
     fun renameCollection(tabCollection: TabCollection, title: String) {

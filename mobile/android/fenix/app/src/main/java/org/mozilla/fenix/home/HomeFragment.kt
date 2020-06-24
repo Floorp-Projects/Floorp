@@ -470,11 +470,10 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showDeleteCollectionPrompt(tabCollection: TabCollection) {
+    private fun showDeleteCollectionPrompt(tabCollection: TabCollection, title: String?, message: String) {
         val context = context ?: return
         AlertDialog.Builder(context).apply {
-            val message =
-                context.getString(R.string.tab_collection_dialog_message, tabCollection.title)
+            setTitle(title)
             setMessage(message)
             setNegativeButton(R.string.tab_collection_dialog_negative) { dialog: DialogInterface, _ ->
                 dialog.cancel()
