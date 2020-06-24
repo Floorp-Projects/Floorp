@@ -788,8 +788,6 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvHistoryCommitLength(
       const MaybeDiscarded<BrowsingContext>& aContext, uint32_t aLength);
 
-  mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
-
  private:
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;
