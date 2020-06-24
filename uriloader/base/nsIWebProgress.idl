@@ -137,8 +137,6 @@ interface nsIWebProgress : nsISupports
    *        Indicates that there is no associated DOM window.
    */
   readonly attribute mozIDOMWindowProxy DOMWindow;
-  readonly attribute uint64_t DOMWindowID;
-  readonly attribute uint64_t innerDOMWindowID;
 
   /**
    * Indicates whether DOMWindow.top == DOMWindow.
