@@ -23,8 +23,7 @@
 
 using namespace mozilla;
 
-// We use the same code as gtk_should_use_portal() to detect if we're in flatpak
-// env
+// s. a. the code gtk_should_use_portal() uses to detect if in flatpak env
 // https://github.com/GNOME/gtk/blob/e0ce028c88858b96aeda9e41734a39a3a04f705d/gtk/gtkprivate.c#L272
 static bool GetFlatpakPortalEnv() {
   bool shouldUsePortal;
@@ -33,7 +32,8 @@ static bool GetFlatpakPortalEnv() {
   if (g_file_test(path, G_FILE_TEST_EXISTS)) {
     shouldUsePortal = true;
   } else {
-    shouldUsePortal = (g_getenv("GTK_USE_PORTAL") != nullptr);
+    const char* portalEnvString = g_getenv("GTK_USE_PORTAL");
+    shouldUsePortal = portalEnvString != nullptr && atoi(portalEnvString) != 0;
   }
   g_free(path);
   return shouldUsePortal;
