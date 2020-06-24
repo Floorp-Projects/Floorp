@@ -128,13 +128,133 @@ static MOZ_MUST_USE bool ActAndFinalize(JSContext* cx,
                                         Handle<PipeToState*> state,
                                         Handle<Maybe<Value>> error) {
   // Step d: Let p be the result of performing action.
+  Rooted<JSObject*> p(cx);
+  switch (state->shutdownAction()) {
+    // This corresponds to the action performed by |abortAlgorithm| in
+    // ReadableStreamPipeTo step 14.1.5.
+    case PipeToState::ShutdownAction::AbortAlgorithm: {
+      MOZ_ASSERT(error.get().isSome());
+
+      // From ReadableStreamPipeTo:
+      // Step 14.1.2: Let actions be an empty ordered set.
+      // Step 14.1.3: If preventAbort is false, append the following action to
+      //              actions:
+      // Step 14.1.3.1: If dest.[[state]] is "writable", return
+      //                ! WritableStreamAbort(dest, error).
+      // Step 14.1.3.2: Otherwise, return a promise resolved with undefined.
+      // Step 14.1.4: If preventCancel is false, append the following action
+      //               action to actions:
+      // Step 14.1.4.1.: If source.[[state]] is "readable", return
+      //                 ! ReadableStreamCancel(source, error).
+      // Step 14.1.4.2: Otherwise, return a promise resolved with undefined.
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
+                                "any required actions during abortAlgorithm");
+      return false;
+    }
+
+    // This corresponds to the action in "shutdown with an action of
+    // ! WritableStreamAbort(dest, source.[[storedError]]) and with
+    // source.[[storedError]]."
+    case PipeToState::ShutdownAction::AbortDestStream: {
+      MOZ_ASSERT(error.get().isSome());
+
+      Rooted<WritableStream*> unwrappedDest(cx, GetUnwrappedDest(cx, state));
+      if (!unwrappedDest) {
+        return false;
+      }
+
+      Rooted<Value> sourceStoredError(cx, *error.get());
+      cx->check(sourceStoredError);
+
+      p = WritableStreamAbort(cx, unwrappedDest, sourceStoredError);
+      break;
+    }
+
+    // This corresponds to two actions:
+    //
+    // * The action in "shutdown with an action of
+    //   ! ReadableStreamCancel(source, dest.[[storedError]]) and with
+    //   dest.[[storedError]]" as used in "Errors must be propagated backward:
+    //   if dest.[[state]] is or becomes 'errored'".
+    // * The action in "shutdown with an action of
+    //   ! ReadableStreamCancel(source, destClosed) and with destClosed" as used
+    //   in "Closing must be propagated backward: if
+    //   ! WritableStreamCloseQueuedOrInFlight(dest) is true or dest.[[state]]
+    //   is 'closed'".
+    //
+    // The different reason-values are passed as |error|.
+    case PipeToState::ShutdownAction::CancelSource: {
+      MOZ_ASSERT(error.get().isSome());
+
+      Rooted<ReadableStream*> unwrappedSource(cx,
+                                              GetUnwrappedSource(cx, state));
+      if (!unwrappedSource) {
+        return false;
+      }
+
+      Rooted<Value> reason(cx, *error.get());
+      cx->check(reason);
+
+      p = ReadableStreamCancel(cx, unwrappedSource, reason);
+      break;
+    }
+
+    // This corresponds to the action in "shutdown with an action of
+    // ! WritableStreamDefaultWriterCloseWithErrorPropagation(writer)" as done
+    // in "Closing must be propagated forward: if source.[[state]] is or becomes
+    // 'closed'".
+    case PipeToState::ShutdownAction::CloseWriterWithErrorPropagation: {
+      MOZ_ASSERT(error.get().isNothing());
+
+      Rooted<WritableStreamDefaultWriter*> writer(cx, state->writer());
+      cx->check(writer);  // just for good measure: we don't depend on this
+
+      p = WritableStreamDefaultWriterCloseWithErrorPropagation(cx, writer);
+      break;
+    }
+  }
+  if (!p) {
+    return false;
+  }
+
   // Step e: Upon fulfillment of p, finalize, passing along originalError if it
   //         was given.
+  Rooted<JSFunction*> onFulfilled(cx);
+  {
+    Rooted<Value> optionalError(
+        cx, error.isSome()
+                ? *error.get()
+                : MagicValue(JS_READABLESTREAM_PIPETO_FINALIZE_WITHOUT_ERROR));
+    onFulfilled = NewHandlerWithExtraValue(cx, Finalize, state, optionalError);
+    if (!onFulfilled) {
+      return false;
+    }
+  }
+
   // Step f: Upon rejection of p with reason newError, finalize with newError.
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
-                            "perform action then finalize");
-  return false;
+  auto OnRejected = [](JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
+    cx->check(state);
+
+    Rooted<Maybe<Value>> newError(cx, Some(args[0]));
+    cx->check(newError);
+    if (!Finalize(cx, state, newError)) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  };
+
+  Rooted<JSFunction*> onRejected(cx, NewHandler(cx, OnRejected, state));
+  if (!onRejected) {
+    return false;
+  }
+
+  return JS::AddPromiseReactions(cx, p, onFulfilled, onRejected);
 }
 
 static MOZ_MUST_USE bool ActAndFinalize(JSContext* cx, unsigned argc,
