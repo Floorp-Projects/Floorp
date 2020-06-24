@@ -39,6 +39,8 @@ static LazyLogModule sEventDispatchAndRunLog("events");
 #endif
 #define LOG1(args) \
   MOZ_LOG(sEventDispatchAndRunLog, mozilla::LogLevel::Error, args)
+#define LOG1_ENABLED() \
+  MOZ_LOG_TEST(sEventDispatchAndRunLog, mozilla::LogLevel::Error)
 
 using namespace mozilla;
 
@@ -622,6 +624,24 @@ template <typename T>
 LogTaskBase<T>::Run::Run(T* aEvent, bool aWillRunAgain)
     : mEvent(aEvent), mWillRunAgain(aWillRunAgain) {
   LOG1(("EXEC %p", mEvent));
+}
+
+template <>
+LogTaskBase<nsIRunnable>::Run::Run(nsIRunnable* aEvent, bool aWillRunAgain)
+    : mEvent(aEvent), mWillRunAgain(aWillRunAgain) {
+  if (!LOG1_ENABLED()) {
+    return;
+  }
+
+  nsCOMPtr<nsINamed> named(do_QueryInterface(aEvent));
+  if (!named) {
+    LOG1(("EXEC %p", mEvent));
+    return;
+  }
+
+  nsAutoCString name;
+  named->GetName(name);
+  LOG1(("EXEC %p [%s]", aEvent, name.BeginReading()));
 }
 
 template <typename T>
