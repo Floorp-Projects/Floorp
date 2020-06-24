@@ -243,6 +243,20 @@ add_task(async function webextension() {
   await BrowserTestUtils.withNewTab("http://example.com", async browser => {
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
+    function background() {
+      browser.commands.onCommand.addListener(() => {
+        browser.test.sendMessage("oncommand");
+      });
+
+      browser.runtime.onMessage.addListener(msg => {
+        if (msg == "from-sidebar-action") {
+          browser.test.sendMessage("sidebar-opened");
+        }
+      });
+
+      browser.test.sendMessage("ready");
+    }
+
     const extension = ExtensionTestUtils.loadExtension({
       manifest: {
         version: "1",
@@ -258,10 +272,42 @@ add_task(async function webextension() {
           default_title: "Hello",
           show_matches: ["http://example.com/*"],
         },
+        commands: {
+          test_command: {
+            suggested_key: {
+              default: "Alt+Shift+J",
+            },
+          },
+          _execute_sidebar_action: {
+            suggested_key: {
+              default: "Alt+Shift+Q",
+            },
+          },
+        },
+        sidebar_action: {
+          default_panel: "sidebar.html",
+        },
       },
+      files: {
+        "sidebar.html": `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <script src="sidebar.js"></script>
+            </head>
+          </html>
+        `,
+
+        "sidebar.js": function() {
+          browser.runtime.sendMessage("from-sidebar-action");
+        },
+      },
+      background,
     });
 
     await extension.startup();
+    await extension.awaitMessage("ready");
 
     // As the first add-on interacted with this should show up as `addon0`.
 
@@ -284,6 +330,22 @@ add_task(async function webextension() {
       },
     });
 
+    EventUtils.synthesizeKey("j", { altKey: true, shiftKey: true });
+    await extension.awaitMessage("oncommand");
+    assertInteractionScalars({
+      keyboard: {
+        addon0: 1,
+      },
+    });
+
+    EventUtils.synthesizeKey("q", { altKey: true, shiftKey: true });
+    await extension.awaitMessage("sidebar-opened");
+    assertInteractionScalars({
+      keyboard: {
+        addon0: 1,
+      },
+    });
+
     const extension2 = ExtensionTestUtils.loadExtension({
       manifest: {
         version: "1",
@@ -299,10 +361,19 @@ add_task(async function webextension() {
           default_title: "Hello",
           show_matches: ["http://example.com/*"],
         },
+        commands: {
+          test_command: {
+            suggested_key: {
+              default: "Alt+Shift+9",
+            },
+          },
+        },
       },
+      background,
     });
 
     await extension2.startup();
+    await extension2.awaitMessage("ready");
 
     // A second extension should be `addon1`.
 
@@ -325,10 +396,26 @@ add_task(async function webextension() {
       },
     });
 
+    EventUtils.synthesizeKey("9", { altKey: true, shiftKey: true });
+    await extension2.awaitMessage("oncommand");
+    assertInteractionScalars({
+      keyboard: {
+        addon1: 1,
+      },
+    });
+
     // The first should have retained its ID.
     click("random_addon_example_com-browser-action");
     assertInteractionScalars({
       nav_bar: {
+        addon0: 1,
+      },
+    });
+
+    EventUtils.synthesizeKey("j", { altKey: true, shiftKey: true });
+    await extension.awaitMessage("oncommand");
+    assertInteractionScalars({
+      keyboard: {
         addon0: 1,
       },
     });
@@ -354,6 +441,14 @@ add_task(async function webextension() {
     click("pageAction-urlbar-random_addon2_example_com");
     assertInteractionScalars({
       pageaction_urlbar: {
+        addon1: 1,
+      },
+    });
+
+    EventUtils.synthesizeKey("9", { altKey: true, shiftKey: true });
+    await extension2.awaitMessage("oncommand");
+    assertInteractionScalars({
+      keyboard: {
         addon1: 1,
       },
     });
