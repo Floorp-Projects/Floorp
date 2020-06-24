@@ -2675,7 +2675,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
         aLocationChangeData->contentPartitionedPrincipal(),
         aLocationChangeData->csp(), aLocationChangeData->referrerInfo(),
         aLocationChangeData->isSyntheticDocument(),
-        aWebProgressData->innerDOMWindowID(),
         aLocationChangeData->requestContextID().isSome(),
         aLocationChangeData->requestContextID().valueOr(0),
         aLocationChangeData->contentType());
