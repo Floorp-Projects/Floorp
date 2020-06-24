@@ -2581,17 +2581,14 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIBrowser> browser;
-  nsCOMPtr<nsIWebProgress> manager;
-  nsCOMPtr<nsIWebProgressListener> managerAsListener;
-  if (!GetWebProgressListener(getter_AddRefs(browser), getter_AddRefs(manager),
-                              getter_AddRefs(managerAsListener))) {
+  nsCOMPtr<nsIBrowser> browser = GetBrowser();
+  if (!GetBrowsingContext()->GetWebProgress() || !browser) {
     return IPC_OK();
   }
 
   nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+  ReconstructWebProgressAndRequest(aWebProgressData, aRequestData,
                                    getter_AddRefs(webProgress),
                                    getter_AddRefs(request));
 
@@ -2611,14 +2608,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
         "Unexpected WebProgressStateChangeData for non-top-level WebProgress");
   }
 
-  Unused << managerAsListener->OnStateChange(webProgress, request, aStateFlags,
-                                             aStatus);
-
-  if (GetBrowsingContext()->Top()->GetWebProgress()) {
-    GetBrowsingContext()->Top()->GetWebProgress()->OnStateChange(
-        webProgress, request, aStateFlags, aStatus);
-  }
-
+  GetBrowsingContext()->Top()->GetWebProgress()->OnStateChange(
+      webProgress, request, aStateFlags, aStatus);
   return IPC_OK();
 }
 
@@ -2631,29 +2622,19 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnProgressChange(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIBrowser> browser;
-  nsCOMPtr<nsIWebProgress> manager;
-  nsCOMPtr<nsIWebProgressListener> managerAsListener;
-  if (!GetWebProgressListener(getter_AddRefs(browser), getter_AddRefs(manager),
-                              getter_AddRefs(managerAsListener))) {
+  if (!GetBrowsingContext()->GetWebProgress()) {
     return IPC_OK();
   }
 
   nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+  ReconstructWebProgressAndRequest(aWebProgressData, aRequestData,
                                    getter_AddRefs(webProgress),
                                    getter_AddRefs(request));
 
-  Unused << managerAsListener->OnProgressChange(
+  GetBrowsingContext()->Top()->GetWebProgress()->OnProgressChange(
       webProgress, request, aCurSelfProgress, aMaxSelfProgress,
       aCurTotalProgress, aMaxTotalProgress);
-
-  if (GetBrowsingContext()->Top()->GetWebProgress()) {
-    GetBrowsingContext()->Top()->GetWebProgress()->OnProgressChange(
-        webProgress, request, aCurSelfProgress, aMaxSelfProgress,
-        aCurTotalProgress, aMaxTotalProgress);
-  }
 
   return IPC_OK();
 }
@@ -2667,17 +2648,14 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIBrowser> browser;
-  nsCOMPtr<nsIWebProgress> manager;
-  nsCOMPtr<nsIWebProgressListener> managerAsListener;
-  if (!GetWebProgressListener(getter_AddRefs(browser), getter_AddRefs(manager),
-                              getter_AddRefs(managerAsListener))) {
+  nsCOMPtr<nsIBrowser> browser = GetBrowser();
+  if (!GetBrowsingContext()->GetWebProgress() || !browser) {
     return IPC_OK();
   }
 
   nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+  ReconstructWebProgressAndRequest(aWebProgressData, aRequestData,
                                    getter_AddRefs(webProgress),
                                    getter_AddRefs(request));
 
@@ -2703,12 +2681,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
         aLocationChangeData->contentType());
   }
 
-  Unused << managerAsListener->OnLocationChange(webProgress, request, aLocation,
-                                                aFlags);
-  if (GetBrowsingContext()->Top()->GetWebProgress()) {
-    GetBrowsingContext()->Top()->GetWebProgress()->OnLocationChange(
-        webProgress, request, aLocation, aFlags);
-  }
+  GetBrowsingContext()->Top()->GetWebProgress()->OnLocationChange(
+      webProgress, request, aLocation, aFlags);
 
   // Since we've now changed Documents, notify the BrowsingContext that we've
   // changed. Ideally we'd just let the BrowsingContext do this when it changes
@@ -2728,27 +2702,18 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStatusChange(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIBrowser> browser;
-  nsCOMPtr<nsIWebProgress> manager;
-  nsCOMPtr<nsIWebProgressListener> managerAsListener;
-  if (!GetWebProgressListener(getter_AddRefs(browser), getter_AddRefs(manager),
-                              getter_AddRefs(managerAsListener))) {
+  if (!GetBrowsingContext()->GetWebProgress()) {
     return IPC_OK();
   }
 
   nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+  ReconstructWebProgressAndRequest(aWebProgressData, aRequestData,
                                    getter_AddRefs(webProgress),
                                    getter_AddRefs(request));
 
-  Unused << managerAsListener->OnStatusChange(webProgress, request, aStatus,
-                                              aMessage.get());
-
-  if (GetBrowsingContext()->Top()->GetWebProgress()) {
-    GetBrowsingContext()->Top()->GetWebProgress()->OnStatusChange(
-        webProgress, request, aStatus, aMessage.get());
-  }
+  GetBrowsingContext()->Top()->GetWebProgress()->OnStatusChange(
+      webProgress, request, aStatus, aMessage.get());
 
   return IPC_OK();
 }
@@ -2811,13 +2776,7 @@ BrowserParent::RecvReportBlockedEmbedderNodeByClassifier() {
   return IPC_OK();
 }
 
-bool BrowserParent::GetWebProgressListener(
-    nsIBrowser** aOutBrowser, nsIWebProgress** aOutManager,
-    nsIWebProgressListener** aOutListener) {
-  MOZ_ASSERT(aOutBrowser);
-  MOZ_ASSERT(aOutManager);
-  MOZ_ASSERT(aOutListener);
-
+already_AddRefed<nsIBrowser> BrowserParent::GetBrowser() {
   nsCOMPtr<nsIBrowser> browser;
   RefPtr<Element> currentElement = mFrameElement;
 
@@ -2835,31 +2794,11 @@ bool BrowserParent::GetWebProgressListener(
         browsingContext ? browsingContext->GetEmbedderElement() : nullptr;
   }
 
-  if (!browser) {
-    return false;
-  }
-
-  nsCOMPtr<nsIWebProgress> manager;
-  nsresult rv = browser->GetRemoteWebProgressManager(getter_AddRefs(manager));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(manager);
-  if (!listener) {
-    // We are no longer remote so we cannot forward this event.
-    return false;
-  }
-
-  browser.forget(aOutBrowser);
-  manager.forget(aOutManager);
-  listener.forget(aOutListener);
-
-  return true;
+  return browser.forget();
 }
 
 void BrowserParent::ReconstructWebProgressAndRequest(
-    nsIWebProgress* aManager, const Maybe<WebProgressData>& aWebProgressData,
+    const Maybe<WebProgressData>& aWebProgressData,
     const RequestData& aRequestData, nsIWebProgress** aOutWebProgress,
     nsIRequest** aOutRequest) {
   MOZ_DIAGNOSTIC_ASSERT(aOutWebProgress,
@@ -2868,11 +2807,11 @@ void BrowserParent::ReconstructWebProgressAndRequest(
 
   nsCOMPtr<nsIWebProgress> webProgress;
   if (aWebProgressData) {
-    webProgress = new RemoteWebProgress(aManager, aWebProgressData->loadType(),
+    webProgress = new RemoteWebProgress(aWebProgressData->loadType(),
                                         aWebProgressData->isLoadingDocument(),
                                         aWebProgressData->isTopLevel());
   } else {
-    webProgress = new RemoteWebProgress(aManager, 0, false, false);
+    webProgress = new RemoteWebProgress(0, false, false);
   }
   webProgress.forget(aOutWebProgress);
 
