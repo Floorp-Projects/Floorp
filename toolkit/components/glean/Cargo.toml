@@ -17,3 +17,6 @@ glean = { path = "./api" }
 cstr = "0.1"
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "61dcc364ac0d6d0816ab88a494bbf20d824b009b" } # Copied from toolkit/library/rust/shared/Cargo.toml
 url = "2.1" # Copied from viaduct's deps, see https://github.com/mozilla/application-services/issues/3062
+
+[features]
+with_gecko = ["glean/with_gecko"]
