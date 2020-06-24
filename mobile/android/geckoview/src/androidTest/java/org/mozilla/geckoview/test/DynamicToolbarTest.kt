@@ -97,7 +97,7 @@ class DynamicToolbarTest : BaseSessionTest() {
 
         // Scroll down bit, if we correctly render the document, the position
         // fixed element still covers whole the document area.
-        mainSession.evaluateJS("window.scrollTo({ top: 100, behevior: 'instant' })")
+        mainSession.evaluateJS("window.scrollTo({ top: 100, behavior: 'instant' })")
 
         // Wait a while to make sure the scrolling result is composited on the compositor
         // since capturePixels() takes a snapshot directly from the compositor without
