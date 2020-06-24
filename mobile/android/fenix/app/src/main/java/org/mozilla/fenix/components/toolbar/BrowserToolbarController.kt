@@ -86,14 +86,11 @@ class DefaultBrowserToolbarController(
     internal var ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun handleToolbarPaste(text: String) {
-        browserAnimator.captureEngineViewAndDrawStatically {
-            val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                sessionId = currentSession?.id,
-                pastedText = text
-            )
-
-            navController.nav(R.id.browserFragment, directions, getToolbarNavOptions(activity))
-        }
+        val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+            sessionId = currentSession?.id,
+            pastedText = text
+        )
+        navController.nav(R.id.browserFragment, directions, getToolbarNavOptions(activity))
     }
 
     override fun handleToolbarPasteAndGo(text: String) {
@@ -112,13 +109,11 @@ class DefaultBrowserToolbarController(
             Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)
         )
 
-        browserAnimator.captureEngineViewAndDrawStatically {
             val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
                 currentSession?.id
             )
 
             navController.nav(R.id.browserFragment, directions, getToolbarNavOptions(activity))
-        }
     }
 
     override fun handleTabCounterClick() {
