@@ -115,12 +115,6 @@ struct RequestData
   nsIURI requestURI;
   nsIURI originalRequestURI;
   nsCString matchedList;
-  // The elapsedLoadTimeMS is only set when the request has finished loading.
-  // In other words, this field is set only during and |OnStateChange| event
-  // where |aStateFlags| contains |nsIWebProgressListener::STATE_STOP| and
-  // |nsIWebProgressListener::STATE_IS_NETWORK| and
-  // |nsIWebProgressListener::STATE_IS_WINDOW|, and the document is top level.
-  uint64_t? elapsedLoadTimeMS;
 };
 
 struct WebProgressStateChangeData
