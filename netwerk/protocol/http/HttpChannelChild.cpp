@@ -460,6 +460,8 @@ void HttpChannelChild::OnStartRequest(
     return;
   }
 
+  // Copy arguments only. It's possible to handle other IPC between
+  // OnStartRequest and DoOnStartRequest.
   mComputedCrossOriginOpenerPolicy = aArgs.openerPolicy();
 
   if (!mCanceled && NS_SUCCEEDED(mStatus)) {
@@ -513,8 +515,6 @@ void HttpChannelChild::OnStartRequest(
   // We have deliberately disabled this for child processes (see bug 806753)
   //
   // gHttpHandler->OnExamineResponse(this);
-
-  mTracingEnabled = false;
 
   ResourceTimingStructArgsToTimingsStruct(aArgs.timing(), mTransactionTimings);
 
@@ -657,6 +657,11 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
   nsresult rv;
 
   LOG(("HttpChannelChild::DoOnStartRequest [this=%p]\n", this));
+
+  // We handle all the listener chaining before OnStartRequest at this moment.
+  // Prevent additional listeners being added to the chain after the request
+  // as started.
+  mTracingEnabled = false;
 
   // mListener could be null if the redirect setup is not completed.
   MOZ_ASSERT(mListener || mOnStartRequestCalled);
