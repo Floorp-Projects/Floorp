@@ -34,7 +34,8 @@ use crate::profiler::GpuCacheProfileCounters;
 use crate::render_backend::{FrameStamp, FrameId};
 use crate::prim_store::VECS_PER_SEGMENT;
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
-use std::{mem, u16, u32};
+use crate::util::VecHelper;
+use std::{u16, u32};
 use std::num::NonZeroU32;
 use std::ops::Add;
 use std::time::{Duration, Instant};
@@ -901,9 +902,9 @@ impl GpuCache {
             frame_id: self.now.frame_id(),
             clear,
             height: self.texture.height,
-            debug_commands: mem::replace(&mut self.texture.debug_commands, Vec::new()),
-            updates: mem::replace(&mut self.texture.updates, Vec::new()),
-            blocks: mem::replace(&mut self.texture.pending_blocks, Vec::new()),
+            debug_commands: self.texture.debug_commands.take_and_preallocate(),
+            updates: self.texture.updates.take_and_preallocate(),
+            blocks: self.texture.pending_blocks.take_and_preallocate(),
         }
     }
 
