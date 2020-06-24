@@ -52,6 +52,7 @@ class TabCounter @JvmOverloads constructor(
             } // Initial state.
             count > MAX_VISIBLE_TABS && INTERNAL_COUNT > MAX_VISIBLE_TABS -> {
                 INTERNAL_COUNT = count
+                updateContentDescription(count)
                 return
             } // There are still over MAX_VISIBLE_TABS tabs open.
         }
