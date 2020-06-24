@@ -331,6 +331,8 @@ impl SegmentBuilder {
             ),
         ];
 
+        self.items.reserve(segments.len() + 1);
+
         for segment in segments {
             self.items.push(Item::new(
                 *segment,
@@ -377,6 +379,8 @@ impl SegmentBuilder {
                         let p1 = inner.origin;
                         let p2 = inner.bottom_right();
                         let p3 = rect.bottom_right();
+
+                        self.items.reserve(9);
 
                         let corner_segments = &[
                             LayoutRect::new(
