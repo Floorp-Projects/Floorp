@@ -148,7 +148,6 @@ StartupCache::StartupCache()
     : mTableLock("StartupCache::mTableLock"),
       mDirty(false),
       mWrittenOnce(false),
-      mStartupWriteInitiated(false),
       mCurTableReferenced(false),
       mRequestedCount(0),
       mCacheEntriesBaseOffset(0),
@@ -493,7 +492,6 @@ size_t StartupCache::HeapSizeOfIncludingThis(
 Result<Ok, nsresult> StartupCache::WriteToDisk() {
   mTableLock.AssertCurrentThreadOwns();
 
-  mStartupWriteInitiated = true;
   if (!mDirty || mWrittenOnce) {
     return Ok();
   }
@@ -661,7 +659,6 @@ void StartupCache::EnsureShutdownWriteComplete() {
     // We got the lock. Keep the following in sync with
     // MaybeWriteOffMainThread:
     WaitOnPrefetchThread();
-    mStartupWriteInitiated = false;
     mDirty = true;
     mCacheData.reset();
     // Most of this should be redundant given MaybeWriteOffMainThread should
@@ -740,7 +737,6 @@ void StartupCache::MaybeWriteOffMainThread() {
 
   // Keep this code in sync with EnsureShutdownWriteComplete.
   WaitOnPrefetchThread();
-  mStartupWriteInitiated = false;
   mDirty = true;
   mCacheData.reset();
 
@@ -806,7 +802,6 @@ nsresult StartupCache::ResetStartupWriteTimerCheckingReadCount() {
 }
 
 nsresult StartupCache::ResetStartupWriteTimer() {
-  mStartupWriteInitiated = false;
   mDirty = true;
   nsresult rv = NS_OK;
   if (!mTimer)
@@ -824,18 +819,7 @@ nsresult StartupCache::ResetStartupWriteTimer() {
 // Used only in tests:
 bool StartupCache::StartupWriteComplete() {
   // Need to have written to disk and not added new things since;
-  // if one of those is not the case, return immediately.
-  if (!mStartupWriteInitiated || mDirty) {
-    return false;
-  }
-  // Ensure we can grab the lock, ie we're not
-  // writing to disk on another thread right now.
-  // XXXgijs is there a more idiomatic way of doing this?
-  if (!mTableLock.TryLock()) {
-    return false;
-  }
-  mTableLock.Unlock();
-  return mStartupWriteInitiated && !mDirty;
+  return !mDirty && mWrittenOnce;
 }
 
 // StartupCacheDebugOutputStream implementation
