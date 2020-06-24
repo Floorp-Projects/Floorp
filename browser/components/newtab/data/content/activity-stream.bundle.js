@@ -16528,7 +16528,13 @@ const Localized = ({
     textNode = text;
   }
 
-  return children ? external_React_default.a.cloneElement(children, props, textNode) : external_React_default.a.createElement("span", props, textNode);
+  if (!children) {
+    return external_React_default.a.createElement("span", props, textNode);
+  } else if (textNode) {
+    return external_React_default.a.cloneElement(children, props, textNode);
+  }
+
+  return external_React_default.a.cloneElement(children, props);
 };
 // CONCATENATED MODULE: ./content-src/asrouter/templates/OnboardingMessage/OnboardingMessage.jsx
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "OnboardingCard", function() { return OnboardingMessage_OnboardingCard; });

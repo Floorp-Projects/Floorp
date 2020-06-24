@@ -4,6 +4,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { Localized } from "./MSLocalized";
+import { Zap } from "./Zap";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import { addUtmParams } from "../../asrouter/templates/FirstRun/addUtmParams";
 
@@ -260,9 +261,7 @@ export class WelcomeScreen extends React.PureComponent {
         {hasSecondaryTopCTA ? this.renderSecondaryCTA("top") : null}
         <div className={`brand-logo ${hasSecondaryTopCTA ? "cta-top" : ""}`} />
         <div className="welcome-text">
-          <Localized text={content.title}>
-            <h1 />
-          </Localized>
+          <Zap hasZap={content.zap} text={content.title} />
           <Localized text={content.subtitle}>
             <h2 />
           </Localized>
