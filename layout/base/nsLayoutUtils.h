@@ -2694,9 +2694,16 @@ class nsLayoutUtils {
    * to the given prescontext. Return true if the size was set, false
    * otherwise.
    */
+  enum class SubtractDynamicToolbar { No, Yes };
   static bool GetContentViewerSize(nsPresContext* aPresContext,
-                                   LayoutDeviceIntSize& aOutSize);
+                                   LayoutDeviceIntSize& aOutSize,
+                                   SubtractDynamicToolbar = SubtractDynamicToolbar::Yes);
 
+ private:
+  static bool UpdateCompositionBoundsForRCDRSF(
+      mozilla::ParentLayerRect& aCompBounds, nsPresContext* aPresContext);
+
+ public:
   /**
    * Calculate the compostion size for a frame. See FrameMetrics.h for
    * defintion of composition size (or bounds).
