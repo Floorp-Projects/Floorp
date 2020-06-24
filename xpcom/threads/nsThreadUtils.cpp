@@ -630,6 +630,7 @@ LogTaskBase<T>::Run::~Run() {
 }
 
 template class LogTaskBase<nsIRunnable>;
+template class LogTaskBase<MicroTaskRunnable>;
 
 MOZ_THREAD_LOCAL(nsISerialEventTarget*)
 SerialEventTargetGuard::sCurrentThreadTLS;
