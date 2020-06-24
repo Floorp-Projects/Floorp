@@ -2124,7 +2124,7 @@
 # Whether "W3C Web Manifest" processing is enabled
 - name: dom.manifest.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Enable mapped array buffer by default.
