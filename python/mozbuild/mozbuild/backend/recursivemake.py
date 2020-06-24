@@ -397,19 +397,11 @@ class RecursiveMakeBackend(MakeBackend):
         return summary
 
     def _get_backend_file_for(self, obj):
-        # For generated files that we put in the export or misc tiers, we use the
-        # top-level backend file.
-        if isinstance(obj, GeneratedFile) and not obj.required_during_compile and \
-                not obj.localized:
-            objdir = self.environment.topobjdir
-        else:
-            objdir = obj.objdir
-
-        if objdir not in self._backend_files:
-            self._backend_files[objdir] = \
-                BackendMakeFile(obj.srcdir, objdir, obj.config,
+        if obj.objdir not in self._backend_files:
+            self._backend_files[obj.objdir] = \
+                BackendMakeFile(obj.srcdir, obj.objdir, obj.config,
                                 obj.topsrcdir, self.environment.topobjdir, self.dry_run)
-        return self._backend_files[objdir]
+        return self._backend_files[obj.objdir]
 
     def consume_object(self, obj):
         """Write out build files necessary to build with recursive make."""
@@ -551,17 +543,11 @@ class RecursiveMakeBackend(MakeBackend):
             else:
                 tier = 'misc'
             if tier:
-                relobjdir = mozpath.relpath(obj.objdir, self.environment.topobjdir)
-                self._no_skip[tier].add(relobjdir)
+                self._no_skip[tier].add(backend_file.relobjdir)
             backend_file.write_once('include $(topsrcdir)/config/AB_rCD.mk\n')
-            relobjdir = mozpath.relpath(obj.objdir, backend_file.objdir)
-            # For generated files that we handle in the top-level backend file,
-            # we want to have a `directory/tier` target depending on the file.
-            # For the others, we want a `tier` target.
-            if tier and relobjdir:
-                tier = '%s/%s' % (relobjdir, tier)
             for stmt in self._format_statements_for_generated_file(
-                    obj, tier, extra_dependencies='backend.mk' if obj.flags else ''):
+                    obj, tier,
+                    extra_dependencies='backend.mk' if obj.flags else ''):
                 backend_file.write(stmt + '\n')
 
         elif isinstance(obj, JARManifest):
@@ -1785,6 +1771,4 @@ class RecursiveMakeBackend(MakeBackend):
             return self._pretty_path(path, self._get_backend_file_for(obj))
 
     def _format_generated_file_output_name(self, path, obj):
-        if not isinstance(path, Path):
-            path = ObjDirPath(obj._context, '!' + path)
-        return self._pretty_path(path, self._get_backend_file_for(obj))
+        return path
