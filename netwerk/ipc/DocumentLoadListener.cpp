@@ -176,7 +176,7 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
     // default listener. This happens when the channel is in
     // an error state, and we want to just forward that on to be
     // handled in the content process.
-    if (!mUsedContentHandler && !m_targetStreamListener) {
+    if (NS_SUCCEEDED(rv) && !mUsedContentHandler && !m_targetStreamListener) {
       m_targetStreamListener = mListener;
       return m_targetStreamListener->OnStartRequest(request);
     }
@@ -199,7 +199,8 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
       nsCOMPtr<nsIMultiPartChannel> multiPartChannel =
           do_QueryInterface(request);
       if (!multiPartChannel && !mCloned) {
-        DisconnectChildListeners();
+        DisconnectChildListeners(NS_FAILED(rv) ? rv : NS_BINDING_RETARGETED,
+                                 rv);
       }
     }
     return rv;
@@ -215,14 +216,14 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
     LOG(("ParentProcessDocumentOpenInfo dtor [this=%p]", this));
   }
 
-  void DisconnectChildListeners() {
+  void DisconnectChildListeners(nsresult aStatus, nsresult aLoadGroupStatus) {
     // Tell the DocumentLoadListener to notify the content process that it's
     // been entirely retargeted, and to stop waiting.
     // Clear mListener's pointer to the DocumentLoadListener to break the
     // reference cycle.
     RefPtr<DocumentLoadListener> doc = do_GetInterface(ToSupports(mListener));
     MOZ_ASSERT(doc);
-    doc->DisconnectListeners(NS_BINDING_RETARGETED, NS_OK);
+    doc->DisconnectListeners(aStatus, aLoadGroupStatus);
     mListener->SetListenerAfterRedirect(nullptr);
   }
 
