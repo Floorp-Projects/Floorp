@@ -44,6 +44,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/RemoteWebProgress.h"
 #include "mozilla/dom/RemoteWebProgressRequest.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 #ifdef ANDROID
 #  include "mozilla/widget/nsWindow.h"
@@ -1537,6 +1538,23 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
           });
 }
 
+void DocumentLoadListener::MaybeReportBlockedByURLClassifier(nsresult aStatus) {
+  if (!GetBrowsingContext() || GetBrowsingContext()->IsTop() ||
+      !StaticPrefs::privacy_trackingprotection_testing_report_blocked_node()) {
+    return;
+  }
+
+  if (!UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aStatus)) {
+    return;
+  }
+
+  RefPtr<WindowGlobalParent> parent =
+      GetBrowsingContext()->GetParentWindowContext();
+  if (parent) {
+    Unused << parent->SendAddBlockedFrameNodeByClassifier(GetBrowsingContext());
+  }
+}
+
 NS_IMETHODIMP
 DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   LOG(("DocumentLoadListener OnStartRequest [this=%p]", this));
@@ -1582,6 +1600,8 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   mChannel->Suspend();
 
   mInitiatedRedirectToRealChannel = true;
+
+  MaybeReportBlockedByURLClassifier(status);
 
   // Determine if a new process needs to be spawned. If it does, this will
   // trigger a cross process switch, and we should hold off on redirecting to
