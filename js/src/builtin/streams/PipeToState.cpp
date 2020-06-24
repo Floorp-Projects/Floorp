@@ -26,9 +26,10 @@
 #include "js/Class.h"          // JSClass, JSCLASS_HAS_RESERVED_SLOTS
 #include "js/Promise.h"        // JS::AddPromiseReactions
 #include "js/RootingAPI.h"     // JS::Handle, JS::Rooted
+#include "js/Value.h"          // JS::{,Int32,Magic,Object}Value
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
-#include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
+#include "builtin/streams/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapReaderFromStream, js::UnwrapStreamFromReader
 #include "builtin/streams/WritableStream-inl.h"  // js::UnwrapWriterFromStream
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::UnwrapStreamFromWriter
@@ -43,12 +44,15 @@ using JS::CallArgs;
 using JS::CallArgsFromVp;
 using JS::Handle;
 using JS::Int32Value;
+using JS::MagicValue;
 using JS::ObjectValue;
 using JS::Rooted;
 using JS::Value;
 
+using js::ExtraValueFromHandler;
 using js::GetErrorMessage;
 using js::NewHandler;
+using js::NewHandlerWithExtraValue;
 using js::PipeToState;
 using js::PromiseObject;
 using js::ReadableStream;
@@ -96,6 +100,35 @@ static WritableStream* GetUnwrappedDest(JSContext* cx,
 static bool WritableAndNotClosing(const WritableStream* unwrappedDest) {
   return unwrappedDest->writable() &&
          WritableStreamCloseQueuedOrInFlight(unwrappedDest);
+}
+
+static MOZ_MUST_USE bool Finalize(JSContext* cx, Handle<PipeToState*> state,
+                                  Handle<Maybe<Value>> error) {
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
+                            "finalize with optional error");
+  return false;
+}
+
+static MOZ_MUST_USE bool Finalize(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
+  cx->check(state);
+
+  Rooted<Maybe<Value>> optionalError(cx, Nothing());
+  if (Value maybeError = ExtraValueFromHandler(args);
+      !maybeError.isMagic(JS_READABLESTREAM_PIPETO_FINALIZE_WITHOUT_ERROR)) {
+    optionalError = Some(maybeError);
+  }
+  cx->check(optionalError);
+
+  if (!Finalize(cx, state, optionalError)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
 }
 
 // Shutdown with an action: if any of the above requirements ask to shutdown
@@ -163,17 +196,36 @@ static MOZ_MUST_USE bool Shutdown(JSContext* cx, Handle<PipeToState*> state,
   if (WritableAndNotClosing(unwrappedDest)) {
     // Step c.i:  If any chunks have been read but not yet written, write them
     //            to dest.
+    //
+    // Any chunk that has been read, will have been processed and a pending
+    // write for it created by this point.  (A pending read has not been "read".
+    // And any pending read, will not be processed into a pending write because
+    // of the |state->setShuttingDown()| above in concert with the early exit
+    // in this case in |ReadFulfilled|.)
+
     // Step c.ii: Wait until every chunk that has been read has been written
     //            (i.e. the corresponding promises have settled).
+    if (PromiseObject* p = state->lastWriteRequest()) {
+      Rooted<PromiseObject*> lastWriteRequest(cx, p);
+
+      Rooted<Value> optionalError(
+          cx,
+          error.isSome()
+              ? *error.get()
+              : MagicValue(JS_READABLESTREAM_PIPETO_FINALIZE_WITHOUT_ERROR));
+
+      Rooted<JSFunction*> finalize(
+          cx, NewHandlerWithExtraValue(cx, Finalize, state, optionalError));
+      if (!finalize) {
+        return false;
+      }
+
+      return JS::AddPromiseReactions(cx, lastWriteRequest, finalize, finalize);
+    }
   }
 
   // Step d: Finalize, passing along error if it was given.
-
-  // XXX fill me in!
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
-                            "pipeTo shutdown");
-  return false;
+  return Finalize(cx, state, error);
 }
 
 /**
@@ -190,6 +242,37 @@ static MOZ_MUST_USE bool OnSourceErrored(
   if (!cx->compartment()->wrap(cx, &storedError)) {
     return false;
   }
+
+  // If |source| becomes errored not during a pending read, it's clear we must
+  // react immediately.
+  //
+  // But what if |source| becomes errored *during* a pending read?  Should this
+  // first error, or the pending-read second error, predominate?  Two semantics
+  // are possible when |source|/|dest| become closed or errored while there's a
+  // pending read:
+  //
+  //   1. Wait until the read fulfills or rejects, then respond to the
+  //      closure/error without regard to the read having fulfilled or rejected.
+  //      (This will simply not react to the read being rejected, or it will
+  //      queue up the read chunk to be written during shutdown.)
+  //   2. React to the closure/error immediately per "Error and close states
+  //      must be propagated".  Then when the read fulfills or rejects later, do
+  //      nothing.
+  //
+  // The spec doesn't clearly require either semantics.  It requires that
+  // *already-read* chunks be written (at least if |dest| didn't become errored
+  // or closed such that no further writes can occur).  But it's silent as to
+  // not-fully-read chunks.  (These semantic differences may only be observable
+  // with very carefully constructed readable/writable streams.)
+  //
+  // It seems best, generally, to react to the temporally-earliest problem that
+  // arises, so we implement option #2.  (Blink, in contrast, currently
+  // implements option #1.)
+  //
+  // All specified reactions to a closure/error invoke either the shutdown, or
+  // shutdown with an action, algorithms.  Those algorithms each abort if either
+  // shutdown algorithm has already been invoked.  So we don't need to do
+  // anything special here to deal with a pending read.
 
   // ii. Otherwise (if preventAbort is true), shutdown with
   //     source.[[storedError]].
@@ -225,6 +308,14 @@ static MOZ_MUST_USE bool OnDestErrored(JSContext* cx,
     return false;
   }
 
+  // As in |OnSourceErrored| above, we must deal with the case of |dest|
+  // erroring before a pending read has fulfilled or rejected.
+  //
+  // As noted there, we handle the *first* error that arises.  And because this
+  // algorithm immediately invokes a shutdown algorithm, and shutting down will
+  // inhibit future shutdown attempts, we don't need to do anything special
+  // *here*, either.
+
   // ii. Otherwise (if preventCancel is true), shutdown with
   //     dest.[[storedError]].
   if (state->preventCancel()) {
@@ -254,6 +345,13 @@ static MOZ_MUST_USE bool OnSourceClosed(JSContext* cx,
   cx->check(state);
 
   Rooted<Maybe<Value>> noError(cx, Nothing());
+
+  // It shouldn't be possible for |source| to become closed *during* a pending
+  // read: such spontaneous closure *should* be enqueued for processing *after*
+  // the settling of the pending read.  (Note also that a [[closedPromise]]
+  // resolution in |ReadableStreamClose| occurs only after all pending reads are
+  // resolved.)  So we need not do anything to handle a source closure while a
+  // read is in progress.
 
   // ii. Otherwise (if preventClose is true), shutdown.
   if (state->preventClose()) {
@@ -306,6 +404,18 @@ static MOZ_MUST_USE bool OnDestClosed(JSContext* cx,
 
     destClosed = Some(v.get());
   }
+
+  // As in all the |On{Source,Dest}{Closed,Errored}| above, we must consider the
+  // possibility that we're in the middle of a pending read.  |state->writer()|
+  // has a lock on |dest| here, so we know only we can be writing chunks to
+  // |dest| -- but there's no reason why |dest| couldn't become closed of its
+  // own accord here (for example, a socket might become closed on its own), and
+  // such closure may or may not be equivalent to error.
+  //
+  // For the reasons noted in |OnSourceErrored|, we process closure in the
+  // middle of a pending read immediately, without delaying for that read to
+  // fulfill or reject.  We trigger a shutdown operation below, which will
+  // ensure shutdown only occurs once, so we need not do anything special here.
 
   // iv. Otherwise (if preventCancel is true), shutdown with destClosed.
   if (state->preventCancel()) {
@@ -460,10 +570,26 @@ static bool ReadFulfilled(JSContext* cx, Handle<PipeToState*> state,
 
   state->clearPendingRead();
 
-  // In general, "Shutdown must stop activity: if shuttingDown becomes true, the
-  // user agent must not initiate further reads from reader, and must only
-  // perform writes of already-read chunks".  But we "perform writes of already-
-  // read chunks" here, so we ignore |state->shuttingDown()|.
+  // "Shutdown must stop activity: if shuttingDown becomes true, the user agent
+  // must not initiate further reads from reader, and must only perform writes
+  // of already-read chunks".
+  //
+  // We may reach this point after |On{Source,Dest}{Clos,Error}ed| has responded
+  // to an out-of-band change.  Per the comment in |OnSourceErrored|, we want to
+  // allow the implicated shutdown to proceed, and we don't want to interfere
+  // with or additionally alter its operation.  Particularly, we don't want to
+  // queue up the successfully-read chunk (if there was one, and this isn't just
+  // reporting "done") to be written: it wasn't "already-read" when that
+  // error/closure happened.
+  //
+  // All specified reactions to a closure/error invoke either the shutdown, or
+  // shutdown with an action, algorithms.  Those algorithms each abort if either
+  // shutdown algorithm has already been invoked.  So we check for shutdown here
+  // in case of asynchronous closure/error and abort if shutdown has already
+  // started (and possibly finished).
+  if (state->shuttingDown()) {
+    return true;
+  }
 
   {
     bool done;
