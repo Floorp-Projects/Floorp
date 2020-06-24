@@ -699,8 +699,9 @@ class SSLTunnel:
         """ Starts the SSL Tunnel """
 
         # start ssltunnel to provide https:// URLs capability
-        bin_suffix = mozinfo.info.get('bin_suffix', '')
-        ssltunnel = os.path.join(self.utilityPath, "ssltunnel" + bin_suffix)
+        ssltunnel = os.path.join(self.utilityPath, "ssltunnel")
+        if os.name == 'nt':
+            ssltunnel += '.exe'
         if not os.path.exists(ssltunnel):
             self.log.error(
                 "INFO | runtests.py | expected to find ssltunnel at %s" %
