@@ -237,10 +237,10 @@ pub struct AlphaBatchList {
 }
 
 impl AlphaBatchList {
-    fn new(break_advanced_blend_batches: bool) -> Self {
+    fn new(break_advanced_blend_batches: bool, preallocate: usize) -> Self {
         AlphaBatchList {
-            batches: Vec::new(),
-            batch_rects: Vec::new(),
+            batches: Vec::with_capacity(preallocate),
+            batch_rects: Vec::with_capacity(preallocate),
             current_z_id: ZBufferId::invalid(),
             current_batch_index: usize::MAX,
             break_advanced_blend_batches,
@@ -564,13 +564,14 @@ impl AlphaBatchBuilder {
         render_task_id: RenderTaskId,
         render_task_address: RenderTaskAddress,
         vis_mask: PrimitiveVisibilityMask,
+        preallocate: usize,
     ) -> Self {
         // The threshold for creating a new batch is
         // one quarter the screen size.
         let batch_area_threshold = (screen_size.width * screen_size.height) as f32 / 4.0;
 
         AlphaBatchBuilder {
-            alpha_batch_list: AlphaBatchList::new(break_advanced_blend_batches),
+            alpha_batch_list: AlphaBatchList::new(break_advanced_blend_batches, preallocate),
             opaque_batch_list: OpaqueBatchList::new(batch_area_threshold, lookback_count),
             render_task_id,
             render_task_address,
