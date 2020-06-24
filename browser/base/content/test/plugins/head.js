@@ -296,8 +296,7 @@ let JSONBlocklistWrapper = {
       }
       await blocklistObj.ensureInitialized();
       let db = await blocklistObj._client.db;
-      await db.clear();
-      await db.importBulk(newData);
+      await db.importChanges({}, 42, newData, { clear: true });
       // We manually call _onUpdate... which is evil, but at the moment kinto doesn't have
       // a better abstraction unless you want to mock your own http server to do the update.
       await blocklistObj._onUpdate();
