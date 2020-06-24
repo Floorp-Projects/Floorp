@@ -70,6 +70,7 @@ class AccessibilityProxy {
     this.onAccessibleWalkerFrontDestroyed = this.onAccessibleWalkerFrontDestroyed.bind(
       this
     );
+    this.unhighlightBeforeCalling = this.unhighlightBeforeCalling.bind(this);
   }
 
   get enabled() {
@@ -201,6 +202,27 @@ class AccessibilityProxy {
   }
 
   /**
+   * Unhighlight previous accessible object if we switched between processes and
+   * call the appropriate event handler.
+   */
+  unhighlightBeforeCalling(listener) {
+    return async accessible => {
+      if (accessible) {
+        const accessibleWalkerFront = accessible.getParent();
+        if (this._currentAccessibleWalkerFront !== accessibleWalkerFront) {
+          if (this._currentAccessibleWalkerFront) {
+            await this._currentAccessibleWalkerFront.unhighlight();
+          }
+
+          this._currentAccessibleWalkerFront = accessibleWalkerFront;
+        }
+      }
+
+      await listener(accessible);
+    };
+  }
+
+  /**
    * Start picking and add walker listeners.
    * @param  {Boolean} doFocus
    *         If true, move keyboard focus into content.
@@ -210,10 +232,16 @@ class AccessibilityProxy {
       async accessibleWalkerFront => {
         this.startListening(accessibleWalkerFront, {
           events: {
-            "picker-accessible-hovered": onHovered,
-            "picker-accessible-picked": onPicked,
-            "picker-accessible-previewed": onPreviewed,
-            "picker-accessible-canceled": onCanceled,
+            "picker-accessible-hovered": this.unhighlightBeforeCalling(
+              onHovered
+            ),
+            "picker-accessible-picked": this.unhighlightBeforeCalling(onPicked),
+            "picker-accessible-previewed": this.unhighlightBeforeCalling(
+              onPreviewed
+            ),
+            "picker-accessible-canceled": this.unhighlightBeforeCalling(
+              onCanceled
+            ),
           },
           // Only register listeners once (for top level), no need to register
           // them for all walkers again and again.
@@ -230,16 +258,17 @@ class AccessibilityProxy {
   /**
    * Stop picking and remove all walker listeners.
    */
-  cancelPick(onHovered, onPicked, onPreviewed, onCanceled) {
+  async cancelPick() {
+    this._currentAccessibleWalkerFront = null;
     return this.withAllAccessibilityWalkerFronts(
       async accessibleWalkerFront => {
         await accessibleWalkerFront.cancelPick();
         this.stopListening(accessibleWalkerFront, {
           events: {
-            "picker-accessible-hovered": onHovered,
-            "picker-accessible-picked": onPicked,
-            "picker-accessible-previewed": onPreviewed,
-            "picker-accessible-canceled": onCanceled,
+            "picker-accessible-hovered": null,
+            "picker-accessible-picked": null,
+            "picker-accessible-previewed": null,
+            "picker-accessible-canceled": null,
           },
           // Only unregister listeners once (for top level), no need to
           // unregister them for all walkers again and again.
@@ -447,6 +476,11 @@ class AccessibilityProxy {
   unregisterEvent(front, type, listener) {
     const events = this._getEvents(front);
     if (!events.has(type)) {
+      return;
+    }
+
+    if (!listener) {
+      events.delete(type);
       return;
     }
 

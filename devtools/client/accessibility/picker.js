@@ -142,13 +142,7 @@ class Picker {
     this.isPicking = false;
     this.pickerButton.isChecked = false;
 
-    await this.accessibilityProxy.cancelPick(
-      this.onPickerAccessibleHovered,
-      this.onPickerAccessiblePicked,
-      this.onPickerAccessiblePreviewed,
-      this.onPickerAccessibleCanceled
-    );
-
+    await this.accessibilityProxy.cancelPick();
     this._telemetry.toolClosed(
       "accessibility_picker",
       this.toolbox.sessionId,
