@@ -26,7 +26,7 @@ runHeuristicsTest(
               section: "",
               addressType: "",
               contactType: "",
-              fieldName: "address-line1",
+              fieldName: "street-address",
             },
             {
               section: "",
@@ -106,7 +106,7 @@ runHeuristicsTest(
               section: "",
               addressType: "",
               contactType: "",
-              fieldName: "address-line1",
+              fieldName: "street-address",
             },
             {
               section: "",
