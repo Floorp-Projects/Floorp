@@ -14,9 +14,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Export experiments proguard rules even in debug since consuming apps may still
+            // enable proguard/R8
+            consumerProguardFiles 'proguard-rules-consumer.pro'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'proguard-rules-consumer.pro'
         }
     }
 }

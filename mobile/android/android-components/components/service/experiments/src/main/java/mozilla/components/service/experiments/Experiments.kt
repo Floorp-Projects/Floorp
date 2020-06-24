@@ -306,6 +306,10 @@ open class ExperimentsInternalAPI internal constructor() {
             activeExperiment = it
             Glean.setExperimentActive(it.experiment.id, it.branch)
         }
+
+        // Invoke the callback provided to `initialize()` to report updated experiment status to
+        // the consuming application.
+        experimentsUpdatedCallback?.invoke()
     }
 
     /**
