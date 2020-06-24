@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<video id="video" src="gizmo.mp4" loop></video>
+<script type="text/javascript">
+
+const video = document.getElementById("video");
+const w = window.opener || window.parent;
+
+window.onmessage = event => {
+  if (event.data == "fullscreen") {
+    video.requestFullscreen();
+    video.onfullscreenchange = () => {
+      video.onfullscreenchange = null;
+      video.onfullscreenerror = null;
+      w.postMessage("entered-fullscreen", "*");
+    }
+    video.onfullscreenerror = () => {
+      // Retry until the element successfully enters fullscreen.
+      video.requestFullscreen();
+    }
+  }
+}
+
+</script>
+</body>
+</html>
