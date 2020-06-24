@@ -70,9 +70,11 @@ class IMediaController {
 class MediaController final : public DOMEventTargetHelper,
                               public IMediaController,
                               public LinkedListElement<RefPtr<MediaController>>,
-                              public MediaStatusManager {
+                              public MediaStatusManager,
+                              public nsITimerCallback {
  public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSITIMERCALLBACK
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaController,
                                                          DOMEventTargetHelper)
   explicit MediaController(uint64_t aBrowsingContextId);
@@ -139,6 +141,8 @@ class MediaController final : public DOMEventTargetHelper,
   bool ShouldActivateController() const;
   bool ShouldDeactivateController() const;
 
+  void UpdateDeactivationTimerIfNeeded();
+
   bool mIsRegisteredToService = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;
@@ -150,6 +154,9 @@ class MediaController final : public DOMEventTargetHelper,
   // Use copyable array so that we can use the result as a parameter for the
   // media event.
   CopyableTArray<MediaControlKey> mSupportedKeys;
+  // Timer to deactivate the controller if the time of being paused exceeds the
+  // threshold of time.
+  nsCOMPtr<nsITimer> mDeactivationTimer;
 };
 
 }  // namespace dom
