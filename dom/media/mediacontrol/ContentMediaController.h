@@ -69,6 +69,8 @@ class ContentMediaAgent : public IMediaInfoUpdater {
                     MediaSessionAction aAction) override;
   void DisableAction(uint64_t aBrowsingContextId,
                      MediaSessionAction aAction) override;
+  void NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
+                                  bool aIsInFullScreen) override;
 
   // Use these methods to register/unregister `ContentMediaControlKeyReceiver`
   // in order to listen to media control key events.

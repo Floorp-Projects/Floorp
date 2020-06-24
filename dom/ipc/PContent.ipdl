@@ -1577,6 +1577,14 @@ parent:
         bool aEnabled);
 
     /**
+     * This method is used to notify the media controller in chrome process that
+     * the media element in the browsing context entered fullscreen.
+     */
+    async NotifyMediaFullScreenState(
+        MaybeDiscardedBrowsingContext aContext,
+        bool aIsInFullScreen);
+
+    /**
      * Due to sandboxing, a child process's UntrustedModulesProcessor cannot
      * obtain enough information about a DLL file to determine its
      * trustworthiness. This API asks the chrome process to perform that
