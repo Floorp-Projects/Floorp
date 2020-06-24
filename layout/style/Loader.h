@@ -64,6 +64,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
       : mURI(aKey->mURI),
         mPrincipal(aKey->mPrincipal),
         mLoaderPrincipal(aKey->mLoaderPrincipal),
+        mPartitionPrincipal(aKey->mPartitionPrincipal),
         mEncodingGuess(aKey->mEncodingGuess),
         mCORSMode(aKey->mCORSMode),
         mParsingMode(aKey->mParsingMode),
@@ -75,6 +76,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
 
   SheetLoadDataHashKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
                        nsIPrincipal* aLoaderPrincipal,
+                       nsIPrincipal* aPartitionPrincipal,
                        NotNull<const Encoding*> aEncodingGuess,
                        CORSMode aCORSMode, css::SheetParsingMode aParsingMode,
                        nsCompatibility aCompatMode,
@@ -83,6 +85,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
       : mURI(aURI),
         mPrincipal(aPrincipal),
         mLoaderPrincipal(aLoaderPrincipal),
+        mPartitionPrincipal(aPartitionPrincipal),
         mEncodingGuess(aEncodingGuess),
         mCORSMode(aCORSMode),
         mParsingMode(aParsingMode),
@@ -99,6 +102,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
       : mURI(std::move(toMove.mURI)),
         mPrincipal(std::move(toMove.mPrincipal)),
         mLoaderPrincipal(std::move(toMove.mLoaderPrincipal)),
+        mPartitionPrincipal(std::move(toMove.mPartitionPrincipal)),
         mEncodingGuess(std::move(toMove.mEncodingGuess)),
         mCORSMode(std::move(toMove.mCORSMode)),
         mParsingMode(std::move(toMove.mParsingMode)),
@@ -143,6 +147,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
   const nsCOMPtr<nsIURI> mURI;
   const nsCOMPtr<nsIPrincipal> mPrincipal;
   const nsCOMPtr<nsIPrincipal> mLoaderPrincipal;
+  const nsCOMPtr<nsIPrincipal> mPartitionPrincipal;
   // The encoding guess is the encoding the sheet would get if the request
   // didn't have any encoding information like @charset or a Content-Encoding
   // header.
@@ -441,6 +446,10 @@ class Loader final {
   // The loader principal is the document's node principal, if this loader is
   // owned by a document, or the system principal otherwise.
   nsIPrincipal* LoaderPrincipal() const;
+
+  // The partitioned principal is the document's partitioned principal, if this
+  // loader is owned by a document, or the system principal otherwise.
+  nsIPrincipal* PartitionedPrincipal() const;
 
   bool ShouldBypassCache() const;
 
