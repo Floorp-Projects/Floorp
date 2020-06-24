@@ -940,16 +940,6 @@ class nsIWidget : public nsISupports {
   }
 
   /**
-   * Get the size of the bounds of this widget that will be visible when
-   * rendered.
-   *
-   * @return the width and height of the composition size of this widget.
-   */
-  virtual LayoutDeviceIntSize GetCompositionSize() {
-    return GetBounds().Size();
-  }
-
-  /**
    * Set the background color for this widget
    *
    * @param aColor the new background color
