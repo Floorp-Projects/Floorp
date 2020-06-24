@@ -239,7 +239,6 @@ avoid-blacklist-and-whitelist:
         - dom/tests/mochitest/dom-level0/idn_child.html
         - dom/tests/mochitest/dom-level0/test_setting_document.domain_idn.html
         - dom/tests/mochitest/whatwg/test_postMessage_origin.xhtml
-        - gfx/config/gfxConfigManager.cpp
         - gfx/gl/GLContextProviderWGL.cpp
         - gfx/gl/GLUploadHelpers.cpp
         - gfx/ipc/GPUProcessManager.cpp
@@ -247,7 +246,6 @@ avoid-blacklist-and-whitelist:
         - gfx/tests/mochitest/test_font_whitelist.html
         - gfx/thebes/gfxDWriteFontList.cpp
         - gfx/thebes/gfxFcPlatformFontList.cpp
-        - gfx/thebes/gfxFontEntry.h
         - gfx/thebes/gfxFT2FontList.cpp
         - gfx/thebes/gfxPlatform.cpp
         - gfx/thebes/gfxPlatformFontList.cpp
@@ -561,7 +559,6 @@ avoid-blacklist-and-whitelist:
         - uriloader/prefetch/nsOfflineCacheUpdate.cpp
         - widget/android/GfxInfo.cpp
         - widget/GfxInfoBase.cpp
-        - widget/GfxInfoBase.h
         - widget/gtk/IMContextWrapper.cpp
         - widget/gtk/nsAppShell.cpp
         - widget/windows/GfxInfo.cpp
