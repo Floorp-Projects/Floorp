@@ -262,3 +262,22 @@ add_task(async function test_setup_trackingprotection() {
 add_task(async function test_trackingprotection() {
   checkPermission("allow.com", "ALLOW", "trackingprotection");
 });
+
+// This seems a little out of place, but it's really a cookie
+// permission, not cookies per say.
+add_task(async function test_cookie_allow_session() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      Cookies: {
+        AllowSession: ["https://allowsession.example.com"],
+      },
+    },
+  });
+  equal(
+    PermissionTestUtils.testPermission(
+      URI("https://allowsession.example.com"),
+      "cookie"
+    ),
+    Ci.nsICookiePermission.ACCESS_SESSION
+  );
+});
