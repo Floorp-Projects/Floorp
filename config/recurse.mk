@@ -169,10 +169,10 @@ widget/android/bindings/export: mobile/android/base/export
 widget/android/export: mobile/android/base/export
 
 # CSS2Properties.webidl needs ServoCSSPropList.py from layout/style
-dom/bindings/export: layout/style/ServoCSSPropList.py
+dom/bindings/export: layout/style/export
 
 # Various telemetry histogram files need ServoCSSPropList.py from layout/style
-toolkit/components/telemetry/export: layout/style/ServoCSSPropList.py
+toolkit/components/telemetry/export: layout/style/export
 
 # The update agent needs to link to the updatecommon library, but the build system does not
 # currently have a good way of expressing this dependency.
