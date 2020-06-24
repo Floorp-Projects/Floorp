@@ -6,6 +6,7 @@
 
 use crate::metrics::CommonMetricData;
 use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Mutex;
 #[cfg(feature = "with_gecko")]
@@ -16,13 +17,13 @@ use {
 
 /// Contains all the information necessary to update the metrics on the main
 /// process.
-#[derive(Debug)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct IPCPayload {
     pub counters: HashMap<MetricId, i32>,
 }
 
 /// Uniquely identifies a single metric within its metric type.
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize, Serialize)]
 pub struct MetricId {
     category: String,
     name: String,
@@ -75,4 +76,22 @@ pub fn need_ipc() -> bool {
 #[cfg(not(feature = "with_gecko"))]
 pub fn need_ipc() -> bool {
     false
+}
+
+pub fn take_buf() -> Option<Vec<u8>> {
+    with_ipc_payload(move |payload| {
+        let buf = bincode::serialize(&payload).ok();
+        *payload = IPCPayload {
+            ..Default::default()
+        };
+        buf
+    })
+}
+
+pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
+    let ipc_payload: IPCPayload = bincode::deserialize(buf).map_err(|_| ())?;
+    for (id, value) in ipc_payload.counters.iter() {
+        log::info!("Asked to replay {:?}, {:?}", id, value);
+    }
+    Ok(())
 }
