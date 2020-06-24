@@ -41,6 +41,10 @@
         async win => {
           info("Window opened, waiting for load event");
           await BrowserTestUtils.waitForEvent(win, "load");
+          if (win.location && win.location.href == "about:blank") {
+            info("Loaded about:blank, waiting for real load event");
+            await BrowserTestUtils.waitForEvent(win, "load");
+          }
           info("Window loaded, checking if download prompt");
           return win.location &&
             win.location.href == "chrome://mozapps/content/downloads/unknownContentType.xhtml";
