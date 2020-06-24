@@ -107,17 +107,17 @@ class nsStandardURL : public nsIFileURL,
     explicit nsSegmentEncoder(const Encoding* encoding = nullptr);
 
     // Encode the given segment if necessary, and return the length of
-    // the encoded segment.  The encoded segment is appended to |buf|
+    // the encoded segment.  The encoded segment is appended to |aOut|
     // if and only if encoding is required.
-    int32_t EncodeSegmentCount(const char* str, const URLSegment& segment,
-                               int16_t mask, nsCString& buf, bool& appended,
+    int32_t EncodeSegmentCount(const char* str, const URLSegment& aSeg,
+                               int16_t mask, nsCString& aOut, bool& appended,
                                uint32_t extraLen = 0);
 
     // Encode the given string if necessary, and return a reference to
-    // the encoded string.  Returns a reference to |buf| if encoding
+    // the encoded string.  Returns a reference to |result| if encoding
     // is required.  Otherwise, a reference to |str| is returned.
     const nsACString& EncodeSegment(const nsACString& str, int16_t mask,
-                                    nsCString& buf);
+                                    nsCString& result);
 
    private:
     const Encoding* mEncoding;
@@ -139,7 +139,7 @@ class nsStandardURL : public nsIFileURL,
 
   // Helper to share code between Clone methods.
   nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
-                         const nsACString& newRef, nsIURI** aClone);
+                         const nsACString& aNewRef, nsIURI** aClone);
   // Helper method that copies member variables from the source StandardURL
   // if copyCached = true, it will also copy mFile and mDisplayHost
   nsresult CopyMembers(nsStandardURL* source, RefHandlingEnum mode,
@@ -185,7 +185,7 @@ class nsStandardURL : public nsIFileURL,
   void Clear();
   void InvalidateCache(bool invalidateCachedFile = true);
 
-  bool ValidIPv6orHostname(const char* host, uint32_t aLen);
+  bool ValidIPv6orHostname(const char* host, uint32_t length);
   static bool IsValidOfBase(unsigned char c, const uint32_t base);
   nsresult NormalizeIDN(const nsACString& host, nsCString& result);
   nsresult CheckIfHostIsAscii();
@@ -201,12 +201,12 @@ class nsStandardURL : public nsIFileURL,
   nsresult SetSpecWithEncoding(const nsACString& input,
                                const Encoding* encoding);
 
-  bool SegmentIs(const URLSegment& s1, const char* val,
+  bool SegmentIs(const URLSegment& seg, const char* val,
                  bool ignoreCase = false);
-  bool SegmentIs(const char* spec, const URLSegment& s1, const char* val,
+  bool SegmentIs(const char* spec, const URLSegment& seg, const char* val,
                  bool ignoreCase = false);
-  bool SegmentIs(const URLSegment& s1, const char* val, const URLSegment& s2,
-                 bool ignoreCase = false);
+  bool SegmentIs(const URLSegment& seg1, const char* val,
+                 const URLSegment& seg2, bool ignoreCase = false);
 
   int32_t ReplaceSegment(uint32_t pos, uint32_t len, const char* val,
                          uint32_t valLen);
