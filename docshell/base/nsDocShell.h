@@ -436,6 +436,13 @@ class nsDocShell final : public nsDocLoader,
       nsLoadFlags aLoadFlags, uint32_t aCacheKey, nsresult& rv,
       nsIChannel** aChannel);
 
+  static already_AddRefed<nsIURI> AttemptURIFixup(
+      nsIChannel* aChannel, nsresult aStatus,
+      const mozilla::Maybe<nsCString>& aOriginalURIString, uint32_t aLoadType,
+      bool aIsTopFrame, bool aAllowKeywordFixup, bool aUsePrivateBrowsing,
+      bool aNotifyKeywordSearchLoading = false,
+      nsIInputStream** aNewPostData = nullptr);
+
   // Notify consumers of a search being loaded through the observer service:
   static void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
                                               const nsString& aKeyword);
@@ -740,9 +747,9 @@ class nsDocShell final : public nsDocLoader,
       uint32_t aResponseStatus, mozilla::dom::BrowsingContext* aBrowsingContext,
       nsIWidget* aWidget, uint32_t aLoadType);
 
-  already_AddRefed<nsIURIFixupInfo> KeywordToURI(const nsACString& aKeyword,
-                                                 bool aIsPrivateContext,
-                                                 nsIInputStream** aPostData);
+  static already_AddRefed<nsIURIFixupInfo> KeywordToURI(
+      const nsACString& aKeyword, bool aIsPrivateContext,
+      nsIInputStream** aPostData);
 
   // Sets the current document's current state object to the given SHEntry's
   // state object. The current state object is eventually given to the page
