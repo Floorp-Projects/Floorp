@@ -304,6 +304,7 @@ class AudioStream final
 
   template <typename Function, typename... Args>
   int InvokeCubeb(Function aFunction, Args&&... aArgs);
+  bool CheckThreadIdChanged();
 
   // The monitor is held to protect all access to member variables.
   Monitor mMonitor;
@@ -337,6 +338,9 @@ class AudioStream final
   // the default device is used. It is set
   // during the Init() in decoder thread.
   RefPtr<AudioDeviceInfo> mSinkInfo;
+  /* Contains the id of the audio thread, from profiler_get_thread_id. */
+  std::atomic<int> mAudioThreadId;
+  const bool mSandboxed = false;
 };
 
 }  // namespace mozilla
