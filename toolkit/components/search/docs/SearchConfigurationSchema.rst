@@ -2,10 +2,6 @@
 Search Configuration Schema
 ===========================
 
-.. note::
-    This configuration is currently under testing for nightly builds only, see
-    `Bug 1542235`_ for more status information.
-
 This document outlines the details of the schema and how the various sub-parts
 interact. For the full fields and descriptions, please see the `schema itself`_.
 
@@ -488,6 +484,5 @@ Example:
 
 This would result in the order: ``engine2@ext, engine1@ext, engine3@ext``.
 
-.. _Bug 1542235: https://bugzilla.mozilla.org/show_bug.cgi?id=1542235
 .. _schema itself: https://searchfox.org/mozilla-central/source/toolkit/components/search/schema/
 .. _the version comparator: https://developer.mozilla.org/en-US/docs/Mozilla/Toolkit_version_format
