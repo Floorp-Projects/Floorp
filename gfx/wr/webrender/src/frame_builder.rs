@@ -13,6 +13,7 @@ use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, SavedTargetIndex};
+use crate::prepare::prepare_primitives;
 use crate::picture::{PictureUpdateState, ROOT_SURFACE_INDEX, SurfaceIndex, RecordedDirtyRegion};
 use crate::picture::{RetainedTiles, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
 use crate::picture::{BackdropKind, TileCacheLogger, SurfaceInfo};
@@ -432,7 +433,8 @@ impl FrameBuilder {
         {
             profile_marker!("PreparePrims");
 
-            scene.prim_store.prepare_primitives(
+            prepare_primitives(
+                &mut scene.prim_store,
                 &mut prim_list,
                 &pic_context,
                 &mut pic_state,
