@@ -3518,6 +3518,29 @@ NS_IMETHODIMP BrowserChild::OnStateChange(nsIWebProgress* aWebProgress,
   MOZ_TRY(PrepareProgressListenerData(aWebProgress, aRequest, webProgressData,
                                       requestData));
 
+  /*
+   * If
+   * 1) this is a document,
+   * 2) the document is top-level,
+   * 3) the document is completely loaded (STATE_STOP), and
+   * 4) this is the end of activity for the document
+   *    (STATE_IS_WINDOW, STATE_IS_NETWORK),
+   * then record the elapsed time that it took to load.
+   */
+  if (document && webProgressData->isTopLevel() &&
+      (aStateFlags & nsIWebProgressListener::STATE_STOP) &&
+      (aStateFlags & nsIWebProgressListener::STATE_IS_WINDOW) &&
+      (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)) {
+    RefPtr<nsDOMNavigationTiming> navigationTiming =
+        document->GetNavigationTiming();
+    if (navigationTiming) {
+      TimeDuration elapsedLoadTimeMS =
+          TimeStamp::Now() - navigationTiming->GetNavigationStartTimeStamp();
+      requestData.elapsedLoadTimeMS() =
+          Some(elapsedLoadTimeMS.ToMilliseconds());
+    }
+  }
+
   if (webProgressData->isTopLevel()) {
     stateChangeData.emplace();
 
@@ -3747,6 +3770,17 @@ nsresult BrowserChild::PrepareProgressListenerData(
     rv = aWebProgress->GetLoadType(&loadType);
     NS_ENSURE_SUCCESS(rv, rv);
     aWebProgressData->loadType() = loadType;
+
+    uint64_t outerDOMWindowID = 0;
+    uint64_t innerDOMWindowID = 0;
+    // The DOM Window ID getters here may throw if the inner or outer windows
+    // aren't created yet or are destroyed at the time we're making this call
+    // but that isn't fatal so ignore the exceptions here.
+    Unused << aWebProgress->GetDOMWindowID(&outerDOMWindowID);
+    aWebProgressData->outerDOMWindowID() = outerDOMWindowID;
+
+    Unused << aWebProgress->GetInnerDOMWindowID(&innerDOMWindowID);
+    aWebProgressData->innerDOMWindowID() = innerDOMWindowID;
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);

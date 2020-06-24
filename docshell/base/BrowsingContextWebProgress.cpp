@@ -47,6 +47,16 @@ NS_IMETHODIMP BrowsingContextWebProgress::GetDOMWindow(
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+NS_IMETHODIMP BrowsingContextWebProgress::GetDOMWindowID(
+    uint64_t* aDOMWindowID) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP BrowsingContextWebProgress::GetInnerDOMWindowID(
+    uint64_t* aInnerDOMWindowID) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 NS_IMETHODIMP BrowsingContextWebProgress::GetIsTopLevel(bool* aIsTopLevel) {
   *aIsTopLevel = true;
   return NS_OK;

@@ -177,6 +177,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   nsIChannel* GetChannel() const { return mChannel; }
 
+  already_AddRefed<nsIBrowser> GetBrowser();
+  already_AddRefed<nsIWebProgressListener> GetRemoteWebProgressListener(
+      nsIWebProgress** aWebProgress, nsIRequest** aRequest);
+
   uint32_t GetRedirectChannelId() const { return mRedirectChannelId; }
 
   nsresult ReportSecurityMessage(const nsAString& aMessageTag,
