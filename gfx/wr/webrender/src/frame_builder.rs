@@ -7,7 +7,7 @@ use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
-use crate::composite::{CompositorKind, CompositeState};
+use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
 use crate::debug_render::DebugItem;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
@@ -163,6 +163,8 @@ pub struct FrameBuilder {
     pub globals: FrameGlobalResources,
     #[cfg_attr(feature = "capture", serde(skip))]
     prim_headers_prealloc: Preallocator,
+    #[cfg_attr(feature = "capture", serde(skip))]
+    composite_state_prealloc: CompositeStatePreallocator,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -236,7 +238,8 @@ impl FrameBuilder {
         FrameBuilder {
             pending_retained_tiles: RetainedTiles::new(),
             globals: FrameGlobalResources::empty(),
-            prim_headers_prealloc: Preallocator::new(0)
+            prim_headers_prealloc: Preallocator::new(0),
+            composite_state_prealloc: CompositeStatePreallocator::default(),
         }
     }
 
@@ -582,6 +585,8 @@ impl FrameBuilder {
             scene.config.max_depth_ids,
         );
 
+        self.composite_state_prealloc.preallocate(&mut composite_state);
+
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
             scene,
             screen_world_rect,
@@ -672,6 +677,7 @@ impl FrameBuilder {
         resource_cache.end_frame(&mut resource_profile.texture_cache);
 
         self.prim_headers_prealloc.record_vec(&mut prim_headers.headers_int);
+        self.composite_state_prealloc.record(&composite_state);
 
         Frame {
             content_origin: scene.output_rect.origin,
