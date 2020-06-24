@@ -36,6 +36,7 @@
 #endif
 
 #include "MessagePump.h"
+#include "nsThreadUtils.h"
 
 using base::Time;
 using base::TimeDelta;
@@ -356,6 +357,7 @@ void MessageLoop::PostIdleTask(already_AddRefed<nsIRunnable> task) {
   MOZ_ASSERT(NS_IsMainThread());
 
   PendingTask pending_task(std::move(task), false);
+  mozilla::LogRunnable::LogDispatch(pending_task.task.get());
   deferred_non_nestable_work_queue_.push(std::move(pending_task));
 }
 
@@ -402,6 +404,7 @@ void MessageLoop::PostTask_Helper(already_AddRefed<nsIRunnable> task,
   RefPtr<base::MessagePump> pump;
   {
     mozilla::MutexAutoLock locked(incoming_queue_lock_);
+    mozilla::LogRunnable::LogDispatch(pending_task.task.get());
     incoming_queue_.push(std::move(pending_task));
     pump = pump_;
   }
@@ -439,6 +442,8 @@ void MessageLoop::RunTask(already_AddRefed<nsIRunnable> aTask) {
   nestable_tasks_allowed_ = false;
 
   nsCOMPtr<nsIRunnable> task = aTask;
+
+  mozilla::LogRunnable::Run log(task.get());
   task->Run();
   task = nullptr;
 
@@ -455,6 +460,7 @@ bool MessageLoop::DeferOrRunPendingTask(PendingTask&& pending_task) {
 
   // We couldn't run the task now because we're in a nested message loop
   // and the task isn't nestable.
+  mozilla::LogRunnable::LogDispatch(pending_task.task.get());
   deferred_non_nestable_work_queue_.push(std::move(pending_task));
   return false;
 }
@@ -466,6 +472,7 @@ void MessageLoop::AddToDelayedWorkQueue(const PendingTask& pending_task) {
   // delayed_run_time value.
   PendingTask new_pending_task(pending_task);
   new_pending_task.sequence_num = next_sequence_num_++;
+  mozilla::LogRunnable::LogDispatch(new_pending_task.task.get());
   delayed_work_queue_.push(std::move(new_pending_task));
 }
 
