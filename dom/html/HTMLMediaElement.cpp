@@ -2288,6 +2288,8 @@ void HTMLMediaElement::AbortExistingLoads() {
   // resume a paused media element.
   ClearResumeDelayedMediaPlaybackAgentIfNeeded();
 
+  StopListeningMediaControlKeyIfNeeded();
+
   // We may have changed mPaused, mAutoplaying, and other
   // things which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
@@ -4397,8 +4399,6 @@ void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
   UpdatePreloadAction();
   UpdateSrcMediaStreamPlaying();
 
-  StartListeningMediaControlKeyIfNeeded();
-
   // Once play() has been called in a user generated event handler,
   // it is allowed to autoplay. Note: we can reach here when not in
   // a user generated event handler if our readyState has not yet
@@ -5472,6 +5472,8 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     mDefaultPlaybackStartPosition = 0.0;
   }
 
+  StartListeningMediaControlKeyIfNeeded();
+
   mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
 }
 
@@ -6134,8 +6136,6 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
   AddRemoveSelfReference();
   UpdateSrcMediaStreamPlaying();
   UpdateAudioChannelPlayingState();
-
-  StartListeningMediaControlKeyIfNeeded();
 
   if (mDecoder) {
     SetPlayedOrSeeked(true);
@@ -7854,11 +7854,6 @@ void HTMLMediaElement::NotifyMediaControlPlaybackStateChanged() {
 }
 
 void HTMLMediaElement::StartListeningMediaControlKeyIfNeeded() {
-  if (mPaused) {
-    MEDIACONTROL_LOG("Not listening because media is paused");
-    return;
-  }
-
   // In order to filter out notification-ish sound, we use this pref to set the
   // eligible media duration to prevent showing media control for those short
   // sound.
@@ -7883,16 +7878,6 @@ void HTMLMediaElement::StartListeningMediaControlKeyIfNeeded() {
   // been playing for a while. Therefore, we have to manually update playback
   // state after starting listener.
   NotifyMediaControlPlaybackStateChanged();
-
-  // `UpdateMediaAudibleState()` could only be used after we start the listener,
-  // but the audible state update could happen before that. Therefore, we have
-  // to manually update media's audible state as well.
-  mMediaControlKeyListener->UpdateMediaAudibleState(IsAudible());
-
-  // Picture-in-Picture mode can be enabled before we start the listener so we
-  // manually update the status here in case not to forgot to propagate that.
-  mMediaControlKeyListener->SetPictureInPictureModeEnabled(
-      IsBeingUsedInPictureInPictureMode());
 }
 
 void HTMLMediaElement::StopListeningMediaControlKeyIfNeeded() {
