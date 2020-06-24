@@ -2,10 +2,6 @@
 Search Engine Configuration
 ===========================
 
-.. note::
-    This configuration is currently under testing for nightly and early beta
-    builds only, see `Bug 1542235`_ for more status information.
-
 The search engine configuration is a mapping that is used to determine the
 list of search engines for each user. The mapping is primarily based on the
 user's region and locale.
@@ -68,7 +64,6 @@ related. As a result several situations may occur:
       - When the WebExtension is delivered, the search engine will then be
         installed and added.
 
-.. _Bug 1542235: https://bugzilla.mozilla.org/show_bug.cgi?id=1542235
 .. _Remote Settings: /services/common/services/RemoteSettings.html
 .. _JSON schema: https://json-schema.org/
 .. _stored in mozilla-central: https://searchfox.org/mozilla-central/source/toolkit/components/search/schema/
