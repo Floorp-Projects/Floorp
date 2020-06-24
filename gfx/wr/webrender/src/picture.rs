@@ -3819,6 +3819,27 @@ impl TileCacheInstance {
     }
 }
 
+pub struct PictureUpdateStateBuffers {
+    surface_stack: Vec<SurfaceIndex>,
+    picture_stack: Vec<PictureInfo>,
+}
+
+impl Default for PictureUpdateStateBuffers {
+    fn default() -> Self {
+        PictureUpdateStateBuffers {
+            surface_stack: Vec::new(),
+            picture_stack: Vec::new(),
+        }
+    }
+}
+
+impl PictureUpdateStateBuffers {
+    pub fn memory_pressure(&mut self) {
+        self.surface_stack = Vec::new();
+        self.picture_stack = Vec::new();
+    }
+}
+
 /// Maintains a stack of picture and surface information, that
 /// is used during the initial picture traversal.
 pub struct PictureUpdateState<'a> {
@@ -3831,6 +3852,7 @@ pub struct PictureUpdateState<'a> {
 
 impl<'a> PictureUpdateState<'a> {
     pub fn update_all(
+        buffers: &mut PictureUpdateStateBuffers,
         surfaces: &'a mut Vec<SurfaceInfo>,
         pic_index: PictureIndex,
         picture_primitives: &mut [PicturePrimitive],
@@ -3845,11 +3867,13 @@ impl<'a> PictureUpdateState<'a> {
 
         let mut state = PictureUpdateState {
             surfaces,
-            surface_stack: vec![SurfaceIndex(0)],
-            picture_stack: Vec::new(),
+            surface_stack: buffers.surface_stack.take().cleared(),
+            picture_stack: buffers.picture_stack.take().cleared(),
             are_raster_roots_assigned: true,
             composite_state,
         };
+
+        state.surface_stack.push(SurfaceIndex(0));
 
         state.update(
             pic_index,
@@ -3867,6 +3891,9 @@ impl<'a> PictureUpdateState<'a> {
                 ROOT_SPATIAL_NODE_INDEX,
             );
         }
+
+        buffers.surface_stack = state.surface_stack.take();
+        buffers.picture_stack = state.picture_stack.take();
     }
 
     /// Return the current surface

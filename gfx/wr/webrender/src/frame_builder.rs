@@ -13,10 +13,10 @@ use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, SavedTargetIndex};
+use crate::picture::{DirtyRegion, RecordedDirtyRegion, PictureUpdateState, PictureUpdateStateBuffers};
+use crate::picture::{RetainedTiles, SurfaceRenderTasks, SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX};
+use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger};
 use crate::prepare::prepare_primitives;
-use crate::picture::{PictureUpdateState, ROOT_SURFACE_INDEX, SurfaceIndex, RecordedDirtyRegion};
-use crate::picture::{RetainedTiles, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
-use crate::picture::{BackdropKind, TileCacheLogger, SurfaceInfo};
 use crate::prim_store::{SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
 use crate::prim_store::{DeferredResolve};
 use crate::profiler::{FrameProfileCounters, TextureCacheProfileCounters, ResourceProfileCounters};
@@ -124,10 +124,13 @@ pub struct FrameBuilder {
     /// that can optionally be consumed by this frame builder.
     pending_retained_tiles: RetainedTiles,
     pub globals: FrameGlobalResources,
-    // A vector that is cleared and re-built each frame. We keep it
-    // here to avoid reallocations.
+
+    // A few data structures that are cleared and re-built each frame.
+    // We keep them here to avoid reallocations.
     #[cfg_attr(any(feature = "capture", feature = "replay"), serde(skip))]
     surfaces: Vec<SurfaceInfo>,
+    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(skip))]
+    picture_update_buffers: PictureUpdateStateBuffers,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -202,6 +205,7 @@ impl FrameBuilder {
             pending_retained_tiles: RetainedTiles::new(),
             globals: FrameGlobalResources::empty(),
             surfaces: Vec::new(),
+            picture_update_buffers: PictureUpdateStateBuffers::default(),
         }
     }
 
@@ -222,6 +226,7 @@ impl FrameBuilder {
 
     pub fn memory_pressure(&mut self) {
         self.surfaces = Vec::new();
+        self.picture_update_buffers.memory_pressure();
     }
 
     /// Compute the contribution (bounding rectangles, and resources) of layers and their
@@ -310,6 +315,7 @@ impl FrameBuilder {
         // which surfaces have valid cached surfaces that don't need to
         // be rendered this frame.
         PictureUpdateState::update_all(
+            &mut self.picture_update_buffers,
             &mut self.surfaces,
             scene.root_pic_index,
             &mut scene.prim_store.pictures,
