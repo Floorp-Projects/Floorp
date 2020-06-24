@@ -224,7 +224,6 @@ class StartupCache : public nsIMemoryReporter {
 
   Atomic<bool> mDirty;
   Atomic<bool> mWrittenOnce;
-  bool mStartupWriteInitiated;
   bool mCurTableReferenced;
   uint32_t mRequestedCount;
   size_t mCacheEntriesBaseOffset;
