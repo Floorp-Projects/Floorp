@@ -4713,12 +4713,7 @@ pref("devtools.errorconsole.deprecation_warnings", true);
 #endif
 
 pref("devtools.debugger.features.watchpoints", true);
-
-#ifdef NIGHTLY_BUILD
-  pref("devtools.debugger.features.windowless-service-workers", true);
-#else
-  pref("devtools.debugger.features.windowless-service-workers", false);
-#endif
+pref("devtools.debugger.features.windowless-service-workers", true);
 
 // Disable remote debugging protocol logging.
 pref("devtools.debugger.log", false);
