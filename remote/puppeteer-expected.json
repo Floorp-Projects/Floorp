@@ -1,66 +1,66 @@
 {
   "Accessibility should work (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility should report uninteresting nodes (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility roledescription (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility orientation (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility autocomplete (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility multiselectable (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility keyshortcuts (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes should not report text nodes inside controls (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes rich text editable fields should have children (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes rich text editable fields with role should have children (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes non editable textbox with role and tabIndex and label should not have children (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes checkbox with and tabIndex and label should not have children (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes checkbox without label should not have children (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes plaintext contenteditable plain text field with role should not have children (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes plaintext contenteditable plain text field without role should not have content (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes plaintext contenteditable plain text field with tabindex and without role should not have content (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes root option should work a button (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes root option should work an input (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes root option should work a menu (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes root option should return null when the element is no longer in DOM (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Accessibility filtering children of leaf nodes root option should support the interestingOnly option (accessibility.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Browser specs Browser.version should return whether we are in headless (browser.spec.js)": [
     "PASS"
@@ -522,7 +522,7 @@
     "PASS"
   ],
   "Fixtures dumpio option should work with pipe option  (fixtures.spec.js)": [
-    "TIMEOUT"
+    "SKIP"
   ],
   "Fixtures should dump browser process stderr (fixtures.spec.js)": [
     "PASS"
@@ -591,10 +591,61 @@
     "PASS", "FAIL"
   ],
   "input tests input should upload the file (input.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "input tests Page.waitForFileChooser should work when file input is attached to DOM (input.spec.js)": [
-    "TIMEOUT"
+    "SKIP"
+  ],
+  "input tests Page.waitForFileChooser should work when file input is not attached to DOM (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests Page.waitForFileChooser should respect timeout (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests Page.waitForFileChooser should respect default timeout when there is no custom timeout (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests Page.waitForFileChooser should prioritize exact timeout over default timeout (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests Page.waitForFileChooser should work with no timeout (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests Page.waitForFileChooser should return the same file chooser when there are many watchdogs simultaneously (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.accept should accept single file (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.accept should be able to read selected file (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.accept should be able to reset selected files with empty file list (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.accept should not accept multiple files for single-file input (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.accept should fail for non-existent files (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.accept should fail when accepting file chooser twice (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.cancel should cancel dialog (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.cancel should fail when canceling file chooser twice (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.isMultiple should work for single file pick (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.isMultiple should work for \"multiple\" (input.spec.js)": [
+    "SKIP"
+  ],
+  "input tests FileChooser.isMultiple should work for \"webkitdirectory\" (input.spec.js)": [
+    "SKIP"
   ],
   "JSHandle Page.evaluateHandle should work (jshandle.spec.js)": [
     "PASS"
@@ -713,6 +764,9 @@
   "Launcher specs Puppeteer BrowserFetcher should download and extract chrome linux binary (launcher.spec.js)": [
     "PASS"
   ],
+  "Launcher specs Puppeteer BrowserFetcher should download and extract firefox linux binary (launcher.spec.js)": [
+    "PASS"
+  ],
   "Launcher specs Puppeteer Browser.disconnect should reject navigation when browser closes (launcher.spec.js)": [
     "PASS"
   ],
@@ -771,10 +825,10 @@
     "SKIP"
   ],
   "Launcher specs Puppeteer Puppeteer.launch falls back to launching chrome if there is an unknown product but logs a warning (launcher.spec.js)": [
-    "PASS"
+    "SKIP"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should be able to launch Firefox (launcher.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Launcher specs Puppeteer Puppeteer.connect should be able to connect multiple times to the same browser (launcher.spec.js)": [
     "PASS"
@@ -792,7 +846,7 @@
     "FAIL"
   ],
   "Launcher specs Puppeteer Puppeteer.executablePath should work (launcher.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Launcher specs Top-level requires should require top-level Errors (launcher.spec.js)": [
     "PASS"
@@ -1890,21 +1944,21 @@
     "PASS"
   ],
   "Workers Page.workers (worker.spec.js)": [
-    "TIMEOUT"
+    "SKIP"
   ],
   "Workers should emit created and destroyed events (worker.spec.js)": [
-    "TIMEOUT"
+    "SKIP"
   ],
   "Workers should report console logs (worker.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Workers should have JSHandles for console logs (worker.spec.js)": [
-    "FAIL"
+    "SKIP"
   ],
   "Workers should have an execution context (worker.spec.js)": [
-    "TIMEOUT"
+    "SKIP"
   ],
   "Workers should report errors (worker.spec.js)": [
-    "TIMEOUT"
+    "SKIP"
   ]
 }
