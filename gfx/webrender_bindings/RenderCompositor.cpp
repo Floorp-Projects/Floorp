@@ -10,6 +10,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/webrender/RenderCompositorOGL.h"
+#include "mozilla/webrender/RenderCompositorSWGL.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 #ifdef XP_WIN
@@ -112,6 +113,15 @@ void wr_compositor_unmap_tile(void* aCompositor) {
 /* static */
 UniquePtr<RenderCompositor> RenderCompositor::Create(
     RefPtr<widget::CompositorWidget>&& aWidget) {
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+#ifdef XP_MACOSX
+    // Mac uses NativeLayerCA
+    return RenderCompositorNativeSWGL::Create(std::move(aWidget));
+#else
+    return RenderCompositorSWGL::Create(std::move(aWidget));
+#endif
+  }
+
 #ifdef XP_WIN
   if (gfx::gfxVars::UseWebRenderANGLE()) {
     return RenderCompositorANGLE::Create(std::move(aWidget));
@@ -142,10 +152,7 @@ RenderCompositor::RenderCompositor(RefPtr<widget::CompositorWidget>&& aWidget)
 
 RenderCompositor::~RenderCompositor() = default;
 
-bool RenderCompositor::MakeCurrent() {
-  gl::GLContext* context = gl();
-  return !context || context->MakeCurrent();
-}
+bool RenderCompositor::MakeCurrent() { return gl()->MakeCurrent(); }
 
 bool RenderCompositor::IsContextLost() {
   // XXX Add glGetGraphicsResetStatus handling for checking rendering context

@@ -70,11 +70,6 @@ class NewRenderer : public RendererEvent {
     *mUseDComp = compositor->UseDComp();
     *mUseTripleBuffering = compositor->UseTripleBuffering();
 
-    void* swCtx = nullptr;
-    if (gfx::gfxVars::UseSoftwareWebRender()) {
-      swCtx = wr_swgl_create_context();
-    }
-
     // Only allow the panic on GL error functionality in nightly builds,
     // since it (deliberately) crashes the GPU process if any GL call
     // returns an error code.
@@ -103,7 +98,8 @@ class NewRenderer : public RendererEvent {
 #else
             false,
 #endif
-            swCtx, compositor->gl(), compositor->SurfaceOriginIsTopLeft(),
+            compositor->swgl(), compositor->gl(),
+            compositor->SurfaceOriginIsTopLeft(),
             aRenderThread.GetProgramCache()
                 ? aRenderThread.GetProgramCache()->Raw()
                 : nullptr,
@@ -122,9 +118,6 @@ class NewRenderer : public RendererEvent {
             StaticPrefs::gfx_webrender_enable_gpu_markers_AtStartup(),
             panic_on_gl_error)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
-      if (swCtx) {
-        wr_swgl_destroy_context(swCtx);
-      }
       return;
     }
     MOZ_ASSERT(wrRenderer);
@@ -132,7 +125,7 @@ class NewRenderer : public RendererEvent {
     RefPtr<RenderThread> thread = &aRenderThread;
     auto renderer =
         MakeUnique<RendererOGL>(std::move(thread), std::move(compositor),
-                                aWindowId, wrRenderer, mBridge, swCtx);
+                                aWindowId, wrRenderer, mBridge);
     if (wrRenderer && renderer) {
       wr::WrExternalImageHandler handler = renderer->GetExternalImageHandler();
       wr_renderer_set_external_image_handler(wrRenderer, &handler);

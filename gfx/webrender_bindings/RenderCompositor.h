@@ -60,17 +60,13 @@ class RenderCompositor {
   // Update FrameId when WR rendering does not happen.
   virtual RenderedFrameId UpdateFrameId() { return GetNextRenderFrameId(); }
 
-  // Return a data mapping of the underlying framebuffer if possible.
-  virtual bool GetMappedBuffer(uint8_t** aData, int32_t* aStride) {
-    return false;
-  }
-
   virtual void Pause() = 0;
   virtual bool Resume() = 0;
   // Called when WR rendering is skipped
   virtual void Update() {}
 
   virtual gl::GLContext* gl() const { return nullptr; }
+  virtual void* swgl() const { return nullptr; }
 
   virtual bool MakeCurrent();
 

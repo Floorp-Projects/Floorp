@@ -164,7 +164,13 @@ class RenderCompositorNativeSWGL : public RenderCompositorNative {
   static UniquePtr<RenderCompositor> Create(
       RefPtr<widget::CompositorWidget>&& aWidget);
 
-  RenderCompositorNativeSWGL(RefPtr<widget::CompositorWidget>&& aWidget);
+  RenderCompositorNativeSWGL(RefPtr<widget::CompositorWidget>&& aWidget,
+                             void* aContext);
+  virtual ~RenderCompositorNativeSWGL();
+
+  void* swgl() const override { return mContext; }
+
+  bool MakeCurrent() override;
 
   void CancelFrame() override;
 
@@ -172,8 +178,6 @@ class RenderCompositorNativeSWGL : public RenderCompositorNative {
                wr::DeviceIntRect aValidRect, void** aData,
                int32_t* aStride) override;
   void UnmapTile() override;
-
-  bool GetMappedBuffer(uint8_t** aData, int32_t* aStride) override;
 
  protected:
   bool InitDefaultFramebuffer(const gfx::IntRect& aBounds) override;
@@ -184,6 +188,7 @@ class RenderCompositorNativeSWGL : public RenderCompositorNative {
                       const gfx::IntRect& aValidRect);
   void UnmapNativeLayer();
 
+  void* mContext = nullptr;
   RefPtr<gfx::DrawTarget> mLayerTarget;
   uint8_t* mLayerData = nullptr;
   int32_t mLayerStride = 0;
