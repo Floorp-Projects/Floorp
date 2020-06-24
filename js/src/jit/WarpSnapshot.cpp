@@ -23,10 +23,12 @@ using namespace js::jit;
 static_assert(!std::is_polymorphic_v<WarpOpSnapshot>,
               "WarpOpSnapshot should not have any virtual methods");
 
-WarpSnapshot::WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script)
+WarpSnapshot::WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script,
+                           const WarpBailoutInfo& bailoutInfo)
     : script_(script),
       globalLexicalEnv_(&cx->global()->lexicalEnvironment()),
-      globalLexicalEnvThis_(globalLexicalEnv_->thisObject()) {}
+      globalLexicalEnvThis_(globalLexicalEnv_->thisObject()),
+      bailoutInfo_(bailoutInfo) {}
 
 WarpScriptSnapshot::WarpScriptSnapshot(
     JSScript* script, const WarpEnvironment& env,
@@ -54,6 +56,8 @@ void WarpSnapshot::dump(GenericPrinter& out) const {
   out.printf("------------------------------\n");
   out.printf("globalLexicalEnv: 0x%p\n", globalLexicalEnv());
   out.printf("globalLexicalEnvThis: 0x%p\n", globalLexicalEnvThis());
+  out.printf("failedBoundsCheck: %u\n", bailoutInfo().failedBoundsCheck());
+  out.printf("failedLexicalCheck: %u\n", bailoutInfo().failedLexicalCheck());
   out.printf("\n");
 
   script_->dump(out);

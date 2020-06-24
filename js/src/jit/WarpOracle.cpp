@@ -109,7 +109,8 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   WarpScriptSnapshot* scriptSnapshot;
   MOZ_TRY_VAR(scriptSnapshot, scriptOracle.createScriptSnapshot());
 
-  auto* snapshot = new (alloc_.fallible()) WarpSnapshot(cx_, scriptSnapshot);
+  auto* snapshot =
+      new (alloc_.fallible()) WarpSnapshot(cx_, scriptSnapshot, bailoutInfo_);
   if (!snapshot) {
     return abort(outerScript_, AbortReason::Alloc);
   }
@@ -233,6 +234,13 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
 
   if (script_->jitScript()->hasTryFinally()) {
     return abort(AbortReason::Disable, "Try-finally not supported");
+  }
+
+  if (script_->failedBoundsCheck()) {
+    oracle_->bailoutInfo().setFailedBoundsCheck();
+  }
+  if (script_->failedLexicalCheck()) {
+    oracle_->bailoutInfo().setFailedLexicalCheck();
   }
 
   WarpEnvironment environment{NoEnvironment()};

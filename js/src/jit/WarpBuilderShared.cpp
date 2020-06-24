@@ -13,9 +13,13 @@
 using namespace js;
 using namespace js::jit;
 
-WarpBuilderShared::WarpBuilderShared(MIRGenerator& mirGen,
+WarpBuilderShared::WarpBuilderShared(WarpSnapshot& snapshot,
+                                     MIRGenerator& mirGen,
                                      MBasicBlock* current_)
-    : mirGen_(mirGen), alloc_(mirGen.alloc()), current(current_) {}
+    : snapshot_(snapshot),
+      mirGen_(mirGen),
+      alloc_(mirGen.alloc()),
+      current(current_) {}
 
 bool WarpBuilderShared::resumeAfter(MInstruction* ins, BytecodeLocation loc) {
   MOZ_ASSERT(ins->isEffectful());
