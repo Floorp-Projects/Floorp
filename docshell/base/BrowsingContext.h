@@ -147,7 +147,8 @@ class WindowProxyHolder;
   /* Signals that session history is enabled for this browsing context tree. \
    * This is only ever set to true on the top BC, so consumers need to get   \
    * the value from the top BC! */                                           \
-  FIELD(HasSessionHistory, bool)
+  FIELD(HasSessionHistory, bool)                                             \
+  FIELD(UseErrorPages, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -784,6 +785,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_HasSessionHistory>, bool aOldValue);
 
   bool CanSet(FieldIndex<IDX_BrowserId>, const uint32_t& aValue,
+              ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_UseErrorPages>, const bool& aUseErrorPages,
               ContentParent* aSource);
 
   template <size_t I, typename T>

@@ -378,7 +378,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mAllowMedia(true),
       mAllowDNSPrefetch(true),
       mAllowWindowControl(true),
-      mUseErrorPages(true),
       mCSSErrorReportingEnabled(false),
       mAllowAuth(mItemType == typeContent),
       mAllowKeywordFixup(false),
@@ -1868,13 +1867,13 @@ already_AddRefed<nsILoadURIDelegate> nsDocShell::GetLoadURIDelegate() {
 
 NS_IMETHODIMP
 nsDocShell::GetUseErrorPages(bool* aUseErrorPages) {
-  *aUseErrorPages = mUseErrorPages;
+  *aUseErrorPages = mBrowsingContext->GetUseErrorPages();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetUseErrorPages(bool aUseErrorPages) {
-  mUseErrorPages = aUseErrorPages;
+  mBrowsingContext->SetUseErrorPages(aUseErrorPages);
   return NS_OK;
 }
 
@@ -3608,7 +3607,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     error = "nssFailure2";
   }
 
-  if (mUseErrorPages) {
+  if (mBrowsingContext->GetUseErrorPages()) {
     // Display an error page
     nsresult loadedPage =
         LoadErrorPage(aURI, aURL, errorPage.get(), error, messageStr.get(),
@@ -6086,7 +6085,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         !GetExtantDocument() || GetExtantDocument()->IsInitialDocument();
     bool skippedUnknownProtocolNavigation = false;
     aStatus = FilterStatusForErrorPage(aStatus, aChannel, mLoadType, isTopFrame,
-                                       mUseErrorPages, isInitialDocument,
+                                       mBrowsingContext->GetUseErrorPages(),
+                                       isInitialDocument,
                                        &skippedUnknownProtocolNavigation);
     if (NS_FAILED(aStatus)) {
       DisplayLoadError(aStatus, url, nullptr, aChannel);
