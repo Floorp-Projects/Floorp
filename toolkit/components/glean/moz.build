@@ -6,23 +6,9 @@
 
 SPHINX_TREES['/toolkit/components/glean'] = 'docs'
 
-if CONFIG['MOZ_GLEAN']:
-    # Needed so that we can include IPC things.
-    include('/ipc/chromium/chromium-config.mozbuild')
-
-    FINAL_LIBRARY = 'xul'
-
-    EXPORTS.mozilla += [
-        'ipc/FOGIPC.h',
-    ]
-
-    UNIFIED_SOURCES += [
-        'ipc/FOGIPC.cpp',
-    ]
-
-    TEST_DIRS += [
-        'gtest',
-    ]
+TEST_DIRS += [
+    'gtest',
+]
 
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']

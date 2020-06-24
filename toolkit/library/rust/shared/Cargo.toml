@@ -100,7 +100,6 @@ wasm_library_sandboxing = ["rlbox_lucet_sandbox"]
 webgpu = ["wgpu_bindings"]
 remote_agent = ["remote"]
 glean = ["fog"]
-glean_with_gecko = ["fog/with_gecko"]
 rust_fxa_client = ["firefox-accounts-bridge"]
 
 [lib]
