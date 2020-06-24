@@ -85,6 +85,12 @@ loader.lazyRequireGetter(
   "devtools/shared/constants",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "isRemoteFrame",
+  "devtools/shared/layout/utils",
+  true
+);
 
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
@@ -912,7 +918,14 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         Current click event.
    */
   onPick(event) {
-    if (!this._isPicking) {
+    if (
+      !this._isPicking ||
+      // If the DOM event is about a remote frame, only the WalkerActor for that
+      // remote frame target should emit RDP events (hovered/picked/...). And
+      // all other WalkerActor for intermediate iframe and top level document
+      // targets should stay silent.
+      isRemoteFrame(event.originalTarget || event.target)
+    ) {
       return;
     }
 
@@ -946,7 +959,14 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         Current hover event.
    */
   async onHovered(event) {
-    if (!this._isPicking) {
+    if (
+      !this._isPicking ||
+      // If the DOM event is about a remote frame, only the WalkerActor for that
+      // remote frame target should emit RDP events (hovered/picked/...). And
+      // all other WalkerActor for intermediate iframe and top level document
+      // targets should stay silent.
+      isRemoteFrame(event.originalTarget || event.target)
+    ) {
       return;
     }
 
@@ -977,7 +997,15 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         Current keyboard event.
    */
   onKey(event) {
-    if (!this._currentAccessible || !this._isPicking) {
+    if (
+      !this._currentAccessible ||
+      !this._isPicking ||
+      // If the DOM event is about a remote frame, only the WalkerActor for that
+      // remote frame target should emit RDP events (hovered/picked/...). And
+      // all other WalkerActor for intermediate iframe and top level document
+      // targets should stay silent.
+      isRemoteFrame(event.originalTarget || event.target)
+    ) {
       return;
     }
 
@@ -994,7 +1022,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     switch (event.keyCode) {
       // Select the element.
       case event.DOM_VK_RETURN:
-        this._onPick(event);
+        this.onPick(event);
         break;
       // Cancel pick mode.
       case event.DOM_VK_ESCAPE:
