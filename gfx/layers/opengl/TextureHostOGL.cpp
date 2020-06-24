@@ -17,8 +17,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/webrender/RenderEGLImageTextureHost.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "nsRegion.h"  // for nsIntRegion
-#include "AndroidSurfaceTexture.h"
+#include "nsRegion.h"             // for nsIntRegion
 #include "GfxTexturesReporter.h"  // for GfxTexturesReporter
 #include "GLBlitTextureImageHelper.h"
 #include "GeckoProfiler.h"
