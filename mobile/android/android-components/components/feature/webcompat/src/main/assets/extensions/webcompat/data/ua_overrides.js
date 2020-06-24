@@ -458,28 +458,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1610370 - UA override for answers.yahoo.com on Firefox for Android
-     * WebCompat issue #5460 - https://webcompat.com/issues/5460
-     *
-     * answers.yahoo.com is not showing lazy loaded content based on UA detection
-     * When spoofing as Chrome it's possible to load the content
-     */
-    id: "bug1610370",
-    platform: "android",
-    domain: "answers.yahoo.com",
-    bug: "1610370",
-    config: {
-      matches: ["https://answers.yahoo.com/*"],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Mobile Safari/537.36"
-        );
-      },
-    },
-  },
-  {
-    /*
      * Bug 1595215 - UA overrides for Uniqlo sites
      * Webcompat issue #38825 - https://webcompat.com/issues/38825
      *
@@ -612,6 +590,33 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["https://*.dominos.ch/*"],
       uaTransformer: () => {
         return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1563839 - rolb.santanderbank.com - Build UA override
+     * Bug 1646791 - bancosantander.es - Re-add UA override.
+     * WebCompat issue #33462 - https://webcompat.com/issues/33462
+     * SuMo request - https://support.mozilla.org/es/questions/1291085
+     *
+     * santanderbank expects UA to have 'like Gecko', otherwise it runs
+     * xmlDoc.onload whose support has been dropped. It results in missing labels in forms
+     * and some other issues.  Adding 'like Gecko' fixes those issues.
+     */
+    id: "bug1563839",
+    platform: "all",
+    domain: "santanderbank.com",
+    bug: "1563839",
+    config: {
+      matches: [
+        "*://*.bancosantander.es*",
+        "*://*.santander.co.uk/*",
+        "*://bob.santanderbank.com/*",
+        "*://rolb.santanderbank.com/*",
+      ],
+      uaTransformer: originalUA => {
+        return originalUA.replace("Gecko", "like Gecko");
       },
     },
   },
