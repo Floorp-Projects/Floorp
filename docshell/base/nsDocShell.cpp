@@ -378,6 +378,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mAllowMedia(true),
       mAllowDNSPrefetch(true),
       mAllowWindowControl(true),
+      mUseErrorPages(true),
       mCSSErrorReportingEnabled(false),
       mAllowAuth(mItemType == typeContent),
       mAllowKeywordFixup(false),
@@ -712,6 +713,12 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
   }
   AutoPopupStatePusher statePusher(popupState);
 
+  if (aLoadState->GetOriginalURIString().isSome()) {
+    // Save URI string in case it's needed later when
+    // sending to search engine service in EndPageLoad()
+    mOriginalUriString = *aLoadState->GetOriginalURIString();
+  }
+
   if (aLoadState->GetCancelContentJSEpoch().isSome()) {
     SetCancelContentJSEpoch(*aLoadState->GetCancelContentJSEpoch());
   }
@@ -800,16 +807,7 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
   MOZ_ASSERT(aLoadState->SHEntry() == nullptr,
              "SHEntry should be null when calling InternalLoad from LoadURI");
 
-  rv = InternalLoad(aLoadState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aLoadState->GetOriginalURIString().isSome()) {
-    // Save URI string in case it's needed later when
-    // sending to search engine service in EndPageLoad()
-    mOriginalUriString = *aLoadState->GetOriginalURIString();
-  }
-
-  return NS_OK;
+  return InternalLoad(aLoadState);  // no nsIRequest
 }
 
 void nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState) {
@@ -1870,13 +1868,13 @@ already_AddRefed<nsILoadURIDelegate> nsDocShell::GetLoadURIDelegate() {
 
 NS_IMETHODIMP
 nsDocShell::GetUseErrorPages(bool* aUseErrorPages) {
-  *aUseErrorPages = mBrowsingContext->GetUseErrorPages();
+  *aUseErrorPages = mUseErrorPages;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetUseErrorPages(bool aUseErrorPages) {
-  mBrowsingContext->SetUseErrorPages(aUseErrorPages);
+  mUseErrorPages = aUseErrorPages;
   return NS_OK;
 }
 
@@ -3610,7 +3608,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     error = "nssFailure2";
   }
 
-  if (mBrowsingContext->GetUseErrorPages()) {
+  if (mUseErrorPages) {
     // Display an error page
     nsresult loadedPage =
         LoadErrorPage(aURI, aURL, errorPage.get(), error, messageStr.get(),
@@ -5614,279 +5612,6 @@ already_AddRefed<nsIURIFixupInfo> nsDocShell::KeywordToURI(
   return info.forget();
 }
 
-/* static */
-already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
-    nsIChannel* aChannel, nsresult aStatus,
-    const mozilla::Maybe<nsCString>& aOriginalURIString, uint32_t aLoadType,
-    bool aIsTopFrame, bool aAllowKeywordFixup, bool aUsePrivateBrowsing,
-    bool aNotifyKeywordSearchLoading, nsIInputStream** aNewPostData) {
-  if (aStatus != NS_ERROR_UNKNOWN_HOST && aStatus != NS_ERROR_NET_RESET &&
-      aStatus != NS_ERROR_CONNECTION_REFUSED) {
-    return nullptr;
-  }
-
-  if (!(aLoadType == LOAD_NORMAL && aIsTopFrame) && !aAllowKeywordFixup) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIURI> url;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(url));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  //
-  // Try and make an alternative URI from the old one
-  //
-  nsCOMPtr<nsIURI> newURI;
-  nsCOMPtr<nsIInputStream> newPostData;
-
-  nsAutoCString oldSpec;
-  url->GetSpec(oldSpec);
-
-  //
-  // First try keyword fixup
-  //
-  nsAutoString keywordProviderName, keywordAsSent;
-  if (aStatus == NS_ERROR_UNKNOWN_HOST && aAllowKeywordFixup) {
-    // we should only perform a keyword search under the following
-    // conditions:
-    // (0) Pref keyword.enabled is true
-    // (1) the url scheme is http (or https)
-    // (2) the url does not have a protocol scheme
-    // If we don't enforce such a policy, then we end up doing
-    // keyword searchs on urls we don't intend like imap, file,
-    // mailbox, etc. This could lead to a security problem where we
-    // send data to the keyword server that we shouldn't be.
-    // Someone needs to clean up keywords in general so we can
-    // determine on a per url basis if we want keywords
-    // enabled...this is just a bandaid...
-    nsAutoCString scheme;
-    Unused << url->GetScheme(scheme);
-    if (Preferences::GetBool("keyword.enabled", false) &&
-        StringBeginsWith(scheme, NS_LITERAL_CSTRING("http"))) {
-      bool attemptFixup = false;
-      nsAutoCString host;
-      Unused << url->GetHost(host);
-      if (host.FindChar('.') == kNotFound) {
-        attemptFixup = true;
-      } else {
-        // For domains with dots, we check the public suffix validity.
-        nsCOMPtr<nsIEffectiveTLDService> tldService =
-            do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-        if (tldService) {
-          nsAutoCString suffix;
-          attemptFixup =
-              NS_SUCCEEDED(tldService->GetKnownPublicSuffix(url, suffix)) &&
-              suffix.IsEmpty();
-        }
-      }
-      if (attemptFixup) {
-        nsCOMPtr<nsIURIFixupInfo> info;
-        // only send non-qualified hosts to the keyword server
-        if (aOriginalURIString && !aOriginalURIString->IsEmpty()) {
-          info = KeywordToURI(*aOriginalURIString, aUsePrivateBrowsing,
-                              getter_AddRefs(newPostData));
-        } else {
-          //
-          // If this string was passed through nsStandardURL by
-          // chance, then it may have been converted from UTF-8 to
-          // ACE, which would result in a completely bogus keyword
-          // query.  Here we try to recover the original Unicode
-          // value, but this is not 100% correct since the value may
-          // have been normalized per the IDN normalization rules.
-          //
-          // Since we don't have access to the exact original string
-          // that was entered by the user, this will just have to do.
-          bool isACE;
-          nsAutoCString utf8Host;
-          nsCOMPtr<nsIIDNService> idnSrv =
-              do_GetService(NS_IDNSERVICE_CONTRACTID);
-          if (idnSrv && NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
-              NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
-            info = KeywordToURI(utf8Host, aUsePrivateBrowsing,
-                                getter_AddRefs(newPostData));
-          } else {
-            info = KeywordToURI(host, aUsePrivateBrowsing,
-                                getter_AddRefs(newPostData));
-          }
-        }
-        if (info) {
-          info->GetPreferredURI(getter_AddRefs(newURI));
-          if (newURI) {
-            info->GetKeywordAsSent(keywordAsSent);
-            info->GetKeywordProviderName(keywordProviderName);
-          }
-        }
-      }
-    }
-  }
-
-  //
-  // Now try change the address, e.g. turn http://foo into
-  // http://www.foo.com, and if that doesn't work try https with
-  // https://foo and https://www.foo.com.
-  //
-  if (aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET) {
-    bool doCreateAlternate = true;
-
-    // Skip fixup for anything except a normal document load
-    // operation on the topframe.
-
-    if (aLoadType != LOAD_NORMAL || !aIsTopFrame) {
-      doCreateAlternate = false;
-    } else {
-      // Test if keyword lookup produced a new URI or not
-      if (newURI) {
-        bool sameURI = false;
-        url->Equals(newURI, &sameURI);
-        if (!sameURI) {
-          // Keyword lookup made a new URI so no need to try
-          // an alternate one.
-          doCreateAlternate = false;
-        }
-      }
-
-      if (doCreateAlternate) {
-        nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
-        // Skip doing this if our channel was redirected, because we
-        // shouldn't be guessing things about the post-redirect URI.
-        if (!info->RedirectChain().IsEmpty()) {
-          doCreateAlternate = false;
-        }
-      }
-    }
-    if (doCreateAlternate) {
-      newURI = nullptr;
-      newPostData = nullptr;
-      keywordProviderName.Truncate();
-      keywordAsSent.Truncate();
-      nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
-      if (uriFixup) {
-        uriFixup->CreateFixupURI(
-            oldSpec, nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
-            getter_AddRefs(newPostData), getter_AddRefs(newURI));
-      }
-    }
-  } else if (aStatus == NS_ERROR_CONNECTION_REFUSED &&
-             Preferences::GetBool("browser.fixup.fallback-to-https", false)) {
-    // Try HTTPS, since http didn't work
-    if (SchemeIsHTTP(url)) {
-      int32_t port = 0;
-      url->GetPort(&port);
-
-      // Fall back to HTTPS only if port is default
-      if (port == -1) {
-        newURI = nullptr;
-        newPostData = nullptr;
-        Unused << NS_MutateURI(url)
-                      .SetScheme(NS_LITERAL_CSTRING("https"))
-                      .Finalize(getter_AddRefs(newURI));
-      }
-    }
-  }
-
-  // Did we make a new URI that is different to the old one? If so
-  // load it.
-  //
-  if (newURI) {
-    // Make sure the new URI is different from the old one,
-    // otherwise there's little point trying to load it again.
-    bool sameURI = false;
-    url->Equals(newURI, &sameURI);
-    if (!sameURI) {
-      if (aNewPostData) {
-        newPostData.forget(aNewPostData);
-      }
-      if (aNotifyKeywordSearchLoading) {
-        // This notification is meant for Firefox Health Report so it
-        // can increment counts from the search engine
-        MaybeNotifyKeywordSearchLoading(keywordProviderName, keywordAsSent);
-      }
-      return newURI.forget();
-    }
-  }
-
-  return nullptr;
-}
-
-nsresult nsDocShell::FilterStatusForErrorPage(
-    nsresult aStatus, nsIChannel* aChannel, uint32_t aLoadType,
-    bool aIsTopFrame, bool aUseErrorPages, bool aIsInitialDocument,
-    bool* aSkippedUnknownProtocolNavigation) {
-  // Errors to be shown only on top-level frames
-  if ((aStatus == NS_ERROR_UNKNOWN_HOST ||
-       aStatus == NS_ERROR_CONNECTION_REFUSED ||
-       aStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
-       aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
-       aStatus == NS_ERROR_PROXY_FORBIDDEN ||
-       aStatus == NS_ERROR_PROXY_NOT_IMPLEMENTED ||
-       aStatus == NS_ERROR_PROXY_AUTHENTICATION_FAILED ||
-       aStatus == NS_ERROR_PROXY_TOO_MANY_REQUESTS ||
-       aStatus == NS_ERROR_MALFORMED_URI ||
-       aStatus == NS_ERROR_BLOCKED_BY_POLICY) &&
-      (aIsTopFrame || aUseErrorPages)) {
-    return aStatus;
-  }
-
-  if (aStatus == NS_ERROR_NET_TIMEOUT ||
-      aStatus == NS_ERROR_PROXY_GATEWAY_TIMEOUT ||
-      aStatus == NS_ERROR_REDIRECT_LOOP ||
-      aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
-      aStatus == NS_ERROR_NET_INTERRUPT || aStatus == NS_ERROR_NET_RESET ||
-      aStatus == NS_ERROR_PROXY_BAD_GATEWAY || aStatus == NS_ERROR_OFFLINE ||
-      aStatus == NS_ERROR_MALWARE_URI || aStatus == NS_ERROR_PHISHING_URI ||
-      aStatus == NS_ERROR_UNWANTED_URI || aStatus == NS_ERROR_HARMFUL_URI ||
-      aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||
-      aStatus == NS_ERROR_REMOTE_XUL ||
-      aStatus == NS_ERROR_INTERCEPTION_FAILED ||
-      aStatus == NS_ERROR_NET_INADEQUATE_SECURITY ||
-      aStatus == NS_ERROR_NET_HTTP2_SENT_GOAWAY ||
-      aStatus == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR ||
-      aStatus == NS_ERROR_DOM_BAD_URI || aStatus == NS_ERROR_FILE_NOT_FOUND ||
-      aStatus == NS_ERROR_FILE_ACCESS_DENIED ||
-      aStatus == NS_ERROR_CORRUPTED_CONTENT ||
-      aStatus == NS_ERROR_INVALID_CONTENT_ENCODING ||
-      NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
-    // Errors to be shown for any frame
-    return aStatus;
-  }
-
-  if (aStatus == NS_ERROR_UNKNOWN_PROTOCOL) {
-    // For unknown protocols we only display an error if the load is triggered
-    // by the browser itself, or we're replacing the initial document (and
-    // nothing else). Showing the error for page-triggered navigations causes
-    // annoying behavior for users, see bug 1528305.
-    //
-    // We could, maybe, try to detect if this is in response to some user
-    // interaction (like clicking a link, or something else) and maybe show
-    // the error page in that case. But this allows for ctrl+clicking and such
-    // to see the error page.
-    nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
-    if (!info->TriggeringPrincipal()->IsSystemPrincipal() &&
-        StaticPrefs::dom_no_unknown_protocol_error_enabled() &&
-        !aIsInitialDocument) {
-      if (aSkippedUnknownProtocolNavigation) {
-        *aSkippedUnknownProtocolNavigation = true;
-      }
-      return NS_OK;
-    }
-    return aStatus;
-  }
-
-  if (aStatus == NS_ERROR_DOCUMENT_NOT_CACHED) {
-    // Non-caching channels will simply return NS_ERROR_OFFLINE.
-    // Caching channels would have to look at their flags to work
-    // out which error to return. Or we can fix up the error here.
-    if (!(aLoadType & LOAD_CMD_HISTORY)) {
-      return NS_ERROR_OFFLINE;
-    }
-    return aStatus;
-  }
-
-  return NS_OK;
-}
-
 nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                  nsIChannel* aChannel, nsresult aStatus) {
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
@@ -6019,56 +5744,287 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   //      (if appropriate).
   //   5. Throw an error dialog box...
   //
-  if (NS_FAILED(aStatus)) {
-    nsCOMPtr<nsIInputStream> newPostData;
-    nsCOMPtr<nsIURI> newURI =
-        AttemptURIFixup(aChannel, aStatus, Some(mOriginalUriString), mLoadType,
-                        isTopFrame, mAllowKeywordFixup, UsePrivateBrowsing(),
-                        true, getter_AddRefs(newPostData));
-    if (newURI) {
-      nsAutoCString newSpec;
-      newURI->GetSpec(newSpec);
-      NS_ConvertUTF8toUTF16 newSpecW(newSpec);
+  if (url && NS_FAILED(aStatus)) {
+    if (aStatus == NS_ERROR_FILE_NOT_FOUND ||
+        aStatus == NS_ERROR_FILE_ACCESS_DENIED ||
+        aStatus == NS_ERROR_CORRUPTED_CONTENT ||
+        aStatus == NS_ERROR_INVALID_CONTENT_ENCODING) {
+      UnblockEmbedderLoadEventForFailure();
+      DisplayLoadError(aStatus, url, nullptr, aChannel);
+      return NS_OK;
+    }
 
-      nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-      MOZ_ASSERT(loadInfo, "loadInfo is required on all channels");
-      nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-          loadInfo->TriggeringPrincipal();
+    // Handle iframe document not loading error because source was
+    // a tracking URL. We make a note of this iframe node by including
+    // it in a dedicated array of blocked tracking nodes under its parent
+    // document. (document of parent window of blocked document)
+    if (!isTopFrame &&
+        UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aStatus)) {
+      UnblockEmbedderLoadEventForFailure();
 
-      // If the new URI is HTTP, it may not work and we may want to fall
-      // back to HTTPS, so kick off a speculative connect to get that
-      // started.  Even if we don't adjust to HTTPS here, there could be a
-      // redirect to HTTPS coming so this could speed things up.
-      if (SchemeIsHTTP(url)) {
-        int32_t port = 0;
-        rv = url->GetPort(&port);
+      // We don't really need to add the blocked node if we are not testing.
+      // This could save a IPC here.
+      if (!StaticPrefs::
+              privacy_trackingprotection_testing_report_blocked_node()) {
+        return NS_OK;
+      }
 
-        // only do this if the port is default.
-        if (NS_SUCCEEDED(rv) && port == -1) {
-          nsCOMPtr<nsIURI> httpsURI;
-          rv = NS_MutateURI(url)
-                   .SetScheme(NS_LITERAL_CSTRING("https"))
-                   .Finalize(getter_AddRefs(httpsURI));
+      RefPtr<BrowsingContext> bc = GetBrowsingContext();
+      RefPtr<BrowsingContext> parentBC = bc->GetParent();
 
-          if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIIOService> ios = do_GetIOService();
-            if (ios) {
-              nsCOMPtr<nsISpeculativeConnect> speculativeService =
-                  do_QueryInterface(ios);
-              if (speculativeService) {
-                speculativeService->SpeculativeConnect(
-                    httpsURI, triggeringPrincipal, nullptr);
+      if (!parentBC) {
+        return NS_OK;
+      }
+
+      if (parentBC->IsInProcess()) {
+        // We can directly add the blocked node in the parent document if the
+        // parent is in the same process.
+        nsCOMPtr<nsPIDOMWindowOuter> parentOuter = parentBC->GetDOMWindow();
+
+        if (!parentOuter) {
+          return NS_OK;
+        }
+
+        nsCOMPtr<nsPIDOMWindowInner> parentInner =
+            parentOuter->GetCurrentInnerWindow();
+
+        if (!parentInner) {
+          return NS_OK;
+        }
+
+        RefPtr<Document> parentDoc;
+        parentDoc = parentInner->GetExtantDoc();
+        if (!parentDoc) {
+          return NS_OK;
+        }
+
+        parentDoc->AddBlockedNodeByClassifier(bc->GetEmbedderElement());
+      } else {
+        // If the parent is out-of-process, we send to the process of the
+        // document which embeds the frame to add the blocked node there.
+        RefPtr<BrowserChild> browserChild = BrowserChild::GetFrom(this);
+        if (browserChild) {
+          Unused << browserChild->SendReportBlockedEmbedderNodeByClassifier();
+        }
+      }
+
+      return NS_OK;
+    }
+
+    if ((aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET ||
+         aStatus == NS_ERROR_CONNECTION_REFUSED) &&
+        ((mLoadType == LOAD_NORMAL && isTopFrame) || mAllowKeywordFixup)) {
+      //
+      // Try and make an alternative URI from the old one
+      //
+      nsCOMPtr<nsIURI> newURI;
+      nsCOMPtr<nsIInputStream> newPostData;
+
+      nsAutoCString oldSpec;
+      url->GetSpec(oldSpec);
+
+      //
+      // First try keyword fixup
+      //
+      nsAutoString keywordProviderName, keywordAsSent;
+      if (aStatus == NS_ERROR_UNKNOWN_HOST && mAllowKeywordFixup) {
+        // we should only perform a keyword search under the following
+        // conditions:
+        // (0) Pref keyword.enabled is true
+        // (1) the url scheme is http (or https)
+        // (2) the url does not have a protocol scheme
+        // If we don't enforce such a policy, then we end up doing
+        // keyword searchs on urls we don't intend like imap, file,
+        // mailbox, etc. This could lead to a security problem where we
+        // send data to the keyword server that we shouldn't be.
+        // Someone needs to clean up keywords in general so we can
+        // determine on a per url basis if we want keywords
+        // enabled...this is just a bandaid...
+        nsAutoCString scheme;
+        Unused << url->GetScheme(scheme);
+        if (Preferences::GetBool("keyword.enabled", false) &&
+            StringBeginsWith(scheme, NS_LITERAL_CSTRING("http"))) {
+          bool attemptFixup = false;
+          nsAutoCString host;
+          Unused << url->GetHost(host);
+          if (host.FindChar('.') == kNotFound) {
+            attemptFixup = true;
+          } else {
+            // For domains with dots, we check the public suffix validity.
+            nsCOMPtr<nsIEffectiveTLDService> tldService =
+                do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+            if (tldService) {
+              nsAutoCString suffix;
+              attemptFixup =
+                  NS_SUCCEEDED(tldService->GetKnownPublicSuffix(url, suffix)) &&
+                  suffix.IsEmpty();
+            }
+          }
+          if (attemptFixup) {
+            nsCOMPtr<nsIURIFixupInfo> info;
+            // only send non-qualified hosts to the keyword server
+            if (!mOriginalUriString.IsEmpty()) {
+              info = KeywordToURI(mOriginalUriString, UsePrivateBrowsing(),
+                                  getter_AddRefs(newPostData));
+            } else {
+              //
+              // If this string was passed through nsStandardURL by
+              // chance, then it may have been converted from UTF-8 to
+              // ACE, which would result in a completely bogus keyword
+              // query.  Here we try to recover the original Unicode
+              // value, but this is not 100% correct since the value may
+              // have been normalized per the IDN normalization rules.
+              //
+              // Since we don't have access to the exact original string
+              // that was entered by the user, this will just have to do.
+              bool isACE;
+              nsAutoCString utf8Host;
+              nsCOMPtr<nsIIDNService> idnSrv =
+                  do_GetService(NS_IDNSERVICE_CONTRACTID);
+              if (idnSrv && NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) &&
+                  isACE &&
+                  NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
+                info = KeywordToURI(utf8Host, UsePrivateBrowsing(),
+                                    getter_AddRefs(newPostData));
+              } else {
+                info = KeywordToURI(host, UsePrivateBrowsing(),
+                                    getter_AddRefs(newPostData));
+              }
+            }
+            if (info) {
+              info->GetPreferredURI(getter_AddRefs(newURI));
+              if (newURI) {
+                info->GetKeywordAsSent(keywordAsSent);
+                info->GetKeywordProviderName(keywordProviderName);
               }
             }
           }
         }
       }
 
-      LoadURIOptions loadURIOptions;
-      loadURIOptions.mTriggeringPrincipal = triggeringPrincipal;
-      loadURIOptions.mCsp = loadInfo->GetCspToInherit();
-      loadURIOptions.mPostData = newPostData;
-      return LoadURI(newSpecW, loadURIOptions);
+      //
+      // Now try change the address, e.g. turn http://foo into
+      // http://www.foo.com, and if that doesn't work try https with
+      // https://foo and https://www.foo.com.
+      //
+      if (aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET) {
+        bool doCreateAlternate = true;
+
+        // Skip fixup for anything except a normal document load
+        // operation on the topframe.
+
+        if (mLoadType != LOAD_NORMAL || !isTopFrame) {
+          doCreateAlternate = false;
+        } else {
+          // Test if keyword lookup produced a new URI or not
+          if (newURI) {
+            bool sameURI = false;
+            url->Equals(newURI, &sameURI);
+            if (!sameURI) {
+              // Keyword lookup made a new URI so no need to try
+              // an alternate one.
+              doCreateAlternate = false;
+            }
+          }
+
+          if (doCreateAlternate) {
+            nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
+            // Skip doing this if our channel was redirected, because we
+            // shouldn't be guessing things about the post-redirect URI.
+            if (!info->RedirectChain().IsEmpty()) {
+              doCreateAlternate = false;
+            }
+          }
+        }
+        if (doCreateAlternate) {
+          newURI = nullptr;
+          newPostData = nullptr;
+          keywordProviderName.Truncate();
+          keywordAsSent.Truncate();
+          nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
+          if (uriFixup) {
+            uriFixup->CreateFixupURI(
+                oldSpec, nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
+                getter_AddRefs(newPostData), getter_AddRefs(newURI));
+          }
+        }
+      } else if (aStatus == NS_ERROR_CONNECTION_REFUSED &&
+                 Preferences::GetBool("browser.fixup.fallback-to-https",
+                                      false)) {
+        // Try HTTPS, since http didn't work
+        if (SchemeIsHTTP(url)) {
+          int32_t port = 0;
+          url->GetPort(&port);
+
+          // Fall back to HTTPS only if port is default
+          if (port == -1) {
+            newURI = nullptr;
+            newPostData = nullptr;
+            Unused << NS_MutateURI(url)
+                          .SetScheme(NS_LITERAL_CSTRING("https"))
+                          .Finalize(getter_AddRefs(newURI));
+          }
+        }
+      }
+
+      // Did we make a new URI that is different to the old one? If so
+      // load it.
+      //
+      if (newURI) {
+        // Make sure the new URI is different from the old one,
+        // otherwise there's little point trying to load it again.
+        bool sameURI = false;
+        url->Equals(newURI, &sameURI);
+        if (!sameURI) {
+          nsAutoCString newSpec;
+          newURI->GetSpec(newSpec);
+          NS_ConvertUTF8toUTF16 newSpecW(newSpec);
+
+          // This notification is meant for Firefox Health Report so it
+          // can increment counts from the search engine
+          MaybeNotifyKeywordSearchLoading(keywordProviderName, keywordAsSent);
+
+          nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+          MOZ_ASSERT(loadInfo, "loadInfo is required on all channels");
+          nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+              loadInfo->TriggeringPrincipal();
+
+          // If the new URI is HTTP, it may not work and we may want to fall
+          // back to HTTPS, so kick off a speculative connect to get that
+          // started.  Even if we don't adjust to HTTPS here, there could be a
+          // redirect to HTTPS coming so this could speed things up.
+          if (SchemeIsHTTP(url)) {
+            int32_t port = 0;
+            rv = url->GetPort(&port);
+
+            // only do this if the port is default.
+            if (NS_SUCCEEDED(rv) && port == -1) {
+              nsCOMPtr<nsIURI> httpsURI;
+              rv = NS_MutateURI(url)
+                       .SetScheme(NS_LITERAL_CSTRING("https"))
+                       .Finalize(getter_AddRefs(httpsURI));
+
+              if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsIIOService> ios = do_GetIOService();
+                if (ios) {
+                  nsCOMPtr<nsISpeculativeConnect> speculativeService =
+                      do_QueryInterface(ios);
+                  if (speculativeService) {
+                    speculativeService->SpeculativeConnect(
+                        httpsURI, triggeringPrincipal, nullptr);
+                  }
+                }
+              }
+            }
+          }
+
+          LoadURIOptions loadURIOptions;
+          loadURIOptions.mTriggeringPrincipal = triggeringPrincipal;
+          loadURIOptions.mCsp = loadInfo->GetCspToInherit();
+          loadURIOptions.mPostData = newPostData;
+          return LoadURI(newSpecW, loadURIOptions);
+        }
+      }
     }
 
     // Well, fixup didn't work :-(
@@ -6084,27 +6040,77 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                 aStatus == NS_ERROR_CONTENT_BLOCKED);
     UnblockEmbedderLoadEventForFailure(fireFrameErrorEvent);
 
-    bool isInitialDocument =
-        !GetExtantDocument() || GetExtantDocument()->IsInitialDocument();
-    bool skippedUnknownProtocolNavigation = false;
-    aStatus = FilterStatusForErrorPage(aStatus, aChannel, mLoadType, isTopFrame,
-                                       mBrowsingContext->GetUseErrorPages(),
-                                       isInitialDocument,
-                                       &skippedUnknownProtocolNavigation);
-    if (NS_FAILED(aStatus)) {
+    // Errors to be shown only on top-level frames
+    if ((aStatus == NS_ERROR_UNKNOWN_HOST ||
+         aStatus == NS_ERROR_CONNECTION_REFUSED ||
+         aStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
+         aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
+         aStatus == NS_ERROR_PROXY_FORBIDDEN ||
+         aStatus == NS_ERROR_PROXY_NOT_IMPLEMENTED ||
+         aStatus == NS_ERROR_PROXY_AUTHENTICATION_FAILED ||
+         aStatus == NS_ERROR_PROXY_TOO_MANY_REQUESTS ||
+         aStatus == NS_ERROR_MALFORMED_URI ||
+         aStatus == NS_ERROR_BLOCKED_BY_POLICY) &&
+        (isTopFrame || mUseErrorPages)) {
       DisplayLoadError(aStatus, url, nullptr, aChannel);
-    } else if (skippedUnknownProtocolNavigation) {
-      nsTArray<nsString> params;
-      if (NS_FAILED(
-              NS_GetSanitizedURIStringFromURI(url, *params.AppendElement()))) {
-        params.LastElement().AssignLiteral(u"(unknown uri)");
+    } else if (aStatus == NS_ERROR_NET_TIMEOUT ||
+               aStatus == NS_ERROR_PROXY_GATEWAY_TIMEOUT ||
+               aStatus == NS_ERROR_REDIRECT_LOOP ||
+               aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
+               aStatus == NS_ERROR_NET_INTERRUPT ||
+               aStatus == NS_ERROR_NET_RESET ||
+               aStatus == NS_ERROR_PROXY_BAD_GATEWAY ||
+               aStatus == NS_ERROR_OFFLINE || aStatus == NS_ERROR_MALWARE_URI ||
+               aStatus == NS_ERROR_PHISHING_URI ||
+               aStatus == NS_ERROR_UNWANTED_URI ||
+               aStatus == NS_ERROR_HARMFUL_URI ||
+               aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||
+               aStatus == NS_ERROR_REMOTE_XUL ||
+               aStatus == NS_ERROR_INTERCEPTION_FAILED ||
+               aStatus == NS_ERROR_NET_INADEQUATE_SECURITY ||
+               aStatus == NS_ERROR_NET_HTTP2_SENT_GOAWAY ||
+               aStatus == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR ||
+               aStatus == NS_ERROR_DOM_BAD_URI ||
+               NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
+      // Errors to be shown for any frame
+      DisplayLoadError(aStatus, url, nullptr, aChannel);
+    } else if (aStatus == NS_ERROR_UNKNOWN_PROTOCOL) {
+      // For unknown protocols we only display an error if the load is triggered
+      // by the browser itself, or we're replacing the initial document (and
+      // nothing else). Showing the error for page-triggered navigations causes
+      // annoying behavior for users, see bug 1528305.
+      //
+      // We could, maybe, try to detect if this is in response to some user
+      // interaction (like clicking a link, or something else) and maybe show
+      // the error page in that case. But this allows for ctrl+clicking and such
+      // to see the error page.
+      nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
+      Document* doc = GetDocument();
+      if (!info->TriggeringPrincipal()->IsSystemPrincipal() &&
+          StaticPrefs::dom_no_unknown_protocol_error_enabled() && doc &&
+          !doc->IsInitialDocument()) {
+        nsTArray<nsString> params;
+        if (NS_FAILED(NS_GetSanitizedURIStringFromURI(
+                url, *params.AppendElement()))) {
+          params.LastElement().AssignLiteral(u"(unknown uri)");
+        }
+        nsContentUtils::ReportToConsole(
+            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), doc,
+            nsContentUtils::eDOM_PROPERTIES,
+            "UnknownProtocolNavigationPrevented", params);
+      } else {
+        DisplayLoadError(aStatus, url, nullptr, aChannel);
       }
-      nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"),
-          GetExtantDocument(), nsContentUtils::eDOM_PROPERTIES,
-          "UnknownProtocolNavigationPrevented", params);
+    } else if (aStatus == NS_ERROR_DOCUMENT_NOT_CACHED) {
+      // Non-caching channels will simply return NS_ERROR_OFFLINE.
+      // Caching channels would have to look at their flags to work
+      // out which error to return. Or we can fix up the error here.
+      if (!(mLoadType & LOAD_CMD_HISTORY)) {
+        aStatus = NS_ERROR_OFFLINE;
+      }
+      DisplayLoadError(aStatus, url, nullptr, aChannel);
     }
-  } else {
+  } else if (url && NS_SUCCEEDED(aStatus)) {
     // If we have a host
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     PredictorLearnRedirect(url, aChannel, loadInfo->GetOriginAttributes());
@@ -12061,12 +12067,6 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
         }
 
         self->InternalLoad(aLoadState);
-
-        if (aLoadState->GetOriginalURIString().isSome()) {
-          // Save URI string in case it's needed later when
-          // sending to search engine service in EndPageLoad()
-          self->mOriginalUriString = *aLoadState->GetOriginalURIString();
-        }
 
         for (auto& endpoint : aStreamFilterEndpoints) {
           extensions::StreamFilterParent::Attach(

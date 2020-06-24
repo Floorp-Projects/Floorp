@@ -3459,9 +3459,6 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   if (aArgs.sessionHistoryInfo().isSome()) {
     loadState->SetSessionHistoryInfo(aArgs.sessionHistoryInfo().ref());
   }
-  if (aArgs.originalUriString().isSome()) {
-    loadState->SetOriginalURIString(aArgs.originalUriString().ref());
-  }
 
   RefPtr<ChildProcessChannelListener> processListener =
       ChildProcessChannelListener::GetSingleton();

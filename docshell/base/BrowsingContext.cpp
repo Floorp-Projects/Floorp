@@ -321,8 +321,6 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
       inherit ? inherit->GetUseGlobalHistory() : false;
   context->mFields.SetWithoutSyncing<IDX_UseGlobalHistory>(useGlobalHistory);
 
-  context->mFields.SetWithoutSyncing<IDX_UseErrorPages>(true);
-
   nsCOMPtr<nsIRequestContextService> rcsvc =
       net::RequestContextService::GetOrCreate();
   if (rcsvc) {
@@ -2075,12 +2073,6 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_FullscreenAllowedByOwner>,
                              const bool& aAllowed, ContentParent* aSource) {
-  return CheckOnlyEmbedderCanSet(aSource);
-}
-
-bool BrowsingContext::CanSet(FieldIndex<IDX_UseErrorPages>,
-                             const bool& aUseErrorPages,
-                             ContentParent* aSource) {
   return CheckOnlyEmbedderCanSet(aSource);
 }
 
