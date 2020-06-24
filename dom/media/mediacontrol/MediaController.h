@@ -106,6 +106,8 @@ class MediaController final : public DOMEventTargetHelper,
                                  MediaAudibleState aState) override;
   void SetIsInPictureInPictureMode(uint64_t aBrowsingContextId,
                                    bool aIsInPictureInPictureMode) override;
+  void NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
+                                  bool aIsInFullScreen) override;
 
   // Reture true if any of controlled media is being used in Picture-In-Picture
   // mode.
@@ -146,6 +148,7 @@ class MediaController final : public DOMEventTargetHelper,
   bool mIsActive = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;
+  bool mIsInFullScreenMode = false;
 
   // We would monitor the change of media session actions and convert them to
   // the media keys, then determine the supported media keys.

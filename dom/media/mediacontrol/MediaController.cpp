@@ -285,6 +285,15 @@ void MediaController::SetIsInPictureInPictureMode(
   UpdateDeactivationTimerIfNeeded();
 }
 
+void MediaController::NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
+                                                 bool aIsInFullScreen) {
+  if (mIsInFullScreenMode == aIsInFullScreen) {
+    return;
+  }
+  LOG("%s fullscreen", aIsInFullScreen ? "Entered" : "Left");
+  mIsInFullScreenMode = aIsInFullScreen;
+}
+
 void MediaController::HandleActualPlaybackStateChanged() {
   // Media control service would like to know all controllers' playback state
   // in order to decide which controller should be the main controller that is

@@ -6242,6 +6242,18 @@ ContentParent::RecvNotifyMediaSessionSupportedActionChanged(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaFullScreenState(
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aIsInFullScreen) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  if (RefPtr<IMediaInfoUpdater> updater =
+          aContext.get_canonical()->GetMediaController()) {
+    updater->NotifyMediaFullScreenState(aContext.ContextId(), aIsInFullScreen);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvGetModulesTrust(
     ModulePaths&& aModPaths, bool aRunAtNormalPriority,
     GetModulesTrustResolver&& aResolver) {
