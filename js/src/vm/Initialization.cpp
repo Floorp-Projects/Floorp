@@ -15,6 +15,7 @@
 #include "jstypes.h"
 
 #include "builtin/AtomicsObject.h"
+#include "builtin/TestingFunctions.h"
 #include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Statistics.h"
 #include "jit/AtomicOperations.h"
@@ -201,6 +202,7 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(js::CreateHelperThreadsState());
   RETURN_IF_FAIL(FutexThread::initialize());
   RETURN_IF_FAIL(js::gcstats::Statistics::initialize());
+  RETURN_IF_FAIL(js::InitTestingFunctions());
 
 #ifdef JS_SIMULATOR
   RETURN_IF_FAIL(js::jit::SimulatorProcess::initialize());

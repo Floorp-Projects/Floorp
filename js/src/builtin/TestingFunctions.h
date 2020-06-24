@@ -11,6 +11,8 @@
 
 namespace js {
 
+MOZ_MUST_USE bool InitTestingFunctions();
+
 MOZ_MUST_USE bool DefineTestingFunctions(JSContext* cx, HandleObject obj,
                                          bool fuzzingSafe,
                                          bool disableOOMFunctions);
