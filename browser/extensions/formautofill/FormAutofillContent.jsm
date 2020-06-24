@@ -372,6 +372,7 @@ let ProfileAutocomplete = {
     let formDetails = FormAutofillContent.activeFormDetails;
     if (!formDetails) {
       // The observer notification is for a different frame.
+      FormAutofillContent.autofillPending = false;
       return;
     }
 
@@ -382,6 +383,7 @@ let ProfileAutocomplete = {
       this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) !=
         "autofill-profile"
     ) {
+      FormAutofillContent.autofillPending = false;
       return;
     }
 
@@ -611,7 +613,14 @@ var FormAutofillContent = {
     this.debug("updateActiveElement: checking for popup-on-focus");
     // We know this element just received focus. If it's a credit card field,
     // open its popup.
-    if (!this._autofillPending && element.value?.length === 0) {
+    if (this._autofillPending) {
+      this.debug("updateActiveElement: skipping check; autofill is imminent");
+    } else if (element.value?.length !== 0) {
+      this.debug(
+        "updateActiveElement: Not opening popup because field is " +
+          `not empty: element.value = "${element.value}"`
+      );
+    } else {
       this.debug(
         "updateActiveElement: checking if empty field is cc-*: ",
         this.activeFieldDetail?.fieldName
