@@ -88,7 +88,7 @@ pub unsafe extern "C" fn fog_init(
     let configuration = Configuration {
         upload_enabled,
         data_path,
-        application_id: "org-mozilla-firefox".to_string(),
+        application_id: "firefox.desktop".to_string(),
         max_events: None,
         delay_ping_lifetime_io: false,
         language_binding_name: "Rust".into(),
