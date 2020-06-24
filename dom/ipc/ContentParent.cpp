@@ -6902,6 +6902,8 @@ NS_IMETHODIMP ContentParent::GetActor(const nsACString& aName,
   return NS_OK;
 }
 
+IPCResult ContentParent::RecvFOGData(ByteBuf&& buf) { return IPC_OK(); }
+
 }  // namespace dom
 }  // namespace mozilla
 
