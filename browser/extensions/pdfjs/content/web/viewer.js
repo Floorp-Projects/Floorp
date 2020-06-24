@@ -974,7 +974,18 @@ const PDFViewerApplication = {
     }).catch(downloadByUrl);
   },
 
+  _recordFallbackErrorTelemetry(featureId) {
+    this.externalServices.reportTelemetry({
+      type: "unsupportedFeature",
+      featureId
+    });
+  },
+
   fallback(featureId) {
+    if (featureId) {
+      this._recordFallbackErrorTelemetry(featureId);
+    }
+
     if (this._delayedFallbackFeatureIds.length >= 1 && this._hasInteracted) {
       featureId = this._delayedFallbackFeatureIds[0];
       this._delayedFallbackFeatureIds = [];
@@ -1230,6 +1241,8 @@ const PDFViewerApplication = {
 
         this._delayedFallbackFeatureIds.push(_pdfjsLib.UNSUPPORTED_FEATURES.javaScript);
 
+        this._recordFallbackErrorTelemetry(_pdfjsLib.UNSUPPORTED_FEATURES.javaScript);
+
         return true;
       });
 
@@ -1294,6 +1307,8 @@ const PDFViewerApplication = {
       console.warn("Warning: AcroForm/XFA is not supported");
 
       this._delayedFallbackFeatureIds.push(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
+
+      this._recordFallbackErrorTelemetry(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
     }
 
     let versionId = "other";
@@ -8505,14 +8520,18 @@ class PDFThumbnailView {
   }
 
   get _thumbPageTitle() {
+    var _this$pageLabel;
+
     return this.l10n.get("thumb_page_title", {
-      page: this.pageLabel !== null ? this.pageLabel : this.id
+      page: (_this$pageLabel = this.pageLabel) != null ? _this$pageLabel : this.id
     }, "Page {{page}}");
   }
 
   get _thumbPageCanvas() {
+    var _this$pageLabel2;
+
     return this.l10n.get("thumb_page_canvas", {
-      page: this.pageLabel !== null ? this.pageLabel : this.id
+      page: (_this$pageLabel2 = this.pageLabel) != null ? _this$pageLabel2 : this.id
     }, "Thumbnail of Page {{page}}");
   }
 

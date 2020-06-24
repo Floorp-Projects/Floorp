@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(17);
 
 var _svg = __w_pdfjs_require__(18);
 
-const pdfjsVersion = '2.6.24';
-const pdfjsBuild = 'a4fa4554d';
+const pdfjsVersion = '2.6.47';
+const pdfjsBuild = 'a91f24cda';
 ;
 
 /***/ }),
@@ -817,7 +817,6 @@ exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
 exports.isArrayEqual = isArrayEqual;
 exports.isBool = isBool;
-exports.isEmptyObj = isEmptyObj;
 exports.isNum = isNum;
 exports.isString = isString;
 exports.isSameOrigin = isSameOrigin;
@@ -1539,14 +1538,6 @@ function utf8StringToString(str) {
   return unescape(encodeURIComponent(str));
 }
 
-function isEmptyObj(obj) {
-  for (const key in obj) {
-    return false;
-  }
-
-  return true;
-}
-
 function isBool(v) {
   return typeof v === "boolean";
 }
@@ -1857,7 +1848,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.24',
+    apiVersion: '2.6.47',
     source: {
       data: source.data,
       url: source.url,
@@ -3701,9 +3692,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.24';
+const version = '2.6.47';
 exports.version = version;
-const build = 'a4fa4554d';
+const build = 'a91f24cda';
 exports.build = build;
 
 /***/ }),
