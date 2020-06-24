@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
     title='Cancel Task',
     name='cancel',
     symbol='cx',
-    generic=True,
     description=(
         'Cancel the given task'
     ),
