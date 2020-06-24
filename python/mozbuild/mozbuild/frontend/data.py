@@ -1250,7 +1250,7 @@ class GeneratedFile(ContextDerived):
 
     def __init__(self, context, script, method, outputs, inputs,
                  flags=(), localized=False, force=False,
-                 py2=False, required_during_compile=None):
+                 py2=False):
         ContextDerived.__init__(self, context)
         self.script = script
         self.method = method
@@ -1287,12 +1287,8 @@ class GeneratedFile(ContextDerived):
             or 'stl_wrappers/' in f or 'xpidl.stub' in f
         ]
 
-        if required_during_compile is None:
-            self.required_during_compile = [
-                f for f in self.outputs if f.endswith(
-                    ('.asm', '.c', '.cpp', '.m', '.mm', '.def', 'symverscript'))]
-        else:
-            self.required_during_compile = required_during_compile
+        self.required_during_compile = [
+            f for f in self.outputs if f.endswith(('.asm', '.c', '.cpp'))]
 
 
 class ChromeManifestEntry(ContextDerived):
