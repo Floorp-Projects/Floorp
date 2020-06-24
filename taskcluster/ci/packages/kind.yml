@@ -143,8 +143,8 @@ jobs:
             symbol: Deb8(valgrind)
         worker:
             env:
-                VERSION: 3.15.99.git20200122
-                COMMIT: 16eb4436e2b2c2e6e4fc51520b1ef16607204313
+                VERSION: 3.16.1
+                COMMIT: 24f63fd435e7bdab5058f2ab52953eb53a768010
         run:
             using: debian-package
             dsc:
@@ -159,8 +159,8 @@ jobs:
                 tar -C .. -jxf ../valgrind_$VERSION.orig.tar.bz2 &&
                 cp -r debian ../valgrind-$VERSION &&
                 cd ../valgrind-$VERSION &&
-                sed -i '/08_fix-spelling-in-manpage.patch/d;/11_arm64-cache-flush.patch/d' debian/patches/series &&
-                debchange -v 1:$VERSION-1.deb8moz1 --distribution jessie "Mozilla backport of git master as of 2020-01-22." < /dev/null
+                sed -i '/07_fix-spelling-in-binary.patch/d;/08_fix-spelling-in-manpage.patch/d;/11_arm64-cache-flush.patch/d' debian/patches/series &&
+                debchange -v 1:$VERSION-1.deb8moz1 --distribution jessie "Mozilla backport of 3.16.1." < /dev/null
 
     deb8-dh-python:
         description: "dh-python for Debian jessie"
