@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Photon colors -->
     <color name="dark_grey_05">#5B5B66</color>
     <color name="dark_grey_10">#52525E</color>
@@ -370,4 +370,7 @@
 
     <!-- SearchView Hint Color -->
     <color name="search_view_hint_color">#5B5B66</color>
+
+    <!-- TextInputLayout default Error Color -->
+    <color name="design_error" tools:override="true">@color/destructive_light_theme</color>
 </resources>

@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Normal theme colors for dark mode -->
     <color name="primary_text_normal_theme">@color/primary_text_dark_theme</color>
     <color name="secondary_text_normal_theme">@color/secondary_text_dark_theme</color>
@@ -73,4 +73,7 @@
 
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/primary_text_dark_theme</color>
+
+    <!-- TextInputLayout default Error Color -->
+    <color name="design_error" tools:override="true">@color/destructive_dark_theme</color>
 </resources>
