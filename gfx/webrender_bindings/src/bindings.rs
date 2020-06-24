@@ -1349,10 +1349,12 @@ pub extern "C" fn wr_window_new(
 ) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
-    let native_gl = if unsafe { is_glcontext_gles(gl_context) } {
-        unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) }
+    let native_gl = if gl_context == ptr::null_mut() {
+        None
+    } else if unsafe { is_glcontext_gles(gl_context) } {
+        unsafe { Some(gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol))) }
     } else {
-        unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) }
+        unsafe { Some(gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol))) }
     };
 
     let software = swgl_context != ptr::null_mut();
@@ -1361,7 +1363,7 @@ pub extern "C" fn wr_window_new(
         ctx.make_current();
         (Rc::new(ctx.clone()) as Rc<dyn gl::Gl>, Some(ctx))
     } else {
-        (native_gl.clone(), None)
+        (native_gl.as_ref().expect("Native GL context required when not using SWGL!").clone(), None)
     };
 
     let version = gl.get_string(gl::VERSION);
@@ -1377,7 +1379,8 @@ pub extern "C" fn wr_window_new(
         }
     };
 
-    let upload_method = if unsafe { is_glcontext_angle(gl_context) } {
+    let upload_method = if gl_context != ptr::null_mut() &&
+                           unsafe { is_glcontext_angle(gl_context) } {
         UploadMethod::Immediate
     } else {
         UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT)
@@ -1409,7 +1412,7 @@ pub extern "C" fn wr_window_new(
         };
         CompositorConfig::Native {
             max_update_rects: 1,
-            compositor: Box::new(SwCompositor::new(sw_gl.unwrap(), Some(native_gl), wr_compositor)),
+            compositor: Box::new(SwCompositor::new(sw_gl.unwrap(), native_gl, wr_compositor)),
         }
     } else if compositor != ptr::null_mut() {
         CompositorConfig::Native {

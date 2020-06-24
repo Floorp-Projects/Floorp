@@ -136,7 +136,11 @@ RenderedFrameId RendererOGL::UpdateAndRender(
 
   if (mSoftwareContext) {
     wr_swgl_make_current(mSoftwareContext);
-    wr_swgl_init_default_framebuffer(mSoftwareContext, size.width, size.height);
+    uint8_t* data = nullptr;
+    int32_t stride = 0;
+    mCompositor->GetMappedBuffer(&data, &stride);
+    wr_swgl_init_default_framebuffer(mSoftwareContext, size.width, size.height,
+                                     stride, data);
   }
 
   wr_renderer_update(mRenderer);
@@ -154,6 +158,7 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   nsTArray<DeviceIntRect> dirtyRects;
   if (!wr_renderer_render(mRenderer, size.width, size.height, aOutStats,
                           &dirtyRects)) {
+    mCompositor->CancelFrame();
     RenderThread::Get()->HandleWebRenderError(WebRenderError::RENDER);
     mCompositor->GetWidget()->PostRender(&widgetContext);
     return RenderedFrameId();

@@ -122,7 +122,10 @@ RenderCompositor::RenderCompositor(RefPtr<widget::CompositorWidget>&& aWidget)
 
 RenderCompositor::~RenderCompositor() = default;
 
-bool RenderCompositor::MakeCurrent() { return gl()->MakeCurrent(); }
+bool RenderCompositor::MakeCurrent() {
+  gl::GLContext* context = gl();
+  return !context || context->MakeCurrent();
+}
 
 bool RenderCompositor::IsContextLost() {
   // XXX Add glGetGraphicsResetStatus handling for checking rendering context
