@@ -8,15 +8,13 @@ import android.content.Context
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.getColor
-import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
-import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.account_share_list_item.view.*
 import mozilla.components.concept.sync.DeviceType
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.share.ShareToAccountDevicesInteractor
 import org.mozilla.fenix.share.listadapters.SyncShareOption
+import org.mozilla.fenix.utils.Do
 
 class AccountDeviceViewHolder(
     itemView: View,
@@ -52,7 +50,7 @@ class AccountDeviceViewHolder(
 
         itemView.deviceIcon.apply {
             setImageResource(drawableRes)
-            background.colorFilter = createBlendModeColorFilterCompat(getColor(context, colorRes), SRC_IN)
+            background.setTint(getColor(context, colorRes))
             drawable.setTint(getColor(context, R.color.device_foreground))
         }
         itemView.isClickable = option != SyncShareOption.Offline

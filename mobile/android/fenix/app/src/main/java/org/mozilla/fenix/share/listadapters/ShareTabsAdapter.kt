@@ -33,7 +33,11 @@ class ShareTabsAdapter :
     class ShareTabViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: ShareData) = with(itemView) {
-            context.components.core.icons.loadIntoView(itemView.share_tab_favicon, item.url.orEmpty())
+            val url = item.url
+            if (!url.isNullOrEmpty()) {
+                context.components.core.icons.loadIntoView(itemView.share_tab_favicon, url)
+            }
+
             itemView.share_tab_title.text = item.title
             itemView.share_tab_url.text = item.url
         }
