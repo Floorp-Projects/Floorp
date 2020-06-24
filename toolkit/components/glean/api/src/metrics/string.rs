@@ -4,8 +4,6 @@
 
 use super::CommonMetricData;
 
-use crate::ipc::{need_ipc, MetricId};
-
 /// A string metric.
 ///
 /// Record an Unicode string value with arbitrary content.
@@ -35,25 +33,13 @@ use crate::ipc::{need_ipc, MetricId};
 /// ```rust,ignore
 /// browser::search_engine.set("websearch");
 /// ```
-#[derive(Debug)]
-pub enum StringMetric {
-    Parent(StringMetricImpl),
-    Child(StringMetricIpc),
-}
-
 #[derive(Clone, Debug)]
-pub struct StringMetricImpl(pub(crate) glean_core::metrics::StringMetric);
-#[derive(Debug)]
-pub struct StringMetricIpc(MetricId);
+pub struct StringMetric(pub(crate) glean_core::metrics::StringMetric);
 
 impl StringMetric {
     /// Create a new string metric.
     pub fn new(meta: CommonMetricData) -> Self {
-        if need_ipc() {
-            StringMetric::Child(StringMetricIpc(MetricId::new(meta)))
-        } else {
-            StringMetric::Parent(StringMetricImpl::new(meta))
-        }
+        Self(glean_core::metrics::StringMetric::new(meta))
     }
 
     /// Set to the specified value.
@@ -67,17 +53,7 @@ impl StringMetric {
     /// Truncates the value if it is longer than `MAX_STRING_LENGTH` bytes and logs an error.
     /// See [String metric limits](https://mozilla.github.io/glean/book/user/metrics/string.html#limits).
     pub fn set<S: Into<String>>(&self, value: S) {
-        match self {
-            StringMetric::Parent(p) => p.set(value),
-            // No truncation here. Hrm.
-            StringMetric::Child(_c) => {
-                log::error!(
-                    "Unable to set string metric {:?} in non-main process. Ignoring.",
-                    self
-                );
-                // TODO: Record an error.
-            }
-        };
+        crate::with_glean(move |glean| self.0.set(glean, value))
     }
 
     /// **Test-only API.**
@@ -93,26 +69,6 @@ impl StringMetric {
     ///
     /// Returns the stored value or `None` if nothing stored.
     pub fn test_get_value(&self, storage_name: &str) -> Option<String> {
-        match self {
-            StringMetric::Parent(p) => p.test_get_value(storage_name),
-            StringMetric::Child(_c) => panic!(
-                "Cannot get test value for {:?} in non-parent process!",
-                self
-            ),
-        }
-    }
-}
-
-impl StringMetricImpl {
-    fn new(meta: CommonMetricData) -> Self {
-        Self(glean_core::metrics::StringMetric::new(meta))
-    }
-
-    fn set<S: Into<String>>(&self, value: S) {
-        crate::with_glean(move |glean| self.0.set(glean, value))
-    }
-
-    fn test_get_value(&self, storage_name: &str) -> Option<String> {
         crate::with_glean(move |glean| self.0.test_get_value(glean, storage_name))
     }
 }

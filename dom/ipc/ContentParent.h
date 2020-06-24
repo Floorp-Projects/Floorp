@@ -1326,8 +1326,6 @@ class ContentParent final
   void AppendDynamicSandboxParams(std::vector<std::string>& aArgs);
 #endif
 
-  mozilla::ipc::IPCResult RecvFOGData(ByteBuf&& buf);
-
  public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);

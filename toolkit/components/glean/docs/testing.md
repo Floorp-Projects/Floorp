@@ -34,16 +34,11 @@ This supports both unit tests
 
 To run FOG's `rusttests` suite use `mach rusttests`
 
-If the crate uses only a few Gecko symbols, they may use the
-`with_gecko` feature to conditionally use them.
-This allows the crate to test its non-Gecko-adjacent code using Rust tests.
-(You will need to cover the Gecko-adjacent code via another means.)
-
 ### Using `gtest`
 
 Because Gecko symbols aren't built for the
 `rusttests` build,
-any test that is written for code that uses Gecko symbols should be written as a
+any test that is written for a crate that uses Gecko symbols should be written as a
 [`gtest`](https://github.com/google/googletest)
 in `toolkit/components/glean/gtest/`.
 
@@ -51,7 +46,6 @@ By necessity these can only be integration tests against the compiled crate.
 
 **Note:** When adding a new test file, don't forget to add it to
 `toolkit/components/glean/gtest/moz.build` and use the
-`FOG` prefix in your test names
-(e.g. `TEST(FOG, YourTestName) { ... }`).
+`FOG` prefix in your test names.
 
 To run FOG's Rust `gtest` suite use `mach gtest FOG.*`
