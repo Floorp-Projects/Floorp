@@ -25,6 +25,7 @@
 #endif
 #include "Tracing.h"
 #include "webaudio/blink/DenormalDisabler.h"
+#include "AudioThreadRegistry.h"
 
 // Use abort() instead of exception in SoundTouch.
 #define ST_NO_EXCEPTION_HANDLING 1
@@ -137,7 +138,9 @@ AudioStream::AudioStream(DataSource& aSource)
       mTimeStretcher(nullptr),
       mState(INITIALIZED),
       mDataSource(aSource),
-      mPrefillQuirk(false) {
+      mPrefillQuirk(false),
+      mAudioThreadId(0),
+      mSandboxed(CubebUtils::SandboxEnabled()) {
 #if defined(XP_WIN)
   if (XRE_IsContentProcess()) {
     audio::AudioNotificationReceiver::Register(this);
@@ -584,7 +587,21 @@ void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
       aWriter.Available());
 }
 
+bool AudioStream::CheckThreadIdChanged() {
+#ifdef MOZ_GECKO_PROFILER
+  auto id = profiler_current_thread_id();
+  if (id != mAudioThreadId) {
+    mAudioThreadId = id;
+    return true;
+  }
+#endif
+  return false;
+}
+
 long AudioStream::DataCallback(void* aBuffer, long aFrames) {
+  if (!mSandboxed && CheckThreadIdChanged()) {
+    CubebUtils::GetAudioThreadRegistry()->Register(mAudioThreadId);
+  }
   WebCore::DenormalDisabler disabler;
 
   TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
@@ -640,6 +657,9 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
   mDumpFile.Write(static_cast<const AudioDataValue*>(aBuffer),
                   aFrames * mOutChannels);
 
+  if (!mSandboxed && writer.Available() != 0) {
+    CubebUtils::GetAudioThreadRegistry()->Unregister(mAudioThreadId);
+  }
   return aFrames - writer.Available();
 }
 
