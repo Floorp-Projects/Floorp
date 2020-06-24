@@ -221,21 +221,6 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvSubFrameCrashed() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserBridgeChild::RecvAddBlockedNodeByClassifier() {
-  RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
-  if (!owner) {
-    return IPC_OK();
-  }
-
-  RefPtr<Document> doc = mFrameLoader->GetOwnerDoc();
-  if (!doc) {
-    return IPC_OK();
-  }
-
-  doc->AddBlockedNodeByClassifier(owner);
-  return IPC_OK();
-}
-
 void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (!mBrowsingContext) {
     // This BBC was never valid, skip teardown.

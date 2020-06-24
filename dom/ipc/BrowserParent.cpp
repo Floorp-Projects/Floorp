@@ -2763,18 +2763,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-BrowserParent::RecvReportBlockedEmbedderNodeByClassifier() {
-  BrowserBridgeParent* bridge = GetBrowserBridgeParent();
-
-  if (!bridge) {
-    return IPC_OK();
-  }
-
-  Unused << bridge->SendAddBlockedNodeByClassifier();
-  return IPC_OK();
-}
-
 already_AddRefed<nsIBrowser> BrowserParent::GetBrowser() {
   nsCOMPtr<nsIBrowser> browser;
   RefPtr<Element> currentElement = mFrameElement;
