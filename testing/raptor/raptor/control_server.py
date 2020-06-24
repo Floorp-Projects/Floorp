@@ -142,7 +142,7 @@ def MakeCustomHandlerClass(
                         self.send_header("Access-Control-Allow-Origin", "*")
                         self.send_header("Content-type", "application/json")
                         self.end_headers()
-                        self.wfile.write(json.dumps(json.load(json_settings)))
+                        self.wfile.write(json.dumps(json.load(json_settings)).encode("utf-8"))
                         self.wfile.close()
                         LOG.info("sent test settings to webext runner")
                 except Exception as ex:

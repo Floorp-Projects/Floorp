@@ -193,7 +193,7 @@ class RaptorRunner(MozbuildObject):
 
     def write_config(self):
         try:
-            config_file = open(self.config_file_path, 'wb')
+            config_file = open(self.config_file_path, 'w')
             config_file.write(json.dumps(self.config))
             config_file.close()
         except IOError as e:

@@ -17,6 +17,8 @@ import tempfile
 
 from shutil import copyfile, rmtree
 
+from six import string_types
+
 import mozharness
 
 from mozharness.base.errors import PythonErrorList
@@ -24,6 +26,7 @@ from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL, INFO
 from mozharness.mozilla.automation import (
     EXIT_STATUS_DICT, TBPL_SUCCESS, TBPL_RETRY, TBPL_WORST_LEVEL_TUPLE
 )
+from mozharness.base.python import Python3Virtualenv
 from mozharness.mozilla.testing.android import AndroidMixin
 from mozharness.mozilla.testing.errors import HarnessErrorList, TinderBoxPrintRe
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
@@ -50,7 +53,7 @@ RaptorErrorList = PythonErrorList + HarnessErrorList + [
 ]
 
 
-class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
+class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Python3Virtualenv):
     """
     Install and run Raptor tests
     """
@@ -641,7 +644,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             # Allow overriding defaults on the `./mach raptor-test ...` command-line
             value = self.config.get(details['dest'])
             if value and arg not in self.config.get("raptor_cmd_line_args", []):
-                if isinstance(value, basestring):
+                if isinstance(value, string_types):
                     options.extend([arg, os.path.expandvars(value)])
                 else:
                     options.extend([arg])

@@ -405,7 +405,7 @@ def get_raptor_test_list(args, oskey):
             next_test['page_cycles'] = args.page_cycles
             LOG.info("setting page-cycles to %d as specified on cmd line" % args.page_cycles)
         else:
-            if int(next_test.get('page_cycles', 1)) > max_page_cycles:
+            if int(next_test.get('page_cycles', 1)) > int(max_page_cycles):
                 next_test['page_cycles'] = max_page_cycles
                 LOG.info("setting page-cycles to %d because gecko-profling is enabled"
                          % next_test['page_cycles'])
