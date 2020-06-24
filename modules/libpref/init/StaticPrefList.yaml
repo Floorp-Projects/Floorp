@@ -1498,12 +1498,6 @@
   value: true
   mirror: always
 
-# Block Insecure downloads from Secure Origins
-- name: dom.block_download_insecure
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 # Block multiple window.open() per single event.
 - name: dom.block_multiple_popups
   type: bool
