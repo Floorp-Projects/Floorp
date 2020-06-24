@@ -74,8 +74,6 @@ WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
       mScanEndPoint(aScanEndPoint),
       mEditingHost(aHTMLEditor->GetActiveEditingHost()),
       mPRE(false),
-      mStartRun(nullptr),
-      mEndRun(nullptr),
       mHTMLEditor(aHTMLEditor) {
   MOZ_ASSERT(
       *nsContentUtils::ComparePoints(aScanStartPoint.ToRawRangeBoundary(),
@@ -85,8 +83,6 @@ WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
                        "WSRunScanner::GetWSNodes() failed, but ignored");
   GetRuns();
 }
-
-WSRunScanner::~WSRunScanner() { ClearRuns(); }
 
 template <typename PT, typename CT>
 WSRunObject::WSRunObject(HTMLEditor& aHTMLEditor,
@@ -679,11 +675,11 @@ nsresult WSRunObject::AdjustWhiteSpace() {
     // nothing to do!
     return NS_OK;
   }
-  for (WSFragment* run = mStartRun; run; run = run->mRight) {
-    if (!run->IsVisibleAndMiddleOfHardLine()) {
+  for (const WSFragment& fragment : mFragments) {
+    if (!fragment.IsVisibleAndMiddleOfHardLine()) {
       continue;
     }
-    nsresult rv = NormalizeWhiteSpacesAtEndOf(*run);
+    nsresult rv = NormalizeWhiteSpacesAtEndOf(fragment);
     if (NS_FAILED(rv)) {
       NS_WARNING("WSRunObject::NormalizeWhiteSpacesAtEndOf() failed");
       return rv;
@@ -953,7 +949,7 @@ void WSRunScanner::InitializeRangeEnd(
 }
 
 void WSRunScanner::GetRuns() {
-  ClearRuns();
+  MOZ_ASSERT(mFragments.IsEmpty());
 
   // Handle preformatted case first since it's simple.  Note that if end of
   // the scan range isn't in preformatted element, we need to check only the
@@ -986,20 +982,18 @@ void WSRunScanner::GetRuns() {
     return;
   }
 
-  // otherwise a little trickier.  shucks.
-  mStartRun = new WSFragment();
-  if (mStart.PointRef().IsSet()) {
-    mStartRun->mStartNode = mStart.PointRef().GetContainer();
-    mStartRun->mStartOffset = mStart.PointRef().Offset();
-  }
-
   if (!StartsFromHardLineBreak()) {
-    mStartRun->MarkAsVisible();
-    if (mNBSPData.LastPointRef().IsSet()) {
-      mStartRun->mEndNode = mNBSPData.LastPointRef().GetContainer();
-      mStartRun->mEndOffset = mNBSPData.LastPointRef().Offset() + 1;
+    WSFragment* startRun = mFragments.AppendElement();
+    startRun->MarkAsVisible();
+    if (mStart.PointRef().IsSet()) {
+      startRun->mStartNode = mStart.PointRef().GetContainer();
+      startRun->mStartOffset = mStart.PointRef().Offset();
     }
-    mStartRun->SetStartFrom(mStart.RawReason());
+    startRun->SetStartFrom(mStart.RawReason());
+    if (mNBSPData.LastPointRef().IsSet()) {
+      startRun->mEndNode = mNBSPData.LastPointRef().GetContainer();
+      startRun->mEndOffset = mNBSPData.LastPointRef().Offset() + 1;
+    }
 
     // we might have trailing ws.
     // it so happens that *if* there is an nbsp at end, {mEndNode,mEndOffset-1}
@@ -1009,50 +1003,52 @@ void WSRunScanner::GetRuns() {
         mNBSPData.LastPointRef().GetContainer() ==
             mEnd.PointRef().GetContainer() &&
         mNBSPData.LastPointRef().Offset() == mEnd.PointRef().Offset() - 1) {
-      mStartRun->SetEndBy(mEnd.RawReason());
-      mStartRun->mEndNode = mEnd.PointRef().GetContainer();
-      mStartRun->mEndOffset = mEnd.PointRef().Offset();
-      mEndRun = mStartRun;
+      startRun->SetEndBy(mEnd.RawReason());
+      startRun->mEndNode = mEnd.PointRef().GetContainer();
+      startRun->mEndOffset = mEnd.PointRef().Offset();
       return;
     }
 
     // set up next run
-    WSFragment* lastRun = new WSFragment();
+    WSFragment* lastRun = mFragments.AppendElement();
     lastRun->MarkAsEndOfHardLine();
     if (mNBSPData.LastPointRef().IsSet()) {
       lastRun->mStartNode = mNBSPData.LastPointRef().GetContainer();
       lastRun->mStartOffset = mNBSPData.LastPointRef().Offset() + 1;
     }
     lastRun->SetStartFromNormalWhiteSpaces();
-    lastRun->mLeft = mStartRun;
+    lastRun->mLeft = startRun;
     lastRun->SetEndBy(mEnd.RawReason());
-    mEndRun = lastRun;
-    mStartRun->mRight = lastRun;
-    mStartRun->SetEndByTrailingWhiteSpaces();
+    startRun->mRight = lastRun;
+    startRun->SetEndByTrailingWhiteSpaces();
     return;
   }
 
   MOZ_ASSERT(StartsFromHardLineBreak());
 
-  // set up mStartRun
-  mStartRun->MarkAsStartOfHardLine();
-  if (mNBSPData.FirstPointRef().IsSet()) {
-    mStartRun->mEndNode = mNBSPData.FirstPointRef().GetContainer();
-    mStartRun->mEndOffset = mNBSPData.FirstPointRef().Offset();
+  WSFragment* startRun = mFragments.AppendElement();
+  startRun->MarkAsStartOfHardLine();
+  if (mStart.PointRef().IsSet()) {
+    startRun->mStartNode = mStart.PointRef().GetContainer();
+    startRun->mStartOffset = mStart.PointRef().Offset();
   }
-  mStartRun->SetStartFrom(mStart.RawReason());
-  mStartRun->SetEndByNormalWiteSpaces();
+  startRun->SetStartFrom(mStart.RawReason());
+  if (mNBSPData.FirstPointRef().IsSet()) {
+    startRun->mEndNode = mNBSPData.FirstPointRef().GetContainer();
+    startRun->mEndOffset = mNBSPData.FirstPointRef().Offset();
+  }
+  startRun->SetEndByNormalWiteSpaces();
 
   // set up next run
-  WSFragment* normalRun = new WSFragment();
-  mStartRun->mRight = normalRun;
+  WSFragment* normalRun = mFragments.AppendElement();
+  startRun->mRight = normalRun;
   normalRun->MarkAsVisible();
   if (mNBSPData.FirstPointRef().IsSet()) {
     normalRun->mStartNode = mNBSPData.FirstPointRef().GetContainer();
     normalRun->mStartOffset = mNBSPData.FirstPointRef().Offset();
   }
   normalRun->SetStartFromLeadingWhiteSpaces();
-  normalRun->mLeft = mStartRun;
+  normalRun->mLeft = startRun;
   if (!EndsByBlockBoundary()) {
     // then no trailing ws.  this normal run ends the overall ws run.
     normalRun->SetEndBy(mEnd.RawReason());
@@ -1060,7 +1056,6 @@ void WSRunScanner::GetRuns() {
       normalRun->mEndNode = mEnd.PointRef().GetContainer();
       normalRun->mEndOffset = mEnd.PointRef().Offset();
     }
-    mEndRun = normalRun;
     return;
   }
 
@@ -1076,7 +1071,6 @@ void WSRunScanner::GetRuns() {
     normalRun->SetEndBy(mEnd.RawReason());
     normalRun->mEndNode = mEnd.PointRef().GetContainer();
     normalRun->mEndOffset = mEnd.PointRef().Offset();
-    mEndRun = normalRun;
     return;
   }
 
@@ -1087,7 +1081,7 @@ void WSRunScanner::GetRuns() {
   normalRun->SetEndByTrailingWhiteSpaces();
 
   // set up next run
-  WSFragment* lastRun = new WSFragment();
+  WSFragment* lastRun = mFragments.AppendElement();
   lastRun->MarkAsEndOfHardLine();
   if (mNBSPData.LastPointRef().IsSet()) {
     lastRun->mStartNode = mNBSPData.LastPointRef().GetContainer();
@@ -1100,52 +1094,36 @@ void WSRunScanner::GetRuns() {
   lastRun->SetStartFromNormalWhiteSpaces();
   lastRun->mLeft = normalRun;
   lastRun->SetEndBy(mEnd.RawReason());
-  mEndRun = lastRun;
   normalRun->mRight = lastRun;
-}
-
-void WSRunScanner::ClearRuns() {
-  WSFragment *tmp, *run;
-  run = mStartRun;
-  while (run) {
-    tmp = run->mRight;
-    delete run;
-    run = tmp;
-  }
-  mStartRun = 0;
-  mEndRun = 0;
 }
 
 void WSRunScanner::InitializeWithSingleFragment(
     WSFragment::Visible aIsVisible,
     WSFragment::StartOfHardLine aIsStartOfHardLine,
     WSFragment::EndOfHardLine aIsEndOfHardLine) {
-  MOZ_ASSERT(!mStartRun);
-  MOZ_ASSERT(!mEndRun);
+  MOZ_ASSERT(mFragments.IsEmpty());
 
-  mStartRun = new WSFragment();
+  WSFragment* startRun = mFragments.AppendElement();
 
   if (mStart.PointRef().IsSet()) {
-    mStartRun->mStartNode = mStart.PointRef().GetContainer();
-    mStartRun->mStartOffset = mStart.PointRef().Offset();
+    startRun->mStartNode = mStart.PointRef().GetContainer();
+    startRun->mStartOffset = mStart.PointRef().Offset();
   }
   if (aIsVisible == WSFragment::Visible::Yes) {
-    mStartRun->MarkAsVisible();
+    startRun->MarkAsVisible();
   }
   if (aIsStartOfHardLine == WSFragment::StartOfHardLine::Yes) {
-    mStartRun->MarkAsStartOfHardLine();
+    startRun->MarkAsStartOfHardLine();
   }
   if (aIsEndOfHardLine == WSFragment::EndOfHardLine::Yes) {
-    mStartRun->MarkAsEndOfHardLine();
+    startRun->MarkAsEndOfHardLine();
   }
   if (mEnd.PointRef().IsSet()) {
-    mStartRun->mEndNode = mEnd.PointRef().GetContainer();
-    mStartRun->mEndOffset = mEnd.PointRef().Offset();
+    startRun->mEndNode = mEnd.PointRef().GetContainer();
+    startRun->mEndOffset = mEnd.PointRef().Offset();
   }
-  mStartRun->SetStartFrom(mStart.RawReason());
-  mStartRun->SetEndBy(mEnd.RawReason());
-
-  mEndRun = mStartRun;
+  startRun->SetStartFrom(mStart.RawReason());
+  startRun->SetEndBy(mEnd.RawReason());
 }
 
 nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
@@ -1636,37 +1614,38 @@ const WSRunScanner::WSFragment* WSRunScanner::FindNearestFragment(
     const EditorDOMPointBase<PT, CT>& aPoint, bool aForward) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  for (WSFragment* run = mStartRun; run; run = run->mRight) {
-    int32_t comp = run->mStartNode ? *nsContentUtils::ComparePoints(
-                                         aPoint.ToRawRangeBoundary(),
-                                         run->StartPoint().ToRawRangeBoundary())
-                                   : -1;
+  for (const WSFragment& fragment : mFragments) {
+    int32_t comp = fragment.mStartNode
+                       ? *nsContentUtils::ComparePoints(
+                             aPoint.ToRawRangeBoundary(),
+                             fragment.StartPoint().ToRawRangeBoundary())
+                       : -1;
     if (comp <= 0) {
-      // aPoint equals or before start of the run.  Return the run if we're
-      // scanning forward, otherwise, nullptr.
-      return aForward ? run : nullptr;
+      // aPoint equals or before start of the fragment.
+      // Return it if we're scanning forward, otherwise, nullptr.
+      return aForward ? &fragment : nullptr;
     }
 
-    comp = run->mEndNode ? *nsContentUtils::ComparePoints(
-                               aPoint.ToRawRangeBoundary(),
-                               run->EndPoint().ToRawRangeBoundary())
-                         : -1;
+    comp = fragment.mEndNode ? *nsContentUtils::ComparePoints(
+                                   aPoint.ToRawRangeBoundary(),
+                                   fragment.EndPoint().ToRawRangeBoundary())
+                             : -1;
     if (comp < 0) {
-      // If aPoint is in the run, return the run.
-      return run;
+      // If aPoint is in the fragment, return it.
+      return &fragment;
     }
 
     if (!comp) {
-      // If aPoint is at end of the run, return next run if we're scanning
-      // forward, otherwise, return the run.
-      return aForward ? run->mRight : run;
+      // If aPoint is at end of the fragment, return next fragment if we're
+      // scanning forward, otherwise, return it.
+      return aForward ? fragment.mRight : &fragment;
     }
 
-    if (!run->mRight) {
-      // If the run is the last run and aPoint is after end of the last run,
-      // return nullptr if we're scanning forward, otherwise, return this
-      // last run.
-      return aForward ? nullptr : run;
+    if (!fragment.mRight) {
+      // If the fragment is the last fragment and aPoint is after end of the
+      // last fragment, return nullptr if we're scanning forward, otherwise,
+      // return this last fragment.
+      return aForward ? nullptr : &fragment;
     }
   }
 
@@ -1996,13 +1975,13 @@ nsresult WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
 }
 
 nsresult WSRunObject::Scrub() {
-  for (WSFragment* run = mStartRun; run; run = run->mRight) {
-    if (run->IsMiddleOfHardLine()) {
+  for (const WSFragment& fragment : mFragments) {
+    if (fragment.IsMiddleOfHardLine()) {
       continue;
     }
     nsresult rv = MOZ_KnownLive(mHTMLEditor)
-                      .DeleteTextAndTextNodesWithTransaction(run->StartPoint(),
-                                                             run->EndPoint());
+                      .DeleteTextAndTextNodesWithTransaction(
+                          fragment.StartPoint(), fragment.EndPoint());
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
       return rv;
