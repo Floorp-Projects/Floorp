@@ -46,6 +46,7 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
+import kotlinx.android.synthetic.main.no_collections_message.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -231,6 +232,11 @@ class HomeFragment : Fragment() {
             }
 
             view.tab_button.setCountWithAnimation(tabCount)
+            view.add_tabs_to_collections_button?.visibility = if (tabCount > 0) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
         }
 
         return view
