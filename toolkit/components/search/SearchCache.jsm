@@ -198,7 +198,7 @@ class SearchCache {
     cache.locale = locale;
 
     if (gModernConfig) {
-      cache.builtInEngineList = this._searchOrder;
+      cache.builtInEngineList = this._searchService._searchOrder;
     } else {
       cache.visibleDefaultEngines = this._searchService._visibleDefaultEngines;
     }
