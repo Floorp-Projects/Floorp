@@ -148,6 +148,11 @@ class MobileViewportManager final : public nsIDOMEventListener,
       const mozilla::CSSSize& aNewViewport,
       const mozilla::CSSSize& aOldViewport);
 
+  mozilla::CSSToScreenScale ResolutionToZoom(
+      const mozilla::LayoutDeviceToLayerScale& aResolution) const;
+  mozilla::LayoutDeviceToLayerScale ZoomToResolution(
+      const mozilla::CSSToScreenScale& aZoom) const;
+
   /* Updates the presShell resolution and the visual viewport size for various
    * types of changes. */
   void UpdateResolutionForFirstPaint(const mozilla::CSSSize& aViewportSize);

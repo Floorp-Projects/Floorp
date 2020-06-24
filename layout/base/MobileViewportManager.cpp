@@ -231,18 +231,18 @@ CSSToScreenScale MobileViewportManager::ScaleZoomWithDisplayWidth(
   return newZoom;
 }
 
-static CSSToScreenScale ResolutionToZoom(LayoutDeviceToLayerScale aResolution,
-                                         CSSToLayoutDeviceScale aCssToDev) {
+CSSToScreenScale MobileViewportManager::ResolutionToZoom(
+    const LayoutDeviceToLayerScale& aResolution) const {
   return ViewTargetAs<ScreenPixel>(
-      aCssToDev * aResolution / ParentLayerToLayerScale(1),
+      mContext->CSSToDevPixelScale() * aResolution / ParentLayerToLayerScale(1),
       PixelCastJustification::ScreenIsParentLayerForRoot);
 }
 
-static LayoutDeviceToLayerScale ZoomToResolution(
-    CSSToScreenScale aZoom, CSSToLayoutDeviceScale aCssToDev) {
+LayoutDeviceToLayerScale MobileViewportManager::ZoomToResolution(
+    const CSSToScreenScale& aZoom) const {
   return ViewTargetAs<ParentLayerPixel>(
              aZoom, PixelCastJustification::ScreenIsParentLayerForRoot) /
-         aCssToDev * ParentLayerToLayerScale(1);
+         mContext->CSSToDevPixelScale() * ParentLayerToLayerScale(1);
 }
 
 void MobileViewportManager::UpdateResolutionForFirstPaint(
@@ -254,9 +254,7 @@ void MobileViewportManager::UpdateResolutionForFirstPaint(
 
   if (mRestoreResolution) {
     LayoutDeviceToLayerScale restoreResolution(*mRestoreResolution);
-    CSSToLayoutDeviceScale cssToDev = mContext->CSSToDevPixelScale();
-    CSSToScreenScale restoreZoom =
-        ResolutionToZoom(restoreResolution, cssToDev);
+    CSSToScreenScale restoreZoom = ResolutionToZoom(restoreResolution);
     if (mRestoreDisplaySize) {
       CSSSize prevViewport =
           mContext->GetViewportInfo(*mRestoreDisplaySize).GetSize();
@@ -454,8 +452,7 @@ void MobileViewportManager::ApplyNewZoom(const ScreenIntSize& aDisplaySize,
   // so we better be sure we've got a positive zoom factor.
   MOZ_ASSERT(aNewZoom > CSSToScreenScale(0.0f), "zoom factor must be positive");
 
-  CSSToLayoutDeviceScale cssToDev = mContext->CSSToDevPixelScale();
-  LayoutDeviceToLayerScale resolution = ZoomToResolution(aNewZoom, cssToDev);
+  LayoutDeviceToLayerScale resolution = ZoomToResolution(aNewZoom);
   MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
   mContext->SetResolutionAndScaleTo(
       resolution.scale, ResolutionChangeOrigin::MainThreadAdjustment);
@@ -503,9 +500,8 @@ void MobileViewportManager::UpdateVisualViewportSize(
 }
 
 CSSToScreenScale MobileViewportManager::GetZoom() const {
-  CSSToLayoutDeviceScale cssToDev = mContext->CSSToDevPixelScale();
   LayoutDeviceToLayerScale res(mContext->GetResolution());
-  return ResolutionToZoom(res, cssToDev);
+  return ResolutionToZoom(res);
 }
 
 void MobileViewportManager::UpdateVisualViewportSizeByDynamicToolbar(
