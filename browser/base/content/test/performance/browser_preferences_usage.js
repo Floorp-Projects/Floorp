@@ -16,7 +16,7 @@ const DEFAULT_PROCESS_COUNT = Services.prefs
  * @param {Array}  stats - an array of [prefName, accessCount] tuples
  * @param {Number} max - the maximum number of times any of the prefs should
  *                 have been called.
- * @param {Object} whitelist (optional) - an object that defines
+ * @param {Object} knownProblematicPrefs (optional) - an object that defines
  *                 prefs that should be exempt from checking the
  *                 maximum access. It looks like the following:
  *
@@ -27,18 +27,18 @@ const DEFAULT_PROCESS_COUNT = Services.prefs
  *                                 been called (to avoid this creeping up further)
  *                 }
  */
-function checkPrefGetters(stats, max, whitelist = {}) {
+function checkPrefGetters(stats, max, knownProblematicPrefs = {}) {
   let getterStats = Object.entries(stats).sort(
     ([, val1], [, val2]) => val2 - val1
   );
 
-  // Clone the whitelist to be able to delete entries to check if we
+  // Clone the list to be able to delete entries to check if we
   // forgot any later on.
-  whitelist = Object.assign({}, whitelist);
+  knownProblematicPrefs = Object.assign({}, knownProblematicPrefs);
 
   for (let [pref, count] of getterStats) {
-    let whitelistItem = whitelist[pref];
-    if (!whitelistItem) {
+    let prefLimits = knownProblematicPrefs[pref];
+    if (!prefLimits) {
       Assert.lessOrEqual(
         count,
         max,
@@ -46,42 +46,42 @@ function checkPrefGetters(stats, max, whitelist = {}) {
       );
     } else {
       // Still record how much this pref was accessed even if we don't do any real assertions.
-      if (!whitelistItem.min && !whitelistItem.max) {
+      if (!prefLimits.min && !prefLimits.max) {
         info(
           `${pref} should not be accessed more than ${max} times and was accessed ${count} times.`
         );
       }
 
-      if (whitelistItem.min) {
+      if (prefLimits.min) {
         Assert.lessOrEqual(
-          whitelistItem.min,
+          prefLimits.min,
           count,
-          `Whitelist item ${pref} should be accessed at least ${whitelistItem.min} times.`
+          `${pref} should be accessed at least ${prefLimits.min} times.`
         );
       }
-      if (whitelistItem.max) {
+      if (prefLimits.max) {
         Assert.lessOrEqual(
           count,
-          whitelistItem.max,
-          `Whitelist item ${pref} should be accessed at most ${whitelistItem.max} times.`
+          prefLimits.max,
+          `${pref} should be accessed at most ${prefLimits.max} times.`
         );
       }
-      delete whitelist[pref];
+      delete knownProblematicPrefs[pref];
     }
   }
 
   // This pref will be accessed by mozJSComponentLoader when loading modules,
   // which fails TV runs since they run the test multiple times without restarting.
   // We just ignore this pref, since it's for testing only anyway.
-  if (whitelist["browser.startup.record"]) {
-    delete whitelist["browser.startup.record"];
+  if (knownProblematicPrefs["browser.startup.record"]) {
+    delete knownProblematicPrefs["browser.startup.record"];
   }
 
-  let remainingWhitelist = Object.keys(whitelist);
+  let unusedPrefs = Object.keys(knownProblematicPrefs);
   is(
-    remainingWhitelist.length,
+    unusedPrefs.length,
     0,
-    `Should have checked all whitelist items. Remaining: ${remainingWhitelist}`
+    `Should have accessed all known problematic prefs. Remaining: ${unusedPrefs}`
   );
 }
 
@@ -103,7 +103,7 @@ add_task(async function debug_only() {
 add_task(async function startup() {
   let max = 40;
 
-  let whitelist = {
+  let knownProblematicPrefs = {
     "browser.startup.record": {
       min: 200,
       max: 350,
@@ -131,7 +131,7 @@ add_task(async function startup() {
 
   ok(startupRecorder.data.prefStats, "startupRecorder has prefStats");
 
-  checkPrefGetters(startupRecorder.data.prefStats, max, whitelist);
+  checkPrefGetters(startupRecorder.data.prefStats, max, knownProblematicPrefs);
 });
 
 // This opens 10 tabs and checks pref getters.
@@ -141,7 +141,7 @@ add_task(async function open_10_tabs() {
   // content processes so we approximate with 4 * process_count.
   const max = 4 * DEFAULT_PROCESS_COUNT;
 
-  let whitelist = {
+  let knownProblematicPrefs = {
     "layout.css.dpi": {
       max: 35,
     },
@@ -178,14 +178,14 @@ add_task(async function open_10_tabs() {
     await BrowserTestUtils.removeTab(tab);
   }
 
-  checkPrefGetters(getPreferenceStats(), max, whitelist);
+  checkPrefGetters(getPreferenceStats(), max, knownProblematicPrefs);
 });
 
 // This navigates to 50 sites and checks pref getters.
 add_task(async function navigate_around() {
   let max = 40;
 
-  let whitelist = {
+  let knownProblematicPrefs = {
     "browser.zoom.full": {
       min: 100,
       max: 110,
@@ -203,48 +203,50 @@ add_task(async function navigate_around() {
     // we're more likely to keep some around so this shouldn't be quite
     // this bad in practice. Fixing this is
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1600266
-    whitelist["dom.ipc.processCount.webIsolated"] = {
+    knownProblematicPrefs["dom.ipc.processCount.webIsolated"] = {
       min: 50,
       max: 51,
     };
     // This pref is only accessed in automation to speed up tests.
-    whitelist["dom.ipc.keepProcessesAlive.webIsolated.perOrigin"] = {
+    knownProblematicPrefs[
+      "dom.ipc.keepProcessesAlive.webIsolated.perOrigin"
+    ] = {
       min: 50,
       max: 51,
     };
     if (AppConstants.platform == "linux") {
       // The following 3 sandbox prefs are covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1600189
-      whitelist["security.sandbox.content.write_path_whitelist"] = {
+      knownProblematicPrefs["security.sandbox.content.write_path_whitelist"] = {
         min: 49,
         max: 55,
       };
-      whitelist["security.sandbox.content.read_path_whitelist"] = {
+      knownProblematicPrefs["security.sandbox.content.read_path_whitelist"] = {
         min: 49,
         max: 55,
       };
-      whitelist["security.sandbox.content.force-namespace"] = {
+      knownProblematicPrefs["security.sandbox.content.force-namespace"] = {
         min: 49,
         max: 55,
       };
     } else if (AppConstants.platform == "win") {
       // The following 2 graphics prefs are covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1639497
-      whitelist["gfx.canvas.azure.backends"] = {
+      knownProblematicPrefs["gfx.canvas.azure.backends"] = {
         min: 100,
         max: 101,
       };
-      whitelist["gfx.content.azure.backends"] = {
+      knownProblematicPrefs["gfx.content.azure.backends"] = {
         min: 100,
         max: 101,
       };
       // The following 2 sandbox prefs are covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1639494
-      whitelist["security.sandbox.content.read_path_whitelist"] = {
+      knownProblematicPrefs["security.sandbox.content.read_path_whitelist"] = {
         min: 49,
         max: 55,
       };
-      whitelist["security.sandbox.logging.enabled"] = {
+      knownProblematicPrefs["security.sandbox.logging.enabled"] = {
         min: 49,
         max: 55,
       };
@@ -277,5 +279,5 @@ add_task(async function navigate_around() {
 
   await BrowserTestUtils.removeTab(tab);
 
-  checkPrefGetters(getPreferenceStats(), max, whitelist);
+  checkPrefGetters(getPreferenceStats(), max, knownProblematicPrefs);
 });

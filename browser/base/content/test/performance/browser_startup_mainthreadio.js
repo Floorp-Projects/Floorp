@@ -33,7 +33,11 @@ const LINUX = AppConstants.platform == "linux";
 const WIN = AppConstants.platform == "win";
 const MAC = AppConstants.platform == "macosx";
 
-/* Paths in the whitelist can:
+/* This is an object mapping string phases of startup to lists of known cases
+ * of IO happening on the main thread. Ideally, IO should not be on the main
+ * thread, and should happen as late as possible (see above).
+ *
+ * Paths in the entries in these lists can:
  *  - be a full path, eg. "/etc/mime.types"
  *  - have a prefix which will be resolved using Services.dirsvc
  *    eg. "GreD:omni.ja"
@@ -47,13 +51,14 @@ const MAC = AppConstants.platform == "macosx";
  * automatically converted to '\'.
  *
  * Specifying 'ignoreIfUnused: true' will make the test ignore unused entries;
- * without this the test is strict and will fail if a whitelist entry isn't used.
+ * without this the test is strict and will fail if the described IO does not
+ * happen.
  *
  * Each entry specifies the maximum number of times an operation is expected to
  * occur.
  * The operations currently reported by the I/O interposer are:
  *   create/open: only supported on Windows currently. The test currently
- *     ignores these markers to have a shorter initial whitelist.
+ *     ignores these markers to have a shorter initial list of IO operations.
  *     Adding Unix support is bug 1533779.
  *   stat: supported on all platforms when checking the last modified date or
  *     file size. Supported only on Windows when checking if a file exists;
@@ -67,10 +72,10 @@ const MAC = AppConstants.platform == "macosx";
  *   fsync: supported only on Windows.
  *
  * If an entry specifies more than one operation, if at least one of them is
- * encountered, the test won't report a failure for the entry. This helps when
- * whitelisting cases where the reported operations aren't the same on all
- * platforms due to the I/O interposer inconsistencies across platforms
- * documented above.
+ * encountered, the test won't report a failure for the entry if other
+ * operations are not encountered. This helps when listing cases where the
+ * reported operations aren't the same on all platforms due to the I/O
+ * interposer inconsistencies across platforms documented above.
  */
 const startupPhases = {
   // Anything done before or during app-startup must have a compelling reason
@@ -447,7 +452,7 @@ const startupPhases = {
 
   // Things that are expected to be completely out of the startup path
   // and loaded lazily when used for the first time by the user should
-  // be blacklisted here.
+  // be listed here.
   "before becoming idle": [
     {
       path: "XREAppFeat:screenshots@mozilla.org.xpi",
@@ -559,7 +564,7 @@ for (let name of [
   });
 }
 
-function expandWhitelistPath(path, canonicalize = false) {
+function expandPathWithDirServiceKey(path, canonicalize = false) {
   if (path.includes(":")) {
     let [prefix, suffix] = path.split(":");
     let [key, property] = prefix.split(".");
@@ -657,7 +662,7 @@ add_task(async function() {
     .wrappedJSObject;
   await startupRecorder.done;
 
-  // Add system add-ons to the whitelist dynamically.
+  // Add system add-ons to the list of known IO dynamically.
   // They should go in the omni.ja file (bug 1357205).
   {
     let addons = await AddonManager.getAddonsByTypes(["extension"]);
@@ -728,7 +733,8 @@ add_task(async function() {
     );
     if (!foundIOMarkers) {
       // If a profile unexpectedly contains no I/O marker, it's better to return
-      // early to avoid having plenty of confusing "unused whitelist entry" failures.
+      // early to avoid having a lot of of confusing "no main thread IO when we
+      // expected some" failures.
       return;
     }
   }
@@ -739,17 +745,17 @@ add_task(async function() {
     );
     startupPhases[phase].forEach(entry => {
       entry.listedPath = entry.path;
-      entry.path = expandWhitelistPath(entry.path, entry.canonicalize);
+      entry.path = expandPathWithDirServiceKey(entry.path, entry.canonicalize);
     });
   }
 
-  let tmpPath = expandWhitelistPath("TmpD:").toLowerCase();
+  let tmpPath = expandPathWithDirServiceKey("TmpD:").toLowerCase();
   let shouldPass = true;
   for (let phase in phases) {
-    let whitelist = startupPhases[phase];
+    let knownIOList = startupPhases[phase];
     info(
-      `whitelisted paths ${phase}:\n` +
-        whitelist
+      `known main thread IO paths during ${phase}:\n` +
+        knownIOList
           .map(e => {
             let operations = Object.keys(e)
               .filter(k => k != "path")
@@ -797,7 +803,7 @@ add_task(async function() {
       }
 
       let expected = false;
-      for (let entry of whitelist) {
+      for (let entry of knownIOList) {
         if (pathMatches(entry.path, filename)) {
           entry[marker.operation] = (entry[marker.operation] || 0) - 1;
           entry._used = true;
@@ -824,7 +830,7 @@ add_task(async function() {
       }
     }
 
-    for (let entry of whitelist) {
+    for (let entry of knownIOList) {
       for (let op in entry) {
         if (
           [
@@ -851,7 +857,7 @@ add_task(async function() {
       if (!("_used" in entry) && !entry.ignoreIfUnused) {
         ok(
           false,
-          `unused whitelist entry ${phase}: ${entry.path} (${entry.listedPath})`
+          `no main thread IO when we expected some during ${phase}: ${entry.path} (${entry.listedPath})`
         );
         shouldPass = false;
       }

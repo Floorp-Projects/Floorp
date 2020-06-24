@@ -13,7 +13,7 @@ const WEBRENDER = window.windowUtils.layerManagerType == "WebRender";
 
 /*
  * Specifying 'ignoreIfUnused: true' will make the test ignore unused entries;
- * without this the test is strict and will fail if a whitelist entry isn't used.
+ * without this the test is strict and will fail if a list entry isn't used.
  */
 const startupPhases = {
   // Anything done before or during app-startup must have a compelling reason
@@ -195,7 +195,7 @@ const startupPhases = {
 
   // Things that are expected to be completely out of the startup path
   // and loaded lazily when used for the first time by the user should
-  // be blacklisted here.
+  // be listed here.
   "before becoming idle": [
     {
       // bug 1373773
@@ -326,11 +326,11 @@ add_task(async function() {
 
   let shouldPass = true;
   for (let phase in phases) {
-    let whitelist = startupPhases[phase];
-    if (whitelist.length) {
+    let knownIPCList = startupPhases[phase];
+    if (knownIPCList.length) {
       info(
-        `whitelisted sync IPC ${phase}:\n` +
-          whitelist
+        `known sync IPC ${phase}:\n` +
+          knownIPCList
             .map(e => `  ${e.name} - at most ${e.maxCount} times`)
             .join("\n")
       );
@@ -339,7 +339,7 @@ add_task(async function() {
     let markers = phases[phase];
     for (let marker of markers) {
       let expected = false;
-      for (let entry of whitelist) {
+      for (let entry of knownIPCList) {
         if (marker == entry.name) {
           entry.maxCount = (entry.maxCount || 0) - 1;
           entry._used = true;
@@ -353,7 +353,7 @@ add_task(async function() {
       }
     }
 
-    for (let entry of whitelist) {
+    for (let entry of knownIPCList) {
       let message = `sync IPC ${entry.name} `;
       if (entry.maxCount == 0) {
         message += "happened as many times as expected";
@@ -366,7 +366,7 @@ add_task(async function() {
       ok(entry.maxCount >= 0, `${message} ${phase}`);
 
       if (!("_used" in entry) && !entry.ignoreIfUnused) {
-        ok(false, `unused whitelist entry ${phase}: ${entry.name}`);
+        ok(false, `unused known IPC entry ${phase}: ${entry.name}`);
         shouldPass = false;
       }
     }
