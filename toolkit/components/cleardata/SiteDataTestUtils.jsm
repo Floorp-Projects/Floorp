@@ -99,7 +99,7 @@ var SiteDataTestUtils = {
       false,
       false,
       Date.now() + 24000 * 60 * 60,
-      {},
+      principal.originAttributes,
       Ci.nsICookie.SAMESITE_NONE,
       Ci.nsICookie.SCHEME_UNSET
     );
