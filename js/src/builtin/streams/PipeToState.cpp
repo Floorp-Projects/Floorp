@@ -458,7 +458,7 @@ static bool ReadFulfilled(JSContext* cx, Handle<PipeToState*> state,
   cx->check(state);
   cx->check(result);
 
-  state->clearReadPending();
+  state->clearPendingRead();
 
   // In general, "Shutdown must stop activity: if shuttingDown becomes true, the
   // user agent must not initiate further reads from reader, and must only
@@ -486,7 +486,7 @@ static bool ReadFulfilled(JSContext* cx, Handle<PipeToState*> state,
 
   // A chunk was read, and *at the time the read was requested*, |dest| was
   // ready to accept a write.  (Only one read is processed at a time per
-  // |state->isReadPending()|, so this condition remains true now.)  Write the
+  // |state->hasPendingRead()|, so this condition remains true now.)  Write the
   // chunk to |dest|.
   {
     Rooted<Value> chunk(cx);
@@ -534,28 +534,13 @@ static bool ReadFulfilled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool ReadRejected(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-
-  Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
-  cx->check(state);
-
-  state->clearReadPending();
-
-  // XXX fill me in!
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool ReadFromSource(JSContext* cx, unsigned argc, Value* vp);
 
 static MOZ_MUST_USE bool ReadFromSource(JSContext* cx,
                                         Handle<PipeToState*> state) {
   cx->check(state);
 
-  MOZ_ASSERT(!state->isReadPending(),
+  MOZ_ASSERT(!state->hasPendingRead(),
              "should only have one read in flight at a time, because multiple "
              "reads could cause the latter read to ignore backpressure "
              "signals");
@@ -634,10 +619,39 @@ static MOZ_MUST_USE bool ReadFromSource(JSContext* cx,
     return false;
   }
 
+#ifdef DEBUG
+  MOZ_ASSERT(!state->pendingReadWouldBeRejected());
+
+  // The specification for ReadableStreamError ensures that rejecting a read or
+  // read-into request is immediately followed by rejecting the reader's
+  // [[closedPromise]].  Therefore, it does not appear *necessary* to handle the
+  // rejected case -- the [[closedPromise]] reaction will do so for us.
+  //
+  // However, this is all very stateful and gnarly, so we implement a rejection
+  // handler that sets a flag to indicate the read was rejected.  Then if the
+  // [[closedPromise]] reaction function is invoked, we can assert that *if*
+  // a read is recorded as pending at that instant, a reject handler would have
+  // been invoked for it.
+  auto ReadRejected = [](JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+
+    Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
+    cx->check(state);
+
+    state->setPendingReadWouldBeRejected();
+
+    args.rval().setUndefined();
+    return true;
+  };
+
   Rooted<JSFunction*> readRejected(cx, NewHandler(cx, ReadRejected, state));
   if (!readRejected) {
     return false;
   }
+#else
+  auto readRejected = nullptr;
+#endif
 
   // Once the chunk is read, immediately write it and attempt to read more.
   // Don't bother handling a rejection: |source| will be closed/errored, and
@@ -658,7 +672,7 @@ static MOZ_MUST_USE bool ReadFromSource(JSContext* cx,
   // read could finish but we can't write it which arguably conflicts with the
   // requirement that chunks that have been read must be written before shutdown
   // completes), to delay.  XXX file a spec issue to require this!
-  state->setReadPending();
+  state->setPendingRead();
   return true;
 }
 
