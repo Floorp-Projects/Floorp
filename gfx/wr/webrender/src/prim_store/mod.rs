@@ -1463,8 +1463,8 @@ pub struct PrimitiveScratchBuffer {
     pub debug_items: Vec<DebugItem>,
 }
 
-impl PrimitiveScratchBuffer {
-    pub fn new() -> Self {
+impl Default for PrimitiveScratchBuffer {
+    fn default() -> Self {
         PrimitiveScratchBuffer {
             clip_mask_instances: Vec::new(),
             glyph_keys: GlyphKeyStorage::new(0),
@@ -1477,7 +1477,9 @@ impl PrimitiveScratchBuffer {
             prim_info: Vec::new(),
         }
     }
+}
 
+impl PrimitiveScratchBuffer {
     pub fn recycle(&mut self, recycler: &mut Recycler) {
         recycler.recycle_vec(&mut self.clip_mask_instances);
         recycler.recycle_vec(&mut self.prim_info);
@@ -1627,7 +1629,6 @@ impl PrimitiveStore {
         }
         prim_count
     }
-
 }
 
 pub fn get_raster_rects(
