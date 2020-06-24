@@ -20,22 +20,25 @@ class MDefinition;
 class MInstruction;
 class MIRGenerator;
 class WarpCacheIR;
+class WarpSnapshot;
 class CallInfo;
 
 using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
 
 // Generate MIR from a Baseline ICStub's CacheIR.
-MOZ_MUST_USE bool TranspileCacheIRToMIR(MIRGenerator& mirGen,
+MOZ_MUST_USE bool TranspileCacheIRToMIR(WarpSnapshot& snapshot,
+                                        MIRGenerator& mirGen,
                                         BytecodeLocation loc,
                                         MBasicBlock* current,
-                                        const WarpCacheIR* snapshot,
+                                        const WarpCacheIR* cacheIRSnapshot,
                                         const MDefinitionStackVector& inputs);
 
 // Overload used to pass information for calls to the transpiler.
-MOZ_MUST_USE bool TranspileCacheIRToMIR(MIRGenerator& mirGen,
+MOZ_MUST_USE bool TranspileCacheIRToMIR(WarpSnapshot& snapshot,
+                                        MIRGenerator& mirGen,
                                         BytecodeLocation loc,
                                         MBasicBlock* current,
-                                        const WarpCacheIR* snapshot,
+                                        const WarpCacheIR* cacheIRSnapshot,
                                         CallInfo& callInfo);
 
 }  // namespace jit

@@ -400,6 +400,28 @@ class WarpScriptSnapshot : public TempObject {
 #endif
 };
 
+// Captures information from previous bailouts to prevent bailout/recompile
+// loops. This mostly exists for compatibility with IonBuilder and the MIR
+// backend.
+// TODO: overhaul bailout tracking once IonBuilder is gone.
+class WarpBailoutInfo {
+  // True if any script in the compilation has the failedBoundsCheck flag. In
+  // this case mark bounds checks as non-movable to prevent hoisting them in
+  // TryEliminateBoundsCheck.
+  bool failedBoundsCheck_ = false;
+
+  // True if any script in the compilation has the failedLexicalCheck flag. In
+  // this case mark lexical checks as non-movable.
+  bool failedLexicalCheck_ = false;
+
+ public:
+  bool failedBoundsCheck() const { return failedBoundsCheck_; }
+  void setFailedBoundsCheck() { failedBoundsCheck_ = true; }
+
+  bool failedLexicalCheck() const { return failedLexicalCheck_; }
+  void setFailedLexicalCheck() { failedLexicalCheck_ = true; }
+};
+
 // Data allocated by WarpOracle on the main thread that's used off-thread by
 // WarpBuilder to build the MIR graph.
 class WarpSnapshot : public TempObject {
@@ -411,8 +433,11 @@ class WarpSnapshot : public TempObject {
   WarpGCPtr<LexicalEnvironmentObject*> globalLexicalEnv_;
   WarpGCPtr<JSObject*> globalLexicalEnvThis_;
 
+  const WarpBailoutInfo bailoutInfo_;
+
  public:
-  explicit WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script);
+  explicit WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script,
+                        const WarpBailoutInfo& bailoutInfo);
 
   WarpScriptSnapshot* script() const { return script_; }
 
@@ -422,6 +447,8 @@ class WarpSnapshot : public TempObject {
   JSObject* globalLexicalEnvThis() const { return globalLexicalEnvThis_; }
 
   void trace(JSTracer* trc);
+
+  const WarpBailoutInfo& bailoutInfo() const { return bailoutInfo_; }
 
 #ifdef JS_JITSPEW
   void dump() const;
