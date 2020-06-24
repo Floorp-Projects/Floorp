@@ -110,17 +110,17 @@ use crate::debug_colors;
 use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D, SideOffsets2D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
-use crate::frame_builder::{FrameBuilderConfig, FrameVisibilityContext, FrameVisibilityState};
+use crate::frame_builder::FrameBuilderConfig;
 use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{UvRectKind, ZBufferId};
 use plane_split::{Clipper, Polygon, Splitter};
-use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PrimitiveTemplateKind};
+use crate::prim_store::{SpaceMapper, PrimitiveTemplateKind};
 use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer};
-use crate::prim_store::{ColorBindingStorage, ColorBindingIndex, PrimitiveVisibilityFlags};
+use crate::prim_store::{ColorBindingStorage, ColorBindingIndex};
 use crate::print_tree::{PrintTree, PrintTreePrinter};
 use crate::render_backend::{DataStores, FrameId};
 use crate::render_task_graph::RenderTaskId;
@@ -136,6 +136,7 @@ use std::ops::Range;
 use crate::texture_cache::TextureCacheHandle;
 use crate::util::{MaxRect, VecHelper, RectHelpers, MatrixHelpers};
 use crate::filterdata::{FilterDataHandle};
+use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibilityFlags, FrameVisibilityContext, FrameVisibilityState};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use ron;
 #[cfg(feature = "capture")]
