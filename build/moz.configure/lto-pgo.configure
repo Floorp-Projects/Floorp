@@ -181,7 +181,7 @@ def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
             value = ['thin']
 
         if target.kernel == 'Darwin' and target.os == 'OSX' \
-           and value[0].lower() == 'cross' and not ld64_known_good:
+           and len(value) and value[0].lower() == 'cross' and not ld64_known_good:
             die('The Mac linker is known to have a bug that affects cross-language '
                 'LTO.  If you know that your linker is free from this bug, please '
                 'set the environment variable `MOZ_LD64_KNOWN_GOOD=1` and re-run '
