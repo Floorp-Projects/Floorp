@@ -32,7 +32,7 @@ using mozilla::UniquePtr;
 
 void WaitForStartupTimer() {
   StartupCache* sc = StartupCache::GetSingleton();
-  PR_Sleep(10 * PR_TicksPerSecond());
+  PR_Sleep(3 * PR_TicksPerSecond());
 
   while (true) {
     NS_ProcessPendingEvents(nullptr);
