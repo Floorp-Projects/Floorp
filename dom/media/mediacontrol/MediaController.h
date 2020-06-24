@@ -145,6 +145,8 @@ class MediaController final : public DOMEventTargetHelper,
 
   void UpdateDeactivationTimerIfNeeded();
 
+  bool IsMediaBeingUsedInPIPModeOrFullScreen() const;
+
   bool mIsActive = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;

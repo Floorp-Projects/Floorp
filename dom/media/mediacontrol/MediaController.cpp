@@ -167,7 +167,8 @@ void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
 }
 
 void MediaController::UpdateDeactivationTimerIfNeeded() {
-  bool shouldBeAlwaysActive = IsPlaying() || mIsInPictureInPictureMode;
+  bool shouldBeAlwaysActive =
+      IsPlaying() || IsMediaBeingUsedInPIPModeOrFullScreen();
   if (shouldBeAlwaysActive && mDeactivationTimer) {
     LOG("Cancel deactivation timer");
     mDeactivationTimer->Cancel();
@@ -185,6 +186,10 @@ void MediaController::UpdateDeactivationTimerIfNeeded() {
   }
 }
 
+bool MediaController::IsMediaBeingUsedInPIPModeOrFullScreen() const {
+  return mIsInPictureInPictureMode || mIsInFullScreenMode;
+}
+
 NS_IMETHODIMP MediaController::Notify(nsITimer* aTimer) {
   mDeactivationTimer = nullptr;
   if (mShutdown) {
@@ -192,10 +197,10 @@ NS_IMETHODIMP MediaController::Notify(nsITimer* aTimer) {
     return NS_OK;
   }
 
-  // As the media being used in the PIP mode would always display on the screen,
-  // users would have high chance to interact with it again, so we don't want to
-  // stop media control.
-  if (mIsInPictureInPictureMode) {
+  // As the media being used in the PIP mode or fullscreen would always display
+  // on the screen, users would have high chance to interact with it again, so
+  // we don't want to stop media control.
+  if (IsMediaBeingUsedInPIPModeOrFullScreen()) {
     LOG("Cancel deactivation timer because controller is in PIP mode");
     return NS_OK;
   }
@@ -239,7 +244,27 @@ void MediaController::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
 
 bool MediaController::ShouldActivateController() const {
   MOZ_ASSERT(!mShutdown);
-  return IsAnyMediaBeingControlled() && IsAudible() && !mIsActive;
+  // After media is successfully loaded and match our critiera, such as its
+  // duration is longer enough, which is used to exclude the notification-ish
+  // sound, then it would be able to be controlled once the controll gets
+  // activated.
+  //
+  // Activating a controller means that we would start to interfere the media
+  // keys on the platform and show the virtual control interface (if needed).
+  // The controller would be activated when (1) the controller becomes audible
+  // or (2) enters fullscreen or PIP mode.
+  //
+  // The reason of activating controller after it beomes audible is, if there is
+  // another application playing audio at the same time, it doesn't make sense
+  // to interfere it if we're playing an inaudible media. In addtion, it can
+  // preven showing control interface for those inaudible media which are used
+  // for GIF-like image or background image.
+  //
+  // When a media enters fullscreen or Picture-in-Picture mode, we can regard it
+  // as a sign of that a user is going to start that media soon. Therefore, it
+  // makes sense to activate the controller in order to start controlling media.
+  return IsAnyMediaBeingControlled() &&
+         (IsAudible() || IsMediaBeingUsedInPIPModeOrFullScreen()) && !mIsActive;
 }
 
 bool MediaController::ShouldDeactivateController() const {
@@ -278,6 +303,7 @@ void MediaController::SetIsInPictureInPictureMode(
   LOG("Set IsInPictureInPictureMode to %s",
       aIsInPictureInPictureMode ? "true" : "false");
   mIsInPictureInPictureMode = aIsInPictureInPictureMode;
+  UpdateActivatedStateIfNeeded();
   if (RefPtr<MediaControlService> service = MediaControlService::GetService();
       service && mIsInPictureInPictureMode) {
     service->NotifyControllerBeingUsedInPictureInPictureMode(this);
@@ -292,6 +318,7 @@ void MediaController::NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
   }
   LOG("%s fullscreen", aIsInFullScreen ? "Entered" : "Left");
   mIsInFullScreenMode = aIsInFullScreen;
+  UpdateActivatedStateIfNeeded();
 }
 
 void MediaController::HandleActualPlaybackStateChanged() {
