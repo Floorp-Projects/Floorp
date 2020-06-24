@@ -15114,12 +15114,12 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "kjacobs@mozilla.com"],
-    "expires_in_version": "80",
+    "expires_in_version": "86",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 2000,
     "n_buckets": 100,
-    "bug_numbers": [1564179],
+    "bug_numbers": [1564179, 1645082],
     "description": "milliseconds to complete a TLS handshake that used delegated credentials"
   },
   "PRESSHELL_LAYOUT_TOTAL_MS_PER_TICK": {
