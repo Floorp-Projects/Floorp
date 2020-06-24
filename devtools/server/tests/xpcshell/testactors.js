@@ -206,7 +206,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
       actorPool,
       this
     );
-    if (!actorPool.isEmpty()) {
+    if (actorPool?._poolMap.size > 0) {
       this._descriptorActorPool = actorPool;
       this.conn.addActorPool(this._descriptorActorPool);
     }

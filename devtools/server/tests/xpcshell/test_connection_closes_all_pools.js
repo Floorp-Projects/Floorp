@@ -76,7 +76,7 @@ add_task(async function() {
   //      |
   //      \- childActor
   //
-  // Since parentActor is also an ActorPool from the point of view of the
+  // Since parentActor is also a Pool from the point of view of the
   // DevToolsServerConnection, it will attempt to destroy it when looping on
   // this._extraPools. But since `parentActor` is also a direct child of `pool`,
   // it has already been destroyed by the Pool destroy() mechanism.

@@ -27,8 +27,7 @@ const ActorRegistry = {
    *        An object with 3 mandatory attributes:
    *        - prefix (string):
    *          The prefix of an actor is used to compute:
-   *          - the `actorID` of each new actor instance (ex: prefix1).
-   *            (See ActorPool.addActor)
+   *          - the `actorID` of each new actor instance (ex: prefix1). (See Pool.manage)
    *          - the actor name in the listTabs request. Sending a listTabs
    *            request to the root actor returns actor IDs. IDs are in
    *            dictionaries, with actor names as keys and actor IDs as values.

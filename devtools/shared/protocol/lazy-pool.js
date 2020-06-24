@@ -69,7 +69,7 @@ exports.LazyPool = LazyPool;
  *     - _extraActors
  *        An object whose own property names are factory table (and packet)
  *        property names, and whose values are no-argument actor constructors,
- *        of the sort that one can add to an ActorPool.
+ *        of the sort that one can add to a Pool.
  *
  *     - conn
  *        The DevToolsServerConnection in which the new actors will participate.
@@ -130,7 +130,7 @@ exports.createExtraActors = createExtraActors;
  *     - _extraActors
  *        An object whose own property names are factory table (and packet)
  *        property names, and whose values are no-argument actor constructors,
- *        of the sort that one can add to an ActorPool.
+ *        of the sort that one can add to a Pool.
  *
  *     - conn
  *        The DevToolsServerConnection in which the new actors will participate.
