@@ -4,16 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidSurfaceTexture.h"
 
-#  include "AndroidSurfaceTexture.h"
+#include "mozilla/java/GeckoSurfaceTextureNatives.h"
 
-#  include "mozilla/java/GeckoSurfaceTextureNatives.h"
-
-#  include "AndroidNativeWindow.h"
-#  include "GLContextEGL.h"
-#  include "GLBlitHelper.h"
-#  include "GLImages.h"
+#include "AndroidNativeWindow.h"
+#include "GLContextEGL.h"
+#include "GLBlitHelper.h"
+#include "GLImages.h"
 
 using namespace mozilla;
 
@@ -194,4 +192,3 @@ void AndroidSurfaceTexture::Init() { GLBlitterSupport::Init(); }
 
 }  // namespace gl
 }  // namespace mozilla
-#endif  // MOZ_WIDGET_ANDROID

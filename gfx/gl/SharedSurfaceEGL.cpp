@@ -5,7 +5,6 @@
 
 #include "SharedSurfaceEGL.h"
 
-#include "AndroidNativeWindow.h"
 #include "GLBlitHelper.h"
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
@@ -16,6 +15,7 @@
 #include "SharedSurface.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
+#  include "AndroidNativeWindow.h"
 #  include "mozilla/java/SurfaceAllocatorWrappers.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
