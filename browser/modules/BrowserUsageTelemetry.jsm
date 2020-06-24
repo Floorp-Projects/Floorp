@@ -190,6 +190,18 @@ function telemetryId(widgetId, obscureAddons = true) {
       let action = PageActions.actionForID(actionId);
       widgetId = action?._isMozillaAction ? actionId : addonId(actionId);
     }
+  } else if (widgetId.startsWith("ext-keyset-id-")) {
+    // Webextension command shortcuts don't have an id on their key element so
+    // we see the id from the keyset that contains them.
+    widgetId = addonId(widgetId.substring("ext-keyset-id-".length));
+  } else if (widgetId.startsWith("ext-key-id-")) {
+    // The command for a webextension sidebar action is an exception to the above rule.
+    widgetId = widgetId.substring("ext-key-id-".length);
+    if (widgetId.endsWith("-sidebar-action")) {
+      widgetId = addonId(
+        widgetId.substring(0, widgetId.length - "-sidebar-action".length)
+      );
+    }
   }
 
   return widgetId.replace(/_/g, "-");
@@ -906,13 +918,19 @@ let BrowserUsageTelemetry = {
     }
 
     // One of these will at least let us know what the widget is for.
-    for (let idAttribute of [
+    let possibleAttributes = [
       "preference",
-      "key",
       "command",
       "observes",
       "data-l10n-id",
-    ]) {
+    ];
+
+    // The key attribute on key elements is the actual key to listen for.
+    if (node.localName != "key") {
+      possibleAttributes.unshift("key");
+    }
+
+    for (let idAttribute of possibleAttributes) {
       if (node.hasAttribute(idAttribute)) {
         return node.getAttribute(idAttribute);
       }
