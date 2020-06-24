@@ -19,7 +19,7 @@ const TELEMETRY_DELAY =
 // Delay before initializing telemetry if we're testing (ms)
 const TELEMETRY_TEST_DELAY = 1;
 
-var EXPORTED_SYMBOLS = ["TelemetryController"];
+var EXPORTED_SYMBOLS = ["TelemetryController", "getTelemetryController"];
 
 var TelemetryController = Object.freeze({
   /**
@@ -42,6 +42,8 @@ var TelemetryController = Object.freeze({
   observe(aSubject, aTopic, aData) {
     return Impl.observe(aSubject, aTopic, aData);
   },
+
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 });
 
 var Impl = {
@@ -99,3 +101,8 @@ var Impl = {
     }
   },
 };
+
+// Used by service registration, which requires a callable function.
+function getTelemetryController() {
+  return TelemetryController;
+}
