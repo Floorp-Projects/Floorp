@@ -162,7 +162,55 @@ void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
     return;
   }
   MediaStatusManager::NotifyMediaPlaybackChanged(aBrowsingContextId, aState);
+  UpdateDeactivationTimerIfNeeded();
   UpdateActivatedStateIfNeeded();
+}
+
+void MediaController::UpdateDeactivationTimerIfNeeded() {
+  bool shouldBeAlwaysActive = IsPlaying() || mIsInPictureInPictureMode;
+  if (shouldBeAlwaysActive && mDeactivationTimer) {
+    LOG("Cancel deactivation timer");
+    mDeactivationTimer->Cancel();
+    mDeactivationTimer = nullptr;
+  } else if (!shouldBeAlwaysActive && !mDeactivationTimer) {
+    nsresult rv = NS_NewTimerWithCallback(
+        getter_AddRefs(mDeactivationTimer), this,
+        StaticPrefs::media_mediacontrol_stopcontrol_timer_ms(),
+        nsITimer::TYPE_ONE_SHOT, AbstractThread::MainThread());
+    if (NS_SUCCEEDED(rv)) {
+      LOG("Create a deactivation timer");
+    } else {
+      LOG("Failed to create a deactivation timer");
+    }
+  }
+}
+
+NS_IMETHODIMP MediaController::Notify(nsITimer* aTimer) {
+  mDeactivationTimer = nullptr;
+  if (mShutdown) {
+    LOG("Cancel deactivation timer because controller has been shutdown");
+    return NS_OK;
+  }
+
+  // As the media being used in the PIP mode would always display on the screen,
+  // users would have high chance to interact with it again, so we don't want to
+  // stop media control.
+  if (mIsInPictureInPictureMode) {
+    LOG("Cancel deactivation timer because controller is in PIP mode");
+    return NS_OK;
+  }
+
+  if (IsPlaying()) {
+    LOG("Cancel deactivation timer because controller is still playing");
+    return NS_OK;
+  }
+
+  if (!mIsRegisteredToService) {
+    LOG("Cancel deactivation timer because controller has been deactivated");
+    return NS_OK;
+  }
+  Deactivate();
+  return NS_OK;
 }
 
 void MediaController::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
@@ -234,6 +282,7 @@ void MediaController::SetIsInPictureInPictureMode(
       service && mIsInPictureInPictureMode) {
     service->NotifyControllerBeingUsedInPictureInPictureMode(this);
   }
+  UpdateDeactivationTimerIfNeeded();
 }
 
 void MediaController::HandleActualPlaybackStateChanged() {
