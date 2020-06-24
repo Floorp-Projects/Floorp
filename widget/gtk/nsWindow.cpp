@@ -1836,6 +1836,10 @@ static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
   }
 
   Window wmWindow = reinterpret_cast<Window*>(prop_return)[0];
+  if (!wmWindow) {
+    return false;
+  }
+
   XFree(prop_return);
   prop_return = nullptr;
 
