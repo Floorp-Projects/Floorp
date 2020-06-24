@@ -5864,7 +5864,9 @@ impl PicturePrimitive {
 
         // Process the accumulated split planes and order them for rendering.
         // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
-        for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
+        let sorted = splitter.sort(vec3(0.0, 0.0, 1.0));
+        ordered.reserve(sorted.len());
+        for poly in sorted {
             let cluster = &self.prim_list.clusters[poly.anchor.cluster_index];
             let spatial_node_index = cluster.spatial_node_index;
             let transform = match spatial_tree
