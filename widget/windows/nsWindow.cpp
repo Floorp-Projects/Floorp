@@ -126,6 +126,7 @@
 #include "SystemTimeConverter.h"
 #include "WinTaskbar.h"
 #include "WidgetUtils.h"
+#include "WinContentSystemParameters.h"
 #include "nsIWidgetListener.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Touch.h"
@@ -5206,6 +5207,9 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_THEMECHANGED: {
+      // Before anything else, push updates to child processes
+      WinContentSystemParameters::GetSingleton()->OnThemeChanged();
+
       // Update non-client margin offsets
       UpdateNonClientMargins();
       nsUXThemeData::UpdateNativeThemeInfo();
