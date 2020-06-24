@@ -194,7 +194,7 @@ function reportUnexpectedReflows(reflows, expectedReflows = []) {
         `Unused expected reflow at ${firstFrame}:\nStack:\n` +
           reflow.stack.map(frame => "  " + frame).join("\n") +
           "\n" +
-          "This is probably a good thing - just remove it from the whitelist."
+          "This is probably a good thing - just remove it from the list of reflows."
       );
     } else {
       if (reflow.count > reflow.maxCount) {
@@ -757,9 +757,9 @@ async function runUrlbarTest(
     filter: rects => {
       // We put text into the urlbar so expect its textbox to change.
       // We expect many changes in the results view.
-      // So we just whitelist the whole urlbar. We don't check the bottom of
-      // the rect because the result view height varies depending on the
-      // results.
+      // So we just allow changes anywhere in the urlbar. We don't check the
+      // bottom of the rect because the result view height varies depending on
+      // the results.
       // We use floor/ceil because the Urlbar dimensions aren't always
       // integers.
       return rects.filter(
