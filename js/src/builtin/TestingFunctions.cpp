@@ -13,6 +13,7 @@
 #include "mozilla/Span.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/Unused.h"
 
@@ -1008,6 +1009,21 @@ static bool WasmExtractCode(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+struct DisasmBuffer {
+  JSStringBuilder builder;
+  bool oom;
+  explicit DisasmBuffer(JSContext* cx) : builder(cx), oom(false) {}
+};
+
+MOZ_THREAD_LOCAL(DisasmBuffer*) disasmBuf;
+
+static void captureDisasmText(const char* text) {
+  DisasmBuffer* buf = disasmBuf.get();
+  if (!buf->builder.append(text, strlen(text)) || !buf->builder.append('\n')) {
+    buf->oom = true;
+  }
+}
+
 static bool WasmDisassemble(JSContext* cx, unsigned argc, Value* vp) {
   if (!cx->options().wasm()) {
     JS_ReportErrorASCII(cx, "wasm support unavailable");
@@ -1046,10 +1062,27 @@ static bool WasmDisassemble(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (args.length() > 2 && args[2].isBoolean() && args[2].toBoolean()) {
+    DisasmBuffer buf(cx);
+    disasmBuf.set(&buf);
+    auto onFinish = mozilla::MakeScopeExit([&] { disasmBuf.set(nullptr); });
+    instance.disassembleExport(cx, funcIndex, tier, captureDisasmText);
+    if (buf.oom) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    JSString* sresult = buf.builder.finishString();
+    if (!sresult) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    args.rval().setString(sresult);
+    return true;
+  }
+
   instance.disassembleExport(cx, funcIndex, tier, [](const char* text) {
     fprintf(stderr, "%s\n", text);
   });
-
   return true;
 }
 
@@ -6376,10 +6409,11 @@ gc::ZealModeHelpText),
 "  until background compilation is complete."),
 
     JS_FN_HELP("wasmDis", WasmDisassemble, 1, 0,
-"wasmDis(function[, tier])",
+"wasmDis(function[, tier [, asString]])",
 "  Disassembles generated machine code from an exported WebAssembly function.\n"
 "  The tier is a string, 'stable', 'best', 'baseline', or 'ion'; the default is\n"
-"  'stable'."),
+"  'stable'.  If `asString` is present and is the value `true` then the output\n"
+"  is returned as a string; otherwise it is printed on stderr."),
 
     JS_FN_HELP("wasmHasTier2CompilationCompleted", WasmHasTier2CompilationCompleted, 1, 0,
 "wasmHasTier2CompilationCompleted(module)",
@@ -6864,6 +6898,8 @@ static const JSFunctionSpecWithHelp PCCountProfilingTestingFunctions[] = {
     JS_FS_HELP_END
 };
 // clang-format on
+
+bool js::InitTestingFunctions() { return disasmBuf.init(); }
 
 bool js::DefineTestingFunctions(JSContext* cx, HandleObject obj,
                                 bool fuzzingSafe_, bool disableOOMFunctions_) {
