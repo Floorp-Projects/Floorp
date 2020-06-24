@@ -84,7 +84,7 @@ jobs:
                 --perfherder
                 --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-                --browsertime-iterations 10
+                --browsertime-iterations 14
                 --output $MOZ_FETCHES_DIR/../artifacts
                 testing/performance/perftest_applink.js
 
@@ -114,7 +114,7 @@ jobs:
                 --perfherder
                 --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-                --browsertime-iterations 10
+                --browsertime-iterations 14
                 --output $MOZ_FETCHES_DIR/../artifacts
                 testing/performance/perftest_applink.js
 
@@ -144,7 +144,7 @@ jobs:
                 --perfherder
                 --perfherder-app geckoview
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-                --browsertime-iterations 10
+                --browsertime-iterations 14
                 --output $MOZ_FETCHES_DIR/../artifacts
                 testing/performance/perftest_applink.js
 
@@ -174,7 +174,7 @@ jobs:
                 --perfherder
                 --perfherder-app geckoview
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-                --browsertime-iterations 10
+                --browsertime-iterations 14
                 --output $MOZ_FETCHES_DIR/../artifacts
                 testing/performance/perftest_applink.js
 
