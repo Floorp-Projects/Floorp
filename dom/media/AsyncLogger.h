@@ -51,30 +51,21 @@ class AsyncLogger {
     char mPayload[PAYLOAD_TOTAL_SIZE - MPSC_MSG_RESERVERD];
   };
 
-// On 32bits the struct is packed differently and there is a hole we need to
-// account for.
-#if !defined(HAVE_64BIT_BUILD)
-#  define PADDING 8
-#else
-#  define PADDING 0
-#endif
-
   // The order of the fields is important here to minimize padding.
   struct TracePayload {
-    // If this marker is of phase B or E (begin or end), this is the time at
-    // which it was captured.
-    TimeStamp mTimestamp;
+    // The thread on which this tracepoint was gathered.
+    int mTID;
     // If this marker is of phase X (COMPLETE), this holds the duration of the
     // event in microseconds. Else, the value is not used.
     uint32_t mDurationUs;
-    // The thread on which this tracepoint was gathered.
-    int mTID;
+    // If this marker is of phase B or E (begin or end), this is the time at
+    // which it was captured.
+    TimeStamp mTimestamp;
     // An arbitrary string, usually containing a function signature or a
     // recognizable tag of some sort, to be displayed when analyzing the
     // profile.
     char mName[PAYLOAD_TOTAL_SIZE - sizeof(TracingPhase) - sizeof(int) -
-               sizeof(uint32_t) - sizeof(TimeStamp) - MPSC_MSG_RESERVERD -
-               PADDING];
+               sizeof(uint32_t) - sizeof(TimeStamp) - MPSC_MSG_RESERVERD];
     // A trace payload can be either:
     // - Begin - this marks the beginning of a temporal region
     // - End - this marks the end of a temporal region
@@ -82,7 +73,6 @@ class AsyncLogger {
     // temporal region
     TracingPhase mPhase;
   };
-#undef PADDING
   // aLogModuleName is the name of the MOZ_LOG module.
   explicit AsyncLogger(const char* aLogModuleName,
                        AsyncLogger::AsyncLoggerOutputMode aMode =
