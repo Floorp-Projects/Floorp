@@ -286,15 +286,23 @@ var dataProviders = {
     done(data);
   },
 
-  extensions: async function extensions(done) {
-    let extensions = await AddonManager.getAddonsByTypes(["extension"]);
-    extensions = extensions.filter(e => !e.isSystem);
-    extensions.sort(function(a, b) {
+  addons: async function addons(done) {
+    let addons = await AddonManager.getAddonsByTypes([
+      "extension",
+      "locale",
+      "dictionary",
+    ]);
+    addons = addons.filter(e => !e.isSystem);
+    addons.sort(function(a, b) {
       if (a.isActive != b.isActive) {
         return b.isActive ? 1 : -1;
       }
 
-      // In some unfortunate cases addon names can be null.
+      if (a.type != b.type) {
+        return a.type.localeCompare(b.type);
+      }
+
+      // In some unfortunate cases add-on names can be null.
       let aname = a.name || "";
       let bname = b.name || "";
       let lc = aname.localeCompare(bname);
@@ -306,9 +314,9 @@ var dataProviders = {
       }
       return 0;
     });
-    let props = ["name", "version", "isActive", "id"];
+    let props = ["name", "type", "version", "isActive", "id"];
     done(
-      extensions.map(function(ext) {
+      addons.map(function(ext) {
         return props.reduce(function(extData, prop) {
           extData[prop] = ext[prop];
           return extData;
