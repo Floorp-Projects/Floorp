@@ -13,6 +13,9 @@ const { AppConstants } = ChromeUtils.import(
 const { getAppInfo } = ChromeUtils.import(
   "resource://testing-common/AppInfo.jsm"
 );
+const { SearchService } = ChromeUtils.import(
+  "resource://gre/modules/SearchService.jsm"
+);
 
 var cacheTemplate, appPluginsPath, profPlugins;
 
@@ -22,10 +25,10 @@ var cacheTemplate, appPluginsPath, profPlugins;
 add_task(async function setup() {
   await useTestEngines("data1");
   await AddonTestUtils.promiseStartupManager();
+});
 
-  let cacheTemplateFile = do_get_file(
-    gModernConfig ? "data/search.json" : "data/search-legacy.json"
-  );
+async function loadCacheFile(cacheFile) {
+  let cacheTemplateFile = do_get_file(cacheFile);
   cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
   cacheTemplate.version = SearchUtils.CACHE_VERSION;
@@ -54,23 +57,40 @@ add_task(async function setup() {
   }
 
   await promiseSaveCacheData(cacheTemplate);
-});
+
+  if (!gModernConfig) {
+    // For the legacy config, make sure we switch _isBuiltin to _isAppProvided
+    // after saving, so that the expected results match.
+    for (let engine of cacheTemplate.engines) {
+      if ("_isBuiltin" in engine) {
+        engine._isAppProvided = engine._isBuiltin;
+        delete engine._isBuiltin;
+      }
+    }
+  }
+}
 
 /**
  * Start the search service and confirm the engine properties match the expected values.
+ *
+ * @param {string} cacheFile
+ *   The path to the cache file to use.
  */
-add_task(async function test_cached_engine_properties() {
+async function checkLoadCachedProperties(cacheFile) {
   info("init search service");
 
+  await loadCacheFile(cacheFile);
+
   const cacheFileWritten = promiseAfterCache();
-  let result = await Services.search.init();
+  let ss = new SearchService();
+  let result = await ss.init();
 
   info("init'd search service");
   Assert.ok(Components.isSuccessCode(result));
 
   await cacheFileWritten;
 
-  let engines = await Services.search.getEngines();
+  let engines = await ss.getEngines();
 
   Assert.equal(
     engines[0].name,
@@ -90,13 +110,23 @@ add_task(async function test_cached_engine_properties() {
   // The extra engine is the second in the list.
   isSubObjectOf(EXPECTED_ENGINE.engine, engines[2]);
 
-  let engineFromSS = Services.search.getEngineByName(
-    EXPECTED_ENGINE.engine.name
-  );
+  let engineFromSS = ss.getEngineByName(EXPECTED_ENGINE.engine.name);
   Assert.ok(!!engineFromSS);
   isSubObjectOf(EXPECTED_ENGINE.engine, engineFromSS);
 
   removeCacheFile();
+}
+
+add_task(async function test_legacy_cached_engine_properties() {
+  await checkLoadCachedProperties("data/search-legacy.json");
+});
+
+add_task(async function test_current_cached_engine_properties() {
+  // Legacy configuration doesn't support loading the modern cache directly.
+  if (!gModernConfig) {
+    return;
+  }
+  await checkLoadCachedProperties("data/search.json");
 });
 
 /**
@@ -104,6 +134,15 @@ add_task(async function test_cached_engine_properties() {
  */
 add_task(async function test_cache_write() {
   info("test cache writing");
+
+  await loadCacheFile(
+    gModernConfig ? "data/search.json" : "data/search-legacy.json"
+  );
+
+  const cacheFileWritten = promiseAfterCache();
+  await Services.search.init();
+  await cacheFileWritten;
+  removeCacheFile();
 
   let cache = do_get_profile().clone();
   cache.append(CACHE_FILENAME);
