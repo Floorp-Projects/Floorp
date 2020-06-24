@@ -233,9 +233,11 @@ class SendTab {
         const targetData = Object.assign({ flowID, streamID }, data);
         const bytes = encoder.encode(JSON.stringify(targetData));
         const encrypted = await this._encrypt(bytes, device);
-        // TODO: remove flowID from the payload.
-        const payload = { encrypted, flowID };
-        await this._commands.invoke(COMMAND_SENDTAB, device, payload); // FxA needs an object.
+        // FxA expects an object as the payload, but we only have a single encrypted string; wrap it.
+        // If you add any plaintext items to this payload, please carefully consider the privacy implications
+        // of revealing that data to the FxA server.
+        const payload = { encrypted };
+        await this._commands.invoke(COMMAND_SENDTAB, device, payload);
         this._fxai.telemetry.recordEvent(
           "command-sent",
           COMMAND_SENDTAB_TAIL,
@@ -264,7 +266,7 @@ class SendTab {
   }
 
   // Handle incoming send tab payload, called by FxAccountsCommands.
-  async handle(senderID, { encrypted, flowID: deprecatedFlowID }) {
+  async handle(senderID, { encrypted }) {
     const bytes = await this._decrypt(encrypted);
     const decoder = new TextDecoder("utf8");
     const data = JSON.parse(decoder.decode(bytes));
@@ -280,7 +282,7 @@ class SendTab {
       "command-received",
       COMMAND_SENDTAB_TAIL,
       this._fxai.telemetry.sanitizeDeviceId(senderID),
-      { flowID: flowID || deprecatedFlowID, streamID }
+      { flowID, streamID }
     );
 
     return {

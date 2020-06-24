@@ -186,8 +186,9 @@ add_task(async function test_sendtab_receive() {
 
   for (let { cmd, device, payload } of commands._invokes) {
     Assert.equal(cmd, COMMAND_SENDTAB);
-    // test we do the right thing with the "duplicated" flow ID.
-    Assert.equal(payload.flowID, "1");
+    // Older Firefoxes would send a plaintext flowID in the top-level payload.
+    // Test that we sensibly ignore it.
+    Assert.ok(!payload.hasOwnProperty("flowID"));
     // change it - ensure we still get what we expect in telemetry later.
     payload.flowID = "ignore-me";
     Assert.deepEqual(await sendTab.handle(device.id, payload), {
@@ -213,7 +214,7 @@ add_task(async function test_sendtab_receive() {
 });
 
 // Test that a client which only sends the flowID in the envelope and not in the
-// encrypted body still gets recorded correctly.
+// encrypted body gets recorded without the flowID.
 add_task(async function test_sendtab_receive_old_client() {
   const fxai = FxaInternalMock();
   const sendTab = new SendTab(null, fxai);
@@ -234,7 +235,7 @@ add_task(async function test_sendtab_receive_old_client() {
       value: "sender-id-san",
       // deepEqual doesn't ignore undefined, but our telemetry code and
       // JSON.stringify() do...
-      extra: { flowID: "flow-id", streamID: undefined },
+      extra: { flowID: undefined, streamID: undefined },
     },
   ]);
 });
