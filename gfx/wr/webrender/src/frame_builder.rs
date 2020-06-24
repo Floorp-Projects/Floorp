@@ -933,6 +933,7 @@ pub fn build_render_pass(
                         task_id,
                         render_tasks.get_task_address(task_id),
                         vis_mask,
+                        0,
                     ));
                 }
 
