@@ -3291,9 +3291,6 @@ void HTMLMediaElement::PauseInternal() {
   // We don't need to resume media which is paused explicitly by user.
   ClearResumeDelayedMediaPlaybackAgentIfNeeded();
 
-  // Start timer to trigger stopping listening to media control key events.
-  CreateStopMediaControlTimerIfNeeded();
-
   if (!oldPaused) {
     FireTimeUpdate(false);
     DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
@@ -7872,10 +7869,6 @@ void HTMLMediaElement::StartListeningMediaControlKeyIfNeeded() {
     return;
   }
 
-  // As we would like to start listening to media control event again so we
-  // should clear the timer, which is used to stop listening to the event.
-  ClearStopMediaControlTimerIfNeeded();
-
   if (!mMediaControlKeyListener) {
     mMediaControlKeyListener = new MediaControlKeyListener(this);
   }
@@ -7908,56 +7901,6 @@ void HTMLMediaElement::StopListeningMediaControlKeyIfNeeded() {
   }
 }
 
-/* static */
-void HTMLMediaElement::StopMediaControlTimerCallback(nsITimer* aTimer,
-                                                     void* aClosure) {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto element = static_cast<HTMLMediaElement*>(aClosure);
-  CONTROLLER_TIMER_LOG(element,
-                       "Runnning stop media control timmer callback function");
-  element->StopListeningMediaControlKeyIfNeeded();
-  element->mStopMediaControlTimer = nullptr;
-}
-
-void HTMLMediaElement::CreateStopMediaControlTimerIfNeeded() {
-  MOZ_ASSERT(NS_IsMainThread());
-  // We would create timer only when `mMediaControlKeyListener` exists and has
-  // been started.
-  if (mStopMediaControlTimer || !mMediaControlKeyListener ||
-      !mMediaControlKeyListener->IsStarted()) {
-    return;
-  }
-
-  // As the media element being used in the PIP mode would always display on the
-  // screen, users would have high chance to interact with it again, so we don't
-  // want to stop media control.
-  if (IsBeingUsedInPictureInPictureMode()) {
-    MEDIACONTROL_LOG("No need to create a timer for PIP video.");
-    return;
-  }
-
-  if (!Paused()) {
-    MEDIACONTROL_LOG("No need to create a timer for playing media.");
-    return;
-  }
-
-  MEDIACONTROL_LOG("Start stop media control timer");
-  NS_NewTimerWithFuncCallback(
-      getter_AddRefs(mStopMediaControlTimer), StopMediaControlTimerCallback,
-      this, StaticPrefs::media_mediacontrol_stopcontrol_timer_ms(),
-      nsITimer::TYPE_ONE_SHOT,
-      "HTMLMediaElement::StopMediaControlTimerCallback",
-      mMainThreadEventTarget);
-}
-
-void HTMLMediaElement::ClearStopMediaControlTimerIfNeeded() {
-  if (mStopMediaControlTimer) {
-    MEDIACONTROL_LOG("Cancel stop media control timer");
-    mStopMediaControlTimer->Cancel();
-    mStopMediaControlTimer = nullptr;
-  }
-}
-
 void HTMLMediaElement::UpdateMediaControlAfterPictureInPictureModeChanged() {
   // Hasn't started to connect with media control, no need to update anything.
   if (!mMediaControlKeyListener || !mMediaControlKeyListener->IsStarted()) {
@@ -7967,7 +7910,6 @@ void HTMLMediaElement::UpdateMediaControlAfterPictureInPictureModeChanged() {
     mMediaControlKeyListener->SetPictureInPictureModeEnabled(true);
   } else {
     mMediaControlKeyListener->SetPictureInPictureModeEnabled(false);
-    CreateStopMediaControlTimerIfNeeded();
   }
 }
 
