@@ -45,7 +45,7 @@
 /* Toolbar / content area border */
 
 #navigator-toolbox {
-  border-bottom: 0.01px solid var(--chrome-content-separator-color);
+  border-bottom: 1px solid var(--chrome-content-separator-color);
 }
 
 :root[customizing] #navigator-toolbox {
