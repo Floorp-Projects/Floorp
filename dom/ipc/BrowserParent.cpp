@@ -2771,8 +2771,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
     const Maybe<
         mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
         aReason) {
-  MOZ_ASSERT(aRequestData.elapsedLoadTimeMS().isNothing());
-
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
 
   if (!bc || bc->IsDiscarded()) {
@@ -2793,7 +2791,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
 
   nsCOMPtr<nsIRequest> request = MakeAndAddRef<RemoteWebProgressRequest>(
       aRequestData.requestURI(), aRequestData.originalRequestURI(),
-      aRequestData.matchedList(), aRequestData.elapsedLoadTimeMS());
+      aRequestData.matchedList());
 
   wgp->NotifyContentBlockingEvent(aEvent, request, aBlocked, aTrackingOrigin,
                                   aTrackingFullHashes, aReason);
@@ -2882,7 +2880,7 @@ void BrowserParent::ReconstructWebProgressAndRequest(
   if (aRequestData.requestURI()) {
     nsCOMPtr<nsIRequest> request = MakeAndAddRef<RemoteWebProgressRequest>(
         aRequestData.requestURI(), aRequestData.originalRequestURI(),
-        aRequestData.matchedList(), aRequestData.elapsedLoadTimeMS());
+        aRequestData.matchedList());
     request.forget(aOutRequest);
   } else {
     *aOutRequest = nullptr;
