@@ -2514,7 +2514,9 @@ impl TileCacheInstance {
         // which will provide a local clip rect. This is useful for establishing things
         // like whether the backdrop rect supplied by Gecko can be considered opaque.
         if self.shared_clip_chain != ClipChainId::NONE {
-            let mut shared_clips = Vec::new();
+            let shared_clips = &mut frame_state.scratch.picture.clip_chain_ids;
+            shared_clips.clear();
+
             let mut current_clip_chain_id = self.shared_clip_chain;
             while current_clip_chain_id != ClipChainId::NONE {
                 shared_clips.push(current_clip_chain_id);
@@ -3822,6 +3824,7 @@ impl TileCacheInstance {
 pub struct PictureScratchBuffer {
     surface_stack: Vec<SurfaceIndex>,
     picture_stack: Vec<PictureInfo>,
+    clip_chain_ids: Vec<ClipChainId>,
 }
 
 impl Default for PictureScratchBuffer {
@@ -3829,6 +3832,7 @@ impl Default for PictureScratchBuffer {
         PictureScratchBuffer {
             surface_stack: Vec::new(),
             picture_stack: Vec::new(),
+            clip_chain_ids: Vec::new(),
         }
     }
 }
@@ -3837,6 +3841,7 @@ impl PictureScratchBuffer {
     pub fn begin_frame(&mut self) {
         self.surface_stack.clear();
         self.picture_stack.clear();
+        self.clip_chain_ids.clear();
     }
 
     pub fn recycle(&mut self, recycler: &mut Recycler) {
