@@ -1091,6 +1091,56 @@ impl Recycler {
     }
 }
 
+/// Record the size of a data structure to preallocate a similar size
+/// at the next frame and avoid growing it too many time.
+#[derive(Copy, Clone, Debug)]
+pub struct Preallocator {
+    size: usize,
+}
+
+impl Preallocator {
+    pub fn new(initial_size: usize) -> Self {
+        Preallocator {
+            size: initial_size,
+        }
+    }
+
+    /// Record the size of a vector to preallocate it the next frame.
+    pub fn record_vec<T>(&mut self, vec: &Vec<T>) {
+        let len = vec.len();
+        if len > self.size {
+            self.size = len;
+        } else {
+            self.size = (self.size + len) / 2;
+        }
+    }
+
+    /// The size that we'll preallocate the vector with.
+    pub fn preallocation_size(&self) -> usize {
+        // Round up to multiple of 16 to avoid small tiny
+        // variations causing reallocations.
+        (self.size + 15) & !15
+    }
+
+    /// Preallocate vector storage.
+    ///
+    /// The preallocated amount depends on the length recorded in the last
+    /// record_vec call.
+    pub fn preallocate_vec<T>(&self, vec: &mut Vec<T>) {
+        let len = vec.len();
+        let cap = self.preallocation_size();
+        if len < cap {
+            vec.reserve(cap - len);
+        }
+    }
+}
+
+impl Default for Preallocator {
+    fn default() -> Self {
+        Self::new(0)
+    }
+}
+
 /// Arc wrapper to support measurement via MallocSizeOf.
 ///
 /// Memory reporting for Arcs is tricky because of the risk of double-counting.
