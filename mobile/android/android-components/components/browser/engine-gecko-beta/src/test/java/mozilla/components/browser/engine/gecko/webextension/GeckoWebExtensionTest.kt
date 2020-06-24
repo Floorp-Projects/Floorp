@@ -475,7 +475,6 @@ class GeckoWebExtensionTest {
 
         val metaDataBundle = GeckoBundle()
         metaDataBundle.putStringArray("promptPermissions", arrayOf("p1", "p2"))
-        metaDataBundle.putStringArray("origins", arrayOf("o1", "o2"))
         metaDataBundle.putString("version", "1.0")
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
@@ -490,7 +489,7 @@ class GeckoWebExtensionTest {
         assertNotNull(metadata!!)
         assertEquals("1.0", metadata.version)
         assertEquals(listOf("p1", "p2"), metadata.permissions)
-        assertEquals(listOf("o1", "o2"), metadata.hostPermissions)
+        assertEquals(emptyList<String>(), metadata.hostPermissions)
         assertEquals("moz-extension://123c5c5b-cd03-4bea-b23f-ac0b9ab40257/", metadata.baseUrl)
         assertNull(metadata.description)
         assertNull(metadata.developerName)
