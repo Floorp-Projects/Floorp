@@ -277,6 +277,27 @@ void ContentMediaAgent::DisableAction(uint64_t aBrowsingContextId,
   }
 }
 
+void ContentMediaAgent::NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
+                                                   bool aIsInFullScreen) {
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify %s fullscreen in BC %" PRId64,
+      aIsInFullScreen ? "entered" : "left", bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyMediaFullScreenState(bc, aIsInFullScreen);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<IMediaInfoUpdater> updater =
+          bc->Canonical()->GetMediaController()) {
+    updater->NotifyMediaFullScreenState(bc->Id(), aIsInFullScreen);
+  }
+}
+
 ContentMediaController::ContentMediaController(uint64_t aId)
     : mTopLevelBrowsingContextId(aId) {}
 

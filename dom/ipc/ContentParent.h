@@ -1286,6 +1286,9 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext,
       MediaSessionAction aAction, bool aEnabled);
 
+  mozilla::ipc::IPCResult RecvNotifyMediaFullScreenState(
+      const MaybeDiscarded<BrowsingContext>& aContext, bool aIsInFullScreen);
+
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,
       GetModulesTrustResolver&& aResolver);
