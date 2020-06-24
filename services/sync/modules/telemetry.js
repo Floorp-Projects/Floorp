@@ -340,13 +340,14 @@ class EngineRecord {
   }
 }
 
-class TelemetryRecord {
+// The record of a single "sync" - typically many of these are submitted in
+// a single ping (ie, as a 'syncs' array)
+class SyncRecord {
   constructor(allowedEngines, why) {
     this.allowedEngines = allowedEngines;
     // Our failure reason. This property only exists in the generated ping if an
     // error actually occurred.
     this.failureReason = undefined;
-    this.uid = "";
     this.syncNodeType = null;
     this.when = Date.now();
     this.startTime = tryGetMonotonicTimestamp();
@@ -393,7 +394,6 @@ class TelemetryRecord {
       this.failureReason = SyncTelemetry.transformError(error);
     }
 
-    this.uid = fxAccounts.telemetry.getSanitizedUID() || EMPTY_UID;
     this.syncNodeType = Weave.Service.identity.telemetryNodeType;
 
     // Check for engine statuses. -- We do this now, and not in engine.finished
@@ -551,6 +551,8 @@ function cleanErrorMessage(error) {
   return error;
 }
 
+// The entire "sync ping" - it includes all the syncs, events etc recorded in
+// the ping.
 class SyncTelemetryImpl {
   constructor(allowedEngines) {
     log.manageLevelFromPref("services.sync.log.logger.telemetry");
@@ -571,6 +573,7 @@ class SyncTelemetryImpl {
     this.lastSubmissionTime = Telemetry.msSinceProcessStart();
     this.lastUID = EMPTY_UID;
     this.lastSyncNodeType = null;
+    this.currentSyncNodeType = null;
     // Note that the sessionStartDate is somewhat arbitrary - the telemetry
     // modules themselves just use `new Date()`. This means that our startDate
     // isn't going to be the same as the sessionStartDate in the main pings,
@@ -752,6 +755,8 @@ class SyncTelemetryImpl {
       );
       TelemetryController.submitExternalPing("sync", record, {
         usePingSender: true,
+      }).catch(err => {
+        log.error("failed to submit ping", err);
       });
       return true;
     }
@@ -778,7 +783,7 @@ class SyncTelemetryImpl {
       // Just discard the old record, consistent with our handling of engines, above.
       this.current = null;
     }
-    this.current = new TelemetryRecord(this.allowedEngines, why);
+    this.current = new SyncRecord(this.allowedEngines, why);
   }
 
   // We need to ensure that the telemetry `deletion-request` ping always contains the user's
@@ -834,8 +839,8 @@ class SyncTelemetryImpl {
     return true;
   }
 
-  shouldSubmitForDataChange() {
-    let newID = this.current.uid;
+  _shouldSubmitForDataChange() {
+    let newID = fxAccounts.telemetry.getSanitizedUID() || EMPTY_UID;
     let oldID = this.lastUID;
     if (
       newID != EMPTY_UID &&
@@ -843,6 +848,9 @@ class SyncTelemetryImpl {
       // Both are "real" uids, so we care if they've changed.
       newID != oldID
     ) {
+      log.trace(
+        `shouldSubmitForDataChange - uid from '${oldID}' -> '${newID}'`
+      );
       return true;
     }
     // We've gone from knowing one of the ids to not knowing it (which we
@@ -850,14 +858,35 @@ class SyncTelemetryImpl {
     // Now check the node type because a change there also means we should
     // submit.
     if (
-      this.current.syncNodeType &&
       this.lastSyncNodeType &&
-      this.current.syncNodeType != this.lastSyncNodeType
+      this.currentSyncNodeType != this.lastSyncNodeType
     ) {
+      log.trace(
+        `shouldSubmitForDataChange - nodeType from '${this.lastSyncNodeType}' -> '${this.currentSyncNodeType}'`
+      );
       return true;
     }
-    // We don't need to submit.
+    log.trace("shouldSubmitForDataChange - no need to submit");
     return false;
+  }
+
+  maybeSubmitForDataChange() {
+    if (this._shouldSubmitForDataChange()) {
+      log.info(
+        "Early submission of sync telemetry due to changed IDs/NodeType"
+      );
+      this.finish("idchange"); // this actually submits.
+      this.lastSubmissionTime = Telemetry.msSinceProcessStart();
+    }
+
+    // Only update the last UIDs if we actually know them.
+    let current_uid = fxAccounts.telemetry.getSanitizedUID();
+    if (current_uid) {
+      this.lastUID = current_uid;
+    }
+    if (this.currentSyncNodeType) {
+      this.lastSyncNodeType = this.currentSyncNodeType;
+    }
   }
 
   maybeSubmitForInterval() {
@@ -880,26 +909,19 @@ class SyncTelemetryImpl {
       return;
     }
     this.current.finished(error);
-    if (this.payloads.length) {
-      if (this.shouldSubmitForDataChange()) {
-        log.info("Early submission of sync telemetry due to changed IDs");
-        this.finish("idchange");
-        this.lastSubmissionTime = Telemetry.msSinceProcessStart();
-      }
-    }
-    // Only update the last UIDs if we actually know them.
-    if (this.current.uid !== EMPTY_UID) {
-      this.lastUID = this.current.uid;
-    }
-    if (this.current.syncNodeType) {
-      this.lastSyncNodeType = this.current.syncNodeType;
-    }
+    this.currentSyncNodeType = this.current.syncNodeType;
+    // We check for "data change" before appending the current sync to payloads,
+    // as it is the current sync which has the data with the new data, and thus
+    // must go in the *next* submission.
+    this.maybeSubmitForDataChange();
     if (this.payloads.length < this.maxPayloadCount) {
       this.payloads.push(this.current.toJSON());
     } else {
       ++this.discarded;
     }
     this.current = null;
+    // If we are submitting due to timing, it's desirable that the most recent
+    // sync is included, so we check after appending `this.current`.
     this.maybeSubmitForInterval();
   }
 
@@ -910,6 +932,8 @@ class SyncTelemetryImpl {
   }
 
   _recordEvent(eventDetails) {
+    this.maybeSubmitForDataChange();
+
     if (this.events.length >= this.maxEventsCount) {
       log.warn("discarding event - already queued our maximum", eventDetails);
       return;
