@@ -19,7 +19,9 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BenchmarkStorageChild.h"
 #include "mozilla/ContentBlocking.h"
-#include "mozilla/FOGIPC.h"
+#ifdef MOZ_GLEAN
+#  include "mozilla/FOGIPC.h"
+#endif
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MemoryTelemetry.h"
 #include "mozilla/NullPrincipal.h"
@@ -4237,7 +4239,9 @@ already_AddRefed<mozilla::dom::JSProcessActorChild> ContentChild::GetActor(
 }
 
 IPCResult ContentChild::RecvFlushFOGData(FlushFOGDataResolver&& aResolver) {
+#ifdef MOZ_GLEAN
   glean::FlushFOGData(std::move(aResolver));
+#endif
   return IPC_OK();
 }
 
