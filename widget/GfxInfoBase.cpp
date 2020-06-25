@@ -1619,6 +1619,9 @@ void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
   gfx::FeatureState& webrender = gfxConfig::GetFeature(gfx::Feature::WEBRENDER);
   InitFeatureObject(aCx, aObj, "webrender", webrender, &obj);
 
+  gfx::FeatureState& wrCompositor = gfxConfig::GetFeature(gfx::Feature::WEBRENDER_COMPOSITOR);
+  InitFeatureObject(aCx, aObj, "wrCompositor", wrCompositor, &obj);
+
   // Only include AL if the platform attempted to use it.
   gfx::FeatureState& advancedLayers =
       gfxConfig::GetFeature(gfx::Feature::ADVANCED_LAYERS);
