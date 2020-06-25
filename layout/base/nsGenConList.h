@@ -84,7 +84,7 @@ struct nsGenConNode : public mozilla::LinkedListElement<nsGenConNode> {
                          mozilla::PseudoStyleType::marker,
                  "not CSS generated content and not counter change");
     NS_ASSERTION(mContentIndex < 0 ||
-                     mPseudoFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT,
+                     mPseudoFrame->HasAnyStateBits(NS_FRAME_GENERATED_CONTENT),
                  "not generated content and not counter change");
   }
 };
