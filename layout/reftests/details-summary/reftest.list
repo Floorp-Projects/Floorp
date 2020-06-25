@@ -39,12 +39,6 @@
 == overflow-auto-open-details.html overflow-auto-open-details-ref.html
 == overflow-scroll-details.html overflow-scroll-details-ref.html
 
-# With pagination property
-== details-page-break-after-1.html details-two-pages.html
-== details-page-break-after-2.html details-two-pages.html
-== details-page-break-before-1.html details-two-pages.html
-== details-page-break-before-2.html details-two-pages.html
-
 # With 'float' property
 == float-left-and-float-details.html float-left-and-float-details-ref.html
 == float-left-and-inflow-details.html float-left-and-inflow-details-ref.html
