@@ -361,7 +361,7 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
-  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+  if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     nsCheckboxRadioFrame::RegUnRegAccessKey(this, true);
   }
 
@@ -403,7 +403,7 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
 
   nscoord oldBSizeOfARow = BSizeOfARow();
 
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW) && autoBSize) {
+  if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW) && autoBSize) {
     // When not doing an initial reflow, and when the block size is
     // auto, start off with our computed block size set to what we'd
     // expect our block size to be.
@@ -417,7 +417,7 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
   if (!mMightNeedSecondPass) {
     NS_ASSERTION(!autoBSize || BSizeOfARow() == oldBSizeOfARow,
                  "How did our BSize of a row change if nothing was dirty?");
-    NS_ASSERTION(!autoBSize || !(GetStateBits() & NS_FRAME_FIRST_REFLOW),
+    NS_ASSERTION(!autoBSize || !HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
                  "How do we not need a second pass during initial reflow at "
                  "auto BSize?");
     NS_ASSERTION(!IsScrollbarUpdateSuppressed(),
@@ -484,14 +484,14 @@ void nsListControlFrame::ReflowAsDropdown(nsPresContext* aPresContext,
   WritingMode wm = aReflowInput.GetWritingMode();
 #ifdef DEBUG
   nscoord oldBSizeOfARow = BSizeOfARow();
-  nscoord oldVisibleBSize = (GetStateBits() & NS_FRAME_FIRST_REFLOW)
+  nscoord oldVisibleBSize = HasAnyStateBits(NS_FRAME_FIRST_REFLOW)
                                 ? NS_UNCONSTRAINEDSIZE
                                 : GetScrolledFrame()->BSize(wm);
 #endif
 
   ReflowInput state(aReflowInput);
 
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // When not doing an initial reflow, and when the block size is
     // auto, start off with our computed block size set to what we'd
     // expect our block size to be.
@@ -511,7 +511,7 @@ void nsListControlFrame::ReflowAsDropdown(nsPresContext* aPresContext,
                  "How did our BSize of a row change if nothing was dirty?");
     NS_ASSERTION(!IsScrollbarUpdateSuppressed(),
                  "Shouldn't be suppressing if we don't need a second pass!");
-    NS_ASSERTION(!(GetStateBits() & NS_FRAME_FIRST_REFLOW),
+    NS_ASSERTION(!HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
                  "How can we avoid a second pass during first reflow?");
     return;
   }
@@ -522,7 +522,7 @@ void nsListControlFrame::ReflowAsDropdown(nsPresContext* aPresContext,
   // will have suppressed the scrollbar update.
   if (!IsScrollbarUpdateSuppressed()) {
     // All done.  No need to do more reflow.
-    NS_ASSERTION(!(GetStateBits() & NS_FRAME_FIRST_REFLOW),
+    NS_ASSERTION(!HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
                  "How can we avoid a second pass during first reflow?");
     return;
   }
