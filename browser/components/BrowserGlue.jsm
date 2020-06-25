@@ -5003,6 +5003,7 @@ var AboutHomeStartupCache = {
     Services.obs.addObserver(this, "ipc:content-created");
     Services.obs.addObserver(this, "process-type-set");
     Services.obs.addObserver(this, "ipc:content-shutdown");
+    Services.obs.addObserver(this, "intl:app-locales-changed");
 
     this._cacheEntryPromise = new Promise(resolve => {
       this._cacheEntryResolver = resolve;
@@ -5046,6 +5047,7 @@ var AboutHomeStartupCache = {
     Services.obs.removeObserver(this, "ipc:content-created");
     Services.obs.removeObserver(this, "process-type-set");
     Services.obs.removeObserver(this, "ipc:content-shutdown");
+    Services.obs.removeObserver(this, "intl:app-locales-changed");
 
     if (this._cacheTask) {
       this._cacheTask.disarm();
@@ -5554,6 +5556,10 @@ var AboutHomeStartupCache = {
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "intl:app-locales-changed": {
+        this.clearCache();
+        break;
+      }
       case "process-type-set":
       // Intentional fall-through
       case "ipc:content-created": {
