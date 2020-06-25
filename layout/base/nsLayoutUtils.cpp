@@ -1465,9 +1465,9 @@ nsContainerFrame* nsLayoutUtils::LastContinuationWithChild(
 FrameChildListID nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame) {
   nsIFrame::ChildListID id = nsIFrame::kPrincipalList;
 
-  MOZ_DIAGNOSTIC_ASSERT(!(aChildFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW));
+  MOZ_DIAGNOSTIC_ASSERT(!aChildFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
 
-  if (aChildFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+  if (aChildFrame->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
     nsIFrame* pif = aChildFrame->GetPrevInFlow();
     if (pif->GetParent() == aChildFrame->GetParent()) {
       id = nsIFrame::kExcessOverflowContainersList;
@@ -1634,7 +1634,7 @@ bool nsLayoutUtils::IsPrimaryStyleFrame(const nsIFrame* aFrame) {
 
 nsIFrame* nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
   NS_ASSERTION(aFrame->IsPlaceholderFrame(), "Must have a placeholder here");
-  if (aFrame->GetStateBits() & PLACEHOLDER_FOR_FLOAT) {
+  if (aFrame->HasAnyStateBits(PLACEHOLDER_FOR_FLOAT)) {
     nsIFrame* outOfFlowFrame =
         nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
     NS_ASSERTION(outOfFlowFrame && outOfFlowFrame->IsFloating(),
@@ -4916,17 +4916,17 @@ nsBlockFrame* nsLayoutUtils::FindNearestBlockAncestor(nsIFrame* aFrame) {
 }
 
 nsIFrame* nsLayoutUtils::GetNonGeneratedAncestor(nsIFrame* aFrame) {
-  if (!(aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT)) return aFrame;
+  if (!aFrame->HasAnyStateBits(NS_FRAME_GENERATED_CONTENT)) return aFrame;
 
   nsIFrame* f = aFrame;
   do {
     f = GetParentOrPlaceholderFor(f);
-  } while (f->GetStateBits() & NS_FRAME_GENERATED_CONTENT);
+  } while (f->HasAnyStateBits(NS_FRAME_GENERATED_CONTENT));
   return f;
 }
 
 nsIFrame* nsLayoutUtils::GetParentOrPlaceholderFor(const nsIFrame* aFrame) {
-  if ((aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+  if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
       !aFrame->GetPrevInFlow()) {
     return aFrame->GetProperty(nsIFrame::PlaceholderFrameProperty());
   }
@@ -4940,7 +4940,7 @@ nsIFrame* nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame) {
 }
 
 nsIFrame* nsLayoutUtils::GetDisplayListParent(nsIFrame* aFrame) {
-  if (aFrame->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+  if (aFrame->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT)) {
     return aFrame->GetParent();
   }
   return nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(aFrame);
@@ -4980,7 +4980,7 @@ nsIFrame* nsLayoutUtils::FirstContinuationOrIBSplitSibling(
     const nsIFrame* aFrame) {
   nsIFrame* result = aFrame->FirstContinuation();
 
-  if (result->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
+  if (result->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
     while (auto* f = result->GetProperty(nsIFrame::IBSplitPrevSibling())) {
       result = f;
     }
@@ -4993,7 +4993,7 @@ nsIFrame* nsLayoutUtils::LastContinuationOrIBSplitSibling(
     const nsIFrame* aFrame) {
   nsIFrame* result = aFrame->FirstContinuation();
 
-  if (result->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
+  if (result->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
     while (auto* f = result->GetProperty(nsIFrame::IBSplitSibling())) {
       result = f;
     }
@@ -5007,7 +5007,7 @@ bool nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(
   if (aFrame->GetPrevContinuation()) {
     return false;
   }
-  if ((aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
+  if ((aFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) &&
       aFrame->GetProperty(nsIFrame::IBSplitPrevSibling())) {
     return false;
   }
@@ -8495,7 +8495,7 @@ static bool ShouldInflateFontsForContainer(const nsIFrame* aFrame) {
   const nsStyleText* styleText = aFrame->StyleText();
 
   return styleText->mTextSizeAdjust != StyleTextSizeAdjust::None &&
-         !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_BSIZE) &&
+         !aFrame->HasAnyStateBits(NS_FRAME_IN_CONSTRAINED_BSIZE) &&
          // We also want to disable font inflation for containers that have
          // preformatted text.
          // MathML cells need special treatment. See bug 1002526 comment 56.
