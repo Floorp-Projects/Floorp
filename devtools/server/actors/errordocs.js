@@ -159,6 +159,7 @@ const StorageAccessPolicyErrorDocs = {
   cookieBlockedTracker: "CookieBlockedTracker",
   cookieBlockedAll: "CookieBlockedAll",
   cookieBlockedForeign: "CookieBlockedForeign",
+  cookiePartitionedForeign: "CookiePartitionedForeign",
 };
 
 exports.GetURL = error => {

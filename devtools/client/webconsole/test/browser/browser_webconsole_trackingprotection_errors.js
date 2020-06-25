@@ -9,11 +9,18 @@ requestLongerTimeout(2);
 
 const TEST_PATH = "browser/devtools/client/webconsole/test/browser/";
 const TEST_FILE = TEST_PATH + "test-trackingprotection-securityerrors.html";
+const TEST_FILE_THIRD_PARTY_ONLY =
+  TEST_PATH + "test-trackingprotection-securityerrors-thirdpartyonly.html";
 const TEST_URI = "http://example.com/" + TEST_FILE;
+const TEST_URI_THIRD_PARTY_ONLY =
+  "http://example.com/" + TEST_FILE_THIRD_PARTY_ONLY;
 const TRACKER_URL = "http://tracking.example.org/";
+const THIRD_PARTY_URL = "http://example.org/";
 const BLOCKED_URL = `\u201c${TRACKER_URL +
   TEST_PATH +
   "cookieSetter.html"}\u201d`;
+const PARTITIONED_URL = `\u201c${THIRD_PARTY_URL +
+  TEST_PATH}cookieSetter.html\u201d`;
 
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIORS = {
@@ -25,6 +32,8 @@ const COOKIE_BEHAVIORS = {
   LIMIT_FOREIGN: 3,
   // reject trackers
   REJECT_TRACKER: 4,
+  // dFPI - partitioned access to third-party cookies
+  PARTITION_FOREIGN: 5,
 };
 
 const { UrlClassifierTestUtils } = ChromeUtils.import(
@@ -154,6 +163,26 @@ add_task(async function testTrackerCookieBlockedMessage() {
   await testLearnMoreClickOpenNewTab(
     message,
     getStorageErrorUrl("CookieBlockedTracker")
+  );
+  win.close();
+});
+
+add_task(async function testForeignCookiePartitionedMessage() {
+  info("Test tracker cookie blocked message");
+  // We change the pref and open a new window to ensure it will be taken into account.
+  await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.PARTITION_FOREIGN);
+  const { hud, win } = await openNewWindowAndConsole(TEST_URI_THIRD_PARTY_ONLY);
+
+  const message = await waitFor(() =>
+    findMessage(
+      hud,
+      `Partitioned cookie or storage access was provided to ${PARTITIONED_URL} because it is ` +
+        `loaded in the third-party context and storage partitioning is enabled.`
+    )
+  );
+  await testLearnMoreClickOpenNewTab(
+    message,
+    getStorageErrorUrl("CookiePartitionedForeign")
   );
   win.close();
 });
