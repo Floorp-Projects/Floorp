@@ -1820,7 +1820,8 @@ set_define('MOZ_CODE_COVERAGE', code_coverage)
 def coverage_cflags(target, c_compiler, vc_path, build_env):
     cflags = ['--coverage']
 
-    if c_compiler.type in ('clang', 'clang-cl'):
+    # clang 11 no longer accepts this flag (its behavior became the default)
+    if c_compiler.type in ('clang', 'clang-cl') and c_compiler.version < '11.0.0':
         cflags += [
             '-Xclang', '-coverage-no-function-names-in-data',
         ]
