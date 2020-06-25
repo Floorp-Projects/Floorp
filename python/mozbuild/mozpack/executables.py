@@ -119,8 +119,6 @@ def elfhack(path):
     '''
     from buildconfig import topobjdir
     cmd = [os.path.join(topobjdir, 'build/unix/elfhack/elfhack'), path]
-    if 'ELF_HACK_FLAGS' in os.environ:
-        cmd[1:0] = os.environ['ELF_HACK_FLAGS'].split()
     if subprocess.call(cmd) != 0:
         errors.fatal('Error executing ' + ' '.join(cmd))
 
