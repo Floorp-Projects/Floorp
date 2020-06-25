@@ -284,10 +284,6 @@ using LauncherVoidResultWithLineInfo = LauncherResultWithLineInfo<Ok>;
 
 #endif  // defined(MOZILLA_INTERNAL_API)
 
-// This macro enables copying of a mozilla::LauncherError from a
-// mozilla::LauncherResult<Foo> into a mozilla::LauncherResult<Bar>
-#define LAUNCHER_ERROR_FROM_RESULT(result) ::mozilla::Err(result.inspectErr())
-
 // How long to wait for a created process to become available for input,
 // to prevent that process's windows being forced to the background.
 // This is used across update, restart, and the launcher.

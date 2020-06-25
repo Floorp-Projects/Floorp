@@ -161,7 +161,7 @@ LauncherResult<ElevationState> GetElevationState(
 
   LauncherResult<TOKEN_ELEVATION_TYPE> elevationType = GetElevationType(token);
   if (elevationType.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(elevationType);
+    return elevationType.propagateErr();
   }
 
   Maybe<ElevationState> elevationState;
@@ -179,7 +179,7 @@ LauncherResult<ElevationState> GetElevationState(
       // themselves.
       LauncherResult<bool> isHighIntegrity = IsHighIntegrity(token);
       if (isHighIntegrity.isErr()) {
-        return LAUNCHER_ERROR_FROM_RESULT(isHighIntegrity);
+        return isHighIntegrity.propagateErr();
       }
 
       if (!isHighIntegrity.unwrap()) {
@@ -201,7 +201,7 @@ LauncherResult<ElevationState> GetElevationState(
   LauncherResult<bool> isAdminByAppCompat =
       IsAdminByAppCompat(HKEY_CURRENT_USER, aExecutablePath);
   if (isAdminByAppCompat.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(isAdminByAppCompat);
+    return isAdminByAppCompat.propagateErr();
   }
 
   if (isAdminByAppCompat.unwrap()) {
@@ -210,7 +210,7 @@ LauncherResult<ElevationState> GetElevationState(
     isAdminByAppCompat =
         IsAdminByAppCompat(HKEY_LOCAL_MACHINE, aExecutablePath);
     if (isAdminByAppCompat.isErr()) {
-      return LAUNCHER_ERROR_FROM_RESULT(isAdminByAppCompat);
+      return isAdminByAppCompat.propagateErr();
     }
 
     if (isAdminByAppCompat.unwrap()) {
@@ -232,7 +232,7 @@ LauncherResult<ElevationState> GetElevationState(
   if (tokenResult.isOk()) {
     aOutMediumIlToken.own(tokenResult.unwrap());
   } else {
-    return LAUNCHER_ERROR_FROM_RESULT(tokenResult);
+    return tokenResult.propagateErr();
   }
 
   return elevationState.value();

@@ -36,7 +36,7 @@ namespace mozilla {
 inline LauncherResult<_bstr_t> UrlmonValidateUri(const wchar_t* aUri) {
   LauncherResult<UniqueAbsolutePidl> pidlResult = ShellParseDisplayName(aUri);
   if (pidlResult.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(pidlResult);
+    return pidlResult.propagateErr();
   }
 
   // The value of |flags| is the same value as used in ieframe!_EnsureIUri in

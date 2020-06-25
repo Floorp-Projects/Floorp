@@ -14,7 +14,7 @@ using namespace mozilla;
 static LauncherResult<_bstr_t> ShellValidateUri(const wchar_t* aUri) {
   LauncherResult<UniqueAbsolutePidl> pidlResult = ShellParseDisplayName(aUri);
   if (pidlResult.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(pidlResult);
+    return pidlResult.propagateErr();
   }
   UniqueAbsolutePidl pidl = pidlResult.unwrap();
 

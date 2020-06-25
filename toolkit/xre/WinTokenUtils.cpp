@@ -54,7 +54,7 @@ LauncherResult<bool> IsAdminWithoutUac() {
   LauncherResult<bool> containsAdminGroup =
       IsMemberOfAdministrators(nsAutoHandle());
   if (containsAdminGroup.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(containsAdminGroup);
+    return containsAdminGroup.propagateErr();
   }
 
   if (!containsAdminGroup.unwrap()) {
@@ -63,7 +63,7 @@ LauncherResult<bool> IsAdminWithoutUac() {
 
   LauncherResult<bool> isUacEnabled = IsUacEnabled();
   if (isUacEnabled.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(isUacEnabled);
+    return isUacEnabled.propagateErr();
   }
 
   return !isUacEnabled.unwrap();
