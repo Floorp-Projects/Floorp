@@ -684,10 +684,11 @@ bool Module::instantiateFunctions(JSContext* cx,
   return true;
 }
 
-static bool CheckLimits(JSContext* cx, uint32_t declaredMin,
-                        const Maybe<uint32_t>& declaredMax,
-                        uint32_t actualLength, const Maybe<uint32_t>& actualMax,
-                        bool isAsmJS, const char* kind) {
+template <typename T>
+static bool CheckLimits(JSContext* cx, T declaredMin,
+                        const Maybe<T>& declaredMax, T actualLength,
+                        const Maybe<T>& actualMax, bool isAsmJS,
+                        const char* kind) {
   if (isAsmJS) {
     MOZ_ASSERT(actualLength >= declaredMin);
     MOZ_ASSERT(!declaredMax);
@@ -746,17 +747,18 @@ bool Module::instantiateMemory(JSContext* cx,
     return true;
   }
 
-  uint32_t declaredMin = metadata().minMemoryLength;
-  Maybe<uint32_t> declaredMax = metadata().maxMemoryLength;
+  uint64_t declaredMin = metadata().minMemoryLength;
+  Maybe<uint64_t> declaredMax = metadata().maxMemoryLength;
   bool declaredShared = metadata().memoryUsage == MemoryUsage::Shared;
 
   if (memory) {
     MOZ_ASSERT_IF(metadata().isAsmJS(), memory->buffer().isPreparedForAsmJS());
     MOZ_ASSERT_IF(!metadata().isAsmJS(), memory->buffer().isWasm());
 
-    if (!CheckLimits(
-            cx, declaredMin, declaredMax, memory->volatileMemoryLength(),
-            memory->buffer().wasmMaxSize(), metadata().isAsmJS(), "Memory")) {
+    if (!CheckLimits(cx, declaredMin, declaredMax,
+                     uint64_t(memory->volatileMemoryLength()),
+                     memory->buffer().wasmMaxSize(), metadata().isAsmJS(),
+                     "Memory")) {
       return false;
     }
 
@@ -794,7 +796,7 @@ bool Module::instantiateImportedTable(JSContext* cx, const TableDesc& td,
   MOZ_ASSERT(!metadata().isAsmJS());
 
   Table& table = tableObj->table();
-  if (!CheckLimits(cx, td.limits.initial, td.limits.maximum, table.length(),
+  if (!CheckLimits(cx, td.initialLength, td.maximumLength, table.length(),
                    table.maximum(), metadata().isAsmJS(), "Table")) {
     return false;
   }
@@ -820,7 +822,8 @@ bool Module::instantiateLocalTable(JSContext* cx, const TableDesc& td,
   if (td.importedOrExported) {
     RootedObject proto(
         cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
-    tableObj.set(WasmTableObject::create(cx, td.limits, td.kind, proto));
+    tableObj.set(WasmTableObject::create(cx, td.initialLength, td.maximumLength,
+                                         td.kind, proto));
     if (!tableObj) {
       return false;
     }
