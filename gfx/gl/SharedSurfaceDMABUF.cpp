@@ -5,6 +5,7 @@
 
 #include "SharedSurfaceDMABUF.h"
 
+#include "gfxPlatformGtk.h"
 #include "GLContextEGL.h"
 #include "MozFramebuffer.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
@@ -49,6 +50,21 @@ Maybe<layers::SurfaceDescriptor> SharedSurface_DMABUF::ToSurfaceDescriptor() {
   layers::SurfaceDescriptor desc;
   if (!mSurface->Serialize(desc)) return {};
   return Some(desc);
+}
+
+/*static*/
+UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
+  if (!gfxPlatformGtk::GetPlatform()->UseWaylandDMABufWebGL()) {
+    return nullptr;
+  }
+
+  auto dmabufFactory = MakeUnique<SurfaceFactory_DMABUF>(gl);
+  if (dmabufFactory->CanCreateSurface()) {
+    return dmabufFactory;
+  }
+
+  gfxPlatformGtk::GetPlatform()->DisableWaylandDMABufWebGL();
+  return nullptr;
 }
 
 SurfaceFactory_DMABUF::SurfaceFactory_DMABUF(GLContext& gl)

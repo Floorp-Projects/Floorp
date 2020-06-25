@@ -9589,7 +9589,7 @@
 # Use DMABuf backend for WebGL on Wayland.
 - name: widget.wayland-dmabuf-webgl.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Use VA-API for video playback on Wayland.
