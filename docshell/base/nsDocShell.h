@@ -477,6 +477,7 @@ class nsDocShell final : public nsDocLoader,
   friend class nsIDocShell;
   friend class mozilla::dom::BrowsingContext;
   friend class mozilla::net::DocumentLoadListener;
+  friend class nsGlobalWindowOuter;
 
   // It is necessary to allow adding a timeline marker wherever a docshell
   // instance is available. This operation happens frequently and needs to
@@ -537,6 +538,8 @@ class nsDocShell final : public nsDocLoader,
   nsresult CreateAboutBlankContentViewer(
       nsIPrincipal* aPrincipal, nsIPrincipal* aPartitionedPrincipal,
       nsIContentSecurityPolicy* aCSP, nsIURI* aBaseURI,
+      const Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCOEP =
+          mozilla::Nothing(),
       bool aTryToSaveOldPresentation = true, bool aCheckPermitUnload = true,
       mozilla::dom::WindowGlobalChild* aActor = nullptr);
 

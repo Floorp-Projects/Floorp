@@ -1740,7 +1740,8 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
 }
 
 void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
-    nsIContentSecurityPolicy* aCSP) {
+    nsIContentSecurityPolicy* aCSP,
+    const Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCOEP) {
   // First, grab the subject principal.
   nsCOMPtr<nsIPrincipal> newWindowPrincipal =
       nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
@@ -1776,8 +1777,9 @@ void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
 
   // Use the subject (or system) principal as the storage principal too until
   // the new window finishes navigating and gets a real storage principal.
-  GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal,
-                                               newWindowPrincipal, aCSP);
+  nsDocShell::Cast(GetDocShell())
+      ->CreateAboutBlankContentViewer(newWindowPrincipal, newWindowPrincipal,
+                                      aCSP, nullptr, aCOEP);
 
   if (mDoc) {
     mDoc->SetIsInitialDocument(true);
