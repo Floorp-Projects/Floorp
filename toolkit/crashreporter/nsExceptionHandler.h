@@ -323,15 +323,6 @@ bool UnsetRemoteExceptionHandler();
 // the handle for the pipe since it can't get remapped to a default value.
 void SetNotificationPipeForChild(int childCrashFd);
 void SetCrashAnnotationPipeForChild(int childCrashAnnotationFd);
-
-// Android builds use a custom library loader, so /proc/<pid>/maps
-// will just show anonymous mappings for all the non-system
-// shared libraries. This API is to work around that by providing
-// info about the shared libraries that are mapped into these anonymous
-// mappings.
-void AddLibraryMapping(const char* library_name, uintptr_t start_address,
-                       size_t mapping_length, size_t file_offset);
-
 #endif
 
 // Annotates the crash report with the name of the calling thread.
