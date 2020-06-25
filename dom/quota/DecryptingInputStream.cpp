@@ -17,12 +17,22 @@ NS_INTERFACE_MAP_BEGIN(DecryptingInputStreamBase)
   NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
                                      mBaseCloneableInputStream || !mBaseStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(
+      nsIIPCSerializableInputStream,
+      mBaseIPCSerializableInputStream || !mBaseStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
 DecryptingInputStreamBase::DecryptingInputStreamBase(
-    MovingNotNull<nsCOMPtr<nsIInputStream>> aBaseStream, size_t aBlockSize)
-    : mBaseStream(std::move(aBaseStream)), mBlockSize(aBlockSize) {
+    MovingNotNull<nsCOMPtr<nsIInputStream>> aBaseStream, size_t aBlockSize) {
+  Init(std::move(aBaseStream), aBlockSize);
+}
+
+void DecryptingInputStreamBase::Init(
+    MovingNotNull<nsCOMPtr<nsIInputStream>> aBaseStream, size_t aBlockSize) {
+  mBlockSize.init(aBlockSize);
+  mBaseStream.init(std::move(aBaseStream));
+
   const nsCOMPtr<nsISeekableStream> seekableStream =
       do_QueryInterface(mBaseStream->get());
   MOZ_ASSERT(seekableStream &&
@@ -34,6 +44,14 @@ DecryptingInputStreamBase::DecryptingInputStreamBase(
   if (cloneableInputStream &&
       SameCOMIdentity(mBaseStream->get(), cloneableInputStream)) {
     mBaseCloneableInputStream.init(WrapNotNullUnchecked(cloneableInputStream));
+  }
+
+  const nsCOMPtr<nsIIPCSerializableInputStream> ipcSerializeInputStream =
+      do_QueryInterface(mBaseStream->get());
+  if (ipcSerializeInputStream &&
+      SameCOMIdentity(mBaseStream->get(), ipcSerializeInputStream)) {
+    mBaseIPCSerializableInputStream.init(
+        WrapNotNullUnchecked(ipcSerializeInputStream));
   }
 }
 
@@ -58,13 +76,21 @@ NS_IMETHODIMP DecryptingInputStreamBase::GetCloneable(bool* aCloneable) {
   return NS_OK;
 }
 
+void DecryptingInputStreamBase::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
+  MOZ_CRASH("Not implemented");
+}
+
 size_t DecryptingInputStreamBase::PlainLength() const {
   MOZ_ASSERT(mNextByte <= mPlainBytes);
   return mPlainBytes - mNextByte;
 }
 
 size_t DecryptingInputStreamBase::EncryptedBufferLength() const {
-  return mBlockSize;
+  return *mBlockSize;
 }
 
 }  // namespace mozilla::dom::quota

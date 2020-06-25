@@ -13,6 +13,8 @@
 #include "mozilla/dom/IPCBlobInputStream.h"
 #include "mozilla/dom/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/IPCBlobInputStreamStorage.h"
+#include "mozilla/dom/quota/DecryptingInputStream_impl.h"
+#include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
 #include "mozilla/ipc/IPCStreamDestination.h"
 #include "mozilla/ipc/IPCStreamSource.h"
 #include "mozilla/InputStreamLengthHelper.h"
@@ -249,6 +251,9 @@ void InputStreamHelper::PostSerializationActivation(InputStreamParams& aParams,
     case InputStreamParams::TIPCBlobInputStreamParams:
       break;
 
+    case InputStreamParams::TEncryptedFileInputStreamParams:
+      break;
+
     default:
       MOZ_CRASH(
           "A new stream? Should decide if it must be processed recursively or "
@@ -359,6 +364,12 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
 
     case InputStreamParams::TInputStreamLengthWrapperParams:
       serializable = new InputStreamLengthWrapper();
+      break;
+
+    case InputStreamParams::TEncryptedFileInputStreamParams:
+      serializable = new dom::quota::DecryptingInputStream<
+          dom::quota::IPCStreamCipherStrategy>(
+          dom::quota::IPCStreamCipherStrategy{});
       break;
 
     default:

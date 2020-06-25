@@ -35,6 +35,7 @@ EXPORTS.mozilla.dom.quota += [
     'EncryptingOutputStream_impl.h',
     'FileStreams.h',
     'InitializationTypes.h',
+    'IPCStreamCipherStrategy.h',
     'MemoryOutputStream.h',
     'OriginScope.h',
     'PersistenceType.h',

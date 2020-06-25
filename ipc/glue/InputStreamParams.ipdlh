@@ -92,6 +92,14 @@ union InputStreamParams
   IPCBlobInputStreamParams;
   InputStreamLengthWrapperParams;
   IPCRemoteStreamParams;
+  EncryptedFileInputStreamParams;
+};
+
+struct EncryptedFileInputStreamParams
+{
+  FileInputStreamParams fileInputStreamParams;
+  uint8_t[] key;
+  uint32_t blockSize;
 };
 
 struct BufferedInputStreamParams

@@ -11,6 +11,8 @@
 
 #include "CipherStrategy.h"
 
+#include "mozilla/ipc/InputStreamParams.h"
+#include "nsFileStreams.h"
 #include "nsIAsyncInputStream.h"
 #include "nsStreamUtils.h"
 
@@ -37,6 +39,12 @@ template <typename CipherStrategy>
 DecryptingInputStream<CipherStrategy>::~DecryptingInputStream() {
   Close();
 }
+
+template <typename CipherStrategy>
+DecryptingInputStream<CipherStrategy>::DecryptingInputStream(
+    CipherStrategy aCipherStrategy)
+    : DecryptingInputStreamBase{},
+      mCipherStrategy(std::move(aCipherStrategy)) {}
 
 template <typename CipherStrategy>
 NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Close() {
@@ -183,7 +191,7 @@ nsresult DecryptingInputStream<CipherStrategy>::ParseNextChunk(
 
   // XXX Do we need to know the actual decrypted size?
   rv = mCipherStrategy.Cipher(
-      CipherMode::Decrypt, mKey, mEncryptedBlock->MutableCipherPrefix(),
+      CipherMode::Decrypt, *mKey, mEncryptedBlock->MutableCipherPrefix(),
       mEncryptedBlock->Payload(), AsWritableBytes(Span{mPlainBuffer}));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -238,7 +246,7 @@ bool DecryptingInputStream<CipherStrategy>::EnsureBuffers() {
   // until the stream is closed.
   if (!mEncryptedBlock) {
     // XXX Do we need to do this fallible (as the comment above suggests)?
-    mEncryptedBlock.emplace(mBlockSize);
+    mEncryptedBlock.emplace(*mBlockSize);
 
     MOZ_ASSERT(mPlainBuffer.IsEmpty());
     if (NS_WARN_IF(!mPlainBuffer.SetLength(mEncryptedBlock->MaxPayloadLength(),
@@ -269,8 +277,8 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Tell(
     return rv;
   }
 
-  const auto fullBlocks = basePosition / mBlockSize;
-  MOZ_ASSERT(0 == basePosition % mBlockSize);
+  const auto fullBlocks = basePosition / *mBlockSize;
+  MOZ_ASSERT(0 == basePosition % *mBlockSize);
 
   *aRetval = (fullBlocks - ((mPlainBytes || mLastBlockLength) ? 1 : 0)) *
                  mEncryptedBlock->MaxPayloadLength() +
@@ -331,7 +339,7 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Seek(const int32_t aWhence,
 
           nsresult rv =
               (*mBaseSeekableStream)
-                  ->Seek(NS_SEEK_END, -static_cast<int64_t>(mBlockSize));
+                  ->Seek(NS_SEEK_END, -static_cast<int64_t>(*mBlockSize));
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return Err(rv);
           }
@@ -377,7 +385,7 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Seek(const int32_t aWhence,
 
   // XXX If we remain in the same block as before, we can skip this.
   nsresult rv =
-      (*mBaseSeekableStream)->Seek(NS_SEEK_SET, baseBlocksOffset * mBlockSize);
+      (*mBaseSeekableStream)->Seek(NS_SEEK_SET, baseBlocksOffset * *mBlockSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -400,7 +408,7 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Seek(const int32_t aWhence,
       return aOffset == 0 ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
     }
 
-    nsresult rv = (*mBaseSeekableStream)->Seek(NS_SEEK_CUR, -mBlockSize);
+    nsresult rv = (*mBaseSeekableStream)->Seek(NS_SEEK_CUR, -*mBlockSize);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -438,10 +446,63 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Clone(
 
   *_retval =
       MakeAndAddRef<DecryptingInputStream>(WrapNotNull(std::move(clonedStream)),
-                                           mBlockSize, mCipherStrategy, mKey)
+                                           *mBlockSize, mCipherStrategy, *mKey)
           .take();
 
   return NS_OK;
+}
+
+template <typename CipherStrategy>
+void DecryptingInputStream<CipherStrategy>::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
+  MOZ_ASSERT(mBaseStream);
+  MOZ_ASSERT(mBaseIPCSerializableInputStream);
+
+  mozilla::ipc::InputStreamParams baseStreamParams;
+  (*mBaseIPCSerializableInputStream)
+      ->Serialize(baseStreamParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                  aSizeUsed, aManager);
+
+  MOZ_ASSERT(baseStreamParams.type() ==
+             mozilla::ipc::InputStreamParams::TFileInputStreamParams);
+
+  mozilla::ipc::EncryptedFileInputStreamParams encryptedFileInputStreamParams;
+  encryptedFileInputStreamParams.fileInputStreamParams() =
+      std::move(baseStreamParams);
+  encryptedFileInputStreamParams.key().AppendElements(
+      mCipherStrategy.SerializeKey(*mKey));
+  encryptedFileInputStreamParams.blockSize() = *mBlockSize;
+
+  aParams = std::move(encryptedFileInputStreamParams);
+}
+
+template <typename CipherStrategy>
+bool DecryptingInputStream<CipherStrategy>::Deserialize(
+    const mozilla::ipc::InputStreamParams& aParams,
+    const FileDescriptorArray& aFileDescriptors) {
+  MOZ_ASSERT(aParams.type() ==
+             mozilla::ipc::InputStreamParams::TEncryptedFileInputStreamParams);
+  const auto& params = aParams.get_EncryptedFileInputStreamParams();
+
+  nsCOMPtr<nsIFileInputStream> stream;
+  nsFileInputStream::Create(nullptr, NS_GET_IID(nsIFileInputStream),
+                            getter_AddRefs(stream));
+  nsCOMPtr<nsIIPCSerializableInputStream> baseSerializable =
+      do_QueryInterface(stream);
+
+  if (NS_WARN_IF(!baseSerializable->Deserialize(params.fileInputStreamParams(),
+                                                aFileDescriptors))) {
+    return false;
+  }
+
+  Init(WrapNotNull<nsCOMPtr<nsIInputStream>>(std::move(stream)),
+       params.blockSize());
+  mKey.init(mCipherStrategy.DeserializeKey(params.key()));
+
+  return true;
 }
 
 }  // namespace mozilla::dom::quota
