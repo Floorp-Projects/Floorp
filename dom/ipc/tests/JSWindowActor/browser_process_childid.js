@@ -8,18 +8,18 @@ declTest("test childid", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
     ok(
-      parent.contentParent.childID,
-      "parent contentParent.childID should have a value."
+      parent.domProcess.childID,
+      "parent domProcess.childID should have a value."
     );
     await SpecialPowers.spawn(
       browser,
-      [parent.contentParent.childID],
+      [parent.domProcess.childID],
       async function(parentChildID) {
         ok(
-          ChromeUtils.contentChild.childID,
+          ChromeUtils.domProcessChild.childID,
           "child process.childID should have a value."
         );
-        let childID = ChromeUtils.contentChild.childID;
+        let childID = ChromeUtils.domProcessChild.childID;
         is(parentChildID, childID);
       }
     );
