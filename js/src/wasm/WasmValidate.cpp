@@ -2735,7 +2735,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       return d.fail("expected segment size");
     }
 
-    if (numElems > MaxTableInitialLength) {
+    if (numElems > MaxElemSegmentLength) {
       return d.fail("too many table elements");
     }
 
@@ -3052,7 +3052,7 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
       return d.fail("expected segment size");
     }
 
-    if (seg.length > MaxMemoryInitialPages * PageSize) {
+    if (seg.length > MaxDataSegmentLengthPages * PageSize) {
       return d.fail("segment size too big");
     }
 
