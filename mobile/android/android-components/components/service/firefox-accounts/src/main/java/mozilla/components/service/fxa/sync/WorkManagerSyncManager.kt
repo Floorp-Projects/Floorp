@@ -294,7 +294,9 @@ class WorkManagerSyncWorker(
                 SyncEngine.Tabs.nativeName -> SyncEngine.Tabs
                 else -> throw IllegalStateException("Invalid syncable store: $it")
             }
-            engine to GlobalSyncableStoreProvider.getStore(engine.nativeName)!!
+            engine to checkNotNull(GlobalSyncableStoreProvider.getStore(engine.nativeName)) {
+                "SyncableStore missing from GlobalSyncableStoreProvider: ${engine.nativeName}"
+            }
         }.ifEmpty {
             // Short-circuit if there are no configured stores.
             // Don't update the "last-synced" timestamp because we haven't actually synced anything.
