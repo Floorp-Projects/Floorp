@@ -168,6 +168,15 @@ tr:not(.deleted) > .cell-value {
   text-align: match-parent;
 }
 
+:root:dir(ltr) tr:not(.deleted) > .cell-value > #form-edit {
+  /* Make the text in the form stay in the same place as before editing the pref. */
+  margin-left: -8px;
+}
+
+:root:dir(rtl) tr:not(.deleted) > .cell-value > #form-edit {
+  margin-right: -8px;
+}
+
 #form-edit > label {
   padding-inline-end: 10px;
 }
