@@ -7,23 +7,15 @@ const { RemoteSettings } = ChromeUtils.import(
 const { CFRMessageProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/CFRMessageProvider.jsm"
 );
+const { CFRPageActions } = ChromeUtils.import(
+  "resource://activity-stream/lib/CFRPageActions.jsm"
+);
 
 /**
  * Load and modify a message for the test.
  */
 add_task(async function setup() {
-  // Force the WNPanel provider cache to 0 by modifying updateCycleInMs
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "browser.newtabpage.activity-stream.asrouter.providers.cfr",
-        `{"id":"cfr","enabled":true,"type":"remote-settings","bucket":"cfr","updateCycleInMs":0}`,
-      ],
-    ],
-  });
-
   const initialMsgCount = ASRouter.state.messages.length;
-
   const heartbeatMsg = CFRMessageProvider.getMessages().find(
     m => m.id === "HEARTBEAT_TACTIC_2"
   );
@@ -38,6 +30,16 @@ add_task(async function setup() {
   await client.db.clear();
   await client.db.create(testMessage);
   await client.db.saveLastModified(42); // Prevent from loading JSON dump.
+
+  // Force the CFR provider cache to 0 by modifying updateCycleInMs
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.asrouter.providers.cfr",
+        `{"id":"cfr","enabled":true,"type":"remote-settings","bucket":"cfr","updateCycleInMs":0}`,
+      ],
+    ],
+  });
 
   // Reload the providers
   await BrowserTestUtils.waitForCondition(async () => {
@@ -74,15 +76,10 @@ add_task(async function setup() {
  */
 add_task(async function test_heartbeat_tactic_2() {
   const TEST_URL = "http://example.com";
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "browser.newtabpage.activity-stream.asrouter.providers.message-groups",
-        `{"id":"message-groups","enabled":true,"type":"remote-settings","bucket":"message-groups","updateCycleInMs":0}`,
-      ],
-    ],
-  });
+  const msg = ASRouter.state.messages.find(m =>
+    m.groups.includes("messaging-experiments")
+  );
+  Assert.ok(msg, "Message found");
   const groupConfiguration = {
     id: "messaging-experiments",
     enabled: true,
@@ -93,16 +90,28 @@ add_task(async function test_heartbeat_tactic_2() {
   await client.db.create(groupConfiguration);
   await client.db.saveLastModified(42); // Prevent from loading JSON dump.
 
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.asrouter.providers.message-groups",
+        `{"id":"message-groups","enabled":true,"type":"remote-settings","bucket":"message-groups","updateCycleInMs":0}`,
+      ],
+      ["browser.userPreference.messaging-experiments", true],
+    ],
+  });
+
+  await BrowserTestUtils.waitForCondition(async () => {
+    const msgs = await client.get();
+    return msgs.find(m => m.id === groupConfiguration.id);
+  }, "Wait for RS message");
+
   // Reload the providers
   await ASRouter._updateMessageProviders();
-  await ASRouter.loadMessagesFromAllProviders();
+  await ASRouter.loadAllMessageGroups();
 
-  await BrowserTestUtils.waitForCondition(
+  let groupState = await BrowserTestUtils.waitForCondition(
     () => ASRouter.state.groups.find(g => g.id === groupConfiguration.id),
     "Wait for group config to load"
-  );
-  let groupState = ASRouter.state.groups.find(
-    g => g.id === groupConfiguration.id
   );
   Assert.ok(groupState, "Group config found");
   Assert.ok(groupState.enabled, "Group is enabled");
@@ -120,6 +129,14 @@ add_task(async function test_heartbeat_tactic_2() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.userPreference.messaging-experiments", false]],
   });
+
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      ASRouter.state.groups.find(
+        g => g.id === groupConfiguration.id && !g.enable
+      ),
+    "Wait for group config to load"
+  );
 
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   await BrowserTestUtils.loadURI(tab2.linkedBrowser, TEST_URL);
@@ -140,4 +157,5 @@ add_task(async function test_heartbeat_tactic_2() {
   await ASRouter._updateMessageProviders();
   await ASRouter.loadMessagesFromAllProviders();
   await SpecialPowers.popPrefEnv();
+  CFRPageActions.clearRecommendations();
 });
