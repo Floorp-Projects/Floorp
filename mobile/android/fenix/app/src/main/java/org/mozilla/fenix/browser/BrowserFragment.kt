@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
@@ -29,6 +30,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.components.FenixSnackbar
@@ -66,11 +68,24 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         return view
     }
 
+    @Suppress("LongMethod")
     override fun initializeUI(view: View): Session? {
         val context = requireContext()
         val components = context.components
 
         return super.initializeUI(view)?.also {
+            if (FeatureFlags.swipeToSwitchTabs) {
+                gestureLayout.addGestureListener(
+                    ToolbarGestureHandler(
+                        activity = requireActivity(),
+                        contentLayout = browserLayout,
+                        tabPreview = tabPreview,
+                        toolbarLayout = browserToolbarView.view,
+                        sessionManager = components.core.sessionManager
+                    )
+                )
+            }
+
             val readerModeAction =
                 BrowserToolbar.ToggleButton(
                     image = ContextCompat.getDrawable(requireContext(), R.drawable.ic_readermode)!!,

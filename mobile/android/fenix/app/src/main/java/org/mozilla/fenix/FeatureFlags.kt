@@ -24,4 +24,9 @@ object FeatureFlags {
      * Enables new tab tray pref
      */
     val tabTray = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables swipe on toolbar to switch tabs
+     */
+    val swipeToSwitchTabs = Config.channel.isNightlyOrDebug
 }

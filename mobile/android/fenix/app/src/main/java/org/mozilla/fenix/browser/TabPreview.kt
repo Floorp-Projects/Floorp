@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.fenix.browser
+
+import android.content.Context
+import android.util.AttributeSet
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.updateLayoutParams
+import kotlinx.android.synthetic.main.tab_preview.view.*
+import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
+import mozilla.components.support.images.ext.loadIntoView
+import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.theme.ThemeManager
+
+class TabPreview @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyle: Int = 0
+) : FrameLayout(context, attrs, defStyle) {
+
+    private val thumbnailLoader = ThumbnailLoader(context.components.core.thumbnailStorage)
+
+    init {
+        val inflater = LayoutInflater.from(context)
+        inflater.inflate(R.layout.tab_preview, this, true)
+
+        if (!context.settings().shouldUseBottomToolbar) {
+            fakeToolbar.updateLayoutParams<LayoutParams> {
+                gravity = Gravity.TOP
+            }
+
+            fakeToolbar.background = ResourcesCompat.getDrawable(
+                resources,
+                ThemeManager.resolveAttribute(R.attr.bottomBarBackgroundTop, context),
+                null
+            )
+        }
+
+        menuButton.setColorFilter(
+            ContextCompat.getColor(
+                context,
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            )
+        )
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        previewThumbnail.translationY = if (!context.settings().shouldUseBottomToolbar) {
+            fakeToolbar.height.toFloat()
+        } else {
+            0f
+        }
+    }
+
+    fun loadPreviewThumbnail(thumbnailId: String) {
+        thumbnailLoader.loadIntoView(previewThumbnail, thumbnailId)
+    }
+}
