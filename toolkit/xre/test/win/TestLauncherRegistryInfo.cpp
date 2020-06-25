@@ -51,7 +51,7 @@ static DWORD gMyImageTimestamp;
     mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> \
         result = info.Check(mozilla::LauncherRegistryInfo::desired);    \
     if (result.isErr()) {                                               \
-      return LAUNCHER_ERROR_FROM_RESULT(result);                        \
+      return result.propagateErr();                                     \
     }                                                                   \
     if (result.unwrap() != mozilla::LauncherRegistryInfo::expected) {   \
       return LAUNCHER_ERROR_FROM_HRESULT(E_FAIL);                       \
@@ -63,7 +63,7 @@ static DWORD gMyImageTimestamp;
     mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> \
         enabled = info.IsEnabled();                                      \
     if (enabled.isErr()) {                                               \
-      return LAUNCHER_ERROR_FROM_RESULT(enabled);                        \
+      return enabled.propagateErr();                                     \
     }                                                                    \
     if (enabled.unwrap() != mozilla::LauncherRegistryInfo::expected) {   \
       return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);                  \
@@ -74,7 +74,7 @@ static DWORD gMyImageTimestamp;
   do {                                                                 \
     mozilla::LauncherResult<bool> enabled = info.IsTelemetryEnabled(); \
     if (enabled.isErr()) {                                             \
-      return LAUNCHER_ERROR_FROM_RESULT(enabled);                      \
+      return enabled.propagateErr();                                   \
     }                                                                  \
     if (enabled.unwrap() != expected) {                                \
       return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);                \
@@ -86,7 +86,7 @@ static DWORD gMyImageTimestamp;
     mozilla::LauncherResult<mozilla::Maybe<DWORD>> result = \
         ReadRegistryValueData<DWORD>(name, REG_DWORD);      \
     if (result.isErr()) {                                   \
-      return LAUNCHER_ERROR_FROM_RESULT(result);            \
+      return result.propagateErr();                         \
     }                                                       \
     if (result.inspect().isNothing() ||                     \
         result.inspect().value() != expected) {             \
@@ -99,7 +99,7 @@ static DWORD gMyImageTimestamp;
     mozilla::LauncherResult<mozilla::Maybe<uint64_t>> result = \
         ReadRegistryValueData<uint64_t>(name, REG_QWORD);      \
     if (result.isErr()) {                                      \
-      return LAUNCHER_ERROR_FROM_RESULT(result);               \
+      return result.propagateErr();                            \
     }                                                          \
     if (result.inspect().isNothing()) {                        \
       return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);        \
@@ -111,7 +111,7 @@ static DWORD gMyImageTimestamp;
     mozilla::LauncherResult<mozilla::Maybe<uint64_t>> result = \
         ReadRegistryValueData<uint64_t>(name, REG_QWORD);      \
     if (result.isErr()) {                                      \
-      return LAUNCHER_ERROR_FROM_RESULT(result);               \
+      return result.propagateErr();                            \
     }                                                          \
     if (result.inspect().isNothing() ||                        \
         result.inspect().value() != expected) {                \
@@ -124,7 +124,7 @@ static DWORD gMyImageTimestamp;
     mozilla::LauncherResult<mozilla::Maybe<DWORD>> result = \
         ReadRegistryValueData<DWORD>(name, REG_DWORD);      \
     if (result.isErr()) {                                   \
-      return LAUNCHER_ERROR_FROM_RESULT(result);            \
+      return result.propagateErr();                         \
     }                                                       \
     if (result.inspect().isSome()) {                        \
       return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);     \
@@ -136,7 +136,7 @@ static DWORD gMyImageTimestamp;
     mozilla::LauncherResult<mozilla::Maybe<uint64_t>> result = \
         ReadRegistryValueData<uint64_t>(name, REG_QWORD);      \
     if (result.isErr()) {                                      \
-      return LAUNCHER_ERROR_FROM_RESULT(result);               \
+      return result.propagateErr();                            \
     }                                                          \
     if (result.inspect().isSome()) {                           \
       return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);        \
@@ -279,12 +279,12 @@ static mozilla::LauncherVoidResult TestNormal() {
   mozilla::LauncherResult<mozilla::Maybe<uint64_t>> launcherTs =
       ReadRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD);
   if (launcherTs.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(launcherTs);
+    return launcherTs.propagateErr();
   }
   mozilla::LauncherResult<mozilla::Maybe<uint64_t>> browserTs =
       ReadRegistryValueData<uint64_t>(gBrowserValue, REG_QWORD);
   if (browserTs.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(browserTs);
+    return browserTs.propagateErr();
   }
   if (launcherTs.inspect().isNothing() || browserTs.inspect().isNothing() ||
       browserTs.inspect().value() <= launcherTs.inspect().value()) {
@@ -451,7 +451,7 @@ static mozilla::LauncherVoidResult TestDisableDueToFailure() {
   // Now call DisableDueToFailure
   mozilla::LauncherVoidResult lvr = info.DisableDueToFailure();
   if (lvr.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(lvr);
+    return lvr.propagateErr();
   }
 
   // We should now be FailDisabled
@@ -479,7 +479,7 @@ static mozilla::LauncherVoidResult TestPrefReflection() {
   mozilla::LauncherRegistryInfo info;
   mozilla::LauncherVoidResult reflectOk = info.ReflectPrefToRegistry(false);
   if (reflectOk.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(reflectOk);
+    return reflectOk.propagateErr();
   }
 
   // Launcher timestamp should be non-existent.
@@ -492,7 +492,7 @@ static mozilla::LauncherVoidResult TestPrefReflection() {
   // Now test to see what happens when the pref is set to ON.
   reflectOk = info.ReflectPrefToRegistry(true);
   if (reflectOk.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(reflectOk);
+    return reflectOk.propagateErr();
   }
 
   // Launcher and browser timestamps should be non-existent.
@@ -517,13 +517,13 @@ static mozilla::LauncherVoidResult TestTelemetryConfig() {
   mozilla::LauncherVoidResult reflectOk =
       info.ReflectTelemetryPrefToRegistry(false);
   if (reflectOk.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(reflectOk);
+    return reflectOk.propagateErr();
   }
   EXPECT_TELEMETRY_IS_ENABLED(false);
 
   reflectOk = info.ReflectTelemetryPrefToRegistry(true);
   if (reflectOk.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(reflectOk);
+    return reflectOk.propagateErr();
   }
   EXPECT_TELEMETRY_IS_ENABLED(true);
 
@@ -540,12 +540,12 @@ static mozilla::LauncherVoidResult TestCommitAbort() {
   mozilla::LauncherResult<mozilla::Maybe<uint64_t>> launcherValue =
       ReadRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD);
   if (launcherValue.isErr() || launcherValue.inspect().isNothing()) {
-    return LAUNCHER_ERROR_FROM_RESULT(launcherValue);
+    return launcherValue.propagateErr();
   }
   mozilla::LauncherResult<mozilla::Maybe<uint64_t>> browserValue =
       ReadRegistryValueData<uint64_t>(gBrowserValue, REG_QWORD);
   if (browserValue.isErr() || browserValue.inspect().isNothing()) {
-    return LAUNCHER_ERROR_FROM_RESULT(browserValue);
+    return browserValue.propagateErr();
   }
   uint64_t launcherTs = launcherValue.inspect().value();
   uint64_t browserTs = browserValue.inspect().value();
@@ -590,7 +590,7 @@ static mozilla::LauncherVoidResult TestDisableDuringLauncherLaunch() {
   mozilla::LauncherResult<mozilla::Maybe<uint64_t>> launcherTs =
       ReadRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD);
   if (launcherTs.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(launcherTs);
+    return launcherTs.propagateErr();
   }
   if (launcherTs.inspect().isNothing()) {
     return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);
@@ -605,7 +605,7 @@ static mozilla::LauncherVoidResult TestDisableDuringLauncherLaunch() {
       mozilla::LauncherRegistryInfo info;
       mozilla::LauncherVoidResult vr = info.DisableDueToFailure();
       if (vr.isErr()) {
-        return LAUNCHER_ERROR_FROM_RESULT(vr);
+        return vr.propagateErr();
       }
       return mozilla::Ok();
     }();
@@ -650,7 +650,7 @@ static mozilla::LauncherVoidResult TestDisableDuringBrowserLaunch() {
       mozilla::LauncherRegistryInfo info;
       mozilla::LauncherVoidResult vr = info.DisableDueToFailure();
       if (vr.isErr()) {
-        return LAUNCHER_ERROR_FROM_RESULT(vr);
+        return vr.propagateErr();
       }
       return mozilla::Ok();
     }();
@@ -683,7 +683,7 @@ static mozilla::LauncherVoidResult TestReEnable() {
   mozilla::LauncherRegistryInfo info;
   vr = info.DisableDueToFailure();
   if (vr.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(vr);
+    return vr.propagateErr();
   }
   EXPECT_ENABLED_STATE_IS(EnabledState::FailDisabled);
 
@@ -705,7 +705,7 @@ static mozilla::LauncherVoidResult TestReEnable() {
   // Make ForceDisabled
   vr = info.ReflectPrefToRegistry(false);
   if (vr.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(vr);
+    return vr.propagateErr();
   }
   EXPECT_ENABLED_STATE_IS(EnabledState::ForceDisabled);
 

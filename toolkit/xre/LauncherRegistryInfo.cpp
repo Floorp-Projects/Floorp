@@ -140,7 +140,7 @@ LauncherVoidResult LauncherRegistryInfo::ReflectPrefToRegistry(
     const bool aEnable) {
   LauncherResult<EnabledState> curEnabledState = IsEnabled();
   if (curEnabledState.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(curEnabledState);
+    return curEnabledState.propagateErr();
   }
 
   bool isCurrentlyEnabled =
@@ -155,7 +155,7 @@ LauncherVoidResult LauncherRegistryInfo::ReflectPrefToRegistry(
   LauncherResult<bool> clearedLauncherTimestamp = ClearLauncherStartTimestamp();
   MOZ_ASSERT(clearedLauncherTimestamp.isOk());
   if (clearedLauncherTimestamp.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(clearedLauncherTimestamp);
+    return clearedLauncherTimestamp.propagateErr();
   }
 
   // Allow commit when we enable the launcher, otherwise block.
@@ -170,7 +170,7 @@ LauncherVoidResult LauncherRegistryInfo::ReflectPrefToRegistry(
   LauncherResult<bool> clearedBrowserTimestamp = ClearBrowserStartTimestamp();
   MOZ_ASSERT(clearedBrowserTimestamp.isOk());
   if (clearedBrowserTimestamp.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(clearedBrowserTimestamp);
+    return clearedBrowserTimestamp.propagateErr();
   }
 
   return Ok();
@@ -180,7 +180,7 @@ LauncherVoidResult LauncherRegistryInfo::ReflectTelemetryPrefToRegistry(
     const bool aEnable) {
   LauncherResult<Disposition> disposition = Open();
   if (disposition.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(disposition);
+    return disposition.propagateErr();
   }
 
   return WriteRegistryValueData(mRegKey, ResolveTelemetryValueName(), REG_DWORD,
@@ -191,17 +191,17 @@ LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
     const ProcessType aDesiredType, const CheckOption aOption) {
   LauncherResult<Disposition> disposition = Open();
   if (disposition.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(disposition);
+    return disposition.propagateErr();
   }
 
   LauncherResult<DWORD> ourImageTimestamp = GetCurrentImageTimestamp();
   if (ourImageTimestamp.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(ourImageTimestamp);
+    return ourImageTimestamp.propagateErr();
   }
 
   LauncherResult<Maybe<DWORD>> savedImageTimestamp = GetSavedImageTimestamp();
   if (savedImageTimestamp.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(savedImageTimestamp);
+    return savedImageTimestamp.propagateErr();
   }
 
   // If we don't have a saved timestamp, or we do but it doesn't match with
@@ -210,13 +210,13 @@ LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
       savedImageTimestamp.inspect().value() != ourImageTimestamp.inspect()) {
     LauncherVoidResult clearResult = ClearStartTimestamps();
     if (clearResult.isErr()) {
-      return LAUNCHER_ERROR_FROM_RESULT(clearResult);
+      return clearResult.propagateErr();
     }
 
     LauncherVoidResult writeResult =
         WriteImageTimestamp(ourImageTimestamp.inspect());
     if (writeResult.isErr()) {
-      return LAUNCHER_ERROR_FROM_RESULT(writeResult);
+      return writeResult.propagateErr();
     }
   }
 
@@ -240,13 +240,13 @@ LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
   LauncherResult<Maybe<uint64_t>> lastLauncherTimestampResult =
       GetLauncherStartTimestamp();
   if (lastLauncherTimestampResult.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(lastLauncherTimestampResult);
+    return lastLauncherTimestampResult.propagateErr();
   }
 
   LauncherResult<Maybe<uint64_t>> lastBrowserTimestampResult =
       GetBrowserStartTimestamp();
   if (lastBrowserTimestampResult.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(lastBrowserTimestampResult);
+    return lastBrowserTimestampResult.propagateErr();
   }
 
   const Maybe<uint64_t>& lastLauncherTimestamp =
@@ -311,7 +311,7 @@ LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
 LauncherVoidResult LauncherRegistryInfo::DisableDueToFailure() {
   LauncherResult<Disposition> disposition = Open();
   if (disposition.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(disposition);
+    return disposition.propagateErr();
   }
   LauncherVoidResult result = WriteBrowserStartTimestamp(0ULL);
   if (result.isOk()) {
@@ -330,14 +330,14 @@ LauncherVoidResult LauncherRegistryInfo::Commit() {
 
   LauncherResult<Disposition> disposition = Open();
   if (disposition.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(disposition);
+    return disposition.propagateErr();
   }
 
   if (mLauncherTimestampToWrite.isSome()) {
     LauncherVoidResult writeResult =
         WriteLauncherStartTimestamp(mLauncherTimestampToWrite.value());
     if (writeResult.isErr()) {
-      return LAUNCHER_ERROR_FROM_RESULT(writeResult);
+      return writeResult.propagateErr();
     }
     mLauncherTimestampToWrite = Nothing();
   }
@@ -346,7 +346,7 @@ LauncherVoidResult LauncherRegistryInfo::Commit() {
     LauncherVoidResult writeResult =
         WriteBrowserStartTimestamp(mBrowserTimestampToWrite.value());
     if (writeResult.isErr()) {
-      return LAUNCHER_ERROR_FROM_RESULT(writeResult);
+      return writeResult.propagateErr();
     }
     mBrowserTimestampToWrite = Nothing();
   }
@@ -383,19 +383,19 @@ LauncherResult<LauncherRegistryInfo::EnabledState>
 LauncherRegistryInfo::IsEnabled() {
   LauncherResult<Disposition> disposition = Open();
   if (disposition.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(disposition);
+    return disposition.propagateErr();
   }
 
   LauncherResult<Maybe<uint64_t>> lastLauncherTimestamp =
       GetLauncherStartTimestamp();
   if (lastLauncherTimestamp.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(lastLauncherTimestamp);
+    return lastLauncherTimestamp.propagateErr();
   }
 
   LauncherResult<Maybe<uint64_t>> lastBrowserTimestamp =
       GetBrowserStartTimestamp();
   if (lastBrowserTimestamp.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(lastBrowserTimestamp);
+    return lastBrowserTimestamp.propagateErr();
   }
 
   return GetEnabledState(lastLauncherTimestamp.inspect(),
@@ -405,13 +405,13 @@ LauncherRegistryInfo::IsEnabled() {
 LauncherResult<bool> LauncherRegistryInfo::IsTelemetryEnabled() {
   LauncherResult<Disposition> disposition = Open();
   if (disposition.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(disposition);
+    return disposition.propagateErr();
   }
 
   LauncherResult<Maybe<DWORD>> result = ReadRegistryValueData<DWORD>(
       mRegKey, ResolveTelemetryValueName(), REG_DWORD);
   if (result.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(result);
+    return result.propagateErr();
   }
 
   if (result.inspect().isNothing()) {
@@ -496,12 +496,12 @@ LauncherVoidResult LauncherRegistryInfo::ClearStartTimestamps() {
 
   LauncherResult<bool> clearedLauncherTimestamp = ClearLauncherStartTimestamp();
   if (clearedLauncherTimestamp.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(clearedLauncherTimestamp);
+    return clearedLauncherTimestamp.propagateErr();
   }
 
   LauncherResult<bool> clearedBrowserTimestamp = ClearBrowserStartTimestamp();
   if (clearedBrowserTimestamp.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(clearedBrowserTimestamp);
+    return clearedBrowserTimestamp.propagateErr();
   }
 
   // Reset both timestamps to align with registry deletion

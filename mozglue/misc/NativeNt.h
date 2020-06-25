@@ -1236,7 +1236,7 @@ inline LauncherResult<void*> GetProcessPebPtr(HANDLE aProcess) {
 inline LauncherResult<HMODULE> GetProcessExeModule(HANDLE aProcess) {
   LauncherResult<void*> ppeb = GetProcessPebPtr(aProcess);
   if (ppeb.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(ppeb);
+    return ppeb.propagateErr();
   }
 
   PEB peb;
@@ -1288,7 +1288,7 @@ inline LauncherResult<HMODULE> GetModuleHandleFromLeafName(
     const UNICODE_STRING& aTarget) {
   auto maybePeb = nt::GetProcessPebPtr(kCurrentProcess);
   if (maybePeb.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(maybePeb);
+    return maybePeb.propagateErr();
   }
 
   const PPEB peb = reinterpret_cast<PPEB>(maybePeb.unwrap());
