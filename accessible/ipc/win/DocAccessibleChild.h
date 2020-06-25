@@ -90,9 +90,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
  private:
   void RemoveDeferredConstructor();
 
-  bool IsConstructedInParentProcess() const { return mIsRemoteConstructed; }
-  void SetConstructedInParentProcess() { mIsRemoteConstructed = true; }
-
   LayoutDeviceIntRect GetCaretRectFor(const uint64_t& aID);
 
   /**
@@ -353,7 +350,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
     uint64_t mID;
   };
 
-  bool mIsRemoteConstructed;
   mscom::ProxyUniquePtr<IDispatch> mParentProxy;
   mscom::ProxyUniquePtr<IDispatch> mEmulatedWindowProxy;
   mscom::ProxyUniquePtr<IAccessible> mTopLevelDocProxy;
