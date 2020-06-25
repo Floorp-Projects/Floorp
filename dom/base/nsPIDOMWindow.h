@@ -18,6 +18,7 @@
 #include "mozilla/TaskCategory.h"
 #include "js/TypeDecls.h"
 #include "nsRefPtrHashtable.h"
+#include "nsILoadInfo.h"
 
 // Only fired for inner windows.
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
@@ -786,8 +787,10 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   }
 
   // Set the window up with an about:blank document with the current subject
-  // principal and potentially a CSP.
-  virtual void SetInitialPrincipalToSubject(nsIContentSecurityPolicy* aCSP) = 0;
+  // principal and potentially a CSP and a COEP.
+  virtual void SetInitialPrincipalToSubject(
+      nsIContentSecurityPolicy* aCSP,
+      const mozilla::Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCoep) = 0;
 
   // Returns an object containing the window's state.  This also suspends
   // all running timeouts in the window.

@@ -295,7 +295,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   // Outer windows only.
   virtual void SetInitialPrincipalToSubject(
-      nsIContentSecurityPolicy* aCSP) override;
+      nsIContentSecurityPolicy* aCSP,
+      const Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCoep) override;
 
   virtual already_AddRefed<nsISupports> SaveWindowState() override;
   virtual nsresult RestoreWindowState(nsISupports* aState) override;
