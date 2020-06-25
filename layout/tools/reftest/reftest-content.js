@@ -1492,9 +1492,11 @@ function SendContentReady()
     try {
         info.D2DEnabled = gfxInfo.D2DEnabled;
         info.DWriteEnabled = gfxInfo.DWriteEnabled;
+        info.EmbeddedInFirefoxReality = gfxInfo.EmbeddedInFirefoxReality;
     } catch (e) {
         info.D2DEnabled = false;
         info.DWriteEnabled = false;
+        info.EmbeddedInFirefoxReality = false;
     }
 
     return sendSyncMessage("reftest:ContentReady", { 'gfx': info })[0];

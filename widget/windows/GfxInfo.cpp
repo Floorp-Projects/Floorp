@@ -86,6 +86,12 @@ int32_t GfxInfo::GetMaxRefreshRate() {
   return refreshRate;
 }
 
+NS_IMETHODIMP
+GfxInfo::GetEmbeddedInFirefoxReality(bool* aEmbeddedInFirefoxReality) {
+  *aEmbeddedInFirefoxReality = gfxVars::FxREmbedded();
+  return NS_OK;
+}
+
 #define PIXEL_STRUCT_RGB 1
 #define PIXEL_STRUCT_BGR 2
 

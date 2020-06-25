@@ -41,6 +41,7 @@ extern nsXREDirProvider* gDirServiceProvider;
 // NOTE: gAppData will be null in embedded contexts.
 extern const mozilla::XREAppData* gAppData;
 extern bool gSafeMode;
+extern bool gFxREmbedded;
 
 extern int gArgc;
 extern char** gArgv;

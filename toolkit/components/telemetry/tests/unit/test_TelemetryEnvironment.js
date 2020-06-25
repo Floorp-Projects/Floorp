@@ -761,12 +761,14 @@ function checkSystemSection(data, assertProcessData) {
   Assert.ok("D2DEnabled" in gfxData);
   Assert.ok("DWriteEnabled" in gfxData);
   Assert.ok("Headless" in gfxData);
+  Assert.ok("EmbeddedInFirefoxReality" in gfxData);
   // DWriteVersion is disabled due to main thread jank and will be enabled
   // again as part of bug 1154500.
   // Assert.ok("DWriteVersion" in gfxData);
   if (gIsWindows) {
     Assert.equal(typeof gfxData.D2DEnabled, "boolean");
     Assert.equal(typeof gfxData.DWriteEnabled, "boolean");
+    Assert.equal(typeof gfxData.EmbeddedInFirefoxReality, "boolean");
     // As above, will be enabled again as part of bug 1154500.
     // Assert.ok(checkString(gfxData.DWriteVersion));
   }
