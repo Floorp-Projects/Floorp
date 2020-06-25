@@ -44,18 +44,13 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   // Callback when OnStartRequest is received and handled by HttpChannelChild.
   // Enqueued messages in background channel will be flushed.
-  void OnStartRequestReceived(Maybe<uint32_t> aMultiPartID);
+  void OnStartRequestReceived();
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool IsQueueEmpty() const { return mQueuedRunnables.IsEmpty(); }
 #endif
 
  protected:
-  IPCResult RecvOnStartRequest(const nsHttpResponseHead& aResponseHead,
-                               const bool& aUseResponseHead,
-                               const nsHttpHeaderArray& aRequestHeaders,
-                               const HttpChannelOnStartRequestArgs& aArgs);
-
   IPCResult RecvOnTransportAndData(const nsresult& aChannelStatus,
                                    const nsresult& aTransportStatus,
                                    const uint64_t& aOffset,
@@ -69,26 +64,11 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
       const nsHttpHeaderArray& aResponseTrailers,
       const nsTArray<ConsoleReportCollected>& aConsoleReports);
 
-  IPCResult RecvOnAfterLastPart(const nsresult& aStatus);
-
-  IPCResult RecvOnProgress(const int64_t& aProgress,
-                           const int64_t& aProgressMax);
-
-  IPCResult RecvOnStatus(const nsresult& aStatus);
-
   IPCResult RecvFlushedForDiversion();
 
   IPCResult RecvDivertMessages();
 
-  IPCResult RecvNotifyClassificationFlags(const uint32_t& aClassificationFlags,
-                                          const bool& aIsThirdParty);
-
-  IPCResult RecvNotifyFlashPluginStateChanged(
-      const nsIHttpChannel::FlashPluginState& aState);
-
-  IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& info);
-
-  IPCResult RecvSetClassifierMatchedTrackingInfo(const ClassifierInfo& info);
+  IPCResult RecvOnStartRequestSent();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -108,7 +88,12 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   // OnStartRequestReceived.
   // return true after both RecvOnStartRequestSend and OnStartRequestReceived
   // are invoked.
-  bool IsWaitingOnStartRequest();
+  // When ODA message is from socket process, it is possible that both
+  // RecvOnStartRequestSent and OnStartRequestReceived are not invoked, but
+  // RecvOnTransportAndData is already invoked. In this case, we only need to
+  // check if OnStartRequestReceived is invoked to make sure ODA doesn't happen
+  // before OnStartRequest.
+  bool IsWaitingOnStartRequest(bool aDataFromSocketProcess = false);
 
   // Associated HttpChannelChild for handling the channel events.
   // Will be removed while failed to create background channel,
@@ -119,6 +104,10 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   // True if OnStartRequest is received by HttpChannelChild.
   // Should only access on STS thread.
   bool mStartReceived = false;
+
+  // True if OnStartRequest is sent by HttpChannelParent.
+  // Should only access on STS thread.
+  bool mStartSent = false;
 
   // Store pending messages that require to be handled after OnStartRequest.
   // Should be flushed after OnStartRequest is received and handled.
