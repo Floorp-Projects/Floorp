@@ -998,7 +998,7 @@ DataStorage::Writer::Run() {
   }
 
   const char* ptr = mData.get();
-  uint32_t remaining = mData.Length();
+  int32_t remaining = mData.Length();
   uint32_t written = 0;
   while (remaining > 0) {
     rv = outputStream->Write(ptr, remaining, &written);
