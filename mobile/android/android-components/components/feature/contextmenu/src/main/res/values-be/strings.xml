@@ -10,6 +10,8 @@
     <string name="mozac_feature_contextmenu_download_link">Сцягнуць спасылку</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Падзяліцца спасылкай</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">Падзяліцца выявай</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Скапіраваць спасылку</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
