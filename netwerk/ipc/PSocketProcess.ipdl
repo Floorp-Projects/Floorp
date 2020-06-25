@@ -19,6 +19,7 @@ include protocol PAltSvcTransaction;
 include protocol PTRRService;
 include protocol PProxyConfigLookup;
 include protocol PNativeDNSResolverOverride;
+include protocol PIPCBlobInputStream;
 
 include MemoryReportTypes;
 include NeckoChannelParams;
@@ -37,6 +38,7 @@ using base::ProcessId from "base/process.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using PRTime from "prtime.h";
 using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
+using struct nsID from "nsID.h";
 
 namespace mozilla {
 namespace net {
@@ -72,6 +74,7 @@ sync protocol PSocketProcess
   manages PTRRService;
   manages PProxyConfigLookup;
   manages PNativeDNSResolverOverride;
+  manages PIPCBlobInputStream;
 
 parent:
   async InitCrashReporter(NativeThreadId threadId);
@@ -140,6 +143,8 @@ child:
                     nsCString[] aDNSSuffixList);
   async PNativeDNSResolverOverride();
   async NotifyObserver(nsCString aTopic, nsString aData);
+
+  async PIPCBlobInputStream(nsID aID, uint64_t aSize);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
