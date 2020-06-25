@@ -349,6 +349,12 @@ ParentChannelWrapper::NotifyClassificationFlags(uint32_t aClassificationFlags,
 NS_IMETHODIMP
 ParentChannelWrapper::Delete() { return NS_OK; }
 
+NS_IMETHODIMP
+ParentChannelWrapper::GetRemoteType(nsAString& aRemoteType) {
+  aRemoteType = VoidString();
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
 

@@ -532,6 +532,17 @@ FTPChannelParent::Delete() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FTPChannelParent::GetRemoteType(nsAString& aRemoteType) {
+  if (!CanSend()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  dom::PContentParent* pcp = Manager()->Manager();
+  aRemoteType = static_cast<dom::ContentParent*>(pcp)->GetRemoteType();
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // FTPChannelParent::nsIInterfaceRequestor
 //-----------------------------------------------------------------------------

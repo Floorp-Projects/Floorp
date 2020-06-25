@@ -1755,6 +1755,21 @@ DocumentLoadListener::Delete() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DocumentLoadListener::GetRemoteType(nsAString& aRemoteType) {
+  RefPtr<CanonicalBrowsingContext> browsingContext = GetBrowsingContext();
+  if (!browsingContext) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  ErrorResult error;
+  browsingContext->GetCurrentRemoteType(aRemoteType, error);
+  if (error.Failed()) {
+    aRemoteType = VoidString();
+  }
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChannelEventSink
 ////////////////////////////////////////////////////////////////////////////////
