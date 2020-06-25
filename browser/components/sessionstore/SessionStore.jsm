@@ -3112,7 +3112,7 @@ var SessionStoreInternal = {
     aTab,
     aDelta = 0,
     aRestoreImmediately = true,
-    { index } = {}
+    { inBackground, index } = {}
   ) {
     if (!aTab || !aTab.ownerGlobal) {
       throw Components.Exception("Need a valid tab", Cr.NS_ERROR_INVALID_ARG);
@@ -3185,6 +3185,10 @@ var SessionStoreInternal = {
         Math.min(tabState.index, tabState.entries.length)
       );
       tabState.pinned = false;
+
+      if (inBackground === false) {
+        aWindow.gBrowser.selectedTab = newTab;
+      }
 
       // Restore the state into the new tab.
       this.restoreTab(newTab, tabState, {
