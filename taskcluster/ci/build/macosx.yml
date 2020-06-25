@@ -15,6 +15,7 @@ macosx64/debug:
         tier: 1
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 5400
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -61,6 +62,7 @@ macosx64/opt:
         tier: 1
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -101,6 +103,7 @@ macosx64-asan-fuzzing/opt:
         symbol: Bof
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
@@ -147,6 +150,7 @@ macosx64-fuzzing/debug:
         symbol: Bf
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 5400
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -199,6 +203,7 @@ macosx64-devedition/opt:
         tier: 1
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -244,6 +249,7 @@ macosx64-noopt/debug:
         tier: 2
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -288,6 +294,7 @@ macosx64-add-on-devel/opt:
         tier: 2
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -338,6 +345,7 @@ macosx64-shippable/opt:
         tier: 1
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -379,6 +387,7 @@ macosx64-ccov/opt:
         tier: 1
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -426,6 +435,7 @@ macosx64-gcp/debug:
         tier: 3
     worker-type: b-linux-gcp
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -473,6 +483,7 @@ macosx64-gcp/opt:
         tier: 3
     worker-type: b-linux-gcp
     worker:
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"

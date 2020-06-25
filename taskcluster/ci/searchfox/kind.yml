@@ -67,6 +67,7 @@ jobs:
             platform: osx-cross/debug
         worker-type: b-linux
         worker:
+            docker-image: {in-tree: debian10-amd64-build}
             max-run-time: 36000
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
