@@ -8991,7 +8991,7 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
 
     MOZ_ASSERT(usage >= 0);
 
-    res.IncrementDatabaseUsage(Some(uint64_t(usage)));
+    res += DatabaseUsageType(Some(uint64_t(usage)));
   } else if (usageFileExists) {
     rv = usageFile->Remove(false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9094,7 +9094,7 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   uint64_t usage;
   if (quotaManager->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroup, aOrigin,
                                       Client::LS, usage)) {
-    res.IncrementDatabaseUsage(Some(usage));
+    res += DatabaseUsageType(Some(usage));
   }
 
   return res;

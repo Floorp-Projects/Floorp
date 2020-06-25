@@ -13,6 +13,39 @@
 
 BEGIN_QUOTA_NAMESPACE
 
+enum struct UsageKind { Database, File };
+
+template <UsageKind Kind>
+struct Usage {
+  explicit Usage(Maybe<uint64_t> aValue = Nothing{}) : mValue(aValue) {}
+
+  Maybe<uint64_t> GetValue() const { return mValue; }
+
+  Usage& operator+=(const Usage aDelta) {
+    if (aDelta.mValue.isSome()) {
+      CheckedUint64 value = mValue.valueOr(0);
+
+      value += aDelta.mValue.value();
+
+      mValue = Some(value.isValid() ? value.value() : UINT64_MAX);
+    }
+
+    return *this;
+  }
+
+  Usage operator+(const Usage aDelta) const {
+    Usage res = *this;
+    res += aDelta;
+    return res;
+  }
+
+ private:
+  Maybe<uint64_t> mValue;
+};
+
+using DatabaseUsageType = Usage<UsageKind::Database>;
+using FileUsageType = Usage<UsageKind::File>;
+
 class UsageInfo final {
  public:
   UsageInfo& operator+=(const UsageInfo& aUsageInfo) {
@@ -21,50 +54,27 @@ class UsageInfo final {
     return *this;
   }
 
-  void IncrementDatabaseUsage(const Maybe<uint64_t>& aUsage) {
+  UsageInfo& operator+=(const DatabaseUsageType aUsage) {
     mDatabaseUsage += aUsage;
+    return *this;
   }
 
-  void IncrementFileUsage(const Maybe<uint64_t>& aUsage) {
+  UsageInfo& operator+=(const FileUsageType aUsage) {
     mFileUsage += aUsage;
+    return *this;
   }
 
   Maybe<uint64_t> FileUsage() const { return mFileUsage.GetValue(); }
 
-  Maybe<uint64_t> TotalUsage() const { return mDatabaseUsage + mFileUsage; }
-
-  struct Usage {
-    MOZ_IMPLICIT Usage(Maybe<uint64_t> aValue = Nothing{}) : mValue(aValue) {}
-
-    MOZ_IMPLICIT operator Maybe<uint64_t>() const { return mValue; }
-
-    Maybe<uint64_t> GetValue() const { return mValue; }
-
-    Usage& operator+=(const Usage aDelta) {
-      if (aDelta.mValue.isSome()) {
-        CheckedUint64 value = mValue.valueOr(0);
-
-        value += aDelta.mValue.value();
-
-        mValue = Some(value.isValid() ? value.value() : UINT64_MAX);
-      }
-
-      return *this;
-    }
-
-    Usage operator+(const Usage aDelta) const {
-      Usage res = *this;
-      res += aDelta;
-      return res;
-    }
-
-   private:
-    Maybe<uint64_t> mValue;
-  };
+  Maybe<uint64_t> TotalUsage() const {
+    const uint64_t res =
+        mDatabaseUsage.GetValue().valueOr(0) + FileUsage().valueOr(0);
+    return res ? Some(res) : Nothing();
+  }
 
  private:
-  Usage mDatabaseUsage;
-  Usage mFileUsage;
+  DatabaseUsageType mDatabaseUsage;
+  FileUsageType mFileUsage;
 };
 
 END_QUOTA_NAMESPACE
