@@ -1044,10 +1044,12 @@ public class GeckoViewActivity
     }
 
     private void createNewTab() {
+        Double startTime = sGeckoRuntime.getProfilerController().getProfilerTime();
         TabSession newSession = createSession();
         newSession.open(sGeckoRuntime);
         setGeckoViewSession(newSession);
         mToolbarView.updateTabCount();
+        sGeckoRuntime.getProfilerController().addMarker("Create new tab", startTime);
     }
 
     @Override

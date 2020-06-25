@@ -41,6 +41,7 @@ import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
 import java.lang.Deprecated;
+import java.lang.Double;
 import java.lang.Exception;
 import java.lang.Float;
 import java.lang.Integer;
@@ -75,6 +76,7 @@ import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.MediaElement;
 import org.mozilla.geckoview.OverscrollEdgeEffect;
 import org.mozilla.geckoview.PanZoomController;
+import org.mozilla.geckoview.ProfilerController;
 import org.mozilla.geckoview.RuntimeSettings;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.ScreenLength;
@@ -514,6 +516,7 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable public GeckoRuntime.Delegate getDelegate();
     method @UiThread @Nullable public Autocomplete.LoginStorageDelegate getLoginStorageDelegate();
     method @UiThread @Nullable public File getProfileDir();
+    method @UiThread @NonNull public ProfilerController getProfilerController();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
     method @UiThread @NonNull public StorageController getStorageController();
     method @UiThread @NonNull public WebExtensionController getWebExtensionController();
@@ -1357,6 +1360,17 @@ package org.mozilla.geckoview {
     field public static final int INPUT_RESULT_UNHANDLED = 0;
     field public static final int SCROLL_BEHAVIOR_AUTO = 1;
     field public static final int SCROLL_BEHAVIOR_SMOOTH = 0;
+  }
+
+  @UiThread public class ProfilerController {
+    ctor public ProfilerController();
+    method public void addMarker(@NonNull String, @Nullable Double, @Nullable Double, @Nullable String);
+    method public void addMarker(@NonNull String, @Nullable Double, @Nullable String);
+    method public void addMarker(@NonNull String, @Nullable Double);
+    method public void addMarker(@NonNull String, @Nullable String);
+    method public void addMarker(@NonNull String);
+    method @Nullable public Double getProfilerTime();
+    method public boolean isProfilerActive();
   }
 
   public abstract class RuntimeSettings implements Parcelable {
