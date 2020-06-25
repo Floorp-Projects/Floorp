@@ -1084,9 +1084,7 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
   aArgs.loadStateLoadType() = mLoadStateLoadType;
   if (mSessionHistoryInfo) {
-    aArgs.sessionHistoryInfo().emplace(
-        mSessionHistoryInfo->mId, MakeUnique<mozilla::dom::SessionHistoryInfo>(
-                                      *mSessionHistoryInfo->mInfo));
+    aArgs.sessionHistoryInfo().emplace(*mSessionHistoryInfo);
   }
 }
 

@@ -32,17 +32,9 @@ namespace dom {
 
 class BrowserParent;
 class MediaController;
-struct SessionHistoryInfoAndId;
+class SessionHistoryInfo;
 class SessionHistoryEntry;
 class WindowGlobalParent;
-
-struct SessionHistoryEntryAndId {
-  SessionHistoryEntryAndId(uint64_t aId, SessionHistoryEntry* aEntry)
-      : mId(aId), mEntry(aEntry) {}
-
-  uint64_t mId;
-  RefPtr<SessionHistoryEntry> mEntry;
-};
 
 // CanonicalBrowsingContext is a BrowsingContext living in the parent
 // process, with whatever extra data that a BrowsingContext in the
@@ -99,7 +91,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   Nullable<WindowProxyHolder> GetTopChromeWindow();
 
   nsISHistory* GetSessionHistory();
-  UniquePtr<SessionHistoryInfoAndId> CreateSessionHistoryEntryForLoad(
+  UniquePtr<SessionHistoryInfo> CreateSessionHistoryEntryForLoad(
       nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
   void SessionHistoryCommit(uint64_t aSessionHistoryEntryId);
 
@@ -249,7 +241,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   RefPtr<net::DocumentLoadListener> mCurrentLoad;
 
-  nsTArray<SessionHistoryEntryAndId> mLoadingEntries;
+  nsTArray<RefPtr<SessionHistoryEntry>> mLoadingEntries;
   RefPtr<SessionHistoryEntry> mActiveEntry;
 
   RefPtr<nsSecureBrowserUI> mSecureBrowserUI;
