@@ -1780,6 +1780,11 @@ extern "C" nsresult NS_DispatchBackgroundTask(
 extern "C" nsresult NS_CreateBackgroundTaskQueue(
     const char* aName, nsISerialEventTarget** aTarget);
 
+// Predeclaration for logging function below
+namespace IPC {
+class Message;
+}
+
 namespace mozilla {
 
 // RAII class that will set the TLS entry to return the currently running
@@ -1908,6 +1913,10 @@ class LogTaskBase {
   // Adds a simple log about dispatch of this runnable.
   static void LogDispatch(T* aEvent);
 
+  // Logs dispatch of the message and along that also the PID of the target
+  // proccess, purposed for uniquely identifying IPC messages.
+  static void LogDispatchWithPid(T* aEvent, int32_t aPid);
+
   // This is designed to surround a call to `Run()` or any code representing
   // execution of the task body.
   // The constructor adds a simple log about start of the runnable execution and
@@ -1928,14 +1937,20 @@ class LogTaskBase {
   };
 };
 
-// Specialized constructor; must be explicitly declared.
+class MicroTaskRunnable;
+
+// Specialized methods must be explicitly predeclared.
 template <>
 LogTaskBase<nsIRunnable>::Run::Run(nsIRunnable* aEvent, bool aWillRunAgain);
-
-class MicroTaskRunnable;
+template <>
+void LogTaskBase<IPC::Message>::LogDispatchWithPid(IPC::Message* aEvent,
+                                                   int32_t aPid);
+template <>
+LogTaskBase<IPC::Message>::Run::Run(IPC::Message* aMessage, bool aWillRunAgain);
 
 typedef LogTaskBase<nsIRunnable> LogRunnable;
 typedef LogTaskBase<MicroTaskRunnable> LogMicroTaskRunnable;
+typedef LogTaskBase<IPC::Message> LogIPCMessage;
 // If you add new types don't forget to add:
 // `template class LogTaskBase<YourType>;` to nsThreadUtils.cpp
 

@@ -18,6 +18,7 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/LateWriteChecks.h"
+#include "nsThreadUtils.h"
 
 #ifdef FUZZING
 #  include "mozilla/ipc/Faulty.h"
@@ -103,6 +104,8 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
 }
 
 void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
+  mozilla::LogIPCMessage::LogDispatchWithPid(msg.get(), other_pid_);
+
   output_queue_.push(std::move(msg));
   output_queue_length_++;
 }
@@ -428,7 +431,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
         // The Hello message contains the process id and must include the
         // shared secret, if we are waiting for it.
         MessageIterator it = MessageIterator(m);
-        int32_t claimed_pid = it.NextInt();
+        other_pid_ = it.NextInt();
         if (waiting_for_shared_secret_ && (it.NextInt() != shared_secret_)) {
           NOTREACHED();
           // Something went wrong. Abort connection.
@@ -437,8 +440,9 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
           return false;
         }
         waiting_for_shared_secret_ = false;
-        listener_->OnChannelConnected(claimed_pid);
+        listener_->OnChannelConnected(other_pid_);
       } else {
+        mozilla::LogIPCMessage::Run run(&m);
         listener_->OnMessageReceived(std::move(m));
       }
 
