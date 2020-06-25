@@ -52,14 +52,14 @@ add_task(async function() {
   );
   // Set language back to en-US
   Services.prefs.setCharPref("intl.accept_languages", "en-US");
-  Region._setRegion("US", false);
+  Region._setHomeRegion("US", false);
   await reloadTab(tab);
   await checkProxyCardVisibility(tab, false);
 
   info(
     "Check that secure proxy card is hidden if user's location is not in the US."
   );
-  Region._setRegion("CA", false);
+  Region._setHomeRegion("CA", false);
   await reloadTab(tab);
   await checkProxyCardVisibility(tab, true);
 
@@ -67,7 +67,7 @@ add_task(async function() {
     "Check that secure proxy card is hidden if the extension is already installed."
   );
   // Make sure we set the region back to "US"
-  Region._setRegion("US", false);
+  Region._setHomeRegion("US", false);
   const id = "secure-proxy@mozilla.com";
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
