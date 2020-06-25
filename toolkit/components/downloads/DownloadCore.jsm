@@ -726,6 +726,9 @@ Download.prototype = {
    * @param options.openWhere  Optional string indicating how to open when handling
    *                           download by opening the target file URI.
    *                           One of "window", "tab", "tabshifted"
+   * @param options.useSystemDefault
+   *                           Optional value indicating how to handle launching this download,
+   *                           this time only. Will override the associated mimeInfo.preferredAction
    * @return {Promise}
    * @resolves When the instruction to launch the file has been
    *           successfully given to the operating system. Note that

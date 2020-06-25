@@ -24,6 +24,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "handlerSvc",
+  "@mozilla.org/uriloader/handler-service;1",
+  "nsIHandlerService"
+);
+
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 var gDownloadElementButtons = {
@@ -457,9 +464,21 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       // on other properties. The order in which we check the properties of the
       // Download object is the same used by stateOfDownload.
       if (this.download.succeeded) {
+        DownloadsCommon.log(
+          "_updateStateInner, target exists? ",
+          this.download.target.path,
+          this.download.target.exists
+        );
         if (this.download.target.exists) {
           // This is a completed download, and the target file still exists.
           this.element.setAttribute("exists", "true");
+
+          const isPDF = DownloadsCommon.isFileOfType(
+            this.download,
+            "application/pdf"
+          );
+          this.element.toggleAttribute("is-pdf", isPDF);
+
           let sizeWithUnits = DownloadsViewUI.getSizeWithUnits(this.download);
           if (this.isPanel) {
             // In the Downloads Panel, we show the file size after the state
@@ -728,6 +747,9 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case "cmd_delete":
         // We don't want in-progress downloads to be removed accidentally.
         return this.download.stopped;
+      case "downloadsCmd_openInSystemViewer":
+      case "downloadsCmd_alwaysOpenInSystemViewer":
+        return DownloadsCommon.isFileOfType(this.download, "application/pdf");
     }
     return DownloadsViewUI.isCommandName(aCommand) && !!this[aCommand];
   },
@@ -806,5 +828,40 @@ DownloadsViewUI.DownloadElementShell.prototype = {
 
   cmd_delete() {
     DownloadsCommon.deleteDownload(this.download).catch(Cu.reportError);
+  },
+
+  downloadsCmd_openInSystemViewer() {
+    // For this interaction only, pass a flag to override the preferredAction for this
+    // mime-type and open using the system viewer
+    DownloadsCommon.openDownload(this.download, {
+      useSystemDefault: true,
+    }).catch(Cu.reportError);
+  },
+
+  downloadsCmd_alwaysOpenInSystemViewer() {
+    // this command toggles between setting preferredAction for this mime-type to open
+    // using the system viewer, or to open the file in browser.
+    const mimeInfo = DownloadsCommon.getMimeInfo(this.download);
+    if (mimeInfo.preferredAction !== mimeInfo.useSystemDefault) {
+      // User has selected to open this mime-type with the system viewer from now on
+      DownloadsCommon.log(
+        "downloadsCmd_alwaysOpenInSystemViewer command for download: ",
+        this.download,
+        "switching to use system default for " + mimeInfo.type
+      );
+      mimeInfo.preferredAction = mimeInfo.useSystemDefault;
+      mimeInfo.alwaysAskBeforeHandling = false;
+    } else {
+      DownloadsCommon.log(
+        "downloadsCmd_alwaysOpenInSystemViewer command for download: ",
+        this.download,
+        "currently uses system default, switching to handleInternally"
+      );
+      // User has selected to not open this mime-type with the system viewer
+      mimeInfo.preferredAction = mimeInfo.handleInternally;
+      mimeInfo.alwaysAskBeforeHandling = true;
+    }
+    handlerSvc.store(mimeInfo);
+    DownloadsCommon.openDownload(this.download).catch(Cu.reportError);
   },
 };

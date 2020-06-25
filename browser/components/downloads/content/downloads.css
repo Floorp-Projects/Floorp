@@ -95,8 +95,14 @@
 .download-state[state="1"]:not([exists])
                                            .downloadCommandsSeparator,
 .download-state[state="8"]:not(.temporary-block)
-                                           .downloadCommandsSeparator
+                                           .downloadCommandsSeparator,
 
+/* the system-viewer context menu items are only shown for certain mime-types
+   and can be individually enabled via prefs */
+.download-state:not([is-pdf])              .downloadUseSystemDefaultMenuItem,
+.download-state                            .downloadUseSystemDefaultMenuItem:not([enabled]),
+.download-state                            .downloadAlwaysUseSystemDefaultMenuItem:not([enabled]),
+.download-state:not([is-pdf])              .downloadAlwaysUseSystemDefaultMenuItem
 {
   display: none;
 }

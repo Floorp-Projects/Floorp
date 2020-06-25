@@ -38,6 +38,10 @@
            oncommand="goDoCommand('downloadsCmd_copyLocation')"/>
   <command id="downloadsCmd_clearList"
            oncommand="goDoCommand('downloadsCmd_clearList')"/>
+  <command id="downloadsCmd_openInSystemViewer"
+           oncommand="goDoCommand('downloadsCmd_openInSystemViewer')"/>
+  <command id="downloadsCmd_alwaysOpenInSystemViewer"
+           oncommand="goDoCommand('downloadsCmd_alwaysOpenInSystemViewer')"/>
 </commandset>
 
 <!-- The panel has level="top" to ensure that it is never hidden by the
@@ -75,6 +79,13 @@
     <menuitem command="downloadsCmd_unblock"
               class="downloadUnblockMenuItem"
               data-l10n-id="downloads-cmd-unblock"/>
+    <menuitem command="downloadsCmd_openInSystemViewer"
+              class="downloadUseSystemDefaultMenuItem"
+              data-l10n-id="downloads-cmd-use-system-default"/>
+    <menuitem command="downloadsCmd_alwaysOpenInSystemViewer"
+              type="checkbox"
+              class="downloadAlwaysUseSystemDefaultMenuItem"
+              data-l10n-id="downloads-cmd-always-use-system-default"/>
     <menuitem command="downloadsCmd_show"
               class="downloadShowMenuItem"
   #ifdef XP_MACOSX
