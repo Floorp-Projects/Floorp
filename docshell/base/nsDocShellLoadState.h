@@ -132,11 +132,9 @@ class nsDocShellLoadState final {
 
   void SetSHEntry(nsISHEntry* aSHEntry);
 
-  const mozilla::dom::SessionHistoryInfo& GetSessionHistoryInfo() const;
-  uint64_t GetSessionHistoryID() const;
+  const mozilla::dom::SessionHistoryInfo* GetSessionHistoryInfo() const;
 
-  void SetSessionHistoryInfo(
-      const mozilla::dom::SessionHistoryInfoAndId& aIdAndInfo);
+  void SetSessionHistoryInfo(const mozilla::dom::SessionHistoryInfo& aInfo);
 
   const nsString& Target() const;
 
@@ -365,7 +363,7 @@ class nsDocShellLoadState final {
   nsCOMPtr<nsISHEntry> mSHEntry;
 
   // Session history info for the load
-  mozilla::dom::SessionHistoryInfoAndId mSessionHistoryInfo;
+  mozilla::UniquePtr<mozilla::dom::SessionHistoryInfo> mSessionHistoryInfo;
 
   // Target for load, like _content, _blank etc.
   nsString mTarget;

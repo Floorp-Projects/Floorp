@@ -346,7 +346,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mHistoryID(aBrowsingContext->GetHistoryID()),
       mContentWindowID(aContentWindowID),
       mBrowsingContext(aBrowsingContext),
-      mLoadingEntryId(PR_UINT64_MAX),
       mForcedCharset(nullptr),
       mParentCharset(nullptr),
       mTreeOwner(nullptr),
@@ -5318,14 +5317,16 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       mActiveEntry = nullptr;
       mLoadingEntry.swap(mActiveEntry);
-      if (XRE_IsParentProcess()) {
-        mBrowsingContext->Canonical()->SessionHistoryCommit(mLoadingEntryId);
-      } else {
-        ContentChild* cc = ContentChild::GetSingleton();
-        mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
-                                                 mLoadingEntryId);
+      if (mActiveEntry) {
+        if (XRE_IsParentProcess()) {
+          mBrowsingContext->Canonical()->SessionHistoryCommit(
+              mActiveEntry->Id());
+        } else {
+          ContentChild* cc = ContentChild::GetSingleton();
+          mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
+                                                   mActiveEntry->Id());
+        }
       }
-      mLoadingEntryId = 0;
     }
   }
 
@@ -9346,10 +9347,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   // FIXME We still have a ton of codepaths that don't pass through
   //       DocumentLoadListener, so probably need to create session history info
   //       in more places.
-  if (aLoadState->GetSessionHistoryID() != 0) {
+  if (aLoadState->GetSessionHistoryInfo()) {
     mLoadingEntry =
-        MakeUnique<SessionHistoryInfo>(aLoadState->GetSessionHistoryInfo());
-    mLoadingEntryId = aLoadState->GetSessionHistoryID();
+        MakeUnique<SessionHistoryInfo>(*aLoadState->GetSessionHistoryInfo());
   }
 
   // open a channel for the url
@@ -12443,8 +12443,7 @@ bool nsDocShell::GetIsAttemptingToNavigate() {
   return false;
 }
 
-void nsDocShell::SetLoadingSessionHistoryInfoAndId(
-    const mozilla::dom::SessionHistoryInfoAndId& aInfoAndId) {
-  mLoadingEntry = MakeUnique<SessionHistoryInfo>(*aInfoAndId.mInfo);
-  mLoadingEntryId = aInfoAndId.mId;
+void nsDocShell::SetLoadingSessionHistoryInfo(
+    const mozilla::dom::SessionHistoryInfo& aInfo) {
+  mLoadingEntry = MakeUnique<SessionHistoryInfo>(aInfo);
 }

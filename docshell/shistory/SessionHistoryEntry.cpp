@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace dom {
 
+static uint64_t gNextHistoryEntryId = 0;
+
 SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
                                        nsIChannel* aChannel)
     : mURI(aLoadState->URI()),
@@ -25,6 +27,7 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
       mScrollPositionY(0),
       mSrcdocData(aLoadState->SrcdocData()),
       mBaseURI(aLoadState->BaseURI()),
+      mId(++gNextHistoryEntryId),
       mLoadReplace(aLoadState->LoadReplace()),
       mURIWasModified(false),
       /* FIXME Should this be aLoadState->IsSrcdocLoad()? */
@@ -756,81 +759,75 @@ SessionHistoryEntry::SyncTreesForSubframeNavigation(
 
 namespace ipc {
 
-void IPDLParamTraits<dom::SessionHistoryInfoAndId>::Write(
+void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
     IPC::Message* aMsg, IProtocol* aActor,
-    const dom::SessionHistoryInfoAndId& aParam) {
-  WriteIPDLParam(aMsg, aActor, aParam.mId);
-
-  const dom::SessionHistoryInfo* info = aParam.mInfo.get();
+    const dom::SessionHistoryInfo& aParam) {
   dom::ClonedMessageData stateData;
-  if (info->mStateData) {
-    JSStructuredCloneData& data = info->mStateData->Data();
+  if (aParam.mStateData) {
+    JSStructuredCloneData& data = aParam.mStateData->Data();
     auto iter = data.Start();
     bool success;
     stateData.data().data = data.Borrow(iter, data.Size(), &success);
     if (NS_WARN_IF(!success)) {
       return;
     }
-    MOZ_ASSERT(info->mStateData->PortIdentifiers().IsEmpty() &&
-               info->mStateData->BlobImpls().IsEmpty() &&
-               info->mStateData->InputStreams().IsEmpty());
+    MOZ_ASSERT(aParam.mStateData->PortIdentifiers().IsEmpty() &&
+               aParam.mStateData->BlobImpls().IsEmpty() &&
+               aParam.mStateData->InputStreams().IsEmpty());
   }
 
-  WriteIPDLParam(aMsg, aActor, info->mURI);
-  WriteIPDLParam(aMsg, aActor, info->mOriginalURI);
-  WriteIPDLParam(aMsg, aActor, info->mResultPrincipalURI);
-  WriteIPDLParam(aMsg, aActor, info->mReferrerInfo);
-  WriteIPDLParam(aMsg, aActor, info->mTitle);
-  WriteIPDLParam(aMsg, aActor, info->mPostData);
-  WriteIPDLParam(aMsg, aActor, info->mLoadType);
-  WriteIPDLParam(aMsg, aActor, info->mScrollPositionX);
-  WriteIPDLParam(aMsg, aActor, info->mScrollPositionY);
+  WriteIPDLParam(aMsg, aActor, aParam.mURI);
+  WriteIPDLParam(aMsg, aActor, aParam.mOriginalURI);
+  WriteIPDLParam(aMsg, aActor, aParam.mResultPrincipalURI);
+  WriteIPDLParam(aMsg, aActor, aParam.mReferrerInfo);
+  WriteIPDLParam(aMsg, aActor, aParam.mTitle);
+  WriteIPDLParam(aMsg, aActor, aParam.mPostData);
+  WriteIPDLParam(aMsg, aActor, aParam.mLoadType);
+  WriteIPDLParam(aMsg, aActor, aParam.mScrollPositionX);
+  WriteIPDLParam(aMsg, aActor, aParam.mScrollPositionY);
   WriteIPDLParam(aMsg, aActor, stateData);
-  WriteIPDLParam(aMsg, aActor, info->mSrcdocData);
-  WriteIPDLParam(aMsg, aActor, info->mBaseURI);
-  WriteIPDLParam(aMsg, aActor, info->mLoadReplace);
-  WriteIPDLParam(aMsg, aActor, info->mURIWasModified);
-  WriteIPDLParam(aMsg, aActor, info->mIsSrcdocEntry);
-  WriteIPDLParam(aMsg, aActor, info->mScrollRestorationIsManual);
-  WriteIPDLParam(aMsg, aActor, info->mPersist);
+  WriteIPDLParam(aMsg, aActor, aParam.mSrcdocData);
+  WriteIPDLParam(aMsg, aActor, aParam.mBaseURI);
+  WriteIPDLParam(aMsg, aActor, aParam.mId);
+  WriteIPDLParam(aMsg, aActor, aParam.mLoadReplace);
+  WriteIPDLParam(aMsg, aActor, aParam.mURIWasModified);
+  WriteIPDLParam(aMsg, aActor, aParam.mIsSrcdocEntry);
+  WriteIPDLParam(aMsg, aActor, aParam.mScrollRestorationIsManual);
+  WriteIPDLParam(aMsg, aActor, aParam.mPersist);
 }
 
-bool IPDLParamTraits<dom::SessionHistoryInfoAndId>::Read(
+bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
-    dom::SessionHistoryInfoAndId* aResult) {
-  uint64_t id;
-  UniquePtr<dom::SessionHistoryInfo> info =
-      MakeUnique<dom::SessionHistoryInfo>();
+    dom::SessionHistoryInfo* aResult) {
   dom::ClonedMessageData stateData;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &id) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mURI) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mOriginalURI) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mResultPrincipalURI) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mReferrerInfo) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mTitle) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mPostData) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mLoadType) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mScrollPositionX) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mScrollPositionY) ||
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mURI) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mOriginalURI) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResultPrincipalURI) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mReferrerInfo) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mTitle) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mPostData) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLoadType) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mScrollPositionX) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mScrollPositionY) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &stateData) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mSrcdocData) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mBaseURI) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mLoadReplace) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mURIWasModified) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mIsSrcdocEntry) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mScrollRestorationIsManual) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &info->mPersist)) {
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSrcdocData) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mBaseURI) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mId) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLoadReplace) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mURIWasModified) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mIsSrcdocEntry) ||
+      !ReadIPDLParam(aMsg, aIter, aActor,
+                     &aResult->mScrollRestorationIsManual) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mPersist)) {
     aActor->FatalError("Error reading fields for SessionHistoryInfo");
     return false;
   }
-  info->mStateData = new nsStructuredCloneContainer();
+  aResult->mStateData = new nsStructuredCloneContainer();
   if (aActor->GetSide() == ChildSide) {
-    UnpackClonedMessageDataForChild(stateData, *info->mStateData);
+    UnpackClonedMessageDataForChild(stateData, *aResult->mStateData);
   } else {
-    UnpackClonedMessageDataForParent(stateData, *info->mStateData);
+    UnpackClonedMessageDataForParent(stateData, *aResult->mStateData);
   }
-  aResult->mId = id;
-  aResult->mInfo = std::move(info);
   return true;
 }
 

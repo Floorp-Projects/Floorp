@@ -403,7 +403,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   nsString mSrcdocData;
   nsCOMPtr<nsIURI> mBaseURI;
 
-  mozilla::UniquePtr<mozilla::dom::SessionHistoryInfoAndId> mSessionHistoryInfo;
+  mozilla::UniquePtr<mozilla::dom::SessionHistoryInfo> mSessionHistoryInfo;
 
   // Flags from nsDocShellLoadState::LoadFlags/Type that we want to make
   // available to the new docshell if we switch processes.
