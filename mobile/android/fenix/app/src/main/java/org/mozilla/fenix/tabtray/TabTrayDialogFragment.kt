@@ -51,11 +51,11 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
-            showCollectionSnackbar()
+            showCollectionSnackbar(sessions.size, true)
         }
 
         override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
-            showCollectionSnackbar()
+            showCollectionSnackbar(sessions.size)
         }
     }
 
@@ -245,8 +245,19 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         }
     }
 
-    private fun showCollectionSnackbar() {
+    private fun showCollectionSnackbar(tabSize: Int, isNewCollection: Boolean = false) {
         view.let {
+            val messageStringRes = when {
+                isNewCollection -> {
+                    R.string.create_collection_tabs_saved_new_collection
+                }
+                tabSize > 1 -> {
+                    R.string.create_collection_tabs_saved
+                }
+                else -> {
+                    R.string.create_collection_tab_saved
+                }
+            }
             val snackbar = FenixSnackbar
                 .make(
                     duration = FenixSnackbar.LENGTH_LONG,
@@ -254,7 +265,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
                     view = (view as View)
                 )
                 .setAnchorView(snackbarAnchor)
-                .setText(requireContext().getString(R.string.create_collection_tabs_saved))
+                .setText(requireContext().getString(messageStringRes))
                 .setAction(requireContext().getString(R.string.create_collection_view)) {
                     dismissAllowingStateLoss()
                     findNavController().navigate(
