@@ -222,7 +222,7 @@ void nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // REVIEW: We don't really need to check frame emptiness here; if it's empty,
   // the background/border display item won't do anything, and if it isn't
   // empty, we need to paint the outline
-  if (!(GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) &&
+  if (!HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER) &&
       IsVisibleForPainting()) {
     DisplayOutsetBoxShadowUnconditional(aBuilder, aLists.BorderBackground());
 
