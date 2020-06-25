@@ -148,6 +148,7 @@ add_task(async function test_form1_warning_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   let results = await shownPromise;
+  await popupEnabled();
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
@@ -173,6 +174,7 @@ add_task(async function test_form1_first_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
@@ -191,6 +193,7 @@ add_task(async function test_form1_second_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
@@ -206,6 +209,7 @@ add_task(async function test_form1_third_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
@@ -222,6 +226,7 @@ add_task(async function test_form1_fourth_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
@@ -240,6 +245,7 @@ add_task(async function test_form1_wraparound_first_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
@@ -261,6 +267,7 @@ add_task(async function test_form1_wraparound_up_last_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last (fourth)
@@ -275,6 +282,7 @@ add_task(async function test_form1_wraparound_down_up_up() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // select first entry
   synthesizeKey("KEY_ArrowUp"); // selects nothing!
@@ -290,6 +298,7 @@ add_task(async function test_form1_wraparound_up_last() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowUp"); // deselects
@@ -312,6 +321,7 @@ add_task(async function test_form1_fill_username_without_autofill_right() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   // Set first entry w/o triggering autocomplete
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
@@ -326,6 +336,7 @@ add_task(async function test_form1_fill_username_without_autofill_left() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   // Set first entry w/o triggering autocomplete
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
@@ -339,6 +350,7 @@ add_task(async function test_form1_pageup_first() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   // Check first entry (page up)
   synthesizeKey("KEY_ArrowDown"); // first
@@ -355,6 +367,7 @@ add_task(async function test_form1_pagedown_last() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   // test 13
   // Check last entry (page down)
@@ -383,6 +396,7 @@ add_task(async function test_form1_delete() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   // XXX tried sending character "t" before/during dropdown to test
   // filtering, but had no luck. Seemed like the character was getting lost.
@@ -417,6 +431,7 @@ add_task(async function test_form1_first_after_deletion() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check the new first entry (of 3)
@@ -431,6 +446,7 @@ add_task(async function test_form1_delete_second() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Delete the second entry (of 3), "testuser3"
@@ -452,6 +468,7 @@ add_task(async function test_form1_first_after_deletion2() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check the new first entry (of 2)
@@ -466,6 +483,7 @@ add_task(async function test_form1_delete_last() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // test 54
@@ -490,6 +508,7 @@ add_task(async function test_form1_first_after_3_deletions() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check the only remaining entry
@@ -504,6 +523,7 @@ add_task(async function test_form1_check_only_entry_remaining() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // test 56
@@ -542,6 +562,7 @@ add_task(async function test_form2() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
@@ -567,6 +588,7 @@ add_task(async function test_form3() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
@@ -592,6 +614,7 @@ add_task(async function test_form4() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
@@ -617,6 +640,7 @@ add_task(async function test_form5() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
@@ -698,6 +722,7 @@ add_task(async function test_form7_2() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
@@ -777,6 +802,7 @@ add_task(async function test_form9_filtering() {
   pword = $_(9, "pword");
   uname.focus();
   let results = await shownPromise;
+  await popupEnabled();
   checkAutoCompleteResults(results,
                            ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAAB", "form9userAB"],
                            "mochi.test",
@@ -785,6 +811,7 @@ add_task(async function test_form9_filtering() {
   shownPromise = promiseACShown();
   sendString("form9userAB");
   results = await shownPromise;
+  await popupEnabled();
   checkAutoCompleteResults(results,
                            ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAB"],
                            "mochi.test",
@@ -796,6 +823,7 @@ add_task(async function test_form9_filtering() {
   shownPromise = promiseACShown();
   synthesizeKey("A", {shiftKey: true});
   results = await shownPromise;
+  await popupEnabled();
 
   checkLoginForm(uname, "form9userAAB", pword, "");
   checkAutoCompleteResults(results,
@@ -822,6 +850,7 @@ add_task(async function test_form9_autocomplete_cache() {
   sendString("z");
   let results = await promise2;
   await shownPromise;
+  await popupEnabled();
   checkAutoCompleteResults(results,
                            ["This connection is not secure. Logins entered here could be compromised. Learn More"],
                            "mochi.test",
@@ -873,6 +902,7 @@ add_task(async function test_form11_recipes() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown");
@@ -907,10 +937,12 @@ add_task(async function test_form12_formless() {
   let shownPromise = promiseACShown();
   uname.focus();
   await shownPromise;
+  await popupEnabled();
   synthesizeKey("KEY_Escape"); // close the autocomplete popup
   shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   let results = await shownPromise;
+  await popupEnabled();
 
   let expectedMenuItems = ["This connection is not secure. Logins entered here could be compromised. Learn More",
                            "testuser10"];
@@ -941,6 +973,7 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
   let shownPromise = promiseACShown();
   synthesizeMouseAtCenter(uname, {});
   await shownPromise;
+  await popupEnabled();
   uname.select();
   synthesizeKey("KEY_Delete");
 
@@ -957,6 +990,7 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
   shownPromise = promiseACShown();
   synthesizeKey("KEY_Delete");
   await shownPromise;
+  await popupEnabled();
   checkLoginForm(uname, "", pword, "");
 });
 </script>

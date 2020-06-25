@@ -157,6 +157,7 @@ add_task(async function check_fields_after_form_autofill() {
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
     })
   ).slice(1));
+  await popupEnabled();
   synthesizeKey("KEY_ArrowDown");
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[1]);
   synthesizeKey("KEY_Escape");
