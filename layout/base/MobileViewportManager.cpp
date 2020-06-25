@@ -277,8 +277,13 @@ void MobileViewportManager::UpdateResolutionForFirstPaint(
   CSSToScreenScale defaultZoom = viewportInfo.GetDefaultZoom();
   MVM_LOG("%p: default zoom from viewport is %f\n", this, defaultZoom.scale);
   if (!viewportInfo.IsDefaultZoomValid()) {
+    CSSSize contentSize = aViewportSize;
+    if (Maybe<CSSRect> scrollableRect =
+            mContext->CalculateScrollableRectForRSF()) {
+      contentSize = scrollableRect->Size();
+    }
     defaultZoom =
-        ComputeIntrinsicScale(viewportInfo, compositionSize, aViewportSize);
+        ComputeIntrinsicScale(viewportInfo, compositionSize, contentSize);
   }
   MOZ_ASSERT(viewportInfo.GetMinZoom() <= defaultZoom &&
              defaultZoom <= viewportInfo.GetMaxZoom());
