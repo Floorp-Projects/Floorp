@@ -22,11 +22,11 @@
   _(ShellObjectMailbox, 100)          \
                                       \
   _(AtomsTable, 200)                  \
-  _(StoreBuffer, 200)                 \
-                                      \
   _(WasmInitBuiltinThunks, 250)       \
   _(WasmLazyStubsTier1, 250)          \
   _(WasmLazyStubsTier2, 251)          \
+                                      \
+  _(StoreBuffer, 275)                 \
                                       \
   _(GlobalHelperThreadState, 300)     \
                                       \
