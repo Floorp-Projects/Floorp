@@ -8,6 +8,21 @@
 #ifndef mozilla_mozalloc_h
 #define mozilla_mozalloc_h
 
+/*
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=427099
+ */
+
+#if defined(__cplusplus)
+#  include <new>
+// Since libstdc++ 6, including the C headers (e.g. stdlib.h) instead of the
+// corresponding C++ header (e.g. cstdlib) can cause confusion in C++ code
+// using things defined there. Specifically, with stdlib.h, the use of abs()
+// in gfx/graphite2/src/inc/UtfCodec.h somehow ends up picking the wrong abs()
+#  include <cstdlib>
+#else
+#  include <stdlib.h>
+#endif
+
 #if defined(MOZ_MEMORY) && defined(IMPL_MFBT)
 #  define MOZ_MEMORY_IMPL
 #  include "mozmemory_wrap.h"
@@ -23,20 +38,6 @@
 #  include "malloc_decls.h"
 #endif
 
-/*
- * https://bugzilla.mozilla.org/show_bug.cgi?id=427099
- */
-
-#if defined(__cplusplus)
-#  include <new>
-// Since libstdc++ 6, including the C headers (e.g. stdlib.h) instead of the
-// corresponding C++ header (e.g. cstdlib) can cause confusion in C++ code
-// using things defined there. Specifically, with stdlib.h, the use of abs()
-// in gfx/graphite2/src/inc/UtfCodec.h somehow ends up picking the wrong abs()
-#  include <cstdlib>
-#else
-#  include <stdlib.h>
-#endif
 
 #if defined(__cplusplus)
 #  include "mozilla/fallible.h"
