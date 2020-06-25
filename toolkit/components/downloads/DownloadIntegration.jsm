@@ -712,6 +712,9 @@ var DownloadIntegration = {
    * @param options.openWhere     Optional string indicating how to open when handling
    *                              download by opening the target file URI.
    *                              One of "window", "tab", "tabshifted"
+   * @param options.useSystemDefault
+   *                              Optional value indicating how to handle launching this download,
+   *                              this time only. Will override the associated mimeInfo.preferredAction
    *
    * @return {Promise}
    * @resolves When the instruction to launch the file has been
@@ -721,7 +724,7 @@ var DownloadIntegration = {
    * @rejects  JavaScript exception if there was an error trying to launch
    *           the file.
    */
-  async launchDownload(aDownload, { openWhere }) {
+  async launchDownload(aDownload, { openWhere, useSystemDefault = null }) {
     let file = new FileUtils.File(aDownload.target.path);
 
     // In case of a double extension, like ".tar.gz", we only
@@ -794,7 +797,8 @@ var DownloadIntegration = {
     const PDF_CONTENT_TYPE = "application/pdf";
     if (
       aDownload.handleInternally ||
-      (mimeInfo &&
+      (!useSystemDefault && // No explicit instruction was passed to launch this download using the default system viewer.
+        mimeInfo &&
         (mimeInfo.type == PDF_CONTENT_TYPE ||
           fileExtension?.toLowerCase() == "pdf") &&
         !mimeInfo.alwaysAskBeforeHandling &&

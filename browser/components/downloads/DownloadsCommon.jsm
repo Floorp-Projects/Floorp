@@ -229,6 +229,8 @@ var PrefObserver = {
 PrefObserver.register({
   // prefName: defaultValue
   animateNotifications: true,
+  openInSystemViewerContextMenuItem: true,
+  alwaysOpenInSystemViewerContextMenuItem: true,
 });
 
 // DownloadsCommon
@@ -294,6 +296,20 @@ var DownloadsCommon = {
    */
   get animateNotifications() {
     return PrefObserver.animateNotifications;
+  },
+
+  /**
+   * Indicates whether or not to show the 'Open in system viewer' context menu item when appropriate
+   */
+  get openInSystemViewerItemEnabled() {
+    return PrefObserver.openInSystemViewerContextMenuItem;
+  },
+
+  /**
+   * Indicates whether or not to show the 'Always open...' context menu item when appropriate
+   */
+  get alwaysOpenInSystemViewerItemEnabled() {
+    return PrefObserver.alwaysOpenInSystemViewerContextMenuItem;
   },
 
   /**
@@ -610,6 +626,9 @@ var DownloadsCommon = {
    * @param options.openWhere
    *        Optional string indicating how to handle opening a download target file URI.
    *        One of "window", "tab", "tabshifted".
+   * @param options.useSystemDefault
+   *        Optional value indicating how to handle launching this download,
+   *        this call only. Will override the associated mimeInfo.preferredAction
    * @return {Promise}
    * @resolves When the instruction to launch the file has been
    *           successfully given to the operating system or handled internally

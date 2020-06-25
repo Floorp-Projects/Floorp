@@ -297,6 +297,11 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
     while (!button._shell) {
       button = button.parentNode;
     }
+    let download = button._shell.download;
+    let { preferredAction, useSystemDefault } = DownloadsCommon.getMimeInfo(
+      download
+    );
+
     menu.setAttribute("state", button.getAttribute("state"));
     if (button.hasAttribute("exists")) {
       menu.setAttribute("exists", button.getAttribute("exists"));
@@ -307,6 +312,37 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
       "temporary-block",
       button.classList.contains("temporary-block")
     );
+    // menu items are conditionally displayed via CSS based on an is-pdf attribute
+    DownloadsCommon.log(
+      "DownloadsSubview, updateContextMenu, download is pdf? ",
+      download.target.path,
+      button.hasAttribute("is-pdf")
+    );
+    if (button.hasAttribute("is-pdf")) {
+      menu.setAttribute("is-pdf", "true");
+      let alwaysUseSystemViewerItem = menu.querySelector(
+        ".downloadAlwaysUseSystemDefaultMenuItem"
+      );
+      if (preferredAction === useSystemDefault) {
+        alwaysUseSystemViewerItem.setAttribute("checked", "true");
+      } else {
+        alwaysUseSystemViewerItem.removeAttribute("checked");
+      }
+      alwaysUseSystemViewerItem.toggleAttribute(
+        "enabled",
+        DownloadsCommon.alwaysOpenInSystemViewerItemEnabled
+      );
+      let useSystemViewerItem = menu.querySelector(
+        ".downloadUseSystemDefaultMenuItem"
+      );
+      useSystemViewerItem.toggleAttribute(
+        "enabled",
+        DownloadsCommon.openInSystemViewerItemEnabled
+      );
+    } else {
+      menu.removeAttribute("is-pdf");
+    }
+
     for (let menuitem of menu.getElementsByTagName("menuitem")) {
       let command = menuitem.getAttribute("command");
       if (!command) {
