@@ -120,7 +120,7 @@ pref(mathml.mfrac_bevelled_attribute.disabled,false) == table-width-1.xhtml tabl
 == embellished-op-4-3.html embellished-op-4-3-ref.html
 == embellished-op-5-1.html embellished-op-5-ref.html
 == embellished-op-5-2.html embellished-op-5-ref.html
-== semantics-1.xhtml semantics-1-ref.xhtml # bug 1309429
+pref(mathml.stixgeneral_operator_stretching.disabled,false) == semantics-1.xhtml semantics-1-ref.xhtml # bug 1309429; bug 1648335
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
 == semantics-4.html semantics-4-ref.html

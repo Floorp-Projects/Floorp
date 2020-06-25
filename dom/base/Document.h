@@ -3120,8 +3120,9 @@ class Document : public nsINode,
   };
 #undef DEPRECATED_OPERATION
   bool HasWarnedAbout(DeprecatedOperations aOperation) const;
-  void WarnOnceAbout(DeprecatedOperations aOperation,
-                     bool asError = false) const;
+  void WarnOnceAbout(
+      DeprecatedOperations aOperation, bool asError = false,
+      const nsTArray<nsString>& aParams = nsTArray<nsString>()) const;
 
 #define DOCUMENT_WARNING(_op) e##_op,
   enum DocumentWarnings {

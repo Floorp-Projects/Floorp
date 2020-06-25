@@ -12216,8 +12216,9 @@ bool Document::HasWarnedAbout(DeprecatedOperations aOperation) const {
   return mDeprecationWarnedAbout[aOperation];
 }
 
-void Document::WarnOnceAbout(DeprecatedOperations aOperation,
-                             bool asError /* = false */) const {
+void Document::WarnOnceAbout(
+    DeprecatedOperations aOperation, bool asError /* = false */,
+    const nsTArray<nsString>& aParams /* = empty array */) const {
   MOZ_ASSERT(NS_IsMainThread());
   if (HasWarnedAbout(aOperation)) {
     return;
@@ -12234,7 +12235,7 @@ void Document::WarnOnceAbout(DeprecatedOperations aOperation,
       asError ? nsIScriptError::errorFlag : nsIScriptError::warningFlag;
   nsContentUtils::ReportToConsole(flags, NS_LITERAL_CSTRING("DOM Core"), this,
                                   nsContentUtils::eDOM_PROPERTIES,
-                                  kDeprecationWarnings[aOperation]);
+                                  kDeprecationWarnings[aOperation], aParams);
 }
 
 bool Document::HasWarnedAbout(DocumentWarnings aWarning) const {
