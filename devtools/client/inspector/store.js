@@ -7,7 +7,11 @@
 const createStore = require("devtools/client/shared/redux/create-store");
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 // Reducers which need to be available immediately when the Inspector loads.
-const reducers = {};
+const reducers = {
+  // Provide a dummy default reducer.
+  // Redux throws an error when calling combineReducers() with an empty object.
+  default: (state = {}) => state,
+};
 
 function createReducer(laterReducers = {}) {
   return combineReducers({
@@ -23,11 +27,18 @@ module.exports = () => {
     thunkOptions: {},
   });
 
-  // Dictionary to keep track of the registered reducers loaded on-demand later
+  // Map of registered reducers loaded on-demand.
   store.laterReducers = {};
 
-  // Create an inject reducer function attached to the store instance.
-  // This function adds the on-demand reducer, and creates a new combined reducer.
+  /**
+   * Augment the current Redux store with a slice reducer.
+   * Call this method to add reducers on-demand after the initial store creation.
+   *
+   * @param {String} key
+   *        Slice name.
+   * @param {Function} reducer
+   *        Slice reducer function.
+   */
   store.injectReducer = (key, reducer) => {
     if (store.laterReducers[key]) {
       console.log(`Already loaded reducer: ${key}`);
