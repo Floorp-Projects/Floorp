@@ -8,6 +8,7 @@
 #define mozilla_dom_indexeddb_filemanager_h__
 
 #include "mozilla/dom/quota/PersistenceType.h"
+#include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/InitializedOnce.h"
 #include "FileManagerBase.h"
 
@@ -50,9 +51,7 @@ class FileManager final : public FileManagerBase<FileManager>,
                                 const nsACString& aOrigin,
                                 uint32_t aTelemetryId);
 
-  static nsresult GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage);
-
-  static nsresult GetUsage(nsIFile* aDirectory, uint64_t& aUsage);
+  static Result<quota::FileUsageType, nsresult> GetUsage(nsIFile* aDirectory);
 
   FileManager(PersistenceType aPersistenceType, const nsACString& aGroup,
               const nsACString& aOrigin, const nsAString& aDatabaseName,
