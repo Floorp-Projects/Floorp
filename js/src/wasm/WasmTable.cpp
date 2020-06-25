@@ -35,8 +35,8 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       observers_(cx->zone()),
       functions_(std::move(functions)),
       kind_(desc.kind),
-      length_(desc.limits.initial),
-      maximum_(desc.limits.maximum) {
+      length_(desc.initialLength),
+      maximum_(desc.maximumLength) {
   MOZ_ASSERT(repr() == TableRepr::Func);
 }
 
@@ -46,8 +46,8 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       observers_(cx->zone()),
       objects_(std::move(objects)),
       kind_(desc.kind),
-      length_(desc.limits.initial),
-      maximum_(desc.limits.maximum) {
+      length_(desc.initialLength),
+      maximum_(desc.maximumLength) {
   MOZ_ASSERT(repr() == TableRepr::Ref);
 }
 
@@ -58,7 +58,7 @@ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
     case TableKind::FuncRef:
     case TableKind::AsmJS: {
       UniqueFuncRefArray functions(
-          cx->pod_calloc<FunctionTableElem>(desc.limits.initial));
+          cx->pod_calloc<FunctionTableElem>(desc.initialLength));
       if (!functions) {
         return nullptr;
       }
@@ -67,7 +67,7 @@ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
     }
     case TableKind::AnyRef: {
       TableAnyRefVector objects;
-      if (!objects.resize(desc.limits.initial)) {
+      if (!objects.resize(desc.initialLength)) {
         return nullptr;
       }
       return SharedTable(
