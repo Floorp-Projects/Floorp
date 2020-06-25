@@ -6093,6 +6093,14 @@ void CodeGenerator::visitEncodeSnapshot(LEncodeSnapshot* lir) {
   encode(lir->snapshot());
 }
 
+void CodeGenerator::visitUnreachableResultV(LUnreachableResultV* lir) {
+  masm.assumeUnreachable("must be unreachable");
+}
+
+void CodeGenerator::visitUnreachableResultT(LUnreachableResultT* lir) {
+  masm.assumeUnreachable("must be unreachable");
+}
+
 void CodeGenerator::visitGetDynamicName(LGetDynamicName* lir) {
   Register envChain = ToRegister(lir->getEnvironmentChain());
   Register name = ToRegister(lir->getName());

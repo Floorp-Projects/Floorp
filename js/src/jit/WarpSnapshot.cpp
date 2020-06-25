@@ -155,6 +155,10 @@ void WarpNewObject::dumpData(GenericPrinter& out) const {
   out.printf("    template: 0x%p\n", templateObject());
 }
 
+void WarpBailout::dumpData(GenericPrinter& out) const {
+  // No fields.
+}
+
 void WarpCacheIR::dumpData(GenericPrinter& out) const {
   out.printf("    stubCode: 0x%p\n", static_cast<JitCode*>(stubCode_));
   out.printf("    stubInfo: 0x%p\n", stubInfo_);
@@ -259,6 +263,10 @@ void WarpNewArray::traceData(JSTracer* trc) {
 
 void WarpNewObject::traceData(JSTracer* trc) {
   TraceWarpGCPtr(trc, templateObject_, "warp-newobject-template");
+}
+
+void WarpBailout::traceData(JSTracer* trc) {
+  // No GC pointers.
 }
 
 void WarpCacheIR::traceData(JSTracer* trc) {

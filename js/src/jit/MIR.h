@@ -12747,6 +12747,25 @@ class MUnknownValue : public MNullaryInstruction {
   TRIVIAL_NEW_WRAPPERS
 };
 
+// Used by MIR building to represent the bytecode result of an operation for
+// which an MBail was generated, to balance the basic block's MDefinition stack.
+class MUnreachableResult : public MNullaryInstruction {
+ protected:
+  explicit MUnreachableResult(MIRType type) : MNullaryInstruction(classOpcode) {
+    MOZ_ASSERT(type != MIRType::None);
+    setResultType(type);
+  }
+
+ public:
+  INSTRUCTION_HEADER(UnreachableResult)
+  TRIVIAL_NEW_WRAPPERS
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 class MIonToWasmCall final : public MVariadicInstruction,
                              public NoTypePolicy::Data {
   CompilerGCPointer<WasmInstanceObject*> instanceObj_;
