@@ -15,7 +15,7 @@ const PREF_TEST_ADDON_INSTALLED = "toolkit.pioneer.testAddonInstalled";
 
 const CACHED_ADDONS = [
   {
-    id: "pioneer-v2-example@mozilla.org",
+    id: "pioneer-v2-example@pioneer.mozilla.org",
     icons: {
       "32":
         "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
@@ -83,6 +83,8 @@ add_task(async function() {
 
   const enrollmentButton = content.document.getElementById("enrollment-button");
   enrollmentButton.click();
+
+  await waitForAnimationFrame();
 
   const pioneerEnrolled = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
   ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
