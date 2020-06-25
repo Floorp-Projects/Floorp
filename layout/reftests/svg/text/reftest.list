@@ -25,7 +25,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-dx-anchor-end-bid
 == simple-dx-rtl-2.svg simple-dx-rtl-2-ref.svg
 
 == simple-fill-color-dynamic.svg simple-fill-color-dynamic-ref.svg
-fuzzy-if(webrender&&winWidget,125-128,221-254) fuzzy-if(webrender&&OSX,32-65,195-196) == simple-fill-color.svg simple-fill-color-ref.html
+fuzzy-if(webrender&&winWidget,125-128,221-254) fuzzy-if(webrender&&OSX,23-65,195-196) == simple-fill-color.svg simple-fill-color-ref.html
 == simple-fill-gradient.svg simple-fill-gradient-ref.svg
 == simple-fill-none.svg simple.svg
 == simple-pointer-events.svg simple.svg
