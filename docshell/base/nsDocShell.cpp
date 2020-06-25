@@ -5808,13 +5808,6 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
   return nullptr;
 }
 
-bool nsDocShell::ShouldLoadErrorPageWithoutFixup(nsresult aStatus) {
-  return aStatus == NS_ERROR_FILE_NOT_FOUND ||
-         aStatus == NS_ERROR_FILE_ACCESS_DENIED ||
-         aStatus == NS_ERROR_CORRUPTED_CONTENT ||
-         aStatus == NS_ERROR_INVALID_CONTENT_ENCODING;
-}
-
 nsresult nsDocShell::FilterStatusForErrorPage(
     nsresult aStatus, nsIChannel* aChannel, uint32_t aLoadType,
     bool aIsTopFrame, bool aUseErrorPages, bool aIsInitialDocument,
@@ -5848,7 +5841,10 @@ nsresult nsDocShell::FilterStatusForErrorPage(
       aStatus == NS_ERROR_NET_INADEQUATE_SECURITY ||
       aStatus == NS_ERROR_NET_HTTP2_SENT_GOAWAY ||
       aStatus == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR ||
-      aStatus == NS_ERROR_DOM_BAD_URI ||
+      aStatus == NS_ERROR_DOM_BAD_URI || aStatus == NS_ERROR_FILE_NOT_FOUND ||
+      aStatus == NS_ERROR_FILE_ACCESS_DENIED ||
+      aStatus == NS_ERROR_CORRUPTED_CONTENT ||
+      aStatus == NS_ERROR_INVALID_CONTENT_ENCODING ||
       NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
     // Errors to be shown for any frame
     return aStatus;
@@ -6022,12 +6018,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   //   5. Throw an error dialog box...
   //
   if (NS_FAILED(aStatus)) {
-    if (ShouldLoadErrorPageWithoutFixup(aStatus)) {
-      UnblockEmbedderLoadEventForFailure();
-      DisplayLoadError(aStatus, url, nullptr, aChannel);
-      return NS_OK;
-    }
-
     // Handle iframe document not loading error because source was
     // a tracking URL. We make a note of this iframe node by including
     // it in a dedicated array of blocked tracking nodes under its parent

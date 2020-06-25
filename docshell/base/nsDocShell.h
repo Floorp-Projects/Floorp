@@ -442,8 +442,6 @@ class nsDocShell final : public nsDocLoader,
       bool aNotifyKeywordSearchLoading = false,
       nsIInputStream** aNewPostData = nullptr);
 
-  static bool ShouldLoadErrorPageWithoutFixup(nsresult aStatus);
-
   // Takes aStatus and filters out results that should not display
   // an error page.
   // If this returns a failed result, then we should display an error
