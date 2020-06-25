@@ -21,7 +21,6 @@ class nsIURI;
 namespace mozilla {
 namespace dom {
 
-struct SessionHistoryInfoAndId;
 class SHEntrySharedParentState;
 
 // SessionHistoryInfo stores session history data for a load. It can be sent
@@ -37,9 +36,11 @@ class SessionHistoryInfo {
 
   nsIURI* GetURI() const { return mURI; }
 
+  uint64_t Id() const { return mId; }
+
  private:
   friend class SessionHistoryEntry;
-  friend struct mozilla::ipc::IPDLParamTraits<SessionHistoryInfoAndId>;
+  friend struct mozilla::ipc::IPDLParamTraits<SessionHistoryInfo>;
 
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mOriginalURI;
@@ -53,33 +54,12 @@ class SessionHistoryInfo {
   RefPtr<nsStructuredCloneContainer> mStateData;
   nsString mSrcdocData;
   nsCOMPtr<nsIURI> mBaseURI;
+  uint64_t mId = 0;
   bool mLoadReplace = false;
   bool mURIWasModified = false;
   bool mIsSrcdocEntry = false;
   bool mScrollRestorationIsManual = false;
   bool mPersist = false;
-};
-
-// XXX Not sure that the id shouldn't just live in SessionHistoryInfo.
-struct SessionHistoryInfoAndId {
-  SessionHistoryInfoAndId() = default;
-  SessionHistoryInfoAndId(uint64_t aId,
-                          UniquePtr<mozilla::dom::SessionHistoryInfo> aInfo)
-      : mId(aId), mInfo(std::move(aInfo)) {}
-  SessionHistoryInfoAndId(SessionHistoryInfoAndId&& aInfoAndId) = default;
-  SessionHistoryInfoAndId& operator=(
-      const SessionHistoryInfoAndId& aInfoAndId) {
-    mId = aInfoAndId.mId;
-    mInfo = MakeUnique<SessionHistoryInfo>(*aInfoAndId.mInfo);
-    return *this;
-  }
-  bool operator==(const SessionHistoryInfoAndId& aInfoAndId) const {
-    return mId == aInfoAndId.mId && !mInfo == !aInfoAndId.mInfo &&
-           *mInfo == *aInfoAndId.mInfo;
-  }
-
-  uint64_t mId = 0;
-  UniquePtr<mozilla::dom::SessionHistoryInfo> mInfo;
 };
 
 // SessionHistoryEntry is used to store session history data in the parent
@@ -93,7 +73,7 @@ class SessionHistoryEntry : public nsISHEntry {
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
 
-  const SessionHistoryInfo& GetInfo() const { return *mInfo; }
+  const SessionHistoryInfo& Info() const { return *mInfo; }
 
  private:
   virtual ~SessionHistoryEntry() = default;
@@ -111,11 +91,11 @@ class SessionHistoryEntry : public nsISHEntry {
 namespace ipc {
 
 template <>
-struct IPDLParamTraits<dom::SessionHistoryInfoAndId> {
+struct IPDLParamTraits<dom::SessionHistoryInfo> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    const dom::SessionHistoryInfoAndId& aParam);
+                    const dom::SessionHistoryInfo& aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, dom::SessionHistoryInfoAndId* aResult);
+                   IProtocol* aActor, dom::SessionHistoryInfo* aResult);
 };
 
 }  // namespace ipc

@@ -259,28 +259,24 @@ nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
   return mSessionHistory;
 }
 
-static uint64_t gNextHistoryEntryId = 0;
-
-UniquePtr<SessionHistoryInfoAndId>
+UniquePtr<SessionHistoryInfo>
 CanonicalBrowsingContext::CreateSessionHistoryEntryForLoad(
     nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
   MOZ_ASSERT(GetSessionHistory(),
              "Creating an entry but session history is not enabled for this "
              "browsing context!");
-  uint64_t id = ++gNextHistoryEntryId;
   RefPtr<SessionHistoryEntry> entry =
       new SessionHistoryEntry(GetSessionHistory(), aLoadState, aChannel);
-  mLoadingEntries.AppendElement(SessionHistoryEntryAndId(id, entry));
-  return MakeUnique<SessionHistoryInfoAndId>(
-      id, MakeUnique<SessionHistoryInfo>(entry->GetInfo()));
+  mLoadingEntries.AppendElement(entry);
+  return MakeUnique<SessionHistoryInfo>(entry->Info());
 }
 
 void CanonicalBrowsingContext::SessionHistoryCommit(
     uint64_t aSessionHistoryEntryId) {
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
-    if (mLoadingEntries[i].mId == aSessionHistoryEntryId) {
+    if (mLoadingEntries[i]->Info().Id() == aSessionHistoryEntryId) {
       RefPtr<SessionHistoryEntry> oldActiveEntry = mActiveEntry.forget();
-      mActiveEntry = mLoadingEntries[i].mEntry;
+      mActiveEntry = mLoadingEntries[i];
       mLoadingEntries.RemoveElementAt(i);
       if (IsTop()) {
         GetSessionHistory()->AddEntry(mActiveEntry,
