@@ -19,7 +19,7 @@ RUN_FIND_DUPES ?= $(MOZ_AUTOMATION)
 RUN_MOZHARNESS_ZIP ?= $(MOZ_AUTOMATION)
 endif
 
-export USE_ELF_HACK ELF_HACK_FLAGS
+export USE_ELF_HACK
 
 stage-package: multilocale.txt locale-manifest.in $(MOZ_PKG_MANIFEST) $(MOZ_PKG_MANIFEST_DEPS)
 	NO_PKG_FILES="$(NO_PKG_FILES)" \
