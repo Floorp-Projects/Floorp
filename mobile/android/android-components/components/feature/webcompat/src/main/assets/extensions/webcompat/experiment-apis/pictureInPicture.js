@@ -64,7 +64,7 @@ this.pictureInPictureChild = class extends ExtensionAPI {
           // The Picture-in-Picture toggle is only implemented for Desktop, so make
           // this return nothing for non-Desktop builds.
           if (AppConstants.platform == "android") {
-            return {};
+            return Cu.cloneInto({}, context.cloneScope);
           }
 
           return Cu.cloneInto(TOGGLE_POLICIES, context.cloneScope);
