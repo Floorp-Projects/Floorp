@@ -36,6 +36,14 @@ class ProfileBuffer final {
   // Returns the position of the entry.
   uint64_t AddThreadIdEntry(int aThreadId);
 
+  // Add a new single entry with *all* given object (using a Serializer for
+  // each), return block index.
+  template <typename... Ts>
+  mozilla::ProfileBufferBlockIndex PutObjects(
+      const ProfileBufferEntry::Kind aKind, const Ts&... aTs) {
+    return mEntries.PutObjects(aKind, aTs...);
+  }
+
   void CollectCodeLocation(
       const char* aLabel, const char* aStr, uint32_t aFrameFlags,
       uint64_t aInnerWindowID, const mozilla::Maybe<uint32_t>& aLineNumber,
