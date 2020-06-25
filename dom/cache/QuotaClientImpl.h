@@ -131,11 +131,10 @@ class CacheQuotaClient final : public quota::Client {
  private:
   ~CacheQuotaClient();
 
-  nsresult GetUsageForOriginInternal(PersistenceType aPersistenceType,
-                                     const nsACString& aGroup,
-                                     const nsACString& aOrigin,
-                                     const AtomicBool& aCanceled,
-                                     bool aInitializing, UsageInfo* aUsageInfo);
+  Result<UsageInfo, nsresult> GetUsageForOriginInternal(
+      PersistenceType aPersistenceType, const nsACString& aGroup,
+      const nsACString& aOrigin, const AtomicBool& aCanceled,
+      bool aInitializing);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheQuotaClient, override)
 
