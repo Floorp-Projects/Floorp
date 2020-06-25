@@ -3184,13 +3184,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ContentParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ContentParent)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(ContentParent)
-  NS_INTERFACE_MAP_ENTRY(nsIContentParent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMProcessParent)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionErrorCallback)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncShutdownBlocker)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentParent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMProcessParent)
 NS_INTERFACE_MAP_END
 
 // Async shutdown blocker
@@ -6819,58 +6819,16 @@ NS_IMETHODIMP ContentParent::GetChildID(uint64_t* aOut) {
 IPCResult ContentParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
                                         const ClonedMessageData& aData,
                                         const ClonedMessageData& aStack) {
-  StructuredCloneData data;
-  data.BorrowFromClonedMessageDataForParent(aData);
-  StructuredCloneData stack;
-  stack.BorrowFromClonedMessageDataForParent(aStack);
-  ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
-  return IPC_OK();
-}
-
-void ContentParent::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
-                                      StructuredCloneData&& aData,
-                                      StructuredCloneData&& aStack) {
-  RefPtr<JSProcessActorParent> actor =
-      GetActor(aMeta.actorName(), IgnoreErrors());
-  if (actor) {
-    actor->ReceiveRawMessage(aMeta, std::move(aData), std::move(aStack));
-  }
-}
-
-already_AddRefed<JSProcessActorParent> ContentParent::GetActor(
-    const nsACString& aName, ErrorResult& aRv) {
-  if (!CanSend()) {
-    aRv.ThrowInvalidStateError(nsPrintfCString(
-        "Cannot get actor '%s': content parent is ready to communicate.",
-        PromiseFlatCString(aName).get()));
-    return nullptr;
-  }
-
-  // Check if this actor has already been created, and return it if it has.
-  if (mProcessActors.Contains(aName)) {
-    return do_AddRef(mProcessActors.GetWeak(aName));
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ConstructActor(aName, &obj, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Unwrap our actor to a JSProcessActorParent object.
   RefPtr<JSProcessActorParent> actor;
-  if (NS_FAILED(UNWRAP_OBJECT(JSProcessActorParent, &obj, actor))) {
-    aRv.ThrowTypeMismatchError(
-        "Constructed actor does not inherit from JSProcessActorParent");
-    return nullptr;
+  GetActor(aMeta.actorName(), getter_AddRefs(actor));
+  if (actor) {
+    StructuredCloneData data;
+    data.BorrowFromClonedMessageDataForParent(aData);
+    StructuredCloneData stack;
+    stack.BorrowFromClonedMessageDataForParent(aStack);
+    actor->ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
   }
-
-  MOZ_RELEASE_ASSERT(!actor->Manager(),
-                     "mManager was already initialized once!");
-  actor->Init(aName, this);
-  mProcessActors.Put(aName, RefPtr{actor});
-  return actor.forget();
+  return IPC_OK();
 }
 
 NS_IMETHODIMP ContentParent::GetActor(const nsACString& aName,
@@ -6915,6 +6873,13 @@ IPCResult ContentParent::RecvFOGData(ByteBuf&& buf) {
 #endif
   return IPC_OK();
 }
+
+NS_IMETHODIMP ContentParent::GetCanSend(bool* aCanSend) {
+  *aCanSend = CanSend();
+  return NS_OK;
+}
+
+ContentParent* ContentParent::AsContentParent() { return this; }
 
 }  // namespace dom
 }  // namespace mozilla
