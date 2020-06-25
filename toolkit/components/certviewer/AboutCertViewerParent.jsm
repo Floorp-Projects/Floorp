@@ -4,11 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AboutCertViewerHandler"];
-
-const { RemotePages } = ChromeUtils.import(
-  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
-);
+var EXPORTED_SYMBOLS = ["AboutCertViewerParent"];
 
 const TYPE_UNKNOWN = 0;
 const TYPE_CA = 1;
@@ -16,11 +12,8 @@ const TYPE_USER = 2;
 const TYPE_EMAIL = 4;
 const TYPE_SERVER = 8;
 
-var AboutCertViewerHandler = {
-  _inited: false,
-  _topics: ["getCertificates"],
-
-  initCerts() {
+class AboutCertViewerParent extends JSWindowActorParent {
+  getCertificates() {
     let certs = {
       [TYPE_UNKNOWN]: [],
       [TYPE_CA]: [],
@@ -43,36 +36,14 @@ var AboutCertViewerHandler = {
       }
     }
     return certs;
-  },
-
-  init() {
-    this.pageListener = new RemotePages("about:certificate");
-    this.receiveMessage = this.receiveMessage.bind(this);
-    for (let topic of this._topics) {
-      this.pageListener.addMessageListener(topic, this.receiveMessage);
-    }
-    this._inited = true;
-  },
-
-  uninit() {
-    if (!this._inited) {
-      return;
-    }
-    for (let topic of this._topics) {
-      this.pageListener.removeMessageListener(topic, this.receiveMessage);
-    }
-    this.pageListener.destroy();
-  },
+  }
 
   receiveMessage(aMessage) {
     switch (aMessage.name) {
-      case "getCertificates": {
-        let certs = this.initCerts();
-        aMessage.target.sendAsyncMessage("certificates", {
-          certs,
-        });
-        break;
-      }
+      case "getCertificates":
+        return this.getCertificates();
     }
-  },
-};
+
+    return undefined;
+  }
+}

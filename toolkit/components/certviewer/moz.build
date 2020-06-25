@@ -15,7 +15,8 @@ MOCHITEST_CHROME_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES += [
-  'AboutCertViewerHandler.jsm',
+  'AboutCertViewerChild.jsm',
+  'AboutCertViewerParent.jsm',
 ]
 
 with Files('**'):

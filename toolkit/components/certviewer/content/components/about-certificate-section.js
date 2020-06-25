@@ -34,8 +34,7 @@ export class AboutCertificateSection extends HTMLElement {
   }
 
   render() {
-    RPMAddMessageListener("certificates", this.filterCerts.bind(this));
-    RPMSendAsyncMessage("getCertificates");
+    RPMSendQuery("getCertificates").then(this.filterCerts.bind(this));
 
     let title = this.shadowRoot.querySelector(".title");
     title.setAttribute(
@@ -44,36 +43,36 @@ export class AboutCertificateSection extends HTMLElement {
     );
   }
 
-  filterCerts(message) {
+  filterCerts(srcCerts) {
     let certs = [];
-    if (message.data.certs[TYPE_USER].length) {
+    if (srcCerts[TYPE_USER].length) {
       certs.push({
         name: "certificate-viewer-tab-mine",
-        data: message.data.certs[TYPE_USER],
+        data: srcCerts[TYPE_USER],
       });
     }
-    if (message.data.certs[TYPE_EMAIL].length) {
+    if (srcCerts[TYPE_EMAIL].length) {
       certs.push({
         name: "certificate-viewer-tab-people",
-        data: message.data.certs[TYPE_EMAIL],
+        data: srcCerts[TYPE_EMAIL],
       });
     }
-    if (message.data.certs[TYPE_SERVER].length) {
+    if (srcCerts[TYPE_SERVER].length) {
       certs.push({
         name: "certificate-viewer-tab-servers",
-        data: message.data.certs[TYPE_SERVER],
+        data: srcCerts[TYPE_SERVER],
       });
     }
-    if (message.data.certs[TYPE_CA].length) {
+    if (srcCerts[TYPE_CA].length) {
       certs.push({
         name: "certificate-viewer-tab-ca",
-        data: message.data.certs[TYPE_CA],
+        data: srcCerts[TYPE_CA],
       });
     }
-    if (message.data.certs[TYPE_UNKNOWN].length) {
+    if (srcCerts[TYPE_UNKNOWN].length) {
       certs.push({
         name: "certificate-viewer-tab-unkonwn",
-        data: message.data.certs[TYPE_UNKNOWN],
+        data: srcCerts[TYPE_UNKNOWN],
       });
     }
 
