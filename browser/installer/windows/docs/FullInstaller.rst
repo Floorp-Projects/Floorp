@@ -6,5 +6,7 @@ The full installer is actually responsible for installing the browser; it's what
 
 The full installer's main script is `installer.nsi <https://searchfox.org/mozilla-central/source/browser/installer/windows/nsis/installer.nsi>`_, but most of the heavy lifting is done by the shared functions in `common.nsh <https://searchfox.org/mozilla-central/source/toolkit/mozapps/installer/windows/nsis/common.nsh>`_.
 
+If it was not launched by the :doc:`StubInstaller`, an :ref:`Install Ping` is sent when the installer exits.
+
 .. toctree::
    FullConfig
