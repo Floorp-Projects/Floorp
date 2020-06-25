@@ -18,7 +18,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.isOSOnLowMemory
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 
 /**
  * Feature implementation for automatically taking thumbnails of sites.
@@ -43,9 +43,9 @@ class BrowserThumbnails(
     override fun start() {
         scope = store.flowScoped { flow ->
             flow.map { it.selectedTab }
-                .ifChanged { it?.content?.loading }
+                .ifAnyChanged { arrayOf(it?.content?.loading, it?.content?.firstContentfulPaint) }
                 .collect { state ->
-                    if (state?.content?.loading == false) {
+                    if (state?.content?.loading == false && state.content.firstContentfulPaint) {
                         requestScreenshot()
                     }
                 }

@@ -64,9 +64,6 @@ class BrowserThumbnailsTest {
         thumbnails.start()
         thumbnails.stop()
 
-        // Initial loading state is false
-        verify(engineView).captureThumbnail(any())
-
         store.dispatch(ContentAction.UpdateThumbnailAction(tabId, mock())).joinBlocking()
 
         verifyNoMoreInteractions(engineView)
@@ -74,7 +71,7 @@ class BrowserThumbnailsTest {
 
     @Suppress("UNCHECKED_CAST")
     @Test
-    fun `feature must capture thumbnail when a site finishes loading`() {
+    fun `feature must capture thumbnail when a site finishes loading and first paint`() {
         val bitmap: Bitmap? = mock()
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tabId, true)).joinBlocking()
@@ -89,6 +86,7 @@ class BrowserThumbnailsTest {
         verify(store, never()).dispatch(ContentAction.UpdateThumbnailAction(tabId, bitmap!!))
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tabId, false)).joinBlocking()
+        store.dispatch(ContentAction.UpdateFirstContentfulPaintStateAction(tabId, true)).joinBlocking()
 
         verify(store).dispatch(ContentAction.UpdateThumbnailAction(tabId, bitmap))
     }
