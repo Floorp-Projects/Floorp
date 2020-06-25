@@ -57,7 +57,6 @@ add_task(async function test_field_highlight_on_autocomplete() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown");
   await shownPromise;
-  await popupEnabled();
   synthesizeKey("KEY_ArrowDown");
   await synthesizeKey("KEY_Enter");
 
@@ -91,7 +90,6 @@ add_task(async function test_field_highlight_on_autocomplete() {
   shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown");
   await shownPromise;
-  await popupEnabled();
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
 

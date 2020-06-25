@@ -592,11 +592,6 @@ async function fillGeneratedPasswordFromOpenACPopup(
     "PasswordEditedOrGenerated"
   );
 
-  await TestUtils.waitForCondition(
-    () => !item.disabled,
-    "Waiting for generated password item to become enabled"
-  );
-
   info("Clicking the generated password AC item");
   EventUtils.synthesizeMouseAtCenter(item, {});
   info("Waiting for the content input value to change");
@@ -723,11 +718,6 @@ async function doFillGeneratedPasswordContextMenuItem(browser, passwordInput) {
   await new Promise(resolve => {
     SimpleTest.executeSoon(resolve);
   });
-
-  await TestUtils.waitForCondition(
-    () => !generatedPasswordItem.disabled,
-    "Waiting for generatedPasswordItem to become enabled"
-  );
 
   EventUtils.synthesizeMouseAtCenter(generatedPasswordItem, {});
 

@@ -70,7 +70,6 @@ add_task(async function setup() {
 add_task(async function test_initial_focus() {
   let results = await notifyMenuChanged(3, "name");
   checkAutoCompleteResults(results, ["name", "name1"], hostname, "Two login results");
-  await popupEnabled();
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -106,7 +105,6 @@ add_task(async function test_reopened_after_edit_not_matching_saved() {
     this.content.document.getElementById("form-basic-username").focus();
   });
   await shownPromise;
-  await popupEnabled();
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
     this.content.document.getElementById("form-basic-submit").focus();
   });
