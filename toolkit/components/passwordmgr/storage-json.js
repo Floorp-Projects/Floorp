@@ -89,7 +89,17 @@ class LoginManagerStorage_json {
 
       // Set the reference to LoginStore synchronously.
       let jsonPath = OS.Path.join(OS.Constants.Path.profileDir, "logins.json");
-      this._store = new LoginStore(jsonPath);
+      let backupPath = "";
+      let loginsBackupEnabled = Services.prefs.getBoolPref(
+        "signon.backup.enabled"
+      );
+      if (loginsBackupEnabled) {
+        backupPath = OS.Path.join(
+          OS.Constants.Path.profileDir,
+          "logins-backup.json"
+        );
+      }
+      this._store = new LoginStore(jsonPath, backupPath);
 
       return (async () => {
         // Load the data asynchronously.
