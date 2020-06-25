@@ -8,7 +8,6 @@ import android.content.Context
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.browser.thumbnails.ThumbnailsUseCases
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -45,16 +44,6 @@ class UseCases(
      * Use cases that provide tab management.
      */
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(sessionManager) }
-
-    /**
-     * Use cases that provide tab thumbnail integration.
-     */
-    val thumbnailUseCases: ThumbnailsUseCases by lazy {
-        ThumbnailsUseCases(
-            store,
-            thumbnailStorage
-        )
-    }
 
     /**
      * Use cases that provide search engine integration.

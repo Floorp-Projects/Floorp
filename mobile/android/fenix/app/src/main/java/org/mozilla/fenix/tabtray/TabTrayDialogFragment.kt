@@ -126,7 +126,6 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
                 view.context.components.core.store,
                 selectTabUseCase,
                 removeTabUseCase,
-                view.context.components.useCases.thumbnailUseCases,
                 { it.content.private == isPrivate },
                 { }
             ),
