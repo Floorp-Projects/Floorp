@@ -1304,6 +1304,17 @@ bool WarpCacheIRTranspiler::emitMathCeilToInt32Result(NumberOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMathTruncToInt32Result(
+    NumberOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MTrunc::New(alloc(), input);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathRoundToInt32Result(
     NumberOperandId inputId) {
   MDefinition* input = getOperand(inputId);
