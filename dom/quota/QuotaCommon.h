@@ -41,6 +41,17 @@
                       NS_ConvertUTF16toUTF8(_leafName).get())                 \
           .get())
 
+// This macro should be used in directory traversals for files or directories
+// that are unknown for given directory traversal. It should only be called
+// after all known (directory traversal specific) files or directories have
+// been checked and handled.
+#ifdef DEBUG
+#  define WARN_IF_FILE_IS_UNKNOWN(_file) \
+    mozilla::dom::quota::WarnIfFileIsUnknown(_file, __FILE__, __LINE__)
+#else
+#  define WARN_IF_FILE_IS_UNKNOWN(_file) Result<bool, nsresult>(false)
+#endif
+
 // Telemetry probes to collect number of failure during the initialization.
 #ifdef NIGHTLY_BUILD
 #  define REPORT_TELEMETRY_INIT_ERR(_key, _label)   \
@@ -184,6 +195,12 @@ class IntCString : public nsAutoCString {
  public:
   explicit IntCString(int64_t aInteger) { AppendInt(aInteger); }
 };
+
+#ifdef DEBUG
+Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
+                                           const char* aSourceFile,
+                                           int32_t aSourceLine);
+#endif
 
 }  // namespace quota
 }  // namespace dom
