@@ -37,7 +37,7 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
             true
         )
 
-        val installationPing = InstallationPing(application)
+        val installationPing = FirstSessionPing(application)
 
         config.setOnAttributionChangedListener {
             if (!it.network.isNullOrEmpty()) {

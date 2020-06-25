@@ -9,7 +9,7 @@ This means you might have to go searching through the dependency tree to get a f
 
  - [activation](#activation)
  - [events](#events)
- - [installation](#installation)
+ - [first-session](#first-session)
  - [metrics](#metrics)
  - [startup-timeline](#startup-timeline)
 
@@ -188,9 +188,10 @@ The following metrics are added to the ping:
 | user_specified_search_engines.custom_engine_deleted |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user deleted a custom search engine  |[1](https://github.com/mozilla-mobile/fenix/pull/6918)||2020-09-01 |
 | voice_search.tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user selected the voice search button on the search screen.  |[1](https://github.com/mozilla-mobile/fenix/pull/10785)||2020-09-01 |
 
-## installation
+## first-session
 
-This ping is intended to capture the source of the installation
+This ping is intended to capture the source of the app install
+on the first session.
 
 
 This ping includes the [client id](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section).
@@ -207,11 +208,11 @@ The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
-| installation.adgroup |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the AdGroup that was used to source this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586480836)||2020-09-01 |
-| installation.campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the campaign that is responsible for this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
-| installation.creative |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The identifier of the creative material that the user interacted with.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
-| installation.network |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the Network that sourced this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
-| installation.timestamp |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |The Glean generated date and time of the installation. This is unique per app install, though the rest of the data in this ping is from Adjust and will remain static across installs.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
+| first_session.adgroup |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the AdGroup that was used to source this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586480836)||2020-09-01 |
+| first_session.campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the campaign that is responsible for this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
+| first_session.creative |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The identifier of the creative material that the user interacted with.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
+| first_session.network |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the Network that sourced this installation.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
+| first_session.timestamp |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |The Glean generated date and time of the installation. This is unique per app install, though the rest of the data in this ping is from Adjust and will remain static across installs.  |[1](https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202)||2020-09-01 |
 
 ## metrics
 

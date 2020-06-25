@@ -11,11 +11,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.GleanMetrics.Installation
+import org.mozilla.fenix.GleanMetrics.FirstSession
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.settings
 
-class InstallationPing(private val context: Context) {
+class FirstSessionPing(private val context: Context) {
 
     private val prefs: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -56,15 +56,15 @@ class InstallationPing(private val context: Context) {
     internal fun triggerPing() {
         if (checkMetricsNotEmpty()) {
             context.settings().also {
-                Installation.campaign.set(it.adjustCampaignId)
-                Installation.adgroup.set(it.adjustAdGroup)
-                Installation.creative.set(it.adjustCreative)
-                Installation.network.set(it.adjustNetwork)
-                Installation.timestamp.set()
+                FirstSession.campaign.set(it.adjustCampaignId)
+                FirstSession.adgroup.set(it.adjustAdGroup)
+                FirstSession.creative.set(it.adjustCreative)
+                FirstSession.network.set(it.adjustNetwork)
+                FirstSession.timestamp.set()
             }
 
             CoroutineScope(Dispatchers.IO).launch {
-                Pings.installation.submit()
+                Pings.firstSession.submit()
                 markAsTriggered()
             }
         }

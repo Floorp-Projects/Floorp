@@ -2319,11 +2319,11 @@ pocket:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
 
-installation:
+first_session:
   campaign:
     type: string
     send_in_pings:
-      - installation
+      - first-session
     description: |
       The name of the campaign that is responsible for this installation.
     bugs:
@@ -2336,7 +2336,7 @@ installation:
   network:
     type: string
     send_in_pings:
-      - installation
+      - first-session
     description: |
       The name of the Network that sourced this installation.
     bugs:
@@ -2349,7 +2349,7 @@ installation:
   adgroup:
     type: string
     send_in_pings:
-      - installation
+      - first-session
     description: |
       The name of the AdGroup that was used to source this installation.
     bugs:
@@ -2361,7 +2361,7 @@ installation:
     expires: "2020-09-01"
   creative:
     send_in_pings:
-      - installation
+      - first-session
     type: string
     description: |
       The identifier of the creative material that the user interacted with.
@@ -2374,7 +2374,7 @@ installation:
     expires: "2020-09-01"
   timestamp:
     send_in_pings:
-      - installation
+      - first-session
     type: datetime
     description: |
       The Glean generated date and time of the installation. This is

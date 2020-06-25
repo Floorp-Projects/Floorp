@@ -19,9 +19,10 @@ activation:
   notification_emails:
     - fenix-core@mozilla.com
 
-installation:
+first-session:
   description: |
-    This ping is intended to capture the source of the installation
+    This ping is intended to capture the source of the app install
+    on the first session.
   include_client_id: true
   bugs:
     - https://github.com/mozilla-mobile/fenix/issues/7295

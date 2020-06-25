@@ -570,7 +570,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     private var initialized = false
 
     private val activationPing = ActivationPing(context)
-    private val installationPing = InstallationPing(context)
+    private val installationPing = FirstSessionPing(context)
 
     override fun start() {
         logger.debug("Enabling Glean.")
