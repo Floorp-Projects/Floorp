@@ -6,5 +6,6 @@ edition = "2018"
 license = "MPL-2.0"
 
 [dependencies]
+lazy_static = "1"
 log = {version = "0.4", features = ["release_max_level_info"]}
 env_logger = {version = "0.6", default-features = false} # disable `regex` to reduce code size

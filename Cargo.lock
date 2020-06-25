@@ -1613,6 +1613,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "env_logger",
+ "lazy_static",
  "log",
 ]
 
