@@ -9,7 +9,7 @@ declTest("test observer triggering actor creation", {
       const TOPIC = "test-js-content-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC, "dataString");
 
-      let child = ChromeUtils.domProcessChild;
+      let child = ChromeUtils.contentChild;
       let actorChild = child.getActor("TestProcessActor");
       ok(actorChild, "JSProcessActorChild should have value.");
       ok(
@@ -29,7 +29,7 @@ declTest("test observers with null data", {
       const TOPIC = "test-js-content-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC);
 
-      let child = ChromeUtils.domProcessChild;
+      let child = ChromeUtils.contentChild;
       let actorChild = child.getActor("TestProcessActor");
       ok(actorChild, "JSProcessActorChild should have value.");
       let { subject, topic, data } = actorChild.lastObserved;

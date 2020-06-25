@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_JSProcessActorChild_h
 #define mozilla_dom_JSProcessActorChild_h
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/JSActor.h"
-#include "nsIDOMProcessChild.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,9 +32,9 @@ class JSProcessActorChild final : public JSActor {
     return MakeAndAddRef<JSProcessActorChild>();
   }
 
-  nsIDOMProcessChild* Manager() const { return mManager; }
+  ContentChild* Manager() const { return mManager; }
 
-  void Init(const nsACString& aName, nsIDOMProcessChild* aManager);
+  void Init(const nsACString& aName, ContentChild* aManager);
   void AfterDestroy();
 
  protected:
@@ -50,7 +50,7 @@ class JSProcessActorChild final : public JSActor {
   ~JSProcessActorChild() { MOZ_ASSERT(!mManager); }
 
   bool mCanSend = true;
-  nsCOMPtr<nsIDOMProcessChild> mManager;
+  RefPtr<ContentChild> mManager;
 };
 
 }  // namespace dom

@@ -9,14 +9,14 @@ include protocol PWindowGlobal;
 include DOMTypes;
 
 namespace mozilla {
-namespace dom {
+namespace ipc {
 
 /**
  * PInProcess is intended for use as an alternative actor manager to PContent
  * for async actors which want to be used uniformly in both Content->Chrome and
  * Chrome->Chrome circumstances.
  *
- * `mozilla::dom::InProcess{Parent, Child}::Singleton()` should be used to get
+ * `mozilla::ipc::InProcess{Parent, Child}::Singleton()` should be used to get
  * an instance of this actor.
  */
 async refcounted protocol PInProcess
@@ -24,5 +24,5 @@ async refcounted protocol PInProcess
   manages PWindowGlobal;
 };
 
-} // namespace dom
+} // namespace ipc
 } // namespace mozilla

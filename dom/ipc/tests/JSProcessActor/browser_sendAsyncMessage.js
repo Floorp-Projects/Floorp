@@ -4,12 +4,12 @@
 
 declTest("asyncMessage testing", {
   async test(browser) {
-    let parent = browser.browsingContext.currentWindowGlobal.domProcess;
+    let parent = browser.browsingContext.currentWindowGlobal.contentParent;
     let actorParent = parent.getActor("TestProcessActor");
     ok(actorParent, "JSProcessActorParent should have value.");
 
     await ContentTask.spawn(browser, {}, async function() {
-      let child = ChromeUtils.domProcessChild;
+      let child = ChromeUtils.contentChild;
       let actorChild = child.getActor("TestProcessActor");
       ok(actorChild, "JSProcessActorChild should have value.");
 
@@ -32,7 +32,7 @@ declTest("asyncMessage without both sides", {
     // If we don't create a parent actor, make sure the parent actor
     // gets created by having sent the message.
     await ContentTask.spawn(browser, {}, async function() {
-      let child = ChromeUtils.domProcessChild;
+      let child = ChromeUtils.contentChild;
       let actorChild = child.getActor("TestProcessActor");
       ok(actorChild, "JSProcessActorChild should have value.");
 

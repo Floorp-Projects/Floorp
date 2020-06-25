@@ -4,7 +4,7 @@
 
 declTest("getActor on both sides", {
   async test(browser) {
-    let parent = browser.browsingContext.currentWindowGlobal.domProcess;
+    let parent = browser.browsingContext.currentWindowGlobal.contentParent;
     ok(parent, "WindowGlobalParent should have value.");
     let actorParent = parent.getActor("TestProcessActor");
     is(
@@ -15,7 +15,7 @@ declTest("getActor on both sides", {
     is(
       actorParent.manager,
       parent,
-      "manager should match WindowGlobalParent.domProcess"
+      "manager should match WindowGlobalParent.contentParent"
     );
 
     ok(
@@ -24,7 +24,7 @@ declTest("getActor on both sides", {
     );
 
     await SpecialPowers.spawn(browser, [], async function() {
-      let child = ChromeUtils.domProcessChild;
+      let child = ChromeUtils.contentChild;
       ok(child, "WindowGlobalChild should have value.");
       let actorChild = child.getActor("TestProcessActor");
       is(
@@ -35,7 +35,7 @@ declTest("getActor on both sides", {
       is(
         actorChild.manager,
         child,
-        "manager should match ChromeUtils.domProcessChild."
+        "manager should match ChromeUtils.contentChild."
       );
 
       ok(
