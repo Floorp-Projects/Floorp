@@ -76,7 +76,7 @@ inline LauncherVoidResult RestoreImportDirectory(
   LauncherResult<nt::DataDirectoryEntry> realImportDirectory =
       detail::GetImageDirectoryViaFileIo(file, importDirEntryRva);
   if (realImportDirectory.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(realImportDirectory);
+    return realImportDirectory.propagateErr();
   }
 
   nt::DataDirectoryEntry toWrite = realImportDirectory.unwrap();

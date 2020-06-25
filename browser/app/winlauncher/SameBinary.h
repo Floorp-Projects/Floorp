@@ -71,7 +71,7 @@ static inline mozilla::LauncherResult<bool> IsSameBinaryAsParentProcess(
     ImageFileCompareOption aOption = ImageFileCompareOption::Default) {
   mozilla::LauncherResult<DWORD> parentPid = mozilla::nt::GetParentProcessId();
   if (parentPid.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(parentPid);
+    return parentPid.propagateErr();
   }
 
   nsAutoHandle parentProcess(::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
