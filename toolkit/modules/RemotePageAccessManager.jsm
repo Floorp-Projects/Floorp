@@ -68,6 +68,9 @@ let RemotePageAccessManager = {
     "about:httpsonlyerror": {
       RPMSendAsyncMessage: ["goBack", "openInsecure"],
     },
+    "about:certificate": {
+      RPMSendQuery: ["getCertificates"],
+    },
     "about:neterror": {
       RPMSendAsyncMessage: [
         "Browser:EnableOnlineMode",

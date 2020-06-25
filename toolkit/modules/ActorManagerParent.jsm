@@ -42,6 +42,21 @@ let JSPROCESSACTORS = {};
  * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jswindowactor
  */
 let JSWINDOWACTORS = {
+  AboutCertViewer: {
+    parent: {
+      moduleURI: "resource://gre/modules/AboutCertViewerParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/modules/AboutCertViewerChild.jsm",
+
+      events: {
+        DOMWindowCreated: { capture: true },
+      },
+    },
+
+    matches: ["about:certificate"],
+  },
+
   AboutHttpsOnlyError: {
     parent: {
       moduleURI: "resource://gre/actors/AboutHttpsOnlyErrorParent.jsm",
@@ -55,6 +70,7 @@ let JSWINDOWACTORS = {
     matches: ["about:httpsonlyerror?*"],
     allFrames: true,
   },
+
   AudioPlayback: {
     parent: {
       moduleURI: "resource://gre/actors/AudioPlaybackParent.jsm",

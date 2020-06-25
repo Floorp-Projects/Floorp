@@ -671,7 +671,6 @@ XPCOMUtils.defineLazyGetter(
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutCertViewerHandler: "resource://gre/modules/AboutCertViewerHandler.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
@@ -1772,8 +1771,6 @@ BrowserGlue.prototype = {
 
     NewTabUtils.init();
 
-    AboutCertViewerHandler.init();
-
     Services.telemetry.setEventRecordingEnabled(
       "security.ui.protections",
       true
@@ -2026,7 +2023,6 @@ BrowserGlue.prototype = {
     SearchTelemetry.uninit();
     PageThumbs.uninit();
     NewTabUtils.uninit();
-    AboutCertViewerHandler.uninit();
 
     Normandy.uninit();
     RFPHelper.uninit();
