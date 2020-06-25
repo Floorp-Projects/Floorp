@@ -1024,6 +1024,21 @@
         ]
       },
       {
+        "name": "warmup",
+        "type": "function",
+        "description": "Warm up a tab",
+        "async": true,
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0,
+            "optional": false,
+            "description": "The ID of the tab to warm up."
+          }
+        ]
+      },
+      {
         "name": "remove",
         "type": "function",
         "description": "Closes one or more tabs.",
