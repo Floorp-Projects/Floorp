@@ -230,7 +230,6 @@ js::Nursery::Nursery(GCRuntime* gc)
       canAllocateBigInts_(true),
       reportTenurings_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
-      smoothedGrowthFactor(1.0),
       decommitTask(gc)
 #ifdef JS_GC_ZEAL
       ,
@@ -312,8 +311,6 @@ void js::Nursery::enable() {
   setCurrentChunk(0);
   setStartPosition();
   poisonAndInitCurrentChunk();
-  smoothedGrowthFactor = 1.0;
-
 #ifdef JS_GC_ZEAL
   if (gc->hasZealMode(ZealMode::GenerationalGC)) {
     enterZealMode();
@@ -1539,36 +1536,28 @@ size_t js::Nursery::targetSize(JS::GCReason reason) {
   // capacity. This gives better results than using the promotion rate (based on
   // the amount of nursery used) in cases where we collect before the nursery is
   // full.
-  double fractionPromoted =
+  const double fractionPromoted =
       double(previousGC.tenuredBytes) / double(previousGC.nurseryCapacity);
 
-  // Adjust the nursery size to try to achieve a target promotion rate.
-  static const double PromotionGoal = 0.02;
+  // Object lifetimes aren't going to behave linearly, but a better relationship
+  // that works for all programs and can be predicted in advance doesn't exist.
+  static const double GrowThreshold = 0.03;
+  static const double ShrinkThreshold = 0.01;
+  static const double PromotionGoal = (GrowThreshold + ShrinkThreshold) / 2.0;
 
-  double growthFactor = fractionPromoted / PromotionGoal;
-
-  // Limit the range of the growth factor to prevent transient high promotion
-  // rates from affecting the nursery size too far into the future.
-  static const double GrowthRange = 2.0;
-  growthFactor = ClampDouble(growthFactor, 1.0 / GrowthRange, GrowthRange);
-
-  // Use exponential smoothing on the desired growth rate to take into account
-  // the promotion rate from recent collections.
-  smoothedGrowthFactor = 0.75 * smoothedGrowthFactor + 0.25 * growthFactor;
-
-  // Leave size untouched if we are close to the promotion goal.
-  static const double GoalWidth = 1.5;
-  if (smoothedGrowthFactor > (1.0 / GoalWidth) &&
-      smoothedGrowthFactor < GoalWidth) {
+  // Leave size untouched if we don't cross either threshold.
+  if (fractionPromoted > ShrinkThreshold && fractionPromoted < GrowThreshold) {
     return capacity();
   }
 
-  // The multiplication below cannot overflow because smoothedGrowthFactor is at
-  // most two.
-  MOZ_ASSERT(smoothedGrowthFactor <= 2.0);
+  const double growthFactor =
+      ClampDouble(fractionPromoted / PromotionGoal, 0.5, 2.0);
+
+  // The multiplication below cannot overflow because growthFactor is at most
+  // two.
   MOZ_ASSERT(capacity() < SIZE_MAX / 2);
 
-  return roundSize(size_t(double(capacity()) * smoothedGrowthFactor));
+  return roundSize(size_t(double(capacity()) * growthFactor));
 }
 
 /* static */
