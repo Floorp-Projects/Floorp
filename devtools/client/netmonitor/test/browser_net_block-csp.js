@@ -8,7 +8,7 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CSP_URL, { requestCount: 3 });
+  const { tab, monitor } = await initNetMonitor(CSP_URL, { requestCount: 2 });
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -18,11 +18,10 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  const wait = waitForNetworkEvents(monitor, 3);
+  const wait = waitForNetworkEvents(monitor, 2);
   tab.linkedBrowser.reload();
-  await wait;
-
   info("Waiting until the requests appear in netmonitor");
+  await wait;
 
   // Ensure the attempt to load a JS file shows a blocked CSP error
   verifyRequestItemTarget(
@@ -32,7 +31,7 @@ add_task(async function() {
     "GET",
     EXAMPLE_URL + "js_websocket-worker-test.js",
     {
-      transferred: "CSP Preload",
+      transferred: "CSP",
       cause: { type: "script" },
       type: "",
     }
