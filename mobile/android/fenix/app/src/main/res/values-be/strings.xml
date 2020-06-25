@@ -188,6 +188,8 @@
     <string name="preferences_private_browsing_options">Прыватнае агляданне</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Адкрываць спасылкі ў прыватнай картцы</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Дазволіць здымкі экрана ў прыватным рэжыме</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Даступнасць</string>
     <!-- Preference category for account information -->
@@ -770,6 +772,9 @@
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly пераехаў</string>
+
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Пераключыцца на новы Nightly</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly пераехаў</string>

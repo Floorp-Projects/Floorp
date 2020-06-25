@@ -887,8 +887,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">جب آپ مین مینو سے &quot;چھوڑیں&quot; کو منتخب کرتے ہیں تو براؤزنگ کا ڈیٹا خودبخود حذف ہو جاتا ہے</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">جب آپ مین مینو سے \&quot;چھوڑیں\&quot; کو منتخب کرتے ہیں تو براؤزنگ کا ڈیٹا خودبخود حذف ہو جاتا ہے</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">براؤزنگ سابقات</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">بند کریں</string>
 
@@ -973,6 +971,11 @@
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">رازداری سے براؤز کریں</string>
 
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">ایک نجی ٹیب ایک بار کھولیں: %s آئیکن پر ٹیپ کریں۔</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">ہر بار نجی ٹیب کھولیں: اپنی نجی براؤزنگ کی ترتیبات کو اپ ڈیٹ کریں۔</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">سیٹنگز کھولیں</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -1043,6 +1046,8 @@
     <string name="preference_enhanced_tracking_protection_strict_info_button">سخت سراغ کاری تحفظ کے ذریعہ کیا مسدود ہے</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">مخصوص</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">منتخب کریں کہ کون سے ٹریکرز اور اسکرپٹ کو مسدود کرنا ہے۔</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">مخصوص سراغ کاری تحفظ کے ذریعہ کیا مسدود ہے</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1174,6 +1179,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">Sync کے لئے سائن ان کریں</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">لاگ ان کو محفوظ کیا گیا</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">آپ جو لاگ انز محفوظ کرتے ہیں یا %s سے sync کرتے ہیں وہ یہاں دکھائے جائیں گے۔</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync کے بارے میں مزید معلومات حاصل کریں۔</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
