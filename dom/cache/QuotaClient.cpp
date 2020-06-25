@@ -208,16 +208,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
     const nsACString& aOrigin, const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  UsageInfo res;
-
-  nsresult rv =
-      GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
-                                /* aInitializing*/ true, &res);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  return res;
+  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+                                   /* aInitializing*/ true);
 }
 
 nsresult CacheQuotaClient::InitOriginWithoutTracking(
@@ -236,16 +228,10 @@ nsresult CacheQuotaClient::InitOriginWithoutTracking(
 Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOrigin(
     PersistenceType aPersistenceType, const nsACString& aGroup,
     const nsACString& aOrigin, const AtomicBool& aCanceled) {
-  UsageInfo res;
+  AssertIsOnIOThread();
 
-  nsresult rv =
-      GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
-                                /* aInitializing*/ false, &res);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  return res;
+  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+                                   /* aInitializing*/ false);
 }
 
 void CacheQuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
@@ -374,12 +360,11 @@ CacheQuotaClient::~CacheQuotaClient() {
   sInstance = nullptr;
 }
 
-nsresult CacheQuotaClient::GetUsageForOriginInternal(
+Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
     PersistenceType aPersistenceType, const nsACString& aGroup,
     const nsACString& aOrigin, const AtomicBool& aCanceled,
-    const bool aInitializing, UsageInfo* aUsageInfo) {
+    const bool aInitializing) {
   AssertIsOnIOThread();
-  MOZ_DIAGNOSTIC_ASSERT(aUsageInfo);
 #ifndef NIGHTLY_BUILD
   Unused << aInitializing;
 #endif
@@ -393,14 +378,14 @@ nsresult CacheQuotaClient::GetUsageForOriginInternal(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                  Cache_GetDirForOri);
-    return rv;
+    return Err(rv);
   }
 
   rv = dir->Append(NS_LITERAL_STRING(DOMCACHE_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                  Cache_Append);
-    return rv;
+    return Err(rv);
   }
 
   bool useCachedValue = false;
@@ -420,7 +405,7 @@ nsresult CacheQuotaClient::GetUsageForOriginInternal(
         if (NS_WARN_IF(NS_FAILED(rv))) {
           REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaInternalError,
                                        Cache_GetPaddingSize);
-          return rv;
+          return Err(rv);
         }
       } else {
         // We can't open the database at this point, since it can be already
@@ -433,31 +418,33 @@ nsresult CacheQuotaClient::GetUsageForOriginInternal(
     }
   }
 
+  UsageInfo usageInfo;
+
   if (useCachedValue) {
     uint64_t usage;
     if (qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroup, aOrigin,
                               Client::DOMCACHE, usage)) {
-      aUsageInfo->IncrementDatabaseUsage(Some(usage));
+      usageInfo.IncrementDatabaseUsage(Some(usage));
     }
 
-    return NS_OK;
+    return usageInfo;
   }
 
-  aUsageInfo->IncrementFileUsage(Some(paddingSize));
+  usageInfo.IncrementFileUsage(Some(paddingSize));
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                  Cache_GetDirEntries);
-    return rv;
+    return Err(rv);
   }
 
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
          file && !aCanceled) {
     if (NS_WARN_IF(QuotaManager::IsShuttingDown())) {
-      return NS_ERROR_ABORT;
+      return Err(NS_ERROR_ABORT);
     }
 
     nsAutoString leafName;
@@ -465,7 +452,7 @@ nsresult CacheQuotaClient::GetUsageForOriginInternal(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                    Cache_GetLeafName);
-      return rv;
+      return Err(rv);
     }
 
     bool isDir;
@@ -473,18 +460,18 @@ nsresult CacheQuotaClient::GetUsageForOriginInternal(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                    Cache_IsDirectory);
-      return rv;
+      return Err(rv);
     }
 
     if (isDir) {
       if (leafName.EqualsLiteral("morgue")) {
-        rv = GetBodyUsage(file, aCanceled, aUsageInfo, aInitializing);
+        rv = GetBodyUsage(file, aCanceled, &usageInfo, aInitializing);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           if (rv != NS_ERROR_ABORT) {
             REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                          Cache_GetBodyUsage);
           }
-          return rv;
+          return Err(rv);
         }
       } else {
         NS_WARNING("Unknown Cache directory found!");
@@ -509,11 +496,11 @@ nsresult CacheQuotaClient::GetUsageForOriginInternal(
       if (NS_WARN_IF(NS_FAILED(rv))) {
         REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                      Cache_GetFileSize);
-        return rv;
+        return Err(rv);
       }
       MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
-      aUsageInfo->IncrementDatabaseUsage(Some(fileSize));
+      usageInfo.IncrementDatabaseUsage(Some(fileSize));
       continue;
     }
 
@@ -526,10 +513,10 @@ nsresult CacheQuotaClient::GetUsageForOriginInternal(
     NS_WARNING("Unknown Cache file found!");
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  return NS_OK;
+  return usageInfo;
 }
 
 // static
