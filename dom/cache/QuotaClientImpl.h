@@ -32,11 +32,9 @@ class CacheQuotaClient final : public quota::Client {
                               const AtomicBool& aCanceled,
                               UsageInfo* aUsageInfo) override;
 
-  virtual nsresult GetUsageForOrigin(PersistenceType aPersistenceType,
-                                     const nsACString& aGroup,
-                                     const nsACString& aOrigin,
-                                     const AtomicBool& aCanceled,
-                                     UsageInfo* aUsageInfo) override;
+  virtual Result<UsageInfo, nsresult> GetUsageForOrigin(
+      PersistenceType aPersistenceType, const nsACString& aGroup,
+      const nsACString& aOrigin, const AtomicBool& aCanceled) override;
 
   virtual void OnOriginClearCompleted(PersistenceType aPersistenceType,
                                       const nsACString& aOrigin) override;

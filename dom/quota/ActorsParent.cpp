@@ -47,6 +47,7 @@
 #include "mozilla/net/MozURL.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
@@ -9146,14 +9147,18 @@ Result<UsageInfo, nsresult> QuotaUsageRequestBase::GetUsageForOriginEntries(
     MOZ_ASSERT(client);
 
     if (aInitialized) {
-      rv = client->GetUsageForOrigin(aPersistenceType, aGroup, aOrigin,
-                                     mCanceled, &usageInfo);
+      auto usageInfoOrErr = client->GetUsageForOrigin(aPersistenceType, aGroup,
+                                                      aOrigin, mCanceled);
+      if (NS_WARN_IF(usageInfoOrErr.isErr())) {
+        return usageInfoOrErr.propagateErr();
+      }
+      usageInfo += usageInfoOrErr.inspect();
     } else {
       rv = client->InitOrigin(aPersistenceType, aGroup, aOrigin, mCanceled,
                               &usageInfo);
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {

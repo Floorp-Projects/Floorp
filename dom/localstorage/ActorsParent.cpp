@@ -2824,11 +2824,9 @@ class QuotaClient final : public mozilla::dom::quota::Client {
                       const AtomicBool& aCanceled,
                       UsageInfo* aUsageInfo) override;
 
-  nsresult GetUsageForOrigin(PersistenceType aPersistenceType,
-                             const nsACString& aGroup,
-                             const nsACString& aOrigin,
-                             const AtomicBool& aCanceled,
-                             UsageInfo* aUsageInfo) override;
+  Result<UsageInfo, nsresult> GetUsageForOrigin(
+      PersistenceType aPersistenceType, const nsACString& aGroup,
+      const nsACString& aOrigin, const AtomicBool& aCanceled) override;
 
   nsresult AboutToClearOrigins(
       const Nullable<PersistenceType>& aPersistenceType,
@@ -9062,14 +9060,11 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   return NS_OK;
 }
 
-nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
-                                        const nsACString& aGroup,
-                                        const nsACString& aOrigin,
-                                        const AtomicBool& aCanceled,
-                                        UsageInfo* aUsageInfo) {
+Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
-  MOZ_ASSERT(aUsageInfo);
 
   // We can't open the database at this point, since it can be already used
   // by the connection thread. Use the cached value instead.
@@ -9077,13 +9072,14 @@ nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
+  UsageInfo res;
   uint64_t usage;
   if (quotaManager->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroup, aOrigin,
                                       Client::LS, usage)) {
-    aUsageInfo->IncrementDatabaseUsage(Some(usage));
+    res.IncrementDatabaseUsage(Some(usage));
   }
 
-  return NS_OK;
+  return res;
 }
 
 nsresult QuotaClient::AboutToClearOrigins(
