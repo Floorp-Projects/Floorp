@@ -1877,7 +1877,7 @@ nsresult PresShell::Initialize() {
 
   // Note: when the frame was created above it had the NS_FRAME_IS_DIRTY bit
   // set, but XBL processing could have caused a reflow which clears it.
-  if (MOZ_LIKELY(rootFrame->GetStateBits() & NS_FRAME_IS_DIRTY)) {
+  if (MOZ_LIKELY(rootFrame->HasAnyStateBits(NS_FRAME_IS_DIRTY))) {
     // Unset the DIRTY bits so that FrameNeedsReflow() will work right.
     rootFrame->RemoveStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
     NS_ASSERTION(!mDirtyRoots.Contains(rootFrame),
@@ -2615,7 +2615,7 @@ void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
 
   // Make sure that there is a reflow root ancestor of |aFrame| that's
   // in mDirtyRoots already.
-  while (aFrame && (aFrame->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN)) {
+  while (aFrame && aFrame->HasAnyStateBits(NS_FRAME_HAS_DIRTY_CHILDREN)) {
     if ((aFrame->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |
                                  NS_FRAME_DYNAMIC_REFLOW_ROOT) ||
          !aFrame->GetParent()) &&
@@ -2818,7 +2818,7 @@ void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
       f = f->GetParent();
       wasDirty = NS_SUBTREE_DIRTY(f);
       f->ChildIsDirty(child);
-      NS_ASSERTION(f->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN,
+      NS_ASSERTION(f->HasAnyStateBits(NS_FRAME_HAS_DIRTY_CHILDREN),
                    "ChildIsDirty didn't do its job");
       if (wasDirty) {
         // This frame was already marked dirty.
@@ -2840,7 +2840,7 @@ void PresShell::FrameNeedsToContinueReflow(nsIFrame* aFrame) {
       aFrame == mCurrentReflowRoot ||
           nsLayoutUtils::IsProperAncestorFrame(mCurrentReflowRoot, aFrame),
       "Frame passed in is not the descendant of mCurrentReflowRoot");
-  NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IN_REFLOW,
+  NS_ASSERTION(aFrame->HasAnyStateBits(NS_FRAME_IN_REFLOW),
                "Frame passed in not in reflow?");
 
   mFramesToDirty.PutEntry(aFrame);
@@ -3550,7 +3550,7 @@ void PresShell::DoScrollContentIntoView() {
     return;
   }
 
-  if (frame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+  if (frame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // The reflow flush before this scroll got interrupted, and this frame's
     // coords and size are all zero, and it has no content showing anyway.
     // Don't bother scrolling to it.  We'll try again when we finish up layout.
@@ -6292,7 +6292,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
     }
 
     if (!(aFlags & PaintFlags::PaintSyncDecodeImages) &&
-        !(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE) &&
+        !frame->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE) &&
         !mNextPaintCompressed) {
       NotifySubDocInvalidationFunc computeInvalidFunc =
           presContext->MayHavePaintEventListenerInSubDocument()
