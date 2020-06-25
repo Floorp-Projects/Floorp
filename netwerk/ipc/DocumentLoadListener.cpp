@@ -1555,6 +1555,31 @@ void DocumentLoadListener::MaybeReportBlockedByURLClassifier(nsresult aStatus) {
   }
 }
 
+bool DocumentLoadListener::DocShellWillDisplayContent(nsresult aStatus) {
+  if (NS_SUCCEEDED(aStatus)) {
+    return true;
+  }
+
+  // nsDocShell attempts urifixup on some failure types,
+  // but also of those also display an error page if we don't
+  // succeed with fixup, so we don't need to check for it
+  // here.
+
+  bool isInitialDocument = true;
+  if (WindowGlobalParent* currentWindow =
+          GetBrowsingContext()->GetCurrentWindowGlobal()) {
+    isInitialDocument = currentWindow->IsInitialDocument();
+  }
+
+  nsresult rv = nsDocShell::FilterStatusForErrorPage(
+      aStatus, mChannel, mLoadStateLoadType, GetBrowsingContext()->IsTop(),
+      GetBrowsingContext()->GetUseErrorPages(), isInitialDocument, nullptr);
+
+  // If filtering returned a failure code, then an error page will
+  // be display for that code, so return true;
+  return NS_FAILED(rv);
+}
+
 NS_IMETHODIMP
 DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   LOG(("DocumentLoadListener OnStartRequest [this=%p]", this));
@@ -1606,8 +1631,11 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   // Determine if a new process needs to be spawned. If it does, this will
   // trigger a cross process switch, and we should hold off on redirecting to
   // the real channel.
+  // If the channel has failed, and the docshell isn't going to display an
+  // error page for that failure, then don't allow process switching, since
+  // we just want to keep our existing document.
   bool willBeRemote = false;
-  if (status == NS_BINDING_ABORTED ||
+  if (!DocShellWillDisplayContent(status) ||
       !MaybeTriggerProcessSwitch(&willBeRemote)) {
     TriggerRedirectToRealChannel();
 
