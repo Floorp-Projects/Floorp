@@ -231,12 +231,19 @@ class ExperimentsDebugActivityTest {
         val experimentsList = listOf(experiment1, experiment2)
 
         // Since initialization is performed off of the calling thread, we must be careful to
-        // await it in tests to prevent async issues.
-        Experiments.initialize(context, configuration)
+        // await it in tests to prevent async issues.  Also, we are passing a canary value here
+        // to ensure that the override triggers the callback.
+        var canary: Boolean
+        Experiments.initialize(context, configuration) {
+            canary = true
+        }
         runBlocking {
             Experiments.testInitJob?.join()
         }
         Experiments.onExperimentsUpdated(ExperimentsSnapshot(experimentsList, null))
+
+        // Reset the canary since initializing will have triggered the callback.
+        canary = false
 
         // Set the extra values and start the intent.
         val intent = Intent(context, ExperimentsDebugActivity::class.java)
@@ -244,6 +251,8 @@ class ExperimentsDebugActivityTest {
         intent.putExtra(ExperimentsDebugActivity.OVERRIDE_BRANCH_EXTRA_KEY, "test-branch")
         var activity = Robolectric.buildActivity(ExperimentsDebugActivity::class.java, intent)
         activity.create().start().resume()
+
+        assertTrue("Callback must be executed if override is used", canary)
 
         // Verify that the experiment exists and is active
         var ex1 = Experiments.getExperiment("test-id1")
