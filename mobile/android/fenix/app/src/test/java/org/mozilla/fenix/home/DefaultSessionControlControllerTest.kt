@@ -49,7 +49,7 @@ class DefaultSessionControlControllerTest {
     private val openPrivacyNotice: () -> Unit = mockk(relaxed = true)
     private val registerCollectionStorageObserver: () -> Unit = mockk(relaxed = true)
     private val showTabTray: () -> Unit = mockk(relaxed = true)
-    private val showDeleteCollectionPrompt: (tabCollection: TabCollection) -> Unit =
+    private val showDeleteCollectionPrompt: (tabCollection: TabCollection, title: String?, message: String) -> Unit =
         mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val state: HomeFragmentState = mockk(relaxed = true)
@@ -137,7 +137,7 @@ class DefaultSessionControlControllerTest {
     fun handleDeleteCollectionTapped() {
         val collection: TabCollection = mockk(relaxed = true)
         controller.handleDeleteCollectionTapped(collection)
-        verify { showDeleteCollectionPrompt(collection) }
+        verify { showDeleteCollectionPrompt(collection, null, any()) }
     }
 
     @Test
