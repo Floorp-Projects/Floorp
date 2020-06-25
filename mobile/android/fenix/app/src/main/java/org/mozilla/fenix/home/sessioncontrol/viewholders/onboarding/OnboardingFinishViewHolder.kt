@@ -8,6 +8,8 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_finish.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
 class OnboardingFinishViewHolder(
@@ -18,6 +20,7 @@ class OnboardingFinishViewHolder(
     init {
         view.finish_button.setOnClickListener {
             interactor.onStartBrowsingClicked()
+            it.context.components.analytics.metrics.track(Event.OnboardingFinish)
         }
     }
 

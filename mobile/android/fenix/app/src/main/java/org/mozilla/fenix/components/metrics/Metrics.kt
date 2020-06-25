@@ -172,8 +172,34 @@ sealed class Event {
     object SearchWidgetCFRCanceled : Event()
     object SearchWidgetCFRNotNowPressed : Event()
     object SearchWidgetCFRAddWidgetPressed : Event()
+    object OnboardingAutoSignIn : Event()
+    object OnboardingManualSignIn : Event()
+    object OnboardingPrivacyNotice : Event()
+    object OnboardingPrivateBrowsing : Event()
+    object OnboardingWhatsNew : Event()
+    object OnboardingFinish : Event()
 
     // Interaction events with extras
+    data class OnboardingToolbarPosition(val position: Position) : Event() {
+        enum class Position { TOP, BOTTOM }
+
+        override val extras: Map<ToolbarSettings.changedPositionKeys, String>?
+            get() = hashMapOf(ToolbarSettings.changedPositionKeys.position to position.name)
+    }
+
+    data class OnboardingTrackingProtection(val setting: Setting) : Event() {
+        enum class Setting { STRICT, STANDARD }
+
+        override val extras: Map<TrackingProtection.etpSettingChangedKeys, String>?
+            get() = hashMapOf(TrackingProtection.etpSettingChangedKeys.etpSetting to setting.name)
+    }
+
+    data class OnboardingThemePicker(val theme: Theme) : Event() {
+        enum class Theme { LIGHT, DARK, FOLLOW_DEVICE }
+
+        override val extras: Map<AppTheme.darkThemeSelectedKeys, String>?
+            get() = mapOf(AppTheme.darkThemeSelectedKeys.source to theme.name)
+    }
 
     data class PreferenceToggled(
         val preferenceKey: String,
@@ -371,7 +397,7 @@ sealed class Event {
     }
 
     data class DarkThemeSelected(val source: Source) : Event() {
-        enum class Source { SETTINGS, ONBOARDING }
+        enum class Source { SETTINGS }
 
         override val extras: Map<AppTheme.darkThemeSelectedKeys, String>?
             get() = mapOf(AppTheme.darkThemeSelectedKeys.source to source.name)

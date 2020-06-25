@@ -8,6 +8,8 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_privacy_notice.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
 class OnboardingPrivacyNoticeViewHolder(
@@ -22,6 +24,7 @@ class OnboardingPrivacyNoticeViewHolder(
         view.description_text.text = view.context.getString(R.string.onboarding_privacy_notice_description, appName)
 
         view.read_button.setOnClickListener {
+            it.context.components.analytics.metrics.track(Event.OnboardingPrivacyNotice)
             interactor.onReadPrivacyNoticeClicked()
         }
     }

@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_manual_signin.view.*
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
 
 class OnboardingManualSignInViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -20,6 +22,8 @@ class OnboardingManualSignInViewHolder(view: View) : RecyclerView.ViewHolder(vie
 
     init {
         view.turn_on_sync_button.setOnClickListener {
+            it.context.components.analytics.metrics.track(Event.OnboardingManualSignIn)
+
             val directions = HomeFragmentDirections.actionGlobalTurnOnSync()
             Navigation.findNavController(view).navigate(directions)
         }

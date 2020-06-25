@@ -11,7 +11,10 @@ import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.to
 import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_top_image
 import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_top_radio_button
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.Event.OnboardingToolbarPosition.Position
 import org.mozilla.fenix.ext.asActivity
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
 
@@ -36,18 +39,28 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         radio.updateRadioValue(true)
 
         radioBottomToolbar.onClickListener {
+            itemView.context.components.analytics.metrics
+                .track(Event.OnboardingToolbarPosition(Position.BOTTOM))
+
             itemView.context.asActivity()?.recreate()
         }
 
         view.toolbar_bottom_image.setOnClickListener {
+            itemView.context.components.analytics.metrics
+                .track(Event.OnboardingToolbarPosition(Position.BOTTOM))
+
             radioBottomToolbar.performClick()
         }
 
         radioTopToolbar.onClickListener {
+            itemView.context.components.analytics.metrics
+                .track(Event.OnboardingToolbarPosition(Position.TOP))
             itemView.context.asActivity()?.recreate()
         }
 
         view.toolbar_top_image.setOnClickListener {
+            itemView.context.components.analytics.metrics
+                .track(Event.OnboardingToolbarPosition(Position.TOP))
             radioTopToolbar.performClick()
         }
     }

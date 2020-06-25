@@ -16,6 +16,8 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_private_browsing.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.setBounds
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
@@ -47,6 +49,7 @@ class OnboardingPrivateBrowsingViewHolder(
         view.description_text_once.text = text
         view.description_text_once.contentDescription = String.format(text.toString(), view.header_text.text)
         view.open_settings_button.setOnClickListener {
+            it.context.components.analytics.metrics.track(Event.OnboardingPrivateBrowsing)
             interactor.onOpenSettingsClicked()
         }
     }

@@ -205,6 +205,131 @@ events:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
 
+onboarding:
+  fxa_auto_signin:
+    type: event
+    description:
+      The onboarding automatic sign in card was tapped.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10824
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11867
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2020-09-01"
+  fxa_manual_signin:
+    type: event
+    description:
+      The onboarding manual sign in card was tapped.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10824
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11867
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2020-09-01"
+  privacy_notice:
+    type: event
+    description:
+      The onboarding privacy notice card was tapped.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10824
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11867
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2020-09-01"
+  pref_toggled_private_browsing:
+    type: event
+    description:
+      The private browsing preference was selected from the onboarding card.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10824
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11867
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2020-09-01"
+  pref_toggled_toolbar_position:
+    type: event
+    description:
+      The toolbar position preference was chosen from the onboarding card.
+    extra_keys:
+      position:
+        description: |
+          A string that indicates the position of the toolbar TOP or BOTTOM.
+          Default: BOTTOM
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10824
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11867
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2020-09-01"
+  pref_toggled_tracking_prot:
+    type: event
+    description:
+      The tracking protection preference was chosen from the onboarding card.
+    extra_keys:
+      position:
+        description: |
+          A string that indicates the Tracking Protection policy STANDARD
+          or STRICT. Default: Toggle ON, STANDARD
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10824
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11867
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2020-09-01"
+  whats_new:
+    type: event
+    description:
+      The onboarding What\'s New card was tapped.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10824
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11867
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2020-09-01"
+  pref_toggled_theme_picker:
+    type: event
+    description:
+      The device theme was chosen using the theme picker onboarding card.
+    extra_keys:
+      theme:
+        description: |
+          A string that indicates the theme LIGHT, DARK, or FOLLOW DEVICE.
+          Default: FOLLOW DEVICE
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10824
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11867
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2020-09-01"
+  finish:
+    type: event
+    description:
+      The user taps starts browsing and ends the onboarding experience.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10824
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11867
+    notification_emails:
+      - fenix-core@mozilla.com
+      - erichards@mozilla.com
+    expires: "2020-09-01"
+
 search_shortcuts:
   selected:
     type: event

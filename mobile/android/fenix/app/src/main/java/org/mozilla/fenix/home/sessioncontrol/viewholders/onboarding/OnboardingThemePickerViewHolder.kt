@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_light_i
 import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_light_radio_button
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.Event.OnboardingThemePicker.Theme
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
@@ -46,10 +47,12 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         radioFollowDeviceTheme.addToRadioGroup(radioLightTheme)
 
         view.theme_dark_image.setOnClickListener {
+            it.context.components.analytics.metrics.track(Event.OnboardingThemePicker(Theme.DARK))
             radioDarkTheme.performClick()
         }
 
         view.theme_light_image.setOnClickListener {
+            it.context.components.analytics.metrics.track(Event.OnboardingThemePicker(Theme.LIGHT))
             radioLightTheme.performClick()
         }
 
@@ -58,23 +61,26 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         view.clickable_region_automatic.contentDescription = "$automaticTitle $automaticSummary"
 
         view.clickable_region_automatic.setOnClickListener {
+            it.context.components.analytics.metrics
+                .track(Event.OnboardingThemePicker(Theme.FOLLOW_DEVICE))
             radioFollowDeviceTheme.performClick()
         }
 
         radioLightTheme.onClickListener {
+            view.context.components.analytics.metrics
+                .track(Event.OnboardingThemePicker(Theme.LIGHT))
             setNewTheme(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
         radioDarkTheme.onClickListener {
-            view.context.components.analytics.metrics.track(
-                Event.DarkThemeSelected(
-                    Event.DarkThemeSelected.Source.ONBOARDING
-                )
-            )
+            view.context.components.analytics.metrics
+                .track(Event.OnboardingThemePicker(Theme.DARK))
             setNewTheme(AppCompatDelegate.MODE_NIGHT_YES)
         }
 
         radioFollowDeviceTheme.onClickListener {
+            view.context.components.analytics.metrics
+                .track(Event.OnboardingThemePicker(Theme.FOLLOW_DEVICE))
             if (SDK_INT >= Build.VERSION_CODES.P) {
                 setNewTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             } else {

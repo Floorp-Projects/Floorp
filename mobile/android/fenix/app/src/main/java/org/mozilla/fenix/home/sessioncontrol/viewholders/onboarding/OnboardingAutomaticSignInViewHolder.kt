@@ -17,6 +17,7 @@ import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 
 class OnboardingAutomaticSignInViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -26,6 +27,8 @@ class OnboardingAutomaticSignInViewHolder(view: View) : RecyclerView.ViewHolder(
 
     init {
         view.turn_on_sync_button.setOnClickListener {
+            it.context.components.analytics.metrics.track(Event.OnboardingAutoSignIn)
+
             it.turn_on_sync_button.text = it.context.getString(
                 R.string.onboarding_firefox_account_signing_in
             )

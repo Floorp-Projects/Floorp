@@ -9,6 +9,8 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.Event.OnboardingTrackingProtection.Setting
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
@@ -56,11 +58,15 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
         standardTrackingProtection.onClickListener {
             updateTrackingProtectionPolicy()
+            view.context.components.analytics.metrics
+                .track(Event.OnboardingTrackingProtection(Setting.STANDARD))
         }
 
         view.clickable_region_standard.apply {
             setOnClickListener {
                 standardTrackingProtection.performClick()
+                view.context.components.analytics.metrics
+                    .track(Event.OnboardingTrackingProtection(Setting.STANDARD))
             }
             val standardTitle = view.context.getString(
                 R.string.onboarding_tracking_protection_standard_button_2
@@ -73,11 +79,15 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
         strictTrackingProtection.onClickListener {
             updateTrackingProtectionPolicy()
+            view.context.components.analytics.metrics
+                .track(Event.OnboardingTrackingProtection(Setting.STRICT))
         }
 
         view.clickable_region_strict.apply {
             setOnClickListener {
                 strictTrackingProtection.performClick()
+                view.context.components.analytics.metrics
+                    .track(Event.OnboardingTrackingProtection(Setting.STRICT))
             }
             val strictTitle =
                 view.context.getString(R.string.onboarding_tracking_protection_strict_option)
