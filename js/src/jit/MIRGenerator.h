@@ -38,7 +38,7 @@ class MIRGenerator final {
                const CompileInfo* outerInfo,
                const OptimizationInfo* optimizationInfo);
 
-  void initMinWasmHeapLength(uint64_t init) { minWasmHeapLength_ = init; }
+  void initMinWasmHeapLength(uint32_t init) { minWasmHeapLength_ = init; }
 
   TempAllocator& alloc() { return *alloc_; }
   MIRGraph& graph() { return *graph_; }
@@ -115,7 +115,7 @@ class MIRGenerator final {
     MOZ_ASSERT(wasmMaxStackArgBytes_ == 0);
     wasmMaxStackArgBytes_ = n;
   }
-  uint64_t minWasmHeapLength() const { return minWasmHeapLength_; }
+  uint32_t minWasmHeapLength() const { return minWasmHeapLength_; }
 
   void setNeedsOverrecursedCheck() { needsOverrecursedCheck_ = true; }
   bool needsOverrecursedCheck() const { return needsOverrecursedCheck_; }
@@ -147,7 +147,7 @@ class MIRGenerator final {
   bool stringsCanBeInNursery_;
   bool bigIntsCanBeInNursery_;
 
-  uint64_t minWasmHeapLength_;
+  uint32_t minWasmHeapLength_;
 
 #if defined(JS_ION_PERF)
   WasmPerfSpewer wasmPerfSpewer_;
