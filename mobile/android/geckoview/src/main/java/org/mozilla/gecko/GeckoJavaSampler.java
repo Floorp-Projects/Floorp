@@ -8,11 +8,17 @@ package org.mozilla.gecko;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.LinkedBlockingQueue;
 
+import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 // Bug 1618560: Currently we only profile the Java Main Thread. Ideally we should
@@ -22,11 +28,39 @@ public class GeckoJavaSampler {
     private static SamplingRunnable sSamplingRunnable;
     private static ScheduledExecutorService sSamplingScheduler;
     private static ScheduledFuture<?> sSamplingFuture;
+    private static final MarkerStorage sMarkerStorage = new MarkerStorage();
+
+    /**
+     * Returns true if profiler is running and unpaused at the moment which means
+     * it's allowed to add a marker.
+     */
+    public static boolean isProfilerActive() {
+        // sSamplingRunnable is present if profiler is running and sSamplingFuture
+        // present if profiler is not paused.
+        return sSamplingRunnable != null && sSamplingFuture != null;
+    }
 
     // Use the same timer primitive as the profiler
     // to get a perfect sample syncing.
     @WrapForJNI
     private static native double getProfilerTime();
+
+    /**
+     * Try to get the profiler time. Returns null if profiler is not running.
+     */
+    public static @Nullable Double tryToGetProfilerTime() {
+        if (!isProfilerActive()) {
+            // Android profiler hasn't started yet.
+            return null;
+        }
+        if (!GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
+            // getProfilerTime is not available yet; either libs are not loaded,
+            // or profiling hasn't started on the Gecko side yet
+            return null;
+        }
+
+        return getProfilerTime();
+    }
 
     private static class Sample {
         public Frame[] mFrames;
@@ -55,6 +89,144 @@ public class GeckoJavaSampler {
         public String className;
     }
 
+    private static class Marker extends JNIObject {
+        /**
+         * Name of the marker
+         */
+        private String mMarkerName;
+        /**
+         * Either start time for the duration markers or time for a point-in-time markers.
+         */
+        private double mTime;
+        /**
+         * A fallback field of {@link #mTime} but it only exists when {@link #getProfilerTime()} is failed.
+         * It is non-zero if Android time is used.
+         */
+        private long mJavaTime;
+        /**
+         * End time for the duration markers.
+         * It's zero for point-in-time markers.
+         */
+        private double mEndTime;
+        /**
+         * A fallback field of {@link #mEndTime} but it only exists when {@link #getProfilerTime()} is failed.
+         * It is non-zero if Android time is used.
+         */
+        private long mEndJavaTime;
+        /**
+         * A nullable additional information field for the marker.
+         */
+        private @Nullable String mText;
+
+        /**
+         * Constructor for the Marker class. It initializes different kinds of markers depending on
+         * the parameters.
+         * Here are some combinations to create different kinds of markers:
+         *
+         * If you want to create a marker that points a single point in time:
+         * <code>new Marker("name", null, null, null)</code> to implicitly get the time when this
+         * marker is added, or <code>new Marker("name", null, endTime, null)</code> to use an explicit
+         * time as an end time retrieved from {@link #tryToGetProfilerTime()}.
+         *
+         * If you want to create a marker that has a start and end time:
+         * <code>new Marker("name", startTime, null, null)</code> to implicitly get the end time
+         * when this marker is added, or <code>new Marker("name", startTime, endTime, null)</code>
+         * to explicitly give the marker start and end time retrieved from {@link #tryToGetProfilerTime()}.
+         *
+         * Last parameter is optional and can be given with any combination. This gives users the
+         * ability to add more context into a marker.
+         *
+         * @param aMarkerName Identifier of the marker as a string.
+         * @param aStartTime Start time as Double. It can be null if you want to mark a point of time.
+         * @param aEndTime End time as Double. If it's null, this function implicitly gets the end time.
+         * @param aText An optional string field for more information about the marker.
+         */
+        public Marker(@NonNull final String aMarkerName,
+                      @Nullable final Double aStartTime,
+                      @Nullable final Double aEndTime,
+                      @Nullable final String aText) {
+            mMarkerName = aMarkerName;
+            mText = aText;
+            if (aStartTime != null) {
+                // Start time is provided. This is an interval marker.
+                mTime = aStartTime;
+                if (aEndTime != null) {
+                    // End time is also provided.
+                    mEndTime = aEndTime;
+                } else {
+                    // End time is not provided. Get the profiler time now and use it.
+                    if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
+                        mEndTime = getProfilerTime();
+                    }
+                    if (mEndTime == 0.0d) {
+                        // getProfilerTime is not available yet; either libs are not loaded,
+                        // or profiling hasn't started on the Gecko side yet
+                        mEndJavaTime = SystemClock.elapsedRealtime();
+                    }
+                }
+            } else {
+                // Start time is not provided. This is point-in-time marker.
+                if (aEndTime != null) {
+                    // End time is also provided. Use that to point the time.
+                    mTime = aEndTime;
+                } else {
+                    if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
+                        mTime = getProfilerTime();
+                    }
+                    if (mTime == 0.0d) {
+                        // getProfilerTime is not available yet; either libs are not loaded,
+                        // or profiling hasn't started on the Gecko side yet
+                        mJavaTime = SystemClock.elapsedRealtime();
+                    }
+                }
+            }
+        }
+
+        @WrapForJNI @Override // JNIObject
+        protected native void disposeNative();
+
+        @WrapForJNI
+        public double getStartTime() {
+            if (mJavaTime != 0) {
+                return (mJavaTime -
+                    SystemClock.elapsedRealtime()) + getProfilerTime();
+            }
+            return mTime;
+        }
+
+        @WrapForJNI
+        public double getEndTime() {
+            if (mEndJavaTime != 0) {
+                return (mEndJavaTime -
+                    SystemClock.elapsedRealtime()) + getProfilerTime();
+            }
+            return mEndTime;
+        }
+
+        @WrapForJNI
+        public @NonNull String getMarkerName() {
+            return mMarkerName;
+        }
+
+        @WrapForJNI
+        public @Nullable String getMarkerText() {
+            return mText;
+        }
+    }
+
+    /**
+     * Public method to add a new marker to Gecko profiler.
+     * This can be used to add a marker *inside* the geckoview code, but ideally
+     * ProfilerController methods should be used instead.
+     * @see Marker#Marker(String, Double, Double, String) for information about the parameter options.
+     */
+    public static void addMarker(@NonNull final String aMarkerName,
+                                 @Nullable final Double aStartTime,
+                                 @Nullable final Double aEndTime,
+                                 @Nullable final String aText) {
+        sMarkerStorage.addMarker(aMarkerName, aStartTime, aEndTime, aText);
+    }
+
     private static class SamplingRunnable implements Runnable {
         // Sampling interval that is used by start and unpause
         public final int mInterval;
@@ -69,9 +241,7 @@ public class GeckoJavaSampler {
         public SamplingRunnable(final int aInterval, final int aSampleCount) {
             // Sanity check of sampling interval.
             mInterval = Math.max(1, aInterval);
-            // Setting a limit of 120000 (2 mins with 1ms interval) for now to
-            // make sure we are not allocating too much.
-            mSampleCount = Math.min(aSampleCount, 120000);
+            mSampleCount = aSampleCount;
             mSamples = new Sample[mSampleCount];
             mSamplePos = 0;
 
@@ -125,6 +295,11 @@ public class GeckoJavaSampler {
     }
 
     @WrapForJNI
+    public static Marker pollNextMarker() {
+        return sMarkerStorage.pollNextMarker();
+    }
+
+    @WrapForJNI
     public synchronized static double getSampleTime(final int aSampleId) {
         Sample sample = getSample(aSampleId);
         if (sample != null) {
@@ -150,8 +325,69 @@ public class GeckoJavaSampler {
         return null;
     }
 
+
+    private static class MarkerStorage {
+        private volatile Queue<Marker> mMarkers;
+
+        MarkerStorage() {}
+
+        public synchronized void start(final int aMarkerCount) {
+            if (this.mMarkers != null) {
+                return;
+            }
+            this.mMarkers = new LinkedBlockingQueue<>(aMarkerCount);
+        }
+
+        public synchronized void stop() {
+            if (this.mMarkers == null) {
+                return;
+            }
+            this.mMarkers = null;
+        }
+
+        private void addMarker(@NonNull final String aMarkerName,
+                               @Nullable final Double aStartTime,
+                               @Nullable final Double aEndTime,
+                               @Nullable final String aText) {
+            Queue<Marker> markersQueue = this.mMarkers;
+            if (markersQueue == null) {
+                // Profiler is not active.
+                return;
+            }
+
+            // It would be good to use `Looper.getMainLooper().isCurrentThread()`
+            // instead but it requires API level 23 and current min is 16.
+            if (Looper.myLooper() != Looper.getMainLooper()) {
+                // Bug 1618560: Currently only main thread is being profiled and
+                // this marker doesn't belong to the main thread.
+                throw new AssertionError("Currently only main thread is supported for markers.");
+            }
+
+            Marker newMarker = new Marker(aMarkerName, aStartTime, aEndTime, aText);
+
+            boolean successful = markersQueue.offer(newMarker);
+            while (!successful) {
+                // Marker storage is full, remove the head and add again.
+                markersQueue.poll();
+                successful = markersQueue.offer(newMarker);
+            }
+        }
+
+        private Marker pollNextMarker() {
+            Queue<Marker> markersQueue = this.mMarkers;
+            if (markersQueue == null) {
+                // Profiler is not active.
+                return null;
+            }
+            // Retrieve and return the head of this queue.
+            // Returns null if the queue is empty.
+            return markersQueue.poll();
+        }
+    }
+
+
     @WrapForJNI
-    public static void start(final int aInterval, final int aSamples) {
+    public static void start(final int aInterval, final int aEntryCount) {
         synchronized (GeckoJavaSampler.class) {
             if (sSamplingRunnable != null) {
                 return;
@@ -161,7 +397,11 @@ public class GeckoJavaSampler {
                 return;
             }
 
-            sSamplingRunnable = new SamplingRunnable(aInterval, aSamples);
+            // Setting a limit of 120000 (2 mins with 1ms interval) for samples and markers for now
+            // to make sure we are not allocating too much.
+            int limitedEntryCount = Math.min(aEntryCount, 120000);
+            sSamplingRunnable = new SamplingRunnable(aInterval, limitedEntryCount);
+            sMarkerStorage.start(limitedEntryCount);
             sSamplingScheduler = Executors.newSingleThreadScheduledExecutor();
             sSamplingFuture = sSamplingScheduler.scheduleAtFixedRate(sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS);
         }
@@ -203,6 +443,7 @@ public class GeckoJavaSampler {
             sSamplingScheduler = null;
             sSamplingRunnable = null;
             sSamplingFuture = null;
+            sMarkerStorage.stop();
         }
     }
 }
