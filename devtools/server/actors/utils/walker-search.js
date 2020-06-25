@@ -210,8 +210,7 @@ WalkerSearch.prototype = {
   },
 
   _searchXPath: function(query, options, results) {
-    const isXPath = query && query.startsWith("/");
-    if (!options.types.includes("xpath") || !isXPath) {
+    if (!options.types.includes("xpath")) {
       return;
     }
 
