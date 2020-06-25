@@ -840,6 +840,11 @@ enum class NameType { Module = 0, Function = 1, Local = 2 };
 
 enum class FieldFlags { Mutable = 0x01, AllowedMask = 0x01 };
 
+// The WebAssembly spec hard-codes the virtual page size to be 64KiB and
+// requires the size of linear memory to always be a multiple of 64KiB.
+
+static const unsigned PageSize = 64 * 1024;
+
 // These limits are agreed upon with other engines for consistency.
 
 static const unsigned MaxTypes = 1000000;
@@ -861,7 +866,7 @@ static const unsigned MaxParams = 1000;
 static const unsigned MaxResults = 1000;
 static const unsigned MaxStructFields = 1000;
 static const unsigned MaxMemoryLimitField = 65536;
-static const unsigned MaxMemoryPages = 16384;
+static const unsigned MaxMemoryPages = INT32_MAX / PageSize;
 static const unsigned MaxStringBytes = 100000;
 static const unsigned MaxModuleBytes = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes = 7654321;
