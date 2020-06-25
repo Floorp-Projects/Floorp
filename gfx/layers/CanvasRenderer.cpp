@@ -110,13 +110,13 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
   if (kIsMacOS) {
     return TextureType::MacIOSurface;
   }
+  if (kIsWayland) {
+    if (gfxPlatform::GetPlatform()->IsWaylandDisplay()) {
+      return TextureType::WaylandDMABUF;
+    }
+  }
   if (kIsX11) {
     return TextureType::X11;
-  }
-  if (kIsWayland) {
-    if (gfxPlatform::GetPlatform()->UseWaylandDMABufWebGL()) {
-      return TextureType::DMABUF;
-    }
   }
   if (kIsAndroid) {
     if (StaticPrefs::webgl_enable_surface_texture()) {

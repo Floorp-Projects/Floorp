@@ -94,7 +94,7 @@ class gfxPlatformGtk final : public gfxPlatform {
 #endif
 
   bool IsX11Display() { return mIsX11Display; }
-  bool IsWaylandDisplay() {
+  bool IsWaylandDisplay() override {
     return !mIsX11Display && !gfxPlatform::IsHeadless();
   }
 
