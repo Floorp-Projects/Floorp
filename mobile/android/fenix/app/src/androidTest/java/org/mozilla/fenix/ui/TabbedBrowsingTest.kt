@@ -204,7 +204,6 @@ class TabbedBrowsingTest {
         }
     }
 
-    @Ignore("Temp disabled, intermittent test: https://github.com/mozilla-mobile/fenix/issues/9783")
     @Test
     fun closePrivateTabsNotificationTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -222,7 +221,7 @@ class TabbedBrowsingTest {
         }.clickClosePrivateTabsNotification {
             // Tap an empty spot on the app homescreen to make sure it's into focus
             sendSingleTapToScreen(20, 20)
-            verifyPrivateSessionMessage()
+            verifyHomeScreen()
         }
     }
 }
