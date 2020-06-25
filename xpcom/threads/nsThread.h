@@ -46,8 +46,7 @@ class nsThreadEnumerator;
 #define LONGTASK_BUSY_WINDOW_MS 50
 
 static inline bool UseTaskController() {
-  static const bool kUseTaskController =
-      !PR_GetEnv("MOZ_DISABLE_TASKCONTROLLER");
+  static const bool kUseTaskController = !!PR_GetEnv("MOZ_USE_TASKCONTROLLER");
   return kUseTaskController;
 }
 
