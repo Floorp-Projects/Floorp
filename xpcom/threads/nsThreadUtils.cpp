@@ -6,6 +6,7 @@
 
 #include "nsThreadUtils.h"
 
+#include "chrome/common/ipc_message.h"  // for IPC::Message
 #include "LeakRefPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
@@ -620,6 +621,14 @@ void LogTaskBase<T>::LogDispatch(T* aEvent) {
   LOG1(("DISP %p", aEvent));
 }
 
+template <>
+void LogTaskBase<IPC::Message>::LogDispatchWithPid(IPC::Message* aEvent,
+                                                   int32_t aPid) {
+  if (aEvent->seqno() && aPid > 0) {
+    LOG1(("SEND %p %d %d", aEvent, aEvent->seqno(), aPid));
+  }
+}
+
 template <typename T>
 LogTaskBase<T>::Run::Run(T* aEvent, bool aWillRunAgain)
     : mEvent(aEvent), mWillRunAgain(aWillRunAgain) {
@@ -644,6 +653,12 @@ LogTaskBase<nsIRunnable>::Run::Run(nsIRunnable* aEvent, bool aWillRunAgain)
   LOG1(("EXEC %p [%s]", aEvent, name.BeginReading()));
 }
 
+template <>
+LogTaskBase<IPC::Message>::Run::Run(IPC::Message* aMessage, bool aWillRunAgain)
+    : mEvent(aMessage), mWillRunAgain(aWillRunAgain) {
+  LOG1(("RECV %p %d [%s]", aMessage, aMessage->seqno(), aMessage->name()));
+}
+
 template <typename T>
 LogTaskBase<T>::Run::~Run() {
   LOG1((mWillRunAgain ? "INTERRUPTED %p" : "DONE %p", mEvent));
@@ -651,6 +666,7 @@ LogTaskBase<T>::Run::~Run() {
 
 template class LogTaskBase<nsIRunnable>;
 template class LogTaskBase<MicroTaskRunnable>;
+template class LogTaskBase<IPC::Message>;
 
 MOZ_THREAD_LOCAL(nsISerialEventTarget*)
 SerialEventTargetGuard::sCurrentThreadTLS;

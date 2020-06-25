@@ -566,7 +566,8 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
       if (m.routing_id() == MSG_ROUTING_NONE &&
           m.type() == HELLO_MESSAGE_TYPE) {
         // The Hello message contains only the process id.
-        listener_->OnChannelConnected(MessageIterator(m).NextInt());
+        other_pid_ = MessageIterator(m).NextInt();
+        listener_->OnChannelConnected(other_pid_);
 #if defined(OS_MACOSX)
       } else if (m.routing_id() == MSG_ROUTING_NONE &&
                  m.type() == RECEIVED_FDS_MESSAGE_TYPE) {
@@ -574,6 +575,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         CloseDescriptors(m.fd_cookie());
 #endif
       } else {
+        mozilla::LogIPCMessage::Run run(&m);
         listener_->OnMessageReceived(std::move(m));
       }
 
@@ -856,6 +858,8 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id) {
 #endif
 
 void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
+  mozilla::LogIPCMessage::LogDispatchWithPid(msg.get(), other_pid_);
+
   MOZ_DIAGNOSTIC_ASSERT(!closed_);
   msg->AssertAsLargeAsHeader();
   output_queue_.push(std::move(msg));
