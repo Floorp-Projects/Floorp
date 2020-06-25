@@ -4,30 +4,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGUseFrame.h"
+#include "SVGUseFrame.h"
 
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/MutationEvent.h"
 #include "mozilla/dom/SVGUseElement.h"
-#include "SVGObserverUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 // Implementation
 
 nsIFrame* NS_NewSVGUseFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGUseFrame(aStyle, aPresShell->GetPresContext());
+  return new (aPresShell) SVGUseFrame(aStyle, aPresShell->GetPresContext());
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGUseFrame)
+NS_IMPL_FRAMEARENA_HELPERS(SVGUseFrame)
+
+namespace mozilla {
 
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
-void nsSVGUseFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                         nsIFrame* aPrevInFlow) {
+void SVGUseFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                       nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::use),
                "Content is not an SVG use!");
 
@@ -37,8 +38,8 @@ void nsSVGUseFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   nsSVGGFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
-nsresult nsSVGUseFrame::AttributeChanged(int32_t aNamespaceID,
-                                         nsAtom* aAttribute, int32_t aModType) {
+nsresult SVGUseFrame::AttributeChanged(int32_t aNamespaceID, nsAtom* aAttribute,
+                                       int32_t aModType) {
   // Currently our SMIL implementation does not modify the DOM attributes. Once
   // we implement the SVG 2 SMIL behaviour this can be removed
   // SVGUseElement::AfterSetAttr's implementation will be sufficient.
@@ -50,7 +51,7 @@ nsresult nsSVGUseFrame::AttributeChanged(int32_t aNamespaceID,
   return nsSVGGFrame::AttributeChanged(aNamespaceID, aAttribute, aModType);
 }
 
-void nsSVGUseFrame::PositionAttributeChanged() {
+void SVGUseFrame::PositionAttributeChanged() {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nullptr;
   nsLayoutUtils::PostRestyleEvent(GetContent()->AsElement(), RestyleHint{0},
@@ -59,8 +60,8 @@ void nsSVGUseFrame::PositionAttributeChanged() {
   nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
 }
 
-void nsSVGUseFrame::DimensionAttributeChanged(bool aHadValidDimensions,
-                                              bool aAttributeIsUsed) {
+void SVGUseFrame::DimensionAttributeChanged(bool aHadValidDimensions,
+                                            bool aAttributeIsUsed) {
   bool invalidate = aAttributeIsUsed;
   if (mHasValidDimensions != aHadValidDimensions) {
     mHasValidDimensions = !mHasValidDimensions;
@@ -74,7 +75,7 @@ void nsSVGUseFrame::DimensionAttributeChanged(bool aHadValidDimensions,
   }
 }
 
-void nsSVGUseFrame::HrefChanged() {
+void SVGUseFrame::HrefChanged() {
   nsLayoutUtils::PostRestyleEvent(GetContent()->AsElement(), RestyleHint{0},
                                   nsChangeHint_InvalidateRenderingObservers);
   nsSVGUtils::ScheduleReflowSVG(this);
@@ -83,7 +84,7 @@ void nsSVGUseFrame::HrefChanged() {
 //----------------------------------------------------------------------
 // nsSVGDisplayableFrame methods
 
-void nsSVGUseFrame::ReflowSVG() {
+void SVGUseFrame::ReflowSVG() {
   // We only handle x/y offset here, since any width/height that is in force is
   // handled by the nsSVGOuterSVGFrame for the anonymous <svg> that will be
   // created for that purpose.
@@ -103,7 +104,7 @@ void nsSVGUseFrame::ReflowSVG() {
   nsSVGGFrame::ReflowSVG();
 }
 
-void nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags) {
+void SVGUseFrame::NotifySVGChanged(uint32_t aFlags) {
   if (aFlags & COORD_CONTEXT_CHANGED && !(aFlags & TRANSFORM_CHANGED)) {
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y'
@@ -127,3 +128,5 @@ void nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags) {
 
   nsSVGGFrame::NotifySVGChanged(aFlags);
 }
+
+}  // namespace mozilla

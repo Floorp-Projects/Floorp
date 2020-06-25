@@ -8,17 +8,17 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/SVGLengthBinding.h"
-#include "mozilla/dom/SVGUseElementBinding.h"
-#include "nsGkAtoms.h"
-#include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGUseFrame.h"
+#include "mozilla/URLExtraData.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/SVGLengthBinding.h"
+#include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/dom/SVGUseElementBinding.h"
+#include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
-#include "mozilla/URLExtraData.h"
-#include "SVGObserverUtils.h"
-#include "nsSVGUseFrame.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Use)
 
@@ -527,7 +527,7 @@ SVGElement::StringAttributesInfo SVGUseElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-nsSVGUseFrame* SVGUseElement::GetFrame() const {
+SVGUseFrame* SVGUseElement::GetFrame() const {
   nsIFrame* frame = GetPrimaryFrame();
   // We might be a plain nsSVGContainerFrame if we didn't pass the conditional
   // processing checks.
@@ -535,7 +535,7 @@ nsSVGUseFrame* SVGUseElement::GetFrame() const {
     MOZ_ASSERT_IF(frame, frame->Type() == LayoutFrameType::None);
     return nullptr;
   }
-  return static_cast<nsSVGUseFrame*>(frame);
+  return static_cast<SVGUseFrame*>(frame);
 }
 
 //----------------------------------------------------------------------

@@ -32,22 +32,22 @@
 #include "SVGAnimatedLength.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGContainerFrame.h"
-#include "SVGContentUtils.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsSVGFilterPaintCallback.h"
-#include "nsSVGForeignObjectFrame.h"
-#include "SVGGeometryFrame.h"
 #include "nsSVGInnerSVGFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGMaskFrame.h"
-#include "SVGObserverUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPaintServerFrame.h"
-#include "SVGTextFrame.h"
 #include "nsTextFrame.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_svg.h"
+#include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGContextPaint.h"
+#include "mozilla/SVGForeignObjectFrame.h"
+#include "mozilla/SVGGeometryFrame.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGTextFrame.h"
 #include "mozilla/Unused.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
@@ -352,7 +352,7 @@ gfxMatrix nsSVGUtils::GetCanvasTM(nsIFrame* aFrame) {
 
   LayoutFrameType type = aFrame->Type();
   if (type == LayoutFrameType::SVGForeignObject) {
-    return static_cast<nsSVGForeignObjectFrame*>(aFrame)->GetCanvasTM();
+    return static_cast<SVGForeignObjectFrame*>(aFrame)->GetCanvasTM();
   }
   if (type == LayoutFrameType::SVGOuterSVG) {
     return GetCSSPxToDevPxMatrix(aFrame);

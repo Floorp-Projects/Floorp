@@ -14,17 +14,22 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-class nsSVGUseFrame final : public nsSVGGFrame {
-  friend nsIFrame* NS_NewSVGUseFrame(mozilla::PresShell* aPresShell,
-                                     ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGUseFrame(mozilla::PresShell* aPresShell,
+                            mozilla::ComputedStyle* aStyle);
+
+namespace mozilla {
+
+class SVGUseFrame final : public nsSVGGFrame {
+  friend nsIFrame* ::NS_NewSVGUseFrame(mozilla::PresShell* aPresShell,
+                                       ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGUseFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+  explicit SVGUseFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsSVGGFrame(aStyle, aPresContext, kClassID),
         mHasValidDimensions(true) {}
 
  public:
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGUseFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGUseFrame)
 
   // nsIFrame interface:
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -56,5 +61,7 @@ class nsSVGUseFrame final : public nsSVGGFrame {
  private:
   bool mHasValidDimensions;
 };
+
+}  // namespace mozilla
 
 #endif  // __NS_SVGUSEFRAME_H__

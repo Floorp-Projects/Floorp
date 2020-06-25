@@ -199,8 +199,8 @@ class nsSVGUtils {
    * Another reason that we don't currently want to call
    * PresShell::FrameNeedsReflow is because passing eRestyle to it to get it to
    * mark descendants dirty would cause it to descend through
-   * nsSVGForeignObjectFrame frames to mark their children dirty, but we want to
-   * handle nsSVGForeignObjectFrame specially. It would also do unnecessary work
+   * SVGForeignObjectFrame frames to mark their children dirty, but we want to
+   * handle SVGForeignObjectFrame specially. It would also do unnecessary work
    * descending into NS_FRAME_IS_NONDISPLAY frames.
    */
   static void ScheduleReflowSVG(nsIFrame* aFrame);

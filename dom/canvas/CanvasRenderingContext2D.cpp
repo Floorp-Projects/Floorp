@@ -9,16 +9,16 @@
 #include "nsXULElement.h"
 
 #include "nsMathUtils.h"
-#include "SVGImageContext.h"
 
 #include "nsContentUtils.h"
 
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
+#include "mozilla/SVGImageContext.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/GeneratePlaceholderCanvasData.h"
-#include "SVGObserverUtils.h"
 #include "nsPresContext.h"
 
 #include "nsIInterfaceRequestorUtils.h"

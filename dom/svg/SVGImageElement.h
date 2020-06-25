@@ -16,9 +16,9 @@
 nsresult NS_NewSVGImageElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-class nsSVGImageFrame;
-
 namespace mozilla {
+class SVGImageFrame;
+
 namespace dom {
 class DOMSVGAnimatedPreserveAspectRatio;
 
@@ -26,7 +26,7 @@ typedef SVGGeometryElement SVGImageElementBase;
 
 class SVGImageElement : public SVGImageElementBase,
                         public nsImageLoadingContent {
-  friend class ::nsSVGImageFrame;
+  friend class mozilla::SVGImageFrame;
 
  protected:
   explicit SVGImageElement(

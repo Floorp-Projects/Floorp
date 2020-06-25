@@ -24,53 +24,39 @@
 #include "nsIReflowCallback.h"
 #include "mozilla/Unused.h"
 
-class nsSVGImageFrame;
-
 namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-class nsSVGImageListener final : public imgINotificationObserver {
- public:
-  explicit nsSVGImageListener(nsSVGImageFrame* aFrame);
+nsIFrame* NS_NewSVGImageFrame(mozilla::PresShell* aPresShell,
+                              mozilla::ComputedStyle* aStyle);
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGINOTIFICATIONOBSERVER
+namespace mozilla {
 
-  void SetFrame(nsSVGImageFrame* frame) { mFrame = frame; }
-
- private:
-  ~nsSVGImageListener() = default;
-
-  nsSVGImageFrame* mFrame;
-};
-
-class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
-                              public nsIReflowCallback {
-  friend nsIFrame* NS_NewSVGImageFrame(mozilla::PresShell* aPresShell,
-                                       ComputedStyle* aStyle);
+class SVGImageFrame final : public SVGGeometryFrame, public nsIReflowCallback {
+  friend nsIFrame* ::NS_NewSVGImageFrame(mozilla::PresShell* aPresShell,
+                                         ComputedStyle* aStyle);
 
   virtual bool CreateWebRenderCommands(
-      mozilla::wr::DisplayListBuilder& aBuilder,
-      mozilla::wr::IpcResourceUpdateQueue& aResources,
-      const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder,
-      mozilla::DisplaySVGGeometry* aItem, bool aDryRun) override;
+      wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+      const layers::StackingContextHelper& aSc,
+      layers::RenderRootStateManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGGeometry* aItem,
+      bool aDryRun) override;
 
  protected:
-  explicit nsSVGImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+  explicit SVGImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : SVGGeometryFrame(aStyle, aPresContext, kClassID),
         mReflowCallbackPosted(false),
         mForceSyncDecoding(false) {
     EnableVisibilityTracking();
   }
 
-  virtual ~nsSVGImageFrame();
+  virtual ~SVGImageFrame();
 
  public:
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGImageFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGImageFrame)
 
   // nsSVGDisplayableFrame interface:
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
@@ -96,8 +82,8 @@ class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
                            PostDestroyData& aPostDestroyData) override;
   void DidSetComputedStyle(ComputedStyle* aOldStyle) final;
 
-  bool GetIntrinsicImageDimensions(mozilla::gfx::Size& aSize,
-                                   mozilla::AspectRatio& aAspectRatio) const;
+  bool GetIntrinsicImageDimensions(gfx::Size& aSize,
+                                   AspectRatio& aAspectRatio) const;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
@@ -113,9 +99,9 @@ class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
   void SetForceSyncDecoding(bool aForce) { mForceSyncDecoding = aForce; }
 
  private:
-  mozilla::gfx::Matrix GetRasterImageTransform(int32_t aNativeWidth,
-                                               int32_t aNativeHeight);
-  mozilla::gfx::Matrix GetVectorImageTransform();
+  gfx::Matrix GetRasterImageTransform(int32_t aNativeWidth,
+                                      int32_t aNativeHeight);
+  gfx::Matrix GetVectorImageTransform();
   bool TransformContextForPainting(gfxContext* aGfxContext,
                                    const gfxMatrix& aTransform);
 
@@ -126,7 +112,9 @@ class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
   bool mReflowCallbackPosted;
   bool mForceSyncDecoding;
 
-  friend class nsSVGImageListener;
+  friend class SVGImageListener;
 };
+
+}  // namespace mozilla
 
 #endif  // __NS_SVGIMAGEFRAME_H__

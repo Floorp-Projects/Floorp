@@ -14,13 +14,13 @@
 nsresult NS_NewSVGForeignObjectElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-class nsSVGForeignObjectFrame;
-
 namespace mozilla {
+class SVGForeignObjectFrame;
+
 namespace dom {
 
 class SVGForeignObjectElement final : public SVGGraphicsElement {
-  friend class ::nsSVGForeignObjectFrame;
+  friend class mozilla::SVGForeignObjectFrame;
 
  protected:
   friend nsresult(::NS_NewSVGForeignObjectElement(
