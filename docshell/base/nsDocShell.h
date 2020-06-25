@@ -442,6 +442,20 @@ class nsDocShell final : public nsDocLoader,
       bool aNotifyKeywordSearchLoading = false,
       nsIInputStream** aNewPostData = nullptr);
 
+  static bool ShouldLoadErrorPageWithoutFixup(nsresult aStatus);
+
+  // Takes aStatus and filters out results that should not display
+  // an error page.
+  // If this returns a failed result, then we should display an error
+  // page with that result.
+  // aSkippedUnknownProtocolNavigation will be set to true if we chose
+  // to skip displaying an error page for an NS_ERROR_UNKNOWN_PROTOCOL
+  // navigation.
+  static nsresult FilterStatusForErrorPage(
+      nsresult aStatus, nsIChannel* aChannel, uint32_t aLoadType,
+      bool aIsTopFrame, bool aUseErrorPages, bool aIsInitialDocument,
+      bool* aSkippedUnknownProtocolNavigation = nullptr);
+
   // Notify consumers of a search being loaded through the observer service:
   static void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
                                               const nsString& aKeyword);
