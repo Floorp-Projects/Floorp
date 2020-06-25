@@ -20,7 +20,7 @@
 
 namespace mozilla {
 
-namespace details {
+namespace detail {
 template <typename T, bool IsPod = std::is_trivial<T>::value>
 struct MemoryOperations {
   /**
@@ -58,7 +58,7 @@ struct MemoryOperations<T, false> {
     std::move(aSource, aSource + aCount, aDestination);
   }
 };
-}  // namespace details
+}  // namespace detail
 
 /**
  * This data structure allows producing data from one thread, and consuming it
@@ -166,14 +166,14 @@ class SPSCRingBufferBase {
     int secondPart = toWrite - firstPart;
 
     if (aElements) {
-      details::MemoryOperations<T>::MoveOrCopy(mData.get() + wrIdx, aElements,
-                                               firstPart);
-      details::MemoryOperations<T>::MoveOrCopy(
+      detail::MemoryOperations<T>::MoveOrCopy(mData.get() + wrIdx, aElements,
+                                              firstPart);
+      detail::MemoryOperations<T>::MoveOrCopy(
           mData.get(), aElements + firstPart, secondPart);
     } else {
-      details::MemoryOperations<T>::ConstructDefault(mData.get() + wrIdx,
-                                                     firstPart);
-      details::MemoryOperations<T>::ConstructDefault(mData.get(), secondPart);
+      detail::MemoryOperations<T>::ConstructDefault(mData.get() + wrIdx,
+                                                    firstPart);
+      detail::MemoryOperations<T>::ConstructDefault(mData.get(), secondPart);
     }
 
     mWriteIndex.store(IncrementIndex(wrIdx, toWrite),
@@ -211,10 +211,10 @@ class SPSCRingBufferBase {
     int secondPart = toRead - firstPart;
 
     if (elements) {
-      details::MemoryOperations<T>::MoveOrCopy(elements, mData.get() + rdIdx,
-                                               firstPart);
-      details::MemoryOperations<T>::MoveOrCopy(elements + firstPart,
-                                               mData.get(), secondPart);
+      detail::MemoryOperations<T>::MoveOrCopy(elements, mData.get() + rdIdx,
+                                              firstPart);
+      detail::MemoryOperations<T>::MoveOrCopy(elements + firstPart, mData.get(),
+                                              secondPart);
     }
 
     mReadIndex.store(IncrementIndex(rdIdx, toRead),
