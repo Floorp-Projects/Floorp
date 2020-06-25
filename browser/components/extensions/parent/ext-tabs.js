@@ -1078,25 +1078,24 @@ this.tabs = class extends ExtensionAPI {
 
         duplicate(tabId, duplicateProperties) {
           const { active, index } = duplicateProperties || {};
+          const inBackground = active === undefined ? false : !active;
+
           // Schema requires tab id.
           let nativeTab = getTabOrActive(tabId);
 
           let gBrowser = nativeTab.ownerGlobal.gBrowser;
-          let newTab = gBrowser.duplicateTab(nativeTab, true, { index });
+          let newTab = gBrowser.duplicateTab(nativeTab, true, {
+            inBackground,
+            index,
+          });
 
           tabListener.blockTabUntilRestored(newTab);
-
           return new Promise(resolve => {
-            // We need to use SSTabRestoring because any attributes set before
-            // are ignored.
+            // Use SSTabRestoring to ensure that the tab's URL is ready before
+            // resolving the promise.
             newTab.addEventListener(
               "SSTabRestoring",
-              function() {
-                if (active !== false) {
-                  gBrowser.selectedTab = newTab;
-                }
-                resolve(tabManager.convert(newTab));
-              },
+              () => resolve(tabManager.convert(newTab)),
               { once: true }
             );
           });
