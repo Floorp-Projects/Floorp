@@ -979,3 +979,34 @@
    obj:/*/lib*/libLLVM-3.6-mesa.so
    obj:/*/lib*/libLLVM-3.6-mesa.so
 }
+
+{
+   bug 1632735
+   Memcheck:Cond
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
+}
+
+{
+   bug 1632735
+   Memcheck:Cond
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser29parse_functional_pseudo_class17h*
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
+}
+
+{
+   bug 1632735
+   Memcheck:Cond
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9cssparser6parser18parse_until_before17h*
+   fun:_ZN5style5gecko15selector_parser94_$LT$impl$u20$selectors..parser..Parser$u20$for$u20$style..selector_parser..SelectorParser$GT$36parse_non_ts_functional_pseudo_class17h*
+   fun:_ZN9selectors6parser29parse_functional_pseudo_class17h*
+   fun:_ZN9selectors6parser25parse_one_simple_selector17*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
+}
