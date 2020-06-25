@@ -79,9 +79,11 @@ extern "C" Elf::Dyn _DYNAMIC[];
  */
 
 void* __wrap_dlopen(const char* path, int flags) {
+#if defined(ANDROID)
   if (GetAndroidSDKVersion() >= 23) {
     return dlopen(path, flags);
   }
+#endif
 
   RefPtr<LibHandle> handle = ElfLoader::Singleton.Load(path, flags);
   if (handle) handle->AddDirectRef();
@@ -89,9 +91,11 @@ void* __wrap_dlopen(const char* path, int flags) {
 }
 
 const char* __wrap_dlerror(void) {
+#if defined(ANDROID)
   if (GetAndroidSDKVersion() >= 23) {
     return dlerror();
   }
+#endif
 
   const char* error = ElfLoader::Singleton.lastError.exchange(nullptr);
   if (error) {
@@ -103,9 +107,11 @@ const char* __wrap_dlerror(void) {
 }
 
 void* __wrap_dlsym(void* handle, const char* symbol) {
+#if defined(ANDROID)
   if (GetAndroidSDKVersion() >= 23) {
     return dlsym(handle, symbol);
   }
+#endif
 
   if (!handle) {
     ElfLoader::Singleton.lastError = "dlsym(NULL, sym) unsupported";
@@ -121,9 +127,11 @@ void* __wrap_dlsym(void* handle, const char* symbol) {
 }
 
 int __wrap_dlclose(void* handle) {
+#if defined(ANDROID)
   if (GetAndroidSDKVersion() >= 23) {
     return dlclose(handle);
   }
+#endif
 
   if (!handle) {
     ElfLoader::Singleton.lastError = "No handle given to dlclose()";
@@ -134,9 +142,11 @@ int __wrap_dlclose(void* handle) {
 }
 
 int __wrap_dladdr(void* addr, Dl_info* info) {
+#if defined(ANDROID)
   if (GetAndroidSDKVersion() >= 23) {
     return dladdr(addr, info);
   }
+#endif
 
   RefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(addr);
   if (!handle) {
@@ -235,9 +245,11 @@ int DlIteratePhdrHelper::fill_and_call(dl_phdr_cb callback, const void* l_addr,
 }
 
 int __wrap_dl_iterate_phdr(dl_phdr_cb callback, void* data) {
+#if defined(ANDROID)
   if (GetAndroidSDKVersion() >= 23) {
     return dl_iterate_phdr(callback, data);
   }
+#endif
 
   DlIteratePhdrHelper helper;
   AutoLock lock(&ElfLoader::Singleton.handlesMutex);
