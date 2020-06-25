@@ -20,7 +20,9 @@ add_task(async function() {
   const { inspector, view, testActor } = await openRuleView();
   const { highlighters } = view;
 
+  const onRuleViewUpdated = view.once("ruleview-refreshed");
   await selectNode("#flex", inspector);
+  await onRuleViewUpdated;
   const container = getRuleViewProperty(view, "#flex", "display").valueSpan;
   const flexboxToggle = container.querySelector(".ruleview-flex");
 
