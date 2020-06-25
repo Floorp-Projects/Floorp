@@ -15,7 +15,7 @@
 #include "jstypes.h"
 
 #include "gc/Allocator.h"  // AllowGC
-#include "gc/Cell.h"       // gc::TenuredCell, gc::CellHeaderWithNonGCPointer
+#include "gc/Cell.h"       // gc::TenuredCellWithNonGCPointer
 #include "jit/ExecutableAllocator.h"  // ExecutablePool
 #include "js/TraceKind.h"             // JS::TraceKind
 #include "js/UbiNode.h"               // ubi::{TracerConcrete, Size, CourseType}
@@ -44,10 +44,12 @@ struct JitCodeHeader {
   }
 };
 
-class JitCode : public gc::TenuredCell {
+class JitCode : public gc::TenuredCellWithNonGCPointer<uint8_t> {
+ public:
+  // Raw code pointer, stored in the cell header.
+  uint8_t* raw() const { return headerPtr(); }
+
  protected:
-  using CellHeaderWithCodePtr = gc::CellHeaderWithNonGCPointer<uint8_t>;
-  CellHeaderWithCodePtr cellHeaderAndCode_;
   ExecutablePool* pool_;
   uint32_t bufferSize_;  // Total buffer size. Does not include headerSize_.
   uint32_t insnSize_;    // Instruction stream size.
@@ -64,7 +66,7 @@ class JitCode : public gc::TenuredCell {
   JitCode() = delete;
   JitCode(uint8_t* code, uint32_t bufferSize, uint32_t headerSize,
           ExecutablePool* pool, CodeKind kind)
-      : cellHeaderAndCode_(code),
+      : TenuredCellWithNonGCPointer(code),
         pool_(pool),
         bufferSize_(bufferSize),
         insnSize_(0),
@@ -86,7 +88,6 @@ class JitCode : public gc::TenuredCell {
   }
 
  public:
-  uint8_t* raw() const { return cellHeaderAndCode_.ptr(); }
   uint8_t* rawEnd() const { return raw() + insnSize_; }
   bool containsNativePC(const void* addr) const {
     const uint8_t* addr_u8 = (const uint8_t*)addr;
@@ -120,10 +121,7 @@ class JitCode : public gc::TenuredCell {
     return code;
   }
 
-  static size_t offsetOfCode() {
-    return offsetof(JitCode, cellHeaderAndCode_) +
-           CellHeaderWithCodePtr::offsetOfPtr();
-  }
+  static size_t offsetOfCode() { return offsetOfHeaderPtr(); }
 
   uint8_t* jumpRelocTable() { return raw() + jumpRelocTableOffset(); }
 
@@ -136,7 +134,6 @@ class JitCode : public gc::TenuredCell {
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::JitCode;
-  const gc::CellHeader& cellHeader() const { return cellHeaderAndCode_; }
 };
 
 }  // namespace jit
