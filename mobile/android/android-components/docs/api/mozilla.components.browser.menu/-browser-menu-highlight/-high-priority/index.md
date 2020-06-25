@@ -2,7 +2,7 @@
 
 # HighPriority
 
-`data class HighPriority : `[`BrowserMenuHighlight`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuHighlight.kt#L46)
+`data class HighPriority : `[`BrowserMenuHighlight`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuHighlight.kt#L60)
 
 Changes the background of the menu item.
 Used for errors that require user attention, like sync errors.
@@ -21,3 +21,9 @@ Used for errors that require user attention, like sync errors.
 | [canPropagate](can-propagate.md) | `val canPropagate: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Indicate whether other components should consider this highlight when displaying their own highlight. |
 | [endImageResource](end-image-resource.md) | `val endImageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Icon to display at the end of the menu item when highlighted. |
 | [label](label.md) | `val label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Label to override the normal label of the menu item. |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [asEffect](as-effect.md) | `fun asEffect(context: <ERROR CLASS>): `[`HighPriorityHighlightEffect`](../../../mozilla.components.concept.menu.candidate/-high-priority-highlight-effect/index.md)<br>Converts the highlight into a corresponding [MenuEffect](../../../mozilla.components.concept.menu.candidate/-menu-effect.md) from concept-menu. |

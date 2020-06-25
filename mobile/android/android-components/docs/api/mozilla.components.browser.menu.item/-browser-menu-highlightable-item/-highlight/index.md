@@ -24,3 +24,9 @@ Replaced by [BrowserMenuHighlight](../../../mozilla.components.browser.menu/-bro
 | [endImageResource](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/end-image-resource.md) | `val endImageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [label](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/label.md) | `open val label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
 | [startImageResource](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/start-image-resource.md) | `val startImageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [asEffect](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/as-effect.md) | `open fun asEffect(context: <ERROR CLASS>): `[`HighPriorityHighlightEffect`](../../../mozilla.components.concept.menu.candidate/-high-priority-highlight-effect/index.md)<br>Converts the highlight into a corresponding [MenuEffect](../../../mozilla.components.concept.menu.candidate/-menu-effect.md) from concept-menu. |

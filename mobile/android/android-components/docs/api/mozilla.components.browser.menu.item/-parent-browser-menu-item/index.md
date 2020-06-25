@@ -2,7 +2,7 @@
 
 # ParentBrowserMenuItem
 
-`class ParentBrowserMenuItem : `[`AbstractParentBrowserMenuItem`](../-abstract-parent-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/ParentBrowserMenuItem.kt#L32)
+`class ParentBrowserMenuItem : `[`AbstractParentBrowserMenuItem`](../-abstract-parent-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/ParentBrowserMenuItem.kt#L33)
 
 A parent menu item for displaying text and an image icon with a nested sub menu.
 It handles back pressing if the sub menu contains a [BackPressMenuItem](../-back-press-menu-item/index.md).
@@ -40,7 +40,7 @@ It handles back pressing if the sub menu contains a [BackPressMenuItem](../-back
 
 | Name | Summary |
 |---|---|
-| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`TextMenuCandidate`](../../mozilla.components.concept.menu.candidate/-text-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
+| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`NestedMenuCandidate`](../../mozilla.components.concept.menu.candidate/-nested-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [bind](bind.md) | `fun bind(menu: `[`BrowserMenu`](../../mozilla.components.browser.menu/-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
 | [getLayoutResource](get-layout-resource.md) | `fun getLayoutResource(): <ERROR CLASS>`<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
 

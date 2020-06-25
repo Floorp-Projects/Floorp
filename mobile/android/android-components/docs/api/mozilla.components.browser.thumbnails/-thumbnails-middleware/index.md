@@ -2,7 +2,7 @@
 
 # ThumbnailsMiddleware
 
-`class ThumbnailsMiddleware : `[`Middleware`](../../mozilla.components.lib.state/-middleware.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/ThumbnailsMiddleware.kt#L18)
+`class ThumbnailsMiddleware : `[`Middleware`](../../mozilla.components.lib.state/-middleware.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/ThumbnailsMiddleware.kt#L19)
 
 [Middleware](../../mozilla.components.lib.state/-middleware.md) implementation for handling [ContentAction.UpdateThumbnailAction](../../mozilla.components.browser.state.action/-content-action/-update-thumbnail-action/index.md) and storing
 the thumbnail to the disk cache.

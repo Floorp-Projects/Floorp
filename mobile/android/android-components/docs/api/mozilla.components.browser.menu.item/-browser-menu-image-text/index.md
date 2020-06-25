@@ -2,7 +2,7 @@
 
 # BrowserMenuImageText
 
-`open class BrowserMenuImageText : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuImageText.kt#L47)
+`open class BrowserMenuImageText : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuImageText.kt#L48)
 
 A menu item for displaying text with an image icon.
 
@@ -40,7 +40,7 @@ A menu item for displaying text with an image icon.
 
 | Name | Summary |
 |---|---|
-| [asCandidate](as-candidate.md) | `open fun asCandidate(context: <ERROR CLASS>): `[`TextMenuCandidate`](../../mozilla.components.concept.menu.candidate/-text-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
+| [asCandidate](as-candidate.md) | `open fun asCandidate(context: <ERROR CLASS>): `[`MenuCandidate`](../../mozilla.components.concept.menu.candidate/-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [bind](bind.md) | `open fun bind(menu: `[`BrowserMenu`](../../mozilla.components.browser.menu/-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
 | [getLayoutResource](get-layout-resource.md) | `open fun getLayoutResource(): <ERROR CLASS>`<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
 

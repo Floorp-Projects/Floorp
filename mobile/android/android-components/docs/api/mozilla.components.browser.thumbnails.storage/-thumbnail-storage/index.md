@@ -17,6 +17,8 @@ Thumbnail storage layer which handles saving and loading the thumbnail from the 
 
 | Name | Summary |
 |---|---|
+| [clearThumbnails](clear-thumbnails.md) | `fun clearThumbnails(): Job`<br>Clears all the stored thumbnails in the disk cache. |
+| [deleteThumbnail](delete-thumbnail.md) | `fun deleteThumbnail(sessionIdOrUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Job`<br>Deletes the given thumbnail [Bitmap](#) from the disk cache with the provided session ID or url as its key. |
 | [loadThumbnail](load-thumbnail.md) | `fun loadThumbnail(sessionIdOrUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<<ERROR CLASS>?>`<br>Asynchronously loads a thumbnail [Bitmap](#) for the given session ID or url. |
 | [saveThumbnail](save-thumbnail.md) | `fun saveThumbnail(sessionIdOrUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, bitmap: <ERROR CLASS>): Job`<br>Stores the given thumbnail [Bitmap](#) into the disk cache with the provided session ID or url as its key. |
 

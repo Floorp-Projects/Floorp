@@ -25,5 +25,6 @@ Menu option data classes to be shown in the browser menu.
 | [CompoundMenuCandidate](../-compound-menu-candidate/index.md) | `data class CompoundMenuCandidate : `[`MenuCandidate`](./index.md)<br>Menu option that shows a switch or checkbox. |
 | [DecorativeTextMenuCandidate](../-decorative-text-menu-candidate/index.md) | `data class DecorativeTextMenuCandidate : `[`MenuCandidate`](./index.md)<br>Menu option that displays static text. |
 | [DividerMenuCandidate](../-divider-menu-candidate/index.md) | `data class DividerMenuCandidate : `[`MenuCandidate`](./index.md)<br>Menu option to display a horizontal divider. |
+| [NestedMenuCandidate](../-nested-menu-candidate/index.md) | `data class NestedMenuCandidate : `[`MenuCandidate`](./index.md)<br>Menu option that opens a nested sub menu. |
 | [RowMenuCandidate](../-row-menu-candidate/index.md) | `data class RowMenuCandidate : `[`MenuCandidate`](./index.md)<br>Displays a row of small menu options. |
 | [TextMenuCandidate](../-text-menu-candidate/index.md) | `data class TextMenuCandidate : `[`MenuCandidate`](./index.md)<br>Interactive menu option that displays some text. |

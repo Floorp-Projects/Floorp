@@ -2,7 +2,7 @@
 
 # BrowserMenuHighlight
 
-`sealed class BrowserMenuHighlight` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuHighlight.kt#L16)
+`sealed class BrowserMenuHighlight` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuHighlight.kt#L21)
 
 Describes how to display a [mozilla.components.browser.menu.item.BrowserMenuHighlightableItem](../../mozilla.components.browser.menu.item/-browser-menu-highlightable-item/index.md)
 when it is highlighted.
@@ -21,6 +21,12 @@ when it is highlighted.
 |---|---|
 | [canPropagate](can-propagate.md) | `abstract val canPropagate: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [label](label.md) | `abstract val label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [asEffect](as-effect.md) | `abstract fun asEffect(context: <ERROR CLASS>): `[`MenuEffect`](../../mozilla.components.concept.menu.candidate/-menu-effect.md)<br>Converts the highlight into a corresponding [MenuEffect](../../mozilla.components.concept.menu.candidate/-menu-effect.md) from concept-menu. |
 
 ### Extension Functions
 
