@@ -122,6 +122,9 @@ gfxPlatformGtk::~gfxPlatformGtk() {
 
   Factory::ReleaseFTLibrary(gPlatformFTLibrary);
   gPlatformFTLibrary = nullptr;
+
+  mUseWebGLDmabufBackend =
+      IsWaylandDisplay() && GetDMABufDevice()->IsDMABufWebGLEnabled();
 }
 
 void gfxPlatformGtk::FlushContentDrawing() {
@@ -734,9 +737,6 @@ bool gfxPlatformGtk::UseWaylandDMABufVideoTextures() {
   return IsWaylandDisplay() &&
          (GetDMABufDevice()->IsDMABufVideoTexturesEnabled() ||
           GetDMABufDevice()->IsDMABufVAAPIEnabled());
-}
-bool gfxPlatformGtk::UseWaylandDMABufWebGL() {
-  return IsWaylandDisplay() && GetDMABufDevice()->IsDMABufWebGLEnabled();
 }
 bool gfxPlatformGtk::UseWaylandHardwareVideoDecoding() {
   return IsWaylandDisplay() && GetDMABufDevice()->IsDMABufVAAPIEnabled() &&
