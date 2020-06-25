@@ -101,7 +101,6 @@ add_task(async function test_empty_first_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown");
   let results = await shownPromise;
-  await popupEnabled();
   popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected");
   checkAutoCompleteResults(results, ["name", "name1", "name2"], hostname, "initial");
@@ -121,7 +120,6 @@ add_task(async function test_empty_second_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
-  await popupEnabled();
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_Enter");
@@ -144,7 +142,6 @@ add_task(async function test_search() {
   sendChar("1");
   synthesizeKey("KEY_ArrowDown"); // open
   let results = await shownPromise;
-  await popupEnabled();
   checkAutoCompleteResults(results, ["name1"], hostname, "check result deduping for 'name1'");
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_Enter");
@@ -160,7 +157,6 @@ add_task(async function test_delete_first_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown");
   await shownPromise;
-  await popupEnabled();
 
   let index0Promise = notifySelectedIndex(0);
   synthesizeKey("KEY_ArrowDown");
@@ -188,7 +184,6 @@ add_task(async function test_delete_duplicate_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown");
   await shownPromise;
-  await popupEnabled();
 
   let index0Promise = notifySelectedIndex(0);
   synthesizeKey("KEY_ArrowDown");

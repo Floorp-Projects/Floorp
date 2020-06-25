@@ -136,7 +136,6 @@ var ParentUtils = {
       open: gAutocompletePopup.popupOpen,
       selectedIndex: gAutocompletePopup.selectedIndex,
       direction: gAutocompletePopup.style.direction,
-      disabled: !!gAutocompletePopup.firstChild?.getItemAtIndex(0)?.disabled,
     });
   },
 

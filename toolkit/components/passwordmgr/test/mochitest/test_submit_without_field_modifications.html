@@ -19,6 +19,7 @@
 
 <pre id="test"></pre>
 <script>
+const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
 SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected popup to show");
 
 const EXAMPLE_COM = "https://example.com/tests/toolkit/components/passwordmgr/test/mochitest/";
