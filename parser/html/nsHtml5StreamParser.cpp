@@ -272,8 +272,7 @@ void nsHtml5StreamParser::FeedJapaneseDetector(Span<const uint8_t> aBuffer,
   }
   DontGuessEncoding();
   int32_t source = kCharsetFromFinalAutoDetection;
-  if (mCharsetSource == kCharsetFromParentForced ||
-      mCharsetSource == kCharsetFromUserForced) {
+  if (mCharsetSource == kCharsetFromUserForced) {
     source = kCharsetFromUserForcedAutoDetection;
   }
   if (detected == mEncoding) {
@@ -353,8 +352,7 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
     mUnicodeDecoder = UTF_8_ENCODING->NewDecoderWithBOMRemoval();
   } else {
     if (mCharsetSource >= kCharsetFromFinalAutoDetection) {
-      if (!(mCharsetSource == kCharsetFromUserForced ||
-            mCharsetSource == kCharsetFromParentForced)) {
+      if (mCharsetSource != kCharsetFromUserForced) {
         DontGuessEncoding();
       }
       mDecodingLocalFileWithoutTokenizing = false;
@@ -732,8 +730,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
       }
       if (encoding) {
         // meta scan successful; honor overrides unless meta is XSS-dangerous
-        if ((mCharsetSource == kCharsetFromParentForced ||
-             mCharsetSource == kCharsetFromUserForced) &&
+        if ((mCharsetSource == kCharsetFromUserForced) &&
             (encoding->IsAsciiCompatible() ||
              encoding == ISO_2022_JP_ENCODING)) {
           // Honor override
@@ -757,8 +754,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
             aFromSegment);
       }
     }
-    if (mCharsetSource == kCharsetFromParentForced ||
-        mCharsetSource == kCharsetFromUserForced) {
+    if (mCharsetSource == kCharsetFromUserForced) {
       // meta not found, honor override
       if (mEncoding->IsJapaneseLegacy()) {
         mFeedChardet = true;
@@ -788,8 +784,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
     }
     if (encoding) {
       // meta scan successful; honor overrides unless meta is XSS-dangerous
-      if ((mCharsetSource == kCharsetFromParentForced ||
-           mCharsetSource == kCharsetFromUserForced) &&
+      if ((mCharsetSource == kCharsetFromUserForced) &&
           (encoding->IsAsciiCompatible() || encoding == ISO_2022_JP_ENCODING)) {
         // Honor override
         return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
@@ -1142,8 +1137,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   }
 
   if (mCharsetSource >= kCharsetFromFinalAutoDetection) {
-    if ((mCharsetSource == kCharsetFromParentForced ||
-         mCharsetSource == kCharsetFromUserForced) &&
+    if ((mCharsetSource == kCharsetFromUserForced) &&
         mEncoding->IsJapaneseLegacy()) {
       // Japanese detector only
       if (!mJapaneseDetector) {
