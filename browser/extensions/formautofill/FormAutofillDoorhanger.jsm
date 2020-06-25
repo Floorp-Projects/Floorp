@@ -33,11 +33,9 @@ const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
 );
 let changeAutofillOptsKey = "changeAutofillOptions";
 let autofillOptsKey = "autofillOptionsLink";
-let autofillSecurityOptionsKey = "autofillSecurityOptionsLink";
 if (AppConstants.platform == "macosx") {
   changeAutofillOptsKey += "OSX";
   autofillOptsKey += "OSX";
-  autofillSecurityOptionsKey += "OSX";
 }
 
 const CONTENT = {
@@ -112,7 +110,7 @@ const CONTENT = {
     message: formatStringFromName("saveCreditCardMessage", [brandShortName]),
     descriptionLabel: GetStringFromName("saveCreditCardDescriptionLabel"),
     descriptionIcon: true,
-    linkMessage: GetStringFromName(autofillSecurityOptionsKey),
+    linkMessage: GetStringFromName(autofillOptsKey),
     spotlightURL: "about:preferences#privacy-credit-card-autofill",
     anchor: {
       id: "autofill-credit-card-notification-icon",
