@@ -313,11 +313,6 @@ const browsingContextTargetPrototype = {
     this.onResourceAvailable = this.onResourceAvailable.bind(this);
 
     TargetActorRegistry.registerTargetActor(this);
-
-    // Map of all resource watchers.
-    // Keys are resource types
-    // Values are instances of resource watcher
-    this._resourceWatchers = new Map();
   },
 
   /**
@@ -601,9 +596,7 @@ const browsingContextTargetPrototype = {
     this.exit();
     Actor.prototype.destroy.call(this);
     TargetActorRegistry.unregisterTargetActor(this);
-    if (this._resourceWatchers) {
-      this.unwatchTargetResources([...this._resourceWatchers.keys()]);
-    }
+    Resources.unwatchAllTargetResources(this);
   },
 
   /**
