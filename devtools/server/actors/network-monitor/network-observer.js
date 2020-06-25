@@ -326,6 +326,20 @@ NetworkObserver.prototype = {
       return;
     }
 
+    // Ignore preload requests to avoid duplicity request entries in
+    // the Network panel. If a preload fails (for whatever reason)
+    // then the platform kicks off another 'real' request.
+    const type = channel.loadInfo.internalContentPolicyType;
+    if (
+      type == Ci.nsIContentPolicy.TYPE_INTERNAL_SCRIPT_PRELOAD ||
+      type == Ci.nsIContentPolicy.TYPE_INTERNAL_MODULE_PRELOAD ||
+      type == Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_PRELOAD ||
+      type == Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET_PRELOAD ||
+      type == Ci.nsIContentPolicy.TYPE_INTERNAL_FONT_PRELOAD
+    ) {
+      return;
+    }
+
     const blockedCode = channel.loadInfo.requestBlockingReason;
     this._httpResponseExaminer(subject, topic, blockedCode);
   },
