@@ -23,6 +23,13 @@ namespace quota {
 
 namespace {
 
+#ifdef DEBUG
+constexpr auto kDSStoreFileName = NS_LITERAL_STRING(".DS_Store");
+constexpr auto kDesktopFileName = NS_LITERAL_STRING(".desktop");
+constexpr auto kDesktopIniFileName = NS_LITERAL_STRING("desktop.ini");
+constexpr auto kThumbsDbFileName = NS_LITERAL_STRING("thumbs.db");
+#endif
+
 #ifdef XP_WIN
 Atomic<int32_t> gUseDOSDevicePathSyntax(-1);
 #endif
@@ -119,6 +126,51 @@ Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath) {
 
   return file;
 }
+
+#ifdef DEBUG
+Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
+                                           const char* aSourceFile,
+                                           const int32_t aSourceLine) {
+  nsString leafName;
+  nsresult rv = aFile.GetLeafName(leafName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  bool isDirectory;
+  rv = aFile.IsDirectory(&isDirectory);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  if (!isDirectory) {
+    // Don't warn about OS metadata files. These files are only used in
+    // different platforms, but the profile can be shared across different
+    // operating systems, so we check it on all platforms.
+    if (leafName.Equals(kDSStoreFileName) ||
+        leafName.Equals(kDesktopFileName) ||
+        leafName.Equals(kDesktopIniFileName,
+                        nsCaseInsensitiveStringComparator) ||
+        leafName.Equals(kThumbsDbFileName, nsCaseInsensitiveStringComparator)) {
+      return false;
+    }
+
+    // Don't warn about files starting with ".".
+    if (leafName.First() == char16_t('.')) {
+      return false;
+    }
+  }
+
+  NS_DebugBreak(
+      NS_DEBUG_WARNING,
+      nsPrintfCString("Something (%s) in the directory that doesn't belong!",
+                      NS_ConvertUTF16toUTF8(leafName).get())
+          .get(),
+      nullptr, aSourceFile, aSourceLine);
+
+  return true;
+}
+#endif
 
 }  // namespace quota
 }  // namespace dom
