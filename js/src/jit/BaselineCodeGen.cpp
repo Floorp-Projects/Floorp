@@ -1251,9 +1251,10 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   masm.store32(countReg, warmUpCounterAddr);
 
   if (JSOp(*pc) == JSOp::LoopHead) {
-    // If this is a loop inside a catch or finally block, increment the warmup
-    // counter but don't attempt OSR (Ion only compiles the try block).
-    if (handler.analysis().info(pc).loopHeadInCatchOrFinally) {
+    // If this is a loop where we can't OSR (for example because it's inside a
+    // catch or finally block), increment the warmup counter but don't attempt
+    // OSR (Ion/Warp only compiles the try block).
+    if (!handler.analysis().info(pc).loopHeadCanOsr) {
       return true;
     }
   }
