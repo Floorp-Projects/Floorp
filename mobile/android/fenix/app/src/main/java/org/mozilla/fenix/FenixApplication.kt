@@ -37,8 +37,10 @@ import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.utils.logElapsedTime
 import mozilla.components.support.webextensions.WebExtensionSupport
+import org.mozilla.fenix.StrictModeManager.enableStrictMode
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
+import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.push.PushFxaIntegration
@@ -47,8 +49,6 @@ import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.StrictModeManager.enableStrictMode
-import org.mozilla.fenix.ext.resetPoliciesAfter
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
@@ -169,7 +169,7 @@ open class FenixApplication : LocaleAwareApplication() {
 
         // Enable the service-experiments component to be initialized after visual completeness
         // for performance wins.
-        if (settings().isExperimentationEnabled && Config.channel.isReleaseOrBeta) {
+        if (settings().isExperimentationEnabled) {
             taskQueue.runIfReadyOrQueue {
                 Experiments.initialize(
                     applicationContext = applicationContext,
