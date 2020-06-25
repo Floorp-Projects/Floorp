@@ -9055,7 +9055,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       }
     }
 
-    WARN_IF_FILE_IS_UNKNOWN(*file);
+    UNKNOWN_FILE_WARNING(leafName);
   }
 #endif
 
