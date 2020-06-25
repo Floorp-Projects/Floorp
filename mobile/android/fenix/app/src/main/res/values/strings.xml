@@ -1464,4 +1464,6 @@
     <string name="preferences_show_search_shortcuts">Show search shortcuts</string>
     <!-- DEPRECATED: Button in the search view that lets a user search by using a shortcut -->
     <string name="search_engines_shortcut_button">Search Engine</string>
+    <!-- DEPRECATED: Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Connect with a Firefox Account.</string>
 </resources>

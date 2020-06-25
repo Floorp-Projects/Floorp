@@ -6,10 +6,10 @@ package org.mozilla.fenix.sync
 
 import android.view.View
 import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.widget.LinearLayout
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.no_content_message_with_action.view.*
+import kotlinx.android.synthetic.main.sync_tabs_error_row.view.*
 import kotlinx.android.synthetic.main.sync_tabs_list_item.view.*
 import kotlinx.android.synthetic.main.view_synced_tabs_group.view.*
 import mozilla.components.browser.storage.sync.Tab
@@ -44,41 +44,26 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         }
     }
 
-    class SignInViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
-
-        override fun <T : AdapterItem> bind(item: T, interactor: (Tab) -> Unit) {
-            val signInItem = item as AdapterItem.SignIn
-            setErrorMargins()
-
-            itemView.no_content_header.visibility = GONE
-            itemView.no_content_description.text =
-                itemView.context.getString(R.string.synced_tabs_sign_in_message)
-            itemView.no_content_button.text =
-                itemView.context.getString(R.string.synced_tabs_sign_in_button)
-            itemView.no_content_button.icon =
-                ContextCompat.getDrawable(itemView.context, R.drawable.ic_sign_in)
-            itemView.no_content_button.setOnClickListener {
-                signInItem.navController.navigate(NavGraphDirections.actionGlobalTurnOnSync())
-            }
-        }
-
-        companion object {
-            const val LAYOUT_ID = R.layout.no_content_message_with_action
-        }
-    }
-
     class ErrorViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
 
         override fun <T : AdapterItem> bind(item: T, interactor: (Tab) -> Unit) {
             val errorItem = item as AdapterItem.Error
             setErrorMargins()
 
-            itemView.no_content_header.visibility = GONE
-            itemView.no_content_description.text = itemView.context.getString(errorItem.errorResId)
+            itemView.sync_tabs_error_description.text =
+                itemView.context.getString(errorItem.descriptionResId)
+            itemView.sync_tabs_error_cta_button.visibility = GONE
+
+            errorItem.navController?.let { navController ->
+                itemView.sync_tabs_error_cta_button.visibility = VISIBLE
+                itemView.sync_tabs_error_cta_button.setOnClickListener {
+                    navController.navigate(NavGraphDirections.actionGlobalTurnOnSync())
+                }
+            }
         }
 
         companion object {
-            const val LAYOUT_ID = R.layout.no_content_message
+            const val LAYOUT_ID = R.layout.sync_tabs_error_row
         }
     }
 
@@ -95,7 +80,12 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
             }
 
             itemView.synced_tabs_group_name.text = device.device.displayName
-            itemView.synced_tabs_group_name.setCompoundDrawablesWithIntrinsicBounds(deviceLogoDrawable, 0, 0, 0)
+            itemView.synced_tabs_group_name.setCompoundDrawablesWithIntrinsicBounds(
+                deviceLogoDrawable,
+                0,
+                0,
+                0
+            )
         }
 
         companion object {
