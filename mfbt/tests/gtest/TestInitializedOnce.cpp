@@ -95,11 +95,13 @@ TEST(InitializedOnce, ImmediateInit)
   static_assert(!val.isNothing());
   static_assert(testValue == (*val).mValue);
   static_assert(testValue == val->mValue);
+  static_assert(testValue == val.ref().mValue);
 
   // run-time assertions
   AssertIsSome(val);
   ASSERT_EQ(testValue, (*val).mValue);
   ASSERT_EQ(testValue, val->mValue);
+  ASSERT_EQ(testValue, val.ref().mValue);
 }
 
 TEST(InitializedOnce, ImmediateInitReset)
@@ -134,6 +136,7 @@ TEST(InitializedOnceAllowLazy, Init)
   AssertIsSome(val);
   ASSERT_EQ(testValue, (*val).mValue);
   ASSERT_EQ(testValue, val->mValue);
+  ASSERT_EQ(testValue, val.ref().mValue);
 }
 
 TEST(InitializedOnceAllowLazyResettable, DefaultCtor)
@@ -151,6 +154,7 @@ TEST(InitializedOnceAllowLazyResettable, Init)
   AssertIsSome(val);
   ASSERT_EQ(testValue, (*val).mValue);
   ASSERT_EQ(testValue, val->mValue);
+  ASSERT_EQ(testValue, val.ref().mValue);
 }
 
 TEST(InitializedOnceAllowLazyResettable, InitReset)

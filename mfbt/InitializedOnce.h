@@ -102,6 +102,8 @@ class InitializedOnce final {
   constexpr T& operator*() const { return *mMaybe; }
   constexpr T* operator->() const { return mMaybe.operator->(); }
 
+  constexpr T& ref() const { return mMaybe.ref(); }
+
   template <typename Dummy = void>
   std::enable_if_t<DestroyWhenVal == DestroyWhen::EarlyAllowed, Dummy>
   destroy() {
