@@ -1651,7 +1651,7 @@ bool GfxInfoBase::InitFeatureObject(JSContext* aCx,
 
   nsCString status;
   auto value = aFeatureState.GetValue();
-  if (value == FeatureStatus::Blocklisted || value == FeatureStatus::Denied ||
+  if (value == FeatureStatus::Blocklisted || value == FeatureStatus::Disabled ||
       value == FeatureStatus::Unavailable || value == FeatureStatus::Blocked) {
     status.AppendPrintf("%s:%s", FeatureStatusToString(value),
                         aFeatureState.GetFailureId().get());
