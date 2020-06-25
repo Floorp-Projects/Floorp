@@ -12,6 +12,8 @@
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
 
+class nsGlobalWindowInner;
+
 namespace mozilla {
 namespace dom {
 
@@ -71,7 +73,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool IsCached() const;
 
-  bool IsInProcess() { return mInProcess; }
+  bool IsInProcess() const { return mInProcess; }
+
+  nsGlobalWindowInner* GetInnerWindow() const;
 
   // Get the parent WindowContext of this WindowContext, taking the BFCache into
   // account. This will not cross chrome/content <browser> boundaries.
