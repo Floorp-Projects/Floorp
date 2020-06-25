@@ -1061,9 +1061,10 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   // Kill all of the workers for this window.
   CancelWorkersForWindow(*this);
 
-  for (const RefPtr<mozilla::dom::SharedWorker> pinnedWorker :
-       mSharedWorkers.ForwardRange()) {
-    pinnedWorker->Close();
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
+      mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Close();
   }
 
   if (mTimeoutManager) {
@@ -5217,9 +5218,10 @@ void nsGlobalWindowInner::Suspend() {
 
   SuspendWorkersForWindow(*this);
 
-  for (const RefPtr<mozilla::dom::SharedWorker> pinnedWorker :
-       mSharedWorkers.ForwardRange()) {
-    pinnedWorker->Suspend();
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
+      mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Suspend();
   }
 
   SuspendIdleRequests();
@@ -5286,9 +5288,10 @@ void nsGlobalWindowInner::Resume() {
   // a setTimeout().
   ResumeWorkersForWindow(*this);
 
-  for (const RefPtr<mozilla::dom::SharedWorker> pinnedWorker :
-       mSharedWorkers.ForwardRange()) {
-    pinnedWorker->Resume();
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
+      mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Resume();
   }
 }
 
@@ -5320,9 +5323,10 @@ void nsGlobalWindowInner::FreezeInternal() {
 
   FreezeWorkersForWindow(*this);
 
-  for (const RefPtr<mozilla::dom::SharedWorker> pinnedWorker :
-       mSharedWorkers.ForwardRange()) {
-    pinnedWorker->Freeze();
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
+      mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Freeze();
   }
 
   mTimeoutManager->Freeze();
@@ -5360,9 +5364,10 @@ void nsGlobalWindowInner::ThawInternal() {
 
   ThawWorkersForWindow(*this);
 
-  for (const RefPtr<mozilla::dom::SharedWorker> pinnedWorker :
-       mSharedWorkers.ForwardRange()) {
-    pinnedWorker->Thaw();
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
+      mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Thaw();
   }
 
   NotifyDOMWindowThawed(this);
