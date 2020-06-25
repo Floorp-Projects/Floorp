@@ -10,6 +10,8 @@
     <string name="mozac_feature_contextmenu_download_link">Сілтемені жүктеп алу</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Сілтемемен бөлісу</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">Суретпен бөлісу</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Сілтемені көшіріп алу</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->

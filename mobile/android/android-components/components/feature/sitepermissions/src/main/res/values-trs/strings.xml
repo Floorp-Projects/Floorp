@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of a dialog for a notification permission request. -->
+    <string name="mozac_feature_sitepermissions_notification_title">Gā\'nïnt riña %1$s da\' gānātàj a\'ngô nuguan\' huā aj.</string>
+    <!-- Title of a dialog for a camera permission request. -->
+    <string name="mozac_feature_sitepermissions_camera_title">Gā\'nïnt riña %1$s da\' gārasunj si kamarâ raj.</string>
+    </resources>

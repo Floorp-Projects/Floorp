@@ -10,6 +10,8 @@
     <string name="mozac_feature_contextmenu_download_link">다운로드 링크</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">링크 공유</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">이미지 공유</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">링크 복사</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
