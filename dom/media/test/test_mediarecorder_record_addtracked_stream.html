@@ -29,6 +29,26 @@ runTestWhenReady(async () => {
   osc.connect(dest);
 
   const stream = dest.stream;
+
+  // Timeouts are experienced intermittently in Linux due to no sound in the
+  // destination. As a workaround wait for the source sound to arrive.
+  const sourceAnalyser = new AudioStreamAnalyser(audioCtx, stream);
+  const sourceAudioReady = sourceAnalyser.waitForAnalysisSuccess(array => {
+    const freq = osc.frequency.value;
+    const lowerFreq = freq / 2;
+    const upperFreq = freq + 1000;
+    const lowerAmp = array[sourceAnalyser.binIndexForFrequency(lowerFreq)];
+    const freqAmp = array[sourceAnalyser.binIndexForFrequency(freq)];
+    const upperAmp = array[sourceAnalyser.binIndexForFrequency(upperFreq)];
+    info("Analysing source audio. "
+         + lowerFreq + ": " + lowerAmp + ", "
+         + freq + ": " + freqAmp + ", "
+         + upperFreq + ": " + upperAmp);
+    return lowerAmp < 50 && freqAmp > 200 && upperAmp < 50;
+  });
+  await sourceAudioReady;
+  info("Source Audio content ok");
+
   canvas.captureStream(0).getVideoTracks().forEach(t => stream.addTrack(t));
 
   const blobs = [];
