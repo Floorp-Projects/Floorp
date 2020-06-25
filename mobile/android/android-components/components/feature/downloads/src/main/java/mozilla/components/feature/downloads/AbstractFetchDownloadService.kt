@@ -216,7 +216,7 @@ abstract class AbstractFetchDownloadService : Service() {
                                     currentDownloadJobState.state.filePath.toString()
                             )
                             val errorMessage = applicationContext.getString(
-                                    R.string.mozac_feature_downloads_open_not_supported, fileExt
+                                    R.string.mozac_feature_downloads_open_not_supported1, fileExt
                             )
 
                             Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
