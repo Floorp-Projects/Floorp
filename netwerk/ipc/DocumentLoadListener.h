@@ -284,6 +284,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   void Disconnect();
 
+  void MaybeReportBlockedByURLClassifier(nsresult aStatus);
+
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
   //

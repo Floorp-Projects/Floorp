@@ -66,8 +66,6 @@ child:
 
   async SubFrameCrashed();
 
-  async AddBlockedNodeByClassifier();
-
 parent:
   // Destroy the remote web browser due to the nsFrameLoader going away.
   async __delete__();
