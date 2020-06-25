@@ -1992,6 +1992,17 @@ HttpChannelParent::Delete() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpChannelParent::GetRemoteType(nsAString& aRemoteType) {
+  if (!CanSend()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  dom::PContentParent* pcp = Manager()->Manager();
+  aRemoteType = static_cast<dom::ContentParent*>(pcp)->GetRemoteType();
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIParentRedirectingChannel
 //-----------------------------------------------------------------------------

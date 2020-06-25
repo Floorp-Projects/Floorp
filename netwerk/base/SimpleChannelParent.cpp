@@ -63,6 +63,11 @@ SimpleChannelParent::Delete() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SimpleChannelParent::GetRemoteType(nsAString& aRemoteType) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void SimpleChannelParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
 NS_IMETHODIMP

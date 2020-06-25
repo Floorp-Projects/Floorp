@@ -6,6 +6,8 @@
 
 #include "FileChannelParent.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/net/NeckoParent.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 
@@ -60,6 +62,17 @@ FileChannelParent::SetClassifierMatchedTrackingInfo(
 NS_IMETHODIMP
 FileChannelParent::Delete() {
   // Nothing to do.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FileChannelParent::GetRemoteType(nsAString& aRemoteType) {
+  if (!CanSend()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  dom::PContentParent* pcp = Manager()->Manager();
+  aRemoteType = static_cast<dom::ContentParent*>(pcp)->GetRemoteType();
   return NS_OK;
 }
 

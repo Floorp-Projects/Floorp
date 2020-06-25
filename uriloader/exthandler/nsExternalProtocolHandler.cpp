@@ -426,6 +426,10 @@ NS_IMETHODIMP nsExtProtocolChannel::Delete() {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExtProtocolChannel::GetRemoteType(nsAString& aRemoteType) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsExtProtocolChannel::OnStartRequest(nsIRequest* aRequest) {
   return NS_ERROR_UNEXPECTED;
 }
