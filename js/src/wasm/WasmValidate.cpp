@@ -1913,8 +1913,9 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
   // If there's a maximum, check it is in range.  The check to exclude
   // initial > maximum is carried out by the DecodeLimits call above, so
   // we don't repeat it here.
-  if (limits.initial > MaxTableInitialLength ||
-      ((limits.maximum.isSome() && limits.maximum.value() > MaxTableLength))) {
+  if (limits.initial > MaxTableLimitField ||
+      ((limits.maximum.isSome() &&
+        limits.maximum.value() > MaxTableLimitField))) {
     return d.fail("too many table elements");
   }
 
@@ -1923,7 +1924,7 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
   }
 
   // The rest of the runtime expects table limits to be within a 32-bit range.
-  static_assert(MaxTableLength <= UINT32_MAX, "invariant");
+  static_assert(MaxTableLimitField <= UINT32_MAX, "invariant");
   uint32_t initialLength = uint32_t(limits.initial);
   Maybe<uint32_t> maximumLength;
   if (limits.maximum) {
