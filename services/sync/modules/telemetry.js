@@ -590,33 +590,6 @@ class SyncTelemetryImpl {
   }
 
   prepareFxaDevices(devices) {
-    // The recentDevicesList contains very many duplicates, so we trim out ones
-    // that another service has already deemed expired, onces which are
-    // duplicates (by name), and ones that haven't been used recently enough.
-    let devicesList = devices.filter(
-      d => !d.pushEndpointExpired && d.lastAccessTime != null
-    );
-    // Discard entries with duplicate names, taking the entry which has been
-    // used more recently.
-    devicesList.sort((a, b) => a.lastAccessTime - b.lastAccessTime);
-    let seenNames = new Map();
-    for (let device of devicesList) {
-      seenNames.set(device.name, device);
-    }
-    devicesList = Array.from(seenNames.values());
-    // And now prune based on the threshold, which defaults to 2 months, but can
-    // be configured (or disabled) if it turns out to be a problem. This range
-    // is arbitrary, but has been given a thumbs up by our data scientist.
-    //
-    // Note that without this, my list contained devices well over two years old D:
-    let threshold = Services.prefs.getIntPref(
-      "identity.fxaccounts.telemetry.staleDeviceThreshold",
-      1000 * 60 * 60 * 24 * 30 * 2
-    );
-    if (threshold != -1) {
-      let limit = Date.now() - threshold;
-      devicesList = devicesList.filter(d => d.lastAccessTime >= limit);
-    }
     // For non-sync users, the data per device is limited -- just an id and a
     // type (and not even the id yet). For sync users, if we can correctly map
     // the fxaDevice to a sync device, then we can get os and version info,
@@ -634,7 +607,7 @@ class SyncTelemetryImpl {
       }
     }
     // Finally, sanitize and convert to the proper format.
-    return devicesList.map(d => {
+    return devices.map(d => {
       let { os, version, syncID } = extraInfoMap.get(d.id) || {
         os: undefined,
         version: undefined,
