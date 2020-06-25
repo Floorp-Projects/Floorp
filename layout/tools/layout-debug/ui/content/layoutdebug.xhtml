@@ -41,6 +41,9 @@
     <command id="cmd_close" oncommand="window.close();"/>
     <command id="cmd_focusURLBar" oncommand="focusURLBar();"/>
     <command id="cmd_reload" oncommand="gBrowser.reload();"/>
+    <command id="cmd_dumpContent" oncommand="gDebugger.dumpContent();"/>
+    <command id="cmd_dumpFrames" oncommand="gDebugger.dumpFrames();"/>
+    <command id="cmd_dumpFramesInCSSPixels" oncommand="gDebugger.dumpFramesInCSSPixels();"/>
   </commandset>
 
   <keyset id="tasksKeys">
@@ -48,6 +51,9 @@
     <key id="key_close" key="W" modifiers="accel" command="cmd_close"/>
     <key id="key_focusURLBar" key="L" modifiers="accel" command="cmd_focusURLBar"/>
     <key id="key_reload" key="R" modifiers="accel" command="cmd_reload"/>
+    <key id="key_dumpContent" key="D" modifiers="accel" command="cmd_dumpContent"/> <!-- "D" means DOM tree -->
+    <key id="key_dumpFrames" key="F" modifiers="accel" command="cmd_dumpFrames"/>
+    <key id="key_dumpFramesInCSSPixels" key="P" modifiers="accel" command="cmd_dumpFramesInCSSPixels"/>
   </keyset>
 
   <vbox flex="1">
