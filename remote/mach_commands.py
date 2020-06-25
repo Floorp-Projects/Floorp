@@ -192,6 +192,7 @@ class MochaOutputHandler(object):
         self.proc = None
         self.test_results = OrderedDict()
         self.expected = expected
+        self.unexpected_skips = set()
 
         self.has_unexpected = False
         self.logger.suite_start([], name="puppeteer-tests")
@@ -237,14 +238,15 @@ class MochaOutputHandler(object):
             if test_start:
                 self.logger.test_start(test_name)
                 return
+            expected = self.expected.get(test_name, ["PASS"])
             # mozlog doesn't really allow unexpected skip,
-            # so if a test is disabled just expect that.
+            # so if a test is disabled just expect that and note the unexpected skip
             # Also, mocha doesn't log test-start for skipped tests
             if status == "SKIP":
                 self.logger.test_start(test_name)
+                if status not in expected:
+                    self.unexpected_skips.add(test_name)
                 expected = ["SKIP"]
-            else:
-                expected = self.expected.get(test_name, ["PASS"])
             known_intermittent = expected[1:]
             expected_status = expected[0]
 
@@ -273,10 +275,20 @@ class MochaOutputHandler(object):
     def after_end(self, subset=False):
         if not subset:
             missing = set(self.expected) - set(self.test_results)
+            extra = set(self.test_results) - set(self.expected)
             if missing:
                 self.has_unexpected = True
                 for test_name in missing:
                     self.logger.error("TEST-UNEXPECTED-MISSING %s" % (test_name,))
+            if self.expected and extra:
+                self.has_unexpected = True
+                for test_name in extra:
+                    self.logger.error("TEST-UNEXPECTED-MISSING Unknown new test %s" % (test_name,))
+
+        if self.unexpected_skips:
+            self.has_unexpected = True
+            for test_name in self.unexpected_skips:
+                self.logger.error("TEST-UNEXPECTED-MISSING Unexpected skipped %s" % (test_name,))
         self.logger.suite_end()
 
 
