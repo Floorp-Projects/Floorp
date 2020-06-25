@@ -1033,8 +1033,8 @@ class nsIFrame : public nsQueryFrame {
    *
    *   - nsSVGInnerSVGFrame
    *   - SVGGeometryFrame (used for <path>, <circle>, etc.)
-   *   - nsSVGImageFrame
-   *   - nsSVGForeignObjectFrame
+   *   - SVGImageFrame
+   *   - SVGForeignObjectFrame
    *
    * For these frames the frame rect contains the frame's element's userspace
    * bounds including fill, stroke and markers, but converted to app units
