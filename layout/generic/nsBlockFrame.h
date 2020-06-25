@@ -427,7 +427,7 @@ class nsBlockFrame : public nsContainerFrame {
 #endif
 
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorProperty, nsLineBox)
-  bool HasLineCursor() { return GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR; }
+  bool HasLineCursor() { return HasAnyStateBits(NS_BLOCK_HAS_LINE_CURSOR); }
   nsLineBox* GetLineCursor() {
     return HasLineCursor() ? GetProperty(LineCursorProperty()) : nullptr;
   }
@@ -560,7 +560,7 @@ class nsBlockFrame : public nsContainerFrame {
     if (!mFloats.IsEmpty()) {
       // If we have pushed floats, then they should be at the beginning of our
       // float list.
-      if (mFloats.FirstChild()->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+      if (mFloats.FirstChild()->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT)) {
         return true;
       }
     }
@@ -570,7 +570,7 @@ class nsBlockFrame : public nsContainerFrame {
     // beginning of our floats list.
     for (nsFrameList::Enumerator e(mFloats); !e.AtEnd(); e.Next()) {
       nsIFrame* f = e.get();
-      NS_ASSERTION(!(f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
+      NS_ASSERTION(!f->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT),
                    "pushed floats must be at the beginning of the float list");
     }
 #endif
@@ -621,7 +621,7 @@ class nsBlockFrame : public nsContainerFrame {
     }
     // For the OverflowOutOfFlowsProperty I think we do enforce that, but it's
     // a mix of out-of-flow frames, so that's why the method name has "Maybe".
-    return GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS;
+    return HasAnyStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
 
   /**
@@ -845,7 +845,7 @@ class nsBlockFrame : public nsContainerFrame {
 
  public:
   bool HasOverflowLines() const {
-    return 0 != (GetStateBits() & NS_BLOCK_HAS_OVERFLOW_LINES);
+    return HasAnyStateBits(NS_BLOCK_HAS_OVERFLOW_LINES);
   }
   FrameLines* GetOverflowLines() const;
 
@@ -899,7 +899,7 @@ class nsBlockFrame : public nsContainerFrame {
    * @return true if this frame has pushed floats.
    */
   bool HasPushedFloats() const {
-    return 0 != (GetStateBits() & NS_BLOCK_HAS_PUSHED_FLOATS);
+    return HasAnyStateBits(NS_BLOCK_HAS_PUSHED_FLOATS);
   }
 
   // Get the pushed floats list, which is used for *temporary* storage
