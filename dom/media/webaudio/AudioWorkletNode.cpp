@@ -571,8 +571,15 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
     AudioBlock* output = &aOutput[o];
     size_t channelCount = output->ChannelCount();
     const auto& float32Arrays = mOutputs.mPorts[o].mFloat32Arrays;
-    JS::AutoCheckCannotGC nogc;
     for (size_t c = 0; c < channelCount; ++c) {
+      uint32_t length = JS_GetTypedArrayLength(float32Arrays[c]);
+      if (length != WEBAUDIO_BLOCK_SIZE) {
+        // ArrayBuffer has been detached.  Behavior is unspecified.
+        // https://github.com/WebAudio/web-audio-api/issues/1933 and
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1619486
+        return;
+      }
+      JS::AutoCheckCannotGC nogc;
       bool isShared;
       const float* src =
           JS_GetFloat32ArrayData(float32Arrays[c], &isShared, nogc);
