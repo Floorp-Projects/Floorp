@@ -1120,44 +1120,6 @@ void CodeGenerator::visitMathF(LMathF* math) {
   }
 }
 
-void CodeGenerator::visitTrunc(LTrunc* lir) {
-  FloatRegister input = ToFloatRegister(lir->input());
-  Register output = ToRegister(lir->output());
-
-  Label notZero;
-  masm.as_truncwd(ScratchFloat32Reg, input);
-  masm.as_cfc1(ScratchRegister, Assembler::FCSR);
-  masm.moveFromFloat32(ScratchFloat32Reg, output);
-  masm.ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
-
-  masm.ma_b(output, Imm32(0), &notZero, Assembler::NotEqual, ShortJump);
-  masm.moveFromDoubleHi(input, ScratchRegister);
-  // Check if input is in ]-1; -0] range by checking the sign bit.
-  masm.as_slt(ScratchRegister, ScratchRegister, zero);
-  masm.bind(&notZero);
-
-  bailoutCmp32(Assembler::NotEqual, ScratchRegister, Imm32(0), lir->snapshot());
-}
-
-void CodeGenerator::visitTruncF(LTruncF* lir) {
-  FloatRegister input = ToFloatRegister(lir->input());
-  Register output = ToRegister(lir->output());
-
-  Label notZero;
-  masm.as_truncws(ScratchFloat32Reg, input);
-  masm.as_cfc1(ScratchRegister, Assembler::FCSR);
-  masm.moveFromFloat32(ScratchFloat32Reg, output);
-  masm.ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
-
-  masm.ma_b(output, Imm32(0), &notZero, Assembler::NotEqual, ShortJump);
-  masm.moveFromFloat32(input, ScratchRegister);
-  // Check if input is in ]-1; -0] range by checking the sign bit.
-  masm.as_slt(ScratchRegister, ScratchRegister, zero);
-  masm.bind(&notZero);
-
-  bailoutCmp32(Assembler::NotEqual, ScratchRegister, Imm32(0), lir->snapshot());
-}
-
 void CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins) {
   emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()),
                      ins->mir());

@@ -2078,6 +2078,92 @@ void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
   ceil(src, dest, fail);
 }
 
+void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
+                                         Label* fail) {
+  const ARMFPRegister src32(src, 32);
+  ScratchFloat32Scope scratch(*this);
+
+  Label done, zeroCase;
+
+  // Convert scalar to signed 32-bit fixed-point, rounding toward zero.
+  // In the case of overflow, the output is saturated.
+  // In the case of NaN and -0, the output is zero.
+  Fcvtzs(ARMRegister(dest, 32), src32);
+
+  // If the output was zero, worry about special cases.
+  branch32(Assembler::Equal, dest, Imm32(0), &zeroCase);
+
+  // Fail on overflow cases.
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+
+  // If the output was non-zero and wasn't saturated, just return it.
+  jump(&done);
+
+  // Handle the case of a zero output:
+  // 1. The input may have been NaN, requiring a failure.
+  // 2. The input may have been in (-1,-0], requiring a failure.
+  {
+    bind(&zeroCase);
+
+    // If input is a negative number that truncated to zero, the real
+    // output should be the non-integer -0.
+    // The use of "lt" instead of "lo" also catches unordered NaN input.
+    Fcmp(src32, 0.0f);
+    B(fail, vixl::lt);
+
+    // Check explicitly for -0, bitwise.
+    Fmov(ARMRegister(dest, 32), src32);
+    branchTest32(Assembler::Signed, dest, dest, fail);
+    move32(Imm32(0), dest);
+  }
+
+  bind(&done);
+}
+
+void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
+                                        Label* fail) {
+  const ARMFPRegister src64(src, 64);
+  ScratchDoubleScope scratch(*this);
+
+  Label done, zeroCase;
+
+  // Convert scalar to signed 32-bit fixed-point, rounding toward zero.
+  // In the case of overflow, the output is saturated.
+  // In the case of NaN and -0, the output is zero.
+  Fcvtzs(ARMRegister(dest, 32), src64);
+
+  // If the output was zero, worry about special cases.
+  branch32(Assembler::Equal, dest, Imm32(0), &zeroCase);
+
+  // Fail on overflow cases.
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+
+  // If the output was non-zero and wasn't saturated, just return it.
+  jump(&done);
+
+  // Handle the case of a zero output:
+  // 1. The input may have been NaN, requiring a failure.
+  // 2. The input may have been in (-1,-0], requiring a failure.
+  {
+    bind(&zeroCase);
+
+    // If input is a negative number that truncated to zero, the real
+    // output should be the non-integer -0.
+    // The use of "lt" instead of "lo" also catches unordered NaN input.
+    Fcmp(src64, 0.0);
+    B(fail, vixl::lt);
+
+    // Check explicitly for -0, bitwise.
+    Fmov(ARMRegister(dest, 64), src64);
+    branchTest32(Assembler::Signed, dest, dest, fail);
+    movePtr(ImmPtr(0), dest);
+  }
+
+  bind(&done);
+}
+
 void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
                                          FloatRegister temp, Label* fail) {
   const ARMFPRegister src32(src, 32);
