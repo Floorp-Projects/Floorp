@@ -41,7 +41,7 @@ using namespace js;
 
 ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
                          JS::Realm* realm, ObjectGroupFlags initialFlags)
-    : headerAndClasp_(clasp),
+    : TenuredCellWithNonGCPointer(clasp),
       proto_(proto),
       realm_(realm),
       flags_(initialFlags) {

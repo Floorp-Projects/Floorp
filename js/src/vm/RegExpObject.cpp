@@ -599,7 +599,7 @@ bool js::StringHasRegExpMetaChars(JSLinearString* str) {
 /* RegExpShared */
 
 RegExpShared::RegExpShared(JSAtom* source, RegExpFlags flags)
-    : headerAndSource(source), pairCount_(0), flags(flags) {}
+    : CellWithTenuredGCPointer(source), pairCount_(0), flags(flags) {}
 
 void RegExpShared::traceChildren(JSTracer* trc) {
   // Discard code to avoid holding onto ExecutablePools.
@@ -607,7 +607,7 @@ void RegExpShared::traceChildren(JSTracer* trc) {
     discardJitCode();
   }
 
-  TraceNullableEdge(trc, &headerAndSource, "RegExpShared source");
+  TraceNullableCellHeaderEdge(trc, this, "RegExpShared source");
   if (kind() == RegExpShared::Kind::Atom) {
     TraceNullableEdge(trc, &patternAtom_, "RegExpShared pattern atom");
   } else {
