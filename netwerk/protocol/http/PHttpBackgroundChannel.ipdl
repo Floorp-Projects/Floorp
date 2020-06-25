@@ -8,11 +8,8 @@
 include protocol PBackground;
 include NeckoChannelParams;
 include HttpChannelParams;
-include PURLClassifierInfo;
 
 include "mozilla/net/NeckoMessageUtils.h";
-
-using nsIHttpChannel::FlashPluginState from "mozilla/net/NeckoMessageUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -23,13 +20,17 @@ async refcounted protocol PHttpBackgroundChannel
   manager PBackground;
 
 child:
-  async OnStartRequest(nsHttpResponseHead  responseHead,
-                       bool                useResponseHead,
-                       nsHttpHeaderArray   requestHeaders,
-                       HttpChannelOnStartRequestArgs args);
+  // OnStartRequest is sent over main thread IPC. The following
+  // OnTransportAndData/OnStopRequest/OnProgress/OnStatus/FlushForDiversion/
+  // DivertMessages needs to wait in content process until OnStartRequest
+  // is processed. For synchronizing the event sequence.
+  async OnStartRequestSent();
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message
+  // This is duplicated on PHttpChannel, which gets used for multi-part
+  // streams to make synchronization when we get OnStartRequest multiple
+  // times easier.
   async OnTransportAndData(nsresult  channelStatus,
                            nsresult  transportStatus,
                            uint64_t  offset,
@@ -37,21 +38,14 @@ child:
                            nsCString data,
                            bool dataFromSocketProcess);
 
-
+  // This is duplicated on PHttpChannel, which gets used for multi-part
+  // streams to make synchronization when we get OnStartRequest multiple
+  // times easier.
   async OnStopRequest(nsresult channelStatus,
                       ResourceTimingStructArgs timing,
                       TimeStamp lastActiveTabOptimization,
                       nsHttpHeaderArray responseTrailers,
                       ConsoleReportCollected[] consoleReport);
-
-  async OnProgress(int64_t progress, int64_t progressMax);
-
-  async OnStatus(nsresult status);
-
-  // Forwards nsIMultiPartChannelListener::onAfterLastPart. Make sure we've
-  // disconnected our listeners, since we might not have on the last
-  // OnStopRequest.
-  async OnAfterLastPart(nsresult aStatus);
 
   // Parent has been suspended for diversion; no more events to be enqueued.
   async FlushedForDiversion();
@@ -59,19 +53,6 @@ child:
   // Child should resume processing the ChannelEventQueue, i.e. diverting any
   // OnDataAvailable and OnStopRequest messages in the queue back to the parent.
   async DivertMessages();
-
-  // Tell the child that the resource being loaded has been classified.
-  async NotifyClassificationFlags(uint32_t aClassificationFlags, bool aIsThirdParty);
-
-  // Tell the child that the current channel's document is not allowed to load
-  // flash content.
-  async NotifyFlashPluginStateChanged(FlashPluginState aState);
-
-  // Tell the child information of matched URL againts SafeBrowsing list
-  async SetClassifierMatchedInfo(ClassifierInfo info);
-
-  // Tell the child information of matched URL againts SafeBrowsing tracking list
-  async SetClassifierMatchedTrackingInfo(ClassifierInfo info);
 
   async __delete__();
 

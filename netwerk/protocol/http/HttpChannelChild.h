@@ -132,7 +132,20 @@ class HttpChannelChild final : public PHttpChannelChild,
   nsresult CrossProcessRedirectFinished(nsresult aStatus);
 
  protected:
-  mozilla::ipc::IPCResult RecvOnStartRequestSent() override;
+  mozilla::ipc::IPCResult RecvOnStartRequest(
+      const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
+      const nsHttpHeaderArray& aRequestHeaders,
+      const HttpChannelOnStartRequestArgs& aArgs) override;
+  mozilla::ipc::IPCResult RecvOnTransportAndData(
+      const nsresult& aChannelStatus, const nsresult& aTransportStatus,
+      const uint64_t& aOffset, const uint32_t& aCount,
+      const nsCString& aData) override;
+
+  mozilla::ipc::IPCResult RecvOnStopRequest(
+      const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
+      const TimeStamp& aLastActiveTabOptHit,
+      const nsHttpHeaderArray& aResponseTrailers,
+      nsTArray<ConsoleReportCollected>&& aConsoleReports) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(
       const uint32_t& registrarId, const URIParams& newURI,
@@ -165,6 +178,20 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvAltDataCacheInputStreamAvailable(
       const Maybe<IPCStream>& aStream) override;
 
+  mozilla::ipc::IPCResult RecvNotifyClassificationFlags(
+      const uint32_t& aClassificationFlags, const bool& aIsThirdParty) override;
+
+  mozilla::ipc::IPCResult RecvNotifyFlashPluginStateChanged(
+      const nsIHttpChannel::FlashPluginState& aState) override;
+
+  mozilla::ipc::IPCResult RecvSetClassifierMatchedInfo(
+      const ClassifierInfo& info) override;
+
+  mozilla::ipc::IPCResult RecvSetClassifierMatchedTrackingInfo(
+      const ClassifierInfo& info) override;
+
+  mozilla::ipc::IPCResult RecvOnAfterLastPart(const nsresult& aStatus) override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void DoNotifyListenerCleanup() override;
@@ -195,6 +222,11 @@ class HttpChannelChild final : public PHttpChannelChild,
   NS_IMETHOD LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;
+
+  mozilla::ipc::IPCResult RecvOnProgress(const int64_t& aProgress,
+                                         const int64_t& aProgressMax) override;
+
+  mozilla::ipc::IPCResult RecvOnStatus(const nsresult& aStatus) override;
 
  private:
   // We want to handle failure result of AsyncOpen, hence AsyncOpen calls the
@@ -235,10 +267,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   already_AddRefed<nsIEventTarget> GetODATarget();
 
   [[nodiscard]] nsresult ContinueAsyncOpen();
-  void ProcessOnStartRequest(const nsHttpResponseHead& aResponseHead,
-                             const bool& aUseResponseHead,
-                             const nsHttpHeaderArray& aRequestHeaders,
-                             const HttpChannelOnStartRequestArgs& aArgs);
 
   // Callbacks while receiving OnTransportAndData/OnStopRequest/OnProgress/
   // OnStatus/FlushedForDiversion/DivertMessages on background IPC channel.
@@ -253,19 +281,6 @@ class HttpChannelChild final : public PHttpChannelChild,
       const nsTArray<ConsoleReportCollected>& aConsoleReports);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
-  void ProcessNotifyClassificationFlags(uint32_t aClassificationFlags,
-                                        bool aIsThirdParty);
-  void ProcessNotifyFlashPluginStateChanged(
-      nsIHttpChannel::FlashPluginState aState);
-  void ProcessSetClassifierMatchedInfo(const nsCString& aList,
-                                       const nsCString& aProvider,
-                                       const nsCString& aFullHash);
-  void ProcessSetClassifierMatchedTrackingInfo(const nsCString& aLists,
-                                               const nsCString& aFullHashes);
-  void ProcessOnAfterLastPart(const nsresult& aStatus);
-  void ProcessOnProgress(const int64_t& aProgress, const int64_t& aProgressMax);
-
-  void ProcessOnStatus(const nsresult& aStatus);
 
   // Return true if we need to tell the parent the size of unreported received
   // data
@@ -455,17 +470,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   // True if this channel is a multi-part channel, and the last part
   // is currently being processed.
   uint8_t mIsLastPartOfMultiPart : 1;
-
-  // True if this channel is suspended by ConnectParent and not resumed by
-  // CompleteRedirectSetup/RecvDeleteSelf.
-  uint8_t mSuspendForWaitCompleteRedirectSetup : 1;
-
-  // True if RecvOnStartRequestSent was received.
-  uint8_t mRecvOnStartRequestSentCalled : 1;
-
-  // True if this channel is suspened by waiting for permission, cookie or
-  // stream filter. That is, RecvOnStartRequestSent is received.
-  uint8_t mSuspendedByWaitingForPermissionCookieStreamFilter : 1;
 
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
