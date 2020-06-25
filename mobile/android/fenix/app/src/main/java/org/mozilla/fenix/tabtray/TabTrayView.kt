@@ -122,7 +122,7 @@ class TabTrayView(
                     }
                     if (!hasLoaded) {
                         hasLoaded = true
-                        tray.layoutManager?.scrollToPosition(selectedBrowserTabIndex)
+                        scrollToSelectedTab()
                         if (view.context.settings().accessibilityServicesEnabled) {
                             lifecycleScope.launch {
                                 delay(SELECTION_DELAY.toLong())
@@ -194,6 +194,7 @@ class TabTrayView(
         filterTabs.invoke(filter)
 
         updateState(view.context.components.core.store.state)
+        scrollToSelectedTab()
     }
 
     override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/ }
@@ -225,16 +226,6 @@ class TabTrayView(
         }
     }
 
-    private fun toggleFabText(private: Boolean) {
-        if (private) {
-            fabView.new_tab_button.extend()
-            fabView.new_tab_button.contentDescription = view.context.resources.getString(R.string.add_private_tab)
-        } else {
-            fabView.new_tab_button.shrink()
-            fabView.new_tab_button.contentDescription = view.context.resources.getString(R.string.add_tab)
-        }
-    }
-
     fun setTopOffset(landscape: Boolean) {
         val topOffset = if (landscape) {
             0
@@ -247,6 +238,31 @@ class TabTrayView(
 
     fun dismissMenu() {
         menu?.dismiss()
+    }
+
+    private fun toggleFabText(private: Boolean) {
+        if (private) {
+            fabView.new_tab_button.extend()
+            fabView.new_tab_button.contentDescription = view.context.resources.getString(R.string.add_private_tab)
+        } else {
+            fabView.new_tab_button.shrink()
+            fabView.new_tab_button.contentDescription = view.context.resources.getString(R.string.add_tab)
+        }
+    }
+
+    private fun scrollToSelectedTab() {
+        (view.tabsTray as? BrowserTabsTray)?.also { tray ->
+            val tabs = if (isPrivateModeSelected) {
+                view.context.components.core.store.state.privateTabs
+            } else {
+                view.context.components.core.store.state.normalTabs
+            }
+
+            val selectedBrowserTabIndex = tabs
+                .indexOfFirst { it.id == view.context.components.core.store.state.selectedTabId }
+
+            tray.layoutManager?.scrollToPosition(selectedBrowserTabIndex)
+        }
     }
 
     companion object {
