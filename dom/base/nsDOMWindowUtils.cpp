@@ -318,7 +318,7 @@ nsDOMWindowUtils::GetDocCharsetIsForced(bool* aIsForced) {
 
   Document* doc = GetDocument();
   *aIsForced =
-      doc && doc->GetDocumentCharacterSetSource() >= kCharsetFromParentForced;
+      doc && doc->GetDocumentCharacterSetSource() >= kCharsetFromUserForced;
   return NS_OK;
 }
 

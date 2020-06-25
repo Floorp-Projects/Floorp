@@ -23,7 +23,6 @@ enum {
   kCharsetFromIrreversibleAutoDetection,
   kCharsetFromChannel,
   kCharsetFromOtherComponent,
-  kCharsetFromParentForced,  // propagates to child frames
   kCharsetFromUserForced,    // propagates to child frames
   kCharsetFromUserForcedAutoDetection,
   kCharsetFromByteOrderMark,
