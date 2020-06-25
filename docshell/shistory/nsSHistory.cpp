@@ -1573,37 +1573,31 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
   }
 
   // Going back or forward.
-  bool differenceFound = false;
-  nsresult rv = LoadDifferingEntries(prevEntry, nextEntry, mRootBC, aLoadType,
-                                     differenceFound, aLoadResults);
+  bool differenceFound = LoadDifferingEntries(prevEntry, nextEntry, mRootBC,
+                                              aLoadType, aLoadResults);
   if (!differenceFound) {
     // We did not find any differences. Go further in the history.
     return LoadNextPossibleEntry(aIndex, aLoadType, aHistCmd, aLoadResults);
   }
 
-  return rv;
+  return NS_OK;
 }
 
-nsresult nsSHistory::LoadDifferingEntries(
-    nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry, BrowsingContext* aParent,
-    long aLoadType, bool& aDifferenceFound,
-    nsTArray<LoadEntryResult>& aLoadResults) {
-  if (!aPrevEntry || !aNextEntry || !aParent) {
-    return NS_ERROR_FAILURE;
-  }
+bool nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
+                                      nsISHEntry* aNextEntry,
+                                      BrowsingContext* aParent, long aLoadType,
+                                      nsTArray<LoadEntryResult>& aLoadResults) {
+  MOZ_ASSERT(aPrevEntry && aNextEntry && aParent);
 
-  nsresult result = NS_OK;
   uint32_t prevID = aPrevEntry->GetID();
   uint32_t nextID = aNextEntry->GetID();
 
   // Check the IDs to verify if the pages are different.
   if (prevID != nextID) {
-    aDifferenceFound = true;
-
     // Set the Subframe flag if not navigating the root docshell.
     aNextEntry->SetIsSubFrame(aParent != mRootBC);
     InitiateLoad(aNextEntry, aParent, aLoadType, aLoadResults);
-    return NS_OK;
+    return true;
   }
 
   // The entries are the same, so compare any child frames
@@ -1615,6 +1609,7 @@ nsresult nsSHistory::LoadDifferingEntries(
   aParent->GetChildren(browsingContexts);
 
   // Search for something to load next.
+  bool differenceFound = false;
   for (int32_t i = 0; i < ncnt; ++i) {
     // First get an entry which may cause a new page to be loaded.
     nsCOMPtr<nsISHEntry> nChild;
@@ -1652,14 +1647,19 @@ nsresult nsSHistory::LoadDifferingEntries(
         }
       }
     }
+    if (!pChild) {
+      continue;
+    }
 
     // Finally recursively call this method.
     // This will either load a new page to shell or some subshell or
     // do nothing.
-    LoadDifferingEntries(pChild, nChild, bcChild, aLoadType, aDifferenceFound,
-                         aLoadResults);
+    if (LoadDifferingEntries(pChild, nChild, bcChild, aLoadType,
+                             aLoadResults)) {
+      differenceFound = true;
+    }
   }
-  return result;
+  return differenceFound;
 }
 
 void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
