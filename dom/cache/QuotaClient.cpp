@@ -203,21 +203,34 @@ CacheQuotaClient* CacheQuotaClient::Get() {
 
 CacheQuotaClient::Type CacheQuotaClient::GetType() { return DOMCACHE; }
 
-nsresult CacheQuotaClient::InitOrigin(PersistenceType aPersistenceType,
-                                      const nsACString& aGroup,
-                                      const nsACString& aOrigin,
-                                      const AtomicBool& aCanceled,
-                                      UsageInfo* aUsageInfo) {
+Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  // The QuotaManager passes a nullptr UsageInfo if there is no quota being
-  // enforced against the origin.
-  if (!aUsageInfo) {
-    return NS_OK;
+  UsageInfo res;
+
+  nsresult rv =
+      GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+                                /* aInitializing*/ true, &res);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
   }
 
-  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
-                                   /* aInitializing*/ true, aUsageInfo);
+  return res;
+}
+
+nsresult CacheQuotaClient::InitOriginWithoutTracking(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+  AssertIsOnIOThread();
+
+  // This is called when a storage/permanent/chrome/cache directory exists. Even
+  // though this shouldn't happen with a "good" profile, we shouldn't return an
+  // error here, since that would cause origin initialization to fail. We just
+  // warn and otherwise ignore that.
+  UNKNOWN_FILE_WARNING(NS_LITERAL_STRING(DOMCACHE_DIRECTORY_NAME));
+  return NS_OK;
 }
 
 Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOrigin(

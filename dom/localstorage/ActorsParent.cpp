@@ -2819,10 +2819,15 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   Type GetType() override;
 
-  nsresult InitOrigin(PersistenceType aPersistenceType,
-                      const nsACString& aGroup, const nsACString& aOrigin,
-                      const AtomicBool& aCanceled,
-                      UsageInfo* aUsageInfo) override;
+  Result<UsageInfo, nsresult> InitOrigin(PersistenceType aPersistenceType,
+                                         const nsACString& aGroup,
+                                         const nsACString& aOrigin,
+                                         const AtomicBool& aCanceled) override;
+
+  nsresult InitOriginWithoutTracking(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     const AtomicBool& aCanceled) override;
 
   Result<UsageInfo, nsresult> GetUsageForOrigin(
       PersistenceType aPersistenceType, const nsACString& aGroup,
@@ -8817,11 +8822,9 @@ mozilla::dom::quota::Client::Type QuotaClient::GetType() {
   return QuotaClient::LS;
 }
 
-nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
-                                 const nsACString& aGroup,
-                                 const nsACString& aOrigin,
-                                 const AtomicBool& aCanceled,
-                                 UsageInfo* aUsageInfo) {
+Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
 
@@ -8833,7 +8836,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                                     getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_GetDirForOrigin);
-    return rv;
+    return Err(rv);
   }
 
   MOZ_ASSERT(directory);
@@ -8841,7 +8844,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   rv = directory->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_Append);
-    return rv;
+    return Err(rv);
   }
 
 #ifdef DEBUG
@@ -8849,7 +8852,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   rv = directory->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_Exists);
-    return rv;
+    return Err(rv);
   }
 
   MOZ_ASSERT(exists);
@@ -8859,14 +8862,14 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   rv = directory->GetPath(directoryPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_GetPath);
-    return rv;
+    return Err(rv);
   }
 
   nsCOMPtr<nsIFile> usageFile;
   rv = GetUsageFile(directoryPath, getter_AddRefs(usageFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_GetUsageFile);
-    return rv;
+    return Err(rv);
   }
 
   bool usageFileExists;
@@ -8877,12 +8880,12 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_IsDirectory);
-      return rv;
+      return Err(rv);
     }
 
     if (NS_WARN_IF(isDirectory)) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, LS_UnexpectedDir);
-      return NS_ERROR_FAILURE;
+      return Err(NS_ERROR_FAILURE);
     }
 
     usageFileExists = true;
@@ -8890,11 +8893,13 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     usageFileExists = false;
   }
 
+  UsageInfo res;
+
   nsCOMPtr<nsIFile> usageJournalFile;
   rv = GetUsageJournalFile(directoryPath, getter_AddRefs(usageJournalFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_GetUsageForJFile);
-    return rv;
+    return Err(rv);
   }
 
   rv = usageJournalFile->IsDirectory(&isDirectory);
@@ -8902,19 +8907,19 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_IsDirectory2);
-      return rv;
+      return Err(rv);
     }
 
     if (NS_WARN_IF(isDirectory)) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, LS_UnexpectedDir2);
-      return NS_ERROR_FAILURE;
+      return Err(NS_ERROR_FAILURE);
     }
 
     if (usageFileExists) {
       rv = usageFile->Remove(false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_Remove);
-        return rv;
+        return Err(rv);
       }
 
       usageFileExists = false;
@@ -8923,7 +8928,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     rv = usageJournalFile->Remove(false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_Remove2);
-      return rv;
+      return Err(rv);
     }
   }
 
@@ -8931,13 +8936,13 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   rv = directory->Clone(getter_AddRefs(file));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_Clone);
-    return rv;
+    return Err(rv);
   }
 
   rv = file->Append(NS_LITERAL_STRING(DATA_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_Append2);
-    return rv;
+    return Err(rv);
   }
 
   rv = file->IsDirectory(&isDirectory);
@@ -8945,12 +8950,12 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_IsDirectory3);
-      return rv;
+      return Err(rv);
     }
 
     if (NS_WARN_IF(isDirectory)) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, LS_UnexpectedDir3);
-      return NS_ERROR_FAILURE;
+      return Err(NS_ERROR_FAILURE);
     }
 
     int64_t usage;
@@ -8962,36 +8967,36 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                    getter_AddRefs(connection), &dummy);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_CreateConnection);
-        return rv;
+        return Err(rv);
       }
 
       rv = GetUsage(connection, /* aArchivedOriginScope */ nullptr, &usage);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_GetUsage);
-        return rv;
+        return Err(rv);
       }
 
       rv = UpdateUsageFile(usageFile, usageJournalFile, usage);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_UpdateUsageFile);
-        return rv;
+        return Err(rv);
       }
 
       rv = usageJournalFile->Remove(false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_Remove3);
-        return rv;
+        return Err(rv);
       }
     }
 
     MOZ_ASSERT(usage >= 0);
 
-    aUsageInfo->IncrementDatabaseUsage(Some(uint64_t(usage)));
+    res.IncrementDatabaseUsage(Some(uint64_t(usage)));
   } else if (usageFileExists) {
     rv = usageFile->Remove(false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_Remove4);
-      return rv;
+      return Err(rv);
     }
   }
 
@@ -9002,11 +9007,11 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   rv = directory->GetDirectoryEntries(getter_AddRefs(directoryEntries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_GetDirEntries);
-    return rv;
+    return Err(rv);
   }
 
   if (!directoryEntries) {
-    return NS_OK;
+    return res;
   }
 
   while (true) {
@@ -9018,7 +9023,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     rv = directoryEntries->GetNextFile(getter_AddRefs(file));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_GetNextFile);
-      return rv;
+      return Err(rv);
     }
 
     if (!file) {
@@ -9029,7 +9034,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_GetLeafName);
-      return rv;
+      return Err(rv);
     }
 
     // Don't need to check for USAGE_JOURNAL_FILE_NAME. We removed it above
@@ -9045,7 +9050,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       rv = file->IsDirectory(&isDirectory);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_IsDirectory4);
-        return rv;
+        return Err(rv);
       }
 
       if (!isDirectory) {
@@ -9057,6 +9062,19 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   }
 #endif
 
+  return res;
+}
+
+nsresult QuotaClient::InitOriginWithoutTracking(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+  AssertIsOnIOThread();
+
+  // This is called when a storage/permanent/chrome/ls directory exists. Even
+  // though this shouldn't happen with a "good" profile, we shouldn't return an
+  // error here, since that would cause origin initialization to fail. We just
+  // warn and otherwise ignore that.
+  UNKNOWN_FILE_WARNING(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
   return NS_OK;
 }
 
