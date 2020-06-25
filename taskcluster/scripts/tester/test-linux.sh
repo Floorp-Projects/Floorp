@@ -187,6 +187,11 @@ fi
 
 maybe_start_pulse
 
+# Bug 1607713 - set cursor position to 0,0 to avoid odd libx11 interaction
+if [ ! -z $DISPLAY ]; then
+    xwit -root -warp 0 0
+fi
+
 # For telemetry purposes, the build process wants information about the
 # source it is running
 export MOZ_SOURCE_REPO="${GECKO_HEAD_REPOSITORY}"
