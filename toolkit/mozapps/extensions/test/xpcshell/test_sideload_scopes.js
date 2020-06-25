@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { AddonSettings } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonSettings.jsm"
-);
-
 // We refer to addons that were sideloaded prior to disabling sideloading as legacy.  We
 // determine that they are legacy because they are in a SCOPE that is not included
 // in AddonSettings.SCOPES_SIDELOAD.
@@ -65,12 +61,10 @@ add_task(async function test_sideloads_legacy() {
 // Test that a sideload install in SCOPE_PROFILE is allowed, all others are
 // disallowed.
 add_task(async function test_sideloads_disabled() {
-  // First, reset our scope pref to disable sideloading.
-  Services.prefs.clearUserPref("extensions.sideloadScopes");
-  Assert.equal(
-    AddonManager.SCOPE_PROFILE,
-    AddonSettings.SCOPES_SIDELOAD,
-    "sideload limited to profile"
+  // First, reset our scope pref to disable sideloading.  head_sideload.js set this to ALL.
+  Services.prefs.setIntPref(
+    "extensions.sideloadScopes",
+    AddonManager.SCOPE_PROFILE
   );
 
   // Create 4 new addons, only one of these, "profile" should
