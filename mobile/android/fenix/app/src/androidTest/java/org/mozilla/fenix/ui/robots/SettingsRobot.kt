@@ -19,7 +19,6 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
-import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -369,19 +368,19 @@ private fun assertLeakCanaryButton() {
 private fun assertAboutHeading(): ViewInteraction {
     scrollToElementByText("About")
     return onView(withText("About"))
-        .check(matches(isCompletelyDisplayed()))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertRateOnGooglePlay(): ViewInteraction {
     scrollToElementByText("About Firefox Preview")
     return onView(withText("Rate on Google Play"))
-        .check(matches(isCompletelyDisplayed()))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertAboutFirefoxPreview(): ViewInteraction {
     scrollToElementByText("About Firefox Preview")
     return onView(withText("About Firefox Preview"))
-        .check(matches(isCompletelyDisplayed()))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 fun swipeToBottom() = onView(withId(R.id.recycler_view)).perform(ViewActions.swipeUp())
