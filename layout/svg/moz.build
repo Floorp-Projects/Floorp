@@ -19,19 +19,19 @@ EXPORTS += [
     'nsFilterInstance.h',
     'nsSVGDisplayableFrame.h',
     'nsSVGFilterInstance.h',
-    'nsSVGForeignObjectFrame.h',
-    'nsSVGImageFrame.h',
     'nsSVGIntegrationUtils.h',
-    'nsSVGUseFrame.h',
     'nsSVGUtils.h',
-    'SVGImageContext.h',
-    'SVGObserverUtils.h',
 ]
 
 EXPORTS.mozilla += [
     'SVGContextPaint.h',
+    'SVGForeignObjectFrame.h',
     'SVGGeometryFrame.h',
-    'SVGTextFrame.h'
+    'SVGImageContext.h',
+    'SVGImageFrame.h',
+    'SVGObserverUtils.h',
+    'SVGTextFrame.h',
+    'SVGUseFrame.h'
 ]
 
 UNIFIED_SOURCES += [
@@ -43,11 +43,9 @@ UNIFIED_SOURCES += [
     'nsSVGContainerFrame.cpp',
     'nsSVGFilterFrame.cpp',
     'nsSVGFilterInstance.cpp',
-    'nsSVGForeignObjectFrame.cpp',
     'nsSVGGenericContainerFrame.cpp',
     'nsSVGGFrame.cpp',
     'nsSVGGradientFrame.cpp',
-    'nsSVGImageFrame.cpp',
     'nsSVGInnerSVGFrame.cpp',
     'nsSVGIntegrationUtils.cpp',
     'nsSVGMarkerFrame.cpp',
@@ -57,7 +55,6 @@ UNIFIED_SOURCES += [
     'nsSVGStopFrame.cpp',
     'nsSVGSwitchFrame.cpp',
     'nsSVGSymbolFrame.cpp',
-    'nsSVGUseFrame.cpp',
     'nsSVGUtils.cpp',
     'nsSVGViewportFrame.cpp',
     'SVGContextPaint.cpp',
@@ -65,10 +62,13 @@ UNIFIED_SOURCES += [
     'SVGFEImageFrame.cpp',
     'SVGFELeafFrame.cpp',
     'SVGFEUnstyledLeafFrame.cpp',
+    'SVGForeignObjectFrame.cpp',
     'SVGGeometryFrame.cpp',
     'SVGImageContext.cpp',
+    'SVGImageFrame.cpp',
     'SVGObserverUtils.cpp',
     'SVGTextFrame.cpp',
+    'SVGUseFrame.cpp',
     'SVGViewFrame.cpp',
 ]
 

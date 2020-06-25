@@ -8,15 +8,15 @@
 #define mozilla_dom_SVGViewportElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/FromParser.h"
+#include "mozilla/SVGImageContext.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/FromParser.h"
 #include "nsIContentInlines.h"
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedLength.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedViewBox.h"
 #include "SVGGraphicsElement.h"
-#include "SVGImageContext.h"
 #include "nsISVGPoint.h"
 #include "SVGPreserveAspectRatio.h"
 

@@ -265,7 +265,7 @@ bool SVGImageElement::GetGeometryBounds(
 
 already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
   // To get bound, the faster method GetGeometryBounds() should already return
-  // success. For render and hittest, nsSVGImageFrame should have its own
+  // success. For render and hittest, SVGImageFrame should have its own
   // implementation that doesn't need to build path for an image.
   MOZ_ASSERT_UNREACHABLE(
       "There is no reason to call BuildPath for SVGImageElement");

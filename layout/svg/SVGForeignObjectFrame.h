@@ -17,18 +17,23 @@
 
 class gfxContext;
 
-class nsSVGForeignObjectFrame final : public nsContainerFrame,
-                                      public nsSVGDisplayableFrame {
-  friend nsContainerFrame* NS_NewSVGForeignObjectFrame(
+nsContainerFrame* NS_NewSVGForeignObjectFrame(mozilla::PresShell* aPresShell,
+                                              mozilla::ComputedStyle* aStyle);
+
+namespace mozilla {
+
+class SVGForeignObjectFrame final : public nsContainerFrame,
+                                    public nsSVGDisplayableFrame {
+  friend nsContainerFrame* ::NS_NewSVGForeignObjectFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGForeignObjectFrame(ComputedStyle* aStyle,
-                                   nsPresContext* aPresContext);
+  explicit SVGForeignObjectFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext);
 
  public:
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGForeignObjectFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGForeignObjectFrame)
 
   // nsIFrame:
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -89,14 +94,16 @@ class nsSVGForeignObjectFrame final : public nsContainerFrame,
  protected:
   // implementation helpers:
   void DoReflow();
-  void RequestReflow(mozilla::IntrinsicDirty aType);
+  void RequestReflow(IntrinsicDirty aType);
 
   // If width or height is less than or equal to zero we must disable rendering
   bool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
 
-  mozilla::UniquePtr<gfxMatrix> mCanvasTM;
+  UniquePtr<gfxMatrix> mCanvasTM;
 
   bool mInReflow;
 };
+
+}  // namespace mozilla
 
 #endif
