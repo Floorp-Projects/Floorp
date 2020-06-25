@@ -146,6 +146,9 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   mozilla::ipc::IPCResult RecvSaveStorageAccessPermissionGranted();
 
+  mozilla::ipc::IPCResult RecvAddBlockedFrameNodeByClassifier(
+      const MaybeDiscardedBrowsingContext& aNode);
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
