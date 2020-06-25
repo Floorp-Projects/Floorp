@@ -15,6 +15,7 @@
 #include "mozilla/dom/JSActor.h"
 #include "mozilla/extensions/WebExtensionContentScript.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDOMProcessParent.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
@@ -38,9 +39,9 @@ class JSProcessActorParent final : public JSActor {
     return MakeAndAddRef<JSProcessActorParent>();
   }
 
-  ContentParent* Manager() const { return mManager; }
+  nsIDOMProcessParent* Manager() const { return mManager; }
 
-  void Init(const nsACString& aName, ContentParent* aManager);
+  void Init(const nsACString& aName, nsIDOMProcessParent* aManager);
   void AfterDestroy();
 
  protected:
@@ -56,7 +57,7 @@ class JSProcessActorParent final : public JSActor {
   ~JSProcessActorParent();
 
   bool mCanSend = true;
-  RefPtr<ContentParent> mManager;
+  nsCOMPtr<nsIDOMProcessParent> mManager;
 };
 
 }  // namespace dom

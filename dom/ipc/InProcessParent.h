@@ -8,7 +8,10 @@
 #define mozilla_dom_InProcessParent_h
 
 #include "mozilla/dom/PInProcessParent.h"
+#include "mozilla/dom/JSProcessActorParent.h"
+#include "mozilla/dom/ProcessActor.h"
 #include "mozilla/StaticPtr.h"
+#include "nsIDOMProcessParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,12 +27,16 @@ class InProcessChild;
  * for async actors which want to communicate uniformly between Content->Chrome
  * and Chrome->Chrome situations.
  */
-class InProcessParent final : public nsIObserver, public PInProcessParent {
+class InProcessParent final : public nsIDOMProcessParent,
+                              public nsIObserver,
+                              public PInProcessParent,
+                              public ProcessActor {
  public:
   friend class InProcessChild;
   friend class PInProcessParent;
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMPROCESSPARENT
   NS_DECL_NSIOBSERVER
 
   // Get the singleton instance of this actor.
@@ -39,6 +46,9 @@ class InProcessParent final : public nsIObserver, public PInProcessParent {
   // not an in-process actor, or is not connected, this method will return
   // |nullptr|.
   static IProtocol* ChildActorFor(IProtocol* aActor);
+
+  const nsAString& GetRemoteType() const override { return VoidString(); };
+  JSActor::Type GetSide() override { return JSActor::Type::Parent; }
 
  private:
   // Lifecycle management is implemented in InProcessImpl.cpp
@@ -50,6 +60,8 @@ class InProcessParent final : public nsIObserver, public PInProcessParent {
 
   static StaticRefPtr<InProcessParent> sSingleton;
   static bool sShutdown;
+
+  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorParent> mProcessActors;
 };
 
 }  // namespace dom
