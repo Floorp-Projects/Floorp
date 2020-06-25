@@ -81,7 +81,6 @@ add_task(async function test_empty_first_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown");
   let results = await shownPromise;
-  await popupEnabled();
   popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected");
   checkAutoCompleteResults(results, ["name", "Name", "USER"], "example.com", "initial");
@@ -101,7 +100,6 @@ add_task(async function test_empty_second_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
-  await popupEnabled();
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_Enter");
@@ -114,7 +112,6 @@ add_task(async function test_empty_third_entry() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
-  await popupEnabled();
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_ArrowDown"); // third
@@ -129,7 +126,6 @@ add_task(async function test_preserve_matching_username_case() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
-  await popupEnabled();
 
   // Check that we don't clobber user-entered text when tabbing away
   // (even with no autocomplete entry selected)
