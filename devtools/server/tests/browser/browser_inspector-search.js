@@ -183,6 +183,18 @@ add_task(async function() {
             },
           ],
         },
+        {
+          desc: "Search using XPath grouping expression",
+          search: "(//*)[2]",
+          expected: [{ node: inspectee.querySelector("head"), type: "xpath" }],
+        },
+        {
+          desc: "Search using XPath function",
+          search: "id('arrows')",
+          expected: [
+            { node: inspectee.querySelector("#arrows"), type: "xpath" },
+          ],
+        },
       ];
 
       const isDeeply = (a, b, msg) => {
