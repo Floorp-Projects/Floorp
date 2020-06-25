@@ -350,7 +350,8 @@ class GeckoWebExtension(
                 homePageUrl = it.homepageUrl,
                 version = it.version,
                 permissions = it.permissions.toList(),
-                hostPermissions = it.origins.toList(),
+                // Origins is marked as @NonNull but may be null: https://bugzilla.mozilla.org/show_bug.cgi?id=1629957
+                hostPermissions = it.origins.orEmpty().toList(),
                 disabledFlags = DisabledFlags.select(it.disabledFlags),
                 optionsPageUrl = it.optionsPageUrl,
                 openOptionsPageInTab = it.openOptionsPageInTab,
