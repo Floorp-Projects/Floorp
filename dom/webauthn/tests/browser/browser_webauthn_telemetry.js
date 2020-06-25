@@ -40,21 +40,6 @@ function validateHistogramEntryCount(aHistogramName, aExpectedCount) {
   );
 }
 
-function checkRpIdHash(rpIdHash) {
-  return crypto.subtle
-    .digest("SHA-256", string2buffer("example.com"))
-    .then(calculatedRpIdHash => {
-      let calcHashStr = bytesToBase64UrlSafe(
-        new Uint8Array(calculatedRpIdHash)
-      );
-      let providedHashStr = bytesToBase64UrlSafe(new Uint8Array(rpIdHash));
-
-      if (calcHashStr != providedHashStr) {
-        throw new Error("Calculated RP ID hash doesn't match.");
-      }
-    });
-}
-
 add_task(async function test_setup() {
   cleanupTelemetry();
 
@@ -81,7 +66,7 @@ add_task(async function test() {
   let { authDataObj } = await webAuthnDecodeCBORAttestation(attObj);
 
   // Make sure the RP ID hash matches what we calculate.
-  await checkRpIdHash(authDataObj.rpIdHash);
+  await checkRpIdHash(authDataObj.rpIdHash, "example.com");
 
   // Get a new assertion.
   let {

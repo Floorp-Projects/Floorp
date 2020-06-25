@@ -817,6 +817,8 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
   nsTArray<nsTArray<uint8_t>> appIds;
   appIds.AppendElement(std::move(rpIdHash));
 
+  Maybe<nsTArray<uint8_t>> appIdHashExt = Nothing();
+
   if (aInfo.Extra().isSome()) {
     const auto& extra = aInfo.Extra().ref();
 
@@ -832,7 +834,8 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
     // Process extensions.
     for (const WebAuthnExtension& ext : extra.Extensions()) {
       if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
-        appIds.AppendElement(ext.get_WebAuthnExtensionAppId().AppId().Clone());
+        appIdHashExt = Some(ext.get_WebAuthnExtensionAppId().AppId().Clone());
+        appIds.AppendElement(appIdHashExt->Clone());
       }
     }
   }
@@ -940,9 +943,9 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
 
   nsTArray<WebAuthnExtensionResult> extensions;
 
-  if (chosenAppId != rpIdHash) {
-    // Indicate to the RP that we used the FIDO appId.
-    extensions.AppendElement(WebAuthnExtensionResultAppId(true));
+  if (appIdHashExt) {
+    bool usedAppId = (chosenAppId == appIdHashExt.ref());
+    extensions.AppendElement(WebAuthnExtensionResultAppId(usedAppId));
   }
 
   CryptoBuffer counterBuf;
