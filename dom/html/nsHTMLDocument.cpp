@@ -275,7 +275,7 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
   if (!aDocShell) {
     return;
   }
-  if (aCharsetSource >= kCharsetFromParentForced) {
+  if (aCharsetSource >= kCharsetFromUserForced) {
     return;
   }
 
@@ -287,8 +287,7 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
   if (!parentCharset) {
     return;
   }
-  if (kCharsetFromParentForced == parentSource ||
-      kCharsetFromUserForced == parentSource ||
+  if (kCharsetFromUserForced == parentSource ||
       kCharsetFromUserForcedAutoDetection == parentSource) {
     if (WillIgnoreCharsetOverride() ||
         !IsAsciiCompatible(aEncoding) ||  // if channel said UTF-16
@@ -296,7 +295,7 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
       return;
     }
     aEncoding = WrapNotNull(parentCharset);
-    aCharsetSource = kCharsetFromParentForced;
+    aCharsetSource = kCharsetFromUserForced;
     return;
   }
 
