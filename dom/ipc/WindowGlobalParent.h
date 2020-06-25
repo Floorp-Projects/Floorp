@@ -20,7 +20,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
-#include "nsIContentParent.h"
+#include "nsIDOMProcessParent.h"
 #include "mozilla/dom/WindowGlobalActor.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/net/CookieJarSettings.h"
@@ -92,6 +92,8 @@ class WindowGlobalParent final : public WindowContext,
   // Get this actor's manager if it is not an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is in-process.
   already_AddRefed<BrowserParent> GetBrowserParent();
+
+  ContentParent* GetContentParent();
 
   void ReceiveRawMessage(const JSActorMessageMeta& aMeta,
                          ipc::StructuredCloneData&& aData,
@@ -173,7 +175,7 @@ class WindowGlobalParent final : public WindowContext,
 
   ContentBlockingLog* GetContentBlockingLog() { return &mContentBlockingLog; }
 
-  nsIContentParent* GetContentParent();
+  nsIDOMProcessParent* GetDomProcess();
 
   nsICookieJarSettings* CookieJarSettings() { return mCookieJarSettings; }
 

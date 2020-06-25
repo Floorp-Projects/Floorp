@@ -27,14 +27,44 @@ JSObject* JSProcessActorChild::WrapObject(JSContext* aCx,
   return JSProcessActorChild_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+namespace {
+
+class AsyncMessageToProcessParent : public Runnable {
+ public:
+  AsyncMessageToProcessParent(const JSActorMessageMeta& aMetadata,
+                              ipc::StructuredCloneData&& aData,
+                              ipc::StructuredCloneData&& aStack)
+      : mozilla::Runnable("InProcessParent::HandleAsyncMessage"),
+        mMetadata(aMetadata),
+        mData(std::move(aData)),
+        mStack(std::move(aStack)) {}
+
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread.");
+    if (auto* parent = InProcessParent::Singleton()) {
+      RefPtr<JSProcessActorParent> actor;
+      parent->GetActor(mMetadata.actorName(), getter_AddRefs(actor));
+      if (actor) {
+        actor->ReceiveRawMessage(mMetadata, std::move(mData),
+                                 std::move(mStack));
+      }
+    }
+    return NS_OK;
+  }
+
+ private:
+  JSActorMessageMeta mMetadata;
+  ipc::StructuredCloneData mData;
+  ipc::StructuredCloneData mStack;
+};
+
+}  // namespace
+
 void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
                                          ipc::StructuredCloneData&& aData,
                                          ipc::StructuredCloneData&& aStack,
                                          ErrorResult& aRv) {
-  // We only ever have JSProcessActorChild in a multi-process scenario.
-  MOZ_ASSERT(XRE_IsContentProcess());
-
-  if (NS_WARN_IF(!mCanSend || !mManager || !mManager->CanSend())) {
+  if (NS_WARN_IF(!mCanSend || !mManager || !mManager->GetCanSend())) {
     aRv.ThrowInvalidStateError("JSProcessActorChild cannot send at the moment");
     return;
   }
@@ -48,17 +78,29 @@ void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
     return;
   }
 
+  // If the parent side is in the same process, we have a PInProcess manager,
+  // and can dispatch the message directly to the event loop.
+  ContentChild* contentChild = mManager->AsContentChild();
+  if (!contentChild) {
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+    NS_DispatchToMainThread(MakeAndAddRef<AsyncMessageToProcessParent>(
+        aMeta, std::move(aData), std::move(aStack)));
+    return;
+  }
+
   ClonedMessageData msgData;
   ClonedMessageData stackData;
-  if (NS_WARN_IF(!aData.BuildClonedMessageDataForChild(mManager, msgData)) ||
-      NS_WARN_IF(!aStack.BuildClonedMessageDataForChild(mManager, stackData))) {
+  if (NS_WARN_IF(
+          !aData.BuildClonedMessageDataForChild(contentChild, msgData)) ||
+      NS_WARN_IF(
+          !aStack.BuildClonedMessageDataForChild(contentChild, stackData))) {
     aRv.ThrowDataCloneError(nsPrintfCString(
         "JSProcessActorChild serialization error: cannot clone, in actor '%s'",
         PromiseFlatCString(aMeta.actorName()).get()));
     return;
   }
 
-  if (NS_WARN_IF(!mManager->SendRawMessage(aMeta, msgData, stackData))) {
+  if (NS_WARN_IF(!contentChild->SendRawMessage(aMeta, msgData, stackData))) {
     aRv.ThrowOperationError(
         nsPrintfCString("JSProcessActorChild send error in actor '%s'",
                         PromiseFlatCString(aMeta.actorName()).get()));
@@ -67,7 +109,7 @@ void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
 }
 
 void JSProcessActorChild::Init(const nsACString& aName,
-                               ContentChild* aManager) {
+                               nsIDOMProcessChild* aManager) {
   MOZ_ASSERT(!mManager, "Cannot Init() a JSProcessActorChild twice!");
   SetName(aName);
   mManager = aManager;

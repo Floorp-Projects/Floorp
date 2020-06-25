@@ -612,8 +612,8 @@ ContentChild::~ContentChild() {
 #endif
 
 NS_INTERFACE_MAP_BEGIN(ContentChild)
-  NS_INTERFACE_MAP_ENTRY(nsIContentChild)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentChild)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMProcessChild)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMProcessChild)
 NS_INTERFACE_MAP_END
 
 mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
@@ -4198,58 +4198,24 @@ NS_IMETHODIMP ContentChild::GetActor(const nsACString& aName,
 IPCResult ContentChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
                                        const ClonedMessageData& aData,
                                        const ClonedMessageData& aStack) {
-  StructuredCloneData data;
-  data.BorrowFromClonedMessageDataForChild(aData);
-  StructuredCloneData stack;
-  stack.BorrowFromClonedMessageDataForChild(aStack);
-  ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
+  RefPtr<JSProcessActorChild> actor;
+  GetActor(aMeta.actorName(), getter_AddRefs(actor));
+  if (actor) {
+    StructuredCloneData data;
+    data.BorrowFromClonedMessageDataForChild(aData);
+    StructuredCloneData stack;
+    stack.BorrowFromClonedMessageDataForChild(aStack);
+    actor->ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
+  }
   return IPC_OK();
 }
 
-void ContentChild::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
-                                     StructuredCloneData&& aData,
-                                     StructuredCloneData&& aStack) {
-  RefPtr<JSProcessActorChild> actor =
-      GetActor(aMeta.actorName(), IgnoreErrors());
-  if (actor) {
-    actor->ReceiveRawMessage(aMeta, std::move(aData), std::move(aStack));
-  }
+NS_IMETHODIMP ContentChild::GetCanSend(bool* aCanSend) {
+  *aCanSend = CanSend();
+  return NS_OK;
 }
 
-already_AddRefed<mozilla::dom::JSProcessActorChild> ContentChild::GetActor(
-    const nsACString& aName, ErrorResult& aRv) {
-  if (!CanSend()) {
-    aRv.ThrowInvalidStateError(
-        "Cannot get JSProcessActor, process is shutting down");
-    return nullptr;
-  }
-
-  // Check if this actor has already been created, and return it if it has.
-  if (mProcessActors.Contains(aName)) {
-    return mProcessActors.Get(aName);
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ConstructActor(aName, &obj, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Unwrap our actor to a JSProcessActorChild object.
-  RefPtr<JSProcessActorChild> actor;
-  if (NS_FAILED(UNWRAP_OBJECT(JSProcessActorChild, &obj, actor))) {
-    aRv.ThrowTypeMismatchError(
-        "Constructed actor does not inherit from JSProcessActorChild");
-    return nullptr;
-  }
-
-  MOZ_RELEASE_ASSERT(!actor->Manager(),
-                     "mManager was already initialized once!");
-  actor->Init(aName, this);
-  mProcessActors.Put(aName, RefPtr{actor});
-  return actor.forget();
-}
+ContentChild* ContentChild::AsContentChild() { return this; }
 
 IPCResult ContentChild::RecvFlushFOGData(FlushFOGDataResolver&& aResolver) {
 #ifdef MOZ_GLEAN
