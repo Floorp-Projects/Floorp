@@ -440,6 +440,7 @@ static ArgResult CheckArgExists(const char* aArg) {
 }
 
 bool gSafeMode = false;
+bool gFxREmbedded = false;
 
 /**
  * The nsXULAppInfo object implements nsIFactory so that it can be its own
@@ -3056,6 +3057,10 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
         ChaosFeature::TimerScheduling));
   }
 #endif
+
+  if (CheckArgExists("fxr")) {
+    gFxREmbedded = true;
+  }
 
   if (ChaosMode::isActive(ChaosFeature::Any)) {
     printf_stderr(
