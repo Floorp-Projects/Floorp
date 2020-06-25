@@ -2552,6 +2552,13 @@ void profiler_init(void* aStackTop) {
       return;
     }
 
+    // Hidden option to stop Base Profiler, mostly due to Talos intermittents,
+    // see https://bugzilla.mozilla.org/show_bug.cgi?id=1638851#c3
+    // TODO: Investigate root cause and remove this in bugs 1648324 and 1648325.
+    if (getenv("MOZ_PROFILER_STARTUP_NO_BASE")) {
+      return;
+    }
+
     LOG("- MOZ_PROFILER_STARTUP is set");
 
     // Startup default capacity may be different.

@@ -4052,6 +4052,14 @@ void GetProfilerEnvVarsForChildProcess(
   }
 
   aSetEnv("MOZ_PROFILER_STARTUP", "1");
+
+  // Hidden option to stop Base Profiler, mostly due to Talos intermittents,
+  // see https://bugzilla.mozilla.org/show_bug.cgi?id=1638851#c3
+  // TODO: Investigate root cause and remove this in bugs 1648324 and 1648325.
+  if (getenv("MOZ_PROFILER_STARTUP_NO_BASE")) {
+    aSetEnv("MOZ_PROFILER_STARTUP_NO_BASE", "1");
+  }
+
   auto capacityString =
       Smprintf("%u", unsigned(ActivePS::Capacity(lock).Value()));
   aSetEnv("MOZ_PROFILER_STARTUP_ENTRIES", capacityString.get());
