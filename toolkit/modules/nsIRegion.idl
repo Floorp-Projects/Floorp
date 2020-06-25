@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(21e6d094-e016-41a4-80cd-76d2e20871aa)]
+interface nsIRegion : nsISupports
+{
+  /**
+   * The users current region.
+   */
+  readonly attribute AString current;
+
+  /**
+   * The users current home region.
+   */
+  readonly attribute AString home;
+};
+
+%{ C++
+/**
+ * The observer topic to listen to for Region notifications.
+ */
+#define REGION_TOPIC "browser-region"
+
+/**
+ * The observer data sent when the region is updated.
+ */
+#define REGION_UPDATED "region-updated"
+
+%}
