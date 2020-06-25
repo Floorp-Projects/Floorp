@@ -24,6 +24,7 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.share.RecentAppsStorage
+import mozilla.components.support.ktx.kotlin.isExtensionUrl
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -172,7 +173,20 @@ class DefaultShareController(
 
     @VisibleForTesting
     fun getShareText() = shareData.joinToString("\n\n") { data ->
-        data.url.orEmpty()
+        val url = data.url.orEmpty()
+        if (url.isExtensionUrl()) {
+            // Sharing moz-extension:// URLs is not practical in general, as
+            // they will only work on the current device.
+
+            // We solve this for URLs from our reader extension as they contain
+            // the original URL as a query parameter. This is a workaround for
+            // now and needs a clean fix once we have a reader specific protocol
+            // e.g. ext+reader://
+            // https://github.com/mozilla-mobile/android-components/issues/2879
+            Uri.parse(url).getQueryParameter("url") ?: url
+        } else {
+            url
+        }
     }
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.

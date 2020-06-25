@@ -273,6 +273,22 @@ class ShareControllerTest {
     }
 
     @Test
+    fun `getShareText attempts to use original URL for reader pages`() {
+        val shareData = listOf(
+            ShareData(url = "moz-extension://eb8df45a-895b-4f3a-896a-c0c71ae4/page.html"),
+            ShareData(url = "moz-extension://eb8df45a-895b-4f3a-896a-c0c71ae5/page.html?url=url0"),
+            ShareData(url = "url1")
+        )
+        val controller = DefaultShareController(
+            context, shareData, sendTabUseCases, snackbar, navController,
+            recentAppStorage, testCoroutineScope, dismiss
+        )
+
+        val expectedShareText = "${shareData[0].url}\n\nurl0\n\n${shareData[2].url}"
+        assertEquals(expectedShareText, controller.getShareText())
+    }
+
+    @Test
     fun `ShareTab#toTabData maps a list of ShareTab to a TabData list`() {
         var tabData: List<TabData>
 
