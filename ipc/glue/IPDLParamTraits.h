@@ -10,6 +10,8 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
+#include "mozilla/Tuple.h"
+#include "nsTArray.h"
 
 #include <type_traits>
 
