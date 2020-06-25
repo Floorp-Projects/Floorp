@@ -20,25 +20,22 @@ import org.mozilla.fenix.ext.components
  * indicating that a private tab is open.
  */
 class NotificationSessionObserver(
-    private val context: Context,
+    private val applicationContext: Context,
     private val notificationService: SessionNotificationService.Companion = SessionNotificationService
 ) {
 
     private var scope: CoroutineScope? = null
-    private var started = false
 
     @ExperimentalCoroutinesApi
     fun start() {
-        scope = context.components.core.store.flowScoped { flow ->
+        scope = applicationContext.components.core.store.flowScoped { flow ->
             flow.map { state -> state.privateTabs.isNotEmpty() }
                 .ifChanged()
                 .collect { hasPrivateTabs ->
                     if (hasPrivateTabs) {
-                        notificationService.start(context, isStartedFromPrivateShortcut)
-                        started = true
-                    } else if (started) {
-                        notificationService.stop(context)
-                        started = false
+                        notificationService.start(applicationContext, isStartedFromPrivateShortcut)
+                    } else if (SessionNotificationService.started) {
+                        notificationService.stop(applicationContext)
                     }
                 }
         }

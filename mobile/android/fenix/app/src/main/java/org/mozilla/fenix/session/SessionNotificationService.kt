@@ -138,6 +138,7 @@ class SessionNotificationService : Service() {
 
         private const val ACTION_START = "start"
         private const val ACTION_ERASE = "erase"
+        internal var started = false
 
         internal fun start(
             context: Context,
@@ -154,6 +155,8 @@ class SessionNotificationService : Service() {
             ThreadUtils.postToMainThread(Runnable {
                 context.startService(intent)
             })
+
+            started = true
         }
 
         internal fun stop(context: Context) {
@@ -164,6 +167,8 @@ class SessionNotificationService : Service() {
             ThreadUtils.postToMainThread(Runnable {
                 context.stopService(intent)
             })
+
+            started = false
         }
     }
 }

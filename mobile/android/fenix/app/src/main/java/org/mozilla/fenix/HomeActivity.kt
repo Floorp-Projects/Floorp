@@ -107,6 +107,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     private var isVisuallyComplete = false
 
     private var visualCompletenessQueue: RunWhenReadyQueue? = null
+    private var privateNotificationObserver: NotificationSessionObserver? = null
 
     private var isToolbarInflated = false
 
@@ -156,8 +157,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         sessionObserver = UriOpenedObserver(this)
 
         checkPrivateShortcutEntryPoint(intent)
-        val privateNotificationObserver = NotificationSessionObserver(this)
-        privateNotificationObserver.start()
+        privateNotificationObserver = NotificationSessionObserver(applicationContext).also {
+            it.start()
+        }
 
         if (isActivityColdStarted(intent, savedInstanceState)) {
             externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
@@ -216,6 +218,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         //
         // NB: There are ways for the user to install new products without leaving the browser.
         BrowsersCache.resetAll()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        privateNotificationObserver?.stop()
     }
 
     /**
