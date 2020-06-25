@@ -101,11 +101,12 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
 
   BytecodeSite* newBytecodeSite(BytecodeLocation loc);
 
-  const WarpOpSnapshot* getOpSnapshotImpl(BytecodeLocation loc);
+  const WarpOpSnapshot* getOpSnapshotImpl(BytecodeLocation loc,
+                                          WarpOpSnapshot::Kind kind);
 
   template <typename T>
   const T* getOpSnapshot(BytecodeLocation loc) {
-    const WarpOpSnapshot* snapshot = getOpSnapshotImpl(loc);
+    const WarpOpSnapshot* snapshot = getOpSnapshotImpl(loc, T::ThisKind);
     return snapshot ? snapshot->as<T>() : nullptr;
   }
 
@@ -133,6 +134,7 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
 
   MOZ_MUST_USE bool buildIC(BytecodeLocation loc, CacheKind kind,
                             std::initializer_list<MDefinition*> inputs);
+  MOZ_MUST_USE bool buildBailoutForColdIC(BytecodeLocation loc, CacheKind kind);
 
   MOZ_MUST_USE bool buildEnvironmentChain();
   MInstruction* buildNamedLambdaEnv(MDefinition* callee, MDefinition* env,

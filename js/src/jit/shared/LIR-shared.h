@@ -1107,6 +1107,20 @@ class LEncodeSnapshot : public LInstructionHelper<0, 0, 0> {
   LEncodeSnapshot() : LInstructionHelper(classOpcode) {}
 };
 
+class LUnreachableResultV : public LInstructionHelper<BOX_PIECES, 0, 0> {
+ public:
+  LIR_HEADER(UnreachableResultV)
+
+  LUnreachableResultV() : LInstructionHelper(classOpcode) {}
+};
+
+class LUnreachableResultT : public LInstructionHelper<1, 0, 0> {
+ public:
+  LIR_HEADER(UnreachableResultT)
+
+  LUnreachableResultT() : LInstructionHelper(classOpcode) {}
+};
+
 template <size_t defs, size_t ops>
 class LDOMPropertyInstructionHelper
     : public LCallInstructionHelper<defs, 1 + ops, 3> {

@@ -544,6 +544,16 @@ void LIRGenerator::visitEncodeSnapshot(MEncodeSnapshot* mir) {
   add(lir, mir);
 }
 
+void LIRGenerator::visitUnreachableResult(MUnreachableResult* mir) {
+  if (mir->type() == MIRType::Value) {
+    auto* lir = new (alloc()) LUnreachableResultV();
+    defineBox(lir, mir);
+  } else {
+    auto* lir = new (alloc()) LUnreachableResultT();
+    define(lir, mir);
+  }
+}
+
 void LIRGenerator::visitAssertFloat32(MAssertFloat32* assertion) {
   MIRType type = assertion->input()->type();
   DebugOnly<bool> checkIsFloat32 = assertion->mustBeFloat32();
