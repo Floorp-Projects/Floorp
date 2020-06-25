@@ -67,13 +67,6 @@ enum StartupEvent {
 
 using namespace mozilla;
 
-static const int MAX_MAPPING_INFO = 32;
-static mapping_info lib_mapping[MAX_MAPPING_INFO];
-
-APKOPEN_EXPORT const struct mapping_info* getLibraryMapping() {
-  return lib_mapping;
-}
-
 void JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg) {
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Throw\n");
   jclass cls = jenv->FindClass(classname);
@@ -147,32 +140,6 @@ static void* plc_handle = nullptr;
 #  define plc_handle nss_handle
 #endif
 static void* nss_handle = nullptr;
-
-static int mapping_count = 0;
-
-extern "C" void report_mapping(char* name, void* base, uint32_t len,
-                               uint32_t offset) {
-  if (mapping_count >= MAX_MAPPING_INFO) return;
-
-  struct mapping_info* info = &lib_mapping[mapping_count++];
-  info->name = strdup(name);
-  info->base = (uintptr_t)base;
-  info->len = len;
-  info->offset = offset;
-}
-
-extern "C" void delete_mapping(const char* name) {
-  for (int pos = 0; pos < mapping_count; ++pos) {
-    struct mapping_info* info = &lib_mapping[pos];
-    if (!strcmp(info->name, name)) {
-      struct mapping_info* last = &lib_mapping[mapping_count - 1];
-      free(info->name);
-      *info = *last;
-      --mapping_count;
-      break;
-    }
-  }
-}
 
 static UniquePtr<char[]> getUnpackedLibraryName(const char* libraryName) {
   static const char* libdir = getenv("MOZ_ANDROID_LIBDIR");

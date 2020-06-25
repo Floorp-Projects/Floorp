@@ -11,14 +11,6 @@
 #  define APKOPEN_EXPORT __attribute__((visibility("default")))
 #endif
 
-struct mapping_info {
-  char* name;
-  uintptr_t base;
-  size_t len;
-  size_t offset;
-};
-
-APKOPEN_EXPORT const struct mapping_info* getLibraryMapping();
 APKOPEN_EXPORT void abortThroughJava(const char* msg);
 
 static const int SUCCESS = 0;
