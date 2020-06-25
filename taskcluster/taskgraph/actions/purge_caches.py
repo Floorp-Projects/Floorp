@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
     title='Purge Worker Caches',
     name='purge-cache',
     symbol='purge-cache',
-    generic=True,
     description=(
         'Purge any caches associated with this task '
         'across all workers of the same workertype as the task.'

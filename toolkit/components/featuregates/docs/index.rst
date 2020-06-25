@@ -90,6 +90,11 @@ description
     Required. A human readable description for the feature, meant to be shown to
     users. Should be at most a paragraph.
 
+description-links
+    Optional. A dictionary of key-value pairs that are referenced in the description. The key
+    name must appear in the description localization text as
+    <a data-l10n-name="key-name">.
+
 bug-numbers
     Required. A list of bug numbers related to this feature. This should
     likely be the metabug for the the feature, but any related bugs can be

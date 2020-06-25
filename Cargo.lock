@@ -1938,12 +1938,15 @@ dependencies = [
 name = "glean"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "chrono",
  "glean-core",
  "log",
  "once_cell",
+ "serde",
  "tempfile",
  "uuid",
+ "xpcom",
 ]
 
 [[package]]

@@ -1930,70 +1930,6 @@ auto DocumentLoadListener::AttachStreamFilter(base::ProcessId aChildProcessId)
   return request->mPromise;
 }
 
-already_AddRefed<nsIBrowser> DocumentLoadListener::GetBrowser() {
-  CanonicalBrowsingContext* bc = GetBrowsingContext();
-  if (!bc || !bc->IsTopContent()) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIBrowser> browser;
-  RefPtr<Element> currentElement = bc->GetEmbedderElement();
-
-  // In Responsive Design Mode, mFrameElement will be the <iframe mozbrowser>,
-  // but we want the <xul:browser> that it is embedded in.
-  while (currentElement) {
-    browser = currentElement->AsBrowser();
-    if (browser) {
-      break;
-    }
-
-    BrowsingContext* browsingContext =
-        currentElement->OwnerDoc()->GetBrowsingContext();
-    currentElement =
-        browsingContext ? browsingContext->GetEmbedderElement() : nullptr;
-  }
-
-  return browser.forget();
-}
-
-already_AddRefed<nsIWebProgressListener>
-DocumentLoadListener::GetRemoteWebProgressListener(
-    nsIWebProgress** aWebProgress, nsIRequest** aRequest) {
-  nsCOMPtr<nsIBrowser> browser = GetBrowser();
-  if (!browser) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIWebProgress> manager;
-  nsresult rv = browser->GetRemoteWebProgressManager(getter_AddRefs(manager));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(manager);
-  if (!listener) {
-    // We are no longer remote so we cannot forward this event.
-    return nullptr;
-  }
-
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-  nsCOMPtr<nsIWebProgress> webProgress = new RemoteWebProgress(
-      manager, loadInfo->GetOuterWindowID(),
-      /* aInnerDOMWindowID = */ 0, mLoadStateLoadType, true, true);
-
-  nsCOMPtr<nsIURI> uri, originalUri;
-  mChannel->GetURI(getter_AddRefs(uri));
-  mChannel->GetOriginalURI(getter_AddRefs(originalUri));
-  nsCString matchedList;
-
-  nsCOMPtr<nsIRequest> request = MakeAndAddRef<RemoteWebProgressRequest>(
-      uri, originalUri, matchedList, Nothing());
-
-  webProgress.forget(aWebProgress);
-  request.forget(aRequest);
-  return listener.forget();
-}
-
 NS_IMETHODIMP DocumentLoadListener::OnProgress(nsIRequest* aRequest,
                                                int64_t aProgress,
                                                int64_t aProgressMax) {
@@ -2003,25 +1939,17 @@ NS_IMETHODIMP DocumentLoadListener::OnProgress(nsIRequest* aRequest,
 NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
                                              nsresult aStatus,
                                              const char16_t* aStatusArg) {
-  nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIRequest> request;
-  nsCOMPtr<nsIWebProgressListener> listener = GetRemoteWebProgressListener(
-      getter_AddRefs(webProgress), getter_AddRefs(request));
-  if (!listener) {
-    return NS_OK;
-  }
+  nsCOMPtr<nsIChannel> channel = mChannel;
+  nsCOMPtr<nsIWebProgress> webProgress =
+      new RemoteWebProgress(mLoadStateLoadType, true, true);
 
   RefPtr<CanonicalBrowsingContext> ctx = GetBrowsingContext();
-
   const nsString message(aStatusArg);
 
   NS_DispatchToMainThread(
       NS_NewRunnableFunction("DocumentLoadListener::FireStateChange", [=]() {
-        Unused << listener->OnStatusChange(webProgress, request, aStatus,
-                                           message.get());
-
         if (ctx && ctx->Top()->GetWebProgress()) {
-          ctx->Top()->GetWebProgress()->OnStatusChange(webProgress, request,
+          ctx->Top()->GetWebProgress()->OnStatusChange(webProgress, channel,
                                                        aStatus, message.get());
         }
       }));

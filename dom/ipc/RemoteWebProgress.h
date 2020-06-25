@@ -5,46 +5,29 @@
 #ifndef mozilla_dom_RemoteWebProgress_h
 #define mozilla_dom_RemoteWebProgress_h
 
-#include "nsIRemoteWebProgress.h"
-#include "nsCycleCollectionParticipant.h"
+#include "nsIWebProgress.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {
 
-class RemoteWebProgress final : public nsIRemoteWebProgress {
+class RemoteWebProgress final : public nsIWebProgress {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(RemoteWebProgress)
-
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESS
-  NS_DECL_NSIREMOTEWEBPROGRESS
 
   RemoteWebProgress()
-      : mManager(nullptr),
-        mOuterDOMWindowID(0),
-        mInnerDOMWindowID(0),
-        mLoadType(0),
-        mIsLoadingDocument(false),
-        mIsTopLevel(false) {}
+      : mLoadType(0), mIsLoadingDocument(false), mIsTopLevel(false) {}
 
-  RemoteWebProgress(nsIWebProgress* aManager, uint64_t aOuterDOMWindowID,
-                    uint64_t aInnerDOMWindowID, uint32_t aLoadType,
-                    bool aIsLoadingDocument, bool aIsTopLevel)
-      : mManager(aManager),
-        mOuterDOMWindowID(aOuterDOMWindowID),
-        mInnerDOMWindowID(aInnerDOMWindowID),
-        mLoadType(aLoadType),
+  RemoteWebProgress(uint32_t aLoadType, bool aIsLoadingDocument,
+                    bool aIsTopLevel)
+      : mLoadType(aLoadType),
         mIsLoadingDocument(aIsLoadingDocument),
         mIsTopLevel(aIsTopLevel) {}
 
  private:
   virtual ~RemoteWebProgress() = default;
 
-  nsCOMPtr<nsIWebProgress> mManager;
-
-  uint64_t mOuterDOMWindowID;
-  uint64_t mInnerDOMWindowID;
   uint32_t mLoadType;
   bool mIsLoadingDocument;
   bool mIsTopLevel;

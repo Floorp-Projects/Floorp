@@ -10,6 +10,7 @@
 #define builtin_streams_PipeToState_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/WrappingOperations.h"  // mozilla::WrapToSigned
 
 #include <stdint.h>  // uint32_t
 
@@ -86,21 +87,86 @@ class PipeToState : public NativeObject {
     SlotCount,
   };
 
+  // The set of possible actions to be passed to the "shutdown with an action"
+  // algorithm.
+  //
+  // We store actions as numbers because 1) handler functions already devote
+  // their extra slots to target and extra value; and 2) storing a full function
+  // pointer would require an extra slot, while storing as number packs into
+  // existing flag storage.
+  enum class ShutdownAction {
+    /** The action used during |abortAlgorithm|.*/
+    AbortAlgorithm,
+
+    /**
+     * The action taken when |source| errors and aborting is not prevented, to
+     * abort |dest| with |source|'s error.
+     */
+    AbortDestStream,
+
+    /**
+     * The action taken when |dest| becomes errored or closed and canceling is
+     * not prevented, to cancel |source| with |dest|'s error.
+     */
+    CancelSource,
+
+    /**
+     * The action taken when |source| closes and closing is not prevented, to
+     * close the writer while propagating any error in it.
+     */
+    CloseWriterWithErrorPropagation,
+
+  };
+
  private:
   enum Flags : uint32_t {
-    Flag_ShuttingDown = 0b0001,
+    /**
+     * The action passed to the "shutdown with an action" algorithm.
+     *
+     * Note that because only the first "shutdown" and "shutdown with an action"
+     * operation has any effect, we can store this action in |PipeToState| in
+     * the first invocation of either operation without worrying about it being
+     * overwritten.
+     *
+     * Purely for convenience, we encode this in the lowest bits so that the
+     * result of a mask is the underlying value of the correct |ShutdownAction|.
+     */
+    Flag_ShutdownActionBits = 0b0000'0011,
 
-    Flag_PreventClose = 0b0010,
-    Flag_PreventAbort = 0b0100,
-    Flag_PreventCancel = 0b1000,
+    Flag_ShuttingDown = 0b0000'0100,
 
-    Flag_ReadPending = 0b1'0000,
+    Flag_PendingRead = 0b0000'1000,
+#ifdef DEBUG
+    Flag_PendingReadWouldBeRejected = 0b0001'0000,
+#endif
+
+    Flag_PreventClose = 0b0010'0000,
+    Flag_PreventAbort = 0b0100'0000,
+    Flag_PreventCancel = 0b1000'0000,
   };
 
   uint32_t flags() const { return getFixedSlot(Slot_Flags).toInt32(); }
   void setFlags(uint32_t flags) {
-    setFixedSlot(Slot_Flags, JS::Int32Value(flags));
+    setFixedSlot(Slot_Flags, JS::Int32Value(mozilla::WrapToSigned(flags)));
   }
+
+  // Flags start out zeroed, so the initially-stored shutdown action value will
+  // be this value.  (This is also the value of an *initialized* shutdown
+  // action, but it doesn't seem worth the trouble to store an extra bit to
+  // detect this specific action being recorded multiple times, purely for
+  // assertions.)
+  static constexpr ShutdownAction UninitializedAction =
+      ShutdownAction::AbortAlgorithm;
+
+  static_assert(Flag_ShutdownActionBits & 1,
+                "shutdown action bits must be low-order bits so that we can "
+                "cast ShutdownAction values directly to bits to store");
+
+  static constexpr uint32_t MaxAction =
+      static_cast<uint32_t>(ShutdownAction::CloseWriterWithErrorPropagation);
+
+  static_assert(MaxAction <= Flag_ShutdownActionBits,
+                "max action shouldn't overflow available bits to store it");
 
  public:
   static const JSClass class_;
@@ -141,19 +207,53 @@ class PipeToState : public NativeObject {
     setFlags(flags() | Flag_ShuttingDown);
   }
 
+  ShutdownAction shutdownAction() const {
+    MOZ_ASSERT(shuttingDown(),
+               "must be shutting down to have a shutdown action");
+
+    uint32_t bits = flags() & Flag_ShutdownActionBits;
+    static_assert(Flag_ShutdownActionBits & 1,
+                  "shutdown action bits are assumed to be low-order bits that "
+                  "don't have to be shifted down to ShutdownAction's range");
+
+    MOZ_ASSERT(bits <= MaxAction, "bits must encode a valid action");
+
+    return static_cast<ShutdownAction>(bits);
+  }
+
+  void setShutdownAction(ShutdownAction action) {
+    MOZ_ASSERT(shuttingDown(),
+               "must be protected by the |shuttingDown| boolean to save the "
+               "shutdown action");
+    MOZ_ASSERT(shutdownAction() == UninitializedAction,
+               "should only set shutdown action once");
+
+    setFlags(flags() | static_cast<uint32_t>(action));
+  }
+
   bool preventClose() const { return flags() & Flag_PreventClose; }
   bool preventAbort() const { return flags() & Flag_PreventAbort; }
   bool preventCancel() const { return flags() & Flag_PreventCancel; }
 
-  bool isReadPending() const { return flags() & Flag_ReadPending; }
-  void setReadPending() {
-    MOZ_ASSERT(!isReadPending());
-    setFlags(flags() | Flag_ReadPending);
+  bool hasPendingRead() const { return flags() & Flag_PendingRead; }
+  void setPendingRead() {
+    MOZ_ASSERT(!hasPendingRead());
+    setFlags(flags() | Flag_PendingRead);
   }
-  void clearReadPending() {
-    MOZ_ASSERT(isReadPending());
-    setFlags(flags() & ~Flag_ReadPending);
+  void clearPendingRead() {
+    MOZ_ASSERT(hasPendingRead());
+    setFlags(flags() & ~Flag_PendingRead);
   }
+
+#ifdef DEBUG
+  bool pendingReadWouldBeRejected() const {
+    return flags() & Flag_PendingReadWouldBeRejected;
+  }
+  void setPendingReadWouldBeRejected() {
+    MOZ_ASSERT(!pendingReadWouldBeRejected());
+    setFlags(flags() | Flag_PendingReadWouldBeRejected);
+  }
+#endif
 
   void initFlags(bool preventClose, bool preventAbort, bool preventCancel) {
     MOZ_ASSERT(getFixedSlot(Slot_Flags).isUndefined());

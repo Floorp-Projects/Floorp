@@ -11,15 +11,9 @@ XPIDL_SOURCES += [
     'nsIContentChild.idl',
     'nsIContentParent.idl',
     'nsIHangReport.idl',
-    'nsIRemoteWebProgress.idl',
-    'nsIRemoteWebProgressRequest.idl',
 ]
 
 XPIDL_MODULE = 'dom'
-
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
 
 EXTRA_JS_MODULES += [
     'ManifestMessagesChild.jsm',

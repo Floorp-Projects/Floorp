@@ -924,8 +924,8 @@ class nsWindow::LayerViewSupport final
                       java::sdk::IllegalStateException::New(
                           "The compositor has detached from the session")
                           .Cast<jni::Throwable>());
-                  results->pop();
                 }
+                results->pop();
               }
               compositor->OnCompositorDetached();
               disposer->Run();
@@ -1222,9 +1222,11 @@ class nsWindow::LayerViewSupport final
     CaptureRequest request;
     java::GeckoResult::LocalRef result = nullptr;
     if (LockedWindowPtr window{mWindow}) {
-      request = mCapturePixelsResults.front();
-      result = java::GeckoResult::LocalRef(request.mResult);
-      if (result) {
+      // The result might have been already rejected if the compositor was
+      // detached from the session
+      if (!mCapturePixelsResults.empty()) {
+        request = mCapturePixelsResults.front();
+        result = java::GeckoResult::LocalRef(request.mResult);
         mCapturePixelsResults.pop();
       }
     }

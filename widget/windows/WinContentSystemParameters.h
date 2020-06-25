@@ -21,6 +21,7 @@ namespace widget {
 enum class SystemParameterId : uint8_t {
   IsPerMonitorDPIAware = 0,
   SystemDPI,
+  FlatMenusEnabled,
   Count,
 };
 
@@ -32,11 +33,13 @@ class WinContentSystemParameters {
 
   float SystemDPI();
 
-  void SetContentValue(const dom::SystemParameterKVPair& aKVPair);
+  bool AreFlatMenusEnabled();
+
   void SetContentValues(const nsTArray<dom::SystemParameterKVPair>& values);
 
-  bool GetParentValue(uint8_t aId, dom::SystemParameterKVPair* aKVPair);
   nsTArray<dom::SystemParameterKVPair> GetParentValues();
+
+  void OnThemeChanged();
 
   WinContentSystemParameters(const WinContentSystemParameters&) = delete;
   WinContentSystemParameters(WinContentSystemParameters&&) = delete;
@@ -50,7 +53,8 @@ class WinContentSystemParameters {
 
   void SetContentValueInternal(const dom::SystemParameterKVPair& aKVPair);
 
-  bool GetParentValueInternal(uint8_t aId, dom::SystemParameterKVPair* aKVPair);
+  bool GetParentValueInternal(SystemParameterId aId,
+                              dom::SystemParameterKVPair* aKVPair);
 
   bool IsCachedValueValid(SystemParameterId aId);
   void SetCachedValueValid(SystemParameterId aId, bool aIsValid);
