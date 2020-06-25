@@ -463,26 +463,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x160d);
       APPEND_DEVICE(0x160e);
 
-      // broadwell gt2+ (gen8)
-      APPEND_DEVICE(0x1612);
-      APPEND_DEVICE(0x1616);
-      APPEND_DEVICE(0x161a);
-      APPEND_DEVICE(0x161b);
-      APPEND_DEVICE(0x161d);
-      APPEND_DEVICE(0x161e);
-      APPEND_DEVICE(0x1622);
-      APPEND_DEVICE(0x1626);
-      APPEND_DEVICE(0x162a);
-      APPEND_DEVICE(0x162b);
-      APPEND_DEVICE(0x162d);
-      APPEND_DEVICE(0x162e);
-      APPEND_DEVICE(0x1632);
-      APPEND_DEVICE(0x1636);
-      APPEND_DEVICE(0x163a);
-      APPEND_DEVICE(0x163b);
-      APPEND_DEVICE(0x163d);
-      APPEND_DEVICE(0x163e);
-
 #ifdef EARLY_BETA_OR_EARLIER
       // gen7.5 gt2
       APPEND_DEVICE(0x0412);
@@ -574,6 +554,25 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x3184);
       APPEND_DEVICE(0x3185);
 #endif
+      // broadwell gt2+ (gen8)
+      APPEND_DEVICE(0x1612);
+      APPEND_DEVICE(0x1616);
+      APPEND_DEVICE(0x161a);
+      APPEND_DEVICE(0x161b);
+      APPEND_DEVICE(0x161d);
+      APPEND_DEVICE(0x161e);
+      APPEND_DEVICE(0x1622);
+      APPEND_DEVICE(0x1626);
+      APPEND_DEVICE(0x162a);
+      APPEND_DEVICE(0x162b);
+      APPEND_DEVICE(0x162d);
+      APPEND_DEVICE(0x162e);
+      APPEND_DEVICE(0x1632);
+      APPEND_DEVICE(0x1636);
+      APPEND_DEVICE(0x163a);
+      APPEND_DEVICE(0x163b);
+      APPEND_DEVICE(0x163d);
+      APPEND_DEVICE(0x163e);
 
       // skylake gt1
       APPEND_DEVICE(0x1902);
