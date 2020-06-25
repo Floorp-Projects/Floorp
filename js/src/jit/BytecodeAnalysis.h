@@ -25,6 +25,10 @@ struct BytecodeInfo {
   // If true, this is a JSOp::LoopHead where we can OSR into Ion/Warp code.
   bool loopHeadCanOsr : 1;
 
+  // See the comment above normallyReachable in BytecodeAnalysis.cpp for how
+  // this works.
+  bool jumpTargetNormallyReachable : 1;
+
   // True if the script has a resume offset for this bytecode op.
   bool hasResumeOffset : 1;
 
@@ -33,6 +37,13 @@ struct BytecodeInfo {
     MOZ_ASSERT_IF(initialized, stackDepth == depth);
     initialized = true;
     stackDepth = depth;
+  }
+
+  void setJumpTarget(bool normallyReachable) {
+    jumpTarget = true;
+    if (normallyReachable) {
+      jumpTargetNormallyReachable = true;
+    }
   }
 };
 
