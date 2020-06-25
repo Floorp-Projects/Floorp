@@ -196,6 +196,9 @@ class UrlbarInput {
     }
 
     this.window.addEventListener("mousedown", this);
+    if (AppConstants.platform == "win") {
+      this.window.addEventListener("draggableregionleftmousedown", this);
+    }
     this.textbox.addEventListener("mousedown", this);
     this._inputContainer.addEventListener("click", this);
 
@@ -2105,6 +2108,12 @@ class UrlbarInput {
 
   _on_mouseover(event) {
     this._updateUrlTooltip();
+  }
+
+  _on_draggableregionleftmousedown(event) {
+    if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
+      this.view.close();
+    }
   }
 
   _on_mousedown(event) {

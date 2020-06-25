@@ -275,6 +275,7 @@ class nsWindow final : public nsWindowBase {
   void DispatchPendingEvents();
   bool DispatchPluginEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
                            bool aDispatchPendingEvents);
+  void DispatchCustomEvent(const nsString& eventName);
 
 #ifdef ACCESSIBILITY
   /**
