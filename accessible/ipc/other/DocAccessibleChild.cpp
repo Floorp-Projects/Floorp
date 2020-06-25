@@ -1618,9 +1618,19 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvChildAtPoint(
     if (result) {
       // Accessible::ChildAtPoint can return an Accessible from a descendant
       // document.
-      *aResultDoc = result->Document()->IPCDoc();
-      *aResultID =
-          result->IsDoc() ? 0 : reinterpret_cast<uint64_t>(result->UniqueID());
+      DocAccessibleChild* resultDoc = result->Document()->IPCDoc();
+      // We've sent the constructor for this document to the parent process.
+      // However, because the constructor is async, the parent process might
+      // get the result of this (sync) method before it runs the constructor.
+      // If we send this document in this case, the parent process will crash.
+      // Therefore, we only do this if the parent process has explicitly told
+      // us that the document has been constructed there.
+      if (resultDoc && resultDoc->IsConstructedInParentProcess()) {
+        *aResultDoc = resultDoc;
+        *aResultID = result->IsDoc()
+                         ? 0
+                         : reinterpret_cast<uint64_t>(result->UniqueID());
+      }
     }
   }
 
