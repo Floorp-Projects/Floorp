@@ -22,8 +22,8 @@ import mozilla.components.browser.state.store.BrowserStore
  * @param webExtIconTintColorResource Optional ID of color resource to tint the icons of back and
  * add-ons manager menu items.
  * @param onAddonsManagerTapped Callback to be invoked when add-ons manager menu item is selected.
- * @param appendExtensionActionAtStart true if web extensions appear at the top (start) of the menu,
- * false if web extensions appear at the bottom of the menu. Default to false (bottom).
+ * @param appendExtensionSubMenuAtStart true if web extension sub menu appear at the top (start) of
+ * the menu, false if web extensions appear at the bottom of the menu. Default to false (bottom).
  */
 @Suppress("LongParameterList")
 class WebExtensionBrowserMenuBuilder(
@@ -33,7 +33,7 @@ class WebExtensionBrowserMenuBuilder(
     private val store: BrowserStore,
     private val webExtIconTintColorResource: Int = NO_ID,
     private val onAddonsManagerTapped: () -> Unit = {},
-    private val appendExtensionActionAtStart: Boolean = false
+    private val appendExtensionSubMenuAtStart: Boolean = false
 ) : BrowserMenuBuilder(items, extras, endOfMenuAlwaysVisible) {
 
     /**
@@ -58,10 +58,15 @@ class WebExtensionBrowserMenuBuilder(
                 onAddonsManagerTapped.invoke()
             }
 
-            val webExtSubMenuItems =
+            val webExtSubMenuItems = if (appendExtensionSubMenuAtStart) {
                 listOf(backPressMenuItem) + BrowserMenuDivider() +
                 extensionMenuItems +
                 BrowserMenuDivider() + addonsManagerMenuItem
+            } else {
+                listOf(addonsManagerMenuItem) + BrowserMenuDivider() +
+                extensionMenuItems +
+                BrowserMenuDivider() + backPressMenuItem
+            }
 
             val webExtBrowserMenuAdapter = BrowserMenuAdapter(context, webExtSubMenuItems)
             val webExtMenu = WebExtensionBrowserMenu(webExtBrowserMenuAdapter, store)
@@ -84,7 +89,7 @@ class WebExtensionBrowserMenuBuilder(
         }
 
         val menuItems =
-            if (appendExtensionActionAtStart) {
+            if (appendExtensionSubMenuAtStart) {
                 listOf(webExtMenuItem) + items
             } else {
                 items + webExtMenuItem

@@ -37,7 +37,7 @@ class WebExtensionBrowserMenuBuilderTest {
             listOf(mockMenuItem(), mockMenuItem()),
             store = store,
             onAddonsManagerTapped = { isAddonsManagerTapped = true },
-            appendExtensionActionAtStart = true
+            appendExtensionSubMenuAtStart = true
         )
 
         val menu = builder.build(testContext)
@@ -78,7 +78,7 @@ class WebExtensionBrowserMenuBuilderTest {
             listOf(mockMenuItem(), mockMenuItem()),
             store = store,
             onAddonsManagerTapped = { isAddonsManagerTapped = true },
-            appendExtensionActionAtStart = true
+            appendExtensionSubMenuAtStart = true
         )
 
         val menu = builder.build(testContext)
@@ -98,7 +98,7 @@ class WebExtensionBrowserMenuBuilderTest {
     }
 
     @Test
-    fun `web extension submenu is added at the start when appendExtensionActionAtStart is true`() {
+    fun `web extension submenu is added at the start when appendExtensionSubMenuAtStart is true`() {
         val browserAction = WebExtensionBrowserAction("browser_action", false, mock(), "", 0, 0) {}
         val pageAction = WebExtensionBrowserAction("page_action", false, mock(), "", 0, 0) {}
 
@@ -122,7 +122,7 @@ class WebExtensionBrowserMenuBuilderTest {
         val builder = WebExtensionBrowserMenuBuilder(
             listOf(mockMenuItem(), mockMenuItem()),
             store = store,
-            appendExtensionActionAtStart = true
+            appendExtensionSubMenuAtStart = true
         )
 
         val menu = builder.build(testContext)
@@ -150,7 +150,7 @@ class WebExtensionBrowserMenuBuilderTest {
     }
 
     @Test
-    fun `web extension submenu is added at the end when appendExtensionActionAtStart is false`() {
+    fun `web extension submenu is added at the end when appendExtensionSubMenuAtStart is false`() {
         val browserAction = WebExtensionBrowserAction("browser_action", false, mock(), "", 0, 0) {}
         val pageAction = WebExtensionBrowserAction("page_action", false, mock(), "", 0, 0) {}
 
@@ -175,7 +175,7 @@ class WebExtensionBrowserMenuBuilderTest {
             WebExtensionBrowserMenuBuilder(
                 listOf(mockMenuItem(), mockMenuItem()),
                 store = store,
-                appendExtensionActionAtStart = false
+                appendExtensionSubMenuAtStart = false
             )
 
         val menu = builder.build(testContext)
@@ -192,10 +192,10 @@ class WebExtensionBrowserMenuBuilderTest {
         val parentMenuItem = menu.adapter.visibleItems[recyclerAdapter.itemCount - 1] as? ParentBrowserMenuItem
         val subMenuItemSize = parentMenuItem!!.subMenu.adapter.visibleItems.size
         assertEquals(6, subMenuItemSize)
-        val backMenuItem = parentMenuItem.subMenu.adapter.visibleItems[0] as? BackPressMenuItem
+        val backMenuItem = parentMenuItem.subMenu.adapter.visibleItems[subMenuItemSize - 1] as? BackPressMenuItem
         val subMenuExtItemBrowserAction = parentMenuItem.subMenu.adapter.visibleItems[2] as? WebExtensionBrowserMenuItem
         val subMenuExtItemPageAction = parentMenuItem.subMenu.adapter.visibleItems[3] as? WebExtensionBrowserMenuItem
-        val addOnsManagerMenuItem = parentMenuItem.subMenu.adapter.visibleItems[subMenuItemSize - 1] as? BrowserMenuImageText
+        val addOnsManagerMenuItem = parentMenuItem.subMenu.adapter.visibleItems[0] as? BrowserMenuImageText
         assertNotNull(backMenuItem)
         assertEquals("browser_action", subMenuExtItemBrowserAction!!.action.title)
         assertEquals("page_action", subMenuExtItemPageAction!!.action.title)
