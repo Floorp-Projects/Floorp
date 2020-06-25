@@ -579,7 +579,7 @@ void JitCode::finalize(JSFreeOp* fop) {
                                                headerSize_ + bufferSize_))) {
     pool_->addRef();
   }
-  setHeaderPtr(nullptr);
+  cellHeaderAndCode_.setPtr(nullptr);
 
   // Code buffers are stored inside ExecutablePools. Pools are refcounted.
   // Releasing the pool may free it. Horrible hack: if we are using perf

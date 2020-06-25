@@ -82,13 +82,11 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
  *       as before.
  *       - JSObject::swap()
  */
-class JSObject
-    : public js::gc::CellWithTenuredGCPointer<js::gc::Cell, js::ObjectGroup> {
- public:
-  // The ObjectGroup is stored in the cell header.
-  js::ObjectGroup* groupRaw() const { return headerPtr(); }
-
+class JSObject : public js::gc::Cell {
  protected:
+  using HeaderWithObjectGroup =
+      js::gc::CellHeaderWithTenuredGCPointer<js::ObjectGroup>;
+  HeaderWithObjectGroup headerAndGroup_;
   js::GCPtrShape shape_;
 
  private:
@@ -105,7 +103,7 @@ class JSObject
   // Make a new group to use for a singleton object.
   static js::ObjectGroup* makeLazyGroup(JSContext* cx, js::HandleObject obj);
 
-  void setGroupRaw(js::ObjectGroup* group) { setHeaderPtr(group); }
+  void setGroupRaw(js::ObjectGroup* group) { headerAndGroup_.setPtr(group); }
 
  public:
   bool isNative() const { return getClass()->isNative(); }
@@ -146,7 +144,9 @@ class JSObject
     return groupRaw();
   }
 
-  void initGroup(js::ObjectGroup* group) { initHeaderPtr(group); }
+  js::ObjectGroup* groupRaw() const { return headerAndGroup_.ptr(); }
+
+  void initGroup(js::ObjectGroup* group) { headerAndGroup_.initPtr(group); }
 
   /*
    * Whether this is the only object which has its specified group. This
@@ -270,6 +270,7 @@ class JSObject
   void fixupAfterMovingGC();
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Object;
+  const js::gc::CellHeader& cellHeader() const { return headerAndGroup_; }
 
   MOZ_ALWAYS_INLINE JS::Zone* zone() const {
     MOZ_ASSERT_IF(!isTenured(), nurseryZone() == groupRaw()->zone());
@@ -580,7 +581,10 @@ class JSObject
   friend class js::jit::MacroAssembler;
   friend class js::jit::CacheIRCompiler;
 
-  static constexpr size_t offsetOfGroup() { return offsetOfHeaderPtr(); }
+  static constexpr size_t offsetOfGroup() {
+    return offsetof(JSObject, headerAndGroup_) +
+           HeaderWithObjectGroup::offsetOfPtr();
+  }
   static constexpr size_t offsetOfShape() { return offsetof(JSObject, shape_); }
 
  private:

@@ -191,6 +191,15 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   MOZ_ASSERT(trc);
   MOZ_ASSERT(thing);
 
+  // Check that CellHeader is the first field in the cell.
+  static_assert(
+      std::is_base_of_v<CellHeader, std::remove_const_t<std::remove_reference_t<
+                                        decltype(thing->cellHeader())>>>,
+      "GC things must provide a cellHeader() method that returns a reference "
+      "to the cell header");
+  MOZ_ASSERT(static_cast<const void*>(&thing->cellHeader()) ==
+             static_cast<const void*>(thing));
+
   if (!trc->checkEdges()) {
     return;
   }
@@ -1164,7 +1173,7 @@ void BaseScript::traceChildren(JSTracer* trc) {
 }
 
 void Shape::traceChildren(JSTracer* trc) {
-  TraceCellHeaderEdge(trc, this, "base");
+  TraceEdge(trc, &headerAndBase_, "base");
   TraceEdge(trc, &propidRef(), "propid");
   if (parent) {
     TraceEdge(trc, &parent, "parent");
@@ -1377,7 +1386,7 @@ void WasmFunctionScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), length);
 }
 void Scope::traceChildren(JSTracer* trc) {
-  TraceNullableCellHeaderEdge(trc, this, "scope enclosing");
+  TraceNullableEdge(trc, &headerAndEnclosingScope_, "scope enclosing");
   TraceNullableEdge(trc, &environmentShape_, "scope env shape");
   applyScopeDataTyped([trc](auto data) { data->trace(trc); });
 }

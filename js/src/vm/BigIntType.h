@@ -39,23 +39,22 @@ XDRResult XDRBigInt(XDRState<mode>* xdr, MutableHandle<JS::BigInt*> bi);
 
 namespace JS {
 
-class BigInt final : public js::gc::CellWithLengthAndFlags {
+class BigInt final : public js::gc::Cell {
  public:
   using Digit = uintptr_t;
 
  private:
+  using Header = js::gc::CellHeaderWithLengthAndFlags;
+
   // The low CellFlagBitsReservedForGC flag bits are reserved.
   static constexpr uintptr_t SignBit =
       js::Bit(js::gc::CellFlagBitsReservedForGC);
 
   static constexpr size_t InlineDigitsLength =
-      (js::gc::MinCellSize - sizeof(CellWithLengthAndFlags)) / sizeof(Digit);
+      (js::gc::MinCellSize - sizeof(Header)) / sizeof(Digit);
 
- public:
-  // The number of digits and the flags are stored in the cell header.
-  size_t digitLength() const { return headerLengthField(); }
+  Header header_;
 
- private:
   // The digit storage starts with the least significant digit (little-endian
   // digit order).  Byte order within a digit is of course native endian.
   union {
@@ -64,20 +63,22 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   };
 
   void setLengthAndFlags(uint32_t len, uint32_t flags) {
-    setHeaderLengthAndFlags(len, flags);
+    header_.setLengthAndFlags(len, flags);
   }
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::BigInt;
+  const js::gc::CellHeader& cellHeader() const { return header_.cellHeader(); }
 
   void fixupAfterMovingGC() {}
 
   js::gc::AllocKind getAllocKind() const { return js::gc::AllocKind::BIGINT; }
 
+  size_t digitLength() const { return header_.lengthField(); }
 
   // Offset for direct access from JIT code.
   static constexpr size_t offsetOfDigitLength() {
-    return offsetOfHeaderLength();
+    return offsetof(BigInt, header_) + Header::offsetOfLength();
   }
 
   bool hasInlineDigits() const { return digitLength() <= InlineDigitsLength; }
@@ -97,7 +98,7 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   void setDigit(size_t idx, Digit digit) { digits()[idx] = digit; }
 
   bool isZero() const { return digitLength() == 0; }
-  bool isNegative() const { return headerFlagsField() & SignBit; }
+  bool isNegative() const { return header_.flagsField() & SignBit; }
 
   void initializeDigitsToZero();
 
@@ -445,8 +446,9 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   // call the methods below.
   friend class js::jit::MacroAssembler;
 
-  static constexpr size_t offsetOfFlags() { return offsetOfHeaderFlags(); }
-  static constexpr size_t offsetOfLength() { return offsetOfHeaderLength(); }
+  // Make offset accessors accessible to the MacroAssembler.
+  static constexpr size_t offsetOfFlags() { return Header::offsetOfFlags(); }
+  static constexpr size_t offsetOfLength() { return Header::offsetOfLength(); }
 
   static size_t offsetOfInlineDigits() {
     return offsetof(BigInt, inlineDigits_);
