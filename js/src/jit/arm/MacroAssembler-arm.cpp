@@ -5809,6 +5809,15 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
   round(src, dest, fail, temp);
 }
 
+void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
+                                         Label* fail) {
+  truncf(src, dest, fail);
+}
+
+void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
+                                        Label* fail) {
+  trunc(src, dest, fail);
+}
 //}}} check_macroassembler_style
 
 void MacroAssemblerARM::wasmTruncateToInt32(FloatRegister input,
