@@ -8,7 +8,8 @@
 
 | Name | Summary |
 |---|---|
-| [put](put.md) | `abstract fun put(context: <ERROR CLASS>, request: `[`IconRequest`](../../../mozilla.components.browser.icons/-icon-request/index.md)`, resource: `[`Resource`](../../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`, icon: `[`Icon`](../../../mozilla.components.browser.icons/-icon/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [putIcon](put-icon.md) | `abstract fun putIcon(context: <ERROR CLASS>, resource: `[`Resource`](../../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`, icon: `[`Icon`](../../../mozilla.components.browser.icons/-icon/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Saves icon bitmap to cache. |
+| [putResources](put-resources.md) | `abstract fun putResources(context: <ERROR CLASS>, request: `[`IconRequest`](../../../mozilla.components.browser.icons/-icon-request/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Saves icon resources to cache. |
 
 ### Inheritors
 
