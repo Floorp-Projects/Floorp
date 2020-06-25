@@ -34,9 +34,6 @@ class PendingEdge {
 
     // MGoto successor.
     Goto,
-
-    // MGotoWithFake second successor.
-    GotoWithFake,
   };
 
  private:
@@ -56,9 +53,6 @@ class PendingEdge {
   }
   static PendingEdge NewGoto(MBasicBlock* block) {
     return PendingEdge(block, Kind::Goto);
-  }
-  static PendingEdge NewGotoWithFake(MBasicBlock* block) {
-    return PendingEdge(block, Kind::GotoWithFake);
   }
 
   MBasicBlock* block() const { return block_; }

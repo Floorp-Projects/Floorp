@@ -129,22 +129,6 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
             targetInfo.setJumpTarget(/* normallyReachable = */ false);
           }
         }
-
-        // Get the pc of the last instruction in the try block. It's a
-        // JSOp::Goto to jump over the catch/finally blocks.
-        BytecodeLocation endOfTryLoc(script_,
-                                     it.toRawBytecode() + it.codeOffset());
-        MOZ_ASSERT(endOfTryLoc.is(JSOp::Goto));
-
-        BytecodeLocation afterTryLoc(
-            script_, endOfTryLoc.toRawBytecode() + endOfTryLoc.jumpOffset());
-        MOZ_ASSERT(afterTryLoc > endOfTryLoc);
-
-        // Ensure the code following the try-block is always marked as
-        // reachable, to simplify MIR building.
-        uint32_t afterTryOffset = afterTryLoc.bytecodeToOffset(script_);
-        infos_[afterTryOffset].init(stackDepth);
-        infos_[afterTryOffset].setJumpTarget(normallyReachable);
         break;
       }
 

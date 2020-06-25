@@ -1985,26 +1985,6 @@ class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
 #endif
 };
 
-// Equivalent to MTest(true, successor, fake), except without the foldsTo
-// method. This allows IonBuilder to insert fake CFG edges to magically protect
-// control flow for try-catch blocks.
-class MGotoWithFake : public MAryControlInstruction<0, 2>,
-                      public NoTypePolicy::Data {
-  MGotoWithFake(MBasicBlock* successor, MBasicBlock* fake)
-      : MAryControlInstruction(classOpcode) {
-    setSuccessor(0, successor);
-    setSuccessor(1, fake);
-  }
-
- public:
-  INSTRUCTION_HEADER(GotoWithFake)
-  TRIVIAL_NEW_WRAPPERS
-
-  MBasicBlock* target() const { return getSuccessor(0); }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 // Returns from this function to the previous caller.
 class MReturn : public MAryControlInstruction<1, 0>,
                 public BoxInputsPolicy::Data {
