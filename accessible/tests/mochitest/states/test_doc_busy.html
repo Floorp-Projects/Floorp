@@ -46,6 +46,7 @@
             await BrowserTestUtils.waitForEvent(win, "load");
           }
           info("Window loaded, checking if download prompt");
+          info("Location: " + win.location);
           return win.location &&
             win.location.href == "chrome://mozapps/content/downloads/unknownContentType.xhtml";
         }
