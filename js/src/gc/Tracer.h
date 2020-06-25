@@ -131,14 +131,14 @@ inline void TraceEdge(JSTracer* trc, WeakHeapPtr<T>* thingp, const char* name) {
   gc::TraceEdgeInternal(trc, gc::ConvertToBase(thingp->unsafeGet()), name);
 }
 
-template <class BC, class T>
-inline void TraceCellHeaderEdge(JSTracer* trc,
-                                gc::CellWithTenuredGCPointer<BC, T>* thingp,
-                                const char* name) {
-  T* thing = thingp->headerPtr();
+template <class T>
+inline void TraceEdge(JSTracer* trc,
+                      gc::CellHeaderWithTenuredGCPointer<T>* thingp,
+                      const char* name) {
+  T* thing = thingp->ptr();
   gc::TraceEdgeInternal(trc, gc::ConvertToBase(&thing), name);
-  if (thing != thingp->headerPtr()) {
-    thingp->unsafeSetHeaderPtr(thing);
+  if (thing != thingp->ptr()) {
+    thingp->unsafeSetPtr(thing);
   }
 }
 
@@ -161,15 +161,15 @@ inline void TraceNullableEdge(JSTracer* trc, WeakHeapPtr<T>* thingp,
   }
 }
 
-template <class BC, class T>
-inline void TraceNullableCellHeaderEdge(
-    JSTracer* trc, gc::CellWithTenuredGCPointer<BC, T>* thingp,
-    const char* name) {
-  T* thing = thingp->headerPtr();
+template <class T>
+inline void TraceNullableEdge(JSTracer* trc,
+                              gc::CellHeaderWithTenuredGCPointer<T>* thingp,
+                              const char* name) {
+  T* thing = thingp->ptr();
   if (thing) {
     gc::TraceEdgeInternal(trc, gc::ConvertToBase(&thing), name);
-    if (thing != thingp->headerPtr()) {
-      thingp->unsafeSetHeaderPtr(thing);
+    if (thing != thingp->ptr()) {
+      thingp->unsafeSetPtr(thing);
     }
   }
 }
