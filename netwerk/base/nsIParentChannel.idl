@@ -73,4 +73,9 @@ interface nsIParentChannel : nsIStreamListener
    * Called to invoke deletion of the IPC protocol.
    */
   void delete();
+
+  /**
+   * The remote type of the target process for this load.
+   */
+  readonly attribute AString remoteType;
 };
