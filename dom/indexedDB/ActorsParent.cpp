@@ -9565,10 +9565,11 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
     uint64_t usage;
 
     if (aQuotaManager) {
-      rv = FileManager::GetUsage(fmDirectory, usage);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      auto fileUsageOrErr = FileManager::GetUsage(fmDirectory);
+      if (NS_WARN_IF(fileUsageOrErr.isErr())) {
+        return fileUsageOrErr.unwrapErr();
       }
+      usage = fileUsageOrErr.inspect().GetValue().valueOr(0);
     }
 
     rv = fmDirectory->Remove(true);
@@ -9576,10 +9577,12 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
       // We may have deleted some files, check if we can and update quota
       // information before returning the error.
       if (aQuotaManager) {
-        uint64_t newUsage;
-        if (NS_SUCCEEDED(FileManager::GetUsage(fmDirectory, newUsage))) {
-          MOZ_ASSERT(newUsage <= usage);
-          usage = usage - newUsage;
+        auto newFileUsageOrErr = FileManager::GetUsage(fmDirectory);
+        if (newFileUsageOrErr.isOk()) {
+          const auto newFileUsage =
+              newFileUsageOrErr.inspect().GetValue().valueOr(0);
+          MOZ_ASSERT(newFileUsage <= usage);
+          usage -= newFileUsage;
         }
       }
     }
@@ -16807,28 +16810,27 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 }
 
 // static
-nsresult FileManager::GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage) {
+Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
   bool exists;
   nsresult rv = aDirectory->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
   if (!exists) {
-    aUsage.reset();
-    return NS_OK;
+    return FileUsageType{};
   }
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  UsageInfo::Usage usage;
+  FileUsageType usage;
 
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
@@ -16836,7 +16838,7 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage) {
     nsString leafName;
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
 
     if (leafName.Equals(kJournalDirectoryName)) {
@@ -16848,10 +16850,10 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage) {
       int64_t fileSize;
       rv = file->GetFileSize(&fileSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
-      usage += Some(uint64_t(fileSize));
+      usage += FileUsageType(Some(uint64_t(fileSize)));
 
       continue;
     }
@@ -16860,26 +16862,10 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage) {
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return Err(rv);
   }
 
-  aUsage = usage;
-  return NS_OK;
-}
-
-// static
-nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t& aUsage) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
-
-  Maybe<uint64_t> usage;
-  nsresult rv = GetUsage(aDirectory, usage);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  aUsage = usage.valueOr(0);
-  return NS_OK;
+  return usage;
 }
 
 nsresult FileManager::SyncDeleteFile(const int64_t aId) {
@@ -17367,26 +17353,25 @@ nsresult QuotaClient::GetUsageForOriginInternal(
 
       MOZ_ASSERT(fileSize >= 0);
 
-      aUsageInfo->IncrementDatabaseUsage(Some(uint64_t(fileSize)));
+      *aUsageInfo += DatabaseUsageType(Some(uint64_t(fileSize)));
 
       rv = walFile->GetFileSize(&fileSize);
       if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(fileSize >= 0);
-        aUsageInfo->IncrementDatabaseUsage(Some(uint64_t(fileSize)));
+        *aUsageInfo += DatabaseUsageType(Some(uint64_t(fileSize)));
       } else if (NS_WARN_IF(rv != NS_ERROR_FILE_NOT_FOUND &&
                             rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetWalFileSize);
         return rv;
       }
 
-      Maybe<uint64_t> usage;
-      rv = FileManager::GetUsage(fmDirectory, usage);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      auto fileUsageOrErr = FileManager::GetUsage(fmDirectory);
+      if (NS_WARN_IF(fileUsageOrErr.isErr())) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetUsage);
-        return rv;
+        return fileUsageOrErr.inspectErr();
       }
 
-      aUsageInfo->IncrementFileUsage(usage);
+      *aUsageInfo += fileUsageOrErr.inspect();
     }
   }
 

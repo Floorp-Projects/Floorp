@@ -1703,7 +1703,7 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
 
       MOZ_ASSERT(fileSize >= 0);
 
-      res.IncrementDatabaseUsage(Some(uint64_t(fileSize)));
+      res += DatabaseUsageType(Some(uint64_t(fileSize)));
 
       continue;
     }

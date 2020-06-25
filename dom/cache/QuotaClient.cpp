@@ -32,6 +32,8 @@ using mozilla::dom::cache::Manager;
 using mozilla::dom::cache::QuotaInfo;
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
+using mozilla::dom::quota::DatabaseUsageType;
+using mozilla::dom::quota::FileUsageType;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
@@ -83,7 +85,7 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
         return rv;
       }
       MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
-      aUsageInfo->IncrementFileUsage(Some(fileSize));
+      *aUsageInfo += FileUsageType(Some(fileSize));
 
       fileDeleted = false;
 
@@ -424,13 +426,13 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
     uint64_t usage;
     if (qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroup, aOrigin,
                               Client::DOMCACHE, usage)) {
-      usageInfo.IncrementDatabaseUsage(Some(usage));
+      usageInfo += DatabaseUsageType(Some(usage));
     }
 
     return usageInfo;
   }
 
-  usageInfo.IncrementFileUsage(Some(paddingSize));
+  usageInfo += FileUsageType(Some(paddingSize));
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
@@ -500,7 +502,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
       }
       MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
-      usageInfo.IncrementDatabaseUsage(Some(fileSize));
+      usageInfo += DatabaseUsageType(Some(fileSize));
       continue;
     }
 
