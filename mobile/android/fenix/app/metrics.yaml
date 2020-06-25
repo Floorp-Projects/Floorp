@@ -1866,6 +1866,57 @@ private_browsing_mode:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
 
+contextual_hint.tracking_protection:
+  display:
+    type: event
+    description: |
+      The enhanced tracking protection contextual hint was
+      displayed.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9625
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11923
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  dismiss:
+    type: event
+    description: |
+      The enhanced tracking protection contextual hint was
+      dismissed
+      by pressing the close button
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9625
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11923
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  outside_tap:
+    type: event
+    description: |
+      The user tapped outside of the etp contextual hint
+      (which has no effect).
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9625
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11923
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  inside_tap:
+    type: event
+    description: |
+      The user tapped inside of the etp contextual hint
+      (which brings up the etp panel for this site).
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/9625
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11923
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+
 tracking_protection:
   exception_added:
     type: event

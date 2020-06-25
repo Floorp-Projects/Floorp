@@ -179,6 +179,11 @@ sealed class Event {
     object OnboardingWhatsNew : Event()
     object OnboardingFinish : Event()
 
+    object ContextualHintETPDisplayed : Event()
+    object ContextualHintETPDismissed : Event()
+    object ContextualHintETPOutsideTap : Event()
+    object ContextualHintETPInsideTap : Event()
+
     // Interaction events with extras
     data class OnboardingToolbarPosition(val position: Position) : Event() {
         enum class Position { TOP, BOTTOM }

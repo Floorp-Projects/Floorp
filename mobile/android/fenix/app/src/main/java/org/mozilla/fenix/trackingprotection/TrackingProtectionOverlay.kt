@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
 import androidx.core.view.isGone
@@ -19,6 +20,8 @@ import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.*
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.*
 import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.utils.Settings
 
@@ -40,13 +43,23 @@ class TrackingProtectionOverlay(
 
     private fun shouldShowTrackingProtectionOnboarding(session: Session) =
         settings.shouldShowTrackingProtectionOnboarding &&
-                session.trackerBlockingEnabled &&
-                session.trackersBlocked.isNotEmpty()
+            session.trackerBlockingEnabled &&
+            session.trackersBlocked.isNotEmpty()
 
     @Suppress("MagicNumber", "InflateParams")
     private fun showTrackingProtectionOnboarding() {
         if (!getToolbar().hasWindowFocus()) return
-        val trackingOnboardingDialog = Dialog(context)
+
+        val trackingOnboardingDialog = object : Dialog(context) {
+            override fun onTouchEvent(event: MotionEvent): Boolean {
+
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    context.components.analytics.metrics.track(Event.ContextualHintETPOutsideTap)
+                }
+                    return super.onTouchEvent(event)
+                }
+            }
+
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.tracking_protection_onboarding_popup, null)
         val isBottomToolbar = Settings.getInstance(context).shouldUseBottomToolbar
@@ -63,6 +76,7 @@ class TrackingProtectionOverlay(
         val closeButton = layout.findViewById<ImageView>(R.id.close_onboarding)
         closeButton.increaseTapArea(BUTTON_INCREASE_DPS)
         closeButton.setOnClickListener {
+            context.components.analytics.metrics.track(Event.ContextualHintETPDismissed)
             trackingOnboardingDialog.dismiss()
         }
 
@@ -101,10 +115,12 @@ class TrackingProtectionOverlay(
         val etpShield =
             getToolbar().findViewById<View>(R.id.mozac_browser_toolbar_tracking_protection_indicator)
         trackingOnboardingDialog.message.setOnClickListener {
+            context.components.analytics.metrics.track(Event.ContextualHintETPInsideTap)
             trackingOnboardingDialog.dismiss()
             etpShield.performClick()
         }
 
+        context.components.analytics.metrics.track(Event.ContextualHintETPDisplayed)
         trackingOnboardingDialog.show()
         settings.incrementTrackingProtectionOnboardingCount()
     }
