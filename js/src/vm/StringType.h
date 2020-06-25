@@ -163,21 +163,16 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  */
 // clang-format on
 
-class JSString : public js::gc::CellWithLengthAndFlags {
+class JSString : public js::gc::Cell {
  protected:
   static const size_t NUM_INLINE_CHARS_LATIN1 =
       2 * sizeof(void*) / sizeof(JS::Latin1Char);
   static const size_t NUM_INLINE_CHARS_TWO_BYTE =
       2 * sizeof(void*) / sizeof(char16_t);
 
- public:
-  // String length and flags are stored in the cell header.
-  MOZ_ALWAYS_INLINE
-  size_t length() const { return headerLengthField(); }
-  MOZ_ALWAYS_INLINE
-  uint32_t flags() const { return headerFlagsField(); }
+  using Header = js::gc::CellHeaderWithLengthAndFlags;
+  Header header_;
 
- protected:
   /* Fields only apply to string types commented on the right. */
   struct Data {
     // Note: 32-bit length and flags fields are inherited from
@@ -289,7 +284,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   static const uint32_t INIT_DEPENDENT_FLAGS = LINEAR_BIT | DEPENDENT_BIT;
 
   static const uint32_t TYPE_FLAGS_MASK = js::BitMask(9) - js::BitMask(3);
-  static_assert((TYPE_FLAGS_MASK & RESERVED_MASK) == 0,
+  static_assert((TYPE_FLAGS_MASK & js::gc::CellHeader::RESERVED_MASK) == 0,
                 "GC reserved bits must not be used for Strings");
 
   static const uint32_t LATIN1_CHARS_BIT = js::Bit(9);
@@ -315,11 +310,16 @@ class JSString : public js::gc::CellWithLengthAndFlags {
    */
   static inline bool validateLength(JSContext* maybecx, size_t length);
 
-  static constexpr size_t offsetOfFlags() {
-    return offsetOfHeaderFlags();
-    ;
+  static constexpr size_t offsetOfRawFlagsField() {
+    return offsetof(JSString, header_) + Header::offsetOfRawFlagsField();
   }
-  static constexpr size_t offsetOfLength() { return offsetOfHeaderLength(); }
+
+  static constexpr size_t offsetOfFlags() {
+    return offsetof(JSString, header_) + Header::offsetOfFlags();
+  }
+  static constexpr size_t offsetOfLength() {
+    return offsetof(JSString, header_) + Header::offsetOfLength();
+  }
 
   static void staticAsserts() {
     static_assert(JSString::MAX_LENGTH < UINT32_MAX,
@@ -335,9 +335,8 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
     /* Ensure js::shadow::String has the same layout. */
     using JS::shadow::String;
-    static_assert(
-        JSString::offsetOfRawHeaderFlagsField() == offsetof(String, flags_),
-        "shadow::String flags offset must match JSString");
+    static_assert(JSString::offsetOfRawFlagsField() == offsetof(String, flags_),
+                  "shadow::String flags offset must match JSString");
 #if JS_BITS_PER_WORD == 32
     static_assert(JSString::offsetOfLength() == offsetof(String, length_),
                   "shadow::String length offset must match JSString");
@@ -392,11 +391,20 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 #endif
   }
 
+ public:
+  MOZ_ALWAYS_INLINE
+  size_t length() const { return header_.lengthField(); }
+
+  MOZ_ALWAYS_INLINE
+  uint32_t flags() const { return header_.flagsField(); }
+
  protected:
-  void setFlattenData(uintptr_t data) { setTemporaryGCUnsafeData(data); }
+  void setFlattenData(uintptr_t data) {
+    header_.setTemporaryGCUnsafeData(data);
+  }
 
   uintptr_t unsetFlattenData(uint32_t len, uint32_t flags) {
-    return unsetTemporaryGCUnsafeData(len, flags);
+    return header_.unsetTemporaryGCUnsafeData(len, flags);
   }
 
   // Get correct non-inline chars enum arm for given type
@@ -585,6 +593,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::String;
+  const js::gc::CellHeader& cellHeader() const { return header_.cellHeader(); }
 
   JS::Zone* zone() const {
     if (isTenured()) {
@@ -598,10 +607,10 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   }
 
   void setLengthAndFlags(uint32_t len, uint32_t flags) {
-    setHeaderLengthAndFlags(len, flags);
+    header_.setLengthAndFlags(len, flags);
   }
-  void setFlagBit(uint32_t flag) { setHeaderFlagBit(flag); }
-  void clearFlagBit(uint32_t flag) { clearHeaderFlagBit(flag); }
+  void setFlagBit(uint32_t flag) { header_.setFlagBit(flag); }
+  void clearFlagBit(uint32_t flag) { header_.clearFlagBit(flag); }
 
   void fixupAfterMovingGC() {}
 
@@ -1955,7 +1964,8 @@ class StringRelocationOverlay : public RelocationOverlay {
   };
 
  public:
-  explicit StringRelocationOverlay(Cell* dst) : RelocationOverlay(dst) {}
+  inline StringRelocationOverlay(Cell* dst, uintptr_t flags)
+      : RelocationOverlay(dst, flags) {}
 
   static const StringRelocationOverlay* fromCell(const Cell* cell) {
     return static_cast<const StringRelocationOverlay*>(cell);
@@ -1995,13 +2005,21 @@ class StringRelocationOverlay : public RelocationOverlay {
   inline static StringRelocationOverlay* forwardCell(JSString* src, Cell* dst) {
     MOZ_ASSERT(!src->isForwarded());
     MOZ_ASSERT(!dst->isForwarded());
-    MOZ_ASSERT(dst->flags() == 0);
 
     JS::AutoCheckCannotGC nogc;
 
+    // Preserve old flags because the nursery may check them before checking if
+    // this is a forwarded Cell.
+    //
+    // This is pretty terrible and we should find a better way to implement
+    // Cell::getTraceKind() that doesn't rely on this behavior.
+    //
+    // The copied over flags are only used for nursery Cells. For tenured
+    // cells, these bits are never read and hence may contain any content.
     StringRelocationOverlay* overlay = nullptr;
     auto set_overlay = [&] {
-      overlay = new (src) StringRelocationOverlay(dst);
+      uintptr_t flags = reinterpret_cast<CellHeader*>(dst)->flags();
+      overlay = new (src) StringRelocationOverlay(dst, flags);
     };
 
     // Initialize the overlay, and remember the nursery base string if there is

@@ -71,8 +71,7 @@ inline bool IsNativeRegExpEnabled() {
  * objects when we are preserving jitcode in their zone, to avoid the same
  * recompilation inefficiencies as normal Ion and baseline compilation.
  */
-class RegExpShared
-    : public gc::CellWithTenuredGCPointer<gc::TenuredCell, JSAtom> {
+class RegExpShared : public gc::TenuredCell {
  public:
   enum class Kind { Unparsed, Atom, RegExp };
   enum class CodeKind { Bytecode, Jitcode, Any };
@@ -107,11 +106,10 @@ class RegExpShared
     }
   };
 
- public:
-  /* Source to the RegExp, for lazy compilation. Stored in the cell header. */
-  JSAtom* getSource() const { return headerPtr(); }
+  /* Source to the RegExp, for lazy compilation. */
+  using HeaderWithAtom = gc::CellHeaderWithTenuredGCPointer<JSAtom>;
+  HeaderWithAtom headerAndSource;
 
- private:
   RegExpCompilation compilationArray[2];
 
   uint32_t pairCount_;
@@ -212,6 +210,8 @@ class RegExpShared
     return namedCaptureIndices_[idx];
   }
 
+  JSAtom* getSource() const { return headerAndSource.ptr(); }
+
   JSAtom* patternAtom() const { return patternAtom_; }
 
   JS::RegExpFlags getFlags() const { return flags; }
@@ -232,7 +232,10 @@ class RegExpShared
   void discardJitCode();
   void finalize(JSFreeOp* fop);
 
-  static size_t offsetOfSource() { return offsetOfHeaderPtr(); }
+  static size_t offsetOfSource() {
+    return offsetof(RegExpShared, headerAndSource) +
+           HeaderWithAtom::offsetOfPtr();
+  }
 
   static size_t offsetOfPatternAtom() {
     return offsetof(RegExpShared, patternAtom_);
@@ -263,6 +266,7 @@ class RegExpShared
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::RegExpShared;
+  const gc::CellHeader& cellHeader() const { return headerAndSource; }
 };
 
 class RegExpZone {
