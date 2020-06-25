@@ -128,8 +128,17 @@
           if (endOfBrowsers == null) {
             endOfBrowsers = actual.match(/End of Web Content/g);
           }
-          let m2 = (vsizes.length == 4 && endOfBrowsers.length == 3);
-          ok(m2, "three child processes present in loaded data");
+
+          let socketProcessRunning = 0;
+          let ios = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
+          if (ios.socketProcessLaunched) {
+            socketProcessRunning = 1;
+          }
+
+          let m2 = (vsizes.length == (4 + socketProcessRunning) &&
+                    endOfBrowsers.length == 3);
+          ok(m2, "three content processes present in loaded data");
           good = good && !!m2;
 
           if (!good) {

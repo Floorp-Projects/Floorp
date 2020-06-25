@@ -228,7 +228,14 @@
 
   function checkSpecialReport(aName, aAmounts, aCanBeUnreasonable)
   {
-    ok(aAmounts.length == 1, aName + " has " + aAmounts.length + " report");
+    let socketProcessRunning = 0;
+    let ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+    if (ios.socketProcessLaunched) {
+      socketProcessRunning = 1;
+    }
+    ok(aAmounts.length == (1 + socketProcessRunning),
+       aName + " has " + aAmounts.length + " report");
     let n = aAmounts[0];
     if (!aCanBeUnreasonable) {
       checkSizeReasonable(aName, n);
