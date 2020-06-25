@@ -87,10 +87,27 @@ function unwatchTargetResources(targetActor, resourceTypes) {
 
     const watcher = watchers.get(targetActor);
     watcher.destroy();
-    watchers.delete(resourceType);
+    watchers.delete(targetActor);
   }
 }
 exports.unwatchTargetResources = unwatchTargetResources;
+
+/**
+ * Stop watching for all watched resources on a given target actor..
+ *
+ * @param TargetActor targetActor
+ *        The related target actor, already passed to watchTargetResources
+ */
+function unwatchAllTargetResources(targetActor) {
+  for (const { watchers } of Object.values(Resources)) {
+    const watcher = watchers.get(targetActor);
+    if (watcher) {
+      watcher.destroy();
+      watchers.delete(targetActor);
+    }
+  }
+}
+exports.unwatchAllTargetResources = unwatchAllTargetResources;
 
 /**
  * If we are watching for the given resource type,
