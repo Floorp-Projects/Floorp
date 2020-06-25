@@ -129,7 +129,12 @@ class ErrorPagesTest {
 
         assertTrue(errorPage.startsWith("resource://android/assets/$htmlFilename"))
         assertTrue(errorPage.contains("&button=${context.resources.getString(errorType.refreshButtonRes)}"))
-        assertTrue(errorPage.contains("&description=${context.resources.getString(errorType.messageRes, uri)}"))
+        assertTrue(
+            errorPage.contains(
+                "&description=${context.resources.getString(errorType.messageRes, uri)}"
+                    .replace("<ul>", "<ul role=\"presentation\">")
+            )
+        )
         assertTrue(errorPage.contains("&image=$expectedImageName"))
     }
 }
