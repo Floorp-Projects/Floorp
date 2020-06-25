@@ -11136,11 +11136,6 @@ void PresShell::CompleteChangeToVisualViewportSize() {
   if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
     window->VisualViewport()->PostResizeEvent();
   }
-
-  if (nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable()) {
-    ScrollAnchorContainer* container = rootScrollFrame->Anchor();
-    container->UserScrolled();
-  }
 }
 
 void PresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
