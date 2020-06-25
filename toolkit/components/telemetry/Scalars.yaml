@@ -4807,10 +4807,10 @@ blocklist:
 firstStartup:
   statusCode:
     bug_numbers:
-      - 1515712
+      - 1582608
     description: >-
       Status of the FirstRun service, which runs post-install/early-startup in Firefox.
-    expires: "80"
+    expires: "90"
     kind: uint
     notification_emails:
       - rhelmer@mozilla.com
@@ -4822,10 +4822,10 @@ firstStartup:
       - main
   elapsed:
     bug_numbers:
-      - 1515712
+      - 1582608
     description: >-
       Number of milliseconds the FirstRun service took to run.
-    expires: "80"
+    expires: "90"
     kind: uint
     notification_emails:
       - rhelmer@mozilla.com
