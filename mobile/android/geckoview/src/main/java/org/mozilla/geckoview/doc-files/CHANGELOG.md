@@ -27,10 +27,15 @@ exclude: true
 - Added [`ensureBuiltIn`][79.3] that ensures that a built-in extension is
   installed without re-installing.
   ([bug 1635564]({{bugzilla}}1635564))
+- Added [`ProfilerController`][79.4], accessible via [`GeckoRuntime.getProfilerController`][79.5]
+to allow adding gecko profiler markers.
+([bug 1624993]({{bugzilla}}1624993))
 
 [79.1]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onOpenOptionsPage-org.mozilla.geckoview.WebExtension-
 [79.2]: {{javadoc_uri}}/WebNotification.html#source
 [79.3]: {{javadoc_uri}}/WebExtensionController.html#ensureBuiltIn-java.lang.String-java.lang.String-
+[79.4]: {{javadoc_uri}}/ProfilerController.html
+[79.5]: {{javadoc_uri}}/GeckoRuntime.html#getProfilerController--
 
 ## v78
 - Added [`WebExtensionController.installBuiltIn`][78.1] that allows installing an
@@ -731,4 +736,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: c6aeb08c76ad537222627963671b4668ff596099
+[api-version]: a53322bd27a9a8968a3fbbc7e44ebefdd9a49ef8
