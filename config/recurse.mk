@@ -168,6 +168,9 @@ widget/android/bindings/export: mobile/android/base/export
 # source code in order to find JNI wrapper annotations.
 widget/android/export: mobile/android/base/export
 
+# android_apks is not built on artifact builds without this dependency.
+mobile/android/base/export: mobile/android/base/android_apks
+
 # CSS2Properties.webidl needs ServoCSSPropList.py from layout/style
 dom/bindings/export: layout/style/ServoCSSPropList.py
 
