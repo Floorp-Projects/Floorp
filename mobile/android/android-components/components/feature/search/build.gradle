@@ -30,6 +30,8 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 dependencies {
     api project(':browser-search')
+    api project(':browser-session')
+
     implementation project(':browser-session')
     implementation project(':concept-engine')
     implementation project(':support-utils')

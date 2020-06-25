@@ -112,4 +112,23 @@ class SearchUseCasesTest {
         assertTrue(captor.value.private)
         verify(engineSession).loadUrl(searchUrl)
     }
+
+    @Test
+    fun newPrivateTabSearchWithParentSession() {
+        val searchTerms = "mozilla android"
+        val searchUrl = "http://search-url.com?$searchTerms"
+
+        val engineSession = mock<EngineSession>()
+        whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
+        whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
+        whenever(sessionManager.getOrCreateEngineSession(any(), anyBoolean())).thenReturn(engineSession)
+
+        val parentSession = mock<Session>()
+        useCases.newPrivateTabSearch.invoke(searchTerms, parentSession = parentSession)
+
+        val captor = argumentCaptor<Session>()
+        verify(sessionManager).add(captor.capture(), eq(true), eq(null), eq(null), eq(parentSession))
+        assertTrue(captor.value.private)
+        verify(engineSession).loadUrl(searchUrl)
+    }
 }

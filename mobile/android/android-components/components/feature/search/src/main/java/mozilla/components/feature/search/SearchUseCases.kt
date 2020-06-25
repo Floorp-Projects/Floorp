@@ -26,7 +26,14 @@ class SearchUseCases(
     }
 ) {
     interface SearchUseCase {
-        fun invoke(searchTerms: String, searchEngine: SearchEngine? = null)
+        /**
+         * Triggers a search.
+         */
+        fun invoke(
+            searchTerms: String,
+            searchEngine: SearchEngine? = null,
+            parentSession: Session? = null
+        )
     }
 
     class DefaultSearchUseCase(
@@ -38,7 +45,11 @@ class SearchUseCases(
         /**
          * Triggers a search in the currently selected session.
          */
-        override fun invoke(searchTerms: String, searchEngine: SearchEngine?) {
+        override fun invoke(
+            searchTerms: String,
+            searchEngine: SearchEngine?,
+            parentSession: Session?
+        ) {
             invoke(searchTerms, sessionManager.selectedSession, searchEngine)
         }
 
@@ -73,13 +84,18 @@ class SearchUseCases(
         private val sessionManager: SessionManager,
         private val isPrivate: Boolean
     ) : SearchUseCase {
-        override fun invoke(searchTerms: String, searchEngine: SearchEngine?) {
+        override fun invoke(
+            searchTerms: String,
+            searchEngine: SearchEngine?,
+            parentSession: Session?
+        ) {
             invoke(
                 searchTerms,
                 source = Session.Source.NONE,
                 selected = true,
                 private = isPrivate,
-                searchEngine = searchEngine
+                searchEngine = searchEngine,
+                parentSession = parentSession
             )
         }
 
@@ -91,13 +107,16 @@ class SearchUseCases(
          * @param private whether or not the new session should be private, defaults to false.
          * @param source the source of the new session.
          * @param searchEngine Search Engine to use, or the default search engine if none is provided
+         * @param parentSession optional parent session to attach this new search session to
          */
+        @Suppress("LongParameterList")
         operator fun invoke(
             searchTerms: String,
             source: Session.Source,
             selected: Boolean = true,
             private: Boolean = false,
-            searchEngine: SearchEngine? = null
+            searchEngine: SearchEngine? = null,
+            parentSession: Session? = null
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
@@ -106,7 +125,7 @@ class SearchUseCases(
             val session = Session(searchUrl, private, source)
             session.searchTerms = searchTerms
 
-            sessionManager.add(session, selected)
+            sessionManager.add(session, selected, parent = parentSession)
             sessionManager.getOrCreateEngineSession(session).loadUrl(searchUrl)
         }
     }

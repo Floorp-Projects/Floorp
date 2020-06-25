@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-intent**
    * ⚠️ **This is a breaking change**: `IntentProcessor.process` is not a suspend function anymore.
 
+* **feature-search**
+  * Adds optional `parentSession` to attach to a new search session in `SearchUseCases`
+
 * **feature-contextmenu**
   * Add "Share image" to context menu.
 

@@ -76,11 +76,11 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox nightly", suggestion.chips[9].title)
                 assertEquals("firefox clear cache", suggestion.chips[10].title)
 
-                verify(useCase, never()).invoke(anyString(), any())
+                verify(useCase, never()).invoke(anyString(), any(), any())
 
                 suggestion.onChipClicked!!.invoke(suggestion.chips[6])
 
-                verify(useCase).invoke(eq("firefox focus"), any())
+                verify(useCase).invoke(eq("firefox focus"), any(), any())
             } finally {
                 server.shutdown()
             }
@@ -131,11 +131,11 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox nightly", suggestions[9].title)
                 assertEquals("firefox clear cache", suggestions[10].title)
 
-                verify(useCase, never()).invoke(anyString(), any())
+                verify(useCase, never()).invoke(anyString(), any(), any())
 
                 suggestions[6].onSuggestionClicked!!.invoke()
 
-                verify(useCase).invoke(eq("firefox focus"), any())
+                verify(useCase).invoke(eq("firefox focus"), any(), any())
             } finally {
                 server.shutdown()
             }
