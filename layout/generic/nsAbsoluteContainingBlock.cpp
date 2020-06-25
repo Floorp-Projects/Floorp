@@ -256,7 +256,7 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
     // needed.  But the logic to not do that is enough more complicated, and
     // the case enough of an edge case, that this is probably better.
     if (kidNeedsReflow && aPresContext->CheckForInterrupt(aDelegatingFrame)) {
-      if (aDelegatingFrame->GetStateBits() & NS_FRAME_IS_DIRTY) {
+      if (aDelegatingFrame->HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
         kidFrame->MarkSubtreeDirty();
       } else {
         kidFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
