@@ -78,6 +78,13 @@ bool IPCBlobInputStreamThread::IsOnFileEventTarget(
     nsIEventTarget* aEventTarget) {
   MOZ_ASSERT(aEventTarget);
 
+  // Note that we don't migrate actors when we are on the socket process
+  // because, on that process, we don't have complex life-time contexts such
+  // as workers and documents.
+  if (XRE_IsSocketProcess()) {
+    return true;
+  }
+
   mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
   return gIPCBlobThread && aEventTarget == gIPCBlobThread->mThread;
 }

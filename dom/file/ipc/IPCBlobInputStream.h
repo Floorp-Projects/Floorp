@@ -55,8 +55,6 @@ class IPCBlobInputStream final : public nsIAsyncInputStream,
 
   void LengthReady(int64_t aLength);
 
-  void SerializeInternal(mozilla::ipc::InputStreamParams& aParams);
-
   // mozIIPCBlobInputStream
   NS_IMETHOD_(nsIInputStream*) GetInternalStream() override {
     if (mRemoteStream) {

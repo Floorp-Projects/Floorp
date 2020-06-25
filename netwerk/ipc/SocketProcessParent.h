@@ -113,6 +113,13 @@ class SocketProcessParent final
       nsIURI* aPushedURL, OriginAttributes&& aOriginAttributes,
       nsCString&& aRequestString, CachePushCheckResolver&& aResolver);
 
+  already_AddRefed<PIPCBlobInputStreamParent> AllocPIPCBlobInputStreamParent(
+      const nsID& aID, const uint64_t& aSize);
+
+  mozilla::ipc::IPCResult RecvPIPCBlobInputStreamConstructor(
+      PIPCBlobInputStreamParent* aActor, const nsID& aID,
+      const uint64_t& aSize);
+
  private:
   SocketProcessHost* mHost;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;
