@@ -171,11 +171,13 @@ public final class GeckoRuntime implements Parcelable {
     private WebPushController mPushController;
     private final ContentBlockingController mContentBlockingController;
     private final Autocomplete.LoginStorageProxy mLoginStorageProxy;
+    private final ProfilerController mProfilerController;
 
     private GeckoRuntime() {
         mWebExtensionController = new WebExtensionController(this);
         mContentBlockingController = new ContentBlockingController();
         mLoginStorageProxy = new Autocomplete.LoginStorageProxy();
+        mProfilerController = new ProfilerController();
 
         if (sRuntime != null) {
             throw new IllegalStateException("Only one GeckoRuntime instance is allowed");
@@ -449,6 +451,16 @@ public final class GeckoRuntime implements Parcelable {
     @UiThread
     public @NonNull ContentBlockingController getContentBlockingController() {
         return mContentBlockingController;
+    }
+
+    /**
+     * Returns a ProfilerController for this GeckoRuntime.
+     *
+     * @return an instance of {@link ProfilerController}.
+     */
+    @UiThread
+    public @NonNull ProfilerController getProfilerController() {
+        return mProfilerController;
     }
 
     /**
