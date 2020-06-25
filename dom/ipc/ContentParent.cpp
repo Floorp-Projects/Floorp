@@ -546,20 +546,6 @@ ScriptableCPInfo::GetProcessId(int32_t* aPID) {
 }
 
 NS_IMETHODIMP
-ScriptableCPInfo::GetOpener(nsIContentProcessInfo** aInfo) {
-  *aInfo = nullptr;
-  if (!mContentParent) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (ContentParent* opener = mContentParent->Opener()) {
-    nsCOMPtr<nsIContentProcessInfo> info = opener->ScriptableHelper();
-    info.forget(aInfo);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ScriptableCPInfo::GetTabCount(int32_t* aTabCount) {
   if (!mContentParent) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -651,8 +637,8 @@ static const char* sObserverTopics[] = {
 // ContentParent then takes this process back within GetNewOrUsedBrowserProcess.
 /*static*/ RefPtr<ContentParent::LaunchPromise>
 ContentParent::PreallocateProcess() {
-  RefPtr<ContentParent> process = new ContentParent(
-      /* aOpener = */ nullptr, NS_LITERAL_STRING(PREALLOC_REMOTE_TYPE));
+  RefPtr<ContentParent> process =
+      new ContentParent(NS_LITERAL_STRING(PREALLOC_REMOTE_TYPE));
 
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
           ("Preallocating process of type " PREALLOC_REMOTE_TYPE));
@@ -841,7 +827,7 @@ void ContentParent::ReleaseCachedProcesses() {
 
 /*static*/
 already_AddRefed<ContentParent> ContentParent::MinTabSelect(
-    const nsTArray<ContentParent*>& aContentParents, ContentParent* aOpener,
+    const nsTArray<ContentParent*>& aContentParents,
     int32_t aMaxContentParents) {
   uint32_t maxSelectable =
       std::min(static_cast<uint32_t>(aContentParents.Length()),
@@ -854,12 +840,11 @@ already_AddRefed<ContentParent> ContentParent::MinTabSelect(
     ContentParent* p = aContentParents[i];
     MOZ_DIAGNOSTIC_ASSERT(!p->IsDead());
     MOZ_DIAGNOSTIC_ASSERT(!p->mShutdownPending);
-    if (p->mOpener == aOpener) {
-      uint32_t tabCount = cpm->GetBrowserParentCountByProcessId(p->ChildID());
-      if (tabCount < min) {
-        candidate = p;
-        min = tabCount;
-      }
+
+    uint32_t tabCount = cpm->GetBrowserParentCountByProcessId(p->ChildID());
+    if (tabCount < min) {
+      candidate = p;
+      min = tabCount;
     }
   }
 
@@ -868,9 +853,8 @@ already_AddRefed<ContentParent> ContentParent::MinTabSelect(
 
 /*static*/
 already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
-    ContentParent* aOpener, const nsAString& aRemoteType,
-    nsTArray<ContentParent*>& aContentParents, uint32_t aMaxContentParents,
-    bool aPreferUsed) {
+    const nsAString& aRemoteType, nsTArray<ContentParent*>& aContentParents,
+    uint32_t aMaxContentParents, bool aPreferUsed) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   AutoRestore ar(sInProcessSelector);
   sInProcessSelector = true;
@@ -890,10 +874,8 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
 
   nsCOMPtr<nsIContentProcessProvider> cpp =
       do_GetService("@mozilla.org/ipc/processselector;1");
-  nsIContentProcessInfo* openerInfo =
-      aOpener ? aOpener->mScriptableHelper.get() : nullptr;
   int32_t index;
-  if (cpp && NS_SUCCEEDED(cpp->ProvideProcess(aRemoteType, openerInfo, infos,
+  if (cpp && NS_SUCCEEDED(cpp->ProvideProcess(aRemoteType, infos,
                                               aMaxContentParents, &index))) {
     // If the provider returned an existing ContentParent, use that one.
     if (0 <= index && static_cast<uint32_t>(index) <= aMaxContentParents) {
@@ -920,7 +902,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     NS_WARNING("nsIContentProcessProvider failed to return a process");
     RefPtr<ContentParent> random;
     if (aContentParents.Length() >= aMaxContentParents &&
-        (random = MinTabSelect(aContentParents, aOpener, aMaxContentParents))) {
+        (random = MinTabSelect(aContentParents, aMaxContentParents))) {
       MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
               ("GetUsedProcess: Reused random process %p (%d) for %s",
                random.get(), (unsigned int)random->ChildID(),
@@ -961,7 +943,6 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
             ("Adopted %s process %p for type %s",
              preallocated ? "preallocated" : "reused web", p.get(),
              NS_ConvertUTF16toUTF8(aRemoteType).get()));
-    p->mOpener = aOpener;
     p->mActivateTS = TimeStamp::Now();
     p->AddToPool(aContentParents);
     if (preallocated) {
@@ -995,7 +976,6 @@ already_AddRefed<ContentParent>
 ContentParent::GetNewOrUsedLaunchingBrowserProcess(Element* aFrameElement,
                                                    const nsAString& aRemoteType,
                                                    ProcessPriority aPriority,
-                                                   ContentParent* aOpener,
                                                    bool aPreferUsed) {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
           ("GetNewOrUsedProcess for type %s",
@@ -1010,12 +990,12 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(Element* aFrameElement,
             ("GetNewOrUsedProcess: returning Large Used process"));
     return GetNewOrUsedLaunchingBrowserProcess(
         aFrameElement, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE), aPriority,
-        aOpener, /*aPreferUsed =*/false);
+        /*aPreferUsed =*/false);
   }
 
   // Let's try and reuse an existing process.
   RefPtr<ContentParent> contentParent = GetUsedBrowserProcess(
-      aOpener, aRemoteType, contentParents, maxContentParents, aPreferUsed);
+      aRemoteType, contentParents, maxContentParents, aPreferUsed);
 
   if (contentParent) {
     // We have located a process. It may not have finished initializing,
@@ -1033,7 +1013,7 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(Element* aFrameElement,
           ("Launching new process immediately for type %s",
            NS_ConvertUTF16toUTF8(aRemoteType).get()));
 
-  contentParent = new ContentParent(aOpener, aRemoteType);
+  contentParent = new ContentParent(aRemoteType);
   if (!contentParent->BeginSubprocessLaunch(aPriority)) {
     // Launch aborted because of shutdown. Bailout.
     contentParent->LaunchSubprocessReject();
@@ -1060,11 +1040,10 @@ RefPtr<ContentParent::LaunchPromise>
 ContentParent::GetNewOrUsedBrowserProcessAsync(Element* aFrameElement,
                                                const nsAString& aRemoteType,
                                                ProcessPriority aPriority,
-                                               ContentParent* aOpener,
                                                bool aPreferUsed) {
   // Obtain a `ContentParent` launched asynchronously.
   RefPtr<ContentParent> contentParent = GetNewOrUsedLaunchingBrowserProcess(
-      aFrameElement, aRemoteType, aPriority, aOpener, aPreferUsed);
+      aFrameElement, aRemoteType, aPriority, aPreferUsed);
   if (!contentParent) {
     // In case of launch error, stop here.
     return LaunchPromise::CreateAndReject(LaunchError(), __func__);
@@ -1075,9 +1054,9 @@ ContentParent::GetNewOrUsedBrowserProcessAsync(Element* aFrameElement,
 /*static*/
 already_AddRefed<ContentParent> ContentParent::GetNewOrUsedBrowserProcess(
     Element* aFrameElement, const nsAString& aRemoteType,
-    ProcessPriority aPriority, ContentParent* aOpener, bool aPreferUsed) {
+    ProcessPriority aPriority, bool aPreferUsed) {
   RefPtr<ContentParent> contentParent = GetNewOrUsedLaunchingBrowserProcess(
-      aFrameElement, aRemoteType, aPriority, aOpener, aPreferUsed);
+      aFrameElement, aRemoteType, aPriority, aPreferUsed);
   if (!contentParent || !contentParent->WaitForLaunchSync(aPriority)) {
     // In case of launch error, stop here.
     return nullptr;
@@ -1362,9 +1341,8 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
       constructorSender =
           GetNewOrUsedJSPluginProcess(aContext.JSPluginId(), initialPriority);
     } else {
-      constructorSender =
-          GetNewOrUsedBrowserProcess(aFrameElement, remoteType, initialPriority,
-                                     nullptr, isPreloadBrowser);
+      constructorSender = GetNewOrUsedBrowserProcess(
+          aFrameElement, remoteType, initialPriority, isPreloadBrowser);
     }
     if (!constructorSender) {
       return nullptr;
@@ -2474,14 +2452,12 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::LaunchSubprocessAsync(
       });
 }
 
-ContentParent::ContentParent(ContentParent* aOpener,
-                             const nsAString& aRemoteType, int32_t aJSPluginID)
+ContentParent::ContentParent(const nsAString& aRemoteType, int32_t aJSPluginID)
     : mSelfRef(nullptr),
       mSubprocess(nullptr),
       mLaunchTS(TimeStamp::Now()),
       mLaunchYieldTS(mLaunchTS),
       mActivateTS(mLaunchTS),
-      mOpener(aOpener),
       mIsAPreallocBlocker(false),
       mRemoteType(aRemoteType),
       mChildID(gContentChildID++),
