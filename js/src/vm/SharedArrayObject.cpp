@@ -44,7 +44,7 @@ static size_t SharedArrayMappedSize(uint32_t length) {
 
 // `maxSize` must be something for wasm, nothing for other cases.
 SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(
-    uint32_t length, const Maybe<uint32_t>& maxSize,
+    uint32_t length, const Maybe<uint64_t>& maxSize,
     const Maybe<size_t>& mappedSize) {
   MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::MaxBufferByteLength);
 
@@ -54,7 +54,7 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(
   }
 
   bool preparedForWasm = maxSize.isSome();
-  uint32_t computedMaxSize;
+  uint64_t computedMaxSize;
   size_t computedMappedSize;
 
   if (preparedForWasm) {
@@ -86,8 +86,8 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(
   return rawbuf;
 }
 
-void SharedArrayRawBuffer::tryGrowMaxSizeInPlace(uint32_t deltaMaxSize) {
-  CheckedInt<uint32_t> newMaxSize = maxSize_;
+void SharedArrayRawBuffer::tryGrowMaxSizeInPlace(uint64_t deltaMaxSize) {
+  CheckedInt<uint64_t> newMaxSize = maxSize_;
   newMaxSize += deltaMaxSize;
   MOZ_ASSERT(newMaxSize.isValid());
   MOZ_ASSERT(newMaxSize.value() % wasm::PageSize == 0);

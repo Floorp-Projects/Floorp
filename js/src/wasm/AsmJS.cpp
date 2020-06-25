@@ -95,7 +95,7 @@ using mozilla::Compression::LZ4;
 // ARM greater or equal to MinHeapLength
 static const size_t MinHeapLength = PageSize;
 
-static uint32_t RoundUpToNextValidAsmJSHeapLength(uint32_t length) {
+static uint64_t RoundUpToNextValidAsmJSHeapLength(uint64_t length) {
   if (length <= MinHeapLength) {
     return MinHeapLength;
   }
@@ -1434,7 +1434,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
   PropertyName* bufferArgumentName() const { return bufferArgumentName_; }
   const ModuleEnvironment& env() { return env_; }
 
-  uint32_t minMemoryLength() const { return env_.minMemoryLength; }
+  uint64_t minMemoryLength() const { return env_.minMemoryLength; }
 
   void initModuleFunctionName(PropertyName* name) {
     MOZ_ASSERT(!moduleFunctionName_);
@@ -1993,7 +1993,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     }
 
     env_.asmJSSigToTableIndex[sigIndex] = env_.tables.length();
-    if (!env_.tables.emplaceBack(TableKind::AsmJS, Limits(mask + 1))) {
+    if (!env_.tables.emplaceBack(TableKind::AsmJS, mask + 1, Nothing())) {
       return false;
     }
 
@@ -6721,12 +6721,13 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   }
 
   buffer.set(&AsAnyArrayBuffer(bufferVal));
-  uint32_t memoryLength = buffer->byteLength();
+  uint64_t memoryLength = uint64_t(buffer->byteLength());
 
   if (!IsValidAsmJSHeapLength(memoryLength)) {
     UniqueChars msg(JS_smprintf(
-        "ArrayBuffer byteLength 0x%x is not a valid heap length. The next "
-        "valid length is 0x%x",
+        "ArrayBuffer byteLength 0x%" PRIu64
+        " is not a valid heap length. The next "
+        "valid length is 0x%" PRIu64,
         memoryLength, RoundUpToNextValidAsmJSHeapLength(memoryLength)));
     if (!msg) {
       return false;
@@ -6739,10 +6740,11 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   // byteLength has larger alignment.
   MOZ_ASSERT((metadata.minMemoryLength - 1) <= INT32_MAX);
   if (memoryLength < metadata.minMemoryLength) {
-    UniqueChars msg(JS_smprintf(
-        "ArrayBuffer byteLength of 0x%x is less than 0x%x (the size implied "
-        "by const heap accesses).",
-        memoryLength, metadata.minMemoryLength));
+    UniqueChars msg(JS_smprintf("ArrayBuffer byteLength of 0x%" PRIu64
+                                " is less than 0x%" PRIu64 " (the "
+                                "size implied "
+                                "by const heap accesses).",
+                                memoryLength, metadata.minMemoryLength));
     if (!msg) {
       return false;
     }

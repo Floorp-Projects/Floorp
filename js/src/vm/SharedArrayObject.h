@@ -51,7 +51,7 @@ class SharedArrayRawBuffer {
   mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refcount_;
   mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> length_;
   Mutex growLock_;
-  uint32_t maxSize_;
+  uint64_t maxSize_;
   size_t mappedSize_;  // Does not include the page for the header
   bool preparedForWasm_;
 
@@ -66,7 +66,7 @@ class SharedArrayRawBuffer {
   }
 
  protected:
-  SharedArrayRawBuffer(uint8_t* buffer, uint32_t length, uint32_t maxSize,
+  SharedArrayRawBuffer(uint8_t* buffer, uint32_t length, uint64_t maxSize,
                        size_t mappedSize, bool preparedForWasm)
       : refcount_(1),
         length_(length),
@@ -94,7 +94,7 @@ class SharedArrayRawBuffer {
 
   // max must be Something for wasm, Nothing for other uses
   static SharedArrayRawBuffer* Allocate(
-      uint32_t length, const mozilla::Maybe<uint32_t>& maxSize,
+      uint32_t length, const mozilla::Maybe<uint64_t>& maxSize,
       const mozilla::Maybe<size_t>& mappedSize);
 
   // This may be called from multiple threads.  The caller must take
@@ -118,13 +118,13 @@ class SharedArrayRawBuffer {
 
   uint32_t volatileByteLength() const { return length_; }
 
-  uint32_t maxSize() const { return maxSize_; }
+  uint64_t maxSize() const { return maxSize_; }
 
   size_t mappedSize() const { return mappedSize_; }
 
   bool isWasm() const { return preparedForWasm_; }
 
-  void tryGrowMaxSizeInPlace(uint32_t deltaMaxSize);
+  void tryGrowMaxSizeInPlace(uint64_t deltaMaxSize);
 
   bool wasmGrowToSizeInPlace(const Lock&, uint32_t newLength);
 
@@ -229,7 +229,7 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static SharedArrayBufferObject* createFromNewRawBuffer(
       JSContext* cx, SharedArrayRawBuffer* buffer, uint32_t initialSize);
 
-  mozilla::Maybe<uint32_t> wasmMaxSize() const {
+  mozilla::Maybe<uint64_t> wasmMaxSize() const {
     return mozilla::Some(rawBufferObject()->maxSize());
   }
 
