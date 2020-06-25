@@ -74,6 +74,7 @@ import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchFragmentDirections
+import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.settings.about.AboutFragmentDirections
@@ -154,6 +155,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
         sessionObserver = UriOpenedObserver(this)
 
+        checkPrivateShortcutEntryPoint(intent)
+        val privateNotificationObserver = NotificationSessionObserver(this)
+        privateNotificationObserver.start()
+
         if (isActivityColdStarted(intent, savedInstanceState)) {
             externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
         }
@@ -176,6 +181,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             StartupTimeline.homeActivityLifecycleObserver
         )
         StartupTimeline.onActivityCreateEndHome(this)
+
+        if (shouldAddToRecentsScreen(intent)) {
+            intent.removeExtra(START_IN_RECENTS_SCREEN)
+            moveTaskToBack(true)
+        }
     }
 
     @CallSuper
@@ -311,6 +321,30 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             }
         }
         return settings().lastKnownMode
+    }
+
+    /**
+     * Determines whether the activity should be pushed to be backstack (i.e., 'minimized' to the recents
+     * screen) upon starting.
+     * @param intent - The intent that started this activity. Is checked for having the 'START_IN_RECENTS_SCREEN'-extra.
+     * @return true if the activity should be started and pushed to the recents screen, false otherwise.
+     */
+    private fun shouldAddToRecentsScreen(intent: Intent?): Boolean {
+        intent?.toSafeIntent()?.let {
+            return it.getBooleanExtra(START_IN_RECENTS_SCREEN, false)
+        }
+        return false
+    }
+
+    private fun checkPrivateShortcutEntryPoint(intent: Intent) {
+        if (intent.hasExtra(OPEN_TO_SEARCH) &&
+            (intent.getStringExtra(OPEN_TO_SEARCH) ==
+                    StartSearchIntentProcessor.STATIC_SHORTCUT_NEW_PRIVATE_TAB ||
+                    intent.getStringExtra(OPEN_TO_SEARCH) ==
+                    StartSearchIntentProcessor.PRIVATE_BROWSING_PINNED_SHORTCUT)
+        ) {
+            NotificationSessionObserver.isStartedFromPrivateShortcut = true
+        }
     }
 
     private fun setupThemeAndBrowsingMode(mode: BrowsingMode) {
@@ -499,5 +533,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         const val EXTRA_DELETE_PRIVATE_TABS = "notification_delete_and_open"
         const val EXTRA_OPENED_FROM_NOTIFICATION = "notification_open"
         const val delay = 5000L
+        const val START_IN_RECENTS_SCREEN = "start_in_recents_screen"
     }
 }

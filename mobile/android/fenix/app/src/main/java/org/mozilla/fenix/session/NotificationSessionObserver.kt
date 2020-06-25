@@ -34,7 +34,7 @@ class NotificationSessionObserver(
                 .ifChanged()
                 .collect { hasPrivateTabs ->
                     if (hasPrivateTabs) {
-                        notificationService.start(context)
+                        notificationService.start(context, isStartedFromPrivateShortcut)
                         started = true
                     } else if (started) {
                         notificationService.stop(context)
@@ -46,5 +46,9 @@ class NotificationSessionObserver(
 
     fun stop() {
         scope?.cancel()
+    }
+
+    companion object {
+        var isStartedFromPrivateShortcut = false
     }
 }

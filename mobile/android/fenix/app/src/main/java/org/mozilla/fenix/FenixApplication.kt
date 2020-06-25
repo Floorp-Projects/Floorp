@@ -43,7 +43,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.push.PushFxaIntegration
 import org.mozilla.fenix.push.WebPushEngineIntegration
-import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
@@ -156,9 +155,6 @@ open class FenixApplication : LocaleAwareApplication() {
 
         visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
         registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
-
-        val privateNotificationObserver = NotificationSessionObserver(this)
-        privateNotificationObserver.start()
 
         // Storage maintenance disabled, for now, as it was interfering with background migrations.
         // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.

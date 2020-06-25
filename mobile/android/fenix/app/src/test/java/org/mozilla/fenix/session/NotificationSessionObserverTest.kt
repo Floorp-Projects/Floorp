@@ -35,6 +35,7 @@ class NotificationSessionObserverTest {
         store = BrowserStore()
         every { context.components.core.store } returns store
         observer = NotificationSessionObserver(context, notificationService)
+        NotificationSessionObserver.isStartedFromPrivateShortcut = false
     }
 
     @Test
@@ -44,7 +45,7 @@ class NotificationSessionObserverTest {
         store.dispatch(TabListAction.AddTabAction(privateSession)).join()
 
         observer.start()
-        verify(exactly = 1) { notificationService.start(context) }
+        verify(exactly = 1) { notificationService.start(context, false) }
         confirmVerified(notificationService)
     }
 
@@ -57,10 +58,10 @@ class NotificationSessionObserverTest {
         verify { notificationService wasNot Called }
 
         store.dispatch(TabListAction.AddTabAction(normalSession)).join()
-        verify(exactly = 0) { notificationService.start(context) }
+        verify(exactly = 0) { notificationService.start(context, false) }
 
         store.dispatch(CustomTabListAction.AddCustomTabAction(customSession)).join()
-        verify(exactly = 0) { notificationService.start(context) }
+        verify(exactly = 0) { notificationService.start(context, false) }
     }
 
     @Test
@@ -74,9 +75,9 @@ class NotificationSessionObserverTest {
         verify { notificationService wasNot Called }
 
         store.dispatch(CustomTabListAction.AddCustomTabAction(privateCustomSession)).join()
-        verify(exactly = 0) { notificationService.start(context) }
+        verify(exactly = 0) { notificationService.start(context, false) }
 
         store.dispatch(CustomTabListAction.AddCustomTabAction(customSession)).join()
-        verify(exactly = 0) { notificationService.start(context) }
+        verify(exactly = 0) { notificationService.start(context, false) }
     }
 }
