@@ -34,7 +34,7 @@ enum {
   JOF_LOOPHEAD = 20,    /* JSOp::LoopHead, combines JOF_ICINDEX and JOF_UINT8 */
   JOF_BIGINT = 21,      /* uint32_t index for BigInt value */
   JOF_CLASS_CTOR = 22,  /* uint32_t atom index, sourceStart, sourceEnd */
-  JOF_CODE_OFFSET = 23, /* int32_t bytecode offset */
+  // (23 is unused.)
   JOF_TYPEMASK = 0x001f, /* mask for above immediate types */
 
   JOF_NAME = 1 << 5,     /* name operation */
