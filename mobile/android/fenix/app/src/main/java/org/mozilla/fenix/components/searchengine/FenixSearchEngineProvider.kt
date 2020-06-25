@@ -61,7 +61,8 @@ open class FenixSearchEngineProvider(
     private val fallBackProvider =
         AssetsSearchEngineProvider(fallbackLocationService)
 
-    private val fallbackEngines = async { fallBackProvider.loadSearchEngines(context) }
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    open val fallbackEngines = async { fallBackProvider.loadSearchEngines(context) }
     private val fallbackRegion = async { fallbackLocationService.determineRegion() }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -213,7 +214,11 @@ open class FenixSearchEngineProvider(
         }
 
         if (!prefs.contains(installedEnginesKey)) {
-            val defaultSet = baseSearchEngines.await()
+            val searchEngines =
+                if (baseSearchEngines.isCompleted) baseSearchEngines
+                else fallbackEngines
+
+            val defaultSet = searchEngines.await()
                 .list
                 .map { it.identifier }
                 .toSet()

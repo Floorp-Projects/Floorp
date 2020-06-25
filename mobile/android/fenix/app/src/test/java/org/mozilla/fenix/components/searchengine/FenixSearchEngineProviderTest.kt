@@ -119,6 +119,21 @@ class FakeFenixSearchEngineProvider(context: Context) : FenixSearchEngineProvide
             )
         }
 
+    override val fallbackEngines: Deferred<SearchEngineList>
+        get() {
+            val google = mockSearchEngine(id = "google-b-1-m", n = "Google")
+
+            return CompletableDeferred(
+                SearchEngineList(
+                    listOf(
+                        google,
+                        mockSearchEngine("bing", "Bing"),
+                        mockSearchEngine("amazondotcom", "Amazon.com")
+                    ), default = google
+                )
+            )
+        }
+
     override val bundledSearchEngines = CompletableDeferred(
         SearchEngineList(
             listOf(
