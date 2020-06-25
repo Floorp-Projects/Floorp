@@ -2179,14 +2179,12 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     /* Various 1-byte no-ops. */
     CASE(Nop)
+    CASE(Try)
     CASE(NopDestructuring)
     CASE(TryDestructuring) {
       MOZ_ASSERT(GetBytecodeLength(REGS.pc) == 1);
       ADVANCE_AND_DISPATCH(1);
     }
-
-    CASE(Try)
-    END_CASE(Try)
 
     CASE(JumpTarget)
     COUNT_COVERAGE();

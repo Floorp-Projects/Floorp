@@ -3076,39 +3076,12 @@ AbortReasonOr<Ok> IonBuilder::visitTry() {
     return abort(AbortReason::Disable, "Try-catch during analysis");
   }
 
-  // Get the pc of the last instruction in the try block. It's a JSOp::Goto to
-  // jump over the catch block.
-  jsbytecode* endpc = pc + GET_CODE_OFFSET(pc);
-  MOZ_ASSERT(JSOp(*endpc) == JSOp::Goto);
-  MOZ_ASSERT(GET_JUMP_OFFSET(endpc) > 0);
-
-  jsbytecode* afterTry = endpc + GET_JUMP_OFFSET(endpc);
-
-  // The baseline compiler should not attempt to enter the catch block
-  // via OSR.
-  MOZ_ASSERT(info().osrPc() < endpc || info().osrPc() >= afterTry);
-
-  // If controlflow in the try body is terminated (by a return or throw
-  // statement), the code after the try-statement may still be reachable
-  // via the catch block (which we don't compile) and OSR can enter it.
-  // For example:
-  //
-  //     try {
-  //         throw 3;
-  //     } catch(e) { }
-  //
-  //     for (var i=0; i<1000; i++) {}
-  //
-  // To handle this, we create two blocks: one for the try block and one
-  // for the code following the try-catch statement.
-
   graph().setHasTryBlock();
 
   MBasicBlock* tryBlock;
   MOZ_TRY_VAR(tryBlock, newBlock(current, GetNextPc(pc)));
 
-  current->end(MGotoWithFake::New(alloc(), tryBlock, nullptr));
-  MOZ_TRY(addPendingEdge(PendingEdge::NewGotoWithFake(current), afterTry));
+  current->end(MGoto::New(alloc(), tryBlock));
 
   return startTraversingBlock(tryBlock);
 }
@@ -3244,11 +3217,6 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
       case PendingEdge::Kind::Goto:
         MOZ_TRY(addEdge(source, 0));
         lastIns->toGoto()->initSuccessor(0, joinBlock);
-        continue;
-
-      case PendingEdge::Kind::GotoWithFake:
-        MOZ_TRY(addEdge(source, 0));
-        lastIns->toGotoWithFake()->initSuccessor(1, joinBlock);
         continue;
     }
     MOZ_CRASH("Invalid kind");

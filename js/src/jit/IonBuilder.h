@@ -93,9 +93,9 @@ using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
 // whenever we need to execute the catch-block.
 //
 // Because we don't compile the catch-block and the code after the try-catch may
-// only be reachable via the catch-block, MGotoWithFake is used to ensure the
-// code after the try-catch is always compiled and is part of the graph.
-// See IonBuilder::visitTry for more information.
+// only be reachable via the catch-block, Baseline's BytecodeAnalysis ensures
+// Baseline does not attempt OSR into Ion/Warp when loops are only reachable via
+// catch/finally blocks.
 //
 // Finally-blocks are currently not supported by Ion.
 

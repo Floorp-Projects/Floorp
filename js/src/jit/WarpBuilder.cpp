@@ -1107,13 +1107,6 @@ bool WarpBuilder::build_JumpTarget(BytecodeLocation loc) {
         }
         lastIns->toGoto()->initSuccessor(0, joinBlock);
         continue;
-
-      case PendingEdge::Kind::GotoWithFake:
-        if (!addEdge(source, /* numToPop = */ 0)) {
-          return false;
-        }
-        lastIns->toGotoWithFake()->initSuccessor(1, joinBlock);
-        continue;
     }
     MOZ_CRASH("Invalid kind");
   }
@@ -2674,42 +2667,15 @@ bool WarpBuilder::build_Try(BytecodeLocation loc) {
   // TODO: IonBuilder doesn't support try-catch in inlined functions. This is
   // most likely not a hard limitation. Re-evaluate this when we can inline.
 
-  // Get the location of the last instruction in the try block. It's a
-  // JSOp::Goto to jump over the catch block.
-  BytecodeLocation endOfTryLoc = loc.getEndOfTryLocation();
-  MOZ_ASSERT(endOfTryLoc.is(JSOp::Goto));
-
-  BytecodeLocation afterTryLoc = endOfTryLoc.getJumpTarget();
-  MOZ_ASSERT(afterTryLoc > endOfTryLoc);
-
-  // The Baseline compiler should not attempt to enter the catch block via OSR.
-  MOZ_ASSERT(info().osrPc() < endOfTryLoc.toRawBytecode() ||
-             info().osrPc() >= afterTryLoc.toRawBytecode());
-
   graph().setHasTryBlock();
-
-  // If control flow in the try body is terminated (by a return or throw
-  // statement), the code after the try-statement may still be reachable via the
-  // catch block (which we don't compile) and OSR can enter it.
-  // For example:
-  //
-  //     try {
-  //         throw 3;
-  //     } catch(e) { }
-  //
-  //     for (var i=0; i<1000; i++) {} // OSR
-  //
-  // To handle this, we create two blocks: one for the try block and one
-  // for the code following the try-catch statement. MGotoWithFake is used to
-  // link both blocks to the predecessor block.
 
   MBasicBlock* pred = current;
   if (!startNewBlock(pred, loc.next())) {
     return false;
   }
 
-  pred->end(MGotoWithFake::New(alloc(), current, nullptr));
-  return addPendingEdge(PendingEdge::NewGotoWithFake(pred), afterTryLoc);
+  pred->end(MGoto::New(alloc(), current));
+  return true;
 }
 
 bool WarpBuilder::build_Exception(BytecodeLocation) {
