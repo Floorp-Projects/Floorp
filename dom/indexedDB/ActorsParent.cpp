@@ -5068,7 +5068,7 @@ class ConnectionPool final {
   nsClassHashtable<nsCStringHashKey, DatabaseInfo> mDatabases;
 
   nsClassHashtable<nsUint64HashKey, TransactionInfo> mTransactions;
-  nsTArray<TransactionInfo*> mQueuedTransactions;
+  nsTArray<NotNull<TransactionInfo*>> mQueuedTransactions;
 
   nsTArray<UniquePtr<DatabasesCompleteCallback>> mCompleteCallbacks;
 
@@ -5125,7 +5125,7 @@ class ConnectionPool final {
 
   void ShutdownIdleThreads();
 
-  bool ScheduleTransaction(TransactionInfo* aTransactionInfo,
+  bool ScheduleTransaction(TransactionInfo& aTransactionInfo,
                            bool aFromQueuedTransactions);
 
   void NoteFinishedTransaction(uint64_t aTransactionId);
@@ -5193,9 +5193,9 @@ struct ConnectionPool::DatabaseInfo final {
   const nsCString mDatabaseId;
   RefPtr<DatabaseConnection> mConnection;
   nsClassHashtable<nsStringHashKey, TransactionInfoPair> mBlockingTransactions;
-  nsTArray<TransactionInfo*> mTransactionsScheduledDuringClose;
-  nsTArray<TransactionInfo*> mScheduledWriteTransactions;
-  TransactionInfo* mRunningWriteTransaction;
+  nsTArray<NotNull<TransactionInfo*>> mTransactionsScheduledDuringClose;
+  nsTArray<NotNull<TransactionInfo*>> mScheduledWriteTransactions;
+  Maybe<TransactionInfo&> mRunningWriteTransaction;
   ThreadInfo mThreadInfo;
   uint32_t mReadTransactionCount;
   uint32_t mWriteTransactionCount;
@@ -5306,7 +5306,7 @@ class ConnectionPool::TransactionInfo final {
   friend class mozilla::DefaultDelete<TransactionInfo>;
 
   nsTHashtable<nsPtrHashKey<TransactionInfo>> mBlocking;
-  nsTArray<TransactionInfo*> mBlockingOrdered;
+  nsTArray<NotNull<TransactionInfo*>> mBlockingOrdered;
 
  public:
   DatabaseInfo* const mDatabaseInfo;
@@ -5332,28 +5332,26 @@ class ConnectionPool::TransactionInfo final {
                   bool aIsWriteTransaction,
                   TransactionDatabaseOperationBase* aTransactionOp);
 
-  void AddBlockingTransaction(TransactionInfo* aTransactionInfo);
+  void AddBlockingTransaction(TransactionInfo& aTransactionInfo);
 
   void RemoveBlockingTransactions();
 
  private:
   ~TransactionInfo();
 
-  void MaybeUnblock(TransactionInfo* aTransactionInfo);
+  void MaybeUnblock(TransactionInfo& aTransactionInfo);
 };
 
 struct ConnectionPool::TransactionInfoPair final {
-  friend class mozilla::DefaultDelete<TransactionInfoPair>;
-
   // Multiple reading transactions can block future writes.
-  nsTArray<TransactionInfo*> mLastBlockingWrites;
+  nsTArray<NotNull<TransactionInfo*>> mLastBlockingWrites;
   // But only a single writing transaction can block future reads.
-  TransactionInfo* mLastBlockingReads;
+  Maybe<TransactionInfo&> mLastBlockingReads;
 
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
   TransactionInfoPair();
-
- private:
   ~TransactionInfoPair();
+#endif
 };
 
 /*******************************************************************************
@@ -12087,13 +12085,17 @@ uint64_t ConnectionPool::Start(
     mDatabases.Put(aDatabaseId, dbInfo);
   }
 
-  auto* transactionInfo = new TransactionInfo(
-      dbInfo, aBackgroundChildLoggingId, aDatabaseId, transactionId,
-      aLoggingSerialNumber, aObjectStoreNames, aIsWriteTransaction,
-      aTransactionOp);
+  auto& transactionInfo = [&]() -> TransactionInfo& {
+    auto* transactionInfo = new TransactionInfo(
+        dbInfo, aBackgroundChildLoggingId, aDatabaseId, transactionId,
+        aLoggingSerialNumber, aObjectStoreNames, aIsWriteTransaction,
+        aTransactionOp);
 
-  MOZ_ASSERT(!mTransactions.Get(transactionId));
-  mTransactions.Put(transactionId, transactionInfo);
+    MOZ_ASSERT(!mTransactions.Get(transactionId));
+    mTransactions.Put(transactionId, transactionInfo);
+
+    return *transactionInfo;
+  }();
 
   if (aIsWriteTransaction) {
     MOZ_ASSERT(dbInfo->mWriteTransactionCount < UINT32_MAX);
@@ -12113,27 +12115,26 @@ uint64_t ConnectionPool::Start(
     }
 
     // Mark what we are blocking on.
-    if (TransactionInfo* blockingRead = blockInfo->mLastBlockingReads) {
-      transactionInfo->mBlockedOn.PutEntry(blockingRead);
-      blockingRead->AddBlockingTransaction(transactionInfo);
+    if (const auto maybeBlockingRead = blockInfo->mLastBlockingReads) {
+      transactionInfo.mBlockedOn.PutEntry(&maybeBlockingRead.ref());
+      maybeBlockingRead->AddBlockingTransaction(transactionInfo);
     }
 
     if (aIsWriteTransaction) {
-      for (TransactionInfo* blockingWrite : blockInfo->mLastBlockingWrites) {
-        MOZ_ASSERT(blockingWrite);
-
-        transactionInfo->mBlockedOn.PutEntry(blockingWrite);
+      for (const auto blockingWrite : blockInfo->mLastBlockingWrites) {
+        transactionInfo.mBlockedOn.PutEntry(blockingWrite);
         blockingWrite->AddBlockingTransaction(transactionInfo);
       }
 
-      blockInfo->mLastBlockingReads = transactionInfo;
+      blockInfo->mLastBlockingReads = SomeRef(transactionInfo);
       blockInfo->mLastBlockingWrites.Clear();
     } else {
-      blockInfo->mLastBlockingWrites.AppendElement(transactionInfo);
+      blockInfo->mLastBlockingWrites.AppendElement(
+          WrapNotNullUnchecked(&transactionInfo));
     }
   }
 
-  if (!transactionInfo->mBlockedOn.Count()) {
+  if (!transactionInfo.mBlockedOn.Count()) {
     Unused << ScheduleTransaction(transactionInfo,
                                   /* aFromQueuedTransactions */ false);
   }
@@ -12153,7 +12154,7 @@ void ConnectionPool::Dispatch(uint64_t aTransactionId, nsIRunnable* aRunnable) {
 
   AUTO_PROFILER_LABEL("ConnectionPool::Dispatch", DOM);
 
-  TransactionInfo* transactionInfo = mTransactions.Get(aTransactionId);
+  auto* const transactionInfo = mTransactions.Get(aTransactionId);
   MOZ_ASSERT(transactionInfo);
   MOZ_ASSERT(!transactionInfo->mFinished);
 
@@ -12162,8 +12163,10 @@ void ConnectionPool::Dispatch(uint64_t aTransactionId, nsIRunnable* aRunnable) {
     MOZ_ASSERT(dbInfo);
     dbInfo->mThreadInfo.AssertValid();
     MOZ_ASSERT(!dbInfo->mClosing);
-    MOZ_ASSERT_IF(transactionInfo->mIsWriteTransaction,
-                  dbInfo->mRunningWriteTransaction == transactionInfo);
+    MOZ_ASSERT_IF(
+        transactionInfo->mIsWriteTransaction,
+        dbInfo->mRunningWriteTransaction &&
+            dbInfo->mRunningWriteTransaction.refEquals(*transactionInfo));
 
     MOZ_ALWAYS_SUCCEEDS(dbInfo->mThreadInfo.ThreadRef().Dispatch(
         aRunnable, NS_DISPATCH_NORMAL));
@@ -12177,7 +12180,7 @@ void ConnectionPool::Finish(uint64_t aTransactionId,
   AssertIsOnOwningThread();
 
 #ifdef DEBUG
-  TransactionInfo* transactionInfo = mTransactions.Get(aTransactionId);
+  auto* const transactionInfo = mTransactions.Get(aTransactionId);
   MOZ_ASSERT(transactionInfo);
   MOZ_ASSERT(!transactionInfo->mFinished);
 #endif
@@ -12407,14 +12410,13 @@ void ConnectionPool::ShutdownIdleThreads() {
   mIdleThreads.Clear();
 }
 
-bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
+bool ConnectionPool::ScheduleTransaction(TransactionInfo& aTransactionInfo,
                                          bool aFromQueuedTransactions) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aTransactionInfo);
 
   AUTO_PROFILER_LABEL("ConnectionPool::ScheduleTransaction", DOM);
 
-  DatabaseInfo* dbInfo = aTransactionInfo->mDatabaseInfo;
+  DatabaseInfo* dbInfo = aTransactionInfo.mDatabaseInfo;
   MOZ_ASSERT(dbInfo);
 
   dbInfo->mIdle = false;
@@ -12422,9 +12424,10 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
   if (dbInfo->mClosing) {
     MOZ_ASSERT(!mIdleDatabases.Contains(dbInfo));
     MOZ_ASSERT(
-        !dbInfo->mTransactionsScheduledDuringClose.Contains(aTransactionInfo));
+        !dbInfo->mTransactionsScheduledDuringClose.Contains(&aTransactionInfo));
 
-    dbInfo->mTransactionsScheduledDuringClose.AppendElement(aTransactionInfo);
+    dbInfo->mTransactionsScheduledDuringClose.AppendElement(
+        WrapNotNullUnchecked(&aTransactionInfo));
     return true;
   }
 
@@ -12480,8 +12483,9 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
 
       if (!created) {
         if (!aFromQueuedTransactions) {
-          MOZ_ASSERT(!mQueuedTransactions.Contains(aTransactionInfo));
-          mQueuedTransactions.AppendElement(aTransactionInfo);
+          MOZ_ASSERT(!mQueuedTransactions.Contains(&aTransactionInfo));
+          mQueuedTransactions.AppendElement(
+              WrapNotNullUnchecked(&aTransactionInfo));
         }
         return false;
       }
@@ -12495,26 +12499,27 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
 
   dbInfo->mThreadInfo.AssertValid();
 
-  if (aTransactionInfo->mIsWriteTransaction) {
+  if (aTransactionInfo.mIsWriteTransaction) {
     if (dbInfo->mRunningWriteTransaction) {
       // SQLite only allows one write transaction at a time so queue this
       // transaction for later.
       MOZ_ASSERT(
-          !dbInfo->mScheduledWriteTransactions.Contains(aTransactionInfo));
+          !dbInfo->mScheduledWriteTransactions.Contains(&aTransactionInfo));
 
-      dbInfo->mScheduledWriteTransactions.AppendElement(aTransactionInfo);
+      dbInfo->mScheduledWriteTransactions.AppendElement(
+          WrapNotNullUnchecked(&aTransactionInfo));
       return true;
     }
 
-    dbInfo->mRunningWriteTransaction = aTransactionInfo;
+    dbInfo->mRunningWriteTransaction = SomeRef(aTransactionInfo);
     dbInfo->mNeedsCheckpoint = true;
   }
 
-  MOZ_ASSERT(!aTransactionInfo->mRunning);
-  aTransactionInfo->mRunning = true;
+  MOZ_ASSERT(!aTransactionInfo.mRunning);
+  aTransactionInfo.mRunning = true;
 
   nsTArray<nsCOMPtr<nsIRunnable>>& queuedRunnables =
-      aTransactionInfo->mQueuedRunnables;
+      aTransactionInfo.mQueuedRunnables;
 
   if (!queuedRunnables.IsEmpty()) {
     for (auto& queuedRunnable : queuedRunnables) {
@@ -12533,7 +12538,7 @@ void ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId) {
 
   AUTO_PROFILER_LABEL("ConnectionPool::NoteFinishedTransaction", DOM);
 
-  TransactionInfo* transactionInfo = mTransactions.Get(aTransactionId);
+  auto* const transactionInfo = mTransactions.Get(aTransactionId);
   MOZ_ASSERT(transactionInfo);
   MOZ_ASSERT(transactionInfo->mRunning);
   MOZ_ASSERT(transactionInfo->mFinished);
@@ -12546,20 +12551,19 @@ void ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId) {
   dbInfo->mThreadInfo.AssertValid();
 
   // Schedule the next write transaction if there are any queued.
-  if (dbInfo->mRunningWriteTransaction == transactionInfo) {
+  if (dbInfo->mRunningWriteTransaction &&
+      dbInfo->mRunningWriteTransaction.refEquals(*transactionInfo)) {
     MOZ_ASSERT(transactionInfo->mIsWriteTransaction);
     MOZ_ASSERT(dbInfo->mNeedsCheckpoint);
 
-    dbInfo->mRunningWriteTransaction = nullptr;
+    dbInfo->mRunningWriteTransaction = Nothing();
 
     if (!dbInfo->mScheduledWriteTransactions.IsEmpty()) {
-      TransactionInfo* nextWriteTransaction =
-          dbInfo->mScheduledWriteTransactions[0];
-      MOZ_ASSERT(nextWriteTransaction);
+      const auto nextWriteTransaction = dbInfo->mScheduledWriteTransactions[0];
 
       dbInfo->mScheduledWriteTransactions.RemoveElementAt(0);
 
-      MOZ_ALWAYS_TRUE(ScheduleTransaction(nextWriteTransaction,
+      MOZ_ALWAYS_TRUE(ScheduleTransaction(*nextWriteTransaction,
                                           /* aFromQueuedTransactions */ false));
     }
   }
@@ -12569,9 +12573,9 @@ void ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId) {
         dbInfo->mBlockingTransactions.Get(objectStoreName);
     MOZ_ASSERT(blockInfo);
 
-    if (transactionInfo->mIsWriteTransaction &&
-        blockInfo->mLastBlockingReads == transactionInfo) {
-      blockInfo->mLastBlockingReads = nullptr;
+    if (transactionInfo->mIsWriteTransaction && blockInfo->mLastBlockingReads &&
+        blockInfo->mLastBlockingReads.refEquals(*transactionInfo)) {
+      blockInfo->mLastBlockingReads = Nothing();
     }
 
     blockInfo->mLastBlockingWrites.RemoveElement(transactionInfo);
@@ -12588,11 +12592,6 @@ void ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId) {
   }
 
   mTransactions.Remove(aTransactionId);
-
-#ifdef DEBUG
-  // That just deleted |transactionInfo|.
-  transactionInfo = nullptr;
-#endif
 
   if (!dbInfo->TotalTransactionCount()) {
     MOZ_ASSERT(!dbInfo->mIdle);
@@ -12616,7 +12615,7 @@ void ConnectionPool::ScheduleQueuedTransactions(ThreadInfo aThreadInfo) {
   const auto foundIt = std::find_if(
       mQueuedTransactions.begin(), mQueuedTransactions.end(),
       [&me = *this](const auto& queuedTransaction) {
-        return !me.ScheduleTransaction(queuedTransaction,
+        return !me.ScheduleTransaction(*queuedTransaction,
                                        /* aFromQueuedTransactions */ true);
       });
 
@@ -12709,13 +12708,13 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
   // Schedule any transactions that were started while we were closing the
   // connection.
   if (aDatabaseInfo->TotalTransactionCount()) {
-    nsTArray<TransactionInfo*>& scheduledTransactions =
+    auto& scheduledTransactions =
         aDatabaseInfo->mTransactionsScheduledDuringClose;
 
     MOZ_ASSERT(!scheduledTransactions.IsEmpty());
 
     for (const auto& scheduledTransaction : scheduledTransactions) {
-      Unused << ScheduleTransaction(scheduledTransaction,
+      Unused << ScheduleTransaction(*scheduledTransaction,
                                     /* aFromQueuedTransactions */ false);
     }
 
@@ -12932,7 +12931,6 @@ ConnectionPool::DatabaseInfo::DatabaseInfo(ConnectionPool* aConnectionPool,
                                            const nsACString& aDatabaseId)
     : mConnectionPool(aConnectionPool),
       mDatabaseId(aDatabaseId),
-      mRunningWriteTransaction(nullptr),
       mReadTransactionCount(0),
       mWriteTransactionCount(0),
       mNeedsCheckpoint(false),
@@ -13213,23 +13211,26 @@ ConnectionPool::TransactionInfo::~TransactionInfo() {
 }
 
 void ConnectionPool::TransactionInfo::AddBlockingTransaction(
-    TransactionInfo* aTransactionInfo) {
+    TransactionInfo& aTransactionInfo) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aTransactionInfo);
 
-  if (!mBlocking.Contains(aTransactionInfo)) {
-    mBlocking.PutEntry(aTransactionInfo);
-    mBlockingOrdered.AppendElement(aTransactionInfo);
+  // XXX Does it really make sense to have both mBlocking and mBlockingOrdered,
+  // just to reduce the algorithmic complexity of this Contains check? This was
+  // mentioned in the context of Bug 1290853, but no real justification was
+  // given. There was the suggestion of encapsulating this in an
+  // insertion-ordered hashtable implementation, which seems like a good idea.
+  // If we had that, this would be the appropriate data structure to use here.
+  if (!mBlocking.Contains(&aTransactionInfo)) {
+    mBlocking.PutEntry(&aTransactionInfo);
+    mBlockingOrdered.AppendElement(WrapNotNullUnchecked(&aTransactionInfo));
   }
 }
 
 void ConnectionPool::TransactionInfo::RemoveBlockingTransactions() {
   AssertIsOnBackgroundThread();
 
-  for (TransactionInfo* blockedInfo : mBlockingOrdered) {
-    MOZ_ASSERT(blockedInfo);
-
-    blockedInfo->MaybeUnblock(this);
+  for (const auto blockedInfo : mBlockingOrdered) {
+    blockedInfo->MaybeUnblock(*this);
   }
 
   mBlocking.Clear();
@@ -13237,12 +13238,12 @@ void ConnectionPool::TransactionInfo::RemoveBlockingTransactions() {
 }
 
 void ConnectionPool::TransactionInfo::MaybeUnblock(
-    TransactionInfo* aTransactionInfo) {
+    TransactionInfo& aTransactionInfo) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mBlockedOn.Contains(aTransactionInfo));
+  MOZ_ASSERT(mBlockedOn.Contains(&aTransactionInfo));
 
-  mBlockedOn.RemoveEntry(aTransactionInfo);
-  if (!mBlockedOn.Count()) {
+  mBlockedOn.RemoveEntry(&aTransactionInfo);
+  if (mBlockedOn.IsEmpty()) {
     MOZ_ASSERT(mDatabaseInfo);
 
     ConnectionPool* connectionPool = mDatabaseInfo->mConnectionPool;
@@ -13250,13 +13251,13 @@ void ConnectionPool::TransactionInfo::MaybeUnblock(
     connectionPool->AssertIsOnOwningThread();
 
     Unused << connectionPool->ScheduleTransaction(
-        this,
+        *this,
         /* aFromQueuedTransactions */ false);
   }
 }
 
-ConnectionPool::TransactionInfoPair::TransactionInfoPair()
-    : mLastBlockingReads(nullptr) {
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
+ConnectionPool::TransactionInfoPair::TransactionInfoPair() {
   AssertIsOnBackgroundThread();
 
   MOZ_COUNT_CTOR(ConnectionPool::TransactionInfoPair);
@@ -13267,6 +13268,7 @@ ConnectionPool::TransactionInfoPair::~TransactionInfoPair() {
 
   MOZ_COUNT_DTOR(ConnectionPool::TransactionInfoPair);
 }
+#endif
 
 /*******************************************************************************
  * Metadata classes
