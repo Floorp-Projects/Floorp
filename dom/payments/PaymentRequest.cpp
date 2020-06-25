@@ -16,6 +16,8 @@
 #include "mozilla/intl/MozLocale.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsContentUtils.h"
+#include "nsImportModule.h"
+#include "nsIRegion.h"
 #include "nsIScriptError.h"
 #include "nsIURLParser.h"
 #include "nsNetCID.h"
@@ -75,8 +77,15 @@ bool PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj) {
   }
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
   MOZ_ASSERT(manager);
+
+  nsCOMPtr<nsIRegion> regionJsm =
+      do_ImportModule("resource://gre/modules/Region.jsm", "Region");
   nsAutoString region;
-  Preferences::GetString("browser.search.region", region);
+  nsresult rv = regionJsm->GetHome(region);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
   if (!manager->IsRegionSupported(region)) {
     return false;
   }
