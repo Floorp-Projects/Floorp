@@ -101,6 +101,12 @@ add_task(async function setup_head() {
       // Ignore warnings and non-errors.
       return;
     }
+
+    if (msg.errorMessage.includes('Unknown event: ["jsonfile", "load"')) {
+      // Ignore telemetry errors from JSONFile.jsm.
+      return;
+    }
+
     if (
       msg.errorMessage == "Refreshing device list failed." ||
       msg.errorMessage == "Skipping device list refresh; not signed in"
