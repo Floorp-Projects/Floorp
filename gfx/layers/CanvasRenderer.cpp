@@ -112,7 +112,7 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
   }
   if (kIsWayland) {
     if (gfxPlatform::GetPlatform()->IsWaylandDisplay()) {
-      return TextureType::WaylandDMABUF;
+      return TextureType::DMABUF;
     }
   }
   if (kIsX11) {

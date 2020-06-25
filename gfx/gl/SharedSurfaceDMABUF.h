@@ -47,12 +47,19 @@ class SharedSurface_DMABUF final : public SharedSurface {
 
 class SurfaceFactory_DMABUF : public SurfaceFactory {
  public:
+  static UniquePtr<SurfaceFactory_DMABUF> Create(GLContext& gl);
+
   explicit SurfaceFactory_DMABUF(GLContext&);
 
  public:
   virtual UniquePtr<SharedSurface> CreateSharedImpl(
       const SharedSurfaceDesc& desc) override {
     return SharedSurface_DMABUF::Create(desc);
+  }
+
+  bool CanCreateSurface() {
+    UniquePtr<SharedSurface> test = CreateShared(gfx::IntSize(1, 1));
+    return test != nullptr;
   }
 };
 
