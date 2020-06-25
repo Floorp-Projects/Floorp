@@ -25,8 +25,12 @@ internal interface ManifestDao {
     fun getManifestsByScope(url: String): List<ManifestEntity>
 
     @WorkerThread
-    @Query("SELECT count(start_url) from manifests WHERE :url LIKE scope||'%' AND used_at < :deadline")
-    fun hasRecentManifest(url: String, deadline: Long): Int
+    @Query("SELECT count(start_url) from manifests WHERE :url LIKE scope||'%' AND used_at < :thresholdMs")
+    fun hasRecentManifest(url: String, thresholdMs: Long): Int
+
+    @WorkerThread
+    @Query("SELECT count(start_url) from manifests WHERE used_at < :thresholdMs")
+    fun recentManifestsCount(thresholdMs: Long): Int
 
     @WorkerThread
     @Insert(onConflict = OnConflictStrategy.REPLACE)

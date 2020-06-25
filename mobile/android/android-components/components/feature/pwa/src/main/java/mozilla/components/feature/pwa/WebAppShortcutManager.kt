@@ -200,14 +200,30 @@ class WebAppShortcutManager(
      * Checks if there is a currently installed web app to which this URL belongs.
      *
      * @param url url that is covered by the scope of a web app installed by the user
-     * @param currentTime the curent time in milliseconds
+     * @param currentTimeMs the current time in milliseconds, exposed for testing
      */
-    suspend fun getWebAppInstallState(url: String, currentTime: Long = System.currentTimeMillis()): WebAppInstallState {
-        if (storage.hasRecentManifest(url, currentTime = currentTime)) {
+    suspend fun getWebAppInstallState(
+        url: String,
+        @VisibleForTesting currentTimeMs: Long = System.currentTimeMillis()
+    ): WebAppInstallState {
+        if (storage.hasRecentManifest(url, currentTimeMs = currentTimeMs)) {
             return WebAppInstallState.Installed
         }
 
         return WebAppInstallState.NotInstalled
+    }
+
+    /**
+     * Counts number of recently used web apps. See [ManifestStorage.activeThresholdMs].
+     *
+     * @param activeThresholdMs defines a time window within which a web app is considered recently used.
+     * Defaults to [ManifestStorage.ACTIVE_THRESHOLD_MS].
+     * @return count of recently used web apps
+     */
+    suspend fun recentlyUsedWebAppsCount(
+        activeThresholdMs: Long = ManifestStorage.ACTIVE_THRESHOLD_MS
+    ): Int {
+        return storage.recentManifestsCount(activeThresholdMs = activeThresholdMs)
     }
 
     /**

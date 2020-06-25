@@ -143,36 +143,63 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `has recent manifest retuns false if no manifest is found`() = runBlocking {
+    fun `has recent manifest returns false if no manifest is found`() = runBlocking {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
-        val timeout = ManifestStorage.DEFAULT_TIMEOUT
-        val curretTime = System.currentTimeMillis()
-        val deadline = curretTime - timeout
+        val timeout = ManifestStorage.ACTIVE_THRESHOLD_MS
+        val currentTime = System.currentTimeMillis()
+        val deadline = currentTime - timeout
 
         whenever(dao.hasRecentManifest("https://mozilla.org/", deadline))
                 .thenReturn(0)
 
-        assertFalse(storage.hasRecentManifest("https://mozilla.org/", curretTime))
+        assertFalse(storage.hasRecentManifest("https://mozilla.org/", currentTime))
     }
 
     @Test
-    fun `has recent manifest retuns true if one or more manifests have been found`() = runBlocking {
+    fun `has recent manifest returns true if one or more manifests have been found`() = runBlocking {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
-        val timeout = ManifestStorage.DEFAULT_TIMEOUT
-        val curretTime = System.currentTimeMillis()
-        val deadline = curretTime - timeout
+        val timeout = ManifestStorage.ACTIVE_THRESHOLD_MS
+        val currentTime = System.currentTimeMillis()
+        val deadline = currentTime - timeout
 
         whenever(dao.hasRecentManifest("https://mozilla.org/", deadline))
                 .thenReturn(1)
 
-        assertTrue(storage.hasRecentManifest("https://mozilla.org/", curretTime))
+        assertTrue(storage.hasRecentManifest("https://mozilla.org/", currentTime))
 
         whenever(dao.hasRecentManifest("https://mozilla.org/", deadline))
                 .thenReturn(5)
 
-        assertTrue(storage.hasRecentManifest("https://mozilla.org/", curretTime))
+        assertTrue(storage.hasRecentManifest("https://mozilla.org/", currentTime))
+    }
+
+    @Test
+    fun `recently used manifest count`() = runBlocking {
+        val testThreshold = 1000 * 60 * 24L
+        val storage = spy(ManifestStorage(testContext, activeThresholdMs = testThreshold))
+        val dao = mockDatabase(storage)
+        val currentTime = System.currentTimeMillis()
+        val deadline = currentTime - testThreshold
+
+        whenever(dao.recentManifestsCount(deadline))
+            .thenReturn(0)
+
+        assertEquals(0, storage.recentManifestsCount(currentTimeMs = currentTime))
+
+        whenever(dao.recentManifestsCount(deadline))
+            .thenReturn(5)
+
+        assertEquals(5, storage.recentManifestsCount(currentTimeMs = currentTime))
+
+        whenever(dao.recentManifestsCount(deadline - 10L))
+            .thenReturn(3)
+
+        assertEquals(3, storage.recentManifestsCount(
+            activeThresholdMs = testThreshold + 10L,
+            currentTimeMs = currentTime
+        ))
     }
 
     private fun mockDatabase(storage: ManifestStorage): ManifestDao = mock<ManifestDao>().also {

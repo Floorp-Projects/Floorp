@@ -90,13 +90,13 @@ class WebAppUseCases(
         private val shortcutManager: WebAppShortcutManager
     ) {
         /**
-         * @param currentTime the current time against which manifest usage timeouts will be validated
+         * @param currentTimeMs the current time against which manifest usage timeouts will be validated
          */
         suspend operator fun invoke(
-            currentTime: Long = System.currentTimeMillis()
+            currentTimeMs: Long = System.currentTimeMillis()
         ): WebAppShortcutManager.WebAppInstallState? {
             val session = sessionManager.selectedSession ?: return null
-            return shortcutManager.getWebAppInstallState(session.url, currentTime)
+            return shortcutManager.getWebAppInstallState(session.url, currentTimeMs)
         }
     }
 
