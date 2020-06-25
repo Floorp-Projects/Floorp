@@ -583,11 +583,11 @@ Get a JSProcessActor
   let parentActor = this.browser
     .browsingContext
     .currentWindowGlobal
-    .domProcess
+    .contentParent
     .getActor("TestProcess");
 
   // get child side actor
-  let childActor = ChromeUtils.domProcessChild
+  let childActor = ChromeUtils.contentChild
     .getActor("TestProcess");
 
 And more

@@ -4,19 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/InProcessParent.h"
-#include "mozilla/dom/InProcessChild.h"
-#include "mozilla/dom/JSProcessActorBinding.h"
+#include "mozilla/ipc/InProcessParent.h"
+#include "mozilla/ipc/InProcessChild.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-
-using namespace mozilla::ipc;
 
 // This file contains the implementation of core InProcess lifecycle management
 // facilities.
 
 namespace mozilla {
-namespace dom {
+namespace ipc {
 
 StaticRefPtr<InProcessParent> InProcessParent::sSingleton;
 StaticRefPtr<InProcessChild> InProcessChild::sSingleton;
@@ -118,118 +115,6 @@ void InProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
   InProcessParent::Shutdown();
 }
 
-/////////////////////////
-// nsIDOMProcessParent //
-/////////////////////////
-
-NS_IMETHODIMP
-InProcessParent::GetChildID(uint64_t* aChildID) {
-  *aChildID = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InProcessParent::GetActor(const nsACString& aName,
-                          JSProcessActorParent** aActor) {
-  if (!CanSend()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  // Check if this actor has already been created, and return it if it has.
-  if (mProcessActors.Contains(aName)) {
-    RefPtr<JSProcessActorParent> actor(mProcessActors.Get(aName));
-    actor.forget(aActor);
-    return NS_OK;
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ErrorResult result;
-  ConstructActor(aName, &obj, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-
-  // Unwrap our actor to a JSProcessActorParent object.
-  RefPtr<JSProcessActorParent> actor;
-  nsresult rv = UNWRAP_OBJECT(JSProcessActorParent, &obj, actor);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  MOZ_RELEASE_ASSERT(!actor->Manager(),
-                     "mManager was already initialized once!");
-  actor->Init(aName, this);
-  mProcessActors.Put(aName, RefPtr{actor});
-  actor.forget(aActor);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InProcessParent::GetCanSend(bool* aCanSend) {
-  *aCanSend = CanSend();
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(ContentParent*)
-InProcessParent::AsContentParent() { return nullptr; }
-
-////////////////////////
-// nsIDOMProcessChild //
-////////////////////////
-
-NS_IMETHODIMP
-InProcessChild::GetChildID(uint64_t* aChildID) {
-  *aChildID = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InProcessChild::GetActor(const nsACString& aName,
-                         JSProcessActorChild** aActor) {
-  if (!CanSend()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  // Check if this actor has already been created, and return it if it has.
-  if (mProcessActors.Contains(aName)) {
-    RefPtr<JSProcessActorChild> actor(mProcessActors.Get(aName));
-    actor.forget(aActor);
-    return NS_OK;
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ErrorResult result;
-  ConstructActor(aName, &obj, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-
-  // Unwrap our actor to a JSProcessActorChild object.
-  RefPtr<JSProcessActorChild> actor;
-  nsresult rv = UNWRAP_OBJECT(JSProcessActorChild, &obj, actor);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  MOZ_RELEASE_ASSERT(!actor->Manager(),
-                     "mManager was already initialized once!");
-  actor->Init(aName, this);
-  mProcessActors.Put(aName, RefPtr{actor});
-  actor.forget(aActor);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InProcessChild::GetCanSend(bool* aCanSend) {
-  *aCanSend = CanSend();
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(ContentChild*)
-InProcessChild::AsContentChild() { return nullptr; }
-
 ////////////////////////////////
 // In-Process Actor Utilities //
 ////////////////////////////////
@@ -292,8 +177,7 @@ IProtocol* InProcessChild::ParentActorFor(IProtocol* aActor) {
   return GetOtherInProcessActor(aActor);
 }
 
-NS_IMPL_ISUPPORTS(InProcessParent, nsIDOMProcessParent, nsIObserver)
-NS_IMPL_ISUPPORTS(InProcessChild, nsIDOMProcessChild)
+NS_IMPL_ISUPPORTS(InProcessParent, nsIObserver)
 
-}  // namespace dom
+}  // namespace ipc
 }  // namespace mozilla

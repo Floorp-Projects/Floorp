@@ -23,7 +23,7 @@ function maybeAsyncStack(offset, column) {
 
 declTest("sendQuery Error", {
   async test(browser) {
-    let parent = browser.browsingContext.currentWindowGlobal.domProcess;
+    let parent = browser.browsingContext.currentWindowGlobal.contentParent;
     let actorParent = parent.getActor("TestProcessActor");
 
     let asyncStack = maybeAsyncStack(2, 8);
@@ -44,7 +44,7 @@ declTest("sendQuery Error", {
 
 declTest("sendQuery Exception", {
   async test(browser) {
-    let parent = browser.browsingContext.currentWindowGlobal.domProcess;
+    let parent = browser.browsingContext.currentWindowGlobal.contentParent;
     let actorParent = parent.getActor("TestProcessActor");
 
     let asyncStack = maybeAsyncStack(2, 8);
@@ -72,7 +72,7 @@ declTest("sendQuery Exception", {
 
 declTest("sendQuery testing", {
   async test(browser) {
-    let parent = browser.browsingContext.currentWindowGlobal.domProcess;
+    let parent = browser.browsingContext.currentWindowGlobal.contentParent;
     let actorParent = parent.getActor("TestProcessActor");
     ok(actorParent, "JSWindowActorParent should have value.");
 

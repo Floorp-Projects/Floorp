@@ -8,7 +8,7 @@ interface URI;
 interface nsIDocShell;
 interface RemoteTab;
 interface nsITransportSecurityInfo;
-interface nsIDOMProcessParent;
+interface nsIContentParent;
 
 [Exposed=Window, ChromeOnly]
 interface WindowContext {
@@ -62,10 +62,9 @@ interface WindowGlobalParent : WindowContext {
   // String containing serialized content blocking log.
   readonly attribute DOMString contentBlockingLog;
 
-  // DOM Process which this window was loaded in. Will be either InProcessParent
-  // for windows loaded in the parent process, or ContentParent for windows
-  // loaded in the content process.
-  readonly attribute nsIDOMProcessParent? domProcess;
+  // ContentParent of the process this window is loaded in.
+  // Will be `null` for windows loaded in the parent process.
+  readonly attribute nsIContentParent? contentParent;
 
   static WindowGlobalParent? getByInnerWindowId(unsigned long long innerWindowId);
 
