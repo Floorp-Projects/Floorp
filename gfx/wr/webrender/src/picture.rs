@@ -4990,6 +4990,8 @@ impl PicturePrimitive {
                             raster_config.root_scaling_factor = scale;
                         }
 
+                        let device_rect = device_rect.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -4999,7 +5001,7 @@ impl PicturePrimitive {
 
                         let picture_task_id = frame_state.render_tasks.add().init(
                             RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, device_rect.size.to_i32()),
+                                RenderTaskLocation::Dynamic(None, device_rect.size),
                                 unclipped.size,
                                 pic_index,
                                 device_rect.origin,
@@ -5057,6 +5059,8 @@ impl PicturePrimitive {
                             raster_config.root_scaling_factor = scale;
                         }
 
+                        let device_rect = device_rect.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5066,7 +5070,7 @@ impl PicturePrimitive {
 
                         let picture_task_id = frame_state.render_tasks.add().init({
                             let mut picture_task = RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, device_rect.size.to_i32()),
+                                RenderTaskLocation::Dynamic(None, device_rect.size),
                                 unclipped.size,
                                 pic_index,
                                 device_rect.origin,
@@ -5101,7 +5105,7 @@ impl PicturePrimitive {
                                 RenderTargetKind::Color,
                                 ClearMode::Transparent,
                                 Some(&mut blur_tasks),
-                                device_rect.size.to_i32(),
+                                device_rect.size,
                             );
                         }
 
@@ -5118,6 +5122,8 @@ impl PicturePrimitive {
                             raster_config.root_scaling_factor = scale;
                         }
 
+                        let clipped = clipped.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5126,7 +5132,7 @@ impl PicturePrimitive {
                         );
 
                         let readback_task_id = frame_state.render_tasks.add().init(
-                            RenderTask::new_readback(clipped.to_i32())
+                            RenderTask::new_readback(clipped)
                         );
 
                         frame_state.render_tasks.add_dependency(
@@ -5138,7 +5144,7 @@ impl PicturePrimitive {
 
                         let render_task_id = frame_state.render_tasks.add().init(
                             RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
+                                RenderTaskLocation::Dynamic(None, clipped.size),
                                 unclipped.size,
                                 pic_index,
                                 clipped.origin,
@@ -5164,6 +5170,8 @@ impl PicturePrimitive {
                             raster_config.root_scaling_factor = scale;
                         }
 
+                        let clipped = clipped.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5173,7 +5181,7 @@ impl PicturePrimitive {
 
                         let render_task_id = frame_state.render_tasks.add().init(
                             RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
+                                RenderTaskLocation::Dynamic(None, clipped.size),
                                 unclipped.size,
                                 pic_index,
                                 clipped.origin,
@@ -5198,6 +5206,8 @@ impl PicturePrimitive {
                             raster_config.root_scaling_factor = scale;
                         }
 
+                        let clipped = clipped.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5207,7 +5217,7 @@ impl PicturePrimitive {
 
                         let render_task_id = frame_state.render_tasks.add().init(
                             RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
+                                RenderTaskLocation::Dynamic(None, clipped.size),
                                 unclipped.size,
                                 pic_index,
                                 clipped.origin,
@@ -5474,7 +5484,7 @@ impl PicturePrimitive {
                                         },
                                         tile_cache.current_tile_size.to_f32(),
                                         pic_index,
-                                        content_origin,
+                                        content_origin.to_i32(),
                                         UvRectKind::Rect,
                                         surface_spatial_node_index,
                                         device_pixel_scale,
@@ -5525,6 +5535,8 @@ impl PicturePrimitive {
                             raster_config.root_scaling_factor = scale;
                         }
 
+                        let clipped = clipped.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5534,7 +5546,7 @@ impl PicturePrimitive {
 
                         let render_task_id = frame_state.render_tasks.add().init(
                             RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
+                                RenderTaskLocation::Dynamic(None, clipped.size),
                                 unclipped.size,
                                 pic_index,
                                 clipped.origin,
@@ -5560,6 +5572,8 @@ impl PicturePrimitive {
                             raster_config.root_scaling_factor = scale;
                         }
 
+                        let clipped = clipped.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5569,7 +5583,7 @@ impl PicturePrimitive {
 
                         let picture_task_id = frame_state.render_tasks.add().init(
                             RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
+                                RenderTaskLocation::Dynamic(None, clipped.size),
                                 unclipped.size,
                                 pic_index,
                                 clipped.origin,
@@ -5586,7 +5600,7 @@ impl PicturePrimitive {
                             primitives,
                             filter_datas,
                             &mut frame_state.render_tasks,
-                            clipped.size.to_i32(),
+                            clipped.size,
                             uv_rect_kind,
                             picture_task_id,
                             device_pixel_scale,
@@ -6346,9 +6360,11 @@ fn calculate_screen_uv(
 fn calculate_uv_rect_kind(
     pic_rect: &PictureRect,
     transform: &PictureToRasterTransform,
-    rendered_rect: &DeviceRect,
+    rendered_rect: &DeviceIntRect,
     device_pixel_scale: DevicePixelScale,
 ) -> UvRectKind {
+    let rendered_rect = rendered_rect.to_f32();
+
     let top_left = calculate_screen_uv(
         &pic_rect.origin,
         transform,
