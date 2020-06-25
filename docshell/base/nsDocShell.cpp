@@ -5612,6 +5612,202 @@ already_AddRefed<nsIURIFixupInfo> nsDocShell::KeywordToURI(
   return info.forget();
 }
 
+/* static */
+already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
+    nsIChannel* aChannel, nsresult aStatus,
+    const mozilla::Maybe<nsCString>& aOriginalURIString, uint32_t aLoadType,
+    bool aIsTopFrame, bool aAllowKeywordFixup, bool aUsePrivateBrowsing,
+    bool aNotifyKeywordSearchLoading, nsIInputStream** aNewPostData) {
+  if (aStatus != NS_ERROR_UNKNOWN_HOST && aStatus != NS_ERROR_NET_RESET &&
+      aStatus != NS_ERROR_CONNECTION_REFUSED) {
+    return nullptr;
+  }
+
+  if (!(aLoadType == LOAD_NORMAL && aIsTopFrame) && !aAllowKeywordFixup) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> url;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(url));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  //
+  // Try and make an alternative URI from the old one
+  //
+  nsCOMPtr<nsIURI> newURI;
+  nsCOMPtr<nsIInputStream> newPostData;
+
+  nsAutoCString oldSpec;
+  url->GetSpec(oldSpec);
+
+  //
+  // First try keyword fixup
+  //
+  nsAutoString keywordProviderName, keywordAsSent;
+  if (aStatus == NS_ERROR_UNKNOWN_HOST && aAllowKeywordFixup) {
+    // we should only perform a keyword search under the following
+    // conditions:
+    // (0) Pref keyword.enabled is true
+    // (1) the url scheme is http (or https)
+    // (2) the url does not have a protocol scheme
+    // If we don't enforce such a policy, then we end up doing
+    // keyword searchs on urls we don't intend like imap, file,
+    // mailbox, etc. This could lead to a security problem where we
+    // send data to the keyword server that we shouldn't be.
+    // Someone needs to clean up keywords in general so we can
+    // determine on a per url basis if we want keywords
+    // enabled...this is just a bandaid...
+    nsAutoCString scheme;
+    Unused << url->GetScheme(scheme);
+    if (Preferences::GetBool("keyword.enabled", false) &&
+        StringBeginsWith(scheme, NS_LITERAL_CSTRING("http"))) {
+      bool attemptFixup = false;
+      nsAutoCString host;
+      Unused << url->GetHost(host);
+      if (host.FindChar('.') == kNotFound) {
+        attemptFixup = true;
+      } else {
+        // For domains with dots, we check the public suffix validity.
+        nsCOMPtr<nsIEffectiveTLDService> tldService =
+            do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+        if (tldService) {
+          nsAutoCString suffix;
+          attemptFixup =
+              NS_SUCCEEDED(tldService->GetKnownPublicSuffix(url, suffix)) &&
+              suffix.IsEmpty();
+        }
+      }
+      if (attemptFixup) {
+        nsCOMPtr<nsIURIFixupInfo> info;
+        // only send non-qualified hosts to the keyword server
+        if (aOriginalURIString && !aOriginalURIString->IsEmpty()) {
+          info = KeywordToURI(*aOriginalURIString, aUsePrivateBrowsing,
+                              getter_AddRefs(newPostData));
+        } else {
+          //
+          // If this string was passed through nsStandardURL by
+          // chance, then it may have been converted from UTF-8 to
+          // ACE, which would result in a completely bogus keyword
+          // query.  Here we try to recover the original Unicode
+          // value, but this is not 100% correct since the value may
+          // have been normalized per the IDN normalization rules.
+          //
+          // Since we don't have access to the exact original string
+          // that was entered by the user, this will just have to do.
+          bool isACE;
+          nsAutoCString utf8Host;
+          nsCOMPtr<nsIIDNService> idnSrv =
+              do_GetService(NS_IDNSERVICE_CONTRACTID);
+          if (idnSrv && NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
+              NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
+            info = KeywordToURI(utf8Host, aUsePrivateBrowsing,
+                                getter_AddRefs(newPostData));
+          } else {
+            info = KeywordToURI(host, aUsePrivateBrowsing,
+                                getter_AddRefs(newPostData));
+          }
+        }
+        if (info) {
+          info->GetPreferredURI(getter_AddRefs(newURI));
+          if (newURI) {
+            info->GetKeywordAsSent(keywordAsSent);
+            info->GetKeywordProviderName(keywordProviderName);
+          }
+        }
+      }
+    }
+  }
+
+  //
+  // Now try change the address, e.g. turn http://foo into
+  // http://www.foo.com, and if that doesn't work try https with
+  // https://foo and https://www.foo.com.
+  //
+  if (aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET) {
+    bool doCreateAlternate = true;
+
+    // Skip fixup for anything except a normal document load
+    // operation on the topframe.
+
+    if (aLoadType != LOAD_NORMAL || !aIsTopFrame) {
+      doCreateAlternate = false;
+    } else {
+      // Test if keyword lookup produced a new URI or not
+      if (newURI) {
+        bool sameURI = false;
+        url->Equals(newURI, &sameURI);
+        if (!sameURI) {
+          // Keyword lookup made a new URI so no need to try
+          // an alternate one.
+          doCreateAlternate = false;
+        }
+      }
+
+      if (doCreateAlternate) {
+        nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
+        // Skip doing this if our channel was redirected, because we
+        // shouldn't be guessing things about the post-redirect URI.
+        if (!info->RedirectChain().IsEmpty()) {
+          doCreateAlternate = false;
+        }
+      }
+    }
+    if (doCreateAlternate) {
+      newURI = nullptr;
+      newPostData = nullptr;
+      keywordProviderName.Truncate();
+      keywordAsSent.Truncate();
+      nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
+      if (uriFixup) {
+        uriFixup->CreateFixupURI(
+            oldSpec, nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
+            getter_AddRefs(newPostData), getter_AddRefs(newURI));
+      }
+    }
+  } else if (aStatus == NS_ERROR_CONNECTION_REFUSED &&
+             Preferences::GetBool("browser.fixup.fallback-to-https", false)) {
+    // Try HTTPS, since http didn't work
+    if (SchemeIsHTTP(url)) {
+      int32_t port = 0;
+      url->GetPort(&port);
+
+      // Fall back to HTTPS only if port is default
+      if (port == -1) {
+        newURI = nullptr;
+        newPostData = nullptr;
+        Unused << NS_MutateURI(url)
+                      .SetScheme(NS_LITERAL_CSTRING("https"))
+                      .Finalize(getter_AddRefs(newURI));
+      }
+    }
+  }
+
+  // Did we make a new URI that is different to the old one? If so
+  // load it.
+  //
+  if (newURI) {
+    // Make sure the new URI is different from the old one,
+    // otherwise there's little point trying to load it again.
+    bool sameURI = false;
+    url->Equals(newURI, &sameURI);
+    if (!sameURI) {
+      if (aNewPostData) {
+        newPostData.forget(aNewPostData);
+      }
+      if (aNotifyKeywordSearchLoading) {
+        // This notification is meant for Firefox Health Report so it
+        // can increment counts from the search engine
+        MaybeNotifyKeywordSearchLoading(keywordProviderName, keywordAsSent);
+      }
+      return newURI.forget();
+    }
+  }
+
+  return nullptr;
+}
+
 nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                  nsIChannel* aChannel, nsresult aStatus) {
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
@@ -5811,220 +6007,55 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
       return NS_OK;
     }
 
-    if ((aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET ||
-         aStatus == NS_ERROR_CONNECTION_REFUSED) &&
-        ((mLoadType == LOAD_NORMAL && isTopFrame) || mAllowKeywordFixup)) {
-      //
-      // Try and make an alternative URI from the old one
-      //
-      nsCOMPtr<nsIURI> newURI;
-      nsCOMPtr<nsIInputStream> newPostData;
+    nsCOMPtr<nsIInputStream> newPostData;
+    nsCOMPtr<nsIURI> newURI =
+        AttemptURIFixup(aChannel, aStatus, Some(mOriginalUriString), mLoadType,
+                        isTopFrame, mAllowKeywordFixup, UsePrivateBrowsing(),
+                        true, getter_AddRefs(newPostData));
+    if (newURI) {
+      nsAutoCString newSpec;
+      newURI->GetSpec(newSpec);
+      NS_ConvertUTF8toUTF16 newSpecW(newSpec);
 
-      nsAutoCString oldSpec;
-      url->GetSpec(oldSpec);
+      nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+      MOZ_ASSERT(loadInfo, "loadInfo is required on all channels");
+      nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+          loadInfo->TriggeringPrincipal();
 
-      //
-      // First try keyword fixup
-      //
-      nsAutoString keywordProviderName, keywordAsSent;
-      if (aStatus == NS_ERROR_UNKNOWN_HOST && mAllowKeywordFixup) {
-        // we should only perform a keyword search under the following
-        // conditions:
-        // (0) Pref keyword.enabled is true
-        // (1) the url scheme is http (or https)
-        // (2) the url does not have a protocol scheme
-        // If we don't enforce such a policy, then we end up doing
-        // keyword searchs on urls we don't intend like imap, file,
-        // mailbox, etc. This could lead to a security problem where we
-        // send data to the keyword server that we shouldn't be.
-        // Someone needs to clean up keywords in general so we can
-        // determine on a per url basis if we want keywords
-        // enabled...this is just a bandaid...
-        nsAutoCString scheme;
-        Unused << url->GetScheme(scheme);
-        if (Preferences::GetBool("keyword.enabled", false) &&
-            StringBeginsWith(scheme, NS_LITERAL_CSTRING("http"))) {
-          bool attemptFixup = false;
-          nsAutoCString host;
-          Unused << url->GetHost(host);
-          if (host.FindChar('.') == kNotFound) {
-            attemptFixup = true;
-          } else {
-            // For domains with dots, we check the public suffix validity.
-            nsCOMPtr<nsIEffectiveTLDService> tldService =
-                do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-            if (tldService) {
-              nsAutoCString suffix;
-              attemptFixup =
-                  NS_SUCCEEDED(tldService->GetKnownPublicSuffix(url, suffix)) &&
-                  suffix.IsEmpty();
-            }
-          }
-          if (attemptFixup) {
-            nsCOMPtr<nsIURIFixupInfo> info;
-            // only send non-qualified hosts to the keyword server
-            if (!mOriginalUriString.IsEmpty()) {
-              info = KeywordToURI(mOriginalUriString, UsePrivateBrowsing(),
-                                  getter_AddRefs(newPostData));
-            } else {
-              //
-              // If this string was passed through nsStandardURL by
-              // chance, then it may have been converted from UTF-8 to
-              // ACE, which would result in a completely bogus keyword
-              // query.  Here we try to recover the original Unicode
-              // value, but this is not 100% correct since the value may
-              // have been normalized per the IDN normalization rules.
-              //
-              // Since we don't have access to the exact original string
-              // that was entered by the user, this will just have to do.
-              bool isACE;
-              nsAutoCString utf8Host;
-              nsCOMPtr<nsIIDNService> idnSrv =
-                  do_GetService(NS_IDNSERVICE_CONTRACTID);
-              if (idnSrv && NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) &&
-                  isACE &&
-                  NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
-                info = KeywordToURI(utf8Host, UsePrivateBrowsing(),
-                                    getter_AddRefs(newPostData));
-              } else {
-                info = KeywordToURI(host, UsePrivateBrowsing(),
-                                    getter_AddRefs(newPostData));
-              }
-            }
-            if (info) {
-              info->GetPreferredURI(getter_AddRefs(newURI));
-              if (newURI) {
-                info->GetKeywordAsSent(keywordAsSent);
-                info->GetKeywordProviderName(keywordProviderName);
+      // If the new URI is HTTP, it may not work and we may want to fall
+      // back to HTTPS, so kick off a speculative connect to get that
+      // started.  Even if we don't adjust to HTTPS here, there could be a
+      // redirect to HTTPS coming so this could speed things up.
+      if (SchemeIsHTTP(url)) {
+        int32_t port = 0;
+        rv = url->GetPort(&port);
+
+        // only do this if the port is default.
+        if (NS_SUCCEEDED(rv) && port == -1) {
+          nsCOMPtr<nsIURI> httpsURI;
+          rv = NS_MutateURI(url)
+                   .SetScheme(NS_LITERAL_CSTRING("https"))
+                   .Finalize(getter_AddRefs(httpsURI));
+
+          if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIIOService> ios = do_GetIOService();
+            if (ios) {
+              nsCOMPtr<nsISpeculativeConnect> speculativeService =
+                  do_QueryInterface(ios);
+              if (speculativeService) {
+                speculativeService->SpeculativeConnect(
+                    httpsURI, triggeringPrincipal, nullptr);
               }
             }
           }
         }
       }
 
-      //
-      // Now try change the address, e.g. turn http://foo into
-      // http://www.foo.com, and if that doesn't work try https with
-      // https://foo and https://www.foo.com.
-      //
-      if (aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET) {
-        bool doCreateAlternate = true;
-
-        // Skip fixup for anything except a normal document load
-        // operation on the topframe.
-
-        if (mLoadType != LOAD_NORMAL || !isTopFrame) {
-          doCreateAlternate = false;
-        } else {
-          // Test if keyword lookup produced a new URI or not
-          if (newURI) {
-            bool sameURI = false;
-            url->Equals(newURI, &sameURI);
-            if (!sameURI) {
-              // Keyword lookup made a new URI so no need to try
-              // an alternate one.
-              doCreateAlternate = false;
-            }
-          }
-
-          if (doCreateAlternate) {
-            nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
-            // Skip doing this if our channel was redirected, because we
-            // shouldn't be guessing things about the post-redirect URI.
-            if (!info->RedirectChain().IsEmpty()) {
-              doCreateAlternate = false;
-            }
-          }
-        }
-        if (doCreateAlternate) {
-          newURI = nullptr;
-          newPostData = nullptr;
-          keywordProviderName.Truncate();
-          keywordAsSent.Truncate();
-          nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
-          if (uriFixup) {
-            uriFixup->CreateFixupURI(
-                oldSpec, nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
-                getter_AddRefs(newPostData), getter_AddRefs(newURI));
-          }
-        }
-      } else if (aStatus == NS_ERROR_CONNECTION_REFUSED &&
-                 Preferences::GetBool("browser.fixup.fallback-to-https",
-                                      false)) {
-        // Try HTTPS, since http didn't work
-        if (SchemeIsHTTP(url)) {
-          int32_t port = 0;
-          url->GetPort(&port);
-
-          // Fall back to HTTPS only if port is default
-          if (port == -1) {
-            newURI = nullptr;
-            newPostData = nullptr;
-            Unused << NS_MutateURI(url)
-                          .SetScheme(NS_LITERAL_CSTRING("https"))
-                          .Finalize(getter_AddRefs(newURI));
-          }
-        }
-      }
-
-      // Did we make a new URI that is different to the old one? If so
-      // load it.
-      //
-      if (newURI) {
-        // Make sure the new URI is different from the old one,
-        // otherwise there's little point trying to load it again.
-        bool sameURI = false;
-        url->Equals(newURI, &sameURI);
-        if (!sameURI) {
-          nsAutoCString newSpec;
-          newURI->GetSpec(newSpec);
-          NS_ConvertUTF8toUTF16 newSpecW(newSpec);
-
-          // This notification is meant for Firefox Health Report so it
-          // can increment counts from the search engine
-          MaybeNotifyKeywordSearchLoading(keywordProviderName, keywordAsSent);
-
-          nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-          MOZ_ASSERT(loadInfo, "loadInfo is required on all channels");
-          nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-              loadInfo->TriggeringPrincipal();
-
-          // If the new URI is HTTP, it may not work and we may want to fall
-          // back to HTTPS, so kick off a speculative connect to get that
-          // started.  Even if we don't adjust to HTTPS here, there could be a
-          // redirect to HTTPS coming so this could speed things up.
-          if (SchemeIsHTTP(url)) {
-            int32_t port = 0;
-            rv = url->GetPort(&port);
-
-            // only do this if the port is default.
-            if (NS_SUCCEEDED(rv) && port == -1) {
-              nsCOMPtr<nsIURI> httpsURI;
-              rv = NS_MutateURI(url)
-                       .SetScheme(NS_LITERAL_CSTRING("https"))
-                       .Finalize(getter_AddRefs(httpsURI));
-
-              if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsIIOService> ios = do_GetIOService();
-                if (ios) {
-                  nsCOMPtr<nsISpeculativeConnect> speculativeService =
-                      do_QueryInterface(ios);
-                  if (speculativeService) {
-                    speculativeService->SpeculativeConnect(
-                        httpsURI, triggeringPrincipal, nullptr);
-                  }
-                }
-              }
-            }
-          }
-
-          LoadURIOptions loadURIOptions;
-          loadURIOptions.mTriggeringPrincipal = triggeringPrincipal;
-          loadURIOptions.mCsp = loadInfo->GetCspToInherit();
-          loadURIOptions.mPostData = newPostData;
-          return LoadURI(newSpecW, loadURIOptions);
-        }
-      }
+      LoadURIOptions loadURIOptions;
+      loadURIOptions.mTriggeringPrincipal = triggeringPrincipal;
+      loadURIOptions.mCsp = loadInfo->GetCspToInherit();
+      loadURIOptions.mPostData = newPostData;
+      return LoadURI(newSpecW, loadURIOptions);
     }
 
     // Well, fixup didn't work :-(
