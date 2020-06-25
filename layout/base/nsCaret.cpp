@@ -249,7 +249,7 @@ nsRect nsCaret::GetGeometryForFrame(nsIFrame* aFrame, int32_t aFrameOffset,
   if (!frame) {
     frame = aFrame;
   }
-  NS_ASSERTION(!(frame->GetStateBits() & NS_FRAME_IN_REFLOW),
+  NS_ASSERTION(!frame->HasAnyStateBits(NS_FRAME_IN_REFLOW),
                "We should not be in the middle of reflow");
   nscoord baseline = frame->GetCaretBaseline();
   nscoord ascent = 0, descent = 0;
