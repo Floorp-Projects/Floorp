@@ -19,6 +19,7 @@ import mozilla.components.browser.search.provider.SearchEngineList
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
+import mozilla.components.browser.search.provider.localization.SearchLocalization
 import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
@@ -51,12 +52,17 @@ open class FenixSearchEngineProvider(
         AssetsSearchEngineProvider(localizationProvider).loadSearchEngines(context)
     }
 
+    private val loadedRegion = async { localizationProvider.determineRegion() }
+
     // https://github.com/mozilla-mobile/fenix/issues/9935
     // Adds a Locale search engine provider as a fallback in case the MLS lookup takes longer
     // than the time it takes for a user to try to search.
-    private val fallBackEngines = async {
-        AssetsSearchEngineProvider(LocaleSearchLocalizationProvider()).loadSearchEngines(context)
-    }
+    private val fallbackLocationService: SearchLocalizationProvider = LocaleSearchLocalizationProvider()
+    private val fallBackProvider =
+        AssetsSearchEngineProvider(fallbackLocationService)
+
+    private val fallbackEngines = async { fallBackProvider.loadSearchEngines(context) }
+    private val fallbackRegion = async { fallbackLocationService.determineRegion() }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     open val bundledSearchEngines = async {
@@ -88,7 +94,15 @@ open class FenixSearchEngineProvider(
             if (loadedSearchEngines.isCompleted) {
                 loadedSearchEngines
             } else {
-                fallBackEngines
+                fallbackEngines
+            }
+
+    private val region: Deferred<SearchLocalization>
+        get() =
+            if (loadedRegion.isCompleted) {
+                loadedRegion
+            } else {
+                fallbackRegion
             }
 
     fun getDefaultEngine(context: Context): SearchEngine {
@@ -215,7 +229,7 @@ open class FenixSearchEngineProvider(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     suspend fun localeAwareInstalledEnginesKey(): String {
-        val tag = localizationProvider.determineRegion().let {
+        val tag = region.await().let {
             val region = it.region?.let { region ->
                 if (region.isEmpty()) "" else "-$region"
             }
