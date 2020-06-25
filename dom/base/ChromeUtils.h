@@ -12,7 +12,7 @@
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/ErrorResult.h"
 #include "nsDOMNavigationTiming.h"  // for DOMHighResTimeStamp
-#include "nsIContentChild.h"
+#include "nsIDOMProcessChild.h"
 
 namespace mozilla {
 
@@ -218,7 +218,7 @@ class ChromeUtils {
   static void GenerateMediaControlKey(const GlobalObject& aGlobal,
                                       MediaControlKey aKey);
 
-  static nsIContentChild* GetContentChild(const GlobalObject&);
+  static nsIDOMProcessChild* GetDomProcessChild(const GlobalObject&);
 
   // This function would only be used for testing.
   static void GetCurrentActiveMediaMetadata(const GlobalObject& aGlobal,

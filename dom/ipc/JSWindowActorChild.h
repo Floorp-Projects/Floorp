@@ -15,7 +15,7 @@
 #include "mozilla/dom/JSActor.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "nsIContentChild.h"
+#include "nsIDOMProcessChild.h"
 
 namespace mozilla {
 namespace dom {
