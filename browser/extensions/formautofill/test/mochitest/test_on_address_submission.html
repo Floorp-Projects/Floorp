@@ -109,7 +109,6 @@ add_task(async function check_storage_after_form_submitted() {
   await setInput("#organization", "Moz");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  await popupEnabled();
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   clickOnElement("input[type=submit]");

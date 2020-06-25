@@ -23,10 +23,6 @@ add_task(async function test_press_enter_on_footer() {
     const listItemElems = itemsBox.querySelectorAll(
       ".autocomplete-richlistitem"
     );
-    await TestUtils.waitForCondition(
-      () => !listItemElems[0].disabled,
-      "Wait for list elements to become enabled"
-    );
     const prefTabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
       PRIVACY_PREF_URL,
@@ -62,10 +58,6 @@ add_task(async function test_click_on_footer() {
     const optionButton = itemsBox.querySelector(
       ".autocomplete-richlistitem:last-child"
     )._optionButton;
-    await TestUtils.waitForCondition(
-      () => !optionButton.disabled,
-      "Wait for option button to become enabled"
-    );
     const prefTabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
       PRIVACY_PREF_URL,
@@ -99,10 +91,6 @@ add_task(async function test_phishing_warning_single_category() {
     const warningBox = itemsBox.querySelector(
       ".autocomplete-richlistitem:last-child"
     )._warningTextBox;
-    await TestUtils.waitForCondition(
-      () => !warningBox.disabled,
-      "Wait for warning box to become enabled"
-    );
     ok(warningBox, "Got phishing warning box");
 
     await expectWarningText(browser, "Autofills phone");
@@ -121,16 +109,6 @@ add_task(async function test_phishing_warning_complex_categories() {
     browser
   ) {
     await openPopupOn(browser, "#street-address");
-    const {
-      autoCompletePopup: { richlistbox: itemsBox },
-    } = browser;
-    const listItemElems = itemsBox.querySelectorAll(
-      ".autocomplete-richlistitem"
-    );
-    await TestUtils.waitForCondition(
-      () => !listItemElems[0].disabled,
-      "Wait for list elements to become enabled"
-    );
 
     await expectWarningText(browser, "Also autofills organization, email");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);

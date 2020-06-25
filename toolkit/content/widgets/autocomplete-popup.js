@@ -15,7 +15,6 @@
       this.mInput = null;
       this.mPopupOpen = false;
       this._currentIndex = 0;
-      this._disabledItemClicked = false;
 
       this.setListeners();
     }
@@ -60,23 +59,16 @@
             }
 
             switch (event.type) {
-              case "mousedown":
-                this._disabledItemClicked = !!event.target.closest(
-                  "richlistitem"
-                )?.disabled;
-                break;
               case "mouseup":
                 // Don't call onPopupClick for the scrollbar buttons, thumb,
                 // slider, etc. If we hit the richlistbox and not a
                 // richlistitem, we ignore the event.
                 if (
                   event.target.closest("richlistbox,richlistitem").localName ==
-                    "richlistitem" &&
-                  !this._disabledItemClicked
+                  "richlistitem"
                 ) {
                   this.onPopupClick(event);
                 }
-                this._disabledItemClicked = false;
                 break;
               case "mousemove":
                 if (Date.now() - this.mLastMoveTime <= 30) {
@@ -105,7 +97,6 @@
           },
         };
       }
-      this.richlistbox.addEventListener("mousedown", this.listEvents);
       this.richlistbox.addEventListener("mouseup", this.listEvents);
       this.richlistbox.addEventListener("mousemove", this.listEvents);
     }
@@ -544,7 +535,6 @@
 
     disconnectedCallback() {
       if (this.listEvents) {
-        this.richlistbox.removeEventListener("mousedown", this.listEvents);
         this.richlistbox.removeEventListener("mouseup", this.listEvents);
         this.richlistbox.removeEventListener("mousemove", this.listEvents);
         delete this.listEvents;

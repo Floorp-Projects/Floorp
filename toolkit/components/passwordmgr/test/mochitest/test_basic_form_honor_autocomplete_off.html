@@ -91,7 +91,6 @@ async function autoCompleteFieldsFromFirstMatch(form) {
   let shownPromise = promiseACShown();
   uname.focus();
   await shownPromise;
-  await popupEnabled();
 
   let formFilled = promiseFormsProcessed();
   await synthesizeKey("KEY_ArrowDown"); // open
