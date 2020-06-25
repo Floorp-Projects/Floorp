@@ -10,9 +10,6 @@ import mozlog
 from telemetry_harness.fog_ping_server import FOGPingServer
 from telemetry_harness.testcase import TelemetryTestCase
 
-# See https://firefox-source-docs.mozilla.org/toolkit/components/glean/preferences.html
-FOG_CHANNELS = ["default", "nightly"]
-
 
 class FOGTestCase(TelemetryTestCase):
     """Base testcase class for project FOG."""
@@ -29,11 +26,14 @@ class FOGTestCase(TelemetryTestCase):
         """
         super(FOGTestCase, self).setUp(*args, **kwargs)
 
-        if self.marionette.get_pref("app.update.channel") not in FOG_CHANNELS:
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            fog_present = self.marionette.execute_script("return AppConstants.NIGHTLY_BUILD;")
+
+        if not fog_present:
             # Before we skip this test, we need to quit marionette and the ping
             # server created in TelemetryTestCase by running tearDown
             super(FOGTestCase, self).tearDown(*args, **kwargs)
-            self.skipTest("FOG only builds for channels {}".format(FOG_CHANNELS))
+            self.skipTest("FOG is only present in AppConstants.NIGHTLY_BUILD builds.")
 
         self.fog_ping_server = FOGPingServer(
             self.testvars["server_root"], "http://localhost:0"
