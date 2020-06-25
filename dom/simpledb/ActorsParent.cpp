@@ -447,10 +447,15 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   Type GetType() override;
 
-  nsresult InitOrigin(PersistenceType aPersistenceType,
-                      const nsACString& aGroup, const nsACString& aOrigin,
-                      const AtomicBool& aCanceled,
-                      UsageInfo* aUsageInfo) override;
+  Result<UsageInfo, nsresult> InitOrigin(PersistenceType aPersistenceType,
+                                         const nsACString& aGroup,
+                                         const nsACString& aOrigin,
+                                         const AtomicBool& aCanceled) override;
+
+  nsresult InitOriginWithoutTracking(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     const AtomicBool& aCanceled) override;
 
   Result<UsageInfo, nsresult> GetUsageForOrigin(
       PersistenceType aPersistenceType, const nsACString& aGroup,
@@ -1623,22 +1628,18 @@ mozilla::dom::quota::Client::Type QuotaClient::GetType() {
   return QuotaClient::SDB;
 }
 
-nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
-                                 const nsACString& aGroup,
-                                 const nsACString& aOrigin,
-                                 const AtomicBool& aCanceled,
-                                 UsageInfo* aUsageInfo) {
+Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  if (aUsageInfo) {
-    auto usageInfoOrErr =
-        GetUsageForOrigin(aPersistenceType, aGroup, aOrigin, aCanceled);
-    if (NS_WARN_IF(usageInfoOrErr.isErr())) {
-      return usageInfoOrErr.unwrapErr();
-    }
+  return GetUsageForOrigin(aPersistenceType, aGroup, aOrigin, aCanceled);
+}
 
-    *aUsageInfo = usageInfoOrErr.unwrap();
-  }
+nsresult QuotaClient::InitOriginWithoutTracking(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+  AssertIsOnIOThread();
 
   return NS_OK;
 }

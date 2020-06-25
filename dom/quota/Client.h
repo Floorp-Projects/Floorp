@@ -92,11 +92,14 @@ class Client {
     return NS_OK;
   }
 
-  virtual nsresult InitOrigin(PersistenceType aPersistenceType,
-                              const nsACString& aGroup,
-                              const nsACString& aOrigin,
-                              const AtomicBool& aCanceled,
-                              UsageInfo* aUsageInfo) = 0;
+  virtual Result<UsageInfo, nsresult> InitOrigin(
+      PersistenceType aPersistenceType, const nsACString& aGroup,
+      const nsACString& aOrigin, const AtomicBool& aCanceled) = 0;
+
+  virtual nsresult InitOriginWithoutTracking(PersistenceType aPersistenceType,
+                                             const nsACString& aGroup,
+                                             const nsACString& aOrigin,
+                                             const AtomicBool& aCanceled) = 0;
 
   virtual Result<UsageInfo, nsresult> GetUsageForOrigin(
       PersistenceType aPersistenceType, const nsACString& aGroup,
