@@ -57,7 +57,7 @@ async function testSteps() {
     createUnknownFileIn(repoRelativePath);
   }
 
-  // Unknown file and unknown directory in the origin directory
+  // Unknown file in the origin directory
   {
     const request = initStorageAndOrigin(principal, "default");
     await requestFinished(request);
@@ -65,10 +65,19 @@ async function testSteps() {
     ok(request.result === true, "The origin directory was created");
 
     createUnknownFileIn(originRelativePath);
+  }
+
+  // Unknown directory in the origin directory
+  {
+    const request = initStorageAndOrigin(principal, "default");
+    await requestFinished(request);
+
+    ok(request.result === false, "The origin directory was not created");
+
     createUnknownDirectoryIn(originRelativePath);
   }
 
-  // Unknown files in idb client directory and its subdirectories
+  // Unknown file in idb client directory
   {
     const request = indexedDB.openForPrincipal(principal, "myIndexedDB");
     await openDBRequestUpgradeNeeded(request);
@@ -92,7 +101,7 @@ async function testSteps() {
     );
   }
 
-  // Unknown files in cache client directory and its subdirectories
+  // Unknown file in cache client directory
   {
     async function sandboxScript() {
       const cache = await caches.open("myCache");
@@ -139,7 +148,7 @@ async function testSteps() {
     createUnknownFileIn(`${originRelativePath}/sdb`);
   }
 
-  // Unknown file and unknown directory in ls client directory
+  // Unknown file in ls client directory
   {
     Services.prefs.setBoolPref("dom.storage.testing", true);
     Services.prefs.setBoolPref("dom.storage.client_validation", false);
@@ -156,6 +165,5 @@ async function testSteps() {
     storage.close();
 
     createUnknownFileIn(`${originRelativePath}/ls`);
-    createUnknownDirectoryIn(`${originRelativePath}/ls`);
   }
 }

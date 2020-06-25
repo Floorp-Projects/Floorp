@@ -6,8 +6,6 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/dom/quota/OriginScope.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsDirectoryServiceUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom::quota;
@@ -25,46 +23,6 @@ void CheckOriginScopeMatchesOrigin(const OriginScope& aOriginScope,
       OriginScope::FromOrigin(nsDependentCString(aOrigin)));
 
   EXPECT_TRUE(result == aMatch);
-}
-
-void CheckUnknownFileEntry(nsIFile& aBase, const nsAString& aName,
-                           const bool aWarnIfFile, const bool aWarnIfDir) {
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aBase.Clone(getter_AddRefs(file));
-  ASSERT_EQ(rv, NS_OK);
-
-  rv = file->Append(aName);
-  ASSERT_EQ(rv, NS_OK);
-
-  rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
-  ASSERT_EQ(rv, NS_OK);
-
-  auto okOrErr = WARN_IF_FILE_IS_UNKNOWN(*file);
-  ASSERT_TRUE(okOrErr.isOk());
-
-#ifdef DEBUG
-  EXPECT_TRUE(okOrErr.inspect() == aWarnIfFile);
-#else
-  EXPECT_TRUE(okOrErr.inspect() == false);
-#endif
-
-  rv = file->Remove(false);
-  ASSERT_EQ(rv, NS_OK);
-
-  rv = file->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  ASSERT_EQ(rv, NS_OK);
-
-  okOrErr = WARN_IF_FILE_IS_UNKNOWN(*file);
-  ASSERT_TRUE(okOrErr.isOk());
-
-#ifdef DEBUG
-  EXPECT_TRUE(okOrErr.inspect() == aWarnIfDir);
-#else
-  EXPECT_TRUE(okOrErr.inspect() == false);
-#endif
-
-  rv = file->Remove(false);
-  ASSERT_EQ(rv, NS_OK);
 }
 
 }  // namespace
@@ -137,31 +95,4 @@ TEST(QuotaManager, OriginScope)
       CheckOriginScopeMatchesOrigin(originScope, test.mOrigin, test.mMatch);
     }
   }
-}
-
-TEST(QuotaManager, WarnIfUnknownFile)
-{
-  nsCOMPtr<nsIFile> base;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(base));
-  ASSERT_EQ(rv, NS_OK);
-
-  rv = base->Append(NS_LITERAL_STRING("mozquotatests"));
-  ASSERT_EQ(rv, NS_OK);
-
-  base->Remove(true);
-
-  rv = base->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  ASSERT_EQ(rv, NS_OK);
-
-  CheckUnknownFileEntry(*base, NS_LITERAL_STRING("foo.bar"), true, true);
-  CheckUnknownFileEntry(*base, NS_LITERAL_STRING(".DS_Store"), false, true);
-  CheckUnknownFileEntry(*base, NS_LITERAL_STRING(".desktop"), false, true);
-  CheckUnknownFileEntry(*base, NS_LITERAL_STRING("desktop.ini"), false, true);
-  CheckUnknownFileEntry(*base, NS_LITERAL_STRING("DESKTOP.INI"), false, true);
-  CheckUnknownFileEntry(*base, NS_LITERAL_STRING("thumbs.db"), false, true);
-  CheckUnknownFileEntry(*base, NS_LITERAL_STRING("THUMBS.DB"), false, true);
-  CheckUnknownFileEntry(*base, NS_LITERAL_STRING(".xyz"), false, true);
-
-  rv = base->Remove(true);
-  ASSERT_EQ(rv, NS_OK);
 }
