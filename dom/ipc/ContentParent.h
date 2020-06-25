@@ -36,7 +36,7 @@
 #include "nsFrameMessageManager.h"
 #include "nsHashKeys.h"
 #include "nsIAsyncShutdown.h"
-#include "nsIDOMProcessParent.h"
+#include "nsIContentParent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIRemoteTab.h"
@@ -128,7 +128,7 @@ struct CancelContentJSOptions;
 
 class ContentParent final
     : public PContentParent,
-      public nsIDOMProcessParent,
+      public nsIContentParent,
       public nsIObserver,
       public nsIDOMGeoPositionCallback,
       public nsIDOMGeoPositionErrorCallback,
@@ -357,7 +357,7 @@ class ContentParent final
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ContentParent, nsIObserver)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMPROCESSPARENT
+  NS_DECL_NSICONTENTPARENT
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMGEOPOSITIONCALLBACK
   NS_DECL_NSIDOMGEOPOSITIONERRORCALLBACK
@@ -1358,6 +1358,13 @@ class ContentParent final
       nsTArray<ContentParent*>& aContentParents, uint32_t aMaxContentParents,
       bool aPreferUsed);
 
+  // Get a JS actor object by name.
+  already_AddRefed<JSProcessActorParent> GetActor(const nsACString& aName,
+                                                  ErrorResult& aRv);
+  void ReceiveRawMessage(const JSActorMessageMeta& aMeta,
+                         StructuredCloneData&& aData,
+                         StructuredCloneData&& aStack);
+
   void AddToPool(nsTArray<ContentParent*>&);
   void RemoveFromPool(nsTArray<ContentParent*>&);
   void AssertNotInPool();
@@ -1540,7 +1547,7 @@ bool IsWebRemoteType(const nsAString& aContentProcessType);
 bool IsWebCoopCoepRemoteType(const nsAString& aContentProcessType);
 
 inline nsISupports* ToSupports(mozilla::dom::ContentParent* aContentParent) {
-  return static_cast<nsIDOMProcessParent*>(aContentParent);
+  return static_cast<nsIContentParent*>(aContentParent);
 }
 
 }  // namespace dom

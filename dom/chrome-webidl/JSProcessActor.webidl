@@ -20,7 +20,7 @@ interface JSProcessActorParent {
   [ChromeOnly]
   constructor();
 
-  readonly attribute nsIDOMProcessParent manager;
+  readonly attribute nsIContentParent manager;
 };
 JSProcessActorParent includes JSActor;
 
@@ -29,7 +29,7 @@ interface JSProcessActorChild {
   [ChromeOnly]
   constructor();
 
-  readonly attribute nsIDOMProcessChild manager;
+  readonly attribute nsIContentChild manager;
 };
 JSProcessActorChild includes JSActor;
 

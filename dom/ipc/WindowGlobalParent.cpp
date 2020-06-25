@@ -10,7 +10,7 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/InProcessParent.h"
+#include "mozilla/ipc/InProcessParent.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientInfo.h"
@@ -211,13 +211,6 @@ already_AddRefed<BrowserParent> WindowGlobalParent::GetBrowserParent() {
     return nullptr;
   }
   return do_AddRef(static_cast<BrowserParent*>(Manager()));
-}
-
-ContentParent* WindowGlobalParent::GetContentParent() {
-  if (IsInProcess() || !CanSend()) {
-    return nullptr;
-  }
-  return static_cast<ContentParent*>(Manager()->Manager());
 }
 
 already_AddRefed<nsFrameLoader> WindowGlobalParent::GetRootFrameLoader() {
@@ -830,11 +823,13 @@ nsIGlobalObject* WindowGlobalParent::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
-nsIDOMProcessParent* WindowGlobalParent::GetDomProcess() {
-  if (RefPtr<BrowserParent> browserParent = GetBrowserParent()) {
-    return browserParent->Manager();
+nsIContentParent* WindowGlobalParent::GetContentParent() {
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  if (!browserParent) {
+    return nullptr;
   }
-  return InProcessParent::Singleton();
+
+  return browserParent->Manager();
 }
 
 void WindowGlobalParent::DidBecomeCurrentWindowGlobal(bool aCurrent) {

@@ -26,7 +26,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
-#include "mozilla/dom/InProcessChild.h"
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/MediaControlUtils.h"
 #include "mozilla/dom/MediaControlService.h"
@@ -1304,10 +1303,7 @@ void ChromeUtils::GenerateMediaControlKey(const GlobalObject& aGlobal,
 }
 
 /* static */
-nsIDOMProcessChild* ChromeUtils::GetDomProcessChild(const GlobalObject&) {
-  if (XRE_IsParentProcess()) {
-    return InProcessChild::Singleton();
-  }
+nsIContentChild* ChromeUtils::GetContentChild(const GlobalObject&) {
   return ContentChild::GetSingleton();
 }
 
