@@ -213,7 +213,7 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   txn.SetIsThirdPartyTrackingResourceWindow(
       nsContentUtils::IsThirdPartyTrackingResourceWindow(mWindowGlobal));
   txn.SetIsSecureContext(mWindowGlobal->IsSecureContext());
-  auto policy = aDocument->GetEmbedderPolicyFromHTTP();
+  auto policy = aDocument->GetEmbedderPolicy();
   if (policy.isSome()) {
     txn.SetEmbedderPolicy(policy.ref());
   }

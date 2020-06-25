@@ -1110,14 +1110,17 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     // SetInitialPrincipalToSubject is safe to call multiple times.
     if (win) {
       nsCOMPtr<nsIContentSecurityPolicy> cspToInheritForAboutBlank;
+      Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> coepToInheritForAboutBlank;
       nsCOMPtr<mozIDOMWindowProxy> targetOpener = win->GetSameProcessOpener();
       nsCOMPtr<nsIDocShell> openerDocShell(do_GetInterface(targetOpener));
       if (openerDocShell) {
         RefPtr<Document> openerDoc =
             static_cast<nsDocShell*>(openerDocShell.get())->GetDocument();
         cspToInheritForAboutBlank = openerDoc ? openerDoc->GetCsp() : nullptr;
+        coepToInheritForAboutBlank = openerDoc->GetEmbedderPolicy();
       }
-      win->SetInitialPrincipalToSubject(cspToInheritForAboutBlank);
+      win->SetInitialPrincipalToSubject(cspToInheritForAboutBlank,
+                                        coepToInheritForAboutBlank);
 
       if (aIsPopupSpam) {
         MOZ_ASSERT(!newBC->GetIsPopupSpam(),

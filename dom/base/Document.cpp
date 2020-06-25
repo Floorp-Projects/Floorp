@@ -3555,7 +3555,7 @@ nsresult Document::InitCOEP(nsIChannel* aChannel) {
   nsILoadInfo::CrossOriginEmbedderPolicy policy =
       nsILoadInfo::EMBEDDER_POLICY_NULL;
   if (NS_SUCCEEDED(intChannel->GetResponseEmbedderPolicy(&policy))) {
-    mEmbedderPolicyFromHTTP = Some(policy);
+    mEmbedderPolicy = Some(policy);
   }
 
   return NS_OK;
