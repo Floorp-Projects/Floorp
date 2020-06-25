@@ -29,7 +29,7 @@ add_task(async function test_cancelEditAddressDialogWithESC() {
 });
 
 add_task(async function test_defaultCountry() {
-  Region._setRegion("CA", false);
+  Region._setHomeRegion("CA", false);
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     let doc = win.document;
     is(
@@ -39,7 +39,7 @@ add_task(async function test_defaultCountry() {
     );
     doc.querySelector("#cancel").click();
   });
-  Region._setRegion("DE", false);
+  Region._setHomeRegion("DE", false);
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     let doc = win.document;
     is(
@@ -50,13 +50,13 @@ add_task(async function test_defaultCountry() {
     doc.querySelector("#cancel").click();
   });
   // Test unsupported country
-  Region._setRegion("XX", false);
+  Region._setHomeRegion("XX", false);
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     let doc = win.document;
     is(doc.querySelector("#country").value, "", "Default country set to empty");
     doc.querySelector("#cancel").click();
   });
-  Region._setRegion("US", false);
+  Region._setHomeRegion("US", false);
 });
 
 add_task(async function test_saveAddress() {
@@ -864,7 +864,7 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
 });
 
 add_task(async function test_countrySpecificFieldsGetRequiredness() {
-  Region._setRegion("RO", false);
+  Region._setHomeRegion("RO", false);
   await testDialog(EDIT_ADDRESS_DIALOG_URL, async win => {
     let doc = win.document;
     is(
