@@ -220,13 +220,19 @@ nsresult CacheQuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                    /* aInitializing*/ true, aUsageInfo);
 }
 
-nsresult CacheQuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
-                                             const nsACString& aGroup,
-                                             const nsACString& aOrigin,
-                                             const AtomicBool& aCanceled,
-                                             UsageInfo* aUsageInfo) {
-  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
-                                   /* aInitializing*/ false, aUsageInfo);
+Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOrigin(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+  UsageInfo res;
+
+  nsresult rv =
+      GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+                                /* aInitializing*/ false, &res);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  return res;
 }
 
 void CacheQuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
