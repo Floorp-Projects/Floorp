@@ -7692,8 +7692,8 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
               RefPtr<SinkInfoPromise> p =
                   self->SetSrcMediaStreamSink(aInfo)->Then(
                       self->mAbstractMainThread, __func__,
-                      [aInfo](
-                          const GenericPromise::ResolveOrRejectValue& aValue) {
+                      [aInfo](const GenericPromise::AllPromiseType::
+                                  ResolveOrRejectValue& aValue) {
                         if (aValue.IsResolve()) {
                           return SinkInfoPromise::CreateAndResolve(aInfo,
                                                                    __func__);
@@ -7739,7 +7739,7 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
   return promise.forget();
 }
 
-RefPtr<GenericPromise> HTMLMediaElement::SetSrcMediaStreamSink(
+RefPtr<GenericPromise::AllPromiseType> HTMLMediaElement::SetSrcMediaStreamSink(
     AudioDeviceInfo* aSink) {
   MOZ_ASSERT(mSrcStream);
   nsTArray<RefPtr<AudioStreamTrack>> audioTracks;
@@ -7748,7 +7748,8 @@ RefPtr<GenericPromise> HTMLMediaElement::SetSrcMediaStreamSink(
     // Save it for later. At the moment the element does not contain any audio
     // track. Nevertheless, the requested sink-id is saved to be used when the
     // first audio track is available.
-    return GenericPromise::CreateAndResolve(true, __func__);
+    return GenericPromise::AllPromiseType::CreateAndResolve(nsTArray<bool>(),
+                                                            __func__);
   }
 
   nsTArray<RefPtr<GenericPromise>> promises;
@@ -7768,20 +7769,11 @@ RefPtr<GenericPromise> HTMLMediaElement::SetSrcMediaStreamSink(
 
   if (!promises.Length()) {
     // Not active track, save it for later
-    return GenericPromise::CreateAndResolve(true, __func__);
+    return GenericPromise::AllPromiseType::CreateAndResolve(nsTArray<bool>(),
+                                                            __func__);
   }
 
-  RefPtr<GenericPromise> p =
-      GenericPromise::All(GetCurrentSerialEventTarget(), promises)
-          ->Then(
-              GetCurrentSerialEventTarget(), __func__,
-              [](const nsTArray<bool>&) {
-                return GenericPromise::CreateAndResolve(true, __func__);
-              },
-              [](nsresult rv) {
-                return GenericPromise::CreateAndReject(rv, __func__);
-              });
-  return p;
+  return GenericPromise::All(GetCurrentSerialEventTarget(), promises);
 }
 
 void HTMLMediaElement::NotifyTextTrackModeChanged() {
