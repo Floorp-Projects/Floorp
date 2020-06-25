@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/JSProcessActorBinding.h"
 #include "mozilla/dom/JSProcessActorChild.h"
-#include "mozilla/ipc/InProcessChild.h"
+#include "mozilla/dom/InProcessChild.h"
 
 namespace mozilla {
 namespace dom {

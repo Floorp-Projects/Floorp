@@ -4,20 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ipc_InProcessChild_h
-#define mozilla_ipc_InProcessChild_h
+#ifndef mozilla_dom_InProcessChild_h
+#define mozilla_dom_InProcessChild_h
 
-#include "mozilla/ipc/PInProcessChild.h"
+#include "mozilla/dom/PInProcessChild.h"
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 namespace dom {
 class PWindowGlobalParent;
 class PWindowGlobalChild;
-}  // namespace dom
-
-namespace ipc {
-
 class InProcessParent;
 
 /**
@@ -52,7 +48,7 @@ class InProcessChild final : public PInProcessChild {
   static StaticRefPtr<InProcessChild> sSingleton;
 };
 
-}  // namespace ipc
+}  // namespace dom
 }  // namespace mozilla
 
-#endif  // defined(mozilla_ipc_InProcessChild_h)
+#endif  // defined(mozilla_dom_InProcessChild_h)
