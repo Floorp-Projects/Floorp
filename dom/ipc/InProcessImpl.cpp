@@ -4,16 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ipc/InProcessParent.h"
-#include "mozilla/ipc/InProcessChild.h"
+#include "mozilla/dom/InProcessParent.h"
+#include "mozilla/dom/InProcessChild.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+
+using namespace mozilla::ipc;
 
 // This file contains the implementation of core InProcess lifecycle management
 // facilities.
 
 namespace mozilla {
-namespace ipc {
+namespace dom {
 
 StaticRefPtr<InProcessParent> InProcessParent::sSingleton;
 StaticRefPtr<InProcessChild> InProcessChild::sSingleton;
@@ -179,5 +181,5 @@ IProtocol* InProcessChild::ParentActorFor(IProtocol* aActor) {
 
 NS_IMPL_ISUPPORTS(InProcessParent, nsIObserver)
 
-}  // namespace ipc
+}  // namespace dom
 }  // namespace mozilla
