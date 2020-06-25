@@ -52,8 +52,8 @@ Independent, small visual UI elements to use in applications.
 * [service-firefox-accounts](https://github.com/mozilla-mobile/android-components/tree/master/components/service/firefox-accounts) - A library for integrating with [Firefox Accounts](https://mozilla.github.io/application-services/docs/accounts/welcome.html).
 * [service-fretboard](https://github.com/mozilla-mobile/android-components/tree/master/components/service/fretboard) - An Android framework for segmenting users in order to run A/B tests and rollout features gradually.
 * [service-pocket](https://github.com/mozilla-mobile/android-components/tree/master/components/service/pocket) - A library for communicating with the Pocket API.
-* [service-telemetry](https://github.com/mozilla-mobile/android-components/tree/master/components/service/telemetry) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
-* [service-glean](https://github.com/mozilla-mobile/android-components/tree/master/components/service/glean) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service (eventually replacing `service-telemetry`).
+* [service-telemetry](https://github.com/mozilla-mobile/android-components/tree/master/components/service/telemetry) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service (Deprecated. Use `service-glean` instead).
+* [service-glean](https://github.com/mozilla-mobile/android-components/tree/master/components/service/glean) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
 
 ## Samples
 
