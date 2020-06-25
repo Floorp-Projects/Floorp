@@ -160,8 +160,7 @@ class Selection;
 //----------------------------------------------------------------------
 
 #define NS_SUBTREE_DIRTY(_frame) \
-  (((_frame)->GetStateBits() &   \
-    (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0)
+  (_frame)->HasAnyStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)
 
 // 1 million CSS pixels less than our max app unit measure.
 // For reflowing with an "infinite" available inline space per [css-sizing].
@@ -1641,7 +1640,7 @@ class nsIFrame : public nsQueryFrame {
 
   /// @return true if we're tracking visibility for this frame.
   bool TrackingVisibility() const {
-    return bool(GetStateBits() & NS_FRAME_VISIBILITY_IS_TRACKED);
+    return HasAnyStateBits(NS_FRAME_VISIBILITY_IS_TRACKED);
   }
 
   /// @return the visibility state of this frame. See the Visibility enum
@@ -3878,7 +3877,7 @@ class nsIFrame : public nsQueryFrame {
    * NS_FRAME_OWNS_ANON_BOXES bit set.
    */
   void UpdateStyleOfOwnedAnonBoxes(mozilla::ServoRestyleState& aRestyleState) {
-    if (GetStateBits() & NS_FRAME_OWNS_ANON_BOXES) {
+    if (HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES)) {
       DoUpdateStyleOfOwnedAnonBoxes(aRestyleState);
     }
   }
@@ -3933,7 +3932,7 @@ class nsIFrame : public nsQueryFrame {
    * directly.
    */
   void AppendOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) {
-    if (GetStateBits() & NS_FRAME_OWNS_ANON_BOXES) {
+    if (HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES)) {
       if (IsInlineFrame()) {
         // See comment in nsIFrame::DoUpdateStyleOfOwnedAnonBoxes for why
         // we skip nsInlineFrames.
@@ -4508,7 +4507,7 @@ class nsIFrame : public nsQueryFrame {
    * continuations of the first inline in it.
    */
   bool FrameIsNonFirstInIBSplit() const {
-    return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
+    return HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT) &&
            FirstContinuation()->GetProperty(nsIFrame::IBSplitPrevSibling());
   }
 
@@ -4517,7 +4516,7 @@ class nsIFrame : public nsQueryFrame {
    * continuations of the last inline in it.
    */
   bool FrameIsNonLastInIBSplit() const {
-    return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
+    return HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT) &&
            FirstContinuation()->GetProperty(nsIFrame::IBSplitSibling());
   }
 
@@ -4526,7 +4525,7 @@ class nsIFrame : public nsQueryFrame {
    * the font size inflation of its descendants.
    */
   bool IsContainerForFontSizeInflation() const {
-    return GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER;
+    return HasAnyStateBits(NS_FRAME_FONT_INFLATION_CONTAINER);
   }
 
   /**
