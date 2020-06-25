@@ -2114,7 +2114,8 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
   bool force = false;
   if (script->hasIonScript() && pc != script->ionScript()->osrPc()) {
     uint32_t count = script->ionScript()->incrOsrPcMismatchCounter();
-    if (count <= JitOptions.osrPcMismatchesBeforeRecompile) {
+    if (count <= JitOptions.osrPcMismatchesBeforeRecompile &&
+        !JitOptions.eagerIonCompilation()) {
       return Method_Skipped;
     }
     force = true;
