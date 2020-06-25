@@ -21,6 +21,11 @@ interface nsIContentProcessInfo : nsISupports
   readonly attribute int32_t processId;
 
   /**
+   * This content process's opener.
+   */
+  readonly attribute nsIContentProcessInfo opener;
+
+  /**
    * Number of opened tabs living in this content process.
    */
   readonly attribute int32_t tabCount;
@@ -41,11 +46,11 @@ interface nsIContentProcessProvider : nsISupports
   const int32_t NEW_PROCESS = -1;
 
   /**
-   * Given aAliveProcesses, choose which process of aType to use. Return
-   * nsIContentProcessProvider.NEW_PROCESS to ask the caller to create a new
-   * content process.
+   * Given aAliveProcesses (with an opener aOpener), choose which process of
+   * aType to use. Return nsIContentProcessProvider.NEW_PROCESS to ask the
+   * caller to create a new content process.
    */
-  int32_t provideProcess(in AString aType,
+  int32_t provideProcess(in AString aType, in nsIContentProcessInfo aOpener,
                          in Array<nsIContentProcessInfo> aAliveProcesses,
                          in uint32_t aMaxCount);
 };
