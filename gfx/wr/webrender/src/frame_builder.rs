@@ -308,7 +308,7 @@ impl FrameBuilder {
                 RenderTaskLocation::Fixed(scene.output_rect),
                 scene.output_rect.size.to_f32(),
                 scene.root_pic_index,
-                DeviceIntPoint::zero(),
+                DevicePoint::zero(),
                 UvRectKind::Rect,
                 ROOT_SPATIAL_NODE_INDEX,
                 global_device_pixel_scale,
