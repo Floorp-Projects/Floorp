@@ -257,7 +257,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0126); /* IntelSandyBridge_6 */
       APPEND_DEVICE(0x010a); /* IntelSandyBridge_7 */
       break;
-    case DeviceFamily::IntelHDGraphicsToHaswell:
+    case DeviceFamily::IntelHaswell:
       APPEND_DEVICE(0x0402); /* IntelHaswell_GT1_1 */
       APPEND_DEVICE(0x0406); /* IntelHaswell_GT1_2 */
       APPEND_DEVICE(0x040A); /* IntelHaswell_GT1_3 */
@@ -804,7 +804,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::IntelGMAX4500HD:
     case DeviceFamily::IntelHDGraphicsToIvyBridge:
     case DeviceFamily::IntelHDGraphicsToSandyBridge:
-    case DeviceFamily::IntelHDGraphicsToHaswell:
+    case DeviceFamily::IntelHaswell:
     case DeviceFamily::IntelHD3000:
     case DeviceFamily::IntelHD520:
     case DeviceFamily::IntelMobileHDGraphics:

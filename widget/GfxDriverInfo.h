@@ -178,7 +178,7 @@ enum class DeviceFamily : uint8_t {
   IntelGMAX4500HD,
   IntelHDGraphicsToIvyBridge,
   IntelHDGraphicsToSandyBridge,
-  IntelHDGraphicsToHaswell,
+  IntelHaswell,
   IntelHD3000,
   IntelHD520,
   IntelMobileHDGraphics,
