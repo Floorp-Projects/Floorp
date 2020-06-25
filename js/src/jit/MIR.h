@@ -3530,6 +3530,25 @@ class MAssertRange : public MUnaryInstruction, public NoTypePolicy::Data {
 #endif
 };
 
+class MAssertClass : public MUnaryInstruction, public NoTypePolicy::Data {
+  const JSClass* class_;
+
+  MAssertClass(MDefinition* obj, const JSClass* clasp)
+      : MUnaryInstruction(classOpcode, obj), class_(clasp) {
+    MOZ_ASSERT(obj->type() == MIRType::Object);
+
+    setGuard();
+    setResultType(MIRType::None);
+  }
+
+ public:
+  INSTRUCTION_HEADER(AssertClass)
+  TRIVIAL_NEW_WRAPPERS
+
+  const JSClass* getClass() const { return class_; }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Caller-side allocation of |this| for |new|:
 // Given a templateobject, construct |this| for JSOp::New.
 // Not used for JSOp::SuperCall, because Baseline doesn't attach template
@@ -10913,6 +10932,8 @@ class MIsArray : public MUnaryInstruction,
   INSTRUCTION_HEADER(IsArray)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, value))
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
 class MIsTypedArray : public MUnaryInstruction,

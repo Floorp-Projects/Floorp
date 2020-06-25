@@ -3539,6 +3539,17 @@ MDefinition* MBitNot::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+static void AssertKnownClass(TempAllocator& alloc, MInstruction* ins,
+                             MDefinition* obj) {
+#ifdef DEBUG
+  const JSClass* clasp = GetObjectKnownJSClass(obj);
+  MOZ_ASSERT(clasp);
+
+  auto* assert = MAssertClass::New(alloc, obj, clasp);
+  ins->block()->insertBefore(ins, assert);
+#endif
+}
+
 MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
   if (!input()->isBox()) {
     return this;
@@ -3570,7 +3581,25 @@ MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
     case MIRType::Boolean:
       type = JSTYPE_BOOLEAN;
       break;
-    case MIRType::Object:
+    case MIRType::Object: {
+      KnownClass known = GetObjectKnownClass(unboxed);
+      if (known != KnownClass::None) {
+        switch (known) {
+          case KnownClass::Array:
+          case KnownClass::PlainObject:
+            type = JSTYPE_OBJECT;
+            break;
+          case KnownClass::Function:
+            type = JSTYPE_FUNCTION;
+            break;
+          case KnownClass::None:
+            MOZ_CRASH("not reachable");
+        }
+
+        AssertKnownClass(alloc, this, unboxed);
+        break;
+      }
+
       if (!inputMaybeCallableOrEmulatesUndefined()) {
         // Object is not callable and does not emulate undefined, so it's
         // safe to fold to "object".
@@ -3578,6 +3607,7 @@ MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
         break;
       }
       [[fallthrough]];
+    }
     default:
       return this;
   }
@@ -5869,13 +5899,27 @@ MDefinition* MGuardSpecificSymbol::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
-  if (getClass() == &ArrayObject::class_) {
-    if (object()->isNewArray() || object()->isNewArrayCopyOnWrite()) {
-      return object();
-    }
+  const JSClass* clasp = GetObjectKnownJSClass(object());
+  if (!clasp || getClass() != clasp) {
+    return this;
   }
 
-  return this;
+  AssertKnownClass(alloc, this, object());
+  return object();
+}
+
+MDefinition* MIsArray::foldsTo(TempAllocator& alloc) {
+  if (input()->type() != MIRType::Object) {
+    return this;
+  }
+
+  KnownClass known = GetObjectKnownClass(input());
+  if (known == KnownClass::None) {
+    return this;
+  }
+
+  AssertKnownClass(alloc, this, input());
+  return MConstant::New(alloc, BooleanValue(known == KnownClass::Array));
 }
 
 MDefinition* MCheckThis::foldsTo(TempAllocator& alloc) {
