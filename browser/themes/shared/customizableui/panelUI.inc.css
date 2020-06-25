@@ -1169,7 +1169,7 @@ panelview .toolbarbutton-1,
   fill-opacity: 0.4;
   float: inline-end;
   /* Centers the icon and resizes it to 12px square. */
-  transform: translateY(2px) scaleX(.75);
+  transform: translateY(2px) scale(.75);
 }
 
 .subviewbutton[checked="true"] {
