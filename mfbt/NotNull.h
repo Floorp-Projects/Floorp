@@ -75,7 +75,9 @@ namespace detail {
 template <typename T>
 struct CopyablePtr {
   T mPtr;
-  explicit CopyablePtr(T aPtr) : mPtr{std::move(aPtr)} {}
+
+  template <typename U>
+  explicit CopyablePtr(U aPtr) : mPtr{std::move(aPtr)} {}
 };
 }  // namespace detail
 
@@ -146,7 +148,7 @@ class NotNull {
 
   template <typename U>
   constexpr MOZ_IMPLICIT NotNull(MovingNotNull<U>&& aOther)
-      : mBasePtr(std::move(aOther)) {}
+      : mBasePtr(std::move(aOther).unwrapBasePtr()) {}
 
   // Disallow null checks, which are unnecessary for this type.
   explicit operator bool() const = delete;
@@ -293,6 +295,10 @@ class MOZ_NON_AUTOABLE MovingNotNull {
 
   template <typename U>
   MOZ_IMPLICIT MovingNotNull(const NotNull<U>& aSrc) : mBasePtr(aSrc) {}
+
+  template <typename U>
+  MOZ_IMPLICIT MovingNotNull(MovingNotNull<U>&& aSrc)
+      : mBasePtr(std::move(aSrc).unwrapBasePtr()) {}
 
   MOZ_IMPLICIT operator T() && { return std::move(*this).unwrapBasePtr(); }
 
