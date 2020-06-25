@@ -36,6 +36,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
+#include "nsAppRunner.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "gfxCrashReporterUtils.h"
@@ -864,6 +865,10 @@ void gfxPlatform::Init() {
     nsAutoCString path;
     Preferences::GetCString("layers.windowrecording.path", path);
     gfxVars::SetLayersWindowRecordingPath(path);
+
+    if (gFxREmbedded) {
+      gfxVars::SetFxREmbedded(true);
+    }
   }
 
   // Drop a note in the crash report if we end up forcing an option that could

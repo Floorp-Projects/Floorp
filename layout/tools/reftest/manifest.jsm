@@ -466,9 +466,11 @@ function BuildConditionSandbox(aURL) {
     try {
       sandbox.d2d = readGfxInfo(gfxInfo, "D2DEnabled");
       sandbox.dwrite = readGfxInfo(gfxInfo, "DWriteEnabled");
+      sandbox.embeddedInFirefoxReality = readGfxInfo(gfxInfo, "EmbeddedInFirefoxReality");
     } catch (e) {
       sandbox.d2d = false;
       sandbox.dwrite = false;
+      sandbox.embeddedInFirefoxReality = false;
     }
 
     var info = gfxInfo.getInfo();

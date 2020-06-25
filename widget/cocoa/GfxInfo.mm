@@ -120,6 +120,9 @@ NS_IMETHODIMP GfxInfo::GetHasBattery(bool* aHasBattery) { return NS_ERROR_NOT_IM
 NS_IMETHODIMP
 GfxInfo::GetDWriteVersion(nsAString& aDwriteVersion) { return NS_ERROR_FAILURE; }
 
+NS_IMETHODIMP
+GfxInfo::GetEmbeddedInFirefoxReality(bool* aEmbeddedInFirefoxReality) { return NS_ERROR_FAILURE; }
+
 /* readonly attribute DOMString cleartypeParameters; */
 NS_IMETHODIMP
 GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) { return NS_ERROR_FAILURE; }

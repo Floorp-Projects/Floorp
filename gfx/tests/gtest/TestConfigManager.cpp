@@ -66,6 +66,11 @@ class MockGfxInfo final : public nsIGfxInfo {
 
   NS_IMETHOD_(int32_t) GetMaxRefreshRate() override { return mMaxRefreshRate; }
 
+  NS_IMETHODIMP GetEmbeddedInFirefoxReality(
+      bool* aEmbeddedInFirefoxReality) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   // The following methods we don't need for testing gfxConfigManager.
   NS_IMETHOD GetFeatureSuggestedDriverVersion(int32_t aFeature,
                                               nsAString& _retval) override {
