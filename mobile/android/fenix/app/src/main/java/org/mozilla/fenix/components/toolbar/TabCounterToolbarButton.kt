@@ -19,6 +19,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.sessionsOfType
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 import java.lang.ref.WeakReference
 
@@ -82,16 +83,6 @@ class TabCounterToolbarButton(
         val metrics = context.components.analytics.metrics
         val menuItems = listOf(
             BrowserMenuImageText(
-                label = context.getString(R.string.close_tab),
-                imageResource = R.drawable.ic_close,
-                iconTintColorResource = primaryTextColor,
-                textColorResource = primaryTextColor
-            ) {
-                metrics.track(Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.CLOSE_TAB))
-                onItemTapped(TabCounterMenuItem.CloseTab)
-            },
-            BrowserMenuDivider(),
-            BrowserMenuImageText(
                 label = context.getString(R.string.browser_menu_new_tab),
                 imageResource = R.drawable.ic_new,
                 iconTintColorResource = primaryTextColor,
@@ -108,9 +99,26 @@ class TabCounterToolbarButton(
             ) {
                 metrics.track(Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.NEW_PRIVATE_TAB))
                 onItemTapped(TabCounterMenuItem.NewTab(true))
+            },
+            BrowserMenuDivider(),
+            BrowserMenuImageText(
+                label = context.getString(R.string.close_tab),
+                imageResource = R.drawable.ic_close,
+                iconTintColorResource = primaryTextColor,
+                textColorResource = primaryTextColor
+            ) {
+                metrics.track(Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.CLOSE_TAB))
+                onItemTapped(TabCounterMenuItem.CloseTab)
             }
         )
-        return BrowserMenuBuilder(menuItems).build(context)
+
+        return BrowserMenuBuilder(
+            if (context.settings().shouldUseBottomToolbar) {
+                menuItems.reversed()
+            } else {
+                menuItems
+            }
+        ).build(context)
     }
 
     private val sessionManagerObserver = object : SessionManager.Observer {
