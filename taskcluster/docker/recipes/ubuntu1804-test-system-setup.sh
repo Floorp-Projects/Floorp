@@ -87,6 +87,7 @@ apt_packages+=('unzip')
 apt_packages+=('uuid')
 apt_packages+=('wget')
 apt_packages+=('xvfb')
+apt_packages+=('xwit')
 apt_packages+=('yasm')
 apt_packages+=('zip')
 
