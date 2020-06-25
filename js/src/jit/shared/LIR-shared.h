@@ -7239,6 +7239,21 @@ class LAssertRangeV : public LInstructionHelper<0, BOX_PIECES, 3> {
   const Range* range() { return mir()->assertedRange(); }
 };
 
+class LAssertClass : public LInstructionHelper<0, 1, 1> {
+ public:
+  LIR_HEADER(AssertClass)
+
+  explicit LAssertClass(const LAllocation& input, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* input() { return getOperand(0); }
+
+  MAssertClass* mir() { return mir_->toAssertClass(); }
+};
+
 class LAssertResultT : public LInstructionHelper<0, 1, 0> {
  public:
   LIR_HEADER(AssertResultT)
