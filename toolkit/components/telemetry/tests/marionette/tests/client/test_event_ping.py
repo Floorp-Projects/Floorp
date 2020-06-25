@@ -56,9 +56,13 @@ class TestEventPing(TelemetryTestCase):
         self.assertIn("events", payload)
         self.assertIn("parent", payload["events"])
         found_it = False
-        for [timestamp, category, method, object, value, extra] in payload["events"]["parent"]:
+
+        for event in payload["events"]["parent"]:
+            # The event may optionally contain additonal fields
+            [timestamp, category, method, obj] = event[:4]
+
             self.assertTrue(timestamp > 0)
-            if category == "navigation" and method == "search" and object == "urlbar":
+            if category == "navigation" and method == "search" and obj == "urlbar":
                 found_it = True
 
         self.assertTrue(found_it)
