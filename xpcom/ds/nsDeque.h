@@ -8,7 +8,7 @@
  * MODULE NOTES:
  *
  * The Deque is a very small, very efficient container object
- * than can hold items of type void*, offering the following features:
+ * than can hold items of type T*, offering the following features:
  * - Its interface supports pushing, popping, and peeking of items at the back
  *   or front, and retrieval from any position.
  * - It can iterate over items via a ForEach method, range-for, or an iterator
@@ -31,21 +31,9 @@
 #include "mozilla/fallible.h"
 #include "mozilla/MemoryReporting.h"
 
-/**
- * The nsDequeFunctor class is used when you want to create
- * callbacks between the deque and your generic code.
- * Use these objects in a call to ForEach(), and as custom deallocators.
- */
-class nsDequeFunctor {
- public:
-  virtual void operator()(void* aObject) = 0;
-  virtual ~nsDequeFunctor() = default;
-};
+namespace mozilla {
 
-/******************************************************
- * Here comes the nsDeque class itself...
- ******************************************************/
-
+namespace detail {
 /**
  * The deque (double-ended queue) class is a common container type,
  * whose behavior mimics a line in your favorite checkout stand.
@@ -53,27 +41,11 @@ class nsDequeFunctor {
  * A deque allows insertion and removal at both ends of
  * the container.
  *
- * The deque stores pointers to items.
+ * nsDequeBase implements the untyped deque data structure while
+ * nsDeque provides the typed implementation and iterators.
  */
-class nsDeque {
-  typedef mozilla::fallible_t fallible_t;
-
+class nsDequeBase {
  public:
-  /**
-   * Constructs an empty deque.
-   *
-   * @param   aDeallocator Optional deallocator functor that will be called from
-   *                       Erase() and the destructor on any remaining item.
-   *                       The deallocator is owned by the deque and will be
-   *                       deleted at destruction time.
-   */
-  explicit nsDeque(nsDequeFunctor* aDeallocator = nullptr);
-
-  /**
-   * Deque destructor. Erases all items, deletes the deallocator.
-   */
-  ~nsDeque();
-
   /**
    * Returns the number of items currently stored in
    * this deque.
@@ -82,16 +54,23 @@ class nsDeque {
    */
   inline size_t GetSize() const { return mSize; }
 
+ protected:
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
   /**
-   * Appends new member at the end of the deque.
+   * Constructs an empty deque.
    *
-   * @param   aItem item to store in deque
+   * @param   aDeallocator Optional deallocator functor that will be called from
+   *                       Erase() and the destructor on any remaining item.
+   *                       The deallocator is owned by the deque and will be
+   *                       deleted at destruction time.
    */
-  void Push(void* aItem) {
-    if (!Push(aItem, mozilla::fallible)) {
-      NS_ABORT_OOM(mSize * sizeof(void*));
-    }
-  }
+  explicit nsDequeBase();
+
+  /**
+   * Deque destructor. Erases all items, deletes the deallocator.
+   */
+  ~nsDequeBase();
 
   /**
    * Appends new member at the end of the deque.
@@ -100,17 +79,6 @@ class nsDeque {
    * @return  true if succeeded, false if failed to resize deque as needed
    */
   [[nodiscard]] bool Push(void* aItem, const fallible_t&);
-
-  /**
-   * Inserts new member at the front of the deque.
-   *
-   * @param   aItem item to store in deque
-   */
-  void PushFront(void* aItem) {
-    if (!PushFront(aItem, mozilla::fallible)) {
-      NS_ABORT_OOM(mSize * sizeof(void*));
-    }
-  }
 
   /**
    * Inserts new member at the front of the deque.
@@ -156,12 +124,171 @@ class nsDeque {
    */
   void* ObjectAt(size_t aIndex) const;
 
+  bool GrowCapacity();
+
+  /**
+   * Remove all items from container without destroying them.
+   */
+  void Empty();
+
+  size_t mSize;
+  size_t mCapacity;
+  size_t mOrigin;
+  void* mBuffer[8];
+  void** mData;
+
+  nsDequeBase& operator=(const nsDequeBase& aOther) = delete;
+  nsDequeBase(const nsDequeBase& aOther) = delete;
+};
+}  // namespace detail
+}  // namespace mozilla
+
+/**
+ * The nsDequeFunctor class is used when you want to create
+ * callbacks between the deque and your generic code.
+ * Use these objects in a call to ForEach(), and as custom deallocators.
+ */
+template <typename T>
+class nsDequeFunctor {
+ public:
+  virtual void operator()(T* aObject) = 0;
+  virtual ~nsDequeFunctor() = default;
+};
+
+/******************************************************
+ * Here comes the nsDeque class itself...
+ ******************************************************/
+
+/**
+ * The deque (double-ended queue) class is a common container type,
+ * whose behavior mimics a line in your favorite checkout stand.
+ * Classic CS describes the common behavior of a queue as FIFO.
+ * A deque allows insertion and removal at both ends of
+ * the container.
+ *
+ * The deque stores pointers to items.
+ */
+template <typename T>
+class nsDeque : public mozilla::detail::nsDequeBase {
+  typedef mozilla::fallible_t fallible_t;
+
+ public:
+  /**
+   * Constructs an empty deque.
+   *
+   * @param   aDeallocator Optional deallocator functor that will be called from
+   *                       Erase() and the destructor on any remaining item.
+   *                       The deallocator is owned by the deque and will be
+   *                       deleted at destruction time.
+   */
+  explicit nsDeque(nsDequeFunctor<T>* aDeallocator = nullptr) {
+    MOZ_COUNT_CTOR(nsDeque);
+    mDeallocator = aDeallocator;
+  }
+
+  /**
+   * Deque destructor. Erases all items, deletes the deallocator.
+   */
+  ~nsDeque() {
+    MOZ_COUNT_DTOR(nsDeque);
+
+    Erase();
+    SetDeallocator(nullptr);
+  }
+
+  /**
+   * Appends new member at the end of the deque.
+   *
+   * @param   aItem item to store in deque
+   */
+  inline void Push(T* aItem) {
+    if (!nsDequeBase::Push(aItem, mozilla::fallible)) {
+      NS_ABORT_OOM(mSize * sizeof(T*));
+    }
+  }
+
+  /**
+   * Appends new member at the end of the deque.
+   *
+   * @param   aItem item to store in deque
+   * @return  true if succeeded, false if failed to resize deque as needed
+   */
+  [[nodiscard]] inline bool Push(T* aItem, const fallible_t& aFaillible) {
+    return nsDequeBase::Push(aItem, aFaillible);
+  }
+
+  /**
+   * Inserts new member at the front of the deque.
+   *
+   * @param   aItem item to store in deque
+   */
+  inline void PushFront(T* aItem) {
+    if (!nsDequeBase::PushFront(aItem, mozilla::fallible)) {
+      NS_ABORT_OOM(mSize * sizeof(T*));
+    }
+  }
+
+  /**
+   * Inserts new member at the front of the deque.
+   *
+   * @param   aItem item to store in deque
+   * @return  true if succeeded, false if failed to resize deque as needed
+   */
+  [[nodiscard]] bool PushFront(T* aItem, const fallible_t& aFallible) {
+    return nsDequeBase::PushFront(aItem, aFallible);
+  }
+
+  /**
+   * Remove and return the last item in the container.
+   *
+   * @return  the item that was the last item in container
+   */
+  inline T* Pop() { return static_cast<T*>(nsDequeBase::Pop()); }
+
+  /**
+   * Remove and return the first item in the container.
+   *
+   * @return  the item that was first item in container
+   */
+  inline T* PopFront() { return static_cast<T*>(nsDequeBase::PopFront()); }
+
+  /**
+   * Retrieve the last item without removing it.
+   *
+   * @return  the last item in container
+   */
+  inline T* Peek() const { return static_cast<T*>(nsDequeBase::Peek()); }
+
+  /**
+   * Retrieve the first item without removing it.
+   *
+   * @return  the first item in container
+   */
+  inline T* PeekFront() const {
+    return static_cast<T*>(nsDequeBase::PeekFront());
+  }
+
+  /**
+   * Retrieve a member from the deque without removing it.
+   *
+   * @param   index of desired item
+   * @return  item in list, or nullptr if index is outside the deque
+   */
+  inline T* ObjectAt(size_t aIndex) const {
+    return static_cast<T*>(nsDequeBase::ObjectAt(aIndex));
+  }
+
   /**
    * Remove and delete all items from container.
    * Deletes are handled by the deallocator nsDequeFunctor
    * which is specified at deque construction.
    */
-  void Erase();
+  void Erase() {
+    if (mDeallocator && mSize) {
+      ForEach(*mDeallocator);
+    }
+    Empty();
+  }
 
   /**
    * Call this method when you want to iterate through all
@@ -173,7 +300,11 @@ class nsDeque {
    *
    * @param   aFunctor object to call for each member
    */
-  void ForEach(nsDequeFunctor& aFunctor) const;
+  void ForEach(nsDequeFunctor<T>& aFunctor) const {
+    for (size_t i = 0; i < mSize; ++i) {
+      aFunctor(ObjectAt(i));
+    }
+  }
 
   // This iterator assumes that the deque itself is const, i.e., it cannot be
   // modified while the iterator is used.
@@ -194,7 +325,7 @@ class nsDeque {
     bool operator!=(const ConstDequeIterator& aOther) const {
       return mIndex != aOther.mIndex;
     }
-    void* operator*() const {
+    T* operator*() const {
       // Don't allow out-of-deque dereferences.
       MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
       return mDeque.ObjectAt(mIndex);
@@ -233,7 +364,7 @@ class nsDeque {
     bool operator!=(const ConstIterator& aOther) const {
       return EffectiveIndex() != aOther.EffectiveIndex();
     }
-    void* operator*() const {
+    T* operator*() const {
       // Don't allow out-of-deque dereferences.
       MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
       return mDeque.ObjectAt(mIndex);
@@ -256,16 +387,20 @@ class nsDeque {
     return ConstIterator(*this, ConstIterator::EndIteratorIndex);
   }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    size_t size = nsDequeBase::SizeOfExcludingThis(aMallocSizeOf);
+    if (mDeallocator) {
+      size += aMallocSizeOf(mDeallocator);
+    }
+    return size;
+  }
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
 
  protected:
-  size_t mSize;
-  size_t mCapacity;
-  size_t mOrigin;
-  nsDequeFunctor* mDeallocator;
-  void* mBuffer[8];
-  void** mData;
+  nsDequeFunctor<T>* mDeallocator;
 
  private:
   /**
@@ -283,12 +418,9 @@ class nsDeque {
    */
   nsDeque& operator=(const nsDeque& aOther) = delete;
 
-  bool GrowCapacity();
-  void SetDeallocator(nsDequeFunctor* aDeallocator);
-
-  /**
-   * Remove all items from container without destroying them.
-   */
-  void Empty();
+  void SetDeallocator(nsDequeFunctor<T>* aDeallocator) {
+    delete mDeallocator;
+    mDeallocator = aDeallocator;
+  }
 };
 #endif
