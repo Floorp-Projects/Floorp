@@ -159,8 +159,8 @@ struct ModuleEnvironment {
   // validating an asm.js module) and immutable during compilation:
   Maybe<uint32_t> dataCount;
   MemoryUsage memoryUsage;
-  uint32_t minMemoryLength;
-  Maybe<uint32_t> maxMemoryLength;
+  uint64_t minMemoryLength;
+  Maybe<uint64_t> maxMemoryLength;
   uint32_t numStructTypes;
   TypeDefVector types;
   FuncTypeWithIdPtrVector funcTypes;

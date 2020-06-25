@@ -442,7 +442,8 @@ class WasmTableObject : public NativeObject {
   // Note that, after creation, a WasmTableObject's table() is not initialized
   // and must be initialized before use.
 
-  static WasmTableObject* create(JSContext* cx, const wasm::Limits& limits,
+  static WasmTableObject* create(JSContext* cx, uint32_t initialLength,
+                                 mozilla::Maybe<uint32_t> maximumLength,
                                  wasm::TableKind tableKind, HandleObject proto);
   wasm::Table& table() const;
 };
