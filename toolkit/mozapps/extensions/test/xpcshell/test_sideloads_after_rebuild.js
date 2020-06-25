@@ -39,7 +39,10 @@ add_task(async function test_sideloads_after_rebuild() {
   // the same addons available
   await promiseShutdownManager();
   // Reset our scope pref so the scope limitation works.
-  Services.prefs.clearUserPref("extensions.sideloadScopes");
+  Services.prefs.setIntPref(
+    "extensions.sideloadScopes",
+    AddonManager.SCOPE_PROFILE
+  );
 
   // Try to sideload from a non-profile directory.
   await createWebExtension(
