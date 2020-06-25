@@ -175,7 +175,7 @@ wrench-deps:
         fetch:
             - android-rs-glue
         toolchain:
-            - linux64-rust-1.41  # whatever m-c is built with
+            - linux64-rust-1.43  # whatever m-c is built with
 
 wgpu-deps:
     description: "Downloads all the crates needed for testing wgpu"
@@ -193,7 +193,7 @@ wgpu-deps:
         fetch:
             - android-rs-glue
         toolchain:
-            - linux64-rust-1.41  # whatever m-c is built with
+            - linux64-rust-1.43  # whatever m-c is built with
 
 linux64-lucetc:
     description: "lucetc build process"
