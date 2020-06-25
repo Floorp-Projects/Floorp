@@ -13682,6 +13682,17 @@ void CodeGenerator::emitAssertRangeD(const Range* r, FloatRegister input,
   }
 }
 
+void CodeGenerator::visitAssertClass(LAssertClass* ins) {
+  Register obj = ToRegister(ins->input());
+  Register temp = ToRegister(ins->getTemp(0));
+
+  Label success;
+  masm.branchTestObjClassNoSpectreMitigations(
+      Assembler::Equal, obj, ins->mir()->getClass(), temp, &success);
+  masm.assumeUnreachable("Wrong KnownClass during run-time");
+  masm.bind(&success);
+}
+
 void CodeGenerator::visitAssertResultV(LAssertResultV* ins) {
 #ifdef DEBUG
   const ValueOperand value = ToValue(ins, LAssertResultV::Input);

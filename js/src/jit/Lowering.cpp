@@ -4173,6 +4173,12 @@ void LIRGenerator::visitAssertRange(MAssertRange* ins) {
   add(lir);
 }
 
+void LIRGenerator::visitAssertClass(MAssertClass* ins) {
+  auto* lir =
+      new (alloc()) LAssertClass(useRegisterAtStart(ins->input()), temp());
+  add(lir, ins);
+}
+
 void LIRGenerator::visitCallGetProperty(MCallGetProperty* ins) {
   LCallGetProperty* lir =
       new (alloc()) LCallGetProperty(useBoxAtStart(ins->value()));
