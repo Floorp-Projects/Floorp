@@ -284,6 +284,7 @@ bool WarpBuilder::build() {
     return false;
   }
 
+  MOZ_ASSERT_IF(info().osrPc(), graph().osrBlock());
   MOZ_ASSERT(loopStack_.empty());
   MOZ_ASSERT(loopDepth_ == 0);
 

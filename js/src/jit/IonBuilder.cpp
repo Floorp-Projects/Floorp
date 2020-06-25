@@ -1409,25 +1409,7 @@ AbortReasonOr<Ok> IonBuilder::maybeAddOsrTypeBarriers() {
   // the types in the preheader.
 
   MBasicBlock* osrBlock = graph().osrBlock();
-  if (!osrBlock) {
-    // Because IonBuilder does not compile catch blocks, it's possible to
-    // end up without an OSR block if the OSR pc is only reachable via a
-    // break-statement inside the catch block. For instance:
-    //
-    //   for (;;) {
-    //       try {
-    //           throw 3;
-    //       } catch(e) {
-    //           break;
-    //       }
-    //   }
-    //   while (..) { } // <= OSR here, only reachable via catch block.
-    //
-    // For now we just abort in this case.
-    MOZ_ASSERT(graph().hasTryBlock());
-    return abort(AbortReason::Disable,
-                 "OSR block only reachable through catch block");
-  }
+  MOZ_ASSERT(osrBlock);
 
   MBasicBlock* preheader = osrBlock->getSuccessor(0);
   MBasicBlock* header = preheader->getSuccessor(0);

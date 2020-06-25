@@ -7,4 +7,4 @@ for (;;) {
         break;
     }
 }
-for (var i = 0; i < 15; i++) {}
+for (var i = 0; i < 1500; i++) {}
