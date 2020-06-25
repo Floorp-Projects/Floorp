@@ -14,6 +14,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/StaticPrefs_mathml.h"
 
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
@@ -1311,6 +1312,8 @@ bool nsMathMLChar::StretchEnumContext::EnumCallback(
     openTypeTable = nsOpenTypeTable::Create(fontGroup->GetFirstValidFont());
     if (openTypeTable) {
       glyphTable = openTypeTable.get();
+    } else if (StaticPrefs::mathml_stixgeneral_operator_stretching_disabled()) {
+      glyphTable = &gGlyphTableList->mUnicodeTable;
     } else {
       // Otherwise try to find a .properties file corresponding to that font
       // family or fallback to the Unicode table.
@@ -1527,6 +1530,14 @@ nsresult nsMathMLChar::StretchInternal(
         font.fontlist.GetFontlist()->mNames;
     for (const FontFamilyName& name : fontlist) {
       if (StretchEnumContext::EnumCallback(name, name.IsGeneric(), &enumData)) {
+        if (name.IsNamedFamily(NS_LITERAL_STRING("STIXGeneral"))) {
+          AutoTArray<nsString, 1> params{
+              NS_LITERAL_STRING("https://developer.mozilla.org/docs/Mozilla/"
+                                "MathML_Project/Fonts")};
+          aForFrame->PresContext()->Document()->WarnOnceAbout(
+              dom::Document::eMathML_DeprecatedStixgeneralOperatorStretching,
+              false, params);
+        }
         break;
       }
     }
