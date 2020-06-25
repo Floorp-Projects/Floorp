@@ -116,15 +116,16 @@ class CodeGeneratorShared : public LElementVisitor {
  protected:
   // The offset of the first instruction of the OSR entry block from the
   // beginning of the code buffer.
-  size_t osrEntryOffset_;
+  mozilla::Maybe<size_t> osrEntryOffset_ = {};
 
   TempAllocator& alloc() const { return graph.mir().alloc(); }
 
-  inline void setOsrEntryOffset(size_t offset) {
-    MOZ_ASSERT(osrEntryOffset_ == 0);
-    osrEntryOffset_ = offset;
+  void setOsrEntryOffset(size_t offset) { osrEntryOffset_.emplace(offset); }
+
+  size_t getOsrEntryOffset() const {
+    MOZ_RELEASE_ASSERT(osrEntryOffset_.isSome());
+    return *osrEntryOffset_;
   }
-  inline size_t getOsrEntryOffset() const { return osrEntryOffset_; }
 
   // The offset of the first instruction of the body.
   // This skips the arguments type checks.
