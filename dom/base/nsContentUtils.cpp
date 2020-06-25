@@ -5555,14 +5555,9 @@ bool nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession,
     return true;
   }
 
-  Document* targetDoc = target->OwnerDoc();
-  nsPIDOMWindowOuter* targetWin = targetDoc->GetWindow();
-  if (!targetWin) {
-    return true;
-  }
-
   // Always allow dropping onto chrome shells.
-  if (targetWin->GetBrowsingContext()->IsChrome()) {
+  BrowsingContext* targetBC = target->OwnerDoc()->GetBrowsingContext();
+  if (targetBC->IsChrome()) {
     return false;
   }
 
@@ -5573,13 +5568,13 @@ bool nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession,
   if (doc) {
     // Get each successive parent of the source document and compare it to
     // the drop document. If they match, then this is a drag from a child frame.
-    do {
-      doc = doc->GetInProcessParentDocument();
-      if (doc == targetDoc) {
-        // The drag is from a child frame.
+    for (BrowsingContext* bc = doc->GetBrowsingContext()->GetParent(); bc;
+         bc = bc->GetParent()) {
+      if (bc == targetBC) {
+        // The drag is from a descendant frame.
         return true;
       }
-    } while (doc);
+    }
   }
 
   return false;
