@@ -6018,63 +6018,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   //   5. Throw an error dialog box...
   //
   if (NS_FAILED(aStatus)) {
-    // Handle iframe document not loading error because source was
-    // a tracking URL. We make a note of this iframe node by including
-    // it in a dedicated array of blocked tracking nodes under its parent
-    // document. (document of parent window of blocked document)
-    if (!isTopFrame &&
-        UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aStatus)) {
-      UnblockEmbedderLoadEventForFailure();
-
-      // We don't really need to add the blocked node if we are not testing.
-      // This could save a IPC here.
-      if (!StaticPrefs::
-              privacy_trackingprotection_testing_report_blocked_node()) {
-        return NS_OK;
-      }
-
-      RefPtr<BrowsingContext> bc = GetBrowsingContext();
-      RefPtr<BrowsingContext> parentBC = bc->GetParent();
-
-      if (!parentBC) {
-        return NS_OK;
-      }
-
-      if (parentBC->IsInProcess()) {
-        // We can directly add the blocked node in the parent document if the
-        // parent is in the same process.
-        nsCOMPtr<nsPIDOMWindowOuter> parentOuter = parentBC->GetDOMWindow();
-
-        if (!parentOuter) {
-          return NS_OK;
-        }
-
-        nsCOMPtr<nsPIDOMWindowInner> parentInner =
-            parentOuter->GetCurrentInnerWindow();
-
-        if (!parentInner) {
-          return NS_OK;
-        }
-
-        RefPtr<Document> parentDoc;
-        parentDoc = parentInner->GetExtantDoc();
-        if (!parentDoc) {
-          return NS_OK;
-        }
-
-        parentDoc->AddBlockedNodeByClassifier(bc->GetEmbedderElement());
-      } else {
-        // If the parent is out-of-process, we send to the process of the
-        // document which embeds the frame to add the blocked node there.
-        RefPtr<BrowserChild> browserChild = BrowserChild::GetFrom(this);
-        if (browserChild) {
-          Unused << browserChild->SendReportBlockedEmbedderNodeByClassifier();
-        }
-      }
-
-      return NS_OK;
-    }
-
     nsCOMPtr<nsIInputStream> newPostData;
     nsCOMPtr<nsIURI> newURI =
         AttemptURIFixup(aChannel, aStatus, Some(mOriginalUriString), mLoadType,
