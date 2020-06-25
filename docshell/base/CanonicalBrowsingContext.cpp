@@ -772,6 +772,7 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsAString& aRemoteType,
         /* aFrameElement = */ nullptr,
         /* aRemoteType = */ aRemoteType,
         /* aPriority = */ hal::PROCESS_PRIORITY_FOREGROUND,
+        /* aOpener = */ nullptr,
         /* aPreferUsed = */ false);
     if (!change->mContentParent) {
       change->Cancel(NS_ERROR_FAILURE);

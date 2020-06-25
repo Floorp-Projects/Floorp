@@ -10,12 +10,23 @@ RandomSelector.prototype = {
   classID: Components.ID("{c616fcfd-9737-41f1-aa74-cee72a38f91b}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIContentProcessProvider]),
 
-  provideProcess(aType, aProcesses, aMaxCount) {
+  provideProcess(aType, aOpener, aProcesses, aMaxCount) {
     if (aProcesses.length < aMaxCount) {
       return Ci.nsIContentProcessProvider.NEW_PROCESS;
     }
 
-    return Math.floor(Math.random() * aMaxCount);
+    let startIdx = Math.floor(Math.random() * aMaxCount);
+    let curIdx = startIdx;
+
+    do {
+      if (aProcesses[curIdx].opener === aOpener) {
+        return curIdx;
+      }
+
+      curIdx = (curIdx + 1) % aMaxCount;
+    } while (curIdx !== startIdx);
+
+    return Ci.nsIContentProcessProvider.NEW_PROCESS;
   },
 };
 
@@ -27,7 +38,7 @@ MinTabSelector.prototype = {
   classID: Components.ID("{2dc08eaf-6eef-4394-b1df-a3a927c1290b}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIContentProcessProvider]),
 
-  provideProcess(aType, aProcesses, aMaxCount) {
+  provideProcess(aType, aOpener, aProcesses, aMaxCount) {
     if (aProcesses.length < aMaxCount) {
       return Ci.nsIContentProcessProvider.NEW_PROCESS;
     }
@@ -43,7 +54,7 @@ MinTabSelector.prototype = {
     for (let i = 0; i < aMaxCount; i++) {
       let process = aProcesses[i];
       let tabCount = process.tabCount;
-      if (tabCount < min) {
+      if (process.opener === aOpener && tabCount < min) {
         min = tabCount;
         candidate = i;
       }
