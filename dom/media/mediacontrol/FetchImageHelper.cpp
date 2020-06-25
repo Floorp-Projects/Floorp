@@ -146,7 +146,7 @@ NS_IMETHODIMP FetchImageHelper::ImageFetchListener::OnImageReady(
   mChannel = nullptr;
 
   MOZ_ASSERT(mHelper);
-  if (NS_FAILED(aStatus)) {
+  if (NS_FAILED(aStatus) || !aImage) {
     mHelper->HandleFetchFail();
     Clear();
     return aStatus;
