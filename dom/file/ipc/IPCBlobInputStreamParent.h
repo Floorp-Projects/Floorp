@@ -12,6 +12,11 @@
 class nsIInputStream;
 
 namespace mozilla {
+
+namespace net {
+class SocketProcessParent;
+}
+
 namespace dom {
 
 class NS_NO_VTABLE IPCBlobInputStreamParentCallback {
@@ -40,6 +45,10 @@ class IPCBlobInputStreamParent final : public PIPCBlobInputStreamParent {
       const nsID& aID, uint64_t aSize,
       mozilla::ipc::PBackgroundParent* aManager);
 
+  static already_AddRefed<IPCBlobInputStreamParent> Create(
+      const nsID& aID, uint64_t aSize,
+      mozilla::net::SocketProcessParent* aManager);
+
   void ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
 
   const nsID& ID() const { return mID; }
@@ -65,15 +74,19 @@ class IPCBlobInputStreamParent final : public PIPCBlobInputStreamParent {
   IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
                            mozilla::ipc::PBackgroundParent* aManager);
 
+  IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
+                           mozilla::net::SocketProcessParent* aManager);
+
   ~IPCBlobInputStreamParent() = default;
 
   const nsID mID;
   const uint64_t mSize;
 
-  // Only 1 of these 2 is set. Raw pointer because these 2 managers are keeping
+  // Only 1 of these is set. Raw pointer because these managers are keeping
   // the parent actor alive. The pointers will be nullified in ActorDestroyed.
   ContentParent* mContentManager;
   mozilla::ipc::PBackgroundParent* mPBackgroundManager;
+  mozilla::net::SocketProcessParent* mSocketProcessManager;
 
   RefPtr<IPCBlobInputStreamParentCallback> mCallback;
 

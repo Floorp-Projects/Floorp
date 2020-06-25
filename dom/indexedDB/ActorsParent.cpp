@@ -13902,7 +13902,14 @@ SafeRefPtr<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
     return nullptr;
   }
 
-  const nsID& id = inputStreamParams.get_IPCBlobInputStreamParams().id();
+  const IPCBlobInputStreamParams& ipcBlobInputStreamParams =
+      inputStreamParams.get_IPCBlobInputStreamParams();
+  if (ipcBlobInputStreamParams.type() !=
+      IPCBlobInputStreamParams::TIPCBlobInputStreamRef) {
+    return nullptr;
+  }
+
+  const nsID& id = ipcBlobInputStreamParams.get_IPCBlobInputStreamRef().id();
 
   RefPtr<FileInfo> fileInfo;
   if (!mMappedBlobs.Get(id, getter_AddRefs(fileInfo))) {

@@ -123,6 +123,9 @@ class SocketProcessChild final
   mozilla::ipc::IPCResult RecvNotifyObserver(const nsCString& aTopic,
                                              const nsString& aData);
 
+  virtual already_AddRefed<PIPCBlobInputStreamChild>
+  AllocPIPCBlobInputStreamChild(const nsID& aID, const uint64_t& aSize);
+
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();

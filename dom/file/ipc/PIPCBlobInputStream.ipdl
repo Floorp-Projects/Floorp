@@ -7,6 +7,7 @@ include protocol PChildToParentStream;
 include protocol PContent;
 include protocol PFileDescriptorSet;
 include protocol PParentToChildStream;
+include protocol PSocketProcess;
 
 include IPCStream;
 
@@ -15,7 +16,7 @@ namespace dom {
 
 refcounted protocol PIPCBlobInputStream
 {
-  manager PBackground or PContent;
+  manager PBackground or PContent or PSocketProcess;
 
 parent:
   async StreamNeeded();

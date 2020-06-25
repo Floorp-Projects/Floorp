@@ -6,8 +6,10 @@
 
 #include "IPCBlobInputStream.h"
 #include "IPCBlobInputStreamChild.h"
+#include "IPCBlobInputStreamParent.h"
 #include "IPCBlobInputStreamStorage.h"
 #include "mozilla/ipc/InputStreamParams.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/SlicedInputStream.h"
 #include "mozilla/NonBlockingAsyncInputStream.h"
 #include "IPCBlobInputStreamThread.h"
@@ -19,6 +21,9 @@
 #include "nsStringStream.h"
 
 namespace mozilla {
+
+using net::SocketProcessParent;
+
 namespace dom {
 
 class IPCBlobInputStream;
@@ -584,7 +589,36 @@ void IPCBlobInputStream::Serialize(
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
-  SerializeInternal(aParams);
+  // So far we support only socket process serialization.
+  MOZ_DIAGNOSTIC_ASSERT(aManager == SocketProcessParent::GetSingleton(),
+                        "Serializing an IPCBlobInputStream parent to child is "
+                        "wrong! The caller must be fixed! See IPCBlobUtils.h.");
+  SocketProcessParent* socketActor = SocketProcessParent::GetSingleton();
+
+  nsresult rv;
+  nsCOMPtr<nsIAsyncInputStream> asyncRemoteStream;
+  RefPtr<IPCBlobInputStreamParent> parentActor;
+  {
+    MutexAutoLock lock(mMutex);
+    rv = EnsureAsyncRemoteStream(lock);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    asyncRemoteStream = mAsyncRemoteStream;
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
+  MOZ_ASSERT(asyncRemoteStream);
+
+  parentActor = IPCBlobInputStreamParent::Create(asyncRemoteStream, mLength, 0,
+                                                 &rv, socketActor);
+  MOZ_ASSERT(parentActor);
+
+  if (!socketActor->SendPIPCBlobInputStreamConstructor(
+          parentActor, parentActor->ID(), parentActor->Size())) {
+    MOZ_CRASH("The serialization is not supposed to fail");
+  }
+
+  aParams = mozilla::ipc::IPCBlobInputStreamParams(parentActor);
 }
 
 void IPCBlobInputStream::Serialize(
@@ -595,14 +629,9 @@ void IPCBlobInputStream::Serialize(
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
-  SerializeInternal(aParams);
-}
-
-void IPCBlobInputStream::SerializeInternal(
-    mozilla::ipc::InputStreamParams& aParams) {
   MutexAutoLock lock(mMutex);
 
-  mozilla::ipc::IPCBlobInputStreamParams params;
+  mozilla::ipc::IPCBlobInputStreamRef params;
   params.id() = mActor->ID();
   params.start() = mStart;
   params.length() = mLength;
@@ -852,7 +881,7 @@ class InputStreamLengthCallbackRunnable final : public CancelableRunnable {
 
   nsCOMPtr<nsIInputStreamLengthCallback> mCallback;
   RefPtr<IPCBlobInputStream> mStream;
-  int64_t mLength;
+  const int64_t mLength;
 };
 
 }  // namespace
