@@ -23,6 +23,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsICertStorage.h"
+#include "nsThreadUtils.h"
 #include "prenv.h"
 
 #ifdef MOZ_NEW_XULSTORE
@@ -154,10 +156,25 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
       cache->EnsureShutdownWriteComplete();
     }
 
+    nsresult rv;
 #ifdef MOZ_NEW_XULSTORE
-    DebugOnly<nsresult> rv = XULStore::Shutdown();
+    rv = XULStore::Shutdown();
     NS_ASSERTION(NS_SUCCEEDED(rv), "XULStore::Shutdown() failed.");
 #endif
+
+    nsCOMPtr<nsICertStorage> certStorage =
+        do_GetService("@mozilla.org/security/certstorage;1", &rv);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get nsICertStorage");
+    if (NS_SUCCEEDED(rv)) {
+      SpinEventLoopUntil([&]() {
+        int32_t remainingOps;
+        nsresult rv = certStorage->GetRemainingOperationCount(&remainingOps);
+        NS_ASSERTION(NS_SUCCEEDED(rv),
+                     "nsICertStorage::getRemainingOperationCount failed during "
+                     "shutdown");
+        return NS_FAILED(rv) || remainingOps <= 0;
+      });
+    }
   }
   if (aPhase == sFastShutdownPhase) {
     StopLateWriteChecks();

@@ -261,4 +261,12 @@ interface nsICertStorage : nsISupports {
    */
   [must_use]
   Array<Array<octet> > findCertsBySubject(in Array<octet> subject);
+
+  /**
+   * Get the count of remaining async operations. Called to ensure we don't skip
+   * or interrupt any operations during fast shutdown.
+   * Must only be called from the main thread.
+   */
+  [must_use]
+  int32_t GetRemainingOperationCount();
 };
