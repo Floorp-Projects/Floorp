@@ -1,6 +1,7 @@
 [css-masonry]
-title = "experimental-features-css-masonry-title"
+title = "experimental-features-css-masonry"
 description = "experimental-features-css-masonry-description"
+description-links = {explainer = "https://github.com/w3c/csswg-drafts/blob/master/css-grid-2/MASONRY-EXPLAINER.md", w3c-issue = "https://github.com/w3c/csswg-drafts/issues/4650", bug = "https://bugzilla.mozilla.org/show_bug.cgi?id=1607439"}
 restart-required = false
 preference = "layout.css.grid-template-masonry-value.enabled"
 type = "boolean"
@@ -9,7 +10,7 @@ is-public = true
 default-value = false
 
 [web-gpu]
-title = "experimental-features-web-gpu-title"
+title = "experimental-features-web-gpu"
 description = "experimental-features-web-gpu-description"
 restart-required = true
 preference = "dom.webgpu.enabled"
@@ -19,7 +20,7 @@ is-public = {default = false, nightly = true}
 default-value = false
 
 [avif]
-title = "experimental-features-avif-title"
+title = "experimental-features-avif"
 description = "experimental-features-avif-description"
 restart-required = false
 preference = "image.avif.enabled"

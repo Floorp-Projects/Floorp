@@ -72,20 +72,6 @@ nsBrowserStatusFilter::GetDOMWindow(mozIDOMWindowProxy** aResult) {
 }
 
 NS_IMETHODIMP
-nsBrowserStatusFilter::GetDOMWindowID(uint64_t* aResult) {
-  *aResult = 0;
-  MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetDOMWindowID");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsBrowserStatusFilter::GetInnerDOMWindowID(uint64_t* aResult) {
-  *aResult = 0;
-  MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetInnerDOMWindowID");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsBrowserStatusFilter::GetIsTopLevel(bool* aIsTopLevel) {
   *aIsTopLevel = false;
   MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetIsTopLevel");

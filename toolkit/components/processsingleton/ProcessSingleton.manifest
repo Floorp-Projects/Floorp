@@ -1,2 +1,1 @@
 category app-startup MainProcessSingleton service,@mozilla.org/main-process-singleton;1 process=main
-category app-startup ContentProcessSingleton service,@mozilla.org/content-process-singleton;1 process=content

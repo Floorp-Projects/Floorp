@@ -80,15 +80,22 @@ var gExperimentalPane = {
         this.addPrefObserver(feature.preference, this._boundRestartObserver);
       }
       let template = this._template.content.cloneNode(true);
+      let description = template.querySelector(".featureGateDescription");
+      description.id = feature.id + "-description";
+      let descriptionLinks = feature.descriptionLinks || {};
+      for (let [key, value] of Object.entries(descriptionLinks)) {
+        let link = document.createElement("a");
+        link.setAttribute("data-l10n-name", key);
+        link.setAttribute("href", value);
+        link.setAttribute("target", "_blank");
+        description.append(link);
+      }
+      document.l10n.setAttributes(description, feature.description);
       let checkbox = template.querySelector(".featureGateCheckbox");
       checkbox.setAttribute("preference", feature.preference);
       checkbox.id = feature.id;
-      let title = template.querySelector(".featureGateTitle");
-      document.l10n.setAttributes(title, feature.title);
-      title.setAttribute("control", feature.id);
-      let description = template.querySelector(".featureGateDescription");
-      document.l10n.setAttributes(description, feature.description);
-      description.setAttribute("control", feature.id);
+      checkbox.setAttribute("aria-describedby", description.id);
+      document.l10n.setAttributes(checkbox, feature.title);
       frag.appendChild(template);
       let preference = Preferences.add({
         id: feature.preference,

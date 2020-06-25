@@ -1,0 +1,25 @@
+{
+  "name": "redirect-to-android-resource",
+  "description": "Redirects script requests from trackers.html to moz-extension:-resource packaged in the APK (resource://android/...)",
+  "manifest_version": 2,
+  "version": "1",
+  "applications": {
+    "gecko": {
+      "id": "redirect-to-android-resource@tests.mozilla.org"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "geckoViewAddons",
+    "nativeMessaging",
+    "webRequest",
+    "webRequestBlocking",
+    "http://localhost/",
+    "http://trackertest.org/",
+    "https://tracking.example.com/",
+    "https://itisatracker.org/tracker.js"
+  ],
+  "web_accessible_resources": ["web-accessible-script.js"]
+}

@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "WinContentSystemParameters.h"
 #include "WinUtils.h"
+#include "nsUXThemeData.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 
 namespace mozilla {
 namespace widget {
@@ -22,6 +24,7 @@ struct WinContentSystemParameters::Detail {
   uint32_t validCachedValueBitfield{0};
   bool cachedIsPerMonitorDPIAware{false};
   float cachedSystemDPI{0.0f};
+  bool cachedFlatMenusEnabled{false};
 };
 
 // static
@@ -52,6 +55,14 @@ float WinContentSystemParameters::SystemDPI() {
   return mDetail->cachedSystemDPI;
 }
 
+bool WinContentSystemParameters::AreFlatMenusEnabled() {
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  OffTheBooksMutexAutoLock lock(mDetail->mutex);
+  MOZ_RELEASE_ASSERT(IsCachedValueValid(SystemParameterId::FlatMenusEnabled));
+  return mDetail->cachedFlatMenusEnabled;
+}
+
 void WinContentSystemParameters::SetContentValueInternal(
     const SystemParameterKVPair& aKVPair) {
   MOZ_ASSERT(XRE_IsContentProcess());
@@ -72,19 +83,14 @@ void WinContentSystemParameters::SetContentValueInternal(
       mDetail->cachedSystemDPI = aKVPair.value();
       return;
 
+    case SystemParameterId::FlatMenusEnabled:
+      mDetail->cachedFlatMenusEnabled = aKVPair.value();
+      return;
+
     case SystemParameterId::Count:
       MOZ_CRASH("Invalid SystemParameterId");
   }
   MOZ_CRASH("Unhandled SystemParameterId");
-}
-
-void WinContentSystemParameters::SetContentValue(
-    const SystemParameterKVPair& aKVPair) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
-  OffTheBooksMutexAutoLock lock(mDetail->mutex);
-  SetContentValueInternal(aKVPair);
 }
 
 void WinContentSystemParameters::SetContentValues(
@@ -99,14 +105,13 @@ void WinContentSystemParameters::SetContentValues(
 }
 
 bool WinContentSystemParameters::GetParentValueInternal(
-    uint8_t aId, SystemParameterKVPair* aKVPair) {
+    SystemParameterId aId, SystemParameterKVPair* aKVPair) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(aId < uint8_t(SystemParameterId::Count));
   MOZ_ASSERT(aKVPair);
 
-  aKVPair->id() = aId;
+  aKVPair->id() = uint8_t(aId);
 
-  switch (SystemParameterId(aId)) {
+  switch (aId) {
     case SystemParameterId::IsPerMonitorDPIAware:
       aKVPair->value() = WinUtils::IsPerMonitorDPIAware();
       return true;
@@ -115,18 +120,14 @@ bool WinContentSystemParameters::GetParentValueInternal(
       aKVPair->value() = WinUtils::SystemDPI();
       return true;
 
+    case SystemParameterId::FlatMenusEnabled:
+      aKVPair->value() = nsUXThemeData::AreFlatMenusEnabled();
+      return true;
+
     case SystemParameterId::Count:
       MOZ_CRASH("Invalid SystemParameterId");
   }
   MOZ_CRASH("Unhandled SystemParameterId");
-}
-
-bool WinContentSystemParameters::GetParentValue(
-    uint8_t aId, dom::SystemParameterKVPair* aKVPair) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_RELEASE_ASSERT(aId < uint8_t(SystemParameterId::Count));
-  MOZ_RELEASE_ASSERT(aKVPair);
-  return GetParentValueInternal(aId, aKVPair);
 }
 
 nsTArray<dom::SystemParameterKVPair>
@@ -136,10 +137,28 @@ WinContentSystemParameters::GetParentValues() {
   nsTArray<dom::SystemParameterKVPair> results;
   for (uint8_t i = 0; i < uint8_t(SystemParameterId::Count); ++i) {
     dom::SystemParameterKVPair kvPair{};
-    GetParentValueInternal(i, &kvPair);
+    GetParentValueInternal(SystemParameterId(i), &kvPair);
     results.AppendElement(std::move(kvPair));
   }
   return results;
+}
+
+void WinContentSystemParameters::OnThemeChanged() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsTArray<dom::SystemParameterKVPair> updates;
+
+  {
+    dom::SystemParameterKVPair kvPair{};
+    GetParentValueInternal(SystemParameterId::FlatMenusEnabled, &kvPair);
+    updates.AppendElement(std::move(kvPair));
+  }
+
+  nsTArray<dom::ContentParent*> contentProcesses{};
+  dom::ContentParent::GetAll(contentProcesses);
+  for (auto contentProcess : contentProcesses) {
+    Unused << contentProcess->SendUpdateSystemParameters(updates);
+  }
 }
 
 bool WinContentSystemParameters::IsCachedValueValid(SystemParameterId aId) {

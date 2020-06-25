@@ -262,6 +262,15 @@ enum JSWhyMagic {
    */
   JS_WRITABLESTREAM_CLOSE_RECORD,
 
+  /**
+   * The ReadableStream pipe-to operation concludes with a "finalize" operation
+   * that accepts an optional |error| argument.  In certain cases that optional
+   * |error| must be stored in a handler function, for use after a promise has
+   * settled.  We represent the argument not being provided, in those cases,
+   * using this magic value.
+   */
+  JS_READABLESTREAM_PIPETO_FINALIZE_WITHOUT_ERROR,
+
   JS_WHY_MAGIC_COUNT
 };
 

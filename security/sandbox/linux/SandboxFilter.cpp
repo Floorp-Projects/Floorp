@@ -1596,6 +1596,8 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
         return If(request == FIOCLEX, Allow())
             // Rust's stdlib also uses FIONBIO instead of equivalent fcntls.
             .ElseIf(request == FIONBIO, Allow())
+            // This is used by PR_Available in nsSocketInputStream::Available.
+            .ElseIf(request == FIONREAD, Allow())
             // ffmpeg, and anything else that calls isatty(), will be told
             // that nothing is a typewriter:
             .ElseIf(request == TCGETS, Error(ENOTTY))
@@ -1646,6 +1648,10 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
       CASES_FOR_getgid:
       CASES_FOR_geteuid:
       CASES_FOR_getegid:
+        return Allow();
+
+      // Bug 1640612
+      case __NR_uname:
         return Allow();
 
       default:

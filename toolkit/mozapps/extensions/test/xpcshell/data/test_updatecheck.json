@@ -4,7 +4,7 @@
       "updates": [
         {
           "version": "1.0",
-          "update_link": "https://localhost:4444/addons/test1.xpi",
+          "update_link": "https://example.com/addons/test1.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "1",
@@ -15,7 +15,7 @@
         {
           "_comment_": "This update is incompatible and so should not be considered a valid update",
           "version": "2.0",
-          "update_link": "https://localhost:4444/addons/test2.xpi",
+          "update_link": "https://example.com/addons/test2.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "2",
@@ -25,7 +25,7 @@
         },
         {
           "version": "3.0",
-          "update_link": "https://localhost:4444/addons/test3.xpi",
+          "update_link": "https://example.com/addons/test3.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "1",
@@ -35,7 +35,7 @@
         },
         {
           "version": "2.0",
-          "update_link": "https://localhost:4444/addons/test2.xpi",
+          "update_link": "https://example.com/addons/test2.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "1",
@@ -46,7 +46,7 @@
         {
           "_comment_": "This update is incompatible and so should not be considered a valid update",
           "version": "4.0",
-          "update_link": "https://localhost:4444/addons/test4.xpi",
+          "update_link": "https://example.com/addons/test4.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "2",
@@ -57,69 +57,13 @@
       ]
     },
 
-    "test_bug378216_5@tests.mozilla.org": {
-      "_comment_": "An update which expects a signature. It will fail since signatures are ",
-      "_comment_": "supported in this format.",
-      "_comment_": "The updateLink will also be ignored since it is not secure and there ",
-      "_comment_": "is no updateHash.",
-
-      "updates": [
-        {
-          "version": "2.0",
-          "update_link": "http://localhost:4444/broken.xpi",
-          "applications": {
-            "gecko": {
-              "strict_min_version": "1",
-              "strict_max_version": "1"
-             }
-           }
-         }
-      ]
-    },
-
-    "test_bug378216_5@tests.mozilla.org": {
-      "updates": [
-        {
-          "version": "2.0",
-          "update_link": "http://localhost:4444/broken.xpi",
-          "applications": {
-            "gecko": {
-              "strict_min_version": "1",
-              "strict_max_version": "1"
-             }
-           }
-         }
-      ]
-    },
-
-    "test_bug378216_7@tests.mozilla.org": {
-      "_comment_": "An update which expects a signature. It will fail since signatures are ",
-      "_comment_": "supported in this format.",
-      "_comment_": "The updateLink will also be ignored since it is not secure ",
-      "_comment_": "and there is no updateHash.",
-
-      "updates": [
-        {
-          "version": "2.0",
-          "update_link": "http://localhost:4444/broken.xpi",
-          "applications": {
-            "gecko": {
-              "strict_min_version": "1",
-              "strict_max_version": "2"
-            }
-          }
-        }
-      ]
-    },
-
     "test_bug378216_8@tests.mozilla.org": {
-      "_comment_": "The updateLink will be ignored since it is not secure and ",
-      "_comment_": "there is no updateHash.",
+      "_comment_": "The updateLink will be ignored since it is not secure and there is no updateHash.",
 
       "updates": [
         {
           "version": "2.0",
-          "update_link": "http://localhost:4444/broken.xpi",
+          "update_link": "http://example.com/broken.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "1",
@@ -136,7 +80,7 @@
       "updates": [
         {
           "version": "2.0",
-          "update_link": "http://localhost:4444/broken.xpi",
+          "update_link": "http://example.com/broken.xpi",
           "update_hash": "sha256:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6",
           "applications": {
             "gecko": {
@@ -154,7 +98,7 @@
       "updates": [
         {
           "version": "2.0",
-          "update_link": "https://localhost:4444/broken.xpi",
+          "update_link": "https://example.com/broken.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "1",
@@ -171,7 +115,7 @@
       "updates": [
         {
           "version": "2.0",
-          "update_link": "https://localhost:4444/broken.xpi",
+          "update_link": "https://example.com/broken.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "1",
@@ -183,13 +127,12 @@
     },
 
     "test_bug378216_12@tests.mozilla.org": {
-      "_comment_": "The updateLink will not be used since the updateHash ",
-      "_comment_": "verifying it is not strong enough.",
+      "_comment_": "The updateLink will not be used since the updateHash verifying it is not strong enough.",
 
       "updates": [
         {
           "version": "2.0",
-          "update_link": "http://localhost:4444/broken.xpi",
+          "update_link": "http://example.com/broken.xpi",
           "update_hash": "sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6",
           "applications": {
             "gecko": {
@@ -202,13 +145,12 @@
     },
 
     "test_bug378216_13@tests.mozilla.org": {
-      "_comment_": "An update with a weak hash. The updateLink will used since it is ",
-      "_comment_": "a secure URL.",
+      "_comment_": "An update with a weak hash. The updateLink will used since it is a secure URL.",
 
       "updates": [
         {
           "version": "2.0",
-          "update_link": "https://localhost:4444/broken.xpi",
+          "update_link": "https://example.com/broken.xpi",
           "update_hash": "sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6",
           "applications": {
             "gecko": {
@@ -234,7 +176,7 @@
       "updates": [
         {
           "version": "1.0",
-          "update_link": "https://localhost:4444/addons/test1.xpi",
+          "update_link": "https://example.com/addons/test1.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "0.1",
@@ -244,7 +186,7 @@
         },
         {
           "version": "2.0",
-          "update_link": "https://localhost:4444/addons/test2.xpi",
+          "update_link": "https://example.com/addons/test2.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "0.5",
@@ -255,7 +197,7 @@
         {
           "_comment_": "Update for future app versions - should never be compatible",
           "version": "3.0",
-          "update_link": "https://localhost:4444/addons/test3.xpi",
+          "update_link": "https://example.com/addons/test3.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "2",
@@ -273,7 +215,7 @@
         {
           "_comment_": "Has compatibility override, but it doesn't match this app version",
           "version": "1.0",
-          "update_link": "https://localhost:4444/addons/test1.xpi",
+          "update_link": "https://example.com/addons/test1.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "0.1",
@@ -284,7 +226,7 @@
         {
           "_comment_": "Has compatibility override, so is incompaible",
           "version": "2.0",
-          "update_link": "https://localhost:4444/addons/test2.xpi",
+          "update_link": "https://example.com/addons/test2.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "0.5",
@@ -295,7 +237,7 @@
         {
           "_comment_": "Update for future app versions - should never be compatible",
           "version": "3.0",
-          "update_link": "https://localhost:4444/addons/test3.xpi",
+          "update_link": "https://example.com/addons/test3.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "2",
@@ -312,7 +254,7 @@
       "updates": [
         {
           "version": "1.0",
-          "update_link": "https://localhost:4444/addons/test1.xpi",
+          "update_link": "https://example.com/addons/test1.xpi",
           "_comment_": "strictCompatibility: true",
           "applications": {
             "gecko": {

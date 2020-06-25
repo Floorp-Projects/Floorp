@@ -12,6 +12,7 @@
 #include "nsDebug.h"
 #include "nsToolkit.h"
 #include "nsUXThemeConstants.h"
+#include "WinContentSystemParameters.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -391,6 +392,10 @@ void nsUXThemeData::UpdateNativeThemeInfo() {
 
 // static
 bool nsUXThemeData::AreFlatMenusEnabled() {
+  if (XRE_IsContentProcess()) {
+    return WinContentSystemParameters::GetSingleton()->AreFlatMenusEnabled();
+  }
+
   BOOL useFlat = FALSE;
   return !!::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ? useFlat
                                                                    : false;

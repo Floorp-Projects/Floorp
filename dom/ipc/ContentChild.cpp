@@ -19,6 +19,9 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BenchmarkStorageChild.h"
 #include "mozilla/ContentBlocking.h"
+#ifdef MOZ_GLEAN
+#  include "mozilla/FOGIPC.h"
+#endif
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MemoryTelemetry.h"
 #include "mozilla/NullPrincipal.h"
@@ -2304,6 +2307,16 @@ mozilla::ipc::IPCResult ContentChild::RecvThemeChanged(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvUpdateSystemParameters(
+    nsTArray<SystemParameterKVPair>&& aUpdates) {
+#ifdef XP_WIN
+  widget::WinContentSystemParameters::GetSingleton()->SetContentValues(
+      aUpdates);
+#endif
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvLoadProcessScript(
     const nsString& aURL) {
   auto* global = ContentProcessMessageManager::Get();
@@ -4233,6 +4246,13 @@ already_AddRefed<mozilla::dom::JSProcessActorChild> ContentChild::GetActor(
   actor->Init(aName, this);
   mProcessActors.Put(aName, RefPtr{actor});
   return actor.forget();
+}
+
+IPCResult ContentChild::RecvFlushFOGData(FlushFOGDataResolver&& aResolver) {
+#ifdef MOZ_GLEAN
+  glean::FlushFOGData(std::move(aResolver));
+#endif
+  return IPC_OK();
 }
 
 }  // namespace dom

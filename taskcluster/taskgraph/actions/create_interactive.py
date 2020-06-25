@@ -87,7 +87,6 @@ def context(params):
     title='Create Interactive Task',
     name='create-interactive',
     symbol='create-inter',
-    generic=True,
     description=(
         'Create a a copy of the task that you can interact with'
     ),

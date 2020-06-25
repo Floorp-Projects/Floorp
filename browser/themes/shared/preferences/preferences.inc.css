@@ -1125,19 +1125,18 @@ richlistitem .text-link:hover {
 }
 
 .featureGate {
-  display: grid;
-  grid-template-columns: min-content 1fr;
   margin-bottom: 16px;
 }
 
 .featureGateCheckbox {
-  align-self: center;
+  font-size: 1.14em;
+  -moz-box-align: center;
 }
 
-.featureGateTitle {
-  font-size: 1.14em;
+.featureGateCheckbox > .checkbox-label-box {
+  -moz-box-align: center;
 }
 
 .featureGateDescription {
-  grid-column: 2;
+  margin-inline-start: 28px;
 }

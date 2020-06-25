@@ -68,14 +68,6 @@ interface nsIBrowser : nsISupports
    */
   readonly attribute boolean isRemoteBrowser;
 
-  /**
-   * The nsIWebProgress instance responsible for handling progress events
-   * from the content process.
-   *
-   * Will always be non-null when isRemoteBrowser is true.
-   */
-  readonly attribute nsIWebProgress remoteWebProgressManager;
-
   readonly attribute nsIPrincipal contentPrincipal;
   readonly attribute nsIPrincipal contentPartitionedPrincipal;
   readonly attribute nsIPrincipal contentBlockingAllowListPrincipal;
@@ -138,7 +130,6 @@ interface nsIBrowser : nsISupports
    * @param aCSP the content security policy of the new document
    * @param aReferrerInfo the referrer info of the new document
    * @param aIsSynthetic whether or not the document is synthetic
-   * @param aInnerWindowID the inner window ID of the document
    * @param aHasRequestContextID whether or not the the request context has a
    *                             value (true) or null should be used (false)
    * @param aRequestContextID the request context ID
@@ -155,7 +146,6 @@ interface nsIBrowser : nsISupports
                                in nsIContentSecurityPolicy aCSP,
                                in nsIReferrerInfo aReferrerInfo,
                                in boolean aIsSynthetic,
-                               in uint64_t aInnerWindowID,
                                in boolean aHasRequestContextID,
                                in uint64_t aRequestContextID,
                                in AString aContentType);
