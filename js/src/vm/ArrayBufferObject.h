@@ -119,7 +119,7 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
   // Note: the eventual goal is to remove this from ArrayBuffer and have
   // (Shared)ArrayBuffers alias memory owned by some wasm::Memory object.
 
-  mozilla::Maybe<uint64_t> wasmMaxSize() const {
+  mozilla::Maybe<uint32_t> wasmMaxSize() const {
     return WasmArrayBufferMaxSize(this);
   }
   size_t wasmMappedSize() const { return WasmArrayBufferMappedSize(this); }
@@ -429,7 +429,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   MOZ_MUST_USE bool prepareForAsmJS();
 
   size_t wasmMappedSize() const;
-  mozilla::Maybe<uint64_t> wasmMaxSize() const;
+  mozilla::Maybe<uint32_t> wasmMaxSize() const;
   static MOZ_MUST_USE bool wasmGrowToSizeInPlace(
       uint32_t newSize, Handle<ArrayBufferObject*> oldBuf,
       MutableHandle<ArrayBufferObject*> newBuf, JSContext* cx);
@@ -680,12 +680,12 @@ class MutableWrappedPtrOperations<InnerViewTable, Wrapper>
 };
 
 class WasmArrayRawBuffer {
-  mozilla::Maybe<uint64_t> maxSize_;
+  mozilla::Maybe<uint32_t> maxSize_;
   size_t mappedSize_;  // Not including the header page
   uint32_t length_;
 
  protected:
-  WasmArrayRawBuffer(uint8_t* buffer, const mozilla::Maybe<uint64_t>& maxSize,
+  WasmArrayRawBuffer(uint8_t* buffer, const mozilla::Maybe<uint32_t>& maxSize,
                      size_t mappedSize, uint32_t length)
       : maxSize_(maxSize), mappedSize_(mappedSize), length_(length) {
     MOZ_ASSERT(buffer == dataPointer());
@@ -693,7 +693,7 @@ class WasmArrayRawBuffer {
 
  public:
   static WasmArrayRawBuffer* Allocate(uint32_t numBytes,
-                                      const mozilla::Maybe<uint64_t>& maxSize,
+                                      const mozilla::Maybe<uint32_t>& maxSize,
                                       const mozilla::Maybe<size_t>& mappedSize);
   static void Release(void* mem);
 
@@ -711,17 +711,17 @@ class WasmArrayRawBuffer {
 
   size_t mappedSize() const { return mappedSize_; }
 
-  mozilla::Maybe<uint64_t> maxSize() const { return maxSize_; }
+  mozilla::Maybe<uint32_t> maxSize() const { return maxSize_; }
 
   uint32_t byteLength() const { return length_; }
 
   MOZ_MUST_USE bool growToSizeInPlace(uint32_t oldSize, uint32_t newSize);
 
-  MOZ_MUST_USE bool extendMappedSize(uint64_t maxSize);
+  MOZ_MUST_USE bool extendMappedSize(uint32_t maxSize);
 
   // Try and grow the mapped region of memory. Does not change current size.
   // Does not move memory if no space to grow.
-  void tryGrowMaxSizeInPlace(uint64_t deltaMaxSize);
+  void tryGrowMaxSizeInPlace(uint32_t deltaMaxSize);
 };
 
 }  // namespace js

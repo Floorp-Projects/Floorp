@@ -320,9 +320,9 @@ typedef Vector<FuncImport, 0, SystemAllocPolicy> FuncImportVector;
 struct MetadataCacheablePod {
   ModuleKind kind;
   MemoryUsage memoryUsage;
-  uint64_t minMemoryLength;
+  uint32_t minMemoryLength;
   uint32_t globalDataLength;
-  Maybe<uint64_t> maxMemoryLength;
+  Maybe<uint32_t> maxMemoryLength;
   Maybe<uint32_t> startFuncIndex;
   Maybe<uint32_t> nameCustomSectionIndex;
   bool filenameIsURL;

@@ -45,9 +45,11 @@ using mozilla::MakeEnumeratedRange;
 #  endif
 #endif
 
-static_assert(MaxMemoryPages ==
+// More sanity checks.
+
+static_assert(MaxMemoryInitialPages <=
                   ArrayBufferObject::MaxBufferByteLength / PageSize,
-              "invariant");
+              "Memory sizing constraint");
 
 // All plausible targets must be able to do at least IEEE754 double
 // loads/stores, hence the lower limit of 8.  Some Intel processors support
@@ -589,10 +591,8 @@ bool wasm::IsValidARMImmediate(uint32_t i) {
   return valid;
 }
 
-uint64_t wasm::RoundUpToNextValidARMImmediate(uint64_t i) {
-  MOZ_ASSERT(i <= HighestValidARMImmediate);
-  static_assert(HighestValidARMImmediate == 0xff000000,
-                "algorithm relies on specific constant");
+uint32_t wasm::RoundUpToNextValidARMImmediate(uint32_t i) {
+  MOZ_ASSERT(i <= 0xff000000);
 
   if (i <= 16 * 1024 * 1024) {
     i = i ? mozilla::RoundUpPow2(i) : 0;
@@ -613,7 +613,7 @@ bool wasm::IsValidBoundsCheckImmediate(uint32_t i) {
 #endif
 }
 
-size_t wasm::ComputeMappedSize(uint64_t maxSize) {
+size_t wasm::ComputeMappedSize(uint32_t maxSize) {
   MOZ_ASSERT(maxSize % PageSize == 0);
 
   // It is the bounds-check limit, not the mapped size, that gets baked into
@@ -621,9 +621,9 @@ size_t wasm::ComputeMappedSize(uint64_t maxSize) {
   // *before* adding in the guard page.
 
 #ifdef JS_CODEGEN_ARM
-  uint64_t boundsCheckLimit = RoundUpToNextValidARMImmediate(maxSize);
+  uint32_t boundsCheckLimit = RoundUpToNextValidARMImmediate(maxSize);
 #else
-  uint64_t boundsCheckLimit = maxSize;
+  uint32_t boundsCheckLimit = maxSize;
 #endif
   MOZ_ASSERT(IsValidBoundsCheckImmediate(boundsCheckLimit));
 

@@ -119,6 +119,18 @@ wasmEvalText('(module (import "a" "" (func $foo (result f64))))', {a:{"":()=>{}}
 
 wasmValidateText('(module (memory 0))');
 wasmValidateText('(module (memory 1))');
+wasmValidateText('(module (memory 16384))');
+wasmFailValidateText('(module (memory 16385))', /initial memory size too big/);
+
+wasmEvalText('(module (memory 0 65536))')
+wasmFailValidateText('(module (memory 0 65537))', /maximum memory size too big/);
+
+// May OOM, but must not crash:
+try {
+    wasmEvalText('(module (memory 16384))');
+} catch (e) {
+    assertEq(String(e).indexOf("out of memory") !== -1, true);
+}
 
 var buf = wasmEvalText('(module (memory 1) (export "memory" (memory 0)))').exports.memory.buffer;
 assertEq(buf instanceof ArrayBuffer, true);
