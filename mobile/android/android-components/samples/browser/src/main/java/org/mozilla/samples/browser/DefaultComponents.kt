@@ -31,7 +31,6 @@ import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.thumbnails.ThumbnailsMiddleware
-import mozilla.components.browser.thumbnails.ThumbnailsUseCases
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -355,7 +354,6 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(sessionManager) }
-    val thumbnailsUseCases: ThumbnailsUseCases by lazy { ThumbnailsUseCases(store, thumbnailStorage) }
     val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(sessionManager, store) }
 }
