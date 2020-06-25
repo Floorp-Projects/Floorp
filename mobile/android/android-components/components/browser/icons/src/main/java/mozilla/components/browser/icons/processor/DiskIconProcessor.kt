@@ -17,7 +17,15 @@ class DiskIconProcessor(
     private val cache: ProcessorDiskCache
 ) : IconProcessor {
     interface ProcessorDiskCache {
-        fun put(context: Context, request: IconRequest, resource: IconRequest.Resource, icon: Icon)
+        /**
+         * Saves icon resources to cache.
+         * */
+        fun putResources(context: Context, request: IconRequest)
+
+        /**
+         * Saves icon bitmap to cache.
+         * */
+        fun putIcon(context: Context, resource: IconRequest.Resource, icon: Icon)
     }
 
     override fun process(
@@ -27,10 +35,12 @@ class DiskIconProcessor(
         icon: Icon,
         desiredSize: DesiredSize
     ): Icon {
-        if (resource != null && icon.shouldCacheOnDisk && !request.isPrivate) {
-            cache.put(context, request, resource, icon)
+        if (resource != null && !request.isPrivate) {
+            cache.putResources(context, request)
+            if (icon.shouldCacheOnDisk) {
+                cache.putIcon(context, resource, icon)
+            }
         }
-
         return icon
     }
 }

@@ -34,7 +34,8 @@ private const val WEBP_QUALITY = 90
  * Caching bitmaps and resource URLs on disk.
  */
 class IconDiskCache :
-    DiskIconLoader.LoaderDiskCache, DiskIconPreparer.PreparerDiskCache, DiskIconProcessor.ProcessorDiskCache {
+    DiskIconLoader.LoaderDiskCache, DiskIconPreparer.PreparerDiskCache,
+    DiskIconProcessor.ProcessorDiskCache {
     private val logger = Logger("Icons/IconDiskCache")
     private var iconResourcesCache: DiskLruCache? = null
     private var iconDataCache: DiskLruCache? = null
@@ -61,7 +62,7 @@ class IconDiskCache :
         return emptyList()
     }
 
-    internal fun putResources(context: Context, request: IconRequest) {
+    override fun putResources(context: Context, request: IconRequest) {
         try {
             synchronized(iconResourcesCacheWriteLock) {
                 val key = createKey(request.url)
@@ -80,8 +81,7 @@ class IconDiskCache :
         }
     }
 
-    override fun put(context: Context, request: IconRequest, resource: IconRequest.Resource, icon: Icon) {
-        putResources(context, request)
+    override fun putIcon(context: Context, resource: IconRequest.Resource, icon: Icon) {
         putIconBitmap(context, resource, icon.bitmap)
     }
 
