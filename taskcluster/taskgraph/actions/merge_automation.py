@@ -22,7 +22,7 @@ def is_release_promotion_available(parameters):
     title="Merge Day Automation",
     symbol="${input.behavior}",
     description="Merge repository branches.",
-    generic=False,
+    permission='merge-automation',
     order=500,
     context=[],
     available=is_release_promotion_available,

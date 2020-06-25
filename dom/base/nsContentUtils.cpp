@@ -2179,6 +2179,26 @@ nsINode* nsContentUtils::GetCrossDocParentNode(nsINode* aChild) {
   return parentDoc ? parentDoc->FindContentForSubDocument(doc) : nullptr;
 }
 
+nsINode* nsContentUtils::GetNearestInProcessCrossDocParentNode(
+    nsINode* aChild) {
+  if (aChild->IsDocument()) {
+    for (BrowsingContext* bc = aChild->AsDocument()->GetBrowsingContext(); bc;
+         bc = bc->GetParent()) {
+      if (bc->GetEmbedderElement()) {
+        return bc->GetEmbedderElement();
+      }
+    }
+    return nullptr;
+  }
+
+  nsINode* parent = aChild->GetParentNode();
+  if (parent && parent->IsContent() && aChild->IsContent()) {
+    parent = aChild->AsContent()->GetFlattenedTreeParent();
+  }
+
+  return parent;
+}
+
 bool nsContentUtils::ContentIsHostIncludingDescendantOf(
     const nsINode* aPossibleDescendant, const nsINode* aPossibleAncestor) {
   MOZ_ASSERT(aPossibleDescendant, "The possible descendant is null!");
@@ -2204,9 +2224,12 @@ bool nsContentUtils::ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
   MOZ_ASSERT(aPossibleAncestor, "The possible ancestor is null!");
 
   do {
-    if (aPossibleDescendant == aPossibleAncestor) return true;
+    if (aPossibleDescendant == aPossibleAncestor) {
+      return true;
+    }
 
-    aPossibleDescendant = GetCrossDocParentNode(aPossibleDescendant);
+    aPossibleDescendant =
+        GetNearestInProcessCrossDocParentNode(aPossibleDescendant);
   } while (aPossibleDescendant);
 
   return false;

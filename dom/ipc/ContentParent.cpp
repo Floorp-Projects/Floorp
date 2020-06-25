@@ -52,6 +52,9 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/DataStorage.h"
+#ifdef MOZ_GLEAN
+#  include "mozilla/FOGIPC.h"
+#endif
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoginReputationIPC.h"
@@ -6900,6 +6903,13 @@ NS_IMETHODIMP ContentParent::GetActor(const nsACString& aName,
   mProcessActors.Put(aName, RefPtr{actor});
   actor.forget(retval);
   return NS_OK;
+}
+
+IPCResult ContentParent::RecvFOGData(ByteBuf&& buf) {
+#ifdef MOZ_GLEAN
+  glean::FOGData(std::move(buf));
+#endif
+  return IPC_OK();
 }
 
 }  // namespace dom

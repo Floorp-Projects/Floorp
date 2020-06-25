@@ -59,6 +59,11 @@ impl SpatialNodeIndex {
 pub const ROOT_SPATIAL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(0);
 const TOPMOST_SCROLL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(1);
 
+// In some cases, the conversion from CSS pixels to device pixels can result in small
+// rounding errors when calculating the scrollable distance of a scroll frame. Apply
+// a small epsilon so that we don't detect these frames as "real" scroll frames.
+const MIN_SCROLLABLE_AMOUNT: f32 = 0.01;
+
 impl SpatialNodeIndex {
     pub fn new(index: usize) -> Self {
         debug_assert!(index < ::std::u32::MAX as usize);
@@ -658,8 +663,8 @@ impl SpatialTree {
                             // consider it. This helps pages that have a nested scroll root
                             // within a redundant scroll root to avoid selecting the wrong
                             // reference spatial node for a picture cache.
-                            if info.scrollable_size.width > 0.0 ||
-                               info.scrollable_size.height > 0.0 {
+                            if info.scrollable_size.width > MIN_SCROLLABLE_AMOUNT ||
+                               info.scrollable_size.height > MIN_SCROLLABLE_AMOUNT {
                                 // Since we are skipping redundant scroll roots, we may end up
                                 // selecting inner scroll roots that are very small. There is
                                 // no performance benefit to creating a slice for these roots,
