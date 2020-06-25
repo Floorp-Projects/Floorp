@@ -32,7 +32,7 @@ struct ResourceItem {
   uint64_t mOffset;
 };
 
-class ResourceQueue : private nsDeque {
+class ResourceQueue : private nsDeque<ResourceItem> {
  public:
   ResourceQueue();
 
