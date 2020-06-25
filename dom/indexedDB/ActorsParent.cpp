@@ -8563,10 +8563,15 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   nsresult UpgradeStorageFrom2_1To2_2(nsIFile* aDirectory) override;
 
-  nsresult InitOrigin(PersistenceType aPersistenceType,
-                      const nsACString& aGroup, const nsACString& aOrigin,
-                      const AtomicBool& aCanceled,
-                      UsageInfo* aUsageInfo) override;
+  Result<UsageInfo, nsresult> InitOrigin(PersistenceType aPersistenceType,
+                                         const nsACString& aGroup,
+                                         const nsACString& aOrigin,
+                                         const AtomicBool& aCanceled) override;
+
+  nsresult InitOriginWithoutTracking(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     const AtomicBool& aCanceled) override;
 
   Result<UsageInfo, nsresult> GetUsageForOrigin(
       PersistenceType aPersistenceType, const nsACString& aGroup,
@@ -17180,15 +17185,30 @@ nsresult QuotaClient::UpgradeStorageFrom2_1To2_2(nsIFile* aDirectory) {
   return NS_OK;
 }
 
-nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
-                                 const nsACString& aGroup,
-                                 const nsACString& aOrigin,
-                                 const AtomicBool& aCanceled,
-                                 UsageInfo* aUsageInfo) {
+Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
+  AssertIsOnIOThread();
+
+  UsageInfo res;
+
+  nsresult rv =
+      GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+                                /* aInitializing*/ true, &res);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  return res;
+}
+
+nsresult QuotaClient::InitOriginWithoutTracking(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
   return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
-                                   /* aInitializing*/ true, aUsageInfo);
+                                   /* aInitializing*/ true, nullptr);
 }
 
 Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(

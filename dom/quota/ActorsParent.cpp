@@ -5307,23 +5307,31 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
       continue;
     }
 
-    UsageInfo usageInfo;
-    rv = mClients[clientType]->InitOrigin(aPersistenceType, aGroup, aOrigin,
-                                          /* aCanceled */ Atomic<bool>(false),
-                                          trackQuota ? &usageInfo : nullptr);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      // error should have reported in InitOrigin
-      RECORD_IN_NIGHTLY(statusKeeper, rv);
-      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
-    }
-
     if (trackQuota) {
-      Maybe<uint64_t> clientUsage = usageInfo.TotalUsage();
+      auto usageInfoOrErr =
+          mClients[clientType]->InitOrigin(aPersistenceType, aGroup, aOrigin,
+                                           /* aCanceled */ Atomic<bool>(false));
+      if (NS_WARN_IF(usageInfoOrErr.isErr())) {
+        // error should have reported in InitOrigin
+        RECORD_IN_NIGHTLY(statusKeeper, usageInfoOrErr.inspectErr());
+        CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(usageInfoOrErr.inspectErr());
+      }
+
+      const Maybe<uint64_t> clientUsage = usageInfoOrErr.inspect().TotalUsage();
 
       clientUsages[clientType] = clientUsage;
 
       AssertNoOverflow(usage, clientUsage.valueOr(0));
       usage += clientUsage.valueOr(0);
+    } else {
+      rv = mClients[clientType]->InitOriginWithoutTracking(
+          aPersistenceType, aGroup, aOrigin,
+          /* aCanceled */ Atomic<bool>(false));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        // error should have reported in InitOrigin
+        RECORD_IN_NIGHTLY(statusKeeper, rv);
+        CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+      }
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9146,20 +9154,15 @@ Result<UsageInfo, nsresult> QuotaUsageRequestBase::GetUsageForOriginEntries(
     Client* client = aQuotaManager.GetClient(clientType);
     MOZ_ASSERT(client);
 
-    if (aInitialized) {
-      auto usageInfoOrErr = client->GetUsageForOrigin(aPersistenceType, aGroup,
-                                                      aOrigin, mCanceled);
-      if (NS_WARN_IF(usageInfoOrErr.isErr())) {
-        return usageInfoOrErr.propagateErr();
-      }
-      usageInfo += usageInfoOrErr.inspect();
-    } else {
-      rv = client->InitOrigin(aPersistenceType, aGroup, aOrigin, mCanceled,
-                              &usageInfo);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+    auto usageInfoOrErr =
+        aInitialized
+            ? client->GetUsageForOrigin(aPersistenceType, aGroup, aOrigin,
+                                        mCanceled)
+            : client->InitOrigin(aPersistenceType, aGroup, aOrigin, mCanceled);
+    if (NS_WARN_IF(usageInfoOrErr.isErr())) {
+      return usageInfoOrErr.propagateErr();
     }
+    usageInfo += usageInfoOrErr.inspect();
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
