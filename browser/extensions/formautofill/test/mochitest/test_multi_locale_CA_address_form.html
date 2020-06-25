@@ -157,6 +157,7 @@ add_task(async function autofill_with_level1_code() {
   await setInput("#organization-en", "Mozilla Toront");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown");
   // Replace address level 1 code with full name in English for test result
@@ -166,6 +167,7 @@ add_task(async function autofill_with_level1_code() {
   await setInput("#organization-fr", "Mozilla Vancouve");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown");
   // Replace address level 1 code with full name in French for test result
@@ -180,6 +182,7 @@ add_task(async function autofill_with_level1_full_name() {
   await setInput("#organization-en", "ExpoCit");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown");
   // Replace address level 1 code with full name in French for test result
@@ -189,6 +192,7 @@ add_task(async function autofill_with_level1_full_name() {
   await setInput("#organization-fr", "Prince of Wales");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown");
   // Replace address level 1 code with full name in English for test result

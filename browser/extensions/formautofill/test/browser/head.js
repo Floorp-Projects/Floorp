@@ -298,20 +298,33 @@ async function expectPopupOpen(browser) {
   }, "The popup should be a form autofill one");
 }
 
+async function waitForPopupEnabled(browser) {
+  const {
+    autoCompletePopup: { richlistbox: itemsBox },
+  } = browser;
+  const listItemElems = itemsBox.querySelectorAll(".autocomplete-richlistitem");
+  await TestUtils.waitForCondition(
+    () => !listItemElems[0].disabled,
+    "Wait for list elements to become enabled"
+  );
+}
+
 async function openPopupOn(browser, selector) {
   await SimpleTest.promiseFocus(browser);
   await focusAndWaitForFieldsIdentified(browser, selector);
   info("openPopupOn: before VK_DOWN");
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
   await expectPopupOpen(browser);
+  await waitForPopupEnabled(browser);
 }
 
 async function openPopupForSubframe(browser, frameBrowsingContext, selector) {
   await SimpleTest.promiseFocus(browser);
   await focusAndWaitForFieldsIdentified(frameBrowsingContext, selector);
-  info("openPopupOn: before VK_DOWN");
+  info("openPopupForSubframe: before VK_DOWN");
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, frameBrowsingContext);
   await expectPopupOpen(browser);
+  await waitForPopupEnabled(browser);
 }
 
 async function expectPopupClose(browser) {
