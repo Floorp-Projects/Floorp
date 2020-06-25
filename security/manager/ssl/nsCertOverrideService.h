@@ -12,7 +12,6 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TypedEnumBits.h"
-#include "nsIAsyncShutdown.h"
 #include "nsICertOverrideService.h"
 #include "nsIFile.h"
 #include "nsIObserver.h"
@@ -91,13 +90,11 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr {
 
 class nsCertOverrideService final : public nsICertOverrideService,
                                     public nsIObserver,
-                                    public nsSupportsWeakReference,
-                                    public nsIAsyncShutdownBlocker {
+                                    public nsSupportsWeakReference {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICERTOVERRIDESERVICE
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
   nsCertOverrideService();
 
@@ -139,10 +136,6 @@ class nsCertOverrideService final : public nsICertOverrideService,
                           nsCertOverride::OverrideBits ob,
                           const nsACString& dbKey,
                           const mozilla::MutexAutoLock& aProofOfLock);
-
- private:
-  class WriterRunnable;
-  RefPtr<TaskQueue> mWriterTaskQueue;
 };
 
 #define NS_CERTOVERRIDE_CID                          \
