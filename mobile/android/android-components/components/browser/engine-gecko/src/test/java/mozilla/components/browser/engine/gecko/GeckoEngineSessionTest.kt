@@ -1216,7 +1216,8 @@ class GeckoEngineSessionTest {
                 engineSession: EngineSession,
                 uri: String,
                 hasUserGesture: Boolean,
-                isSameDomain: Boolean
+                isSameDomain: Boolean,
+                isRedirect: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
@@ -1244,7 +1245,8 @@ class GeckoEngineSessionTest {
                 engineSession: EngineSession,
                 uri: String,
                 hasUserGesture: Boolean,
-                isSameDomain: Boolean
+                isSameDomain: Boolean,
+                isRedirect: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return RequestInterceptor.InterceptionResponse.Url("https://mozilla.org")
@@ -1277,7 +1279,8 @@ class GeckoEngineSessionTest {
                 engineSession: EngineSession,
                 uri: String,
                 hasUserGesture: Boolean,
-                isSameDomain: Boolean
+                isSameDomain: Boolean,
+                isRedirect: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalled = true
                 return RequestInterceptor.InterceptionResponse.Url("https://mozilla.org")
@@ -1320,7 +1323,8 @@ class GeckoEngineSessionTest {
                 engineSession: EngineSession,
                 uri: String,
                 hasUserGesture: Boolean,
-                isSameDomain: Boolean
+                isSameDomain: Boolean,
+                isRedirect: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
                 return null
@@ -1985,7 +1989,8 @@ class GeckoEngineSessionTest {
                 engineSession: EngineSession,
                 uri: String,
                 hasUserGesture: Boolean,
-                isSameDomain: Boolean
+                isSameDomain: Boolean,
+                isRedirect: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 return when (uri) {
                     "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
@@ -2037,7 +2042,8 @@ class GeckoEngineSessionTest {
                 engineSession: EngineSession,
                 uri: String,
                 hasUserGesture: Boolean,
-                isSameDomain: Boolean
+                isSameDomain: Boolean,
+                isRedirect: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 return when (uri) {
                     "sample:about" -> RequestInterceptor.InterceptionResponse.Url("result")
@@ -2158,7 +2164,8 @@ class GeckoEngineSessionTest {
                 engineSession: EngineSession,
                 uri: String,
                 hasUserGesture: Boolean,
-                isSameDomain: Boolean
+                isSameDomain: Boolean,
+                isRedirect: Boolean
             ): RequestInterceptor.InterceptionResponse? {
                 return when (uri) {
                     fakeUrl -> null

@@ -455,7 +455,8 @@ class GeckoEngineSession(
                     engineSession,
                     request.uri,
                     request.hasUserGesture,
-                    isSameDomain
+                    isSameDomain,
+                    request.isRedirect
                 )?.apply {
                     when (this) {
                         is InterceptionResponse.Content -> loadData(data, mimeType, encoding)
