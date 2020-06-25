@@ -22,6 +22,8 @@ permalink: /changelog/
 
 * **feature-pwa**
   * ⚠️ **This is a breaking change**: `TrustedWebActivityIntentProcessor` now requires a `RelationChecker` instead of `httpClient` and `apiKey`.
+  * ⚠️ **This is a breaking change**: Removed unused API from `WebAppShortcutManager`: uninstallShortcuts
+  * `WebAppShortcutManager` gained a new API: recentlyUsedWebAppsCount. Allows counting recently used web apps.
 
 * **browser-thumbnails**
   * Deletes the tab's thumbnail from the storage when the sessions are removed.

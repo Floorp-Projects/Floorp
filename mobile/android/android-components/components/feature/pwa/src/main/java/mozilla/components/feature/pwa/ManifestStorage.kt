@@ -6,7 +6,6 @@ package mozilla.components.feature.pwa
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -17,10 +16,10 @@ import mozilla.components.feature.pwa.db.ManifestEntity
  * Disk storage for [WebAppManifest]. Other components use this class to reload a saved manifest.
  *
  * @param context the application context this storage is associated with
- * @param usedAtTimeout a timeout in milliseconds after which the storage will consider a manifest
- *                      as unused. By default this is 30 days.
+ * @param activeThresholdMs a timeout in milliseconds after which the storage will consider a manifest
+ *                      as unused. By default this is [ACTIVE_THRESHOLD_MS].
  */
-class ManifestStorage(context: Context, private val usedAtTimeout: Long = DEFAULT_TIMEOUT) {
+class ManifestStorage(context: Context, private val activeThresholdMs: Long = ACTIVE_THRESHOLD_MS) {
 
     @VisibleForTesting
     internal var manifestDao = lazy { ManifestDatabase.get(context).manifestDao() }
@@ -31,7 +30,7 @@ class ManifestStorage(context: Context, private val usedAtTimeout: Long = DEFAUL
      *
      * @param startUrl URL of site. Should correspond to manifest's start_url.
      */
-    suspend fun loadManifest(startUrl: String): WebAppManifest? = withContext(Dispatchers.IO) {
+    suspend fun loadManifest(startUrl: String): WebAppManifest? = withContext(IO) {
         manifestDao.value.getManifest(startUrl)?.manifest
     }
 
@@ -41,18 +40,34 @@ class ManifestStorage(context: Context, private val usedAtTimeout: Long = DEFAUL
      *
      * @param url URL of site. Should correspond to an url covered by the scope of a stored manifest.
      */
-    suspend fun loadManifestsByScope(url: String): List<WebAppManifest> = withContext(Dispatchers.IO) {
-        manifestDao.value.getManifestsByScope(url).map { it -> it.manifest }
+    suspend fun loadManifestsByScope(url: String): List<WebAppManifest> = withContext(IO) {
+        manifestDao.value.getManifestsByScope(url).map { it.manifest }
     }
 
     /**
      * Checks whether there is a currently used manifest with a scope that matches the url.
      *
      * @param url the url to match with manifest scopes.
-     * @param currentTime the current time in milliseconds.
+     * @param currentTimeMs the current time in milliseconds.
      */
-    suspend fun hasRecentManifest(url: String, currentTime: Long): Boolean = withContext(Dispatchers.IO) {
-        manifestDao.value.hasRecentManifest(url, deadline = currentTime - usedAtTimeout) > 0
+    suspend fun hasRecentManifest(
+        url: String,
+        @VisibleForTesting currentTimeMs: Long = System.currentTimeMillis()
+    ): Boolean = withContext(IO) {
+        manifestDao.value.hasRecentManifest(url, thresholdMs = currentTimeMs - activeThresholdMs) > 0
+    }
+
+    /**
+     * Counts number of recently used manifests, as configured by [usedAtTimeout].
+     *
+     * @param currentTimeMs current time, exposed for testing
+     * @param activeThresholdMs a time threshold within which manifests are considered to be recently used.
+     */
+    suspend fun recentManifestsCount(
+        activeThresholdMs: Long = this.activeThresholdMs,
+        @VisibleForTesting currentTimeMs: Long = System.currentTimeMillis()
+    ): Int = withContext(IO) {
+        manifestDao.value.recentManifestsCount(thresholdMs = currentTimeMs - activeThresholdMs)
     }
 
     /**
@@ -97,7 +112,6 @@ class ManifestStorage(context: Context, private val usedAtTimeout: Long = DEFAUL
     }
 
     companion object {
-        const val MILLISECONDS_IN_A_DAY: Long = 86400000
-        const val DEFAULT_TIMEOUT = MILLISECONDS_IN_A_DAY * 30
+        const val ACTIVE_THRESHOLD_MS = 86400000 * 30L // 30 days
     }
 }
