@@ -217,6 +217,8 @@ Structure:
               //   "disabled"    - User explicitly disabled this default feature.
               //   "failed"      - This feature was attempted but failed to initialize.
               //   "available"   - User has this feature available.
+              // The status can also include a ":" followed by a reason
+              // e.g. "FEATURE_FAILURE_WEBRENDER_VIDEO_CRASH_INTEL_23.20.16.4973"
               d3d11: { // This feature is Windows-only.
                 status: <string>,
                 warp: <bool>,           // Software rendering (WARP) mode was chosen.
@@ -235,6 +237,12 @@ Structure:
               advancedLayers: { // Advanced Layers compositing. Only present if D3D11 enabled.
                 status: <string>,    // See the status codes above.
               },
+              hwCompositing: { // hardware acceleration. i.e. whether we try using the GPU
+                status: <string>
+              },
+              wrCompositor: { // native OS compositor (CA, DComp, etc.)
+                status: <string>
+              }
             },
           },
         appleModelId: <string>, // Mac only or null on failure
