@@ -49,8 +49,7 @@ jobs:
             toolchain:
                 - linux64-binutils
                 - linux64-clang
-                # bug 1632735
-                - linux64-rust-1.41
+                - linux64-rust
                 - linux64-cbindgen
                 - linux64-sccache
                 - linux64-nasm
