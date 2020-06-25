@@ -24,7 +24,6 @@ for (var i = 1; i < 6; i++) {
 
     // Run until the end is running within Ion, or skip if we are unable to run
     // in Ion.
-    while (!res.start)
+    while (!res.start || !res.end)
         res = test(values);
-    assertEq(!res.start || !res.end, false);
 }

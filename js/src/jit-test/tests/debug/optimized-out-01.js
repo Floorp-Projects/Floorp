@@ -35,12 +35,12 @@ withJitOptions(Opts_Ion2NoOffthreadCompilation, function () {
 
   g.eval("" + function g(d, x) {
     "use strict";
-    for (var i = 0; i < 200; i++);
+    for (var i = 0; i < 100; i++);
     toggle(d);
   });
 
   g.eval("(" + function test() {
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < 15; i++)
       f(false, 42);
     f(true, 42);
   } + ")();");
