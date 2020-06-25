@@ -1265,13 +1265,19 @@ static bool TestReference() {
   }
 
   {
-    int foo = 42;
+    int foo = 42, bar = 42;
     Maybe<int&> some = SomeRef(foo);
 
     MOZ_RELEASE_ASSERT(!some.isNothing());
     MOZ_RELEASE_ASSERT(some.isSome());
     MOZ_RELEASE_ASSERT(some);
     MOZ_RELEASE_ASSERT(&some.ref() == &foo);
+
+    MOZ_RELEASE_ASSERT(some.refEquals(foo));
+    MOZ_RELEASE_ASSERT(some.refEquals(SomeRef(foo)));
+    MOZ_RELEASE_ASSERT(!some.refEquals(Nothing()));
+    MOZ_RELEASE_ASSERT(!some.refEquals(bar));
+    MOZ_RELEASE_ASSERT(!some.refEquals(SomeRef(bar)));
 
     some.ref()++;
     MOZ_RELEASE_ASSERT(43 == foo);
@@ -1281,7 +1287,7 @@ static bool TestReference() {
   }
 
   {
-    int foo = 42;
+    int foo = 42, bar = 42;
     Maybe<int&> some;
     some.emplace(foo);
 
@@ -1289,6 +1295,12 @@ static bool TestReference() {
     MOZ_RELEASE_ASSERT(some.isSome());
     MOZ_RELEASE_ASSERT(some);
     MOZ_RELEASE_ASSERT(&some.ref() == &foo);
+
+    MOZ_RELEASE_ASSERT(some.refEquals(foo));
+    MOZ_RELEASE_ASSERT(some.refEquals(SomeRef(foo)));
+    MOZ_RELEASE_ASSERT(!some.refEquals(Nothing()));
+    MOZ_RELEASE_ASSERT(!some.refEquals(bar));
+    MOZ_RELEASE_ASSERT(!some.refEquals(SomeRef(bar)));
 
     some.ref()++;
     MOZ_RELEASE_ASSERT(43 == foo);

@@ -744,6 +744,12 @@ class Maybe<T&> {
     return val;
   }
 
+  bool refEquals(const Maybe<T&>& aOther) const {
+    return mValue == aOther.mValue;
+  }
+
+  bool refEquals(const T& aOther) const { return mValue == &aOther; }
+
  private:
   T* mValue = nullptr;
 };
