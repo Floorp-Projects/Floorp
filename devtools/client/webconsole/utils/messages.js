@@ -681,7 +681,8 @@ function isContentBlockingMessage(message) {
     category == "cookieBlockedPermission" ||
     category == "cookieBlockedTracker" ||
     category == "cookieBlockedAll" ||
-    category == "cookieBlockedForeign"
+    category == "cookieBlockedForeign" ||
+    category == "cookiePartitionedForeign"
   );
 }
 
