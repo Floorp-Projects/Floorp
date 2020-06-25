@@ -83,3 +83,8 @@ details > summary {
 *[hidden] {
   display: none !important;
 }
+
+#pioneer-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
