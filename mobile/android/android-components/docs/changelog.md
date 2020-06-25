@@ -28,6 +28,13 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: Removes unused `ThumbnailsUseCases` since we now load thumbnails via `ThumbnailLoader`. See [#7313](https://github.com/mozilla-mobile/android-components/issues/7313).
   * ⚠️ **This is a breaking change**: Removes `ThumbnailsUseCases` as a parameter in `TabsFeature` and `TabsTrayPresenter`.
 
+* **service-glean**
+  * Glean was updated to v31.2.1
+    * BUGFIX: Correctly format the date and time in the Date header
+    * Feature: Add rate limiting capabilities to the upload manager
+    * BUGFIX: baseline pings with reason "dirty startup" are no longer sent if Glean did not full initialize in the previous run
+
+
 # 47.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v46.0.0...v47.0.0)
