@@ -187,8 +187,8 @@ RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
                                                __func__);
   }
 
-  mTransaction = Some(Transaction(tid, rpIdHash, aInfo.ClientDataJSON(),
-                                  aForceNoneAttestation));
+  mTransaction = Some(Transaction(
+      tid, rpIdHash, Nothing(), aInfo.ClientDataJSON(), aForceNoneAttestation));
 
   return mRegisterPromise.Ensure(__func__);
 }
@@ -223,7 +223,9 @@ RefPtr<U2FSignPromise> U2FHIDTokenManager::Sign(
 
   uint64_t signFlags = 0;
   nsTArray<nsTArray<uint8_t>> appIds;
-  appIds.AppendElement(std::move(rpIdHash));
+  appIds.AppendElement(rpIdHash.InfallibleClone());
+
+  Maybe<nsTArray<uint8_t>> appIdHashExt = Nothing();
 
   if (aInfo.Extra().isSome()) {
     const auto& extra = aInfo.Extra().ref();
@@ -239,7 +241,8 @@ RefPtr<U2FSignPromise> U2FHIDTokenManager::Sign(
     // Process extensions.
     for (const WebAuthnExtension& ext : extra.Extensions()) {
       if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
-        appIds.AppendElement(ext.get_WebAuthnExtensionAppId().AppId().Clone());
+        appIdHashExt = Some(ext.get_WebAuthnExtensionAppId().AppId().Clone());
+        appIds.AppendElement(appIdHashExt->Clone());
       }
     }
   }
@@ -254,7 +257,9 @@ RefPtr<U2FSignPromise> U2FHIDTokenManager::Sign(
     return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
   }
 
-  mTransaction = Some(Transaction(tid, rpIdHash, aInfo.ClientDataJSON()));
+  mTransaction =
+      Some(Transaction(tid, std::move(rpIdHash), std::move(appIdHashExt),
+                       aInfo.ClientDataJSON()));
 
   return mSignPromise.Ensure(__func__);
 }
@@ -341,8 +346,8 @@ void U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult) {
     return;
   }
 
-  nsTArray<uint8_t> appId;
-  if (!aResult->CopyAppId(appId)) {
+  nsTArray<uint8_t> hashChosenByAuthenticator;
+  if (!aResult->CopyAppId(hashChosenByAuthenticator)) {
     mSignPromise.Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
     return;
   }
@@ -367,9 +372,10 @@ void U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult) {
 
   nsTArray<WebAuthnExtensionResult> extensions;
 
-  if (appId != mTransaction.ref().mRpIdHash) {
-    // Indicate to the RP that we used the FIDO appId.
-    extensions.AppendElement(WebAuthnExtensionResultAppId(true));
+  if (mTransaction.ref().mAppIdHash.isSome()) {
+    bool usedAppId =
+        (hashChosenByAuthenticator == mTransaction.ref().mAppIdHash.ref());
+    extensions.AppendElement(WebAuthnExtensionResultAppId(usedAppId));
   }
 
   CryptoBuffer signatureBuf;
@@ -383,7 +389,7 @@ void U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult) {
   }
 
   CryptoBuffer chosenAppIdBuf;
-  if (!chosenAppIdBuf.Assign(appId)) {
+  if (!chosenAppIdBuf.Assign(hashChosenByAuthenticator)) {
     mSignPromise.Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
     return;
   }

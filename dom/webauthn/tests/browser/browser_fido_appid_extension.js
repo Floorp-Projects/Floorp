@@ -106,6 +106,75 @@ add_task(async function test_appid() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function test_appid_unused() {
+  // Open a new tab.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  // Get a keyHandle for a FIDO AppId.
+  let appid = "https://example.com/appId";
+
+  let { attObj, rawId } = await promiseWebAuthnMakeCredential(tab);
+  let { authDataObj } = await webAuthnDecodeCBORAttestation(attObj);
+
+  // Make sure the RP ID hash matches what we calculate.
+  await checkRpIdHash(authDataObj.rpIdHash, "example.com");
+
+  // Get a new assertion.
+  let {
+    clientDataJSON,
+    authenticatorData,
+    signature,
+    extensions,
+  } = await promiseWebAuthnGetAssertion(tab, rawId, { appid });
+
+  // Check the we can parse clientDataJSON.
+  let clientData = JSON.parse(buffer2string(clientDataJSON));
+  ok(
+    "appid" in clientData.clientExtensions,
+    `since it was passed, appid field should appear in the client data, but ` +
+      `saw: ${JSON.stringify(clientData.clientExtensions)}`
+  );
+
+  ok(
+    "appid" in extensions,
+    `appid should be populated in the extensions data, but saw: ` +
+      `${JSON.stringify(extensions)}`
+  );
+  is(extensions.appid, false, "appid extension should indicate it was unused");
+
+  // Check auth data.
+  let attestation = await webAuthnDecodeAuthDataArray(
+    new Uint8Array(authenticatorData)
+  );
+  is(
+    attestation.flags,
+    flag_TUP,
+    "Assertion's user presence byte set correctly"
+  );
+
+  // Verify the signature.
+  let params = await deriveAppAndChallengeParam(
+    "example.com",
+    clientDataJSON,
+    attestation
+  );
+  let signedData = await assembleSignedData(
+    params.appParam,
+    params.attestation.flags,
+    params.attestation.counter,
+    params.challengeParam
+  );
+  let valid = await verifySignature(
+    authDataObj.publicKeyHandle,
+    signedData,
+    signature
+  );
+  ok(valid, "signature is valid");
+
+  // Close tab.
+  BrowserTestUtils.removeTab(tab);
+});
+
 add_task(function test_cleanup() {
   Services.prefs.clearUserPref("security.webauth.u2f");
   Services.prefs.clearUserPref("security.webauth.webauthn");

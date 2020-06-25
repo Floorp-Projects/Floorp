@@ -137,4 +137,19 @@ function promiseWebAuthnGetAssertion(tab, key_handle = null, extensions = {}) {
     }
   );
 }
+
+function checkRpIdHash(rpIdHash, hostname) {
+  return crypto.subtle
+    .digest("SHA-256", string2buffer(hostname))
+    .then(calculatedRpIdHash => {
+      let calcHashStr = bytesToBase64UrlSafe(
+        new Uint8Array(calculatedRpIdHash)
+      );
+      let providedHashStr = bytesToBase64UrlSafe(new Uint8Array(rpIdHash));
+
+      if (calcHashStr != providedHashStr) {
+        throw new Error("Calculated RP ID hash doesn't match.");
+      }
+    });
+}
 /* eslint-enable no-shadow */
