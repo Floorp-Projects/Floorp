@@ -420,6 +420,16 @@ class HttpChannelChild final : public PHttpChannelChild,
   bool mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy = false;
   bool mAsyncOpenSucceeded = false;
   bool mSuccesfullyRedirected = false;
+  // State of the HttpBackgroundChannelChild's event queue during destruction.
+  enum BckChildQueueStatus {
+    // BckChild never told us
+    BCKCHILD_UNKNOWN,
+    // BckChild was empty at the time of destruction
+    BCKCHILD_EMPTY,
+    // BckChild was keeping events in the queue at the destruction time!
+    BCKCHILD_NON_EMPTY
+  };
+  Atomic<BckChildQueueStatus> mBackgroundChildQueueFinalState;
   Maybe<ActorDestroyReason> mActorDestroyReason;
 #endif
 

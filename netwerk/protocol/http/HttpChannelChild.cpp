@@ -175,6 +175,9 @@ HttpChannelChild::HttpChannelChild()
       mIsRacing(false),
       mCacheNeedToReportBytesReadInitialized(false),
       mNeedToReportBytesRead(true),
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      mBackgroundChildQueueFinalState(BCKCHILD_UNKNOWN),
+#endif
       mCacheEntryAvailable(false),
       mAltDataCacheEntryAvailable(false),
       mSendResumeAt(false),
@@ -228,10 +231,13 @@ HttpChannelChild::~HttpChannelChild() {
         (mInterceptedRedirectListener ? 1 << 7 : 0) | (mCanceled ? 1 << 8 : 0) |
         (mRedirectChannelChild ? 1 << 9 : 0) |
         (mEventQ->IsEmpty() ? 1 << 10 : 0) | (nullBgChild ? 1 << 11 : 0) |
-        (emptyBgChildQueue ? 1 << 12 : 0);
+        (emptyBgChildQueue ? 1 << 12 : 0) |
+        (mOnStartRequestCalled ? 1 << 13 : 0) |
+        (mBackgroundChildQueueFinalState == BCKCHILD_EMPTY ? 1 << 14 : 0) |
+        (mBackgroundChildQueueFinalState == BCKCHILD_NON_EMPTY ? 1 << 15 : 0);
     MOZ_CRASH_UNSAFE_PRINTF(
         "~HttpChannelChild, mOnStopRequestCalled=false, mStatus=0x%08x, "
-        "mActorDestroyReason=%d, 20200601 flags=%u",
+        "mActorDestroyReason=%d, 20200618 flags=%u",
         static_cast<uint32_t>(nsresult(mStatus)),
         static_cast<int32_t>(mActorDestroyReason ? *mActorDestroyReason : -1),
         flags);

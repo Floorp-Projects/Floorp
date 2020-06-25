@@ -70,6 +70,14 @@ void HttpBackgroundChannelChild::OnChannelClosed() {
   LOG(("HttpBackgroundChannelChild::OnChannelClosed [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  if (mChannelChild) {
+    mChannelChild->mBackgroundChildQueueFinalState =
+        mQueuedRunnables.IsEmpty() ? HttpChannelChild::BCKCHILD_EMPTY
+                                   : HttpChannelChild::BCKCHILD_NON_EMPTY;
+  }
+#endif
+
   // HttpChannelChild is not going to handle any incoming message.
   mChannelChild = nullptr;
 
