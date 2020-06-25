@@ -30,7 +30,6 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.components.FenixSnackbar
@@ -40,8 +39,8 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.resetPoliciesAfter
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.shortcut.FirstTimePwaObserver
 import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
 
@@ -178,9 +177,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     override fun onResume() {
         super.onResume()
-        getSessionById()?.let {
-            (activity as HomeActivity).updateThemeForSession(it)
-        }
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
     }
 

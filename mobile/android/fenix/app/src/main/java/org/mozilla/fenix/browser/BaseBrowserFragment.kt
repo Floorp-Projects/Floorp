@@ -78,6 +78,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
@@ -690,7 +691,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     @CallSuper
     override fun onSessionSelected(session: Session) {
-        (activity as HomeActivity).updateThemeForSession(session)
+        updateThemeForSession(session)
         if (!browserInitialized) {
             // Initializing a new coroutineScope to avoid ConcurrentModificationException in ObserverRegistry
             // This will be removed when ObserverRegistry is deprecated by browser-state.
@@ -720,6 +721,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             components.useCases.sessionUseCases.reload()
         }
         hideToolbar()
+
+        getSessionById()?.let { updateThemeForSession(it) }
     }
 
     @CallSuper
@@ -873,6 +876,14 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     }
 
     /**
+     * Set the activity normal/private theme to match the current session.
+     */
+    private fun updateThemeForSession(session: Session) {
+        val sessionMode = BrowsingMode.fromBoolean(session.private)
+        (activity as HomeActivity).browsingModeManager.mode = sessionMode
+    }
+
+    /**
      * Returns the current session.
      */
     protected fun getSessionById(): Session? {
@@ -997,6 +1008,5 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
-        private const val SNACKBAR_ELEVATION = 80f
     }
 }

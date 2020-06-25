@@ -511,11 +511,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         }
     }
 
-    fun updateThemeForSession(session: Session) {
-        val sessionMode = BrowsingMode.fromBoolean(session.private)
-        browsingModeManager.mode = sessionMode
-    }
-
     override fun attachBaseContext(base: Context) {
         StrictMode.allowThreadDiskReads().resetPoliciesAfter {
             super.attachBaseContext(base)

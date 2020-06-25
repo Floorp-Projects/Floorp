@@ -67,7 +67,7 @@ class CustomTabsIntegration(
                 )
             }
 
-            toolbar.background = getDrawable(activity, R.drawable.toolbar_background_private)
+            toolbar.background = getDrawable(activity, R.drawable.toolbar_background)
         }
     }
 
