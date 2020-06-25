@@ -426,13 +426,11 @@ const TargetingGetters = {
     return new Promise(resolve => {
       // Note: calling init ensures this code is only executed after Search has been initialized
       Services.search
-        .getVisibleEngines()
+        .getDefaultEngines()
         .then(engines => {
           resolve({
             current: Services.search.defaultEngine.identifier,
-            installed: engines
-              .map(engine => engine.identifier)
-              .filter(engine => engine),
+            installed: engines.map(engine => engine.identifier),
           });
         })
         .catch(() => resolve({ installed: [], current: "" }));
