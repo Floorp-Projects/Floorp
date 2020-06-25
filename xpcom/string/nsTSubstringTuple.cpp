@@ -53,7 +53,7 @@ void nsTSubstringTuple<T>::WriteTo(char_type* aBuf, uint32_t aBufLen) const {
 template <typename T>
 bool nsTSubstringTuple<T>::IsDependentOn(const char_type* aStart,
                                          const char_type* aEnd) const {
-  // we aStart with the right-most fragment since it is faster to check.
+  // we start with the right-most fragment since it is faster to check.
 
   if (mFragB->IsDependentOn(aStart, aEnd)) {
     return true;
@@ -70,6 +70,14 @@ template <typename T>
 auto nsTSubstringTuple<T>::IsDependentOnWithLength(const char_type* aStart,
                                                    const char_type* aEnd) const
     -> std::pair<bool, size_type> {
+  // we start with the right-most fragment since it is faster to check for
+  // dependency.
+  const bool rightDependentOn = mFragB->IsDependentOn(aStart, aEnd);
+
+  if (rightDependentOn) {
+    return {true, Length()};
+  }
+
   const auto [leftDependentOn, leftLen] =
       mHead ? mHead->IsDependentOnWithLength(aStart, aEnd)
             : std::pair{mFragA->IsDependentOn(aStart, aEnd), mFragA->Length()};
@@ -77,8 +85,7 @@ auto nsTSubstringTuple<T>::IsDependentOnWithLength(const char_type* aStart,
   const auto checkedLen =
       mozilla::CheckedInt<size_type>{leftLen} + mFragB->Length();
   MOZ_RELEASE_ASSERT(checkedLen.isValid(), "Substring tuple length is invalid");
-  return {leftDependentOn || mFragB->IsDependentOn(aStart, aEnd),
-          checkedLen.value()};
+  return {leftDependentOn, checkedLen.value()};
 }
 
 template class nsTSubstringTuple<char>;
