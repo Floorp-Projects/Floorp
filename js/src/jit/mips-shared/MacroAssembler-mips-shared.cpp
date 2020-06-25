@@ -3292,4 +3292,38 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
   bind(&end);
 }
 
+void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
+                                         Label* fail) {
+  Label notZero;
+  as_truncws(ScratchFloat32Reg, src);
+  as_cfc1(ScratchRegister, Assembler::FCSR);
+  moveFromFloat32(ScratchFloat32Reg, dest);
+  ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
+
+  ma_b(dest, Imm32(0), &notZero, Assembler::NotEqual, ShortJump);
+  moveFromFloat32(src, ScratchRegister);
+  // Check if src is in ]-1; -0] range by checking the sign bit.
+  as_slt(ScratchRegister, ScratchRegister, zero);
+  bind(&notZero);
+
+  branch32(Assembler::NotEqual, ScratchRegister, Imm32(0), fail);
+}
+
+void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
+                                        Label* fail) {
+  Label notZero;
+  as_truncwd(ScratchFloat32Reg, src);
+  as_cfc1(ScratchRegister, Assembler::FCSR);
+  moveFromFloat32(ScratchFloat32Reg, dest);
+  ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
+
+  ma_b(dest, Imm32(0), &notZero, Assembler::NotEqual, ShortJump);
+  moveFromDoubleHi(src, ScratchRegister);
+  // Check if src is in ]-1; -0] range by checking the sign bit.
+  as_slt(ScratchRegister, ScratchRegister, zero);
+  bind(&notZero);
+
+  branch32(Assembler::NotEqual, ScratchRegister, Imm32(0), fail);
+}
+
 //}}} check_macroassembler_style
