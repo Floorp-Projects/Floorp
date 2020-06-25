@@ -9,9 +9,9 @@ package mozilla.components.support.ktx.android.notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import androidx.core.content.getSystemService
 import android.os.Build
 import androidx.annotation.StringRes
+import androidx.core.content.getSystemService
 
 /**
  * Make sure a notification channel exists.

@@ -35,6 +35,9 @@ permalink: /changelog/
     * BUGFIX: baseline pings with reason "dirty startup" are no longer sent if Glean did not full initialize in the previous run
 
 
+* **feature-privatemode**
+  * Add `PrivateNotificationFeature` to display a notification when private sessions are open.
+
 # 47.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v46.0.0...v47.0.0)
