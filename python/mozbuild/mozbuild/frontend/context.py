@@ -1430,6 +1430,10 @@ VARIABLES = {
         This will result in the compiler flags ``-DNS_NO_XPCOM``,
         ``-DMOZ_EXTENSIONS_DB_SCHEMA=15``, and ``-DDLL_SUFFIX='".so"'``,
         respectively.
+
+        Note that these entries are not necessarily passed to the assembler.
+        Whether they are depends on the type of assembly file. As an
+        alternative, you may add a ``-DKEY=value`` entry to ``ASFLAGS``.
         """
         ),
 
