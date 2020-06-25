@@ -7277,9 +7277,7 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   }
 
-  if ((GetStateBits() &
-       (NS_FRAME_FONT_INFLATION_CONTAINER | NS_BLOCK_FLOAT_MGR)) ==
-      (NS_FRAME_FONT_INFLATION_CONTAINER | NS_BLOCK_FLOAT_MGR)) {
+  if (HasAllStateBits(NS_FRAME_FONT_INFLATION_CONTAINER | NS_BLOCK_FLOAT_MGR)) {
     AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   }
 }
