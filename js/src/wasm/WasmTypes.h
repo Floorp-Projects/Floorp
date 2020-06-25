@@ -2774,15 +2774,15 @@ bool IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode);
 // Represents the resizable limits of memories and tables.
 
 struct Limits {
-  uint32_t initial;
-  Maybe<uint32_t> maximum;
+  uint64_t initial;
+  Maybe<uint64_t> maximum;
 
   // `shared` is Shareable::False for tables but may be Shareable::True for
   // memories.
   Shareable shared;
 
   Limits() = default;
-  explicit Limits(uint32_t initial, const Maybe<uint32_t>& maximum = Nothing(),
+  explicit Limits(uint64_t initial, const Maybe<uint64_t>& maximum = Nothing(),
                   Shareable shared = Shareable::False)
       : initial(initial), maximum(maximum), shared(shared) {}
 };
@@ -2814,15 +2814,17 @@ struct TableDesc {
   TableKind kind;
   bool importedOrExported;
   uint32_t globalDataOffset;
-  Limits limits;
+  uint32_t initialLength;
+  Maybe<uint32_t> maximumLength;
 
   TableDesc() = default;
-  TableDesc(TableKind kind, const Limits& limits,
-            bool importedOrExported = false)
+  TableDesc(TableKind kind, uint32_t initialLength,
+            Maybe<uint32_t> maximumLength, bool importedOrExported = false)
       : kind(kind),
         importedOrExported(importedOrExported),
         globalDataOffset(UINT32_MAX),
-        limits(limits) {}
+        initialLength(initialLength),
+        maximumLength(maximumLength) {}
 };
 
 typedef Vector<TableDesc, 0, SystemAllocPolicy> TableDescVector;
@@ -3033,7 +3035,7 @@ class CalleeDesc {
     CalleeDesc c;
     c.which_ = WasmTable;
     c.u.table.globalDataOffset_ = desc.globalDataOffset;
-    c.u.table.minLength_ = desc.limits.initial;
+    c.u.table.minLength_ = desc.initialLength;
     c.u.table.funcTypeId_ = funcTypeId;
     return c;
   }
@@ -3090,9 +3092,11 @@ class CalleeDesc {
 // Because ARM has a fixed-width instruction encoding, ARM can only express a
 // limited subset of immediates (in a single instruction).
 
+static const uint64_t HighestValidARMImmediate = 0xff000000;
+
 extern bool IsValidARMImmediate(uint32_t i);
 
-extern uint32_t RoundUpToNextValidARMImmediate(uint32_t i);
+extern uint64_t RoundUpToNextValidARMImmediate(uint64_t i);
 
 // The WebAssembly spec hard-codes the virtual page size to be 64KiB and
 // requires the size of linear memory to always be a multiple of 64KiB.
@@ -3172,7 +3176,7 @@ extern bool IsValidBoundsCheckImmediate(uint32_t i);
 //   boundsCheckLimit = mappedSize - GuardSize
 //   IsValidBoundsCheckImmediate(boundsCheckLimit)
 
-extern size_t ComputeMappedSize(uint32_t maxSize);
+extern size_t ComputeMappedSize(uint64_t maxSize);
 
 // The following thresholds were derived from a microbenchmark. If we begin to
 // ship this optimization for more platforms, we will need to extend this list.

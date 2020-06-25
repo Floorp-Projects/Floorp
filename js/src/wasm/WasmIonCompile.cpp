@@ -1449,10 +1449,10 @@ class FunctionCompiler {
       MOZ_ASSERT(funcType.id.kind() == FuncTypeIdDescKind::None);
       const TableDesc& table =
           env_.tables[env_.asmJSSigToTableIndex[funcTypeIndex]];
-      MOZ_ASSERT(IsPowerOfTwo(table.limits.initial));
+      MOZ_ASSERT(IsPowerOfTwo(table.initialLength));
 
       MConstant* mask =
-          MConstant::New(alloc(), Int32Value(table.limits.initial - 1));
+          MConstant::New(alloc(), Int32Value(table.initialLength - 1));
       curBlock_->add(mask);
       MBitAnd* maskedIndex = MBitAnd::New(alloc(), index, mask, MIRType::Int32);
       curBlock_->add(maskedIndex);
