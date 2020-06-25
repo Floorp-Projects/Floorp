@@ -25,10 +25,21 @@ const { FormAutofill } = ChromeUtils.import(
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://formautofill/FormAutofillUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "OSKeyStore",
+  "resource://gre/modules/OSKeyStore.jsm"
+);
 
 const {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
   ENABLED_AUTOFILL_CREDITCARDS_PREF,
+  ENABLED_AUTOFILL_CREDITCARDS_REAUTH_PREF,
 } = FormAutofill;
 const {
   MANAGE_ADDRESSES_KEYWORDS,
@@ -228,6 +239,47 @@ FormAutofillPreferences.prototype = {
 
       this.refs.creditCardAutofillCheckbox = creditCardAutofillCheckbox;
       this.refs.savedCreditCardsBtn = savedCreditCardsBtn;
+
+      if (OSKeyStore.canReauth()) {
+        let reauth = document.createXULElement("hbox");
+        let reauthCheckboxGroup = document.createXULElement("hbox");
+        let reauthCheckbox = document.createXULElement("checkbox");
+
+        reauthCheckboxGroup.classList.add("indent");
+        reauthCheckbox.disabled = !FormAutofill.isAutofillCreditCardsEnabled;
+
+        reauth.id = "creditCardReauthenticate";
+
+        reauth.setAttribute("data-subcategory", "reauth-credit-card-autofill");
+
+        let autofillReauthCheckboxLabel = "autofillReauthCheckbox";
+        // We reuse the if/else order from wizard markup to increase
+        // odds of consistent behavior.
+        if (AppConstants.platform == "macosx") {
+          autofillReauthCheckboxLabel += "Mac";
+        } else if (AppConstants.platform == "linux") {
+          autofillReauthCheckboxLabel += "Lin";
+        } else {
+          autofillReauthCheckboxLabel += "Win";
+        }
+        reauthCheckbox.setAttribute(
+          "label",
+          this.bundle.GetStringFromName(autofillReauthCheckboxLabel)
+        );
+
+        // Manually set the checked state
+        if (FormAutofillUtils._reauthEnabledByUser) {
+          reauthCheckbox.setAttribute("checked", true);
+        }
+
+        reauthCheckboxGroup.setAttribute("align", "center");
+        reauthCheckboxGroup.flex = 1;
+
+        formAutofillGroup.appendChild(reauth);
+        reauth.appendChild(reauthCheckboxGroup);
+        reauthCheckboxGroup.appendChild(reauthCheckbox);
+        this.refs.reauthCheckbox = reauthCheckbox;
+      }
     }
   },
 
@@ -236,7 +288,7 @@ FormAutofillPreferences.prototype = {
    *
    * @param  {DOMEvent} event
    */
-  handleEvent(event) {
+  async handleEvent(event) {
     switch (event.type) {
       case "command": {
         let target = event.target;
@@ -250,6 +302,46 @@ FormAutofillPreferences.prototype = {
         } else if (target == this.refs.creditCardAutofillCheckbox) {
           Services.prefs.setBoolPref(
             ENABLED_AUTOFILL_CREDITCARDS_PREF,
+            target.checked
+          );
+          if (this.refs.reauthCheckbox) {
+            this.refs.reauthCheckbox.disabled = !target.checked;
+          }
+        } else if (target == this.refs.reauthCheckbox) {
+          if (!OSKeyStore.canReauth()) {
+            break;
+          }
+
+          let messageTextId = "autofillReauthOSDialog";
+          // We reuse the if/else order from wizard markup to increase
+          // odds of consistent behavior.
+          if (AppConstants.platform == "macosx") {
+            messageTextId += "Mac";
+          } else if (AppConstants.platform == "linux") {
+            messageTextId += "Lin";
+          } else {
+            messageTextId += "Win";
+          }
+
+          let messageText = this.bundle.GetStringFromName(messageTextId);
+
+          const brandBundle = Services.strings.createBundle(
+            "chrome://branding/locale/brand.properties"
+          );
+          let win = target.ownerGlobal.docShell.chromeEventHandler.ownerGlobal;
+          let loggedIn = await OSKeyStore.ensureLoggedIn(
+            messageText,
+            brandBundle.GetStringFromName("brandFullName"),
+            win,
+            false
+          );
+          if (!loggedIn.authenticated) {
+            target.checked = !target.checked;
+            break;
+          }
+
+          Services.prefs.setBoolPref(
+            ENABLED_AUTOFILL_CREDITCARDS_REAUTH_PREF,
             target.checked
           );
         } else if (target == this.refs.savedAddressesBtn) {
@@ -270,6 +362,7 @@ FormAutofillPreferences.prototype = {
           let pref = FormAutofill.isAutofillCreditCardsEnabled;
           Services.prefs.setBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF, !pref);
           this.refs.creditCardAutofillCheckbox.checked = !pref;
+          this.refs.reauthCheckbox.disabled = pref;
         }
         break;
       }

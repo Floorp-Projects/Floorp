@@ -10,6 +10,7 @@ const SELECTORS = {
   savedCreditCardsBtn: "#creditCardAutofill button",
   addressAutofillLearnMore: "#addressAutofillLearnMore",
   creditCardAutofillLearnMore: "#creditCardAutofillLearnMore",
+  reauthCheckbox: "#creditCardReauthenticate checkbox",
 };
 
 // Visibility of form autofill group should be hidden when opening
@@ -209,6 +210,37 @@ add_task(async function test_creditCardNotAvailable() {
           "Autofill credit cards checkbox should not exist"
         );
       });
+    }
+  );
+});
+
+add_task(async function test_reauth() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true]],
+  });
+  let { OSKeyStore } = ChromeUtils.import(
+    "resource://gre/modules/OSKeyStore.jsm"
+  );
+
+  let finalPrefPaneLoaded = TestUtils.topicObserved(
+    "sync-pane-loaded",
+    () => true
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_PRIVACY },
+    async function(browser) {
+      await finalPrefPaneLoaded;
+      await SpecialPowers.spawn(
+        browser,
+        [SELECTORS, OSKeyStore.canReauth()],
+        (selectors, canReauth) => {
+          is(
+            canReauth,
+            !!content.document.querySelector(selectors.reauthCheckbox),
+            "Re-authentication checkbox should be available if OSKeyStore.canReauth() is `true`"
+          );
+        }
+      );
     }
   );
 });
