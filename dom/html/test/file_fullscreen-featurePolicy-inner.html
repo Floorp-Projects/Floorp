@@ -6,22 +6,24 @@
 <body onload="doRequestFullscreen()">
 <script>
 function doRequestFullscreen() {
+  let isChrome = location.search.includes("chrome");
+
   function handler(evt) {
     document.removeEventListener("fullscreenchange", handler);
     document.removeEventListener("fullscreenerror", handler);
+    const enabled = isChrome ? SpecialPowers.wrap(document).fullscreenEnabled
+                             : document.fullscreenEnabled;
     if (evt.type == "fullscreenchange") {
-      document.addEventListener("fullscreenchange", () => parent.continueTest(evt.type), {once: true});
+      document.addEventListener("fullscreenchange", () => parent.continueTest(evt.type, enabled), {once: true});
       document.exitFullscreen();
     } else {
-      parent.continueTest(evt.type);
+      parent.continueTest(evt.type, enabled);
     }
   }
-  parent.ok(document.fullscreenEnabled, "Fullscreen " +
-            `should be enabled in ${parent.testTargetName}`);
   document.addEventListener("fullscreenchange", handler);
   document.addEventListener("fullscreenerror", handler);
   parent.opener.info("Requesting fullscreen");
-  if (location.search.includes("chrome")) {
+  if (isChrome) {
     SpecialPowers.wrap(document.documentElement).requestFullscreen();
   } else {
     document.documentElement.requestFullscreen();
