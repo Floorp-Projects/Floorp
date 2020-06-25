@@ -45,12 +45,6 @@ using mozilla::MakeEnumeratedRange;
 #  endif
 #endif
 
-// More sanity checks.
-
-static_assert(MaxMemoryInitialPages <=
-                  ArrayBufferObject::MaxBufferByteLength / PageSize,
-              "Memory sizing constraint");
-
 // All plausible targets must be able to do at least IEEE754 double
 // loads/stores, hence the lower limit of 8.  Some Intel processors support
 // AVX-512 loads/stores, hence the upper limit of 64.

@@ -768,6 +768,12 @@ bool Module::instantiateMemory(JSContext* cx,
   } else {
     MOZ_ASSERT(!metadata().isAsmJS());
 
+    if (declaredMin / PageSize > MaxMemoryPages) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_MEM_IMP_LIMIT);
+      return false;
+    }
+
     RootedArrayBufferObjectMaybeShared buffer(cx);
     Limits l(declaredMin, declaredMax,
              declaredShared ? Shareable::True : Shareable::False);

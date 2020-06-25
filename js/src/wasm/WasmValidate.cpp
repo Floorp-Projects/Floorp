@@ -2002,7 +2002,7 @@ static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
-  if (memory.initial > MaxMemoryInitialPages) {
+  if (memory.initial > MaxMemoryLimitField) {
     return d.fail("initial memory size too big");
   }
 
