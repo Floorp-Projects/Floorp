@@ -299,6 +299,7 @@ DEFINES['TOPOBJDIR'] = TOPOBJDIR
 
 XPIDL_SOURCES += [
     'nsIE10SUtils.idl',
+    'nsIRegion.idl',
 ]
 
 XPIDL_MODULE = 'toolkit_modules'
