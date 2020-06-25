@@ -10,7 +10,7 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ipc/InProcessParent.h"
+#include "mozilla/dom/InProcessParent.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientInfo.h"
