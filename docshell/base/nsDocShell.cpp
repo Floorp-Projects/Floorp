@@ -5808,6 +5808,87 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
   return nullptr;
 }
 
+bool nsDocShell::ShouldLoadErrorPageWithoutFixup(nsresult aStatus) {
+  return aStatus == NS_ERROR_FILE_NOT_FOUND ||
+         aStatus == NS_ERROR_FILE_ACCESS_DENIED ||
+         aStatus == NS_ERROR_CORRUPTED_CONTENT ||
+         aStatus == NS_ERROR_INVALID_CONTENT_ENCODING;
+}
+
+nsresult nsDocShell::FilterStatusForErrorPage(
+    nsresult aStatus, nsIChannel* aChannel, uint32_t aLoadType,
+    bool aIsTopFrame, bool aUseErrorPages, bool aIsInitialDocument,
+    bool* aSkippedUnknownProtocolNavigation) {
+  // Errors to be shown only on top-level frames
+  if ((aStatus == NS_ERROR_UNKNOWN_HOST ||
+       aStatus == NS_ERROR_CONNECTION_REFUSED ||
+       aStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
+       aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
+       aStatus == NS_ERROR_PROXY_FORBIDDEN ||
+       aStatus == NS_ERROR_PROXY_NOT_IMPLEMENTED ||
+       aStatus == NS_ERROR_PROXY_AUTHENTICATION_FAILED ||
+       aStatus == NS_ERROR_PROXY_TOO_MANY_REQUESTS ||
+       aStatus == NS_ERROR_MALFORMED_URI ||
+       aStatus == NS_ERROR_BLOCKED_BY_POLICY) &&
+      (aIsTopFrame || aUseErrorPages)) {
+    return aStatus;
+  }
+
+  if (aStatus == NS_ERROR_NET_TIMEOUT ||
+      aStatus == NS_ERROR_PROXY_GATEWAY_TIMEOUT ||
+      aStatus == NS_ERROR_REDIRECT_LOOP ||
+      aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
+      aStatus == NS_ERROR_NET_INTERRUPT || aStatus == NS_ERROR_NET_RESET ||
+      aStatus == NS_ERROR_PROXY_BAD_GATEWAY || aStatus == NS_ERROR_OFFLINE ||
+      aStatus == NS_ERROR_MALWARE_URI || aStatus == NS_ERROR_PHISHING_URI ||
+      aStatus == NS_ERROR_UNWANTED_URI || aStatus == NS_ERROR_HARMFUL_URI ||
+      aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||
+      aStatus == NS_ERROR_REMOTE_XUL ||
+      aStatus == NS_ERROR_INTERCEPTION_FAILED ||
+      aStatus == NS_ERROR_NET_INADEQUATE_SECURITY ||
+      aStatus == NS_ERROR_NET_HTTP2_SENT_GOAWAY ||
+      aStatus == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR ||
+      aStatus == NS_ERROR_DOM_BAD_URI ||
+      NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
+    // Errors to be shown for any frame
+    return aStatus;
+  }
+
+  if (aStatus == NS_ERROR_UNKNOWN_PROTOCOL) {
+    // For unknown protocols we only display an error if the load is triggered
+    // by the browser itself, or we're replacing the initial document (and
+    // nothing else). Showing the error for page-triggered navigations causes
+    // annoying behavior for users, see bug 1528305.
+    //
+    // We could, maybe, try to detect if this is in response to some user
+    // interaction (like clicking a link, or something else) and maybe show
+    // the error page in that case. But this allows for ctrl+clicking and such
+    // to see the error page.
+    nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
+    if (!info->TriggeringPrincipal()->IsSystemPrincipal() &&
+        StaticPrefs::dom_no_unknown_protocol_error_enabled() &&
+        !aIsInitialDocument) {
+      if (aSkippedUnknownProtocolNavigation) {
+        *aSkippedUnknownProtocolNavigation = true;
+      }
+      return NS_OK;
+    }
+    return aStatus;
+  }
+
+  if (aStatus == NS_ERROR_DOCUMENT_NOT_CACHED) {
+    // Non-caching channels will simply return NS_ERROR_OFFLINE.
+    // Caching channels would have to look at their flags to work
+    // out which error to return. Or we can fix up the error here.
+    if (!(aLoadType & LOAD_CMD_HISTORY)) {
+      return NS_ERROR_OFFLINE;
+    }
+    return aStatus;
+  }
+
+  return NS_OK;
+}
+
 nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                  nsIChannel* aChannel, nsresult aStatus) {
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
@@ -5940,11 +6021,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   //      (if appropriate).
   //   5. Throw an error dialog box...
   //
-  if (url && NS_FAILED(aStatus)) {
-    if (aStatus == NS_ERROR_FILE_NOT_FOUND ||
-        aStatus == NS_ERROR_FILE_ACCESS_DENIED ||
-        aStatus == NS_ERROR_CORRUPTED_CONTENT ||
-        aStatus == NS_ERROR_INVALID_CONTENT_ENCODING) {
+  if (NS_FAILED(aStatus)) {
+    if (ShouldLoadErrorPageWithoutFixup(aStatus)) {
       UnblockEmbedderLoadEventForFailure();
       DisplayLoadError(aStatus, url, nullptr, aChannel);
       return NS_OK;
@@ -6071,77 +6149,26 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                                 aStatus == NS_ERROR_CONTENT_BLOCKED);
     UnblockEmbedderLoadEventForFailure(fireFrameErrorEvent);
 
-    // Errors to be shown only on top-level frames
-    if ((aStatus == NS_ERROR_UNKNOWN_HOST ||
-         aStatus == NS_ERROR_CONNECTION_REFUSED ||
-         aStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
-         aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
-         aStatus == NS_ERROR_PROXY_FORBIDDEN ||
-         aStatus == NS_ERROR_PROXY_NOT_IMPLEMENTED ||
-         aStatus == NS_ERROR_PROXY_AUTHENTICATION_FAILED ||
-         aStatus == NS_ERROR_PROXY_TOO_MANY_REQUESTS ||
-         aStatus == NS_ERROR_MALFORMED_URI ||
-         aStatus == NS_ERROR_BLOCKED_BY_POLICY) &&
-        (isTopFrame || mUseErrorPages)) {
+    bool isInitialDocument =
+        !GetExtantDocument() || GetExtantDocument()->IsInitialDocument();
+    bool skippedUnknownProtocolNavigation = false;
+    aStatus = FilterStatusForErrorPage(aStatus, aChannel, mLoadType, isTopFrame,
+                                       mUseErrorPages, isInitialDocument,
+                                       &skippedUnknownProtocolNavigation);
+    if (NS_FAILED(aStatus)) {
       DisplayLoadError(aStatus, url, nullptr, aChannel);
-    } else if (aStatus == NS_ERROR_NET_TIMEOUT ||
-               aStatus == NS_ERROR_PROXY_GATEWAY_TIMEOUT ||
-               aStatus == NS_ERROR_REDIRECT_LOOP ||
-               aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
-               aStatus == NS_ERROR_NET_INTERRUPT ||
-               aStatus == NS_ERROR_NET_RESET ||
-               aStatus == NS_ERROR_PROXY_BAD_GATEWAY ||
-               aStatus == NS_ERROR_OFFLINE || aStatus == NS_ERROR_MALWARE_URI ||
-               aStatus == NS_ERROR_PHISHING_URI ||
-               aStatus == NS_ERROR_UNWANTED_URI ||
-               aStatus == NS_ERROR_HARMFUL_URI ||
-               aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||
-               aStatus == NS_ERROR_REMOTE_XUL ||
-               aStatus == NS_ERROR_INTERCEPTION_FAILED ||
-               aStatus == NS_ERROR_NET_INADEQUATE_SECURITY ||
-               aStatus == NS_ERROR_NET_HTTP2_SENT_GOAWAY ||
-               aStatus == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR ||
-               aStatus == NS_ERROR_DOM_BAD_URI ||
-               NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
-      // Errors to be shown for any frame
-      DisplayLoadError(aStatus, url, nullptr, aChannel);
-    } else if (aStatus == NS_ERROR_UNKNOWN_PROTOCOL) {
-      // For unknown protocols we only display an error if the load is triggered
-      // by the browser itself, or we're replacing the initial document (and
-      // nothing else). Showing the error for page-triggered navigations causes
-      // annoying behavior for users, see bug 1528305.
-      //
-      // We could, maybe, try to detect if this is in response to some user
-      // interaction (like clicking a link, or something else) and maybe show
-      // the error page in that case. But this allows for ctrl+clicking and such
-      // to see the error page.
-      nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
-      Document* doc = GetDocument();
-      if (!info->TriggeringPrincipal()->IsSystemPrincipal() &&
-          StaticPrefs::dom_no_unknown_protocol_error_enabled() && doc &&
-          !doc->IsInitialDocument()) {
-        nsTArray<nsString> params;
-        if (NS_FAILED(NS_GetSanitizedURIStringFromURI(
-                url, *params.AppendElement()))) {
-          params.LastElement().AssignLiteral(u"(unknown uri)");
-        }
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), doc,
-            nsContentUtils::eDOM_PROPERTIES,
-            "UnknownProtocolNavigationPrevented", params);
-      } else {
-        DisplayLoadError(aStatus, url, nullptr, aChannel);
+    } else if (skippedUnknownProtocolNavigation) {
+      nsTArray<nsString> params;
+      if (NS_FAILED(
+              NS_GetSanitizedURIStringFromURI(url, *params.AppendElement()))) {
+        params.LastElement().AssignLiteral(u"(unknown uri)");
       }
-    } else if (aStatus == NS_ERROR_DOCUMENT_NOT_CACHED) {
-      // Non-caching channels will simply return NS_ERROR_OFFLINE.
-      // Caching channels would have to look at their flags to work
-      // out which error to return. Or we can fix up the error here.
-      if (!(mLoadType & LOAD_CMD_HISTORY)) {
-        aStatus = NS_ERROR_OFFLINE;
-      }
-      DisplayLoadError(aStatus, url, nullptr, aChannel);
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"),
+          GetExtantDocument(), nsContentUtils::eDOM_PROPERTIES,
+          "UnknownProtocolNavigationPrevented", params);
     }
-  } else if (url && NS_SUCCEEDED(aStatus)) {
+  } else {
     // If we have a host
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     PredictorLearnRedirect(url, aChannel, loadInfo->GetOriginAttributes());
