@@ -72,6 +72,9 @@ bool Sink(MIRGenerator* mir, MIRGraph& graph) {
         hasUses = true;
         MNode* consumerNode = (*i)->consumer();
         if (consumerNode->isResumePoint()) {
+          if (!consumerNode->toResumePoint()->isRecoverableOperand(*i)) {
+            hasLiveUses = true;
+          }
           continue;
         }
 
