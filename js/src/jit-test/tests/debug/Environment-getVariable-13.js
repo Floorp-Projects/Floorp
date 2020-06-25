@@ -32,7 +32,7 @@ withJitOptions(Opts_Ion2NoOffthreadCompilation, function () {
 
   g.eval("" + function f(d, x) { g(d, x); });
   g.eval("" + function g(d, x) {
-    for (var i = 0; i < 200; i++);
+    for (var i = 0; i < 100; i++);
     function inner() { i = 42; };
     toggle(d);
     // Use x so it doesn't get optimized out.
@@ -40,7 +40,7 @@ withJitOptions(Opts_Ion2NoOffthreadCompilation, function () {
   });
 
   g.eval("(" + function test() {
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < 15; i++)
       f(false, 42);
     f(true, 42);
   } + ")();");
