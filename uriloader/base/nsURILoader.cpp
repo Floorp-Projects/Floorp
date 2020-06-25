@@ -395,13 +395,15 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request,
   // Before dispatching to the external helper app service, check for an HTTP
   // error page.  If we got one, we don't want to handle it with a helper app,
   // really.
+  // The WPT a-download-click-404.html requires us to silently handle this
+  // without displaying an error page, so we just return early here.
+  // See bug 1604308 for discussion around what the ideal behaviour is.
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (httpChannel) {
     bool requestSucceeded;
     rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
     if (NS_FAILED(rv) || !requestSucceeded) {
-      // returning error from OnStartRequest will cancel the channel
-      return NS_ERROR_FILE_NOT_FOUND;
+      return NS_OK;
     }
   }
 
