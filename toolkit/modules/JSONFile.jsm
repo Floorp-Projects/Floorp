@@ -109,6 +109,8 @@ const kSaveDelayMs = 1500;
  *                      testing.
  *        - compression: A compression algorithm to use when reading and
  *                       writing the data.
+ *        - backupTo: A boolean value indicating whether writeAtomic should create
+ *                    a backup before writing to json files.
  */
 function JSONFile(config) {
   this.path = config.path;
@@ -128,6 +130,10 @@ function JSONFile(config) {
   this._options = {};
   if (config.compression) {
     this._options.compression = config.compression;
+  }
+
+  if (config.backupTo) {
+    this._options.backupTo = config.backupTo;
   }
 
   this._finalizeAt = config.finalizeAt || AsyncShutdown.profileBeforeChange;
