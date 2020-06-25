@@ -14,8 +14,11 @@ include NeckoChannelParams;
 include IPCServiceWorkerDescriptor;
 include IPCStream;
 include HttpChannelParams;
+include PURLClassifierInfo;
 
 include "mozilla/net/NeckoMessageUtils.h";
+
+using nsIHttpChannel::FlashPluginState from "mozilla/net/NeckoMessageUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -100,16 +103,34 @@ parent:
   async __delete__();
 
 child:
+  async OnStartRequest(nsHttpResponseHead  responseHead,
+                       bool                useResponseHead,
+                       nsHttpHeaderArray   requestHeaders,
+                       HttpChannelOnStartRequestArgs args);
+
+  // Combines a single OnDataAvailable and its associated OnProgress &
+  // OnStatus calls into one IPDL message
+  // This is a duplicate of the message on PHttpBackgroundChannel, and gets
+  // used for multi-pary streams to make synchronization when we get OnStartRequest 
+  // multiple times easier.
+  async OnTransportAndData(nsresult  channelStatus,
+                           nsresult  transportStatus,
+                           uint64_t  offset,
+                           uint32_t  count,
+                           nsCString data);
+
+  // This is a duplicate of the message on PHttpBackgroundChannel, and gets
+  // used for multi-pary streams to make synchronization when we get OnStartRequest 
+  // multiple times easier.
+  async OnStopRequest(nsresult channelStatus,
+                      ResourceTimingStructArgs timing,
+                      TimeStamp lastActiveTabOptimization,
+                      nsHttpHeaderArray responseTrailers,
+                      ConsoleReportCollected[] consoleReport);
+
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.
   async FailedAsyncOpen(nsresult status);
-
-  // OnStartRequest is sent over PHttpBackgroundChannel. However, sometime we
-  // need to wait for some PContent IPCs, e.g., permission, cookies. Those IPC
-  // are sent just before the background thread OnStartRequest, which is racy.
-  // Therefore, need one main thread IPC event for synchronizing the event
-  // sequence.
-  async OnStartRequestSent();
 
   // Called to initiate content channel redirect, starts talking to sinks
   // on the content process and reports result via Redirect2Verify above
@@ -157,6 +178,26 @@ child:
 
   async AltDataCacheInputStreamAvailable(IPCStream? stream);
 
+  async OnProgress(int64_t progress, int64_t progressMax);
+
+  async OnStatus(nsresult status);
+
+  // Tell the child that the resource being loaded has been classified.
+  async NotifyClassificationFlags(uint32_t aClassificationFlags, bool aIsThirdParty);
+
+  // Tell the child that the current channel's document is not allowed to load
+  // flash content.
+  async NotifyFlashPluginStateChanged(FlashPluginState aState);
+
+  // Tell the child information of matched URL againts SafeBrowsing list
+  async SetClassifierMatchedInfo(ClassifierInfo info);
+
+  // Tell the child information of matched URL againts SafeBrowsing tracking list
+  async SetClassifierMatchedTrackingInfo(ClassifierInfo info);
+ 
+  // Forwards nsIMultiPartChannelListener::onAfterLastPart. Make sure we've
+  // disconnected our listeners, since we might not have on the last OnStopRequest.
+  async OnAfterLastPart(nsresult aStatus);
 
 both:
   // After receiving this message, the parent also calls
