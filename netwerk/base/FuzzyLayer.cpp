@@ -43,7 +43,7 @@ static nsDataHashtable<nsPtrHashKey<PRFileDesc>, NetworkFuzzingBuffer*>
     gConnectedNetworkFuzzingBuffers;
 
 // This holds all buffers for connections we can still open.
-static nsDeque gNetworkFuzzingBuffers;
+static nsDeque<NetworkFuzzingBuffer> gNetworkFuzzingBuffers;
 
 // This is `true` once all connections are closed and either there are
 // no buffers left to be used or all remaining buffers are marked optional.
@@ -143,8 +143,7 @@ static PRStatus FuzzyConnect(PRFileDesc* fd, const PRNetAddr* addr,
 
   MutexAutoLock lock(gConnRecvMutex);
 
-  NetworkFuzzingBuffer* buf =
-      (NetworkFuzzingBuffer*)gNetworkFuzzingBuffers.PopFront();
+  NetworkFuzzingBuffer* buf = gNetworkFuzzingBuffers.PopFront();
   if (!buf) {
     FUZZING_LOG(("[FuzzyConnect] Denying additional connection."));
     return PR_FAILURE;
@@ -266,8 +265,7 @@ static PRStatus FuzzyClose(PRFileDesc* fd) {
     // unused network buffers that were not marked as optional.
     bool haveRemainingUnusedBuffers = false;
     for (size_t i = 0; i < gNetworkFuzzingBuffers.GetSize(); ++i) {
-      NetworkFuzzingBuffer* buf = static_cast<NetworkFuzzingBuffer*>(
-          gNetworkFuzzingBuffers.ObjectAt(i));
+      NetworkFuzzingBuffer* buf = gNetworkFuzzingBuffers.ObjectAt(i);
 
       if (!buf->allowUnused) {
         haveRemainingUnusedBuffers = true;

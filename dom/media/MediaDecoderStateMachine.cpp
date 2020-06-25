@@ -3951,28 +3951,28 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::RequestDebugInfo(
   return p;
 }
 
-class VideoQueueMemoryFunctor : public nsDequeFunctor {
+class VideoQueueMemoryFunctor : public nsDequeFunctor<VideoData> {
  public:
   VideoQueueMemoryFunctor() : mSize(0) {}
 
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
-  virtual void operator()(void* aObject) override {
-    const VideoData* v = static_cast<const VideoData*>(aObject);
+  virtual void operator()(VideoData* aObject) override {
+    const VideoData* v = aObject;
     mSize += v->SizeOfIncludingThis(MallocSizeOf);
   }
 
   size_t mSize;
 };
 
-class AudioQueueMemoryFunctor : public nsDequeFunctor {
+class AudioQueueMemoryFunctor : public nsDequeFunctor<AudioData> {
  public:
   AudioQueueMemoryFunctor() : mSize(0) {}
 
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
-  virtual void operator()(void* aObject) override {
-    const AudioData* audioData = static_cast<const AudioData*>(aObject);
+  virtual void operator()(AudioData* aObject) override {
+    const AudioData* audioData = aObject;
     mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
   }
 

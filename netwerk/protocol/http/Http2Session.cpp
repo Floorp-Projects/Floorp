@@ -587,8 +587,7 @@ void Http2Session::QueueStream(Http2Stream* stream) {
 #ifdef DEBUG
   int32_t qsize = mQueuedStreams.GetSize();
   for (int32_t i = 0; i < qsize; i++) {
-    Http2Stream* qStream =
-        static_cast<Http2Stream*>(mQueuedStreams.ObjectAt(i));
+    Http2Stream* qStream = mQueuedStreams.ObjectAt(i);
     MOZ_ASSERT(qStream != stream);
     MOZ_ASSERT(qStream->Queued());
   }
@@ -602,8 +601,7 @@ void Http2Session::ProcessPending() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   Http2Stream* stream;
-  while (RoomForMoreConcurrent() &&
-         (stream = static_cast<Http2Stream*>(mQueuedStreams.PopFront()))) {
+  while (RoomForMoreConcurrent() && (stream = mQueuedStreams.PopFront())) {
     LOG3(("Http2Session::ProcessPending %p stream %p woken from queue.", this,
           stream));
     MOZ_ASSERT(!stream->CountAsActive());
@@ -1270,10 +1268,11 @@ void Http2Session::CleanupStream(uint32_t aID, nsresult aResult,
   CleanupStream(stream, aResult, aResetCode);
 }
 
-static void RemoveStreamFromQueue(Http2Stream* aStream, nsDeque& queue) {
+static void RemoveStreamFromQueue(Http2Stream* aStream,
+                                  nsDeque<Http2Stream>& queue) {
   size_t size = queue.GetSize();
   for (size_t count = 0; count < size; ++count) {
-    Http2Stream* stream = static_cast<Http2Stream*>(queue.PopFront());
+    Http2Stream* stream = queue.PopFront();
     if (stream != aStream) queue.Push(stream);
   }
 }
@@ -2179,8 +2178,7 @@ nsresult Http2Session::RecvGoAway(Http2Session* self) {
   // are not covered by the last-good id.
   size = self->mQueuedStreams.GetSize();
   for (size_t count = 0; count < size; ++count) {
-    Http2Stream* stream =
-        static_cast<Http2Stream*>(self->mQueuedStreams.PopFront());
+    Http2Stream* stream = self->mQueuedStreams.PopFront();
     MOZ_ASSERT(stream->Queued());
     stream->SetQueued(false);
     if (self->mPeerGoAwayReason == HTTP_1_1_REQUIRED) {
@@ -2763,7 +2761,7 @@ nsresult Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
 
   LOG3(("Http2Session::ReadSegments %p", this));
 
-  Http2Stream* stream = static_cast<Http2Stream*>(mReadyForWrite.PopFront());
+  Http2Stream* stream = mReadyForWrite.PopFront();
   if (!stream) {
     LOG3(("Http2Session %p could not identify a stream to write; suspending.",
           this));
@@ -3002,8 +3000,7 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
   // If there are http transactions attached to a push stream with filled
   // buffers trigger that data pump here. This only reads from buffers (not the
   // network) so mDownstreamState doesn't matter.
-  Http2Stream* pushConnectedStream =
-      static_cast<Http2Stream*>(mPushesReadyForRead.PopFront());
+  Http2Stream* pushConnectedStream = mPushesReadyForRead.PopFront();
   if (pushConnectedStream) {
     return ProcessConnectedPush(pushConnectedStream, writer, count,
                                 countWritten);
@@ -3011,8 +3008,7 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
 
   // feed gecko channels that previously stopped consuming data
   // only take data from stored buffers
-  Http2Stream* slowConsumer =
-      static_cast<Http2Stream*>(mSlowConsumersReadyForRead.PopFront());
+  Http2Stream* slowConsumer = mSlowConsumersReadyForRead.PopFront();
   if (slowConsumer) {
     internalStateType savedState = mDownstreamState;
     mDownstreamState = NOT_USING_NETWORK;
