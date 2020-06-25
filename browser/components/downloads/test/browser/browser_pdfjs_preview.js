@@ -30,6 +30,26 @@ const TestCases = [
     },
   },
   {
+    name: "Download panel, system viewer menu items prefd off",
+    whichUI: "downloadPanel",
+    itemSelector: "#downloadsListBox richlistitem .downloadMainArea",
+    async userEvents(itemTarget, win) {
+      EventUtils.synthesizeMouseAtCenter(itemTarget, {}, win);
+    },
+    prefs: [
+      ["browser.download.openInSystemViewerContextMenuItem", false],
+      ["browser.download.alwaysOpenInSystemViewerContextMenuItem", false],
+    ],
+    expected: {
+      downloadCount: 1,
+      newWindow: false,
+      opensTab: true,
+      tabSelected: true,
+      useSystemMenuItemDisabled: true,
+      alwaysMenuItemDisabled: true,
+    },
+  },
+  {
     name: "Download panel, open from keyboard",
     whichUI: "downloadPanel",
     itemSelector: "#downloadsListBox richlistitem .downloadMainArea",
@@ -110,6 +130,26 @@ const TestCases = [
     },
   },
   {
+    name: "Library all downloads dialog, system viewer menu items prefd off",
+    whichUI: "allDownloads",
+    async userEvents(itemTarget, win) {
+      // double click
+      await triggerDblclickOn(itemTarget, {}, win);
+    },
+    prefs: [
+      ["browser.download.openInSystemViewerContextMenuItem", false],
+      ["browser.download.alwaysOpenInSystemViewerContextMenuItem", false],
+    ],
+    expected: {
+      downloadCount: 1,
+      newWindow: false,
+      opensTab: true,
+      tabSelected: true,
+      useSystemMenuItemDisabled: true,
+      alwaysMenuItemDisabled: true,
+    },
+  },
+  {
     name: "Library all downloads dialog, open from keyboard",
     whichUI: "allDownloads",
     async userEvents(itemTarget, win) {
@@ -187,6 +227,28 @@ const TestCases = [
       newWindow: false,
       opensTab: true,
       tabSelected: true,
+    },
+  },
+  {
+    name: "about:downloads, system viewer menu items prefd off",
+    whichUI: "aboutDownloads",
+    itemSelector: "#downloadsRichListBox richlistitem .downloadContainer",
+    async userEvents(itemSelector, win) {
+      let browser = win.gBrowser.selectedBrowser;
+      is(browser.currentURI.spec, "about:downloads");
+      await contentTriggerDblclickOn(itemSelector, {}, browser);
+    },
+    prefs: [
+      ["browser.download.openInSystemViewerContextMenuItem", false],
+      ["browser.download.alwaysOpenInSystemViewerContextMenuItem", false],
+    ],
+    expected: {
+      downloadCount: 1,
+      newWindow: false,
+      opensTab: true,
+      tabSelected: true,
+      useSystemMenuItemDisabled: true,
+      alwaysMenuItemDisabled: true,
     },
   },
   {
@@ -306,6 +368,66 @@ function contentTriggerDblclickOn(selector, eventModifiers = {}, browser) {
   );
 }
 
+async function openContextMenu(itemElement, win = window) {
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    itemElement.ownerDocument,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    itemElement,
+    {
+      type: "contextmenu",
+      button: 2,
+    },
+    win
+  );
+  let { target } = await popupShownPromise;
+  return target;
+}
+
+async function verifyContextMenu(contextMenu, expected = {}) {
+  info("verifyContextMenu with expected: " + JSON.stringify(expected, null, 2));
+  let alwaysMenuItem = contextMenu.querySelector(
+    ".downloadAlwaysUseSystemDefaultMenuItem"
+  );
+  let useSystemMenuItem = contextMenu.querySelector(
+    ".downloadUseSystemDefaultMenuItem"
+  );
+  await TestUtils.waitForCondition(
+    () => BrowserTestUtils.is_visible(contextMenu),
+    "The context menu is visible"
+  );
+  await TestUtils.waitForTick();
+
+  is(
+    BrowserTestUtils.is_hidden(useSystemMenuItem),
+    expected.useSystemMenuItemDisabled,
+    `The 'Use system viewer' menu item was ${
+      expected.useSystemMenuItemDisabled ? "hidden" : "visible"
+    }`
+  );
+  is(
+    BrowserTestUtils.is_hidden(alwaysMenuItem),
+    expected.alwaysMenuItemDisabled,
+    `The 'Use system viewer' menu item was ${
+      expected.alwaysMenuItemDisabled ? "hidden" : "visible"
+    }`
+  );
+
+  if (!expected.useSystemMenuItemDisabled && expected.alwaysChecked) {
+    is(
+      alwaysMenuItem.getAttribute("checked"),
+      "true",
+      "The 'Always...' menu item is checked"
+    );
+  } else if (!expected.useSystemMenuItemDisabled) {
+    ok(
+      !alwaysMenuItem.hasAttribute("checked"),
+      "The 'Always...' menu item not checked"
+    );
+  }
+}
+
 async function createDownloadedFile(pathname, contents) {
   let encoder = new TextEncoder();
   let file = new FileUtils.File(pathname);
@@ -352,7 +474,7 @@ async function addPDFDownload(itemData) {
   return download;
 }
 
-async function testSetup(testData = {}) {
+async function testSetup() {
   // remove download files, empty out collections
   let downloadList = await Downloads.getList(Downloads.ALL);
   let downloadCount = (await downloadList.getAll()).length;
@@ -379,6 +501,7 @@ async function testOpenPDFPreview({
   whichUI,
   itemSelector,
   expected,
+  prefs = [],
   userEvents,
   isPrivate,
 }) {
@@ -386,6 +509,11 @@ async function testOpenPDFPreview({
   // Wait for focus first
   await promiseFocus();
   await testSetup();
+  if (prefs.length) {
+    await SpecialPowers.pushPrefEnv({
+      set: prefs,
+    });
+  }
 
   // Populate downloads database with the data required by this test.
   info("Adding download objects");
@@ -454,12 +582,16 @@ async function testOpenPDFPreview({
     }
 
     let itemTarget;
+    let contextMenu;
+
     switch (whichUI) {
       case "downloadPanel":
         info("Opening download panel");
         await openDownloadPanel(expected.downloadCount);
         info("/Opening download panel");
         itemTarget = document.querySelector(itemSelector);
+        contextMenu = uiWindow.document.querySelector("#downloadsContextMenu");
+
         break;
       case "allDownloads":
         // we'll be interacting with the library dialog
@@ -467,11 +599,17 @@ async function testOpenPDFPreview({
 
         let listbox = uiWindow.document.getElementById("downloadsRichListBox");
         ok(listbox, "download list box present");
-        // wait for the expected number of items in the view
-        await TestUtils.waitForCondition(
-          () => listbox.itemChildren.length == expected.downloadCount
-        );
+        // wait for the expected number of items in the view,
+        // and for the first item to be visible && clickable
+        await TestUtils.waitForCondition(() => {
+          return (
+            listbox.itemChildren.length == expected.downloadCount &&
+            BrowserTestUtils.is_visible(listbox.itemChildren[0])
+          );
+        });
         itemTarget = listbox.itemChildren[0];
+        contextMenu = uiWindow.document.querySelector("#downloadsContextMenu");
+
         break;
       case "aboutDownloads":
         info("Preparing about:downloads browser window");
@@ -537,6 +675,21 @@ async function testOpenPDFPreview({
         break;
     }
 
+    if (contextMenu) {
+      info("trigger the contextmenu");
+      await openContextMenu(itemTarget || itemSelector, uiWindow);
+      info("context menu should be open, verify its menu items");
+      let expectedValues = {
+        useSystemMenuItemDisabled: false,
+        alwaysMenuItemDisabled: false,
+        ...expected,
+      };
+      await verifyContextMenu(contextMenu, expectedValues);
+      contextMenu.hidePopup();
+    } else {
+      todo(contextMenu, "No context menu checks for test: " + name);
+    }
+
     info("Executing user events");
     await userEvents(itemTarget || itemSelector, uiWindow);
 
@@ -594,6 +747,9 @@ async function testOpenPDFPreview({
     await lastPBContextExitedPromise;
   });
   await downloadList.removeFinished();
+  if (prefs.length) {
+    await SpecialPowers.popPrefEnv();
+  }
 }
 
 // register the tests

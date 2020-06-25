@@ -705,12 +705,40 @@ DownloadsPlacesView.prototype = {
     // Set the state attribute so that only the appropriate items are displayed.
     let contextMenu = document.getElementById("downloadsContextMenu");
     let download = element._shell.download;
+    let { preferredAction, useSystemDefault } = DownloadsCommon.getMimeInfo(
+      download
+    );
     contextMenu.setAttribute(
       "state",
       DownloadsCommon.stateOfDownload(download)
     );
     contextMenu.setAttribute("exists", "true");
     contextMenu.classList.toggle("temporary-block", !!download.hasBlockedData);
+
+    if (element.hasAttribute("is-pdf")) {
+      contextMenu.setAttribute("is-pdf", "true");
+      let alwaysUseSystemViewerItem = contextMenu.querySelector(
+        ".downloadAlwaysUseSystemDefaultMenuItem"
+      );
+      if (preferredAction === useSystemDefault) {
+        alwaysUseSystemViewerItem.setAttribute("checked", "true");
+      } else {
+        alwaysUseSystemViewerItem.removeAttribute("checked");
+      }
+      alwaysUseSystemViewerItem.toggleAttribute(
+        "enabled",
+        DownloadsCommon.alwaysOpenInSystemViewerItemEnabled
+      );
+      let useSystemViewerItem = contextMenu.querySelector(
+        ".downloadUseSystemDefaultMenuItem"
+      );
+      useSystemViewerItem.toggleAttribute(
+        "enabled",
+        DownloadsCommon.openInSystemViewerItemEnabled
+      );
+    } else {
+      contextMenu.removeAttribute("is-pdf");
+    }
 
     if (!download.stopped) {
       // The hasPartialData property of a download may change at any time after

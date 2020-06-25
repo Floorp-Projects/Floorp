@@ -359,6 +359,13 @@ pref("browser.download.animateNotifications", true);
 // This records whether or not the panel has been shown at least once.
 pref("browser.download.panel.shown", false);
 
+// This records whether or not to show the 'Open in system viewer' context menu item when appropriate
+pref("browser.download.openInSystemViewerContextMenuItem", true);
+
+// This records whether or not to show the 'Always open...' context menu item when appropriate
+pref("browser.download.alwaysOpenInSystemViewerContextMenuItem", true);
+
+
 // This controls whether the button is automatically shown/hidden depending
 // on whether there are downloads to show.
 pref("browser.download.autohideButton", true);
