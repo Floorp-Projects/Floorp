@@ -1909,17 +1909,18 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
           ("destroying Subprocess in ActorDestroy: ContentParent %p "
-           "mSubprocess %p handle %ld",
+           "mSubprocess %p handle %" PRIuPTR,
            this, mSubprocess,
-           mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
+           mSubprocess ? (uintptr_t)mSubprocess->GetChildProcessHandle() : -1));
   // FIXME (bug 1520997): does this really need an additional dispatch?
   MessageLoop::current()->PostTask(NS_NewRunnableFunction(
       "DelayedDeleteSubprocessRunnable", [subprocess = mSubprocess] {
         MOZ_LOG(
             ContentParent::GetLog(), LogLevel::Debug,
-            ("destroyed Subprocess in ActorDestroy: Subprocess %p handle %ld",
+            ("destroyed Subprocess in ActorDestroy: Subprocess %p handle "
+             "%" PRIuPTR,
              subprocess,
-             subprocess ? (long)subprocess->GetChildProcessHandle() : -1));
+             subprocess ? (uintptr_t)subprocess->GetChildProcessHandle() : -1));
         subprocess->Destroy();
       }));
   mSubprocess = nullptr;
@@ -2527,9 +2528,9 @@ ContentParent::ContentParent(ContentParent* aOpener,
   bool isFile = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
   mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, isFile);
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-          ("CreateSubprocess: ContentParent %p mSubprocess %p handle %ld", this,
-           mSubprocess,
-           mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
+          ("CreateSubprocess: ContentParent %p mSubprocess %p handle %" PRIuPTR,
+           this, mSubprocess,
+           mSubprocess ? (uintptr_t)mSubprocess->GetChildProcessHandle() : -1));
 
   // This is safe to do in the constructor, as it doesn't take a strong
   // reference.
@@ -2556,10 +2557,11 @@ ContentParent::~ContentParent() {
   // Normally mSubprocess is destroyed in ActorDestroy, but that won't
   // happen if the process wasn't launched or if it failed to launch.
   if (mSubprocess) {
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-            ("DestroySubprocess: ContentParent %p mSubprocess %p handle %ld",
-             this, mSubprocess,
-             mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
+    MOZ_LOG(
+        ContentParent::GetLog(), LogLevel::Verbose,
+        ("DestroySubprocess: ContentParent %p mSubprocess %p handle %" PRIuPTR,
+         this, mSubprocess,
+         mSubprocess ? (uintptr_t)mSubprocess->GetChildProcessHandle() : -1));
     mSubprocess->Destroy();
   }
 
@@ -3718,10 +3720,12 @@ void ContentParent::KillHard(const char* aReason) {
   }
 
   if (mSubprocess) {
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-            ("KillHard Subprocess: ContentParent %p mSubprocess %p handle %ld",
-             this, mSubprocess,
-             mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
+    MOZ_LOG(
+        ContentParent::GetLog(), LogLevel::Verbose,
+        ("KillHard Subprocess: ContentParent %p mSubprocess %p handle "
+         "%" PRIuPTR,
+         this, mSubprocess,
+         mSubprocess ? (uintptr_t)mSubprocess->GetChildProcessHandle() : -1));
     mSubprocess->SetAlreadyDead();
   }
 
