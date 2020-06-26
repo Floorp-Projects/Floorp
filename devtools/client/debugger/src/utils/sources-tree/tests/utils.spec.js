@@ -5,7 +5,7 @@
 
 // @flow
 
-import { makeMockSource } from "../../test-mockup";
+import { makeMockDisplaySource } from "../../test-mockup";
 
 import {
   createDirectoryNode,
@@ -24,7 +24,7 @@ type RawSource = {| url: string, id: string, actors?: any |};
 
 function createSourcesMap(sources: RawSource[]) {
   const sourcesMap = sources.reduce((map, source) => {
-    map[source.id] = makeMockSource(source.url, source.id);
+    map[source.id] = makeMockDisplaySource(source.url, source.id);
     return map;
   }, {});
 
@@ -56,8 +56,8 @@ describe("sources tree", () => {
   describe("isDirectory", () => {
     it("identifies directories correctly", () => {
       const sources = [
-        makeMockSource("http://example.com/a.js", "actor1"),
-        makeMockSource("http://example.com/b/c/d.js", "actor2"),
+        makeMockDisplaySource("http://example.com/a.js", "actor1"),
+        makeMockDisplaySource("http://example.com/b/c/d.js", "actor2"),
       ];
 
       const tree = createDirectoryNode("root", "", []);
@@ -97,22 +97,22 @@ describe("sources tree", () => {
 
   describe("isNotJavaScript", () => {
     it("js file", () => {
-      const source = makeMockSource("http://example.com/foo.js");
+      const source = makeMockDisplaySource("http://example.com/foo.js");
       expect(isNotJavaScript(source)).toBe(false);
     });
 
     it("css file", () => {
-      const source = makeMockSource("http://example.com/foo.css");
+      const source = makeMockDisplaySource("http://example.com/foo.css");
       expect(isNotJavaScript(source)).toBe(true);
     });
 
     it("svg file", () => {
-      const source = makeMockSource("http://example.com/foo.svg");
+      const source = makeMockDisplaySource("http://example.com/foo.svg");
       expect(isNotJavaScript(source)).toBe(true);
     });
 
     it("png file", () => {
-      const source = makeMockSource("http://example.com/foo.png");
+      const source = makeMockDisplaySource("http://example.com/foo.png");
       expect(isNotJavaScript(source)).toBe(true);
     });
   });

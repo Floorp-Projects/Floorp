@@ -9,7 +9,7 @@ import { shallow } from "enzyme";
 import { showMenu } from "devtools-contextmenu";
 
 import SourcesTree from "../SourcesTree";
-import { makeMockSource, mockcx } from "../../../utils/test-mockup";
+import { makeMockDisplaySource, mockcx } from "../../../utils/test-mockup";
 import { copyToTheClipboard } from "../../../utils/clipboard";
 
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
@@ -65,7 +65,7 @@ describe("SourcesTree", () => {
       it("does not recreate tree if no new source is added", async () => {
         const { component, props, defaultState } = render();
         const sources = {
-          "server1.conn13.child1/41": createMockSource(
+          "server1.conn13.child1/41": createMockDisplaySource(
             "server1.conn13.child1/41",
             "http://mdn.com/three.js"
           ),
@@ -80,7 +80,7 @@ describe("SourcesTree", () => {
 
       it("updates tree with a new item", async () => {
         const { component, props } = render();
-        const newSource = createMockSource(
+        const newSource = createMockDisplaySource(
           "server1.conn13.child1/43",
           "http://mdn.com/four.js",
           true
@@ -119,7 +119,7 @@ describe("SourcesTree", () => {
         const { component, props, defaultState } = render();
         const sources = {
           FakeThread: {
-            "server1.conn13.child1/41": createMockSource(
+            "server1.conn13.child1/41": createMockDisplaySource(
               "server1.conn13.child1/41",
               "http://mozilla.com/three.js"
             ),
@@ -145,7 +145,7 @@ describe("SourcesTree", () => {
         const { component, props, defaultState } = render();
         const sources = {
           FakeThread: {
-            "server1.conn13.child1/41": createMockSource(
+            "server1.conn13.child1/41": createMockDisplaySource(
               "server1.conn13.child1/41",
               "http://mdn.com/three.js",
               true
@@ -172,7 +172,7 @@ describe("SourcesTree", () => {
     describe("updates threads", () => {
       it("adds sources to the correct thread", async () => {
         const { component, props } = render();
-        const newSource = createMockSource(
+        const newSource = createMockDisplaySource(
           "server1.conn13.child1/43",
           "http://mdn.com/four.js",
           true
@@ -221,7 +221,7 @@ describe("SourcesTree", () => {
     describe("updates highlighted items", () => {
       it("updates highlightItems if selectedSource changes", async () => {
         const { component, props } = render();
-        const mockSource = createMockSource(
+        const mockSource = createMockDisplaySource(
           "server1.conn13.child1/41",
           "http://mdn.com/three.js",
           false
@@ -356,27 +356,27 @@ describe("SourcesTree", () => {
 function generateDefaults(overrides: Object) {
   const defaultSources = {
     FakeThread: {
-      "server1.conn13.child1/39": createMockSource(
+      "server1.conn13.child1/39": createMockDisplaySource(
         "server1.conn13.child1/39",
         "http://mdn.com/one.js",
         false
       ),
-      "server1.conn13.child1/40": createMockSource(
+      "server1.conn13.child1/40": createMockDisplaySource(
         "server1.conn13.child1/40",
         "http://mdn.com/two.js",
         false
       ),
-      "server1.conn13.child1/41": createMockSource(
+      "server1.conn13.child1/41": createMockDisplaySource(
         "server1.conn13.child1/41",
         "http://mdn.com/three.js",
         false
       ),
-      "server1.conn13.child1/42/originalSource-sha": createMockSource(
+      "server1.conn13.child1/42/originalSource-sha": createMockDisplaySource(
         "server1.conn13.child1/42/originalSource-sha",
         "http://mdn.com/four.js [original]",
         false
       ),
-      "server1.conn13.child1/42": createMockSource(
+      "server1.conn13.child1/42": createMockDisplaySource(
         "server1.conn13.child1/42",
         "http://mdn.com/four.js"
       ),
@@ -420,9 +420,9 @@ function render(overrides = {}) {
   return { component, props, defaultState, instance };
 }
 
-function createMockSource(id, url, isBlackBoxed = false) {
+function createMockDisplaySource(id, url, isBlackBoxed = false) {
   return {
-    ...makeMockSource(url, id),
+    ...makeMockDisplaySource(url, id),
     isBlackBoxed,
   };
 }

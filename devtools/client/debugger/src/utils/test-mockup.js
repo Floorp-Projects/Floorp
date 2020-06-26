@@ -14,6 +14,7 @@
 import type {
   ActorId,
   Breakpoint,
+  DisplaySource,
   Expression,
   Frame,
   FrameId,
@@ -47,6 +48,16 @@ function makeMockSource(url: URL = "url", id: SourceId = "source"): SourceBase {
     extensionName: null,
     isExtension: false,
     isOriginal: id.includes("originalSource"),
+  };
+}
+
+function makeMockDisplaySource(
+  url: URL = "url",
+  id: SourceId = "source"
+): DisplaySource {
+  return {
+    ...makeMockSource(url, id),
+    displayURL: url,
   };
 }
 
@@ -249,6 +260,7 @@ function makeMockState(state: $Shape<State>) {
 }
 
 export {
+  makeMockDisplaySource,
   makeMockSource,
   makeMockSourceWithContent,
   makeMockSourceAndContent,
