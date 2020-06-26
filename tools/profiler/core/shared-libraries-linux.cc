@@ -30,9 +30,6 @@
 #endif
 #include <sys/types.h>
 
-#if defined(MOZ_LINKER)
-#  include "AutoObjectMapper.h"
-#endif
 #if defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
 #  include <link.h>  // dl_phdr_info
 #else
@@ -60,10 +57,6 @@ struct LoadedLibraryInfo {
   unsigned long mLastMappingEnd;
 };
 
-#if defined(MOZ_LINKER)
-static void outputMapperLog(const char* aBuf) { LOG("%s", aBuf); }
-#endif
-
 static nsCString IDtoUUIDString(
     const google_breakpad::wasteful_vector<uint8_t>& aIdentifier) {
   using namespace google_breakpad;
@@ -82,19 +75,6 @@ static nsCString getId(const char* bin_name) {
 
   PageAllocator allocator;
   auto_wasteful_vector<uint8_t, kDefaultBuildIdSize> identifier(&allocator);
-
-#if defined(MOZ_LINKER)
-  if (nsDependentCString(bin_name).Find("!/") != kNotFound) {
-    AutoObjectMapperFaultyLib mapper(outputMapperLog);
-    void* image = nullptr;
-    size_t size = 0;
-    if (mapper.Map(&image, &size, bin_name) && image && size) {
-      if (FileID::ElfFileIdentifierFromMappedFile(image, identifier)) {
-        return IDtoUUIDString(identifier);
-      }
-    }
-  }
-#endif
 
   FileID file_id(bin_name);
   if (file_id.ElfFileIdentifier(identifier)) {
