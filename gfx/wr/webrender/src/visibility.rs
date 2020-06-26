@@ -500,8 +500,6 @@ pub fn update_primitive_visibility(
                 };
 
                 if combined_local_clip_rect.size.is_empty_or_negative() {
-                    debug_assert!(combined_local_clip_rect.size.width >= 0.0 &&
-                        combined_local_clip_rect.size.height >= 0.0);
                     if prim_instance.is_chased() {
                         println!("\tculled for zero local clip rectangle");
                     }
