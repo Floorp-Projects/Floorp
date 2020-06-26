@@ -114,24 +114,13 @@ inline RelocatedCellHeader::RelocatedCellHeader(Cell* location,
   header_ = ptr | flags | FORWARD_BIT;
 }
 
-inline RelocationOverlay::RelocationOverlay(Cell* dst, uintptr_t flags)
-    : header_(dst, flags) {}
+inline RelocationOverlay::RelocationOverlay(Cell* dst) : header_(dst, 0) {}
 
 /* static */
 inline RelocationOverlay* RelocationOverlay::forwardCell(Cell* src, Cell* dst) {
   MOZ_ASSERT(!src->isForwarded());
   MOZ_ASSERT(!dst->isForwarded());
-
-  // Preserve old flags because nursery may check them before checking
-  // if this is a forwarded Cell.
-  //
-  // This is pretty terrible and we should find a better way to implement
-  // Cell::getTraceKind() that doesn't rely on this behavior.
-  //
-  // The copied over flags are only used for nursery Cells, when the Cell is
-  // tenured, these bits are never read and hence may contain any content.
-  uintptr_t flags = reinterpret_cast<CellHeader*>(dst)->flags();
-  return new (src) RelocationOverlay(dst, flags);
+  return new (src) RelocationOverlay(dst);
 }
 
 inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell** cellp) {

@@ -321,6 +321,10 @@ class JSString : public js::gc::Cell {
     return offsetof(JSString, header_) + Header::offsetOfLength();
   }
 
+  bool sameLengthAndFlags(const JSString& other) const {
+    return header_ == other.header_;
+  }
+
   static void staticAsserts() {
     static_assert(JSString::MAX_LENGTH < UINT32_MAX,
                   "Length must fit in 32 bits");
@@ -541,7 +545,7 @@ class JSString : public js::gc::Cell {
   // or the return value can be the actual base when it is not forwarded.
   inline JSLinearString* nurseryBaseOrRelocOverlay() const;
 
-  inline bool canBeRootBase() const;
+  inline bool canOwnDependentChars() const;
 
   inline void setBase(JSLinearString* newBase);
 
@@ -1787,10 +1791,9 @@ inline JSLinearString* JSString::nurseryBaseOrRelocOverlay() const {
   return d.s.u3.base;
 }
 
-inline bool JSString::canBeRootBase() const {
-  // A root base is a base that does not have bases (is not a dependent
-  // string). It serves as the owner of the dependent string chars. A base must
-  // be linear and non-inline.
+inline bool JSString::canOwnDependentChars() const {
+  // A string that could own the malloced chars used by another (dependent)
+  // string. It will not have a base and must be linear and non-inline.
   return isLinear() && !isInline() && !hasBase();
 }
 
@@ -1964,8 +1967,9 @@ class StringRelocationOverlay : public RelocationOverlay {
   };
 
  public:
-  inline StringRelocationOverlay(Cell* dst, uintptr_t flags)
-      : RelocationOverlay(dst, flags) {}
+  explicit StringRelocationOverlay(Cell* dst) : RelocationOverlay(dst) {
+    static_assert(sizeof(JSString) >= sizeof(StringRelocationOverlay));
+  }
 
   static const StringRelocationOverlay* fromCell(const Cell* cell) {
     return static_cast<const StringRelocationOverlay*>(cell);
@@ -2007,20 +2011,7 @@ class StringRelocationOverlay : public RelocationOverlay {
     MOZ_ASSERT(!dst->isForwarded());
 
     JS::AutoCheckCannotGC nogc;
-
-    // Preserve old flags because the nursery may check them before checking if
-    // this is a forwarded Cell.
-    //
-    // This is pretty terrible and we should find a better way to implement
-    // Cell::getTraceKind() that doesn't rely on this behavior.
-    //
-    // The copied over flags are only used for nursery Cells. For tenured
-    // cells, these bits are never read and hence may contain any content.
-    StringRelocationOverlay* overlay = nullptr;
-    auto set_overlay = [&] {
-      uintptr_t flags = reinterpret_cast<CellHeader*>(dst)->flags();
-      overlay = new (src) StringRelocationOverlay(dst, flags);
-    };
+    StringRelocationOverlay* overlay;
 
     // Initialize the overlay, and remember the nursery base string if there is
     // one, or nursery non-inlined chars if it can be the root base of other
@@ -2033,20 +2024,20 @@ class StringRelocationOverlay : public RelocationOverlay {
     // remembered in overlays.
     if (src->hasBase()) {
       auto nurseryBaseOrRelocOverlay = src->nurseryBaseOrRelocOverlay();
-      set_overlay();
+      overlay = new (src) StringRelocationOverlay(dst);
       overlay->nurseryBaseOrRelocOverlay = nurseryBaseOrRelocOverlay;
-    } else if (src->canBeRootBase()) {
+    } else if (src->canOwnDependentChars()) {
       if (src->hasTwoByteChars()) {
         auto nurseryCharsTwoByte = src->asLinear().twoByteChars(nogc);
-        set_overlay();
+        overlay = new (src) StringRelocationOverlay(dst);
         overlay->nurseryCharsTwoByte = nurseryCharsTwoByte;
       } else {
         auto nurseryCharsLatin1 = src->asLinear().latin1Chars(nogc);
-        set_overlay();
+        overlay = new (src) StringRelocationOverlay(dst);
         overlay->nurseryCharsLatin1 = nurseryCharsLatin1;
       }
     } else {
-      set_overlay();
+      overlay = new (src) StringRelocationOverlay(dst);
     }
 
     return overlay;
