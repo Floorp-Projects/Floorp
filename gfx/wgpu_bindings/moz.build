@@ -12,7 +12,12 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    CbindgenHeader('wgpu_ffi_generated.h', inputs=['/gfx/wgpu_bindings'])
+    GeneratedFile('wgpu_ffi_generated.h',
+                  script='/build/RunCbindgen.py',
+                  entry_point='generate',
+                  inputs=[
+                    '/gfx/wgpu_bindings',
+                  ])
 
     EXPORTS.mozilla.webgpu.ffi += [
         '!wgpu_ffi_generated.h',

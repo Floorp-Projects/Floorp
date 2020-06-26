@@ -15,7 +15,10 @@ SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    CbindgenHeader('MozURL_ffi.h', inputs=['/netwerk/base/mozurl'])
+    GeneratedFile('MozURL_ffi.h',
+                  script='/build/RunCbindgen.py',
+                  entry_point='generate',
+                  inputs=['/netwerk/base/mozurl'])
 
     EXPORTS.mozilla.net += [
         '!MozURL_ffi.h',

@@ -5,7 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    CbindgenHeader('rust_helper.h', inputs=['/netwerk/base/rust-helper'])
+    GeneratedFile('rust_helper.h',
+                  script='/build/RunCbindgen.py',
+                  entry_point='generate',
+                  inputs=['/netwerk/base/rust-helper'])
 
     EXPORTS.mozilla.net += [
         '!rust_helper.h',

@@ -201,15 +201,6 @@ def GeneratedFile(name, *names, **kwargs):
     generated_file.flags = flags
     generated_file.force = force
 
-@template
-def CbindgenHeader(name, inputs):
-    """Add one GENERATED_FILES by running RunCbindgen.py"""
-
-    inputs = ['!/build/cbindgen-metadata.json'] + inputs
-    GeneratedFile(name, script='/build/RunCbindgen.py',
-                  entry_point='generate', inputs=inputs)
-
-
 include('gecko_templates.mozbuild')
 include('test_templates.mozbuild')
 
