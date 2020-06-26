@@ -115,13 +115,24 @@ CanvasChild::CanvasChild(Endpoint<PCanvasChild>&& aEndpoint) {
 
 CanvasChild::~CanvasChild() = default;
 
-ipc::IPCResult CanvasChild::RecvNotifyDeviceChanged() {
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+static void NotifyCanvasDeviceReset() {
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(nullptr, "canvas-device-reset", nullptr);
   }
+}
 
+ipc::IPCResult CanvasChild::RecvNotifyDeviceChanged() {
+  NotifyCanvasDeviceReset();
   mRecorder->RecordEvent(RecordedDeviceChangeAcknowledged());
+  return IPC_OK();
+}
+
+/* static */ bool CanvasChild::mDeactivated = false;
+
+ipc::IPCResult CanvasChild::RecvDeactivate() {
+  mDeactivated = true;
+  NotifyCanvasDeviceReset();
   return IPC_OK();
 }
 
@@ -213,6 +224,11 @@ void CanvasChild::EndTransaction() {
 }
 
 bool CanvasChild::ShouldBeCleanedUp() const {
+  // Always return true if we've been deactivated.
+  if (Deactivated()) {
+    return true;
+  }
+
   // We can only be cleaned up if nothing else references our recorder.
   if (mRecorder && !mRecorder->hasOneRef()) {
     return false;
