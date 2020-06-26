@@ -19,7 +19,7 @@ namespace ipc {
 class ProtocolFuzzerHelper {
  public:
   static mozilla::dom::ContentParent* CreateContentParent(
-      mozilla::dom::ContentParent* aOpener, const nsAString& aRemoteType);
+      const nsAString& aRemoteType);
 
   static void CompositorBridgeParentSetup();
 
