@@ -38,6 +38,7 @@ static const char *const filter_names[] = {
 };
 
 static const char *const mxy_names[] = { "0", "h", "v", "hv" };
+static const char *const scaled_paths[] = { "", "_dy1", "_dy2" };
 
 static int mc_h_next(const int h) {
     switch (h) {
@@ -159,6 +160,112 @@ static void check_mct(Dav1dMCDSPContext *const c) {
                         }
                     }
     report("mct");
+}
+
+static void check_mc_scaled(Dav1dMCDSPContext *const c) {
+    ALIGN_STK_64(pixel, src_buf, 263 * 263,);
+    ALIGN_STK_64(pixel, c_dst,   128 * 128,);
+    ALIGN_STK_64(pixel, a_dst,   128 * 128,);
+    const pixel *src = src_buf + 263 * 3 + 3;
+    const ptrdiff_t src_stride = 263 * sizeof(pixel);
+#if BITDEPTH == 16
+    const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#else
+    const int bitdepth_max = 0xff;
+#endif
+
+    declare_func(void, pixel *dst, ptrdiff_t dst_stride, const pixel *src,
+                 ptrdiff_t src_stride, int w, int h,
+                 int mx, int my, int dx, int dy HIGHBD_DECL_SUFFIX);
+
+    for (int filter = 0; filter < N_2D_FILTERS; filter++)
+        for (int w = 2; w <= 128; w <<= 1) {
+            const ptrdiff_t dst_stride = w * sizeof(pixel);
+            for (int p = 0; p < 3; ++p) {
+                if (check_func(c->mc_scaled[filter], "mc_scaled_%s_w%d%s_%dbpc",
+                               filter_names[filter], w, scaled_paths[p], BITDEPTH))
+                {
+                    const int h_min = w <= 32 ? 2 : w / 4;
+                    const int h_max = imax(imin(w * 4, 128), 32);
+                    for (int h = h_min; h <= h_max; h = mc_h_next(h)) {
+                        const int mx = rnd() % 1024;
+                        const int my = rnd() % 1024;
+                        const int dx = rnd() % 2048 + 1;
+                        const int dy = !p
+                            ? rnd() % 2048 + 1
+                            : p << 10; // ystep=1.0 and ystep=2.0 paths
+
+                        for (int k = 0; k < 263 * 263; k++)
+                            src_buf[k] = rnd() & bitdepth_max;
+
+                        call_ref(c_dst, dst_stride, src, src_stride,
+                                 w, h, mx, my, dx, dy HIGHBD_TAIL_SUFFIX);
+                        call_new(a_dst, dst_stride, src, src_stride,
+                                 w, h, mx, my, dx, dy HIGHBD_TAIL_SUFFIX);
+                        checkasm_check_pixel(c_dst, dst_stride,
+                                             a_dst, dst_stride, w, h, "dst");
+
+                        if (filter == FILTER_2D_8TAP_REGULAR ||
+                            filter == FILTER_2D_BILINEAR)
+                            bench_new(a_dst, dst_stride, src, src_stride,
+                                      w, h, mx, my, dx, dy HIGHBD_TAIL_SUFFIX);
+                    }
+                }
+            }
+        }
+    report("mc_scaled");
+}
+
+static void check_mct_scaled(Dav1dMCDSPContext *const c) {
+    ALIGN_STK_64(pixel, src_buf, 263 * 263,);
+    ALIGN_STK_64(int16_t, c_tmp,   128 * 128,);
+    ALIGN_STK_64(int16_t, a_tmp,   128 * 128,);
+    const pixel *src = src_buf + 263 * 3 + 3;
+    const ptrdiff_t src_stride = 263 * sizeof(pixel);
+#if BITDEPTH == 16
+    const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#else
+    const int bitdepth_max = 0xff;
+#endif
+
+    declare_func(void, int16_t *tmp, const pixel *src, ptrdiff_t src_stride,
+                 int w, int h, int mx, int my, int dx, int dy HIGHBD_DECL_SUFFIX);
+
+    for (int filter = 0; filter < N_2D_FILTERS; filter++)
+        for (int w = 4; w <= 128; w <<= 1)
+            for (int p = 0; p < 3; ++p) {
+                if (check_func(c->mct_scaled[filter], "mct_scaled_%s_w%d%s_%dbpc",
+                               filter_names[filter], w, scaled_paths[p], BITDEPTH))
+                {
+                    const int h_min = imax(w / 4, 4);
+                    const int h_max = imin(w * 4, 128);
+                    for (int h = h_min; h <= h_max; h = mc_h_next(h)) {
+                        const int mx = rnd() % 1024;
+                        const int my = rnd() % 1024;
+                        const int dx = rnd() % 2048 + 1;
+                        const int dy = !p
+                            ? rnd() % 2048 + 1
+                            : p << 10; // ystep=1.0 and ystep=2.0 paths
+
+                        for (int k = 0; k < 263 * 263; k++)
+                            src_buf[k] = rnd() & bitdepth_max;
+
+                        call_ref(c_tmp, src, src_stride,
+                                 w, h, mx, my, dx, dy HIGHBD_TAIL_SUFFIX);
+                        call_new(a_tmp, src, src_stride,
+                                 w, h, mx, my, dx, dy HIGHBD_TAIL_SUFFIX);
+                        checkasm_check(int16_t, c_tmp, w * sizeof(*c_tmp),
+                                                a_tmp, w * sizeof(*a_tmp),
+                                                w, h, "tmp");
+
+                        if (filter == FILTER_2D_8TAP_REGULAR ||
+                            filter == FILTER_2D_BILINEAR)
+                            bench_new(a_tmp, src, src_stride,
+                                      w, h, mx, my, dx, dy HIGHBD_TAIL_SUFFIX);
+                    }
+                }
+            }
+    report("mct_scaled");
 }
 
 static void init_tmp(Dav1dMCDSPContext *const c, pixel *const buf,
@@ -573,12 +680,68 @@ static void check_emuedge(Dav1dMCDSPContext *const c) {
     report("emu_edge");
 }
 
+static int get_upscale_x0(const int in_w, const int out_w, const int step) {
+    const int err = out_w * step - (in_w << 14);
+    const int x0 = (-((out_w - in_w) << 13) + (out_w >> 1)) / out_w + 128 - (err >> 1);
+    return x0 & 0x3fff;
+}
+
+static void check_resize(Dav1dMCDSPContext *const c) {
+    ALIGN_STK_64(pixel, c_dst, 1024 * 64,);
+    ALIGN_STK_64(pixel, a_dst, 1024 * 64,);
+    ALIGN_STK_64(pixel, src,   512 * 64,);
+
+    const int height = 64;
+    const int max_src_width = 512;
+    const ptrdiff_t dst_stride = 1024 * sizeof(pixel);
+    const ptrdiff_t src_stride = 512 * sizeof(pixel);
+
+    declare_func(void, pixel *dst, ptrdiff_t dst_stride,
+                 const pixel *src, ptrdiff_t src_stride,
+                 int dst_w, int src_w, int h, int dx, int mx0
+                 HIGHBD_DECL_SUFFIX);
+
+    if (check_func(c->resize, "resize_%dbpc", BITDEPTH)) {
+#if BITDEPTH == 16
+        const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#else
+        const int bitdepth_max = 0xff;
+#endif
+
+        for (int i = 0; i < max_src_width * height; i++)
+            src[i] = rnd() & bitdepth_max;
+
+        const int w_den = 9 + (rnd() & 7);
+        const int src_w = 16 + (rnd() % (max_src_width - 16 + 1));
+        const int dst_w = w_den * src_w >> 3;
+#define scale_fac(ref_sz, this_sz) \
+    ((((ref_sz) << 14) + ((this_sz) >> 1)) / (this_sz))
+        const int dx = scale_fac(src_w, dst_w);
+#undef scale_fac
+        const int mx0 = get_upscale_x0(src_w, dst_w, dx);
+
+        call_ref(c_dst, dst_stride, src, src_stride,
+                 dst_w, height, src_w, dx, mx0 HIGHBD_TAIL_SUFFIX);
+        call_new(a_dst, dst_stride, src, src_stride,
+                 dst_w, height, src_w, dx, mx0 HIGHBD_TAIL_SUFFIX);
+        checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
+                             dst_w, height, "dst");
+
+        bench_new(a_dst, dst_stride, src, src_stride,
+                  512, height, 512 * 8 / w_den, dx, mx0 HIGHBD_TAIL_SUFFIX);
+    }
+
+    report("resize");
+}
+
 void bitfn(checkasm_check_mc)(void) {
     Dav1dMCDSPContext c;
     bitfn(dav1d_mc_dsp_init)(&c);
 
     check_mc(&c);
     check_mct(&c);
+    check_mc_scaled(&c);
+    check_mct_scaled(&c);
     check_avg(&c);
     check_w_avg(&c);
     check_mask(&c);
@@ -589,4 +752,5 @@ void bitfn(checkasm_check_mc)(void) {
     check_warp8x8(&c);
     check_warp8x8t(&c);
     check_emuedge(&c);
+    check_resize(&c);
 }

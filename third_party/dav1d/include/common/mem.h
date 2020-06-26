@@ -37,13 +37,13 @@
 #include "common/attributes.h"
 
 /*
- * Allocate 32-byte aligned memory. The return value can be released
- * by calling the standard free() function.
+ * Allocate align-byte aligned memory. The return value can be released
+ * by calling the dav1d_free_aligned() function.
  */
 static inline void *dav1d_alloc_aligned(size_t sz, size_t align) {
+    assert(!(align & (align - 1)));
 #ifdef HAVE_POSIX_MEMALIGN
     void *ptr;
-    assert(!(align & (align - 1)));
     if (posix_memalign(&ptr, align, sz)) return NULL;
     return ptr;
 #elif defined(HAVE_ALIGNED_MALLOC)

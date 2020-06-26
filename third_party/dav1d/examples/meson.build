@@ -35,28 +35,40 @@ endif
 # dav1d player sources
 dav1dplay_sources = files(
     'dav1dplay.c',
+    'dp_fifo.c',
+    'dp_renderer_placebo.c',
+    'dp_renderer_sdl.c',
 )
 
-sdl2_dependency = dependency('sdl2', version: '>= 2.0.1', required: false)
+sdl2_dependency = dependency('sdl2', version: '>= 2.0.1', required: true)
 
 if sdl2_dependency.found()
+    dav1dplay_deps = [sdl2_dependency]
+    dav1dplay_cflags = []
+
     placebo_dependency = dependency('libplacebo', version: '>= 1.18.0', required: false)
-    vulkan_dependency = dependency('vulkan', required: false)
-    sdl_has_vulkan = cc.has_header('SDL_vulkan.h', dependencies: [sdl2_dependency])
-    cflag_placebo = []
-    deps_placebo = []
-    if placebo_dependency.found() and vulkan_dependency.found() and sdl_has_vulkan
-        cflag_placebo += '-DHAVE_PLACEBO_VULKAN=1'
-        deps_placebo = [vulkan_dependency, placebo_dependency]
+
+    if placebo_dependency.found()
+        dav1dplay_deps += placebo_dependency
+        dav1dplay_cflags += '-DHAVE_PLACEBO'
+
+        # If libplacebo is found, we might be able to use Vulkan
+        # with it, in which case we need the Vulkan library too.
+        vulkan_dependency = dependency('vulkan', required: false)
+        if vulkan_dependency.found()
+            dav1dplay_deps += vulkan_dependency
+            dav1dplay_cflags += '-DHAVE_VULKAN'
+        endif
     endif
+
     dav1dplay = executable('dav1dplay',
         dav1dplay_sources,
         rev_target,
 
         link_with : [libdav1d, dav1d_input_objs],
         include_directories : [dav1d_inc_dirs],
-        dependencies : [getopt_dependency, sdl2_dependency, deps_placebo],
+        dependencies : [getopt_dependency, dav1dplay_deps],
         install : true,
-        c_args : cflag_placebo,
+        c_args : dav1dplay_cflags,
     )
 endif

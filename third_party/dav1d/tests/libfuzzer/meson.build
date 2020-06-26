@@ -26,6 +26,10 @@
 # Build definition for the dav1d fuzzing binaries
 #
 
+if fuzzing_engine == 'none' and not have_fseeko
+    subdir_done()
+endif
+
 dav1d_fuzzer_sources =  files('dav1d_fuzzer.c')
 fuzzer_ldflags = []
 fuzzer_link_lang = {}

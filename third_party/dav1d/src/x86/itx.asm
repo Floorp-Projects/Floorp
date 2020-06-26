@@ -27,14 +27,9 @@
 
 %if ARCH_X86_64
 
-SECTION_RODATA 32
+SECTION_RODATA 16
 
 ; Note: The order of (at least some of) those constants matter!
-
-iadst4_dconly2a: dw 10568, 10568, 10568, 10568, 19856, 19856, 19856, 19856
-iadst4_dconly2b: dw 26752, 26752, 26752, 26752, 30424, 30424, 30424, 30424
-iadst4_dconly1a: dw 10568, 19856, 26752, 30424
-iadst4_dconly1b: dw 30424, 26752, 19856, 10568
 
 deint_shuf: db  0,  1,  4,  5,  8,  9, 12, 13,  2,  3,  6,  7, 10, 11, 14, 15
 
@@ -132,7 +127,7 @@ SECTION .text
 ; mandatory 4-byte offsets everywhere, we can set up a base pointer with a
 ; single rip-relative lea and then address things relative from that with
 ; 1-byte offsets as long as data is within +-128 bytes of the base pointer.
-%define o_base iadst4_dconly2a + 128
+%define o_base deint_shuf + 128
 %define o(x) (rax - (o_base) + (x))
 
 %macro REPX 2-*
@@ -180,16 +175,16 @@ SECTION .text
     vpbroadcastd        m%3, [o(pw_%8_%9)]
     vpbroadcastd        m%4, [o(pw_m%9_%8)]
     vpbroadcastd       xm%2, [o(pw_%6_%7)]
-    vpblendd            m%2, m%2, m%3, 0xf0
+    vpblendd            m%2, m%3, 0xf0
     vpbroadcastd       xm%3, [o(pw_m%7_%6)]
 %else
     vpbroadcastd        m%3, [o(pw_m%9_%8)]
     vpbroadcastd        m%4, [o(pw_%8_%9)]
     vpbroadcastd       xm%2, [o(pw_m%7_%6)]
-    vpblendd            m%2, m%2, m%3, 0xf0
+    vpblendd            m%2, m%3, 0xf0
     vpbroadcastd       xm%3, [o(pw_%6_%7)]
 %endif
-    vpblendd            m%3, m%3, m%4, 0xf0
+    vpblendd            m%3, m%4, 0xf0
     ITX_MUL2X_PACK       %1, %4, _, %5, %2, %3, (4|%10)
 %endmacro
 
@@ -360,21 +355,17 @@ cglobal inv_txfm_add_wht_wht_4x4, 3, 3, 4, dst, stride, c
     punpckhdq            m1, m0, m3
     punpckldq            m0, m3
     IWHT4_1D_PACKED
-    vpblendd             m0, m0, m2, 0x03
+    vpblendd             m0, m2, 0x03
     ITX4_END              3, 0, 2, 1, 0
 
-%macro INV_TXFM_FN 4 ; type1, type2, fast_thresh, size
-cglobal inv_txfm_add_%1_%2_%4, 4, 5, 0, dst, stride, c, eob, tx2
-    %undef cmp
-    %define %%p1 m(i%1_%4_internal)
+%macro INV_TXFM_FN 3 ; type1, type2, size
+cglobal inv_txfm_add_%1_%2_%3, 4, 5, 0, dst, stride, c, eob, tx2
+    %define %%p1 m(i%1_%3_internal)
     lea                 rax, [o_base]
     ; Jump to the 1st txfm function if we're not taking the fast path, which
     ; in turn performs an indirect jump to the 2nd txfm function.
-    lea tx2q, [m(i%2_%4_internal).pass2]
-%if %3 > 0
-    cmp                eobd, %3
-    jg %%p1
-%elif %3 == 0
+    lea                tx2q, [m(i%2_%3_internal).pass2]
+%ifidn %1_%2, dct_dct
     test               eobd, eobd
     jnz %%p1
 %else
@@ -385,54 +376,16 @@ ALIGN function_align
 %endif
 %endmacro
 
-%macro INV_TXFM_4X4_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 4x4
-%ifidn %1_%2, dct_identity
-    vpbroadcastd         m0, [o(pw_2896x8)]
-    pmulhrsw             m0, [cq]
-    vpbroadcastd         m1, [o(pw_1697x8)]
-    pmulhrsw             m1, m0
-    paddsw               m0, m1
-    punpcklwd            m0, m0
-    punpckhdq            m1, m0, m0
-    punpckldq            m0, m0
-    jmp m(iadst_4x4_internal).end
-%elifidn %1_%2, identity_dct
-    mova                 m0, [cq+16*0]
-    packusdw             m0, [cq+16*1]
-    vpbroadcastd         m1, [o(pw_1697x8)]
-    vpbroadcastd         m2, [o(pw_2896x8)]
-    packusdw             m0, m0
-    pmulhrsw             m1, m0
-    paddsw               m0, m1
-    pmulhrsw             m0, m2
-    mova                 m1, m0
-    jmp m(iadst_4x4_internal).end
-%elif %3 >= 0
+%macro INV_TXFM_4X4_FN 2 ; type1, type2
+    INV_TXFM_FN          %1, %2, 4x4
+%ifidn %1_%2, dct_dct
     vpbroadcastw         m0, [cq]
-%ifidn %1, dct
     vpbroadcastd         m1, [o(pw_2896x8)]
     pmulhrsw             m0, m1
-%elifidn %1, adst
-    movddup              m1, [o(iadst4_dconly1a)]
-    pmulhrsw             m0, m1
-%elifidn %1, flipadst
-    movddup              m1, [o(iadst4_dconly1b)]
-    pmulhrsw             m0, m1
-%endif
     mov                [cq], eobd ; 0
-%ifidn %2, dct
-%ifnidn %1, dct
-    vpbroadcastd         m1, [o(pw_2896x8)]
-%endif
     pmulhrsw             m0, m1
     mova                 m1, m0
     jmp m(iadst_4x4_internal).end2
-%else ; adst / flipadst
-    pmulhrsw             m1, m0, [o(iadst4_dconly2b)]
-    pmulhrsw             m0, [o(iadst4_dconly2a)]
-    jmp m(i%2_4x4_internal).end2
-%endif
 %endif
 %endmacro
 
@@ -477,10 +430,10 @@ ALIGN function_align
     packssdw             m1, m2 ; out2 out3
 %endmacro
 
-INV_TXFM_4X4_FN dct, dct,      0
-INV_TXFM_4X4_FN dct, adst,     0
-INV_TXFM_4X4_FN dct, flipadst, 0
-INV_TXFM_4X4_FN dct, identity, 3
+INV_TXFM_4X4_FN dct, dct
+INV_TXFM_4X4_FN dct, adst
+INV_TXFM_4X4_FN dct, flipadst
+INV_TXFM_4X4_FN dct, identity
 
 cglobal idct_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
     mova                 m0, [cq+16*0]
@@ -488,7 +441,7 @@ cglobal idct_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
     IDCT4_1D_PACKED
     mova                 m2, [o(deint_shuf)]
     shufps               m3, m0, m1, q1331
-    shufps               m0, m0, m1, q0220
+    shufps               m0, m1, q0220
     pshufb               m0, m2
     pshufb               m1, m3, m2
     jmp                tx2q
@@ -499,9 +452,9 @@ cglobal idct_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
     mova          [cq+16*1], m2
     ITX4_END              0, 1, 3, 2
 
-INV_TXFM_4X4_FN adst, dct,      0
-INV_TXFM_4X4_FN adst, adst,     0
-INV_TXFM_4X4_FN adst, flipadst, 0
+INV_TXFM_4X4_FN adst, dct
+INV_TXFM_4X4_FN adst, adst
+INV_TXFM_4X4_FN adst, flipadst
 INV_TXFM_4X4_FN adst, identity
 
 cglobal iadst_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
@@ -526,9 +479,9 @@ ALIGN function_align
     IADST4_1D_PACKED
     ret
 
-INV_TXFM_4X4_FN flipadst, dct,      0
-INV_TXFM_4X4_FN flipadst, adst,     0
-INV_TXFM_4X4_FN flipadst, flipadst, 0
+INV_TXFM_4X4_FN flipadst, dct
+INV_TXFM_4X4_FN flipadst, adst
+INV_TXFM_4X4_FN flipadst, flipadst
 INV_TXFM_4X4_FN flipadst, identity
 
 cglobal iflipadst_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
@@ -549,7 +502,7 @@ cglobal iflipadst_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
 .end2:
     ITX4_END              3, 2, 1, 0
 
-INV_TXFM_4X4_FN identity, dct,      3
+INV_TXFM_4X4_FN identity, dct
 INV_TXFM_4X4_FN identity, adst
 INV_TXFM_4X4_FN identity, flipadst
 INV_TXFM_4X4_FN identity, identity
@@ -600,38 +553,9 @@ cglobal iidentity_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
     pextrd [r2  +r3       ], xm5, 3
 %endmacro
 
-%macro INV_TXFM_4X8_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 4x8
-%if %3 >= 0
-%ifidn %1_%2, dct_identity
-    vpbroadcastd        xm0, [o(pw_2896x8)]
-    pmulhrsw            xm1, xm0, [cq]
-    vpbroadcastd        xm2, [o(pw_4096)]
-    pmulhrsw            xm1, xm0
-    pmulhrsw            xm1, xm2
-    vpermq               m1, m1, q1100
-    punpcklwd            m1, m1
-    punpckldq            m0, m1, m1
-    punpckhdq            m1, m1
-    jmp m(iadst_4x8_internal).end3
-%elifidn %1_%2, identity_dct
-    movd                xm0, [cq+16*0]
-    punpcklwd           xm0, [cq+16*1]
-    movd                xm1, [cq+16*2]
-    punpcklwd           xm1, [cq+16*3]
-    vpbroadcastd        xm2, [o(pw_2896x8)]
-    vpbroadcastd        xm3, [o(pw_1697x8)]
-    vpbroadcastd        xm4, [o(pw_2048)]
-    punpckldq           xm0, xm1
-    pmulhrsw            xm0, xm2
-    pmulhrsw            xm3, xm0
-    paddsw              xm0, xm3
-    pmulhrsw            xm0, xm2
-    pmulhrsw            xm0, xm4
-    vpbroadcastq         m0, xm0
-    mova                 m1, m0
-    jmp m(iadst_4x8_internal).end3
-%elifidn %1_%2, dct_dct
+%macro INV_TXFM_4X8_FN 2 ; type1, type2
+    INV_TXFM_FN          %1, %2, 4x8
+%ifidn %1_%2, dct_dct
     movd                xm1, [o(pw_2896x8)]
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_2048)]
@@ -641,24 +565,7 @@ cglobal iidentity_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
     pmulhrsw            xm0, xm2
     vpbroadcastw         m0, xm0
     mova                 m1, m0
-    jmp m(iadst_4x8_internal).end4
-%else ; adst_dct / flipadst_dct
-    vpbroadcastw        xm0, [cq]
-    vpbroadcastd        xm1, [o(pw_2896x8)]
-    pmulhrsw            xm0, xm1
-    pmulhrsw            xm0, [o(iadst4_dconly1a)]
-    vpbroadcastd        xm2, [o(pw_2048)]
-    mov                [cq], eobd
-    pmulhrsw            xm0, xm1
-    pmulhrsw            xm0, xm2
-%ifidn %1, adst
-    vpbroadcastq         m0, xm0
-%else ; flipadst
-    vpermq               m0, m0, q1111
-%endif
-    mova                 m1, m0
-    jmp m(iadst_4x8_internal).end4
-%endif
+    jmp m(iadst_4x8_internal).end3
 %endif
 %endmacro
 
@@ -760,9 +667,9 @@ cglobal iidentity_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
     paddsw               m4, m5            ; out6 -out1
     vpbroadcastd         m5, [o(pw_2896x8)]
     vpblendd             m3, m0, m4, 0x33  ; out6 -out7
-    vpblendd             m0, m0, m4, 0xcc  ; out0 -out1
+    vpblendd             m0, m4, 0xcc      ; out0 -out1
     shufps               m4, m2, m1, q1032 ; t3 t7
-    vpblendd             m1, m2, m1, 0xcc  ; t2 t6
+    vpblendd             m1, m2, 0x33      ; t2 t6
     psubsw               m2, m1, m4        ; t2-t3 t6-t7
     paddsw               m1, m4            ; t2+t3 t6+t7
     pmulhrsw             m2, m5            ; out4 -out5
@@ -772,10 +679,10 @@ cglobal iidentity_4x4_internal, 0, 5, 6, dst, stride, c, eob, tx2
 %endmacro
 
 INIT_YMM avx2
-INV_TXFM_4X8_FN dct, dct,      0
-INV_TXFM_4X8_FN dct, identity, 7
+INV_TXFM_4X8_FN dct, dct
 INV_TXFM_4X8_FN dct, adst
 INV_TXFM_4X8_FN dct, flipadst
+INV_TXFM_4X8_FN dct, identity
 
 cglobal idct_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vpermq               m0, [cq+32*0], q3120
@@ -786,7 +693,7 @@ cglobal idct_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     IDCT4_1D_PACKED
     vbroadcasti128       m2, [o(deint_shuf)]
     shufps               m3, m0, m1, q1331
-    shufps               m0, m0, m1, q0220
+    shufps               m0, m1, q0220
     pshufb               m0, m2
     pshufb               m1, m3, m2
     jmp                tx2q
@@ -795,8 +702,8 @@ cglobal idct_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vextracti128        xm3, m1, 1
     call .main
     vpbroadcastd         m4, [o(pw_2048)]
-    vinserti128          m0, m0, xm2, 1
-    vinserti128          m1, m1, xm3, 1
+    vinserti128          m0, xm2, 1
+    vinserti128          m1, xm3, 1
     pshufd               m1, m1, q1032
     jmp m(iadst_4x8_internal).end2
 ALIGN function_align
@@ -804,7 +711,7 @@ ALIGN function_align
     WRAP_XMM IDCT8_1D_PACKED
     ret
 
-INV_TXFM_4X8_FN adst, dct,      0
+INV_TXFM_4X8_FN adst, dct
 INV_TXFM_4X8_FN adst, adst
 INV_TXFM_4X8_FN adst, flipadst
 INV_TXFM_4X8_FN adst, identity
@@ -828,21 +735,20 @@ cglobal iadst_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     pshufd              xm5, xm1, q1032
     call .main_pass2
     vpbroadcastd         m4, [o(pw_2048)]
-    vinserti128          m0, m0, xm2, 1
-    vinserti128          m1, m1, xm3, 1
+    vinserti128          m0, xm2, 1
+    vinserti128          m1, xm3, 1
     pxor                 m5, m5
     psubw                m5, m4
 .end:
-    vpblendd             m4, m4, m5, 0xcc
+    vpblendd             m4, m5, 0xcc
 .end2:
     pmulhrsw             m0, m4
     pmulhrsw             m1, m4
     WIN64_RESTORE_XMM
-.end3:
     pxor                 m2, m2
     mova          [cq+32*0], m2
     mova          [cq+32*1], m2
-.end4:
+.end3:
     lea                  r2, [dstq+strideq*4]
     lea                  r3, [strideq*3]
     WRITE_4X8             0, 1
@@ -856,7 +762,7 @@ ALIGN function_align
     WRAP_XMM IADST8_1D_PACKED 2
     ret
 
-INV_TXFM_4X8_FN flipadst, dct,      0
+INV_TXFM_4X8_FN flipadst, dct
 INV_TXFM_4X8_FN flipadst, adst
 INV_TXFM_4X8_FN flipadst, flipadst
 INV_TXFM_4X8_FN flipadst, identity
@@ -880,15 +786,15 @@ cglobal iflipadst_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     pshufd              xm5, xm1, q1032
     call m(iadst_4x8_internal).main_pass2
     vpbroadcastd         m5, [o(pw_2048)]
-    vinserti128          m3, m3, xm1, 1
-    vinserti128          m2, m2, xm0, 1
+    vinserti128          m3, xm1, 1
+    vinserti128          m2, xm0, 1
     pxor                 m4, m4
     psubw                m4, m5
     pshufd               m0, m3, q1032
     pshufd               m1, m2, q1032
     jmp m(iadst_4x8_internal).end
 
-INV_TXFM_4X8_FN identity, dct,      3
+INV_TXFM_4X8_FN identity, dct
 INV_TXFM_4X8_FN identity, adst
 INV_TXFM_4X8_FN identity, flipadst
 INV_TXFM_4X8_FN identity, identity
@@ -913,49 +819,9 @@ cglobal iidentity_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vpbroadcastd         m4, [o(pw_4096)]
     jmp m(iadst_4x8_internal).end2
 
-%macro INV_TXFM_4X16_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 4x16
-%if %3 >= 0
-%ifidn %1_%2, dct_identity
-    vpbroadcastd         m0, [o(pw_2896x8)]
-    pmulhrsw             m0, [cq]
-    vpbroadcastd         m1, [o(pw_16384)]
-    vpbroadcastd         m2, [o(pw_1697x16)]
-    vpbroadcastd         m3, [o(pw_2048)]
-    pmulhrsw             m0, m1
-    pmulhrsw             m2, m0
-    paddsw               m0, m0
-    paddsw               m0, m2
-    pmulhrsw             m3, m0
-    punpcklwd            m1, m3, m3
-    punpckhwd            m3, m3
-    punpckldq            m0, m1, m1
-    punpckhdq            m1, m1
-    punpckldq            m2, m3, m3
-    punpckhdq            m3, m3
-    jmp m(iadst_4x16_internal).end3
-%elifidn %1_%2, identity_dct
-    movd                xm0, [cq+32*0]
-    punpcklwd           xm0, [cq+32*1]
-    movd                xm1, [cq+32*2]
-    punpcklwd           xm1, [cq+32*3]
-    vpbroadcastd        xm2, [o(pw_1697x8)]
-    vpbroadcastd        xm3, [o(pw_2896x8)]
-    vpbroadcastd        xm4, [o(pw_2048)]
-    punpckldq           xm0, xm1
-    pcmpeqw             xm1, xm1
-    pmulhrsw            xm2, xm0
-    pcmpeqw             xm1, xm0
-    pxor                xm0, xm1
-    pavgw               xm0, xm2
-    pmulhrsw            xm0, xm3
-    pmulhrsw            xm0, xm4
-    vpbroadcastq         m0, xm0
-    mova                 m1, m0
-    mova                 m2, m0
-    mova                 m3, m0
-    jmp m(iadst_4x16_internal).end3
-%elifidn %1_%2, dct_dct
+%macro INV_TXFM_4X16_FN 2 ; type1, type2
+    INV_TXFM_FN          %1, %2, 4x16
+%ifidn %1_%2, dct_dct
     movd                xm1, [o(pw_2896x8)]
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_16384)]
@@ -968,27 +834,7 @@ cglobal iidentity_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     mova                 m1, m0
     mova                 m2, m0
     mova                 m3, m0
-    jmp m(iadst_4x16_internal).end4
-%else ; adst_dct / flipadst_dct
-    vpbroadcastw        xm0, [cq]
-    pmulhrsw            xm0, [o(iadst4_dconly1a)]
-    vpbroadcastd        xm1, [o(pw_16384)]
-    vpbroadcastd        xm2, [o(pw_2896x8)]
-    mov                [cq], eobd
-    pmulhrsw            xm0, xm1
-    psrlw               xm1, 3 ; pw_2048
-    pmulhrsw            xm0, xm2
-    pmulhrsw            xm0, xm1
-%ifidn %1, adst
-    vpbroadcastq         m0, xm0
-%else ; flipadst
-    vpermq               m0, m0, q1111
-%endif
-    mova                 m1, m0
-    mova                 m2, m0
-    mova                 m3, m0
-    jmp m(iadst_4x16_internal).end4
-%endif
+    jmp m(iadst_4x16_internal).end3
 %endif
 %endmacro
 
@@ -1038,7 +884,7 @@ cglobal iidentity_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vpbroadcastd         m5, [o(pw_2896_2896)]
     ITX_MUL2X_PACK        1, 0, _, 10, 0, 5, 4    ; t6   t5
     vpbroadcastd         m0, [o(pw_m2896_2896)]
-    ITX_MUL2X_PACK        2, 0, _, 10, 0, 5, 4,   ; t13a t10a
+    ITX_MUL2X_PACK        2, 0, _, 10, 0, 5, 4    ; t13a t10a
     punpckhqdq           m0, m8, m3        ; t15a t14
     punpcklqdq           m8, m3            ; t8a  t9
     shufps               m5, m4, m2, q1032 ; t12  t13a
@@ -1061,10 +907,10 @@ cglobal iidentity_4x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     paddsw               m3, m8     ; out7  out6
 %endmacro
 
-INV_TXFM_4X16_FN dct, dct,      0
-INV_TXFM_4X16_FN dct, identity, 15
+INV_TXFM_4X16_FN dct, dct
 INV_TXFM_4X16_FN dct, adst
 INV_TXFM_4X16_FN dct, flipadst
+INV_TXFM_4X16_FN dct, identity
 
 cglobal idct_4x16_internal, 0, 5, 11, dst, stride, c, eob, tx2
     mova                 m0, [cq+32*0]
@@ -1089,11 +935,11 @@ cglobal idct_4x16_internal, 0, 5, 11, dst, stride, c, eob, tx2
     vextracti128        xm6, m2, 1
     vextracti128        xm7, m3, 1
     call .main
-    vinserti128          m0, m0, xm4, 1
-    vinserti128          m1, m1, xm5, 1
+    vinserti128          m0, xm4, 1
+    vinserti128          m1, xm5, 1
     vpbroadcastd         m5, [o(pw_2048)]
-    vinserti128          m2, m2, xm6, 1
-    vinserti128          m3, m3, xm7, 1
+    vinserti128          m2, xm6, 1
+    vinserti128          m3, xm7, 1
     pshufd               m1, m1, q1032
     pshufd               m3, m3, q1032
     jmp m(iadst_4x16_internal).end2
@@ -1102,7 +948,7 @@ ALIGN function_align
     WRAP_XMM IDCT16_1D_PACKED
     ret
 
-INV_TXFM_4X16_FN adst, dct,      0
+INV_TXFM_4X16_FN adst, dct
 INV_TXFM_4X16_FN adst, adst
 INV_TXFM_4X16_FN adst, flipadst
 INV_TXFM_4X16_FN adst, identity
@@ -1134,26 +980,25 @@ cglobal iadst_4x16_internal, 0, 5, 11, dst, stride, c, eob, tx2
     vpbroadcastd         m5, [o(pw_2048)]
     pshufd               m1, m1, q1032
     vpblendd             m4, m1, m0, 0x33
-    vpblendd             m0, m0, m2, 0x33
-    vpblendd             m2, m2, m3, 0x33
-    vpblendd             m3, m3, m1, 0x33
+    vpblendd             m0, m2, 0x33
+    vpblendd             m2, m3, 0x33
+    vpblendd             m3, m1, 0x33
     vpermq               m0, m0, q2031
     vpermq               m1, m2, q1302
     vpermq               m2, m3, q3120
     vpermq               m3, m4, q0213
     psubw                m6, m7, m5
 .end:
-    vpblendd             m5, m5, m6, 0xcc
+    vpblendd             m5, m6, 0xcc
 .end2:
     REPX   {pmulhrsw x, m5}, m0, m1, m2, m3
     WIN64_RESTORE_XMM
-.end3:
     pxor                 m4, m4
     mova          [cq+32*0], m4
     mova          [cq+32*1], m4
     mova          [cq+32*2], m4
     mova          [cq+32*3], m4
-.end4:
+.end3:
     lea                  r2, [dstq+strideq*8]
     lea                  r3, [strideq*3]
     WRITE_4X8             0, 1
@@ -1164,9 +1009,9 @@ cglobal iadst_4x16_internal, 0, 5, 11, dst, stride, c, eob, tx2
 ALIGN function_align
 .main:
     vpblendd             m4, m1, m0, 0xcc
-    vpblendd             m1, m1, m0, 0x33
+    vpblendd             m1, m0, 0x33
     vpblendd             m5, m2, m3, 0xcc
-    vpblendd             m2, m2, m3, 0x33
+    vpblendd             m2, m3, 0x33
     vperm2i128           m3, m5, m2, 0x31
     vinserti128          m0, m1, xm4, 1 ; in0  in3  in2  in1
     vperm2i128           m4, m1, m4, 0x31
@@ -1198,23 +1043,23 @@ ALIGN function_align
     psubsw               m1, m2, m3 ; t13a t12a t15a t14a
     paddsw               m2, m3     ; t9a  t8a  t11a t10a
     psubw                m3, m7, m6 ; pw_3784_m1567
-    vpblendd             m6, m6, m3, 0xf0
+    vpblendd             m6, m3, 0xf0
     ITX_MUL2X_PACK        4, 3, _, 8, 6, 5, 4 ; t4a t5a t7a t6a
     ITX_MUL2X_PACK        1, 3, _, 8, 6, 5, 4 ; t12 t13 t15 t14
     vbroadcasti128       m5, [o(deint_shuf)]
     pshufb               m0, m5
     pshufb               m2, m5
     vperm2i128           m3, m0, m2, 0x31  ; t3   t2   t11a t10a
-    vinserti128          m0, m0, xm2, 1    ; t1   t0   t9a  t8a
+    vinserti128          m0, xm2, 1        ; t1   t0   t9a  t8a
     vperm2i128           m2, m4, m1, 0x31  ; t7a  t6a  t15  t14
-    vinserti128          m4, m4, xm1, 1    ; t4a  t5a  t12  t13
+    vinserti128          m4, xm1, 1        ; t4a  t5a  t12  t13
     pshufd               m2, m2, q1032     ; t6a  t7a  t14  t15
     psubsw               m1, m0, m3        ; t3a t2a t11 t10
     paddsw               m0, m3     ; -out15  out0   out14 -out1
     paddsw               m3, m4, m2 ; -out3   out12  out2  -out13
     psubsw               m4, m2            ; t6 t7 t14a t15a
     shufps               m2, m1, m4, q1032 ; t2a t6  t10 t14a
-    vpblendd             m4, m4, m1, 0x33  ; t3a t7  t11 t15a
+    vpblendd             m4, m1, 0x33      ; t3a t7  t11 t15a
     ret
 ALIGN function_align
 .main_pass1_end:
@@ -1232,7 +1077,7 @@ ALIGN function_align
     packssdw             m1, m4     ; -out7   out4   out6  -out5
     ret
 
-INV_TXFM_4X16_FN flipadst, dct,      0
+INV_TXFM_4X16_FN flipadst, dct
 INV_TXFM_4X16_FN flipadst, adst
 INV_TXFM_4X16_FN flipadst, flipadst
 INV_TXFM_4X16_FN flipadst, identity
@@ -1264,9 +1109,9 @@ cglobal iflipadst_4x16_internal, 0, 5, 11, dst, stride, c, eob, tx2
     vpbroadcastd         m6, [o(pw_2048)]
     pshufd               m1, m1, q1032
     vpblendd             m4, m0, m2, 0x33
-    vpblendd             m0, m0, m1, 0xcc
-    vpblendd             m1, m1, m3, 0xcc
-    vpblendd             m2, m2, m3, 0x33
+    vpblendd             m0, m1, 0xcc
+    vpblendd             m1, m3, 0xcc
+    vpblendd             m2, m3, 0x33
     vpermq               m0, m0, q3120
     vpermq               m1, m1, q0213
     vpermq               m2, m2, q2031
@@ -1274,7 +1119,7 @@ cglobal iflipadst_4x16_internal, 0, 5, 11, dst, stride, c, eob, tx2
     psubw                m5, m7, m6
     jmp m(iadst_4x16_internal).end
 
-INV_TXFM_4X16_FN identity, dct,      3
+INV_TXFM_4X16_FN identity, dct
 INV_TXFM_4X16_FN identity, adst
 INV_TXFM_4X16_FN identity, flipadst
 INV_TXFM_4X16_FN identity, identity
@@ -1325,7 +1170,7 @@ cglobal iidentity_4x16_internal, 0, 5, 11, dst, stride, c, eob, tx2
     paddsw               m3, m8
     jmp m(iadst_4x16_internal).end2
 
-%macro WRITE_8X4 4-7 strideq*1, strideq*2, r3, ; coefs[1-2], tmp[1-2], off[1-3]
+%macro WRITE_8X4 4-7 strideq*1, strideq*2, r3 ; coefs[1-2], tmp[1-2], off[1-3]
     movq               xm%3, [dstq   ]
     movhps             xm%3, [dstq+%5]
     movq               xm%4, [dstq+%6]
@@ -1350,69 +1195,25 @@ cglobal iidentity_4x16_internal, 0, 5, 11, dst, stride, c, eob, tx2
     movhps        [dstq+%7], xm%4
 %endmacro
 
-%macro INV_TXFM_8X4_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 8x4
-%if %3 >= 0
-%ifidn %1_%2, dct_identity
-    vpbroadcastd        xm0, [o(pw_2896x8)]
-    pmulhrsw            xm1, xm0, [cq]
-    vpbroadcastd        xm2, [o(pw_1697x8)]
-    vpbroadcastd        xm3, [o(pw_2048)]
-    pmulhrsw            xm1, xm0
-    pmulhrsw            xm2, xm1
-    paddsw              xm1, xm2
-    pmulhrsw            xm1, xm3
-    punpcklwd           xm1, xm1
-    punpckldq           xm0, xm1, xm1
-    punpckhdq           xm1, xm1
-    vpermq               m0, m0, q1100
-    vpermq               m1, m1, q1100
-%elifidn %1_%2, identity_dct
-    mova                xm0, [cq+16*0]
-    packusdw            xm0, [cq+16*1]
-    mova                xm1, [cq+16*2]
-    packusdw            xm1, [cq+16*3]
-    vpbroadcastd        xm2, [o(pw_2896x8)]
-    vpbroadcastd        xm3, [o(pw_2048)]
-    packusdw            xm0, xm1
-    pmulhrsw            xm0, xm2
-    paddsw              xm0, xm0
-    pmulhrsw            xm0, xm2
-    pmulhrsw            xm0, xm3
-    vinserti128          m0, m0, xm0, 1
-    mova                 m1, m0
-%else
+%macro INV_TXFM_8X4_FN 2 ; type1, type2
+    INV_TXFM_FN          %1, %2, 8x4
+%ifidn %1_%2, dct_dct
     movd                xm1, [o(pw_2896x8)]
     pmulhrsw            xm0, xm1, [cq]
     pmulhrsw            xm0, xm1
-%ifidn %2, dct
     movd                xm2, [o(pw_2048)]
     pmulhrsw            xm0, xm1
     pmulhrsw            xm0, xm2
     vpbroadcastw         m0, xm0
     mova                 m1, m0
-%else ; adst / flipadst
-    vpbroadcastw         m0, xm0
-    pmulhrsw             m0, [o(iadst4_dconly2a)]
-    vpbroadcastd         m1, [o(pw_2048)]
-    pmulhrsw             m1, m0
-%ifidn %2, adst
-    vpermq               m0, m1, q1100
-    vpermq               m1, m1, q3322
-%else ; flipadst
-    vpermq               m0, m1, q2233
-    vpermq               m1, m1, q0011
-%endif
-%endif
-%endif
     jmp m(iadst_8x4_internal).end3
 %endif
 %endmacro
 
-INV_TXFM_8X4_FN dct, dct,      0
-INV_TXFM_8X4_FN dct, adst,     0
-INV_TXFM_8X4_FN dct, flipadst, 0
-INV_TXFM_8X4_FN dct, identity, 3
+INV_TXFM_8X4_FN dct, dct
+INV_TXFM_8X4_FN dct, adst
+INV_TXFM_8X4_FN dct, flipadst
+INV_TXFM_8X4_FN dct, identity
 
 cglobal idct_8x4_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vpbroadcastd        xm3, [o(pw_2896x8)]
@@ -1425,7 +1226,7 @@ cglobal idct_8x4_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vinserti128          m3, m1, xm3, 1
     vinserti128          m1, m0, xm2, 1
     shufps               m0, m1, m3, q0220
-    shufps               m1, m1, m3, q1331
+    shufps               m1, m3, q1331
     pshufb               m0, m4
     pshufb               m1, m4
     jmp                tx2q
@@ -1449,8 +1250,8 @@ cglobal iadst_8x4_internal, 0, 5, 7, dst, stride, c, eob, tx2
     pmulhrsw            xm4, xm0
     pmulhrsw            xm5, xm0
     call m(iadst_4x8_internal).main_pass1
-    vinserti128        m0, m0, xm2, 1
-    vinserti128        m1, m1, xm3, 1
+    vinserti128        m0, xm2, 1
+    vinserti128        m1, xm3, 1
     punpckhwd          m2, m0, m1
     punpcklwd          m0, m1
     pxor               m3, m3
@@ -1494,8 +1295,8 @@ cglobal iflipadst_8x4_internal, 0, 5, 7, dst, stride, c, eob, tx2
     pmulhrsw            xm4, xm0
     pmulhrsw            xm5, xm0
     call m(iadst_4x8_internal).main_pass1
-    vinserti128          m3, m3, xm1, 1
-    vinserti128          m2, m2, xm0, 1
+    vinserti128          m3, xm1, 1
+    vinserti128          m2, xm0, 1
     punpckhwd            m1, m3, m2
     punpcklwd            m3, m2
     pxor                 m0, m0
@@ -1510,16 +1311,16 @@ cglobal iflipadst_8x4_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vpermq               m0, m2, q2031
     jmp m(iadst_8x4_internal).end2
 
-INV_TXFM_8X4_FN identity, dct,      7
+INV_TXFM_8X4_FN identity, dct
 INV_TXFM_8X4_FN identity, adst
 INV_TXFM_8X4_FN identity, flipadst
 INV_TXFM_8X4_FN identity, identity
 
 cglobal iidentity_8x4_internal, 0, 5, 7, dst, stride, c, eob, tx2
-    mova                xm2,     [cq+16*0]
-    mova                xm0,     [cq+16*1]
-    vinserti128          m2, m2, [cq+16*2], 1
-    vinserti128          m0, m0, [cq+16*3], 1
+    mova                xm2, [cq+16*0]
+    mova                xm0, [cq+16*1]
+    vinserti128          m2, [cq+16*2], 1
+    vinserti128          m0, [cq+16*3], 1
     vpbroadcastd         m3, [o(pw_2896x8)]
     punpcklwd            m1, m2, m0
     punpckhwd            m2, m0
@@ -1538,25 +1339,9 @@ cglobal iidentity_8x4_internal, 0, 5, 7, dst, stride, c, eob, tx2
     paddsw               m1, m3
     jmp m(iadst_8x4_internal).end
 
-%macro INV_TXFM_8X8_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 8x8
-%ifidn %1_%2, dct_identity
-    vpbroadcastd        xm0, [o(pw_2896x8)]
-    pmulhrsw            xm0, [cq]
-    vpbroadcastd        xm1, [o(pw_16384)]
-    pmulhrsw            xm0, xm1
-    psrlw               xm1, 2 ; pw_4096
-    pmulhrsw            xm0, xm1
-    pshufb              xm0, [o(deint_shuf)]
-    vpermq               m3, m0, q1100
-    punpcklwd            m3, m3
-    pshufd               m0, m3, q0000
-    pshufd               m1, m3, q1111
-    pshufd               m2, m3, q2222
-    pshufd               m3, m3, q3333
-    jmp m(iadst_8x8_internal).end4
-%elif %3 >= 0
-%ifidn %1, dct
+%macro INV_TXFM_8X8_FN 2 ; type1, type2
+    INV_TXFM_FN          %1, %2, 8x8
+%ifidn %1_%2, dct_dct
     movd                xm1, [o(pw_2896x8)]
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_16384)]
@@ -1576,33 +1361,13 @@ cglobal iidentity_8x4_internal, 0, 5, 7, dst, stride, c, eob, tx2
     dec                 r2d
     jg .loop
     RET
-%else ; identity
-    mova                 m0, [cq+32*0]
-    punpcklwd            m0, [cq+32*1]
-    mova                 m1, [cq+32*2]
-    punpcklwd            m1, [cq+32*3]
-    vpbroadcastd         m2, [o(pw_2896x8)]
-    vpbroadcastd         m3, [o(pw_2048)]
-    pxor                 m4, m4
-    mova          [cq+32*0], m4
-    mova          [cq+32*1], m4
-    mova          [cq+32*2], m4
-    mova          [cq+32*3], m4
-    punpckldq            m0, m1
-    vpermq               m1, m0, q3232
-    vpermq               m0, m0, q1010
-    punpcklwd            m0, m1
-    pmulhrsw             m0, m2
-    pmulhrsw             m0, m3
-    jmp m(inv_txfm_add_dct_dct_8x8).end
-%endif
 %endif
 %endmacro
 
-INV_TXFM_8X8_FN dct, dct,      0
-INV_TXFM_8X8_FN dct, identity, 7
+INV_TXFM_8X8_FN dct, dct
 INV_TXFM_8X8_FN dct, adst
 INV_TXFM_8X8_FN dct, flipadst
+INV_TXFM_8X8_FN dct, identity
 
 cglobal idct_8x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vpermq               m0, [cq+32*0], q3120 ; 0 1
@@ -1749,20 +1514,20 @@ cglobal iflipadst_8x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     pmulhrsw             m0, m5, m4
     jmp m(iadst_8x8_internal).end3
 
-INV_TXFM_8X8_FN identity, dct,      7
+INV_TXFM_8X8_FN identity, dct
 INV_TXFM_8X8_FN identity, adst
 INV_TXFM_8X8_FN identity, flipadst
 INV_TXFM_8X8_FN identity, identity
 
 cglobal iidentity_8x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
-    mova                xm3,     [cq+16*0]
-    mova                xm2,     [cq+16*1]
-    vinserti128          m3, m3, [cq+16*4], 1
-    vinserti128          m2, m2, [cq+16*5], 1
-    mova                xm4,     [cq+16*2]
-    mova                xm0,     [cq+16*3]
-    vinserti128          m4, m4, [cq+16*6], 1
-    vinserti128          m0, m0, [cq+16*7], 1
+    mova                xm3, [cq+16*0]
+    mova                xm2, [cq+16*1]
+    vinserti128          m3, [cq+16*4], 1
+    vinserti128          m2, [cq+16*5], 1
+    mova                xm4, [cq+16*2]
+    mova                xm0, [cq+16*3]
+    vinserti128          m4, [cq+16*6], 1
+    vinserti128          m0, [cq+16*7], 1
     punpcklwd            m1, m3, m2
     punpckhwd            m3, m2
     punpcklwd            m2, m4, m0
@@ -1776,8 +1541,8 @@ cglobal iidentity_8x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     vpbroadcastd         m4, [o(pw_4096)]
     jmp m(iadst_8x8_internal).end
 
-%macro INV_TXFM_8X16_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 8x16
+%macro INV_TXFM_8X16_FN 2 ; type1, type2
+    INV_TXFM_FN          %1, %2, 8x16
 %ifidn %1_%2, dct_dct
     movd                xm1, [o(pw_2896x8)]
     pmulhrsw            xm0, xm1, [cq]
@@ -1789,66 +1554,6 @@ cglobal iidentity_8x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     pmulhrsw            xm0, xm1
     pmulhrsw            xm0, xm2
     vpbroadcastw         m0, xm0
-    mov                 r2d, 4
-    jmp m(inv_txfm_add_dct_dct_8x8).end2
-%elifidn %1_%2, dct_identity
-    WIN64_SPILL_XMM      13
-    vpbroadcastd         m0, [o(pw_2896x8)]
-    pmulhrsw             m7, m0, [cq]
-    vpbroadcastd         m1, [o(pw_16384)]
-    vpbroadcastd         m2, [o(pw_1697x16)]
-    pxor                 m3, m3
-    mova               [cq], m3
-    pmulhrsw             m7, m0
-    pmulhrsw             m7, m1
-    psrlw                m1, 3 ; pw_2048
-    pmulhrsw             m2, m7
-    paddsw               m7, m7
-    paddsw               m7, m2
-    pmulhrsw             m7, m1
-    punpcklwd            m5, m7, m7
-    punpckhwd            m7, m7
-    punpcklwd            m4, m5, m5
-    punpckhwd            m5, m5
-    punpcklwd            m6, m7, m7
-    punpckhwd            m7, m7
-    vpermq               m0, m4, q1100
-    vpermq               m1, m5, q1100
-    vpermq               m2, m6, q1100
-    vpermq               m3, m7, q1100
-    vpermq               m4, m4, q3322
-    vpermq               m5, m5, q3322
-    vpermq               m6, m6, q3322
-    vpermq               m7, m7, q3322
-    jmp m(idct_8x16_internal).end4
-%elifidn %1_%2, identity_dct
-    movd                xm0, [cq+32*0]
-    punpcklwd           xm0, [cq+32*1]
-    movd                xm2, [cq+32*2]
-    punpcklwd           xm2, [cq+32*3]
-    add                  cq, 32*4
-    movd                xm1, [cq+32*0]
-    punpcklwd           xm1, [cq+32*1]
-    movd                xm3, [cq+32*2]
-    punpcklwd           xm3, [cq+32*3]
-    vpbroadcastd        xm4, [o(pw_2896x8)]
-    vpbroadcastd        xm5, [o(pw_2048)]
-    xor                 eax, eax
-    mov           [cq-32*4], eax
-    mov           [cq-32*3], eax
-    mov           [cq-32*2], eax
-    mov           [cq-32*1], eax
-    punpckldq           xm0, xm2
-    punpckldq           xm1, xm3
-    punpcklqdq          xm0, xm1
-    pmulhrsw            xm0, xm4
-    pmulhrsw            xm0, xm4
-    pmulhrsw            xm0, xm5
-    mov           [cq+32*0], eax
-    mov           [cq+32*1], eax
-    mov           [cq+32*2], eax
-    mov           [cq+32*3], eax
-    vinserti128          m0, m0, xm0, 1
     mov                 r2d, 4
     jmp m(inv_txfm_add_dct_dct_8x8).end2
 %endif
@@ -1867,10 +1572,10 @@ cglobal iidentity_8x8_internal, 0, 5, 7, dst, stride, c, eob, tx2
     pmulhrsw             m4,     [cq+32*0]
 %endmacro
 
-INV_TXFM_8X16_FN dct, dct,      0
-INV_TXFM_8X16_FN dct, identity, 15
+INV_TXFM_8X16_FN dct, dct
 INV_TXFM_8X16_FN dct, adst
 INV_TXFM_8X16_FN dct, flipadst
+INV_TXFM_8X16_FN dct, identity
 
 cglobal idct_8x16_internal, 0, 5, 13, dst, stride, c, eob, tx2
     ITX_8X16_LOAD_COEFS
@@ -1878,13 +1583,13 @@ cglobal idct_8x16_internal, 0, 5, 13, dst, stride, c, eob, tx2
     vpbroadcastd        m10, [o(pw_16384)]
 .pass1_end:
     vperm2i128           m9, m3, m7, 0x31
-    vinserti128          m3, m3, xm7, 1
+    vinserti128          m3, xm7, 1
     vperm2i128           m8, m2, m6, 0x31
-    vinserti128          m2, m2, xm6, 1
+    vinserti128          m2, xm6, 1
     vperm2i128           m6, m1, m5, 0x31
-    vinserti128          m1, m1, xm5, 1
+    vinserti128          m1, xm5, 1
     vperm2i128           m5, m0, m4, 0x31
-    vinserti128          m0, m0, xm4, 1
+    vinserti128          m0, xm4, 1
     punpckhwd            m4, m2, m3
     punpcklwd            m2, m3
     punpckhwd            m3, m0, m1
@@ -1915,7 +1620,6 @@ cglobal idct_8x16_internal, 0, 5, 13, dst, stride, c, eob, tx2
 .end3:
     pxor                 m8, m8
     REPX {mova [cq+32*x], m8}, -4, -3, -2, -1, 0, 1, 2, 3
-.end4:
     lea                  r3, [strideq*3]
     WRITE_8X4             0, 1, 8, 9
     lea                dstq, [dstq+strideq*4]
@@ -2120,7 +1824,7 @@ cglobal iflipadst_8x16_internal, 0, 5, 13, dst, stride, c, eob, tx2
     pmulhrsw             m7, m9, m8
     jmp m(idct_8x16_internal).end3
 
-INV_TXFM_8X16_FN identity, dct,      7
+INV_TXFM_8X16_FN identity, dct
 INV_TXFM_8X16_FN identity, adst
 INV_TXFM_8X16_FN identity, flipadst
 INV_TXFM_8X16_FN identity, identity
@@ -2136,24 +1840,24 @@ INV_TXFM_8X16_FN identity, identity
 %endmacro
 
 cglobal iidentity_8x16_internal, 0, 5, 13, dst, stride, c, eob, tx2
-    mova                xm3,     [cq+16*0]
-    mova                xm2,     [cq+16*2]
+    mova                xm3, [cq+16*0]
+    mova                xm2, [cq+16*2]
     add                  cq, 16*8
-    vinserti128          m3, m3, [cq+16*0], 1
-    vinserti128          m2, m2, [cq+16*2], 1
+    vinserti128          m3, [cq+16*0], 1
+    vinserti128          m2, [cq+16*2], 1
     vpbroadcastd         m9, [o(pw_2896x8)]
-    mova                xm4,     [cq-16*4]
-    mova                xm5,     [cq-16*2]
-    vinserti128          m4, m4, [cq+16*4], 1
-    vinserti128          m5, m5, [cq+16*6], 1
-    mova                xm7,     [cq-16*7]
-    mova                xm6,     [cq-16*5]
-    vinserti128          m7, m7, [cq+16*1], 1
-    vinserti128          m6, m6, [cq+16*3], 1
-    mova                xm8,     [cq-16*3]
-    mova                xm0,     [cq-16*1]
-    vinserti128          m8, m8, [cq+16*5], 1
-    vinserti128          m0, m0, [cq+16*7], 1
+    mova                xm4, [cq-16*4]
+    mova                xm5, [cq-16*2]
+    vinserti128          m4, [cq+16*4], 1
+    vinserti128          m5, [cq+16*6], 1
+    mova                xm7, [cq-16*7]
+    mova                xm6, [cq-16*5]
+    vinserti128          m7, [cq+16*1], 1
+    vinserti128          m6, [cq+16*3], 1
+    mova                xm8, [cq-16*3]
+    mova                xm0, [cq-16*1]
+    vinserti128          m8, [cq+16*5], 1
+    vinserti128          m0, [cq+16*7], 1
     punpcklwd            m1, m3, m2
     punpckhwd            m3, m2
     punpcklwd            m2, m4, m5
@@ -2197,64 +1901,11 @@ cglobal iidentity_8x16_internal, 0, 5, 13, dst, stride, c, eob, tx2
     vextracti128  [dstq+%6], m%3, 1
 %endmacro
 
-%macro INV_TXFM_16X4_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 16x4
-%if %3 >= 0
-%ifidn %1_%2, dct_identity
-    vpbroadcastd        xm3, [o(pw_2896x8)]
-    pmulhrsw            xm3, [cq]
-    vpbroadcastd        xm0, [o(pw_16384)]
-    vpbroadcastd        xm1, [o(pw_1697x8)]
-    pmulhrsw            xm3, xm0
-    psrlw               xm0, 3 ; pw_2048
-    pmulhrsw            xm1, xm3
-    paddsw              xm3, xm1
-    pmulhrsw            xm3, xm0
-    punpcklwd           xm3, xm3
-    punpckldq           xm1, xm3, xm3
-    punpckhdq           xm3, xm3
-    vpbroadcastq         m0, xm1
-    vpermq               m1, m1, q1111
-    vpbroadcastq         m2, xm3
-    vpermq               m3, m3, q1111
-    jmp m(iadst_16x4_internal).end2
-%elifidn %1_%2, identity_dct
-    mova                xm0,     [cq+16*0]
-    mova                xm2,     [cq+16*1]
-    vinserti128          m0, m0, [cq+16*4], 1
-    vinserti128          m2, m2, [cq+16*5], 1
-    mova                xm1,     [cq+16*2]
-    mova                xm3,     [cq+16*3]
-    vinserti128          m1, m1, [cq+16*6], 1
-    vinserti128          m3, m3, [cq+16*7], 1
-    vpbroadcastd         m4, [o(pw_1697x16)]
-    vpbroadcastd         m5, [o(pw_16384)]
-    packusdw             m0, m2
-    packusdw             m1, m3
-    packusdw             m0, m1
-    vpbroadcastd         m1, [o(pw_2896x8)]
-    pmulhrsw             m4, m0
-    pmulhrsw             m4, m5
-    paddsw               m0, m4
-    psrlw                m5, 3 ; pw_2048
-    pmulhrsw             m0, m1
-    pmulhrsw             m0, m5
-    mov                 r3d, 2
-.end:
-    pxor                 m3, m3
-.end_loop:
-    mova          [cq+32*0], m3
-    mova          [cq+32*1], m3
-    add                  cq, 32*2
-    WRITE_16X2            0, 0, 1, 2, strideq*0, strideq*1
-    lea                dstq, [dstq+strideq*2]
-    dec                 r3d
-    jg .end_loop
-    RET
-%else
+%macro INV_TXFM_16X4_FN 2 ; type1, type2
+    INV_TXFM_FN          %1, %2, 16x4
+%ifidn %1_%2, dct_dct
     movd                xm1, [o(pw_2896x8)]
     pmulhrsw            xm0, xm1, [cq]
-%ifidn %2, dct
     movd                xm2, [o(pw_16384)]
     mov                [cq], eobd
     mov                 r2d, 2
@@ -2267,7 +1918,7 @@ cglobal iidentity_8x16_internal, 0, 5, 13, dst, stride, c, eob, tx2
     pxor                 m3, m3
 .dconly_loop:
     mova                xm1, [dstq]
-    vinserti128          m1, m1, [dstq+strideq], 1
+    vinserti128          m1, [dstq+strideq], 1
     punpckhbw            m2, m1, m3
     punpcklbw            m1, m3
     paddw                m2, m0
@@ -2279,35 +1930,13 @@ cglobal iidentity_8x16_internal, 0, 5, 13, dst, stride, c, eob, tx2
     dec                 r2d
     jg .dconly_loop
     RET
-%else ; adst / flipadst
-    movd                xm2, [o(pw_16384)]
-    pmulhrsw            xm0, xm2
-    vpbroadcastw         m0, xm0
-    pmulhrsw             m0, [o(iadst4_dconly2a)]
-    vpbroadcastd         m3, [o(pw_2048)]
-    mov                [cq], eobd
-    pmulhrsw             m3, m0
-%ifidn %2, adst
-    vpbroadcastq         m0, xm3
-    vpermq               m1, m3, q1111
-    vpermq               m2, m3, q2222
-    vpermq               m3, m3, q3333
-%else ; flipadst
-    vpermq               m0, m3, q3333
-    vpermq               m1, m3, q2222
-    vpermq               m2, m3, q1111
-    vpbroadcastq         m3, xm3
-%endif
-    jmp m(iadst_16x4_internal).end3
-%endif
-%endif
 %endif
 %endmacro
 
-INV_TXFM_16X4_FN dct, dct,      0
-INV_TXFM_16X4_FN dct, adst,     0
-INV_TXFM_16X4_FN dct, flipadst, 0
-INV_TXFM_16X4_FN dct, identity, 3
+INV_TXFM_16X4_FN dct, dct
+INV_TXFM_16X4_FN dct, adst
+INV_TXFM_16X4_FN dct, flipadst
+INV_TXFM_16X4_FN dct, identity
 
 cglobal idct_16x4_internal, 0, 5, 11, dst, stride, c, eob, tx2
     mova                xm0, [cq+16*0]
@@ -2481,20 +2110,20 @@ ALIGN function_align
     WRITE_16X2            1, 0, 4, 5, strideq*0, strideq*1
     RET
 
-INV_TXFM_16X4_FN identity, dct,      15
+INV_TXFM_16X4_FN identity, dct
 INV_TXFM_16X4_FN identity, adst
 INV_TXFM_16X4_FN identity, flipadst
 INV_TXFM_16X4_FN identity, identity
 
 cglobal iidentity_16x4_internal, 0, 5, 11, dst, stride, c, eob, tx2
-    mova                xm2,     [cq+16*0]
-    mova                xm4,     [cq+16*1]
-    vinserti128          m2, m2, [cq+16*4], 1
-    vinserti128          m4, m4, [cq+16*5], 1
-    mova                xm0,     [cq+16*2]
-    mova                xm1,     [cq+16*3]
-    vinserti128          m0, m0, [cq+16*6], 1
-    vinserti128          m1, m1, [cq+16*7], 1
+    mova                xm2, [cq+16*0]
+    mova                xm4, [cq+16*1]
+    vinserti128          m2, [cq+16*4], 1
+    vinserti128          m4, [cq+16*5], 1
+    mova                xm0, [cq+16*2]
+    mova                xm1, [cq+16*3]
+    vinserti128          m0, [cq+16*6], 1
+    vinserti128          m1, [cq+16*7], 1
     vpbroadcastd         m7, [o(pw_1697x16)]
     vpbroadcastd         m8, [o(pw_16384)]
     punpcklwd            m3, m2, m4
@@ -2531,8 +2160,8 @@ cglobal iidentity_16x4_internal, 0, 5, 11, dst, stride, c, eob, tx2
     paddsw               m3, m7
     jmp m(iadst_16x4_internal).end
 
-%macro INV_TXFM_16X8_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 16x8
+%macro INV_TXFM_16X8_FN 2 ; type1, type2
+    INV_TXFM_FN          %1, %2, 16x8
 %ifidn %1_%2, dct_dct
     movd                xm1, [o(pw_2896x8)]
     pmulhrsw            xm0, xm1, [cq]
@@ -2541,59 +2170,6 @@ cglobal iidentity_16x4_internal, 0, 5, 11, dst, stride, c, eob, tx2
     pmulhrsw            xm0, xm1
     mov                 r2d, 4
     jmp m(inv_txfm_add_dct_dct_16x4).dconly
-%elifidn %1_%2, dct_identity
-    WIN64_SPILL_XMM      13
-    vbroadcasti128       m7, [cq]
-    vpbroadcastd         m0, [o(pw_2896x8)]
-    vpbroadcastd         m1, [o(pw_16384)]
-    pxor                xm2, xm2
-    mova               [cq], xm2
-    pmulhrsw             m7, m0
-    pmulhrsw             m7, m0
-    pmulhrsw             m7, m1
-    psrlw                m1, 2 ; pw_4096
-    pmulhrsw             m7, m1
-    punpcklwd            m3, m7, m7
-    punpckhwd            m7, m7
-    pshufd               m0, m3, q0000
-    pshufd               m1, m3, q1111
-    pshufd               m2, m3, q2222
-    pshufd               m3, m3, q3333
-    pshufd               m4, m7, q0000
-    pshufd               m5, m7, q1111
-    pshufd               m6, m7, q2222
-    pshufd               m7, m7, q3333
-    lea                  r3, [strideq*3]
-    WRITE_16X2            0, 1, 8, 0, strideq*0, strideq*1
-    WRITE_16X2            2, 3, 0, 1, strideq*2, r3
-    jmp m(idct_16x8_internal).end4
-%elifidn %1_%2, identity_dct
-    mova                 m0, [cq+32*0]
-    packusdw             m0, [cq+32*1]
-    mova                 m2, [cq+32*2]
-    packusdw             m2, [cq+32*3]
-    mova                 m1, [cq+32*4]
-    packusdw             m1, [cq+32*5]
-    mova                 m3, [cq+32*6]
-    packusdw             m3, [cq+32*7]
-    vpbroadcastd         m4, [o(pw_2896x8)]
-    vpbroadcastd         m5, [o(pw_1697x16)]
-    packusdw             m0, m2
-    packusdw             m1, m3
-    vpbroadcastd         m2, [o(pw_16384)]
-    packusdw             m0, m1
-    vpermq               m1, m0, q3322
-    vpermq               m0, m0, q1100
-    punpcklwd            m0, m1
-    pmulhrsw             m0, m4
-    pmulhrsw             m5, m0
-    pmulhrsw             m5, m2
-    paddsw               m0, m5
-    psrlw                m2, 3 ; pw_2048
-    pmulhrsw             m0, m4
-    pmulhrsw             m0, m2
-    mov                 r3d, 4
-    jmp m(inv_txfm_add_identity_dct_16x4).end
 %endif
 %endmacro
 
@@ -2611,10 +2187,10 @@ cglobal iidentity_16x4_internal, 0, 5, 11, dst, stride, c, eob, tx2
     REPX   {pmulhrsw x, m8}, m0, m7, m1, m6, m2, m5, m3, m4
 %endmacro
 
-INV_TXFM_16X8_FN dct, dct,      0
-INV_TXFM_16X8_FN dct, identity, 7
+INV_TXFM_16X8_FN dct, dct
 INV_TXFM_16X8_FN dct, adst
 INV_TXFM_16X8_FN dct, flipadst
+INV_TXFM_16X8_FN dct, identity
 
 cglobal idct_16x8_internal, 0, 5, 13, dst, stride, c, eob, tx2
     ITX_16X8_LOAD_COEFS 3120
@@ -2648,13 +2224,13 @@ cglobal idct_16x8_internal, 0, 5, 13, dst, stride, c, eob, tx2
     punpckldq            m8, m9, m5
     punpckhdq            m9, m5
     vperm2i128           m4, m0, m6, 0x31
-    vinserti128          m0, m0, xm6, 1
+    vinserti128          m0, xm6, 1
     vperm2i128           m5, m1, m7, 0x31
-    vinserti128          m1, m1, xm7, 1
+    vinserti128          m1, xm7, 1
     vperm2i128           m6, m2, m8, 0x31
-    vinserti128          m2, m2, xm8, 1
+    vinserti128          m2, xm8, 1
     vperm2i128           m7, m3, m9, 0x31
-    vinserti128          m3, m3, xm9, 1
+    vinserti128          m3, xm9, 1
     jmp                tx2q
 .pass2:
     call .main
@@ -2811,13 +2387,13 @@ cglobal iflipadst_16x8_internal, 0, 5, 13, dst, stride, c, eob, tx2
     punpckldq            m5, m8, m2
     punpckhdq            m8, m2
     vinserti128          m2, m6, xm5, 1
-    vperm2i128           m6, m6, m5, 0x31
+    vperm2i128           m6, m5, 0x31
     vperm2i128           m5, m1, m4, 0x31
-    vinserti128          m1, m1, xm4, 1
+    vinserti128          m1, xm4, 1
     vperm2i128           m4, m0, m3, 0x31
-    vinserti128          m0, m0, xm3, 1
+    vinserti128          m0, xm3, 1
     vinserti128          m3, m7, xm8, 1
-    vperm2i128           m7, m7, m8, 0x31
+    vperm2i128           m7, m8, 0x31
     jmp                tx2q
 .pass2:
     call m(iadst_16x8_internal).main
@@ -2837,30 +2413,30 @@ cglobal iflipadst_16x8_internal, 0, 5, 13, dst, stride, c, eob, tx2
     WRITE_16X2            1, 2, 0, 1, strideq*2, r3
     jmp m(idct_16x8_internal).end3
 
-INV_TXFM_16X8_FN identity, dct,      15
+INV_TXFM_16X8_FN identity, dct
 INV_TXFM_16X8_FN identity, adst
 INV_TXFM_16X8_FN identity, flipadst
 INV_TXFM_16X8_FN identity, identity
 
 cglobal iidentity_16x8_internal, 0, 5, 13, dst, stride, c, eob, tx2
-    mova                xm7,     [cq+16*0]
-    mova                xm2,     [cq+16*1]
+    mova                xm7, [cq+16*0]
+    mova                xm2, [cq+16*1]
     add                  cq, 16*8
     vpbroadcastd         m3, [o(pw_2896x8)]
-    vinserti128          m7, m7, [cq+16*0], 1
-    vinserti128          m2, m2, [cq+16*1], 1
-    mova                xm6,     [cq-16*6]
-    mova                xm4,     [cq-16*5]
-    vinserti128          m6, m6, [cq+16*2], 1
-    vinserti128          m4, m4, [cq+16*3], 1
-    mova                xm8,     [cq-16*4]
-    mova                xm5,     [cq-16*3]
-    vinserti128          m8, m8, [cq+16*4], 1
-    vinserti128          m5, m5, [cq+16*5], 1
-    mova                xm0,     [cq-16*2]
-    mova                xm1,     [cq-16*1]
-    vinserti128          m0, m0, [cq+16*6], 1
-    vinserti128          m1, m1, [cq+16*7], 1
+    vinserti128          m7, [cq+16*0], 1
+    vinserti128          m2, [cq+16*1], 1
+    mova                xm6, [cq-16*6]
+    mova                xm4, [cq-16*5]
+    vinserti128          m6, [cq+16*2], 1
+    vinserti128          m4, [cq+16*3], 1
+    mova                xm8, [cq-16*4]
+    mova                xm5, [cq-16*3]
+    vinserti128          m8, [cq+16*4], 1
+    vinserti128          m5, [cq+16*5], 1
+    mova                xm0, [cq-16*2]
+    mova                xm1, [cq-16*1]
+    vinserti128          m0, [cq+16*6], 1
+    vinserti128          m1, [cq+16*7], 1
     vpbroadcastd        m10, [o(pw_1697x16)]
     vpbroadcastd        m11, [o(pw_16384)]
     REPX   {pmulhrsw x, m3}, m7, m2, m6, m4, m8, m5, m0, m1
@@ -2896,8 +2472,8 @@ cglobal iidentity_16x8_internal, 0, 5, 13, dst, stride, c, eob, tx2
 
 %define o_base pw_5 + 128
 
-%macro INV_TXFM_16X16_FN 2-3 -1 ; type1, type2, fast_thresh
-    INV_TXFM_FN          %1, %2, %3, 16x16
+%macro INV_TXFM_16X16_FN 2 ; type1, type2
+    INV_TXFM_FN          %1, %2, 16x16
 %ifidn %1_%2, dct_dct
     movd                xm1, [o(pw_2896x8)]
     pmulhrsw            xm0, xm1, [cq]
@@ -2905,72 +2481,6 @@ cglobal iidentity_16x8_internal, 0, 5, 13, dst, stride, c, eob, tx2
     mov                [cq], eobd
     mov                 r2d, 8
     jmp m(inv_txfm_add_dct_dct_16x4).dconly
-%elifidn %1_%2, dct_identity
-    WIN64_SPILL_XMM       7
-    vpbroadcastd         m3, [o(pw_2896x8)]
-    pmulhrsw             m3, [cq]
-    vpbroadcastd         m0, [o(pw_8192)]
-    vpbroadcastd         m1, [o(pw_1697x16)]
-    vpbroadcastw         m4, [o(deint_shuf)] ; pb_0_1
-    pcmpeqb              m5, m5
-    pxor                 m6, m6
-    mova               [cq], m6
-    paddb                m5, m5 ; pb_m2
-    pmulhrsw             m3, m0
-    psrlw                m0, 2  ; pw_2048
-    IDTX16                3, 1, 1
-    pmulhrsw             m3, m0
-    mov                 r3d, 8
-.loop:
-    mova                xm1, [dstq]
-    vinserti128          m1, m1, [dstq+strideq*8], 1
-    pshufb               m0, m3, m4
-    psubb                m4, m5 ; += 2
-    punpckhbw            m2, m1, m6
-    punpcklbw            m1, m6
-    paddw                m2, m0
-    paddw                m1, m0
-    packuswb             m1, m2
-    mova             [dstq], xm1
-    vextracti128 [dstq+strideq*8], m1, 1
-    add                dstq, strideq
-    dec                 r3d
-    jg .loop
-    RET
-%elifidn %1_%2, identity_dct
-    movd                xm0,     [cq+32*0 ]
-    movd                xm2,     [cq+32*1 ]
-    movd                xm1,     [cq+32*2 ]
-    movd                xm3,     [cq+32*3 ]
-    vinserti128          m0, m0, [cq+32*8 ], 1
-    vinserti128          m2, m2, [cq+32*9 ], 1
-    vinserti128          m1, m1, [cq+32*10], 1
-    vinserti128          m3, m3, [cq+32*11], 1
-    punpcklwd            m0, m2
-    punpcklwd            m1, m3
-    punpckldq            m0, m1
-    movd                xm1,     [cq+32*4 ]
-    movd                xm3,     [cq+32*5 ]
-    movd                xm2,     [cq+32*6 ]
-    movd                xm4,     [cq+32*7 ]
-    vinserti128          m1, m1, [cq+32*12], 1
-    vinserti128          m3, m3, [cq+32*13], 1
-    vinserti128          m2, m2, [cq+32*14], 1
-    vinserti128          m4, m4, [cq+32*15], 1
-    punpcklwd            m1, m3
-    vpbroadcastd         m3, [o(pw_1697x16)]
-    punpcklwd            m2, m4
-    vpbroadcastd         m4, [o(pw_2896x8)]
-    punpckldq            m1, m2
-    vpbroadcastd         m2, [o(pw_2048)]
-    punpcklqdq           m0, m1
-    pmulhrsw             m3, m0
-    psraw                m3, 1
-    pavgw                m0, m3
-    pmulhrsw             m0, m4
-    pmulhrsw             m0, m2
-    mov                 r3d, 8
-    jmp m(inv_txfm_add_identity_dct_16x4).end
 %endif
 %endmacro
 
@@ -2995,10 +2505,10 @@ cglobal iidentity_16x8_internal, 0, 5, 13, dst, stride, c, eob, tx2
     mova              [rsp], m15
 %endmacro
 
-INV_TXFM_16X16_FN dct, dct,      0
-INV_TXFM_16X16_FN dct, identity, 15
+INV_TXFM_16X16_FN dct, dct
 INV_TXFM_16X16_FN dct, adst
 INV_TXFM_16X16_FN dct, flipadst
+INV_TXFM_16X16_FN dct, identity
 
 cglobal idct_16x16_internal, 0, 5, 16, 32*3, dst, stride, c, eob, tx2
     ITX_16X16_LOAD_COEFS
@@ -3014,19 +2524,19 @@ cglobal idct_16x16_internal, 0, 5, 16, 32*3, dst, stride, c, eob, tx2
     REPX   {pmulhrsw x, m1}, m3, m5, m7, m9, m11, m13, m15
     pmulhrsw             m1, [rsp+32*1]
     vperm2i128           m8, m1, m9, 0x31
-    vinserti128          m1, m1, xm9, 1
+    vinserti128          m1, xm9, 1
     vperm2i128           m9, m2, m10, 0x31
-    vinserti128          m2, m2, xm10, 1
+    vinserti128          m2, xm10, 1
     vperm2i128          m10, m3, m11, 0x31
-    vinserti128          m3, m3, xm11, 1
+    vinserti128          m3, xm11, 1
     vperm2i128          m11, m4, m12, 0x31
-    vinserti128          m4, m4, xm12, 1
+    vinserti128          m4, xm12, 1
     vperm2i128          m12, m5, m13, 0x31
-    vinserti128          m5, m5, xm13, 1
+    vinserti128          m5, xm13, 1
     vperm2i128          m13, m6, m14, 0x31
-    vinserti128          m6, m6, xm14, 1
+    vinserti128          m6, xm14, 1
     vperm2i128          m14, m7, m15, 0x31
-    vinserti128          m7, m7, xm15, 1
+    vinserti128          m7, xm15, 1
     mova                m15, [rsp+32*2]
 .pass1_end3:
     punpcklwd            m0, m9, m10
@@ -3395,7 +2905,7 @@ cglobal iflipadst_16x16_internal, 0, 5, 16, 32*3, dst, stride, c, eob, tx2
     pavgw               m%1, m%2 ; signs are guaranteed to be equal
 %endmacro
 
-INV_TXFM_16X16_FN identity, dct,      15
+INV_TXFM_16X16_FN identity, dct
 INV_TXFM_16X16_FN identity, identity
 
 cglobal iidentity_16x16_internal, 0, 5, 16, 32*3, dst, stride, c, eob, tx2
@@ -3456,7 +2966,7 @@ ALIGN function_align
     paddsw              m15, m1
     jmp m(idct_16x16_internal).end
 
-%define o_base iadst4_dconly2a + 128
+%define o_base deint_shuf + 128
 
 %macro LOAD_8ROWS 2-3 0 ; src, stride, is_rect2
 %if %3
@@ -3526,13 +3036,13 @@ cglobal inv_txfm_add_dct_dct_8x32, 4, 4, 0, dst, stride, c, eob
     LOAD_8ROWS      cq+32*1, 32*2
     call m(idct_16x8_internal).main
     vperm2i128          m11, m0, m4, 0x31
-    vinserti128          m0, m0, xm4, 1
+    vinserti128          m0, xm4, 1
     vperm2i128           m4, m1, m5, 0x31
-    vinserti128          m1, m1, xm5, 1
+    vinserti128          m1, xm5, 1
     vperm2i128           m5, m2, m6, 0x31
-    vinserti128          m2, m2, xm6, 1
+    vinserti128          m2, xm6, 1
     vperm2i128           m6, m3, m7, 0x31
-    vinserti128          m3, m3, xm7, 1
+    vinserti128          m3, xm7, 1
     pxor                 m7, m7
     REPX {mova [cq+32*x], m7}, 1, 3, 5, 7, 9, 11, 13, 15
     punpckhwd            m7, m0, m1
@@ -3566,13 +3076,13 @@ cglobal inv_txfm_add_dct_dct_8x32, 4, 4, 0, dst, stride, c, eob
     LOAD_8ROWS      cq+32*0, 32*2
     call m(idct_16x8_internal).main
     vperm2i128           m8, m0, m4, 0x31
-    vinserti128          m0, m0, xm4, 1
+    vinserti128          m0, xm4, 1
     vperm2i128           m4, m1, m5, 0x31
-    vinserti128          m1, m1, xm5, 1
+    vinserti128          m1, xm5, 1
     vperm2i128           m5, m2, m6, 0x31
-    vinserti128          m2, m2, xm6, 1
+    vinserti128          m2, xm6, 1
     vperm2i128           m6, m3, m7, 0x31
-    vinserti128          m3, m3, xm7, 1
+    vinserti128          m3, xm7, 1
     vpbroadcastd         m9, [o(pw_8192)]
     pxor                 m7, m7
     REPX {mova [cq+32*x], m7}, 0, 2, 4, 6, 8, 10, 12, 14
@@ -3775,7 +3285,7 @@ ALIGN function_align
 %macro LOAD_PACKED_16X2 4 ; dst, tmp, row[1-2]
     vbroadcasti128      m%1, [cq+16*%3]
     vbroadcasti128      m%2, [cq+16*%4]
-    shufpd              m%1, m%1, m%2, 0x0c
+    shufpd              m%1, m%2, 0x0c
 %endmacro
 
 cglobal inv_txfm_add_dct_dct_32x8, 4, 4, 0, dst, stride, c, eob
@@ -3877,13 +3387,13 @@ cglobal inv_txfm_add_dct_dct_32x8, 4, 4, 0, dst, stride, c, eob
     pmulhrsw            m12, [rsp+32*0]
     mova         [rsp+32*0], m8
     vperm2i128           m4, m0, m6, 0x31
-    vinserti128          m0, m0, xm6, 1
+    vinserti128          m0, xm6, 1
     vperm2i128           m5, m1, m7, 0x31
-    vinserti128          m1, m1, xm7, 1
+    vinserti128          m1, xm7, 1
     vperm2i128           m6, m2, m9, 0x31
-    vinserti128          m2, m2, xm9, 1
+    vinserti128          m2, xm9, 1
     vperm2i128           m7, m3, m10, 0x31
-    vinserti128          m3, m3, xm10, 1
+    vinserti128          m3, xm10, 1
     call m(idct_16x8_internal).main
     vpbroadcastd         m8, [o(pw_2048)]
     REPX   {pmulhrsw x, m8}, m0, m1, m2, m3, m4, m5, m6, m7
@@ -3922,13 +3432,13 @@ cglobal inv_txfm_add_dct_dct_32x8, 4, 4, 0, dst, stride, c, eob
     punpckldq            m9, m12, m5
     punpckhdq           m12, m5
     vperm2i128           m4, m0, m6, 0x31
-    vinserti128          m0, m0, xm6, 1
+    vinserti128          m0, xm6, 1
     vperm2i128           m5, m1, m7, 0x31
-    vinserti128          m1, m1, xm7, 1
+    vinserti128          m1, xm7, 1
     vperm2i128           m6, m2, m9, 0x31
-    vinserti128          m2, m2, xm9, 1
+    vinserti128          m2, xm9, 1
     vperm2i128           m7, m3, m12, 0x31
-    vinserti128          m3, m3, xm12, 1
+    vinserti128          m3, xm12, 1
     call m(idct_16x8_internal).main2
     vpbroadcastd         m8, [o(pw_2048)]
     REPX   {pmulhrsw x, m8}, m0, m1, m2, m3, m4, m5, m6, m7
@@ -3947,26 +3457,26 @@ cglobal inv_txfm_add_identity_identity_8x32, 4, 5, 11, dst, stride, c, eob
     lea                  r4, [strideq*3]
     sub                eobd, 107 ; loop_iterations = 1 + (eobd >= 107)
 .loop:
-    mova                xm0,     [cq+16* 0]
-    mova                xm1,     [cq+16* 4]
-    vinserti128          m0, m0, [cq+16* 1], 1
-    vinserti128          m1, m1, [cq+16* 5], 1
+    mova                xm0,[cq+16* 0]
+    mova                xm1, [cq+16* 4]
+    vinserti128          m0, [cq+16* 1], 1
+    vinserti128          m1, [cq+16* 5], 1
     pxor                 m8, m8
     mova          [cq+32*0], m8
     mova          [cq+32*2], m8
     add                  cq, 16*16
-    mova                xm2,     [cq-16* 8]
-    mova                xm3,     [cq-16* 4]
-    vinserti128          m2, m2, [cq-16* 7], 1
-    vinserti128          m3, m3, [cq-16* 3], 1
-    mova                xm4,     [cq+16* 0]
-    mova                xm5,     [cq+16* 4]
-    vinserti128          m4, m4, [cq+16* 1], 1
-    vinserti128          m5, m5, [cq+16* 5], 1
-    mova                xm6,     [cq+16* 8]
-    mova                xm7,     [cq+16*12]
-    vinserti128          m6, m6, [cq+16* 9], 1
-    vinserti128          m7, m7, [cq+16*13], 1
+    mova                xm2, [cq-16* 8]
+    mova                xm3, [cq-16* 4]
+    vinserti128          m2, [cq-16* 7], 1
+    vinserti128          m3, [cq-16* 3], 1
+    mova                xm4, [cq+16* 0]
+    mova                xm5, [cq+16* 4]
+    vinserti128          m4, [cq+16* 1], 1
+    vinserti128          m5, [cq+16* 5], 1
+    mova                xm6, [cq+16* 8]
+    mova                xm7, [cq+16*12]
+    vinserti128          m6, [cq+16* 9], 1
+    vinserti128          m7, [cq+16*13], 1
     REPX {mova [cq+32*x], m8}, -4, -2,  0,  2,  4,  6
     REPX  {paddsw    x, m9}, m0, m1, m2, m3, m4, m5, m6, m7
     call .transpose8x8
@@ -4019,22 +3529,22 @@ cglobal inv_txfm_add_identity_identity_32x8, 4, 6, 10, dst, stride, c, eob
     lea                  r5, [dstq+strideq*4]
     sub                eobd, 107
 .loop:
-    mova                xm0,     [cq-16*8]
-    mova                xm1,     [cq-16*7]
-    vinserti128          m0, m0, [cq+16*0], 1
-    vinserti128          m1, m1, [cq+16*1], 1
-    mova                xm2,     [cq-16*6]
-    mova                xm3,     [cq-16*5]
-    vinserti128          m2, m2, [cq+16*2], 1
-    vinserti128          m3, m3, [cq+16*3], 1
-    mova                xm4,     [cq-16*4]
-    mova                xm5,     [cq-16*3]
-    vinserti128          m4, m4, [cq+16*4], 1
-    vinserti128          m5, m5, [cq+16*5], 1
-    mova                xm6,     [cq-16*2]
-    mova                xm7,     [cq-16*1]
-    vinserti128          m6, m6, [cq+16*6], 1
-    vinserti128          m7, m7, [cq+16*7], 1
+    mova                xm0, [cq-16*8]
+    mova                xm1, [cq-16*7]
+    vinserti128          m0, [cq+16*0], 1
+    vinserti128          m1, [cq+16*1], 1
+    mova                xm2, [cq-16*6]
+    mova                xm3, [cq-16*5]
+    vinserti128          m2, [cq+16*2], 1
+    vinserti128          m3, [cq+16*3], 1
+    mova                xm4, [cq-16*4]
+    mova                xm5, [cq-16*3]
+    vinserti128          m4, [cq+16*4], 1
+    vinserti128          m5, [cq+16*5], 1
+    mova                xm6, [cq-16*2]
+    mova                xm7, [cq-16*1]
+    vinserti128          m6, [cq+16*6], 1
+    vinserti128          m7, [cq+16*7], 1
     pxor                 m8, m8
     REPX {mova [cq+32*x], m8}, -4, -3, -2, -1,  0,  1,  2,  3
     call m(inv_txfm_add_identity_identity_8x32).transpose8x8
@@ -4206,28 +3716,28 @@ cglobal inv_txfm_add_dct_dct_16x32, 4, 4, 0, dst, stride, c, eob
     vextracti128 [r2+32*3+16], m14, 1
     vinserti128          m8, m1, xm9, 1
     vperm2i128          m12, m1, m9, 0x31
-    mova                xm0,     [tmp1q-32*4]
-    mova                xm1,     [tmp1q-32*3]
-    vinserti128          m0, m0, [tmp1q+32*0], 1
-    vinserti128          m1, m1, [tmp1q+32*1], 1
+    mova                xm0, [tmp1q-32*4]
+    mova                xm1, [tmp1q-32*3]
+    vinserti128          m0, [tmp1q+32*0], 1
+    vinserti128          m1, [tmp1q+32*1], 1
     vinserti128         m10, m5, xm13, 1
     vperm2i128          m14, m5, m13, 0x31
-    mova                xm4,     [tmp1q-32*4+16]
-    mova                xm5,     [tmp1q-32*3+16]
-    vinserti128          m4, m4, [tmp1q+32*0+16], 1
-    vinserti128          m5, m5, [tmp1q+32*1+16], 1
+    mova                xm4, [tmp1q-32*4+16]
+    mova                xm5, [tmp1q-32*3+16]
+    vinserti128          m4, [tmp1q+32*0+16], 1
+    vinserti128          m5, [tmp1q+32*1+16], 1
     vinserti128          m9, m3, xm11, 1
     vperm2i128          m13, m3, m11, 0x31
-    mova                xm2,     [tmp1q-32*2]
-    mova                xm3,     [tmp1q-32*1]
-    vinserti128          m2, m2, [tmp1q+32*2], 1
-    vinserti128          m3, m3, [tmp1q+32*3], 1
+    mova                xm2, [tmp1q-32*2]
+    mova                xm3, [tmp1q-32*1]
+    vinserti128          m2, [tmp1q+32*2], 1
+    vinserti128          m3, [tmp1q+32*3], 1
     vinserti128         m11, m7, xm15, 1
     vperm2i128          m15, m7, m15, 0x31
-    mova                xm6,     [tmp1q-32*2+16]
-    mova                xm7,     [tmp1q-32*1+16]
-    vinserti128          m6, m6, [tmp1q+32*2+16], 1
-    vinserti128          m7, m7, [tmp1q+32*3+16], 1
+    mova                xm6, [tmp1q-32*2+16]
+    mova                xm7, [tmp1q-32*1+16]
+    vinserti128          m6, [tmp1q+32*2+16], 1
+    vinserti128          m7, [tmp1q+32*3+16], 1
     call .main_oddhalf
     LOAD_8ROWS_H    r2-32*4, 32
 .idct16:
@@ -4475,7 +3985,7 @@ ALIGN function_align
     mova         [tmp1q+32*(11-%2)], xm%2
     vextracti128 [tmp2q+32*( 3-%1)], m%2, 1
     vperm2i128          m%2, m%1, m%4, 0x31
-    vinserti128         m%1, m%1, xm%4, 1
+    vinserti128         m%1, xm%4, 1
 %endmacro
 
 cglobal inv_txfm_add_dct_dct_32x16, 4, 4, 0, dst, stride, c, eob
@@ -4593,22 +4103,22 @@ cglobal inv_txfm_add_identity_identity_16x32, 4, 5, 13, dst, stride, c, eob
     mov                 rax, cq
     paddw               m11, m12, m12 ; pw_16384
 .loop:
-    mova                xm0,     [cq+64* 0]
-    mova                xm1,     [cq+64* 1]
-    vinserti128          m0, m0, [cq+64* 8], 1
-    vinserti128          m1, m1, [cq+64* 9], 1
-    mova                xm2,     [cq+64* 2]
-    mova                xm3,     [cq+64* 3]
-    vinserti128          m2, m2, [cq+64*10], 1
-    vinserti128          m3, m3, [cq+64*11], 1
-    mova                xm4,     [cq+64* 4]
-    mova                xm5,     [cq+64* 5]
-    vinserti128          m4, m4, [cq+64*12], 1
-    vinserti128          m5, m5, [cq+64*13], 1
-    mova                xm6,     [cq+64* 6]
-    mova                xm7,     [cq+64* 7]
-    vinserti128          m6, m6, [cq+64*14], 1
-    vinserti128          m7, m7, [cq+64*15], 1
+    mova                xm0, [cq+64* 0]
+    mova                xm1, [cq+64* 1]
+    vinserti128          m0, [cq+64* 8], 1
+    vinserti128          m1, [cq+64* 9], 1
+    mova                xm2, [cq+64* 2]
+    mova                xm3, [cq+64* 3]
+    vinserti128          m2, [cq+64*10], 1
+    vinserti128          m3, [cq+64*11], 1
+    mova                xm4, [cq+64* 4]
+    mova                xm5, [cq+64* 5]
+    vinserti128          m4, [cq+64*12], 1
+    vinserti128          m5, [cq+64*13], 1
+    mova                xm6, [cq+64* 6]
+    mova                xm7, [cq+64* 7]
+    vinserti128          m6, [cq+64*14], 1
+    vinserti128          m7, [cq+64*15], 1
     REPX  {pmulhrsw x, m9 }, m0, m1, m2, m3, m4, m5, m6, m7
     REPX  {IDTX16 x, 8, 10, 11}, 0, 1, 2, 3, 4, 5, 6, 7
     call m(inv_txfm_add_identity_identity_8x32).transpose8x8
@@ -4661,22 +4171,22 @@ cglobal inv_txfm_add_identity_identity_32x16, 4, 6, 12, dst, stride, c, eob
     mov                  r5, dstq
     mov                 rax, cq
 .loop:
-    mova                xm0,     [cq+32* 0]
-    mova                xm1,     [cq+32* 1]
-    vinserti128          m0, m0, [cq+32* 8], 1
-    vinserti128          m1, m1, [cq+32* 9], 1
-    mova                xm2,     [cq+32* 2]
-    mova                xm3,     [cq+32* 3]
-    vinserti128          m2, m2, [cq+32*10], 1
-    vinserti128          m3, m3, [cq+32*11], 1
-    mova                xm4,     [cq+32* 4]
-    mova                xm5,     [cq+32* 5]
-    vinserti128          m4, m4, [cq+32*12], 1
-    vinserti128          m5, m5, [cq+32*13], 1
-    mova                xm6,     [cq+32* 6]
-    mova                xm7,     [cq+32* 7]
-    vinserti128          m6, m6, [cq+32*14], 1
-    vinserti128          m7, m7, [cq+32*15], 1
+    mova                xm0, [cq+32* 0]
+    mova                xm1, [cq+32* 1]
+    vinserti128          m0, [cq+32* 8], 1
+    vinserti128          m1, [cq+32* 9], 1
+    mova                xm2, [cq+32* 2]
+    mova                xm3, [cq+32* 3]
+    vinserti128          m2, [cq+32*10], 1
+    vinserti128          m3, [cq+32*11], 1
+    mova                xm4, [cq+32* 4]
+    mova                xm5, [cq+32* 5]
+    vinserti128          m4, [cq+32*12], 1
+    vinserti128          m5, [cq+32*13], 1
+    mova                xm6, [cq+32* 6]
+    mova                xm7, [cq+32* 7]
+    vinserti128          m6, [cq+32*14], 1
+    vinserti128          m7, [cq+32*15], 1
     REPX  {pmulhrsw x, m9 }, m0, m1, m2, m3, m4, m5, m6, m7
     REPX  {paddsw   x, x  }, m0, m1, m2, m3, m4, m5, m6, m7
     call m(inv_txfm_add_identity_identity_8x32).transpose8x8
@@ -4864,22 +4374,22 @@ cglobal inv_txfm_add_identity_identity_32x32, 4, 6, 10, dst, stride, c, eob
     mov                  r5, dstq
     lea                 rax, [cq+32]
 .loop:
-    mova                xm0,     [cq+64* 0]
-    mova                xm1,     [cq+64* 1]
-    vinserti128          m0, m0, [cq+64* 8], 1
-    vinserti128          m1, m1, [cq+64* 9], 1
-    mova                xm2,     [cq+64* 2]
-    mova                xm3,     [cq+64* 3]
-    vinserti128          m2, m2, [cq+64*10], 1
-    vinserti128          m3, m3, [cq+64*11], 1
-    mova                xm4,     [cq+64* 4]
-    mova                xm5,     [cq+64* 5]
-    vinserti128          m4, m4, [cq+64*12], 1
-    vinserti128          m5, m5, [cq+64*13], 1
-    mova                xm6,     [cq+64* 6]
-    mova                xm7,     [cq+64* 7]
-    vinserti128          m6, m6, [cq+64*14], 1
-    vinserti128          m7, m7, [cq+64*15], 1
+    mova                xm0, [cq+64* 0]
+    mova                xm1, [cq+64* 1]
+    vinserti128          m0, [cq+64* 8], 1
+    vinserti128          m1, [cq+64* 9], 1
+    mova                xm2, [cq+64* 2]
+    mova                xm3, [cq+64* 3]
+    vinserti128          m2, [cq+64*10], 1
+    vinserti128          m3, [cq+64*11], 1
+    mova                xm4, [cq+64* 4]
+    mova                xm5, [cq+64* 5]
+    vinserti128          m4, [cq+64*12], 1
+    vinserti128          m5, [cq+64*13], 1
+    mova                xm6, [cq+64* 6]
+    mova                xm7, [cq+64* 7]
+    vinserti128          m6, [cq+64*14], 1
+    vinserti128          m7, [cq+64*15], 1
     call m(inv_txfm_add_identity_identity_8x32).transpose8x8
     REPX   {pmulhrsw x, m9}, m0, m1, m2, m3, m4, m5, m6, m7
     WRITE_16X2            0,  1,  8,  0, strideq*0, strideq*1
@@ -5022,27 +4532,27 @@ cglobal inv_txfm_add_dct_dct_16x64, 4, 4, 0, dst, stride, c, eob
     add                eobd, 0x80000000
     jnc .pass1_loop
     lea                  r2, [rsp+32*23]
-    mova                xm0,     [r2-32*4+ 0]
-    mova                xm1,     [r2-32*2+ 0]
-    vinserti128          m0, m0, [r2+32*0+ 0], 1
-    vinserti128          m1, m1, [r2+32*2+ 0], 1
-    mova                xm2,     [r2-32*4+16]
-    mova                xm3,     [r2-32*2+16]
-    vinserti128          m2, m2, [r2+32*0+16], 1
-    vinserti128          m3, m3, [r2+32*2+16], 1
+    mova                xm0, [r2-32*4+ 0]
+    mova                xm1, [r2-32*2+ 0]
+    vinserti128          m0, [r2+32*0+ 0], 1
+    vinserti128          m1, [r2+32*2+ 0], 1
+    mova                xm2, [r2-32*4+16]
+    mova                xm3, [r2-32*2+16]
+    vinserti128          m2, [r2+32*0+16], 1
+    vinserti128          m3, [r2+32*2+16], 1
     pxor                 m4, m4
     REPX       {mova x, m4}, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14
     test                r7d, r7d
     jl .fast
     lea                  r3, [r2+32*8]
-    mova                xm4,     [r3-32*4+ 0]
-    mova                xm5,     [r3-32*2+ 0]
-    vinserti128          m4, m4, [r3+32*0+ 0], 1
-    vinserti128          m5, m5, [r3+32*2+ 0], 1
-    mova                xm6,     [r3-32*4+16]
-    mova                xm7,     [r3-32*2+16]
-    vinserti128          m6, m6, [r3+32*0+16], 1
-    vinserti128          m7, m7, [r3+32*2+16], 1
+    mova                xm4, [r3-32*4+ 0]
+    mova                xm5, [r3-32*2+ 0]
+    vinserti128          m4, [r3+32*0+ 0], 1
+    vinserti128          m5, [r3+32*2+ 0], 1
+    mova                xm6, [r3-32*4+16]
+    mova                xm7, [r3-32*2+16]
+    vinserti128          m6, [r3+32*0+16], 1
+    vinserti128          m7, [r3+32*2+16], 1
 .fast:
     mova              [rsp], m8
     lea               tmp1q, [rsp+32*7]
@@ -5065,26 +4575,26 @@ cglobal inv_txfm_add_dct_dct_16x64, 4, 4, 0, dst, stride, c, eob
     mova       [tmp1q+32*1], m13
     mova       [tmp1q+32*2], m14
     mova       [tmp1q+32*3], m15
-    mova                xm0,     [r2-32*3+ 0]
-    mova                xm1,     [r2-32*1+ 0]
-    vinserti128          m0, m0, [r2+32*1+ 0], 1
-    vinserti128          m1, m1, [r2+32*3+ 0], 1
-    mova                xm2,     [r2-32*3+16]
-    mova                xm3,     [r2-32*1+16]
-    vinserti128          m2, m2, [r2+32*1+16], 1
-    vinserti128          m3, m3, [r2+32*3+16], 1
+    mova                xm0, [r2-32*3+ 0]
+    mova                xm1, [r2-32*1+ 0]
+    vinserti128          m0, [r2+32*1+ 0], 1
+    vinserti128          m1, [r2+32*3+ 0], 1
+    mova                xm2, [r2-32*3+16]
+    mova                xm3, [r2-32*1+16]
+    vinserti128          m2, [r2+32*1+16], 1
+    vinserti128          m3, [r2+32*3+16], 1
     pxor                 m4, m4
     REPX       {mova x, m4}, m5, m6, m7
     test                r7d, r7d
     jl .fast2
-    mova                xm4,     [r3-32*3+ 0]
-    mova                xm5,     [r3-32*1+ 0]
-    vinserti128          m4, m4, [r3+32*1+ 0], 1
-    vinserti128          m5, m5, [r3+32*3+ 0], 1
-    mova                xm6,     [r3-32*3+16]
-    mova                xm7,     [r3-32*1+16]
-    vinserti128          m6, m6, [r3+32*1+16], 1
-    vinserti128          m7, m7, [r3+32*3+16], 1
+    mova                xm4, [r3-32*3+ 0]
+    mova                xm5, [r3-32*1+ 0]
+    vinserti128          m4, [r3+32*1+ 0], 1
+    vinserti128          m5, [r3+32*3+ 0], 1
+    mova                xm6, [r3-32*3+16]
+    mova                xm7, [r3-32*1+16]
+    vinserti128          m6, [r3+32*1+16], 1
+    vinserti128          m7, [r3+32*3+16], 1
 .fast2:
     add               tmp1q, 32*8
     lea               tmp2q, [tmp1q+32*8]
@@ -5093,53 +4603,53 @@ cglobal inv_txfm_add_dct_dct_16x64, 4, 4, 0, dst, stride, c, eob
     vpbroadcastd        m15, [o(pd_2048)]
     add               tmp1q, 32*16
     add               tmp2q, 32*32
-    mova                xm0,     [r2-32*4+ 0]
-    mova                xm3,     [r2-32*1+16]
-    vinserti128          m0, m0, [r2+32*0+ 0], 1
-    vinserti128          m3, m3, [r2+32*3+16], 1
-    mova                xm4,     [r2-32*4+16]
-    mova                xm7,     [r2-32*1+ 0]
-    vinserti128          m4, m4, [r2+32*0+16], 1
-    vinserti128          m7, m7, [r2+32*3+ 0], 1
+    mova                xm0, [r2-32*4+ 0]
+    mova                xm3, [r2-32*1+16]
+    vinserti128          m0, [r2+32*0+ 0], 1
+    vinserti128          m3, [r2+32*3+16], 1
+    mova                xm4, [r2-32*4+16]
+    mova                xm7, [r2-32*1+ 0]
+    vinserti128          m4, [r2+32*0+16], 1
+    vinserti128          m7, [r2+32*3+ 0], 1
     pxor                 m1, m1
     REPX       {mova x, m1}, m2, m5, m6
     test                r7d, r7d
     jl .fast3
     add                  r3, 32*24
-    mova                xm1,     [r3-32*1+16]
-    mova                xm2,     [r3-32*4+ 0]
-    vinserti128          m1, m1, [r3+32*3+16], 1
-    vinserti128          m2, m2, [r3+32*0+ 0], 1
-    mova                xm5,     [r3-32*1+ 0]
-    mova                xm6,     [r3-32*4+16]
-    vinserti128          m5, m5, [r3+32*3+ 0], 1
-    vinserti128          m6, m6, [r3+32*0+16], 1
+    mova                xm1, [r3-32*1+16]
+    mova                xm2, [r3-32*4+ 0]
+    vinserti128          m1, [r3+32*3+16], 1
+    vinserti128          m2, [r3+32*0+ 0], 1
+    mova                xm5, [r3-32*1+ 0]
+    mova                xm6, [r3-32*4+16]
+    vinserti128          m5, [r3+32*3+ 0], 1
+    vinserti128          m6, [r3+32*0+16], 1
 .fast3:
     add                 rax, o_idct64_offset
     call m(inv_txfm_add_dct_dct_16x64).main_part1
     add                 rax, 8
     add               tmp1q, 32*8
     sub               tmp2q, 32*8
-    mova                xm0,     [r2-32*2+ 0]
-    mova                xm3,     [r2-32*3+16]
-    vinserti128          m0, m0, [r2+32*2+ 0], 1
-    vinserti128          m3, m3, [r2+32*1+16], 1
-    mova                xm4,     [r2-32*2+16]
-    mova                xm7,     [r2-32*3+ 0]
-    vinserti128          m4, m4, [r2+32*2+16], 1
-    vinserti128          m7, m7, [r2+32*1+ 0], 1
+    mova                xm0, [r2-32*2+ 0]
+    mova                xm3, [r2-32*3+16]
+    vinserti128          m0, [r2+32*2+ 0], 1
+    vinserti128          m3, [r2+32*1+16], 1
+    mova                xm4, [r2-32*2+16]
+    mova                xm7, [r2-32*3+ 0]
+    vinserti128          m4, [r2+32*2+16], 1
+    vinserti128          m7, [r2+32*1+ 0], 1
     pxor                 m1, m1
     REPX       {mova x, m1}, m2, m5, m6
     test                r7d, r7d
     jl .fast4
-    mova                xm1,     [r3-32*3+16]
-    mova                xm2,     [r3-32*2+ 0]
-    vinserti128          m1, m1, [r3+32*1+16], 1
-    vinserti128          m2, m2, [r3+32*2+ 0], 1
-    mova                xm5,     [r3-32*3+ 0]
-    mova                xm6,     [r3-32*2+16]
-    vinserti128          m5, m5, [r3+32*1+ 0], 1
-    vinserti128          m6, m6, [r3+32*2+16], 1
+    mova                xm1, [r3-32*3+16]
+    mova                xm2, [r3-32*2+ 0]
+    vinserti128          m1, [r3+32*1+16], 1
+    vinserti128          m2, [r3+32*2+ 0], 1
+    mova                xm5, [r3-32*3+ 0]
+    mova                xm6, [r3-32*2+16]
+    vinserti128          m5, [r3+32*1+ 0], 1
+    vinserti128          m6, [r3+32*2+16], 1
 .fast4:
     call m(inv_txfm_add_dct_dct_16x64).main_part1
     call m(inv_txfm_add_dct_dct_16x64).main_part2_pass2
@@ -5423,38 +4933,38 @@ cglobal inv_txfm_add_dct_dct_64x16, 4, 4, 0, dst, stride, c, eob
     mov               tmp2d, 4
 .pass2_loop:
     lea                  r3, [tmp1q-32*8]
-    mova                xm0,      [r3   -32*4]
-    mova                xm1,      [r3   -32*3]
-    vinserti128          m0, m0,  [tmp1q-32*4], 1
-    vinserti128          m1, m1,  [tmp1q-32*3], 1
-    mova                xm2,      [r3   -32*2]
-    mova                xm3,      [r3   -32*1]
-    vinserti128          m2, m2,  [tmp1q-32*2], 1
-    vinserti128          m3, m3,  [tmp1q-32*1], 1
-    mova                xm4,      [r3   +32*0]
-    mova                xm5,      [r3   +32*1]
-    vinserti128          m4, m4,  [tmp1q+32*0], 1
-    vinserti128          m5, m5,  [tmp1q+32*1], 1
-    mova                xm6,      [r3   +32*2]
-    mova                xm7,      [r3   +32*3]
-    vinserti128          m6, m6,  [tmp1q+32*2], 1
-    vinserti128          m7, m7,  [tmp1q+32*3], 1
-    mova                xm8,      [r3   -32*4+16]
-    mova                xm9,      [r3   -32*3+16]
-    vinserti128          m8, m8,  [tmp1q-32*4+16], 1
-    vinserti128          m9, m9,  [tmp1q-32*3+16], 1
-    mova               xm10,      [r3   -32*2+16]
-    mova               xm11,      [r3   -32*1+16]
-    vinserti128         m10, m10, [tmp1q-32*2+16], 1
-    vinserti128         m11, m11, [tmp1q-32*1+16], 1
-    mova               xm12,      [r3   +32*0+16]
-    mova               xm13,      [r3   +32*1+16]
-    vinserti128         m12, m12, [tmp1q+32*0+16], 1
-    vinserti128         m13, m13, [tmp1q+32*1+16], 1
-    mova               xm14,      [r3   +32*2+16]
-    mova               xm15,      [r3   +32*3+16]
-    vinserti128         m14, m14, [tmp1q+32*2+16], 1
-    vinserti128         m15, m15, [tmp1q+32*3+16], 1
+    mova                xm0, [r3   -32*4]
+    mova                xm1, [r3   -32*3]
+    vinserti128          m0, [tmp1q-32*4], 1
+    vinserti128          m1, [tmp1q-32*3], 1
+    mova                xm2, [r3   -32*2]
+    mova                xm3, [r3   -32*1]
+    vinserti128          m2, [tmp1q-32*2], 1
+    vinserti128          m3, [tmp1q-32*1], 1
+    mova                xm4, [r3   +32*0]
+    mova                xm5, [r3   +32*1]
+    vinserti128          m4, [tmp1q+32*0], 1
+    vinserti128          m5, [tmp1q+32*1], 1
+    mova                xm6, [r3   +32*2]
+    mova                xm7, [r3   +32*3]
+    vinserti128          m6, [tmp1q+32*2], 1
+    vinserti128          m7, [tmp1q+32*3], 1
+    mova                xm8, [r3   -32*4+16]
+    mova                xm9, [r3   -32*3+16]
+    vinserti128          m8, [tmp1q-32*4+16], 1
+    vinserti128          m9, [tmp1q-32*3+16], 1
+    mova               xm10, [r3   -32*2+16]
+    mova               xm11, [r3   -32*1+16]
+    vinserti128         m10, [tmp1q-32*2+16], 1
+    vinserti128         m11, [tmp1q-32*1+16], 1
+    mova               xm12, [r3   +32*0+16]
+    mova               xm13, [r3   +32*1+16]
+    vinserti128         m12, [tmp1q+32*0+16], 1
+    vinserti128         m13, [tmp1q+32*1+16], 1
+    mova               xm14, [r3   +32*2+16]
+    mova               xm15, [r3   +32*3+16]
+    vinserti128         m14, [tmp1q+32*2+16], 1
+    vinserti128         m15, [tmp1q+32*3+16], 1
     mova         [rsp+32*0], m6
     mova         [rsp+32*1], m7
     vpbroadcastd         m7, [o(pw_8192)]
@@ -5810,48 +5320,48 @@ ALIGN function_align
     mov               tmp3d, 4
 .loop:
     lea               tmp2q, [tmp1q+32*8]
-    mova                xm0,      [tmp1q-32*4]
-    mova                xm1,      [tmp1q-32*3]
-    vinserti128          m0, m0,  [tmp2q-32*4], 1
-    vinserti128          m1, m1,  [tmp2q-32*3], 1
-    mova                xm2,      [tmp1q-32*2]
-    mova                xm3,      [tmp1q-32*1]
-    vinserti128          m2, m2,  [tmp2q-32*2], 1
-    vinserti128          m3, m3,  [tmp2q-32*1], 1
-    mova                xm4,      [tmp1q+32*0]
-    mova                xm5,      [tmp1q+32*1]
-    vinserti128          m4, m4,  [tmp2q+32*0], 1
-    vinserti128          m5, m5,  [tmp2q+32*1], 1
-    mova                xm6,      [tmp1q+32*2]
-    mova                xm7,      [tmp1q+32*3]
-    vinserti128          m6, m6,  [tmp2q+32*2], 1
-    vinserti128          m7, m7,  [tmp2q+32*3], 1
+    mova                xm0, [tmp1q-32*4]
+    mova                xm1, [tmp1q-32*3]
+    vinserti128          m0, [tmp2q-32*4], 1
+    vinserti128          m1, [tmp2q-32*3], 1
+    mova                xm2, [tmp1q-32*2]
+    mova                xm3, [tmp1q-32*1]
+    vinserti128          m2, [tmp2q-32*2], 1
+    vinserti128          m3, [tmp2q-32*1], 1
+    mova                xm4, [tmp1q+32*0]
+    mova                xm5, [tmp1q+32*1]
+    vinserti128          m4, [tmp2q+32*0], 1
+    vinserti128          m5, [tmp2q+32*1], 1
+    mova                xm6, [tmp1q+32*2]
+    mova                xm7, [tmp1q+32*3]
+    vinserti128          m6, [tmp2q+32*2], 1
+    vinserti128          m7, [tmp2q+32*3], 1
     REPX  {pmulhrsw x, m10}, m0, m1, m2, m3, m4, m5, m6, m7
     call m(inv_txfm_add_identity_identity_8x32).transpose8x8
-    mova                xm8,      [tmp1q-32*4+16]
-    mova                xm9,      [tmp1q-32*3+16]
-    vinserti128          m8, m8,  [tmp2q-32*4+16], 1
-    vinserti128          m9, m9,  [tmp2q-32*3+16], 1
+    mova                xm8, [tmp1q-32*4+16]
+    mova                xm9, [tmp1q-32*3+16]
+    vinserti128          m8, [tmp2q-32*4+16], 1
+    vinserti128          m9, [tmp2q-32*3+16], 1
     mova       [tmp1q-32*4], m0
     mova       [tmp2q-32*4], m1
     mova       [tmp1q-32*3], m2
     mova       [tmp2q-32*3], m3
-    mova                xm2,     [tmp1q-32*2+16]
-    mova                xm3,     [tmp1q-32*1+16]
-    vinserti128          m2, m2, [tmp2q-32*2+16], 1
-    vinserti128          m3, m3, [tmp2q-32*1+16], 1
+    mova                xm2, [tmp1q-32*2+16]
+    mova                xm3, [tmp1q-32*1+16]
+    vinserti128          m2, [tmp2q-32*2+16], 1
+    vinserti128          m3, [tmp2q-32*1+16], 1
     mova       [tmp1q-32*2], m4
     mova       [tmp2q-32*2], m5
     mova       [tmp1q-32*1], m6
     mova       [tmp2q-32*1], m7
-    mova                xm4,     [tmp1q+32*0+16]
-    mova                xm5,     [tmp1q+32*1+16]
-    vinserti128          m4, m4, [tmp2q+32*0+16], 1
-    vinserti128          m5, m5, [tmp2q+32*1+16], 1
-    mova                xm6,     [tmp1q+32*2+16]
-    mova                xm7,     [tmp1q+32*3+16]
-    vinserti128          m6, m6, [tmp2q+32*2+16], 1
-    vinserti128          m7, m7, [tmp2q+32*3+16], 1
+    mova                xm4, [tmp1q+32*0+16]
+    mova                xm5, [tmp1q+32*1+16]
+    vinserti128          m4, [tmp2q+32*0+16], 1
+    vinserti128          m5, [tmp2q+32*1+16], 1
+    mova                xm6, [tmp1q+32*2+16]
+    mova                xm7, [tmp1q+32*3+16]
+    vinserti128          m6, [tmp2q+32*2+16], 1
+    vinserti128          m7, [tmp2q+32*3+16], 1
     pmulhrsw             m0, m8, m10
     pmulhrsw             m1, m9, m10
     REPX  {pmulhrsw x, m10}, m2, m3, m4, m5, m6, m7

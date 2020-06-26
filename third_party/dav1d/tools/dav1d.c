@@ -63,7 +63,9 @@ static uint64_t get_time_nanos(void) {
     QueryPerformanceFrequency(&frequency);
     LARGE_INTEGER t;
     QueryPerformanceCounter(&t);
-    return 1000000000 * t.QuadPart / frequency.QuadPart;
+    uint64_t seconds = t.QuadPart / frequency.QuadPart;
+    uint64_t fractions = t.QuadPart % frequency.QuadPart;
+    return 1000000000 * seconds + 1000000000 * fractions / frequency.QuadPart;
 #elif defined(HAVE_CLOCK_GETTIME)
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -245,7 +247,7 @@ int main(const int argc, char *const *const argv) {
             if ((res = output_write(out, &p)) < 0)
                 break;
             n_out++;
-            if (nspf) {
+            if (nspf || !cli_settings.quiet) {
                 synchronize(cli_settings.realtime, cli_settings.realtime_cache,
                             n_out, nspf, tfirst, &elapsed, frametimes);
             }
@@ -282,7 +284,7 @@ int main(const int argc, char *const *const argv) {
             if ((res = output_write(out, &p)) < 0)
                 break;
             n_out++;
-            if (nspf) {
+            if (nspf || !cli_settings.quiet) {
                 synchronize(cli_settings.realtime, cli_settings.realtime_cache,
                             n_out, nspf, tfirst, &elapsed, frametimes);
             }

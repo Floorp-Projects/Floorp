@@ -28,11 +28,11 @@
 #include "src/arm/asm.S"
 #include "util.S"
 
-// void ipred_dc_128_neon(pixel *dst, const ptrdiff_t stride,
-//                        const pixel *const topleft,
-//                        const int width, const int height, const int a,
-//                        const int max_width, const int max_height);
-function ipred_dc_128_neon, export=1
+// void ipred_dc_128_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                             const pixel *const topleft,
+//                             const int width, const int height, const int a,
+//                             const int max_width, const int max_height);
+function ipred_dc_128_8bpc_neon, export=1
         clz             w3,  w3
         adr             x5,  L(ipred_dc_128_tbl)
         sub             w3,  w3,  #25
@@ -97,11 +97,11 @@ L(ipred_dc_128_tbl):
         .hword L(ipred_dc_128_tbl) -   4b
 endfunc
 
-// void ipred_v_neon(pixel *dst, const ptrdiff_t stride,
-//                   const pixel *const topleft,
-//                   const int width, const int height, const int a,
-//                   const int max_width, const int max_height);
-function ipred_v_neon, export=1
+// void ipred_v_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                        const pixel *const topleft,
+//                        const int width, const int height, const int a,
+//                        const int max_width, const int max_height);
+function ipred_v_8bpc_neon, export=1
         clz             w3,  w3
         adr             x5,  L(ipred_v_tbl)
         sub             w3,  w3,  #25
@@ -132,7 +132,7 @@ function ipred_v_neon, export=1
         b.gt            8b
         ret
 160:
-        ld1             {v0.16b}, [x2], #16
+        ld1             {v0.16b}, [x2]
 16:
         st1             {v0.16b}, [x0], x1
         st1             {v0.16b}, [x6], x1
@@ -170,11 +170,11 @@ L(ipred_v_tbl):
         .hword L(ipred_v_tbl) -  40b
 endfunc
 
-// void ipred_h_neon(pixel *dst, const ptrdiff_t stride,
-//                   const pixel *const topleft,
-//                   const int width, const int height, const int a,
-//                   const int max_width, const int max_height);
-function ipred_h_neon, export=1
+// void ipred_h_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                        const pixel *const topleft,
+//                        const int width, const int height, const int a,
+//                        const int max_width, const int max_height);
+function ipred_h_8bpc_neon, export=1
         clz             w3,  w3
         adr             x5,  L(ipred_h_tbl)
         sub             w3,  w3,  #25
@@ -251,11 +251,11 @@ L(ipred_h_tbl):
         .hword L(ipred_h_tbl) -  4b
 endfunc
 
-// void ipred_dc_top_neon(pixel *dst, const ptrdiff_t stride,
-//                        const pixel *const topleft,
-//                        const int width, const int height, const int a,
-//                        const int max_width, const int max_height);
-function ipred_dc_top_neon, export=1
+// void ipred_dc_top_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                             const pixel *const topleft,
+//                             const int width, const int height, const int a,
+//                             const int max_width, const int max_height);
+function ipred_dc_top_8bpc_neon, export=1
         clz             w3,  w3
         adr             x5,  L(ipred_dc_top_tbl)
         sub             w3,  w3,  #25
@@ -351,11 +351,11 @@ L(ipred_dc_top_tbl):
         .hword L(ipred_dc_top_tbl) -  40b
 endfunc
 
-// void ipred_dc_left_neon(pixel *dst, const ptrdiff_t stride,
-//                         const pixel *const topleft,
-//                         const int width, const int height, const int a,
-//                         const int max_width, const int max_height);
-function ipred_dc_left_neon, export=1
+// void ipred_dc_left_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                              const pixel *const topleft,
+//                              const int width, const int height, const int a,
+//                              const int max_width, const int max_height);
+function ipred_dc_left_8bpc_neon, export=1
         sub             x2,  x2,  w4, uxtw
         clz             w3,  w3
         clz             w7,  w4
@@ -472,11 +472,11 @@ L(ipred_dc_left_tbl):
         .hword L(ipred_dc_left_tbl) - L(ipred_dc_left_w4)
 endfunc
 
-// void ipred_dc_neon(pixel *dst, const ptrdiff_t stride,
-//                    const pixel *const topleft,
-//                    const int width, const int height, const int a,
-//                    const int max_width, const int max_height);
-function ipred_dc_neon, export=1
+// void ipred_dc_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                         const pixel *const topleft,
+//                         const int width, const int height, const int a,
+//                         const int max_width, const int max_height);
+function ipred_dc_8bpc_neon, export=1
         sub             x2,  x2,  w4, uxtw
         add             w7,  w3,  w4             // width + height
         clz             w3,  w3
@@ -608,7 +608,7 @@ L(ipred_dc_w32):
         cmp             w4,  #32
         add             v0.4h,   v0.4h,   v1.4h
         add             v0.4h,   v0.4h,   v2.4h
-        ushl            v0.4h,   v0.4h,   v17.4h
+        ushl            v4.4h,   v0.4h,   v17.4h
         b.eq            1f
         // h = 8/16/64
         cmp             w4,  #8
@@ -616,10 +616,10 @@ L(ipred_dc_w32):
         mov             w17, #(0x5556/2)
         csel            w16, w16, w17, eq
         dup             v16.4h,  w16
-        sqdmulh         v0.4h,   v0.4h,   v16.4h
+        sqdmulh         v4.4h,   v4.4h,   v16.4h
 1:
-        dup             v0.16b,  v0.b[0]
-        dup             v1.16b,  v0.b[0]
+        dup             v0.16b,  v4.b[0]
+        dup             v1.16b,  v4.b[0]
 2:
         st1             {v0.16b, v1.16b}, [x0], x1
         st1             {v0.16b, v1.16b}, [x6], x1
@@ -640,10 +640,6 @@ L(ipred_dc_h64):
         add             v0.4h,   v0.4h,   v2.4h
         br              x3
 L(ipred_dc_w64):
-        mov             v1.16b,  v0.16b
-        mov             v2.16b,  v0.16b
-        mov             v3.16b,  v0.16b
-2:
         add             x2,  x2,  #1
         ld1             {v1.16b, v2.16b, v3.16b, v4.16b}, [x2]
         add             v0.4h,   v0.4h,   v16.4h
@@ -656,19 +652,19 @@ L(ipred_dc_w64):
         cmp             w4,  #64
         add             v0.4h,   v0.4h,   v1.4h
         add             v0.4h,   v0.4h,   v3.4h
-        ushl            v0.4h,   v0.4h,   v17.4h
+        ushl            v4.4h,   v0.4h,   v17.4h
         b.eq            1f
         // h = 16/32
         mov             w16, #(0x5556/2)
         movk            w16, #(0x3334/2), lsl #16
         lsr             w16, w16, w4
         dup             v16.4h,  w16
-        sqdmulh         v0.4h,   v0.4h,   v16.4h
+        sqdmulh         v4.4h,   v4.4h,   v16.4h
 1:
-        dup             v0.16b,  v0.b[0]
-        dup             v1.16b,  v0.b[0]
-        dup             v2.16b,  v0.b[0]
-        dup             v3.16b,  v0.b[0]
+        dup             v0.16b,  v4.b[0]
+        dup             v1.16b,  v4.b[0]
+        dup             v2.16b,  v4.b[0]
+        dup             v3.16b,  v4.b[0]
 2:
         st1             {v0.16b, v1.16b, v2.16b, v3.16b}, [x0], x1
         st1             {v0.16b, v1.16b, v2.16b, v3.16b}, [x6], x1
@@ -691,11 +687,11 @@ L(ipred_dc_tbl):
         .hword L(ipred_dc_tbl) - L(ipred_dc_w4)
 endfunc
 
-// void ipred_paeth_neon(pixel *dst, const ptrdiff_t stride,
-//                       const pixel *const topleft,
-//                       const int width, const int height, const int a,
-//                       const int max_width, const int max_height);
-function ipred_paeth_neon, export=1
+// void ipred_paeth_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                            const pixel *const topleft,
+//                            const int width, const int height, const int a,
+//                            const int max_width, const int max_height);
+function ipred_paeth_8bpc_neon, export=1
         clz             w9,  w3
         adr             x5,  L(ipred_paeth_tbl)
         sub             w9,  w9,  #25
@@ -868,11 +864,11 @@ L(ipred_paeth_tbl):
         .hword L(ipred_paeth_tbl) -  40b
 endfunc
 
-// void ipred_smooth_neon(pixel *dst, const ptrdiff_t stride,
-//                        const pixel *const topleft,
-//                        const int width, const int height, const int a,
-//                        const int max_width, const int max_height);
-function ipred_smooth_neon, export=1
+// void ipred_smooth_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                             const pixel *const topleft,
+//                             const int width, const int height, const int a,
+//                             const int max_width, const int max_height);
+function ipred_smooth_8bpc_neon, export=1
         movrel          x10, X(sm_weights)
         add             x11, x10, w4, uxtw
         add             x10, x10, w3, uxtw
@@ -1046,11 +1042,11 @@ L(ipred_smooth_tbl):
         .hword L(ipred_smooth_tbl) -  40b
 endfunc
 
-// void ipred_smooth_v_neon(pixel *dst, const ptrdiff_t stride,
-//                          const pixel *const topleft,
-//                          const int width, const int height, const int a,
-//                          const int max_width, const int max_height);
-function ipred_smooth_v_neon, export=1
+// void ipred_smooth_v_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                               const pixel *const topleft,
+//                               const int width, const int height, const int a,
+//                               const int max_width, const int max_height);
+function ipred_smooth_v_8bpc_neon, export=1
         movrel          x7,  X(sm_weights)
         add             x7,  x7,  w4, uxtw
         clz             w9,  w3
@@ -1184,11 +1180,11 @@ L(ipred_smooth_v_tbl):
         .hword L(ipred_smooth_v_tbl) -  40b
 endfunc
 
-// void ipred_smooth_h_neon(pixel *dst, const ptrdiff_t stride,
-//                          const pixel *const topleft,
-//                          const int width, const int height, const int a,
-//                          const int max_width, const int max_height);
-function ipred_smooth_h_neon, export=1
+// void ipred_smooth_h_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                               const pixel *const topleft,
+//                               const int width, const int height, const int a,
+//                               const int max_width, const int max_height);
+function ipred_smooth_h_8bpc_neon, export=1
         movrel          x8,  X(sm_weights)
         add             x8,  x8,  w3, uxtw
         clz             w9,  w3
@@ -1327,11 +1323,11 @@ L(ipred_smooth_h_tbl):
         .hword L(ipred_smooth_h_tbl) -  40b
 endfunc
 
-// void ipred_filter_neon(pixel *dst, const ptrdiff_t stride,
-//                        const pixel *const topleft,
-//                        const int width, const int height, const int filt_idx,
-//                        const int max_width, const int max_height);
-function ipred_filter_neon, export=1
+// void ipred_filter_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                             const pixel *const topleft,
+//                             const int width, const int height, const int filt_idx,
+//                             const int max_width, const int max_height);
+function ipred_filter_8bpc_neon, export=1
         and             w5,  w5,  #511
         movrel          x6,  X(filter_intra_taps)
         lsl             w5,  w5,  #6
@@ -1487,10 +1483,10 @@ L(ipred_filter_tbl):
         .hword L(ipred_filter_tbl) -  40b
 endfunc
 
-// void pal_pred_neon(pixel *dst, const ptrdiff_t stride,
-//                    const uint16_t *const pal, const uint8_t *idx,
-//                    const int w, const int h);
-function pal_pred_neon, export=1
+// void pal_pred_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                         const uint16_t *const pal, const uint8_t *idx,
+//                         const int w, const int h);
+function pal_pred_8bpc_neon, export=1
         ld1             {v0.8h}, [x2]
         clz             w9,  w4
         adr             x6,  L(pal_pred_tbl)
@@ -1578,11 +1574,11 @@ L(pal_pred_tbl):
         .hword L(pal_pred_tbl) -  4b
 endfunc
 
-// void ipred_cfl_128_neon(pixel *dst, const ptrdiff_t stride,
-//                         const pixel *const topleft,
-//                         const int width, const int height,
-//                         const int16_t *ac, const int alpha);
-function ipred_cfl_128_neon, export=1
+// void ipred_cfl_128_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                              const pixel *const topleft,
+//                              const int width, const int height,
+//                              const int16_t *ac, const int alpha);
+function ipred_cfl_128_8bpc_neon, export=1
         clz             w9,  w3
         adr             x7,  L(ipred_cfl_128_tbl)
         sub             w9,  w9,  #26
@@ -1699,11 +1695,11 @@ L(ipred_cfl_splat_tbl):
         .hword L(ipred_cfl_128_tbl) - L(ipred_cfl_splat_w4)
 endfunc
 
-// void ipred_cfl_top_neon(pixel *dst, const ptrdiff_t stride,
-//                         const pixel *const topleft,
-//                         const int width, const int height,
-//                         const int16_t *ac, const int alpha);
-function ipred_cfl_top_neon, export=1
+// void ipred_cfl_top_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                              const pixel *const topleft,
+//                              const int width, const int height,
+//                              const int16_t *ac, const int alpha);
+function ipred_cfl_top_8bpc_neon, export=1
         clz             w9,  w3
         adr             x7,  L(ipred_cfl_top_tbl)
         sub             w9,  w9,  #26
@@ -1717,19 +1713,19 @@ function ipred_cfl_top_neon, export=1
 4:
         ld1r            {v0.2s},  [x2]
         uaddlv          h0,      v0.8b
-        urshr           v0.8h,   v0.8h,   #3
+        urshr           v0.4h,   v0.4h,   #3
         dup             v0.8h,   v0.h[0]
         b               L(ipred_cfl_splat_w4)
 8:
         ld1             {v0.8b},  [x2]
         uaddlv          h0,      v0.8b
-        urshr           v0.8h,   v0.8h,   #3
+        urshr           v0.4h,   v0.4h,   #3
         dup             v0.8h,   v0.h[0]
         b               L(ipred_cfl_splat_w8)
 16:
         ld1             {v0.16b}, [x2]
         uaddlv          h0,      v0.16b
-        urshr           v0.8h,   v0.8h,   #4
+        urshr           v0.4h,   v0.4h,   #4
         dup             v0.8h,   v0.h[0]
         b               L(ipred_cfl_splat_w16)
 32:
@@ -1737,7 +1733,7 @@ function ipred_cfl_top_neon, export=1
         uaddlv          h2,      v2.16b
         uaddlv          h3,      v3.16b
         add             v2.4h,   v2.4h,   v3.4h
-        urshr           v2.8h,   v2.8h,   #5
+        urshr           v2.4h,   v2.4h,   #5
         dup             v0.8h,   v2.h[0]
         b               L(ipred_cfl_splat_w16)
 
@@ -1748,11 +1744,11 @@ L(ipred_cfl_top_tbl):
         .hword L(ipred_cfl_top_tbl) -  4b
 endfunc
 
-// void ipred_cfl_left_neon(pixel *dst, const ptrdiff_t stride,
-//                          const pixel *const topleft,
-//                          const int width, const int height,
-//                          const int16_t *ac, const int alpha);
-function ipred_cfl_left_neon, export=1
+// void ipred_cfl_left_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                               const pixel *const topleft,
+//                               const int width, const int height,
+//                               const int16_t *ac, const int alpha);
+function ipred_cfl_left_8bpc_neon, export=1
         sub             x2,  x2,  w4, uxtw
         clz             w9,  w3
         clz             w8,  w4
@@ -1772,21 +1768,21 @@ function ipred_cfl_left_neon, export=1
 L(ipred_cfl_left_h4):
         ld1r            {v0.2s},  [x2]
         uaddlv          h0,      v0.8b
-        urshr           v0.8h,   v0.8h,   #3
+        urshr           v0.4h,   v0.4h,   #3
         dup             v0.8h,   v0.h[0]
         br              x9
 
 L(ipred_cfl_left_h8):
         ld1             {v0.8b},  [x2]
         uaddlv          h0,      v0.8b
-        urshr           v0.8h,   v0.8h,   #3
+        urshr           v0.4h,   v0.4h,   #3
         dup             v0.8h,   v0.h[0]
         br              x9
 
 L(ipred_cfl_left_h16):
         ld1             {v0.16b}, [x2]
         uaddlv          h0,      v0.16b
-        urshr           v0.8h,   v0.8h,   #4
+        urshr           v0.4h,   v0.4h,   #4
         dup             v0.8h,   v0.h[0]
         br              x9
 
@@ -1795,7 +1791,7 @@ L(ipred_cfl_left_h32):
         uaddlv          h2,      v2.16b
         uaddlv          h3,      v3.16b
         add             v2.4h,   v2.4h,   v3.4h
-        urshr           v2.8h,   v2.8h,   #5
+        urshr           v2.4h,   v2.4h,   #5
         dup             v0.8h,   v2.h[0]
         br              x9
 
@@ -1806,11 +1802,11 @@ L(ipred_cfl_left_tbl):
         .hword L(ipred_cfl_left_tbl) - L(ipred_cfl_left_h4)
 endfunc
 
-// void ipred_cfl_neon(pixel *dst, const ptrdiff_t stride,
-//                     const pixel *const topleft,
-//                     const int width, const int height,
-//                     const int16_t *ac, const int alpha);
-function ipred_cfl_neon, export=1
+// void ipred_cfl_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                          const pixel *const topleft,
+//                          const int width, const int height,
+//                          const int16_t *ac, const int alpha);
+function ipred_cfl_8bpc_neon, export=1
         sub             x2,  x2,  w4, uxtw
         add             w8,  w3,  w4             // width + height
         dup             v1.8h,   w6              // alpha
@@ -1946,15 +1942,19 @@ L(ipred_cfl_tbl):
         .hword L(ipred_cfl_tbl) - L(ipred_cfl_w4)
 endfunc
 
-// void cfl_ac_420_neon(int16_t *const ac, const pixel *const ypx,
-//                      const ptrdiff_t stride, const int w_pad,
-//                      const int h_pad, const int cw, const int ch);
-function ipred_cfl_ac_420_neon, export=1
+// void cfl_ac_420_8bpc_neon(int16_t *const ac, const pixel *const ypx,
+//                           const ptrdiff_t stride, const int w_pad,
+//                           const int h_pad, const int cw, const int ch);
+function ipred_cfl_ac_420_8bpc_neon, export=1
         clz             w8,  w5
         lsl             w4,  w4,  #2
         adr             x7,  L(ipred_cfl_ac_420_tbl)
         sub             w8,  w8,  #27
         ldrh            w8,  [x7, w8, uxtw #1]
+        movi            v16.8h,  #0
+        movi            v17.8h,  #0
+        movi            v18.8h,  #0
+        movi            v19.8h,  #0
         sub             x7,  x7,  w8, uxtw
         sub             w8,  w6,  w4         // height - h_pad
         rbit            w9,  w5              // rbit(width)
@@ -1962,14 +1962,10 @@ function ipred_cfl_ac_420_neon, export=1
         clz             w9,  w9              // ctz(width)
         clz             w10, w10             // ctz(height)
         add             w9,  w9,  w10        // log2sz
-        movi            v16.4s,  #1
         add             x10, x1,  x2
+        dup             v31.4s,  w9
         lsl             x2,  x2,  #1
-        dup             v17.4s,  w9
-        sshl            v16.4s,  v16.4s,  v17.4s // 1 << log2sz
-        neg             v17.4s,  v17.4s          // -log2sz
-        ushr            v16.4s,  v16.4s,  #1     // 1 << (log2sz - 1)
-        mov             w9,  w6
+        neg             v31.4s,  v31.4s      // -log2sz
         br              x7
 
 L(ipred_cfl_ac_420_w4):
@@ -1984,6 +1980,7 @@ L(ipred_cfl_ac_420_w4):
         shl             v0.8h,   v0.8h,   #1
         subs            w8,  w8,  #2
         st1             {v0.8h}, [x0], #16
+        add             v16.8h,  v16.8h,  v0.8h
         b.gt            1b
         trn2            v1.2d,   v0.2d,   v0.2d
         trn2            v0.2d,   v0.2d,   v0.2d
@@ -1992,29 +1989,19 @@ L(ipred_cfl_ac_420_w4_hpad):
 2:      // Vertical padding (h_pad > 0)
         subs            w4,  w4,  #4
         st1             {v0.8h, v1.8h}, [x0], #32
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
         b.gt            2b
 3:
-        sub             x0,  x0,  w6, uxtw #3
-        // Sum the produced ac values
-        subs            w6,  w6,  #4
-        ld1             {v0.8h, v1.8h}, [x0], #32
-        b.le            5f
-4:
-        ld1             {v2.8h, v3.8h}, [x0], #32
-        subs            w6,  w6,  #4
-        add             v0.8h,   v0.8h,   v2.8h
-        add             v1.8h,   v1.8h,   v3.8h
-        b.gt            4b
-5:
-        add             v0.8h,   v0.8h,   v1.8h
+        // Aggregate the sums
+        add             v0.8h,   v16.8h,  v17.8h
         uaddlv          s0,  v0.8h                // sum
-        sub             x0,  x0,  w9, uxtw #3
-        add             v0.2s,   v0.2s,   v16.2s  // sum += 1 << (log2sz - 1)
-        ushl            v4.2s,   v0.2s,   v17.2s  // sum >>= log2sz
+        sub             x0,  x0,  w6, uxtw #3
+        urshl           v4.2s,   v0.2s,   v31.2s  // (sum + (1 << (log2sz - 1))) >>= log2sz
         dup             v4.8h,   v4.h[0]
 6:      // Subtract dc from ac
         ld1             {v0.8h, v1.8h}, [x0]
-        subs            w9,  w9,  #4
+        subs            w6,  w6,  #4
         sub             v0.8h,   v0.8h,   v4.8h
         sub             v1.8h,   v1.8h,   v4.8h
         st1             {v0.8h, v1.8h}, [x0], #32
@@ -2038,6 +2025,8 @@ L(ipred_cfl_ac_420_w8):
         shl             v1.8h,   v2.8h,   #1
         subs            w8,  w8,  #2
         st1             {v0.8h, v1.8h}, [x0], #32
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
         b.gt            1b
         mov             v0.16b,  v1.16b
         b               L(ipred_cfl_ac_420_w8_hpad)
@@ -2057,6 +2046,10 @@ L(ipred_cfl_ac_420_w8_wpad):
         trn2            v2.2d,   v0.2d,   v0.2d
         subs            w8,  w8,  #2
         st1             {v0.4h, v1.4h, v2.4h, v3.4h}, [x0], #32
+        add             v16.4h,  v16.4h,  v0.4h
+        add             v17.4h,  v17.4h,  v1.4h
+        add             v18.4h,  v18.4h,  v2.4h
+        add             v19.4h,  v19.4h,  v3.4h
         b.gt            1b
         trn1            v0.2d,   v2.2d,   v3.2d
         trn1            v1.2d,   v2.2d,   v3.2d
@@ -2066,38 +2059,28 @@ L(ipred_cfl_ac_420_w8_hpad):
 2:      // Vertical padding (h_pad > 0)
         subs            w4,  w4,  #4
         st1             {v0.8h, v1.8h}, [x0], #32
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
         st1             {v0.8h, v1.8h}, [x0], #32
+        add             v18.8h,  v18.8h,  v0.8h
+        add             v19.8h,  v19.8h,  v1.8h
         b.gt            2b
 3:
 
 L(ipred_cfl_ac_420_w8_calc_subtract_dc):
-        sub             x0,  x0,  w6, uxtw #4
-        // Sum the produced ac values
-        subs            w6,  w6,  #4
-        ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
-        b.le            5f
-4:
-        ld1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x0], #64
-        subs            w6,  w6,  #4
-        add             v0.8h,   v0.8h,   v4.8h
-        add             v1.8h,   v1.8h,   v5.8h
-        add             v2.8h,   v2.8h,   v6.8h
-        add             v3.8h,   v3.8h,   v7.8h
-        b.gt            4b
-5:
-        add             v0.8h,   v0.8h,   v1.8h
-        add             v2.8h,   v2.8h,   v3.8h
+        // Aggregate the sums
+        add             v0.8h,   v16.8h,  v17.8h
+        add             v2.8h,   v18.8h,  v19.8h
         uaddlp          v0.4s,   v0.8h
         uaddlp          v2.4s,   v2.8h
         add             v0.4s,   v0.4s,   v2.4s
         addv            s0,  v0.4s                // sum
-        sub             x0,  x0,  w9, uxtw #4
-        add             v0.2s,   v0.2s,   v16.2s  // sum += 1 << (log2sz - 1)
-        ushl            v4.2s,   v0.2s,   v17.2s  // sum >>= log2sz
+        sub             x0,  x0,  w6, uxtw #4
+        urshl           v4.2s,   v0.2s,   v31.2s  // (sum + (1 << (log2sz - 1))) >>= log2sz
         dup             v4.8h,   v4.h[0]
 6:      // Subtract dc from ac
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0]
-        subs            w9,  w9,  #4
+        subs            w6,  w6,  #4
         sub             v0.8h,   v0.8h,   v4.8h
         sub             v1.8h,   v1.8h,   v4.8h
         sub             v2.8h,   v2.8h,   v4.8h
@@ -2136,6 +2119,10 @@ L(ipred_cfl_ac_420_w16_wpad0):
         shl             v3.8h,   v5.8h,   #1
         subs            w8,  w8,  #2
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v2.16b
         mov             v1.16b,  v3.16b
@@ -2173,6 +2160,10 @@ L(ipred_cfl_ac_420_w16_wpad1):
         trn1            v3.2d,   v3.2d,   v5.2d
         subs            w8,  w8,  #2
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v2.16b
         mov             v1.16b,  v3.16b
@@ -2196,6 +2187,10 @@ L(ipred_cfl_ac_420_w16_wpad2):
         dup             v3.8h,   v2.h[7]
         subs            w8,  w8,  #2
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v2.16b
         mov             v1.16b,  v3.16b
@@ -2221,6 +2216,10 @@ L(ipred_cfl_ac_420_w16_wpad3):
         trn1            v2.2d,   v2.2d,   v3.2d
         subs            w8,  w8,  #2
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v2.16b
         mov             v1.16b,  v3.16b
@@ -2231,7 +2230,15 @@ L(ipred_cfl_ac_420_w16_hpad):
 2:      // Vertical padding (h_pad > 0)
         subs            w4,  w4,  #4
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            2b
 3:
 
@@ -2253,15 +2260,19 @@ L(ipred_cfl_ac_420_w16_tbl):
         .hword L(ipred_cfl_ac_420_w16_tbl) - L(ipred_cfl_ac_420_w16_wpad3)
 endfunc
 
-// void cfl_ac_422_neon(int16_t *const ac, const pixel *const ypx,
-//                      const ptrdiff_t stride, const int w_pad,
-//                      const int h_pad, const int cw, const int ch);
-function ipred_cfl_ac_422_neon, export=1
+// void cfl_ac_422_8bpc_neon(int16_t *const ac, const pixel *const ypx,
+//                           const ptrdiff_t stride, const int w_pad,
+//                           const int h_pad, const int cw, const int ch);
+function ipred_cfl_ac_422_8bpc_neon, export=1
         clz             w8,  w5
         lsl             w4,  w4,  #2
         adr             x7,  L(ipred_cfl_ac_422_tbl)
         sub             w8,  w8,  #27
         ldrh            w8,  [x7, w8, uxtw #1]
+        movi            v16.8h,  #0
+        movi            v17.8h,  #0
+        movi            v18.8h,  #0
+        movi            v19.8h,  #0
         sub             x7,  x7,  w8, uxtw
         sub             w8,  w6,  w4         // height - h_pad
         rbit            w9,  w5              // rbit(width)
@@ -2269,14 +2280,10 @@ function ipred_cfl_ac_422_neon, export=1
         clz             w9,  w9              // ctz(width)
         clz             w10, w10             // ctz(height)
         add             w9,  w9,  w10        // log2sz
-        movi            v16.4s,  #1
         add             x10, x1,  x2
+        dup             v31.4s,  w9
         lsl             x2,  x2,  #1
-        dup             v17.4s,  w9
-        sshl            v16.4s,  v16.4s,  v17.4s // 1 << log2sz
-        neg             v17.4s,  v17.4s          // -log2sz
-        ushr            v16.4s,  v16.4s,  #1     // 1 << (log2sz - 1)
-        mov             w9,  w6
+        neg             v31.4s,  v31.4s      // -log2sz
         br              x7
 
 L(ipred_cfl_ac_422_w4):
@@ -2290,6 +2297,8 @@ L(ipred_cfl_ac_422_w4):
         shl             v0.8h,   v0.8h,   #2
         shl             v1.8h,   v1.8h,   #2
         subs            w8,  w8,  #4
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
         st1             {v0.8h, v1.8h}, [x0], #32
         b.gt            1b
         trn2            v0.2d,   v1.2d,   v1.2d
@@ -2313,6 +2322,10 @@ L(ipred_cfl_ac_422_w8):
         shl             v3.8h,   v3.8h,   #2
         subs            w8,  w8,  #4
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v3.16b
         mov             v1.16b,  v3.16b
@@ -2338,6 +2351,10 @@ L(ipred_cfl_ac_422_w8_wpad):
         trn1            v2.2d,   v2.2d,   v6.2d
         subs            w8,  w8,  #4
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v3.16b
         mov             v1.16b,  v3.16b
@@ -2363,6 +2380,10 @@ L(ipred_cfl_ac_422_w16_wpad0):
         shl             v3.8h,   v3.8h,   #2
         subs            w8,  w8,  #2
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v2.16b
         mov             v1.16b,  v3.16b
@@ -2388,6 +2409,10 @@ L(ipred_cfl_ac_422_w16_wpad1):
         trn1            v3.2d,   v3.2d,   v5.2d
         subs            w8,  w8,  #2
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v2.16b
         mov             v1.16b,  v3.16b
@@ -2405,6 +2430,10 @@ L(ipred_cfl_ac_422_w16_wpad2):
         dup             v3.8h,   v2.h[7]
         subs            w8,  w8,  #2
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v2.16b
         mov             v1.16b,  v3.16b
@@ -2424,6 +2453,10 @@ L(ipred_cfl_ac_422_w16_wpad3):
         trn1            v2.2d,   v2.2d,   v3.2d
         subs            w8,  w8,  #2
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], #64
+        add             v16.8h,  v16.8h,  v0.8h
+        add             v17.8h,  v17.8h,  v1.8h
+        add             v18.8h,  v18.8h,  v2.8h
+        add             v19.8h,  v19.8h,  v3.8h
         b.gt            1b
         mov             v0.16b,  v2.16b
         mov             v1.16b,  v3.16b

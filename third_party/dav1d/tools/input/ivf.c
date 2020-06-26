@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -92,8 +93,27 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
             break; // EOF
         fseeko(c->f, rl32(data) + 8, SEEK_CUR);
     }
-    fps[0] = timebase[0] * *num_frames;
-    fps[1] = timebase[1] * duration;
+
+    uint64_t fps_num = (uint64_t) timebase[0] * *num_frames;
+    uint64_t fps_den = (uint64_t) timebase[1] * duration;
+    if (fps_num && fps_den) { /* Reduce fraction */
+        uint64_t gcd = fps_num;
+        for (uint64_t a = fps_den, b; (b = a % gcd); a = gcd, gcd = b);
+        fps_num /= gcd;
+        fps_den /= gcd;
+
+        while ((fps_num | fps_den) > UINT_MAX) {
+            fps_num >>= 1;
+            fps_den >>= 1;
+        }
+    }
+    if (fps_num && fps_den) {
+        fps[0] = (unsigned) fps_num;
+        fps[1] = (unsigned) fps_den;
+    } else {
+        fps[0] = fps[1] = 0;
+    }
+
     fseeko(c->f, 32, SEEK_SET);
 
     return 0;

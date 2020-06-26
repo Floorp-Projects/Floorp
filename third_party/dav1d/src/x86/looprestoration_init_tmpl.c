@@ -169,7 +169,7 @@ void dav1d_sgr_weighted1_##ext(pixel *dst, const ptrdiff_t stride, \
 void dav1d_sgr_weighted2_##ext(pixel *dst, const ptrdiff_t stride, \
                                const coef *t1, const coef *t2, \
                                const int w, const int h, \
-                               const int16_t wt[2]); \
+                               const uint32_t wt); \
 \
 static void sgr_filter_##ext(pixel *const dst, const ptrdiff_t dst_stride, \
                              const pixel (*const left)[4], \
@@ -194,7 +194,7 @@ static void sgr_filter_##ext(pixel *const dst, const ptrdiff_t dst_stride, \
                                w, h, dav1d_sgr_params[sgr_idx][2], edges); \
         dav1d_sgr_filter1_##ext(tmp2, dst, dst_stride, left, lpf, lpf_stride, \
                                w, h, dav1d_sgr_params[sgr_idx][3], edges); \
-        const int16_t wt[2] = { sgr_wt[0], 128 - sgr_wt[0] - sgr_wt[1] }; \
+        const uint32_t wt = ((128 - sgr_wt[0] - sgr_wt[1]) << 16) | (uint16_t) sgr_wt[0]; \
         dav1d_sgr_weighted2_##ext(dst, dst_stride, tmp1, tmp2, w, h, wt); \
     } \
 }

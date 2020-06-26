@@ -42,8 +42,7 @@ void *dav1d_frame_task(void *const data) {
         if (f->frame_thread.die) break;
         pthread_mutex_unlock(&f->frame_thread.td.lock);
 
-        const int res = dav1d_decode_frame(f);
-        if (res)
+        if (dav1d_decode_frame(f))
             memset(f->frame_thread.cf, 0,
                    (size_t)f->frame_thread.cf_sz * 128 * 128 / 2);
 
@@ -92,8 +91,8 @@ void *dav1d_tile_task(void *const data) {
             for (t->by = ts->tiling.row_start; t->by < ts->tiling.row_end;
                  t->by += f->sb_step)
             {
-                int error = dav1d_decode_tile_sbrow(t);
-                int progress = error ? TILE_ERROR : 1 + (t->by >> f->sb_shift);
+                const int error = dav1d_decode_tile_sbrow(t);
+                const int progress = error ? TILE_ERROR : 1 + (t->by >> f->sb_shift);
 
                 // signal progress
                 pthread_mutex_lock(&ts->tile_thread.lock);
@@ -128,7 +127,7 @@ void *dav1d_tile_task(void *const data) {
             // waiting for the post-filter to complete
             t->ts = ts;
             t->by = sby << f->sb_shift;
-            int error = dav1d_decode_tile_sbrow(t);
+            const int error = dav1d_decode_tile_sbrow(t);
             progress = error ? TILE_ERROR : 1 + sby;
 
             // signal progress
