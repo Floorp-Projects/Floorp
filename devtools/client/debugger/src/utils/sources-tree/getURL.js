@@ -7,7 +7,7 @@
 import { parse } from "../url";
 import { getUnicodeHostname, getUnicodeUrlPath } from "devtools-modules";
 
-import type { Source } from "../../types";
+import type { DisplaySource, Source } from "../../types";
 export type ParsedURL = {
   path: string,
   group: string,
@@ -34,7 +34,21 @@ export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
   if (!url) {
     return def;
   }
+  return getURLInternal(url, defaultDomain);
+}
 
+export function getDisplayURL(
+  source: DisplaySource,
+  defaultDomain: ?string = ""
+): ParsedURL {
+  const { displayURL } = source;
+  if (!displayURL) {
+    return def;
+  }
+  return getURLInternal(displayURL, defaultDomain);
+}
+
+function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
   const { pathname, protocol, host } = parse(url);
   const filename = getUnicodeUrlPath(getFilenameFromPath(pathname));
 

@@ -13,11 +13,11 @@ import {
   createDirectoryNode,
 } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
-import { getURL } from "./getURL";
+import { getDisplayURL } from "./getURL";
 
 import type { ParsedURL } from "./getURL";
 import type { TreeDirectory, TreeNode } from "./types";
-import type { Source } from "../../types";
+import type { DisplaySource, Source } from "../../types";
 
 function createNodeInTree(
   part: string,
@@ -173,11 +173,11 @@ function addSourceToNode(
  */
 export function addToTree(
   tree: TreeDirectory,
-  source: Source,
+  source: DisplaySource,
   debuggeeHost: ?string,
   thread: string
 ): void {
-  const url = getURL(source, debuggeeHost);
+  const url = getDisplayURL(source, debuggeeHost);
 
   if (isInvalidUrl(url, source)) {
     return;

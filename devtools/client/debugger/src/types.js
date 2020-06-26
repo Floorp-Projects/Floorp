@@ -424,6 +424,10 @@ export type Source = {
   +isOriginal: boolean,
 };
 
+export type DisplaySource = Source & {
+  +displayURL: string,
+};
+
 /**
  * Script
  * This describes scripts which are sent to the debug server to be eval'd

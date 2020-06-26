@@ -4,9 +4,18 @@
 
 // @flow
 
-import { parse } from "../url";
+import { stripQuery, parse } from "../url";
 
 describe("url", () => {
+  describe("stripQuery", () => {
+    it("strips properly", () => {
+      expect(stripQuery("/file/path")).toBe("/file/path");
+      expect(stripQuery("/file/path?param")).toBe("/file/path");
+      expect(stripQuery("/file/path#hash")).toBe("/file/path#hash");
+      expect(stripQuery("/file/path?param#hash")).toBe("/file/path#hash");
+    });
+  });
+
   describe("parse", () => {
     it("parses an absolute URL", () => {
       const val = parse("http://example.com:8080/path/file.js");

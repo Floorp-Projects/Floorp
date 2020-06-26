@@ -24,6 +24,27 @@ const defaultUrl = {
   username: "",
 };
 
+export const stripQuery = memoize(function stripQueryAndHash(url: URL): URL {
+  let queryStart = url.indexOf("?");
+
+  let before = url;
+  let after = "";
+  if (queryStart >= 0) {
+    const hashStart = url.indexOf("#");
+    if (hashStart >= 0) {
+      if (hashStart < queryStart) {
+        queryStart = hashStart;
+      }
+
+      after = url.slice(hashStart);
+    }
+
+    before = url.slice(0, queryStart);
+  }
+
+  return before + after;
+});
+
 export const parse = memoize(function parse(url: URL): any {
   let urlObj;
   try {

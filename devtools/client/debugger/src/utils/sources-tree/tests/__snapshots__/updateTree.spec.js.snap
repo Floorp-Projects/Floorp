@@ -29,7 +29,8 @@ exports[`calls updateTree.js adds one source 1`] = `
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
-                \\"isOriginal\\": false
+                \\"isOriginal\\": false,
+                \\"displayURL\\": \\"https://davidwalsh.name/\\"
               }
             },
             {
@@ -45,7 +46,8 @@ exports[`calls updateTree.js adds one source 1`] = `
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
-                \\"isOriginal\\": false
+                \\"isOriginal\\": false,
+                \\"displayURL\\": \\"https://davidwalsh.name/source1.js\\"
               }
             }
           ]
@@ -85,7 +87,8 @@ exports[`calls updateTree.js adds two sources 1`] = `
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
-                \\"isOriginal\\": false
+                \\"isOriginal\\": false,
+                \\"displayURL\\": \\"https://davidwalsh.name/\\"
               }
             },
             {
@@ -101,7 +104,8 @@ exports[`calls updateTree.js adds two sources 1`] = `
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
-                \\"isOriginal\\": false
+                \\"isOriginal\\": false,
+                \\"displayURL\\": \\"https://davidwalsh.name/source1.js\\"
               }
             },
             {
@@ -117,7 +121,8 @@ exports[`calls updateTree.js adds two sources 1`] = `
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
-                \\"isOriginal\\": false
+                \\"isOriginal\\": false,
+                \\"displayURL\\": \\"https://davidwalsh.name/source2.js\\"
               }
             }
           ]
@@ -157,7 +162,8 @@ exports[`calls updateTree.js shows all the sources 1`] = `
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
-                \\"isOriginal\\": false
+                \\"isOriginal\\": false,
+                \\"displayURL\\": \\"https://davidwalsh.name/\\"
               }
             },
             {
@@ -173,7 +179,8 @@ exports[`calls updateTree.js shows all the sources 1`] = `
                 \\"isWasm\\": false,
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
-                \\"isOriginal\\": false
+                \\"isOriginal\\": false,
+                \\"displayURL\\": \\"https://davidwalsh.name/source1.js\\"
               }
             }
           ]

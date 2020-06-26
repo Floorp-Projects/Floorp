@@ -37,6 +37,7 @@ import {
   type ReduceAllQuery,
   type ShallowQuery,
 } from "../utils/resource";
+import { stripQuery } from "../utils/url";
 
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
 import {
@@ -62,6 +63,7 @@ import {
 } from "./source-actors";
 import { getAllThreads } from "./threads";
 import type {
+  DisplaySource,
   Source,
   SourceId,
   SourceActor,
@@ -87,7 +89,9 @@ import type { LoadSourceAction } from "../actions/types/SourceAction";
 import { uniq } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
-export type SourcesMapByThread = { [ThreadId]: SourcesMap };
+export type SourcesMapByThread = {
+  [ThreadId]: { [SourceId]: DisplaySource },
+};
 
 export type BreakpointPositionsMap = { [SourceId]: BreakpointPositions };
 type SourceActorMap = { [SourceId]: Array<SourceActorId> };
@@ -960,11 +964,35 @@ export const getDisplayedSources: GetDisplayedSourcesSelector = createSelector(
     const result = {};
 
     for (const thread of Object.keys(idsByThread)) {
+      const entriesByNoQueryURL = Object.create(null);
+
       for (const id of idsByThread[thread]) {
         if (!result[thread]) {
           result[thread] = {};
         }
-        result[thread][id] = getResource(sources, id);
+        const source = getResource(sources, id);
+
+        const entry = {
+          ...source,
+          displayURL: source.url,
+        };
+        result[thread][id] = entry;
+
+        const noQueryURL = stripQuery(entry.displayURL);
+        if (!entriesByNoQueryURL[noQueryURL]) {
+          entriesByNoQueryURL[noQueryURL] = [];
+        }
+        entriesByNoQueryURL[noQueryURL].push(entry);
+      }
+
+      // If the URL does not compete with another without the query string,
+      // we exclude the query string when rendering the source URL to keep the
+      // UI more easily readable.
+      for (const noQueryURL in entriesByNoQueryURL) {
+        const entries = entriesByNoQueryURL[noQueryURL];
+        if (entries.length === 1) {
+          entries[0].displayURL = noQueryURL;
+        }
       }
     }
 

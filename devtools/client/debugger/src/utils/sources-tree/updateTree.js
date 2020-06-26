@@ -10,10 +10,10 @@ import { createDirectoryNode, createParentMap } from "./utils";
 import { getDomain } from "./treeOrder";
 
 import type { SourcesMapByThread } from "../../reducers/types";
-import type { Thread, Source, URL } from "../../types";
+import type { Thread, DisplaySource, URL } from "../../types";
 import type { TreeDirectory, TreeNode } from "./types";
 
-function getSourcesToAdd(newSources, prevSources): Source[] {
+function getSourcesToAdd(newSources, prevSources): DisplaySource[] {
   const sourcesToAdd = [];
 
   for (const sourceId in newSources) {
