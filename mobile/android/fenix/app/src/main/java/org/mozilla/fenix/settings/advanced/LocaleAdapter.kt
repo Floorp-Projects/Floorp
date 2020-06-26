@@ -23,9 +23,8 @@ class LocaleAdapter(private val interactor: LocaleSettingsViewInteractor) :
     private var selectedLocale: Locale = Locale.getDefault()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseLocaleViewHolder {
-        val view =
-            LayoutInflater.from(parent.context)
-                .inflate(R.layout.locale_settings_item, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.locale_settings_item, parent, false)
 
         return when (viewType) {
             ItemType.DEFAULT.ordinal -> SystemLocaleViewHolder(

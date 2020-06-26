@@ -12,7 +12,8 @@ import org.mozilla.fenix.ext.showToolbar
 /**
  * Lets the user customize Private browsing options.
  */
-class SecretSettingsPreference : PreferenceFragmentCompat() {
+class SecretSettingsFragment : PreferenceFragmentCompat() {
+
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_debug_settings))

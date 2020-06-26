@@ -17,20 +17,21 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.settings.about.viewholders.AboutItemViewHolder
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.settings.about.viewholders.AboutItemViewHolder
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AboutPageAdapterTest {
-    private var aboutList: List<AboutPageItem> =
-        mutableListOf(
-            AboutPageItem.Item(
+    private val aboutList: List<AboutPageItem> =
+        listOf(
+            AboutPageItem(
                 AboutItem.ExternalLink(
                     AboutItemType.WHATS_NEW,
                     "https://mozilla.org"
                 ), "Libraries"
             ),
-            AboutPageItem.Item(AboutItem.Libraries, "Libraries")
+            AboutPageItem(AboutItem.Libraries, "Libraries"),
+            AboutPageItem(AboutItem.Crashes, "Crashes")
         )
     private val listener: AboutPageListener = mockk(relaxed = true)
 
@@ -47,7 +48,7 @@ class AboutPageAdapterTest {
 
         adapter.submitList(aboutList)
 
-        assertEquals(2, adapter.itemCount)
+        assertEquals(3, adapter.itemCount)
     }
 
     @Test
@@ -78,6 +79,6 @@ class AboutPageAdapterTest {
         adapter.submitList(aboutList)
         adapter.bindViewHolder(viewHolder, 1)
 
-        verify { viewHolder.bind(aboutList[1] as AboutPageItem.Item) }
+        verify { viewHolder.bind(aboutList[1]) }
     }
 }

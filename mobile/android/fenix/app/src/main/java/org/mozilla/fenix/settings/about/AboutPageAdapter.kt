@@ -20,19 +20,16 @@ class AboutPageAdapter(private val listener: AboutPageListener) :
     }
 
     override fun onBindViewHolder(holder: AboutItemViewHolder, position: Int) {
-        holder.bind(getItem(position) as AboutPageItem.Item)
+        holder.bind(getItem(position))
     }
 
     private object DiffCallback : DiffUtil.ItemCallback<AboutPageItem>() {
 
         override fun areItemsTheSame(oldItem: AboutPageItem, newItem: AboutPageItem) =
-            oldItem === newItem
+            oldItem.title == newItem.title
 
         override fun areContentsTheSame(oldItem: AboutPageItem, newItem: AboutPageItem) =
-            when (oldItem) {
-                is AboutPageItem.Item ->
-                    newItem is AboutPageItem.Item && oldItem.title == newItem.title
-            }
+            oldItem == newItem
     }
 }
 

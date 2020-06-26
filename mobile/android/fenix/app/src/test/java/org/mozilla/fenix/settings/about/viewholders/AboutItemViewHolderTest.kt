@@ -22,7 +22,7 @@ import org.mozilla.fenix.settings.about.AboutPageListener
 @RunWith(FenixRobolectricTestRunner::class)
 class AboutItemViewHolderTest {
 
-    private val item = AboutPageItem.Item(AboutItem.Libraries, "Libraries")
+    private val item = AboutPageItem(AboutItem.Libraries, "Libraries")
     private lateinit var view: View
     private lateinit var listener: AboutPageListener
 

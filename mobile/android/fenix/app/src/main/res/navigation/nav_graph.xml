@@ -544,7 +544,7 @@
         android:name="org.mozilla.fenix.settings.about.AboutFragment"/>
     <fragment
         android:id="@+id/secretSettingsPreference"
-        android:name="org.mozilla.fenix.settings.SecretSettingsPreference"
+        android:name="org.mozilla.fenix.settings.SecretSettingsFragment"
         android:label="@string/preferences_debug_settings" />
     <fragment
         android:id="@+id/crashReporterFragment"

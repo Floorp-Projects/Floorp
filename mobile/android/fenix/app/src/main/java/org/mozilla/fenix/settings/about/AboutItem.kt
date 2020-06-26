@@ -14,6 +14,4 @@ enum class AboutItemType {
     WHATS_NEW, SUPPORT, PRIVACY_NOTICE, RIGHTS, LICENSING_INFO
 }
 
-sealed class AboutPageItem {
-    data class Item(val type: AboutItem, val title: String) : AboutPageItem()
-}
+data class AboutPageItem(val type: AboutItem, val title: String)

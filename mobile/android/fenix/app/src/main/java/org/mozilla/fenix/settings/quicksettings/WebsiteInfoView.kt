@@ -10,7 +10,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat.getColor
 import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.quicksettings_website_info.view.*
+import kotlinx.android.synthetic.main.quicksettings_website_info.*
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import org.mozilla.fenix.R
 
@@ -19,13 +19,14 @@ import org.mozilla.fenix.R
  *
  * Currently it does not support any user interaction.
  *
- * @param containerView [ViewGroup] in which this View will inflate itself.
+ * @param container [ViewGroup] in which this View will inflate itself.
  */
 class WebsiteInfoView(
-    override val containerView: ViewGroup
+    container: ViewGroup
 ) : LayoutContainer {
-    val view: View = LayoutInflater.from(containerView.context)
-        .inflate(R.layout.quicksettings_website_info, containerView, true)
+
+    override val containerView: View = LayoutInflater.from(container.context)
+        .inflate(R.layout.quicksettings_website_info, container, true)
 
     /**
      * Allows changing what this View displays.
@@ -39,25 +40,25 @@ class WebsiteInfoView(
         bindCertificateName(state.certificateName)
     }
 
-    private fun bindUrl(url: String) {
-        view.url.text = url
+    private fun bindUrl(websiteUrl: String) {
+        url.text = websiteUrl
     }
 
-    private fun bindTitle(title: String) {
-        view.title.text = title
+    private fun bindTitle(websiteTitle: String) {
+        title.text = websiteTitle
     }
 
     private fun bindCertificateName(cert: String) {
-        val certificateLabel = view.context.getString(R.string.certificate_info_verified_by, cert)
-        view.certificateInfo.text = certificateLabel
-        view.certificateInfo.isVisible = cert.isNotEmpty()
+        val certificateLabel = containerView.context.getString(R.string.certificate_info_verified_by, cert)
+        certificateInfo.text = certificateLabel
+        certificateInfo.isVisible = cert.isNotEmpty()
     }
 
     private fun bindSecurityInfo(uiValues: WebsiteSecurityUiValues) {
-        val tint = getColor(view.context, uiValues.iconTintRes)
-        view.securityInfo.setText(uiValues.securityInfoRes)
-        view.securityInfoIcon.setImageDrawable(
-            view.context.getDrawableWithTint(uiValues.iconRes, tint)
+        val tint = getColor(containerView.context, uiValues.iconTintRes)
+        securityInfo.setText(uiValues.securityInfoRes)
+        securityInfoIcon.setImageDrawable(
+            containerView.context.getDrawableWithTint(uiValues.iconRes, tint)
         )
     }
 }

@@ -25,13 +25,13 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.about.AboutItemType.LICENSING_INFO
 import org.mozilla.fenix.settings.about.AboutItemType.PRIVACY_NOTICE
 import org.mozilla.fenix.settings.about.AboutItemType.RIGHTS
 import org.mozilla.fenix.settings.about.AboutItemType.SUPPORT
 import org.mozilla.fenix.settings.about.AboutItemType.WHATS_NEW
+import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.whatsnew.WhatsNew
 import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
 
@@ -145,39 +145,39 @@ class AboutFragment : Fragment(), AboutPageListener {
         val context = requireContext()
 
         return listOf(
-            AboutPageItem.Item(
+            AboutPageItem(
                 AboutItem.ExternalLink(
                     WHATS_NEW,
                     SupportUtils.getWhatsNewUrl(context)
                 ), getString(R.string.about_whats_new, getString(R.string.app_name))
             ),
-            AboutPageItem.Item(
+            AboutPageItem(
                 AboutItem.ExternalLink(
                     SUPPORT,
                     SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.HELP)
                 ), getString(R.string.about_support)
             ),
-            AboutPageItem.Item(
+            AboutPageItem(
                 AboutItem.Crashes,
                 getString(R.string.about_crashes)
             ),
-            AboutPageItem.Item(
+            AboutPageItem(
                 AboutItem.ExternalLink(
                     PRIVACY_NOTICE,
                     SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE)
                 ), getString(R.string.about_privacy_notice)
             ),
-            AboutPageItem.Item(
+            AboutPageItem(
                 AboutItem.ExternalLink(
                     RIGHTS,
                     SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS)
                 ), getString(R.string.about_know_your_rights)
             ),
-            AboutPageItem.Item(
+            AboutPageItem(
                 AboutItem.ExternalLink(LICENSING_INFO, ABOUT_LICENSE_URL),
                 getString(R.string.about_licensing_information)
             ),
-            AboutPageItem.Item(
+            AboutPageItem(
                 AboutItem.Libraries,
                 getString(R.string.about_other_open_source_libraries)
             )

@@ -6,10 +6,13 @@ package org.mozilla.fenix.settings.account
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.R
 
@@ -34,6 +37,7 @@ class AccountSettingsInteractorTest {
     @Test
     fun onChangeDeviceName() {
         val store: AccountSettingsFragmentStore = mockk(relaxed = true)
+        val invalidNameResponse = mockk<() -> Unit>(relaxed = true)
 
         val interactor = AccountSettingsInteractor(
             mockk(),
@@ -42,9 +46,28 @@ class AccountSettingsInteractorTest {
             store
         )
 
-        interactor.onChangeDeviceName("New Name") {}
+        assertTrue(interactor.onChangeDeviceName("New Name", invalidNameResponse))
 
         verify { store.dispatch(AccountSettingsFragmentAction.UpdateDeviceName("New Name")) }
+        verify { invalidNameResponse wasNot Called }
+    }
+
+    @Test
+    fun onChangeDeviceNameSyncFalse() {
+        val store: AccountSettingsFragmentStore = mockk(relaxed = true)
+        val invalidNameResponse = mockk<() -> Unit>(relaxed = true)
+
+        val interactor = AccountSettingsInteractor(
+            mockk(),
+            mockk(),
+            { false },
+            store
+        )
+
+        assertFalse(interactor.onChangeDeviceName("New Name", invalidNameResponse))
+
+        verify { store wasNot Called }
+        verify { invalidNameResponse() }
     }
 
     @Test

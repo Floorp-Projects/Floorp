@@ -17,7 +17,7 @@ class AboutItemViewHolder(
 ) : RecyclerView.ViewHolder(view) {
 
     private val title = view.about_item_title
-    private lateinit var item: AboutPageItem.Item
+    private lateinit var item: AboutPageItem
 
     init {
         itemView.setOnClickListener {
@@ -25,7 +25,7 @@ class AboutItemViewHolder(
         }
     }
 
-    fun bind(item: AboutPageItem.Item) {
+    fun bind(item: AboutPageItem) {
         this.item = item
         title.text = item.title
     }
