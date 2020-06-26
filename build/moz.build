@@ -95,6 +95,7 @@ if CONFIG['MOZ_APP_BASENAME']:
     GeneratedFile('application.ini.h', script='appini_header.py',
                   inputs=['!application.ini'])
 
+
 # Put a .lldbinit in the bin directory and the objdir, to be picked up
 # automatically by LLDB when we debug executables using either of those two
 # directories as the current working directory.  The .lldbinit file will

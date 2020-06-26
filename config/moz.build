@@ -79,3 +79,10 @@ if CONFIG['WRAP_SYSTEM_INCLUDES']:
     GeneratedFile(*outputs, script='make-system-wrappers.py',
                   entry_point='gen_wrappers',
                   flags = [TOPOBJDIR + output_dir] + stl_headers + system_headers)
+
+if CONFIG['COMPILE_ENVIRONMENT'] and CONFIG['CBINDGEN']:
+    GeneratedFile(
+        'cbindgen-metadata.json',
+        script='/build/RunCbindgen.py',
+        entry_point='generate_metadata',
+        inputs=['!/.cargo/config'])

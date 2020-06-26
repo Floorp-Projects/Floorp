@@ -21,12 +21,7 @@ GeneratedFile('ReservedWordsGenerated.h', script='GenerateReservedWords.py',
               inputs=['ReservedWords.h'])
 
 if CONFIG['JS_ENABLE_SMOOSH']:
-    GeneratedFile('smoosh_generated.h',
-                  script='/build/RunCbindgen.py',
-                  entry_point='generate_with_same_crate',
-                  inputs=[
-                      '/js/src/frontend/smoosh',
-                  ])
+    CbindgenHeader('smoosh_generated.h', inputs=['/js/src/frontend/smoosh'])
 
 UNIFIED_SOURCES += [
     'AbstractScopePtr.cpp',

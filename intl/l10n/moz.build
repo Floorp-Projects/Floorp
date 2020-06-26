@@ -37,10 +37,8 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    GeneratedFile('fluent_ffi_generated.h',
-                  script='/build/RunCbindgen.py',
-                  entry_point='generate',
-                  inputs=['/intl/l10n/rust/fluent-ffi'])
+    CbindgenHeader('fluent_ffi_generated.h',
+                   inputs=['/intl/l10n/rust/fluent-ffi'])
 
     EXPORTS.mozilla.intl += [
         '!fluent_ffi_generated.h',

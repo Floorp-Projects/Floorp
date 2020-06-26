@@ -383,17 +383,11 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         '!audioipc_server_ffi_generated.h',
     ]
 
-    GeneratedFile('audioipc_client_ffi_generated.h',
-                  script='/build/RunCbindgen.py', entry_point='generate',
-                  inputs=[
-                      '/media/audioipc/client',
-                  ])
+    CbindgenHeader('audioipc_client_ffi_generated.h',
+                   inputs=['/media/audioipc/client'])
 
-    GeneratedFile('audioipc_server_ffi_generated.h',
-                  script='/build/RunCbindgen.py', entry_point='generate',
-                  inputs=[
-                      '/media/audioipc/server',
-                  ])
+    CbindgenHeader('audioipc_server_ffi_generated.h',
+                   inputs=['/media/audioipc/server'])
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
