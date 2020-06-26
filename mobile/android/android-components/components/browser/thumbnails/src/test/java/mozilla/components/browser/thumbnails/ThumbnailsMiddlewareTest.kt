@@ -12,7 +12,6 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
-import mozilla.components.support.images.ImageRequest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Test
@@ -24,7 +23,7 @@ class ThumbnailsMiddlewareTest {
 
     @Test
     fun `thumbnail storage stores the provided thumbnail on update thumbnail action`() {
-        val request = ImageRequest("test-tab1")
+        val request = "test-tab1"
         val tab = createTab("https://www.mozilla.org", id = "test-tab1")
         val thumbnailStorage: ThumbnailStorage = mock()
         val store = BrowserStore(
@@ -33,7 +32,7 @@ class ThumbnailsMiddlewareTest {
         )
 
         val bitmap: Bitmap = mock()
-        store.dispatch(ContentAction.UpdateThumbnailAction(request.id, bitmap)).joinBlocking()
+        store.dispatch(ContentAction.UpdateThumbnailAction(request, bitmap)).joinBlocking()
         verify(thumbnailStorage).saveThumbnail(request, bitmap)
     }
 

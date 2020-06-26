@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.thumbnails.ext
+package mozilla.components.support.images.ext
 
 import android.widget.ImageView
-import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
-import mozilla.components.support.images.ImageRequest
+import mozilla.components.support.images.ImageLoadRequest
+import mozilla.components.support.images.loader.ImageLoader
+import kotlin.math.max
 
 /**
  * Loads an image asynchronously and then displays it in the [ImageView].
@@ -15,4 +16,5 @@ import mozilla.components.support.images.ImageRequest
  * @param view [ImageView] to load the image into.
  * @param id Load image for this given ID.
  */
-fun ThumbnailLoader.loadIntoView(view: ImageView, id: String) = loadIntoView(view, ImageRequest(id))
+fun ImageLoader.loadIntoView(view: ImageView, id: String) =
+    loadIntoView(view, ImageLoadRequest(id, max(view.height, view.width)))

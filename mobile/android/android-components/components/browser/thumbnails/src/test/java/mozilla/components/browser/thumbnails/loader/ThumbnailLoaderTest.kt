@@ -16,8 +16,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.thumbnails.R
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
-import mozilla.components.support.images.ImageRequest
-import mozilla.components.support.images.ImageRequest.Size
+import mozilla.components.support.images.ImageLoadRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -57,7 +56,7 @@ class ThumbnailLoaderTest {
         val view: ImageView = mock()
         val storage: ThumbnailStorage = mock()
         val loader = spy(ThumbnailLoader(storage))
-        val request = ImageRequest("123", Size.DEFAULT)
+        val request = ImageLoadRequest("123", 100)
 
         doReturn(result).`when`(storage).loadThumbnail(request)
 
@@ -83,7 +82,7 @@ class ThumbnailLoaderTest {
         val error: Drawable = mock()
         val storage: ThumbnailStorage = mock()
         val loader = spy(ThumbnailLoader(storage))
-        val request = ImageRequest("123", Size.DEFAULT)
+        val request = ImageLoadRequest("123", 100)
 
         doReturn(result).`when`(storage).loadThumbnail(request)
 
@@ -105,7 +104,7 @@ class ThumbnailLoaderTest {
         val previousJob: Job = mock()
         val storage: ThumbnailStorage = mock()
         val loader = spy(ThumbnailLoader(storage))
-        val request = ImageRequest("123")
+        val request = ImageLoadRequest("123", 100)
 
         doReturn(previousJob).`when`(view).getTag(R.id.mozac_browser_thumbnails_tag_job)
         doReturn(result).`when`(storage).loadThumbnail(request)

@@ -6,7 +6,7 @@ package mozilla.components.browser.thumbnails.utils
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.support.images.ImageRequest
+import mozilla.components.support.images.ImageLoadRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -25,7 +25,7 @@ class ThumbnailDiskCacheTest {
     @Test
     fun `Writing and reading bitmap bytes`() {
         val cache = ThumbnailDiskCache()
-        val request = ImageRequest("123")
+        val request = ImageLoadRequest("123", 100)
 
         val bitmap: Bitmap = mock()
         Mockito.`when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
@@ -40,7 +40,7 @@ class ThumbnailDiskCacheTest {
             true
         }
 
-        cache.putThumbnailBitmap(testContext, request, bitmap)
+        cache.putThumbnailBitmap(testContext, request.id, bitmap)
 
         val data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
@@ -50,10 +50,10 @@ class ThumbnailDiskCacheTest {
     @Test
     fun `Removing bitmap from disk cache`() {
         val cache = ThumbnailDiskCache()
-        val request = ImageRequest("123")
+        val request = ImageLoadRequest("123", 100)
         val bitmap: Bitmap = mock()
 
-        cache.putThumbnailBitmap(testContext, request, bitmap)
+        cache.putThumbnailBitmap(testContext, request.id, bitmap)
         var data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
 
@@ -65,10 +65,10 @@ class ThumbnailDiskCacheTest {
     @Test
     fun `Clearing bitmap from disk cache`() {
         val cache = ThumbnailDiskCache()
-        val request = ImageRequest("123")
+        val request = ImageLoadRequest("123", 100)
         val bitmap: Bitmap = mock()
 
-        cache.putThumbnailBitmap(testContext, request, bitmap)
+        cache.putThumbnailBitmap(testContext, request.id, bitmap)
         var data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
 

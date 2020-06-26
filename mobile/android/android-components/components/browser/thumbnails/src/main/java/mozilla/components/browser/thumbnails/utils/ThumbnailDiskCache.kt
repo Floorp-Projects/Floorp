@@ -8,7 +8,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.images.ImageRequest
+import mozilla.components.support.images.ImageLoadRequest
+import mozilla.components.support.images.ImageSaveRequest
 import java.io.File
 import java.io.IOException
 
@@ -35,10 +36,10 @@ class ThumbnailDiskCache {
      * Retrieves the thumbnail data from the disk cache for the given session ID or URL.
      *
      * @param context the application [Context].
-     * @param request [ImageRequest] providing the session ID or URL of the thumbnail to retrieve.
+     * @param request [ImageLoadRequest] providing the session ID or URL of the thumbnail to retrieve.
      * @return the [ByteArray] of the thumbnail or null if the snapshot of the entry does not exist.
      */
-    internal fun getThumbnailData(context: Context, request: ImageRequest): ByteArray? {
+    internal fun getThumbnailData(context: Context, request: ImageLoadRequest): ByteArray? {
         val snapshot = getThumbnailCache(context).get(request.id) ?: return null
 
         return try {
@@ -55,14 +56,14 @@ class ThumbnailDiskCache {
      * Stores the given session ID or URL's thumbnail [Bitmap] into the disk cache.
      *
      * @param context the application [Context].
-     * @param request [ImageRequest] providing the session ID or URL of the thumbnail to retrieve.
+     * @param request [ImageSaveRequest] providing the session ID or URL of the thumbnail to retrieve.
      * @param bitmap the thumbnail [Bitmap] to store.
      */
-    internal fun putThumbnailBitmap(context: Context, request: ImageRequest, bitmap: Bitmap) {
+    internal fun putThumbnailBitmap(context: Context, request: ImageSaveRequest, bitmap: Bitmap) {
         try {
             synchronized(thumbnailCacheWriteLock) {
                 val editor = getThumbnailCache(context)
-                    .edit(request.id) ?: return
+                    .edit(request) ?: return
 
                 editor.newOutputStream(0).use { stream ->
                     bitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, stream)

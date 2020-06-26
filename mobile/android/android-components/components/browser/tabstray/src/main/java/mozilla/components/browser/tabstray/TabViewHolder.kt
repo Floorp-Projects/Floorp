@@ -8,14 +8,17 @@ import android.content.res.ColorStateList
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.Dimension
+import androidx.annotation.Dimension.DP
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
-import mozilla.components.support.images.ImageRequest
+import mozilla.components.support.images.ImageLoadRequest
 import mozilla.components.support.images.loader.ImageLoader
+import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
 /**
@@ -84,11 +87,18 @@ class DefaultTabViewHolder(
 
         // In the final else case, we have no cache or fresh screenshot; do nothing instead of clearing the image.
         if (thumbnailLoader != null && tab.thumbnail == null) {
-            thumbnailLoader.loadIntoView(thumbnailView, ImageRequest(tab.id))
+            val thumbnailSize = THUMBNAIL_SIZE.dpToPx(thumbnailView.context.resources.displayMetrics)
+            thumbnailLoader.loadIntoView(
+                thumbnailView,
+                ImageLoadRequest(id = tab.id, size = thumbnailSize))
         } else if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
         }
 
         iconView?.setImageBitmap(tab.icon)
+    }
+
+    companion object {
+        @Dimension(unit = DP) private const val THUMBNAIL_SIZE = 100
     }
 }
