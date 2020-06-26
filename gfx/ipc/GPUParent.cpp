@@ -209,8 +209,11 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     if (DeviceManagerDx::Get()->CreateCompositorDevices() &&
         gfxVars::RemoteCanvasEnabled()) {
-      MOZ_ALWAYS_TRUE(DeviceManagerDx::Get()->CreateCanvasDevice());
-      MOZ_ALWAYS_TRUE(Factory::EnsureDWriteFactory());
+      if (DeviceManagerDx::Get()->CreateCanvasDevice()) {
+        MOZ_ALWAYS_TRUE(Factory::EnsureDWriteFactory());
+      } else {
+        gfxWarning() << "Failed to create canvas device.";
+      }
     }
   }
   if (gfxVars::UseWebRender()) {

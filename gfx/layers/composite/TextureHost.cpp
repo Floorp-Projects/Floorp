@@ -13,6 +13,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Shmem.h"  // for Shmem
 #include "mozilla/layers/AsyncImagePipelineManager.h"
+#include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/CompositableTransactionParent.h"  // for CompositableParentManager
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/Compositor.h"         // for Compositor
@@ -167,6 +168,25 @@ void TextureHost::SetLastFwdTransactionId(uint64_t aTransactionId) {
   mFwdTransactionId = aTransactionId;
 }
 
+already_AddRefed<TextureHost> CreateDummyBufferTextureHost(
+    mozilla::layers::LayersBackend aBackend,
+    mozilla::layers::TextureFlags aFlags) {
+  // Ensure that the host will delete the memory.
+  aFlags &= ~TextureFlags::DEALLOCATE_CLIENT;
+  UniquePtr<TextureData> textureData(BufferTextureData::Create(
+      gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8, gfx::BackendType::SKIA,
+      aBackend, aFlags, TextureAllocationFlags::ALLOC_DEFAULT, nullptr));
+  SurfaceDescriptor surfDesc;
+  textureData->Serialize(surfDesc);
+  const SurfaceDescriptorBuffer& bufferDesc =
+      surfDesc.get_SurfaceDescriptorBuffer();
+  const MemoryOrShmem& data = bufferDesc.data();
+  RefPtr<TextureHost> host =
+      new MemoryTextureHost(reinterpret_cast<uint8_t*>(data.get_uintptr_t()),
+                            bufferDesc.desc(), aFlags);
+  return host.forget();
+}
+
 already_AddRefed<TextureHost> TextureHost::Create(
     const SurfaceDescriptor& aDesc, const ReadLockDescriptor& aReadLock,
     ISurfaceAllocator* aDeallocator, LayersBackend aBackend,
@@ -227,8 +247,10 @@ already_AddRefed<TextureHost> TextureHost::Create(
           aDeallocator->AsCompositorBridgeParentBase()
               ->LookupSurfaceDescriptorForClientDrawTarget(desc.drawTarget());
       if (!realDesc) {
-        NS_WARNING("Failed to get descriptor for recorded texture.");
-        return nullptr;
+        gfxCriticalNote << "Failed to get descriptor for recorded texture.";
+        // Create a dummy to prevent any crashes due to missing IPDL actors.
+        result = CreateDummyBufferTextureHost(aBackend, aFlags);
+        break;
       }
 
       result = TextureHost::Create(*realDesc, aReadLock, aDeallocator, aBackend,
