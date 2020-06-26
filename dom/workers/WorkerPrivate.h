@@ -856,7 +856,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   void GarbageCollect(bool aShrinking);
 
-  void CycleCollect(bool aDummy);
+  void CycleCollect();
 
   nsresult SetPrincipalsAndCSPOnMainThread(nsIPrincipal* aPrincipal,
                                            nsIPrincipal* aPartitionedPrincipal,
@@ -877,7 +877,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   Document* GetDocument() const;
 
-  void MemoryPressure(bool aDummy);
+  void MemoryPressure();
 
   void UpdateContextOptions(const JS::ContextOptions& aContextOptions);
 
