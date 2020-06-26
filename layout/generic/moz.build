@@ -236,10 +236,12 @@ SOURCES += [
 
 GeneratedFile('FrameIdList.h',
               script='GenerateFrameLists.py',
-              entry_point='generate_frame_id_list_h')
+              entry_point='generate_frame_id_list_h',
+              inputs=['FrameClasses.py'])
 GeneratedFile('FrameTypeList.h',
               script='GenerateFrameLists.py',
-              entry_point='generate_frame_type_list_h')
+              entry_point='generate_frame_type_list_h',
+              inputs=['FrameClasses.py'])
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
