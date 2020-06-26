@@ -35,6 +35,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=884693
           is(xhr.responseText, expectedResponse, "Correct responseText returned");
 
           let messages = consoleService.getMessageArray() || [];
+          // broadcastlisteners can happen and cause false alarm.
+          messages = messages.filter(msg =>
+            !(msg instanceof Ci.nsIScriptError &&
+              msg.category.includes("chrome javascript") &&
+              msg.message.includes("Unknown event")));
+
+          if (messages.length > 0) {
+            info(`Got console messages ${messages}`);
+          }
           is(messages.length, expectedMessages.length, "Got expected message count");
           messages = messages.map(m => m.message).join(",");
           for(let message of expectedMessages) {
