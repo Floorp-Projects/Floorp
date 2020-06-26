@@ -86,7 +86,7 @@ region-name-tw = Taiwan
 
   let locales = Services.locale.packagedLocales;
   const mockSource = new FileSource("mock", locales, "");
-  L10nRegistry.registerSource(mockSource);
+  L10nRegistry.registerSources([mockSource]);
 }
 
 do_get_profile();

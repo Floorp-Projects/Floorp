@@ -219,13 +219,13 @@ add_task(async function test_setup() {
 
   // Register a fake it-IT locale (used to test localized AMO details in some
   // of the test case defined in this test file).
-  L10nRegistry.registerSource(
+  L10nRegistry.registerSources([
     new FileSource(
       "mock",
       ["it-IT", "fr-FR"],
       "resource://fake/locales/{locale}"
-    )
-  );
+    ),
+  ]);
 });
 
 add_task(async function test_addon_report_data() {

@@ -25,7 +25,7 @@ L10nRegistry.loadSync = function(url) {
 
 let locales = Services.locale.packagedLocales;
 const mockSource = new FileSource("mock", locales, "");
-L10nRegistry.registerSource(mockSource);
+L10nRegistry.registerSources([mockSource]);
 
 const gLangDN = Services.intl.getLanguageDisplayNames.bind(
   Services.intl,

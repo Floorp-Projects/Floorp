@@ -22,7 +22,7 @@ key = This is a single message
   };
 
   const source = new FileSource("test", ["de"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   return async function* generateMessages(resIds) {
     yield * await L10nRegistry.generateBundles(["de"], resIds);

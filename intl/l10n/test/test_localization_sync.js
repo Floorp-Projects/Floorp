@@ -27,7 +27,7 @@ key-attr =
   };
 
   const source = new FileSource("test", ["de", "en-US"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   function* generateBundlesSync(resIds) {
     yield * L10nRegistry.generateBundlesSync(["de", "en-US"], resIds);
@@ -118,7 +118,7 @@ key = { PLATFORM() ->
   };
 
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   function* generateBundlesSync(resIds) {
     yield * L10nRegistry.generateBundlesSync(["en-US"], resIds);
@@ -153,7 +153,7 @@ add_task(function test_add_remove_resourceIds() {
   };
 
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   function* generateBundlesSync(resIds) {
     yield * L10nRegistry.generateBundlesSync(["en-US"], resIds);

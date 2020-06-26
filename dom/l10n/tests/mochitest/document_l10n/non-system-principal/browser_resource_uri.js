@@ -19,11 +19,11 @@ protocol.setSubstitution("l10n-test", Services.io.newURI(uri));
 // Real sources should use `resource://` protocol.
 let locales = Services.locale.appLocalesAsBCP47;
 let mockSource = new FileSource("test", locales, `${uri}localization/`);
-L10nRegistry.registerSource(mockSource);
+L10nRegistry.registerSources([mockSource]);
 
 registerCleanupFunction(() => {
   protocol.setSubstitution("l10n-test", null);
-  L10nRegistry.removeSource("test");
+  L10nRegistry.removeSources(["test"]);
   SpecialPowers.pushPrefEnv({
     set: [["dom.ipc.processPrelaunch.enabled", true]],
   });
