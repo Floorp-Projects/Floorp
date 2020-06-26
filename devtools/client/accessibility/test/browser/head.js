@@ -8,7 +8,7 @@
 /* exported addTestTab, checkTreeState, checkSidebarState, checkAuditState, selectRow,
             toggleRow, toggleMenuItem, addA11yPanelTestsTask, reload, navigate,
             openSimulationMenu, toggleSimulationOption, TREE_FILTERS_MENU_ID,
-            PREFS_MENU_ID, checkHighlighted */
+            PREFS_MENU_ID */
 
 "use strict";
 
@@ -46,32 +46,6 @@ const MENU_INDEXES = {
   [TREE_FILTERS_MENU_ID]: 0,
   [PREFS_MENU_ID]: 1,
 };
-
-/**
- * Enable accessibility service and wait for a11y init event.
- * @return {Object}  instance of accessibility service.
- */
-async function initA11y() {
-  if (Services.appinfo.accessibilityEnabled) {
-    return Cc["@mozilla.org/accessibilityService;1"].getService(
-      Ci.nsIAccessibilityService
-    );
-  }
-
-  const initPromise = new Promise(resolve => {
-    const observe = () => {
-      Services.obs.removeObserver(observe, "a11y-init-or-shutdown");
-      resolve();
-    };
-    Services.obs.addObserver(observe, "a11y-init-or-shutdown");
-  });
-
-  const a11yService = Cc["@mozilla.org/accessibilityService;1"].getService(
-    Ci.nsIAccessibilityService
-  );
-  await initPromise;
-  return a11yService;
-}
 
 /**
  * Wait for accessibility service to shut down. We consider it shut down when
@@ -852,19 +826,4 @@ function addA11YPanelTask(msg, uri, task, options = {}) {
 function reload(target, waitForTargetEvent = "navigate") {
   executeSoon(() => target.reload());
   return once(target, waitForTargetEvent);
-}
-
-/**
- * Wait and check that the state of the accessibility tab in the toolbox is
- * correct.
- * @param {Object}   toolbox
- *                   DevTools toolbox to be checked.
- * @param {Boolean}  expected
- *                   Expected highlighted state of the accessibility tab.
- */
-async function checkHighlighted(toolbox, expected) {
-  await BrowserTestUtils.waitForCondition(async function() {
-    const isHighlighted = await toolbox.isToolHighlighted("accessibility");
-    return isHighlighted === expected;
-  });
 }
