@@ -754,11 +754,7 @@ pref("plugins.favorfallback.rules", "nosrc,video");
 
 // Toggling Search bar on and off in about:preferences
 pref("browser.preferences.search", true);
-#if defined(NIGHTLY_BUILD)
-pref("browser.preferences.experimental", true);
-#else
 pref("browser.preferences.experimental", false);
-#endif
 pref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
 pref("browser.download.show_plugins_in_list", true);

@@ -63,14 +63,9 @@ var gExperimentalPane = {
       "pane-experimental-featureGates"
     );
     this._boundRestartObserver = this._observeRestart.bind(this);
-    let searchParams = new URLSearchParams(document.documentURIObject.query);
-    let definitionsUrl = searchParams.get("definitionsUrl");
-    let features = await FeatureGate.all(definitionsUrl);
+    let features = await FeatureGate.all();
     let frag = document.createDocumentFragment();
     for (let feature of features) {
-      if (!feature.isPublic) {
-        continue;
-      }
       if (Preferences.get(feature.preference)) {
         console.error(
           "Preference control already exists for experimental feature '" +

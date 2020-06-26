@@ -15,24 +15,20 @@ Feature Definitions
 
 All features must have a definition, specified in
 ``toolkit/components/featuregates/Features.toml``. These definitions include
-data such as references to title and description strings (to be shown to users),
-and bug numbers (to track the development of the feature over time). Here is an
-example feature definition with an id of ``demo-feature``:
+data such as title and description (to be shown to users), and bug numbers (to
+track the development of the feature over time). Here is an example feature
+definition with an id of ``demo-feature``:
 
 .. code-block:: toml
 
    [demo-feature]
-   title = "experimental-features-demo-feature"
-   description = "experimental-features-demo-feature-description"
+   title = "Demo Feature"
+   description = "A no-op feature to demo the feature gate system."
    restart-required = false
    bug-numbers = [1479127]
    type = boolean
    is-public = {default = false, nightly = true}
    default-value = {default = false, nightly = true}
-
-The references defined in the `title` and `description` values point to strings
-stored in ``toolkit/locales/en-US/toolkit/featuregates/features.ftl``. The `title`
-string should specify the user-facing string as the `label` attribute.
 
 .. _targeted value:
 
@@ -87,40 +83,17 @@ Fields
 ------
 
 title
-    Required. The string ID of the human readable name for the feature, meant to be shown to
-    users. Should fit onto a single line. The actual string should be defined in
-    ``toolkit/locales/en-US/toolkit/featuregates/features.ftl`` with the user-facing value
-    defined as the `label` attribute of the string.
+    Required. A human readable name for the feature, meant to be shown to
+    users. Should fit onto a single line.
 
 description
-    Required. The string ID of the human readable description for the feature, meant to be shown to
-    users. Should be at most a paragraph. The actual string should be defined in
-    ``toolkit/locales/en-US/toolkit/featuregates/features.ftl``.
+    Required. A human readable description for the feature, meant to be shown to
+    users. Should be at most a paragraph.
 
 description-links
     Optional. A dictionary of key-value pairs that are referenced in the description. The key
     name must appear in the description localization text as
-    <a data-l10n-name="key-name">. For example in Features.toml:
-
-.. code-block:: toml
-
-   [demo-feature]
-   title = "experimental-features-demo-feature"
-   description = "experimental-features-demo-feature-description"
-   description-links = {exampleCom = "https://example.com", exampleOrg = "https://example.org"}
-   restart-required = false
-   bug-numbers = [1479127]
-   type = boolean
-   is-public = {default = false, nightly = true}
-   default-value = {default = false, nightly = true}
-
-and in features.ftl:
-
-.. code-block:: fluent
-
-   experimental-features-demo-feature =
-       .label = Example Demo Feature
-   experimental-features-demo-feature-description = Example demo feature that can point to <a data-l10n-name="exampleCom">.com</a> links and <a data-l10n-name="exampleOrg">.org</a> links.
+    <a data-l10n-name="key-name">.
 
 bug-numbers
     Required. A list of bug numbers related to this feature. This should
