@@ -98,6 +98,10 @@ class EventEmitter {
     }
   }
 
+  hasListeners(event) {
+    return this._listeners.has(event) && this._listeners.get(event).length > 0;
+  }
+
   on(event, callback) {
     if (!this._listeners.has(event)) {
       throw new Error(`Unknown event type ${event}`);
@@ -566,23 +570,26 @@ class RemoteSettingsClient extends EventEmitter {
               "duration"
             );
           }
-          // The records imported from the dump should be considered as "created" for the
-          // listeners.
-          const importedById = importedFromDump.reduce((acc, r) => {
-            acc.set(r.id, r);
-            return acc;
-          }, new Map());
-          // Deleted records should not appear as created.
-          syncResult.deleted.forEach(r => importedById.delete(r.id));
-          // Records from dump that were updated should appear in their newest form.
-          syncResult.updated.forEach(u => {
-            if (importedById.has(u.old.id)) {
-              importedById.set(u.old.id, u.new);
-            }
-          });
-          syncResult.created = syncResult.created.concat(
-            Array.from(importedById.values())
-          );
+          if (this.hasListeners("sync")) {
+            // If we have listeners for the "sync" event, then compute the lists of changes.
+            // The records imported from the dump should be considered as "created" for the
+            // listeners.
+            const importedById = importedFromDump.reduce((acc, r) => {
+              acc.set(r.id, r);
+              return acc;
+            }, new Map());
+            // Deleted records should not appear as created.
+            syncResult.deleted.forEach(r => importedById.delete(r.id));
+            // Records from dump that were updated should appear in their newest form.
+            syncResult.updated.forEach(u => {
+              if (importedById.has(u.old.id)) {
+                importedById.set(u.old.id, u.new);
+              }
+            });
+            syncResult.created = syncResult.created.concat(
+              Array.from(importedById.values())
+            );
+          }
         }
       } catch (e) {
         if (e instanceof InvalidSignatureError) {
@@ -952,26 +959,29 @@ class RemoteSettingsClient extends EventEmitter {
       console.warn(`${this.identifier} has signature disabled`);
     }
 
-    // Compute the changes, comparing records before and after.
-    syncResult.current = newRecords;
-    const oldById = new Map(localRecords.map(e => [e.id, e]));
-    for (const r of newRecords) {
-      const old = oldById.get(r.id);
-      if (old) {
-        oldById.delete(r.id);
-        if (r.last_modified != old.last_modified) {
-          syncResult.updated.push({ old, new: r });
+    if (this.hasListeners("sync")) {
+      // If we have some listeners for the "sync" event,
+      // Compute the changes, comparing records before and after.
+      syncResult.current = newRecords;
+      const oldById = new Map(localRecords.map(e => [e.id, e]));
+      for (const r of newRecords) {
+        const old = oldById.get(r.id);
+        if (old) {
+          oldById.delete(r.id);
+          if (r.last_modified != old.last_modified) {
+            syncResult.updated.push({ old, new: r });
+          }
+        } else {
+          syncResult.created.push(r);
         }
-      } else {
-        syncResult.created.push(r);
       }
+      syncResult.deleted = syncResult.deleted.concat(
+        Array.from(oldById.values())
+      );
+      console.debug(
+        `${this.identifier} ${syncResult.created.length} created. ${syncResult.updated.length} updated. ${syncResult.deleted.length} deleted.`
+      );
     }
-    syncResult.deleted = syncResult.deleted.concat(
-      Array.from(oldById.values())
-    );
-    console.debug(
-      `${this.identifier} ${syncResult.created.length} created. ${syncResult.updated.length} updated. ${syncResult.deleted.length} deleted.`
-    );
 
     return syncResult;
   }
