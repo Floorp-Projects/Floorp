@@ -13,10 +13,6 @@ const { FormAutofillUtils } = SpecialPowers.Cu.import(
   "resource://formautofill/FormAutofillUtils.jsm"
 );
 
-const { TestUtils } = SpecialPowers.Cu.import(
-  "resource://testing-common/TestUtils.jsm"
-);
-
 async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {
   SimpleTest.requestFlakyTimeout(reason);
   await new Promise(resolve => setTimeout(resolve, ms));
@@ -385,7 +381,7 @@ function notExpectPopup(ms = 500) {
 }
 
 function popupShownListener() {
-  info("popup shown for test");
+  info("popup shown for test ");
   if (expectingPopup) {
     expectingPopup();
     expectingPopup = null;
@@ -396,18 +392,10 @@ function initPopupListener() {
   registerPopupShownListener(popupShownListener);
 }
 
-async function popupEnabled() {
-  return TestUtils.waitForCondition(
-    async () => !(await getPopupState()).disabled,
-    "Wait for popup to become enabled."
-  );
-}
-
 async function triggerPopupAndHoverItem(fieldSelector, selectIndex) {
   await focusAndWaitForFieldsIdentified(fieldSelector);
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  await popupEnabled();
   for (let i = 0; i <= selectIndex; i++) {
     synthesizeKey("KEY_ArrowDown");
   }

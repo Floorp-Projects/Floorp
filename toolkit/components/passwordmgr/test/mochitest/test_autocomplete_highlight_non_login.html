@@ -57,7 +57,6 @@ add_task(async function test_field_highlight_on_pw_field_autocomplete_insecureWa
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open popup
   await shownPromise;
-  await popupEnabled();
   synthesizeKey("KEY_ArrowDown"); // insecure warning
   synthesizeKey("KEY_Enter");
 
@@ -72,7 +71,6 @@ add_task(async function test_field_highlight_on_pw_field_autocomplete_insecureWa
   shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open popup
   await shownPromise;
-  await popupEnabled();
   synthesizeKey("KEY_ArrowDown"); // insecure warning
   synthesizeKey("KEY_Tab");
 
@@ -89,7 +87,6 @@ add_task(async function test_field_highlight_on_pw_field_autocomplete_footer() {
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open popup
   await shownPromise;
-  await popupEnabled();
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_Enter");
 
@@ -110,7 +107,6 @@ add_task(async function test_field_highlight_on_pw_field_autocomplete_footer() {
   shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open popup
   await shownPromise;
-  await popupEnabled();
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_Tab");
 
