@@ -17,7 +17,7 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
   (define sandbox-level-1 (param "SANDBOX_LEVEL_1"))
   (define sandbox-level-2 (param "SANDBOX_LEVEL_2"))
   (define sandbox-level-3 (param "SANDBOX_LEVEL_3"))
-  (define macosMinorVersion (string->number (param "MAC_OS_MINOR")))
+  (define macosVersion (string->number (param "MAC_OS_VERSION")))
   (define appPath (param "APP_PATH"))
   (define hasProfileDir (param "HAS_SANDBOXED_PROFILE"))
   (define profileDir (param "PROFILE_DIR"))
@@ -100,7 +100,7 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
 
   ; macOS 10.9 does not support the |sysctl-name| predicate, so unfortunately
   ; we need to allow all sysctl-reads there.
-  (if (= macosMinorVersion 9)
+  (if (= macosVersion 1009)
     (allow sysctl-read)
     (allow sysctl-read
       (sysctl-name-regex #"^sysctl\.")
@@ -145,7 +145,7 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
       (sysctl-name "machdep.cpu.stepping")
       (sysctl-name "debug.intel.gstLevelGST")
       (sysctl-name "debug.intel.gstLoaderControl")))
-  (if (> macosMinorVersion 9)
+  (if (> macosVersion 1009)
     (allow sysctl-write
       (sysctl-name "kern.tcsm_enable")))
 
@@ -177,14 +177,14 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
     (global-name "com.apple.coreservices.launchservicesd")
     (global-name "com.apple.lsd.mapdb"))
 
-  (if (>= macosMinorVersion 13)
+  (if (>= macosVersion 1013)
     (allow mach-lookup
       ; bug 1392988
       (xpc-service-name "com.apple.coremedia.videodecoder")
       (xpc-service-name "com.apple.coremedia.videoencoder")))
 
 ; bug 1312273
-  (if (= macosMinorVersion 9)
+  (if (= macosVersion 1009)
      (allow mach-lookup (global-name "com.apple.xpcd")))
 
   (allow iokit-open
@@ -317,7 +317,7 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
   (allow user-preference-read (preference-domain "com.nvidia.OpenGL"))
   (allow mach-lookup
       (global-name "com.apple.cvmsServ"))
-  (if (>= macosMinorVersion 14)
+  (if (>= macosVersion 1014)
     (allow mach-lookup
       (global-name "com.apple.MTLCompilerService")))
   (allow iokit-open
@@ -351,13 +351,13 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
   (allow mach-lookup
     (global-name "com.apple.fonts")
     (global-name "com.apple.FontObjectsServer"))
-  (if (<= macosMinorVersion 11)
+  (if (<= macosVersion 1011)
     (allow mach-lookup (global-name "com.apple.FontServer")))
 
   ; Fonts
   ; Workaround for sandbox extensions not being automatically
   ; issued for fonts on 10.11 and earlier versions (bug 1460917).
-  (if (<= macosMinorVersion 11)
+  (if (<= macosVersion 1011)
     (allow file-read*
       (regex #"\.[oO][tT][fF]$"          ; otf
              #"\.[tT][tT][fF]$"          ; ttf
@@ -372,7 +372,7 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
       (regex #"\.fontvault/")
       (home-subpath "/FontExplorer X/Font Library")))
 
-  (if (>= macosMinorVersion 13)
+  (if (>= macosVersion 1013)
    (allow mach-lookup
     ; bug 1565575
     (global-name "com.apple.audio.AudioComponentRegistrar")))

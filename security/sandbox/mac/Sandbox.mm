@@ -25,23 +25,11 @@
 #include "SandboxPolicyUtility.h"
 #include "SandboxPolicySocket.h"
 
-// XXX There are currently problems with the /usr/include/sandbox.h file on
-// some/all of the Macs in Mozilla's build system. Further,
-// sandbox_init_with_parameters is not included in the header.  For the time
-// being (until this problem is resolved), we refer directly to what we need
-// from it, rather than including it here.
-extern "C" int sandbox_init(const char* profile, uint64_t flags, char** errorbuf);
+// Undocumented sandbox setup routines.
 extern "C" int sandbox_init_with_parameters(const char* profile, uint64_t flags,
                                             const char* const parameters[], char** errorbuf);
 extern "C" void sandbox_free_error(char* errorbuf);
 extern "C" int sandbox_check(pid_t pid, const char* operation, int type, ...);
-
-#define MAC_OS_X_VERSION_10_0_HEX 0x00001000
-#define MAC_OS_X_VERSION_10_6_HEX 0x00001060
-#define MAC_OS_X_VERSION_10_7_HEX 0x00001070
-#define MAC_OS_X_VERSION_10_8_HEX 0x00001080
-#define MAC_OS_X_VERSION_10_9_HEX 0x00001090
-#define MAC_OS_X_VERSION_10_10_HEX 0x000010A0
 
 // Note about "major", "minor" and "bugfix" in the following code:
 //
@@ -51,20 +39,32 @@ extern "C" int sandbox_check(pid_t pid, const char* operation, int type, ...);
 // an OS X version number to indicate a "major" release (for example the "9"
 // in OS X 10.9.5), and the "bugfix" component to indicate a "minor" release
 // (for example the "5" in OS X 10.9.5).
-
 class OSXVersion {
  public:
-  static int32_t OSXVersionMinor();
+  static void Get(int32_t& aMajor, int32_t& aMinor);
 
  private:
   static void GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix);
-  static int32_t GetVersionNumber();
-  static int32_t mOSXVersion;
+  static bool mCached;
+  static int32_t mOSXVersionMajor;
+  static int32_t mOSXVersionMinor;
 };
 
-int32_t OSXVersion::mOSXVersion = -1;
+bool OSXVersion::mCached = false;
+int32_t OSXVersion::mOSXVersionMajor;
+int32_t OSXVersion::mOSXVersionMinor;
 
-int32_t OSXVersion::OSXVersionMinor() { return (GetVersionNumber() & 0xF0) >> 4; }
+void OSXVersion::Get(int32_t& aMajor, int32_t& aMinor) {
+  if (!mCached) {
+    int32_t major, minor, bugfix;
+    GetSystemVersion(major, minor, bugfix);
+    mOSXVersionMajor = major;
+    mOSXVersionMinor = minor;
+    mCached = true;
+  }
+  aMajor = mOSXVersionMajor;
+  aMinor = mOSXVersionMinor;
+}
 
 void OSXVersion::GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix) {
   SInt32 major = 0, minor = 0, bugfix = 0;
@@ -110,15 +110,6 @@ void OSXVersion::GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBu
     aMinor = minor;
     aBugFix = bugfix;
   }
-}
-
-int32_t OSXVersion::GetVersionNumber() {
-  if (mOSXVersion == -1) {
-    int32_t major, minor, bugfix;
-    GetSystemVersion(major, minor, bugfix);
-    mOSXVersion = MAC_OS_X_VERSION_10_0_HEX + (minor << 4) + bugfix;
-  }
-  return mOSXVersion;
 }
 
 bool GetRealPath(std::string& aOutputPath, const char* aInputPath) {
@@ -245,7 +236,13 @@ namespace mozilla {
 bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
   std::vector<const char*> params;
   std::string profile;
-  std::string macOSMinor = std::to_string(OSXVersion::OSXVersionMinor());
+
+  // Use a combined version number to simplify version check logic
+  // in sandbox policies. For example, 10.14 becomes "1014".
+  int32_t major = 0, minor = 0;
+  OSXVersion::Get(major, minor);
+  MOZ_ASSERT(minor >= 0 && minor < 100);
+  std::string combinedVersion = std::to_string((major * 100) + minor);
 
   // Used for the Flash sandbox. Declared here so that they
   // stay in scope until sandbox_init_with_parameters is called.
@@ -262,8 +259,8 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
     params.push_back("SANDBOX_LEVEL_2");
     params.push_back(aInfo.level == 2 ? "TRUE" : "FALSE");
 
-    params.push_back("MAC_OS_MINOR");
-    params.push_back(macOSMinor.c_str());
+    params.push_back("MAC_OS_VERSION");
+    params.push_back(combinedVersion.c_str());
 
     params.push_back("HOME_PATH");
     params.push_back(getenv("HOME"));
@@ -354,8 +351,8 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
       params.push_back(aInfo.level == 2 ? "TRUE" : "FALSE");
       params.push_back("SANDBOX_LEVEL_3");
       params.push_back(aInfo.level == 3 ? "TRUE" : "FALSE");
-      params.push_back("MAC_OS_MINOR");
-      params.push_back(macOSMinor.c_str());
+      params.push_back("MAC_OS_VERSION");
+      params.push_back(combinedVersion.c_str());
       params.push_back("APP_PATH");
       params.push_back(aInfo.appPath.c_str());
       params.push_back("PROFILE_DIR");
