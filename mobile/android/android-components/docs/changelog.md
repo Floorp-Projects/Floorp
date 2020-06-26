@@ -38,6 +38,16 @@ permalink: /changelog/
 * **feature-privatemode**
   * Add `PrivateNotificationFeature` to display a notification when private sessions are open.
 
+* **service-glean**
+  * Glean was updated to v31.2.2
+    * BUGFIX: Correctly format the date and time in the Date header
+    * Feature: Add rate limiting capabilities to the upload manager
+    * BUGFIX: baseline pings with reason "dirty startup" are no longer sent if Glean did not full initialize in the previous run
+    * BUGFIX: Compile dependencies with `NDEBUG` to avoid linking unavailable symbols.
+      This fixes a crash due to a missing `stderr` symbol on older Android.
+
+
+
 # 47.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v46.0.0...v47.0.0)

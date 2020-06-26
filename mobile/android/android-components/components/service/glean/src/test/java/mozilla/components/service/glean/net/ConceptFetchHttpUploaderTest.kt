@@ -39,9 +39,7 @@ import org.mockito.Mockito.verify
 class ConceptFetchHttpUploaderTest {
     private val testPath: String = "/some/random/path/not/important"
     private val testPing: String = "{ 'ping': 'test' }"
-    private val testDefaultConfig = Configuration().copy(
-        userAgent = "Glean/Test 25.0.2"
-    )
+    private val testDefaultConfig = Configuration()
 
     /**
      * Create a mock webserver that accepts all requests.
@@ -219,7 +217,6 @@ class ConceptFetchHttpUploaderTest {
         val server = getMockWebServer()
 
         val testConfig = testDefaultConfig.copy(
-            userAgent = "Telemetry/42.23",
             serverEndpoint = "http://localhost:" + server.port
         )
 
