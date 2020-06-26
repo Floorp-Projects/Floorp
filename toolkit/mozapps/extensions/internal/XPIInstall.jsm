@@ -185,6 +185,8 @@ function flushJarCache(aJarFile) {
 const PREF_EM_UPDATE_BACKGROUND_URL = "extensions.update.background.url";
 const PREF_EM_UPDATE_URL = "extensions.update.url";
 const PREF_XPI_SIGNATURES_DEV_ROOT = "xpinstall.signatures.dev-root";
+const PREF_INSTALL_REQUIREBUILTINCERTS =
+  "extensions.install.requireBuiltInCerts";
 
 const KEY_TEMPDIR = "TmpD";
 
@@ -2227,9 +2229,12 @@ var DownloadAddonInstall = class extends AddonInstall {
     ].createInstance(Ci.nsIStreamListenerTee);
     listener.init(this, this.stream);
     try {
-      this.badCertHandler = new CertUtils.BadCertHandler(
-        !AddonSettings.INSTALL_REQUIREBUILTINCERTS
+      let requireBuiltIn = Services.prefs.getBoolPref(
+        PREF_INSTALL_REQUIREBUILTINCERTS,
+        !AppConstants.MOZ_REQUIRE_SIGNING &&
+          !AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
       );
+      this.badCertHandler = new CertUtils.BadCertHandler(!requireBuiltIn);
 
       this.channel = NetUtil.newChannel({
         uri: this.sourceURI,
@@ -2398,7 +2403,11 @@ var DownloadAddonInstall = class extends AddonInstall {
           try {
             CertUtils.checkCert(
               aRequest,
-              !AddonSettings.INSTALL_REQUIREBUILTINCERTS
+              !Services.prefs.getBoolPref(
+                PREF_INSTALL_REQUIREBUILTINCERTS,
+                !AppConstants.MOZ_REQUIRE_SIGNING &&
+                  !AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+              )
             );
           } catch (e) {
             this.downloadFailed(AddonManager.ERROR_NETWORK_FAILURE, e);
