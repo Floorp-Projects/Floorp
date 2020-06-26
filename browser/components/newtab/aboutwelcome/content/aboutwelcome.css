@@ -277,14 +277,18 @@ body {
     .multistageContainer .brand-logo.cta-top {
       margin-top: 25px; }
   .multistageContainer .welcomeZap span {
-    display: inline-block;
-    font-weight: bold;
-    background-image: url("../data/content/assets/zap.svg");
-    background-repeat: no-repeat;
-    background-size: 100%;
+    position: relative;
+    z-index: 1; }
+  .multistageContainer .welcomeZap span::after {
+    display: block;
+    background: center/contain no-repeat url("../data/content/assets/zap.svg");
     content: '';
-    background-position-y: bottom;
-    padding-bottom: 8px; }
+    position: absolute;
+    top: calc(100% - 0.15em);
+    width: 100%;
+    height: 0.3em;
+    left: 0;
+    z-index: -1; }
   .multistageContainer .welcome-text {
     display: flex;
     flex-direction: column;
@@ -328,9 +332,13 @@ body {
       box-shadow: 0 1px 4px rgba(12, 12, 13, 0.1);
       border-radius: 4px;
       cursor: pointer;
-      margin-inline-end: 21px; }
+      margin-inline-start: 21px; }
+      .multistageContainer .tiles-theme-section .theme:first-child {
+        margin-inline-start: 0; }
       .multistageContainer .tiles-theme-section .theme .icon {
         background-size: cover;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
         height: 91px; }
         .multistageContainer .tiles-theme-section .theme .icon.light {
           background-image: url("chrome://mozapps/content/extensions/firefox-compact-light.svg"); }
