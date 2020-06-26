@@ -10,6 +10,8 @@
     <string name="mozac_feature_contextmenu_download_link">Scarica link</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Condividi link</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">Condividi immagine</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Copia link</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
