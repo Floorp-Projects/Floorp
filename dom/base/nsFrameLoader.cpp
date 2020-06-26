@@ -3199,12 +3199,20 @@ BrowsingContext* nsFrameLoader::GetBrowsingContext() {
 }
 
 BrowsingContext* nsFrameLoader::GetExtantBrowsingContext() {
+  if (!mPendingBrowsingContext) {
+    // If mPendingBrowsingContext is null then the frame loader is being
+    // destroyed (nsFrameLoader::DestroyDocShell was called), so return null
+    // here in that case.
+    return nullptr;
+  }
+
   BrowsingContext* browsingContext = nullptr;
   if (mRemoteBrowser) {
     browsingContext = mRemoteBrowser->GetBrowsingContext();
   } else if (mDocShell) {
     browsingContext = mDocShell->GetBrowsingContext();
   }
+
   MOZ_ASSERT_IF(browsingContext, browsingContext == mPendingBrowsingContext);
   return browsingContext;
 }
