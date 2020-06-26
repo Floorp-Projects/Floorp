@@ -51,6 +51,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
     "@mozilla.org/widget/clipboardhelper;1",
     "nsIClipboardHelper",
   ],
+  gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
 });
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
@@ -183,6 +184,12 @@ const kFileExtensions = [
   "xltm",
   "xltx",
   "zip",
+];
+
+const kGenericContentTypes = [
+  "application/octet-stream",
+  "binary/octet-stream",
+  "application/unknown",
 ];
 
 const TELEMETRY_EVENT_CATEGORY = "downloads";
@@ -414,6 +421,67 @@ var DownloadsCommon = {
     let list = await Downloads.getList(Downloads.ALL);
     await list.remove(download);
     await download.finalize(true);
+  },
+
+  /**
+   * Get a nsIMIMEInfo object for a download
+   */
+  getMimeInfo(download) {
+    if (!download.succeeded) {
+      return null;
+    }
+    let contentType = download.contentType;
+    let url = Cc["@mozilla.org/network/standard-url-mutator;1"]
+      .createInstance(Ci.nsIURIMutator)
+      .setSpec("http://example.com") // construct the URL
+      .setFilePath(download.target.path)
+      .finalize()
+      .QueryInterface(Ci.nsIURL);
+    let fileExtension = url.fileExtension;
+
+    // look at file extension if there's no contentType or it is generic
+    if (!contentType || kGenericContentTypes.includes(contentType)) {
+      try {
+        contentType = gMIMEService.getTypeFromExtension(fileExtension);
+      } catch (ex) {
+        DownloadsCommon.log(
+          "Cant get mimeType from file extension: ",
+          fileExtension
+        );
+      }
+    }
+    if (!(contentType || fileExtension)) {
+      return null;
+    }
+    let mimeInfo = null;
+    try {
+      mimeInfo = gMIMEService.getFromTypeAndExtension(
+        contentType || "",
+        fileExtension || ""
+      );
+    } catch (ex) {
+      DownloadsCommon.log(
+        "Can't get nsIMIMEInfo for contentType: ",
+        contentType,
+        "and fileExtension:",
+        fileExtension
+      );
+    }
+    return mimeInfo;
+  },
+
+  /**
+   * Confirm if the download exists on the filesystem and is a given mime-type
+   */
+  isFileOfType(download, mimeType) {
+    if (!(download.succeeded && download.target?.exists)) {
+      DownloadsCommon.log(
+        `isFileOfType returning false for mimeType: ${mimeType}, succeeded: ${download.succeeded}, exists: ${download.target?.exists}`
+      );
+      return false;
+    }
+    let mimeInfo = DownloadsCommon.getMimeInfo(download);
+    return mimeInfo?.type === mimeType.toLowerCase();
   },
 
   /**
