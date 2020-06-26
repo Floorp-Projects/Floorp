@@ -101,6 +101,12 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "help": "Defines a way to not run a specific implementation status "
                     " (i.e. not implemented)."}
          ],
+        [["--backlog"], {
+            "action": "store_true",
+            "dest": "backlog",
+            "default": False,
+            "help": "Defines if test category is backlog."}
+         ],
         [["--skip-timeout"], {
             "action": "store_true",
             "dest": "skip_timeout",
@@ -281,8 +287,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd.append("--skip-implementation-status=%s" % implementation_status)
 
         # Bug 1643177 - reduce timeout multiplier for web-platform-tests backlog
-        if 'backlog' not in c["skip_implementation_status"] and (
-           'testharness' in test_types or 'reftest' in test_types):
+        if c['backlog']:
             cmd.append("--timeout-multiplier=0.25")
 
         test_paths = set()

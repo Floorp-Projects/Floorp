@@ -116,6 +116,7 @@ web-platform-tests-backlog:
             - --test-type=testharness
             - --skip-implementation-status=implementing
             - --skip-implementation-status=not-implementing
+            - --backlog
 
 web-platform-tests-reftest:
     description: "Web platform reftest run"
@@ -169,6 +170,7 @@ web-platform-tests-reftest-backlog:
             - --test-type=reftest
             - --skip-implementation-status=implementing
             - --skip-implementation-status=not-implementing
+            - --backlog
 
 web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
