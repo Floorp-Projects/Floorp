@@ -6,22 +6,18 @@
 
 <script src="chrome://browser/content/preferences/experimental.js"/>
 <html:template id="template-paneExperimental">
-<vbox id="firefoxExperimentalCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneExperimental">
-  <html:h1 style="-moz-box-flex: 1;" data-l10n-id="pane-experimental-title"/>
-  <label><html:h2 id="pane-experimental-subtitle" data-l10n-id="pane-experimental-subtitle"/></label>
-</vbox>
-
-<groupbox data-category="paneExperimental"
-          id="pane-experimental-featureGates"
-          hidden="true">
-  <label class="search-header" hidden="true">
-    <html:h2 id="pane-experimental-search-results-header" data-l10n-id="pane-experimental-search-results-header"/>
-  </label>
+<html:div id="firefoxExperimentalCategory"
+          class="subcategory"
+          hidden="true"
+          data-category="paneExperimental">
+  <html:h1 style="-moz-box-flex: 1;"
+           data-l10n-id="pane-experimental-title"/>
+  <html:h2 id="pane-experimental-subtitle"
+           data-l10n-id="pane-experimental-subtitle"/>
   <html:p data-l10n-id="pane-experimental-description"/>
-</groupbox>
+</html:div>
+<html:div id="pane-experimental-featureGates"
+          data-category="paneExperimental"/>
 </html:template>
 
 <html:template id="template-featureGate">
