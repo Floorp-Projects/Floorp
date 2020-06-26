@@ -178,7 +178,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   // These accessible types are the exception to the rule of label vs. title:
   // They may be named explicitly, but they still provide a label not a title.
   return mRole == roles::GROUPING || mRole == roles::RADIO_GROUP || mRole == roles::FIGURE ||
-         mRole == roles::GRAPHIC;
+         mRole == roles::GRAPHIC || mRole == roles::DOCUMENT;
 }
 
 - (mozilla::a11y::AccessibleOrProxy)geckoAccessible {
@@ -793,11 +793,6 @@ struct RoleDescrComparator {
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_FOCUS:
       [self moxPostNotification:NSAccessibilityFocusedUIElementChangedNotification];
-      break;
-    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
-      [self moxPostNotification:NSAccessibilityFocusedUIElementChangedNotification];
-      [self moxPostNotification:@"AXLoadComplete"];
-      [self moxPostNotification:@"AXLayoutComplete"];
       break;
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
       [self moxPostNotification:@"AXMenuOpened"];
