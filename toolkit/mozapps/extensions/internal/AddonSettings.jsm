@@ -21,6 +21,9 @@ const PREF_LANGPACK_SIGNATURES = "extensions.langpacks.signatures.required";
 const PREF_ALLOW_EXPERIMENTS = "extensions.experiments.enabled";
 const PREF_EM_SIDELOAD_SCOPES = "extensions.sideloadScopes";
 const PREF_IS_EMBEDDED = "extensions.isembedded";
+const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
+const PREF_INSTALL_REQUIREBUILTINCERTS =
+  "extensions.install.requireBuiltInCerts";
 
 var AddonSettings = {};
 
@@ -52,6 +55,27 @@ if (AppConstants.MOZ_REQUIRE_SIGNING && !Cu.isInAutomation) {
     false
   );
 }
+
+/**
+ * Require the use of certs shipped with Firefox for
+ * addon install and update, if the distribution does
+ * not require addon signing and is not ESR.
+ */
+XPCOMUtils.defineLazyPreferenceGetter(
+  AddonSettings,
+  "INSTALL_REQUIREBUILTINCERTS",
+  PREF_INSTALL_REQUIREBUILTINCERTS,
+  !AppConstants.MOZ_REQUIRE_SIGNING &&
+    !AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  AddonSettings,
+  "UPDATE_REQUIREBUILTINCERTS",
+  PREF_UPDATE_REQUIREBUILTINCERTS,
+  !AppConstants.MOZ_REQUIRE_SIGNING &&
+    !AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+);
 
 // Whether or not we're running in GeckoView embedded in an Android app
 if (Cu.isInAutomation) {
