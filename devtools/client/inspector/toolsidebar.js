@@ -63,6 +63,7 @@ ToolSidebar.prototype = {
     const sidebar = this.TabBar({
       menuDocument: this._toolPanel._toolbox.doc,
       showAllTabsMenu: true,
+      allTabsMenuButtonTooltip: this._options.allTabsMenuButtonTooltip,
       sidebarToggleButton: this._options.sidebarToggleButton,
       onSelect: this.handleSelectionChange.bind(this),
     });

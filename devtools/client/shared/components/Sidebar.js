@@ -26,6 +26,7 @@ class Sidebar extends PureComponent {
       onAllTabsMenuClick: PropTypes.func,
       renderOnlySelected: PropTypes.bool,
       showAllTabsMenu: PropTypes.bool,
+      allTabsMenuButtonTooltip: PropTypes.string,
       sidebarToggleButton: PropTypes.shape({
         collapsed: PropTypes.bool.isRequired,
         collapsePaneTitle: PropTypes.string.isRequired,
@@ -75,6 +76,7 @@ class Sidebar extends PureComponent {
       onAllTabsMenuClick,
       renderOnlySelected,
       showAllTabsMenu,
+      allTabsMenuButtonTooltip,
       activeTab,
     } = this.props;
 
@@ -85,6 +87,7 @@ class Sidebar extends PureComponent {
         renderOnlySelected,
         renderSidebarToggle,
         showAllTabsMenu,
+        allTabsMenuButtonTooltip,
         activeTab,
       },
       children

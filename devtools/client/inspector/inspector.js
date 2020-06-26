@@ -1017,6 +1017,9 @@ Inspector.prototype = {
     const sidebar = this.panelDoc.getElementById("inspector-sidebar");
     const options = {
       showAllTabsMenu: true,
+      allTabsMenuButtonTooltip: INSPECTOR_L10N.getStr(
+        "allTabsMenuButton.tooltip"
+      ),
       sidebarToggleButton: {
         collapsed: !this.is3PaneModeEnabled,
         collapsePaneTitle: INSPECTOR_L10N.getStr("inspector.hideThreePaneMode"),
