@@ -188,7 +188,7 @@ class ArtifactJob(object):
             elif self._symbols_archive_suffix and name.endswith(self._symbols_archive_suffix):
                 yield name
             else:
-                self.log(logging.INFO, 'artifact',
+                self.log(logging.DEBUG, 'artifact',
                          {'name': name},
                          'Not yielding artifact named {name} as a candidate artifact')
         if self._tests_re and not tests_artifact:
@@ -229,7 +229,7 @@ class ArtifactJob(object):
                         continue
                     destpath = mozpath.relpath(filename, src_prefix)
                     destpath = mozpath.join(dest_prefix, destpath)
-                    self.log(logging.INFO, 'artifact',
+                    self.log(logging.DEBUG, 'artifact',
                              {'destpath': destpath},
                              'Adding {destpath} to processed archive')
                     mode = entry['external_attr'] >> 16
@@ -240,7 +240,7 @@ class ArtifactJob(object):
                 if filename.endswith('.ini'):
                     # The artifact build writes test .ini files into the object
                     # directory; they don't come from the upstream test archive.
-                    self.log(logging.INFO, 'artifact',
+                    self.log(logging.DEBUG, 'artifact',
                              {'filename': filename},
                              'Skipping test INI file {filename}')
                     continue
@@ -275,7 +275,7 @@ class ArtifactJob(object):
 
                         destpath = mozpath.relpath(filename, src_prefix)
                         destpath = mozpath.join(dest_prefix, destpath)
-                        self.log(logging.INFO, 'artifact',
+                        self.log(logging.DEBUG, 'artifact',
                                  {'destpath': destpath},
                                  'Adding {destpath} to processed archive')
                         mode = entry.mode
@@ -286,7 +286,7 @@ class ArtifactJob(object):
                     if filename.endswith('.ini'):
                         # The artifact build writes test .ini files into the object
                         # directory; they don't come from the upstream test archive.
-                        self.log(logging.INFO, 'artifact',
+                        self.log(logging.DEBUG, 'artifact',
                                  {'filename': filename},
                                  'Skipping test INI file {filename}')
                         continue
@@ -313,12 +313,12 @@ class ArtifactJob(object):
             reader = JarReader(filename)
             for filename in reader.entries:
                 if skip_compressed and filename.endswith('.gz'):
-                    self.log(logging.INFO, 'artifact',
+                    self.log(logging.DEBUG, 'artifact',
                              {'filename': filename},
                              'Skipping compressed ELF debug symbol file {filename}')
                     continue
                 destpath = mozpath.join('crashreporter-symbols', filename)
-                self.log(logging.INFO, 'artifact',
+                self.log(logging.DEBUG, 'artifact',
                          {'destpath': destpath},
                          'Adding {destpath} to processed archive')
                 writer.add(destpath.encode('utf-8'), reader[filename])
@@ -349,7 +349,7 @@ class AndroidArtifactJob(ArtifactJob):
                     continue
 
                 dirname, basename = os.path.split(p)
-                self.log(logging.INFO, 'artifact',
+                self.log(logging.DEBUG, 'artifact',
                          {'basename': basename},
                          'Adding {basename} to processed archive')
 
@@ -385,7 +385,7 @@ class AndroidArtifactJob(ArtifactJob):
                 # https://github.com/llvm-mirror/lldb/blob/882670690ca69d9dd96b7236c620987b11894af9/source/Host/common/Symbols.cpp#L324.
                 basename = os.path.basename(filename).replace('.gz', '')
                 destpath = mozpath.join('crashreporter-symbols', basename)
-                self.log(logging.INFO, 'artifact',
+                self.log(logging.DEBUG, 'artifact',
                          {'destpath': destpath},
                          'Adding uncompressed ELF debug symbol file '
                          '{destpath} to processed archive')
@@ -428,7 +428,7 @@ class LinuxArtifactJob(ArtifactJob):
                     # but otherwise preserve it.
                     destpath = mozpath.join('bin',
                                             mozpath.relpath(p, self.product))
-                    self.log(logging.INFO, 'artifact',
+                    self.log(logging.DEBUG, 'artifact',
                              {'destpath': destpath},
                              'Adding {destpath} to processed archive')
                     writer.add(destpath.encode('utf-8'), f.open(), mode=f.mode)
@@ -481,7 +481,7 @@ class MacArtifactJob(ArtifactJob):
         tempdir = tempfile.mkdtemp()
         oldcwd = os.getcwd()
         try:
-            self.log(logging.INFO, 'artifact',
+            self.log(logging.DEBUG, 'artifact',
                      {'tempdir': tempdir},
                      'Unpacking DMG into {tempdir}')
             if self._substs['HOST_OS_ARCH'] == 'Linux':
@@ -524,7 +524,7 @@ class MacArtifactJob(ArtifactJob):
                 finder = UnpackFinder(mozpath.join(source, root))
                 for path in paths:
                     for p, f in finder.find(path):
-                        self.log(logging.INFO, 'artifact',
+                        self.log(logging.DEBUG, 'artifact',
                                  {'path': p},
                                  'Adding {path} to processed archive')
                         destpath = mozpath.join('bin', os.path.basename(p))
@@ -534,7 +534,7 @@ class MacArtifactJob(ArtifactJob):
                     finder = UnpackFinder(mozpath.join(source, root))
                     for path in paths:
                         for p, f in finder.find(path):
-                            self.log(logging.INFO, 'artifact',
+                            self.log(logging.DEBUG, 'artifact',
                                      {'path': p},
                                      'Adding {path} to processed archive')
                             destpath = mozpath.join('bin', p)
@@ -598,7 +598,7 @@ class WinArtifactJob(ArtifactJob):
                 # strip off the relative "firefox/" bit from the path:
                 basename = mozpath.relpath(p, self.product)
                 basename = mozpath.join('bin', basename)
-                self.log(logging.INFO, 'artifact',
+                self.log(logging.DEBUG, 'artifact',
                          {'basename': basename},
                          'Adding {basename} to processed archive')
                 writer.add(basename.encode('utf-8'), f.open(), mode=f.mode)
@@ -810,7 +810,7 @@ class TaskCache(CacheManager):
             product=artifact_job_class.product,
             job=job,
         )
-        self.log(logging.INFO, 'artifact',
+        self.log(logging.DEBUG, 'artifact',
                  {'namespace': namespace},
                  'Searching Taskcluster index with namespace: {namespace}')
         try:
@@ -928,7 +928,7 @@ class Artifacts(object):
 
             search_trees = self._artifact_job.candidate_trees
             for tree in search_trees:
-                self.log(logging.INFO, 'artifact',
+                self.log(logging.DEBUG, 'artifact',
                          {'tree': tree,
                           'rev': rev},
                          'Attempting to find a pushhead containing {rev} on {tree}.')
@@ -944,7 +944,7 @@ class Artifacts(object):
                 end = pushid
                 start = pushid - NUM_PUSHHEADS_TO_QUERY_PER_PARENT
 
-                self.log(logging.INFO, 'artifact',
+                self.log(logging.DEBUG, 'artifact',
                          {'tree': tree,
                           'pushid': pushid,
                           'num': NUM_PUSHHEADS_TO_QUERY_PER_PARENT},
@@ -999,7 +999,7 @@ from remote.  Please run `hg pull` and build again.
 see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles\
 """)
 
-        self.log(logging.INFO, 'artifact',
+        self.log(logging.DEBUG, 'artifact',
                  {'len': len(last_revs)},
                  'hg suggested {len} candidate revisions')
 
@@ -1014,10 +1014,10 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         nodes = [pair[1] for pair in sorted(pairs, reverse=True)]
 
         for node in nodes[:20]:
-            self.log(logging.INFO, 'artifact',
+            self.log(logging.DEBUG, 'artifact',
                      {'node': node},
                      'hg suggested candidate revision: {node}')
-        self.log(logging.INFO, 'artifact',
+        self.log(logging.DEBUG, 'artifact',
                  {'remaining': max(0, len(nodes) - 20)},
                  'hg suggested candidate revision: and {remaining} more')
 
@@ -1060,7 +1060,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if urls:
-            self.log(logging.INFO, 'artifact',
+            self.log(logging.DEBUG, 'artifact',
                      {'pushhead': pushhead,
                       'tree': tree},
                      'Installing from remote pushhead {pushhead} on {tree}')
@@ -1068,7 +1068,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         return None
 
     def install_from_file(self, filename, distdir):
-        self.log(logging.INFO, 'artifact',
+        self.log(logging.DEBUG, 'artifact',
                  {'filename': filename},
                  'Installing from {filename}')
 
@@ -1085,7 +1085,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             path = mozpath.join(distdir, orig_basename)
             with FileAvoidWrite(path, readmode='rb') as fh:
                 shutil.copyfileobj(open(filename, mode='rb'), fh)
-            self.log(logging.INFO, 'artifact',
+            self.log(logging.DEBUG, 'artifact',
                      {'path': path},
                      'Copied unprocessed artifact: to {path}')
             return
@@ -1100,17 +1100,17 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             os.remove(processed_filename)
 
         if not os.path.exists(processed_filename):
-            self.log(logging.INFO, 'artifact',
+            self.log(logging.DEBUG, 'artifact',
                      {'filename': filename},
                      'Processing contents of {filename}')
-            self.log(logging.INFO, 'artifact',
+            self.log(logging.DEBUG, 'artifact',
                      {'processed_filename': processed_filename},
                      'Writing processed {processed_filename}')
             self._artifact_job.process_artifact(filename, processed_filename)
 
         self._artifact_cache._persist_limit.register_file(processed_filename)
 
-        self.log(logging.INFO, 'artifact',
+        self.log(logging.DEBUG, 'artifact',
                  {'processed_filename': processed_filename},
                  'Installing from processed {processed_filename}')
 
@@ -1120,7 +1120,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
                 fh = FileAvoidWrite(n, readmode='rb')
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
-                self.log(logging.INFO, 'artifact',
+                self.log(logging.DEBUG, 'artifact',
                          {'updating': 'Updating' if file_updated else 'Not updating',
                           'filename': n},
                          '{updating} {filename}')
@@ -1133,7 +1133,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         return 0
 
     def install_from_url(self, url, distdir):
-        self.log(logging.INFO, 'artifact',
+        self.log(logging.DEBUG, 'artifact',
                  {'url': url},
                  'Installing from {url}')
         filename = self._artifact_cache.fetch(url)
@@ -1152,7 +1152,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             for trees, hg_hash in hg_pushheads:
                 for tree in trees:
                     count += 1
-                    self.log(logging.INFO, 'artifact',
+                    self.log(logging.DEBUG, 'artifact',
                              {'hg_hash': hg_hash,
                               'tree': tree},
                              'Trying to find artifacts for hg revision {hg_hash} on tree {tree}.')
