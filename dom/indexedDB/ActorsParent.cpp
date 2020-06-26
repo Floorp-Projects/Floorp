@@ -13194,8 +13194,7 @@ void ConnectionPool::TransactionInfo::AddBlockingTransaction(
   // given. There was the suggestion of encapsulating this in an
   // insertion-ordered hashtable implementation, which seems like a good idea.
   // If we had that, this would be the appropriate data structure to use here.
-  if (!mBlocking.Contains(&aTransactionInfo)) {
-    mBlocking.PutEntry(&aTransactionInfo);
+  if (mBlocking.EnsureInserted(&aTransactionInfo)) {
     mBlockingOrdered.AppendElement(WrapNotNullUnchecked(&aTransactionInfo));
   }
 }
