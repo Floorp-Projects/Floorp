@@ -25,18 +25,43 @@ const defaultUrl = {
 };
 
 export const parse = memoize(function parse(url: URL): any {
+  let urlObj;
   try {
-    const urlObj = new URLParser(url);
-    (urlObj: any).path = urlObj.pathname + urlObj.search;
-    return urlObj;
+    urlObj = new URLParser(url);
   } catch (err) {
+    urlObj = { ...defaultUrl };
     // If we're given simply a filename...
     if (url) {
-      return { ...defaultUrl, path: url, pathname: url };
-    }
+      const hashStart = url.indexOf("#");
+      if (hashStart >= 0) {
+        urlObj.hash = url.slice(hashStart);
+        url = url.slice(0, hashStart);
 
-    return defaultUrl;
+        if (urlObj.hash === "#") {
+          // The standard URL parser does not include the ? unless there are
+          // parameters included in the search value.
+          urlObj.hash = "";
+        }
+      }
+
+      const queryStart = url.indexOf("?");
+      if (queryStart >= 0) {
+        urlObj.search = url.slice(queryStart);
+        url = url.slice(0, queryStart);
+
+        if (urlObj.search === "?") {
+          // The standard URL parser does not include the ? unless there are
+          // parameters included in the search value.
+          urlObj.search = "";
+        }
+      }
+
+      urlObj.pathname = url;
+    }
   }
+  (urlObj: any).path = urlObj.pathname + urlObj.search;
+
+  return urlObj;
 });
 
 export function sameOrigin(firstUrl: URL, secondUrl: URL): boolean {
