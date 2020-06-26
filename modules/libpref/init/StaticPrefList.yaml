@@ -8154,12 +8154,6 @@
   value: 1048576
   mirror: always
 
-# Support http3 draft 28
-- name: network.http.http3.support_draft28
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
