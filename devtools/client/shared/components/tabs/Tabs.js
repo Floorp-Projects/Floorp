@@ -47,6 +47,7 @@ define(function(require, exports, module) {
         children: PropTypes.oneOfType([PropTypes.array, PropTypes.element])
           .isRequired,
         showAllTabsMenu: PropTypes.bool,
+        allTabsMenuButtonTooltip: PropTypes.string,
         onAllTabsMenuClick: PropTypes.func,
 
         // To render a sidebar toggle button before the tab menu provide a function that
@@ -344,6 +345,7 @@ define(function(require, exports, module) {
       const allTabsMenu = this.state.overflow
         ? dom.button({
             className: "all-tabs-menu",
+            title: this.props.allTabsMenuButtonTooltip,
             onClick: this.props.onAllTabsMenuClick,
           })
         : null;
