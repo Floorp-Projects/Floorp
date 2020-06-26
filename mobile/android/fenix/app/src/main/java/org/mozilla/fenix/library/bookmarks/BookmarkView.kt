@@ -13,7 +13,6 @@ import kotlinx.android.synthetic.main.component_bookmark.view.*
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.UserInteractionHandler
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.library.LibraryPageView
@@ -140,17 +139,9 @@ class BookmarkView(
         bookmarkAdapter.updateData(state.tree, mode)
         when (mode) {
             is BookmarkFragmentState.Mode.Normal -> {
-                if (tree != null) {
-                    if (BookmarkRoot.Mobile.id == tree?.guid) {
-                        (activity as HomeActivity).setupNavigationToolbar(R.id.bookmarkFragment)
-                    } else {
-                        (activity as HomeActivity).setupNavigationToolbar()
-                    }
-                }
                 setUiForNormalMode(state.tree)
             }
             is BookmarkFragmentState.Mode.Selecting -> {
-                (activity as HomeActivity).setupNavigationToolbar()
                 setUiForSelectingMode(
                     context.getString(
                         R.string.bookmarks_multi_select_title,

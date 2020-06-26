@@ -367,11 +367,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
      * Everyone should call this instead of supportActionBar.
      */
     fun getSupportActionBarAndInflateIfNecessary(): ActionBar {
-        // Add ids to this that we don't want to have a toolbar back button
         if (!isToolbarInflated) {
             navigationToolbar = navigationToolbarStub.inflate() as Toolbar
 
             setSupportActionBar(navigationToolbar)
+            // Add ids to this that we don't want to have a toolbar back button
             setupNavigationToolbar()
 
             isToolbarInflated = true
