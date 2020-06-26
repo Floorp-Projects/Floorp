@@ -289,13 +289,24 @@ add_task(async function test_AWMultistage_Primary_Action() {
 
   let clickCall;
   let impressionCall;
+  let performanceCall;
   for (let i = 0; i < callCount; i++) {
     const call = aboutWelcomeActor.onContentMessage.getCall(i);
     info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
     if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
       clickCall = call;
-    } else if (call.calledWithMatch("", { event: "IMPRESSION" })) {
+    } else if (
+      call.calledWithMatch("", {
+        event_context: { importable: sinon.match.number },
+      })
+    ) {
       impressionCall = call;
+    } else if (
+      call.calledWithMatch("", {
+        event_context: { mountStart: sinon.match.number },
+      })
+    ) {
+      performanceCall = call;
     }
   }
 
@@ -325,6 +336,40 @@ add_task(async function test_AWMultistage_Primary_Action() {
       impressionCall.args[1].message_id,
       `${TEST_MULTISTAGE_CONTENT.id}_SITES`.toUpperCase(),
       "SITES MessageId sent in impression event telemetry"
+    );
+  }
+
+  // For some builds, we can stub fast enough to catch the performance
+  if (performanceCall) {
+    Assert.equal(
+      performanceCall.args[0],
+      "AWPage:TELEMETRY_EVENT",
+      "send telemetry event"
+    );
+    Assert.equal(
+      performanceCall.args[1].event,
+      "IMPRESSION",
+      "performance impression event recorded in telemetry"
+    );
+    Assert.equal(
+      typeof performanceCall.args[1].event_context.domComplete,
+      "number",
+      "numeric domComplete recorded in telemetry"
+    );
+    Assert.equal(
+      typeof performanceCall.args[1].event_context.domInteractive,
+      "number",
+      "numeric domInteractive recorded in telemetry"
+    );
+    Assert.equal(
+      typeof performanceCall.args[1].event_context.mountStart,
+      "number",
+      "numeric mountStart recorded in telemetry"
+    );
+    Assert.equal(
+      performanceCall.args[1].message_id,
+      TEST_MULTISTAGE_CONTENT.id.toUpperCase(),
+      "MessageId sent in performance event telemetry"
     );
   }
 
