@@ -587,10 +587,12 @@ if (typeof Mozilla == "undefined") {
    * with `utm_` and contains only only alphanumeric characters, dashes or
    * underscores. The values may be any string and will automatically be encoded.
    * For Flow metrics, see details at https://mozilla.github.io/ecosystem-platform/docs/fxa-engineering/fxa-metrics#content-server
+   * @param {String} entrypoint - A string containing the entrypoint name.
    * @param {String} email - A string containing the default email account
    * for the URL opened by the browser.
    * @since 31, 47 for `extraURLParams`
-   * @since 79 for "flow_id", "flow_begin_time", "device_id" fields.
+   * @since 79 for "flow_id", "flow_begin_time", "device_id", "entrypoint_experiment",
+   * "entrypoint", "entrypoint_variation" fields.
    * @example
    * // Will open https://accounts.firefox.com/signup?entrypoint=uitour
    * Mozilla.UITour.showFirefoxAccounts();
@@ -604,7 +606,11 @@ if (typeof Mozilla == "undefined") {
    * @example
    * // Will open:
    * // https://accounts.firefox.com/?action=email&email=foo%40bar.com&entrypoint=uitour
-   * Mozilla.UITour.showFirefoxAccounts(null, "foo@bar.com");
+   * Mozilla.UITour.showFirefoxAccounts(null, null, "foo@bar.com");
+   * @example
+   * // Will open:
+   * // https://accounts.firefox.com/signup?entrypoint=sample
+   * Mozilla.UITour.showFirefoxAccounts(null, "sample");
    * @example
    * // Will open:
    * // https://accounts.firefox.com/?action=email&email=foo%40bar.com&entrypoint=uitour&flow_id=c5b5ad7c4a94462afe4b9a7fbcca263dbd6c8409fb4539449c50c4a52544b2ed&flow_begin_time=1590680755812
@@ -614,9 +620,14 @@ if (typeof Mozilla == "undefined") {
    *   device_id: '7e450f3337d3479b8582ea1c9bb5ba6c'
    * }, "foo@bar.com");
    */
-  Mozilla.UITour.showFirefoxAccounts = function(extraURLParams, email) {
+  Mozilla.UITour.showFirefoxAccounts = function(
+    extraURLParams,
+    entrypoint,
+    email
+  ) {
     _sendEvent("showFirefoxAccounts", {
       extraURLParams: JSON.stringify(extraURLParams),
+      entrypoint,
       email,
     });
   };
