@@ -127,5 +127,6 @@ class nsUXThemeData {
   static bool IsHighContrastOn();
 
   static bool AreFlatMenusEnabled();
+  static bool IsAppThemed();
 };
 #endif  // __UXThemeData_h__

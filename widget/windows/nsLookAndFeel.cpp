@@ -227,7 +227,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       idx = COLOR_HIGHLIGHT;
       break;
     case ColorID::MozMenubarhovertext:
-      if (!IsAppThemed()) {
+      if (!nsUXThemeData::IsAppThemed()) {
         idx = nsUXThemeData::AreFlatMenusEnabled() ? COLOR_HIGHLIGHTTEXT
                                                    : COLOR_MENUTEXT;
         break;
@@ -448,7 +448,7 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = 3;
       break;
     case IntID::WindowsClassic:
-      aResult = !IsAppThemed();
+      aResult = !nsUXThemeData::IsAppThemed();
       break;
     case IntID::TouchEnabled:
       aResult = WinUtils::IsTouchDeviceSupportPresent();
@@ -899,7 +899,7 @@ void nsLookAndFeel::EnsureInit() {
   res = GetAccentColorText(mColorAccentText);
   mHasColorAccentText = NS_SUCCEEDED(res);
 
-  if (IsAppThemed()) {
+  if (nsUXThemeData::IsAppThemed()) {
     res = ::GetColorFromTheme(eUXMenu, MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR,
                               mColorMenuHoverText);
     mHasColorMenuHoverText = NS_SUCCEEDED(res);

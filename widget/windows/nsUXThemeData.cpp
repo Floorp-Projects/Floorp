@@ -308,7 +308,7 @@ void nsUXThemeData::UpdateNativeThemeInfo() {
     sIsHighContrastOn = false;
   }
 
-  if (!IsAppThemed()) {
+  if (!nsUXThemeData::IsAppThemed()) {
     sThemeId = LookAndFeel::eWindowsTheme_Classic;
     return;
   }
@@ -400,3 +400,6 @@ bool nsUXThemeData::AreFlatMenusEnabled() {
   return !!::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ? useFlat
                                                                    : false;
 }
+
+// static
+bool nsUXThemeData::IsAppThemed() { return !!::IsAppThemed(); }
