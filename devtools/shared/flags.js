@@ -51,6 +51,16 @@ function makePrefTrackedFlag(exports, name, pref) {
 }
 
 /**
+ * Setting the "devtools.testing.netmonitor.want-all-requests" preference to true will
+ * enable logging of all of network requests by the network monitor.
+ */
+makePrefTrackedFlag(
+  exports,
+  "wantAllNetworkRequests",
+  "devtools.testing.netmonitor.want-all-requests"
+);
+
+/**
  * Setting the "devtools.debugger.log" preference to true will enable logging of
  * the RDP calls to the devtools server.
  */

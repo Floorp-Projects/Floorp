@@ -10,6 +10,8 @@ const EMPTY_TEST_URL = TEST_BASE_HTTP + "doc_empty.html";
 const TEST_URL = TEST_BASE_HTTP + "doc_fetch_from_netmonitor.html";
 
 add_task(async function() {
+  await pushPref("devtools.testing.netmonitor.want-all-requests", true);
+
   info("Opening netmonitor");
   // Navigate first to an empty document in order to:
   // * avoid introducing a cross process navigation when calling navigateTo()
