@@ -135,14 +135,26 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
   }
 
   componentDidMount() {
-    this.fetchFxAFlowUri();
-    window.AWSendEventTelemetry({
-      event: "IMPRESSION",
-      event_context: {
-        source: this.props.UTMTerm,
-        page: "about:welcome"
-      },
-      message_id: this.props.messageId
+    this.fetchFxAFlowUri(); // Record impression with performance data after allowing the page to load
+
+    window.addEventListener("load", () => {
+      const {
+        domComplete,
+        domInteractive
+      } = performance.getEntriesByType("navigation").pop();
+      window.AWSendEventTelemetry({
+        event: "IMPRESSION",
+        event_context: {
+          domComplete,
+          domInteractive,
+          mountStart: performance.getEntriesByName("mount").pop().startTime,
+          source: this.props.UTMTerm,
+          page: "about:welcome"
+        },
+        message_id: this.props.messageId
+      });
+    }, {
+      once: true
     }); // Captures user has seen about:welcome by setting
     // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
 
@@ -244,6 +256,7 @@ async function mount() {
   }, settings)), document.getElementById("root"));
 }
 
+performance.mark("mount");
 mount();
 
 /***/ }),

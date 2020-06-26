@@ -28,14 +28,29 @@ class AboutWelcome extends React.PureComponent {
 
   componentDidMount() {
     this.fetchFxAFlowUri();
-    window.AWSendEventTelemetry({
-      event: "IMPRESSION",
-      event_context: {
-        source: this.props.UTMTerm,
-        page: "about:welcome",
+
+    // Record impression with performance data after allowing the page to load
+    window.addEventListener(
+      "load",
+      () => {
+        const { domComplete, domInteractive } = performance
+          .getEntriesByType("navigation")
+          .pop();
+        window.AWSendEventTelemetry({
+          event: "IMPRESSION",
+          event_context: {
+            domComplete,
+            domInteractive,
+            mountStart: performance.getEntriesByName("mount").pop().startTime,
+            source: this.props.UTMTerm,
+            page: "about:welcome",
+          },
+          message_id: this.props.messageId,
+        });
       },
-      message_id: this.props.messageId,
-    });
+      { once: true }
+    );
+
     // Captures user has seen about:welcome by setting
     // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
     window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN", this.props.messageId);
@@ -136,4 +151,5 @@ async function mount() {
   );
 }
 
+performance.mark("mount");
 mount();
