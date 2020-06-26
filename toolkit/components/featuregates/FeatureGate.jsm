@@ -84,6 +84,15 @@ function buildFeatureGateImplementation(definition) {
   return new FeatureGateImplementation(definition);
 }
 
+let featureGatePrefObserver = {
+  onChange() {
+    FeatureGate.annotateCrashReporter();
+  },
+  // Ignore onEnable and onDisable since onChange is called in both cases.
+  onEnable() {},
+  onDisable() {},
+};
+
 const kFeatureGateCache = new Map();
 
 /** A high level control for turning features on and off. */
@@ -142,6 +151,35 @@ class FeatureGate {
       );
     }
     return definitions;
+  }
+
+  static async observePrefChangesForCrashReportAnnotation(
+    testDefinitionsUrl = undefined
+  ) {
+    let featureDefinitions = await FeatureGate.all(testDefinitionsUrl);
+
+    for (let definition of featureDefinitions.values()) {
+      FeatureGate.addObserver(
+        definition.id,
+        featureGatePrefObserver,
+        testDefinitionsUrl
+      );
+    }
+  }
+
+  static async annotateCrashReporter() {
+    let crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
+      Ci.nsICrashReporter
+    );
+    if (!crashReporter?.enabled) {
+      return;
+    }
+    let features = await FeatureGate.all();
+    let enabledFeatures = features
+      .filter(async f => f.getValue())
+      .map(f => f.preference)
+      .join(",");
+    crashReporter.annotateCrashReport("ExperimentalFeatures", enabledFeatures);
   }
 
   /**
