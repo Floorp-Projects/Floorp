@@ -255,6 +255,18 @@ Here is the list of current deep links available, which can be found here in the
     <td>Opens to the Fenix home screen</td>
   </tr>
   <tr>
+    <td>`fenix://home_bookmarks`</td>
+    <td>Opens to the list of the user's bookmarks at its root</td>
+  </tr>
+  <tr>
+    <td>`fenix://home_history`</td>
+    <td>Opens to the list of pages the user has visited</td>
+  </tr>
+  <tr>
+    <td>`fenix://home_collections`</td>
+    <td>Opens to the list of collections the user has saved. It is implemented as `fenix://home`</td>
+  </tr>
+  <tr>
     <td>`fenix://settings`</td>
     <td>Opens to the top level settings screen</td>
   </tr>
@@ -275,6 +287,22 @@ Here is the list of current deep links available, which can be found here in the
     <td>Opens to the delete browsing data settings screen</td>
   </tr>
   <tr>
+    <td>`fenix://settings_addon_manager`</td>
+    <td>Opens to the settings page to install and manage addons</td>
+  </tr>
+  <tr>
+    <td>`fenix://settings_logins`</td>
+    <td>Opens to the Logins and passwords settings page configure how logins are treated. This is *not* the list of actual logins</td>
+  </tr>
+  <tr>
+    <td>`fenix://settings_tracking_protection`</td>
+    <td>Opens to the Enhanced Tracking Protection settings page</td>
+  </tr>
+  <tr>
+    <td>`fenix://settings_privacy`</td>
+    <td>Opens to the settings page which contains the privacy settings. Currently, this is the same as `fenix://settings`</td>
+  </tr>
+  <tr>
     <td>`fenix://enable_private_browsing`</td>
     <td>Opens to the Fenix home screen and enables private browsing</td>
   </tr>
@@ -285,6 +313,10 @@ Here is the list of current deep links available, which can be found here in the
   <tr>
     <td>`fenix://make_default_browser`</td>
     <td>Opens to the Android default apps settings screen. **Only works on Android API >=24**</td>
+  </tr>
+  <tr>
+    <td>`fenix://settings_notifications`</td>
+    <td>Opens to the Android notification settings screen for Fenix. **Only works on Android API >=24**</td>
   </tr>
 </table>
 
