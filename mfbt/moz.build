@@ -137,10 +137,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla += [
         'WindowsVersion.h',
     ]
-elif CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'FreeBSD':
-    EXPORTS.mozilla += [
-        'LinuxSignal.h',
-    ]
 
 if CONFIG['MOZ_TSAN']:
     EXPORTS.mozilla += [
