@@ -60,13 +60,18 @@ tier_MOZ_AUTOMATION_CHECK = check
 # dependencies between them).
 moz_automation_symbols = \
   MOZ_AUTOMATION_PACKAGE_TESTS \
+  MOZ_AUTOMATION_UPLOAD \
+  $(NULL)
+
+ifdef COMPILE_ENVIRONMENT
+moz_automation_symbols = \
   MOZ_AUTOMATION_BUILD_SYMBOLS \
   MOZ_AUTOMATION_UPLOAD_SYMBOLS \
   MOZ_AUTOMATION_PACKAGE \
   MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES \
-  MOZ_AUTOMATION_UPLOAD \
   MOZ_AUTOMATION_CHECK \
   $(NULL)
+endif
 MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,$($(sym))),$(tier_$(sym))))
 
 # Dependencies between automation build steps
