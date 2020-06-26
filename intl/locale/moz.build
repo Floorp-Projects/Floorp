@@ -83,14 +83,10 @@ if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    GeneratedFile('fluent_langneg_ffi_generated.h',
-                  script='/build/RunCbindgen.py',
-                  entry_point='generate',
-                  inputs=['/intl/locale/rust/fluent-langneg-ffi'])
-    GeneratedFile('unic_langid_ffi_generated.h',
-                  script='/build/RunCbindgen.py',
-                  entry_point='generate',
-                  inputs=['/intl/locale/rust/unic-langid-ffi'])
+    CbindgenHeader('fluent_langneg_ffi_generated.h',
+                   inputs=['/intl/locale/rust/fluent-langneg-ffi'])
+    CbindgenHeader('unic_langid_ffi_generated.h',
+                   inputs=['/intl/locale/rust/unic-langid-ffi'])
 
     EXPORTS.mozilla.intl += [
         '!fluent_langneg_ffi_generated.h',
