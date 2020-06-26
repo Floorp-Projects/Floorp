@@ -151,7 +151,7 @@ class InterruptedError extends Error {
 }
 
 /**
- * Adapts a `Log.jsm` logger to a `mozIServicesLogger`. This class is copied
+ * Adapts a `Log.jsm` logger to a `mozIServicesLogSink`. This class is copied
  * from `SyncedBookmarksMirror.jsm`.
  */
 class LogAdapter {
@@ -162,18 +162,18 @@ class LogAdapter {
   get maxLevel() {
     let level = this.log.level;
     if (level <= Log.Level.All) {
-      return Ci.mozIServicesLogger.LEVEL_TRACE;
+      return Ci.mozIServicesLogSink.LEVEL_TRACE;
     }
     if (level <= Log.Level.Info) {
-      return Ci.mozIServicesLogger.LEVEL_DEBUG;
+      return Ci.mozIServicesLogSink.LEVEL_DEBUG;
     }
     if (level <= Log.Level.Warn) {
-      return Ci.mozIServicesLogger.LEVEL_WARN;
+      return Ci.mozIServicesLogSink.LEVEL_WARN;
     }
     if (level <= Log.Level.Error) {
-      return Ci.mozIServicesLogger.LEVEL_ERROR;
+      return Ci.mozIServicesLogSink.LEVEL_ERROR;
     }
-    return Ci.mozIServicesLogger.LEVEL_OFF;
+    return Ci.mozIServicesLogSink.LEVEL_OFF;
   }
 
   trace(message) {
@@ -214,7 +214,6 @@ function BridgedEngine(bridge, name, service) {
   SyncEngine.call(this, name, service);
 
   this._bridge = bridge;
-  this._bridge.logger = new LogAdapter(this._log);
 }
 
 BridgedEngine.prototype = {
