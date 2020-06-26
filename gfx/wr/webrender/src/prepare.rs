@@ -1520,7 +1520,7 @@ pub fn update_brush_segment_clip_task(
             let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(device_rect, device_pixel_scale);
 
             let clip_task_id = RenderTask::new_mask(
-                device_rect,
+                device_rect.to_i32(),
                 clip_chain.clips_range,
                 root_spatial_node_index,
                 frame_state.clip_store,
@@ -1802,7 +1802,7 @@ fn get_clipped_device_rect(
 }
 
 // Ensures that the size of mask render tasks are within MAX_MASK_SIZE.
-fn adjust_mask_scale_for_max_size(device_rect: DeviceRect, device_pixel_scale: DevicePixelScale) -> (DeviceRect, DevicePixelScale) {
+fn adjust_mask_scale_for_max_size(device_rect: DeviceRect, device_pixel_scale: DevicePixelScale) -> (DeviceIntRect, DevicePixelScale) {
     if device_rect.width() > MAX_MASK_SIZE || device_rect.height() > MAX_MASK_SIZE {
         // round_out will grow by 1 integer pixel if origin is on a
         // fractional position, so keep that margin for error with -1:
@@ -1810,9 +1810,10 @@ fn adjust_mask_scale_for_max_size(device_rect: DeviceRect, device_pixel_scale: D
             f32::max(device_rect.width(), device_rect.height());
         let new_device_pixel_scale = device_pixel_scale * Scale::new(scale);
         let new_device_rect = (device_rect.to_f32() * Scale::new(scale))
-            .round_out();
+            .round_out()
+            .to_i32();
         (new_device_rect, new_device_pixel_scale)
     } else {
-        (device_rect, device_pixel_scale)
+        (device_rect.to_i32(), device_pixel_scale)
     }
 }

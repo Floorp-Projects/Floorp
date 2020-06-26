@@ -119,7 +119,7 @@ impl RenderTaskLocation {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheMaskTask {
-    pub actual_rect: DeviceRect,
+    pub actual_rect: DeviceIntRect,
     pub root_spatial_node_index: SpatialNodeIndex,
     pub clip_node_range: ClipNodeRange,
     pub device_pixel_scale: DevicePixelScale,
@@ -139,7 +139,7 @@ pub struct ClipRegionTask {
 pub struct PictureTask {
     pub pic_index: PictureIndex,
     pub can_merge: bool,
-    pub content_origin: DevicePoint,
+    pub content_origin: DeviceIntPoint,
     pub uv_rect_handle: GpuCacheHandle,
     pub surface_spatial_node_index: SpatialNodeIndex,
     uv_rect_kind: UvRectKind,
@@ -397,7 +397,7 @@ impl RenderTask {
         location: RenderTaskLocation,
         unclipped_size: DeviceSize,
         pic_index: PictureIndex,
-        content_origin: DevicePoint,
+        content_origin: DeviceIntPoint,
         uv_rect_kind: UvRectKind,
         surface_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
@@ -520,7 +520,7 @@ impl RenderTask {
     }
 
     pub fn new_mask(
-        outer_rect: DeviceRect,
+        outer_rect: DeviceIntRect,
         clip_node_range: ClipNodeRange,
         root_spatial_node_index: SpatialNodeIndex,
         clip_store: &mut ClipStore,
@@ -615,7 +615,7 @@ impl RenderTask {
 
         render_tasks.add().init(
             RenderTask::with_dynamic_location(
-                outer_rect.size.to_i32(),
+                outer_rect.size,
                 smallvec![],
                 RenderTaskKind::CacheMask(CacheMaskTask {
                     actual_rect: outer_rect,
@@ -1215,15 +1215,15 @@ impl RenderTask {
                 // Note: has to match `PICTURE_TYPE_*` in shaders
                 [
                     task.device_pixel_scale.0,
-                    task.content_origin.x,
-                    task.content_origin.y,
+                    task.content_origin.x as f32,
+                    task.content_origin.y as f32,
                 ]
             }
             RenderTaskKind::CacheMask(ref task) => {
                 [
                     task.device_pixel_scale.0,
-                    task.actual_rect.origin.x,
-                    task.actual_rect.origin.y,
+                    task.actual_rect.origin.x as f32,
+                    task.actual_rect.origin.y as f32,
                 ]
             }
             RenderTaskKind::ClipRegion(ref task) => {
