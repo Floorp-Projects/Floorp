@@ -116,11 +116,20 @@ void DeviceInfoAndroid::BuildDeviceList() {
   jclass j_cap_class = mozilla::jni::GetClassRef(
       jni, "org/webrtc/videoengine/CaptureCapabilityAndroid");
   assert(j_info_class);
-  jmethodID j_initialize = jni->GetStaticMethodID(
+  jmethodID j_get_device_info = jni->GetStaticMethodID(
       j_info_class, "getDeviceInfo",
       "()[Lorg/webrtc/videoengine/CaptureCapabilityAndroid;");
   jarray j_camera_caps = static_cast<jarray>(
-      jni->CallStaticObjectMethod(j_info_class, j_initialize));
+      jni->CallStaticObjectMethod(j_info_class, j_get_device_info));
+  if (jni->ExceptionCheck()) {
+    jni->ExceptionClear();
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": Failed to get camera capabilities.";
+    return;
+  }
+  if (j_camera_caps == nullptr) {
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": Failed to get camera capabilities.";
+    return;
+  }
 
   const jsize capLength = jni->GetArrayLength(j_camera_caps);
 
