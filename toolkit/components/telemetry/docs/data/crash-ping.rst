@@ -58,6 +58,7 @@ Structure:
           ContainsMemoryReport: "1", // Optional, if set indicates that the crash had a memory report attached
           DOMFissionEnabled: "1", // Optional, if set indicates that a Fission window had been opened
           EventLoopNestingLevel: <levels>, // Optional, present only if >0, indicates the nesting level of the event-loop
+          ExperimentalFeatures: <features>, // Optional, a comma-separated string that specifies the enabled experimental features from about:preferences#experimental
           ipc_channel_error: <error string>, // Optional, contains the string processing error reason for an ipc-based content crash
           IsGarbageCollecting: "1", // Optional, if set indicates that the crash occurred while the garbage collector was running
           LowCommitSpaceEvents: <num>, // Windows-only, present only if >0, number of low commit space events detected by the available memory tracker
