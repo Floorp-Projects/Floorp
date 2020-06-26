@@ -9,9 +9,8 @@ EXPORTS += [
 ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    GeneratedFile('mp4parse_ffi_generated.h',
-                  script='/build/RunCbindgen.py', entry_point='generate',
-                  inputs=['/third_party/rust/mp4parse_capi'])
+    CbindgenHeader('mp4parse_ffi_generated.h',
+                   inputs=['/third_party/rust/mp4parse_capi'])
 
     EXPORTS += [ # Should this be namespaced? EXPORTS.mozilla.media
         '!mp4parse_ffi_generated.h',
