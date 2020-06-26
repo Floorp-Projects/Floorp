@@ -497,6 +497,43 @@ metrics:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+  recently_used_pwa_count:
+    type: counter
+    lifetime: application
+    description: |
+      A counter that indicates how many PWAs a user has recently used.
+      Threshold for "recency" set in HomeActivity#PWA_RECENTLY_USED_THRESHOLD.
+      Currently we are not told by the OS when a PWA is removed by the user,
+      so we use the "recently used" heuristic to judge how many PWAs are still
+      active, as a proxy for "installed". This value will only be set if the
+      user has at least *one* recently used PWA. If they have 0, this metric
+      will not be sent, resulting in a null value during analysis on the
+      server-side. To disambiguate between a failed `recently_used_pwa_count`
+      metric and 0 recent PWAs, please see `has_recent_pwas`.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11909
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11982#pullrequestreview-437963817
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-12-01"
+  has_recent_pwas:
+    type: boolean
+    lifetime: application
+    description: |
+      A boolean that indicates if the user has recently used PWAs.
+      See recently_used_pwa_count for the actual count.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11909
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11982#pullrequestreview-437963817
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-12-01"
   search_count:
     type: labeled_counter
     description: |

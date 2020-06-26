@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.StrictMode
+import android.text.format.DateUtils
 import android.util.AttributeSet
 import android.view.View
 import android.view.WindowManager
@@ -27,6 +28,7 @@ import androidx.navigation.ui.NavigationUI
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
@@ -50,6 +52,7 @@ import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
+import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.browser.UriOpenedObserver
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -188,6 +191,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             intent.removeExtra(START_IN_RECENTS_SCREEN)
             moveTaskToBack(true)
         }
+
+        captureSnapshotTelemetryMetrics()
     }
 
     @CallSuper
@@ -523,6 +528,23 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         this.visualCompletenessQueue = visualCompletenessQueue
     }
 
+    private fun captureSnapshotTelemetryMetrics() = CoroutineScope(Dispatchers.IO).launch {
+        // PWA
+        val recentlyUsedPwaCount = components.core.webAppShortcutManager.recentlyUsedWebAppsCount(
+            activeThresholdMs = PWA_RECENTLY_USED_THRESHOLD
+        )
+        if (recentlyUsedPwaCount == 0) {
+            Metrics.hasRecentPwas.set(false)
+        } else {
+            Metrics.hasRecentPwas.set(true)
+            // This metric's lifecycle is set to 'application', meaning that it gets reset upon
+            // application restart. Combined with the behaviour of the metric type itself (a growing counter),
+            // it's important that this metric is only set once per application's lifetime.
+            // Otherwise, we're going to over-count.
+            Metrics.recentlyUsedPwaCount.add(recentlyUsedPwaCount)
+        }
+    }
+
     @VisibleForTesting
     internal fun isActivityColdStarted(startingIntent: Intent, activityIcicle: Bundle?): Boolean =
         // First time opening this activity in the task.
@@ -541,5 +563,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         const val EXTRA_OPENED_FROM_NOTIFICATION = "notification_open"
         const val delay = 5000L
         const val START_IN_RECENTS_SCREEN = "start_in_recents_screen"
+
+        // PWA must have been used within last 30 days to be considered "recently used" for the
+        // telemetry purposes.
+        const val PWA_RECENTLY_USED_THRESHOLD = DateUtils.DAY_IN_MILLIS * 30L
     }
 }
