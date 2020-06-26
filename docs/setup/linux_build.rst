@@ -123,16 +123,16 @@ on. <https://codetribute.mozilla.org/>`_
 General considerations
 ----------------------
 
-#. 2GB RAM with an additional 2GB of available swap space is the bare minimum, and more RAM is always better - having 8GB or more will dramatically improve build time.
-#. A 64-bit x86 CPU and a 64-bit OS. As of early 2015 it is no longer possible to do a full build of Firefox from source on most 32-bit systems; a 64-bit OS is required. ":ref:`Artifact Builds <Understanding Artifact Builds>`" may be possible, but are not a supported configuration. On Linux you can determine this by typing "``uname -a``" in a terminal.
-#. A recent version of Clang is required to build Firefox. You can `learn more about the features we use and their compiler support here <https://developer.mozilla.org/en-US/docs/Using_CXX_in_Mozilla_code>`_
+#. 4GB RAM with an additional 4GB of available swap space is the bare minimum, and more RAM is always better - having 8GB or more will dramatically improve build time.
+#. A 64-bit x86 CPU and a 64-bit OS. As of early 2015 it is no longer possible to do a full build of Firefox from source on most 32-bit systems; a 64-bit OS is required. ":ref:`Artifact Builds <Understanding Artifact Builds>`" may be possible, but are not a supported configuration. On Linux you can determine this by typing "``uname -a``" in a terminal. It is possible to build a 32-bit Firefox on a 64-bit system, see :ref:`Building Firefox 32-bit on Linux 64-bit <Building Firefox 32-bit On Linux 64-bit>`.
+#. A recent version of Clang is required to build Firefox. You can learn more about the features we use and their :ref:`compiler support <Using C++ in Mozilla code>`.
 #. Most Linux distros now install a later version of autoconf, which the build system cannot use, reporting the error "``*** Couldn't find autoconf 2.13.  Stop.``" However a separate ``autoconf2.13`` package is usually available. To install `autoconf 2.13` in Debian based distros copy this line and paste it into a terminal window:
 
 .. code-block:: shell
 
    $ sudo apt install autoconf2.13
 
-#. If you are on a Fedora machine then simply install the following prerequisites from the terminal window:
+5. If you are on a Fedora machine then simply install the following prerequisites from the terminal window:
 
 .. code-block:: shell
 
