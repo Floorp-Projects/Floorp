@@ -55,6 +55,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/DeferredTask.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "FeatureGate",
+  "resource://featuregates/FeatureGate.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "PushService",
@@ -2171,6 +2177,8 @@ BrowserGlue.prototype = {
     if (AppConstants.MOZ_CRASHREPORTER) {
       UnsubmittedCrashHandler.init();
       UnsubmittedCrashHandler.scheduleCheckForUnsubmittedCrashReports();
+      FeatureGate.annotateCrashReporter();
+      FeatureGate.observePrefChangesForCrashReportAnnotation();
     }
 
     if (AppConstants.ASAN_REPORTER) {
