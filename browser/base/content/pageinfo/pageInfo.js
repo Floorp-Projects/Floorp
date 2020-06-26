@@ -245,9 +245,9 @@ gImageView.onPageMediaSort = function(columnname) {
 var gImageHash = {};
 
 // localized strings (will be filled in when the document is loaded)
-// this isn't all of them, these are just the ones that would otherwise have been loaded inside a loop
-var gStrings = {};
-var gBundle;
+const MEDIA_STRINGS = {};
+let SIZE_UNKNOWN = "";
+let ALT_NOT_SET = "";
 
 // a number of services I'll need later
 // the cache services
@@ -288,19 +288,35 @@ const gClipboardHelper = getClipboardHelper();
  *                         - initialTab: (optional) id of the inital tab to display
  */
 async function onLoadPageInfo() {
-  gStrings.unknown = await document.l10n.formatValue("image-size-unknown");
-  gStrings.notSet = await document.l10n.formatValue("not-set-alternative-text");
-  gStrings.mediaImg = await document.l10n.formatValue("media-img");
-  gStrings.mediaBGImg = await document.l10n.formatValue("media-bg-img");
-  gStrings.mediaBorderImg = await document.l10n.formatValue("media-border-img");
-  gStrings.mediaListImg = await document.l10n.formatValue("media-list-img");
-  gStrings.mediaCursor = await document.l10n.formatValue("media-cursor");
-  gStrings.mediaObject = await document.l10n.formatValue("media-object");
-  gStrings.mediaEmbed = await document.l10n.formatValue("media-embed");
-  gStrings.mediaLink = await document.l10n.formatValue("media-link");
-  gStrings.mediaInput = await document.l10n.formatValue("media-input");
-  gStrings.mediaVideo = await document.l10n.formatValue("media-video");
-  gStrings.mediaAudio = await document.l10n.formatValue("media-audio");
+  [
+    SIZE_UNKNOWN,
+    ALT_NOT_SET,
+    MEDIA_STRINGS.img,
+    MEDIA_STRINGS["bg-img"],
+    MEDIA_STRINGS["border-img"],
+    MEDIA_STRINGS["list-img"],
+    MEDIA_STRINGS.cursor,
+    MEDIA_STRINGS.object,
+    MEDIA_STRINGS.embed,
+    MEDIA_STRINGS.link,
+    MEDIA_STRINGS.input,
+    MEDIA_STRINGS.video,
+    MEDIA_STRINGS.audio,
+  ] = await document.l10n.formatValues([
+    "image-size-unknown",
+    "not-set-alternative-text",
+    "media-img",
+    "media-bg-img",
+    "media-border-img",
+    "media-list-img",
+    "media-cursor",
+    "media-object",
+    "media-embed",
+    "media-link",
+    "media-input",
+    "media-video",
+    "media-audio",
+  ]);
 
   const args =
     "arguments" in window &&
@@ -328,9 +344,7 @@ async function loadPageInfo(browsingContext, imageElement, browser) {
 
   let actor = browsingContext.currentWindowGlobal.getActor("PageInfo");
 
-  let result = await actor.sendQuery("PageInfo:getData", {
-    strings: gStrings,
-  });
+  let result = await actor.sendQuery("PageInfo:getData");
   await onNonMediaPageInfoLoad(browser, result, imageElement);
 
   // Here, we are walking the frame tree via BrowsingContexts to collect all of the
@@ -345,9 +359,7 @@ async function loadPageInfo(browsingContext, imageElement, browser) {
     }
 
     let subframeActor = global.getActor("PageInfo");
-    let mediaResult = await subframeActor.sendQuery("PageInfo:getMediaData", {
-      strings: gStrings,
-    });
+    let mediaResult = await subframeActor.sendQuery("PageInfo:getMediaData");
     for (let item of mediaResult.mediaItems) {
       addImage(item);
     }
@@ -538,10 +550,13 @@ async function makeGeneralTab(metaViewRows, docInfo) {
   });
 }
 
-async function addImage(imageViewRow) {
-  let [url, type, alt, elem, isBg] = imageViewRow;
+async function addImage({ url, type, alt, altNotProvided, element, isBg }) {
   if (!url) {
     return;
+  }
+
+  if (altNotProvided) {
+    alt = ALT_NOT_SET;
   }
 
   if (!gImageHash.hasOwnProperty(url)) {
@@ -552,7 +567,7 @@ async function addImage(imageViewRow) {
   }
   if (!gImageHash[url][type].hasOwnProperty(alt)) {
     gImageHash[url][type][alt] = gImageView.data.length;
-    var row = [url, type, gStrings.unknown, alt, 1, elem, isBg];
+    var row = [url, MEDIA_STRINGS[type], SIZE_UNKNOWN, alt, 1, element, isBg];
     gImageView.addRow(row);
 
     // Fill in cache data asynchronously
@@ -587,11 +602,11 @@ async function addImage(imageViewRow) {
       !gImageView.data[i][COL_IMAGE_BG] &&
       gImageElement &&
       url == gImageElement.currentSrc &&
-      gImageElement.width == elem.width &&
-      gImageElement.height == elem.height &&
-      gImageElement.imageText == elem.imageText
+      gImageElement.width == element.width &&
+      gImageElement.height == element.height &&
+      gImageElement.imageText == element.imageText
     ) {
-      gImageView.data[i][COL_IMAGE_NODE] = elem;
+      gImageView.data[i][COL_IMAGE_NODE] = element;
     }
   }
 }
