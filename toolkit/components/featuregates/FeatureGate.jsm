@@ -31,7 +31,12 @@ const kTargetFacts = new Map([
   ["release", AppConstants.MOZ_UPDATE_CHANNEL === "release"],
   ["beta", AppConstants.MOZ_UPDATE_CHANNEL === "beta"],
   ["dev-edition", AppConstants.MOZ_UPDATE_CHANNEL === "aurora"],
-  ["nightly", AppConstants.MOZ_UPDATE_CHANNEL === "nightly"],
+  [
+    "nightly",
+    AppConstants.MOZ_UPDATE_CHANNEL === "nightly" ||
+      /* Treat local builds the same as Nightly builds */
+      AppConstants.MOZ_UPDATE_CHANNEL === "default",
+  ],
   ["win", AppConstants.platform === "win"],
   ["mac", AppConstants.platform === "macosx"],
   ["linux", AppConstants.platform === "linux"],
