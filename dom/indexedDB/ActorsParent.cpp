@@ -11652,11 +11652,8 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
     const int64_t id = file.FileInfo().Id();
     MOZ_ASSERT(id > 0);
 
-    FileInfoEntry* entry;
-    if (!mFileInfoEntries.Get(id, &entry)) {
-      entry = new FileInfoEntry(file.FileInfoPtr());
-      mFileInfoEntries.Put(id, entry);
-    }
+    FileInfoEntry* const entry = mFileInfoEntries.LookupOrAddFromFactory(
+        id, [&file] { return MakeUnique<FileInfoEntry>(file.FileInfoPtr()); });
 
     if (mInSavepoint) {
       mSavepointEntriesIndex.Put(id, entry);
@@ -12100,11 +12097,8 @@ uint64_t ConnectionPool::Start(
   auto& blockingTransactions = dbInfo->mBlockingTransactions;
 
   for (const nsString& objectStoreName : aObjectStoreNames) {
-    TransactionInfoPair* blockInfo = blockingTransactions.Get(objectStoreName);
-    if (!blockInfo) {
-      blockInfo = new TransactionInfoPair();
-      blockingTransactions.Put(objectStoreName, blockInfo);
-    }
+    TransactionInfoPair* blockInfo =
+        blockingTransactions.LookupOrAdd(objectStoreName);
 
     // Mark what we are blocking on.
     if (const auto maybeBlockingRead = blockInfo->mLastBlockingReads) {
@@ -16953,13 +16947,7 @@ nsresult QuotaClient::AsyncDeleteFile(FileManager* aFileManager,
     return rv;
   }
 
-  nsTArray<int64_t>* array;
-  if (!mPendingDeleteInfos.Get(aFileManager, &array)) {
-    array = new nsTArray<int64_t>();
-    mPendingDeleteInfos.Put(aFileManager, array);
-  }
-
-  array->AppendElement(aFileId);
+  mPendingDeleteInfos.LookupOrAdd(aFileManager)->AppendElement(aFileId);
 
   return NS_OK;
 }

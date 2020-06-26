@@ -698,13 +698,9 @@ void IndexedDatabaseManager::AddFileManager(
   AssertIsOnIOThread();
   NS_ASSERTION(aFileManager, "Null file manager!");
 
-  FileManagerInfo* info;
-  if (!mFileManagerInfos.Get(aFileManager->Origin(), &info)) {
-    info = new FileManagerInfo();
-    mFileManagerInfos.Put(aFileManager->Origin(), info);
-  }
-
-  info->AddFileManager(std::move(aFileManager));
+  const auto& origin = aFileManager->Origin();
+  mFileManagerInfos.LookupOrAdd(origin)->AddFileManager(
+      std::move(aFileManager));
 }
 
 void IndexedDatabaseManager::InvalidateAllFileManagers() {
