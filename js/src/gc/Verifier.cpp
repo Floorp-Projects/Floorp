@@ -1088,17 +1088,13 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
 bool GCRuntime::isPointerWithinTenuredCell(void* ptr, JS::TraceKind traceKind) {
   AutoLockGC lock(this);
   for (auto chunk = allNonEmptyChunks(lock); !chunk.done(); chunk.next()) {
-    if (chunk->isNurseryChunk()) {
-      continue;
-    }
-
+    MOZ_ASSERT(!chunk->isNurseryChunk());
     if (ptr >= &chunk->arenas[0] && ptr < &chunk->arenas[ArenasPerChunk]) {
       auto* arena = reinterpret_cast<Arena*>(uintptr_t(ptr) & ~ArenaMask);
       if (!arena->allocated()) {
         return false;
       }
 
-      MOZ_ASSERT(!chunk->isNurseryChunk());
       return MapAllocToTraceKind(arena->getAllocKind()) == traceKind;
     }
   }
