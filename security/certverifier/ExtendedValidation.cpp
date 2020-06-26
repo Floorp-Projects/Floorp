@@ -930,6 +930,17 @@ static const struct EVInfo kEVInfos[] = {
     "TXVkaHJhIEluYzEgMB4GA1UEAxMXZW1TaWduIEVDQyBSb290IENBIC0gQzM=",
     "e3G2gla4EnycqA==",
   },
+  {
+    // OU=certSIGN ROOT CA G2,O=CERTSIGN SA,C=RO
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x65, 0x7C, 0xFE, 0x2F, 0xA7, 0x3F, 0xAA, 0x38, 0x46, 0x25, 0x71,
+      0xF3, 0x32, 0xA2, 0x36, 0x3A, 0x46, 0xFC, 0xE7, 0x02, 0x09, 0x51,
+      0x71, 0x07, 0x02, 0xCD, 0xFB, 0xB6, 0xEE, 0xDA, 0x33, 0x05 },
+    "MEExCzAJBgNVBAYTAlJPMRQwEgYDVQQKEwtDRVJUU0lHTiBTQTEcMBoGA1UECxMT"
+    "Y2VydFNJR04gUk9PVCBDQSBHMg==",
+    "EQA0tk7GNi02",
+  },
     // clang-format on
 };
 
