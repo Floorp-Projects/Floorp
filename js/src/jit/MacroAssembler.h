@@ -3747,12 +3747,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // This class is used to surround call sites throughout the assembler. This
   // is used by callWithABI, and callJit functions, except if suffixed by
   // NoProfiler.
-  class AutoProfilerCallInstrumentation {
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
-
+  class MOZ_RAII AutoProfilerCallInstrumentation {
    public:
-    explicit AutoProfilerCallInstrumentation(
-        MacroAssembler& masm MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    explicit AutoProfilerCallInstrumentation(MacroAssembler& masm);
     ~AutoProfilerCallInstrumentation() = default;
   };
   friend class AutoProfilerCallInstrumentation;
