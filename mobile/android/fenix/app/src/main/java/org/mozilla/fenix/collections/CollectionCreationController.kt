@@ -8,7 +8,6 @@ package org.mozilla.fenix.collections
 
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -62,13 +61,21 @@ fun List<Tab>.toSessionBundle(sessionManager: SessionManager): List<Session> {
     return this.mapNotNull { sessionManager.findSessionById(it.sessionId) }
 }
 
+/**
+ * @param store Store used to hold in-memory collection state.
+ * @param dismiss Callback to dismiss the collection creation dialog.
+ * @param metrics Controller that handles telemetry events.
+ * @param tabCollectionStorage Storage used to save tab collections to disk.
+ * @param sessionManager Used to query and serialize tabs.
+ * @param ioScope Coroutine scope that launches on the IO thread.
+ */
 class DefaultCollectionCreationController(
     private val store: CollectionCreationStore,
     private val dismiss: () -> Unit,
     private val metrics: MetricController,
     private val tabCollectionStorage: TabCollectionStorage,
     private val sessionManager: SessionManager,
-    private val scope: CoroutineScope
+    private val ioScope: CoroutineScope
 ) : CollectionCreationController {
 
     companion object {
@@ -80,7 +87,7 @@ class DefaultCollectionCreationController(
         dismiss()
 
         val sessionBundle = tabs.toSessionBundle(sessionManager)
-        scope.launch(IO) {
+        ioScope.launch {
             tabCollectionStorage.createCollection(name, sessionBundle)
         }
 
@@ -91,7 +98,7 @@ class DefaultCollectionCreationController(
 
     override fun renameCollection(collection: TabCollection, name: String) {
         dismiss()
-        scope.launch(IO) {
+        ioScope.launch {
             tabCollectionStorage.renameCollection(collection, name)
         }
         metrics.track(Event.CollectionRenamed)
@@ -121,7 +128,7 @@ class DefaultCollectionCreationController(
     override fun selectCollection(collection: TabCollection, tabs: List<Tab>) {
         dismiss()
         val sessionBundle = tabs.toList().toSessionBundle(sessionManager)
-        scope.launch(IO) {
+        ioScope.launch {
             tabCollectionStorage
                 .addTabsToCollection(collection, sessionBundle)
         }
