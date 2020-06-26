@@ -57,6 +57,7 @@ add_task(async function test_system_profile_location() {
   notEqual(addon, null, "Addon is installed");
   ok(addon.isActive, "Addon is active");
   ok(addon.isPrivileged, "Addon is privileged");
+  ok(wrapper.extension.isAppProvided, "Addon is app provided");
   ok(!addon.hidden, "Addon is not hidden");
   equal(
     addon.signedState,
