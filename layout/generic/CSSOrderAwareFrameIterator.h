@@ -262,10 +262,10 @@ class CSSOrderAwareFrameIteratorT {
 #endif
 };
 
-typedef CSSOrderAwareFrameIteratorT<nsFrameList::iterator>
-    CSSOrderAwareFrameIterator;
-typedef CSSOrderAwareFrameIteratorT<nsFrameList::reverse_iterator>
-    ReverseCSSOrderAwareFrameIterator;
+using CSSOrderAwareFrameIterator =
+    CSSOrderAwareFrameIteratorT<nsFrameList::iterator>;
+using ReverseCSSOrderAwareFrameIterator =
+    CSSOrderAwareFrameIteratorT<nsFrameList::reverse_iterator>;
 
 }  // namespace mozilla
 
