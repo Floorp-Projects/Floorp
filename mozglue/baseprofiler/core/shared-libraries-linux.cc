@@ -31,9 +31,6 @@
 #include <sys/types.h>
 #include <vector>
 
-#if defined(MOZ_LINKER)
-#  include "AutoObjectMapper.h"
-#endif
 #if defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
 #  include <link.h>  // dl_phdr_info, ElfW()
 #else
@@ -654,11 +651,6 @@ struct LoadedLibraryInfo {
   unsigned long mLastMappingEnd;
 };
 
-#if defined(MOZ_LINKER)
-static void outputMapperLog(const char* aBuf) { /* LOG("%s", aBuf); */
-}
-#endif
-
 static std::string IDtoUUIDString(const std::vector<uint8_t>& aIdentifier) {
   std::string uuid = FileID::ConvertIdentifierToUUIDString(aIdentifier);
   // This is '0', not '\0', since it represents the breakpad id age.
@@ -670,19 +662,6 @@ static std::string IDtoUUIDString(const std::vector<uint8_t>& aIdentifier) {
 static std::string getId(const char* bin_name) {
   std::vector<uint8_t> identifier;
   identifier.reserve(kDefaultBuildIdSize);
-
-#if defined(MOZ_LINKER)
-  if (std::string(bin_name).find(std::string("!/")) != std::string::npos) {
-    AutoObjectMapperFaultyLib mapper(outputMapperLog);
-    void* image = nullptr;
-    size_t size = 0;
-    if (mapper.Map(&image, &size, bin_name) && image && size) {
-      if (FileID::ElfFileIdentifierFromMappedFile(image, identifier)) {
-        return IDtoUUIDString(identifier);
-      }
-    }
-  }
-#endif
 
   FileID file_id(bin_name);
   if (file_id.ElfFileIdentifier(identifier)) {

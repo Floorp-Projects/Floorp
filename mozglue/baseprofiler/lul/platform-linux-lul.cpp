@@ -33,13 +33,8 @@ void read_procmaps(lul::LUL* aLUL) {
 
     std::string nativePath = lib.GetDebugPath();
 
-#  if defined(MOZ_LINKER)
-    // We're using faulty.lib.  Use a special-case object mapper.
-    AutoObjectMapperFaultyLib mapper(aLUL->mLog);
-#  else
     // We can use the standard POSIX-based mapper.
     AutoObjectMapperPOSIX mapper(aLUL->mLog);
-#  endif
 
     // Ask |mapper| to map the object.  Then hand its mapped address
     // to NotifyAfterMap().

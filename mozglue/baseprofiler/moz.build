@@ -70,11 +70,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         DEFINES['ANDROID_NDK_MAJOR_VERSION'] = CONFIG['ANDROID_NDK_MAJOR_VERSION']
         DEFINES['ANDROID_NDK_MINOR_VERSION'] = CONFIG['ANDROID_NDK_MINOR_VERSION']
 
-    if CONFIG['MOZ_LINKER']:
-        LOCAL_INCLUDES += [
-            'lul',
-        ]
-
     FINAL_LIBRARY = 'mozglue'
 
 # Many of the headers in this directory are usable in non-MOZ_GECKO_PROFILER
