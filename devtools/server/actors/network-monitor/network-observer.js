@@ -81,11 +81,8 @@ function matchRequest(channel, filters) {
 
   // Ignore requests from chrome or add-on code when we are monitoring
   // content.
-  // TODO: one particular test (browser_styleeditor_fetch-from-cache.js) needs
-  // the flags.testing check. We will move to a better way to serve
-  // its needs in bug 1167188, where this check should be removed.
   if (
-    !flags.testing &&
+    !flags.wantAllNetworkRequests &&
     channel.loadInfo &&
     channel.loadInfo.loadingDocument === null &&
     (channel.loadInfo.loadingPrincipal ===
