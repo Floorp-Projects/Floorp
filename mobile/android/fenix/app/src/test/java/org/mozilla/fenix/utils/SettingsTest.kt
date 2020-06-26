@@ -254,7 +254,7 @@ class SettingsTest {
     fun shouldShowSearchShortcuts() {
         // When just created
         // Then
-        assertTrue(settings.shouldShowSearchShortcuts)
+        assertFalse(settings.shouldShowSearchShortcuts)
     }
 
     @Test

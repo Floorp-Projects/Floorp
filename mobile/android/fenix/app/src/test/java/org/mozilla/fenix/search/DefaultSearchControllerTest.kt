@@ -150,6 +150,10 @@ class DefaultSearchControllerTest {
     @Test
     fun `show search shortcuts when setting enabled AND query empty`() {
         val text = ""
+        testContext.settings().preferences
+                .edit()
+                .putBoolean(testContext.getString(R.string.pref_key_show_search_shortcuts), true)
+                .apply()
 
         controller.handleTextChanged(text)
 
@@ -160,6 +164,10 @@ class DefaultSearchControllerTest {
     fun `show search shortcuts when setting enabled AND query equals url`() {
         val text = "mozilla.org"
         every { session?.url } returns "mozilla.org"
+        testContext.settings().preferences
+                .edit()
+                .putBoolean(testContext.getString(R.string.pref_key_show_search_shortcuts), true)
+                .apply()
 
         assertEquals(text, session?.url)
 

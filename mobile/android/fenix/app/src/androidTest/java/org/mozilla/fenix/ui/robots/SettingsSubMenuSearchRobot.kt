@@ -36,6 +36,7 @@ class SettingsSubMenuSearchRobot {
         selectDefaultSearchEngine(searchEngineName)
 
     fun disableShowSearchSuggestions() = toggleShowSearchSuggestions()
+    fun enableShowSearchShortcuts() = toggleShowSearchShortcuts()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -139,6 +140,17 @@ private fun toggleShowSearchSuggestions() {
     )
 
     onView(withText("Show search suggestions"))
+        .perform(click())
+}
+
+private fun toggleShowSearchShortcuts() {
+    onView(withId(androidx.preference.R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText("Show search shortcuts"))
+        )
+    )
+
+    onView(withText("Show search shortcuts"))
         .perform(click())
 }
 
