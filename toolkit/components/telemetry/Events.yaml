@@ -1672,9 +1672,10 @@ security.ui.protections:
     bug_numbers:
       - 1557050
       - 1610897
+      - 1643428
     description: >
       User arrived on the protection report.
-    expiry_version: "80"
+    expiry_version: "86"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
@@ -1693,9 +1694,10 @@ security.ui.protections:
       - 1557050
       - 1610897
       - 1612091
+      - 1643428
     description: >
       User closed on the protection report.
-    expiry_version: "80"
+    expiry_version: "86"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
@@ -1714,6 +1716,7 @@ security.ui.protections:
       - 1612088
       - 1612091
       - 1637615
+      - 1643428
     description: >
       User interaction by click events on the protection report.
     objects: [
@@ -1727,7 +1730,7 @@ security.ui.protections:
       "mobile_app_link",
       "settings_link",
     ]
-    expiry_version: "80"
+    expiry_version: "86"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
@@ -1744,12 +1747,13 @@ security.ui.app_menu:
     bug_numbers:
       - 1603545
       - 1616229
+      - 1643428
     description: >
       Privacy and Security click events on app menu.
     objects: [
       "open_full_report",
     ]
-    expiry_version: "80"
+    expiry_version: "86"
     record_in_processes:
       - main
     release_channel_collection: opt-out
@@ -1766,9 +1770,10 @@ security.ui.protectionspopup:
     bug_numbers:
       - 1560327
       - 1607488
+      - 1643428
     description: >
       How many times the protections panel was opened.
-    expiry_version: "80"
+    expiry_version: "86"
     notification_emails:
       - ewright@mozilla.com
       - nhnt11@mozilla.com
@@ -1801,9 +1806,10 @@ security.ui.protectionspopup:
       - 1560327
       - 1602015
       - 1607488
+      - 1643428
     description: >
       User interaction by click events in the protections panel.
-    expiry_version: "80"
+    expiry_version: "86"
     notification_emails:
       - ewright@mozilla.com
       - nhnt11@mozilla.com
