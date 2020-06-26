@@ -585,13 +585,14 @@ bool nsIOService::UseSocketProcess(bool aCheckAgain) {
     return sUseSocketProcess;
   }
 
+  if (PR_GetEnv("MOZ_FORCE_USE_SOCKET_PROCESS")) {
+    sUseSocketProcess = true;
+    return sUseSocketProcess;
+  }
+
   if (StaticPrefs::network_process_enabled()) {
-    if (PR_GetEnv("MOZ_FORCE_USE_SOCKET_PROCESS")) {
-      sUseSocketProcess = true;
-    } else {
-      sUseSocketProcess =
-          StaticPrefs::network_http_network_access_on_socket_process_enabled();
-    }
+    sUseSocketProcess =
+        StaticPrefs::network_http_network_access_on_socket_process_enabled();
   }
   return sUseSocketProcess;
 }
