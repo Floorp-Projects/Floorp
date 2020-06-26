@@ -56,6 +56,13 @@ class TopSiteStorage(private val context: Context) {
     private fun addDefaultTopSites() {
         val topSiteCandidates = mutableListOf<Pair<String, String>>()
         if (!context.settings().defaultTopSitesAdded) {
+            topSiteCandidates.add(
+                Pair(
+                    context.getString(R.string.default_top_site_google),
+                    SupportUtils.GOOGLE_URL
+                )
+            )
+
             if (LocaleManager.getSelectedLocale(context).language == "en") {
                 topSiteCandidates.add(
                     Pair(
@@ -69,13 +76,6 @@ class TopSiteStorage(private val context: Context) {
                 Pair(
                     context.getString(R.string.default_top_site_wikipedia),
                     SupportUtils.WIKIPEDIA_URL
-                )
-            )
-
-            topSiteCandidates.add(
-                Pair(
-                    context.getString(R.string.default_top_site_youtube),
-                    SupportUtils.YOUTUBE_URL
                 )
             )
 

@@ -148,7 +148,7 @@ class TopSitesTest {
         val defaultTopSites = arrayOf(
             "Top Articles",
             "Wikipedia",
-            "YouTube"
+            "Google"
         )
 
         homeScreen { }.dismissOnboarding()

@@ -50,8 +50,8 @@ class HomeScreenTest {
             // Verify Top Sites
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs("Wikipedia")
-            verifyExistingTopSitesTabs("YouTube")
             verifyExistingTopSitesTabs("Top Articles")
+            verifyExistingTopSitesTabs("Google")
         }
     }
 
