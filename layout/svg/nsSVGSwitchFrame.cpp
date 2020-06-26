@@ -7,7 +7,7 @@
 // Keep in (case-insensitive) order:
 #include "gfxRect.h"
 #include "SVGObserverUtils.h"
-#include "SVGGFrame.h"
+#include "nsSVGGFrame.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/SVGSwitchElement.h"
 #include "nsSVGUtils.h"
@@ -19,13 +19,13 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-class nsSVGSwitchFrame final : public SVGGFrame {
+class nsSVGSwitchFrame final : public nsSVGGFrame {
   friend nsIFrame* NS_NewSVGSwitchFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
  protected:
   explicit nsSVGSwitchFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : SVGGFrame(aStyle, aPresContext, kClassID) {}
+      : nsSVGGFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGSwitchFrame)
@@ -75,7 +75,7 @@ void nsSVGSwitchFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::svgSwitch),
                "Content is not an SVG switch");
 
-  SVGGFrame::Init(aContent, aParent, aPrevInFlow);
+  nsSVGGFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "SVGGFrame.h"
+#include "nsSVGGFrame.h"
 
 // Keep others in (case-insensitive) order:
 #include "mozilla/PresShell.h"
@@ -16,27 +16,24 @@
 #include "SVGGraphicsElement.h"
 #include "SVGTransformableElement.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame* NS_NewSVGGFrame(mozilla::PresShell* aPresShell,
-                          mozilla::ComputedStyle* aStyle) {
-  return new (aPresShell)
-      mozilla::SVGGFrame(aStyle, aPresShell->GetPresContext());
+nsIFrame* NS_NewSVGGFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
+  return new (aPresShell) nsSVGGFrame(aStyle, aPresShell->GetPresContext());
 }
 
-namespace mozilla {
-
-NS_IMPL_FRAMEARENA_HELPERS(SVGGFrame)
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGGFrame)
 
 #ifdef DEBUG
-void SVGGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                     nsIFrame* aPrevInFlow) {
+void nsSVGGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                       nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement() &&
                    static_cast<SVGElement*>(aContent)->IsTransformable(),
-               "The element is not transformable");
+               "The element doesn't support nsIDOMSVGTransformable");
 
   nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
@@ -45,8 +42,8 @@ void SVGGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 //----------------------------------------------------------------------
 // nsSVGDisplayableFrame methods
 
-nsresult SVGGFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                     int32_t aModType) {
+nsresult nsSVGGFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                       int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::transform) {
     // We don't invalidate for transform changes (the layers code does that).
     // Also note that SVGTransformableElement::GetAttributeChangeHint will
@@ -57,5 +54,3 @@ nsresult SVGGFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 
   return NS_OK;
 }
-
-}  // namespace mozilla

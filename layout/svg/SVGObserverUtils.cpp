@@ -12,7 +12,6 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/SVGMaskFrame.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
@@ -23,11 +22,12 @@
 #include "nsISupportsImpl.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGFilterFrame.h"
+#include "nsSVGMarkerFrame.h"
+#include "nsSVGMaskFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
 #include "SVGGeometryElement.h"
-#include "SVGMarkerFrame.h"
 #include "SVGTextFrame.h"
 #include "SVGTextPathElement.h"
 #include "SVGUseElement.h"
@@ -1181,7 +1181,7 @@ static already_AddRefed<URLAndReferrerInfo> GetMarkerURI(
 }
 
 bool SVGObserverUtils::GetAndObserveMarkers(nsIFrame* aMarkedFrame,
-                                            SVGMarkerFrame* (*aFrames)[3]) {
+                                            nsSVGMarkerFrame* (*aFrames)[3]) {
   MOZ_ASSERT(!aMarkedFrame->GetPrevContinuation() &&
                  aMarkedFrame->IsSVGGeometryFrame() &&
                  static_cast<SVGGeometryElement*>(aMarkedFrame->GetContent())
@@ -1201,7 +1201,7 @@ bool SVGObserverUtils::GetAndObserveMarkers(nsIFrame* aMarkedFrame,
                           LayoutFrameType::SVGMarker, nullptr)              \
                     : nullptr;                                              \
   foundMarker = foundMarker || bool(marker);                                \
-  (*aFrames)[SVGMark::e##type] = static_cast<SVGMarkerFrame*>(marker);
+  (*aFrames)[SVGMark::e##type] = static_cast<nsSVGMarkerFrame*>(marker);
 
   GET_MARKER(Start)
   GET_MARKER(Mid)
@@ -1356,7 +1356,7 @@ static SVGMaskObserverList* GetOrCreateMaskObserverList(
 }
 
 SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveMasks(
-    nsIFrame* aMaskedFrame, nsTArray<SVGMaskFrame*>* aMaskFrames) {
+    nsIFrame* aMaskedFrame, nsTArray<nsSVGMaskFrame*>* aMaskFrames) {
   SVGMaskObserverList* observerList = GetOrCreateMaskObserverList(aMaskedFrame);
   if (!observerList) {
     return eHasNoRefs;
@@ -1372,8 +1372,8 @@ SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveMasks(
 
   for (size_t i = 0; i < observers.Length(); i++) {
     bool frameTypeOK = true;
-    SVGMaskFrame* maskFrame =
-        static_cast<SVGMaskFrame*>(observers[i]->GetAndObserveReferencedFrame(
+    nsSVGMaskFrame* maskFrame =
+        static_cast<nsSVGMaskFrame*>(observers[i]->GetAndObserveReferencedFrame(
             LayoutFrameType::SVGMask, &frameTypeOK));
     MOZ_ASSERT(!maskFrame || frameTypeOK);
     // XXXjwatt: this looks fishy
