@@ -22,16 +22,15 @@ import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.DownloadNotification
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.GleanMetrics.Events.preferenceToggled
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
-import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcut
@@ -600,6 +599,43 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.ContextualHintETPOutsideTap -> EventWrapper<NoExtraKeys>(
             { ContextualHintTrackingProtection.outsideTap.record(it) }
+        )
+
+        is Event.TabsTrayOpened -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.opened.record(it) }
+        )
+        is Event.TabsTrayClosed -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.closed.record(it) }
+        )
+        is Event.OpenedExistingTab -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.openedExistingTab.record(it) }
+        )
+        is Event.ClosedExistingTab -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.closedExistingTab.record(it) }
+        )
+        is Event.TabsTrayPrivateModeTapped -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.privateModeTapped.record(it) }
+        )
+        is Event.TabsTrayNormalModeTapped -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.normalModeTapped.record(it) }
+        )
+        is Event.NewTabTapped -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.newTabTapped.record(it) }
+        )
+        is Event.NewPrivateTabTapped -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.newPrivateTabTapped.record(it) }
+        )
+        is Event.TabsTrayMenuOpened -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.menuOpened.record(it) }
+        )
+        is Event.TabsTraySaveToCollectionPressed -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.saveToCollection.record(it) }
+        )
+        is Event.TabsTrayShareAllTabsPressed -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.shareAllTabs.record(it) }
+        )
+        is Event.TabsTrayCloseAllTabsPressed -> EventWrapper<NoExtraKeys>(
+            { org.mozilla.fenix.GleanMetrics.TabsTray.closeAllTabs.record(it) }
         )
 
         // Don't record other events in Glean:

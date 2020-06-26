@@ -31,6 +31,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.utils.allowUndo
@@ -54,11 +55,13 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
 
     private val selectTabUseCase = object : TabsUseCases.SelectTabUseCase {
         override fun invoke(tabId: String) {
+            requireContext().components.analytics.metrics.track(Event.OpenedExistingTab)
             requireComponents.useCases.tabsUseCases.selectTab(tabId)
             navigateToBrowser()
         }
 
         override fun invoke(session: Session) {
+            requireContext().components.analytics.metrics.track(Event.OpenedExistingTab)
             requireComponents.useCases.tabsUseCases.selectTab(session)
             navigateToBrowser()
         }
@@ -66,11 +69,13 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
 
     private val removeTabUseCase = object : TabsUseCases.RemoveTabUseCase {
         override fun invoke(sessionId: String) {
+            requireContext().components.analytics.metrics.track(Event.ClosedExistingTab)
             showUndoSnackbarForTab(sessionId)
             requireComponents.useCases.tabsUseCases.removeTab(sessionId)
         }
 
         override fun invoke(session: Session) {
+            requireContext().components.analytics.metrics.track(Event.ClosedExistingTab)
             showUndoSnackbarForTab(session.id)
             requireComponents.useCases.tabsUseCases.removeTab(session)
         }
@@ -134,6 +139,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
         )
 
         tabLayout.setOnClickListener {
+            requireContext().components.analytics.metrics.track(Event.TabsTrayClosed)
             dismissAllowingStateLoss()
         }
 

@@ -185,6 +185,19 @@ sealed class Event {
     object ContextualHintETPOutsideTap : Event()
     object ContextualHintETPInsideTap : Event()
 
+    object TabsTrayOpened : Event()
+    object TabsTrayClosed : Event()
+    object OpenedExistingTab : Event()
+    object ClosedExistingTab : Event()
+    object TabsTrayPrivateModeTapped : Event()
+    object TabsTrayNormalModeTapped : Event()
+    object NewTabTapped : Event()
+    object NewPrivateTabTapped : Event()
+    object TabsTrayMenuOpened : Event()
+    object TabsTraySaveToCollectionPressed : Event()
+    object TabsTrayShareAllTabsPressed : Event()
+    object TabsTrayCloseAllTabsPressed : Event()
+
     // Interaction events with extras
     data class OnboardingToolbarPosition(val position: Position) : Event() {
         enum class Position { TOP, BOTTOM }

@@ -30,6 +30,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
@@ -64,6 +65,8 @@ class TabTrayView(
         get() = container
 
     init {
+        container.context.components.analytics.metrics.track(Event.TabsTrayOpened)
+
         val hasAccessibilityEnabled = view.context.settings().accessibilityServicesEnabled
 
         toggleFabText(isPrivate)
@@ -81,6 +84,7 @@ class TabTrayView(
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                    container.context.components.analytics.metrics.track(Event.TabsTrayClosed)
                     interactor.onTabTrayDismissed()
                 }
             }
@@ -154,6 +158,7 @@ class TabTrayView(
         }
 
         view.tab_tray_overflow.setOnClickListener {
+            container.context.components.analytics.metrics.track(Event.TabsTrayMenuOpened)
             menu = tabTrayItemMenu.menuBuilder.build(container.context)
             menu?.show(it)
                 ?.also { pu ->
@@ -167,6 +172,7 @@ class TabTrayView(
         view.tab_tray_new_tab.apply {
             isVisible = hasAccessibilityEnabled
             setOnClickListener {
+                sendNewTabEvent(isPrivateModeSelected)
                 interactor.onNewTabTapped(isPrivateModeSelected)
             }
         }
@@ -174,9 +180,20 @@ class TabTrayView(
         fabView.new_tab_button.apply {
             isVisible = !hasAccessibilityEnabled
             setOnClickListener {
+                sendNewTabEvent(isPrivateModeSelected)
                 interactor.onNewTabTapped(isPrivateModeSelected)
             }
         }
+    }
+
+    private fun sendNewTabEvent(isPrivateModeSelected: Boolean) {
+        val eventToSend = if (isPrivateModeSelected) {
+            Event.NewPrivateTabTapped
+        } else {
+            Event.NewTabTapped
+        }
+
+        container.context.components.analytics.metrics.track(eventToSend)
     }
 
     fun expand() {
@@ -195,6 +212,12 @@ class TabTrayView(
 
         updateState(view.context.components.core.store.state)
         scrollToSelectedTab()
+
+        if (isPrivateModeSelected) {
+            container.context.components.analytics.metrics.track(Event.TabsTrayPrivateModeTapped)
+        } else {
+            container.context.components.analytics.metrics.track(Event.TabsTrayNormalModeTapped)
+        }
     }
 
     override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/ }
@@ -294,6 +317,7 @@ class TabTrayItemMenu(
                 context.getString(R.string.tab_tray_menu_item_save),
                 textColorResource = R.color.primary_text_normal_theme
             ) {
+                context.components.analytics.metrics.track(Event.TabsTraySaveToCollectionPressed)
                 onItemTapped.invoke(Item.SaveToCollection)
             }.apply { visible = shouldShowSaveToCollection },
 
@@ -301,6 +325,7 @@ class TabTrayItemMenu(
                 context.getString(R.string.tab_tray_menu_item_share),
                 textColorResource = R.color.primary_text_normal_theme
             ) {
+                context.components.analytics.metrics.track(Event.TabsTrayShareAllTabsPressed)
                 onItemTapped.invoke(Item.ShareAllTabs)
             },
 
@@ -308,6 +333,7 @@ class TabTrayItemMenu(
                 context.getString(R.string.tab_tray_menu_item_close),
                 textColorResource = R.color.primary_text_normal_theme
             ) {
+                context.components.analytics.metrics.track(Event.TabsTrayCloseAllTabsPressed)
                 onItemTapped.invoke(Item.CloseAllTabs)
             }
         )

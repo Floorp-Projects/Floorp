@@ -1608,6 +1608,143 @@ reader_mode:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
 
+tabs_tray:
+  opened:
+    type: event
+    description: |
+      A user opened the tabs tray
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  closed:
+    type: event
+    description: |
+      A user closed the tabs tray
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  opened_existing_tab:
+    type: event
+    description: |
+      A user opened an existing tab
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  closed_existing_tab:
+    type: event
+    description: |
+      A user closed an existing tab
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  private_mode_tapped:
+    type: event
+    description: |
+      A user switched to private mode
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  normal_mode_tapped:
+    type: event
+    description: |
+      A user switched to normal mode
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  new_tab_tapped:
+    type: event
+    description: |
+      A user opened a new tab
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  new_private_tab_tapped:
+    type: event
+    description: |
+      A user opened a new private tab
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  menu_opened:
+    type: event
+    description: |
+      A user opened three three dot menu in the tabs tray
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  save_to_collection:
+    type: event
+    description: |
+      A user tapped the save to collection button in the
+      three dot menu within the tabs tray
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  share_all_tabs:
+    type: event
+    description: |
+      A user tapped the share all tabs button in the
+      three dot menu within the tabs tray
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  close_all_tabs:
+    type: event
+    description: |
+      A user tapped the close all tabs button in the
+      three dot menu within the tabs tray
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11273
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12036
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+
 collections:
   renamed:
     type: event
