@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "SVGMaskFrame.h"
+#include "nsSVGMaskFrame.h"
 
 // Keep others in (case-insensitive) order:
 #include "AutoReferenceChainGuard.h"
@@ -18,22 +18,19 @@
 #include "mozilla/gfx/2D.h"
 #include "SVGObserverUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGUnitTypes_Binding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-nsIFrame* NS_NewSVGMaskFrame(mozilla::PresShell* aPresShell,
-                             mozilla::ComputedStyle* aStyle) {
-  return new (aPresShell)
-      mozilla::SVGMaskFrame(aStyle, aPresShell->GetPresContext());
+nsIFrame* NS_NewSVGMaskFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
+  return new (aPresShell) nsSVGMaskFrame(aStyle, aPresShell->GetPresContext());
 }
 
-namespace mozilla {
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGMaskFrame)
 
-NS_IMPL_FRAMEARENA_HELPERS(SVGMaskFrame)
-
-already_AddRefed<SourceSurface> SVGMaskFrame::GetMaskForMaskedFrame(
+already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
     MaskParams& aParams) {
   // Make sure we break reference loops and over long reference chains:
   static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
@@ -125,7 +122,7 @@ already_AddRefed<SourceSurface> SVGMaskFrame::GetMaskForMaskedFrame(
   return surface.forget();
 }
 
-gfxRect SVGMaskFrame::GetMaskArea(nsIFrame* aMaskedFrame) {
+gfxRect nsSVGMaskFrame::GetMaskArea(nsIFrame* aMaskedFrame) {
   SVGMaskElement* maskElem = static_cast<SVGMaskElement*>(GetContent());
 
   uint16_t units =
@@ -145,8 +142,9 @@ gfxRect SVGMaskFrame::GetMaskArea(nsIFrame* aMaskedFrame) {
   return maskArea;
 }
 
-nsresult SVGMaskFrame::AttributeChanged(int32_t aNameSpaceID,
-                                        nsAtom* aAttribute, int32_t aModType) {
+nsresult nsSVGMaskFrame::AttributeChanged(int32_t aNameSpaceID,
+                                          nsAtom* aAttribute,
+                                          int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y ||
        aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
@@ -160,8 +158,8 @@ nsresult SVGMaskFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 #ifdef DEBUG
-void SVGMaskFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                        nsIFrame* aPrevInFlow) {
+void nsSVGMaskFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                          nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::mask),
                "Content is not an SVG mask");
 
@@ -169,9 +167,9 @@ void SVGMaskFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 #endif /* DEBUG */
 
-gfxMatrix SVGMaskFrame::GetCanvasTM() { return mMatrixForChildren; }
+gfxMatrix nsSVGMaskFrame::GetCanvasTM() { return mMatrixForChildren; }
 
-gfxMatrix SVGMaskFrame::GetMaskTransform(nsIFrame* aMaskedFrame) {
+gfxMatrix nsSVGMaskFrame::GetMaskTransform(nsIFrame* aMaskedFrame) {
   SVGMaskElement* content = static_cast<SVGMaskElement*>(GetContent());
 
   SVGAnimatedEnumeration* maskContentUnits =
@@ -186,5 +184,3 @@ gfxMatrix SVGMaskFrame::GetMaskTransform(nsIFrame* aMaskedFrame) {
   return nsSVGUtils::AdjustMatrixForUnits(gfxMatrix(), maskContentUnits,
                                           aMaskedFrame, flags);
 }
-
-}  // namespace mozilla

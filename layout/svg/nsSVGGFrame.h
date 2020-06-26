@@ -15,24 +15,19 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-nsIFrame* NS_NewSVGGFrame(mozilla::PresShell* aPresShell,
-                          mozilla::ComputedStyle* aStyle);
-
-namespace mozilla {
-
-class SVGGFrame : public nsSVGDisplayContainerFrame {
-  friend nsIFrame* ::NS_NewSVGGFrame(mozilla::PresShell* aPresShell,
-                                     mozilla::ComputedStyle* aStyle);
-  explicit SVGGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : SVGGFrame(aStyle, aPresContext, kClassID) {}
+class nsSVGGFrame : public nsSVGDisplayContainerFrame {
+  friend nsIFrame* NS_NewSVGGFrame(mozilla::PresShell* aPresShell,
+                                   ComputedStyle* aStyle);
+  explicit nsSVGGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGGFrame(aStyle, aPresContext, kClassID) {}
 
  protected:
-  SVGGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
-            nsIFrame::ClassID aID)
+  nsSVGGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+              nsIFrame::ClassID aID)
       : nsSVGDisplayContainerFrame(aStyle, aPresContext, aID) {}
 
  public:
-  NS_DECL_FRAMEARENA_HELPERS(SVGGFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGGFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -49,7 +44,5 @@ class SVGGFrame : public nsSVGDisplayContainerFrame {
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 };
-
-}  // namespace mozilla
 
 #endif

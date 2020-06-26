@@ -21,39 +21,35 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-nsIFrame* NS_NewSVGMaskFrame(mozilla::PresShell* aPresShell,
-                             mozilla::ComputedStyle* aStyle);
+class nsSVGMaskFrame final : public nsSVGContainerFrame {
+  friend nsIFrame* NS_NewSVGMaskFrame(mozilla::PresShell* aPresShell,
+                                      ComputedStyle* aStyle);
 
-namespace mozilla {
-
-class SVGMaskFrame final : public nsSVGContainerFrame {
-  friend nsIFrame* ::NS_NewSVGMaskFrame(mozilla::PresShell* aPresShell,
-                                        ComputedStyle* aStyle);
-
-  typedef gfx::Matrix Matrix;
-  typedef gfx::SourceSurface SourceSurface;
-  typedef image::imgDrawingParams imgDrawingParams;
+  typedef mozilla::gfx::Matrix Matrix;
+  typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
  protected:
-  explicit SVGMaskFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+  explicit nsSVGMaskFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsSVGContainerFrame(aStyle, aPresContext, kClassID), mInUse(false) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 
  public:
-  NS_DECL_FRAMEARENA_HELPERS(SVGMaskFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGMaskFrame)
 
   struct MaskParams {
     gfxContext* ctx;
     nsIFrame* maskedFrame;
     const gfxMatrix& toUserSpace;
     float opacity;
-    StyleMaskMode maskMode;
+    mozilla::StyleMaskMode maskMode;
     imgDrawingParams& imgParams;
 
     explicit MaskParams(gfxContext* aCtx, nsIFrame* aMaskedFrame,
                         const gfxMatrix& aToUserSpace, float aOpacity,
-                        StyleMaskMode aMaskMode, imgDrawingParams& aImgParams)
+                        mozilla::StyleMaskMode aMaskMode,
+                        imgDrawingParams& aImgParams)
         : ctx(aCtx),
           maskedFrame(aMaskedFrame),
           toUserSpace(aToUserSpace),
@@ -62,7 +58,7 @@ class SVGMaskFrame final : public nsSVGContainerFrame {
           imgParams(aImgParams) {}
   };
 
-  // SVGMaskFrame method:
+  // nsSVGMaskFrame method:
 
   /**
    * Generate a mask surface for the target frame.
@@ -106,7 +102,5 @@ class SVGMaskFrame final : public nsSVGContainerFrame {
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
 };
-
-}  // namespace mozilla
 
 #endif

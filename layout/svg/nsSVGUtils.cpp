@@ -34,7 +34,9 @@
 #include "nsSVGContainerFrame.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsSVGFilterPaintCallback.h"
+#include "nsSVGInnerSVGFrame.h"
 #include "nsSVGIntegrationUtils.h"
+#include "nsSVGMaskFrame.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsTextFrame.h"
@@ -44,7 +46,6 @@
 #include "mozilla/SVGContextPaint.h"
 #include "mozilla/SVGForeignObjectFrame.h"
 #include "mozilla/SVGGeometryFrame.h"
-#include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGTextFrame.h"
 #include "mozilla/Unused.h"
@@ -438,7 +439,7 @@ void nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
 
   const nsStyleSVGReset* svgReset = firstFrame->StyleSVGReset();
 
-  nsTArray<SVGMaskFrame*> maskFrames;
+  nsTArray<nsSVGMaskFrame*> maskFrames;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
   aUsage.shouldGenerateMaskLayer = (maskFrames.Length() > 0);
@@ -652,7 +653,7 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
   /* Properties are added lazily and may have been removed by a restyle,
      so make sure all applicable ones are set again. */
   nsSVGClipPathFrame* clipPathFrame;
-  nsTArray<SVGMaskFrame*> maskFrames;
+  nsTArray<nsSVGMaskFrame*> maskFrames;
   // TODO: We currently pass nullptr instead of an nsTArray* here, but we
   // actually should get the filter frames and then pass them into
   // PaintFilteredFrame below!  See bug 1494263.
@@ -666,7 +667,7 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     return;
   }
 
-  SVGMaskFrame* maskFrame = maskFrames.IsEmpty() ? nullptr : maskFrames[0];
+  nsSVGMaskFrame* maskFrame = maskFrames.IsEmpty() ? nullptr : maskFrames[0];
 
   MixModeBlender blender(aFrame, &aContext);
   gfxContext* target = blender.ShouldCreateDrawTargetForBlend()
@@ -697,8 +698,9 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     if (maskUsage.shouldGenerateMaskLayer && maskFrame) {
       StyleMaskMode maskMode =
           aFrame->StyleSVGReset()->mMask.mLayers[0].mMaskMode;
-      SVGMaskFrame::MaskParams params(&aContext, aFrame, aTransform,
-                                      maskUsage.opacity, maskMode, aImgParams);
+      nsSVGMaskFrame::MaskParams params(&aContext, aFrame, aTransform,
+                                        maskUsage.opacity, maskMode,
+                                        aImgParams);
       // We want the mask to be untransformed so use the inverse of the current
       // transform as the maskTransform to compensate.
       maskTransform = aContext.CurrentMatrix();
@@ -708,7 +710,7 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
 
       if (!maskSurface) {
         // Either entire surface is clipped out, or gfx buffer allocation
-        // failure in SVGMaskFrame::GetMaskForMaskedFrame.
+        // failure in nsSVGMaskFrame::GetMaskForMaskedFrame.
         return;
       }
       shouldPushMask = true;

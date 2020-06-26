@@ -30,22 +30,16 @@ class SVGViewportElement;
 }  // namespace dom
 }  // namespace mozilla
 
-nsContainerFrame* NS_NewSVGMarkerFrame(mozilla::PresShell* aPresShell,
-                                       mozilla::ComputedStyle* aStyle);
-nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(mozilla::PresShell* aPresShell,
-                                                mozilla::ComputedStyle* aStyle);
+class nsSVGMarkerFrame final : public nsSVGContainerFrame {
+  typedef mozilla::SVGMark SVGMark;
+  typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
-namespace mozilla {
-
-class SVGMarkerFrame final : public nsSVGContainerFrame {
-  typedef image::imgDrawingParams imgDrawingParams;
-
-  friend class SVGMarkerAnonChildFrame;
-  friend nsContainerFrame* ::NS_NewSVGMarkerFrame(
-      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
+  friend class nsSVGMarkerAnonChildFrame;
+  friend nsContainerFrame* NS_NewSVGMarkerFrame(mozilla::PresShell* aPresShell,
+                                                ComputedStyle* aStyle);
 
  protected:
-  explicit SVGMarkerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+  explicit nsSVGMarkerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsSVGContainerFrame(aStyle, aPresContext, kClassID),
         mMarkedFrame(nullptr),
         mInUse(false),
@@ -54,7 +48,7 @@ class SVGMarkerFrame final : public nsSVGContainerFrame {
   }
 
  public:
-  NS_DECL_FRAMEARENA_HELPERS(SVGMarkerFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGMarkerFrame)
 
   // nsIFrame interface:
 #ifdef DEBUG
@@ -83,14 +77,14 @@ class SVGMarkerFrame final : public nsSVGContainerFrame {
     return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
 
-  // SVGMarkerFrame methods:
+  // nsSVGMarkerFrame methods:
   void PaintMark(gfxContext& aContext, const gfxMatrix& aToMarkedFrameUserSpace,
-                 SVGGeometryFrame* aMarkedFrame, const SVGMark& aMark,
+                 mozilla::SVGGeometryFrame* aMarkedFrame, const SVGMark& aMark,
                  float aStrokeWidth, imgDrawingParams& aImgParams);
 
   SVGBBox GetMarkBBoxContribution(const Matrix& aToBBoxUserspace,
                                   uint32_t aFlags,
-                                  SVGGeometryFrame* aMarkedFrame,
+                                  mozilla::SVGGeometryFrame* aMarkedFrame,
                                   const SVGMark& aMark, float aStrokeWidth);
 
   // Return our anonymous box child.
@@ -98,7 +92,7 @@ class SVGMarkerFrame final : public nsSVGContainerFrame {
 
  private:
   // stuff needed for callback
-  SVGGeometryFrame* mMarkedFrame;
+  mozilla::SVGGeometryFrame* mMarkedFrame;
   Matrix mMarkerTM;
 
   // nsSVGContainerFrame methods:
@@ -111,18 +105,18 @@ class SVGMarkerFrame final : public nsSVGContainerFrame {
   // and break things, so this helper makes the code far more robust.
   class MOZ_RAII AutoMarkerReferencer {
    public:
-    AutoMarkerReferencer(SVGMarkerFrame* aFrame,
-                         SVGGeometryFrame* aMarkedFrame
+    AutoMarkerReferencer(nsSVGMarkerFrame* aFrame,
+                         mozilla::SVGGeometryFrame* aMarkedFrame
                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~AutoMarkerReferencer();
 
    private:
-    SVGMarkerFrame* mFrame;
+    nsSVGMarkerFrame* mFrame;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
-  // SVGMarkerFrame methods:
-  void SetParentCoordCtxProvider(dom::SVGViewportElement* aContext);
+  // nsSVGMarkerFrame methods:
+  void SetParentCoordCtxProvider(mozilla::dom::SVGViewportElement* aContext);
 
   // recursion prevention flag
   bool mInUse;
@@ -134,16 +128,16 @@ class SVGMarkerFrame final : public nsSVGContainerFrame {
 ////////////////////////////////////////////////////////////////////////
 // nsMarkerAnonChildFrame class
 
-class SVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame {
-  friend nsContainerFrame* ::NS_NewSVGMarkerAnonChildFrame(
+class nsSVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame {
+  friend nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
-  explicit SVGMarkerAnonChildFrame(ComputedStyle* aStyle,
-                                   nsPresContext* aPresContext)
+  explicit nsSVGMarkerAnonChildFrame(ComputedStyle* aStyle,
+                                     nsPresContext* aPresContext)
       : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
 
  public:
-  NS_DECL_FRAMEARENA_HELPERS(SVGMarkerAnonChildFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGMarkerAnonChildFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -158,9 +152,7 @@ class SVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame {
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override {
-    return static_cast<SVGMarkerFrame*>(GetParent())->GetCanvasTM();
+    return static_cast<nsSVGMarkerFrame*>(GetParent())->GetCanvasTM();
   }
 };
-
-}  // namespace mozilla
 #endif

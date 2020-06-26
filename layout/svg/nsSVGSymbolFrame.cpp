@@ -5,35 +5,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "SVGSymbolFrame.h"
+#include "nsSVGSymbolFrame.h"
 
 #include "mozilla/PresShell.h"
 
-nsIFrame* NS_NewSVGSymbolFrame(mozilla::PresShell* aPresShell,
-                               mozilla::ComputedStyle* aStyle) {
+using namespace mozilla;
+
+nsIFrame* NS_NewSVGSymbolFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
-      mozilla::SVGSymbolFrame(aStyle, aPresShell->GetPresContext());
+      nsSVGSymbolFrame(aStyle, aPresShell->GetPresContext());
 }
 
-namespace mozilla {
-
-NS_IMPL_FRAMEARENA_HELPERS(SVGSymbolFrame)
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGSymbolFrame)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
 
-NS_QUERYFRAME_HEAD(SVGSymbolFrame)
-  NS_QUERYFRAME_ENTRY(SVGSymbolFrame)
-NS_QUERYFRAME_TAIL_INHERITING(SVGViewportFrame)
+NS_QUERYFRAME_HEAD(nsSVGSymbolFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGSymbolFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsSVGViewportFrame)
 
 #ifdef DEBUG
-void SVGSymbolFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                          nsIFrame* aPrevInFlow) {
+void nsSVGSymbolFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                            nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::symbol),
                "Content is not an SVG 'symbol' element!");
 
-  SVGViewportFrame::Init(aContent, aParent, aPrevInFlow);
+  nsSVGViewportFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
-
-}  // namespace mozilla

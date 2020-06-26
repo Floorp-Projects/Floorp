@@ -8,7 +8,7 @@
 #define __NS_SVGUSEFRAME_H__
 
 // Keep in (case-insensitive) order:
-#include "SVGGFrame.h"
+#include "nsSVGGFrame.h"
 
 namespace mozilla {
 class PresShell;
@@ -19,13 +19,14 @@ nsIFrame* NS_NewSVGUseFrame(mozilla::PresShell* aPresShell,
 
 namespace mozilla {
 
-class SVGUseFrame final : public SVGGFrame {
+class SVGUseFrame final : public nsSVGGFrame {
   friend nsIFrame* ::NS_NewSVGUseFrame(mozilla::PresShell* aPresShell,
                                        ComputedStyle* aStyle);
 
  protected:
   explicit SVGUseFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : SVGGFrame(aStyle, aPresContext, kClassID), mHasValidDimensions(true) {}
+      : nsSVGGFrame(aStyle, aPresContext, kClassID),
+        mHasValidDimensions(true) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(SVGUseFrame)

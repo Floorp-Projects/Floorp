@@ -16,15 +16,13 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame* NS_NewSVGUseFrame(mozilla::PresShell* aPresShell,
-                            mozilla::ComputedStyle* aStyle) {
-  return new (aPresShell)
-      mozilla::SVGUseFrame(aStyle, aPresShell->GetPresContext());
+nsIFrame* NS_NewSVGUseFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
+  return new (aPresShell) SVGUseFrame(aStyle, aPresShell->GetPresContext());
 }
 
-namespace mozilla {
-
 NS_IMPL_FRAMEARENA_HELPERS(SVGUseFrame)
+
+namespace mozilla {
 
 //----------------------------------------------------------------------
 // nsIFrame methods:
@@ -37,7 +35,7 @@ void SVGUseFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   mHasValidDimensions =
       static_cast<SVGUseElement*>(aContent)->HasValidDimensions();
 
-  SVGGFrame::Init(aContent, aParent, aPrevInFlow);
+  nsSVGGFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 nsresult SVGUseFrame::AttributeChanged(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -50,7 +48,7 @@ nsresult SVGUseFrame::AttributeChanged(int32_t aNamespaceID, nsAtom* aAttribute,
     content->ProcessAttributeChange(aNamespaceID, aAttribute);
   }
 
-  return SVGGFrame::AttributeChanged(aNamespaceID, aAttribute, aModType);
+  return nsSVGGFrame::AttributeChanged(aNamespaceID, aAttribute, aModType);
 }
 
 void SVGUseFrame::PositionAttributeChanged() {
@@ -103,7 +101,7 @@ void SVGUseFrame::ReflowSVG() {
     InvalidateFrame();
   }
 
-  SVGGFrame::ReflowSVG();
+  nsSVGGFrame::ReflowSVG();
 }
 
 void SVGUseFrame::NotifySVGChanged(uint32_t aFlags) {
@@ -128,7 +126,7 @@ void SVGUseFrame::NotifySVGChanged(uint32_t aFlags) {
   // non-percentage width/height, since if they're set then they are cloned to
   // an anonymous child <svg>, and its nsSVGInnerSVGFrame will do that.
 
-  SVGGFrame::NotifySVGChanged(aFlags);
+  nsSVGGFrame::NotifySVGChanged(aFlags);
 }
 
 }  // namespace mozilla
