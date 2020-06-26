@@ -7,56 +7,49 @@
 #define PANGO_ENABLE_ENGINE
 
 #include "gfxPlatformGtk.h"
-#include "prenv.h"
 
-#include "nsUnicharUtils.h"
-#include "nsUnicodeProperties.h"
+#include <gtk/gtk.h>
+#include <fontconfig/fontconfig.h>
+
+#include "base/task.h"
+#include "base/thread.h"
+#include "base/message_loop.h"
+#include "cairo.h"
 #include "gfx2DGlue.h"
 #include "gfxFcPlatformFontList.h"
 #include "gfxConfig.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 #include "gfxUserFontSet.h"
 #include "gfxUtils.h"
 #include "gfxFT2FontBase.h"
 #include "gfxTextRun.h"
-#include "VsyncSource.h"
+#include "GLContextProvider.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Monitor.h"
-#include "mozilla/StaticPrefs_layers.h"
-#include "base/task.h"
-#include "base/thread.h"
-#include "base/message_loop.h"
 #include "mozilla/FontPropertyTypes.h"
-#include "mozilla/gfx/Logging.h"
-
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_layers.h"
+#include "nsMathUtils.h"
+#include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
+#include "VsyncSource.h"
 
-#include "cairo.h"
-#include <gtk/gtk.h>
-
-#include "gfxImageSurface.h"
 #ifdef MOZ_X11
 #  include <gdk/gdkx.h>
-#  include "gfxXlibSurface.h"
 #  include "cairo-xlib.h"
-#  include "mozilla/Preferences.h"
-#  include "mozilla/X11Util.h"
-
-#  include "GLContextProvider.h"
+#  include "gfxXlibSurface.h"
 #  include "GLContextGLX.h"
 #  include "GLXLibrary.h"
+#  include "mozilla/X11Util.h"
 
 /* Undefine the Status from Xlib since it will conflict with system headers on
  * OSX */
 #  if defined(__APPLE__) && defined(Status)
 #    undef Status
 #  endif
-
-#  ifdef MOZ_WAYLAND
-#    include <gdk/gdkwayland.h>
-#    include "mozilla/widget/nsWaylandDisplay.h"
-#  endif
-
 #endif /* MOZ_X11 */
 
 #ifdef MOZ_WAYLAND
@@ -64,10 +57,6 @@
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #endif
-
-#include <fontconfig/fontconfig.h>
-
-#include "nsMathUtils.h"
 
 #define GDK_PIXMAP_SIZE_MAX 32767
 
@@ -108,6 +97,12 @@ gfxPlatformGtk::gfxPlatformGtk() {
     mCompositorDisplay = nullptr;
   }
 #endif  // MOZ_X11
+
+#ifdef MOZ_WAYLAND
+  mUseWebGLDmabufBackend =
+      IsWaylandDisplay() && GetDMABufDevice()->IsDMABufWebGLEnabled();
+#endif
+
   gPlatformFTLibrary = Factory::NewFTLibrary();
   MOZ_ASSERT(gPlatformFTLibrary);
   Factory::SetFTLibrary(gPlatformFTLibrary);
@@ -122,9 +117,6 @@ gfxPlatformGtk::~gfxPlatformGtk() {
 
   Factory::ReleaseFTLibrary(gPlatformFTLibrary);
   gPlatformFTLibrary = nullptr;
-
-  mUseWebGLDmabufBackend =
-      IsWaylandDisplay() && GetDMABufDevice()->IsDMABufWebGLEnabled();
 }
 
 void gfxPlatformGtk::FlushContentDrawing() {
