@@ -174,11 +174,8 @@ AccessibilityPanel.prototype = {
     this._opening.then(() => this.refresh());
   },
 
-  onTargetUpdated({ targetFront, isTargetSwitching }) {
-    if (targetFront.isTopLevel) {
-      targetFront.on("navigate", this.onTabNavigated);
-    }
-
+  onTargetUpdated({ isTargetSwitching }) {
+    this.accessibilityProxy.currentTarget.on("navigate", this.onTabNavigated);
     if (isTargetSwitching) {
       this.onTabNavigated();
     }
