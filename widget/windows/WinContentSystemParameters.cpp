@@ -25,6 +25,9 @@ struct WinContentSystemParameters::Detail {
   bool cachedIsPerMonitorDPIAware{false};
   float cachedSystemDPI{0.0f};
   bool cachedFlatMenusEnabled{false};
+
+  // Almost-always true in Windows 7, always true starting in Windows 8
+  bool cachedIsAppThemed{true};
 };
 
 // static
@@ -63,6 +66,14 @@ bool WinContentSystemParameters::AreFlatMenusEnabled() {
   return mDetail->cachedFlatMenusEnabled;
 }
 
+bool WinContentSystemParameters::IsAppThemed() {
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  OffTheBooksMutexAutoLock lock(mDetail->mutex);
+  MOZ_RELEASE_ASSERT(IsCachedValueValid(SystemParameterId::IsAppThemed));
+  return mDetail->cachedIsAppThemed;
+}
+
 void WinContentSystemParameters::SetContentValueInternal(
     const SystemParameterKVPair& aKVPair) {
   MOZ_ASSERT(XRE_IsContentProcess());
@@ -85,6 +96,10 @@ void WinContentSystemParameters::SetContentValueInternal(
 
     case SystemParameterId::FlatMenusEnabled:
       mDetail->cachedFlatMenusEnabled = aKVPair.value();
+      return;
+
+    case SystemParameterId::IsAppThemed:
+      mDetail->cachedIsAppThemed = aKVPair.value();
       return;
 
     case SystemParameterId::Count:
@@ -124,6 +139,10 @@ bool WinContentSystemParameters::GetParentValueInternal(
       aKVPair->value() = nsUXThemeData::AreFlatMenusEnabled();
       return true;
 
+    case SystemParameterId::IsAppThemed:
+      aKVPair->value() = nsUXThemeData::IsAppThemed();
+      return true;
+
     case SystemParameterId::Count:
       MOZ_CRASH("Invalid SystemParameterId");
   }
@@ -151,6 +170,12 @@ void WinContentSystemParameters::OnThemeChanged() {
   {
     dom::SystemParameterKVPair kvPair{};
     GetParentValueInternal(SystemParameterId::FlatMenusEnabled, &kvPair);
+    updates.AppendElement(std::move(kvPair));
+  }
+
+  {
+    dom::SystemParameterKVPair kvPair{};
+    GetParentValueInternal(SystemParameterId::IsAppThemed, &kvPair);
     updates.AppendElement(std::move(kvPair));
   }
 
