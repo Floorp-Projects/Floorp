@@ -3085,6 +3085,42 @@ Span(nsTArray_Impl<E, Alloc>&) -> Span<E>;
 template <typename E, class Alloc>
 Span(const nsTArray_Impl<E, Alloc>&) -> Span<const E>;
 
+// Provides a view on a nsTArray through which the existing array elements can
+// be accessed in a non-const way, but the array itself cannot be modified, so
+// that references to elements are guaranteed to be stable.
+template <typename T>
+class nsTArrayView {
+ public:
+  using element_type = T;
+  using pointer = element_type*;
+  using reference = element_type&;
+  using index_type = typename Span<T>::index_type;
+  using size_type = typename Span<T>::index_type;
+
+  explicit nsTArrayView(nsTArray<T> aArray)
+      : mArray(std::move(aArray)), mSpan(mArray) {}
+
+  T& operator[](index_type aIndex) { return mSpan[aIndex]; }
+
+  const T& operator[](index_type aIndex) const { return mSpan[aIndex]; }
+
+  size_type Length() const { return mSpan.Length(); }
+
+  auto begin() { return mSpan.begin(); }
+  auto end() { return mSpan.end(); }
+  auto begin() const { return mSpan.begin(); }
+  auto end() const { return mSpan.end(); }
+  auto cbegin() const { return mSpan.cbegin(); }
+  auto cend() const { return mSpan.cend(); }
+
+  Span<T> AsSpan() { return mSpan; }
+  Span<const T> AsSpan() const { return mSpan; }
+
+ private:
+  nsTArray<T> mArray;
+  const Span<T> mSpan;
+};
+
 }  // namespace mozilla
 
 // MOZ_DBG support
