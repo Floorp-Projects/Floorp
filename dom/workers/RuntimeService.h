@@ -198,6 +198,9 @@ class RuntimeService final : public nsIObserver {
   bool ScheduleWorker(WorkerPrivate& aWorkerPrivate);
 
   static void ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
+
+  template <typename Func>
+  void BroadcastAllWorkers(const Func& aFunc);
 };
 
 }  // namespace workerinternals
