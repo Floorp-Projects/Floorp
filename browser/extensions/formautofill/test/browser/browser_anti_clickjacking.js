@@ -10,7 +10,9 @@ add_task(async function setup_storage() {
 });
 
 add_task(async function test_active_delay() {
-  await SpecialPowers.pushPrefEnv({ set: [["security.notification_enable_delay", 500]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.notification_enable_delay", 500]],
+  });
   await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
     browser
   ) {
