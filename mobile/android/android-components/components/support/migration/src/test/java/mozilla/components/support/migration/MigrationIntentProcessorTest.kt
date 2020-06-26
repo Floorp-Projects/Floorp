@@ -5,7 +5,6 @@
 package mozilla.components.support.migration
 
 import android.content.Intent
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.support.migration.state.MigrationAction
 import mozilla.components.support.migration.state.MigrationStore
 import mozilla.components.support.test.ext.joinBlocking
@@ -16,7 +15,7 @@ import org.junit.Test
 
 class MigrationIntentProcessorTest {
     @Test
-    fun `process updates intent`() = runBlockingTest {
+    fun `process updates intent`() {
         val store = MigrationStore()
         val processor = MigrationIntentProcessor(store)
         val intent: Intent = mock()

@@ -6,6 +6,7 @@ package mozilla.components.feature.pwa.intent
 
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
@@ -39,11 +40,11 @@ class WebAppIntentProcessor(
      * A custom tab config is also set so a custom tab toolbar can be shown when the user leaves
      * the scope defined in the manifest.
      */
-    override suspend fun process(intent: Intent): Boolean {
+    override fun process(intent: Intent): Boolean {
         val url = intent.toSafeIntent().dataString
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
-            val webAppManifest = storage.loadManifest(url) ?: return false
+            val webAppManifest = runBlocking { storage.loadManifest(url) } ?: return false
 
             val session = Session(url, private = false, source = Source.HOME_SCREEN)
             session.webAppManifest = webAppManifest

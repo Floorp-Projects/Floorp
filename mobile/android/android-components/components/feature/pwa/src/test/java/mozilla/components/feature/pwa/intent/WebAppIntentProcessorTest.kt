@@ -31,7 +31,7 @@ import org.mockito.Mockito.`when`
 @ExperimentalCoroutinesApi
 class WebAppIntentProcessorTest {
     @Test
-    fun `process checks if intent action is not valid`() = runBlockingTest {
+    fun `process checks if intent action is not valid`() {
         val processor = WebAppIntentProcessor(mock(), mock(), mock())
 
         assertFalse(processor.process(Intent(ACTION_VIEW)))

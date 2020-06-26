@@ -52,7 +52,7 @@ class CustomTabIntentProcessor(
         }
     }
 
-    override suspend fun process(intent: Intent): Boolean {
+    override fun process(intent: Intent): Boolean {
         val safeIntent = SafeIntent(intent)
         val url = safeIntent.dataString
 
