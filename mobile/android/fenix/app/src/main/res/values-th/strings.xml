@@ -874,8 +874,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">ลบข้อมูลการเรียกดูโดยอัตโนมัติเมื่อคุณเลือก &quot;ออก&quot; จากเมนูหลัก</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">ลบข้อมูลการเรียกดูโดยอัตโนมัติเมื่อคุณเลือก \&quot;ออก\&quot; จากเมนูหลัก</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">ประวัติการเรียกดู</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">ออก</string>
 
@@ -899,6 +897,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly อัปเดตทุกคืนและมีลูกเล่นใหม่ ๆ ทุกคืน
         อย่างไรก็ตามความเสถียรอาจลดลง ดาวน์โหลดเบราว์เซอร์เบต้าของเราเพื่อประสบการณ์ที่เสถียรยิ่งขึ้น</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">รับ Firefox Beta สำหรับ Android</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly ย้ายไปแล้ว</string>
@@ -951,6 +952,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync เปิดอยู่</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ไม่สามารถเข้าสู่ระบบ</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">ความเป็นส่วนตัวอัตโนมัติ</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">เข้มงวด (แนะนำ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1379,4 +1382,10 @@
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">เชื่อมต่ออุปกรณ์อื่น</string>
 
-    </resources>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">ลงชื่อเข้าใช้เพื่อซิงค์</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">ตกลง เข้าใจแล้ว</string>
+
+</resources>

@@ -1288,6 +1288,8 @@
     <string name="search_add_custom_engine_error_existing_name">“%s” نام والا تلاش انجن پہلے سے موجود ہے۔</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">ایک تلاشی سٹرنگ داخل کریں</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">چیک کریں کہ سرچ سٹرنگ مثال کی شکل سے میل کھاتا ہے</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">”%s“ سے رابطہ کرنے میں خرابی</string>
     <!-- Text shown when a user creates a new search engine -->
@@ -1381,6 +1383,8 @@
     <string name="synced_tabs_reauth">برائے مہربانی دوبارہ توثیق کریں۔</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">براہ کرم ٹیب sync کو فعال کریں۔</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">دیگر آلات سے ٹیبیں کی فہرست دیکھیں۔</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">sync کے لئے سائن ان کریں</string>
 

@@ -313,7 +313,7 @@
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">Inserire un nome per il dispositivo.</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing_in_progress">Sincronizzazione…</string>
+    <string name="sync_syncing_in_progress">Sincronizzazione in corso…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Sincronizzazione non riuscita. Ultima sincronizzazione: %s</string>
     <!-- Label summary showing never synced -->
@@ -922,8 +922,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Elimina automaticamente i dati di navigazione quando viene selezionato “Esci” nel menu principale</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Elimina automaticamente i dati di navigazione quando viene selezionato “Esci” nel menu principale</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Cronologia di navigazione</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Esci</string>
 

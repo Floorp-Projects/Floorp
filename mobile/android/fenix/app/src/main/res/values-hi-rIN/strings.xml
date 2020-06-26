@@ -362,6 +362,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">खाता मिटायें</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[<b>firefox.com/pair</b> पर दिखाए गए QR कोड को स्कैन करें]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">कैमरा खोले</string>
     <!-- Button to cancel pairing -->
@@ -825,8 +828,6 @@
     <string name="preferences_delete_browsing_data_site_permissions">साइट की अनुमति</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">ब्राउज़िंग डेटा मिटाएं</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">ब्राउज़िंग इतिहास</string>
 
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">निकास</string>

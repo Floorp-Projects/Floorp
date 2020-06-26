@@ -367,7 +367,7 @@
     <string name="preference_experiments">Experimentos</string>
 
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Permite que o Mozilla instale e colete dados para recursos experimentais</string>
+    <string name="preference_experiments_summary">Permitir que a Mozilla instale e colete dados para recursos experimentais</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Relator de travamentos</string>
     <!-- Preference switch for Mozilla location service -->
@@ -887,8 +887,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Excluir dados de navegação automaticamente ao selecionar &quot;Sair&quot; no menu principal.</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Excluir automaticamente os dados de navegação quando você selecionar \&quot;Sair\&quot; no menu principal.</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Histórico de navegação</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Sair</string>
 
