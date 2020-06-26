@@ -2753,15 +2753,16 @@ class Langpack extends ExtensionData {
 
     resourceProtocol.setSubstitution(langpackId, this.rootURI);
 
-    for (const [sourceName, basePath] of Object.entries(l10nRegistrySources)) {
-      L10nRegistry.registerSource(
-        new FileSource(
-          `${sourceName}-${langpackId}`,
-          this.startupData.languages,
-          `resource://${langpackId}/${basePath}localization/{locale}/`
-        )
+    const fileSources = Object.entries(l10nRegistrySources).map(entry => {
+      const [sourceName, basePath] = entry;
+      return new FileSource(
+        `${sourceName}-${langpackId}`,
+        this.startupData.languages,
+        `resource://${langpackId}/${basePath}localization/{locale}/`
       );
-    }
+    });
+
+    L10nRegistry.registerSources(fileSources);
 
     Services.obs.notifyObservers(
       { wrappedJSObject: { langpack: this } },
@@ -2775,11 +2776,12 @@ class Langpack extends ExtensionData {
       // system.
       return;
     }
-    for (const sourceName of Object.keys(
+
+    const sourcesToRemove = Object.keys(
       this.startupData.l10nRegistrySources
-    )) {
-      L10nRegistry.removeSource(`${sourceName}-${this.startupData.langpackId}`);
-    }
+    ).map(sourceName => `${sourceName}-${this.startupData.langpackId}`);
+    L10nRegistry.removeSources(sourcesToRemove);
+
     if (this.chromeRegistryHandle) {
       this.chromeRegistryHandle.destruct();
       this.chromeRegistryHandle = null;
