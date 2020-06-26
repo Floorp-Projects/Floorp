@@ -6,39 +6,16 @@
 // This test attemps to verify that:
 // - SharedWorkers can be created and successfully spawned by web extensions
 //   when web-extensions run in their own child process.
-// - SharedWorkers cannot be created by web extensions when web extensions
-//   are being run in the main process (because SharedWorkers are only
-//   allowed to be spawned in the parent process if they have a system principal).
 add_task(async function test_spawn_shared_worker() {
-  const background = WebExtensionPolicy.useRemoteWebExtensions
-    ? async function() {
-        const worker = new SharedWorker("worker.js");
-        await new Promise(resolve => {
-          worker.port.onmessage = resolve;
-          worker.port.postMessage("bgpage->worker");
-        });
-        browser.test.sendMessage("test-shared-worker:done");
-      }
-    : function() {
-        // This test covers the builds where the extensions are still
-        // running in the main process (it just checks that we don't
-        // allow it).
-        browser.test.assertThrows(
-          () => {
-            try {
-              new SharedWorker("worker.js");
-            } catch (e) {
-              // assertThrows is currently failing to match the error message
-              // automatically, let's cheat a little bit for now.
-              throw new Error(`${e}`);
-            }
-          },
-          /NS_ERROR_ABORT/,
-          "Got the expected failure in non-remote mode"
-        );
+  const background = async function() {
+    const worker = new SharedWorker("worker.js");
+    await new Promise(resolve => {
+      worker.port.onmessage = resolve;
+      worker.port.postMessage("bgpage->worker");
+    });
+    browser.test.sendMessage("test-shared-worker:done");
+  };
 
-        browser.test.sendMessage("test-shared-worker:done");
-      };
   const extension = ExtensionTestUtils.loadExtension({
     background,
     files: {
