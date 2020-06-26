@@ -2,8 +2,8 @@
 
 # saveThumbnail
 
-`fun saveThumbnail(sessionIdOrUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, bitmap: <ERROR CLASS>): Job` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/storage/ThumbnailStorage.kt#L101)
+`fun saveThumbnail(request: `[`ImageRequest`](../../mozilla.components.support.images/-image-request/index.md)`, bitmap: <ERROR CLASS>): Job` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/storage/ThumbnailStorage.kt#L102)
 
-Stores the given thumbnail [Bitmap](#) into the disk cache with the provided session ID or url
+Stores the given thumbnail [Bitmap](#) into the disk cache with the provided [ImageRequest](../../mozilla.components.support.images/-image-request/index.md)
 as its key.
 

@@ -2,7 +2,7 @@
 
 # clearThumbnails
 
-`fun clearThumbnails(): Job` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/storage/ThumbnailStorage.kt#L48)
+`fun clearThumbnails(): Job` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/storage/ThumbnailStorage.kt#L49)
 
 Clears all the stored thumbnails in the disk cache.
 

@@ -2,7 +2,7 @@
 
 # loadThumbnail
 
-`fun loadThumbnail(sessionIdOrUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<<ERROR CLASS>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/storage/ThumbnailStorage.kt#L67)
+`fun loadThumbnail(request: `[`ImageRequest`](../../mozilla.components.support.images/-image-request/index.md)`): Deferred<<ERROR CLASS>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/storage/ThumbnailStorage.kt#L68)
 
-Asynchronously loads a thumbnail [Bitmap](#) for the given session ID or url.
+Asynchronously loads a thumbnail [Bitmap](#) for the given [ImageRequest](../../mozilla.components.support.images/-image-request/index.md).
 

@@ -138,6 +138,7 @@ mozilla.components.browser.storage.sync
 mozilla.components.browser.tabstray
 mozilla.components.browser.tabstray.thumbnail
 mozilla.components.browser.thumbnails
+mozilla.components.browser.thumbnails.ext
 mozilla.components.browser.thumbnails.loader
 mozilla.components.browser.thumbnails.storage
 mozilla.components.browser.thumbnails.utils
@@ -208,6 +209,7 @@ mozilla.components.feature.p2p
 mozilla.components.feature.p2p.internal
 mozilla.components.feature.p2p.view
 mozilla.components.feature.privatemode.feature
+mozilla.components.feature.privatemode.notification
 mozilla.components.feature.prompts
 mozilla.components.feature.prompts.dialog
 mozilla.components.feature.prompts.share

@@ -2,7 +2,7 @@
 
 # TabViewHolder
 
-`abstract class TabViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabViewHolder.kt#L23)
+`abstract class TabViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabViewHolder.kt#L24)
 
 An abstract ViewHolder implementation for "tab" items.
 

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`ManifestStorage(context: <ERROR CLASS>, usedAtTimeout: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = DEFAULT_TIMEOUT)`
+`ManifestStorage(context: <ERROR CLASS>, activeThresholdMs: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = ACTIVE_THRESHOLD_MS)`
 
 Disk storage for [WebAppManifest](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md). Other components use this class to reload a saved manifest.
 
@@ -10,5 +10,5 @@ Disk storage for [WebAppManifest](../../mozilla.components.concept.engine.manife
 
 `context` - the application context this storage is associated with
 
-`usedAtTimeout` - a timeout in milliseconds after which the storage will consider a manifest
-    as unused. By default this is 30 days.
+`activeThresholdMs` - a timeout in milliseconds after which the storage will consider a manifest
+    as unused. By default this is [ACTIVE_THRESHOLD_MS](-a-c-t-i-v-e_-t-h-r-e-s-h-o-l-d_-m-s.md).
