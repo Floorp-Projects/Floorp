@@ -40,7 +40,6 @@
 #include "gfxGDIFontList.h"
 #include "gfxGDIFont.h"
 
-#include "mozilla/layers/CanvasChild.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/PaintThread.h"
 #include "mozilla/layers/ReadbackManagerD3D11.h"
@@ -540,17 +539,11 @@ mozilla::gfx::BackendType gfxWindowsPlatform::GetContentBackendFor(
 mozilla::gfx::BackendType gfxWindowsPlatform::GetPreferredCanvasBackend() {
   mozilla::gfx::BackendType backend = gfxPlatform::GetPreferredCanvasBackend();
 
-  if (backend == BackendType::DIRECT2D1_1) {
-    if (gfx::gfxVars::UseWebRender() && !gfx::gfxVars::UseWebRenderANGLE()) {
-      // We can't have D2D without ANGLE when WebRender is enabled, so fallback
-      // to Skia.
-      return BackendType::SKIA;
-    }
-
-    // Fall back to software when remote canvas has been deactivated.
-    if (CanvasChild::Deactivated()) {
-      return BackendType::SKIA;
-    }
+  if (backend == BackendType::DIRECT2D1_1 && gfx::gfxVars::UseWebRender() &&
+      !gfx::gfxVars::UseWebRenderANGLE()) {
+    // We can't have D2D without ANGLE when WebRender is enabled, so fallback to
+    // Skia.
+    return BackendType::SKIA;
   }
   return backend;
 }
