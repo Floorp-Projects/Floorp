@@ -46,13 +46,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "cacheBustEnabled",
-  "browser.region.update.enabled",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "localGeocodingEnabled",
   "browser.region.local-geocoding",
   false
@@ -66,28 +59,16 @@ const log = console.createInstance({
 const REGION_PREF = "browser.search.region";
 const COLLECTION_ID = "regions";
 
-// Prefix for all the region updating related preferences.
-const UPDATE_PREFIX = "browser.region.update";
-
-// The amount of time (in seconds) we need to be in a new
-// location before we update the home region.
-// Currently set to 2 weeks.
-const UPDATE_INTERVAL = 60 * 60 * 24 * 14;
-
 /**
  * This module keeps track of the users current region (country).
  * so the SearchService and other consumers can apply region
  * specific customisations.
  */
 class RegionDetector {
-  // The users home location.
-  _home = null;
-  // The most recent location the user was detected.
-  _current = null;
   // The RemoteSettings client used to sync region files.
   _rsClient = null;
   // Keep track of the wifi data across listener events.
-  _wifiDataPromise = null;
+  wifiDataPromise = null;
   // Topic for Observer events fired by Region.jsm.
   REGION_TOPIC = "browser-region";
   // Verb for event fired when we update the region.
@@ -105,8 +86,8 @@ class RegionDetector {
    * region detection.
    */
   init() {
-    this._home = Services.prefs.getCharPref(REGION_PREF, null);
-    if (cacheBustEnabled || !this._home) {
+    let region = Services.prefs.getCharPref(REGION_PREF, null);
+    if (!region) {
       Services.tm.idleDispatchToMainThread(this._fetchRegion.bind(this));
     }
     if (localGeocodingEnabled) {
@@ -114,6 +95,7 @@ class RegionDetector {
         this._setupRemoteSettings.bind(this)
       );
     }
+    this._home = region;
   }
 
   /**
@@ -124,16 +106,6 @@ class RegionDetector {
    */
   get home() {
     return this._home;
-  }
-
-  /**
-   * Get the last region we detected the user to be in.
-   *
-   * @returns {string}
-   *   The users current region.
-   */
-  get current() {
-    return this._current;
   }
 
   /**
@@ -182,7 +154,8 @@ class RegionDetector {
     // the value. This works because no region defaults to
     // ZZ (unknown) in nsURLFormatter
     if (region != "US" || isTimezoneUS) {
-      this._setCurrentRegion(region, true);
+      log.info("Saving home region:", region);
+      this._setRegion(region, true);
     }
 
     // and telemetry...
@@ -238,64 +211,12 @@ class RegionDetector {
   }
 
   /**
-   * Save the update current region and check if the home region
-   * also needs an update.
+   * Save the updated region and notify observers.
    *
-   * @param {string} region
+   * @param region
    *   The region to store.
    */
-  _setCurrentRegion(region = "") {
-    log.info("Setting current region:", region);
-    this._current = region;
-
-    let prefs = Services.prefs;
-    // Interval is in seconds.
-    let interval = prefs.getIntPref(
-      `${UPDATE_PREFIX}.interval`,
-      UPDATE_INTERVAL
-    );
-    let seenRegion = prefs.getCharPref(`${UPDATE_PREFIX}.region`, null);
-    let firstSeen = prefs.getIntPref(`${UPDATE_PREFIX}.first-seen`, 0);
-
-    // If we don't have a value for .home we can set it immediately.
-    if (!this._home) {
-      this._setHomeRegion(region);
-    } else if (region != this._home && region != seenRegion) {
-      // If we are in a different region than what is currently
-      // considered home, then keep track of when we first
-      // seen the new location.
-      prefs.setCharPref(`${UPDATE_PREFIX}.region`, region);
-      prefs.setIntPref(
-        `${UPDATE_PREFIX}.first-seen`,
-        Math.round(Date.now() / 1000)
-      );
-    } else if (region != this._home && region == seenRegion) {
-      // If we have been in the new region for longer than
-      // a specified time period, then set that as the new home.
-      if (Math.round(Date.now() / 1000) >= firstSeen + interval) {
-        this._setHomeRegion(region);
-      }
-    } else {
-      // If we are at home again, stop tracking the seen region.
-      prefs.clearUserPref(`${UPDATE_PREFIX}.region`);
-      prefs.clearUserPref(`${UPDATE_PREFIX}.first-seen`);
-    }
-  }
-
-  /**
-   * Save the updated home region and notify observers.
-   *
-   * @param {string} region
-   *   The region to store.
-   * @param {boolean} [notify]
-   *   Tests can disable the notification for convenience as it
-   *   may trigger an engines reload.
-   */
-  _setHomeRegion(region, notify = true) {
-    if (region == this._home) {
-      return;
-    }
-    log.info("Updating home region:", region);
+  _setRegion(region = "", notify = false) {
     this._home = region;
     Services.prefs.setCharPref("browser.search.region", region);
     if (notify) {
@@ -646,13 +567,13 @@ class RegionDetector {
     this.wifiService.startWatching(this);
 
     return new Promise(resolve => {
-      this._wifiDataPromise = resolve;
+      this.wifiDataPromise = resolve;
     });
   }
 
   onChange(accessPoints) {
     log.info("onChange called");
-    if (!accessPoints || !this._wifiDataPromise) {
+    if (!accessPoints || !this.wifiDataPromise) {
       return;
     }
 
@@ -661,10 +582,10 @@ class RegionDetector {
       this.wifiService = null;
     }
 
-    if (this._wifiDataPromise) {
+    if (this.wifiDataPromise) {
       let data = LocationHelper.formatWifiAccessPoints(accessPoints);
-      this._wifiDataPromise(data);
-      this._wifiDataPromise = null;
+      this.wifiDataPromise(data);
+      this.wifiDataPromise = null;
     }
   }
 }

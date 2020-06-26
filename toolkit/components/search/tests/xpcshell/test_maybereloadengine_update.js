@@ -23,7 +23,7 @@ add_task(async function test_maybereloadengine_update() {
   let enginesReloaded = SearchTestUtils.promiseSearchNotification(
     "engines-reloaded"
   );
-  Region._setHomeRegion("FR", true);
+  Region._setRegion("FR", true);
   await enginesReloaded;
 
   Assert.equal(

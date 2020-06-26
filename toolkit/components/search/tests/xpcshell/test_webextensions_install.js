@@ -65,7 +65,7 @@ add_task(async function basic_install_test() {
 
 add_task(async function basic_multilocale_test() {
   await forceExpiration();
-  Region._setHomeRegion("an");
+  Region._setRegion("an", false);
 
   await withGeoServer(
     async function cont(requests) {
@@ -82,7 +82,7 @@ add_task(async function basic_multilocale_test() {
 
 add_task(async function complex_multilocale_test() {
   await forceExpiration();
-  Region._setHomeRegion("af", false);
+  Region._setRegion("af", false);
 
   await withGeoServer(
     async function cont(requests) {
@@ -99,7 +99,7 @@ add_task(async function complex_multilocale_test() {
 });
 add_task(async function test_manifest_selection() {
   await forceExpiration();
-  Region._setHomeRegion("an", false);
+  Region._setRegion("an", false);
   Services.locale.availableLocales = ["af"];
   Services.locale.requestedLocales = ["af"];
 

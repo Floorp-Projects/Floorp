@@ -23,7 +23,7 @@ add_task(async function setup() {
 add_task(async function test_maybereloadengine_update_distro() {
   await Services.search.init();
 
-  Region._setHomeRegion("FR", true);
+  Region._setRegion("FR", true);
   await SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
   let defaultEngine = await Services.search.getDefault();

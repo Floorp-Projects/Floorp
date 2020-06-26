@@ -5,13 +5,11 @@ const { AppConstants } = ChromeUtils.import(
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
 const REGION_PREF = "browser.region.network.url";
-const INTERVAL_PREF = "browser.region.update.interval";
 
 const RESPONSE_DELAY = 500;
 const RESPONSE_TIMEOUT = 100;
@@ -84,9 +82,11 @@ add_task(async function test_mismatched_probe() {
     probeHistogram.clear();
   }
   histogram.clear();
-  Region._home = null;
 
-  setNetworkRegion("AU");
+  Services.prefs.setCharPref(
+    REGION_PREF,
+    'data:application/json,{"country_code": "AU"}'
+  );
   await Region._fetchRegion();
   Assert.equal(Region.home, "AU", "Should have correct region");
   checkTelemetry(Region.TELEMETRY.SUCCESS);
@@ -115,33 +115,6 @@ add_task(async function test_location() {
 
   await new Promise(r => srv.stop(r));
 });
-
-add_task(async function test_update() {
-  Region._home = null;
-  setNetworkRegion("FR");
-  await Region._fetchRegion();
-  Assert.equal(Region.home, "FR", "Should have correct region");
-  setNetworkRegion("DE");
-  await Region._fetchRegion();
-  Assert.equal(Region.home, "FR", "Shouldnt have changed yet");
-  // Thie first fetchRegion will set the prefs to determine when
-  // to update the home region, we need to do 2 fetchRegions to test
-  // it isnt updating when it shouldnt.
-  await Region._fetchRegion();
-  Assert.equal(Region.home, "FR", "Shouldnt have changed yet again");
-  Services.prefs.setIntPref(INTERVAL_PREF, 1);
-  /* eslint-disable mozilla/no-arbitrary-setTimeout */
-  await new Promise(resolve => setTimeout(resolve, 1100));
-  await Region._fetchRegion();
-  Assert.equal(Region.home, "DE", "Should have updated now");
-});
-
-function setNetworkRegion(region) {
-  Services.prefs.setCharPref(
-    REGION_PREF,
-    `data:application/json,{"country_code": "${region}"}`
-  );
-}
 
 function useHttpServer(pref) {
   let server = new HttpServer();

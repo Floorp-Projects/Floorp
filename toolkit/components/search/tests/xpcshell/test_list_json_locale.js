@@ -16,7 +16,7 @@ add_task(async function setup() {
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
     true
   );
-  Region._setHomeRegion("US", false);
+  Region._setRegion("US", false);
 });
 
 add_task(async function test_listJSONlocale() {
@@ -82,7 +82,7 @@ add_task(async function test_listJSONlocaleSwitch() {
 
 // Check that region overrides apply
 add_task(async function test_listJSONRegionOverride() {
-  Region._setHomeRegion("RU", false);
+  Region._setRegion("RU", false);
 
   await asyncReInit();
 
