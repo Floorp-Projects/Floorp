@@ -8663,9 +8663,9 @@ class DeleteFilesRunnable final : public Runnable,
  private:
   ~DeleteFilesRunnable() = default;
 
-  nsresult Open();
+  void Open();
 
-  nsresult DoDatabaseWork();
+  void DoDatabaseWork();
 
   void Finish();
 
@@ -17721,13 +17721,14 @@ void DeleteFilesRunnable::RunImmediately() {
   Unused << this->Run();
 }
 
-nsresult DeleteFilesRunnable::Open() {
+void DeleteFilesRunnable::Open() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State_Initial);
 
   QuotaManager* const quotaManager = QuotaManager::Get();
   if (NS_WARN_IF(!quotaManager)) {
-    return NS_ERROR_FAILURE;
+    Finish();
+    return;
   }
 
   mState = State_DirectoryOpenPending;
@@ -17736,11 +17737,9 @@ nsresult DeleteFilesRunnable::Open() {
       quotaManager->OpenDirectory(mFileManager->Type(), mFileManager->Group(),
                                   mFileManager->Origin(), quota::Client::IDB,
                                   /* aExclusive */ false, this);
-
-  return NS_OK;
 }
 
-nsresult DeleteFilesRunnable::DoDatabaseWork() {
+void DeleteFilesRunnable::DoDatabaseWork() {
   AssertIsOnIOThread();
   MOZ_ASSERT(mState == State_DatabaseWorkOpen);
 
@@ -17753,11 +17752,11 @@ nsresult DeleteFilesRunnable::DoDatabaseWork() {
   }
 
   Finish();
-
-  return NS_OK;
 }
 
 void DeleteFilesRunnable::Finish() {
+  MOZ_ASSERT(mState != State_UnblockingOpen);
+
   // Must set mState before dispatching otherwise we will race with the main
   // thread.
   mState = State_UnblockingOpen;
@@ -17778,28 +17777,22 @@ NS_IMPL_ISUPPORTS_INHERITED0(DeleteFilesRunnable, Runnable)
 
 NS_IMETHODIMP
 DeleteFilesRunnable::Run() {
-  nsresult rv;
-
   switch (mState) {
     case State_Initial:
-      rv = Open();
+      Open();
       break;
 
     case State_DatabaseWorkOpen:
-      rv = DoDatabaseWork();
+      DoDatabaseWork();
       break;
 
     case State_UnblockingOpen:
       UnblockOpen();
-      return NS_OK;
+      break;
 
     case State_DirectoryOpenPending:
     default:
       MOZ_CRASH("Should never get here!");
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State_UnblockingOpen) {
-    Finish();
   }
 
   return NS_OK;
