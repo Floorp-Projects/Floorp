@@ -7055,7 +7055,12 @@ class LWasmRegisterResult : public LInstructionHelper<1, 0, 0> {
 
   LWasmRegisterResult() : LInstructionHelper(classOpcode) {}
 
-  MWasmRegisterResult* mir() const { return mir_->toWasmRegisterResult(); }
+  MWasmRegisterResult* mir() const {
+    if (!mir_->isWasmRegisterResult()) {
+      return nullptr;
+    }
+    return mir_->toWasmRegisterResult();
+  }
 };
 
 class LWasmRegisterPairResult : public LInstructionHelper<2, 0, 0> {

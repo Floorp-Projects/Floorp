@@ -1527,6 +1527,9 @@ void CodeGenerator::visitBitAndAndBranch(LBitAndAndBranch* baab) {
   emitBranch(baab->cond(), baab->ifTrue(), baab->ifFalse());
 }
 
+// See ../CodeGenerator.cpp for more information.
+void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {}
+
 void CodeGenerator::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir) {
   masm.convertUInt32ToDouble(ToRegister(lir->input()),
                              ToFloatRegister(lir->output()));
