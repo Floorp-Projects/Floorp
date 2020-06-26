@@ -27,7 +27,7 @@
             android:visibility="visible"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
+        <org.mozilla.fenix.utils.LinkTextView
             android:id="@+id/exceptions_learn_more"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

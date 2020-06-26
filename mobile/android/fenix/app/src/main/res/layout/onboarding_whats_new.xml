@@ -40,7 +40,7 @@
         app:layout_constraintTop_toBottomOf="@id/header_text"
         tools:text="@string/onboarding_whats_new_description" />
 
-    <TextView
+    <org.mozilla.fenix.utils.LinkTextView
         android:id="@+id/get_answers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

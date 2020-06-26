@@ -37,7 +37,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
 
-        <TextView
+        <org.mozilla.fenix.utils.LinkTextView
             android:id="@+id/saved_passwords_empty_learn_more"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
