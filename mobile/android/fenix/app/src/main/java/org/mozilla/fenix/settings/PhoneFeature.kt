@@ -42,28 +42,25 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
         sitePermissions: SitePermissions? = null,
         settings: Settings? = null
     ): String {
-        @StringRes val stringRes =
-            when (isAndroidPermissionGranted(context)) {
-                false -> R.string.phone_feature_blocked_by_android
-                else -> when (this) {
-                    AUTOPLAY_AUDIBLE -> {
-                        when (settings?.getAutoplayUserSetting(default = AUTOPLAY_BLOCK_ALL) ?: AUTOPLAY_BLOCK_ALL) {
-                            AUTOPLAY_ALLOW_ALL -> R.string.preference_option_autoplay_allowed2
-                            AUTOPLAY_ALLOW_ON_WIFI -> R.string.preference_option_autoplay_allowed_wifi_only2
-                            AUTOPLAY_BLOCK_AUDIBLE -> R.string.preference_option_autoplay_block_audio2
-                            AUTOPLAY_BLOCK_ALL -> R.string.preference_option_autoplay_blocked3
-                            else -> R.string.preference_option_autoplay_blocked3
-                        }
+        @StringRes val stringRes = if (isAndroidPermissionGranted(context)) {
+            when (this) {
+                AUTOPLAY_AUDIBLE ->
+                    when (settings?.getAutoplayUserSetting(default = AUTOPLAY_BLOCK_ALL) ?: AUTOPLAY_BLOCK_ALL) {
+                        AUTOPLAY_ALLOW_ALL -> R.string.preference_option_autoplay_allowed2
+                        AUTOPLAY_ALLOW_ON_WIFI -> R.string.preference_option_autoplay_allowed_wifi_only2
+                        AUTOPLAY_BLOCK_AUDIBLE -> R.string.preference_option_autoplay_block_audio2
+                        AUTOPLAY_BLOCK_ALL -> R.string.preference_option_autoplay_blocked3
+                        else -> R.string.preference_option_autoplay_blocked3
                     }
-                    else -> {
-                        when (getStatus(sitePermissions, settings)) {
-                            SitePermissions.Status.BLOCKED -> R.string.preference_option_phone_feature_blocked
-                            SitePermissions.Status.NO_DECISION -> R.string.preference_option_phone_feature_ask_to_allow
-                            SitePermissions.Status.ALLOWED -> R.string.preference_option_phone_feature_allowed
-                        }
-                    }
+                else -> when (getStatus(sitePermissions, settings)) {
+                    SitePermissions.Status.BLOCKED -> R.string.preference_option_phone_feature_blocked
+                    SitePermissions.Status.NO_DECISION -> R.string.preference_option_phone_feature_ask_to_allow
+                    SitePermissions.Status.ALLOWED -> R.string.preference_option_phone_feature_allowed
                 }
             }
+        } else {
+            R.string.phone_feature_blocked_by_android
+        }
         return context.getString(stringRes)
     }
 
@@ -109,7 +106,7 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
     fun getAction(settings: Settings): SitePermissionsRules.Action =
         settings.getSitePermissionsPhoneFeatureAction(this, getDefault())
 
-    fun getDefault(): SitePermissionsRules.Action {
+    private fun getDefault(): SitePermissionsRules.Action {
         return when (this) {
             AUTOPLAY_AUDIBLE -> SitePermissionsRules.Action.BLOCKED
             AUTOPLAY_INAUDIBLE -> SitePermissionsRules.Action.ALLOWED
