@@ -22,8 +22,8 @@ import mozilla.components.support.base.log.logger.Logger
 /**
  * This activity is launched by Web App shortcuts on the home screen.
  *
- * Based on the Web App Manifest (display) it will decide whether the app is launched in the browser or in a
- * standalone activity.
+ * Based on the Web App Manifest (display) it will decide whether the app is launched in the
+ * browser or in a standalone activity.
  */
 class WebAppLauncherActivity : AppCompatActivity() {
 
@@ -37,9 +37,7 @@ class WebAppLauncherActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         storage = ManifestStorage(this)
 
-        if (savedInstanceState == null) {
-            setBackgroundStartTime(0L) // reset
-        }
+        backgroundStartTime = savedInstanceState?.getLong("backgroundStartTime") ?: 0L
 
         val startUrl = intent.data ?: return finish()
 
@@ -51,17 +49,24 @@ class WebAppLauncherActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(bundle: Bundle) {
+        // reset background start time
+        backgroundStartTime = 0L
+        bundle.putLong("backgroundStartTime", backgroundStartTime)
+        super.onSaveInstanceState(bundle)
+    }
+
     override fun onResume() {
         super.onResume()
 
         val backgroundEndTime = SystemClock.elapsedRealtimeNanos()
         emitBackgroundTimingFact(backgroundEndTime - backgroundStartTime)
-
         setBackgroundStartTime(0L) // reset
     }
 
     override fun onPause() {
         super.onPause()
+        // record when we go into the background
         setBackgroundStartTime(SystemClock.elapsedRealtimeNanos())
     }
 
@@ -73,10 +78,6 @@ class WebAppLauncherActivity : AppCompatActivity() {
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun setBackgroundStartTime(timeNs: Long) {
         backgroundStartTime = timeNs
-        val bundle = Bundle()
-        bundle.putLong("backgroundStartTime", backgroundStartTime)
-
-        onSaveInstanceState(bundle)
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
