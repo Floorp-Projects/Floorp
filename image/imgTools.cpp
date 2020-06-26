@@ -110,17 +110,14 @@ class ImageDecoderListener final : public nsIStreamListener,
 
   NS_IMETHOD
   OnStopRequest(nsIRequest* aRequest, nsresult aStatus) override {
-    // Depending on the error, we might not have received any data yet, in which
-    // case we would not have an |mImage|
-    if (mImage) {
-      mImage->OnImageDataComplete(aRequest, nullptr, aStatus, true);
+    // Encouter a fetch error, or no data could be fetched.
+    if (!mImage || NS_FAILED(aStatus)) {
+      mCallback->OnImageReady(nullptr, mImage ? aStatus : NS_ERROR_FAILURE);
+      return NS_OK;
     }
 
-    nsCOMPtr<imgIContainer> container;
-    if (NS_SUCCEEDED(aStatus)) {
-      container = this;
-    }
-
+    mImage->OnImageDataComplete(aRequest, nullptr, aStatus, true);
+    nsCOMPtr<imgIContainer> container = this;
     mCallback->OnImageReady(container, aStatus);
     return NS_OK;
   }
