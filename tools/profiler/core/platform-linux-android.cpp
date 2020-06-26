@@ -63,7 +63,6 @@
 #include <stdarg.h>
 
 #include "prenv.h"
-#include "mozilla/LinuxSignal.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/DebugOnly.h"
 #if defined(GP_OS_linux) || defined(GP_OS_android)
@@ -288,7 +287,7 @@ Sampler::Sampler(PSLockRef aLock)
 
   // Request profiling signals.
   struct sigaction sa;
-  sa.sa_sigaction = MOZ_SIGNAL_TRAMPOLINE(SigprofHandler);
+  sa.sa_sigaction = SigprofHandler;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART | SA_SIGINFO;
   if (sigaction(SIGPROF, &sa, &mOldSigprofHandler) != 0) {
