@@ -939,6 +939,85 @@ class ResolvePromiseRunnable final : public CancelableRunnable {
 
 }  // namespace
 
+NS_IMETHODIMP
+ServiceWorkerManager::RegisterForTest(nsIPrincipal* aPrincipal,
+                                      const nsAString& aScopeURL,
+                                      const nsAString& aScriptURL,
+                                      JSContext* aCx,
+                                      mozilla::dom::Promise** aPromise) {
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult erv;
+  RefPtr<Promise> outer = Promise::Create(global, erv);
+  if (NS_WARN_IF(erv.Failed())) {
+    return erv.StealNSResult();
+  }
+
+  if (!StaticPrefs::dom_serviceWorkers_testing_enabled()) {
+    outer->MaybeRejectWithAbortError(
+        "registerForTest only allowed when dom.serviceWorkers.testing.enabled "
+        "is true");
+    return NS_OK;
+  }
+
+  if (aPrincipal == nullptr) {
+    outer->MaybeRejectWithAbortError("Missing principal");
+    return NS_OK;
+  }
+
+  if (aScriptURL.IsEmpty()) {
+    outer->MaybeRejectWithAbortError("Missing script url");
+    return NS_OK;
+  }
+
+  if (aScopeURL.IsEmpty()) {
+    outer->MaybeRejectWithAbortError("Missing scope url");
+    return NS_OK;
+  }
+
+  // The ClientType isn't really used here, but ClientType::Window
+  // is the least bad choice since this is happening on the main thread.
+  Maybe<ClientInfo> clientInfo =
+      dom::ClientManager::CreateInfo(ClientType::Window, aPrincipal);
+
+  if (!clientInfo.isSome()) {
+    outer->MaybeRejectWithUnknownError("Error creating clientInfo");
+    return NS_OK;
+  }
+
+  auto scope = NS_ConvertUTF16toUTF8(aScopeURL);
+  auto scriptURL = NS_ConvertUTF16toUTF8(aScriptURL);
+
+  auto regPromise = Register(clientInfo.ref(), scope, scriptURL,
+                             dom::ServiceWorkerUpdateViaCache::Imports);
+  const RefPtr<ServiceWorkerManager> self(this);
+  const nsCOMPtr<nsIPrincipal> principal(aPrincipal);
+  regPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self, outer, principal,
+       scope](const ServiceWorkerRegistrationDescriptor& regDesc) {
+        RefPtr<ServiceWorkerRegistrationInfo> registration =
+            self->GetRegistration(principal, NS_ConvertUTF16toUTF8(scope));
+        if (registration) {
+          outer->MaybeResolve(registration);
+        } else {
+          outer->MaybeRejectWithUnknownError(
+              "Failed to retrieve ServiceWorkerRegistrationInfo");
+        }
+      },
+      [outer](const mozilla::CopyableErrorResult& err) {
+        CopyableErrorResult result(err);
+        outer->MaybeReject(std::move(result));
+      });
+
+  outer.forget(aPromise);
+
+  return NS_OK;
+}
+
 RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerManager::Register(
     const ClientInfo& aClientInfo, const nsACString& aScopeURL,
     const nsACString& aScriptURL, ServiceWorkerUpdateViaCache aUpdateViaCache) {
