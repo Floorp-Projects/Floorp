@@ -93,7 +93,7 @@ class AccessibilityProxy {
   }
 
   get currentTarget() {
-    return this._currentTarget;
+    return this.toolbox.targetList.targetFront;
   }
 
   /**
@@ -408,7 +408,7 @@ class AccessibilityProxy {
       this.onTargetAvailable,
       this.onTargetDestroyed
     );
-    this.parentAccessibilityFront = await this._currentTarget.client.mainRoot.getFront(
+    this.parentAccessibilityFront = await this.toolbox.targetList.rootFront.getFront(
       "parentaccessibility"
     );
     // Bug 1602075: auto init feature definition is used for an experiment to
@@ -523,10 +523,9 @@ class AccessibilityProxy {
       return;
     }
 
-    this._currentTarget = targetFront;
     this._accessibilityWalkerFronts.clear();
 
-    this.accessibilityFront = await this._currentTarget.getFront(
+    this.accessibilityFront = await this.currentTarget.getFront(
       "accessibility"
     );
     // To add a check for backward compatibility add something similar to the
@@ -534,7 +533,7 @@ class AccessibilityProxy {
     //
     // [this.supports.simulation] = await Promise.all([
     //   // Please specify the version of Firefox when the feature was added.
-    //   this._currentTarget.actorHasMethod("accessibility", "getSimulator"),
+    //   this.currentTarget.actorHasMethod("accessibility", "getSimulator"),
     // ]);
     this.simulatorFront = this.accessibilityFront.simulatorFront;
     if (this.simulatorFront) {
@@ -551,10 +550,7 @@ class AccessibilityProxy {
       }
     }
 
-    this._updateTargetListeners.emit("target-updated", {
-      targetFront: this._currentTarget,
-      isTargetSwitching,
-    });
+    this._updateTargetListeners.emit("target-updated", { isTargetSwitching });
   }
 
   async onTargetDestroyed({ targetFront }) {
