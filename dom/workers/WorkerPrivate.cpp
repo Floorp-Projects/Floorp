@@ -1898,7 +1898,7 @@ void WorkerPrivate::GarbageCollect(bool aShrinking) {
   }
 }
 
-void WorkerPrivate::CycleCollect(bool aDummy) {
+void WorkerPrivate::CycleCollect() {
   AssertIsOnParentThread();
 
   RefPtr<CycleCollectRunnable> runnable =
@@ -1952,7 +1952,7 @@ void WorkerPrivate::OfflineStatusChangeEventInternal(bool aIsOffline) {
   globalScope->DispatchEvent(*event);
 }
 
-void WorkerPrivate::MemoryPressure(bool aDummy) {
+void WorkerPrivate::MemoryPressure() {
   AssertIsOnParentThread();
 
   RefPtr<MemoryPressureRunnable> runnable = new MemoryPressureRunnable(this);
@@ -4900,7 +4900,7 @@ void WorkerPrivate::CycleCollectInternal(bool aCollectChildren) {
 
   if (aCollectChildren) {
     for (uint32_t index = 0; index < data->mChildWorkers.Length(); index++) {
-      data->mChildWorkers[index]->CycleCollect(/* aDummy = */ false);
+      data->mChildWorkers[index]->CycleCollect();
     }
   }
 }
@@ -4930,7 +4930,7 @@ void WorkerPrivate::MemoryPressureInternal() {
   }
 
   for (uint32_t index = 0; index < data->mChildWorkers.Length(); index++) {
-    data->mChildWorkers[index]->MemoryPressure(false);
+    data->mChildWorkers[index]->MemoryPressure();
   }
 }
 

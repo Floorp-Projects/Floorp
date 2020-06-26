@@ -123,24 +123,6 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define LOW_MEMORY_ONGOING_DATA "low-memory-ongoing"
 #define MEMORY_PRESSURE_STOP_OBSERVER_TOPIC "memory-pressure-stop"
 
-#define BROADCAST_ALL_WORKERS(_func, ...)                         \
-  PR_BEGIN_MACRO                                                  \
-  AssertIsOnMainThread();                                         \
-                                                                  \
-  AutoTArray<WorkerPrivate*, 100> workers;                        \
-  {                                                               \
-    MutexAutoLock lock(mMutex);                                   \
-                                                                  \
-    AddAllTopLevelWorkersToArray(workers);                        \
-  }                                                               \
-                                                                  \
-  if (!workers.IsEmpty()) {                                       \
-    for (uint32_t index = 0; index < workers.Length(); index++) { \
-      workers[index]->_func(__VA_ARGS__);                         \
-    }                                                             \
-  }                                                               \
-  PR_END_MACRO
-
 // Prefixes for observing preference changes.
 #define PREF_JS_OPTIONS_PREFIX "javascript.options."
 #define PREF_WORKERS_OPTIONS_PREFIX PREF_WORKERS_PREFIX "options."
@@ -1319,7 +1301,7 @@ void RuntimeService::UnregisterWorker(WorkerPrivate& aWorkerPrivate) {
   } else if (aWorkerPrivate.IsSharedWorker()) {
     AssertIsOnMainThread();
 
-    for (auto iter = mWindowMap.Iter(); !iter.Done(); iter.Next()) {
+    mWindowMap.RemoveIf([&aWorkerPrivate](const auto& iter) {
       const auto& workers = iter.Data();
       MOZ_ASSERT(workers);
 
@@ -1327,11 +1309,11 @@ void RuntimeService::UnregisterWorker(WorkerPrivate& aWorkerPrivate) {
         MOZ_ASSERT(!workers->Contains(&aWorkerPrivate),
                    "Added worker more than once!");
 
-        if (workers->IsEmpty()) {
-          iter.Remove();
-        }
+        return workers->IsEmpty();
       }
-    }
+
+      return false;
+    });
   } else if (aWorkerPrivate.IsDedicatedWorker()) {
     // May be null.
     nsPIDOMWindowInner* window = aWorkerPrivate.GetWindow();
@@ -1402,7 +1384,7 @@ void RuntimeService::ShutdownIdleThreads(nsITimer* aTimer,
   NS_ASSERTION(aTimer == runtime->mIdleThreadTimer, "Wrong timer!");
 
   // Cheat a little and grab all threads that expire within one second of now.
-  TimeStamp now = TimeStamp::NowLoRes() + TimeDuration::FromSeconds(1);
+  const TimeStamp now = TimeStamp::NowLoRes() + TimeDuration::FromSeconds(1);
 
   TimeStamp nextExpiration;
 
@@ -1410,9 +1392,7 @@ void RuntimeService::ShutdownIdleThreads(nsITimer* aTimer,
   {
     MutexAutoLock lock(runtime->mMutex);
 
-    for (uint32_t index = 0; index < runtime->mIdleThreadArray.Length();
-         index++) {
-      IdleThreadInfo& info = runtime->mIdleThreadArray[index];
+    for (auto& info : runtime->mIdleThreadArray) {
       if (info.mExpirationTime > now) {
         nextExpiration = info.mExpirationTime;
         break;
@@ -1421,14 +1401,12 @@ void RuntimeService::ShutdownIdleThreads(nsITimer* aTimer,
       expiredThreads.AppendElement(std::move(info.mThread));
     }
 
-    if (!expiredThreads.IsEmpty()) {
-      runtime->mIdleThreadArray.RemoveElementsAt(0, expiredThreads.Length());
-    }
+    runtime->mIdleThreadArray.RemoveElementsAt(0, expiredThreads.Length());
   }
 
   if (!nextExpiration.IsNull()) {
-    TimeDuration delta = nextExpiration - TimeStamp::NowLoRes();
-    uint32_t delay(delta > TimeDuration(0) ? delta.ToMilliseconds() : 0);
+    const TimeDuration delta = nextExpiration - TimeStamp::NowLoRes();
+    const uint32_t delay = delta > TimeDuration{} ? delta.ToMilliseconds() : 0;
 
     // Reschedule the timer.
     MOZ_ALWAYS_SUCCEEDS(aTimer->InitWithNamedFuncCallback(
@@ -1436,8 +1414,8 @@ void RuntimeService::ShutdownIdleThreads(nsITimer* aTimer,
         "RuntimeService::ShutdownIdleThreads"));
   }
 
-  for (uint32_t index = 0; index < expiredThreads.Length(); index++) {
-    if (NS_FAILED(expiredThreads[index]->Shutdown())) {
+  for (const auto& expiredThread : expiredThreads) {
+    if (NS_FAILED(expiredThread->Shutdown())) {
       NS_WARNING("Failed to shutdown thread!");
     }
   }
@@ -1569,21 +1547,18 @@ void RuntimeService::Shutdown() {
   }
 
   {
-    MutexAutoLock lock(mMutex);
-
     AutoTArray<WorkerPrivate*, 100> workers;
-    AddAllTopLevelWorkersToArray(workers);
 
-    if (!workers.IsEmpty()) {
-      // Cancel all top-level workers.
-      {
-        MutexAutoUnlock unlock(mMutex);
+    {
+      MutexAutoLock lock(mMutex);
 
-        for (uint32_t index = 0; index < workers.Length(); index++) {
-          if (!workers[index]->Cancel()) {
-            NS_WARNING("Failed to cancel worker!");
-          }
-        }
+      AddAllTopLevelWorkersToArray(workers);
+    }
+
+    // Cancel all top-level workers.
+    for (const auto& worker : workers) {
+      if (!worker->Cancel()) {
+        NS_WARNING("Failed to cancel worker!");
       }
     }
   }
@@ -1670,20 +1645,17 @@ void RuntimeService::CrashIfHanging() {
   ActiveWorkerStats activeStats;
   uint32_t inactiveWorkers = 0;
 
-  for (auto iter = mDomainMap.Iter(); !iter.Done(); iter.Next()) {
-    WorkerDomainInfo* aData = iter.UserData();
+  for (const auto& entry : mDomainMap) {
+    const WorkerDomainInfo* const aData = entry.GetData().get();
 
     activeStats.Update<&ActiveWorkerStats::mWorkers>(aData->mActiveWorkers);
     activeStats.Update<&ActiveWorkerStats::mServiceWorkers>(
         aData->mActiveServiceWorkers);
 
     // These might not be top-level workers...
-    for (uint32_t index = 0; index < aData->mQueuedWorkers.Length(); index++) {
-      WorkerPrivate* worker = aData->mQueuedWorkers[index];
-      if (!worker->GetParent()) {
-        ++inactiveWorkers;
-      }
-    }
+    inactiveWorkers += std::count_if(
+        aData->mQueuedWorkers.begin(), aData->mQueuedWorkers.end(),
+        [](const auto* const worker) { return !worker->GetParent(); });
   }
 
   if (activeStats.mWorkers + activeStats.mServiceWorkers + inactiveWorkers ==
@@ -1735,21 +1707,25 @@ void RuntimeService::Cleanup() {
       // Shut down any idle threads.
       if (!mIdleThreadArray.IsEmpty()) {
         AutoTArray<SafeRefPtr<WorkerThread>, 20> idleThreads;
+        idleThreads.SetCapacity(mIdleThreadArray.Length());
 
-        uint32_t idleThreadCount = mIdleThreadArray.Length();
-        idleThreads.SetLength(idleThreadCount);
+#ifdef DEBUG
+        const bool anyNullThread = std::any_of(
+            mIdleThreadArray.begin(), mIdleThreadArray.end(),
+            [](const auto& entry) { return entry.mThread == nullptr; });
+        MOZ_ASSERT(!anyNullThread);
+#endif
 
-        for (uint32_t index = 0; index < idleThreadCount; index++) {
-          NS_ASSERTION(mIdleThreadArray[index].mThread, "Null thread!");
-          idleThreads[index] = std::move(mIdleThreadArray[index].mThread);
-        }
+        std::transform(mIdleThreadArray.begin(), mIdleThreadArray.end(),
+                       MakeBackInserter(idleThreads),
+                       [](auto& entry) { return std::move(entry.mThread); });
 
         mIdleThreadArray.Clear();
 
         MutexAutoUnlock unlock(mMutex);
 
-        for (uint32_t index = 0; index < idleThreadCount; index++) {
-          if (NS_FAILED(idleThreads[index]->Shutdown())) {
+        for (const auto& idleThread : idleThreads) {
+          if (NS_FAILED(idleThread->Shutdown())) {
             NS_WARNING("Failed to shutdown thread!");
           }
         }
@@ -1827,17 +1803,16 @@ void RuntimeService::Cleanup() {
 
 void RuntimeService::AddAllTopLevelWorkersToArray(
     nsTArray<WorkerPrivate*>& aWorkers) {
-  for (auto iter = mDomainMap.Iter(); !iter.Done(); iter.Next()) {
-    WorkerDomainInfo* aData = iter.UserData();
+  for (const auto& entry : mDomainMap) {
+    WorkerDomainInfo* const aData = entry.GetData().get();
 
 #ifdef DEBUG
-    for (uint32_t index = 0; index < aData->mActiveWorkers.Length(); index++) {
-      MOZ_ASSERT(!aData->mActiveWorkers[index]->GetParent(),
+    for (const auto& activeWorker : aData->mActiveWorkers) {
+      MOZ_ASSERT(!activeWorker->GetParent(),
                  "Shouldn't have a parent in this list!");
     }
-    for (uint32_t index = 0; index < aData->mActiveServiceWorkers.Length();
-         index++) {
-      MOZ_ASSERT(!aData->mActiveServiceWorkers[index]->GetParent(),
+    for (const auto& activeServiceWorker : aData->mActiveServiceWorkers) {
+      MOZ_ASSERT(!activeServiceWorker->GetParent(),
                  "Shouldn't have a parent in this list!");
     }
 #endif
@@ -1846,12 +1821,9 @@ void RuntimeService::AddAllTopLevelWorkersToArray(
     aWorkers.AppendElements(aData->mActiveServiceWorkers);
 
     // These might not be top-level workers...
-    for (uint32_t index = 0; index < aData->mQueuedWorkers.Length(); index++) {
-      WorkerPrivate* worker = aData->mQueuedWorkers[index];
-      if (!worker->GetParent()) {
-        aWorkers.AppendElement(worker);
-      }
-    }
+    std::copy_if(aData->mQueuedWorkers.begin(), aData->mQueuedWorkers.end(),
+                 MakeBackInserter(aWorkers),
+                 [](const auto& worker) { return !worker->GetParent(); });
   }
 }
 
@@ -1870,36 +1842,27 @@ nsTArray<WorkerPrivate*> RuntimeService::GetWorkersForWindow(
 void RuntimeService::CancelWorkersForWindow(const nsPIDOMWindowInner& aWindow) {
   AssertIsOnMainThread();
 
-  const nsTArray<WorkerPrivate*> workers = GetWorkersForWindow(aWindow);
-
-  if (!workers.IsEmpty()) {
-    for (uint32_t index = 0; index < workers.Length(); index++) {
-      WorkerPrivate* const& worker = workers[index];
-      MOZ_ASSERT(!worker->IsSharedWorker());
-      worker->Cancel();
-    }
+  for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
+    MOZ_ASSERT(!worker->IsSharedWorker());
+    worker->Cancel();
   }
 }
 
 void RuntimeService::FreezeWorkersForWindow(const nsPIDOMWindowInner& aWindow) {
   AssertIsOnMainThread();
 
-  const nsTArray<WorkerPrivate*> workers = GetWorkersForWindow(aWindow);
-
-  for (uint32_t index = 0; index < workers.Length(); index++) {
-    MOZ_ASSERT(!workers[index]->IsSharedWorker());
-    workers[index]->Freeze(&aWindow);
+  for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
+    MOZ_ASSERT(!worker->IsSharedWorker());
+    worker->Freeze(&aWindow);
   }
 }
 
 void RuntimeService::ThawWorkersForWindow(const nsPIDOMWindowInner& aWindow) {
   AssertIsOnMainThread();
 
-  const nsTArray<WorkerPrivate*> workers = GetWorkersForWindow(aWindow);
-
-  for (uint32_t index = 0; index < workers.Length(); index++) {
-    MOZ_ASSERT(!workers[index]->IsSharedWorker());
-    workers[index]->Thaw(&aWindow);
+  for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
+    MOZ_ASSERT(!worker->IsSharedWorker());
+    worker->Thaw(&aWindow);
   }
 }
 
@@ -1907,22 +1870,18 @@ void RuntimeService::SuspendWorkersForWindow(
     const nsPIDOMWindowInner& aWindow) {
   AssertIsOnMainThread();
 
-  const nsTArray<WorkerPrivate*> workers = GetWorkersForWindow(aWindow);
-
-  for (uint32_t index = 0; index < workers.Length(); index++) {
-    MOZ_ASSERT(!workers[index]->IsSharedWorker());
-    workers[index]->ParentWindowPaused();
+  for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
+    MOZ_ASSERT(!worker->IsSharedWorker());
+    worker->ParentWindowPaused();
   }
 }
 
 void RuntimeService::ResumeWorkersForWindow(const nsPIDOMWindowInner& aWindow) {
   AssertIsOnMainThread();
 
-  const nsTArray<WorkerPrivate*> workers = GetWorkersForWindow(aWindow);
-
-  for (uint32_t index = 0; index < workers.Length(); index++) {
-    MOZ_ASSERT(!workers[index]->IsSharedWorker());
-    workers[index]->ParentWindowResumed();
+  for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
+    MOZ_ASSERT(!worker->IsSharedWorker());
+    worker->ParentWindowResumed();
   }
 }
 
@@ -1933,10 +1892,8 @@ void RuntimeService::PropagateStorageAccessPermissionGranted(
                                             ->CookieJarSettings()
                                             ->GetRejectThirdPartyContexts());
 
-  const nsTArray<WorkerPrivate*> workers = GetWorkersForWindow(aWindow);
-
-  for (uint32_t index = 0; index < workers.Length(); index++) {
-    workers[index]->PropagateStorageAccessPermissionGranted();
+  for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
+    worker->PropagateStorageAccessPermissionGranted();
   }
 }
 
@@ -1951,14 +1908,14 @@ void RuntimeService::NoteIdleThread(SafeRefPtr<WorkerThread> aThread) {
     static TimeDuration timeout =
         TimeDuration::FromSeconds(IDLE_THREAD_TIMEOUT_SEC);
 
-    TimeStamp expirationTime = TimeStamp::NowLoRes() + timeout;
+    const TimeStamp expirationTime = TimeStamp::NowLoRes() + timeout;
 
     MutexAutoLock lock(mMutex);
 
-    uint32_t previousIdleCount = mIdleThreadArray.Length();
+    const uint32_t previousIdleCount = mIdleThreadArray.Length();
 
     if (previousIdleCount < MAX_IDLE_THREADS) {
-      IdleThreadInfo* info = mIdleThreadArray.AppendElement();
+      IdleThreadInfo* const info = mIdleThreadArray.AppendElement();
       info->mThread = std::move(aThread);
       info->mExpirationTime = expirationTime;
 
@@ -1981,9 +1938,26 @@ void RuntimeService::NoteIdleThread(SafeRefPtr<WorkerThread> aThread) {
   }
 }
 
+template <typename Func>
+void RuntimeService::BroadcastAllWorkers(const Func& aFunc) {
+  AssertIsOnMainThread();
+
+  AutoTArray<WorkerPrivate*, 100> workers;
+  {
+    MutexAutoLock lock(mMutex);
+
+    AddAllTopLevelWorkersToArray(workers);
+  }
+
+  for (const auto& worker : workers) {
+    aFunc(*worker);
+  }
+}
+
 void RuntimeService::UpdateAllWorkerContextOptions() {
-  BROADCAST_ALL_WORKERS(UpdateContextOptions,
-                        sDefaultJSSettings->contextOptions);
+  BroadcastAllWorkers([](auto& worker) {
+    worker.UpdateContextOptions(sDefaultJSSettings->contextOptions);
+  });
 }
 
 void RuntimeService::UpdateAppNameOverridePreference(const nsAString& aValue) {
@@ -2007,39 +1981,48 @@ void RuntimeService::UpdateAllWorkerLanguages(
   MOZ_ASSERT(NS_IsMainThread());
 
   mNavigatorProperties.mLanguages = aLanguages.Clone();
-  BROADCAST_ALL_WORKERS(UpdateLanguages, aLanguages);
+  BroadcastAllWorkers(
+      [&aLanguages](auto& worker) { worker.UpdateLanguages(aLanguages); });
 }
 
 void RuntimeService::UpdateAllWorkerMemoryParameter(JSGCParamKey aKey,
                                                     Maybe<uint32_t> aValue) {
-  BROADCAST_ALL_WORKERS(UpdateJSWorkerMemoryParameter, aKey, aValue);
+  BroadcastAllWorkers([aKey, aValue](auto& worker) {
+    worker.UpdateJSWorkerMemoryParameter(aKey, aValue);
+  });
 }
 
 #ifdef JS_GC_ZEAL
 void RuntimeService::UpdateAllWorkerGCZeal() {
-  BROADCAST_ALL_WORKERS(UpdateGCZeal, sDefaultJSSettings->gcZeal,
+  BroadcastAllWorkers([](auto& worker) {
+    worker.UpdateGCZeal(sDefaultJSSettings->gcZeal,
                         sDefaultJSSettings->gcZealFrequency);
+  });
 }
 #endif
 
 void RuntimeService::SetLowMemoryStateAllWorkers(bool aState) {
-  BROADCAST_ALL_WORKERS(SetLowMemoryState, aState);
+  BroadcastAllWorkers(
+      [aState](auto& worker) { worker.SetLowMemoryState(aState); });
 }
 
 void RuntimeService::GarbageCollectAllWorkers(bool aShrinking) {
-  BROADCAST_ALL_WORKERS(GarbageCollect, aShrinking);
+  BroadcastAllWorkers(
+      [aShrinking](auto& worker) { worker.GarbageCollect(aShrinking); });
 }
 
 void RuntimeService::CycleCollectAllWorkers() {
-  BROADCAST_ALL_WORKERS(CycleCollect, /* dummy = */ false);
+  BroadcastAllWorkers([](auto& worker) { worker.CycleCollect(); });
 }
 
 void RuntimeService::SendOfflineStatusChangeEventToAllWorkers(bool aIsOffline) {
-  BROADCAST_ALL_WORKERS(OfflineStatusChangeEvent, aIsOffline);
+  BroadcastAllWorkers([aIsOffline](auto& worker) {
+    worker.OfflineStatusChangeEvent(aIsOffline);
+  });
 }
 
 void RuntimeService::MemoryPressureAllWorkers() {
-  BROADCAST_ALL_WORKERS(MemoryPressure, /* dummy = */ false);
+  BroadcastAllWorkers([](auto& worker) { worker.MemoryPressure(); });
 }
 
 uint32_t RuntimeService::ClampedHardwareConcurrency() const {
