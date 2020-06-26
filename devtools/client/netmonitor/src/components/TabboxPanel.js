@@ -46,6 +46,7 @@ const TimingsPanel = createFactory(
 );
 
 const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
+const ALL_TABS_MENU_BUTTON_TOOLTIP = L10N.getStr("allTabsMenuButton.tooltip");
 const CACHE_TITLE = L10N.getStr("netmonitor.tab.cache");
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
 const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
@@ -134,6 +135,7 @@ class TabboxPanel extends Component {
         onSelect: selectTab,
         renderOnlySelected: true,
         showAllTabsMenu: true,
+        allTabsMenuButtonTooltip: ALL_TABS_MENU_BUTTON_TOOLTIP,
         sidebarToggleButton: hideToggleButton
           ? null
           : {
