@@ -80,6 +80,7 @@ void CanvasThreadHolder::StaticRelease(
 
   auto lockedCanvasThreadHolder = sCanvasThreadHolder.Lock();
   if (lockedCanvasThreadHolder.ref()->mRefCnt == 1) {
+    lockedCanvasThreadHolder.ref()->mCanvasThread->Shutdown();
     lockedCanvasThreadHolder.ref() = nullptr;
   }
 }

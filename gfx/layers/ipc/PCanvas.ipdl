@@ -37,6 +37,11 @@ parent:
    * Notify that the canvas device used by the translator has changed.
    */
   async NotifyDeviceChanged();
+
+  /**
+   * Deactivate remote canvas, which will cause fall back to software.
+   */
+  async Deactivate();
 };
 
 } // layers
