@@ -4107,6 +4107,8 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
         current->add(postConversion);
         break;
       default:
+        // No spectre.index_masking of i32 results required, as the generated
+        // stub takes care of that.
         break;
     }
   }

@@ -3441,6 +3441,23 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
   }
 
+#ifdef JS_CODEGEN_X64
+  inline void maskResultRegisters(ResultType type) {
+    MOZ_ASSERT(JitOptions.spectreIndexMasking);
+
+    if (type.empty()) {
+      return;
+    }
+
+    for (ABIResultIter iter(type); !iter.done(); iter.next()) {
+      ABIResult result = iter.cur();
+      if (result.inRegister() && result.type().kind() == ValType::I32) {
+        masm.movl(result.gpr(), result.gpr());
+      }
+    }
+  }
+#endif
+
   inline void freeResultRegisters(ResultType type, RegKind which) {
     if (type.empty()) {
       return;
@@ -3538,6 +3555,15 @@ class BaseCompiler final : public BaseCompilerInterface {
   void captureResultRegisters(ResultType type) {
     assertResultRegistersAvailable(type);
     needResultRegisters(type);
+  }
+
+  void captureCallResultRegisters(ResultType type) {
+    captureResultRegisters(type);
+#ifdef JS_CODEGEN_X64
+    if (JitOptions.spectreIndexMasking) {
+      maskResultRegisters(type);
+    }
+#endif
   }
 
   ////////////////////////////////////////////////////////////
@@ -5915,6 +5941,11 @@ class BaseCompiler final : public BaseCompilerInterface {
     RegI32 r = RegI32(ReturnReg);
     MOZ_ASSERT(isAvailableI32(r));
     needI32(r);
+#if defined(JS_CODEGEN_X64)
+    if (JitOptions.spectreIndexMasking) {
+      masm.movl(r, r);
+    }
+#endif
     return r;
   }
 
@@ -10121,7 +10152,7 @@ bool BaseCompiler::emitCall() {
 
   popValueStackBy(numArgs);
 
-  captureResultRegisters(resultType);
+  captureCallResultRegisters(resultType);
   pushCallResults(baselineCall, resultType, results);
 
   return true;
@@ -10178,7 +10209,7 @@ bool BaseCompiler::emitCallIndirect() {
 
   popValueStackBy(numArgs);
 
-  captureResultRegisters(resultType);
+  captureCallResultRegisters(resultType);
   pushCallResults(baselineCall, resultType, results);
 
   return true;
