@@ -8197,11 +8197,11 @@ class CursorOpBaseHelperBase {
                                                     bool aInitializeResponse,
                                                     Key* const aOptOutSortKey);
 
-  nsresult PopulateExtraResponses(mozIStorageStatement* aStmt,
-                                  uint32_t aMaxExtraCount,
-                                  const size_t aInitialResponseSize,
-                                  const nsCString& aOperation,
-                                  Key* const aOptPreviousSortKey);
+  void PopulateExtraResponses(mozIStorageStatement* aStmt,
+                              uint32_t aMaxExtraCount,
+                              const size_t aInitialResponseSize,
+                              const nsCString& aOperation,
+                              Key* const aOptPreviousSortKey);
 
  protected:
   Cursor<CursorType>& GetCursor() {
@@ -26508,7 +26508,7 @@ CursorOpBaseHelperBase<CursorType>::PopulateResponseFromStatement(
 }
 
 template <IDBCursorType CursorType>
-nsresult CursorOpBaseHelperBase<CursorType>::PopulateExtraResponses(
+void CursorOpBaseHelperBase<CursorType>::PopulateExtraResponses(
     mozIStorageStatement* const aStmt, const uint32_t aMaxExtraCount,
     const size_t aInitialResponseSize, const nsCString& aOperation,
     Key* const aOptPreviousSortKey) {
@@ -26571,8 +26571,6 @@ nsresult CursorOpBaseHelperBase<CursorType>::PopulateExtraResponses(
       "Populated", IDB_LOG_ID_STRING(mOp.mBackgroundChildLoggingId),
       mOp.mTransactionLoggingSerialNumber, mOp.mLoggingSerialNumber,
       aOperation.get(), extraCount, aMaxExtraCount);
-
-  return NS_OK;
 }
 
 template <IDBCursorType CursorType>
@@ -26768,9 +26766,10 @@ nsresult CommonOpenOpHelper<CursorType>::ProcessStatementSteps(
   //
   // TODO: We should somehow evaluate the effects of this. Maybe use a smaller
   // extra count than for ContinueOp?
-  return PopulateExtraResponses(aStmt, GetCursor().mMaxExtraCount,
-                                res.inspect(), NS_LITERAL_CSTRING("OpenOp"),
-                                optPreviousKey);
+  PopulateExtraResponses(aStmt, GetCursor().mMaxExtraCount, res.inspect(),
+                         NS_LITERAL_CSTRING("OpenOp"), optPreviousKey);
+
+  return NS_OK;
 }
 
 nsresult OpenOpHelper<IDBCursorType::ObjectStore>::DoDatabaseWork(
@@ -27287,9 +27286,11 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
     return res.inspectErr();
   }
 
-  return helper.PopulateExtraResponses(&*stmt, maxExtraCount, res.inspect(),
-                                       NS_LITERAL_CSTRING("ContinueOp"),
-                                       optPreviousKey);
+  helper.PopulateExtraResponses(&*stmt, maxExtraCount, res.inspect(),
+                                NS_LITERAL_CSTRING("ContinueOp"),
+                                optPreviousKey);
+
+  return NS_OK;
 }
 
 Utils::Utils()
