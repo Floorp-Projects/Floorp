@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 class PageInfoChild extends JSWindowActorChild {
   async receiveMessage(message) {
-    let strings = message.data.strings;
-
     let window = this.contentWindow;
     let document = window.document;
 
@@ -33,7 +31,7 @@ class PageInfoChild extends JSWindowActorChild {
       }
       case "PageInfo:getMediaData": {
         return Promise.resolve({
-          mediaItems: await this.getDocumentMedia(document, strings),
+          mediaItems: await this.getDocumentMedia(document),
         });
       }
     }
@@ -109,7 +107,7 @@ class PageInfoChild extends JSWindowActorChild {
    * Calls getMediaItems for all nodes within the constructed tree walker and forms
    * resulting array.
    */
-  async getDocumentMedia(document, strings) {
+  async getDocumentMedia(document) {
     let nodeCount = 0;
     let content = document.ownerGlobal;
     let iterator = document.createTreeWalker(
@@ -120,11 +118,7 @@ class PageInfoChild extends JSWindowActorChild {
     let totalMediaItems = [];
 
     while (iterator.nextNode()) {
-      let mediaItems = this.getMediaItems(
-        document,
-        strings,
-        iterator.currentNode
-      );
+      let mediaItems = this.getMediaItems(document, iterator.currentNode);
 
       if (++nodeCount % 500 == 0) {
         // setTimeout every 500 elements so we don't keep blocking the content process.
@@ -136,7 +130,7 @@ class PageInfoChild extends JSWindowActorChild {
     return totalMediaItems;
   }
 
-  getMediaItems(document, strings, elem) {
+  getMediaItems(document, elem) {
     // Check for images defined in CSS (e.g. background, borders)
     let computedStyle = elem.ownerGlobal.getComputedStyle(elem);
     // A node can have multiple media items associated with it - for example,
@@ -144,22 +138,22 @@ class PageInfoChild extends JSWindowActorChild {
     let mediaItems = [];
     let content = document.ownerGlobal;
 
-    let addImage = (url, type, alt, el, isBg) => {
-      let element = this.serializeElementInfo(
-        document,
+    let addMedia = (url, type, alt, el, isBg, altNotProvided = false) => {
+      let element = this.serializeElementInfo(document, url, el, isBg);
+      mediaItems.push({
         url,
         type,
         alt,
-        el,
-        isBg
-      );
-      mediaItems.push([url, type, alt, element, isBg]);
+        altNotProvided,
+        element,
+        isBg,
+      });
     };
 
     if (computedStyle) {
-      let addImgFunc = (label, urls) => {
+      let addImgFunc = (type, urls) => {
         for (let url of urls) {
-          addImage(url, label, strings.notSet, elem, true);
+          addMedia(url, type, "", elem, true, true);
         }
       };
       // FIXME: This is missing properties. See the implementation of
@@ -167,29 +161,24 @@ class PageInfoChild extends JSWindowActorChild {
       //
       // If you don't care about the message you can also pass "all" here and
       // get all the ones the browser knows about.
+      addImgFunc("bg-img", computedStyle.getCSSImageURLs("background-image"));
       addImgFunc(
-        strings.mediaBGImg,
-        computedStyle.getCSSImageURLs("background-image")
-      );
-      addImgFunc(
-        strings.mediaBorderImg,
+        "border-img",
         computedStyle.getCSSImageURLs("border-image-source")
       );
-      addImgFunc(
-        strings.mediaListImg,
-        computedStyle.getCSSImageURLs("list-style-image")
-      );
-      addImgFunc(strings.mediaCursor, computedStyle.getCSSImageURLs("cursor"));
+      addImgFunc("list-img", computedStyle.getCSSImageURLs("list-style-image"));
+      addImgFunc("cursor", computedStyle.getCSSImageURLs("cursor"));
     }
 
     // One swi^H^H^Hif-else to rule them all.
     if (elem instanceof content.HTMLImageElement) {
-      addImage(
+      addMedia(
         elem.src,
-        strings.mediaImg,
-        elem.hasAttribute("alt") ? elem.alt : strings.notSet,
+        "img",
+        elem.getAttribute("alt"),
         elem,
-        false
+        false,
+        !elem.hasAttribute("alt")
       );
     } else if (elem instanceof content.SVGImageElement) {
       try {
@@ -201,40 +190,35 @@ class PageInfoChild extends JSWindowActorChild {
             null,
             Services.io.newURI(elem.baseURI)
           ).spec;
-          addImage(href, strings.mediaImg, "", elem, false);
+          addMedia(href, "img", "", elem, false);
         }
       } catch (e) {}
     } else if (elem instanceof content.HTMLVideoElement) {
-      addImage(elem.currentSrc, strings.mediaVideo, "", elem, false);
+      addMedia(elem.currentSrc, "video", "", elem, false);
     } else if (elem instanceof content.HTMLAudioElement) {
-      addImage(elem.currentSrc, strings.mediaAudio, "", elem, false);
+      addMedia(elem.currentSrc, "audio", "", elem, false);
     } else if (elem instanceof content.HTMLLinkElement) {
       if (elem.rel && /\bicon\b/i.test(elem.rel)) {
-        addImage(elem.href, strings.mediaLink, "", elem, false);
+        addMedia(elem.href, "link", "", elem, false);
       }
     } else if (
       elem instanceof content.HTMLInputElement ||
       elem instanceof content.HTMLButtonElement
     ) {
       if (elem.type.toLowerCase() == "image") {
-        addImage(
+        addMedia(
           elem.src,
-          strings.mediaInput,
-          elem.hasAttribute("alt") ? elem.alt : strings.notSet,
+          "input",
+          elem.getAttribute("alt"),
           elem,
-          false
+          false,
+          !elem.hasAttribute("alt")
         );
       }
     } else if (elem instanceof content.HTMLObjectElement) {
-      addImage(
-        elem.data,
-        strings.mediaObject,
-        this.getValueText(elem),
-        elem,
-        false
-      );
+      addMedia(elem.data, "object", this.getValueText(elem), elem, false);
     } else if (elem instanceof content.HTMLEmbedElement) {
-      addImage(elem.src, strings.mediaEmbed, "", elem, false);
+      addMedia(elem.src, "embed", "", elem, false);
     }
 
     return mediaItems;
@@ -245,7 +229,7 @@ class PageInfoChild extends JSWindowActorChild {
    * makePreview in pageInfo.js uses to figure out how to display the preview.
    */
 
-  serializeElementInfo(document, url, type, alt, item, isBG) {
+  serializeElementInfo(document, url, item, isBG) {
     let result = {};
     let content = document.ownerGlobal;
 
