@@ -46,10 +46,9 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/displayName"
             android:layout_alignStart="@id/displayName"
+            android:textColor="?secondaryText"
             android:maxLines="4"
-            android:text="@string/preferences_account_default_name"
-            android:textColor="?primaryText"
-            app:fontFamily="@font/metropolis_bold" />
+            android:text="@string/preferences_account_default_name" />
 
     </RelativeLayout>
 

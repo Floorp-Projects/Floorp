@@ -30,10 +30,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="@string/no_collections_description1"
-        android:textColor="?primaryText"
         android:textSize="14sp"
-        android:textAlignment="viewStart"
-        app:fontFamily="@font/metropolis_medium" />
+        android:textAlignment="viewStart" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/add_tabs_to_collections_button"

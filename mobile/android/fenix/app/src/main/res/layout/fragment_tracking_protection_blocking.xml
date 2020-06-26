@@ -14,14 +14,14 @@
         <TextView
             android:id="@+id/details_blocking_header"
             style="@style/QuickSettingsText"
+            android:fontFamily="@font/metropolis_bold"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:paddingStart="0dp"
             android:paddingEnd="0dp"
-            android:text="@string/enhanced_tracking_protection_blocked"
-            android:textStyle="bold" />
+            android:text="@string/enhanced_tracking_protection_blocked" />
 
         <org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem
             android:id="@+id/category_social_media"
