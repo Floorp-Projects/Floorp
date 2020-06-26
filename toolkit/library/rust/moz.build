@@ -11,11 +11,15 @@ RustLibrary('gkrust', gkrust_features, is_gkrust=True)
 # Target directory doesn't matter a lot here, since we can't share panic=abort
 # compilation artifacts with gkrust.
 RUST_TESTS = [
-    'glean',
     'selectors',
     'servo_arc',
     'stylo_tests',
 ]
+
+if not CONFIG['MOZ_CODE_COVERAGE']:
+    # glean tests are disabled for ccov builds because some of them test panics
+    # and those builds are compiled with '-Cpanic=abort -Zpanic_abort_tests'
+    RUST_TESTS += ['glean']
 
 for feature in gkrust_features:
     # We don't want to enable refcount logging during rusttests, since the
