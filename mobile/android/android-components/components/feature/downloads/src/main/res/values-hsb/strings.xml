@@ -23,7 +23,7 @@
     <string name="mozac_feature_downloads_could_not_open_file">Dataja njeda so wočinić</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported">Žane nałoženje za wočinjenje datajow typa %1$s namakane</string>
+    <string name="mozac_feature_downloads_open_not_supported1">Žane nałoženje za wočinjenje datajow typa %1$s namakane</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Zastajić</string>

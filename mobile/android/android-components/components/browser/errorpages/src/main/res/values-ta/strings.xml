@@ -6,6 +6,9 @@
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">மீண்டும் முயற்சி செய்</string>
 
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">பின் செல்க</string>
+
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">கோரிக்கையை முடிக்க முடியவில்லை</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
@@ -32,6 +35,9 @@
         <li>நீங்கள் இதற்கு முன்பு வெற்றிகரமாக இந்தச் சேவையகத்துடன் இணைந்து இருந்தால், இந்தப் பிழை தற்காலிகமானதாக இருக்கும், மேலும் நீங்கள் பிறகு மீண்டும் முயற்சி செய்யலாம்.</li>
       </ul>
     ]]></string>
+
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">பின் செல்க (பரிந்துரைக்கப்படுகிறது)</string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">இணைப்பில் தடங்கல் உள்ளது</string>
