@@ -318,6 +318,12 @@ ExpectedStreamLen:
     Expected length of an IPC proxy stream.
   type: integer
 
+ExperimentalFeatures:
+  description: >
+    Comma-separated list of enabled experimental features from about:preferences#experimental.
+  type: string
+  ping: true
+
 FlashProcessDump:
   description: >
     Type of process the flash plugin is running in, can be either "Broker" or
