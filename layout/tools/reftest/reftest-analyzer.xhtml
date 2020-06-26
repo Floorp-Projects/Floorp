@@ -313,6 +313,27 @@ SUITE-END | took 2s`,
       "expected": { "pass": 0, "unexpected": 1, "random": 0, "skip": 0 },
       "expected_images": 2,
     },
+    { "name": "wpt reftests (taskcluster log from macOS CI)",
+      "log": `[task 2020-06-26T01:35:29.065Z] 01:35:29     INFO - TEST-START | /html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute-values.html
+[task 2020-06-26T01:35:29.065Z] 01:35:29     INFO - PID 1353 | 1593135329040    Marionette  INFO    Testing http://web-platform.test:8000/html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute-values.html == http://web-platform.test:8000/html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute-values-ref.html
+[task 2020-06-26T01:35:29.673Z] 01:35:29     INFO - PID 1353 | 1593135329633    Marionette  INFO    No differences allowed
+[task 2020-06-26T01:35:29.726Z] 01:35:29     INFO - TEST-KNOWN-INTERMITTENT-FAIL | /html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute-values.html | took 649ms
+[task 2020-06-26T01:35:29.726Z] 01:35:29     INFO - REFTEST   IMAGE 1 (TEST): data:image/png;
+[task 2020-06-26T01:35:29.726Z] 01:35:29     INFO - REFTEST   IMAGE 2 (REFERENCE): data:image/png;`,
+      "expected": { "pass": 0, "unexpected": 0, "random": 1, "skip": 0 },
+      "expected_images": 2,
+    },
+    { "name": "wpt reftests (taskcluster log from Windows CI)",
+      "log": `[task 2020-06-26T01:41:19.205Z] 01:41:19     INFO - TEST-START | /html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute-values.html
+[task 2020-06-26T01:41:19.214Z] 01:41:19     INFO - PID 5920 | 1593135679202    Marionette  WARN    [24] http://web-platform.test:8000/css/WOFF2/metadatadisplay-schema-license-022-ref.xht overflows viewport (width: 783, height: 731)
+[task 2020-06-26T01:41:19.214Z] 01:41:19     INFO - PID 9692 | 1593135679208    Marionette  INFO    Testing http://web-platform.test:8000/html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute-values.html == http://web-platform.test:8000/html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute-values-ref.html
+[task 2020-06-26T01:41:19.638Z] 01:41:19     INFO - PID 9692 | 1593135679627    Marionette  INFO    No differences allowed
+[task 2020-06-26T01:41:19.688Z] 01:41:19     INFO - TEST-KNOWN-INTERMITTENT-PASS | /html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute-values.html | took 474ms
+[task 2020-06-26T01:41:19.688Z] 01:41:19     INFO - REFTEST   IMAGE 1 (TEST): data:image/png;
+[task 2020-06-26T01:41:19.689Z] 01:41:19     INFO - REFTEST   IMAGE 2 (REFERENCE): data:image/png;`,
+      "expected": { "pass": 1, "unexpected": 0, "random": 1, "skip": 0 },
+      "expected_images": 2,
+    },
     { "name": "local reftest run with timestamps (Linux; Bug 1167712)",
       "log": ` 0:05.21 REFTEST TEST-START | a
  0:05.21 REFTEST REFTEST TEST-LOAD | a | 0 / 1 (0%)
@@ -403,7 +424,7 @@ function process_log(contents) {
     }
     if (match)
       line = match[1];
-    match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-FAIL|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO)(\(EXPECTED RANDOM\)|) \| ([^\|]+)(?: \|(.*)|$)/);
+    match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-FAIL|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO|TEST-KNOWN-INTERMITTENT-FAIL|TEST-KNOWN-INTERMITTENT-PASS)(\(EXPECTED RANDOM\)|) \| ([^\|]+)(?: \|(.*)|$)/);
     if (match) {
       var state = match[1];
       var random = match[2];
@@ -414,7 +435,7 @@ function process_log(contents) {
           pass: !state.match(/DEBUG-INFO$|FAIL$/),
           // only one of the following three should ever be true
           unexpected: !!state.match(/^TEST-UNEXPECTED/),
-          random: (random == "(EXPECTED RANDOM)"),
+          random: (random == "(EXPECTED RANDOM)" || state == "TEST-KNOWN-INTERMITTENT-FAIL" || state == "TEST-KNOWN-INTERMITTENT-PASS"),
           skip: (extra == " (SKIP)"),
           url: url,
           images: [],
