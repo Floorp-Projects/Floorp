@@ -34,6 +34,12 @@ add_task(async function test_autofocus_autocomplete() {
   ok(true, "popup opened");
 
   let promiseHidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+
+  await TestUtils.waitForCondition(
+    () => !popup.firstChild.getItemAtIndex(0).disabled,
+    "Wait for popup to become enabled"
+  );
+
   popup.firstChild.getItemAtIndex(0).click();
   await promiseHidden;
 

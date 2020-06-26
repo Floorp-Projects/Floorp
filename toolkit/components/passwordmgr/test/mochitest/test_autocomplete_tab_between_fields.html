@@ -29,8 +29,6 @@ let readyPromise = registerRunTests();
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
-
 async function prepareLogins(logins = []) {
   await LoginManager.removeAllLogins();
 
@@ -151,6 +149,7 @@ async function testResultOfTabInteractions(testData) {
   await synthesizeKey("KEY_ArrowDown");
   info("waiting for AC results");
   let results = await shownPromise;
+  await popupEnabled();
   info("checking results");
   checkAutoCompleteResults(results, testData.expectedACLabels, "example.com", "Check all rows are correct");
 
