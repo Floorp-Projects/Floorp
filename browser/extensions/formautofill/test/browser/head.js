@@ -8,7 +8,7 @@
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
             sleep, expectPopupOpen, openPopupOn, openPopupForSubframe, expectPopupClose, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
-            getDisplayedPopupItems, getDoorhangerCheckbox,
+            getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
             getNotification, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
 
 "use strict";
@@ -298,6 +298,17 @@ async function expectPopupOpen(browser) {
   }, "The popup should be a form autofill one");
 }
 
+async function waitForPopupEnabled(browser) {
+  const {
+    autoCompletePopup: { richlistbox: itemsBox },
+  } = browser;
+  const listItemElems = itemsBox.querySelectorAll(".autocomplete-richlistitem");
+  await TestUtils.waitForCondition(
+    () => !listItemElems[0].disabled,
+    "Wait for list elements to become enabled"
+  );
+}
+
 async function openPopupOn(browser, selector) {
   await SimpleTest.promiseFocus(browser);
   await focusAndWaitForFieldsIdentified(browser, selector);
@@ -309,7 +320,7 @@ async function openPopupOn(browser, selector) {
 async function openPopupForSubframe(browser, frameBrowsingContext, selector) {
   await SimpleTest.promiseFocus(browser);
   await focusAndWaitForFieldsIdentified(frameBrowsingContext, selector);
-  info("openPopupOn: before VK_DOWN");
+  info("openPopupForSubframe: before VK_DOWN");
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, frameBrowsingContext);
   await expectPopupOpen(browser);
 }
