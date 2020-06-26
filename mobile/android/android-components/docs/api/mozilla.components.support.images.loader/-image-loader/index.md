@@ -2,7 +2,7 @@
 
 # ImageLoader
 
-`interface ImageLoader` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/images/src/main/java/mozilla/components/support/images/loader/ImageLoader.kt#L14)
+`interface ImageLoader` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/images/src/main/java/mozilla/components/support/images/loader/ImageLoader.kt#L15)
 
 A loader that can load an image from an ID directly into an [ImageView](#).
 
@@ -10,7 +10,7 @@ A loader that can load an image from an ID directly into an [ImageView](#).
 
 | Name | Summary |
 |---|---|
-| [loadIntoView](load-into-view.md) | `abstract fun loadIntoView(view: <ERROR CLASS>, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, placeholder: <ERROR CLASS>? = null, error: <ERROR CLASS>? = null): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Loads an image asynchronously and then displays it in the [ImageView](#). If the view is detached from the window before loading is completed, then loading is cancelled. |
+| [loadIntoView](load-into-view.md) | `abstract fun loadIntoView(view: <ERROR CLASS>, request: `[`ImageRequest`](../../mozilla.components.support.images/-image-request/index.md)`, placeholder: <ERROR CLASS>? = null, error: <ERROR CLASS>? = null): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Loads an image asynchronously and then displays it in the [ImageView](#). If the view is detached from the window before loading is completed, then loading is cancelled. |
 
 ### Extension Functions
 

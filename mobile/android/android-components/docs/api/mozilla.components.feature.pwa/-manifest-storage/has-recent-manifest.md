@@ -2,7 +2,7 @@
 
 # hasRecentManifest
 
-`suspend fun hasRecentManifest(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, currentTime: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ManifestStorage.kt#L54)
+`suspend fun hasRecentManifest(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, currentTimeMs: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = System.currentTimeMillis()): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ManifestStorage.kt#L53)
 
 Checks whether there is a currently used manifest with a scope that matches the url.
 
@@ -10,4 +10,4 @@ Checks whether there is a currently used manifest with a scope that matches the 
 
 `url` - the url to match with manifest scopes.
 
-`currentTime` - the current time in milliseconds.
+`currentTimeMs` - the current time in milliseconds.

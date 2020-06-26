@@ -2,7 +2,7 @@
 
 # loadIntoView
 
-`fun loadIntoView(view: <ERROR CLASS>, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, placeholder: <ERROR CLASS>?, error: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/loader/ThumbnailLoader.kt#L26)
+`fun loadIntoView(view: <ERROR CLASS>, request: `[`ImageRequest`](../../mozilla.components.support.images/-image-request/index.md)`, placeholder: <ERROR CLASS>?, error: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/loader/ThumbnailLoader.kt#L27)
 
 Overrides [ImageLoader.loadIntoView](../../mozilla.components.support.images.loader/-image-loader/load-into-view.md)
 
@@ -13,7 +13,7 @@ If the view is detached from the window before loading is completed, then loadin
 
 `view` - [ImageView](#) to load the image into.
 
-`id` - Load image for this given ID.
+`request` - [ImageRequest](../../mozilla.components.support.images/-image-request/index.md) Load image for this given request.
 
 `placeholder` - [Drawable](#) to display while image is loading.
 

@@ -2,7 +2,7 @@
 
 # ThumbnailDiskCache
 
-`class ThumbnailDiskCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/utils/ThumbnailDiskCache.kt#L21)
+`class ThumbnailDiskCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/utils/ThumbnailDiskCache.kt#L22)
 
 Caching thumbnail bitmaps on disk.
 

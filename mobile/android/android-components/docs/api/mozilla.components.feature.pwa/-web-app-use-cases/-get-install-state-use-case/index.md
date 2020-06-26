@@ -15,4 +15,4 @@ Otherwise, WebAppShortcutManager.InstallState.NotInstalled is returned.
 
 | Name | Summary |
 |---|---|
-| [invoke](invoke.md) | `operator suspend fun invoke(currentTime: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = System.currentTimeMillis()): `[`WebAppInstallState`](../../-web-app-shortcut-manager/-web-app-install-state/index.md)`?` |
+| [invoke](invoke.md) | `operator suspend fun invoke(currentTimeMs: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)` = System.currentTimeMillis()): `[`WebAppInstallState`](../../-web-app-shortcut-manager/-web-app-install-state/index.md)`?` |

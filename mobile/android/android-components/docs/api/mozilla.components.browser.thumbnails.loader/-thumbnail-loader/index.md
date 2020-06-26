@@ -2,7 +2,7 @@
 
 # ThumbnailLoader
 
-`class ThumbnailLoader : `[`ImageLoader`](../../mozilla.components.support.images.loader/-image-loader/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/loader/ThumbnailLoader.kt#L24)
+`class ThumbnailLoader : `[`ImageLoader`](../../mozilla.components.support.images.loader/-image-loader/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/loader/ThumbnailLoader.kt#L25)
 
 An implementation of [ImageLoader](../../mozilla.components.support.images.loader/-image-loader/index.md) for loading thumbnails into a [ImageView](#).
 
@@ -16,10 +16,11 @@ An implementation of [ImageLoader](../../mozilla.components.support.images.loade
 
 | Name | Summary |
 |---|---|
-| [loadIntoView](load-into-view.md) | `fun loadIntoView(view: <ERROR CLASS>, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, placeholder: <ERROR CLASS>?, error: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Loads an image asynchronously and then displays it in the [ImageView](#). If the view is detached from the window before loading is completed, then loading is cancelled. |
+| [loadIntoView](load-into-view.md) | `fun loadIntoView(view: <ERROR CLASS>, request: `[`ImageRequest`](../../mozilla.components.support.images/-image-request/index.md)`, placeholder: <ERROR CLASS>?, error: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Loads an image asynchronously and then displays it in the [ImageView](#). If the view is detached from the window before loading is completed, then loading is cancelled. |
 
 ### Extension Functions
 
 | Name | Summary |
 |---|---|
+| [loadIntoView](../../mozilla.components.browser.thumbnails.ext/load-into-view.md) | `fun `[`ThumbnailLoader`](./index.md)`.loadIntoView(view: <ERROR CLASS>, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Loads an image asynchronously and then displays it in the [ImageView](#). If the view is detached from the window before loading is completed, then loading is cancelled. |
 | [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
