@@ -21,8 +21,8 @@ function test(x) {
     }
 
     function double(v) {
-        // NB: Math.cbrt() always returns a double value.
-        return Math.cbrt(v * v * v)
+        // NB: numberToDouble() always returns a double value.
+        return numberToDouble(v);
     }
 
     // Find the first power which will exceed the Int32 range by computing ⌈log_x(2 ^ 31)⌉.

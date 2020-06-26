@@ -16,9 +16,9 @@ for (var i = 0; i < 30; i++) {
     get_thee(A, i % A.length);
 }
 
-// Math.hypot currently always returns a Number, so helps
-// us ensure we're accessing the array with a Number index.
-var y = Math.hypot(1,0);
+// numberToDouble always returns a double-typed Number, so helps
+// us ensure we're accessing the array with a double-typed Number index.
+var y = numberToDouble(1);
 var z = 2**31-1;
 // Ensure we handle negative indices.
 var a = -1;

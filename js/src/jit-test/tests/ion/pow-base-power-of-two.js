@@ -21,8 +21,8 @@ function test(x, y, z) {
     }
 
     function double(v) {
-        // NB: Math.cbrt() always returns a double value.
-        return `Math.cbrt(${v * v * v})`;
+        // NB: numberToDouble() always returns a double value.
+        return `numberToDouble(${v})`;
     }
 
     function addTests(fn) {

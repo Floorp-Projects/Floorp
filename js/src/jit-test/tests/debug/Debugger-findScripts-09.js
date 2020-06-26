@@ -19,7 +19,7 @@ assertThrowsInstanceOf(function () { dbg.findScripts({url:4}); }, TypeError);
 assertThrowsInstanceOf(function () { dbg.findScripts({url:{}}); }, TypeError);
 
 assertEq(dbg.findScripts({url:"", line:1}).length, 0);
-assertEq(dbg.findScripts({url:"", line:Math.sqrt(4)}).length, 0);
+assertEq(dbg.findScripts({url:"", line:numberToDouble(2)}).length, 0);
 
 // A 'line' property without a 'url' property is verboten.
 assertThrowsInstanceOf(function () { dbg.findScripts({line:1}); }, TypeError);

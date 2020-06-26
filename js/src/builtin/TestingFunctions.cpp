@@ -5880,6 +5880,22 @@ static bool NewPrivateName(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool NumberToDouble(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "numberToDouble", 1)) {
+    return false;
+  }
+
+  if (!args[0].isNumber()) {
+    RootedObject callee(cx, &args.callee());
+    ReportUsageErrorASCII(cx, callee, "argument must be a number");
+    return false;
+  }
+
+  args.rval().setDouble(args[0].toNumber());
+  return true;
+}
+
 static bool PCCountProfiling_Start(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -6840,6 +6856,10 @@ gc::ZealModeHelpText),
   JS_FN_HELP("newPrivateName", NewPrivateName, 1, 0,
 "newPrivateName(desc)",
 "Create a new PrivateName symbol."),
+
+  JS_FN_HELP("numberToDouble", NumberToDouble, 1, 0,
+"numberToDouble(number)",
+"  Return the input number as double-typed number."),
 
     JS_FS_HELP_END
 };

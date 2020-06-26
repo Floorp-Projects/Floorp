@@ -17,6 +17,10 @@ var expect = '';
 if (typeof gczeal !== 'undefined')
     gczeal(0)
 
+if (typeof numberToDouble !== 'function') {
+    var numberToDouble = SpecialPowers.Cu.getJSTestingFunctions().numberToDouble;
+}
+
 test();
 //-----------------------------------------------------------------------------
 
@@ -493,9 +497,9 @@ function test()
     check(() => (new Int32Array(0)).BYTES_PER_ELEMENT == 4);
     check(() => Int16Array.BYTES_PER_ELEMENT == Uint16Array.BYTES_PER_ELEMENT);
 
-    // test various types of args; Math.sqrt(4) is used to ensure that the
+    // test various types of args; numberToDouble(2) is used to ensure that the
     // function gets a double, and not a demoted int
-    check(() => (new Float32Array(Math.sqrt(4))).length == 2);
+    check(() => (new Float32Array(numberToDouble(2))).length == 2);
     check(() => (new Float32Array({ length: 10 })).length == 10);
     check(() => (new Float32Array({})).length == 0);
     check(() => new Float32Array("3").length === 3);

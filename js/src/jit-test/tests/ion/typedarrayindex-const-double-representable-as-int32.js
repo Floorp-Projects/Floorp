@@ -7,8 +7,8 @@ function f(n) {
   // for the TypedArray index conversion.
   const r = n === 0 ? undefined : 0;
 
-  // Math.cbrt always returns a double number.
-  const k = Math.cbrt(0);
+  // numberToDouble always returns a double number.
+  const k = numberToDouble(0);
 
   for (var i = 0; i < 10; ++i) {
     assertEq(ta[k], r);
