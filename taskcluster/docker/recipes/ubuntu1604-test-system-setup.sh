@@ -96,6 +96,8 @@ apt_packages+=('python-pip')
 apt_packages+=('python3-pip')
 
 apt-get update
+# Start by upgrading apt for CVE-2019-3462.
+apt-get install -y apt
 # This allows ubuntu-desktop to be installed without human interaction
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y -f "${apt_packages[@]}"
