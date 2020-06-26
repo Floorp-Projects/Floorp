@@ -50,7 +50,7 @@ interface mixin NavigatorID {
   readonly attribute DOMString appName;
   [Constant, Cached, Throws, NeedsCallerType]
   readonly attribute DOMString appVersion;
-  [Constant, Cached, Throws, NeedsCallerType]
+  [Pure, Cached, Throws, NeedsCallerType]
   readonly attribute DOMString platform;
   [Pure, Cached, Throws, NeedsCallerType]
   readonly attribute DOMString userAgent;

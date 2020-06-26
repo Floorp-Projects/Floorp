@@ -2037,6 +2037,21 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
   });
 }
 
+void BrowsingContext::SetCustomPlatform(const nsAString& aPlatform) {
+  Top()->SetPlatformOverride(aPlatform);
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_PlatformOverride>) {
+  MOZ_ASSERT(IsTop());
+
+  PreOrderWalk([&](BrowsingContext* aContext) {
+    nsIDocShell* shell = aContext->GetDocShell();
+    if (shell) {
+      shell->ClearCachedPlatform();
+    }
+  });
+}
+
 bool BrowsingContext::CheckOnlyOwningProcessCanSet(ContentParent* aSource) {
   if (aSource) {
     MOZ_ASSERT(XRE_IsParentProcess());
@@ -2140,6 +2155,16 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_UseGlobalHistory>,
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
                              const nsString& aUserAgent,
+                             ContentParent* aSource) {
+  if (!IsTop()) {
+    return false;
+  }
+
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_PlatformOverride>,
+                             const nsString& aPlatform,
                              ContentParent* aSource) {
   if (!IsTop()) {
     return false;
