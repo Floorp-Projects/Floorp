@@ -57,6 +57,7 @@ pane-experimental-title = { -brand-short-name } Experiments
 category-experimental =
     .tooltiptext = { -brand-short-name } Experiments
 pane-experimental-subtitle = Proceed with Caution
+pane-experimental-search-results-header = { -brand-short-name } Experiments: Proceed with Caution
 pane-experimental-description = Changing advanced configuration preferences can impact { -brand-short-name } performance or security.
 
 help-button-label = { -brand-short-name } Support
