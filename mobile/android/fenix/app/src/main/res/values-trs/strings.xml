@@ -1062,23 +1062,138 @@
     <string name="sign_in_with_camera">Gāyì\'ì sēsiûn ngà si kamarât</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Gārāsun si kōrreôt si lūgaj</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Dūnâj Firefox si nāgi\'iaj nūguàn\'anj si kuentât, sanī si dure\'ej nej datô râj sunt ngà aché nunt riña aga\' nan.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">Dūnâj %s si nāgi\'iaj nūguàn\'anj si kuentât, sanī si dure\'ej nej datô râj sunt ngà aché nunt riña aga\' nan.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Gāhuī riña internet</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Dūyichin\'</string>
 
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Sī ga\'ue nādūnāt sa mà riña nej karpetâ ngà nīka \'naj</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Riña gā\'ue nāgi\'iát riña sa dugumî sò\'</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Sa huā hue\'ê doj guendâ nārán riña sa naga\'nāj a</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Nitāj gà\' \'ngō ganikò\' sò\' si gāchē nunt</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Duguminj nej si datôt. %s naran rayi\'ît riña nej sa naga\'nāj sa \'iát nga aché nunt.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Gāhuin chrūn doj</string>
 
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Sa huā chre\' (dàj huaj \'naj)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Riña dòj sa naga\'nāj a naran.  Dàj rû\' nayi\'nïnj riña pâjina nāyi\'nïn nīñanj.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Ahuin si riñā narán sa dugumî sò\' \'na\' niñā guendâ nej sa naga\'nāj a</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Sa nùkuaj doj</string>
 
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Narán man riña doj sa naga\'nāj a, nej nuguan\' nata\'a nī nej bēntanâ narugui\' man\'an. Hìo doj nayî\'nïnj riña nej pâjina, sanī huā sa sī ga\'ue gi\'iaj sun hue\'e.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Ahuin si riñā narán sa nùkuaj doj dugumî sò\' \'na\' niñā guendâ nej sa naga\'nāj a</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Nāgi\'iaj mun\'ûn\'</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Nāguī nej sa naga\'nāj a asi a\'ngô sa riñā ruhuât naránt.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Nan huin sa riñā narán sa dugumî sò\' \'na\' niñā guendâ nej sa naga\'nāj a</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Nej kôki</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Sa naga\'nāj riña nej sîtio nī nej rêd sociâl</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Si kokî nej sitiô nu atûjt</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Daran\' nej kokî ânej e (ga\'ue gī\'iaj sun a\'nan\' web gī\'ia)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Daran\' nej kokî (ga\'ue dūre\'ej dā\'āj sîtio)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Sa nīkāj sa naga\'nāj a</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Riña daran\' nej rakïj ñanj</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Màn riña nej rakïj ñanj huìi</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Màn riña nej rakïj ñanj nagi\'iaj mān\'ânt</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Nej kriptominêro</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Nej da\'nga\' rā\'a</string>
     <string name="enhanced_tracking_protection_blocked">Nitāj si hūaj nāyi\'nïn</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Gā\'ue</string>
+
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Nej sa naga\'nāj nej rêd sosiâl</string>
+
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Sī ga\'nïnjt riña nej rêd sōsiâl da\' nāga\'nāj nìko sa \'iát ngà aché nunt.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Nej kokî naga\'nāj riña nej dūguì\' nej sîtio</string>
+
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Nārán riña nej kokî arâj sun nej rêd duyinga\' sa ane\'e nī nej dukuâ sun nadigi\'ñûn sa anïn ruhuâ guìi da\' si naga\'nāj nìko man nej sa \'iát nga aché nunt.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Nej kriptominêro</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Nu â\'nïn riña nej skripts yi\'ìi da\' gātū nej man riña si āgâ\'t nī gīrī nej man san\'ānj nānèe.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Nej sa nani\'in nej da\'nga\' rā\'a</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Nu â\'nïn da\' sī nari a\'ngô sa yi\'ìi nej nuguan\' nīkāj si āgâ\'t nī ga\'ue nāga\'nāj nej man sò\'.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Sa nīkāj sa naga\'nāj a</string>
+
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Naran riña nej nuguan\' duyinga\' nej sa ane\'e, sa ni\'io\' nī riña nej nuguan\' nīkāj sa naga\'nāj a. Ga\'ue gā\'uì\' yī\'ij dàj \'iaj sun nej sîtio.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Da\' nanûn kolô dînda riña eskûdo, ngà narán %s sa naga\'nāj riña \'ngō sitio. Gūru\'man ra\'a da\' gīni\'înt doj sa huā rayi\'î man.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Ngà \'IAJ SUN nej sa dugumî sò\' riña sitiô nan</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">NITĀJ SI \'IAJ SUN nej sa dugumî sò\' riña sitiô nan</string>
+
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Nitāj si \'iaj sun sa nùkuaj narán riña sa naga\'nāj a riña nej sitiô nan</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Gūij ne\' rūkùu</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Nej nuguan\' tna\'uēj rayi\'ît</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Dukuâ ñanj nīkāj kodigô huā nî\'nïnj arân sun ñûnj</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Sa nākà doj huā riña %s</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s Dukuâ ñanj OSS</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Sa rugûñu\'ūnj un</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Nej sa gahui a\'nan\'</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Nuguan\' huì huin si dūkuan</string>
+
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Gīni\'in nej nuguan\' tna\'uēj rayi\'ît</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Si nùguàn\' līsênsia</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Nej dukuâ ñanj arâj sun ñûnj</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menû nagi\'aj hìo: gūru\'man ra\'a %1$d da\' nāchrūnt</string>
+    <string name="about_debug_menu_toast_done">Menû nagi\'aj hìo ngà \'iaj sun</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 rakïj ñanj</string>
@@ -1088,21 +1203,57 @@
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">Gūxūn nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Gāchrūn &amp; Gūij</string>
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Gāchrūn</string>
 
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL ngà nachîn riña portapapeles</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Gāchrūn man riña pantâya</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Dūyichin\'</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Nūtà\'</string>
 
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Ginu ngè riña sitiô nan</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Si yūgui aksêso dīrêkto</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Gā\'ue nāchrūnt sitiô nan riña pajinâ ayi\'ìt riña aga\' a\'min nīkājt da\' ga\'ue hìo gātūt riñanj dàj rû\' \'iaj \'ngō aplikāsiûn</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Nej riña gayi\'ìt sēsiûn nī nej da\'nga\' huìi</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Nā\'nïnj sà\' nej riña gayi\'ìt sēsiûn nī nej da\'nga\' huìi</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Gāchìnj nì\'iaj nā\'nïnj sà\'t</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Nitāj āmān nā\'nïnj sà\'t</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Nāchra man\'an</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Nāgi\'iaj nūguàn\'àn nej riña ayì\'ìt sēsiûn</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Nāchrūn</string>
     <!-- Syncing saved logins in Fenix is off -->
     <string name="preferences_passwords_sync_logins_off">Dūnâ\’àj</string>
 
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Gānātū ñû</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Gāyi\'ì sēsiûn riña Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Sa gayi\'ìt sesiûn ngà naginu sà\'</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Gāhuin chrūn doj</string>
+
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Nā\'nïnj sà\'</string>
 
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Nūtà\'</string>
