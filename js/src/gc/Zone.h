@@ -59,6 +59,10 @@ using FinalizationRecordVector = GCVector<HeapPtrObject, 1, ZoneAllocPolicy>;
 
 }  // namespace gc
 
+// If two different nursery strings are wrapped into the same zone, and have
+// the same contents, then deduplication may make them duplicates.
+// `DuplicatesPossible` will allow this and map both wrappers to the same (now
+// tenured) source string.
 using StringWrapperMap =
     NurseryAwareHashMap<JSString*, JSString*, DefaultHasher<JSString*>,
                         ZoneAllocPolicy, DuplicatesPossible>;

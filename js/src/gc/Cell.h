@@ -609,6 +609,14 @@ class CellHeaderWithLengthAndFlags {
 #endif
   }
 
+  bool operator==(const CellHeaderWithLengthAndFlags& other) const {
+#if JS_BITS_PER_WORD == 32
+    return length_ == other.length_ && flagsField() == other.flagsField();
+#else
+    return header() == other.header();
+#endif
+  }
+
   // Sub classes can store temporary data in the flags word. This is not GC safe
   // and users must ensure flags/length are never checked (including by asserts)
   // while this data is stored. Use of this method is strongly discouraged!
