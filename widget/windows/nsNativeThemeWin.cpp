@@ -345,7 +345,7 @@ static CaptionButtonPadding buttonData[3] = {
 static void AddPaddingRect(LayoutDeviceIntSize* aSize, CaptionButton button) {
   if (!aSize) return;
   RECT offset;
-  if (!IsAppThemed())
+  if (!nsUXThemeData::IsAppThemed())
     offset = buttonData[CAPTION_CLASSIC].hotPadding[button];
   else
     offset = buttonData[CAPTION_BASIC].hotPadding[button];
@@ -357,7 +357,7 @@ static void AddPaddingRect(LayoutDeviceIntSize* aSize, CaptionButton button) {
 // the area we draw into to compensate.
 static void OffsetBackgroundRect(RECT& rect, CaptionButton button) {
   RECT offset;
-  if (!IsAppThemed())
+  if (!nsUXThemeData::IsAppThemed())
     offset = buttonData[CAPTION_CLASSIC].hotPadding[button];
   else
     offset = buttonData[CAPTION_BASIC].hotPadding[button];
