@@ -1124,10 +1124,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
   // pageshow, and that's pretty broken... Fortunately, this should be rare.
   // (It requires us to spin the event loop in onload handler, e.g. via sync
   // XHR, in order for the navigation-away to happen before onload completes.)
-  // We skip firing pageshow if we're currently handling unload, or if loading
-  // was explicitly aborted.
-  if (mDocument && mDocument->IsCurrentActiveDocument() &&
-      aStatus != NS_BINDING_ABORTED) {
+  if (mDocument && mDocument->IsCurrentActiveDocument()) {
     // Re-get window, since it might have changed during above firing of onload
     window = mDocument->GetWindow();
     if (window) {
