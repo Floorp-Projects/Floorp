@@ -14,7 +14,7 @@ add_task(async function setup() {
 add_task(async function test_regular_init() {
   await withGeoServer(
     async function cont(requests) {
-      Region._setHomeRegion("us", false);
+      Region._setRegion("us", false);
       await Services.search.init();
       await promiseAfterCache();
 
@@ -30,7 +30,7 @@ add_task(async function test_regular_init() {
       let enginesReloaded = SearchTestUtils.promiseSearchNotification(
         "engines-reloaded"
       );
-      Region._setHomeRegion("FR");
+      Region._setRegion("FR", true);
       await promiseAfterCache();
       await enginesReloaded;
 
