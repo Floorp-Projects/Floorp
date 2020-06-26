@@ -21,6 +21,7 @@
 #include "nsXULAppAPI.h"
 
 #include "RemoteWorkerService.h"
+#include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
@@ -658,16 +659,13 @@ void RemoteWorkerChild::ErrorPropagationOnMainThread(
 
   ErrorValue value;
   if (aIsErrorEvent) {
-    nsTArray<ErrorDataNote> notes;
-    for (size_t i = 0, len = aReport->mNotes.Length(); i < len; i++) {
-      const WorkerErrorNote& note = aReport->mNotes.ElementAt(i);
-      notes.AppendElement(ErrorDataNote(note.mLineNumber, note.mColumnNumber,
-                                        note.mMessage, note.mFilename));
-    }
-
-    ErrorData data(aReport->mIsWarning, aReport->mLineNumber,
-                   aReport->mColumnNumber, aReport->mMessage,
-                   aReport->mFilename, aReport->mLine, notes);
+    ErrorData data(
+        aReport->mIsWarning, aReport->mLineNumber, aReport->mColumnNumber,
+        aReport->mMessage, aReport->mFilename, aReport->mLine,
+        TransformIntoNewArray(aReport->mNotes, [](const WorkerErrorNote& note) {
+          return ErrorDataNote(note.mLineNumber, note.mColumnNumber,
+                               note.mMessage, note.mFilename);
+        }));
     value = data;
   } else {
     value = void_t();
