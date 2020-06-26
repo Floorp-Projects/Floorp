@@ -7865,8 +7865,8 @@ void CodeGenerator::visitGetNextEntryForIterator(
 }
 
 // The point of these is to inform Ion of where these values already are; they
-// don't generate code.
-void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {}
+// don't normally generate code.  Still, visitWasmRegisterResult is
+// per-platform.
 void CodeGenerator::visitWasmRegisterPairResult(LWasmRegisterPairResult* lir) {}
 void CodeGenerator::visitWasmStackResult(LWasmStackResult* lir) {}
 void CodeGenerator::visitWasmStackResult64(LWasmStackResult64* lir) {}
