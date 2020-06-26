@@ -80,12 +80,21 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
 
   while (ctx) {
     nsCOMPtr<nsIPrincipal> principal;
-    WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
-    if (window) {
-      // Using the URI of the Principal and not the document because e.g.
-      // window.open inherits the principal and hence the URI of the
-      // opening context needed for same origin checks.
-      principal = window->DocumentPrincipal();
+    // Generally CheckOneFrameOptionsPolicy is consulted from within the
+    // DocumentLoadListener in the parent process. For loads of type object
+    // and embed it's called from the Document in the content process.
+    // After Bug 1646899 we should be able to remove that branching code for
+    // querying the principal.
+    if (XRE_IsParentProcess()) {
+      WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
+      if (window) {
+        // Using the URI of the Principal and not the document because e.g.
+        // window.open inherits the principal and hence the URI of the
+        // opening context needed for same origin checks.
+        principal = window->DocumentPrincipal();
+      }
+    } else if (nsPIDOMWindowOuter* windowOuter = ctx->GetDOMWindow()) {
+      principal = nsGlobalWindowOuter::Cast(windowOuter)->GetPrincipal();
     }
 
     if (principal && principal->IsSystemPrincipal()) {
@@ -160,8 +169,6 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
 /* static */
 bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
                                        nsIContentSecurityPolicy* aCsp) {
-  MOZ_ASSERT(XRE_IsParentProcess(), "check frame options only in parent");
-
   if (!aChannel) {
     return true;
   }
