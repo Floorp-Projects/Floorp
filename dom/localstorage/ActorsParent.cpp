@@ -9058,7 +9058,7 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
       }
     }
 
-    UNKNOWN_FILE_WARNING(leafName);
+    Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
   }
 #endif
 
