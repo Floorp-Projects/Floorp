@@ -78,7 +78,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/SVGMaskFrame.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -94,6 +93,7 @@
 #include "nsCaret.h"
 #include "nsDOMTokenList.h"
 #include "nsCSSProps.h"
+#include "nsSVGMaskFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTextFrame.h"
@@ -9028,7 +9028,7 @@ static void ComputeMaskGeometry(PaintFramesParams& aParams) {
 
   const nsStyleSVGReset* svgReset = firstFrame->StyleSVGReset();
 
-  nsTArray<SVGMaskFrame*> maskFrames;
+  nsTArray<nsSVGMaskFrame*> maskFrames;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
 
@@ -9057,7 +9057,7 @@ static void ComputeMaskGeometry(PaintFramesParams& aParams) {
   // Union all mask layer rectangles in user space.
   gfxRect maskInUserSpace;
   for (size_t i = 0; i < maskFrames.Length(); i++) {
-    SVGMaskFrame* maskFrame = maskFrames[i];
+    nsSVGMaskFrame* maskFrame = maskFrames[i];
     gfxRect currentMaskSurfaceRect;
 
     if (maskFrame) {
@@ -9535,7 +9535,7 @@ void nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo) {
     first = false;
   }
 
-  nsTArray<SVGMaskFrame*> masks;
+  nsTArray<nsSVGMaskFrame*> masks;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveMasks(firstFrame, &masks);
   if (!masks.IsEmpty() && masks[0]) {

@@ -11,12 +11,12 @@
 #include "SVGAnimatedLength.h"
 #include "mozilla/dom/SVGElement.h"
 
+class nsSVGMaskFrame;
+
 nsresult NS_NewSVGMaskElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
-class SVGMaskFrame;
-
 namespace dom {
 
 //--------------------- Masks ------------------------
@@ -24,7 +24,7 @@ namespace dom {
 typedef SVGElement SVGMaskElementBase;
 
 class SVGMaskElement final : public SVGMaskElementBase {
-  friend class mozilla::SVGMaskFrame;
+  friend class ::nsSVGMaskFrame;
 
  protected:
   friend nsresult(::NS_NewSVGMaskElement(

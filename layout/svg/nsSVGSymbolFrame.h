@@ -7,28 +7,23 @@
 #ifndef __NS_SVGISYMBOLFRAME_H__
 #define __NS_SVGISYMBOLFRAME_H__
 
-#include "SVGViewportFrame.h"
+#include "nsSVGViewportFrame.h"
 
 namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-nsIFrame* NS_NewSVGSymbolFrame(mozilla::PresShell* aPresShell,
-                               mozilla::ComputedStyle* aStyle);
-
-namespace mozilla {
-
-class SVGSymbolFrame final : public SVGViewportFrame {
-  friend nsIFrame* ::NS_NewSVGSymbolFrame(mozilla::PresShell* aPresShell,
-                                          ComputedStyle* aStyle);
+class nsSVGSymbolFrame final : public nsSVGViewportFrame {
+  friend nsIFrame* NS_NewSVGSymbolFrame(mozilla::PresShell* aPresShell,
+                                        ComputedStyle* aStyle);
 
  protected:
-  explicit SVGSymbolFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : SVGViewportFrame(aStyle, aPresContext, kClassID) {}
+  explicit nsSVGSymbolFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGViewportFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(SVGSymbolFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGSymbolFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -41,7 +36,5 @@ class SVGSymbolFrame final : public SVGViewportFrame {
   }
 #endif
 };
-
-}  // namespace mozilla
 
 #endif

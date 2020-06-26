@@ -22,7 +22,7 @@
 #include "nsLayoutUtils.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGIntegrationUtils.h"
-#include "SVGMarkerFrame.h"
+#include "nsSVGMarkerFrame.h"
 #include "SVGGeometryElement.h"
 #include "nsSVGUtils.h"
 #include "mozilla/ArrayUtils.h"
@@ -572,7 +572,7 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
   // Account for markers:
   if ((aFlags & nsSVGUtils::eBBoxIncludeMarkers) != 0 &&
       element->IsMarkable()) {
-    SVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
+    nsSVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
     if (SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
       nsTArray<SVGMark> marks;
       element->GetMarkPoints(&marks);
@@ -580,7 +580,7 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
         float strokeWidth = nsSVGUtils::GetStrokeWidth(this);
         for (uint32_t i = 0; i < num; i++) {
           const SVGMark& mark = marks[i];
-          SVGMarkerFrame* frame = markerFrames[mark.type];
+          nsSVGMarkerFrame* frame = markerFrames[mark.type];
           if (frame) {
             SVGBBox mbbox = frame->GetMarkBBoxContribution(
                 aToBBoxUserspace, aFlags, this, mark, strokeWidth);
@@ -735,7 +735,7 @@ void SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
   auto element = static_cast<SVGGeometryElement*>(GetContent());
 
   if (element->IsMarkable()) {
-    SVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
+    nsSVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
     if (SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
       nsTArray<SVGMark> marks;
       element->GetMarkPoints(&marks);
@@ -745,7 +745,7 @@ void SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
         float strokeWidth = nsSVGUtils::GetStrokeWidth(this, contextPaint);
         for (uint32_t i = 0; i < num; i++) {
           const SVGMark& mark = marks[i];
-          SVGMarkerFrame* frame = markerFrames[mark.type];
+          nsSVGMarkerFrame* frame = markerFrames[mark.type];
           if (frame) {
             frame->PaintMark(aContext, aTransform, this, mark, strokeWidth,
                              aImgParams);
