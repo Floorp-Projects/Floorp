@@ -1273,11 +1273,12 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   if (mSheets) {
     // If we have at least one other load ongoing, then we can defer it until
     // all non-pending loads are done.
-    if (aSheetState == SheetState::NeedsParser && aLoadData.ShouldDefer() &&
+    if (aSheetState == SheetState::NeedsParser &&
+        aPendingLoad == PendingLoad::No && aLoadData.ShouldDefer() &&
         mOngoingLoadCount > mPendingLoadCount + 1) {
       LOG(("  Deferring sheet load"));
       ++mPendingLoadCount;
-      mSheets->DeferSheetLoad(aLoadData);
+      mSheets->DeferSheetLoad(key, aLoadData);
       return NS_OK;
     }
 

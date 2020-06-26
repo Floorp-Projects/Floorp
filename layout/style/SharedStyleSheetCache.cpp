@@ -230,10 +230,13 @@ size_t SharedStyleSheetCache::SizeOfIncludingThis(
   return n;
 }
 
-void SharedStyleSheetCache::DeferSheetLoad(SheetLoadData& aData) {
-  SheetLoadDataHashKey key(aData);
+void SharedStyleSheetCache::DeferSheetLoad(const SheetLoadDataHashKey& aKey,
+                                           SheetLoadData& aData) {
+  MOZ_ASSERT(SheetLoadDataHashKey(aData).KeyEquals(aKey));
+  MOZ_DIAGNOSTIC_ASSERT(!aData.mNext, "Should only defer loads once");
+
   aData.mMustNotify = true;
-  mPendingDatas.Put(key, RefPtr{&aData});
+  mPendingDatas.Put(aKey, RefPtr{&aData});
 }
 
 void SharedStyleSheetCache::LoadStarted(const SheetLoadDataHashKey& aKey,
