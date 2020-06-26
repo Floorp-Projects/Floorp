@@ -22,6 +22,7 @@ enum class SystemParameterId : uint8_t {
   IsPerMonitorDPIAware = 0,
   SystemDPI,
   FlatMenusEnabled,
+  IsAppThemed,
   Count,
 };
 
@@ -34,6 +35,8 @@ class WinContentSystemParameters {
   float SystemDPI();
 
   bool AreFlatMenusEnabled();
+
+  bool IsAppThemed();
 
   void SetContentValues(const nsTArray<dom::SystemParameterKVPair>& values);
 

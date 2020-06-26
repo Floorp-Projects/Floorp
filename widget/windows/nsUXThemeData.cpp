@@ -402,4 +402,9 @@ bool nsUXThemeData::AreFlatMenusEnabled() {
 }
 
 // static
-bool nsUXThemeData::IsAppThemed() { return !!::IsAppThemed(); }
+bool nsUXThemeData::IsAppThemed() {
+  if (XRE_IsContentProcess()) {
+    return WinContentSystemParameters::GetSingleton()->IsAppThemed();
+  }
+  return !!::IsAppThemed();
+}
