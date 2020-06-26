@@ -503,8 +503,8 @@ class DataSourceSurface : public SourceSurface {
 #endif
 
   struct MappedSurface {
-    uint8_t* mData;
-    int32_t mStride;
+    uint8_t* mData = nullptr;
+    int32_t mStride = 0;
   };
 
   enum MapType { READ, WRITE, READ_WRITE };
