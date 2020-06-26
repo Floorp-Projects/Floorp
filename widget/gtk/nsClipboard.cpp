@@ -156,15 +156,7 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
     // Special case text/unicode since we can handle all of the string types.
     if (flavorStr.EqualsLiteral(kUnicodeMime)) {
       LOGCLIP(("    text targets\n"));
-
-      // We don't use gtk_target_list_add_text_targets here,
-      // because that list includes text/plain variants.
-      // gtk_selection_data_set_text will convert line-endings from LF to CRLF
-      // for those. (Bug 1547595)
-      gtk_target_list_add(list, gdk_atom_intern("UTF8_STRING", FALSE), 0, 0);
-      gtk_target_list_add(list, gdk_atom_intern("COMPOUND_TEXT", FALSE), 0, 0);
-      gtk_target_list_add(list, gdk_atom_intern("TEXT", FALSE), 0, 0);
-      gtk_target_list_add(list, GDK_SELECTION_TYPE_STRING, 0, 0);
+      gtk_target_list_add_text_targets(list, 0);
       continue;
     }
 
