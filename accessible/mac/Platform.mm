@@ -64,13 +64,15 @@ void ProxyDestroyed(ProxyAccessible* aProxy) {
 }
 
 void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
-  // ignore everything but focus-changed, value-changed, caret and selection
-  // events for now.
+  // ignore everything but focus-changed, value-changed, caret,
+  // selection, and document load complete events for now.
+  NSLog(@"Event type is %u", aEventType);
   if (aEventType != nsIAccessibleEvent::EVENT_FOCUS &&
       aEventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
       aEventType != nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE &&
       aEventType != nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED &&
       aEventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED &&
+      aEventType != nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE &&
       aEventType != nsIAccessibleEvent::EVENT_REORDER)
     return;
 

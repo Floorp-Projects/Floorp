@@ -12,6 +12,7 @@
 #include "gfxPlatform.h"
 
 #import "MOXMathAccessibles.h"
+#import "MOXWebAreaAccessible.h"
 #import "mozAccessible.h"
 #import "mozActionElements.h"
 #import "mozHTMLAccessible.h"
@@ -173,6 +174,9 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
   switch (aRole) {
     case roles::COMBOBOX:
       return [mozPopupButtonAccessible class];
+
+    case roles::DOCUMENT:
+      return [MOXWebAreaAccessible class];
 
     case roles::PUSHBUTTON:
       return [mozButtonAccessible class];

@@ -19,6 +19,7 @@ UNIFIED_SOURCES += [
     'MacUtils.mm',
     'MOXAccessibleBase.mm',
     'MOXMathAccessibles.mm',
+    'MOXWebAreaAccessible.mm',
     'mozAccessible.mm',
     'mozActionElements.mm',
     'mozHTMLAccessible.mm',
