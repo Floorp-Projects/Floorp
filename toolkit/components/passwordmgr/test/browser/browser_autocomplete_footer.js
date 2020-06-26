@@ -54,6 +54,11 @@ add_task(async function test_autocomplete_footer_onclick() {
         return !EventUtils.isHidden(footer);
       }, "Waiting for footer to become visible");
 
+      await TestUtils.waitForCondition(
+        () => !footer.disabled,
+        "Waiting for footer to become enabled"
+      );
+
       let openingFunc = () => EventUtils.synthesizeMouseAtCenter(footer, {});
       let passwordManager = await openPasswordManager(openingFunc, false);
 
@@ -99,6 +104,11 @@ add_task(async function test_autocomplete_footer_keydown() {
       await TestUtils.waitForCondition(() => {
         return !EventUtils.isHidden(footer);
       }, "Waiting for footer to become visible");
+
+      await TestUtils.waitForCondition(
+        () => !footer.disabled,
+        "Waiting for footer to become enabled"
+      );
 
       await EventUtils.synthesizeKey("KEY_ArrowDown");
       await EventUtils.synthesizeKey("KEY_ArrowDown");

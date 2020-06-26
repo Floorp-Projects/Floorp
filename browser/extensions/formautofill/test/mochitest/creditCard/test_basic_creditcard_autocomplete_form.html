@@ -158,7 +158,6 @@ add_task(async function check_fields_after_form_autofill() {
   }
 
   await setInput("#cc-exp-year", 202);
-
   synthesizeKey("KEY_ArrowDown");
   // The popup doesn't auto-show on focus because the field isn't empty
   await expectPopup();
@@ -166,6 +165,7 @@ add_task(async function check_fields_after_form_autofill() {
     primary: cc["cc-exp-year"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
   })));
+  await popupEnabled();
 
   synthesizeKey("KEY_ArrowDown");
   let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
