@@ -529,8 +529,13 @@ var UITour = {
         Promise.resolve()
           .then(() => {
             return data.email
-              ? FxAccounts.config.promiseEmailURI(data.email, "uitour")
-              : FxAccounts.config.promiseConnectAccountURI("uitour");
+              ? FxAccounts.config.promiseEmailURI(
+                  data.email,
+                  data.entrypoint || "uitour"
+                )
+              : FxAccounts.config.promiseConnectAccountURI(
+                  data.entrypoint || "uitour"
+                );
           })
           .then(uri => {
             const url = new URL(uri);
@@ -550,23 +555,25 @@ var UITour = {
       }
 
       case "showConnectAnotherDevice": {
-        FxAccounts.config.promiseConnectDeviceURI("uitour").then(uri => {
-          const url = new URL(uri);
-          // Call our helper to validate extraURLParams and populate URLSearchParams
-          if (!this._populateURLParams(url, data.extraURLParams)) {
-            log.warn(
-              "showConnectAnotherDevice: invalid campaign args specified"
-            );
-            return;
-          }
+        FxAccounts.config
+          .promiseConnectDeviceURI(data.entrypoint || "uitour")
+          .then(uri => {
+            const url = new URL(uri);
+            // Call our helper to validate extraURLParams and populate URLSearchParams
+            if (!this._populateURLParams(url, data.extraURLParams)) {
+              log.warn(
+                "showConnectAnotherDevice: invalid campaign args specified"
+              );
+              return;
+            }
 
-          // We want to replace the current tab.
-          browser.loadURI(url.href, {
-            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-              {}
-            ),
+            // We want to replace the current tab.
+            browser.loadURI(url.href, {
+              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+                {}
+              ),
+            });
           });
-        });
         break;
       }
 
@@ -838,6 +845,8 @@ var UITour = {
         let value = urlParams[name];
         const validName =
           name.startsWith("utm_") ||
+          name === "entrypoint_experiment" ||
+          name === "entrypoint_variation" ||
           name === "flow_begin_time" ||
           name === "flow_id" ||
           name === "device_id";

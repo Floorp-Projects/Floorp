@@ -88,7 +88,7 @@ add_UITour_task(async function test_firefoxAccountsValidParams() {
 
 add_UITour_task(async function test_firefoxAccountsWithEmail() {
   info("Load https://accounts.firefox.com");
-  await gContentAPI.showFirefoxAccounts(null, "foo@bar.com");
+  await gContentAPI.showFirefoxAccounts(null, null, "foo@bar.com");
   await BrowserTestUtils.browserLoaded(
     gTestTab.linkedBrowser,
     false,
@@ -103,7 +103,7 @@ add_UITour_task(async function test_firefoxAccountsWithEmailAndFlowParams() {
     flow_begin_time: MOCK_FLOW_BEGIN_TIME,
     device_id: MOCK_DEVICE_ID,
   };
-  await gContentAPI.showFirefoxAccounts(flowParams, "foo@bar.com");
+  await gContentAPI.showFirefoxAccounts(flowParams, null, "foo@bar.com");
   await BrowserTestUtils.browserLoaded(
     gTestTab.linkedBrowser,
     false,
@@ -124,6 +124,7 @@ add_UITour_task(
         flow_begin_time: MOCK_FLOW_BEGIN_TIME,
         device_id: MOCK_DEVICE_ID,
       },
+      null,
       "foo@bar.com"
     );
     await checkFxANotLoaded();
@@ -134,6 +135,7 @@ add_UITour_task(
         flow_begin_time: BAD_MOCK_FLOW_BEGIN_TIME,
         device_id: MOCK_DEVICE_ID,
       },
+      null,
       "foo@bar.com"
     );
     await checkFxANotLoaded();
@@ -149,6 +151,7 @@ add_UITour_task(
         flow_id: MOCK_FLOW_ID,
         flow_begin_time: MOCK_FLOW_BEGIN_TIME,
       },
+      null,
       "foo@bar.com"
     );
     await BrowserTestUtils.browserLoaded(
@@ -159,6 +162,25 @@ add_UITour_task(
     );
   }
 );
+
+add_UITour_task(async function test_firefoxAccountsWithEmailAndEntrypoints() {
+  info("Load https://accounts.firefox.com with entrypoint parameters");
+
+  await gContentAPI.showFirefoxAccounts(
+    {
+      entrypoint_experiment: "exp",
+      entrypoint_variation: "var",
+    },
+    "entry",
+    "foo@bar.com"
+  );
+  await BrowserTestUtils.browserLoaded(
+    gTestTab.linkedBrowser,
+    false,
+    "https://example.com/?context=fx_desktop_v3&entrypoint=entry&email=foo%40bar.com&service=sync&" +
+      `entrypoint_experiment=exp&entrypoint_variation=var`
+  );
+});
 
 add_UITour_task(async function test_firefoxAccountsNonAlphaValue() {
   // All characters in the value are allowed, but they must be automatically escaped.
