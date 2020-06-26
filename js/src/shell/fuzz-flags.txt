@@ -72,8 +72,6 @@
 --wasm-disable-huge-memory
 
 # CPU instruction set-related
---enable-avx
---no-avx
 --no-sse3
 --no-ssse3
 --no-sse41
