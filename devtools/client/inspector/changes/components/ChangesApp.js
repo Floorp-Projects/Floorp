@@ -217,6 +217,8 @@ class ChangesApp extends PureComponent {
       {
         className: "theme-sidebar inspector-tabpanel",
         id: "sidebar-panel-changes",
+        role: "document",
+        tabIndex: "0",
         onContextMenu: this.props.onContextMenu,
       },
       !hasChanges && this.renderEmptyState(),
