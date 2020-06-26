@@ -302,6 +302,13 @@ void GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected) {
 
   if (aConnected) {
     for (uint32_t i = 0; i < listeners.Length(); i++) {
+#ifdef NIGHTLY_BUILD
+      // Don't fire a gamepadconnected event unless it's a secure context
+      if (!listeners[i]->IsSecureContext()) {
+        continue;
+      }
+#endif
+
       // Do not fire gamepadconnected and gamepaddisconnected events when
       // privacy.resistFingerprinting is true.
       if (nsContentUtils::ShouldResistFingerprinting(
