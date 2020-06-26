@@ -21,6 +21,6 @@ assertEq(parseInt(-0, 10), 0);
 assertEq(parseInt('0', 10), 0);
 assertEq(parseInt('-0', 10), -0);
 
-/* this is not very hacky, but we try to get a double value of 0, instead of int */
-assertEq(parseInt(Math.asin(0), 10), 0); 
-assertEq(parseInt(Math.asin(-0), 10), 0); 
+// Test with 0 typed as a double instead of int.
+assertEq(parseInt(numberToDouble(0), 10), 0);
+assertEq(parseInt(numberToDouble(-0), 10), 0);
