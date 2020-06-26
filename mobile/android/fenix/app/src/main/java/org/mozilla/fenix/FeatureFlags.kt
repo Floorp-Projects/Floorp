@@ -23,7 +23,7 @@ object FeatureFlags {
     /**
      * Enable tab sync feature
      */
-    val syncedTabs = Config.channel.isNightlyOrDebug
+    const val syncedTabs = true
 
     /**
      * Enables new tab tray pref
