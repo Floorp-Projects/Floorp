@@ -1543,7 +1543,6 @@ nsresult nsCSPContext::AsyncReportViolation(
 NS_IMETHODIMP
 nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
                               bool* outPermitsAncestry) {
-  MOZ_ASSERT(XRE_IsParentProcess(), "frame-ancestor check only in parent");
   nsresult rv;
 
   *outPermitsAncestry = true;
@@ -1557,9 +1556,18 @@ nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
 
   while (ctx) {
     nsCOMPtr<nsIURI> currentURI;
-    WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
-    if (window) {
-      currentURI = window->GetDocumentURI();
+    // Generally permitsAncestry is consulted from within the
+    // DocumentLoadListener in the parent process. For loads of type object
+    // and embed it's called from the Document in the content process.
+    // After Bug 1646899 we should be able to remove that branching code for
+    // querying the currentURI.
+    if (XRE_IsParentProcess()) {
+      WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
+      if (window) {
+        currentURI = window->GetDocumentURI();
+      }
+    } else if (nsPIDOMWindowOuter* windowOuter = ctx->GetDOMWindow()) {
+      currentURI = windowOuter->GetDocumentURI();
     }
 
     if (currentURI) {
