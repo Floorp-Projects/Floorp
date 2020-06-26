@@ -20,14 +20,20 @@
     <string name="mozac_feature_prompt_dont_save">मत सहेजें‌</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">सहेजें</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update">अपडेट न करें</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">अद्यतित करें</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_empty_password">पासवर्ड क्षेत्र रिक्त नहीं होनी चाहिए</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">लॉगिन जानकारी सजेहने में असफल</string>
-    <!-- Prompt message displayed when app detects a user has entered a password and user decides if app should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="mozac_feature_prompt_logins_save_message">आप चाहते है %s इस लॉगिन को सहेजें?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
+    <string name="mozac_feature_prompt_login_save_headline">इस लॉगिन को सहेजना चाहते हैं?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_update_headline">इस लॉगिन को अपडेट करना चाहते हैं?</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">सहेजे गए पासवर्ड में उपयोगकर्ता नाम जोड़ना चाहते हैं?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
     <string name="mozac_feature_prompts_content_description_input_label">पाठ इनपुट क्षेत्र दर्ज करने के लिए लेबल</string>
@@ -37,6 +43,8 @@
     <string name="mozac_feature_prompts_allow">अनुमति दें</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">अस्वीकार करें</string>
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">क्या आपको यकीन है?</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">एक महीना चुनें</string>
     <!-- January (short description), used on the month chooser dialog. -->
