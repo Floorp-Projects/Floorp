@@ -32,10 +32,11 @@ void PlatformShutdown() {}
 
 void ProxyCreated(ProxyAccessible* aProxy, uint32_t) {
   ProxyAccessible* parent = aProxy->Parent();
-  if (parent && nsAccUtils::MustPrune(parent)) {
+  if ((parent && nsAccUtils::MustPrune(parent)) || aProxy->Role() == roles::WHITESPACE) {
     // We don't create a native object if we're child of a "flat" accessible;
     // for example, on OS X buttons shouldn't have any children, because that
-    // makes the OS confused.
+    // makes the OS confused. We also don't create accessibles for <br>
+    // (whitespace) elements.
     return;
   }
 
@@ -43,14 +44,15 @@ void ProxyCreated(ProxyAccessible* aProxy, uint32_t) {
   // Note that we can use ProxyAccessible::IsTable* functions here because they
   // do not use IPC calls but that might change after bug 1210477.
   Class type;
-  if (aProxy->IsTable())
+  if (aProxy->IsTable()) {
     type = [mozTableAccessible class];
-  else if (aProxy->IsTableRow())
+  } else if (aProxy->IsTableRow()) {
     type = [mozTableRowAccessible class];
-  else if (aProxy->IsTableCell())
+  } else if (aProxy->IsTableCell()) {
     type = [mozTableCellAccessible class];
-  else
+  } else {
     type = GetTypeFromRole(aProxy->Role());
+  }
 
   mozAccessible* mozWrapper = [[type alloc] initWithAccessible:aProxy];
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(mozWrapper));
