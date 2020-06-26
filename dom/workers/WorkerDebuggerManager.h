@@ -72,6 +72,8 @@ class WorkerDebuggerManager final : public nsIObserver,
   WorkerDebugger* GetDebuggerAt(uint32_t aIndex) const;
 
  private:
+  nsTArray<nsCOMPtr<nsIWorkerDebuggerManagerListener>> CloneListeners();
+
   virtual ~WorkerDebuggerManager();
 };
 

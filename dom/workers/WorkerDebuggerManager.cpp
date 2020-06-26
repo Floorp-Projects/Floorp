@@ -278,15 +278,8 @@ void WorkerDebuggerManager::RegisterDebuggerMainThread(
   aWorkerPrivate->SetDebugger(debugger);
 
   if (aNotifyListeners) {
-    nsTArray<nsCOMPtr<nsIWorkerDebuggerManagerListener>> listeners;
-    {
-      MutexAutoLock lock(mMutex);
-
-      listeners = mListeners.Clone();
-    }
-
-    for (size_t index = 0; index < listeners.Length(); ++index) {
-      listeners[index]->OnRegister(debugger);
+    for (const auto& listener : CloneListeners()) {
+      listener->OnRegister(debugger);
     }
   }
 
@@ -310,15 +303,8 @@ void WorkerDebuggerManager::UnregisterDebuggerMainThread(
 
   aWorkerPrivate->SetDebugger(nullptr);
 
-  nsTArray<nsCOMPtr<nsIWorkerDebuggerManagerListener>> listeners;
-  {
-    MutexAutoLock lock(mMutex);
-
-    listeners = mListeners.Clone();
-  }
-
-  for (size_t index = 0; index < listeners.Length(); ++index) {
-    listeners[index]->OnUnregister(debugger);
+  for (const auto& listener : CloneListeners()) {
+    listener->OnUnregister(debugger);
   }
 
   debugger->Close();
@@ -331,6 +317,13 @@ uint32_t WorkerDebuggerManager::GetDebuggersLength() const {
 
 WorkerDebugger* WorkerDebuggerManager::GetDebuggerAt(uint32_t aIndex) const {
   return mDebuggers.SafeElementAt(aIndex, nullptr);
+}
+
+nsTArray<nsCOMPtr<nsIWorkerDebuggerManagerListener>>
+WorkerDebuggerManager::CloneListeners() {
+  MutexAutoLock lock(mMutex);
+
+  return mListeners.Clone();
 }
 
 }  // namespace dom
