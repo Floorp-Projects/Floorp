@@ -139,7 +139,7 @@ async function testSteps() {
     createUnknownFileIn(`${originRelativePath}/sdb`);
   }
 
-  // Unknown file in ls client directory
+  // Unknown file and unknown directory in ls client directory
   {
     Services.prefs.setBoolPref("dom.storage.testing", true);
     Services.prefs.setBoolPref("dom.storage.client_validation", false);
@@ -156,5 +156,6 @@ async function testSteps() {
     storage.close();
 
     createUnknownFileIn(`${originRelativePath}/ls`);
+    createUnknownDirectoryIn(`${originRelativePath}/ls`);
   }
 }
