@@ -26,6 +26,9 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/SVGMaskFrame.h"
+#include "mozilla/SVGObserverUtils.h"
+#include "mozilla/SVGTextFrame.h"
 #include "mozilla/ToString.h"
 #include "mozilla/ViewportUtils.h"
 
@@ -86,12 +89,9 @@
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
 #include "nsSVGIntegrationUtils.h"
-#include "SVGObserverUtils.h"
-#include "nsSVGMaskFrame.h"
 #include "nsChangeHint.h"
 #include "nsDeckFrame.h"
 #include "nsSubDocumentFrame.h"
-#include "SVGTextFrame.h"
 #include "RetainedDisplayListBuilder.h"
 
 #include "gfxContext.h"
@@ -3060,7 +3060,7 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
 
     nsIFrame* firstFrame =
         nsLayoutUtils::FirstContinuationOrIBSplitSibling(aMaskedFrame);
-    nsTArray<nsSVGMaskFrame*> maskFrames;
+    nsTArray<SVGMaskFrame*> maskFrames;
     // XXX check return value?
     SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
 
