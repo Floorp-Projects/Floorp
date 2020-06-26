@@ -451,6 +451,12 @@ process.
 
 To check the mode the process is operating in, the :js:`LocaleService::IsServer` method is available.
 
+Note that :js:`L10nRegistry.registerSources`, :js:`L10nRegistry.updateSources`, and
+:js:`L10nRegistry.removeSources` each trigger an IPC synchronization between the parent
+process and any extant content processes, which is expensive. If you need to change the
+registration of multiple sources, the best way to do so is to coalesce multiple requests
+into a single array and then call the method once.
+
 Mozilla Exceptions
 ==================
 
@@ -514,7 +520,7 @@ It may look like this:
       "resource://mock-addon/localization/ar/test.ftl": "key = Value in Arabic"
     };
 
-    L10nRegistry.registerSource(fs);
+    L10nRegistry.registerSources([fs]);
 
     let availableLocales = Services.locale.availableLocales;
 
