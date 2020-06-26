@@ -105,6 +105,25 @@ class ProviderSearchSuggestions extends UrlbarProvider {
   }
 
   /**
+   * Returns whether the user typed a token alias or a restriction token. We use
+   * this value to override the pref to disable search suggestions in the
+   * Urlbar.
+   * @param {UrlbarQueryContext} queryContext  The query context object.
+   * @returns {boolean} True if the user typed a token alias or search
+   *   restriction token.
+   */
+  _isTokenOrRestrictionPresent(queryContext) {
+    return (
+      queryContext.searchString.startsWith("@") ||
+      (queryContext.restrictSource &&
+        queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH) ||
+      queryContext.tokens.some(
+        t => t.type == UrlbarTokenizer.TYPE.RESTRICT_SEARCH
+      )
+    );
+  }
+
+  /**
    * Returns whether suggestions in general are allowed for a given query
    * context.  If this returns false, then we shouldn't fetch either form
    * history or remote suggestions.  Otherwise further checks are necessary to
@@ -118,7 +137,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
   _allowSuggestions(queryContext) {
     if (
       !queryContext.allowSearchSuggestions ||
-      !UrlbarPrefs.get("suggest.searches") ||
+      // If the user typed a restriction token or token alias, we ignore the
+      // pref to disable suggestions in the Urlbar.
+      (!UrlbarPrefs.get("suggest.searches") &&
+        !this._isTokenOrRestrictionPresent(queryContext)) ||
       !UrlbarPrefs.get("browser.search.suggest.enabled") ||
       (queryContext.isPrivate &&
         !UrlbarPrefs.get("browser.search.suggest.enabled.private"))
@@ -141,10 +163,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     }
 
     // Skip all remaining checks and allow remote suggestions at this point if
-    // the user used a search engine token alias.  We want "@engine query" to
-    // return suggestions from the engine.  We'll return early from startQuery
+    // the user used a token alias or restriction token. We want "@engine query"
+    // to return suggestions from the engine. We'll return early from startQuery
     // if the query doesn't match an alias.
-    if (queryContext.searchString.startsWith("@")) {
+    if (this._isTokenOrRestrictionPresent(queryContext)) {
       return true;
     }
 
