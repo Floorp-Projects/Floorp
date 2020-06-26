@@ -20,7 +20,6 @@
 #include "SVGObserverUtils.h"
 #include "SVGElement.h"
 #include "nsSVGFilterPaintCallback.h"
-#include "nsSVGMaskFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGUtils.h"
 #include "FrameLayerBuilder.h"
@@ -29,6 +28,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "nsCSSRendering.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/SVGMaskFrame.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -448,7 +448,7 @@ typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
 static bool PaintMaskSurface(const PaintFramesParams& aParams,
                              DrawTarget* aMaskDT, float aOpacity,
                              ComputedStyle* aSC,
-                             const nsTArray<nsSVGMaskFrame*>& aMaskFrames,
+                             const nsTArray<SVGMaskFrame*>& aMaskFrames,
                              const Matrix& aMaskSurfaceMatrix,
                              const nsPoint& aOffsetToUserSpace) {
   MOZ_ASSERT(aMaskFrames.Length() > 0);
@@ -472,7 +472,7 @@ static bool PaintMaskSurface(const PaintFramesParams& aParams,
   // Multiple SVG masks interleave with image mask. Paint each layer onto
   // aMaskDT one at a time.
   for (int i = aMaskFrames.Length() - 1; i >= 0; i--) {
-    nsSVGMaskFrame* maskFrame = aMaskFrames[i];
+    SVGMaskFrame* maskFrame = aMaskFrames[i];
     CompositionOp compositionOp =
         (i == int(aMaskFrames.Length() - 1))
             ? CompositionOp::OP_OVER
@@ -482,7 +482,7 @@ static bool PaintMaskSurface(const PaintFramesParams& aParams,
     // maskFrame != nullptr means we get a SVG mask.
     // maskFrame == nullptr means we get an image mask.
     if (maskFrame) {
-      nsSVGMaskFrame::MaskParams params(
+      SVGMaskFrame::MaskParams params(
           maskContext, aParams.frame, cssPxToDevPxMatrix, aOpacity,
           svgReset->mMask.mLayers[i].mMaskMode, aParams.imgParams);
       RefPtr<SourceSurface> svgMask = maskFrame->GetMaskForMaskedFrame(params);
@@ -527,7 +527,7 @@ struct MaskPaintResult {
 
 static MaskPaintResult CreateAndPaintMaskSurface(
     const PaintFramesParams& aParams, float aOpacity, ComputedStyle* aSC,
-    const nsTArray<nsSVGMaskFrame*>& aMaskFrames,
+    const nsTArray<SVGMaskFrame*>& aMaskFrames,
     const nsPoint& aOffsetToUserSpace) {
   const nsStyleSVGReset* svgReset = aSC->StyleSVGReset();
   MOZ_ASSERT(aMaskFrames.Length() > 0);
@@ -540,7 +540,7 @@ static MaskPaintResult CreateAndPaintMaskSurface(
     gfxMatrix cssPxToDevPxMatrix =
         nsSVGUtils::GetCSSPxToDevPxMatrix(aParams.frame);
     paintResult.opacityApplied = true;
-    nsSVGMaskFrame::MaskParams params(
+    SVGMaskFrame::MaskParams params(
         &ctx, aParams.frame, cssPxToDevPxMatrix, aOpacity,
         svgReset->mMask.mLayers[0].mMaskMode, aParams.imgParams);
     paintResult.maskSurface = aMaskFrames[0]->GetMaskForMaskedFrame(params);
@@ -718,7 +718,7 @@ static EffectOffsets MoveContextOriginToUserSpace(
 bool nsSVGIntegrationUtils::IsMaskResourceReady(nsIFrame* aFrame) {
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  nsTArray<nsSVGMaskFrame*> maskFrames;
+  nsTArray<SVGMaskFrame*> maskFrames;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
 
@@ -790,7 +790,7 @@ bool nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
 
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
-  nsTArray<nsSVGMaskFrame*> maskFrames;
+  nsTArray<SVGMaskFrame*> maskFrames;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
 
@@ -900,7 +900,7 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
   // XXX check return value?
   SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
 
-  nsTArray<nsSVGMaskFrame*> maskFrames;
+  nsTArray<SVGMaskFrame*> maskFrames;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
 

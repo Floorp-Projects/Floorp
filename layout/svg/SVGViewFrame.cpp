@@ -15,7 +15,7 @@
 using namespace mozilla::dom;
 
 nsIFrame* NS_NewSVGViewFrame(mozilla::PresShell* aPresShell,
-                             ComputedStyle* aStyle);
+                             mozilla::ComputedStyle* aStyle);
 
 namespace mozilla {
 
@@ -69,7 +69,7 @@ class SVGViewFrame final : public nsFrame {
 }  // namespace mozilla
 
 nsIFrame* NS_NewSVGViewFrame(mozilla::PresShell* aPresShell,
-                             ComputedStyle* aStyle) {
+                             mozilla::ComputedStyle* aStyle) {
   return new (aPresShell)
       mozilla::SVGViewFrame(aStyle, aPresShell->GetPresContext());
 }

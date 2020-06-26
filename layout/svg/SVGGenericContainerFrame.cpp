@@ -5,34 +5,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGGenericContainerFrame.h"
+#include "SVGGenericContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 
 #include "mozilla/PresShell.h"
 
-using namespace mozilla;
-
 //----------------------------------------------------------------------
-// nsSVGGenericContainerFrame Implementation
+// SVGGenericContainerFrame Implementation
 
-nsIFrame* NS_NewSVGGenericContainerFrame(PresShell* aPresShell,
-                                         ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGGenericContainerFrame(mozilla::PresShell* aPresShell,
+                                         mozilla::ComputedStyle* aStyle) {
   return new (aPresShell)
-      nsSVGGenericContainerFrame(aStyle, aPresShell->GetPresContext());
+      mozilla::SVGGenericContainerFrame(aStyle, aPresShell->GetPresContext());
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGGenericContainerFrame)
+namespace mozilla {
+
+NS_IMPL_FRAMEARENA_HELPERS(SVGGenericContainerFrame)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
 
-nsresult nsSVGGenericContainerFrame::AttributeChanged(int32_t aNameSpaceID,
-                                                      nsAtom* aAttribute,
-                                                      int32_t aModType) {
+nsresult SVGGenericContainerFrame::AttributeChanged(int32_t aNameSpaceID,
+                                                    nsAtom* aAttribute,
+                                                    int32_t aModType) {
 #ifdef DEBUG
   nsAutoString str;
   aAttribute->ToString(str);
-  printf("** nsSVGGenericContainerFrame::AttributeChanged(%s)\n",
+  printf("** SVGGenericContainerFrame::AttributeChanged(%s)\n",
          NS_LossyConvertUTF16toASCII(str).get());
 #endif
 
@@ -42,8 +42,10 @@ nsresult nsSVGGenericContainerFrame::AttributeChanged(int32_t aNameSpaceID,
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 
-gfxMatrix nsSVGGenericContainerFrame::GetCanvasTM() {
+gfxMatrix SVGGenericContainerFrame::GetCanvasTM() {
   NS_ASSERTION(GetParent(), "null parent");
 
   return static_cast<nsSVGContainerFrame*>(GetParent())->GetCanvasTM();
 }
+
+}  // namespace mozilla

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGMarkerFrame.h"
+#include "SVGMarkerFrame.h"
 
 // Keep others in (case-insensitive) order:
 #include "gfxContext.h"
@@ -15,25 +15,26 @@
 #include "SVGGeometryFrame.h"
 #include "SVGObserverUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-nsContainerFrame* NS_NewSVGMarkerFrame(PresShell* aPresShell,
-                                       ComputedStyle* aStyle) {
+nsContainerFrame* NS_NewSVGMarkerFrame(mozilla::PresShell* aPresShell,
+                                       mozilla::ComputedStyle* aStyle) {
   return new (aPresShell)
-      nsSVGMarkerFrame(aStyle, aPresShell->GetPresContext());
+      mozilla::SVGMarkerFrame(aStyle, aPresShell->GetPresContext());
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGMarkerFrame)
+namespace mozilla {
+
+NS_IMPL_FRAMEARENA_HELPERS(SVGMarkerFrame)
 
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
-nsresult nsSVGMarkerFrame::AttributeChanged(int32_t aNameSpaceID,
-                                            nsAtom* aAttribute,
-                                            int32_t aModType) {
+nsresult SVGMarkerFrame::AttributeChanged(int32_t aNameSpaceID,
+                                          nsAtom* aAttribute,
+                                          int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::markerUnits || aAttribute == nsGkAtoms::refX ||
        aAttribute == nsGkAtoms::refY || aAttribute == nsGkAtoms::markerWidth ||
@@ -49,8 +50,8 @@ nsresult nsSVGMarkerFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 #ifdef DEBUG
-void nsSVGMarkerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                            nsIFrame* aPrevInFlow) {
+void SVGMarkerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                          nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::marker),
                "Content is not an SVG marker");
 
@@ -61,7 +62,7 @@ void nsSVGMarkerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 
-gfxMatrix nsSVGMarkerFrame::GetCanvasTM() {
+gfxMatrix SVGMarkerFrame::GetCanvasTM() {
   NS_ASSERTION(mMarkedFrame, "null SVGGeometry frame");
 
   if (mInUse2) {
@@ -87,11 +88,11 @@ static nsIFrame* GetAnonymousChildFrame(nsIFrame* aFrame) {
   return kid;
 }
 
-void nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
-                                 const gfxMatrix& aToMarkedFrameUserSpace,
-                                 SVGGeometryFrame* aMarkedFrame,
-                                 const SVGMark& aMark, float aStrokeWidth,
-                                 imgDrawingParams& aImgParams) {
+void SVGMarkerFrame::PaintMark(gfxContext& aContext,
+                               const gfxMatrix& aToMarkedFrameUserSpace,
+                               SVGGeometryFrame* aMarkedFrame,
+                               const SVGMark& aMark, float aStrokeWidth,
+                               imgDrawingParams& aImgParams) {
   // If the flag is set when we get here, it means this marker frame
   // has already been used painting the current mark, and the document
   // has a marker reference loop.
@@ -136,9 +137,11 @@ void nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
   if (StyleDisplay()->IsScrollableOverflow()) aContext.Restore();
 }
 
-SVGBBox nsSVGMarkerFrame::GetMarkBBoxContribution(
-    const Matrix& aToBBoxUserspace, uint32_t aFlags,
-    SVGGeometryFrame* aMarkedFrame, const SVGMark& aMark, float aStrokeWidth) {
+SVGBBox SVGMarkerFrame::GetMarkBBoxContribution(const Matrix& aToBBoxUserspace,
+                                                uint32_t aFlags,
+                                                SVGGeometryFrame* aMarkedFrame,
+                                                const SVGMark& aMark,
+                                                float aStrokeWidth) {
   SVGBBox bbox;
 
   // If the flag is set when we get here, it means this marker frame
@@ -178,12 +181,12 @@ SVGBBox nsSVGMarkerFrame::GetMarkBBoxContribution(
   return bbox;
 }
 
-void nsSVGMarkerFrame::SetParentCoordCtxProvider(SVGViewportElement* aContext) {
+void SVGMarkerFrame::SetParentCoordCtxProvider(SVGViewportElement* aContext) {
   SVGMarkerElement* marker = static_cast<SVGMarkerElement*>(GetContent());
   marker->SetParentCoordCtxProvider(aContext);
 }
 
-void nsSVGMarkerFrame::AppendDirectlyOwnedAnonBoxes(
+void SVGMarkerFrame::AppendDirectlyOwnedAnonBoxes(
     nsTArray<OwnedAnonBox>& aResult) {
   aResult.AppendElement(OwnedAnonBox(GetAnonymousChildFrame(this)));
 }
@@ -191,8 +194,8 @@ void nsSVGMarkerFrame::AppendDirectlyOwnedAnonBoxes(
 //----------------------------------------------------------------------
 // helper class
 
-nsSVGMarkerFrame::AutoMarkerReferencer::AutoMarkerReferencer(
-    nsSVGMarkerFrame* aFrame,
+SVGMarkerFrame::AutoMarkerReferencer::AutoMarkerReferencer(
+    SVGMarkerFrame* aFrame,
     SVGGeometryFrame* aMarkedFrame MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : mFrame(aFrame) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -204,29 +207,35 @@ nsSVGMarkerFrame::AutoMarkerReferencer::AutoMarkerReferencer(
   mFrame->SetParentCoordCtxProvider(ctx);
 }
 
-nsSVGMarkerFrame::AutoMarkerReferencer::~AutoMarkerReferencer() {
+SVGMarkerFrame::AutoMarkerReferencer::~AutoMarkerReferencer() {
   mFrame->SetParentCoordCtxProvider(nullptr);
 
   mFrame->mMarkedFrame = nullptr;
   mFrame->mInUse = false;
 }
 
-//----------------------------------------------------------------------
-// Implementation of nsSVGMarkerAnonChildFrame
+}  // namespace mozilla
 
-nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(PresShell* aPresShell,
-                                                ComputedStyle* aStyle) {
+//----------------------------------------------------------------------
+// Implementation of SVGMarkerAnonChildFrame
+
+nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(
+    mozilla::PresShell* aPresShell, mozilla::ComputedStyle* aStyle) {
   return new (aPresShell)
-      nsSVGMarkerAnonChildFrame(aStyle, aPresShell->GetPresContext());
+      mozilla::SVGMarkerAnonChildFrame(aStyle, aPresShell->GetPresContext());
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGMarkerAnonChildFrame)
+namespace mozilla {
+
+NS_IMPL_FRAMEARENA_HELPERS(SVGMarkerAnonChildFrame)
 
 #ifdef DEBUG
-void nsSVGMarkerAnonChildFrame::Init(nsIContent* aContent,
-                                     nsContainerFrame* aParent,
-                                     nsIFrame* aPrevInFlow) {
+void SVGMarkerAnonChildFrame::Init(nsIContent* aContent,
+                                   nsContainerFrame* aParent,
+                                   nsIFrame* aPrevInFlow) {
   MOZ_ASSERT(aParent->IsSVGMarkerFrame(), "Unexpected parent");
   nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
+
+}  // namespace mozilla
 #endif
