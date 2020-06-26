@@ -39,6 +39,7 @@ categories:
         - testing/perfdocs
         - testing/perftest
         - tools/code-coverage
+        - testing-rust-code
     l10n_doc:
         - intl
         - l10n

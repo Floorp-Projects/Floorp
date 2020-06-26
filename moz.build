@@ -198,6 +198,8 @@ SPHINX_TREES['contributing'] = 'docs/contributing'
 
 SPHINX_TREES['code-quality'] = 'docs/code-quality'
 
+SPHINX_TREES['testing-rust-code'] = 'docs/testing-rust-code'
+
 SPHINX_TREES['bug-mgmt'] = 'docs/bug-mgmt'
 
 SPHINX_TREES['setup'] = 'docs/setup'
