@@ -22,7 +22,4 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    GeneratedFile('mapped_hyph.h',
-                  script='/build/RunCbindgen.py',
-                  entry_point='generate',
-                  inputs=['/third_party/rust/mapped_hyph'])
+    CbindgenHeader('mapped_hyph.h', inputs=['/third_party/rust/mapped_hyph'])
