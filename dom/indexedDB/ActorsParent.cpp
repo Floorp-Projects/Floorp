@@ -4071,7 +4071,7 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
   }
 
   if (NS_WARN_IF(connectionOrErr.isErr())) {
-    return Err(connectionOrErr.unwrapErr());
+    return connectionOrErr.propagateErr();
   }
 
   return connectionOrErr;
@@ -4092,7 +4092,7 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
   auto dbFileUrlOrErr =
       GetDatabaseFileURL(aDBFile, aDirectoryLockId, aTelemetryId);
   if (NS_WARN_IF(dbFileUrlOrErr.isErr())) {
-    return Err(dbFileUrlOrErr.unwrapErr());
+    return dbFileUrlOrErr.propagateErr();
   }
 
   auto dbFileUrl = dbFileUrlOrErr.unwrap();
@@ -4146,7 +4146,7 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     }
 
     if (NS_WARN_IF(connectionOrErr.isErr())) {
-      return Err(connectionOrErr.unwrapErr());
+      return connectionOrErr.propagateErr();
     }
   }
 
@@ -4562,7 +4562,7 @@ GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
   auto dbFileUrlOrErr =
       GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId, aTelemetryId);
   if (NS_WARN_IF(dbFileUrlOrErr.isErr())) {
-    return Err(dbFileUrlOrErr.unwrapErr());
+    return dbFileUrlOrErr.propagateErr();
   }
 
   nsCOMPtr<mozIStorageService> ss =
@@ -4574,7 +4574,7 @@ GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
   auto connectionOrErr =
       OpenDatabaseAndHandleBusy(*ss, *dbFileUrlOrErr.inspect());
   if (NS_WARN_IF(connectionOrErr.isErr())) {
-    return Err(connectionOrErr.unwrapErr());
+    return connectionOrErr.propagateErr();
   }
 
   auto connection = connectionOrErr.unwrap().unwrapBasePtr();
@@ -9152,8 +9152,7 @@ DeserializeStructuredCloneFiles(const FileManager& aFileManager,
     auto structuredCloneFileOrErr =
         DeserializeStructuredCloneFile(aFileManager, token);
     if (NS_WARN_IF(structuredCloneFileOrErr.isErr())) {
-      // XXX Can't this be written in a simpler way?
-      return Err(structuredCloneFileOrErr.unwrapErr());
+      return structuredCloneFileOrErr.propagateErr();
     }
 
     result.EmplaceBack(structuredCloneFileOrErr.unwrap());
@@ -9309,7 +9308,7 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
         }
       });
   if (res.isErr()) {
-    return Err(res.unwrapErr());
+    return res.propagateErr();
   }
 
   return std::move(serializedStructuredCloneFiles);
@@ -12024,7 +12023,7 @@ ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
       GetStorageConnection(aDatabase.FilePath(), aDatabase.DirectoryLockId(),
                            aDatabase.TelemetryId());
   if (NS_WARN_IF(storageConnectionOrErr.isErr())) {
-    return Err(storageConnectionOrErr.unwrapErr());
+    return storageConnectionOrErr.propagateErr();
   }
 
   RefPtr<DatabaseConnection> connection = new DatabaseConnection(
@@ -19296,7 +19295,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
-      return Err(filesOrErr.unwrapErr());
+      return filesOrErr.propagateErr();
     }
 
     files = filesOrErr.unwrap();
@@ -19322,7 +19321,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
-      return Err(filesOrErr.unwrapErr());
+      return filesOrErr.propagateErr();
     }
 
     files = filesOrErr.unwrap();
@@ -22108,7 +22107,7 @@ Result<DatabaseSpec, nsresult> OpenDatabaseOp::MetadataToSpec() const {
             fallible);
 
         if (NS_WARN_IF(indexesOrErr.isErr())) {
-          return Err(indexesOrErr.unwrapErr());
+          return indexesOrErr.propagateErr();
         }
         // XXX Assign rather than use the ctor, since the ctor always copies
         // indexes.
@@ -22118,7 +22117,7 @@ Result<DatabaseSpec, nsresult> OpenDatabaseOp::MetadataToSpec() const {
       },
       fallible);
   if (NS_WARN_IF(objectStoresOrErr.isErr())) {
-    return Err(objectStoresOrErr.unwrapErr());
+    return objectStoresOrErr.propagateErr();
   }
 
   // XXX Assign rather than use the ctor, since the ctor always copies
@@ -24105,7 +24104,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
       /* aDataIndex */ 3,
       /* aFileIdsIndex */ 2, *mOp->mFileManager);
   if (NS_WARN_IF(cloneInfoOrErr.isErr())) {
-    return Err(cloneInfoOrErr.unwrapErr());
+    return cloneInfoOrErr.propagateErr();
   }
 
   auto cloneInfo = cloneInfoOrErr.unwrap();
@@ -25526,7 +25525,7 @@ Result<T, nsresult> ObjectStoreGetRequestOp::ConvertResponse(
       SerializeStructuredCloneFiles(mBackgroundParent, mDatabase, aInfo.Files(),
                                     std::is_same_v<T, PreprocessInfo>);
   if (NS_WARN_IF(res.isErr())) {
-    return Err(res.unwrapErr());
+    return res.propagateErr();
   }
 
   result.files() = res.unwrap();
@@ -25582,7 +25581,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
     auto cloneInfoOrErr = GetStructuredCloneReadInfoFromStatement(
         &*stmt, 1, 0, mDatabase->GetFileManager());
     if (NS_WARN_IF(cloneInfoOrErr.isErr())) {
-      return Err(cloneInfoOrErr.unwrapErr());
+      return cloneInfoOrErr.propagateErr();
     }
 
     if (cloneInfoOrErr.inspect().HasPreprocessInfo()) {
@@ -25631,7 +25630,7 @@ ObjectStoreGetRequestOp::GetPreprocessParams() {
         });
 
     if (NS_WARN_IF(res.isErr())) {
-      return Err(res.unwrapErr());
+      return res.propagateErr();
     }
 
     return PreprocessParams{std::move(params)};
@@ -25641,7 +25640,7 @@ ObjectStoreGetRequestOp::GetPreprocessParams() {
 
   auto res = ConvertResponse<PreprocessInfo>(std::move(mResponse[0]));
   if (NS_WARN_IF(res.isErr())) {
-    return Err(res.unwrapErr());
+    return res.propagateErr();
   }
   params.preprocessInfo() = res.unwrap();
 
@@ -26194,7 +26193,7 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
     auto res = SerializeStructuredCloneFiles(mBackgroundParent, mDatabase,
                                              info.Files(), false);
     if (NS_WARN_IF(res.isErr())) {
-      return Err(res.unwrapErr());
+      return res.propagateErr();
     }
 
     result.files() = res.unwrap();
