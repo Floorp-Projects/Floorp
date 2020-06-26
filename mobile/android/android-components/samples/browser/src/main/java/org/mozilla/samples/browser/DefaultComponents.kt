@@ -184,7 +184,15 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val searchUseCases by lazy { SearchUseCases(applicationContext, searchEngineManager, sessionManager) }
-    val defaultSearchUseCase by lazy { { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) } }
+    val defaultSearchUseCase by lazy {
+        { searchTerms: String ->
+            searchUseCases.defaultSearch.invoke(
+                searchTerms = searchTerms,
+                searchEngine = null,
+                parentSession = null
+            )
+        }
+    }
     val appLinksUseCases by lazy { AppLinksUseCases(applicationContext) }
 
     val appLinksInterceptor by lazy {
