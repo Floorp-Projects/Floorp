@@ -1478,6 +1478,27 @@ void Navigator::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads,
   }
   NS_ENSURE_TRUE_VOID(mWindow->GetDocShell());
   nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
+
+  // As we are moving this API to secure contexts, we are going to temporarily
+  // show a console warning to developers.
+  if (!mGamepadSecureContextWarningShown && !win->IsSecureContext()) {
+    mGamepadSecureContextWarningShown = true;
+    auto msg = NS_LITERAL_STRING(
+        "The Gamepad API is only available in "
+        "secure contexts (e.g., https). Please see "
+        "https://hacks.mozilla.org/2020/06/securing-gamepad-api/ for more "
+        "info.");
+    nsContentUtils::ReportToConsoleNonLocalized(
+        msg, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"),
+        win->GetExtantDoc());
+  }
+
+#ifdef NIGHTLY_BUILD
+  if (!win->IsSecureContext()) {
+    return;
+  }
+#endif
+
   win->SetHasGamepadEventListener(true);
   win->GetGamepads(aGamepads);
 }
