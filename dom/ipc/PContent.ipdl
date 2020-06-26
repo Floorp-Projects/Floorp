@@ -1610,6 +1610,10 @@ parent:
      */
     async AbortOtherOrientationPendingPromises(MaybeDiscardedBrowsingContext aContext);
 
+    async NotifyOnHistoryReload(MaybeDiscardedBrowsingContext aContext)
+            returns (bool canReload, nsDocShellLoadState? loadState,
+                     bool? reloadActiveEntry);
+
     async HistoryCommit(MaybeDiscardedBrowsingContext aContext,
                         uint64_t aSessionHistoryEntryID);
 
