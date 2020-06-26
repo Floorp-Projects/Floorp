@@ -97,13 +97,12 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         '!webrender_ffi_generated.h',
     ]
 
-    GeneratedFile('webrender_ffi_generated.h',
-                  script='/build/RunCbindgen.py', entry_point='generate',
-                  inputs=[
-                      '/gfx/webrender_bindings',
-                      '/gfx/wr/webrender',
-                      '/gfx/wr/webrender_api',
-                  ])
+    CbindgenHeader('webrender_ffi_generated.h',
+                   inputs=[
+                       '/gfx/webrender_bindings',
+                       '/gfx/wr/webrender',
+                       '/gfx/wr/webrender_api',
+                   ])
 
 
 include('/ipc/chromium/chromium-config.mozbuild')
