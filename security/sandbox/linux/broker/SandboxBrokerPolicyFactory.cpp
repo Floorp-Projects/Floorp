@@ -693,7 +693,6 @@ SandboxBrokerPolicyFactory::GetSocketProcessPolicy(int aPid) {
   policy->AddDir(rdonly, "/usr/lib64");
   policy->AddDir(rdonly, "/usr/share");
   policy->AddDir(rdonly, "/usr/local/share");
-  policy->AddDir(rdonly, "/etc");
 
   AddLdconfigPaths(policy.get());
 
