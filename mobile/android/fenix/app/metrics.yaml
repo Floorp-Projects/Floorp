@@ -276,7 +276,7 @@ onboarding:
     description:
       The tracking protection preference was chosen from the onboarding card.
     extra_keys:
-      position:
+      setting:
         description: |
           A string that indicates the Tracking Protection policy STANDARD
           or STRICT. Default: Toggle ON, STANDARD

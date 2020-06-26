@@ -37,6 +37,7 @@ import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Logins
+import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.Tip
@@ -188,22 +189,22 @@ sealed class Event {
     data class OnboardingToolbarPosition(val position: Position) : Event() {
         enum class Position { TOP, BOTTOM }
 
-        override val extras: Map<ToolbarSettings.changedPositionKeys, String>?
-            get() = hashMapOf(ToolbarSettings.changedPositionKeys.position to position.name)
+        override val extras: Map<Onboarding.prefToggledToolbarPositionKeys, String>?
+            get() = hashMapOf(Onboarding.prefToggledToolbarPositionKeys.position to position.name)
     }
 
     data class OnboardingTrackingProtection(val setting: Setting) : Event() {
         enum class Setting { STRICT, STANDARD }
 
-        override val extras: Map<TrackingProtection.etpSettingChangedKeys, String>?
-            get() = hashMapOf(TrackingProtection.etpSettingChangedKeys.etpSetting to setting.name)
+        override val extras: Map<Onboarding.prefToggledTrackingProtKeys, String>?
+            get() = hashMapOf(Onboarding.prefToggledTrackingProtKeys.setting to setting.name)
     }
 
     data class OnboardingThemePicker(val theme: Theme) : Event() {
         enum class Theme { LIGHT, DARK, FOLLOW_DEVICE }
 
-        override val extras: Map<AppTheme.darkThemeSelectedKeys, String>?
-            get() = mapOf(AppTheme.darkThemeSelectedKeys.source to theme.name)
+        override val extras: Map<Onboarding.prefToggledThemePickerKeys, String>?
+            get() = mapOf(Onboarding.prefToggledThemePickerKeys.theme to theme.name)
     }
 
     data class PreferenceToggled(
