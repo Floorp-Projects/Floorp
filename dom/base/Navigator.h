@@ -293,6 +293,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   RefPtr<AddonManager> mAddonManager;
   RefPtr<webgpu::Instance> mWebGpu;
   RefPtr<Promise> mSharePromise;  // Web Share API related
+  // Gamepad moving to secure contexts
+  bool mGamepadSecureContextWarningShown = false;
 };
 
 }  // namespace dom
