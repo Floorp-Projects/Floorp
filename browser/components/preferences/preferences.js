@@ -84,13 +84,16 @@ function init_all() {
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
-  if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
-    document.getElementById("category-sync").hidden = false;
-    register_module("paneSync", gSyncPane);
-  }
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
     document.getElementById("category-experimental").hidden = false;
     register_module("paneExperimental", gExperimentalPane);
+  }
+  // The Sync category needs to be the last of the "real" categories
+  // registered and inititalized since many tests wait for the
+  // "sync-pane-loaded" observer notification before starting the test.
+  if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
+    document.getElementById("category-sync").hidden = false;
+    register_module("paneSync", gSyncPane);
   }
   register_module("paneSearchResults", gSearchResultsPane);
   gSearchResultsPane.init();
