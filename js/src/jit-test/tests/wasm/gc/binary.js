@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !WasmGcEnabled()
+fv// |jit-test| skip-if: !wasmGcEnabled()
 
 load(libdir + "wasm-binary.js");
 
