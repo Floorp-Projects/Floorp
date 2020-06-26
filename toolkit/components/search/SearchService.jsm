@@ -2340,8 +2340,7 @@ SearchService.prototype = {
       return this._upgradeExtensionEngine(extension);
     }
 
-    let addon = await AddonManager.getAddonByID(extension.id);
-    if (addon.isBuiltin || addon.isSystem) {
+    if (extension.isAppProvided) {
       let inConfig = this._searchOrder.filter(el => el.id == extension.id);
       if (gInitialized && inConfig.length) {
         return this._installExtensionEngine(
@@ -2377,7 +2376,7 @@ SearchService.prototype = {
       if (locale != SearchUtils.DEFAULT_TAG) {
         manifest = await extension.getLocalizedManifest(locale);
       }
-      let params = await this.getEngineParams(extension, manifest, locale);
+      let params = this.getEngineParams(extension, manifest, locale);
       engine._updateFromMetadata(params);
     }
     return engines;
@@ -2441,7 +2440,7 @@ SearchService.prototype = {
       manifest = await policy.extension.getLocalizedManifest(locale);
     }
 
-    let engineParams = await this.getEngineParams(
+    let engineParams = this.getEngineParams(
       policy.extension,
       manifest,
       locale,
@@ -2518,13 +2517,13 @@ SearchService.prototype = {
         return engine;
       }
     }
-    let params = await this.getEngineParams(extension, manifest, locale, {
+    let params = this.getEngineParams(extension, manifest, locale, {
       initEngine,
     });
     return this.addEngineWithDetails(params.name, params, isReload);
   },
 
-  async getEngineParams(extension, manifest, locale, engineParams = {}) {
+  getEngineParams(extension, manifest, locale, engineParams = {}) {
     let { IconDetails } = ExtensionParent;
 
     // General set of icons for an engine.
@@ -2582,8 +2581,6 @@ SearchService.prototype = {
       "";
     let mozParams = engineParams.extraParams || searchProvider.params || [];
 
-    let addon = await AddonManager.getAddonByID(extension.id);
-    let isAppProvided = addon.isBuiltin || addon.isSystem;
     let params = {
       name: searchProvider.name.trim(),
       shortName,
@@ -2599,7 +2596,7 @@ SearchService.prototype = {
       alias: searchProvider.keyword,
       extensionID: extension.id,
       locale,
-      isAppProvided,
+      isAppProvided: extension.isAppProvided,
       orderHint: engineParams.orderHint,
       // suggest_url doesn't currently get encoded.
       suggestURL: searchProvider.suggest_url,
