@@ -117,11 +117,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
             '/toolkit/crashreporter/google-breakpad/src/common/android/include',
         ]
 
-    if CONFIG['MOZ_LINKER']:
-        LOCAL_INCLUDES += [
-            'lul',
-        ]
-
     if CONFIG['ENABLE_TESTS']:
         DIRS += ['tests/gtest']
 
