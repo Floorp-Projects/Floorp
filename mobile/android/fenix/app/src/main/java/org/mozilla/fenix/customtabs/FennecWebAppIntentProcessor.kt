@@ -58,27 +58,24 @@ class FennecWebAppIntentProcessor(
         val url = safeIntent.dataString
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
-            runBlocking {
+            val webAppManifest = runBlocking { loadManifest(safeIntent, url) }
 
-                val webAppManifest = loadManifest(safeIntent, url)
+            val session = Session(url, private = false, source = Source.HOME_SCREEN)
+            session.webAppManifest = webAppManifest
+            session.customTabConfig =
+                webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()
 
-                val session = Session(url, private = false, source = Source.HOME_SCREEN)
-                session.webAppManifest = webAppManifest
-                session.customTabConfig =
-                    webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()
+            sessionManager.add(session)
+            loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
 
-                sessionManager.add(session)
-                loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
+            intent.putSessionId(session.id)
 
-                intent.putSessionId(session.id)
-
-                if (webAppManifest != null) {
-                    intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
-                    intent.putWebAppManifest(webAppManifest)
-                }
-
-                true
+            if (webAppManifest != null) {
+                intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
+                intent.putWebAppManifest(webAppManifest)
             }
+
+            true
         } else {
             false
         }
