@@ -14,8 +14,10 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    CbindgenHeader('neqo_glue_ffi_generated.h',
-                   inputs=['/netwerk/socket/neqo_glue'])
+    GeneratedFile('neqo_glue_ffi_generated.h',
+                  script='/build/RunCbindgen.py',
+                  entry_point='generate',
+                  inputs=['/netwerk/socket/neqo_glue'])
 
     EXPORTS.mozilla.net += [
         '!neqo_glue_ffi_generated.h',

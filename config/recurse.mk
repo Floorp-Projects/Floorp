@@ -228,7 +228,7 @@ $(addprefix build/unix/stdc++compat/,target host) build/clang-plugin/host: confi
 # prior to Make running. So we also set it as a dependency of pre-export, which
 # ensures it exists before recursing the rust targets and the export targets
 # that run cbindgen, tricking Make into keeping them early.
-$(rust_targets): $(DEPTH)/.cargo/config
+$(rust_targets) gfx/webrender_bindings/export layout/style/export xpcom/base/export: $(DEPTH)/.cargo/config
 ifndef TEST_MOZBUILD
 pre-export:: $(DEPTH)/.cargo/config
 endif
