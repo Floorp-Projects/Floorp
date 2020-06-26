@@ -188,7 +188,7 @@ class Core(private val context: Context) {
 
             WebNotificationFeature(
                 context, engine, icons, R.drawable.ic_status_logo,
-                HomeActivity::class.java
+                permissionStorage.permissionsStorage, HomeActivity::class.java
             )
         }
     }

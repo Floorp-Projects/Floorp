@@ -35,7 +35,7 @@ class FennecBookmarkShortcutsIntentProcessor(
      * If this is an Intent for a Fennec pinned website shortcut
      * prepare it for opening website's URL in a new tab.
      */
-    override suspend fun process(intent: Intent): Boolean {
+    override fun process(intent: Intent): Boolean {
         val safeIntent = intent.toSafeIntent()
         val url = safeIntent.dataString
 

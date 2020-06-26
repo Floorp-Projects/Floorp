@@ -42,6 +42,7 @@ android {
     }
 
     def releaseTemplate = {
+        signingConfig signingConfigs.debug
         shrinkResources true
         minifyEnabled true
         proguardFiles 'proguard-android-optimize-3.5.0-modified.txt', 'proguard-rules.pro'

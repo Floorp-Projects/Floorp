@@ -28,7 +28,7 @@ class NewTabShortcutIntentProcessor : IntentProcessor {
      * @param intent The intent to process.
      * @return True if the intent was processed, otherwise false.
      */
-    override suspend fun process(intent: Intent): Boolean {
+    override fun process(intent: Intent): Boolean {
         val safeIntent = SafeIntent(intent)
         val (searchExtra, startPrivateMode) = when (safeIntent.action) {
             ACTION_OPEN_TAB -> StartSearchIntentProcessor.STATIC_SHORTCUT_NEW_TAB to false

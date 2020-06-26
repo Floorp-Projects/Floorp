@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
@@ -52,28 +53,32 @@ class FennecWebAppIntentProcessor(
      * A custom tab config is also set so a custom tab toolbar can be shown when the user leaves
      * the scope defined in the manifest.
      */
-    override suspend fun process(intent: Intent): Boolean {
+    override fun process(intent: Intent): Boolean {
         val safeIntent = intent.toSafeIntent()
         val url = safeIntent.dataString
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
-            val webAppManifest = loadManifest(safeIntent, url)
+            runBlocking {
 
-            val session = Session(url, private = false, source = Source.HOME_SCREEN)
-            session.webAppManifest = webAppManifest
-            session.customTabConfig = webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()
+                val webAppManifest = loadManifest(safeIntent, url)
 
-            sessionManager.add(session)
-            loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
+                val session = Session(url, private = false, source = Source.HOME_SCREEN)
+                session.webAppManifest = webAppManifest
+                session.customTabConfig =
+                    webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()
 
-            intent.putSessionId(session.id)
+                sessionManager.add(session)
+                loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
 
-            if (webAppManifest != null) {
-                intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
-                intent.putWebAppManifest(webAppManifest)
+                intent.putSessionId(session.id)
+
+                if (webAppManifest != null) {
+                    intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
+                    intent.putWebAppManifest(webAppManifest)
+                }
+
+                true
             }
-
-            true
         } else {
             false
         }

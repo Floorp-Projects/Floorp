@@ -100,7 +100,7 @@ class IntentProcessorTypeTest {
     @Test
     fun `get type for generic intent processor`() {
         val processor = object : IntentProcessor {
-            override suspend fun process(intent: Intent) = true
+            override fun process(intent: Intent) = true
         }
         val type = testContext.components.intentProcessors.getType(processor)
 

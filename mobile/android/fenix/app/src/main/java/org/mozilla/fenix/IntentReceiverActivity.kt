@@ -9,8 +9,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 import mozilla.components.feature.intent.processing.IntentProcessor
 import org.mozilla.fenix.components.IntentProcessorType
 import org.mozilla.fenix.components.getType
@@ -33,19 +31,17 @@ class IntentReceiverActivity : Activity() {
             super.onCreate(savedInstanceState)
         }
 
-        MainScope().launch {
-            // The intent property is nullable, but the rest of the code below
-            // assumes it is not. If it's null, then we make a new one and open
-            // the HomeActivity.
-            val intent = intent?.let { Intent(it) } ?: Intent()
-            intent.stripUnwantedFlags()
-            processIntent(intent)
-        }
+        // The intent property is nullable, but the rest of the code below
+        // assumes it is not. If it's null, then we make a new one and open
+        // the HomeActivity.
+        val intent = intent?.let { Intent(it) } ?: Intent()
+        intent.stripUnwantedFlags()
+        processIntent(intent)
 
         StartupTimeline.onActivityCreateEndIntentReceiver()
     }
 
-    suspend fun processIntent(intent: Intent) {
+    fun processIntent(intent: Intent) {
         // Call process for side effects, short on the first that returns true
         val processor = getIntentProcessors().firstOrNull { it.process(intent) }
         val intentProcessorType = components.intentProcessors.getType(processor)
