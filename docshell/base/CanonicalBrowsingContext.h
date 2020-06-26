@@ -95,6 +95,16 @@ class CanonicalBrowsingContext final : public BrowsingContext {
       nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
   void SessionHistoryCommit(uint64_t aSessionHistoryEntryId);
 
+  // Calls the session history listeners' OnHistoryReload, storing the result in
+  // aCanReload. If aCanReload is set to true and we have an active or a loading
+  // entry then aLoadState will be initialized from that entry, and
+  // aReloadActiveEntry will be true if we have an active entry. If aCanReload
+  // is true and aLoadState and aReloadActiveEntry are not set then we should
+  // attempt to reload based on the current document in the docshell.
+  void NotifyOnHistoryReload(bool& aCanReload,
+                             Maybe<RefPtr<nsDocShellLoadState>>& aLoadState,
+                             Maybe<bool>& aReloadActiveEntry);
+
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 

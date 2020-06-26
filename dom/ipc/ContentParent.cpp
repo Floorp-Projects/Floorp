@@ -6768,6 +6768,21 @@ mozilla::ipc::IPCResult ContentParent::RecvReportServiceWorkerShutdownProgress(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvNotifyOnHistoryReload(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    NotifyOnHistoryReloadResolver&& aResolver) {
+  bool canReload = false;
+  Maybe<RefPtr<nsDocShellLoadState>> loadState;
+  Maybe<bool> reloadActiveEntry;
+  if (!aContext.IsDiscarded()) {
+    aContext.get_canonical()->NotifyOnHistoryReload(canReload, loadState,
+                                                    reloadActiveEntry);
+  }
+  aResolver(Tuple<const bool&, const Maybe<RefPtr<nsDocShellLoadState>>&,
+                  const Maybe<bool>&>(canReload, loadState, reloadActiveEntry));
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvHistoryCommit(
     const MaybeDiscarded<BrowsingContext>& aContext,
     uint64_t aSessionHistoryEntryID) {
