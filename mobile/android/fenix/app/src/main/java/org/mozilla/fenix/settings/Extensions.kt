@@ -10,9 +10,9 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelative
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.theme.ThemeManager
 
 fun SitePermissions.toggle(featurePhone: PhoneFeature): SitePermissions {
     return update(featurePhone, get(featurePhone).toggle())
@@ -41,7 +41,7 @@ fun SitePermissions.update(field: PhoneFeature, value: SitePermissions.Status) =
  * as a result we have to apply it programmatically. More info about this issue https://github.com/mozilla-mobile/fenix/issues/1414
  */
 fun RadioButton.setStartCheckedIndicator() {
-    val attr = ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
+    val attr = context.theme.resolveAttribute(android.R.attr.listChoiceIndicatorSingle)
     val buttonDrawable = AppCompatResources.getDrawable(context, attr)
     buttonDrawable?.apply {
         setBounds(0, 0, intrinsicWidth, intrinsicHeight)
