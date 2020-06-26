@@ -4,7 +4,7 @@
 
 // @flow
 
-import { makeMockSource } from "../../../utils/test-mockup";
+import { makeMockDisplaySource } from "../../../utils/test-mockup";
 
 import { getDirectories, findSourceTreeNodes, createTree } from "../index";
 
@@ -17,7 +17,7 @@ function createSources(urls) {
   return {
     FakeThread: urls.reduce((sources, url, index) => {
       const id = `a${index}`;
-      sources[id] = makeMockSource(url, id);
+      sources[id] = makeMockDisplaySource(url, id);
       return sources;
     }, {}),
   };

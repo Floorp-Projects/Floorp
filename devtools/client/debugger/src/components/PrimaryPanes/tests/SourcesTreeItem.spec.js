@@ -9,7 +9,7 @@ import { shallow } from "enzyme";
 import { showMenu } from "devtools-contextmenu";
 
 import SourcesTreeItem from "../SourcesTreeItem";
-import { makeMockSource } from "../../../utils/test-mockup";
+import { makeMockDisplaySource } from "../../../utils/test-mockup";
 import { copyToTheClipboard } from "../../../utils/clipboard";
 
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
@@ -423,7 +423,10 @@ describe("SourceTreeItem", () => {
     it("should show source item with ignore icon", async () => {
       const isBlackBoxed = true;
       const mockSource = {
-        ...makeMockSource("http://mdn.com/one.js", "server1.conn13.child1/39"),
+        ...makeMockDisplaySource(
+          "http://mdn.com/one.js",
+          "server1.conn13.child1/39"
+        ),
         isBlackBoxed,
       };
       const node = render({
@@ -538,7 +541,7 @@ describe("SourceTreeItem", () => {
 });
 
 function generateDefaults(overrides) {
-  const source = makeMockSource(
+  const source = makeMockDisplaySource(
     "http://mdn.com/one.js",
     "server1.conn13.child1/39"
   );
@@ -564,8 +567,12 @@ function generateDefaults(overrides) {
     blackBoxSources: jest.fn(),
     getSourcesGroups: () => {
       return {
-        sourcesInside: [makeMockSource("https://example.com/a.js", "actor1")],
-        sourcesOuside: [makeMockSource("https://example.com/b.js", "actor2")],
+        sourcesInside: [
+          makeMockDisplaySource("https://example.com/a.js", "actor1"),
+        ],
+        sourcesOuside: [
+          makeMockDisplaySource("https://example.com/b.js", "actor2"),
+        ],
       };
     },
     threads: [{ name: "Main Thread" }],
@@ -600,7 +607,7 @@ function createMockItem(overrides = {}) {
   overrides = {
     ...overrides,
     contents: {
-      ...makeMockSource(undefined, "server1.conn13.child1/39"),
+      ...makeMockDisplaySource(undefined, "server1.conn13.child1/39"),
       ...(overrides.contents || {}),
     },
   };

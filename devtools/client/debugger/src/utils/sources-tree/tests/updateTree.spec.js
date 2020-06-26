@@ -4,14 +4,14 @@
 
 // @flow
 
-import { makeMockSource } from "../../../utils/test-mockup";
+import { makeMockDisplaySource } from "../../../utils/test-mockup";
 import { updateTree, createTree } from "../index";
 
 type RawSource = {| url: string, id: string, actors?: any |};
 
 function createSourcesMap(sources: RawSource[]) {
   const sourcesMap = sources.reduce((map, source) => {
-    map[source.id] = makeMockSource(source.url, source.id);
+    map[source.id] = makeMockDisplaySource(source.url, source.id);
     return map;
   }, {});
 

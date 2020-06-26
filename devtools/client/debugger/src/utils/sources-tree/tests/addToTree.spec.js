@@ -6,7 +6,7 @@
 
 /* eslint max-nested-callbacks: ["error", 4]*/
 
-import { makeMockSource } from "../../../utils/test-mockup";
+import { makeMockDisplaySource } from "../../../utils/test-mockup";
 
 import {
   addToTree,
@@ -21,7 +21,7 @@ type RawSource = {| url: string, id: string, actors?: any |};
 
 function createSourcesMap(sources: RawSource[]) {
   const sourcesMap = sources.reduce((map, source) => {
-    map[source.id] = makeMockSource(source.url, source.id);
+    map[source.id] = makeMockDisplaySource(source.url, source.id);
     return map;
   }, {});
 
@@ -29,7 +29,7 @@ function createSourcesMap(sources: RawSource[]) {
 }
 
 function createSourcesList(sources: { url: string, id?: string }[]) {
-  return sources.map((s, i) => makeMockSource(s.url, s.id));
+  return sources.map((s, i) => makeMockDisplaySource(s.url, s.id));
 }
 
 function getChildNode(tree, ...path) {
@@ -39,7 +39,10 @@ function getChildNode(tree, ...path) {
 describe("sources-tree", () => {
   describe("addToTree", () => {
     it("should provide node API", () => {
-      const source = makeMockSource("http://example.com/a/b/c.js", "actor1");
+      const source = makeMockDisplaySource(
+        "http://example.com/a/b/c.js",
+        "actor1"
+      );
 
       const root = createDirectoryNode("root", "", [
         createSourceNode("foo", "/foo", source),
@@ -57,7 +60,7 @@ describe("sources-tree", () => {
     });
 
     it("builds a path-based tree", () => {
-      const source1 = makeMockSource(
+      const source1 = makeMockDisplaySource(
         "http://example.com/foo/source1.js",
         "actor1"
       );
@@ -79,7 +82,10 @@ describe("sources-tree", () => {
     });
 
     it("builds a path-based tree for webpack URLs", () => {
-      const source1 = makeMockSource("webpack:///foo/source1.js", "actor1");
+      const source1 = makeMockDisplaySource(
+        "webpack:///foo/source1.js",
+        "actor1"
+      );
       const tree = createDirectoryNode("root", "", []);
 
       addToTree(tree, source1, "http://example.com/", "");
@@ -98,7 +104,7 @@ describe("sources-tree", () => {
     });
 
     it("builds a path-based tree for webpack URLs with absolute path", () => {
-      const source1 = makeMockSource(
+      const source1 = makeMockDisplaySource(
         "webpack:////Users/foo/source1.js",
         "actor1"
       );
@@ -128,7 +134,7 @@ describe("sources-tree", () => {
     });
 
     it("handles url with no filename", function() {
-      const source1 = makeMockSource("http://example.com/", "actor1");
+      const source1 = makeMockDisplaySource("http://example.com/", "actor1");
       const tree = createDirectoryNode("root", "", []);
 
       addToTree(tree, source1, "http://example.com/", "");
@@ -146,7 +152,7 @@ describe("sources-tree", () => {
       const sourceName = // eslint-disable-next-line max-len
         "B9724220.131821496;dc_ver=42.111;sz=468x60;u_sd=2;dc_adk=2020465299;ord=a53rpc;dc_rfl=1,https%3A%2F%2Fdavidwalsh.name%2F$0;xdt=1";
 
-      const source1 = makeMockSource(
+      const source1 = makeMockDisplaySource(
         `https://example.com/foo/${sourceName}`,
         "actor1"
       );
@@ -162,7 +168,7 @@ describe("sources-tree", () => {
     it("name does not include query params", () => {
       const sourceName = "name.js?bar=3";
 
-      const source1 = makeMockSource(
+      const source1 = makeMockDisplaySource(
         `https://example.com/foo/${sourceName}`,
         "actor1"
       );
@@ -274,12 +280,15 @@ describe("sources-tree", () => {
     });
 
     it("excludes javascript: URLs from the tree", () => {
-      const source1 = makeMockSource(
+      const source1 = makeMockDisplaySource(
         "javascript:alert('Hello World')",
         "actor1"
       );
-      const source2 = makeMockSource("http://example.com/source1.js", "actor2");
-      const source3 = makeMockSource(
+      const source2 = makeMockDisplaySource(
+        "http://example.com/source1.js",
+        "actor2"
+      );
+      const source3 = makeMockDisplaySource(
         "javascript:let i = 10; while (i > 0) i--; console.log(i);",
         "actor3"
       );
@@ -298,7 +307,7 @@ describe("sources-tree", () => {
     });
 
     it("correctly parses file sources", () => {
-      const source = makeMockSource("file:///a/b.js", "actor1");
+      const source = makeMockDisplaySource("file:///a/b.js", "actor1");
       const tree = createDirectoryNode("root", "", []);
 
       addToTree(tree, source, "file:///a/index.html", "FakeThread");

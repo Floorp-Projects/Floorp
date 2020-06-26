@@ -4,7 +4,7 @@
 
 // @flow
 
-import { makeMockSource } from "../../../utils/test-mockup";
+import { makeMockDisplaySource } from "../../../utils/test-mockup";
 
 import {
   collapseTree,
@@ -13,9 +13,18 @@ import {
   createDirectoryNode,
 } from "../index";
 
-const abcSource = makeMockSource("http://example.com/a/b/c.js", "actor1");
-const abcdeSource = makeMockSource("http://example.com/a/b/c/d/e.js", "actor2");
-const abxSource = makeMockSource("http://example.com/a/b/x.js", "actor3");
+const abcSource = makeMockDisplaySource(
+  "http://example.com/a/b/c.js",
+  "actor1"
+);
+const abcdeSource = makeMockDisplaySource(
+  "http://example.com/a/b/c/d/e.js",
+  "actor2"
+);
+const abxSource = makeMockDisplaySource(
+  "http://example.com/a/b/x.js",
+  "actor3"
+);
 
 describe("sources tree", () => {
   describe("collapseTree", () => {

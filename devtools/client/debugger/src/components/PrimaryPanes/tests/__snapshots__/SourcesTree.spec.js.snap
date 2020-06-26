@@ -135,6 +135,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
         Array [
           Object {
             "contents": Object {
+              "displayURL": "http://mdn.com/three.js",
               "extensionName": null,
               "id": "server1.conn13.child1/41",
               "isBlackBoxed": false,
@@ -153,6 +154,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
             "contents": Array [
               Object {
                 "contents": Object {
+                  "displayURL": "http://mdn.com/four.js",
                   "extensionName": null,
                   "id": "server1.conn13.child1/42",
                   "isBlackBoxed": false,
@@ -169,6 +171,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               },
               Object {
                 "contents": Object {
+                  "displayURL": "http://mdn.com/four.js [original]",
                   "extensionName": null,
                   "id": "server1.conn13.child1/42/originalSource-sha",
                   "isBlackBoxed": false,
@@ -185,6 +188,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               },
               Object {
                 "contents": Object {
+                  "displayURL": "http://mdn.com/one.js",
                   "extensionName": null,
                   "id": "server1.conn13.child1/39",
                   "isBlackBoxed": false,
@@ -201,6 +205,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               },
               Object {
                 "contents": Object {
+                  "displayURL": "http://mdn.com/three.js",
                   "extensionName": null,
                   "id": "server1.conn13.child1/41",
                   "isBlackBoxed": false,
@@ -217,6 +222,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               },
               Object {
                 "contents": Object {
+                  "displayURL": "http://mdn.com/two.js",
                   "extensionName": null,
                   "id": "server1.conn13.child1/40",
                   "isBlackBoxed": false,
@@ -242,6 +248,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                 "contents": Array [
                   Object {
                     "contents": Object {
+                      "displayURL": "http://mdn.com/four.js",
                       "extensionName": null,
                       "id": "server1.conn13.child1/42",
                       "isBlackBoxed": false,
@@ -258,6 +265,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   },
                   Object {
                     "contents": Object {
+                      "displayURL": "http://mdn.com/four.js [original]",
                       "extensionName": null,
                       "id": "server1.conn13.child1/42/originalSource-sha",
                       "isBlackBoxed": false,
@@ -274,6 +282,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   },
                   Object {
                     "contents": Object {
+                      "displayURL": "http://mdn.com/one.js",
                       "extensionName": null,
                       "id": "server1.conn13.child1/39",
                       "isBlackBoxed": false,
@@ -290,6 +299,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   },
                   Object {
                     "contents": Object {
+                      "displayURL": "http://mdn.com/three.js",
                       "extensionName": null,
                       "id": "server1.conn13.child1/41",
                       "isBlackBoxed": false,
@@ -306,6 +316,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   },
                   Object {
                     "contents": Object {
+                      "displayURL": "http://mdn.com/two.js",
                       "extensionName": null,
                       "id": "server1.conn13.child1/40",
                       "isBlackBoxed": false,
