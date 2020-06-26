@@ -6,6 +6,7 @@
 
 #include "WorkerError.h"
 
+#include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ErrorEventBinding.h"
@@ -379,19 +380,16 @@ void WorkerErrorReport::ReportError(
 void WorkerErrorReport::LogErrorToConsole(JSContext* aCx,
                                           WorkerErrorReport& aReport,
                                           uint64_t aInnerWindowId) {
-  nsTArray<ErrorDataNote> notes;
-  for (size_t i = 0, len = aReport.mNotes.Length(); i < len; i++) {
-    const WorkerErrorNote& note = aReport.mNotes.ElementAt(i);
-    notes.AppendElement(ErrorDataNote(note.mLineNumber, note.mColumnNumber,
-                                      note.mMessage, note.mFilename));
-  }
-
   JS::RootedObject stack(aCx, aReport.ReadStack(aCx));
   JS::RootedObject stackGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
 
-  ErrorData errorData(aReport.mIsWarning, aReport.mLineNumber,
-                      aReport.mColumnNumber, aReport.mMessage,
-                      aReport.mFilename, aReport.mLine, notes);
+  ErrorData errorData(
+      aReport.mIsWarning, aReport.mLineNumber, aReport.mColumnNumber,
+      aReport.mMessage, aReport.mFilename, aReport.mLine,
+      TransformIntoNewArray(aReport.mNotes, [](const WorkerErrorNote& note) {
+        return ErrorDataNote(note.mLineNumber, note.mColumnNumber,
+                             note.mMessage, note.mFilename);
+      }));
   LogErrorToConsole(errorData, aInnerWindowId, stack, stackGlobal);
 }
 
@@ -419,9 +417,7 @@ void WorkerErrorReport::LogErrorToConsole(const ErrorData& aReport,
       scriptError = nullptr;
     }
 
-    for (size_t i = 0, len = aReport.notes().Length(); i < len; i++) {
-      const ErrorDataNote& note = aReport.notes().ElementAt(i);
-
+    for (const ErrorDataNote& note : aReport.notes()) {
       nsScriptErrorNote* noteObject = new nsScriptErrorNote();
       noteObject->Init(note.message(), note.filename(), 0, note.lineNumber(),
                        note.columnNumber());
