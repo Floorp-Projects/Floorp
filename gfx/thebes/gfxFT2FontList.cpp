@@ -806,14 +806,14 @@ class FontNameCache {
 
   PLDHashTableOps mOps;
 
-  typedef struct : public PLDHashEntryHdr {
+  struct FNCMapEntry : public PLDHashEntryHdr {
    public:
     nsCString mFilename;
     uint32_t mTimestamp;
     uint32_t mFilesize;
     nsCString mFaces;
     bool mFileExists;
-  } FNCMapEntry;
+  };
 
   static PLDHashNumber StringHash(const void* key) {
     return HashString(reinterpret_cast<const char*>(key));
