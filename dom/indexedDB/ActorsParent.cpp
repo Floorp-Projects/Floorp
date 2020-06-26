@@ -14171,38 +14171,41 @@ Database::AllocPBackgroundIDBTransactionParent(
     return nullptr;
   }
 
-  nsTArray<RefPtr<FullObjectStoreMetadata>> objectStoreMetadatas;
-  if (NS_WARN_IF(!objectStoreMetadatas.SetCapacity(nameCount, fallible))) {
+  auto objectStoreMetadatasOrErr = TransformIntoNewArrayAbortOnErr(
+      aObjectStoreNames,
+      [lastName = Maybe<const nsString&>{},
+       &objectStores](const nsString& name) mutable
+      -> mozilla::Result<RefPtr<FullObjectStoreMetadata>, nsresult> {
+        if (lastName) {
+          // Make sure that this name is sorted properly and not a duplicate.
+          if (NS_WARN_IF(name <= lastName.ref())) {
+            ASSERT_UNLESS_FUZZING();
+            return Err(NS_ERROR_FAILURE);
+          }
+        }
+        lastName = SomeRef(name);
+
+        const auto foundIt = std::find_if(
+            objectStores.cbegin(), objectStores.cend(),
+            [&name](const auto& entry) {
+              const auto& value = entry.GetData();
+              MOZ_ASSERT(entry.GetKey());
+              return name == value->mCommonMetadata.name() && !value->mDeleted;
+            });
+        if (foundIt == objectStores.cend()) {
+          ASSERT_UNLESS_FUZZING();
+          return Err(NS_ERROR_FAILURE);
+        }
+
+        return foundIt->GetData();
+      },
+      fallible);
+  if (objectStoreMetadatasOrErr.isErr()) {
     return nullptr;
   }
 
-  for (uint32_t nameIndex = 0; nameIndex < nameCount; nameIndex++) {
-    const nsString& name = aObjectStoreNames[nameIndex];
-
-    if (nameIndex) {
-      // Make sure that this name is sorted properly and not a duplicate.
-      if (NS_WARN_IF(name <= aObjectStoreNames[nameIndex - 1])) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-    }
-
-    const auto foundIt = std::find_if(
-        objectStores.cbegin(), objectStores.cend(), [&name](const auto& entry) {
-          const auto& value = entry.GetData();
-          MOZ_ASSERT(entry.GetKey());
-          return name == value->mCommonMetadata.name() && !value->mDeleted;
-        });
-    if (foundIt == objectStores.cend()) {
-      ASSERT_UNLESS_FUZZING();
-      return nullptr;
-    }
-
-    objectStoreMetadatas.AppendElement(foundIt->GetData());
-  }
-
   return MakeSafeRefPtr<NormalTransaction>(SafeRefPtrFromThis(), aMode,
-                                           std::move(objectStoreMetadatas))
+                                           objectStoreMetadatasOrErr.unwrap())
       .forget();
 }
 
