@@ -175,9 +175,8 @@ WorkerDebugger::~WorkerDebugger() {
   MOZ_ASSERT(!mWorkerPrivate);
 
   if (!NS_IsMainThread()) {
-    for (size_t index = 0; index < mListeners.Length(); ++index) {
-      NS_ReleaseOnMainThread("WorkerDebugger::mListeners",
-                             mListeners[index].forget());
+    for (auto& listener : mListeners) {
+      NS_ReleaseOnMainThread("WorkerDebugger::mListeners", listener.forget());
     }
   }
 }
@@ -395,9 +394,8 @@ void WorkerDebugger::Close() {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate = nullptr;
 
-  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners(mListeners.Clone());
-  for (size_t index = 0; index < listeners.Length(); ++index) {
-    listeners[index]->OnClose();
+  for (const auto& listener : mListeners.Clone()) {
+    listener->OnClose();
   }
 }
 
@@ -416,9 +414,8 @@ void WorkerDebugger::PostMessageToDebuggerOnMainThread(
     const nsAString& aMessage) {
   AssertIsOnMainThread();
 
-  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners(mListeners.Clone());
-  for (size_t index = 0; index < listeners.Length(); ++index) {
-    listeners[index]->OnMessage(aMessage);
+  for (const auto& listener : mListeners.Clone()) {
+    listener->OnMessage(aMessage);
   }
 }
 
@@ -439,9 +436,8 @@ void WorkerDebugger::ReportErrorToDebuggerOnMainThread(
     const nsAString& aFilename, uint32_t aLineno, const nsAString& aMessage) {
   AssertIsOnMainThread();
 
-  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners(mListeners.Clone());
-  for (size_t index = 0; index < listeners.Length(); ++index) {
-    listeners[index]->OnError(aFilename, aLineno, aMessage);
+  for (const auto& listener : mListeners.Clone()) {
+    listener->OnError(aFilename, aLineno, aMessage);
   }
 
   // We need a JSContext to be able to read any stack associated with the error.
