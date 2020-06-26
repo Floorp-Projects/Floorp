@@ -14,6 +14,8 @@ var EXPORTED_SYMBOLS = ["AddonUpdateChecker"];
 const TIMEOUT = 60 * 1000;
 const TOOLKIT_ID = "toolkit@mozilla.org";
 
+const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -43,8 +45,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "AddonSettings",
-  "resource://gre/modules/AddonSettings.jsm"
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
 );
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -271,12 +273,18 @@ function UpdateParser(aId, aUrl, aObserver) {
   this.observer = aObserver;
   this.url = aUrl;
 
+  let requireBuiltIn = Services.prefs.getBoolPref(
+    PREF_UPDATE_REQUIREBUILTINCERTS,
+    !AppConstants.MOZ_REQUIRE_SIGNING &&
+      !AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+  );
+
   logger.debug("Requesting " + aUrl);
   try {
     this.request = new ServiceRequest({ mozAnon: true });
     this.request.open("GET", this.url, true);
     this.request.channel.notificationCallbacks = new CertUtils.BadCertHandler(
-      !AddonSettings.UPDATE_REQUIREBUILTINCERTS
+      !requireBuiltIn
     );
     this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to cache.
@@ -306,11 +314,14 @@ UpdateParser.prototype = {
     this.request = null;
     this._doneAt = new Error("place holder");
 
+    let requireBuiltIn = Services.prefs.getBoolPref(
+      PREF_UPDATE_REQUIREBUILTINCERTS,
+      !AppConstants.MOZ_REQUIRE_SIGNING &&
+        !AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+    );
+
     try {
-      CertUtils.checkCert(
-        request.channel,
-        !AddonSettings.UPDATE_REQUIREBUILTINCERTS
-      );
+      CertUtils.checkCert(request.channel, !requireBuiltIn);
     } catch (e) {
       logger.warn("Request failed: " + this.url + " - " + e);
       this.notifyError(AddonManager.ERROR_DOWNLOAD_ERROR);
