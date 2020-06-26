@@ -159,7 +159,7 @@ add_task(async function test_init_with_slow_region_lookup() {
     `http://localhost:${srv.identity.primaryPort}/fetch_region`
   );
 
-  Region._setHomeRegion("", false);
+  Region._setRegion("", false);
   Region.init();
 
   // Kick off a re-init.

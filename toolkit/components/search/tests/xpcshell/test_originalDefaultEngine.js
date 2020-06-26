@@ -8,7 +8,7 @@
 "use strict";
 
 add_task(async function setup() {
-  Region._setHomeRegion("an", false);
+  Region._setRegion("an", false);
   await AddonTestUtils.promiseStartupManager();
   await useTestEngines("test-extensions");
 });
@@ -48,7 +48,7 @@ add_task(async function test_changeRegion() {
   let reInitPromise = SearchTestUtils.promiseSearchNotification(
     "reinit-complete"
   );
-  Region._setHomeRegion("tr", false);
+  Region._setRegion("tr", false);
   Services.search.reInit();
   await reInitPromise;
 
