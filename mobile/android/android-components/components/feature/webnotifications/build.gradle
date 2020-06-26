@@ -25,6 +25,7 @@ android {
 dependencies {
     implementation project(':browser-icons')
     implementation project(':concept-engine')
+    implementation project(':feature-sitepermissions')
     implementation project(':support-ktx')
 
     implementation Dependencies.androidx_core_ktx

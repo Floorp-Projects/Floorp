@@ -49,7 +49,8 @@ permalink: /changelog/
     * BUGFIX: Compile dependencies with `NDEBUG` to avoid linking unavailable symbols.
       This fixes a crash due to a missing `stderr` symbol on older Android.
 
-
+* **feature-webnotifications**
+  * `WebNotificationFeature` checks the site permissions first before showing a notification.
 
 # 47.0.0
 
