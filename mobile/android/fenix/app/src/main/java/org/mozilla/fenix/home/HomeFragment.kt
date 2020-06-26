@@ -248,11 +248,17 @@ class HomeFragment : Fragment() {
      * data in our store. The [View.consumeFrom] coroutine dispatch
      * doesn't get run right away which means that we won't draw on the first layout pass.
      */
-    fun updateSessionControlView(view: View) {
-        sessionControlView?.update(homeFragmentStore.state)
+    private fun updateSessionControlView(view: View) {
+        if (browsingModeManager.mode == BrowsingMode.Private) {
+            view.consumeFrom(homeFragmentStore, viewLifecycleOwner) {
+                sessionControlView?.update(it)
+            }
+        } else {
+            sessionControlView?.update(homeFragmentStore.state)
 
-        view.consumeFrom(homeFragmentStore, viewLifecycleOwner) {
-            sessionControlView?.update(it)
+            view.consumeFrom(homeFragmentStore, viewLifecycleOwner) {
+                sessionControlView?.update(it)
+            }
         }
     }
 
