@@ -5,33 +5,36 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGInnerSVGFrame.h"
+#include "SVGInnerSVGFrame.h"
 
 #include "mozilla/PresShell.h"
 
-using namespace mozilla;
-
-nsIFrame* NS_NewSVGInnerSVGFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGInnerSVGFrame(mozilla::PresShell* aPresShell,
+                                 mozilla::ComputedStyle* aStyle) {
   return new (aPresShell)
-      nsSVGInnerSVGFrame(aStyle, aPresShell->GetPresContext());
+      mozilla::SVGInnerSVGFrame(aStyle, aPresShell->GetPresContext());
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGInnerSVGFrame)
+namespace mozilla {
+
+NS_IMPL_FRAMEARENA_HELPERS(SVGInnerSVGFrame)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
 
-NS_QUERYFRAME_HEAD(nsSVGInnerSVGFrame)
-  NS_QUERYFRAME_ENTRY(nsSVGInnerSVGFrame)
+NS_QUERYFRAME_HEAD(SVGInnerSVGFrame)
+  NS_QUERYFRAME_ENTRY(SVGInnerSVGFrame)
   NS_QUERYFRAME_ENTRY(nsISVGSVGFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsSVGViewportFrame)
+NS_QUERYFRAME_TAIL_INHERITING(SVGViewportFrame)
 
 #ifdef DEBUG
-void nsSVGInnerSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                              nsIFrame* aPrevInFlow) {
+void SVGInnerSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                            nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::svg),
                "Content is not an SVG 'svg' element!");
 
-  nsSVGViewportFrame::Init(aContent, aParent, aPrevInFlow);
+  SVGViewportFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
+
+}  // namespace mozilla

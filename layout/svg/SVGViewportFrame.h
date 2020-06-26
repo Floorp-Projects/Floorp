@@ -12,18 +12,21 @@
 #include "nsISVGSVGFrame.h"
 
 class gfxContext;
+
+namespace mozilla {
+
 /**
  * Superclass for inner SVG frames and symbol frames.
  */
-class nsSVGViewportFrame : public nsSVGDisplayContainerFrame,
-                           public nsISVGSVGFrame {
+class SVGViewportFrame : public nsSVGDisplayContainerFrame,
+                         public nsISVGSVGFrame {
  protected:
-  nsSVGViewportFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
-                     nsIFrame::ClassID aID)
+  SVGViewportFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                   nsIFrame::ClassID aID)
       : nsSVGDisplayContainerFrame(aStyle, aPresContext, aID) {}
 
  public:
-  NS_DECL_ABSTRACT_FRAME(nsSVGViewportFrame)
+  NS_DECL_ABSTRACT_FRAME(SVGViewportFrame)
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
@@ -44,5 +47,7 @@ class nsSVGViewportFrame : public nsSVGDisplayContainerFrame,
   // nsISVGSVGFrame interface:
   virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
 };
+
+}  // namespace mozilla
 
 #endif  // __NS_SVGVIEWPORTFRAME_H__
