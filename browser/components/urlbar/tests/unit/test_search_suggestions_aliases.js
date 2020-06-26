@@ -7,10 +7,16 @@
  */
 
 const SUGGESTIONS_ENGINE_NAME = "engine-suggestions.xml";
+const SUGGEST_PREF = "browser.urlbar.suggest.searches";
+const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
+
+let engine;
+
+add_task(async function setup() {
+  engine = await addTestSuggestionsEngine();
+});
 
 add_task(async function engineWithSuggestions() {
-  let engine = await addTestSuggestionsEngine();
-
   // History matches should not appear with @ aliases, so this visit/match
   // should not appear when searching with the @ alias below.
   let historyTitle = "fire";
@@ -125,4 +131,51 @@ add_task(async function engineWithSuggestions() {
   engine.alias = "";
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
+});
+
+add_task(async function disabled_urlbarSuggestions() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, false);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+  let alias = "@moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+
+  for (let private of [false, true]) {
+    let context = createContext(`${alias} term`, { isPrivate: private });
+    let expectedMatches = [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        query: "term",
+        heuristic: true,
+      }),
+    ];
+
+    if (!private) {
+      expectedMatches.push(
+        makeSearchResult(context, {
+          engineName: SUGGESTIONS_ENGINE_NAME,
+          alias,
+          query: "term",
+          suggestion: "term foo",
+        })
+      );
+      expectedMatches.push(
+        makeSearchResult(context, {
+          engineName: SUGGESTIONS_ENGINE_NAME,
+          alias,
+          query: "term",
+          suggestion: "term bar",
+        })
+      );
+    }
+    await check_results({
+      context,
+      matches: expectedMatches,
+    });
+  }
+
+  engine.alias = "";
+  Services.prefs.clearUserPref(SUGGEST_PREF);
+  Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
 });

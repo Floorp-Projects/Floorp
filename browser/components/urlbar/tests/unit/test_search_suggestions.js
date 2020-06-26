@@ -173,6 +173,78 @@ add_task(async function disabled_privateWindow() {
   await cleanUpSuggestions();
 });
 
+add_task(async function disabled_urlbarSuggestions_withRestrictionToken() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, false);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+  let context = createContext(
+    `${UrlbarTokenizer.RESTRICT.SEARCH} ${SEARCH_STRING}`,
+    { isPrivate: false }
+  );
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        query: SEARCH_STRING,
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
+      ...makeExpectedSuggestionResults(context, {
+        query: SEARCH_STRING,
+      }),
+    ],
+  });
+  await cleanUpSuggestions();
+});
+
+add_task(
+  async function disabled_urlbarSuggestions_withRestrictionToken_private() {
+    Services.prefs.setBoolPref(SUGGEST_PREF, false);
+    Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+    Services.prefs.setBoolPref(PRIVATE_ENABLED_PREF, false);
+    let context = createContext(
+      `${UrlbarTokenizer.RESTRICT.SEARCH} ${SEARCH_STRING}`,
+      { isPrivate: true }
+    );
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          query: SEARCH_STRING,
+          engineName: ENGINE_NAME,
+          heuristic: true,
+        }),
+      ],
+    });
+    await cleanUpSuggestions();
+  }
+);
+
+add_task(
+  async function disabled_urlbarSuggestions_withRestrictionToken_private_enabled() {
+    Services.prefs.setBoolPref(SUGGEST_PREF, false);
+    Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+    Services.prefs.setBoolPref(PRIVATE_ENABLED_PREF, true);
+    let context = createContext(
+      `${UrlbarTokenizer.RESTRICT.SEARCH} ${SEARCH_STRING}`,
+      { isPrivate: true }
+    );
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          query: SEARCH_STRING,
+          engineName: ENGINE_NAME,
+          heuristic: true,
+        }),
+        ...makeExpectedSuggestionResults(context, {
+          query: SEARCH_STRING,
+        }),
+      ],
+    });
+    await cleanUpSuggestions();
+  }
+);
+
 add_task(async function enabled_by_pref_privateWindow() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
