@@ -30,7 +30,8 @@ add_task(async function testCanOpenWithPref() {
   ok(experimentalCategory, "The category exists");
   ok(!experimentalCategory.hidden, "The category is not hidden");
 
-  let categoryHeader = await TestUtils.waitForCondition(
+  let categoryHeader;
+  categoryHeader = await TestUtils.waitForCondition(
     () => doc.getElementById("firefoxExperimentalCategory"),
     "Waiting for experimental features category to get initialized"
   );
