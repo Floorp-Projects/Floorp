@@ -33,7 +33,7 @@ key-attr =
   };
 
   const source = new FileSource("test", ["de", "en-US"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   async function* generateBundles(resIds) {
     yield * await L10nRegistry.generateBundles(["de", "en-US"], resIds);
@@ -123,7 +123,7 @@ key = { PLATFORM() ->
   };
 
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   async function* generateBundles(resIds) {
     yield * await L10nRegistry.generateBundles(["en-US"], resIds);
@@ -158,7 +158,7 @@ add_task(async function test_add_remove_resourceIds() {
   };
 
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   async function* generateBundles(resIds) {
     yield * await L10nRegistry.generateBundles(["en-US"], resIds);
@@ -226,7 +226,7 @@ add_task(async function test_switch_to_async() {
   };
 
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   async function* generateBundles(resIds) {
     yield * await L10nRegistry.generateBundles(["en-US"], resIds);

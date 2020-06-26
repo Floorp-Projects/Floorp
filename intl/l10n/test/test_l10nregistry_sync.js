@@ -20,8 +20,9 @@ L10nRegistry.loadSync = function(url) {
 add_task(function test_methods_presence() {
   equal(typeof L10nRegistry.generateBundles, "function");
   equal(typeof L10nRegistry.getAvailableLocales, "function");
-  equal(typeof L10nRegistry.registerSource, "function");
-  equal(typeof L10nRegistry.updateSource, "function");
+  equal(typeof L10nRegistry.registerSources, "function");
+  equal(typeof L10nRegistry.removeSources, "function");
+  equal(typeof L10nRegistry.updateSources, "function");
 });
 
 /**
@@ -31,7 +32,7 @@ add_task(function test_empty_resourceids() {
   fs = {};
 
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   const bundles = L10nRegistry.generateBundlesSync(["en-US"], []);
 
@@ -69,7 +70,7 @@ add_task(function test_methods_calling() {
   };
 
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
-  L10nRegistry.registerSource(source);
+  L10nRegistry.registerSources([source]);
 
   const bundles = L10nRegistry.generateBundlesSync(["en-US"], ["/browser/menu.ftl"]);
 
@@ -90,7 +91,7 @@ add_task(function test_has_one_source() {
   fs = {
     "./app/data/locales/en-US/test.ftl": "key = value en-US",
   };
-  L10nRegistry.registerSource(oneSource);
+  L10nRegistry.registerSources([oneSource]);
 
 
   // has one source
@@ -124,10 +125,8 @@ add_task(function test_has_one_source() {
  */
 add_task(function test_has_two_sources() {
   let oneSource = new FileSource("platform", ["en-US"], "./platform/data/locales/{locale}/");
-  L10nRegistry.registerSource(oneSource);
-
   let secondSource = new FileSource("app", ["pl"], "./app/data/locales/{locale}/");
-  L10nRegistry.registerSource(secondSource);
+  L10nRegistry.registerSources([oneSource, secondSource]);
   fs = {
     "./platform/data/locales/en-US/test.ftl": "key = platform value",
     "./app/data/locales/pl/test.ftl": "key = app value",
@@ -185,7 +184,7 @@ add_task(function test_indexed() {
   let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
     "/data/locales/pl/test.ftl",
   ]);
-  L10nRegistry.registerSource(oneSource);
+  L10nRegistry.registerSources([oneSource]);
   fs = {
     "/data/locales/pl/test.ftl": "key = value",
   };
@@ -207,12 +206,10 @@ add_task(function test_indexed() {
  */
 add_task(function test_override() {
   let fileSource = new FileSource("app", ["pl"], "/app/data/locales/{locale}/");
-  L10nRegistry.registerSource(fileSource);
-
   let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
     "/data/locales/pl/test.ftl",
   ]);
-  L10nRegistry.registerSource(oneSource);
+  L10nRegistry.registerSources([fileSource, oneSource]);
 
   fs = {
     "/app/data/locales/pl/test.ftl": "key = value",
@@ -249,7 +246,7 @@ add_task(function test_updating() {
   let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
     "/data/locales/pl/test.ftl",
   ]);
-  L10nRegistry.registerSource(oneSource);
+  L10nRegistry.registerSources([oneSource]);
   fs = {
     "/data/locales/pl/test.ftl": "key = value",
   };
@@ -266,7 +263,7 @@ add_task(function test_updating() {
     "/data/locales/pl/test.ftl",
   ]);
   fs["/data/locales/pl/test.ftl"] = "key = new value";
-  L10nRegistry.updateSource(newSource);
+  L10nRegistry.updateSources([newSource]);
 
   equal(L10nRegistry.sources.size, 1);
   bundles = L10nRegistry.generateBundlesSync(["pl"], ["test.ftl"]);
@@ -284,12 +281,10 @@ add_task(function test_updating() {
  */
 add_task(function test_removing() {
   let fileSource = new FileSource("app", ["pl"], "/app/data/locales/{locale}/");
-  L10nRegistry.registerSource(fileSource);
-
   let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
     "/data/locales/pl/test.ftl",
   ]);
-  L10nRegistry.registerSource(oneSource);
+  L10nRegistry.registerSources([fileSource, oneSource]);
 
   fs = {
     "/app/data/locales/pl/test.ftl": "key = value",
@@ -316,7 +311,7 @@ add_task(function test_removing() {
 
   // Remove langpack
 
-  L10nRegistry.removeSource("langpack-pl");
+  L10nRegistry.removeSources(["langpack-pl"]);
 
   equal(L10nRegistry.sources.size, 1);
   equal(L10nRegistry.sources.has("langpack-pl"), false);
@@ -332,7 +327,7 @@ add_task(function test_removing() {
 
   // Remove app source
 
-  L10nRegistry.removeSource("app");
+  L10nRegistry.removeSources(["app"]);
 
   equal(L10nRegistry.sources.size, 0);
 
@@ -349,9 +344,8 @@ add_task(function test_removing() {
  */
 add_task(function test_missing_file() {
   let oneSource = new FileSource("app", ["en-US"], "./app/data/locales/{locale}/");
-  L10nRegistry.registerSource(oneSource);
   let twoSource = new FileSource("platform", ["en-US"], "./platform/data/locales/{locale}/");
-  L10nRegistry.registerSource(twoSource);
+  L10nRegistry.registerSources([oneSource, twoSource]);
 
   fs = {
     "./app/data/locales/en-US/test.ftl": "key = value en-US",
@@ -423,7 +417,7 @@ add_task(function test_parallel_io() {
     return Promise.resolve("");
   };
   let oneSource = new FileSource("app", ["en-US"], "/{locale}/");
-  L10nRegistry.registerSource(oneSource);
+  L10nRegistry.registerSources([oneSource]);
 
   fs = {
     "/en-US/test.ftl": "key = value en-US",
@@ -458,10 +452,8 @@ add_task(function test_parallel_io() {
  */
 add_task(function test_remove_source_mid_iter_cycle() {
   let oneSource = new FileSource("platform", ["en-US"], "./platform/data/locales/{locale}/");
-  L10nRegistry.registerSource(oneSource);
-
   let secondSource = new FileSource("app", ["pl"], "./app/data/locales/{locale}/");
-  L10nRegistry.registerSource(secondSource);
+  L10nRegistry.registerSources([oneSource, secondSource]);
 
   fs = {
     "./platform/data/locales/en-US/test.ftl": "key = platform value",
@@ -472,7 +464,7 @@ add_task(function test_remove_source_mid_iter_cycle() {
 
   let bundle0 = bundles.next();
 
-  L10nRegistry.removeSource("app");
+  L10nRegistry.removeSources(["app"]);
 
   equal((bundles.next()).done, true);
 
