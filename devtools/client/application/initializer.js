@@ -99,8 +99,19 @@ window.Application = {
   },
 
   async updateWorkers() {
-    const registrationsWithWorkers = await this.client.mainRoot.listAllServiceWorkers();
-    this.actions.updateWorkers(registrationsWithWorkers);
+    try {
+      const registrationsWithWorkers = await this.client.mainRoot.listAllServiceWorkers();
+      this.actions.updateWorkers(registrationsWithWorkers);
+    } catch (e) {
+      if (this._destroyed) {
+        // Errors are expected if a worker update was fired while the panel is
+        // being destroyed. Log and swallow the error.
+        console.error("updateWorkers resolved after panel destruction", e);
+      } else {
+        // Otherwise, let the error through.
+        throw e;
+      }
+    }
   },
 
   updateDomain() {
@@ -162,5 +173,6 @@ window.Application = {
     this.client = null;
     this.workersListener = null;
     this.deviceFront = null;
+    this._destroyed = true;
   },
 };
