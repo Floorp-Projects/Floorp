@@ -201,23 +201,33 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
  * those registers to keep them powered on. */
 void checkasm_simd_warmup(void);
 #define declare_new(ret, ...)\
-    ret (*checked_call)(void *, int, int, int, int, int, __VA_ARGS__) =\
+    ret (*checked_call)(void *, int, int, int, int, int, __VA_ARGS__,\
+                        int, int, int, int, int, int, int, int,\
+                        int, int, int, int, int, int, int) =\
     (void *)checkasm_checked_call;
 #define CLOB (UINT64_C(0xdeadbeefdeadbeef))
+#ifdef _WIN32
+#define STACKARGS 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0
+#else
+#define STACKARGS 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0
+#endif
 #define call_new(...)\
     (checkasm_set_signal_handler_state(1),\
      checkasm_simd_warmup(),\
      checkasm_stack_clobber(CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB),\
-     checked_call(func_new, 0, 0, 0, 0, 0, __VA_ARGS__));\
+     checked_call(func_new, 0, 0, 0, 0, 0, __VA_ARGS__, STACKARGS));\
     checkasm_set_signal_handler_state(0)
 #elif ARCH_X86_32
 #define declare_new(ret, ...)\
-    ret (*checked_call)(void *, __VA_ARGS__) = (void *)checkasm_checked_call;
+    ret (*checked_call)(void *, __VA_ARGS__, int, int, int, int, int, int,\
+                        int, int, int, int, int, int, int, int, int) =\
+        (void *)checkasm_checked_call;
 #define call_new(...)\
     (checkasm_set_signal_handler_state(1),\
-     checked_call(func_new, __VA_ARGS__));\
+     checked_call(func_new, __VA_ARGS__, 15, 14, 13, 12,\
+                  11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1));\
     checkasm_set_signal_handler_state(0)
 #elif ARCH_ARM
 /* Use a dummy argument, to offset the real parameters by 2, not only 1.
@@ -225,17 +235,20 @@ void checkasm_simd_warmup(void);
  * the same even when the extra parameters have been removed. */
 void checkasm_checked_call_vfp(void *func, int dummy, ...);
 #define declare_new(ret, ...)\
-    ret (*checked_call)(void *, int dummy, __VA_ARGS__) =\
+    ret (*checked_call)(void *, int dummy, __VA_ARGS__,\
+                        int, int, int, int, int, int, int, int,\
+                        int, int, int, int, int, int, int) =\
     (void *)checkasm_checked_call_vfp;
 #define call_new(...)\
     (checkasm_set_signal_handler_state(1),\
-     checked_call(func_new, 0, __VA_ARGS__));\
+     checked_call(func_new, 0, __VA_ARGS__, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0));\
     checkasm_set_signal_handler_state(0)
 #elif ARCH_AARCH64 && !defined(__APPLE__)
 void checkasm_stack_clobber(uint64_t clobber, ...);
 #define declare_new(ret, ...)\
     ret (*checked_call)(void *, int, int, int, int, int, int, int,\
-                        __VA_ARGS__) =\
+                        __VA_ARGS__, int, int, int, int, int, int, int, int,\
+                        int, int, int, int, int, int, int) =\
     (void *)checkasm_checked_call;
 #define CLOB (UINT64_C(0xdeadbeefdeadbeef))
 #define call_new(...)\
@@ -244,7 +257,8 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB),\
-     checked_call(func_new, 0, 0, 0, 0, 0, 0, 0, __VA_ARGS__));\
+     checked_call(func_new, 0, 0, 0, 0, 0, 0, 0, __VA_ARGS__,\
+                  7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0));\
     checkasm_set_signal_handler_state(0)
 #else
 #define declare_new(ret, ...)
@@ -270,8 +284,8 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
             checkasm_set_signal_handler_state(1);\
             func_type *tfunc = func_new;\
             uint64_t tsum = 0;\
-            int ti, tcount = 0;\
-            for (ti = 0; ti < BENCH_RUNS; ti++) {\
+            int tcount = 0;\
+            for (int ti = 0; ti < BENCH_RUNS; ti++) {\
                 uint64_t t = readtime();\
                 tfunc(__VA_ARGS__);\
                 tfunc(__VA_ARGS__);\

@@ -223,12 +223,16 @@ static int ftx(coef *const buf, const enum RectTxfmSize tx,
 }
 
 void bitfn(checkasm_check_itx)(void) {
-    Dav1dInvTxfmDSPContext c;
-    bitfn(dav1d_itx_dsp_init)(&c);
+#if BITDEPTH == 16
+    const int bpc_min = 10, bpc_max = 12;
+#else
+    const int bpc_min = 8, bpc_max = 8;
+#endif
 
     ALIGN_STK_64(coef, coeff, 2, [32 * 32]);
     ALIGN_STK_64(pixel, c_dst, 64 * 64,);
     ALIGN_STK_64(pixel, a_dst, 64 * 64,);
+    Dav1dInvTxfmDSPContext c = { { { 0 } } }; /* Zero unused function pointer elements. */
 
     static const uint8_t txfm_size_order[N_RECT_TX_SIZES] = {
         TX_4X4,   RTX_4X8,  RTX_4X16,
@@ -250,39 +254,38 @@ void bitfn(checkasm_check_itx)(void) {
         const int subsh_max = subsh_iters[imax(dav1d_txfm_dimensions[tx].lw,
                                                dav1d_txfm_dimensions[tx].lh)];
 
-        for (enum TxfmType txtp = 0; txtp < N_TX_TYPES_PLUS_LL; txtp++)
-            for (int subsh = 0; subsh < subsh_max; subsh++)
-                if (check_func(c.itxfm_add[tx][txtp],
-                               "inv_txfm_add_%dx%d_%s_%s_%d_%dbpc",
-                               w, h, itx_1d_names[itx_1d_types[txtp][0]],
-                               itx_1d_names[itx_1d_types[txtp][1]], subsh,
-                               BITDEPTH))
-                {
-#if BITDEPTH == 16
-                    const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
-#else
-                    const int bitdepth_max = 0xff;
-#endif
-                    const int eob = ftx(coeff[0], tx, txtp, w, h, subsh, bitdepth_max);
-                    memcpy(coeff[1], coeff[0], sizeof(*coeff));
+        for (int bpc = bpc_min; bpc <= bpc_max; bpc += 2) {
+            bitfn(dav1d_itx_dsp_init)(&c, bpc);
+            for (enum TxfmType txtp = 0; txtp < N_TX_TYPES_PLUS_LL; txtp++)
+                for (int subsh = 0; subsh < subsh_max; subsh++)
+                    if (check_func(c.itxfm_add[tx][txtp],
+                                   "inv_txfm_add_%dx%d_%s_%s_%d_%dbpc",
+                                   w, h, itx_1d_names[itx_1d_types[txtp][0]],
+                                   itx_1d_names[itx_1d_types[txtp][1]], subsh,
+                                   bpc))
+                    {
+                        const int bitdepth_max = (1 << bpc) - 1;
+                        const int eob = ftx(coeff[0], tx, txtp, w, h, subsh, bitdepth_max);
+                        memcpy(coeff[1], coeff[0], sizeof(*coeff));
 
-                    for (int j = 0; j < w * h; j++)
-                        c_dst[j] = a_dst[j] = rnd() & bitdepth_max;
+                        for (int j = 0; j < w * h; j++)
+                            c_dst[j] = a_dst[j] = rnd() & bitdepth_max;
 
-                    call_ref(c_dst, w * sizeof(*c_dst), coeff[0], eob
-                             HIGHBD_TAIL_SUFFIX);
-                    call_new(a_dst, w * sizeof(*c_dst), coeff[1], eob
-                             HIGHBD_TAIL_SUFFIX);
+                        call_ref(c_dst, w * sizeof(*c_dst), coeff[0], eob
+                                 HIGHBD_TAIL_SUFFIX);
+                        call_new(a_dst, w * sizeof(*c_dst), coeff[1], eob
+                                 HIGHBD_TAIL_SUFFIX);
 
-                    checkasm_check_pixel(c_dst, w * sizeof(*c_dst),
-                                         a_dst, w * sizeof(*a_dst),
-                                         w, h, "dst");
-                    if (memcmp(coeff[0], coeff[1], sizeof(*coeff)))
-                        fail();
+                        checkasm_check_pixel(c_dst, w * sizeof(*c_dst),
+                                             a_dst, w * sizeof(*a_dst),
+                                             w, h, "dst");
+                        if (memcmp(coeff[0], coeff[1], sizeof(*coeff)))
+                            fail();
 
-                    bench_new(a_dst, w * sizeof(*c_dst), coeff[0], eob
-                              HIGHBD_TAIL_SUFFIX);
-                }
+                        bench_new(a_dst, w * sizeof(*c_dst), coeff[0], eob
+                                  HIGHBD_TAIL_SUFFIX);
+                    }
+        }
         report("add_%dx%d", w, h);
     }
 }

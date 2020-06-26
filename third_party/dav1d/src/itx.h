@@ -43,8 +43,8 @@ typedef struct Dav1dInvTxfmDSPContext {
     itxfm_fn itxfm_add[N_RECT_TX_SIZES][N_TX_TYPES_PLUS_LL];
 } Dav1dInvTxfmDSPContext;
 
-bitfn_decls(void dav1d_itx_dsp_init, Dav1dInvTxfmDSPContext *c);
-bitfn_decls(void dav1d_itx_dsp_init_arm, Dav1dInvTxfmDSPContext *c);
+bitfn_decls(void dav1d_itx_dsp_init, Dav1dInvTxfmDSPContext *c, int bpc);
+bitfn_decls(void dav1d_itx_dsp_init_arm, Dav1dInvTxfmDSPContext *c, int bpc);
 bitfn_decls(void dav1d_itx_dsp_init_x86, Dav1dInvTxfmDSPContext *c);
 
 #endif /* DAV1D_SRC_ITX_H */

@@ -29,32 +29,32 @@
 #include "src/itx.h"
 
 #define decl_itx2_fns(w, h, opt) \
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_identity_identity_##w##x##h##_##opt)
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_identity_identity_##w##x##h, opt))
 
 #define decl_itx12_fns(w, h, opt) \
 decl_itx2_fns(w, h, opt); \
-decl_itx_fn(dav1d_inv_txfm_add_dct_adst_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_dct_flipadst_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_dct_identity_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_adst_dct_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_adst_adst_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_adst_flipadst_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_flipadst_dct_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_flipadst_adst_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_flipadst_flipadst_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_identity_dct_##w##x##h##_##opt)
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_adst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_flipadst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_identity_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_adst_dct_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_adst_adst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_adst_flipadst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_flipadst_dct_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_flipadst_adst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_flipadst_flipadst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_identity_dct_##w##x##h, opt))
 
 #define decl_itx16_fns(w, h, opt) \
 decl_itx12_fns(w, h, opt); \
-decl_itx_fn(dav1d_inv_txfm_add_adst_identity_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_flipadst_identity_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_identity_adst_##w##x##h##_##opt); \
-decl_itx_fn(dav1d_inv_txfm_add_identity_flipadst_##w##x##h##_##opt)
+decl_itx_fn(BF(dav1d_inv_txfm_add_adst_identity_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_flipadst_identity_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_identity_adst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_identity_flipadst_##w##x##h, opt))
 
 #define decl_itx17_fns(w, h, opt) \
 decl_itx16_fns(w, h, opt); \
-decl_itx_fn(dav1d_inv_txfm_add_wht_wht_##w##x##h##_##opt)
+decl_itx_fn(BF(dav1d_inv_txfm_add_wht_wht_##w##x##h, opt))
 
 decl_itx17_fns( 4,  4, neon);
 decl_itx16_fns( 4,  8, neon);
@@ -71,16 +71,16 @@ decl_itx2_fns (32,  8, neon);
 decl_itx2_fns (32, 16, neon);
 decl_itx2_fns (32, 32, neon);
 
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_16x64_neon);
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_32x64_neon);
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x16_neon);
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x32_neon);
-decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x64_neon);
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_16x64, neon));
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_32x64, neon));
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_64x16, neon));
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_64x32, neon));
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_64x64, neon));
 
-COLD void bitfn(dav1d_itx_dsp_init_arm)(Dav1dInvTxfmDSPContext *const c) {
+COLD void bitfn(dav1d_itx_dsp_init_arm)(Dav1dInvTxfmDSPContext *const c, int bpc) {
 #define assign_itx_fn(pfx, w, h, type, type_enum, ext) \
     c->itxfm_add[pfx##TX_##w##X##h][type_enum] = \
-        dav1d_inv_txfm_add_##type##_##w##x##h##_##ext
+        BF(dav1d_inv_txfm_add_##type##_##w##x##h, ext)
 
 #define assign_itx1_fn(pfx, w, h, ext) \
     assign_itx_fn(pfx, w, h, dct_dct,           DCT_DCT,           ext)
@@ -117,7 +117,9 @@ COLD void bitfn(dav1d_itx_dsp_init_arm)(Dav1dInvTxfmDSPContext *const c) {
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-#if BITDEPTH == 8 && ARCH_AARCH64
+    if (bpc > 10) return;
+
+#if ARCH_AARCH64 || BITDEPTH == 8
     assign_itx17_fn( ,  4,  4, neon);
     assign_itx16_fn(R,  4,  8, neon);
     assign_itx16_fn(R,  4, 16, neon);

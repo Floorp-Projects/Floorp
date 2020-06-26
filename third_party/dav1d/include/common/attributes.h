@@ -159,4 +159,8 @@ static inline int clzll(const unsigned long long mask) {
 }
 #endif /* !_MSC_VER */
 
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
 #endif /* DAV1D_COMMON_ATTRIBUTES_H */

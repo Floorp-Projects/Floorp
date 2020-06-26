@@ -1,3 +1,33 @@
+Changes for 0.7.1 'Frigatebird':
+------------------------------
+
+0.7.1 is a minor update on 0.7.0:
+ - ARM32 NEON optimizations for itxfm, which can give up to 28% speedup, and MSAC
+ - SSE2 optimizations for prep_bilin and prep_8tap
+ - AVX2 optimizations for MC scaled
+ - Fix a clamping issue in motion vector projection
+ - Fix an issue on some specific Haswell CPU on ipred_z AVX2 functions
+ - Improvements on the dav1dplay utility player to support resizing
+
+
+Changes for 0.7.0 'Frigatebird':
+------------------------------
+
+0.7.0 is a major release for dav1d:
+ - Faster refmv implementation gaining up to 12% speed while -25% of RAM (Single Thread)
+ - 10b/12b ARM64 optimizations are mostly complete:
+   - ipred (paeth, smooth, dc, pal, filter, cfl)
+   - itxfm (only 10b)
+ - AVX2/SSSE3 for non-4:2:0 film grain and for mc.resize
+ - AVX2 for cfl4:4:4
+ - AVX-512 CDEF filter
+ - ARM64 8b improvements for cfl_ac and itxfm
+ - ARM64 implementation for emu_edge in 8b/10b/12b
+ - ARM32 implementation for emu_edge in 8b
+ - Improvements on the dav1dplay utility player to support 10 bit,
+   non-4:2:0 pixel formats and film grain on the GPU
+
+
 Changes for 0.6.0 'Gyrfalcon':
 ------------------------------
 

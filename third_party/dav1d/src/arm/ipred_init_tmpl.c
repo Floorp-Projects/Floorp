@@ -27,56 +27,56 @@
 #include "src/cpu.h"
 #include "src/ipred.h"
 
-decl_angular_ipred_fn(dav1d_ipred_dc_neon);
-decl_angular_ipred_fn(dav1d_ipred_dc_128_neon);
-decl_angular_ipred_fn(dav1d_ipred_dc_top_neon);
-decl_angular_ipred_fn(dav1d_ipred_dc_left_neon);
-decl_angular_ipred_fn(dav1d_ipred_h_neon);
-decl_angular_ipred_fn(dav1d_ipred_v_neon);
-decl_angular_ipred_fn(dav1d_ipred_paeth_neon);
-decl_angular_ipred_fn(dav1d_ipred_smooth_neon);
-decl_angular_ipred_fn(dav1d_ipred_smooth_v_neon);
-decl_angular_ipred_fn(dav1d_ipred_smooth_h_neon);
-decl_angular_ipred_fn(dav1d_ipred_filter_neon);
+decl_angular_ipred_fn(BF(dav1d_ipred_dc, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_dc_128, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_dc_top, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_dc_left, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_h, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_v, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_paeth, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_smooth, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_smooth_v, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_smooth_h, neon));
+decl_angular_ipred_fn(BF(dav1d_ipred_filter, neon));
 
-decl_cfl_pred_fn(dav1d_ipred_cfl_neon);
-decl_cfl_pred_fn(dav1d_ipred_cfl_128_neon);
-decl_cfl_pred_fn(dav1d_ipred_cfl_top_neon);
-decl_cfl_pred_fn(dav1d_ipred_cfl_left_neon);
+decl_cfl_pred_fn(BF(dav1d_ipred_cfl, neon));
+decl_cfl_pred_fn(BF(dav1d_ipred_cfl_128, neon));
+decl_cfl_pred_fn(BF(dav1d_ipred_cfl_top, neon));
+decl_cfl_pred_fn(BF(dav1d_ipred_cfl_left, neon));
 
-decl_cfl_ac_fn(dav1d_ipred_cfl_ac_420_neon);
-decl_cfl_ac_fn(dav1d_ipred_cfl_ac_422_neon);
+decl_cfl_ac_fn(BF(dav1d_ipred_cfl_ac_420, neon));
+decl_cfl_ac_fn(BF(dav1d_ipred_cfl_ac_422, neon));
 
-decl_pal_pred_fn(dav1d_pal_pred_neon);
+decl_pal_pred_fn(BF(dav1d_pal_pred, neon));
 
 COLD void bitfn(dav1d_intra_pred_dsp_init_arm)(Dav1dIntraPredDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-#if BITDEPTH == 8
-    c->intra_pred[DC_PRED]       = dav1d_ipred_dc_neon;
-    c->intra_pred[DC_128_PRED]   = dav1d_ipred_dc_128_neon;
-    c->intra_pred[TOP_DC_PRED]   = dav1d_ipred_dc_top_neon;
-    c->intra_pred[LEFT_DC_PRED]  = dav1d_ipred_dc_left_neon;
-    c->intra_pred[HOR_PRED]      = dav1d_ipred_h_neon;
-    c->intra_pred[VERT_PRED]     = dav1d_ipred_v_neon;
+#if BITDEPTH == 8 || ARCH_AARCH64
+    c->intra_pred[DC_PRED]       = BF(dav1d_ipred_dc, neon);
+    c->intra_pred[DC_128_PRED]   = BF(dav1d_ipred_dc_128, neon);
+    c->intra_pred[TOP_DC_PRED]   = BF(dav1d_ipred_dc_top, neon);
+    c->intra_pred[LEFT_DC_PRED]  = BF(dav1d_ipred_dc_left, neon);
+    c->intra_pred[HOR_PRED]      = BF(dav1d_ipred_h, neon);
+    c->intra_pred[VERT_PRED]     = BF(dav1d_ipred_v, neon);
 #if ARCH_AARCH64
-    c->intra_pred[PAETH_PRED]    = dav1d_ipred_paeth_neon;
-    c->intra_pred[SMOOTH_PRED]   = dav1d_ipred_smooth_neon;
-    c->intra_pred[SMOOTH_V_PRED] = dav1d_ipred_smooth_v_neon;
-    c->intra_pred[SMOOTH_H_PRED] = dav1d_ipred_smooth_h_neon;
-    c->intra_pred[FILTER_PRED]   = dav1d_ipred_filter_neon;
+    c->intra_pred[PAETH_PRED]    = BF(dav1d_ipred_paeth, neon);
+    c->intra_pred[SMOOTH_PRED]   = BF(dav1d_ipred_smooth, neon);
+    c->intra_pred[SMOOTH_V_PRED] = BF(dav1d_ipred_smooth_v, neon);
+    c->intra_pred[SMOOTH_H_PRED] = BF(dav1d_ipred_smooth_h, neon);
+    c->intra_pred[FILTER_PRED]   = BF(dav1d_ipred_filter, neon);
 
-    c->cfl_pred[DC_PRED]         = dav1d_ipred_cfl_neon;
-    c->cfl_pred[DC_128_PRED]     = dav1d_ipred_cfl_128_neon;
-    c->cfl_pred[TOP_DC_PRED]     = dav1d_ipred_cfl_top_neon;
-    c->cfl_pred[LEFT_DC_PRED]    = dav1d_ipred_cfl_left_neon;
+    c->cfl_pred[DC_PRED]         = BF(dav1d_ipred_cfl, neon);
+    c->cfl_pred[DC_128_PRED]     = BF(dav1d_ipred_cfl_128, neon);
+    c->cfl_pred[TOP_DC_PRED]     = BF(dav1d_ipred_cfl_top, neon);
+    c->cfl_pred[LEFT_DC_PRED]    = BF(dav1d_ipred_cfl_left, neon);
 
-    c->cfl_ac[DAV1D_PIXEL_LAYOUT_I420 - 1] = dav1d_ipred_cfl_ac_420_neon;
-    c->cfl_ac[DAV1D_PIXEL_LAYOUT_I422 - 1] = dav1d_ipred_cfl_ac_422_neon;
+    c->cfl_ac[DAV1D_PIXEL_LAYOUT_I420 - 1] = BF(dav1d_ipred_cfl_ac_420, neon);
+    c->cfl_ac[DAV1D_PIXEL_LAYOUT_I422 - 1] = BF(dav1d_ipred_cfl_ac_422, neon);
 
-    c->pal_pred                  = dav1d_pal_pred_neon;
+    c->pal_pred                  = BF(dav1d_pal_pred, neon);
 #endif
 #endif
 }

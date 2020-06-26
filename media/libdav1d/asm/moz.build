@@ -1,4 +1,4 @@
-# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 4 -*-
 # vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 ASFLAGS += [
     '-I%s/third_party/dav1d/src/' % TOPSRCDIR,
+    '-DHAVE_AVX512ICL=1',
 ]
 
 LOCAL_INCLUDES += [
@@ -69,6 +70,7 @@ DEFINES['STACK_ALIGNMENT'] = stack_alignment
 if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     SOURCES += [
         '../../../third_party/dav1d/src/x86/cpu.c',
+        '../../../third_party/dav1d/src/x86/msac_init.c',
     ]
 
     EXPORTS.dav1d += [
@@ -81,14 +83,14 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         # Empty file on all other archs. Nasm produces
         # an error when it compiles empty files.
         SOURCES += [
-            '../../../third_party/dav1d/src/x86/cdef.asm',
+            '../../../third_party/dav1d/src/x86/cdef_avx2.asm',
+            '../../../third_party/dav1d/src/x86/cdef_avx512.asm',
             '../../../third_party/dav1d/src/x86/film_grain.asm',
             '../../../third_party/dav1d/src/x86/ipred.asm',
             '../../../third_party/dav1d/src/x86/itx.asm',
             '../../../third_party/dav1d/src/x86/loopfilter.asm',
             '../../../third_party/dav1d/src/x86/looprestoration.asm',
             '../../../third_party/dav1d/src/x86/mc.asm',
-            '../../../third_party/dav1d/src/x86/msac_init.c',
         ]
 
     SOURCES += [
@@ -99,7 +101,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         '../../../third_party/dav1d/src/x86/itx_ssse3.asm',
         '../../../third_party/dav1d/src/x86/loopfilter_ssse3.asm',
         '../../../third_party/dav1d/src/x86/looprestoration_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/mc_ssse3.asm',
+        '../../../third_party/dav1d/src/x86/mc_sse.asm',
         '../../../third_party/dav1d/src/x86/msac.asm',
     ]
 
@@ -171,7 +173,10 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/64/cdef16.S',
             '../../../third_party/dav1d/src/arm/64/cdef_tmpl.S',
             '../../../third_party/dav1d/src/arm/64/ipred.S',
+            '../../../third_party/dav1d/src/arm/64/ipred16.S',
+            # itx.S is used for both 8 and 16 bpc.
             '../../../third_party/dav1d/src/arm/64/itx.S',
+            '../../../third_party/dav1d/src/arm/64/itx16.S',
             '../../../third_party/dav1d/src/arm/64/loopfilter.S',
             '../../../third_party/dav1d/src/arm/64/loopfilter16.S',
             '../../../third_party/dav1d/src/arm/64/looprestoration.S',
@@ -186,9 +191,11 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
         SOURCES += [
             '../../../third_party/dav1d/src/arm/32/cdef.S',
             '../../../third_party/dav1d/src/arm/32/ipred.S',
+            '../../../third_party/dav1d/src/arm/32/itx.S',
             '../../../third_party/dav1d/src/arm/32/loopfilter.S',
             '../../../third_party/dav1d/src/arm/32/looprestoration.S',
             '../../../third_party/dav1d/src/arm/32/mc.S',
+            '../../../third_party/dav1d/src/arm/32/msac.S',
         ]
 
 if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):

@@ -53,8 +53,10 @@ const register_init, align=4
 endconst
 
 
-const error_message
+const error_message_register
         .asciz "failed to preserve register"
+error_message_stack:
+        .asciz "stack clobbered"
 endconst
 
 
@@ -74,7 +76,8 @@ function stack_clobber, export=1
         ret
 endfunc
 
-#define ARG_STACK ((8*(MAX_ARGS - 8) + 15) & ~15)
+// + 16 for stack canary reference
+#define ARG_STACK ((8*(MAX_ARGS - 8) + 15) & ~15 + 16)
 
 function checked_call, export=1
         stp             x29, x30, [sp, #-16]!
@@ -109,22 +112,56 @@ function checked_call, export=1
 .equ pos, pos + 8
 .endr
 
+        // Fill x8-x17 with garbage. This doesn't have to be preserved,
+        // but avoids relying on them having any particular value.
+        movrel          x9, register_init
+        ldp             x10, x11, [x9], #32
+        ldp             x12, x13, [x9], #32
+        ldp             x14, x15, [x9], #32
+        ldp             x16, x17, [x9], #32
+        ldp             x8,  x9,  [x9]
+
+        // For stack overflows, the callee is free to overwrite the parameters
+        // that were passed on the stack (if any), so we can only check after
+        // that point. First figure out how many parameters the function
+        // really took on the stack:
+        ldr             w2,  [x29, #16 + 8*8 + (MAX_ARGS-8)*8]
+        // Load the first non-parameter value from the stack, that should be
+        // left untouched by the function. Store a copy of it inverted, so that
+        // e.g. overwriting everything with zero would be noticed.
+        ldr             x2,  [sp, x2, lsl #3]
+        mvn             x2,  x2
+        str             x2,  [sp, #ARG_STACK-8]
+
+        // Load the in-register arguments
         mov             x12, x0
         ldp             x0,  x1,  [x29, #16]
         ldp             x2,  x3,  [x29, #32]
         ldp             x4,  x5,  [x29, #48]
         ldp             x6,  x7,  [x29, #64]
+        // Call the target function
         blr             x12
+
+        // Load the number of stack parameters, stack canary and its reference
+        ldr             w2,  [x29, #16 + 8*8 + (MAX_ARGS-8)*8]
+        ldr             x2,  [sp, x2, lsl #3]
+        ldr             x3,  [sp, #ARG_STACK-8]
+
         add             sp,  sp,  #ARG_STACK
         stp             x0,  x1,  [sp, #-16]!
+
+        mvn             x3,  x3
+        cmp             x2,  x3
+        b.ne            2f
+
         movrel          x9, register_init
         movi            v3.8h,  #0
 
 .macro check_reg_neon reg1, reg2
-        ldr             q0,  [x9], #16
-        uzp1            v1.2d,  v\reg1\().2d, v\reg2\().2d
-        eor             v0.16b, v0.16b, v1.16b
-        orr             v3.16b, v3.16b, v0.16b
+        ldr             q1,  [x9], #16
+        uzp1            v2.2d,  v\reg1\().2d, v\reg2\().2d
+        eor             v1.16b, v1.16b, v2.16b
+        orr             v3.16b, v3.16b, v1.16b
 .endm
         check_reg_neon  8,  9
         check_reg_neon  10, 11
@@ -148,7 +185,11 @@ function checked_call, export=1
 
         cbz             x3,  0f
 
-        movrel          x0, error_message
+        movrel          x0, error_message_register
+        b               1f
+2:
+        movrel          x0, error_message_stack
+1:
 #ifdef PREFIX
         bl              _checkasm_fail_func
 #else

@@ -170,6 +170,18 @@
         trn2            \r3\().2s,  \t5\().2s,  \t7\().2s
 .endm
 
+.macro  transpose_4x4s  r0, r1, r2, r3, t4, t5, t6, t7
+        trn1            \t4\().4s,  \r0\().4s,  \r1\().4s
+        trn2            \t5\().4s,  \r0\().4s,  \r1\().4s
+        trn1            \t6\().4s,  \r2\().4s,  \r3\().4s
+        trn2            \t7\().4s,  \r2\().4s,  \r3\().4s
+
+        trn1            \r0\().2d,  \t4\().2d,  \t6\().2d
+        trn2            \r2\().2d,  \t4\().2d,  \t6\().2d
+        trn1            \r1\().2d,  \t5\().2d,  \t7\().2d
+        trn2            \r3\().2d,  \t5\().2d,  \t7\().2d
+.endm
+
 .macro  transpose_4x8h  r0, r1, r2, r3, t4, t5, t6, t7
         trn1            \t4\().8h,  \r0\().8h,  \r1\().8h
         trn2            \t5\().8h,  \r0\().8h,  \r1\().8h

@@ -27,13 +27,11 @@
 %include "config.asm"
 %include "ext/x86/x86inc.asm"
 
-SECTION_RODATA
-
-error_message: db "failed to preserve register", 0
+SECTION_RODATA 16
 
 %if ARCH_X86_64
 ; just random numbers to reduce the chance of incidental match
-ALIGN 16
+%if WIN64
 x6:  dq 0x1a1b2550a612b48c,0x79445c159ce79064
 x7:  dq 0x2eed899d5a28ddcd,0x86b2536fcd8cf636
 x8:  dq 0xb0856806085e7943,0x3f2bf84fc0fcca4e
@@ -46,6 +44,7 @@ x14: dq 0x135ce6888fa02cbf,0x11e53e2b2ac655ef
 x15: dq 0x011ff554472a7a10,0x6de8f4c914c334d5
 n7:  dq 0x21f86d66c8ca00ce
 n8:  dq 0x75b6ba21077c48ad
+%endif
 n9:  dq 0xed56bb2dcb3c7736
 n10: dq 0x8bda43d3fd1a7e06
 n11: dq 0xb64a9c9e5d318408
@@ -53,6 +52,9 @@ n12: dq 0xdf9a54b303f1d3a3
 n13: dq 0x4a75479abd64e097
 n14: dq 0x249214109d5d1c88
 %endif
+
+errmsg_reg:   db "failed to preserve register", 0
+errmsg_stack: db "stack corruption", 0
 
 SECTION .text
 
@@ -67,7 +69,7 @@ cextern fail_func
 ;-----------------------------------------------------------------------------
 ; int checkasm_stack_clobber(uint64_t clobber, ...)
 ;-----------------------------------------------------------------------------
-cglobal stack_clobber, 1,2
+cglobal stack_clobber, 1, 2
     ; Clobber the stack with junk below the stack pointer
     %define argsize (max_args+6)*8
     SUB  rsp, argsize
@@ -81,9 +83,13 @@ cglobal stack_clobber, 1,2
 
 %if WIN64
     %assign free_regs 7
+    %define stack_param rsp+32 ; shadow space
+    %define num_stack_params rsp+stack_offset+22*8
     DECLARE_REG_TMP 4
 %else
     %assign free_regs 9
+    %define stack_param rsp
+    %define num_stack_params rsp+stack_offset+16*8
     DECLARE_REG_TMP 7
 %endif
 
@@ -91,7 +97,7 @@ cglobal stack_clobber, 1,2
 ; void checkasm_checked_call(void *func, ...)
 ;-----------------------------------------------------------------------------
 INIT_XMM
-cglobal checked_call, 2,15,16,max_args*8+8
+cglobal checked_call, 2, 15, 16, max_args*8+64+8
     mov  t0, r0
 
     ; All arguments have been pushed on the stack instead of registers in
@@ -104,20 +110,7 @@ cglobal checked_call, 2,15,16,max_args*8+8
 %if UNIX64
     mov  r4, r10mp
     mov  r5, r11mp
-    %assign i 6
-    %rep max_args-6
-        mov  r9, [rsp+stack_offset+(i+1)*8]
-        mov  [rsp+(i-6)*8], r9
-        %assign i i+1
-    %endrep
 %else ; WIN64
-    %assign i 4
-    %rep max_args-4
-        mov  r9, [rsp+stack_offset+(i+7)*8]
-        mov  [rsp+i*8], r9
-        %assign i i+1
-    %endrep
-
     ; Move possible floating-point arguments to the correct registers
     movq m0, r0
     movq m1, r1
@@ -131,22 +124,44 @@ cglobal checked_call, 2,15,16,max_args*8+8
     %endrep
 %endif
 
+    ; write stack canaries to the area above parameters passed on the stack
+    mov r9d, [num_stack_params]
+    mov  r8, [rsp+stack_offset] ; return address
+    not  r8
+%assign i 0
+%rep 8 ; 64 bytes
+    mov [stack_param+(r9+i)*8], r8
+    %assign i i+1
+%endrep
+    dec r9d
+    jl .stack_setup_done ; no stack parameters
+.copy_stack_parameter:
+    mov  r8, [stack_param+stack_offset+7*8+r9*8]
+    mov [stack_param+r9*8], r8
+    dec r9d
+    jge .copy_stack_parameter
+.stack_setup_done:
+
 %assign i 14
 %rep 15-free_regs
     mov r %+ i, [n %+ i]
     %assign i i-1
 %endrep
     call t0
-%assign i 14
-%rep 15-free_regs
+
+    ; check for failure to preserve registers
+    xor r14, [n14]
+    lea  r0, [errmsg_reg]
+%assign i 13
+%rep 14-free_regs
     xor r %+ i, [n %+ i]
     or  r14, r %+ i
     %assign i i-1
 %endrep
-
 %if WIN64
-    %assign i 6
-    %rep 16-6
+    pxor m6, [x6]
+    %assign i 7
+    %rep 16-7
         pxor m %+ i, [x %+ i]
         por  m6, m %+ i
         %assign i i+1
@@ -155,14 +170,30 @@ cglobal checked_call, 2,15,16,max_args*8+8
     movq r5, m6
     or  r14, r5
 %endif
+    jnz .fail
 
-    ; Call fail_func() with a descriptive message to mark it as a failure
-    ; if the called function didn't preserve all callee-saved registers.
-    ; Save the return value located in rdx:rax first to prevent clobbering.
+    ; check for stack corruption
+    mov r9d, [num_stack_params]
+    mov  r8, [rsp+stack_offset]
+    mov  r4, [stack_param+r9*8]
+    not  r8
+    xor  r4, r8
+%assign i 1
+%rep 6
+    mov  r5, [stack_param+(r9+i)*8]
+    xor  r5, r8
+    or   r4, r5
+    %assign i i+1
+%endrep
+    xor  r8, [stack_param+(r9+7)*8]
+    or   r4, r8
     jz .ok
+    add  r0, errmsg_stack-errmsg_reg
+.fail:
+    ; Call fail_func() with a descriptive message to mark it as a failure.
+    ; Save the return value located in rdx:rax first to prevent clobbering.
     mov  r9, rax
     mov r10, rdx
-    lea  r0, [error_message]
     xor eax, eax
     call fail_func
     mov rdx, r10
@@ -186,40 +217,70 @@ WARMUP
 %else
 
 ; just random numbers to reduce the chance of incidental match
-%define n3 dword 0x6549315c
-%define n4 dword 0xe02f3e23
-%define n5 dword 0xb78d0d1d
-%define n6 dword 0x33627ba7
+%assign n3 0x6549315c
+%assign n4 0xe02f3e23
+%assign n5 0xb78d0d1d
+%assign n6 0x33627ba7
 
 ;-----------------------------------------------------------------------------
 ; void checkasm_checked_call(void *func, ...)
 ;-----------------------------------------------------------------------------
-cglobal checked_call, 1,7
+cglobal checked_call, 1, 7
+    mov  r3, [esp+stack_offset]      ; return address
+    mov  r1, [esp+stack_offset+17*4] ; num_stack_params
+    mov  r2, 27
+    not  r3
+    sub  r2, r1
+.push_canary:
+    push r3
+    dec  r2
+    jg .push_canary
+.push_parameter:
+    push dword [esp+32*4]
+    dec  r1
+    jg .push_parameter
     mov  r3, n3
     mov  r4, n4
     mov  r5, n5
     mov  r6, n6
-%rep max_args
-    PUSH dword [esp+20+max_args*4]
-%endrep
     call r0
+
+    ; check for failure to preserve registers
     xor  r3, n3
     xor  r4, n4
     xor  r5, n5
     xor  r6, n6
     or   r3, r4
     or   r5, r6
+    LEA  r1, errmsg_reg
     or   r3, r5
+    jnz .fail
+
+    ; check for stack corruption
+    mov  r3, [esp+48*4] ; num_stack_params
+    mov  r6, [esp+31*4] ; return address
+    mov  r4, [esp+r3*4]
+    sub  r3, 26
+    not  r6
+    xor  r4, r6
+.check_canary:
+    mov  r5, [esp+(r3+27)*4]
+    xor  r5, r6
+    or   r4, r5
+    inc  r3
+    jl .check_canary
+    test r4, r4
     jz .ok
+    add  r1, errmsg_stack-errmsg_reg
+.fail:
     mov  r3, eax
     mov  r4, edx
-    LEA  r0, error_message
-    mov [esp], r0
+    mov [esp], r1
     call fail_func
-    mov  edx, r4
-    mov  eax, r3
+    mov edx, r4
+    mov eax, r3
 .ok:
-    add  esp, max_args*4
+    add esp, 27*4
     RET
 
 %endif ; ARCH_X86_64

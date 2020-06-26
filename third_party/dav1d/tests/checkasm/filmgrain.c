@@ -181,8 +181,8 @@ static void check_fgy_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
         const int w = 1 + (rnd() & 127);
         const int h = 1 + (rnd() & 31);
 
-        for (int y = 0; y < h; y++)
-            for (int x = 0; x < w; x++)
+        for (int y = 0; y < 32; y++)
+            for (int x = 0; x < 128; x++)
                 src[y * PXSTRIDE(stride) + x] = rnd() & bitdepth_max;
         const int row_num = rnd() & 1 ? rnd() & 0x7ff : 0;
 
@@ -260,13 +260,12 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
 
                 const int w = 1 + (rnd() & (127 >> ss_x));
                 const int h = 1 + (rnd() & (31 >> ss_y));
-                const int lw = w << ss_x, lh = h << ss_y;
 
-                for (int y = 0; y < h; y++)
-                    for (int x = 0; x < w; x++)
+                for (int y = 0; y < 32; y++)
+                    for (int x = 0; x < 128; x++)
                         src[y * PXSTRIDE(stride) + x] = rnd() & bitdepth_max;
-                for (int y = 0; y < lh; y++)
-                    for (int x = 0; x < lw; x++)
+                for (int y = 0; y < 32; y++)
+                    for (int x = 0; x < 128; x++)
                         luma_src[y * PXSTRIDE(lstride) + x] = rnd() & bitdepth_max;
                 const int row_num = rnd() & 1 ? rnd() & 0x7ff : 0;
 

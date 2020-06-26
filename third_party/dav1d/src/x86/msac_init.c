@@ -28,6 +28,7 @@
 #include "src/msac.h"
 #include "src/x86/msac.h"
 
+#if ARCH_X86_64
 void dav1d_msac_init_x86(MsacContext *const s) {
     const unsigned flags = dav1d_get_cpu_flags();
 
@@ -39,4 +40,4 @@ void dav1d_msac_init_x86(MsacContext *const s) {
         s->symbol_adapt16 = dav1d_msac_decode_symbol_adapt16_avx2;
     }
 }
-
+#endif

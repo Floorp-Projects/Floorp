@@ -66,7 +66,10 @@ static unsigned parse_proc_cpuinfo(const char *flag) {
         // if line is incomplete seek back to avoid splitting the search
         // string into two buffers
         if (!strchr(line, '\n') && strlen(line) > strlen(flag)) {
-            if (fseeko(file, -strlen(flag), SEEK_CUR))
+            // use fseek since the 64 bit fseeko is only available since
+            // Android API level 24 and meson defines _FILE_OFFSET_BITS
+            // by default 64
+            if (fseek(file, -strlen(flag), SEEK_CUR))
                 break;
         }
     }
