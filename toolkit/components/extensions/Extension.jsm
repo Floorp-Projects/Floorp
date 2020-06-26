@@ -1294,6 +1294,12 @@ class ExtensionData {
     return null;
   }
 
+  // Returns true if an addon is builtin to Firefox or
+  // distributed via Normandy into a system location.
+  get isAppProvided() {
+    return this.addonData.builtIn || this.addonData.isSystem;
+  }
+
   // Normalizes a Chrome-compatible locale code to the appropriate
   // Gecko-compatible variant. Currently, this means simply
   // replacing underscores with hyphens.
