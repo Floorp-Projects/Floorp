@@ -29,6 +29,8 @@ permalink: /changelog/
   * Deletes the tab's thumbnail from the storage when the sessions are removed.
   * ⚠️ **This is a breaking change**: Removes unused `ThumbnailsUseCases` since we now load thumbnails via `ThumbnailLoader`. See [#7313](https://github.com/mozilla-mobile/android-components/issues/7313).
   * ⚠️ **This is a breaking change**: Removes `ThumbnailsUseCases` as a parameter in `TabsFeature` and `TabsTrayPresenter`.
+  * ⚠️ **This is a breaking change**: Change the id parameter to accept a new `ImageRequest` in `ImageLoader`, which
+    allows consumers of `ThumbnailLoader` to specify the preferred image size along with the id when loading an image.
 
 * **feature-privatemode**
   * Add `PrivateNotificationFeature` to display a notification when private sessions are open.

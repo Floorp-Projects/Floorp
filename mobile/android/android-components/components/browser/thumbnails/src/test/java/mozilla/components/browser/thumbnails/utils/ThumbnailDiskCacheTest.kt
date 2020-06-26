@@ -6,6 +6,7 @@ package mozilla.components.browser.thumbnails.utils
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.images.ImageRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -24,7 +25,7 @@ class ThumbnailDiskCacheTest {
     @Test
     fun `Writing and reading bitmap bytes`() {
         val cache = ThumbnailDiskCache()
-        val sessionIdOrUrl = "123"
+        val request = ImageRequest("123")
 
         val bitmap: Bitmap = mock()
         Mockito.`when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
@@ -39,9 +40,9 @@ class ThumbnailDiskCacheTest {
             true
         }
 
-        cache.putThumbnailBitmap(testContext, sessionIdOrUrl, bitmap)
+        cache.putThumbnailBitmap(testContext, request, bitmap)
 
-        val data = cache.getThumbnailData(testContext, sessionIdOrUrl)
+        val data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
         Assert.assertEquals("Hello World", String(data))
     }
@@ -49,30 +50,30 @@ class ThumbnailDiskCacheTest {
     @Test
     fun `Removing bitmap from disk cache`() {
         val cache = ThumbnailDiskCache()
-        val sessionIdOrUrl = "123"
+        val request = ImageRequest("123")
         val bitmap: Bitmap = mock()
 
-        cache.putThumbnailBitmap(testContext, sessionIdOrUrl, bitmap)
-        var data = cache.getThumbnailData(testContext, sessionIdOrUrl)
+        cache.putThumbnailBitmap(testContext, request, bitmap)
+        var data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
 
-        cache.removeThumbnailData(testContext, sessionIdOrUrl)
-        data = cache.getThumbnailData(testContext, sessionIdOrUrl)
+        cache.removeThumbnailData(testContext, request.id)
+        data = cache.getThumbnailData(testContext, request)
         assertNull(data)
     }
 
     @Test
     fun `Clearing bitmap from disk cache`() {
         val cache = ThumbnailDiskCache()
-        val sessionIdOrUrl = "123"
+        val request = ImageRequest("123")
         val bitmap: Bitmap = mock()
 
-        cache.putThumbnailBitmap(testContext, sessionIdOrUrl, bitmap)
-        var data = cache.getThumbnailData(testContext, sessionIdOrUrl)
+        cache.putThumbnailBitmap(testContext, request, bitmap)
+        var data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
 
         cache.clear(testContext)
-        data = cache.getThumbnailData(testContext, sessionIdOrUrl)
+        data = cache.getThumbnailData(testContext, request)
         assertNull(data)
     }
 }

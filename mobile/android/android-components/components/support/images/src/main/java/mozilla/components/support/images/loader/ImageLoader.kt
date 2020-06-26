@@ -7,6 +7,7 @@ package mozilla.components.support.images.loader
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import androidx.annotation.MainThread
+import mozilla.components.support.images.ImageRequest
 
 /**
  * A loader that can load an image from an ID directly into an [ImageView].
@@ -18,14 +19,14 @@ interface ImageLoader {
      * If the view is detached from the window before loading is completed, then loading is cancelled.
      *
      * @param view [ImageView] to load the image into.
-     * @param id Load image for this given ID.
+     * @param request [ImageRequest] Load image for this given request.
      * @param placeholder [Drawable] to display while image is loading.
      * @param error [Drawable] to display if loading fails.
      */
     @MainThread
     fun loadIntoView(
         view: ImageView,
-        id: String,
+        request: ImageRequest,
         placeholder: Drawable? = null,
         error: Drawable? = null
     )

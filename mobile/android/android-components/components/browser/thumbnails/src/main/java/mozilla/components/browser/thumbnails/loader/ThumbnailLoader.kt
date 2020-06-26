@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.thumbnails.R
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.support.images.CancelOnDetach
+import mozilla.components.support.images.ImageRequest
 import mozilla.components.support.images.loader.ImageLoader
 import java.lang.ref.WeakReference
 
@@ -25,19 +26,19 @@ class ThumbnailLoader(private val storage: ThumbnailStorage) : ImageLoader {
 
     override fun loadIntoView(
         view: ImageView,
-        id: String,
+        request: ImageRequest,
         placeholder: Drawable?,
         error: Drawable?
     ) {
         CoroutineScope(Dispatchers.Main).launch {
-            loadIntoViewInternal(WeakReference(view), id, placeholder, error)
+            loadIntoViewInternal(WeakReference(view), request, placeholder, error)
         }
     }
 
     @MainThread
     private suspend fun loadIntoViewInternal(
         view: WeakReference<ImageView>,
-        id: String,
+        request: ImageRequest,
         placeholder: Drawable?,
         error: Drawable?
     ) {
@@ -48,7 +49,7 @@ class ThumbnailLoader(private val storage: ThumbnailStorage) : ImageLoader {
         view.get()?.setImageDrawable(placeholder)
 
         // Create a loading job
-        val deferredThumbnail = storage.loadThumbnail(id)
+        val deferredThumbnail = storage.loadThumbnail(request)
 
         view.get()?.setTag(R.id.mozac_browser_thumbnails_tag_job, deferredThumbnail)
         val onAttachStateChangeListener = CancelOnDetach(deferredThumbnail).also {
