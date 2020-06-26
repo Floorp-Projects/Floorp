@@ -19,7 +19,8 @@ namespace net {
 
 Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
                          Http3Session* session)
-    : mState(PREPARING_HEADERS),
+    : mSendState(PREPARING_HEADERS),
+      mRecvState(READING_HEADERS),
       mStreamId(UINT64_MAX),
       mSession(session),
       mTransaction(httpTransaction),
@@ -28,6 +29,7 @@ Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
       mQueued(false),
       mRequestBlockedOnRead(false),
       mDataReceived(false),
+      mResetRecv(false),
       mRequestBodyLenRemaining(0),
       mSocketTransport(session->SocketTransport()),
       mActivatingFailed(false),
@@ -142,12 +144,12 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
                                     uint32_t* countRead) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  LOG(("Http3Stream::OnReadSegment count=%u state=%d [this=%p]", count, mState,
-       this));
+  LOG(("Http3Stream::OnReadSegment count=%u state=%d [this=%p]", count,
+       mSendState, this));
 
   nsresult rv = NS_OK;
 
-  switch (mState) {
+  switch (mSendState) {
     case PREPARING_HEADERS:
       if (mActivatingFailed) {
         MOZ_ASSERT(count, "There must be at least one byte in the buffer.");
@@ -192,12 +194,12 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
 
       if (mRequestStarted) {
         if (mRequestBodyLenRemaining) {
-          mState = SENDING_BODY;
+          mSendState = SENDING_BODY;
         } else {
           mTransaction->OnTransportStatus(mSocketTransport,
                                           NS_NET_STATUS_WAITING_FOR, 0);
           mSession->CloseSendingSide(mStreamId);
-          mState = READING_HEADERS;
+          mSendState = SEND_DONE;
         }
       }
       break;
@@ -221,7 +223,7 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
         mTransaction->OnTransportStatus(mSocketTransport,
                                         NS_NET_STATUS_WAITING_FOR, 0);
         mSession->CloseSendingSide(mStreamId);
-        mState = READING_HEADERS;
+        mSendState = SEND_DONE;
       }
     } break;
     case EARLY_RESPONSE:
@@ -231,7 +233,7 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
       if (!mRequestBodyLenRemaining) {
         mTransaction->OnTransportStatus(mSocketTransport,
                                         NS_NET_STATUS_WAITING_FOR, 0);
-        mState = READING_HEADERS;
+        mSendState = SEND_DONE;
       }
       break;
     default:
@@ -257,14 +259,9 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
                                      uint32_t* countWritten) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  LOG(("Http3Stream::OnWriteSegment [this=%p, state=%d", this, mState));
+  LOG(("Http3Stream::OnWriteSegment [this=%p, state=%d", this, mRecvState));
   nsresult rv = NS_OK;
-  switch (mState) {
-    case PREPARING_HEADERS:
-    case SENDING_BODY:
-    case EARLY_RESPONSE:
-      rv = NS_BASE_STREAM_WOULD_BLOCK;
-      break;
+  switch (mRecvState) {
     case READING_HEADERS: {
       // SetResponseHeaders should have been previously called.
       MOZ_ASSERT(!mFlatResponseHeaders.IsEmpty(), "Headers empty!");
@@ -275,7 +272,7 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
 
       mFlatResponseHeaders.RemoveElementsAt(0, *countWritten);
       if (mFlatResponseHeaders.Length() == 0) {
-        mState = mFin ? RECEIVED_FIN : READING_DATA;
+        mRecvState = mFin ? RECEIVED_FIN : READING_DATA;
       }
 
       if (*countWritten == 0) {
@@ -294,7 +291,7 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
       }
       if (*countWritten == 0) {
         if (mFin) {
-          mState = DONE;
+          mRecvState = RECV_DONE;
           rv = NS_BASE_STREAM_CLOSED;
         } else {
           rv = NS_BASE_STREAM_WOULD_BLOCK;
@@ -305,16 +302,16 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
             mSocketTransport, NS_NET_STATUS_RECEIVING_FROM, mTotalRead);
 
         if (mFin) {
-          mState = RECEIVED_FIN;
+          mRecvState = RECEIVED_FIN;
         }
       }
     } break;
     case RECEIVED_FIN:
     case RECEIVED_RESET:
       rv = NS_BASE_STREAM_CLOSED;
-      mState = DONE;
+      mRecvState = RECV_DONE;
       break;
-    case DONE:
+    case RECV_DONE:
       rv = NS_ERROR_UNEXPECTED;
   }
 
@@ -327,8 +324,17 @@ nsresult Http3Stream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t count,
 
   mRequestBlockedOnRead = false;
 
+  if (mRecvState == RECV_DONE) {
+    // Don't transmit any request frames if the peer cannot respond or respone
+    // is already done.
+    LOG3(
+        ("Http3Stream %p ReadSegments request stream aborted due to"
+         " response side closure\n", this));
+    return NS_ERROR_ABORT;
+  }
+
   nsresult rv = NS_OK;
-  switch (mState) {
+  switch (mSendState) {
     case PREPARING_HEADERS:
     case SENDING_BODY: {
       rv = mTransaction->ReadSegments(this, count, countRead);

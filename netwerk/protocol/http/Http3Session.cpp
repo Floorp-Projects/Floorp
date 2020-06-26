@@ -793,6 +793,9 @@ nsresult Http3Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
         if (!mReadyForWriteButBlocked.Contains(stream->StreamId())) {
           mReadyForWriteButBlocked.AppendElement(stream->StreamId());
         }
+        // NS_BASE_STREAM_WOULD_BLOCK is not a real error, it is just saying
+        // that the transaction stream is blocked. Therefor overwrite it.
+        rv = NS_OK;
       } else if (ASpdySession::SoftStreamError(rv)) {
         CloseStream(stream, rv);
         LOG3(("Http3Session::ReadSegments %p soft error override\n", this));
