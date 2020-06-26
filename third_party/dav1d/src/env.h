@@ -33,7 +33,7 @@
 #include <stdlib.h>
 
 #include "src/levels.h"
-#include "src/ref_mvs.h"
+#include "src/refmvs.h"
 #include "src/tables.h"
 
 typedef struct BlockContext {
@@ -428,7 +428,7 @@ static inline int av1_get_uni_p1_ctx(const BlockContext *const a,
     return cnt[0] == cnt[1] ? 1 : cnt[0] < cnt[1] ? 0 : 2;
 }
 
-static inline int get_drl_context(const candidate_mv *const ref_mv_stack,
+static inline int get_drl_context(const refmvs_candidate *const ref_mv_stack,
                                   const int ref_idx)
 {
     if (ref_mv_stack[ref_idx].weight >= 640)
@@ -460,6 +460,22 @@ static inline unsigned get_cur_frame_segid(const int by, const int bx,
     }
 }
 
+static inline void fix_int_mv_precision(mv *const mv) {
+    mv->x = (mv->x - (mv->x >> 15) + 3) & ~7U;
+    mv->y = (mv->y - (mv->y >> 15) + 3) & ~7U;
+}
+
+static inline void fix_mv_precision(const Dav1dFrameHeader *const hdr,
+                                    mv *const mv)
+{
+    if (hdr->force_integer_mv) {
+        fix_int_mv_precision(mv);
+    } else if (!hdr->hp) {
+        mv->x = (mv->x - (mv->x >> 15)) & ~1U;
+        mv->y = (mv->y - (mv->y >> 15)) & ~1U;
+    }
+}
+
 static inline mv get_gmv_2d(const Dav1dWarpedMotionParams *const gmv,
                             const int bx4, const int by4,
                             const int bw4, const int bh4,
@@ -480,16 +496,23 @@ static inline mv get_gmv_2d(const Dav1dWarpedMotionParams *const gmv,
                        gmv->matrix[4] * x + gmv->matrix[1];
         const int shift = 16 - (3 - !hdr->hp);
         const int round = (1 << shift) >> 1;
-        return (mv) {
+        mv res = (mv) {
             .y = apply_sign(((abs(yc) + round) >> shift) << !hdr->hp, yc),
             .x = apply_sign(((abs(xc) + round) >> shift) << !hdr->hp, xc),
         };
+        if (hdr->force_integer_mv)
+            fix_int_mv_precision(&res);
+        return res;
     }
-    case DAV1D_WM_TYPE_TRANSLATION:
-        return (mv) {
+    case DAV1D_WM_TYPE_TRANSLATION: {
+        mv res = (mv) {
             .y = gmv->matrix[0] >> 13,
             .x = gmv->matrix[1] >> 13,
         };
+        if (hdr->force_integer_mv)
+            fix_int_mv_precision(&res);
+        return res;
+    }
     case DAV1D_WM_TYPE_IDENTITY:
         return (mv) { .x = 0, .y = 0 };
     }

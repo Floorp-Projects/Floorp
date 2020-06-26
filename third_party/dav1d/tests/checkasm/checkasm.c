@@ -125,7 +125,7 @@ typedef struct CheckasmFunc {
     struct CheckasmFunc *child[2];
     CheckasmFuncVersion versions;
     uint8_t color; /* 0 = red, 1 = black */
-    char name[1];
+    char name[];
 } CheckasmFunc;
 
 /* Internal state */
@@ -142,7 +142,7 @@ static struct {
     unsigned cpu_flag;
     const char *cpu_flag_name;
     const char *test_name;
-    unsigned int seed;
+    unsigned seed;
     int bench_c;
     int verbose;
     int function_listing;
@@ -159,7 +159,7 @@ typedef union {
 
 static uint32_t xs_state[4];
 
-static void xor128_srand(unsigned int seed) {
+static void xor128_srand(unsigned seed) {
     xs_state[0] = seed;
     xs_state[1] = ( seed & 0xffff0000) | (~seed & 0x0000ffff);
     xs_state[2] = (~seed & 0xffff0000) | ( seed & 0x0000ffff);
@@ -335,15 +335,15 @@ static int cmp_nop(const void *a, const void *b) {
 /* Measure the overhead of the timing code (in decicycles) */
 static int measure_nop_time(void) {
     uint16_t nops[10000];
-    int i, nop_sum = 0;
+    int nop_sum = 0;
 
-    for (i = 0; i < 10000; i++) {
+    for (int i = 0; i < 10000; i++) {
         uint64_t t = readtime();
         nops[i] = (uint16_t) (readtime() - t);
     }
 
     qsort(nops, 10000, sizeof(uint16_t), cmp_nop);
-    for (i = 2500; i < 7500; i++)
+    for (int i = 2500; i < 7500; i++)
         nop_sum += nops[i];
 
     return nop_sum / 500;
@@ -359,8 +359,8 @@ static void print_benchs(const CheckasmFunc *const f) {
             const CheckasmFuncVersion *v = &f->versions;
             do {
                 if (v->iterations) {
-                    int decicycles = (int) (10*v->cycles/v->iterations -
-                                            state.nop_time) / 4;
+                    const int decicycles = (int) (10*v->cycles/v->iterations -
+                                                  state.nop_time) / 4;
                     printf("%s_%s: %d.%d\n", f->name, cpu_suffix(v->cpu),
                            decicycles/10, decicycles%10);
                 }
@@ -413,7 +413,7 @@ static CheckasmFunc *rotate_tree(CheckasmFunc *const f, const int dir) {
 #define is_red(f) ((f) && !(f)->color)
 
 /* Balance a left-leaning red-black tree at the specified node */
-static void balance_tree(CheckasmFunc **root) {
+static void balance_tree(CheckasmFunc **const root) {
     CheckasmFunc *const f = *root;
 
     if (is_red(f->child[0]) && is_red(f->child[1])) {
@@ -427,12 +427,12 @@ static void balance_tree(CheckasmFunc **root) {
 }
 
 /* Get a node with the specified name, creating it if it doesn't exist */
-static CheckasmFunc *get_func(CheckasmFunc **root, const char *const name) {
+static CheckasmFunc *get_func(CheckasmFunc **const root, const char *const name) {
     CheckasmFunc *f = *root;
 
     if (f) {
         /* Search the tree for a matching node */
-        int cmp = cmp_func_names(name, f->name);
+        const int cmp = cmp_func_names(name, f->name);
         if (cmp) {
             f = get_func(&f->child[cmp > 0], name);
 
@@ -442,9 +442,9 @@ static CheckasmFunc *get_func(CheckasmFunc **root, const char *const name) {
         }
     } else {
         /* Allocate and insert a new node into the tree */
-        const size_t name_length = strlen(name);
-        f = *root = checkasm_malloc(sizeof(CheckasmFunc) + name_length);
-        memcpy(f->name, name, name_length + 1);
+        const size_t name_length = strlen(name) + 1;
+        f = *root = checkasm_malloc(offsetof(CheckasmFunc, name) + name_length);
+        memcpy(f->name, name, name_length);
     }
 
     return f;
@@ -559,28 +559,29 @@ int main(int argc, char *argv[]) {
         } else if (!strcmp(argv[1], "--verbose") || !strcmp(argv[1], "-v")) {
             state.verbose = 1;
         } else {
-            state.seed = (unsigned int) strtoul(argv[1], NULL, 10);
+            state.seed = (unsigned) strtoul(argv[1], NULL, 10);
         }
 
         argc--;
         argv++;
     }
 
-    fprintf(stderr, "checkasm: using random seed %u\n", state.seed);
-
     dav1d_init_cpu();
+
+    if (!state.function_listing) {
+        fprintf(stderr, "checkasm: using random seed %u\n", state.seed);
 #if ARCH_X86_64
-    void checkasm_warmup_avx2(void);
-    void checkasm_warmup_avx512(void);
-    unsigned cpu_flags = dav1d_get_cpu_flags();
-    if (cpu_flags & DAV1D_X86_CPU_FLAG_AVX512ICL)
-        state.simd_warmup = checkasm_warmup_avx512;
-    else if (cpu_flags & DAV1D_X86_CPU_FLAG_AVX2)
-        state.simd_warmup = checkasm_warmup_avx2;
-    else
-        state.simd_warmup = NULL;
-    checkasm_simd_warmup();
+        void checkasm_warmup_avx2(void);
+        void checkasm_warmup_avx512(void);
+        const unsigned cpu_flags = dav1d_get_cpu_flags();
+        if (cpu_flags & DAV1D_X86_CPU_FLAG_AVX512ICL)
+            state.simd_warmup = checkasm_warmup_avx512;
+        else if (cpu_flags & DAV1D_X86_CPU_FLAG_AVX2)
+            state.simd_warmup = checkasm_warmup_avx2;
+        checkasm_simd_warmup();
 #endif
+    }
+
     check_cpu_flag(NULL, 0);
 
     if (state.function_listing) {

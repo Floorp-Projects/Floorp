@@ -111,6 +111,9 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
     const int uv_idx = DAV1D_PIXEL_LAYOUT_I444 - layout;
     const int ss_ver = layout == DAV1D_PIXEL_LAYOUT_I420;
     const int ss_hor = layout != DAV1D_PIXEL_LAYOUT_I444;
+    static const uint8_t uv_dirs[2][8] = { { 0, 1, 2, 3, 4, 5, 6, 7 },
+                                           { 7, 0, 2, 4, 5, 6, 6, 6 } };
+    const uint8_t *uv_dir = uv_dirs[layout == DAV1D_PIXEL_LAYOUT_I422];
 
     for (int bit = 0, by = by_start; by < by_end; by += 2, edges |= CDEF_HAVE_TOP) {
         const int tf = f->lf.top_pre_cdef_toggle;
@@ -199,8 +202,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                                     damping, edges HIGHBD_CALL_SUFFIX);
                 if (uv_lvl) {
                     assert(layout != DAV1D_PIXEL_LAYOUT_I400);
-                    const int uvdir = uv_pri_lvl ? layout == DAV1D_PIXEL_LAYOUT_I422 ?
-                        ((const uint8_t[]) { 7, 0, 2, 4, 5, 6, 6, 6 })[dir] : dir : 0;
+                    const int uvdir = uv_pri_lvl ? uv_dir[dir] : 0;
                     for (int pl = 1; pl <= 2; pl++) {
                         dsp->cdef.fb[uv_idx](bptrs[pl], f->cur.stride[1], lr_bak[bit][pl],
                                              &f->lf.cdef_line[tf][pl][bx * 4 >> ss_hor],

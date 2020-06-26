@@ -130,6 +130,22 @@ static int get_mult_shift_diag(const int64_t px,
     return iclip(v2, 0xe001, 0x11fff);
 }
 
+void dav1d_set_affine_mv2d(const int bw4, const int bh4,
+                           const mv mv, Dav1dWarpedMotionParams *const wm,
+                           const int bx4, const int by4)
+{
+    int32_t *const mat = wm->matrix;
+    const int rsuy = 2 * bh4 - 1;
+    const int rsux = 2 * bw4 - 1;
+    const int isuy = by4 * 4 + rsuy;
+    const int isux = bx4 * 4 + rsux;
+
+    mat[0] = iclip(mv.x * 0x2000 - (isux * (mat[2] - 0x10000) + isuy * mat[3]),
+                   -0x800000, 0x7fffff);
+    mat[1] = iclip(mv.y * 0x2000 - (isux * mat[4] + isuy * (mat[5] - 0x10000)),
+                   -0x800000, 0x7fffff);
+}
+
 int dav1d_find_affine_int(const int (*pts)[2][2], const int np,
                           const int bw4, const int bh4,
                           const mv mv, Dav1dWarpedMotionParams *const wm,

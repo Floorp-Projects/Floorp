@@ -29,22 +29,24 @@
 #ifndef DAV1D_INPUT_PARSE_H
 #define DAV1D_INPUT_PARSE_H
 
+#include <limits.h>
+
 #include "dav1d/headers.h"
 
 static int leb128(FILE *const f, size_t *const len) {
+    uint64_t val = 0;
     unsigned i = 0, more;
-    *len = 0;
     do {
-        uint8_t byte;
-        if (fread(&byte, 1, 1, f) < 1)
+        uint8_t v;
+        if (fread(&v, 1, 1, f) < 1)
             return -1;
-        more = byte & 0x80;
-        const unsigned bits = byte & 0x7f;
-        if (i <= 3 || (i == 4 && bits < (1 << 4)))
-            *len |= bits << (i * 7);
-        else if (bits) return -1;
-        if (++i == 8 && more) return -1;
-    } while (more);
+        more = v & 0x80;
+        val |= ((uint64_t) (v & 0x7F)) << (i * 7);
+        i++;
+    } while (more && i < 8);
+    if (val > UINT_MAX || more)
+        return -1;
+    *len = (size_t) val;
     return i;
 }
 
@@ -52,18 +54,18 @@ static int leb128(FILE *const f, size_t *const len) {
 // with author's permission
 
 static int leb(const uint8_t *ptr, int sz, size_t *const len) {
+    uint64_t val = 0;
     unsigned i = 0, more;
-    *len = 0;
     do {
         if (!sz--) return -1;
-        const int byte = *ptr++;
-        more = byte & 0x80;
-        const unsigned bits = byte & 0x7f;
-        if (i <= 3 || (i == 4 && bits < (1 << 4)))
-            *len |= bits << (i * 7);
-        else if (bits) return -1;
-        if (++i == 8 && more) return -1;
-    } while (more);
+        const int v = *ptr++;
+        more = v & 0x80;
+        val |= ((uint64_t) (v & 0x7F)) << (i * 7);
+        i++;
+    } while (more && i < 8);
+    if (val > UINT_MAX || more)
+        return -1;
+    *len = (size_t) val;
     return i;
 }
 

@@ -35,12 +35,12 @@
 
 #include "common/attributes.h"
 
-void dav1d_log_default_callback(void *cookie, const char *format, va_list ap);
-
 #if CONFIG_LOG
 #define dav1d_log dav1d_log
+void dav1d_log_default_callback(void *cookie, const char *format, va_list ap);
 void dav1d_log(Dav1dContext *c, const char *format, ...) ATTR_FORMAT_PRINTF(2, 3);
 #else
+#define dav1d_log_default_callback NULL
 #define dav1d_log(...) do { } while(0)
 #endif
 

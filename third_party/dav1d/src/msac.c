@@ -38,7 +38,7 @@
 
 #define EC_WIN_SIZE (sizeof(ec_win) << 3)
 
-static inline void ctx_refill(MsacContext *s) {
+static inline void ctx_refill(MsacContext *const s) {
     const uint8_t *buf_pos = s->buf_pos;
     const uint8_t *buf_end = s->buf_end;
     int c = EC_WIN_SIZE - s->cnt - 24;
@@ -57,7 +57,9 @@ static inline void ctx_refill(MsacContext *s) {
  * necessary), and stores them back in the decoder context.
  * dif: The new value of dif.
  * rng: The new value of the range. */
-static inline void ctx_norm(MsacContext *s, ec_win dif, unsigned rng) {
+static inline void ctx_norm(MsacContext *const s, const ec_win dif,
+                            const unsigned rng)
+{
     const int d = 15 ^ (31 ^ clz(rng));
     assert(rng <= 65535U);
     s->cnt -= d;
@@ -68,16 +70,16 @@ static inline void ctx_norm(MsacContext *s, ec_win dif, unsigned rng) {
 }
 
 unsigned dav1d_msac_decode_bool_equi_c(MsacContext *const s) {
-    ec_win vw, dif = s->dif;
-    unsigned ret, v, r = s->rng;
+    const unsigned r = s->rng;
+    ec_win dif = s->dif;
     assert((dif >> (EC_WIN_SIZE - 16)) < r);
     // When the probability is 1/2, f = 16384 >> EC_PROB_SHIFT = 256 and we can
     // replace the multiply with a simple shift.
-    v = ((r >> 8) << 7) + EC_MIN_PROB;
-    vw   = (ec_win)v << (EC_WIN_SIZE - 16);
-    ret  = dif >= vw;
-    dif -= ret*vw;
-    v   += ret*(r - 2*v);
+    unsigned v = ((r >> 8) << 7) + EC_MIN_PROB;
+    const ec_win vw = (ec_win)v << (EC_WIN_SIZE - 16);
+    const unsigned ret = dif >= vw;
+    dif -= ret * vw;
+    v += ret * (r - 2 * v);
     ctx_norm(s, dif, v);
     return !ret;
 }
@@ -86,14 +88,14 @@ unsigned dav1d_msac_decode_bool_equi_c(MsacContext *const s) {
  * f: The probability that the bit is one
  * Return: The value decoded (0 or 1). */
 unsigned dav1d_msac_decode_bool_c(MsacContext *const s, const unsigned f) {
-    ec_win vw, dif = s->dif;
-    unsigned ret, v, r = s->rng;
+    const unsigned r = s->rng;
+    ec_win dif = s->dif;
     assert((dif >> (EC_WIN_SIZE - 16)) < r);
-    v = ((r >> 8) * (f >> EC_PROB_SHIFT) >> (7 - EC_PROB_SHIFT)) + EC_MIN_PROB;
-    vw   = (ec_win)v << (EC_WIN_SIZE - 16);
-    ret  = dif >= vw;
-    dif -= ret*vw;
-    v   += ret*(r - 2*v);
+    unsigned v = ((r >> 8) * (f >> EC_PROB_SHIFT) >> (7 - EC_PROB_SHIFT)) + EC_MIN_PROB;
+    const ec_win vw = (ec_win)v << (EC_WIN_SIZE - 16);
+    const unsigned ret = dif >= vw;
+    dif -= ret * vw;
+    v += ret * (r - 2 * v);
     ctx_norm(s, dif, v);
     return !ret;
 }
@@ -196,12 +198,11 @@ void dav1d_msac_init(MsacContext *const s, const uint8_t *const data,
     s->rng = 0x8000;
     s->cnt = -15;
     s->allow_update_cdf = !disable_cdf_update_flag;
+    ctx_refill(s);
 
 #if ARCH_X86_64 && HAVE_ASM
     s->symbol_adapt16 = dav1d_msac_decode_symbol_adapt_c;
 
     dav1d_msac_init_x86(s);
 #endif
-
-    ctx_refill(s);
 }

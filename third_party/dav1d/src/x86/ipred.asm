@@ -100,6 +100,8 @@ ipred_h_shuf: db  7,  7,  7,  7,  3,  3,  3,  3,  5,  5,  5,  5,  1,  1,  1,  1
               db  6,  6,  6,  6,  2,  2,  2,  2,  4,  4,  4,  4;  0,  0,  0,  0
 pw_64:        times 2 dw 64
 
+cfl_ac_444_w16_pad1_shuffle: db 0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1, 6, -1
+                             times 9 db 7, -1
 cfl_ac_w16_pad_shuffle: ; w=16, w_pad=1
                         db 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
                         ; w=8, w_pad=1 as well as second half of previous one
@@ -166,6 +168,7 @@ JMP_TABLE ipred_cfl,        avx2, h4, h8, h16, h32, w4, w8, w16, w32, \
 JMP_TABLE ipred_cfl_left,   avx2, h4, h8, h16, h32
 JMP_TABLE ipred_cfl_ac_420, avx2, w16_pad1, w16_pad2, w16_pad3
 JMP_TABLE ipred_cfl_ac_422, avx2, w16_pad1, w16_pad2, w16_pad3
+JMP_TABLE ipred_cfl_ac_444, avx2, w32_pad1, w32_pad2, w32_pad3, w4, w8, w16, w32
 JMP_TABLE pal_pred,         avx2, w4, w8, w16, w32, w64
 
 cextern dr_intra_derivative
@@ -1409,7 +1412,6 @@ ALIGN function_align
     mova                xm2, [r3+angleq*8] ; upper ymm half zero in both cases
     pcmpgtb              m1, m2
     pmovmskb            r5d, m1
-    popcnt              r5d, r5d ; sets ZF which can be used by caller
     ret
 .w4_no_upsample:
     %assign stack_offset org_stack_offset
@@ -1420,7 +1422,9 @@ ALIGN function_align
     lea            maxbased, [hq+3]
     call .filter_strength
     mov            maxbased, 7
+    test                r5d, r5d
     jz .w4_main ; filter_strength == 0
+    popcnt              r5d, r5d
     vpbroadcastd         m7, [base+pb_8]
     vbroadcasti128       m2, [tlq-1]
     pminub               m1, m7, [base+z_filter_s]
@@ -1593,7 +1597,9 @@ ALIGN function_align
     test             angled, 0x400
     jnz .w8_no_intra_edge_filter
     call .filter_strength
+    test                r5d, r5d
     jz .w8_main ; filter_strength == 0
+    popcnt              r5d, r5d
     movu                xm2, [tlq]
     pminub              xm1, xm0, [base+z_filter_s+14]
     vinserti128          m2, [tlq-1], 1
@@ -1695,7 +1701,9 @@ ALIGN function_align
     test             angled, 0x400
     jnz .w16_no_intra_edge_filter
     call .filter_strength
+    test                r5d, r5d
     jz .w16_main ; filter_strength == 0
+    popcnt              r5d, r5d
     vpbroadcastd         m1, [base+pb_12]
     vbroadcasti128       m6, [base+z_filter_s+8]
     vinserti128          m2, m6, [base+z_filter_s], 0
@@ -2202,7 +2210,6 @@ ALIGN function_align
     pand                 m0, m8, m7
     pcmpgtb              m0, m9
     pmovmskb            r3d, m0
-    popcnt              r3d, r3d
     ret
 ALIGN function_align
 .upsample_above: ; w4/w8
@@ -2252,7 +2259,9 @@ ALIGN function_align
     lea                 r3d, [hq+3]
     sub              angled, 1112 ; angle - 90
     call .filter_strength
+    test                r3d, r3d
     jz .w4_no_filter_above
+    popcnt              r3d, r3d
     vpbroadcastd        xm2, [base+pb_4]
     pminub              xm2, [base+z_filter_s]
     vpbroadcastd        xm0, [base+z_filter_k-4+r3*4+12*0]
@@ -2287,9 +2296,10 @@ ALIGN function_align
     pand                xm0, xm8 ; reuse from previous filter_strength call
     pcmpgtb             xm0, xm9
     pmovmskb            r3d, xm0
-    popcnt              r3d, r3d
 .w4_filter_left:
+    test                r3d, r3d
     jz .w4_main
+    popcnt              r3d, r3d
     mov                 r5d, 10
     cmp                  hd, 16
     movu                xm2, [rsp+49]
@@ -2440,7 +2450,9 @@ ALIGN function_align
     lea                 r3d, [hq+7]
     sub              angled, 90 ; angle - 90
     call .filter_strength
+    test                r3d, r3d
     jz .w8_no_filter_above
+    popcnt              r3d, r3d
     vpbroadcastd        xm3, [base+pb_8]
     pminub              xm3, [base+z_filter_s+8]
     vpbroadcastd        xm0, [base+z_filter_k-4+r3*4+12*0]
@@ -2473,9 +2485,10 @@ ALIGN function_align
     pand                 m0, m8
     pcmpgtb              m0, m9
     pmovmskb            r3d, m0
-    popcnt              r3d, r3d
 .w8_filter_left:
+    test                r3d, r3d
     jz .w8_main
+    popcnt              r3d, r3d
     vpbroadcastd         m7, [base+z_filter_k-4+r3*4+12*0]
     vpbroadcastd         m8, [base+z_filter_k-4+r3*4+12*1]
     vpbroadcastd         m9, [base+z_filter_k-4+r3*4+12*2]
@@ -2647,7 +2660,9 @@ ALIGN function_align
     lea                 r3d, [hq+15]
     sub              angled, 90
     call .filter_strength
+    test                r3d, r3d
     jz .w16_no_filter_above
+    popcnt              r3d, r3d
     vbroadcasti128       m6, [tlq+1]
     mova                xm2, [base+z_filter_s]
     vinserti128          m2, [base+z_filter_s+14], 1 ; 00 01 12 23 34 45 56 67   67 78 89 9a ab bc cd de
@@ -2680,8 +2695,9 @@ ALIGN function_align
     pand                 m0, m8
     pcmpgtb              m0, m9
     pmovmskb            r3d, m0
-    popcnt              r3d, r3d
+    test                r3d, r3d
     jz .w16_main
+    popcnt              r3d, r3d
     vpbroadcastd         m7, [base+z_filter_k-4+r3*4+12*0]
     vpbroadcastd         m8, [base+z_filter_k-4+r3*4+12*1]
     vpbroadcastd         m9, [base+z_filter_k-4+r3*4+12*2]
@@ -3083,7 +3099,6 @@ ALIGN function_align
     mova                xm2, [r4+angleq*8]
     pcmpgtb              m1, m2
     pmovmskb            r5d, m1
-    popcnt              r5d, r5d
     ret
 .h4_no_upsample:
     %assign stack_offset org_stack_offset
@@ -3094,7 +3109,9 @@ ALIGN function_align
     lea            maxbased, [wq+3]
     call .filter_strength
     mov            maxbased, 7
+    test                r5d, r5d
     jz .h4_main ; filter_strength == 0
+    popcnt              r5d, r5d
     vpbroadcastd         m7, [base+pb_7]
     vbroadcasti128       m2, [tlq-14]
     pmaxub               m1, m7, [base+z_filter_s-4]
@@ -3285,7 +3302,9 @@ ALIGN function_align
     test             angled, 0x400
     jnz .h8_no_intra_edge_filter
     call .filter_strength
+    test                r5d, r5d
     jz .h8_main ; filter_strength == 0
+    popcnt              r5d, r5d
     vpbroadcastd        xm6, [base+pb_15]
     pcmpeqb             xm1, xm1
     psubusb             xm6, xm0
@@ -3441,7 +3460,9 @@ ALIGN function_align
     test             angled, 0x400
     jnz .h16_no_intra_edge_filter
     call .filter_strength
+    test                r5d, r5d
     jz .h16_main ; filter_strength == 0
+    popcnt              r5d, r5d
     vpbroadcastd        m11, [base+pb_27]
     vpbroadcastd         m1, [base+pb_1]
     vbroadcasti128       m6, [base+z_filter_s+12]
@@ -5035,6 +5056,236 @@ cglobal ipred_cfl_ac_422, 4, 9, 6, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
     vextracti128        xm1, m0, 1
     tzcnt               r1d, szd
     paddd               xm0, xm1
+    movd                xm2, r1d
+    movd                xm3, szd
+    punpckhqdq          xm1, xm0, xm0
+    paddd               xm0, xm1
+    psrad               xm3, 1
+    psrlq               xm1, xm0, 32
+    paddd               xm0, xm3
+    paddd               xm0, xm1
+    psrad               xm0, xm2
+    vpbroadcastw         m0, xm0
+.sub_loop:
+    mova                 m1, [ac_bakq]
+    psubw                m1, m0
+    mova          [ac_bakq], m1
+    add             ac_bakq, 32
+    sub                 szd, 16
+    jg .sub_loop
+    RET
+
+cglobal ipred_cfl_ac_444, 4, 9, 6, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
+    movifnidn         hpadd, hpadm
+    movifnidn            wd, wm
+    mov                  hd, hm
+    mov                 szd, wd
+    imul                szd, hd
+    shl               hpadd, 2
+    sub                  hd, hpadd
+    pxor                 m4, m4
+    vpbroadcastd         m5, [pw_1]
+    tzcnt               r8d, wd
+    lea                  r5, [ipred_cfl_ac_444_avx2_table]
+    movsxd               r8, [r5+r8*4+12]
+    add                  r5, r8
+
+    DEFINE_ARGS ac, y, stride, wpad, hpad, stride3, h, sz, ac_bak
+    mov             ac_bakq, acq
+    jmp                  r5
+
+.w4:
+    lea            stride3q, [strideq*3]
+    pxor                xm2, xm2
+.w4_loop:
+    movd                xm1, [yq]
+    movd                xm0, [yq+strideq*2]
+    pinsrd              xm1, [yq+strideq], 1
+    pinsrd              xm0, [yq+stride3q], 1
+    punpcklbw           xm1, xm2
+    punpcklbw           xm0, xm2
+    psllw               xm1, 3
+    psllw               xm0, 3
+    mova              [acq], xm1
+    mova           [acq+16], xm0
+    paddw               xm1, xm0
+    paddw               xm4, xm1
+    lea                  yq, [yq+strideq*4]
+    add                 acq, 32
+    sub                  hd, 4
+    jg .w4_loop
+    test              hpadd, hpadd
+    jz .calc_avg_mul
+    pshufd              xm0, xm0, q3232
+    paddw               xm1, xm0, xm0
+.w4_hpad_loop:
+    mova              [acq], xm0
+    mova           [acq+16], xm0
+    paddw               xm4, xm1
+    add                 acq, 32
+    sub               hpadd, 4
+    jg .w4_hpad_loop
+    jmp .calc_avg_mul
+
+.w8:
+    lea            stride3q, [strideq*3]
+    pxor                 m2, m2
+.w8_loop:
+    movq                xm1, [yq]
+    movq                xm0, [yq+strideq*2]
+    vinserti128          m1, [yq+strideq], 1
+    vinserti128          m0, [yq+stride3q], 1
+    punpcklbw            m1, m2
+    punpcklbw            m0, m2
+    psllw                m1, 3
+    psllw                m0, 3
+    mova              [acq], m1
+    mova           [acq+32], m0
+    paddw                m1, m0
+    paddw                m4, m1
+    lea                  yq, [yq+strideq*4]
+    add                 acq, 64
+    sub                  hd, 4
+    jg .w8_loop
+    test              hpadd, hpadd
+    jz .calc_avg_mul
+    vpermq               m0, m0, q3232
+    paddw                m1, m0, m0
+.w8_hpad_loop:
+    mova              [acq], m0
+    mova           [acq+32], m0
+    paddw                m4, m1
+    add                 acq, 64
+    sub               hpadd, 4
+    jg .w8_hpad_loop
+    jmp .calc_avg_mul
+
+.w16:
+    test              wpadd, wpadd
+    jnz .w16_wpad
+.w16_loop:
+    pmovzxbw             m1, [yq]
+    pmovzxbw             m0, [yq+strideq]
+    psllw                m1, 3
+    psllw                m0, 3
+    mova              [acq], m1
+    mova           [acq+32], m0
+    paddw                m1, m0
+    pmaddwd              m1, m5
+    paddd                m4, m1
+    lea                  yq, [yq+strideq*2]
+    add                 acq, 64
+    sub                  hd, 2
+    jg .w16_loop
+    test              hpadd, hpadd
+    jz .calc_avg
+    jmp .w16_hpad
+.w16_wpad:
+    mova                 m3, [cfl_ac_444_w16_pad1_shuffle]
+.w16_wpad_loop:
+    vpbroadcastq         m1, [yq]
+    vpbroadcastq         m0, [yq+strideq]
+    pshufb               m1, m3
+    pshufb               m0, m3
+    psllw                m1, 3
+    psllw                m0, 3
+    mova              [acq], m1
+    mova           [acq+32], m0
+    paddw                m1, m0
+    pmaddwd              m1, m5
+    paddd                m4, m1
+    lea                  yq, [yq+strideq*2]
+    add                 acq, 64
+    sub                  hd, 2
+    jg .w16_wpad_loop
+    test              hpadd, hpadd
+    jz .calc_avg
+.w16_hpad:
+    paddw                m1, m0, m0
+    pmaddwd              m1, m5
+.w16_hpad_loop:
+    mova              [acq], m0
+    mova           [acq+32], m0
+    paddd                m4, m1
+    add                 acq, 64
+    sub               hpadd, 2
+    jg .w16_hpad_loop
+    jmp .calc_avg
+
+.w32:
+    test              wpadd, wpadd
+    jnz .w32_wpad
+.w32_loop:
+    pmovzxbw             m1, [yq]
+    pmovzxbw             m0, [yq+16]
+    psllw                m1, 3
+    psllw                m0, 3
+    mova              [acq], m1
+    mova           [acq+32], m0
+    paddw                m2, m1, m0
+    pmaddwd              m2, m5
+    paddd                m4, m2
+    add                  yq, strideq
+    add                 acq, 64
+    dec                  hd
+    jg .w32_loop
+    test              hpadd, hpadd
+    jz .calc_avg
+    jmp .w32_hpad_loop
+.w32_wpad:
+    DEFINE_ARGS ac, y, stride, wpad, hpad, iptr, h, sz, ac_bak
+    lea               iptrq, [ipred_cfl_ac_444_avx2_table]
+    add               wpadd, wpadd
+    mova                 m3, [iptrq+cfl_ac_444_w16_pad1_shuffle-ipred_cfl_ac_444_avx2_table]
+    movsxd            wpadq, [iptrq+wpadq+4]
+    add               iptrq, wpadq
+    jmp iptrq
+.w32_pad3:
+    vpbroadcastq         m1, [yq]
+    pshufb               m1, m3
+    vpermq               m0, m1, q3232
+    jmp .w32_wpad_end
+.w32_pad2:
+    pmovzxbw             m1, [yq]
+    pshufhw              m0, m1, q3333
+    vpermq               m0, m0, q3333
+    jmp .w32_wpad_end
+.w32_pad1:
+    pmovzxbw             m1, [yq]
+    vpbroadcastq         m0, [yq+16]
+    pshufb               m0, m3
+    ; fall-through
+.w32_wpad_end:
+    psllw                m1, 3
+    psllw                m0, 3
+    mova              [acq], m1
+    mova           [acq+32], m0
+    paddw                m2, m1, m0
+    pmaddwd              m2, m5
+    paddd                m4, m2
+    add                  yq, strideq
+    add                 acq, 64
+    dec                  hd
+    jz .w32_wpad_done
+    jmp iptrq
+.w32_wpad_done:
+    test              hpadd, hpadd
+    jz .calc_avg
+.w32_hpad_loop:
+    mova              [acq], m1
+    mova           [acq+32], m0
+    paddd                m4, m2
+    add                 acq, 64
+    dec               hpadd
+    jg .w32_hpad_loop
+    jmp .calc_avg
+
+.calc_avg_mul:
+    pmaddwd              m4, m5
+.calc_avg:
+    vextracti128        xm1, m4, 1
+    tzcnt               r1d, szd
+    paddd               xm0, xm4, xm1
     movd                xm2, r1d
     movd                xm3, szd
     punpckhqdq          xm1, xm0, xm0

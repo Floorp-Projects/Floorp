@@ -133,7 +133,7 @@ static void ipred_cfl_left_c(pixel *dst, const ptrdiff_t stride,
                              const int16_t *ac, const int alpha
                              HIGHBD_DECL_SUFFIX)
 {
-    unsigned dc = dc_gen_left(topleft, height);
+    const unsigned dc = dc_gen_left(topleft, height);
     cfl_pred(dst, stride, width, height, dc, ac, alpha HIGHBD_TAIL_SUFFIX);
 }
 
@@ -625,16 +625,12 @@ static void ipred_filter_c(pixel *dst, const ptrdiff_t stride,
     assert(filt_idx < 5);
 
     const int8_t *const filter = dav1d_filter_intra_taps[filt_idx];
-    int x, y;
-    ptrdiff_t left_stride;
-    const pixel *left, *topleft, *top;
-
-    top = &topleft_in[1];
-    for (y = 0; y < height; y += 2) {
-        topleft = &topleft_in[-y];
-        left = &topleft[-1];
-        left_stride = -1;
-        for (x = 0; x < width; x += 4) {
+    const pixel *top = &topleft_in[1];
+    for (int y = 0; y < height; y += 2) {
+        const pixel *topleft = &topleft_in[-y];
+        const pixel *left = &topleft[-1];
+        ptrdiff_t left_stride = -1;
+        for (int x = 0; x < width; x += 4) {
             const int p0 = *topleft;
             const int p1 = top[0], p2 = top[1], p3 = top[2], p4 = top[3];
             const int p5 = left[0 * left_stride], p6 = left[1 * left_stride];
@@ -643,7 +639,7 @@ static void ipred_filter_c(pixel *dst, const ptrdiff_t stride,
 
             for (int yy = 0; yy < 2; yy++) {
                 for (int xx = 0; xx < 4; xx++, flt_ptr += FLT_INCR) {
-                    int acc = FILTER(flt_ptr, p0, p1, p2, p3, p4, p5, p6);
+                    const int acc = FILTER(flt_ptr, p0, p1, p2, p3, p4, p5, p6);
                     ptr[xx] = iclip_pixel((acc + 8) >> 4);
                 }
                 ptr += PXSTRIDE(stride);

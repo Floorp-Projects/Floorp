@@ -3168,3 +3168,184 @@ endfunc
 
 warp  , 11
 warp t, 7
+
+// void dav1d_emu_edge_8bpc_neon(
+//         const intptr_t bw, const intptr_t bh,
+//         const intptr_t iw, const intptr_t ih,
+//         const intptr_t x, const intptr_t y,
+//         pixel *dst, const ptrdiff_t dst_stride,
+//         const pixel *ref, const ptrdiff_t ref_stride)
+function emu_edge_8bpc_neon, export=1
+        push            {r4-r11,lr}
+        ldrd            r4,  r5,  [sp, #36]
+        ldrd            r6,  r7,  [sp, #44]
+        ldrd            r8,  r9,  [sp, #52]
+
+        // ref += iclip(y, 0, ih - 1) * PXSTRIDE(ref_stride)
+        // ref += iclip(x, 0, iw - 1)
+        sub             r12, r3,  #1           // ih - 1
+        cmp             r5,  r3
+        sub             lr,  r2,  #1           // iw - 1
+        it              lt
+        movlt           r12, r5                // min(y, ih - 1)
+        cmp             r4,  r2
+        bic             r12, r12, r12, asr #31 // max(min(y, ih - 1), 0)
+        it              lt
+        movlt           lr,  r4                // min(x, iw - 1)
+        bic             lr,  lr,  lr,  asr #31 // max(min(x, iw - 1), 0)
+        mla             r8,  r12, r9,  r8      // ref += iclip() * stride
+        add             r8,  r8,  lr           // ref += iclip()
+
+        // bottom_ext = iclip(y + bh - ih, 0, bh - 1)
+        // top_ext = iclip(-y, 0, bh - 1)
+        add             r10, r5,  r1           // y + bh
+        neg             r5,  r5                // -y
+        sub             r10, r10, r3           // y + bh - ih
+        sub             r12, r1,  #1           // bh - 1
+        cmp             r10, r1
+        bic             r5,  r5,  r5,  asr #31 // max(-y, 0)
+        it              ge
+        movge           r10, r12               // min(y + bh - ih, bh-1)
+        cmp             r5,  r1
+        bic             r10, r10, r10, asr #31 // max(min(y + bh - ih, bh-1), 0)
+        it              ge
+        movge           r5,  r12               // min(max(-y, 0), bh-1)
+
+        // right_ext = iclip(x + bw - iw, 0, bw - 1)
+        // left_ext = iclip(-x, 0, bw - 1)
+        add             r11, r4,  r0           // x + bw
+        neg             r4,  r4                // -x
+        sub             r11, r11, r2           // x + bw - iw
+        sub             lr,  r0,  #1           // bw - 1
+        cmp             r11, r0
+        bic             r4,  r4,  r4,  asr #31 // max(-x, 0)
+        it              ge
+        movge           r11, lr                // min(x + bw - iw, bw-1)
+        cmp             r4,  r0
+        bic             r11, r11, r11, asr #31 // max(min(x + bw - iw, bw-1), 0)
+        it              ge
+        movge           r4,  lr                // min(max(-x, 0), bw - 1)
+
+        // center_h = bh - top_ext - bottom_ext
+        // dst += top_ext * PXSTRIDE(dst_stride)
+        // center_w = bw - left_ext - right_ext
+        sub             r1,  r1,  r5           // bh - top_ext
+        mla             r6,  r5,  r7,  r6
+        sub             r2,  r0,  r4           // bw - left_ext
+        sub             r1,  r1,  r10          // center_h = bh - top_ext - bottom_ext
+        sub             r2,  r2,  r11          // center_w = bw - left_ext - right_ext
+
+        mov             r0,  r6                // backup of dst
+
+.macro v_loop need_left, need_right
+0:
+.if \need_left
+        vld1.8          {d0[]}, [r8]
+        mov             r12, r6                // out = dst
+        mov             r3,  r4
+        vmov            d1,  d0
+1:
+        subs            r3,  r3,  #16
+        vst1.8          {q0}, [r12, :128]!
+        bgt             1b
+.endif
+        mov             lr,  r8
+        add             r12, r6,  r4           // out = dst + left_ext
+        mov             r3,  r2
+1:
+        vld1.8          {q0, q1}, [lr]!
+        subs            r3,  r3,  #32
+.if \need_left
+        vst1.8          {q0, q1}, [r12]!
+.else
+        vst1.8          {q0, q1}, [r12, :128]!
+.endif
+        bgt             1b
+.if \need_right
+        add             r3,  r8,  r2           // in + center_w
+        sub             r3,  r3,  #1           // in + center_w - 1
+        add             r12, r6,  r4           // dst + left_ext
+        vld1.8          {d0[]}, [r3]
+        add             r12, r12, r2           // out = dst + left_ext + center_w
+        mov             r3,  r11
+        vmov            d1,  d0
+1:
+        subs            r3,  r3,  #16
+        vst1.8          {q0}, [r12]!
+        bgt             1b
+.endif
+
+        subs            r1,  r1,  #1           // center_h--
+        add             r6,  r6,  r7
+        add             r8,  r8,  r9
+        bgt             0b
+.endm
+
+        cmp             r4,  #0
+        beq             2f
+        // need_left
+        cmp             r11, #0
+        beq             3f
+        // need_left + need_right
+        v_loop          1,   1
+        b               5f
+
+2:
+        // !need_left
+        cmp             r11, #0
+        beq             4f
+        // !need_left + need_right
+        v_loop          0,   1
+        b               5f
+
+3:
+        // need_left + !need_right
+        v_loop          1,   0
+        b               5f
+
+4:
+        // !need_left + !need_right
+        v_loop          0,   0
+
+5:
+        cmp             r10, #0
+        // Storing the original dst in r0 overwrote bw, recalculate it here
+        add             r2,  r2,  r4           // center_w + left_ext
+        add             r2,  r2,  r11          // bw = center_w + left_ext + right_ext
+
+        beq             3f
+        // need_bottom
+        sub             r8,  r6,  r7           // ref = dst - stride
+        mov             r4,  r2
+1:
+        vld1.8          {q0, q1}, [r8, :128]!
+        mov             r3,  r10
+2:
+        subs            r3,  r3,  #1
+        vst1.8          {q0, q1}, [r6, :128], r7
+        bgt             2b
+        mls             r6,  r7,  r10,  r6     // dst -= bottom_ext * stride
+        subs            r4,  r4,  #32          // bw -= 32
+        add             r6,  r6,  #32          // dst += 32
+        bgt             1b
+
+3:
+        cmp             r5,  #0
+        beq             3f
+        // need_top
+        mls             r6,  r7,  r5,  r0      // dst = stored_dst - top_ext * stride
+1:
+        vld1.8          {q0, q1}, [r0, :128]!
+        mov             r3,  r5
+2:
+        subs            r3,  r3,  #1
+        vst1.8          {q0, q1}, [r6, :128], r7
+        bgt             2b
+        mls             r6,  r7,  r5,  r6      // dst -= top_ext * stride
+        subs            r2,  r2,  #32          // bw -= 32
+        add             r6,  r6,  #32          // dst += 32
+        bgt             1b
+
+3:
+        pop             {r4-r11,pc}
+endfunc

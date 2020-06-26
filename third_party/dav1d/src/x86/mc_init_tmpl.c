@@ -52,33 +52,65 @@ decl_mc_fn(dav1d_put_bilin_ssse3);
 decl_mct_fn(dav1d_prep_8tap_regular_avx512icl);
 decl_mct_fn(dav1d_prep_8tap_regular_avx2);
 decl_mct_fn(dav1d_prep_8tap_regular_ssse3);
+decl_mct_fn(dav1d_prep_8tap_regular_sse2);
 decl_mct_fn(dav1d_prep_8tap_regular_smooth_avx512icl);
 decl_mct_fn(dav1d_prep_8tap_regular_smooth_avx2);
 decl_mct_fn(dav1d_prep_8tap_regular_smooth_ssse3);
+decl_mct_fn(dav1d_prep_8tap_regular_smooth_sse2);
 decl_mct_fn(dav1d_prep_8tap_regular_sharp_avx512icl);
 decl_mct_fn(dav1d_prep_8tap_regular_sharp_avx2);
 decl_mct_fn(dav1d_prep_8tap_regular_sharp_ssse3);
+decl_mct_fn(dav1d_prep_8tap_regular_sharp_sse2);
 decl_mct_fn(dav1d_prep_8tap_smooth_avx512icl);
 decl_mct_fn(dav1d_prep_8tap_smooth_avx2);
 decl_mct_fn(dav1d_prep_8tap_smooth_ssse3);
+decl_mct_fn(dav1d_prep_8tap_smooth_sse2);
 decl_mct_fn(dav1d_prep_8tap_smooth_regular_avx512icl);
 decl_mct_fn(dav1d_prep_8tap_smooth_regular_avx2);
 decl_mct_fn(dav1d_prep_8tap_smooth_regular_ssse3);
+decl_mct_fn(dav1d_prep_8tap_smooth_regular_sse2);
 decl_mct_fn(dav1d_prep_8tap_smooth_sharp_avx512icl);
 decl_mct_fn(dav1d_prep_8tap_smooth_sharp_avx2);
 decl_mct_fn(dav1d_prep_8tap_smooth_sharp_ssse3);
+decl_mct_fn(dav1d_prep_8tap_smooth_sharp_sse2);
 decl_mct_fn(dav1d_prep_8tap_sharp_avx512icl);
 decl_mct_fn(dav1d_prep_8tap_sharp_avx2);
 decl_mct_fn(dav1d_prep_8tap_sharp_ssse3);
+decl_mct_fn(dav1d_prep_8tap_sharp_sse2);
 decl_mct_fn(dav1d_prep_8tap_sharp_regular_avx512icl);
 decl_mct_fn(dav1d_prep_8tap_sharp_regular_avx2);
 decl_mct_fn(dav1d_prep_8tap_sharp_regular_ssse3);
+decl_mct_fn(dav1d_prep_8tap_sharp_regular_sse2);
 decl_mct_fn(dav1d_prep_8tap_sharp_smooth_avx512icl);
 decl_mct_fn(dav1d_prep_8tap_sharp_smooth_avx2);
 decl_mct_fn(dav1d_prep_8tap_sharp_smooth_ssse3);
+decl_mct_fn(dav1d_prep_8tap_sharp_smooth_sse2);
 decl_mct_fn(dav1d_prep_bilin_avx512icl);
 decl_mct_fn(dav1d_prep_bilin_avx2);
 decl_mct_fn(dav1d_prep_bilin_ssse3);
+decl_mct_fn(dav1d_prep_bilin_sse2);
+
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_regular_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_regular_smooth_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_regular_sharp_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_smooth_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_smooth_regular_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_smooth_sharp_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_sharp_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_sharp_regular_avx2);
+decl_mc_scaled_fn(dav1d_put_8tap_scaled_sharp_smooth_avx2);
+decl_mc_scaled_fn(dav1d_put_bilin_scaled_avx2);
+
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_regular_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_regular_smooth_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_regular_sharp_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_smooth_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_smooth_regular_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_smooth_sharp_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_sharp_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_sharp_regular_avx2);
+decl_mct_scaled_fn(dav1d_prep_8tap_scaled_sharp_smooth_avx2);
+decl_mct_scaled_fn(dav1d_prep_bilin_scaled_avx2);
 
 decl_avg_fn(dav1d_avg_avx512icl);
 decl_avg_fn(dav1d_avg_avx2);
@@ -115,17 +147,36 @@ decl_warp8x8t_fn(dav1d_warp_affine_8x8t_sse2);
 decl_emu_edge_fn(dav1d_emu_edge_avx2);
 decl_emu_edge_fn(dav1d_emu_edge_ssse3);
 
+decl_resize_fn(dav1d_resize_avx2);
+decl_resize_fn(dav1d_resize_ssse3);
+
 COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
 #define init_mc_fn(type, name, suffix) \
     c->mc[type] = dav1d_put_##name##_##suffix
 #define init_mct_fn(type, name, suffix) \
     c->mct[type] = dav1d_prep_##name##_##suffix
+#define init_mc_scaled_fn(type, name, suffix) \
+    c->mc_scaled[type] = dav1d_put_##name##_##suffix
+#define init_mct_scaled_fn(type, name, suffix) \
+    c->mct_scaled[type] = dav1d_prep_##name##_##suffix
+
     const unsigned flags = dav1d_get_cpu_flags();
 
     if(!(flags & DAV1D_X86_CPU_FLAG_SSE2))
         return;
 
 #if BITDEPTH == 8
+    init_mct_fn(FILTER_2D_BILINEAR,            bilin,               sse2);
+    init_mct_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        sse2);
+    init_mct_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, sse2);
+    init_mct_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  sse2);
+    init_mct_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, sse2);
+    init_mct_fn(FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         sse2);
+    init_mct_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   sse2);
+    init_mct_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  sse2);
+    init_mct_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   sse2);
+    init_mct_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          sse2);
+
     c->warp8x8  = dav1d_warp_affine_8x8_sse2;
     c->warp8x8t = dav1d_warp_affine_8x8t_sse2;
 #endif
@@ -134,16 +185,16 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
         return;
 
 #if BITDEPTH == 8
-    init_mc_fn (FILTER_2D_BILINEAR,            bilin,               ssse3);
-    init_mc_fn (FILTER_2D_8TAP_REGULAR,        8tap_regular,        ssse3);
-    init_mc_fn (FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, ssse3);
-    init_mc_fn (FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  ssse3);
-    init_mc_fn (FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, ssse3);
-    init_mc_fn (FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         ssse3);
-    init_mc_fn (FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   ssse3);
-    init_mc_fn (FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  ssse3);
-    init_mc_fn (FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   ssse3);
-    init_mc_fn (FILTER_2D_8TAP_SHARP,          8tap_sharp,          ssse3);
+    init_mc_fn(FILTER_2D_BILINEAR,            bilin,               ssse3);
+    init_mc_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        ssse3);
+    init_mc_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, ssse3);
+    init_mc_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  ssse3);
+    init_mc_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, ssse3);
+    init_mc_fn(FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         ssse3);
+    init_mc_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   ssse3);
+    init_mc_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  ssse3);
+    init_mc_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   ssse3);
+    init_mc_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          ssse3);
 
     init_mct_fn(FILTER_2D_BILINEAR,            bilin,               ssse3);
     init_mct_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        ssse3);
@@ -168,6 +219,7 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     c->warp8x8t = dav1d_warp_affine_8x8t_ssse3;
 
     c->emu_edge = dav1d_emu_edge_ssse3;
+    c->resize = dav1d_resize_ssse3;
 #endif
 
     if(!(flags & DAV1D_X86_CPU_FLAG_SSE41))
@@ -183,16 +235,16 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
         return;
 
 #if BITDEPTH == 8
-    init_mc_fn (FILTER_2D_8TAP_REGULAR,        8tap_regular,        avx2);
-    init_mc_fn (FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, avx2);
-    init_mc_fn (FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  avx2);
-    init_mc_fn (FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, avx2);
-    init_mc_fn (FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         avx2);
-    init_mc_fn (FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   avx2);
-    init_mc_fn (FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  avx2);
-    init_mc_fn (FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   avx2);
-    init_mc_fn (FILTER_2D_8TAP_SHARP,          8tap_sharp,          avx2);
-    init_mc_fn (FILTER_2D_BILINEAR,            bilin,               avx2);
+    init_mc_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        avx2);
+    init_mc_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, avx2);
+    init_mc_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  avx2);
+    init_mc_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, avx2);
+    init_mc_fn(FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         avx2);
+    init_mc_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   avx2);
+    init_mc_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  avx2);
+    init_mc_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   avx2);
+    init_mc_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          avx2);
+    init_mc_fn(FILTER_2D_BILINEAR,            bilin,               avx2);
 
     init_mct_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        avx2);
     init_mct_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, avx2);
@@ -204,6 +256,28 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     init_mct_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   avx2);
     init_mct_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          avx2);
     init_mct_fn(FILTER_2D_BILINEAR,            bilin,               avx2);
+
+    init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR,        8tap_scaled_regular,        avx2);
+    init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_scaled_regular_smooth, avx2);
+    init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_scaled_regular_sharp,  avx2);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_scaled_smooth_regular, avx2);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SMOOTH,         8tap_scaled_smooth,         avx2);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_scaled_smooth_sharp,   avx2);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_scaled_sharp_regular,  avx2);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_scaled_sharp_smooth,   avx2);
+    init_mc_scaled_fn(FILTER_2D_8TAP_SHARP,          8tap_scaled_sharp,          avx2);
+    init_mc_scaled_fn(FILTER_2D_BILINEAR,            bilin_scaled,               avx2);
+
+    init_mct_scaled_fn(FILTER_2D_8TAP_REGULAR,        8tap_scaled_regular,        avx2);
+    init_mct_scaled_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_scaled_regular_smooth, avx2);
+    init_mct_scaled_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_scaled_regular_sharp,  avx2);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_scaled_smooth_regular, avx2);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SMOOTH,         8tap_scaled_smooth,         avx2);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_scaled_smooth_sharp,   avx2);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_scaled_sharp_regular,  avx2);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_scaled_sharp_smooth,   avx2);
+    init_mct_scaled_fn(FILTER_2D_8TAP_SHARP,          8tap_scaled_sharp,          avx2);
+    init_mct_scaled_fn(FILTER_2D_BILINEAR,            bilin_scaled,               avx2);
 
     c->avg = dav1d_avg_avx2;
     c->w_avg = dav1d_w_avg_avx2;
@@ -219,12 +293,13 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     c->warp8x8t = dav1d_warp_affine_8x8t_avx2;
 
     c->emu_edge = dav1d_emu_edge_avx2;
+    c->resize = dav1d_resize_avx2;
 #endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL))
         return;
 
-#if BITDEPTH == 8
+#if HAVE_AVX512ICL && BITDEPTH == 8
     init_mct_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        avx512icl);
     init_mct_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, avx512icl);
     init_mct_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  avx512icl);

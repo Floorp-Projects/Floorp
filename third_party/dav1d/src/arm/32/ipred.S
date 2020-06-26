@@ -29,11 +29,11 @@
 #include "src/arm/asm.S"
 #include "util.S"
 
-// void ipred_dc_128_neon(pixel *dst, const ptrdiff_t stride,
-//                        const pixel *const topleft,
-//                        const int width, const int height, const int a,
-//                        const int max_width, const int max_height);
-function ipred_dc_128_neon, export=1
+// void ipred_dc_128_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                             const pixel *const topleft,
+//                             const int width, const int height, const int a,
+//                             const int max_width, const int max_height);
+function ipred_dc_128_8bpc_neon, export=1
         push            {r4, lr}
         ldr             r4,  [sp, #8]
         clz             r3,  r3
@@ -107,11 +107,11 @@ L(ipred_dc_128_tbl):
         pop             {r4, pc}
 endfunc
 
-// void ipred_v_neon(pixel *dst, const ptrdiff_t stride,
-//                   const pixel *const topleft,
-//                   const int width, const int height, const int a,
-//                   const int max_width, const int max_height);
-function ipred_v_neon, export=1
+// void ipred_v_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                        const pixel *const topleft,
+//                        const int width, const int height, const int a,
+//                        const int max_width, const int max_height);
+function ipred_v_8bpc_neon, export=1
         push            {r4, lr}
         ldr             lr,  [sp, #8]
         clz             r3,  r3
@@ -189,11 +189,11 @@ L(ipred_v_tbl):
         pop             {r4, pc}
 endfunc
 
-// void ipred_h_neon(pixel *dst, const ptrdiff_t stride,
-//                   const pixel *const topleft,
-//                   const int width, const int height, const int a,
-//                   const int max_width, const int max_height);
-function ipred_h_neon, export=1
+// void ipred_h_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                        const pixel *const topleft,
+//                        const int width, const int height, const int a,
+//                        const int max_width, const int max_height);
+function ipred_h_8bpc_neon, export=1
         push            {r4-r5, lr}
         ldr             r4,  [sp, #12]
         clz             r3,  r3
@@ -297,11 +297,11 @@ L(ipred_h_tbl):
         pop             {r4-r5, pc}
 endfunc
 
-// void ipred_dc_top_neon(pixel *dst, const ptrdiff_t stride,
-//                        const pixel *const topleft,
-//                        const int width, const int height, const int a,
-//                        const int max_width, const int max_height);
-function ipred_dc_top_neon, export=1
+// void ipred_dc_top_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                             const pixel *const topleft,
+//                             const int width, const int height, const int a,
+//                             const int max_width, const int max_height);
+function ipred_dc_top_8bpc_neon, export=1
         push            {r4-r5, lr}
         ldr             r4,  [sp, #12]
         clz             r3,  r3
@@ -418,11 +418,11 @@ L(ipred_dc_top_tbl):
         pop             {r4-r5, pc}
 endfunc
 
-// void ipred_dc_left_neon(pixel *dst, const ptrdiff_t stride,
-//                         const pixel *const topleft,
-//                         const int width, const int height, const int a,
-//                         const int max_width, const int max_height);
-function ipred_dc_left_neon, export=1
+// void ipred_dc_left_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                              const pixel *const topleft,
+//                              const int width, const int height, const int a,
+//                              const int max_width, const int max_height);
+function ipred_dc_left_8bpc_neon, export=1
         push            {r4-r5, lr}
         ldr             r4,  [sp, #12]
         sub             r2,  r2,  r4
@@ -556,11 +556,11 @@ L(ipred_dc_left_w64):
         pop             {r4-r5, pc}
 endfunc
 
-// void ipred_dc_neon(pixel *dst, const ptrdiff_t stride,
-//                    const pixel *const topleft,
-//                    const int width, const int height, const int a,
-//                    const int max_width, const int max_height);
-function ipred_dc_neon, export=1
+// void ipred_dc_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                         const pixel *const topleft,
+//                         const int width, const int height, const int a,
+//                         const int max_width, const int max_height);
+function ipred_dc_8bpc_neon, export=1
         push            {r4-r6, lr}
         ldr             r4,  [sp, #16]
         sub             r2,  r2,  r4
@@ -765,10 +765,6 @@ L(ipred_dc_h64):
         vpadd.u16       d0,  d0
         bx              r3
 L(ipred_dc_w64):
-        vmov.8          q1,  q0
-        vmov.8          q2,  q0
-        vmov.8          q3,  q0
-2:
         add             r2,  r2,  #1
         vld1.8          {d2,  d3,  d4,  d5},  [r2]!
         vadd.s16        d0,  d0,  d30

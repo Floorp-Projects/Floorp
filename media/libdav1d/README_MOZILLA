@@ -7,29 +7,29 @@ directory.
 
 To update the library source and build config files, execute
 
-  ./mach vendor dav1d
+  ./mach vendor media/libdav1d/moz.yaml
 
 To update to a specific upstream git tag or commit, use
 
-  ./mach vendor dav1d -r <commit>
+  ./mach vendor media/libdav1d/moz.yaml -r <commit>
 
 The upstream git repository is https://code.videolan.org/videolan/dav1d
 
 To update to a fork, use
 
-  ./mach vendor dav1d --repo <repository url> [-r <commit>]
+  ./mach vendor media/libdav1d/moz.yaml --repo <repository url> [-r <commit>]
 
 
 The rough steps are:
-- Execute ./mach vendor dav1d -r {tag-name}  # ex: ./mach vendor dav1d -r 0.6.0
-- Update moz.build with the new files, check the
-  third_party/dav1d/src/meson.build (confirm with the diff) (note the
+- Execute ./mach vendor media/libdav1d/moz.yaml -r {tag-name}  # ex: ./mach vendor media/libdav1d/moz.yaml -r 0.6.0
+- Update ./moz.build and ./asm/moz.build to add new files and remove deleted ones using
+  third_party/dav1d/src/meson.build as a guide (confirm with the diff) (note the
   empty .asm file in x86_64)
-- Build a stand-alone libdav1d following the steps here:
+- Clone the tag from the dav1d repo and build a stand-alone libdav1d following the steps here:
   https://code.videolan.org/videolan/dav1d#compile
 - Copy vcs_version.h from the local build/include/vcs_version.h
   to media/libdav1d/vcs_version.h
-- Copy version.h from local build/include/dav1di/version.h to
+- Copy version.h from local build/include/dav1d/version.h to
   media/libdav1d/version.h
 - Update dav1d.rc:
   - update the API_VERSION_NUMBER, API_VERSION_NUMBER_STR, defines to

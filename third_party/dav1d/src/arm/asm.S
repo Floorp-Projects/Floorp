@@ -93,6 +93,7 @@
         .global EXTERN\name
 #ifdef __ELF__
         .type   EXTERN\name, %function
+        .hidden EXTERN\name
 #endif
 #if HAVE_AS_FUNC
         .func   EXTERN\name
@@ -109,7 +110,7 @@ EXTERN\name:
 \name:
 .endm
 
-.macro  const   name, align=2
+.macro  const   name, export=0, align=2
     .macro endconst
 #ifdef __ELF__
         .size   \name, . - \name
@@ -124,6 +125,13 @@ EXTERN\name:
         .const_data
 #endif
         .align          \align
+    .if \export
+        .global EXTERN\name
+#ifdef __ELF__
+        .hidden EXTERN\name
+#endif
+EXTERN\name:
+    .endif
 \name:
 .endm
 
@@ -134,5 +142,10 @@ EXTERN\name:
 #endif
 
 #define X(x) CONCAT(EXTERN, x)
+
+#if ARCH_AARCH64
+#define x18 do_not_use_x18
+#define w18 do_not_use_w18
+#endif
 
 #endif /* DAV1D_SRC_ARM_ASM_S */

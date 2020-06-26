@@ -75,59 +75,66 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
                  int width, int height, int angle, int max_width, int max_height
                  HIGHBD_DECL_SUFFIX);
 
-    for (int mode = 0; mode < N_IMPL_INTRA_PRED_MODES; mode++)
-        for (int w = 4; w <= (mode == FILTER_PRED ? 32 : 64); w <<= 1)
-            if (check_func(c->intra_pred[mode], "intra_pred_%s_w%d_%dbpc",
-                intra_pred_mode_names[mode], w, BITDEPTH))
-            {
-                for (int h = imax(w / 4, 4); h <= imin(w * 4,
-                    (mode == FILTER_PRED ? 32 : 64)); h <<= 1)
+    for (int mode = 0; mode < N_IMPL_INTRA_PRED_MODES; mode++) {
+        int bpc_min = BITDEPTH, bpc_max = BITDEPTH;
+        if (mode == FILTER_PRED && BITDEPTH == 16) {
+            bpc_min = 10;
+            bpc_max = 12;
+        }
+        for (int bpc = bpc_min; bpc <= bpc_max; bpc += 2)
+            for (int w = 4; w <= (mode == FILTER_PRED ? 32 : 64); w <<= 1)
+                if (check_func(c->intra_pred[mode], "intra_pred_%s_w%d_%dbpc",
+                    intra_pred_mode_names[mode], w, bpc))
                 {
-                    const ptrdiff_t stride = w * sizeof(pixel);
-
-                    int a = 0, maxw = 0, maxh = 0;
-                    if (mode >= Z1_PRED && mode <= Z3_PRED) { /* angle */
-                        a = (90 * (mode - Z1_PRED) + z_angles[rnd() % 27]) |
-                            (rnd() & 0x600);
-                        if (mode == Z2_PRED) {
-                            maxw = rnd(), maxh = rnd();
-                            maxw = 1 + (maxw & (maxw & 4096 ? 4095 : w - 1));
-                            maxh = 1 + (maxh & (maxh & 4096 ? 4095 : h - 1));
-                        }
-                    } else if (mode == FILTER_PRED) /* filter_idx */
-                        a = (rnd() % 5) | (rnd() & ~511);
-
-#if BITDEPTH == 16
-                    const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
-#else
-                    const int bitdepth_max = 0xff;
-#endif
-
-                    for (int i = -h * 2; i <= w * 2; i++)
-                        topleft[i] = rnd() & bitdepth_max;
-
-                    call_ref(c_dst, stride, topleft, w, h, a, maxw, maxh
-                             HIGHBD_TAIL_SUFFIX);
-                    call_new(a_dst, stride, topleft, w, h, a, maxw, maxh
-                             HIGHBD_TAIL_SUFFIX);
-                    if (checkasm_check_pixel(c_dst, stride, a_dst, stride,
-                                             w, h, "dst"))
+                    for (int h = imax(w / 4, 4); h <= imin(w * 4,
+                        (mode == FILTER_PRED ? 32 : 64)); h <<= 1)
                     {
-                        if (mode == Z1_PRED || mode == Z3_PRED)
-                            fprintf(stderr, "angle = %d (0x%03x)\n",
-                                    a & 0x1ff, a & 0x600);
-                        else if (mode == Z2_PRED)
-                            fprintf(stderr, "angle = %d (0x%03x), "
-                                    "max_width = %d, max_height = %d\n",
-                                    a & 0x1ff, a & 0x600, maxw, maxh);
-                        else if (mode == FILTER_PRED)
-                            fprintf(stderr, "filter_idx = %d\n", a & 0x1ff);
-                    }
+                        const ptrdiff_t stride = w * sizeof(pixel);
 
-                    bench_new(a_dst, stride, topleft, w, h, a, 128, 128
-                              HIGHBD_TAIL_SUFFIX);
+                        int a = 0, maxw = 0, maxh = 0;
+                        if (mode >= Z1_PRED && mode <= Z3_PRED) { /* angle */
+                            a = (90 * (mode - Z1_PRED) + z_angles[rnd() % 27]) |
+                                (rnd() & 0x600);
+                            if (mode == Z2_PRED) {
+                                maxw = rnd(), maxh = rnd();
+                                maxw = 1 + (maxw & (maxw & 4096 ? 4095 : w - 1));
+                                maxh = 1 + (maxh & (maxh & 4096 ? 4095 : h - 1));
+                            }
+                        } else if (mode == FILTER_PRED) /* filter_idx */
+                            a = (rnd() % 5) | (rnd() & ~511);
+
+                        int bitdepth_max;
+                        if (bpc == 16)
+                            bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+                        else
+                            bitdepth_max = (1 << bpc) - 1;
+
+                        for (int i = -h * 2; i <= w * 2; i++)
+                            topleft[i] = rnd() & bitdepth_max;
+
+                        call_ref(c_dst, stride, topleft, w, h, a, maxw, maxh
+                                 HIGHBD_TAIL_SUFFIX);
+                        call_new(a_dst, stride, topleft, w, h, a, maxw, maxh
+                                 HIGHBD_TAIL_SUFFIX);
+                        if (checkasm_check_pixel(c_dst, stride, a_dst, stride,
+                                                 w, h, "dst"))
+                        {
+                            if (mode == Z1_PRED || mode == Z3_PRED)
+                                fprintf(stderr, "angle = %d (0x%03x)\n",
+                                        a & 0x1ff, a & 0x600);
+                            else if (mode == Z2_PRED)
+                                fprintf(stderr, "angle = %d (0x%03x), "
+                                        "max_width = %d, max_height = %d\n",
+                                        a & 0x1ff, a & 0x600, maxw, maxh);
+                            else if (mode == FILTER_PRED)
+                                fprintf(stderr, "filter_idx = %d\n", a & 0x1ff);
+                        }
+
+                        bench_new(a_dst, stride, topleft, w, h, a, 128, 128
+                                  HIGHBD_TAIL_SUFFIX);
+                    }
                 }
-            }
+    }
     report("intra_pred");
 }
 
@@ -142,14 +149,21 @@ static void check_cfl_ac(Dav1dIntraPredDSPContext *const c) {
     for (int layout = 1; layout <= DAV1D_PIXEL_LAYOUT_I444; layout++) {
         const int ss_ver = layout == DAV1D_PIXEL_LAYOUT_I420;
         const int ss_hor = layout != DAV1D_PIXEL_LAYOUT_I444;
+        const int h_step = 2 >> ss_hor, v_step = 2 >> ss_ver;
         for (int w = 4; w <= (32 >> ss_hor); w <<= 1)
             if (check_func(c->cfl_ac[layout - 1], "cfl_ac_%s_w%d_%dbpc",
                 cfl_ac_names[layout - 1], w, BITDEPTH))
             {
-                for (int h = imax(w / 4, 4); h <= imin(w * 4, (32 >> ss_ver)); h <<= 1) {
+                for (int h = imax(w / 4, 4);
+                     h <= imin(w * 4, (32 >> ss_ver)); h <<= 1)
+                {
                     const ptrdiff_t stride = 32 * sizeof(pixel);
-                    for (int w_pad = (w >> 2) - 1; w_pad >= 0; w_pad--) {
-                        for (int h_pad = (h >> 2) - 1; h_pad >= 0; h_pad--) {
+                    for (int w_pad = imax((w >> 2) - h_step, 0);
+                         w_pad >= 0; w_pad -= h_step)
+                    {
+                        for (int h_pad = imax((h >> 2) - v_step, 0);
+                             h_pad >= 0; h_pad -= v_step)
+                        {
 #if BITDEPTH == 16
                             const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
 #else

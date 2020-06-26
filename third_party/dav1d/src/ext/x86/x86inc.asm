@@ -1,7 +1,7 @@
 ;*****************************************************************************
 ;* x86inc.asm: x264asm abstraction layer
 ;*****************************************************************************
-;* Copyright (C) 2005-2019 x264 project
+;* Copyright (C) 2005-2020 x264 project
 ;*
 ;* Authors: Loren Merritt <lorenm@u.washington.edu>
 ;*          Henrik Gramner <henrik@gramner.com>
@@ -358,7 +358,7 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
 %define vzeroupper_required (mmsize > 16 && (ARCH_X86_64 == 0 || xmm_regs_used > 16 || notcpuflag(avx512)))
 %define high_mm_regs (16*cpuflag(avx512))
 
-%macro ALLOC_STACK 1-2 0 ; stack_size, n_xmm_regs (for win64 only)
+%macro ALLOC_STACK 0-2 0, 0 ; stack_size, n_xmm_regs (for win64 only)
     %ifnum %1
         %if %1 != 0
             %assign %%pad 0
@@ -403,7 +403,7 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
     %endif
 %endmacro
 
-%macro SETUP_STACK_POINTER 1
+%macro SETUP_STACK_POINTER 0-1 0
     %ifnum %1
         %if %1 != 0 && required_stack_alignment > STACK_ALIGNMENT
             %if %1 > 0
@@ -991,6 +991,8 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     %if WIN64
         AVX512_MM_PERMUTATION 6 ; Swap callee-saved registers with volatile registers
     %endif
+    %xdefine bcstd 1to4
+    %xdefine bcstq 1to2
 %endmacro
 
 %macro INIT_YMM 0-1+
@@ -1004,6 +1006,8 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     INIT_CPUFLAGS %1
     DEFINE_MMREGS ymm
     AVX512_MM_PERMUTATION
+    %xdefine bcstd 1to8
+    %xdefine bcstq 1to4
 %endmacro
 
 %macro INIT_ZMM 0-1+
@@ -1017,6 +1021,8 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     INIT_CPUFLAGS %1
     DEFINE_MMREGS zmm
     AVX512_MM_PERMUTATION
+    %xdefine bcstd 1to16
+    %xdefine bcstq 1to8
 %endmacro
 
 INIT_XMM
@@ -1250,6 +1256,12 @@ INIT_XMM
                 %error use of ``%1'' sse2 instruction in cpuname function: current_function
             %elif %3 == 0 && __sizeofreg == 32 && notcpuflag(avx2)
                 %error use of ``%1'' avx2 instruction in cpuname function: current_function
+            %elif __sizeofreg == 16 && notcpuflag(sse)
+                %error use of ``%1'' sse instruction in cpuname function: current_function
+            %elif __sizeofreg == 32 && notcpuflag(avx)
+                %error use of ``%1'' avx instruction in cpuname function: current_function
+            %elif __sizeofreg == 64 && notcpuflag(avx512)
+                %error use of ``%1'' avx512 instruction in cpuname function: current_function
             %elifidn %1, pextrw ; special case because the base instruction is mmx2,
                 %ifnid %6       ; but sse4 is required for memory operands
                     %if notcpuflag(sse4)
@@ -1672,6 +1684,7 @@ GPR_INSTR andn, bmi1
 GPR_INSTR bextr, bmi1
 GPR_INSTR blsi, bmi1
 GPR_INSTR blsmsk, bmi1
+GPR_INSTR blsr, bmi1
 GPR_INSTR bzhi, bmi2
 GPR_INSTR mulx, bmi2
 GPR_INSTR pdep, bmi2

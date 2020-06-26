@@ -243,8 +243,11 @@ enum InterIntraType {
     INTER_INTRA_WEDGE,
 };
 
-typedef struct mv {
-    int16_t y, x;
+typedef union mv {
+    struct {
+        int16_t y, x;
+    };
+    uint32_t n;
 } mv;
 
 enum MotionMode {
@@ -264,12 +267,20 @@ typedef struct Av1Block {
             int8_t y_angle, uv_angle, cfl_alpha[2];
         }; // intra
         struct {
+            union {
+                struct {
+                    union mv mv[2];
+                    uint8_t wedge_idx, mask_sign, interintra_mode;
+                };
+                struct {
+                    union mv mv2d;
+                    int16_t matrix[4];
+                };
+            };
+            uint8_t comp_type, inter_mode, motion_mode, drl_idx;
             int8_t ref[2];
-            uint8_t comp_type, wedge_idx, mask_sign, inter_mode, drl_idx;
-            uint8_t interintra_type, interintra_mode, motion_mode;
-            uint8_t max_ytx, filter2d;
-            uint16_t tx_split[2];
-            mv mv[2];
+            uint8_t max_ytx, filter2d, interintra_type, tx_split0;
+            uint16_t tx_split1;
         }; // inter
     };
 } Av1Block;

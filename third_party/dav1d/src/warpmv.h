@@ -32,6 +32,8 @@
 
 int dav1d_get_shear_params(Dav1dWarpedMotionParams *wm);
 int dav1d_find_affine_int(const int (*pts)[2][2], int np, int bw4, int bh4,
-                          mv mv, Dav1dWarpedMotionParams *wm, int by, int bx);
+                          mv mv, Dav1dWarpedMotionParams *wm, int bx, int by);
+void dav1d_set_affine_mv2d(int bw4, int bh4,
+                           mv mv, Dav1dWarpedMotionParams *wm, int bx, int by);
 
 #endif /* DAV1D_SRC_WARPMV_H */

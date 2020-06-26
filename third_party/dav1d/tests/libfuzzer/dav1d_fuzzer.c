@@ -69,13 +69,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     dav1d_version();
 
-    // memory sanitizer is inherently incompatible with asm
-#if defined(__has_feature)
-  #if __has_feature(memory_sanitizer)
-    dav1d_set_cpu_flags_mask(0);
-  #endif
-#endif
-
     if (size < 32) goto end;
 #ifdef DAV1D_ALLOC_FAIL
     unsigned h = djb_xor(ptr, 32);

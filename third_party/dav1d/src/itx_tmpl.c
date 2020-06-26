@@ -180,7 +180,7 @@ static void inv_txfm_add_wht_wht_4x4_c(pixel *dst, const ptrdiff_t stride,
             dst[x] = iclip_pixel(dst[x] + *c++);
 }
 
-COLD void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c) {
+COLD void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c, int bpc) {
 #define assign_itx_all_fn64(w, h, pfx) \
     c->itxfm_add[pfx##TX_##w##X##h][DCT_DCT  ] = \
         inv_txfm_add_dct_dct_##w##x##h##_c
@@ -224,8 +224,6 @@ COLD void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c) {
     c->itxfm_add[pfx##TX_##w##X##h][V_ADST] = \
         inv_txfm_add_identity_adst_##w##x##h##_c; \
 
-    memset(c, 0, sizeof(*c)); /* Zero unused function pointer elements. */
-
     c->itxfm_add[TX_4X4][WHT_WHT] = inv_txfm_add_wht_wht_4x4_c;
     assign_itx_all_fn84( 4,  4, );
     assign_itx_all_fn84( 4,  8, R);
@@ -249,7 +247,7 @@ COLD void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c) {
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    bitfn(dav1d_itx_dsp_init_arm)(c);
+    bitfn(dav1d_itx_dsp_init_arm)(c, bpc);
 #endif
 #if ARCH_X86
     bitfn(dav1d_itx_dsp_init_x86)(c);
