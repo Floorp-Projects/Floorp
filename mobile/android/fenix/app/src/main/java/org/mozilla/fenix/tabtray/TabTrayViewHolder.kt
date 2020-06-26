@@ -20,6 +20,7 @@ import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.images.ImageRequest
 import mozilla.components.support.images.loader.ImageLoader
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
@@ -71,7 +72,7 @@ class TabTrayViewHolder(
         if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
         } else {
-            imageLoader.loadIntoView(thumbnailView, tab.id)
+            imageLoader.loadIntoView(thumbnailView, ImageRequest(tab.id))
         }
 
         // Media state

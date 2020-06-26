@@ -70,7 +70,7 @@ class DefaultToolbarMenu(
             onAddonsManagerTapped = {
                 onItemTapped.invoke(ToolbarMenu.Item.AddonsManager)
             },
-            appendExtensionActionAtStart = !shouldReverseItems
+            appendExtensionSubMenuAtStart = !shouldReverseItems
         )
     }
 
