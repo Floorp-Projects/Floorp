@@ -395,6 +395,8 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   void clearCachedUserAgent();
 
+  void clearCachedPlatform();
+
   /* Track whether we're currently restoring a document presentation. */
   readonly attribute boolean restoringDocument;
 
