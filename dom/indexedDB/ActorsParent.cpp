@@ -12736,14 +12736,14 @@ bool ConnectionPool::MaybeFireCallback(DatabasesCompleteCallback* aCallback) {
 
   AUTO_PROFILER_LABEL("ConnectionPool::MaybeFireCallback", DOM);
 
-  for (uint32_t count = aCallback->mDatabaseIds.Length(), index = 0;
-       index < count; index++) {
-    const nsCString& databaseId = aCallback->mDatabaseIds[index];
-    MOZ_ASSERT(!databaseId.IsEmpty());
+  if (std::any_of(aCallback->mDatabaseIds.begin(),
+                  aCallback->mDatabaseIds.end(),
+                  [&databases = mDatabases](const auto& databaseId) {
+                    MOZ_ASSERT(!databaseId.IsEmpty());
 
-    if (mDatabases.Get(databaseId)) {
-      return false;
-    }
+                    return databases.Get(databaseId);
+                  })) {
+    return false;
   }
 
   Unused << aCallback->mCallback->Run();
