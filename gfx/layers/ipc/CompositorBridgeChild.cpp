@@ -949,11 +949,6 @@ PTextureChild* CompositorBridgeChild::CreateTexture(
 
 already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {
   MOZ_ASSERT(gfx::gfxVars::RemoteCanvasEnabled());
-
-  if (CanvasChild::Deactivated()) {
-    return nullptr;
-  }
-
   if (!mCanvasChild) {
     ipc::Endpoint<PCanvasParent> parentEndpoint;
     ipc::Endpoint<PCanvasChild> childEndpoint;

@@ -98,6 +98,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
             const CrossProcessSemaphoreHandle& aWriterSem,
             UniquePtr<CanvasEventRingBuffer::ReaderServices> aReaderServices);
 
+  bool IsValid() { return mIsValid; }
+
   /**
    * Translates events until no more are available or the end of a transaction
    * If this returns false the caller of this is responsible for re-calling
@@ -257,8 +259,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void FinishShutdown();
 
-  void Deactivate();
-
   TextureData* CreateTextureData(TextureType aTextureType,
                                  const gfx::IntSize& aSize,
                                  gfx::SurfaceFormat aFormat);
@@ -294,7 +294,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   DescriptorMap mSurfaceDescriptors;
   Monitor mSurfaceDescriptorsMonitor{
       "CanvasTranslator::mSurfaceDescriptorsMonitor"};
-  Atomic<bool> mDeactivated{false};
+  bool mIsValid = true;
   bool mIsInTransaction = false;
   bool mDeviceResetInProgress = false;
 };

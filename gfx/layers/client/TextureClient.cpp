@@ -372,10 +372,6 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
       return new RecordedTextureData(canvasChild.forget(), aSize, aFormat,
                                      textureType);
     }
-
-    // We don't have a CanvasChild, but are supposed to be remote.
-    // Fall back to software.
-    textureType = TextureType::Unknown;
   }
 
   switch (textureType) {
