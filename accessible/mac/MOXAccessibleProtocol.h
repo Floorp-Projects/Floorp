@@ -129,6 +129,25 @@
 // AXMenuItemMarkChar
 - (NSString* _Nullable)moxMenuItemMarkChar;
 
+// AXLoaded
+- (NSNumber* _Nullable)moxLoaded;
+
+// AXLoadingProgress
+- (NSNumber* _Nullable)moxLoadingProgress;
+
+// Webkit also implements the following:
+// // AXCaretBrowsingEnabled
+// - (NSString* _Nullable)moxCaretBrowsingEnabled;
+
+// // AXLayoutCount
+// - (NSString* _Nullable)moxLayoutCount;
+
+// // AXWebSessionID
+// - (NSString* _Nullable)moxWebSessionID;
+
+// // AXPreventKeyboardDOMEventDispatch
+// - (NSString* _Nullable)moxPreventKeyboardDOMEventDispatch;
+
 // Table Attributes
 
 // AXRowCount

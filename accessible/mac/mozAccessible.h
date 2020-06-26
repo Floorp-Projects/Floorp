@@ -70,6 +70,8 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 
 // Given a gecko accessibility event type, post the relevant
 // system accessibility notification.
+// Note: when overriding or adding new events, make sure your events aren't
+// filtered out in Platform::ProxyEvent or AccessibleWrap::HandleAccEvent!
 - (void)handleAccessibleEvent:(uint32_t)eventType;
 
 // internal method to retrieve a child at a given index.
