@@ -222,6 +222,7 @@ define(function(require, exports, module) {
         selected: props.selected,
         active: props.active,
         lastSelectedIndex: props.defaultSelectFirstNode ? 0 : null,
+        mouseDown: false,
       };
 
       this.treeRef = createRef();
@@ -253,6 +254,26 @@ define(function(require, exports, module) {
       }
 
       this.setState(Object.assign({}, this.state, state));
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+      const {
+        expandedNodes,
+        columns,
+        selected,
+        active,
+        lastSelectedIndex,
+        mouseDown,
+      } = this.state;
+
+      return (
+        expandedNodes !== nextState.expandedNodes ||
+        columns !== nextState.columns ||
+        selected !== nextState.selected ||
+        active !== nextState.active ||
+        lastSelectedIndex !== nextState.lastSelectedIndex ||
+        mouseDown === nextState.mouseDown
+      );
     }
 
     componentDidUpdate() {
@@ -313,6 +334,9 @@ define(function(require, exports, module) {
     // Event Handlers
 
     onFocus(_event) {
+      if (this.state.mouseDown) {
+        return;
+      }
       // Set focus to the first element, if none is selected or activated
       // This is needed because keyboard navigation won't work without an element being selected
       this.componentDidUpdate();
@@ -716,6 +740,8 @@ define(function(require, exports, module) {
           onFocus: this.onFocus,
           onKeyDown: this.onKeyDown,
           onContextMenu: onContextMenuTree && onContextMenuTree.bind(this),
+          onMouseDown: () => this.setState({ mouseDown: true }),
+          onMouseUp: () => this.setState({ mouseDown: false }),
           onClick: () => {
             // Focus should always remain on the tree container itself.
             this.treeRef.current.focus();
