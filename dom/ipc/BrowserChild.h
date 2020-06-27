@@ -737,14 +737,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const WindowsHandle& aWidgetNativeData);
 
  private:
-  // Wraps up a JSON object as a structured clone and sends it to the browser
-  // chrome script.
-  //
-  // XXX/bug 780335: Do the work the browser chrome script does in C++ instead
-  // so we don't need things like this.
-  void DispatchMessageManagerMessage(const nsAString& aMessageName,
-                                     const nsAString& aJSONData);
-
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
                        const ScrollableLayerGuid& aGuid);
 

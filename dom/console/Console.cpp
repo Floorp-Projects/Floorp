@@ -498,7 +498,9 @@ class ConsoleCallDataWorkletRunnable final : public ConsoleWorkletRunnable {
 
   NS_IMETHOD Run() override {
     AssertIsOnMainThread();
-    AutoSafeJSContext cx;
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
 
     JSObject* sandbox =
         mConsoleData->GetOrCreateSandbox(cx, mWorkletImpl->Principal());
@@ -729,7 +731,9 @@ class ConsoleProfileWorkletRunnable final : public ConsoleWorkletRunnable {
   NS_IMETHOD Run() override {
     AssertIsOnMainThread();
 
-    AutoSafeJSContext cx;
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
 
     JSObject* sandbox =
         mConsoleData->GetOrCreateSandbox(cx, mWorkletImpl->Principal());

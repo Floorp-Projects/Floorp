@@ -2196,14 +2196,13 @@ class XPCJSRuntimeStats : public JS::RuntimeStats {
 
   virtual void initExtraZoneStats(JS::Zone* zone,
                                   JS::ZoneStats* zStats) override {
-    AutoSafeJSContext cx;
     xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
     extras->pathPrefix.AssignLiteral("explicit/js-non-window/zones/");
 
     // Get some global in this zone.
-    Rooted<Realm*> realm(cx, js::GetAnyRealmInZone(zone));
+    Rooted<Realm*> realm(dom::RootingCx(), js::GetAnyRealmInZone(zone));
     if (realm) {
-      RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
+      RootedObject global(dom::RootingCx(), JS::GetRealmGlobalOrNull(realm));
       if (global) {
         RefPtr<nsGlobalWindowInner> window;
         if (NS_SUCCEEDED(UNWRAP_NON_WRAPPER_OBJECT(Window, global, window))) {
@@ -2229,9 +2228,8 @@ class XPCJSRuntimeStats : public JS::RuntimeStats {
     GetRealmName(realm, rName, &mAnonymizeID, /* replaceSlashes = */ true);
 
     // Get the realm's global.
-    AutoSafeJSContext cx;
     bool needZone = true;
-    RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
+    RootedObject global(dom::RootingCx(), JS::GetRealmGlobalOrNull(realm));
     if (global) {
       RefPtr<nsGlobalWindowInner> window;
       if (NS_SUCCEEDED(UNWRAP_NON_WRAPPER_OBJECT(Window, global, window))) {
