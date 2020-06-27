@@ -20,12 +20,12 @@ bool nsIFrame::IsSVGGeometryFrameOrSubclass() const {
 
 bool nsIFrame::IsFlexItem() const {
   return GetParent() && GetParent()->IsFlexContainerFrame() &&
-         !(GetStateBits() & NS_FRAME_OUT_OF_FLOW);
+         !HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
 }
 
 bool nsIFrame::IsGridItem() const {
   return GetParent() && GetParent()->IsGridContainerFrame() &&
-         !(GetStateBits() & NS_FRAME_OUT_OF_FLOW);
+         !HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
 }
 
 bool nsIFrame::IsFlexOrGridContainer() const {
@@ -33,7 +33,7 @@ bool nsIFrame::IsFlexOrGridContainer() const {
 }
 
 bool nsIFrame::IsFlexOrGridItem() const {
-  return !(GetStateBits() & NS_FRAME_OUT_OF_FLOW) && GetParent() &&
+  return !HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) && GetParent() &&
          GetParent()->IsFlexOrGridContainer();
 }
 
@@ -195,7 +195,7 @@ void nsIFrame::PropagateWritingModeToSelfAndAncestors(
 }
 
 nsContainerFrame* nsIFrame::GetInFlowParent() const {
-  if (GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+  if (HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     nsIFrame* ph =
         FirstContinuation()->GetProperty(nsIFrame::PlaceholderFrameProperty());
     return ph->GetParent();
