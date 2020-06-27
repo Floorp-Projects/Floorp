@@ -10,11 +10,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.component_tabstray.view.*
+import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
 import mozilla.components.browser.session.Session
@@ -42,6 +44,10 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
     private var _tabTrayView: TabTrayView? = null
     private val tabTrayView: TabTrayView
         get() = _tabTrayView!!
+
+    private val snackbarAnchor: View?
+        get() = if (tabTrayView.fabView.new_tab_button.isVisible) tabTrayView.fabView.new_tab_button
+                else null
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
@@ -188,7 +194,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
                     sessionManager.add(snapshot.session, isSelected, engineSessionState = state)
                 },
                 operation = { },
-                elevation = ELEVATION
+                elevation = ELEVATION,
+                anchorView = snackbarAnchor
             )
         }
     }
@@ -232,7 +239,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
                     context?.components?.core?.sessionManager?.restore(snapshot)
                 },
                 operation = { },
-                elevation = ELEVATION
+                elevation = ELEVATION,
+                anchorView = snackbarAnchor
             )
         }
     }
@@ -245,6 +253,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
                     isDisplayedWithBrowserToolbar = true,
                     view = (view as View)
                 )
+                .setAnchorView(snackbarAnchor)
                 .setText(requireContext().getString(R.string.create_collection_tabs_saved))
                 .setAction(requireContext().getString(R.string.create_collection_view)) {
                     dismissAllowingStateLoss()
