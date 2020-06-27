@@ -2411,6 +2411,7 @@ SearchService.prototype = {
       extraParams: config.extraParams,
       telemetryId: config.telemetryId,
       orderHint: config.orderHint,
+      regionParams: config.regionParams,
     };
 
     // Modern Config encodes params as objects whereas they are
@@ -2591,6 +2592,7 @@ SearchService.prototype = {
       template: decodeURI(searchProvider.search_url),
       searchGetParams: searchUrlGetParams,
       searchPostParams: searchUrlPostParams,
+      regionParams: engineParams.regionParams,
       iconURL: searchProvider.favicon_url || preferredIconUrl,
       icons: iconList,
       alias: searchProvider.keyword,

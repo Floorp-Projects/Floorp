@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  Region: "resource://gre/modules/Region.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -668,7 +669,17 @@ EngineURL.prototype = {
         continue;
       }
 
-      const paramValue = param.value;
+      let paramValue = param.value;
+      // Override the parameter value if the engine has a region
+      // override defined for our current region.
+      if (engine._regionParams?.[Region.current]) {
+        let override = engine._regionParams[Region.current].find(
+          p => p.name == param.name
+        );
+        if (override) {
+          paramValue = override.value;
+        }
+      }
       // Preference MozParams might not have a preferenced saved, or a valid value.
       if (paramValue != null) {
         var value = ParamSubstitution(paramValue, searchTerms, engine);
@@ -1488,6 +1499,8 @@ SearchEngine.prototype = {
     this._orderHint = params.orderHint;
     this._telemetryId = params.telemetryId;
     this._name = engineName;
+    this._regionParams = params.regionParams;
+
     if (params.shortName) {
       this._shortName = params.shortName;
     }

@@ -34,6 +34,9 @@
     },
     "extraParams": {
       "$ref": "#/definitions/extraParams"
+    },
+    "regionParams": {
+      "$ref": "#/definitions/regionParams"
     }
   },
   "definitions": {
@@ -255,6 +258,33 @@
         }
       }
     },
+    "regionParams": {
+      "type": "object",
+      "title": "Region Parameters",
+      "description": "A map of regions to an array of parameter overrides",
+      "patternProperties" {
+        "^([a-z][a-z]|default)$": {
+          "type": "array"
+          "title": "Parameter Overrides",
+          "description": "A array of objects - map of parameter name to the parameter value.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "Name",
+                "description": "Name of the parameter to override"
+              },
+              "value": {
+                "type": "string",
+                "title": "Value",
+                "description": "The value to override with"
+              }
+            }
+          }
+        }
+      }
+    },
     "telemetryId": {
       "type": "string",
       "title": "Telemetry Id",
@@ -374,6 +404,9 @@
         },
         "params": {
           "$ref": "#/definitions/params"
+        },
+        "regionParams": {
+          "$ref": "#/definitions/regionParams"
         },
         "extraParams": {
           "$ref": "#/definitions/extraParams"

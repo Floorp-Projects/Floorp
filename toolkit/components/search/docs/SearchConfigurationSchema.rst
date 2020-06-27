@@ -484,5 +484,29 @@ Example:
 
 This would result in the order: ``engine2@ext, engine1@ext, engine3@ext``.
 
+=======
+Region Params
+=============
+
+The ``regionParams`` field allows us to override query parameters used based on the users current Region without having to reload the engine list which is based on the users home Region.
+
+Example:
+
+.. code-block:: js
+
+    {
+      "webExtension": {
+        "id": "engine1@ext"
+      },
+      "params": {
+        "searchUrlGetParams": [{ "name": "param", "value": "default" }],
+      },
+      "regionParams": {
+        "US": [{ "name": "param", "value": "custom" }]
+      }
+    },
+
+Will send ``param=custom`` whenever we detect the user is in US.
+
 .. _schema itself: https://searchfox.org/mozilla-central/source/toolkit/components/search/schema/
 .. _the version comparator: https://developer.mozilla.org/en-US/docs/Mozilla/Toolkit_version_format
