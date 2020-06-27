@@ -516,7 +516,7 @@ void SVGMarkerObserver::OnRenderingChange() {
   MOZ_ASSERT(frame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
 
   // Don't need to request ReflowFrame if we're being reflowed.
-  if (!(frame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
+  if (!frame->HasAnyStateBits(NS_FRAME_IN_REFLOW)) {
     // XXXjwatt: We need to unify SVG into standard reflow so we can just use
     // nsChangeHint_NeedReflow | nsChangeHint_NeedDirtyReflow here.
     // XXXSDL KILL THIS!!!
@@ -545,7 +545,7 @@ void nsSVGPaintingProperty::OnRenderingChange() {
     return;
   }
 
-  if (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+  if (frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     frame->InvalidateFrameSubtree();
   } else {
     for (nsIFrame* f = frame; f;
