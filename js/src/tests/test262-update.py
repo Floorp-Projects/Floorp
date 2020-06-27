@@ -31,6 +31,7 @@ UNSUPPORTED_FEATURES = set([
     "Intl.DateTimeFormat-formatRange",
     "Intl.Segmenter",
     "top-level-await",
+    "Atomics.waitAsync",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
