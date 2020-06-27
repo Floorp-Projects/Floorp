@@ -411,6 +411,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool IsLoading();
 
+  void GetEmbedderElementType(nsString& aElementType) {
+    if (GetEmbedderElementType().isSome()) {
+      aElementType = GetEmbedderElementType().value();
+    }
+  }
+
   bool IsLoadingIdentifier(uint64_t aLoadIdentifer) {
     if (GetCurrentLoadIdentifier() &&
         *GetCurrentLoadIdentifier() == aLoadIdentifer) {
