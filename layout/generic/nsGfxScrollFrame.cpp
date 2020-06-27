@@ -791,7 +791,7 @@ bool nsHTMLScrollFrame::InInitialReflow() const {
   // end up auto-sizing so they don't overflow, and that the root basically
   // always needs a scrollbar if it did last time we loaded this page (good
   // assumption, because our initial reflow is no longer synchronous).
-  return !mHelper.mIsRoot && (GetStateBits() & NS_FRAME_FIRST_REFLOW);
+  return !mHelper.mIsRoot && HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 }
 
 void nsHTMLScrollFrame::ReflowContents(ScrollReflowInput* aState,
@@ -1224,7 +1224,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
   nsRect newScrolledAreaBounds =
       mHelper.mScrolledFrame->GetScrollableOverflowRectRelativeToParent();
   if (mHelper.mSkippedScrollbarLayout || reflowHScrollbar || reflowVScrollbar ||
-      reflowScrollCorner || (GetStateBits() & NS_FRAME_IS_DIRTY) ||
+      reflowScrollCorner || HasAnyStateBits(NS_FRAME_IS_DIRTY) ||
       didHaveHScrollbar != state.mShowHScrollbar ||
       didHaveVScrollbar != state.mShowVScrollbar ||
       !oldScrollAreaBounds.IsEqualEdges(newScrollAreaBounds) ||
@@ -2470,7 +2470,7 @@ static void AdjustViews(nsIFrame* aFrame) {
     return;
   }
 
-  if (!(aFrame->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW)) {
+  if (!aFrame->HasAnyStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW)) {
     return;
   }
 
@@ -3535,7 +3535,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // layers, so don't apply clipping again.
   mAddClipRectToLayer =
       !(mIsRoot && mOuter->PresShell()->UsesMobileViewportSizing());
-
 
   // Whether we might want to build a scrollable layer for this scroll frame
   // at some point in the future. This controls whether we add the information
@@ -5842,7 +5841,7 @@ nsresult nsXULScrollFrame::XULLayout(nsBoxLayoutState& aState) {
     PresShell()->PostReflowCallback(&mHelper);
     mHelper.mPostedReflowCallback = true;
   }
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     mHelper.mHadNonInitialReflow = true;
   }
 
@@ -6416,7 +6415,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   // reflow of a descendant.  (If the outer frame is dirty, the fixed
   // children will be re-laid out anyway)
   if (aOldScrollArea.Size() != mScrollPort.Size() &&
-      !(mOuter->GetStateBits() & NS_FRAME_IS_DIRTY) && mIsRoot) {
+      !mOuter->HasAnyStateBits(NS_FRAME_IS_DIRTY) && mIsRoot) {
     mMayHaveDirtyFixedChildren = true;
   }
 
