@@ -357,7 +357,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
   InitDynamicReflowRoot();
 
   nsIFrame* parent = mFrame->GetParent();
-  if (parent && (parent->GetStateBits() & NS_FRAME_IN_CONSTRAINED_BSIZE) &&
+  if (parent && parent->HasAnyStateBits(NS_FRAME_IN_CONSTRAINED_BSIZE) &&
       !(parent->IsScrollFrame() &&
         parent->StyleDisplay()->mOverflowY != StyleOverflow::Hidden)) {
     mFrame->AddStateBits(NS_FRAME_IN_CONSTRAINED_BSIZE);
@@ -521,7 +521,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
       (mStylePosition->mBoxSizing != StyleBoxSizing::Content &&
        mStylePadding->IsWidthDependent());
 
-  if ((mFrame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) &&
+  if (mFrame->HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT) &&
       nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
     // Create our font inflation data if we don't have it already, and
     // give it our current width information.
@@ -602,7 +602,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     }
   }
 
-  SetIResize(!(mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) && isIResize);
+  SetIResize(!mFrame->HasAnyStateBits(NS_FRAME_IS_DIRTY) && isIResize);
 
   // XXX Should we really need to null check mCBReflowInput?  (We do for
   // at least nsBoxFrame).
@@ -629,9 +629,9 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     mFlags.mIsBResizeForPercentages = true;
   } else if (aFrameType == LayoutFrameType::TableCell &&
              (mFlags.mSpecialBSizeReflow ||
-              (mFrame->FirstInFlow()->GetStateBits() &
-               NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) &&
-             (mFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+              mFrame->FirstInFlow()->HasAnyStateBits(
+                  NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) &&
+             mFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
     // Need to set the bit on the cell so that
     // mCBReflowInput->IsBResize() is set correctly below when
     // reflowing descendant.
@@ -710,7 +710,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
         break;
       }
 
-      if (rs->mFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE) {
+      if (rs->mFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
         break;  // no need to go further
       }
       rs->mFrame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
@@ -733,7 +733,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     // CalcQuirkContainingBlockHeight. But it doesn't hurt
     // us to set the bit in these cases.
   }
-  if (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) {
+  if (mFrame->HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
     // If we're reflowing everything, then we'll find out if we need
     // to re-set this.
     mFrame->RemoveStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
@@ -775,7 +775,7 @@ void ReflowInput::InitFrameType(LayoutFrameType aFrameType) {
   NS_ASSERTION(
       mFrame->StyleDisplay()->IsFloatingStyle() == disp->IsFloatingStyle(),
       "Unexpected float style");
-  if (mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+  if (mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     if (disp->IsAbsolutelyPositioned(mFrame)) {
       frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
       // XXXfr hack for making frames behave properly when in overflow container
@@ -971,7 +971,7 @@ void ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
     *aPosition += nsPoint(aComputedOffsets.left, aComputedOffsets.top);
   } else if (StylePositionProperty::Sticky == display->mPosition &&
              !aFrame->GetNextContinuation() && !aFrame->GetPrevContinuation() &&
-             !(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
+             !aFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
     // Sticky positioning for elements with multiple frames needs to be
     // computed all at once. We can't safely do that here because we might be
     // partway through (re)positioning the frames, so leave it until the scroll
@@ -1003,7 +1003,7 @@ nsIFrame* ReflowInput::GetHypotheticalBoxContainer(nsIFrame* aFrame,
   /* Check whether the containing block is currently being reflowed.
      If so, use the info from the reflow input. */
   const ReflowInput* reflowInput;
-  if (aFrame->GetStateBits() & NS_FRAME_IN_REFLOW) {
+  if (aFrame->HasAnyStateBits(NS_FRAME_IN_REFLOW)) {
     for (reflowInput = mParentReflowInput;
          reflowInput && reflowInput->mFrame != aFrame;
          reflowInput = reflowInput->mParentReflowInput) {
@@ -1022,7 +1022,7 @@ nsIFrame* ReflowInput::GetHypotheticalBoxContainer(nsIFrame* aFrame,
     /* Didn't find a reflow reflowInput for aFrame.  Just compute the
        information we want, on the assumption that aFrame already knows its
        size.  This really ought to be true by now. */
-    NS_ASSERTION(!(aFrame->GetStateBits() & NS_FRAME_IN_REFLOW),
+    NS_ASSERTION(!aFrame->HasAnyStateBits(NS_FRAME_IN_REFLOW),
                  "aFrame shouldn't be in reflow; we'll lie if it is");
     WritingMode wm = aFrame->GetWritingMode();
     // Compute CB's offset & content-box size by subtracting borderpadding from
@@ -1269,7 +1269,7 @@ void ReflowInput::CalculateHypotheticalPosition(
   // XXXbz the placeholder is not fully reflowed yet if our containing block is
   // relatively positioned...
   nsSize containerSize =
-      containingBlock->GetStateBits() & NS_FRAME_IN_REFLOW
+      containingBlock->HasAnyStateBits(NS_FRAME_IN_REFLOW)
           ? aCBReflowInput->ComputedSizeAsContainerIfConstrained()
           : containingBlock->GetSize();
   LogicalPoint placeholderOffset(
@@ -1474,7 +1474,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
   NS_ASSERTION(aFrameType != LayoutFrameType::Table,
                "InitAbsoluteConstraints should not be called on table frames");
-  NS_ASSERTION(mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+  NS_ASSERTION(mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
                "Why are we here?");
 
   const auto& styleOffset = mStylePosition->mOffset;
@@ -2010,7 +2010,7 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
   if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE ||
       (mFrame->IsTableFrame() &&
        mFrame->IsAbsolutelyPositioned(mStyleDisplay) &&
-       (mFrame->GetParent()->GetStateBits() & NS_FRAME_OUT_OF_FLOW))) {
+       mFrame->GetParent()->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW))) {
     // See if the ancestor is block-level or inline-level
     if (NS_FRAME_GET_TYPE(aContainingBlockRI->mFrameType) ==
         NS_CSS_FRAME_TYPE_INLINE) {
