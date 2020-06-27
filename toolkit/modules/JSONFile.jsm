@@ -83,6 +83,12 @@ ChromeUtils.defineModuleGetter(
  */
 const kSaveDelayMs = 1500;
 
+/**
+ * Cleansed basenames of the filenames that telemetry can be recorded for.
+ * Keep synchronized with 'objects' from Events.yaml.
+ */
+const TELEMETRY_BASENAMES = new Set(["logins", "autofillprofiles"]);
+
 // JSONFile
 
 /**
@@ -231,8 +237,7 @@ JSONFile.prototype = {
         .replace(/\.json$/, "")
         .replaceAll(/[^a-zA-Z0-9_.]/g, "");
       let errorNo = ex.winLastError || ex.unixErrno;
-      Services.telemetry.recordEvent(
-        "jsonfile",
+      this._recordTelemetry(
         "load",
         cleansedBasename,
         errorNo ? errorNo.toString() : ""
@@ -247,12 +252,7 @@ JSONFile.prototype = {
           });
           await openInfo.file.close();
           await OS.File.move(this.path, openInfo.path);
-          Services.telemetry.recordEvent(
-            "jsonfile",
-            "load",
-            cleansedBasename,
-            "invalid_json"
-          );
+          this._recordTelemetry("load", cleansedBasename, "invalid_json");
         } catch (e2) {
           Cu.reportError(e2);
         }
@@ -381,6 +381,15 @@ JSONFile.prototype = {
       return;
     }
     this.data = this._dataPostProcessor ? this._dataPostProcessor(data) : data;
+  },
+
+  _recordTelemetry(method, cleansedBasename, value) {
+    if (!TELEMETRY_BASENAMES.has(cleansedBasename)) {
+      // Avoid recording so we don't log an error in the console.
+      return;
+    }
+
+    Services.telemetry.recordEvent("jsonfile", method, cleansedBasename, value);
   },
 
   /**
