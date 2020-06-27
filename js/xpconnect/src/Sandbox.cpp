@@ -93,6 +93,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(SandboxPrivate)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SandboxPrivate)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
   tmp->UnlinkObjectsInGlobal();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -1351,7 +1352,7 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
   }
 
   // We handle the case where the context isn't in a compartment for the
-  // benefit of InitSingletonScopes.
+  // benefit of UnprivilegedJunkScope().
   vp.setObject(*sandbox);
   if (js::GetContextCompartment(cx) && !JS_WrapValue(cx, vp)) {
     return NS_ERROR_UNEXPECTED;

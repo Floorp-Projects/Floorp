@@ -7,6 +7,7 @@
 #ifndef __SANDBOXPRIVATE_H__
 #define __SANDBOXPRIVATE_H__
 
+#include "mozilla/WeakPtr.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
@@ -18,8 +19,10 @@
 class SandboxPrivate : public nsIGlobalObject,
                        public nsIScriptObjectPrincipal,
                        public nsSupportsWeakReference,
+                       public mozilla::SupportsWeakPtr<SandboxPrivate>,
                        public nsWrapperCache {
  public:
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SandboxPrivate);
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SandboxPrivate,
                                                          nsIGlobalObject)
