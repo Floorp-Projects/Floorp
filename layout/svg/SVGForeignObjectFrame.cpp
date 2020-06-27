@@ -120,7 +120,7 @@ void SVGForeignObjectFrame::Reflow(nsPresContext* aPresContext,
                                    const ReflowInput& aReflowInput,
                                    nsReflowStatus& aStatus) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
-  MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+  MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
              "Should not have been called");
 
   // Only InvalidateAndScheduleBoundsUpdate marks us with NS_FRAME_IS_DIRTY,
@@ -128,7 +128,7 @@ void SVGForeignObjectFrame::Reflow(nsPresContext* aPresContext,
   // this assertion, then we should get the presShell to skip reflow roots
   // that have a dirty parent since a reflow is going to come via the
   // reflow root's parent anyway.
-  NS_ASSERTION(!(GetStateBits() & NS_FRAME_IS_DIRTY),
+  NS_ASSERTION(!HasAnyStateBits(NS_FRAME_IS_DIRTY),
                "Reflowing while a resize is pending is wasteful");
 
   // ReflowSVG makes sure mRect is up to date before we're called.
@@ -288,7 +288,7 @@ nsIFrame* SVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint) {
                "If display lists are enabled, only hit-testing of a "
                "clipPath's contents should take this code path");
 
-  if (IsDisabled() || (GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+  if (IsDisabled() || HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     return nullptr;
   }
 
@@ -319,7 +319,7 @@ void SVGForeignObjectFrame::ReflowSVG() {
   NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
                "This call is probably a wasteful mistake");
 
-  MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+  MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
              "ReflowSVG mechanism not designed for this");
 
   if (!nsSVGUtils::NeedsReflowSVG(this)) {
@@ -481,9 +481,10 @@ gfxMatrix SVGForeignObjectFrame::GetCanvasTM() {
 // Implementation helpers
 
 void SVGForeignObjectFrame::RequestReflow(IntrinsicDirty aType) {
-  if (GetStateBits() & NS_FRAME_FIRST_REFLOW)
+  if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // If we haven't had a ReflowSVG() yet, nothing to do.
     return;
+  }
 
   nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid) {
@@ -496,7 +497,7 @@ void SVGForeignObjectFrame::RequestReflow(IntrinsicDirty aType) {
 void SVGForeignObjectFrame::DoReflow() {
   MarkInReflow();
   // Skip reflow if we're zero-sized, unless this is our first reflow.
-  if (IsDisabled() && !(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  if (IsDisabled() && !HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     return;
   }
 
