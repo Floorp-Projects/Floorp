@@ -588,7 +588,7 @@ class nsSVGUtils {
 
   static bool IsInSVGTextSubtree(const nsIFrame* aFrame) {
     // Returns true if the frame is an SVGTextFrame or one of its descendants.
-    return aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT;
+    return aFrame->HasAnyStateBits(NS_FRAME_IS_SVG_TEXT);
   }
 
   /**
