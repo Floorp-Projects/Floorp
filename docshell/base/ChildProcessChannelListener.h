@@ -37,7 +37,7 @@ class ChildProcessChannelListener final {
 
  private:
   ChildProcessChannelListener() = default;
-  ~ChildProcessChannelListener() = default;
+  ~ChildProcessChannelListener();
   struct CallbackArgs {
     RefPtr<nsDocShellLoadState> mLoadState;
     nsTArray<Endpoint> mStreamFilterEndpoints;

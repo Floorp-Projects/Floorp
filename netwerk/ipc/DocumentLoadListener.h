@@ -271,6 +271,11 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                         const Maybe<uint64_t>& aDestinationProcess,
                         nsTArray<ParentEndpoint>&& aStreamFilterEndpoints);
 
+  // A helper for RedirectToRealChannel that handles the case where we started
+  // from a content process and are process switching into the parent process.
+  RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
+  RedirectToParentProcess(uint32_t aRedirectFlags, uint32_t aLoadFlags);
+
   // Construct a LoadInfo object to use for the internal channel.
   already_AddRefed<LoadInfo> CreateLoadInfo(
       dom::CanonicalBrowsingContext* aBrowsingContext,

@@ -15,6 +15,7 @@
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/ChildProcessChannelListener.h"
 #include "mozilla/dom/ClientChannelHelper.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
@@ -1312,8 +1313,9 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
          NS_ConvertUTF16toUTF8(remoteType).get()));
     return false;
   }
-  if (NS_WARN_IF(remoteType.IsEmpty())) {
-    LOG(("Process Switch Abort: non-remote target process"));
+
+  if (NS_WARN_IF(!browsingContext->IsTop() && remoteType.IsEmpty())) {
+    LOG(("Process Switch Abort: non-remote target process for subframe"));
     return false;
   }
 
@@ -1335,20 +1337,52 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self = RefPtr{this}](BrowserParent* aBrowserParent) {
-            MOZ_DIAGNOSTIC_ASSERT(
-                aBrowserParent,
-                "Shouldn't have switched into the parent process, as we check "
-                "!remoteType.IsEmpty() earlier in MaybeTriggerProcessSwitch");
             MOZ_ASSERT(self->mChannel,
                        "Something went wrong, channel got cancelled");
-            self->TriggerRedirectToRealChannel(
-                Some(aBrowserParent->Manager()->ChildID()));
+            self->TriggerRedirectToRealChannel(Some(
+                aBrowserParent ? aBrowserParent->Manager()->ChildID() : 0));
           },
           [self = RefPtr{this}](nsresult aStatusCode) {
             MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
             self->RedirectToRealChannelFinished(aStatusCode);
           });
   return true;
+}
+
+RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
+DocumentLoadListener::RedirectToParentProcess(uint32_t aRedirectFlags,
+                                              uint32_t aLoadFlags) {
+  // This is largely the same as ContentChild::RecvCrossProcessRedirect,
+  // except without needing to deserialize or create an nsIChildChannel.
+
+  RefPtr<nsDocShellLoadState> loadState;
+  nsDocShellLoadState::CreateFromPendingChannel(
+      mChannel, mLoadIdentifier, mRedirectChannelId, getter_AddRefs(loadState));
+
+  loadState->SetLoadFlags(mLoadStateLoadFlags);
+  loadState->SetLoadType(mLoadStateLoadType);
+  if (mSessionHistoryInfo) {
+    loadState->SetSessionHistoryInfo(*mSessionHistoryInfo);
+  }
+
+  // This is poorly named now.
+  RefPtr<ChildProcessChannelListener> processListener =
+      ChildProcessChannelListener::GetSingleton();
+
+  auto promise =
+      MakeRefPtr<PDocumentChannelParent::RedirectToRealChannelPromise::Private>(
+          __func__);
+  promise->UseDirectTaskDispatch(__func__);
+  auto resolve = [promise](nsresult aResult) {
+    promise->Resolve(aResult, __func__);
+  };
+
+  nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>> endpoints;
+  processListener->OnChannelReady(loadState, mCrossProcessRedirectIdentifier,
+                                  std::move(endpoints), mTiming,
+                                  std::move(resolve));
+
+  return promise;
 }
 
 RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
@@ -1379,6 +1413,10 @@ DocumentLoadListener::RedirectToRealChannel(
   MOZ_ALWAYS_SUCCEEDS(registrar->RegisterChannel(mChannel, mRedirectChannelId));
 
   if (aDestinationProcess) {
+    if (!*aDestinationProcess) {
+      MOZ_ASSERT(aStreamFilterEndpoints.IsEmpty());
+      return RedirectToParentProcess(aRedirectFlags, aLoadFlags);
+    }
     dom::ContentParent* cp =
         dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
             ContentParentId{*aDestinationProcess});
@@ -1466,15 +1504,24 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
   if (!mStreamFilterRequests.IsEmpty()) {
     base::ProcessId pid = OtherPid();
     if (aDestinationProcess) {
-      dom::ContentParent* cp =
-          dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
-              ContentParentId(*aDestinationProcess));
-      if (cp) {
-        pid = cp->OtherPid();
+      if (*aDestinationProcess) {
+        dom::ContentParent* cp =
+            dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
+                ContentParentId(*aDestinationProcess));
+        if (cp) {
+          pid = cp->OtherPid();
+        }
+      } else {
+        pid = 0;
       }
     }
 
     for (StreamFilterRequest& request : mStreamFilterRequests) {
+      if (!pid) {
+        request.mPromise->Reject(false, __func__);
+        request.mPromise = nullptr;
+        continue;
+      }
       ParentEndpoint parent;
       nsresult rv = extensions::PStreamFilter::CreateEndpoints(
           pid, request.mChildProcessId, &parent, &request.mChildEndpoint);

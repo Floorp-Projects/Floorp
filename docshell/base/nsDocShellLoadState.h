@@ -50,6 +50,7 @@ class nsDocShellLoadState final {
 
   static nsresult CreateFromPendingChannel(nsIChannel* aPendingChannel,
                                            uint64_t aLoadIdentifier,
+                                           uint64_t aRegistarId,
                                            nsDocShellLoadState** aResult);
 
   static nsresult CreateFromLoadURIOptions(
@@ -228,6 +229,10 @@ class nsDocShellLoadState final {
 
   nsIChannel* GetPendingRedirectedChannel() {
     return mPendingRedirectedChannel;
+  }
+
+  uint64_t GetPendingRedirectChannelRegistrarId() const {
+    return mChannelRegistrarId;
   }
 
   void SetOriginalURIString(const nsCString& aOriginalURI) {
@@ -425,6 +430,11 @@ class nsDocShellLoadState final {
   // An optional value to pass to nsIDocShell::setCancelJSEpoch
   // when initiating the load.
   mozilla::Maybe<int32_t> mCancelContentJSEpoch;
+
+  // If mPendingRedirectChannel is set, then this is the identifier
+  // that the parent-process equivalent channel has been registered
+  // with using RedirectChannelRegistrar.
+  uint64_t mChannelRegistrarId;
 
   // An identifier to make it possible to examine if two loads are
   // equal, and which browsing context they belong to (see

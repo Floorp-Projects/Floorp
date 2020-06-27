@@ -653,6 +653,9 @@ class nsDocShell final : public nsDocLoader,
   nsresult OpenInitializedChannel(nsIChannel* aChannel,
                                   nsIURILoader* aURILoader,
                                   uint32_t aOpenFlags);
+  nsresult OpenRedirectedChannel(nsDocShellLoadState* aLoadState);
+
+  void UpdateMixedContentChannelForNewLoad(nsIChannel* aChannel);
 
   MOZ_CAN_RUN_SCRIPT
   nsresult ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
