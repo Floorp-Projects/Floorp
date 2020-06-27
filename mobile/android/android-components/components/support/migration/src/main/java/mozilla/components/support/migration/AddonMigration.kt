@@ -22,7 +22,10 @@ internal var supportedAddonsFallback = listOf(
     "{73a6fe31-595d-460b-a920-fcc0f8843232}", // noscript
     "addon@darkreader.org",
     "jid1-MnnxcxisBPnSXQ@jetpack", // Privacy badger
-    "{2e5ff8c8-32fe-46d0-9fc8-6b8986621f3c}" // Search by Image
+    "{2e5ff8c8-32fe-46d0-9fc8-6b8986621f3c}", // Search by Image
+    "jid1-BoFifL9Vbdl2zQ@jetpack", // Decentraleyes
+    "{7b1bf0b6-a1b9-42b0-b75d-252036438bdc}", // Youtube High Definition
+    "woop-NoopscooPsnSXQ@jetpack" // Privacy Possum
 )
 
 @VisibleForTesting
