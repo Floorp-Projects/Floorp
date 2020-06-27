@@ -93,15 +93,15 @@
   margin-inline-end: 2px;
 }
 
-#placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon,
+#placesToolbar > toolbarbutton[disabled] > .toolbarbutton-icon,
 #placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
-#placesToolbar > toolbarbutton[type="menu"][disabled="true"] > .toolbarbutton-menu-dropmarker,
+#placesToolbar > toolbarbutton[type="menu"][disabled] > .toolbarbutton-menu-dropmarker,
 #placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive[type="menu"] > .toolbarbutton-menu-dropmarker {
   opacity: .5;
 }
 
-#placesToolbar > toolbarbutton:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon,
-#placesToolbar > toolbarbutton:-moz-window-inactive[type="menu"][disabled="true"] > .toolbarbutton-menu-dropmarker {
+#placesToolbar > toolbarbutton:-moz-window-inactive[disabled] > .toolbarbutton-icon,
+#placesToolbar > toolbarbutton:-moz-window-inactive[type="menu"][disabled] > .toolbarbutton-menu-dropmarker {
   opacity: .25;
 }
 
@@ -181,14 +181,6 @@
 /**
  * info pane
  */
-
-#infoBoxExpander {
-  margin: 2px;
-}
-
-#infoBoxExpanderLabel {
-  display: none;
-}
 
 #itemsCountText,
 #selectItemDescription {

@@ -2,11 +2,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@media (prefers-color-scheme: dark) {
+  .expander-up,
+  .expander-down {
+    --expander-background-color-selected: rgba(249, 249, 250, 0.15);
+    --expander-background-color-hover: rgba(250, 250, 249, 0.1);
+    -moz-appearance: none;
+  }
+
+  .expander-up:hover,
+  .expander-down:hover {
+    background-color: var(--expander-background-color-hover);
+  }
+
+  .expander-up:active:hover,
+  .expander-down:active:hover {
+    background-color: var(--expander-background-color-selected);
+  }
+}
+
 #editBookmarkPanelRows > vbox {
   margin-bottom: .5em;
 }
 
-/**** folder menulist ****/
+/* Folder menulist */
+
 #editBMPanel_folderMenuList::part(icon) {
   width: 16px;
   height: 16px;
@@ -22,14 +42,23 @@
   fill: currentColor;
 }
 
-
-/**** expanders ****/
+/* Expanders */
 
 .expander-up,
 .expander-down {
   min-width: 0;
+  padding: 1px;
   margin: 0;
   margin-inline-end: 4px;
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+  color: unset;
+}
+
+.expander-up {
+  transform: scaleY(-1);
 }
 
 .expander-up > .button-box,
@@ -37,17 +66,8 @@
   padding: 0;
 }
 
-.expander-up {
-  list-style-image: url("chrome://global/skin/icons/collapse.png");
-}
-
-.expander-down {
-  list-style-image: url("chrome://global/skin/icons/expand.png");
-}
-
 #editBMPanel_folderTree {
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin-block: 2px;
 }
 
 /* Hide the value column of the tag autocomplete popup
@@ -62,15 +82,14 @@
 #editBMPanel_tagsSelector > richlistitem > image {
   -moz-appearance: checkbox;
   -moz-box-align: center;
-  margin: 0px 2px;
+  margin: 0 2px;
   border: 1px solid -moz-DialogText;
   min-width: 13px;
   min-height: 13px;
   background: -moz-Field no-repeat 50% 50%;
 }
 
-
-/* ::::: bookmark panel dropdown icons ::::: */
+/* Bookmark panel dropdown icons */
 
 #editBMPanel_folderMenuList[selectedGuid="toolbar_____"],
 #editBMPanel_toolbarFolderItem {

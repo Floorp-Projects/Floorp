@@ -6,7 +6,8 @@
   margin-bottom: .5em;
 }
 
-/**** folder menulist ****/
+/* Folder menulist */
+
 #editBMPanel_folderMenuList::part(icon) {
   width: 16px;
   height: 16px;
@@ -22,8 +23,7 @@
   fill: currentColor;
 }
 
-
-/**** expanders ****/
+/* Expanders */
 
 .expander-up,
 .expander-down {
@@ -41,8 +41,7 @@
 }
 
 #editBMPanel_folderTree {
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin-block: 2px;
 }
 
 /* Hide the value column of the tag autocomplete popup
@@ -61,7 +60,6 @@
   min-width: 13px;
   min-height: 13px;
 }
-
 
 /* Bookmark panel dropdown menu items */
 #editBMPanel_folderMenuList[selectedGuid="toolbar_____"],
