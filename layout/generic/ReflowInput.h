@@ -944,9 +944,9 @@ struct ReflowInput : public SizeComputationInput {
     // were tested there along with NS_FRAME_CONTAINS_RELATIVE_BSIZE.
     // This would need to be combined with a slight change in which
     // frames NS_FRAME_CONTAINS_RELATIVE_BSIZE is marked on.
-    return (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) || IsIResize() ||
+    return mFrame->HasAnyStateBits(NS_FRAME_IS_DIRTY) || IsIResize() ||
            (IsBResize() &&
-            (mFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE));
+            mFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE));
   }
 
   // This method doesn't apply min/max computed widths to the value passed in.
