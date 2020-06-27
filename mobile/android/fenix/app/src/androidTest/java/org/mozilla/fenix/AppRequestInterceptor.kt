@@ -14,16 +14,18 @@ import org.mozilla.fenix.ui.robots.appContext
  * This class overrides the application's request interceptor to
  * deactivate the FxA web channel
  * which is not supported on the staging servers.
-*/
+ */
 
 class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
         hasUserGesture: Boolean,
-        isSameDomain: Boolean
+        isSameDomain: Boolean,
+        isRedirect: Boolean
     ): RequestInterceptor.InterceptionResponse? {
         return appContext.components.services.accountsAuthFeature.interceptor.onLoadRequest(
-            engineSession, uri, hasUserGesture, isSameDomain)
+            engineSession, uri, hasUserGesture, isSameDomain, isRedirect
+        )
     }
 }

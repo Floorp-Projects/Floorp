@@ -101,7 +101,10 @@ class DefaultBrowserToolbarController(
         }
 
         sessionManager.selectedSession?.searchTerms = text
-        activity.components.useCases.searchUseCases.defaultSearch.invoke(text)
+        activity.components.useCases.searchUseCases.defaultSearch.invoke(
+            text,
+            session = sessionManager.selectedSession
+        )
     }
 
     override fun handleToolbarClick() {

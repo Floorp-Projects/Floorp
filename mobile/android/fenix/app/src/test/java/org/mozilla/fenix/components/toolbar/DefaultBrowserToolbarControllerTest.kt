@@ -160,7 +160,7 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleToolbarPasteAndGo(pastedText)
         verifyOrder {
             currentSession.searchTerms = "Mozilla"
-            searchUseCases.defaultSearch.invoke(pastedText)
+            searchUseCases.defaultSearch.invoke(pastedText, currentSession)
         }
     }
 

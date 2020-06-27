@@ -126,9 +126,15 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             searchFeature.set(
                 feature = SearchFeature(components.core.store) {
                     if (it.isPrivate) {
-                        components.useCases.searchUseCases.newPrivateTabSearch.invoke(it.query)
+                        components.useCases.searchUseCases.newPrivateTabSearch.invoke(
+                            it.query,
+                            parentSession = getSessionById()
+                        )
                     } else {
-                        components.useCases.searchUseCases.newTabSearch.invoke(it.query)
+                        components.useCases.searchUseCases.newTabSearch.invoke(
+                            it.query,
+                            parentSession = getSessionById()
+                        )
                     }
                 },
                 owner = this,

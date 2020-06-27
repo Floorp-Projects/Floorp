@@ -102,13 +102,21 @@ class AwesomeBarView(
     }
 
     private val searchUseCase = object : SearchUseCases.SearchUseCase {
-        override fun invoke(searchTerms: String, searchEngine: SearchEngine?) {
+        override fun invoke(
+            searchTerms: String,
+            searchEngine: SearchEngine?,
+            parentSession: Session?
+        ) {
             interactor.onSearchTermsTapped(searchTerms)
         }
     }
 
     private val shortcutSearchUseCase = object : SearchUseCases.SearchUseCase {
-        override fun invoke(searchTerms: String, searchEngine: SearchEngine?) {
+        override fun invoke(
+            searchTerms: String,
+            searchEngine: SearchEngine?,
+            parentSession: Session?
+        ) {
             interactor.onSearchTermsTapped(searchTerms)
         }
     }
