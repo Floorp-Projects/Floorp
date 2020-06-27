@@ -4,14 +4,25 @@
 
 //! Very simple implementation of logging via the Windows Event Log
 
+use std::ffi::OsStr;
 use std::ptr;
 
-use crate::ole_utils::to_u16_nul;
 use log::{Level, Metadata, Record};
 use winapi::shared::minwindef::WORD;
 use winapi::um::{winbase, winnt};
+use wio::wide::ToWide;
 
-pub struct EventLogger;
+pub struct EventLogger {
+    pub name: Vec<u16>,
+}
+
+impl EventLogger {
+    pub fn new(name: impl AsRef<OsStr>) -> Self {
+        EventLogger {
+            name: name.to_wide_null(),
+        }
+    }
+}
 
 impl log::Log for EventLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
@@ -23,13 +34,13 @@ impl log::Log for EventLogger {
             return;
         }
 
-        let name = to_u16_nul(crate::DESCRIPTION);
-        let msg = to_u16_nul(format!("{} - {}", record.level(), record.args()));
+        let name = self.name.as_ptr();
+        let msg = format!("{} - {}", record.level(), record.args()).to_wide_null();
 
         // Open and close the event log handle on every message, for simplicity.
         let event_log;
         unsafe {
-            event_log = winbase::RegisterEventSourceW(ptr::null(), name.as_ptr());
+            event_log = winbase::RegisterEventSourceW(ptr::null(), name);
             if event_log.is_null() {
                 return;
             }

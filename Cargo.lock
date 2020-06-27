@@ -5240,6 +5240,7 @@ dependencies = [
  "raw-cpuid",
  "rust-ini",
  "winapi 0.3.7",
+ "wineventlog",
  "wio",
  "xml-rs",
 ]
@@ -5650,6 +5651,15 @@ checksum = "96f5016b18804d24db43cebf3c77269e7569b8954a8464501c216cc5e070eaa9"
 dependencies = [
  "winapi 0.3.7",
  "winapi-util",
+]
+
+[[package]]
+name = "wineventlog"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "winapi 0.3.7",
+ "wio",
 ]
 
 [[package]]
