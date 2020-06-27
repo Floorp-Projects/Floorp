@@ -14,7 +14,7 @@ use moz_task::{Task, TaskRunnable, ThreadPtrHandle};
 use nserror::nsresult;
 use nsstring::{nsACString, nsCString, nsString};
 use storage_variant::HashPropertyBag;
-use xpcom::interfaces::{mozIServicesLogger, mozISyncedBookmarksMirrorProgressListener};
+use xpcom::interfaces::{mozIServicesLogSink, mozISyncedBookmarksMirrorProgressListener};
 
 extern "C" {
     fn NS_GeneratePlacesGUID(guid: *mut nsACString) -> nsresult;
@@ -107,14 +107,14 @@ impl dogear::Driver for Driver {
 
 pub struct Logger {
     pub max_level: LevelFilter,
-    logger: Option<ThreadPtrHandle<mozIServicesLogger>>,
+    logger: Option<ThreadPtrHandle<mozIServicesLogSink>>,
 }
 
 impl Logger {
     #[inline]
     pub fn new(
         max_level: LevelFilter,
-        logger: Option<ThreadPtrHandle<mozIServicesLogger>>,
+        logger: Option<ThreadPtrHandle<mozIServicesLogSink>>,
     ) -> Logger {
         Logger { max_level, logger }
     }
@@ -153,7 +153,7 @@ impl Log for Logger {
 /// Logs a message to the mirror logger. This task is created on the async
 /// thread, and dispatched to the main thread.
 struct LogTask {
-    logger: ThreadPtrHandle<mozIServicesLogger>,
+    logger: ThreadPtrHandle<mozIServicesLogSink>,
     level: Level,
     message: nsString,
 }
