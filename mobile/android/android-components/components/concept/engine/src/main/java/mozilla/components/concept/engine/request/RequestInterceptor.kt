@@ -56,6 +56,7 @@ interface RequestInterceptor {
      * @param uri The the URI of the request.
      * @param hasUserGesture If the request if triggered by the user then true, else false.
      * @param isSameDomain If the request is the same domain as the current URL then true, else false.
+     * @param isRedirect If the request is due to redirect then true, else false.
      * @return An [InterceptionResponse] object containing alternative content
      * or an alternative URL. Null if the original request should continue to
      * be loaded.
@@ -64,7 +65,8 @@ interface RequestInterceptor {
         engineSession: EngineSession,
         uri: String,
         hasUserGesture: Boolean,
-        isSameDomain: Boolean
+        isSameDomain: Boolean,
+        isRedirect: Boolean
     ): InterceptionResponse? = null
 
     /**

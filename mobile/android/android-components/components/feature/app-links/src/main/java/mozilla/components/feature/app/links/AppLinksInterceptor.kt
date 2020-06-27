@@ -57,16 +57,17 @@ class AppLinksInterceptor(
         engineSession: EngineSession,
         uri: String,
         hasUserGesture: Boolean,
-        isSameDomain: Boolean
+        isSameDomain: Boolean,
+        isRedirect: Boolean
     ): RequestInterceptor.InterceptionResponse? {
         val uriScheme = Uri.parse(uri).scheme
         val engineSupportsScheme = engineSupportedSchemes.contains(uriScheme)
 
         val doNotIntercept = when {
             uriScheme == null -> true
-            // If request not from user gesture or if we're already on the site,
-            // and we're clicking around then let's not go to an external app.
-            (!hasUserGesture || isSameDomain) && engineSupportsScheme -> true
+            // If request not from an user gesture and not from a redirect
+            // or if we're already on the site then let's not go to an external app.
+            ((!hasUserGesture && !isRedirect) || isSameDomain) && engineSupportsScheme -> true
             // If scheme not in whitelist then follow user preference
             (!interceptLinkClicks || !launchInApp()) && engineSupportsScheme -> true
             // Never go to an external app when scheme is in blacklist

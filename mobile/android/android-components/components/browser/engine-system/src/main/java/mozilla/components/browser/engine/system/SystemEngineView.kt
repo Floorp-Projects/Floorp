@@ -13,6 +13,7 @@ import android.graphics.Canvas
 import android.net.Uri
 import android.net.http.SslError
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Handler
 import android.os.Message
 import android.util.AttributeSet
@@ -236,13 +237,20 @@ class SystemEngineView @JvmOverloads constructor(
                 }
             }
 
+            val isRedirect = if (SDK_INT >= Build.VERSION_CODES.N) {
+                request.isRedirect
+            } else {
+                false
+            }
+
             session?.let { session ->
                 session.settings.requestInterceptor?.let { interceptor ->
                     interceptor.onLoadRequest(
                         session,
                         request.url.toString(),
                         request.hasGesture(),
-                        session.currentUrl.tryGetHostFromUrl() == request.url.host
+                        session.currentUrl.tryGetHostFromUrl() == request.url.host,
+                        isRedirect
                     )?.apply {
                         return when (this) {
                             is InterceptionResponse.Content ->
