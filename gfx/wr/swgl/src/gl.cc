@@ -1149,26 +1149,45 @@ void DeleteProgram(GLuint n) {
 void LinkProgram(GLuint program) {
   Program& p = ctx->programs[program];
   assert(p.impl);
+  if (!p.impl) {
+    return;
+  }
   assert(p.impl->interpolants_size() <= sizeof(Interpolants));
   if (!p.vert_impl) p.vert_impl = p.impl->get_vertex_shader();
   if (!p.frag_impl) p.frag_impl = p.impl->get_fragment_shader();
 }
 
+GLint GetLinkStatus(GLuint program) {
+  if (auto* p = ctx->programs.find(program)) {
+    return p->impl ? 1 : 0;
+  }
+  return 0;
+}
+
 void BindAttribLocation(GLuint program, GLuint index, char* name) {
   Program& p = ctx->programs[program];
   assert(p.impl);
+  if (!p.impl) {
+    return;
+  }
   p.impl->bind_attrib(name, index);
 }
 
 GLint GetAttribLocation(GLuint program, char* name) {
   Program& p = ctx->programs[program];
   assert(p.impl);
+  if (!p.impl) {
+    return -1;
+  }
   return p.impl->get_attrib(name);
 }
 
 GLint GetUniformLocation(GLuint program, char* name) {
   Program& p = ctx->programs[program];
   assert(p.impl);
+  if (!p.impl) {
+    return -1;
+  }
   GLint loc = p.impl->get_uniform(name);
   // debugf("location: %d\n", loc);
   return loc;

@@ -2128,9 +2128,12 @@ impl Device {
         Ok(())
     }
 
-    pub fn bind_program(&mut self, program: &Program) {
+    pub fn bind_program(&mut self, program: &Program) -> bool {
         debug_assert!(self.inside_frame);
         debug_assert!(program.is_initialized());
+        if !program.is_initialized() {
+            return false;
+        }
         #[cfg(debug_assertions)]
         {
             self.shader_is_ready = true;
@@ -2141,6 +2144,7 @@ impl Device {
             self.bound_program = program.id;
             self.program_mode_id = UniformLocation(program.u_mode);
         }
+        true
     }
 
     pub fn create_texture(
