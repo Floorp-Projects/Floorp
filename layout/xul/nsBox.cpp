@@ -32,7 +32,7 @@ nsresult nsIFrame::BeginXULLayout(nsBoxLayoutState& aState) {
   // XXXldb Is this still needed?
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 
-  if (GetStateBits() & NS_FRAME_IS_DIRTY) {
+  if (HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
     // If the parent is dirty, all the children are dirty (ReflowInput
     // does this too).
     nsIFrame* box;
@@ -272,7 +272,7 @@ nsresult nsIFrame::SyncXULLayout(nsBoxLayoutState& aBoxLayoutState) {
   }
   */
 
-  if (GetStateBits() & NS_FRAME_IS_DIRTY) {
+  if (HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
     XULRedraw(aBoxLayoutState);
   }
 
