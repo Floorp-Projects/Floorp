@@ -102,9 +102,9 @@ class nsInlineFrame : public nsContainerFrame {
   bool IsFirst() const {
     // If the frame's bidi visual state is set, return is-first state
     // else return true if it's the first continuation.
-    return (GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
-               ? !!(GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST)
-               : (!GetPrevInFlow());
+    return HasAnyStateBits(NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
+               ? HasAnyStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST)
+               : !GetPrevInFlow();
   }
 
   /**
@@ -113,9 +113,9 @@ class nsInlineFrame : public nsContainerFrame {
   bool IsLast() const {
     // If the frame's bidi visual state is set, return is-last state
     // else return true if it's the last continuation.
-    return (GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
-               ? !!(GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST)
-               : (!GetNextInFlow());
+    return HasAnyStateBits(NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
+               ? HasAnyStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST)
+               : !GetNextInFlow();
   }
 
   // Restyles the block wrappers around our non-inline-outside kids.
