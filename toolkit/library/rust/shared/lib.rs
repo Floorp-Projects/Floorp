@@ -6,7 +6,6 @@
 
 extern crate geckoservo;
 
-extern crate app_services_logger;
 #[cfg(feature = "cubeb-remoting")]
 extern crate audioipc_client;
 #[cfg(feature = "cubeb-remoting")]
@@ -83,10 +82,8 @@ extern crate remote;
 
 extern crate gecko_logger;
 
-extern crate log;
-use log::info;
-
-use std::{ffi::CStr, os::raw::c_char};
+use std::ffi::CStr;
+use std::os::raw::c_char;
 
 use gecko_logger::GeckoLogger;
 
@@ -103,15 +100,6 @@ pub extern "C" fn GkRust_Shutdown() {}
 #[no_mangle]
 pub extern "C" fn intentional_panic(message: *const c_char) {
     panic!("{}", unsafe { CStr::from_ptr(message) }.to_string_lossy());
-}
-
-/// Used to implement `nsIDebug2::rustLog` for testing purposes.
-#[no_mangle]
-pub extern "C" fn debug_log(target: *const c_char, message: *const c_char) {
-    unsafe {
-        // NOTE: The `info!` log macro is used here because we have the `release_max_level_info` feature set.
-        info!(target: CStr::from_ptr(target).to_str().unwrap(), "{}", CStr::from_ptr(message).to_str().unwrap());
-    }
 }
 
 #[cfg(feature = "oom_with_hook")]

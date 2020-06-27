@@ -216,6 +216,7 @@ impl TaskRunnable {
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
         {
             Ok(_) => {
+                assert!(!is_current_thread(&self.original_thread));
                 self.task.run();
                 Self::dispatch(RefPtr::new(self), &self.original_thread)
             }

@@ -9,10 +9,6 @@ with Files('**'):
 
 TEST_DIRS += ['tests']
 
-EXPORTS.mozilla.appservices += [
-    'app_services_logger/AppServicesLoggerComponents.h',
-]
-
 EXTRA_COMPONENTS += [
     'servicesComponents.manifest',
 ]
@@ -41,7 +37,3 @@ TESTING_JS_MODULES.services.common += [
 ]
 
 SPHINX_TREES['services'] = 'docs'
-
-XPCOM_MANIFESTS += [
-    'app_services_logger/components.conf',
-]
