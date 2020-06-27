@@ -972,8 +972,7 @@ class nsDisplayListBuilder {
    * rect, because it may have out-of-flows that do so.
    */
   bool ShouldDescendIntoFrame(nsIFrame* aFrame, bool aVisible) const {
-    return (aFrame->GetStateBits() &
-            NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) ||
+    return aFrame->HasAnyStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) ||
            (aVisible && aFrame->ForceDescendIntoIfVisible()) ||
            GetIncludeAllOutOfFlows();
   }
