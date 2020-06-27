@@ -196,7 +196,7 @@ void nsSubDocumentFrame::ShowViewer() {
       mCallingShow = false;
       mDidCreateDoc = didCreateDoc;
 
-      if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+      if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
         frameloader->UpdatePositionAndSize(this);
       }
 
@@ -264,7 +264,7 @@ mozilla::PresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
 }
 
 ScreenIntSize nsSubDocumentFrame::GetSubdocumentSize() {
-  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+  if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     RefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader) {
       nsCOMPtr<Document> oldContainerDoc;
