@@ -1266,9 +1266,8 @@ void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
   if (!mBlobImpl) {
     payload.SetNull();
   } else {
-    AutoSafeJSContext cx;
-
-    JS::Rooted<JSObject*> globalObject(cx, JS::CurrentGlobalOrNull(cx));
+    JS::Rooted<JSObject*> globalObject(RootingCx(),
+                                       xpc::UnprivilegedJunkScope(fallible));
     if (NS_WARN_IF(!globalObject)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;

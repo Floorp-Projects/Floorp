@@ -14401,7 +14401,12 @@ class CGDictionary(CGThing):
                 // side-effects, followed by a call to JS::ToJSONMaybeSafely,
                 // which likewise guarantees no side-effects for the sorts of
                 // things we will pass it.
-                JSAutoRealm ar(cx, UnprivilegedJunkScopeOrWorkerGlobal());
+                JSObject* scope = UnprivilegedJunkScopeOrWorkerGlobal(fallible);
+                if (!scope) {
+                  JS_ReportOutOfMemory(cx);
+                  return false;
+                }
+                JSAutoRealm ar(cx, scope);
                 JS::Rooted<JS::Value> val(cx);
                 if (!ToObjectInternal(cx, &val)) {
                   return false;
