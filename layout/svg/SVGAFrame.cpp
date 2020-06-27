@@ -14,18 +14,21 @@
 #include "nsSVGUtils.h"
 #include "SVGLengthList.h"
 
-using namespace mozilla;
+nsIFrame* NS_NewSVGAFrame(mozilla::PresShell* aPresShell,
+                          mozilla::ComputedStyle* aStyle);
 
-class nsSVGAFrame final : public nsSVGDisplayContainerFrame {
-  friend nsIFrame* NS_NewSVGAFrame(mozilla::PresShell* aPresShell,
-                                   ComputedStyle* aStyle);
+namespace mozilla {
+
+class SVGAFrame final : public nsSVGDisplayContainerFrame {
+  friend nsIFrame* ::NS_NewSVGAFrame(mozilla::PresShell* aPresShell,
+                                     ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGAFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+  explicit SVGAFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
 
  public:
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGAFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGAFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -43,20 +46,26 @@ class nsSVGAFrame final : public nsSVGDisplayContainerFrame {
 #endif
 };
 
+}  // namespace mozilla
+
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame* NS_NewSVGAFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGAFrame(aStyle, aPresShell->GetPresContext());
+nsIFrame* NS_NewSVGAFrame(mozilla::PresShell* aPresShell,
+                          mozilla::ComputedStyle* aStyle) {
+  return new (aPresShell)
+      mozilla::SVGAFrame(aStyle, aPresShell->GetPresContext());
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGAFrame)
+namespace mozilla {
+
+NS_IMPL_FRAMEARENA_HELPERS(SVGAFrame)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
 #ifdef DEBUG
-void nsSVGAFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                       nsIFrame* aPrevInFlow) {
+void SVGAFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                     nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::a),
                "Trying to construct an SVGAFrame for a "
                "content element that doesn't support the right interfaces");
@@ -65,8 +74,8 @@ void nsSVGAFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 #endif /* DEBUG */
 
-nsresult nsSVGAFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                       int32_t aModType) {
+nsresult SVGAFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                     int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::transform) {
     // We don't invalidate for transform changes (the layers code does that).
     // Also note that SVGTransformableElement::GetAttributeChangeHint will
@@ -91,3 +100,5 @@ nsresult nsSVGAFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 
   return NS_OK;
 }
+
+}  // namespace mozilla
