@@ -19,14 +19,13 @@
 #include "mozilla/dom/SVGMarkerElementBinding.h"
 #include "mozilla/UniquePtr.h"
 
-class nsSVGMarkerFrame;
-
 nsresult NS_NewSVGMarkerElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 
 struct SVGMark;
+class SVGMarkerFrame;
 
 namespace dom {
 
@@ -36,7 +35,7 @@ static const uint16_t SVG_MARKER_ORIENT_AUTO_START_REVERSE = 3;
 typedef SVGElement SVGMarkerElementBase;
 
 class SVGMarkerElement : public SVGMarkerElementBase {
-  friend class ::nsSVGMarkerFrame;
+  friend class mozilla::SVGMarkerFrame;
 
  protected:
   friend nsresult(::NS_NewSVGMarkerElement(

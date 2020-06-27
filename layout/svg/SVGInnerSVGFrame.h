@@ -7,24 +7,28 @@
 #ifndef __NS_SVGINNERSVGFRAME_H__
 #define __NS_SVGINNERSVGFRAME_H__
 
-#include "nsSVGViewportFrame.h"
+#include "SVGViewportFrame.h"
 
 namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-class nsSVGInnerSVGFrame final : public nsSVGViewportFrame {
-  friend nsIFrame* NS_NewSVGInnerSVGFrame(mozilla::PresShell* aPresShell,
-                                          ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGInnerSVGFrame(mozilla::PresShell* aPresShell,
+                                 mozilla::ComputedStyle* aStyle);
+
+namespace mozilla {
+
+class SVGInnerSVGFrame final : public SVGViewportFrame {
+  friend nsIFrame* ::NS_NewSVGInnerSVGFrame(mozilla::PresShell* aPresShell,
+                                            ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGInnerSVGFrame(ComputedStyle* aStyle,
-                              nsPresContext* aPresContext)
-      : nsSVGViewportFrame(aStyle, aPresContext, kClassID) {}
+  explicit SVGInnerSVGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : SVGViewportFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGInnerSVGFrame)
+  NS_DECL_FRAMEARENA_HELPERS(SVGInnerSVGFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -37,5 +41,7 @@ class nsSVGInnerSVGFrame final : public nsSVGViewportFrame {
   }
 #endif
 };
+
+}  // namespace mozilla
 
 #endif
