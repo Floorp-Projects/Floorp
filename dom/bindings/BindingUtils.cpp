@@ -4184,12 +4184,18 @@ void DeprecationWarning(const GlobalObject& aGlobal,
 }
 
 namespace binding_detail {
-JSObject* UnprivilegedJunkScopeOrWorkerGlobal() {
+JSObject* UnprivilegedJunkScopeOrWorkerGlobal(const fallible_t&) {
   if (NS_IsMainThread()) {
-    return xpc::UnprivilegedJunkScope();
+    return xpc::UnprivilegedJunkScope(fallible);
   }
 
   return GetCurrentThreadWorkerGlobal();
+}
+
+JSObject* UnprivilegedJunkScopeOrWorkerGlobal() {
+  JSObject* scope = UnprivilegedJunkScopeOrWorkerGlobal(fallible);
+  MOZ_RELEASE_ASSERT(scope);
+  return scope;
 }
 }  // namespace binding_detail
 

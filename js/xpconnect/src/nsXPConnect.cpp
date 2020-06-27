@@ -84,9 +84,6 @@ void nsXPConnect::InitJSContext() {
   gSelf->mContext = xpccx;
   gSelf->mRuntime = xpccx->Runtime();
 
-  // Initialize our singleton scopes.
-  gSelf->mRuntime->InitSingletonScopes();
-
   mozJSComponentLoader::InitStatics();
 
   // Initialize the script preloader cache.

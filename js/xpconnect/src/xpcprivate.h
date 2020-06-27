@@ -567,10 +567,27 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
-  JSObject* UnprivilegedJunkScope() { return mUnprivilegedJunkScope; }
+  /**
+   * The unprivileged junk scope is an unprivileged sandbox global used for
+   * convenience by certain operations which need an unprivileged global but
+   * don't have one immediately handy. It should generally be avoided when
+   * possible.
+   *
+   * The scope is created lazily when it is needed, and held weakly so that it
+   * is destroyed when there are no longer any remaining external references to
+   * it. This means that under low memory conditions, when the scope does not
+   * already exist, we may not be able to create one. In these circumstances,
+   * the infallible version of this API will abort, and the fallible version
+   * will return null. Callers should therefore prefer the fallible version when
+   * on a codepath which can already return failure, but may use the infallible
+   * one otherwise.
+   */
+  JSObject* UnprivilegedJunkScope();
+  JSObject* UnprivilegedJunkScope(const mozilla::fallible_t&);
+
+  bool IsUnprivilegedJunkScope(JSObject*);
   JSObject* LoaderGlobal();
 
-  void InitSingletonScopes();
   void DeleteSingletonScopes();
 
   void SystemIsBeingShutDown();
@@ -621,7 +638,7 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   nsTArray<xpcGCCallback> extraGCCallbacks;
   JS::GCSliceCallback mPrevGCSliceCallback;
   JS::DoCycleCollectionCallback mPrevDoCycleCollectionCallback;
-  JS::PersistentRootedObject mUnprivilegedJunkScope;
+  mozilla::WeakPtr<SandboxPrivate> mUnprivilegedJunkScope;
   JS::PersistentRootedObject mLoaderGlobal;
   RefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
 
