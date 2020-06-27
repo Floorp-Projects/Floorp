@@ -363,8 +363,10 @@ ContentPrincipal::SetDomain(nsIURI* aDomain) {
   };
   JSPrincipals* principals =
       nsJSPrincipals::get(static_cast<nsIPrincipal*>(this));
-  AutoSafeJSContext cx;
-  JS::IterateRealmsWithPrincipals(cx, principals, nullptr, cb);
+
+  dom::AutoJSAPI jsapi;
+  jsapi.Init();
+  JS::IterateRealmsWithPrincipals(jsapi.cx(), principals, nullptr, cb);
 
   return NS_OK;
 }

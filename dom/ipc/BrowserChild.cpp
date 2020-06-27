@@ -178,28 +178,6 @@ PresShell* BrowserChild::GetTopLevelPresShell() const {
   return nullptr;
 }
 
-void BrowserChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
-                                                 const nsAString& aJSONData) {
-  AutoSafeJSContext cx;
-  JS::Rooted<JS::Value> json(cx, JS::NullValue());
-  dom::ipc::StructuredCloneData data;
-  if (JS_ParseJSON(cx, static_cast<const char16_t*>(aJSONData.BeginReading()),
-                   aJSONData.Length(), &json)) {
-    ErrorResult rv;
-    data.Write(cx, json, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
-      return;
-    }
-  }
-
-  RefPtr<BrowserChildMessageManager> kungFuDeathGrip(
-      mBrowserChildMessageManager);
-  RefPtr<nsFrameMessageManager> mm = kungFuDeathGrip->GetMessageManager();
-  mm->ReceiveMessage(static_cast<EventTarget*>(kungFuDeathGrip), nullptr,
-                     aMessageName, false, &data, nullptr, IgnoreErrors());
-}
-
 bool BrowserChild::UpdateFrame(const RepaintRequest& aRequest) {
   MOZ_ASSERT(aRequest.GetScrollId() != ScrollableLayerGuid::NULL_SCROLL_ID);
 

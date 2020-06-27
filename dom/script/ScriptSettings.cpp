@@ -747,11 +747,16 @@ AutoSlowOperation::AutoSlowOperation(
 void AutoSlowOperation::CheckForInterrupt() {
   // For now we support only main thread!
   if (mIsMainThread) {
-    // JS_CheckForInterrupt expects us to be in a realm.
-    AutoJSAPI jsapi;
-    if (jsapi.Init(xpc::UnprivilegedJunkScope())) {
-      JS_CheckForInterrupt(jsapi.cx());
-    }
+    // JS_CheckForInterrupt expects us to be in a realm, so we use a junk scope.
+    // In principle, it doesn't matter which one we use, since we aren't really
+    // running scripts here, and none of our interrupt callbacks can stop
+    // scripts in a junk scope anyway. In practice, though, the privileged junk
+    // scope is the same as the JSM global, and therefore always exists, while
+    // the unprivileged junk scope is created lazily, and may not exist until we
+    // try to use it. So we use the former for the sake of efficiency.
+    dom::AutoJSAPI jsapi;
+    MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
+    JS_CheckForInterrupt(jsapi.cx());
   }
 }
 

@@ -2702,8 +2702,14 @@ void AsyncErrorReporter::SetException(JSContext* aCx,
 
 NS_IMETHODIMP AsyncErrorReporter::Run() {
   AutoJSAPI jsapi;
-  DebugOnly<bool> ok = jsapi.Init(xpc::UnprivilegedJunkScope());
-  MOZ_ASSERT(ok, "Problem with junk scope?");
+  // We're only using this context to deserialize a stack to report to the
+  // console, so the scope we use doesn't matter. Stack frame filtering happens
+  // based on the principal encoded into the frame and the caller compartment,
+  // not the compartment of the frame object, and the console reporting code
+  // will not be using our context, and therefore will not care what compartment
+  // it has entered.
+  DebugOnly<bool> ok = jsapi.Init(xpc::PrivilegedJunkScope());
+  MOZ_ASSERT(ok, "Problem with system global?");
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> stack(cx);
   JS::Rooted<JSObject*> stackGlobal(cx);
