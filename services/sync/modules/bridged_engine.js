@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
-var EXPORTED_SYMBOLS = ["BridgedEngine", "LogAdapter"];
+var EXPORTED_SYMBOLS = ["BridgedEngine"];
 
 /**
  * A stub store that converts between raw decrypted incoming records and
@@ -151,7 +151,7 @@ class InterruptedError extends Error {
 }
 
 /**
- * Adapts a `Log.jsm` logger to a `mozIServicesLogSink`. This class is copied
+ * Adapts a `Log.jsm` logger to a `mozIServicesLogger`. This class is copied
  * from `SyncedBookmarksMirror.jsm`.
  */
 class LogAdapter {
@@ -162,18 +162,18 @@ class LogAdapter {
   get maxLevel() {
     let level = this.log.level;
     if (level <= Log.Level.All) {
-      return Ci.mozIServicesLogSink.LEVEL_TRACE;
+      return Ci.mozIServicesLogger.LEVEL_TRACE;
     }
     if (level <= Log.Level.Info) {
-      return Ci.mozIServicesLogSink.LEVEL_DEBUG;
+      return Ci.mozIServicesLogger.LEVEL_DEBUG;
     }
     if (level <= Log.Level.Warn) {
-      return Ci.mozIServicesLogSink.LEVEL_WARN;
+      return Ci.mozIServicesLogger.LEVEL_WARN;
     }
     if (level <= Log.Level.Error) {
-      return Ci.mozIServicesLogSink.LEVEL_ERROR;
+      return Ci.mozIServicesLogger.LEVEL_ERROR;
     }
-    return Ci.mozIServicesLogSink.LEVEL_OFF;
+    return Ci.mozIServicesLogger.LEVEL_OFF;
   }
 
   trace(message) {
@@ -214,6 +214,7 @@ function BridgedEngine(bridge, name, service) {
   SyncEngine.call(this, name, service);
 
   this._bridge = bridge;
+  this._bridge.logger = new LogAdapter(this._log);
 }
 
 BridgedEngine.prototype = {
