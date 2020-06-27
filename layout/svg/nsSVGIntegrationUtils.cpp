@@ -191,7 +191,7 @@ bool nsSVGIntegrationUtils::UsingSimpleClipPathForFrame(
 }
 
 nsPoint nsSVGIntegrationUtils::GetOffsetToBoundingBox(nsIFrame* aFrame) {
-  if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+  if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     // Do NOT call GetAllInFlowRectsUnion for SVG - it will get the
     // covered region relative to the nsSVGOuterSVGFrame, which is absolutely
     // not what we want. SVG frames are always in user space, so they have
@@ -230,7 +230,7 @@ gfxRect nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(
   // Except for nsSVGOuterSVGFrame, we shouldn't be getting here with SVG
   // frames at all. This function is for elements that are laid out using the
   // CSS box model rules.
-  NS_ASSERTION(!(aNonSVGFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT),
+  NS_ASSERTION(!aNonSVGFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT),
                "Frames with SVG layout should not get here");
   MOZ_ASSERT(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG) ||
              aNonSVGFrame->IsSVGOuterSVGFrame());
@@ -283,7 +283,7 @@ gfxRect nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(
 //
 nsRect nsSVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(
     nsIFrame* aFrame, const nsRect& aPreEffectsOverflowRect) {
-  MOZ_ASSERT(!(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT),
+  MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT),
              "Don't call this on SVG child frames");
 
   MOZ_ASSERT(aFrame->StyleEffects()->HasFilters(),
@@ -396,7 +396,7 @@ bool nsSVGIntegrationUtils::HitTestFrameForEffects(nsIFrame* aFrame,
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
   // Convert aPt to user space:
   nsPoint toUserSpace;
-  if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+  if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     // XXXmstange Isn't this wrong for svg:use and innerSVG frames?
     toUserSpace = aFrame->GetPosition();
   } else {
@@ -599,7 +599,7 @@ static MaskPaintResult CreateAndPaintMaskSurface(
     //   Left paintResult.maskSurface empty, the caller should paint all
     //   masked content as if this mask is an opaque white one(no mask).
     paintResult.transparentBlackMask =
-        !(aParams.frame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
+        !aParams.frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT);
 
     MOZ_ASSERT(!paintResult.maskSurface);
     return paintResult;
@@ -616,13 +616,13 @@ static MaskPaintResult CreateAndPaintMaskSurface(
 
 static bool ValidateSVGFrame(nsIFrame* aFrame) {
 #ifdef DEBUG
-  NS_ASSERTION(!(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) ||
+  NS_ASSERTION(!aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
                    (NS_SVGDisplayListPaintingEnabled() &&
-                    !(aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)),
+                    !aFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)),
                "Should not use nsSVGIntegrationUtils on this SVG frame");
 #endif
 
-  bool hasSVGLayout = (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
+  bool hasSVGLayout = aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT);
   if (hasSVGLayout) {
 #ifdef DEBUG
     nsSVGDisplayableFrame* svgFrame = do_QueryFrame(aFrame);
@@ -689,7 +689,7 @@ static EffectOffsets ComputeEffectOffset(nsIFrame* aFrame,
   result.offsetToUserSpace = result.offsetToBoundingBox - toUserSpace;
 
 #ifdef DEBUG
-  bool hasSVGLayout = (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
+  bool hasSVGLayout = aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT);
   NS_ASSERTION(
       hasSVGLayout || result.offsetToBoundingBox == result.offsetToUserSpace,
       "For non-SVG frames there shouldn't be any additional offset");
@@ -1252,7 +1252,7 @@ bool PaintFrameCallback::operator()(gfxContext* aContext,
                                     const gfxRect& aFillRect,
                                     const SamplingFilter aSamplingFilter,
                                     const gfxMatrix& aTransform) {
-  if (mFrame->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER) {
+  if (mFrame->HasAnyStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER)) {
     return false;
   }
 
