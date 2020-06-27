@@ -110,8 +110,8 @@ bool nsSplittableFrame::IsInNextContinuationChain(nsIFrame* aFrame1,
 #endif
 
 nsIFrame* nsSplittableFrame::GetPrevInFlow() const {
-  return (GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION) ? mPrevContinuation
-                                                           : nullptr;
+  return HasAnyStateBits(NS_FRAME_IS_FLUID_CONTINUATION) ? mPrevContinuation
+                                                         : nullptr;
 }
 
 void nsSplittableFrame::SetPrevInFlow(nsIFrame* aFrame) {
@@ -124,8 +124,8 @@ void nsSplittableFrame::SetPrevInFlow(nsIFrame* aFrame) {
 }
 
 nsIFrame* nsSplittableFrame::GetNextInFlow() const {
-  return mNextContinuation && (mNextContinuation->GetStateBits() &
-                               NS_FRAME_IS_FLUID_CONTINUATION)
+  return mNextContinuation && mNextContinuation->HasAnyStateBits(
+                                  NS_FRAME_IS_FLUID_CONTINUATION)
              ? mNextContinuation
              : nullptr;
 }
