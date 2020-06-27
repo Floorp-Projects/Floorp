@@ -2548,21 +2548,29 @@ void ScriptSource::performTaskWork(SourceCompressionTask* task) {
 }
 
 void SourceCompressionTask::runTask() {
-  if (!shouldCancel()) {
-    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-    AutoTraceLog logCompile(logger, TraceLogger_CompressSource);
+  if (shouldCancel()) {
+    return;
+  }
 
-    ScriptSource* source = sourceHolder_.get();
-    MOZ_ASSERT(source->hasUncompressedSource());
+  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
+  AutoTraceLog logCompile(logger, TraceLogger_CompressSource);
 
-    source->performTaskWork(this);
+  ScriptSource* source = sourceHolder_.get();
+  MOZ_ASSERT(source->hasUncompressedSource());
+
+  source->performTaskWork(this);
+}
+
+void SourceCompressionTask::runTaskLocked(AutoLockHelperThreadState& locked) {
+  {
+    AutoUnlockHelperThreadState unlock(locked);
+    this->runTask();
   }
 
   {
-    AutoLockHelperThreadState lock;
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!HelperThreadState().compressionFinishedList(lock).append(this)) {
-      oomUnsafe.crash("handleCompressionWorkload");
+    if (!HelperThreadState().compressionFinishedList(locked).append(this)) {
+      oomUnsafe.crash("SourceCompressionTask::runTaskLocked");
     }
   }
 }
