@@ -154,7 +154,7 @@ void nsBoxFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                       nsIFrame* aPrevInFlow) {
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  if (GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER) {
+  if (HasAnyStateBits(NS_FRAME_FONT_INFLATION_CONTAINER)) {
     AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   }
 
@@ -810,7 +810,7 @@ void nsBoxFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
   CheckBoxOrder();
 
   // XXXbz why is this NS_FRAME_FIRST_REFLOW check here?
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
   }
@@ -818,8 +818,9 @@ void nsBoxFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
 
 /* virtual */
 nsContainerFrame* nsBoxFrame::GetContentInsertionFrame() {
-  if (GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK)
+  if (HasAnyStateBits(NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK)) {
     return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
+  }
   return nsContainerFrame::GetContentInsertionFrame();
 }
 
@@ -1016,7 +1017,7 @@ void nsBoxFrame::RegUnregAccessKey(bool aDoReg) {
 }
 
 void nsBoxFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) {
-  if (GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK) {
+  if (HasAnyStateBits(NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK)) {
     aResult.AppendElement(OwnedAnonBox(PrincipalChildList().FirstChild()));
   }
 }
