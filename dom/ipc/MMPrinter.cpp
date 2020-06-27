@@ -52,7 +52,11 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
   ErrorResult rv;
 
   AutoJSAPI jsapi;
-  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::UnprivilegedJunkScope()));
+  // We're using this context to deserialize, stringify, and print a message
+  // manager message here. Since the messages are always sent from and to system
+  // scopes, we need to do this in a system scope, or attempting to deserialize
+  // certain privileged objects will fail.
+  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
   JSContext* cx = jsapi.cx();
 
   ipc::StructuredCloneData data;
