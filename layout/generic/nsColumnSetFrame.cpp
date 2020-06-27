@@ -632,7 +632,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       nsIFrame* kidNext = child->GetNextSibling();
       if (kidNext) {
         aStatus.Reset();
-        if (kidNext->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+        if (kidNext->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
           aStatus.SetOverflowIncomplete();
         } else {
           aStatus.SetIncomplete();
@@ -679,8 +679,8 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       // Note if the column's next in flow is not being changed by this
       // incremental reflow. This may allow the current column to avoid trying
       // to pull lines from the next column.
-      if (child->GetNextSibling() && !(GetStateBits() & NS_FRAME_IS_DIRTY) &&
-          !(child->GetNextSibling()->GetStateBits() & NS_FRAME_IS_DIRTY)) {
+      if (child->GetNextSibling() && !HasAnyStateBits(NS_FRAME_IS_DIRTY) &&
+          !child->GetNextSibling()->HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
         kidReflowInput.mFlags.mNextInFlowUntouched = true;
       }
 
@@ -776,12 +776,12 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     // Make sure we reflow a next-in-flow when it switches between being
     // normal or overflow container
     if (aStatus.IsOverflowIncomplete()) {
-      if (!(kidNextInFlow->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+      if (!kidNextInFlow->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
         aStatus.SetNextInFlowNeedsReflow();
         reflowNext = true;
         kidNextInFlow->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
       }
-    } else if (kidNextInFlow->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+    } else if (kidNextInFlow->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
       aStatus.SetNextInFlowNeedsReflow();
       reflowNext = true;
       kidNextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
@@ -881,7 +881,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   }
 
   if (PresContext()->CheckForInterrupt(this) &&
-      (GetStateBits() & NS_FRAME_IS_DIRTY)) {
+      HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
     // Mark all our kids starting with |child| dirty
 
     // Note that this is a CheckForInterrupt call, not a HasPendingInterrupt,
