@@ -21,7 +21,7 @@ use webext_storage::STORAGE_VERSION;
 use xpcom::{
     interfaces::{
         mozIBridgedSyncEngineApplyCallback, mozIBridgedSyncEngineCallback,
-        mozIExtensionStorageCallback, mozIServicesLogger, nsIFile, nsISerialEventTarget,
+        mozIExtensionStorageCallback, mozIServicesLogSink, nsIFile, nsISerialEventTarget,
     },
     RefPtr,
 };
@@ -311,13 +311,13 @@ impl StorageSyncArea {
 
 /// `mozIBridgedSyncEngine` implementation.
 impl StorageSyncArea {
-    xpcom_method!(get_logger => GetLogger() -> *const mozIServicesLogger);
-    fn get_logger(&self) -> Result<RefPtr<mozIServicesLogger>> {
+    xpcom_method!(get_logger => GetLogger() -> *const mozIServicesLogSink);
+    fn get_logger(&self) -> Result<RefPtr<mozIServicesLogSink>> {
         Err(NS_OK)?
     }
 
-    xpcom_method!(set_logger => SetLogger(logger: *const mozIServicesLogger));
-    fn set_logger(&self, _logger: Option<&mozIServicesLogger>) -> Result<()> {
+    xpcom_method!(set_logger => SetLogger(logger: *const mozIServicesLogSink));
+    fn set_logger(&self, _logger: Option<&mozIServicesLogSink>) -> Result<()> {
         Ok(())
     }
 
