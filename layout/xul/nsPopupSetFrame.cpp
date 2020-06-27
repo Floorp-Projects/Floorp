@@ -118,7 +118,7 @@ nsPopupSetFrame::DoXULLayout(nsBoxLayoutState& aState) {
 }
 
 void nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup) {
-  MOZ_ASSERT((aPopup->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+  MOZ_ASSERT(aPopup->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
                  aPopup->IsMenuPopupFrame(),
              "removing wrong type of frame in popupset's ::popupList");
 
@@ -128,7 +128,7 @@ void nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup) {
 void nsPopupSetFrame::AddPopupFrameList(nsFrameList& aPopupFrameList) {
 #ifdef DEBUG
   for (nsFrameList::Enumerator e(aPopupFrameList); !e.AtEnd(); e.Next()) {
-    NS_ASSERTION((e.get()->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+    NS_ASSERTION(e.get()->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
                      e.get()->IsMenuPopupFrame(),
                  "adding wrong type of frame in popupset's ::popupList");
   }
