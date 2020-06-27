@@ -12,8 +12,7 @@ with Files('**'):
 XPIDL_MODULE = 'services'
 
 XPIDL_SOURCES += [
-    'mozIAppServicesLogger.idl',
     'mozIBridgedSyncEngine.idl',
     'mozIInterruptible.idl',
-    'mozIServicesLogSink.idl',
+    'mozIServicesLogger.idl',
 ]

@@ -8,13 +8,12 @@
 // The synced bookmarks mirror and bridged engines implement this interface
 // to hook in to the services `LogManager` infrastructure.
 [scriptable, uuid(c92bfe0d-50b7-4a7f-9686-fe5335a696b9)]
-interface mozIServicesLogSink : nsISupports {
+interface mozIServicesLogger : nsISupports {
   const short LEVEL_OFF = 0;
   const short LEVEL_ERROR = 1;
   const short LEVEL_WARN = 2;
-  const short LEVEL_INFO = 3;
-  const short LEVEL_DEBUG = 4;
-  const short LEVEL_TRACE = 5;
+  const short LEVEL_DEBUG = 3;
+  const short LEVEL_TRACE = 4;
 
   attribute short maxLevel;
 
@@ -22,5 +21,4 @@ interface mozIServicesLogSink : nsISupports {
   void warn(in AString message);
   void debug(in AString message);
   void trace(in AString message);
-  void info(in AString message);
 };

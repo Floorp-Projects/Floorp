@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozIServicesLogSink.idl"
+#include "mozIServicesLogger.idl"
 #include "nsISupports.idl"
 
 interface nsIVariant;
@@ -63,7 +63,7 @@ interface mozIBridgedSyncEngine : nsISupports {
 
     // Wires up the Sync logging machinery to the bridged engine. This can be
     // `null`, in which case any logs from the engine will be discarded.
-    attribute mozIServicesLogSink logger;
+    attribute mozIServicesLogger logger;
 
     // Returns the last sync time, in milliseconds, for this engine's
     // collection. This is used to build the collection URL for fetching
