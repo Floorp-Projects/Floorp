@@ -88,7 +88,7 @@ const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
 // Use a shared jankYielder in these functions
 XPCOMUtils.defineLazyGetter(this, "yieldState", () => Async.yieldState());
 
-/** Adapts a `Log.jsm` logger to a `mozIServicesLogSink`. */
+/** Adapts a `Log.jsm` logger to a `mozIServicesLogger`. */
 class LogAdapter {
   constructor(log) {
     this.log = log;
@@ -97,18 +97,18 @@ class LogAdapter {
   get maxLevel() {
     let level = this.log.level;
     if (level <= Log.Level.All) {
-      return Ci.mozIServicesLogSink.LEVEL_TRACE;
+      return Ci.mozIServicesLogger.LEVEL_TRACE;
     }
     if (level <= Log.Level.Info) {
-      return Ci.mozIServicesLogSink.LEVEL_DEBUG;
+      return Ci.mozIServicesLogger.LEVEL_DEBUG;
     }
     if (level <= Log.Level.Warn) {
-      return Ci.mozIServicesLogSink.LEVEL_WARN;
+      return Ci.mozIServicesLogger.LEVEL_WARN;
     }
     if (level <= Log.Level.Error) {
-      return Ci.mozIServicesLogSink.LEVEL_ERROR;
+      return Ci.mozIServicesLogger.LEVEL_ERROR;
     }
-    return Ci.mozIServicesLogSink.LEVEL_OFF;
+    return Ci.mozIServicesLogger.LEVEL_OFF;
   }
 
   trace(message) {
