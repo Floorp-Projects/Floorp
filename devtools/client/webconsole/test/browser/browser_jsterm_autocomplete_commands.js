@@ -18,7 +18,7 @@ add_task(async function() {
   EventUtils.sendString(":");
   await onAutocompleUpdated;
 
-  const expectedCommands = [":help", ":screenshot"];
+  const expectedCommands = [":block", ":help", ":screenshot", ":unblock"];
   ok(
     hasExactPopupLabels(autocompletePopup, expectedCommands),
     "popup contains expected commands"

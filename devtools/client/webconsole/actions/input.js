@@ -14,6 +14,7 @@ const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
 const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
+const l10n = require("devtools/client/webconsole/utils/l10n");
 
 loader.lazyServiceGetter(
   this,
@@ -42,6 +43,12 @@ loader.lazyRequireGetter(
   "devtools/client/webconsole/types",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "netmonitorBlockingActions",
+  "devtools/client/netmonitor/src/actions/request-blocking"
+);
+
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
 async function getMappedExpression(hud, expression) {
@@ -165,7 +172,7 @@ function onExpressionEvaluated(response) {
 }
 
 function handleHelperResult(response) {
-  return async ({ dispatch, hud, webConsoleUI }) => {
+  return async ({ dispatch, hud, toolbox, webConsoleUI }) => {
     const { result, helperResult } = response;
     const helperHasRawOutput = !!helperResult?.rawOutput;
 
@@ -206,6 +213,47 @@ function handleHelperResult(response) {
                 resourceType: ResourceWatcher.TYPES.PLATFORM_MESSAGE,
               }))
             )
+          );
+          break;
+        case "blockURL":
+          const blockURL = helperResult.args.url;
+
+          toolbox
+            .getPanel("netmonitor")
+            ?.panelWin.store.dispatch(
+              netmonitorBlockingActions.addBlockedUrl(blockURL)
+            );
+
+          dispatch(
+            messagesActions.messagesAdd([
+              {
+                type: "logMessage",
+                message: l10n.getFormatStr(
+                  "webconsole.message.commands.blockedURL",
+                  [blockURL]
+                ),
+              },
+            ])
+          );
+          break;
+        case "unblockURL":
+          const unblockURL = helperResult.args.url;
+          toolbox
+            .getPanel("netmonitor")
+            ?.panelWin.store.dispatch(
+              netmonitorBlockingActions.removeBlockedUrl(unblockURL)
+            );
+
+          dispatch(
+            messagesActions.messagesAdd([
+              {
+                type: "logMessage",
+                message: l10n.getFormatStr(
+                  "webconsole.message.commands.unblockedURL",
+                  [unblockURL]
+                ),
+              },
+            ])
           );
           // early return as we already dispatched necessary messages.
           return;
