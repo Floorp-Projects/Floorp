@@ -215,9 +215,12 @@ class SearchConfigTest {
    *   The two-letter locale code.
    */
   async _reinit(region, locale) {
-    Region._setHomeRegion(region?.toUpperCase(), true);
-    if (region) {
-      await SearchTestUtils.promiseSearchNotification("engines-reloaded");
+    region = region?.toUpperCase();
+    if (region != Region.home) {
+      Region._setHomeRegion(region, true);
+      if (region) {
+        await SearchTestUtils.promiseSearchNotification("engines-reloaded");
+      }
     }
 
     const reinitCompletePromise = SearchTestUtils.promiseSearchNotification(
