@@ -163,6 +163,7 @@ extern "C" {
     fn EnableVertexAttribArray(index: GLuint);
     fn VertexAttribDivisor(index: GLuint, divisor: GLuint);
     fn LinkProgram(program: GLuint);
+    fn GetLinkStatus(program: GLuint) -> GLint;
     fn UseProgram(program: GLuint);
     fn SetViewport(x: GLint, y: GLint, width: GLsizei, height: GLsizei);
     fn FramebufferTextureLayer(
@@ -1829,8 +1830,8 @@ impl Gl for Context {
     }
 
     fn get_program_info_log(&self, program: GLuint) -> String {
-        panic!();
-        //String::new()
+        debug!("get_program_info_log {}", program);
+        String::new()
     }
 
     #[inline]
@@ -1840,7 +1841,7 @@ impl Gl for Context {
         assert!(!result.is_empty());
         //#define GL_LINK_STATUS                    0x8B82
         if pname == 0x8b82 {
-            result[0] = 1;
+            result[0] = GetLinkStatus(program);
         }
     }
 
