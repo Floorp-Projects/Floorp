@@ -187,7 +187,7 @@ void nsSVGSwitchFrame::ReflowSVG() {
   NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
                "This call is probably a wasteful mistake");
 
-  MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+  MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
              "ReflowSVG mechanism not designed for this");
 
   if (!nsSVGUtils::NeedsReflowSVG(this)) {
@@ -204,7 +204,7 @@ void nsSVGSwitchFrame::ReflowSVG() {
   bool isFirstReflow = (mState & NS_FRAME_FIRST_REFLOW);
 
   bool outerSVGHasHadFirstReflow =
-      (GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) == 0;
+      !GetParent()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
   if (outerSVGHasHadFirstReflow) {
     RemoveStateBits(NS_FRAME_FIRST_REFLOW);  // tell our children
@@ -217,7 +217,7 @@ void nsSVGSwitchFrame::ReflowSVG() {
 
   nsSVGDisplayableFrame* svgChild = do_QueryFrame(child);
   if (svgChild) {
-    MOZ_ASSERT(!(child->GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+    MOZ_ASSERT(!child->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                "Check for this explicitly in the |if|, then");
     svgChild->ReflowSVG();
 
