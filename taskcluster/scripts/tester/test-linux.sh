@@ -185,12 +185,12 @@ elif [ $NEED_COMPIZ == "true" ] && [ $RELEASE == "18.04" ]; then
     compiz --replace 2>&1 &
 fi
 
-maybe_start_pulse
-
 # Bug 1607713 - set cursor position to 0,0 to avoid odd libx11 interaction
-if [ ! -z $DISPLAY ]; then
+if [ $NEED_WINDOW_MANAGER ] && [ $DISPLAY == ':0' ]; then
     xwit -root -warp 0 0
 fi
+
+maybe_start_pulse
 
 # For telemetry purposes, the build process wants information about the
 # source it is running
