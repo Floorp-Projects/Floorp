@@ -15,6 +15,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BridgedEngine: "resource://services-sync/bridged_engine.js",
+  LogAdapter: "resource://services-sync/bridged_engine.js",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   Observers: "resource://services-common/observers.js",
   Svc: "resource://services-sync/util.js",
@@ -73,6 +74,12 @@ function setEngineEnabled(enabled) {
 function ExtensionStorageEngineBridge(service) {
   let bridge = StorageSyncService.getInterface(Ci.mozIBridgedSyncEngine);
   BridgedEngine.call(this, bridge, "Extension-Storage", service);
+
+  let app_services_logger = Cc["@mozilla.org/appservices/logger;1"].getService(
+    Ci.mozIAppServicesLogger
+  );
+  let logger_target = "app-services:webext_storage:sync";
+  app_services_logger.register(logger_target, new LogAdapter(this._log));
 }
 
 ExtensionStorageEngineBridge.prototype = {
