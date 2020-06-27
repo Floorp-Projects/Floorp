@@ -173,6 +173,9 @@ open class FenixApplication : LocaleAwareApplication() {
             taskQueue.runIfReadyOrQueue {
                 Experiments.initialize(
                     applicationContext = applicationContext,
+                    onExperimentsUpdated = {
+                        ExperimentsManager.initSearchWidgetExperiment(this)
+                    },
                     configuration = mozilla.components.service.experiments.Configuration(
                         httpClient = components.core.client,
                         kintoEndpoint = KINTO_ENDPOINT_PROD
