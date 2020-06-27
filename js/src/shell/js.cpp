@@ -6429,8 +6429,8 @@ static bool IsHTMLDDA_Call(JSContext* cx, unsigned argc, Value* vp) {
 
   // These are the required conditions under which this object may be called
   // by test262 tests, and the required behavior under those conditions.
-  if (args.length() == 0 || (args.length() == 1 && args[0].isString() &&
-                             args[0].toString()->length() == 0)) {
+  if (args.length() == 0 ||
+      (args[0].isString() && args[0].toString()->length() == 0)) {
     args.rval().setNull();
     return true;
   }
