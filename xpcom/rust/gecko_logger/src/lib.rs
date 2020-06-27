@@ -7,7 +7,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-#[cfg(not(target_os = "android"))]
+use app_services_logger::{AppServicesLogger, LOGGERS_BY_TARGET};
 use log::Log;
 use log::{Level, LevelFilter};
 use std::boxed::Box;
@@ -185,6 +185,18 @@ impl GeckoLogger {
         log::set_boxed_logger(Box::new(gecko_logger))
     }
 
+    fn should_log_to_app_services(target: &str) -> bool {
+        return AppServicesLogger::is_app_services_logger_registered(target.into());
+    }
+
+    fn maybe_log_to_app_services(&self, record: &log::Record) {
+        if Self::should_log_to_app_services(record.target()) {
+            if let Some(l) = LOGGERS_BY_TARGET.read().unwrap().get(record.target()) {
+                l.log(record);
+            }
+        }
+    }
+
     fn should_log_to_gfx_critical_note(record: &log::Record) -> bool {
         record.level() == log::Level::Error && record.target().contains("webrender")
     }
@@ -232,12 +244,13 @@ impl GeckoLogger {
 
 impl log::Log for GeckoLogger {
     fn enabled(&self, metadata: &log::Metadata) -> bool {
-        self.logger.enabled(metadata)
+        self.logger.enabled(metadata) || GeckoLogger::should_log_to_app_services(metadata.target())
     }
 
     fn log(&self, record: &log::Record) {
         // Forward log to gfxCriticalNote, if the log should be in gfx crash log.
         self.maybe_log_to_gfx_critical_note(record);
+        self.maybe_log_to_app_services(record);
         self.log_out(record);
     }
 
