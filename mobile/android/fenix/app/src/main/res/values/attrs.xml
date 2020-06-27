@@ -60,6 +60,8 @@
     <attr name="tabTrayItemMediaBackground" format="reference" />
     <attr name="tabTrayHeadingIcon" format="reference" />
     <attr name="tabTrayHeadingIconInactive" format="reference" />
+    <attr name="tabTrayThumbnailItemBackground" format="reference" />
+    <attr name="tabTrayThumbnailIcon" format="reference" />
 
     <declare-styleable name="TrackingProtectionCategory">
         <attr name="categoryItemTitle" format="reference" />

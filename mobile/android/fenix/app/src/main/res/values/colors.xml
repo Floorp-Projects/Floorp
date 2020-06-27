@@ -83,6 +83,8 @@
     <color name="tab_tray_item_media_background_light_theme">#312A65</color>
     <color name="tab_tray_heading_icon_light_theme">@color/ink_20</color>
     <color name="tab_tray_heading_icon_inactive_light_theme">@color/ink_20_48a</color>
+    <color name="tab_tray_item_thumbnail_background_light_theme">@color/light_grey_10</color>
+    <color name="tab_tray_item_thumbnail_icon_light_theme">@color/light_grey_60</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>
@@ -140,6 +142,8 @@
     <color name="tab_tray_item_media_background_dark_theme">#9059FF</color>
     <color name="tab_tray_heading_icon_dark_theme">@color/violet_50</color>
     <color name="tab_tray_heading_icon_inactive_dark_theme">@color/violet_50_48a</color>
+    <color name="tab_tray_item_thumbnail_background_dark_theme">@color/dark_grey_50</color>
+    <color name="tab_tray_item_thumbnail_icon_dark_theme">@color/dark_grey_05</color>
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">#FBFBFE</color>
@@ -243,6 +247,8 @@
     <color name="tab_tray_item_media_background_normal_theme">@color/tab_tray_item_media_background_light_theme</color>
     <color name="tab_tray_heading_icon_normal_theme">@color/tab_tray_heading_icon_light_theme</color>
     <color name="tab_tray_heading_icon_inactive_normal_theme">@color/tab_tray_heading_icon_inactive_light_theme</color>
+    <color name="tab_tray_item_thumbnail_background_normal_theme">@color/tab_tray_item_thumbnail_background_light_theme</color>
+    <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/tab_tray_item_thumbnail_icon_light_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
