@@ -25,11 +25,13 @@
 class nsAtom;
 class nsIURI;
 class nsSVGClipPathFrame;
-class nsSVGMarkerFrame;
 class nsSVGPaintServerFrame;
 class nsSVGFilterFrame;
-class nsSVGMaskFrame;
+
 namespace mozilla {
+class SVGMarkerFrame;
+class SVGMaskFrame;
+
 namespace dom {
 class CanvasRenderingContext2D;
 class SVGGeometryElement;
@@ -253,7 +255,7 @@ class SVGObserverUtils {
    * found, false otherwise.
    */
   static bool GetAndObserveMarkers(nsIFrame* aMarkedFrame,
-                                   nsSVGMarkerFrame* (*aFrames)[3]);
+                                   SVGMarkerFrame* (*aFrames)[3]);
 
   /**
    * Get the frames of the SVG filters applied to the given frame, and add the
@@ -344,7 +346,7 @@ class SVGObserverUtils {
    * case.
    */
   static ReferenceState GetAndObserveMasks(
-      nsIFrame* aMaskedFrame, nsTArray<nsSVGMaskFrame*>* aMaskFrames);
+      nsIFrame* aMaskedFrame, nsTArray<SVGMaskFrame*>* aMaskFrames);
 
   /**
    * Get the SVGGeometryElement that is referenced by aTextPathFrame, and make
