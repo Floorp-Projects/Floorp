@@ -726,14 +726,14 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
     aDesiredSize.Width() = aDesiredSize.Height() = 0;
   } else if (mFrames.FirstChild() != mPopupSetFrame) {
     nsIFrame* kidFrame = mFrames.FirstChild();
-    bool kidDirty = (kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0;
+    bool kidDirty = kidFrame->HasAnyStateBits(NS_FRAME_IS_DIRTY);
 
     ReflowInput kidReflowInput(
         aPresContext, aReflowInput, kidFrame,
         aReflowInput.AvailableSize(kidFrame->GetWritingMode()));
 
     if (aReflowInput.IsBResizeForWM(kidReflowInput.GetWritingMode()) &&
-        (kidFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+        kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
       // Tell our kid it's being block-dir resized too.  Bit of a
       // hack for framesets.
       kidReflowInput.SetBResize(true);
