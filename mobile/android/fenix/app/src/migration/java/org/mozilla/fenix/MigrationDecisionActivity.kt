@@ -39,6 +39,6 @@ class MigrationDecisionActivity : Activity() {
         // and then we switch to the actual activity without an animation. This visually looks like
         // a faster start than launching this activity invisibly and switching to the actual
         // activity after that.
-        overridePendingTransition(0, 0)
+        overridePendingTransition(0, R.anim.placeholder_animation)
     }
 }

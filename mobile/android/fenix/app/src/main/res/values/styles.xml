@@ -20,6 +20,7 @@
         <item name="alertDialogStyle">@style/DialogStyleNormal</item>
         <item name="alertDialogTheme">@style/DialogStyleNormal</item>
         <item name="android:windowEnableSplitTouch">false</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:splitMotionEvents">false</item>
 
         <item name="mozacInputLayoutErrorTextColor"
