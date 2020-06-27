@@ -60,7 +60,7 @@ class GMPParent final
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPParent)
 
-  explicit GMPParent(AbstractThread* aMainThread);
+  explicit GMPParent(nsISerialEventTarget* aThread);
 
   RefPtr<GenericPromise> Init(GeckoMediaPluginServiceParent* aService,
                               nsIFile* aPluginDir);
@@ -150,7 +150,7 @@ class GMPParent final
   RefPtr<GenericPromise> ReadGMPMetaData();
   RefPtr<GenericPromise> ReadGMPInfoFile(nsIFile* aFile);
   RefPtr<GenericPromise> ParseChromiumManifest(
-      const nsAString& aJSON);  // Main thread.
+      const nsAString& aJSON);  // Worker thread.
   RefPtr<GenericPromise> ReadChromiumManifestFile(
       nsIFile* aFile);  // GMP thread.
   void AddCrashAnnotations();
@@ -214,7 +214,7 @@ class GMPParent final
   // to terminate gracefully.
   bool mHoldingSelfRef;
 
-  const RefPtr<AbstractThread> mMainThread;
+  const nsCOMPtr<nsISerialEventTarget> mWorkerThread;
 };
 
 }  // namespace gmp
