@@ -7490,6 +7490,6 @@ void nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
     cur->SetComputedStyle(newStyle);
   }
 
-  MOZ_ASSERT(!(aWrapperFrame->GetStateBits() & NS_FRAME_OWNS_ANON_BOXES),
+  MOZ_ASSERT(!aWrapperFrame->HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES),
              "Wrapper frame doesn't have any anon boxes of its own!");
 }
