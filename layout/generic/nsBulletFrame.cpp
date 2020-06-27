@@ -1227,7 +1227,7 @@ nscoord nsBulletFrame::GetListStyleAscent() const {
 
 nscoord nsBulletFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
   nscoord ascent = 0;
-  if (GetStateBits() & BULLET_FRAME_IMAGE_LOADING) {
+  if (HasAnyStateBits(BULLET_FRAME_IMAGE_LOADING)) {
     ascent = BSize(aWritingMode);
   } else {
     ascent = GetListStyleAscent();
@@ -1239,7 +1239,7 @@ bool nsBulletFrame::GetNaturalBaselineBOffset(WritingMode aWM,
                                               BaselineSharingGroup,
                                               nscoord* aBaseline) const {
   nscoord ascent = 0;
-  if (GetStateBits() & BULLET_FRAME_IMAGE_LOADING) {
+  if (HasAnyStateBits(BULLET_FRAME_IMAGE_LOADING)) {
     ascent = BSize(aWM);
   } else {
     ascent = GetListStyleAscent();

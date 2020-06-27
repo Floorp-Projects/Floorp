@@ -118,7 +118,7 @@ class nsBulletFrame final : public nsFrame {
 
   float GetFontSizeInflation() const;
   bool HasFontSizeInflation() const {
-    return (GetStateBits() & BULLET_FRAME_HAS_FONT_INFLATION) != 0;
+    return HasAnyStateBits(BULLET_FRAME_HAS_FONT_INFLATION);
   }
   void SetFontSizeInflation(float aInflation);
 
