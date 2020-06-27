@@ -96,9 +96,9 @@ static void ScheduleReflow(PresShell* aPresShell, nsIFrame* aFrame) {
     // FrameNeedsReflow on.  (This logic is based on
     // nsSVGUtils::ScheduleReflowSVG and
     // SVGTextFrame::ScheduleReflowSVGNonDisplayText.)
-    if (f->GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
+    if (f->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
       while (f) {
-        if (!(f->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+        if (!f->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
           if (NS_SUBTREE_DIRTY(f)) {
             // This is a displayed frame, so if it is already dirty, we
             // will be reflowed soon anyway.  No need to call
