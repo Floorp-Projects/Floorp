@@ -145,7 +145,3 @@ impl IntoVariantBool for bool {
         }
     }
 }
-
-pub fn to_u16_nul(s: impl AsRef<OsStr>) -> Vec<u16> {
-    s.as_ref().encode_wide().chain(Some(0)).collect()
-}
