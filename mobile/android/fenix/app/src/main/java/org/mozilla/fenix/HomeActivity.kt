@@ -174,10 +174,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             lifecycle.addObserver(BreadcrumbsRecorder(components.analytics.crashReporter,
                 navHost.navController, ::getBreadcrumbMessage))
 
-            intent
-                ?.toSafeIntent()
+            val safeIntent = intent?.toSafeIntent()
+            safeIntent
                 ?.let(::getIntentSource)
                 ?.also { components.analytics.metrics.track(Event.OpenedApp(it)) }
+            // record on cold startup
+            safeIntent
+                ?.let(::getIntentAllSource)
+                ?.also { components.analytics.metrics.track(Event.AppRecievedIntent(it)) }
         }
         supportActionBar?.hide()
 
@@ -250,6 +254,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                 ?.let { it as? TabTrayDialogFragment }
                 ?.also { it.dismissAllowingStateLoss() }
         }
+
+        // If there is a warm or hot startup, onNewIntent method is always called first.
+        // Note: This does not work in case of an user sending an intent with ACTION_VIEW
+        // for example, launch the application, and than use adb to send an intent with
+        // ACTION_VIEW to open a link. In this case, we will get multiple telemetry events.
+        intent
+            .toSafeIntent()
+            .let(::getIntentAllSource)
+            ?.also { components.analytics.metrics.track(Event.AppRecievedIntent(it)) }
     }
 
     /**
@@ -317,6 +330,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             intent.isLauncherIntent -> Event.OpenedApp.Source.APP_ICON
             intent.action == Intent.ACTION_VIEW -> Event.OpenedApp.Source.LINK
             else -> null
+        }
+    }
+
+    protected open fun getIntentAllSource(intent: SafeIntent): Event.AppRecievedIntent.Source? {
+        return when {
+            intent.isLauncherIntent -> Event.AppRecievedIntent.Source.APP_ICON
+            intent.action == Intent.ACTION_VIEW -> Event.AppRecievedIntent.Source.LINK
+            else -> Event.AppRecievedIntent.Source.UNKNOWN
         }
     }
 

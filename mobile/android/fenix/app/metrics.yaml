@@ -8,6 +8,32 @@ no_lint:
   - CATEGORY_GENERIC
 
 events:
+  app_received_intent:
+    type: event
+    description: |
+      The system received an Intent for the HomeActivity. An intent
+      is received an external entity wants to the app to display
+      content. Intents can be received when the app is closed – at
+      which point the app will be opened – or when the app is
+      already opened – at which point the already open app will make
+      changes such as loading a url. This can be used loosely as a
+      heuristic for when the user requested to open the app. The
+      HomeActivity encompasses the home screen and browser screen but
+      may include other screens. This differs from the app_opened
+      probe because it measures all startups, not just cold startup.
+    extra_keys:
+      source:
+        description: |
+          The method used to open Fenix. Possible values are `app_icon`,
+          `custom_tab`, `link` or `unknown`
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11830
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11940/
+    notification_emails:
+      - esmyth@mozilla.com
+      - perf-android-fe@mozilla.com
+    expires: "2020-12-01"
   app_opened:
     type: event
     description: |
