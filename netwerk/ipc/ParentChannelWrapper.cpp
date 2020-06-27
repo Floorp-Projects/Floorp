@@ -7,12 +7,22 @@
 
 #include "ParentChannelWrapper.h"
 #include "mozilla/net/UrlClassifierCommon.h"
+#include "nsIRedirectChannelRegistrar.h"
 
 namespace mozilla {
 namespace net {
 
 NS_IMPL_ISUPPORTS(ParentChannelWrapper, nsIParentChannel, nsIStreamListener,
                   nsIRequestObserver);
+
+void ParentChannelWrapper::Register(uint64_t aRegistrarId) {
+  nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
+      RedirectChannelRegistrar::GetOrCreate();
+  nsCOMPtr<nsIChannel> dummy;
+  MOZ_ALWAYS_SUCCEEDS(
+      NS_LinkRedirectChannels(aRegistrarId, this, getter_AddRefs(dummy)));
+  MOZ_ASSERT(dummy == mChannel);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIParentChannel

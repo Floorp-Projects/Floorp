@@ -40,6 +40,12 @@ void ChildProcessChannelListener::OnChannelReady(
   }
 }
 
+ChildProcessChannelListener::~ChildProcessChannelListener() {
+  for (auto& args : mChannelArgs) {
+    args.GetData().mResolver(NS_ERROR_FAILURE);
+  }
+}
+
 already_AddRefed<ChildProcessChannelListener>
 ChildProcessChannelListener::GetSingleton() {
   if (!sCPCLSingleton) {

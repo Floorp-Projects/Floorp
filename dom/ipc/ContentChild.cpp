@@ -3447,7 +3447,8 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
 
   RefPtr<nsDocShellLoadState> loadState;
   rv = nsDocShellLoadState::CreateFromPendingChannel(
-      newChannel, aArgs.loadIdentifier(), getter_AddRefs(loadState));
+      newChannel, aArgs.loadIdentifier(), aArgs.registrarId(),
+      getter_AddRefs(loadState));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_OK();
   }

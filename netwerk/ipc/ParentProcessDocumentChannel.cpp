@@ -13,7 +13,6 @@
 #include "nsDocShell.h"
 #include "nsIObserverService.h"
 #include "nsIClassifiedChannel.h"
-#include "nsIRedirectChannelRegistrar.h"
 
 extern mozilla::LazyLogModule gDocumentChannelLog;
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
@@ -118,13 +117,7 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
       RefPtr<ParentChannelWrapper> wrapper =
           new ParentChannelWrapper(channel, mListener);
 
-      nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
-          RedirectChannelRegistrar::GetOrCreate();
-      nsCOMPtr<nsIChannel> dummy;
-      MOZ_ALWAYS_SUCCEEDS(
-          NS_LinkRedirectChannels(mDocumentLoadListener->GetRedirectChannelId(),
-                                  wrapper, getter_AddRefs(dummy)));
-      MOZ_ASSERT(dummy == channel);
+      wrapper->Register(mDocumentLoadListener->GetRedirectChannelId());
     }
   }
 
