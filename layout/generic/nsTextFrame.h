@@ -260,8 +260,8 @@ class nsTextFrame : public nsFrame {
     }
   }
   nsTextFrame* GetNextInFlow() const final {
-    return mNextContinuation && (mNextContinuation->GetStateBits() &
-                                 NS_FRAME_IS_FLUID_CONTINUATION)
+    return mNextContinuation && mNextContinuation->HasAnyStateBits(
+                                    NS_FRAME_IS_FLUID_CONTINUATION)
                ? mNextContinuation
                : nullptr;
   }
@@ -391,7 +391,7 @@ class nsTextFrame : public nsFrame {
    * characters are present.
    */
   bool HasNoncollapsedCharacters() const {
-    return (GetStateBits() & TEXT_HAS_NONCOLLAPSED_CHARACTERS) != 0;
+    return HasAnyStateBits(TEXT_HAS_NONCOLLAPSED_CHARACTERS);
   }
 
 #ifdef ACCESSIBILITY
@@ -401,7 +401,7 @@ class nsTextFrame : public nsFrame {
   float GetFontSizeInflation() const;
   bool IsCurrentFontInflation(float aInflation) const;
   bool HasFontSizeInflation() const {
-    return (GetStateBits() & TEXT_HAS_FONT_INFLATION) != 0;
+    return HasAnyStateBits(TEXT_HAS_FONT_INFLATION);
   }
   void SetFontSizeInflation(float aInflation);
 
@@ -705,8 +705,8 @@ class nsTextFrame : public nsFrame {
   void SetTextRun(gfxTextRun* aTextRun, TextRunType aWhichTextRun,
                   float aInflation);
   bool IsInTextRunUserData() const {
-    return GetStateBits() &
-           (TEXT_IN_TEXTRUN_USER_DATA | TEXT_IN_UNINFLATED_TEXTRUN_USER_DATA);
+    return HasAnyStateBits(TEXT_IN_TEXTRUN_USER_DATA |
+                           TEXT_IN_UNINFLATED_TEXTRUN_USER_DATA);
   }
   /**
    * Notify the frame that it should drop its pointer to a text run.
