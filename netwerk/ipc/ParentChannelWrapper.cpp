@@ -1,0 +1,88 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "ParentChannelWrapper.h"
+#include "mozilla/net/UrlClassifierCommon.h"
+
+namespace mozilla {
+namespace net {
+
+NS_IMPL_ISUPPORTS(ParentChannelWrapper, nsIParentChannel, nsIStreamListener,
+                  nsIRequestObserver);
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIParentChannel
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+ParentChannelWrapper::SetParentListener(
+    mozilla::net::ParentChannelListener* listener) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ParentChannelWrapper::NotifyFlashPluginStateChanged(
+    nsIHttpChannel::FlashPluginState aState) {
+  // For now, only HttpChannel use this attribute.
+  RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(mChannel);
+  if (httpChannel) {
+    httpChannel->SetFlashPluginState(aState);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ParentChannelWrapper::SetClassifierMatchedInfo(const nsACString& aList,
+                                               const nsACString& aProvider,
+                                               const nsACString& aFullHash) {
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(mChannel);
+  if (classifiedChannel) {
+    classifiedChannel->SetMatchedInfo(aList, aProvider, aFullHash);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ParentChannelWrapper::SetClassifierMatchedTrackingInfo(
+    const nsACString& aLists, const nsACString& aFullHash) {
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(mChannel);
+  if (classifiedChannel) {
+    nsTArray<nsCString> lists, fullhashes;
+    for (const nsACString& token : aLists.Split(',')) {
+      lists.AppendElement(token);
+    }
+    for (const nsACString& token : aFullHash.Split(',')) {
+      fullhashes.AppendElement(token);
+    }
+    classifiedChannel->SetMatchedTrackingInfo(lists, fullhashes);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ParentChannelWrapper::NotifyClassificationFlags(uint32_t aClassificationFlags,
+                                                bool aIsThirdParty) {
+  UrlClassifierCommon::SetClassificationFlagsHelper(
+      mChannel, aClassificationFlags, aIsThirdParty);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ParentChannelWrapper::Delete() { return NS_OK; }
+
+NS_IMETHODIMP
+ParentChannelWrapper::GetRemoteType(nsAString& aRemoteType) {
+  aRemoteType = VoidString();
+  return NS_OK;
+}
+
+}  // namespace net
+}  // namespace mozilla
+
+#undef LOG
