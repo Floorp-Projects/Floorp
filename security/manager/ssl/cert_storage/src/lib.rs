@@ -1268,7 +1268,10 @@ impl CertStorage {
         NS_OK
     }
 
-    unsafe fn GetRemainingOperationCount(&self, state: *mut i32) -> nserror::nsresult {
+    unsafe fn GetRemainingOperationCount(
+        &self,
+        state: *mut i32,
+    ) -> nserror::nsresult {
         if !is_main_thread() {
             return NS_ERROR_NOT_SAME_THREAD;
         }

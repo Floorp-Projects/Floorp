@@ -150,15 +150,6 @@ nsDebugImpl::RustPanic(const char* aMessage) {
   return NS_OK;
 }
 
-// From toolkit/library/rust/lib.rs
-extern "C" void debug_log(const char* target, const char* message);
-
-NS_IMETHODIMP
-nsDebugImpl::RustLog(const char* aTarget, const char* aMessage) {
-  debug_log(aTarget, aMessage);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDebugImpl::GetIsDebugBuild(bool* aResult) {
 #ifdef DEBUG
