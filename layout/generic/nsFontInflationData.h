@@ -54,7 +54,7 @@ class nsFontInflationData {
   void ScanTextIn(nsIFrame* aFrame);
 
   static const nsIFrame* FlowRootFor(const nsIFrame* aFrame) {
-    while (!(aFrame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT)) {
+    while (!aFrame->HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT)) {
       aFrame = aFrame->GetParent();
     }
     return aFrame;
