@@ -27,7 +27,7 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(FontInflationDataProperty,
     const nsIFrame* aFrame) {
   // We have one set of font inflation data per block formatting context.
   const nsIFrame* bfc = FlowRootFor(aFrame);
-  NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
+  NS_ASSERTION(bfc->HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT),
                "should have found a flow root");
   MOZ_ASSERT(aFrame->GetWritingMode().IsVertical() ==
                  bfc->GetWritingMode().IsVertical(),
@@ -40,7 +40,7 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(FontInflationDataProperty,
 bool nsFontInflationData::UpdateFontInflationDataISizeFor(
     const ReflowInput& aReflowInput) {
   nsIFrame* bfc = aReflowInput.mFrame;
-  NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
+  NS_ASSERTION(bfc->HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT),
                "should have been given a flow root");
   nsFontInflationData* data = bfc->GetProperty(FontInflationDataProperty());
   bool oldInflationEnabled;
@@ -64,7 +64,7 @@ bool nsFontInflationData::UpdateFontInflationDataISizeFor(
 
 /* static */
 void nsFontInflationData::MarkFontInflationDataTextDirty(nsIFrame* aBFCFrame) {
-  NS_ASSERTION(aBFCFrame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
+  NS_ASSERTION(aBFCFrame->HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT),
                "should have been given a flow root");
 
   nsFontInflationData* data =
@@ -167,7 +167,7 @@ static nscoord ComputeDescendantISize(const ReflowInput& aAncestorReflowInput,
 
 void nsFontInflationData::UpdateISize(const ReflowInput& aReflowInput) {
   nsIFrame* bfc = aReflowInput.mFrame;
-  NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
+  NS_ASSERTION(bfc->HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT),
                "must be block formatting context");
 
   nsIFrame* firstInflatableDescendant =
@@ -249,7 +249,7 @@ void nsFontInflationData::UpdateISize(const ReflowInput& aReflowInput) {
                                                     : list.LastChild();
          kid; kid = (aDirection == eFromStart) ? kid->GetNextSibling()
                                                : kid->GetPrevSibling()) {
-      if (kid->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
+      if (kid->HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT)) {
         // Goes in a different set of inflation data.
         continue;
       }
@@ -322,7 +322,7 @@ void nsFontInflationData::ScanTextIn(nsIFrame* aFrame) {
 
   for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* kid : childList.mList) {
-      if (kid->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
+      if (kid->HasAnyStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT)) {
         // Goes in a different set of inflation data.
         continue;
       }
