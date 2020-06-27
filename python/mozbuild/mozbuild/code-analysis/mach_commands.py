@@ -272,7 +272,7 @@ class StaticAnalysis(MachCommandBase):
         import re
         chunk_size = 50
         for offset in range(0, len(source), chunk_size):
-            source_chunks = source[offset:offset + chunk_size]
+            source_chunks = [re.escape(f) for f in source[offset:offset + chunk_size].copy()]
             name_re = re.compile('(' + ')|('.join(source_chunks) + ')')
             for f in compile_db:
                 if name_re.search(f['file']):
