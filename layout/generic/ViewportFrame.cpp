@@ -136,7 +136,7 @@ void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
       // Inner SVG, MathML elements, as well as children of some XUL
       // elements are not allowed to be out-of-flow. They should not
       // be handled as top layer element here.
-      if (!(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+      if (!frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
         MOZ_ASSERT(!elem->GetParent()->IsHTMLElement(),
                    "HTML element should always be out-of-flow if in the top "
                    "layer");
@@ -162,7 +162,7 @@ void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
       if (nsIFrame* frame = container->GetPrimaryFrame()) {
         MOZ_ASSERT(frame->StyleDisplay()->mTopLayer != StyleTopLayer::None,
                    "ua.css should ensure this");
-        MOZ_ASSERT(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW);
+        MOZ_ASSERT(frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
         BuildDisplayListForTopLayerFrame(aBuilder, frame, aList);
       }
     }
@@ -347,7 +347,7 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
   }
 
   // If we were dirty then do a repaint
-  if (GetStateBits() & NS_FRAME_IS_DIRTY) {
+  if (HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
     InvalidateFrame();
   }
 
