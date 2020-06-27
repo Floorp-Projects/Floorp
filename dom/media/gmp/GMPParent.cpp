@@ -11,7 +11,6 @@
 #include "GMPLog.h"
 #include "GMPTimerParent.h"
 #include "mozIGeckoMediaPluginService.h"
-#include "mozilla/AbstractThread.h"
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -55,7 +54,7 @@ namespace mozilla {
 
 namespace gmp {
 
-GMPParent::GMPParent(AbstractThread* aMainThread)
+GMPParent::GMPParent(nsISerialEventTarget* aThread)
     : mState(GMPStateNotLoaded),
       mProcess(nullptr),
       mDeleteProcessOnlyOnUnload(false),
@@ -65,7 +64,7 @@ GMPParent::GMPParent(AbstractThread* aMainThread)
       mGMPContentChildCount(0),
       mChildPid(0),
       mHoldingSelfRef(false),
-      mMainThread(aMainThread) {
+      mWorkerThread(aThread) {
   mPluginId = GeckoChildProcessHost::GetUniqueID();
   GMP_PARENT_LOG_DEBUG("GMPParent ctor id=%u", mPluginId);
 }
@@ -366,7 +365,7 @@ void GMPParent::DeleteProcess() {
 
   nsCOMPtr<nsIRunnable> r =
       new NotifyGMPShutdownTask(NS_ConvertUTF8toUTF16(mNodeId));
-  mMainThread->Dispatch(r.forget());
+  mWorkerThread->Dispatch(r.forget());
 
   if (mHoldingSelfRef) {
     Release();
@@ -501,7 +500,7 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
     // NotifyObservers is mainthread-only
     nsCOMPtr<nsIRunnable> r =
         WrapRunnableNM(&GMPNotifyObservers, mPluginId, mDisplayName, dumpID);
-    mMainThread->Dispatch(r.forget());
+    mWorkerThread->Dispatch(r.forget());
   }
 
   // warn us off trying to close again
@@ -667,7 +666,7 @@ RefPtr<GenericPromise> GMPParent::ReadChromiumManifestFile(nsIFile* aFile) {
   }
 
   // DOM JSON parsing needs to run on the main thread.
-  return InvokeAsync(mMainThread, this, __func__,
+  return InvokeAsync(mWorkerThread, this, __func__,
                      &GMPParent::ParseChromiumManifest,
                      NS_ConvertUTF8toUTF16(json));
 }
@@ -688,7 +687,7 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
   GMP_PARENT_LOG_DEBUG("%s: for '%s'", __FUNCTION__,
                        NS_LossyConvertUTF16toASCII(aJSON).get());
 
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mWorkerThread->IsOnCurrentThread());
   mozilla::dom::WidevineCDMManifest m;
   if (!m.Init(aJSON)) {
     GMP_PARENT_LOG_DEBUG("%s: Failed to initialize json parser, failing.",
