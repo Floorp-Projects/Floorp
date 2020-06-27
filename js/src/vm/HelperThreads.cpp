@@ -2217,13 +2217,9 @@ void HelperThread::handleCompressionWorkload(
     currentTask.emplace(task.get());
   }
 
-  {
-    AutoUnlockHelperThreadState unlock(locked);
-
-    // release the pointer, inside runTask the SourceCompressTask pointer will
-    // be stored in compressionFinishedList.
-    task.release()->runTask();
-  }
+  // Release the pointer, inside runTaskLocked the SourceCompressTask pointer
+  // will be stored in compressionFinishedList.
+  task.release()->runTaskLocked(locked);
 
   currentTask.reset();
 

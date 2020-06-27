@@ -831,6 +831,7 @@ class SourceCompressionTask : public RunnableTask {
   }
 
   void runTask() override;
+  void runTaskLocked(AutoLockHelperThreadState& locked);
   void complete();
 
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_COMPRESS; }
