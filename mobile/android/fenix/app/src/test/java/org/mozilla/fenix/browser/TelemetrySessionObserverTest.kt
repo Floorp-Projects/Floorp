@@ -16,9 +16,11 @@ import org.junit.Test
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
+import org.mozilla.fenix.utils.Settings
 
 class TelemetrySessionObserverTest {
 
+    private val settings: Settings = mockk(relaxed = true)
     private val owner: LifecycleOwner = mockk(relaxed = true)
     private val sessionManager: SessionManager = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
@@ -29,7 +31,7 @@ class TelemetrySessionObserverTest {
     @Before
     fun setup() {
         singleSessionObserver =
-            UriOpenedObserver(owner, sessionManager, metrics, ads).singleSessionObserver
+            UriOpenedObserver(settings, owner, sessionManager, metrics, ads).singleSessionObserver
     }
 
     @Test

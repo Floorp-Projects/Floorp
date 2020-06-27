@@ -12,9 +12,12 @@ import mozilla.components.browser.session.SessionManager
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
+import org.mozilla.fenix.utils.Settings
 
 class UriOpenedObserver(
+    private val settings: Settings,
     private val owner: LifecycleOwner,
     private val sessionManager: SessionManager,
     metrics: MetricController,
@@ -22,6 +25,7 @@ class UriOpenedObserver(
 ) : SessionManager.Observer {
 
     constructor(activity: FragmentActivity) : this(
+        activity.applicationContext.settings(),
         activity,
         activity.components.core.sessionManager,
         activity.metrics,
@@ -41,20 +45,24 @@ class UriOpenedObserver(
     }
 
     override fun onAllSessionsRemoved() {
+        settings.setOpenTabsCount(sessionManager.sessions.filter { !it.private }.size)
         sessionManager.sessions.forEach {
             it.unregister(singleSessionObserver)
         }
     }
 
     override fun onSessionAdded(session: Session) {
+        settings.setOpenTabsCount(sessionManager.sessions.filter { !it.private }.size)
         session.register(singleSessionObserver, owner)
     }
 
     override fun onSessionRemoved(session: Session) {
+        settings.setOpenTabsCount(sessionManager.sessions.filter { !it.private }.size)
         session.unregister(singleSessionObserver)
     }
 
     override fun onSessionsRestored() {
+        settings.setOpenTabsCount(sessionManager.sessions.filter { !it.private }.size)
         sessionManager.sessions.forEach {
             it.register(singleSessionObserver, owner)
         }

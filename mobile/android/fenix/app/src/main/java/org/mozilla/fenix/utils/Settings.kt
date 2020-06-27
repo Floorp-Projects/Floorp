@@ -775,6 +775,19 @@ class Settings private constructor(
         default = 0
     )
 
+    fun setOpenTabsCount(count: Int) {
+        preferences.edit().putInt(
+            appContext.getPreferenceKey(R.string.pref_key_open_tabs_count),
+            count
+        ).apply()
+    }
+
+    val openTabsCount: Int
+        get() = preferences.getInt(
+            appContext.getPreferenceKey(R.string.pref_key_open_tabs_count),
+            0
+        )
+
     private var savedLoginsSortingStrategyString by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_saved_logins_sorting_strategy),
         default = SavedLoginsFragment.SORTING_STRATEGY_ALPHABETICALLY

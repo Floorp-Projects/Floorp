@@ -177,6 +177,8 @@
 
     <string name="pref_key_debug_settings" translatable="false">pref_key_debug_settings</string>
 
+    <string name="pref_key_open_tabs_count" translatable="false">pref_key_open_tabs_count</string>
+
     <string name="pref_key_search_count" translatable="false">pref_key_search_count</string>
     <string name="pref_key_search_widget_cfr_display_count" translatable="false">pref_key_search_widget_cfr_display_count</string>
     <string name="pref_key_search_widget_cfr_dismiss_count" translatable="false">pref_key_search_widget_cfr_dismiss_count</string>

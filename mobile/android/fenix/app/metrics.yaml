@@ -689,6 +689,38 @@ metrics:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+  tabs_open_count:
+    type: counter
+    lifetime: application
+    description: |
+      A counter that indicates how many NORMAL tabs a user has open. This
+      value will only be set if the user has at least *one* open tab. If they
+      have 0, this ping will not get sent, resulting in a null value. To
+      disambiguate between a failed `tabs_open_count` ping and 0 open tabs,
+      please see `has_open_tabs`.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11479
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12024
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  has_open_tabs:
+    type: boolean
+    lifetime: application
+    description: |
+      A boolean that indicates if the user has any open NORMAL tabs.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11479
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12024
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
 
 preferences:
   show_search_suggestions:

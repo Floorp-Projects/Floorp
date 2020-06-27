@@ -11,11 +11,13 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
+import org.mozilla.fenix.utils.Settings
 
 class UriOpenedObserverTest {
 
+    private val settings: Settings = mockk(relaxed = true)
     private val owner: LifecycleOwner = mockk(relaxed = true)
     private val sessionManager: SessionManager = mockk(relaxed = true)
     private val metrics: MetricController = mockk()
@@ -24,7 +26,7 @@ class UriOpenedObserverTest {
 
     @Before
     fun setup() {
-        observer = UriOpenedObserver(owner, sessionManager, metrics, ads)
+        observer = UriOpenedObserver(settings, owner, sessionManager, metrics, ads)
     }
 
     @Test

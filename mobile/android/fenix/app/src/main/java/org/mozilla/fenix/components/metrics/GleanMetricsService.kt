@@ -697,6 +697,12 @@ class GleanMetricsService(private val context: Context) : MetricsService {
 
             searchWidgetInstalled.set(context.settings().searchWidgetInstalled)
 
+            val openTabsCount = context.settings().openTabsCount
+            hasOpenTabs.set(openTabsCount > 0)
+            if (openTabsCount > 0) {
+                tabsOpenCount.add(openTabsCount)
+            }
+
             val topSitesSize = context.settings().topSitesSize
             hasTopSites.set(topSitesSize > 0)
             if (topSitesSize > 0) {
