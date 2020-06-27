@@ -21,6 +21,7 @@ function getDebuggerSourceURL(source) {
   // These are all the sources that are eval or eval-like, but may still have
   // a URL set on the source, so we explicitly ignore the source URL for these.
   if (
+    introType === "injectedScript" ||
     introType === "eval" ||
     introType === "debugger eval" ||
     introType === "Function" ||
