@@ -294,8 +294,6 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         view.search_suggestions_onboarding.setOnInflateListener((stubListener))
 
-        view.toolbar_wrapper.clipToOutline = false
-
         fill_link_from_clipboard.setOnClickListener {
             (activity as HomeActivity)
                 .openToBrowserAndLoad(

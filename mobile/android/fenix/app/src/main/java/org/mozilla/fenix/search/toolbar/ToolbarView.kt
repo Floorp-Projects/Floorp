@@ -8,7 +8,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -16,7 +15,6 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.search.SearchFragmentState
@@ -64,8 +62,6 @@ class ToolbarView(
         view.apply {
             editMode()
 
-            elevation = TOOLBAR_ELEVATION_IN_DP.dpToPx(resources.displayMetrics).toFloat()
-
             setOnUrlCommitListener {
                 // We're hiding the keyboard as early as possible to prevent the engine view
                 // from resizing in case the BrowserFragment is being displayed before the
@@ -79,8 +75,6 @@ class ToolbarView(
                 AppCompatResources.getDrawable(
                     context, ThemeManager.resolveAttribute(R.attr.foundation, context)
                 )
-
-            layoutParams.height = CoordinatorLayout.LayoutParams.MATCH_PARENT
 
             edit.hint = context.getString(R.string.search_hint)
 
@@ -155,9 +149,5 @@ class ToolbarView(
         val icon = BitmapDrawable(context.resources, scaledIcon)
 
         view.edit.setIcon(icon, searchState.searchEngineSource.searchEngine.name)
-    }
-
-    companion object {
-        private const val TOOLBAR_ELEVATION_IN_DP = 16
     }
 }

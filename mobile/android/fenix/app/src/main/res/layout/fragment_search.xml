@@ -11,38 +11,24 @@
     android:background="?foundation"
     tools:context=".search.SearchFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/toolbar_wrapper"
+    <mozilla.components.browser.toolbar.BrowserToolbar
+        android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="@dimen/browser_toolbar_height"
-        android:layout_margin="0dp"
-        android:outlineProvider="paddedBounds"
+        android:background="@drawable/toolbar_background_top"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
+        app:browserToolbarClearColor="?primaryText"
+        app:browserToolbarInsecureColor="?primaryText"
+        app:browserToolbarMenuColor="?primaryText"
+        app:browserToolbarProgressBarGravity="bottom"
+        app:browserToolbarSecureColor="?primaryText"
+        app:browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor="?toolbarDivider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <mozilla.components.browser.toolbar.BrowserToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/browser_toolbar_height"
-            android:layout_gravity="top"
-            android:background="@drawable/toolbar_background_top"
-            android:clickable="true"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
-            app:browserToolbarClearColor="?primaryText"
-            app:browserToolbarInsecureColor="?primaryText"
-            app:browserToolbarMenuColor="?primaryText"
-            app:browserToolbarProgressBarGravity="bottom"
-            app:browserToolbarSecureColor="?primaryText"
-            app:browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor="?toolbarDivider"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="0dp"
@@ -51,7 +37,7 @@
         app:layout_constraintBottom_toBottomOf="@id/search_divider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper">
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/scrollable_area"
