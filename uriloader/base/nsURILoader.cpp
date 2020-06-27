@@ -687,19 +687,6 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel* channel, uint32_t aFlags,
     }
   }
 
-  if (aFlags & nsIURILoader::REDIRECTED_CHANNEL) {
-    // Our channel was redirected from another process, so doesn't need to
-    // be opened again. However, it does need its listener hooked up
-    // correctly.
-    if (nsCOMPtr<nsIChildChannel> childChannel = do_QueryInterface(channel)) {
-      return childChannel->CompleteRedirectSetup(loader);
-    }
-
-    // It's possible for the redirected channel to not implement
-    // nsIChildChannel and be entirely local (like srcdoc). In that case we
-    // can just open the local instance and it will work.
-  }
-
   // This method is not complete. Eventually, we should first go
   // to the content listener and ask them for a protocol handler...
   // if they don't give us one, we need to go to the registry and get
