@@ -10,7 +10,7 @@ Processor for Android intents which should trigger session-related actions.
 
 | Name | Summary |
 |---|---|
-| [process](process.md) | `abstract suspend fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes the given [Intent](#). |
+| [process](process.md) | `abstract fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes the given [Intent](#). |
 
 ### Extension Functions
 

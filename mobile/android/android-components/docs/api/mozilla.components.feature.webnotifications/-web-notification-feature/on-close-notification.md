@@ -2,7 +2,7 @@
 
 # onCloseNotification
 
-`fun onCloseNotification(webNotification: `[`WebNotification`](../../mozilla.components.concept.engine.webnotifications/-web-notification/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/webnotifications/src/main/java/mozilla/components/feature/webnotifications/WebNotificationFeature.kt#L77)
+`fun onCloseNotification(webNotification: `[`WebNotification`](../../mozilla.components.concept.engine.webnotifications/-web-notification/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/webnotifications/src/main/java/mozilla/components/feature/webnotifications/WebNotificationFeature.kt#L92)
 
 Overrides [WebNotificationDelegate.onCloseNotification](../../mozilla.components.concept.engine.webnotifications/-web-notification-delegate/on-close-notification.md)
 

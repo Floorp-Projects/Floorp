@@ -16,7 +16,7 @@ Processor for intents which should trigger session-related actions.
 
 | Name | Summary |
 |---|---|
-| [process](process.md) | `suspend fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes the given intent by invoking the registered handler. |
+| [process](process.md) | `fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes the given intent by invoking the registered handler. |
 
 ### Extension Functions
 

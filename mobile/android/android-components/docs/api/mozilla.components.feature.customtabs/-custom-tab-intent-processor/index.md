@@ -16,7 +16,7 @@ Processor for intents which trigger actions related to custom tabs.
 
 | Name | Summary |
 |---|---|
-| [process](process.md) | `suspend fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes the given [Intent](#). |
+| [process](process.md) | `fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes the given [Intent](#). |
 
 ### Extension Functions
 
