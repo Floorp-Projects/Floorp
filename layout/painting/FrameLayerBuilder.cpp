@@ -4030,7 +4030,7 @@ void PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
     }
   }
 
-  if (hasRoundedCorners || (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+  if (hasRoundedCorners || frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     mMaybeHitRegion.OrWith(area);
   } else {
     mHitRegion.OrWith(area);

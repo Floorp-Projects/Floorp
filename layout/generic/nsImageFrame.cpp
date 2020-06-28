@@ -1086,7 +1086,7 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   }
   FinishAndStoreOverflow(&aMetrics, aReflowInput.mStyleDisplay);
 
-  if ((GetStateBits() & NS_FRAME_FIRST_REFLOW) && !mReflowCallbackPosted) {
+  if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW) && !mReflowCallbackPosted) {
     mReflowCallbackPosted = true;
     PresShell()->PostReflowCallback(this);
   }

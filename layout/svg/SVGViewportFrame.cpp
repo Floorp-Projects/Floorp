@@ -163,7 +163,7 @@ nsresult SVGViewportFrame::AttributeChanged(int32_t aNameSpaceID,
                                             nsAtom* aAttribute,
                                             int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None &&
-      !(GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+      !HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     SVGViewportElement* content =
         static_cast<SVGViewportElement*>(GetContent());
 

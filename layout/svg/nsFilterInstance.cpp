@@ -407,8 +407,8 @@ nsRegion nsFilterInstance::GetPreFilterNeededArea(
 nsRect nsFilterInstance::GetPostFilterBounds(nsIFrame* aFilteredFrame,
                                              const gfxRect* aOverrideBBox,
                                              const nsRect* aPreFilterBounds) {
-  MOZ_ASSERT(!(aFilteredFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) ||
-                 !(aFilteredFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+  MOZ_ASSERT(!aFilteredFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
+                 !aFilteredFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
              "Non-display SVG do not maintain visual overflow rects");
 
   nsRegion preFilterRegion;

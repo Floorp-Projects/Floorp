@@ -42,7 +42,7 @@ void nsSprocketLayout::Shutdown() { NS_IF_RELEASE(gInstance); }
 nsSprocketLayout::nsSprocketLayout() = default;
 
 bool nsSprocketLayout::IsXULHorizontal(nsIFrame* aBox) {
-  return (aBox->GetStateBits() & NS_STATE_IS_HORIZONTAL) != 0;
+  return aBox->HasAnyStateBits(NS_STATE_IS_HORIZONTAL);
 }
 
 void nsSprocketLayout::GetFrameState(nsIFrame* aBox, nsFrameState& aState) {

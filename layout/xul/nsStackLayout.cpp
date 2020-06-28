@@ -160,8 +160,9 @@ uint8_t nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset) {
   // As an optimization, we cache the fact that we are not positioned to avoid
   // wasting time fetching attributes.
   if (aChild->IsXULBoxFrame() &&
-      (aChild->GetStateBits() & NS_STATE_STACK_NOT_POSITIONED))
+      aChild->HasAnyStateBits(NS_STATE_STACK_NOT_POSITIONED)) {
     return 0;
+  }
 
   uint8_t offsetSpecified = 0;
   nsIContent* content = aChild->GetContent();
