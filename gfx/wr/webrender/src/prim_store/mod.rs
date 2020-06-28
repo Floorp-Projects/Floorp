@@ -20,7 +20,8 @@ use crate::glyph_rasterizer::GlyphKey;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
 use crate::gpu_types::{BrushFlags};
 use crate::intern;
-use crate::picture::PicturePrimitive;
+use crate::internal_types::FastHashMap;
+use crate::picture::{PicturePrimitive, TileCacheInstance, SliceId};
 use crate::picture::{RecordedDirtyRegion, RetainedTiles};
 use crate::prim_store::backdrop::BackdropDataHandle;
 use crate::prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
@@ -1613,10 +1614,12 @@ impl PrimitiveStore {
     pub fn destroy(
         &mut self,
         retained_tiles: &mut RetainedTiles,
+        tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     ) {
         for pic in &mut self.pictures {
             pic.destroy(
                 retained_tiles,
+                tile_caches,
             );
         }
     }

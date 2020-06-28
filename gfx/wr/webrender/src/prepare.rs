@@ -21,9 +21,9 @@ use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainInstance, ClipItemKind}
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
-use crate::internal_types::PlaneSplitAnchor;
-use crate::picture::{PicturePrimitive, TileCacheLogger};
-use crate::picture::{PrimitiveList, SurfaceIndex};
+use crate::internal_types::{FastHashMap, PlaneSplitAnchor};
+use crate::picture::{PicturePrimitive, SliceId, TileCacheLogger};
+use crate::picture::{PrimitiveList, SurfaceIndex, TileCacheInstance};
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
 use crate::prim_store::gradient::LinearGradientPrimitive;
 use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
@@ -52,6 +52,7 @@ pub fn prepare_primitives(
     data_stores: &mut DataStores,
     scratch: &mut PrimitiveScratchBuffer,
     tile_cache_log: &mut TileCacheLogger,
+    tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
 ) {
     profile_scope!("prepare_primitives");
     for (cluster_index, cluster) in prim_list.clusters.iter_mut().enumerate() {
@@ -102,6 +103,7 @@ pub fn prepare_primitives(
                 data_stores,
                 scratch,
                 tile_cache_log,
+                tile_caches,
             ) {
                 frame_state.profile_counters.visible_primitives.inc();
             }
@@ -121,6 +123,7 @@ fn prepare_prim_for_render(
     data_stores: &mut DataStores,
     scratch: &mut PrimitiveScratchBuffer,
     tile_cache_log: &mut TileCacheLogger,
+    tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
 ) -> bool {
     profile_scope!("prepare_prim_for_render");
     // If we have dependencies, we need to prepare them first, in order
@@ -148,6 +151,7 @@ fn prepare_prim_for_render(
                     frame_context,
                     scratch,
                     tile_cache_log,
+                    tile_caches,
                 ) {
                     Some(info) => Some(info),
                     None => {
@@ -192,6 +196,7 @@ fn prepare_prim_for_render(
                 data_stores,
                 scratch,
                 tile_cache_log,
+                tile_caches,
             );
 
             // Restore the dependencies (borrow check dance)
