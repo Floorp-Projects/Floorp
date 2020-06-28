@@ -66,12 +66,10 @@ API
 itself. Until someone makes a tool for converting schema to HTML, you can read
 the documentation in urlbar.json_.
 
-For help on understanding the schema, see `API Schemas`_ in the WebExtensions
+For help on understanding the schema, see :ref:`API Schemas <API Schemas>` in the WebExtensions
 API Developers Guide.
 
 For examples on using the API, see the `browser.urlbar Cookbook`_ section below.
-
-.. _API Schemas: https://firefox-source-docs.mozilla.org/toolkit/components/extensions/webextensions/schema.html
 
 Workflow
 ~~~~~~~~
@@ -231,7 +229,7 @@ example.
 Further Reading
 ~~~~~~~~~~~~~~~
 
-`WebExtensions API Developers Guide <https://firefox-source-docs.mozilla.org/toolkit/components/extensions/webextensions/index.html>`__
+:ref:`WebExtensions API Developers Guide <WebExtensions API Development>`
   Detailed info on implementing a WebExtensions API.
 
 Running Address Bar Extensions
