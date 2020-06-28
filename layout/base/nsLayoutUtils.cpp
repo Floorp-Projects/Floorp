@@ -5007,7 +5007,7 @@ bool nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(
   if (aFrame->GetPrevContinuation()) {
     return false;
   }
-  if ((aFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) &&
+  if (aFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT) &&
       aFrame->GetProperty(nsIFrame::IBSplitPrevSibling())) {
     return false;
   }

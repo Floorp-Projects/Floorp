@@ -876,7 +876,7 @@ void nsFloatCacheFreeList::DeleteAll() {
 }
 
 nsFloatCache* nsFloatCacheFreeList::Alloc(nsIFrame* aFloat) {
-  MOZ_ASSERT(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+  MOZ_ASSERT(aFloat->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
              "This is a float cache, why isn't the frame out-of-flow?");
 
   nsFloatCache* fc = mHead;

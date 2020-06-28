@@ -1372,8 +1372,7 @@ nsSize nsSliderFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
 void nsSliderFrame::EnsureOrient() {
   nsIFrame* scrollbarBox = GetScrollbar();
 
-  bool isHorizontal =
-      (scrollbarBox->GetStateBits() & NS_STATE_IS_HORIZONTAL) != 0;
+  bool isHorizontal = scrollbarBox->HasAnyStateBits(NS_STATE_IS_HORIZONTAL);
   if (isHorizontal)
     AddStateBits(NS_STATE_IS_HORIZONTAL);
   else

@@ -48,7 +48,7 @@ void TransformReferenceBox::EnsureDimensionsAreCached() {
 
   mIsCached = true;
 
-  if (mFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+  if (mFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     if (!StaticPrefs::svg_transform_box_enabled()) {
       mX = -mFrame->GetPosition().x;
       mY = -mFrame->GetPosition().y;

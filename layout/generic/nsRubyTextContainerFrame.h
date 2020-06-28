@@ -48,7 +48,7 @@ class nsRubyTextContainerFrame final : public nsContainerFrame {
   virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 
   bool IsSpanContainer() const {
-    return GetStateBits() & NS_RUBY_TEXT_CONTAINER_IS_SPAN;
+    return HasAnyStateBits(NS_RUBY_TEXT_CONTAINER_IS_SPAN);
   }
 
  protected:

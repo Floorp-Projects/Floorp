@@ -7548,7 +7548,7 @@ bool nsBlockFrame::BlockNeedsFloatManager(nsIFrame* aBlock) {
   NS_ASSERTION(aBlock->IsBlockFrameOrSubclass(), "aBlock must be a block");
 
   nsIFrame* parent = aBlock->GetParent();
-  return (aBlock->HasAnyStateBits(NS_BLOCK_FLOAT_MGR)) ||
+  return aBlock->HasAnyStateBits(NS_BLOCK_FLOAT_MGR) ||
          (parent && !parent->IsFloatContainingBlock());
 }
 

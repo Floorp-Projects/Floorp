@@ -352,8 +352,7 @@ already_AddRefed<SourceSurface> nsSVGPatternFrame::PaintPattern(
 
   // Delay checking NS_FRAME_DRAWING_AS_PAINTSERVER bit until here so we can
   // give back a clear surface if there's a loop
-  if (!(patternWithChildren->GetStateBits() &
-        NS_FRAME_DRAWING_AS_PAINTSERVER)) {
+  if (!patternWithChildren->HasAnyStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER)) {
     AutoSetRestorePaintServerState paintServer(patternWithChildren);
     for (nsIFrame* kid = firstKid; kid; kid = kid->GetNextSibling()) {
       gfxMatrix tm = *(patternWithChildren->mCTM);

@@ -803,7 +803,7 @@ void nsImageBoxFrame::OnSizeAvailable(imgIRequest* aRequest,
   mIntrinsicSize.SizeTo(nsPresContext::CSSPixelsToAppUnits(w),
                         nsPresContext::CSSPixelsToAppUnits(h));
 
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                   NS_FRAME_IS_DIRTY);
   }
