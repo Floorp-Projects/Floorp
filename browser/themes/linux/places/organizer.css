@@ -76,9 +76,11 @@
 #placesMenu > menu::after {
   content: "";
   display: -moz-box;
-  -moz-appearance: toolbarbutton-dropdown;
   width: 12px;
   height: 12px;
+  content: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 /* Root View */
@@ -145,13 +147,6 @@
     border-radius: 2px;
     padding: 4px;
     color: var(--organizer-text-primary-color);
-  }
-
-  #placesMenu > menu::after {
-    -moz-appearance: none;
-    -moz-context-properties: fill;
-    content: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
-    fill: currentColor;
   }
 
   #placesMenu > menu:hover,
