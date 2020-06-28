@@ -463,7 +463,7 @@ fuzzy-if(skiaContent,0-1,0-2600) == svg-in-foreignObject-02.xhtml svg-in-foreign
 fuzzy-if(skiaContent||webrender,0-39,0-268) == symbol-01.svg symbol-01-ref.svg
 
 == text-font-size-01.svg pass.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) random-if(gtkWidget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713, bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 1392106
 == text-gradient-01.svg text-gradient-01-ref.svg
 random-if(winWidget) fuzzy-if(Android,0-10,0-2) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
 fuzzy-if(skiaContent,0-1,0-5500) == text-gradient-03.svg pass.svg
