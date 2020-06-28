@@ -4119,10 +4119,10 @@ impl Renderer {
             false,
         );
 
-        let source_in_backdrop_space = source_screen_origin.to_f32() * (backdrop_scale.0 / source_scale.0);
+        let source_in_backdrop_space = source_screen_origin * (backdrop_scale.0 / source_scale.0);
 
         let mut src = DeviceIntRect::new(
-            (source_in_backdrop_space + (backdrop_rect.origin - backdrop_screen_origin).to_f32()).to_i32(),
+            (source_in_backdrop_space + (backdrop_rect.origin.to_f32() - backdrop_screen_origin)).to_i32(),
             readback_rect.size,
         );
         let mut dest = readback_rect.to_i32();
