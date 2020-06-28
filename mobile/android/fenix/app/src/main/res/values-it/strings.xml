@@ -272,7 +272,7 @@
     <!-- Preference title for switch preference to show search shortcuts -->
     <string name="preferences_show_search_shortcuts">Mostra le scorciatoie di ricerca</string>
     <!-- Preference title for switch preference to show search suggestions -->
-    <string name="preferences_show_search_suggestions">Visualizza suggerimenti</string>
+    <string name="preferences_show_search_suggestions">Mostra suggerimenti di ricerca</string>
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">Mostra ricerca vocale</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->

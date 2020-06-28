@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">தனிப்பட்ட பயர்பாக்சு முன்னோட்டம்</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">கூடுதல் தேர்வுகள்</string>
@@ -13,8 +11,6 @@
     <string name="search_hint">தேடு/முகவரியை உள்ளிடு</string>
 
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">திறந்த கீற்றுகள் இல்லை</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">உங்கள் திறந்த கீற்றுகள் இங்கே காண்பிக்கப்படும்.</string>
 
@@ -54,8 +50,6 @@
     <string name="browser_menu_help">உதவி</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">அமைப்புகள்</string>
-    <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">உங்கள் நூலகம்</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">முகப்பு திரையில் சேர்</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -67,10 +61,6 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">புதிய கீற்று</string>
 
-    <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">சேகரிப்பில் சேமிக்கவும்</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">தள சிக்கலைப் புகாரளிக்கவும்</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">பகிர்</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -81,7 +71,10 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by">%1$s ஆல் இயக்கப்படுகிறது</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">%1$s மூலம் இயக்கப்படுகிறது</string>
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">வாசகர் பார்வை</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">தோற்றம்</string>
@@ -141,5 +134,12 @@
 
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">இணைப்பைக் கமுக்க கீற்றில் திறக்க</string>
+
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">கமுக்க உலாவல் குறுக்குவழியைச் சேர்க்கவும்</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">அணுகுத்திறன்</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">கணக்கு</string>
 
     </resources>
