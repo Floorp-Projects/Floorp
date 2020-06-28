@@ -153,7 +153,7 @@ void ProfilerMarkerChannelHook::ClientNotify(REFGUID aExtensionId, REFIID aIid,
 
 static void RegisterChannelHook() {
   RefPtr<ProfilerMarkerChannelHook> hook(new ProfilerMarkerChannelHook());
-  DebugOnly<HRESULT> hr =
+  mozilla::DebugOnly<HRESULT> hr =
       ::CoRegisterChannelHook(GUID_MozProfilerMarkerExtension, hook);
   MOZ_ASSERT(SUCCEEDED(hr));
 }
