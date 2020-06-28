@@ -15,7 +15,7 @@ use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, SavedTargetIndex};
 use crate::picture::{DirtyRegion, RecordedDirtyRegion, PictureUpdateState};
 use crate::picture::{RetainedTiles, SurfaceRenderTasks, SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX};
-use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger};
+use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
 use crate::prim_store::{SpaceMapper, PictureIndex, PrimitiveDebugId};
 use crate::prim_store::{DeferredResolve};
@@ -391,6 +391,7 @@ impl FrameBuilder {
                 &global_screen_world_rect,
                 &visibility_context,
                 &mut visibility_state,
+                &mut scene.tile_caches,
             );
 
             // When there are tiles that are left remaining in the `retained_tiles`,
@@ -469,7 +470,8 @@ impl FrameBuilder {
                 &mut frame_state,
                 &frame_context,
                 &mut scratch.primitive,
-                tile_cache_logger
+                tile_cache_logger,
+                &mut scene.tile_caches,
             )
             .unwrap();
 
@@ -488,6 +490,7 @@ impl FrameBuilder {
                 data_stores,
                 &mut scratch.primitive,
                 tile_cache_logger,
+                &mut scene.tile_caches,
             );
         }
 
@@ -641,6 +644,7 @@ impl FrameBuilder {
                     scratch: &mut scratch.primitive,
                     screen_world_rect,
                     globals: &self.globals,
+                    tile_caches: &scene.tile_caches,
                 };
 
                 build_render_pass(
@@ -881,15 +885,18 @@ pub fn build_render_pass(
             for (pic_index, task_ids) in picture_cache_tasks {
                 profile_scope!("picture_cache_task");
                 let pic = &ctx.prim_store.pictures[pic_index.0];
-                let tile_cache = pic.tile_cache.as_ref().expect("bug");
 
                 // Extract raster/surface spatial nodes for this surface.
-                let (root_spatial_node_index, surface_spatial_node_index) = match pic.raster_config {
-                    Some(ref rc) => {
-                        let surface = &ctx.surfaces[rc.surface_index.0];
-                        (surface.raster_spatial_node_index, surface.surface_spatial_node_index)
+                let (root_spatial_node_index, surface_spatial_node_index, tile_cache) = match pic.raster_config {
+                    Some(RasterConfig { surface_index, composite_mode: PictureCompositeMode::TileCache { slice_id }, .. }) => {
+                        let surface = &ctx.surfaces[surface_index.0];
+                        (
+                            surface.raster_spatial_node_index,
+                            surface.surface_spatial_node_index,
+                            &ctx.tile_caches[&slice_id],
+                        )
                     }
-                    None => {
+                    _ => {
                         unreachable!();
                     }
                 };

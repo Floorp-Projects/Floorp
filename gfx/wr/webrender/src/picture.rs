@@ -2262,6 +2262,19 @@ pub struct ExternalNativeSurface {
     pub image_dependencies: [ImageDependency; 3],
 }
 
+/// The key that identifies a tile cache instance. For now, it's simple the index of
+/// the slice as it was created during scene building.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct SliceId(usize);
+
+impl SliceId {
+    pub fn new(index: usize) -> Self {
+        SliceId(index)
+    }
+}
+
 /// Represents a cache of tiles that make up a picture primitives.
 pub struct TileCacheInstance {
     /// Index of the tile cache / slice for this frame builder. It's determined
@@ -3629,7 +3642,7 @@ impl TileCacheInstance {
         //           diff'ing the invalidation states in a visual tool.
         let mut pt = PrintTree::new("Picture Cache");
 
-        pt.new_level(format!("Slice {}", self.slice));
+        pt.new_level(format!("Slice {:?}", self.slice));
 
         pt.add_item(format!("fract_offset: {:?}", self.fract_offset));
         pt.add_item(format!("background_color: {:?}", self.background_color));
@@ -4173,6 +4186,7 @@ pub enum PictureCompositeMode {
     Blit(BlitReason),
     /// Used to cache a picture as a series of tiles.
     TileCache {
+        slice_id: SliceId,
     },
     /// Apply an SVG filter
     SvgFilter(Vec<FilterPrimitive>, Vec<SFilterData>),
@@ -4568,10 +4582,6 @@ pub struct PicturePrimitive {
     /// transform animation and/or scrolling.
     pub segments_are_valid: bool,
 
-    /// If Some(..) the tile cache that is associated with this picture.
-    #[cfg_attr(feature = "capture", serde(skip))] //TODO
-    pub tile_cache: Option<Box<TileCacheInstance>>,
-
     /// The config options for this picture.
     pub options: PictureOptions,
 
@@ -4663,29 +4673,32 @@ impl PicturePrimitive {
     pub fn destroy(
         &mut self,
         retained_tiles: &mut RetainedTiles,
+        tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     ) {
-        if let Some(tile_cache) = self.tile_cache.take() {
-            if !tile_cache.tiles.is_empty() {
-                retained_tiles.caches.insert(
-                    tile_cache.slice,
-                    PictureCacheState {
-                        tiles: tile_cache.tiles,
-                        spatial_node_comparer: tile_cache.spatial_node_comparer,
-                        opacity_bindings: tile_cache.opacity_bindings,
-                        color_bindings: tile_cache.color_bindings,
-                        root_transform: tile_cache.root_transform,
-                        current_tile_size: tile_cache.current_tile_size,
-                        native_surface: tile_cache.native_surface,
-                        external_native_surface_cache: tile_cache.external_native_surface_cache,
-                        virtual_offset: tile_cache.virtual_offset,
-                        frame_id: tile_cache.frame_id,
-                        allocations: PictureCacheRecycledAllocations {
-                            old_opacity_bindings: tile_cache.old_opacity_bindings,
-                            old_color_bindings: tile_cache.old_color_bindings,
-                            compare_cache: tile_cache.compare_cache,
+        if let Some(PictureCompositeMode::TileCache { slice_id }) = self.requested_composite_mode {
+            if let Some(tile_cache) = tile_caches.remove(&slice_id) {
+                if !tile_cache.tiles.is_empty() {
+                    retained_tiles.caches.insert(
+                        tile_cache.slice,
+                        PictureCacheState {
+                            tiles: tile_cache.tiles,
+                            spatial_node_comparer: tile_cache.spatial_node_comparer,
+                            opacity_bindings: tile_cache.opacity_bindings,
+                            color_bindings: tile_cache.color_bindings,
+                            root_transform: tile_cache.root_transform,
+                            current_tile_size: tile_cache.current_tile_size,
+                            native_surface: tile_cache.native_surface,
+                            external_native_surface_cache: tile_cache.external_native_surface_cache,
+                            virtual_offset: tile_cache.virtual_offset,
+                            frame_id: tile_cache.frame_id,
+                            allocations: PictureCacheRecycledAllocations {
+                                old_opacity_bindings: tile_cache.old_opacity_bindings,
+                                old_color_bindings: tile_cache.old_color_bindings,
+                                compare_cache: tile_cache.compare_cache,
+                            },
                         },
-                    },
-                );
+                    );
+                }
             }
         }
     }
@@ -4703,7 +4716,6 @@ impl PicturePrimitive {
         requested_raster_space: RasterSpace,
         prim_list: PrimitiveList,
         spatial_node_index: SpatialNodeIndex,
-        tile_cache: Option<Box<TileCacheInstance>>,
         options: PictureOptions,
     ) -> Self {
         PicturePrimitive {
@@ -4721,7 +4733,6 @@ impl PicturePrimitive {
             spatial_node_index,
             estimated_local_rect: LayoutRect::zero(),
             precise_local_rect: LayoutRect::zero(),
-            tile_cache,
             options,
             segments_are_valid: false,
             num_render_tasks: 0,
@@ -4762,6 +4773,7 @@ impl PicturePrimitive {
         frame_context: &FrameBuildingContext,
         scratch: &mut PrimitiveScratchBuffer,
         tile_cache_logger: &mut TileCacheLogger,
+        tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     ) -> Option<(PictureContext, PictureState, PrimitiveList)> {
         if !self.is_visible() {
             return None;
@@ -5222,8 +5234,8 @@ impl PicturePrimitive {
 
                         Some((render_task_id, render_task_id))
                     }
-                    PictureCompositeMode::TileCache { .. } => {
-                        let tile_cache = self.tile_cache.as_mut().unwrap();
+                    PictureCompositeMode::TileCache { slice_id } => {
+                        let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
                         let mut first = true;
 
                         // Get the overall world space rect of the picture cache. Used to clip
@@ -5614,28 +5626,29 @@ impl PicturePrimitive {
         #[cfg(feature = "capture")]
         {
             if frame_context.debug_flags.contains(DebugFlags::TILE_CACHE_LOGGING_DBG) {
-                if let Some(ref tile_cache) = self.tile_cache
-                {
-                    // extract just the fields that we're interested in
-                    let mut tile_cache_tiny = TileCacheInstanceSerializer {
-                        slice: tile_cache.slice,
-                        tiles: FastHashMap::default(),
-                        background_color: tile_cache.background_color,
-                        fract_offset: tile_cache.fract_offset
-                    };
-                    for (key, tile) in &tile_cache.tiles {
-                        tile_cache_tiny.tiles.insert(*key, TileSerializer {
-                            rect: tile.local_tile_rect,
-                            current_descriptor: tile.current_descriptor.clone(),
-                            fract_offset: tile.fract_offset,
-                            id: tile.id,
-                            root: tile.root.clone(),
-                            background_color: tile.background_color,
-                            invalidation_reason: tile.invalidation_reason.clone()
-                        });
+                if let Some(PictureCompositeMode::TileCache { slice_id }) = self.requested_composite_mode {
+                    if let Some(ref tile_cache) = tile_caches.get(&slice_id) {
+                        // extract just the fields that we're interested in
+                        let mut tile_cache_tiny = TileCacheInstanceSerializer {
+                            slice: tile_cache.slice,
+                            tiles: FastHashMap::default(),
+                            background_color: tile_cache.background_color,
+                            fract_offset: tile_cache.fract_offset
+                        };
+                        for (key, tile) in &tile_cache.tiles {
+                            tile_cache_tiny.tiles.insert(*key, TileSerializer {
+                                rect: tile.local_tile_rect,
+                                current_descriptor: tile.current_descriptor.clone(),
+                                fract_offset: tile.fract_offset,
+                                id: tile.id,
+                                root: tile.root.clone(),
+                                background_color: tile.background_color,
+                                invalidation_reason: tile.invalidation_reason.clone()
+                            });
+                        }
+                        let text = ron::ser::to_string_pretty(&tile_cache_tiny, Default::default()).unwrap();
+                        tile_cache_logger.add(text, map_pic_to_world.get_transform());
                     }
-                    let text = ron::ser::to_string_pretty(&tile_cache_tiny, Default::default()).unwrap();
-                    tile_cache_logger.add(text, map_pic_to_world.get_transform());
                 }
             }
         }
@@ -5657,8 +5670,8 @@ impl PicturePrimitive {
 
         // If this is a picture cache, push the dirty region to ensure any
         // child primitives are culled and clipped to the dirty rect(s).
-        if let Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) = self.raster_config {
-            let dirty_region = self.tile_cache.as_ref().unwrap().dirty_region.clone();
+        if let Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { slice_id }, .. }) = self.raster_config {
+            let dirty_region = tile_caches[&slice_id].dirty_region.clone();
             frame_state.push_dirty_region(dirty_region);
             dirty_region_count += 1;
         }
@@ -5674,8 +5687,8 @@ impl PicturePrimitive {
         let (is_passthrough, subpixel_mode) = match self.raster_config {
             Some(RasterConfig { ref composite_mode, .. }) => {
                 let subpixel_mode = match composite_mode {
-                    PictureCompositeMode::TileCache { .. } => {
-                        self.tile_cache.as_ref().unwrap().subpixel_mode.clone()
+                    PictureCompositeMode::TileCache { slice_id } => {
+                        tile_caches[&slice_id].subpixel_mode.clone()
                     }
                     PictureCompositeMode::Blit(..) |
                     PictureCompositeMode::ComponentTransferFilter(..) |
@@ -5934,11 +5947,11 @@ impl PicturePrimitive {
         // See if this picture actually needs a surface for compositing.
         let actual_composite_mode = match self.requested_composite_mode {
             Some(PictureCompositeMode::Filter(ref filter)) if filter.is_noop() => None,
-            Some(PictureCompositeMode::TileCache { .. }) => {
+            Some(PictureCompositeMode::TileCache { slice_id }) => {
                 // Only allow picture caching composite mode if global picture caching setting
                 // is enabled this frame.
                 if state.composite_state.picture_caching_is_enabled {
-                    Some(PictureCompositeMode::TileCache { })
+                    Some(PictureCompositeMode::TileCache { slice_id })
                 } else {
                     None
                 }

@@ -19,8 +19,9 @@ use crate::clip::{ClipInstance, ClipChainInstance};
 use crate::debug_colors;
 use crate::frame_builder::FrameBuilderConfig;
 use crate::gpu_cache::GpuCache;
+use crate::internal_types::FastHashMap;
 use crate::picture::{PictureCompositeMode, ClusterFlags, SurfaceInfo, TileCacheInstance};
-use crate::picture::{PrimitiveList, SurfaceIndex, RetainedTiles, RasterConfig};
+use crate::picture::{PrimitiveList, SurfaceIndex, RetainedTiles, RasterConfig, SliceId};
 use crate::prim_store::{ClipTaskIndex, PictureIndex, SpaceMapper, PrimitiveInstanceKind};
 use crate::prim_store::{SpaceSnapper, PrimitiveStore, PrimitiveInstance};
 use crate::prim_store::image::VisibleImageTile;
@@ -184,6 +185,7 @@ pub fn update_primitive_visibility(
     world_culling_rect: &WorldRect,
     frame_context: &FrameVisibilityContext,
     frame_state: &mut FrameVisibilityState,
+    tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
 ) -> Option<PictureRect> {
     profile_scope!("update_visibility");
     let (mut prim_list, surface_index, apply_local_clip_rect, world_culling_rect, is_composite) = {
@@ -197,9 +199,10 @@ pub fn update_primitive_visibility(
         };
 
         match pic.raster_config {
-            Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) => {
-                let mut tile_cache = pic.tile_cache.take().unwrap();
-                debug_assert!(frame_state.tile_cache.is_none());
+            Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { slice_id }, .. }) => {
+                let mut tile_cache = tile_caches
+                    .remove(&slice_id)
+                    .expect("bug: non-existent tile cache");
 
                 // If we have a tile cache for this picture, see if any of the
                 // relative transforms have changed, which means we need to
@@ -303,6 +306,7 @@ pub fn update_primitive_visibility(
                         &world_culling_rect,
                         frame_context,
                         frame_state,
+                        tile_caches,
                     );
 
                     frame_state.clip_chain_stack.pop_clip();
@@ -652,7 +656,7 @@ pub fn update_primitive_visibility(
                 frame_state,
             );
 
-            pic.tile_cache = Some(tile_cache);
+            tile_caches.insert(SliceId::new(tile_cache.slice), tile_cache);
         }
 
         None

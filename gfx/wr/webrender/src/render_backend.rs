@@ -732,7 +732,10 @@ impl Document {
         // and then presumably back in the prim store during the next frame
         // build.
         let mut retained_tiles = RetainedTiles::new();
-        self.scene.prim_store.destroy(&mut retained_tiles);
+        self.scene.prim_store.destroy(
+            &mut retained_tiles,
+            &mut self.scene.tile_caches,
+        );
         let old_scrolling_states = self.scene.spatial_tree.drain();
 
         self.scene = built_scene;

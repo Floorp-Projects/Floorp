@@ -22,7 +22,7 @@ use crate::glyph_rasterizer::FontInstance;
 use crate::hit_test::{HitTestingItem, HitTestingScene};
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, FastHashSet, LayoutPrimitiveInfo, Filter};
-use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
+use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions, SliceId};
 use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, TileCacheInstance, ClusterFlags};
 use crate::prim_store::PrimitiveInstance;
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
@@ -302,6 +302,9 @@ pub struct SceneBuilder<'a> {
 
     /// The current quality / performance settings for this scene.
     quality_settings: QualitySettings,
+
+    /// Map of tile caches that were created for this scene
+    tile_caches: FastHashMap<SliceId, Box<TileCacheInstance>>,
 }
 
 impl<'a> SceneBuilder<'a> {
@@ -346,6 +349,7 @@ impl<'a> SceneBuilder<'a> {
             content_slice_count: 0,
             picture_cache_spatial_nodes: FastHashSet::default(),
             quality_settings: view.quality_settings,
+            tile_caches: FastHashMap::default(),
         };
 
         let device_pixel_scale = view.accumulated_scale_factor_for_snapping();
@@ -414,6 +418,7 @@ impl<'a> SceneBuilder<'a> {
             config: builder.config,
             content_slice_count: builder.content_slice_count,
             picture_cache_spatial_nodes: builder.picture_cache_spatial_nodes,
+            tile_caches: builder.tile_caches,
         }
     }
 
@@ -573,6 +578,7 @@ impl<'a> SceneBuilder<'a> {
                 &mut self.clip_store,
                 &mut self.picture_cache_spatial_nodes,
                 &self.config,
+                &mut self.tile_caches,
             );
 
             main_prim_list.add_prim(
@@ -1916,7 +1922,6 @@ impl<'a> SceneBuilder<'a> {
                 stacking_context.requested_raster_space,
                 stacking_context.prim_list,
                 stacking_context.spatial_node_index,
-                None,
                 PictureOptions::default(),
             ))
         );
@@ -1971,7 +1976,6 @@ impl<'a> SceneBuilder<'a> {
                     stacking_context.requested_raster_space,
                     prim_list,
                     stacking_context.spatial_node_index,
-                    None,
                     PictureOptions::default(),
                 ))
             );
@@ -2036,7 +2040,6 @@ impl<'a> SceneBuilder<'a> {
                         stacking_context.requested_raster_space,
                         prim_list,
                         stacking_context.spatial_node_index,
-                        None,
                         PictureOptions::default(),
                     ))
                 );
@@ -2521,7 +2524,6 @@ impl<'a> SceneBuilder<'a> {
                                 raster_space,
                                 prim_list,
                                 pending_shadow.spatial_node_index,
-                                None,
                                 options,
                             ))
                         );
@@ -3270,7 +3272,6 @@ impl<'a> SceneBuilder<'a> {
                     requested_raster_space,
                     prim_list,
                     backdrop_spatial_node_index,
-                    None,
                     PictureOptions {
                        inflate_if_required: false,
                     },
@@ -3455,7 +3456,6 @@ impl<'a> SceneBuilder<'a> {
                     requested_raster_space,
                     prim_list,
                     spatial_node_index,
-                    None,
                     PictureOptions {
                        inflate_if_required,
                     },
@@ -3521,7 +3521,6 @@ impl<'a> SceneBuilder<'a> {
                     requested_raster_space,
                     prim_list,
                     spatial_node_index,
-                    None,
                     PictureOptions {
                         inflate_if_required,
                     },
@@ -3838,7 +3837,6 @@ impl FlattenedStackingContext {
                 self.requested_raster_space,
                 mem::replace(&mut self.prim_list, PrimitiveList::empty()),
                 self.spatial_node_index,
-                None,
                 PictureOptions::default(),
             ))
         );
@@ -4021,6 +4019,7 @@ fn create_tile_cache(
     clip_store: &mut ClipStore,
     picture_cache_spatial_nodes: &mut FastHashSet<SpatialNodeIndex>,
     frame_builder_config: &FrameBuilderConfig,
+    tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
 ) -> PrimitiveInstance {
     // Add this spatial node to the list to check for complex transforms
     // at the start of a frame build.
@@ -4066,9 +4065,11 @@ fn create_tile_cache(
         parent_clip_chain_id,
         frame_builder_config,
     ));
+    let slice_id = SliceId::new(slice);
+    tile_caches.insert(slice_id, tile_cache);
 
     let pic_index = prim_store.pictures.alloc().init(PicturePrimitive::new_image(
-        Some(PictureCompositeMode::TileCache { }),
+        Some(PictureCompositeMode::TileCache { slice_id }),
         Picture3DContext::Out,
         None,
         true,
@@ -4076,7 +4077,6 @@ fn create_tile_cache(
         RasterSpace::Screen,
         prim_list,
         scroll_root,
-        Some(tile_cache),
         PictureOptions::default(),
     ));
 
