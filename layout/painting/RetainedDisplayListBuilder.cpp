@@ -253,8 +253,7 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
       bool keepLinked = aKeepLinked;
       nsIFrame* invalid = item->FrameForInvalidation();
       if (!invalid->ForceDescendIntoIfVisible() &&
-          !(invalid->GetStateBits() &
-            NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
+          !invalid->HasAnyStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
         keepLinked = true;
       }
 

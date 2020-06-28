@@ -151,7 +151,7 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
    * @return true if this frame has a popup child frame.
    */
   bool HasPopup() const {
-    return (GetStateBits() & NS_STATE_MENU_HAS_POPUP_LIST) != 0;
+    return HasAnyStateBits(NS_STATE_MENU_HAS_POPUP_LIST);
   }
 
   // nsMenuFrame methods
