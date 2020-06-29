@@ -1578,7 +1578,7 @@
 # HTML <dialog> element
 - name: dom.dialog_element.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Only propagate the open window click permission if the setTimeout() is equal
