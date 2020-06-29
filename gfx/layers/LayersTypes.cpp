@@ -9,6 +9,13 @@
 namespace mozilla {
 namespace layers {
 
+const char* kCompositionPayloadTypeNames[kCompositionPayloadTypeCount] = {
+    "KeyPress",
+    "APZScroll",
+    "APZPinchZoom",
+    "ContentPaint",
+};
+
 const char* GetLayersBackendName(LayersBackend aBackend) {
   switch (aBackend) {
     case LayersBackend::LAYERS_NONE:

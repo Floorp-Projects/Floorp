@@ -451,6 +451,8 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(CompositionPayloadType, uint8_t, (
 ));
 // clang-format on
 
+extern const char* kCompositionPayloadTypeNames[kCompositionPayloadTypeCount];
+
 struct CompositionPayload {
   bool operator==(const CompositionPayload& aOther) const {
     return mType == aOther.mType && mTimeStamp == aOther.mTimeStamp;
