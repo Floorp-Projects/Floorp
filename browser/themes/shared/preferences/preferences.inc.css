@@ -1121,6 +1121,11 @@ richlistitem .text-link:hover {
   align-items: center;
 }
 
+#pane-experimental-search-results-header:-moz-locale-dir(rtl),
+#pane-experimental-subtitle:-moz-locale-dir(rtl) {
+  background-position-x: right;
+}
+
 #pane-experimental-featureGates {
   margin-top: 16px;
 }
