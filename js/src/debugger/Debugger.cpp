@@ -2571,6 +2571,12 @@ bool DebugAPI::onSingleStep(JSContext* cx) {
           continue;
         }
 
+        // A closed generator no longer has a callee so it will not be able to
+        // compare with the trappingScript.
+        if (genObj.isClosed()) {
+          continue;
+        }
+
         // If a frame isn't live, but it has an entry in generatorFrames,
         // it had better be suspended.
         MOZ_ASSERT(genObj.isSuspended());
