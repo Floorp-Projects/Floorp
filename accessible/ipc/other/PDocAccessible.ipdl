@@ -124,6 +124,12 @@ parent:
   async Batch(uint64_t aBatchType, BatchData[] aData);
 
 child:
+  /*
+   * Notify the content process that the PDocAccessible has finished being
+   * constructed in the parent process.
+   */
+  async ConstructedInParentProcess();
+
   async __delete__();
 
   /*
