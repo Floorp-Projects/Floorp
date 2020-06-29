@@ -650,6 +650,11 @@ var testcases = [
     input: "mozilla /test/",
     keywordLookup: true,
   },
+  {
+    input: "pserver:8080",
+    fixedURI: "http://pserver:8080/",
+    protocolChange: true,
+  },
 ];
 
 if (AppConstants.platform == "win") {
