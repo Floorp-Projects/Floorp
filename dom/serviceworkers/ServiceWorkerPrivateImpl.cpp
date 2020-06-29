@@ -38,10 +38,10 @@
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/FetchEventOpChild.h"
-#include "mozilla/dom/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/ReferrerInfo.h"
+#include "mozilla/dom/RemoteLazyInputStreamStorage.h"
 #include "mozilla/dom/RemoteWorkerControllerChild.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -71,7 +71,7 @@ ServiceWorkerPrivateImpl::RAIIActorPtrHolder::~RAIIActorPtrHolder() {
 }
 
 RemoteWorkerControllerChild*
-    ServiceWorkerPrivateImpl::RAIIActorPtrHolder::operator->() const {
+ServiceWorkerPrivateImpl::RAIIActorPtrHolder::operator->() const {
   AssertIsOnMainThread();
 
   return get();
@@ -774,7 +774,7 @@ nsresult MaybeStoreStreamForBackgroundThread(nsIInterceptedChannel* aChannel,
       MOZ_TRY(nsContentUtils::GenerateUUIDInPlace(
           body->get_ParentToParentStream().uuid()));
 
-      IPCBlobInputStreamStorage::Get()->AddStream(
+      RemoteLazyInputStreamStorage::Get()->AddStream(
           uploadStream, body->get_ParentToParentStream().uuid(), bodySize, 0);
     }
   }
