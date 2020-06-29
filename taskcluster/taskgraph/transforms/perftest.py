@@ -13,6 +13,7 @@ import six
 
 from taskgraph.transforms.base import TransformSequence
 
+
 transforms = TransformSequence()
 
 
@@ -29,7 +30,8 @@ def pass_perftest_options(config, jobs):
 @transforms.add
 def setup_perftest_test_date(config, jobs):
     for job in jobs:
-        if "--test-date" not in job["run"]["command"]:
-            job["run"]["command"] += " --test-date %s" % \
-                (date.today() - timedelta(1)).strftime("%Y.%m.%d")
+        if (job.get("attributes", {}).get("batch", False) and
+            "--test-date" not in job["run"]["command"]):
+            yesterday = (date.today() - timedelta(1)).strftime("%Y.%m.%d")
+            job["run"]["command"] += " --test-date %s" % yesterday
         yield job

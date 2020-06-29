@@ -296,6 +296,11 @@ artifact_map
 For beetmover jobs, this indicates which yaml file should be used to
 generate the upstream artifacts and payload instructions to the task.
 
+batch
+=====
+Used by `perftest` to indicates that a task can be run as a batch.
+
+
 enable-full-crashsymbols
 ========================
 In automation, full crashsymbol package generation is normally disabled.  For

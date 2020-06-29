@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 import contextlib
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 import sys
 import os
 import random
@@ -195,15 +195,25 @@ def temporary_env(**env):
                 os.environ[key] = value
 
 
+def convert_day(day):
+    if day in ("yesterday", "today"):
+        curr = date.today()
+        if day == "yesterday":
+            curr = curr - timedelta(1)
+        day = curr.strftime("%Y.%m.%d")
+    else:
+        # verify that the user provided string is in the expected format
+        # if it can't parse it, it'll raise a value error
+        datetime.strptime(day, "%Y.%m.%d")
+
+    return day
+
+
 def get_multi_tasks_url(route, day="yesterday"):
     """Builds a URL to obtain all the tasks of a given build route for a single day.
 
     If previous is true, then we get builds from the previous day,
     otherwise, we look at the current day.
     """
-    if day in ("yesterday", "today"):
-        curr = date.today()
-        if day == "yesterday":
-            curr = curr - timedelta(1)
-        day = curr.strftime("%Y.%m.%d")
+    day = convert_day(day)
     return f"""{MULTI_TASK_ROOT}{route}.{day}.revision"""
