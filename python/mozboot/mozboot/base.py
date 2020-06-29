@@ -168,6 +168,12 @@ class BaseBootstrapper(object):
         self.no_system_changes = no_system_changes
         self.state_dir = None
 
+    def prepare(self):
+        '''
+        Called before anything else is done with this bootstrapper, but after it
+        is initialized.
+        '''
+
     def install_system_packages(self):
         '''
         Install packages shared by all applications. These are usually
