@@ -156,7 +156,7 @@ add_task(async function test_cache_write() {
   Services.tm.dispatchToMainThread(() => {
     // Call the observe method directly to simulate a remove but not actually
     // remove anything.
-    Services.search.wrappedJSObject._cache
+    Services.search
       .QueryInterface(Ci.nsIObserver)
       .observe(null, "browser-search-engine-modified", "engine-removed");
   });
