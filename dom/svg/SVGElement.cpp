@@ -262,30 +262,6 @@ nsresult SVGElement::BindToTree(BindContext& aContext, nsINode& aParent) {
         }));
   }
 
-  if (!MayHaveStyle()) {
-    return NS_OK;
-  }
-  const nsAttrValue* oldVal = mAttrs.GetAttr(nsGkAtoms::style);
-
-  if (oldVal && oldVal->Type() == nsAttrValue::eCSSDeclaration) {
-    // we need to force a reparse because the baseURI of the document
-    // may have changed, and in particular because we may be clones of
-    // XBL anonymous content now being bound to the document we should
-    // render in and due to the hacky way in which we implement the
-    // interaction of XBL and SVG resources.  Once we have a sane
-    // ownerDocument on XBL anonymous content, this can all go away.
-    nsAttrValue attrValue;
-    nsAutoString stringValue;
-    oldVal->ToString(stringValue);
-    // Force in data doc, since we already have a style rule
-    ParseStyleAttribute(stringValue, nullptr, attrValue, true);
-    // Don't bother going through SetInlineStyleDeclaration; we don't
-    // want to fire off mutation events or document notifications anyway
-    bool oldValueSet;
-    rv = mAttrs.SetAndSwapAttr(nsGkAtoms::style, attrValue, &oldValueSet);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return NS_OK;
 }
 
