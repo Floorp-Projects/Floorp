@@ -23,8 +23,6 @@ class SandboxBrokerPolicyFactory {
 
  private:
   UniquePtr<const SandboxBroker::Policy> mCommonContentPolicy;
-  static void AddDynamicPathList(SandboxBroker::Policy* policy,
-                                 const char* aPathListPref, int perms);
 };
 
 }  // namespace mozilla
