@@ -42,7 +42,7 @@ IPDL_SOURCES += [
     'BlobTypes.ipdlh',
     'IPCBlob.ipdlh',
     'PFileCreator.ipdl',
-    'PIPCBlobInputStream.ipdl',
+    'PRemoteLazyInputStream.ipdl',
     'PTemporaryIPCBlob.ipdl',
 ]
 

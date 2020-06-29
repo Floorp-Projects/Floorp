@@ -25,7 +25,7 @@ include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
 include protocol PHttpBackgroundChannel;
 include protocol PIdleScheduler;
-include protocol PIPCBlobInputStream;
+include protocol PRemoteLazyInputStream;
 include protocol PMediaTransport;
 include protocol PRemoteWorker;
 include protocol PRemoteWorkerController;
@@ -96,7 +96,7 @@ sync protocol PBackground
   manages PGamepadTestChannel;
   manages PHttpBackgroundChannel;
   manages PIdleScheduler;
-  manages PIPCBlobInputStream;
+  manages PRemoteLazyInputStream;
   manages PMediaTransport;
   manages PRemoteWorker;
   manages PRemoteWorkerController;
@@ -263,9 +263,9 @@ child:
   async PRemoteWorker(RemoteWorkerData data);
 
 both:
-  // PIPCBlobInputStream is created on the parent side only if the child starts
-  // a migration.
-  async PIPCBlobInputStream(nsID aID, uint64_t aSize);
+  // PRemoteLazyInputStream is created on the parent side only if the child
+  // starts a migration.
+  async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
 
   async PFileDescriptorSet(FileDescriptor fd);
 };

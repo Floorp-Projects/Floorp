@@ -6,7 +6,7 @@ include ProtocolTypes;
 
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
-include protocol PIPCBlobInputStream;
+include protocol PRemoteLazyInputStream;
 
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
@@ -59,7 +59,7 @@ struct IPCBlobInputStreamRef
 union IPCBlobInputStreamParams
 {
   IPCBlobInputStreamRef;
-  PIPCBlobInputStream;
+  PRemoteLazyInputStream;
 };
 
 union IPCRemoteStreamType

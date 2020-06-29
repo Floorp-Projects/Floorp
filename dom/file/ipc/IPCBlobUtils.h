@@ -89,25 +89,25 @@
  * in order to do some networking, or whatever.
  *
  * For this reason, IPCBlobUtils uses a particular protocol for serializing
- * nsIInputStream parent to child: PIPCBlobInputStream. This protocol keeps the
- * original nsIInputStream alive on the parent side, and gives its size and a
- * UUID to the child side. The child side creates a IPCBlobInputStream and that
- * is incapsulated into a StreamBlobImpl.
+ * nsIInputStream parent to child: PRemoteLazyInputStream. This protocol keeps
+ * the original nsIInputStream alive on the parent side, and gives its size and
+ * a UUID to the child side. The child side creates a IPCBlobInputStream and
+ * that is incapsulated into a StreamBlobImpl.
  *
  * The UUID is useful when the content process sends the same nsIInputStream
  * back to the parent process because, the only information it has to share is
- * the UUID. Each nsIInputStream sent via PIPCBlobInputStream, is registered
+ * the UUID. Each nsIInputStream sent via PRemoteLazyInputStream, is registered
  * into the RemoteLazyInputStreamStorage.
  *
  * On the content process side, IPCBlobInputStream is a special inputStream:
  * the only reliable methods are:
- * - nsIInputStream.available() - the size is shared by PIPCBlobInputStream
+ * - nsIInputStream.available() - the size is shared by PRemoteLazyInputStream
  *   actor.
  * - nsIIPCSerializableInputStream.serialize() - we can give back this stream to
  *   the parent because we know its UUID.
  * - nsICloneableInputStream.cloneable() and nsICloneableInputStream.clone() -
  *   this stream can be cloned. We just need to have a reference of the
- *   PIPCBlobInputStream actor and its UUID.
+ *   PRemoteLazyInputStream actor and its UUID.
  * - nsIAsyncInputStream.asyncWait() - see next section.
  *
  * Any other method (read, readSegment and so on) will fail if asyncWait() is
@@ -249,7 +249,7 @@ namespace dom {
 class IPCBlob;
 class ContentChild;
 class ContentParent;
-class PIPCBlobInputStreamParent;
+class PRemoteLazyInputStreamParent;
 
 namespace IPCBlobUtils {
 
@@ -271,11 +271,11 @@ nsresult Serialize(BlobImpl* aBlobImpl,
                    IPCBlob& aIPCBlob);
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
-                              PIPCBlobInputStreamParent*& aActorParent,
+                              PRemoteLazyInputStreamParent*& aActorParent,
                               ContentParent* aManager);
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
-                              PIPCBlobInputStreamParent*& aActorParent,
+                              PRemoteLazyInputStreamParent*& aActorParent,
                               mozilla::ipc::PBackgroundParent* aManager);
 
 // WARNING: If you pass any actor which does not have P{Content,Background} as

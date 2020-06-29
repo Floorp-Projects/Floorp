@@ -388,16 +388,17 @@ void SocketProcessParent::Destroy(UniquePtr<SocketProcessParent>&& aParent) {
       new DeferredDeleteSocketProcessParent(std::move(aParent)));
 }
 
-already_AddRefed<dom::PIPCBlobInputStreamParent>
-SocketProcessParent::AllocPIPCBlobInputStreamParent(const nsID& aID,
-                                                    const uint64_t& aSize) {
+already_AddRefed<dom::PRemoteLazyInputStreamParent>
+SocketProcessParent::AllocPRemoteLazyInputStreamParent(const nsID& aID,
+                                                       const uint64_t& aSize) {
   RefPtr<dom::IPCBlobInputStreamParent> actor =
       dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
   return actor.forget();
 }
 
-mozilla::ipc::IPCResult SocketProcessParent::RecvPIPCBlobInputStreamConstructor(
-    dom::PIPCBlobInputStreamParent* aActor, const nsID& aID,
+mozilla::ipc::IPCResult
+SocketProcessParent::RecvPRemoteLazyInputStreamConstructor(
+    dom::PRemoteLazyInputStreamParent* aActor, const nsID& aID,
     const uint64_t& aSize) {
   if (!static_cast<dom::IPCBlobInputStreamParent*>(aActor)->HasValidStream()) {
     return IPC_FAIL_NO_REASON(this);
