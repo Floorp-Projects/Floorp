@@ -290,7 +290,7 @@ static void AddDynamicPathList(SandboxBroker::Policy* policy,
   }
 }
 
-SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory() {
+void SandboxBrokerPolicyFactory::InitContentPolicy() {
   // Policy entries that are the same in every process go here, and
   // are cached over the lifetime of the factory.
   SandboxBroker::Policy* policy = new SandboxBroker::Policy;
@@ -523,6 +523,7 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
     return nullptr;
   }
 
+  std::call_once(mContentInited, [this] { InitContentPolicy(); });
   MOZ_ASSERT(mCommonContentPolicy);
   UniquePtr<SandboxBroker::Policy> policy(
       new SandboxBroker::Policy(*mCommonContentPolicy));
