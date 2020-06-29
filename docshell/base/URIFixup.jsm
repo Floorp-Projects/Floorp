@@ -326,7 +326,7 @@ URIFixup.prototype = {
         ["ile", "file"],
         ["le", "file"],
       ].some(([typo, fixed]) => {
-        if (uriString.startsWith(typo)) {
+        if (uriString.startsWith(typo + ":")) {
           scheme = fixed;
           uriString = scheme + uriString.substring(typo.length);
           isCommonProtocol = true;
