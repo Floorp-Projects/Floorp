@@ -2110,13 +2110,15 @@ var gBrowserInit = {
     // We've announced that delayed startup has finished. Do not add code past this point.
   },
 
+  /**
+   * Resolved on the first MozAfterPaint in the first content window.
+   */
+  get firstContentWindowPaintPromise() {
+    return this._firstContentWindowPaintDeferred.promise;
+  },
+
   _setInitialFocus() {
     let initiallyFocusedElement = document.commandDispatcher.focusedElement;
-
-    this._firstBrowserPaintDeferred = {};
-    this._firstBrowserPaintDeferred.promise = new Promise(resolve => {
-      this._firstBrowserPaintDeferred.resolve = resolve;
-    });
 
     // To prevent startup flicker, the urlbar has the 'focused' attribute set
     // by default. If we are not sure the urlbar will be focused in this
@@ -2136,7 +2138,7 @@ var gBrowserInit = {
       if (gBrowser.selectedBrowser.isRemoteBrowser) {
         // If the initial browser is remote, in order to optimize for first paint,
         // we'll defer switching focus to that browser until it has painted.
-        this._firstBrowserPaintDeferred.promise.then(() => {
+        this._firstContentWindowPaintDeferred.promise.then(() => {
           // If focus didn't move while we were waiting for first paint, we're okay
           // to move to the browser.
           if (
@@ -2532,6 +2534,12 @@ var gBrowserInit = {
     window.browserDOMWindow = null;
   },
 };
+
+XPCOMUtils.defineLazyGetter(
+  gBrowserInit,
+  "_firstContentWindowPaintDeferred",
+  () => PromiseUtils.defer()
+);
 
 gBrowserInit.idleTasksFinishedPromise = new Promise(resolve => {
   gBrowserInit.idleTaskPromiseResolve = resolve;
@@ -5261,6 +5269,7 @@ var XULBrowserWindow = {
       SafeBrowsingNotificationBox.onLocationChange(aLocationURI);
 
       UrlbarProviderSearchTips.onLocationChange(
+        window,
         aLocationURI,
         aWebProgress,
         aFlags

@@ -30,7 +30,7 @@ class BrowserTabParent extends JSWindowActorParent {
       }
 
       case "Browser:FirstPaint": {
-        browser.ownerGlobal.gBrowserInit._firstBrowserPaintDeferred.resolve();
+        browser.ownerGlobal.gBrowserInit._firstContentWindowPaintDeferred.resolve();
         break;
       }
 
