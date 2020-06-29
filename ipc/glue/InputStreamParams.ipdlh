@@ -49,16 +49,16 @@ struct SlicedInputStreamParams
   bool closed;
 };
 
-struct IPCBlobInputStreamRef
+struct RemoteLazyInputStreamRef
 {
   nsID id;
   uint64_t start;
   uint64_t length;
 };
 
-union IPCBlobInputStreamParams
+union RemoteLazyInputStreamParams
 {
-  IPCBlobInputStreamRef;
+  RemoteLazyInputStreamRef;
   PRemoteLazyInputStream;
 };
 
@@ -89,7 +89,7 @@ union InputStreamParams
   MIMEInputStreamParams;
   MultiplexInputStreamParams;
   SlicedInputStreamParams;
-  IPCBlobInputStreamParams;
+  RemoteLazyInputStreamParams;
   InputStreamLengthWrapperParams;
   IPCRemoteStreamParams;
   EncryptedFileInputStreamParams;
