@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_RemoteLazyInputStreamThread_h
-#define mozilla_dom_RemoteLazyInputStreamThread_h
+#ifndef mozilla_RemoteLazyInputStreamThread_h
+#define mozilla_RemoteLazyInputStreamThread_h
 
-#include "mozilla/dom/RemoteLazyInputStreamChild.h"
+#include "mozilla/RemoteLazyInputStreamChild.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
@@ -15,7 +15,6 @@
 class nsIThread;
 
 namespace mozilla {
-namespace dom {
 
 class RemoteLazyInputStreamChild;
 
@@ -54,7 +53,6 @@ bool IsOnDOMFileThread();
 
 void AssertIsOnDOMFileThread();
 
-}  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_RemoteLazyInputStreamThread_h
+#endif  // mozilla_RemoteLazyInputStreamThread_h

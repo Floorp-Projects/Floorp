@@ -13,6 +13,17 @@ using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
+
+union RemoteLazyStream
+{
+  // Parent to Child: The child will receive a RemoteLazyInputStream. Nothing
+  // can be done with it except retrieving the size.
+  PRemoteLazyInputStream;
+
+  // Child to Parent: Normal serialization.
+  IPCStream;
+};
+
 namespace dom {
 
 // This contains any extra bit for making a File out of a Blob.
@@ -28,16 +39,6 @@ struct IPCFile
 
   // Useful for Entries API.
   bool isDirectory;
-};
-
-union RemoteLazyStream
-{
-  // Parent to Child: The child will receive a RemoteLazyInputStream. Nothing
-  // can be done with it except retrieving the size.
-  PRemoteLazyInputStream;
-
-  // Child to Parent: Normal serialization.
-  IPCStream;
 };
 
 struct IPCBlob

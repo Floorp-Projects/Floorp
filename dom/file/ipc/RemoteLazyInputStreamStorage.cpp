@@ -16,8 +16,6 @@ namespace mozilla {
 
 using namespace hal;
 
-namespace dom {
-
 namespace {
 StaticMutex gMutex;
 StaticRefPtr<RemoteLazyInputStreamStorage> gStorage;
@@ -202,5 +200,4 @@ RemoteLazyInputStreamStorage::TakeCallback(const nsID& aID) {
   return callback.forget();
 }
 
-}  // namespace dom
 }  // namespace mozilla
