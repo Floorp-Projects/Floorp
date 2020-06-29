@@ -1394,10 +1394,8 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   } else {
     if (StaticPrefs::network_ssl_tokens_cache_enabled()) {
       RebuildCertificateInfoFromSSLTokenCache(infoObject);
-      infoObject->NoteSessionResumptionTime(true);
     } else {
       RebuildVerifiedCertificateInformation(fd, infoObject);
-      infoObject->NoteSessionResumptionTime(false);
     }
   }
 
