@@ -1,5 +1,5 @@
 # This pref enables high-contrast mode in the testcases here:
-defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true)
+defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true) test-pref(layout.css.prefers-contrast.enabled,true)
 
 # There are several platform-specific fuzzy-if notations below due to
 # anti-aliasing, extra visual overflow, and slightly inacurate reftest
@@ -43,3 +43,32 @@ pref(browser.display.document_color_use,2) == non-themed-button-002.html non-the
 != cascade-001.html about:blank
 
 pref(browser.display.document_color_use,2) == background-transparent-form-control.html background-transparent-form-control-ref.html
+
+# prefers-contrast media query:
+# XXX: because we can't toggle an OS high contrast theme from a
+# reftest we can't directly test whether or not that triggers the high
+# contrast setting on the prefers-contrast media query. This is quite
+# sad. Bug 1648807.
+
+# a prefers-contrast value of forced should evaluate to true
+== prefers-contrast-001.html prefers-contrast-black-ref.html
+
+# If RFP is on the media query stops evaluating contrast preferences
+# and defaults to no-preference. The media query will still evaluate
+# to forced though when RFP is on. The idea being that there are other
+# ways to detect if forced colors are enabled so might as well not lie
+# about it.
+test-pref(privacy.resistFingerprinting,true) == prefers-contrast-003.html prefers-contrast-black-ref.html
+# Should only be enabled behind preference.
+test-pref(layout.css.prefers-contrast.enabled,false) != prefers-contrast-001.html prefers-contrast-black-ref.html
+
+
+# prefers-contrast forced matching forced
+== prefers-contrast-003.html prefers-contrast-black-ref.html
+
+# a prefers-contrast value of no-preference should evaluate to false
+# in the boolean context
+test-pref(browser.display.document_color_use,0) != prefers-contrast-001.html prefers-contrast-black-ref.html
+
+# a prefers-contrast value of no-preference should match no-preference
+test-pref(browser.display.document_color_use,0) == prefers-contrast-005.html prefers-contrast-black-ref.html

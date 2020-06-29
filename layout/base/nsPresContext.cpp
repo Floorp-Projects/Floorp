@@ -499,6 +499,15 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     }
     return;
   }
+  // Changing any of these potentially changes the value of @media
+  // (prefers-contrast).
+  if (prefName.EqualsLiteral("layout.css.prefers-contrast.enabled") ||
+      prefName.EqualsLiteral("browser.display.document_color_use") ||
+      prefName.EqualsLiteral("privacy.resistFingerprinting") ||
+      prefName.EqualsLiteral("browser.display.foreground_color") ||
+      prefName.EqualsLiteral("browser.display.background_color")) {
+    MediaFeatureValuesChanged({MediaFeatureChangeReason::PreferenceChange});
+  }
   if (prefName.EqualsLiteral(GFX_MISSING_FONTS_NOTIFY_PREF)) {
     if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
       if (!mMissingFonts) {

@@ -26,7 +26,7 @@
 #include "nsIMemoryReporter.h"
 
 namespace mozilla {
-enum class MediaFeatureChangeReason : uint8_t;
+enum class MediaFeatureChangeReason : uint16_t;
 namespace css {
 class Rule;
 }  // namespace css
