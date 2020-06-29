@@ -658,7 +658,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   UniquePtr<SerializedStackHolder> mOriginStack;
   nsString mOriginStackJSON;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
-  nsTArray<ScriptLoadInfo> mLoadInfos;
+  nsTArrayView<ScriptLoadInfo> mLoadInfos;
   RefPtr<CacheCreator> mCacheCreator;
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
@@ -673,7 +673,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   ScriptLoaderRunnable(WorkerPrivate* aWorkerPrivate,
                        UniquePtr<SerializedStackHolder> aOriginStack,
                        nsIEventTarget* aSyncLoopTarget,
-                       nsTArray<ScriptLoadInfo>& aLoadInfos,
+                       nsTArray<ScriptLoadInfo> aLoadInfos,
                        const Maybe<ClientInfo>& aClientInfo,
                        const Maybe<ServiceWorkerDescriptor>& aController,
                        bool aIsMainScript, WorkerScriptType aWorkerScriptType,
@@ -681,6 +681,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       : mWorkerPrivate(aWorkerPrivate),
         mOriginStack(std::move(aOriginStack)),
         mSyncLoopTarget(aSyncLoopTarget),
+        mLoadInfos(std::move(aLoadInfos)),
         mClientInfo(aClientInfo),
         mController(aController),
         mIsMainScript(aIsMainScript),
@@ -689,9 +690,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
         mRv(aRv) {
     aWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(aSyncLoopTarget);
-    MOZ_ASSERT_IF(aIsMainScript, aLoadInfos.Length() == 1);
-
-    mLoadInfos.SwapElements(aLoadInfos);
+    MOZ_ASSERT_IF(aIsMainScript, mLoadInfos.Length() == 1);
   }
 
   void CancelMainThreadWithBindingAborted() {
@@ -2099,11 +2098,11 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
                                        WorkerPrivate* aWorkerPrivate) {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  nsTArray<ScriptLoadInfo>& loadInfos = mScriptLoader.mLoadInfos;
+  auto& loadInfos = mScriptLoader.mLoadInfos;
 
   // Don't run if something else has already failed.
   for (uint32_t index = 0; index < mFirstIndex; index++) {
-    ScriptLoadInfo& loadInfo = loadInfos.ElementAt(index);
+    const ScriptLoadInfo& loadInfo = loadInfos[index];
 
     NS_ASSERTION(!loadInfo.mChannel, "Should no longer have a channel!");
     NS_ASSERTION(loadInfo.mExecutionScheduled, "Should be scheduled!");
@@ -2122,7 +2121,7 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
   MOZ_ASSERT(global);
 
   for (uint32_t index = mFirstIndex; index <= mLastIndex; index++) {
-    ScriptLoadInfo& loadInfo = loadInfos.ElementAt(index);
+    ScriptLoadInfo& loadInfo = loadInfos[index];
 
     NS_ASSERTION(!loadInfo.mChannel, "Should no longer have a channel!");
     NS_ASSERTION(loadInfo.mExecutionScheduled, "Should be scheduled!");
@@ -2187,7 +2186,7 @@ void ScriptExecutorRunnable::PostRun(JSContext* aCx,
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!JS_IsExceptionPending(aCx), "Who left an exception on there?");
 
-  nsTArray<ScriptLoadInfo>& loadInfos = mScriptLoader.mLoadInfos;
+  const auto& loadInfos = mScriptLoader.mLoadInfos;
 
   if (mLastIndex == loadInfos.Length() - 1) {
     // All done. If anything failed then return false.
@@ -2289,7 +2288,7 @@ void ScriptExecutorRunnable::LogExceptionToConsole(
 
 void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
                     UniquePtr<SerializedStackHolder> aOriginStack,
-                    nsTArray<ScriptLoadInfo>& aLoadInfos, bool aIsMainScript,
+                    nsTArray<ScriptLoadInfo> aLoadInfos, bool aIsMainScript,
                     WorkerScriptType aWorkerScriptType, ErrorResult& aRv) {
   aWorkerPrivate->AssertIsOnWorkerThread();
   NS_ASSERTION(!aLoadInfos.IsEmpty(), "Bad arguments!");
@@ -2314,8 +2313,9 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   }
 
   RefPtr<ScriptLoaderRunnable> loader = new ScriptLoaderRunnable(
-      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget, aLoadInfos,
-      clientInfo, controller, aIsMainScript, aWorkerScriptType, aRv);
+      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget,
+      std::move(aLoadInfos), clientInfo, controller, aIsMainScript,
+      aWorkerScriptType, aRv);
 
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 
@@ -2450,8 +2450,8 @@ void LoadMainScript(WorkerPrivate* aWorkerPrivate,
         aWorkerPrivate->DebuggerGlobalScope()->GetClientInfo();
   }
 
-  LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), loadInfos, true,
-                 aWorkerScriptType, aRv);
+  LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), std::move(loadInfos),
+                 true, aWorkerScriptType, aRv);
 }
 
 void Load(WorkerPrivate* aWorkerPrivate,
@@ -2477,8 +2477,8 @@ void Load(WorkerPrivate* aWorkerPrivate,
     loadInfos[index].mLoadFlags = aWorkerPrivate->GetLoadFlags();
   }
 
-  LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), loadInfos, false,
-                 aWorkerScriptType, aRv);
+  LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), std::move(loadInfos),
+                 false, aWorkerScriptType, aRv);
 }
 
 }  // namespace workerinternals
