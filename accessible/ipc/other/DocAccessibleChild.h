@@ -38,6 +38,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
     MOZ_COUNT_DTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
   }
 
+  virtual mozilla::ipc::IPCResult RecvConstructedInParentProcess() override;
   virtual mozilla::ipc::IPCResult RecvRestoreFocus() override;
 
   /*

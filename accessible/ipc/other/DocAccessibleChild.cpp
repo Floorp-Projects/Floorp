@@ -1694,6 +1694,11 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvDOMNodeID(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChild::RecvConstructedInParentProcess() {
+  SetConstructedInParentProcess();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
   FocusMgr()->ForceFocusEvent();
   return IPC_OK();

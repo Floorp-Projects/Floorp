@@ -77,6 +77,8 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
 
   DocAccessible* mDoc;
   bool mIsRemoteConstructed;
+
+  friend void DocAccessible::DoInitialUpdate();
 };
 
 }  // namespace a11y
