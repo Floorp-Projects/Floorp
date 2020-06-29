@@ -60,12 +60,12 @@ exports[`sources-tree addToTree excludes javascript: URLs from the tree 1`] = `
 "
 `;
 
-exports[`sources-tree addToTree name does not include query params 1`] = `
+exports[`sources-tree addToTree name does include query params 1`] = `
 " - root path= 
   - FakeThread path=FakeThread 
     - example.com path=FakeThread/example.com 
       - foo path=FakeThread/example.com/foo 
-        - name.js path=FakeThread/example.com/foo/name.js source_id=actor1 
+        - name.js?bar=3 path=FakeThread/example.com/foo/name.js?bar=3 source_id=actor1 
 "
 `;
 

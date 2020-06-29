@@ -10,6 +10,7 @@ import { getUnicodeHostname, getUnicodeUrlPath } from "devtools-modules";
 import type { DisplaySource, Source } from "../../types";
 export type ParsedURL = {
   path: string,
+  search: string,
   group: string,
   filename: string,
 };
@@ -27,7 +28,7 @@ export function getFilenameFromPath(pathname?: string): string {
 }
 
 const NoDomain = "(no domain)";
-const def = { path: "", group: "", filename: "" };
+const def = { path: "", search: "", group: "", filename: "" };
 
 export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
   const { url } = source;
@@ -49,7 +50,7 @@ export function getDisplayURL(
 }
 
 function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
-  const { pathname, protocol, host } = parse(url);
+  const { pathname, search, protocol, host } = parse(url);
   const filename = getUnicodeUrlPath(getFilenameFromPath(pathname));
 
   switch (protocol) {
@@ -62,6 +63,7 @@ function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
       return {
         ...def,
         path: pathname,
+        search,
         filename,
         group: `${protocol}//${host || ""}`,
       };
@@ -71,6 +73,7 @@ function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
       return {
         ...def,
         path: pathname,
+        search,
         filename,
         group: `${protocol}//`,
       };
@@ -80,6 +83,7 @@ function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
       return {
         ...def,
         path: "/",
+        search,
         filename,
         group: url,
       };
@@ -88,6 +92,7 @@ function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
       return {
         ...def,
         path: "/",
+        search,
         group: NoDomain,
         filename: url,
       };
@@ -98,13 +103,15 @@ function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
         return {
           ...def,
           path: pathname,
+          search,
           filename,
           group: "file://",
         };
       } else if (!host) {
         return {
           ...def,
-          path: url,
+          path: pathname,
+          search,
           group: defaultDomain || "",
           filename,
         };
@@ -116,6 +123,7 @@ function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
       return {
         ...def,
         path: pathname,
+        search,
         filename,
         group: getUnicodeHostname(host),
       };
@@ -124,6 +132,7 @@ function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
   return {
     ...def,
     path: pathname,
+    search,
     group: protocol ? `${protocol}//` : "",
     filename,
   };

@@ -9,8 +9,51 @@ import type { TreeNode, TreeSource, TreeDirectory, ParentMap } from "./types";
 import type { Source, Thread, URL } from "../../types";
 import type { SourcesMapByThread } from "../../reducers/types";
 import { isPretty } from "../source";
-import { getURL } from "./getURL";
+import { getURL, type ParsedURL } from "./getURL";
 const IGNORED_URLS = ["debugger eval code", "XStringBundle"];
+
+export type PathPart = {
+  part: string,
+  path: string,
+  debuggeeHostIfRoot: ?string,
+};
+export function getPathParts(
+  url: ParsedURL,
+  thread: string,
+  debuggeeHost: ?string
+): Array<PathPart> {
+  const parts = url.path.split("/");
+  if (parts.length > 1 && parts[parts.length - 1] === "") {
+    parts.pop();
+    if (url.search) {
+      parts.push(url.search);
+    }
+  } else {
+    parts[parts.length - 1] += url.search;
+  }
+
+  parts[0] = url.group;
+  if (thread) {
+    parts.unshift(thread);
+  }
+
+  let path = "";
+  return parts.map((part, index) => {
+    if (index == 0 && thread) {
+      path = thread;
+    } else {
+      path = `${path}/${part}`;
+    }
+
+    const debuggeeHostIfRoot = index === 1 ? debuggeeHost : null;
+
+    return {
+      part,
+      path,
+      debuggeeHostIfRoot,
+    };
+  });
+}
 
 export function nodeHasChildren(item: TreeNode): boolean {
   return item.type == "directory" && Array.isArray(item.contents);
@@ -92,7 +135,7 @@ export function isNotJavaScript(source: Source): boolean {
   return ["css", "svg", "png"].includes(getFileExtension(source));
 }
 
-export function isInvalidUrl(url: Object, source: Source): boolean {
+export function isInvalidUrl(url: ParsedURL, source: Source): boolean {
   return (
     !source.url ||
     !url.group ||
@@ -104,7 +147,7 @@ export function isInvalidUrl(url: Object, source: Source): boolean {
 
 export function partIsFile(
   index: number,
-  parts: Array<string>,
+  parts: Array<PathPart>,
   url: Object
 ): boolean {
   const isLastPart = index === parts.length - 1;
