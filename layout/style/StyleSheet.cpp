@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/StyleSheet.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/css/ErrorReporter.h"
@@ -895,7 +896,15 @@ void StyleSheet::UnparentChildren() {
              "by a document?");
   // XXXbz this is a little bogus; see the comment where we
   // declare mChildren in StyleSheetInfo.
-  for (StyleSheet* child : ChildSheets()) {
+  //
+  // FIXME(emilio): StyleSheetInfo::RemoveSheet fixes up the parent list
+  // instead... We should maybe remove this and make that fix up more correct
+  // (right now it only tries to fix them up if you're the first sheet, but
+  // there's no guarantee that the first stylesheet is where the children end up
+  // being inserted in presence of deferred loads).
+  for (StyleSheet* child : Inner().mChildren) {
+    MOZ_ASSERT(!child->GetParentSheet() ||
+               child->GetParentSheet()->mInner == mInner);
     if (child->mParentSheet == this) {
       child->mParentSheet = nullptr;
     }
