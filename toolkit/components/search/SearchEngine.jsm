@@ -137,26 +137,29 @@ function ENSURE_WARN(assertion, message, resultCode) {
   }
 }
 
-function loadListener(channel, engine, callback) {
-  this._channel = channel;
-  this._bytes = [];
-  this._engine = engine;
-  this._callback = callback;
-}
-loadListener.prototype = {
-  _callback: null,
-  _channel: null,
-  _countRead: 0,
-  _engine: null,
-  _stream: null,
-
-  QueryInterface: ChromeUtils.generateQI([
+/**
+ * Load listener
+ */
+class loadListener {
+  _bytes = [];
+  _callback = null;
+  _channel = null;
+  _countRead = 0;
+  _engine = null;
+  _stream = null;
+  QueryInterface = ChromeUtils.generateQI([
     Ci.nsIRequestObserver,
     Ci.nsIStreamListener,
     Ci.nsIChannelEventSink,
     Ci.nsIInterfaceRequestor,
     Ci.nsIProgressEventSink,
-  ]),
+  ]);
+
+  constructor(channel, engine, callback) {
+    this._channel = channel;
+    this._engine = engine;
+    this._callback = callback;
+  }
 
   // nsIRequestObserver
   onStartRequest(request) {
@@ -164,7 +167,7 @@ loadListener.prototype = {
     this._stream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
       Ci.nsIBinaryInputStream
     );
-  },
+  }
 
   onStopRequest(request, statusCode) {
     logConsole.debug("loadListener: Stopping request:", request.name);
@@ -182,7 +185,7 @@ loadListener.prototype = {
     this._callback(this._bytes, this._engine);
     this._channel = null;
     this._engine = null;
-  },
+  }
 
   // nsIStreamListener
   onDataAvailable(request, inputStream, offset, count) {
@@ -191,23 +194,23 @@ loadListener.prototype = {
     // Get a byte array of the data
     this._bytes = this._bytes.concat(this._stream.readByteArray(count));
     this._countRead += count;
-  },
+  }
 
   // nsIChannelEventSink
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
     this._channel = newChannel;
     callback.onRedirectVerifyCallback(Cr.NS_OK);
-  },
+  }
 
   // nsIInterfaceRequestor
   getInterface(iid) {
     return this.QueryInterface(iid);
-  },
+  }
 
   // nsIProgressEventSink
-  onProgress(request, progress, progressMax) {},
-  onStatus(request, status, statusArg) {},
-};
+  onProgress(request, progress, progressMax) {}
+  onStatus(request, status, statusArg) {}
+}
 
 /**
  * Tries to rescale an icon to a given size.
@@ -539,79 +542,84 @@ function getInternalAliases(engine) {
 }
 
 /**
- * Creates an engineURL object, which holds the query URL and all parameters.
- *
- * @param {string} mimeType
- *   The name of the MIME type of the search results returned by this URL.
- * @param {string} requestMethod
- *   The HTTP request method. Must be a case insensitive value of either
- *   "GET" or "POST".
- * @param {string} template
- *   The URL to which search queries should be sent. For GET requests,
- *   must contain the string "{searchTerms}", to indicate where the user
- *   entered search terms should be inserted.
- * @param {string} [resultDomain]
- *   The root domain for this URL.  Defaults to the template's host.
- *
- * @see http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
- *
- * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.
+ * EngineURL holds a query URL and all associated parameters.
  */
-function EngineURL(mimeType, requestMethod, template, resultDomain) {
-  if (!mimeType || !requestMethod || !template) {
-    throw Components.Exception(
-      "missing mimeType, method or template for EngineURL!",
-      Cr.NS_ERROR_INVALID_ARG
-    );
-  }
+class EngineURL {
+  params = [];
+  rels = [];
 
-  var method = requestMethod.toUpperCase();
-  var type = mimeType.toLowerCase();
-
-  if (method != "GET" && method != "POST") {
-    throw Components.Exception(
-      'method passed to EngineURL must be "GET" or "POST"',
-      Cr.NS_ERROR_INVALID_ARG
-    );
-  }
-
-  this.type = type;
-  this.method = method;
-  this.params = [];
-  this.rels = [];
-
-  var templateURI = SearchUtils.makeURI(template);
-  if (!templateURI) {
-    throw Components.Exception(
-      "new EngineURL: template is not a valid URI!",
-      Cr.NS_ERROR_FAILURE
-    );
-  }
-
-  switch (templateURI.scheme) {
-    case "http":
-    case "https":
-      // Disable these for now, see bug 295018
-      // case "file":
-      // case "resource":
-      this.template = template;
-      break;
-    default:
+  /**
+   * Constructor
+   *
+   * @param {string} mimeType
+   *   The name of the MIME type of the search results returned by this URL.
+   * @param {string} requestMethod
+   *   The HTTP request method. Must be a case insensitive value of either
+   *   "GET" or "POST".
+   * @param {string} template
+   *   The URL to which search queries should be sent. For GET requests,
+   *   must contain the string "{searchTerms}", to indicate where the user
+   *   entered search terms should be inserted.
+   * @param {string} [resultDomain]
+   *   The root domain for this URL.  Defaults to the template's host.
+   *
+   * @see http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
+   *
+   * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.
+   */
+  constructor(mimeType, requestMethod, template, resultDomain) {
+    if (!mimeType || !requestMethod || !template) {
       throw Components.Exception(
-        "new EngineURL: template uses invalid scheme!",
+        "missing mimeType, method or template for EngineURL!",
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
+
+    var method = requestMethod.toUpperCase();
+    var type = mimeType.toLowerCase();
+
+    if (method != "GET" && method != "POST") {
+      throw Components.Exception(
+        'method passed to EngineURL must be "GET" or "POST"',
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
+
+    this.type = type;
+    this.method = method;
+
+    var templateURI = SearchUtils.makeURI(template);
+    if (!templateURI) {
+      throw Components.Exception(
+        "new EngineURL: template is not a valid URI!",
         Cr.NS_ERROR_FAILURE
       );
+    }
+
+    switch (templateURI.scheme) {
+      case "http":
+      case "https":
+        // Disable these for now, see bug 295018
+        // case "file":
+        // case "resource":
+        this.template = template;
+        break;
+      default:
+        throw Components.Exception(
+          "new EngineURL: template uses invalid scheme!",
+          Cr.NS_ERROR_FAILURE
+        );
+    }
+
+    this.templateHost = templateURI.host;
+    // If no resultDomain was specified in the engine definition file, use the
+    // host from the template.
+    this.resultDomain = resultDomain || this.templateHost;
   }
 
-  this.templateHost = templateURI.host;
-  // If no resultDomain was specified in the engine definition file, use the
-  // host from the template.
-  this.resultDomain = resultDomain || this.templateHost;
-}
-EngineURL.prototype = {
   addParam(name, value, purpose) {
     this.params.push(new QueryParameter(name, value, purpose));
-  },
+  }
 
   /**
    * Adds a MozParam to the parameters list for this URL. For purpose based params
@@ -643,7 +651,7 @@ EngineURL.prototype = {
     } else {
       this.addParam(param.name, param.value || undefined, purpose);
     }
-  },
+  }
 
   getSubmission(searchTerms, engine, purpose) {
     var url = ParamSubstitution(this.template, searchTerms, engine);
@@ -716,16 +724,16 @@ EngineURL.prototype = {
     }
 
     return new Submission(Services.io.newURI(url), postData);
-  },
+  }
 
   _getTermsParameterName() {
     let queryParam = this.params.find(p => p.value == "{" + USER_DEFINED + "}");
     return queryParam ? queryParam.name : "";
-  },
+  }
 
   _hasRelation(rel) {
     return this.rels.some(e => e == rel.toLowerCase());
-  },
+  }
 
   _initWithJSON(json) {
     if (!json.params) {
@@ -742,7 +750,7 @@ EngineURL.prototype = {
         this.addParam(param.name, param.value, param.purpose || undefined);
       }
     }
-  },
+  }
 
   /**
    * Creates a JavaScript object that represents this URL.
@@ -766,132 +774,134 @@ EngineURL.prototype = {
     }
 
     return json;
-  },
-};
-
-/**
- * nsISearchEngine constructor.
- *
- * @param {object} options
- *   The options for this search engine. At least one of options.name,
- *   options.fileURI or options.uri are required.
- * @param {string} [options.name]
- *   The name to base the short name of the engine on. This is typically the
- *   display name where a pre-defined/sanitized short name is not available.
- * @param {string} [options.shortName]
- *   The short name to use for the engine. This should be known to match
- *   the basic requirements in sanitizeName for a short name.
- * @param {nsIFile} [options.fileURI]
- *   The file URI that points to the search engine data.
- * @param {nsIURI|string} [options.uri]
- *   Represents the location of the search engine data file.
- * @param {boolean} options.isAppProvided
- *   Indicates whether the engine is provided by Firefox, either
- *   shipped in omni.ja or via Normandy. If it is, it will
- *   be treated as read-only.
- */
-function SearchEngine(options = {}) {
-  if (!("isAppProvided" in options)) {
-    throw new Error("isAppProvided missing from options.");
-  }
-  this._isAppProvided = options.isAppProvided;
-  // The alias coming from the engine definition (via webextension
-  // keyword field for example) may be overridden in the metaData
-  // with a user defined alias.
-  this._definedAlias = null;
-  this._urls = [];
-  this._metaData = {};
-
-  let file, uri;
-  if ("name" in options) {
-    this._shortName = sanitizeName(options.name);
-  } else if ("shortName" in options) {
-    this._shortName = options.shortName;
-  } else if ("fileURI" in options && options.fileURI instanceof Ci.nsIFile) {
-    file = options.fileURI;
-  } else if ("uri" in options) {
-    let optionsURI = options.uri;
-    if (typeof optionsURI == "string") {
-      optionsURI = SearchUtils.makeURI(optionsURI);
-    }
-    // makeURI can return null if the URI is invalid.
-    if (!optionsURI || !(optionsURI instanceof Ci.nsIURI)) {
-      throw new Components.Exception(
-        "options.uri isn't a string nor an nsIURI",
-        Cr.NS_ERROR_INVALID_ARG
-      );
-    }
-    switch (optionsURI.scheme) {
-      case "https":
-      case "http":
-      case "ftp":
-      case "data":
-      case "file":
-      case "resource":
-      case "chrome":
-        uri = optionsURI;
-        break;
-      default:
-        throw Components.Exception(
-          "Invalid URI passed to SearchEngine constructor",
-          Cr.NS_ERROR_INVALID_ARG
-        );
-    }
-  } else {
-    throw Components.Exception(
-      "Invalid name/fileURI/uri options passed to SearchEngine",
-      Cr.NS_ERROR_INVALID_ARG
-    );
-  }
-
-  if (!this._shortName) {
-    // If we don't have a shortName at this point, it's the first time we load
-    // this engine, so let's generate the shortName, id and loadPath values.
-    let shortName;
-    if (file) {
-      shortName = file.leafName;
-    } else if (uri && uri instanceof Ci.nsIURL) {
-      if (
-        this._isAppProvided ||
-        (gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR") &&
-          uri.scheme == "resource")
-      ) {
-        shortName = uri.fileName;
-      }
-    }
-    if (shortName && shortName.endsWith(".xml")) {
-      this._shortName = shortName.slice(0, -4);
-    }
-    this._loadPath = this.getAnonymizedLoadPath(file, uri);
   }
 }
 
-SearchEngine.prototype = {
+/**
+ * SearchEngine represents WebExtension based search engines.
+ */
+class SearchEngine {
+  /**
+   * Constructor.
+   *
+   * @param {object} options
+   *   The options for this search engine. At least one of options.name,
+   *   options.fileURI or options.uri are required.
+   * @param {string} [options.name]
+   *   The name to base the short name of the engine on. This is typically the
+   *   display name where a pre-defined/sanitized short name is not available.
+   * @param {string} [options.shortName]
+   *   The short name to use for the engine. This should be known to match
+   *   the basic requirements in sanitizeName for a short name.
+   * @param {nsIFile} [options.fileURI]
+   *   The file URI that points to the search engine data.
+   * @param {nsIURI|string} [options.uri]
+   *   Represents the location of the search engine data file.
+   * @param {boolean} options.isAppProvided
+   *   Indicates whether the engine is provided by Firefox, either
+   *   shipped in omni.ja or via Normandy. If it is, it will
+   *   be treated as read-only.
+   */
+  constructor(options = {}) {
+    if (!("isAppProvided" in options)) {
+      throw new Error("isAppProvided missing from options.");
+    }
+    this._isAppProvided = options.isAppProvided;
+    // The alias coming from the engine definition (via webextension
+    // keyword field for example) may be overridden in the metaData
+    // with a user defined alias.
+    this._definedAlias = null;
+    this._urls = [];
+    this._metaData = {};
+
+    let file, uri;
+    if ("name" in options) {
+      this._shortName = sanitizeName(options.name);
+    } else if ("shortName" in options) {
+      this._shortName = options.shortName;
+    } else if ("fileURI" in options && options.fileURI instanceof Ci.nsIFile) {
+      file = options.fileURI;
+    } else if ("uri" in options) {
+      let optionsURI = options.uri;
+      if (typeof optionsURI == "string") {
+        optionsURI = SearchUtils.makeURI(optionsURI);
+      }
+      // makeURI can return null if the URI is invalid.
+      if (!optionsURI || !(optionsURI instanceof Ci.nsIURI)) {
+        throw new Components.Exception(
+          "options.uri isn't a string nor an nsIURI",
+          Cr.NS_ERROR_INVALID_ARG
+        );
+      }
+      switch (optionsURI.scheme) {
+        case "https":
+        case "http":
+        case "ftp":
+        case "data":
+        case "file":
+        case "resource":
+        case "chrome":
+          uri = optionsURI;
+          break;
+        default:
+          throw Components.Exception(
+            "Invalid URI passed to SearchEngine constructor",
+            Cr.NS_ERROR_INVALID_ARG
+          );
+      }
+    } else {
+      throw Components.Exception(
+        "Invalid name/fileURI/uri options passed to SearchEngine",
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
+
+    if (!this._shortName) {
+      // If we don't have a shortName at this point, it's the first time we load
+      // this engine, so let's generate the shortName, id and loadPath values.
+      let shortName;
+      if (file) {
+        shortName = file.leafName;
+      } else if (uri && uri instanceof Ci.nsIURL) {
+        if (
+          this._isAppProvided ||
+          (gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR") &&
+            uri.scheme == "resource")
+        ) {
+          shortName = uri.fileName;
+        }
+      }
+      if (shortName && shortName.endsWith(".xml")) {
+        this._shortName = shortName.slice(0, -4);
+      }
+      this._loadPath = this.getAnonymizedLoadPath(file, uri);
+    }
+  }
   // Data set by the user.
-  _metaData: null,
+  _metaData = null;
   // The data describing the engine, in the form of an XML document element.
-  _data: null,
+  _data = null;
   // Anonymized path of where we initially loaded the engine from.
   // This will stay null for engines installed in the profile before we moved
   // to a JSON storage.
-  _loadPath: null,
+  _loadPath = null;
   // The engine's description
-  _description: "",
+  _description = "";
   // Used to store the engine to replace, if we're an update to an existing
   // engine.
-  _engineToUpdate: null,
+  _engineToUpdate = null;
   // Set to true if the engine has a preferred icon (an icon that should not be
   // overridden by a non-preferred icon).
-  _hasPreferredIcon: null,
+  _hasPreferredIcon = null;
   // The engine's name.
-  _name: null,
+  _name = null;
   // The name of the charset used to submit the search terms.
-  _queryCharset: null,
+  _queryCharset = null;
   // The engine's raw SearchForm value (URL string pointing to a search form).
-  __searchForm: null,
+  __searchForm = null;
   get _searchForm() {
     return this.__searchForm;
-  },
+  }
   set _searchForm(value) {
     if (/^https?:/i.test(value)) {
       this.__searchForm = value;
@@ -901,36 +911,36 @@ SearchEngine.prototype = {
         this._name || "the current engine"
       );
     }
-  },
+  }
   // Whether to obtain user confirmation before adding the engine. This is only
   // used when the engine is first added to the list.
-  _confirm: false,
+  _confirm = null;
   // Whether to set this as the current engine as soon as it is loaded.  This
   // is only used when the engine is first added to the list.
-  _useNow: false,
+  _useNow = null;
   // A function to be invoked when this engine object's addition completes (or
   // fails). Only used for installation via addEngine.
-  _installCallback: null,
+  _installCallback = null;
   // The number of days between update checks for new versions
-  _updateInterval: null,
+  _updateInterval = null;
   // The url to check at for a new update
-  _updateURL: null,
+  _updateURL = null;
   // The url to check for a new icon
-  _iconUpdateURL: null,
+  _iconUpdateURL = null;
   // The extension ID if added by an extension.
-  _extensionID: null,
+  _extensionID = null;
   // The locale, or "DEFAULT", if required.
-  _locale: null,
+  _locale = null;
   // Whether the engine is provided by the application.
-  _isAppProvided: false,
+  _isAppProvided = false;
   // The order hint from the configuration (if any).
-  _orderHint: null,
+  _orderHint = null;
   // The telemetry id from the configuration (if any).
-  _telemetryId: null,
+  _telemetryId = null;
   // Set to true once the engine has been added to the store, and the initial
   // notification sent. This allows to skip sending notifications during
   // initialization.
-  _engineAddedToStore: false,
+  _engineAddedToStore = false;
 
   /**
    * Retrieves the data from the engine's file asynchronously.
@@ -952,7 +962,7 @@ SearchEngine.prototype = {
 
     // Now that the data is loaded, initialize the engine object
     this._initFromData();
-  },
+  }
 
   /**
    * Retrieves the engine data from a URI. Initializes the engine, flushes to
@@ -985,7 +995,7 @@ SearchEngine.prototype = {
     var listener = new loadListener(chan, this, this._onLoad);
     chan.notificationCallbacks = listener;
     chan.asyncOpen(listener);
-  },
+  }
 
   /**
    * Retrieves the engine data from a URI asynchronously and initializes it.
@@ -998,7 +1008,7 @@ SearchEngine.prototype = {
     await this._retrieveSearchXMLData(uri.spec);
     // Now that the data is loaded, initialize the engine object
     this._initFromData();
-  },
+  }
 
   /**
    * Retrieves the engine data for a given URI asynchronously.
@@ -1023,7 +1033,7 @@ SearchEngine.prototype = {
       request.open("GET", url, true);
       request.send();
     });
-  },
+  }
 
   /**
    * Attempts to find an EngineURL object in the set of EngineURLs for
@@ -1045,7 +1055,7 @@ SearchEngine.prototype = {
     }
 
     return null;
-  },
+  }
 
   _confirmAddEngine() {
     var stringBundle = Services.strings.createBundle(SEARCH_BUNDLE);
@@ -1094,7 +1104,7 @@ SearchEngine.prototype = {
     );
 
     return { confirmed: confirm, useNow: checked.value };
-  },
+  }
 
   /**
    * Handle the successful download of an engine. Initializes the engine and
@@ -1239,7 +1249,7 @@ SearchEngine.prototype = {
     if (engine._installCallback) {
       engine._installCallback();
     }
-  },
+  }
 
   /**
    * Creates a key by serializing an object that contains the icon's width
@@ -1259,7 +1269,7 @@ SearchEngine.prototype = {
     };
 
     return JSON.stringify(keyObj);
-  },
+  }
 
   /**
    * Add an icon to the icon map used by getIconURIBySize() and getIcons().
@@ -1281,7 +1291,7 @@ SearchEngine.prototype = {
     this._iconMapObj = this._iconMapObj || {};
     let key = this._getIconKey(width, height);
     this._iconMapObj[key] = uriSpec;
-  },
+  }
 
   /**
    * Sets the .iconURI property of the engine. If both aWidth and aHeight are
@@ -1391,7 +1401,7 @@ SearchEngine.prototype = {
         chan.asyncOpen(listener);
         break;
     }
-  },
+  }
 
   /**
    * Initialize this Engine object from the collected data.
@@ -1424,7 +1434,7 @@ SearchEngine.prototype = {
     // No need to keep a ref to our data (which in some cases can be a document
     // element) past this point
     this._data = null;
-  },
+  }
 
   /**
    * Initialize an EngineURL object from metadata.
@@ -1473,7 +1483,7 @@ SearchEngine.prototype = {
     }
 
     this._urls.push(url);
-  },
+  }
 
   /**
    * Initialize this Engine object from a collection of metadata.
@@ -1516,7 +1526,7 @@ SearchEngine.prototype = {
       }
     }
     this._setUrls(params);
-  },
+  }
 
   /**
    * This sets the urls for the search engine based on the supplied parameters.
@@ -1561,7 +1571,7 @@ SearchEngine.prototype = {
     }
 
     this.__searchForm = params.searchForm;
-  },
+  }
 
   /**
    * Update this engine based on new metadata, used during
@@ -1575,7 +1585,7 @@ SearchEngine.prototype = {
     this._iconMapObj = null;
     this._initFromMetadata(params.name, params);
     SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
-  },
+  }
 
   /**
    * Overrides the urls/parameters with those of the provided extension.
@@ -1597,7 +1607,7 @@ SearchEngine.prototype = {
     this.setAttr("overriddenBy", params.extensionID);
     this._setUrls(params);
     SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
-  },
+  }
 
   /**
    * Resets the overrides for the engine if it has been overridden.
@@ -1611,7 +1621,7 @@ SearchEngine.prototype = {
       this.clearAttr("overriddenBy");
       SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
     }
-  },
+  }
 
   /**
    * Extracts data from an OpenSearch URL element and creates an EngineURL
@@ -1713,7 +1723,7 @@ SearchEngine.prototype = {
     }
 
     this._urls.push(url);
-  },
+  }
 
   /**
    * Get the icon from an OpenSearch Image element.
@@ -1735,7 +1745,7 @@ SearchEngine.prototype = {
     }
 
     this._setIcon(element.textContent, isPrefered, width, height);
-  },
+  }
 
   /**
    * Extract search engine information from the collected data to initialize
@@ -1801,7 +1811,7 @@ SearchEngine.prototype = {
         Cr.NS_ERROR_FAILURE
       );
     }
-  },
+  }
 
   /**
    * Init from a JSON record.
@@ -1845,7 +1855,7 @@ SearchEngine.prototype = {
       engineURL._initWithJSON(url);
       this._urls.push(engineURL);
     }
-  },
+  }
 
   /**
    * Creates a JavaScript object that represents this engine.
@@ -1906,29 +1916,29 @@ SearchEngine.prototype = {
     }
 
     return json;
-  },
+  }
 
   setAttr(name, val) {
     this._metaData[name] = val;
-  },
+  }
 
   getAttr(name) {
     return this._metaData[name] || undefined;
-  },
+  }
 
   clearAttr(name) {
     delete this._metaData[name];
-  },
+  }
 
   // nsISearchEngine
   get alias() {
     return this.getAttr("alias") || this._definedAlias;
-  },
+  }
   set alias(val) {
     var value = val ? val.trim() : null;
     this.setAttr("alias", value);
     SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
-  },
+  }
 
   /**
    * Returns the appropriate identifier to use for telemetry. It is based on
@@ -1948,7 +1958,7 @@ SearchEngine.prototype = {
       return telemetryId + "-addon";
     }
     return telemetryId;
-  },
+  }
 
   /**
    * Return the built-in identifier of app-provided engines.
@@ -1959,36 +1969,36 @@ SearchEngine.prototype = {
   get identifier() {
     // No identifier if If the engine isn't app-provided
     return this.isAppProvided ? this._shortName : null;
-  },
+  }
 
   get description() {
     return this._description;
-  },
+  }
 
   get hidden() {
     return this.getAttr("hidden") || false;
-  },
+  }
   set hidden(val) {
     var value = !!val;
     if (value != this.hidden) {
       this.setAttr("hidden", value);
       SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
     }
-  },
+  }
 
   get iconURI() {
     if (this._iconURI) {
       return this._iconURI;
     }
     return null;
-  },
+  }
 
   get _iconURL() {
     if (!this._iconURI) {
       return "";
     }
     return this._iconURI.spec;
-  },
+  }
 
   // Where the engine is being loaded from: will return the URI's spec if the
   // engine is being downloaded and does not yet have a file. This is only used
@@ -1999,7 +2009,7 @@ SearchEngine.prototype = {
     }
 
     return this._loadPath;
-  },
+  }
 
   // This indicates where we found the .xml file to load the engine,
   // and attempts to hide user-identifiable data (such as username).
@@ -2106,7 +2116,7 @@ SearchEngine.prototype = {
     }
 
     return prefix + id + suffix;
-  },
+  }
 
   get _isDistribution() {
     return !!(
@@ -2116,7 +2126,7 @@ SearchEngine.prototype = {
         ""
       )
     );
-  },
+  }
 
   get isAppProvided() {
     // For the modern configuration, distribution engines are app-provided as
@@ -2142,30 +2152,31 @@ SearchEngine.prototype = {
     }
 
     return false;
-  },
+  }
 
   get _hasUpdates() {
     // Whether or not the engine has an update URL
     let selfURL = this._getURLOfType(SearchUtils.URL_TYPE.OPENSEARCH, "self");
     return !!(this._updateURL || this._iconUpdateURL || selfURL);
-  },
+  }
 
   get name() {
     return this._name;
-  },
+  }
 
   get searchForm() {
     return this._getSearchFormWithPurpose();
-  },
+  }
 
   /* Internal aliases for default engines only. */
-  __internalAliases: null,
+  __internalAliases = null;
+
   get _internalAliases() {
     if (!this.__internalAliases) {
       this.__internalAliases = getInternalAliases(this);
     }
     return this.__internalAliases;
-  },
+  }
 
   _getSearchFormWithPurpose(purpose) {
     // First look for a <Url rel="searchform">
@@ -2192,14 +2203,14 @@ SearchEngine.prototype = {
     }
 
     return ParamSubstitution(this._searchForm, "", this);
-  },
+  }
 
   get queryCharset() {
     if (this._queryCharset) {
       return this._queryCharset;
     }
     return (this._queryCharset = "windows-1252"); // the default
-  },
+  }
 
   get _defaultMobileResponseType() {
     let type = SearchUtils.URL_TYPE.SEARCH;
@@ -2225,7 +2236,7 @@ SearchEngine.prototype = {
     });
 
     return type;
-  },
+  }
 
   // from nsISearchEngine
   getSubmission(data, responseType, purpose) {
@@ -2263,12 +2274,12 @@ SearchEngine.prototype = {
       );
     }
     return url.getSubmission(submissionData, this, purpose);
-  },
+  }
 
   // from nsISearchEngine
   supportsResponseType(type) {
     return this._getURLOfType(type) != null;
-  },
+  }
 
   // from nsISearchEngine
   getResultDomain(responseType) {
@@ -2284,7 +2295,7 @@ SearchEngine.prototype = {
       return url.resultDomain;
     }
     return "";
-  },
+  }
 
   /**
    * @returns {object}
@@ -2314,14 +2325,14 @@ SearchEngine.prototype = {
       path: templateUrl.filePath.toLowerCase(),
       termsParameterName,
     };
-  },
+  }
 
   // nsISupports
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISearchEngine]),
+  QueryInterface = ChromeUtils.generateQI([Ci.nsISearchEngine]);
 
   get wrappedJSObject() {
     return this;
-  },
+  }
 
   /**
    * Returns a string with the URL to an engine's icon matching both width and
@@ -2347,7 +2358,7 @@ SearchEngine.prototype = {
       return this._iconMapObj[key];
     }
     return null;
-  },
+  }
 
   /**
    * Gets an array of all available icons. Each entry is an object with
@@ -2378,7 +2389,7 @@ SearchEngine.prototype = {
     }
 
     return result;
-  },
+  }
 
   /**
    * Opens a speculative connection to the engine's search URI
@@ -2440,22 +2451,26 @@ SearchEngine.prototype = {
         }
       }
     }
-  },
-};
-
-// nsISearchSubmission
-function Submission(uri, postData = null) {
-  this._uri = uri;
-  this._postData = postData;
+  }
 }
-Submission.prototype = {
+
+/**
+ * Implements nsISearchSubmission.
+ */
+class Submission {
+  QueryInterface = ChromeUtils.generateQI([Ci.nsISearchSubmission]);
+
+  constructor(uri, postData = null) {
+    this._uri = uri;
+    this._postData = postData;
+  }
+
   get uri() {
     return this._uri;
-  },
+  }
   get postData() {
     return this._postData;
-  },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISearchSubmission]),
-};
+  }
+}
 
 var EXPORTED_SYMBOLS = ["SearchEngine", "getVerificationHash"];
