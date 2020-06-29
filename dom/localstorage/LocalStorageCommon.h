@@ -81,16 +81,16 @@
  * like directory locking before sending a reply to a synchronous message, then
  * we would have to block the thread or spin the event loop which is usually a
  * bad idea, especially in the main process.
- * Instead, we can use a special thread in the content process called
- * RemoteLazyInputStream thread for communication with the main process using
- * asynchronous messages and synchronously block the main thread until the DOM
- * File thread is done (the main thread blocking is a bit more complicated, see
- * the comment in RequestHelper::StartAndReturnResponse for more details).
- * Anyway, the extra hop to the RemoteLazyInputStream thread brings another
- * overhead and latency. The final solution is to use a combination of the
- * special thread for complex stuff like datastore preparation and synchronous
- * IPC messages sent directly from the main thread for database access when data
- * is already loaded from disk into memory.
+ * Instead, we can use a special thread in the content process called DOM File
+ * thread for communication with the main process using asynchronous messages
+ * and synchronously block the main thread until the DOM File thread is done
+ * (the main thread blocking is a bit more complicated, see the comment in
+ * RequestHelper::StartAndReturnResponse for more details).
+ * Anyway, the extra hop to the DOM File thread brings another overhead and
+ * latency. The final solution is to use a combination of the special thread
+ * for complex stuff like datastore preparation and synchronous IPC messages
+ * sent directly from the main thread for database access when data is already
+ * loaded from disk into memory.
  *
  * Requests
  * ~~~~~~~~
@@ -116,13 +116,13 @@
  * responses and do safe main thread blocking at the same time.
  * It inherits from the "Runnable" class, so instances are ref counted and
  * they are internally used on multiple threads (specifically on the main
- * thread and on the RemoteLazyInputStream thread). Anyway, users should create
- * and use instances of this class only on the main thread (apart from a special
- * case when we need to cancel the request from an internal chromium IPC thread
- * to prevent a dead lock involving CPOWs).
+ * thread and on the DOM File thread). Anyway, users should create and use
+ * instances of this class only on the main thread (apart from a special case
+ * when we need to cancel the request from an internal chromium IPC thread to
+ * prevent a dead lock involving CPOWs).
  * The actual child actor is represented by the "LSRequestChild" class that
  * implements the "PBackgroundLSRequestChild" interface. An "LSRequestChild"
- * instance is not ref counted and lives on the RemoteLazyInputStream thread.
+ * instance is not ref counted and lives on the DOM File thread.
  * Request responses are passed using the "LSRequestChildCallback" interface.
  *
  * Preparation of a datastore
@@ -157,10 +157,9 @@
  * In theory, the datastore preparation request could return a database actor
  * directly (instead of returning an id intended for database linking to a
  * datastore). However, as it was explained above, the preparation must be done
- * on the RemoteLazyInputStream thread and database objects are used on the main
- * thread. The returned actor would have to be migrated from the
- * RemoteLazyInputStream thread to the main thread and that's something which
- * our IPDL doesn't support yet.
+ * on the DOM File thread and database objects are used on the main thread. The
+ * returned actor would have to be migrated from the DOM File thread to the
+ * main thread and that's something which our IPDL doesn't support yet.
  *
  * Exposing local storage
  * ~~~~~~~~~~~~~~~~~~~~~~

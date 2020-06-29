@@ -51,6 +51,7 @@
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/InProcessChild.h"
+#include "mozilla/dom/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/JSProcessActorBinding.h"
@@ -97,7 +98,6 @@
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
-#include "mozilla/RemoteLazyInputStreamChild.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "nsBaseDragService.h"
@@ -1803,11 +1803,11 @@ bool ContentChild::DeallocPFileDescriptorSetChild(
   return true;
 }
 
-already_AddRefed<PRemoteLazyInputStreamChild>
-ContentChild::AllocPRemoteLazyInputStreamChild(const nsID& aID,
-                                               const uint64_t& aSize) {
-  RefPtr<RemoteLazyInputStreamChild> actor =
-      new RemoteLazyInputStreamChild(aID, aSize);
+already_AddRefed<PIPCBlobInputStreamChild>
+ContentChild::AllocPIPCBlobInputStreamChild(const nsID& aID,
+                                            const uint64_t& aSize) {
+  RefPtr<IPCBlobInputStreamChild> actor =
+      new IPCBlobInputStreamChild(aID, aSize);
   return actor.forget();
 }
 

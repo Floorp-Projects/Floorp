@@ -22,7 +22,7 @@
 #include "IndexedDatabaseInlines.h"
 #include "js/Array.h"  // JS::NewArrayObject, JS::SetArrayLength
 #include "js/Date.h"   // JS::NewDateObject, JS::TimeClip
-#include <mozIRemoteLazyInputStream.h>
+#include <mozIIPCBlobInputStream.h>
 #include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -2758,8 +2758,7 @@ nsresult BackgroundRequestChild::PreprocessHelper::ProcessStream() {
   // SnappyUncompressInputStream doesn't support reading from async input
   // streams.
 
-  nsCOMPtr<mozIRemoteLazyInputStream> blobInputStream =
-      do_QueryInterface(mStream);
+  nsCOMPtr<mozIIPCBlobInputStream> blobInputStream = do_QueryInterface(mStream);
   MOZ_ASSERT(blobInputStream);
 
   nsCOMPtr<nsIInputStream> internalInputStream =

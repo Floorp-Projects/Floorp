@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_RemoteLazyInputStreamThread_h
-#define mozilla_RemoteLazyInputStreamThread_h
+#ifndef mozilla_dom_IPCBlobInputStreamThread_h
+#define mozilla_dom_IPCBlobInputStreamThread_h
 
-#include "mozilla/RemoteLazyInputStreamChild.h"
+#include "mozilla/dom/IPCBlobInputStreamChild.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
@@ -15,11 +15,12 @@
 class nsIThread;
 
 namespace mozilla {
+namespace dom {
 
-class RemoteLazyInputStreamChild;
+class IPCBlobInputStreamChild;
 
-class RemoteLazyInputStreamThread final : public nsIObserver,
-                                          public nsIEventTarget {
+class IPCBlobInputStreamThread final : public nsIObserver,
+                                       public nsIEventTarget {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -27,32 +28,33 @@ class RemoteLazyInputStreamThread final : public nsIObserver,
 
   static bool IsOnFileEventTarget(nsIEventTarget* aEventTarget);
 
-  static RemoteLazyInputStreamThread* Get();
+  static IPCBlobInputStreamThread* Get();
 
-  static RemoteLazyInputStreamThread* GetOrCreate();
+  static IPCBlobInputStreamThread* GetOrCreate();
 
-  void MigrateActor(RemoteLazyInputStreamChild* aActor);
+  void MigrateActor(IPCBlobInputStreamChild* aActor);
 
   bool Initialize();
 
   void InitializeOnMainThread();
 
  private:
-  ~RemoteLazyInputStreamThread() = default;
+  ~IPCBlobInputStreamThread() = default;
 
-  void MigrateActorInternal(RemoteLazyInputStreamChild* aActor);
+  void MigrateActorInternal(IPCBlobInputStreamChild* aActor);
 
   nsCOMPtr<nsIThread> mThread;
 
   // This is populated if MigrateActor() is called before the initialization of
   // the thread.
-  nsTArray<RefPtr<RemoteLazyInputStreamChild>> mPendingActors;
+  nsTArray<RefPtr<IPCBlobInputStreamChild>> mPendingActors;
 };
 
 bool IsOnDOMFileThread();
 
 void AssertIsOnDOMFileThread();
 
+}  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_RemoteLazyInputStreamThread_h
+#endif  // mozilla_dom_IPCBlobInputStreamThread_h
