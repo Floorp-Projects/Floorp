@@ -61,3 +61,17 @@ function checkElements(expectPresent, l, win = window) {
     );
   }
 }
+
+function checkElementsShown(expectPresent, l, win = window) {
+  for (let id of l) {
+    let el =
+      win.document.getElementById(id) ||
+      win.gNavToolbox.palette.querySelector("#" + id);
+    let elShown = window.getComputedStyle(el).display != "none";
+    is(
+      elShown,
+      expectPresent,
+      "element " + id + (expectPresent ? " is" : " is not") + " present"
+    );
+  }
+}
