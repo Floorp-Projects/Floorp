@@ -814,6 +814,13 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
             'source-test-file-metadata-bugzilla-components']
 
 
+# Run Coverity Static Analysis once daily.
+@_target_task('coverity_static_analysis_full')
+def target_tasks_coverity_full(full_task_graph, parameters, graph_config):
+    """Select tasks required to run Coverity Static Analysis"""
+    return ['source-test-coverity-coverity-full-analysis']
+
+
 @_target_task('customv8_update')
 def target_tasks_customv8_update(full_task_graph, parameters, graph_config):
     """Select tasks required for building latest d8/v8 version."""
