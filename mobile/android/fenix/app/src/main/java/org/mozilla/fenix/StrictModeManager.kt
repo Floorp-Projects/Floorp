@@ -1,6 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public 
-* License, v. 2.0. If a copy of the MPL was not distributed with this 
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.fenix
 
@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.StrictMode
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import kotlin.collections.HashSet
 
 /**
  * Manages strict mode settings for the application.
@@ -16,38 +15,39 @@ import kotlin.collections.HashSet
 object StrictModeManager {
 
     /***
-         *  Enables strict mode for debug purposes. meant to be run only in the main process.
-         *  @param setPenaltyDialog boolean value to decide setting the dialog box as  a penalty.
-         */
-        fun enableStrictMode(setPenaltyDialog: Boolean) {
-            if (Config.channel.isDebug) {
-                val threadPolicy = StrictMode.ThreadPolicy.Builder()
-                    .detectAll()
-                    .penaltyLog()
-                if (setPenaltyDialog &&
-                    !strictModeExceptionList.contains(Build.MANUFACTURER)) {
-                    threadPolicy.penaltyDialog()
-                }
-                StrictMode.setThreadPolicy(threadPolicy.build())
-                var builder = StrictMode.VmPolicy.Builder()
-                    .detectLeakedSqlLiteObjects()
-                    .detectLeakedClosableObjects()
-                    .detectLeakedRegistrationObjects()
-                    .detectActivityLeaks()
-                    .detectFileUriExposure()
-                    .penaltyLog()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) builder =
-                    builder.detectContentUriWithoutPermission()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    if (setPenaltyDialog) {
-                        builder.permitNonSdkApiUsage()
-                    } else {
-                        builder.detectNonSdkApiUsage()
-                    }
-                }
-                StrictMode.setVmPolicy(builder.build())
+     * Enables strict mode for debug purposes. meant to be run only in the main process.
+     * @param setPenaltyDialog boolean value to decide setting the dialog box as  a penalty.
+     */
+    fun enableStrictMode(setPenaltyDialog: Boolean) {
+        if (Config.channel.isDebug) {
+            val threadPolicy = StrictMode.ThreadPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+            if (setPenaltyDialog && Build.MANUFACTURER !in strictModeExceptionList) {
+                threadPolicy.penaltyDialog()
             }
+            StrictMode.setThreadPolicy(threadPolicy.build())
+
+            val builder = StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects()
+                .detectLeakedClosableObjects()
+                .detectLeakedRegistrationObjects()
+                .detectActivityLeaks()
+                .detectFileUriExposure()
+                .penaltyLog()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                builder.detectContentUriWithoutPermission()
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                if (setPenaltyDialog) {
+                    builder.permitNonSdkApiUsage()
+                } else {
+                    builder.detectNonSdkApiUsage()
+                }
+            }
+            StrictMode.setVmPolicy(builder.build())
         }
+    }
 
     /**
      * Revert strict mode to disable penalty dialog. Tied to fragment lifecycle since strict mode
@@ -55,14 +55,16 @@ object StrictModeManager {
      * specific fragment.
      */
     fun changeStrictModePolicies(fragmentManager: FragmentManager) {
-        fragmentManager.registerFragmentLifecycleCallbacks(object :
-            FragmentManager.FragmentLifecycleCallbacks() {
+        fragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
                 enableStrictMode(false)
                 fm.unregisterFragmentLifecycleCallbacks(this)
             }
         }, false)
     }
+
+    private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
+    private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
 
     /**
      * There are certain manufacturers that have custom font classes for the OS systems.
@@ -71,11 +73,5 @@ object StrictModeManager {
      * To add a new manufacturer to the list, log "Build.MANUFACTURER" from the device to get the
      * exact name of the manufacturer.
      */
-    private val strictModeExceptionList = HashSet<String>().also {
-        it.add(MANUFACTURE_HUAWEI)
-        it.add(MANUFACTURE_ONE_PLUS)
-    }
-
-    private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
-    private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
+    private val strictModeExceptionList = setOf(MANUFACTURE_HUAWEI, MANUFACTURE_ONE_PLUS)
 }
