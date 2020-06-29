@@ -145,14 +145,15 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   // misc (any thread)
   //-------------------------------------------------------------------------
 
-  nsCOMPtr<nsIThread> mThread;  // protected by mLock
+  // Only ever modified once on the main thread. They are never cleared until
+  // the nsSocketTransportService gets destructed.
+  nsCOMPtr<nsIThread> mThread;
+  Atomic<nsIThread*> mRawThread;
   // We store a pointer to mThread as a direct task dispatcher to avoid having
   // to do do_QueryInterface whenever we need to access the interface.
-  nsCOMPtr<nsIDirectTaskDispatcher>
-      mDirectTaskDispatcher;  // protected by mLock
-  UniquePtr<PollableEvent> mPollableEvent;
+  nsCOMPtr<nsIDirectTaskDispatcher> mDirectTaskDispatcher;
 
-  // Returns mThread, protecting the get-and-addref with mLock
+  // Returns mThread in a thread-safe manner.
   already_AddRefed<nsIThread> GetThreadSafely();
   // Same as above, but return mThread as a nsIDirectTaskDispatcher
   already_AddRefed<nsIDirectTaskDispatcher> GetDirectTaskDispatcherSafely();
@@ -161,9 +162,11 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   // initialization and shutdown (any thread)
   //-------------------------------------------------------------------------
 
+  Atomic<bool> mInitialized;
+  Atomic<bool> mShuttingDown;
   Mutex mLock;
-  bool mInitialized;
-  bool mShuttingDown;
+  // Variables in the next section protected by mLock
+  UniquePtr<PollableEvent> mPollableEvent;
   // indicates whether we are currently in the
   // process of shutting down
   bool mOffline;
@@ -213,7 +216,6 @@ class nsSocketTransportService final : public nsPISocketTransportService,
 
   SocketContext* mActiveList; /* mListSize entries */
   SocketContext* mIdleList;   /* mListSize entries */
-  nsIThread* mRawThread;
 
   uint32_t mActiveListSize;
   uint32_t mIdleListSize;
