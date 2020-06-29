@@ -8,7 +8,6 @@
 #include "IPCBlobInputStream.h"
 #include "IPCBlobInputStreamChild.h"
 #include "IPCBlobInputStreamParent.h"
-#include "IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/IPCBlob.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundParent.h"
@@ -17,6 +16,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "RemoteLazyInputStreamStorage.h"
 #include "StreamBlobImpl.h"
 #include "prtime.h"
 

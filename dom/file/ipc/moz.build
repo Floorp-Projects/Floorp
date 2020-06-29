@@ -19,8 +19,8 @@ EXPORTS.mozilla.dom += [
     'IPCBlobInputStream.h',
     'IPCBlobInputStreamChild.h',
     'IPCBlobInputStreamParent.h',
-    'IPCBlobInputStreamStorage.h',
     'IPCBlobUtils.h',
+    'RemoteLazyInputStreamStorage.h',
     'TemporaryIPCBlobChild.h',
     'TemporaryIPCBlobParent.h',
 ]
@@ -31,9 +31,9 @@ UNIFIED_SOURCES += [
     'IPCBlobInputStream.cpp',
     'IPCBlobInputStreamChild.cpp',
     'IPCBlobInputStreamParent.cpp',
-    'IPCBlobInputStreamStorage.cpp',
     'IPCBlobInputStreamThread.cpp',
     'IPCBlobUtils.cpp',
+    'RemoteLazyInputStreamStorage.cpp',
     'TemporaryIPCBlobChild.cpp',
     'TemporaryIPCBlobParent.cpp',
 ]
