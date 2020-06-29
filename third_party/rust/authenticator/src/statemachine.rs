@@ -171,7 +171,7 @@ impl StateMachine {
                 return;
             }
 
-            while alive() {
+            'outer: while alive() {
                 // If the device matches none of the given key handles
                 // then just make it blink with bogus data.
                 if valid_handles.is_empty() {
@@ -190,7 +190,7 @@ impl StateMachine {
                                 key_handle.credential.clone(),
                                 bytes,
                             )));
-                            break;
+                            break 'outer;
                         }
                     }
                 }
