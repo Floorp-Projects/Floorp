@@ -20,9 +20,12 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
+#include "mozilla/RelativeLuminanceUtils.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/GeckoBindings.h"
+#include "PreferenceSheet.h"
 
 using namespace mozilla;
 using mozilla::dom::Document;
@@ -235,6 +238,26 @@ bool Gecko_MediaFeatures_PrefersReducedMotion(const Document* aDocument) {
 StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
     const Document* aDocument) {
   return aDocument->PrefersColorScheme();
+}
+
+StyleContrastPref Gecko_MediaFeatures_PrefersContrast(
+    const Document* aDocument, const bool aForcedColors) {
+  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
+    return StyleContrastPref::NoPreference;
+  }
+  // Neither Linux, Windows, nor Mac have a way to indicate that low
+  // contrast is prefered so the presence of an accessibility theme
+  // implies that high contrast is prefered.
+  //
+  // Note that MacOS does not expose whether or not high contrast is
+  // enabled so for MacOS users this will always evaluate to
+  // false. For more information and discussion see:
+  // https://github.com/w3c/csswg-drafts/issues/3856#issuecomment-642313572
+  // https://github.com/w3c/csswg-drafts/issues/2943
+  if (!!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
+    return StyleContrastPref::High;
+  }
+  return StyleContrastPref::NoPreference;
 }
 
 static PointerCapabilities GetPointerCapabilities(const Document* aDocument,

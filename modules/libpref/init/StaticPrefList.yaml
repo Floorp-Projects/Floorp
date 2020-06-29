@@ -5892,6 +5892,17 @@
   value: true
   mirror: always
 
+# Dictates whether or not the prefers contrast media query will be
+# usable.
+#   true: prefers-contrast will toggle based on OS and browser settings.
+#   false: prefers-contrast will only parse and toggle in the browser
+#   chrome and ua.
+- name: layout.css.prefers-contrast.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for -moz-prefixed animation properties enabled?
 - name: layout.css.prefixes.animations
   type: bool

@@ -84,6 +84,7 @@ include = [
   "ComputedFontWeightRange",
   "ComputedTimingFunction",
   "ComputedValueFlags",
+  "ContrastPref",
   "CursorKind",
   "DisplayOutside",
   "DisplayInside",

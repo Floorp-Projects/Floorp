@@ -816,6 +816,17 @@ function run() {
     should_be_parseable_if_enabled("-moz-touch-enabled: 1");
   }
 
+  {
+    let should_be_parseable_if_enabled = SpecialPowers.getBoolPref('layout.css.prefers-contrast.enabled')
+      ? expression_should_be_parseable
+      : expression_should_not_be_parseable;
+    should_be_parseable_if_enabled("prefers-contrast");
+    should_be_parseable_if_enabled("prefers-contrast: high");
+    should_be_parseable_if_enabled("prefers-contrast: low");
+    should_be_parseable_if_enabled("prefers-contrast: forced");
+    should_be_parseable_if_enabled("prefers-contrast: no-preference");
+  }
+
   // OpenType SVG media features
   query_should_not_be_parseable("(-moz-is-glyph)");
   query_should_not_be_parseable("not (-moz-is-glyph)");
