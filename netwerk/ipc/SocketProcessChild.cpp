@@ -11,8 +11,8 @@
 #include "HttpTransactionChild.h"
 #include "HttpConnectionMgrChild.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/MemoryReportRequest.h"
+#include "mozilla/dom/RemoteLazyInputStreamChild.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -467,8 +467,8 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvNotifyObserver(
 already_AddRefed<dom::PRemoteLazyInputStreamChild>
 SocketProcessChild::AllocPRemoteLazyInputStreamChild(const nsID& aID,
                                                      const uint64_t& aSize) {
-  RefPtr<dom::IPCBlobInputStreamChild> actor =
-      new dom::IPCBlobInputStreamChild(aID, aSize);
+  RefPtr<dom::RemoteLazyInputStreamChild> actor =
+      new dom::RemoteLazyInputStreamChild(aID, aSize);
   return actor.forget();
 }
 

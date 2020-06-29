@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCBlobInputStream.h"
-#include "IPCBlobInputStreamChild.h"
-#include "IPCBlobInputStreamParent.h"
+#include "RemoteLazyInputStreamChild.h"
+#include "RemoteLazyInputStreamParent.h"
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/SlicedInputStream.h"
@@ -129,7 +129,7 @@ NS_INTERFACE_MAP_BEGIN(IPCBlobInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
-IPCBlobInputStream::IPCBlobInputStream(IPCBlobInputStreamChild* aActor)
+IPCBlobInputStream::IPCBlobInputStream(RemoteLazyInputStreamChild* aActor)
     : mActor(aActor),
       mState(eInit),
       mStart(0),
@@ -597,7 +597,7 @@ void IPCBlobInputStream::Serialize(
 
   nsresult rv;
   nsCOMPtr<nsIAsyncInputStream> asyncRemoteStream;
-  RefPtr<IPCBlobInputStreamParent> parentActor;
+  RefPtr<RemoteLazyInputStreamParent> parentActor;
   {
     MutexAutoLock lock(mMutex);
     rv = EnsureAsyncRemoteStream(lock);
@@ -609,8 +609,8 @@ void IPCBlobInputStream::Serialize(
 
   MOZ_ASSERT(asyncRemoteStream);
 
-  parentActor = IPCBlobInputStreamParent::Create(asyncRemoteStream, mLength, 0,
-                                                 &rv, socketActor);
+  parentActor = RemoteLazyInputStreamParent::Create(asyncRemoteStream, mLength,
+                                                    0, &rv, socketActor);
   MOZ_ASSERT(parentActor);
 
   if (!socketActor->SendPRemoteLazyInputStreamConstructor(
