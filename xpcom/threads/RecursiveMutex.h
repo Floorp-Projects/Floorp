@@ -20,7 +20,7 @@ namespace mozilla {
 
 class RecursiveMutex : public BlockingResourceBase {
  public:
-  explicit RecursiveMutex(const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  explicit RecursiveMutex(const char* aName);
   ~RecursiveMutex();
 
 #ifdef DEBUG
@@ -68,7 +68,6 @@ class RecursiveMutex : public BlockingResourceBase {
   // enough for CRITICAL_SECTION, and we'll fix it up later.
   void* mMutex[6];
 #endif
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_RAII RecursiveMutexAutoLock {

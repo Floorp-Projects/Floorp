@@ -14,8 +14,7 @@
 
 namespace mozilla {
 
-RecursiveMutex::RecursiveMutex(
-    const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+RecursiveMutex::RecursiveMutex(const char* aName)
     : BlockingResourceBase(aName, eRecursiveMutex)
 #ifdef DEBUG
       ,
@@ -23,7 +22,6 @@ RecursiveMutex::RecursiveMutex(
       mEntryCount(0)
 #endif
 {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 #ifdef XP_WIN
   // This number was adapted from NSPR.
   static const DWORD sLockSpinCount = 100;
