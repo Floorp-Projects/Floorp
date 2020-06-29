@@ -495,7 +495,9 @@ static GConst* gConst;
 
 // Thread-local state.
 class GTls {
-  DISALLOW_COPY_AND_ASSIGN(GTls);
+  GTls(const GTls&) = delete;
+
+  const GTls& operator=(const GTls&) = delete;
 
   // When true, PHC does as little as possible.
   //
@@ -570,7 +572,10 @@ class GTls {
 PHC_THREAD_LOCAL(bool) GTls::tlsIsDisabled;
 
 class AutoDisableOnCurrentThread {
-  DISALLOW_COPY_AND_ASSIGN(AutoDisableOnCurrentThread);
+  AutoDisableOnCurrentThread(const AutoDisableOnCurrentThread&) = delete;
+
+  const AutoDisableOnCurrentThread& operator=(
+      const AutoDisableOnCurrentThread&) = delete;
 
  public:
   explicit AutoDisableOnCurrentThread() { GTls::DisableOnCurrentThread(); }

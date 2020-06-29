@@ -73,7 +73,10 @@ class ProcessPriorityManager final {
 
  private:
   ProcessPriorityManager();
-  DISALLOW_EVIL_CONSTRUCTORS(ProcessPriorityManager);
+  ProcessPriorityManager(const ProcessPriorityManager&) = delete;
+
+  const ProcessPriorityManager& operator=(const ProcessPriorityManager&) =
+      delete;
 };
 
 }  // namespace mozilla
