@@ -40,14 +40,15 @@ class ThreadInitializeRunnable final : public Runnable {
 
 class MigrateActorRunnable final : public Runnable {
  public:
-  explicit MigrateActorRunnable(IPCBlobInputStreamChild* aActor)
+  explicit MigrateActorRunnable(RemoteLazyInputStreamChild* aActor)
       : Runnable("dom::MigrateActorRunnable"), mActor(aActor) {
     MOZ_ASSERT(mActor);
   }
 
   NS_IMETHOD
   Run() override {
-    MOZ_ASSERT(mActor->State() == IPCBlobInputStreamChild::eInactiveMigrating);
+    MOZ_ASSERT(mActor->State() ==
+               RemoteLazyInputStreamChild::eInactiveMigrating);
 
     PBackgroundChild* actorChild =
         BackgroundChild::GetOrCreateForCurrentThread();
@@ -66,7 +67,7 @@ class MigrateActorRunnable final : public Runnable {
  private:
   ~MigrateActorRunnable() = default;
 
-  RefPtr<IPCBlobInputStreamChild> mActor;
+  RefPtr<RemoteLazyInputStreamChild> mActor;
 };
 
 }  // namespace
@@ -178,8 +179,9 @@ IPCBlobInputStreamThread::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-void IPCBlobInputStreamThread::MigrateActor(IPCBlobInputStreamChild* aActor) {
-  MOZ_ASSERT(aActor->State() == IPCBlobInputStreamChild::eInactiveMigrating);
+void IPCBlobInputStreamThread::MigrateActor(
+    RemoteLazyInputStreamChild* aActor) {
+  MOZ_ASSERT(aActor->State() == RemoteLazyInputStreamChild::eInactiveMigrating);
 
   mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
 
@@ -197,7 +199,7 @@ void IPCBlobInputStreamThread::MigrateActor(IPCBlobInputStreamChild* aActor) {
 }
 
 void IPCBlobInputStreamThread::MigrateActorInternal(
-    IPCBlobInputStreamChild* aActor) {
+    RemoteLazyInputStreamChild* aActor) {
   RefPtr<Runnable> runnable = new MigrateActorRunnable(aActor);
   mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }

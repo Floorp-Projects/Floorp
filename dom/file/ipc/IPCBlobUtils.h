@@ -140,7 +140,7 @@
  * DOM-File Thread
  * ~~~~~~~~~~~~~~~
  *
- * IPCBlobInputStreamChild actor can be created in any thread (sort of) and
+ * RemoteLazyInputStreamChild actor can be created in any thread (sort of) and
  * their top-level IPDL protocol is PBackground. These actors are wrapped by 1
  * or more IPCBlobInputStream objects in order to expose nsIInputStream
  * interface and be thread-safe.
@@ -158,24 +158,24 @@
  *    used on another thread (note that nsIInputStream could do I/O and usually
  *    they are used on special I/O threads).
  *
- * In order to avoid this, IPCBlobInputStreamChild are 'migrated' to a DOM-File
- * thread. This is done in this way:
+ * In order to avoid this, RemoteLazyInputStreamChild are 'migrated' to a
+ * DOM-File thread. This is done in this way:
  *
- * 1. If IPCBlobInputStreamChild actor is not already owned by DOM-File thread,
- *    it calls Send__delete__ in order to inform the parent side that we don't
- *    need this IPC channel on the current thread.
- * 2. A new IPCBlobInputStreamChild is created. IPCBlobInputStreamThread is
+ * 1. If RemoteLazyInputStreamChild actor is not already owned by DOM-File
+ *    thread, it calls Send__delete__ in order to inform the parent side that we
+ *    don't need this IPC channel on the current thread.
+ * 2. A new RemoteLazyInputStreamChild is created. IPCBlobInputStreamThread is
  *    used to assign this actor to the DOM-File thread.
  *    IPCBlobInputStreamThread::GetOrCreate() creates the DOM-File thread if it
  *    doesn't exist yet. Pending operations and IPCBlobInputStreams are moved
  *    onto the new actor.
- * 3. IPCBlobInputStreamParent::Recv__delete__ is called on the parent side and
- *    the parent actor is deleted. Doing this we don't remove the UUID from
+ * 3. RemoteLazyInputStreamParent::Recv__delete__ is called on the parent side
+ *    and the parent actor is deleted. Doing this we don't remove the UUID from
  *    RemoteLazyInputStreamStorage.
  * 4. The IPCBlobInputStream constructor is sent with the new
- *    IPCBlobInputStreamChild actor, with the DOM-File thread's PBackground as
- *    its manager.
- * 5. When the new IPCBlobInputStreamParent actor is created, it will receive
+ *    RemoteLazyInputStreamChild actor, with the DOM-File thread's PBackground
+ *    as its manager.
+ * 5. When the new RemoteLazyInputStreamParent actor is created, it will receive
  *    the same UUID of the previous parent actor. The nsIInputStream will be
  *    retrieved from RemoteLazyInputStreamStorage.
  * 6. In order to avoid leaks, RemoteLazyInputStreamStorage will monitor child
