@@ -23,9 +23,9 @@ let openedTabs = [];
 
 async function openBookmarksPanelInLibraryToolbarButton() {
   let libraryBtn = document.getElementById("library-button");
+  libraryBtn.click();
   let libView = document.getElementById("appMenu-libraryView");
   let viewShownPromise = BrowserTestUtils.waitForEvent(libView, "ViewShown");
-  libraryBtn.click();
   await viewShownPromise;
 
   let bookmarksButton;

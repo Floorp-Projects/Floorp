@@ -17,9 +17,18 @@ add_task(async function test_setup() {
 add_task(async function() {
   await promisePocketEnabled();
 
-  checkElements(true, ["pocket-button", "appMenu-library-pocket-button"]);
-  let button = document.getElementById("pocket-button");
-  is(button.hidden, false, "Button should not have been hidden");
+  let libraryButton = document.getElementById("library-button");
+  libraryButton.click();
+
+  let libraryView = document.getElementById("appMenu-libraryView");
+  let popupShown = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
+  await popupShown;
+
+  checkElementsShown(true, ["appMenu-library-pocket-button"]);
+
+  // Close the Library panel.
+  let popupHidden = BrowserTestUtils.waitForEvent(document, "popuphidden");
+  libraryView.closest("panel").hidePopup();
 
   // check context menu exists
   info("checking content context menu");
@@ -29,8 +38,8 @@ add_task(async function() {
   );
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
-  let popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  let popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "body",
     {
@@ -41,7 +50,7 @@ add_task(async function() {
   );
   await popupShown;
 
-  checkElements(true, ["context-pocket"]);
+  checkElementsShown(true, ["pocket-button", "context-pocket"]);
 
   contextMenu.hidePopup();
   await popupHidden;
@@ -57,7 +66,7 @@ add_task(async function() {
   );
   await popupShown;
 
-  checkElements(true, ["context-savelinktopocket"]);
+  checkElementsShown(true, ["context-savelinktopocket"]);
 
   contextMenu.hidePopup();
   await popupHidden;
@@ -65,26 +74,35 @@ add_task(async function() {
 
   await promisePocketDisabled();
 
-  checkElements(false, [
-    "appMenu-library-pocket-button",
+  checkElementsShown(false, [
     "context-pocket",
     "context-savelinktopocket",
+    "appMenu-library-pocket-button",
+    "pocket-button",
   ]);
-  button = document.getElementById("pocket-button");
-  is(button.hidden, true, "Button should have been hidden");
 
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  checkElements(
+  libraryButton = newWin.document.getElementById("library-button");
+  libraryButton.click();
+
+  libraryView = newWin.document.getElementById("appMenu-libraryView");
+  popupShown = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
+  await popupShown;
+
+  checkElementsShown(
     false,
     [
-      "appMenu-library-pocket-button",
       "context-pocket",
       "context-savelinktopocket",
+      "appMenu-library-pocket-button",
+      "pocket-button",
     ],
     newWin
   );
-  button = newWin.document.getElementById("pocket-button");
-  is(button.hidden, true, "Button should have been hidden");
+
+  // Close the Library panel.
+  popupHidden = BrowserTestUtils.waitForEvent(newWin.document, "popuphidden");
+  libraryView.closest("panel").hidePopup();
 
   await BrowserTestUtils.closeWindow(newWin);
 

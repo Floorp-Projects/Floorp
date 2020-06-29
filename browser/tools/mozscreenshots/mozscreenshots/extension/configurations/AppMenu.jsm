@@ -33,9 +33,9 @@ var AppMenu = {
         );
         await reopenAppMenu(browserWindow);
 
+        browserWindow.document.getElementById("appMenu-library-button").click();
         let view = browserWindow.document.getElementById("appMenu-libraryView");
         let promiseViewShown = BrowserTestUtils.waitForEvent(view, "ViewShown");
-        browserWindow.document.getElementById("appMenu-library-button").click();
         await promiseViewShown;
       },
 

@@ -717,7 +717,92 @@
       </panel>
     </html:template>
   </popupset>
-  <box id="appMenu-viewCache" hidden="true"/>
+
+  <html:template id="appMenu-viewCache">
+    <panelview id="PanelUI-history" flex="1">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenuViewHistorySidebar"
+                       label="&appMenuHistory.viewSidebar.label;"
+                       label-checked="&appMenuHistory.hideSidebar.label;"
+                       label-unchecked="&appMenuHistory.viewSidebar.label;"
+                       type="checkbox"
+                       class="subviewbutton subviewbutton-iconic"
+                       key="key_gotoHistory"
+                       oncommand="SidebarUI.toggle('viewHistorySidebar');">
+                       <observes element="sidebar-box" attribute="positionend"/>
+        </toolbarbutton>
+        <toolbarbutton id="appMenuClearRecentHistory"
+                       label="&appMenuHistory.clearRecent.label;"
+                       class="subviewbutton subviewbutton-iconic"
+                       command="Tools:Sanitize"/>
+        <toolbarseparator/>
+        <toolbarbutton id="appMenuRecentlyClosedTabs"
+                       label="&historyUndoMenu.label;"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedTabs', this)"/>
+        <toolbarbutton id="appMenuRecentlyClosedWindows"
+                       label="&historyUndoWindowMenu.label;"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedWindows', this)"/>
+        <toolbarseparator/>
+        <label value="&appMenuHistory.recentHistory.label;"
+               class="subview-subheader"/>
+        <toolbaritem id="appMenu_historyMenu"
+                     orient="vertical"
+                     smoothscroll="false"
+                     flatList="true"
+                     tooltip="bhTooltip">
+          <!-- history menu items will go here -->
+        </toolbaritem>
+      </vbox>
+      <toolbarbutton id="PanelUI-historyMore"
+                     class="panel-subview-footer subviewbutton"
+                     label="&appMenuHistory.showAll.label;"
+                     oncommand="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
+    </panelview>
+    <panelview id="appMenu-libraryView" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenu-library-bookmarks-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&bookmarksSubview.label;"
+                       closemenu="none"
+                       oncommand="BookmarkingUI.showSubView(this);"/>
+        <toolbarbutton id="appMenu-library-pocket-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&pocketMenuitem.label;"
+                       oncommand="Pocket.openList(event)"/>
+        <toolbarbutton id="appMenu-library-history-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&historyMenu.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-history', this)"/>
+        <toolbarbutton id="appMenu-library-downloads-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&libraryDownloads.label;"
+                       closemenu="none"
+                       oncommand="DownloadsSubview.show(this);"/>
+        <toolbarbutton id="appMenu-library-remotetabs-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav sync-ui-item"
+                       label="&appMenuRemoteTabs.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-remotetabs', this)"/>
+        <toolbarseparator hidden="true"/>
+        <label value="&appMenuRecentHighlights.label;"
+               hidden="true"
+               class="subview-subheader"/>
+        <toolbaritem id="appMenu-library-recentHighlights"
+                     hidden="true"
+                     orient="vertical"
+                     smoothscroll="false"
+                     flatList="true"
+                     tooltip="bhTooltip">
+          <!-- Recent Highlights will go here -->
+        </toolbaritem>
+      </vbox>
+    </panelview>
+  </html:template>
 
   <!-- Temporary wrapper until we move away from XUL flex to allow a negative
        margin-top to slide the toolbox off screen in fullscreen layout.-->

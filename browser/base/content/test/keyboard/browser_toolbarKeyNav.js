@@ -265,9 +265,9 @@ add_task(async function testArrowsOverflowButton() {
 add_task(async function testArrowsInPanelMultiView() {
   let button = document.getElementById("library-button");
   forceFocus(button);
+  EventUtils.synthesizeKey(" ");
   let view = document.getElementById("appMenu-libraryView");
   let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
-  EventUtils.synthesizeKey(" ");
   let focusEvt = await focused;
   ok(true, "Focus inside Library menu after toolbar button pressed");
   EventUtils.synthesizeKey("KEY_ArrowLeft");

@@ -303,14 +303,10 @@ var SaveToPocket = {
   },
 
   updateElementsInWindow(win, enabled) {
-    let elementIds = [
-      "context-pocket",
-      "context-savelinktopocket",
-      "appMenu-library-pocket-button",
-    ];
-    let document = win.document;
-    for (let id of elementIds) {
-      document.getElementById(id).hidden = !enabled;
+    if (enabled) {
+      win.document.documentElement.removeAttribute("pocketdisabled");
+    } else {
+      win.document.documentElement.setAttribute("pocketdisabled", "true");
     }
   },
 
