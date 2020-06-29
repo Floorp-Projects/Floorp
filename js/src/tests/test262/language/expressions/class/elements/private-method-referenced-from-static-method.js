@@ -1,11 +1,11 @@
-// |reftest| skip -- class-static-methods-private is not supported
+// |reftest| skip -- class-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-method-referenced-from-static-method.case
 // - src/class-elements/default/cls-expr.template
 /*---
 description: Private method referenced from a static method (field definitions in a class expression)
 esid: prod-FieldDefinition
-features: [class-static-methods-private, class]
+features: [class-methods-private, class]
 flags: [generated]
 info: |
     PrivateFieldGet (P, O)
