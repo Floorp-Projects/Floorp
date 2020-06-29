@@ -12,10 +12,11 @@
 #include "mozilla/Array.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SandboxLaunch.h"
 #include "mozilla/SandboxSettings.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/SandboxLaunch.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
@@ -291,16 +292,21 @@ static void AddDynamicPathList(SandboxBroker::Policy* policy,
 }
 
 void SandboxBrokerPolicyFactory::InitContentPolicy() {
+  const bool headless =
+      StaticPrefs::security_sandbox_content_headless_AtStartup();
+
   // Policy entries that are the same in every process go here, and
   // are cached over the lifetime of the factory.
   SandboxBroker::Policy* policy = new SandboxBroker::Policy;
   // Write permssions
   //
-  // Bug 1308851: NVIDIA proprietary driver when using WebGL
-  policy->AddFilePrefix(rdwr, "/dev", "nvidia");
+  if (!headless) {
+    // Bug 1308851: NVIDIA proprietary driver when using WebGL
+    policy->AddFilePrefix(rdwr, "/dev", "nvidia");
 
-  // Bug 1312678: radeonsi/Intel with DRI when using WebGL
-  policy->AddDir(rdwr, "/dev/dri");
+    // Bug 1312678: Mesa with DRI when using WebGL
+    policy->AddDir(rdwr, "/dev/dri");
+  }
 
   // Bug 1575985: WASM library sandbox needs RW access to /dev/null
   policy->AddPath(rdwr, "/dev/null");
@@ -326,12 +332,16 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   policy->AddDir(rdonly, "/run/host/user-fonts");
   policy->AddDir(rdonly, "/var/cache/fontconfig");
 
-  AddMesaSysfsPaths(policy);
+  if (!headless) {
+    AddMesaSysfsPaths(policy);
+  }
   AddLdconfigPaths(policy);
   AddLdLibraryEnvPaths(policy);
 
-  // Bug 1385715: NVIDIA PRIME support
-  policy->AddPath(rdonly, "/proc/modules");
+  if (!headless) {
+    // Bug 1385715: NVIDIA PRIME support
+    policy->AddPath(rdonly, "/proc/modules");
+  }
 
   // Allow access to XDG_CONFIG_PATH and XDG_CONFIG_DIRS
   if (const auto xdgConfigPath = PR_GetEnv("XDG_CONFIG_PATH")) {
@@ -484,28 +494,30 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   }
 #endif
 
-  // Allow Primus to contact the Bumblebee daemon to manage GPU
-  // switching on NVIDIA Optimus systems.
-  const char* bumblebeeSocket = PR_GetEnv("BUMBLEBEE_SOCKET");
-  if (bumblebeeSocket == nullptr) {
-    bumblebeeSocket = "/var/run/bumblebee.socket";
-  }
-  policy->AddPath(SandboxBroker::MAY_CONNECT, bumblebeeSocket);
+  if (!headless) {
+    // Allow Primus to contact the Bumblebee daemon to manage GPU
+    // switching on NVIDIA Optimus systems.
+    const char* bumblebeeSocket = PR_GetEnv("BUMBLEBEE_SOCKET");
+    if (bumblebeeSocket == nullptr) {
+      bumblebeeSocket = "/var/run/bumblebee.socket";
+    }
+    policy->AddPath(SandboxBroker::MAY_CONNECT, bumblebeeSocket);
 
 #if defined(MOZ_WIDGET_GTK)
-  // Allow local X11 connections, for Primus and VirtualGL to contact
-  // the secondary X server. No exception for Wayland.
+    // Allow local X11 connections, for Primus and VirtualGL to contact
+    // the secondary X server. No exception for Wayland.
 #  if defined(MOZ_WAYLAND)
-  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
-  }
+    if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+      policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
+    }
 #  else
-  policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
+    policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
 #  endif
-  if (const auto xauth = PR_GetEnv("XAUTHORITY")) {
-    policy->AddPath(rdonly, xauth);
-  }
+    if (const auto xauth = PR_GetEnv("XAUTHORITY")) {
+      policy->AddPath(rdonly, xauth);
+    }
 #endif
+  }
 
   // Read any extra paths that will get write permissions,
   // configured by the user or distro
@@ -606,7 +618,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
 
   // Bug 1434711 - AMDGPU-PRO crashes if it can't read it's marketing ids
   // and various other things
-  if (HasAtiDrivers()) {
+  if (!headless && HasAtiDrivers()) {
     policy->AddDir(rdonly, "/opt/amdgpu/share");
     policy->AddPath(rdonly, "/sys/module/amdgpu");
     // AMDGPU-PRO's MESA version likes to readlink a lot of things here
