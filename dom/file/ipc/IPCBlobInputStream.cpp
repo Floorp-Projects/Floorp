@@ -11,7 +11,6 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/SlicedInputStream.h"
 #include "mozilla/NonBlockingAsyncInputStream.h"
-#include "IPCBlobInputStreamThread.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIPipe.h"
@@ -19,6 +18,7 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "RemoteLazyInputStreamStorage.h"
+#include "RemoteLazyInputStreamThread.h"
 
 namespace mozilla {
 
@@ -804,8 +804,8 @@ nsresult IPCBlobInputStream::EnsureAsyncRemoteStream(
       return rv;
     }
 
-    RefPtr<IPCBlobInputStreamThread> thread =
-        IPCBlobInputStreamThread::GetOrCreate();
+    RefPtr<RemoteLazyInputStreamThread> thread =
+        RemoteLazyInputStreamThread::GetOrCreate();
     if (NS_WARN_IF(!thread)) {
       return NS_ERROR_FAILURE;
     }
