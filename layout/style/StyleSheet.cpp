@@ -194,8 +194,6 @@ void StyleSheet::LastRelease() {
   MOZ_DIAGNOSTIC_ASSERT(mAdopters.IsEmpty(),
                         "Should have no adopters at time of destruction.");
 
-  UnparentChildren();
-
   mInner->RemoveSheet(this);
   mInner = nullptr;
 
@@ -416,9 +414,12 @@ void StyleSheetInfo::AddSheet(StyleSheet* aSheet) {
 }
 
 void StyleSheetInfo::RemoveSheet(StyleSheet* aSheet) {
-  if (aSheet == mSheets[0] && mSheets.Length() > 1) {
-    StyleSheet* newParent = mSheets[1];
-    for (StyleSheet* child : mChildren) {
+  // Fix up the parent pointer in children lists.
+  StyleSheet* newParent = aSheet == mSheets[0] ? mSheets.SafeElementAt(1) : mSheets[0];
+  for (StyleSheet* child : mChildren) {
+    MOZ_ASSERT(child->mParentSheet);
+    MOZ_ASSERT(child->mParentSheet->mInner == this);
+    if (child->mParentSheet == aSheet) {
       child->mParentSheet = newParent;
     }
   }
@@ -888,27 +889,6 @@ void StyleSheet::RemoveFromParent() {
   MOZ_ASSERT(mParentSheet->ChildSheets().Contains(this));
   mParentSheet->Inner().mChildren.RemoveElement(this);
   mParentSheet = nullptr;
-}
-
-void StyleSheet::UnparentChildren() {
-  MOZ_ASSERT(!mDocumentOrShadowRoot,
-             "How did we get to the destructor, exactly, if we're owned "
-             "by a document?");
-  // XXXbz this is a little bogus; see the comment where we
-  // declare mChildren in StyleSheetInfo.
-  //
-  // FIXME(emilio): StyleSheetInfo::RemoveSheet fixes up the parent list
-  // instead... We should maybe remove this and make that fix up more correct
-  // (right now it only tries to fix them up if you're the first sheet, but
-  // there's no guarantee that the first stylesheet is where the children end up
-  // being inserted in presence of deferred loads).
-  for (StyleSheet* child : Inner().mChildren) {
-    MOZ_ASSERT(!child->GetParentSheet() ||
-               child->GetParentSheet()->mInner == mInner);
-    if (child->mParentSheet == this) {
-      child->mParentSheet = nullptr;
-    }
-  }
 }
 
 void StyleSheet::SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,

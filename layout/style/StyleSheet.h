@@ -530,8 +530,6 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // assertion will fail if the expectation does not match reality.
   void ApplicableStateChanged(bool aApplicable);
 
-  void UnparentChildren();
-
   void LastRelease();
 
   // Return success if the subject principal subsumes the principal of our
