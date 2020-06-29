@@ -458,6 +458,8 @@ class Bootstrapper(object):
         self.instance.application = application
         self.instance.artifact_mode = 'artifact_mode' in application
 
+        self.instance.prepare()
+
         if self.instance.no_system_changes:
             state_dir_available, state_dir = self.try_to_create_state_dir()
             # We need to enable the loading of hgrc in case extensions are
