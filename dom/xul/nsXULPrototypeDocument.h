@@ -32,8 +32,6 @@ class nsXULPrototypePI;
  */
 class nsXULPrototypeDocument final : public nsISerializable {
  public:
-  static nsresult Create(nsIURI* aURI, nsXULPrototypeDocument** aResult);
-
   typedef std::function<void()> Callback;
 
   // nsISupports interface
