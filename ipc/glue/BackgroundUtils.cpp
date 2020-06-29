@@ -538,7 +538,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetHttpsOnlyStatus(),
       aLoadInfo->GetHasValidUserGestureActivation(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
-      aLoadInfo->GetParserCreatedScript(),
+      aLoadInfo->GetIsInDevToolsContext(), aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieJarSettingsArgs,
       aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo,
       aLoadInfo->GetHasStoragePermission(),
@@ -767,9 +767,9 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.httpsOnlyStatus(),
       loadInfoArgs.hasValidUserGestureActivation(),
       loadInfoArgs.allowDeprecatedSystemRequests(),
-      loadInfoArgs.parserCreatedScript(), loadInfoArgs.hasStoragePermission(),
-      loadInfoArgs.requestBlockingReason(), loadingContext,
-      loadInfoArgs.loadingEmbedderPolicy());
+      loadInfoArgs.isInDevToolsContext(), loadInfoArgs.parserCreatedScript(),
+      loadInfoArgs.hasStoragePermission(), loadInfoArgs.requestBlockingReason(),
+      loadingContext, loadInfoArgs.loadingEmbedderPolicy());
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
@@ -809,7 +809,7 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyStatus(),
       aLoadInfo->GetHasValidUserGestureActivation(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
-      aLoadInfo->GetParserCreatedScript(),
+      aLoadInfo->GetIsInDevToolsContext(), aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(),
@@ -855,6 +855,9 @@ nsresult MergeParentLoadInfoForwarder(
 
   rv = aLoadInfo->SetAllowDeprecatedSystemRequests(
       aForwarderArgs.allowDeprecatedSystemRequests());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aLoadInfo->SetIsInDevToolsContext(aForwarderArgs.isInDevToolsContext());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadInfo->SetParserCreatedScript(aForwarderArgs.parserCreatedScript());
