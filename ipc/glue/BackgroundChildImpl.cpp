@@ -383,9 +383,9 @@ bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
   return true;
 }
 
-already_AddRefed<dom::PIPCBlobInputStreamChild>
-BackgroundChildImpl::AllocPIPCBlobInputStreamChild(const nsID& aID,
-                                                   const uint64_t& aSize) {
+already_AddRefed<dom::PRemoteLazyInputStreamChild>
+BackgroundChildImpl::AllocPRemoteLazyInputStreamChild(const nsID& aID,
+                                                      const uint64_t& aSize) {
   RefPtr<dom::IPCBlobInputStreamChild> actor =
       new dom::IPCBlobInputStreamChild(aID, aSize);
   return actor.forget();

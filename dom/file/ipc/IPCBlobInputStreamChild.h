@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_IPCBlobInputStreamChild_h
 #define mozilla_dom_IPCBlobInputStreamChild_h
 
-#include "mozilla/dom/PIPCBlobInputStreamChild.h"
+#include "mozilla/dom/PRemoteLazyInputStreamChild.h"
 #include "mozilla/dom/IPCBlobInputStream.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
@@ -19,7 +19,7 @@ namespace dom {
 class IPCBlobInputStream;
 class ThreadSafeWorkerRef;
 
-class IPCBlobInputStreamChild final : public PIPCBlobInputStreamChild {
+class IPCBlobInputStreamChild final : public PRemoteLazyInputStreamChild {
  public:
   enum ActorState {
     // The actor is connected via IPDL to the parent.
