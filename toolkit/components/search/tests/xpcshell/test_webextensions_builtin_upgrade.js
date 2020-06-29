@@ -113,4 +113,5 @@ add_task(async function basic_multilocale_test() {
   );
 
   await ext.unload();
+  await promiseAfterCache();
 });
