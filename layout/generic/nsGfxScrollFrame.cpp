@@ -1251,6 +1251,17 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
       mHelper.mSkippedScrollbarLayout = true;
     }
   }
+  if (mHelper.mIsRoot) {
+    if (RefPtr<MobileViewportManager> manager =
+            PresShell()->GetMobileViewportManager()) {
+      // Note that this runs during layout, and when we get here the root
+      // scrollframe has already been laid out. It may have added or removed
+      // scrollbars as a result of that layout, so we need to ensure the
+      // visual viewport is updated to account for that before we read the
+      // visual viewport size.
+      manager->UpdateVisualViewportSizeForPotentialScrollbarChange();
+    }
+  }
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 

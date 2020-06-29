@@ -557,17 +557,15 @@ void MobileViewportManager::RefreshVisualViewportSize() {
   UpdateVisualViewportSize(displaySize, GetZoom());
 }
 
-void MobileViewportManager::NotifyResizeReflow() {
-  // If there's a resize-reflow, the visual viewport may need to be recomputed
-  // for a new display size, so let's do that.
+void MobileViewportManager::UpdateSizesBeforeReflow() {
   if (Maybe<LayoutDeviceIntSize> newDisplaySize =
           mContext->GetContentViewerSize()) {
-    // Note that we intentionally don't short-circuit here if the display size
-    // (in LD units) is unchanged, because a resize-reflow may also be triggered
-    // by a change in the CSS/LD pixel ratio which would affect GetZoom() and
-    // therefore the computed visual viewport.
+    if (mDisplaySize == *newDisplaySize) {
+      return;
+    }
+
     mDisplaySize = *newDisplaySize;
-    MVM_LOG("%p: Display size updated to %s\n", this,
+    MVM_LOG("%p: Reflow starting, display size updated to %s\n", this,
             Stringify(mDisplaySize).c_str());
 
     if (mDisplaySize.width == 0 || mDisplaySize.height == 0) {
@@ -580,8 +578,6 @@ void MobileViewportManager::NotifyResizeReflow() {
     mMobileViewportSize = viewportInfo.GetSize();
     MVM_LOG("%p: MVSize updated to %s\n", this,
             Stringify(mMobileViewportSize).c_str());
-
-    RefreshVisualViewportSize();
   }
 }
 
