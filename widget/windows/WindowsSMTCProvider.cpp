@@ -22,6 +22,8 @@
 #  include "mozilla/Maybe.h"
 #  include "mozilla/WidgetUtils.h"
 #  include "mozilla/WindowsVersion.h"
+#  include "mozilla/media/MediaUtils.h"
+#  include "nsThreadUtils.h"
 
 #  pragma comment(lib, "runtimeobject.lib")
 
@@ -82,6 +84,18 @@ static inline Maybe<mozilla::dom::MediaControlKey> TranslateKeycode(
     default:
       return Nothing();  // Not supported Button
   }
+}
+
+static IAsyncInfo* GetIAsyncInfo(IAsyncOperation<unsigned int>* aAsyncOp) {
+  MOZ_ASSERT(aAsyncOp);
+  IAsyncInfo* asyncInfo;
+  HRESULT hr = aAsyncOp->QueryInterface(IID_IAsyncInfo,
+                                        reinterpret_cast<void**>(&asyncInfo));
+  // The assertion always works since IAsyncOperation implements IAsyncInfo
+  MOZ_ASSERT(SUCCEEDED(hr));
+  Unused << hr;
+  MOZ_ASSERT(asyncInfo);
+  return asyncInfo;
 }
 
 WindowsSMTCProvider::WindowsSMTCProvider() {
@@ -160,8 +174,12 @@ void WindowsSMTCProvider::Close() {
 
   // Cancel the pending image fetch process
   mImageFetchRequest.DisconnectIfExists();
-  // Clear the cached image URL in case that image fetching is cancelled
-  mImageSrc = EmptyString();
+
+  CancelPendingStoreAsyncOperation();
+
+  // Clear the cached image urls
+  mThumbnailUrl = EmptyString();
+  mProcessingUrl = EmptyString();
 }
 
 void WindowsSMTCProvider::SetPlaybackState(
@@ -396,11 +414,50 @@ static nsresult GetEncodedImageBuffer(imgIContainer* aImage,
   return NS_OK;
 }
 
+static bool IsImageIn(const nsTArray<mozilla::dom::MediaImage>& aArtwork,
+                      const nsAString& aImageUrl) {
+  for (const mozilla::dom::MediaImage& image : aArtwork) {
+    if (image.mSrc == aImageUrl) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void WindowsSMTCProvider::LoadThumbnail(
     const nsTArray<mozilla::dom::MediaImage>& aArtwork) {
   MOZ_ASSERT(NS_IsMainThread());
+
   // TODO: Sort the images by the preferred size or format.
   mArtwork = aArtwork;
+
+  // Abort the loading if
+  // 1) thumbnail is being updated, and one in processing is in the artwork
+  // 2) thumbnail is not being updated, and one in use is in the artwork
+  if (!mProcessingUrl.IsEmpty()) {
+    LOG("Load thumbnail while image: %s is being processed",
+        NS_ConvertUTF16toUTF8(mProcessingUrl).get());
+    if (IsImageIn(aArtwork, mProcessingUrl)) {
+      LOG("No need to load thumbnail. The one being processed is in the "
+          "artwork");
+      return;
+    }
+  } else if (!mThumbnailUrl.IsEmpty()) {
+    if (IsImageIn(aArtwork, mThumbnailUrl)) {
+      LOG("No need to load thumbnail. The one in use is in the artwork");
+      return;
+    }
+  }
+
+  // If there is a pending image store operation, that image must be different
+  // from the new image will be loaded below, so the pending one should be
+  // cancelled.
+  CancelPendingStoreAsyncOperation();
+  // Remove the current thumbnail on the interface
+  ClearThumbnail();
+  RefreshDisplay();
+  mThumbnailUrl = EmptyString();
+  // Then load the new thumbnail asynchronously
   LoadImageAtIndex(0);
 }
 
@@ -408,22 +465,13 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aIndex >= mArtwork.Length()) {
-    LOG("Clear the thumbnail since there is no available image");
+    LOG("Stop loading thumbnail. No more available images");
     mImageFetchRequest.DisconnectIfExists();
-    mImageSrc = EmptyString();
-    ClearThumbnail();
-    RefreshDisplay();
+    mProcessingUrl = EmptyString();
     return;
   }
 
   const mozilla::dom::MediaImage& image = mArtwork[aIndex];
-
-  // Do nothing if the URL isn't changed. The image of the songs in the same
-  // list may be same (e.g., Spotify)
-  if (mImageSrc == image.mSrc) {
-    LOG("Keep the thumbnail since the image url is same");
-    return;
-  }
 
   // TODO: No need to fetch the default image and do image processing since the
   // the default image is local file and it's trustworthy. For the default
@@ -438,11 +486,7 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
   }
 
   mImageFetchRequest.DisconnectIfExists();
-  mImageSrc = image.mSrc;
-
-  // Remove the current thumbnail on the interface
-  ClearThumbnail();
-  RefreshDisplay();
+  mProcessingUrl = image.mSrc;
 
   mImageFetcher = mozilla::MakeUnique<mozilla::dom::FetchImageHelper>(image);
   RefPtr<WindowsSMTCProvider> self = this;
@@ -482,6 +526,8 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
 
 void WindowsSMTCProvider::LoadImage(const char* aImageData,
                                     uint32_t aDataSize) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // 1. Use mImageDataWriter to write the binary data of image into mImageStream
   // 2. Refer the image by mImageStreamReference and then set it to the SMTC
   // In case of the race condition between they are being destroyed and the
@@ -529,10 +575,9 @@ void WindowsSMTCProvider::LoadImage(const char* aImageData,
     return;
   }
 
-  ComPtr<IAsyncOperation<unsigned int>> storeAsyncOperation;
-  hr = mImageDataWriter->StoreAsync(&storeAsyncOperation);
+  hr = mImageDataWriter->StoreAsync(&mStoreAsyncOperation);
   if (FAILED(hr)) {
-    LOG("Failed to commit the written data to mImageStream, asynchronously");
+    LOG("Failed to create a DataWriterStoreOperation for mStoreAsyncOperation");
     return;
   }
 
@@ -540,36 +585,37 @@ void WindowsSMTCProvider::LoadImage(const char* aImageData,
   // interface
   auto onStoreCompleted = Callback<
       IAsyncOperationCompletedHandler<unsigned int>>(
-      [this, self = RefPtr<WindowsSMTCProvider>(this)](
+      [this, self = RefPtr<WindowsSMTCProvider>(this),
+       aImageUrl = nsString(mProcessingUrl)](
           IAsyncOperation<unsigned int>* aAsyncOp, AsyncStatus aStatus) {
         if (aStatus != AsyncStatus::Completed) {
           LOG("Asynchronous operation is not completed");
           return E_ABORT;
         }
 
-        IAsyncInfo* asyncInfo;
-        HRESULT hr = aAsyncOp->QueryInterface(
-            IID_IAsyncInfo, reinterpret_cast<void**>(&asyncInfo));
-        if (FAILED(hr)) {
-          LOG("Failed when query IAsyncInfo from aAsyncOp");
-          return hr;
-        }
-
-        MOZ_ASSERT(asyncInfo);
+        HRESULT hr = S_OK;
+        IAsyncInfo* asyncInfo = GetIAsyncInfo(aAsyncOp);
         asyncInfo->get_ErrorCode(&hr);
         if (FAILED(hr)) {
           LOG("Failed to get termination status of the asynchronous operation");
           return hr;
         }
 
-        if (!SetThumbnail() || !RefreshDisplay()) {
-          LOG("Failed to update thumbnail");
+        nsresult rv = UpdateThumbnailOnMainThread(aImageUrl);
+        if (NS_FAILED(rv)) {
+          LOG("Failed to dispatch a task to thumbnail update");
         }
+
+        // If an error occurs above:
+        // - If aImageUrl is not mProcessingUrl. It's fine.
+        // - If aImageUrl is mProcessingUrl, then mProcessingUrl won't be reset.
+        //   Therefore the thumbnail will remain empty until a new image whose
+        //   url is different from mProcessingUrl is loaded.
 
         return S_OK;
       });
 
-  hr = storeAsyncOperation->put_Completed(onStoreCompleted.Get());
+  hr = mStoreAsyncOperation->put_Completed(onStoreCompleted.Get());
   if (FAILED(hr)) {
     LOG("Failed to set callback on completeing the asynchronous operation");
   }
@@ -607,6 +653,44 @@ void WindowsSMTCProvider::ClearThumbnail() {
   HRESULT hr = mDisplay->put_Thumbnail(nullptr);
   MOZ_ASSERT(SUCCEEDED(hr));
   Unused << hr;
+}
+
+nsresult WindowsSMTCProvider::UpdateThumbnailOnMainThread(
+    const nsAString& aUrl) {
+  return NS_DispatchToMainThread(
+      media::NewRunnableFrom([this, self = RefPtr<WindowsSMTCProvider>(this),
+                              aImageUrl = nsString(aUrl)] {
+        if (!IsOpened()) {
+          LOG("Abort the thumbnail update: SMTC is closed");
+          return NS_OK;
+        }
+
+        if (aImageUrl != mProcessingUrl) {
+          LOG("Abort the thumbnail update: The image from %s is out of date",
+              NS_ConvertUTF16toUTF8(aImageUrl).get());
+          return NS_OK;
+        }
+
+        mProcessingUrl = EmptyString();
+
+        if (!SetThumbnail() || !RefreshDisplay()) {
+          LOG("Failed to update thumbnail");
+          mThumbnailUrl = EmptyString();
+          return NS_OK;
+        }
+
+        mThumbnailUrl = aImageUrl;
+        LOG("The thumbnail is updated to the image from: %s",
+            NS_ConvertUTF16toUTF8(mThumbnailUrl).get());
+        return NS_OK;
+      }));
+}
+
+void WindowsSMTCProvider::CancelPendingStoreAsyncOperation() const {
+  if (mStoreAsyncOperation) {
+    IAsyncInfo* asyncInfo = GetIAsyncInfo(mStoreAsyncOperation.Get());
+    asyncInfo->Cancel();
+  }
 }
 
 #endif  // __MINGW32__
