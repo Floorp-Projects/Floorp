@@ -20,6 +20,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Тут будуць паказаны вашы прыватныя карткі.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 адкрытая картка. Націсніце, каб пераключыць карткі.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">Адкрытых картак: %1$s. Націсніце, каб пераключыць карткі.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Вы ў прыватным сеансе</string>
@@ -324,9 +329,9 @@
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
-    <string name="preference_top_toolbar">Зверху</string>
+    <string name="preference_top_toolbar">Уверсе</string>
     <!-- Preference for using bottom toolbar -->
-    <string name="preference_bottom_toolbar">Знізу</string>
+    <string name="preference_bottom_toolbar">Унізе</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -334,6 +339,8 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Цёмная</string>
 
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Паводле рэжыму эканоміі зараду</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Тэма прылады</string>
 
@@ -403,6 +410,8 @@
     <string name="close_tab">Закрыць картку</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
     <string name="close_tab_title">Закрыць картку %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Меню адкрытых картак</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">Закрыць усе карткі</string>
     <!-- Open tabs menu item to share all tabs -->
@@ -505,6 +514,8 @@
     <string name="bookmark_created_snackbar">Закладка створана.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Закладка захавана!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">ЗМЯНІЦЬ</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Змяніць</string>
     <!-- Bookmark overflow menu select button -->
@@ -585,6 +596,8 @@
     <string name="preference_phone_feature_notification">Абвестка</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Запытваць дазвол</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Дазволена</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Заблакавана Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
@@ -625,6 +638,12 @@
     <string name="create_collection_deselect_all">Адмяніць выбар усіх</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">Выберыце карткі для захавання</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">Выбрана картак: %d</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">Выбрана картка: %d</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Карткі захаваны!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -667,6 +686,8 @@
     <string name="sync_offline">Па-за сеткай</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Падключыць іншую прыладу</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Каб адправіць картку, увайдзіце ў Firefox прынамсі на адной іншай прыладзе.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Зразумела</string>
 
@@ -707,6 +728,8 @@
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Карткі закрыты</string>
 
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Дададзена да папулярных сайтаў</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Прыватная картка закрыта</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -746,11 +769,16 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">Адкрытыя карткі</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Карткі: %d</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Гісторыя аглядання і дадзеныя сайтаў</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Адрасы: %d</string>
     <!-- Title for history items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_history_title">Гісторыя</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">Старонак: %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Кукі</string>
     <!-- Title for the site permissions item in Delete browsing data -->
@@ -787,26 +815,56 @@
     <string name="onboarding_header">Вітаем у %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Ужо маеце ўліковы запіс?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Пазнаёмцеся з %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Паглядзіце, што новага</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Маеце пытанні па абноўленым выглядзе %s? Хочаце ведаць, што змянілася?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Адказы тут</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Атрымайце максімум ад %s.</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Увайсці ў Firefox</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Няўдача ўваходу</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Аўтаматычная прыватнасць</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Налады прыватнасці і бяспекі блакуюць трэкеры, шкоднасныя праграмы і кампаніі, што ідуць за вамі.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартная (прадвызначана)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Блакуе менш трэкераў. Старонкі загружаюцца нармальна.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Строгая (рэкамендуецца)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Строгая</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Блакуе больш трэкераў, рэкламы і выплыўных вокнаў. Старонкі загружаюцца хутчэй, але некаторыя функцыі могуць не працаваць.</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Выберыце становішча</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Паспрабуйце навігацыю адной рукой на паліцы прылад унізе або перамясціце яе ўверх.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Аглядайце прыватна</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Адкрыць налады</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ваша прыватнасць</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Мы распрацавалі %s, каб даць вам кантроль над тым, чым дзяліцца
+        ў Інтэрнэце і тым, чым вы падзеліцеся з намі.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Паведамленне аб прыватнасці</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Закрыць</string>
 
@@ -866,12 +924,20 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Даведацца больш</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартная (прадвызначана)</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Што блакуецца стандартнай аховай ад сачэння</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Строгая</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Блакуе больш трэкераў, рэкламы і выплыўных вокнаў. Старонкі загружаюцца хутчэй, але некаторыя функцыі могуць не працаваць.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Што блакуецца строгай аховай ад сачэння</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Адмыслова</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description_2">Выберыце, якія трэкеры і скрыпты трэба заблакаваць.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Што блакуецца адмысловай аховай ад сачэння</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Кукі</string>
@@ -889,6 +955,8 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Ва ўсіх картках</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Толькі ў прыватных картках</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Толькі ў адмысловых картках</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Майнеры крыптавалют</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -914,6 +982,8 @@
     <string name="etp_back_button_content_description">Перайсці назад</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Вашы правы</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Выкарыстаныя бібліятэкі з адкрытым зыходным кодам</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Што новага ў %s</string>
 
@@ -982,6 +1052,12 @@
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Выключэнні</string>
 
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Шукаць лагіны</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Па алфавіце</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Нядаўна выкарыстаныя</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Сайт</string>
     <!-- The header for the username for a login -->
@@ -1035,6 +1111,8 @@
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Выдаліць</string>
 
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Іншы</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Назва</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
@@ -1065,6 +1143,8 @@
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Не бяспечнае злучэнне</string>
 
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Няма выняткаў для сайта</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Дадаць да папулярных сайтаў</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
