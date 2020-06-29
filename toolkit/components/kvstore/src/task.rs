@@ -178,6 +178,20 @@ impl GetOrCreateTask {
         }
     }
 
+    fn fetch_store(&self, path: &Path, writer: &mut Manager) -> Result<RkvStoreTuple, KeyValueError> {
+        let store;
+        let rkv = writer.get_or_create(path, Rkv::new)?;
+        {
+            let env = rkv.read()?;
+            let load_ratio = env.load_ratio()?;
+            if load_ratio > RESIZE_RATIO {
+                active_resize(&env)?;
+            }
+            store = env.open_single(str::from_utf8(&self.name)?, StoreOptions::create())?;
+        }
+        Ok((rkv, store))
+    }
+
     fn convert(&self, result: RkvStoreTuple) -> Result<RefPtr<KeyValueDatabase>, KeyValueError> {
         Ok(KeyValueDatabase::new(result.0, result.1)?)
     }
@@ -189,18 +203,16 @@ impl Task for GetOrCreateTask {
         // use the ? operator to simplify the implementation.
         self.result
             .store(Some(|| -> Result<RkvStoreTuple, KeyValueError> {
-                let store;
+                let path = Path::new(str::from_utf8(&self.path)?);
                 let mut writer = Manager::singleton().write()?;
-                let rkv = writer.get_or_create(Path::new(str::from_utf8(&self.path)?), Rkv::new)?;
-                {
-                    let env = rkv.read()?;
-                    let load_ratio = env.load_ratio()?;
-                    if load_ratio > RESIZE_RATIO {
-                        active_resize(&env)?;
-                    }
-                    store = env.open_single(str::from_utf8(&self.name)?, StoreOptions::create())?;
+                let store = self.fetch_store(&path, &mut writer);
+                if store.is_err() {
+                    // Remove this path from the cache so that the app can fix
+                    // the problem and try again, e.g. by deleting the database
+                    // folder
+                    writer.clear_cache(path);
                 }
-                Ok((rkv, store))
+                store
             }()));
     }
 
