@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "IPCBlobInputStreamParent.h"
+#include "RemoteLazyInputStreamParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "nsContentUtils.h"
@@ -15,9 +15,10 @@ namespace dom {
 
 template <typename M>
 /* static */
-already_AddRefed<IPCBlobInputStreamParent> IPCBlobInputStreamParent::Create(
-    nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
-    nsresult* aRv, M* aManager) {
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(nsIInputStream* aInputStream,
+                                    uint64_t aSize, uint64_t aChildID,
+                                    nsresult* aRv, M* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aRv);
 
@@ -30,51 +31,52 @@ already_AddRefed<IPCBlobInputStreamParent> IPCBlobInputStreamParent::Create(
   RemoteLazyInputStreamStorage::Get()->AddStream(aInputStream, id, aSize,
                                                  aChildID);
 
-  RefPtr<IPCBlobInputStreamParent> parent =
-      new IPCBlobInputStreamParent(id, aSize, aManager);
+  RefPtr<RemoteLazyInputStreamParent> parent =
+      new RemoteLazyInputStreamParent(id, aSize, aManager);
   return parent.forget();
 }
 
 /* static */
-already_AddRefed<IPCBlobInputStreamParent> IPCBlobInputStreamParent::Create(
-    const nsID& aID, uint64_t aSize, PBackgroundParent* aManager) {
-  RefPtr<IPCBlobInputStreamParent> actor =
-      new IPCBlobInputStreamParent(aID, aSize, aManager);
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(const nsID& aID, uint64_t aSize,
+                                    PBackgroundParent* aManager) {
+  RefPtr<RemoteLazyInputStreamParent> actor =
+      new RemoteLazyInputStreamParent(aID, aSize, aManager);
 
   actor->mCallback = RemoteLazyInputStreamStorage::Get()->TakeCallback(aID);
 
   return actor.forget();
 }
 
-template already_AddRefed<IPCBlobInputStreamParent>
-IPCBlobInputStreamParent::Create<mozilla::ipc::PBackgroundParent>(
+template already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create<mozilla::ipc::PBackgroundParent>(
     nsIInputStream*, uint64_t, uint64_t, nsresult*,
     mozilla::ipc::PBackgroundParent*);
 
 /* static */
-already_AddRefed<IPCBlobInputStreamParent> IPCBlobInputStreamParent::Create(
-    const nsID& aID, uint64_t aSize, SocketProcessParent* aManager) {
-  RefPtr<IPCBlobInputStreamParent> actor =
-      new IPCBlobInputStreamParent(aID, aSize, aManager);
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(const nsID& aID, uint64_t aSize,
+                                    SocketProcessParent* aManager) {
+  RefPtr<RemoteLazyInputStreamParent> actor =
+      new RemoteLazyInputStreamParent(aID, aSize, aManager);
 
   actor->mCallback = RemoteLazyInputStreamStorage::Get()->TakeCallback(aID);
 
   return actor.forget();
 }
 
-template already_AddRefed<IPCBlobInputStreamParent>
-IPCBlobInputStreamParent::Create<mozilla::net::SocketProcessParent>(
+template already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create<mozilla::net::SocketProcessParent>(
     nsIInputStream*, uint64_t, uint64_t, nsresult*,
     mozilla::net::SocketProcessParent*);
 
-template already_AddRefed<IPCBlobInputStreamParent>
-IPCBlobInputStreamParent::Create<ContentParent>(nsIInputStream*, uint64_t,
-                                                uint64_t, nsresult*,
-                                                ContentParent*);
+template already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create<ContentParent>(nsIInputStream*, uint64_t,
+                                                   uint64_t, nsresult*,
+                                                   ContentParent*);
 
-IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
-                                                   uint64_t aSize,
-                                                   ContentParent* aManager)
+RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
+    const nsID& aID, uint64_t aSize, ContentParent* aManager)
     : mID(aID),
       mSize(aSize),
       mContentManager(aManager),
@@ -82,9 +84,8 @@ IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
       mSocketProcessManager(nullptr),
       mMigrating(false) {}
 
-IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
-                                                   uint64_t aSize,
-                                                   PBackgroundParent* aManager)
+RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
+    const nsID& aID, uint64_t aSize, PBackgroundParent* aManager)
     : mID(aID),
       mSize(aSize),
       mContentManager(nullptr),
@@ -92,7 +93,7 @@ IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
       mSocketProcessManager(nullptr),
       mMigrating(false) {}
 
-IPCBlobInputStreamParent::IPCBlobInputStreamParent(
+RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
     const nsID& aID, uint64_t aSize, SocketProcessParent* aManager)
     : mID(aID),
       mSize(aSize),
@@ -101,7 +102,7 @@ IPCBlobInputStreamParent::IPCBlobInputStreamParent(
       mSocketProcessManager(aManager),
       mMigrating(false) {}
 
-void IPCBlobInputStreamParent::ActorDestroy(
+void RemoteLazyInputStreamParent::ActorDestroy(
     IProtocol::ActorDestroyReason aReason) {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
 
@@ -109,7 +110,7 @@ void IPCBlobInputStreamParent::ActorDestroy(
   mPBackgroundManager = nullptr;
   mSocketProcessManager = nullptr;
 
-  RefPtr<IPCBlobInputStreamParentCallback> callback;
+  RefPtr<RemoteLazyInputStreamParentCallback> callback;
   mCallback.swap(callback);
 
   RefPtr<RemoteLazyInputStreamStorage> storage =
@@ -132,15 +133,15 @@ void IPCBlobInputStreamParent::ActorDestroy(
   }
 }
 
-void IPCBlobInputStreamParent::SetCallback(
-    IPCBlobInputStreamParentCallback* aCallback) {
+void RemoteLazyInputStreamParent::SetCallback(
+    RemoteLazyInputStreamParentCallback* aCallback) {
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(!mCallback);
 
   mCallback = aCallback;
 }
 
-mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvStreamNeeded() {
+mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvStreamNeeded() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
 
   nsCOMPtr<nsIInputStream> stream;
@@ -178,7 +179,7 @@ mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvStreamNeeded() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvLengthNeeded() {
+mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvLengthNeeded() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
 
   nsCOMPtr<nsIInputStream> stream;
@@ -198,7 +199,7 @@ mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvLengthNeeded() {
     return IPC_OK();
   }
 
-  RefPtr<IPCBlobInputStreamParent> self = this;
+  RefPtr<RemoteLazyInputStreamParent> self = this;
   InputStreamLengthHelper::GetAsyncLength(stream, [self](int64_t aLength) {
     if (self->mContentManager || self->mPBackgroundManager ||
         self->mSocketProcessManager) {
@@ -209,20 +210,20 @@ mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvLengthNeeded() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvClose() {
+mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvClose() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
 
   Unused << Send__delete__(this);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult IPCBlobInputStreamParent::Recv__delete__() {
+mozilla::ipc::IPCResult RemoteLazyInputStreamParent::Recv__delete__() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
   mMigrating = true;
   return IPC_OK();
 }
 
-bool IPCBlobInputStreamParent::HasValidStream() const {
+bool RemoteLazyInputStreamParent::HasValidStream() const {
   return RemoteLazyInputStreamStorage::Get()->HasStream(mID);
 }
 

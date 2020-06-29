@@ -178,7 +178,7 @@ void RemoteLazyInputStreamStorage::GetStream(const nsID& aID, uint64_t aStart,
 }
 
 void RemoteLazyInputStreamStorage::StoreCallback(
-    const nsID& aID, IPCBlobInputStreamParentCallback* aCallback) {
+    const nsID& aID, RemoteLazyInputStreamParentCallback* aCallback) {
   MOZ_ASSERT(aCallback);
 
   mozilla::StaticMutexAutoLock lock(gMutex);
@@ -189,7 +189,7 @@ void RemoteLazyInputStreamStorage::StoreCallback(
   }
 }
 
-already_AddRefed<IPCBlobInputStreamParentCallback>
+already_AddRefed<RemoteLazyInputStreamParentCallback>
 RemoteLazyInputStreamStorage::TakeCallback(const nsID& aID) {
   mozilla::StaticMutexAutoLock lock(gMutex);
   StreamData* data = mStorage.Get(aID);
@@ -197,7 +197,7 @@ RemoteLazyInputStreamStorage::TakeCallback(const nsID& aID) {
     return nullptr;
   }
 
-  RefPtr<IPCBlobInputStreamParentCallback> callback;
+  RefPtr<RemoteLazyInputStreamParentCallback> callback;
   data->mCallback.swap(callback);
   return callback.forget();
 }
