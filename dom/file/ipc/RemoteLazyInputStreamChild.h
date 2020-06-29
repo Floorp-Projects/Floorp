@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_IPCBlobInputStreamChild_h
-#define mozilla_dom_IPCBlobInputStreamChild_h
+#ifndef mozilla_dom_RemoteLazyInputStreamChild_h
+#define mozilla_dom_RemoteLazyInputStreamChild_h
 
 #include "mozilla/dom/PRemoteLazyInputStreamChild.h"
 #include "mozilla/dom/IPCBlobInputStream.h"
@@ -19,7 +19,7 @@ namespace dom {
 class IPCBlobInputStream;
 class ThreadSafeWorkerRef;
 
-class IPCBlobInputStreamChild final : public PRemoteLazyInputStreamChild {
+class RemoteLazyInputStreamChild final : public PRemoteLazyInputStreamChild {
  public:
   enum ActorState {
     // The actor is connected via IPDL to the parent.
@@ -37,9 +37,9 @@ class IPCBlobInputStreamChild final : public PRemoteLazyInputStreamChild {
     eInactiveMigrating,
   };
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IPCBlobInputStreamChild, final)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteLazyInputStreamChild, final)
 
-  IPCBlobInputStreamChild(const nsID& aID, uint64_t aSize);
+  RemoteLazyInputStreamChild(const nsID& aID, uint64_t aSize);
 
   void ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
 
@@ -66,7 +66,7 @@ class IPCBlobInputStreamChild final : public PRemoteLazyInputStreamChild {
   void Migrated();
 
  private:
-  ~IPCBlobInputStreamChild();
+  ~RemoteLazyInputStreamChild();
 
   // Raw pointers because these streams keep this actor alive. When the last
   // stream is unregister, the actor will be deleted. This list is protected by
@@ -100,4 +100,4 @@ class IPCBlobInputStreamChild final : public PRemoteLazyInputStreamChild {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_IPCBlobInputStreamChild_h
+#endif  // mozilla_dom_RemoteLazyInputStreamChild_h

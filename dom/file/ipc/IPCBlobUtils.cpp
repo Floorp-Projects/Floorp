@@ -6,8 +6,8 @@
 
 #include "IPCBlobUtils.h"
 #include "IPCBlobInputStream.h"
-#include "IPCBlobInputStreamChild.h"
-#include "IPCBlobInputStreamParent.h"
+#include "RemoteLazyInputStreamChild.h"
+#include "RemoteLazyInputStreamParent.h"
 #include "mozilla/dom/IPCBlob.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundParent.h"
@@ -35,8 +35,9 @@ already_AddRefed<BlobImpl> Deserialize(const IPCBlob& aIPCBlob) {
     // Parent to child: when an nsIInputStream is sent from parent to child, the
     // child receives a IPCBlobInputStream actor.
     case IPCBlobStream::TPRemoteLazyInputStreamChild: {
-      IPCBlobInputStreamChild* actor = static_cast<IPCBlobInputStreamChild*>(
-          stream.get_PRemoteLazyInputStreamChild());
+      RemoteLazyInputStreamChild* actor =
+          static_cast<RemoteLazyInputStreamChild*>(
+              stream.get_PRemoteLazyInputStreamChild());
       inputStream = actor->CreateStream();
       break;
     }
@@ -86,8 +87,8 @@ nsresult SerializeInputStreamParent(nsIInputStream* aInputStream,
   nsCOMPtr<nsIInputStream> stream = aInputStream;
 
   // In case this is a IPCBlobInputStream, we don't want to create a loop:
-  // IPCBlobInputStreamParent -> IPCBlobInputStream ->
-  // IPCBlobInputStreamParent. Let's use the underlying inputStream instead.
+  // RemoteLazyInputStreamParent -> IPCBlobInputStream ->
+  // RemoteLazyInputStreamParent. Let's use the underlying inputStream instead.
   nsCOMPtr<mozIRemoteLazyInputStream> ipcBlobInputStream =
       do_QueryInterface(aInputStream);
   if (ipcBlobInputStream) {
@@ -101,8 +102,9 @@ nsresult SerializeInputStreamParent(nsIInputStream* aInputStream,
   }
 
   nsresult rv;
-  RefPtr<IPCBlobInputStreamParent> parentActor =
-      IPCBlobInputStreamParent::Create(stream, aSize, aChildID, &rv, aManager);
+  RefPtr<RemoteLazyInputStreamParent> parentActor =
+      RemoteLazyInputStreamParent::Create(stream, aSize, aChildID, &rv,
+                                          aManager);
   if (!parentActor) {
     return rv;
   }

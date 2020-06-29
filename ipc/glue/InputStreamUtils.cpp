@@ -11,7 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/IPCBlobInputStream.h"
-#include "mozilla/dom/IPCBlobInputStreamChild.h"
+#include "mozilla/dom/RemoteLazyInputStreamChild.h"
 #include "mozilla/dom/RemoteLazyInputStreamStorage.h"
 #include "mozilla/dom/quota/DecryptingInputStream_impl.h"
 #include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
@@ -293,8 +293,9 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
     // parent -> child serializations receive an IPCBlobInputStream actor.
     MOZ_ASSERT(params.type() ==
                IPCBlobInputStreamParams::TPRemoteLazyInputStreamChild);
-    IPCBlobInputStreamChild* actor = static_cast<IPCBlobInputStreamChild*>(
-        params.get_PRemoteLazyInputStreamChild());
+    RemoteLazyInputStreamChild* actor =
+        static_cast<RemoteLazyInputStreamChild*>(
+            params.get_PRemoteLazyInputStreamChild());
     nsCOMPtr<nsIInputStream> stream = actor->CreateStream();
     return stream.forget();
   }
