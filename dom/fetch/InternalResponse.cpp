@@ -9,9 +9,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/FetchTypes.h"
-#include "mozilla/dom/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/RemoteLazyInputStreamStorage.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/RandomNum.h"
@@ -32,7 +32,7 @@ nsCOMPtr<nsIInputStream> TakeStreamFromStorage(
   MOZ_ASSERT(aVariant.type() == BodyStreamVariant::TParentToParentStream);
   const auto& uuid = aVariant.get_ParentToParentStream().uuid();
 
-  auto stream = IPCBlobInputStreamStorage::Get()->ForgetStream(uuid);
+  auto stream = RemoteLazyInputStreamStorage::Get()->ForgetStream(uuid);
   MOZ_ASSERT(stream);
 
   return stream;

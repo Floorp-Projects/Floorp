@@ -26,7 +26,7 @@ struct HeadersEntry {
 };
 
 struct ParentToParentStream {
-  // Used as a key for IPCBlobInputStreamStorage
+  // Used as a key for RemoteLazyInputStreamStorage
   nsID uuid;
 };
 

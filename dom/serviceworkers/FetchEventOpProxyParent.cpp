@@ -19,8 +19,8 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpParent.h"
-#include "mozilla/dom/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/RemoteLazyInputStreamStorage.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 
@@ -47,8 +47,8 @@ nsresult MaybeDeserializeAndWrapForMainThread(
 
   MOZ_TRY(nsContentUtils::GenerateUUIDInPlace(uuid));
 
-  IPCBlobInputStreamStorage::Get()->AddStream(deserialized, uuid,
-                                              aBodyStreamSize, 0);
+  RemoteLazyInputStreamStorage::Get()->AddStream(deserialized, uuid,
+                                                 aBodyStreamSize, 0);
 
   return NS_OK;
 }
@@ -80,7 +80,7 @@ nsresult MaybeDeserializeAndWrapForMainThread(
     auto streamLength = copyRequest.bodySize();
     const auto& uuid =
         copyRequest.body().ref().get_ParentToParentStream().uuid();
-    IPCBlobInputStreamStorage* storage = IPCBlobInputStreamStorage::Get();
+    RemoteLazyInputStreamStorage* storage = RemoteLazyInputStreamStorage::Get();
 
     storage->GetStream(uuid, 0, streamLength, getter_AddRefs(stream));
     storage->ForgetStream(uuid);

@@ -109,7 +109,7 @@
 #include "mozilla/StaticPresData.h"
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/IPCBlobInputStreamStorage.h"
+#include "mozilla/dom/RemoteLazyInputStreamStorage.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #ifdef OS_WIN
@@ -262,7 +262,7 @@ nsresult nsLayoutStatics::Initialize() {
   }
 
   // This must be initialized on the main-thread.
-  mozilla::dom::IPCBlobInputStreamStorage::Initialize();
+  mozilla::dom::RemoteLazyInputStreamStorage::Initialize();
 
   mozilla::dom::U2FTokenManager::Initialize();
 
