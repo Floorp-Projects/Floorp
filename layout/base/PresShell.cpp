@@ -1956,9 +1956,6 @@ nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
     mMobileViewportManager->RequestReflow(false);
     return NS_OK;
   }
-  if (mMobileViewportManager) {
-    mMobileViewportManager->NotifyResizeReflow();
-  }
 
   return ResizeReflowIgnoreOverride(aWidth, aHeight, aOptions);
 }
@@ -9486,6 +9483,10 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     tp->Accumulate();
     tp->reflowCount++;
     timeStart = TimeStamp::Now();
+  }
+
+  if (mMobileViewportManager) {
+    mMobileViewportManager->UpdateSizesBeforeReflow();
   }
 
   // Schedule a paint, but don't actually mark this frame as changed for
