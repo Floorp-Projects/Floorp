@@ -243,6 +243,9 @@ Structure:
               wrCompositor: { // native OS compositor (CA, DComp, etc.)
                 status: <string>
               }
+              openglCompositing: { // OpenGL compositing.
+                status: <string>
+              }
             },
           },
         appleModelId: <string>, // Mac only or null on failure
