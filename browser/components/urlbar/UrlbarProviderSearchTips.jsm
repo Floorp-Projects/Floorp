@@ -112,6 +112,9 @@ class ProviderSearchTips extends UrlbarProvider {
 
     // Whether and what kind of tip we've shown in the current engagement.
     this.showedTipTypeInCurrentEngagement = TIPS.NONE;
+
+    // Used to track browser windows we've seen.
+    this._seenWindows = new WeakSet();
   }
 
   /**
@@ -269,13 +272,40 @@ class ProviderSearchTips extends UrlbarProvider {
 
   /**
    * Called from `onLocationChange` in browser.js.
+   * @param {window} window
+   *  The browser window where the location change happened.
    * @param {URL} uri
    *  The URI being navigated to.
    * @param {nsIWebProgress} webProgress
    * @param {number} flags
    *   Load flags. See nsIWebProgressListener.idl for possible values.
    */
-  onLocationChange(uri, webProgress, flags) {
+  async onLocationChange(window, uri, webProgress, flags) {
+    let instance = (this._onLocationChangeInstance = {});
+
+    // If this is the first time we've seen this browser window, we take some
+    // precautions to avoid impacting ts_paint.
+    if (!this._seenWindows.has(window)) {
+      this._seenWindows.add(window);
+
+      // First, wait until MozAfterPaint is fired in the current content window.
+      await window.gBrowserInit.firstContentWindowPaintPromise;
+      if (instance != this._onLocationChangeInstance) {
+        return;
+      }
+
+      // Second, wait 500ms.  ts_paint waits at most 500ms after MozAfterPaint
+      // before ending.  We use XPCOM directly instead of Timer.jsm to avoid the
+      // perf impact of loading Timer.jsm, in case it's not already loaded.
+      await new Promise(resolve => {
+        let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+        timer.initWithCallback(resolve, 500, Ci.nsITimer.TYPE_ONE_SHOT);
+      });
+      if (instance != this._onLocationChangeInstance) {
+        return;
+      }
+    }
+
     // Ignore events that don't change the document. Google is known to do this.
     // Also ignore changes in sub-frames. See bug 1623978.
     if (
@@ -285,7 +315,6 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
-    let window = BrowserWindowTracker.getTopWindow();
     // The UrlbarView is usually closed on location change when the input is
     // blurred. Since we open the view to show the redirect tip without focusing
     // the input, the view won't close in that case. We need to close it
@@ -316,20 +345,10 @@ class ProviderSearchTips extends UrlbarProvider {
     let instance = {};
     this._maybeShowTipForUrlInstance = instance;
 
-    let ignoreShowLimits = UrlbarPrefs.get("searchTips.test.ignoreShowLimits");
-
-    // Don't show a tip if the browser is already showing some other notification.
-    if ((await isBrowserShowingNotification()) && !ignoreShowLimits) {
-      return;
-    }
-
-    // Don't show a tip if the browser has been updated recently.
-    let date = await lastBrowserUpdateDate();
-    if (Date.now() - date <= LAST_UPDATE_THRESHOLD_MS && !ignoreShowLimits) {
-      return;
-    }
-
-    // Determine which tip we should show for the tab.
+    // Determine which tip we should show for the tab.  Do this check first
+    // before the others below.  It has less of a performance impact than the
+    // others, so in the common case where the URL is not one we're interested
+    // in, we can return immediately.
     let tip;
     let isNewtab = ["about:newtab", "about:home"].includes(urlStr);
     let isSearchHomepage = !isNewtab && (await isDefaultEngineHomepage(urlStr));
@@ -342,10 +361,24 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
+    let ignoreShowLimits = UrlbarPrefs.get("searchTips.test.ignoreShowLimits");
+
     // If we've shown this type of tip the maximum number of times over all
     // sessions, don't show it again.
     let shownCount = UrlbarPrefs.get(`tipShownCount.${tip}`);
     if (shownCount >= MAX_SHOWN_COUNT && !ignoreShowLimits) {
+      return;
+    }
+
+    // Don't show a tip if the browser is already showing some other
+    // notification.
+    if ((await isBrowserShowingNotification()) && !ignoreShowLimits) {
+      return;
+    }
+
+    // Don't show a tip if the browser has been updated recently.
+    let date = await lastBrowserUpdateDate();
+    if (Date.now() - date <= LAST_UPDATE_THRESHOLD_MS && !ignoreShowLimits) {
       return;
     }
 
