@@ -33,6 +33,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ResultExtensions.h"
@@ -1294,8 +1295,9 @@ gfxFontEntry* gfxPlatformFontList::FindFontForFamily(
 
 gfxFontEntry* gfxPlatformFontList::GetOrCreateFontEntry(
     fontlist::Face* aFace, const fontlist::Family* aFamily) {
-  return mFontEntries.LookupForAdd(aFace).OrInsert(
-      [=]() { return CreateFontEntry(aFace, aFamily); });
+  return mFontEntries.LookupForAdd(aFace).OrInsert([=]() {
+    return CreateFontEntry(aFace, aFamily);
+  });
 }
 
 void gfxPlatformFontList::AddOtherFamilyName(

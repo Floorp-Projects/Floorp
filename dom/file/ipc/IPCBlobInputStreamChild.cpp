@@ -4,16 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RemoteLazyInputStreamChild.h"
-#include "RemoteLazyInputStreamThread.h"
+#include "IPCBlobInputStreamChild.h"
+#include "IPCBlobInputStreamThread.h"
 
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
 
 namespace mozilla {
-
-using namespace dom;
+namespace dom {
 
 namespace {
 
@@ -21,7 +20,7 @@ namespace {
 // thread.
 class ShutdownRunnable final : public CancelableRunnable {
  public:
-  explicit ShutdownRunnable(RemoteLazyInputStreamChild* aActor)
+  explicit ShutdownRunnable(IPCBlobInputStreamChild* aActor)
       : CancelableRunnable("dom::ShutdownRunnable"), mActor(aActor) {}
 
   NS_IMETHOD
@@ -31,36 +30,35 @@ class ShutdownRunnable final : public CancelableRunnable {
   }
 
  private:
-  RefPtr<RemoteLazyInputStreamChild> mActor;
+  RefPtr<IPCBlobInputStreamChild> mActor;
 };
 
 // This runnable is used in case StreamNeeded() has been called on a non-owning
 // thread.
 class StreamNeededRunnable final : public CancelableRunnable {
  public:
-  explicit StreamNeededRunnable(RemoteLazyInputStreamChild* aActor)
+  explicit StreamNeededRunnable(IPCBlobInputStreamChild* aActor)
       : CancelableRunnable("dom::StreamNeededRunnable"), mActor(aActor) {}
 
   NS_IMETHOD
   Run() override {
-    MOZ_ASSERT(
-        mActor->State() != RemoteLazyInputStreamChild::eActiveMigrating &&
-        mActor->State() != RemoteLazyInputStreamChild::eInactiveMigrating);
-    if (mActor->State() == RemoteLazyInputStreamChild::eActive) {
+    MOZ_ASSERT(mActor->State() != IPCBlobInputStreamChild::eActiveMigrating &&
+               mActor->State() != IPCBlobInputStreamChild::eInactiveMigrating);
+    if (mActor->State() == IPCBlobInputStreamChild::eActive) {
       mActor->SendStreamNeeded();
     }
     return NS_OK;
   }
 
  private:
-  RefPtr<RemoteLazyInputStreamChild> mActor;
+  RefPtr<IPCBlobInputStreamChild> mActor;
 };
 
 // When the stream has been received from the parent, we inform the
-// RemoteLazyInputStream.
+// IPCBlobInputStream.
 class StreamReadyRunnable final : public CancelableRunnable {
  public:
-  StreamReadyRunnable(RemoteLazyInputStream* aDestinationStream,
+  StreamReadyRunnable(IPCBlobInputStream* aDestinationStream,
                       already_AddRefed<nsIInputStream> aCreatedStream)
       : CancelableRunnable("dom::StreamReadyRunnable"),
         mDestinationStream(aDestinationStream),
@@ -76,7 +74,7 @@ class StreamReadyRunnable final : public CancelableRunnable {
   }
 
  private:
-  RefPtr<RemoteLazyInputStream> mDestinationStream;
+  RefPtr<IPCBlobInputStream> mDestinationStream;
   nsCOMPtr<nsIInputStream> mCreatedStream;
 };
 
@@ -84,29 +82,28 @@ class StreamReadyRunnable final : public CancelableRunnable {
 // thread.
 class LengthNeededRunnable final : public CancelableRunnable {
  public:
-  explicit LengthNeededRunnable(RemoteLazyInputStreamChild* aActor)
+  explicit LengthNeededRunnable(IPCBlobInputStreamChild* aActor)
       : CancelableRunnable("dom::LengthNeededRunnable"), mActor(aActor) {}
 
   NS_IMETHOD
   Run() override {
-    MOZ_ASSERT(
-        mActor->State() != RemoteLazyInputStreamChild::eActiveMigrating &&
-        mActor->State() != RemoteLazyInputStreamChild::eInactiveMigrating);
-    if (mActor->State() == RemoteLazyInputStreamChild::eActive) {
+    MOZ_ASSERT(mActor->State() != IPCBlobInputStreamChild::eActiveMigrating &&
+               mActor->State() != IPCBlobInputStreamChild::eInactiveMigrating);
+    if (mActor->State() == IPCBlobInputStreamChild::eActive) {
       mActor->SendLengthNeeded();
     }
     return NS_OK;
   }
 
  private:
-  RefPtr<RemoteLazyInputStreamChild> mActor;
+  RefPtr<IPCBlobInputStreamChild> mActor;
 };
 
 // When the stream has been received from the parent, we inform the
-// RemoteLazyInputStream.
+// IPCBlobInputStream.
 class LengthReadyRunnable final : public CancelableRunnable {
  public:
-  LengthReadyRunnable(RemoteLazyInputStream* aDestinationStream, int64_t aSize)
+  LengthReadyRunnable(IPCBlobInputStream* aDestinationStream, int64_t aSize)
       : CancelableRunnable("dom::LengthReadyRunnable"),
         mDestinationStream(aDestinationStream),
         mSize(aSize) {
@@ -120,15 +117,15 @@ class LengthReadyRunnable final : public CancelableRunnable {
   }
 
  private:
-  RefPtr<RemoteLazyInputStream> mDestinationStream;
+  RefPtr<IPCBlobInputStream> mDestinationStream;
   int64_t mSize;
 };
 
 }  // namespace
 
-RemoteLazyInputStreamChild::RemoteLazyInputStreamChild(const nsID& aID,
-                                                       uint64_t aSize)
-    : mMutex("RemoteLazyInputStreamChild::mMutex"),
+IPCBlobInputStreamChild::IPCBlobInputStreamChild(const nsID& aID,
+                                                 uint64_t aSize)
+    : mMutex("IPCBlobInputStreamChild::mMutex"),
       mID(aID),
       mSize(aSize),
       mState(eActive),
@@ -142,7 +139,7 @@ RemoteLazyInputStreamChild::RemoteLazyInputStreamChild(const nsID& aID,
     }
 
     RefPtr<StrongWorkerRef> workerRef =
-        StrongWorkerRef::Create(workerPrivate, "RemoteLazyInputStreamChild");
+        StrongWorkerRef::Create(workerPrivate, "IPCBlobInputStreamChild");
     if (!workerRef) {
       return;
     }
@@ -152,12 +149,12 @@ RemoteLazyInputStreamChild::RemoteLazyInputStreamChild(const nsID& aID,
   }
 }
 
-RemoteLazyInputStreamChild::~RemoteLazyInputStreamChild() = default;
+IPCBlobInputStreamChild::~IPCBlobInputStreamChild() = default;
 
-void RemoteLazyInputStreamChild::Shutdown() {
+void IPCBlobInputStreamChild::Shutdown() {
   MutexAutoLock lock(mMutex);
 
-  RefPtr<RemoteLazyInputStreamChild> kungFuDeathGrip = this;
+  RefPtr<IPCBlobInputStreamChild> kungFuDeathGrip = this;
 
   mWorkerRef = nullptr;
   mPendingOperations.Clear();
@@ -168,7 +165,7 @@ void RemoteLazyInputStreamChild::Shutdown() {
   }
 }
 
-void RemoteLazyInputStreamChild::ActorDestroy(
+void IPCBlobInputStreamChild::ActorDestroy(
     IProtocol::ActorDestroyReason aReason) {
   bool migrating = false;
 
@@ -185,16 +182,15 @@ void RemoteLazyInputStreamChild::ActorDestroy(
   }
 }
 
-RemoteLazyInputStreamChild::ActorState RemoteLazyInputStreamChild::State() {
+IPCBlobInputStreamChild::ActorState IPCBlobInputStreamChild::State() {
   MutexAutoLock lock(mMutex);
   return mState;
 }
 
-already_AddRefed<RemoteLazyInputStream>
-RemoteLazyInputStreamChild::CreateStream() {
+already_AddRefed<IPCBlobInputStream> IPCBlobInputStreamChild::CreateStream() {
   bool shouldMigrate = false;
 
-  RefPtr<RemoteLazyInputStream> stream;
+  RefPtr<IPCBlobInputStream> stream;
 
   {
     MutexAutoLock lock(mMutex);
@@ -206,19 +202,19 @@ RemoteLazyInputStreamChild::CreateStream() {
     // The stream is active but maybe it is not running in the DOM-File thread.
     // We should migrate it there.
     if (mState == eActive &&
-        !RemoteLazyInputStreamThread::IsOnFileEventTarget(mOwningEventTarget)) {
+        !IPCBlobInputStreamThread::IsOnFileEventTarget(mOwningEventTarget)) {
       MOZ_ASSERT(mStreams.IsEmpty());
 
       shouldMigrate = true;
       mState = eActiveMigrating;
 
-      RefPtr<RemoteLazyInputStreamThread> thread =
-          RemoteLazyInputStreamThread::GetOrCreate();
+      RefPtr<IPCBlobInputStreamThread> thread =
+          IPCBlobInputStreamThread::GetOrCreate();
       MOZ_ASSERT(thread, "We cannot continue without DOMFile thread.");
 
       // Create a new actor object to connect to the target thread.
-      RefPtr<RemoteLazyInputStreamChild> newActor =
-          new RemoteLazyInputStreamChild(mID, mSize);
+      RefPtr<IPCBlobInputStreamChild> newActor =
+          new IPCBlobInputStreamChild(mID, mSize);
       {
         MutexAutoLock newActorLock(newActor->mMutex);
 
@@ -228,14 +224,14 @@ RemoteLazyInputStreamChild::CreateStream() {
         newActor->mPendingOperations.SwapElements(mPendingOperations);
 
         // Create the actual stream object.
-        stream = new RemoteLazyInputStream(newActor);
+        stream = new IPCBlobInputStream(newActor);
         newActor->mStreams.AppendElement(stream);
       }
 
       // Perform the actual migration.
       thread->MigrateActor(newActor);
     } else {
-      stream = new RemoteLazyInputStream(this);
+      stream = new IPCBlobInputStream(this);
       mStreams.AppendElement(stream);
     }
   }
@@ -249,10 +245,10 @@ RemoteLazyInputStreamChild::CreateStream() {
   return stream.forget();
 }
 
-void RemoteLazyInputStreamChild::ForgetStream(RemoteLazyInputStream* aStream) {
+void IPCBlobInputStreamChild::ForgetStream(IPCBlobInputStream* aStream) {
   MOZ_ASSERT(aStream);
 
-  RefPtr<RemoteLazyInputStreamChild> kungFuDeathGrip = this;
+  RefPtr<IPCBlobInputStreamChild> kungFuDeathGrip = this;
 
   {
     MutexAutoLock lock(mMutex);
@@ -272,8 +268,8 @@ void RemoteLazyInputStreamChild::ForgetStream(RemoteLazyInputStream* aStream) {
   mOwningEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
 
-void RemoteLazyInputStreamChild::StreamNeeded(RemoteLazyInputStream* aStream,
-                                              nsIEventTarget* aEventTarget) {
+void IPCBlobInputStreamChild::StreamNeeded(IPCBlobInputStream* aStream,
+                                           nsIEventTarget* aEventTarget) {
   MutexAutoLock lock(mMutex);
 
   if (mState == eInactive) {
@@ -303,11 +299,11 @@ void RemoteLazyInputStreamChild::StreamNeeded(RemoteLazyInputStream* aStream,
   mOwningEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 }
 
-mozilla::ipc::IPCResult RemoteLazyInputStreamChild::RecvStreamReady(
+mozilla::ipc::IPCResult IPCBlobInputStreamChild::RecvStreamReady(
     const Maybe<IPCStream>& aStream) {
   nsCOMPtr<nsIInputStream> stream = mozilla::ipc::DeserializeIPCStream(aStream);
 
-  RefPtr<RemoteLazyInputStream> pendingStream;
+  RefPtr<IPCBlobInputStream> pendingStream;
   nsCOMPtr<nsIEventTarget> eventTarget;
 
   {
@@ -331,7 +327,7 @@ mozilla::ipc::IPCResult RemoteLazyInputStreamChild::RecvStreamReady(
   RefPtr<StreamReadyRunnable> runnable =
       new StreamReadyRunnable(pendingStream, stream.forget());
 
-  // If RemoteLazyInputStream::AsyncWait() has been executed without passing an
+  // If IPCBlobInputStream::AsyncWait() has been executed without passing an
   // event target, we run the callback synchronous because any thread could be
   // result to be the wrong one. See more in nsIAsyncInputStream::asyncWait
   // documentation.
@@ -344,8 +340,8 @@ mozilla::ipc::IPCResult RemoteLazyInputStreamChild::RecvStreamReady(
   return IPC_OK();
 }
 
-void RemoteLazyInputStreamChild::LengthNeeded(RemoteLazyInputStream* aStream,
-                                              nsIEventTarget* aEventTarget) {
+void IPCBlobInputStreamChild::LengthNeeded(IPCBlobInputStream* aStream,
+                                           nsIEventTarget* aEventTarget) {
   MutexAutoLock lock(mMutex);
 
   if (mState == eInactive) {
@@ -375,9 +371,9 @@ void RemoteLazyInputStreamChild::LengthNeeded(RemoteLazyInputStream* aStream,
   mOwningEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 }
 
-mozilla::ipc::IPCResult RemoteLazyInputStreamChild::RecvLengthReady(
+mozilla::ipc::IPCResult IPCBlobInputStreamChild::RecvLengthReady(
     const int64_t& aLength) {
-  RefPtr<RemoteLazyInputStream> pendingStream;
+  RefPtr<IPCBlobInputStream> pendingStream;
   nsCOMPtr<nsIEventTarget> eventTarget;
 
   {
@@ -406,15 +402,14 @@ mozilla::ipc::IPCResult RemoteLazyInputStreamChild::RecvLengthReady(
 
   return IPC_OK();
 }
-void RemoteLazyInputStreamChild::Migrated() {
+void IPCBlobInputStreamChild::Migrated() {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mState == eInactiveMigrating);
 
   mWorkerRef = nullptr;
 
   mOwningEventTarget = GetCurrentSerialEventTarget();
-  MOZ_ASSERT(
-      RemoteLazyInputStreamThread::IsOnFileEventTarget(mOwningEventTarget));
+  MOZ_ASSERT(IPCBlobInputStreamThread::IsOnFileEventTarget(mOwningEventTarget));
 
   // Maybe we have no reasons to keep this actor alive.
   if (mStreams.IsEmpty()) {
@@ -437,4 +432,5 @@ void RemoteLazyInputStreamChild::Migrated() {
   }
 }
 
+}  // namespace dom
 }  // namespace mozilla
