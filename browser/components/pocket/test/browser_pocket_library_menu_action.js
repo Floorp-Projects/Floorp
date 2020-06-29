@@ -20,11 +20,11 @@ add_task(async function() {
   );
 
   let libraryButton = document.getElementById("library-button");
-  let libraryView = document.getElementById("appMenu-libraryView");
 
   info("opening library menu");
-  let libraryPromise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
   libraryButton.click();
+  let libraryView = document.getElementById("appMenu-libraryView");
+  let libraryPromise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
   await libraryPromise;
 
   let pocketLibraryButton = document.getElementById(

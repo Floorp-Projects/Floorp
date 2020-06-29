@@ -41,8 +41,6 @@ const PanelUI = {
       mainView: "appMenu-mainView",
       multiView: "appMenu-multiView",
       helpView: "PanelUI-helpView",
-      libraryView: "appMenu-libraryView",
-      libraryRecentHighlights: "appMenu-library-recentHighlights",
       menuButton: "PanelUI-menu-button",
       panel: "appMenu-popup",
       addonNotificationContainer: "appMenu-addon-banners",
@@ -192,7 +190,9 @@ const PanelUI = {
     this.menuButton.removeEventListener("mousedown", this);
     this.menuButton.removeEventListener("keypress", this);
     CustomizableUI.removeListener(this);
-    this.libraryView.removeEventListener("ViewShowing", this);
+    if (this.libraryView) {
+      this.libraryView.removeEventListener("ViewShowing", this);
+    }
     this.whatsNewPanel.removeEventListener("ViewShowing", this);
   },
 
@@ -433,7 +433,8 @@ const PanelUI = {
     }
 
     this._ensureEventListenersAdded();
-    let viewNode = document.getElementById(aViewId);
+
+    let viewNode = PanelMultiView.getViewNode(document, aViewId);
     if (!viewNode) {
       Cu.reportError("Could not show panel subview with id: " + aViewId);
       return;
@@ -480,6 +481,7 @@ const PanelUI = {
       multiView.setAttribute("id", "customizationui-widget-multiview");
       multiView.setAttribute("viewCacheId", "appMenu-viewCache");
       multiView.setAttribute("mainViewId", viewNode.id);
+      multiView.appendChild(viewNode);
       tempPanel.appendChild(multiView);
       viewNode.classList.add("cui-widget-panelview");
 
@@ -529,8 +531,12 @@ const PanelUI = {
    * @param {panelview} viewNode The library view.
    */
   ensureLibraryInitialized(viewNode) {
-    if (viewNode != this.libraryView || viewNode._initialized) {
+    if (viewNode.id != "appMenu-libraryView" || viewNode._initialized) {
       return;
+    }
+
+    if (!this.libraryView) {
+      this.libraryView = viewNode;
     }
 
     viewNode._initialized = true;
@@ -550,6 +556,12 @@ const PanelUI = {
     // we keep the space currently reserved for the items, but we hide them.
     if (this._loadingRecentHighlights || !this.libraryRecentHighlightsEnabled) {
       return;
+    }
+
+    if (!this.libraryRecentHighlights) {
+      this.libraryRecentHighlights = document.getElementById(
+        "appMenu-library-recentHighlights"
+      );
     }
 
     // Make the elements invisible synchronously, before the view is shown.

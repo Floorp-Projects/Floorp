@@ -19,9 +19,9 @@ async function selectAppMenuView(buttonId, viewId) {
     btn = document.getElementById(buttonId);
     return btn;
   }, "Should have the " + buttonId + "button");
+  btn.click();
   let view = document.getElementById(viewId);
   let viewPromise = BrowserTestUtils.waitForEvent(view, "ViewShown");
-  btn.click();
   await viewPromise;
 }
 

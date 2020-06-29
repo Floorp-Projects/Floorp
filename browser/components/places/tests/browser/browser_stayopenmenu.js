@@ -134,10 +134,10 @@ add_task(async function testStayopenBookmarksClicks() {
   );
   appMenu.click();
   await PopupShownPromise;
-  let libView = document.getElementById("appMenu-libraryView");
   let libraryBtn = document.getElementById("appMenu-library-button");
-  let ViewShownPromise = BrowserTestUtils.waitForEvent(libView, "ViewShown");
   libraryBtn.click();
+  let libView = document.getElementById("appMenu-libraryView");
+  let ViewShownPromise = BrowserTestUtils.waitForEvent(libView, "ViewShown");
   await ViewShownPromise;
   info("Library panel shown.");
   let bookmarks = document.getElementById("appMenu-library-bookmarks-button");

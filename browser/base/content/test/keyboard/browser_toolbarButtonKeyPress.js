@@ -62,9 +62,9 @@ add_task(async function testAppMenuButtonWrongKey() {
 add_task(async function testLibraryButtonPress() {
   let button = document.getElementById("library-button");
   forceFocus(button);
+  EventUtils.synthesizeKey(" ");
   let view = document.getElementById("appMenu-libraryView");
   let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
-  EventUtils.synthesizeKey(" ");
   await focused;
   ok(true, "Focus inside Library menu after toolbar button pressed");
   let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);

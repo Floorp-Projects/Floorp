@@ -37,12 +37,12 @@ add_task(async function test_appMenu_libraryView() {
     return;
   }
 
-  const libraryView = document.getElementById("appMenu-libraryView");
   const button = document.getElementById("library-button");
 
-  let shownPromise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
   // Should still open the panel when Ctrl key is pressed.
   EventUtils.synthesizeMouseAtCenter(button, { ctrlKey: true });
+  const libraryView = document.getElementById("appMenu-libraryView");
+  let shownPromise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
   await shownPromise;
   ok(true, "Library menu shown after button pressed");
 

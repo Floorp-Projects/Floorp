@@ -9,9 +9,9 @@
 
 async function openDownloadsInLibraryToolbarButton() {
   let libraryBtn = document.getElementById("library-button");
+  libraryBtn.click();
   let libView = document.getElementById("appMenu-libraryView");
   let viewShownPromise = BrowserTestUtils.waitForEvent(libView, "ViewShown");
-  libraryBtn.click();
   await viewShownPromise;
 
   let downloadsButton;
