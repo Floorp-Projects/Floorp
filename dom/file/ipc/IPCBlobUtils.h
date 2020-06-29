@@ -137,8 +137,8 @@
  * method will be forwarded to the 'real' stream ones. This means that the
  * reading will be available.
  *
- * DOM-File Thread
- * ~~~~~~~~~~~~~~~
+ * RemoteLazyInputStream Thread
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  * RemoteLazyInputStreamChild actor can be created in any thread (sort of) and
  * their top-level IPDL protocol is PBackground. These actors are wrapped by 1
@@ -164,10 +164,10 @@
  * 1. If RemoteLazyInputStreamChild actor is not already owned by DOM-File
  *    thread, it calls Send__delete__ in order to inform the parent side that we
  *    don't need this IPC channel on the current thread.
- * 2. A new RemoteLazyInputStreamChild is created. IPCBlobInputStreamThread is
- *    used to assign this actor to the DOM-File thread.
- *    IPCBlobInputStreamThread::GetOrCreate() creates the DOM-File thread if it
- *    doesn't exist yet. Pending operations and IPCBlobInputStreams are moved
+ * 2. A new RemoteLazyInputStreamChild is created. RemoteLazyInputStreamThread
+ *    is used to assign this actor to the DOM-File thread.
+ *    RemoteLazyInputStreamThread::GetOrCreate() creates the DOM-File thread if
+ *    it doesn't exist yet. Pending operations and IPCBlobInputStreams are moved
  *    onto the new actor.
  * 3. RemoteLazyInputStreamParent::Recv__delete__ is called on the parent side
  *    and the parent actor is deleted. Doing this we don't remove the UUID from

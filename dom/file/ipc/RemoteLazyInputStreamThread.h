@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_IPCBlobInputStreamThread_h
-#define mozilla_dom_IPCBlobInputStreamThread_h
+#ifndef mozilla_dom_RemoteLazyInputStreamThread_h
+#define mozilla_dom_RemoteLazyInputStreamThread_h
 
 #include "mozilla/dom/RemoteLazyInputStreamChild.h"
 #include "nsIEventTarget.h"
@@ -19,8 +19,8 @@ namespace dom {
 
 class RemoteLazyInputStreamChild;
 
-class IPCBlobInputStreamThread final : public nsIObserver,
-                                       public nsIEventTarget {
+class RemoteLazyInputStreamThread final : public nsIObserver,
+                                          public nsIEventTarget {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -28,9 +28,9 @@ class IPCBlobInputStreamThread final : public nsIObserver,
 
   static bool IsOnFileEventTarget(nsIEventTarget* aEventTarget);
 
-  static IPCBlobInputStreamThread* Get();
+  static RemoteLazyInputStreamThread* Get();
 
-  static IPCBlobInputStreamThread* GetOrCreate();
+  static RemoteLazyInputStreamThread* GetOrCreate();
 
   void MigrateActor(RemoteLazyInputStreamChild* aActor);
 
@@ -39,7 +39,7 @@ class IPCBlobInputStreamThread final : public nsIObserver,
   void InitializeOnMainThread();
 
  private:
-  ~IPCBlobInputStreamThread() = default;
+  ~RemoteLazyInputStreamThread() = default;
 
   void MigrateActorInternal(RemoteLazyInputStreamChild* aActor);
 
@@ -57,4 +57,4 @@ void AssertIsOnDOMFileThread();
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_IPCBlobInputStreamThread_h
+#endif  // mozilla_dom_RemoteLazyInputStreamThread_h
