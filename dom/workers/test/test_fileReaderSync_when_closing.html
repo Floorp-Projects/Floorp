@@ -14,8 +14,8 @@
 // immediately available (eliminating memory-backed Blobs) and 2) return
 // NS_BASE_STREAM_WOULD_BLOCK.  Under e10s, any Blob/File sourced from the
 // parent process (as loadChromeScript performs) will be backed by an
-// IPCBlobInputStream and will behave this way on first use (when it is in the
-// eInit state).  For ease of testing, we reuse script_createFile.js which
+// RemoteLazyInputStream and will behave this way on first use (when it is in
+// the eInit state).  For ease of testing, we reuse script_createFile.js which
 // involves a file on disk, but a memory-backed Blob from the parent process
 // would be equally fine.  Under non-e10s, this File will not do the right
 // thing because a synchronous nsFileInputStream will be made directly

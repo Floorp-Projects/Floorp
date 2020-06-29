@@ -182,7 +182,7 @@ interface nsIFileStream : nsISupports
  * interface before taking any action that might consume the underlying stream.
  * For example, once Available(), Read(), or nsIAsyncInputStream::AsyncWait()
  * are invoked, these methods may return NS_BASE_STREAM_CLOSED.  This will
- * happen when using IPCBlobInputStream with an underlying file stream, for
+ * happen when using RemoteLazyInputStream with an underlying file stream, for
  * example.
  */
 [scriptable, uuid(07f679e4-9601-4bd1-b510-cd3852edb881)]
