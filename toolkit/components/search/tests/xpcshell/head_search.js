@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
+  SearchCache: "resource://gre/modules/SearchCache.jsm",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -68,6 +69,10 @@ Services.prefs.setBoolPref(
   "toolkit.telemetry.testing.overrideProductsCheck",
   true
 );
+
+// For tests, allow the cache to write sooner than it would do normally so that
+// the tests that need to wait for it can run a bit faster.
+SearchCache.CACHE_INVALIDATION_DELAY = 250;
 
 /**
  * Load engines from test data located in particular folders.
