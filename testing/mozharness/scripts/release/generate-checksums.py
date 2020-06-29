@@ -1,8 +1,11 @@
+import binascii
 import hashlib
 import os
 import re
 import sys
 from multiprocessing.pool import ThreadPool
+
+import six
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
@@ -163,7 +166,7 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
         pool.map(worker, find_checksums_files())
 
         for c in raw_checksums:
-            for f, info in parse_checksums_file(c).iteritems():
+            for f, info in six.iteritems(parse_checksums_file(c)):
                 for pattern in self.config["includes"]:
                     if re.search(pattern, f):
                         if f in self.checksums:
@@ -194,8 +197,8 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
             data = [self.checksums[fn]["hashes"][fmt] for fn in files]
 
             tree = MerkleTree(hash_fn, data)
-            head = tree.head().encode("hex")
-            proofs = [tree.inclusion_proof(i).to_rfc6962_bis().encode("hex")
+            head = binascii.hexlify(tree.head())
+            proofs = [binascii.hexlify(tree.inclusion_proof(i).to_rfc6962_bis())
                       for i in range(len(files))]
 
             summary = self._get_summary_filename(fmt)
