@@ -123,6 +123,7 @@ LoadInfo::LoadInfo(
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mHasValidUserGestureActivation(false),
       mAllowDeprecatedSystemRequests(false),
+      mIsInDevToolsContext(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false),
@@ -406,6 +407,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mHasValidUserGestureActivation(false),
       mAllowDeprecatedSystemRequests(false),
+      mIsInDevToolsContext(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false),
@@ -509,6 +511,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mHasValidUserGestureActivation(false),
       mAllowDeprecatedSystemRequests(false),
+      mIsInDevToolsContext(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false),
@@ -596,6 +599,7 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mAllowDeprecatedSystemRequests(false),
+      mIsInDevToolsContext(false),
       mParserCreatedScript(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false),
@@ -791,6 +795,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mHttpsOnlyStatus(rhs.mHttpsOnlyStatus),
       mHasValidUserGestureActivation(rhs.mHasValidUserGestureActivation),
       mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
+      mIsInDevToolsContext(rhs.mIsInDevToolsContext),
       mParserCreatedScript(rhs.mParserCreatedScript),
       mHasStoragePermission(rhs.mHasStoragePermission),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
@@ -832,9 +837,9 @@ LoadInfo::LoadInfo(
     bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
     const nsAString& aCspNonce, bool aSkipContentSniffing,
     uint32_t aHttpsOnlyStatus, bool aHasValidUserGestureActivation,
-    bool aAllowDeprecatedSystemRequests, bool aParserCreatedScript,
-    bool aHasStoragePermission, uint32_t aRequestBlockingReason,
-    nsINode* aLoadingContext,
+    bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
+    bool aParserCreatedScript, bool aHasStoragePermission,
+    uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
     nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
@@ -895,6 +900,7 @@ LoadInfo::LoadInfo(
       mHttpsOnlyStatus(aHttpsOnlyStatus),
       mHasValidUserGestureActivation(aHasValidUserGestureActivation),
       mAllowDeprecatedSystemRequests(aAllowDeprecatedSystemRequests),
+      mIsInDevToolsContext(aIsInDevToolsContext),
       mParserCreatedScript(aParserCreatedScript),
       mHasStoragePermission(aHasStoragePermission),
       mIsFromProcessingFrameAttributes(false),
@@ -1804,6 +1810,18 @@ NS_IMETHODIMP
 LoadInfo::SetAllowDeprecatedSystemRequests(
     bool aAllowDeprecatedSystemRequests) {
   mAllowDeprecatedSystemRequests = aAllowDeprecatedSystemRequests;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsInDevToolsContext(bool* aIsInDevToolsContext) {
+  *aIsInDevToolsContext = mIsInDevToolsContext;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsInDevToolsContext(bool aIsInDevToolsContext) {
+  mIsInDevToolsContext = aIsInDevToolsContext;
   return NS_OK;
 }
 

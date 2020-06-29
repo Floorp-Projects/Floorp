@@ -478,6 +478,11 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean parserCreatedScript;
 
   /**
+   * True if this request is from DevTools.
+   */
+  [infallible] attribute boolean isInDevToolsContext;
+
+  /**
    * True if this request is embedded in a context that can't be third-party
    * (i.e. an iframe embedded in a cross-origin parent window). If this is
    * false, then this request may be third-party if it's a third-party to
@@ -1332,7 +1337,7 @@ interface nsILoadInfo : nsISupports
    * The value is initialized with corresponding WindowContext which get by
    * innerWindowIID in the nsILoadInfo.
    * It also could be set by workers when fetch is called under
-   * the workers' scope. 
+   * the workers' scope.
    */
   [infallible] attribute nsILoadInfo_CrossOriginEmbedderPolicy
         loadingEmbedderPolicy;
