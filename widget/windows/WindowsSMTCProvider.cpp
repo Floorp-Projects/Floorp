@@ -221,7 +221,6 @@ void WindowsSMTCProvider::SetMediaMetadata(
   MOZ_ASSERT(mInitialized);
   SetMusicMetadata(aMetadata.mArtist.get(), aMetadata.mTitle.get(),
                    aMetadata.mAlbum.get());
-  RefreshDisplay();
   LoadThumbnail(aMetadata.mArtwork);
 }
 
@@ -329,11 +328,6 @@ bool WindowsSMTCProvider::SetControlAttributes(
   return true;
 }
 
-bool WindowsSMTCProvider::RefreshDisplay() {
-  MOZ_ASSERT(mDisplay);
-  return SUCCEEDED(mDisplay->Update());
-}
-
 bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
                                            const wchar_t* aTitle,
                                            const wchar_t* aAlbumArtist) {
@@ -367,6 +361,12 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
   hr = musicProps->put_AlbumArtist(HStringReference(aAlbumArtist).Get());
   if (FAILED(hr)) {
     LOG("Failed to set the music's album");
+    return false;
+  }
+
+  hr = mDisplay->Update();
+  if (FAILED(hr)) {
+    LOG("Failed to refresh the display");
     return false;
   }
 
@@ -455,7 +455,6 @@ void WindowsSMTCProvider::LoadThumbnail(
   CancelPendingStoreAsyncOperation();
   // Remove the current thumbnail on the interface
   ClearThumbnail();
-  RefreshDisplay();
   mThumbnailUrl = EmptyString();
   // Then load the new thumbnail asynchronously
   LoadImageAtIndex(0);
@@ -645,12 +644,20 @@ bool WindowsSMTCProvider::SetThumbnail() {
     return false;
   }
 
-  return SUCCEEDED(mDisplay->put_Thumbnail(mImageStreamReference.Get()));
+  hr = mDisplay->put_Thumbnail(mImageStreamReference.Get());
+  if (FAILED(hr)) {
+    LOG("Failed to update thumbnail");
+    return false;
+  }
+
+  return SUCCEEDED(mDisplay->Update());
 }
 
 void WindowsSMTCProvider::ClearThumbnail() {
   MOZ_ASSERT(mDisplay);
   HRESULT hr = mDisplay->put_Thumbnail(nullptr);
+  MOZ_ASSERT(SUCCEEDED(hr));
+  hr = mDisplay->Update();
   MOZ_ASSERT(SUCCEEDED(hr));
   Unused << hr;
 }
@@ -673,7 +680,7 @@ nsresult WindowsSMTCProvider::UpdateThumbnailOnMainThread(
 
         mProcessingUrl = EmptyString();
 
-        if (!SetThumbnail() || !RefreshDisplay()) {
+        if (!SetThumbnail()) {
           LOG("Failed to update thumbnail");
           mThumbnailUrl = EmptyString();
           return NS_OK;
