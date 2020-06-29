@@ -12,7 +12,6 @@
 #include "HttpConnectionMgrChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/MemoryReportRequest.h"
-#include "mozilla/dom/RemoteLazyInputStreamChild.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -28,6 +27,7 @@
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/RemoteLazyInputStreamChild.h"
 #include "mozilla/Telemetry.h"
 #include "nsDebugImpl.h"
 #include "nsHttpConnectionInfo.h"
@@ -464,11 +464,11 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvNotifyObserver(
   return IPC_OK();
 }
 
-already_AddRefed<dom::PRemoteLazyInputStreamChild>
+already_AddRefed<PRemoteLazyInputStreamChild>
 SocketProcessChild::AllocPRemoteLazyInputStreamChild(const nsID& aID,
                                                      const uint64_t& aSize) {
-  RefPtr<dom::RemoteLazyInputStreamChild> actor =
-      new dom::RemoteLazyInputStreamChild(aID, aSize);
+  RefPtr<RemoteLazyInputStreamChild> actor =
+      new RemoteLazyInputStreamChild(aID, aSize);
   return actor.forget();
 }
 

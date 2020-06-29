@@ -9,12 +9,12 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FetchTypes.h"
-#include "mozilla/dom/RemoteLazyInputStreamChild.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/RemoteLazyInputStreamChild.h"
 #include "nsIContentPolicy.h"
 #include "nsStreamUtils.h"
 

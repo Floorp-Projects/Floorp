@@ -11,13 +11,13 @@
 #include "HttpTransactionParent.h"
 #include "SocketProcessHost.h"
 #include "mozilla/dom/MemoryReportRequest.h"
-#include "mozilla/dom/RemoteLazyInputStreamParent.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ProxyConfigLookupParent.h"
+#include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
 #include "nsIAppStartup.h"
@@ -388,20 +388,19 @@ void SocketProcessParent::Destroy(UniquePtr<SocketProcessParent>&& aParent) {
       new DeferredDeleteSocketProcessParent(std::move(aParent)));
 }
 
-already_AddRefed<dom::PRemoteLazyInputStreamParent>
+already_AddRefed<PRemoteLazyInputStreamParent>
 SocketProcessParent::AllocPRemoteLazyInputStreamParent(const nsID& aID,
                                                        const uint64_t& aSize) {
-  RefPtr<dom::RemoteLazyInputStreamParent> actor =
-      dom::RemoteLazyInputStreamParent::Create(aID, aSize, this);
+  RefPtr<RemoteLazyInputStreamParent> actor =
+      RemoteLazyInputStreamParent::Create(aID, aSize, this);
   return actor.forget();
 }
 
 mozilla::ipc::IPCResult
 SocketProcessParent::RecvPRemoteLazyInputStreamConstructor(
-    dom::PRemoteLazyInputStreamParent* aActor, const nsID& aID,
+    PRemoteLazyInputStreamParent* aActor, const nsID& aID,
     const uint64_t& aSize) {
-  if (!static_cast<dom::RemoteLazyInputStreamParent*>(aActor)
-           ->HasValidStream()) {
+  if (!static_cast<RemoteLazyInputStreamParent*>(aActor)->HasValidStream()) {
     return IPC_FAIL_NO_REASON(this);
   }
 

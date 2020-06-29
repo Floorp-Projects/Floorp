@@ -36,7 +36,6 @@
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
-#include "mozilla/dom/RemoteLazyInputStreamParent.h"
 #include "mozilla/dom/RemoteWorkerParent.h"
 #include "mozilla/dom/RemoteWorkerControllerParent.h"
 #include "mozilla/dom/RemoteWorkerServiceParent.h"
@@ -61,6 +60,7 @@
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/psm/VerifySSLServerCertParent.h"
+#include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -622,23 +622,22 @@ bool BackgroundParentImpl::DeallocPTemporaryIPCBlobParent(
   return true;
 }
 
-already_AddRefed<dom::PRemoteLazyInputStreamParent>
+already_AddRefed<PRemoteLazyInputStreamParent>
 BackgroundParentImpl::AllocPRemoteLazyInputStreamParent(const nsID& aID,
                                                         const uint64_t& aSize) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<dom::RemoteLazyInputStreamParent> actor =
-      dom::RemoteLazyInputStreamParent::Create(aID, aSize, this);
+  RefPtr<RemoteLazyInputStreamParent> actor =
+      RemoteLazyInputStreamParent::Create(aID, aSize, this);
   return actor.forget();
 }
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPRemoteLazyInputStreamConstructor(
-    dom::PRemoteLazyInputStreamParent* aActor, const nsID& aID,
+    PRemoteLazyInputStreamParent* aActor, const nsID& aID,
     const uint64_t& aSize) {
-  if (!static_cast<dom::RemoteLazyInputStreamParent*>(aActor)
-           ->HasValidStream()) {
+  if (!static_cast<RemoteLazyInputStreamParent*>(aActor)->HasValidStream()) {
     return IPC_FAIL_NO_REASON(this);
   }
 

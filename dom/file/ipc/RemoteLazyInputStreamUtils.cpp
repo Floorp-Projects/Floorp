@@ -17,10 +17,6 @@
 
 namespace mozilla {
 
-using namespace ipc;
-
-namespace dom {
-
 namespace {
 
 template <typename M>
@@ -120,5 +116,4 @@ nsresult RemoteLazyInputStreamUtils::SerializeInputStream(
   return NS_OK;
 }
 
-}  // namespace dom
 }  // namespace mozilla
