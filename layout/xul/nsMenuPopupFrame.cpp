@@ -342,6 +342,8 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
   widget->SetWindowShadowStyle(GetShadowStyle());
+  widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
+  widget->SetWindowTransform(ComputeWidgetTransform());
 
   // most popups don't have a title so avoid setting the title if there isn't
   // one
