@@ -31,10 +31,10 @@ add_task(async function() {
 
   // We are only interested in console messages as a resource, the ROOT_NODE one
   // is here to test the ResourceWatcher::unwatchResources API with several resources.
-  let receivedMessages = 0;
-  const onAvailable = ({ resourceType }) => {
+  const receivedMessages = [];
+  const onAvailable = ({ resource, resourceType }) => {
     if (resourceType === CONSOLE_MESSAGE) {
-      receivedMessages++;
+      receivedMessages.push(resource);
     }
   };
 
@@ -44,9 +44,15 @@ add_task(async function() {
   });
 
   info("Use console.log in the content page");
-  logInTab(tab, "test");
-  info("Wait until onAvailable received 1 resource of type CONSOLE_MESSAGE");
-  await waitUntil(() => receivedMessages === 1);
+  logInTab(tab, "test from data-url");
+  info(
+    "Wait until onAvailable received the CONSOLE_MESSAGE resource emitted from the data-url tab"
+  );
+  await waitUntil(() =>
+    receivedMessages.find(
+      resource => resource.message.arguments[0] === "test from data-url"
+    )
+  );
 
   // Check that the resource watcher captures resources from new targets.
   info("Open a first tab on the example.com domain");
@@ -55,8 +61,14 @@ add_task(async function() {
   );
   info("Use console.log in the example.com page");
   logInTab(comTab, "test-from-example-com");
-  info("Wait until onAvailable received 2 resources of type CONSOLE_MESSAGE");
-  await waitUntil(() => receivedMessages === 2);
+  info(
+    "Wait until onAvailable received the CONSOLE_MESSAGE resource emitted from the example.com tab"
+  );
+  await waitUntil(() =>
+    receivedMessages.find(
+      resource => resource.message.arguments[0] === "test-from-example-com"
+    )
+  );
 
   info("Stop watching ROOT_NODE resources");
   await resourceWatcher.unwatchResources([ROOT_NODE], { onAvailable });
@@ -69,8 +81,14 @@ add_task(async function() {
   );
   info("Use console.log in the example.net page");
   logInTab(netTab, "test-from-example-net");
-  info("Wait until onAvailable received 3 resources of type CONSOLE_MESSAGE");
-  await waitUntil(() => receivedMessages === 3);
+  info(
+    "Wait until onAvailable received the CONSOLE_MESSAGE resource emitted from the example.net tab"
+  );
+  await waitUntil(() =>
+    receivedMessages.find(
+      resource => resource.message.arguments[0] === "test-from-example-net"
+    )
+  );
 
   info("Stop watching CONSOLE_MESSAGE resources");
   await resourceWatcher.unwatchResources([CONSOLE_MESSAGE], { onAvailable });
@@ -81,8 +99,10 @@ add_task(async function() {
   await wait(1000);
 
   is(
-    receivedMessages,
-    3,
+    receivedMessages.find(
+      resource => resource.message.arguments[0] === "test-again"
+    ),
+    null,
     "The resource watcher should not watch CONSOLE_MESSAGE anymore"
   );
 
