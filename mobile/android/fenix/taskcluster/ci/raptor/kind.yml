@@ -80,6 +80,7 @@ job-defaults:
             - '--binary=org.mozilla.fenix.nightly'
             - '--activity=org.mozilla.fenix.IntentReceiverActivity'
             - '--download-symbols=ondemand'
+            - '--no-conditioned-profile'
     fetches:
         toolchain:
             - linux64-minidump-stackwalk
