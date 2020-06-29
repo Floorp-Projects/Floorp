@@ -47,9 +47,7 @@ class nsTLiteralString : public mozilla::detail::nsTStringRepr<T> {
 
   template <size_type N>
   explicit constexpr nsTLiteralString(const char_type (&aStr)[N])
-      : base_string_type(const_cast<char_type*>(aStr), N - 1,
-                         DataFlags::TERMINATED | DataFlags::LITERAL,
-                         ClassFlags::NULL_TERMINATED) {}
+      : nsTLiteralString(aStr, N - 1) {}
 
   /**
    * For compatibility with existing code that requires const ns[C]String*.
@@ -82,6 +80,15 @@ class nsTLiteralString : public mozilla::detail::nsTStringRepr<T> {
   const typename raw_type<T, int>::type get() const& { return this->mData; }
 
  private:
+  friend constexpr auto operator""_ns(const char* aStr, size_t aLen);
+  friend constexpr auto operator""_ns(const char16_t* aStr, size_t aLen);
+
+  // Only for use by operator""
+  constexpr nsTLiteralString(const char_type* aStr, size_t aLen)
+      : base_string_type(const_cast<char_type*>(aStr), aLen,
+                         DataFlags::TERMINATED | DataFlags::LITERAL,
+                         ClassFlags::NULL_TERMINATED) {}
+
   // NOT TO BE IMPLEMENTED
   template <size_type N>
   nsTLiteralString(char_type (&aStr)[N]) = delete;
