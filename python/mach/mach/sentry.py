@@ -10,9 +10,18 @@ from os.path import expanduser
 
 import sentry_sdk
 from mozboot.util import get_state_dir
+from mozversioncontrol import get_repository_object, InvalidRepoPath
 from six import string_types
 from six.moves.configparser import SafeConfigParser, NoOptionError
 
+# The following developers frequently modify mach code, and testing will commonly cause
+# exceptions to be thrown. We don't want these exceptions reported to Sentry.
+_DEVELOPER_BLOCKLIST = [
+    'ahalberstadt@mozilla.com'
+    'mhentges@mozilla.com',
+    'rstewart@mozilla.com',
+    'sledru@mozilla.com'
+]
 # https://sentry.prod.mozaws.net/operations/mach/
 _SENTRY_DSN = "https://8228c9aff64949c2ba4a2154dc515f55@sentry.prod.mozaws.net/525"
 
@@ -31,6 +40,15 @@ def register_sentry(argv, topsrcdir=None):
 
     if not telemetry_enabled:
         return
+
+    if topsrcdir:
+        try:
+            repo = get_repository_object(topsrcdir)
+            email = repo.get_user_email()
+            if email in _DEVELOPER_BLOCKLIST:
+                return
+        except InvalidRepoPath:
+            pass
 
     sentry_sdk.init(_SENTRY_DSN,
                     before_send=lambda event, _: _process_event(event, topsrcdir))

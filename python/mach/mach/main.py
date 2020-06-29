@@ -18,7 +18,6 @@ import traceback
 import uuid
 from collections import Iterable
 
-from mach.sentry import register_sentry, report_exception
 from six import string_types
 
 from .base import (
@@ -37,6 +36,7 @@ from .decorators import (
 from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
+from .sentry import register_sentry, report_exception
 from .util import setenv
 
 SUGGEST_MACH_BUSTED_TEMPLATE = r'''
