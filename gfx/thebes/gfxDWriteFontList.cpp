@@ -1302,6 +1302,11 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
 
   mSystemFonts = Factory::GetDWriteSystemFonts(true);
   NS_ASSERTION(mSystemFonts != nullptr, "GetSystemFontCollection failed!");
+  if (!mSystemFonts) {
+    Telemetry::Accumulate(Telemetry::DWRITEFONT_INIT_PROBLEM,
+                          uint32_t(errSystemFontCollection));
+    return;
+  }
 #ifdef MOZ_BUNDLED_FONTS
   mBundledFonts = CreateBundledFontsCollection(factory);
 #endif
