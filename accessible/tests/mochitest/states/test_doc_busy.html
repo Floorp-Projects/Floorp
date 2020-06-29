@@ -33,6 +33,7 @@
     }
 
     async function doTest() {
+      EventsLogger.enabled = true;
       const busyEvents = waitForOrderedEvents([
         [EVENT_STATE_CHANGE, matchDocBusyChange(true)],
         [EVENT_STATE_CHANGE, matchDocBusyChange(false)]
@@ -55,6 +56,7 @@
       synthesizeMouse(getNode("link"), 1, 1, {});
       info("Waiting for a11y busy events");
       await busyEvents;
+      EventsLogger.enabled = false;
 
       info("Waiting for download prompt to open");
       const downloadWin = await downloadPromptOpened;
