@@ -22,5 +22,7 @@ internal fun BrowserState.toTabs(
     list = tabs
         .filter(tabsFilter)
         .map { it.toTab(mediaStateForTab(it)) },
-    selectedIndex = tabs.indexOfFirst { it.id == selectedTabId }
+    selectedIndex = tabs
+            .filter(tabsFilter)
+            .indexOfFirst { it.id == selectedTabId }
 )
