@@ -654,7 +654,13 @@ class JSTerm extends Component {
    * Execute a string. Execution happens asynchronously in the content process.
    */
   _execute() {
-    const executeString = this.getSelectedText() || this._getValue();
+    const value = this._getValue();
+    // In editor mode, we only evaluate the text selection if there's one. The feature isn't
+    // enabled in inline mode as it can be confusing since input is cleared when evaluating.
+    const executeString = this.props.editorMode
+      ? this.getSelectedText() || value
+      : value;
+
     if (!executeString) {
       return;
     }
