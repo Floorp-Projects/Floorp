@@ -8,7 +8,7 @@
 #define mozilla_dom_RemoteLazyInputStreamChild_h
 
 #include "mozilla/dom/PRemoteLazyInputStreamChild.h"
-#include "mozilla/dom/IPCBlobInputStream.h"
+#include "mozilla/dom/RemoteLazyInputStream.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-class IPCBlobInputStream;
+class RemoteLazyInputStream;
 class ThreadSafeWorkerRef;
 
 class RemoteLazyInputStreamChild final : public PRemoteLazyInputStreamChild {
@@ -45,19 +45,21 @@ class RemoteLazyInputStreamChild final : public PRemoteLazyInputStreamChild {
 
   ActorState State();
 
-  already_AddRefed<IPCBlobInputStream> CreateStream();
+  already_AddRefed<RemoteLazyInputStream> CreateStream();
 
-  void ForgetStream(IPCBlobInputStream* aStream);
+  void ForgetStream(RemoteLazyInputStream* aStream);
 
   const nsID& ID() const { return mID; }
 
   uint64_t Size() const { return mSize; }
 
-  void StreamNeeded(IPCBlobInputStream* aStream, nsIEventTarget* aEventTarget);
+  void StreamNeeded(RemoteLazyInputStream* aStream,
+                    nsIEventTarget* aEventTarget);
 
   mozilla::ipc::IPCResult RecvStreamReady(const Maybe<IPCStream>& aStream);
 
-  void LengthNeeded(IPCBlobInputStream* aStream, nsIEventTarget* aEventTarget);
+  void LengthNeeded(RemoteLazyInputStream* aStream,
+                    nsIEventTarget* aEventTarget);
 
   mozilla::ipc::IPCResult RecvLengthReady(const int64_t& aLength);
 
@@ -71,7 +73,7 @@ class RemoteLazyInputStreamChild final : public PRemoteLazyInputStreamChild {
   // Raw pointers because these streams keep this actor alive. When the last
   // stream is unregister, the actor will be deleted. This list is protected by
   // mutex.
-  nsTArray<IPCBlobInputStream*> mStreams;
+  nsTArray<RemoteLazyInputStream*> mStreams;
 
   // This mutex protects mStreams because that can be touched in any thread.
   Mutex mMutex;
@@ -83,7 +85,7 @@ class RemoteLazyInputStreamChild final : public PRemoteLazyInputStreamChild {
 
   // This struct and the array are used for creating streams when needed.
   struct PendingOperation {
-    RefPtr<IPCBlobInputStream> mStream;
+    RefPtr<RemoteLazyInputStream> mStream;
     nsCOMPtr<nsIEventTarget> mEventTarget;
     enum {
       eStreamNeeded,

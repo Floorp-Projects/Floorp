@@ -91,7 +91,7 @@
  * For this reason, IPCBlobUtils uses a particular protocol for serializing
  * nsIInputStream parent to child: PRemoteLazyInputStream. This protocol keeps
  * the original nsIInputStream alive on the parent side, and gives its size and
- * a UUID to the child side. The child side creates a IPCBlobInputStream and
+ * a UUID to the child side. The child side creates a RemoteLazyInputStream and
  * that is incapsulated into a StreamBlobImpl.
  *
  * The UUID is useful when the content process sends the same nsIInputStream
@@ -99,7 +99,7 @@
  * the UUID. Each nsIInputStream sent via PRemoteLazyInputStream, is registered
  * into the RemoteLazyInputStreamStorage.
  *
- * On the content process side, IPCBlobInputStream is a special inputStream:
+ * On the content process side, RemoteLazyInputStream is a special inputStream:
  * the only reliable methods are:
  * - nsIInputStream.available() - the size is shared by PRemoteLazyInputStream
  *   actor.
@@ -114,7 +114,7 @@
  * not previously called (see the next section). Basically, this inputStream
  * cannot be used synchronously for any 'real' reading operation.
  *
- * When the parent receives the serialization of a IPCBlobInputStream, it is
+ * When the parent receives the serialization of a RemoteLazyInputStream, it is
  * able to retrieve the correct nsIInputStream using the UUID and
  * RemoteLazyInputStreamStorage.
  *
@@ -124,16 +124,16 @@
  * The FileReader and BlobURL scenarios are described here.
  *
  * When content process needs to read data from a Blob sent from the parent
- * process, it must do it asynchronously using IPCBlobInputStream as a
+ * process, it must do it asynchronously using RemoteLazyInputStream as a
  * nsIAsyncInputStream stream. This happens calling
- * IPCBlobInputStream.asyncWait(). At that point, the child actor will send a
+ * RemoteLazyInputStream.asyncWait(). At that point, the child actor will send a
  * StreamNeeded() IPC message to the parent side. When this is received, the
  * parent retrieves the 'real' stream from RemoteLazyInputStreamStorage using
  * the UUID, it will serialize the 'real' stream, and it will send it to the
  * child side.
  *
  * When the 'real' stream is received (RecvStreamReady()), the asyncWait
- * callback will be executed and, from that moment, any IPCBlobInputStream
+ * callback will be executed and, from that moment, any RemoteLazyInputStream
  * method will be forwarded to the 'real' stream ones. This means that the
  * reading will be available.
  *
@@ -142,12 +142,12 @@
  *
  * RemoteLazyInputStreamChild actor can be created in any thread (sort of) and
  * their top-level IPDL protocol is PBackground. These actors are wrapped by 1
- * or more IPCBlobInputStream objects in order to expose nsIInputStream
+ * or more RemoteLazyInputStream objects in order to expose nsIInputStream
  * interface and be thread-safe.
  *
  * But IPDL actors are not thread-safe and any SendFoo() method must be executed
  * on the owning thread. This means that this thread must be kept alive for the
- * life-time of the IPCBlobInputStream.
+ * life-time of the RemoteLazyInputStream.
  *
  * In doing this, there are 2 main issues:
  * a. if a remote Blob is created on a worker (because of a
@@ -167,12 +167,12 @@
  * 2. A new RemoteLazyInputStreamChild is created. RemoteLazyInputStreamThread
  *    is used to assign this actor to the DOM-File thread.
  *    RemoteLazyInputStreamThread::GetOrCreate() creates the DOM-File thread if
- *    it doesn't exist yet. Pending operations and IPCBlobInputStreams are moved
- *    onto the new actor.
+ *    it doesn't exist yet. Pending operations and RemoteLazyInputStreams are
+ *    moved onto the new actor.
  * 3. RemoteLazyInputStreamParent::Recv__delete__ is called on the parent side
  *    and the parent actor is deleted. Doing this we don't remove the UUID from
  *    RemoteLazyInputStreamStorage.
- * 4. The IPCBlobInputStream constructor is sent with the new
+ * 4. The RemoteLazyInputStream constructor is sent with the new
  *    RemoteLazyInputStreamChild actor, with the DOM-File thread's PBackground
  *    as its manager.
  * 5. When the new RemoteLazyInputStreamParent actor is created, it will receive
@@ -189,9 +189,9 @@
  * IPCBlob and nsIAsyncInputStream
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
- * IPCBlobInputStream is always async. If the remote inputStream is not async,
- * IPCBlobInputStream will create a pipe stream around it in order to be
- * consistently async.
+ * RemoteLazyInputStream is always async. If the remote inputStream is not
+ * async, RemoteLazyInputStream will create a pipe stream around it in order to
+ * be consistently async.
  *
  * Slicing IPCBlob
  * ~~~~~~~~~~~~~~~
@@ -204,33 +204,34 @@
  * inputStream is seekable, the pipe will not be, and in order to reach the
  * starting point, SlicedInputStream will do consecutive read()s.
  *
- * This problem is fixed implmenting nsICloneableWithRange in IPCBlobInputStream
- * and using cloneWithRange() when a StreamBlobImpl is sliced. When the remote
- * stream is received, it will be sliced directly.
+ * This problem is fixed implmenting nsICloneableWithRange in
+ * RemoteLazyInputStream and using cloneWithRange() when a StreamBlobImpl is
+ * sliced. When the remote stream is received, it will be sliced directly.
  *
  * If we want to represent the hierarchy of the InputStream classes, instead
- * of having: |SlicedInputStream(IPCBlobInputStream(Async Pipe(RemoteStream)))|,
- * we have: |IPCBlobInputStream(Async Pipe(SlicedInputStream(RemoteStream)))|.
+ * of having: |SlicedInputStream(RemoteLazyInputStream(Async
+ * Pipe(RemoteStream)))|, we have: |RemoteLazyInputStream(Async
+ * Pipe(SlicedInputStream(RemoteStream)))|.
  *
- * When IPCBlobInputStream is serialized and sent to the parent process, start
- * and range are sent too and SlicedInputStream is used in the parent side as
- * well.
+ * When RemoteLazyInputStream is serialized and sent to the parent process,
+ * start and range are sent too and SlicedInputStream is used in the parent side
+ * as well.
  *
  * Socket Process
  * ~~~~~~~~~~~~~~
  *
  * The socket process is a separate process used to do networking operations.
  * When a website sends a blob as the body of a POST/PUT request, we need to
- * send the corresponding IPCBlobInputStream to the socket process.
+ * send the corresponding RemoteLazyInputStream to the socket process.
  *
- * This is the only serialization of IPCBlobInputStream from parent to child
+ * This is the only serialization of RemoteLazyInputStream from parent to child
  * process and it works _only_ for the socket process. Do not expose this
  * serialization to PContent or PBackground or any other top-level IPDL protocol
  * without a DOM File peer review!
  *
  * The main difference between Socket Process is that DOM-File thread is not
  * used. Here is a list of reasons:
- * - DOM-File moves the ownership of the IPCBlobInputStream actors to
+ * - DOM-File moves the ownership of the RemoteLazyInputStream actors to
  *   PBackground, but in the Socket Process we don't have PBackground (yet?)
  * - Socket Process is a stable process with a simple life-time configuration:
  *   we can keep the actors on the main-thread because no Workers are involved.
