@@ -368,21 +368,14 @@ already_AddRefed<BasePrincipal> ExpandedPrincipal::FromProperties(
 
 NS_IMETHODIMP
 ExpandedPrincipal::IsThirdPartyURI(nsIURI* aURI, bool* aRes) {
-  // ExpandedPrincipal for extension content scripts consist of two principals,
-  // the document's principal and the extension's principal.
-  // To make sure that the third-party check behaves like the web page on which
-  // the content script is running, ignore the extension's principal.
-
+  nsresult rv;
   for (const auto& principal : mPrincipals) {
-    if (!Cast(principal)->AddonPolicy()) {
-      return Cast(principal)->IsThirdPartyURI(aURI, aRes);
+    rv = Cast(principal)->IsThirdPartyURI(aURI, aRes);
+    if (NS_WARN_IF(NS_FAILED(rv)) || !*aRes) {
+      return rv;
     }
   }
 
-  if (mPrincipals.IsEmpty()) {
-    *aRes = true;
-    return NS_OK;
-  }
-
-  return Cast(mPrincipals[0])->IsThirdPartyURI(aURI, aRes);
+  *aRes = true;
+  return NS_OK;
 }
