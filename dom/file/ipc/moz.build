@@ -16,8 +16,8 @@ XPIDL_MODULE = 'dom'
 EXPORTS.mozilla.dom += [
     'FileCreatorChild.h',
     'FileCreatorParent.h',
-    'IPCBlobInputStream.h',
     'IPCBlobUtils.h',
+    'RemoteLazyInputStream.h',
     'RemoteLazyInputStreamChild.h',
     'RemoteLazyInputStreamParent.h',
     'RemoteLazyInputStreamStorage.h',
@@ -28,8 +28,8 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'FileCreatorChild.cpp',
     'FileCreatorParent.cpp',
-    'IPCBlobInputStream.cpp',
     'IPCBlobUtils.cpp',
+    'RemoteLazyInputStream.cpp',
     'RemoteLazyInputStreamChild.cpp',
     'RemoteLazyInputStreamParent.cpp',
     'RemoteLazyInputStreamStorage.cpp',
