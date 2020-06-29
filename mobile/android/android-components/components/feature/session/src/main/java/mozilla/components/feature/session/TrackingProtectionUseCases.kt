@@ -4,8 +4,8 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
@@ -15,30 +15,30 @@ import java.lang.Exception
 /**
  * Contains use cases related to the tracking protection.
  *
- * @param sessionManager the application's [SessionManager].
+ * @param store the application's [BrowserStore].
  * @param engine the application's [Engine].
  */
 class TrackingProtectionUseCases(
-    val sessionManager: SessionManager,
+    val store: BrowserStore,
     val engine: Engine
 ) {
 
     /**
-     * Use case for adding a new [Session] to the exception list.
+     * Use case for adding a new tab to the exception list.
      */
     class AddExceptionUseCase internal constructor(
-        private val sessionManager: SessionManager,
+        private val store: BrowserStore,
         private val engine: Engine
     ) {
         private val logger = Logger("TrackingProtectionUseCases")
 
         /**
-         * Adds a new [session] to the exception list, as a result this session will
-         * not get applied any tracking protection policy.
-         * @param session The [session] that will be added to the exception list.
+         * Adds a new tab to the exception list, as a result this tab will not get applied any
+         * tracking protection policy.
+         * @param tabId The id of the tab that will be added to the exception list.
          */
-        operator fun invoke(session: Session) {
-            val engineSession = sessionManager.getEngineSession(session)
+        operator fun invoke(tabId: String) {
+            val engineSession = store.state.findTabOrCustomTabOrSelectedTab(tabId)?.engineState?.engineSession
                 ?: return logger.error("The engine session should not be null")
 
             engine.trackingProtectionExceptionStore.add(engineSession)
@@ -46,20 +46,20 @@ class TrackingProtectionUseCases(
     }
 
     /**
-     * Use case for removing a [Session] or a [TrackingProtectionException] from the exception list.
+     * Use case for removing a tab or a [TrackingProtectionException] from the exception list.
      */
     class RemoveExceptionUseCase internal constructor(
-        private val sessionManager: SessionManager,
+        private val store: BrowserStore,
         private val engine: Engine
     ) {
         private val logger = Logger("TrackingProtectionUseCases")
 
         /**
-         * Removes a [session] from the exception list.
-         * @param session The [session] that will be removed from the exception list.
+         * Removes a tab from the exception list.
+         * @param tabId The id of the tab that will be removed from the exception list.
          */
-        operator fun invoke(session: Session) {
-            val engineSession = sessionManager.getEngineSession(session)
+        operator fun invoke(tabId: String) {
+            val engineSession = store.state.findTabOrCustomTabOrSelectedTab(tabId)?.engineState?.engineSession
                 ?: return logger.error("The engine session should not be null")
 
             engine.trackingProtectionExceptionStore.remove(engineSession)
@@ -75,10 +75,10 @@ class TrackingProtectionUseCases(
     }
 
     /**
-     * Use case for removing all [Session]s from the exception list.
+     * Use case for removing all tabs from the exception list.
      */
     class RemoveAllExceptionsUseCase internal constructor(
-        private val sessionManager: SessionManager,
+        private val store: BrowserStore,
         private val engine: Engine
     ) {
         /**
@@ -91,30 +91,34 @@ class TrackingProtectionUseCases(
          * (https://github.com/mozilla-mobile/android-components/issues/6283).
          */
         operator fun invoke() {
-            engine.trackingProtectionExceptionStore.removeAll(sessionManager.all.map {
-                sessionManager.getEngineSession(it)
-            })
+            val engineSessions = (store.state.tabs + store.state.customTabs).mapNotNull { tab ->
+                tab.engineState.engineSession
+            }
+
+            engine.trackingProtectionExceptionStore.removeAll(engineSessions)
         }
     }
 
     /**
-     * Use case for verifying if a [Session] is in the exception list.
+     * Use case for verifying if a tab is in the exception list.
      */
     class ContainsExceptionUseCase internal constructor(
-        private val sessionManager: SessionManager,
+        private val store: BrowserStore,
         private val engine: Engine
     ) {
         /**
-         * Indicates if a given [session] is in the exception list.
-         * @param session The [session] to verify.
-         * @param onResult A callback to inform if the given [session] is on
+         * Indicates if a given tab is in the exception list.
+         * @param tabId The id of the tab to verify.
+         * @param onResult A callback to inform if the given tab is on
          * the exception list, true if it is in otherwise false.
          */
         operator fun invoke(
-            session: Session,
+            tabId: String,
             onResult: (Boolean) -> Unit
         ) {
-            val engineSession = sessionManager.getEngineSession(session) ?: return onResult(false)
+            val engineSession = store.state.findTabOrCustomTabOrSelectedTab(tabId)?.engineState?.engineSession
+                ?: return onResult(false)
+
             engine.trackingProtectionExceptionStore.contains(engineSession, onResult)
         }
     }
@@ -123,7 +127,6 @@ class TrackingProtectionUseCases(
      * Use case for fetching all exceptions in the exception list.
      */
     class FetchExceptionsUseCase internal constructor(
-        private val sessionManager: SessionManager,
         private val engine: Engine
     ) {
         /**
@@ -141,44 +144,44 @@ class TrackingProtectionUseCases(
      * Use case for fetching all the tracking protection logged information.
      */
     class FetchTrackingLogUserCase internal constructor(
-        private val sessionManager: SessionManager,
+        private val store: BrowserStore,
         private val engine: Engine
     ) {
         /**
-         * Fetch all the tracking protection logged information of a given [session].
+         * Fetch all the tracking protection logged information of a given tab.
          *
-         * @param session the session for which loading should be stopped.
+         * @param tabId the id of the tab for which loading should be stopped.
          * @param onSuccess callback invoked if the data was fetched successfully.
          * @param onError (optional) callback invoked if fetching the data caused an exception.
          */
         operator fun invoke(
-            session: Session,
+            tabId: String,
             onSuccess: (List<TrackerLog>) -> Unit,
             onError: (Throwable) -> Unit
         ) {
-            val engineSession =
-                sessionManager.getEngineSession(session)
-                    ?: return onError(Exception("The engine session should not be null"))
+            val engineSession = store.state.findTabOrCustomTabOrSelectedTab(tabId)?.engineState?.engineSession
+                ?: return onError(Exception("The engine session should not be null"))
+
             engine.getTrackersLog(engineSession, onSuccess, onError)
         }
     }
 
     val fetchTrackingLogs: FetchTrackingLogUserCase by lazy {
-        FetchTrackingLogUserCase(sessionManager, engine)
+        FetchTrackingLogUserCase(store, engine)
     }
     val addException: AddExceptionUseCase by lazy {
-        AddExceptionUseCase(sessionManager, engine)
+        AddExceptionUseCase(store, engine)
     }
     val removeException: RemoveExceptionUseCase by lazy {
-        RemoveExceptionUseCase(sessionManager, engine)
+        RemoveExceptionUseCase(store, engine)
     }
     val containsException: ContainsExceptionUseCase by lazy {
-        ContainsExceptionUseCase(sessionManager, engine)
+        ContainsExceptionUseCase(store, engine)
     }
     val removeAllExceptions: RemoveAllExceptionsUseCase by lazy {
-        RemoveAllExceptionsUseCase(sessionManager, engine)
+        RemoveAllExceptionsUseCase(store, engine)
     }
     val fetchExceptions: FetchExceptionsUseCase by lazy {
-        FetchExceptionsUseCase(sessionManager, engine)
+        FetchExceptionsUseCase(engine)
     }
 }
