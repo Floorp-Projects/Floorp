@@ -38,7 +38,6 @@ exclude = [
 
   # Excluded because they are used only as dependencies, not top-level targets,
   # so we don't need to vendor their dev-dependencies.
-  "dom/webauthn/u2f-hid-rs",
   "gfx/webrender_bindings",
   "media/mp4parse-rust/mp4parse",
   "media/mp4parse-rust/mp4parse_capi",
