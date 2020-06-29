@@ -8,7 +8,7 @@
 #define mozilla_dom_IPCBlobInputStream_h
 
 #include "mozilla/Mutex.h"
-#include "mozIIPCBlobInputStream.h"
+#include "mozIRemoteLazyInputStream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICloneableInputStream.h"
 #include "nsIFileStreams.h"
@@ -35,7 +35,7 @@ class IPCBlobInputStream final : public nsIAsyncInputStream,
                                  public nsIAsyncFileMetadata,
                                  public nsIInputStreamLength,
                                  public nsIAsyncInputStreamLength,
-                                 public mozIIPCBlobInputStream {
+                                 public mozIRemoteLazyInputStream {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
@@ -55,7 +55,7 @@ class IPCBlobInputStream final : public nsIAsyncInputStream,
 
   void LengthReady(int64_t aLength);
 
-  // mozIIPCBlobInputStream
+  // mozIRemoteLazyInputStream
   NS_IMETHOD_(nsIInputStream*) GetInternalStream() override {
     if (mRemoteStream) {
       return mRemoteStream;

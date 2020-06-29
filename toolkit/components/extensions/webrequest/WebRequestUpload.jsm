@@ -475,7 +475,7 @@ function* getRawDataChunked(
     // the file, rather than its data.
     if (
       unbuffered instanceof Ci.nsIFileInputStream ||
-      unbuffered instanceof Ci.mozIIPCBlobInputStream
+      unbuffered instanceof Ci.mozIRemoteLazyInputStream
     ) {
       // But this is not actually supported yet.
       yield { file: "<file>" };
