@@ -623,9 +623,9 @@ bool BackgroundParentImpl::DeallocPTemporaryIPCBlobParent(
   return true;
 }
 
-already_AddRefed<dom::PIPCBlobInputStreamParent>
-BackgroundParentImpl::AllocPIPCBlobInputStreamParent(const nsID& aID,
-                                                     const uint64_t& aSize) {
+already_AddRefed<dom::PRemoteLazyInputStreamParent>
+BackgroundParentImpl::AllocPRemoteLazyInputStreamParent(const nsID& aID,
+                                                        const uint64_t& aSize) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -635,8 +635,8 @@ BackgroundParentImpl::AllocPIPCBlobInputStreamParent(const nsID& aID,
 }
 
 mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPIPCBlobInputStreamConstructor(
-    dom::PIPCBlobInputStreamParent* aActor, const nsID& aID,
+BackgroundParentImpl::RecvPRemoteLazyInputStreamConstructor(
+    dom::PRemoteLazyInputStreamParent* aActor, const nsID& aID,
     const uint64_t& aSize) {
   if (!static_cast<dom::IPCBlobInputStreamParent*>(aActor)->HasValidStream()) {
     return IPC_FAIL_NO_REASON(this);
