@@ -11,10 +11,10 @@
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/cache/CacheTypes.h"
-#include "mozilla/dom/RemoteLazyInputStreamStorage.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/RandomNum.h"
+#include "mozilla/RemoteLazyInputStreamStorage.h"
 #include "nsIRandomGenerator.h"
 #include "nsStreamUtils.h"
 

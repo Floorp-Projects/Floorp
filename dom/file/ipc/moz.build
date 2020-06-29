@@ -17,13 +17,16 @@ EXPORTS.mozilla.dom += [
     'FileCreatorChild.h',
     'FileCreatorParent.h',
     'IPCBlobUtils.h',
+    'TemporaryIPCBlobChild.h',
+    'TemporaryIPCBlobParent.h',
+]
+
+EXPORTS.mozilla += [
     'RemoteLazyInputStream.h',
     'RemoteLazyInputStreamChild.h',
     'RemoteLazyInputStreamParent.h',
     'RemoteLazyInputStreamStorage.h',
     'RemoteLazyInputStreamUtils.h',
-    'TemporaryIPCBlobChild.h',
-    'TemporaryIPCBlobParent.h',
 ]
 
 UNIFIED_SOURCES += [

@@ -12,7 +12,8 @@
 #include "mozilla/dom/WorkerRef.h"
 
 namespace mozilla {
-namespace dom {
+
+using namespace dom;
 
 namespace {
 
@@ -436,5 +437,4 @@ void RemoteLazyInputStreamChild::Migrated() {
   }
 }
 
-}  // namespace dom
 }  // namespace mozilla
