@@ -28,14 +28,6 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/AboutNewTabService.jsm"
 );
 
-var gEMEUIObserver = function(subject, topic, data) {
-  let win = subject.top;
-  let mm = getMessageManagerForWindow(win);
-  if (mm) {
-    mm.sendAsyncMessage("EMEVideo:ContentMediaKeysRequest", data);
-  }
-};
-
 var gDecoderDoctorObserver = function(subject, topic, data) {
   let win = subject.top;
   let mm = getMessageManagerForWindow(win);
@@ -48,7 +40,6 @@ function getMessageManagerForWindow(aContentWindow) {
   return aContentWindow.docShell.messageManager;
 }
 
-Services.obs.addObserver(gEMEUIObserver, "mediakeys-request");
 Services.obs.addObserver(gDecoderDoctorObserver, "decoder-doctor-notification");
 
 // WebRTCChild observer registration. Actor observers require the subject
