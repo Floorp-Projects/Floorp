@@ -298,18 +298,6 @@ SessionHistoryEntry::SetSaveLayoutStateFlag(bool aSaveLayoutStateFlag) {
 }
 
 NS_IMETHODIMP
-SessionHistoryEntry::GetExpirationStatus(bool* aExpirationStatus) {
-  MOZ_CRASH("This lives in the child process");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-SessionHistoryEntry::SetExpirationStatus(bool aExpirationStatus) {
-  MOZ_CRASH("This lives in the child process");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 SessionHistoryEntry::GetContentType(nsACString& aContentType) {
   aContentType = mSharedInfo->mContentType;
   return NS_OK;
