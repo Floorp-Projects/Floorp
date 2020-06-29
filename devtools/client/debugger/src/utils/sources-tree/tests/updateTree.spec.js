@@ -94,6 +94,33 @@ describe("calls updateTree.js", () => {
     expect(formatTree(newTree)).toMatchSnapshot();
   });
 
+  it("update sources that change their display URL", () => {
+    const prevSources = createSourcesMap([sources[0]]);
+
+    const { sourceTree, uncollapsedTree } = createTree({
+      debuggeeUrl,
+      sources: prevSources,
+      threads,
+    });
+
+    const newTree = updateTree({
+      debuggeeUrl,
+      prevSources,
+      newSources: createSourcesMap([
+        {
+          ...sources[0],
+          url: `${sources[0].url}?param`,
+        },
+      ]),
+      uncollapsedTree,
+      sourceTree,
+      projectRoot: "",
+      threads,
+    });
+
+    expect(formatTree(newTree)).toMatchSnapshot();
+  });
+
   // NOTE: we currently only add sources to the tree and clear the tree
   // on navigate.
   it("shows all the sources", () => {

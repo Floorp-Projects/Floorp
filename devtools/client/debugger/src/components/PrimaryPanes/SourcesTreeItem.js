@@ -25,7 +25,6 @@ import actions from "../../actions";
 
 import {
   isOriginal as isOriginalSource,
-  getSourceQueryString,
   isUrlExtension,
   isExtensionDirectoryPath,
   shouldBlackbox,
@@ -405,28 +404,11 @@ class SourceTreeItem extends Component<Props, State> {
   }
 
   render() {
-    const {
-      item,
-      depth,
-      source,
-      focused,
-      hasMatchingGeneratedSource,
-      hasSiblingOfSameName,
-    } = this.props;
+    const { item, depth, focused, hasMatchingGeneratedSource } = this.props;
 
     const suffix = hasMatchingGeneratedSource ? (
       <span className="suffix">{L10N.getStr("sourceFooter.mappedSuffix")}</span>
     ) : null;
-
-    let querystring;
-    if (hasSiblingOfSameName) {
-      querystring = getSourceQueryString(source);
-    }
-
-    const query =
-      hasSiblingOfSameName && querystring ? (
-        <span className="query">{querystring}</span>
-      ) : null;
 
     return (
       <div
@@ -440,7 +422,7 @@ class SourceTreeItem extends Component<Props, State> {
         {this.renderIcon(item, depth)}
         <span className="label">
           {this.renderItemName(depth)}
-          {query} {suffix}
+          {suffix}
         </span>
       </div>
     );

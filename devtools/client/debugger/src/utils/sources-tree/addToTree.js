@@ -11,6 +11,8 @@ import {
   partIsFile,
   createSourceNode,
   createDirectoryNode,
+  getPathParts,
+  type PathPart,
 } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
 import { getDisplayURL } from "./getURL";
@@ -41,7 +43,7 @@ function createNodeInTree(
  * 2. if it does not exist create it
  */
 function findOrCreateNode(
-  parts: string[],
+  parts: PathPart[],
   subTree: TreeDirectory,
   path: string,
   part: string,
@@ -92,33 +94,21 @@ function traverseTree(
   source: Source,
   thread: string
 ): TreeNode {
-  const parts = url.path.replace(/\/$/, "").split("/");
-  parts[0] = url.group;
-  if (thread) {
-    parts.unshift(thread);
-  }
-
-  let path = "";
-  return parts.reduce((subTree, part, index) => {
-    if (index == 0 && thread) {
-      path = thread;
-    } else {
-      path = `${path}/${part}`;
-    }
-
-    const debuggeeHostIfRoot = index === 1 ? debuggeeHost : null;
-
-    return findOrCreateNode(
-      parts,
-      subTree,
-      path,
-      part,
-      index,
-      url,
-      debuggeeHostIfRoot,
-      source
-    );
-  }, tree);
+  const parts = getPathParts(url, thread, debuggeeHost);
+  return parts.reduce(
+    (subTree, { part, path, debuggeeHostIfRoot }, index) =>
+      findOrCreateNode(
+        parts,
+        subTree,
+        path,
+        part,
+        index,
+        url,
+        debuggeeHostIfRoot,
+        source
+      ),
+    tree
+  );
 }
 
 /*
@@ -143,7 +133,14 @@ function addSourceToNode(
     return source;
   }
 
-  const { filename } = url;
+  let { filename } = url;
+
+  if (filename === "(index)" && url.search) {
+    filename = url.search;
+  } else {
+    filename += url.search;
+  }
+
   const { found: childFound, index: childIndex } = findNodeInContents(
     node,
     createTreeNodeMatcher(filename, false, null)
