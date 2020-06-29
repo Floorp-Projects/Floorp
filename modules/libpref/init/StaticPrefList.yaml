@@ -8799,6 +8799,18 @@
     mirror: always
 #endif
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  # Run content processes in headless mode and disallow connections to
+  # the X server.  Experimental; breaks WebGL and Flash, and requires
+  # `widget.disable-native-theme-for-content`.  Changing it requires a
+  # restart because sandbox policy information dependent on it is cached.
+  # See bug 1640345 for details.
+- name: security.sandbox.content.headless
+  type: bool
+  value: false
+  mirror: once
+#endif
+
 # When comparing schemes, if this pref is set, view-source URIs are reachable
 # from same-protocol (so e.g. file: can link to view-source:file). This is
 # required for reftests.
