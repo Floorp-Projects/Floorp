@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<script>
+"use strict";
+
+const html = `
+	<!DOCTYPE html>
+	<head>
+		<link rel="stylesheet" href="internal-loaded.css">
+	</head>
+`;
+onload = function() {
+  // eslint-disable-next-line no-unsanitized/method
+  document.write(html);
+}
+</script>
