@@ -6290,18 +6290,14 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
                                          const nsRect& aOldScrollArea) {
   NS_ASSERTION(!mSuppressScrollbarUpdate, "This should have been suppressed");
 
-  PresShell* presShell = mOuter->PresShell();
-
   bool hasResizer = HasResizer();
   bool scrollbarOnLeft = !IsScrollbarOnRight();
-  bool overlayScrollBarsWithZoom = UsesOverlayScrollbars() && mIsRoot &&
-                                   presShell->IsVisualViewportSizeSet();
+  bool overlayScrollBarsOnRoot = UsesOverlayScrollbars() && mIsRoot;
 
-  nsSize scrollPortClampingSize = mScrollPort.Size();
-  double res = 1.0;
-  if (overlayScrollBarsWithZoom) {
-    scrollPortClampingSize = presShell->GetVisualViewportSize();
-    res = presShell->GetCumulativeResolution();
+  nsSize compositionSize = mScrollPort.Size();
+  if (overlayScrollBarsOnRoot) {
+    compositionSize = nsLayoutUtils::CalculateCompositionSizeForFrame(
+        mOuter, false, &compositionSize);
   }
 
   // place the scrollcorner
@@ -6370,14 +6366,12 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   if (mVScrollbarBox) {
     MOZ_ASSERT(mVScrollbarBox->IsXULBoxFrame(), "Must be a box frame!");
     vRect = mScrollPort;
-    if (overlayScrollBarsWithZoom) {
-      vRect.height = NSToCoordRound(res * scrollPortClampingSize.height);
+    if (overlayScrollBarsOnRoot) {
+      vRect.height = compositionSize.height;
     }
     vRect.width = aContentArea.width - mScrollPort.width;
-    vRect.x = scrollbarOnLeft
-                  ? aContentArea.x
-                  : mScrollPort.x +
-                        NSToCoordRound(res * scrollPortClampingSize.width);
+    vRect.x = scrollbarOnLeft ? aContentArea.x
+                              : mScrollPort.x + compositionSize.width;
     if (mHasVerticalScrollbar) {
       nsMargin margin;
       mVScrollbarBox->GetXULMargin(margin);
@@ -6391,12 +6385,11 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   if (mHScrollbarBox) {
     MOZ_ASSERT(mHScrollbarBox->IsXULBoxFrame(), "Must be a box frame!");
     hRect = mScrollPort;
-    if (overlayScrollBarsWithZoom) {
-      hRect.width = NSToCoordRound(res * scrollPortClampingSize.width);
+    if (overlayScrollBarsOnRoot) {
+      hRect.width = compositionSize.width;
     }
     hRect.height = aContentArea.height - mScrollPort.height;
-    hRect.y =
-        mScrollPort.y + NSToCoordRound(res * scrollPortClampingSize.height);
+    hRect.y = mScrollPort.y + compositionSize.height;
     if (mHasHorizontalScrollbar) {
       nsMargin margin;
       mHScrollbarBox->GetXULMargin(margin);
