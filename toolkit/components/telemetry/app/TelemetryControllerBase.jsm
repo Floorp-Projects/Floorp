@@ -34,6 +34,7 @@ const Preferences = Object.freeze({
  * preferences change.
  */
 var gLogger = null;
+var gPrefixLogger = null;
 var gLogAppenderDump = null;
 
 var TelemetryControllerBase = Object.freeze({
@@ -52,18 +53,18 @@ var TelemetryControllerBase = Object.freeze({
   },
 
   get log() {
-    return (
-      gLogger ||
-      Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX)
-    );
+    if (!gPrefixLogger) {
+      gPrefixLogger = Log.repository.getLoggerWithMessagePrefix(
+        LOGGER_NAME,
+        LOGGER_PREFIX
+      );
+    }
+    return gPrefixLogger;
   },
 
   configureLogging() {
     if (!gLogger) {
-      gLogger = Log.repository.getLoggerWithMessagePrefix(
-        LOGGER_NAME,
-        LOGGER_PREFIX
-      );
+      gLogger = Log.repository.getLogger(LOGGER_NAME);
 
       // Log messages need to go to the browser console.
       let consoleAppender = new Log.ConsoleAppender(new Log.BasicFormatter());
