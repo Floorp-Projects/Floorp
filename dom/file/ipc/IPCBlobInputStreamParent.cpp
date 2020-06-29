@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCBlobInputStreamParent.h"
-#include "IPCBlobInputStreamStorage.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "nsContentUtils.h"
+#include "RemoteLazyInputStreamStorage.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,8 +27,8 @@ already_AddRefed<IPCBlobInputStreamParent> IPCBlobInputStreamParent::Create(
     return nullptr;
   }
 
-  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id, aSize,
-                                              aChildID);
+  RemoteLazyInputStreamStorage::Get()->AddStream(aInputStream, id, aSize,
+                                                 aChildID);
 
   RefPtr<IPCBlobInputStreamParent> parent =
       new IPCBlobInputStreamParent(id, aSize, aManager);
@@ -41,7 +41,7 @@ already_AddRefed<IPCBlobInputStreamParent> IPCBlobInputStreamParent::Create(
   RefPtr<IPCBlobInputStreamParent> actor =
       new IPCBlobInputStreamParent(aID, aSize, aManager);
 
-  actor->mCallback = IPCBlobInputStreamStorage::Get()->TakeCallback(aID);
+  actor->mCallback = RemoteLazyInputStreamStorage::Get()->TakeCallback(aID);
 
   return actor.forget();
 }
@@ -57,7 +57,7 @@ already_AddRefed<IPCBlobInputStreamParent> IPCBlobInputStreamParent::Create(
   RefPtr<IPCBlobInputStreamParent> actor =
       new IPCBlobInputStreamParent(aID, aSize, aManager);
 
-  actor->mCallback = IPCBlobInputStreamStorage::Get()->TakeCallback(aID);
+  actor->mCallback = RemoteLazyInputStreamStorage::Get()->TakeCallback(aID);
 
   return actor.forget();
 }
@@ -112,7 +112,8 @@ void IPCBlobInputStreamParent::ActorDestroy(
   RefPtr<IPCBlobInputStreamParentCallback> callback;
   mCallback.swap(callback);
 
-  RefPtr<IPCBlobInputStreamStorage> storage = IPCBlobInputStreamStorage::Get();
+  RefPtr<RemoteLazyInputStreamStorage> storage =
+      RemoteLazyInputStreamStorage::Get();
 
   if (mMigrating) {
     if (callback && storage) {
@@ -143,8 +144,8 @@ mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvStreamNeeded() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
 
   nsCOMPtr<nsIInputStream> stream;
-  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize,
-                                              getter_AddRefs(stream));
+  RemoteLazyInputStreamStorage::Get()->GetStream(mID, 0, mSize,
+                                                 getter_AddRefs(stream));
   if (!stream) {
     if (!SendStreamReady(Nothing())) {
       return IPC_FAIL(this, "SendStreamReady failed");
@@ -181,8 +182,8 @@ mozilla::ipc::IPCResult IPCBlobInputStreamParent::RecvLengthNeeded() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
 
   nsCOMPtr<nsIInputStream> stream;
-  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize,
-                                              getter_AddRefs(stream));
+  RemoteLazyInputStreamStorage::Get()->GetStream(mID, 0, mSize,
+                                                 getter_AddRefs(stream));
   if (!stream) {
     if (!SendLengthReady(-1)) {
       return IPC_FAIL(this, "SendLengthReady failed");
@@ -222,7 +223,7 @@ mozilla::ipc::IPCResult IPCBlobInputStreamParent::Recv__delete__() {
 }
 
 bool IPCBlobInputStreamParent::HasValidStream() const {
-  return IPCBlobInputStreamStorage::Get()->HasStream(mID);
+  return RemoteLazyInputStreamStorage::Get()->HasStream(mID);
 }
 
 }  // namespace dom
