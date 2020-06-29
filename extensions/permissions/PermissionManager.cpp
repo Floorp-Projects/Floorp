@@ -1779,8 +1779,6 @@ nsresult PermissionManager::AddInternal(
         break;
       }
 
-      PermissionEntry oldPermissionEntry = entry->GetPermissions()[index];
-
       // If the new expireType is EXPIRE_SESSION, then we have to keep a
       // copy of the previous permission/expireType values. This cached value
       // will be used when restoring the permissions of an app.
@@ -1804,29 +1802,13 @@ nsresult PermissionManager::AddInternal(
       entry->GetPermissions()[index].mExpireTime = aExpireTime;
       entry->GetPermissions()[index].mModificationTime = aModificationTime;
 
-      if (aDBOperation == eWriteToDB) {
-        bool newIsPersistentExpire = IsPersistentExpire(aExpireType, aType);
-        bool oldIsPersistentExpire =
-            IsPersistentExpire(oldPermissionEntry.mExpireType, aType);
-
-        if (!newIsPersistentExpire && oldIsPersistentExpire) {
-          // Maybe we have to remove the previous permission if that was
-          // persistent.
-          UpdateDB(eOperationRemoving, id, EmptyCString(), EmptyCString(), 0,
-                   nsIPermissionManager::EXPIRE_NEVER, 0, 0);
-        } else if (newIsPersistentExpire && !oldIsPersistentExpire) {
-          // It could also be that the previous permission was session-only but
-          // this needs to be written into the DB. In this case, we have to run
-          // an Adding operation.
-          UpdateDB(eOperationAdding, id, origin, aType, aPermission,
-                   aExpireType, aExpireTime, aModificationTime);
-        } else if (newIsPersistentExpire) {
-          // This is the a simple update.  We care only about the id, the
-          // permission and expireType/expireTime/modificationTime here. We pass
-          // dummy values for all other parameters.
-          UpdateDB(op, id, EmptyCString(), EmptyCString(), aPermission,
-                   aExpireType, aExpireTime, aModificationTime);
-        }
+      if (aDBOperation == eWriteToDB &&
+          IsPersistentExpire(aExpireType, aType)) {
+        // We care only about the id, the permission and
+        // expireType/expireTime/modificationTime here. We pass dummy values for
+        // all other parameters.
+        UpdateDB(op, id, EmptyCString(), EmptyCString(), aPermission,
+                 aExpireType, aExpireTime, aModificationTime);
       }
 
       if (aNotifyOperation == eNotify) {
