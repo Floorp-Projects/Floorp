@@ -31,7 +31,7 @@ API Documentation
 =================
 
 * `Changelog <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/doc-files/CHANGELOG>`_
-* `API <https://firefox-source-docs.mozilla.org/index.html>`_	
+* `API <https://mozilla.github.io/geckoview/javadoc/mozilla-central/index.html>`_
 
 =================
 More information
