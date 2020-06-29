@@ -2,7 +2,7 @@
 
 # process
 
-`suspend fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/MigrationIntentProcessor.kt#L23)
+`fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/MigrationIntentProcessor.kt#L23)
 
 Overrides [IntentProcessor.process](../../mozilla.components.feature.intent.processing/-intent-processor/process.md)
 

@@ -2,7 +2,7 @@
 
 # WebAppIntentProcessor
 
-`class WebAppIntentProcessor : `[`IntentProcessor`](../../mozilla.components.feature.intent.processing/-intent-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/intent/WebAppIntentProcessor.kt#L24)
+`class WebAppIntentProcessor : `[`IntentProcessor`](../../mozilla.components.feature.intent.processing/-intent-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/intent/WebAppIntentProcessor.kt#L25)
 
 Processor for intents which trigger actions related to web apps.
 
@@ -16,7 +16,7 @@ Processor for intents which trigger actions related to web apps.
 
 | Name | Summary |
 |---|---|
-| [process](process.md) | `suspend fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes the given [Intent](#) by creating a [Session](../../mozilla.components.browser.session/-session/index.md) with a corresponding web app manifest. |
+| [process](process.md) | `fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Processes the given [Intent](#) by creating a [Session](../../mozilla.components.browser.session/-session/index.md) with a corresponding web app manifest. |
 
 ### Companion Object Properties
 
