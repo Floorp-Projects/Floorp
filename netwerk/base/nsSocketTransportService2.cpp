@@ -119,12 +119,12 @@ void nsSocketTransportService::SocketContext::MaybeResetEpoch() {
 // ctor/dtor (called on the main/UI thread by the service manager)
 
 nsSocketTransportService::nsSocketTransportService()
-    : mLock("nsSocketTransportService::mLock"),
+    : mRawThread(nullptr),
       mInitialized(false),
       mShuttingDown(false),
+      mLock("nsSocketTransportService::mLock"),
       mOffline(false),
       mGoingOffline(false),
-      mRawThread(nullptr),
       mActiveListSize(SOCKET_LIMIT_MIN),
       mIdleListSize(SOCKET_LIMIT_MIN),
       mActiveCount(0),
@@ -264,12 +264,17 @@ bool nsSocketTransportService::UpdatePortRemapPreference(
 
   bool rv = consumePreference();
 
-  if (!IsOnCurrentThreadInfallible() && mThread) {
-    mThread->Dispatch(
-        NewRunnableMethod<TPortRemapping>(
-            "net::ApplyPortRemapping", this,
-            &nsSocketTransportService::ApplyPortRemapPreference, portRemapping),
-        NS_DISPATCH_NORMAL);
+  if (!IsOnCurrentThread()) {
+    nsCOMPtr<nsIThread> thread = GetThreadSafely();
+    if (!thread) {
+      // Init hasn't been called yet. Could probably just assert.
+      // If shutdown, the dispatch below will just silently fail.
+      NS_ASSERTION(false, "ApplyPortRemapPreference before STS::Init");
+      return false;
+    }
+    thread->Dispatch(NewRunnableMethod<TPortRemapping>(
+        "net::ApplyPortRemapping", this,
+        &nsSocketTransportService::ApplyPortRemapPreference, portRemapping));
   } else {
     ApplyPortRemapPreference(portRemapping);
   }
@@ -291,9 +296,10 @@ nsSocketTransportService::~nsSocketTransportService() {
 // event queue (any thread)
 
 already_AddRefed<nsIThread> nsSocketTransportService::GetThreadSafely() {
-  MutexAutoLock lock(mLock);
-  nsCOMPtr<nsIThread> result = mThread;
-  return result.forget();
+  if (!mRawThread) {  // this is an atomic operation.
+    return nullptr;
+  }
+  return do_AddRef(static_cast<nsIThread*>(mRawThread));
 }
 
 NS_IMETHODIMP
@@ -311,8 +317,9 @@ nsSocketTransportService::Dispatch(already_AddRefed<nsIRunnable> event,
 
   nsCOMPtr<nsIThread> thread = GetThreadSafely();
   nsresult rv;
-  rv = thread ? thread->Dispatch(event_ref.forget(), flags)
-              : NS_ERROR_NOT_INITIALIZED;
+  rv = thread && MOZ_LIKELY(mInitialized)
+           ? thread->Dispatch(event_ref.forget(), flags)
+           : NS_ERROR_NOT_INITIALIZED;
   if (rv == NS_ERROR_UNEXPECTED) {
     // Thread is no longer accepting events. We must have just shut it
     // down on the main thread. Pretend we never saw it.
@@ -346,7 +353,9 @@ nsSocketTransportService::IsOnCurrentThreadInfallible() {
 
 already_AddRefed<nsIDirectTaskDispatcher>
 nsSocketTransportService::GetDirectTaskDispatcherSafely() {
-  MutexAutoLock lock(mLock);
+  if (!mRawThread) {  // this is an atomic operation.
+    return nullptr;
+  }
   nsCOMPtr<nsIDirectTaskDispatcher> result = mDirectTaskDispatcher;
   return result.forget();
 }
@@ -656,6 +665,7 @@ PRIntervalTime nsSocketTransportService::PollTimeout(PRIntervalTime now) {
 
 int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
                                        PRIntervalTime ts) {
+  MOZ_ASSERT(IsOnCurrentThread());
   PRPollDesc* pollList;
   uint32_t pollCount;
   PRIntervalTime pollTimeout;
@@ -664,7 +674,7 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
   // If there are pending events for this thread then
   // DoPollIteration() should service the network without blocking.
   bool pendingEvents = false;
-  mRawThread->HasPendingEvents(&pendingEvents);
+  mThread->HasPendingEvents(&pendingEvents);
 
   if (mPollList[0].fd) {
     mPollList[0].out_flags = 0;
@@ -762,17 +772,18 @@ nsSocketTransportService::Init() {
 
   if (mShuttingDown) return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv =
-      NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), this);
+  nsresult rv = NS_NewNamedThread("Socket Thread", getter_AddRefs(mThread));
   if (NS_FAILED(rv)) return rv;
 
-  {
-    MutexAutoLock lock(mLock);
-    // Install our mThread, protecting against concurrent readers
-    thread.swap(mThread);
-    mDirectTaskDispatcher = do_QueryInterface(mThread);
-  }
+  // Setting mRawThread allows to now query if we are on the socket thread.
+  mRawThread = mThread;
+  // Start the event loop, it must be done after mThread has been set.
+  rv = mThread->Dispatch(do_AddRef(this));
+  NS_ENSURE_SUCCESS(rv, rv);
+  mDirectTaskDispatcher = do_QueryInterface(mThread);
+  MOZ_DIAGNOSTIC_ASSERT(
+      mDirectTaskDispatcher,
+      "Underlying thread must support direct task dispatching");
 
   Preferences::RegisterCallbacks(UpdatePrefs, gCallbackPrefs, this);
   UpdatePrefs();
@@ -790,6 +801,7 @@ nsSocketTransportService::Init() {
     obsSvc->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
   }
 
+  // We can now dispatch tasks to the socket thread.
   mInitialized = true;
   return NS_OK;
 }
@@ -805,11 +817,11 @@ nsSocketTransportService::Shutdown(bool aXpcomShutdown) {
 
   if (mShuttingDown) return NS_ERROR_UNEXPECTED;
 
+  // signal the socket thread to shutdown
+  mShuttingDown = true;
+
   {
     MutexAutoLock lock(mLock);
-
-    // signal the socket thread to shutdown
-    mShuttingDown = true;
 
     if (mPollableEvent) {
       mPollableEvent->Signal();
@@ -832,13 +844,6 @@ nsresult nsSocketTransportService::ShutdownThread() {
 
   // join with thread
   mThread->Shutdown();
-  {
-    MutexAutoLock lock(mLock);
-    // Drop our reference to mThread and make sure that any concurrent
-    // readers are excluded
-    mThread = nullptr;
-    mDirectTaskDispatcher = nullptr;
-  }
 
   Preferences::UnregisterCallbacks(UpdatePrefs, gCallbackPrefs, this);
 
@@ -1044,6 +1049,10 @@ void nsSocketTransportService::MarkTheLastElementOfPendingQueue() {
 NS_IMETHODIMP
 nsSocketTransportService::Run() {
   SOCKET_LOG(("STS thread init %d sockets\n", gMaxCount));
+  // It is safe to access mThread directly from the socket thread as this is
+  // the first task ever dispatched and mThread has already been set.
+  // It must be non-null.
+  MOZ_DIAGNOSTIC_ASSERT(mThread);
 
 #if defined(XP_WIN)
   // see bug 1361495, gethostname() triggers winsock initialization.
@@ -1085,13 +1094,11 @@ nsSocketTransportService::Run() {
     mPollList[0].out_flags = 0;
   }
 
-  mRawThread = NS_GetCurrentThread();
-
   // Ensure a call to GetCurrentSerialEventTarget() returns this event target.
   SerialEventTargetGuard guard(this);
 
   // hook ourselves up to observe event processing for this thread
-  nsCOMPtr<nsIThreadInternal> threadInt = do_QueryInterface(mRawThread);
+  nsCOMPtr<nsIThreadInternal> threadInt = do_QueryInterface(mThread);
   threadInt->SetObserver(this);
 
   // make sure the pseudo random number generator is seeded on this thread
@@ -1127,7 +1134,7 @@ nsSocketTransportService::Run() {
     // If we don't reset these, we may not re-enter ProcessNextEvent()
     // until we have events to process, and it may seem like we have
     // an event running for a very long time.
-    mRawThread->SetRunningEventDelay(TimeDuration(), TimeStamp());
+    mThread->SetRunningEventDelay(TimeDuration(), TimeStamp());
 
     do {
       if (Telemetry::CanRecordPrereleaseData()) {
@@ -1145,7 +1152,7 @@ nsSocketTransportService::Run() {
         pollDuration += singlePollDuration;
       }
 
-      mRawThread->HasPendingEvents(&pendingEvents);
+      mThread->HasPendingEvents(&pendingEvents);
       if (pendingEvents) {
         if (!mServingPendingQueue) {
           nsresult rv = Dispatch(
@@ -1174,9 +1181,9 @@ nsSocketTransportService::Run() {
         }
         TimeStamp eventQueueStart = TimeStamp::NowLoRes();
         do {
-          NS_ProcessNextEvent(mRawThread);
+          NS_ProcessNextEvent(mThread);
           pendingEvents = false;
-          mRawThread->HasPendingEvents(&pendingEvents);
+          mThread->HasPendingEvents(&pendingEvents);
         } while (pendingEvents && mServingPendingQueue &&
                  ((TimeStamp::NowLoRes() - eventQueueStart).ToMilliseconds() <
                   mMaxTimePerPollIter));
@@ -1193,17 +1200,17 @@ nsSocketTransportService::Run() {
 
     bool goingOffline = false;
     // now that our event queue is empty, check to see if we should exit
+    if (mShuttingDown) {
+      if (Telemetry::CanRecordPrereleaseData() &&
+          !startOfCycleForLastCycleCalc.IsNull()) {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::STS_POLL_AND_EVENT_THE_LAST_CYCLE,
+            startOfCycleForLastCycleCalc, TimeStamp::NowLoRes());
+      }
+      break;
+    }
     {
       MutexAutoLock lock(mLock);
-      if (mShuttingDown) {
-        if (Telemetry::CanRecordPrereleaseData() &&
-            !startOfCycleForLastCycleCalc.IsNull()) {
-          Telemetry::AccumulateTimeDelta(
-              Telemetry::STS_POLL_AND_EVENT_THE_LAST_CYCLE,
-              startOfCycleForLastCycleCalc, TimeStamp::NowLoRes());
-        }
-        break;
-      }
       if (mGoingOffline) {
         mGoingOffline = false;
         goingOffline = true;
@@ -1224,7 +1231,7 @@ nsSocketTransportService::Run() {
 
   // Final pass over the event queue. This makes sure that events posted by
   // socket detach handlers get processed.
-  NS_ProcessPendingEvents(mRawThread);
+  NS_ProcessPendingEvents(mThread);
 
   SOCKET_LOG(("STS thread exit\n"));
 
@@ -1610,12 +1617,7 @@ nsSocketTransportService::Observe(nsISupports* subject, const char* topic,
 }
 
 void nsSocketTransportService::ClosePrivateConnections() {
-  // Must be called on the socket thread.
-#ifdef DEBUG
-  bool onSTSThread;
-  IsOnCurrentThread(&onSTSThread);
-  MOZ_ASSERT(onSTSThread);
-#endif
+  MOZ_ASSERT(IsOnCurrentThread(), "Must be called on the socket thread");
 
   for (int32_t i = mActiveCount - 1; i >= 0; --i) {
     if (mActiveList[i].mHandler->mIsPrivate) {
