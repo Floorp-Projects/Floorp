@@ -19,10 +19,10 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpParent.h"
+#include "mozilla/dom/IPCBlobInputStreamStorage.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/RemoteLazyInputStreamUtils.h"
-#include "mozilla/RemoteLazyInputStreamStorage.h"
 
 namespace mozilla {
 
@@ -47,8 +47,8 @@ nsresult MaybeDeserializeAndWrapForMainThread(
 
   MOZ_TRY(nsContentUtils::GenerateUUIDInPlace(uuid));
 
-  RemoteLazyInputStreamStorage::Get()->AddStream(deserialized, uuid,
-                                                 aBodyStreamSize, 0);
+  IPCBlobInputStreamStorage::Get()->AddStream(deserialized, uuid,
+                                              aBodyStreamSize, 0);
 
   return NS_OK;
 }
@@ -80,7 +80,7 @@ nsresult MaybeDeserializeAndWrapForMainThread(
     auto streamLength = copyRequest.bodySize();
     const auto& uuid =
         copyRequest.body().ref().get_ParentToParentStream().uuid();
-    RemoteLazyInputStreamStorage* storage = RemoteLazyInputStreamStorage::Get();
+    IPCBlobInputStreamStorage* storage = IPCBlobInputStreamStorage::Get();
 
     storage->GetStream(uuid, 0, streamLength, getter_AddRefs(stream));
     storage->ForgetStream(uuid);
@@ -91,13 +91,10 @@ nsresult MaybeDeserializeAndWrapForMainThread(
     MOZ_ASSERT(bgParent);
 
     copyRequest.body() = Some(ParentToChildStream());
-
-    RemoteLazyStream ipdlStream;
-    MOZ_ALWAYS_SUCCEEDS(RemoteLazyInputStreamUtils::SerializeInputStream(
-        stream, streamLength, ipdlStream, bgParent));
-
-    copyRequest.body().ref().get_ParentToChildStream().actorParent() =
-        ipdlStream;
+    MOZ_ALWAYS_SUCCEEDS(IPCBlobUtils::SerializeInputStream(
+        stream, streamLength,
+        copyRequest.body().ref().get_ParentToChildStream().actorParent(),
+        bgParent));
   }
 
   Unused << aManager->SendPFetchEventOpProxyConstructor(actor, copyArgs);

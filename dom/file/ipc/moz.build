@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
 XPIDL_SOURCES += [
-    'mozIRemoteLazyInputStream.idl',
+    'mozIIPCBlobInputStream.idl',
 ]
 
 XPIDL_MODULE = 'dom'
@@ -16,29 +16,24 @@ XPIDL_MODULE = 'dom'
 EXPORTS.mozilla.dom += [
     'FileCreatorChild.h',
     'FileCreatorParent.h',
+    'IPCBlobInputStream.h',
+    'IPCBlobInputStreamChild.h',
+    'IPCBlobInputStreamParent.h',
+    'IPCBlobInputStreamStorage.h',
     'IPCBlobUtils.h',
     'TemporaryIPCBlobChild.h',
     'TemporaryIPCBlobParent.h',
 ]
 
-EXPORTS.mozilla += [
-    'RemoteLazyInputStream.h',
-    'RemoteLazyInputStreamChild.h',
-    'RemoteLazyInputStreamParent.h',
-    'RemoteLazyInputStreamStorage.h',
-    'RemoteLazyInputStreamUtils.h',
-]
-
 UNIFIED_SOURCES += [
     'FileCreatorChild.cpp',
     'FileCreatorParent.cpp',
+    'IPCBlobInputStream.cpp',
+    'IPCBlobInputStreamChild.cpp',
+    'IPCBlobInputStreamParent.cpp',
+    'IPCBlobInputStreamStorage.cpp',
+    'IPCBlobInputStreamThread.cpp',
     'IPCBlobUtils.cpp',
-    'RemoteLazyInputStream.cpp',
-    'RemoteLazyInputStreamChild.cpp',
-    'RemoteLazyInputStreamParent.cpp',
-    'RemoteLazyInputStreamStorage.cpp',
-    'RemoteLazyInputStreamThread.cpp',
-    'RemoteLazyInputStreamUtils.cpp',
     'TemporaryIPCBlobChild.cpp',
     'TemporaryIPCBlobParent.cpp',
 ]
@@ -47,7 +42,7 @@ IPDL_SOURCES += [
     'BlobTypes.ipdlh',
     'IPCBlob.ipdlh',
     'PFileCreator.ipdl',
-    'PRemoteLazyInputStream.ipdl',
+    'PIPCBlobInputStream.ipdl',
     'PTemporaryIPCBlob.ipdl',
 ]
 

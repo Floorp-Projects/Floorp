@@ -12,8 +12,9 @@ include protocol PSocketProcess;
 include IPCStream;
 
 namespace mozilla {
+namespace dom {
 
-refcounted protocol PRemoteLazyInputStream
+refcounted protocol PIPCBlobInputStream
 {
   manager PBackground or PContent or PSocketProcess;
 
@@ -43,4 +44,6 @@ both:
   async __delete__();
 };
 
+} // namespace dom
 } // namespace mozilla
+
