@@ -10,38 +10,39 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class SwipeRefreshFeatureTest {
 
     private lateinit var refreshFeature: SwipeRefreshFeature
-    private lateinit var mockSessionManager: SessionManager
     private val mockLayout = mock<SwipeRefreshLayout>()
-    private val mockSession = mock<Session>()
     private val useCase = mock<SessionUseCases.ReloadUrlUseCase>()
 
     @Before
     fun setup() {
-        mockSessionManager = mock()
-        refreshFeature = SwipeRefreshFeature(mockSessionManager, useCase, mockLayout)
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "A"),
+                createTab("https://www.firefox.com", id = "B")
+            ),
+            selectedTabId = "B"
+        ))
 
-        whenever(mockSessionManager.selectedSession).thenReturn(mockSession)
+        refreshFeature = SwipeRefreshFeature(store, useCase, mockLayout)
     }
 
     @Test
@@ -68,28 +69,16 @@ class SwipeRefreshFeatureTest {
         refreshFeature.start()
         refreshFeature.onRefresh()
 
-        verify(useCase).invoke(mockSession)
+        verify(useCase).invoke("B")
     }
 
     @Test
     fun `onLoadingStateChanged should update the SwipeRefreshLayout`() {
-        refreshFeature.onLoadingStateChanged(mockSession, false)
+        refreshFeature.onLoadingStateChanged(false)
         verify(mockLayout).isRefreshing = false
 
-        refreshFeature.onLoadingStateChanged(mockSession, true)
+        refreshFeature.onLoadingStateChanged(true)
         verify(mockLayout).isRefreshing = false
-    }
-
-    @Test
-    fun `start with a sessionId`() {
-        refreshFeature = spy(SwipeRefreshFeature(mockSessionManager, useCase, mockLayout, "abc"))
-        whenever(mockSessionManager.findSessionById(anyString())).thenReturn(mockSession)
-
-        refreshFeature.start()
-
-        verify(refreshFeature).observeIdOrSelected(anyString())
-        verify(mockSessionManager).findSessionById(anyString())
-        verify(refreshFeature).observeFixed(mockSession)
     }
 
     private open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {

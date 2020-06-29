@@ -5,12 +5,19 @@
 package mozilla.components.feature.session
 
 import android.view.View
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature implementation to add pull to refresh functionality to browsers.
@@ -18,12 +25,12 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * @param swipeRefreshLayout Reference to SwipeRefreshLayout that has an [EngineView] as its child.
  */
 class SwipeRefreshFeature(
-    sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val swipeRefreshLayout: SwipeRefreshLayout,
-    private val sessionId: String? = null
-) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature,
-    SwipeRefreshLayout.OnChildScrollUpCallback, SwipeRefreshLayout.OnRefreshListener {
+    private val tabId: String? = null
+) : LifecycleAwareFeature, SwipeRefreshLayout.OnChildScrollUpCallback, SwipeRefreshLayout.OnRefreshListener {
+    private var scope: CoroutineScope? = null
 
     init {
         swipeRefreshLayout.setOnRefreshListener(this)
@@ -34,7 +41,18 @@ class SwipeRefreshFeature(
      * Start feature: Starts adding pull to refresh behavior for the active session.
      */
     override fun start() {
-        observeIdOrSelected(sessionId)
+        store.flowScoped { flow ->
+            flow.map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
+                .map { tab -> tab?.content?.loading ?: false }
+                .ifChanged()
+                .collect { loading ->
+                    onLoadingStateChanged(loading)
+                }
+        }
+    }
+
+    override fun stop() {
+        scope?.cancel()
     }
 
     /**
@@ -54,13 +72,16 @@ class SwipeRefreshFeature(
      * Called when a swipe gesture triggers a refresh.
      */
     override fun onRefresh() {
-        reloadUrlUseCase(activeSession)
+        store.state.findTabOrCustomTabOrSelectedTab(tabId)?.let { tab ->
+            reloadUrlUseCase(tab.id)
+        }
     }
 
     /**
      * Called when the current session starts or stops refreshing.
      */
-    override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun onLoadingStateChanged(loading: Boolean) {
         // Don't activate the indicator unless triggered by a gesture.
         if (!loading) {
             swipeRefreshLayout.isRefreshing = loading

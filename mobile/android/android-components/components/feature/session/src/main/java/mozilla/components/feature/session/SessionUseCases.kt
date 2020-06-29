@@ -115,6 +115,15 @@ class SessionUseCases(
                 sessionManager.getOrCreateEngineSession(session).reload()
             }
         }
+
+        /**
+         * Reloads the current page of the tab with the given [tabId].
+         */
+        operator fun invoke(tabId: String) {
+            sessionManager.findSessionById(tabId)?.let {
+                invoke(it)
+            }
+        }
     }
 
     class StopLoadingUseCase internal constructor(
