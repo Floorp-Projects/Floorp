@@ -507,65 +507,19 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   }
 #endif
 
-  mCommonContentPolicy.reset(policy);
-}
-
-UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
-    int aPid, bool aFileProcess) {
-  // Policy entries that vary per-process (currently the only reason
-  // that can happen is because they contain the pid) are added here,
-  // as well as entries that depend on preferences or paths not available
-  // in early startup.
-
-  MOZ_ASSERT(NS_IsMainThread());
-  // The file broker is used at level 2 and up.
-  if (GetEffectiveContentSandboxLevel() <= 1) {
-    return nullptr;
-  }
-
-  std::call_once(mContentInited, [this] { InitContentPolicy(); });
-  MOZ_ASSERT(mCommonContentPolicy);
-  UniquePtr<SandboxBroker::Policy> policy(
-      new SandboxBroker::Policy(*mCommonContentPolicy));
-
-  const int level = GetEffectiveContentSandboxLevel();
-
   // Read any extra paths that will get write permissions,
   // configured by the user or distro
-  AddDynamicPathList(policy.get(),
-                     "security.sandbox.content.write_path_whitelist", rdwr);
+  AddDynamicPathList(policy, "security.sandbox.content.write_path_whitelist",
+                     rdwr);
 
   // Whitelisted for reading by the user/distro
-  AddDynamicPathList(policy.get(),
-                     "security.sandbox.content.read_path_whitelist", rdonly);
-
-  // No read blocking at level 2 and below.
-  // file:// processes also get global read permissions
-  // This requires accessing user preferences so we can only do it now.
-  // Our constructor is initialized before user preferences are read in.
-  if (level <= 2 || aFileProcess) {
-    policy->AddDir(rdonly, "/");
-    // Any other read-only rules will be removed as redundant by
-    // Policy::FixRecursivePermissions, so there's no need to
-    // early-return here.
-  }
-
-  // Bug 1198550: the profiler's replacement for dl_iterate_phdr
-  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/maps", aPid).get());
-
-  // Bug 1198552: memory reporting.
-  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/statm", aPid).get());
-  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/smaps", aPid).get());
-
-  // Bug 1384804, notably comment 15
-  // Used by libnuma, included by x265/ffmpeg, who falls back
-  // to get_mempolicy if this fails
-  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/status", aPid).get());
+  AddDynamicPathList(policy, "security.sandbox.content.read_path_whitelist",
+                     rdonly);
 
   // Add write permissions on the content process specific temporary dir.
   nsCOMPtr<nsIFile> tmpDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                       getter_AddRefs(tmpDir));
+  rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                              getter_AddRefs(tmpDir));
   if (NS_SUCCEEDED(rv)) {
     nsAutoCString tmpPath;
     rv = tmpDir->GetNativePath(tmpPath);
@@ -575,8 +529,7 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
   }
 
   // userContent.css and the extensions dir sit in the profile, which is
-  // normally blocked and we can't get the profile dir earlier in startup,
-  // so this must happen here.
+  // normally blocked.
   nsCOMPtr<nsIFile> profileDir;
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                               getter_AddRefs(profileDir));
@@ -606,6 +559,7 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
     }
   }
 
+  const int level = GetEffectiveContentSandboxLevel();
   bool allowPulse = false;
   bool allowAlsa = false;
   if (level < 4) {
@@ -624,8 +578,6 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
 
   if (allowPulse) {
     policy->AddDir(rdwrcr, "/dev/shm");
-  } else {
-    AddSharedMemoryPaths(policy.get(), aPid);
   }
 
 #ifdef MOZ_WIDGET_GTK
@@ -661,7 +613,54 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
     policy->AddDir(access, "/sys");
   }
 
-  // Return the common policy.
+  mCommonContentPolicy.reset(policy);
+}
+
+UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
+    int aPid, bool aFileProcess) {
+  // Policy entries that vary per-process (because they depend on the
+  // pid or content subtype) are added here.
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  const int level = GetEffectiveContentSandboxLevel();
+  // The file broker is used at level 2 and up.
+  if (level <= 1) {
+    return nullptr;
+  }
+
+  std::call_once(mContentInited, [this] { InitContentPolicy(); });
+  MOZ_ASSERT(mCommonContentPolicy);
+  UniquePtr<SandboxBroker::Policy> policy(
+      new SandboxBroker::Policy(*mCommonContentPolicy));
+
+  // No read blocking at level 2 and below.
+  // file:// processes also get global read permissions
+  if (level <= 2 || aFileProcess) {
+    policy->AddDir(rdonly, "/");
+    // Any other read-only rules will be removed as redundant by
+    // Policy::FixRecursivePermissions, so there's no need to
+    // early-return here.
+  }
+
+  // Access to /dev/shm is restricted to a per-process prefix to
+  // prevent interfering with other processes or with services outside
+  // the browser (e.g., PulseAudio).
+  AddSharedMemoryPaths(policy.get(), aPid);
+
+  // Bug 1198550: the profiler's replacement for dl_iterate_phdr
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/maps", aPid).get());
+
+  // Bug 1198552: memory reporting.
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/statm", aPid).get());
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/smaps", aPid).get());
+
+  // Bug 1384804, notably comment 15
+  // Used by libnuma, included by x265/ffmpeg, who falls back
+  // to get_mempolicy if this fails
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/status", aPid).get());
+
+  // Finalize the policy.
   policy->FixRecursivePermissions();
   return policy;
 }
