@@ -23,6 +23,7 @@ sequence.push(1);
 
 p.then(function() {
   sequence.push(3);
+  assert.sameValue(sequence.length, 3);
   checkSequence(sequence, "Should be second");
 }).catch($DONE);
 
@@ -30,10 +31,12 @@ Promise.resolve().then(function() {
   // enqueue another then-handler
   p.then(function() {
     sequence.push(4);
-    checkSequence(sequence, "Should be third");
+    assert.sameValue(sequence.length, 4);
+  checkSequence(sequence, "Should be third");
   }).then($DONE, $DONE);
 
   sequence.push(2);
+  assert.sameValue(sequence.length, 2);
   checkSequence(sequence, "Should be first");
 
   pResolve();

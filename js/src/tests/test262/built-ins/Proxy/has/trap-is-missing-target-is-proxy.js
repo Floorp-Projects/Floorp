@@ -29,7 +29,7 @@ assert("lastIndex" in Object.create(regExpProxy));
 var functionTarget = new Proxy(function() {}, {});
 var functionProxy = new Proxy(functionTarget, {});
 
-assert("__proto__" in functionProxy);
+assert("name" in functionProxy);
 assert("length" in Object.create(functionProxy));
 
 reportCompare(0, 0);

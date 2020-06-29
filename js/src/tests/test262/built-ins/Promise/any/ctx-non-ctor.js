@@ -22,28 +22,4 @@ assert.throws(TypeError, function() {
   Promise.any.call(eval);
 });
 
-assert.throws(TypeError, function() {
-  Promise.any.call(undefined, []);
-});
-
-assert.throws(TypeError, function() {
-  Promise.any.call(null, []);
-});
-
-assert.throws(TypeError, function() {
-  Promise.any.call(86, []);
-});
-
-assert.throws(TypeError, function() {
-  Promise.any.call('string', []);
-});
-
-assert.throws(TypeError, function() {
-  Promise.any.call(true, []);
-});
-
-assert.throws(TypeError, function() {
-  Promise.any.call(Symbol(), []);
-});
-
 reportCompare(0, 0);
