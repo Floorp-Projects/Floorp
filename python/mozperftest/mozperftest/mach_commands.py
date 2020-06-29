@@ -130,6 +130,8 @@ class PerftestTests(MachCommandBase):
         except ImportError:
             pydeps = Path(self.topsrcdir, "third_party", "python")
             vendors = ["coverage"]
+            if not ON_TRY:
+                vendors.append("attrs")
             if skip_linters:
                 pypis = []
             else:

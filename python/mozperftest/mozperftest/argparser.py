@@ -18,6 +18,7 @@ except ImportError:
 from mozperftest.system import get_layers as system_layers  # noqa
 from mozperftest.test import get_layers as test_layers  # noqa
 from mozperftest.metrics import get_layers as metrics_layers  # noqa
+from mozperftest.utils import convert_day  # noqa
 
 FLAVORS = ["desktop-browser", "mobile-browser", "doc"]
 
@@ -72,10 +73,10 @@ class Options:
             "help": "Running the test on try",
         },
         "--test-date": {
-            "type": str,
-            "default": "yesterday",
+            "type": convert_day,
+            "default": "today",
             "help": "Used in multi-commit testing, it specifies the day to get test builds from. "
-            "Must follow the format `YYYY.MM.DD`.",
+            "Must follow the format `YYYY.MM.DD` or be `today` or `yesterday`.",
         },
     }
 

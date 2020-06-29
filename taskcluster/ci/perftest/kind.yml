@@ -66,6 +66,7 @@ jobs:
         platform: android-hw-g5-7-0-arm7-api-16/opt
         attributes:
             cron: true
+            batch: true
         run:
             command: >-
                 mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
@@ -96,6 +97,7 @@ jobs:
         platform: android-hw-p2-8-0-android-aarch64/opt
         attributes:
             cron: true
+            batch: true
         run:
             command: >-
                 mkdir -p $MOZ_FETCHES_DIR/../artifacts &&

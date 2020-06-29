@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 from pathlib import Path
 import shutil
+from datetime import date, timedelta
 
 from mozperftest.utils import (
     host_platform,
@@ -16,6 +17,7 @@ from mozperftest.utils import (
     install_package,
     build_test_list,
     get_multi_tasks_url,
+    convert_day,
 )
 from mozperftest.tests.support import temp_file, requests_content, EXAMPLE_TESTS_DIR
 
@@ -86,6 +88,17 @@ def test_build_test_list():
         assert len(files) == 2
     finally:
         shutil.rmtree(tmp_dir)
+
+
+def test_convert_day():
+    day = "2020.06.08"
+    assert convert_day(day) == day
+    with pytest.raises(ValueError):
+        convert_day("2020-06-08")
+    today = date.today()
+    assert convert_day("today"), today.strftime("%Y.%m.%d")
+    yesterday = today - timedelta(days=1)
+    assert convert_day("yesterday") == yesterday.strftime("%Y.%m.%d")
 
 
 def test_multibuild_url():
