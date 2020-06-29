@@ -145,8 +145,10 @@
       testValue("range", "6", 6, 0, 10, 1);
 
       // Test that elements which should not expose values do not
-      var accSeparator = getAccessible("separator", [nsIAccessibleValue], null, DONOTFAIL_IF_NO_INTERFACE);
-      ok(!accSeparator, "value interface is not exposed for separator");
+      let separatorVal = getAccessible("separator", [nsIAccessibleValue], null, DONOTFAIL_IF_NO_INTERFACE);
+      ok(!separatorVal, "value interface is not exposed for separator");
+      let separatorAcc = getAccessible("separator");
+      ok(!separatorAcc.value, "Value text is not exposed for separator");
 
       // Test value change events
       gQueue = new eventQueue();
