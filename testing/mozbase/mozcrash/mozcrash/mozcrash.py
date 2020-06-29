@@ -10,13 +10,12 @@ import os
 import re
 import shutil
 import signal
+import six
 import subprocess
 import sys
 import tempfile
 import zipfile
 from collections import namedtuple
-from six import string_types, text_type
-from six.moves.urllib.request import urlopen
 
 import mozfile
 import mozinfo
@@ -224,7 +223,7 @@ class CrashInfo(object):
             self.remove_symbols = True
             self.logger.info("Downloading symbols from: %s" % self.symbols_path)
             # Get the symbols and write them to a temporary zipfile
-            data = urlopen(self.symbols_path)
+            data = six.moves.urllib.request.urlopen(self.symbols_path)
             with tempfile.TemporaryFile() as symbols_file:
                 symbols_file.write(data.read())
                 # extract symbols to a temporary directory (which we'll delete after
@@ -307,6 +306,9 @@ class CrashInfo(object):
             )
             (out, err) = p.communicate()
             retcode = p.returncode
+            if six.PY3:
+                out = six.ensure_str(out)
+                err = six.ensure_str(err)
 
             if len(out) > 3:
                 # minidump_stackwalk is chatty,
@@ -510,7 +512,7 @@ if mozinfo.isWin:
                 log.error(u"minidumpwriter not found in {}".format(utility_path))
                 return
 
-            if isinstance(file_name, string_types):
+            if isinstance(file_name, six.string_types):
                 # Convert to a byte string before sending to the shell.
                 file_name = file_name.encode(sys.getfilesystemencoding())
 
@@ -528,10 +530,10 @@ if mozinfo.isWin:
             log.warning("unable to get handle for pid %d: %d" % (pid, err))
             return
 
-        if not isinstance(file_name, text_type):
+        if not isinstance(file_name, six.text_type):
             # Convert to unicode explicitly so our path will be valid as input
             # to CreateFileW
-            file_name = text_type(file_name, sys.getfilesystemencoding())
+            file_name = six.text_type(file_name, sys.getfilesystemencoding())
 
         file_handle = kernel32.CreateFileW(file_name,
                                            GENERIC_READ | GENERIC_WRITE,
