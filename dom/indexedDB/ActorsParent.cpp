@@ -13861,18 +13861,18 @@ SafeRefPtr<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
 
   const InputStreamParams& inputStreamParams = ipcStream.stream();
   if (inputStreamParams.type() !=
-      InputStreamParams::TIPCBlobInputStreamParams) {
+      InputStreamParams::TRemoteLazyInputStreamParams) {
     return nullptr;
   }
 
-  const IPCBlobInputStreamParams& ipcBlobInputStreamParams =
-      inputStreamParams.get_IPCBlobInputStreamParams();
+  const RemoteLazyInputStreamParams& ipcBlobInputStreamParams =
+      inputStreamParams.get_RemoteLazyInputStreamParams();
   if (ipcBlobInputStreamParams.type() !=
-      IPCBlobInputStreamParams::TIPCBlobInputStreamRef) {
+      RemoteLazyInputStreamParams::TRemoteLazyInputStreamRef) {
     return nullptr;
   }
 
-  const nsID& id = ipcBlobInputStreamParams.get_IPCBlobInputStreamRef().id();
+  const nsID& id = ipcBlobInputStreamParams.get_RemoteLazyInputStreamRef().id();
 
   RefPtr<FileInfo> fileInfo;
   if (!mMappedBlobs.Get(id, getter_AddRefs(fileInfo))) {
