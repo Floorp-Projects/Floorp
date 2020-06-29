@@ -133,9 +133,6 @@ interface nsISHEntry : nsISupports
     /** Should the layoutHistoryState be saved? */
     [infallible] attribute boolean saveLayoutStateFlag;
 
-    /** Has the page already expired in cache? */
-    [infallible] attribute boolean expirationStatus;
-
     /**
      * attribute to indicate the content-type of the document that this
      * is a session history entry for

@@ -326,18 +326,6 @@ nsSHEntry::SetCacheKey(uint32_t aCacheKey) {
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetExpirationStatus(bool* aFlag) {
-  *aFlag = mShared->mExpired;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::SetExpirationStatus(bool aFlag) {
-  mShared->mExpired = aFlag;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSHEntry::GetContentType(nsACString& aContentType) {
   aContentType = mShared->mContentType;
   return NS_OK;
