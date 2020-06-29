@@ -144,12 +144,12 @@ class BackgroundParentImpl : public PBackgroundParent,
   virtual already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent()
       override;
 
-  virtual already_AddRefed<PIPCBlobInputStreamParent>
-  AllocPIPCBlobInputStreamParent(const nsID& aID,
-                                 const uint64_t& aSize) override;
+  virtual already_AddRefed<PRemoteLazyInputStreamParent>
+  AllocPRemoteLazyInputStreamParent(const nsID& aID,
+                                    const uint64_t& aSize) override;
 
-  virtual mozilla::ipc::IPCResult RecvPIPCBlobInputStreamConstructor(
-      PIPCBlobInputStreamParent* aActor, const nsID& aID,
+  virtual mozilla::ipc::IPCResult RecvPRemoteLazyInputStreamConstructor(
+      PRemoteLazyInputStreamParent* aActor, const nsID& aID,
       const uint64_t& aSize) override;
 
   virtual PTemporaryIPCBlobParent* AllocPTemporaryIPCBlobParent() override;
