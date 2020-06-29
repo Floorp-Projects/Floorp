@@ -7,7 +7,6 @@
 #include "IPCBlobInputStream.h"
 #include "IPCBlobInputStreamChild.h"
 #include "IPCBlobInputStreamParent.h"
-#include "IPCBlobInputStreamStorage.h"
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/SlicedInputStream.h"
@@ -19,6 +18,7 @@
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
+#include "RemoteLazyInputStreamStorage.h"
 
 namespace mozilla {
 
@@ -142,8 +142,8 @@ IPCBlobInputStream::IPCBlobInputStream(IPCBlobInputStreamChild* aActor)
 
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIInputStream> stream;
-    IPCBlobInputStreamStorage::Get()->GetStream(mActor->ID(), 0, mLength,
-                                                getter_AddRefs(stream));
+    RemoteLazyInputStreamStorage::Get()->GetStream(mActor->ID(), 0, mLength,
+                                                   getter_AddRefs(stream));
     if (stream) {
       mState = eRunning;
       mRemoteStream = stream;

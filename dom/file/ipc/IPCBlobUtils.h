@@ -97,7 +97,7 @@
  * The UUID is useful when the content process sends the same nsIInputStream
  * back to the parent process because, the only information it has to share is
  * the UUID. Each nsIInputStream sent via PIPCBlobInputStream, is registered
- * into the IPCBlobInputStreamStorage.
+ * into the RemoteLazyInputStreamStorage.
  *
  * On the content process side, IPCBlobInputStream is a special inputStream:
  * the only reliable methods are:
@@ -116,7 +116,7 @@
  *
  * When the parent receives the serialization of a IPCBlobInputStream, it is
  * able to retrieve the correct nsIInputStream using the UUID and
- * IPCBlobInputStreamStorage.
+ * RemoteLazyInputStreamStorage.
  *
  * Parent to Child Streams, FileReader and BlobURL
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,9 +128,9 @@
  * nsIAsyncInputStream stream. This happens calling
  * IPCBlobInputStream.asyncWait(). At that point, the child actor will send a
  * StreamNeeded() IPC message to the parent side. When this is received, the
- * parent retrieves the 'real' stream from IPCBlobInputStreamStorage using the
- * UUID, it will serialize the 'real' stream, and it will send it to the child
- * side.
+ * parent retrieves the 'real' stream from RemoteLazyInputStreamStorage using
+ * the UUID, it will serialize the 'real' stream, and it will send it to the
+ * child side.
  *
  * When the 'real' stream is received (RecvStreamReady()), the asyncWait
  * callback will be executed and, from that moment, any IPCBlobInputStream
@@ -171,14 +171,14 @@
  *    onto the new actor.
  * 3. IPCBlobInputStreamParent::Recv__delete__ is called on the parent side and
  *    the parent actor is deleted. Doing this we don't remove the UUID from
- *    IPCBlobInputStreamStorage.
+ *    RemoteLazyInputStreamStorage.
  * 4. The IPCBlobInputStream constructor is sent with the new
  *    IPCBlobInputStreamChild actor, with the DOM-File thread's PBackground as
  *    its manager.
  * 5. When the new IPCBlobInputStreamParent actor is created, it will receive
  *    the same UUID of the previous parent actor. The nsIInputStream will be
- *    retrieved from IPCBlobInputStreamStorage.
- * 6. In order to avoid leaks, IPCBlobInputStreamStorage will monitor child
+ *    retrieved from RemoteLazyInputStreamStorage.
+ * 6. In order to avoid leaks, RemoteLazyInputStreamStorage will monitor child
  *    processes and in case one of them dies, it will release the
  *    nsIInputStream objects belonging to that process.
  *
