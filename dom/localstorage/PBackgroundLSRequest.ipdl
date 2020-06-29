@@ -93,7 +93,8 @@ child:
    * Cancel() would be received by the parent after it had already sent
    * __delete__.  (Which may no longer be fatal thanks to improvements to the
    * IPC layer, but it would still lead to warnings, etc.  And we don't
-   * expect PBackground to be highly contended nor the DOM File thread.)
+   * expect PBackground to be highly contended nor the RemoteLazyInputStream
+   * thread.)
    */
   async Ready();
 };
