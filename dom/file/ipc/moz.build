@@ -29,11 +29,11 @@ UNIFIED_SOURCES += [
     'FileCreatorChild.cpp',
     'FileCreatorParent.cpp',
     'IPCBlobInputStream.cpp',
-    'IPCBlobInputStreamThread.cpp',
     'IPCBlobUtils.cpp',
     'RemoteLazyInputStreamChild.cpp',
     'RemoteLazyInputStreamParent.cpp',
     'RemoteLazyInputStreamStorage.cpp',
+    'RemoteLazyInputStreamThread.cpp',
     'TemporaryIPCBlobChild.cpp',
     'TemporaryIPCBlobParent.cpp',
 ]

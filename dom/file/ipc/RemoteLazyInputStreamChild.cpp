@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemoteLazyInputStreamChild.h"
-#include "IPCBlobInputStreamThread.h"
+#include "RemoteLazyInputStreamThread.h"
 
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -205,14 +205,14 @@ RemoteLazyInputStreamChild::CreateStream() {
     // The stream is active but maybe it is not running in the DOM-File thread.
     // We should migrate it there.
     if (mState == eActive &&
-        !IPCBlobInputStreamThread::IsOnFileEventTarget(mOwningEventTarget)) {
+        !RemoteLazyInputStreamThread::IsOnFileEventTarget(mOwningEventTarget)) {
       MOZ_ASSERT(mStreams.IsEmpty());
 
       shouldMigrate = true;
       mState = eActiveMigrating;
 
-      RefPtr<IPCBlobInputStreamThread> thread =
-          IPCBlobInputStreamThread::GetOrCreate();
+      RefPtr<RemoteLazyInputStreamThread> thread =
+          RemoteLazyInputStreamThread::GetOrCreate();
       MOZ_ASSERT(thread, "We cannot continue without DOMFile thread.");
 
       // Create a new actor object to connect to the target thread.
@@ -412,7 +412,8 @@ void RemoteLazyInputStreamChild::Migrated() {
   mWorkerRef = nullptr;
 
   mOwningEventTarget = GetCurrentSerialEventTarget();
-  MOZ_ASSERT(IPCBlobInputStreamThread::IsOnFileEventTarget(mOwningEventTarget));
+  MOZ_ASSERT(
+      RemoteLazyInputStreamThread::IsOnFileEventTarget(mOwningEventTarget));
 
   // Maybe we have no reasons to keep this actor alive.
   if (mStreams.IsEmpty()) {
