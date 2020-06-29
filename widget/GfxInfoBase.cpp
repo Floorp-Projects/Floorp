@@ -1626,6 +1626,9 @@ void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
   gfx::FeatureState& wrCompositor = gfxConfig::GetFeature(gfx::Feature::WEBRENDER_COMPOSITOR);
   InitFeatureObject(aCx, aObj, "wrCompositor", wrCompositor, &obj);
 
+  gfx::FeatureState& openglCompositing = gfxConfig::GetFeature(gfx::Feature::OPENGL_COMPOSITING);
+  InitFeatureObject(aCx, aObj, "openglCompositing", openglCompositing, &obj);
+
   // Only include AL if the platform attempted to use it.
   gfx::FeatureState& advancedLayers =
       gfxConfig::GetFeature(gfx::Feature::ADVANCED_LAYERS);
