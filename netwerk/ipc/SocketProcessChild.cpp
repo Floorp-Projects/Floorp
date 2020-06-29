@@ -464,9 +464,9 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvNotifyObserver(
   return IPC_OK();
 }
 
-already_AddRefed<dom::PIPCBlobInputStreamChild>
-SocketProcessChild::AllocPIPCBlobInputStreamChild(const nsID& aID,
-                                                  const uint64_t& aSize) {
+already_AddRefed<dom::PRemoteLazyInputStreamChild>
+SocketProcessChild::AllocPRemoteLazyInputStreamChild(const nsID& aID,
+                                                     const uint64_t& aSize) {
   RefPtr<dom::IPCBlobInputStreamChild> actor =
       new dom::IPCBlobInputStreamChild(aID, aSize);
   return actor.forget();

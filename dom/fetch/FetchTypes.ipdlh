@@ -6,7 +6,7 @@ include IPCStream;
 include ChannelInfo;
 include PBackgroundSharedTypes;
 
-include protocol PIPCBlobInputStream;
+include protocol PRemoteLazyInputStream;
 
 using HeadersGuardEnum from "mozilla/dom/FetchIPCTypes.h";
 using ReferrerPolicy from "mozilla/dom/FetchIPCTypes.h";
@@ -31,7 +31,7 @@ struct ParentToParentStream {
 };
 
 struct ParentToChildStream {
-  PIPCBlobInputStream actor;
+  PRemoteLazyInputStream actor;
 };
 
 struct ChildToParentStream {

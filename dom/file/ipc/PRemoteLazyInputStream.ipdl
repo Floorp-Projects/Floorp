@@ -14,7 +14,7 @@ include IPCStream;
 namespace mozilla {
 namespace dom {
 
-refcounted protocol PIPCBlobInputStream
+refcounted protocol PRemoteLazyInputStream
 {
   manager PBackground or PContent or PSocketProcess;
 
