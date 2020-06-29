@@ -67,11 +67,10 @@ if CONFIG['OS_TARGET'] == 'Android':
     # default to user readable only to fit Android security model
     DEFINES['SQLITE_DEFAULT_FILE_PERMISSIONS'] = '0600'
 
-# Force using malloc_usable_size when building with jemalloc because _msize
-# causes assertions on Win64. See bug 719579.
-if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_MEMORY']:
-    DEFINES['HAVE_MALLOC_USABLE_SIZE'] = True
-    DEFINES['SQLITE_WITHOUT_MSIZE'] = True
+# Force using _msize on mingw, as sqlite3 only enables it with MSVC.
+if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CC_TYPE'] != 'clang-cl':
+    DEFINES['SQLITE_USE_MALLOC_H'] = True
+    DEFINES['SQLITE_USE_MSIZE'] = True
 
 # Omit unused functions to save some library footprint.
 DEFINES['SQLITE_OMIT_DEPRECATED'] = True
