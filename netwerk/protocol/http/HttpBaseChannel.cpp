@@ -82,7 +82,7 @@
 #include "nsThreadUtils.h"
 #include "nsURLHelper.h"
 #include "mozilla/dom/IPCBlobUtils.h"
-#include "mozilla/dom/IPCBlobInputStreamChild.h"
+#include "mozilla/dom/RemoteLazyInputStreamChild.h"
 
 namespace mozilla {
 namespace net {
@@ -3680,8 +3680,8 @@ HttpBaseChannel::ReplacementChannelConfig::ReplacementChannelConfig(
   method = aInit.method();
   referrerInfo = aInit.referrerInfo();
   timedChannel = aInit.timedChannel();
-  if (dom::IPCBlobInputStreamChild* actor =
-          static_cast<dom::IPCBlobInputStreamChild*>(
+  if (dom::RemoteLazyInputStreamChild* actor =
+          static_cast<dom::RemoteLazyInputStreamChild*>(
               aInit.uploadStreamChild())) {
     uploadStreamLength = actor->Size();
     uploadStream = actor->CreateStream();

@@ -62,7 +62,6 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBTransactionParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsParent.h"
-#include "mozilla/dom/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
@@ -71,6 +70,7 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/UsageInfo.h"
+#include "mozilla/dom/RemoteLazyInputStreamParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/InputStreamParams.h"
@@ -6053,7 +6053,7 @@ class Database::StartTransactionOp final
 };
 
 class Database::UnmapBlobCallback final
-    : public IPCBlobInputStreamParentCallback {
+    : public RemoteLazyInputStreamParentCallback {
   SafeRefPtr<Database> mDatabase;
 
  public:
@@ -13799,8 +13799,9 @@ void Database::MapBlob(const IPCBlob& aIPCBlob,
   const IPCBlobStream& stream = aIPCBlob.inputStream();
   MOZ_ASSERT(stream.type() == IPCBlobStream::TPRemoteLazyInputStreamParent);
 
-  IPCBlobInputStreamParent* actor = static_cast<IPCBlobInputStreamParent*>(
-      stream.get_PRemoteLazyInputStreamParent());
+  RemoteLazyInputStreamParent* actor =
+      static_cast<RemoteLazyInputStreamParent*>(
+          stream.get_PRemoteLazyInputStreamParent());
 
   MOZ_ASSERT(!mMappedBlobs.GetWeak(actor->ID()));
   mMappedBlobs.Put(actor->ID(), AsRefPtr(std::move(aFileInfo)));

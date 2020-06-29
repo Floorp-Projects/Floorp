@@ -10,8 +10,8 @@
 #include "CachePushChecker.h"
 #include "HttpTransactionParent.h"
 #include "SocketProcessHost.h"
-#include "mozilla/dom/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/MemoryReportRequest.h"
+#include "mozilla/dom/RemoteLazyInputStreamParent.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
@@ -391,8 +391,8 @@ void SocketProcessParent::Destroy(UniquePtr<SocketProcessParent>&& aParent) {
 already_AddRefed<dom::PRemoteLazyInputStreamParent>
 SocketProcessParent::AllocPRemoteLazyInputStreamParent(const nsID& aID,
                                                        const uint64_t& aSize) {
-  RefPtr<dom::IPCBlobInputStreamParent> actor =
-      dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
+  RefPtr<dom::RemoteLazyInputStreamParent> actor =
+      dom::RemoteLazyInputStreamParent::Create(aID, aSize, this);
   return actor.forget();
 }
 
@@ -400,7 +400,8 @@ mozilla::ipc::IPCResult
 SocketProcessParent::RecvPRemoteLazyInputStreamConstructor(
     dom::PRemoteLazyInputStreamParent* aActor, const nsID& aID,
     const uint64_t& aSize) {
-  if (!static_cast<dom::IPCBlobInputStreamParent*>(aActor)->HasValidStream()) {
+  if (!static_cast<dom::RemoteLazyInputStreamParent*>(aActor)
+           ->HasValidStream()) {
     return IPC_FAIL_NO_REASON(this);
   }
 

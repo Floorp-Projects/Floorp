@@ -25,7 +25,6 @@
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/EndpointForReportChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
-#include "mozilla/dom/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/PMediaTransportChild.h"
 #include "mozilla/dom/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/cache/ActorUtils.h"
@@ -33,6 +32,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
+#include "mozilla/dom/RemoteLazyInputStreamChild.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerControllerChild.h"
 #include "mozilla/dom/RemoteWorkerServiceChild.h"
@@ -386,8 +386,8 @@ bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
 already_AddRefed<dom::PRemoteLazyInputStreamChild>
 BackgroundChildImpl::AllocPRemoteLazyInputStreamChild(const nsID& aID,
                                                       const uint64_t& aSize) {
-  RefPtr<dom::IPCBlobInputStreamChild> actor =
-      new dom::IPCBlobInputStreamChild(aID, aSize);
+  RefPtr<dom::RemoteLazyInputStreamChild> actor =
+      new dom::RemoteLazyInputStreamChild(aID, aSize);
   return actor.forget();
 }
 

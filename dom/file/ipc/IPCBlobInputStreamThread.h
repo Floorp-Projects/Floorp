@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_IPCBlobInputStreamThread_h
 #define mozilla_dom_IPCBlobInputStreamThread_h
 
-#include "mozilla/dom/IPCBlobInputStreamChild.h"
+#include "mozilla/dom/RemoteLazyInputStreamChild.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
@@ -17,7 +17,7 @@ class nsIThread;
 namespace mozilla {
 namespace dom {
 
-class IPCBlobInputStreamChild;
+class RemoteLazyInputStreamChild;
 
 class IPCBlobInputStreamThread final : public nsIObserver,
                                        public nsIEventTarget {
@@ -32,7 +32,7 @@ class IPCBlobInputStreamThread final : public nsIObserver,
 
   static IPCBlobInputStreamThread* GetOrCreate();
 
-  void MigrateActor(IPCBlobInputStreamChild* aActor);
+  void MigrateActor(RemoteLazyInputStreamChild* aActor);
 
   bool Initialize();
 
@@ -41,13 +41,13 @@ class IPCBlobInputStreamThread final : public nsIObserver,
  private:
   ~IPCBlobInputStreamThread() = default;
 
-  void MigrateActorInternal(IPCBlobInputStreamChild* aActor);
+  void MigrateActorInternal(RemoteLazyInputStreamChild* aActor);
 
   nsCOMPtr<nsIThread> mThread;
 
   // This is populated if MigrateActor() is called before the initialization of
   // the thread.
-  nsTArray<RefPtr<IPCBlobInputStreamChild>> mPendingActors;
+  nsTArray<RefPtr<RemoteLazyInputStreamChild>> mPendingActors;
 };
 
 bool IsOnDOMFileThread();

@@ -19,7 +19,7 @@
 namespace mozilla {
 namespace dom {
 
-class IPCBlobInputStreamChild;
+class RemoteLazyInputStreamChild;
 
 #define IPCBLOBINPUTSTREAM_IID                       \
   {                                                  \
@@ -49,7 +49,7 @@ class IPCBlobInputStream final : public nsIAsyncInputStream,
   NS_DECL_NSIINPUTSTREAMLENGTH
   NS_DECL_NSIASYNCINPUTSTREAMLENGTH
 
-  explicit IPCBlobInputStream(IPCBlobInputStreamChild* aActor);
+  explicit IPCBlobInputStream(RemoteLazyInputStreamChild* aActor);
 
   void StreamReady(already_AddRefed<nsIInputStream> aInputStream);
 
@@ -76,7 +76,7 @@ class IPCBlobInputStream final : public nsIAsyncInputStream,
   void InitWithExistingRange(uint64_t aStart, uint64_t aLength,
                              const MutexAutoLock& aProofOfLock);
 
-  RefPtr<IPCBlobInputStreamChild> mActor;
+  RefPtr<RemoteLazyInputStreamChild> mActor;
 
   // This is the list of possible states.
   enum {
