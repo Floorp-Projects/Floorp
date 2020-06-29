@@ -18,6 +18,7 @@ import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.metrics.AppAllSourceStartTelemetry
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.Settings
@@ -80,6 +81,8 @@ class Components(private val context: Context) {
             AddonCollectionProvider(context, core.client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
         }
     }
+
+    val appAllSourceStartTelemetry by lazy { AppAllSourceStartTelemetry(analytics.metrics) }
 
     @Suppress("MagicNumber")
     val addonUpdater by lazy {

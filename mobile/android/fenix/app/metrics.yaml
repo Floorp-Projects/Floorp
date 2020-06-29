@@ -8,6 +8,36 @@ no_lint:
   - CATEGORY_GENERIC
 
 events:
+  app_opened_all_startup:
+    type: event
+    description: |
+      A user opened the app to the HomeActivity. The HomeActivity
+      encompasses the home screen, browser screen, settings screen,
+      collections and other screens in the nav_graph.
+      This differs from the app_opened probe because it measures all
+      startups, not just cold startup. Note: There is a short gap
+      between the time application goes into background and the time
+      android reports the application going into the background.
+      Note: This metric does not cover the following cases:
+      Case # 1 -> a). open a link(for example, gmail) with in-app
+      Browser (metric report custom_tab startup) b). press home button
+      c). open gmail again (which brings us back to in app browser).
+      Step c will not report startup metric. Case # 2 -> a). open fenix
+      b). press home button c). launch fenix through app switcher/recent
+      apps. step c will not report startup type.
+    extra_keys:
+      source:
+        description: |
+          The method used to open Fenix. Possible values are `app_icon`,
+          `custom_tab`, `link` or `unknown`
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11830
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/12114#pullrequestreview-445245341
+    notification_emails:
+      - esmyth@mozilla.com
+      - perf-android-fe@mozilla.com
+    expires: "2020-12-01"
   app_received_intent:
     type: event
     description: |

@@ -41,9 +41,13 @@ open class ExternalAppBrowserActivity : HomeActivity() {
 
     final override fun getIntentSource(intent: SafeIntent) = Event.OpenedApp.Source.CUSTOM_TAB
 
-    final override fun getIntentAllSource(intent: SafeIntent) = Event.AppRecievedIntent.Source.CUSTOM_TAB
+    final override fun getIntentAllSource(intent: SafeIntent) = Event.AppReceivedIntent.Source.CUSTOM_TAB
 
     final override fun getIntentSessionId(intent: SafeIntent) = intent.getSessionId()
+
+    override fun setAppAllStartTelemetry(safeIntent: SafeIntent) {
+        components.appAllSourceStartTelemetry.receivedIntentInExternalAppBrowserActivity(safeIntent)
+    }
 
     override fun getNavDirections(
         from: BrowserDirection,

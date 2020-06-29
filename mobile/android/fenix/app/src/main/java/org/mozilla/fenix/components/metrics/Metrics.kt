@@ -312,11 +312,19 @@ sealed class Event {
             get() = hashMapOf(Events.appOpenedKeys.source to source.name)
     }
 
-    data class AppRecievedIntent(val source: Source) : Event() {
+    data class AppReceivedIntent(val source: Source) : Event() {
+
         enum class Source { APP_ICON, LINK, CUSTOM_TAB, UNKNOWN }
 
-        override val extras: Map<Events.appReceivedIntentKeys, String>?
-            get() = hashMapOf(Events.appReceivedIntentKeys.source to source.name)
+        override val extras: Map<Events.appOpenedAllStartupKeys, String>?
+            get() = hashMapOf(Events.appOpenedAllStartupKeys.source to source.name)
+    }
+
+    data class AppOpenedAllSourceStartup(val source: Source) : Event() {
+        enum class Source { APP_ICON, LINK, CUSTOM_TAB, UNKNOWN }
+
+        override val extras: Map<Events.appOpenedAllStartupKeys, String>?
+            get() = hashMapOf(Events.appOpenedAllStartupKeys.source to source.name)
     }
 
     data class CollectionSaveButtonPressed(val fromScreen: String) : Event() {
