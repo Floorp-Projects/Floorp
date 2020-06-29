@@ -622,7 +622,9 @@ class GeckoEngine(
                 }
             }
 
-        override var loginAutofillEnabled: Boolean = false
+        override var loginAutofillEnabled: Boolean
+            get() = runtime.settings.loginAutofillEnabled
+            set(value) { runtime.settings.loginAutofillEnabled = value }
 
         override var forceUserScalableContent: Boolean
             get() = runtime.settings.forceUserScalableEnabled
