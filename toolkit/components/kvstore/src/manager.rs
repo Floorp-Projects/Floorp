@@ -42,6 +42,18 @@ impl Manager {
         &*MANAGER
     }
 
+    ///  Clears the cache for entry at `path`
+    pub fn clear_cache<'p, P>(
+        &mut self,
+        path: P,
+    )
+    where
+        P: Into<&'p Path>,
+    {
+        let path = path.into();
+        self.environments.remove(path);
+    }
+
     /// Return the open env at `path`, or create it by calling `f`.
     pub fn get_or_create<'p, F, P>(
         &mut self,
