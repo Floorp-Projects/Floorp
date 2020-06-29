@@ -56,6 +56,9 @@ permalink: /changelog/
 * **feature-webnotifications**
   * `WebNotificationFeature` checks the site permissions first before showing a notification.
 
+* **feature-addons**
+  * Add `Addon.createdAtDate` and `Addon.updatedAtDate` extensions to get `Addon.createdAt` and `Addon.updatedAt` as a `Date`.
+
 # 47.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v46.0.0...v47.0.0)
