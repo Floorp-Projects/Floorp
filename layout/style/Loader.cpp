@@ -1266,7 +1266,6 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   }
 
   SheetLoadDataHashKey key(aLoadData);
-  mLoadsPerformed.PutEntry(key);
 
   auto preloadKey = PreloadHashKey::CreateAsStyle(aLoadData);
   bool coalescedLoad = false;
@@ -1528,6 +1527,7 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
 void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
   RecordUseCountersIfNeeded(mDocument, aData.mUseCounters.get());
   if (aData.mURI) {
+    mLoadsPerformed.PutEntry(SheetLoadDataHashKey(aData));
     aData.NotifyStop(aStatus);
     // NOTE(emilio): This needs to happen before notifying observers, as
     // FontFaceSet for example checks for pending sheet loads from the
