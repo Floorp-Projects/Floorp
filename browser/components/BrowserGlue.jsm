@@ -352,6 +352,19 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  EncryptedMedia: {
+    parent: {
+      moduleURI: "resource:///actors/EncryptedMediaParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource:///actors/EncryptedMediaChild.jsm",
+      observers: ["mediakeys-request"],
+    },
+
+    allFrames: true,
+  },
+
   FormValidation: {
     parent: {
       moduleURI: "resource:///actors/FormValidationParent.jsm",
