@@ -5,7 +5,6 @@
 import groovy.json.JsonSlurper
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.task
 import java.util.Properties
 
 open class GitHubPlugin : Plugin<Project> {
@@ -22,7 +21,7 @@ open class GitHubPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
 
-        project.task("openPR") {
+        project.tasks.register("openPR") {
 
             doLast {
                 init(project)
@@ -38,7 +37,7 @@ open class GitHubPlugin : Plugin<Project> {
             }
         }
 
-        project.task("openIssue") {
+        project.tasks.register("openIssue") {
 
             doLast {
                 init(project)
