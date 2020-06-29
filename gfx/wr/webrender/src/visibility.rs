@@ -21,7 +21,7 @@ use crate::frame_builder::FrameBuilderConfig;
 use crate::gpu_cache::GpuCache;
 use crate::internal_types::FastHashMap;
 use crate::picture::{PictureCompositeMode, ClusterFlags, SurfaceInfo, TileCacheInstance};
-use crate::picture::{PrimitiveList, SurfaceIndex, RetainedTiles, RasterConfig, SliceId};
+use crate::picture::{PrimitiveList, SurfaceIndex, RasterConfig, SliceId};
 use crate::prim_store::{ClipTaskIndex, PictureIndex, SpaceMapper, PrimitiveInstanceKind};
 use crate::prim_store::{SpaceSnapper, PrimitiveStore, PrimitiveInstance};
 use crate::prim_store::image::VisibleImageTile;
@@ -48,7 +48,6 @@ pub struct FrameVisibilityState<'a> {
     pub gpu_cache: &'a mut GpuCache,
     pub scratch: &'a mut ScratchBuffer,
     pub tile_cache: Option<Box<TileCacheInstance>>,
-    pub retained_tiles: &'a mut RetainedTiles,
     pub data_stores: &'a mut DataStores,
     pub clip_chain_stack: ClipChainStack,
     pub render_tasks: &'a mut RenderTaskGraph,
