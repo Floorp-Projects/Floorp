@@ -31,7 +31,6 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
-#include "mozilla/dom/RemoteLazyInputStreamChild.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerControllerChild.h"
 #include "mozilla/dom/RemoteWorkerServiceChild.h"
@@ -55,6 +54,7 @@
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/dom/MIDIPortChild.h"
 #include "mozilla/dom/MIDIManagerChild.h"
+#include "mozilla/RemoteLazyInputStreamChild.h"
 #include "nsID.h"
 #include "nsTraceRefcnt.h"
 
@@ -382,11 +382,11 @@ bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
   return true;
 }
 
-already_AddRefed<dom::PRemoteLazyInputStreamChild>
+already_AddRefed<PRemoteLazyInputStreamChild>
 BackgroundChildImpl::AllocPRemoteLazyInputStreamChild(const nsID& aID,
                                                       const uint64_t& aSize) {
-  RefPtr<dom::RemoteLazyInputStreamChild> actor =
-      new dom::RemoteLazyInputStreamChild(aID, aSize);
+  RefPtr<RemoteLazyInputStreamChild> actor =
+      new RemoteLazyInputStreamChild(aID, aSize);
   return actor.forget();
 }
 

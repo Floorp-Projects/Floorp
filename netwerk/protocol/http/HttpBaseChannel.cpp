@@ -81,8 +81,8 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsURLHelper.h"
-#include "mozilla/dom/RemoteLazyInputStreamChild.h"
-#include "mozilla/dom/RemoteLazyInputStreamUtils.h"
+#include "mozilla/RemoteLazyInputStreamChild.h"
+#include "mozilla/RemoteLazyInputStreamUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -3680,9 +3680,8 @@ HttpBaseChannel::ReplacementChannelConfig::ReplacementChannelConfig(
   method = aInit.method();
   referrerInfo = aInit.referrerInfo();
   timedChannel = aInit.timedChannel();
-  if (dom::RemoteLazyInputStreamChild* actor =
-          static_cast<dom::RemoteLazyInputStreamChild*>(
-              aInit.uploadStreamChild())) {
+  if (RemoteLazyInputStreamChild* actor =
+          static_cast<RemoteLazyInputStreamChild*>(aInit.uploadStreamChild())) {
     uploadStreamLength = actor->Size();
     uploadStream = actor->CreateStream();
     // actor can be deleted by CreateStream, so don't touch it
@@ -3706,8 +3705,8 @@ HttpBaseChannel::ReplacementChannelConfig::Serialize(
   config.referrerInfo() = referrerInfo;
   config.timedChannel() = timedChannel;
   if (uploadStream) {
-    dom::RemoteLazyStream ipdlStream;
-    dom::RemoteLazyInputStreamUtils::SerializeInputStream(
+    RemoteLazyStream ipdlStream;
+    RemoteLazyInputStreamUtils::SerializeInputStream(
         uploadStream, uploadStreamLength, ipdlStream, aParent);
     config.uploadStreamParent() = ipdlStream;
   }

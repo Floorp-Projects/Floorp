@@ -15,10 +15,6 @@
 
 namespace mozilla {
 
-using namespace ipc;
-
-namespace dom {
-
 namespace {
 
 StaticMutex gRemoteLazyThreadMutex;
@@ -31,7 +27,7 @@ class ThreadInitializeRunnable final : public Runnable {
 
   NS_IMETHOD
   Run() override {
-    mozilla::StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+    StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
     MOZ_ASSERT(gRemoteLazyThread);
     gRemoteLazyThread->InitializeOnMainThread();
     return NS_OK;
@@ -86,13 +82,13 @@ bool RemoteLazyInputStreamThread::IsOnFileEventTarget(
     return true;
   }
 
-  mozilla::StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
   return gRemoteLazyThread && aEventTarget == gRemoteLazyThread->mThread;
 }
 
 /* static */
 RemoteLazyInputStreamThread* RemoteLazyInputStreamThread::Get() {
-  mozilla::StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
 
   if (gShutdownHasStarted) {
     return nullptr;
@@ -103,7 +99,7 @@ RemoteLazyInputStreamThread* RemoteLazyInputStreamThread::Get() {
 
 /* static */
 RemoteLazyInputStreamThread* RemoteLazyInputStreamThread::GetOrCreate() {
-  mozilla::StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
 
   if (gShutdownHasStarted) {
     return nullptr;
@@ -166,7 +162,7 @@ RemoteLazyInputStreamThread::Observe(nsISupports* aSubject, const char* aTopic,
                                      const char16_t* aData) {
   MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID));
 
-  mozilla::StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
 
   if (mThread) {
     mThread->Shutdown();
@@ -183,7 +179,7 @@ void RemoteLazyInputStreamThread::MigrateActor(
     RemoteLazyInputStreamChild* aActor) {
   MOZ_ASSERT(aActor->State() == RemoteLazyInputStreamChild::eInactiveMigrating);
 
-  mozilla::StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
 
   if (gShutdownHasStarted) {
     return;
@@ -221,7 +217,7 @@ RemoteLazyInputStreamThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                                       uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
 
-  mozilla::StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
 
   if (gShutdownHasStarted) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -244,7 +240,7 @@ RemoteLazyInputStreamThread::DelayedDispatch(already_AddRefed<nsIRunnable>,
 }
 
 bool IsOnDOMFileThread() {
-  mozilla::StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
 
   MOZ_ASSERT(!gShutdownHasStarted);
   MOZ_ASSERT(gRemoteLazyThread);
@@ -254,5 +250,4 @@ bool IsOnDOMFileThread() {
 
 void AssertIsOnDOMFileThread() { MOZ_ASSERT(IsOnDOMFileThread()); }
 
-}  // namespace dom
 }  // namespace mozilla
