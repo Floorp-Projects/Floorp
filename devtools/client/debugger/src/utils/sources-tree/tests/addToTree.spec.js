@@ -165,7 +165,7 @@ describe("sources-tree", () => {
       expect(formatTree(tree)).toMatchSnapshot();
     });
 
-    it("name does not include query params", () => {
+    it("name does include query params", () => {
       const sourceName = "name.js?bar=3";
 
       const source1 = makeMockDisplaySource(

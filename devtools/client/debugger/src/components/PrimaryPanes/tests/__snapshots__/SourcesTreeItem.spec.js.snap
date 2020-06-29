@@ -33,7 +33,6 @@ Object {
       className="label"
     >
       one.js
-       
     </span>
   </div>,
   "defaultState": null,
@@ -182,7 +181,6 @@ Object {
             className="label"
           >
             one.js
-             
           </span>
         </div>,
         "_rendering": false,
@@ -273,7 +271,6 @@ Object {
       className="label"
     >
       one.js
-       
       <span
         className="suffix"
       >
@@ -431,7 +428,6 @@ Object {
             className="label"
           >
             one.js
-             
             <span
               className="suffix"
             >
@@ -529,7 +525,6 @@ Object {
       className="label"
     >
       root
-       
     </span>
   </div>,
   "defaultState": null,
@@ -682,7 +677,6 @@ Object {
             className="label"
           >
             root
-             
           </span>
         </div>,
         "_rendering": false,
@@ -761,7 +755,6 @@ Object {
       className="label"
     >
       http://mdn.com
-       
     </span>
   </div>,
   "defaultState": null,
@@ -878,7 +871,6 @@ Object {
             className="label"
           >
             http://mdn.com
-             
           </span>
         </div>,
         "_rendering": false,
@@ -946,7 +938,6 @@ Object {
       className="label"
     >
       http://mdn.com
-       
     </span>
   </div>,
   "defaultState": null,
@@ -1065,7 +1056,6 @@ Object {
             className="label"
           >
             http://mdn.com
-             
           </span>
         </div>,
         "_rendering": false,
@@ -1134,7 +1124,6 @@ Object {
       className="label"
     >
       folder
-       
     </span>
   </div>,
   "defaultState": null,
@@ -1229,7 +1218,6 @@ Object {
             className="label"
           >
             folder
-             
           </span>
         </div>,
         "_rendering": false,
@@ -1287,7 +1275,6 @@ Object {
       className="label"
     >
       Angular
-       
     </span>
   </div>,
   "defaultState": null,
@@ -1402,7 +1389,6 @@ Object {
             className="label"
           >
             Angular
-             
           </span>
         </div>,
         "_rendering": false,
@@ -1469,7 +1455,6 @@ Object {
       className="label"
     >
       folder
-       
     </span>
   </div>,
   "defaultState": null,
@@ -1588,7 +1573,6 @@ Object {
             className="label"
           >
             folder
-             
           </span>
         </div>,
         "_rendering": false,
@@ -1657,7 +1641,6 @@ Object {
       className="label"
     >
       folder
-       
     </span>
   </div>,
   "defaultState": null,
@@ -1748,7 +1731,6 @@ Object {
             className="label"
           >
             folder
-             
           </span>
         </div>,
         "_rendering": false,
@@ -1804,7 +1786,6 @@ Object {
       className="label"
     >
       folder
-       
     </span>
   </div>,
   "defaultState": null,
@@ -1899,7 +1880,6 @@ Object {
             className="label"
           >
             folder
-             
           </span>
         </div>,
         "_rendering": false,
@@ -1957,7 +1937,6 @@ Object {
       className="label"
     >
       moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856
-       
     </span>
   </div>,
   "defaultState": null,
@@ -2074,7 +2053,6 @@ Object {
             className="label"
           >
             moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856
-             
           </span>
         </div>,
         "_rendering": false,
@@ -2142,7 +2120,6 @@ Object {
       className="label"
     >
       moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856
-       
     </span>
   </div>,
   "defaultState": null,
@@ -2261,7 +2238,6 @@ Object {
             className="label"
           >
             moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856
-             
           </span>
         </div>,
         "_rendering": false,
@@ -2330,7 +2306,6 @@ Object {
       className="label"
     >
       Webpack
-       
     </span>
   </div>,
   "defaultState": null,
@@ -2445,7 +2420,6 @@ Object {
             className="label"
           >
             Webpack
-             
           </span>
         </div>,
         "_rendering": false,
@@ -2512,7 +2486,6 @@ Object {
       className="label"
     >
       one.js
-       
     </span>
   </div>,
   "defaultState": null,
@@ -2649,7 +2622,6 @@ Object {
             className="label"
           >
             one.js
-             
           </span>
         </div>,
         "_rendering": false,
@@ -2727,7 +2699,6 @@ Object {
       className="label"
     >
       one.js
-       
     </span>
   </div>,
   "defaultState": null,
@@ -2866,7 +2837,6 @@ Object {
             className="label"
           >
             one.js
-             
           </span>
         </div>,
         "_rendering": false,
@@ -2959,7 +2929,6 @@ Object {
       className="label"
     >
       one.js
-       
     </span>
   </div>,
   "defaultState": null,
@@ -3110,7 +3079,6 @@ Object {
             className="label"
           >
             one.js
-             
           </span>
         </div>,
         "_rendering": false,
@@ -3202,7 +3170,6 @@ Object {
       className="label"
     >
       one.js
-       
     </span>
   </div>,
   "defaultState": null,
@@ -3355,7 +3322,6 @@ Object {
             className="label"
           >
             one.js
-             
           </span>
         </div>,
         "_rendering": false,
@@ -3448,7 +3414,6 @@ Object {
       className="label"
     >
       external file
-       
     </span>
   </div>,
   "defaultState": null,
@@ -3599,7 +3564,6 @@ Object {
             className="label"
           >
             external file
-             
           </span>
         </div>,
         "_rendering": false,
