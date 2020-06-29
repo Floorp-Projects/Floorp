@@ -1,15 +1,14 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
-    xmlns:tools="http://schemas.android.com/tools"
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:viewportWidth="14"
     android:viewportHeight="17"
     android:width="14dp"
     android:height="17dp">
-  <group
-      android:translateX="-1">
     <path
-        android:pathData="M14.707 9.143075L11.707 6.143075C11.5195073 5.95552563 11.2651948 5.85013164 11 5.850075L10 5.850075L10 4.850075C9.99994336 4.58488019 9.89454937 4.33056773 9.707 4.143075L6.707 1.143075C6.51950727 0.955525625 6.26519481 0.850075 6 0.850075L3 0.850075C1.8954305 0.850075 1 1.7455055 1 2.850075L1 9.850075C1 10.9546445 1.8954305 11.850075 3 11.850075L6 11.850075L6 14.850075C6 15.9546445 6.8954305 16.850075 8 16.850075L13 16.850075C14.1045695 16.850075 15 15.9546445 15 14.850075L15 9.850075C15 9.58488019 14.8945494 9.33056773 14.707 9.143075ZM12.586 9.850075L11 9.850075L11 8.264075L12.586 9.850075ZM7.586 4.850075L6 4.850075L6 3.264075L7.586 4.850075ZM6 7.850075L6 9.850075L3 9.850075L3 2.850075L5 2.850075L5 5.350075C5 5.62621737 5.22385763 5.850075 5.5 5.850075L8 5.850075C6.8954305 5.850075 6 6.7455055 6 7.850075ZM8 14.850075L8 7.850075L10 7.850075L10 10.350075C10 10.6262174 10.2238576 10.850075 10.5 10.850075L13 10.850075L13 14.850075L8 14.850075Z"
+        android:pathData="M13.707 9.143l-3-3C10.52 5.955 10.265 5.85 10 5.85H9v-1c0-0.265-0.105-0.52-0.293-0.707l-3-3C5.52 0.955 5.265 0.85 5 0.85H2c-1.105 0-2 0.895-2 2v7c0 1.105 0.895 2 2 2h3v3c0 1.105 0.895 2 2 2h5c1.105 0 2-0.895 2-2v-5c0-0.265-0.105-0.52-0.293-0.707zM11.586 9.85H10V8.264l1.586 1.586zm-5-5H5V3.264L6.586 4.85zM5 7.85v2H2v-7h2v2.5c0 0.276 0.224 0.5 0.5 0.5H7c-1.105 0-2 0.895-2 2zm2 7v-7h2v2.5c0 0.276 0.224 0.5 0.5 0.5H12v4H7z"
         android:fillColor="?primaryText"
-        android:fillAlpha="0.8"
-        tools:ignore="VectorPath" />
-  </group>
+        android:fillAlpha="0.8" />
 </vector>

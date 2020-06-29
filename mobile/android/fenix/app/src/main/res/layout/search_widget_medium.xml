@@ -24,12 +24,11 @@
         android:layout_marginStart="9dp"
         android:layout_toEndOf="@id/button_search_widget_new_tab_icon"
         android:layout_alignEnd="@id/button_search_widget_voice"
-        android:gravity="center_vertical"
+        android:gravity="start|center_vertical"
         android:letterSpacing="-0.025"
         android:textAlignment="viewStart"
         android:textColor="@color/search_widget_text"
         android:textSize="15sp"
-        tools:ignore="RtlCompat"
         tools:text="Search"/>
 
     <ImageButton

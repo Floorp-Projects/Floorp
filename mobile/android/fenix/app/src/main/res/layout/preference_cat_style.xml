@@ -8,7 +8,6 @@
     android:layout_marginTop="16dp"
     android:textAlignment="viewStart"
     android:layout_marginStart="16dp"
-    android:gravity="center_vertical"
+    android:gravity="start|center_vertical"
     app:fontFamily="@font/metropolis_semibold"
-    android:id="@android:id/title"
-    tools:ignore="RtlCompat" />
+    android:id="@android:id/title" />

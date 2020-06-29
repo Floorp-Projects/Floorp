@@ -21,6 +21,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:paddingStart="3dp"
+        android:paddingEnd="0dp"
         android:gravity="center_vertical"
         android:text="@string/preferences_passwords_saved_logins_site"
         android:textColor="?primaryText"
@@ -30,8 +31,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed"
-        tools:ignore="RtlSymmetry" />
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/inputLayoutHostname"
@@ -48,8 +48,7 @@
         app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="@id/hostnameHeaderText"
         app:layout_constraintStart_toStartOf="@id/hostnameHeaderText"
-        app:layout_constraintTop_toBottomOf="@id/hostnameHeaderText"
-        tools:ignore="RtlSymmetry">
+        app:layout_constraintTop_toBottomOf="@id/hostnameHeaderText">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/hostnameText"
@@ -80,6 +79,7 @@
         android:layout_height="16dp"
         android:gravity="center_vertical"
         android:paddingStart="3dp"
+        android:paddingEnd="0dp"
         android:layout_marginTop="20dp"
         android:text="@string/preferences_passwords_saved_logins_username"
         android:textColor="?primaryText"
@@ -90,8 +90,7 @@
         app:layout_constraintEnd_toStartOf="@id/clearUsernameTextButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/inputLayoutHostname"
-        app:layout_constraintVertical_chainStyle="packed"
-        tools:ignore="RtlSymmetry" />
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/inputLayoutUsername"
@@ -105,8 +104,7 @@
         app:layout_constraintStart_toStartOf="@id/usernameHeader"
         app:layout_constraintTop_toBottomOf="@id/usernameHeader"
         app:layout_constraintVertical_chainStyle="packed"
-        app:hintEnabled="false"
-        tools:ignore="RtlSymmetry">
+        app:hintEnabled="false">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/usernameText"
@@ -150,6 +148,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:paddingStart="3dp"
+        android:paddingEnd="0dp"
         android:text="@string/preferences_passwords_saved_logins_password"
         android:textColor="?primaryText"
         android:textSize="12sp"
@@ -160,8 +159,7 @@
         app:layout_constraintEnd_toStartOf="@id/revealPasswordButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/inputLayoutUsername"
-        app:layout_constraintVertical_chainStyle="packed"
-        tools:ignore="RtlSymmetry" />
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/inputLayoutPassword"
@@ -177,8 +175,7 @@
         app:layout_constraintEnd_toEndOf="@id/passwordHeader"
         app:layout_constraintStart_toStartOf="@id/passwordHeader"
         app:layout_constraintTop_toBottomOf="@id/passwordHeader"
-        app:layout_constraintVertical_chainStyle="packed"
-        tools:ignore="RtlSymmetry">
+        app:layout_constraintVertical_chainStyle="packed">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/passwordText"
