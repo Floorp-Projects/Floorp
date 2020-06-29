@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
 XPIDL_SOURCES += [
-    'mozIIPCBlobInputStream.idl',
+    'mozIRemoteLazyInputStream.idl',
 ]
 
 XPIDL_MODULE = 'dom'
