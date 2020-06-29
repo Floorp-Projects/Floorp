@@ -548,6 +548,9 @@ AudioListener* AudioContext::Listener() {
 }
 
 double AudioContext::OutputLatency() {
+  if (mIsShutDown) {
+    return 0.0;
+  }
   // When reduceFingerprinting is enabled, return a latency figure that is
   // fixed, but plausible for the platform.
   double latency_s = 0.0;
