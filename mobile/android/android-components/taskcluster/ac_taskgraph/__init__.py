@@ -40,7 +40,7 @@ def get_decision_parameters(graph_config, parameters):
         head_tag = parameters["head_tag"].decode("utf-8")
         if not head_tag:
             raise ValueError(
-                "Cannot run github-release if `head_tag` is not defined.Got {}".format(
+                "Cannot run github-release if `head_tag` is not defined. Got {}".format(
                     head_tag
                 )
             )
