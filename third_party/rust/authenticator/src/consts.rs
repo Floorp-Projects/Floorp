@@ -31,16 +31,16 @@ pub const U2FHID_FRAME_TIMEOUT: u32 = 500; // Default frame timeout in ms
 pub const U2FHID_TRANS_TIMEOUT: u32 = 3000; // Default message timeout in ms
 
 // U2FHID native commands
-pub const U2FHID_PING: u8 = (TYPE_INIT | 0x01); // Echo data through local processor only
-pub const U2FHID_MSG: u8 = (TYPE_INIT | 0x03); // Send U2F message frame
-pub const U2FHID_LOCK: u8 = (TYPE_INIT | 0x04); // Send lock channel command
-pub const U2FHID_INIT: u8 = (TYPE_INIT | 0x06); // Channel initialization
-pub const U2FHID_WINK: u8 = (TYPE_INIT | 0x08); // Send device identification wink
-pub const U2FHID_ERROR: u8 = (TYPE_INIT | 0x3f); // Error response
+pub const U2FHID_PING: u8 = TYPE_INIT | 0x01; // Echo data through local processor only
+pub const U2FHID_MSG: u8 = TYPE_INIT | 0x03; // Send U2F message frame
+pub const U2FHID_LOCK: u8 = TYPE_INIT | 0x04; // Send lock channel command
+pub const U2FHID_INIT: u8 = TYPE_INIT | 0x06; // Channel initialization
+pub const U2FHID_WINK: u8 = TYPE_INIT | 0x08; // Send device identification wink
+pub const U2FHID_ERROR: u8 = TYPE_INIT | 0x3f; // Error response
 
 // U2FHID_MSG commands
-pub const U2F_VENDOR_FIRST: u8 = (TYPE_INIT | 0x40); // First vendor defined command
-pub const U2F_VENDOR_LAST: u8 = (TYPE_INIT | 0x7f); // Last vendor defined command
+pub const U2F_VENDOR_FIRST: u8 = TYPE_INIT | 0x40; // First vendor defined command
+pub const U2F_VENDOR_LAST: u8 = TYPE_INIT | 0x7f; // Last vendor defined command
 pub const U2F_REGISTER: u8 = 0x01; // Registration command
 pub const U2F_AUTHENTICATE: u8 = 0x02; // Authenticate/sign command
 pub const U2F_VERSION: u8 = 0x03; // Read version string command

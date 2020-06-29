@@ -28,7 +28,7 @@ dependencies = [
 
 [[package]]
 name = "authenticator"
-version = "0.2.12"
+version = "0.2.13"
 dependencies = [
  "base64 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bindgen 0.51.1 (registry+https://github.com/rust-lang/crates.io-index)",
