@@ -87,7 +87,7 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   // Thumbnail asynchronously
   void LoadImage(const char* aImageData, uint32_t aDataSize);
   // Sets the Thumbnail to the image stored in mImageStream
-  bool SetThumbnail();
+  bool SetThumbnail(const nsAString& aUrl);
   void ClearThumbnail();
 
   nsresult UpdateThumbnailOnMainThread(const nsAString& aUrl);

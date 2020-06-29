@@ -22,6 +22,7 @@
 #  include "mozilla/Maybe.h"
 #  include "mozilla/WidgetUtils.h"
 #  include "mozilla/WindowsVersion.h"
+#  include "mozilla/ScopeExit.h"
 #  include "mozilla/media/MediaUtils.h"
 #  include "nsThreadUtils.h"
 
@@ -455,7 +456,6 @@ void WindowsSMTCProvider::LoadThumbnail(
   CancelPendingStoreAsyncOperation();
   // Remove the current thumbnail on the interface
   ClearThumbnail();
-  mThumbnailUrl = EmptyString();
   // Then load the new thumbnail asynchronously
   LoadImageAtIndex(0);
 }
@@ -620,9 +620,10 @@ void WindowsSMTCProvider::LoadImage(const char* aImageData,
   }
 }
 
-bool WindowsSMTCProvider::SetThumbnail() {
+bool WindowsSMTCProvider::SetThumbnail(const nsAString& aUrl) {
   MOZ_ASSERT(mDisplay);
   MOZ_ASSERT(mImageStream);
+  MOZ_ASSERT(!aUrl.IsEmpty());
 
   ComPtr<IRandomAccessStreamReferenceStatics> streamRefFactory;
 
@@ -631,6 +632,12 @@ bool WindowsSMTCProvider::SetThumbnail() {
           RuntimeClass_Windows_Storage_Streams_RandomAccessStreamReference)
           .Get(),
       streamRefFactory.GetAddressOf());
+  auto cleanup =
+      MakeScopeExit([this, self = RefPtr<WindowsSMTCProvider>(this)] {
+        LOG("Clean mThumbnailUrl");
+        mThumbnailUrl = EmptyString();
+      });
+
   if (FAILED(hr)) {
     LOG("Failed to get an activation factory for "
         "IRandomAccessStreamReferenceStatics type");
@@ -650,7 +657,17 @@ bool WindowsSMTCProvider::SetThumbnail() {
     return false;
   }
 
-  return SUCCEEDED(mDisplay->Update());
+  hr = mDisplay->Update();
+  if (FAILED(hr)) {
+    LOG("Failed to refresh display");
+    return false;
+  }
+
+  // No need to clean mThumbnailUrl since thumbnail is set successfully
+  cleanup.release();
+  mThumbnailUrl = aUrl;
+
+  return true;
 }
 
 void WindowsSMTCProvider::ClearThumbnail() {
@@ -660,6 +677,7 @@ void WindowsSMTCProvider::ClearThumbnail() {
   hr = mDisplay->Update();
   MOZ_ASSERT(SUCCEEDED(hr));
   Unused << hr;
+  mThumbnailUrl = EmptyString();
 }
 
 nsresult WindowsSMTCProvider::UpdateThumbnailOnMainThread(
@@ -680,13 +698,12 @@ nsresult WindowsSMTCProvider::UpdateThumbnailOnMainThread(
 
         mProcessingUrl = EmptyString();
 
-        if (!SetThumbnail()) {
+        if (!SetThumbnail(aImageUrl)) {
           LOG("Failed to update thumbnail");
-          mThumbnailUrl = EmptyString();
           return NS_OK;
         }
 
-        mThumbnailUrl = aImageUrl;
+        MOZ_ASSERT(mThumbnailUrl == aImageUrl);
         LOG("The thumbnail is updated to the image from: %s",
             NS_ConvertUTF16toUTF8(mThumbnailUrl).get());
         return NS_OK;
