@@ -185,9 +185,9 @@ class LoadInfo final : public nsILoadInfo {
            bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
            const nsAString& aCspNonce, bool aSkipContentSniffing,
            uint32_t aHttpsOnlyStatus, bool aHasValidUserGestureActivation,
-           bool aAllowDeprecatedSystemRequests, bool aParserCreatedScript,
-           bool aHasStoragePermission, uint32_t aRequestBlockingReason,
-           nsINode* aLoadingContext,
+           bool aAllowDeprecatedSystemRequests, bool aIsDevToolsContext,
+           bool aParserCreatedScript, bool aHasStoragePermission,
+           uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
            nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy);
   LoadInfo(const LoadInfo& rhs);
 
@@ -288,6 +288,7 @@ class LoadInfo final : public nsILoadInfo {
   uint32_t mHttpsOnlyStatus;
   bool mHasValidUserGestureActivation;
   bool mAllowDeprecatedSystemRequests;
+  bool mIsInDevToolsContext;
   bool mParserCreatedScript;
   bool mHasStoragePermission;
 
