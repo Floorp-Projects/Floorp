@@ -722,3 +722,18 @@ describe("Error - Error with undefined-grip message", () => {
     expect(tinyRenderedComponent).toMatchSnapshot();
   });
 });
+
+describe("Error - Error with stack having frames with multiple @", () => {
+  const stub = stubs.get("Error with stack having frames with multiple @");
+
+  it("renders with expected text for Error object", () => {
+    const renderedComponent = shallow(
+      ErrorRep.rep({
+        object: stub,
+        customFormat: true,
+      })
+    );
+
+    expect(renderedComponent).toMatchSnapshot();
+  });
+});

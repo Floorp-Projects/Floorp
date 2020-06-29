@@ -55,6 +55,74 @@ exports[`Error - Error with invalid stack renders with expected text 1`] = `
 </span>
 `;
 
+exports[`Error - Error with stack having frames with multiple @ renders with expected text for Error object 1`] = `
+<span
+  className="objectBox-stackTrace reps-custom-format"
+  data-link-actor-id="server1.conn1.child1/obj1021"
+  title={null}
+>
+  Error: 
+  <span
+    className="objectBox objectBox-string"
+  >
+    bar
+  </span>
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      errorBar
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      https://example.com/turbo/from-npm.js@0.8.26/dist/from-npm.js:814:31
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn1"
+    >
+      errorFoo
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location1"
+    >
+      https://example.com/turbo/from-npm.js@0.8.26/dist/from-npm.js:815:31
+    </span>
+    
+
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn2"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location2"
+    >
+      https://example.com/turbo/from-npm.js@0.8.26/dist/from-npm.js:816:31
+    </span>
+    
+
+  </span>
+</span>
+`;
+
 exports[`Error - Error with undefined-grip message renders with expected text 1`] = `
 <span
   className="objectBox-stackTrace reps-custom-format"
@@ -892,14 +960,14 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
       className="objectBox-stackTrace-fn"
       key="fn0"
     >
-      node_modules
+      ngOnChanges
     </span>
      
     <span
       className="objectBox-stackTrace-location"
       key="location0"
     >
-      angular/common/esm5/common.js:2656:27
+      webpack-internal:///./node_modules/@angular/common/esm5/common.js:2656:27
     </span>
     
 
@@ -908,14 +976,14 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
       className="objectBox-stackTrace-fn"
       key="fn1"
     >
-      node_modules
+      checkAndUpdateDirectiveInline
     </span>
      
     <span
       className="objectBox-stackTrace-location"
       key="location1"
     >
-      angular/core/esm5/core.js:12581:9
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:12581:9
     </span>
     
 
@@ -924,14 +992,14 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
       className="objectBox-stackTrace-fn"
       key="fn2"
     >
-      node_modules
+      checkAndUpdateNodeInline
     </span>
      
     <span
       className="objectBox-stackTrace-location"
       key="location2"
     >
-      angular/core/esm5/core.js:14109:20
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14109:20
     </span>
     
 
@@ -940,14 +1008,14 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
       className="objectBox-stackTrace-fn"
       key="fn3"
     >
-      node_modules
+      checkAndUpdateNode
     </span>
      
     <span
       className="objectBox-stackTrace-location"
       key="location3"
     >
-      angular/core/esm5/core.js:14052:16
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14052:16
     </span>
     
 
@@ -956,14 +1024,14 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
       className="objectBox-stackTrace-fn"
       key="fn4"
     >
-      node_modules
+      debugCheckAndUpdateNode
     </span>
      
     <span
       className="objectBox-stackTrace-location"
       key="location4"
     >
-      angular/core/esm5/core.js:14945:55
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14945:55
     </span>
     
 
@@ -972,14 +1040,14 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
       className="objectBox-stackTrace-fn"
       key="fn5"
     >
-      node_modules
+      debugCheckDirectivesFn
     </span>
      
     <span
       className="objectBox-stackTrace-location"
       key="location5"
     >
-      angular/core/esm5/core.js:14886:13
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14886:13
     </span>
     
 
@@ -1004,14 +1072,14 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
       className="objectBox-stackTrace-fn"
       key="fn7"
     >
-      node_modules
+      debugUpdateDirectives
     </span>
      
     <span
       className="objectBox-stackTrace-location"
       key="location7"
     >
-      angular/core/esm5/core.js:14871:12
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14871:12
     </span>
     
 
@@ -1020,14 +1088,14 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
       className="objectBox-stackTrace-fn"
       key="fn8"
     >
-      node_modules
+      checkAndUpdateView
     </span>
      
     <span
       className="objectBox-stackTrace-location"
       key="location8"
     >
-      angular/core/esm5/core.js:14018:5
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14018:5
     </span>
     
 
@@ -1036,14 +1104,14 @@ exports[`Error - longString stacktrace renders as expected 1`] = `
       className="objectBox-stackTrace-fn"
       key="fn9"
     >
-      node_modules
+      callViewAction
     </span>
      
     <span
       className="objectBox-stackTrace-location"
       key="location9"
     >
-      angular/core/esm5/core.js:14369:21
+      webpack-internal:///./node_modules/@angular/core/esm5/core.js:14369:21
     </span>
     
 

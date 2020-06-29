@@ -353,4 +353,23 @@ stubs.set("Error with undefined-grip message", {
   },
 });
 
+stubs.set("Error with stack having frames with multiple @", {
+  type: "object",
+  actor: "server1.conn1.child1/obj1021",
+  class: "Error",
+  ownPropertyLength: 4,
+  preview: {
+    kind: "Error",
+    name: "Error",
+    message: "bar",
+    stack:
+      "errorBar@https://example.com/turbo/from-npm.js@0.8.26/dist/from-npm.js:814:31\n" +
+      "errorFoo@https://example.com/turbo/from-npm.js@0.8.26/dist/from-npm.js:815:31\n" +
+      "@https://example.com/turbo/from-npm.js@0.8.26/dist/from-npm.js:816:31\n",
+    fileName: "from-npm.js",
+    lineNumber: 6,
+    columnNumber: 15,
+  },
+});
+
 module.exports = stubs;
