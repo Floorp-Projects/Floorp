@@ -114,6 +114,7 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   // Returns true if the current thread is currently running a Runnable in
   // the task queue.
   bool IsCurrentThreadIn() const override;
+  using nsISerialEventTarget::IsOnCurrentThread;
 
  protected:
   virtual ~TaskQueue();
