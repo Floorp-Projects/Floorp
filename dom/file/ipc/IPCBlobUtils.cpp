@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCBlobUtils.h"
-#include "IPCBlobInputStream.h"
+#include "RemoteLazyInputStream.h"
 #include "RemoteLazyInputStreamChild.h"
 #include "RemoteLazyInputStreamParent.h"
 #include "mozilla/dom/IPCBlob.h"
@@ -33,7 +33,7 @@ already_AddRefed<BlobImpl> Deserialize(const IPCBlob& aIPCBlob) {
   const IPCBlobStream& stream = aIPCBlob.inputStream();
   switch (stream.type()) {
     // Parent to child: when an nsIInputStream is sent from parent to child, the
-    // child receives a IPCBlobInputStream actor.
+    // child receives a RemoteLazyInputStream actor.
     case IPCBlobStream::TPRemoteLazyInputStreamChild: {
       RemoteLazyInputStreamChild* actor =
           static_cast<RemoteLazyInputStreamChild*>(
@@ -81,21 +81,21 @@ nsresult SerializeInputStreamParent(nsIInputStream* aInputStream,
                                     uint64_t aSize, uint64_t aChildID,
                                     PRemoteLazyInputStreamParent*& aActorParent,
                                     M* aManager) {
-  // Parent to Child we always send a IPCBlobInputStream.
+  // Parent to Child we always send a RemoteLazyInputStream.
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsIInputStream> stream = aInputStream;
 
-  // In case this is a IPCBlobInputStream, we don't want to create a loop:
-  // RemoteLazyInputStreamParent -> IPCBlobInputStream ->
+  // In case this is a RemoteLazyInputStream, we don't want to create a loop:
+  // RemoteLazyInputStreamParent -> RemoteLazyInputStream ->
   // RemoteLazyInputStreamParent. Let's use the underlying inputStream instead.
-  nsCOMPtr<mozIRemoteLazyInputStream> ipcBlobInputStream =
+  nsCOMPtr<mozIRemoteLazyInputStream> remoteLazyInputStream =
       do_QueryInterface(aInputStream);
-  if (ipcBlobInputStream) {
-    stream = ipcBlobInputStream->GetInternalStream();
+  if (remoteLazyInputStream) {
+    stream = remoteLazyInputStream->GetInternalStream();
     // If we don't have an underlying stream, it's better to terminate here
-    // instead of sending an 'empty' IPCBlobInputStream actor on the other side,
-    // unable to be used.
+    // instead of sending an 'empty' RemoteLazyInputStream actor on the other
+    // side, unable to be used.
     if (NS_WARN_IF(!stream)) {
       return NS_ERROR_FAILURE;
     }

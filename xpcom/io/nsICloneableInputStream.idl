@@ -22,7 +22,7 @@ interface nsICloneableInputStream : nsISupports
 };
 
 // This interface implements cloneWithRange() because for some streams
-// (IPCBlobInputStream only, so far) are more efficient to produce a sub
+// (RemoteLazyInputStream only, so far) are more efficient to produce a sub
 // stream with range than doing clone + SlicedInputStream().
 [scriptable, builtinclass, uuid(ece853c3-aded-4cef-8f51-0d1493d60bd5)]
 interface nsICloneableInputStreamWithRange : nsICloneableInputStream
