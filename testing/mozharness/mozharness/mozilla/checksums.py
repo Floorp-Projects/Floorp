@@ -1,3 +1,6 @@
+import six
+
+
 def parse_checksums_file(checksums):
     """
     Parses checksums files that the build system generates and uploads:
@@ -6,6 +9,8 @@ def parse_checksums_file(checksums):
     fileInfo = {}
     for line in checksums.splitlines():
         hash_, type_, size, file_ = line.split(None, 3)
+        type_ = six.ensure_str(type_)
+        file_ = six.ensure_str(file_)
         size = int(size)
         if size < 0:
             raise ValueError("Found negative value (%d) for size." % size)
