@@ -879,7 +879,9 @@ class ContentChild final : public PContentChild,
   uint64_t mBrowsingContextFieldEpoch = 0;
 
   nsRefPtrHashtable<nsCStringHashKey, JSProcessActorChild> mProcessActors;
-  DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
+  ContentChild(const ContentChild&) = delete;
+
+  const ContentChild& operator=(const ContentChild&) = delete;
 };
 
 inline nsISupports* ToSupports(mozilla::dom::ContentChild* aContentChild) {

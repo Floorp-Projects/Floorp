@@ -152,7 +152,10 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
 
   ProcessPriorityManagerImpl();
   ~ProcessPriorityManagerImpl();
-  DISALLOW_EVIL_CONSTRUCTORS(ProcessPriorityManagerImpl);
+  ProcessPriorityManagerImpl(const ProcessPriorityManagerImpl&) = delete;
+
+  const ProcessPriorityManagerImpl& operator=(
+      const ProcessPriorityManagerImpl&) = delete;
 
   void Init();
 
@@ -188,7 +191,10 @@ class ProcessPriorityManagerChild final : public nsIObserver {
 
   ProcessPriorityManagerChild();
   ~ProcessPriorityManagerChild() = default;
-  DISALLOW_EVIL_CONSTRUCTORS(ProcessPriorityManagerChild);
+  ProcessPriorityManagerChild(const ProcessPriorityManagerChild&) = delete;
+
+  const ProcessPriorityManagerChild& operator=(
+      const ProcessPriorityManagerChild&) = delete;
 
   void Init();
 

@@ -48,7 +48,11 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
 
   PreallocatedProcessManagerImpl();
   ~PreallocatedProcessManagerImpl();
-  DISALLOW_EVIL_CONSTRUCTORS(PreallocatedProcessManagerImpl);
+  PreallocatedProcessManagerImpl(const PreallocatedProcessManagerImpl&) =
+      delete;
+
+  const PreallocatedProcessManagerImpl& operator=(
+      const PreallocatedProcessManagerImpl&) = delete;
 
   void Init();
 
@@ -196,8 +200,7 @@ already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
     process = mPreallocatedE10SProcess.forget();
     if (process) {
       MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-              ("Reuse " DEFAULT_REMOTE_TYPE " process %p",
-               process.get()));
+              ("Reuse " DEFAULT_REMOTE_TYPE " process %p", process.get()));
     }
   }
   if (!process && !mPreallocatedProcesses.empty()) {
