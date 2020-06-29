@@ -1,11 +1,11 @@
-// |reftest| skip -- class-static-methods-private is not supported
+// |reftest| skip -- class-static-methods-private,class-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/static-private-method-and-instance-method-brand-check.case
 // - src/class-elements/default/cls-expr.template
 /*---
 description: Brand for static private names and instance private names are different (field definitions in a class expression)
 esid: prod-FieldDefinition
-features: [class-static-methods-private, class]
+features: [class-static-methods-private, class-methods-private, class]
 flags: [generated]
 info: |
     ClassTail : ClassHeritage { ClassBody }

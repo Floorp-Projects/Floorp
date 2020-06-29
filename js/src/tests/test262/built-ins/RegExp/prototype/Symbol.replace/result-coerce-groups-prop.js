@@ -58,6 +58,7 @@ var coercibleValue = {
         throw new Test262Error('This method should not be invoked.');
       },
     },
+    bar: null,
   },
 };
 
@@ -66,5 +67,6 @@ r.exec = function() {
 };
 
 assert.sameValue(r[Symbol.replace]('ab', '[$<foo>]'), '[toString value]b');
+assert.sameValue(r[Symbol.replace]('ab', '[$<bar>]'), '[null]b');
 
 reportCompare(0, 0);
