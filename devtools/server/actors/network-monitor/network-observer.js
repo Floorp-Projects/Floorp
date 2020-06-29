@@ -81,21 +81,13 @@ function matchRequest(channel, filters) {
 
   // Ignore requests from chrome or add-on code when we are monitoring
   // content.
-  // TODO: one particular test (browser_styleeditor_fetch-from-cache.js) needs
-  // the flags.testing check. We will move to a better way to serve
-  // its needs in bug 1167188, where this check should be removed.
   if (
-    !flags.testing &&
+    !flags.wantAllNetworkRequests &&
     channel.loadInfo &&
     channel.loadInfo.loadingDocument === null &&
     (channel.loadInfo.loadingPrincipal ===
       Services.scriptSecurityManager.getSystemPrincipal() ||
-      // StyleEditor loads stylesheets with not the system principal but the content
-      // principal that same as of the document that loaded the stylesheet in order
-      // to take over the context of Private Browsing etc. Thus, in order to restrict
-      // the networking from StyleEditor, we check the loading policy.
-      channel.loadInfo.internalContentPolicyType ===
-        Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET)
+      channel.loadInfo.isInDevToolsContext)
   ) {
     return false;
   }

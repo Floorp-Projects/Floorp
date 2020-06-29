@@ -654,6 +654,16 @@ TRRLoadInfo::SetAllowDeprecatedSystemRequests(
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetIsInDevToolsContext(bool* aIsInDevToolsContext) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetIsInDevToolsContext(bool aIsInDevToolsContext) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::GetParserCreatedScript(bool* aParserCreatedScript) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

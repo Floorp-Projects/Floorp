@@ -146,6 +146,7 @@ struct LoadInfoArgs
   uint32_t                    httpsOnlyStatus;
   bool                        hasValidUserGestureActivation;
   bool                        allowDeprecatedSystemRequests;
+  bool                        isInDevToolsContext;
   bool                        parserCreatedScript;
   bool                        isFromProcessingFrameAttributes;
   CookieJarSettingsArgs       cookieJarSettings;
@@ -199,6 +200,8 @@ struct ParentLoadInfoForwarderArgs
   // and all requests will be cancelled. Setting this flag to true prevents
   // the request from being cancelled.
   bool allowDeprecatedSystemRequests;
+
+  bool isInDevToolsContext;
 
   // Only ever returns true if the loadinfo is of TYPE_SCRIPT and
   // the script was created by the HTML parser.
