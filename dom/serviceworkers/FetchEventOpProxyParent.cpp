@@ -19,7 +19,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpParent.h"
-#include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/RemoteLazyInputStreamUtils.h"
 #include "mozilla/dom/RemoteLazyInputStreamStorage.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
@@ -91,10 +91,13 @@ nsresult MaybeDeserializeAndWrapForMainThread(
     MOZ_ASSERT(bgParent);
 
     copyRequest.body() = Some(ParentToChildStream());
-    MOZ_ALWAYS_SUCCEEDS(IPCBlobUtils::SerializeInputStream(
-        stream, streamLength,
-        copyRequest.body().ref().get_ParentToChildStream().actorParent(),
-        bgParent));
+
+    RemoteLazyStream ipdlStream;
+    MOZ_ALWAYS_SUCCEEDS(RemoteLazyInputStreamUtils::SerializeInputStream(
+        stream, streamLength, ipdlStream, bgParent));
+
+    copyRequest.body().ref().get_ParentToChildStream().actorParent() =
+        ipdlStream;
   }
 
   Unused << aManager->SendPFetchEventOpProxyConstructor(actor, copyArgs);
