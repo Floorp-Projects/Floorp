@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_RemoteLazyInputStream_h
-#define mozilla_dom_RemoteLazyInputStream_h
+#ifndef mozilla_RemoteLazyInputStream_h
+#define mozilla_RemoteLazyInputStream_h
 
 #include "mozilla/Mutex.h"
 #include "mozIRemoteLazyInputStream.h"
@@ -17,16 +17,8 @@
 #include "nsCOMPtr.h"
 
 namespace mozilla {
-namespace dom {
 
 class RemoteLazyInputStreamChild;
-
-#define IPCBLOBINPUTSTREAM_IID                       \
-  {                                                  \
-    0xbcfa38fc, 0x8b7f, 0x4d79, {                    \
-      0xbe, 0x3a, 0x1e, 0x7b, 0xbe, 0x52, 0x38, 0xcd \
-    }                                                \
-  }
 
 class RemoteLazyInputStream final : public nsIAsyncInputStream,
                                     public nsIInputStreamCallback,
@@ -126,7 +118,6 @@ class RemoteLazyInputStream final : public nsIAsyncInputStream,
   Mutex mMutex;
 };
 
-}  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_RemoteLazyInputStream_h
+#endif  // mozilla_RemoteLazyInputStream_h
