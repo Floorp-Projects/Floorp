@@ -36,6 +36,7 @@ import zlib
 from contextlib import contextmanager
 from io import BytesIO
 
+import six
 from six import binary_type
 
 from mozprocess import ProcessHandler
@@ -1274,11 +1275,10 @@ class ScriptMixin(PlatformMixin):
                 del env[k]
         if os.name == 'nt':
             pref_encoding = locale.getpreferredencoding()
-            for k, v in env.iteritems():
+            for k, v in six.iteritems(env):
                 # When run locally on Windows machines, some environment
                 # variables may be unicode.
-                if isinstance(v, unicode):
-                    env[k] = v.encode(pref_encoding)
+                env[k] = six.ensure_str(v, pref_encoding)
         if set_self_env:
             self.env = env
         return env
