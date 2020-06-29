@@ -23,7 +23,7 @@
     <string name="mozac_feature_downloads_could_not_open_file">ფაილის გახსნა ვერ ხერხდება</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported">არ მოიძებნა აპი, რომელიც გახსნის %1$s ფაილებს</string>
+    <string name="mozac_feature_downloads_open_not_supported1">არ მოიძებნა აპი, რომლითაც გაიხსნება %1$s</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">შეჩერება</string>

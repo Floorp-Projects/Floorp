@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">தனியுரிமை அமைப்புகளைப் படித்து மாற்றவும்</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">அனைத்துத் தளங்களுக்குமான உங்கள் தரவை அணுகுக</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">உலாவியின் கீற்றுகளை அணுகுக</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">கிளையண்ட் தரவை வரம்பற்றுச் சேமி</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">வழிச்செலுத்தலின்போது உலாவியின் செயல்பாட்டை அணுகவும்</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">புத்தகக்குறிகளைப் படித்து மாற்றுக</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">உலாவி அமைவுகளைப் படித்து மாற்றுக</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">அண்மைய உலாவல் வரலாறு, நினைவிகள், தொடர்புடைய தரவைத் துடை</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">ஒட்டுப் பலகையிலிருந்து தரவைப் பெறுக</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">ஒட்டுப் பலகையில் தரவை உள்ளிடு</string>
+    </resources>
