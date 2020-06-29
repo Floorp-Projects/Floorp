@@ -33,11 +33,11 @@
 #include "mozilla/dom/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
-#include "mozilla/dom/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
+#include "mozilla/dom/RemoteLazyInputStreamParent.h"
 #include "mozilla/dom/RemoteWorkerParent.h"
 #include "mozilla/dom/RemoteWorkerControllerParent.h"
 #include "mozilla/dom/RemoteWorkerServiceParent.h"
@@ -629,8 +629,8 @@ BackgroundParentImpl::AllocPRemoteLazyInputStreamParent(const nsID& aID,
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<dom::IPCBlobInputStreamParent> actor =
-      dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
+  RefPtr<dom::RemoteLazyInputStreamParent> actor =
+      dom::RemoteLazyInputStreamParent::Create(aID, aSize, this);
   return actor.forget();
 }
 
@@ -638,7 +638,8 @@ mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPRemoteLazyInputStreamConstructor(
     dom::PRemoteLazyInputStreamParent* aActor, const nsID& aID,
     const uint64_t& aSize) {
-  if (!static_cast<dom::IPCBlobInputStreamParent*>(aActor)->HasValidStream()) {
+  if (!static_cast<dom::RemoteLazyInputStreamParent*>(aActor)
+           ->HasValidStream()) {
     return IPC_FAIL_NO_REASON(this);
   }
 

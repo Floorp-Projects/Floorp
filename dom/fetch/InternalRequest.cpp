@@ -9,7 +9,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FetchTypes.h"
-#include "mozilla/dom/IPCBlobInputStreamChild.h"
+#include "mozilla/dom/RemoteLazyInputStreamChild.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -169,7 +169,7 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
   // (constructed on the child side).
   if (body) {
     MOZ_ASSERT(body->type() == BodyStreamVariant::TParentToChildStream);
-    mBodyStream = static_cast<IPCBlobInputStreamChild*>(
+    mBodyStream = static_cast<RemoteLazyInputStreamChild*>(
                       body->get_ParentToChildStream().actorChild())
                       ->CreateStream();
   }
