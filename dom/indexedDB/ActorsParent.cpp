@@ -13796,8 +13796,8 @@ void Database::MapBlob(const IPCBlob& aIPCBlob,
                        SafeRefPtr<FileInfo> aFileInfo) {
   AssertIsOnBackgroundThread();
 
-  const IPCBlobStream& stream = aIPCBlob.inputStream();
-  MOZ_ASSERT(stream.type() == IPCBlobStream::TPRemoteLazyInputStreamParent);
+  const RemoteLazyStream& stream = aIPCBlob.inputStream();
+  MOZ_ASSERT(stream.type() == RemoteLazyStream::TPRemoteLazyInputStreamParent);
 
   RemoteLazyInputStreamParent* actor =
       static_cast<RemoteLazyInputStreamParent*>(
@@ -13854,8 +13854,8 @@ void Database::Stringify(nsACString& aResult) const {
 SafeRefPtr<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
   AssertIsOnBackgroundThread();
 
-  const IPCBlobStream& stream = aIPCBlob.inputStream();
-  MOZ_ASSERT(stream.type() == IPCBlobStream::TIPCStream);
+  const RemoteLazyStream& stream = aIPCBlob.inputStream();
+  MOZ_ASSERT(stream.type() == RemoteLazyStream::TIPCStream);
 
   const IPCStream& ipcStream = stream.get_IPCStream();
 

@@ -81,8 +81,8 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsURLHelper.h"
-#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/RemoteLazyInputStreamChild.h"
+#include "mozilla/dom/RemoteLazyInputStreamUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -3706,8 +3706,10 @@ HttpBaseChannel::ReplacementChannelConfig::Serialize(
   config.referrerInfo() = referrerInfo;
   config.timedChannel() = timedChannel;
   if (uploadStream) {
-    dom::IPCBlobUtils::SerializeInputStream(
-        uploadStream, uploadStreamLength, config.uploadStreamParent(), aParent);
+    dom::RemoteLazyStream ipdlStream;
+    dom::RemoteLazyInputStreamUtils::SerializeInputStream(
+        uploadStream, uploadStreamLength, ipdlStream, aParent);
+    config.uploadStreamParent() = ipdlStream;
   }
   config.uploadStreamHasHeaders() = uploadStreamHasHeaders;
   config.contentType() = contentType;
