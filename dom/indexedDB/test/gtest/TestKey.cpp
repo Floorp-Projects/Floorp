@@ -9,6 +9,8 @@
 #include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/indexedDB/Key.h"
+#include "mozilla/IntegerRange.h"
+#include "mozilla/Unused.h"
 
 #include "jsapi.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
@@ -419,4 +421,47 @@ TEST(DOM_IndexedDB_Key, CompareKeys_NonZeroLengthArrayBuffer)
   EXPECT_TRUE(result2.Is(mozilla::dom::indexedDB::Ok, rv2));
 
   EXPECT_EQ(0, Key::CompareKeys(first, second));
+}
+
+constexpr auto kTestLocale = NS_LITERAL_CSTRING("e");
+
+TEST(DOM_IndexedDB_Key, ToLocaleAwareKey_Empty)
+{
+  const auto input = Key{};
+
+  auto rv1 = mozilla::ErrorResult{};
+  auto rv2 = mozilla::ErrorResult{};
+  auto output = Key{};
+
+  auto res = input.ToLocaleAwareKey(output, kTestLocale, rv1);
+  EXPECT_FALSE(rv1.Failed());
+  EXPECT_TRUE(res.Is(mozilla::dom::indexedDB::Ok, rv2));
+
+  EXPECT_TRUE(output.IsUnset());
+}
+
+TEST(DOM_IndexedDB_Key, ToLocaleAwareKey_Bug_1641598)
+{
+  const auto buffer = [] {
+    nsCString res;
+    // This is the encoded representation produced by the test case from bug
+    // 1641598.
+    res.AppendLiteral("\x90\x01\x01\x01\x01\x00\x40");
+    for (const size_t unused : IntegerRange<size_t>(256)) {
+      Unused << unused;
+      res.AppendLiteral("\x01\x01\x80\x03\x43");
+    }
+    return res;
+  }();
+  const auto input = Key{buffer};
+
+  auto rv1 = mozilla::ErrorResult{};
+  auto rv2 = mozilla::ErrorResult{};
+  auto output = Key{};
+
+  auto res = input.ToLocaleAwareKey(output, kTestLocale, rv1);
+  EXPECT_FALSE(rv1.Failed());
+  EXPECT_TRUE(res.Is(mozilla::dom::indexedDB::Ok, rv2));
+
+  EXPECT_EQ(input, output);
 }
