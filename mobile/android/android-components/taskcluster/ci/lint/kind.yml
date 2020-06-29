@@ -46,6 +46,6 @@ jobs:
         description: 'Running detekt and ktlint over all modules'
         run:
             using: gradlew
-            gradlew: [detekt, ktlint]
+            gradlew: [detekt, ktlint, writeGithubLintDetails]
         treeherder:
             symbol: detektKtlint

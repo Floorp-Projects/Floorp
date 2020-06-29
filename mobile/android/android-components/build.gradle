@@ -370,3 +370,19 @@ tasks.register("listRepositories") {
         project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
    }
 }
+
+tasks.register("writeGithubBuildDetails") {
+    ext.details_file = new File('/builds/worker/github/customCheckRunText.md')
+
+    doLast {
+        mkdir "/builds/worker/github"
+
+        def url = "https://firefoxci.taskcluster-artifacts.net/$System.env.TASK_ID/0/public/reports"
+        details_file.text = """#### Test result files
+_(404 if task didn't run)_
+
+- [Unit Tests (Debug)]($url/tests/testDebugUnitTest/index.html)
+- [Unit Tests (Release)]($url/tests/testReleaseUnitTest/index.html)
+- [Android Lint]($url/lint-results-release.html)"""
+    }
+}
