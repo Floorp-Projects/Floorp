@@ -42,7 +42,9 @@ class ContentProcess : public mozilla::ipc::ProcessChild {
   mozilla::mscom::ProcessRuntime mCOMRuntime;
 #endif
 
-  DISALLOW_EVIL_CONSTRUCTORS(ContentProcess);
+  ContentProcess(const ContentProcess&) = delete;
+
+  const ContentProcess& operator=(const ContentProcess&) = delete;
 };
 
 }  // namespace dom

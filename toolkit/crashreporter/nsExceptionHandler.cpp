@@ -598,7 +598,9 @@ class PlatformWriter {
   NativeFileDesc FileDesc() { return mFD; }
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(PlatformWriter);
+  PlatformWriter(const PlatformWriter&) = delete;
+
+  const PlatformWriter& operator=(const PlatformWriter&) = delete;
 
   void WriteChar(char aChar) {
     if (mPos == kBufferSize) {
