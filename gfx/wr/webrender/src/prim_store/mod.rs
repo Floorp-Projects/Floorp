@@ -20,9 +20,7 @@ use crate::glyph_rasterizer::GlyphKey;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
 use crate::gpu_types::{BrushFlags};
 use crate::intern;
-use crate::internal_types::FastHashMap;
-use crate::picture::{PicturePrimitive, TileCacheInstance, SliceId};
-use crate::picture::{RecordedDirtyRegion, RetainedTiles};
+use crate::picture::{PicturePrimitive, RecordedDirtyRegion};
 use crate::prim_store::backdrop::BackdropDataHandle;
 use crate::prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use crate::prim_store::gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle, ConicGradientDataHandle};
@@ -1607,21 +1605,6 @@ impl PrimitiveStore {
         use crate::print_tree::PrintTree;
         let mut pt = PrintTree::new("picture tree");
         self.pictures[root.0].print(&self.pictures, root, &mut pt);
-    }
-
-    /// Destroy an existing primitive store. This is called just before
-    /// a primitive store is replaced with a newly built scene.
-    pub fn destroy(
-        &mut self,
-        retained_tiles: &mut RetainedTiles,
-        tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
-    ) {
-        for pic in &mut self.pictures {
-            pic.destroy(
-                retained_tiles,
-                tile_caches,
-            );
-        }
     }
 
     /// Returns the total count of primitive instances contained in pictures.

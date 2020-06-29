@@ -432,6 +432,7 @@ impl CompositeState {
         mut picture_caching_is_enabled: bool,
         global_device_pixel_scale: DevicePixelScale,
         max_depth_ids: i32,
+        dirty_rects_are_valid: bool,
     ) -> Self {
         // The native compositor interface requires picture caching to work, so
         // force it here and warn if it was disabled.
@@ -447,7 +448,7 @@ impl CompositeState {
             alpha_tiles: Vec::new(),
             clear_tiles: Vec::new(),
             z_generator: ZBufferIdGenerator::new(0, max_depth_ids),
-            dirty_rects_are_valid: true,
+            dirty_rects_are_valid,
             compositor_kind,
             picture_caching_is_enabled,
             global_device_pixel_scale,
