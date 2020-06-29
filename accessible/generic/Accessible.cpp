@@ -1304,12 +1304,7 @@ void Accessible::ApplyARIAState(uint64_t* aState) const {
 }
 
 void Accessible::Value(nsString& aValue) const {
-  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-
-  if ((roleMapEntry && roleMapEntry->valueRule != eNoValue) ||
-      // Bug 1475376: aria-valuetext should also be supported for implicit ARIA
-      // roles; e.g. <input type="range">.
-      HasNumericValue()) {
+  if (HasNumericValue()) {
     // aria-valuenow is a number, and aria-valuetext is the optional text
     // equivalent. For the string value, we will try the optional text
     // equivalent first.
@@ -1329,6 +1324,7 @@ void Accessible::Value(nsString& aValue) const {
     return;
   }
 
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry) {
     return;
   }
