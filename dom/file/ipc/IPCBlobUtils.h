@@ -48,7 +48,7 @@
  * the parent process).
  *
  * DocumentLoadListener uses blobs to serialize the POST data back to the
- * content process (for insertion into session history). This lets it correclty
+ * content process (for insertion into session history). This lets it correctly
  * handle OS files by reference, and avoid copying the underlying buffer data
  * unless it is read. This can hopefully be removed once SessionHistory is
  * handled in the parent process.
@@ -250,7 +250,6 @@ namespace dom {
 class IPCBlob;
 class ContentChild;
 class ContentParent;
-class PRemoteLazyInputStreamParent;
 
 namespace IPCBlobUtils {
 
@@ -270,14 +269,6 @@ nsresult Serialize(BlobImpl* aBlobImpl, ContentParent* aManager,
 nsresult Serialize(BlobImpl* aBlobImpl,
                    mozilla::ipc::PBackgroundParent* aManager,
                    IPCBlob& aIPCBlob);
-
-nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
-                              PRemoteLazyInputStreamParent*& aActorParent,
-                              ContentParent* aManager);
-
-nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
-                              PRemoteLazyInputStreamParent*& aActorParent,
-                              mozilla::ipc::PBackgroundParent* aManager);
 
 // WARNING: If you pass any actor which does not have P{Content,Background} as
 // its toplevel protocol, this method will MOZ_CRASH.

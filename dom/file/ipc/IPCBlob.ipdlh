@@ -30,7 +30,7 @@ struct IPCFile
   bool isDirectory;
 };
 
-union IPCBlobStream
+union RemoteLazyStream
 {
   // Parent to Child: The child will receive a RemoteLazyInputStream. Nothing
   // can be done with it except retrieving the size.
@@ -46,7 +46,7 @@ struct IPCBlob
   uint64_t size;
   nsString blobImplType;
 
-  IPCBlobStream inputStream;
+  RemoteLazyStream inputStream;
 
   // Nothing is for Blob
   IPCFile? file;

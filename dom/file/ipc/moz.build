@@ -21,6 +21,7 @@ EXPORTS.mozilla.dom += [
     'RemoteLazyInputStreamChild.h',
     'RemoteLazyInputStreamParent.h',
     'RemoteLazyInputStreamStorage.h',
+    'RemoteLazyInputStreamUtils.h',
     'TemporaryIPCBlobChild.h',
     'TemporaryIPCBlobParent.h',
 ]
@@ -34,6 +35,7 @@ UNIFIED_SOURCES += [
     'RemoteLazyInputStreamParent.cpp',
     'RemoteLazyInputStreamStorage.cpp',
     'RemoteLazyInputStreamThread.cpp',
+    'RemoteLazyInputStreamUtils.cpp',
     'TemporaryIPCBlobChild.cpp',
     'TemporaryIPCBlobParent.cpp',
 ]
