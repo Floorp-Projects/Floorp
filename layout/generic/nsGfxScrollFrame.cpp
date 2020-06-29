@@ -476,7 +476,13 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   ROOT_SCROLLBAR_LOG("TryLayout with VV %s\n",
                      Stringify(visualViewportSize).c_str());
   mozilla::PresShell* presShell = PresShell();
-  if (mHelper.mIsRoot && presShell->IsVisualViewportSizeSet()) {
+  // Note: we check for a non-null MobileViepwortManager here, but ideally we
+  // should be able to drop that clause as well. It's just that in some cases
+  // with extension popups the composition size comes back as stale, because
+  // the content viewer is only resized after the popup contents are reflowed.
+  // That case also happens to have no APZ and no MVM, so we use that as a
+  // way to detect the scenario. Bug 1648669 tracks removing this clause.
+  if (mHelper.mIsRoot && presShell->GetMobileViewportManager()) {
     visualViewportSize = nsLayoutUtils::CalculateCompositionSizeForFrame(
         this, false, &layoutSize);
 
