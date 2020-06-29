@@ -30,6 +30,7 @@ import androidx.constraintlayout.widget.ConstraintSet.TOP
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -223,22 +224,6 @@ class HomeFragment : Fragment() {
         updateSessionControlView(view)
 
         activity.themeManager.applyStatusBarTheme(activity)
-
-        view.consumeFrom(requireComponents.core.store, viewLifecycleOwner) {
-            val tabCount = if (currentMode.getCurrentMode() == Mode.Normal) {
-                it.normalTabs.size
-            } else {
-                it.privateTabs.size
-            }
-
-            view.tab_button.setCountWithAnimation(tabCount)
-            view.add_tabs_to_collections_button?.visibility = if (tabCount > 0) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
-        }
-
         return view
     }
 
@@ -402,6 +387,17 @@ class HomeFragment : Fragment() {
             requireActivity().window.addFlags(FLAG_SECURE)
         } else {
             requireActivity().window.clearFlags(FLAG_SECURE)
+        }
+
+        consumeFrom(requireComponents.core.store) {
+            val tabCount = if (browsingModeManager.mode.isPrivate) {
+                it.privateTabs.size
+            } else {
+                it.normalTabs.size
+            }
+
+            view.tab_button?.setCountWithAnimation(tabCount)
+            view.add_tabs_to_collections_button?.isVisible = tabCount > 0
         }
     }
 
