@@ -22,9 +22,8 @@
 
 namespace mozilla {
 
+using namespace dom;
 using net::SocketProcessParent;
-
-namespace dom {
 
 class RemoteLazyInputStream;
 
@@ -955,5 +954,4 @@ void RemoteLazyInputStream::LengthReady(int64_t aLength) {
   }
 }
 
-}  // namespace dom
 }  // namespace mozilla

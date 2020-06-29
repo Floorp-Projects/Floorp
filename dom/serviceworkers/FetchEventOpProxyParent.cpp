@@ -19,10 +19,10 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpParent.h"
-#include "mozilla/dom/RemoteLazyInputStreamUtils.h"
-#include "mozilla/dom/RemoteLazyInputStreamStorage.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/RemoteLazyInputStreamUtils.h"
+#include "mozilla/RemoteLazyInputStreamStorage.h"
 
 namespace mozilla {
 

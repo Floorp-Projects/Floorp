@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_RemoteLazyInputStreamUtils_h
-#define mozilla_dom_RemoteLazyInputStreamUtils_h
+#ifndef mozilla_RemoteLazyInputStreamUtils_h
+#define mozilla_RemoteLazyInputStreamUtils_h
 
 /*
  * RemoteLazyInputStream was previously part of the IPCBlob world.
@@ -15,6 +15,8 @@
 
 namespace mozilla {
 
+class RemoteLazyStream;
+
 namespace ipc {
 class IPCStream;
 class PBackgroundChild;
@@ -22,16 +24,16 @@ class PBackgroundParent;
 }  // namespace ipc
 
 namespace dom {
-
 class ContentChild;
 class ContentParent;
+}  // namespace dom
 
 class RemoteLazyInputStreamUtils final {
  public:
   static nsresult SerializeInputStream(nsIInputStream* aInputStream,
                                        uint64_t aSize,
                                        RemoteLazyStream& aOutStream,
-                                       ContentParent* aManager);
+                                       dom::ContentParent* aManager);
 
   static nsresult SerializeInputStream(
       nsIInputStream* aInputStream, uint64_t aSize,
@@ -40,14 +42,13 @@ class RemoteLazyInputStreamUtils final {
   static nsresult SerializeInputStream(nsIInputStream* aInputStream,
                                        uint64_t aSize,
                                        RemoteLazyStream& aOutStream,
-                                       ContentChild* aManager);
+                                       dom::ContentChild* aManager);
 
   static nsresult SerializeInputStream(
       nsIInputStream* aInputStream, uint64_t aSize,
       RemoteLazyStream& aOutStream, mozilla::ipc::PBackgroundChild* aManager);
 };
 
-}  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_RemoteLazyInputStreamUtils_h
+#endif  // mozilla_RemoteLazyInputStreamUtils_h
