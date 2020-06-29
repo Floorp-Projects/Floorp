@@ -144,6 +144,16 @@ jobs:
       when:
           - {hour: 10, minute: 0}
 
+    - name: coverity-tree-analysis
+      job:
+          type: decision-task
+          treeherder-symbol: CoverityTA
+          target-tasks-method: coverity_static_analysis_full
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 10, minute: 0}
+
     - name: customv8-update
       job:
           type: decision-task
