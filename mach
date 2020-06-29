@@ -13,7 +13,6 @@
 py2commands="
     android
     awsy-test
-    browsertime
     check-spidermonkey
     clang-format
     cramtest
