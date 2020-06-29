@@ -1048,7 +1048,9 @@ nsresult Http2Stream::ConvertResponseHeaders(Http2Decompressor* decompressor,
         httpResponseCode));
   if (mIsTunnel) {
     LOG3(("Http2Stream %p Tunnel Response code %d", this, httpResponseCode));
-    if ((httpResponseCode / 100) != 2) {
+    // 1xx response is simply skipeed and a final response is expected.
+    // 2xx response needs to be encrypted.
+    if ((httpResponseCode / 100) > 2) {
       MapStreamToPlainText();
     }
     MapStreamToHttpConnection(aHeadersOut, httpResponseCode);
@@ -1058,13 +1060,6 @@ nsresult Http2Stream::ConvertResponseHeaders(Http2Decompressor* decompressor,
     if (httpResponseCode == 200) {
       MapStreamToHttpConnection(aHeadersOut);
     }
-  }
-
-  if (httpResponseCode == 101) {
-    // 8.1.1 of h2 disallows 101.. throw PROTOCOL_ERROR on stream
-    LOG3(("Http2Stream::ConvertResponseHeaders %p Error - status == 101\n",
-          this));
-    return NS_ERROR_ILLEGAL_VALUE;
   }
 
   if (httpResponseCode == 421) {

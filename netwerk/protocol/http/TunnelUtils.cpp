@@ -1162,6 +1162,14 @@ void SpdyConnectTransaction::MapStreamToHttpConnection(
     const nsACString& aFlat407Headers, int32_t aHttpResponseCode) {
   MOZ_ASSERT(OnSocketThread());
 
+  if (aHttpResponseCode >= 100 && aHttpResponseCode < 200) {
+    LOG(
+        ("SpdyConnectTransaction::MapStreamToHttpConnection %p skip "
+         "pre-response with response code %d",
+         this, aHttpResponseCode));
+    return;
+  }
+
   mConnInfo = aConnInfo;
 
   mTunnelTransport = new SocketTransportShim(this, aTransport, mIsWebsocket);
