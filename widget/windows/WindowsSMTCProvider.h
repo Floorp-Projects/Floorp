@@ -73,11 +73,8 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   // Buttons)
   bool SetControlAttributes(SMTCControlAttributes aAttributes);
 
-  bool RefreshDisplay();
-
   // Sets the Metadata for the currently playing media and sets the playback
   // type to "MUSIC"
-  // Note: This method does not call update(), you need to do that manually
   bool SetMusicMetadata(const wchar_t* aArtist, const wchar_t* aTitle,
                         const wchar_t* aAlbumArtist);
 
@@ -90,7 +87,6 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   // Thumbnail asynchronously
   void LoadImage(const char* aImageData, uint32_t aDataSize);
   // Sets the Thumbnail to the image stored in mImageStream
-  // Note: This method does not call update(), you need to do that manually
   bool SetThumbnail();
   void ClearThumbnail();
 
