@@ -143,6 +143,8 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
 void VideoCaptureAndroid::OnIncomingFrame(rtc::scoped_refptr<I420Buffer> buffer,
                                           int32_t degrees,
                                           int64_t captureTime) {
+  rtc::CritScope cs(&_apiCs);
+
   VideoRotation rotation =
       (degrees <= 45 || degrees > 315)
           ? kVideoRotation_0
@@ -179,12 +181,11 @@ int32_t VideoCaptureAndroid::Init(const char* deviceUniqueIdUTF8) {
   AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
   jmethodID ctor = env->GetMethodID(g_java_capturer_class, "<init>",
-                                    "(Ljava/lang/String;J)V");
+                                    "(Ljava/lang/String;)V");
   assert(ctor);
   jstring j_deviceName = env->NewStringUTF(_deviceUniqueId);
-  jlong j_this = reinterpret_cast<intptr_t>(this);
   _jCapturer = env->NewGlobalRef(
-      env->NewObject(g_java_capturer_class, ctor, j_deviceName, j_this));
+      env->NewObject(g_java_capturer_class, ctor, j_deviceName));
   assert(_jCapturer);
   return 0;
 }
@@ -194,12 +195,6 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
   if (_captureStarted) StopCapture();
   AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
-
-  // Avoid callbacks into ourself even if the above stopCapture fails.
-  jmethodID j_unlink =
-      env->GetMethodID(g_java_capturer_class, "unlinkCapturer", "()V");
-  env->CallVoidMethod(_jCapturer, j_unlink);
-
   env->DeleteGlobalRef(_jCapturer);
 }
 
@@ -230,10 +225,11 @@ int32_t VideoCaptureAndroid::StartCapture(
   _apiCs.Leave();
 
   jmethodID j_start =
-      env->GetMethodID(g_java_capturer_class, "startCapture", "(IIII)Z");
+      env->GetMethodID(g_java_capturer_class, "startCapture", "(IIIIJ)Z");
   assert(j_start);
+  jlong j_this = reinterpret_cast<intptr_t>(this);
   bool started = env->CallBooleanMethod(_jCapturer, j_start, width, height,
-                                        min_mfps, max_mfps);
+                                        min_mfps, max_mfps, j_this);
   if (started) {
     rtc::CritScope cs(&_apiCs);
     _requestedCapability = capability;
