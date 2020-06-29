@@ -36,7 +36,7 @@ from .decorators import (
 from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
-from .sentry import register_sentry, report_exception
+from .sentry import register_sentry
 from .util import setenv
 
 SUGGEST_MACH_BUSTED_TEMPLATE = r'''
@@ -319,9 +319,9 @@ To see more help for a specific command, run:
         """
         if self.populate_context_handler:
             topsrcdir = self.populate_context_handler('topdir')
-            register_sentry(argv, topsrcdir)
+            sentry = register_sentry(argv, topsrcdir)
         else:
-            register_sentry(argv)
+            sentry = register_sentry(argv)
 
         # If no encoding is defined, we default to UTF-8 because without this
         # Python 2.7 will assume the default encoding of ASCII. This will blow
@@ -360,7 +360,7 @@ To see more help for a specific command, run:
             if os.isatty(orig_stdout.fileno()):
                 setenv('MACH_STDOUT_ISATTY', '1')
 
-            return self._run(argv)
+            return self._run(argv, sentry)
         except KeyboardInterrupt:
             print('mach interrupted by signal or user action. Stopping.')
             return 1
@@ -378,7 +378,7 @@ To see more help for a specific command, run:
             stack = traceback.extract_tb(exc_tb)
 
             self._print_exception(sys.stdout, exc_type, exc_value, stack)
-            report_exception(exc_value)
+            sentry.report_exception(exc_value)
 
             return 1
 
@@ -390,7 +390,7 @@ To see more help for a specific command, run:
             sys.stdout = orig_stdout
             sys.stderr = orig_stderr
 
-    def _run(self, argv):
+    def _run(self, argv, sentry):
         # Load settings as early as possible so things in dispatcher.py
         # can use them.
         for provider in Registrar.settings_providers:
@@ -483,7 +483,7 @@ To see more help for a specific command, run:
             return e.exit_code
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
-            report_exception(exc_value)
+            sentry.report_exception(exc_value)
 
             # The first two frames are us and are never used.
             stack = traceback.extract_tb(exc_tb)[2:]

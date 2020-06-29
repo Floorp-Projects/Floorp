@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import abc
 import os
 import re
 from os.path import expanduser
@@ -26,20 +27,49 @@ _DEVELOPER_BLOCKLIST = [
 _SENTRY_DSN = "https://8228c9aff64949c2ba4a2154dc515f55@sentry.prod.mozaws.net/525"
 
 
-def register_sentry(argv, topsrcdir=None):
-    cfg_file = os.path.join(get_state_dir(), 'machrc')
+class ErrorReporter(object):
+    @abc.abstractmethod
+    def report_exception(self, exception):
+        """Report the exception to remote error-tracking software."""
+
+
+class SentryErrorReporter(ErrorReporter):
+    """Reports errors using Sentry."""
+    def report_exception(self, exception):
+        sentry_sdk.capture_exception(exception)
+
+
+class NoopErrorReporter(ErrorReporter):
+    """Drops errors instead of reporting them.
+
+    This is useful in cases where error-reporting is specifically disabled, such as
+    when telemetry hasn't been allowed.
+    """
+    def report_exception(self, exception):
+        pass
+
+
+def _is_telemetry_enabled(cfg_file):
     config = SafeConfigParser()
 
     if not config.read(cfg_file):
-        return
+        return False
 
     try:
         telemetry_enabled = config.getboolean("build", "telemetry")
     except NoOptionError:
-        return
+        return False
 
     if not telemetry_enabled:
-        return
+        return False
+
+    return True
+
+
+def register_sentry(argv, topsrcdir=None):
+    cfg_file = os.path.join(get_state_dir(), 'machrc')
+    if not _is_telemetry_enabled(cfg_file):
+        return NoopErrorReporter()
 
     if topsrcdir:
         try:
@@ -53,6 +83,7 @@ def register_sentry(argv, topsrcdir=None):
     sentry_sdk.init(_SENTRY_DSN,
                     before_send=lambda event, _: _process_event(event, topsrcdir))
     sentry_sdk.add_breadcrumb(message="./mach {}".format(" ".join(argv)))
+    return SentryErrorReporter()
 
 
 def _process_event(sentry_event, topsrcdir):
@@ -124,8 +155,3 @@ def _patch_absolute_paths(sentry_event, topsrcdir):
 def _delete_server_name(sentry_event, _):
     sentry_event.pop("server_name")
     return sentry_event
-
-
-def report_exception(exception):
-    # sentry_sdk won't report the exception if `sentry-sdk.init(...)` hasn't been called
-    sentry_sdk.capture_exception(exception)
