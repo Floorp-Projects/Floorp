@@ -34,9 +34,9 @@ already_AddRefed<BlobImpl> Deserialize(const IPCBlob& aIPCBlob) {
   switch (stream.type()) {
     // Parent to child: when an nsIInputStream is sent from parent to child, the
     // child receives a IPCBlobInputStream actor.
-    case IPCBlobStream::TPIPCBlobInputStreamChild: {
+    case IPCBlobStream::TPRemoteLazyInputStreamChild: {
       IPCBlobInputStreamChild* actor = static_cast<IPCBlobInputStreamChild*>(
-          stream.get_PIPCBlobInputStreamChild());
+          stream.get_PRemoteLazyInputStreamChild());
       inputStream = actor->CreateStream();
       break;
     }
@@ -78,7 +78,7 @@ already_AddRefed<BlobImpl> Deserialize(const IPCBlob& aIPCBlob) {
 template <typename M>
 nsresult SerializeInputStreamParent(nsIInputStream* aInputStream,
                                     uint64_t aSize, uint64_t aChildID,
-                                    PIPCBlobInputStreamParent*& aActorParent,
+                                    PRemoteLazyInputStreamParent*& aActorParent,
                                     M* aManager) {
   // Parent to Child we always send a IPCBlobInputStream.
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -107,7 +107,7 @@ nsresult SerializeInputStreamParent(nsIInputStream* aInputStream,
     return rv;
   }
 
-  if (!aManager->SendPIPCBlobInputStreamConstructor(
+  if (!aManager->SendPRemoteLazyInputStreamConstructor(
           parentActor, parentActor->ID(), parentActor->Size())) {
     return NS_ERROR_FAILURE;
   }
@@ -129,14 +129,14 @@ nsresult SerializeInputStreamChild(nsIInputStream* aInputStream,
 }
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
-                              PIPCBlobInputStreamParent*& aActorParent,
+                              PRemoteLazyInputStreamParent*& aActorParent,
                               ContentParent* aManager) {
   return SerializeInputStreamParent(aInputStream, aSize, aManager->ChildID(),
                                     aActorParent, aManager);
 }
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
-                              PIPCBlobInputStreamParent*& aActorParent,
+                              PRemoteLazyInputStreamParent*& aActorParent,
                               PBackgroundParent* aManager) {
   return SerializeInputStreamParent(aInputStream, aSize,
                                     BackgroundParent::GetChildID(aManager),
@@ -146,19 +146,19 @@ nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
                               IPCBlobStream& aIPCBlob,
                               ContentParent* aManager) {
-  aIPCBlob = (PIPCBlobInputStreamParent*)nullptr;
+  aIPCBlob = (PRemoteLazyInputStreamParent*)nullptr;
   return SerializeInputStreamParent(aInputStream, aSize, aManager->ChildID(),
-                                    aIPCBlob.get_PIPCBlobInputStreamParent(),
+                                    aIPCBlob.get_PRemoteLazyInputStreamParent(),
                                     aManager);
 }
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
                               IPCBlobStream& aIPCBlob,
                               PBackgroundParent* aManager) {
-  aIPCBlob = (PIPCBlobInputStreamParent*)nullptr;
+  aIPCBlob = (PRemoteLazyInputStreamParent*)nullptr;
   return SerializeInputStreamParent(
       aInputStream, aSize, BackgroundParent::GetChildID(aManager),
-      aIPCBlob.get_PIPCBlobInputStreamParent(), aManager);
+      aIPCBlob.get_PRemoteLazyInputStreamParent(), aManager);
 }
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,

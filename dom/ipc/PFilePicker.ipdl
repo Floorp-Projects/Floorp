@@ -6,9 +6,9 @@
 
 include protocol PBrowser;
 include protocol PChildToParentStream;
-include protocol PIPCBlobInputStream;
 include protocol PFileDescriptorSet;
 include protocol PParentToChildStream;
+include protocol PRemoteLazyInputStream;
 
 include IPCBlob;
 

@@ -11,7 +11,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 
 include IPCBlob;
 include IPCStream;
-include protocol PIPCBlobInputStream;
+include protocol PRemoteLazyInputStream;
 include ProtocolTypes;
 
 using struct mozilla::void_t
@@ -314,7 +314,7 @@ struct ReplacementChannelConfigInit
   nsCString? method;
   nsIReferrerInfo referrerInfo;
   TimedChannelInfo? timedChannel;
-  nullable PIPCBlobInputStream uploadStream;
+  nullable PRemoteLazyInputStream uploadStream;
   bool uploadStreamHasHeaders;
   nsCString? contentType;
   nsCString? contentLength;

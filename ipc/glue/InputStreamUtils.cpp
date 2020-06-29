@@ -292,9 +292,9 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
 
     // parent -> child serializations receive an IPCBlobInputStream actor.
     MOZ_ASSERT(params.type() ==
-               IPCBlobInputStreamParams::TPIPCBlobInputStreamChild);
+               IPCBlobInputStreamParams::TPRemoteLazyInputStreamChild);
     IPCBlobInputStreamChild* actor = static_cast<IPCBlobInputStreamChild*>(
-        params.get_PIPCBlobInputStreamChild());
+        params.get_PRemoteLazyInputStreamChild());
     nsCOMPtr<nsIInputStream> stream = actor->CreateStream();
     return stream.forget();
   }

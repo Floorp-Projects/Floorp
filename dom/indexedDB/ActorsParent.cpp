@@ -13797,10 +13797,10 @@ void Database::MapBlob(const IPCBlob& aIPCBlob,
   AssertIsOnBackgroundThread();
 
   const IPCBlobStream& stream = aIPCBlob.inputStream();
-  MOZ_ASSERT(stream.type() == IPCBlobStream::TPIPCBlobInputStreamParent);
+  MOZ_ASSERT(stream.type() == IPCBlobStream::TPRemoteLazyInputStreamParent);
 
   IPCBlobInputStreamParent* actor = static_cast<IPCBlobInputStreamParent*>(
-      stream.get_PIPCBlobInputStreamParent());
+      stream.get_PRemoteLazyInputStreamParent());
 
   MOZ_ASSERT(!mMappedBlobs.GetWeak(actor->ID()));
   mMappedBlobs.Put(actor->ID(), AsRefPtr(std::move(aFileInfo)));

@@ -55,8 +55,8 @@ class MigrateActorRunnable final : public Runnable {
       return NS_OK;
     }
 
-    if (actorChild->SendPIPCBlobInputStreamConstructor(mActor, mActor->ID(),
-                                                       mActor->Size())) {
+    if (actorChild->SendPRemoteLazyInputStreamConstructor(mActor, mActor->ID(),
+                                                          mActor->Size())) {
       mActor->Migrated();
     }
 

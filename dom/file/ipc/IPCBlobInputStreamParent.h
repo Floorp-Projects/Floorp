@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_IPCBlobInputStreamParent_h
 #define mozilla_dom_IPCBlobInputStreamParent_h
 
-#include "mozilla/dom/PIPCBlobInputStreamParent.h"
+#include "mozilla/dom/PRemoteLazyInputStreamParent.h"
 
 class nsIInputStream;
 
@@ -29,7 +29,7 @@ class NS_NO_VTABLE IPCBlobInputStreamParentCallback {
   virtual ~IPCBlobInputStreamParentCallback() = default;
 };
 
-class IPCBlobInputStreamParent final : public PIPCBlobInputStreamParent {
+class IPCBlobInputStreamParent final : public PRemoteLazyInputStreamParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IPCBlobInputStreamParent, final)
 

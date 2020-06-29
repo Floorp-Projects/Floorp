@@ -112,9 +112,9 @@ class BackgroundChildImpl : public PBackgroundChild,
   virtual bool DeallocPBackgroundStorageChild(
       PBackgroundStorageChild* aActor) override;
 
-  virtual already_AddRefed<PIPCBlobInputStreamChild>
-  AllocPIPCBlobInputStreamChild(const nsID& aID,
-                                const uint64_t& aSize) override;
+  virtual already_AddRefed<PRemoteLazyInputStreamChild>
+  AllocPRemoteLazyInputStreamChild(const nsID& aID,
+                                   const uint64_t& aSize) override;
 
   virtual PTemporaryIPCBlobChild* AllocPTemporaryIPCBlobChild() override;
 

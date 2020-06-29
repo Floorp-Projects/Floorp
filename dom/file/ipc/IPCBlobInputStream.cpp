@@ -613,7 +613,7 @@ void IPCBlobInputStream::Serialize(
                                                  &rv, socketActor);
   MOZ_ASSERT(parentActor);
 
-  if (!socketActor->SendPIPCBlobInputStreamConstructor(
+  if (!socketActor->SendPRemoteLazyInputStreamConstructor(
           parentActor, parentActor->ID(), parentActor->Size())) {
     MOZ_CRASH("The serialization is not supposed to fail");
   }

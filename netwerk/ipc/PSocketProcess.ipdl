@@ -19,7 +19,7 @@ include protocol PAltSvcTransaction;
 include protocol PTRRService;
 include protocol PProxyConfigLookup;
 include protocol PNativeDNSResolverOverride;
-include protocol PIPCBlobInputStream;
+include protocol PRemoteLazyInputStream;
 
 include MemoryReportTypes;
 include NeckoChannelParams;
@@ -74,7 +74,7 @@ sync protocol PSocketProcess
   manages PTRRService;
   manages PProxyConfigLookup;
   manages PNativeDNSResolverOverride;
-  manages PIPCBlobInputStream;
+  manages PRemoteLazyInputStream;
 
 parent:
   async InitCrashReporter(NativeThreadId threadId);
@@ -144,7 +144,7 @@ child:
   async PNativeDNSResolverOverride();
   async NotifyObserver(nsCString aTopic, nsString aData);
 
-  async PIPCBlobInputStream(nsID aID, uint64_t aSize);
+  async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
