@@ -67,10 +67,10 @@ internal class WorkManagerSyncManager(
     init {
         WorkersLiveDataObserver.init(context)
 
-        if (syncConfig.syncPeriodInMinutes == null) {
+        if (syncConfig.periodicSyncConfig == null) {
             logger.info("Periodic syncing is disabled.")
         } else {
-            logger.info("Periodic syncing enabled at a ${syncConfig.syncPeriodInMinutes} interval")
+            logger.info("Periodic syncing enabled: ${syncConfig.periodicSyncConfig}")
         }
     }
 
@@ -128,7 +128,7 @@ internal object WorkersLiveDataObserver {
     }
 }
 
-class WorkManagerSyncDispatcher(
+internal class WorkManagerSyncDispatcher(
     private val context: Context,
     private val supportedEngines: Set<SyncEngine>
 ) : SyncDispatcher, Observable<SyncStatusObserver> by ObserverRegistry(), Closeable {
@@ -178,6 +178,7 @@ class WorkManagerSyncDispatcher(
     }
 
     override fun close() {
+        unregisterObservers()
         stopPeriodicSync()
     }
 
@@ -185,14 +186,14 @@ class WorkManagerSyncDispatcher(
      * Periodic background syncing is mainly intended to reduce workload when we sync during
      * application startup.
      */
-    override fun startPeriodicSync(unit: TimeUnit, period: Long) {
+    override fun startPeriodicSync(unit: TimeUnit, period: Long, initialDelay: Long) {
         logger.debug("Starting periodic syncing, period = $period, time unit = $unit")
         // Use the 'replace' policy as a simple way to upgrade periodic worker configurations across
         // application versions. We do this instead of versioning workers.
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             SyncWorkerName.Periodic.name,
             ExistingPeriodicWorkPolicy.REPLACE,
-            periodicSyncWorkRequest(unit, period)
+            periodicSyncWorkRequest(unit, period, initialDelay)
         )
     }
 
@@ -205,11 +206,11 @@ class WorkManagerSyncDispatcher(
         WorkManager.getInstance(context).cancelUniqueWork(SyncWorkerName.Periodic.name)
     }
 
-    private fun periodicSyncWorkRequest(unit: TimeUnit, period: Long): PeriodicWorkRequest {
+    private fun periodicSyncWorkRequest(unit: TimeUnit, period: Long, initialDelay: Long): PeriodicWorkRequest {
         val data = getWorkerData(SyncReason.Scheduled)
         // Periodic interval must be at least PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS,
         // e.g. not more frequently than 15 minutes.
-        return PeriodicWorkRequestBuilder<WorkManagerSyncWorker>(period, unit)
+        return PeriodicWorkRequestBuilder<WorkManagerSyncWorker>(period, unit, initialDelay, unit)
                 .setConstraints(
                         Constraints.Builder()
                                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -258,7 +259,7 @@ class WorkManagerSyncDispatcher(
     }
 }
 
-class WorkManagerSyncWorker(
+internal class WorkManagerSyncWorker(
     private val context: Context,
     private val params: WorkerParameters
 ) : CoroutineWorker(context, params) {
@@ -467,7 +468,7 @@ private const val SYNC_STATE_PREFS_KEY = "syncPrefs"
 private const val SYNC_LAST_SYNCED_KEY = "lastSynced"
 private const val SYNC_STATE_KEY = "persistedState"
 
-private const val SYNC_STAGGER_BUFFER_MS = 10 * 60 * 1000L // 10 minutes.
+private const val SYNC_STAGGER_BUFFER_MS = 5 * 60 * 1000L // 5 minutes.
 private const val SYNC_STARTUP_DELAY_MS = 5 * 1000L // 5 seconds.
 
 fun getLastSynced(context: Context): Long {

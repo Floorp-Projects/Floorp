@@ -7,9 +7,11 @@ package mozilla.components.feature.accounts
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
@@ -299,12 +301,14 @@ class FxaWebChannelFeature(
                 return null
             }
 
-            accountManager.finishAuthenticationAsync(FxaAuthData(
-                authType = authType,
-                code = code,
-                state = state,
-                declinedEngines = declinedEngines?.toSyncEngines()
-            ))
+            CoroutineScope(Dispatchers.Main).launch {
+                accountManager.finishAuthentication(FxaAuthData(
+                    authType = authType,
+                    code = code,
+                    state = state,
+                    declinedEngines = declinedEngines?.toSyncEngines()
+                ))
+            }
 
             return null
         }

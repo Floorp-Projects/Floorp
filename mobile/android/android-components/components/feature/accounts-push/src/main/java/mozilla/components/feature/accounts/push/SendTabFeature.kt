@@ -54,7 +54,7 @@ internal class EventsObserver(
     override fun onEvents(events: List<AccountEvent>) {
         events.asSequence()
             .filterIsInstance<AccountEvent.DeviceCommandIncoming>()
-            .map({ it.command })
+            .map { it.command }
             .filterIsInstance<DeviceCommandIncoming.TabReceived>()
             .forEach { command ->
                 logger.debug("Showing ${command.entries.size} tab(s) received from deviceID=${command.from?.id}")

@@ -72,7 +72,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             },
             onScanResult = { pairingUrl ->
                 launch {
-                    val url = account.beginPairingFlowAsync(pairingUrl, scopes).await()
+                    val url = account.beginPairingFlow(pairingUrl, scopes)
                     if (url == null) {
                         Log.log(
                             Log.Priority.ERROR,
@@ -91,7 +91,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<View>(R.id.buttonCustomTabs).setOnClickListener {
             launch {
-                account.beginOAuthFlowAsync(scopes).await()?.let {
+                account.beginOAuthFlow(scopes)?.let {
                     openTab(it.url)
                 }
             }
@@ -99,7 +99,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                account.beginOAuthFlowAsync(scopes).await()?.let {
+                account.beginOAuthFlow(scopes)?.let {
                     openWebView(it.url)
                 }
             }
@@ -123,8 +123,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private fun initAccount(): FirefoxAccount {
         getAuthenticatedAccount()?.let {
             launch {
-                it.getProfileAsync(true).await()?.let {
-                    displayProfile(it)
+                it.getProfile(true)?.let { profile ->
+                    displayProfile(profile)
                 }
             }
             return it
@@ -189,8 +189,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     private fun displayAndPersistProfile(code: String, state: String) {
         launch {
-            account.completeOAuthFlowAsync(code, state).await()
-            account.getProfileAsync().await()?.let {
+            account.completeOAuthFlow(code, state)
+            account.getProfile()?.let {
                 displayProfile(it)
             }
             account.toJSONString().let {

@@ -8,17 +8,6 @@ import kotlinx.coroutines.Deferred
 import org.json.JSONObject
 
 /**
- * An auth-related exception type, for use with [AuthException].
- *
- * @property msg string value of the auth exception type
- */
-enum class AuthExceptionType(val msg: String) {
-    KEY_INFO("Missing key info"),
-    NO_TOKEN("Missing access token"),
-    UNAUTHORIZED("Unauthorized")
-}
-
-/**
  * The access-type determines whether the code can be exchanged for a refresh token for
  * offline use or not.
  *
@@ -30,38 +19,37 @@ enum class AccessType(val msg: String) {
 }
 
 /**
- * An exception which may happen while obtaining auth information using [OAuthAccount].
- */
-class AuthException(type: AuthExceptionType, cause: Exception? = null) : Throwable(type.msg, cause)
-
-/**
  * An object that represents a login flow initiated by [OAuthAccount].
  * @property state OAuth state parameter, identifying a specific authentication flow.
- * This string is randomly generated during [OAuthAccount.beginOAuthFlowAsync] and [OAuthAccount.beginPairingFlowAsync].
+ * This string is randomly generated during [OAuthAccount.beginOAuthFlow] and [OAuthAccount.beginPairingFlow].
  * @property url Url which needs to be loaded to go through the authentication flow identified by [state].
  */
 data class AuthFlowUrl(val state: String, val url: String)
 
 /**
  * Represents a specific type of an "in-flight" migration state that could result from intermittent
- * issues during [OAuthAccount.migrateFromSessionTokenAsync] or [OAuthAccount.copyFromSessionTokenAsync].
+ * issues during [OAuthAccount.migrateFromAccount].
  */
-enum class InFlightMigrationState {
+enum class InFlightMigrationState(val reuseSessionToken: Boolean) {
     /**
-     * No in-flight migration.
+     * "Copy" in-flight migration present. Can retry migration via [OAuthAccount.retryMigrateFromSessionToken].
      */
-    NONE,
+    COPY_SESSION_TOKEN(false),
 
     /**
-     * "Copy" in-flight migration present. Can retry migration via [OAuthAccount.retryMigrateFromSessionTokenAsync].
+     * "Reuse" in-flight migration present. Can retry migration via [OAuthAccount.retryMigrateFromSessionToken].
      */
-    COPY_SESSION_TOKEN,
-
-    /**
-     * "Reuse" in-flight migration present. Can retry migration via [OAuthAccount.retryMigrateFromSessionTokenAsync].
-     */
-    REUSE_SESSION_TOKEN
+    REUSE_SESSION_TOKEN(true)
 }
+
+/**
+ * Data structure describing FxA and Sync credentials necessary to sign-in into an FxA account.
+ */
+data class MigratingAccountInfo(
+    val sessionToken: String,
+    val kSync: String,
+    val kXCS: String
+)
 
 /**
  * Facilitates testing consumers of FirefoxAccount.
@@ -76,12 +64,12 @@ interface OAuthAccount : AutoCloseable {
      * @param entryPoint The UI entryPoint used to start this flow. An arbitrary
      * string which is recorded in telemetry by the server to help analyze the
      * most effective touchpoints
-     * @return Deferred AuthFlowUrl that resolves to the flow URL when complete
+     * @return [AuthFlowUrl] if available, `null` in case of a failure
      */
-    fun beginOAuthFlowAsync(
+    suspend fun beginOAuthFlow(
         scopes: Set<String>,
         entryPoint: String = "android-components"
-    ): Deferred<AuthFlowUrl?>
+    ): AuthFlowUrl?
 
     /**
      * Constructs a URL used to begin the pairing flow for the requested scopes and pairingUrl.
@@ -91,13 +79,13 @@ interface OAuthAccount : AutoCloseable {
      * @param entryPoint The UI entryPoint used to start this flow. An arbitrary
      * string which is recorded in telemetry by the server to help analyze the
      * most effective touchpoints
-     * @return Deferred AuthFlowUrl Optional that resolves to the flow URL when complete
+     * @return [AuthFlowUrl] if available, `null` in case of a failure
      */
-    fun beginPairingFlowAsync(
+    suspend fun beginPairingFlow(
         pairingUrl: String,
         scopes: Set<String>,
         entryPoint: String = "android-components"
-    ): Deferred<AuthFlowUrl?>
+    ): AuthFlowUrl?
 
     /**
      * Returns current FxA Device ID for an authenticated account.
@@ -123,12 +111,12 @@ interface OAuthAccount : AutoCloseable {
      * the code can be exchanged for a refresh token to be used offline or not
      * @return Deferred authorized auth code string, or `null` in case of failure.
      */
-    fun authorizeOAuthCodeAsync(
+    suspend fun authorizeOAuthCode(
         clientId: String,
         scopes: Array<String>,
         state: String,
         accessType: AccessType = AccessType.ONLINE
-    ): Deferred<String?>
+    ): String?
 
     /**
      * Fetches the profile object for the current client either from the existing cached state
@@ -137,18 +125,18 @@ interface OAuthAccount : AutoCloseable {
      * @param ignoreCache Fetch the profile information directly from the server
      * @return Profile (optional, if successfully retrieved) representing the user's basic profile info
      */
-    fun getProfileAsync(ignoreCache: Boolean = false): Deferred<Profile?>
+    suspend fun getProfile(ignoreCache: Boolean = false): Profile?
 
     /**
      * Authenticates the current account using the [code] and [state] parameters obtained via the
-     * OAuth flow initiated by [beginOAuthFlowAsync].
+     * OAuth flow initiated by [beginOAuthFlow].
      *
      * Modifies the FirefoxAccount state.
      * @param code OAuth code string
      * @param state state token string
      * @return Deferred boolean representing success or failure
      */
-    fun completeOAuthFlowAsync(code: String, state: String): Deferred<Boolean>
+    suspend fun completeOAuthFlow(code: String, state: String): Boolean
 
     /**
      * Tries to fetch an access token for the given scope.
@@ -157,11 +145,11 @@ interface OAuthAccount : AutoCloseable {
      * @return [AccessTokenInfo] that stores the token, along with its scope, key and
      *                           expiration timestamp (in seconds) since epoch when complete
      */
-    fun getAccessTokenAsync(singleScope: String): Deferred<AccessTokenInfo?>
+    suspend fun getAccessToken(singleScope: String): AccessTokenInfo?
 
     /**
      * Call this whenever an authentication error was encountered while using an access token
-     * issued by [getAccessTokenAsync].
+     * issued by [getAccessToken].
      */
     fun authErrorDetected()
 
@@ -176,7 +164,7 @@ interface OAuthAccount : AutoCloseable {
      * @return An optional [Boolean] flag indicating if we're connected, or need to go through
      * re-authentication. A null result means we were not able to determine state at this time.
      */
-    fun checkAuthorizationStatusAsync(singleScope: String): Deferred<Boolean?>
+    suspend fun checkAuthorizationStatus(singleScope: String): Boolean?
 
     /**
      * Fetches the token server endpoint, for authentication using the SAML bearer flow.
@@ -203,36 +191,23 @@ interface OAuthAccount : AutoCloseable {
      * Attempts to migrate from an existing session token without user input.
      * Passed-in session token will be reused.
      *
-     * @param sessionToken token string to use for login
-     * @param kSync sync string for login
-     * @param kXCS XCS string for login
+     * @param authInfo Auth info necessary for signing in
+     * @param reuseSessionToken Whether or not session token should be reused; reusing session token
+     * means that FxA device record will be inherited
      * @return JSON object with the result of the migration or 'null' if it failed.
-     * For up-to-date schema, see underlying implementation in https://github.com/mozilla/application-services/blob/v0.49.0/components/fxa-client/src/migrator.rs#L10
+     * For up-to-date schema, see underlying implementation in
+     * https://github.com/mozilla/application-services/blob/v0.49.0/components/fxa-client/src/migrator.rs#L10
      * At the moment, it's just "{total_duration: long}".
      */
-    fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<JSONObject?>
-
-    /**
-     * Attempts to migrate from an existing session token without user input.
-     * New session token will be created.
-     *
-     * @param sessionToken token string to use for login
-     * @param kSync sync string for login
-     * @param kXCS XCS string for login
-     * @return JSON object with the result of the migration or 'null' if it failed.
-     * For up-to-date schema, see underlying implementation in https://github.com/mozilla/application-services/blob/v0.49.0/components/fxa-client/src/migrator.rs#L10
-     * At the moment, it's just "{total_duration: long}".
-     */
-    fun copyFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<JSONObject?>
+    suspend fun migrateFromAccount(authInfo: MigratingAccountInfo, reuseSessionToken: Boolean): JSONObject?
 
     /**
      * Checks if there's a migration in-flight. An in-flight migration means that we've tried to migrate
-     * via either [migrateFromSessionTokenAsync] or [copyFromSessionTokenAsync], and failed for intermittent
-     * (e.g. network)
-     * reasons. When an in-flight migration is present, we can retry using [retryMigrateFromSessionTokenAsync].
-     * @return InFlightMigrationState indicating specific migration state.
+     * via [migrateFromAccount], and failed for intermittent (e.g. network) reasons. When an in-flight
+     * migration is present, we can retry using [retryMigrateFromSessionToken].
+     * @return InFlightMigrationState indicating specific migration state. [null] if not in a migration state.
      */
-    fun isInMigrationState(): InFlightMigrationState
+    fun isInMigrationState(): InFlightMigrationState?
 
     /**
      * Retries an in-flight migration attempt.
@@ -240,7 +215,7 @@ interface OAuthAccount : AutoCloseable {
      * For up-to-date schema, see underlying implementation in https://github.com/mozilla/application-services/blob/v0.49.0/components/fxa-client/src/migrator.rs#L10
      * At the moment, it's just "{total_duration: long}".
      */
-    fun retryMigrateFromSessionTokenAsync(): Deferred<JSONObject?>
+    suspend fun retryMigrateFromSessionToken(): JSONObject?
 
     /**
      * Returns the device constellation for the current account
@@ -258,7 +233,7 @@ interface OAuthAccount : AutoCloseable {
      * Failure indicates that we may have failed to destroy current device record. Nothing to do for
      * the consumer; device record will be cleaned up eventually via TTL.
      */
-    fun disconnectAsync(): Deferred<Boolean>
+    suspend fun disconnect(): Boolean
 
     /**
      * Serializes the current account's authentication state as a JSON string, for persistence in
@@ -307,14 +282,40 @@ sealed class AuthType {
     data class OtherExternal(val action: String?) : AuthType()
 
     /**
-     * Account created via a shared account state from another app.
+     * Account created via a shared account state from another app via the copy token flow.
      */
-    object Shared : AuthType()
+    object MigratedCopy : AuthType()
+
+    /**
+     * Account created via a shared account state from another app via the reuse token flow.
+     */
+    object MigratedReuse : AuthType()
 
     /**
      * Existing account was recovered from an authentication problem.
      */
     object Recovered : AuthType()
+}
+
+/**
+ * Different types of errors that may be encountered during authorization and migration flows.
+ * Intermittent network problems are the most common reason for these errors.
+ */
+enum class AuthFlowError {
+    /**
+     * Couldn't begin authorization, i.e. failed to obtain an authorization URL.
+     */
+    FailedToBeginAuth,
+
+    /**
+     * Couldn't complete authorization after user entered valid credentials/paired correctly.
+     */
+    FailedToCompleteAuth,
+
+    /**
+     * Unrecoverable error during account migration.
+     */
+    FailedToMigrate
 }
 
 /**
@@ -346,6 +347,12 @@ interface AccountObserver {
      * Account needs to be re-authenticated (e.g. due to a password change).
      */
     fun onAuthenticationProblems() = Unit
+
+    /**
+     * Encountered an error during an authentication or migration flow.
+     * @param error Exact error encountered.
+     */
+    fun onFlowError(error: AuthFlowError) = Unit
 }
 
 data class Avatar(

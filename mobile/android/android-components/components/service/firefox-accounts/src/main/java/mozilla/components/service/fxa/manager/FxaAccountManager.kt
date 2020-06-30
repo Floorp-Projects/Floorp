@@ -8,29 +8,26 @@ import android.content.Context
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 import mozilla.appservices.syncmanager.DeviceSettings
+import mozilla.components.concept.sync.AuthFlowError
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.AccountEventsObserver
+import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.concept.sync.ServiceResult
 import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.service.fxa.AccountManagerException
 import mozilla.components.service.fxa.AccountStorage
-import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaAuthData
@@ -55,6 +52,7 @@ import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import org.json.JSONObject
 import java.io.Closeable
 import java.lang.Exception
 import java.lang.IllegalArgumentException
@@ -62,22 +60,6 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
-
-/**
- * Observer interface which lets its consumers respond to authentication requests.
- */
-private interface OAuthObserver {
-    /**
-     * Account manager is requesting for an OAUTH flow to begin.
-     * @param authUrl Starting point for the OAUTH flow.
-     */
-    fun onBeginOAuthFlow(authFlowUrl: AuthFlowUrl)
-
-    /**
-     * Account manager encountered an error during authentication.
-     */
-    fun onError()
-}
 
 // Necessary to fetch a profile.
 const val SCOPE_PROFILE = "profile"
@@ -95,10 +77,12 @@ const val AUTH_CHECK_CIRCUIT_BREAKER_COUNT = 10
 // For example, initializing the account state machine & syncing after letting our access tokens expire
 // due to long period of inactivity will trigger a few 401s, and that shouldn't be a cause for concern.
 
+const val MAX_NETWORK_RETRIES = 3
+
 /**
- * Describes a result of running [FxaAccountManager.signInWithShareableAccountAsync].
+ * Describes a result of running [FxaAccountManager.migrateFromAccount].
  */
-enum class SignInWithShareableAccountResult {
+enum class MigrationResult {
     /**
      * Sign-in failed due to an intermittent problem (such as a network failure). A retry attempt will
      * be performed automatically during account manager initialization, or as a side-effect of certain
@@ -134,12 +118,12 @@ enum class SignInWithShareableAccountResult {
  * @param syncConfig Optional, initial sync behaviour configuration. Sync will be disabled if this is `null`.
  * @param applicationScopes A set of scopes which will be requested during account authentication.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 open class FxaAccountManager(
     private val context: Context,
     private val serverConfig: ServerConfig,
     private val deviceConfig: DeviceConfig,
-    @Volatile private var syncConfig: SyncConfig?,
+    private val syncConfig: SyncConfig?,
     private val applicationScopes: Set<String> = emptySet(),
     private val crashReporter: CrashReporting? = null,
     // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
@@ -149,29 +133,26 @@ open class FxaAccountManager(
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
     private val logger = Logger("FirefoxAccountStateMachine")
 
+    /**
+     * Observer interface which lets its consumers respond to authentication requests.
+     */
+    private interface OAuthObserver {
+        /**
+         * Account manager is requesting for an OAUTH flow to begin.
+         * @param authUrl Starting point for the OAUTH flow.
+         */
+        fun onBeginOAuthFlow(authFlowUrl: AuthFlowUrl)
+
+        /**
+         * Account manager encountered an error during authentication.
+         */
+        fun onError() {}
+    }
+
     @Volatile
     private var latestAuthState: String? = null
 
-    // This is used during 'beginAuthenticationAsync' call, which returns a Deferred<String>.
-    // 'deferredAuthUrl' is set on this observer and returned, and resolved once state machine goes
-    // through its motions. This allows us to keep around only one observer in the registry.
-    private val fxaOAuthObserver = FxaOAuthObserver()
-    private class FxaOAuthObserver : OAuthObserver {
-        @Volatile
-        lateinit var deferredAuthUrl: CompletableDeferred<String?>
-
-        override fun onBeginOAuthFlow(authFlowUrl: AuthFlowUrl) {
-            deferredAuthUrl.complete(authFlowUrl.url)
-        }
-
-        override fun onError() {
-            deferredAuthUrl.complete(null)
-        }
-    }
     private val oauthObservers = object : Observable<OAuthObserver> by ObserverRegistry() {}
-    init {
-        oauthObservers.register(fxaOAuthObserver)
-    }
 
     init {
         GlobalAccountManager.setInstance(this)
@@ -202,7 +183,7 @@ open class FxaAccountManager(
     // We'd like to persist this state, so that we can short-circuit transition to AuthenticationProblem on
     // initialization, instead of triggering the full state machine knowing in advance we'll hit auth problems.
     // See https://github.com/mozilla-mobile/android-components/issues/5102
-    @Volatile private var state = AccountState.Start
+    @Volatile private var state: State = State.Idle(AccountState.NotAuthenticated)
     private val eventQueue = ConcurrentLinkedQueue<Event>()
 
     private val accountEventObserverRegistry = ObserverRegistry<AccountEventsObserver>()
@@ -225,11 +206,22 @@ open class FxaAccountManager(
     // Note that trying to perform a sync while account isn't authenticated will not succeed.
     @GuardedBy("this")
     private var syncManager: SyncManager? = null
-    private var syncManagerIntegration: AccountsToSyncIntegration? = null
-    private val internalSyncStatusObserver = SyncToAccountsIntegration(this)
 
     init {
-        syncConfig?.let { setSyncConfigAsync(it) }
+        syncConfig?.let {
+            // Initialize sync manager with the passed-in config.
+            if (syncConfig.supportedEngines.isEmpty()) {
+                throw IllegalArgumentException("Set of supported engines can't be empty")
+            }
+
+            syncManager = createSyncManager(syncConfig).also {
+                // Observe account state changes.
+                this.register(AccountsToSyncIntegration(it))
+
+                // Observe sync status changes.
+                it.registerSyncStatusObserver(SyncToAccountsIntegration(this))
+            }
+        }
 
         if (syncManager == null) {
             logger.info("Sync is disabled")
@@ -241,7 +233,7 @@ open class FxaAccountManager(
     /**
      * Queries trusted FxA Auth providers available on the device, returning a list of [ShareableAccount]
      * in an order of preference. Any of the returned [ShareableAccount] may be used with
-     * [signInWithShareableAccountAsync] to sign-in into an FxA account without any required user input.
+     * [migrateFromAccount] to sign-in into an FxA account without any required user input.
      */
     fun shareableAccounts(context: Context): List<ShareableAccount> {
         return AccountSharing.queryShareableAccounts(context)
@@ -255,79 +247,20 @@ open class FxaAccountManager(
      * @param reuseSessionToken Whether or not to reuse existing session token (which is part of the [ShareableAccount].
      * @return A deferred boolean flag indicating success (if true) of the sign-in operation.
      */
-    fun signInWithShareableAccountAsync(
+    suspend fun migrateFromAccount(
         fromAccount: ShareableAccount,
         reuseSessionToken: Boolean = false
-    ): Deferred<SignInWithShareableAccountResult> {
-        val stateMachineTransition = processQueueAsync(Event.SignInShareableAccount(fromAccount, reuseSessionToken))
-        val result = CompletableDeferred<SignInWithShareableAccountResult>()
-        CoroutineScope(coroutineContext).launch {
-            stateMachineTransition.await()
+    ): MigrationResult = withContext(coroutineContext) {
+        processQueue(Event.Account.MigrateFromAccount(fromAccount, reuseSessionToken))
 
-            if (accountMigrationInFlight()) {
-                result.complete(SignInWithShareableAccountResult.WillRetry)
-            } else if (authenticatedAccount() != null) {
-                result.complete(SignInWithShareableAccountResult.Success)
-            } else {
-                result.complete(SignInWithShareableAccountResult.Failure)
+        when (val s = state) {
+            is State.Idle -> when (s.accountState) {
+                AccountState.Authenticated -> MigrationResult.Success
+                AccountState.IncompleteMigration -> MigrationResult.WillRetry
+                else -> MigrationResult.Failure
             }
+            else -> MigrationResult.Failure
         }
-        return result
-    }
-
-    /**
-     * Allows setting a new [SyncConfig], changing sync behaviour.
-     *
-     * @param config Sync behaviour configuration, see [SyncConfig].
-     */
-    fun setSyncConfigAsync(config: SyncConfig): Deferred<Unit> = synchronized(this) {
-        logger.info("Enabling/updating sync with a new SyncConfig: $config")
-
-        syncConfig = config
-        // Let the existing manager, if it's present, clean up (cancel periodic syncing, etc).
-        syncManager?.stop()
-        syncManagerIntegration = null
-
-        val result = CompletableDeferred<Unit>()
-
-        // Initialize a new sync manager with the passed-in config.
-        if (config.supportedEngines.isEmpty()) {
-            throw IllegalArgumentException("Set of supported engines can't be empty")
-        }
-
-        syncManager = createSyncManager(config).also { manager ->
-            // Observe account state changes.
-            syncManagerIntegration = AccountsToSyncIntegration(manager).also { accountToSync ->
-                this@FxaAccountManager.register(accountToSync)
-            }
-            // Observe sync status changes.
-            manager.registerSyncStatusObserver(internalSyncStatusObserver)
-            // If account is currently authenticated, 'enable' the sync manager.
-            if (authenticatedAccount() != null) {
-                CoroutineScope(coroutineContext).launch {
-                    // Make sure auth-info cache is populated before starting sync manager.
-                    maybeUpdateSyncAuthInfoCache()
-
-                    // We enabled syncing for an authenticated account, and we now need to kick-off sync.
-                    // How do we know if this is going to be a first sync for an account?
-                    // We can make two assumptions, that are probably roughly correct most of the time:
-                    // - we know what the user data choices are
-                    //  - they were presented with CWTS ("choose what to sync") during sign-up/sign-in
-                    // - ... or we're enabling sync for an existing account, with data choices already
-                    //   recorded on some other client, e.g. desktop.
-                    // In either case, we need to behave as if we're in a "first sync":
-                    // - persist local choice, if we've signed for an account up locally and have CWTS
-                    // data from the user
-                    // - or fetch existing CWTS data from the server, if we don't have it locally.
-                    manager.start(SyncReason.FirstSync)
-                    result.complete(Unit)
-                }
-            } else {
-                result.complete(Unit)
-            }
-        }
-
-        return result
     }
 
     /**
@@ -357,38 +290,36 @@ open class FxaAccountManager(
      * @param reason A [SyncReason] indicating why this sync is being requested.
      * @param debounce Boolean flag indicating if this sync may be debounced (in case another sync executed recently).
      */
-    fun syncNowAsync(
+    suspend fun syncNow(
         reason: SyncReason,
         debounce: Boolean = false
-    ): Deferred<Unit> = CoroutineScope(coroutineContext).async {
-        // We may be in a state where we're not quite authenticated yet - but can auto-retry our
-        // authentication, instead.
-        // This is one of our trigger points for retrying - when a user asks us to sync.
-        // Another trigger point is the initialization flow of the account manager itself.
-        if (accountMigrationInFlight()) {
-            // Only trigger a retry attempt if the sync request was caused by a direct user action.
-            // We don't attempt to retry migration on 'SyncReason.Startup' because a retry will happen during
-            // account manager initialization if necessary anyway.
-            // If the retry attempt succeeds, sync will run as a by-product of regular account authentication flow,
-            // which is why we don't check for the result of a retry attempt here.
-            when (reason) {
-                SyncReason.User, SyncReason.EngineChange -> processQueueAsync(Event.RetryMigration).await()
-            }
-        } else {
-            // Make sure auth cache is populated before we try to sync.
-            maybeUpdateSyncAuthInfoCache()
-
-            // Access to syncManager is guarded by `this`.
-            synchronized(this) {
-                if (syncManager == null) {
-                    throw IllegalStateException(
-                        "Sync is not configured. Construct this class with a 'syncConfig' or use 'setSyncConfig'"
-                    )
+    ) = withContext(coroutineContext) {
+        when (val s = state) {
+            // Can't sync while we're still doing stuff.
+            is State.Active -> Unit
+            is State.Idle -> when (s.accountState) {
+                // If we're in an incomplete migration state, try to complete it.
+                // This is one of our trigger points for retrying - when a user asks us to sync.
+                // Another trigger point is the startup flow of the account manager itself.
+                AccountState.IncompleteMigration -> {
+                    processQueue(Event.Account.RetryMigration)
                 }
-                syncManager?.now(reason, debounce)
+                // All good, request a sync.
+                AccountState.Authenticated -> {
+                    // Make sure auth cache is populated before we try to sync.
+                    maybeUpdateSyncAuthInfoCache()
+
+                    // Access to syncManager is guarded by `this`.
+                    synchronized(this) {
+                        checkNotNull(syncManager == null) {
+                            "Sync is not configured. Construct this class with a 'syncConfig' or use 'setSyncConfig'"
+                        }
+                        syncManager?.now(reason, debounce)
+                    }
+                }
+                else -> logger.info("Ignoring syncNow request, not in the right state: $s")
             }
         }
-        Unit
     }
 
     /**
@@ -399,9 +330,9 @@ open class FxaAccountManager(
     /**
      * Call this after registering your observers, and before interacting with this class.
      */
-    fun initAsync(): Deferred<Unit> {
-        statePersistenceCallback = FxaStatePersistenceCallback(WeakReference(this))
-        return processQueueAsync(Event.Init)
+    suspend fun start() = withContext(coroutineContext) {
+        statePersistenceCallback = FxaStatePersistenceCallback(WeakReference(this@FxaAccountManager))
+        processQueue(Event.Account.Start)
     }
 
     /**
@@ -409,29 +340,18 @@ open class FxaAccountManager(
      * @return [OAuthAccount] if we're in an authenticated state, null otherwise. Returned [OAuthAccount]
      * may need to be re-authenticated; consumers are expected to check [accountNeedsReauth].
      */
-    fun authenticatedAccount(): OAuthAccount? = when (state) {
-        AccountState.AuthenticatedWithProfile,
-        AccountState.AuthenticatedNoProfile,
-        AccountState.AuthenticationProblem,
-        AccountState.CanAutoRetryAuthenticationViaTokenReuse,
-        AccountState.CanAutoRetryAuthenticationViaTokenCopy -> account
+    fun authenticatedAccount(): OAuthAccount? = when (val s = state) {
+        is State.Idle -> when (s.accountState) {
+            AccountState.Authenticated,
+            AccountState.IncompleteMigration,
+            AccountState.AuthenticationProblem -> account
+            else -> null
+        }
         else -> null
     }
 
     /**
-     * Checks if there's an in-flight account migration. An in-flight migration means that we've tried to "migrate"
-     * via [signInWithShareableAccountAsync] and failed for intermittent (e.g. network) reasons.
-     * A migration sign-in attempt will be retried automatically either during account manager initialization,
-     * or as a by-product of user-triggered [syncNowAsync].
-     */
-    fun accountMigrationInFlight(): Boolean = when (state) {
-        AccountState.CanAutoRetryAuthenticationViaTokenReuse,
-        AccountState.CanAutoRetryAuthenticationViaTokenCopy -> true
-        else -> false
-    }
-
-    /**
-     * Indicates if account needs to be re-authenticated via [beginAuthenticationAsync].
+     * Indicates if account needs to be re-authenticated via [beginAuthentication].
      * Most common reason for an account to need re-authentication is a password change.
      *
      * TODO this may return a false-positive, if we're currently going through a recovery flow.
@@ -439,38 +359,76 @@ open class FxaAccountManager(
      *
      * @return A boolean flag indicating if account needs to be re-authenticated.
      */
-    fun accountNeedsReauth(): Boolean {
-        return when (state) {
+    fun accountNeedsReauth() = when (val s = state) {
+        is State.Idle -> when (s.accountState) {
             AccountState.AuthenticationProblem -> true
             else -> false
         }
+        else -> false
     }
 
-    fun accountProfile(): Profile? {
-        return when (state) {
-            AccountState.AuthenticatedWithProfile,
+    /**
+     * Returns a [Profile] for an account, attempting to fetch it if necessary.
+     * @return [Profile] if one is available and account is an authenticated state.
+     */
+    fun accountProfile(): Profile? = when (val s = state) {
+        is State.Idle -> when (s.accountState) {
+            AccountState.Authenticated,
             AccountState.AuthenticationProblem -> profile
             else -> null
         }
+        else -> null
     }
 
-    fun updateProfileAsync(): Deferred<Unit> {
-        return processQueueAsync(Event.FetchProfile)
+    /**
+     * Fetches an up-to-date [Profile] if account is in an authenticated state.
+     */
+    suspend fun fetchProfile(): Profile? {
+        return refreshProfile(true)
     }
 
-    fun beginAuthenticationAsync(pairingUrl: String? = null): Deferred<String?> {
-        val deferredAuthUrl = CompletableDeferred<String?>()
+    private suspend fun refreshProfile(ignoreCache: Boolean): Profile? {
+        return authenticatedAccount()?.getProfile(ignoreCache = ignoreCache)?.let { newProfile ->
+            profile = newProfile
+            notifyObservers {
+                onProfileUpdated(newProfile)
+            }
+            profile
+        }
+    }
 
-        // Observer will 'complete' this deferred once state machine resolves its events.
-        fxaOAuthObserver.deferredAuthUrl = deferredAuthUrl
+    /**
+     * Begins an authentication process. Should be finalized by calling [finishAuthentication] once
+     * user successfully goes through the authentication at the returned url.
+     * @param pairingUrl Optional pairing URL in case a pairing flow is being initiated.
+     * @return An authentication url which is to be presented to the user.
+     */
+    suspend fun beginAuthentication(pairingUrl: String? = null): String? {
+        val event = if (pairingUrl != null) {
+            Event.Account.BeginPairingFlow(pairingUrl)
+        } else {
+            Event.Account.BeginEmailFlow
+        }
 
-        val event = if (pairingUrl != null) Event.Pair(pairingUrl) else Event.Authenticate
-        processQueueAsync(event)
+        // 'deferredAuthUrl' will be set as the state machine reacts to the 'event'.
+        var deferredAuthUrl: String? = null
+        oauthObservers.register(object : OAuthObserver {
+            override fun onBeginOAuthFlow(authFlowUrl: AuthFlowUrl) {
+                deferredAuthUrl = authFlowUrl.url
+            }
+
+            override fun onError() {
+                // No-op for now.
+                logger.warn("Got an error during 'beginAuthentication'")
+            }
+        })
+        processQueue(event)
+        oauthObservers.unregisterObservers()
         return deferredAuthUrl
     }
 
     /**
-     * Finalize authentication that was started via [beginAuthenticationAsync].
+     * Finalize authentication that was started via [beginAuthentication].
      *
      * If authentication wasn't started via this manager we won't accept this authentication attempt,
      * returning `false`. This may happen if [WebChannelFeature] is enabled, and user is manually
@@ -482,38 +440,39 @@ open class FxaAccountManager(
      *
      * @return A deferred boolean flag indicating if authentication state was accepted.
      */
-    fun finishAuthenticationAsync(authData: FxaAuthData): Deferred<Boolean> {
-        val result = CompletableDeferred<Boolean>()
-
+    suspend fun finishAuthentication(authData: FxaAuthData) = withContext(coroutineContext) {
         when {
             latestAuthState == null -> {
                 logger.warn("Trying to finish authentication that was never started.")
-                result.complete(false)
+                false
             }
             authData.state != latestAuthState -> {
                 logger.warn("Trying to finish authentication for an invalid auth state; ignoring.")
-                result.complete(false)
+                false
             }
             authData.state == latestAuthState -> {
-                CoroutineScope(coroutineContext).launch {
-                    processQueueAsync(Event.Authenticated(authData)).await()
-                    result.complete(true)
-                }
+                processQueue(Event.Progress.AuthData(authData))
+                true
             }
-            else -> throw IllegalStateException("Unexpected finishAuthenticationAsync state")
+            else -> throw IllegalStateException("Unexpected finishAuthentication state")
         }
-
-        return result
     }
 
-    fun logoutAsync(): Deferred<Unit> {
-        return processQueueAsync(Event.Logout)
-    }
+    /**
+     * Logout of the account, if currently logged-in.
+     */
+    suspend fun logout() = withContext(coroutineContext) { processQueue(Event.Account.Logout) }
 
+    /**
+     * Register a [AccountEventsObserver] to monitor events relevant to an account/device.
+     */
     fun registerForAccountEvents(observer: AccountEventsObserver, owner: LifecycleOwner, autoPause: Boolean) {
         accountEventObserverRegistry.register(observer, owner, autoPause)
     }
 
+    /**
+     * Register a [SyncStatusObserver] to monitor sync activity performed by this manager.
+     */
     fun registerForSyncEvents(observer: SyncStatusObserver, owner: LifecycleOwner, autoPause: Boolean) {
         syncStatusObserverRegistry.register(observer, owner, autoPause)
     }
@@ -528,26 +487,26 @@ open class FxaAccountManager(
         operation: String,
         errorCountWithinTheTimeWindow: Int = 1
     ) = withContext(coroutineContext) {
-        processQueueAsync(
-            Event.AuthenticationError(operation, errorCountWithinTheTimeWindow)
-        ).await()
+        processQueue(
+            Event.Account.AuthenticationError(operation, errorCountWithinTheTimeWindow)
+        )
     }
 
     /**
      * Pumps the state machine until all events are processed and their side-effects resolve.
      */
-    private fun processQueueAsync(event: Event): Deferred<Unit> = CoroutineScope(coroutineContext).async {
+    private suspend fun processQueue(event: Event) = withContext(coroutineContext) {
         eventQueue.add(event)
         do {
             val toProcess: Event = eventQueue.poll()!!
-            val transitionInto = FxaStateMatrix.nextState(state, toProcess)
+            val transitionInto = state.next(toProcess)
 
             if (transitionInto == null) {
-                logger.warn("Got invalid event $toProcess for state $state.")
+                logger.warn("Got invalid event '$toProcess' for state $state.")
                 continue
             }
 
-            logger.info("Processing event $toProcess for state $state. Next state is $transitionInto")
+            logger.info("Processing event '$toProcess' for state $state. Next state is $transitionInto")
 
             state = transitionInto
 
@@ -558,363 +517,305 @@ open class FxaAccountManager(
         } while (!eventQueue.isEmpty())
     }
 
+    private suspend fun accountStateSideEffects(forState: State.Idle, via: Event): Unit = when (forState.accountState) {
+        AccountState.NotAuthenticated -> when (via) {
+            Event.Progress.LoggedOut -> {
+                notifyObservers { onLoggedOut() }
+            }
+            Event.Progress.FailedToBeginAuth -> {
+                notifyObservers { onFlowError(AuthFlowError.FailedToBeginAuth) }
+            }
+            Event.Progress.FailedToCompleteAuth -> {
+                notifyObservers { onFlowError(AuthFlowError.FailedToCompleteAuth) }
+            }
+            is Event.Progress.FailedToCompleteMigration -> {
+                notifyObservers { onFlowError(AuthFlowError.FailedToMigrate) }
+            }
+            else -> Unit
+        }
+        AccountState.IncompleteMigration -> {
+            via as Event.Progress.IncompleteMigration
+            Unit
+        }
+        AccountState.Authenticated -> when (via) {
+            is Event.Progress.CompletedAuthentication -> {
+                notifyObservers { onAuthenticated(account, via.authType) }
+                refreshProfile(ignoreCache = false)
+                Unit
+            }
+            Event.Progress.RecoveredFromAuthenticationProblem -> {
+                notifyObservers { onAuthenticated(account, AuthType.Recovered) }
+                refreshProfile(ignoreCache = true)
+                Unit
+            }
+            else -> Unit
+        }
+        AccountState.AuthenticationProblem -> {
+            notifyObservers { onAuthenticationProblems() }
+        }
+    }
+
+    @Suppress("NestedBlockDepth", "LongMethod")
+    private suspend fun internalStateSideEffects(
+        forState: State.Active,
+        via: Event
+    ): Event? = when (forState.progressState) {
+        ProgressState.Initializing -> {
+            // Locally corrupt accounts are simply treated as 'absent'.
+            val hydratedAccount = try {
+                getAccountStorage().read()
+            } catch (e: FxaPanicException) {
+                // Don't swallow panics from the underlying library.
+                throw e
+            } catch (e: FxaException) {
+                logger.error("Failed to load saved account. Re-initializing...", e)
+                null
+            }
+
+            if (hydratedAccount == null) {
+                account = createAccount(serverConfig)
+                Event.Progress.AccountNotFound
+            } else {
+                account = hydratedAccount
+                account.registerPersistenceCallback(statePersistenceCallback)
+                account.deviceConstellation().register(accountEventsIntegration)
+                // We may have attempted a migration previously, which failed in a way that allows
+                // us to retry it (e.g. a migration could have hit
+                when (account.isInMigrationState()) {
+                    null -> Event.Progress.AccountRestored
+                    InFlightMigrationState.REUSE_SESSION_TOKEN -> Event.Progress.IncompleteMigration(true)
+                    InFlightMigrationState.COPY_SESSION_TOKEN -> Event.Progress.IncompleteMigration(false)
+                }
+            }
+        }
+        ProgressState.LoggingOut -> {
+            resetAccount()
+            Event.Progress.LoggedOut
+        }
+        ProgressState.BeginningAuthentication -> when (via) {
+            is Event.Account.BeginPairingFlow, Event.Account.BeginEmailFlow -> {
+                val pairingUrl = if (via is Event.Account.BeginPairingFlow) {
+                    via.pairingUrl
+                } else {
+                    null
+                }
+                when (val result = withRetries(MAX_NETWORK_RETRIES) { pairingUrl.asAuthFlowUrl() }) {
+                    is RetryResult.Success -> {
+                        latestAuthState = result.value!!.state
+                        oauthObservers.notifyObservers { onBeginOAuthFlow(result.value) }
+                        null
+                    }
+                    RetryResult.Failure -> {
+                        resetAccount()
+                        oauthObservers.notifyObservers { onError() }
+                        Event.Progress.FailedToBeginAuth
+                    }
+                }
+            }
+            else -> null
+        }
+        ProgressState.CompletingAuthentication -> when (via) {
+            Event.Progress.AccountRestored -> {
+                val authType = AuthType.Existing
+                when (withServiceRetries(MAX_NETWORK_RETRIES) { finalizeDevice(authType) }) {
+                    ServiceResult.Ok -> {
+                        // This method can "fail" for a number of reasons:
+                        // - auth problems are encountered. In that case, GlobalAccountManager.authError
+                        // will be invoked, which will place an AuthenticationError event on state
+                        // machine's queue.
+                        // If that happens, we'll end up either in an Authenticated state
+                        // (if we're able to auto-recover) or in a 'AuthenticationProblem' state otherwise.
+                        // In both cases, the 'CompletedAuthentication' event below will be discarded.
+                        // - network errors are encountered. 'CompletedAuthentication' event will be processed,
+                        // moving the state machine into an 'Authenticated' state. Next time user requests
+                        // a sync, methods that failed will be re-ran, giving them a chance to succeed.
+                        authenticationSideEffects(authType)
+                        Event.Progress.CompletedAuthentication(authType)
+                    }
+                    ServiceResult.AuthError -> {
+                        Event.Account.AuthenticationError("finalizeDevice")
+                    }
+                    ServiceResult.OtherError -> {
+                        Event.Progress.FailedToCompleteAuthRestore
+                    }
+                }
+            }
+            is Event.Progress.AuthData -> {
+                val completeAuth = suspend {
+                    withRetries(MAX_NETWORK_RETRIES) {
+                        account.completeOAuthFlow(via.authData.code, via.authData.state)
+                    }
+                }
+                val finalize = suspend {
+                    withRetries(MAX_NETWORK_RETRIES) { finalizeDevice(via.authData.authType) }
+                }
+                // If we can't 'complete', we won't run 'finalize' due to short-circuiting.
+                if (completeAuth() is RetryResult.Failure || finalize() is RetryResult.Failure) {
+                    resetAccount()
+                    Event.Progress.FailedToCompleteAuth
+                } else {
+                    via.authData.declinedEngines?.let { persistDeclinedEngines(it) }
+                    authenticationSideEffects(via.authData.authType)
+                    Event.Progress.CompletedAuthentication(via.authData.authType)
+                }
+            }
+            is Event.Progress.Migrated -> {
+                val authType = when (via.reusedSessionToken) {
+                    true -> AuthType.MigratedReuse
+                    false -> AuthType.MigratedCopy
+                }
+                when (withRetries(MAX_NETWORK_RETRIES) { finalizeDevice(authType) }) {
+                    is RetryResult.Success -> {
+                        authenticationSideEffects(authType)
+                        Event.Progress.CompletedAuthentication(authType)
+                    }
+                    RetryResult.Failure -> {
+                        resetAccount()
+                        Event.Progress.FailedToCompleteMigration
+                    }
+                }
+            }
+            else -> null
+        }
+        ProgressState.MigratingAccount -> when (via) {
+            Event.Account.RetryMigration -> {
+                val migrationState = account.isInMigrationState()
+                if (migrationState == null) {
+                    // Expected to see ourselves in a migration state, but we weren't.
+                    Event.Progress.FailedToCompleteMigration
+                } else {
+                    tryToMigrate(migrationState.reuseSessionToken) {
+                        account.retryMigrateFromSessionToken()
+                    }
+                }
+            }
+            is Event.Account.MigrateFromAccount -> {
+                tryToMigrate(via.reuseSessionToken) {
+                    account.migrateFromAccount(via.account.authInfo, via.reuseSessionToken)
+                }
+            }
+            is Event.Progress.IncompleteMigration -> {
+                tryToMigrate(via.reuseSessionToken) {
+                    account.retryMigrateFromSessionToken()
+                }
+            }
+            else -> null
+        }
+        ProgressState.RecoveringFromAuthProblem -> {
+            via as Event.Account.AuthenticationError
+            // Somewhere in the system, we've just hit an authentication problem.
+            // There are two main causes:
+            // 1) an access token we've obtain from fxalib via 'getAccessToken' expired
+            // 2) password was changed, or device was revoked
+            // We can recover from (1) and test if we're in (2) by asking the fxalib
+            // to give us a new access token. If it succeeds, then we can go back to whatever
+            // state we were in before. Future operations that involve access tokens should
+            // succeed.
+            // If we fail with a 401, then we know we have a legitimate authentication problem.
+            logger.info("Hit auth problem. Trying to recover.")
+
+            // Ensure we clear any auth-relevant internal state, such as access tokens.
+            account.authErrorDetected()
+
+            // Clear our access token cache; it'll be re-populated as part of the
+            // regular state machine flow if we manage to recover.
+            SyncAuthInfoCache(context).clear()
+
+            // Circuit-breaker logic to protect ourselves from getting into endless authorization
+            // check loops. If we determine that application is trying to check auth status too
+            // frequently, drive the state machine into an unauthorized state.
+            if (via.errorCountWithinTheTimeWindow >= AUTH_CHECK_CIRCUIT_BREAKER_COUNT) {
+                crashReporter?.submitCaughtException(
+                    AccountManagerException.AuthRecoveryCircuitBreakerException(via.operation)
+                )
+                logger.warn("Unable to recover from an auth problem, triggered a circuit breaker.")
+
+                Event.Progress.FailedToRecoverFromAuthenticationProblem
+            } else {
+                // Since we haven't hit the circuit-breaker above, perform an authorization check.
+                // We request an access token for a "profile" scope since that's the only
+                // scope we're guaranteed to have at this point. That is, we don't rely on
+                // passed-in application-specific scopes.
+                when (account.checkAuthorizationStatus(SCOPE_PROFILE)) {
+                    true -> {
+                        logger.info("Able to recover from an auth problem.")
+
+                        // And now we can go back to our regular programming.
+                        Event.Progress.RecoveredFromAuthenticationProblem
+                    }
+                    null, false -> {
+                        // We are either certainly in the scenario (2), or were unable to determine
+                        // our connectivity state. Let's assume we need to re-authenticate.
+                        // This uncertainty about real state means that, hopefully rarely,
+                        // we will disconnect users that hit transient network errors during
+                        // an authorization check.
+                        // See https://github.com/mozilla-mobile/android-components/issues/3347
+                        logger.info("Unable to recover from an auth problem, notifying observers.")
+
+                        Event.Progress.FailedToRecoverFromAuthenticationProblem
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Side-effects matrix. Defines non-pure operations that must take place for state+event combinations.
      */
     @Suppress("ComplexMethod", "ReturnCount", "ThrowsCount", "NestedBlockDepth", "LongMethod")
-    private suspend fun stateActions(forState: AccountState, via: Event): Event? {
+    private suspend fun stateActions(forState: State, via: Event): Event? = when (forState) {
         // We're about to enter a new state ('forState') via some event ('via').
         // States will have certain side-effects associated with different event transitions.
         // In other words, the same state may have different side-effects depending on the event
         // which caused a transition.
-        // For example, a "NotAuthenticated" state may be entered after a logoutAsync, and its side-effects
+        // For example, a "NotAuthenticated" state may be entered after a logout, and its side-effects
         // will include clean-up and re-initialization of an account. Alternatively, it may be entered
         // after we've checked local disk, and didn't find a persisted authenticated account.
-        return when (forState) {
-            AccountState.Start -> {
-                when (via) {
-                    Event.Init -> {
-                        // Locally corrupt accounts are simply treated as 'absent'.
-                        account = try {
-                            getAccountStorage().read()
-                        } catch (e: FxaPanicException) {
-                            // Don't swallow panics from the underlying library.
-                            throw e
-                        } catch (e: FxaException) {
-                            logger.error("Failed to load saved account. Re-initializing...", e)
-                            null
-                        } ?: return Event.AccountNotFound
+        is State.Idle -> {
+            accountStateSideEffects(forState, via)
+            null
+        }
+        is State.Active -> internalStateSideEffects(forState, via)
+    }
 
-                        // We may have attempted a migration previously, which failed in a way that allows
-                        // us to retry it (e.g. a migration could have hit
-                        when (account.isInMigrationState()) {
-                            InFlightMigrationState.NONE -> Event.AccountRestored
-                            InFlightMigrationState.REUSE_SESSION_TOKEN -> Event.InFlightReuseMigration
-                            InFlightMigrationState.COPY_SESSION_TOKEN -> Event.InFlightCopyMigration
-                        }
-                    }
-                    else -> null
-                }
-            }
-            AccountState.NotAuthenticated -> {
-                when (via) {
-                    Event.FailedToAuthenticate, Event.Logout -> {
-                        // Clean up internal account state and destroy the current FxA device record.
-                        if (account.disconnectAsync().await()) {
-                            logger.info("Disconnected FxA account")
-                        } else {
-                            logger.warn("Failed to fully disconnect the FxA account")
-                        }
-                        // Clean up resources.
-                        profile = null
-                        account.close()
-                        // Delete persisted state.
-                        getAccountStorage().clear()
-                        // Even though we might not have Sync enabled, clear out sync-related storage
-                        // layers as well; if they're already empty (unused), nothing bad will happen
-                        // and extra overhead is quite small.
-                        SyncAuthInfoCache(context).clear()
-                        SyncEnginesStorage(context).clear()
-                        clearSyncState(context)
-                        // Re-initialize account.
-                        account = createAccount(serverConfig)
-
-                        if (via is Event.Logout) {
-                            notifyObservers { onLoggedOut() }
-                        }
-
-                        null
-                    }
-                    Event.AccountNotFound -> {
-                        account = createAccount(serverConfig)
-
-                        null
-                    }
-                    Event.Authenticate -> {
-                        return doAuthenticate()
-                    }
-                    is Event.SignInShareableAccount -> {
-                        account.registerPersistenceCallback(statePersistenceCallback)
-
-                        // "reusing an account" in this case means that we will maintain the same
-                        // session token, enabling us to re-use the same FxA device record and, in
-                        // theory, push subscriptions.
-                        val migrationResult = if (via.reuseAccount) {
-                            account.migrateFromSessionTokenAsync(
-                                via.account.authInfo.sessionToken,
-                                via.account.authInfo.kSync,
-                                via.account.authInfo.kXCS
-                            ).await()
-                        } else {
-                            account.copyFromSessionTokenAsync(
-                                via.account.authInfo.sessionToken,
-                                via.account.authInfo.kSync,
-                                via.account.authInfo.kXCS
-                            ).await()
-                        }
-
-                        // If a migration fails, we need to determine if it failed for a reason that allows
-                        // retrying - e.g. an intermittent issue, where `isInMigrationState` will be 'true'.
-                        // We model "ability to retry an in-flight migration" as a distinct state.
-                        // This allows keeping this retry logic somewhat more contained, and not involved
-                        // in a regular flow of things.
-
-                        // So, below we will return the following:
-                        // - `null` if migration failed in an unrecoverable way
-                        // - SignedInShareableAccount if we succeeded
-                        // - One of the 'retry' events if we can retry later
-
-                        // Currently, we don't really care about the returned json blob. Right now all
-                        // it contains is how long a migration took - which really is just measuring
-                        // network performance for this particular operation.
-
-                        if (migrationResult != null) {
-                            return Event.SignedInShareableAccount(via.reuseAccount)
-                        }
-
-                        when (account.isInMigrationState()) {
-                            InFlightMigrationState.NONE -> {
-                                null
-                            }
-                            InFlightMigrationState.COPY_SESSION_TOKEN -> {
-                                if (via.reuseAccount) {
-                                    throw IllegalStateException("Expected 'reuse' in-flight state, saw 'copy'")
-                                }
-                                Event.RetryLaterViaTokenCopy
-                            }
-                            InFlightMigrationState.REUSE_SESSION_TOKEN -> {
-                                if (!via.reuseAccount) {
-                                    throw IllegalStateException("Expected 'copy' in-flight state, saw 'reuse'")
-                                }
-                                Event.RetryLaterViaTokenReuse
-                            }
-                        }
-                    }
-                    is Event.Pair -> {
-                        val authFlowUrl = account.beginPairingFlowAsync(via.pairingUrl, scopes).await()
-                        if (authFlowUrl == null) {
-                            oauthObservers.notifyObservers { onError() }
-                            return Event.FailedToAuthenticate
-                        }
-                        latestAuthState = authFlowUrl.state
-                        oauthObservers.notifyObservers { onBeginOAuthFlow(authFlowUrl) }
-                        null
-                    }
-                    else -> null
-                }
-            }
-            AccountState.CanAutoRetryAuthenticationViaTokenReuse -> {
-                when (via) {
-                    Event.RetryMigration,
-                    Event.InFlightReuseMigration -> {
-                        logger.info("Registering persistence callback")
-                        account.registerPersistenceCallback(statePersistenceCallback)
-                        return retryMigration(reuseAccount = true)
-                    }
-                    else -> null
-                }
-            }
-            AccountState.CanAutoRetryAuthenticationViaTokenCopy -> {
-                when (via) {
-                    Event.RetryMigration,
-                    Event.InFlightCopyMigration -> {
-                        logger.info("Registering persistence callback")
-                        account.registerPersistenceCallback(statePersistenceCallback)
-                        return retryMigration(reuseAccount = false)
-                    }
-                    else -> null
-                }
-            }
-            AccountState.AuthenticatedNoProfile -> {
-                when (via) {
-                    is Event.Authenticated -> {
-                        logger.info("Registering persistence callback")
-                        account.registerPersistenceCallback(statePersistenceCallback)
-
-                        // TODO do not ignore this failure.
-                        logger.info("Completing oauth flow")
-
-                        // Reasons this can fail:
-                        // - network errors
-                        // - unknown auth state
-                        //  -- authenticating via web-content; we didn't beginOAuthFlowAsync
-                        account.completeOAuthFlowAsync(via.authData.code, via.authData.state).await()
-
-                        logger.info("Registering device constellation observer")
-                        account.deviceConstellation().register(accountEventsIntegration)
-
-                        logger.info("Initializing device")
-                        // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
-                        if (account.deviceConstellation().initDeviceAsync(
-                            deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
-                        ).await()) {
-                            postAuthenticated(via.authData.authType, via.authData.declinedEngines)
-                            Event.FetchProfile
-                        } else {
-                            Event.FailedToAuthenticate
-                        }
-                    }
-                    Event.AccountRestored -> {
-                        logger.info("Registering persistence callback")
-                        account.registerPersistenceCallback(statePersistenceCallback)
-
-                        logger.info("Registering device constellation observer")
-                        account.deviceConstellation().register(accountEventsIntegration)
-
-                        // If this is the first time ensuring our capabilities,
-                        logger.info("Ensuring device capabilities...")
-                        if (account.deviceConstellation().ensureCapabilitiesAsync(deviceConfig.capabilities).await()) {
-                            logger.info("Successfully ensured device capabilities. Continuing...")
-                            postAuthenticated(AuthType.Existing)
-                            Event.FetchProfile
-                        } else {
-                            logger.warn("Failed to ensure device capabilities. Stopping.")
-                            null
-                        }
-                    }
-                    is Event.SignedInShareableAccount -> {
-                        // Note that we are not registering an account persistence callback here like
-                        // we do in other `AuthenticatedNoProfile` methods, because it would have been
-                        // already registered while handling any of the pre-cursor events, such as
-                        // `Event.SignInShareableAccount`, `Event.InFlightCopyMigration`
-                        // or `Event.InFlightReuseMigration`.
-                        logger.info("Registering device constellation observer")
-                        account.deviceConstellation().register(accountEventsIntegration)
-
-                        val deviceFinalizeSuccess = if (via.reuseAccount) {
-                            logger.info("Configuring migrated account's device")
-                            // At the minimum, we need to "ensure capabilities" - that is, register for Send Tab, etc.
-                            account.deviceConstellation().ensureCapabilitiesAsync(deviceConfig.capabilities).await()
-                            // Note that at this point, we do not rename a device record to our own default name.
-                            // It's possible that user already customized their name, and we'd like to retain it.
-                        } else {
-                            logger.info("Initializing device")
-                            // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
-                            account.deviceConstellation().initDeviceAsync(
-                                deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
-                            ).await()
-                        }
-
-                        if (deviceFinalizeSuccess) {
-                            postAuthenticated(AuthType.Shared)
-                            Event.FetchProfile
-                        } else {
-                            Event.FailedToAuthenticate
-                        }
-                    }
-
-                    Event.RecoveredFromAuthenticationProblem -> {
-                        // This path is a blend of "authenticated" and "account restored".
-                        // We need to re-initialize an fxa device, but we don't need to complete an auth.
-                        logger.info("Registering persistence callback")
-                        account.registerPersistenceCallback(statePersistenceCallback)
-
-                        logger.info("Registering device constellation observer")
-                        account.deviceConstellation().register(accountEventsIntegration)
-
-                        // NB: we're running neither `initDevice` nor `ensureCapabilities` here, since
-                        // this is a recovery flow, and these calls already ran at some point before.
-
-                        postAuthenticated(AuthType.Recovered)
-
-                        Event.FetchProfile
-                    }
-                    Event.FetchProfile -> {
-                        // Profile fetching and account authentication issues:
-                        // https://github.com/mozilla/application-services/issues/483
-                        logger.info("Fetching profile...")
-
-                        // `account` provides us with intelligent profile caching, so make sure to use it.
-                        profile = account.getProfileAsync(ignoreCache = false).await()
-                        if (profile == null) {
-                            return Event.FailedToFetchProfile
-                        }
-
-                        Event.FetchedProfile
-                    }
-                    else -> null
-                }
-            }
-            AccountState.AuthenticatedWithProfile -> {
-                when (via) {
-                    Event.FetchedProfile -> {
-                        notifyObservers {
-                            onProfileUpdated(profile!!)
-                        }
-                        null
-                    }
-                    else -> null
-                }
-            }
-            AccountState.AuthenticationProblem -> {
-                when (via) {
-                    Event.Authenticate -> {
-                        return doAuthenticate()
-                    }
-                    is Event.AuthenticationError -> {
-                        // Somewhere in the system, we've just hit an authentication problem.
-                        // There are two main causes:
-                        // 1) an access token we've obtain from fxalib via 'getAccessToken' expired
-                        // 2) password was changed, or device was revoked
-                        // We can recover from (1) and test if we're in (2) by asking the fxalib
-                        // to give us a new access token. If it succeeds, then we can go back to whatever
-                        // state we were in before. Future operations that involve access tokens should
-                        // succeed.
-                        // If we fail with a 401, then we know we have a legitimate authentication problem.
-                        logger.info("Hit auth problem. Trying to recover.")
-
-                        // Ensure we clear any auth-relevant internal state, such as access tokens.
-                        account.authErrorDetected()
-
-                        // Clear our access token cache; it'll be re-populated as part of the
-                        // regular state machine flow if we manage to recover.
-                        SyncAuthInfoCache(context).clear()
-
-                        // Circuit-breaker logic to protect ourselves from getting into endless authorization
-                        // check loops. If we determine that application is trying to check auth status too
-                        // frequently, drive the state machine into an unauthorized state.
-                        if (via.errorCountWithinTheTimeWindow >= AUTH_CHECK_CIRCUIT_BREAKER_COUNT) {
-                            crashReporter?.submitCaughtException(
-                                AccountManagerException.AuthRecoveryCircuitBreakerException(via.operation)
-                            )
-                            logger.warn("Unable to recover from an auth problem, triggered a circuit breaker.")
-
-                            notifyObservers { onAuthenticationProblems() }
-
-                            return null
-                        }
-
-                        // Since we haven't hit the circuit-breaker above, perform an authorization check.
-                        // We request an access token for a "profile" scope since that's the only
-                        // scope we're guaranteed to have at this point. That is, we don't rely on
-                        // passed-in application-specific scopes.
-                        when (account.checkAuthorizationStatusAsync(SCOPE_PROFILE).await()) {
-                            true -> {
-                                logger.info("Able to recover from an auth problem.")
-
-                                // And now we can go back to our regular programming.
-                                return Event.RecoveredFromAuthenticationProblem
-                            }
-                            null, false -> {
-                                // We are either certainly in the scenario (2), or were unable to determine
-                                // our connectivity state. Let's assume we need to re-authenticate.
-                                // This uncertainty about real state means that, hopefully rarely,
-                                // we will disconnect users that hit transient network errors during
-                                // an authorization check.
-                                // See https://github.com/mozilla-mobile/android-components/issues/3347
-                                logger.info("Unable to recover from an auth problem, notifying observers.")
-
-                                // Tell our listeners we're in a bad auth state.
-                                notifyObservers { onAuthenticationProblems() }
-                            }
-                        }
-
-                        null
-                    }
-                    else -> null
-                }
+    private suspend fun tryToMigrate(
+        reuseSessionToken: Boolean,
+        migrationBlock: suspend () -> JSONObject?
+    ): Event.Progress {
+        return if (migrationBlock() != null) {
+            Event.Progress.Migrated(reuseSessionToken)
+        } else {
+            // null json means 'migrationBlock' call above failed. We expect account to be still
+            // in a migrating state, and if it isn't declare this migration a failure.
+            if (account.isInMigrationState() == null) {
+                resetAccount()
+                Event.Progress.FailedToCompleteMigration
+            } else {
+                Event.Progress.IncompleteMigration(reuseSessionToken)
             }
         }
+    }
+
+    private suspend fun resetAccount() {
+        // Clean up internal account state and destroy the current FxA device record (if one exists).
+        // This can fail (network issues, auth problems, etc), but nothing we can do at this point.
+        account.disconnect()
+
+        // Clean up resources.
+        profile = null
+        account.close()
+        // Delete persisted state.
+        getAccountStorage().clear()
+        // Even though we might not have Sync enabled, clear out sync-related storage
+        // layers as well; if they're already empty (unused), nothing bad will happen
+        // and extra overhead is quite small.
+        SyncAuthInfoCache(context).clear()
+        SyncEnginesStorage(context).clear()
+        clearSyncState(context)
+        // Re-initialize account.
+        // In theory, .disconnect call above should ensure that we don't need to re-initialize the account.
+        // See https://github.com/mozilla-mobile/android-components/issues/8195
+        account = createAccount(serverConfig)
     }
 
     private suspend fun maybeUpdateSyncAuthInfoCache() {
@@ -929,54 +830,90 @@ open class FxaAccountManager(
             return
         }
 
-        // NB: this call will inform authErrorRegistry in case an auth error is encountered.
-        account.getAccessTokenAsync(SCOPE_SYNC).await()?.let {
+        // NB: this call will call into GlobalAccountManager.authError if necessary.
+        // Network failures are ignored.
+        account.getAccessToken(SCOPE_SYNC)?.let {
             SyncAuthInfoCache(context).setToCache(
                 it.asSyncAuthInfo(account.getTokenServerEndpointURL())
             )
         }
     }
 
-    private suspend fun doAuthenticate(): Event? {
-        val authFlowUrl = account.beginOAuthFlowAsync(scopes).await()
-        if (authFlowUrl == null) {
-            oauthObservers.notifyObservers { onError() }
-            return Event.FailedToAuthenticate
-        }
-        latestAuthState = authFlowUrl.state
-        oauthObservers.notifyObservers { onBeginOAuthFlow(authFlowUrl) }
-        return null
-    }
-
-    private suspend fun postAuthenticated(authType: AuthType, declinedEngines: Set<SyncEngine>? = null) {
+    private fun persistDeclinedEngines(declinedEngines: Set<SyncEngine>) {
         // Sync may not be configured at all (e.g. won't run), but if we received a
         // list of declined engines, that indicates user intent, so we preserve it
         // within SyncEnginesStorage regardless. If sync becomes enabled later on,
         // we will be respecting user choice around what to sync.
-        declinedEngines?.let {
-            val enginesStorage = SyncEnginesStorage(context)
-            declinedEngines.forEach { declinedEngine ->
-                enginesStorage.setStatus(declinedEngine, false)
-            }
-
-            // Enable all engines that were not explicitly disabled. Only do this in
-            // the presence of a "declinedEngines" list, since that indicates user
-            // intent. Absence of that list means that user was not presented with a
-            // choice during authentication, and so we can't assume an enabled state
-            // for any of the engines.
-            syncConfig?.supportedEngines?.forEach { supportedEngine ->
-                if (!declinedEngines.contains(supportedEngine)) {
-                    enginesStorage.setStatus(supportedEngine, true)
-                }
-            }
+        val enginesStorage = SyncEnginesStorage(context)
+        declinedEngines.forEach { declinedEngine ->
+            enginesStorage.setStatus(declinedEngine, false)
         }
 
-        // Before any sync workers have a chance to access it, make sure our SyncAuthInfo cache is hot.
+        // Enable all engines that were not explicitly disabled. Only do this in
+        // the presence of a "declinedEngines" list, since that indicates user
+        // intent. Absence of that list means that user was not presented with a
+        // choice during authentication, and so we can't assume an enabled state
+        // for any of the engines.
+        syncConfig?.supportedEngines?.forEach { supportedEngine ->
+            if (!declinedEngines.contains(supportedEngine)) {
+                enginesStorage.setStatus(supportedEngine, true)
+            }
+        }
+    }
+
+    private sealed class RetryResult<out T> {
+        internal data class Success<out T>(val value: T) : RetryResult<T>()
+        internal object Failure : RetryResult<Nothing>()
+    }
+
+    private suspend fun <T> withRetries(retryCount: Int, block: suspend () -> T): RetryResult<T> {
+        var attempt = 0
+        var res: T? = null
+        while (attempt < retryCount && (res == null || res == false)) {
+            attempt += 1
+            logger.info("attempt $attempt/$retryCount")
+            res = block()
+        }
+        return if (res == null || res == false) {
+            logger.warn("all attempts failed")
+            RetryResult.Failure
+        } else {
+            RetryResult.Success(res)
+        }
+    }
+
+    private suspend fun withServiceRetries(retryCount: Int, block: suspend () -> ServiceResult): ServiceResult {
+        var attempt = 0
+        do {
+            attempt += 1
+            logger.info("attempt $attempt/$retryCount")
+            when (val res = block()) {
+                ServiceResult.Ok, ServiceResult.AuthError -> return res
+                ServiceResult.OtherError -> {}
+            }
+        } while (attempt < retryCount)
+
+        logger.warn("all attempts failed")
+        return ServiceResult.OtherError
+    }
+
+    private suspend fun String?.asAuthFlowUrl(): AuthFlowUrl? {
+        return if (this != null) {
+            account.beginPairingFlow(this, scopes)
+        } else {
+            account.beginOAuthFlow(scopes)
+        }
+    }
+
+    private suspend fun finalizeDevice(authType: AuthType) = account.deviceConstellation().finalizeDevice(
+        authType, deviceConfig
+    )
+
+    private suspend fun authenticationSideEffects(authType: AuthType) {
+        // Make sure our SyncAuthInfo cache is hot, background sync worker needs it to function.
         maybeUpdateSyncAuthInfoCache()
 
-        // Notify our internal (sync) and external (app logic) observers.
-        notifyObservers { onAuthenticated(account, authType) }
-
+        // Sync workers also need to know about the current FxA device.
         FxaDeviceSettingsCache(context).setToCache(DeviceSettings(
             fxaDeviceId = account.getCurrentDeviceId()!!,
             name = deviceConfig.name,
@@ -985,37 +922,24 @@ open class FxaAccountManager(
 
         // If device supports SEND_TAB, and we're not recovering from an auth problem...
         if (deviceConfig.capabilities.contains(DeviceCapability.SEND_TAB) && authType != AuthType.Recovered) {
-            // ... update constellation state
-            account.deviceConstellation().refreshDevicesAsync().await()
+            // ... update constellation state (fetching info about other devices, our own device).
+            account.deviceConstellation().refreshDevices()
         }
     }
 
-    private suspend fun retryMigration(reuseAccount: Boolean): Event {
-        val resultJson = account.retryMigrateFromSessionTokenAsync().await()
-        if (resultJson != null) {
-            return Event.SignedInShareableAccount(reuseAccount)
-        }
-
-        return when (account.isInMigrationState()) {
-            InFlightMigrationState.NONE -> Event.FailedToAuthenticate
-            InFlightMigrationState.COPY_SESSION_TOKEN -> {
-                if (reuseAccount) {
-                    throw IllegalStateException("Expected 'reuse' in-flight state, saw 'copy'")
-                }
-                Event.RetryLaterViaTokenCopy
-            }
-            InFlightMigrationState.REUSE_SESSION_TOKEN -> {
-                if (!reuseAccount) {
-                    throw IllegalStateException("Expected 'copy' in-flight state, saw 'reuse'")
-                }
-                Event.RetryLaterViaTokenReuse
-            }
+    private fun createAccount(config: ServerConfig): OAuthAccount {
+        return obtainAccount(config).also {
+            it.registerPersistenceCallback(statePersistenceCallback)
+            it.deviceConstellation().register(accountEventsIntegration)
         }
     }
 
+    /**
+     * Exists strictly for testing purposes, allowing tests to specify their own implementation of [OAuthAccount].
+     */
     @VisibleForTesting
-    open fun createAccount(config: ServerConfig): OAuthAccount {
-        return FirefoxAccount(config, null, crashReporter)
+    open fun obtainAccount(config: ServerConfig): OAuthAccount {
+        return FirefoxAccount(config, crashReporter)
     }
 
     @VisibleForTesting
@@ -1061,11 +985,12 @@ open class FxaAccountManager(
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
             val reason = when (authType) {
-                is AuthType.OtherExternal, AuthType.Signin, AuthType.Signup, AuthType.Shared, AuthType.Pairing
-                    -> SyncReason.FirstSync
+                is AuthType.OtherExternal, AuthType.Signin, AuthType.Signup, AuthType.MigratedReuse,
+                AuthType.MigratedCopy, AuthType.Pairing -> SyncReason.FirstSync
                 AuthType.Existing, AuthType.Recovered -> SyncReason.Startup
             }
-            syncManager.start(reason)
+            syncManager.start()
+            syncManager.now(reason)
         }
 
         override fun onProfileUpdated(profile: Profile) {

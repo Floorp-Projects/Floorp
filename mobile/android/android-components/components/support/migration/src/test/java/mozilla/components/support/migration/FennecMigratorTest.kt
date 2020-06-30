@@ -28,14 +28,13 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import java.io.File
 import java.lang.IllegalStateException
-import kotlinx.coroutines.CompletableDeferred
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.top.sites.PinnedSiteStorage
-import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
+import mozilla.components.service.fxa.manager.MigrationResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.concept.base.crash.CrashReporting
@@ -581,9 +580,7 @@ class FennecMigratorTest {
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(true))).thenReturn(
-            CompletableDeferred(SignInWithShareableAccountResult.Success)
-        )
+        `when`(accountManager.migrateFromAccount(any(), eq(true))).thenReturn(MigrationResult.Success)
 
         with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
@@ -592,7 +589,7 @@ class FennecMigratorTest {
         }
 
         val captor = argumentCaptor<ShareableAccount>()
-        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(true))
+        verify(accountManager).migrateFromAccount(captor.capture(), eq(true))
 
         assertEquals("test@example.com", captor.value.email)
         // This is going to be package name (org.mozilla.firefox) in actual builds.
@@ -620,9 +617,7 @@ class FennecMigratorTest {
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(true))).thenReturn(
-            CompletableDeferred(SignInWithShareableAccountResult.WillRetry)
-        )
+        `when`(accountManager.migrateFromAccount(any(), eq(true))).thenReturn(MigrationResult.WillRetry)
 
         with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
@@ -631,7 +626,7 @@ class FennecMigratorTest {
         }
 
         val captor = argumentCaptor<ShareableAccount>()
-        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(true))
+        verify(accountManager).migrateFromAccount(captor.capture(), eq(true))
 
         assertEquals("test@example.com", captor.value.email)
         // This is going to be package name (org.mozilla.firefox) in actual builds.
@@ -660,9 +655,7 @@ class FennecMigratorTest {
             .build()
 
         // For now, we don't treat sign-in failure any different from success. E.g. it's a one-shot attempt.
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(true))).thenReturn(
-            CompletableDeferred(SignInWithShareableAccountResult.Failure)
-        )
+        `when`(accountManager.migrateFromAccount(any(), eq(true))).thenReturn(MigrationResult.Failure)
 
         with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
@@ -671,7 +664,7 @@ class FennecMigratorTest {
         }
 
         val captor = argumentCaptor<ShareableAccount>()
-        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(true))
+        verify(accountManager).migrateFromAccount(captor.capture(), eq(true))
 
         assertEquals("test@example.com", captor.value.email)
         // This is going to be package name (org.mozilla.firefox) in actual builds.

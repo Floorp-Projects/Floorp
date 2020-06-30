@@ -6,6 +6,7 @@
 
 package mozilla.components.feature.accounts.push
 
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.accounts.push.FxaPushSupportFeature.Companion.PUSH_SCOPE_PREFIX
@@ -68,7 +69,7 @@ class OneTimeFxaPushResetTest {
 
     @Suppress("UNCHECKED_CAST")
     @Test
-    fun `existing invalid scope format is updated`() {
+    fun `existing invalid scope format is updated`() = runBlocking {
         preference(testContext).edit().putString(PREF_FXA_SCOPE, "12345").apply()
 
         val validPushScope = PUSH_SCOPE_PREFIX + "12345"
@@ -92,7 +93,7 @@ class OneTimeFxaPushResetTest {
 
         verify(pushFeature).unsubscribe(eq("12345"), any(), any())
         verify(pushFeature).subscribe(eq(validPushScope), nullable(), any(), any())
-        verify(constellation).setDevicePushSubscriptionAsync(any())
+        verify(constellation).setDevicePushSubscription(any())
         assertEquals(validPushScope, preference(testContext).getString(PREF_FXA_SCOPE, null))
     }
 }

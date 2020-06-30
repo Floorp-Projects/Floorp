@@ -4,169 +4,135 @@
 
 package mozilla.components.service.fxa.manager
 
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.sharing.ShareableAccount
 
-/**
- * States of the [FxaAccountManager].
- */
-enum class AccountState {
-    Start,
+internal enum class AccountState {
     NotAuthenticated,
-    AuthenticationProblem,
-    CanAutoRetryAuthenticationViaTokenCopy,
-    CanAutoRetryAuthenticationViaTokenReuse,
-    AuthenticatedNoProfile,
-    AuthenticatedWithProfile,
+    IncompleteMigration,
+    Authenticated,
+    AuthenticationProblem
 }
 
-/**
- * Base class for [FxaAccountManager] state machine events.
- * Events aren't a simple enum class because we might want to pass data along with some of the events.
- */
+internal enum class ProgressState {
+    Initializing,
+    BeginningAuthentication,
+    CompletingAuthentication,
+    MigratingAccount,
+    RecoveringFromAuthProblem,
+    LoggingOut,
+}
+
 internal sealed class Event {
-    override fun toString(): String {
-        // For a better logcat experience.
-        return this.javaClass.simpleName
+    internal sealed class Account : Event() {
+        internal object Start : Account()
+        object BeginEmailFlow : Account()
+        data class BeginPairingFlow(val pairingUrl: String?) : Account()
+        data class AuthenticationError(val operation: String, val errorCountWithinTheTimeWindow: Int = 1) : Account() {
+            override fun toString(): String {
+                return "${this.javaClass.simpleName} - $operation"
+            }
+        }
+
+        data class MigrateFromAccount(val account: ShareableAccount, val reuseSessionToken: Boolean) : Account() {
+            override fun toString(): String {
+                return this.javaClass.simpleName
+            }
+        }
+
+        object RetryMigration : Account()
+
+        object Logout : Account()
     }
 
-    internal object Init : Event()
+    internal sealed class Progress : Event() {
+        object AccountNotFound : Progress()
+        object AccountRestored : Progress()
+        data class IncompleteMigration(val reuseSessionToken: Boolean) : Progress()
 
-    object AccountNotFound : Event()
-    object AccountRestored : Event()
+        data class AuthData(val authData: FxaAuthData) : Progress()
+        data class Migrated(val reusedSessionToken: Boolean) : Progress()
 
-    object Authenticate : Event()
-    data class Authenticated(val authData: FxaAuthData) : Event() {
-        override fun toString(): String {
-            // data classes define their own toString, so we override it here as well as in the base
-            // class to avoid exposing 'code' and 'state' in logs.
-            return this.javaClass.simpleName
-        }
-    }
+        object FailedToCompleteMigration : Progress()
+        object FailedToBeginAuth : Progress()
+        object FailedToCompleteAuthRestore : Progress()
+        object FailedToCompleteAuth : Progress()
 
-    /**
-     * Fired during account init, if an in-flight copy migration was detected.
-     */
-    object InFlightCopyMigration : Event()
+        object FailedToRecoverFromAuthenticationProblem : Progress()
+        object RecoveredFromAuthenticationProblem : Progress()
 
-    /**
-     * Fired during account init, if an in-flight copy migration was detected.
-     */
-    object InFlightReuseMigration : Event()
+        object LoggedOut : Progress()
 
-    data class AuthenticationError(val operation: String, val errorCountWithinTheTimeWindow: Int = 1) : Event() {
-        override fun toString(): String {
-            return "${this.javaClass.simpleName} - $operation"
-        }
-    }
-    data class SignInShareableAccount(val account: ShareableAccount, val reuseAccount: Boolean) : Event() {
-        override fun toString(): String {
-            return this.javaClass.simpleName
-        }
-    }
-    data class SignedInShareableAccount(val reuseAccount: Boolean) : Event()
-
-    /**
-     * Fired during SignInShareableAccount(reuseAccount=true) processing if an intermittent problem is encountered.
-     */
-    object RetryLaterViaTokenReuse : Event()
-
-    /**
-     * Fired during SignInShareableAccount(reuseAccount=false) processing if an intermittent problem is encountered.
-     */
-    object RetryLaterViaTokenCopy : Event()
-
-    /**
-     * Fired to trigger a migration retry.
-     */
-    object RetryMigration : Event()
-
-    object RecoveredFromAuthenticationProblem : Event()
-    object FetchProfile : Event()
-    object FetchedProfile : Event()
-
-    object FailedToAuthenticate : Event()
-    object FailedToFetchProfile : Event()
-
-    object Logout : Event()
-
-    data class Pair(val pairingUrl: String) : Event() {
-        override fun toString(): String {
-            // data classes define their own toString, so we override it here as well as in the base
-            // class to avoid exposing the 'pairingUrl' in logs.
-            return this.javaClass.simpleName
-        }
+        data class CompletedAuthentication(val authType: AuthType) : Progress()
     }
 }
 
-internal object FxaStateMatrix {
-    /**
-     * State transition matrix.
-     * @return An optional [AccountState] if provided state+event combination results in a
-     * state transition. Note that states may transition into themselves.
-     */
-    internal fun nextState(state: AccountState, event: Event): AccountState? =
-        when (state) {
-            AccountState.Start -> when (event) {
-                Event.Init -> AccountState.Start
-                Event.AccountNotFound -> AccountState.NotAuthenticated
-                Event.AccountRestored -> AccountState.AuthenticatedNoProfile
+internal sealed class State {
+    data class Idle(val accountState: AccountState) : State()
+    data class Active(val progressState: ProgressState) : State()
+}
 
-                Event.InFlightCopyMigration -> AccountState.CanAutoRetryAuthenticationViaTokenCopy
-                Event.InFlightReuseMigration -> AccountState.CanAutoRetryAuthenticationViaTokenReuse
-
-                else -> null
-            }
-            AccountState.NotAuthenticated -> when (event) {
-                Event.Authenticate -> AccountState.NotAuthenticated
-                Event.FailedToAuthenticate -> AccountState.NotAuthenticated
-
-                is Event.SignInShareableAccount -> AccountState.NotAuthenticated
-                is Event.SignedInShareableAccount -> AccountState.AuthenticatedNoProfile
-                is Event.RetryLaterViaTokenCopy -> AccountState.CanAutoRetryAuthenticationViaTokenCopy
-                is Event.RetryLaterViaTokenReuse -> AccountState.CanAutoRetryAuthenticationViaTokenReuse
-
-                is Event.Pair -> AccountState.NotAuthenticated
-                is Event.Authenticated -> AccountState.AuthenticatedNoProfile
-                else -> null
-            }
-            AccountState.CanAutoRetryAuthenticationViaTokenCopy -> when (event) {
-                Event.RetryMigration -> AccountState.CanAutoRetryAuthenticationViaTokenCopy
-                Event.FailedToAuthenticate -> AccountState.NotAuthenticated
-                is Event.SignedInShareableAccount -> AccountState.AuthenticatedNoProfile
-                Event.RetryLaterViaTokenCopy -> AccountState.CanAutoRetryAuthenticationViaTokenCopy
-                Event.Logout -> AccountState.NotAuthenticated
-                else -> null
-            }
-            AccountState.CanAutoRetryAuthenticationViaTokenReuse -> when (event) {
-                Event.RetryMigration -> AccountState.CanAutoRetryAuthenticationViaTokenReuse
-                Event.FailedToAuthenticate -> AccountState.NotAuthenticated
-                is Event.SignedInShareableAccount -> AccountState.AuthenticatedNoProfile
-                Event.RetryLaterViaTokenReuse -> AccountState.CanAutoRetryAuthenticationViaTokenReuse
-                Event.Logout -> AccountState.NotAuthenticated
-                else -> null
-            }
-            AccountState.AuthenticatedNoProfile -> when (event) {
-                is Event.AuthenticationError -> AccountState.AuthenticationProblem
-                Event.FetchProfile -> AccountState.AuthenticatedNoProfile
-                Event.FetchedProfile -> AccountState.AuthenticatedWithProfile
-                Event.FailedToFetchProfile -> AccountState.AuthenticatedNoProfile
-                Event.FailedToAuthenticate -> AccountState.NotAuthenticated
-                Event.Logout -> AccountState.NotAuthenticated
-                else -> null
-            }
-            AccountState.AuthenticatedWithProfile -> when (event) {
-                is Event.AuthenticationError -> AccountState.AuthenticationProblem
-                Event.Logout -> AccountState.NotAuthenticated
-                else -> null
-            }
-            AccountState.AuthenticationProblem -> when (event) {
-                Event.Authenticate -> AccountState.AuthenticationProblem
-                Event.FailedToAuthenticate -> AccountState.AuthenticationProblem
-                Event.RecoveredFromAuthenticationProblem -> AccountState.AuthenticatedNoProfile
-                is Event.Authenticated -> AccountState.AuthenticatedNoProfile
-                Event.Logout -> AccountState.NotAuthenticated
-                else -> null
-            }
+internal fun State.next(event: Event): State? = when (this) {
+    // Reacting to external events.
+    is State.Idle -> when (this.accountState) {
+        AccountState.NotAuthenticated -> when (event) {
+            Event.Account.Start -> State.Active(ProgressState.Initializing)
+            Event.Account.BeginEmailFlow -> State.Active(ProgressState.BeginningAuthentication)
+            is Event.Account.BeginPairingFlow -> State.Active(ProgressState.BeginningAuthentication)
+            is Event.Account.MigrateFromAccount -> State.Active(ProgressState.MigratingAccount)
+            else -> null
         }
+        AccountState.IncompleteMigration -> when (event) {
+            is Event.Account.RetryMigration -> State.Active(ProgressState.MigratingAccount)
+            is Event.Account.Logout -> State.Active(ProgressState.LoggingOut)
+            else -> null
+        }
+        AccountState.Authenticated -> when (event) {
+            is Event.Account.AuthenticationError -> State.Active(ProgressState.RecoveringFromAuthProblem)
+            is Event.Account.Logout -> State.Active(ProgressState.LoggingOut)
+            else -> null
+        }
+        AccountState.AuthenticationProblem -> when (event) {
+            is Event.Account.Logout -> State.Active(ProgressState.LoggingOut)
+            is Event.Account.BeginEmailFlow -> State.Active(ProgressState.BeginningAuthentication)
+            else -> null
+        }
+    }
+    // Reacting to internal events.
+    is State.Active -> when (this.progressState) {
+        ProgressState.Initializing -> when (event) {
+            Event.Progress.AccountNotFound -> State.Idle(AccountState.NotAuthenticated)
+            Event.Progress.AccountRestored -> State.Active(ProgressState.CompletingAuthentication)
+            is Event.Progress.IncompleteMigration -> State.Active(ProgressState.MigratingAccount)
+            else -> null
+        }
+        ProgressState.BeginningAuthentication -> when (event) {
+            is Event.Progress.AuthData -> State.Active(ProgressState.CompletingAuthentication)
+            Event.Progress.FailedToBeginAuth -> State.Idle(AccountState.NotAuthenticated)
+            else -> null
+        }
+        ProgressState.CompletingAuthentication -> when (event) {
+            is Event.Progress.CompletedAuthentication -> State.Idle(AccountState.Authenticated)
+            is Event.Account.AuthenticationError -> State.Active(ProgressState.RecoveringFromAuthProblem)
+            Event.Progress.FailedToCompleteAuthRestore -> State.Idle(AccountState.NotAuthenticated)
+            Event.Progress.FailedToCompleteAuth -> State.Idle(AccountState.NotAuthenticated)
+            else -> null
+        }
+        ProgressState.MigratingAccount -> when (event) {
+            is Event.Progress.Migrated -> State.Active(ProgressState.CompletingAuthentication)
+            Event.Progress.FailedToCompleteMigration -> State.Idle(AccountState.NotAuthenticated)
+            is Event.Progress.IncompleteMigration -> State.Idle(AccountState.IncompleteMigration)
+            else -> null
+        }
+        ProgressState.RecoveringFromAuthProblem -> when (event) {
+            Event.Progress.RecoveredFromAuthenticationProblem -> State.Idle(AccountState.Authenticated)
+            Event.Progress.FailedToRecoverFromAuthenticationProblem -> State.Idle(AccountState.AuthenticationProblem)
+            else -> null
+        }
+        ProgressState.LoggingOut -> when (event) {
+            Event.Progress.LoggedOut -> State.Idle(AccountState.NotAuthenticated)
+            else -> null
+        }
+    }
 }

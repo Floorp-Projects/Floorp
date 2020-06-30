@@ -12,8 +12,6 @@ import mozilla.appservices.fxaclient.MigrationState
 import mozilla.appservices.fxaclient.Profile
 import mozilla.appservices.fxaclient.ScopedKey
 import mozilla.appservices.fxaclient.TabHistoryEntry
-import mozilla.components.concept.sync.AuthException
-import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.Avatar
 import mozilla.components.concept.sync.DeviceCapability
@@ -49,7 +47,11 @@ data class FxaAuthData(
     val code: String,
     val state: String,
     val declinedEngines: Set<SyncEngine>? = null
-)
+) {
+    override fun toString(): String {
+        return "authType: $authType, code: XXX, state: XXX, declinedEngines: $declinedEngines"
+    }
+}
 
 // The rest of this file describes translations between fxaclient's internal type definitions and analogous
 // types defined by concept-sync. It's a little tedious, but ensures decoupling between abstract
@@ -70,10 +72,10 @@ fun AccessTokenInfo.into(): mozilla.components.concept.sync.AccessTokenInfo {
  * may be used for data synchronization.
  *
  * @return An [SyncAuthInfo] which is guaranteed to have a sync key.
- * @throws AuthException if [AccessTokenInfo] didn't have key information.
+ * @throws IllegalStateException if [AccessTokenInfo] didn't have key information.
  */
 fun mozilla.components.concept.sync.AccessTokenInfo.asSyncAuthInfo(tokenServerUrl: String): SyncAuthInfo {
-    val keyInfo = this.key ?: throw AuthException(AuthExceptionType.KEY_INFO)
+    val keyInfo = this.key ?: throw IllegalStateException("missing OAuthScopedKey")
 
     return SyncAuthInfo(
         kid = keyInfo.kid,
@@ -212,11 +214,11 @@ fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent {
         is AccountEvent.IncomingDeviceCommand ->
             mozilla.components.concept.sync.AccountEvent.DeviceCommandIncoming(command = this.command.into())
         is AccountEvent.ProfileUpdated ->
-            mozilla.components.concept.sync.AccountEvent.ProfileUpdated()
+            mozilla.components.concept.sync.AccountEvent.ProfileUpdated
         is AccountEvent.AccountAuthStateChanged ->
-            mozilla.components.concept.sync.AccountEvent.AccountAuthStateChanged()
+            mozilla.components.concept.sync.AccountEvent.AccountAuthStateChanged
         is AccountEvent.AccountDestroyed ->
-            mozilla.components.concept.sync.AccountEvent.AccountDestroyed()
+            mozilla.components.concept.sync.AccountEvent.AccountDestroyed
         is AccountEvent.DeviceConnected ->
             mozilla.components.concept.sync.AccountEvent.DeviceConnected(deviceName = this.deviceName)
         is AccountEvent.DeviceDisconnected ->
@@ -241,9 +243,9 @@ fun IncomingDeviceCommand.TabReceived.into(): mozilla.components.concept.sync.De
 /**
  * Conversion function from fxaclient's data structure to ours.
  */
-fun MigrationState.into(): InFlightMigrationState {
+fun MigrationState.into(): InFlightMigrationState? {
     return when (this) {
-        MigrationState.NONE -> InFlightMigrationState.NONE
+        MigrationState.NONE -> null
         MigrationState.COPY_SESSION_TOKEN -> InFlightMigrationState.COPY_SESSION_TOKEN
         MigrationState.REUSE_SESSION_TOKEN -> InFlightMigrationState.REUSE_SESSION_TOKEN
     }

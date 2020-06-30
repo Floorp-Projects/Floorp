@@ -4,9 +4,9 @@
 
 package mozilla.components.feature.accounts.push
 
-import android.content.Context
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
@@ -35,7 +35,6 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AccountObserverTest {
 
-    private val context: Context = mock()
     private val accountManager: FxaAccountManager = mock()
     private val pushFeature: AutoPushFeature = mock()
     private val pushScope: String = "testScope"
@@ -151,7 +150,7 @@ class AccountObserverTest {
     }
 
     @Test
-    fun `notify account of new subscriptions`() {
+    fun `notify account of new subscriptions`() = runBlocking {
         val observer = AccountObserver(
             testContext,
             pushFeature,
@@ -164,7 +163,8 @@ class AccountObserverTest {
 
         observer.onAuthenticated(account, AuthType.Signin)
 
-        verify(constellation).setDevicePushSubscriptionAsync(any())
+        verify(constellation).setDevicePushSubscription(any())
+        Unit
     }
 
     @Test

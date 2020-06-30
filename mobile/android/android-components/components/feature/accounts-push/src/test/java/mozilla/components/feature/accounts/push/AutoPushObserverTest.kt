@@ -4,6 +4,11 @@
 
 package mozilla.components.feature.accounts.push
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.setMain
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.push.AutoPushFeature
@@ -25,8 +30,10 @@ class AutoPushObserverTest {
     private val constellation: DeviceConstellation = mock()
     private val pushFeature: AutoPushFeature = mock()
 
+    @ExperimentalCoroutinesApi
     @Test
-    fun `messages are forwarded to account manager`() {
+    fun `messages are forwarded to account manager`() = runBlocking {
+        Dispatchers.setMain(TestCoroutineDispatcher())
         val observer = AutoPushObserver(manager, mock(), "test")
 
         `when`(manager.authenticatedAccount()).thenReturn(account)
@@ -34,30 +41,35 @@ class AutoPushObserverTest {
 
         observer.onMessageReceived("test", "foobar".toByteArray())
 
-        verify(constellation).processRawEventAsync("foobar")
+        verify(constellation).processRawEvent("foobar")
+        Unit
     }
 
     @Test
-    fun `account manager is not invoked if no account is available`() {
+    fun `account manager is not invoked if no account is available`() = runBlocking {
         val observer = AutoPushObserver(manager, mock(), "test")
 
         observer.onMessageReceived("test", "foobar".toByteArray())
 
-        verify(constellation, never()).setDevicePushSubscriptionAsync(any())
-        verify(constellation, never()).processRawEventAsync("foobar")
+        verify(constellation, never()).setDevicePushSubscription(any())
+        verify(constellation, never()).processRawEvent("foobar")
+        Unit
     }
 
     @Test
-    fun `messages are not forwarded to account manager if they are for a different scope`() {
+    fun `messages are not forwarded to account manager if they are for a different scope`() = runBlocking {
         val observer = AutoPushObserver(manager, mock(), "fake")
 
         observer.onMessageReceived("test", "foobar".toByteArray())
 
-        verify(constellation, never()).processRawEventAsync(any())
+        verify(constellation, never()).processRawEvent(any())
+        Unit
     }
 
+    @ExperimentalCoroutinesApi
     @Test
-    fun `subscription changes are forwarded to account manager`() {
+    fun `subscription changes are forwarded to account manager`() = runBlocking {
+        Dispatchers.setMain(TestCoroutineDispatcher())
         val observer = AutoPushObserver(manager, pushFeature, "test")
 
         whenSubscribe()
@@ -67,22 +79,24 @@ class AutoPushObserverTest {
 
         observer.onSubscriptionChanged("test")
 
-        verify(constellation).setDevicePushSubscriptionAsync(any())
+        verify(constellation).setDevicePushSubscription(any())
+        Unit
     }
 
     @Test
-    fun `do nothing if there is no account manager`() {
+    fun `do nothing if there is no account manager`() = runBlocking {
         val observer = AutoPushObserver(manager, pushFeature, "test")
 
         whenSubscribe()
 
         observer.onSubscriptionChanged("test")
 
-        verify(constellation, never()).setDevicePushSubscriptionAsync(any())
+        verify(constellation, never()).setDevicePushSubscription(any())
+        Unit
     }
 
     @Test
-    fun `subscription changes are not forwarded to account manager if they are for a different scope`() {
+    fun `subscription changes are not forwarded to account manager if they are for a different scope`() = runBlocking {
         val observer = AutoPushObserver(manager, mock(), "fake")
 
         `when`(manager.authenticatedAccount()).thenReturn(account)
@@ -90,7 +104,7 @@ class AutoPushObserverTest {
 
         observer.onSubscriptionChanged("test")
 
-        verify(constellation, never()).setDevicePushSubscriptionAsync(any())
+        verify(constellation, never()).setDevicePushSubscription(any())
         verifyZeroInteractions(pushFeature)
     }
 

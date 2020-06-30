@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.storage.BookmarkNode
@@ -29,12 +30,13 @@ import mozilla.components.concept.sync.DeviceCommandOutgoing
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.AccountEvent
+import mozilla.components.concept.sync.AuthFlowError
+import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.generateEncryptionKey
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
@@ -42,6 +44,7 @@ import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.support.base.log.Log
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.FxaAuthData
+import mozilla.components.service.fxa.PeriodicSyncConfig
 import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.sync.SyncReason
@@ -92,7 +95,7 @@ class MainActivity :
                 ),
                 SyncConfig(
                     setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords),
-                    syncPeriodInMinutes = 15L
+                    periodicSyncConfig = PeriodicSyncConfig(periodMinutes = 15, initialDelayMinutes = 5)
                 )
         )
     }
@@ -119,24 +122,16 @@ class MainActivity :
 
         findViewById<View>(R.id.buttonSignIn).setOnClickListener {
             launch {
-                val authUrl = accountManager.beginAuthenticationAsync().await()
-                if (authUrl == null) {
-                    val txtView: TextView = findViewById(R.id.fxaStatusView)
-                    txtView.text = getString(R.string.account_error, null)
-                    return@launch
-                }
-                openWebView(authUrl)
+                accountManager.beginAuthentication()?.let { openWebView(it) }
             }
         }
 
         findViewById<View>(R.id.buttonLogout).setOnClickListener {
-            launch {
-                accountManager.logoutAsync().await()
-            }
+            launch { accountManager.logout() }
         }
 
         findViewById<View>(R.id.refreshDevice).setOnClickListener {
-            launch { accountManager.authenticatedAccount()?.deviceConstellation()?.refreshDevicesAsync()?.await() }
+            launch { accountManager.authenticatedAccount()?.deviceConstellation()?.refreshDevices() }
         }
 
         findViewById<View>(R.id.sendTab).setOnClickListener {
@@ -148,9 +143,9 @@ class MainActivity :
                     }
 
                     targets?.forEach {
-                        constellation.sendCommandToDeviceAsync(
+                        constellation.sendCommandToDevice(
                             it.id, DeviceCommandOutgoing.SendTab("Sample tab", "https://www.mozilla.org")
-                        ).await()
+                        )
                     }
 
                     Toast.makeText(
@@ -171,17 +166,20 @@ class MainActivity :
         // Observe incoming device commands.
         accountManager.registerForAccountEvents(accountEventsObserver, owner = this, autoPause = true)
 
-        launch {
-            GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
-            GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarksStorage)
-            GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarksStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
 
+        launch {
             // Now that our account state observer is registered, we can kick off the account manager.
-            accountManager.initAsync().await()
+            accountManager.start()
         }
 
         findViewById<View>(R.id.buttonSync).setOnClickListener {
-            accountManager.syncNowAsync(SyncReason.User)
+            launch {
+                accountManager.syncNow(SyncReason.User)
+                accountManager.authenticatedAccount()?.deviceConstellation()?.pollForCommands()
+            }
         }
     }
 
@@ -194,9 +192,9 @@ class MainActivity :
     override fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment) {
         launch {
             supportFragmentManager.popBackStack()
-            accountManager.finishAuthenticationAsync(
+            accountManager.finishAuthentication(
                 FxaAuthData(action.toAuthType(), code = code, state = state)
-            ).await()
+            )
         }
     }
 
@@ -222,24 +220,26 @@ class MainActivity :
 
     private val deviceConstellationObserver = object : DeviceConstellationObserver {
         override fun onDevicesUpdate(constellation: ConstellationState) {
-            val currentDevice = constellation.currentDevice
+            launch {
+                val currentDevice = constellation.currentDevice
 
-            val currentDeviceView: TextView = findViewById(R.id.currentDevice)
-            if (currentDevice != null) {
-                currentDeviceView.text = getString(
-                    R.string.full_device_details,
-                    currentDevice.id, currentDevice.displayName, currentDevice.deviceType,
-                    currentDevice.subscriptionExpired, currentDevice.subscription,
-                    currentDevice.capabilities, currentDevice.lastAccessTime
-                )
-            } else {
-                currentDeviceView.text = getString(R.string.current_device_unknown)
+                val currentDeviceView: TextView = findViewById(R.id.currentDevice)
+                if (currentDevice != null) {
+                    currentDeviceView.text = getString(
+                        R.string.full_device_details,
+                        currentDevice.id, currentDevice.displayName, currentDevice.deviceType,
+                        currentDevice.subscriptionExpired, currentDevice.subscription,
+                        currentDevice.capabilities, currentDevice.lastAccessTime
+                    )
+                } else {
+                    currentDeviceView.text = getString(R.string.current_device_unknown)
+                }
+
+                val devicesFragment = supportFragmentManager.findFragmentById(R.id.devices_fragment) as DeviceFragment
+                devicesFragment.updateDevices(constellation.otherDevices)
+
+                Toast.makeText(this@MainActivity, "Devices updated", Toast.LENGTH_SHORT).show()
             }
-
-            val devicesFragment = supportFragmentManager.findFragmentById(R.id.devices_fragment) as DeviceFragment
-            devicesFragment.updateDevices(constellation.otherDevices)
-
-            Toast.makeText(this@MainActivity, "Devices updated", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -253,7 +253,6 @@ class MainActivity :
                         when (it.command) {
                             is DeviceCommandIncoming.TabReceived -> {
                                 val cmd = it.command as DeviceCommandIncoming.TabReceived
-                                txtView.text = "A tab was received"
                                 var tabsStringified = "Tab(s) from: ${cmd.from?.displayName}\n"
                                 cmd.entries.forEach { tab ->
                                     tabsStringified += "${tab.title}: ${tab.url}\n"
@@ -362,6 +361,20 @@ class MainActivity :
                 )
             }
         }
+
+        override fun onFlowError(error: AuthFlowError) {
+            launch {
+                val txtView: TextView = findViewById(R.id.fxaStatusView)
+                txtView.text = getString(
+                    R.string.account_error,
+                    when (error) {
+                        AuthFlowError.FailedToBeginAuth -> "Failed to begin authentication"
+                        AuthFlowError.FailedToCompleteAuth -> "Failed to complete authentication"
+                        AuthFlowError.FailedToMigrate -> "Failed to migrate"
+                    }
+                )
+            }
+        }
     }
 
     private val syncObserver = object : SyncStatusObserver {
@@ -378,7 +391,7 @@ class MainActivity :
                 syncStatus?.text = getString(R.string.sync_idle)
 
                 val historyResultTextView: TextView = findViewById(R.id.historySyncResult)
-                val visitedCount = historyStorage.value.getVisited().size
+                val visitedCount = withContext(Dispatchers.IO) { historyStorage.value.getVisited().size }
                 // visitedCount is passed twice: to get the correct plural form, and then as
                 // an argument for string formatting.
                 historyResultTextView.text = resources.getQuantityString(
@@ -386,22 +399,24 @@ class MainActivity :
                 )
 
                 val bookmarksResultTextView: TextView = findViewById(R.id.bookmarksSyncResult)
-                val bookmarksRoot = bookmarksStorage.value.getTree("root________", recursive = true)
-                if (bookmarksRoot == null) {
-                    bookmarksResultTextView.text = getString(R.string.no_bookmarks_root)
-                } else {
-                    var bookmarksRootAndChildren = "BOOKMARKS\n"
-                    fun addTreeNode(node: BookmarkNode, depth: Int) {
-                        val desc = " ".repeat(depth * 2) + "${node.title} - ${node.url} (${node.guid})\n"
-                        bookmarksRootAndChildren += desc
-                        node.children?.forEach {
-                            addTreeNode(it, depth + 1)
+                bookmarksResultTextView.setHorizontallyScrolling(true)
+                bookmarksResultTextView.movementMethod = ScrollingMovementMethod.getInstance()
+                bookmarksResultTextView.text = withContext(Dispatchers.IO) {
+                    val bookmarksRoot = bookmarksStorage.value.getTree("root________", recursive = true)
+                    if (bookmarksRoot == null) {
+                        getString(R.string.no_bookmarks_root)
+                    } else {
+                        var bookmarksRootAndChildren = "BOOKMARKS\n"
+                        fun addTreeNode(node: BookmarkNode, depth: Int) {
+                            val desc = " ".repeat(depth * 2) + "${node.title} - ${node.url} (${node.guid})\n"
+                            bookmarksRootAndChildren += desc
+                            node.children?.forEach {
+                                addTreeNode(it, depth + 1)
+                            }
                         }
+                        addTreeNode(bookmarksRoot, 0)
+                        bookmarksRootAndChildren
                     }
-                    addTreeNode(bookmarksRoot, 0)
-                    bookmarksResultTextView.setHorizontallyScrolling(true)
-                    bookmarksResultTextView.setMovementMethod(ScrollingMovementMethod.getInstance())
-                    bookmarksResultTextView.text = bookmarksRootAndChildren
                 }
             }
         }

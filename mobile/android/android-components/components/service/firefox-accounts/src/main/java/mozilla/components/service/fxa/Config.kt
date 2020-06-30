@@ -4,53 +4,30 @@
 
 package mozilla.components.service.fxa
 
-import mozilla.components.concept.sync.DeviceCapability
-import mozilla.components.concept.sync.DeviceType
-import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 
 typealias ServerConfig = mozilla.appservices.fxaclient.Config
 typealias Server = mozilla.appservices.fxaclient.Config.Server
 
 /**
- * Configuration for the current device.
- *
- * @property name An initial name to use for the device record which will be created during authentication.
- * This can be changed later via [FxaDeviceConstellation].
- *
- * @property type Type of a device - mobile, desktop - used for displaying identifying icons on other devices.
- * This cannot be changed once device record is created.
- *
- * @property capabilities A set of device capabilities, such as SEND_TAB. This set can be expanded by
- * re-initializing [FxaAccountManager] with a new set (e.g. on app restart).
- * Shrinking a set of capabilities is currently not supported.
- *
- * @property secureStateAtRest A flag indicating whether or not to use encrypted storage for the persisted account
- * state. If set to `true`, [SecureAbove22AccountStorage] will be used as a storage layer. As the name suggests,
- * account state will only by encrypted on Android API 23+. Otherwise, even if this flag is set to `true`, account state
- * will be stored in plaintext.
- *
- * Default value of `false` configures the plaintext version of account storage to be used, [SharedPrefAccountStorage].
- *
- * Switching of this flag's values is supported; account state will be migrated between the underlying storage layers.
+ * @property periodMinutes How frequently periodic sync should happen.
+ * @property initialDelayMinutes What should the initial delay for the periodic sync be.
  */
-data class DeviceConfig(
-    val name: String,
-    val type: DeviceType,
-    val capabilities: Set<DeviceCapability>,
-    val secureStateAtRest: Boolean = false
+data class PeriodicSyncConfig(
+    val periodMinutes: Int = 240,
+    val initialDelayMinutes: Int = 5
 )
 
 /**
  * Configuration for sync.
  *
  * @property supportedEngines A set of supported sync engines, exposed via [GlobalSyncableStoreProvider].
- * @property syncPeriodInMinutes Optional, how frequently periodic sync should happen. If this is `null`,
- * periodic syncing will be disabled.
+ * @property periodicSyncConfig Optional configuration for running sync periodically.
+ * Periodic sync is disabled if this is `null`.
  */
 data class SyncConfig(
     val supportedEngines: Set<SyncEngine>,
-    val syncPeriodInMinutes: Long? = null
+    val periodicSyncConfig: PeriodicSyncConfig?
 )
 
 /**

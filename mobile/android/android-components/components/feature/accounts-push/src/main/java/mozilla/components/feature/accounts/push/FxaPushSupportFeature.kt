@@ -8,6 +8,9 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
@@ -122,7 +125,9 @@ internal class AccountObserver(
             logger.debug("Subscribing for FxaPushScope ($fxaPushScope) events.")
 
             push.subscribe(fxaPushScope) { subscription ->
-                account.deviceConstellation().setDevicePushSubscriptionAsync(subscription.into())
+                CoroutineScope(Dispatchers.Main).launch {
+                    account.deviceConstellation().setDevicePushSubscription(subscription.into())
+                }
             }
         }
 
@@ -191,7 +196,9 @@ internal class AutoPushObserver(
         val rawEvent = message ?: return
 
         accountManager.withConstellation {
-            processRawEventAsync(String(rawEvent))
+            CoroutineScope(Dispatchers.Main).launch {
+                processRawEvent(String(rawEvent))
+            }
         }
     }
 
@@ -210,7 +217,9 @@ internal class AutoPushObserver(
                 return@subscribe
             }
 
-            account.deviceConstellation().setDevicePushSubscriptionAsync(subscription.into())
+            CoroutineScope(Dispatchers.Main).launch {
+                account.deviceConstellation().setDevicePushSubscription(subscription.into())
+            }
         }
     }
 }
@@ -325,7 +334,9 @@ class OneTimeFxaPushReset(
 
         pushFeature.unsubscribe(pushScope)
         pushFeature.subscribe(newPushScope) { subscription ->
-            account.deviceConstellation().setDevicePushSubscriptionAsync(subscription.into())
+            CoroutineScope(Dispatchers.Main).launch {
+                account.deviceConstellation().setDevicePushSubscription(subscription.into())
+            }
         }
 
         preference(context).edit().putString(PREF_FXA_SCOPE, newPushScope).apply()

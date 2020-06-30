@@ -97,7 +97,7 @@ object GlobalSyncableStoreProvider {
 internal interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
     fun isSyncActive(): Boolean
     fun syncNow(reason: SyncReason, debounce: Boolean = false)
-    fun startPeriodicSync(unit: TimeUnit, period: Long)
+    fun startPeriodicSync(unit: TimeUnit, period: Long, initialDelay: Long)
     fun stopPeriodicSync()
     fun workersStateChanged(isRunning: Boolean)
 }
@@ -107,31 +107,9 @@ internal interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
  * @param syncConfig A [SyncConfig] object describing how sync should behave.
  */
 @SuppressWarnings("TooManyFunctions")
-abstract class SyncManager(
+internal abstract class SyncManager(
     private val syncConfig: SyncConfig
 ) {
-    companion object {
-        // Periodically sync in the background, to make our syncs a little more incremental.
-        // This isn't strictly necessary, and could be considered an optimization.
-        //
-        // Assuming that we synchronize during app startup, our trade-offs are:
-        // - not syncing in the background at all might mean longer syncs, more arduous startup syncs
-        // - on a slow mobile network, these delays could be significant
-        // - a delay during startup sync may affect user experience, since our data will be stale
-        // for longer
-        // - however, background syncing eats up some of the device resources
-        // - ... so we only do so a few times per day
-        // - we also rely on the OS and the WorkManager APIs to minimize those costs. It promises to
-        // bundle together tasks from different applications that have similar resource-consumption
-        // profiles. Specifically, we need device radio to be ON to talk to our servers; OS will run
-        // our periodic syncs bundled with another tasks that also need radio to be ON, thus "spreading"
-        // the overall cost.
-        //
-        // If we wanted to be very fancy, this period could be driven by how much new activity an
-        // account is actually expected to generate. For now, it's just a hard-coded constant.
-        val SYNC_PERIOD_UNIT = TimeUnit.MINUTES
-    }
-
     open val logger = Logger("SyncManager")
 
     // A SyncDispatcher instance bound to an account and a set of syncable stores.
@@ -164,18 +142,15 @@ abstract class SyncManager(
         if (syncDispatcher == null) {
             logger.info("Sync is not enabled. Ignoring 'sync now' request.")
         }
-        syncDispatcher?.let {
-            logger.debug("Requesting immediate sync, reason: $reason, debounce: $debounce")
-            it.syncNow(reason, debounce)
-        }
+        syncDispatcher?.syncNow(reason, debounce)
     }
 
     /**
      * Enables synchronization, with behaviour described in [syncConfig].
      */
-    internal fun start(reason: SyncReason) = synchronized(this) {
+    internal fun start() = synchronized(this) {
         logger.debug("Enabling...")
-        syncDispatcher = initDispatcher(newDispatcher(syncDispatcher, syncConfig.supportedEngines), reason)
+        syncDispatcher = initDispatcher(newDispatcher(syncDispatcher, syncConfig.supportedEngines))
         logger.debug("set and initialized new dispatcher: $syncDispatcher")
     }
 
@@ -184,8 +159,6 @@ abstract class SyncManager(
      */
     internal fun stop() = synchronized(this) {
         logger.debug("Disabling...")
-        syncDispatcher?.unregister(dispatcherStatusObserver)
-        syncDispatcher?.stopPeriodicSync()
         syncDispatcher?.close()
         syncDispatcher = null
     }
@@ -208,11 +181,14 @@ abstract class SyncManager(
         return createDispatcher(supportedEngines)
     }
 
-    private fun initDispatcher(dispatcher: SyncDispatcher, reason: SyncReason): SyncDispatcher {
+    private fun initDispatcher(dispatcher: SyncDispatcher): SyncDispatcher {
         dispatcher.register(dispatcherStatusObserver)
-        dispatcher.syncNow(reason)
-        if (syncConfig.syncPeriodInMinutes != null) {
-            dispatcher.startPeriodicSync(SYNC_PERIOD_UNIT, syncConfig.syncPeriodInMinutes)
+        syncConfig.periodicSyncConfig?.let {
+            dispatcher.startPeriodicSync(
+                TimeUnit.MINUTES,
+                period = it.periodMinutes.toLong(),
+                initialDelay = it.initialDelayMinutes.toLong()
+            )
         }
         dispatcherUpdated(dispatcher)
         return dispatcher

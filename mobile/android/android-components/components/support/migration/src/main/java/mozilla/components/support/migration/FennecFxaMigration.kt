@@ -5,10 +5,10 @@
 package mozilla.components.support.migration
 
 import android.content.Context
+import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
+import mozilla.components.service.fxa.manager.MigrationResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
-import mozilla.components.service.fxa.sharing.ShareableAuthInfo
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.FxaMigrationResult.Failure
 import mozilla.components.support.migration.FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount
@@ -147,7 +147,7 @@ private object AuthenticatedAccountProcessor {
     ): Result<FxaMigrationResult> {
         require(fennecAccount.authInfo != null) { "authInfo must be present in order to sign-in a FennecAccount" }
 
-        val fennecAuthInfo = ShareableAuthInfo(
+        val fennecAuthInfo = MigratingAccountInfo(
             sessionToken = fennecAccount.authInfo.sessionToken,
             kSync = fennecAccount.authInfo.kSync,
             kXCS = fennecAccount.authInfo.kXCS
@@ -158,13 +158,13 @@ private object AuthenticatedAccountProcessor {
             authInfo = fennecAuthInfo
         )
 
-        val signInResult = accountManager.signInWithShareableAccountAsync(
+        val signInResult = accountManager.migrateFromAccount(
             shareableAccount,
             reuseSessionToken = true
-        ).await()
+        )
 
         return when (signInResult) {
-            SignInWithShareableAccountResult.Failure -> {
+            MigrationResult.Failure -> {
                 Result.Failure(
                     FxaMigrationException(Failure.FailedToSignIntoAuthenticatedAccount(
                         email = fennecAccount.email,
@@ -172,13 +172,13 @@ private object AuthenticatedAccountProcessor {
                     ))
                 )
             }
-            SignInWithShareableAccountResult.Success -> {
+            MigrationResult.Success -> {
                 Result.Success(SignedInIntoAuthenticatedAccount(
                     email = fennecAccount.email,
                     stateLabel = fennecAccount.stateLabel
                 ))
             }
-            SignInWithShareableAccountResult.WillRetry -> {
+            MigrationResult.WillRetry -> {
                 Result.Success(FxaMigrationResult.Success.WillAutoRetrySignInLater(
                     email = fennecAccount.email,
                     stateLabel = fennecAccount.stateLabel

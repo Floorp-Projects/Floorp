@@ -5,7 +5,7 @@
 package mozilla.components.feature.accounts
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -253,7 +253,6 @@ class FxaWebChannelFeatureTest {
         val ext: WebExtension = mock()
         val port: Port = mock()
         val expectedEngines: Set<SyncEngine> = setOf(SyncEngine.History)
-        val logoutDeferred = CompletableDeferred<Unit>()
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
 
@@ -263,7 +262,6 @@ class FxaWebChannelFeatureTest {
         whenever(accountManager.accountProfile()).thenReturn(profile)
         whenever(accountManager.authenticatedAccount()).thenReturn(account)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
-        whenever(accountManager.logoutAsync()).thenReturn(logoutDeferred)
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines, emptySet(), accountManager)
         webchannelFeature.start()
@@ -308,7 +306,6 @@ class FxaWebChannelFeatureTest {
         val ext: WebExtension = mock()
         val port: Port = mock()
         val expectedEngines: Set<SyncEngine> = setOf(SyncEngine.History)
-        val logoutDeferred = CompletableDeferred<Unit>()
         val messageHandler = argumentCaptor<MessageHandler>()
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
 
@@ -317,7 +314,6 @@ class FxaWebChannelFeatureTest {
         whenever(accountManager.accountProfile()).thenReturn(null)
         whenever(accountManager.authenticatedAccount()).thenReturn(account)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
-        whenever(accountManager.logoutAsync()).thenReturn(logoutDeferred)
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, expectedEngines, emptySet(), accountManager)
         webchannelFeature.start()
@@ -485,14 +481,14 @@ class FxaWebChannelFeatureTest {
 
     // Receiving an oauth-login message account manager accepts the request
     @Test
-    fun `COMMAND_OAUTH_LOGIN web-channel must be processed through when the accountManager accepts the request`() {
+    fun `COMMAND_OAUTH_LOGIN web-channel must be processed through when the accountManager accepts the request`() = runBlocking {
         val accountManager: FxaAccountManager = mock() // syncConfig is null by default (is not configured)
         val engineSession: EngineSession = mock()
         val ext: WebExtension = mock()
         val port: Port = mock()
         val messageHandler = argumentCaptor<MessageHandler>()
 
-        whenever(accountManager.finishAuthenticationAsync(any())).thenReturn(CompletableDeferred(false))
+        whenever(accountManager.finishAuthentication(any())).thenReturn(false)
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, null, emptySet(), accountManager)
@@ -517,14 +513,14 @@ class FxaWebChannelFeatureTest {
 
     // Receiving an oauth-login message account manager refuses the request
     @Test
-    fun `COMMAND_OAUTH_LOGIN web-channel must be processed when the accountManager refuses the request`() {
+    fun `COMMAND_OAUTH_LOGIN web-channel must be processed when the accountManager refuses the request`() = runBlocking {
         val accountManager: FxaAccountManager = mock() // syncConfig is null by default (is not configured)
         val engineSession: EngineSession = mock()
         val ext: WebExtension = mock()
         val port: Port = mock()
         val messageHandler = argumentCaptor<MessageHandler>()
 
-        whenever(accountManager.finishAuthenticationAsync(any())).thenReturn(CompletableDeferred(false))
+        whenever(accountManager.finishAuthentication(any())).thenReturn(false)
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, null, emptySet(), accountManager)
@@ -663,7 +659,7 @@ class FxaWebChannelFeatureTest {
             .getBoolean("ok")
     }
 
-    private fun verifyOauthLogin(action: String, expectedAuthType: AuthType, code: String, state: String, declined: Set<SyncEngine>?, messageHandler: MessageHandler, accountManager: FxaAccountManager) {
+    private suspend fun verifyOauthLogin(action: String, expectedAuthType: AuthType, code: String, state: String, declined: Set<SyncEngine>?, messageHandler: MessageHandler, accountManager: FxaAccountManager) {
         val jsonToWebChannel = jsonOauthLogin(action, code, state, declined ?: emptySet())
         val port = mock<Port>()
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
@@ -675,7 +671,7 @@ class FxaWebChannelFeatureTest {
             state = state,
             declinedEngines = declined ?: emptySet()
         )
-        verify(accountManager).finishAuthenticationAsync(expectedAuthData)
+        verify(accountManager).finishAuthentication(expectedAuthData)
     }
 
     private fun jsonOauthLogin(action: String, code: String, state: String, declined: Set<SyncEngine>): JSONObject {

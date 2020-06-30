@@ -6,36 +6,39 @@ package mozilla.components.concept.sync
 
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.Deferred
 import mozilla.components.support.base.observer.Observable
+
+/**
+ * Represents a result of interacting with a backend service which may return an authentication error.
+ */
+sealed class ServiceResult {
+    /**
+     * All good.
+     */
+    object Ok : ServiceResult()
+
+    /**
+     * Auth error.
+     */
+    object AuthError : ServiceResult()
+
+    /**
+     * Error that isn't auth.
+     */
+    object OtherError : ServiceResult()
+}
 
 /**
  * Describes available interactions with the current device and other devices associated with an [OAuthAccount].
  */
 interface DeviceConstellation : Observable<AccountEventsObserver> {
     /**
-     * Register current device in the associated [DeviceConstellation].
-     *
-     * @param name An initial name for the current device. This may be changed via [setDeviceNameAsync].
-     * @param type Type of the current device. This can't be changed.
-     * @param capabilities A list of capabilities that the current device claims to have.
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     * Perform actions necessary to finalize device initialization based on [authType].
+     * @param authType Type of an authentication event we're experiencing.
+     * @param config A [DeviceConfig] that describes current device.
+     * @return A boolean success flag.
      */
-    fun initDeviceAsync(
-        name: String,
-        type: DeviceType = DeviceType.MOBILE,
-        capabilities: Set<DeviceCapability>
-    ): Deferred<Boolean>
-
-    /**
-     * Ensure that all passed in [capabilities] are configured.
-     * This may involve backend service registration, or other work involving network/disc access.
-     * @param capabilities A list of capabilities to configure. This is expected to be the same or
-     * longer list than what was passed into [initDeviceAsync]. Removing capabilities is currently
-     * not supported.
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
-     */
-    fun ensureCapabilitiesAsync(capabilities: Set<DeviceCapability>): Deferred<Boolean>
+    suspend fun finalizeDevice(authType: AuthType, config: DeviceConfig): ServiceResult
 
     /**
      * Current state of the constellation. May be missing if state was never queried.
@@ -53,46 +56,46 @@ interface DeviceConstellation : Observable<AccountEventsObserver> {
      * Set name of the current device.
      * @param name New device name.
      * @param context An application context, used for updating internal caches.
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     * @return A boolean success flag.
      */
-    fun setDeviceNameAsync(name: String, context: Context): Deferred<Boolean>
+    suspend fun setDeviceName(name: String, context: Context): Boolean
 
     /**
      * Set a [DevicePushSubscription] for the current device.
      * @param subscription A new [DevicePushSubscription].
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     * @return A boolean success flag.
      */
-    fun setDevicePushSubscriptionAsync(subscription: DevicePushSubscription): Deferred<Boolean>
+    suspend fun setDevicePushSubscription(subscription: DevicePushSubscription): Boolean
 
     /**
      * Send a command to a specified device.
      * @param targetDeviceId A device ID of the recipient.
      * @param outgoingCommand An event to send.
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     * @return A boolean success flag.
      */
-    fun sendCommandToDeviceAsync(targetDeviceId: String, outgoingCommand: DeviceCommandOutgoing): Deferred<Boolean>
+    suspend fun sendCommandToDevice(targetDeviceId: String, outgoingCommand: DeviceCommandOutgoing): Boolean
 
     /**
      * Process a raw event, obtained via a push message or some other out-of-band mechanism.
      * @param payload A raw, plaintext payload to be processed.
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     * @return A boolean success flag.
      */
-    fun processRawEventAsync(payload: String): Deferred<Boolean>
+    suspend fun processRawEvent(payload: String): Boolean
 
     /**
      * Refreshes [ConstellationState]. Registered [DeviceConstellationObserver] observers will be notified.
      *
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     * @return A boolean success flag.
      */
-    fun refreshDevicesAsync(): Deferred<Boolean>
+    suspend fun refreshDevices(): Boolean
 
     /**
      * Polls for any pending [DeviceCommandIncoming] commands.
      * In case of new commands, registered [AccountEventsObserver] observers will be notified.
      *
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     * @return A boolean success flag.
      */
-    fun pollForCommandsAsync(): Deferred<Boolean>
+    suspend fun pollForCommands(): Boolean
 }
 
 /**
@@ -126,6 +129,24 @@ data class DevicePushSubscription(
     val endpoint: String,
     val publicKey: String,
     val authKey: String
+)
+
+/**
+ * Configuration for the current device.
+ *
+ * @property name An initial name to use for the device record which will be created during authentication.
+ * This can be changed later via [DeviceConstellation.setDeviceName].
+ * @property type Type of a device - mobile, desktop - used for displaying identifying icons on other devices.
+ * This cannot be changed once device record is created.
+ * @property capabilities A set of device capabilities, such as SEND_TAB.
+ * @property secureStateAtRest A flag indicating whether or not to use encrypted storage for the persisted account
+ * state.
+ */
+data class DeviceConfig(
+    val name: String,
+    val type: DeviceType,
+    val capabilities: Set<DeviceCapability>,
+    val secureStateAtRest: Boolean = false
 )
 
 /**

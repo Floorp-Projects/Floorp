@@ -5,7 +5,6 @@
 package mozilla.components.feature.syncedtabs.controller
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
@@ -160,11 +159,11 @@ class DefaultControllerTest {
 
         `when`(accountManager.authenticatedAccount()).thenReturn(account)
         `when`(account.deviceConstellation()).thenReturn(constellation)
-        `when`(constellation.refreshDevicesAsync()).thenReturn(CompletableDeferred(true))
+        `when`(constellation.refreshDevices()).thenReturn(true)
 
         controller.syncAccount()
 
-        verify(constellation).refreshDevicesAsync()
-        verify(accountManager).syncNowAsync(SyncReason.User, false)
+        verify(constellation).refreshDevices()
+        verify(accountManager).syncNow(SyncReason.User, false)
     }
 }

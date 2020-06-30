@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.support.ktx.kotlin.toHexString
 import mozilla.components.support.ktx.kotlin.toSha256Digest
 
@@ -18,16 +19,7 @@ import mozilla.components.support.ktx.kotlin.toSha256Digest
 data class ShareableAccount(
     val email: String,
     val sourcePackage: String,
-    val authInfo: ShareableAuthInfo
-)
-
-/**
- * Data structure describing FxA and Sync credentials necessary to share an FxA account.
- */
-data class ShareableAuthInfo(
-    val sessionToken: String,
-    val kSync: String,
-    val kXCS: String
+    val authInfo: MigratingAccountInfo
 )
 
 /**
@@ -109,7 +101,7 @@ object AccountSharing {
                     ShareableAccount(
                         email = email,
                         sourcePackage = packageName,
-                        authInfo = ShareableAuthInfo(sessionToken, kSync, kXSCS)
+                        authInfo = MigratingAccountInfo(sessionToken, kSync, kXSCS)
                     )
                 } else {
                     null

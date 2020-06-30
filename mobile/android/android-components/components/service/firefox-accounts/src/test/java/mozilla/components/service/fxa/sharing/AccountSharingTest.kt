@@ -13,6 +13,7 @@ import android.content.pm.Signature
 import android.content.pm.SigningInfo
 import android.database.Cursor
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.service.fxa.sharing.AccountSharing.KEY_EMAIL
 import mozilla.components.service.fxa.sharing.AccountSharing.KEY_KSYNC
 import mozilla.components.service.fxa.sharing.AccountSharing.KEY_KXSCS
@@ -166,7 +167,7 @@ class AccountSharingTest {
         val expectedAccountRelease = ShareableAccount(
             "user@mozilla.org",
             packageNameRelease,
-            ShareableAuthInfo(
+            MigratingAccountInfo(
                 "sessionToken".toByteArray().toHexString(),
                 "ksync".toByteArray().toHexString(),
                 "kxscs"
@@ -177,7 +178,7 @@ class AccountSharingTest {
         val expectedAccountBeta = ShareableAccount(
                 "user@mozilla.org",
                 packageNameBeta,
-                ShareableAuthInfo(
+            MigratingAccountInfo(
                     "sessionToken".toByteArray().toHexString(),
                     "ksync".toByteArray().toHexString(),
                     "kxscs"

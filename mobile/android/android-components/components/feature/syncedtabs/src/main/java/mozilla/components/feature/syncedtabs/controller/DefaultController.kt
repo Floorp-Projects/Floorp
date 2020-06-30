@@ -57,10 +57,8 @@ internal class DefaultController(
      */
     override fun syncAccount() {
         scope.launch {
-            accountManager.withConstellation {
-                refreshDevicesAsync().await()
-            }
-            accountManager.syncNowAsync(SyncReason.User)
+            accountManager.withConstellation { refreshDevices() }
+            accountManager.syncNow(SyncReason.User)
         }
     }
 }

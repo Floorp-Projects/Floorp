@@ -16,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
+import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
@@ -23,8 +24,8 @@ import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.FxaAuthData
+import mozilla.components.service.fxa.PeriodicSyncConfig
 import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
@@ -59,7 +60,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
                 applicationContext,
                 ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL),
                 DeviceConfig("A-C Logins Sync Sample", DeviceType.MOBILE, setOf()),
-                SyncConfig(setOf(SyncEngine.Passwords))
+                SyncConfig(setOf(SyncEngine.Passwords), PeriodicSyncConfig())
         )
     }
 
@@ -98,12 +99,12 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
             // kicking off the accountManager.
             GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to loginsStorage)
 
-            accountManager.initAsync().await()
+            accountManager.start()
         }
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                val authUrl = accountManager.beginAuthenticationAsync().await()
+                val authUrl = accountManager.beginAuthentication()
                 if (authUrl == null) {
                     Toast.makeText(this@MainActivity, "Account auth error", Toast.LENGTH_LONG).show()
                     return@launch
@@ -119,7 +120,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         override fun onLoggedOut() {}
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-            accountManager.syncNowAsync(SyncReason.User)
+            launch { accountManager.syncNow(SyncReason.User) }
         }
 
         @Suppress("EmptyFunctionBlock")
@@ -148,9 +149,9 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
     override fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment) {
         launch {
-            accountManager.finishAuthenticationAsync(
+            accountManager.finishAuthentication(
                 FxaAuthData(action.toAuthType(), code = code, state = state)
-            ).await()
+            )
             supportFragmentManager.popBackStack()
         }
     }

@@ -34,13 +34,13 @@ class FirefoxAccountsAuthFeature(
 ) {
     fun beginAuthentication(context: Context) {
         beginAuthenticationAsync(context) {
-            accountManager.beginAuthenticationAsync().await()
+            accountManager.beginAuthentication()
         }
     }
 
     fun beginPairingAuthentication(context: Context, pairingUrl: String) {
         beginAuthenticationAsync(context) {
-            accountManager.beginAuthenticationAsync(pairingUrl).await()
+            accountManager.beginAuthentication(pairingUrl)
         }
     }
 
@@ -81,11 +81,13 @@ class FirefoxAccountsAuthFeature(
                     val state = parsedUri.getQueryParameter("state") as String
 
                     // Notify the state machine about our success.
-                    accountManager.finishAuthenticationAsync(FxaAuthData(
-                        authType = authType,
-                        code = code,
-                        state = state
-                    ))
+                    CoroutineScope(Dispatchers.Main).launch {
+                        accountManager.finishAuthentication(FxaAuthData(
+                            authType = authType,
+                            code = code,
+                            state = state
+                        ))
+                    }
 
                     return RequestInterceptor.InterceptionResponse.Url(redirectUrl)
                 }

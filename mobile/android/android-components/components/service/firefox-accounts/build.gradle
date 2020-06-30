@@ -75,6 +75,7 @@ dependencies {
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
 
     testImplementation Dependencies.mozilla_full_megazord_forUnitTests
+    testImplementation Dependencies.kotlin_reflect
 }
 
 apply from: '../../../publish.gradle'

@@ -36,7 +36,7 @@ class EventsObserverTest {
         val callback: (Device?, List<TabData>) -> Unit = mock()
         val observer = EventsObserver(callback)
         val events = listOf(
-            AccountEvent.ProfileUpdated(),
+            AccountEvent.ProfileUpdated,
             AccountEvent.DeviceCommandIncoming(command = DeviceCommandIncoming.TabReceived(mock(), mock())),
             AccountEvent.DeviceCommandIncoming(command = DeviceCommandIncoming.TabReceived(mock(), mock()))
         )
