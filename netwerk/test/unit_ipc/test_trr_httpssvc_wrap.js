@@ -67,5 +67,15 @@ function run_test() {
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/httpssvc"
   );
+
+  do_await_remote_message("mode3-port").then(port => {
+    prefs.setIntPref("network.trr.mode", 3);
+    prefs.setCharPref(
+      "network.trr.uri",
+      `https://foo.example.com:${port}/dns-query`
+    );
+    do_send_remote_message("mode3-port-done");
+  });
+
   run_test_in_child("../unit/test_trr_httpssvc.js");
 }
