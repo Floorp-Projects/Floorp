@@ -1181,11 +1181,12 @@ nsresult HTMLCanvasElement::RegisterFrameCaptureListener(
       return NS_ERROR_FAILURE;
     }
 
-    while (doc->GetInProcessParentDocument()) {
-      doc = doc->GetInProcessParentDocument();
+    PresShell* shell = nsContentUtils::FindPresShellForDocument(doc);
+    if (!shell) {
+      return NS_ERROR_FAILURE;
     }
 
-    nsPresContext* context = doc->GetPresContext();
+    nsPresContext* context = shell->GetPresContext();
     if (!context) {
       return NS_ERROR_FAILURE;
     }
