@@ -11,6 +11,7 @@
 #include "mozilla/AddonManagerWebAPI.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsIObserver.h"
 #include "nsISubstitutingProtocolHandler.h"
@@ -248,6 +249,11 @@ bool WebExtensionPolicy::Enable() {
     return false;
   }
 
+  if (XRE_IsParentProcess()) {
+    // Reserve a BrowsingContextGroup ID for use by this WebExtensionPolicy.
+    mBrowsingContextGroupId = nsContentUtils::GenerateBrowsingContextId();
+  }
+
   Unused << Proto()->SetSubstitution(MozExtensionHostname(), mBaseURI);
 
   mActive = true;
@@ -483,6 +489,11 @@ void WebExtensionPolicy::GetReadyPromise(
   } else {
     aResult.set(nullptr);
   }
+}
+
+uint64_t WebExtensionPolicy::GetBrowsingContextGroupId() const {
+  MOZ_ASSERT(XRE_IsParentProcess() && mActive);
+  return mBrowsingContextGroupId;
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(WebExtensionPolicy, mParent,
