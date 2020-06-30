@@ -13687,6 +13687,10 @@ bool Document::FullscreenElementReadyCheck(FullscreenRequest& aRequest) {
     aRequest.Reject("FullscreenDeniedSubDocFullScreen");
     return false;
   }
+  if (elem->IsHTMLElement(nsGkAtoms::dialog)) {
+    aRequest.Reject("FullscreenDeniedHTMLDialog");
+    return false;
+  }
   // XXXsmaug Note, we don't follow the latest fullscreen spec here.
   //         This whole check could be probably removed.
   if (fullscreenElement && !nsContentUtils::ContentIsHostIncludingDescendantOf(
