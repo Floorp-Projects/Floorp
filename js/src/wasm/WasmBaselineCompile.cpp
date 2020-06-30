@@ -14778,6 +14778,9 @@ bool BaseCompiler::emitBody() {
 
       // Thread operations
       case uint16_t(Op::ThreadPrefix): {
+        if (env_.sharedMemoryEnabled == Shareable::False) {
+          return iter_.unrecognizedOpcode(&op);
+        }
         switch (op.b1) {
           case uint32_t(ThreadOp::Wake):
             CHECK_NEXT(emitWake());

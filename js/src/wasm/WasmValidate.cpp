@@ -1304,6 +1304,9 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
       }
 #endif
       case uint16_t(Op::ThreadPrefix): {
+        if (env.sharedMemoryEnabled == Shareable::False) {
+          return iter.unrecognizedOpcode(&op);
+        }
         switch (op.b1) {
           case uint32_t(ThreadOp::Wake): {
             LinearMemoryAddress<Nothing> addr;
