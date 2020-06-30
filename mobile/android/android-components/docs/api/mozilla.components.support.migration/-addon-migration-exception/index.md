@@ -2,7 +2,7 @@
 
 # AddonMigrationException
 
-`class AddonMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L36)
+`class AddonMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L39)
 
 Wraps [AddonMigrationResult](../-addon-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](../-result/-failure/index.md).
 
