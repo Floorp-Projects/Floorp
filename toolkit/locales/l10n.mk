@@ -8,8 +8,8 @@
 # of Mozilla applications.
 # This makefile should be included, and then assumes that the including
 # makefile defines the following targets:
-# libs-%
-#   This target should call into the various libs targets that this
+# l10n-%
+#   This target should call into the various l10n targets that this
 #   application depends on.
 # installer-%
 #   This target should list all required targets, a typical rule would be
@@ -27,7 +27,7 @@
 
 run_for_effects := $(shell if test ! -d $(DIST); then $(NSINSTALL) -D $(DIST); fi)
 
-# This makefile uses variable overrides from the libs-% target to
+# This makefile uses variable overrides from the l10n-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
 
 LPROJ_ROOT = $(firstword $(subst -, ,$(AB_CD)))
@@ -214,7 +214,7 @@ endif
 # compare-locales above, which would add en-US.dic and en-US.aff to
 # the merge directory.
 # Copy them to the merge dir, if exist. The repackaged app can still decide
-# on whether to package them or not in `libs-%` and `chrome-%`.
+# on whether to package them or not in `l10n-%` and `chrome-%`.
 	if  test -d $(L10NBASEDIR)/$(AB_CD)/extensions/spellcheck ; then \
 		$(NSINSTALL) -D $(REAL_LOCALE_MERGEDIR)/extensions/spellcheck/hunspell ; \
 		cp $(L10NBASEDIR)/$(AB_CD)/extensions/spellcheck/hunspell/*.* $(REAL_LOCALE_MERGEDIR)/extensions/spellcheck/hunspell ; \
@@ -225,7 +225,7 @@ langpack-%: IS_LANGPACK=1
 langpack-%: AB_CD=$*
 langpack-%: clobber-%
 	@echo 'Making langpack $(LANGPACK_FILE)'
-	@$(MAKE) libs-$(AB_CD)
+	@$(MAKE) l10n-$(AB_CD)
 	@$(MAKE) package-langpack-$(AB_CD)
 
 package-langpack-%: LANGPACK_FILE=$(ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi

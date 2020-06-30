@@ -33,11 +33,11 @@ clobber-stage:
 
 # merge if we're not en-US, using conditional function as we need
 # the current value of AB_CD
-libs-%: AB_CD=$*
-libs-%:
+l10n-%: AB_CD=$*
+l10n-%:
 	$(if $(filter en-US,$(AB_CD)),, $(MAKE) merge-$*)
-	$(MAKE) -C $(DEPTH)/mobile/locales libs-$*
-	$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
+	$(MAKE) -C $(DEPTH)/mobile/locales l10n-$*
+	$(MAKE) l10n AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 	$(MAKE) multilocale.txt-$* AB_CD=$* XPI_NAME=locale-$*
 
 # Tailored target to just add the chrome processing for multi-locale builds
@@ -58,7 +58,7 @@ langpack: langpack-$(AB_CD)
 installers-%: IS_LANGUAGE_REPACK=1
 installers-%:
 	$(MAKE) clobber-stage
-	$(MAKE) libs-$*
+	$(MAKE) l10n-$*
 	$(MAKE) package-langpack-$*
 	$(MAKE) repackage-zip-$*
 	@echo 'repackaging done'

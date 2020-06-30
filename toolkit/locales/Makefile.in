@@ -4,13 +4,13 @@
 
 include $(topsrcdir)/config/rules.mk
 
-libs-%: AB_CD=$*
-libs-%:
-	@$(MAKE) -C ../../netwerk/locales/ libs AB_CD=$* XPI_NAME=locale-$*
-	@$(MAKE) -C ../../dom/locales/ libs AB_CD=$* XPI_NAME=locale-$*
-	@$(MAKE) -C ../../security/manager/locales/ libs AB_CD=$* XPI_NAME=locale-$*
-	@$(MAKE) -C ../../devtools/shared/locales/ libs AB_CD=$* XPI_NAME=locale-$*
-	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$*
+l10n-%: AB_CD=$*
+l10n-%:
+	@$(MAKE) -C ../../netwerk/locales/ l10n AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../../dom/locales/ l10n AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../../security/manager/locales/ l10n AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../../devtools/shared/locales/ l10n AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) l10n AB_CD=$* XPI_NAME=locale-$*
 
 # target to be used by multi-locale l10n builds, just add this locale
 # like regular chrome code

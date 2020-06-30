@@ -475,7 +475,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             'include $(topsrcdir)/config/AB_rCD.mk',
-            'libs:: $(MDDEPDIR)/foo.xyz.stub',
+            'misc:: $(MDDEPDIR)/foo.xyz.stub',
             'foo.xyz: $(MDDEPDIR)/foo.xyz.stub ;',
             'GARBAGE += foo.xyz',
             'GARBAGE += $(MDDEPDIR)/foo.xyz.stub',
@@ -487,7 +487,7 @@ class TestRecursiveMakeBackend(BackendTester):
             '',
             'LOCALIZED_FILES_0_FILES += foo.xyz',
             'LOCALIZED_FILES_0_DEST = $(FINAL_TARGET)/',
-            'LOCALIZED_FILES_0_TARGET := libs',
+            'LOCALIZED_FILES_0_TARGET := misc',
             'INSTALL_TARGETS += LOCALIZED_FILES_0',
         ]
 
@@ -503,7 +503,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             'include $(topsrcdir)/config/AB_rCD.mk',
-            'libs:: $(MDDEPDIR)/foo.xyz.stub',
+            'misc:: $(MDDEPDIR)/foo.xyz.stub',
             'foo.xyz: $(MDDEPDIR)/foo.xyz.stub ;',
             'GARBAGE += foo.xyz',
             'GARBAGE += $(MDDEPDIR)/foo.xyz.stub',
@@ -513,7 +513,7 @@ class TestRecursiveMakeBackend(BackendTester):
             '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(MDDEPDIR)/foo.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
-            'libs:: $(MDDEPDIR)/abc.xyz.stub',
+            'misc:: $(MDDEPDIR)/abc.xyz.stub',
             'abc.xyz: $(MDDEPDIR)/abc.xyz.stub ;',
             'GARBAGE += abc.xyz',
             'GARBAGE += $(MDDEPDIR)/abc.xyz.stub',
@@ -538,7 +538,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             'include $(topsrcdir)/config/AB_rCD.mk',
-            'libs:: $(MDDEPDIR)/foo$(AB_CD).xyz.stub',
+            'misc:: $(MDDEPDIR)/foo$(AB_CD).xyz.stub',
             'foo$(AB_CD).xyz: $(MDDEPDIR)/foo$(AB_CD).xyz.stub ;',
             'GARBAGE += foo$(AB_CD).xyz',
             'GARBAGE += $(MDDEPDIR)/foo$(AB_CD).xyz.stub',
@@ -994,7 +994,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'LOCALIZED_FILES_0_FILES += $(call MERGE_FILE,bar.ini)',
             'LOCALIZED_FILES_0_FILES += $(call MERGE_FILE,foo.js)',
             'LOCALIZED_FILES_0_DEST = $(FINAL_TARGET)/',
-            'LOCALIZED_FILES_0_TARGET := libs',
+            'LOCALIZED_FILES_0_TARGET := misc',
             'INSTALL_TARGETS += LOCALIZED_FILES_0',
         ]
 
@@ -1012,7 +1012,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'LOCALIZED_PP_FILES_0 += $(call MERGE_FILE,bar.ini)',
             'LOCALIZED_PP_FILES_0 += $(call MERGE_FILE,foo.js)',
             'LOCALIZED_PP_FILES_0_PATH = $(FINAL_TARGET)/',
-            'LOCALIZED_PP_FILES_0_TARGET := libs',
+            'LOCALIZED_PP_FILES_0_TARGET := misc',
             'LOCALIZED_PP_FILES_0_FLAGS := --silence-missing-directive-warnings',
             'PP_TARGETS += LOCALIZED_PP_FILES_0',
         ]

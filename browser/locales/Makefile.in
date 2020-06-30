@@ -11,7 +11,7 @@ SUBMAKEFILES += \
 	$(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
 	$(NULL)
 
-# This makefile uses variable overrides from the libs-% target to
+# This makefile uses variable overrides from the l10n-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
 
 PWD := $(CURDIR)
@@ -51,11 +51,11 @@ include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/toolkit/locales/l10n.mk
 
-libs-%: AB_CD=$*
-libs-%:
+l10n-%: AB_CD=$*
+l10n-%:
 	$(if $(filter en-US,$(AB_CD)),, @$(MAKE) merge-$*)
 	$(NSINSTALL) -D $(DIST)/install
-	@$(MAKE) -C ../../toolkit/locales libs-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
+	@$(MAKE) -C ../../toolkit/locales l10n-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
 ifneq (,$(wildcard ../extensions/formautofill/locales))
@@ -64,7 +64,7 @@ endif
 	@$(MAKE) -C ../extensions/report-site-issue/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../devtools/client/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -C ../../devtools/startup/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
-	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
+	@$(MAKE) l10n AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
 	@$(MAKE) multilocale.txt-$* AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 
@@ -96,7 +96,7 @@ langpack: langpack-$(AB_CD)
 installers-%: IS_LANGUAGE_REPACK=1
 installers-%:
 	@$(MAKE) clobber-$*
-	@$(MAKE) libs-$*
+	@$(MAKE) l10n-$*
 	@$(MAKE) package-langpack-$*
 	@$(MAKE) repackage-zip-$*
 ifeq (WINNT,$(OS_ARCH))
