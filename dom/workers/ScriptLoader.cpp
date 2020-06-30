@@ -466,10 +466,8 @@ class CacheScriptLoader final : public PromiseNativeHandler,
   NS_DECL_NSISTREAMLOADEROBSERVER
 
   CacheScriptLoader(WorkerPrivate* aWorkerPrivate, ScriptLoadInfo& aLoadInfo,
-                    uint32_t aIndex, bool aIsWorkerScript,
-                    ScriptLoaderRunnable* aRunnable)
+                    bool aIsWorkerScript, ScriptLoaderRunnable* aRunnable)
       : mLoadInfo(aLoadInfo),
-        mIndex(aIndex),
         mRunnable(aRunnable),
         mIsWorkerScript(aIsWorkerScript),
         mFailed(false),
@@ -496,7 +494,6 @@ class CacheScriptLoader final : public PromiseNativeHandler,
   ~CacheScriptLoader() { AssertIsOnMainThread(); }
 
   ScriptLoadInfo& mLoadInfo;
-  uint32_t mIndex;
   const RefPtr<ScriptLoaderRunnable> mRunnable;
   const bool mIsWorkerScript;
   bool mFailed;
@@ -518,8 +515,8 @@ class CachePromiseHandler final : public PromiseNativeHandler {
   NS_DECL_ISUPPORTS
 
   CachePromiseHandler(ScriptLoaderRunnable* aRunnable,
-                      ScriptLoadInfo& aLoadInfo, uint32_t aIndex)
-      : mRunnable(aRunnable), mLoadInfo(aLoadInfo), mIndex(aIndex) {
+                      ScriptLoadInfo& aLoadInfo)
+      : mRunnable(aRunnable), mLoadInfo(aLoadInfo) {
     AssertIsOnMainThread();
     MOZ_ASSERT(mRunnable);
   }
@@ -535,7 +532,6 @@ class CachePromiseHandler final : public PromiseNativeHandler {
 
   RefPtr<ScriptLoaderRunnable> mRunnable;
   ScriptLoadInfo& mLoadInfo;
-  uint32_t mIndex;
 };
 
 NS_IMPL_ISUPPORTS0(CachePromiseHandler)
@@ -545,8 +541,8 @@ class LoaderListener final : public nsIStreamLoaderObserver,
  public:
   NS_DECL_ISUPPORTS
 
-  LoaderListener(ScriptLoaderRunnable* aRunnable, uint32_t aIndex)
-      : mRunnable(aRunnable), mIndex(aIndex) {
+  LoaderListener(ScriptLoaderRunnable* aRunnable, ScriptLoadInfo& aLoadInfo)
+      : mRunnable(aRunnable), mLoadInfo(aLoadInfo) {
     MOZ_ASSERT(mRunnable);
   }
 
@@ -568,7 +564,7 @@ class LoaderListener final : public nsIStreamLoaderObserver,
   ~LoaderListener() = default;
 
   RefPtr<ScriptLoaderRunnable> mRunnable;
-  uint32_t mIndex;
+  ScriptLoadInfo& mLoadInfo;
 };
 
 NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamLoaderObserver, nsIRequestObserver)
@@ -719,49 +715,44 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     return NS_OK;
   }
 
-  void LoadingFinished(uint32_t aIndex, nsresult aRv) {
+  void LoadingFinished(ScriptLoadInfo& aLoadInfo, nsresult aRv) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(aIndex < mLoadInfos.Length());
-    ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
 
-    loadInfo.mLoadResult = aRv;
+    aLoadInfo.mLoadResult = aRv;
 
-    MOZ_ASSERT(!loadInfo.mLoadingFinished);
-    loadInfo.mLoadingFinished = true;
+    MOZ_ASSERT(!aLoadInfo.mLoadingFinished);
+    aLoadInfo.mLoadingFinished = true;
 
     if (IsMainWorkerScript() && NS_SUCCEEDED(aRv)) {
       MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate->PrincipalURIMatchesScriptURL());
     }
 
-    MaybeExecuteFinishedScripts(aIndex);
+    MaybeExecuteFinishedScripts(aLoadInfo);
   }
 
-  void MaybeExecuteFinishedScripts(uint32_t aIndex) {
+  void MaybeExecuteFinishedScripts(const ScriptLoadInfo& aLoadInfo) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(aIndex < mLoadInfos.Length());
-    ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
 
     // We execute the last step if we don't have a pending operation with the
     // cache and the loading is completed.
-    if (loadInfo.Finished()) {
+    if (aLoadInfo.Finished()) {
       ExecuteFinishedScripts();
     }
   }
 
-  nsresult OnStreamComplete(nsIStreamLoader* aLoader, uint32_t aIndex,
+  nsresult OnStreamComplete(nsIStreamLoader* aLoader, ScriptLoadInfo& aLoadInfo,
                             nsresult aStatus, uint32_t aStringLen,
                             const uint8_t* aString) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(aIndex < mLoadInfos.Length());
 
     nsresult rv = OnStreamCompleteInternal(aLoader, aStatus, aStringLen,
-                                           aString, mLoadInfos[aIndex]);
-    LoadingFinished(aIndex, rv);
+                                           aString, aLoadInfo);
+    LoadingFinished(aLoadInfo, rv);
     return NS_OK;
   }
 
-  nsresult OnStartRequest(nsIRequest* aRequest, uint32_t aIndex) {
-    nsresult rv = OnStartRequestInternal(aRequest, aIndex);
+  nsresult OnStartRequest(nsIRequest* aRequest, ScriptLoadInfo& aLoadInfo) {
+    nsresult rv = OnStartRequestInternal(aRequest, aLoadInfo);
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRequest->Cancel(rv);
@@ -770,17 +761,15 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     return rv;
   }
 
-  nsresult OnStartRequestInternal(nsIRequest* aRequest, uint32_t aIndex) {
+  nsresult OnStartRequestInternal(nsIRequest* aRequest,
+                                  ScriptLoadInfo& aLoadInfo) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(aIndex < mLoadInfos.Length());
 
     // If one load info cancels or hits an error, it can race with the start
     // callback coming from another load info.
     if (mCanceledMainThread || !mCacheCreator) {
       return NS_ERROR_FAILURE;
     }
-
-    ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
@@ -803,7 +792,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
         ServiceWorkerManager::LocalizeAndReportToAllClients(
             scope, "ServiceWorkerRegisterMimeTypeError2",
             nsTArray<nsString>{NS_ConvertUTF8toUTF16(scope),
-                               NS_ConvertUTF8toUTF16(mimeType), loadInfo.mURL});
+                               NS_ConvertUTF8toUTF16(mimeType),
+                               aLoadInfo.mURL});
 
         return NS_ERROR_DOM_NETWORK_ERR;
       }
@@ -812,17 +802,18 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     // Note that importScripts() can redirect.  In theory the main
     // script could also encounter an internal redirect, but currently
     // the assert does not allow that.
-    MOZ_ASSERT_IF(mIsMainScript, channel == loadInfo.mChannel);
-    loadInfo.mChannel = channel;
+    MOZ_ASSERT_IF(mIsMainScript, channel == aLoadInfo.mChannel);
+    aLoadInfo.mChannel = channel;
 
     // We synthesize the result code, but its never exposed to content.
     RefPtr<mozilla::dom::InternalResponse> ir =
         new mozilla::dom::InternalResponse(200, NS_LITERAL_CSTRING("OK"));
-    ir->SetBody(loadInfo.mCacheReadStream, InternalResponse::UNKNOWN_BODY_SIZE);
+    ir->SetBody(aLoadInfo.mCacheReadStream,
+                InternalResponse::UNKNOWN_BODY_SIZE);
 
     // Drop our reference to the stream now that we've passed it along, so it
     // doesn't hang around once the cache is done with it and keep data alive.
-    loadInfo.mCacheReadStream = nullptr;
+    aLoadInfo.mCacheReadStream = nullptr;
 
     // Set the channel info of the channel on the response so that it's
     // saved in the cache.
@@ -841,15 +832,15 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     MOZ_TRY(PrincipalToPrincipalInfo(channelPrincipal, principalInfo.get()));
 
     ir->SetPrincipalInfo(std::move(principalInfo));
-    ir->Headers()->FillResponseHeaders(loadInfo.mChannel);
+    ir->Headers()->FillResponseHeaders(aLoadInfo.mChannel);
 
     RefPtr<mozilla::dom::Response> response =
         new mozilla::dom::Response(mCacheCreator->Global(), ir, nullptr);
 
     mozilla::dom::RequestOrUSVString request;
 
-    MOZ_ASSERT(!loadInfo.mFullURL.IsEmpty());
-    request.SetAsUSVString().ShareOrDependUpon(loadInfo.mFullURL);
+    MOZ_ASSERT(!aLoadInfo.mFullURL.IsEmpty());
+    request.SetAsUSVString().ShareOrDependUpon(aLoadInfo.mFullURL);
 
     // This JSContext will not end up executing JS code because here there are
     // no ReadableStreams involved.
@@ -865,11 +856,11 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     }
 
     RefPtr<CachePromiseHandler> promiseHandler =
-        new CachePromiseHandler(this, loadInfo, aIndex);
+        new CachePromiseHandler(this, aLoadInfo);
     cachePromise->AppendNativeHandler(promiseHandler);
 
-    loadInfo.mCachePromise.swap(cachePromise);
-    loadInfo.mCacheStatus = ScriptLoadInfo::WritingToCache;
+    aLoadInfo.mCachePromise.swap(cachePromise);
+    aLoadInfo.mCacheStatus = ScriptLoadInfo::WritingToCache;
 
     return NS_OK;
   }
@@ -918,7 +909,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       }
 
       if (callLoadingFinished && !loadInfo.Finished()) {
-        LoadingFinished(index, aCancelResult);
+        LoadingFinished(loadInfo, aCancelResult);
       }
     }
 
@@ -953,9 +944,9 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     if (!mWorkerPrivate->IsServiceWorker() || IsDebuggerScript()) {
       for (uint32_t index = 0, len = mLoadInfos.Length(); index < len;
            ++index) {
-        nsresult rv = LoadScript(index);
+        nsresult rv = LoadScript(mLoadInfos[index]);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          LoadingFinished(index, rv);
+          LoadingFinished(mLoadInfos[index], rv);
           return rv;
         }
       }
@@ -968,7 +959,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 
     for (uint32_t index = 0, len = mLoadInfos.Length(); index < len; ++index) {
       RefPtr<CacheScriptLoader> loader = new CacheScriptLoader(
-          mWorkerPrivate, mLoadInfos[index], index, IsMainWorkerScript(), this);
+          mWorkerPrivate, mLoadInfos[index], IsMainWorkerScript(), this);
       mCacheCreator->AddLoader(loader);
     }
 
@@ -989,9 +980,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     return NS_OK;
   }
 
-  nsresult LoadScript(uint32_t aIndex) {
+  nsresult LoadScript(ScriptLoadInfo& aLoadInfo) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(aIndex < mLoadInfos.Length());
     MOZ_ASSERT_IF(IsMainWorkerScript(), mWorkerScriptType != DebuggerScript);
 
     WorkerPrivate* parentWorker = mWorkerPrivate->GetParent();
@@ -1028,10 +1018,9 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
     NS_ASSERTION(secMan, "This should never be null!");
 
-    ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
-    nsresult& rv = loadInfo.mLoadResult;
+    nsresult& rv = aLoadInfo.mLoadResult;
 
-    nsLoadFlags loadFlags = loadInfo.mLoadFlags;
+    nsLoadFlags loadFlags = aLoadInfo.mLoadFlags;
 
     // Get the top-level worker.
     WorkerPrivate* topWorkerPrivate = mWorkerPrivate;
@@ -1060,7 +1049,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       // script uri encoding. Otherwise, default encoding (UTF-8) is applied.
       bool useDefaultEncoding = !(!parentWorker && IsMainWorkerScript());
       nsCOMPtr<nsIURI> url;
-      rv = ConstructURI(loadInfo.mURL, baseURI, parentDoc, useDefaultEncoding,
+      rv = ConstructURI(aLoadInfo.mURL, baseURI, parentDoc, useDefaultEncoding,
                         getter_AddRefs(url));
       if (NS_FAILED(rv)) {
         return rv;
@@ -1092,7 +1081,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 
     // We need to know which index we're on in OnStreamComplete so we know
     // where to put the result.
-    RefPtr<LoaderListener> listener = new LoaderListener(this, aIndex);
+    RefPtr<LoaderListener> listener = new LoaderListener(this, aLoadInfo);
 
     RefPtr<ScriptResponseHeaderProcessor> headerProcessor = nullptr;
 
@@ -1110,10 +1099,10 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     }
 
     if (IsMainWorkerScript()) {
-      MOZ_DIAGNOSTIC_ASSERT(loadInfo.mReservedClientInfo.isSome());
+      MOZ_DIAGNOSTIC_ASSERT(aLoadInfo.mReservedClientInfo.isSome());
       rv = AddClientChannelHelper(
-          channel, std::move(loadInfo.mReservedClientInfo), Maybe<ClientInfo>(),
-          mWorkerPrivate->HybridEventTarget());
+          channel, std::move(aLoadInfo.mReservedClientInfo),
+          Maybe<ClientInfo>(), mWorkerPrivate->HybridEventTarget());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1135,7 +1124,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       channelLoadInfo->SetLoadingEmbedderPolicy(respectedCOEP);
     }
 
-    if (loadInfo.mCacheStatus != ScriptLoadInfo::ToBeCached) {
+    if (aLoadInfo.mCacheStatus != ScriptLoadInfo::ToBeCached) {
       rv = channel->AsyncOpen(loader);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -1144,10 +1133,10 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       nsCOMPtr<nsIOutputStream> writer;
 
       // In case we return early.
-      loadInfo.mCacheStatus = ScriptLoadInfo::Cancel;
+      aLoadInfo.mCacheStatus = ScriptLoadInfo::Cancel;
 
       rv = NS_NewPipe(
-          getter_AddRefs(loadInfo.mCacheReadStream), getter_AddRefs(writer), 0,
+          getter_AddRefs(aLoadInfo.mCacheReadStream), getter_AddRefs(writer), 0,
           UINT32_MAX,    // unlimited size to avoid writer WOULD_BLOCK case
           true, false);  // non-blocking reader, blocking writer
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1167,7 +1156,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       }
     }
 
-    loadInfo.mChannel.swap(channel);
+    aLoadInfo.mChannel.swap(channel);
 
     return NS_OK;
   }
@@ -1371,7 +1360,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     return NS_OK;
   }
 
-  void DataReceivedFromCache(uint32_t aIndex, const uint8_t* aString,
+  void DataReceivedFromCache(ScriptLoadInfo& aLoadInfo, const uint8_t* aString,
                              uint32_t aStringLen,
                              const mozilla::dom::ChannelInfo& aChannelInfo,
                              UniquePtr<PrincipalInfo> aPrincipalInfo,
@@ -1379,9 +1368,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
                              const nsACString& aCSPReportOnlyHeaderValue,
                              const nsACString& aReferrerPolicyHeaderValue) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(aIndex < mLoadInfos.Length());
-    ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
-    MOZ_ASSERT(loadInfo.mCacheStatus == ScriptLoadInfo::Cached);
+    MOZ_ASSERT(aLoadInfo.mCacheStatus == ScriptLoadInfo::Cached);
 
     auto responsePrincipalOrErr = PrincipalInfoToPrincipal(*aPrincipalInfo);
     MOZ_DIAGNOSTIC_ASSERT(responsePrincipalOrErr.isOk());
@@ -1395,28 +1382,28 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 
     nsCOMPtr<nsIPrincipal> responsePrincipal = responsePrincipalOrErr.unwrap();
 
-    loadInfo.mMutedErrorFlag.emplace(!principal->Subsumes(responsePrincipal));
+    aLoadInfo.mMutedErrorFlag.emplace(!principal->Subsumes(responsePrincipal));
 
     // May be null.
     Document* parentDoc = mWorkerPrivate->GetDocument();
 
-    MOZ_ASSERT(loadInfo.ScriptTextIsNull());
+    MOZ_ASSERT(aLoadInfo.ScriptTextIsNull());
 
     nsresult rv;
     if (StaticPrefs::dom_worker_script_loader_utf8_parsing_enabled()) {
-      loadInfo.InitUTF8Script();
+      aLoadInfo.InitUTF8Script();
       rv = ScriptLoader::ConvertToUTF8(
           nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
-          loadInfo.mScript.mUTF8, loadInfo.mScriptLength);
+          aLoadInfo.mScript.mUTF8, aLoadInfo.mScriptLength);
     } else {
-      loadInfo.InitUTF16Script();
+      aLoadInfo.InitUTF16Script();
       rv = ScriptLoader::ConvertToUTF16(
           nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
-          loadInfo.mScript.mUTF16, loadInfo.mScriptLength);
+          aLoadInfo.mScript.mUTF16, aLoadInfo.mScriptLength);
     }
     if (NS_SUCCEEDED(rv) && IsMainWorkerScript()) {
       nsCOMPtr<nsIURI> finalURI;
-      rv = NS_NewURI(getter_AddRefs(finalURI), loadInfo.mFullURL);
+      rv = NS_NewURI(getter_AddRefs(finalURI), aLoadInfo.mFullURL);
       if (NS_SUCCEEDED(rv)) {
         mWorkerPrivate->SetBaseURI(finalURI);
       }
@@ -1464,7 +1451,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       DataReceived();
     }
 
-    LoadingFinished(aIndex, rv);
+    LoadingFinished(aLoadInfo, rv);
   }
 
   void DataReceived() {
@@ -1548,13 +1535,13 @@ NS_IMETHODIMP
 LoaderListener::OnStreamComplete(nsIStreamLoader* aLoader,
                                  nsISupports* aContext, nsresult aStatus,
                                  uint32_t aStringLen, const uint8_t* aString) {
-  return mRunnable->OnStreamComplete(aLoader, mIndex, aStatus, aStringLen,
+  return mRunnable->OnStreamComplete(aLoader, mLoadInfo, aStatus, aStringLen,
                                      aString);
 }
 
 NS_IMETHODIMP
 LoaderListener::OnStartRequest(nsIRequest* aRequest) {
-  return mRunnable->OnStartRequest(aRequest, mIndex);
+  return mRunnable->OnStartRequest(aRequest, mLoadInfo);
 }
 
 void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
@@ -1570,7 +1557,7 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
   if (mLoadInfo.mCachePromise) {
     mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
     mLoadInfo.mCachePromise = nullptr;
-    mRunnable->MaybeExecuteFinishedScripts(mIndex);
+    mRunnable->MaybeExecuteFinishedScripts(mLoadInfo);
   }
 }
 
@@ -1750,7 +1737,7 @@ void CacheScriptLoader::Fail(nsresult aRv) {
     return;
   }
 
-  mRunnable->LoadingFinished(mIndex, aRv);
+  mRunnable->LoadingFinished(mLoadInfo, aRv);
 }
 
 void CacheScriptLoader::Load(Cache* aCache) {
@@ -1833,7 +1820,7 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
     }
 
     mLoadInfo.mCacheStatus = ScriptLoadInfo::ToBeCached;
-    rv = mRunnable->LoadScript(mIndex);
+    rv = mRunnable->LoadScript(mLoadInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       Fail(rv);
     }
@@ -1885,7 +1872,7 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
   if (!inputStream) {
     mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
     mRunnable->DataReceivedFromCache(
-        mIndex, (uint8_t*)"", 0, mChannelInfo, std::move(mPrincipalInfo),
+        mLoadInfo, (uint8_t*)"", 0, mChannelInfo, std::move(mPrincipalInfo),
         mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
     return;
   }
@@ -1949,7 +1936,7 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
   MOZ_ASSERT(mPrincipalInfo);
   mRunnable->DataReceivedFromCache(
-      mIndex, aString, aStringLen, mChannelInfo, std::move(mPrincipalInfo),
+      mLoadInfo, aString, aStringLen, mChannelInfo, std::move(mPrincipalInfo),
       mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
   return NS_OK;
 }
