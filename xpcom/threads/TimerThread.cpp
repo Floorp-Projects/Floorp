@@ -412,7 +412,10 @@ TimerThread::Run() {
           // We are going to let the call to PostTimerEvent here handle the
           // release of the timer so that we don't end up releasing the timer
           // on the TimerThread instead of on the thread it targets.
-          timerRef = PostTimerEvent(timerRef.forget());
+          {
+            LogTimerEvent::Run run(timerRef.get());
+            timerRef = PostTimerEvent(timerRef.forget());
+          }
 
           if (timerRef) {
             // We got our reference back due to an error.
@@ -628,6 +631,8 @@ bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
   }
 
   TimeStamp now = TimeStamp::Now();
+
+  LogTimerEvent::LogDispatch(aTimer);
 
   UniquePtr<Entry>* entry = mTimers.AppendElement(
       MakeUnique<Entry>(now, aTimer->mTimeout, aTimer), mozilla::fallible);

@@ -14,6 +14,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsExceptionHandler.h"
 #include "nsITimer.h"
+#include "nsTimerImpl.h"
 #include "prsystem.h"
 
 #ifdef MOZILLA_INTERNAL_API
@@ -414,7 +415,15 @@ extern nsresult NS_DispatchToThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
   }
   idleEvent->SetTimer(aTimeout, target);
 
-  return NS_DispatchToThreadQueue(event.forget(), aThread, aQueue);
+  nsresult rv = NS_DispatchToThreadQueue(event.forget(), aThread, aQueue);
+  if (NS_SUCCEEDED(rv)) {
+    // This is intended to bind with the "DISP" log made from inside
+    // NS_DispatchToThreadQueue for the `event`. There is no possibly to inject
+    // another "DISP" for a different event on this thread.
+    LOG1(("TIMEOUT %u", aTimeout));
+  }
+
+  return rv;
 }
 
 extern nsresult NS_DispatchToCurrentThreadQueue(
@@ -663,6 +672,14 @@ LogTaskBase<IPC::Message>::Run::Run(IPC::Message* aMessage, bool aWillRunAgain)
         aMessage->name()));
 }
 
+template <>
+LogTaskBase<nsTimerImpl>::Run::Run(nsTimerImpl* aEvent, bool aWillRunAgain)
+    : mWillRunAgain(aWillRunAgain) {
+  // The name of the timer will be logged when running it on the target thread.
+  // Logging it here (on the `Timer` thread) would be redundant.
+  LOG1(("EXEC %p %p [nsTimerImpl]", aEvent, this));
+}
+
 template <typename T>
 LogTaskBase<T>::Run::~Run() {
   LOG1((mWillRunAgain ? "INTERRUPTED %p" : "DONE %p", this));
@@ -671,6 +688,7 @@ LogTaskBase<T>::Run::~Run() {
 template class LogTaskBase<nsIRunnable>;
 template class LogTaskBase<MicroTaskRunnable>;
 template class LogTaskBase<IPC::Message>;
+template class LogTaskBase<nsTimerImpl>;
 
 MOZ_THREAD_LOCAL(nsISerialEventTarget*)
 SerialEventTargetGuard::sCurrentThreadTLS;
