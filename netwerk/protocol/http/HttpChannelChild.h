@@ -165,18 +165,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvAltDataCacheInputStreamAvailable(
       const Maybe<IPCStream>& aStream) override;
 
-  mozilla::ipc::IPCResult RecvNotifyClassificationFlags(
-      const uint32_t& aClassificationFlags, const bool& aIsThirdParty) override;
-
-  mozilla::ipc::IPCResult RecvNotifyFlashPluginStateChanged(
-      const nsIHttpChannel::FlashPluginState& aState) override;
-
-  mozilla::ipc::IPCResult RecvSetClassifierMatchedInfo(
-      const ClassifierInfo& info) override;
-
-  mozilla::ipc::IPCResult RecvSetClassifierMatchedTrackingInfo(
-      const ClassifierInfo& info) override;
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void DoNotifyListenerCleanup() override;
@@ -265,6 +253,15 @@ class HttpChannelChild final : public PHttpChannelChild,
       const nsTArray<ConsoleReportCollected>& aConsoleReports);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
+  void ProcessNotifyClassificationFlags(uint32_t aClassificationFlags,
+                                        bool aIsThirdParty);
+  void ProcessNotifyFlashPluginStateChanged(
+      nsIHttpChannel::FlashPluginState aState);
+  void ProcessSetClassifierMatchedInfo(const nsCString& aList,
+                                       const nsCString& aProvider,
+                                       const nsCString& aFullHash);
+  void ProcessSetClassifierMatchedTrackingInfo(const nsCString& aLists,
+                                               const nsCString& aFullHashes);
   void ProcessOnAfterLastPart(const nsresult& aStatus);
   void ProcessOnProgress(const int64_t& aProgress, const int64_t& aProgressMax);
 

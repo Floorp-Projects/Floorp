@@ -345,6 +345,133 @@ bool HttpBackgroundChannelParent::OnDiversion() {
   return true;
 }
 
+bool HttpBackgroundChannelParent::OnNotifyClassificationFlags(
+    uint32_t aClassificationFlags, bool aIsThirdParty) {
+  LOG(
+      ("HttpBackgroundChannelParent::OnNotifyClassificationFlags "
+       "classificationFlags=%" PRIu32 ", thirdparty=%d [this=%p]\n",
+       aClassificationFlags, static_cast<int>(aIsThirdParty), this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    nsresult rv = mBackgroundThread->Dispatch(
+        NewRunnableMethod<uint32_t, bool>(
+            "net::HttpBackgroundChannelParent::OnNotifyClassificationFlags",
+            this, &HttpBackgroundChannelParent::OnNotifyClassificationFlags,
+            aClassificationFlags, aIsThirdParty),
+        NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendNotifyClassificationFlags(aClassificationFlags, aIsThirdParty);
+}
+
+bool HttpBackgroundChannelParent::OnNotifyFlashPluginStateChanged(
+    nsIHttpChannel::FlashPluginState aState) {
+  LOG(
+      ("HttpBackgroundChannelParent::OnNotifyFlashPluginStateChanged "
+       "[this=%p]\n",
+       this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    RefPtr<HttpBackgroundChannelParent> self = this;
+    nsresult rv = mBackgroundThread->Dispatch(
+        NS_NewRunnableFunction(
+            "net::HttpBackgroundChannelParent::OnNotifyFlashPluginStateChanged",
+            [self, aState]() {
+              self->OnNotifyFlashPluginStateChanged(aState);
+            }),
+        NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendNotifyFlashPluginStateChanged(aState);
+}
+
+bool HttpBackgroundChannelParent::OnSetClassifierMatchedInfo(
+    const nsACString& aList, const nsACString& aProvider,
+    const nsACString& aFullHash) {
+  LOG(("HttpBackgroundChannelParent::OnSetClassifierMatchedInfo [this=%p]\n",
+       this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    nsresult rv = mBackgroundThread->Dispatch(
+        NewRunnableMethod<const nsCString, const nsCString, const nsCString>(
+            "net::HttpBackgroundChannelParent::OnSetClassifierMatchedInfo",
+            this, &HttpBackgroundChannelParent::OnSetClassifierMatchedInfo,
+            aList, aProvider, aFullHash),
+        NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  ClassifierInfo info;
+  info.list() = aList;
+  info.fullhash() = aFullHash;
+  info.provider() = aProvider;
+
+  return SendSetClassifierMatchedInfo(info);
+}
+
+bool HttpBackgroundChannelParent::OnSetClassifierMatchedTrackingInfo(
+    const nsACString& aLists, const nsACString& aFullHashes) {
+  LOG(
+      ("HttpBackgroundChannelParent::OnSetClassifierMatchedTrackingInfo "
+       "[this=%p]\n",
+       this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    nsresult rv = mBackgroundThread->Dispatch(
+        NewRunnableMethod<const nsCString, const nsCString>(
+            "net::HttpBackgroundChannelParent::"
+            "OnSetClassifierMatchedTrackingInfo",
+            this,
+            &HttpBackgroundChannelParent::OnSetClassifierMatchedTrackingInfo,
+            aLists, aFullHashes),
+        NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  ClassifierInfo info;
+  info.list() = aLists;
+  info.fullhash() = aFullHashes;
+
+  return SendSetClassifierMatchedTrackingInfo(info);
+}
 void HttpBackgroundChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("HttpBackgroundChannelParent::ActorDestroy [this=%p]\n", this));
   AssertIsInMainProcess();

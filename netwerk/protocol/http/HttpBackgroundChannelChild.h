@@ -80,6 +80,16 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   IPCResult RecvDivertMessages();
 
+  IPCResult RecvNotifyClassificationFlags(const uint32_t& aClassificationFlags,
+                                          const bool& aIsThirdParty);
+
+  IPCResult RecvNotifyFlashPluginStateChanged(
+      const nsIHttpChannel::FlashPluginState& aState);
+
+  IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& info);
+
+  IPCResult RecvSetClassifierMatchedTrackingInfo(const ClassifierInfo& info);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void CreateDataBridge();
