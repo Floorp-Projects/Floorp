@@ -1286,7 +1286,7 @@ nsresult ParagraphStateAtSelection::CollectEditableFormatNodesInSelection(
     // Scan for table elements.  If we find table elements other than table,
     // replace it with a list of any editable non-table content.  Ditto for
     // list elements.
-    if (HTMLEditUtils::IsTableElement(content) ||
+    if (HTMLEditUtils::IsAnyTableElement(content) ||
         HTMLEditUtils::IsList(content) || HTMLEditUtils::IsListItem(content)) {
       aArrayOfContents.RemoveElementAt(i);
       aHTMLEditor.CollectChildren(content, aArrayOfContents, i,
@@ -2971,7 +2971,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
 
   // Make sure it's not a table element.  If so, cancel the operation
   // (translation: users cannot backspace or delete across table cells)
-  if (HTMLEditUtils::IsTableElement(&aOtherBlockElement)) {
+  if (HTMLEditUtils::IsAnyTableElement(&aOtherBlockElement)) {
     return EditActionCanceled();
   }
 
@@ -3105,7 +3105,7 @@ HTMLEditor::HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
 
   // Make sure it's not a table element.  If so, cancel the operation
   // (translation: users cannot backspace or delete across table cells)
-  if (HTMLEditUtils::IsTableElement(&aCurrentBlockElement)) {
+  if (HTMLEditUtils::IsAnyTableElement(&aCurrentBlockElement)) {
     return EditActionCanceled();
   }
 
@@ -4227,8 +4227,8 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
     return EditActionIgnored(NS_ERROR_UNEXPECTED);
   }
 
-  if (HTMLEditUtils::IsTableElement(leftBlockElement) ||
-      HTMLEditUtils::IsTableElement(rightBlockElement)) {
+  if (HTMLEditUtils::IsAnyTableElement(leftBlockElement) ||
+      HTMLEditUtils::IsAnyTableElement(rightBlockElement)) {
     // Do not try to merge table elements
     return EditActionCanceled();
   }
@@ -6882,7 +6882,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
          parentContent && !parentContent->IsHTMLElement(nsGkAtoms::body) &&
          parentContent != editingHost &&
          (parentContent->IsHTMLElement(nsGkAtoms::table) ||
-          !HTMLEditUtils::IsTableElement(parentContent));
+          !HTMLEditUtils::IsAnyTableElement(parentContent));
          parentContent = parentContent->GetParent()) {
       // If we reach a `<blockquote>` ancestor, it should be split at next
       // time at least for outdenting current node.
@@ -7510,7 +7510,7 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
         return NS_ERROR_FAILURE;
       }
       nsINode* parent = atStartOfSelection.Container();
-      createEmptyDivElement = !HTMLEditUtils::IsTableElement(parent) ||
+      createEmptyDivElement = !HTMLEditUtils::IsAnyTableElement(parent) ||
                               HTMLEditUtils::IsTableCellOrCaption(*parent);
     }
   }
@@ -7676,7 +7676,7 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
     // Skip insignificant formatting text nodes to prevent unnecessary
     // structure splitting!
     if (content->IsText() &&
-        ((HTMLEditUtils::IsTableElement(atContent.GetContainer()) &&
+        ((HTMLEditUtils::IsAnyTableElement(atContent.GetContainer()) &&
           !HTMLEditUtils::IsTableCellOrCaption(*atContent.GetContainer())) ||
          HTMLEditUtils::IsList(atContent.GetContainer()) ||
          IsEmptyNode(*content))) {
@@ -7908,7 +7908,7 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
       HTMLEditUtils::GetInclusiveAncestorBlockElement(aStartContent);
   RefPtr<Element> topMostEmptyBlockElement;
   while (blockElement && blockElement != &aEditingHostElement &&
-         !HTMLEditUtils::IsTableElement(blockElement) &&
+         !HTMLEditUtils::IsAnyTableElement(blockElement) &&
          IsEmptyNode(*blockElement, true, false)) {
     topMostEmptyBlockElement = blockElement;
     blockElement =
@@ -8083,7 +8083,7 @@ size_t HTMLEditor::CollectChildren(
          (HTMLEditUtils::IsList(content) ||
           HTMLEditUtils::IsListItem(content))) ||
         (aCollectTableChildren == CollectTableChildren::Yes &&
-         HTMLEditUtils::IsTableElement(content))) {
+         HTMLEditUtils::IsAnyTableElement(content))) {
       numberOfFoundChildren += CollectChildren(
           *content, aOutArrayOfContents,
           aIndexToInsertChildren + numberOfFoundChildren, aCollectListChildren,
@@ -8139,7 +8139,7 @@ HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes(
                  WSRunScanner(this, atStart).GetStartReasonContent());
       // We want to keep looking up.  But stop if we are crossing table
       // element boundaries, or if we hit the root.
-      if (HTMLEditUtils::IsTableElement(
+      if (HTMLEditUtils::IsAnyTableElement(
               backwardScanFromStartResult.GetContent()) ||
           backwardScanFromStartResult.GetContent() == commonAncestorBlock ||
           backwardScanFromStartResult.GetContent() == editingHost) {
@@ -8185,7 +8185,7 @@ HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes(
                    wsScannerAtEnd.GetEndReasonContent());
         // We want to keep looking up.  But stop if we are crossing table
         // element boundaries, or if we hit the root.
-        if (HTMLEditUtils::IsTableElement(
+        if (HTMLEditUtils::IsAnyTableElement(
                 forwardScanFromEndResult.GetContent()) ||
             forwardScanFromEndResult.GetContent() == commonAncestorBlock ||
             forwardScanFromEndResult.GetContent() == editingHost) {
@@ -9284,7 +9284,7 @@ Element* HTMLEditor::GetNearestAncestorListItemElement(
   //     whether we reach it or not.
   for (Element* parentElement = aContent.GetParentElement();
        parentElement && IsDescendantOfEditorRoot(parentElement) &&
-       !HTMLEditUtils::IsTableElement(parentElement);
+       !HTMLEditUtils::IsAnyTableElement(parentElement);
        parentElement = parentElement->GetParentElement()) {
     if (HTMLEditUtils::IsListItem(parentElement)) {
       return parentElement;
@@ -11141,12 +11141,12 @@ bool HTMLEditor::NodesInDifferentTableElements(nsINode& aNode1,
                                                nsINode& aNode2) {
   nsINode* parentNode1;
   for (parentNode1 = &aNode1;
-       parentNode1 && !HTMLEditUtils::IsTableElement(parentNode1);
+       parentNode1 && !HTMLEditUtils::IsAnyTableElement(parentNode1);
        parentNode1 = parentNode1->GetParentNode()) {
   }
   nsINode* parentNode2;
   for (parentNode2 = &aNode2;
-       parentNode2 && !HTMLEditUtils::IsTableElement(parentNode2);
+       parentNode2 && !HTMLEditUtils::IsAnyTableElement(parentNode2);
        parentNode2 = parentNode2->GetParentNode()) {
   }
   // XXX Despite of the name, this returns true if only one node is in a
