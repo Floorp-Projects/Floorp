@@ -411,12 +411,10 @@ TEST(DOM_IndexedDB_Key, ToLocaleAwareKey_Empty)
 {
   const auto input = Key{};
 
-  auto output = Key{};
-
-  auto res = input.ToLocaleAwareKey(output, kTestLocale);
+  auto res = input.ToLocaleAwareKey(kTestLocale);
   EXPECT_TRUE(res.Is(mozilla::dom::indexedDB::Ok));
 
-  EXPECT_TRUE(output.IsUnset());
+  EXPECT_TRUE(res.Inspect().IsUnset());
 }
 
 TEST(DOM_IndexedDB_Key, ToLocaleAwareKey_Bug_1641598)
@@ -434,10 +432,8 @@ TEST(DOM_IndexedDB_Key, ToLocaleAwareKey_Bug_1641598)
   }();
   const auto input = Key{buffer};
 
-  auto output = Key{};
-
-  auto res = input.ToLocaleAwareKey(output, kTestLocale);
+  auto res = input.ToLocaleAwareKey(kTestLocale);
   EXPECT_TRUE(res.Is(mozilla::dom::indexedDB::Ok));
 
-  EXPECT_EQ(input, output);
+  EXPECT_EQ(input, res.Inspect());
 }

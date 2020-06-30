@@ -355,15 +355,13 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
 
   if constexpr (!IsObjectStoreCursor) {
     if (IsLocaleAware() && !key.IsUnset()) {
-      Key tmp;
-
-      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale());
+      auto result = key.ToLocaleAwareKey(GetSourceRef().Locale());
       if (!result.Is(Ok)) {
         aRv = result.ExtractErrorResult(
             InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
         return;
       }
-      key = tmp;
+      key = result.Unwrap();
     }
   }
 
@@ -457,14 +455,13 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
     }
 
     if (IsLocaleAware() && !key.IsUnset()) {
-      Key tmp;
-      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale());
+      auto result = key.ToLocaleAwareKey(GetSourceRef().Locale());
       if (!result.Is(Ok)) {
         aRv = result.ExtractErrorResult(
             InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
         return;
       }
-      key = tmp;
+      key = result.Unwrap();
     }
 
     if (key.IsUnset()) {
