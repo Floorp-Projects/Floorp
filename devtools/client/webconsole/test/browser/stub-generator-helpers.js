@@ -328,6 +328,14 @@ function getCleanedPacket(key, packet) {
       res.networkInfo.response.transferredSize =
         existingPacket.networkInfo.response.transferredSize;
     }
+
+    if (
+      res.networkInfo.response &&
+      res.networkInfo.response.waitingTime !== undefined
+    ) {
+      res.networkInfo.response.waitingTime =
+        existingPacket.networkInfo.response.waitingTime;
+    }
   }
 
   if (res.updates && Array.isArray(res.updates)) {

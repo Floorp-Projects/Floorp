@@ -15,7 +15,9 @@
 :root.theme-dark {
   --table-splitter-color: var(--grey-70);
   --table-zebra-background: rgba(255,255,255,0.05);
+  --table-zebra-inline-icons-background: rgb(49, 47, 47);
   --table-selection-background-hover: rgba(53, 59, 72, 1);
+  --table-selection-inline-icons-background-hover: rgba(53, 59, 72, 1);
 
   --timing-blocked-color: var(--red-20);
   --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
@@ -29,7 +31,9 @@
 :root.theme-light {
   --table-splitter-color: var(--grey-20);
   --table-zebra-background: rgba(247, 247, 247, 0.8);
+  --table-zebra-inline-icons-background: rgba(247, 247, 247);
   --table-selection-background-hover: rgba(209, 232, 255, 0.8);
+  --table-selection-inline-icons-background-hover: rgba(209, 232, 255);
 
   --timing-blocked-color: var(--red-70);
   --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */

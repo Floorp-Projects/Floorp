@@ -143,6 +143,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
         networkInfo.response.remoteAddress = packet.response.remoteAddress;
         networkInfo.response.remotePort = packet.response.remotePort;
         networkInfo.discardResponseBody = packet.response.discardResponseBody;
+        networkInfo.response.waitingTime = packet.response.waitingTime;
         break;
       case "responseContent":
         networkInfo.response.content = {

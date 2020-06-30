@@ -51,6 +51,7 @@ rawPackets.set(`GET request`, {
     "headersSize": 160,
     "remoteAddress": "127.0.0.1",
     "remotePort": 8888,
+    "waitingTime": 2,
     "content": {
       "mimeType": "text/html; charset=utf-8"
     },
@@ -90,6 +91,7 @@ rawPackets.set(`GET request update`, {
       "headersSize": 160,
       "remoteAddress": "127.0.0.1",
       "remotePort": 8888,
+      "waitingTime": 2,
       "content": {
         "mimeType": "text/html; charset=utf-8"
       },
@@ -133,6 +135,7 @@ rawPackets.set(`XHR GET request`, {
     "headersSize": 160,
     "remoteAddress": "127.0.0.1",
     "remotePort": 8888,
+    "waitingTime": 1,
     "content": {
       "mimeType": "text/html; charset=utf-8"
     },
@@ -172,6 +175,7 @@ rawPackets.set(`XHR GET request update`, {
       "headersSize": 160,
       "remoteAddress": "127.0.0.1",
       "remotePort": 8888,
+      "waitingTime": 1,
       "content": {
         "mimeType": "text/html; charset=utf-8"
       },
@@ -215,6 +219,7 @@ rawPackets.set(`XHR POST request`, {
     "headersSize": 160,
     "remoteAddress": "127.0.0.1",
     "remotePort": 8888,
+    "waitingTime": 1,
     "content": {
       "mimeType": "text/html; charset=utf-8"
     },
@@ -254,6 +259,7 @@ rawPackets.set(`XHR POST request update`, {
       "headersSize": 160,
       "remoteAddress": "127.0.0.1",
       "remotePort": 8888,
+      "waitingTime": 1,
       "content": {
         "mimeType": "text/html; charset=utf-8"
       },
