@@ -77,7 +77,6 @@ class TestExceptionGroup(unittest.TestCase):
           * multiline
             error 2""")
 
-
 class TestFeatureGateException(unittest.TestCase):
     def test_str_no_file(self):
         error = FeatureGateException("oops")
@@ -91,7 +90,7 @@ class TestFeatureGateException(unittest.TestCase):
         error = FeatureGateException("oops")
         assert repr(error) == "FeatureGateException('oops', filename=None)"
 
-    def test_repr_with_file(self):
+    def test_str_with_file(self):
         error = FeatureGateException("oops", filename="some/bad/file.txt")
         assert repr(error) == "FeatureGateException('oops', filename='some/bad/file.txt')"
 
@@ -217,8 +216,7 @@ class ExpandFeatureTests(unittest.TestCase):
         assert expand_feature(feature)['defaultValue'] == {'default': True}
 
     def test_default_value_override_configured_value(self):
-        feature = minimal_definition(type='boolean', default_value={
-                                     'default': False, 'nightly': True})
+        feature = minimal_definition(type='boolean', default_value={'default': False, 'nightly': True})
         assert expand_feature(feature)['defaultValue'] == {'default': False, 'nightly': True}
 
     def test_preference_default(self):
