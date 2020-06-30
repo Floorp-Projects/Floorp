@@ -83,8 +83,7 @@ HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
       mCacheNeedFlowControlInitialized(false),
       mNeedFlowControl(true),
       mSuspendedForFlowControl(false),
-      mAfterOnStartRequestBegun(false),
-      mIsMultiPart(false) {
+      mAfterOnStartRequestBegun(false) {
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
 
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
@@ -1371,13 +1370,14 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 
   Maybe<uint32_t> multiPartID;
   bool isLastPartOfMultiPart = false;
+  DebugOnly<bool> isMultiPart = false;
 
   RefPtr<HttpBaseChannel> chan = do_QueryObject(aRequest);
   if (!chan) {
     nsCOMPtr<nsIMultiPartChannel> multiPartChannel =
         do_QueryInterface(aRequest);
     if (multiPartChannel) {
-      mIsMultiPart = true;
+      isMultiPart = true;
       nsCOMPtr<nsIChannel> baseChannel;
       multiPartChannel->GetBaseChannel(getter_AddRefs(baseChannel));
       chan = do_QueryObject(baseChannel);
@@ -1388,7 +1388,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
       multiPartChannel->GetIsLastPart(&isLastPartOfMultiPart);
     }
   }
-  MOZ_ASSERT(multiPartID || !mIsMultiPart, "Changed multi-part state?");
+  MOZ_ASSERT(multiPartID || !isMultiPart, "Changed multi-part state?");
 
   if (!chan) {
     LOG(("  aRequest is not HttpBaseChannel"));
@@ -1531,27 +1531,15 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   }
 
   rv = NS_OK;
-  bool ipcResult = false;
-  if (!mIPCClosed) {
-    // TODO: For multipart channel, we would deliever everything across
-    // pBackground as well.
-    if (!mIsMultiPart) {
-      ipcResult = mBgParent->OnStartRequest(
+  if (mIPCClosed ||
+      !mBgParent->OnStartRequest(
           *responseHead, useResponseHead,
           cleanedUpRequest ? cleanedUpRequestHeaders : requestHead->Headers(),
-          args);
-    } else {
-      ipcResult = SendOnStartRequest(
-          *responseHead, useResponseHead,
-          cleanedUpRequest ? cleanedUpRequestHeaders : requestHead->Headers(),
-          args);
-    }
+          args)) {
+    rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();
 
-  if (mIPCClosed || !ipcResult) {
-    rv = NS_ERROR_UNEXPECTED;
-  }
   return rv;
 }
 
@@ -1585,20 +1573,11 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
   // If we're handling a multi-part stream, then send this directly
   // over PHttpChannel to make synchronization easier.
-  if (!mIPCClosed && mIsMultiPart) {
-    // See the child code for why we do this.
-    TimeStamp lastActTabOpt = nsHttp::GetLastActiveTabLoadOptimizationHit();
-    if (!SendOnStopRequest(
-            aStatusCode, GetTimingAttributes(mChannel), lastActTabOpt,
-            responseTrailer ? *responseTrailer : nsHttpHeaderArray(),
-            consoleReports)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  } else if (mIPCClosed || !mBgParent ||
-             !mBgParent->OnStopRequest(
-                 aStatusCode, GetTimingAttributes(mChannel),
-                 responseTrailer ? *responseTrailer : nsHttpHeaderArray(),
-                 consoleReports)) {
+  if (mIPCClosed || !mBgParent ||
+      !mBgParent->OnStopRequest(
+          aStatusCode, GetTimingAttributes(mChannel),
+          responseTrailer ? *responseTrailer : nsHttpHeaderArray(),
+          consoleReports)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1706,16 +1685,9 @@ HttpChannelParent::OnDataAvailable(nsIRequest* aRequest,
     // is ready to send OnTransportAndData.
     MOZ_ASSERT(mIPCClosed || mBgParent);
 
-    // If we're handling a multi-part stream, then send this directly
-    // over PHttpChannel to make synchronization easier.
-    if (!mIPCClosed && mIsMultiPart) {
-      if (!SendOnTransportAndData(channelStatus, transportStatus, aOffset,
-                                  toRead, data)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-    } else if (mIPCClosed || !mBgParent ||
-               !mBgParent->OnTransportAndData(channelStatus, transportStatus,
-                                              aOffset, toRead, data)) {
+    if (mIPCClosed || !mBgParent ||
+        !mBgParent->OnTransportAndData(channelStatus, transportStatus, aOffset,
+                                       toRead, data)) {
       return NS_ERROR_UNEXPECTED;
     }
 
