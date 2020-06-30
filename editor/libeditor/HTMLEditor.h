@@ -4519,7 +4519,8 @@ class HTMLEditor final : public TextEditor,
    *                            different block level element.
    */
   EditorRawDOMPoint GetBetterInsertionPointFor(
-      nsIContent& aContentToInsert, const EditorRawDOMPoint& aPointToInsert);
+      nsIContent& aContentToInsert,
+      const EditorRawDOMPoint& aPointToInsert) const;
 
   /**
    * MakeDefinitionListItemWithTransaction() replaces parent list of current
