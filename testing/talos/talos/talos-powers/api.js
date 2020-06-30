@@ -171,7 +171,7 @@ TalosPowersService.prototype = {
    */
   profilerPause(marker = null) {
     if (marker) {
-      Services.profiler.AddMarker(marker);
+      ChromeUtils.addProfilerMarker(marker);
     }
 
     Services.profiler.PauseSampling();
@@ -188,7 +188,7 @@ TalosPowersService.prototype = {
     Services.profiler.ResumeSampling();
 
     if (marker) {
-      Services.profiler.AddMarker(marker);
+      ChromeUtils.addProfilerMarker(marker);
     }
   },
 
@@ -196,7 +196,7 @@ TalosPowersService.prototype = {
    * Adds a marker to the Profile in the parent process.
    */
   profilerMarker(marker) {
-    Services.profiler.AddMarker(marker);
+    ChromeUtils.addProfilerMarker(marker);
   },
 
   receiveProfileCommand(message) {
