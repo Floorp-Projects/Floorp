@@ -223,10 +223,8 @@ INSTANTIATE_TEST_CASE_P(
 
 TEST_P(TestWithParam_LiteralString, SetFromString) {
   auto key = Key{};
-  mozilla::ErrorResult error;
-  const auto result = key.SetFromString(GetParam(), error);
-  EXPECT_FALSE(error.Failed());
-  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok, error));
+  const auto result = key.SetFromString(GetParam());
+  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok));
 
   ExpectKeyIsString(key);
 
@@ -264,10 +262,8 @@ TEST(DOM_IndexedDB_Key, SetFromJSVal_ZeroLengthArrayBuffer)
   auto key = Key{};
   Rooted<JS::Value> arrayBuffer(context,
                                 CreateArrayBufferValue(context, 0, nullptr));
-  auto rv1 = mozilla::ErrorResult{};
-  const auto result = key.SetFromJSVal(context, arrayBuffer, rv1);
-  EXPECT_FALSE(rv1.Failed());
-  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok, rv1));
+  const auto result = key.SetFromJSVal(context, arrayBuffer);
+  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok));
 
   ExpectKeyIsBinary(key);
 
@@ -321,11 +317,9 @@ TEST_P(TestWithParam_ArrayBufferArray, SetFromJSVal) {
   Rooted<JS::Value> arrayValue(context);
   arrayValue = CreateArrayBufferArray(context, elements);
 
-  auto rv1 = mozilla::ErrorResult{};
   auto key = Key{};
-  const auto result = key.SetFromJSVal(context, arrayValue, rv1);
-  EXPECT_FALSE(rv1.Failed());
-  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok, rv1));
+  const auto result = key.SetFromJSVal(context, arrayValue);
+  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok));
 
   ExpectKeyIsArray(key);
 
@@ -373,11 +367,9 @@ TEST_P(TestWithParam_StringArray, SetFromJSVal) {
   AutoTestJSContext context;
   Rooted<JS::Value> arrayValue(context, CreateStringArray(context, elements));
 
-  auto rv1 = mozilla::ErrorResult{};
   auto key = Key{};
-  const auto result = key.SetFromJSVal(context, arrayValue, rv1);
-  EXPECT_FALSE(rv1.Failed());
-  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok, rv1));
+  const auto result = key.SetFromJSVal(context, arrayValue);
+  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok));
 
   ExpectKeyIsArray(key);
 
@@ -405,20 +397,16 @@ TEST(DOM_IndexedDB_Key, CompareKeys_NonZeroLengthArrayBuffer)
   const char buf[] = "abc\x80";
 
   auto first = Key{};
-  auto rv1 = mozilla::ErrorResult{};
   Rooted<JS::Value> arrayBuffer1(
       context, CreateArrayBufferValue(context, sizeof buf, strdup(buf)));
-  const auto result1 = first.SetFromJSVal(context, arrayBuffer1, rv1);
-  EXPECT_FALSE(rv1.Failed());
-  EXPECT_TRUE(result1.Is(mozilla::dom::indexedDB::Ok, rv1));
+  const auto result1 = first.SetFromJSVal(context, arrayBuffer1);
+  EXPECT_TRUE(result1.Is(mozilla::dom::indexedDB::Ok));
 
   auto second = Key{};
-  auto rv2 = mozilla::ErrorResult{};
   Rooted<JS::Value> arrayBuffer2(
       context, CreateArrayBufferValue(context, sizeof buf, strdup(buf)));
-  const auto result2 = second.SetFromJSVal(context, arrayBuffer2, rv2);
-  EXPECT_FALSE(rv2.Failed());
-  EXPECT_TRUE(result2.Is(mozilla::dom::indexedDB::Ok, rv2));
+  const auto result2 = second.SetFromJSVal(context, arrayBuffer2);
+  EXPECT_TRUE(result2.Is(mozilla::dom::indexedDB::Ok));
 
   EXPECT_EQ(0, Key::CompareKeys(first, second));
 }
@@ -429,13 +417,10 @@ TEST(DOM_IndexedDB_Key, ToLocaleAwareKey_Empty)
 {
   const auto input = Key{};
 
-  auto rv1 = mozilla::ErrorResult{};
-  auto rv2 = mozilla::ErrorResult{};
   auto output = Key{};
 
-  auto res = input.ToLocaleAwareKey(output, kTestLocale, rv1);
-  EXPECT_FALSE(rv1.Failed());
-  EXPECT_TRUE(res.Is(mozilla::dom::indexedDB::Ok, rv2));
+  auto res = input.ToLocaleAwareKey(output, kTestLocale);
+  EXPECT_TRUE(res.Is(mozilla::dom::indexedDB::Ok));
 
   EXPECT_TRUE(output.IsUnset());
 }
@@ -455,13 +440,10 @@ TEST(DOM_IndexedDB_Key, ToLocaleAwareKey_Bug_1641598)
   }();
   const auto input = Key{buffer};
 
-  auto rv1 = mozilla::ErrorResult{};
-  auto rv2 = mozilla::ErrorResult{};
   auto output = Key{};
 
-  auto res = input.ToLocaleAwareKey(output, kTestLocale, rv1);
-  EXPECT_FALSE(rv1.Failed());
-  EXPECT_TRUE(res.Is(mozilla::dom::indexedDB::Ok, rv2));
+  auto res = input.ToLocaleAwareKey(output, kTestLocale);
+  EXPECT_TRUE(res.Is(mozilla::dom::indexedDB::Ok));
 
   EXPECT_EQ(input, output);
 }
