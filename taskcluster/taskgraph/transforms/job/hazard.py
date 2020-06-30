@@ -35,7 +35,7 @@ haz_run_schema = Schema({
     # this will enable any worker features required and set the task's scopes
     # appropriately.  `true` here means ['*'], all secrets.  Not supported on
     # Windows
-    Required('secrets', default=False): Any(bool, [text_type]),
+    Optional('secrets'): Any(bool, [text_type]),
 
     # Base work directory used to set up the task.
     Required('workdir'): text_type,

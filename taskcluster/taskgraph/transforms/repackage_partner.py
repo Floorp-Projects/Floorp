@@ -63,7 +63,7 @@ packaging_description_schema = schema.extend({
 
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
-        Required('comm-checkout', default=False): bool,
+        Optional('comm-checkout'): bool,
     },
 
     # Override the default priority for the project
