@@ -8,6 +8,7 @@
 #include "DocumentLoadListener.h"
 
 #include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
 #include "mozilla/StaticPrefs_extensions.h"
@@ -719,7 +720,8 @@ bool DocumentLoadListener::SpeculativeLoadInParent(
     nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
         RedirectChannelRegistrar::GetOrCreate();
     uint64_t loadIdentifier = aLoadState->GetLoadIdentifier();
-    nsresult rv = registrar->RegisterChannel(nullptr, loadIdentifier);
+    DebugOnly<nsresult> rv =
+        registrar->RegisterChannel(nullptr, loadIdentifier);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     // Register listener (as an nsIParentChannel) under our new identifier.
     rv = registrar->LinkChannels(loadIdentifier, listener, nullptr);
