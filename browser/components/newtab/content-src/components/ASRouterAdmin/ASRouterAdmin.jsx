@@ -508,6 +508,7 @@ export class ASRouterAdminInner extends React.PureComponent {
       messageFilter: "all",
       WNMessages: [],
       collapsedMessages: [],
+      modifiedMessages: [],
       evaluationStatus: {},
       trailhead: {},
       stringTargetingParameters: null,
@@ -578,6 +579,23 @@ export class ASRouterAdminInner extends React.PureComponent {
       return () => ASRouterUtils.unblockBundle(bundle);
     }
     return () => ASRouterUtils.unblockById(msg.id);
+  }
+
+  resetJSON(msg) {
+    // reset the displayed JSON for the given message
+    document.getElementById(`${msg.id}-textarea`).value = JSON.stringify(
+      msg,
+      null,
+      2
+    );
+    // remove the message from the list of modified IDs
+    let index = this.state.modifiedMessages.indexOf(msg.id);
+    this.setState(prevState => ({
+      modifiedMessages: [
+        ...prevState.modifiedMessages.slice(0, index),
+        ...prevState.modifiedMessages.slice(index + 1),
+      ],
+    }));
   }
 
   handleOverride(id) {
@@ -788,6 +806,20 @@ export class ASRouterAdminInner extends React.PureComponent {
     }
   }
 
+  modifyJson(msg) {
+    ASRouterUtils.modifyMessageJson(
+      JSON.parse(document.getElementById(`${msg.id}-textarea`).value)
+    );
+  }
+
+  handleChange(msgId) {
+    if (!this.state.modifiedMessages.includes(msgId)) {
+      this.setState(prevState => ({
+        modifiedMessages: prevState.modifiedMessages.concat(msgId),
+      }));
+    }
+  }
+
   renderMessageItem(msg) {
     const isBlockedByGroup = this.state.groups
       .filter(group => msg.groups.includes(group.id))
@@ -805,6 +837,7 @@ export class ASRouterAdminInner extends React.PureComponent {
       ? this.state.messageImpressions[msg.id].length
       : 0;
     const isCollapsed = this.state.collapsedMessages.includes(msg.id);
+    const isModified = this.state.modifiedMessages.includes(msg.id);
 
     let itemClassName = "message-item";
     if (isBlocked) {
@@ -834,9 +867,30 @@ export class ASRouterAdminInner extends React.PureComponent {
           >
             {isBlocked ? "Unblock" : "Block"}
           </button>
-          {isBlocked ? null : (
-            <button className="button" onClick={this.handleOverride(msg.id)}>
+          {// eslint-disable-next-line no-nested-ternary
+          isBlocked ? null : isModified ? (
+            <button
+              className="button restore"
+              // eslint-disable-next-line react/jsx-no-bind
+              onClick={e => this.resetJSON(msg)}
+            >
+              Reset
+            </button>
+          ) : (
+            <button
+              className="button show"
+              onClick={this.handleOverride(msg.id)}
+            >
               Show
+            </button>
+          )}
+          {isBlocked ? null : (
+            <button
+              className="button modify"
+              // eslint-disable-next-line react/jsx-no-bind
+              onClick={e => this.modifyJson(msg)}
+            >
+              Modify
             </button>
           )}
           <br />({impressions} impressions)
@@ -852,7 +906,16 @@ export class ASRouterAdminInner extends React.PureComponent {
           )}
           <tr>
             <pre className={isCollapsed ? "collapsed" : "expanded"}>
-              {JSON.stringify(msg, null, 2)}
+              <textarea
+                id={`${msg.id}-textarea`}
+                name={msg.id}
+                className="general-textarea"
+                disabled={isBlocked}
+                // eslint-disable-next-line react/jsx-no-bind
+                onChange={e => this.handleChange(msg.id)}
+              >
+                {JSON.stringify(msg, null, 2)}
+              </textarea>
             </pre>
           </tr>
         </td>
@@ -959,12 +1022,19 @@ export class ASRouterAdminInner extends React.PureComponent {
     return (
       <div>
         <button
-          className="ASRouterButton slim button"
+          className="ASRouterButton slim"
           // eslint-disable-next-line react/jsx-no-bind
           onClick={e => this.toggleAllMessages(messagesToShow)}
         >
           Collapse/Expand All
         </button>
+        <p className="helpLink">
+          <span className="icon icon-small-spacer icon-info" />{" "}
+          <span>
+            To modify a message, change the JSON and click 'Modify' to see your
+            changes. Click 'Reset' to restore the JSON to the original.
+          </span>
+        </p>
         <table>
           <tbody>
             {messagesToShow.map(msg => this.renderMessageItem(msg))}

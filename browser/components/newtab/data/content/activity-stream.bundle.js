@@ -1189,6 +1189,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       messageFilter: "all",
       WNMessages: [],
       collapsedMessages: [],
+      modifiedMessages: [],
       evaluationStatus: {},
       trailhead: {},
       stringTargetingParameters: null,
@@ -1264,6 +1265,16 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }
 
     return () => _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].unblockById(msg.id);
+  }
+
+  resetJSON(msg) {
+    // reset the displayed JSON for the given message
+    document.getElementById(`${msg.id}-textarea`).value = JSON.stringify(msg, null, 2); // remove the message from the list of modified IDs
+
+    let index = this.state.modifiedMessages.indexOf(msg.id);
+    this.setState(prevState => ({
+      modifiedMessages: [...prevState.modifiedMessages.slice(0, index), ...prevState.modifiedMessages.slice(index + 1)]
+    }));
   }
 
   handleOverride(id) {
@@ -1510,6 +1521,18 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }
   }
 
+  modifyJson(msg) {
+    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].modifyMessageJson(JSON.parse(document.getElementById(`${msg.id}-textarea`).value));
+  }
+
+  handleChange(msgId) {
+    if (!this.state.modifiedMessages.includes(msgId)) {
+      this.setState(prevState => ({
+        modifiedMessages: prevState.modifiedMessages.concat(msgId)
+      }));
+    }
+  }
+
   renderMessageItem(msg) {
     const isBlockedByGroup = this.state.groups.filter(group => msg.groups.includes(group.id)).some(group => !group.enabled);
     const msgProvider = this.state.providers.find(provider => provider.id === msg.provider) || {};
@@ -1518,6 +1541,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     const isBlocked = isMessageBlocked || isBlockedByGroup || isProviderExcluded;
     const impressions = this.state.messageImpressions[msg.id] ? this.state.messageImpressions[msg.id].length : 0;
     const isCollapsed = this.state.collapsedMessages.includes(msg.id);
+    const isModified = this.state.modifiedMessages.includes(msg.id);
     let itemClassName = "message-item";
 
     if (isBlocked) {
@@ -1538,14 +1562,30 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: `button ${isBlocked ? "" : " primary"}`,
       onClick: isBlocked ? this.handleUnblock(msg) : this.handleBlock(msg)
-    }, isBlocked ? "Unblock" : "Block"), isBlocked ? null : react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
-      className: "button",
+    }, isBlocked ? "Unblock" : "Block"), // eslint-disable-next-line no-nested-ternary
+    isBlocked ? null : isModified ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "button restore" // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onClick: e => this.resetJSON(msg)
+    }, "Reset") : react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "button show",
       onClick: this.handleOverride(msg.id)
-    }, "Show"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "(", impressions, " impressions)"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
+    }, "Show"), isBlocked ? null : react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "button modify" // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onClick: e => this.modifyJson(msg)
+    }, "Modify"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "(", impressions, " impressions)"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
       className: "message-summary"
     }, isBlocked && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, "Block reason:", isBlockedByGroup && " Blocked by group", isProviderExcluded && " Excluded by provider", isMessageBlocked && " Message blocked"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("pre", {
       className: isCollapsed ? "collapsed" : "expanded"
-    }, JSON.stringify(msg, null, 2)))));
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("textarea", {
+      id: `${msg.id}-textarea`,
+      name: msg.id,
+      className: "general-textarea",
+      disabled: isBlocked // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onChange: e => this.handleChange(msg.id)
+    }, JSON.stringify(msg, null, 2))))));
   }
 
   restoreWNMessageState() {
@@ -1622,10 +1662,14 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
 
     const messagesToShow = this.state.messageFilter === "all" ? this.state.messages : this.state.messages.filter(message => message.provider === this.state.messageFilter);
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
-      className: "ASRouterButton slim button" // eslint-disable-next-line react/jsx-no-bind
+      className: "ASRouterButton slim" // eslint-disable-next-line react/jsx-no-bind
       ,
       onClick: e => this.toggleAllMessages(messagesToShow)
-    }, "Collapse/Expand All"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg)))));
+    }, "Collapse/Expand All"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
+      className: "helpLink"
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
+      className: "icon icon-small-spacer icon-info"
+    }), " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "To modify a message, change the JSON and click 'Modify' to see your changes. Click 'Reset' to restore the JSON to the original.")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg)))));
   }
 
   renderWNMessages() {

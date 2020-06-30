@@ -78,6 +78,15 @@
     margin-bottom: 0;
   }
 
+  .general-textarea {
+    width: 740px;
+    height: 500px;
+    overflow: auto;
+    resize: none;
+    border-radius: 4px;
+    display: flex;
+  }
+
   .wnp-textarea {
     width: 740px;
     height: 500px;
