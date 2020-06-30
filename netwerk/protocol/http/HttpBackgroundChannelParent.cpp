@@ -239,6 +239,30 @@ bool HttpBackgroundChannelParent::OnStopRequest(
                            aResponseTrailers, aConsoleReports);
 }
 
+bool HttpBackgroundChannelParent::OnAfterLastPart(const nsresult aStatus) {
+  LOG(("HttpBackgroundChannelParent::OnAfterLastPart [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    nsresult rv = mBackgroundThread->Dispatch(
+        NewRunnableMethod<const nsresult>(
+            "net::HttpBackgroundChannelParent::OnAfterLastPart", this,
+            &HttpBackgroundChannelParent::OnAfterLastPart, aStatus),
+        NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendOnAfterLastPart(aStatus);
+}
+
 bool HttpBackgroundChannelParent::OnProgress(const int64_t aProgress,
                                              const int64_t aProgressMax) {
   LOG(("HttpBackgroundChannelParent::OnProgress [this=%p]\n", this));

@@ -1629,9 +1629,22 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
 NS_IMETHODIMP
 HttpChannelParent::OnAfterLastPart(nsresult aStatus) {
-  if (!mIPCClosed) {
-    Unused << SendOnAfterLastPart(aStatus);
+  LOG(("HttpChannelParent::OnAfterLastPart [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // If IPC channel is closed, there is nothing we can do. Just return NS_OK.
+  if (mIPCClosed) {
+    return NS_OK;
   }
+
+  // If IPC channel is open, background channel should be ready to send
+  // OnAfterLastPart.
+  MOZ_ASSERT(mBgParent);
+
+  if (!mBgParent || !mBgParent->OnAfterLastPart(aStatus)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   return NS_OK;
 }
 
