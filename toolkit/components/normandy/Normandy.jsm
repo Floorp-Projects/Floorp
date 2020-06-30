@@ -169,7 +169,6 @@ var Normandy = {
         // topic must have already been removed or never added
       }
     }
-    await PreferenceRollouts.uninit();
   },
 
   /**
