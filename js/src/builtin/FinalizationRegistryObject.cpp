@@ -184,8 +184,10 @@ void FinalizationRegistrationsObject::trace(JSTracer* trc, JSObject* obj) {
   }
 
   auto* self = &obj->as<FinalizationRegistrationsObject>();
-  TraceRange(trc, self->records()->length(), self->records()->begin(),
-             "FinalizationRegistrationsObject records");
+  if (WeakFinalizationRecordVector* records = self->records()) {
+    TraceRange(trc, records->length(), records->begin(),
+               "FinalizationRegistrationsObject records");
+  }
 }
 
 /* static */
