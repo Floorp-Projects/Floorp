@@ -10,25 +10,25 @@ add_task(async function test() {
     "http://example.com/browser/devtools/client/performance-new/test/browser/fake-frontend.html"
   );
   await makeSureProfilerPopupIsEnabled();
-  await toggleOpenProfilerPopup();
+  await withPopupOpen(window, async () => {
+    {
+      const button = await getElementByLabel(document, "Start Recording");
+      info("Click the button to start recording.");
+      button.click();
+    }
 
-  {
-    const button = await getElementByLabel(document, "Start Recording");
-    info("Click the button to start recording.");
-    button.click();
-  }
+    {
+      const button = await getElementByLabel(document, "Discard");
+      info("Click the button to discard the recording.");
+      button.click();
+    }
 
-  {
-    const button = await getElementByLabel(document, "Discard");
-    info("Click the button to discard the recording.");
-    button.click();
-  }
-
-  {
-    const button = await getElementByLabel(document, "Start Recording");
-    ok(
-      Boolean(button),
-      "The popup reverted back to be able to start recording again"
-    );
-  }
+    {
+      const button = await getElementByLabel(document, "Start Recording");
+      ok(
+        Boolean(button),
+        "The popup reverted back to be able to start recording again"
+      );
+    }
+  });
 });
