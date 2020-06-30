@@ -19,6 +19,7 @@
 #include "js/PropertySpec.h"
 #include "unicode/udisplaycontext.h"
 #include "unicode/uloc.h"
+#include "unicode/unum.h"
 #include "unicode/ureldatefmt.h"
 #include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
@@ -232,13 +233,42 @@ static URelativeDateTimeFormatter* NewURelativeDateTimeFormatter(
   }
 
   UErrorCode status = U_ZERO_ERROR;
+  UNumberFormat* nf = unum_open(UNUM_DECIMAL, nullptr, 0,
+                                IcuLocale(locale.get()), nullptr, &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return nullptr;
+  }
+  ScopedICUObject<UNumberFormat, unum_close> toClose(nf);
+
+  // Use the default values as if a new Intl.NumberFormat had been constructed.
+  unum_setAttribute(nf, UNUM_MIN_INTEGER_DIGITS, 1);
+  unum_setAttribute(nf, UNUM_MIN_FRACTION_DIGITS, 0);
+  unum_setAttribute(nf, UNUM_MAX_FRACTION_DIGITS, 3);
+  unum_setAttribute(nf, UNUM_GROUPING_USED, true);
+
+  // The undocumented magic value -2 is needed to request locale-specific data.
+  // See |icu::number::impl::Grouper::{fGrouping1, fGrouping2, fMinGrouping}|.
+  //
+  // Future ICU versions (> ICU 67) will expose it as a proper constant:
+  // https://unicode-org.atlassian.net/browse/ICU-21109
+  // https://github.com/unicode-org/icu/pull/1152
+  constexpr int32_t useLocaleData = -2;
+
+  unum_setAttribute(nf, UNUM_GROUPING_SIZE, useLocaleData);
+  unum_setAttribute(nf, UNUM_SECONDARY_GROUPING_SIZE, useLocaleData);
+  unum_setAttribute(nf, UNUM_MINIMUM_GROUPING_DIGITS, useLocaleData);
+
   URelativeDateTimeFormatter* rtf =
-      ureldatefmt_open(IcuLocale(locale.get()), nullptr, relDateTimeStyle,
+      ureldatefmt_open(IcuLocale(locale.get()), nf, relDateTimeStyle,
                        UDISPCTX_CAPITALIZATION_FOR_STANDALONE, &status);
   if (U_FAILURE(status)) {
     intl::ReportInternalError(cx);
     return nullptr;
   }
+
+  // Ownership was transferred to the URelativeDateTimeFormatter.
+  toClose.forget();
   return rtf;
 }
 
