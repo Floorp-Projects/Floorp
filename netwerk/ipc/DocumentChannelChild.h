@@ -38,7 +38,8 @@ class DocumentChannelChild final : public DocumentChannel,
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& aStatusCode);
 
   mozilla::ipc::IPCResult RecvDisconnectChildListeners(
-      const nsresult& aStatus, const nsresult& aLoadGroupStatus);
+      const nsresult& aStatus, const nsresult& aLoadGroupStatus,
+      bool aSwitchedProcess);
 
   mozilla::ipc::IPCResult RecvDeleteSelf();
 
