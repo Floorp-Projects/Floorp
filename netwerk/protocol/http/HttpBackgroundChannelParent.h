@@ -42,6 +42,12 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
   // To send OnStartRequestSend message over background channel.
   bool OnStartRequestSent();
 
+  // To send OnStartRequest message over background channel.
+  bool OnStartRequest(const nsHttpResponseHead& aResponseHead,
+                      const bool& aUseResponseHead,
+                      const nsHttpHeaderArray& aRequestHeaders,
+                      const HttpChannelOnStartRequestArgs& aArgs);
+
   // To send OnTransportAndData message over background channel.
   bool OnTransportAndData(const nsresult& aChannelStatus,
                           const nsresult& aTransportStatus,

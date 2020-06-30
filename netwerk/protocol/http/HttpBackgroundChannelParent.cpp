@@ -166,6 +166,37 @@ bool HttpBackgroundChannelParent::OnStartRequestSent() {
   return SendOnStartRequestSent();
 }
 
+bool HttpBackgroundChannelParent::OnStartRequest(
+    const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
+    const nsHttpHeaderArray& aRequestHeaders,
+    const HttpChannelOnStartRequestArgs& aArgs) {
+  LOG(("HttpBackgroundChannelParent::OnStartRequest [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    nsresult rv = mBackgroundThread->Dispatch(
+        NewRunnableMethod<const nsHttpResponseHead, const bool,
+                          const nsHttpHeaderArray,
+                          const HttpChannelOnStartRequestArgs>(
+            "net::HttpBackgroundChannelParent::OnStartRequest", this,
+            &HttpBackgroundChannelParent::OnStartRequest, aResponseHead,
+            aUseResponseHead, aRequestHeaders, aArgs),
+        NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendOnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
+                            aArgs);
+}
+
 bool HttpBackgroundChannelParent::OnTransportAndData(
     const nsresult& aChannelStatus, const nsresult& aTransportStatus,
     const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData) {

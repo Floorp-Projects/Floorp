@@ -26,6 +26,11 @@ child:
   // is processed. For synchronizing the event sequence.
   async OnStartRequestSent();
 
+  async OnStartRequest(nsHttpResponseHead  responseHead,
+                       bool                useResponseHead,
+                       nsHttpHeaderArray   requestHeaders,
+                       HttpChannelOnStartRequestArgs args);
+
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message
   // This is duplicated on PHttpChannel, which gets used for multi-part
