@@ -1474,19 +1474,20 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       mWorkerPrivate->WorkerScriptLoaded();
     }
 
-    const auto [firstIndexToExecute, lastIndexToExecute] =
-        [this]() -> std::pair<uint32_t, uint32_t> {
+    const auto begin = mLoadInfos.begin();
+    const auto end = mLoadInfos.end();
+    using Iterator = decltype(begin);
+    const auto maybeRangeToExecute =
+        [begin, end]() -> Maybe<std::pair<Iterator, Iterator>> {
       // firstItToExecute is the first loadInfo where mExecutionScheduled is
       // unset.
-      const auto begin = mLoadInfos.begin();
-      const auto end = mLoadInfos.end();
       auto firstItToExecute =
           std::find_if(begin, end, [](const ScriptLoadInfo& loadInfo) {
             return !loadInfo.mExecutionScheduled;
           });
 
       if (firstItToExecute == end) {
-        return std::pair(UINT32_MAX, UINT32_MAX);
+        return Nothing();
       }
 
       // firstItUnexecutable is the first loadInfo that is not yet finished.
@@ -1504,27 +1505,22 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
             return false;
           });
 
-      return std::pair(firstItToExecute - begin,
-                       firstItUnexecutable == firstItToExecute
-                           ? UINT32_MAX
-                           : firstItUnexecutable - begin - 1);
+      return firstItUnexecutable == firstItToExecute
+                 ? Nothing()
+                 : Some(std::pair(firstItToExecute, firstItUnexecutable));
     }();
 
     // If there are no unexecutable load infos, we can unuse things before the
     // execution of the scripts and the stopping of the sync loop.
-    if (lastIndexToExecute == mLoadInfos.Length() - 1) {
-      mCacheCreator = nullptr;
-    }
-
-    if (firstIndexToExecute != UINT32_MAX && lastIndexToExecute != UINT32_MAX) {
-      const auto [loadInfosAlreadyExecuted, loadInfosToExecute] =
-          mLoadInfos.AsSpan()
-              .First(lastIndexToExecute + 1)
-              .SplitAt(firstIndexToExecute);
+    if (maybeRangeToExecute) {
+      if (maybeRangeToExecute->second == end) {
+        mCacheCreator = nullptr;
+      }
 
       RefPtr<ScriptExecutorRunnable> runnable = new ScriptExecutorRunnable(
           *this, mSyncLoopTarget, IsMainWorkerScript(),
-          loadInfosAlreadyExecuted, loadInfosToExecute);
+          Span{begin, maybeRangeToExecute->first},
+          Span{maybeRangeToExecute->first, maybeRangeToExecute->second});
       if (!runnable->Dispatch()) {
         MOZ_ASSERT(false, "This should never fail!");
       }
