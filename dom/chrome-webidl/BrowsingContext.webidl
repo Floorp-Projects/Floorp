@@ -190,4 +190,6 @@ interface CanonicalBrowsingContext : BrowsingContext {
 [Exposed=Window, ChromeOnly]
 interface BrowsingContextGroup {
   sequence<BrowsingContext> getToplevels();
+
+  readonly attribute unsigned long long id;
 };
