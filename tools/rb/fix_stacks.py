@@ -66,7 +66,7 @@ def fixSymbols(line, jsonMode=False, slowWarning=False, breakpadSymsDir=None, hi
         # Sometimes we need to prevent errors from going to stderr.
         stderr = open(os.devnull) if hide_errors else None
 
-        fix_stacks = Popen(args, stdin=PIPE, stdout=PIPE, stderr=stderr)
+        fix_stacks = Popen(args, stdin=PIPE, stdout=PIPE, stderr=stderr, universal_newlines=True)
 
         # Shut down the fix_stacks process on exit. We use `terminate()`
         # because it is more forceful than `wait()`, and the Python docs warn
