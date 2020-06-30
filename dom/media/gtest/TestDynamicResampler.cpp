@@ -957,7 +957,7 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
   int in_rate = 24000;
   int out_rate = 48000;
 
-  uint32_t pre_buffer = 20;
+  uint32_t pre_buffer = 21;
 
   AudioResampler dr(in_rate, out_rate, pre_buffer);
 
@@ -1003,7 +1003,7 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
   int in_rate = 24000;
   int out_rate = 48000;
 
-  uint32_t pre_buffer = 20;
+  uint32_t pre_buffer = 21;
 
   AudioResampler dr(in_rate, out_rate, pre_buffer);
 

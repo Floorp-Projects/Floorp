@@ -403,8 +403,11 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames) {
     return segment;
   }
 
-  // Not enough input frames abort
-  if (!mResampler.CanResample(aOutFrames)) {
+  // Not enough input frames abort. We check for the requested frames plus one.
+  // This is to make sure that the individual resample iteration that will
+  // follow up, will have enough frames even if one of them consume an extra
+  // frame.
+  if (!mResampler.CanResample(aOutFrames + 1)) {
     return segment;
   }
 
