@@ -6,6 +6,12 @@
 
 var EXPORTED_SYMBOLS = ["TabStateFlusher"];
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm"
+);
+
 /**
  * A module that enables async flushes. Updates from frame scripts are
  * throttled to be sent only once per second. If an action wants a tab's latest
@@ -92,6 +98,15 @@ var TabStateFlusherInternal = {
        */
       requestNativeListener = browser.frameLoader.requestTabStateFlush(id);
     }
+    /*
+      In the event that we have to trigger a process switch and thus change
+      browser remoteness, session store needs to register and track the new
+      browser window loaded and to have message manager listener registered
+      ** before ** TabStateFlusher send "SessionStore:flush" message. This fixes
+      the race where we send the message before the message listener is
+      registered for it.
+      */
+    SessionStore.ensureInitialized(browser.ownerGlobal);
 
     let mm = browser.messageManager;
     mm.sendAsyncMessage("SessionStore:flush", { id });

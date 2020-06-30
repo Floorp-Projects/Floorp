@@ -459,6 +459,22 @@ var SessionStore = {
   },
 
   /**
+   * Ensures that session store has registered and started tracking a given window.
+   * @param window
+   *        Window reference
+   */
+  ensureInitialized(window) {
+    if (SessionStoreInternal._sessionInitialized && !window.__SSi) {
+      /*
+        We need to check that __SSi is not defined on the window so that if
+        onLoad function is in the middle of executing we don't enter the function
+        again and try to redeclare the ContentSessionStore script.
+       */
+      SessionStoreInternal.onLoad(window);
+    }
+  },
+
+  /**
    * Determines whether the passed version number is compatible with
    * the current version number of the SessionStore.
    *
