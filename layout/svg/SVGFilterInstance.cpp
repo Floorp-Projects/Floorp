@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGFilterInstance.h"
+#include "SVGFilterInstance.h"
 
 // Keep others in (case-insensitive) order:
 #include "gfxPlatform.h"
@@ -16,19 +16,20 @@
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "mozilla/dom/SVGFilterElement.h"
+#include "SVGFilterFrame.h"
 #include "SVGObserverUtils.h"
-#include "nsSVGFilterFrame.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
 #include "FilterSupport.h"
 #include "gfx2DGlue.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGUnitTypes_Binding;
 using namespace mozilla::gfx;
 
-nsSVGFilterInstance::nsSVGFilterInstance(
+namespace mozilla {
+
+SVGFilterInstance::SVGFilterInstance(
     const StyleFilter& aFilter, nsIFrame* aTargetFrame,
     nsIContent* aTargetContent, const UserSpaceMetrics& aMetrics,
     const gfxRect& aTargetBBox, const gfxSize& aUserSpaceToFilterSpaceScale)
@@ -62,7 +63,7 @@ nsSVGFilterInstance::nsSVGFilterInstance(
   mInitialized = true;
 }
 
-bool nsSVGFilterInstance::ComputeBounds() {
+bool SVGFilterInstance::ComputeBounds() {
   // XXX if filterUnits is set (or has defaulted) to objectBoundingBox, we
   // should send a warning to the error console if the author has used lengths
   // with units. This is a common mistake and can result in the filter region
@@ -108,7 +109,7 @@ bool nsSVGFilterInstance::ComputeBounds() {
   return true;
 }
 
-nsSVGFilterFrame* nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
+SVGFilterFrame* SVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
   if (!mFilter.IsUrl()) {
     // The filter is not an SVG reference filter.
     return nullptr;
@@ -160,11 +161,11 @@ nsSVGFilterFrame* nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
     return nullptr;
   }
 
-  return static_cast<nsSVGFilterFrame*>(frame);
+  return static_cast<SVGFilterFrame*>(frame);
 }
 
-float nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType,
-                                              float aValue) const {
+float SVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType,
+                                            float aValue) const {
   SVGAnimatedLength val;
   val.Init(aCtxType, 0xff, aValue, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
 
@@ -188,7 +189,7 @@ float nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType,
   }
 }
 
-Point3D nsSVGFilterInstance::ConvertLocation(const Point3D& aPoint) const {
+Point3D SVGFilterInstance::ConvertLocation(const Point3D& aPoint) const {
   SVGAnimatedLength val[4];
   val[0].Init(SVGContentUtils::X, 0xff, aPoint.x,
               SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
@@ -206,7 +207,7 @@ Point3D nsSVGFilterInstance::ConvertLocation(const Point3D& aPoint) const {
   return Point3D(r.x, r.y, GetPrimitiveNumber(SVGContentUtils::XY, aPoint.z));
 }
 
-gfxRect nsSVGFilterInstance::UserSpaceToFilterSpace(
+gfxRect SVGFilterInstance::UserSpaceToFilterSpace(
     const gfxRect& aUserSpaceRect) const {
   gfxRect filterSpaceRect = aUserSpaceRect;
   filterSpaceRect.Scale(mUserSpaceToFilterSpaceScale.width,
@@ -214,7 +215,7 @@ gfxRect nsSVGFilterInstance::UserSpaceToFilterSpace(
   return filterSpaceRect;
 }
 
-IntRect nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(
+IntRect SVGFilterInstance::ComputeFilterPrimitiveSubregion(
     SVGFE* aFilterElement,
     const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     const nsTArray<int32_t>& aInputIndices) {
@@ -257,7 +258,7 @@ IntRect nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(
   return RoundedToInt(region);
 }
 
-void nsSVGFilterInstance::GetInputsAreTainted(
+void SVGFilterInstance::GetInputsAreTainted(
     const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     const nsTArray<int32_t>& aInputIndices, bool aFilterInputIsTainted,
     nsTArray<bool>& aOutInputsAreTainted) {
@@ -280,7 +281,7 @@ static int32_t GetLastResultIndex(
              : numPrimitiveDescrs - 1;
 }
 
-int32_t nsSVGFilterInstance::GetOrCreateSourceAlphaIndex(
+int32_t SVGFilterInstance::GetOrCreateSourceAlphaIndex(
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs) {
   // If the SourceAlpha index has already been determined or created for this
   // SVG filter, just return it.
@@ -317,7 +318,7 @@ int32_t nsSVGFilterInstance::GetOrCreateSourceAlphaIndex(
   return mSourceAlphaIndex;
 }
 
-nsresult nsSVGFilterInstance::GetSourceIndices(
+nsresult SVGFilterInstance::GetSourceIndices(
     SVGFE* aPrimitiveElement,
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
@@ -355,7 +356,7 @@ nsresult nsSVGFilterInstance::GetSourceIndices(
   return NS_OK;
 }
 
-nsresult nsSVGFilterInstance::BuildPrimitives(
+nsresult SVGFilterInstance::BuildPrimitives(
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     nsTArray<RefPtr<SourceSurface>>& aInputImages, bool aInputIsTainted) {
   mSourceGraphicIndex = GetLastResultIndex(aPrimitiveDescrs);
@@ -442,3 +443,5 @@ nsresult nsSVGFilterInstance::BuildPrimitives(
 
   return NS_OK;
 }
+
+}  // namespace mozilla

@@ -34,7 +34,7 @@ class SVGFEMorphologyElement : public SVGFEMorphologyElementBase {
 
  public:
   virtual FilterPrimitiveDescription GetPrimitiveDescription(
-      nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+      SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
       const nsTArray<bool>& aInputsAreTainted,
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
@@ -54,7 +54,7 @@ class SVGFEMorphologyElement : public SVGFEMorphologyElementBase {
   void SetRadius(float rx, float ry);
 
  protected:
-  void GetRXY(int32_t* aRX, int32_t* aRY, const nsSVGFilterInstance& aInstance);
+  void GetRXY(int32_t* aRX, int32_t* aRY, const SVGFilterInstance& aInstance);
 
   virtual NumberPairAttributesInfo GetNumberPairInfo() override;
   virtual EnumAttributesInfo GetEnumInfo() override;

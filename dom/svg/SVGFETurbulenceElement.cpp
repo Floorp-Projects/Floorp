@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/SVGFETurbulenceElement.h"
 #include "mozilla/dom/SVGFETurbulenceElementBinding.h"
-#include "nsSVGFilterInstance.h"
+#include "mozilla/SVGFilterInstance.h"
 #include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FETurbulence)
@@ -90,7 +90,7 @@ already_AddRefed<DOMSVGAnimatedEnumeration> SVGFETurbulenceElement::Type() {
 }
 
 FilterPrimitiveDescription SVGFETurbulenceElement::GetPrimitiveDescription(
-    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   float fX = mNumberPairAttributes[BASE_FREQ].GetAnimValue(

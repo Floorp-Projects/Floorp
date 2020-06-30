@@ -19,7 +19,6 @@
 #include "nsCSSClipPathInstance.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
-#include "nsFilterInstance.h"
 #include "nsFrameList.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
@@ -33,11 +32,12 @@
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGDisplayableFrame.h"
-#include "nsSVGFilterPaintCallback.h"
+#include "SVGFilterPaintCallback.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsTextFrame.h"
+#include "mozilla/FilterInstance.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/SVGContentUtils.h"
@@ -129,8 +129,7 @@ nsRect nsSVGUtils::GetPostFilterVisualOverflowRect(
     return aPreFilterRect;
   }
 
-  return nsFilterInstance::GetPostFilterBounds(aFrame, nullptr,
-                                               &aPreFilterRect);
+  return FilterInstance::GetPostFilterBounds(aFrame, nullptr, &aPreFilterRect);
 }
 
 bool nsSVGUtils::OuterSVGIsCallingReflowSVG(nsIFrame* aFrame) {
@@ -384,7 +383,7 @@ void nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags) {
 
 // ************************************************************
 
-class SVGPaintCallback : public nsSVGFilterPaintCallback {
+class SVGPaintCallback : public SVGFilterPaintCallback {
  public:
   virtual void Paint(gfxContext& aContext, nsIFrame* aTarget,
                      const gfxMatrix& aTransform, const nsIntRect* aDirtyRect,
@@ -793,8 +792,8 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
                             target->CurrentMatrixDouble());
 
     SVGPaintCallback paintCallback;
-    nsFilterInstance::PaintFilteredFrame(aFrame, target, &paintCallback,
-                                         dirtyRegion, aImgParams);
+    FilterInstance::PaintFilteredFrame(aFrame, target, &paintCallback,
+                                       dirtyRegion, aImgParams);
   } else {
     svgFrame->PaintSVG(*target, aTransform, aImgParams, aDirtyRect);
   }

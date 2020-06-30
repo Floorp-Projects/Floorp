@@ -6,8 +6,8 @@
 
 #include "mozilla/dom/SVGFESpecularLightingElement.h"
 #include "mozilla/dom/SVGFESpecularLightingElementBinding.h"
+#include "mozilla/SVGFilterInstance.h"
 #include "nsSVGUtils.h"
-#include "nsSVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FESpecularLighting)
 
@@ -62,7 +62,7 @@ SVGFESpecularLightingElement::KernelUnitLengthY() {
 
 FilterPrimitiveDescription
 SVGFESpecularLightingElement::GetPrimitiveDescription(
-    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   float specularExponent = mNumberAttributes[SPECULAR_EXPONENT].GetAnimValue();

@@ -15,23 +15,24 @@
 #include "nsColor.h"
 #include "mozilla/ServoStyleConsts.h"
 
+namespace mozilla {
+
 /**
- * This class helps nsFilterInstance build its filter graph. It turns a CSS
+ * This class helps FilterInstance build its filter graph. It turns a CSS
  * filter function (e.g. blur(3px)) from the style system into a
  * FilterPrimitiveDescription connected to the filter graph.
  */
-class nsCSSFilterInstance {
-  using StyleFilter = mozilla::StyleFilter;
-  typedef mozilla::gfx::sRGBColor sRGBColor;
-  typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
-  typedef mozilla::gfx::IntPoint IntPoint;
-  typedef mozilla::gfx::Size Size;
+class CSSFilterInstance {
+  typedef gfx::sRGBColor sRGBColor;
+  typedef gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
+  typedef gfx::IntPoint IntPoint;
+  typedef gfx::Size Size;
 
  public:
   /**
    * @param aFilter The CSS filter from the style system. This class stores
    *   aFilter by reference, so callers should avoid modifying or deleting
-   *   aFilter during the lifetime of nsCSSFilterInstance.
+   *   aFilter during the lifetime of CSSFilterInstance.
    * @param aShadowFallbackColor The color that should be used for
    *   drop-shadow() filters that don't specify a shadow color.
    * @param aTargetBoundsInFilterSpace The pre-filter visual overflow rect of
@@ -39,10 +40,9 @@ class nsCSSFilterInstance {
    * @param aFrameSpaceInCSSPxToFilterSpaceTransform The transformation from
    *   the filtered element's frame space in CSS pixels to filter space.
    */
-  nsCSSFilterInstance(
-      const StyleFilter& aFilter, nscolor aShadowFallbackColor,
-      const nsIntRect& aTargetBoundsInFilterSpace,
-      const gfxMatrix& aFrameSpaceInCSSPxToFilterSpaceTransform);
+  CSSFilterInstance(const StyleFilter& aFilter, nscolor aShadowFallbackColor,
+                    const nsIntRect& aTargetBoundsInFilterSpace,
+                    const gfxMatrix& aFrameSpaceInCSSPxToFilterSpaceTransform);
 
   /**
    * Creates at least one new FilterPrimitiveDescription based on the filter
@@ -140,5 +140,7 @@ class nsCSSFilterInstance {
    */
   gfxMatrix mFrameSpaceInCSSPxToFilterSpaceTransform;
 };
+
+}  // namespace mozilla
 
 #endif
