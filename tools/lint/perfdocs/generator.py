@@ -111,7 +111,17 @@ class Generator(object):
                 os.linesep.join(documentation),
                 rst_content
             )
-            frameworks_info[yaml_content['name']] = framework_rst
+            frameworks_info[yaml_content["name"]] = {"dynamic": framework_rst, "static": []}
+
+            # For static `.rst` file
+            for static_file in framework["static"]:
+                frameworks_info[yaml_content["name"]]["static"].append({
+                    "file": static_file,
+                    "content": read_file(
+                                    os.path.join(framework["path"], static_file),
+                                    stringify=True
+                               )
+                })
 
         return frameworks_info
 
@@ -150,13 +160,19 @@ class Generator(object):
         for framework_name in sorted(framework_docs.keys()):
             frameworks.append(framework_name)
             save_file(
-                framework_docs[framework_name],
+                framework_docs[framework_name]["dynamic"],
                 os.path.join(perfdocs_tmpdir, framework_name)
             )
 
+            for static_name in framework_docs[framework_name]["static"]:
+                save_file(
+                    static_name["content"],
+                    os.path.join(perfdocs_tmpdir, static_name["file"].split(".")[0])
+                )
+
         # Get the main page and add the framework links to it
         mainpage = read_file(os.path.join(self.templates_path, "index.rst"), stringify=True)
-        fmt_frameworks = os.linesep.join(['  :doc:`%s`' % name for name in frameworks])
+        fmt_frameworks = os.linesep.join(['  * :doc:`%s`' % name for name in frameworks])
         fmt_mainpage = re.sub(r"{test_documentation}", fmt_frameworks, mainpage)
         save_file(fmt_mainpage, os.path.join(perfdocs_tmpdir, 'index'))
 
