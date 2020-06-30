@@ -194,7 +194,7 @@ HttpChannelChild::HttpChannelChild()
       mIsLastPartOfMultiPart(false),
       mSuspendForWaitCompleteRedirectSetup(false),
       mRecvOnStartRequestSentCalled(false),
-      mSuspendedByWaitingForPermissionAndCookie(false) {
+      mSuspendedByWaitingForPermissionCookieStreamFilter(false) {
   LOG(("Creating HttpChannelChild @%p\n", this));
 
   mChannelCreationTime = PR_Now();
@@ -406,8 +406,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequestSent() {
 
   mRecvOnStartRequestSentCalled = true;
 
-  if (mSuspendedByWaitingForPermissionAndCookie) {
-    mSuspendedByWaitingForPermissionAndCookie = false;
+  if (mSuspendedByWaitingForPermissionCookieStreamFilter) {
+    mSuspendedByWaitingForPermissionCookieStreamFilter = false;
     mEventQ->Resume();
   }
   return IPC_OK();
@@ -551,7 +551,7 @@ void HttpChannelChild::OnStartRequest(
     MOZ_ASSERT(NS_IsMainThread());
 
     mEventQ->Suspend();
-    mSuspendedByWaitingForPermissionAndCookie = true;
+    mSuspendedByWaitingForPermissionCookieStreamFilter = true;
     mEventQ->PrependEvent(MakeUnique<NeckoTargetChannelFunctionEvent>(
         this, [self = UnsafePtr<HttpChannelChild>(this)]() {
           self->DoOnStartRequest(self, nullptr);
