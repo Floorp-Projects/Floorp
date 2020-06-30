@@ -95,6 +95,7 @@ function Damp() {}
 Damp.prototype = {
   async garbageCollect() {
     dump("Garbage collect\n");
+    let start = performance.now();
 
     // Minimize memory usage
     // mimic miminizeMemoryUsage, by only flushing JS objects via GC.
@@ -111,6 +112,7 @@ Damp.prototype = {
       Cu.forceGC();
       await new Promise(done => setTimeout(done, 0));
     }
+    ChromeUtils.addProfilerMarker("DAMP", start, "GC");
   },
 
   async ensureTalosParentProfiler() {
@@ -182,15 +184,13 @@ Damp.prototype = {
       this.allocationTracker.flushAllocations();
     }
 
-    let startLabel = label + ".start";
-    performance.mark(startLabel);
     let start = performance.now();
 
     return {
       done: () => {
         let end = performance.now();
         let duration = end - start;
-        performance.measure(label, startLabel);
+        ChromeUtils.addProfilerMarker("DAMP", start, label);
         if (record) {
           this._results.push({
             name: label,
@@ -229,20 +229,20 @@ Damp.prototype = {
 
   async waitForPendingPaints(window) {
     let utils = window.windowUtils;
-    window.performance.mark("pending paints.start");
+    let startTime = performance.now();
     while (utils.isMozAfterPaintPending) {
       await new Promise(done => {
         window.addEventListener(
           "MozAfterPaint",
           function listener() {
-            window.performance.mark("pending paint");
+            ChromeUtils.addProfilerMarker("DAMP", undefined, "pending paint");
             done();
           },
           { once: true }
         );
       });
     }
-    window.performance.measure("pending paints", "pending paints.start");
+    ChromeUtils.addProfilerMarker("DAMP", startTime, "pending paints");
   },
 
   reloadPage(onReload) {
@@ -406,7 +406,8 @@ Damp.prototype = {
       this._reportAllResults();
     }
 
-    this.TalosParentProfiler.pause("DAMP - end");
+    ChromeUtils.addProfilerMarker("DAMP", this._startTimestamp);
+    this.TalosParentProfiler.pause();
   },
 
   startAllocationTracker() {
@@ -517,7 +518,8 @@ Damp.prototype = {
 
       this.waitBeforeRunningTests()
         .then(() => {
-          this.TalosParentProfiler.resume("DAMP - start");
+          this._startTimestamp = performance.now();
+          this.TalosParentProfiler.resume();
           this._doSequence(sequenceArray, this._doneInternal);
         })
         .catch(e => {
