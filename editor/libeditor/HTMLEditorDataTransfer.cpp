@@ -413,7 +413,8 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     }
   }
 
-  bool insertionPointWasInLink = !!GetLinkElement(pointToInsert.GetContainer());
+  const bool insertionPointWasInLink =
+      !!GetLinkElement(pointToInsert.GetContainer());
 
   if (pointToInsert.IsInTextNode()) {
     SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
