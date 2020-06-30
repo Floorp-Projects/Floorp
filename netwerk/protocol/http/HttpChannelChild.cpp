@@ -2305,6 +2305,8 @@ HttpChannelChild::Suspend() {
   NS_ENSURE_TRUE(RemoteChannelExists() || mInterceptListener,
                  NS_ERROR_NOT_AVAILABLE);
 
+  LogCallingScriptLocation(this);
+
   // SendSuspend only once, when suspend goes from 0 to 1.
   // Don't SendSuspend at all if we're diverting callbacks to the parent;
   // suspend will be called at the correct time in the parent itself.
@@ -2331,6 +2333,8 @@ HttpChannelChild::Resume() {
   NS_ENSURE_TRUE(RemoteChannelExists() || mInterceptListener,
                  NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
+
+  LogCallingScriptLocation(this);
 
   nsresult rv = NS_OK;
 
