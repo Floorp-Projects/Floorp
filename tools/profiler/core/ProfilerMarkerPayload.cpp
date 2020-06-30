@@ -816,6 +816,32 @@ void GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
+ProfileBufferEntryWriter::Length BudgetMarkerPayload::TagAndSerializationBytes()
+    const {
+  return CommonPropsTagAndSerializationBytes();
+}
+
+void BudgetMarkerPayload::SerializeTagAndPayload(
+    ProfileBufferEntryWriter& aEntryWriter) const {
+  static const DeserializerTag tag = TagForDeserializer(Deserialize);
+  SerializeTagAndCommonProps(tag, aEntryWriter);
+}
+
+// static
+UniquePtr<ProfilerMarkerPayload> BudgetMarkerPayload::Deserialize(
+    ProfileBufferEntryReader& aEntryReader) {
+  ProfilerMarkerPayload::CommonProps props =
+      DeserializeCommonProps(aEntryReader);
+  return UniquePtr<ProfilerMarkerPayload>(
+      new BudgetMarkerPayload(std::move(props)));
+}
+
+void BudgetMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                        const TimeStamp& aProcessStartTime,
+                                        UniqueStacks& aUniqueStacks) const {
+  StreamCommonProps("Budget", aWriter, aProcessStartTime, aUniqueStacks);
+}
+
 ProfileBufferEntryWriter::Length
 GCMajorMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
