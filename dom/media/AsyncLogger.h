@@ -53,7 +53,8 @@ class AsyncLogger {
 
 // On 32bits the struct is packed differently and there is a hole we need to
 // account for.
-#if !defined(HAVE_64BIT_BUILD) && !(defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+#if !defined(HAVE_64BIT_BUILD) && \
+    !(defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
 #  define PADDING 8
 #else
 #  define PADDING 0
@@ -209,22 +210,13 @@ class AsyncLogger {
                   message.mTID, JS::ProfilingCategoryPair::MEDIA_RT,
                   message.mName, payload);
             } else {
-              // 0.9 is a hack to work around floating point precision issues
-              // in the profiler frontend.
               mozilla::TimeStamp end =
                   message.mTimestamp +
-                  TimeDuration::FromMicroseconds(message.mDurationUs * 0.9);
-              TracingMarkerPayload payload0("media",
-                                            TracingKind::TRACING_INTERVAL_START,
-                                            message.mTimestamp);
-              TracingMarkerPayload payload1(
-                  "media", TracingKind::TRACING_INTERVAL_END, end);
+                  TimeDuration::FromMicroseconds(message.mDurationUs);
+              BudgetMarkerPayload payload(message.mTimestamp, end);
               profiler_add_marker_for_thread(
                   message.mTID, JS::ProfilingCategoryPair::MEDIA_RT,
-                  message.mName, payload0);
-              profiler_add_marker_for_thread(
-                  message.mTID, JS::ProfilingCategoryPair::MEDIA_RT,
-                  message.mName, payload1);
+                  message.mName, payload);
             }
           }
         }
