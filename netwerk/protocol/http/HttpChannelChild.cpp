@@ -194,7 +194,7 @@ HttpChannelChild::HttpChannelChild()
       mIsLastPartOfMultiPart(false),
       mSuspendForWaitCompleteRedirectSetup(false),
       mRecvOnStartRequestSentCalled(false),
-      mSuspendedByWaitingForPermissionCookie(false) {
+      mSuspendedByWaitingForPermissionCookieStreamFilter(false) {
   LOG(("Creating HttpChannelChild @%p\n", this));
 
   mChannelCreationTime = PR_Now();
@@ -406,8 +406,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequestSent() {
 
   mRecvOnStartRequestSentCalled = true;
 
-  if (mSuspendedByWaitingForPermissionCookie) {
-    mSuspendedByWaitingForPermissionCookie = false;
+  if (mSuspendedByWaitingForPermissionCookieStreamFilter) {
+    mSuspendedByWaitingForPermissionCookieStreamFilter = false;
     mEventQ->Resume();
   }
   return IPC_OK();
@@ -551,7 +551,7 @@ void HttpChannelChild::OnStartRequest(
     MOZ_ASSERT(NS_IsMainThread());
 
     mEventQ->Suspend();
-    mSuspendedByWaitingForPermissionCookie = true;
+    mSuspendedByWaitingForPermissionCookieStreamFilter = true;
     mEventQ->PrependEvent(MakeUnique<NeckoTargetChannelFunctionEvent>(
         this, [self = UnsafePtr<HttpChannelChild>(this)]() {
           self->DoOnStartRequest(self, nullptr);
@@ -3873,39 +3873,10 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvSetPriority(
   return IPC_OK();
 }
 
-// We don't have a copyable Endpoint and NeckoTargetChannelFunctionEvent takes
-// std::function<void()>.  It's not possible to avoid the copy from the type of
-// lambda to std::function, so does the capture list. Hence, we're forced to
-// use the old-fashioned channel event inheritance.
-class AttachStreamFilterEvent : public ChannelEvent {
- public:
-  AttachStreamFilterEvent(HttpChannelChild* aChild,
-                          already_AddRefed<nsIEventTarget> aTarget,
-                          Endpoint<extensions::PStreamFilterParent>&& aEndpoint)
-      : mChild(aChild), mTarget(aTarget), mEndpoint(std::move(aEndpoint)) {}
-
-  already_AddRefed<nsIEventTarget> GetEventTarget() override {
-    nsCOMPtr<nsIEventTarget> target = mTarget;
-    return target.forget();
-  }
-
-  void Run() override {
-    extensions::StreamFilterParent::Attach(mChild, std::move(mEndpoint));
-  }
-
- private:
-  HttpChannelChild* mChild;
-  nsCOMPtr<nsIEventTarget> mTarget;
-  Endpoint<extensions::PStreamFilterParent> mEndpoint;
-};
-
-void HttpChannelChild::ProcessAttachStreamFilter(
+mozilla::ipc::IPCResult HttpChannelChild::RecvAttachStreamFilter(
     Endpoint<extensions::PStreamFilterParent>&& aEndpoint) {
-  LOG(("HttpChannelChild::ProcessAttachStreamFilter [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
-
-  mEventQ->RunOrEnqueue(new AttachStreamFilterEvent(this, GetNeckoTarget(),
-                                                    std::move(aEndpoint)));
+  extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvCancelDiversion() {

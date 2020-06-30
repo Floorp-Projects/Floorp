@@ -83,7 +83,8 @@ HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
       mCacheNeedFlowControlInitialized(false),
       mNeedFlowControl(true),
       mSuspendedForFlowControl(false),
-      mAfterOnStartRequestBegun(false) {
+      mAfterOnStartRequestBegun(false),
+      mStreamFilterAttached(false) {
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
 
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
@@ -1541,7 +1542,8 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   // Bug 1645901: Currently Set-Cookie is passed to child process on main
   // thread, which is racy with PBackground. We should have a way to set cookie
   // in child for Set-Cookie response header.
-  args.shouldWaitForOnStartRequestSent() = isDocument || hasSetCookie;
+  args.shouldWaitForOnStartRequestSent() =
+      isDocument || hasSetCookie || mStreamFilterAttached;
 
   rv = NS_OK;
 
@@ -2663,23 +2665,11 @@ void HttpChannelParent::OverrideReferrerInfoDuringBeginConnect(
   mOverrideReferrerInfo = aReferrerInfo;
 }
 
-auto HttpChannelParent::AttachStreamFilter(
-    Endpoint<extensions::PStreamFilterParent>&& aParentEndpoint,
-    Endpoint<extensions::PStreamFilterChild>&& aChildEndpoint)
-    -> RefPtr<ChildEndpointPromise> {
-  LOG(("HttpChannelParent::AttachStreamFilter [this=%p]", this));
+bool HttpChannelParent::AttachStreamFilter(
+    Endpoint<extensions::PStreamFilterParent>&& aEndpoint) {
   MOZ_ASSERT(!mAfterOnStartRequestBegun);
-
-  if (mIPCClosed) {
-    return ChildEndpointPromise::CreateAndReject(false, __func__);
-  }
-
-  // If IPC channel is open, background channel should be ready to send
-  // SendAttachStreamFilter.
-  MOZ_ASSERT(mBgParent);
-  return InvokeAsync(mBgParent->GetBackgroundTarget(), mBgParent.get(),
-                     __func__, &HttpBackgroundChannelParent::AttachStreamFilter,
-                     std::move(aParentEndpoint), std::move(aChildEndpoint));
+  mStreamFilterAttached = true;
+  return SendAttachStreamFilter(std::move(aEndpoint));
 }
 
 }  // namespace net

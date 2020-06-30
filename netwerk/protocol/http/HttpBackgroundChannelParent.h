@@ -14,7 +14,7 @@
 #include "nsID.h"
 #include "nsISupportsImpl.h"
 
-class nsISerialEventTarget;
+class nsIEventTarget;
 
 namespace mozilla {
 namespace net {
@@ -86,14 +86,6 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
   bool OnSetClassifierMatchedTrackingInfo(const nsACString& aLists,
                                           const nsACString& aFullHashes);
 
-  nsISerialEventTarget* GetBackgroundTarget();
-
-  using ChildEndpointPromise =
-      MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
-  [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
-      Endpoint<extensions::PStreamFilterParent>&& aParentEndpoint,
-      Endpoint<extensions::PStreamFilterChild>&& aChildEndpoint);
-
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -105,7 +97,7 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
   // Used to ensure atomicity of mBackgroundThread
   Mutex mBgThreadMutex;
 
-  nsCOMPtr<nsISerialEventTarget> mBackgroundThread;
+  nsCOMPtr<nsIEventTarget> mBackgroundThread;
 
   // associated HttpChannelParent for generating the channel events
   RefPtr<HttpChannelParent> mChannelParent;
