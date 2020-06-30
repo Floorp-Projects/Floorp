@@ -132,8 +132,7 @@ class Key {
   nsAutoString ToString() const {
     MOZ_ASSERT(IsString());
     const EncodedDataType* pos = BufferStart();
-    nsAutoString res;
-    DecodeString(pos, BufferEnd(), res);
+    auto res = DecodeString(pos, BufferEnd());
     MOZ_ASSERT(pos >= BufferEnd());
     return res;
   }
@@ -230,8 +229,7 @@ class Key {
                                                            uint8_t aType);
 
   IDBResult<void, IDBSpecialValue::Invalid> EncodeLocaleString(
-      const nsDependentString& aString, uint8_t aTypeOffset,
-      const nsCString& aLocale);
+      const nsAString& aString, uint8_t aTypeOffset, const nsCString& aLocale);
 
   void EncodeNumber(double aFloat, uint8_t aType);
 
@@ -245,8 +243,8 @@ class Key {
                               const EncodedDataType* aEnd, JSContext* aCx,
                               JS::MutableHandle<JS::Value> aVal);
 
-  static void DecodeString(const EncodedDataType*& aPos,
-                           const EncodedDataType* aEnd, nsString& aString);
+  static nsAutoString DecodeString(const EncodedDataType*& aPos,
+                                   const EncodedDataType* aEnd);
 
   static double DecodeNumber(const EncodedDataType*& aPos,
                              const EncodedDataType* aEnd);
