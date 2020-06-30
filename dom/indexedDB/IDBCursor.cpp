@@ -346,10 +346,12 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
   }
 
   Key key;
-  auto result = key.SetFromJSVal(aCx, aKey, aRv);
-  if (!result.Is(Ok, aRv)) {
-    if (result.Is(Invalid, aRv)) {
+  auto result = key.SetFromJSVal(aCx, aKey);
+  if (!result.Is(Ok)) {
+    if (result.Is(Invalid)) {
       aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+    } else {
+      aRv = std::move(result.AsException());
     }
     return;
   }
@@ -358,10 +360,12 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
     if (IsLocaleAware() && !key.IsUnset()) {
       Key tmp;
 
-      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale(), aRv);
-      if (!result.Is(Ok, aRv)) {
-        if (result.Is(Invalid, aRv)) {
+      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale());
+      if (!result.Is(Ok)) {
+        if (result.Is(Invalid)) {
           aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+        } else {
+          aRv = std::move(result.AsException());
         }
         return;
       }
@@ -451,20 +455,24 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
     }
 
     Key key;
-    auto result = key.SetFromJSVal(aCx, aKey, aRv);
-    if (!result.Is(Ok, aRv)) {
-      if (result.Is(Invalid, aRv)) {
+    auto result = key.SetFromJSVal(aCx, aKey);
+    if (!result.Is(Ok)) {
+      if (result.Is(Invalid)) {
         aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+      } else {
+        aRv = std::move(result.AsException());
       }
       return;
     }
 
     if (IsLocaleAware() && !key.IsUnset()) {
       Key tmp;
-      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale(), aRv);
-      if (!result.Is(Ok, aRv)) {
-        if (result.Is(Invalid, aRv)) {
+      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale());
+      if (!result.Is(Ok)) {
+        if (result.Is(Invalid)) {
           aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+        } else {
+          aRv = std::move(result.AsException());
         }
         return;
       }
@@ -477,10 +485,12 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
     }
 
     Key primaryKey;
-    result = primaryKey.SetFromJSVal(aCx, aPrimaryKey, aRv);
-    if (!result.Is(Ok, aRv)) {
-      if (result.Is(Invalid, aRv)) {
+    result = primaryKey.SetFromJSVal(aCx, aPrimaryKey);
+    if (!result.Is(Ok)) {
+      if (result.Is(Invalid)) {
         aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+      } else {
+        aRv = std::move(result.AsException());
       }
       return;
     }
