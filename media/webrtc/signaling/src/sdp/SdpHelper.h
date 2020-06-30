@@ -83,7 +83,7 @@ class SdpHelper {
   bool HasRtcp(SdpMediaSection::Protocol proto) const;
   static SdpMediaSection::Protocol GetProtocolForMediaType(
       SdpMediaSection::MediaType type);
-  void appendSdpParseErrors(
+  void AppendSdpParseErrors(
       const std::vector<std::pair<size_t, std::string> >& aErrors,
       std::string* aErrorString);
 

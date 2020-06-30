@@ -173,11 +173,18 @@ dictionary RTCVideoFrameHistoryInternal {
   sequence<RTCVideoFrameHistoryEntryInternal> entries = [];
 };
 
+// This is used by about:webrtc to report SDP parsing errors
+dictionary RTCSdpParsingErrorInternal {
+  required unsigned long lineNumber;
+  required DOMString     error;
+};
+
 // This is for tracking the flow of SDP for about:webrtc
 dictionary RTCSdpHistoryEntryInternal {
-  required DOMHighResTimeStamp timestamp;
-  required boolean             isLocal;
-  required DOMString           sdp;
+  required DOMHighResTimeStamp         timestamp;
+  required boolean                     isLocal;
+  required DOMString                   sdp;
+  sequence<RTCSdpParsingErrorInternal> errors = [];
 };
 
 // This is intended to be a list of dictionaries that inherit from RTCStats
@@ -222,6 +229,7 @@ dictionary RTCConfigurationInternal {
 dictionary RTCStatsReportInternal : RTCStatsCollection {
   required DOMString                        pcid;
   RTCConfigurationInternal                  configuration;
+  DOMString                                 jsepSessionErrors;
   DOMString                                 localSdp;
   DOMString                                 remoteSdp;
   sequence<RTCSdpHistoryEntryInternal>      sdpHistory = [];
