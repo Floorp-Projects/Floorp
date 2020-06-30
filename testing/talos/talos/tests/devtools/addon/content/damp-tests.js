@@ -87,6 +87,12 @@ module.exports = [
     description:
       "Measure open/close toolbox on network monitor panel against simple document",
   },
+  {
+    name: "simple.accessibility",
+    path: "accessibility/simple.js",
+    description:
+      "Measure open/close toolbox on accessibility panel against simple document",
+  },
   // Run all tests against "complicated" document
   {
     name: "complicated.webconsole",

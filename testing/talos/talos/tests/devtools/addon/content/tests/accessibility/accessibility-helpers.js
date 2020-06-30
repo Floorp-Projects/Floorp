@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { openToolboxAndLog } = require("../head");
+const { openToolboxAndLog, reloadPageAndLog } = require("../head");
 
 const INITIALIZED_EVENT = "Accessibility:Initialized";
 
@@ -24,10 +24,19 @@ exports.shutdownAccessibilityService = function() {
   Services.prefs.clearUserPref(PREF_ACCESSIBILITY_FORCE_DISABLED);
 };
 
-exports.openAccessibilityAndLog = async function(label) {
-  await openToolboxAndLog(
+exports.openAccessibilityAndLog = function(label) {
+  return openToolboxAndLog(
     `${label}.accessibility`,
     "accessibility",
     (toolbox, panel) => panel.panelWin.once(INITIALIZED_EVENT)
   );
+};
+
+exports.reloadAccessibilityAndLog = async function(label, toolbox) {
+  const onReload = async function() {
+    let accessibility = await toolbox.getPanelWhenReady("accessibility");
+    await accessibility.panelWin.once(INITIALIZED_EVENT);
+  };
+
+  await reloadPageAndLog(`${label}.accessibility`, toolbox, onReload);
 };
