@@ -4383,6 +4383,11 @@ class HTMLEditor final : public TextEditor,
                        char16_t** aCfcontext);
 
   nsresult StripFormattingNodes(nsIContent& aNode, bool aOnlyList = false);
+
+  /**
+   * @param aContextStr as indicated by nsITransferable's kHTMLContext.
+   * @param aInfoStr as indicated by nsITransferable's kHTMLInfo.
+   */
   nsresult CreateDOMFragmentFromPaste(
       const nsAString& aInputString, const nsAString& aContextStr,
       const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
