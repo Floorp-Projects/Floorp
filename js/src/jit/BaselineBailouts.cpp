@@ -2001,6 +2001,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case Bailout_Debugger:
     case Bailout_SpecificAtomGuard:
     case Bailout_SpecificSymbolGuard:
+    case Bailout_NonInt32ArrayLength:
       // Do nothing.
       break;
 

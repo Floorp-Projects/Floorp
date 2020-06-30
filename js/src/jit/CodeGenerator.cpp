@@ -7640,8 +7640,19 @@ void CodeGenerator::visitArrowNewTarget(LArrowNewTarget* lir) {
 }
 
 void CodeGenerator::visitArrayLength(LArrayLength* lir) {
-  Address length(ToRegister(lir->elements()), ObjectElements::offsetOfLength());
-  masm.load32(length, ToRegister(lir->output()));
+  Register elements = ToRegister(lir->elements());
+  Register output = ToRegister(lir->output());
+
+  Address length(elements, ObjectElements::offsetOfLength());
+  masm.load32(length, output);
+
+  // IonBuilder relies on TI knowing the length fits in int32, but Warp needs to
+  // check this dynamically.
+  if (JitOptions.warpBuilder) {
+    Label bail;
+    masm.branchTest32(Assembler::Signed, output, output, &bail);
+    bailoutFrom(&bail, lir->snapshot());
+  }
 }
 
 static void SetLengthFromIndex(MacroAssembler& masm, const LAllocation* index,

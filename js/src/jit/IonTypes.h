@@ -144,6 +144,9 @@ enum BailoutKind {
   // We hit this code for the first time.
   Bailout_FirstExecution,
 
+  // Array length did not fit in int32.
+  Bailout_NonInt32ArrayLength,
+
   // END Normal bailouts
 
   // Bailouts caused by invalid assumptions based on Baseline code.
@@ -246,6 +249,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_Debugger";
     case Bailout_FirstExecution:
       return "Bailout_FirstExecution";
+    case Bailout_NonInt32ArrayLength:
+      return "Bailout_NonInt32ArrayLength";
 
     // Bailouts caused by invalid assumptions.
     case Bailout_OverflowInvalidate:

@@ -1769,10 +1769,12 @@ void MLoadDataViewElement::computeRange(TempAllocator& alloc) {
 }
 
 void MArrayLength::computeRange(TempAllocator& alloc) {
-  // Array lengths can go up to UINT32_MAX, but we only create MArrayLength
+  // Array lengths can go up to UINT32_MAX. IonBuilder only creates MArrayLength
   // nodes when the value is known to be int32 (see the
-  // OBJECT_FLAG_LENGTH_OVERFLOW flag).
-  setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
+  // OBJECT_FLAG_LENGTH_OVERFLOW flag). WarpBuilder does a dynamic check and we
+  // have to return the range pre-bailouts, so use UINT32_MAX for Warp.
+  uint32_t max = JitOptions.warpBuilder ? UINT32_MAX : INT32_MAX;
+  setRange(Range::NewUInt32Range(alloc, 0, max));
 }
 
 void MInitializedLength::computeRange(TempAllocator& alloc) {
