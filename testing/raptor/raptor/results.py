@@ -14,6 +14,7 @@ from logger.logger import RaptorLogger
 from output import RaptorOutput, BrowsertimeOutput
 
 LOG = RaptorLogger(component="perftest-results-handler")
+KNOWN_TEST_MODIFIERS = ["nocondprof", "fission", "live", "gecko_profile", "cold", "webrender"]
 
 
 class PerftestResultsHandler(object):
@@ -56,6 +57,38 @@ class PerftestResultsHandler(object):
     @abstractmethod
     def add(self, new_result_json):
         raise NotImplementedError()
+
+    def build_extra_options(self, modifiers=None):
+        extra_options = []
+
+        # If fields is not None, then we default to
+        # checking all known fields. Otherwise, we only check
+        # the fields that were given to us.
+        if modifiers is None:
+            if self.no_conditioned_profile:
+                extra_options.append("nocondprof")
+            if self.fission_enabled:
+                extra_options.append("fission")
+            if self.live_sites:
+                extra_options.append("live")
+            if self.gecko_profile:
+                extra_options.append("gecko_profile")
+            if self.cold:
+                extra_options.append("cold")
+            if self.webrender_enabled:
+                extra_options.append("webrender")
+        else:
+            for modifier, name in modifiers:
+                if not modifier:
+                    continue
+                if name in KNOWN_TEST_MODIFIERS:
+                    extra_options.append(name)
+                else:
+                    raise Exception(
+                        "Unknown test modifier %s was provided as an extra option" % name
+                    )
+
+        return extra_options
 
     def add_browser_meta(self, browser_name, browser_version):
         # sets the browser metadata for the perfherder data
@@ -200,16 +233,12 @@ class RaptorResultsHandler(PerftestResultsHandler):
     """Process Raptor results"""
 
     def add(self, new_result_json):
-        # add to results
-        if new_result_json.get("extra_options") is None:
-            new_result_json["extra_options"] = []
         LOG.info("received results in RaptorResultsHandler.add")
-        if self.no_conditioned_profile:
-            new_result_json["extra_options"].append("nocondprof")
-        if self.fission_enabled:
-            new_result_json["extra_options"].append("fission")
-        if self.webrender_enabled:
-            new_result_json["extra_options"].append("webrender")
+        new_result_json.setdefault("extra_options", []).extend(self.build_extra_options([
+            (self.no_conditioned_profile, "nocondprof"),
+            (self.fission_enabled, "fission"),
+            (self.webrender_enabled, "webrender"),
+        ]))
         self.results.append(new_result_json)
 
     def summarize_and_output(self, test_config, tests, test_names):
@@ -597,19 +626,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     new_result["subtest_unit"] = "ms"
                     LOG.info("parsed new result: %s" % str(new_result))
 
-                    new_result["extra_options"] = []
-                    if self.no_conditioned_profile:
-                        new_result["extra_options"].append("nocondprof")
-                    if self.fission_enabled:
-                        new_result["extra_options"].append("fission")
-                    if self.live_sites:
-                        new_result["extra_options"].append("live")
-                    if self.gecko_profile:
-                        new_result["extra_options"].append("gecko_profile")
-                    if self.cold:
-                        new_result["extra_options"].append("cold")
-                    if self.webrender_enabled:
-                        new_result["extra_options"].append("webrender")
+                    new_result["extra_options"] = self.build_extra_options()
 
                     return new_result
 
@@ -636,11 +653,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     new_result["subtest_unit"] = test.get("subtest_unit", "ms")
                     LOG.info("parsed new result: %s" % str(new_result))
 
-                    new_result["extra_options"] = []
+                    new_result["extra_options"] = self.build_extra_options()
                     if self.app != "firefox":
                         new_result["extra_options"].append(self.app)
-                    if self.gecko_profile:
-                        new_result["extra_options"].append("gecko_profile")
 
                     return new_result
 
