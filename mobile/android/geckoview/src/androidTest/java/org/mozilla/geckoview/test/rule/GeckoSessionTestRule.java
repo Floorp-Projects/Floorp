@@ -1952,6 +1952,21 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     /**
+     * This method is a temporary hack to ensure that sessions reconstituted from parcels
+     * have their WebExtension.Port transferred over to the reconstituted session.
+     *
+     * This will be removed when we remove the ability of GeckoSession to be Parcelable.
+     */
+    public void transferPort(@NonNull final GeckoSession fromSession, @NonNull final GeckoSession toSession) {
+        final WebExtension.Port port = mPorts.remove(fromSession);
+        if (port == null) {
+            throw new NullPointerException("Expected a valid port, got null instead");
+        }
+
+        mPorts.put(toSession, port);
+    }
+
+    /**
      * Create a new, opened session using the main session settings.
      *
      * @return New session.
