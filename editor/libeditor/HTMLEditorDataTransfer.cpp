@@ -506,13 +506,13 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     // If a list element on the clipboard, and pasting it into a list or
     // list item element, insert the appropriate children instead.  I.e.,
     // merge the list elements instead of pasting as a sublist.
-    else if (HTMLEditUtils::IsList(content) &&
-             (HTMLEditUtils::IsList(pointToInsert.GetContainer()) ||
+    else if (HTMLEditUtils::IsAnyListElement(content) &&
+             (HTMLEditUtils::IsAnyListElement(pointToInsert.GetContainer()) ||
               HTMLEditUtils::IsListItem(pointToInsert.GetContainer()))) {
       for (nsCOMPtr<nsIContent> firstChild = content->GetFirstChild();
            firstChild; firstChild = content->GetFirstChild()) {
         if (HTMLEditUtils::IsListItem(firstChild) ||
-            HTMLEditUtils::IsList(firstChild)) {
+            HTMLEditUtils::IsAnyListElement(firstChild)) {
           // If we're pasting into empty list item, we should remove it
           // and past current node into the parent list directly.
           // XXX This creates invalid structure if current list item element
@@ -797,7 +797,7 @@ nsresult HTMLEditor::StripFormattingNodes(nsIContent& aNode, bool aListOnly) {
   if (aNode.TextIsOnlyWhitespace()) {
     nsCOMPtr<nsINode> parent = aNode.GetParentNode();
     if (parent) {
-      if (!aListOnly || HTMLEditUtils::IsList(parent)) {
+      if (!aListOnly || HTMLEditUtils::IsAnyListElement(parent)) {
         ErrorResult error;
         parent->RemoveChild(aNode, error);
         NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
@@ -3115,7 +3115,8 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
         const {
   for (Element* element = aContent.GetAsElementOrParentElement(); element;
        element = element->GetParentElement()) {
-    if (HTMLEditUtils::IsList(element) || HTMLEditUtils::IsTable(element)) {
+    if (HTMLEditUtils::IsAnyListElement(element) ||
+        HTMLEditUtils::IsTable(element)) {
       aOutArrayOfListAndTableElements.AppendElement(*element);
     }
   }
@@ -3169,7 +3170,7 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
     for (Element* maybeListElement = content->GetParentElement();
          maybeListElement;
          maybeListElement = maybeListElement->GetParentElement()) {
-      if (HTMLEditUtils::IsList(maybeListElement)) {
+      if (HTMLEditUtils::IsAnyListElement(maybeListElement)) {
         listElement = maybeListElement;
         break;
       }
@@ -3244,7 +3245,7 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::FindReplaceableTableElement(
 
 bool HTMLEditor::AutoHTMLFragmentBoundariesFixer::IsReplaceableListElement(
     Element& aListElement, nsIContent& aContentMaybeInListElement) const {
-  MOZ_ASSERT(HTMLEditUtils::IsList(&aListElement));
+  MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(&aListElement));
   // Perhaps, this is designed for climbing up the DOM tree from
   // aContentMaybeInListElement to aListElement and making sure that
   // aContentMaybeInListElement itself or its ancestor is an list item.
@@ -3266,7 +3267,7 @@ bool HTMLEditor::AutoHTMLFragmentBoundariesFixer::IsReplaceableListElement(
     for (Element* maybeListElement = element->GetParentElement();
          maybeListElement;
          maybeListElement = maybeListElement->GetParentElement()) {
-      if (HTMLEditUtils::IsList(maybeListElement)) {
+      if (HTMLEditUtils::IsAnyListElement(maybeListElement)) {
         listElement = maybeListElement;
         break;
       }
@@ -3327,7 +3328,7 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
 
   // Find substructure of list or table that must be included in paste.
   Element* replaceElement;
-  if (HTMLEditUtils::IsList(listOrTableElement)) {
+  if (HTMLEditUtils::IsAnyListElement(listOrTableElement)) {
     if (!IsReplaceableListElement(*listOrTableElement,
                                   firstOrLastChildContent)) {
       return;
