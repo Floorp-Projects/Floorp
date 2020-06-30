@@ -54,6 +54,12 @@ enum class MessageDirection {
   eReceiving,
 };
 
+enum class MessagePhase {
+  Endpoint,
+  TransferStart,
+  TransferEnd,
+};
+
 enum class SyncSendError {
   SendSuccess,
   PreviousTimeout,
@@ -465,7 +471,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
   // debugger with all threads paused.
   void DumpInterruptStack(const char* const pfx = "") const;
 
-  void AddProfilerMarker(const IPC::Message* aMessage,
+  void AddProfilerMarker(const IPC::Message& aMessage,
                          MessageDirection aDirection);
 
  private:

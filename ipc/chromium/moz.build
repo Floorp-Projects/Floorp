@@ -28,6 +28,7 @@ UNIFIED_SOURCES += [
     'src/chrome/common/child_thread.cc',
     'src/chrome/common/chrome_switches.cc',
     'src/chrome/common/ipc_channel.cc',
+    'src/chrome/common/ipc_channel_utils.cc',
     'src/chrome/common/ipc_message.cc',
 ]
 
