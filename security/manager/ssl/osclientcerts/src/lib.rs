@@ -500,6 +500,33 @@ extern "C" fn C_SetAttributeValue(
     CKR_FUNCTION_NOT_SUPPORTED
 }
 
+fn trace_attr(prefix: &str, attr: &CK_ATTRIBUTE) {
+    let typ = match unsafe_packed_field_access!(attr.attrType) {
+        CKA_CLASS => "CKA_CLASS".to_string(),
+        CKA_TOKEN => "CKA_TOKEN".to_string(),
+        CKA_LABEL => "CKA_LABEL".to_string(),
+        CKA_ID => "CKA_ID".to_string(),
+        CKA_VALUE => "CKA_VALUE".to_string(),
+        CKA_ISSUER => "CKA_ISSUER".to_string(),
+        CKA_SERIAL_NUMBER => "CKA_SERIAL_NUMBER".to_string(),
+        CKA_SUBJECT => "CKA_SUBJECT".to_string(),
+        CKA_PRIVATE => "CKA_PRIVATE".to_string(),
+        CKA_KEY_TYPE => "CKA_KEY_TYPE".to_string(),
+        CKA_MODULUS => "CKA_MODULUS".to_string(),
+        CKA_EC_PARAMS => "CKA_EC_PARAMS".to_string(),
+        _ => format!("0x{:x}", unsafe_packed_field_access!(attr.attrType)),
+    };
+    let value =
+        unsafe { std::slice::from_raw_parts(attr.pValue as *const u8, attr.ulValueLen as usize) };
+    trace!(
+        "{}CK_ATTRIBUTE {{ attrType: {}, pValue: {:?}, ulValueLen: {} }}",
+        prefix,
+        typ,
+        value,
+        unsafe_packed_field_access!(attr.ulValueLen)
+    );
+}
+
 /// This gets called to initialize a search for objects matching a given list of attributes. This
 /// module implements this by gathering the attributes and passing them to the `ManagerProxy` to
 /// start the search.
@@ -516,7 +543,7 @@ extern "C" fn C_FindObjectsInit(
     trace!("C_FindObjectsInit:");
     for i in 0..ulCount {
         let attr = unsafe { &*pTemplate.offset(i as isize) };
-        trace!("  {:?}", attr);
+        trace_attr("  ", &attr);
         let slice = unsafe {
             std::slice::from_raw_parts(attr.pValue as *const u8, attr.ulValueLen as usize)
         };
