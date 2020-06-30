@@ -82,9 +82,9 @@ add_task(async function testDeveloperButtonPress() {
   );
   let button = document.getElementById("developer-button");
   forceFocus(button);
+  EventUtils.synthesizeKey(" ");
   let view = document.getElementById("PanelUI-developer");
   let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
-  EventUtils.synthesizeKey(" ");
   await focused;
   ok(true, "Focus inside Developer menu after toolbar button pressed");
   let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
