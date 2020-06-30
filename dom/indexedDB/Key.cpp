@@ -308,8 +308,7 @@ IDBResult<Key, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
       const uint8_t typeOffset = *it - eString;
       MOZ_ASSERT((typeOffset % eArray == 0) && (typeOffset / eArray <= 2));
 
-      nsDependentString str;
-      DecodeString(it, end, str);
+      auto str = DecodeString(it, end);
       auto result = res.EncodeLocaleString(str, typeOffset, aLocale);
       if (NS_WARN_IF(!result.Is(Ok))) {
         return result.PropagateNotOk<Key>();
@@ -495,8 +494,7 @@ nsresult Key::DecodeJSValInternal(const EncodedDataType*& aPos,
 
     aVal.setObject(*array);
   } else if (*aPos - aTypeOffset == eString) {
-    nsString key;
-    DecodeString(aPos, aEnd, key);
+    auto key = DecodeString(aPos, aEnd);
     if (!xpc::StringToJsval(aCx, key, aVal)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -624,8 +622,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
 }
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
-    const nsDependentString& aString, uint8_t aTypeOffset,
-    const nsCString& aLocale) {
+    const nsAString& aString, uint8_t aTypeOffset, const nsCString& aLocale) {
   const int length = aString.Length();
   if (length == 0) {
     return Ok();
@@ -751,16 +748,16 @@ void Key::DecodeStringy(const EncodedDataType*& aPos,
 }
 
 // static
-void Key::DecodeString(const EncodedDataType*& aPos,
-                       const EncodedDataType* const aEnd, nsString& aString) {
-  MOZ_ASSERT(aString.IsEmpty(), "aString should be empty on call!");
-
+nsAutoString Key::DecodeString(const EncodedDataType*& aPos,
+                               const EncodedDataType* const aEnd) {
+  nsAutoString res;
   DecodeStringy<eString, char16_t>(
       aPos, aEnd,
-      [&aString](char16_t** out, uint32_t decodedLength) {
-        return 0 != aString.GetMutableData(out, decodedLength);
+      [&res](char16_t** out, uint32_t decodedLength) {
+        return 0 != res.GetMutableData(out, decodedLength);
       },
       [] {});
+  return res;
 }
 
 void Key::EncodeNumber(double aFloat, uint8_t aType) {
