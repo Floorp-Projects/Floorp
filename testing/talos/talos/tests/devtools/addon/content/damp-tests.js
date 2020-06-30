@@ -50,6 +50,12 @@ module.exports = [
     description: "Measure first open toolbox on netmonitor panel",
     cold: true,
   },
+  {
+    name: "accessibility.cold-open",
+    path: "accessibility/cold-open.js",
+    description: "Measure first open toolbox on accessibility panel",
+    cold: true,
+  },
   // Run all tests against "simple" document
   {
     name: "simple.webconsole",

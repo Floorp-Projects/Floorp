@@ -166,6 +166,15 @@ class Accessible extends Component {
     }
   }
 
+  componentDidUpdate(prevProps) {
+    if (
+      this.props?.accessibleFront?.actorID &&
+      this.props.accessibleFront !== prevProps.accessibleFront
+    ) {
+      window.emit(EVENTS.PROPERTIES_UPDATED);
+    }
+  }
+
   componentWillUnmount() {
     window.off(
       EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED,
