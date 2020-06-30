@@ -1531,14 +1531,29 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   }
 
   rv = NS_OK;
-  if (mIPCClosed ||
-      !SendOnStartRequest(
+  bool ipcResult = false;
+  if (!mIPCClosed) {
+    // TODO: For multipart channel, we would deliever everything across
+    // pBackground as well.
+    // TODO: OnStartRequestSent is no longer needed since
+    // OnStartRequest/ODA/OnStopRequest are on the same thread.
+    if (!mIsMultiPart) {
+      ipcResult = mBgParent->OnStartRequest(
           *responseHead, useResponseHead,
           cleanedUpRequest ? cleanedUpRequestHeaders : requestHead->Headers(),
-          args)) {
-    rv = NS_ERROR_UNEXPECTED;
+          args);
+    } else {
+      ipcResult = SendOnStartRequest(
+          *responseHead, useResponseHead,
+          cleanedUpRequest ? cleanedUpRequestHeaders : requestHead->Headers(),
+          args);
+    }
   }
   requestHead->Exit();
+
+  if (mIPCClosed || !ipcResult) {
+    rv = NS_ERROR_UNEXPECTED;
+  }
 
   // OnStartRequest is sent to content process successfully.
   // Notify PHttpBackgroundChannelChild that all following IPC mesasges
