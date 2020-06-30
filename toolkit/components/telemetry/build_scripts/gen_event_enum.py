@@ -19,6 +19,9 @@ banner = """/* This file is auto-generated, see gen_event_enum.py.  */
 file_header = """\
 #ifndef mozilla_TelemetryEventEnums_h
 #define mozilla_TelemetryEventEnums_h
+
+#include <stdint.h>
+
 namespace mozilla {
 namespace Telemetry {
 enum class EventID : uint32_t {\
