@@ -237,6 +237,38 @@ var tests = [
     copyVal: "<example.com/би>ография",
     copyExpected: "http://example.com/би",
   },
+  {
+    setup() {
+      // Setup a valid intranet url that resolves but is not yet known.
+      const proxyService = Cc[
+        "@mozilla.org/network/protocol-proxy-service;1"
+      ].getService(Ci.nsIProtocolProxyService);
+      let proxyInfo = proxyService.newProxyInfo(
+        "http",
+        "localhost",
+        8888,
+        "",
+        "",
+        0,
+        4096,
+        null
+      );
+      const proxyFilter = {
+        applyFilter(channel, defaultProxyInfo, callback) {
+          callback.onProxyFilterResult(
+            channel.URI.host === "mytest" ? proxyInfo : defaultProxyInfo
+          );
+        },
+      };
+      proxyService.registerChannelFilter(proxyFilter, 0);
+      registerCleanupFunction(() => {
+        proxyService.unregisterChannelFilter(proxyFilter);
+      });
+    },
+    loadURL: "http://mytest/",
+    expectedURL: "mytest",
+    copyExpected: "http://mytest",
+  },
 ];
 
 function nextTest() {
