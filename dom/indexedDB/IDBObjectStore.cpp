@@ -67,10 +67,9 @@ IndexUpdateInfo MakeIndexUpdateInfo(const int64_t aIndexID, const Key& aKey,
   if (!aLocale.IsEmpty()) {
     auto result =
         aKey.ToLocaleAwareKey(indexUpdateInfo.localizedValue(), aLocale);
-    if (result.Is(Invalid)) {
-      aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    } else if (result.Is(indexedDB::Exception)) {
-      *aRv = std::move(result.AsException());
+    if (!result.Is(Ok)) {
+      *aRv = result.ExtractErrorResult(
+          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR>);
     }
   }
   return indexUpdateInfo;
@@ -675,11 +674,8 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
     // Out-of-line keys must be passed in.
     auto result = aKey.SetFromJSVal(aCx, aKeyVal);
     if (!result.Is(Ok)) {
-      if (result.Is(Invalid)) {
-        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-      } else {
-        aRv = std::move(result.AsException());
-      }
+      aRv = result.ExtractErrorResult(
+          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
       return;
     }
   } else if (!isAutoIncrement) {
