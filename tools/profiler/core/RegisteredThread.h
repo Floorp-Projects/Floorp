@@ -7,6 +7,7 @@
 #ifndef RegisteredThread_h
 #define RegisteredThread_h
 
+#include "GeckoProfiler.h"
 #include "platform.h"
 #include "ThreadInfo.h"
 
@@ -15,6 +16,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "nsIEventTarget.h"
+#include "nsIThread.h"
 
 // This class contains the state for a single thread that is accessible without
 // protection from gPSMutex in platform.cpp. Because there is no external
@@ -25,7 +27,7 @@ class RacyRegisteredThread final {
  public:
   explicit RacyRegisteredThread(int aThreadId)
       : mProfilingStackOwner(
-            mozilla::MakeNotNull<RefPtr<class ProfilingStackOwner>>()),
+            mozilla::MakeNotNull<RefPtr<mozilla::ProfilingStackOwner>>()),
         mThreadId(aThreadId),
         mSleep(AWAKE),
         mIsBeingProfiled(false) {
@@ -88,12 +90,12 @@ class RacyRegisteredThread final {
     return mProfilingStackOwner->ProfilingStack();
   }
 
-  class ProfilingStackOwner& ProfilingStackOwner() {
+  mozilla::ProfilingStackOwner& ProfilingStackOwner() {
     return *mProfilingStackOwner;
   }
 
  private:
-  mozilla::NotNull<RefPtr<class ProfilingStackOwner>> mProfilingStackOwner;
+  mozilla::NotNull<RefPtr<mozilla::ProfilingStackOwner>> mProfilingStackOwner;
 
   // mThreadId contains the thread ID of the current thread. It is safe to read
   // this from multiple threads concurrently, as it will never be mutated.
@@ -167,8 +169,9 @@ class RegisteredThread final {
   // aRunning is the time the event has been running.  If no event is
   // running these will both be TimeDuration() (i.e. 0).  Both are out
   // params, and are always set.  Their initial value is discarded.
-  void GetRunningEventDelay(const TimeStamp& aNow, TimeDuration& aDelay,
-                            TimeDuration& aRunning);
+  void GetRunningEventDelay(const mozilla::TimeStamp& aNow,
+                            mozilla::TimeDuration& aDelay,
+                            mozilla::TimeDuration& aRunning);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
