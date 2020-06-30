@@ -7,14 +7,13 @@ Gecko-based browsers.
 
 This program provides the HTTP API described by the `WebDriver protocol`_.
 to communicate with Gecko browsers, such as Firefox.  It translates calls
-into the `Firefox remote protocol`_ by acting as a proxy between the local-
+into the :ref:`Firefox remote protocol <Protocol>` by acting as a proxy between the local-
 and remote ends.
 
 You can consult the `change log`_ for a record of all notable changes
 to the program.  Releases_ are made available on GitHub.
 
 .. _WebDriver protocol: https://w3c.github.io/webdriver/#protocol
-.. _Firefox remote protocol: https://firefox-source-docs.mozilla.org/testing/marionette/Protocol.html
 .. _change log: https://github.com/mozilla/geckodriver/releases
 .. _Releases: https://github.com/mozilla/geckodriver/releases
 
