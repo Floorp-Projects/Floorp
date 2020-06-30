@@ -1882,6 +1882,13 @@ pref("doh-rollout.profileCreationThreshold", "1572476400000");
 // This pref is controlled by a Normandy rollout so we don't overload providers.
 pref("doh-rollout.trr-selection.enabled", false);
 
+// DoH Rollout: whether to enable automatic steering to provider endpoints.
+// This pref is also controlled by a Normandy rollout.
+pref("doh-rollout.provider-steering.enabled", false);
+
+// DoH Rollout: provider details for automatic steering.
+pref("doh-rollout.provider-steering.provider-list", "[{ \"name\": \"comcast\", \"canonicalName\": \"doh-discovery.xfinity.com\", \"uri\": \"https://doh.xfinity.com/dns-query\" }]");
+
 // URL for Learn More link for browser error logging in preferences
 pref("browser.chrome.errorReporter.infoURL",
      "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/nightly-error-collection");
