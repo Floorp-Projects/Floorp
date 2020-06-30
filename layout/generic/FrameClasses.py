@@ -106,7 +106,7 @@ FRAME_CLASSES = [
     Frame("SVGFEImageFrame", "SVGFEImage", LEAF),
     Frame("SVGFELeafFrame", "SVGFELeaf", LEAF),
     Frame("SVGFEUnstyledLeafFrame", "SVGFEUnstyledLeaf", LEAF),
-    Frame("nsSVGFilterFrame", "SVGFilter", NOT_LEAF),
+    Frame("SVGFilterFrame", "SVGFilter", NOT_LEAF),
     Frame("SVGForeignObjectFrame", "SVGForeignObject", NOT_LEAF),
     Frame("SVGGenericContainerFrame", "SVGGenericContainer", NOT_LEAF),
     Frame("SVGGeometryFrame", "SVGGeometry", LEAF),

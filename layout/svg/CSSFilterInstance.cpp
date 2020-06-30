@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsCSSFilterInstance.h"
+#include "CSSFilterInstance.h"
 
 // Keep others in (case-insensitive) order:
 #include "gfx2DGlue.h"
@@ -14,8 +14,9 @@
 #include "nsStyleStruct.h"
 #include "nsTArray.h"
 
-using namespace mozilla;
 using namespace mozilla::gfx;
+
+namespace mozilla {
 
 static float ClampFactor(float aFactor) {
   if (aFactor > 1) {
@@ -29,7 +30,7 @@ static float ClampFactor(float aFactor) {
   return aFactor;
 }
 
-nsCSSFilterInstance::nsCSSFilterInstance(
+CSSFilterInstance::CSSFilterInstance(
     const StyleFilter& aFilter, nscolor aShadowFallbackColor,
     const nsIntRect& aTargetBoundsInFilterSpace,
     const gfxMatrix& aFrameSpaceInCSSPxToFilterSpaceTransform)
@@ -39,7 +40,7 @@ nsCSSFilterInstance::nsCSSFilterInstance(
       mFrameSpaceInCSSPxToFilterSpaceTransform(
           aFrameSpaceInCSSPxToFilterSpaceTransform) {}
 
-nsresult nsCSSFilterInstance::BuildPrimitives(
+nsresult CSSFilterInstance::BuildPrimitives(
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     bool aInputIsTainted) {
   FilterPrimitiveDescription descr =
@@ -94,7 +95,7 @@ nsresult nsCSSFilterInstance::BuildPrimitives(
   return NS_OK;
 }
 
-FilterPrimitiveDescription nsCSSFilterInstance::CreatePrimitiveDescription(
+FilterPrimitiveDescription CSSFilterInstance::CreatePrimitiveDescription(
     const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     bool aInputIsTainted) {
   FilterPrimitiveDescription descr;
@@ -107,7 +108,7 @@ FilterPrimitiveDescription nsCSSFilterInstance::CreatePrimitiveDescription(
   return descr;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForBlur(
+nsresult CSSFilterInstance::SetAttributesForBlur(
     FilterPrimitiveDescription& aDescr) {
   const Length& radiusInFrameSpace = mFilter.AsBlur();
   Size radiusInFilterSpace =
@@ -118,7 +119,7 @@ nsresult nsCSSFilterInstance::SetAttributesForBlur(
   return NS_OK;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForBrightness(
+nsresult CSSFilterInstance::SetAttributesForBrightness(
     FilterPrimitiveDescription& aDescr) {
   float value = mFilter.AsBrightness();
   float intercept = 0.0f;
@@ -139,7 +140,7 @@ nsresult nsCSSFilterInstance::SetAttributesForBrightness(
   return NS_OK;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForContrast(
+nsresult CSSFilterInstance::SetAttributesForContrast(
     FilterPrimitiveDescription& aDescr) {
   float value = mFilter.AsContrast();
   float intercept = -(0.5 * value) + 0.5;
@@ -160,7 +161,7 @@ nsresult nsCSSFilterInstance::SetAttributesForContrast(
   return NS_OK;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForDropShadow(
+nsresult CSSFilterInstance::SetAttributesForDropShadow(
     FilterPrimitiveDescription& aDescr) {
   const auto& shadow = mFilter.AsDropShadow();
 
@@ -183,7 +184,7 @@ nsresult nsCSSFilterInstance::SetAttributesForDropShadow(
   return NS_OK;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForGrayscale(
+nsresult CSSFilterInstance::SetAttributesForGrayscale(
     FilterPrimitiveDescription& aDescr) {
   ColorMatrixAttributes atts;
   // Set color matrix type.
@@ -197,7 +198,7 @@ nsresult nsCSSFilterInstance::SetAttributesForGrayscale(
   return NS_OK;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForHueRotate(
+nsresult CSSFilterInstance::SetAttributesForHueRotate(
     FilterPrimitiveDescription& aDescr) {
   ColorMatrixAttributes atts;
   // Set color matrix type.
@@ -211,7 +212,7 @@ nsresult nsCSSFilterInstance::SetAttributesForHueRotate(
   return NS_OK;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForInvert(
+nsresult CSSFilterInstance::SetAttributesForInvert(
     FilterPrimitiveDescription& aDescr) {
   ComponentTransferAttributes atts;
   float value = ClampFactor(mFilter.AsInvert());
@@ -233,7 +234,7 @@ nsresult nsCSSFilterInstance::SetAttributesForInvert(
   return NS_OK;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForOpacity(
+nsresult CSSFilterInstance::SetAttributesForOpacity(
     FilterPrimitiveDescription& aDescr) {
   OpacityAttributes atts;
   float value = ClampFactor(mFilter.AsOpacity());
@@ -243,7 +244,7 @@ nsresult nsCSSFilterInstance::SetAttributesForOpacity(
   return NS_OK;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForSaturate(
+nsresult CSSFilterInstance::SetAttributesForSaturate(
     FilterPrimitiveDescription& aDescr) {
   ColorMatrixAttributes atts;
   // Set color matrix type.
@@ -257,7 +258,7 @@ nsresult nsCSSFilterInstance::SetAttributesForSaturate(
   return NS_OK;
 }
 
-nsresult nsCSSFilterInstance::SetAttributesForSepia(
+nsresult CSSFilterInstance::SetAttributesForSepia(
     FilterPrimitiveDescription& aDescr) {
   ColorMatrixAttributes atts;
   // Set color matrix type.
@@ -271,7 +272,7 @@ nsresult nsCSSFilterInstance::SetAttributesForSepia(
   return NS_OK;
 }
 
-Size nsCSSFilterInstance::BlurRadiusToFilterSpace(nscoord aRadiusInFrameSpace) {
+Size CSSFilterInstance::BlurRadiusToFilterSpace(nscoord aRadiusInFrameSpace) {
   float radiusInFrameSpaceInCSSPx =
       nsPresContext::AppUnitsToFloatCSSPixels(aRadiusInFrameSpace);
 
@@ -300,8 +301,8 @@ Size nsCSSFilterInstance::BlurRadiusToFilterSpace(nscoord aRadiusInFrameSpace) {
   return radiusInFilterSpace;
 }
 
-IntPoint nsCSSFilterInstance::OffsetToFilterSpace(
-    nscoord aXOffsetInFrameSpace, nscoord aYOffsetInFrameSpace) {
+IntPoint CSSFilterInstance::OffsetToFilterSpace(nscoord aXOffsetInFrameSpace,
+                                                nscoord aYOffsetInFrameSpace) {
   gfxPoint offsetInFilterSpace(
       nsPresContext::AppUnitsToFloatCSSPixels(aXOffsetInFrameSpace),
       nsPresContext::AppUnitsToFloatCSSPixels(aYOffsetInFrameSpace));
@@ -316,12 +317,12 @@ IntPoint nsCSSFilterInstance::OffsetToFilterSpace(
                   int32_t(offsetInFilterSpace.y));
 }
 
-sRGBColor nsCSSFilterInstance::ToAttributeColor(nscolor aColor) {
+sRGBColor CSSFilterInstance::ToAttributeColor(nscolor aColor) {
   return sRGBColor(NS_GET_R(aColor) / 255.0, NS_GET_G(aColor) / 255.0,
                    NS_GET_B(aColor) / 255.0, NS_GET_A(aColor) / 255.0);
 }
 
-int32_t nsCSSFilterInstance::GetLastResultIndex(
+int32_t CSSFilterInstance::GetLastResultIndex(
     const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs) {
   uint32_t numPrimitiveDescrs = aPrimitiveDescrs.Length();
   return !numPrimitiveDescrs
@@ -329,7 +330,7 @@ int32_t nsCSSFilterInstance::GetLastResultIndex(
              : numPrimitiveDescrs - 1;
 }
 
-void nsCSSFilterInstance::SetBounds(
+void CSSFilterInstance::SetBounds(
     FilterPrimitiveDescription& aDescr,
     const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs) {
   int32_t inputIndex = GetLastResultIndex(aPrimitiveDescrs);
@@ -347,3 +348,5 @@ void nsCSSFilterInstance::SetBounds(
   aDescr.SetPrimitiveSubregion(outputBounds);
   aDescr.SetFilterSpaceBounds(outputBounds);
 }
+
+}  // namespace mozilla

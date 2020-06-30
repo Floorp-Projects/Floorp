@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/SVGFETileElement.h"
 #include "mozilla/dom/SVGFETileElementBinding.h"
-#include "nsSVGFilterInstance.h"
+#include "mozilla/SVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FETile)
 
@@ -41,7 +41,7 @@ void SVGFETileElement::GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) {
 // SVGElement methods
 
 FilterPrimitiveDescription SVGFETileElement::GetPrimitiveDescription(
-    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   return FilterPrimitiveDescription(AsVariant(TileAttributes()));

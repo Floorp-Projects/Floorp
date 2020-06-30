@@ -12,21 +12,21 @@
 #include "SVGAnimatedString.h"
 #include "mozilla/dom/SVGElement.h"
 
-class nsSVGFilterFrame;
-class nsSVGFilterInstance;
-
 nsresult NS_NewSVGFilterElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
+class SVGFilterFrame;
+class SVGFilterInstance;
+
 namespace dom {
 class DOMSVGAnimatedLength;
 
 typedef SVGElement SVGFilterElementBase;
 
 class SVGFilterElement : public SVGFilterElementBase {
-  friend class ::nsSVGFilterFrame;
-  friend class ::nsSVGFilterInstance;
+  friend class mozilla::SVGFilterFrame;
+  friend class mozilla::SVGFilterInstance;
 
  protected:
   friend nsresult(::NS_NewSVGFilterElement(

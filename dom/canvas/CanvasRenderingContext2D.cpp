@@ -81,6 +81,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/FilterInstance.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/Tools.h"
@@ -107,7 +108,6 @@
 #include "mozilla/dom/TextMetrics.h"
 #include "mozilla/FloatingPoint.h"
 #include "nsGlobalWindow.h"
-#include "nsFilterInstance.h"
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
 #include "Units.h"
@@ -2394,7 +2394,7 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
 };
 
 // The filter might reference an SVG filter that is declared inside this
-// document. Flush frames so that we'll have an nsSVGFilterFrame to work
+// document. Flush frames so that we'll have a SVGFilterFrame to work
 // with.
 static bool FiltersNeedFrameFlush(Span<const StyleFilter> aFilters) {
   for (const auto& filter : aFilters) {
@@ -2428,7 +2428,7 @@ void CanvasRenderingContext2D::UpdateFilter() {
   const bool sourceGraphicIsTainted =
       mCanvasElement && mCanvasElement->IsWriteOnly();
 
-  CurrentState().filter = nsFilterInstance::GetFilterDescription(
+  CurrentState().filter = FilterInstance::GetFilterDescription(
       mCanvasElement, CurrentState().filterChain.AsSpan(),
       sourceGraphicIsTainted,
       CanvasUserSpaceMetrics(

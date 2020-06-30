@@ -6,8 +6,8 @@
 
 #include "mozilla/dom/SVGFEDropShadowElement.h"
 #include "mozilla/dom/SVGFEDropShadowElementBinding.h"
+#include "mozilla/SVGFilterInstance.h"
 #include "nsIFrame.h"
-#include "nsSVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEDropShadow)
 
@@ -67,7 +67,7 @@ void SVGFEDropShadowElement::SetStdDeviation(float stdDeviationX,
 }
 
 FilterPrimitiveDescription SVGFEDropShadowElement::GetPrimitiveDescription(
-    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   float stdX = aInstance->GetPrimitiveNumber(SVGContentUtils::X,

@@ -6,11 +6,11 @@
 
 #include "mozilla/dom/SVGFEConvolveMatrixElement.h"
 #include "mozilla/dom/SVGFEConvolveMatrixElementBinding.h"
+#include "mozilla/SVGFilterInstance.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "DOMSVGAnimatedNumberList.h"
 #include "nsSVGUtils.h"
-#include "nsSVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEConvolveMatrix)
 
@@ -126,7 +126,7 @@ void SVGFEConvolveMatrixElement::GetSourceImageNames(
 }
 
 FilterPrimitiveDescription SVGFEConvolveMatrixElement::GetPrimitiveDescription(
-    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   FilterPrimitiveDescription failureDescription;

@@ -33,8 +33,7 @@ class SVGFESpotLightElement : public SVGFESpotLightElementBase {
 
  public:
   virtual mozilla::gfx::LightType ComputeLightAttributes(
-      nsSVGFilterInstance* aInstance,
-      nsTArray<float>& aFloatAttributes) override;
+      SVGFilterInstance* aInstance, nsTArray<float>& aFloatAttributes) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
 

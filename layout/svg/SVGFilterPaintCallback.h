@@ -12,9 +12,11 @@
 class nsIFrame;
 class gfxContext;
 
-class nsSVGFilterPaintCallback {
+namespace mozilla {
+
+class SVGFilterPaintCallback {
  public:
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+  typedef image::imgDrawingParams imgDrawingParams;
 
   /**
    * Paint the frame contents.
@@ -32,5 +34,7 @@ class nsSVGFilterPaintCallback {
                      const gfxMatrix& aTransform, const nsIntRect* aDirtyRect,
                      imgDrawingParams& aImgParams) = 0;
 };
+
+}  // namespace mozilla
 
 #endif

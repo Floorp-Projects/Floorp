@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/SVGFEMorphologyElement.h"
 #include "mozilla/dom/SVGFEMorphologyElementBinding.h"
-#include "nsSVGFilterInstance.h"
+#include "mozilla/SVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEMorphology)
 
@@ -73,7 +73,7 @@ void SVGFEMorphologyElement::GetSourceImageNames(
 #define MORPHOLOGY_EPSILON 0.0001
 
 void SVGFEMorphologyElement::GetRXY(int32_t* aRX, int32_t* aRY,
-                                    const nsSVGFilterInstance& aInstance) {
+                                    const SVGFilterInstance& aInstance) {
   // Subtract an epsilon here because we don't want a value that's just
   // slightly larger than an integer to round up to the next integer; it's
   // probably meant to be the integer it's close to, modulo machine precision
@@ -89,7 +89,7 @@ void SVGFEMorphologyElement::GetRXY(int32_t* aRX, int32_t* aRY,
 }
 
 FilterPrimitiveDescription SVGFEMorphologyElement::GetPrimitiveDescription(
-    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   int32_t rx, ry;

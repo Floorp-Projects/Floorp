@@ -16,15 +16,15 @@ if CONFIG['ENABLE_TESTS']:
 ]
 
 EXPORTS += [
-    'nsFilterInstance.h',
     'nsSVGDisplayableFrame.h',
-    'nsSVGFilterInstance.h',
     'nsSVGIntegrationUtils.h',
     'nsSVGUtils.h',
 ]
 
 EXPORTS.mozilla += [
+    'FilterInstance.h',
     'SVGContextPaint.h',
+    'SVGFilterInstance.h',
     'SVGForeignObjectFrame.h',
     'SVGGeometryFrame.h',
     'SVGImageContext.h',
@@ -36,13 +36,11 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    'CSSFilterInstance.cpp',
+    'FilterInstance.cpp',
     'nsCSSClipPathInstance.cpp',
-    'nsCSSFilterInstance.cpp',
-    'nsFilterInstance.cpp',
     'nsSVGClipPathFrame.cpp',
     'nsSVGContainerFrame.cpp',
-    'nsSVGFilterFrame.cpp',
-    'nsSVGFilterInstance.cpp',
     'nsSVGGradientFrame.cpp',
     'nsSVGIntegrationUtils.cpp',
     'nsSVGOuterSVGFrame.cpp',
@@ -56,6 +54,8 @@ UNIFIED_SOURCES += [
     'SVGFEImageFrame.cpp',
     'SVGFELeafFrame.cpp',
     'SVGFEUnstyledLeafFrame.cpp',
+    'SVGFilterFrame.cpp',
+    'SVGFilterInstance.cpp',
     'SVGForeignObjectFrame.cpp',
     'SVGGenericContainerFrame.cpp',
     'SVGGeometryFrame.cpp',

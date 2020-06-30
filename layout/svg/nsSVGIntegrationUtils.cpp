@@ -12,24 +12,24 @@
 
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSClipPathInstance.h"
+#include "nsCSSRendering.h"
 #include "nsDisplayList.h"
-#include "nsFilterInstance.h"
 #include "nsLayoutUtils.h"
 #include "gfxContext.h"
 #include "nsSVGClipPathFrame.h"
-#include "SVGObserverUtils.h"
-#include "SVGElement.h"
-#include "nsSVGFilterPaintCallback.h"
+#include "SVGFilterPaintCallback.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGUtils.h"
 #include "FrameLayerBuilder.h"
 #include "BasicLayers.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "nsCSSRendering.h"
+#include "mozilla/FilterInstance.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/SVGElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -317,7 +317,7 @@ nsRect nsSVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(
   overrideBBox.RoundOut();
 
   nsRect overflowRect =
-      nsFilterInstance::GetPostFilterBounds(firstFrame, &overrideBBox);
+      FilterInstance::GetPostFilterBounds(firstFrame, &overrideBBox);
 
   // Return overflowRect relative to aFrame, rather than "user space":
   return overflowRect -
@@ -358,7 +358,7 @@ nsIntRegion nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(
   // Adjust the dirty area for effects, and shift it back to being relative to
   // the reference frame.
   nsRegion result =
-      nsFilterInstance::GetPostFilterDirtyArea(firstFrame, preEffectsRegion)
+      FilterInstance::GetPostFilterDirtyArea(firstFrame, preEffectsRegion)
           .MovedBy(-toBoundingBox);
   // Return the result, in pixels relative to the reference frame.
   return result.ToOutsidePixels(appUnitsPerDevPixel);
@@ -385,7 +385,7 @@ nsRect nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(
   nsRect postEffectsRect = aDirtyRect + toUserSpace;
 
   // Return ther result, relative to aFrame, not in user space:
-  return nsFilterInstance::GetPreFilterNeededArea(firstFrame, postEffectsRect)
+  return FilterInstance::GetPreFilterNeededArea(firstFrame, postEffectsRect)
              .GetBounds() -
          toUserSpace;
 }
@@ -408,7 +408,7 @@ bool nsSVGIntegrationUtils::HitTestFrameForEffects(nsIFrame* aFrame,
   return nsSVGUtils::HitTestClip(firstFrame, userSpacePt);
 }
 
-class RegularFramePaintCallback : public nsSVGFilterPaintCallback {
+class RegularFramePaintCallback : public SVGFilterPaintCallback {
  public:
   RegularFramePaintCallback(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
@@ -1113,8 +1113,8 @@ void nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams) {
                                      offsets.offsetToUserSpaceInDevPx);
   nsRegion dirtyRegion = aParams.dirtyRect - offsets.offsetToBoundingBox;
 
-  nsFilterInstance::PaintFilteredFrame(frame, &context, &callback, &dirtyRegion,
-                                       aParams.imgParams, opacity);
+  FilterInstance::PaintFilteredFrame(frame, &context, &callback, &dirtyRegion,
+                                     aParams.imgParams, opacity);
 }
 
 bool nsSVGIntegrationUtils::CreateWebRenderCSSFilters(
@@ -1202,8 +1202,8 @@ bool nsSVGIntegrationUtils::CreateWebRenderCSSFilters(
 bool nsSVGIntegrationUtils::BuildWebRenderFilters(
     nsIFrame* aFilteredFrame, Span<const StyleFilter> aFilters,
     WrFiltersHolder& aWrFilters, Maybe<nsRect>& aPostFilterClip) {
-  return nsFilterInstance::BuildWebRenderFilters(aFilteredFrame, aFilters,
-                                                 aWrFilters, aPostFilterClip);
+  return FilterInstance::BuildWebRenderFilters(aFilteredFrame, aFilters,
+                                               aWrFilters, aPostFilterClip);
 }
 
 bool nsSVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(
