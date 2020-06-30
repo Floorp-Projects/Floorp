@@ -346,6 +346,14 @@ const walkerSpec = generateActorSpec({
         node: RetVal("nullable:domnode"),
       },
     },
+    hasAccessibilityProperties: {
+      request: {
+        node: Arg(0, "nullable:domnode"),
+      },
+      response: {
+        value: RetVal("boolean"),
+      },
+    },
     setMutationBreakpoints: {
       request: {
         node: Arg(0, "nullable:domnode"),

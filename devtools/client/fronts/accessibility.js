@@ -192,6 +192,7 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     const accessibilityFront = await documentNodeFront.targetFront.getFront(
       "accessibility"
     );
+    await accessibilityFront.bootstrap();
 
     return accessibilityFront.accessibleWalkerFront.children();
   }
@@ -329,6 +330,7 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
     );
     const frameNodeFront = (await domWalkerFront.getRootNode()).parentNode();
     const accessibilityFront = await parentTarget.getFront("accessibility");
+    await accessibilityFront.bootstrap();
     const { accessibleWalkerFront } = accessibilityFront;
     const frameAccessibleFront = await accessibleWalkerFront.getAccessibleFor(
       frameNodeFront
@@ -441,11 +443,20 @@ class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
     this.formAttributeName = "accessibilityActor";
   }
 
-  async initialize() {
+  // We purposefully do not use initialize here and separate accessiblity
+  // front/actor initialization into two parts: getting the front from target
+  // and then separately bootstrapping the front. The reason for that is because
+  // accessibility front is always created as part of the accessibility panel
+  // startup when the toolbox is opened. If initialize was used, in rare cases,
+  // when the toolbox is destroyed before the accessibility tool startup is
+  // complete, the toolbox destruction would hang because the accessibility
+  // front will indefinitely wait for its initialize method to complete before
+  // being destroyed. With custom bootstrapping the front will be destroyed
+  // correctly.
+  async bootstrap() {
     this.accessibleWalkerFront = await super.getWalker();
     this.simulatorFront = await super.getSimulator();
-    const { enabled } = await super.bootstrap();
-    this.enabled = enabled;
+    ({ enabled: this.enabled } = await super.bootstrap());
   }
 
   init() {
