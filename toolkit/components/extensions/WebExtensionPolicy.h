@@ -142,8 +142,6 @@ class WebExtensionPolicy final : public nsISupports,
   void GetReadyPromise(JSContext* aCx, JS::MutableHandleObject aResult) const;
   dom::Promise* ReadyPromise() const { return mReadyPromise; }
 
-  uint64_t GetBrowsingContextGroupId() const;
-
   static void GetActiveExtensions(
       dom::GlobalObject& aGlobal,
       nsTArray<RefPtr<WebExtensionPolicy>>& aResults);
@@ -188,8 +186,6 @@ class WebExtensionPolicy final : public nsISupports,
   nsString mName;
   nsString mExtensionPageCSP;
   nsString mContentScriptCSP;
-
-  uint64_t mBrowsingContextGroupId = 0;
 
   bool mActive = false;
   bool mAllowPrivateBrowsingByDefault = true;
