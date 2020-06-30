@@ -69,6 +69,9 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
     columnNumber: column,
     arguments: value,
     level,
+    // The 'prepareConsoleMessageForRemote' method in webconsoleActor expects internal source ID,
+    // thus we can't set sourceId directly to sourceActorID.
+    sourceId: sourceActor.internalSourceId,
   };
 
   const targetActor = threadActor._parent;
