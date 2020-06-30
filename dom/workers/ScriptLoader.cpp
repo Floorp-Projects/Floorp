@@ -414,10 +414,10 @@ class CacheCreator final : public PromiseNativeHandler {
     AssertIsOnMainThread();
   }
 
-  void AddLoader(CacheScriptLoader* aLoader) {
+  void AddLoader(MovingNotNull<RefPtr<CacheScriptLoader>> aLoader) {
     AssertIsOnMainThread();
     MOZ_ASSERT(!mCacheStorage);
-    mLoaders.AppendElement(aLoader);
+    mLoaders.AppendElement(std::move(aLoader));
   }
 
   virtual void ResolvedCallback(JSContext* aCx,
@@ -453,7 +453,7 @@ class CacheCreator final : public PromiseNativeHandler {
   RefPtr<Cache> mCache;
   RefPtr<CacheStorage> mCacheStorage;
   nsCOMPtr<nsIGlobalObject> mSandboxGlobalObject;
-  nsTArray<RefPtr<CacheScriptLoader>> mLoaders;
+  nsTArray<NotNull<RefPtr<CacheScriptLoader>>> mLoaders;
 
   nsString mCacheName;
   OriginAttributes mOriginAttributes;
@@ -957,9 +957,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     mCacheCreator = new CacheCreator(mWorkerPrivate);
 
     for (ScriptLoadInfo& loadInfo : mLoadInfos) {
-      RefPtr<CacheScriptLoader> loader = new CacheScriptLoader(
-          mWorkerPrivate, loadInfo, IsMainWorkerScript(), this);
-      mCacheCreator->AddLoader(loader);
+      mCacheCreator->AddLoader(MakeNotNull<RefPtr<CacheScriptLoader>>(
+          mWorkerPrivate, loadInfo, IsMainWorkerScript(), this));
     }
 
     // The worker may have a null principal on first load, but in that case its
@@ -1687,7 +1686,6 @@ void CacheCreator::ResolvedCallback(JSContext* aCx,
   // If the worker is canceled, CancelMainThread() will have cleared the
   // loaders via DeleteCache().
   for (uint32_t i = 0, len = mLoaders.Length(); i < len; ++i) {
-    MOZ_DIAGNOSTIC_ASSERT(mLoaders[i]);
     mLoaders[i]->Load(cache);
   }
 }
