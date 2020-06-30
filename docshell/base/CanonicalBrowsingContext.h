@@ -137,6 +137,15 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void LoadURI(const nsAString& aURI, const LoadURIOptions& aOptions,
                ErrorResult& aError);
 
+  void GoBack(const Optional<int32_t>& aCancelContentJSEpoch,
+              bool aRequireUserInteraction);
+  void GoForward(const Optional<int32_t>& aCancelContentJSEpoch,
+                 bool aRequireUserInteraction);
+  void GoToIndex(int32_t aIndex,
+                 const Optional<int32_t>& aCancelContentJSEpoch);
+  void Reload(uint32_t aReloadFlags);
+  void Stop(uint32_t aStopFlags);
+
   // Internal method to change which process a BrowsingContext is being loaded
   // in. The returned promise will resolve when the process switch is completed.
   //

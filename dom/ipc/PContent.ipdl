@@ -883,6 +883,12 @@ child:
 
     async DisplayLoadError(MaybeDiscardedBrowsingContext aContext, nsString aURI);
 
+    async GoBack(MaybeDiscardedBrowsingContext aContext, int32_t? aCancelContentJSEpoch, bool aRequireUserInteraction);
+    async GoForward(MaybeDiscardedBrowsingContext aContext, int32_t? aCancelContentJSEpoch, bool aRequireUserInteraction);
+    async GoToIndex(MaybeDiscardedBrowsingContext aContext, int32_t aIndex, int32_t? aCancelContentJSEpoch);
+    async Reload(MaybeDiscardedBrowsingContext aContext, uint32_t aReloadFlags);
+    async StopLoad(MaybeDiscardedBrowsingContext aContext, uint32_t aStopFlags);
+
     async OnAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
                            nsCString aTrackingOrigin,
                            uint32_t aCookieBehavior,

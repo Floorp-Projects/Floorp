@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cu, Cr, components: Components } = require("chrome");
+const { Cc, Ci, Cr, components: Components } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 
@@ -35,14 +35,14 @@ BrowserElementWebNavigation.prototype = {
     const cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_BACK
     );
-    this._sendMessage("WebNavigation:GoBack", { cancelContentJSEpoch });
+    this._browser.browsingContext.goBack(cancelContentJSEpoch);
   },
 
   goForward() {
     const cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_FORWARD
     );
-    this._sendMessage("WebNavigation:GoForward", { cancelContentJSEpoch });
+    this._browser.browsingContext.goForward(cancelContentJSEpoch);
   },
 
   maybeCancelContentJSExecution(navigationType, options = {}) {
@@ -56,7 +56,7 @@ BrowserElementWebNavigation.prototype = {
 
   gotoIndex(index) {
     // No equivalent in the current BrowserElement API
-    this._sendMessage("WebNavigation:GotoIndex", { index });
+    this._browser.browsingContext.gotoIndex(index);
   },
 
   loadURI(uri, flags, referrer, postData, headers) {
@@ -111,8 +111,7 @@ BrowserElementWebNavigation.prototype = {
   },
 
   stop(flags) {
-    // No equivalent in the current BrowserElement API
-    this._sendMessage("WebNavigation:Stop", { flags });
+    this._browser.browsingContext.stop(flags);
   },
 
   get document() {
@@ -139,21 +138,6 @@ BrowserElementWebNavigation.prototype = {
   },
   set sessionHistory(value) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  },
-
-  _sendMessage(message, data) {
-    try {
-      if (this._browser.frameLoader) {
-        const windowGlobal = this._browser.browsingContext.currentWindowGlobal;
-        if (windowGlobal) {
-          windowGlobal
-            .getActor("WebNavigation")
-            .sendAsyncMessage(message, data);
-        }
-      }
-    } catch (e) {
-      Cu.reportError(e);
-    }
   },
 
   swapBrowser(browser) {
