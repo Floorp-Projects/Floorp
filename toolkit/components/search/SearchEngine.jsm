@@ -781,6 +781,67 @@ class EngineURL {
  * SearchEngine represents WebExtension based search engines.
  */
 class SearchEngine {
+  QueryInterface = ChromeUtils.generateQI([Ci.nsISearchEngine]);
+  // Data set by the user.
+  _metaData = {};
+  // The data describing the engine, in the form of an XML document element.
+  _data = null;
+  // Anonymized path of where we initially loaded the engine from.
+  // This will stay null for engines installed in the profile before we moved
+  // to a JSON storage.
+  _loadPath = null;
+  // The engine's description
+  _description = "";
+  // Used to store the engine to replace, if we're an update to an existing
+  // engine.
+  _engineToUpdate = null;
+  // Set to true if the engine has a preferred icon (an icon that should not be
+  // overridden by a non-preferred icon).
+  _hasPreferredIcon = null;
+  // The engine's name.
+  _name = null;
+  // The name of the charset used to submit the search terms.
+  _queryCharset = null;
+  // The engine's raw SearchForm value (URL string pointing to a search form).
+  __searchForm = null;
+  // Whether to obtain user confirmation before adding the engine. This is only
+  // used when the engine is first added to the list.
+  _confirm = null;
+  // Whether to set this as the current engine as soon as it is loaded.  This
+  // is only used when the engine is first added to the list.
+  _useNow = null;
+  // A function to be invoked when this engine object's addition completes (or
+  // fails). Only used for installation via addEngine.
+  _installCallback = null;
+  // The number of days between update checks for new versions
+  _updateInterval = null;
+  // The url to check at for a new update
+  _updateURL = null;
+  // The url to check for a new icon
+  _iconUpdateURL = null;
+  // The extension ID if added by an extension.
+  _extensionID = null;
+  // The locale, or "DEFAULT", if required.
+  _locale = null;
+  // Whether the engine is provided by the application.
+  _isAppProvided = false;
+  // The order hint from the configuration (if any).
+  _orderHint = null;
+  // The telemetry id from the configuration (if any).
+  _telemetryId = null;
+  // Set to true once the engine has been added to the store, and the initial
+  // notification sent. This allows to skip sending notifications during
+  // initialization.
+  _engineAddedToStore = false;
+  // The alias coming from the engine definition (via webextension
+  // keyword field for example) may be overridden in the metaData
+  // with a user defined alias.
+  _definedAlias = null;
+  // The urls associated with this engine.
+  _urls = [];
+  // Internal aliases for default engines only.
+  __internalAliases = null;
+
   /**
    * Constructor.
    *
@@ -807,12 +868,6 @@ class SearchEngine {
       throw new Error("isAppProvided missing from options.");
     }
     this._isAppProvided = options.isAppProvided;
-    // The alias coming from the engine definition (via webextension
-    // keyword field for example) may be overridden in the metaData
-    // with a user defined alias.
-    this._definedAlias = null;
-    this._urls = [];
-    this._metaData = {};
 
     let file, uri;
     if ("name" in options) {
@@ -877,28 +932,6 @@ class SearchEngine {
       this._loadPath = this.getAnonymizedLoadPath(file, uri);
     }
   }
-  // Data set by the user.
-  _metaData = null;
-  // The data describing the engine, in the form of an XML document element.
-  _data = null;
-  // Anonymized path of where we initially loaded the engine from.
-  // This will stay null for engines installed in the profile before we moved
-  // to a JSON storage.
-  _loadPath = null;
-  // The engine's description
-  _description = "";
-  // Used to store the engine to replace, if we're an update to an existing
-  // engine.
-  _engineToUpdate = null;
-  // Set to true if the engine has a preferred icon (an icon that should not be
-  // overridden by a non-preferred icon).
-  _hasPreferredIcon = null;
-  // The engine's name.
-  _name = null;
-  // The name of the charset used to submit the search terms.
-  _queryCharset = null;
-  // The engine's raw SearchForm value (URL string pointing to a search form).
-  __searchForm = null;
   get _searchForm() {
     return this.__searchForm;
   }
@@ -912,35 +945,6 @@ class SearchEngine {
       );
     }
   }
-  // Whether to obtain user confirmation before adding the engine. This is only
-  // used when the engine is first added to the list.
-  _confirm = null;
-  // Whether to set this as the current engine as soon as it is loaded.  This
-  // is only used when the engine is first added to the list.
-  _useNow = null;
-  // A function to be invoked when this engine object's addition completes (or
-  // fails). Only used for installation via addEngine.
-  _installCallback = null;
-  // The number of days between update checks for new versions
-  _updateInterval = null;
-  // The url to check at for a new update
-  _updateURL = null;
-  // The url to check for a new icon
-  _iconUpdateURL = null;
-  // The extension ID if added by an extension.
-  _extensionID = null;
-  // The locale, or "DEFAULT", if required.
-  _locale = null;
-  // Whether the engine is provided by the application.
-  _isAppProvided = false;
-  // The order hint from the configuration (if any).
-  _orderHint = null;
-  // The telemetry id from the configuration (if any).
-  _telemetryId = null;
-  // Set to true once the engine has been added to the store, and the initial
-  // notification sent. This allows to skip sending notifications during
-  // initialization.
-  _engineAddedToStore = false;
 
   /**
    * Retrieves the data from the engine's file asynchronously.
@@ -2168,9 +2172,6 @@ class SearchEngine {
     return this._getSearchFormWithPurpose();
   }
 
-  /* Internal aliases for default engines only. */
-  __internalAliases = null;
-
   get _internalAliases() {
     if (!this.__internalAliases) {
       this.__internalAliases = getInternalAliases(this);
@@ -2326,9 +2327,6 @@ class SearchEngine {
       termsParameterName,
     };
   }
-
-  // nsISupports
-  QueryInterface = ChromeUtils.generateQI([Ci.nsISearchEngine]);
 
   get wrappedJSObject() {
     return this;
