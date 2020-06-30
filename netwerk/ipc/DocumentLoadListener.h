@@ -447,11 +447,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // channel.
   bool mIsFinished = false;
 
-  // This identifier is set by MaybeTriggerProcessSwitch, and is later
+  // The id of the currently pending load which is
   // passed to the childChannel in order to identify it in the new process.
-  uint64_t mCrossProcessRedirectIdentifier = 0;
-
-  // The id of the currently pending load.
   uint64_t mLoadIdentifier = 0;
 
   // True if cancelled.
