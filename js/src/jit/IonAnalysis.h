@@ -174,7 +174,7 @@ bool DeadIfUnused(const MDefinition* def);
 
 bool IsDiscardable(const MDefinition* def);
 
-enum class KnownClass { PlainObject, Array, Function, RegExp, None };
+enum class KnownClass { PlainObject, Array, Function, None };
 KnownClass GetObjectKnownClass(const MDefinition* def);
 const JSClass* GetObjectKnownJSClass(const MDefinition* def);
 
