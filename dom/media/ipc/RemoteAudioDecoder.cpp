@@ -77,9 +77,9 @@ MediaResult RemoteAudioDecoderChild::InitIPDL(
 RemoteAudioDecoderParent::RemoteAudioDecoderParent(
     RemoteDecoderManagerParent* aParent, const AudioInfo& aAudioInfo,
     const CreateDecoderParams::OptionSet& aOptions,
-    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
-    bool* aSuccess, nsCString* aErrorDescription)
-    : RemoteDecoderParent(aParent, aManagerThread, aDecodeTaskQueue),
+    TaskQueue* aManagerTaskQueue, TaskQueue* aDecodeTaskQueue, bool* aSuccess,
+    nsCString* aErrorDescription)
+    : RemoteDecoderParent(aParent, aManagerTaskQueue, aDecodeTaskQueue),
       mAudioInfo(aAudioInfo) {
   CreateDecoderParams params(mAudioInfo);
   params.mTaskQueue = mDecodeTaskQueue;

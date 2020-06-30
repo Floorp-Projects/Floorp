@@ -430,6 +430,9 @@ class IToplevelProtocol : public IProtocol {
             MessageLoop* aThread = nullptr,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
+  bool Open(MessageChannel* aChannel, MessageLoop* aMessageLoop,
+            mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
+
   bool Open(MessageChannel* aChannel, nsISerialEventTarget* aEventTarget,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
@@ -860,7 +863,7 @@ class ManagedEndpoint {
 // references!
 class ActorLifecycleProxy {
  public:
-  NS_INLINE_DECL_REFCOUNTING_ONEVENTTARGET(ActorLifecycleProxy)
+  NS_INLINE_DECL_REFCOUNTING(ActorLifecycleProxy)
 
   IProtocol* Get() { return mActor; }
 

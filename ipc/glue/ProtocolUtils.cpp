@@ -590,6 +590,14 @@ bool IToplevelProtocol::Open(UniquePtr<Transport> aTransport,
 }
 
 bool IToplevelProtocol::Open(MessageChannel* aChannel,
+                             MessageLoop* aMessageLoop,
+                             mozilla::ipc::Side aSide) {
+  SetOtherProcessId(base::GetCurrentProcId());
+  return GetIPCChannel()->Open(aChannel, aMessageLoop->SerialEventTarget(),
+                               aSide);
+}
+
+bool IToplevelProtocol::Open(MessageChannel* aChannel,
                              nsISerialEventTarget* aEventTarget,
                              mozilla::ipc::Side aSide) {
   SetOtherProcessId(base::GetCurrentProcId());

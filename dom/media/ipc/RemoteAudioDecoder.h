@@ -28,7 +28,7 @@ class RemoteAudioDecoderParent final : public RemoteDecoderParent {
   RemoteAudioDecoderParent(RemoteDecoderManagerParent* aParent,
                            const AudioInfo& aAudioInfo,
                            const CreateDecoderParams::OptionSet& aOptions,
-                           nsISerialEventTarget* aManagerThread,
+                           TaskQueue* aManagerTaskQueue,
                            TaskQueue* aDecodeTaskQueue, bool* aSuccess,
                            nsCString* aErrorDescription);
 
