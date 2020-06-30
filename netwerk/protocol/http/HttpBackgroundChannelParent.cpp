@@ -478,6 +478,22 @@ nsISerialEventTarget* HttpBackgroundChannelParent::GetBackgroundTarget() {
   return mBackgroundThread.get();
 }
 
+auto HttpBackgroundChannelParent::AttachStreamFilter(
+    Endpoint<extensions::PStreamFilterParent>&& aParentEndpoint,
+    Endpoint<extensions::PStreamFilterChild>&& aChildEndpoint)
+    -> RefPtr<ChildEndpointPromise> {
+  LOG(("HttpBackgroundChannelParent::AttachStreamFilter [this=%p]\n", this));
+  MOZ_ASSERT(IsOnBackgroundThread());
+
+  if (NS_WARN_IF(!mIPCOpened) ||
+      !SendAttachStreamFilter(std::move(aParentEndpoint))) {
+    return ChildEndpointPromise::CreateAndReject(false, __func__);
+  }
+
+  return ChildEndpointPromise::CreateAndResolve(std::move(aChildEndpoint),
+                                                __func__);
+}
+
 void HttpBackgroundChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("HttpBackgroundChannelParent::ActorDestroy [this=%p]\n", this));
   AssertIsInMainProcess();
