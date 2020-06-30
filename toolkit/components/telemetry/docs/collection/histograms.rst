@@ -230,6 +230,8 @@ Optional. This is one of:
 
     Every new or changed data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`__ from a Data Steward.
 
+.. _histogram-products:
+
 ``products``
 -------------
 Required. This field is a list of products this histogram can be recorded on. Currently-supported values are:
