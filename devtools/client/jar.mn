@@ -238,6 +238,7 @@ devtools.jar:
     content/netmonitor/src/assets/icons/play.svg (netmonitor/src/assets/icons/play.svg)
     content/netmonitor/src/assets/icons/arrow-up.svg (netmonitor/src/assets/icons/arrow-up.svg)
     content/netmonitor/src/assets/icons/shield.svg (netmonitor/src/assets/icons/shield.svg)
+    content/netmonitor/src/assets/icons/turtle.svg (netmonitor/src/assets/icons/turtle.svg)
     content/netmonitor/index.html (netmonitor/index.html)
     content/netmonitor/src/assets/styles/StatusCode.css (netmonitor/src/assets/styles/StatusCode.css)
     content/netmonitor/src/assets/styles/messages.css (netmonitor/src/assets/styles/messages.css)

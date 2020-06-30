@@ -81,6 +81,7 @@ function UI(initialState = {}) {
       "devtools.netmonitor.persistlog"
     ),
     browserCacheDisabled: Services.prefs.getBoolPref("devtools.cache.disabled"),
+    slowLimit: Services.prefs.getIntPref("devtools.netmonitor.audits.slow"),
     statisticsOpen: false,
     waterfallWidth: null,
     networkActionOpen: false,
