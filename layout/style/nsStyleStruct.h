@@ -1406,6 +1406,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   bool IsFloatingStyle() const { return mozilla::StyleFloat::None != mFloat; }
 
+  bool IsPositionedStyle() const {
+    return mPosition != mozilla::StylePositionProperty::Static ||
+           (mWillChange.bits & mozilla::StyleWillChangeBits::ABSPOS_CB);
+  }
+
   bool IsAbsolutelyPositionedStyle() const {
     return mozilla::StylePositionProperty::Absolute == mPosition ||
            mozilla::StylePositionProperty::Fixed == mPosition;
@@ -1562,18 +1567,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
    * aContextFrame is the frame for which this is the nsStyleDisplay.
    */
   inline bool IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const;
-
-  /**
-   * Tests for only the sub-parts of IsAbsPosContainingBlock that apply
-   * to nearly all frames, except those that are SVG text frames.
-   *
-   * This should be used only when the caller has the style but not the
-   * frame (i.e., when calculating style changes).
-   *
-   * NOTE: This (unlike IsAbsPosContainingBlock) does not include
-   * IsFixPosContainingBlockForNonSVGTextFrames.
-   */
-  inline bool IsAbsPosContainingBlockForNonSVGTextFrames() const;
 
   /**
    * Returns true when the element is a containing block for its fixed-pos

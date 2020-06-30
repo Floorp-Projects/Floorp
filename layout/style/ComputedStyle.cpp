@@ -55,8 +55,7 @@ static bool ContainingBlockMayHaveChanged(const ComputedStyle& aOldStyle,
   auto* oldDisp = aOldStyle.StyleDisplay();
   auto* newDisp = aNewStyle.StyleDisplay();
 
-  if (oldDisp->IsAbsPosContainingBlockForNonSVGTextFrames() !=
-      newDisp->IsAbsPosContainingBlockForNonSVGTextFrames()) {
+  if (oldDisp->IsPositionedStyle() != newDisp->IsPositionedStyle()) {
     return true;
   }
 
