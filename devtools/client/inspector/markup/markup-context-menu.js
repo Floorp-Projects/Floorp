@@ -375,37 +375,6 @@ class MarkupContextMenu {
     this.inspector.emit("console-var-ready");
   }
 
-  _buildA11YMenuItem(menu) {
-    if (
-      !(this.selection.isElementNode() || this.selection.isTextNode()) ||
-      !Services.prefs.getBoolPref("devtools.accessibility.enabled")
-    ) {
-      return;
-    }
-
-    const a11yAutoInitEnabled = Services.prefs.getBoolPref(
-      "devtools.accessibility.auto-init.enabled",
-      false
-    );
-    const showA11YPropsItem = new MenuItem({
-      id: "node-menu-showaccessibilityproperties",
-      label: INSPECTOR_L10N.getStr(
-        "inspectorShowAccessibilityProperties.label"
-      ),
-      click: () => this._showAccessibilityProperties(),
-      disabled: !a11yAutoInitEnabled,
-    });
-
-    // Only attempt to determine if a11y props menu item needs to be enabled if
-    // AccessibilityFront is enabled and accessibility panel auto init feature
-    // is disabled.
-    if (!a11yAutoInitEnabled && this.inspector.accessibilityFront.enabled) {
-      this._updateA11YMenuItem(showA11YPropsItem);
-    }
-
-    menu.append(showA11YPropsItem);
-  }
-
   _getAttributesSubmenu(isEditableElement) {
     const attributesSubmenu = new Menu();
     const nodeInfo = this.nodeMenuTriggerInfo;
@@ -845,7 +814,17 @@ class MarkupContextMenu {
       })
     );
 
-    this._buildA11YMenuItem(menu);
+    if (this.selection.isElementNode() || this.selection.isTextNode()) {
+      menu.append(
+        new MenuItem({
+          id: "node-menu-showaccessibilityproperties",
+          label: INSPECTOR_L10N.getStr(
+            "inspectorShowAccessibilityProperties.label"
+          ),
+          click: () => this._showAccessibilityProperties(),
+        })
+      );
+    }
 
     if (this.selection.nodeFront.customElementLocation) {
       menu.append(
@@ -954,19 +933,6 @@ class MarkupContextMenu {
 
     menu.popup(screenX, screenY, this.toolbox.doc);
     return menu;
-  }
-
-  async _updateA11YMenuItem(menuItem) {
-    const hasA11YProps = await this.walker.hasAccessibilityProperties(
-      this.selection.nodeFront
-    );
-
-    if (hasA11YProps) {
-      const menuItemEl = Menu.getMenuElementById(menuItem.id, this.toolbox.doc);
-      menuItemEl.disabled = menuItem.disabled = false;
-    }
-
-    this.inspector.emit("node-menu-updated");
   }
 }
 

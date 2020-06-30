@@ -45,7 +45,7 @@ const RightSidebar = createFactory(
   require("devtools/client/accessibility/components/RightSidebar")
 );
 const Toolbar = createFactory(
-  require("devtools/client/accessibility/components/Toolbar")
+  require("devtools/client/accessibility/components/Toolbar").Toolbar
 );
 const SplitBox = createFactory(
   require("devtools/client/shared/components/splitter/SplitBox")
@@ -70,7 +70,6 @@ class MainFrame extends Component {
       audit: PropTypes.func.isRequired,
       simulate: PropTypes.func,
       enableAccessibility: PropTypes.func.isRequired,
-      disableAccessibility: PropTypes.func.isRequired,
       resetAccessiblity: PropTypes.func.isRequired,
       startListeningForLifecycleEvents: PropTypes.func.isRequired,
       stopListeningForLifecycleEvents: PropTypes.func.isRequired,
@@ -126,13 +125,9 @@ class MainFrame extends Component {
   }
 
   onCanBeEnabledChange(canBeEnabled) {
-    const {
-      enableAccessibility,
-      dispatch,
-      supports: { autoInit },
-    } = this.props;
+    const { enableAccessibility, dispatch } = this.props;
     dispatch(updateCanBeEnabled(canBeEnabled));
-    if (canBeEnabled && autoInit) {
+    if (canBeEnabled) {
       dispatch(enable(enableAccessibility));
     }
   }
@@ -170,14 +165,12 @@ class MainFrame extends Component {
       startListeningForAccessibilityEvents,
       stopListeningForAccessibilityEvents,
       audit,
-      enableAccessibility,
-      disableAccessibility,
       highlightAccessible,
       unhighlightAccessible,
     } = this.props;
 
     if (!enabled) {
-      return Description({ enableAccessibility });
+      return Description();
     }
 
     // Audit is currently running.
@@ -189,7 +182,6 @@ class MainFrame extends Component {
         { className: "mainFrame", role: "presentation", tabIndex: "-1" },
         Toolbar({
           audit,
-          disableAccessibility,
           simulate,
           toolboxDoc: toolbox.doc,
         }),

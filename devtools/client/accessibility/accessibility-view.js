@@ -81,8 +81,6 @@ AccessibilityView.prototype = {
    *                                          docShell).
    * - enableAccessibility                    {Function}
    *                                          Enable accessibility services.
-   * - disableAccessibility                   {Function}
-   *                                          Disable accessibility services.
    * - resetAccessiblity                      {Function}
    *                                          Reset the state of the
    *                                          accessibility services.
@@ -115,7 +113,6 @@ AccessibilityView.prototype = {
     audit,
     simulate,
     enableAccessibility,
-    disableAccessibility,
     resetAccessiblity,
     startListeningForLifecycleEvents,
     stopListeningForLifecycleEvents,
@@ -136,7 +133,6 @@ AccessibilityView.prototype = {
       audit,
       simulate,
       enableAccessibility,
-      disableAccessibility,
       resetAccessiblity,
       startListeningForLifecycleEvents,
       stopListeningForLifecycleEvents,

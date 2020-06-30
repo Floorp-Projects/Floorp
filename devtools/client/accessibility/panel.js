@@ -106,10 +106,8 @@ AccessibilityPanel.prototype = {
     );
     await this.accessibilityProxy.initialize();
 
-    // Bug 1602075: if auto init feature is enabled, enable accessibility
-    // service if necessary.
+    // Enable accessibility service if necessary.
     if (
-      this.accessibilityProxy.supports.autoInit &&
       this.accessibilityProxy.canBeEnabled &&
       !this.accessibilityProxy.enabled
     ) {
@@ -210,7 +208,6 @@ AccessibilityPanel.prototype = {
       audit,
       simulate,
       enableAccessibility,
-      disableAccessibility,
       resetAccessiblity,
       startListeningForLifecycleEvents,
       stopListeningForLifecycleEvents,
@@ -229,7 +226,6 @@ AccessibilityPanel.prototype = {
       audit,
       simulate,
       enableAccessibility,
-      disableAccessibility,
       resetAccessiblity,
       startListeningForLifecycleEvents,
       stopListeningForLifecycleEvents,

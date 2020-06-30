@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(
@@ -34,7 +33,6 @@ class AccessibilityProxy {
     this.supports = {};
 
     this.audit = this.audit.bind(this);
-    this.disableAccessibility = this.disableAccessibility.bind(this);
     this.enableAccessibility = this.enableAccessibility.bind(this);
     this.getAccessibilityTreeRoot = this.getAccessibilityTreeRoot.bind(this);
     this.resetAccessiblity = this.resetAccessiblity.bind(this);
@@ -148,16 +146,6 @@ class AccessibilityProxy {
 
   stopListeningForTargetUpdated(onTargetUpdated) {
     this._updateTargetListeners.off("target-updated", onTargetUpdated);
-  }
-
-  async disableAccessibility() {
-    // Accessibility service is shut down using the parent accessibility front.
-    // That, in turn, shuts down accessibility service in all content processes.
-    // We need to wait until that happens to be sure platform  accessibility is
-    // fully disabled.
-    const disabled = this.accessibilityFront.once("shutdown");
-    await this.parentAccessibilityFront.disable();
-    await disabled;
   }
 
   async enableAccessibility() {
@@ -410,13 +398,6 @@ class AccessibilityProxy {
     );
     this.parentAccessibilityFront = await this.toolbox.targetList.rootFront.getFront(
       "parentaccessibility"
-    );
-    // Bug 1602075: auto init feature definition is used for an experiment to
-    // determine if we can automatically enable accessibility panel when it
-    // opens.
-    this.supports.autoInit = Services.prefs.getBoolPref(
-      "devtools.accessibility.auto-init.enabled",
-      false
     );
   }
 
