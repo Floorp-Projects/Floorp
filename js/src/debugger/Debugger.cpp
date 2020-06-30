@@ -628,55 +628,35 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
 
   FrameMap::AddPtr p = frames.lookupForAdd(referent);
   if (!p) {
-    RootedDebuggerFrame frame(cx);
-
-    // If this is a generator frame, there may be an existing
-    // Debugger.Frame object that isn't in `frames` because the generator
-    // was suspended, popping the stack frame, and later resumed (and we
-    // were not stepping, so did not pass through slowPathOnResumeFrame).
     Rooted<AbstractGeneratorObject*> genObj(cx);
     if (referent.isGeneratorFrame()) {
-      {
-        AutoRealm ar(cx, referent.callee());
-        genObj = GetGeneratorObjectForFrame(cx, referent);
-      }
-      if (genObj) {
-        GeneratorWeakMap::Ptr gp = generatorFrames.lookup(genObj);
-        if (gp) {
-          frame = gp->value();
-          MOZ_ASSERT(&frame->unwrappedGenerator() == genObj);
+      AutoRealm ar(cx, referent.callee());
+      genObj = GetGeneratorObjectForFrame(cx, referent);
 
-          // We have found an existing Debugger.Frame object. But
-          // since it was previously popped (see comment above), it
-          // is not currently "live". We must revive it.
-          if (!frame->resume(iter)) {
-            return false;
-          }
-          if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
-            return false;
-          }
-        }
-      }
+      // If this frame has a generator associated with it, but no on-stack
+      // Debugger.Frame object was found, there should not be a suspended
+      // Debugger.Frame either because otherwise slowPathOnResumeFrame would
+      // have already populated the "frames" map with a Debugger.Frame.
+      MOZ_ASSERT_IF(genObj, !generatorFrames.has(genObj));
 
       // If no AbstractGeneratorObject exists yet, we create a Debugger.Frame
       // below anyway, and Debugger::onNewGenerator() will associate it
       // with the AbstractGeneratorObject later when we hit JSOp::Generator.
     }
 
+    // Create and populate the Debugger.Frame object.
+    RootedObject proto(
+        cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
+    RootedNativeObject debugger(cx, object);
+
+    RootedDebuggerFrame frame(
+        cx, DebuggerFrame::create(cx, proto, debugger, &iter, genObj));
     if (!frame) {
-      // Create and populate the Debugger.Frame object.
-      RootedObject proto(
-          cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
-      RootedNativeObject debugger(cx, object);
+      return false;
+    }
 
-      frame = DebuggerFrame::create(cx, proto, debugger, &iter, genObj);
-      if (!frame) {
-        return false;
-      }
-
-      if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
-        return false;
-      }
+    if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
+      return false;
     }
 
     if (!frames.add(p, referent, frame)) {
