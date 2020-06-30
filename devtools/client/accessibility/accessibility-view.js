@@ -147,6 +147,9 @@ AccessibilityView.prototype = {
     });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);
+    window.once(EVENTS.PROPERTIES_UPDATED).then(() => {
+      window.emit(EVENTS.INITIALIZED);
+    });
     this.mainFrame = ReactDOM.render(provider, container);
   },
 
