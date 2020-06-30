@@ -267,6 +267,10 @@ class HttpChannelChild final : public PHttpChannelChild,
   already_AddRefed<nsIEventTarget> GetODATarget();
 
   [[nodiscard]] nsresult ContinueAsyncOpen();
+  void ProcessOnStartRequest(const nsHttpResponseHead& aResponseHead,
+                             const bool& aUseResponseHead,
+                             const nsHttpHeaderArray& aRequestHeaders,
+                             const HttpChannelOnStartRequestArgs& aArgs);
 
   // Callbacks while receiving OnTransportAndData/OnStopRequest/OnProgress/
   // OnStatus/FlushedForDiversion/DivertMessages on background IPC channel.
