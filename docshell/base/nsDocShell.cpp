@@ -12199,6 +12199,7 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
 
         if (aTiming) {
           self->mTiming = new nsDOMNavigationTiming(self, aTiming);
+          self->mBlankTiming = false;
         }
 
         // If we're performing a history load, locate the correct history entry,
