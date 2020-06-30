@@ -1980,6 +1980,23 @@ add_task(async function test_deriveKeys() {
   );
 });
 
+add_task(async function test_flushLogFile() {
+  _("Tests flushLogFile");
+  let account = await MakeFxAccounts();
+  let promiseObserved = new Promise(res => {
+    log.info("Adding flush-log-file observer.");
+    Services.obs.addObserver(function onFlushLogFile() {
+      Services.obs.removeObserver(
+        onFlushLogFile,
+        "service:log-manager:flush-log-file"
+      );
+      res();
+    }, "service:log-manager:flush-log-file");
+  });
+  account.flushLogFile();
+  await promiseObserved;
+});
+
 /*
  * End of tests.
  * Utility functions follow.

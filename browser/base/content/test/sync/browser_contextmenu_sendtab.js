@@ -55,6 +55,21 @@ add_task(async function setup() {
   is(gBrowser.visibleTabs.length, 2, "there are two visible tabs");
 });
 
+add_task(async function test_sendTabToDevice_callsFlushLogFile() {
+  const sandbox = setupSendTabMocks({ fxaDevices });
+  updateTabContextMenu(testTab);
+  await openTabContextMenu("context_sendTabToDevice");
+  let promiseObserved = promiseObserver("service:log-manager:flush-log-file");
+  document
+    .getElementById("context_sendTabToDevicePopupMenu")
+    .querySelector("menuitem")
+    .click();
+
+  await promiseObserved;
+  await hideTabContextMenu();
+  sandbox.restore();
+});
+
 add_task(async function test_tab_contextmenu() {
   const sandbox = setupSendTabMocks({ fxaDevices });
   let expectation = sandbox
@@ -239,4 +254,14 @@ async function hideTabContextMenu() {
   );
   contextMenu.hidePopup();
   await awaitPopupHidden;
+}
+
+function promiseObserver(topic) {
+  return new Promise(resolve => {
+    let obs = (aSubject, aTopic, aData) => {
+      Services.obs.removeObserver(obs, aTopic);
+      resolve(aSubject);
+    };
+    Services.obs.addObserver(obs, topic);
+  });
 }
