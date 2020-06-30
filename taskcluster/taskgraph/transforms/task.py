@@ -900,7 +900,7 @@ def notarization_poller_payload(config, task, task_def):
 
 @payload_builder('beetmover', schema={
     # the maximum time to run, in seconds
-    Required('max-run-time', default=600): int,
+    Required('max-run-time'): int,
 
     # locale key, if this is a locale beetmover job
     Optional('locale'): text_type,
@@ -980,7 +980,7 @@ def build_beetmover_push_to_release_payload(config, task, task_def):
 
 
 @payload_builder('beetmover-maven', schema={
-    Required('max-run-time', default=600): int,
+    Required('max-run-time'): int,
     Required('release-properties'): {
         'app-name': text_type,
         'app-version': text_type,
@@ -995,7 +995,7 @@ def build_beetmover_push_to_release_payload(config, task, task_def):
         Required('taskId'): taskref_or_string,
         Required('taskType'): text_type,
         Required('paths'): [text_type],
-        Required('zipExtract', default=False): bool,
+        Optional('zipExtract'): bool,
     }],
     Optional('artifact-map'): object,
 })
@@ -1229,8 +1229,8 @@ def build_push_addons_payload(config, task, task_def):
     Optional('repo-param-prefix'): text_type,
     Optional('dontbuild'): bool,
     Optional('ignore-closed-tree'): bool,
-    Required('force-dry-run', default=True): bool,
-    Required('push', default=False): bool,
+    Optional('force-dry-run'): bool,
+    Optional('push'): bool,
     Optional('source-repo'): text_type,
     Optional('ssh-user'): text_type,
     Optional('l10n-bump-info'): {

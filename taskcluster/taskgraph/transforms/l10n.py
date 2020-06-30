@@ -72,7 +72,7 @@ l10n_description_schema = schema.extend({
 
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
-        Required('comm-checkout', default=False): bool,
+        Optional('comm-checkout'): bool,
     },
     # Items for the taskcluster index
     Optional('index'): {
@@ -101,11 +101,10 @@ l10n_description_schema = schema.extend({
 
     # Docker image required for task.  We accept only in-tree images
     # -- generally desktop-build or android-build -- for now.
-    Required('docker-image', default=None): _by_platform(Any(
+    Optional('docker-image'): _by_platform(
         # an in-tree generated docker image (from `taskcluster/docker/<name>`)
         {'in-tree': text_type},
-        None,
-    )),
+    ),
 
     Optional('fetches'): {
         text_type: _by_platform([text_type]),
@@ -116,7 +115,7 @@ l10n_description_schema = schema.extend({
     # this will enable any worker features required and set the task's scopes
     # appropriately.  `true` here means ['*'], all secrets.  Not supported on
     # Windows
-    Required('secrets', default=False): _by_platform(Any(bool, [text_type])),
+    Optional('secrets'): _by_platform(Any(bool, [text_type])),
 
     # Information for treeherder
     Required('treeherder'): {
