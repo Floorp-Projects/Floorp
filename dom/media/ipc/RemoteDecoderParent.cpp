@@ -12,11 +12,11 @@
 namespace mozilla {
 
 RemoteDecoderParent::RemoteDecoderParent(RemoteDecoderManagerParent* aParent,
-                                         TaskQueue* aManagerTaskQueue,
+                                         nsISerialEventTarget* aManagerThread,
                                          TaskQueue* aDecodeTaskQueue)
     : mParent(aParent),
       mDecodeTaskQueue(aDecodeTaskQueue),
-      mManagerTaskQueue(aManagerTaskQueue),
+      mManagerThread(aManagerThread),
       mDecodedFramePool(1, ShmemPool::PoolType::DynamicPool) {
   MOZ_COUNT_CTOR(RemoteDecoderParent);
   MOZ_ASSERT(OnManagerThread());
@@ -41,7 +41,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInit(
   MOZ_ASSERT(OnManagerThread());
   RefPtr<RemoteDecoderParent> self = this;
   mDecoder->Init()->Then(
-      mManagerTaskQueue, __func__,
+      mManagerThread, __func__,
       [self, resolver = std::move(aResolver)](
           MediaDataDecoder::InitPromise::ResolveOrRejectValue&& aValue) {
         if (!self->CanRecv()) {
@@ -100,7 +100,7 @@ void RemoteDecoderParent::DecodeNextSample(nsTArray<MediaRawDataIPDL>&& aData,
 
   RefPtr<RemoteDecoderParent> self = this;
   mDecoder->Decode(data)->Then(
-      mManagerTaskQueue, __func__,
+      mManagerThread, __func__,
       [self, this, aData = std::move(aData), output = std::move(aOutput),
        resolver = std::move(aResolver)](
           MediaDataDecoder::DecodePromise::ResolveOrRejectValue&&
@@ -150,7 +150,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvFlush(
   MOZ_ASSERT(OnManagerThread());
   RefPtr<RemoteDecoderParent> self = this;
   mDecoder->Flush()->Then(
-      mManagerTaskQueue, __func__,
+      mManagerThread, __func__,
       [self, resolver = std::move(aResolver)](
           MediaDataDecoder::FlushPromise::ResolveOrRejectValue&& aValue) {
         if (aValue.IsReject()) {
@@ -168,7 +168,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvDrain(
   MOZ_ASSERT(OnManagerThread());
   RefPtr<RemoteDecoderParent> self = this;
   mDecoder->Drain()->Then(
-      mManagerTaskQueue, __func__,
+      mManagerThread, __func__,
       [self, this, resolver = std::move(aResolver)](
           MediaDataDecoder::DecodePromise::ResolveOrRejectValue&& aValue) {
         if (!self->CanRecv()) {
@@ -196,7 +196,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvShutdown(
   if (mDecoder) {
     RefPtr<RemoteDecoderParent> self = this;
     mDecoder->Shutdown()->Then(
-        mManagerTaskQueue, __func__,
+        mManagerThread, __func__,
         [self, resolver = std::move(aResolver)](
             const ShutdownPromise::ResolveOrRejectValue& aValue) {
           MOZ_ASSERT(aValue.IsResolve());

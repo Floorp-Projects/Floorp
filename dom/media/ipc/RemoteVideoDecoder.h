@@ -53,8 +53,8 @@ class RemoteVideoDecoderParent final : public RemoteDecoderParent {
       RemoteDecoderManagerParent* aParent, const VideoInfo& aVideoInfo,
       float aFramerate, const CreateDecoderParams::OptionSet& aOptions,
       const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-      TaskQueue* aManagerTaskQueue, TaskQueue* aDecodeTaskQueue, bool* aSuccess,
-      nsCString* aErrorDescription);
+      nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
+      bool* aSuccess, nsCString* aErrorDescription);
 
  protected:
   MediaResult ProcessDecodedData(const MediaDataDecoder::DecodedData& aData,

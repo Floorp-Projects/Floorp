@@ -67,7 +67,6 @@ RemoteLzyStream
 RWLockTester
 RacingServMan
 RemVidChild
-RemVidParent
 Sandbox Testing
 SaveScripts
 Socket Thread
