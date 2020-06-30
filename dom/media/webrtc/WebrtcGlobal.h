@@ -5,6 +5,7 @@
 #ifndef _WEBRTC_GLOBAL_H_
 #define _WEBRTC_GLOBAL_H_
 
+#include "WebrtcIPCTraits.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
@@ -87,6 +88,21 @@ struct ParamTraits<
   }
 };
 
+template <>
+struct ParamTraits<mozilla::dom::RTCBundlePolicy>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::RTCBundlePolicy,
+          mozilla::dom::RTCBundlePolicy::Balanced,
+          mozilla::dom::RTCBundlePolicy::EndGuard_> {};
+
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCIceServerInternal, mUrls,
+                                  mCredentialProvided, mUserNameProvided);
+
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCConfigurationInternal,
+                                  mBundlePolicy, mCertificatesProvided,
+                                  mIceServers, mIceTransportPolicy,
+                                  mPeerIdentityProvided, mSdpSemantics);
+
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCSdpHistoryEntryInternal,
                                   mTimestamp, mIsLocal, mSdp);
 
@@ -101,7 +117,7 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(
 DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
     mozilla::dom::RTCStatsReportInternal, mozilla::dom::RTCStatsCollection,
     mClosed, mLocalSdp, mSdpHistory, mPcid, mRemoteSdp, mTimestamp,
-    mCallDurationMs, mIceRestarts, mIceRollbacks, mOfferer);
+    mCallDurationMs, mIceRestarts, mIceRollbacks, mOfferer, mConfiguration);
 
 typedef mozilla::dom::RTCStats RTCStats;
 

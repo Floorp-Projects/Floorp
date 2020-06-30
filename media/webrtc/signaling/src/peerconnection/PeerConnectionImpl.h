@@ -511,10 +511,15 @@ class PeerConnectionImpl final
 
   void RecordIceRestartStatistics(JsepSdpType type);
 
+  void StoreConfigurationForAboutWebrtc(const RTCConfiguration& aConfig);
+
   // Timecard used to measure processing time. This should be the first class
   // attribute so that we accurately measure the time required to instantiate
   // any other attributes of this class.
   Timecard* mTimeCard;
+
+  // Configuration used to initialize the PeerConnection
+  dom::RTCConfigurationInternal mJsConfiguration;
 
   mozilla::dom::RTCSignalingState mSignalingState;
 
