@@ -15,7 +15,7 @@ typedef float GLfloat;
 typedef double GLdouble;
 
 typedef uint32_t GLenum;
-typedef int32_t GLboolean;
+typedef uint8_t GLboolean;
 typedef uint32_t GLbitfield;
 
 typedef int32_t GLsizei;
