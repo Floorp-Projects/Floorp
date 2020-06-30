@@ -45,22 +45,5 @@ class EngineSessionUseCases(
         }
     }
 
-    /**
-     * Use case for getting an [EngineSession] for a tab.
-     */
-    class GetUseCase internal constructor(
-        private val sessionManager: SessionManager
-    ) {
-        /**
-         * Gets the linked engine session for a tab (if it exists).
-         */
-        operator fun invoke(tabId: String): EngineSession? {
-            return sessionManager.findSessionById(tabId)?.let {
-                sessionManager.getEngineSession(it)
-            }
-        }
-    }
-
     val getOrCreateEngineSession = GetOrCreateUseCase(sessionManager)
-    val getEngineSession = GetUseCase(sessionManager)
 }
