@@ -3,7 +3,7 @@ import os
 import pathlib
 import pytest
 from mozperftest.metrics.notebook.perftestetl import PerftestETL
-from mozperftest.tests.support import temp_dir, HERE
+from mozperftest.tests.support import get_running_env, temp_dir, HERE
 from mozperftest.metrics.notebook.perftestnotebook import PerftestNotebook
 
 
@@ -94,19 +94,33 @@ def files(data):
 @pytest.fixture(scope="session", autouse=True)
 def ptetls(files):
     resources, dirs, output = files["resources"], files["dirs"], files["output"]
+    _, metadata, _ = get_running_env()
     config = {"output": output}
     file_group_list = {"group_1": list(resources.values())}
     file_group_str = {"group_1": dirs["resources"].resolve().as_posix()}
 
     yield {
-        "ptetl_list": PerftestETL(file_group_list, config, sort_files=True),
-        "ptetl_str": PerftestETL(file_group_str, config, sort_files=True),
+        "ptetl_list": PerftestETL(
+            file_groups=file_group_list,
+            config=config,
+            prefix="PerftestETL",
+            logger=metadata,
+            sort_files=True,
+        ),
+        "ptetl_str": PerftestETL(
+            file_groups=file_group_str,
+            config=config,
+            prefix="PerftestETL",
+            logger=metadata,
+            sort_files=True,
+        ),
     }
 
 
 @pytest.fixture(scope="session", autouse=True)
 def ptnb(standarized_data):
-    return PerftestNotebook(standarized_data)
+    _, metadata, _ = get_running_env()
+    return PerftestNotebook(standarized_data, metadata, "PerftestNotebook")
 
 
 @pytest.fixture(scope="function", autouse=True)

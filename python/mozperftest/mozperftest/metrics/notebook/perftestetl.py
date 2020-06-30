@@ -9,16 +9,21 @@ from collections import OrderedDict
 
 from .transformer import Transformer, SimplePerfherderTransformer
 from .constant import Constant
-from .logger import NotebookLogger
-
-logger = NotebookLogger()
 
 
 class PerftestETL(object):
     """Controller class for the PerftestETL."""
 
-    def __init__(self, file_groups, config, custom_transform=None, sort_files=False):
-        """Initializes PerftestNotebook.
+    def __init__(
+        self,
+        file_groups,
+        config,
+        prefix,
+        logger,
+        custom_transform=None,
+        sort_files=False,
+    ):
+        """Initializes PerftestETL.
 
         :param dict file_groups: A dict of file groupings. The value
             of each of the dict entries is the name of the data that
@@ -30,6 +35,8 @@ class PerftestETL(object):
         self.config = config
         self.sort_files = sort_files
         self.const = Constant()
+        self.prefix = prefix
+        self.logger = logger
 
         # Gather the available transformers
         tfms_dict = self.const.predefined_transformers
@@ -45,13 +52,21 @@ class PerftestETL(object):
         if custom_transform:
             tfm_cls = tfms_dict.get(custom_transform)
             if tfm_cls:
-                self.transformer = Transformer(files=[], custom_transformer=tfm_cls())
-                logger.info(f"Found {custom_transform} transformer")
+                self.transformer = Transformer(
+                    files=[],
+                    custom_transformer=tfm_cls(),
+                    logger=self.logger,
+                    prefix=self.prefix,
+                )
+                self.logger.info(f"Found {custom_transform} transformer", self.prefix)
             else:
                 raise Exception(f"Could not get a {custom_transform} transformer.")
         else:
             self.transformer = Transformer(
-                files=[], custom_transformer=SimplePerfherderTransformer()
+                files=[],
+                custom_transformer=SimplePerfherderTransformer(),
+                logger=self.logger,
+                prefix=self.prefix,
             )
 
     def parse_file_grouping(self, file_grouping):

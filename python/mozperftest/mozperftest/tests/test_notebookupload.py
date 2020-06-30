@@ -43,7 +43,7 @@ def test_notebookupload_with_filter(notebook, no_filter):
 
     if no_filter:
         args, kwargs = notebook.call_args_list[0]
-        assert type(args[0][0]["data"][0]["value"]) == str
+        assert type(kwargs["data"][0]["data"][0]["value"]) == str
     else:
         for call in notebook.call_args_list:
             args, kwargs = call

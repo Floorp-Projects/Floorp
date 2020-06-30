@@ -6,18 +6,19 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from .constant import Constant
-from .logger import logger
 
 
 class PerftestNotebook(object):
     """Controller class for PerftestNotebook."""
 
-    def __init__(self, data):
+    def __init__(self, data, logger, prefix):
         """Initialize the PerftestNotebook.
 
         :param dict data: Standardized data, post-transformation.
         """
         self.data = data
+        self.logger = logger
+        self.prefix = prefix
         self.const = Constant()
 
     def get_notebook_section(self, func):
@@ -27,7 +28,9 @@ class PerftestNotebook(object):
         """
         template_path = self.const.here / "notebook-sections" / func
         if not template_path.exists():
-            logger.warning(f"Could not find the notebook-section called {func}")
+            self.logger.warning(
+                f"Could not find the notebook-section called {func}", self.prefix
+            )
             return ""
         with template_path.open() as f:
             return f.read()

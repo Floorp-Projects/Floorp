@@ -135,7 +135,13 @@ class MetricsStorage(object):
                 "file_groups": {data_type: data_info["files"]},
             }
 
-            ptnb = PerftestETL(config["file_groups"], config, data_info["transformer"])
+            ptnb = PerftestETL(
+                file_groups=config["file_groups"],
+                config=config,
+                prefix=self.prefix,
+                logger=self.logger,
+                custom_transform=data_info["transformer"],
+            )
             r = ptnb.process(**data_info["options"])
             self.stddata[data_type] = r["data"]
 

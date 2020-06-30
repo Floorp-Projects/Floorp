@@ -8,7 +8,6 @@ import sys
 import pathlib
 
 from jsonschema import validate
-from .logger import NotebookLogger
 from mozperftest.metrics.exceptions import (
     NotebookInvalidTransformError,
     NotebookInvalidPathError,
@@ -16,14 +15,12 @@ from mozperftest.metrics.exceptions import (
 )
 from mozperftest.runner import HERE
 
-logger = NotebookLogger()
-
 
 class Transformer(object):
     """Abstract class for data transformers.
     """
 
-    def __init__(self, files=None, custom_transformer=None):
+    def __init__(self, files=None, custom_transformer=None, logger=None, prefix=None):
         """Initialize the transformer with files.
 
         :param list files: A list of files containing data to transform.
@@ -31,6 +28,8 @@ class Transformer(object):
             Must implement `transform` and `merge` methods.
         """
         self._files = files
+        self.logger = logger
+        self.prefix = prefix
 
         if custom_transformer:
             valid = (
@@ -57,7 +56,9 @@ class Transformer(object):
     @files.setter
     def files(self, val):
         if not isinstance(val, list):
-            logger.warning("`files` must be a list, got %s" % type(val))
+            self.logger.warning(
+                "`files` must be a list, got %s" % type(val), self.prefix
+            )
             return
         self._files = val
 
@@ -97,8 +98,10 @@ class Transformer(object):
                 else:
                     data = self.open_data(file)
             except Exception as e:
-                logger.warning("Failed to open file %s, skipping" % file)
-                logger.warning("%s %s" % (e.__class__.__name__, e))
+                self.logger.warning(
+                    "Failed to open file %s, skipping" % file, self.prefix
+                )
+                self.logger.warning("%s %s" % (e.__class__.__name__, e), self.prefix)
 
             # Transform data
             try:
@@ -110,8 +113,10 @@ class Transformer(object):
                         ele.update({"file": file})
                 trfmdata.extend(data)
             except Exception as e:
-                logger.warning("Failed to transform file %s, skipping" % file)
-                logger.warning("%s %s" % (e.__class__.__name__, e))
+                self.logger.warning(
+                    "Failed to transform file %s, skipping" % file, self.prefix
+                )
+                self.logger.warning("%s %s" % (e.__class__.__name__, e), self.prefix)
 
         merged = self._custom_transformer.merge(trfmdata)
 
