@@ -146,9 +146,9 @@ bool HTMLEditUtils::IsListItem(nsINode* aNode) {
 }
 
 /**
- * IsTableElement() returns true if aNode is an html table, td, tr, ...
+ * IsAnyTableElement() returns true if aNode is an html table, td, tr, ...
  */
-bool HTMLEditUtils::IsTableElement(nsINode* aNode) {
+bool HTMLEditUtils::IsAnyTableElement(nsINode* aNode) {
   MOZ_ASSERT(aNode);
   return aNode->IsAnyOfHTMLElements(
       nsGkAtoms::table, nsGkAtoms::tr, nsGkAtoms::td, nsGkAtoms::th,

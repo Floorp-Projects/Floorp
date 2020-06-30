@@ -729,7 +729,7 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       }
 
       // If selection is in a table element, we need special handling.
-      if (HTMLEditUtils::IsTableElement(blockParent)) {
+      if (HTMLEditUtils::IsAnyTableElement(blockParent)) {
         EditActionResult result = HandleTabKeyPressInTable(aKeyboardEvent);
         if (result.Failed()) {
           NS_WARNING("HTMLEditor::HandleTabKeyPressInTable() failed");
@@ -1786,7 +1786,7 @@ EditorDOMPoint HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
     // If the current parent is a root (body or table element)
     // then go no further - we can't insert.
     if (pointToInsert.IsContainerHTMLElement(nsGkAtoms::body) ||
-        HTMLEditUtils::IsTableElement(pointToInsert.GetContainer())) {
+        HTMLEditUtils::IsAnyTableElement(pointToInsert.GetContainer())) {
       return EditorDOMPoint();
     }
 
@@ -3985,7 +3985,7 @@ bool HTMLEditor::SetCaretInTableCell(Element* aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!aElement || !aElement->IsHTMLElement() ||
-      !HTMLEditUtils::IsTableElement(aElement) ||
+      !HTMLEditUtils::IsAnyTableElement(aElement) ||
       !IsDescendantOfEditorRoot(aElement)) {
     return false;
   }
