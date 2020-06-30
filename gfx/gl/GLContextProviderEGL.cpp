@@ -321,8 +321,11 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
 
 already_AddRefed<GLContext> GLContextEGLFactory::Create(
     EGLNativeWindowType aWindow, bool aWebRender) {
-  RefPtr<GLContext> glContext = CreateImpl(aWindow, aWebRender,
-                                           /* aUseGles */ false);
+  RefPtr<GLContext> glContext;
+#if !defined(MOZ_WIDGET_ANDROID)
+  glContext = CreateImpl(aWindow, aWebRender, /* aUseGles */ false);
+#endif  // !defined(MOZ_WIDGET_ANDROID)
+
   if (!glContext) {
     glContext = CreateImpl(aWindow, aWebRender, /* aUseGles */ true);
   }
