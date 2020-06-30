@@ -2178,6 +2178,9 @@ pref("devtools.netmonitor.har.enableAutoExportToFile", false);
 
 pref("devtools.netmonitor.features.webSockets", true);
 
+// netmonitor audit
+pref("devtools.netmonitor.audits.slow", 500);
+
 // Disable the EventSource Inspector.
 pref("devtools.netmonitor.features.serverSentEvents", false);
 
