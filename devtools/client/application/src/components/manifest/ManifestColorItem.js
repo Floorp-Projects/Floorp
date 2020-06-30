@@ -26,23 +26,16 @@ class ManifestColorItem extends PureComponent {
   }
 
   renderColor() {
-    let { value } = this.props;
-    if (!value) {
-      return null;
-    }
-
-    // Truncate colors in #rrggbbaa format to #rrggbb
-    if (value.length === 9 && value.toLowerCase().endsWith("ff")) {
-      value = value.slice(0, 7);
-    }
-
-    return span(
-      {
-        className: "manifest-item__color",
-        style: { "--color-value": value },
-      },
-      value
-    );
+    const { value } = this.props;
+    return value
+      ? span(
+          {
+            className: "manifest-item__color",
+            style: { "--color-value": value },
+          },
+          value
+        )
+      : null;
   }
 
   render() {
