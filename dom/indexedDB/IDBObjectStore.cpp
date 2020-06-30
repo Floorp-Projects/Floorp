@@ -65,12 +65,12 @@ IndexUpdateInfo MakeIndexUpdateInfo(const int64_t aIndexID, const Key& aKey,
   indexUpdateInfo.indexId() = aIndexID;
   indexUpdateInfo.value() = aKey;
   if (!aLocale.IsEmpty()) {
-    auto result =
-        aKey.ToLocaleAwareKey(indexUpdateInfo.localizedValue(), aLocale);
+    auto result = aKey.ToLocaleAwareKey(aLocale);
     if (!result.Is(Ok)) {
       *aRv = result.ExtractErrorResult(
           InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR>);
     }
+    indexUpdateInfo.localizedValue() = result.Unwrap();
   }
   return indexUpdateInfo;
 }
