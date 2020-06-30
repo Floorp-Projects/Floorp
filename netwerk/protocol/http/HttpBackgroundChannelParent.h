@@ -39,9 +39,6 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
   // IPC channel.
   void OnChannelClosed();
 
-  // To send OnStartRequestSend message over background channel.
-  bool OnStartRequestSent();
-
   // To send OnStartRequest message over background channel.
   bool OnStartRequest(const nsHttpResponseHead& aResponseHead,
                       const bool& aUseResponseHead,
