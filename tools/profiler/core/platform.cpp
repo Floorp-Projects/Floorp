@@ -2317,9 +2317,86 @@ static void StreamCategories(SpliceableJSONWriter& aWriter) {
 #undef CATEGORY_JSON_END_CATEGORY
 }
 
-static void StreamMetaJSCustomObject(PSLockRef aLock,
-                                     SpliceableJSONWriter& aWriter,
-                                     bool aIsShuttingDown) {
+// Some meta information that is better recorded before streaming the profile.
+// This is *not* intended to be cached, as some values could change between
+// profiling sessions.
+struct PreRecordedMetaInformation {
+  bool mAsyncStacks;
+
+  // This struct should only live on the stack, so it's fine to use Auto
+  // strings.
+  nsAutoCString mHttpPlatform;
+  nsAutoCString mHttpOscpu;
+  nsAutoCString mHttpMisc;
+
+  nsAutoCString mRuntimeABI;
+  nsAutoCString mRuntimeToolkit;
+
+  nsAutoCString mAppInfoProduct;
+  nsAutoCString mAppInfoAppBuildID;
+  nsAutoCString mAppInfoSourceURL;
+
+  int32_t mProcessInfoCpuCount;
+  int32_t mProcessInfoCpuCores;
+};
+
+// This function should be called out of the profiler lock.
+// It gathers non-trivial data that doesn't require the profiler to stop, or for
+// which the request could theoretically deadlock if the profiler is locked.
+static PreRecordedMetaInformation PreRecordMetaInformation() {
+  gPSMutex.AssertCurrentThreadDoesNotOwn();
+
+  PreRecordedMetaInformation info = {};  // Aggregate-init all fields.
+
+  if (!NS_IsMainThread()) {
+    // Leave these properties out if we're not on the main thread.
+    // At the moment, the only case in which this function is called on a
+    // background thread is if we're in a content process and are going to
+    // send this profile to the parent process. In that case, the parent
+    // process profile's "meta" object already has the rest of the properties,
+    // and the parent process profile is dumped on that process's main thread.
+    return info;
+  }
+
+  info.mAsyncStacks = Preferences::GetBool("javascript.options.asyncstack");
+
+  nsresult res;
+
+  if (nsCOMPtr<nsIHttpProtocolHandler> http =
+          do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
+      !NS_FAILED(res) && http) {
+    Unused << http->GetPlatform(info.mHttpPlatform);
+    Unused << http->GetOscpu(info.mHttpOscpu);
+    Unused << http->GetMisc(info.mHttpMisc);
+  }
+
+  if (nsCOMPtr<nsIXULRuntime> runtime =
+          do_GetService("@mozilla.org/xre/runtime;1");
+      runtime) {
+    Unused << runtime->GetXPCOMABI(info.mRuntimeABI);
+    Unused << runtime->GetWidgetToolkit(info.mRuntimeToolkit);
+  }
+
+  if (nsCOMPtr<nsIXULAppInfo> appInfo =
+          do_GetService("@mozilla.org/xre/app-info;1");
+      appInfo) {
+    Unused << appInfo->GetName(info.mAppInfoProduct);
+    Unused << appInfo->GetAppBuildID(info.mAppInfoAppBuildID);
+    Unused << appInfo->GetSourceURL(info.mAppInfoSourceURL);
+  }
+
+  ProcessInfo processInfo = {};  // Aggregate-init all fields to false/zeroes.
+  if (NS_SUCCEEDED(CollectProcessInfo(processInfo))) {
+    info.mProcessInfoCpuCount = processInfo.cpuCount;
+    info.mProcessInfoCpuCores = processInfo.cpuCores;
+  }
+
+  return info;
+}
+
+static void StreamMetaJSCustomObject(
+    PSLockRef aLock, SpliceableJSONWriter& aWriter, bool aIsShuttingDown,
+    const PreRecordedMetaInformation& aPreRecordedMetaInformation) {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
   aWriter.IntProperty("version", 19);
@@ -2368,72 +2445,54 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
 
   aWriter.IntProperty("gcpoison", JS::IsGCPoisoning() ? 1 : 0);
 
-  bool asyncStacks = Preferences::GetBool("javascript.options.asyncstack");
-  aWriter.IntProperty("asyncstack", asyncStacks);
+  aWriter.IntProperty("asyncstack", aPreRecordedMetaInformation.mAsyncStacks);
 
   aWriter.IntProperty("processType", XRE_GetProcessType());
 
   aWriter.StringProperty("updateChannel", MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL));
 
-  nsresult res;
-  nsCOMPtr<nsIHttpProtocolHandler> http =
-      do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
-
-  if (!NS_FAILED(res)) {
-    nsAutoCString string;
-
-    res = http->GetPlatform(string);
-    if (!NS_FAILED(res)) {
-      aWriter.StringProperty("platform", string.Data());
-    }
-
-    res = http->GetOscpu(string);
-    if (!NS_FAILED(res)) {
-      aWriter.StringProperty("oscpu", string.Data());
-    }
-
-    res = http->GetMisc(string);
-    if (!NS_FAILED(res)) {
-      aWriter.StringProperty("misc", string.Data());
-    }
+  if (!aPreRecordedMetaInformation.mHttpPlatform.IsEmpty()) {
+    aWriter.StringProperty("platform",
+                           aPreRecordedMetaInformation.mHttpPlatform.Data());
+  }
+  if (!aPreRecordedMetaInformation.mHttpOscpu.IsEmpty()) {
+    aWriter.StringProperty("oscpu",
+                           aPreRecordedMetaInformation.mHttpOscpu.Data());
+  }
+  if (!aPreRecordedMetaInformation.mHttpMisc.IsEmpty()) {
+    aWriter.StringProperty("misc",
+                           aPreRecordedMetaInformation.mHttpMisc.Data());
   }
 
-  nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
-  if (runtime) {
-    nsAutoCString string;
-
-    res = runtime->GetXPCOMABI(string);
-    if (!NS_FAILED(res)) aWriter.StringProperty("abi", string.Data());
-
-    res = runtime->GetWidgetToolkit(string);
-    if (!NS_FAILED(res)) aWriter.StringProperty("toolkit", string.Data());
+  if (!aPreRecordedMetaInformation.mRuntimeABI.IsEmpty()) {
+    aWriter.StringProperty("abi",
+                           aPreRecordedMetaInformation.mRuntimeABI.Data());
+  }
+  if (!aPreRecordedMetaInformation.mRuntimeToolkit.IsEmpty()) {
+    aWriter.StringProperty("toolkit",
+                           aPreRecordedMetaInformation.mRuntimeToolkit.Data());
   }
 
-  nsCOMPtr<nsIXULAppInfo> appInfo =
-      do_GetService("@mozilla.org/xre/app-info;1");
-
-  if (appInfo) {
-    nsAutoCString string;
-    res = appInfo->GetName(string);
-    if (!NS_FAILED(res)) aWriter.StringProperty("product", string.Data());
-
-    res = appInfo->GetAppBuildID(string);
-    if (!NS_FAILED(res)) aWriter.StringProperty("appBuildID", string.Data());
-
-    res = appInfo->GetSourceURL(string);
-    if (!NS_FAILED(res)) aWriter.StringProperty("sourceURL", string.Data());
+  if (!aPreRecordedMetaInformation.mAppInfoProduct.IsEmpty()) {
+    aWriter.StringProperty("product",
+                           aPreRecordedMetaInformation.mAppInfoProduct.Data());
+  }
+  if (!aPreRecordedMetaInformation.mAppInfoAppBuildID.IsEmpty()) {
+    aWriter.StringProperty(
+        "appBuildID", aPreRecordedMetaInformation.mAppInfoAppBuildID.Data());
+  }
+  if (!aPreRecordedMetaInformation.mAppInfoSourceURL.IsEmpty()) {
+    aWriter.StringProperty(
+        "sourceURL", aPreRecordedMetaInformation.mAppInfoSourceURL.Data());
   }
 
-  ProcessInfo processInfo;
-  processInfo.cpuCount = 0;
-  processInfo.cpuCores = 0;
-  if (NS_SUCCEEDED(CollectProcessInfo(processInfo))) {
-    if (processInfo.cpuCores > 0) {
-      aWriter.IntProperty("physicalCPUs", processInfo.cpuCores);
-    }
-    if (processInfo.cpuCount > 0) {
-      aWriter.IntProperty("logicalCPUs", processInfo.cpuCount);
-    }
+  if (aPreRecordedMetaInformation.mProcessInfoCpuCores > 0) {
+    aWriter.IntProperty("physicalCPUs",
+                        aPreRecordedMetaInformation.mProcessInfoCpuCores);
+  }
+  if (aPreRecordedMetaInformation.mProcessInfoCpuCount > 0) {
+    aWriter.IntProperty("logicalCPUs",
+                        aPreRecordedMetaInformation.mProcessInfoCpuCount);
   }
 
   // We should avoid collecting extension metadata for profiler while XPCOM is
@@ -2613,6 +2672,7 @@ profiler_code_address_service_for_presymbolication() {
 
 static void locked_profiler_stream_json_for_this_process(
     PSLockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime,
+    const PreRecordedMetaInformation& aPreRecordedMetaInformation,
     bool aIsShuttingDown, ProfilerCodeAddressService* aService) {
   LOG("locked_profiler_stream_json_for_this_process");
 
@@ -2638,7 +2698,10 @@ static void locked_profiler_stream_json_for_this_process(
 
   // Put meta data
   aWriter.StartObjectProperty("meta");
-  { StreamMetaJSCustomObject(aLock, aWriter, aIsShuttingDown); }
+  {
+    StreamMetaJSCustomObject(aLock, aWriter, aIsShuttingDown,
+                             aPreRecordedMetaInformation);
+  }
   aWriter.EndObject();
 
   // Put page data
@@ -2742,6 +2805,8 @@ bool profiler_stream_json_for_this_process(
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  const auto preRecordedMetaInformation = PreRecordMetaInformation();
+
   PSAutoLock lock(gPSMutex);
 
   if (!ActivePS::Exists(lock)) {
@@ -2749,6 +2814,7 @@ bool profiler_stream_json_for_this_process(
   }
 
   locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
+                                               preRecordedMetaInformation,
                                                aIsShuttingDown, aService);
   return true;
 }
@@ -3932,9 +3998,10 @@ void profiler_init(void* aStackTop) {
                         filters.length(), 0);
 }
 
-static void locked_profiler_save_profile_to_file(PSLockRef aLock,
-                                                 const char* aFilename,
-                                                 bool aIsShuttingDown);
+static void locked_profiler_save_profile_to_file(
+    PSLockRef aLock, const char* aFilename,
+    const PreRecordedMetaInformation& aPreRecordedMetaInformation,
+    bool aIsShuttingDown);
 
 static SamplerThread* locked_profiler_stop(PSLockRef aLock);
 
@@ -3945,6 +4012,8 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  const auto preRecordedMetaInformation = PreRecordMetaInformation();
 
   ProfilerParent::ProfilerWillStopIfStarted();
 
@@ -3959,6 +4028,7 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
       const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
       if (filename) {
         locked_profiler_save_profile_to_file(lock, filename,
+                                             preRecordedMetaInformation,
                                              /* aIsShuttingDown */ true);
       }
       if (aIsFastShutdown == IsFastShutdown::Yes) {
@@ -4170,9 +4240,10 @@ Vector<nsCString> profiler_move_exit_profiles() {
   return profiles;
 }
 
-static void locked_profiler_save_profile_to_file(PSLockRef aLock,
-                                                 const char* aFilename,
-                                                 bool aIsShuttingDown = false) {
+static void locked_profiler_save_profile_to_file(
+    PSLockRef aLock, const char* aFilename,
+    const PreRecordedMetaInformation& aPreRecordedMetaInformation,
+    bool aIsShuttingDown = false) {
   LOG("locked_profiler_save_profile_to_file(%s)", aFilename);
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
@@ -4184,6 +4255,7 @@ static void locked_profiler_save_profile_to_file(PSLockRef aLock,
     w.Start();
     {
       locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0,
+                                                   aPreRecordedMetaInformation,
                                                    aIsShuttingDown, nullptr);
 
       w.StartArrayProperty("processes");
@@ -4206,13 +4278,16 @@ void profiler_save_profile_to_file(const char* aFilename) {
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  const auto preRecordedMetaInformation = PreRecordMetaInformation();
+
   PSAutoLock lock(gPSMutex);
 
   if (!ActivePS::Exists(lock)) {
     return;
   }
 
-  locked_profiler_save_profile_to_file(lock, aFilename);
+  locked_profiler_save_profile_to_file(lock, aFilename,
+                                       preRecordedMetaInformation);
 }
 
 uint32_t profiler_get_available_features() {
