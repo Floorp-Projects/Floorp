@@ -795,37 +795,11 @@ bool IonCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
     return false;
   }
 
-  Label done;
-  masm.branchPtr(Assembler::Equal, str, ImmGCPtr(atom), &done);
-
-  // The pointers are not equal, so if the input string is also an atom it
-  // must be a different string.
-  masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
-                    Imm32(JSString::ATOM_BIT), failure->label());
-
-  // Check the length.
-  masm.branch32(Assembler::NotEqual, Address(str, JSString::offsetOfLength()),
-                Imm32(atom->length()), failure->label());
-
-  // We have a non-atomized string with the same length. Call a helper
-  // function to do the comparison.
   LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
                                liveVolatileFloatRegs());
-  masm.PushRegsInMask(volatileRegs);
+  volatileRegs.takeUnchecked(scratch);
 
-  masm.setupUnalignedABICall(scratch);
-  masm.movePtr(ImmGCPtr(atom), scratch);
-  masm.passABIArg(scratch);
-  masm.passABIArg(str);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, EqualStringsHelperPure));
-  masm.mov(ReturnReg, scratch);
-
-  LiveRegisterSet ignore;
-  ignore.add(scratch);
-  masm.PopRegsInMaskIgnore(volatileRegs, ignore);
-  masm.branchIfFalseBool(scratch, failure->label());
-
-  masm.bind(&done);
+  masm.guardSpecificAtom(str, atom, scratch, volatileRegs, failure->label());
   return true;
 }
 
