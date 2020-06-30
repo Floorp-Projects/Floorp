@@ -224,10 +224,11 @@ def package(manifest, pkg, target):
 
 def fetch_package(manifest, pkg, host):
     version, info = package(manifest, pkg, host)
-    log('%s %s\n  %s\n  %s' % (pkg, version, info['url'], info['hash']))
     if not info['available']:
         log('%s marked unavailable for %s' % (pkg, host))
         raise AssertionError
+
+    log('%s %s\n  %s\n  %s' % (pkg, version, info['url'], info['hash']))
     sha = fetch(info['url'])
     if sha != info['hash']:
         log('Checksum mismatch: package resource is different from manifest'
@@ -240,7 +241,9 @@ def fetch_std(manifest, targets):
     stds = []
     for target in targets:
         stds.append(fetch_package(manifest, 'rust-std', target))
-        stds.append(fetch_package(manifest, 'rust-analysis', target))
+        # not available for i686
+        if target != "i686-unknown-linux-musl":
+            stds.append(fetch_package(manifest, 'rust-analysis', target))
     return stds
 
 

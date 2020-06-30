@@ -43,7 +43,7 @@ x86_64-apple-darwin)
   ;;
 esac
 
-export PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
+export PATH="$MOZ_FETCHES_DIR/rustc/bin:$PATH"
 
 cd $GECKO_PATH/testing/geckodriver
 

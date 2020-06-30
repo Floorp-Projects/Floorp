@@ -24,29 +24,31 @@ job-defaults:
             # Changes to 'third_party/rust' should be captured by
             # 'testing/geckodriver/Cargo.toml'.
 
+# For Linux platforms target "*-musl" so that the binary will be statically linked.
+
 linux32-geckodriver:
     treeherder:
         symbol: TL32(gd)
         platform: linux32/opt
     run:
-        arguments: ['i686-unknown-linux-gnu']
+        arguments: ['i686-unknown-linux-musl']
     attributes:
         build_platform: linux-geckodriver
     fetches:
         toolchain:
-            - linux64-rust
+            - linux64-rust-static
 
 linux64-geckodriver:
     treeherder:
         symbol: TL(gd)
         platform: linux64/opt
     run:
-        arguments: ['x86_64-unknown-linux-gnu']
+        arguments: ['x86_64-unknown-linux-musl']
     attributes:
         build_platform: linux64-geckodriver
     fetches:
         toolchain:
-            - linux64-rust
+            - linux64-rust-static
 
 macosx64-geckodriver:
     treeherder:
