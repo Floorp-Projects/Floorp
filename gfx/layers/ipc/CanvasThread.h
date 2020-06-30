@@ -77,9 +77,6 @@ class CanvasThreadHolder final {
   already_AddRefed<TaskQueue> CreateWorkerTaskQueue();
 
  private:
-  static void StaticRelease(
-      already_AddRefed<CanvasThreadHolder> aCanvasThreadHolder);
-
   static StaticDataMutex<StaticRefPtr<CanvasThreadHolder>> sCanvasThreadHolder;
 
   CanvasThreadHolder(already_AddRefed<nsISerialEventTarget> aCanvasThread,
