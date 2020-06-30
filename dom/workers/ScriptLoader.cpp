@@ -48,6 +48,7 @@
 #include "nsXPCOM.h"
 #include "xpcpublic.h"
 
+#include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/Maybe.h"
@@ -2465,13 +2466,14 @@ void Load(WorkerPrivate* aWorkerPrivate,
     return;
   }
 
-  nsTArray<ScriptLoadInfo> loadInfos;
-  loadInfos.SetLength(urlCount);
-
-  for (uint32_t index = 0; index < urlCount; index++) {
-    loadInfos[index].mURL = aScriptURLs[index];
-    loadInfos[index].mLoadFlags = aWorkerPrivate->GetLoadFlags();
-  }
+  nsTArray<ScriptLoadInfo> loadInfos = TransformIntoNewArray(
+      aScriptURLs,
+      [loadFlags = aWorkerPrivate->GetLoadFlags()](const auto& scriptURL) {
+        ScriptLoadInfo res;
+        res.mURL = scriptURL;
+        res.mLoadFlags = loadFlags;
+        return res;
+      });
 
   LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), std::move(loadInfos),
                  false, aWorkerScriptType, aRv);
