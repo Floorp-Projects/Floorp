@@ -2,6 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { logManager } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
@@ -15,8 +18,6 @@ const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 const CLEANUP_DELAY = 2000;
 const DELAY_BUFFER = 500; // Buffer for timers on different OS platforms.
 
-var errorHandler = Service.errorHandler;
-
 function run_test() {
   validate_all_future_pings();
   run_next_test();
@@ -24,7 +25,7 @@ function run_test() {
 
 add_test(function test_noOutput() {
   // Ensure that the log appender won't print anything.
-  errorHandler._logManager._fileAppender.level = Log.Level.Fatal + 1;
+  logManager._fileAppender.level = Log.Level.Fatal + 1;
 
   // Clear log output from startup.
   Svc.Prefs.set("log.appender.file.logOnSuccess", false);
@@ -37,7 +38,7 @@ add_test(function test_noOutput() {
     Svc.Obs.add("weave:service:reset-file-log", function onResetFileLogInner() {
       Svc.Obs.remove("weave:service:reset-file-log", onResetFileLogInner);
 
-      errorHandler._logManager._fileAppender.level = Log.Level.Trace;
+      logManager._fileAppender.level = Log.Level.Trace;
       Svc.Prefs.resetBranch("");
       run_next_test();
     });
