@@ -4897,7 +4897,7 @@ void HTMLEditor::MovePreviousSiblings(nsIContent& aChild,
 nsresult HTMLEditor::DeleteElementsExceptTableRelatedElements(nsINode& aNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!HTMLEditUtils::IsTableElementButNotTable(&aNode)) {
+  if (!HTMLEditUtils::IsAnyTableElementButNotTable(&aNode)) {
     nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*aNode.AsContent()));
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
@@ -8947,7 +8947,7 @@ nsresult HTMLEditor::CollectEditTargetNodes(
         // ends at or starts from outside the `<table>`, we need to make
         // lists in each selected table-cells.
         OwningNonNull<nsIContent> content = aOutArrayOfContents[i - 1];
-        if (HTMLEditUtils::IsTableElementButNotTable(content)) {
+        if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
           // XXX aCollectNonEditableNodes is ignored here.  Maybe a bug.
           aOutArrayOfContents.RemoveElementAt(i - 1);
           CollectChildren(content, aOutArrayOfContents, i - 1,
@@ -8988,7 +8988,7 @@ nsresult HTMLEditor::CollectEditTargetNodes(
       // still need to make sure we don't act on table elements
       for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
         OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
-        if (HTMLEditUtils::IsTableElementButNotTable(content)) {
+        if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
           aOutArrayOfContents.RemoveElementAt(i);
           CollectChildren(*content, aOutArrayOfContents, i,
                           CollectListChildren::Yes, CollectTableChildren::Yes,
@@ -9962,7 +9962,7 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
 
   for (auto& content : aArrayOfContents) {
     // If the node is a table element or list item, dive inside
-    if (HTMLEditUtils::IsTableElementButNotTable(content) ||
+    if (HTMLEditUtils::IsAnyTableElementButNotTable(content) ||
         HTMLEditUtils::IsListItem(content)) {
       // Forget any previous block
       curBlock = nullptr;
