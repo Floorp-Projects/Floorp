@@ -356,3 +356,21 @@ TEST(TestAudioDriftCorrection, NotEnoughFrames)
     }
   }
 }
+
+TEST(TestAudioDriftCorrection, CrashInAudioResampler)
+{
+  const int32_t sampleRateTransmitter = 48000;
+  const int32_t sampleRateReceiver = 48000;
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
+  const int32_t targetFrames = sampleRateReceiver / 100;
+
+  for (int i = 0; i < 100; ++i) {
+    AudioChunk chunk = CreateAudioChunk<float>(sampleRateTransmitter / 1000, 1,
+                                               AUDIO_FORMAT_FLOAT32);
+    AudioSegment inSegment;
+    inSegment.AppendAndConsumeChunk(&chunk);
+
+    AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
+    EXPECT_EQ(outSegment.GetDuration(), targetFrames);
+  }
+}
