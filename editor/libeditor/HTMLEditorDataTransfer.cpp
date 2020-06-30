@@ -3122,15 +3122,15 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
   }
 }
 
+// static
 Element*
 HTMLEditor::AutoHTMLFragmentBoundariesFixer::GetMostAncestorListOrTableElement(
     const nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents,
-    const nsTArray<OwningNonNull<Element>>& aArrayOfListAndTableRelatedElements)
-    const {
+    const nsTArray<OwningNonNull<Element>>&
+        aArrayOfListAndTableRelatedElements) {
   Element* lastFoundAncestorListOrTableElement = nullptr;
   for (auto& content : aArrayOfTopMostChildContents) {
-    if (HTMLEditUtils::IsAnyTableElement(content) &&
-        !content->IsHTMLElement(nsGkAtoms::table)) {
+    if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
       Element* tableElement = nullptr;
       for (Element* maybeTableElement = content->GetParentElement();
            maybeTableElement;
