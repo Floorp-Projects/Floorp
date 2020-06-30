@@ -3903,7 +3903,7 @@ var XPIInstall = {
     url = await UpdateUtils.formatUpdateURL(url);
 
     logger.info(`Starting system add-on update check from ${url}.`);
-    let res = await ProductAddonChecker.getProductAddonList(url);
+    let res = await ProductAddonChecker.getProductAddonList(url, true);
 
     // If there was no list then do nothing.
     if (!res || !res.gmpAddons) {
