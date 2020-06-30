@@ -886,9 +886,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     }
 
     // Cancel all the channels that were already opened.
-    for (uint32_t index = 0; index < mLoadInfos.Length(); index++) {
-      ScriptLoadInfo& loadInfo = mLoadInfos[index];
-
+    for (ScriptLoadInfo& loadInfo : mLoadInfos) {
       // If promise or channel is non-null, their failures will lead to
       // LoadingFinished being called.
       bool callLoadingFinished = true;
@@ -942,11 +940,10 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     }
 
     if (!mWorkerPrivate->IsServiceWorker() || IsDebuggerScript()) {
-      for (uint32_t index = 0, len = mLoadInfos.Length(); index < len;
-           ++index) {
-        nsresult rv = LoadScript(mLoadInfos[index]);
+      for (ScriptLoadInfo& loadInfo : mLoadInfos) {
+        nsresult rv = LoadScript(loadInfo);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          LoadingFinished(mLoadInfos[index], rv);
+          LoadingFinished(loadInfo, rv);
           return rv;
         }
       }
@@ -957,9 +954,9 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     MOZ_ASSERT(!mCacheCreator);
     mCacheCreator = new CacheCreator(mWorkerPrivate);
 
-    for (uint32_t index = 0, len = mLoadInfos.Length(); index < len; ++index) {
+    for (ScriptLoadInfo& loadInfo : mLoadInfos) {
       RefPtr<CacheScriptLoader> loader = new CacheScriptLoader(
-          mWorkerPrivate, mLoadInfos[index], IsMainWorkerScript(), this);
+          mWorkerPrivate, loadInfo, IsMainWorkerScript(), this);
       mCacheCreator->AddLoader(loader);
     }
 
