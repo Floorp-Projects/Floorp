@@ -4,7 +4,6 @@
 from __future__ import absolute_import
 
 import os
-import re
 
 from perfdocs.logger import PerfDocLogger
 from perfdocs.utils import read_yaml
@@ -61,28 +60,30 @@ class Gatherer(object):
                     "path": Path to the perfdocs directory.
                     "yml": Name of the configuration YAML file.
                     "rst": Name of the RST file.
+                    "static": Name of the static file
                 }, ...
             ]
 
         This method doesn't return anything. The result can be found in
         the perfdocs_tree attribute.
         '''
-        yml_match = re.compile('^config.y(a)?ml$')
-        rst_match = re.compile('^index.rst$')
 
         for dirpath, dirname, files in os.walk(self.root_dir):
             # Walk through the testing directory tree
             if dirpath.endswith('/perfdocs'):
-                matched = {"path": dirpath, "yml": "", "rst": ""}
+                matched = {"path": dirpath, "yml": "", "rst": "", "static": []}
                 for file in files:
-                    # Add the yml/rst file to its key if re finds the searched file
-                    if re.search(yml_match, file):
-                        matched["yml"] = re.search(yml_match, file).string
-                    if re.search(rst_match, file):
-                        matched["rst"] = re.search(rst_match, file).string
-                    # Append to structdocs if all the searched files were found
-                    if all(matched.values()):
-                        self._perfdocs_tree.append(matched)
+                    # Add the yml/rst/static file to its key if re finds the searched file
+                    if file == "config.yml" or file == "config.yaml":
+                        matched["yml"] = file
+                    elif file == "index.rst":
+                        matched["rst"] = file
+                    elif file.endswith(".rst"):
+                        matched["static"].append(file)
+
+                # Append to structdocs if all the searched files were found
+                if all(val for val in matched.values() if not type(val) == list):
+                    self._perfdocs_tree.append(matched)
 
         logger.log("Found {} perfdocs directories in {}"
                    .format(len(self._perfdocs_tree), self.root_dir))
