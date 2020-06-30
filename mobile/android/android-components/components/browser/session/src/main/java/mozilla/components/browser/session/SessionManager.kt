@@ -317,6 +317,7 @@ class SessionManager(
     /**
      * Gets the linked engine session for the provided session (if it exists).
      */
+    @Deprecated("Read EngineSession from BrowserStore instead")
     fun getEngineSession(session: Session = selectedSessionOrThrow) = delegate.getEngineSession(session)
 
     /**
