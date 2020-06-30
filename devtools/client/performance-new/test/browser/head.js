@@ -202,11 +202,33 @@ async function makeSureProfilerPopupIsEnabled() {
 }
 
 /**
+ * XUL popups will fire the popupshown and popuphidden events. These will fire for
+ * any type of popup in the browser. This function waits for one of those events, and
+ * checks that the viewId of the popup is PanelUI-profiler
+ *
+ * @param {"popupshown" | "popuphidden"} eventName
+ * @returns {Promise<void>}
+ */
+function waitForProfilerPopupEvent(eventName) {
+  return new Promise(resolve => {
+    function handleEvent(event) {
+      if (event.target.getAttribute("viewId") === "PanelUI-profiler") {
+        window.removeEventListener(eventName, handleEvent);
+        resolve();
+      }
+    }
+    window.addEventListener(eventName, handleEvent);
+  });
+}
+
+/**
+ * Do not use this directly in a test. Prefer withPopupOpen and openPopupAndEnsureCloses.
+ *
  * This function toggles the profiler menu button, and then uses user gestures
  * to click it open. It waits a tick to make sure it has a chance to initialize.
  * @return {Promise<void>}
  */
-async function toggleOpenProfilerPopup() {
+async function _toggleOpenProfilerPopup(window) {
   info("Toggle open the profiler popup.");
 
   info("> Find the profiler menu button.");
@@ -215,9 +237,68 @@ async function toggleOpenProfilerPopup() {
     throw new Error("Could not find the profiler button in the menu.");
   }
 
+  const popupShown = waitForProfilerPopupEvent("popupshown");
+
   info("> Trigger a click on the profiler menu button.");
   profilerButton.click();
+
+  if (profilerButton.getAttribute("open") !== "true") {
+    throw new Error(
+      "This test assumes that the button will have an open=true attribute after clicking it."
+    );
+  }
+
+  info("> Wait for the popup to be shown.");
+  await popupShown;
+  // Also wait a tick in case someone else is subscribing to the "popupshown" event
+  // and is doing synchronous work with it.
   await tick();
+}
+
+/**
+ * Do not use this directly in a test. Prefer withPopupOpen.
+ *
+ * This function uses a keyboard shortcut to close the profiler popup.
+ * @return {Promise<void>}
+ */
+async function _closePopup(window) {
+  const popupHiddenPromise = waitForProfilerPopupEvent("popuphidden");
+  info("> Trigger an escape key to hide the popup");
+  EventUtils.synthesizeKey("KEY_Escape");
+
+  info("> Wait for the popup to be hidden.");
+  await popupHiddenPromise;
+  // Also wait a tick in case someone else is subscribing to the "popuphidden" event
+  // and is doing synchronous work with it.
+  await tick();
+}
+
+/**
+ * Perform some action on the popup, and close it afterwards.
+ * @param {Window} window
+ * @param {() => Promise<void>} callback
+ */
+async function withPopupOpen(window, callback) {
+  await _toggleOpenProfilerPopup(window);
+  await callback();
+  await _closePopup(window);
+}
+
+/**
+ * This function opens the profiler popup, but also ensures that something else closes
+ * it before the end of the test. This is useful for tests that trigger the profiler
+ * popup to close through an implicit action, like opening a tab.
+ *
+ * @param {Window} window
+ * @param {() => Promise<void>} callback
+ */
+async function openPopupAndEnsureCloses(window, callback) {
+  await _toggleOpenProfilerPopup(window);
+  // We want to ensure the popup gets closed by the test, during the callback.
+  const popupHiddenPromise = waitForProfilerPopupEvent("popuphidden");
+  await callback();
+  info("> Verifying that the popup was closed by the test.");
+  await popupHiddenPromise;
 }
 
 /**

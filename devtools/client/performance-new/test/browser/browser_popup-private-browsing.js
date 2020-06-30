@@ -9,7 +9,6 @@ add_task(async function test() {
     "Test that the profiler popup gets disabled when a private browsing window is open."
   );
   await makeSureProfilerPopupIsEnabled();
-  await toggleOpenProfilerPopup();
 
   const getRecordingButton = () =>
     getElementByLabel(document, "Start Recording");
@@ -19,7 +18,9 @@ add_task(async function test() {
       "The profiler is currently disabled"
     );
 
-  ok(await getRecordingButton(), "The start recording button is available");
+  await withPopupOpen(window, async () => {
+    ok(await getRecordingButton(), "The start recording button is available");
+  });
 
   info("Open a private browsing window.");
   const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
@@ -28,19 +29,19 @@ add_task(async function test() {
 
   info("Switch back to the main window and open the popup again.");
   window.focus();
-  await toggleOpenProfilerPopup();
-
-  ok(await getDisabledMessage(), "The disabled message is displayed.");
+  await withPopupOpen(window, async () => {
+    ok(await getDisabledMessage(), "The disabled message is displayed.");
+  });
 
   info("Close the private window");
   await BrowserTestUtils.closeWindow(privateWindow);
 
   info("Make sure the first window is focused, and open the popup back up.");
   window.focus();
-  await toggleOpenProfilerPopup();
-
-  ok(
-    await getRecordingButton(),
-    "The start recording button is available once again."
-  );
+  await withPopupOpen(window, async () => {
+    ok(
+      await getRecordingButton(),
+      "The start recording button is available once again."
+    );
+  });
 });

@@ -5,7 +5,6 @@
 
 add_task(async function test() {
   info("Test that about:profiling can modify the sampling interval.");
-  console.log(getActiveConfiguration());
 
   await withAboutProfiling(async document => {
     is(
