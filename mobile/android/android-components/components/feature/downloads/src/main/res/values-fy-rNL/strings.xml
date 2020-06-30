@@ -23,7 +23,7 @@
     <string name="mozac_feature_downloads_could_not_open_file">Kin bestân net iepenje</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported">Gjin app fûn om %1$s-bestannen mei te iepenjen</string>
+    <string name="mozac_feature_downloads_open_not_supported1">Gjin app fûn om %1$s-bestannen mei te iepenjen</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Pauzearje</string>

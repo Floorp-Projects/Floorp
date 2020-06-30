@@ -71,7 +71,7 @@
 
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
-        <li>Страница може бити привремено недоступна или заузета. Покушшајте поново за неколико тренутака.</li>
+        <li>Страница може бити привремено недоступна или заузета. Покушајте поново за неколико тренутака.</li>
         <li>Ако не можете да учитате ниједну страницу, проверите мобилни пренос података или Wi-Fi везу.</li>
       </ul>]]></string>
 
