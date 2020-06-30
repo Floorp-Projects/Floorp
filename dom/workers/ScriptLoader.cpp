@@ -368,15 +368,14 @@ class ScriptLoaderRunnable;
 
 class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
   ScriptLoaderRunnable& mScriptLoader;
-  bool mIsWorkerScript;
-  uint32_t mFirstIndexToExecute;
-  uint32_t mLastIndexToExecute;
+  const bool mIsWorkerScript;
+  const Span<ScriptLoadInfo> mLoadInfosAlreadyExecuted, mLoadInfosToExecute;
 
  public:
   ScriptExecutorRunnable(ScriptLoaderRunnable& aScriptLoader,
                          nsIEventTarget* aSyncLoopTarget, bool aIsWorkerScript,
-                         uint32_t aFirstIndexToExecute,
-                         uint32_t aLastIndexToExecute);
+                         Span<ScriptLoadInfo> aLoadInfosAlreadyExecuted,
+                         Span<ScriptLoadInfo> aLoadInfosToExecute);
 
  private:
   ~ScriptExecutorRunnable() = default;
@@ -397,6 +396,8 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
                             bool aResult, bool aMutedError);
 
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* WorkerPrivate);
+
+  bool AllScriptsExecutable() const;
 };
 
 class CacheScriptLoader;
@@ -1516,9 +1517,14 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     }
 
     if (firstIndexToExecute != UINT32_MAX && lastIndexToExecute != UINT32_MAX) {
+      const auto [loadInfosAlreadyExecuted, loadInfosToExecute] =
+          mLoadInfos.AsSpan()
+              .First(lastIndexToExecute + 1)
+              .SplitAt(firstIndexToExecute);
+
       RefPtr<ScriptExecutorRunnable> runnable = new ScriptExecutorRunnable(
-          *this, mSyncLoopTarget, IsMainWorkerScript(), firstIndexToExecute,
-          lastIndexToExecute);
+          *this, mSyncLoopTarget, IsMainWorkerScript(),
+          loadInfosAlreadyExecuted, loadInfosToExecute);
       if (!runnable->Dispatch()) {
         MOZ_ASSERT(false, "This should never fail!");
       }
@@ -2021,16 +2027,20 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
     ScriptLoaderRunnable& aScriptLoader, nsIEventTarget* aSyncLoopTarget,
-    bool aIsWorkerScript, uint32_t aFirstIndexToExecute,
-    uint32_t aLastIndexToExecute)
+    bool aIsWorkerScript, Span<ScriptLoadInfo> aLoadInfosAlreadyExecuted,
+    Span<ScriptLoadInfo> aLoadInfosToExecute)
     : MainThreadWorkerSyncRunnable(aScriptLoader.mWorkerPrivate,
                                    aSyncLoopTarget),
       mScriptLoader(aScriptLoader),
       mIsWorkerScript(aIsWorkerScript),
-      mFirstIndexToExecute(aFirstIndexToExecute),
-      mLastIndexToExecute(aLastIndexToExecute) {
-  MOZ_ASSERT(aFirstIndexToExecute <= aLastIndexToExecute);
-  MOZ_ASSERT(aLastIndexToExecute < aScriptLoader.mLoadInfos.Length());
+      mLoadInfosAlreadyExecuted(aLoadInfosAlreadyExecuted),
+      mLoadInfosToExecute(aLoadInfosToExecute) {
+  // If there are load infos for scripts that have already been executed, the
+  // load infos for the scripts to execute must immediate follow them.
+  MOZ_ASSERT_IF(mLoadInfosAlreadyExecuted.Length(),
+                mLoadInfosAlreadyExecuted.Elements() +
+                        mLoadInfosAlreadyExecuted.Length() ==
+                    mLoadInfosToExecute.Elements());
 }
 
 bool ScriptExecutorRunnable::IsDebuggerRunnable() const {
@@ -2051,7 +2061,7 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
     return false;
   }
 
-  MOZ_ASSERT(mFirstIndexToExecute == 0);
+  MOZ_ASSERT(mLoadInfosAlreadyExecuted.Length() == 0);
   MOZ_ASSERT(!mScriptLoader.mRv.Failed());
 
   // Move the CSP from the workerLoadInfo in the corresponding Client
@@ -2088,18 +2098,17 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
                                        WorkerPrivate* aWorkerPrivate) {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  auto& loadInfos = mScriptLoader.mLoadInfos;
-
   // Don't run if something else has already failed.
-  for (uint32_t index = 0; index < mFirstIndexToExecute; index++) {
-    const ScriptLoadInfo& loadInfo = loadInfos[index];
+  if (std::any_of(
+          mLoadInfosAlreadyExecuted.cbegin(), mLoadInfosAlreadyExecuted.cend(),
+          [](const ScriptLoadInfo& loadInfo) {
+            NS_ASSERTION(!loadInfo.mChannel,
+                         "Should no longer have a channel!");
+            NS_ASSERTION(loadInfo.mExecutionScheduled, "Should be scheduled!");
 
-    NS_ASSERTION(!loadInfo.mChannel, "Should no longer have a channel!");
-    NS_ASSERTION(loadInfo.mExecutionScheduled, "Should be scheduled!");
-
-    if (!loadInfo.mExecutionResult) {
-      return true;
-    }
+            return !loadInfo.mExecutionResult;
+          })) {
+    return true;
   }
 
   // If nothing else has failed, our ErrorResult better not be a failure either.
@@ -2110,10 +2119,7 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   MOZ_ASSERT(global);
 
-  for (uint32_t index = mFirstIndexToExecute; index <= mLastIndexToExecute;
-       index++) {
-    ScriptLoadInfo& loadInfo = loadInfos[index];
-
+  for (ScriptLoadInfo& loadInfo : mLoadInfosToExecute) {
     NS_ASSERTION(!loadInfo.mChannel, "Should no longer have a channel!");
     NS_ASSERTION(loadInfo.mExecutionScheduled, "Should be scheduled!");
     NS_ASSERTION(!loadInfo.mExecutionResult, "Should not have executed yet!");
@@ -2177,15 +2183,13 @@ void ScriptExecutorRunnable::PostRun(JSContext* aCx,
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!JS_IsExceptionPending(aCx), "Who left an exception on there?");
 
-  const auto& loadInfos = mScriptLoader.mLoadInfos;
-
-  if (mLastIndexToExecute == loadInfos.Length() - 1) {
+  if (AllScriptsExecutable()) {
     // All done. If anything failed then return false.
     bool result = true;
     bool mutedError = false;
-    for (uint32_t index = 0; index < loadInfos.Length(); index++) {
-      if (!loadInfos[index].mExecutionResult) {
-        mutedError = loadInfos[index].mMutedErrorFlag.valueOr(true);
+    for (const auto& loadInfo : mScriptLoader.mLoadInfos) {
+      if (!loadInfo.mExecutionResult) {
+        mutedError = loadInfo.mMutedErrorFlag.valueOr(true);
         result = false;
         break;
       }
@@ -2201,7 +2205,7 @@ void ScriptExecutorRunnable::PostRun(JSContext* aCx,
 }
 
 nsresult ScriptExecutorRunnable::Cancel() {
-  if (mLastIndexToExecute == mScriptLoader.mLoadInfos.Length() - 1) {
+  if (AllScriptsExecutable()) {
     ShutdownScriptLoader(mWorkerPrivate->GetJSContext(), mWorkerPrivate, false,
                          false);
   }
@@ -2214,7 +2218,7 @@ void ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
                                                   bool aMutedError) {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  MOZ_ASSERT(mLastIndexToExecute == mScriptLoader.mLoadInfos.Length() - 1);
+  MOZ_ASSERT(AllScriptsExecutable());
 
   if (mIsWorkerScript) {
     aWorkerPrivate->SetLoadingWorkerScript(false);
@@ -2275,6 +2279,11 @@ void ScriptExecutorRunnable::LogExceptionToConsole(
 
   RefPtr<AsyncErrorReporter> r = new AsyncErrorReporter(xpcReport);
   NS_DispatchToMainThread(r);
+}
+
+bool ScriptExecutorRunnable::AllScriptsExecutable() const {
+  return mScriptLoader.mLoadInfos.Length() ==
+         mLoadInfosAlreadyExecuted.Length() + mLoadInfosToExecute.Length();
 }
 
 void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
