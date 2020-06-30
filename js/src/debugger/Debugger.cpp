@@ -639,6 +639,14 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
       // have already populated the "frames" map with a Debugger.Frame.
       MOZ_ASSERT_IF(genObj, !generatorFrames.has(genObj));
 
+      // If the frame's generator is closed, there is no way to associate the
+      // generator with the frame successfully because there is no way to
+      // get the generator's callee script, and even if we could, having it
+      // there would in no way affect the behavior of the frame.
+      if (genObj && genObj->isClosed()) {
+        genObj = nullptr;
+      }
+
       // If no AbstractGeneratorObject exists yet, we create a Debugger.Frame
       // below anyway, and Debugger::onNewGenerator() will associate it
       // with the AbstractGeneratorObject later when we hit JSOp::Generator.
@@ -655,16 +663,29 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
       return false;
     }
 
+    auto terminateDebuggerFrameGuard = MakeScopeExit([&] {
+      frame->freeFrameIterData(cx->defaultFreeOp());
+      frame->clearGeneratorInfo(cx->runtime()->defaultFreeOp());
+      generatorFrames.remove(genObj);
+    });
+
+    if (genObj) {
+      DependentAddPtr<GeneratorWeakMap> genPtr(cx, generatorFrames, genObj);
+      if (!genPtr.add(cx, generatorFrames, genObj, frame)) {
+        return false;
+      }
+    }
+
     if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
       return false;
     }
 
     if (!frames.add(p, referent, frame)) {
-      frame->freeFrameIterData(cx->defaultFreeOp());
-      frame->clearGeneratorInfo(cx->runtime()->defaultFreeOp(), this);
       ReportOutOfMemory(cx);
       return false;
     }
+
+    terminateDebuggerFrameGuard.release();
   }
 
   result.set(p->value());
@@ -678,13 +699,13 @@ bool Debugger::getFrame(JSContext* cx, Handle<AbstractGeneratorObject*> genObj,
   // stack for the generator's frame, but for the moment, we only need this
   // function to handle generators we've found on promises' reaction records,
   // which should always be suspended.
-  MOZ_ASSERT(!genObj->isRunning());
+  MOZ_ASSERT(genObj->isSuspended());
 
   // Do we have an existing Debugger.Frame for this generator?
-  GeneratorWeakMap::Ptr gp = generatorFrames.lookup(genObj);
-  if (gp) {
-    MOZ_ASSERT(&gp->value()->unwrappedGenerator() == genObj);
-    result.set(gp->value());
+  DependentAddPtr<GeneratorWeakMap> p(cx, generatorFrames, genObj);
+  if (p) {
+    MOZ_ASSERT(&p->value()->unwrappedGenerator() == genObj);
+    result.set(p->value());
     return true;
   }
 
@@ -695,6 +716,12 @@ bool Debugger::getFrame(JSContext* cx, Handle<AbstractGeneratorObject*> genObj,
 
   result.set(DebuggerFrame::create(cx, proto, debugger, nullptr, genObj));
   if (!result) {
+    return false;
+  }
+
+  if (!p.add(cx, generatorFrames, genObj, result)) {
+    result->freeFrameIterData(cx->defaultFreeOp());
+    result->clearGeneratorInfo(cx->runtime()->defaultFreeOp());
     return false;
   }
 
@@ -1176,23 +1203,29 @@ bool DebugAPI::slowPathOnNewGenerator(JSContext* cx, AbstractFramePtr frame,
   // created. It must be associated with any existing Debugger.Frames.
   bool ok = true;
   Debugger::forEachDebuggerFrame(
-      frame, [&](Debugger*, DebuggerFrame* frameObjPtr) {
+      frame, [&](Debugger* dbg, DebuggerFrame* frameObjPtr) {
         if (!ok) {
           return;
         }
 
         RootedDebuggerFrame frameObj(cx, frameObjPtr);
-        {
-          AutoRealm ar(cx, frameObj);
 
-          if (!frameObj->setGeneratorInfo(cx, genObj)) {
-            ReportOutOfMemory(cx);
+        AutoRealm ar(cx, frameObj);
 
-            // This leaves `genObj` and `frameObj` unassociated. It's OK
-            // because we won't pause again with this generator on the stack:
-            // the caller will immediately discard `genObj` and unwind `frame`.
-            ok = false;
-          }
+        if (!frameObj->setGeneratorInfo(cx, genObj)) {
+          ReportOutOfMemory(cx);
+
+          // This leaves `genObj` and `frameObj` unassociated. It's OK
+          // because we won't pause again with this generator on the stack:
+          // the caller will immediately discard `genObj` and unwind `frame`.
+          ok = false;
+          return;
+        }
+
+        DependentAddPtr<Debugger::GeneratorWeakMap> genPtr(
+            cx, dbg->generatorFrames, genObj);
+        if (!genPtr.add(cx, dbg->generatorFrames, genObj, frameObj)) {
+          ok = false;
         }
       });
   return ok;
@@ -3820,7 +3853,8 @@ void DebugAPI::sweepAll(JSFreeOp* fop) {
            e.popFront()) {
         DebuggerFrame* frameObj = e.front().value();
         if (IsAboutToBeFinalizedUnbarriered(&frameObj)) {
-          frameObj->clearGeneratorInfo(fop, dbg, &e);
+          e.removeFront();
+          frameObj->clearGeneratorInfo(fop);
         }
       }
     }
@@ -4708,7 +4742,8 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
       AbstractGeneratorObject& genObj = *e.front().key();
       DebuggerFrame& frameObj = *e.front().value();
       if (genObj.isClosed() || &genObj.callee().global() == global) {
-        frameObj.clearGeneratorInfo(fop, this, &e);
+        e.removeFront();
+        frameObj.clearGeneratorInfo(fop);
       }
     }
   }
@@ -6319,7 +6354,8 @@ void Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
         MOZ_ASSERT(p);
         MOZ_ASSERT(p->value() == frameobj);
 #endif
-        frameobj->clearGeneratorInfo(fop, dbg);
+        dbg->generatorFrames.remove(&frameobj->unwrappedGenerator());
+        frameobj->clearGeneratorInfo(fop);
       }
     } else {
       frameobj->maybeDecrementStepperCounter(fop, frame);

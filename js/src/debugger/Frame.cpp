@@ -352,64 +352,37 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
                                      Handle<AbstractGeneratorObject*> genObj) {
   cx->check(this);
 
-  Debugger::GeneratorWeakMap::AddPtr p =
-      owner()->generatorFrames.lookupForAdd(genObj);
-  if (p) {
-    MOZ_ASSERT(p->value() == this);
-    MOZ_ASSERT(&unwrappedGenerator() == genObj);
-    return true;
-  }
+  MOZ_ASSERT(!hasGeneratorInfo());
+  MOZ_ASSERT(!genObj->isClosed());
 
-  // There are three relations we must establish:
+  // There are two relations we must establish:
   //
   // 1) The DebuggerFrame must point to the AbstractGeneratorObject.
   //
-  // 2) generatorFrames must map the AbstractGeneratorObject to the
-  //    DebuggerFrame.
-  //
-  // 3) The generator's script's observer count must be bumped.
-  UniquePtr<GeneratorInfo> info;
-  RootedScript script(cx);
-  if (!genObj->isClosed()) {
-    script = genObj->callee().nonLazyScript();
-    info.reset(cx->new_<GeneratorInfo>(genObj, script));
-    if (!info) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-  }
+  // 2) The generator's script's observer count must be bumped.
 
-  if (!owner()->generatorFrames.relookupOrAdd(p, genObj, this)) {
-    ReportOutOfMemory(cx);
+  RootedScript script(cx, genObj->callee().nonLazyScript());
+  auto info = cx->make_unique<GeneratorInfo>(genObj, script);
+  if (!info) {
     return false;
   }
-  auto generatorFramesGuard =
-      MakeScopeExit([&] { owner()->generatorFrames.remove(genObj); });
 
-  if (script) {
-    AutoRealm ar(cx, script);
+  AutoRealm ar(cx, script);
 
-    // All frames running a debuggee script must themselves be marked as
-    // debuggee frames. Bumping a script's generator observer count makes it a
-    // debuggee, so we need to mark all frames on the stack running it as
-    // debuggees as well, not just this one. This call takes care of all that.
-    if (!Debugger::ensureExecutionObservabilityOfScript(cx, script)) {
-      return false;
-    }
-
-    if (!DebugScript::incrementGeneratorObserverCount(cx, script)) {
-      return false;
-    }
+  // All frames running a debuggee script must themselves be marked as
+  // debuggee frames. Bumping a script's generator observer count makes it a
+  // debuggee, so we need to mark all frames on the stack running it as
+  // debuggees as well, not just this one. This call takes care of all that.
+  if (!Debugger::ensureExecutionObservabilityOfScript(cx, script)) {
+    return false;
   }
 
-  if (info) {
-    InitReservedSlot(this, GENERATOR_INFO_SLOT, info.release(),
-                     MemoryUse::DebuggerFrameGeneratorInfo);
-  } else {
-    setReservedSlot(GENERATOR_INFO_SLOT, UndefinedValue());
+  if (!DebugScript::incrementGeneratorObserverCount(cx, script)) {
+    return false;
   }
-  generatorFramesGuard.release();
 
+  InitReservedSlot(this, GENERATOR_INFO_SLOT, info.release(),
+                   MemoryUse::DebuggerFrameGeneratorInfo);
   return true;
 }
 
@@ -436,25 +409,6 @@ void DebuggerFrame::clearGeneratorInfo(JSFreeOp* fop) {
   // 1) The DebuggerFrame must no longer point to the AbstractGeneratorObject.
   setReservedSlot(GENERATOR_INFO_SLOT, UndefinedValue());
   fop->delete_(this, info, MemoryUse::DebuggerFrameGeneratorInfo);
-}
-
-void DebuggerFrame::clearGeneratorInfo(
-    JSFreeOp* fop, Debugger* owner,
-    Debugger::GeneratorWeakMap::Enum* maybeGeneratorFramesEnum) {
-  if (!hasGeneratorInfo()) {
-    return;
-  }
-
-  // 2) generatorFrames must no longer map the AbstractGeneratorObject to the
-  // DebuggerFrame.
-  GeneratorInfo* info = generatorInfo();
-  if (maybeGeneratorFramesEnum) {
-    maybeGeneratorFramesEnum->removeFront();
-  } else {
-    owner->generatorFrames.remove(&info->unwrappedGenerator());
-  }
-
-  clearGeneratorInfo(fop);
 }
 
 /* static */

@@ -247,9 +247,6 @@ class DebuggerFrame : public NativeObject {
    * allows this function to be used while iterating over generatorFrames.
    */
   void clearGeneratorInfo(JSFreeOp* fop);
-  void clearGeneratorInfo(
-      JSFreeOp* fop, Debugger* owner,
-      Debugger::GeneratorWeakMap::Enum* maybeGeneratorFramesEnum = nullptr);
 
   /*
    * Called after a generator/async frame is resumed, before exposing this
