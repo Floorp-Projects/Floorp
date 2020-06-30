@@ -176,13 +176,6 @@ inline js::Debugger* js::DebuggerFrame::owner() const {
   return Debugger::fromJSObject(dbgobj);
 }
 
-inline bool js::DebuggerFrame::hasIncrementedStepper() const {
-  return getReservedSlot(HAS_INCREMENTED_STEPPER_SLOT).toBoolean();
-}
-inline void js::DebuggerFrame::setHasIncrementedStepper(bool incremented) {
-  setReservedSlot(HAS_INCREMENTED_STEPPER_SLOT, BooleanValue(incremented));
-}
-
 const JSClassOps DebuggerFrame::classOps_ = {
     nullptr,                         // addProperty
     nullptr,                         // delProperty
@@ -243,7 +236,6 @@ DebuggerFrame* DebuggerFrame::create(
   }
 
   frame->setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
-  frame->setReservedSlot(HAS_INCREMENTED_STEPPER_SLOT, BooleanValue(false));
 
   if (maybeIter) {
     FrameIter::Data* data = maybeIter->copyData();
@@ -356,6 +348,13 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
   MOZ_ASSERT(!hasGeneratorInfo());
   MOZ_ASSERT(!genObj->isClosed());
 
+  // When we initialize the generator information, we do not need to adjust
+  // the stepper increment, because either it was already incremented when
+  // the step hook was added, or we're setting this into on a new DebuggerFrame
+  // that has not yet had the chance for a hook to be added to it.
+  MOZ_ASSERT_IF(onStepHandler(), frameIterData());
+  MOZ_ASSERT_IF(!frameIterData(), !onStepHandler());
+
   // There are two relations we must establish:
   //
   // 1) The DebuggerFrame must point to the AbstractGeneratorObject.
@@ -395,8 +394,10 @@ void DebuggerFrame::terminate(JSFreeOp* fop, AbstractFramePtr frame) {
     MOZ_ASSERT_IF(!frame, hasGeneratorInfo());
 
     freeFrameIterData(fop);
-    if (frame && !hasGeneratorInfo()) {
-      maybeDecrementStepperCounter(fop, frame);
+    if (frame && !hasGeneratorInfo() && onStepHandler()) {
+      // If we are terminating a non-generator frame that had a step handler,
+      // we need to decrement the counter to keep things in sync.
+      decrementStepperCounter(fop, frame);
     }
   }
 
@@ -416,7 +417,11 @@ void DebuggerFrame::terminate(JSFreeOp* fop, AbstractFramePtr frame) {
   if (!info->isGeneratorScriptAboutToBeFinalized()) {
     JSScript* generatorScript = info->generatorScript();
     DebugScript::decrementGeneratorObserverCount(fop, generatorScript);
-    maybeDecrementStepperCounter(fop, generatorScript);
+    if (onStepHandler()) {
+      // If we are terminating a generator frame that had a step handler,
+      // we need to decrement the counter to keep things in sync.
+      decrementStepperCounter(fop, generatorScript);
+    }
   }
 
   // 1) The DebuggerFrame must no longer point to the AbstractGeneratorObject.
@@ -759,24 +764,22 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
 
     // Adjust execution observability and step counts on whatever code (JS or
     // Wasm) this frame is running.
-    if (handler) {
-      if (!frame->maybeIncrementStepperCounter(cx, referent)) {
+    if (handler && !prior) {
+      if (!frame->incrementStepperCounter(cx, referent)) {
         return false;
       }
-    } else {
-      frame->maybeDecrementStepperCounter(cx->runtime()->defaultFreeOp(),
-                                          referent);
+    } else if (!handler && prior) {
+      frame->decrementStepperCounter(cx->runtime()->defaultFreeOp(), referent);
     }
   } else if (frame->isSuspended()) {
     RootedScript script(cx, frame->generatorInfo()->generatorScript());
 
-    if (handler) {
-      if (!frame->maybeIncrementStepperCounter(cx, script)) {
+    if (handler && !prior) {
+      if (!frame->incrementStepperCounter(cx, script)) {
         return false;
       }
-    } else {
-      frame->maybeDecrementStepperCounter(cx->runtime()->defaultFreeOp(),
-                                          script);
+    } else if (!handler && prior) {
+      frame->decrementStepperCounter(cx->runtime()->defaultFreeOp(), script);
     }
   } else {
     // If the frame is entirely dead, we still allow setting the onStep
@@ -799,14 +802,10 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
   return true;
 }
 
-bool DebuggerFrame::maybeIncrementStepperCounter(JSContext* cx,
-                                                 AbstractFramePtr referent) {
-  if (hasIncrementedStepper()) {
-    return true;
-  }
-
+bool DebuggerFrame::incrementStepperCounter(JSContext* cx,
+                                            AbstractFramePtr referent) {
   if (!referent.isWasmDebugFrame()) {
-    return maybeIncrementStepperCounter(cx, referent.script());
+    return incrementStepperCounter(cx, referent.script());
   }
 
   wasm::Instance* instance = referent.asWasmDebugFrame()->instance();
@@ -816,16 +815,10 @@ bool DebuggerFrame::maybeIncrementStepperCounter(JSContext* cx,
     return false;
   }
 
-  setHasIncrementedStepper(true);
   return true;
 }
 
-bool DebuggerFrame::maybeIncrementStepperCounter(JSContext* cx,
-                                                 JSScript* script) {
-  if (hasIncrementedStepper()) {
-    return true;
-  }
-
+bool DebuggerFrame::incrementStepperCounter(JSContext* cx, JSScript* script) {
   // Single stepping toggled off->on.
   AutoRealm ar(cx, script);
   // Ensure observability *before* incrementing the step mode count.
@@ -838,18 +831,13 @@ bool DebuggerFrame::maybeIncrementStepperCounter(JSContext* cx,
     return false;
   }
 
-  setHasIncrementedStepper(true);
   return true;
 }
 
-void DebuggerFrame::maybeDecrementStepperCounter(JSFreeOp* fop,
-                                                 AbstractFramePtr referent) {
-  if (!hasIncrementedStepper()) {
-    return;
-  }
-
+void DebuggerFrame::decrementStepperCounter(JSFreeOp* fop,
+                                            AbstractFramePtr referent) {
   if (!referent.isWasmDebugFrame()) {
-    maybeDecrementStepperCounter(fop, referent.script());
+    decrementStepperCounter(fop, referent.script());
     return;
   }
 
@@ -857,18 +845,11 @@ void DebuggerFrame::maybeDecrementStepperCounter(JSFreeOp* fop,
   wasm::DebugFrame* wasmFrame = referent.asWasmDebugFrame();
   // Single stepping toggled on->off.
   instance->debug().decrementStepperCount(fop, wasmFrame->funcIndex());
-  setHasIncrementedStepper(false);
 }
 
-void DebuggerFrame::maybeDecrementStepperCounter(JSFreeOp* fop,
-                                                 JSScript* script) {
-  if (!hasIncrementedStepper()) {
-    return;
-  }
-
+void DebuggerFrame::decrementStepperCounter(JSFreeOp* fop, JSScript* script) {
   // Single stepping toggled on->off.
   DebugScript::decrementStepperCount(fop, script);
-  setHasIncrementedStepper(false);
 }
 
 /* static */
