@@ -496,7 +496,7 @@
 
 - name: apz.mvm.force-enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: apz.one_touch_pinch.enabled
