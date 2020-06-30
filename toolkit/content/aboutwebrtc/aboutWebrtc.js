@@ -19,156 +19,78 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/filepicker;1",
   "nsIFilePicker"
 );
-XPCOMUtils.defineLazyGetter(this, "strings", () => {
-  return Services.strings.createBundle(
-    "chrome://global/locale/aboutWebrtc.properties"
-  );
-});
+XPCOMUtils.defineLazyGetter(this, "strings", () =>
+  Services.strings.createBundle("chrome://global/locale/aboutWebrtc.properties")
+);
 
-const getString = strings.GetStringFromName;
-const formatString = strings.formatStringFromName;
+const string = strings.GetStringFromName;
+const format = strings.formatStringFromName;
+const WGI = WebrtcGlobalInformation;
 
 const LOGFILE_NAME_DEFAULT = "aboutWebrtc.html";
 const WEBRTC_TRACE_ALL = 65535;
 
-const getStats = () => new Promise(r => WebrtcGlobalInformation.getAllStats(r));
-const getLog = () =>
-  new Promise(r => WebrtcGlobalInformation.getLogging("", r));
+async function getStats() {
+  const { reports } = await new Promise(r => WGI.getAllStats(r));
+  return [...reports].sort((a, b) => b.timestamp - a.timestamp);
+}
 
-// Setup
+const getLog = () => new Promise(r => WGI.getLogging("", r));
 
-(async () => {
-  // Begin initial data queries as page loads.
-  const reportsRetrieved = getStats();
-  const logRetrieved = getLog();
-  await new Promise(r => (window.onload = r));
+const renderElement = (name, options) =>
+  Object.assign(document.createElement(name), options);
 
-  document.title = getString("document_title");
-  const controls = document.querySelector("#controls");
-  if (controls) {
-    const render = className => renderElement("div", null, { className });
-    const set = render("controls");
-    const control = render("control");
-    const message = render("message");
-    set.appendChild(control);
-    set.appendChild(message);
+const renderText = (name, textContent, options) =>
+  renderElement(name, Object.assign({ textContent }, options));
 
-    const add = controlObj => {
-      const [ctrl, msg] = controlObj.render();
-      control.appendChild(ctrl);
-      message.appendChild(msg);
-    };
-
-    add(new SavePage());
-    add(new DebugMode());
-    add(new AecLogging());
-    controls.appendChild(set);
-  }
-
-  const contentElem = document.querySelector("#content");
-  if (!contentElem) {
-    return;
-  }
-
-  AboutWebRTC.init(
-    async () => {
-      WebrtcGlobalInformation.clearAllStats();
-      try {
-        const { reports } = await getStats();
-        AboutWebRTC.refresh({ reports });
-      } catch (reportError) {
-        AboutWebRTC.refresh({ reportError });
-      }
-    },
-    async () => {
-      WebrtcGlobalInformation.clearLogging();
-      try {
-        AboutWebRTC.refresh({ log: await getLog() });
-      } catch (logError) {
-        AboutWebRTC.refresh({ logError });
-      }
-    }
-  );
-
-  try {
-    const { reports } = await reportsRetrieved;
-    AboutWebRTC.render(contentElem, { reports, log: await logRetrieved });
-  } catch (error) {
-    AboutWebRTC.render(contentElem, { error });
-  }
-})();
+const renderElements = (name, options, list) => {
+  const element = renderElement(name, options);
+  element.append(...list);
+  return element;
+};
 
 // Button control classes
 
 class Control {
-  _label = null;
-  _message = null;
-  _messageHeader = null;
+  label = null;
+  message = null;
+  messageHeader = null;
 
   render() {
-    const controlElem = document.createElement("button");
-    const messageElem = document.createElement("p");
-
-    this.ctrl = controlElem;
-    controlElem.onclick = () => this.onClick();
-    this.msg = messageElem;
+    this.ctrl = renderElement("button", { onclick: () => this.onClick() });
+    this.msg = renderElement("p");
     this.update();
-
-    return [controlElem, messageElem];
-  }
-
-  set label(val) {
-    return (this._labelVal = val || "\xA0");
-  }
-
-  get label() {
-    return this._labelVal;
-  }
-
-  set message(val) {
-    return (this._messageVal = val);
-  }
-
-  get message() {
-    return this._messageVal;
+    return [this.ctrl, this.msg];
   }
 
   update() {
-    this.ctrl.textContent = this._label;
-
+    this.ctrl.textContent = this.label;
     this.msg.textContent = "";
-    if (this._message) {
-      this.msg.appendChild(
-        Object.assign(document.createElement("span"), {
+    if (this.message) {
+      this.msg.append(
+        renderText("span", `${this.messageHeader}: `, {
           className: "info-label",
-          textContent: `${this._messageHeader}: `,
-        })
+        }),
+        this.message
       );
-      this.msg.appendChild(document.createTextNode(this._message));
     }
-  }
-
-  onClick() {
-    return true;
   }
 }
 
 class SavePage extends Control {
   constructor() {
     super();
-    this._messageHeader = getString("save_page_label");
-    this._label = getString("save_page_label");
+    this.messageHeader = string("save_page_label");
+    this.label = string("save_page_label");
   }
 
   async onClick() {
-    const content = document.querySelector("#content");
-    if (!content) {
-      return;
-    }
-
     FoldEffect.expandAll();
-    const title = getString("save_page_dialog_title");
-    FilePicker.init(window, title, FilePicker.modeSave);
+    FilePicker.init(
+      window,
+      string("save_page_dialog_title"),
+      FilePicker.modeSave
+    );
     FilePicker.defaultString = LOGFILE_NAME_DEFAULT;
     const rv = await new Promise(r => FilePicker.open(r));
     if (rv != FilePicker.returnOK && rv != FilePicker.returnReplace) {
@@ -178,19 +100,20 @@ class SavePage extends Control {
       FilePicker.file,
       FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE
     );
-
+    const content = document.querySelector("#content");
     const noPrintList = [...content.querySelectorAll(".no-print")];
     for (const node of noPrintList) {
       node.style.setProperty("display", "none");
     }
-
-    fout.write(content.outerHTML, content.outerHTML.length);
-    FileUtils.closeAtomicFileOutputStream(fout);
-
-    for (const node of noPrintList) {
-      node.style.removeProperty("display");
+    try {
+      fout.write(content.outerHTML, content.outerHTML.length);
+    } finally {
+      FileUtils.closeAtomicFileOutputStream(fout);
+      for (const node of noPrintList) {
+        node.style.removeProperty("display");
+      }
     }
-    this._message = formatString("save_page_msg", [FilePicker.file.path]);
+    this.message = format("save_page_msg", [FilePicker.file.path]);
     this.update();
   }
 }
@@ -198,34 +121,29 @@ class SavePage extends Control {
 class DebugMode extends Control {
   constructor() {
     super();
-    this._messageHeader = getString("debug_mode_msg_label");
+    this.messageHeader = string("debug_mode_msg_label");
 
-    if (WebrtcGlobalInformation.debugLevel > 0) {
+    if (WGI.debugLevel > 0) {
       this.setState(true);
     } else {
-      this._label = getString("debug_mode_off_state_label");
-      this._message = null;
+      this.label = string("debug_mode_off_state_label");
     }
   }
 
   setState(state) {
-    this._label = getString(`debug_mode_${state ? "on" : "off"}_state_label`);
+    const stateString = state ? "on" : "off";
+    this.label = string(`debug_mode_${stateString}_state_label`);
     try {
-      let file = Services.prefs.getCharPref("media.webrtc.debug.log_file");
-      this._message = formatString("debug_mode_on_state_msg", [file]);
+      const file = Services.prefs.getCharPref("media.webrtc.debug.log_file");
+      this.message = format(`debug_mode_${stateString}_state_msg`, [file]);
     } catch (e) {
-      this._message = null;
+      this.message = null;
     }
+    return state;
   }
 
   onClick() {
-    if (WebrtcGlobalInformation.debugLevel > 0) {
-      WebrtcGlobalInformation.debugLevel = 0;
-      this.setState(false);
-    } else {
-      WebrtcGlobalInformation.debugLevel = WEBRTC_TRACE_ALL;
-      this.setState(true);
-    }
+    this.setState((WGI.debugLevel = WGI.debugLevel ? 0 : WEBRTC_TRACE_ALL));
     this.update();
   }
 }
@@ -233,350 +151,218 @@ class DebugMode extends Control {
 class AecLogging extends Control {
   constructor() {
     super();
-    this._messageHeader = getString("aec_logging_msg_label");
+    this.messageHeader = string("aec_logging_msg_label");
 
-    if (WebrtcGlobalInformation.aecDebug) {
+    if (WGI.aecDebug) {
       this.setState(true);
     } else {
-      this._label = getString("aec_logging_off_state_label");
-      this._message = null;
+      this.label = string("aec_logging_off_state_label");
+      this.message = null;
     }
   }
 
   setState(state) {
-    this._label = getString(`aec_logging_${state ? "on" : "off"}_state_label`);
+    this.label = string(`aec_logging_${state ? "on" : "off"}_state_label`);
     try {
       if (!state) {
-        const file = WebrtcGlobalInformation.aecDebugLogDir;
-        this._message = formatString("aec_logging_off_state_msg", [file]);
+        const file = WGI.aecDebugLogDir;
+        this.message = format("aec_logging_off_state_msg", [file]);
       } else {
-        this._message = getString("aec_logging_on_state_msg");
+        this.message = string("aec_logging_on_state_msg");
       }
     } catch (e) {
-      this._message = null;
+      this.message = null;
     }
   }
 
   onClick() {
-    this.setState(
-      (WebrtcGlobalInformation.aecDebug = !WebrtcGlobalInformation.aecDebug)
-    );
+    this.setState((WGI.aecDebug = !WGI.aecDebug));
     this.update();
   }
 }
 
-// Singleton app logic
+(async () => {
+  // Setup. Retrieve reports & log while page loads.
+  const haveReports = getStats();
+  const haveLog = getLog();
+  await new Promise(r => (window.onload = r));
 
-const AboutWebRTC = {
-  _reports: [],
-  _log: [],
-
-  init(onClearStats, onClearLog) {
-    this._onClearStats = onClearStats;
-    this._onClearLog = onClearLog;
-  },
-
-  render(parent, data) {
-    this._content = parent;
-    this._setData(data);
-
-    if (data.error) {
-      parent.appendChild(renderElement("h3", getString("cannot_retrieve_log")));
-      parent.appendChild(
-        renderElement("p", `${data.error.name}: ${data.error.message}`)
-      );
-      return;
-    }
-
-    this._peerConnections = this.renderPeerConnections();
-    this._connectionLog = this.renderConnectionLog();
-    this._content.appendChild(this._peerConnections);
-    this._content.appendChild(this._connectionLog);
-  },
-
-  _setData({ reports = [], log = this._log }) {
-    this._reports = [...reports].sort((a, b) => b.timestamp - a.timestamp);
-    this._log = log;
-  },
-
-  refresh(data) {
-    this._setData(data);
-    const pc = this._peerConnections;
-    this._peerConnections = this.renderPeerConnections();
-    const log = this._connectionLog;
-    this._connectionLog = this.renderConnectionLog();
-    this._content.replaceChild(this._peerConnections, pc);
-    this._content.replaceChild(this._connectionLog, log);
-  },
-
-  renderPeerConnections() {
-    const connections = renderElement("div", null, { className: "stats" });
-    const heading = renderElement("span", null, {
-      className: "section-heading",
-    });
-    heading.appendChild(renderElement("h3", getString("stats_heading")));
-
-    heading.appendChild(
-      renderElement("button", getString("stats_clear"), {
-        className: "no-print",
-        onclick: this._onClearStats,
-      })
-    );
-    connections.appendChild(heading);
-
-    connections.append(
-      ...this._reports.map(r => new PeerConnection(r).render())
-    );
-    return connections;
-  },
-
-  renderConnectionLog() {
-    let content = renderElement("div", null, { className: "log" });
-
-    let heading = renderElement("span", null, { className: "section-heading" });
-    heading.appendChild(renderElement("h3", getString("log_heading")));
-    heading.appendChild(
-      renderElement("button", getString("log_clear"), {
-        className: "no-print",
-        onclick: this._onClearLog,
-      })
-    );
-    content.appendChild(heading);
-
-    if (!this._log || !this._log.length) {
-      return content;
-    }
-
-    let div = new FoldableSection(content, {
-      showMsg: getString("log_show_msg"),
-      hideMsg: getString("log_hide_msg"),
-    }).render();
-
-    for (const line of this._log) {
-      div.appendChild(renderElement("p", line));
-    }
-
-    content.appendChild(div);
-    return content;
-  },
-};
-
-class PeerConnection {
-  constructor(report) {
-    this._report = report;
-  }
-
-  render() {
-    const pc = renderElement("div", null, { className: "peer-connection" });
-    pc.appendChild(this.renderHeading());
-
-    const div = new FoldableSection(pc).render();
-
-    div.appendChild(this.renderDesc());
-    div.appendChild(this.renderConfiguration());
-
-    div.appendChild(new ICEStats(this._report).render());
-    div.appendChild(new SDPStats(this._report).render());
-    for (const frameStats of this._report.videoFrameHistories) {
-      div.appendChild(new FrameRateStats(frameStats).render());
-    }
-    div.appendChild(new RTPStats(this._report).render());
-    pc.appendChild(div);
-    return pc;
-  }
-
-  renderHeading() {
-    const pcInfo = this.getPCInfo(this._report);
-    const heading = document.createElement("h3");
-    const now = new Date(this._report.timestamp).toString();
-    heading.textContent = `[ ${pcInfo.id} ] ${pcInfo.url} ${
-      pcInfo.closed ? `(${getString("connection_closed")})` : ""
-    } ${now}`;
-    return heading;
-  }
-
-  renderDesc() {
-    const info = document.createElement("div");
-
-    info.appendChild(
-      renderElement("span", `${getString("peer_connection_id_label")}: `),
-      {
-        className: "info-label",
-      }
-    );
-
-    info.appendChild(
-      renderElement("span", this._report.pcid, {
-        className: "info-body",
-      })
-    );
-
-    return info;
-  }
-
-  renderConfiguration() {
-    const provided = () => {
-      const italics = document.createElement("i");
-      italics.textContent = getString("configuration_element_provided");
-      return italics;
+  document.title = string("document_title");
+  {
+    const ctrl = renderElement("div", { className: "control" });
+    const msg = renderElement("div", { className: "message" });
+    const add = ([control, message]) => {
+      ctrl.appendChild(control);
+      msg.appendChild(message);
     };
-    const notProvided = () => {
-      const italics = document.createElement("i");
-      italics.textContent = getString("configuration_element_not_provided");
-      return italics;
-    };
-    const br = () => document.createElement("br");
+    add(new SavePage().render());
+    add(new DebugMode().render());
+    add(new AecLogging().render());
 
-    const div = document.createElement("div");
-    div.classList = "peer-connection-config";
-    // Create the text for a configuration field
-    const cfg = (obj, key, elem) => {
-      elem.append(br(), `${key}: `, key in obj ? obj[key] : notProvided());
-    };
-    // Create the text for a fooProvided configuration field
-    const pro = (obj, key, elem) => {
-      elem.append(
-        br(),
-        `${key}(`,
-        provided(),
-        "/",
-        notProvided(),
-        "): ",
-        `${key}Provided` in obj ? provided() : notProvided()
-      );
-    };
-
-    const c = this._report.configuration;
-    div.append("RTCConfiguration");
-    cfg(c, "bundlePolicy", div);
-    cfg(c, "iceTransportPolicy", div);
-    pro(c, "peerIdentity", div);
-    cfg(c, "sdpSemantics", div);
-    div.append(br(), "iceServers: ");
-    if (!c.iceServers) {
-      div.append(notProvided());
-    }
-    for (const i of c.iceServers) {
-      const inner = document.createElement("div");
-      div.append(inner);
-      inner.append(`urls: ${JSON.stringify(i.urls)}`);
-      pro(i, "credential", inner);
-      pro(i, "userName", inner);
-    }
-    return div;
-  },
-
-  getPCInfo(report) {
-    return {
-      id: report.pcid.match(/id=(\S+)/)[1],
-      url: report.pcid.match(/url=([^)]+)/)[1],
-      closed: report.closed,
-    };
-  }
-}
-
-function renderElement(elemName, elemText, options = {}) {
-  const elem = document.createElement(elemName);
-  // check for null instead of using elemText || "" so we don't hide
-  // elements with 0 values
-  if (elemText != null) {
-    elem.textContent = elemText;
-  }
-  Object.assign(elem, options);
-  return elem;
-}
-
-class SDPStats {
-  constructor(report) {
-    this._report = report;
+    const ctrls = document.querySelector("#controls");
+    ctrls.append(renderElements("div", { className: "controls" }, [ctrl, msg]));
   }
 
-  render() {
-    const div = document.createElement("div");
-    div.appendChild(renderElement("h4", getString("sdp_heading")));
+  // Render pcs and log
+  let reports = await haveReports;
+  let log = await haveLog;
 
-    const offerLabel = `(${getString("offer")})`;
-    const answerLabel = `(${getString("answer")})`;
-    const localSdpHeading = `${getString("local_sdp_heading")} ${
-      this._report.offerer ? offerLabel : answerLabel
-    }`;
-    const remoteSdpHeading = `${getString("remote_sdp_heading")} ${
-      this._report.offerer ? answerLabel : offerLabel
-    }`;
+  let peerConnections = renderElement("div");
+  let connectionLog = renderElement("div");
 
-    div.appendChild(renderElement("h5", localSdpHeading));
-    div.appendChild(renderElement("pre", this._report.localSdp));
+  const content = document.querySelector("#content");
+  content.append(peerConnections, connectionLog);
 
-    div.appendChild(renderElement("h5", remoteSdpHeading));
-    div.appendChild(renderElement("pre", this._report.remoteSdp));
-
-    div.appendChild(renderElement("h4", getString("sdp_history_heading")));
-    for (const history of this._report.sdpHistory) {
-      const historyElem = renderElement("div", null, {
-        className: "sdp-history",
+  function refresh() {
+    const pcDiv = renderElements("div", { className: "stats" }, [
+      renderElements("span", { className: "section-heading" }, [
+        renderText("h3", string("stats_heading")),
+        renderText("button", string("stats_clear"), {
+          className: "no-print",
+          onclick: async () => {
+            WGI.clearAllStats();
+            reports = await getStats();
+            refresh();
+          },
+        }),
+      ]),
+      ...reports.map(renderPeerConnection),
+    ]);
+    const logDiv = renderElements("div", { className: "log" }, [
+      renderElement("span", { className: "section-heading" }, [
+        renderText("h3", string("log_heading")),
+        renderElement("button", {
+          textContent: string("log_clear"),
+          className: "no-print",
+          onclick: async () => {
+            WGI.clearLogging();
+            log = await getLog();
+            refresh();
+          },
+        }),
+      ]),
+    ]);
+    if (log.length) {
+      const div = renderFoldableSection(logDiv, {
+        showMsg: string("log_show_msg"),
+        hideMsg: string("log_hide_msg"),
       });
-      const sdpSide = history.isLocal
-        ? getString("local_sdp_heading")
-        : getString("remote_sdp_heading");
-      historyElem.appendChild(
-        renderElement(
-          "h5",
-          formatString("sdp_set_at_timestamp", [sdpSide, history.timestamp])
-        )
-      );
-      const historyDiv = new FoldableSection(historyElem).render();
-      if (history.errors.length) {
-        historyDiv.append(
-          renderElement("h5", getString("sdp_parsing_errors_heading"))
-        );
-      }
-      for (const { lineNumber, error } of history.errors) {
-        historyDiv.append(renderElement("br"), `${lineNumber}: ${error}`);
-      }
-      historyDiv.append(renderElement("pre", history.sdp));
-      historyElem.appendChild(historyDiv);
-      div.appendChild(historyElem);
+      div.append(...log.map(line => renderText("p", line)));
+      logDiv.append(div);
     }
-    return div;
+
+    // Replace previous info
+    peerConnections.replaceWith(pcDiv);
+    connectionLog.replaceWith(logDiv);
+    peerConnections = pcDiv;
+    connectionLog = logDiv;
   }
+  refresh();
+})();
+
+function renderPeerConnection(report) {
+  const { pcid, closed, timestamp, configuration } = report;
+
+  const pcDiv = renderElement("div", { className: "peer-connection" });
+  {
+    const id = pcid.match(/id=(\S+)/)[1];
+    const url = pcid.match(/url=([^)]+)/)[1];
+    const closedStr = closed ? `(${string("connection_closed")})` : "";
+    const now = new Date(timestamp).toString();
+
+    pcDiv.append(renderText("h3", `[ ${id} ] ${url} ${closedStr} ${now}`));
+  }
+  {
+    const section = renderFoldableSection(pcDiv);
+    section.append(
+      renderElements("div", {}, [
+        renderText("span", `${string("peer_connection_id_label")}: `, {
+          className: "info-label",
+        }),
+        renderText("span", pcid, { className: "info-body" }),
+      ]),
+      renderConfiguration(configuration),
+      renderICEStats(report),
+      renderSDPStats(report),
+      ...report.videoFrameHistories.map(h => renderFrameRateStats(h)),
+      renderRTPStats(report)
+    );
+    pcDiv.append(section);
+  }
+  return pcDiv;
 }
 
-class FrameRateStats {
-  constructor(frameHistory) {
-    this.remoteSsrc = frameHistory.remoteSsrc;
-    this.trackIdentifier = frameHistory.trackIdentifier;
-    this.stats = frameHistory.entries.map(stat => {
-      stat.elapsed = stat.lastFrameTimestamp - stat.firstFrameTimestamp;
-      if (stat.elapsed < 1) {
-        stat.elapsed = 0;
-      }
-      stat.elapsed = stat.elapsed / 1_000;
-      if (stat.elapsed && stat.consecutiveFrames) {
-        stat.avgFramerate = stat.consecutiveFrames / stat.elapsed;
-      } else {
-        stat.avgFramerate = getString("n_a");
-      }
-      return stat;
-    });
+function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
+  const statsDiv = renderElements("div", {}, [
+    renderText("h4", string("sdp_heading")),
+    renderText(
+      "h5",
+      `${string("local_sdp_heading")} (${string(offerer ? "offer" : "answer")})`
+    ),
+    renderText("pre", localSdp),
+    renderText(
+      "h5",
+      `${string("remote_sdp_heading")} (${string(
+        offerer ? "answer" : "offer"
+      )})`
+    ),
+    renderText("pre", remoteSdp),
+    renderText("h4", string("sdp_history_heading")),
+  ]);
+  for (const { isLocal, timestamp, sdp, errors } of sdpHistory) {
+    const histDiv = renderElements("div", { className: "sdp-history" }, [
+      renderText(
+        "h5",
+        format("sdp_set_at_timestamp", [
+          string(`${isLocal ? "local" : "remote"}_sdp_heading`),
+          timestamp,
+        ])
+      ),
+    ]);
+    const sdpSection = renderFoldableSection(histDiv);
+    if (errors.length) {
+      histDiv.append(renderElement("h5", string("sdp_parsing_errors_heading")));
+    }
+    for (const { lineNumber, error } of errors) {
+      histDiv.append(renderElement("br"), `${lineNumber}: ${error}`);
+    }
+    sdpSection.append(renderText("pre", sdp));
+    histDiv.append(sdpSection);
+    statsDiv.append(histDiv);
   }
+  return statsDiv;
+}
 
-  render() {
-    const div = document.createElement("div");
-    div.appendChild(
-      renderElement(
-        "h4",
-        `${getString("frame_stats_heading")} - MediaStreamTrack Id: ${
-          this.trackIdentifier
-        }`
-      )
-    );
-    div.appendChild(this.renderFrameStatSet());
-    return div;
-  }
+function renderFrameRateStats({ trackIdentifier: id, entries }) {
+  const stats = entries.map(stat => {
+    stat.elapsed = stat.lastFrameTimestamp - stat.firstFrameTimestamp;
+    if (stat.elapsed < 1) {
+      stat.elapsed = 0;
+    }
+    stat.elapsed = stat.elapsed / 1_000;
+    if (stat.elapsed && stat.consecutiveFrames) {
+      stat.avgFramerate = stat.consecutiveFrames / stat.elapsed;
+    } else {
+      stat.avgFramerate = string("n_a");
+    }
+    return stat;
+  });
 
-  renderFrameStatSet() {
-    const caption = "";
-    const tbody = this.stats.map(stat =>
+  const table = renderSimpleTable(
+    "",
+    [
+      "width_px",
+      "height_px",
+      "consecutive_frames",
+      "time_elapsed",
+      "estimated_framerate",
+      "rotation_degrees",
+      "first_frame_timestamp",
+      "last_frame_timestamp",
+      "local_receive_ssrc",
+      "remote_send_ssrc",
+    ].map(columnName => string(columnName)),
+    stats.map(stat =>
       [
         stat.width,
         stat.height,
@@ -589,219 +375,304 @@ class FrameRateStats {
         stat.localSsrc,
         stat.remoteSsrc || "?",
       ].map(entry => (Object.is(entry, undefined) ? "<<undefined>>" : entry))
-    );
-    return new SimpleTable(
-      [
-        "width_px",
-        "height_px",
-        "consecutive_frames",
-        "time_elapsed",
-        "estimated_framerate",
-        "rotation_degrees",
-        "first_frame_timestamp",
-        "last_frame_timestamp",
-        "local_receive_ssrc",
-        "remote_send_ssrc",
-      ].map(columnName => getString(columnName)),
-      tbody,
-      caption
-    ).render();
-  }
+    )
+  );
+
+  return renderElements("div", {}, [
+    renderText(
+      "h4",
+      `${string("frame_stats_heading")} - MediaStreamTrack Id: ${id}`
+    ),
+    table,
+  ]);
 }
 
-class RTPStats {
-  constructor(report) {
-    this._report = report;
+function renderRTPStats(report) {
+  const rtpStats = [
+    ...(report.inboundRtpStreamStats || []),
+    ...(report.outboundRtpStreamStats || []),
+  ];
+  const remoteRtpStats = [
+    ...(report.remoteInboundRtpStreamStats || []),
+    ...(report.remoteOutboundRtpStreamStats || []),
+  ];
+
+  // Generate an id-to-streamStat index for each remote streamStat. This will
+  // be used next to link the remote to its local side.
+  const remoteRtpStatsMap = {};
+  for (const stat of remoteRtpStats) {
+    remoteRtpStatsMap[stat.id] = stat;
   }
 
-  render() {
-    const div = document.createElement("div");
-    div.appendChild(renderElement("h4", getString("rtp_stats_heading")));
-
-    const rtpStats = [
-      ...(this._report.inboundRtpStreamStats || []),
-      ...(this._report.outboundRtpStreamStats || []),
-    ];
-    const remoteRtpStats = [
-      ...(this._report.remoteInboundRtpStreamStats || []),
-      ...(this._report.remoteOutboundRtpStreamStats || []),
-    ];
-
-    // Generate an id-to-streamStat index for each remote streamStat. This will
-    // be used next to link the remote to its local side.
-    const remoteRtpStatsMap = {};
-    for (const stat of remoteRtpStats) {
-      remoteRtpStatsMap[stat.id] = stat;
-    }
-
-    // If a streamStat has a remoteId attribute, create a remoteRtpStats
-    // attribute that references the remote streamStat entry directly.
-    // That is, the index generated above is merged into the returned list.
-    for (const stat of rtpStats.filter(s => "remoteId" in s)) {
-      stat.remoteRtpStats = remoteRtpStatsMap[stat.remoteId];
-    }
-    const stats = [...rtpStats, ...remoteRtpStats];
-    div.append(...stats.map(stat => this.renderRTPStatSet(stat)));
-    return div;
+  // If a streamStat has a remoteId attribute, create a remoteRtpStats
+  // attribute that references the remote streamStat entry directly.
+  // That is, the index generated above is merged into the returned list.
+  for (const stat of rtpStats.filter(s => "remoteId" in s)) {
+    stat.remoteRtpStats = remoteRtpStatsMap[stat.remoteId];
   }
+  const stats = [...rtpStats, ...remoteRtpStats];
 
-  renderCoderStats(stats) {
-    let statsString = "";
-    let label;
-
-    if (stats.bitrateMean) {
-      statsString += ` ${getString("avg_bitrate_label")}: ${(
-        stats.bitrateMean / 1000000
-      ).toFixed(2)} Mbps`;
-      if (stats.bitrateStdDev) {
-        statsString += ` (${(stats.bitrateStdDev / 1000000).toFixed(2)} SD)`;
+  // Render stats set
+  return renderElements("div", {}, [
+    renderText("h4", string("rtp_stats_heading")),
+    ...stats.map(stat => {
+      const { id, remoteId, remoteRtpStats } = stat;
+      const div = renderElements("div", {}, [
+        renderText("h5", id),
+        renderCoderStats(stat),
+        renderTransportStats(stat, string("typeLocal")),
+      ]);
+      if (remoteId && remoteRtpStats) {
+        div.append(renderTransportStats(remoteRtpStats, string("typeRemote")));
       }
-    }
-
-    if (stats.framerateMean) {
-      statsString += ` ${getString(
-        "avg_framerate_label"
-      )}: ${stats.framerateMean.toFixed(2)} fps`;
-      if (stats.framerateStdDev) {
-        statsString += ` (${stats.framerateStdDev.toFixed(2)} SD)`;
-      }
-    }
-
-    if (stats.droppedFrames) {
-      statsString += ` ${getString("dropped_frames_label")}: ${
-        stats.droppedFrames
-      }`;
-    }
-    if (stats.discardedPackets) {
-      statsString += ` ${getString("discarded_packets_label")}: ${
-        stats.discardedPackets
-      }`;
-    }
-
-    if (statsString.length) {
-      label = stats.packetsReceived
-        ? ` ${getString("decoder_label")}:`
-        : ` ${getString("encoder_label")}:`;
-      statsString = label + statsString;
-    }
-    return renderElement("p", statsString);
-  }
-
-  renderTransportStats(stats, typeLabel) {
-    const time = new Date(stats.timestamp).toTimeString();
-    let statsString = `${typeLabel}: ${time} ${stats.type} SSRC: ${stats.ssrc}`;
-
-    if (stats.packetsReceived) {
-      statsString += ` ${getString("received_label")}: ${
-        stats.packetsReceived
-      } ${getString("packets")}`;
-
-      if (stats.bytesReceived) {
-        statsString += ` (${(stats.bytesReceived / 1024).toFixed(2)} Kb)`;
-      }
-
-      statsString += ` ${getString("lost_label")}: ${
-        stats.packetsLost
-      } ${getString("jitter_label")}: ${stats.jitter}`;
-
-      if (stats.roundTripTime) {
-        statsString += ` RTT: ${stats.roundTripTime * 1000} ms`;
-      }
-    } else if (stats.packetsSent) {
-      statsString += ` ${getString("sent_label")}: ${
-        stats.packetsSent
-      } ${getString("packets")}`;
-      if (stats.bytesSent) {
-        statsString += ` (${(stats.bytesSent / 1024).toFixed(2)} Kb)`;
-      }
-    }
-    return renderElement("p", statsString);
-  }
-
-  renderRTPStatSet(stats) {
-    const div = document.createElement("div");
-    div.appendChild(renderElement("h5", stats.id));
-
-    div.appendChild(this.renderCoderStats(stats));
-    div.appendChild(this.renderTransportStats(stats, getString("typeLocal")));
-
-    if (stats.remoteId && stats.remoteRtpStats) {
-      div.appendChild(
-        this.renderTransportStats(stats.remoteRtpStats, getString("typeRemote"))
-      );
-    }
-    return div;
-  }
+      return div;
+    }),
+  ]);
 }
 
-class ICEStats {
-  constructor(report) {
-    this._report = report;
+function renderCoderStats({
+  bitrateMean,
+  bitrateStdDev,
+  framerateMean,
+  framerateStdDev,
+  droppedFrames,
+  discardedPackets,
+  packetsReceived,
+}) {
+  let s = "";
+
+  if (bitrateMean) {
+    s += ` ${string("avg_bitrate_label")}: ${(bitrateMean / 1000000).toFixed(
+      2
+    )} Mbps`;
+    if (bitrateStdDev) {
+      s += ` (${(bitrateStdDev / 1000000).toFixed(2)} SD)`;
+    }
   }
-
-  render() {
-    const div = document.createElement("div");
-    div.appendChild(renderElement("h4", getString("ice_stats_heading")));
-
-    div.appendChild(this.renderICECandidateTable());
-    // add just a bit of vertical space between the restart/rollback
-    // counts and the ICE candidate pair table above.
-    div.appendChild(document.createElement("br"));
-    div.appendChild(
-      this.renderIceMetric("ice_restart_count_label", this._report.iceRestarts)
-    );
-    div.appendChild(
-      this.renderIceMetric(
-        "ice_rollback_count_label",
-        this._report.iceRollbacks
-      )
-    );
-    div.appendChild(this.renderRawICECandidateSection());
-    return div;
+  if (framerateMean) {
+    s += ` ${string("avg_framerate_label")}: ${framerateMean.toFixed(2)} fps`;
+    if (framerateStdDev) {
+      s += ` (${framerateStdDev.toFixed(2)} SD)`;
+    }
   }
+  if (droppedFrames) {
+    s += ` ${string("dropped_frames_label")}: ${droppedFrames}`;
+  }
+  if (discardedPackets) {
+    s += ` ${string("discarded_packets_label")}: ${discardedPackets}`;
+  }
+  if (s.length) {
+    s = ` ${string(`${packetsReceived ? "de" : "en"}coder_label`)}:${s}`;
+  }
+  return renderText("p", s);
+}
 
-  renderICECandidateTable() {
-    const caption = renderElement("caption", null, { className: "no-print" });
+function renderTransportStats(
+  {
+    timestamp,
+    type,
+    ssrc,
+    packetsReceived,
+    bytesReceived,
+    packetsLost,
+    jitter,
+    roundTripTime,
+    packetsSent,
+    bytesSent,
+  },
+  typeLabel
+) {
+  const time = new Date(timestamp).toTimeString();
+  let s = `${typeLabel}: ${time} ${type} SSRC: ${ssrc}`;
+
+  const packets = string("packets");
+  if (packetsReceived) {
+    s += ` ${string("received_label")}: ${packetsReceived} ${packets}`;
+
+    if (bytesReceived) {
+      s += ` (${(bytesReceived / 1024).toFixed(2)} Kb)`;
+    }
+    s += ` ${string("lost_label")}: ${packetsLost} ${string(
+      "jitter_label"
+    )}: ${jitter}`;
+
+    if (roundTripTime) {
+      s += ` RTT: ${roundTripTime * 1000} ms`;
+    }
+  } else if (packetsSent) {
+    s += ` ${string("sent_label")}: ${packetsSent} ${packets}`;
+    if (bytesSent) {
+      s += ` (${(bytesSent / 1024).toFixed(2)} Kb)`;
+    }
+  }
+  return renderText("p", s);
+}
+
+function renderRawIceTable(caption, candidates) {
+  const table = renderSimpleTable(
+    "",
+    [string(caption)],
+    [...new Set(candidates.sort())].filter(i => i).map(i => [i])
+  );
+  table.className = "raw-candidate";
+  return table;
+}
+
+function renderConfiguration(c) {
+  const provided = () => {
+    const italics = document.createElement("i");
+    italics.textContent = string("configuration_element_provided");
+    return italics;
+  };
+  const notProvided = () => {
+    const italics = document.createElement("i");
+    italics.textContent = string("configuration_element_not_provided");
+    return italics;
+  };
+  const br = () => document.createElement("br");
+
+  const div = document.createElement("div");
+  div.classList = "peer-connection-config";
+  // Create the text for a configuration field
+  const cfg = (obj, key, elem) => {
+    elem.append(br(), `${key}: `, key in obj ? `${obj[key]}` : notProvided());
+  };
+  // Create the text for a fooProvided configuration field
+  const pro = (obj, key, elem) => {
+    elem.append(
+      br(),
+      `${key}(`,
+      provided(),
+      "/",
+      notProvided(),
+      "): ",
+      `${key}Provided` in obj ? provided() : notProvided()
+    );
+  };
+
+  div.append("RTCConfiguration");
+  cfg(c, "bundlePolicy", div);
+  cfg(c, "iceTransportPolicy", div);
+  pro(c, "peerIdentity", div);
+  cfg(c, "sdpSemantics", div);
+  div.append(br(), "iceServers: ");
+  if (!c.iceServers) {
+    div.append(notProvided());
+  }
+  for (const i of c.iceServers) {
+    const inner = document.createElement("div");
+    div.append(inner);
+    inner.append(`urls: ${JSON.stringify(i.urls)}`);
+    pro(i, "credential", inner);
+    pro(i, "userName", inner);
+  }
+  return div;
+}
+
+function renderICEStats(report) {
+  const iceDiv = renderElements("div", {}, [
+    renderText("h4", string("ice_stats_heading")),
+  ]);
+
+  // Render ICECandidate table
+  {
+    const caption = renderElement("caption", { className: "no-print" });
 
     // This takes the caption message with the replacement token, breaks
     // it around the token, and builds the spans for each portion of the
     // caption.  This is to allow localization to put the color name for
     // the highlight wherever it is appropriate in the translated string
     // while avoiding innerHTML warnings from eslint.
-    const captionTemplate = getString("trickle_caption_msg2");
-    const [start, end] = captionTemplate.split(/%(?:1\$)?S/);
+    const [start, end] = string("trickle_caption_msg2").split(/%(?:1\$)?S/);
 
     // only append span if non-whitespace chars present
     if (/\S/.test(start)) {
-      caption.appendChild(renderElement("span", `${start}`));
+      caption.append(renderText("span", start));
     }
-    caption.appendChild(
-      renderElement("span", getString("trickle_highlight_color_name2"), {
+    caption.append(
+      renderText("span", string("trickle_highlight_color_name2"), {
         className: "ice-trickled",
       })
     );
     // only append span if non-whitespace chars present
     if (/\S/.test(end)) {
-      caption.appendChild(renderElement("span", `${end}`));
+      caption.append(renderText("span", end));
     }
 
-    const stats = this.generateICEStats();
-    // don't use |stat.x || ""| here because it hides 0 values
-    const tbody = stats.map(stat =>
-      [
-        stat.state,
-        stat.nominated,
-        stat.selected,
-        stat["local-candidate"],
-        stat["remote-candidate"],
-        stat.componentId,
-        stat.priority,
-        stat.bytesSent,
-        stat.bytesReceived,
-      ].map(entry => (Object.is(entry, undefined) ? "" : entry))
-    );
+    // Generate ICE stats
+    const stats = [];
+    {
+      // Create an index based on candidate ID for each element in the
+      // iceCandidateStats array.
+      const candidates = {};
+      for (const candidate of report.iceCandidateStats) {
+        candidates[candidate.id] = candidate;
+      }
 
-    const statsTable = new SimpleTable(
+      // a method to see if a given candidate id is in the array of tickled
+      // candidates.
+      const isTrickled = candidateId =>
+        report.trickledIceCandidateStats.some(({ id }) => id == candidateId);
+
+      // A component may have a remote or local candidate address or both.
+      // Combine those with both; these will be the peer candidates.
+      const matched = {};
+
+      for (const {
+        localCandidateId,
+        remoteCandidateId,
+        componentId,
+        state,
+        priority,
+        nominated,
+        selected,
+        bytesSent,
+        bytesReceived,
+      } of report.iceCandidatePairStats) {
+        const local = candidates[localCandidateId];
+        if (local) {
+          const stat = {
+            ["local-candidate"]: candidateToString(local),
+            componentId,
+            state,
+            priority,
+            nominated,
+            selected,
+            bytesSent,
+            bytesReceived,
+          };
+          matched[local.id] = true;
+          if (isTrickled(local.id)) {
+            stat["local-trickled"] = true;
+          }
+
+          const remote = candidates[remoteCandidateId];
+          if (remote) {
+            stat["remote-candidate"] = candidateToString(remote);
+            matched[remote.id] = true;
+            if (isTrickled(remote.id)) {
+              stat["remote-trickled"] = true;
+            }
+          }
+          stats.push(stat);
+        }
+      }
+
+      // sort (group by) componentId first, then bytesSent if available, else by
+      // priority
+      stats.sort((a, b) => {
+        if (a.componentId != b.componentId) {
+          return a.componentId - b.componentId;
+        }
+        return b.bytesSent
+          ? b.bytesSent - (a.bytesSent || 0)
+          : (b.priority || 0) - (a.priority || 0);
+      });
+    }
+    // Render ICE stats
+    // don't use |stat.x || ""| here because it hides 0 values
+    const statsTable = renderSimpleTable(
+      caption,
       [
         "ice_state",
         "nominated",
@@ -812,10 +683,21 @@ class ICEStats {
         "priority",
         "ice_pair_bytes_sent",
         "ice_pair_bytes_received",
-      ].map(columnName => getString(columnName)),
-      tbody,
-      caption
-    ).render();
+      ].map(columnName => string(columnName)),
+      stats.map(stat =>
+        [
+          stat.state,
+          stat.nominated,
+          stat.selected,
+          stat["local-candidate"],
+          stat["remote-candidate"],
+          stat.componentId,
+          stat.priority,
+          stat.bytesSent,
+          stat.bytesReceived,
+        ].map(entry => (Object.is(entry, undefined) ? "" : entry))
+      )
+    );
 
     // after rendering the table, we need to change the class name for each
     // candidate pair's local or remote candidate if it was trickled.
@@ -831,10 +713,10 @@ class ICEStats {
       const { cells } = statsTable.rows[++index];
       cells[0].className = `ice-${state}`;
       if (nominated) {
-        cells[1].className = "ice-success";
+        cells[1].className = "ice-succeeded";
       }
       if (selected) {
-        cells[2].className = "ice-success";
+        cells[2].className = "ice-succeeded";
       }
       if (localTrickled) {
         cells[3].className = "ice-trickled";
@@ -844,260 +726,152 @@ class ICEStats {
       }
     }
 
-    // if the next row's component id changes, mark the bottom of the
-    // current row with a thin, black border to differentiate the
+    // if the current row's component id changes, mark the bottom of the
+    // previous row with a thin, black border to differentiate the
     // component id grouping.
-    const rowCount = statsTable.rows.length - 1;
-    for (let i = 0; i < rowCount; i++) {
-      if (
-        statsTable.rows[i].cells[5].innerHTML !==
-        statsTable.rows[i + 1].cells[5].innerHTML
-      ) {
-        statsTable.rows[i].className = "bottom-border";
-      }
-    }
-    return statsTable;
-  }
-
-  renderRawICECandidates() {
-    const div = document.createElement("div");
-    const candidates = direction =>
-      [
-        ...new Set(
-          direction == "local"
-            ? this._report.rawLocalCandidates.sort()
-            : this._report.rawRemoteCandidates.sort()
-        ),
-      ]
-        .filter(i => `${i}` != "")
-        .map(i => [i]);
-
-    for (const direction of ["local", "remote"]) {
-      const statsTable = new SimpleTable(
-        [getString(`raw_${direction}_candidate`)],
-        candidates(direction)
-      ).render();
-      statsTable.className = "raw-candidate";
-      div.appendChild(statsTable);
-    }
-    return div;
-  }
-
-  renderRawICECandidateSection() {
-    const section = document.createElement("div");
-    section.appendChild(
-      renderElement("h4", getString("raw_candidates_heading"))
-    );
-
-    const div = new FoldableSection(section, {
-      showMsg: getString("raw_cand_show_msg"),
-      hideMsg: getString("raw_cand_hide_msg"),
-    }).render();
-
-    div.appendChild(this.renderRawICECandidates());
-    section.appendChild(div);
-    return section;
-  }
-
-  renderIceMetric(labelName, value) {
-    const info = document.createElement("div");
-
-    info.appendChild(
-      renderElement("span", `${getString(labelName)}: `, {
-        className: "info-label",
-      })
-    );
-    info.appendChild(renderElement("span", value, { className: "info-body" }));
-    return info;
-  }
-
-  generateICEStats() {
-    // Create an index based on candidate ID for each element in the
-    // iceCandidateStats array.
-    const candidates = new Map();
-
-    for (const candidate of this._report.iceCandidateStats) {
-      candidates.set(candidate.id, candidate);
-    }
-
-    // a method to see if a given candidate id is in the array of tickled
-    // candidates.
-    const isTrickled = candidateId =>
-      [...this._report.trickledIceCandidateStats].some(
-        ({ id }) => id == candidateId
-      );
-
-    // A component may have a remote or local candidate address or both.
-    // Combine those with both; these will be the peer candidates.
-    const matched = {};
-    const stats = [];
-    let stat;
-
-    for (const {
-      localCandidateId,
-      remoteCandidateId,
-      componentId,
-      state,
-      priority,
-      nominated,
-      selected,
-      bytesSent,
-      bytesReceived,
-    } of this._report.iceCandidatePairStats) {
-      const local = candidates.get(localCandidateId);
-      if (local) {
-        stat = {
-          ["local-candidate"]: this.candidateToString(local),
-          componentId,
-          state,
-          priority,
-          nominated,
-          selected,
-          bytesSent,
-          bytesReceived,
-        };
-        matched[local.id] = true;
-        if (isTrickled(local.id)) {
-          stat["local-trickled"] = true;
+    let previousRow;
+    for (const row of statsTable.rows) {
+      if (previousRow) {
+        if (previousRow.cells[5].innerHTML != row.cells[5].innerHTML) {
+          previousRow.className = "bottom-border";
         }
-
-        const remote = candidates.get(remoteCandidateId);
-        if (remote) {
-          stat["remote-candidate"] = this.candidateToString(remote);
-          matched[remote.id] = true;
-          if (isTrickled(remote.id)) {
-            stat["remote-trickled"] = true;
-          }
-        }
-        stats.push(stat);
       }
+      previousRow = row;
     }
+    iceDiv.append(statsTable);
+  }
+  // add just a bit of vertical space between the restart/rollback
+  // counts and the ICE candidate pair table above.
+  iceDiv.append(
+    renderElement("br"),
+    renderIceMetric("ice_restart_count_label", report.iceRestarts),
+    renderIceMetric("ice_rollback_count_label", report.iceRollbacks)
+  );
 
-    // sort (group by) componentId first, then bytesSent if available, else by
-    // priority
-    return stats.sort((a, b) => {
-      if (a.componentId != b.componentId) {
-        return a.componentId - b.componentId;
-      }
-      return b.bytesSent
-        ? (b.bytesSent || 0) - (a.bytesSent || 0)
-        : (b.priority || 0) - (a.priority || 0);
+  // Render raw ICECandidate section
+  {
+    const section = renderElements("div", {}, [
+      renderText("h4", string("raw_candidates_heading")),
+    ]);
+    const foldSection = renderFoldableSection(section, {
+      showMsg: string("raw_cand_show_msg"),
+      hideMsg: string("raw_cand_hide_msg"),
     });
-  }
 
-  candidateToString(c) {
-    if (!c) {
-      return "*";
-    }
-    const type =
-      c.type == "local-candidate" && c.candidateType == "relayed"
-        ? `${c.candidateType}-${c.relayProtocol}`
-        : c.candidateType;
-    const proxied = c.type == "local-candidate" ? ` [${c.proxied}]` : "";
-
-    return `${c.address}:${c.port}/${c.protocol}(${type})${proxied}`;
+    // render raw candidates
+    foldSection.append(
+      renderElements("div", {}, [
+        renderRawIceTable("raw_local_candidate", report.rawLocalCandidates),
+        renderRawIceTable("raw_remote_candidate", report.rawRemoteCandidates),
+      ])
+    );
+    section.append(foldSection);
+    iceDiv.append(section);
   }
+  return iceDiv;
 }
 
-class FoldableSection {
-  constructor(parentElement, options = {}) {
-    this._foldableElement = document.createElement("div");
-    if (parentElement) {
-      const sectionCtrl = renderElement("div", null, {
-        className: "section-ctrl no-print",
-      });
-      const foldEffect = new FoldEffect(this._foldableElement, options);
-      sectionCtrl.appendChild(foldEffect.render());
-      parentElement.appendChild(sectionCtrl);
-    }
-  }
-
-  render() {
-    return this._foldableElement;
-  }
+function renderIceMetric(label, value) {
+  return renderElement("div", {}, [
+    renderText("span", `${string(label)}: `, { className: "info-label" }),
+    renderText("span", value, { className: "info-body" }),
+  ]);
 }
 
-class SimpleTable {
-  constructor(heading = [], data, caption) {
-    this._heading = heading;
-    this._data = data;
-    this._caption = caption;
+function candidateToString({
+  type,
+  address,
+  port,
+  protocol,
+  candidateType,
+  relayProtocol,
+  proxied,
+} = {}) {
+  if (!type) {
+    return "*";
   }
-
-  renderRow(list, elemType) {
-    const row = document.createElement("tr");
-    row.append(...list.map(elem => renderElement(elemType, elem)));
-    return row;
+  if (relayProtocol) {
+    candidateType = `${candidateType}-${relayProtocol}`;
   }
+  proxied = type == "local-candidate" ? ` [${proxied}]` : "";
+  return `${address}:${port}/${protocol}(${candidateType})${proxied}`;
+}
 
-  render() {
-    const table = document.createElement("table");
-
-    if (this._caption) {
-      table.appendChild(this._caption);
-    }
-    if (this._heading) {
-      table.appendChild(this.renderRow(this._heading, "th"));
-    }
-    table.append(...this._data.map(row => this.renderRow(row, "td")));
-    return table;
+function renderFoldableSection(parent, options = {}) {
+  const section = renderElement("div");
+  if (parent) {
+    const ctrl = renderElements("div", { className: "section-ctrl no-print" }, [
+      new FoldEffect(section, options).render(),
+    ]);
+    parent.append(ctrl);
   }
+  return section;
+}
+
+function renderSimpleTable(caption, headings, data) {
+  const heads = headings.map(text => renderText("th", text));
+  const renderCell = text => renderText("td", text);
+
+  return renderElements("table", {}, [
+    caption,
+    renderElements("tr", {}, heads),
+    ...data.map(line => renderElements("tr", {}, line.map(renderCell))),
+  ]);
 }
 
 class FoldEffect {
-  static _sections = [];
+  static allSections = [];
 
-  constructor(targetElem, { showMsg, showHint, hideMsg, hideHint } = {}) {
-    if (targetElem) {
-      this._showMsg = "\u25BC " + (showMsg || getString("fold_show_msg"));
-      this._showHint = showHint || getString("fold_show_hint");
-      this._hideMsg = "\u25B2 " + (hideMsg || getString("fold_hide_msg"));
-      this._hideHint = hideHint || getString("fold_hide_hint");
-      this._target = targetElem;
-    }
+  constructor(
+    target,
+    {
+      showMsg = string("fold_show_msg"),
+      showHint = string("fold_show_hint"),
+      hideMsg = string("fold_hide_msg"),
+      hideHint = string("fold_hide_hint"),
+    } = {}
+  ) {
+    showMsg = `\u25BC ${showMsg}`;
+    hideMsg = `\u25B2 ${hideMsg}`;
+    Object.assign(this, { target, showMsg, showHint, hideMsg, hideHint });
   }
 
   render() {
-    this._target.classList.add("fold-target");
-
-    const ctrl = renderElement("div", null, { className: "fold-trigger" });
-    this._trigger = ctrl;
-    ctrl.addEventListener("click", () => this.onClick());
-    this.close();
-
-    FoldEffect._sections.push(this);
-    return ctrl;
+    this.target.classList.add("fold-target");
+    this.trigger = renderElement("div", { className: "fold-trigger" });
+    this.collapse();
+    this.trigger.onclick = () => {
+      if (this.target.classList.contains("fold-closed")) {
+        this.expand();
+      } else {
+        this.collapse();
+      }
+    };
+    FoldEffect.allSections.push(this);
+    return this.trigger;
   }
 
-  onClick() {
-    if (this._target.classList.contains("fold-closed")) {
-      this.open();
-    } else {
-      this.close();
-    }
+  expand() {
+    this.target.classList.remove("fold-closed");
+    this.trigger.setAttribute("title", this.hideHint);
+    this.trigger.textContent = this.hideMsg;
   }
 
-  open() {
-    this._target.classList.remove("fold-closed");
-    this._trigger.setAttribute("title", this._hideHint);
-    this._trigger.textContent = this._hideMsg;
-  }
-
-  close() {
-    this._target.classList.add("fold-closed");
-    this._trigger.setAttribute("title", this._showHint);
-    this._trigger.textContent = this._showMsg;
+  collapse() {
+    this.target.classList.add("fold-closed");
+    this.trigger.setAttribute("title", this.showHint);
+    this.trigger.textContent = this.showMsg;
   }
 
   static expandAll() {
-    for (const section of FoldEffect._sections) {
-      section.open();
+    for (const section of FoldEffect.allSections) {
+      section.expand();
     }
   }
 
   static collapseAll() {
-    for (const section of FoldEffect._sections) {
-      section.close();
+    for (const section of FoldEffect.allSections) {
+      section.collapse();
     }
   }
 }
