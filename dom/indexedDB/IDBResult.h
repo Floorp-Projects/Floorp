@@ -92,6 +92,8 @@ class IDBResultBase {
   // Construct a normal result. Use the Ok function to create an object of type
   // ValueType.
   MOZ_IMPLICIT IDBResultBase(const ValueType& aValue) : mVariant(aValue) {}
+  MOZ_IMPLICIT IDBResultBase(ValueType&& aValue)
+      : mVariant(std::move(aValue)) {}
 
   MOZ_IMPLICIT IDBResultBase(ExceptionType, ErrorResult&& aErrorResult)
       : mVariant(std::move(aErrorResult)) {}
