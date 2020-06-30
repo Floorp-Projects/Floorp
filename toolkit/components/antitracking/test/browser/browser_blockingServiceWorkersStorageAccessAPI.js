@@ -65,11 +65,7 @@ AntiTracking.runTest(
   },
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    if (allowListed) {
-      await hasStorageAccessInitially();
-    } else {
-      await noStorageAccessInitially();
-    }
+    await hasStorageAccessInitially();
 
     await navigator.serviceWorker
       .register("empty.js")
