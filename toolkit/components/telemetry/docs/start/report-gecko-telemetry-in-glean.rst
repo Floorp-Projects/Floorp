@@ -24,7 +24,7 @@ Exfiltrating existing histograms is a relatively straightforward process made up
 Tag histograms in ``Histograms.json``
 -------------------------------------
 Accumulations to non-tagged histograms are ignored if streaming Telemetry is enabled.
-To tag a histogram you must add the `geckoview_streaming` product to the `products list <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/histograms.html#products>`__  in the `Histograms.json file <https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/telemetry/Histograms.json>`__ .
+To tag a histogram you must add the `geckoview_streaming` product to the :ref:`products list <histogram-products>`  in the `Histograms.json file <https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/telemetry/Histograms.json>`__ .
 
 Add Glean metrics to ``metrics.yaml``
 -------------------------------------
@@ -161,7 +161,7 @@ Exfiltrating existing boolean, string or uint scalars, or adding new ones, is a 
 Tag scalars in ``Scalars.yaml``
 ----------------------------------
 Accumulations to non-tagged scalars are ignored if streaming Telemetry is enabled.
-To tag a scalar you must add the `geckoview_streaming` product to the `products list <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/scalars.html#required-fields>`__  in the `Scalars.yaml file <https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/telemetry/Scalars.yaml>`__ .
+To tag a scalar you must add the `geckoview_streaming` product to the :ref:`products list <scalars-required-fields>`  in the `Scalars.yaml file <https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/telemetry/Scalars.yaml>`__ .
 
 Add Glean metrics to ``metrics.yaml``
 -------------------------------------
@@ -254,6 +254,6 @@ Unsupported features
 ====================
 This is the list of the currently unsupported features:
 
-* `keyed scalars <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/scalars.html#keyed-scalars>`__ are not supported and there are no future plans for supporting them;
-* uint scalar operations other than `set <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/scalars.html#id2>`__ are not supported and there are no future plans for supporting them.
-* `events <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/events.html>`__ are not supported and there are no future plans for supporting them.
+* :ref:`keyed scalars <scalars-keyed-scalars>` are not supported and there are no future plans for supporting them;
+* uint scalar operations other than :ref:`set <scalars-c++-API>` are not supported and there are no future plans for supporting them.
+* :ref:`events <eventtelemetry>` are not supported and there are no future plans for supporting them.

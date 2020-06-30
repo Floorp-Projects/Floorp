@@ -122,21 +122,18 @@ reported under the key ``normandy/recipe/<recipe id>``:
    Normandy failed to verify the signature of the recipe.
 
 
-Additionally, Normandy reports a `keyed scalar`_ to measure recipe
+Additionally, Normandy reports a :ref:`keyed scalar <Scalars>` to measure recipe
 freshness. This scalar is called ``normandy.recipe_freshness``, and it
 corresponds to the ``last_modified`` date of each recipe (using its ID
 as the key), reported as seconds since 1970 in UTC.
-
-.. _keyed scalar: https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/scalars.html
 
 
 Enrollment
 -----------
 Normandy records enrollment and unenrollment of users into studies, and
-records that data using `Telemetry Events`_. All data is stored in the
+records that data using :ref:`Telemetry Events <eventtelemetry>`. All data is stored in the
 ``normandy`` category.
 
-.. _Telemetry Events: https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/events.html
 
 Enrollment IDs
 ^^^^^^^^^^^^^^

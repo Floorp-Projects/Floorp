@@ -80,7 +80,7 @@ Considerations for all changes
 
 - Does this need documentation updates?
 
-  - To the `in-tree docs <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/>`_?
+  - To the :ref:`in-tree docs <Telemetry>`?
   - To the `firefox-data-docs <https://docs.telemetry.mozilla.org/>`_ (`repository <https://github.com/mozilla/firefox-data-docs>`_)?
   - To the `glean documentation <https://github.com/mozilla-mobile/android-components/tree/master/components/service/glean>`_?
 

@@ -84,6 +84,9 @@ Example:
   // Now scalars can be recorded.
   Services.telemetry.scalarSet("myAddon.category.counter_scalar", 37);
 
+
+.. _scalars-c++-API:
+
 C++ API
 -------
 Probes in native code can use the more convenient helper functions declared in `Telemetry.h <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/core/Telemetry.h>`_:
@@ -151,6 +154,8 @@ A probe can be defined as follows:
         notification_emails:
           - telemetry-client-dev@mozilla.com
 
+.. _scalars-required-fields:
+
 Required Fields
 ---------------
 
@@ -193,7 +198,7 @@ String type restrictions
 To prevent abuses, the content of a string scalar is limited to 50 characters in length. Trying
 to set a longer string will result in an error and no string being set.
 
-.. _scalars.keyed-scalars:
+.. _scalars-keyed-scalars:
 
 Keyed Scalars
 -------------
