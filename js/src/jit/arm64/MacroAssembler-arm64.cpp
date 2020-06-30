@@ -2081,7 +2081,6 @@ void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
 void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
                                          Label* fail) {
   const ARMFPRegister src32(src, 32);
-  ScratchFloat32Scope scratch(*this);
 
   Label done, zeroCase;
 
@@ -2124,7 +2123,6 @@ void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
 void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
   const ARMFPRegister src64(src, 64);
-  ScratchDoubleScope scratch(*this);
 
   Label done, zeroCase;
 
