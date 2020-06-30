@@ -3845,17 +3845,6 @@ void DebugAPI::sweepAll(JSFreeOp* fop) {
   }
 }
 
-/* static */
-void Debugger::detachAllDebuggersFromGlobal(JSFreeOp* fop,
-                                            GlobalObject* global) {
-  const Realm::DebuggerVector& debuggers = global->getDebuggers();
-  MOZ_ASSERT(!debuggers.empty());
-  while (!debuggers.empty()) {
-    debuggers.back().dbg->removeDebuggeeGlobal(fop, global, nullptr,
-                                               Debugger::FromSweep::No);
-  }
-}
-
 static inline bool SweepZonesInSameGroup(Zone* a, Zone* b) {
   // Ensure two zones are swept in the same sweep group by adding an edge
   // between them in each direction.
