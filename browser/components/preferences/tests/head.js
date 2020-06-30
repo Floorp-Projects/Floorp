@@ -151,7 +151,7 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
       () => true
     );
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-    openPreferences(aPane);
+    openPreferences(aPane, aOptions);
     let newTabBrowser = gBrowser.selectedBrowser;
 
     newTabBrowser.addEventListener(

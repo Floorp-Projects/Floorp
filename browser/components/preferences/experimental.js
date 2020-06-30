@@ -57,20 +57,39 @@ var gExperimentalPane = {
       return;
     }
     this.inited = true;
+
+    let searchParams = new URLSearchParams(document.documentURIObject.query);
+    let definitionsUrl = searchParams.get("definitionsUrl");
+    let features = await FeatureGate.all(definitionsUrl);
+    features = features.filter(f => f.isPublic);
+    let shouldHide = !features.length;
+    document.getElementById("category-experimental").hidden = shouldHide;
+    // Cache the visibility so we can show it quicker in subsequent loads.
+    Services.prefs.setBoolPref(
+      "browser.preferences.experimental.hidden",
+      shouldHide
+    );
+    if (shouldHide) {
+      // Remove the 'experimental' category if there are no available features
+      document.getElementById("firefoxExperimentalCategory").remove();
+      if (
+        document.getElementById("categories").selectedItem?.id ==
+        "category-experimental"
+      ) {
+        // Leave the 'experimental' category if there are no available features
+        gotoPref("general");
+        return;
+      }
+    }
+
     window.addEventListener("unload", () => this.removePrefObservers());
     this._template = document.getElementById("template-featureGate");
     this._featureGatesContainer = document.getElementById(
       "pane-experimental-featureGates"
     );
     this._boundRestartObserver = this._observeRestart.bind(this);
-    let searchParams = new URLSearchParams(document.documentURIObject.query);
-    let definitionsUrl = searchParams.get("definitionsUrl");
-    let features = await FeatureGate.all(definitionsUrl);
     let frag = document.createDocumentFragment();
     for (let feature of features) {
-      if (!feature.isPublic) {
-        continue;
-      }
       if (Preferences.get(feature.preference)) {
         console.error(
           "Preference control already exists for experimental feature '" +
