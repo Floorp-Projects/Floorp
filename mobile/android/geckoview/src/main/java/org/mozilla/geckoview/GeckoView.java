@@ -585,7 +585,7 @@ public class GeckoView extends FrameLayout {
     }
 
     private void restoreSession(final @Nullable GeckoSession savedSession) {
-        if (savedSession == null || savedSession.equals(mSession)) {
+        if (savedSession == null || savedSession.equalsId(mSession)) {
             return;
         }
 
