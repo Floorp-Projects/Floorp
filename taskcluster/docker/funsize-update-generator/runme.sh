@@ -8,6 +8,10 @@ test "$SIGNING_CERT"
 ARTIFACTS_DIR="/home/worker/artifacts"
 mkdir -p "$ARTIFACTS_DIR"
 
+# Strip trailing / if present
+TASKCLUSTER_ROOT_URL="${TASKCLUSTER_ROOT_URL%/}"
+export TASKCLUSTER_ROOT_URL
+
 # duplicate the functionality of taskcluster-lib-urls, but in bash..
 queue_base="${TASKCLUSTER_ROOT_URL%/}/api/queue/v1"
 
