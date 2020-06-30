@@ -137,20 +137,11 @@ bool nsStyleDisplay::IsFixedPosContainingBlock(
   return true;
 }
 
-bool nsStyleDisplay::IsAbsPosContainingBlockForNonSVGTextFrames() const {
-  // NOTE: Any CSS properties that influence the output of this function
-  // should have the ABSPOS_CB set on them.
-  return IsAbsolutelyPositionedStyle() || IsRelativelyPositionedStyle() ||
-         (mWillChange.bits & mozilla::StyleWillChangeBits::ABSPOS_CB);
-}
-
 bool nsStyleDisplay::IsAbsPosContainingBlock(
     const nsIFrame* aContextFrame) const {
   mozilla::ComputedStyle* style = aContextFrame->Style();
   NS_ASSERTION(style->StyleDisplay() == this, "unexpected aContextFrame");
-  // NOTE: Any CSS properties that influence the output of this function
-  // should have the ABSPOS_CB set on them.
-  if (!IsAbsPosContainingBlockForNonSVGTextFrames() &&
+  if (!IsPositionedStyle() &&
       !IsFixedPosContainingBlockForNonSVGTextFrames(*style) &&
       (!IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() ||
        !aContextFrame->IsFrameOfType(

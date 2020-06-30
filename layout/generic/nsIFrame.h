@@ -2073,10 +2073,10 @@ class nsIFrame : public nsQueryFrame {
   void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame);
 
   /**
-   * Returns the computed z-index for this frame, returning 0 for z-index:auto
-   * and frames that don't support z-index.
+   * Returns the computed z-index for this frame, returning Nothing() for
+   * z-index: auto, and for frames that don't support z-index.
    */
-  int32_t ZIndex() const;
+  Maybe<int32_t> ZIndex() const;
 
   /**
    * Returns whether this frame is the anchor of some ancestor scroll frame. As
@@ -3981,14 +3981,8 @@ class nsIFrame : public nsQueryFrame {
 
   /**
    * Determines if this frame is a stacking context.
-   *
-   * @param aIsPositioned The precomputed result of IsAbsPosContainingBlock
-   * on the StyleDisplay().
    */
-  bool IsStackingContext(const nsStyleDisplay* aStyleDisplay,
-                         const nsStylePosition* aStylePosition,
-                         const nsStyleEffects* aStyleEffects,
-                         bool aIsPositioned);
+  bool IsStackingContext(const nsStyleDisplay*, const nsStyleEffects*);
   bool IsStackingContext();
 
   virtual bool HonorPrintBackgroundSettings() { return true; }

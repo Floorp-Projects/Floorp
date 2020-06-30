@@ -1590,24 +1590,9 @@ void nsIFrame::SyncFrameViewProperties(nsView* aView) {
                                      : nsViewVisibility_kHide);
   }
 
-  int32_t zIndex = 0;
-  bool autoZIndex = false;
-
-  if (IsAbsPosContainingBlock()) {
-    // Make sure z-index is correct
-    ComputedStyle* sc = Style();
-    const nsStylePosition* position = sc->StylePosition();
-    if (position->mZIndex.IsInteger()) {
-      zIndex = position->mZIndex.AsInteger();
-    } else {
-      MOZ_ASSERT(position->mZIndex.IsAuto());
-      autoZIndex = true;
-    }
-  } else {
-    autoZIndex = true;
-  }
-
-  vm->SetViewZIndex(aView, autoZIndex, zIndex);
+  const auto zIndex = ZIndex();
+  const bool autoZIndex = !zIndex;
+  vm->SetViewZIndex(aView, autoZIndex, zIndex.valueOr(0));
 }
 
 void nsIFrame::CreateView() {
@@ -4060,9 +4045,7 @@ void nsIFrame::BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
 nsIFrame::DisplayChildFlag nsIFrame::DisplayFlagForFlexOrGridItem() const {
   MOZ_ASSERT(IsFlexOrGridItem(),
              "Should only be called on flex or grid items!");
-  return StylePosition()->mZIndex.IsInteger()
-             ? DisplayChildFlag::ForceStackingContext
-             : DisplayChildFlag::ForcePseudoStackingContext;
+  return DisplayChildFlag::ForcePseudoStackingContext;
 }
 
 static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
@@ -4241,13 +4224,11 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // SVG effects or a blend mode..
   const nsStyleDisplay* disp = child->StyleDisplay();
   const nsStyleEffects* effects = child->StyleEffects();
-  const nsStylePosition* pos = child->StylePosition();
 
-  const bool isPositioned = disp->IsAbsPosContainingBlock(child);
-
+  const bool isPositioned = disp->IsPositionedStyle();
   const bool isStackingContext =
       aFlags.contains(DisplayChildFlag::ForceStackingContext) ||
-      child->IsStackingContext(disp, pos, effects, isPositioned);
+      child->IsStackingContext(disp, effects);
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
       placeholder || (!isSVG && disp->IsFloating(child)) ||
@@ -4374,7 +4355,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     // hit test info to still be behind us. Force a new hit test info for this
     // item, and for the item after it, so that we always have the right hit
     // test info.
-    bool mayBeSorted = isPositioned && (ZIndex() != 0);
+    const bool mayBeSorted = ZIndex().valueOr(0) != 0;
 
     aBuilder->BuildCompositorHitTestInfoIfNeeded(
         child, pseudoStack.BorderBackground(), differentAGR || mayBeSorted);
@@ -4412,8 +4393,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
   buildingForChild.RestoreBuildingInvisibleItemsValue();
 
-  if (isPositioned || isStackingContext ||
-      aFlags.contains(DisplayChildFlag::ForceStackingContext)) {
+  if (isPositioned || isStackingContext) {
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.
     if (!list.IsEmpty()) {
@@ -9548,18 +9528,15 @@ void nsIFrame::ComputePreserve3DChildrenOverflow(
   }
 }
 
-int32_t nsIFrame::ZIndex() const {
-  if (!IsAbsPosContainingBlock() && !IsFlexOrGridItem()) {
-    return 0;
+Maybe<int32_t> nsIFrame::ZIndex() const {
+  if (!StyleDisplay()->IsPositionedStyle() && !IsFlexOrGridItem()) {
+    return Nothing();  // z-index doesn't apply.
   }
-
-  const nsStylePosition* position = StylePosition();
-  if (position->mZIndex.IsInteger()) {
-    return position->mZIndex.AsInteger();
+  const auto& zIndex = StylePosition()->mZIndex;
+  if (zIndex.IsAuto()) {
+    return Nothing();
   }
-  MOZ_ASSERT(position->mZIndex.IsAuto());
-  // sort the auto and 0 elements together
-  return 0;
+  return Some(zIndex.AsInteger());
 }
 
 bool nsIFrame::IsScrollAnchor(ScrollAnchorContainer** aOutContainer) {
@@ -10716,9 +10693,7 @@ void nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
-                                 const nsStylePosition* aStylePosition,
-                                 const nsStyleEffects* aStyleEffects,
-                                 bool aIsPositioned) {
+                                 const nsStyleEffects* aStyleEffects) {
   return HasOpacity(aStyleDisplay, aStyleEffects, nullptr) ||
          IsTransformed(aStyleDisplay) ||
          ((aStyleDisplay->IsContainPaint() ||
@@ -10729,8 +10704,8 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
          ChildrenHavePerspective(aStyleDisplay) ||
          aStyleEffects->mMixBlendMode != StyleBlend::Normal ||
          nsSVGIntegrationUtils::UsingEffectsForFrame(this) ||
-         (aIsPositioned && (aStyleDisplay->IsPositionForcingStackingContext() ||
-                            aStylePosition->mZIndex.IsInteger())) ||
+         aStyleDisplay->IsPositionForcingStackingContext() ||
+         ZIndex().isSome() ||
          (aStyleDisplay->mWillChange.bits &
           StyleWillChangeBits::STACKING_CONTEXT) ||
          aStyleDisplay->mIsolation != StyleIsolation::Auto ||
@@ -10738,9 +10713,7 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
 }
 
 bool nsIFrame::IsStackingContext() {
-  const nsStyleDisplay* disp = StyleDisplay();
-  const bool isPositioned = disp->IsAbsPosContainingBlock(this);
-  return IsStackingContext(disp, StylePosition(), StyleEffects(), isPositioned);
+  return IsStackingContext(StyleDisplay(), StyleEffects());
 }
 
 static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,

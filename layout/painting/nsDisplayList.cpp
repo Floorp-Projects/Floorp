@@ -2863,7 +2863,7 @@ bool nsDisplayItem::ForceActiveLayers() {
   return StaticPrefs::layers_force_active();
 }
 
-int32_t nsDisplayItem::ZIndex() const { return mFrame->ZIndex(); }
+int32_t nsDisplayItem::ZIndex() const { return mFrame->ZIndex().valueOr(0); }
 
 bool nsDisplayItem::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                       nsRegion* aVisibleRegion) {
