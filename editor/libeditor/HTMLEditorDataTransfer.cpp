@@ -791,6 +791,7 @@ Element* HTMLEditor::GetLinkElement(nsINode* aNode) {
   return nullptr;
 }
 
+// static
 nsresult HTMLEditor::StripFormattingNodes(nsIContent& aNode, bool aListOnly) {
   if (aNode.TextIsOnlyWhitespace()) {
     nsCOMPtr<nsINode> parent = aNode.GetParentNode();
@@ -809,7 +810,7 @@ nsresult HTMLEditor::StripFormattingNodes(nsIContent& aNode, bool aListOnly) {
     nsCOMPtr<nsIContent> child = aNode.GetLastChild();
     while (child) {
       nsCOMPtr<nsIContent> previous = child->GetPreviousSibling();
-      nsresult rv = StripFormattingNodes(*child, aListOnly);
+      nsresult rv = HTMLEditor::StripFormattingNodes(*child, aListOnly);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::StripFormattingNodes() failed");
         return rv;
@@ -2919,9 +2920,9 @@ nsresult HTMLEditor::CreateDOMFragmentFromPaste(
   nsCOMPtr<nsINode> targetNode;
   RefPtr<DocumentFragment> documentFragmentForContext;
   if (!aContextStr.IsEmpty()) {
-    nsresult rv = ParseFragment(aContextStr, nullptr, document,
-                                getter_AddRefs(documentFragmentForContext),
-                                aTrustedInput);
+    nsresult rv = HTMLEditor::ParseFragment(
+        aContextStr, nullptr, document,
+        getter_AddRefs(documentFragmentForContext), aTrustedInput);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::ParseFragment(aContextStr) failed");
       return rv;
@@ -2931,7 +2932,7 @@ nsresult HTMLEditor::CreateDOMFragmentFromPaste(
       return NS_ERROR_FAILURE;
     }
 
-    rv = StripFormattingNodes(*documentFragmentForContext);
+    rv = HTMLEditor::StripFormattingNodes(*documentFragmentForContext);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::StripFormattingNodes() failed");
       return rv;
@@ -2956,9 +2957,9 @@ nsresult HTMLEditor::CreateDOMFragmentFromPaste(
     contextLocalNameAtom = nsGkAtoms::body;
   }
   RefPtr<DocumentFragment> documentFragmentToInsert;
-  nsresult rv =
-      ParseFragment(aInputString, contextLocalNameAtom, document,
-                    getter_AddRefs(documentFragmentToInsert), aTrustedInput);
+  nsresult rv = HTMLEditor::ParseFragment(
+      aInputString, contextLocalNameAtom, document,
+      getter_AddRefs(documentFragmentToInsert), aTrustedInput);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::ParseFragment(aInputString) failed");
     return rv;
@@ -2979,7 +2980,7 @@ nsresult HTMLEditor::CreateDOMFragmentFromPaste(
     documentFragmentToInsert = documentFragmentForContext;
   }
 
-  rv = StripFormattingNodes(*documentFragmentToInsert, true);
+  rv = HTMLEditor::StripFormattingNodes(*documentFragmentToInsert, true);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::StripFormattingNodes() failed");
     return rv;
@@ -3045,6 +3046,7 @@ nsresult HTMLEditor::MoveStartAndEndAccordingToHTMLInfo(
   return NS_OK;
 }
 
+// static
 nsresult HTMLEditor::ParseFragment(const nsAString& aFragStr,
                                    nsAtom* aContextLocalName,
                                    Document* aTargetDocument,

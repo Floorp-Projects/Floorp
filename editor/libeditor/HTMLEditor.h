@@ -4382,7 +4382,8 @@ class HTMLEditor final : public TextEditor,
   nsresult ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,
                        char16_t** aCfcontext);
 
-  nsresult StripFormattingNodes(nsIContent& aNode, bool aOnlyList = false);
+  static nsresult StripFormattingNodes(nsIContent& aNode,
+                                       bool aOnlyList = false);
 
   /**
    * @param aContextStr as indicated by nsITransferable's kHTMLContext.
@@ -4393,7 +4394,7 @@ class HTMLEditor final : public TextEditor,
       const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
       nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
       int32_t* aOutStartOffset, int32_t* aOutEndOffset, bool aTrustedInput);
-  nsresult ParseFragment(const nsAString& aStr, nsAtom* aContextLocalName,
+  static nsresult ParseFragment(const nsAString& aStr, nsAtom* aContextLocalName,
                          Document* aTargetDoc,
                          dom::DocumentFragment** aFragment, bool aTrustedInput);
 
