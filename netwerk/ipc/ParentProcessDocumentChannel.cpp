@@ -204,8 +204,14 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
         p->ChainTo(aResolveValue.mPromise.forget(), __func__);
       },
       [self](DocumentLoadListener::OpenPromiseFailedType&& aRejectValue) {
-        self->DisconnectChildListeners(aRejectValue.mStatus,
-                                       aRejectValue.mLoadGroupStatus);
+        // If this is a normal failure, then we want to disconnect our listeners
+        // and notify them of the failure. If this is a process switch, then we
+        // can just ignore it silently, and trust that the switch will shut down
+        // our docshell and cancel us when it's ready.
+        if (!aRejectValue.mSwitchedProcess) {
+          self->DisconnectChildListeners(aRejectValue.mStatus,
+                                         aRejectValue.mLoadGroupStatus);
+        }
         self->RemoveObserver();
       });
   return NS_OK;
