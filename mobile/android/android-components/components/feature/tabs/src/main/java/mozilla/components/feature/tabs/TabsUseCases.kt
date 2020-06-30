@@ -7,6 +7,8 @@ package mozilla.components.feature.tabs
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
@@ -15,6 +17,7 @@ import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
  * Contains use cases related to the tabs feature.
  */
 class TabsUseCases(
+    store: BrowserStore,
     sessionManager: SessionManager
 ) {
     /**
@@ -108,6 +111,7 @@ class TabsUseCases(
     }
 
     class AddNewTabUseCase internal constructor(
+        private val store: BrowserStore,
         private val sessionManager: SessionManager
     ) : LoadUrlUseCase {
 
@@ -149,7 +153,9 @@ class TabsUseCases(
             // If an engine session is specified then loading will have already started
             // during sessionManager.add when linking the session to its engine session.
             if (startLoading && engineSession == null) {
-                val parentEngineSession = parent?.let { sessionManager.getEngineSession(it) }
+                val parentEngineSession = parent?.let {
+                    store.state.findTabOrCustomTab(it.id)?.engineState?.engineSession
+                }
                 sessionManager.getOrCreateEngineSession(session, true).loadUrl(url, parentEngineSession, flags)
             }
 
@@ -158,6 +164,7 @@ class TabsUseCases(
     }
 
     class AddNewPrivateTabUseCase internal constructor(
+        private val store: BrowserStore,
         private val sessionManager: SessionManager
     ) : LoadUrlUseCase {
 
@@ -197,7 +204,9 @@ class TabsUseCases(
             // If an engine session is specified then loading will have already started
             // during sessionManager.add when linking the session to its engine session.
             if (startLoading && engineSession == null) {
-                val parentEngineSession = parent?.let { sessionManager.getEngineSession(it) }
+                val parentEngineSession = parent?.let {
+                    store.state.findTabOrCustomTab(it.id)?.engineState?.engineSession
+                }
                 sessionManager.getOrCreateEngineSession(session, true).loadUrl(url, parentEngineSession, flags)
             }
 
@@ -229,8 +238,8 @@ class TabsUseCases(
 
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(sessionManager) }
     val removeTab: RemoveTabUseCase by lazy { DefaultRemoveTabUseCase(sessionManager) }
-    val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(sessionManager) }
-    val addPrivateTab: AddNewPrivateTabUseCase by lazy { AddNewPrivateTabUseCase(sessionManager) }
+    val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(store, sessionManager) }
+    val addPrivateTab: AddNewPrivateTabUseCase by lazy { AddNewPrivateTabUseCase(store, sessionManager) }
     val removeAllTabs: RemoveAllTabsUseCase by lazy { RemoveAllTabsUseCase(sessionManager) }
     val removeAllTabsOfType: RemoveAllTabsOfTypeUseCase by lazy {
         RemoveAllTabsOfTypeUseCase(

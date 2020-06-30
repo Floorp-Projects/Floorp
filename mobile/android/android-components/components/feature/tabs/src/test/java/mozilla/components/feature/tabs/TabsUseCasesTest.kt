@@ -8,10 +8,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -32,7 +35,7 @@ class TabsUseCasesTest {
     @Test
     fun `SelectTabUseCase - session will be selected in session manager`() {
         val sessionManager: SessionManager = mock()
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         val session = Session("A")
         useCases.selectTab(session)
@@ -43,7 +46,7 @@ class TabsUseCasesTest {
     @Test
     fun `RemoveTabUseCase - session will be removed in session manager`() {
         val sessionManager: SessionManager = mock()
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         val session = Session("A")
         useCases.removeTab(session)
@@ -54,7 +57,7 @@ class TabsUseCasesTest {
     @Test
     fun `RemoveTabUseCase - session can be removed by ID`() {
         val sessionManager = spy(SessionManager(mock()))
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         val session = Session(id = "test", initialUrl = "http://mozilla.org")
         sessionManager.remove(session)
@@ -69,7 +72,7 @@ class TabsUseCasesTest {
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         assertEquals(0, sessionManager.size)
 
@@ -89,7 +92,7 @@ class TabsUseCasesTest {
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         assertEquals(0, sessionManager.size)
 
@@ -109,7 +112,7 @@ class TabsUseCasesTest {
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         useCases.addTab("https://www.mozilla.org", startLoading = false)
 
@@ -123,7 +126,7 @@ class TabsUseCasesTest {
         whenever(engine.createSession(false, null)).thenReturn(engineSession)
         val sessionManager = SessionManager(engine)
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
         useCases.addTab("https://www.mozilla.org", startLoading = true)
         verify(engineSession, times(1)).loadUrl("https://www.mozilla.org")
     }
@@ -134,7 +137,7 @@ class TabsUseCasesTest {
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         useCases.addTab.invoke("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
         verify(engineSession).loadUrl("https://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
@@ -142,16 +145,20 @@ class TabsUseCasesTest {
 
     @Test
     fun `AddNewTabUseCase forwards parent session to engine`() {
-        val sessionManager = spy(SessionManager(mock()))
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
         val parentSession = Session(id = "parent", initialUrl = "")
         sessionManager.add(parentSession)
         val parentEngineSession: EngineSession = mock()
-        doReturn(parentEngineSession).`when`(sessionManager).getEngineSession(parentSession)
 
-        val useCases = TabsUseCases(sessionManager)
+        store.dispatch(EngineAction.LinkEngineSessionAction(
+            "parent", parentEngineSession
+        )).joinBlocking()
+
+        val useCases = TabsUseCases(store, sessionManager)
         useCases.addTab.invoke("https://www.mozilla.org", parentId = "parent", startLoading = true)
         verify(engineSession).loadUrl("https://www.mozilla.org", parentEngineSession, LoadUrlFlags.none())
     }
@@ -161,7 +168,7 @@ class TabsUseCasesTest {
         val sessionManager = spy(SessionManager(mock()))
         val engineSession: EngineSession = mock()
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
         useCases.addTab.invoke("https://www.mozilla.org", engineSession = engineSession, startLoading = true)
         verify(engineSession).loadUrl("https://www.mozilla.org", null, LoadUrlFlags.none())
     }
@@ -172,7 +179,7 @@ class TabsUseCasesTest {
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         assertEquals(0, sessionManager.size)
 
@@ -193,7 +200,7 @@ class TabsUseCasesTest {
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         useCases.addPrivateTab("https://www.mozilla.org", startLoading = false)
 
@@ -207,7 +214,7 @@ class TabsUseCasesTest {
         whenever(engine.createSession(true, null)).thenReturn(engineSession)
         val sessionManager = SessionManager(engine)
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
         useCases.addPrivateTab("https://www.mozilla.org", startLoading = true)
         verify(engineSession, times(1)).loadUrl("https://www.mozilla.org")
     }
@@ -218,7 +225,7 @@ class TabsUseCasesTest {
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         useCases.addPrivateTab.invoke("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
         verify(engineSession).loadUrl("https://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
@@ -226,16 +233,20 @@ class TabsUseCasesTest {
 
     @Test
     fun `AddNewPrivateTabUseCase forwards parent session to engine`() {
-        val sessionManager = spy(SessionManager(mock()))
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
         val parentSession = Session(id = "parent", initialUrl = "")
         sessionManager.add(parentSession)
         val parentEngineSession: EngineSession = mock()
-        doReturn(parentEngineSession).`when`(sessionManager).getEngineSession(parentSession)
 
-        val useCases = TabsUseCases(sessionManager)
+        store.dispatch(EngineAction.LinkEngineSessionAction(
+            "parent", parentEngineSession
+        )).joinBlocking()
+
+        val useCases = TabsUseCases(store, sessionManager)
         useCases.addPrivateTab.invoke("https://www.mozilla.org", parentId = "parent", startLoading = true)
         verify(engineSession).loadUrl("https://www.mozilla.org", parentEngineSession, LoadUrlFlags.none())
     }
@@ -245,7 +256,7 @@ class TabsUseCasesTest {
         val sessionManager = spy(SessionManager(mock()))
         val engineSession: EngineSession = mock()
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
         useCases.addPrivateTab.invoke("https://www.mozilla.org", engineSession = engineSession, startLoading = true)
         verify(engineSession).loadUrl("https://www.mozilla.org", null, LoadUrlFlags.none())
     }
@@ -256,7 +267,7 @@ class TabsUseCasesTest {
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         useCases.addPrivateTab("https://www.mozilla.org")
         useCases.addTab("https://www.mozilla.org")
@@ -276,7 +287,7 @@ class TabsUseCasesTest {
         val engineSession: EngineSession = mock()
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
 
-        val useCases = TabsUseCases(sessionManager)
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         val session1 = Session("https://www.mozilla.org")
         session1.customTabConfig = mock()

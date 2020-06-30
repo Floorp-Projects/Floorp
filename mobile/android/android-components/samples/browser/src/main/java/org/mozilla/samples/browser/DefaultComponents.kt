@@ -367,7 +367,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         ShippedDomainsProvider().also { it.initialize(applicationContext) }
     }
 
-    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(sessionManager) }
+    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
     val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(sessionManager, store) }
 }

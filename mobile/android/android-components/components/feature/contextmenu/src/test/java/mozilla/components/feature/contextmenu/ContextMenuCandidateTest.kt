@@ -61,9 +61,10 @@ class ContextMenuCandidateTest {
 
     @Test
     fun `Candidate "Open Link in New Tab" showFor displayed in correct cases`() {
-        val sessionManager = spy(SessionManager(mock()))
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
             testContext, tabsUseCases, parentView, snackbarDelegate)
@@ -96,7 +97,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", contextId = "1"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
             testContext, tabsUseCases, parentView, snackbarDelegate)
@@ -118,7 +119,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
             testContext, tabsUseCases, parentView, snackbarDelegate)
@@ -141,7 +142,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
 
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
@@ -165,7 +166,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
 
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
@@ -187,7 +188,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
             testContext, tabsUseCases, parentView, snackbarDelegate)
@@ -220,7 +221,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
             testContext, tabsUseCases, parentView, snackbarDelegate)
@@ -243,7 +244,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
             testContext, tabsUseCases, parentView, snackbarDelegate)
@@ -266,7 +267,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
             testContext, tabsUseCases, parentView, snackbarDelegate)
@@ -285,7 +286,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
@@ -344,7 +345,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", private = true))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
@@ -368,7 +369,7 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any(), anyBoolean())
         sessionManager.add(Session("https://www.mozilla.org", contextId = "1"))
 
-        val tabsUseCases = TabsUseCases(sessionManager)
+        val tabsUseCases = TabsUseCases(store, sessionManager)
         val parentView = CoordinatorLayout(testContext)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
