@@ -527,7 +527,7 @@ interface nsITelemetry : nsISupports
    *   ]
    *
    * @param aDataset DATASET_ALL_CHANNELS or DATASET_PRERELEASE_CHANNELS.
-   * @param [aClear=false] Whether to clear out the events after snapshotting.
+   * @param [aClear=false] Whether to clear out the flushed events after snapshotting.
    * @param aEventLimit How many events per process to limit the snapshot to contain, all if unspecified.
    *                    Even if aClear, the leftover event records are not cleared.
    */
@@ -613,6 +613,8 @@ interface nsITelemetry : nsISupports
 
   /**
    * Resets all the stored events. This is intended to be only used in tests.
+   * Events recorded but not yet flushed to the parent process storage won't be cleared.
+   * Override the pref. `toolkit.telemetry.ipcBatchTimeout` to reduce the time to flush events.
    */
   void clearEvents();
 
