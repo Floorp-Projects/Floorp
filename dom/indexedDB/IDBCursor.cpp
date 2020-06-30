@@ -348,11 +348,8 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
   Key key;
   auto result = key.SetFromJSVal(aCx, aKey);
   if (!result.Is(Ok)) {
-    if (result.Is(Invalid)) {
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-    } else {
-      aRv = std::move(result.AsException());
-    }
+    aRv = result.ExtractErrorResult(
+        InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
     return;
   }
 
@@ -362,11 +359,8 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
 
       result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale());
       if (!result.Is(Ok)) {
-        if (result.Is(Invalid)) {
-          aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-        } else {
-          aRv = std::move(result.AsException());
-        }
+        aRv = result.ExtractErrorResult(
+            InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
         return;
       }
       key = tmp;
@@ -457,11 +451,8 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
     Key key;
     auto result = key.SetFromJSVal(aCx, aKey);
     if (!result.Is(Ok)) {
-      if (result.Is(Invalid)) {
-        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-      } else {
-        aRv = std::move(result.AsException());
-      }
+      aRv = result.ExtractErrorResult(
+          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
       return;
     }
 
@@ -469,11 +460,8 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
       Key tmp;
       result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale());
       if (!result.Is(Ok)) {
-        if (result.Is(Invalid)) {
-          aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-        } else {
-          aRv = std::move(result.AsException());
-        }
+        aRv = result.ExtractErrorResult(
+            InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
         return;
       }
       key = tmp;
@@ -487,11 +475,8 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
     Key primaryKey;
     result = primaryKey.SetFromJSVal(aCx, aPrimaryKey);
     if (!result.Is(Ok)) {
-      if (result.Is(Invalid)) {
-        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-      } else {
-        aRv = std::move(result.AsException());
-      }
+      aRv = result.ExtractErrorResult(
+          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
       return;
     }
 

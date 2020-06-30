@@ -125,6 +125,16 @@ class IDBResultBase {
 
   ErrorResult& AsException() { return mVariant.template as<ErrorResult>(); }
 
+  template <typename... SpecialValueMappers>
+  ErrorResult ExtractErrorResult(SpecialValueMappers... aSpecialValueMappers) {
+    return mVariant.match(
+        [](const ValueType&) -> ErrorResult {
+          MOZ_CRASH("non-value expected");
+        },
+        [](ErrorResult& aException) { return std::move(aException); },
+        aSpecialValueMappers...);
+  }
+
  protected:
   using VariantType = Variant<ValueType, ErrorResult, SpecialConstant<S>...>;
 
@@ -157,6 +167,11 @@ class MOZ_MUST_USE_TYPE IDBResult<void, S...>
  public:
   using IDBResult::IDBResultBase::IDBResultBase;
 };
+
+template <nsresult E>
+ErrorResult InvalidMapsTo(const indexedDB::detail::InvalidType&) {
+  return ErrorResult{E};
+}
 
 }  // namespace indexedDB
 }  // namespace dom

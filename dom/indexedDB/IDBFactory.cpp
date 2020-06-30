@@ -446,21 +446,15 @@ int16_t IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
   Key first, second;
   auto result = first.SetFromJSVal(aCx, aFirst);
   if (!result.Is(Ok)) {
-    if (result.Is(Invalid)) {
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-    } else {
-      aRv = std::move(result.AsException());
-    }
+    aRv = result.ExtractErrorResult(
+        InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
     return 0;
   }
 
   result = second.SetFromJSVal(aCx, aSecond);
   if (!result.Is(Ok)) {
-    if (result.Is(Invalid)) {
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-    } else {
-      aRv = std::move(result.AsException());
-    }
+    aRv = result.ExtractErrorResult(
+        InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
     return 0;
   }
 
