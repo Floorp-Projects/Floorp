@@ -92,44 +92,41 @@ class IDBResultBase {
   // ValueType.
   MOZ_IMPLICIT IDBResultBase(const ValueType& aValue) : mVariant(aValue) {}
 
-  MOZ_IMPLICIT IDBResultBase(ExceptionType) : mVariant(ExceptionType{}) {}
+  MOZ_IMPLICIT IDBResultBase(ExceptionType, ErrorResult&& aErrorResult)
+      : mVariant(std::move(aErrorResult)) {}
 
   template <IDBSpecialValue Special>
   MOZ_IMPLICIT IDBResultBase(SpecialConstant<Special>)
       : mVariant(SpecialConstant<Special>{}) {}
 
+  IDBResultBase(IDBResultBase&&) = default;
+  IDBResultBase& operator=(IDBResultBase&&) = default;
+
   // Construct an IDBResult from another IDBResult whose set of possible special
   // values is a subset of this one's.
   template <IDBSpecialValue... U>
-  MOZ_IMPLICIT IDBResultBase(const IDBResultBase<T, U...>& aOther)
+  MOZ_IMPLICIT IDBResultBase(IDBResultBase<T, U...>&& aOther)
       : mVariant(aOther.mVariant.match(
-            [](auto& aVariant) { return VariantType{aVariant}; })) {}
+            [](auto& aVariant) { return VariantType{std::move(aVariant)}; })) {}
 
   // Test whether the result is a normal return value. The choice of the first
   // parameter's type makes it possible to write `result.Is(Ok, rv)`, promoting
   // readability and uniformity with other functions in the overload set.
-  bool Is(OkType<void> (*)(), const ErrorResult& aRv) const {
-    AssertConsistency(aRv);
+  bool Is(OkType<void> (*)()) const {
     return mVariant.template is<ValueType>();
   }
 
-  bool Is(ExceptionType, const ErrorResult& aRv) const {
-    AssertConsistency(aRv);
-    return mVariant.template is<ExceptionType>();
-  }
+  bool Is(ExceptionType) const { return mVariant.template is<ErrorResult>(); }
 
   template <IDBSpecialValue Special>
-  bool Is(SpecialConstant<Special>, const ErrorResult& aRv) const {
-    AssertConsistency(aRv);
+  bool Is(SpecialConstant<Special>) const {
     return mVariant.template is<SpecialConstant<Special>>();
   }
 
- protected:
-  void AssertConsistency(const ErrorResult& aRv) const {
-    MOZ_ASSERT(aRv.Failed() == mVariant.template is<ExceptionType>());
-  }
+  ErrorResult& AsException() { return mVariant.template as<ErrorResult>(); }
 
-  using VariantType = Variant<ValueType, ExceptionType, SpecialConstant<S>...>;
+ protected:
+  using VariantType = Variant<ValueType, ErrorResult, SpecialConstant<S>...>;
 
   VariantType mVariant;
 };
@@ -145,12 +142,11 @@ class MOZ_MUST_USE_TYPE IDBResult : public detail::IDBResultBase<T, S...> {
 
   // Get a reference to the regular return value, asserting that this object
   // is indeed a regular return value.
-  T& Unwrap(const ErrorResult& aRv) {
-    return const_cast<T&>(static_cast<const IDBResult*>(this)->Unwrap(aRv));
+  T& Unwrap() {
+    return const_cast<T&>(static_cast<const IDBResult*>(this)->Unwrap());
   }
 
-  const T& Unwrap(const ErrorResult& aRv) const {
-    this->AssertConsistency(aRv);
+  const T& Unwrap() const {
     return this->mVariant.template as<typename IDBResult::ValueType>().mValue;
   }
 };
