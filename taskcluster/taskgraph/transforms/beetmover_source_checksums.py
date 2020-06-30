@@ -17,10 +17,9 @@ from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
                                          get_beetmover_bucket_scope,
                                          get_beetmover_action_scope)
 from taskgraph.transforms.task import task_description_schema
-from voluptuous import Required, Optional
+from voluptuous import Optional
 
 beetmover_checksums_description_schema = schema.extend({
-    Required('depname', default='build'): text_type,
     Optional('label'): text_type,
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('locale'): text_type,

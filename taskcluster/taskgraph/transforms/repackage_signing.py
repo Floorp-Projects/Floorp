@@ -17,10 +17,9 @@ from taskgraph.util.scriptworker import (
     get_signing_cert_scope_per_platform,
 )
 from taskgraph.transforms.task import task_description_schema
-from voluptuous import Required, Optional
+from voluptuous import Optional
 
 repackage_signing_description_schema = schema.extend({
-    Required('depname', default='repackage'): text_type,
     Optional('label'): text_type,
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('shipping-product'): task_description_schema['shipping-product'],

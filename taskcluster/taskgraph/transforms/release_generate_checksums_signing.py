@@ -16,10 +16,9 @@ from taskgraph.util.scriptworker import (
 )
 from taskgraph.util.taskcluster import get_artifact_path
 from taskgraph.transforms.task import task_description_schema
-from voluptuous import Required, Optional
+from voluptuous import Optional
 
 release_generate_checksums_signing_schema = schema.extend({
-    Required('depname', default='release-generate-checksums'): text_type,
     Optional('label'): text_type,
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('shipping-product'): task_description_schema['shipping-product'],

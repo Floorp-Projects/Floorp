@@ -24,9 +24,6 @@ from taskgraph.util.treeherder import replace_group
 transforms = TransformSequence()
 
 beetmover_description_schema = schema.extend({
-    # depname is used in taskref's to identify the taskID of the unsigned things
-    Required('depname', default='build'): text_type,
-
     # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
     Optional('label'): text_type,
 
