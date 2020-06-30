@@ -1730,6 +1730,13 @@ main {
     padding: 6px 12px;
     margin-inline-start: 5px;
     margin-bottom: 0; }
+  .asrouter-admin .general-textarea {
+    width: 740px;
+    height: 500px;
+    overflow: auto;
+    resize: none;
+    border-radius: 4px;
+    display: flex; }
   .asrouter-admin .wnp-textarea {
     width: 740px;
     height: 500px;
