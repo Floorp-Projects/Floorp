@@ -6177,24 +6177,15 @@ already_AddRefed<PresShell> Document::CreatePresShell(
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShell = presShell;
 
-  bool hadStyleSheets = mStyleSetFilled;
-  if (!hadStyleSheets) {
+  if (!mStyleSetFilled) {
     FillStyleSet();
   }
 
   presShell->Init(aContext, aViewManager);
 
-  if (hadStyleSheets) {
-    // Gaining a shell causes changes in how media queries are evaluated, so
-    // invalidate that.
-    aContext->MediaFeatureValuesChanged({MediaFeatureChange::kAllChanges});
-  } else {
-    // Otherwise, we need to at least recompute the initial style now that our
-    // resolution and such may have changed. This is done by
-    // MediaFeatureValuesChanged above otherwise, see
-    // kMediaFeaturesAffectingDefaultStyle.
-    mStyleSet->ClearCachedStyleData();
-  }
+  // Gaining a shell causes changes in how media queries are evaluated, so
+  // invalidate that.
+  aContext->MediaFeatureValuesChanged({MediaFeatureChange::kAllChanges});
 
   // Make sure to never paint if we belong to an invisible DocShell.
   nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);

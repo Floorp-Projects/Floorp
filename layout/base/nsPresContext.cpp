@@ -1554,18 +1554,12 @@ void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
     RebuildAllStyleData(change.mChangeHint, change.mRestyleHint);
   }
 
-  if (!mPresShell || !mPresShell->DidInitialize()) {
-    return;
-  }
-
   if (mDocument->IsBeingUsedAsImage()) {
     MOZ_ASSERT(mDocument->MediaQueryLists().isEmpty());
     return;
   }
 
   mDocument->NotifyMediaFeatureValuesChanged();
-
-  MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsSafeToRunScript());
 
   // Media query list listeners should be notified from a queued task
   // (in HTML5 terms), although we also want to notify them on certain
@@ -1589,11 +1583,15 @@ void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
     localMediaQueryLists.AppendElement(mql);
   }
 
-  // Now iterate our local array of the lists.
-  for (const auto& mql : localMediaQueryLists) {
-    nsAutoMicroTask mt;
-    mql->MaybeNotify();
-  }
+  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+      "nsPresContext::FlushPendingMediaFeatureValuesChanged",
+      [list = std::move(localMediaQueryLists)] {
+        // Now iterate our local array of the lists.
+        for (const auto& mql : list) {
+          nsAutoMicroTask mt;
+          mql->MaybeNotify();
+        }
+      }));
 }
 
 void nsPresContext::SizeModeChanged(nsSizeMode aSizeMode) {
