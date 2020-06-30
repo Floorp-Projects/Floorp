@@ -801,7 +801,8 @@ class IPCMarkerPayload : public ProfilerMarkerPayload {
  public:
   IPCMarkerPayload(int32_t aOtherPid, int32_t aMessageSeqno,
                    IPC::Message::msgid_t aMessageType, mozilla::ipc::Side aSide,
-                   mozilla::ipc::MessageDirection aDirection, bool aSync,
+                   mozilla::ipc::MessageDirection aDirection,
+                   mozilla::ipc::MessagePhase aPhase, bool aSync,
                    const mozilla::TimeStamp& aStartTime)
       : ProfilerMarkerPayload(aStartTime, aStartTime),
         mOtherPid(aOtherPid),
@@ -809,6 +810,7 @@ class IPCMarkerPayload : public ProfilerMarkerPayload {
         mMessageType(aMessageType),
         mSide(aSide),
         mDirection(aDirection),
+        mPhase(aPhase),
         mSync(aSync) {}
 
   DECL_STREAM_PAYLOAD
@@ -817,13 +819,15 @@ class IPCMarkerPayload : public ProfilerMarkerPayload {
   IPCMarkerPayload(CommonProps&& aCommonProps, int32_t aOtherPid,
                    int32_t aMessageSeqno, IPC::Message::msgid_t aMessageType,
                    mozilla::ipc::Side aSide,
-                   mozilla::ipc::MessageDirection aDirection, bool aSync)
+                   mozilla::ipc::MessageDirection aDirection,
+                   mozilla::ipc::MessagePhase aPhase, bool aSync)
       : ProfilerMarkerPayload(std::move(aCommonProps)),
         mOtherPid(aOtherPid),
         mMessageSeqno(aMessageSeqno),
         mMessageType(aMessageType),
         mSide(aSide),
         mDirection(aDirection),
+        mPhase(aPhase),
         mSync(aSync) {}
 
   int32_t mOtherPid;
@@ -831,6 +835,7 @@ class IPCMarkerPayload : public ProfilerMarkerPayload {
   IPC::Message::msgid_t mMessageType;
   mozilla::ipc::Side mSide;
   mozilla::ipc::MessageDirection mDirection;
+  mozilla::ipc::MessagePhase mPhase;
   bool mSync;
 };
 

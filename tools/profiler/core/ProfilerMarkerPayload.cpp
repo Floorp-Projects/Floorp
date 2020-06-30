@@ -1101,8 +1101,9 @@ void NativeAllocationMarkerPayload::StreamPayload(
 ProfileBufferEntryWriter::Length IPCMarkerPayload::TagAndSerializationBytes()
     const {
   return CommonPropsTagAndSerializationBytes() +
-         ProfileBufferEntryWriter::SumBytes(
-             mOtherPid, mMessageSeqno, mMessageType, mSide, mDirection, mSync);
+         ProfileBufferEntryWriter::SumBytes(mOtherPid, mMessageSeqno,
+                                            mMessageType, mSide, mDirection,
+                                            mPhase, mSync);
 }
 
 void IPCMarkerPayload::SerializeTagAndPayload(
@@ -1114,6 +1115,7 @@ void IPCMarkerPayload::SerializeTagAndPayload(
   aEntryWriter.WriteObject(mMessageType);
   aEntryWriter.WriteObject(mSide);
   aEntryWriter.WriteObject(mDirection);
+  aEntryWriter.WriteObject(mPhase);
   aEntryWriter.WriteObject(mSync);
 }
 
@@ -1125,12 +1127,39 @@ UniquePtr<ProfilerMarkerPayload> IPCMarkerPayload::Deserialize(
   auto otherPid = aEntryReader.ReadObject<int32_t>();
   auto messageSeqno = aEntryReader.ReadObject<int32_t>();
   auto messageType = aEntryReader.ReadObject<IPC::Message::msgid_t>();
-  auto mSide = aEntryReader.ReadObject<ipc::Side>();
-  auto mDirection = aEntryReader.ReadObject<ipc::MessageDirection>();
-  auto mSync = aEntryReader.ReadObject<bool>();
+  auto side = aEntryReader.ReadObject<ipc::Side>();
+  auto direction = aEntryReader.ReadObject<ipc::MessageDirection>();
+  auto phase = aEntryReader.ReadObject<ipc::MessagePhase>();
+  auto sync = aEntryReader.ReadObject<bool>();
   return UniquePtr<ProfilerMarkerPayload>(
       new IPCMarkerPayload(std::move(props), otherPid, messageSeqno,
-                           messageType, mSide, mDirection, mSync));
+                           messageType, side, direction, phase, sync));
+}
+
+static const char* IPCSideToString(ipc::Side aSide) {
+  switch (aSide) {
+    case ipc::ParentSide:
+      return "parent";
+    case ipc::ChildSide:
+      return "child";
+    case ipc::UnknownSide:
+      return "unknown";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid IPC side");
+  }
+}
+
+static const char* IPCPhaseToString(ipc::MessagePhase aPhase) {
+  switch (aPhase) {
+    case ipc::MessagePhase::Endpoint:
+      return "endpoint";
+    case ipc::MessagePhase::TransferStart:
+      return "transferStart";
+    case ipc::MessagePhase::TransferEnd:
+      return "transferEnd";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid IPC phase");
+  }
 }
 
 void IPCMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
@@ -1142,9 +1171,10 @@ void IPCMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.IntProperty("messageSeqno", mMessageSeqno);
   aWriter.StringProperty("messageType",
                          IPC::StringFromIPCMessageType(mMessageType));
-  aWriter.StringProperty("side", mSide == ParentSide ? "parent" : "child");
+  aWriter.StringProperty("side", IPCSideToString(mSide));
   aWriter.StringProperty("direction", mDirection == MessageDirection::eSending
                                           ? "sending"
                                           : "receiving");
+  aWriter.StringProperty("phase", IPCPhaseToString(mPhase));
   aWriter.BoolProperty("sync", mSync);
 }

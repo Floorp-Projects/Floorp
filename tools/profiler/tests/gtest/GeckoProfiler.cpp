@@ -775,7 +775,8 @@ TEST(GeckoProfiler, Markers)
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "IPCMarkerPayload marker", IPC, IPCMarkerPayload,
       (1111, 1, 3 /* PAPZ::Msg_LayerTransforms */, mozilla::ipc::ParentSide,
-       mozilla::ipc::MessageDirection::eSending, false, ts1));
+       mozilla::ipc::MessageDirection::eSending,
+       mozilla::ipc::MessagePhase::Endpoint, false, ts1));
 
   SpliceableChunkedJSONWriter w;
   w.Start();
@@ -1330,6 +1331,7 @@ TEST(GeckoProfiler, Markers)
                                "PAPZ::Msg_LayerTransforms");
                 EXPECT_EQ_JSON(payload["side"], String, "parent");
                 EXPECT_EQ_JSON(payload["direction"], String, "sending");
+                EXPECT_EQ_JSON(payload["phase"], String, "endpoint");
                 EXPECT_EQ_JSON(payload["sync"], Bool, false);
               }
             }  // marker with payload

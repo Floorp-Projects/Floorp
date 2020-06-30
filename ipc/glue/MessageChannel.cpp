@@ -985,7 +985,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg) {
     return false;
   }
 
-  AddProfilerMarker(aMsg.get(), MessageDirection::eSending);
+  AddProfilerMarker(*aMsg, MessageDirection::eSending);
   SendMessageToLink(std::move(aMsg));
   return true;
 }
@@ -1511,7 +1511,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
   // aMsg will be destroyed soon, but name() is not owned by aMsg.
   const char* msgName = aMsg->name();
 
-  AddProfilerMarker(aMsg.get(), MessageDirection::eSending);
+  AddProfilerMarker(*aMsg, MessageDirection::eSending);
   SendMessageToLink(std::move(aMsg));
 
   while (true) {
@@ -1599,7 +1599,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
   MOZ_RELEASE_ASSERT(reply->type() == replyType, "wrong reply type");
   MOZ_RELEASE_ASSERT(reply->is_sync());
 
-  AddProfilerMarker(reply.get(), MessageDirection::eReceiving);
+  AddProfilerMarker(*reply, MessageDirection::eReceiving);
 
   *aReply = std::move(*reply);
   if (aReply->size() >= kMinTelemetryMessageSize) {
@@ -1651,7 +1651,7 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
   aMsg->set_interrupt_local_stack_depth(1 + InterruptStackDepth());
   mInterruptStack.push(MessageInfo(*aMsg));
 
-  AddProfilerMarker(aMsg.get(), MessageDirection::eSending);
+  AddProfilerMarker(*aMsg, MessageDirection::eSending);
 
   mLink->SendMessage(std::move(aMsg));
 
@@ -1760,7 +1760,7 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
       // this frame and return the reply.
       mInterruptStack.pop();
 
-      AddProfilerMarker(&recvd, MessageDirection::eReceiving);
+      AddProfilerMarker(recvd, MessageDirection::eReceiving);
 
       bool is_reply_error = recvd.is_reply_error();
       if (!is_reply_error) {
@@ -2068,7 +2068,7 @@ void MessageChannel::DispatchMessage(Message&& aMsg) {
 
   IPC_LOG("DispatchMessage: seqno=%d, xid=%d", aMsg.seqno(),
           aMsg.transaction_id());
-  AddProfilerMarker(&aMsg, MessageDirection::eReceiving);
+  AddProfilerMarker(aMsg, MessageDirection::eReceiving);
 
   {
     AutoEnterTransaction transaction(this, aMsg);
@@ -2107,7 +2107,7 @@ void MessageChannel::DispatchMessage(Message&& aMsg) {
   if (reply && ChannelConnected == mChannelState) {
     IPC_LOG("Sending reply seqno=%d, xid=%d", aMsg.seqno(),
             aMsg.transaction_id());
-    AddProfilerMarker(reply.get(), MessageDirection::eSending);
+    AddProfilerMarker(*reply, MessageDirection::eSending);
 
     mLink->SendMessage(std::move(reply));
   }
@@ -2208,7 +2208,7 @@ void MessageChannel::DispatchInterruptMessage(ActorLifecycleProxy* aProxy,
 
   MonitorAutoLock lock(*mMonitor);
   if (ChannelConnected == mChannelState) {
-    AddProfilerMarker(reply.get(), MessageDirection::eSending);
+    AddProfilerMarker(*reply, MessageDirection::eSending);
     mLink->SendMessage(std::move(reply));
   }
 }
@@ -2803,15 +2803,16 @@ void MessageChannel::DumpInterruptStack(const char* const pfx) const {
   }
 }
 
-void MessageChannel::AddProfilerMarker(const IPC::Message* aMessage,
+void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
                                        MessageDirection aDirection) {
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_feature_active(ProfilerFeature::IPCMessages)) {
+    // If mPeerPid is -1, messages are being sent to the current process.
     int32_t pid = mPeerPid == -1 ? base::GetCurrentProcId() : mPeerPid;
     PROFILER_ADD_MARKER_WITH_PAYLOAD(
         "IPC", IPC, IPCMarkerPayload,
-        (pid, aMessage->seqno(), aMessage->type(), mSide, aDirection,
-         aMessage->is_sync(), TimeStamp::Now()));
+        (pid, aMessage.seqno(), aMessage.type(), mSide, aDirection,
+         MessagePhase::Endpoint, aMessage.is_sync(), TimeStamp::NowUnfuzzed()));
   }
 #endif
 }

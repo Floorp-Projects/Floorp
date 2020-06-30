@@ -30,6 +30,7 @@
 #include "base/string_util.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/file_descriptor_set_posix.h"
+#include "chrome/common/ipc_channel_utils.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/StaticMutex.h"
@@ -52,6 +53,8 @@ static const size_t kMaxIOVecSize = 16;
 #  include "GeckoTaskTracerImpl.h"
 using namespace mozilla::tasktracer;
 #endif
+
+using namespace mozilla::ipc;
 
 namespace IPC {
 
@@ -558,6 +561,13 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
                                                 m.header()->num_fds);
         fds_i += m.header()->num_fds;
       }
+
+      // Note: We set other_pid_ below when we receive a Hello message (which
+      // has no routing ID), but we only emit a profiler marker for messages
+      // with a routing ID, so there's no conflict here.
+      AddIPCProfilerMarker(m, other_pid_, MessageDirection::eReceiving,
+                           MessagePhase::TransferEnd);
+
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
       DLOG(INFO) << "received message on channel @" << this << " with type "
                  << m.type();
@@ -632,33 +642,37 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       return false;
     }
 
-    if (partial_write_iter_.value().Data() == msg->Buffers().Start() &&
-        !msg->file_descriptor_set()->empty()) {
-      // This is the first chunk of a message which has descriptors to send
-      struct cmsghdr* cmsg;
-      const unsigned num_fds = msg->file_descriptor_set()->size();
+    if (partial_write_iter_.value().Data() == msg->Buffers().Start()) {
+      AddIPCProfilerMarker(*msg, other_pid_, MessageDirection::eSending,
+                           MessagePhase::TransferStart);
 
-      if (num_fds > FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
-        MOZ_DIAGNOSTIC_ASSERT(false, "Too many file descriptors!");
-        CHROMIUM_LOG(FATAL) << "Too many file descriptors!";
-        // This should not be reached.
-        return false;
-      }
+      if (!msg->file_descriptor_set()->empty()) {
+        // This is the first chunk of a message which has descriptors to send
+        struct cmsghdr* cmsg;
+        const unsigned num_fds = msg->file_descriptor_set()->size();
 
-      msgh.msg_control = buf;
-      msgh.msg_controllen = CMSG_SPACE(sizeof(int) * num_fds);
-      cmsg = CMSG_FIRSTHDR(&msgh);
-      cmsg->cmsg_level = SOL_SOCKET;
-      cmsg->cmsg_type = SCM_RIGHTS;
-      cmsg->cmsg_len = CMSG_LEN(sizeof(int) * num_fds);
-      msg->file_descriptor_set()->GetDescriptors(
-          reinterpret_cast<int*>(CMSG_DATA(cmsg)));
-      msgh.msg_controllen = cmsg->cmsg_len;
+        if (num_fds > FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
+          MOZ_DIAGNOSTIC_ASSERT(false, "Too many file descriptors!");
+          CHROMIUM_LOG(FATAL) << "Too many file descriptors!";
+          // This should not be reached.
+          return false;
+        }
 
-      msg->header()->num_fds = num_fds;
+        msgh.msg_control = buf;
+        msgh.msg_controllen = CMSG_SPACE(sizeof(int) * num_fds);
+        cmsg = CMSG_FIRSTHDR(&msgh);
+        cmsg->cmsg_level = SOL_SOCKET;
+        cmsg->cmsg_type = SCM_RIGHTS;
+        cmsg->cmsg_len = CMSG_LEN(sizeof(int) * num_fds);
+        msg->file_descriptor_set()->GetDescriptors(
+            reinterpret_cast<int*>(CMSG_DATA(cmsg)));
+        msgh.msg_controllen = cmsg->cmsg_len;
+
+        msg->header()->num_fds = num_fds;
 #if defined(OS_MACOSX)
-      msg->set_fd_cookie(++last_pending_fd_id_);
+        msg->set_fd_cookie(++last_pending_fd_id_);
 #endif
+      }
     }
 
     struct iovec iov[kMaxIOVecSize];
@@ -767,7 +781,11 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
             PendingDescriptors(msg->fd_cookie(), msg->file_descriptor_set()));
 #endif
 
-        // Message sent OK!
+      // Message sent OK!
+
+      AddIPCProfilerMarker(*msg, other_pid_, MessageDirection::eSending,
+                           MessagePhase::TransferEnd);
+
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
       DLOG(INFO) << "sent message @" << msg << " on channel @" << this
                  << " with type " << msg->type();
