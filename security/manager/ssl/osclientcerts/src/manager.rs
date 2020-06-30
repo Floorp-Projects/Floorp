@@ -10,6 +10,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::backend_macos as backend;
 #[cfg(target_os = "windows")]
 use crate::backend_windows as backend;
+use crate::util::*;
 use backend::*;
 
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -305,6 +306,37 @@ impl ManagerProxy {
     }
 }
 
+// Determines if the attributes of a given search correspond to NSS looking for all certificates or
+// private keys. Returns true if so, and false otherwise.
+// These searches are of the form:
+//   { { type: CKA_TOKEN, value: [1] },
+//     { type: CKA_CLASS, value: [CKO_CERTIFICATE or CKO_PRIVATE_KEY, as serialized bytes] } }
+// (although not necessarily in that order - see nssToken_TraverseCertificates and
+// nssToken_FindPrivateKeys)
+fn search_is_for_all_certificates_or_keys(
+    attrs: &[(CK_ATTRIBUTE_TYPE, Vec<u8>)],
+) -> Result<bool, ()> {
+    if attrs.len() != 2 {
+        return Ok(false);
+    }
+    let token_bytes = vec![1 as u8];
+    let mut found_token = false;
+    let cko_certificate_bytes = serialize_uint(CKO_CERTIFICATE)?;
+    let cko_private_key_bytes = serialize_uint(CKO_PRIVATE_KEY)?;
+    let mut found_certificate_or_private_key = false;
+    for (attr_type, attr_value) in attrs.iter() {
+        if attr_type == &CKA_TOKEN && attr_value == &token_bytes {
+            found_token = true;
+        }
+        if attr_type == &CKA_CLASS
+            && (attr_value == &cko_certificate_bytes || attr_value == &cko_private_key_bytes)
+        {
+            found_certificate_or_private_key = true;
+        }
+    }
+    Ok(found_token && found_certificate_or_private_key)
+}
+
 /// The `Manager` keeps track of the state of this module with respect to the PKCS #11
 /// specification. This includes what sessions are open, which search and sign operations are
 /// ongoing, and what objects are known and by what handle.
@@ -389,7 +421,6 @@ impl Manager {
     }
 
     pub fn open_session(&mut self) -> Result<CK_SESSION_HANDLE, ()> {
-        self.maybe_find_new_objects();
         let next_session = self.next_session;
         self.next_session += 1;
         self.sessions.insert(next_session);
@@ -434,6 +465,14 @@ impl Manager {
                 self.searches.insert(session, Vec::new());
                 return Ok(());
             }
+        }
+        // When NSS wants to find all certificates or all private keys, it will perform a search
+        // with a particular set of attributes. This implementation uses these searches as an
+        // indication for the backend to re-scan for new objects from tokens that may have been
+        // inserted or certificates that may have been imported into the OS. Since these searches
+        // are relatively rare, this minimizes the impact of doing these re-scans.
+        if search_is_for_all_certificates_or_keys(attrs)? {
+            self.maybe_find_new_objects();
         }
         let mut handles = Vec::new();
         for (handle, object) in &self.objects {
