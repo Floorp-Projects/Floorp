@@ -1945,6 +1945,8 @@ PermissionManager::RemoveAllSince(int64_t aSince) {
 
 template <class T>
 nsresult PermissionManager::RemovePermissionEntries(T aCondition) {
+  EnsureReadCompleted();
+
   Vector<Tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> array;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
@@ -2306,6 +2308,7 @@ NS_IMETHODIMP
 PermissionManager::GetAllForPrincipal(
     nsIPrincipal* aPrincipal, nsTArray<RefPtr<nsIPermission>>& aResult) {
   aResult.Clear();
+  EnsureReadCompleted();
 
   MOZ_ASSERT(PermissionAvailable(aPrincipal, EmptyCString()));
 
@@ -2429,6 +2432,8 @@ PermissionManager::RemovePermissionsWithAttributes(const nsAString& aPattern) {
 
 nsresult PermissionManager::RemovePermissionsWithAttributes(
     OriginAttributesPattern& aPattern) {
+  EnsureReadCompleted();
+
   Vector<Tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> permissions;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
