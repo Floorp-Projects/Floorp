@@ -1531,7 +1531,8 @@ NS_IMETHODIMP HTMLEditor::RebuildDocumentFromSource(
 }
 
 EditorRawDOMPoint HTMLEditor::GetBetterInsertionPointFor(
-    nsIContent& aContentToInsert, const EditorRawDOMPoint& aPointToInsert) {
+    nsIContent& aContentToInsert,
+    const EditorRawDOMPoint& aPointToInsert) const {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return aPointToInsert;
   }
