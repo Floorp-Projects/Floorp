@@ -189,7 +189,7 @@ bool BrowsingContext::SameOriginWithTop() {
 /* static */
 already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     nsGlobalWindowInner* aParent, BrowsingContext* aOpener,
-    const nsAString& aName, Type aType) {
+    BrowsingContextGroup* aSpecificGroup, const nsAString& aName, Type aType) {
   if (aParent) {
     MOZ_DIAGNOSTIC_ASSERT(aParent->GetWindowContext());
     MOZ_DIAGNOSTIC_ASSERT(aParent->GetBrowsingContext()->mType == aType);
@@ -210,10 +210,13 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
       aParent ? aParent->GetWindowContext() : nullptr;
 
   // Determine which BrowsingContextGroup this context should be created in.
-  RefPtr<BrowsingContextGroup> group =
-      (aType == Type::Chrome)
-          ? do_AddRef(BrowsingContextGroup::GetChromeGroup())
-          : BrowsingContextGroup::Select(parentWC, aOpener);
+  RefPtr<BrowsingContextGroup> group = aSpecificGroup;
+  if (aType == Type::Chrome) {
+    MOZ_DIAGNOSTIC_ASSERT(!group);
+    group = BrowsingContextGroup::GetChromeGroup();
+  } else if (!group) {
+    group = BrowsingContextGroup::Select(parentWC, aOpener);
+  }
 
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
@@ -339,7 +342,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
 already_AddRefed<BrowsingContext> BrowsingContext::CreateIndependent(
     Type aType) {
   RefPtr<BrowsingContext> bc(
-      CreateDetached(nullptr, nullptr, EmptyString(), aType));
+      CreateDetached(nullptr, nullptr, nullptr, EmptyString(), aType));
   bc->mWindowless = bc->IsContent();
   bc->EnsureAttached();
   return bc.forget();
