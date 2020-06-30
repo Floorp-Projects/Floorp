@@ -121,24 +121,24 @@ var Profiler;
         if (_profiler.ResumeSampling) {
           _profiler.ResumeSampling();
         }
-        _profiler.AddMarker(
+        ChromeUtils.addProfilerMarker(
           explicit ? name : 'Start of test "' + (name || test_name) + '"'
         );
       }
     },
     pause: function Profiler__pause(name, explicit) {
       if (_profiler) {
+        ChromeUtils.addProfilerMarker(
+          explicit ? name : 'End of test "' + (name || test_name) + '"'
+        );
         if (_profiler.PauseSampling) {
           _profiler.PauseSampling();
         }
-        _profiler.AddMarker(
-          explicit ? name : 'End of test "' + (name || test_name) + '"'
-        );
       }
     },
     mark: function Profiler__mark(marker, explicit) {
       if (_profiler) {
-        _profiler.AddMarker(
+        ChromeUtils.addProfilerMarker(
           explicit ? marker : 'Profiler: "' + (marker || test_name) + '"'
         );
       }
