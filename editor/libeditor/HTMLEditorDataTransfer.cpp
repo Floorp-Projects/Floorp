@@ -3108,11 +3108,11 @@ HTMLEditor::AutoHTMLFragmentBoundariesFixer::AutoHTMLFragmentBoundariesFixer(
                                      aArrayOfTopMostChildContents);
 }
 
+// static
 void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
-    CollectListAndTableRelatedElementsAt(
+    CollectTableAndAnyListElementsOfInclusiveAncestorsAt(
         nsIContent& aContent,
-        nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements)
-        const {
+        nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements) {
   for (Element* element = aContent.GetAsElementOrParentElement(); element;
        element = element->GetParentElement()) {
     if (HTMLEditUtils::IsAnyListElement(element) ||
@@ -3291,7 +3291,7 @@ void HTMLEditor::AutoHTMLFragmentBoundariesFixer::
   // in aArrayOfTopMostChildContents.
   AutoTArray<OwningNonNull<Element>, 4>
       arrayOfListAndTableRelatedElementsAtEdge;
-  CollectListAndTableRelatedElementsAt(
+  CollectTableAndAnyListElementsOfInclusiveAncestorsAt(
       aStartOrEnd == StartOrEnd::end
           ? aArrayOfTopMostChildContents.LastElement()
           : aArrayOfTopMostChildContents[0],
