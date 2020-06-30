@@ -16,15 +16,12 @@ from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
                                          get_beetmover_action_scope)
 from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.transforms.task import task_description_schema
-from voluptuous import Required, Optional
+from voluptuous import Optional
 
 transforms = TransformSequence()
 
 
 release_generate_checksums_beetmover_schema = schema.extend({
-    # depname is used in taskref's to identify the taskID of the unsigned things
-    Required('depname', default='build'): text_type,
-
     # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
     Optional('label'): text_type,
 

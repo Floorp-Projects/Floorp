@@ -17,12 +17,11 @@ from taskgraph.util.scriptworker import (
 )
 from taskgraph.util.taskcluster import get_artifact_path
 from taskgraph.transforms.task import task_description_schema
-from voluptuous import Required, Optional
+from voluptuous import Optional
 
 transforms = TransformSequence()
 
 repackage_signing_description_schema = schema.extend({
-    Required('depname', default='repackage'): text_type,
     Optional('label'): text_type,
     Optional('extra'): object,
     Optional('shipping-product'): task_description_schema['shipping-product'],

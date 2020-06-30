@@ -37,9 +37,6 @@ PACKAGE_FORMATS['installer-stub']['inputs']['package'] = 'target-stub{archive_fo
 PACKAGE_FORMATS['installer-stub']['args'].extend(["--package-name", "{package-name}"])
 
 packaging_description_schema = schema.extend({
-    # depname is used in taskref's to identify the taskID of the signed things
-    Required('depname', default='build'): text_type,
-
     # unique label to describe this repackaging task
     Optional('label'): text_type,
 
