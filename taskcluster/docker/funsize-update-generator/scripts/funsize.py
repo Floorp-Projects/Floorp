@@ -15,6 +15,7 @@ import shutil
 import tempfile
 import time
 from distutils.util import strtobool
+from contextlib import AsyncExitStack
 from pathlib import Path
 
 import aiohttp
@@ -64,9 +65,7 @@ def verify_signature(mar, cert):
 def process_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifacts-dir", required=True)
-    parser.add_argument(
-        "--signing-cert", type=argparse.FileType("rb"), required=True
-    )
+    parser.add_argument("--signing-cert", type=argparse.FileType("rb"), required=True)
     parser.add_argument("--task-definition", required=True, type=argparse.FileType("r"))
     parser.add_argument(
         "--allow-staging-prefixes",
@@ -113,14 +112,17 @@ def validate_mar_channel_id(mar, channel_ids):
     log.info("%s channel %s in %s", mar, product_info[1], channel_ids)
 
 
-async def retry_download(*args, **kwargs):  # noqa: E999
+async def retry_download(*args, semaphore=None, **kwargs):  # noqa: E999
     """Retry download() calls."""
-    await retry_async(
-        download,
-        retry_exceptions=(aiohttp.ClientError, asyncio.TimeoutError),
-        args=args,
-        kwargs=kwargs,
-    )
+    async with AsyncExitStack() as stack:
+        if semaphore:
+            stack.enter_async_context(semaphore)
+        await retry_async(
+            download,
+            retry_exceptions=(aiohttp.ClientError, asyncio.TimeoutError),
+            args=args,
+            kwargs=kwargs,
+        )
 
 
 def verify_allowed_url(mar, allowed_url_prefixes):
@@ -230,21 +232,23 @@ def extract_download_urls(partials_config, mar_type):
     return {definition[f"{mar_type}_mar"] for definition in partials_config}
 
 
-async def download_and_verify_mars(
-    partials_config, allowed_url_prefixes, signing_cert
-):
+async def download_and_verify_mars(partials_config, allowed_url_prefixes, signing_cert):
     """Download, check signature, channel ID and unpack MAR files."""
     # Separate these categories so we can opt to perform checks on only 'to' downloads.
     from_urls = extract_download_urls(partials_config, mar_type="from")
     to_urls = extract_download_urls(partials_config, mar_type="to")
     tasks = list()
     downloads = dict()
+
+    semaphore = asyncio.Semaphore(2)  # Magic 2 to reduce network timeout errors.
     for url in from_urls.union(to_urls):
         verify_allowed_url(url, allowed_url_prefixes)
         downloads[url] = {
             "download_path": Path(tempfile.mkdtemp()) / Path(url).name,
         }
-        tasks.append(retry_download(url, downloads[url]["download_path"]))
+        tasks.append(
+            retry_download(url, downloads[url]["download_path"], semaphore=semaphore)
+        )
 
     await asyncio.gather(*tasks)
 
