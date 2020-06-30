@@ -62,10 +62,14 @@ internal class NativeNotificationBridge(
             builder.setSmallIcon(smallIcon)
                 .setSubText(sourceUrl.tryGetHostFromUrl())
                 .setContentTitle(title)
-                .setContentText(body)
                 .setShowWhen(true)
                 .setWhen(timestamp)
                 .setAutoCancel(true)
+
+            body?.let {
+                builder.setContentText(body)
+                    .setStyle(Notification.BigTextStyle().bigText(body))
+            }
 
             loadIcon(iconUrl?.toUri(), Size.DEFAULT)?.let { iconBitmap ->
                 builder.setLargeIcon(iconBitmap)

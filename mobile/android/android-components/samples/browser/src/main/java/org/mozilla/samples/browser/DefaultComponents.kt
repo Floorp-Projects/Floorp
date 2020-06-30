@@ -116,7 +116,7 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     private val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
 
-    private val permissionStorage by lazy { SitePermissionsStorage(applicationContext) }
+    val permissionStorage by lazy { SitePermissionsStorage(applicationContext) }
 
     val thumbnailStorage by lazy { ThumbnailStorage(applicationContext) }
 
