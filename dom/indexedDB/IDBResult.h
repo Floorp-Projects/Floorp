@@ -39,7 +39,6 @@ struct ExceptionType final {};
 struct VoidType final {};
 }  // namespace detail
 
-namespace {
 template <typename T>
 constexpr inline detail::OkType<std::remove_reference_t<T>> Ok(T&& aValue) {
   return {std::forward<T>(aValue)};
@@ -50,7 +49,9 @@ constexpr inline detail::OkType<void> Ok() { return {}; }
 constexpr const detail::FailureType Failure;
 constexpr const detail::InvalidType Invalid;
 constexpr const detail::ExceptionType Exception;
-}  // namespace
+
+template <typename T, IDBSpecialValue... S>
+class MOZ_MUST_USE_TYPE IDBResult;
 
 namespace detail {
 template <IDBSpecialValue... Elements>
@@ -135,6 +136,9 @@ class IDBResultBase {
         aSpecialValueMappers...);
   }
 
+  template <typename NewValueType>
+  auto PropagateNotOk();
+
  protected:
   using VariantType = Variant<ValueType, ErrorResult, SpecialConstant<S>...>;
 
@@ -175,6 +179,40 @@ template <nsresult E>
 ErrorResult InvalidMapsTo(const indexedDB::detail::InvalidType&) {
   return ErrorResult{E};
 }
+
+namespace detail {
+template <typename T, IDBSpecialValue... S>
+template <typename NewValueType>
+auto IDBResultBase<T, S...>::PropagateNotOk() {
+  using ResultType = IDBResult<NewValueType, S...>;
+  MOZ_ASSERT(!Is(Ok));
+
+  return mVariant.match(
+#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 8)
+      [](const ValueType&) -> ResultType { MOZ_CRASH("non-value expected"); },
+      [](ErrorResult& aException) -> ResultType {
+        return {Exception, std::move(aException)};
+      },
+      [](SpecialConstant<S> aSpecialValue) -> ResultType {
+        return aSpecialValue;
+      }...
+#else
+      // gcc 7 doesn't accept the kind of parameter pack expansion above,
+      // probably due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=47226
+      [](auto& aParam) -> ResultType {
+        if constexpr (std::is_same_v<ValueType&, decltype(aParam)>) {
+          MOZ_CRASH("non-value expected");
+        } else if constexpr (std::is_same_v<ErrorResult&, decltype(aParam)>) {
+          return {Exception, std::move(aParam)};
+        } else {
+          return aParam;
+        }
+      }
+#endif
+  );
+}
+
+}  // namespace detail
 
 }  // namespace indexedDB
 }  // namespace dom
