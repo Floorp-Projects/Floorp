@@ -45,11 +45,11 @@ size_t RegisteredThread::SizeOfIncludingThis(
   return n;
 }
 
-void RegisteredThread::GetRunningEventDelay(const TimeStamp& aNow,
-                                            TimeDuration& aDelay,
-                                            TimeDuration& aRunning) {
+void RegisteredThread::GetRunningEventDelay(const mozilla::TimeStamp& aNow,
+                                            mozilla::TimeDuration& aDelay,
+                                            mozilla::TimeDuration& aRunning) {
   if (mThread) {  // can be null right at the start of a process
-    TimeStamp start;
+    mozilla::TimeStamp start;
     mThread->GetRunningEventDelay(&aDelay, &start);
     if (!start.IsNull()) {
       // Note: the timestamp used here will be from when we started to
@@ -59,6 +59,6 @@ void RegisteredThread::GetRunningEventDelay(const TimeStamp& aNow,
       return;
     }
   }
-  aDelay = TimeDuration();
-  aRunning = TimeDuration();
+  aDelay = mozilla::TimeDuration();
+  aRunning = mozilla::TimeDuration();
 }
