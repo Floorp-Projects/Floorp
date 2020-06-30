@@ -9,6 +9,7 @@
 
 #include "mozilla/MozPromise.h"
 #include "mozilla/Variant.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
@@ -107,6 +108,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   struct OpenPromiseFailedType {
     nsresult mStatus;
     nsresult mLoadGroupStatus;
+    // This is set to true if we're rejecting the promise because we
+    // switched to load away to a new process.
+    bool mSwitchedProcess = false;
   };
 
   typedef MozPromise<OpenPromiseSucceededType, OpenPromiseFailedType,
@@ -130,14 +134,22 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                            Maybe<bool> aUriModified, Maybe<bool> aIsXFOError,
                            base::ProcessId aPid, nsresult* aRv);
 
-  // Creates a DocumentLoadListener directly in the parent process without
-  // an associated DocumentChannel.
+  // Creates a DocumentLoadListener entirely in the parent process and opens it,
+  // and never needs a DocumentChannel to connect to an existing docshell.
+  // Once we get a response it takes the 'process switch' path to find the right
+  // process and docshell, and delivers the response there directly.
+  static bool LoadInParent(dom::CanonicalBrowsingContext* aBrowsingContext,
+                           nsDocShellLoadState* aLoadState,
+                           uint64_t aOuterWindowId, bool aSetNavigating);
+
+  // Creates a DocumentLoadListener directly in the parent process and opens it,
+  // without needing an existing DocumentChannel.
   // If successful it registers a unique identifier (return in aOutIdent) to
   // keep it alive until a future DocumentChannel can attach to it, or we fail
   // and clean up.
-  static bool OpenFromParent(dom::CanonicalBrowsingContext* aBrowsingContext,
-                             nsDocShellLoadState* aLoadState,
-                             uint64_t aOuterWindowId);
+  static bool SpeculativeLoadInParent(
+      dom::CanonicalBrowsingContext* aBrowsingContext,
+      nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
 
   // Ensures that a load identifier allocated by OpenFromParent has
   // been deregistered if it hasn't already been claimed.
@@ -225,14 +237,22 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              dom::ContentParent* aParent) const;
 
   uint64_t GetLoadIdentifier() const { return mLoadIdentifier; }
+  dom::CanonicalBrowsingContext* GetBrowsingContext() const;
+
+  uint32_t GetLoadType() const { return mLoadStateLoadType; }
 
  protected:
   virtual ~DocumentLoadListener();
 
  private:
+  RefPtr<OpenPromise> OpenInParent(nsDocShellLoadState* aLoadState,
+                                   uint64_t aOuterWindowId,
+                                   bool aSupportsRedirectToRealChannel);
+
   friend class ParentProcessDocumentOpenInfo;
   // Will reject the promise to notify the DLL consumer that we are done.
-  void DisconnectListeners(nsresult aStatus, nsresult aLoadGroupStatus);
+  void DisconnectListeners(nsresult aStatus, nsresult aLoadGroupStatus,
+                           bool aSwitchedProcess = false);
 
   // Called when we were created without a document channel, and creation has
   // failed, and won't ever be attached.
@@ -241,8 +261,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // Initiates the switch from DocumentChannel to the real protocol-specific
   // channel, and ensures that RedirectToRealChannelFinished is called when
   // this is complete.
-  void TriggerRedirectToRealChannel(
-      const Maybe<uint64_t>& aDestinationProcess = Nothing());
+  void TriggerRedirectToRealChannel(const Maybe<uint64_t>& aDestinationProcess);
 
   // Called once the content-process side on setting up a replacement
   // channel is complete. May wait for the new parent channel to
@@ -280,8 +299,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   already_AddRefed<LoadInfo> CreateLoadInfo(
       dom::CanonicalBrowsingContext* aBrowsingContext,
       nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
-
-  dom::CanonicalBrowsingContext* GetBrowsingContext();
 
   void AddURIVisit(nsIChannel* aChannel, uint32_t aLoadFlags);
   bool HasCrossOriginOpenerPolicyMismatch() const;
@@ -456,17 +473,20 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   Maybe<nsCString> mOriginalUriString;
 
+  bool mSupportsRedirectToRealChannel = true;
+
   // The process id of the content process that we are being called from
   // or 0 initiated from a parent process load.
   base::ProcessId mOtherPid = 0;
 
   void RejectOpenPromise(nsresult aStatus, nsresult aLoadGroupStatus,
-                         const char* aLocation) {
+                         bool aSwitchedProcess, const char* aLocation) {
     // It is possible for mOpenPromise to not be set if AsyncOpen failed and
     // the DocumentChannel got canceled.
     if (!mOpenPromiseResolved && mOpenPromise) {
-      mOpenPromise->Reject(OpenPromiseFailedType({aStatus, aLoadGroupStatus}),
-                           aLocation);
+      mOpenPromise->Reject(
+          OpenPromiseFailedType({aStatus, aLoadGroupStatus, aSwitchedProcess}),
+          aLocation);
       mOpenPromiseResolved = true;
     }
   }
