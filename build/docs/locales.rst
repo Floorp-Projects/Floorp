@@ -115,12 +115,12 @@ related build flows:
 
 #. Get the localization repository, if needed
 #. Run l10n-merge with a prior clobber of the merge dir
-#. Copy l10n files to ``dist``, with minor differences here between ``libs-%`` and ``chrome-%``
+#. Copy l10n files to ``dist``, with minor differences here between ``l10n-%`` and ``chrome-%``
 #. Repackage and package
 
 Details on l10n-merge are described in its own section below.
 The copying of files is mainly controlled by ``jar.mn``, in the few source
-directories that include localizable files. ``libs-%`` is used for repacks,
+directories that include localizable files. ``l10n-%`` is used for repacks,
 ``chrome-%`` for multi-locale packages. The repackaging is dedicated
 Python code in ``toolkit/mozapps/installer/l10n-repack.py``, using an existing
 package. It strips existing ``chrome`` l10n resources, and adds localizations
