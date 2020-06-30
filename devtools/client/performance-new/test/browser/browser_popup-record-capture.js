@@ -13,28 +13,28 @@ add_task(async function test() {
     "http://example.com/browser/devtools/client/performance-new/test/browser/fake-frontend.html"
   );
   await makeSureProfilerPopupIsEnabled();
-  await toggleOpenProfilerPopup();
+  await openPopupAndEnsureCloses(window, async () => {
+    {
+      const button = await getElementByLabel(document, "Start Recording");
+      info("Click the button to start recording.");
+      button.click();
+    }
 
-  {
-    const button = await getElementByLabel(document, "Start Recording");
-    info("Click the button to start recording.");
-    button.click();
-  }
+    {
+      const button = await getElementByLabel(document, "Capture");
+      info("Click the button to capture the recording.");
+      button.click();
+    }
 
-  {
-    const button = await getElementByLabel(document, "Capture");
-    info("Click the button to capture the recording.");
-    button.click();
-  }
+    info(
+      "If the profiler successfully injects a profile into the page, then the " +
+        "fake frontend will rename the title of the page."
+    );
 
-  info(
-    "If the profiler successfully injects a profile into the page, then the " +
-      "fake frontend will rename the title of the page."
-  );
-
-  await checkTabLoadedProfile({
-    initialTitle: "Waiting on the profile",
-    successTitle: "Profile received",
-    errorTitle: "Error",
+    await checkTabLoadedProfile({
+      initialTitle: "Waiting on the profile",
+      successTitle: "Profile received",
+      errorTitle: "Error",
+    });
   });
 });
