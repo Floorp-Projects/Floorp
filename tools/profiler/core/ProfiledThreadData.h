@@ -14,6 +14,7 @@
 #include "js/ProfilingStack.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "nsIEventTarget.h"
 
 class ProfileBuffer;
 
