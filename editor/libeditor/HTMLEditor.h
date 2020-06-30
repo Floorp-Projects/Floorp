@@ -4476,10 +4476,10 @@ class HTMLEditor final : public TextEditor,
      * element which is in aArrayOfListAndTableElements and they are
      * actually valid ancestor of at least one of aArrayOfTopMostChildContents.
      */
-    Element* GetMostAncestorListOrTableElement(
+    static Element* GetMostAncestorListOrTableElement(
         const nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents,
         const nsTArray<OwningNonNull<Element>>&
-            aArrayOfListAndTableRelatedElements) const;
+            aArrayOfListAndTableRelatedElements);
 
     /**
      * FindReplaceableTableElement() is a helper method of
