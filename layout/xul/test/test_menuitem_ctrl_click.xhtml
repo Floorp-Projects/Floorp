@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1630828
+-->
+<window title="Mozilla Bug 1630828"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<!-- test results are displayed in the html:body -->
+<body xmlns="http://www.w3.org/1999/xhtml">
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1630828"
+   target="_blank">Mozilla Bug 1630828</a>
+</body>
+
+<hbox align="center" pack="center">
+  <menulist id="menu">
+    <menupopup id="popup">
+      <menuitem label="Target" id="target" />
+    </menupopup>
+  </menulist>
+</hbox>
+<!-- test code goes here -->
+<script type="application/javascript">
+<![CDATA[
+
+const { AppConstants } = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm");
+
+function waitForEvent(target, event) {
+  info(`Waiting for ${event} event.`);
+  return new Promise(resolve => {
+    target.addEventListener(event, resolve, { once: true });
+  });
+}
+
+function waitForIdle() {
+  return new Promise(resolve => {
+    SpecialPowers.Services.tm.idleDispatchToMainThread(resolve);
+  });
+}
+
+add_task(async function init() {
+  await SimpleTest.promiseFocus();
+});
+
+add_task(async function test_ctrl_click() {
+  const isMac = AppConstants.platform === "macosx";
+
+  let popup = document.getElementById("popup");
+  let promise = waitForEvent(popup, "popupshown");
+  let menu = document.getElementById("menu");
+  synthesizeMouseAtCenter(menu, {});
+  // Wait for popup open.
+  await promise;
+
+  let commandReceived = false;
+  menu.addEventListener("command", function(e) {
+    ok(!isMac, `${AppConstants.platform} receives command event`);
+    commandReceived = true;
+  });
+
+  // Ctrl click in Mac won't dispatch command event and close popup, so we wait
+  // for idle instead.
+  promise = isMac ? waitForIdle() : waitForEvent(popup, "popuphidden");
+  let target = document.getElementById("target");
+  synthesizeMouseAtCenter(target, { ctrlKey: true });
+  await promise;
+
+  is(commandReceived, !isMac, `Check command event for ${AppConstants.platform}`);
+  is(popup.state, isMac ? "open" : "closed", `Check popup state for ${AppConstants.platform}`);
+});
+
+]]>
+</script>
+</window>
