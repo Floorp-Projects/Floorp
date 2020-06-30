@@ -62,6 +62,10 @@ bool ConvolutionFilter::ComputeResizeFilter(ResizeMethod aResizeMethod,
                                             int32_t aDstSize) {
   typedef SkConvolutionFilter1D::ConvolutionFixed Fixed;
 
+  if (aSrcSize < 0 || aDstSize < 0) {
+    return false;
+  }
+
   UniquePtr<SkBitmapFilter> bitmapFilter;
   switch (aResizeMethod) {
     case ResizeMethod::BOX:
@@ -102,8 +106,20 @@ bool ConvolutionFilter::ComputeResizeFilter(ResizeMethod aResizeMethod,
   // filter values for each one. Those values will tell us how to blend the
   // source pixels to compute the destination pixel.
 
-  mFilter->reserveAdditional(aDstSize,
-                             int32_t(ceil(aDstSize * srcSupport * 2)));
+  // This value is computed based on how SkTDArray::resizeStorageToAtLeast works
+  // in order to ensure that it does not overflow or assert. That functions
+  // computes
+  //   n+4 + (n+4)/4
+  // and we want to to fit in a 32 bit signed int. Equating that to 2^31-1 and
+  // solving n gives n = (2^31-6)*4/5 = 1717986913.6
+  const int32_t maxToPassToReserveAdditional = 1717986913;
+
+  int32_t filterValueCount = int32_t(ceil(aDstSize * srcSupport * 2));
+  if (aDstSize > maxToPassToReserveAdditional || filterValueCount < 0 ||
+      filterValueCount > maxToPassToReserveAdditional) {
+    return false;
+  }
+  mFilter->reserveAdditional(aDstSize, filterValueCount);
   for (int32_t destI = 0; destI < aDstSize; destI++) {
     // This is the pixel in the source directly under the pixel in the dest.
     // Note that we base computations on the "center" of the pixels. To see
