@@ -6259,6 +6259,8 @@ bool Debugger::observesWasm(wasm::Instance* instance) const {
 /* static */
 bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
                                 AbstractFramePtr to, ScriptFrameIter& iter) {
+  MOZ_ASSERT(from != to);
+
   // Rekey missingScopes to maintain Debugger.Environment identity and
   // forward liveScopes to point to the new frame.
   DebugEnvironments::forwardLiveFrame(cx, from, to);
@@ -6292,24 +6294,15 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
       return false;
     }
 
-    // Remove old frame.
-    dbg->frames.remove(from);
-
     // Add the frame object with |to| as key.
     if (!dbg->frames.putNew(to, frameobj)) {
-      // This OOM is subtle. At this point, removeDebuggerFramesOnExit
-      // must run for the same reason given above.
-      //
-      // The difference is that the current frameobj is no longer in its
-      // Debugger's frame map, so it will not be cleaned up by neither
-      // lambda. Manually clean it up here.
-      JSFreeOp* fop = cx->runtime()->defaultFreeOp();
-      frameobj->freeFrameIterData(fop);
-      frameobj->maybeDecrementStepperCounter(fop, to);
-
       ReportOutOfMemory(cx);
       return false;
     }
+
+    // Remove the old frame entry after all fallible operations are completed
+    // so that an OOM will be able to clean up properly.
+    dbg->frames.remove(from);
   }
 
   // All frames successfuly replaced, cancel the rollback.
