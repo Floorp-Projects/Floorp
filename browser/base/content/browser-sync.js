@@ -953,6 +953,7 @@ var gSync = {
           let action = PageActions.actionForID("sendToDevice");
           showBrowserPageActionFeedback(action);
         }
+        fxAccounts.flushLogFile();
       });
     };
     const onSendAllCommand = event => {
