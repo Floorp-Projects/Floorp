@@ -374,7 +374,7 @@ class Http2Stream : public nsAHttpSegmentReader,
  private:
   void ClearTransactionsBlockedOnTunnel();
   void MapStreamToPlainText();
-  void MapStreamToHttpConnection(const nsACString& aFlat407Headers,
+  bool MapStreamToHttpConnection(const nsACString& aFlat407Headers,
                                  int32_t aHttpResponseCode = -1);
 
   bool mIsTunnel;
