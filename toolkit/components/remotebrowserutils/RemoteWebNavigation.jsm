@@ -42,29 +42,26 @@ class RemoteWebNavigation {
     let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_BACK
     );
-    this._sendMessage("WebNavigation:GoBack", {
+    this._browser.browsingContext.goBack(
       cancelContentJSEpoch,
-      requireUserInteraction,
-    });
+      requireUserInteraction
+    );
   }
   goForward(requireUserInteraction = false) {
     let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_FORWARD
     );
-    this._sendMessage("WebNavigation:GoForward", {
+    this._browser.browsingContext.goForward(
       cancelContentJSEpoch,
-      requireUserInteraction,
-    });
+      requireUserInteraction
+    );
   }
   gotoIndex(aIndex) {
     let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_INDEX,
       { index: aIndex }
     );
-    this._sendMessage("WebNavigation:GotoIndex", {
-      index: aIndex,
-      cancelContentJSEpoch,
-    });
+    this._browser.browsingContext.goToIndex(aIndex, cancelContentJSEpoch);
   }
   loadURI(aURI, aLoadURIOptions) {
     let uri;
@@ -112,16 +109,16 @@ class RemoteWebNavigation {
       Ci.nsIRemoteTab.NAVIGATE_URL,
       { uri }
     );
-    this._browser.frameLoader.browsingContext.loadURI(aURI, {
+    this._browser.browsingContext.loadURI(aURI, {
       ...aLoadURIOptions,
       cancelContentJSEpoch,
     });
   }
   reload(aReloadFlags) {
-    this._sendMessage("WebNavigation:Reload", { loadFlags: aReloadFlags });
+    this._browser.browsingContext.reload(aReloadFlags);
   }
   stop(aStopFlags) {
-    this._sendMessage("WebNavigation:Stop", { loadFlags: aStopFlags });
+    this._browser.browsingContext.stop(aStopFlags);
   }
 
   get document() {

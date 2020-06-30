@@ -4144,6 +4144,102 @@ mozilla::ipc::IPCResult ContentChild::RecvHistoryCommitLength(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvGoBack(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const Maybe<int32_t>& aCancelContentJSEpoch, bool aRequireUserInteraction) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  BrowsingContext* bc = aContext.get();
+
+  if (auto* docShell = nsDocShell::Cast(bc->GetDocShell())) {
+    if (aCancelContentJSEpoch) {
+      docShell->SetCancelContentJSEpoch(*aCancelContentJSEpoch);
+    }
+    docShell->GoBack(aRequireUserInteraction);
+
+    if (BrowserChild* browserChild = BrowserChild::GetFrom(docShell)) {
+      browserChild->NotifyNavigationFinished();
+    }
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvGoForward(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const Maybe<int32_t>& aCancelContentJSEpoch, bool aRequireUserInteraction) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  BrowsingContext* bc = aContext.get();
+
+  if (auto* docShell = nsDocShell::Cast(bc->GetDocShell())) {
+    if (aCancelContentJSEpoch) {
+      docShell->SetCancelContentJSEpoch(*aCancelContentJSEpoch);
+    }
+    docShell->GoForward(aRequireUserInteraction);
+
+    if (BrowserChild* browserChild = BrowserChild::GetFrom(docShell)) {
+      browserChild->NotifyNavigationFinished();
+    }
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvGoToIndex(
+    const MaybeDiscarded<BrowsingContext>& aContext, const int32_t& aIndex,
+    const Maybe<int32_t>& aCancelContentJSEpoch) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  BrowsingContext* bc = aContext.get();
+
+  if (auto* docShell = nsDocShell::Cast(bc->GetDocShell())) {
+    if (aCancelContentJSEpoch) {
+      docShell->SetCancelContentJSEpoch(*aCancelContentJSEpoch);
+    }
+    docShell->GotoIndex(aIndex);
+
+    if (BrowserChild* browserChild = BrowserChild::GetFrom(docShell)) {
+      browserChild->NotifyNavigationFinished();
+    }
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvReload(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const uint32_t aReloadFlags) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  BrowsingContext* bc = aContext.get();
+
+  if (auto* docShell = nsDocShell::Cast(bc->GetDocShell())) {
+    docShell->Reload(aReloadFlags);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvStopLoad(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const uint32_t aStopFlags) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  BrowsingContext* bc = aContext.get();
+
+  if (auto* docShell = nsDocShell::Cast(bc->GetDocShell())) {
+    docShell->Stop(aStopFlags);
+  }
+
+  return IPC_OK();
+}
+
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 mozilla::ipc::IPCResult ContentChild::RecvInitSandboxTesting(
     Endpoint<PSandboxTestingChild>&& aEndpoint) {

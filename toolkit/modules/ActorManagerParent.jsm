@@ -436,12 +436,6 @@ let JSWINDOWACTORS = {
 
     allFrames: true,
   },
-
-  WebNavigation: {
-    child: {
-      moduleURI: "resource://gre/actors/WebNavigationChild.jsm",
-    },
-  },
 };
 
 /*

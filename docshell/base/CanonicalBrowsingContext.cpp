@@ -22,6 +22,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
+#include "nsIWebNavigation.h"
 #include "mozilla/MozPromiseInlines.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIWebBrowserChrome.h"
@@ -439,6 +440,118 @@ void CanonicalBrowsingContext::LoadURI(const nsAString& aURI,
   }
 
   LoadURI(loadState, true);
+}
+
+void CanonicalBrowsingContext::GoBack(
+    const Optional<int32_t>& aCancelContentJSEpoch,
+    bool aRequireUserInteraction) {
+  if (IsDiscarded()) {
+    return;
+  }
+
+  // Stop any known network loads if necessary.
+  if (mCurrentLoad) {
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+  }
+
+  if (nsDocShell* docShell = nsDocShell::Cast(GetDocShell())) {
+    if (aCancelContentJSEpoch.WasPassed()) {
+      docShell->SetCancelContentJSEpoch(aCancelContentJSEpoch.Value());
+    }
+    docShell->GoBack(aRequireUserInteraction);
+  } else if (ContentParent* cp = GetContentParent()) {
+    Maybe<int32_t> cancelContentJSEpoch;
+    if (aCancelContentJSEpoch.WasPassed()) {
+      cancelContentJSEpoch = Some(aCancelContentJSEpoch.Value());
+    }
+    Unused << cp->SendGoBack(this, cancelContentJSEpoch,
+                             aRequireUserInteraction);
+  }
+}
+void CanonicalBrowsingContext::GoForward(
+    const Optional<int32_t>& aCancelContentJSEpoch,
+    bool aRequireUserInteraction) {
+  if (IsDiscarded()) {
+    return;
+  }
+
+  // Stop any known network loads if necessary.
+  if (mCurrentLoad) {
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+  }
+
+  if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
+    if (aCancelContentJSEpoch.WasPassed()) {
+      docShell->SetCancelContentJSEpoch(aCancelContentJSEpoch.Value());
+    }
+    docShell->GoForward(aRequireUserInteraction);
+  } else if (ContentParent* cp = GetContentParent()) {
+    Maybe<int32_t> cancelContentJSEpoch;
+    if (aCancelContentJSEpoch.WasPassed()) {
+      cancelContentJSEpoch.emplace(aCancelContentJSEpoch.Value());
+    }
+    Unused << cp->SendGoForward(this, cancelContentJSEpoch,
+                                aRequireUserInteraction);
+  }
+}
+void CanonicalBrowsingContext::GoToIndex(
+    int32_t aIndex, const Optional<int32_t>& aCancelContentJSEpoch) {
+  if (IsDiscarded()) {
+    return;
+  }
+
+  // Stop any known network loads if necessary.
+  if (mCurrentLoad) {
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+  }
+
+  if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
+    if (aCancelContentJSEpoch.WasPassed()) {
+      docShell->SetCancelContentJSEpoch(aCancelContentJSEpoch.Value());
+    }
+    docShell->GotoIndex(aIndex);
+  } else if (ContentParent* cp = GetContentParent()) {
+    Maybe<int32_t> cancelContentJSEpoch;
+    if (aCancelContentJSEpoch.WasPassed()) {
+      cancelContentJSEpoch.emplace(aCancelContentJSEpoch.Value());
+    }
+    Unused << cp->SendGoToIndex(this, aIndex, cancelContentJSEpoch);
+  }
+}
+void CanonicalBrowsingContext::Reload(uint32_t aReloadFlags) {
+  if (IsDiscarded()) {
+    return;
+  }
+
+  // Stop any known network loads if necessary.
+  if (mCurrentLoad) {
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+  }
+
+  if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
+    docShell->Reload(aReloadFlags);
+  } else if (ContentParent* cp = GetContentParent()) {
+    Unused << cp->SendReload(this, aReloadFlags);
+  }
+}
+
+void CanonicalBrowsingContext::Stop(uint32_t aStopFlags) {
+  if (IsDiscarded()) {
+    return;
+  }
+
+  // Stop any known network loads if necessary.
+  if (mCurrentLoad && (aStopFlags & nsIWebNavigation::STOP_NETWORK)) {
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+  }
+
+  // Ask the docshell to stop to handle loads that haven't
+  // yet reached here, as well as non-network activity.
+  if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
+    docShell->Stop(aStopFlags);
+  } else if (ContentParent* cp = GetContentParent()) {
+    Unused << cp->SendStopLoad(this, aStopFlags);
+  }
 }
 
 void CanonicalBrowsingContext::PendingRemotenessChange::ProcessReady() {

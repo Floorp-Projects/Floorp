@@ -173,6 +173,15 @@ interface CanonicalBrowsingContext : BrowsingContext {
   [Throws]
   void loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
 
+  /**
+   * These methods implement the nsIWebNavigation methods of the same names
+   */
+  void goBack(optional long aCancelContentJSEpoch, optional boolean aRequireUserInteraction = false);
+  void goForward(optional long aCancelContentJSEpoch, optional boolean aRequireUserInteraction  = false);
+  void goToIndex(long aIndex, optional long aCancelContentJSEpoch);
+  void reload(unsigned long aReloadFlags);
+  void stop(unsigned long aStopFlags);
+
   readonly attribute nsISHistory? sessionHistory;
 
   readonly attribute MediaController? mediaController;
