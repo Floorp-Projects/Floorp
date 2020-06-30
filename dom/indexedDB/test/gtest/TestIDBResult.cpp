@@ -11,27 +11,31 @@ using namespace mozilla::dom::indexedDB;
 
 TEST(IDBResultTest, ConstructWithValue)
 {
+  ErrorResult rv;
   IDBResult<int, IDBSpecialValue::Failure> result(Ok(0));
-  EXPECT_FALSE(result.Is(Failure));
-  EXPECT_TRUE(result.Is(Ok));
-  EXPECT_EQ(result.Unwrap(), 0);
+  EXPECT_FALSE(result.Is(Failure, rv));
+  EXPECT_TRUE(result.Is(Ok, rv));
+  EXPECT_EQ(result.Unwrap(rv), 0);
 }
 
 TEST(IDBResultTest, Expand)
 {
+  ErrorResult rv;
   IDBResult<int, IDBSpecialValue::Failure> narrow{Failure};
   IDBResult<int, IDBSpecialValue::Failure, IDBSpecialValue::Invalid> wide{
-      std::move(narrow)};
-  EXPECT_TRUE(wide.Is(Failure));
+      narrow};
+  EXPECT_TRUE(wide.Is(Failure, rv));
 }
 
-IDBResult<int, IDBSpecialValue::Failure> ThrowException() {
-  return {Exception, ErrorResult{NS_ERROR_FAILURE}};
+IDBResult<int, IDBSpecialValue::Failure> ThrowException(ErrorResult& aRv) {
+  aRv.Throw(NS_ERROR_FAILURE);
+  return Exception;
 }
 
 TEST(IDBResultTest, ThrowException)
 {
-  auto result = ThrowException();
-  EXPECT_TRUE(result.Is(Exception));
-  result.AsException().SuppressException();
+  ErrorResult rv;
+  const auto result = ThrowException(rv);
+  EXPECT_TRUE(result.Is(Exception, rv));
+  rv.SuppressException();
 }

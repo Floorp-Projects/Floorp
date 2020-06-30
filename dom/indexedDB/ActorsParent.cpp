@@ -2102,10 +2102,11 @@ class EncodeKeysFunction final : public mozIStorageFunction {
     } else if (type == mozIStorageStatement::VALUE_TYPE_TEXT) {
       nsString stringKey;
       aArguments->GetString(0, stringKey);
-      auto result = key.SetFromString(stringKey);
-      if (!result.Is(Ok)) {
-        return result.Is(Invalid) ? NS_ERROR_DOM_INDEXEDDB_DATA_ERR
-                                  : result.AsException().StealNSResult();
+      ErrorResult errorResult;
+      auto result = key.SetFromString(stringKey, errorResult);
+      if (!result.Is(Ok, errorResult)) {
+        return result.Is(Invalid, errorResult) ? NS_ERROR_DOM_INDEXEDDB_DATA_ERR
+                                               : errorResult.StealNSResult();
       }
     } else {
       NS_WARNING("Don't call me with the wrong type of arguments!");
@@ -9882,10 +9883,12 @@ nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
   MOZ_ASSERT(aLocalizedKey);
   MOZ_ASSERT(!aLocale.IsEmpty());
 
-  auto result = aBaseKey.ToLocaleAwareKey(*aLocalizedKey, aLocale);
-  if (!result.Is(Ok)) {
-    return NS_WARN_IF(result.Is(Exception))
-               ? result.AsException().StealNSResult()
+  ErrorResult errorResult;
+  const auto result =
+      aBaseKey.ToLocaleAwareKey(*aLocalizedKey, aLocale, errorResult);
+  if (!result.Is(Ok, errorResult)) {
+    return NS_WARN_IF(result.Is(Exception, errorResult))
+               ? errorResult.StealNSResult()
                : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
@@ -21625,10 +21628,11 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
       return rv;
     }
 
-    auto result = oldKey.ToLocaleAwareKey(newSortKey, aLocale);
-    if (!result.Is(Ok)) {
-      return NS_WARN_IF(result.Is(Exception))
-                 ? result.AsException().StealNSResult()
+    ErrorResult errorResult;
+    auto result = oldKey.ToLocaleAwareKey(newSortKey, aLocale, errorResult);
+    if (!result.Is(Ok, errorResult)) {
+      return NS_WARN_IF(result.Is(Exception, errorResult))
+                 ? errorResult.StealNSResult()
                  : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
 
@@ -26588,13 +26592,14 @@ void Cursor<CursorType>::SetOptionalKeyRange(
         (range.isOnly() || lowerBound) ? range.lower() : range.upper();
     if constexpr (IsIndexCursor) {
       if (this->IsLocaleAware()) {
-        auto res = bound.ToLocaleAwareKey(localeAwareRangeBound, this->mLocale);
+        ErrorResult rv;
+        Unused << bound.ToLocaleAwareKey(localeAwareRangeBound, this->mLocale,
+                                         rv);
 
-        // XXX Explain why an error or Invalid result is ignored here (If it's
-        // impossible, then
+        // XXX Explain why the error is ignored here (If it's impossible, then
         //     we should change this to an assertion.)
-        if (res.Is(Exception)) {
-          res.AsException().SuppressException();
+        if (rv.Failed()) {
+          rv.SuppressException();
         }
       } else {
         localeAwareRangeBound = bound;
