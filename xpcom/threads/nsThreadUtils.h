@@ -1785,6 +1785,8 @@ namespace IPC {
 class Message;
 }
 
+class nsTimerImpl;
+
 namespace mozilla {
 
 // RAII class that will set the TLS entry to return the currently running
@@ -1946,10 +1948,13 @@ void LogTaskBase<IPC::Message>::LogDispatchWithPid(IPC::Message* aEvent,
                                                    int32_t aPid);
 template <>
 LogTaskBase<IPC::Message>::Run::Run(IPC::Message* aMessage, bool aWillRunAgain);
+template <>
+LogTaskBase<nsTimerImpl>::Run::Run(nsTimerImpl* aEvent, bool aWillRunAgain);
 
 typedef LogTaskBase<nsIRunnable> LogRunnable;
 typedef LogTaskBase<MicroTaskRunnable> LogMicroTaskRunnable;
 typedef LogTaskBase<IPC::Message> LogIPCMessage;
+typedef LogTaskBase<nsTimerImpl> LogTimerEvent;
 // If you add new types don't forget to add:
 // `template class LogTaskBase<YourType>;` to nsThreadUtils.cpp
 
