@@ -152,7 +152,6 @@ const UPDATED_REQ_ITEM_PROPS = [
   "requestHeaders",
   "responseCookies",
   "responseHeaders",
-  "waitingTime",
 ];
 
 const UPDATED_REQ_PROPS = [
@@ -178,11 +177,7 @@ const COLUMN_COMPONENTS = [
     ColumnComponent: RequestListColumnDomain,
     props: ["onSecurityIconMouseDown"],
   },
-  {
-    column: "file",
-    ColumnComponent: RequestListColumnFile,
-    props: ["onWaterfallMouseDown"],
-  },
+  { column: "file", ColumnComponent: RequestListColumnFile },
   {
     column: "url",
     ColumnComponent: RequestListColumnUrl,

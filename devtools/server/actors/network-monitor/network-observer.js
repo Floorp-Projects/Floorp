@@ -495,7 +495,6 @@ NetworkObserver.prototype = {
           status: response.status,
           statusText: response.statusText,
           headersSize: 0,
-          waitingTime: 0,
         },
         "",
         true
@@ -1088,9 +1087,7 @@ NetworkObserver.prototype = {
     response.status = statusLineArray.shift();
     response.statusText = statusLineArray.join(" ");
     response.headersSize = extraStringData.length;
-    response.waitingTime = this._convertTimeToMs(
-      this._getWaitTiming(httpActivity.timings)
-    );
+
     httpActivity.responseStatus = response.status;
     httpActivity.headersSize = response.headersSize;
 
@@ -1446,10 +1443,6 @@ NetworkObserver.prototype = {
     return serverTimings;
   },
 
-  _convertTimeToMs: function(timing) {
-    return Math.max(Math.round(timing / 1000), -1);
-  },
-
   _calculateOffsetAndTotalTime: function(
     harTimings,
     secureConnectionStartTime,
@@ -1459,7 +1452,7 @@ NetworkObserver.prototype = {
   ) {
     let totalTime = 0;
     for (const timing in harTimings) {
-      const time = this._convertTimeToMs(harTimings[timing]);
+      const time = Math.max(Math.round(harTimings[timing] / 1000), -1);
       harTimings[timing] = time;
       if (time > -1 && timing != "connect" && timing != "ssl") {
         totalTime += time;

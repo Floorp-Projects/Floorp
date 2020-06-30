@@ -9,23 +9,15 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
-  connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
-const {
   propertiesEqual,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
-const {
-  getFormattedTime,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
 
-const UPDATED_FILE_PROPS = ["urlDetails", "waitingTime"];
+const UPDATED_FILE_PROPS = ["urlDetails"];
 
 class RequestListColumnFile extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
-      slowLimit: PropTypes.number,
-      onWaterfallMouseDown: PropTypes.func,
     };
   }
 
@@ -39,9 +31,7 @@ class RequestListColumnFile extends Component {
 
   render() {
     const {
-      item: { urlDetails, waitingTime },
-      slowLimit,
-      onWaterfallMouseDown,
+      item: { urlDetails },
     } = this.props;
 
     const originalFileURL = urlDetails.url;
@@ -60,28 +50,14 @@ class RequestListColumnFile extends Component {
         ? originalFileURL
         : ORIGINAL_FILE_URL + "\n\n" + DECODED_FILE_URL;
 
-    const isSlow = slowLimit > 0 && !!waitingTime && waitingTime > slowLimit;
-
     return dom.td(
       {
         className: "requests-list-column requests-list-file",
         title: fileToolTip,
       },
-      dom.div({}, requestedFile),
-      isSlow &&
-        dom.div({
-          title: L10N.getFormatStr(
-            "netmonitor.audits.slowTooltip",
-            getFormattedTime(waitingTime),
-            getFormattedTime(slowLimit)
-          ),
-          onMouseDown: onWaterfallMouseDown,
-          className: "requests-list-slow-button",
-        })
+      requestedFile
     );
   }
 }
 
-module.exports = connect(state => ({
-  slowLimit: state.ui.slowLimit,
-}))(RequestListColumnFile);
+module.exports = RequestListColumnFile;
