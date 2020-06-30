@@ -226,7 +226,6 @@ const UPDATE_PROPS = [
   "blockedReason",
   "blockingExtension",
   "channelId",
-  "waitingTime",
 ];
 
 const PANELS = {

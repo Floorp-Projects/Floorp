@@ -419,7 +419,6 @@ class FirefoxDataProvider {
           status: networkInfo.response.status,
           statusText: networkInfo.response.statusText,
           headersSize: networkInfo.response.headersSize,
-          waitingTime: networkInfo.response.waitingTime,
         });
         this.emitForTests(TEST_EVENTS.STARTED_RECEIVING_RESPONSE, actor);
         break;

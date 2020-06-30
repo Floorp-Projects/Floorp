@@ -154,10 +154,6 @@ function getFilterState() {
   return new FilterTypes(activeFilters);
 }
 
-/**
- * Get json data from preferences
- */
-
 function getPref(pref) {
   try {
     return JSON.parse(Services.prefs.getCharPref(pref));
