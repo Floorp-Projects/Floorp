@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
-include protocol PStreamFilter;
 include NeckoChannelParams;
 include HttpChannelParams;
 include PURLClassifierInfo;
@@ -73,8 +72,6 @@ child:
 
   // Tell the child information of matched URL againts SafeBrowsing tracking list
   async SetClassifierMatchedTrackingInfo(ClassifierInfo info);
-
-  async AttachStreamFilter(Endpoint<PStreamFilterParent> aEndpoint);
 
   async __delete__();
 
