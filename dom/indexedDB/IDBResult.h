@@ -39,7 +39,6 @@ struct ExceptionType final {};
 struct VoidType final {};
 }  // namespace detail
 
-namespace {
 template <typename T>
 constexpr inline detail::OkType<std::remove_reference_t<T>> Ok(T&& aValue) {
   return {std::forward<T>(aValue)};
@@ -50,7 +49,9 @@ constexpr inline detail::OkType<void> Ok() { return {}; }
 constexpr const detail::FailureType Failure;
 constexpr const detail::InvalidType Invalid;
 constexpr const detail::ExceptionType Exception;
-}  // namespace
+
+template <typename T, IDBSpecialValue... S>
+class MOZ_MUST_USE_TYPE IDBResult;
 
 namespace detail {
 template <IDBSpecialValue... Elements>
@@ -135,6 +136,9 @@ class IDBResultBase {
         aSpecialValueMappers...);
   }
 
+  template <typename NewValueType>
+  auto PropagateNotOk();
+
  protected:
   using VariantType = Variant<ValueType, ErrorResult, SpecialConstant<S>...>;
 
@@ -175,6 +179,25 @@ template <nsresult E>
 ErrorResult InvalidMapsTo(const indexedDB::detail::InvalidType&) {
   return ErrorResult{E};
 }
+
+namespace detail {
+template <typename T, IDBSpecialValue... S>
+template <typename NewValueType>
+auto IDBResultBase<T, S...>::PropagateNotOk() {
+  using ResultType = IDBResult<NewValueType, S...>;
+  MOZ_ASSERT(!Is(Ok));
+
+  return mVariant.match(
+      [](const ValueType&) -> ResultType { MOZ_CRASH("non-value expected"); },
+      [](ErrorResult& aException) -> ResultType {
+        return {Exception, std::move(aException)};
+      },
+      [](SpecialConstant<S> aSpecialValue) -> ResultType {
+        return aSpecialValue;
+      }...);
+}
+
+}  // namespace detail
 
 }  // namespace indexedDB
 }  // namespace dom
