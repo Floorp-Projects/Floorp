@@ -1622,19 +1622,19 @@ struct SourceExtent {
 //
 // NOTE: Scripts may be directly created with bytecode and skip the lazy script
 //       form. This is always the case for top-level scripts.
-class BaseScript : public gc::TenuredCell {
+class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
  public:
   // The definition of flags is shared with the frontend for consistency.
   using ImmutableFlags = ImmutableScriptFlagsEnum;
   using MutableFlags = MutableScriptFlagsEnum;
 
- protected:
+ public:
   // Pointer to baseline->method()->raw(), ion->method()->raw(), a wasm jit
   // entry, the JIT's EnterInterpreter stub, or the lazy link stub. Must be
-  // non-null (except on no-jit builds).
-  using HeaderWithCodePtr = gc::CellHeaderWithNonGCPointer<uint8_t>;
-  HeaderWithCodePtr headerAndJitCodeRaw_;
+  // non-null (except on no-jit builds). This is stored in the cell header.
+  uint8_t* jitCodeRaw() const { return headerPtr(); }
 
+ protected:
   // Object that determines what Realm this script is compiled for. For function
   // scripts this is the canonical function, otherwise it is the GlobalObject of
   // the realm.
@@ -1681,7 +1681,7 @@ class BaseScript : public gc::TenuredCell {
   BaseScript(uint8_t* stubEntry, JSObject* functionOrGlobal,
              ScriptSourceObject* sourceObject, SourceExtent extent,
              uint32_t immutableFlags)
-      : headerAndJitCodeRaw_(stubEntry),
+      : TenuredCellWithNonGCPointer(stubEntry),
         functionOrGlobal_(functionOrGlobal),
         sourceObject_(sourceObject),
         extent_(extent),
@@ -1692,7 +1692,7 @@ class BaseScript : public gc::TenuredCell {
     MOZ_ASSERT(extent_.sourceEnd <= extent_.toStringEnd);
   }
 
-  void setJitCodeRaw(uint8_t* code) { headerAndJitCodeRaw_.setPtr(code); }
+  void setJitCodeRaw(uint8_t* code) { setHeaderPtr(code); }
 
  public:
   static BaseScript* New(JSContext* cx, js::HandleObject functionOrGlobal,
@@ -1707,7 +1707,6 @@ class BaseScript : public gc::TenuredCell {
                                    const SourceExtent& extent,
                                    uint32_t immutableFlags);
 
-  uint8_t* jitCodeRaw() const { return headerAndJitCodeRaw_.ptr(); }
   bool isUsingInterpreterTrampoline(JSRuntime* rt) const;
 
   // Canonical function for the script, if it has a function. For top-level
@@ -1983,7 +1982,6 @@ class BaseScript : public gc::TenuredCell {
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::Script;
-  const gc::CellHeader& cellHeader() const { return headerAndJitCodeRaw_; }
 
   void traceChildren(JSTracer* trc);
   void finalize(JSFreeOp* fop);
@@ -2001,10 +1999,7 @@ class BaseScript : public gc::TenuredCell {
                                      bool hasFieldInitializer);
 
   // JIT accessors
-  static constexpr size_t offsetOfJitCodeRaw() {
-    return offsetof(BaseScript, headerAndJitCodeRaw_) +
-           HeaderWithCodePtr::offsetOfPtr();
-  }
+  static constexpr size_t offsetOfJitCodeRaw() { return offsetOfHeaderPtr(); }
   static constexpr size_t offsetOfPrivateData() {
     return offsetof(BaseScript, data_);
   }

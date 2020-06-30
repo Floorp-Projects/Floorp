@@ -1582,14 +1582,14 @@ Shape* Shape::setObjectFlags(JSContext* cx, BaseShape::Flag flags,
 }
 
 inline BaseShape::BaseShape(const StackBaseShape& base)
-    : headerAndClasp_(base.clasp),
+    : TenuredCellWithNonGCPointer(base.clasp),
       flags(base.flags),
       slotSpan_(0),
       unowned_(nullptr) {}
 
 /* static */
 void BaseShape::copyFromUnowned(BaseShape& dest, UnownedBaseShape& src) {
-  dest.headerAndClasp_.setPtr(src.clasp());
+  dest.setHeaderPtr(src.clasp());
   dest.slotSpan_ = src.slotSpan_;
   dest.unowned_ = &src;
   dest.flags = src.flags | OWNED_SHAPE;

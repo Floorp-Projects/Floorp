@@ -44,7 +44,7 @@ class JSStringPtr(Common):
 
     def chars(self):
         d = self.value['d']
-        length, flags = get_header_length_and_flags(self.value['header_'])
+        length, flags = get_header_length_and_flags(self.value)
 
         corrupt = {
             0x2f2f2f2f: 'JS_FRESH_NURSERY_PATTERN',
