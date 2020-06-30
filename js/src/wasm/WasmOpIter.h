@@ -1856,11 +1856,6 @@ inline bool OpIter<Policy>::readWake(LinearMemoryAddress<Value>* addr,
                                      Value* count) {
   MOZ_ASSERT(Classify(op_) == OpKind::Wake);
 
-  if (!env_.usesSharedMemory()) {
-    return fail(
-        "can't touch memory with atomic operations without shared memory");
-  }
-
   if (!popWithType(ValType::I32, count)) {
     return false;
   }
@@ -1880,11 +1875,6 @@ inline bool OpIter<Policy>::readWait(LinearMemoryAddress<Value>* addr,
                                      ValType valueType, uint32_t byteSize,
                                      Value* value, Value* timeout) {
   MOZ_ASSERT(Classify(op_) == OpKind::Wait);
-
-  if (!env_.usesSharedMemory()) {
-    return fail(
-        "can't touch memory with atomic operations without shared memory");
-  }
 
   if (!popWithType(ValType::I64, timeout)) {
     return false;
@@ -1921,11 +1911,6 @@ inline bool OpIter<Policy>::readAtomicLoad(LinearMemoryAddress<Value>* addr,
                                            uint32_t byteSize) {
   MOZ_ASSERT(Classify(op_) == OpKind::AtomicLoad);
 
-  if (!env_.usesSharedMemory()) {
-    return fail(
-        "can't touch memory with atomic operations without shared memory");
-  }
-
   if (!readLinearMemoryAddressAligned(byteSize, addr)) {
     return false;
   }
@@ -1939,11 +1924,6 @@ inline bool OpIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr,
                                             ValType resultType,
                                             uint32_t byteSize, Value* value) {
   MOZ_ASSERT(Classify(op_) == OpKind::AtomicStore);
-
-  if (!env_.usesSharedMemory()) {
-    return fail(
-        "can't touch memory with atomic operations without shared memory");
-  }
 
   if (!popWithType(resultType, value)) {
     return false;
@@ -1961,11 +1941,6 @@ inline bool OpIter<Policy>::readAtomicRMW(LinearMemoryAddress<Value>* addr,
                                           ValType resultType, uint32_t byteSize,
                                           Value* value) {
   MOZ_ASSERT(Classify(op_) == OpKind::AtomicBinOp);
-
-  if (!env_.usesSharedMemory()) {
-    return fail(
-        "can't touch memory with atomic operations without shared memory");
-  }
 
   if (!popWithType(resultType, value)) {
     return false;
@@ -1986,11 +1961,6 @@ inline bool OpIter<Policy>::readAtomicCmpXchg(LinearMemoryAddress<Value>* addr,
                                               Value* oldValue,
                                               Value* newValue) {
   MOZ_ASSERT(Classify(op_) == OpKind::AtomicCompareExchange);
-
-  if (!env_.usesSharedMemory()) {
-    return fail(
-        "can't touch memory with atomic operations without shared memory");
-  }
 
   if (!popWithType(resultType, newValue)) {
     return false;
