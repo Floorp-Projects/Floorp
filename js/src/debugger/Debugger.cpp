@@ -896,6 +896,8 @@ bool DebugAPI::slowPathOnResumeFrame(JSContext* cx, AbstractFramePtr frame) {
   // For each debugger, if there is an existing Debugger.Frame object for the
   // resumed `frame`, update it with the new frame pointer and make sure the
   // frame is observable.
+  FrameIter iter(cx);
+  MOZ_ASSERT(iter.abstractFramePtr() == frame);
   for (Realm::DebuggerVectorEntry& entry : frame.global()->getDebuggers()) {
     Debugger* dbg = entry.dbg;
     if (Debugger::GeneratorWeakMap::Ptr generatorEntry =
@@ -906,13 +908,7 @@ bool DebugAPI::slowPathOnResumeFrame(JSContext* cx, AbstractFramePtr frame) {
         ReportOutOfMemory(cx);
         return false;
       }
-
-      FrameIter iter(cx);
-      MOZ_ASSERT(iter.abstractFramePtr() == frame);
       if (!frameObj->resume(iter)) {
-        return false;
-      }
-      if (!Debugger::ensureExecutionObservabilityOfFrame(cx, frame)) {
         return false;
       }
     }
