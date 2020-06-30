@@ -266,7 +266,7 @@ describe("ASRouterAdmin", () => {
         });
 
         assert.lengthOf(wrapper.find(".message-id"), 1);
-        wrapper.find(".message-item button:not(.primary)").simulate("click");
+        wrapper.find(".message-item button.show").simulate("click");
         // first call is ADMIN_CONNECT_STATE
         assert.propertyVal(
           sendMessageStub.secondCall.args[1],
