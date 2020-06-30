@@ -1089,7 +1089,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   WeakGlobalObjectSet::Range allDebuggees() const { return debuggees.all(); }
 
-  static void detachAllDebuggersFromGlobal(JSFreeOp* fop, GlobalObject* global);
 #ifdef DEBUG
   static bool isDebuggerCrossCompartmentEdge(JSObject* obj,
                                              const js::gc::Cell* cell);
