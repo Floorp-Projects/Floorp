@@ -1757,7 +1757,7 @@ var CustomizableUIInternal = {
             aWidget.id +
             " has a view. Auto-registering event handlers."
         );
-        let viewNode = PanelMultiView.getViewNode(aDocument, aWidget.viewId);
+        let viewNode = aDocument.getElementById(aWidget.viewId);
 
         if (viewNode) {
           // PanelUI relies on the .PanelUI-subView class to be able to show only

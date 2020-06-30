@@ -38,18 +38,15 @@ add_task(async function check_developer_subview_in_overflow() {
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
 
   let chevron = document.getElementById("nav-bar-overflow-button");
-  let shownPanelPromise = BrowserTestUtils.waitForEvent(
-    kOverflowPanel,
-    "ViewShown"
-  );
+  let shownPanelPromise = promisePanelElementShown(window, kOverflowPanel);
   chevron.click();
   await shownPanelPromise;
 
-  let button = document.getElementById("developer-button");
-  button.click();
-
   let developerView = document.getElementById("PanelUI-developer");
-  await BrowserTestUtils.waitForEvent(developerView, "ViewShown");
+  let button = document.getElementById("developer-button");
+  let subviewShownPromise = subviewShown(developerView);
+  button.click();
+  await subviewShownPromise;
   let hasSubviews = !!kOverflowPanel.querySelector("panelmultiview");
   let expectedPanel = hasSubviews
     ? kOverflowPanel
