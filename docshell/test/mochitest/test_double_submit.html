@@ -15,11 +15,6 @@
     </form>
     <script>
       "use strict";
-      // For some reason this triggers the (harmless) assert at
-      // https://searchfox.org/mozilla-central/source/layout/generic/nsLineLayout.cpp#958
-      // See bug 1645132.
-
-      SimpleTest.expectAssertions(1)
 
       const CROSS_ORIGIN_URI = "http://test1.example.com/tests/docshell/test/mochitest/ping.html";
 
@@ -64,7 +59,7 @@
         let form = document.getElementById('form');
         let button = document.getElementById('button');
 
-        document.getElementById('input').value = generateBody(1014*1024*10);
+        document.getElementById('input').value = generateBody(1024*1024);
         let token = document.getElementById('token');
         token.value = "first";
 
