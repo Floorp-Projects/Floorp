@@ -199,10 +199,29 @@ dictionary RTCStatsCollection {
   sequence<RTCVideoFrameHistoryInternal>    videoFrameHistories = [];
 };
 
+// Details that about:webrtc can display about configured ICE servers
+dictionary RTCIceServerInternal {
+  sequence<DOMString> urls = [];
+  required boolean    credentialProvided;
+  required boolean    userNameProvided;
+};
+
+// Details that about:webrtc can display about the RTCConfiguration
+// Chrome only
+dictionary RTCConfigurationInternal {
+  RTCBundlePolicy                bundlePolicy;
+  required boolean               certificatesProvided;
+  sequence<RTCIceServerInternal> iceServers = [];
+  RTCIceTransportPolicy          iceTransportPolicy;
+  required boolean               peerIdentityProvided;
+  DOMString                      sdpSemantics;
+};
+
 // A collection of RTCStats dictionaries, plus some other info. Used by
 // WebrtcGlobalInformation for about:webrtc, and telemetry.
 dictionary RTCStatsReportInternal : RTCStatsCollection {
   required DOMString                        pcid;
+  RTCConfigurationInternal                  configuration;
   DOMString                                 localSdp;
   DOMString                                 remoteSdp;
   sequence<RTCSdpHistoryEntryInternal>      sdpHistory = [];

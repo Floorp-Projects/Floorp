@@ -290,6 +290,7 @@ bool IsPrivateBrowsing(nsPIDOMWindowInner* aWindow) {
 PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
     : mTimeCard(MOZ_LOG_TEST(logModuleInfo, LogLevel::Error) ? create_timecard()
                                                              : nullptr),
+      mJsConfiguration(),
       mSignalingState(RTCSignalingState::Stable),
       mIceConnectionState(RTCIceConnectionState::New),
       mIceGatheringState(RTCIceGatheringState::New),
@@ -388,6 +389,9 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     MOZ_ASSERT(mThread);
   }
   CheckThread();
+
+  // Store the configuration for about:webrtc
+  StoreConfigurationForAboutWebrtc(aConfiguration);
 
   mPCObserver = &aObserver;
 
@@ -2791,6 +2795,7 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
   UniquePtr<dom::RTCStatsReportInternal> report(
       new dom::RTCStatsReportInternal);
   report->mPcid = NS_ConvertASCIItoUTF16(mName.c_str());
+  report->mConfiguration.Construct(mJsConfiguration);
   // TODO(bug 1589416): We need to do better here.
   if (!mIceStartTime.IsNull()) {
     report->mCallDurationMs.Construct(
@@ -2923,6 +2928,45 @@ void PeerConnectionImpl::RecordIceRestartStatistics(JsepSdpType type) {
       ++mIceRollbackCount;
       break;
   }
+}
+
+void PeerConnectionImpl::StoreConfigurationForAboutWebrtc(
+    const dom::RTCConfiguration& aConfig) {
+  // This will only be called once, when the PeerConnection is initially
+  // configured, at least until setConfiguration is implemented
+  // see https://bugzilla.mozilla.org/show_bug.cgi?id=1253706
+  // @TODO call this from setConfiguration
+  if (aConfig.mIceServers.WasPassed()) {
+    for (const auto& server : aConfig.mIceServers.Value()) {
+      RTCIceServerInternal internal;
+      internal.mCredentialProvided = server.mCredential.WasPassed();
+      internal.mUserNameProvided = server.mUsername.WasPassed();
+      if (server.mUrl.WasPassed()) {
+        if (!internal.mUrls.AppendElement(server.mUrl.Value(), fallible)) {
+          mozalloc_handle_oom(0);
+        }
+      }
+      if (server.mUrls.WasPassed()) {
+        for (const auto& url : server.mUrls.Value().GetAsStringSequence()) {
+          if (!internal.mUrls.AppendElement(url, fallible)) {
+            mozalloc_handle_oom(0);
+          }
+        }
+      }
+      if (!mJsConfiguration.mIceServers.AppendElement(internal, fallible)) {
+        mozalloc_handle_oom(0);
+      }
+      if (aConfig.mSdpSemantics.WasPassed()) {
+        mJsConfiguration.mSdpSemantics.Construct(aConfig.mSdpSemantics.Value());
+      }
+    }
+  }
+  mJsConfiguration.mIceTransportPolicy.Construct(aConfig.mIceTransportPolicy);
+  mJsConfiguration.mBundlePolicy.Construct(aConfig.mBundlePolicy);
+  mJsConfiguration.mPeerIdentityProvided = !aConfig.mPeerIdentity.IsEmpty();
+  mJsConfiguration.mCertificatesProvided =
+      aConfig.mCertificates.WasPassed() &&
+      !aConfig.mCertificates.Value().Length();
 }
 
 // Telemetry for when calls start
