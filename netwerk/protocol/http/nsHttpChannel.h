@@ -657,12 +657,12 @@ class nsHttpChannel final : public HttpBaseChannel,
   uint32_t mCacheQueueSizeWhenOpen;
 
   Atomic<bool, Relaxed> mCachedContentIsValid;
+  Atomic<bool> mAuthRetryPending;
 
   // state flags
   uint32_t mCachedContentIsPartial : 1;
   uint32_t mCacheOnlyMetadata : 1;
   uint32_t mTransactionReplaced : 1;
-  uint32_t mAuthRetryPending : 1;
   uint32_t mProxyAuthPending : 1;
   // Set if before the first authentication attempt a custom authorization
   // header has been set on the channel.  This will make that custom header
