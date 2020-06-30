@@ -268,9 +268,6 @@ class DebuggerFrame : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
 
   static AbstractFramePtr getReferent(HandleDebuggerFrame frame);
-  static MOZ_MUST_USE bool getFrameIter(JSContext* cx,
-                                        HandleDebuggerFrame frame,
-                                        mozilla::Maybe<FrameIter>& result);
   static MOZ_MUST_USE bool requireScriptReferent(JSContext* cx,
                                                  HandleDebuggerFrame frame);
 
@@ -289,9 +286,14 @@ class DebuggerFrame : public NativeObject {
                                                  JSScript* script);
   void maybeDecrementStepperCounter(JSFreeOp* fop, JSScript* script);
 
- public:
   FrameIter::Data* frameIterData() const;
   void setFrameIterData(FrameIter::Data*);
+
+ public:
+  FrameIter getFrameIter(JSContext* cx);
+
+  MOZ_MUST_USE bool replaceFrameIterData(JSContext* cx, const FrameIter&);
+
   void freeFrameIterData(JSFreeOp* fop);
   void maybeDecrementStepperCounter(JSFreeOp* fop, AbstractFramePtr referent);
 
