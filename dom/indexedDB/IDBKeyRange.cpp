@@ -21,10 +21,11 @@ namespace {
 
 void GetKeyFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal, Key& aKey,
                      ErrorResult& aRv) {
-  auto result = aKey.SetFromJSVal(aCx, aVal);
-  if (!result.Is(Ok)) {
-    aRv = result.ExtractErrorResult(
-        InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
+  auto result = aKey.SetFromJSVal(aCx, aVal, aRv);
+  if (!result.Is(Ok, aRv)) {
+    if (result.Is(Invalid, aRv)) {
+      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+    }
     return;
   }
 

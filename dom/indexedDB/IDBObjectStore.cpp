@@ -65,11 +65,10 @@ IndexUpdateInfo MakeIndexUpdateInfo(const int64_t aIndexID, const Key& aKey,
   indexUpdateInfo.indexId() = aIndexID;
   indexUpdateInfo.value() = aKey;
   if (!aLocale.IsEmpty()) {
-    auto result =
-        aKey.ToLocaleAwareKey(indexUpdateInfo.localizedValue(), aLocale);
-    if (!result.Is(Ok)) {
-      *aRv = result.ExtractErrorResult(
-          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR>);
+    const auto result =
+        aKey.ToLocaleAwareKey(indexUpdateInfo.localizedValue(), aLocale, *aRv);
+    if (result.Is(Invalid, *aRv)) {
+      aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
   }
   return indexUpdateInfo;
@@ -571,12 +570,10 @@ void IDBObjectStore::AppendIndexUpdateInfo(
       }
 
       Key value;
-      auto result = value.SetFromJSVal(aCx, arrayItem);
-      if (!result.Is(Ok) || value.IsUnset()) {
+      const auto result = value.SetFromJSVal(aCx, arrayItem, *aRv);
+      if (!result.Is(Ok, *aRv) || value.IsUnset()) {
         // Not a value we can do anything with, ignore it.
-        if (result.Is(indexedDB::Exception)) {
-          result.AsException().SuppressException();
-        }
+        aRv->SuppressException();
         continue;
       }
 
@@ -588,12 +585,10 @@ void IDBObjectStore::AppendIndexUpdateInfo(
     }
   } else {
     Key value;
-    auto result = value.SetFromJSVal(aCx, val);
-    if (!result.Is(Ok) || value.IsUnset()) {
+    const auto result = value.SetFromJSVal(aCx, val, *aRv);
+    if (!result.Is(Ok, *aRv) || value.IsUnset()) {
       // Not a value we can do anything with, ignore it.
-      if (result.Is(indexedDB::Exception)) {
-        result.AsException().SuppressException();
-      }
+      aRv->SuppressException();
       return;
     }
 
@@ -672,10 +667,11 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
 
   if (!HasValidKeyPath()) {
     // Out-of-line keys must be passed in.
-    auto result = aKey.SetFromJSVal(aCx, aKeyVal);
-    if (!result.Is(Ok)) {
-      aRv = result.ExtractErrorResult(
-          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
+    const auto result = aKey.SetFromJSVal(aCx, aKeyVal, aRv);
+    if (!result.Is(Ok, aRv)) {
+      if (result.Is(Invalid, aRv)) {
+        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+      }
       return;
     }
   } else if (!isAutoIncrement) {

@@ -346,10 +346,11 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
   }
 
   Key key;
-  auto result = key.SetFromJSVal(aCx, aKey);
-  if (!result.Is(Ok)) {
-    aRv = result.ExtractErrorResult(
-        InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
+  auto result = key.SetFromJSVal(aCx, aKey, aRv);
+  if (!result.Is(Ok, aRv)) {
+    if (result.Is(Invalid, aRv)) {
+      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+    }
     return;
   }
 
@@ -357,10 +358,11 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
     if (IsLocaleAware() && !key.IsUnset()) {
       Key tmp;
 
-      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale());
-      if (!result.Is(Ok)) {
-        aRv = result.ExtractErrorResult(
-            InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
+      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale(), aRv);
+      if (!result.Is(Ok, aRv)) {
+        if (result.Is(Invalid, aRv)) {
+          aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+        }
         return;
       }
       key = tmp;
@@ -449,19 +451,21 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
     }
 
     Key key;
-    auto result = key.SetFromJSVal(aCx, aKey);
-    if (!result.Is(Ok)) {
-      aRv = result.ExtractErrorResult(
-          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
+    auto result = key.SetFromJSVal(aCx, aKey, aRv);
+    if (!result.Is(Ok, aRv)) {
+      if (result.Is(Invalid, aRv)) {
+        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+      }
       return;
     }
 
     if (IsLocaleAware() && !key.IsUnset()) {
       Key tmp;
-      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale());
-      if (!result.Is(Ok)) {
-        aRv = result.ExtractErrorResult(
-            InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
+      result = key.ToLocaleAwareKey(tmp, GetSourceRef().Locale(), aRv);
+      if (!result.Is(Ok, aRv)) {
+        if (result.Is(Invalid, aRv)) {
+          aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+        }
         return;
       }
       key = tmp;
@@ -473,10 +477,11 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
     }
 
     Key primaryKey;
-    result = primaryKey.SetFromJSVal(aCx, aPrimaryKey);
-    if (!result.Is(Ok)) {
-      aRv = result.ExtractErrorResult(
-          InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
+    result = primaryKey.SetFromJSVal(aCx, aPrimaryKey, aRv);
+    if (!result.Is(Ok, aRv)) {
+      if (result.Is(Invalid, aRv)) {
+        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+      }
       return;
     }
 

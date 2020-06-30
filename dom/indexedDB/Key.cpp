@@ -112,10 +112,10 @@ namespace mozilla::dom::indexedDB {
 */
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::SetFromString(
-    const nsAString& aString) {
+    const nsAString& aString, ErrorResult& aRv) {
   mBuffer.Truncate();
-  auto result = EncodeString(aString, 0);
-  if (result.Is(Ok)) {
+  auto result = EncodeString(aString, 0, aRv);
+  if (result.Is(Ok, aRv)) {
     TrimBuffer();
   }
   return result;
@@ -143,7 +143,7 @@ uint32_t Key::LengthOfEncodedBinary(const EncodedDataType* aPos,
 }
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
-    Key& aTarget, const nsCString& aLocale) const {
+    Key& aTarget, const nsCString& aLocale, ErrorResult& aRv) const {
   if (IsUnset()) {
     aTarget.Unset();
     return Ok();
@@ -188,7 +188,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
   }
 
   if (!aTarget.mBuffer.SetCapacity(mBuffer.Length(), fallible)) {
-    return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return Exception;
   }
 
   // A string was found, so we need to copy the data we've read so far
@@ -222,21 +223,24 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
     if (type == eTerminator) {
       // Copy array TypeID and terminator from raw key
       if (!updateBufferAndIter(0)) {
-        return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return Exception;
       }
     } else if (type == eFloat || type == eDate) {
       // Copy number from raw key
       const size_t byteCount = std::min(sizeof(uint64_t), size_t(end - it - 1));
 
       if (!updateBufferAndIter(byteCount)) {
-        return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return Exception;
       }
     } else if (type == eBinary) {
       // skip all binary data
       const auto binaryLength = LengthOfEncodedBinary(it, end);
 
       if (!updateBufferAndIter(binaryLength)) {
-        return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return Exception;
       }
     } else {
       // Decode string and reencode
@@ -245,8 +249,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
 
       nsDependentString str;
       DecodeString(it, end, str);
-      auto result = aTarget.EncodeLocaleString(str, typeOffset, aLocale);
-      if (NS_WARN_IF(!result.Is(Ok))) {
+      auto result = aTarget.EncodeLocaleString(str, typeOffset, aLocale, aRv);
+      if (NS_WARN_IF(!result.Is(Ok, aRv))) {
         return result;
       }
     }
@@ -279,9 +283,10 @@ class MOZ_STACK_CLASS Key::ArrayValueEncoder final {
   }
 
   IDBResult<void, IDBSpecialValue::Invalid> ConvertSubkey(
-      JSContext* const aCx, JS::HandleValue aEntry, const uint32_t aIndex) {
-    auto result =
-        mKey.EncodeJSValInternal(aCx, aEntry, mTypeOffset, mRecursionDepth);
+      JSContext* const aCx, JS::HandleValue aEntry, const uint32_t aIndex,
+      ErrorResult& aRv) {
+    const auto result = mKey.EncodeJSValInternal(aCx, aEntry, mTypeOffset,
+                                                 mRecursionDepth, aRv);
     mTypeOffset = 0;
     return result;
   }
@@ -298,7 +303,7 @@ class MOZ_STACK_CLASS Key::ArrayValueEncoder final {
 // https://w3c.github.io/IndexedDB/#convert-a-value-to-a-key
 IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
     JSContext* const aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset,
-    const uint16_t aRecursionDepth) {
+    const uint16_t aRecursionDepth, ErrorResult& aRv) {
   static_assert(eMaxType * kMaxArrayCollapse < 256, "Unable to encode jsvals.");
 
   // 1. If `seen` was not given, let `seen` be a new empty set.
@@ -332,9 +337,10 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
     nsAutoJSString string;
     if (!string.init(aCx, aVal)) {
       IDB_REPORT_INTERNAL_ERR();
-      return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      return Exception;
     }
-    return EncodeString(string, aTypeOffset);
+    return EncodeString(string, aTypeOffset, aRv);
   }
 
   if (aVal.isObject()) {
@@ -343,7 +349,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
     js::ESClass builtinClass;
     if (!js::GetBuiltinClass(aCx, object, &builtinClass)) {
       IDB_REPORT_INTERNAL_ERR();
-      return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      return Exception;
     }
 
     // If `input` is a Date (has a [[DateValue]] internal slot)
@@ -352,7 +359,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
       double ms;
       if (!js::DateGetMsecSinceEpoch(aCx, object, &ms)) {
         IDB_REPORT_INTERNAL_ERR();
-        return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        return Exception;
       }
 
       // 2. If `ms` is NaN then return invalid.
@@ -368,13 +376,13 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
     // If `input` is a buffer source type
     if (JS::IsArrayBufferObject(object) || JS_IsArrayBufferViewObject(object)) {
       const bool isViewObject = JS_IsArrayBufferViewObject(object);
-      return EncodeBinary(object, isViewObject, aTypeOffset);
+      return EncodeBinary(object, isViewObject, aTypeOffset, aRv);
     }
 
     // If IsArray(`input`)
     if (builtinClass == js::ESClass::Array) {
       ArrayValueEncoder encoder(*this, aTypeOffset, aRecursionDepth);
-      return ConvertArrayValueToKey(aCx, object, encoder);
+      return ConvertArrayValueToKey(aCx, object, encoder, aRv);
     }
   }
 
@@ -474,28 +482,30 @@ nsresult Key::DecodeJSValInternal(const EncodedDataType*& aPos,
 #define THREE_BYTE_SHIFT 6
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSVal(
-    JSContext* aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset) {
-  return EncodeJSValInternal(aCx, aVal, aTypeOffset, 0);
+    JSContext* aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset,
+    ErrorResult& aRv) {
+  return EncodeJSValInternal(aCx, aVal, aTypeOffset, 0, aRv);
 }
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeString(
-    const nsAString& aString, uint8_t aTypeOffset) {
-  return EncodeString(Span{aString}, aTypeOffset);
+    const nsAString& aString, uint8_t aTypeOffset, ErrorResult& aRv) {
+  return EncodeString(Span{aString}, aTypeOffset, aRv);
 }
 
 template <typename T>
 IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeString(
-    const Span<const T> aInput, uint8_t aTypeOffset) {
-  return EncodeAsString(aInput, eString + aTypeOffset);
+    const Span<const T> aInput, const uint8_t aTypeOffset, ErrorResult& aRv) {
+  return EncodeAsString(aInput, eString + aTypeOffset, aRv);
 }
 
 template <typename T>
 IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
-    const Span<const T> aInput, uint8_t aType) {
+    const Span<const T> aInput, const uint8_t aType, ErrorResult& aRv) {
   // First measure how long the encoded string will be.
   if (NS_WARN_IF(UINT32_MAX - 2 < uintptr_t(aInput.Length()))) {
     IDB_REPORT_INTERNAL_ERR();
-    return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return Exception;
   }
 
   // The +2 is for initial aType and trailing 0. We'll compensate for multi-byte
@@ -510,7 +520,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
       size += char16_t(val) > TWO_BYTE_LIMIT ? 2 : 1;
       if (!size.isValid()) {
         IDB_REPORT_INTERNAL_ERR();
-        return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        return Exception;
       }
     }
   }
@@ -521,13 +532,15 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
 
   if (!size.isValid()) {
     IDB_REPORT_INTERNAL_ERR();
-    return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return Exception;
   }
 
   char* buffer;
   if (!mBuffer.GetMutableData(&buffer, size.value())) {
     IDB_REPORT_INTERNAL_ERR();
-    return {Exception, ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return Exception;
   }
   buffer += oldLen;
 
@@ -560,7 +573,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
     const nsDependentString& aString, uint8_t aTypeOffset,
-    const nsCString& aLocale) {
+    const nsCString& aLocale, ErrorResult& aRv) {
   const int length = aString.Length();
   if (length == 0) {
     return Ok();
@@ -570,7 +583,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
   UErrorCode uerror = U_ZERO_ERROR;
   UCollator* collator = ucol_open(aLocale.get(), &uerror);
   if (NS_WARN_IF(U_FAILURE(uerror))) {
-    return {Exception, ErrorResult{NS_ERROR_FAILURE}};
+    aRv.Throw(NS_ERROR_FAILURE);
+    return Exception;
   }
   MOZ_ASSERT(collator);
 
@@ -579,7 +593,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
       collator, ustr, length, keyBuffer.Elements(), keyBuffer.Length());
   if (sortKeyLength > (int32_t)keyBuffer.Length()) {
     if (!keyBuffer.SetLength(sortKeyLength, fallible)) {
-      return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return Exception;
     }
     sortKeyLength = ucol_getSortKey(collator, ustr, length,
                                     keyBuffer.Elements(), sortKeyLength);
@@ -587,11 +602,12 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
 
   ucol_close(collator);
   if (NS_WARN_IF(sortKeyLength == 0)) {
-    return {Exception, ErrorResult{NS_ERROR_FAILURE}};
+    aRv.Throw(NS_ERROR_FAILURE);
+    return Exception;
   }
 
   return EncodeString(Span{keyBuffer}.AsConst().First(sortKeyLength),
-                      aTypeOffset);
+                      aTypeOffset, aRv);
 }
 
 // static
@@ -740,8 +756,10 @@ double Key::DecodeNumber(const EncodedDataType*& aPos,
   return BitwiseCast<double>(bits);
 }
 
-IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeBinary(
-    JSObject* aObject, bool aIsViewObject, uint8_t aTypeOffset) {
+IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeBinary(JSObject* aObject,
+                                                            bool aIsViewObject,
+                                                            uint8_t aTypeOffset,
+                                                            ErrorResult& aRv) {
   uint8_t* bufferData;
   uint32_t bufferLength;
 
@@ -756,7 +774,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeBinary(
   }
 
   return EncodeAsString(Span{bufferData, bufferLength}.AsConst(),
-                        eBinary + aTypeOffset);
+                        eBinary + aTypeOffset, aRv);
 }
 
 // static
@@ -803,7 +821,7 @@ nsresult Key::SetFromValueArray(mozIStorageValueArray* aValues,
 }
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::SetFromJSVal(
-    JSContext* aCx, JS::Handle<JS::Value> aVal) {
+    JSContext* aCx, JS::Handle<JS::Value> aVal, ErrorResult& aRv) {
   mBuffer.Truncate();
 
   if (aVal.isNull() || aVal.isUndefined()) {
@@ -811,8 +829,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::SetFromJSVal(
     return Ok();
   }
 
-  auto result = EncodeJSVal(aCx, aVal, 0);
-  if (!result.Is(Ok)) {
+  auto result = EncodeJSVal(aCx, aVal, 0, aRv);
+  if (!result.Is(Ok, aRv)) {
     Unset();
     return result;
   }
@@ -847,9 +865,10 @@ nsresult Key::ToJSVal(JSContext* aCx, JS::Heap<JS::Value>& aVal) const {
 }
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::AppendItem(
-    JSContext* aCx, bool aFirstOfArray, JS::Handle<JS::Value> aVal) {
-  auto result = EncodeJSVal(aCx, aVal, aFirstOfArray ? eMaxType : 0);
-  if (!result.Is(Ok)) {
+    JSContext* aCx, bool aFirstOfArray, JS::Handle<JS::Value> aVal,
+    ErrorResult& aRv) {
+  auto result = EncodeJSVal(aCx, aVal, aFirstOfArray ? eMaxType : 0, aRv);
+  if (!result.Is(Ok, aRv)) {
     Unset();
   }
   return result;
