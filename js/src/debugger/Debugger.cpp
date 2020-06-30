@@ -1175,25 +1175,26 @@ bool DebugAPI::slowPathOnNewGenerator(JSContext* cx, AbstractFramePtr frame,
   // AbstractGeneratorObject for this generator call, though, has just been
   // created. It must be associated with any existing Debugger.Frames.
   bool ok = true;
-  Debugger::forEachDebuggerFrame(frame, [&](DebuggerFrame* frameObjPtr) {
-    if (!ok) {
-      return;
-    }
+  Debugger::forEachDebuggerFrame(
+      frame, [&](Debugger*, DebuggerFrame* frameObjPtr) {
+        if (!ok) {
+          return;
+        }
 
-    RootedDebuggerFrame frameObj(cx, frameObjPtr);
-    {
-      AutoRealm ar(cx, frameObj);
+        RootedDebuggerFrame frameObj(cx, frameObjPtr);
+        {
+          AutoRealm ar(cx, frameObj);
 
-      if (!frameObj->setGeneratorInfo(cx, genObj)) {
-        ReportOutOfMemory(cx);
+          if (!frameObj->setGeneratorInfo(cx, genObj)) {
+            ReportOutOfMemory(cx);
 
-        // This leaves `genObj` and `frameObj` unassociated. It's OK
-        // because we won't pause again with this generator on the stack:
-        // the caller will immediately discard `genObj` and unwind `frame`.
-        ok = false;
-      }
-    }
-  });
+            // This leaves `genObj` and `frameObj` unassociated. It's OK
+            // because we won't pause again with this generator on the stack:
+            // the caller will immediately discard `genObj` and unwind `frame`.
+            ok = false;
+          }
+        }
+      });
   return ok;
 }
 
@@ -3215,7 +3216,7 @@ void Debugger::forEachDebuggerFrame(AbstractFramePtr frame, FrameFn fn) {
   for (Realm::DebuggerVectorEntry& entry : frame.global()->getDebuggers()) {
     Debugger* dbg = entry.dbg;
     if (FrameMap::Ptr frameEntry = dbg->frames.lookup(frame)) {
-      fn(frameEntry->value());
+      fn(dbg, frameEntry->value());
     }
   }
 }
@@ -3224,7 +3225,7 @@ void Debugger::forEachDebuggerFrame(AbstractFramePtr frame, FrameFn fn) {
 bool Debugger::getDebuggerFrames(AbstractFramePtr frame,
                                  MutableHandle<DebuggerFrameVector> frames) {
   bool hadOOM = false;
-  forEachDebuggerFrame(frame, [&](DebuggerFrame* frameobj) {
+  forEachDebuggerFrame(frame, [&](Debugger*, DebuggerFrame* frameobj) {
     if (!hadOOM && !frames.append(frameobj)) {
       hadOOM = true;
     }
@@ -6292,7 +6293,7 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
 bool DebugAPI::inFrameMaps(AbstractFramePtr frame) {
   bool foundAny = false;
   Debugger::forEachDebuggerFrame(
-      frame, [&](DebuggerFrame* frameobj) { foundAny = true; });
+      frame, [&](Debugger*, DebuggerFrame* frameobj) { foundAny = true; });
   return foundAny;
 }
 
@@ -6300,11 +6301,10 @@ bool DebugAPI::inFrameMaps(AbstractFramePtr frame) {
 void Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
                                                         AbstractFramePtr frame,
                                                         bool suspending) {
-  forEachDebuggerFrame(frame, [&](DebuggerFrame* frameobj) {
+  forEachDebuggerFrame(frame, [&](Debugger* dbg, DebuggerFrame* frameobj) {
     JSFreeOp* fop = cx->runtime()->defaultFreeOp();
     frameobj->freeFrameIterData(fop);
 
-    Debugger* dbg = Debugger::fromChildJSObject(frameobj);
     dbg->frames.remove(frame);
 
     if (frameobj->hasGeneratorInfo()) {

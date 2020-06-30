@@ -908,7 +908,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
       JSContext* cx, DebugAPI::ExecutionObservableSet& obs,
       IsObserving observing);
 
-  template <typename FrameFn /* void (DebuggerFrame*) */>
+  template <typename FrameFn /* void (Debugger*, DebuggerFrame*) */>
   static void forEachDebuggerFrame(AbstractFramePtr frame, FrameFn fn);
 
   /*
