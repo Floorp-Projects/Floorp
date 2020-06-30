@@ -36,7 +36,6 @@ py2commands="
     raptor-test
     reftest
     release
-    rusttests
     talos-test
     taskcluster-load-image
     taskgraph
