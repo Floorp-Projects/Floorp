@@ -34,5 +34,4 @@ BROWSER_CHROME_MANIFESTS += [
     'csp/browser.ini',
     'general/browser.ini',
     'https-only/browser.ini',
-    'mixedcontentblocker/browser.ini'
 ]
