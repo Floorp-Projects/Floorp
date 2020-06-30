@@ -1937,12 +1937,9 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                             const nsACString& aFullHash) {
   LOG(("HttpChannelParent::SetClassifierMatchedInfo [this=%p]\n", this));
   if (!mIPCClosed) {
-    ClassifierInfo info;
-    info.list() = aList;
-    info.provider() = aProvider;
-    info.fullhash() = aFullHash;
-
-    Unused << SendSetClassifierMatchedInfo(info);
+    MOZ_ASSERT(mBgParent);
+    Unused << mBgParent->OnSetClassifierMatchedInfo(aList, aProvider,
+                                                    aFullHash);
   }
   return NS_OK;
 }
@@ -1953,11 +1950,9 @@ HttpChannelParent::SetClassifierMatchedTrackingInfo(
   LOG(("HttpChannelParent::SetClassifierMatchedTrackingInfo [this=%p]\n",
        this));
   if (!mIPCClosed) {
-    ClassifierInfo info;
-    info.list() = aLists;
-    info.fullhash() = aFullHashes;
-
-    Unused << SendSetClassifierMatchedTrackingInfo(info);
+    MOZ_ASSERT(mBgParent);
+    Unused << mBgParent->OnSetClassifierMatchedTrackingInfo(aLists,
+                                                            aFullHashes);
   }
   return NS_OK;
 }
@@ -1970,8 +1965,9 @@ HttpChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
        "classificationFlags=%" PRIu32 ", thirdparty=%d [this=%p]\n",
        aClassificationFlags, static_cast<int>(aIsThirdParty), this));
   if (!mIPCClosed) {
-    Unused << SendNotifyClassificationFlags(aClassificationFlags,
-                                            aIsThirdParty);
+    MOZ_ASSERT(mBgParent);
+    Unused << mBgParent->OnNotifyClassificationFlags(aClassificationFlags,
+                                                     aIsThirdParty);
   }
   return NS_OK;
 }
@@ -1981,7 +1977,8 @@ HttpChannelParent::NotifyFlashPluginStateChanged(
     nsIHttpChannel::FlashPluginState aState) {
   LOG(("HttpChannelParent::NotifyFlashPluginStateChanged [this=%p]\n", this));
   if (!mIPCClosed) {
-    Unused << SendNotifyFlashPluginStateChanged(aState);
+    MOZ_ASSERT(mBgParent);
+    Unused << mBgParent->OnNotifyFlashPluginStateChanged(aState);
   }
   return NS_OK;
 }
