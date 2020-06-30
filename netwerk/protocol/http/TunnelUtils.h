@@ -221,7 +221,9 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
   // CONNECT tunnel but the setup fails. The plaintext only carries the CONNECT
   // error.
   void ForcePlainText();
-  void MapStreamToHttpConnection(nsISocketTransport* aTransport,
+  // True if we successfully map stream to a nsHttpConnection. Currently we skip
+  // 1xx response only.
+  bool MapStreamToHttpConnection(nsISocketTransport* aTransport,
                                  nsHttpConnectionInfo* aConnInfo,
                                  const nsACString& aFlat407Headers,
                                  int32_t aHttpResponseCode);
