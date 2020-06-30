@@ -47,6 +47,7 @@
 #include "mozilla/Assertions.h"
 
 #include <stdint.h>
+#include <string>
 
 typedef signed char int8;
 typedef short int16;
