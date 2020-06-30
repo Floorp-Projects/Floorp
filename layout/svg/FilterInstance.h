@@ -23,14 +23,14 @@
 
 class gfxContext;
 class nsIFrame;
-class nsSVGFilterPaintCallback;
 struct WrFiltersHolder;
 
 namespace mozilla {
+class SVGFilterPaintCallback;
+
 namespace dom {
 class UserSpaceMetrics;
 }  // namespace dom
-}  // namespace mozilla
 
 /**
  * This class performs all filter processing.
@@ -48,18 +48,14 @@ class UserSpaceMetrics;
  * The definition of "filter region" can be found here:
  * http://www.w3.org/TR/SVG11/filters.html#FilterEffectsRegion
  */
-class nsFilterInstance {
-  template <typename T>
-  using Span = mozilla::Span<T>;
-  using StyleFilter = mozilla::StyleFilter;
-
-  typedef mozilla::gfx::IntRect IntRect;
-  typedef mozilla::gfx::SourceSurface SourceSurface;
-  typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
-  typedef mozilla::gfx::FilterDescription FilterDescription;
-  typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
-  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+class FilterInstance {
+  typedef gfx::IntRect IntRect;
+  typedef gfx::SourceSurface SourceSurface;
+  typedef gfx::DrawTarget DrawTarget;
+  typedef gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
+  typedef gfx::FilterDescription FilterDescription;
+  typedef dom::UserSpaceMetrics UserSpaceMetrics;
+  typedef image::imgDrawingParams imgDrawingParams;
 
  public:
   /**
@@ -88,7 +84,7 @@ class nsFilterInstance {
    *   border box).
    */
   static void PaintFilteredFrame(nsIFrame* aFilteredFrame, gfxContext* aCtx,
-                                 nsSVGFilterPaintCallback* aPaintCallback,
+                                 SVGFilterPaintCallback* aPaintCallback,
                                  const nsRegion* aDirtyArea,
                                  imgDrawingParams& aImgParams,
                                  float aOpacity = 1.0f);
@@ -157,16 +153,16 @@ class nsFilterInstance {
    * @param aOverrideBBox [optional] Use a different SVG bbox for the target
    *   element. Must be non-null if aTargetFrame is null.
    */
-  nsFilterInstance(nsIFrame* aTargetFrame, nsIContent* aTargetContent,
-                   const UserSpaceMetrics& aMetrics,
-                   Span<const StyleFilter> aFilterChain,
-                   bool aFilterInputIsTainted,
-                   nsSVGFilterPaintCallback* aPaintCallback,
-                   const gfxMatrix& aPaintTransform,
-                   const nsRegion* aPostFilterDirtyRegion = nullptr,
-                   const nsRegion* aPreFilterDirtyRegion = nullptr,
-                   const nsRect* aPreFilterVisualOverflowRectOverride = nullptr,
-                   const gfxRect* aOverrideBBox = nullptr);
+  FilterInstance(nsIFrame* aTargetFrame, nsIContent* aTargetContent,
+                 const UserSpaceMetrics& aMetrics,
+                 Span<const StyleFilter> aFilterChain,
+                 bool aFilterInputIsTainted,
+                 SVGFilterPaintCallback* aPaintCallback,
+                 const gfxMatrix& aPaintTransform,
+                 const nsRegion* aPostFilterDirtyRegion = nullptr,
+                 const nsRegion* aPreFilterDirtyRegion = nullptr,
+                 const nsRect* aPreFilterVisualOverflowRectOverride = nullptr,
+                 const gfxRect* aOverrideBBox = nullptr);
 
   /**
    * Returns true if the filter instance was created successfully.
@@ -177,7 +173,7 @@ class nsFilterInstance {
    * Draws the filter output into aDrawTarget. The area that
    * needs to be painted must have been specified before calling this method
    * by passing it as the aPostFilterDirtyRegion argument to the
-   * nsFilterInstance constructor.
+   * FilterInstance constructor.
    */
   void Render(gfxContext* aCtx, imgDrawingParams& aImgParams,
               float aOpacity = 1.0f);
@@ -193,7 +189,7 @@ class nsFilterInstance {
    * space that would be dirtied by mTargetFrame when a given
    * pre-filter area of mTargetFrame is dirtied. The pre-filter area must have
    * been specified before calling this method by passing it as the
-   * aPreFilterDirtyRegion argument to the nsFilterInstance constructor.
+   * aPreFilterDirtyRegion argument to the FilterInstance constructor.
    */
   nsRegion ComputePostFilterDirtyRegion();
 
@@ -211,7 +207,7 @@ class nsFilterInstance {
    * area of mTargetFrame that is needed in order to paint the filtered output
    * for a given post-filter dirtied area. The post-filter area must have been
    * specified before calling this method by passing it as the
-   * aPostFilterDirtyRegion argument to the nsFilterInstance constructor.
+   * aPostFilterDirtyRegion argument to the FilterInstance constructor.
    */
   nsRect ComputeSourceNeededRect();
 
@@ -335,7 +331,7 @@ class nsFilterInstance {
    */
   const UserSpaceMetrics& mMetrics;
 
-  nsSVGFilterPaintCallback* mPaintCallback;
+  SVGFilterPaintCallback* mPaintCallback;
 
   /**
    * The SVG bbox of the element that is being filtered, in user space.
@@ -388,5 +384,7 @@ class nsFilterInstance {
   FilterDescription mFilterDescription;
   bool mInitialized;
 };
+
+}  // namespace mozilla
 
 #endif

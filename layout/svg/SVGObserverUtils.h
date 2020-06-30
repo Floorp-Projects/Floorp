@@ -26,9 +26,9 @@ class nsAtom;
 class nsIURI;
 class nsSVGClipPathFrame;
 class nsSVGPaintServerFrame;
-class nsSVGFilterFrame;
 
 namespace mozilla {
+class SVGFilterFrame;
 class SVGMarkerFrame;
 class SVGMaskFrame;
 
@@ -217,7 +217,7 @@ class SVGObserverUtils {
    * MutationObservers::AttributeChanged which walks up the content node tree
    * all the way to the root node (not stopping if it encounters a non-container
    * SVG node) invalidating all mutation observers (not just
-   * nsSVGRenderingObservers) on all nodes along the way (not just the first
+   * SVGRenderingObservers) on all nodes along the way (not just the first
    * node it finds with observers). In other words, by doing all the
    * things in parentheses in the preceding sentence, this method uses
    * knowledge about our implementation and what can be affected by SVG effects
@@ -273,7 +273,7 @@ class SVGObserverUtils {
    * that behavior just yet due to the regression potential.
    */
   static ReferenceState GetAndObserveFilters(
-      nsIFrame* aFilteredFrame, nsTArray<nsSVGFilterFrame*>* aFilterFrames);
+      nsIFrame* aFilteredFrame, nsTArray<SVGFilterFrame*>* aFilterFrames);
 
   /**
    * If the given frame is already observing SVG filters, this function gets
@@ -281,7 +281,7 @@ class SVGObserverUtils {
    * function assumes that it doesn't have anything to observe.
    */
   static ReferenceState GetFiltersIfObserving(
-      nsIFrame* aFilteredFrame, nsTArray<nsSVGFilterFrame*>* aFilterFrames);
+      nsIFrame* aFilteredFrame, nsTArray<SVGFilterFrame*>* aFilterFrames);
 
   /**
    * Starts observing filters for a <canvas> element's CanvasRenderingContext2D.

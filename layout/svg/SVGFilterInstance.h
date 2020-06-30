@@ -14,16 +14,15 @@
 #include "SVGFilters.h"
 #include "mozilla/ServoStyleConsts.h"
 
-class nsSVGFilterFrame;
-
 namespace mozilla {
+class SVGFilterFrame;
+
 namespace dom {
 class SVGFilterElement;
 }  // namespace dom
-}  // namespace mozilla
 
 /**
- * This class helps nsFilterInstance build its filter graph by processing a
+ * This class helps FilterInstance build its filter graph by processing a
  * single SVG reference filter.
  *
  * In BuildPrimitives, this class iterates through the referenced <filter>
@@ -63,31 +62,28 @@ class SVGFilterElement;
  *   "filter space point" = (10, 10) * 2
  *   "filter space point" = (20, 20)
  */
-class nsSVGFilterInstance {
-  using StyleFilter = mozilla::StyleFilter;
-  typedef mozilla::SVGAnimatedNumber SVGAnimatedNumber;
-  typedef mozilla::SVGAnimatedNumberPair SVGAnimatedNumberPair;
-  typedef mozilla::gfx::Point3D Point3D;
-  typedef mozilla::gfx::IntRect IntRect;
-  typedef mozilla::gfx::SourceSurface SourceSurface;
-  typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
-  typedef mozilla::dom::SVGFE SVGFE;
-  typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
+class SVGFilterInstance {
+  typedef gfx::Point3D Point3D;
+  typedef gfx::IntRect IntRect;
+  typedef gfx::SourceSurface SourceSurface;
+  typedef gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
+  typedef dom::SVGFE SVGFE;
+  typedef dom::UserSpaceMetrics UserSpaceMetrics;
 
  public:
   /**
    * @param aFilter The SVG filter reference from the style system. This class
    *   stores aFilter by reference, so callers should avoid modifying or
-   *   deleting aFilter during the lifetime of nsSVGFilterInstance.
+   *   deleting aFilter during the lifetime of SVGFilterInstance.
    * @param aTargetContent The filtered element.
    * @param aTargetBBox The SVG bbox to use for the target frame, computed by
    *   the caller. The caller may decide to override the actual SVG bbox.
    */
-  nsSVGFilterInstance(const StyleFilter& aFilter, nsIFrame* aTargetFrame,
-                      nsIContent* aTargetContent,
-                      const UserSpaceMetrics& aMetrics,
-                      const gfxRect& aTargetBBox,
-                      const gfxSize& aUserSpaceToFilterSpaceScale);
+  SVGFilterInstance(const StyleFilter& aFilter, nsIFrame* aTargetFrame,
+                    nsIContent* aTargetContent,
+                    const UserSpaceMetrics& aMetrics,
+                    const gfxRect& aTargetBBox,
+                    const gfxSize& aUserSpaceToFilterSpaceScale);
 
   /**
    * Returns true if the filter instance was created successfully.
@@ -137,7 +133,7 @@ class nsSVGFilterInstance {
   /**
    * Finds the filter frame associated with this SVG filter.
    */
-  nsSVGFilterFrame* GetFilterFrame(nsIFrame* aTargetFrame);
+  SVGFilterFrame* GetFilterFrame(nsIFrame* aTargetFrame);
 
   /**
    * Computes the filter primitive subregion for the given primitive.
@@ -217,12 +213,12 @@ class nsSVGFilterInstance {
   /**
    * The filter element referenced by mTargetFrame's element.
    */
-  const mozilla::dom::SVGFilterElement* mFilterElement;
+  const dom::SVGFilterElement* mFilterElement;
 
   /**
    * The frame for the SVG filter element.
    */
-  nsSVGFilterFrame* mFilterFrame;
+  SVGFilterFrame* mFilterFrame;
 
   /**
    * The SVG bbox of the element that is being filtered, in user space.
@@ -265,5 +261,7 @@ class nsSVGFilterInstance {
 
   bool mInitialized;
 };
+
+}  // namespace mozilla
 
 #endif

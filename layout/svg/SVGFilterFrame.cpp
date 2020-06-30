@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGFilterFrame.h"
+#include "SVGFilterFrame.h"
 
 // Keep others in (case-insensitive) order:
 #include "AutoReferenceChainGuard.h"
@@ -15,7 +15,7 @@
 #include "nsGkAtoms.h"
 #include "SVGObserverUtils.h"
 #include "SVGElement.h"
-#include "nsSVGFilterInstance.h"
+#include "SVGFilterInstance.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "nsContentUtils.h"
@@ -23,14 +23,17 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsIFrame* NS_NewSVGFilterFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGFilterFrame(mozilla::PresShell* aPresShell,
+                               mozilla::ComputedStyle* aStyle) {
   return new (aPresShell)
-      nsSVGFilterFrame(aStyle, aPresShell->GetPresContext());
+      mozilla::SVGFilterFrame(aStyle, aPresShell->GetPresContext());
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGFilterFrame)
+namespace mozilla {
 
-uint16_t nsSVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent* aDefault) {
+NS_IMPL_FRAMEARENA_HELPERS(SVGFilterFrame)
+
+uint16_t SVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent* aDefault) {
   SVGAnimatedEnumeration& thisEnum =
       static_cast<SVGFilterElement*>(GetContent())->mEnumAttributes[aIndex];
 
@@ -50,7 +53,7 @@ uint16_t nsSVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent* aDefault) {
         .GetAnimValue();
   }
 
-  nsSVGFilterFrame* next = GetReferencedFilter();
+  SVGFilterFrame* next = GetReferencedFilter();
 
   return next ? next->GetEnumValue(aIndex, aDefault)
               : static_cast<SVGFilterElement*>(aDefault)
@@ -58,8 +61,8 @@ uint16_t nsSVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent* aDefault) {
                     .GetAnimValue();
 }
 
-const SVGAnimatedLength* nsSVGFilterFrame::GetLengthValue(
-    uint32_t aIndex, nsIContent* aDefault) {
+const SVGAnimatedLength* SVGFilterFrame::GetLengthValue(uint32_t aIndex,
+                                                        nsIContent* aDefault) {
   const SVGAnimatedLength* thisLength =
       &static_cast<SVGFilterElement*>(GetContent())->mLengthAttributes[aIndex];
 
@@ -77,15 +80,14 @@ const SVGAnimatedLength* nsSVGFilterFrame::GetLengthValue(
     return &static_cast<SVGFilterElement*>(aDefault)->mLengthAttributes[aIndex];
   }
 
-  nsSVGFilterFrame* next = GetReferencedFilter();
+  SVGFilterFrame* next = GetReferencedFilter();
 
   return next ? next->GetLengthValue(aIndex, aDefault)
               : &static_cast<SVGFilterElement*>(aDefault)
                      ->mLengthAttributes[aIndex];
 }
 
-const SVGFilterElement* nsSVGFilterFrame::GetFilterContent(
-    nsIContent* aDefault) {
+const SVGFilterElement* SVGFilterFrame::GetFilterContent(nsIContent* aDefault) {
   for (nsIContent* child = mContent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     RefPtr<SVGFE> primitive;
@@ -105,13 +107,13 @@ const SVGFilterElement* nsSVGFilterFrame::GetFilterContent(
     return static_cast<SVGFilterElement*>(aDefault);
   }
 
-  nsSVGFilterFrame* next = GetReferencedFilter();
+  SVGFilterFrame* next = GetReferencedFilter();
 
   return next ? next->GetFilterContent(aDefault)
               : static_cast<SVGFilterElement*>(aDefault);
 }
 
-nsSVGFilterFrame* nsSVGFilterFrame::GetReferencedFilter() {
+SVGFilterFrame* SVGFilterFrame::GetReferencedFilter() {
   if (mNoHRefURI) {
     return nullptr;
   }
@@ -132,7 +134,7 @@ nsSVGFilterFrame* nsSVGFilterFrame::GetReferencedFilter() {
   if (tframe) {
     LayoutFrameType frameType = tframe->Type();
     if (frameType == LayoutFrameType::SVGFilter) {
-      return static_cast<nsSVGFilterFrame*>(tframe);
+      return static_cast<SVGFilterFrame*>(tframe);
     }
     // We don't call SVGObserverUtils::RemoveTemplateObserver and set
     // `mNoHRefURI = false` here since we want to be invalidated if the ID
@@ -142,9 +144,9 @@ nsSVGFilterFrame* nsSVGFilterFrame::GetReferencedFilter() {
   return nullptr;
 }
 
-nsresult nsSVGFilterFrame::AttributeChanged(int32_t aNameSpaceID,
-                                            nsAtom* aAttribute,
-                                            int32_t aModType) {
+nsresult SVGFilterFrame::AttributeChanged(int32_t aNameSpaceID,
+                                          nsAtom* aAttribute,
+                                          int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y ||
        aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
@@ -165,11 +167,13 @@ nsresult nsSVGFilterFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 #ifdef DEBUG
-void nsSVGFilterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                            nsIFrame* aPrevInFlow) {
+void SVGFilterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                          nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::filter),
                "Content is not an SVG filter");
 
   nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
+
+}  // namespace mozilla

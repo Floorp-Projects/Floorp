@@ -67,7 +67,7 @@ void SVGFEColorMatrixElement::GetSourceImageNames(
 }
 
 FilterPrimitiveDescription SVGFEColorMatrixElement::GetPrimitiveDescription(
-    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   uint32_t type = mEnumAttributes[TYPE].GetAnimValue();

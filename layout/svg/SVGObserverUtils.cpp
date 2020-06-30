@@ -22,10 +22,10 @@
 #include "nsIReflowCallback.h"
 #include "nsISupportsImpl.h"
 #include "nsSVGClipPathFrame.h"
-#include "nsSVGFilterFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
+#include "SVGFilterFrame.h"
 #include "SVGGeometryElement.h"
 #include "SVGMarkerFrame.h"
 #include "SVGTextFrame.h"
@@ -165,8 +165,8 @@ class SVGFilterObserverList;
  * mFramePresShell may be null, but when mFrame is non-null, mFramePresShell
  * is guaranteed to be non-null, too.
  */
-struct nsSVGFrameReferenceFromProperty {
-  explicit nsSVGFrameReferenceFromProperty(nsIFrame* aFrame)
+struct SVGFrameReferenceFromProperty {
+  explicit SVGFrameReferenceFromProperty(nsIFrame* aFrame)
       : mFrame(aFrame), mFramePresShell(aFrame->PresShell()) {}
 
   // Clear our reference to the frame.
@@ -426,7 +426,7 @@ class nsSVGRenderingObserverProperty : public SVGIDRenderingObserver {
 
   void OnRenderingChange() override;
 
-  nsSVGFrameReferenceFromProperty mFrameReference;
+  SVGFrameReferenceFromProperty mFrameReference;
 };
 
 NS_IMPL_ISUPPORTS(nsSVGRenderingObserverProperty, nsIMutationObserver)
@@ -644,7 +644,7 @@ class SVGFilterObserver final : public SVGIDRenderingObserver {
   /**
    * @return the filter frame, or null if there is no filter frame
    */
-  nsSVGFilterFrame* GetAndObserveFilterFrame();
+  SVGFilterFrame* GetAndObserveFilterFrame();
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -680,8 +680,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SVGFilterObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mObservingContent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-nsSVGFilterFrame* SVGFilterObserver::GetAndObserveFilterFrame() {
-  return static_cast<nsSVGFilterFrame*>(
+SVGFilterFrame* SVGFilterObserver::GetAndObserveFilterFrame() {
+  return static_cast<SVGFilterFrame*>(
       GetAndObserveReferencedFrame(LayoutFrameType::SVGFilter, nullptr));
 }
 
@@ -954,7 +954,7 @@ class SVGTemplateElementObserver : public SVGIDRenderingObserver {
 
   void OnRenderingChange() override;
 
-  nsSVGFrameReferenceFromProperty mFrameReference;
+  SVGFrameReferenceFromProperty mFrameReference;
 };
 
 NS_IMPL_ISUPPORTS(SVGTemplateElementObserver, nsIMutationObserver)
@@ -1239,7 +1239,7 @@ static SVGFilterObserverListForCSSProp* GetOrCreateFilterObserverListForCSS(
 
 static SVGObserverUtils::ReferenceState GetAndObserveFilters(
     SVGFilterObserverListForCSSProp* aObserverList,
-    nsTArray<nsSVGFilterFrame*>* aFilterFrames) {
+    nsTArray<SVGFilterFrame*>* aFilterFrames) {
   if (!aObserverList) {
     return SVGObserverUtils::eHasNoRefs;
   }
@@ -1251,7 +1251,7 @@ static SVGObserverUtils::ReferenceState GetAndObserveFilters(
   }
 
   for (uint32_t i = 0; i < observers.Length(); i++) {
-    nsSVGFilterFrame* filter = observers[i]->GetAndObserveFilterFrame();
+    SVGFilterFrame* filter = observers[i]->GetAndObserveFilterFrame();
     if (!filter) {
       if (aFilterFrames) {
         aFilterFrames->Clear();
@@ -1267,14 +1267,14 @@ static SVGObserverUtils::ReferenceState GetAndObserveFilters(
 }
 
 SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveFilters(
-    nsIFrame* aFilteredFrame, nsTArray<nsSVGFilterFrame*>* aFilterFrames) {
+    nsIFrame* aFilteredFrame, nsTArray<SVGFilterFrame*>* aFilterFrames) {
   SVGFilterObserverListForCSSProp* observerList =
       GetOrCreateFilterObserverListForCSS(aFilteredFrame);
   return ::GetAndObserveFilters(observerList, aFilterFrames);
 }
 
 SVGObserverUtils::ReferenceState SVGObserverUtils::GetFiltersIfObserving(
-    nsIFrame* aFilteredFrame, nsTArray<nsSVGFilterFrame*>* aFilterFrames) {
+    nsIFrame* aFilteredFrame, nsTArray<SVGFilterFrame*>* aFilterFrames) {
   SVGFilterObserverListForCSSProp* observerList =
       aFilteredFrame->GetProperty(FilterProperty());
   return ::GetAndObserveFilters(observerList, aFilterFrames);
