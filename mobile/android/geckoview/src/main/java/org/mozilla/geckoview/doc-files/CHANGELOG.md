@@ -13,6 +13,10 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v80
+- Removed `GeckoSession.hashCode` and `GeckoSession.equals` overrides in favor
+  of the default implementations. ([bug 1647883]({{bugzilla}}1647883))
+
 ## v79
 - Added `runtime.openOptionsPage` support. For `options_ui.open_in_new_tab` ==
   `false`, [`TabDelegate.onOpenOptionsPage`][79.1] is called.
