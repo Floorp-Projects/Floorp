@@ -144,25 +144,16 @@ And then you can follow the normal build process again (only *faster*!)
 
 For more information on aspects such as technical limitations of artifact builds, read the [Artifact Builds](https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds) page.
 
-## Maybe you don't even need to build
+### Updating worker code requires a few extra steps
 
-Working in DevTools generally involves editing JavaScript files only. This means that often you don't even need to run `./mach build`.
+#### Prerequisite
 
-Instead, you just need to save the files you modified, and restart Firefox. To achieve this, you *could* quit Firefox, and reopen it again with `./mach run`. Or you could use the `Restart (Developer)` option that is available under the `File` menu in local builds (or its respective shortcut).
+1. Install yarn 1.x globally via `npm install -g yarn` if you do not have it installed globally already.
+2. Go to the `client/debugger/` directory and run `npm install`.
 
-![Image of Restart (Developer) option under File menu](restart.png)
+#### Regenerating work bundle
 
-That would be equivalent to the following pseudocode, performed manually:
-
-```bash
-# 1. Build
-./mach build
-# 2. Run
-./mach run
-# 3. you try out things in the browser that opens
-# 4. fully close the browser, e.g. ⌘Q in MacOS
-# 5. edit JS files on the `devtools` folder, save
-# 6. Back to step 2!
-./mach run
-```
+1. Save the modified files.
+2. Back in your terminal, under `client/debugger/` directory, execute `node bin/build`.
+3. After completion, use the `Restart (Developer)` option that is available under the `File` menu in local builds (or its respective shortcut).
 
