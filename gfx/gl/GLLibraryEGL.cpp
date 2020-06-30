@@ -61,6 +61,7 @@ static const char* sEGLExtensionNames[] = {
     "EGL_KHR_fence_sync",
     "EGL_ANDROID_native_fence_sync",
     "EGL_ANDROID_image_crop",
+    "EGL_ANDROID_get_native_client_buffer",
     "EGL_ANGLE_platform_angle",
     "EGL_ANGLE_platform_angle_d3d",
     "EGL_ANGLE_d3d_share_handle_client_buffer",
@@ -635,6 +636,17 @@ bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
           "EGL supports ANDROID_native_fence_sync without exposing its "
           "functions!");
       MarkExtensionUnsupported(ANDROID_native_fence_sync);
+    }
+  }
+
+  if (IsExtensionSupported(ANDROID_get_native_client_buffer)) {
+    const SymLoadStruct nativeClientBufferSymbols[] = {
+        SYMBOL(GetNativeClientBufferANDROID), END_OF_SYMBOLS};
+    if (!fnLoadSymbols(nativeClientBufferSymbols)) {
+      NS_ERROR(
+          "EGL supports ANDROID_get_native_client_buffer without exposing its "
+          "functions!");
+      MarkExtensionUnsupported(ANDROID_get_native_client_buffer);
     }
   }
 
