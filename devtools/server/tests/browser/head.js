@@ -88,7 +88,6 @@ async function initAccessibilityFrontsForUrl(
     "parentaccessibility"
   );
   const accessibility = await target.getFront("accessibility");
-  await accessibility.bootstrap();
   const a11yWalker = accessibility.accessibleWalkerFront;
   if (enableByDefault) {
     await parentAccessibility.enable();

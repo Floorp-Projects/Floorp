@@ -50,7 +50,7 @@ function AccessibilityPanel(iframeWindow, toolbox) {
   this._toolbox = toolbox;
 
   this.onTabNavigated = this.onTabNavigated.bind(this);
-  this.onTargetAvailable = this.onTargetAvailable.bind(this);
+  this.onTargetUpdated = this.onTargetUpdated.bind(this);
   this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
   this.onNewAccessibleFrontSelected = this.onNewAccessibleFrontSelected.bind(
     this
@@ -101,12 +101,10 @@ AccessibilityPanel.prototype = {
     this.shouldRefresh = true;
 
     this.accessibilityProxy = new AccessibilityProxy(this._toolbox);
-    await this.accessibilityProxy.initialize();
-
-    await this._toolbox.targetList.watchTargets(
-      [this._toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable
+    this.accessibilityProxy.startListeningForTargetUpdated(
+      this.onTargetUpdated
     );
+    await this.accessibilityProxy.initialize();
 
     // Bug 1602075: if auto init feature is enabled, enable accessibility
     // service if necessary.
@@ -176,10 +174,9 @@ AccessibilityPanel.prototype = {
     this._opening.then(() => this.refresh());
   },
 
-  async onTargetAvailable({ targetFront, isTargetSwitching }) {
+  onTargetUpdated({ targetFront, isTargetSwitching }) {
     if (targetFront.isTopLevel) {
-      await this.accessibilityProxy.initializeProxyForPanel(targetFront);
-      this.accessibilityProxy.currentTarget.on("navigate", this.onTabNavigated);
+      targetFront.on("navigate", this.onTabNavigated);
     }
 
     if (isTargetSwitching) {
@@ -324,14 +321,12 @@ AccessibilityPanel.prototype = {
     }
     this._destroyed = true;
 
-    this._toolbox.targetList.unwatchTargets(
-      [this._toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable
-    );
-
     this.postContentMessage("destroy");
 
     if (this.accessibilityProxy) {
+      this.accessibilityProxy.stopListeningForTargetUpdated(
+        this.onTargetUpdated
+      );
       this.accessibilityProxy.currentTarget.off(
         "navigate",
         this.onTabNavigated
