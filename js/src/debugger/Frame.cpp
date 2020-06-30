@@ -256,6 +256,7 @@ DebuggerFrame* DebuggerFrame::create(
 
   if (maybeGenerator) {
     if (!frame->setGeneratorInfo(cx, maybeGenerator)) {
+      frame->freeFrameIterData(cx->runtime()->defaultFreeOp());
       return nullptr;
     }
   }
@@ -386,7 +387,19 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
   return true;
 }
 
-void DebuggerFrame::clearGeneratorInfo(JSFreeOp* fop) {
+void DebuggerFrame::terminate(JSFreeOp* fop, AbstractFramePtr frame) {
+  if (frameIterData()) {
+    // If no frame pointer was provided to decrement the stepper counter,
+    // then we must be terminating a generator, otherwise the stepper count
+    // would have no way to synchronize properly.
+    MOZ_ASSERT_IF(!frame, hasGeneratorInfo());
+
+    freeFrameIterData(fop);
+    if (frame && !hasGeneratorInfo()) {
+      maybeDecrementStepperCounter(fop, frame);
+    }
+  }
+
   if (!hasGeneratorInfo()) {
     return;
   }
@@ -409,6 +422,15 @@ void DebuggerFrame::clearGeneratorInfo(JSFreeOp* fop) {
   // 1) The DebuggerFrame must no longer point to the AbstractGeneratorObject.
   setReservedSlot(GENERATOR_INFO_SLOT, UndefinedValue());
   fop->delete_(this, info, MemoryUse::DebuggerFrameGeneratorInfo);
+}
+
+void DebuggerFrame::suspend(JSFreeOp* fop) {
+  // There must be generator info because otherwise this would be the same
+  // overall behavior as terminate() except that here we do not properly
+  // adjust stepper counts.
+  MOZ_ASSERT(hasGeneratorInfo());
+
+  freeFrameIterData(fop);
 }
 
 /* static */
@@ -1192,10 +1214,10 @@ void DebuggerFrame::finalize(JSFreeOp* fop, JSObject* obj) {
   DebuggerFrame& frameobj = obj->as<DebuggerFrame>();
 
   // Connections between dying Debugger.Frames and their
-  // AbstractGeneratorObjects should have been broken in DebugAPI::sweepAll.
+  // AbstractGeneratorObjects, as well as the frame's stack data should have
+  // been by a call to terminate() from sweepAll or some other place.
   MOZ_ASSERT(!frameobj.hasGeneratorInfo());
-
-  frameobj.freeFrameIterData(fop);
+  MOZ_ASSERT(!frameobj.frameIterData());
   OnStepHandler* onStepHandler = frameobj.onStepHandler();
   if (onStepHandler) {
     onStepHandler->drop(fop, &frameobj);
