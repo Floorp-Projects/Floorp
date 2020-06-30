@@ -209,7 +209,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // DocShell, BrowserParent, or BrowserBridgeChild.
   static already_AddRefed<BrowsingContext> CreateDetached(
       nsGlobalWindowInner* aParent, BrowsingContext* aOpener,
-      BrowsingContextGroup* aSpecificGroup, const nsAString& aName, Type aType);
+      const nsAString& aName, Type aType);
 
   void EnsureAttached();
 
