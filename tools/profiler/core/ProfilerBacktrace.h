@@ -9,7 +9,6 @@
 
 #include "ProfileBuffer.h"
 
-#include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 class ProfileBuffer;
@@ -28,7 +27,7 @@ class ProfilerBacktrace {
  public:
   ProfilerBacktrace(
       const char* aName, int aThreadId,
-      mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aProfileChunkedBuffer,
+      UniquePtr<mozilla::ProfileChunkedBuffer> aProfileChunkedBuffer,
       mozilla::UniquePtr<ProfileBuffer> aProfileBuffer);
   ~ProfilerBacktrace();
 
@@ -44,16 +43,14 @@ class ProfilerBacktrace {
 
  private:
   // Used to serialize a ProfilerBacktrace.
-  friend struct mozilla::ProfileBufferEntryWriter::Serializer<
-      ProfilerBacktrace>;
-  friend struct mozilla::ProfileBufferEntryReader::Deserializer<
-      ProfilerBacktrace>;
+  friend struct ProfileBufferEntryWriter::Serializer<ProfilerBacktrace>;
+  friend struct ProfileBufferEntryReader::Deserializer<ProfilerBacktrace>;
 
   mozilla::UniqueFreePtr<char> mName;
   int mThreadId;
   // `ProfileChunkedBuffer` in which `mProfileBuffer` stores its data; must be
   // located before `mProfileBuffer` so that it's destroyed after.
-  mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> mProfileChunkedBuffer;
+  UniquePtr<mozilla::ProfileChunkedBuffer> mProfileChunkedBuffer;
   mozilla::UniquePtr<ProfileBuffer> mProfileBuffer;
 };
 
@@ -62,7 +59,7 @@ namespace mozilla {
 // Format: [ UniquePtr<BlockRingsBuffer> | threadId | name ]
 // Initial len==0 marks a nullptr or empty backtrace.
 template <>
-struct mozilla::ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
+struct ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
   static Length Bytes(const ProfilerBacktrace& aBacktrace) {
     if (!aBacktrace.mProfileBuffer) {
       return ULEB128Size<Length>(0);
@@ -75,7 +72,7 @@ struct mozilla::ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
            SumBytes(aBacktrace.mThreadId,
                     WrapProfileBufferUnownedCString(aBacktrace.mName.get()));
   }
-  static void Write(mozilla::ProfileBufferEntryWriter& aEW,
+  static void Write(ProfileBufferEntryWriter& aEW,
                     const ProfilerBacktrace& aBacktrace) {
     if (!aBacktrace.mProfileBuffer ||
         SumBytes(*aBacktrace.mProfileChunkedBuffer) == 0) {
@@ -89,18 +86,18 @@ struct mozilla::ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
 };
 
 template <typename Destructor>
-struct mozilla::ProfileBufferEntryWriter::Serializer<
-    mozilla::UniquePtr<ProfilerBacktrace, Destructor>> {
+struct ProfileBufferEntryWriter::Serializer<
+    UniquePtr<ProfilerBacktrace, Destructor>> {
   static Length Bytes(
-      const mozilla::UniquePtr<ProfilerBacktrace, Destructor>& aBacktrace) {
+      const UniquePtr<ProfilerBacktrace, Destructor>& aBacktrace) {
     if (!aBacktrace) {
       return ULEB128Size<Length>(0);
     }
     return SumBytes(*aBacktrace);
   }
   static void Write(
-      mozilla::ProfileBufferEntryWriter& aEW,
-      const mozilla::UniquePtr<ProfilerBacktrace, Destructor>& aBacktrace) {
+      ProfileBufferEntryWriter& aEW,
+      const UniquePtr<ProfilerBacktrace, Destructor>& aBacktrace) {
     if (!aBacktrace) {
       aEW.WriteULEB128(0u);
       return;
@@ -109,17 +106,16 @@ struct mozilla::ProfileBufferEntryWriter::Serializer<
   }
 };
 template <typename Destructor>
-struct mozilla::ProfileBufferEntryReader::Deserializer<
-    mozilla::UniquePtr<ProfilerBacktrace, Destructor>> {
-  static void ReadInto(
-      mozilla::ProfileBufferEntryReader& aER,
-      mozilla::UniquePtr<ProfilerBacktrace, Destructor>& aBacktrace) {
+struct ProfileBufferEntryReader::Deserializer<
+    UniquePtr<ProfilerBacktrace, Destructor>> {
+  static void ReadInto(ProfileBufferEntryReader& aER,
+                       UniquePtr<ProfilerBacktrace, Destructor>& aBacktrace) {
     aBacktrace = Read(aER);
   }
-  static mozilla::UniquePtr<ProfilerBacktrace, Destructor> Read(
-      mozilla::ProfileBufferEntryReader& aER) {
+  static UniquePtr<ProfilerBacktrace, Destructor> Read(
+      ProfileBufferEntryReader& aER) {
     auto profileChunkedBuffer =
-        aER.ReadObject<mozilla::UniquePtr<ProfileChunkedBuffer>>();
+        aER.ReadObject<UniquePtr<ProfileChunkedBuffer>>();
     if (!profileChunkedBuffer) {
       return nullptr;
     }
@@ -129,10 +125,9 @@ struct mozilla::ProfileBufferEntryReader::Deserializer<
     int threadId = aER.ReadObject<int>();
     std::string name = aER.ReadObject<std::string>();
     auto profileBuffer = MakeUnique<ProfileBuffer>(*profileChunkedBuffer);
-    return mozilla::UniquePtr<ProfilerBacktrace, Destructor>{
-        new ProfilerBacktrace(name.c_str(), threadId,
-                              std::move(profileChunkedBuffer),
-                              std::move(profileBuffer))};
+    return UniquePtr<ProfilerBacktrace, Destructor>{new ProfilerBacktrace(
+        name.c_str(), threadId, std::move(profileChunkedBuffer),
+        std::move(profileBuffer))};
   }
 };
 
