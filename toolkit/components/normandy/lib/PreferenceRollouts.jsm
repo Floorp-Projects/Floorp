@@ -24,6 +24,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "CleanupManager",
+  "resource://normandy/lib/CleanupManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "PrefUtils",
   "resource://normandy/lib/PrefUtils.jsm"
 );
@@ -170,6 +175,8 @@ var PreferenceRollouts = {
   },
 
   async init() {
+    CleanupManager.addCleanupHandler(() => this.saveStartupPrefs());
+
     for (const rollout of await this.getAllActive()) {
       TelemetryEnvironment.setExperimentActive(rollout.slug, rollout.state, {
         type: "normandy-prefrollout",
@@ -177,10 +184,6 @@ var PreferenceRollouts = {
           rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     }
-  },
-
-  async uninit() {
-    await this.saveStartupPrefs();
   },
 
   /** When Telemetry is disabled, clear all identifiers from the stored rollouts.  */
