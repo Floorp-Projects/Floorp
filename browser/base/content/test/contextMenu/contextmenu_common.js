@@ -432,14 +432,7 @@ async function test_contextmenu(selector, menuItems, options = {}) {
   if (menuItems) {
     if (Services.prefs.getBoolPref("devtools.inspector.enabled", true)) {
       const inspectItems = ["---", null];
-      if (
-        Services.prefs.getBoolPref("devtools.accessibility.enabled", true) &&
-        (Services.appinfo.accessibilityEnabled ||
-          Services.prefs.getBoolPref(
-            "devtools.accessibility.auto-init.enabled",
-            false
-          ))
-      ) {
+      if (Services.prefs.getBoolPref("devtools.accessibility.enabled", true)) {
         inspectItems.push("context-inspect-a11y", true);
       }
 
