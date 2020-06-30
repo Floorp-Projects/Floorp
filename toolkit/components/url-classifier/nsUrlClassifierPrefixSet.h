@@ -9,12 +9,10 @@
 
 #include "nsISupportsUtils.h"
 #include "nsID.h"
-#include "nsIMemoryReporter.h"
 #include "nsIUrlClassifierPrefixSet.h"
 #include "nsTArray.h"
 #include "nsToolkitCompsCID.h"
 #include "mozilla/FileUtils.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Poison.h"
 
@@ -29,8 +27,7 @@ class VariableLengthPrefixSet;
 }  // namespace safebrowsing
 }  // namespace mozilla
 
-class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet,
-                                       public nsIMemoryReporter {
+class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet {
  public:
   nsUrlClassifierPrefixSet();
 
@@ -48,7 +45,6 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet,
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIMEMORYREPORTER
 
   friend class mozilla::safebrowsing::VariableLengthPrefixSet;
 
@@ -84,7 +80,6 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet,
   uint32_t mTotalPrefixes;
 
   nsCString mName;
-  nsCString mMemoryReportPath;
   mozilla::CorruptionCanary mCanary;
 };
 

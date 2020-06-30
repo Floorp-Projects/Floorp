@@ -470,6 +470,7 @@ size_t VariableLengthPrefixSet::SizeOfIncludingThis(
 
   size_t n = 0;
   n += aMallocSizeOf(this);
+
   n += mFixedPrefixSet->SizeOfIncludingThis(moz_malloc_size_of) -
        aMallocSizeOf(mFixedPrefixSet);
 
