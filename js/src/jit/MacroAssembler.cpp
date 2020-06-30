@@ -1815,6 +1815,40 @@ void MacroAssembler::guardGroupHasUnanalyzedNewScript(Register group,
   bind(&noNewScript);
 }
 
+void MacroAssembler::guardSpecificAtom(Register str, JSAtom* atom,
+                                       Register scratch,
+                                       const LiveRegisterSet& volatileRegs,
+                                       Label* fail) {
+  Label done;
+  branchPtr(Assembler::Equal, str, ImmGCPtr(atom), &done);
+
+  // The pointers are not equal, so if the input string is also an atom it
+  // must be a different string.
+  branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+               Imm32(JSString::ATOM_BIT), fail);
+
+  // Check the length.
+  branch32(Assembler::NotEqual, Address(str, JSString::offsetOfLength()),
+           Imm32(atom->length()), fail);
+
+  // We have a non-atomized string with the same length. Call a helper
+  // function to do the comparison.
+  PushRegsInMask(volatileRegs);
+
+  setupUnalignedABICall(scratch);
+  movePtr(ImmGCPtr(atom), scratch);
+  passABIArg(scratch);
+  passABIArg(str);
+  callWithABI(JS_FUNC_TO_DATA_PTR(void*, EqualStringsHelperPure));
+  mov(ReturnReg, scratch);
+
+  MOZ_ASSERT(!volatileRegs.has(scratch));
+  PopRegsInMask(volatileRegs);
+  branchIfFalseBool(scratch, fail);
+
+  bind(&done);
+}
+
 void MacroAssembler::generateBailoutTail(Register scratch,
                                          Register bailoutInfo) {
   loadJSContext(scratch);
