@@ -2,7 +2,7 @@
 
 # AddonMigrationResult
 
-`sealed class AddonMigrationResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L41)
+`sealed class AddonMigrationResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L44)
 
 Result of an add-on migration.
 

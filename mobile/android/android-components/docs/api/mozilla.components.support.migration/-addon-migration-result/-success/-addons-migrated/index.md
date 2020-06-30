@@ -2,7 +2,7 @@
 
 # AddonsMigrated
 
-`data class AddonsMigrated : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L54)
+`data class AddonsMigrated : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L57)
 
 Successfully migrated add-ons.
 
