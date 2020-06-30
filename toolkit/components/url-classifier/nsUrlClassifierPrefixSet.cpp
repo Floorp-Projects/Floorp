@@ -16,7 +16,6 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
@@ -32,8 +31,7 @@ static LazyLogModule gUrlClassifierPrefixSetLog("UrlClassifierPrefixSet");
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(gUrlClassifierPrefixSetLog, mozilla::LogLevel::Debug)
 
-NS_IMPL_ISUPPORTS(nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet,
-                  nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet)
 
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
     : mLock("nsUrlClassifierPrefixSet.mLock"), mTotalPrefixes(0) {}
@@ -41,17 +39,11 @@ nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::Init(const nsACString& aName) {
   mName = aName;
-  mMemoryReportPath = nsPrintfCString(
-      "explicit/storage/prefix-set/%s",
-      (!aName.IsEmpty() ? PromiseFlatCString(aName).get() : "?!"));
-
-  RegisterWeakMemoryReporter(this);
 
   return NS_OK;
 }
 
 nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet() {
-  UnregisterWeakMemoryReporter(this);
 }
 
 void nsUrlClassifierPrefixSet::Clear() {
@@ -314,25 +306,6 @@ nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound) {
   if (diff == 0) {
     *aFound = true;
   }
-
-  return NS_OK;
-}
-
-MOZ_DEFINE_MALLOC_SIZE_OF(UrlClassifierMallocSizeOf)
-
-NS_IMETHODIMP
-nsUrlClassifierPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                         nsISupports* aData, bool aAnonymize) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // No need to get mLock here because this function does not directly touch
-  // the class's data members. (SizeOfIncludingThis() will get mLock, however.)
-
-  aHandleReport->Callback(
-      EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES,
-      SizeOfIncludingThis(UrlClassifierMallocSizeOf),
-      NS_LITERAL_CSTRING("Memory used by the prefix set for a URL classifier."),
-      aData);
 
   return NS_OK;
 }
