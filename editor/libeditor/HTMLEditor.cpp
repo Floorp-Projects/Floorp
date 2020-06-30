@@ -2556,7 +2556,7 @@ Element* HTMLEditor::GetInclusiveAncestorByTagNameInternal(
       }
     } else if (&aTagName == nsGkAtoms::list_) {
       // Match "ol", "ul", or "dl" for lists
-      if (HTMLEditUtils::IsList(element)) {
+      if (HTMLEditUtils::IsAnyListElement(element)) {
         return element;
       }
     } else if (&aTagName == nsGkAtoms::td) {
@@ -5251,7 +5251,7 @@ bool HTMLEditor::IsEmptyNodeImpl(nsINode& aNode, bool aSingleBRDoesntCount,
           // if they contain other lists or tables
           if (child->IsElement()) {
             if (isListItemOrCell) {
-              if (HTMLEditUtils::IsList(child) ||
+              if (HTMLEditUtils::IsAnyListElement(child) ||
                   child->IsHTMLElement(nsGkAtoms::table)) {
                 // break out if we find we aren't empty
                 return false;

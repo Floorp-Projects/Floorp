@@ -1287,7 +1287,8 @@ nsresult ParagraphStateAtSelection::CollectEditableFormatNodesInSelection(
     // replace it with a list of any editable non-table content.  Ditto for
     // list elements.
     if (HTMLEditUtils::IsAnyTableElement(content) ||
-        HTMLEditUtils::IsList(content) || HTMLEditUtils::IsListItem(content)) {
+        HTMLEditUtils::IsAnyListElement(content) ||
+        HTMLEditUtils::IsListItem(content)) {
       aArrayOfContents.RemoveElementAt(i);
       aHTMLEditor.CollectChildren(content, aArrayOfContents, i,
                                   HTMLEditor::CollectListChildren::Yes,
@@ -4256,7 +4257,7 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
   }
 
   // Joining a list item to its parent is a NOP.
-  if (HTMLEditUtils::IsList(leftBlockElement) &&
+  if (HTMLEditUtils::IsAnyListElement(leftBlockElement) &&
       HTMLEditUtils::IsListItem(rightBlockElement) &&
       rightBlockElement->GetParentNode() == leftBlockElement) {
     return EditActionHandled();
@@ -5282,7 +5283,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       continue;
     }
 
-    if (HTMLEditUtils::IsList(content)) {
+    if (HTMLEditUtils::IsAnyListElement(content)) {
       // If we met a list element and current list element is not a descendant
       // of the list, append current node to end of the current list element.
       // Then, wrap it with list item element and delete the old container.
@@ -5394,7 +5395,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         if (!curList) {
           curList = atContent.GetContainerAsElement();
           NS_WARNING_ASSERTION(
-              HTMLEditUtils::IsList(curList),
+              HTMLEditUtils::IsAnyListElement(curList),
               "Current list item parent is not a list element");
         }
         // If current list item element is not a child of current list element,
@@ -5463,7 +5464,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       continue;
     }
 
-    MOZ_ASSERT(!HTMLEditUtils::IsList(content) &&
+    MOZ_ASSERT(!HTMLEditUtils::IsAnyListElement(content) &&
                !HTMLEditUtils::IsListItem(content));
 
     // If current node is a `<div>` element, replace it in the array with
@@ -5670,7 +5671,7 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction() {
       }
       continue;
     }
-    if (HTMLEditUtils::IsList(content)) {
+    if (HTMLEditUtils::IsAnyListElement(content)) {
       // node is a list, move list items out
       nsresult rv =
           DestroyListStructureRecursively(MOZ_KnownLive(*content->AsElement()));
@@ -5949,7 +5950,7 @@ EditActionResult HTMLEditor::IndentAsSubAction() {
 nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
                                      const EditorDOMPoint& aCurPoint,
                                      nsIContent& aContent) {
-  MOZ_ASSERT(HTMLEditUtils::IsList(aCurPoint.GetContainer()),
+  MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(aCurPoint.GetContainer()),
              "unexpected container");
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
@@ -5960,7 +5961,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
   // same type (li/ol) as aContent was a part it.
   if (nsIContent* nextEditableSibling =
           GetNextHTMLSibling(&aContent, SkipWhiteSpace::Yes)) {
-    if (HTMLEditUtils::IsList(nextEditableSibling) &&
+    if (HTMLEditUtils::IsAnyListElement(nextEditableSibling) &&
         aCurPoint.GetContainer()->NodeInfo()->NameAtom() ==
             nextEditableSibling->NodeInfo()->NameAtom() &&
         aCurPoint.GetContainer()->NodeInfo()->NamespaceID() ==
@@ -5981,7 +5982,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
   // the same type (li/ol) as aContent was a part of.
   if (nsCOMPtr<nsIContent> previousEditableSibling =
           GetPriorHTMLSibling(&aContent, SkipWhiteSpace::Yes)) {
-    if (HTMLEditUtils::IsList(previousEditableSibling) &&
+    if (HTMLEditUtils::IsAnyListElement(previousEditableSibling) &&
         aCurPoint.GetContainer()->NodeInfo()->NameAtom() ==
             previousEditableSibling->NodeInfo()->NameAtom() &&
         aCurPoint.GetContainer()->NodeInfo()->NamespaceID() ==
@@ -6233,7 +6234,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
       continue;
     }
 
-    if (HTMLEditUtils::IsList(atContent.GetContainer())) {
+    if (HTMLEditUtils::IsAnyListElement(atContent.GetContainer())) {
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
       nsresult rv =
@@ -6442,7 +6443,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
       continue;
     }
 
-    if (HTMLEditUtils::IsList(atContent.GetContainer())) {
+    if (HTMLEditUtils::IsAnyListElement(atContent.GetContainer())) {
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
       nsresult rv =
@@ -6923,8 +6924,8 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
       // If we reach a block element which indents its children with start
       // margin, we should remove it at next time.
       if (startMargin > 0 &&
-          !(HTMLEditUtils::IsList(atContent.GetContainer()) &&
-            HTMLEditUtils::IsList(content))) {
+          !(HTMLEditUtils::IsAnyListElement(atContent.GetContainer()) &&
+            HTMLEditUtils::IsAnyListElement(content))) {
         indentedParentElement = parentContent->AsElement();
         firstContentToBeOutdented = content;
         lastContentToBeOutdented = content;
@@ -6943,9 +6944,9 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
     // XXX This is buggy.  When both lists' item types are different,
     //     we create invalid tree.  E.g., `<ul>` may have `<dd>` as its
     //     list item element.
-    if (HTMLEditUtils::IsList(atContent.GetContainer())) {
+    if (HTMLEditUtils::IsAnyListElement(atContent.GetContainer())) {
       // Move node out of list
-      if (HTMLEditUtils::IsList(content)) {
+      if (HTMLEditUtils::IsAnyListElement(content)) {
         // Just unwrap this sublist
         nsresult rv = RemoveBlockContainerWithTransaction(
             MOZ_KnownLive(*content->AsElement()));
@@ -6963,7 +6964,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
 
     // If current content is a list element but its parent is not a list
     // element, move children to where it is and remove it from the tree.
-    if (HTMLEditUtils::IsList(content)) {
+    if (HTMLEditUtils::IsAnyListElement(content)) {
       // XXX If mutation event listener appends new children forever, this
       //     becomes an infinite loop so that we should set limitation from
       //     first child count.
@@ -6982,7 +6983,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
           continue;
         }
 
-        if (HTMLEditUtils::IsList(lastChildContent)) {
+        if (HTMLEditUtils::IsAnyListElement(lastChildContent)) {
           // We have an embedded list, so move it out from under the parent
           // list. Be sure to put it after the parent list because this
           // loop iterates backwards through the parent's list of children.
@@ -7192,7 +7193,7 @@ CreateElementResult HTMLEditor::ChangeListElementType(Element& aListElement,
       childContent = newListItemElement;
       continue;
     }
-    if (HTMLEditUtils::IsList(childContent->AsElement()) &&
+    if (HTMLEditUtils::IsAnyListElement(childContent->AsElement()) &&
         !childContent->IsHTMLElement(&aNewListTag)) {
       // XXX List elements shouldn't have other list elements as their
       //     child.  Why do we handle such invalid tree?
@@ -7678,14 +7679,15 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
     if (content->IsText() &&
         ((HTMLEditUtils::IsAnyTableElement(atContent.GetContainer()) &&
           !HTMLEditUtils::IsTableCellOrCaption(*atContent.GetContainer())) ||
-         HTMLEditUtils::IsList(atContent.GetContainer()) ||
+         HTMLEditUtils::IsAnyListElement(atContent.GetContainer()) ||
          IsEmptyNode(*content))) {
       continue;
     }
 
     // If it's a list item, or a list inside a list, forget any "current" div,
     // and instead put divs inside the appropriate block (td, li, etc.)
-    if (HTMLEditUtils::IsListItem(content) || HTMLEditUtils::IsList(content)) {
+    if (HTMLEditUtils::IsListItem(content) ||
+        HTMLEditUtils::IsAnyListElement(content)) {
       Element* listOrListItemElement = content->AsElement();
       AutoEditorDOMPointOffsetInvalidator lockChild(atContent);
       nsresult rv = RemoveAlignFromDescendants(
@@ -7709,7 +7711,7 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
         continue;
       }
 
-      if (HTMLEditUtils::IsList(atContent.GetContainer())) {
+      if (HTMLEditUtils::IsAnyListElement(atContent.GetContainer())) {
         // If we don't use CSS, add a content to list element: they have to
         // be inside another list, i.e., >= second level of nesting.
         // XXX AlignContentsInAllTableCellsAndListItems() handles only list
@@ -7946,7 +7948,8 @@ EditActionResult HTMLEditor::MaybeDeleteTopMostEmptyAncestor(
       }
       // If the grand parent IS a list element, we'll adjust Selection in
       // AfterEdit().
-      if (!HTMLEditUtils::IsList(atParentOfEmptyBlock.GetContainer())) {
+      if (!HTMLEditUtils::IsAnyListElement(
+              atParentOfEmptyBlock.GetContainer())) {
         RefPtr<Element> brElement =
             InsertBRElementWithTransaction(atParentOfEmptyBlock);
         if (NS_WARN_IF(Destroyed())) {
@@ -8080,7 +8083,7 @@ size_t HTMLEditor::CollectChildren(
   for (nsIContent* content = GetFirstEditableChild(aNode); content;
        content = content->GetNextSibling()) {
     if ((aCollectListChildren == CollectListChildren::Yes &&
-         (HTMLEditUtils::IsList(content) ||
+         (HTMLEditUtils::IsAnyListElement(content) ||
           HTMLEditUtils::IsListItem(content))) ||
         (aCollectTableChildren == CollectTableChildren::Yes &&
          HTMLEditUtils::IsAnyTableElement(content))) {
@@ -9062,7 +9065,7 @@ Element* HTMLEditor::GetParentListElementAtSelection() const {
     nsRange* range = SelectionRefPtr()->GetRangeAt(i);
     for (nsINode* parent = range->GetClosestCommonInclusiveAncestor(); parent;
          parent = parent->GetParentNode()) {
-      if (HTMLEditUtils::IsList(parent)) {
+      if (HTMLEditUtils::IsAnyListElement(parent)) {
         return parent->AsElement();
       }
     }
@@ -9080,7 +9083,7 @@ Element* HTMLEditor::GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
   for (nsIContent* content = aNode.AsContent();
        content && content->IsElement() &&
        (content->IsAnyOfHTMLElements(nsGkAtoms::div, nsGkAtoms::blockquote) ||
-        HTMLEditUtils::IsList(content));
+        HTMLEditUtils::IsAnyListElement(content));
        content = content->GetFirstChild()) {
     if (CountEditableChildren(content) != 1) {
       return content->AsElement();
@@ -9752,7 +9755,8 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
     DebugOnly<bool> advanced = atNextSiblingOfLeftList.AdvanceOffset();
     NS_WARNING_ASSERTION(advanced,
                          "Failed to advance offset after the right list node");
-    if (HTMLEditUtils::IsList(atNextSiblingOfLeftList.GetContainer())) {
+    if (HTMLEditUtils::IsAnyListElement(
+            atNextSiblingOfLeftList.GetContainer())) {
       // If so, move item out of this list and into the grandparent list
       nsresult rv = MoveNodeWithTransaction(aListItem, atNextSiblingOfLeftList);
       if (NS_WARN_IF(Destroyed())) {
@@ -10077,7 +10081,7 @@ nsresult HTMLEditor::RemoveBlockContainerElements(
     if (content->IsAnyOfHTMLElements(
             nsGkAtoms::table, nsGkAtoms::tr, nsGkAtoms::tbody, nsGkAtoms::td,
             nsGkAtoms::li, nsGkAtoms::blockquote, nsGkAtoms::div) ||
-        HTMLEditUtils::IsList(content)) {
+        HTMLEditUtils::IsAnyListElement(content)) {
       // Process any partial progress saved
       if (blockElement) {
         SplitRangeOffFromNodeResult removeMiddleContainerResult =
@@ -10228,7 +10232,8 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       continue;
     }
 
-    if (HTMLEditUtils::IsTable(content) || HTMLEditUtils::IsList(content) ||
+    if (HTMLEditUtils::IsTable(content) ||
+        HTMLEditUtils::IsAnyListElement(content) ||
         content->IsAnyOfHTMLElements(nsGkAtoms::tbody, nsGkAtoms::tr,
                                      nsGkAtoms::td, nsGkAtoms::li,
                                      nsGkAtoms::blockquote, nsGkAtoms::div)) {
@@ -10525,7 +10530,7 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
   EditorDOMPoint ret(&aNodeRight, aNodeLeft.Length());
 
   // Separate join rules for differing blocks
-  if (HTMLEditUtils::IsList(&aNodeLeft) || aNodeLeft.IsText()) {
+  if (HTMLEditUtils::IsAnyListElement(&aNodeLeft) || aNodeLeft.IsText()) {
     // For lists, merge shallow (wouldn't want to combine list items)
     nsresult rv = JoinNodesWithTransaction(aNodeLeft, aNodeRight);
     if (NS_WARN_IF(Destroyed())) {
@@ -11220,7 +11225,7 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
       } else if ((isMailCite = HTMLEditUtils::IsMailCite(content)) ||
                  content->IsHTMLElement(nsGkAtoms::a) ||
                  HTMLEditUtils::IsInlineStyle(content) ||
-                 HTMLEditUtils::IsList(content) ||
+                 HTMLEditUtils::IsAnyListElement(content) ||
                  content->IsHTMLElement(nsGkAtoms::div)) {
         // Only consider certain nodes to be empty for purposes of removal
         isCandidate = true;
@@ -11417,7 +11422,7 @@ nsresult HTMLEditor::LiftUpListItemElement(
   // XXX If aListItemElement is <dl> or <dd> and current parent is <ul> or <ol>,
   //     the list items won't be unwrapped.  If aListItemElement is <li> and its
   //     current parent is <dl>, there is same issue.
-  if (!HTMLEditUtils::IsList(pointToInsertListItem.GetContainer()) &&
+  if (!HTMLEditUtils::IsAnyListElement(pointToInsertListItem.GetContainer()) &&
       HTMLEditUtils::IsListItem(&aListItemElement)) {
     nsresult rv = RemoveBlockContainerWithTransaction(aListItemElement);
     if (NS_WARN_IF(Destroyed())) {
@@ -11443,7 +11448,7 @@ nsresult HTMLEditor::LiftUpListItemElement(
 
 nsresult HTMLEditor::DestroyListStructureRecursively(Element& aListElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(HTMLEditUtils::IsList(&aListElement));
+  MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(&aListElement));
 
   // XXX If mutation event listener inserts new child into `aListElement`,
   //     this becomes infinite loop so that we should set limit of the
@@ -11472,7 +11477,7 @@ nsresult HTMLEditor::DestroyListStructureRecursively(Element& aListElement) {
       continue;
     }
 
-    if (HTMLEditUtils::IsList(child)) {
+    if (HTMLEditUtils::IsAnyListElement(child)) {
       nsresult rv =
           DestroyListStructureRecursively(MOZ_KnownLive(*child->AsElement()));
       if (NS_FAILED(rv)) {
@@ -12144,7 +12149,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     // If current node is a child of a list element, we need another list
     // element in absolute-positioned `<div>` element to avoid non-selected
     // list items are moved into the `<div>` element.
-    if (HTMLEditUtils::IsList(atContent.GetContainer())) {
+    if (HTMLEditUtils::IsAnyListElement(atContent.GetContainer())) {
       // If we cannot move current node to created list element, we need a
       // list element in the target `<div>` element for the destination.
       // Therefore, duplicate same list element into the target `<div>`

@@ -197,9 +197,9 @@ bool HTMLEditUtils::IsTableCellOrCaption(nsINode& aNode) {
 }
 
 /**
- * IsList() returns true if aNode is an html list.
+ * IsAnyListElement() returns true if aNode is an html list.
  */
-bool HTMLEditUtils::IsList(nsINode* aNode) {
+bool HTMLEditUtils::IsAnyListElement(nsINode* aNode) {
   MOZ_ASSERT(aNode);
   return aNode->IsAnyOfHTMLElements(nsGkAtoms::ul, nsGkAtoms::ol,
                                     nsGkAtoms::dl);
