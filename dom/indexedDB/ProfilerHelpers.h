@@ -176,9 +176,7 @@ class MOZ_STACK_CLASS LoggingString final : public nsAutoCString {
     } else if (aKey.IsDate()) {
       AppendPrintf("<Date %g>", aKey.ToDateMsec());
     } else if (aKey.IsString()) {
-      nsAutoString str;
-      aKey.ToString(str);
-      AppendPrintf("\"%s\"", NS_ConvertUTF16toUTF8(str).get());
+      AppendPrintf("\"%s\"", NS_ConvertUTF16toUTF8(aKey.ToString()).get());
     } else if (aKey.IsBinary()) {
       AssignLiteral("[object ArrayBuffer]");
     } else {

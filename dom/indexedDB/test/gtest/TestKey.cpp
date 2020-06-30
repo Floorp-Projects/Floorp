@@ -203,10 +203,7 @@ TEST_P(TestWithParam_CString_String_Pair, Ctor_EncodedString) {
 
   ExpectKeyIsString(key);
 
-  nsString rv;
-  key.ToString(rv);
-
-  EXPECT_EQ(GetParam().second, rv);
+  EXPECT_EQ(GetParam().second, key.ToString());
 }
 
 static const uint8_t zeroLengthStringEncodedBuffer[] = {Key::eString};
@@ -228,10 +225,7 @@ TEST_P(TestWithParam_LiteralString, SetFromString) {
 
   ExpectKeyIsString(key);
 
-  nsString rv;
-  key.ToString(rv);
-
-  EXPECT_EQ(GetParam(), rv);
+  EXPECT_EQ(GetParam(), key.ToString());
 }
 
 INSTANTIATE_TEST_CASE_P(DOM_IndexedDB_Key, TestWithParam_LiteralString,
