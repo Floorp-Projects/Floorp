@@ -1830,10 +1830,14 @@ HttpChannelParent::OnProgress(nsIRequest* aRequest, int64_t aProgress,
     return NS_OK;
   }
 
+  // If IPC channel is open, background channel should be ready to send
+  // OnProgress.
+  MOZ_ASSERT(mBgParent);
+
   // Send OnProgress events to the child for data upload progress notifications
   // (i.e. status == NS_NET_STATUS_SENDING_TO) or if the channel has
   // LOAD_BACKGROUND set.
-  if (!SendOnProgress(aProgress, aProgressMax)) {
+  if (!mBgParent || !mBgParent->OnProgress(aProgress, aProgressMax)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1862,8 +1866,12 @@ HttpChannelParent::OnStatus(nsIRequest* aRequest, nsresult aStatus,
     return NS_OK;
   }
 
+  // If IPC channel is open, background channel should be ready to send
+  // OnStatus.
+  MOZ_ASSERT(mIPCClosed || mBgParent);
+
   // Otherwise, send to child now
-  if (!SendOnStatus(aStatus)) {
+  if (!mBgParent || !mBgParent->OnStatus(aStatus)) {
     return NS_ERROR_UNEXPECTED;
   }
 
