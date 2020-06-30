@@ -1,0 +1,51 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Observer for skip list updates.
+ */
+[scriptable, function, uuid(d8db1086-7b59-44d3-9f88-f31a7e642637)]
+interface nsIPartitioningSkipListObserver : nsISupports
+{
+  /**
+   * Called by nsIPartitioningSkipListService when the skip list
+   * changes and when the observer is first registered.
+   *
+   * @param aList
+   *        A semicolon-separated list of comma-separated url pairs.
+   */
+  void onSkipListUpdate(in ACString aList);
+};
+
+/**
+ * A service that monitors updates to the skip list of partitioning
+ * from sources such as a local pref and remote settings updates.
+ */
+[scriptable, uuid(cf83a9af-dd3f-43a2-88bb-489a22bca124)]
+interface nsIPartitioningSkipListService : nsISupports
+{
+  /**
+   * Register a new observer to skip list updates. When the observer is
+   * registered it is called immediately once. Afterwards it will be called
+   * whenever the specified pref changes or when remote settings for
+   * partitioning updates.
+   *
+   * @param aObserver
+   *        An nsIPartitioningSkipListObserver object or function that
+   *        will receive updates to the skip list as a comma-separated
+   *        string. Will be called immediately with the current skip
+   *        list value.
+   */
+  void registerAndRunSkipListObserver(in nsIPartitioningSkipListObserver aObserver);
+
+  /**
+   * Unregister an observer.
+   *
+   * @param aObserver
+   *        The nsIPartitioningSkipListObserver object to unregister.
+   */
+  void unregisterSkipListObserver(in nsIPartitioningSkipListObserver aObserver);
+};
