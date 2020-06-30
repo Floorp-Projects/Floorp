@@ -73,8 +73,6 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   IPCResult RecvDivertMessages();
 
-  IPCResult RecvOnStartRequestSent();
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void CreateDataBridge();
@@ -93,12 +91,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   // OnStartRequestReceived.
   // return true after both RecvOnStartRequestSend and OnStartRequestReceived
   // are invoked.
-  // When ODA message is from socket process, it is possible that both
-  // RecvOnStartRequestSent and OnStartRequestReceived are not invoked, but
-  // RecvOnTransportAndData is already invoked. In this case, we only need to
-  // check if OnStartRequestReceived is invoked to make sure ODA doesn't happen
-  // before OnStartRequest.
-  bool IsWaitingOnStartRequest(bool aDataFromSocketProcess = false);
+  bool IsWaitingOnStartRequest();
 
   // Associated HttpChannelChild for handling the channel events.
   // Will be removed while failed to create background channel,
@@ -109,10 +102,6 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   // True if OnStartRequest is received by HttpChannelChild.
   // Should only access on STS thread.
   bool mStartReceived = false;
-
-  // True if OnStartRequest is sent by HttpChannelParent.
-  // Should only access on STS thread.
-  bool mStartSent = false;
 
   // Store pending messages that require to be handled after OnStartRequest.
   // Should be flushed after OnStartRequest is received and handled.
