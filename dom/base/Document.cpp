@@ -8110,7 +8110,8 @@ void Document::SetDomain(const nsAString& aDomain, ErrorResult& rv) {
     return;
   }
 
-  rv = NodePrincipal()->SetDomain(newURI);
+  MOZ_ALWAYS_SUCCEEDS(NodePrincipal()->SetDomain(newURI));
+  MOZ_ALWAYS_SUCCEEDS(PartitionedPrincipal()->SetDomain(newURI));
 }
 
 already_AddRefed<nsIURI> Document::CreateInheritingURIForHost(
