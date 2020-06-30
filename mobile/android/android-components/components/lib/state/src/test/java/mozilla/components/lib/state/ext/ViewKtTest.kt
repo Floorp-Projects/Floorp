@@ -4,40 +4,36 @@
 
 package mozilla.components.lib.state.ext
 
-import android.app.Activity
 import android.view.View
-import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.TestAction
 import mozilla.components.lib.state.TestState
 import mozilla.components.lib.state.reducer
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
-import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.Robolectric
+import org.mockito.Mockito.doNothing
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@RunWith(AndroidJUnit4::class)
+@ExperimentalCoroutinesApi
 class ViewKtTest {
 
-    @ExperimentalCoroutinesApi
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     @Synchronized
-    @ExperimentalCoroutinesApi // consumeFrom
     fun `consumeFrom reads states from store`() {
+        val view = mock<View>()
         val owner = MockedLifecycleOwner(Lifecycle.State.INITIALIZED)
 
         val store = Store(
@@ -45,13 +41,10 @@ class ViewKtTest {
             ::reducer
         )
 
-        val view = View(testContext)
-        val activity = Robolectric.buildActivity(Activity::class.java).create().get()
-        activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
-        assertTrue(view.isAttachedToWindow)
-
+        val onAttachListener = argumentCaptor<View.OnAttachStateChangeListener>()
         var receivedValue = 0
         var latch = CountDownLatch(1)
+        doNothing().`when`(view).addOnAttachStateChangeListener(onAttachListener.capture())
 
         view.consumeFrom(store, owner) { state ->
             receivedValue = state.counter
@@ -84,8 +77,7 @@ class ViewKtTest {
         latch = CountDownLatch(1)
 
         // View gets detached
-        activity.windowManager.removeView(view)
-        assertFalse(view.isAttachedToWindow)
+        onAttachListener.value.onViewDetachedFromWindow(view)
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
         assertFalse(latch.await(1, TimeUnit.SECONDS))

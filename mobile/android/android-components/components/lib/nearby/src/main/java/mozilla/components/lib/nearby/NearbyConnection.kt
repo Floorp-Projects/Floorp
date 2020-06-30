@@ -49,13 +49,13 @@ internal fun Payload.toString(errorReporter: (String) -> Unit = { _: String -> U
 @VisibleForTesting
 internal fun String.toPayload(): Payload {
     val bytes = toByteArray(NearbyConnection.PAYLOAD_ENCODING)
-    if (bytes.size <= ConnectionsClient.MAX_BYTES_DATA_SIZE) {
-        return Payload.fromBytes(bytes)
+    return if (bytes.size <= ConnectionsClient.MAX_BYTES_DATA_SIZE) {
+        Payload.fromBytes(bytes)
     } else {
         // Logically, it might make more sense to use Payload.fromFile() since we
         // know the size of the string, than Payload.fromStream(), but we would
         // have to create a file locally to use use the former.
-        return Payload.fromStream(ByteArrayInputStream(bytes))
+        Payload.fromStream(ByteArrayInputStream(bytes))
     }
 }
 

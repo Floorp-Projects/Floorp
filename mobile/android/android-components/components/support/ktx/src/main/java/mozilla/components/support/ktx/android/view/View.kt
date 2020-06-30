@@ -16,7 +16,7 @@ import androidx.annotation.MainThread
 import androidx.core.content.getSystemService
 import androidx.core.view.ViewCompat
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -92,7 +92,7 @@ fun View.setPadding(padding: Padding) {
  */
 @MainThread
 fun View.toScope(): CoroutineScope {
-    val scope = CoroutineScope(Dispatchers.Main)
+    val scope = MainScope()
 
     addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
         override fun onViewAttachedToWindow(view: View) = Unit

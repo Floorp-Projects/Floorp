@@ -4,14 +4,10 @@
 
 package mozilla.components.lib.dataprotect
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
-import org.junit.runner.RunWith
-import java.lang.IllegalArgumentException
 
-@RunWith(AndroidJUnit4::class)
 class KeyUtilsKtTest {
     @Test
     fun `key generation`() {
