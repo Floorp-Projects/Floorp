@@ -101,14 +101,6 @@ job-defaults:
             - --setpref=extensions.logging.enabled=true
     fission-run-on-projects:
         by-app:
-            firefox:
-                by-pageload:
-                    warm:
-                        by-test-platform:
-                            linux64-shippable-qr/opt: ["mozilla-central"]
-                            windows10-64-shippable-qr/opt: ["mozilla-central"]
-                            default: []
-                    default: []
             chrome: []
             chromium: []
             default:
