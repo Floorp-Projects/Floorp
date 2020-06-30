@@ -28,6 +28,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PanelMultiView",
+  "resource:///modules/PanelMultiView.jsm"
+);
+
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -117,12 +123,14 @@ const CustomizableWidgets = [
       );
       // When either of these sub-subviews show, populate them with recently closed
       // objects data.
-      document
-        .getElementById(this.recentlyClosedTabsPanel)
-        .addEventListener("ViewShowing", this);
-      document
-        .getElementById(this.recentlyClosedWindowsPanel)
-        .addEventListener("ViewShowing", this);
+      PanelMultiView.getViewNode(
+        document,
+        this.recentlyClosedTabsPanel
+      ).addEventListener("ViewShowing", this);
+      PanelMultiView.getViewNode(
+        document,
+        this.recentlyClosedWindowsPanel
+      ).addEventListener("ViewShowing", this);
       // When the popup is hidden (thus the panelmultiview node as well), make
       // sure to stop listening to PlacesDatabase updates.
       panelview.panelMultiView.addEventListener("PanelMultiViewHidden", this);
@@ -136,12 +144,14 @@ const CustomizableWidgets = [
       if (this._panelMenuView) {
         this._panelMenuView.uninit();
         delete this._panelMenuView;
-        document
-          .getElementById(this.recentlyClosedTabsPanel)
-          .removeEventListener("ViewShowing", this);
-        document
-          .getElementById(this.recentlyClosedWindowsPanel)
-          .removeEventListener("ViewShowing", this);
+        PanelMultiView.getViewNode(
+          document,
+          this.recentlyClosedTabsPanel
+        ).removeEventListener("ViewShowing", this);
+        PanelMultiView.getViewNode(
+          document,
+          this.recentlyClosedWindowsPanel
+        ).removeEventListener("ViewShowing", this);
       }
       panelMultiView.removeEventListener("PanelMultiViewHidden", this);
     },
