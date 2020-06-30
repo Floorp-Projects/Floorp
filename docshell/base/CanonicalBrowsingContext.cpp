@@ -942,16 +942,8 @@ MediaController* CanonicalBrowsingContext::GetMediaController() {
   return mTabMediaController;
 }
 
-bool CanonicalBrowsingContext::AttemptLoadURIInParent(
-    nsDocShellLoadState* aLoadState) {
-  // We currently only support starting loads directly from the
-  // CanonicalBrowsingContext for top-level BCs.
-  if (!IsTopContent() || !GetContentParent() ||
-      !StaticPrefs::browser_tabs_documentchannel() ||
-      !StaticPrefs::browser_tabs_documentchannel_parent_initiated()) {
-    return false;
-  }
-
+bool CanonicalBrowsingContext::SupportsLoadingInParent(
+    nsDocShellLoadState* aLoadState, uint64_t* aOuterWindowId) {
   // We currently don't support initiating loads in the parent when they are
   // watched by devtools. This is because devtools tracks loads using content
   // process notifications, which happens after the load is initiated in this
@@ -969,7 +961,6 @@ bool CanonicalBrowsingContext::AttemptLoadURIInParent(
     return false;
   }
 
-  uint64_t outerWindowId = 0;
   if (WindowGlobalParent* global = GetCurrentWindowGlobal()) {
     nsCOMPtr<nsIURI> currentURI = global->GetDocumentURI();
     if (currentURI) {
@@ -990,20 +981,72 @@ bool CanonicalBrowsingContext::AttemptLoadURIInParent(
       return false;
     }
 
-    outerWindowId = global->OuterWindowId();
+    *aOuterWindowId = global->OuterWindowId();
+  }
+  return true;
+}
+
+bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
+                                            bool aSetNavigating) {
+  // We currently only support starting loads directly from the
+  // CanonicalBrowsingContext for top-level BCs.
+  // We currently only support starting loads directly from the
+  // CanonicalBrowsingContext for top-level BCs.
+  if (!IsTopContent() || !GetContentParent() ||
+      !StaticPrefs::browser_tabs_documentchannel() ||
+      !StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
+    return false;
+  }
+
+  uint64_t outerWindowId = 0;
+  if (!SupportsLoadingInParent(aLoadState, &outerWindowId)) {
+    return false;
+  }
+
+  // Note: If successful, this will recurse into StartDocumentLoad and
+  // set mCurrentLoad to the DocumentLoadListener instance created.
+  // Ideally in the future we will only start loads from here, and we can
+  // just set this directly instead.
+  return net::DocumentLoadListener::LoadInParent(this, aLoadState,
+                                                 outerWindowId, aSetNavigating);
+}
+
+bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
+    nsDocShellLoadState* aLoadState) {
+  // We currently only support starting loads directly from the
+  // CanonicalBrowsingContext for top-level BCs.
+  // We currently only support starting loads directly from the
+  // CanonicalBrowsingContext for top-level BCs.
+  if (!IsTopContent() || !GetContentParent() ||
+      !StaticPrefs::browser_tabs_documentchannel() ||
+      !StaticPrefs::browser_tabs_documentchannel_parent_initiated() ||
+      StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
+    return false;
+  }
+
+  uint64_t outerWindowId = 0;
+  if (!SupportsLoadingInParent(aLoadState, &outerWindowId)) {
+    return false;
   }
 
   // If we successfully open the DocumentChannel, then it'll register
   // itself using aLoadIdentifier and be kept alive until it completes
   // loading.
-  return net::DocumentLoadListener::OpenFromParent(this, aLoadState,
-                                                   outerWindowId);
+  return net::DocumentLoadListener::SpeculativeLoadInParent(this, aLoadState,
+                                                            outerWindowId);
 }
 
-void CanonicalBrowsingContext::StartDocumentLoad(
+bool CanonicalBrowsingContext::StartDocumentLoad(
     net::DocumentLoadListener* aLoad) {
+  // If we're controlling loads from the parent, then starting a new load means
+  // that we need to cancel any existing ones.
+  if (StaticPrefs::browser_tabs_documentchannel_parent_controlled() &&
+      mCurrentLoad) {
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+  }
   mCurrentLoad = aLoad;
   SetCurrentLoadIdentifier(Some(aLoad->GetLoadIdentifier()));
+  return true;
 }
 
 void CanonicalBrowsingContext::EndDocumentLoad(bool aForProcessSwitch) {

@@ -1584,11 +1584,15 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
       return NS_ERROR_UNEXPECTED;
     }
 
+    if (Canonical()->LoadInParent(aLoadState, aSetNavigating)) {
+      return NS_OK;
+    }
+
     if (ContentParent* cp = Canonical()->GetContentParent()) {
       // Attempt to initiate this load immediately in the parent, if it succeeds
       // it'll return a unique identifier so that we can find it later.
       uint64_t loadIdentifier = 0;
-      if (Canonical()->AttemptLoadURIInParent(aLoadState)) {
+      if (Canonical()->AttemptSpeculativeLoadInParent(aLoadState)) {
         MOZ_DIAGNOSTIC_ASSERT(GetCurrentLoadIdentifier().isSome());
         loadIdentifier = GetCurrentLoadIdentifier().value();
         aLoadState->SetChannelInitialized(true);
