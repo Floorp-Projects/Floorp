@@ -85,7 +85,13 @@ function init_all() {
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
-    document.getElementById("category-experimental").hidden = false;
+    // Set hidden based on previous load's hidden value.
+    document.getElementById(
+      "category-experimental"
+    ).hidden = Services.prefs.getBoolPref(
+      "browser.preferences.experimental.hidden",
+      false
+    );
     register_module("paneExperimental", gExperimentalPane);
   }
   // The Sync category needs to be the last of the "real" categories
@@ -207,7 +213,7 @@ async function gotoPref(aCategory) {
     }
 
     item = categories.querySelector(".category[value=" + category + "]");
-    if (!item) {
+    if (!item || item.hidden) {
       category = kDefaultCategoryInternalName;
       item = categories.querySelector(".category[value=" + category + "]");
     }

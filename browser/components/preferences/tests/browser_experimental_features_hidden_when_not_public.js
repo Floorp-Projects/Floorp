@@ -95,3 +95,47 @@ add_task(async function testNonPublicFeaturesShouldntGetDisplayed() {
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+add_task(async function testNonPublicFeaturesShouldntGetDisplayed() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.preferences.experimental", true],
+      ["browser.preferences.experimental.hidden", false],
+    ],
+  });
+
+  const server = new DefinitionServer();
+  server.addDefinition({
+    id: "test-hidden",
+    isPublic: false,
+    preference: "test.feature.hidden",
+  });
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    `about:preferences?definitionsUrl=${encodeURIComponent(
+      server.definitionsUrl
+    )}#paneExperimental`
+  );
+  let doc = gBrowser.contentDocument;
+
+  await TestUtils.waitForCondition(
+    () => doc.getElementById("category-experimental").hidden,
+    "Wait for Experimental Features section to get hidden"
+  );
+
+  ok(
+    doc.getElementById("category-experimental").hidden,
+    "Experimental Features section should be hidden when all features are hidden"
+  );
+  ok(
+    !doc.getElementById("firefoxExperimentalCategory"),
+    "Experimental Features header should not exist when all features are hidden"
+  );
+  is(
+    doc.querySelector(".category[selected]").id,
+    "category-general",
+    "When the experimental features section is hidden, navigating to #experimental should redirect to #general"
+  );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
