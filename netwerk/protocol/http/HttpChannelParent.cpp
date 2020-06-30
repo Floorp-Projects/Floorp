@@ -83,8 +83,7 @@ HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
       mCacheNeedFlowControlInitialized(false),
       mNeedFlowControl(true),
       mSuspendedForFlowControl(false),
-      mAfterOnStartRequestBegun(false),
-      mStreamFilterAttached(false) {
+      mAfterOnStartRequestBegun(false) {
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
 
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
@@ -1542,8 +1541,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   // Bug 1645901: Currently Set-Cookie is passed to child process on main
   // thread, which is racy with PBackground. We should have a way to set cookie
   // in child for Set-Cookie response header.
-  args.shouldWaitForOnStartRequestSent() =
-      isDocument || hasSetCookie || mStreamFilterAttached;
+  args.shouldWaitForOnStartRequestSent() = isDocument || hasSetCookie;
 
   rv = NS_OK;
 
@@ -2671,7 +2669,6 @@ auto HttpChannelParent::AttachStreamFilter(
     -> RefPtr<ChildEndpointPromise> {
   LOG(("HttpChannelParent::AttachStreamFilter [this=%p]", this));
   MOZ_ASSERT(!mAfterOnStartRequestBegun);
-  mStreamFilterAttached = true;
 
   if (mIPCClosed) {
     return ChildEndpointPromise::CreateAndReject(false, __func__);
