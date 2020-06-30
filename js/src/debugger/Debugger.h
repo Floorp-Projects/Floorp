@@ -895,9 +895,35 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static const JSFunctionSpec methods[];
   static const JSFunctionSpec static_methods[];
 
-  static void removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
-                                                       AbstractFramePtr frame,
-                                                       bool suspending = false);
+  /**
+   * Suspend the DebuggerFrame, clearing on-stack data but leaving it linked
+   * with the AbstractGeneratorObject so it can be re-used later.
+   */
+  static void suspendGeneratorDebuggerFrames(JSContext* cx,
+                                             AbstractFramePtr frame);
+
+  /**
+   * Terminate the DebuggerFrame, clearing all data associated with the frame
+   * so that it cannot be used to introspect stack frame data.
+   */
+  static void terminateDebuggerFrames(JSContext* cx, AbstractFramePtr frame);
+
+  /**
+   * Terminate a given DebuggerFrame, removing all internal state and all
+   * references to the frame from the Debugger itself. If the frame is being
+   * terminated while 'frames' or 'generatorFrames' are being iterated, pass a
+   * pointer to the iteration Enum to remove the entry and ensure that iteration
+   * behaves properly.
+   *
+   * The AbstractFramePtr may be omited in a call so long as it is either
+   * called again later with the correct 'frame', or the frame itself has never
+   * had on-stack data or a 'frames' entry and has never had an onStep handler.
+   */
+  static void terminateDebuggerFrame(
+      JSFreeOp* fop, Debugger* dbg, DebuggerFrame* dbgFrame,
+      AbstractFramePtr frame, FrameMap::Enum* maybeFramesEnum = nullptr,
+      GeneratorWeakMap::Enum* maybeGeneratorFramesEnum = nullptr);
+
   static bool updateExecutionObservabilityOfFrames(
       JSContext* cx, const DebugAPI::ExecutionObservableSet& obs,
       IsObserving observing);
@@ -909,7 +935,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
       IsObserving observing);
 
   template <typename FrameFn /* void (Debugger*, DebuggerFrame*) */>
-  static void forEachDebuggerFrame(AbstractFramePtr frame, FrameFn fn);
+  static void forEachOnStackDebuggerFrame(AbstractFramePtr frame, FrameFn fn);
+  template <typename FrameFn /* void (Debugger*, DebuggerFrame*) */>
+  static void forEachOnStackOrSuspendedDebuggerFrame(JSContext* cx,
+                                                     AbstractFramePtr frame,
+                                                     FrameFn fn);
 
   /*
    * Return a vector containing all Debugger.Frame instances referring to

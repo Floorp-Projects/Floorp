@@ -282,17 +282,19 @@ class DebuggerFrame : public NativeObject {
   MOZ_MUST_USE bool maybeIncrementStepperCounter(JSContext* cx,
                                                  JSScript* script);
   void maybeDecrementStepperCounter(JSFreeOp* fop, JSScript* script);
+  void maybeDecrementStepperCounter(JSFreeOp* fop, AbstractFramePtr referent);
 
   FrameIter::Data* frameIterData() const;
   void setFrameIterData(FrameIter::Data*);
+  void freeFrameIterData(JSFreeOp* fop);
 
  public:
   FrameIter getFrameIter(JSContext* cx);
 
-  MOZ_MUST_USE bool replaceFrameIterData(JSContext* cx, const FrameIter&);
+  void terminate(JSFreeOp* fop, AbstractFramePtr frame);
+  void suspend(JSFreeOp* fop);
 
-  void freeFrameIterData(JSFreeOp* fop);
-  void maybeDecrementStepperCounter(JSFreeOp* fop, AbstractFramePtr referent);
+  MOZ_MUST_USE bool replaceFrameIterData(JSContext* cx, const FrameIter&);
 
   class GeneratorInfo;
   inline GeneratorInfo* generatorInfo() const;
