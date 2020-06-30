@@ -228,6 +228,19 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
   TracingKind mKind;
 };
 
+class BudgetMarkerPayload : public ProfilerMarkerPayload {
+ public:
+  BudgetMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                      const mozilla::TimeStamp& aEndTime)
+      : ProfilerMarkerPayload(aStartTime, aEndTime) {}
+
+  DECL_STREAM_PAYLOAD
+
+ private:
+  explicit BudgetMarkerPayload(CommonProps&& aCommonProps)
+      : ProfilerMarkerPayload(std::move(aCommonProps)) {}
+};
+
 class FileIOMarkerPayload : public ProfilerMarkerPayload {
  public:
   FileIOMarkerPayload(
