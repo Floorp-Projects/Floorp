@@ -4995,6 +4995,9 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 
       // Thread operations
       case uint16_t(Op::ThreadPrefix): {
+        if (f.env().sharedMemoryEnabled == Shareable::False) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
         switch (op.b1) {
           case uint32_t(ThreadOp::Wake):
             CHECK(EmitWake(f));
