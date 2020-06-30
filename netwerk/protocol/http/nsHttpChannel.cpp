@@ -6301,6 +6301,8 @@ nsHttpChannel::Cancel(nsresult status) {
     return NS_OK;
   }
 
+  LogCallingScriptLocation(this);
+
   if (mWaitingForRedirectCallback) {
     LOG(("channel canceled during wait for redirect callback"));
   }
@@ -6484,6 +6486,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
       "security flags in loadInfo but doContentSecurityCheck() not called");
 
   LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
+  LogCallingScriptLocation(this);
 
 #ifdef MOZ_TASK_TRACER
   if (tasktracer::IsStartLogging()) {
@@ -9394,6 +9397,7 @@ nsHttpChannel::SuspendInternal() {
   NS_ENSURE_TRUE(mIsPending, NS_ERROR_NOT_AVAILABLE);
 
   LOG(("nsHttpChannel::SuspendInternal [this=%p]\n", this));
+  LogCallingScriptLocation(this);
 
   ++mSuspendCount;
 
@@ -9435,6 +9439,7 @@ nsHttpChannel::ResumeInternal() {
   NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
 
   LOG(("nsHttpChannel::ResumeInternal [this=%p]\n", this));
+  LogCallingScriptLocation(this);
 
   if (--mSuspendCount == 0) {
     mSuspendTotalTime +=
