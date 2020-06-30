@@ -9882,12 +9882,13 @@ nsresult LocalizeKey(const Key& aBaseKey, const nsCString& aLocale,
   MOZ_ASSERT(aLocalizedKey);
   MOZ_ASSERT(!aLocale.IsEmpty());
 
-  auto result = aBaseKey.ToLocaleAwareKey(*aLocalizedKey, aLocale);
+  auto result = aBaseKey.ToLocaleAwareKey(aLocale);
   if (!result.Is(Ok)) {
     return NS_WARN_IF(result.Is(Exception))
                ? result.AsException().StealNSResult()
                : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
+  *aLocalizedKey = result.Unwrap();
 
   return NS_OK;
 }
@@ -21614,7 +21615,7 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
       return rv;
     }
 
-    Key oldKey, newSortKey, objectStorePosition;
+    Key oldKey, objectStorePosition;
     rv = oldKey.SetFromStatement(readStmt, 0);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -21625,12 +21626,13 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
       return rv;
     }
 
-    auto result = oldKey.ToLocaleAwareKey(newSortKey, aLocale);
+    auto result = oldKey.ToLocaleAwareKey(aLocale);
     if (!result.Is(Ok)) {
       return NS_WARN_IF(result.Is(Exception))
                  ? result.AsException().StealNSResult()
                  : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
+    const auto newSortKey = result.Unwrap();
 
     rv = newSortKey.BindToStatement(writeStmt, kStmtParamNameValueLocale);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -26588,7 +26590,7 @@ void Cursor<CursorType>::SetOptionalKeyRange(
         (range.isOnly() || lowerBound) ? range.lower() : range.upper();
     if constexpr (IsIndexCursor) {
       if (this->IsLocaleAware()) {
-        auto res = bound.ToLocaleAwareKey(localeAwareRangeBound, this->mLocale);
+        auto res = bound.ToLocaleAwareKey(this->mLocale);
 
         // XXX Explain why an error or Invalid result is ignored here (If it's
         // impossible, then
@@ -26596,6 +26598,8 @@ void Cursor<CursorType>::SetOptionalKeyRange(
         if (res.Is(Exception)) {
           res.AsException().SuppressException();
         }
+
+        localeAwareRangeBound = res.Unwrap();
       } else {
         localeAwareRangeBound = bound;
       }

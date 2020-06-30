@@ -161,8 +161,8 @@ class Key {
   IDBResult<void, IDBSpecialValue::Invalid> AppendItem(
       JSContext* aCx, bool aFirstOfArray, JS::Handle<JS::Value> aVal);
 
-  IDBResult<void, IDBSpecialValue::Invalid> ToLocaleAwareKey(
-      Key& aTarget, const nsCString& aLocale) const;
+  IDBResult<Key, IDBSpecialValue::Invalid> ToLocaleAwareKey(
+      const nsCString& aLocale) const;
 
   void FinishArray() { TrimBuffer(); }
 

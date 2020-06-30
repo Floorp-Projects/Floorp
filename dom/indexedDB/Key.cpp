@@ -142,19 +142,18 @@ uint32_t Key::LengthOfEncodedBinary(const EncodedDataType* aPos,
   return iter - aPos - 1;
 }
 
-IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
-    Key& aTarget, const nsCString& aLocale) const {
+IDBResult<Key, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
+    const nsCString& aLocale) const {
+  Key res;
+
   if (IsUnset()) {
-    aTarget.Unset();
-    return Ok();
+    return Ok(res);
   }
 
   if (IsFloat() || IsDate() || IsBinary()) {
-    aTarget.mBuffer = mBuffer;
-    return Ok();
+    res.mBuffer = mBuffer;
+    return Ok(res);
   }
-
-  aTarget.mBuffer.Truncate();
 
   auto* it = BufferStart();
   auto* const end = BufferEnd();
@@ -183,11 +182,11 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
 
   if (canShareBuffers) {
     MOZ_ASSERT(it == end);
-    aTarget.mBuffer = mBuffer;
-    return Ok();
+    res.mBuffer = mBuffer;
+    return Ok(res);
   }
 
-  if (!aTarget.mBuffer.SetCapacity(mBuffer.Length(), fallible)) {
+  if (!res.mBuffer.SetCapacity(mBuffer.Length(), fallible)) {
     return {Exception, ErrorResult{NS_ERROR_OUT_OF_MEMORY}};
   }
 
@@ -195,20 +194,20 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
   auto* const start = BufferStart();
   if (it > start) {
     char* buffer;
-    MOZ_ALWAYS_TRUE(aTarget.mBuffer.GetMutableData(&buffer, it - start));
+    MOZ_ALWAYS_TRUE(res.mBuffer.GetMutableData(&buffer, it - start));
     std::copy(start, it, buffer);
   }
 
   // Now continue decoding
   while (it < end) {
     char* buffer;
-    const uint32_t oldLen = aTarget.mBuffer.Length();
+    const uint32_t oldLen = res.mBuffer.Length();
     const auto type = *it % eMaxType;
 
     // Note: Do not modify |it| before calling |updateBufferAndIter|;
     // |byteCount| doesn't include the type indicator
     const auto updateBufferAndIter = [&](size_t byteCount) -> bool {
-      if (!aTarget.mBuffer.GetMutableData(&buffer, oldLen + 1 + byteCount)) {
+      if (!res.mBuffer.GetMutableData(&buffer, oldLen + 1 + byteCount)) {
         return false;
       }
       buffer += oldLen;
@@ -245,14 +244,14 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleAwareKey(
 
       nsDependentString str;
       DecodeString(it, end, str);
-      auto result = aTarget.EncodeLocaleString(str, typeOffset, aLocale);
+      auto result = res.EncodeLocaleString(str, typeOffset, aLocale);
       if (NS_WARN_IF(!result.Is(Ok))) {
-        return result;
+        return result.PropagateNotOk<Key>();
       }
     }
   }
-  aTarget.TrimBuffer();
-  return Ok();
+  res.TrimBuffer();
+  return Ok(res);
 }
 
 class MOZ_STACK_CLASS Key::ArrayValueEncoder final {
