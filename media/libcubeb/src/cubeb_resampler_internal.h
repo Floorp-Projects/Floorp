@@ -283,8 +283,9 @@ public:
    * exactly `output_frame_count` resampled frames. This can return a number
    * slightly bigger than what is strictly necessary, but it guaranteed that the
    * number of output frames will be exactly equal. */
-  uint32_t input_needed_for_output(uint32_t output_frame_count) const
+  uint32_t input_needed_for_output(int32_t output_frame_count) const
   {
+    assert(output_frame_count >= 0); // Check overflow
     int32_t unresampled_frames_left = samples_to_frames(resampling_in_buffer.length());
     int32_t resampled_frames_left = samples_to_frames(resampling_out_buffer.length());
     float input_frames_needed =
@@ -462,8 +463,9 @@ public:
    * @parameter frames_needed the number of frames one want to write into the
    * delay_line
    * @returns the number of frames one will get. */
-  size_t input_needed_for_output(uint32_t frames_needed) const
+  uint32_t input_needed_for_output(int32_t frames_needed) const
   {
+    assert(frames_needed >= 0); // Check overflow
     return frames_needed;
   }
   /** Returns the number of frames produces for `input_frames` frames in input */

@@ -487,11 +487,17 @@ CUBEB_EXPORT void cubeb_destroy(cubeb * context);
                   cubeb stream.
     @param stream_name A name for this stream.
     @param input_device Device for the input side of the stream. If NULL the
-                        default input device is used.
+                        default input device is used. Passing a valid cubeb_devid
+                        means the stream only ever uses that device. Passing a NULL
+                        cubeb_devid allows the stream to follow that device type's
+                        OS default.
     @param input_stream_params Parameters for the input side of the stream, or
                                NULL if this stream is output only.
     @param output_device Device for the output side of the stream. If NULL the
-                         default output device is used.
+                         default output device is used. Passing a valid cubeb_devid
+                         means the stream only ever uses that device. Passing a NULL
+                         cubeb_devid allows the stream to follow that device type's
+                         OS default.
     @param output_stream_params Parameters for the output side of the stream, or
                                 NULL if this stream is input only.
     @param latency_frames Stream latency in frames.  Valid range
