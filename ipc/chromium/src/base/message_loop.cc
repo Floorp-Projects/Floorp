@@ -8,12 +8,13 @@
 
 #include <algorithm>
 
-#include "mozilla/Atomics.h"
 #include "base/compiler_specific.h"
 #include "base/logging.h"
 #include "base/message_pump_default.h"
 #include "base/string_util.h"
 #include "base/thread_local.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Mutex.h"
 
 #if defined(OS_MACOSX)
 #  include "base/message_pump_mac.h"
@@ -91,7 +92,8 @@ class MessageLoop::EventTarget : public nsISerialEventTarget,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
 
-  explicit EventTarget(MessageLoop* aLoop) : mLoop(aLoop) {
+  explicit EventTarget(MessageLoop* aLoop)
+      : mMutex("MessageLoop::EventTarget"), mLoop(aLoop) {
     aLoop->AddDestructionObserver(this);
   }
 
@@ -103,10 +105,15 @@ class MessageLoop::EventTarget : public nsISerialEventTarget,
   }
 
   void WillDestroyCurrentMessageLoop() override {
+    mozilla::MutexAutoLock lock(mMutex);
+    // The MessageLoop is being destroyed and we are called from its destructor
+    // There's no real need to remove ourselves from the destruction observer
+    // list. But it makes things look tidier.
     mLoop->RemoveDestructionObserver(this);
     mLoop = nullptr;
   }
 
+  mozilla::Mutex mMutex;
   MessageLoop* mLoop;
 };
 
@@ -115,6 +122,7 @@ NS_IMPL_ISUPPORTS(MessageLoop::EventTarget, nsIEventTarget,
 
 NS_IMETHODIMP_(bool)
 MessageLoop::EventTarget::IsOnCurrentThreadInfallible() {
+  mozilla::MutexAutoLock lock(mMutex);
   return mLoop == MessageLoop::current();
 }
 
@@ -134,6 +142,7 @@ MessageLoop::EventTarget::DispatchFromScript(nsIRunnable* aEvent,
 NS_IMETHODIMP
 MessageLoop::EventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
                                    uint32_t aFlags) {
+  mozilla::MutexAutoLock lock(mMutex);
   if (!mLoop) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -149,6 +158,7 @@ MessageLoop::EventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
 NS_IMETHODIMP
 MessageLoop::EventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
                                           uint32_t aDelayMs) {
+  mozilla::MutexAutoLock lock(mMutex);
   if (!mLoop) {
     return NS_ERROR_NOT_INITIALIZED;
   }
