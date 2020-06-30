@@ -23,11 +23,8 @@ void GetKeyFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal, Key& aKey,
                      ErrorResult& aRv) {
   auto result = aKey.SetFromJSVal(aCx, aVal);
   if (!result.Is(Ok)) {
-    if (result.Is(Invalid)) {
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-    } else {
-      aRv = std::move(result.AsException());
-    }
+    aRv = result.ExtractErrorResult(
+        InvalidMapsTo<NS_ERROR_DOM_INDEXEDDB_DATA_ERR>);
     return;
   }
 
