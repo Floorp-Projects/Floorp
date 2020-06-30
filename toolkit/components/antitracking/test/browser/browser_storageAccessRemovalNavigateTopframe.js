@@ -11,7 +11,11 @@ AntiTracking.runTest(
   // non-blocking callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    await hasStorageAccessInitially();
+    if (allowListed) {
+      await hasStorageAccessInitially();
+    } else {
+      await noStorageAccessInitially();
+    }
 
     /* import-globals-from storageAccessAPIHelpers.js */
     let [threw, rejected] = await callRequestStorageAccess();

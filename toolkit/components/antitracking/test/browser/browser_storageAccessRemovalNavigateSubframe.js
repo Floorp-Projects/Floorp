@@ -11,7 +11,11 @@ AntiTracking.runTest(
   // non-blocking callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    await hasStorageAccessInitially();
+    if (allowListed) {
+      await hasStorageAccessInitially();
+    } else {
+      await noStorageAccessInitially();
+    }
 
     /* import-globals-from storageAccessAPIHelpers.js */
     let [threw, rejected] = await callRequestStorageAccess();
@@ -36,8 +40,6 @@ AntiTracking.runTest(
   // after-removal callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    // TODO: this is just a temporarily fixed, we should update the testcase
-    //       in Bug 1649399
-    await hasStorageAccessInitially();
+    await noStorageAccessInitially();
   }
 );
