@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
+include protocol PStreamFilter;
 include InputStreamParams;
 include URIParams;
 include PBackgroundSharedTypes;
@@ -146,6 +147,8 @@ child:
                             bool warning,
                             nsString url,
                             nsString contentType);
+
+  async AttachStreamFilter(Endpoint<PStreamFilterParent> aEndpoint);
 
   // See ADivertableParentChannel::CancelDiversion
   async CancelDiversion();

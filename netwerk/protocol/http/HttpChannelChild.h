@@ -11,7 +11,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/NeckoTargetHolder.h"
 #include "mozilla/net/PHttpChannelChild.h"
@@ -155,6 +154,9 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   mozilla::ipc::IPCResult RecvSetPriority(const int16_t& aPriority) override;
 
+  mozilla::ipc::IPCResult RecvAttachStreamFilter(
+      Endpoint<extensions::PStreamFilterParent>&& aEndpoint) override;
+
   mozilla::ipc::IPCResult RecvCancelDiversion() override;
 
   mozilla::ipc::IPCResult RecvOriginalCacheInputStreamAvailable(
@@ -264,9 +266,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   void ProcessOnProgress(const int64_t& aProgress, const int64_t& aProgressMax);
 
   void ProcessOnStatus(const nsresult& aStatus);
-
-  void ProcessAttachStreamFilter(
-      Endpoint<extensions::PStreamFilterParent>&& aEndpoint);
 
   // Return true if we need to tell the parent the size of unreported received
   // data
@@ -474,9 +473,9 @@ class HttpChannelChild final : public PHttpChannelChild,
   // True if RecvOnStartRequestSent was received.
   uint8_t mRecvOnStartRequestSentCalled : 1;
 
-  // True if this channel is suspened by waiting for permission or cookie.
-  // That is, RecvOnStartRequestSent is received.
-  uint8_t mSuspendedByWaitingForPermissionCookie : 1;
+  // True if this channel is suspened by waiting for permission, cookie or
+  // stream filter. That is, RecvOnStartRequestSent is received.
+  uint8_t mSuspendedByWaitingForPermissionCookieStreamFilter : 1;
 
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
