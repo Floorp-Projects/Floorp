@@ -696,6 +696,12 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
                            int64_t timeout_ns) {
   JSContext* cx = TlsContext.get();
 
+  if (!instance->memory()->isShared()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_NONSHARED_WAIT);
+    return -1;
+  }
+
   if (byteOffset & (sizeof(T) - 1)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_UNALIGNED_ACCESS);
@@ -761,6 +767,10 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
+  }
+
+  if (!instance->memory()->isShared()) {
+    return 0;
   }
 
   int64_t woken = atomics_notify_impl(instance->sharedMemoryBuffer(),
