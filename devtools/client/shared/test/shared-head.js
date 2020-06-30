@@ -263,9 +263,20 @@ function loadFrameScriptUtils(browser = gBrowser.selectedBrowser) {
 }
 
 Services.prefs.setBoolPref("devtools.inspector.three-pane-enabled", true);
+
 // Disable this preference to reduce exceptions related to pending `listWorkers`
 // requests occuring after a process is created/destroyed. See Bug 1620983.
 Services.prefs.setBoolPref("dom.ipc.processPrelaunch.enabled", false);
+
+// Disable this preference to capture async stacks across all locations during
+// DevTools mochitests. Async stacks provide very valuable information to debug
+// intermittents, but come with a performance overhead, which is why they are
+// only captured in Debuggees by default.
+Services.prefs.setBoolPref(
+  "javascript.options.asyncstack_capture_debuggee_only",
+  false
+);
+
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.inspector.three-pane-enabled");
@@ -274,6 +285,9 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.toolbox.previousHost");
   Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
   Services.prefs.clearUserPref("devtools.toolbox.splitconsoleHeight");
+  Services.prefs.clearUserPref(
+    "javascript.options.asyncstack_capture_debuggee_only"
+  );
 });
 
 registerCleanupFunction(async function cleanup() {
