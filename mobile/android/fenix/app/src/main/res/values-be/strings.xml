@@ -32,6 +32,9 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Выдаліць сеанс</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Дадайце цэтлік, каб адкрываць прыватныя карткі з галоўнага экрана.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Дадаць цэтлік</string>
     <!-- Text for the negative button -->
@@ -195,6 +198,8 @@
     <string name="preferences_open_links_in_a_private_tab">Адкрываць спасылкі ў прыватнай картцы</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Дазволіць здымкі экрана ў прыватным рэжыме</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Дадаць ярлык прыватнага аглядання</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Даступнасць</string>
     <!-- Preference category for account information -->
@@ -608,6 +613,8 @@
     <string name="tracking_protection_off">Выключана</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Дазволіць гук і відэа</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Блакаваць толькі гук</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Блакаваць гук і відэа</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
@@ -830,6 +837,8 @@
     <string name="onboarding_firefox_account_header">Атрымайце максімум ад %s.</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Увайсці ў Firefox</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Сінхранізацыя ўключана</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Няўдача ўваходу</string>
     <!-- text for the tracking protection onboarding card header -->
@@ -855,6 +864,11 @@
     <string name="onboarding_toolbar_position_description">Паспрабуйце навігацыю адной рукой на паліцы прылад унізе або перамясціце яе ўверх.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Аглядайце прыватна</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Адкрыць прыватную картку адзін раз: Націсніце значок %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Адкрываць прыватныя карткі кожны раз: Абнавіце налады прыватнага аглядання.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Адкрыць налады</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -874,6 +888,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Выберыце тэму</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Зберажыце зарад батарэі і зрок, уключыўшы цёмны рэжым.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Аўтаматычна</string>
 

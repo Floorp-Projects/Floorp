@@ -635,6 +635,10 @@
     <string name="tracking_protection_on">Ενεργό</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Ανενεργό</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Φραγή ήχου μόνο</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Φραγή ήχου και βίντεο</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Ενεργό</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -798,8 +802,6 @@
     <string name="preferences_delete_browsing_data_button">Διαγραφή δεδομένων περιήγησης</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Διαγραφή δεδομένων περιήγησης στην έξοδο</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Ιστορικό περιήγησης</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Έξοδος</string>
 
@@ -821,6 +823,11 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Το Firefox Preview είναι πλέον το Firefox Nightly</string>
 
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Λήψη του Firefox για Android Beta</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Το Firefox Nightly έχει μετακινηθεί</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Εναλλαγή στο νέο Nightly</string>
 
@@ -831,6 +838,8 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Καλώς ορίσατε στο %s!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Έχετε ήδη λογαριασμό;</string>
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Γνωρίστε το %s</string>
@@ -1140,6 +1149,8 @@
     <string name="confirm_clear_permissions_site">Θέλετε σίγουρα να διαγράψετε όλα τα δικαιώματα για αυτή την ιστοσελίδα;</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">Θέλετε σίγουρα να διαγράψετε αυτό το δικαίωμα για αυτή την ιστοσελίδα;</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Καμία εξαίρεση ιστοσελίδων</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">Κορυφαία άρθρα</string>
     <!-- Bookmark deletion confirmation -->

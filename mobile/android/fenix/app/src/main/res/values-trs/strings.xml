@@ -21,6 +21,11 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Hiūj nan nāruguì\’ nej rakïj ñanj huì nīkājt.</string>
 
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 nā\'nïn rakïj ñanj. Gūru\'man ra\'a da\' nādūnāt rakïj ñanj.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s nā\'nïn nej rakïj ñanj. Gūru\'man ra\'a da\' nādūnāt nej rakïj ñanj.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s huin \’ngō sa giri Mozilla.</string>
 
@@ -305,6 +310,8 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Nej riña ayi\'ìt sēsiûn</string>
 
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Nārán riña sēsiûn</string>
 
@@ -494,6 +501,8 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Dūyinga\' nej rakïj ñanj</string>
 
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Na\'nïnj sà\' nej rakïj ñanj riña màn si yi\'nïnj</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Si menû rakïj ñanj</string>
     <!-- Tab menu item to share the tab -->
@@ -1249,12 +1258,93 @@
     <string name="preferences_passwords_sync_logins_sign_in">Gāyi\'ì sēsiûn riña Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Sa gayi\'ìt sesiûn ngà naginu sà\'</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Nej riña gayi\'ìt sēsiûn asi rña nagi\'iaj nūguà\'ànt man ngà %s gūruguì\' hiūj nan gīni\'iājt.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Gāhuin chrūn doj rayi\'î Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Sa huā gi\'iát</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Hiūj nan gūruguì\' nej riña gayì\'ìt sēsiûn ngà nej da\'nga\' huì na\'nïn sà\'t.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Sê sī nānun sà\' nej riña gayi\'ît sēsiûn nī nej da\'nga\' huìi guiendâ nej sitiô nan.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Nānà\'uì\' nej riña gayi\'ît sēsiûn</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Dàj rû\' hua alfabêto</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Hīaj garâj sun nākàt</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Sîtio</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Si yūguî rè\'</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Da\'nga\' huìi</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Nāchrūn ñû PIN nīkājt</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Gā\'nïn riñanj da\' ga\'ue ni\'iājt nej riña gayì\'ìt sēsiûn na\'nïn sà\'t</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Huā ahī kōneksiûn nan. Gā\'ue gīni\'iāj nej si riña nej ña gayì\'ìt sēsiûn duguatûjt hiūj nan.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Gāhuin chrūn doj</string>
 
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Gā\'nïnt sisī %s nà\'nïnj sà\'aj riña gayì\'ìt sēsiûn nan anj.</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Nā\'nïnj sà\'</string>
 
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Sī na\'nïn sà\'t</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Ngà nañû da\'nga\' huìi riña portapapel</string>
+
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Ngà nañû si yūguît riña portapapel</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Ngà nañû sîtio riña portapapel</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Gūxūn da\'nga\' huìi nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Gūxūn si yūguît nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Gūxūn sîtio nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Nādīgân da\'nga\' huìi</string>
+
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Da\'nga\' huì huā huìi</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Gā\'nïn riñanj da\' ga\'ue ni\'iājt nej riña gayì\'ìt sēsiûn na\'nïn sà\'t</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Nāgi\'iaj ran riña gayì\'ìt sēsiûn nī nej da\'nga\' huì nīkājt</string>
+
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Nāchrūn \'ngō da\'nga\' huì duyâ ra\'ât riña si āgâ\'t, \'ngō PIN asi \'ngō da\'nga\' huì achrûnt da\' si ga\'ue gīni\'iāj nej duguî\' riñā rûgûñu\'ūnjt si āgâ\'t nej riña gayì\'ìt sēsiûn asi nej da\'nga\' huì màn sà\' \'iát.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Ne\' rūkù doj</string>
+
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">À\' \'ngō nāgi\'iát riñanj</string>
+
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Nā\'nïn riña si āgâ\'t</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Zoom riña daran\' nej sîtio</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Nāchrūn sa huā nan da\' ga\'ue duyâ ra\'ât nī gi\'iát zoom, nda riña nej sitiô nu a\'nïnj sa huā dānanj.</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Si yūgui (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Āmān garâj sun rūkù nï\'t</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Nāgi\'iaj hue\'ê riña menú gayì\'ìt sēsiûn</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Nūtà\' a\'ngô sa riñā nānà\'uì\'t</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Nāgi\'iaj riña sa riñā nānà\'uì\'t</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Nūtà\'</string>
 
@@ -1270,21 +1360,134 @@
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Si yugui</string>
 
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Kadenâ nana\'ui\' huū gārasunt</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Nādūnā sa nana\'uî\'t ngà “%s”. dàj rû\':\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Gāhuin chrūn doj</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Sa huā riña sa nana\'uî\'t nagi\'iaj man\'ânt</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Lînk gātūt da\' gāhuin chrūnt doj</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Gāchrūn si yūgui riña sā nana\'uî\'t</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Ngà huā \'ngō sa riñā nana\'uî\'t gū\'nàj “%s”.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Gāchrūn \'ngō kādenâ nanà\'uì\'t</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Gīni\'iāj sisī dàj rû\' hua kādenâ \'na\' diganj hua si kādenât</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Na\'ue gi\'iaj kōnektandoj ngà “%s”</string>
+
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s ngà nahuij gahui</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">Ngà nanun sà\' %s</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Ngà nare\' %s</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Guruhuât gunumât riña %s \'ngō sa hìaj gahui nākàt chre huin</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Ānà\'uìj \'ngō sa nana\'uî\' nahuin nākà ta\'u sò\', hue\'ê nī hìo doj \'iaj sun da\' rūgûña\'un doj sò\' nga aché nunt.\n\nGāna\'uìj hìaj nï\' nagi\'iaj nākà ñunj %s ngà si</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Hīaj nagi\'iaj nākaj %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Gāyi\'ì %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Ngà nahuij gachinj</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Nej da\'nga\' huìi</string>
 
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Da\' ga\'ue gā\'nïn:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Gūij riña ga\'ue nāgi\'iát Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Gūru\'man ra\'a riña <b>nej sa achín nì\'iát</b>]]></string>
+
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Nāchrūn <b>%1$s</b>]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Kōneksiûn huā sà\'a</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Kōneksiûn huā a\'nan\'an</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Huin hīa ruhuât nādurê\' nej sa achín nì\'iaj nīkāj daran\' nej sitio aj.</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Huin hīa ruhuât nādurê\' daran\' nej sa achín nì\'iaj nīkāj sitiô nan anj.</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Huin hīa ruhuât nādurê\' sa achín nì\'iaj nīkāj sitiô nan anj.</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Nitāj à\'ngō nej sîtio gūnàj</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Nej artikulô ña\'ān doj</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Huā yītïnj ruhuât nādure\'t markadô nan anj.</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Nūtà\' riña nej sitiô nīhià\' ruhuât doj</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Ngà ganatsij sa gu\'nàj: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Nādūre\'</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Nāgi\'iaj riñaj</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Huā yītïnj ruhuât nādure\'t riña gayì\'ìt sēsiûn nan anj</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Nādūre\'</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">A\'ngô sa ga\'ue gī\'iát da\' ga\'ue gāyi\'ìt sēsiûn</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Hūaj ga\'ue nāchrūnt nuguan\'an riña direksiûn web gayi\'ìt sēsiûn.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Hūaj ga\'ue nāchrūnt nuguan\'an riña si yūgui riña gayi\'ìt sēsiûn.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Hūaj ga\'ue nāchrūnt nuguan\'an riña da\'nga\' huì riña gayi\'ìt sēsiûn.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Nā\'nïnj sà\' sa nadunâ riña gayì\'ìt sēsiûn.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Dūnâj dàj rû\' gaj</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Nāgi\'iaj riñaj</string>
 
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Achin da\'nga\' huìi</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Nānà\'uì\' ngà nanèt</string>
+
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Gā\'mīn hìaj</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Ngà huā \'ngō riña gayì\'ìt sēsiûn gù\'nàj dàdanj</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Gātū ngà a\'ngô kuendâ Firefox</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Gātū ngà a\'ngô aga\'a.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Gi\'iaj sunūj u, nādigân ñû si huê hīat huin.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Gi\'iaj sunūj u, nāchrūn sa nāgi\'iaj nūguàn\'ànt nej rakïj ñanj.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Nitāj à\'ngō rakïj ñanj huā nî\'nïnj riña Firefox riña a\'ngô nej si āgâ\'t.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Gīni\'iāj \'ngō dukuán rakïj ñanj nīkāj a\'ngô nej si āgâ\'t.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Gāyi\'ì sēsiûn riña sync</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Ngà guchî\'t riña da\'uît gūchì\'t guendâ nej sitiô ña’ān doj</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Guendâ gānatà\' \'ngō sitiô arâj sun nīchrà\'t doj, nādure\' \'ngòj. Gūru\'man ra\'a riña sitio nī gūru\'man ra\'a nādurê\'.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ga\'ue, ngà garâj da\'nga\' ruhuâj</string>
 
