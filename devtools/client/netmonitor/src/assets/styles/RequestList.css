@@ -33,6 +33,49 @@
   background-image: url(chrome://devtools/skin/images/profiler-stopwatch.svg);
 }
 
+.requests-list-slow-button {
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  top: 50%;
+  cursor: pointer;
+  background-image: linear-gradient(to right,transparent, var(--theme-body-background) 43%);
+  padding-inline-end: 30px;
+  padding-inline-start: 5px;
+}
+
+.request-list-item:not(.selected).odd .requests-list-slow-button {
+  background-image: linear-gradient(to right,transparent, var(--table-zebra-inline-icons-background) 43%);
+}
+
+.request-list-item:not(.selected):hover .requests-list-slow-button,
+.request-list-item:not(.selected).odd:hover .requests-list-slow-button {
+  background-image: linear-gradient(to right,transparent, var(--table-selection-inline-icons-background-hover) 43%);
+}
+
+.request-list-item.selected .requests-list-slow-button {
+  background-image: linear-gradient(to right,transparent, var(--theme-selection-background) 43%);
+}
+
+.requests-list-slow-button::before {
+  content: "";
+  width: 12px;
+  height: 16px;
+  display: inline-block;
+  background-image: url(chrome://devtools/content/netmonitor/src/assets/icons/turtle.svg);
+  background-repeat: no-repeat;
+  background-position-x: right;
+  padding-inline-end: 14px;
+  fill: var(--grey-40);
+  -moz-context-properties: fill;
+}
+
+.request-list-item.selected .requests-list-slow-button::before {
+  fill: currentColor;
+}
+
 .requests-list-reload-notice-button {
   font-size: inherit;
   min-height: 26px;
@@ -95,6 +138,10 @@
    * it conflicts easily with existing click and double-click actions,
    * and we already have several Copy and Export options. */
   user-select: none;
+}
+
+.requests-list-column {
+  position: relative;
 }
 
 .requests-list-column > * {
