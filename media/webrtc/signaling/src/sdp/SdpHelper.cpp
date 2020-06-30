@@ -602,7 +602,7 @@ SdpMediaSection::Protocol SdpHelper::GetProtocolForMediaType(
   return SdpMediaSection::kUdpTlsRtpSavpf;
 }
 
-void SdpHelper::appendSdpParseErrors(
+void SdpHelper::AppendSdpParseErrors(
     const std::vector<std::pair<size_t, std::string> >& aErrors,
     std::string* aErrorString) {
   std::ostringstream os;

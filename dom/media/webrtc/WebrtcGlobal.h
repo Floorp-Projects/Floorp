@@ -103,8 +103,11 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCConfigurationInternal,
                                   mIceServers, mIceTransportPolicy,
                                   mPeerIdentityProvided, mSdpSemantics);
 
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCSdpParsingErrorInternal,
+                                  mLineNumber, mError);
+
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCSdpHistoryEntryInternal,
-                                  mTimestamp, mIsLocal, mSdp);
+                                  mTimestamp, mIsLocal, mSdp, mErrors);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mozilla::dom::RTCStatsCollection, mIceCandidatePairStats,
