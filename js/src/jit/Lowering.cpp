@@ -2996,7 +2996,11 @@ void LIRGenerator::visitPostWriteElementBarrier(MPostWriteElementBarrier* ins) {
 
 void LIRGenerator::visitArrayLength(MArrayLength* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
-  define(new (alloc()) LArrayLength(useRegisterAtStart(ins->elements())), ins);
+  auto* lir = new (alloc()) LArrayLength(useRegisterAtStart(ins->elements()));
+  if (JitOptions.warpBuilder) {
+    assignSnapshot(lir, Bailout_NonInt32ArrayLength);
+  }
+  define(lir, ins);
 }
 
 void LIRGenerator::visitSetArrayLength(MSetArrayLength* ins) {
