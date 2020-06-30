@@ -45,6 +45,11 @@ child:
 
   async OnStatus(nsresult status);
 
+  // Forwards nsIMultiPartChannelListener::onAfterLastPart. Make sure we've
+  // disconnected our listeners, since we might not have on the last
+  // OnStopRequest.
+  async OnAfterLastPart(nsresult aStatus);
+
   // Parent has been suspended for diversion; no more events to be enqueued.
   async FlushedForDiversion();
 

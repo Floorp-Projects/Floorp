@@ -57,6 +57,9 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
                      const nsHttpHeaderArray& aResponseTrailers,
                      const nsTArray<ConsoleReportCollected>& aConsoleReports);
 
+  // To send OnAfterLastPart message over background channel.
+  bool OnAfterLastPart(const nsresult aStatus);
+
   // To send OnProgress message over background channel.
   bool OnProgress(const int64_t aProgress, const int64_t aProgressMax);
 
