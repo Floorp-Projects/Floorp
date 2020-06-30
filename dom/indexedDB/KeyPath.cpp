@@ -350,12 +350,11 @@ nsresult KeyPath::ExtractKey(JSContext* aCx, const JS::Value& aValue,
       return rv;
     }
 
-    auto result = aKey.AppendItem(aCx, IsArray() && i == 0, value);
-    if (!result.Is(Ok)) {
+    ErrorResult errorResult;
+    auto result = aKey.AppendItem(aCx, IsArray() && i == 0, value, errorResult);
+    if (!result.Is(Ok, errorResult)) {
       NS_ASSERTION(aKey.IsUnset(), "Encoding error should unset");
-      if (result.Is(Exception)) {
-        result.AsException().SuppressException();
-      }
+      errorResult.SuppressException();
       return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
   }
@@ -416,12 +415,11 @@ nsresult KeyPath::ExtractOrCreateKey(JSContext* aCx, const JS::Value& aValue,
     return rv;
   }
 
-  auto result = aKey.AppendItem(aCx, false, value);
-  if (!result.Is(Ok)) {
+  ErrorResult errorResult;
+  auto result = aKey.AppendItem(aCx, false, value, errorResult);
+  if (!result.Is(Ok, errorResult)) {
     NS_ASSERTION(aKey.IsUnset(), "Should be unset");
-    if (result.Is(Exception)) {
-      result.AsException().SuppressException();
-    }
+    errorResult.SuppressException();
     return value.isUndefined() ? NS_OK : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
