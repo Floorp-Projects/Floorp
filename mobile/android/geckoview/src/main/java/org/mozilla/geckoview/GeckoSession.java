@@ -1333,12 +1333,16 @@ public class GeckoSession implements Parcelable {
         }
     };
 
-    /* package */ boolean equalsId(final GeckoSession other) {
-        if (other == null) {
-            return false;
-        }
+    @Override
+    @AnyThread
+    public int hashCode() {
+        return mId.hashCode();
+    }
 
-        return mId.equals(other.mId);
+    @Override
+    @AnyThread
+    public boolean equals(final Object obj) {
+        return obj instanceof GeckoSession && mId.equals(((GeckoSession) obj).mId);
     }
 
     /**
