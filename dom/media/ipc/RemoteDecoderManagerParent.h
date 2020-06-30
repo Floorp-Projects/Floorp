@@ -49,10 +49,12 @@ class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
       const SurfaceDescriptorGPUVideo& aSD);
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
+
   void ActorDealloc() override;
 
  private:
-  explicit RemoteDecoderManagerParent(nsISerialEventTarget* aThread);
+  explicit RemoteDecoderManagerParent(
+      RemoteDecoderManagerThreadHolder* aThreadHolder);
   ~RemoteDecoderManagerParent();
 
   void Open(Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
@@ -60,7 +62,7 @@ class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
   std::map<uint64_t, RefPtr<layers::Image>> mImageMap;
   std::map<uint64_t, RefPtr<layers::TextureClient>> mTextureMap;
 
-  nsCOMPtr<nsISerialEventTarget> mThread;
+  RefPtr<RemoteDecoderManagerThreadHolder> mThreadHolder;
 };
 
 }  // namespace mozilla
