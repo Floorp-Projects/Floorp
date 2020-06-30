@@ -27,6 +27,11 @@ const EVENTS = {
   // When the accessibility inspector is updated.
   ACCESSIBILITY_INSPECTOR_UPDATED:
     "Accessibility:AccessibilityInspectorUpdated",
+  // When accessibility panel UI is initialized (rendered).
+  INITIALIZED: "Accessibility:Initialized",
+  // When accessibile object properties are updated in the panel sidebar for a
+  // new accessible object.
+  PROPERTIES_UPDATED: "Accessibility:PropertiesUpdated",
 };
 
 /**
