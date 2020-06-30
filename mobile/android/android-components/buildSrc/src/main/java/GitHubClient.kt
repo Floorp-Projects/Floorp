@@ -31,8 +31,8 @@ class GitHubClient(token: String) {
         val url = URL(urlString)
         val http = url.openConnection() as HttpURLConnection
 
-        http.setRequestMethod("POST")
-        http.setDoOutput(true)
+        http.requestMethod = "POST"
+        http.doOutput = true
         http.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
 
         headers.forEach {
@@ -44,9 +44,7 @@ class GitHubClient(token: String) {
         }
 
         var responseSuccessful = true
-        var textResponse: String
-
-        textResponse = try {
+        val textResponse = try {
             http.inputStream.bufferedReader().readText()
         } catch (e: Exception) {
             responseSuccessful = false

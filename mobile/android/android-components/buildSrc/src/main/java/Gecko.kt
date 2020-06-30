@@ -19,7 +19,7 @@ internal object GeckoVersions {
     const val release_version = "78.0.20200625152958"
 }
 
-@Suppress("MaxLineLength")
+@Suppress("Unused", "MaxLineLength")
 object Gecko {
     const val geckoview_nightly = "org.mozilla.geckoview:geckoview-nightly:${GeckoVersions.nightly_version}"
     const val geckoview_beta = "org.mozilla.geckoview:geckoview-beta:${GeckoVersions.beta_version}"

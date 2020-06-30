@@ -11,7 +11,6 @@ import groovy.util.XmlParser
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
-import java.lang.Exception
 
 open class GVVersionVerifierPlugin : Plugin<Project> {
 
@@ -27,7 +26,7 @@ open class GVVersionVerifierPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
 
-        project.task("updateGVNightlyVersion") {
+        project.tasks.register("updateGVNightlyVersion") {
 
             doLast {
                 val configuration = GVConfiguration(
@@ -39,7 +38,7 @@ open class GVVersionVerifierPlugin : Plugin<Project> {
             }
         }
 
-        project.task("updateGVBetaVersion") {
+        project.tasks.register("updateGVBetaVersion") {
 
             doLast {
                 val configuration = GVConfiguration(
@@ -51,7 +50,7 @@ open class GVVersionVerifierPlugin : Plugin<Project> {
             }
         }
 
-        project.task("updateGVStableVersion") {
+        project.tasks.register("updateGVStableVersion") {
 
             doLast {
                 val configuration = GVConfiguration(
