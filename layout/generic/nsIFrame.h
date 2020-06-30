@@ -694,6 +694,7 @@ class nsIFrame : public nsQueryFrame {
     MOZ_ASSERT(mComputedStyle);
     MOZ_ASSERT(mPresContext);
     mozilla::PodZero(&mOverflow);
+    MOZ_COUNT_CTOR(nsIFrame);
   }
 
   nsPresContext* PresContext() const { return mPresContext; }
@@ -719,7 +720,7 @@ class nsIFrame : public nsQueryFrame {
    * @param   aPrevInFlow the prev-in-flow frame
    */
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) = 0;
+                    nsIFrame* aPrevInFlow);
 
   using PostDestroyData = mozilla::layout::PostFrameDestroyData;
   struct MOZ_RAII AutoPostDestroyData {
@@ -798,7 +799,7 @@ class nsIFrame : public nsQueryFrame {
    * @param  aDestructRoot is the root of the subtree being destroyed
    */
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) = 0;
+                           PostDestroyData& aPostDestroyData);
   friend class nsFrameList;  // needed to pass aDestructRoot through to children
   friend class nsLineBox;    // needed to pass aDestructRoot through to children
   friend class nsContainerFrame;  // needed to pass aDestructRoot through to
@@ -806,6 +807,16 @@ class nsIFrame : public nsQueryFrame {
   friend class nsFrame;           // need to assign mParent
   template <class Source>
   friend class do_QueryFrameHelper;  // to read mClass
+
+  virtual ~nsIFrame();
+
+ private:
+  // Returns true if this frame has any kind of CSS animations.
+  bool HasCSSAnimations();
+
+  // Returns true if this frame has any kind of CSS transitions.
+  bool HasCSSTransitions();
+
  public:
   /**
    * Get the content object associated with this frame. Does not add a

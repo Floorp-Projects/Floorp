@@ -470,12 +470,10 @@ nsIFrame* NS_NewEmptyFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 
 nsFrame::nsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                  ClassID aID)
-    : nsIFrame(aStyle, aPresContext, aID) {
-  MOZ_COUNT_CTOR(nsFrame);
-}
+    : nsIFrame(aStyle, aPresContext, aID) {}
 
-nsFrame::~nsFrame() {
-  MOZ_COUNT_DTOR(nsFrame);
+nsIFrame::~nsIFrame() {
+  MOZ_COUNT_DTOR(nsIFrame);
 
   MOZ_ASSERT(GetVisibility() != Visibility::ApproximatelyVisible,
              "Visible nsFrame is being destroyed");
@@ -612,8 +610,8 @@ bool nsIFrame::IsPrimaryFrameOfRootOrBodyElement() const {
          content == document->GetBodyElement();
 }
 
-void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                   nsIFrame* aPrevInFlow) {
+void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) {
   MOZ_ASSERT(nsQueryFrame::FrameIID(mClass) == GetFrameId());
   MOZ_ASSERT(!mContent, "Double-initing a frame?");
   NS_ASSERTION(IsFrameOfType(eDEBUGAllFrames) && !IsFrameOfType(eDEBUGNoFrames),
@@ -776,8 +774,8 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 }
 
-void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                          PostDestroyData& aPostDestroyData) {
+void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "destroy called on frame while scripts not blocked");
   NS_ASSERTION(!GetNextSibling() && !GetPrevSibling(),
@@ -887,7 +885,7 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
   // if it's from a method defined in the same class.
 
   nsQueryFrame::FrameIID id = GetFrameId();
-  this->~nsFrame();
+  this->~nsIFrame();
 
 #ifdef DEBUG
   {
@@ -10904,13 +10902,13 @@ nsIFrame::CaretPosition::CaretPosition() : mContentOffset(0) {}
 
 nsIFrame::CaretPosition::~CaretPosition() = default;
 
-bool nsFrame::HasCSSAnimations() {
+bool nsIFrame::HasCSSAnimations() {
   auto collection =
       AnimationCollection<CSSAnimation>::GetAnimationCollection(this);
   return collection && collection->mAnimations.Length() > 0;
 }
 
-bool nsFrame::HasCSSTransitions() {
+bool nsIFrame::HasCSSTransitions() {
   auto collection =
       AnimationCollection<CSSTransition>::GetAnimationCollection(this);
   return collection && collection->mAnimations.Length() > 0;
