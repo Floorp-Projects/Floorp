@@ -15,6 +15,7 @@
 #include "base/thread_local.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
+#include "nsThreadUtils.h"
 
 #if defined(OS_MACOSX)
 #  include "base/message_pump_mac.h"
@@ -255,6 +256,13 @@ MessageLoop::MessageLoop(Type type, nsIEventTarget* aEventTarget)
     pump_ = new base::MessagePumpDefault();
   }
 #endif    // OS_POSIX
+
+  // We want GetCurrentSerialEventTarget() to return the real nsThread if it
+  // will be used to dispatch tasks. However, under all other cases; we'll want
+  // it to return this MessageLoop's EventTarget.
+  if (!pump_->GetXPCOMThread()) {
+    mozilla::SerialEventTargetGuard::Set(mEventTarget);
+  }
 }
 
 MessageLoop::~MessageLoop() {

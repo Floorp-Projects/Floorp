@@ -33,6 +33,8 @@
 #include "prthread.h"
 #include "xpcpublic.h"
 
+class MessageLoop;
+
 //-----------------------------------------------------------------------------
 // These methods are alternatives to the methods on nsIThreadManager, provided
 // for convenience.
@@ -1796,7 +1798,7 @@ class SerialEventTargetGuard {
  public:
   explicit SerialEventTargetGuard(nsISerialEventTarget* aThread)
       : mLastCurrentThread(sCurrentThreadTLS.get()) {
-    sCurrentThreadTLS.set(aThread);
+    Set(aThread);
   }
 
   ~SerialEventTargetGuard() { sCurrentThreadTLS.set(mLastCurrentThread); }
@@ -1804,6 +1806,13 @@ class SerialEventTargetGuard {
   static void InitTLS();
   static nsISerialEventTarget* GetCurrentSerialEventTarget() {
     return sCurrentThreadTLS.get();
+  }
+
+ protected:
+  friend class ::MessageLoop;
+  static void Set(nsISerialEventTarget* aThread) {
+    MOZ_ASSERT(aThread->IsOnCurrentThread());
+    sCurrentThreadTLS.set(aThread);
   }
 
  private:
