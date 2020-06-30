@@ -463,7 +463,6 @@ struct RedirectToRealChannelArgs {
   uint32_t redirectFlags;
   uint32_t? contentDisposition;
   nsString? contentDispositionFilename;
-  uint64_t redirectIdentifier;
   nsIPropertyBag2 properties;
   uint32_t loadStateLoadFlags;
   uint32_t loadStateLoadType;

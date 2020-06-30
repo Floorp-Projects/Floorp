@@ -3468,7 +3468,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
       ChildProcessChannelListener::GetSingleton();
   // The listener will call completeRedirectSetup or asyncOpen on the channel.
   processListener->OnChannelReady(
-      loadState, aArgs.redirectIdentifier(), std::move(aEndpoints),
+      loadState, aArgs.loadIdentifier(), std::move(aEndpoints),
       aArgs.timing().refOr(nullptr), std::move(resolve));
   scopeExit.release();
 
