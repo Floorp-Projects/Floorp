@@ -19,7 +19,6 @@ import mozilla.components.browser.search.provider.SearchEngineList
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
-import mozilla.components.browser.search.provider.localization.SearchLocalization
 import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
@@ -96,14 +95,6 @@ open class FenixSearchEngineProvider(
                 loadedSearchEngines
             } else {
                 fallbackEngines
-            }
-
-    private val region: Deferred<SearchLocalization>
-        get() =
-            if (loadedRegion.isCompleted) {
-                loadedRegion
-            } else {
-                fallbackRegion
             }
 
     fun getDefaultEngine(context: Context): SearchEngine {
@@ -207,12 +198,6 @@ open class FenixSearchEngineProvider(
         val prefs = prefs(context)
         val installedEnginesKey = localeAwareInstalledEnginesKey()
 
-        if (installedEnginesKey != prefs.getString(CURRENT_LOCALE_KEY, "")) {
-            updateBaseSearchEngines()
-            reload()
-            prefs.edit().putString(CURRENT_LOCALE_KEY, installedEnginesKey).apply()
-        }
-
         if (!prefs.contains(installedEnginesKey)) {
             val searchEngines =
                 if (baseSearchEngines.isCompleted) baseSearchEngines
@@ -234,12 +219,20 @@ open class FenixSearchEngineProvider(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     suspend fun localeAwareInstalledEnginesKey(): String {
-        val tag = region.await().let {
-            val region = it.region?.let { region ->
-                if (region.isEmpty()) "" else "-$region"
+        val tag = if (loadedRegion.isCompleted) {
+            val localization = loadedRegion.await()
+            val region = localization.region?.let {
+                if (it.isEmpty()) "" else "-$it"
             }
 
-            "${it.languageTag}$region"
+            "${localization.languageTag}$region"
+        } else {
+            val localization = fallbackRegion.await()
+            val region = localization.region?.let {
+                if (it.isEmpty()) "" else "-$it"
+            }
+
+            "${localization.languageTag}$region-fallback"
         }
 
         return "$INSTALLED_ENGINES_KEY-$tag"
