@@ -92,7 +92,6 @@ async function shutdownAccessibility(browser) {
 
 registerCleanupFunction(async () => {
   info("Cleaning up...");
-  Services.prefs.clearUserPref("devtools.accessibility.auto-init.enabled");
   Services.prefs.clearUserPref("devtools.accessibility.enabled");
   Services.prefs.clearUserPref("devtools.contenttoolbox.fission");
 });
