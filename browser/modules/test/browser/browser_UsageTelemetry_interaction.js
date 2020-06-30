@@ -202,11 +202,11 @@ add_task(async function devtools() {
     click("PanelUI-menu-button");
     await shown;
 
+    click("appMenu-developer-button");
     shown = BrowserTestUtils.waitForEvent(
       elem("PanelUI-developer"),
       "ViewShown"
     );
-    click("appMenu-developer-button");
     await shown;
 
     let tabOpen = BrowserTestUtils.waitForNewTab(gBrowser);
