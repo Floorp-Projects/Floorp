@@ -4436,19 +4436,15 @@ void CodeGenerator::visitGuardSpecificFunction(LGuardSpecificFunction* guard) {
 
 void CodeGenerator::visitGuardSpecificAtom(LGuardSpecificAtom* guard) {
   Register str = ToRegister(guard->str());
+  Register scratch = ToRegister(guard->temp());
 
-  Label done;
-  masm.branchPtr(Assembler::Equal, str, ImmGCPtr(guard->mir()->atom()), &done);
+  LiveRegisterSet volatileRegs = liveVolatileRegs(guard);
+  volatileRegs.takeUnchecked(scratch);
 
-  // The pointers are not equal, so if the input string is also an atom it
-  // must be a different string.
-  bailoutTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
-                Imm32(JSString::ATOM_BIT), guard->snapshot());
-
-  // Todo: Check length + VM fallback.
-  bailout(guard->snapshot());
-
-  masm.bind(&done);
+  Label bail;
+  masm.guardSpecificAtom(str, guard->mir()->atom(), scratch, volatileRegs,
+                         &bail);
+  bailoutFrom(&bail, guard->snapshot());
 }
 
 void CodeGenerator::visitGuardSpecificSymbol(LGuardSpecificSymbol* guard) {

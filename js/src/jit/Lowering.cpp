@@ -4041,10 +4041,12 @@ void LIRGenerator::visitGuardSpecificFunction(MGuardSpecificFunction* ins) {
 }
 
 void LIRGenerator::visitGuardSpecificAtom(MGuardSpecificAtom* ins) {
-  auto* guard = new (alloc()) LGuardSpecificAtom(useRegister(ins->str()));
+  auto* guard =
+      new (alloc()) LGuardSpecificAtom(useRegister(ins->str()), temp());
   assignSnapshot(guard, Bailout_SpecificAtomGuard);
   add(guard, ins);
   redefine(ins, ins->str());
+  assignSafepoint(guard, ins);
 }
 
 void LIRGenerator::visitGuardSpecificSymbol(MGuardSpecificSymbol* ins) {

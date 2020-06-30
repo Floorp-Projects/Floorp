@@ -368,7 +368,8 @@ class CodeGeneratorShared : public LElementVisitor {
   inline void restoreLive(LInstruction* ins);
   inline void restoreLiveIgnore(LInstruction* ins, LiveRegisterSet reg);
 
-  // Save/restore all registers that are both live and volatile.
+  // Get/save/restore all registers that are both live and volatile.
+  inline LiveRegisterSet liveVolatileRegs(LInstruction* ins);
   inline void saveLiveVolatile(LInstruction* ins);
   inline void restoreLiveVolatile(LInstruction* ins);
 
