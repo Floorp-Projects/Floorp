@@ -404,20 +404,22 @@ const rollout = {
       return;
     }
 
-    // The network is up. If we know we are not captive or in an unlocked portal,
-    // run heuristics. If we detect a portal later, we'll run heuristics again
-    // when it's unlocked.
-    if (captiveState == "unlocked_portal" || captiveState == "not_captive") {
-      await rollout.heuristics("netchange");
+    if (captiveState == "locked_portal") {
+      return;
     }
+
+    // The network is up and we don't know that we're in a locked portal.
+    // Run heuristics. When we detect a portal or lack thereof later, we'll run
+    // heuristics again. In that case, this run will likely have failed.
+    await rollout.heuristics("netchange");
   },
 
   async onCaptiveStateChanged({ state }) {
     log("onCaptiveStateChanged", state);
     // unlocked_portal means we were previously in a locked portal and then
-    // network access was granted.
+    // network access was granted. not_captive means we know there's no portal.
     if (state == "unlocked_portal" || state == "not_captive") {
-      await rollout.heuristics("netchange");
+      await rollout.heuristics("captivechanged");
     }
   },
 };
