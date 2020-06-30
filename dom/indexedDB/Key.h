@@ -129,11 +129,13 @@ class Key {
     return res;
   }
 
-  void ToString(nsString& aString) const {
+  nsAutoString ToString() const {
     MOZ_ASSERT(IsString());
     const EncodedDataType* pos = BufferStart();
-    DecodeString(pos, BufferEnd(), aString);
+    nsAutoString res;
+    DecodeString(pos, BufferEnd(), res);
     MOZ_ASSERT(pos >= BufferEnd());
+    return res;
   }
 
   IDBResult<void, IDBSpecialValue::Invalid> SetFromString(
