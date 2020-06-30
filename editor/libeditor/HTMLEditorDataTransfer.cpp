@@ -2996,39 +2996,52 @@ nsresult HTMLEditor::CreateDOMFragmentFromPaste(
   *aOutFragNode = std::move(documentFragmentToInsert);
   *aOutStartOffset = 0;
 
-  // get the infoString contents
   if (!aInfoStr.IsEmpty()) {
-    int32_t sep = aInfoStr.FindChar((char16_t)',');
-    nsAutoString numstr1(Substring(aInfoStr, 0, sep));
-    nsAutoString numstr2(
-        Substring(aInfoStr, sep + 1, aInfoStr.Length() - (sep + 1)));
-
-    // Move the start and end children.
-    nsresult rvIgnored;
-    int32_t num = numstr1.ToInteger(&rvIgnored);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "nsAString::ToInteger() failed, but ignored");
-    while (num--) {
-      nsINode* tmp = (*aOutStartNode)->GetFirstChild();
-      if (!tmp) {
-        NS_WARNING("aOutStartNode did not have children");
-        return NS_ERROR_FAILURE;
-      }
-      *aOutStartNode = tmp;
-    }
-
-    num = numstr2.ToInteger(&rvIgnored);
-    while (num--) {
-      nsINode* tmp = (*aOutEndNode)->GetLastChild();
-      if (!tmp) {
-        NS_WARNING("aOutEndNode did not have children");
-        return NS_ERROR_FAILURE;
-      }
-      *aOutEndNode = tmp;
+    const nsresult rv = HTMLEditor::MoveStartAndEndAccordingToHTMLInfo(
+        aInfoStr, aOutStartNode, aOutEndNode);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::MoveStartAndEndAccordingToHTMLInfo() failed");
+      return rv;
     }
   }
 
   *aOutEndOffset = (*aOutEndNode)->Length();
+  return NS_OK;
+}
+
+// static
+nsresult HTMLEditor::MoveStartAndEndAccordingToHTMLInfo(
+    const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutStartNode,
+    nsCOMPtr<nsINode>* aOutEndNode) {
+  int32_t sep = aInfoStr.FindChar((char16_t)',');
+  nsAutoString numstr1(Substring(aInfoStr, 0, sep));
+  nsAutoString numstr2(
+      Substring(aInfoStr, sep + 1, aInfoStr.Length() - (sep + 1)));
+
+  // Move the start and end children.
+  nsresult rvIgnored;
+  int32_t num = numstr1.ToInteger(&rvIgnored);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "nsAString::ToInteger() failed, but ignored");
+  while (num--) {
+    nsINode* tmp = (*aOutStartNode)->GetFirstChild();
+    if (!tmp) {
+      NS_WARNING("aOutStartNode did not have children");
+      return NS_ERROR_FAILURE;
+    }
+    *aOutStartNode = tmp;
+  }
+
+  num = numstr2.ToInteger(&rvIgnored);
+  while (num--) {
+    nsINode* tmp = (*aOutEndNode)->GetLastChild();
+    if (!tmp) {
+      NS_WARNING("aOutEndNode did not have children");
+      return NS_ERROR_FAILURE;
+    }
+    *aOutEndNode = tmp;
+  }
+
   return NS_OK;
 }
 

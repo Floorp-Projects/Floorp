@@ -4396,6 +4396,14 @@ class HTMLEditor final : public TextEditor,
   nsresult ParseFragment(const nsAString& aStr, nsAtom* aContextLocalName,
                          Document* aTargetDoc,
                          dom::DocumentFragment** aFragment, bool aTrustedInput);
+
+  /**
+   * @param aInfoStr as indicated by nsITransferable's kHTMLInfo.
+   */
+  [[nodiscard]] static nsresult MoveStartAndEndAccordingToHTMLInfo(
+      const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutStartNode,
+      nsCOMPtr<nsINode>* aOutEndNode);
+
   /**
    * CollectTopMostChildContentsCompletelyInRange() collects topmost child
    * contents which are completely in the given range.
