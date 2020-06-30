@@ -1081,7 +1081,6 @@ void DocumentLoadListener::SerializeRedirectData(
 
   aArgs.newLoadFlags() = aLoadFlags;
   aArgs.redirectFlags() = aRedirectFlags;
-  aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
   aArgs.properties() = do_QueryObject(mChannel);
   aArgs.srcdocData() = mSrcdocData;
   aArgs.baseUri() = mBaseURI;
@@ -1325,14 +1324,11 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
        NS_ConvertUTF16toUTF8(currentRemoteType).get(),
        NS_ConvertUTF16toUTF8(remoteType).get()));
 
-  // XXX: This is super hacky, and we should be able to do something better.
-  static uint64_t sNextCrossProcessRedirectIdentifier = 0;
-  mCrossProcessRedirectIdentifier = ++sNextCrossProcessRedirectIdentifier;
   mDoingProcessSwitch = true;
 
   LOG(("Process Switch: Calling ChangeRemoteness"));
   browsingContext
-      ->ChangeRemoteness(remoteType, mCrossProcessRedirectIdentifier,
+      ->ChangeRemoteness(remoteType, mLoadIdentifier,
                          isCOOPSwitch || isLargeAllocSwitch)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
@@ -1378,7 +1374,7 @@ DocumentLoadListener::RedirectToParentProcess(uint32_t aRedirectFlags,
   };
 
   nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>> endpoints;
-  processListener->OnChannelReady(loadState, mCrossProcessRedirectIdentifier,
+  processListener->OnChannelReady(loadState, mLoadIdentifier,
                                   std::move(endpoints), mTiming,
                                   std::move(resolve));
 
