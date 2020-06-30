@@ -40,7 +40,6 @@ const PanelUI = {
     return {
       mainView: "appMenu-mainView",
       multiView: "appMenu-multiView",
-      helpView: "PanelUI-helpView",
       menuButton: "PanelUI-menu-button",
       panel: "appMenu-popup",
       addonNotificationContainer: "appMenu-addon-banners",
@@ -158,7 +157,10 @@ const PanelUI = {
       this.panel.addEventListener(event, this);
     }
 
-    this.helpView.addEventListener("ViewShowing", this._onHelpViewShow);
+    PanelMultiView.getViewNode(document, "PanelUI-helpView").addEventListener(
+      "ViewShowing",
+      this._onHelpViewShow
+    );
     this._eventListenersAdded = true;
   },
 
@@ -166,7 +168,10 @@ const PanelUI = {
     for (let event of this.kEvents) {
       this.panel.removeEventListener(event, this);
     }
-    this.helpView.removeEventListener("ViewShowing", this._onHelpViewShow);
+    PanelMultiView.getViewNode(
+      document,
+      "PanelUI-helpView"
+    ).removeEventListener("ViewShowing", this._onHelpViewShow);
     this._eventListenersAdded = false;
   },
 
