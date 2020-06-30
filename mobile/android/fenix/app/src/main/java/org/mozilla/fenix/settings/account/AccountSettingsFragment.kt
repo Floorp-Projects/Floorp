@@ -34,6 +34,7 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.getLastSynced
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
@@ -137,6 +138,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         val preferenceSyncNow = requirePreference<Preference>(R.string.pref_key_sync_now)
         preferenceSyncNow.apply {
             onPreferenceClickListener = getClickListenerForSyncNow()
+
+            icon = icon.mutate().apply {
+                setTint(context.getColorFromAttr(R.attr.primaryText))
+            }
 
             // Current sync state
             if (requireComponents.backgroundServices.accountManager.isSyncActive()) {
