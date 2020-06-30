@@ -3440,7 +3440,16 @@
 - name: extensions.backgroundServiceWorker.enabled
   type: bool
   value: false
-  mirror: once 
+  mirror: once
+
+# Whether the extensions can register a service worker on its own.
+# NOTE: WebExtensions Framework ability to register a background service worker
+# is not controlled by this pref, only the extension code ability to use
+# navigator.serviceWorker.register is locked behind this pref.
+- name: extensions.serviceWorkerRegister.allowed
+  type: bool
+  value: false
+  mirror: always
 
 # This pref governs whether we enable content script CSP in extensions.
 - name: extensions.content_script_csp.enabled
