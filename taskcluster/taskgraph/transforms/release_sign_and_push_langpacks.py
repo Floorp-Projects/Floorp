@@ -25,8 +25,7 @@ langpack_sign_push_description_schema = schema.extend({
     Required('worker'): {
         Required('implementation'): 'push-addons',
         Required('channel'): optionally_keyed_by(
-            'project',
-            optionally_keyed_by('platform', Any('listed', 'unlisted'))),
+            'project', 'platform', Any('listed', 'unlisted')),
         Required('upstream-artifacts'): None,   # Processed here below
     },
 
