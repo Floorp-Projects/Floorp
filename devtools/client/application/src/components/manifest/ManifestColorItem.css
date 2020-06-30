@@ -11,7 +11,12 @@
 .manifest-item__color::before {
   display: inline-block;
   content: '';
-  background-color: var(--color-value); /* injected via React */
+  background-color: #fff;
+  background-image: linear-gradient(var(--color-value), var(--color-value)), /* injected via React */
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+  background-size: 6px 6px;
+  background-position: 0 0, 3px 3px;
   border-radius: 50%;
   width: calc(var(--base-unit) * 3);
   height: calc(var(--base-unit) * 3);
