@@ -55,6 +55,7 @@ permalink: /changelog/
 
 * **feature-webnotifications**
   * `WebNotificationFeature` checks the site permissions first before showing a notification.
+  * Notifications with a long text body are now expandable to show the full text.
 
 # 47.0.0
 

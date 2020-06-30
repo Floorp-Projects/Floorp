@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.webnotifications
 
+import android.app.Notification
 import android.app.Notification.EXTRA_SUB_TEXT
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
@@ -17,6 +18,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -101,5 +103,29 @@ class NativeNotificationBridgeTest {
                 ))
             )
         )
+    }
+
+    @Test
+    fun `android notification sets BigTextStyle`() = runBlockingTest {
+        val notification = bridge.convertToAndroidNotification(
+            blankNotification.copy(iconUrl = "https://example.com/large.png"),
+            testContext,
+            TEST_CHANNEL,
+            null,
+            0
+        )
+
+        val expectedStyle = Notification.BigTextStyle().javaClass.name
+        assertEquals(expectedStyle, notification.extras.getString(Notification.EXTRA_TEMPLATE))
+
+        val noBodyNotification = bridge.convertToAndroidNotification(
+            blankNotification.copy(iconUrl = "https://example.com/large.png", body = null),
+            testContext,
+            TEST_CHANNEL,
+            null,
+            0
+        )
+
+        assertNotEquals(expectedStyle, noBodyNotification.extras.getString(Notification.EXTRA_TEMPLATE))
     }
 }

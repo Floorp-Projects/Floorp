@@ -159,6 +159,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                 context = requireContext(),
                 sessionManager = components.sessionManager,
                 sessionId = sessionId,
+                storage = components.permissionStorage,
                 fragmentManager = requireFragmentManager(),
                 sitePermissionsRules = SitePermissionsRules(
                     autoplayAudible = SitePermissionsRules.AutoplayAction.ALLOWED,
