@@ -1195,10 +1195,10 @@ nsresult JsepSessionImpl::ParseSdp(const std::string& sdp,
                                    UniquePtr<Sdp>* parsedp) {
   auto results = mParser->Parse(sdp);
   auto parsed = std::move(results->Sdp());
-  auto errors = results->Errors();
+  mLastSdpParsingErrors = results->Errors();
   if (!parsed) {
     std::string error = results->ParserName() + " Failed to parse SDP: ";
-    mSdpHelper.appendSdpParseErrors(errors, &error);
+    mSdpHelper.AppendSdpParseErrors(mLastSdpParsingErrors, &error);
     JSEP_SET_ERROR(error);
     return NS_ERROR_INVALID_ARG;
   }
@@ -2263,6 +2263,11 @@ nsresult JsepSessionImpl::Close() {
 }
 
 const std::string JsepSessionImpl::GetLastError() const { return mLastError; }
+
+const std::vector<std::pair<size_t, std::string> >&
+JsepSessionImpl::GetLastSdpParsingErrors() const {
+  return mLastSdpParsingErrors;
+}
 
 bool JsepSessionImpl::CheckNegotiationNeeded() const {
   MOZ_ASSERT(mState == kJsepStateStable);

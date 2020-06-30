@@ -174,6 +174,9 @@ class JsepSession {
 
   virtual const std::string GetLastError() const { return "Error"; }
 
+  virtual const std::vector<std::pair<size_t, std::string>>&
+  GetLastSdpParsingErrors() const = 0;
+
   static const char* GetStateStr(JsepSignalingState state) {
     static const char* states[] = {"stable",
                                    "have-local-offer",

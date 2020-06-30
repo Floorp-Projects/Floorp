@@ -118,6 +118,9 @@ class JsepSessionImpl : public JsepSession {
 
   virtual const std::string GetLastError() const override;
 
+  virtual const std::vector<std::pair<size_t, std::string>>&
+  GetLastSdpParsingErrors() const override;
+
   virtual bool IsIceControlling() const override { return mIceControlling; }
 
   virtual Maybe<bool> IsPendingOfferer() const override {
@@ -266,6 +269,7 @@ class JsepSessionImpl : public JsepSession {
   UniquePtr<Sdp> mPendingRemoteDescription;
   std::vector<UniquePtr<JsepCodecDescription>> mSupportedCodecs;
   std::string mLastError;
+  std::vector<std::pair<size_t, std::string>> mLastSdpParsingErrors;
   SdpHelper mSdpHelper;
   UniquePtr<SdpParser> mParser;
   SsrcGenerator mSsrcGenerator;
