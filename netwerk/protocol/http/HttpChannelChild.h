@@ -132,20 +132,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   nsresult CrossProcessRedirectFinished(nsresult aStatus);
 
  protected:
-  mozilla::ipc::IPCResult RecvOnStartRequest(
-      const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
-      const nsHttpHeaderArray& aRequestHeaders,
-      const HttpChannelOnStartRequestArgs& aArgs) override;
-  mozilla::ipc::IPCResult RecvOnTransportAndData(
-      const nsresult& aChannelStatus, const nsresult& aTransportStatus,
-      const uint64_t& aOffset, const uint32_t& aCount,
-      const nsCString& aData) override;
-
-  mozilla::ipc::IPCResult RecvOnStopRequest(
-      const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
-      const TimeStamp& aLastActiveTabOptHit,
-      const nsHttpHeaderArray& aResponseTrailers,
-      nsTArray<ConsoleReportCollected>&& aConsoleReports) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(
       const uint32_t& registrarId, const URIParams& newURI,
