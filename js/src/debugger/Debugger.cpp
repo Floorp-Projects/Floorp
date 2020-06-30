@@ -6258,19 +6258,18 @@ bool Debugger::observesWasm(wasm::Instance* instance) const {
 /* static */
 bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
                                 AbstractFramePtr to, ScriptFrameIter& iter) {
-  auto removeFromDebuggerFramesOnExit = MakeScopeExit([&] {
-    // Remove any remaining old entries on exit, as the 'from' frame will
-    // be gone. This is only done in the failure case. On failure, the
-    // removeToDebuggerFramesOnExit lambda below will rollback any frames
-    // that were replaced, resulting in !frameMaps(to). On success, the
-    // range will be empty, as all from Frame.Debugger instances will have
-    // been removed.
-    MOZ_ASSERT_IF(DebugAPI::inFrameMaps(to), !DebugAPI::inFrameMaps(from));
-    removeFromFrameMapsAndClearBreakpointsIn(cx, from);
+  // Rekey missingScopes to maintain Debugger.Environment identity and
+  // forward liveScopes to point to the new frame.
+  DebugEnvironments::forwardLiveFrame(cx, from, to);
 
-    // Rekey missingScopes to maintain Debugger.Environment identity and
-    // forward liveScopes to point to the new frame.
-    DebugEnvironments::forwardLiveFrame(cx, from, to);
+  // If we hit an OOM anywhere in here, we need to make sure there aren't any
+  // Debugger.Frame objects left partially-initialized.
+  auto removeDebuggerFramesOnExit = MakeScopeExit([&] {
+    removeFromFrameMapsAndClearBreakpointsIn(cx, from);
+    removeFromFrameMapsAndClearBreakpointsIn(cx, to);
+
+    MOZ_ASSERT(!DebugAPI::inFrameMaps(from));
+    MOZ_ASSERT(!DebugAPI::inFrameMaps(to));
   });
 
   // Forward live Debugger.Frame objects.
@@ -6278,17 +6277,10 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
   if (!getDebuggerFrames(from, &frames)) {
     // An OOM here means that all Debuggers' frame maps still contain
     // entries for 'from' and no entries for 'to'. Since the 'from' frame
-    // will be gone, they are removed by removeFromDebuggerFramesOnExit
+    // will be gone, they are removed by removeDebuggerFramesOnExit
     // above.
     return false;
   }
-
-  // If during the loop below we hit an OOM, we must also rollback any of
-  // the frames that were successfully replaced. For OSR frames, OOM here
-  // means those frames will pop from the OSR trampoline, which does not
-  // call Debugger::onLeaveFrame.
-  auto removeToDebuggerFramesOnExit =
-      MakeScopeExit([&] { removeFromFrameMapsAndClearBreakpointsIn(cx, to); });
 
   for (size_t i = 0; i < frames.length(); i++) {
     HandleDebuggerFrame frameobj = frames[i];
@@ -6300,13 +6292,12 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
     if (!data) {
       // An OOM here means that some Debuggers' frame maps may still
       // contain entries for 'from' and some Debuggers' frame maps may
-      // also contain entries for 'to'. Thus both
-      // removeFromDebuggerFramesOnExit and
-      // removeToDebuggerFramesOnExit must both run.
+      // also contain entries for 'to'. Thus removeDebuggerFramesOnExit
+      // must run.
       //
       // The current frameobj in question is still in its Debugger's
       // frame map keyed by 'from', so it will be covered by
-      // removeFromDebuggerFramesOnExit.
+      // removeDebuggerFramesOnExit.
       return false;
     }
     frameobj->setFrameIterData(data);
@@ -6316,9 +6307,8 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
 
     // Add the frame object with |to| as key.
     if (!dbg->frames.putNew(to, frameobj)) {
-      // This OOM is subtle. At this point, both
-      // removeFromDebuggerFramesOnExit and removeToDebuggerFramesOnExit
-      // must both run for the same reason given above.
+      // This OOM is subtle. At this point, removeDebuggerFramesOnExit
+      // must run for the same reason given above.
       //
       // The difference is that the current frameobj is no longer in its
       // Debugger's frame map, so it will not be cleaned up by neither
@@ -6333,8 +6323,10 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
   }
 
   // All frames successfuly replaced, cancel the rollback.
-  removeToDebuggerFramesOnExit.release();
+  removeDebuggerFramesOnExit.release();
 
+  MOZ_ASSERT(!DebugAPI::inFrameMaps(from));
+  MOZ_ASSERT_IF(!frames.empty(), DebugAPI::inFrameMaps(to));
   return true;
 }
 
