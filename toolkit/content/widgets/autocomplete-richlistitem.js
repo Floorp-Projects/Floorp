@@ -804,13 +804,24 @@
     }
 
     _adjustAcItem() {
+      // Bug 1649180 to localize this when no longer an experiment.
+      let browser = this.getAttribute("ac-value");
+      switch (browser) {
+        case "chrome":
+          browser = "Google Chrome";
+          break;
+        case "chromium-edge":
+          browser = "Microsoft Edge";
+          break;
+        case "chromium":
+          browser = "Chromium";
+          break;
+      }
       document.l10n.setAttributes(
         this.querySelector(".labels-wrapper"),
         "autocomplete-import-logins",
         {
-          browser: this.MigrationUtils.getBrowserName(
-            this.getAttribute("ac-value")
-          ),
+          browser,
           host: this.getAttribute("ac-label").replace(/^www\./, ""),
         }
       );
