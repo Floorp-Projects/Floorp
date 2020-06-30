@@ -248,7 +248,7 @@ var PreferenceExperiments = {
    * default preference branch.
    */
   async init() {
-    CleanupManager.addCleanupHandler(this.saveStartupPrefs.bind(this));
+    CleanupManager.addCleanupHandler(() => this.saveStartupPrefs());
 
     for (const experiment of await this.getAllActive()) {
       // Check that the current value of the preference is still what we set it to
