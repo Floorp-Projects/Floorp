@@ -71,6 +71,7 @@ job-defaults:
     variants:
         by-app:
             chrome-m: []
+            fennec: []
             default: ["webrender"]
 
 browsertime-tp6m:
