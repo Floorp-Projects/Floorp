@@ -44,7 +44,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   // Callback when OnStartRequest is received and handled by HttpChannelChild.
   // Enqueued messages in background channel will be flushed.
-  void OnStartRequestReceived();
+  void OnStartRequestReceived(Maybe<uint32_t> aMultiPartID);
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool IsQueueEmpty() const { return mQueuedRunnables.IsEmpty(); }
