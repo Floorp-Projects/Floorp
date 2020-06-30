@@ -1,15 +1,7 @@
-DOCKERIO_USERNAME =$(error DOCKERIO_USERNAME should be set)
 IMAGE_NAME = funsize-update-generator
-FULL_IMAGE_NAME = $(DOCKERIO_USERNAME)/$(IMAGE_NAME)
 
 build:
-	docker build -t $(FULL_IMAGE_NAME) --no-cache --rm .
-
-push:
-	docker push $(FULL_IMAGE_NAME):latest
-
-pull:
-	docker pull $(FULL_IMAGE_NAME):latest
+	docker build -t $(IMAGE_NAME) --no-cache --rm .
 
 update_pubkeys:
 	curl https://hg.mozilla.org/mozilla-central/raw-file/default/toolkit/mozapps/update/updater/nightly_aurora_level3_primary.der | openssl x509 -inform DER -pubkey -noout > nightly.pubkey
