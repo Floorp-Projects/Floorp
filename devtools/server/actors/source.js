@@ -152,6 +152,10 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this._extensionName;
   },
 
+  get internalSourceId() {
+    return this._source.id;
+  },
+
   form: function() {
     const source = this._source;
 
