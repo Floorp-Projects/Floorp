@@ -318,6 +318,10 @@ Here is the list of current deep links available, which can be found here in the
     <td>`fenix://settings_notifications`</td>
     <td>Opens to the Android notification settings screen for Fenix. **Only works on Android API >=24**</td>
   </tr>
+  <tr>
+    <td>`fenix://install_search_widget`</td>
+    <td>Adds the search widget to the users launcher homescreen. **Only works on Android API >=26**</td>
+  </tr>
 </table>
 
 Messages

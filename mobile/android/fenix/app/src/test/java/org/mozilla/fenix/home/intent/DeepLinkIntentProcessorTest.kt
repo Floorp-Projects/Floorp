@@ -8,7 +8,9 @@ import android.content.Intent
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import io.mockk.Called
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.verify
 import mozilla.appservices.places.BookmarkRoot
 import org.junit.Assert.assertFalse
@@ -20,6 +22,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.SearchWidgetCreator
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -220,6 +223,17 @@ class DeepLinkIntentProcessorTest {
         verify { navController wasNot Called }
         verify { out wasNot Called }
         verify { activity.startActivity(any()) }
+    }
+
+    @Test
+    fun `process install_search_widget deep link`() {
+        mockkObject(SearchWidgetCreator)
+        every { SearchWidgetCreator.createSearchWidget(any()) } returns true
+        assertTrue(processor.process(testIntent("fenix://install_search_widget"), navController, out))
+
+        verify { navController wasNot Called }
+        verify { out wasNot Called }
+        verify { activity wasNot Called }
     }
 
     private fun testIntent(uri: String) = Intent("", uri.toUri())

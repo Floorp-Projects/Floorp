@@ -15,6 +15,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GlobalDirections
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.SearchWidgetCreator
 import org.mozilla.fenix.ext.alreadyOnDestination
 
 /**
@@ -90,6 +91,11 @@ class DeepLinkIntentProcessor(
             "settings_notifications" -> {
                 val intent = notificationSettings(activity)
                 activity.startActivity(intent)
+            }
+            "install_search_widget" -> {
+                if (SDK_INT >= Build.VERSION_CODES.O) {
+                    SearchWidgetCreator.createSearchWidget(activity)
+                }
             }
         }
     }
