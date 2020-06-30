@@ -25,8 +25,7 @@ class JSSymbolPtr(mozilla.prettyprinters.Pointer):
 
     def to_string(self):
         code = int(self.value['code_']) & 0xffffffff
-        desc = str(get_header_ptr(self.value['headerAndDescription_'],
-                                  self.cache.JSString_ptr_t))
+        desc = str(get_header_ptr(self.value, self.cache.JSString_ptr_t))
         if code == InSymbolRegistry:
             return "Symbol.for({})".format(desc)
         elif code == UniqueSymbol:

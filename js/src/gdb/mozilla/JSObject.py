@@ -43,10 +43,8 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
         self.otc = cache.mod_JSObject
 
     def summary(self):
-        group = get_header_ptr(self.value['headerAndGroup_'],
-                               self.otc.ObjectGroup_ptr_t)
-        classp = get_header_ptr(group['headerAndClasp_'],
-                                self.otc.JSClass_ptr_t)
+        group = get_header_ptr(self.value, self.otc.ObjectGroup_ptr_t)
+        classp = get_header_ptr(group, self.otc.JSClass_ptr_t)
         non_native = classp['flags'] & self.otc.class_NON_NATIVE
 
         # Use GDB to format the class name, but then strip off the address
@@ -61,8 +59,7 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
         else:
             native = self.value.cast(self.otc.NativeObject_ptr_t)
             shape = deref(native['shape_'])
-            baseshape = get_header_ptr(shape['headerAndBase_'],
-                                       self.otc.BaseShape_ptr_t)
+            baseshape = get_header_ptr(shape, self.otc.BaseShape_ptr_t)
             flags = baseshape['flags']
             is_delegate = bool(flags & self.otc.flag_DELEGATE)
             name = None

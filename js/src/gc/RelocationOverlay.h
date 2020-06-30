@@ -20,29 +20,19 @@
 namespace js {
 namespace gc {
 
-class RelocatedCellHeader : public CellHeader {
- public:
-  RelocatedCellHeader(Cell* location, uintptr_t flags);
-
-  Cell* location() const {
-    return reinterpret_cast<Cell*>(header_ & ~RESERVED_MASK);
-  }
-};
-
 /*
  * This structure overlays a Cell that has been moved and provides a way to find
  * its new location. It's used during generational and compacting GC.
  */
 class RelocationOverlay : public Cell {
- protected:
-  // First word of a Cell has additional requirements from GC. The GC flags
-  // determine if a Cell is a normal entry or is a RelocationOverlay.
-  //                3         0
-  //  -------------------------
-  //  | NewLocation | GCFlags |
-  //  -------------------------
-  RelocatedCellHeader header_;
+ public:
+  /* The location the cell has been moved to, stored in the cell header. */
+  Cell* forwardingAddress() const {
+    MOZ_ASSERT(isForwarded());
+    return reinterpret_cast<Cell*>(header_ & ~RESERVED_MASK);
+  }
 
+ protected:
   /* A list entry to track all relocated things. */
   RelocationOverlay* next_;
 
@@ -58,11 +48,6 @@ class RelocationOverlay : public Cell {
   }
 
   static RelocationOverlay* forwardCell(Cell* src, Cell* dst);
-
-  Cell* forwardingAddress() const {
-    MOZ_ASSERT(isForwarded());
-    return header_.location();
-  }
 
   RelocationOverlay*& nextRef() {
     MOZ_ASSERT(isForwarded());
