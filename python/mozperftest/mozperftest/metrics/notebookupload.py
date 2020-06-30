@@ -63,7 +63,9 @@ class Notebook(Layer):
                     data_to_post.append(r)
                 elif self.get_arg("analyze-strings"):
                     data_to_post.append(r)
-        self.ptnb = PerftestNotebook(data_to_post)
+        self.ptnb = PerftestNotebook(
+            data=data_to_post, logger=metadata, prefix=self.get_arg("prefix")
+        )
         self.ptnb.post_to_iodide(analysis)
 
         return metadata
