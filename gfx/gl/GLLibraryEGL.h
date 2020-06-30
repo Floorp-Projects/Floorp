@@ -24,6 +24,10 @@
 #  define EGL_DEFAULT_DISPLAY ((EGLNativeDisplayType)0)
 #endif
 
+extern "C" {
+struct AHardwareBuffer;
+}
+
 class nsIGfxInfo;
 
 template <typename T>
@@ -75,6 +79,7 @@ class GLLibraryEGL final {
     KHR_fence_sync,
     ANDROID_native_fence_sync,
     EGL_ANDROID_image_crop,
+    ANDROID_get_native_client_buffer,
     ANGLE_platform_angle,
     ANGLE_platform_angle_d3d,
     ANGLE_d3d_share_handle_client_buffer,
@@ -361,6 +366,11 @@ class GLLibraryEGL final {
       EGLBoolean fSwapBuffersWithDamage(EGLDisplay dpy, EGLSurface surface,
                                         const EGLint* rects, EGLint n_rects)
           WRAP(fSwapBuffersWithDamage(dpy, surface, rects, n_rects))
+
+      // ANDROID_get_native_client_buffer
+      EGLClientBuffer
+      fGetNativeClientBufferANDROID(const struct AHardwareBuffer* buffer)
+          WRAP(fGetNativeClientBufferANDROID(buffer))
 #undef WRAP
 #undef VOID_WRAP
 #undef PROFILE_CALL
@@ -537,6 +547,8 @@ class GLLibraryEGL final {
                                                    EGLSurface surface,
                                                    const EGLint* rects,
                                                    EGLint n_rects);
+    EGLClientBuffer(GLAPIENTRY* fGetNativeClientBufferANDROID)(
+        const struct AHardwareBuffer* buffer);
   } mSymbols = {};
 
  private:
