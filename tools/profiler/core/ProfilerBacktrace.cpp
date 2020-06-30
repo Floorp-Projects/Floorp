@@ -13,7 +13,7 @@
 
 ProfilerBacktrace::ProfilerBacktrace(
     const char* aName, int aThreadId,
-    mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aProfileChunkedBuffer,
+    UniquePtr<mozilla::ProfileChunkedBuffer> aProfileChunkedBuffer,
     mozilla::UniquePtr<ProfileBuffer> aProfileBuffer)
     : mName(strdup(aName)),
       mThreadId(aThreadId),
