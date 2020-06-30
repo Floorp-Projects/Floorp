@@ -32,9 +32,6 @@ transforms = TransformSequence()
 
 
 beetmover_description_schema = schema.extend({
-    # depname is used in taskref's to identify the taskID of the unsigned things
-    Required('depname', default='build'): text_type,
-
     # attributes is used for enabling artifact-map by declarative artifacts
     Required('attributes'): {text_type: object},
 
