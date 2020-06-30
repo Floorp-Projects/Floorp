@@ -150,13 +150,16 @@ class MOZ_MUST_USE_TYPE IDBResult : public detail::IDBResultBase<T, S...> {
  public:
   using IDBResult::IDBResultBase::IDBResultBase;
 
-  // Get a reference to the regular return value, asserting that this object
+  // Move the regular return value, asserting that this object
   // is indeed a regular return value.
-  T& Unwrap() {
-    return const_cast<T&>(static_cast<const IDBResult*>(this)->Unwrap());
+  T Unwrap() {
+    return std::move(
+        this->mVariant.template as<typename IDBResult::ValueType>().mValue);
   }
 
-  const T& Unwrap() const {
+  // Get a reference to the regular return value, asserting that this object
+  // is indeed a regular return value.
+  const T& Inspect() const {
     return this->mVariant.template as<typename IDBResult::ValueType>().mValue;
   }
 };
