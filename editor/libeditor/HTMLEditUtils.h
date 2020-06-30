@@ -94,7 +94,7 @@ class HTMLEditUtils final {
   static bool IsTable(nsINode* aNode);
   static bool IsTableRow(nsINode* aNode);
   static bool IsAnyTableElement(nsINode* aNode);
-  static bool IsTableElementButNotTable(nsINode* aNode);
+  static bool IsAnyTableElementButNotTable(nsINode* aNode);
   static bool IsTableCell(nsINode* node);
   static bool IsTableCellOrCaption(nsINode& aNode);
   static bool IsList(nsINode* aNode);
