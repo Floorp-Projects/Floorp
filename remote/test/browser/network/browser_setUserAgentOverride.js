@@ -12,26 +12,52 @@ const DOC = toDataURL(`<script>document.write(navigator.userAgent);</script>`);
 add_task(async function forwardToEmulation({ client }) {
   const { Network } = client;
   const userAgent = "Mozilla/5.0 (rv: 23) Romanesco/42.0";
+  const platform = "foobar";
 
   await loadURL(DOC);
   const originalUserAgent = await getNavigatorProperty("userAgent");
+  const originalPlatform = await getNavigatorProperty("platform");
 
   isnot(originalUserAgent, userAgent, "Custom user agent hasn't been set");
+  isnot(originalPlatform, platform, "Custom platform hasn't been set");
 
-  await Network.setUserAgentOverride({ userAgent });
+  await Network.setUserAgentOverride({ userAgent, platform });
   await loadURL(DOC);
   is(
     await getNavigatorProperty("userAgent"),
     userAgent,
     "Custom user agent has been set"
   );
+  is(
+    await getNavigatorProperty("platform"),
+    platform,
+    "Custom platform has been set"
+  );
 
-  await Network.setUserAgentOverride({ userAgent: "" });
+  await Network.setUserAgentOverride({ userAgent: "", platform: "" });
   await loadURL(DOC);
   is(
     await getNavigatorProperty("userAgent"),
     originalUserAgent,
     "Custom user agent has been reset"
+  );
+  is(
+    await getNavigatorProperty("platform"),
+    originalPlatform,
+    "Custom platform has been reset"
+  );
+
+  await Network.setUserAgentOverride({ userAgent, platform });
+  await loadURL(DOC);
+  is(
+    await getNavigatorProperty("userAgent"),
+    userAgent,
+    "Custom user agent has been set"
+  );
+  is(
+    await getNavigatorProperty("platform"),
+    platform,
+    "Custom platform has been set"
   );
 });
 

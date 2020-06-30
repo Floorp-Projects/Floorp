@@ -16,7 +16,7 @@ const MAX_WINDOW_SIZE = 10000000;
 
 class Emulation extends Domain {
   destructor() {
-    this.setUserAgentOverride({ userAgent: "" });
+    this.setUserAgentOverride({ userAgent: "", platform: "" });
 
     super.destructor();
   }
@@ -101,16 +101,20 @@ class Emulation extends Domain {
    *     User agent to use.
    * @param {string=} options.acceptLanguage [not yet supported]
    *     Browser langugage to emulate.
-   * @param {number=} options.platform [not yet supported]
+   * @param {string=} options.platform
    *     The platform navigator.platform should return.
    */
   async setUserAgentOverride(options = {}) {
-    const { userAgent } = options;
+    const { userAgent, platform } = options;
 
     if (typeof userAgent != "string") {
       throw new TypeError(
         "Invalid parameters (userAgent: string value expected)"
       );
+    }
+
+    if (!["undefined", "string"].includes(typeof platform)) {
+      throw new TypeError("platform: string value expected");
     }
 
     const { browsingContext } = this.session.target;
@@ -121,6 +125,12 @@ class Emulation extends Domain {
       browsingContext.customUserAgent = userAgent;
     } else {
       throw new TypeError("Invalid characters found in userAgent");
+    }
+
+    if (platform?.length > 0) {
+      browsingContext.customPlatform = platform;
+    } else {
+      browsingContext.customPlatform = null;
     }
   }
 
