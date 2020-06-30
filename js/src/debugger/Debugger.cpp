@@ -6000,7 +6000,7 @@ bool Debugger::CallData::adoptFrame() {
 
   RootedDebuggerFrame adoptedFrame(cx);
   if (frameObj->isOnStack()) {
-    FrameIter iter(*frameObj->frameIterData());
+    FrameIter iter = frameObj->getFrameIter(cx);
     if (!dbg->observesFrame(iter)) {
       JS_ReportErrorASCII(cx, "Debugger.Frame's global is not a debuggee");
       return false;
@@ -6287,20 +6287,9 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
     Debugger* dbg = Debugger::fromChildJSObject(frameobj);
 
     // Update frame object's ScriptFrameIter::data pointer.
-    frameobj->freeFrameIterData(cx->runtime()->defaultFreeOp());
-    ScriptFrameIter::Data* data = iter.copyData();
-    if (!data) {
-      // An OOM here means that some Debuggers' frame maps may still
-      // contain entries for 'from' and some Debuggers' frame maps may
-      // also contain entries for 'to'. Thus removeDebuggerFramesOnExit
-      // must run.
-      //
-      // The current frameobj in question is still in its Debugger's
-      // frame map keyed by 'from', so it will be covered by
-      // removeDebuggerFramesOnExit.
+    if (!frameobj->replaceFrameIterData(cx, iter)) {
       return false;
     }
-    frameobj->setFrameIterData(data);
 
     // Remove old frame.
     dbg->frames.remove(from);
