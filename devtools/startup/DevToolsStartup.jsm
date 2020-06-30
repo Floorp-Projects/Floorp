@@ -71,11 +71,6 @@ ChromeUtils.defineModuleGetter(
   "WebChannel",
   "resource://gre/modules/WebChannel.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
 
 // We don't want to spend time initializing the full loader here so we create
 // our own lazy require.
@@ -580,10 +575,7 @@ DevToolsStartup.prototype = {
         });
         itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
 
-        const developerItems = PanelMultiView.getViewNode(
-          doc,
-          "PanelUI-developerItems"
-        );
+        const developerItems = doc.getElementById("PanelUI-developerItems");
         CustomizableUI.clearSubview(developerItems);
         CustomizableUI.fillSubviewFromMenuItems(itemsToDisplay, developerItems);
       },
@@ -598,7 +590,8 @@ DevToolsStartup.prototype = {
         // not called yet when CustomizableUI creates the widget.
         this.hookKeyShortcuts(doc.defaultView);
 
-        if (PanelMultiView.getViewNode(doc, "PanelUI-developerItems")) {
+        // Bug 1223127, CUI should make this easier to do.
+        if (doc.getElementById("PanelUI-developerItems")) {
           return;
         }
         const view = doc.createXULElement("panelview");
