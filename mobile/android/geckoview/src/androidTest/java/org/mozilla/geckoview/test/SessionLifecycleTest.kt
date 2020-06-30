@@ -261,6 +261,10 @@ class SessionLifecycleTest : BaseSessionTest() {
         var newSession: GeckoSession? = null
         mainSession.toParcel { parcel ->
             newSession = sessionRule.createFromParcel(parcel)
+            // Since we will be calling evaluateJS on newSession, we need to
+            // tell sessionRule to transfer mainSession's WebExtension.Port
+            // over to newSession.
+            sessionRule.transferPort(mainSession, newSession!!)
         }
 
         // We generate an extra focus event during transfer.
