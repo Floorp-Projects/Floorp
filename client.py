@@ -96,7 +96,7 @@ def toggle_trailing_blank_line(depname):
         open(depname, "wb").writelines(lines[:-1])
     else:
         # adding blank line
-        open(depname, "ab").write("\n")
+        open(depname, "ab").write(b'\n')
 
 
 def get_trailing_blank_line_state(depname):
