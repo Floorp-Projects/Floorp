@@ -396,7 +396,14 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   } else if (
 #ifndef NSCONTEXTMENUISMOUSEUP
       (aEvent->mMessage == eMouseUp &&
-       aEvent->AsMouseEvent()->mButton == MouseButton::eSecondary) &&
+       (aEvent->AsMouseEvent()->mButton == MouseButton::eSecondary
+#  ifdef XP_MACOSX
+        // On Mac, we get the context menu event on left-click when ctrl key is
+        // pressed, listen it as well to dismiss the menu.
+        || (aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary &&
+            aEvent->AsMouseEvent()->IsControl())
+#  endif
+            )) &&
 #else
       aEvent->mMessage == eContextMenu &&
 #endif
@@ -406,17 +413,22 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     // that it doesn't bubble and get seen again by the popuplistener and show
     // another context menu.
     //
-    // Furthermore (there's always more, isn't there?), on some platforms (win32
-    // being one of them) we get the context menu event on a mouse up while
-    // on others we get it on a mouse down. For the ones where we get it on a
-    // mouse down, we must continue listening for the right button up event to
-    // dismiss the menu.
+    // Furthermore (there's always more, isn't there?), on some platforms
+    // (win32 being one of them) we get the context menu event on a mouse up
+    // while on others we get it on a mouse down. For the ones where we get it
+    // on a mouse down, we must continue listening for the right button up
+    // event to dismiss the menu.
     if (menuParent->IsContextMenu()) {
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
       Execute(aEvent);
     }
   } else if (aEvent->mMessage == eMouseUp &&
              aEvent->AsMouseEvent()->mButton == MouseButton::ePrimary &&
+#ifdef XP_MACOSX
+             // On Mac, we get the context menu event on left-click when ctrl
+             // key is pressed, so we don't want to execute the event handler.
+             !aEvent->AsMouseEvent()->IsControl() &&
+#endif
              !IsMenu() && !IsDisabled()) {
     // Execute the execute event handler.
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
