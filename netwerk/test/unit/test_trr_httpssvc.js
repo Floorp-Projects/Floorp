@@ -205,3 +205,230 @@ add_task(async function testHTTPSSVC() {
   Assert.equal(answer[2].name, "hello");
   Assert.equal(answer[2].values.length, 0);
 });
+
+add_task(async function test_aliasform() {
+  let trrServer = new TRRServer();
+  registerCleanupFunction(async () => trrServer.stop());
+  await trrServer.start();
+  dump(`port = ${trrServer.port}\n`);
+
+  if (inChildProcess()) {
+    do_send_remote_message("mode3-port", trrServer.port);
+    await do_await_remote_message("mode3-port-done");
+  } else {
+    Services.prefs.setIntPref("network.trr.mode", 3);
+    Services.prefs.setCharPref(
+      "network.trr.uri",
+      `https://foo.example.com:${trrServer.port}/dns-query`
+    );
+  }
+
+  // Test that HTTPS priority = 0 (AliasForm) behaves like a CNAME
+  await trrServer.registerDoHAnswers("test.com", "A", [
+    {
+      name: "test.com",
+      ttl: 55,
+      type: "HTTPSSVC",
+      flush: false,
+      data: {
+        priority: 0,
+        name: "something.com",
+        values: [],
+      },
+    },
+  ]);
+  await trrServer.registerDoHAnswers("something.com", "A", [
+    {
+      name: "something.com",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "1.2.3.4",
+    },
+  ]);
+
+  await new TRRDNSListener("test.com", "1.2.3.4");
+
+  // Test a chain of HTTPSSVC AliasForm and CNAMEs
+  await trrServer.registerDoHAnswers("x.com", "A", [
+    {
+      name: "x.com",
+      ttl: 55,
+      type: "HTTPSSVC",
+      flush: false,
+      data: {
+        priority: 0,
+        name: "y.com",
+        values: [],
+      },
+    },
+  ]);
+  await trrServer.registerDoHAnswers("y.com", "A", [
+    {
+      name: "y.com",
+      type: "CNAME",
+      ttl: 55,
+      class: "IN",
+      flush: false,
+      data: "z.com",
+    },
+  ]);
+  await trrServer.registerDoHAnswers("z.com", "A", [
+    {
+      name: "z.com",
+      ttl: 55,
+      type: "HTTPSSVC",
+      flush: false,
+      data: {
+        priority: 0,
+        name: "target.com",
+        values: [],
+      },
+    },
+  ]);
+  await trrServer.registerDoHAnswers("target.com", "A", [
+    {
+      name: "target.com",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "4.3.2.1",
+    },
+  ]);
+
+  await new TRRDNSListener("x.com", "4.3.2.1");
+
+  // We get a ServiceForm instead of a A answer, CNAME or AliasForm
+  await trrServer.registerDoHAnswers("no-ip-host.com", "A", [
+    {
+      name: "no-ip-host.com",
+      ttl: 55,
+      type: "HTTPSSVC",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "h3pool",
+        values: [
+          { key: "alpn", value: "h2,h3" },
+          { key: "no-default-alpn" },
+          { key: "port", value: 8888 },
+          { key: "ipv4hint", value: "1.2.3.4" },
+          { key: "esniconfig", value: "123..." },
+          { key: "ipv6hint", value: "::1" },
+        ],
+      },
+    },
+  ]);
+
+  let [, , inStatus] = await new TRRDNSListener(
+    "no-ip-host.com",
+    undefined,
+    false
+  );
+  Assert.ok(
+    !Components.isSuccessCode(inStatus),
+    `${inStatus} should be an error code`
+  );
+
+  // Test CNAME/AliasForm loop
+  await trrServer.registerDoHAnswers("loop.com", "A", [
+    {
+      name: "loop.com",
+      type: "CNAME",
+      ttl: 55,
+      class: "IN",
+      flush: false,
+      data: "loop2.com",
+    },
+  ]);
+  await trrServer.registerDoHAnswers("loop2.com", "A", [
+    {
+      name: "loop2.com",
+      ttl: 55,
+      type: "HTTPSSVC",
+      flush: false,
+      data: {
+        priority: 0,
+        name: "loop.com",
+        values: [],
+      },
+    },
+  ]);
+
+  [, , inStatus] = await new TRRDNSListener("loop.com", undefined, false);
+  Assert.ok(
+    !Components.isSuccessCode(inStatus),
+    `${inStatus} should be an error code`
+  );
+
+  // Alias form for .
+  await trrServer.registerDoHAnswers("empty.com", "A", [
+    {
+      name: "empty.com",
+      ttl: 55,
+      type: "HTTPSSVC",
+      flush: false,
+      data: {
+        priority: 0,
+        name: "", // This is not allowed
+        values: [],
+      },
+    },
+  ]);
+
+  [, , inStatus] = await new TRRDNSListener("empty.com", undefined, false);
+  Assert.ok(
+    !Components.isSuccessCode(inStatus),
+    `${inStatus} should be an error code`
+  );
+
+  // We should ignore ServiceForm if an AliasForm record is also present
+  await trrServer.registerDoHAnswers("multi.com", "HTTPSSVC", [
+    {
+      name: "multi.com",
+      ttl: 55,
+      type: "HTTPSSVC",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "h3pool",
+        values: [
+          { key: "alpn", value: "h2,h3" },
+          { key: "no-default-alpn" },
+          { key: "port", value: 8888 },
+          { key: "ipv4hint", value: "1.2.3.4" },
+          { key: "esniconfig", value: "123..." },
+          { key: "ipv6hint", value: "::1" },
+        ],
+      },
+    },
+    {
+      name: "multi.com",
+      ttl: 55,
+      type: "HTTPSSVC",
+      flush: false,
+      data: {
+        priority: 0,
+        name: "example.com",
+        values: [],
+      },
+    },
+  ]);
+
+  let listener = new DNSListener();
+  let request = dns.asyncResolveByType(
+    "multi.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.ok(
+    !Components.isSuccessCode(inStatus2),
+    `${inStatus2} should be an error code`
+  );
+});
