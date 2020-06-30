@@ -286,6 +286,8 @@ function Toolbox(
   this._webExtensions = new Map();
 
   this._toolPanels = new Map();
+  // Map of tool startup components for given tool id.
+  this._toolStartups = new Map();
   this._inspectorExtensionSidebars = new Map();
 
   this._netMonitorAPI = null;
@@ -2271,6 +2273,10 @@ Toolbox.prototype = {
     }
 
     deck.appendChild(panel);
+
+    if (toolDefinition.buildToolStartup && !this._toolStartups.has(id)) {
+      this._toolStartups.set(id, toolDefinition.buildToolStartup(this));
+    }
   },
 
   /**
@@ -2972,6 +2978,19 @@ Toolbox.prototype = {
   },
 
   /**
+   * Check if the tool's tab is highlighted.
+   *
+   * @param {string} id
+   *        The id of the tool to be checked
+   */
+  async isToolHighlighted(id) {
+    if (!this.component) {
+      await this.isOpen;
+    }
+    return this.component.isToolHighlighted(id);
+  },
+
+  /**
    * Highlights the tool's tab if it is not the currently selected tool.
    *
    * @param {string} id
@@ -3419,6 +3438,25 @@ Toolbox.prototype = {
   },
 
   /**
+   * Get a startup component for a given tool.
+   * @param  {string} toolId
+   *         Id of the tool to get the startup component for.
+   */
+  getToolStartup: function(toolId) {
+    return this._toolStartups.get(toolId);
+  },
+
+  _unloadToolStartup: async function(toolId) {
+    const startup = this.getToolStartup(toolId);
+    if (!startup) {
+      return;
+    }
+
+    this._toolStartups.delete(toolId);
+    await startup.destroy();
+  },
+
+  /**
    * Handler for the tool-registered event.
    * @param  {string} toolId
    *         Id of the tool that was registered
@@ -3455,6 +3493,7 @@ Toolbox.prototype = {
    */
   _toolUnregistered: function(toolId) {
     this.unloadTool(toolId);
+    this._unloadToolStartup(toolId);
 
     // Emit the event so tools can listen to it from the toolbox level
     // instead of gDevTools
@@ -3693,6 +3732,10 @@ Toolbox.prototype = {
         // We don't want to stop here if any panel fail to close.
         console.error("Panel " + id + ":", e);
       }
+    }
+
+    for (const id of this._toolStartups.keys()) {
+      outstanding.push(this._unloadToolStartup(id));
     }
 
     this.browserRequire = null;

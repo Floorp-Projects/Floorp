@@ -7,6 +7,7 @@ const Services = require("Services");
 
 const {
   ENABLE,
+  DISABLE,
   RESET,
   UPDATE_CAN_BE_DISABLED,
   UPDATE_CAN_BE_ENABLED,
@@ -52,5 +53,17 @@ exports.enable = enableAccessibility => async dispatch => {
     dispatch({ type: ENABLE });
   } catch (error) {
     dispatch({ error, type: ENABLE });
+  }
+};
+
+/**
+ * Enable accessibility services in order to view accessible tree.
+ */
+exports.disable = disableAccessibility => async dispatch => {
+  try {
+    await disableAccessibility();
+    dispatch({ type: DISABLE });
+  } catch (error) {
+    dispatch({ error, type: DISABLE });
   }
 };

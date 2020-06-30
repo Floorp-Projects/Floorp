@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
+const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,
@@ -29,10 +29,10 @@ class AccessibilityProxy {
     this._accessibilityWalkerFronts = new Set();
     this.lifecycleEvents = new Map();
     this.accessibilityEvents = new Map();
-    this._updateTargetListeners = new EventEmitter();
     this.supports = {};
 
     this.audit = this.audit.bind(this);
+    this.disableAccessibility = this.disableAccessibility.bind(this);
     this.enableAccessibility = this.enableAccessibility.bind(this);
     this.getAccessibilityTreeRoot = this.getAccessibilityTreeRoot.bind(this);
     this.resetAccessiblity = this.resetAccessiblity.bind(this);
@@ -45,9 +45,6 @@ class AccessibilityProxy {
     this.startListeningForParentLifecycleEvents = this.startListeningForParentLifecycleEvents.bind(
       this
     );
-    this.startListeningForTargetUpdated = this.startListeningForTargetUpdated.bind(
-      this
-    );
     this.stopListeningForAccessibilityEvents = this.stopListeningForAccessibilityEvents.bind(
       this
     );
@@ -55,9 +52,6 @@ class AccessibilityProxy {
       this
     );
     this.stopListeningForParentLifecycleEvents = this.stopListeningForParentLifecycleEvents.bind(
-      this
-    );
-    this.stopListeningForTargetUpdated = this.stopListeningForTargetUpdated.bind(
       this
     );
     this.highlightAccessible = this.highlightAccessible.bind(this);
@@ -91,7 +85,7 @@ class AccessibilityProxy {
   }
 
   get currentTarget() {
-    return this.toolbox.targetList.targetFront;
+    return this._currentTarget;
   }
 
   /**
@@ -140,12 +134,14 @@ class AccessibilityProxy {
     return combinedAudit;
   }
 
-  startListeningForTargetUpdated(onTargetUpdated) {
-    this._updateTargetListeners.on("target-updated", onTargetUpdated);
-  }
-
-  stopListeningForTargetUpdated(onTargetUpdated) {
-    this._updateTargetListeners.off("target-updated", onTargetUpdated);
+  async disableAccessibility() {
+    // Accessibility service is shut down using the parent accessibility front.
+    // That, in turn, shuts down accessibility service in all content processes.
+    // We need to wait until that happens to be sure platform  accessibility is
+    // fully disabled.
+    const disabled = this.accessibilityFront.once("shutdown");
+    await this.parentAccessibilityFront.disable();
+    await disabled;
   }
 
   async enableAccessibility() {
@@ -284,7 +280,8 @@ class AccessibilityProxy {
 
   async resetAccessiblity() {
     const { enabled } = this.accessibilityFront;
-    const { canBeEnabled, canBeDisabled } = this.parentAccessibilityFront;
+    const { canBeEnabled, canBeDisabled } =
+      this.parentAccessibilityFront || this.accessibilityFront;
     return { enabled, canBeDisabled, canBeEnabled };
   }
 
@@ -390,15 +387,58 @@ class AccessibilityProxy {
     });
   }
 
+  /**
+   * Part of the proxy initialization only needs to be done when the accessibility panel starts.
+   * To avoid performance issues, the panel will explicitly call this method every time a new
+   * target becomes available.
+   */
+  async initializeProxyForPanel(targetFront) {
+    await this.onTargetAvailable({ targetFront });
+
+    // No need to retrieve parent accessibility front since root front does not
+    // change.
+    if (!this.parentAccessibilityFront) {
+      this.parentAccessibilityFront = await this._currentTarget.client.mainRoot.getFront(
+        "parentaccessibility"
+      );
+    }
+
+    this.simulatorFront = this.accessibilityFront.simulatorFront;
+    if (this.simulatorFront) {
+      this.simulate = types => this.simulatorFront.simulate({ types });
+    } else {
+      this.simulate = null;
+    }
+
+    // Move accessibility front lifecycle event listeners to a new top level
+    // front.
+    for (const [type, listeners] of this.lifecycleEvents.entries()) {
+      for (const listener of listeners.values()) {
+        this.accessibilityFront.on(type, listener);
+      }
+    }
+  }
+
   async initialize() {
-    await this.toolbox.targetList.watchTargets(
-      [this.toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed
-    );
-    this.parentAccessibilityFront = await this.toolbox.targetList.rootFront.getFront(
-      "parentaccessibility"
-    );
+    try {
+      await this.toolbox.targetList.watchTargets(
+        [this.toolbox.targetList.TYPES.FRAME],
+        this.onTargetAvailable,
+        this.onTargetDestroyed
+      );
+      // Bug 1602075: auto init feature definition is used for an experiment to
+      // determine if we can automatically enable accessibility panel when it
+      // opens.
+      this.supports.autoInit = Services.prefs.getBoolPref(
+        "devtools.accessibility.auto-init.enabled",
+        false
+      );
+
+      return true;
+    } catch (e) {
+      // toolbox may be destroyed during this step.
+      return false;
+    }
   }
 
   destroy() {
@@ -410,7 +450,6 @@ class AccessibilityProxy {
 
     this.lifecycleEvents.clear();
     this.accessibilityEvents.clear();
-    this._updateTargetListeners = null;
 
     this.accessibilityFront = null;
     this.parentAccessibilityFront = null;
@@ -493,7 +532,7 @@ class AccessibilityProxy {
     }
   }
 
-  async onTargetAvailable({ targetFront, isTargetSwitching }) {
+  async onTargetAvailable({ targetFront }) {
     targetFront.watchFronts(
       "accessibility",
       this.onAccessibilityFrontAvailable,
@@ -501,37 +540,33 @@ class AccessibilityProxy {
     );
 
     if (!targetFront.isTopLevel) {
-      return;
+      return null;
     }
 
+    if (this._updatePromise && this._currentTarget === targetFront) {
+      return this._updatePromise;
+    }
+
+    this._currentTarget = targetFront;
     this._accessibilityWalkerFronts.clear();
 
-    this.accessibilityFront = await this.currentTarget.getFront(
-      "accessibility"
-    );
-    // To add a check for backward compatibility add something similar to the
-    // example below:
-    //
-    // [this.supports.simulation] = await Promise.all([
-    //   // Please specify the version of Firefox when the feature was added.
-    //   this.currentTarget.actorHasMethod("accessibility", "getSimulator"),
-    // ]);
-    this.simulatorFront = this.accessibilityFront.simulatorFront;
-    if (this.simulatorFront) {
-      this.simulate = types => this.simulatorFront.simulate({ types });
-    } else {
-      this.simulate = null;
-    }
+    this._updatePromise = (async () => {
+      this.accessibilityFront = await this._currentTarget.getFront(
+        "accessibility"
+      );
+      // Finalize accessibility front initialization. See accessibility front
+      // bootstrap method description.
+      await this.accessibilityFront.bootstrap();
+      // To add a check for backward compatibility add something similar to the
+      // example below:
+      //
+      // [this.supports.simulation] = await Promise.all([
+      //   // Please specify the version of Firefox when the feature was added.
+      //   this._currentTarget.actorHasMethod("accessibility", "getSimulator"),
+      // ]);
+    })();
 
-    // Move accessibility front lifecycle event listeners to a new top level
-    // front.
-    for (const [type, listeners] of this.lifecycleEvents.entries()) {
-      for (const listener of listeners.values()) {
-        this.accessibilityFront.on(type, listener);
-      }
-    }
-
-    this._updateTargetListeners.emit("target-updated", { isTargetSwitching });
+    return this._updatePromise;
   }
 
   async onTargetDestroyed({ targetFront }) {
