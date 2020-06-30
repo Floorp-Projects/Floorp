@@ -5097,9 +5097,6 @@ KnownClass jit::GetObjectKnownClass(const MDefinition* def) {
     case MDefinition::Opcode::FunctionWithProto:
       return KnownClass::Function;
 
-    case MDefinition::Opcode::RegExp:
-      return KnownClass::RegExp;
-
     case MDefinition::Opcode::Phi: {
       if (def->numOperands() == 0) {
         return KnownClass::None;
@@ -5141,8 +5138,6 @@ const JSClass* jit::GetObjectKnownJSClass(const MDefinition* def) {
       return &ArrayObject::class_;
     case KnownClass::Function:
       return &JSFunction::class_;
-    case KnownClass::RegExp:
-      return &RegExpObject::class_;
     case KnownClass::None:
       break;
   }
