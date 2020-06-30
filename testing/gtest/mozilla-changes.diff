@@ -37,6 +37,17 @@ diff --git a/gtest/src/gtest-death-test.cc b/gtest/src/gtest-death-test.cc
  #  endif  // GTEST_OS_MAC
  
  #  if !GTEST_OS_QNX
+@@ -1285,9 +1285,9 @@ static pid_t ExecDeathTestSpawnChild(cha
+   const bool use_fork = GTEST_FLAG(death_test_use_fork);
+ 
+   if (!use_fork) {
+     static const bool stack_grows_down = StackGrowsDown();
+-    const size_t stack_size = getpagesize();
++    const size_t stack_size = getpagesize() * 2;
+     // MMAP_ANONYMOUS is not defined on Mac, so we use MAP_ANON instead.
+     void* const stack = mmap(NULL, stack_size, PROT_READ | PROT_WRITE,
+                              MAP_ANON | MAP_PRIVATE, -1, 0);
+     GTEST_DEATH_TEST_CHECK_(stack != MAP_FAILED);
 diff --git a/gtest/src/gtest.cc b/gtest/src/gtest.cc
 --- a/gtest/src/gtest.cc
 +++ b/gtest/src/gtest.cc
