@@ -27,4 +27,22 @@ describe("ManifestColorItem", () => {
     const wrapper = shallow(ManifestColorItem({ label: "foo" }));
     expect(wrapper).toMatchSnapshot();
   });
+
+  it("strips opaque alpha from the displayed color", () => {
+    const wrapper = shallow(
+      ManifestColorItem({ label: "foo", value: "#00FF00FF" })
+    );
+    expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper.find(".manifest-item__color").text()).toBe("#00FF00");
+  });
+
+  it("does not strip translucent alpha from the displayed color", () => {
+    const wrapper = shallow(
+      ManifestColorItem({ label: "foo", value: "#00FF00FA" })
+    );
+    expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper.find(".manifest-item__color").text()).toBe("#00FF00FA");
+  });
 });
