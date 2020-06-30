@@ -19,6 +19,11 @@ add_task(async function() {
 
   // Expand nodes and make sure more sources appear.
   await assertSourceCount(dbg, 3);
+  is(
+    findElement(dbg, "sourceNode", 1).textContent.trim(),
+    "Main Thread",
+    "Main thread is labeled properly"
+  );
   await clickElement(dbg, "sourceDirectoryLabel", 3);
 
   await assertSourceCount(dbg, 8);
