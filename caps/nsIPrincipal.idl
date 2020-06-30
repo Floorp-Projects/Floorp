@@ -255,7 +255,7 @@ interface nsIPrincipal : nsISerializable
      * Returns the "host" portion of the 
      * Principals URI, if any.
      */
-    [noscript] readonly attribute ACString host;
+    readonly attribute ACString host;
 
     /**
      * Returns the prepath of the principals uri
@@ -277,7 +277,7 @@ interface nsIPrincipal : nsISerializable
       * WARNING: DO NOT USE FOR SECURITY CHECKS.
       * just for logging purposes!
      */
-    [noscript] readonly attribute ACString asciiSpec;
+    readonly attribute ACString asciiSpec;
 
     /* Returns the Pre Path of the Principals URI with
     * user:pass stripped for privacy and spoof prevention
