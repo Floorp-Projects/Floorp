@@ -113,7 +113,11 @@ class SharedGL final {
   }
 
   static already_AddRefed<GLContextEGL> CreateContext() {
-    RefPtr<GLContextEGL> gl = CreateContextImpl(/* aUseGles */ false);
+    RefPtr<GLContextEGL> gl;
+#if !defined(MOZ_WIDGET_ANDROID)
+    gl = CreateContextImpl(/* aUseGles */ false);
+#endif  // !defined(MOZ_WIDGET_ANDROID)
+
     if (!gl) {
       gl = CreateContextImpl(/* aUseGles */ true);
     }
