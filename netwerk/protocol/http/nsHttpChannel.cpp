@@ -7094,10 +7094,7 @@ auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
   }
 
   if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel)) {
-    if (httpParent->AttachStreamFilter(std::move(parent))) {
-      return ChildEndpointPromise::CreateAndResolve(std::move(child), __func__);
-    }
-    return ChildEndpointPromise::CreateAndReject(false, __func__);
+    return httpParent->AttachStreamFilter(std::move(parent), std::move(child));
   }
 
   extensions::StreamFilterParent::Attach(this, std::move(parent));

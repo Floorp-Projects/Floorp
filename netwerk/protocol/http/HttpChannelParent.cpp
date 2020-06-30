@@ -2665,11 +2665,24 @@ void HttpChannelParent::OverrideReferrerInfoDuringBeginConnect(
   mOverrideReferrerInfo = aReferrerInfo;
 }
 
-bool HttpChannelParent::AttachStreamFilter(
-    Endpoint<extensions::PStreamFilterParent>&& aEndpoint) {
+auto HttpChannelParent::AttachStreamFilter(
+    Endpoint<extensions::PStreamFilterParent>&& aParentEndpoint,
+    Endpoint<extensions::PStreamFilterChild>&& aChildEndpoint)
+    -> RefPtr<ChildEndpointPromise> {
+  LOG(("HttpChannelParent::AttachStreamFilter [this=%p]", this));
   MOZ_ASSERT(!mAfterOnStartRequestBegun);
   mStreamFilterAttached = true;
-  return SendAttachStreamFilter(std::move(aEndpoint));
+
+  if (mIPCClosed) {
+    return ChildEndpointPromise::CreateAndReject(false, __func__);
+  }
+
+  // If IPC channel is open, background channel should be ready to send
+  // SendAttachStreamFilter.
+  MOZ_ASSERT(mBgParent);
+  return InvokeAsync(mBgParent->GetBackgroundTarget(), mBgParent.get(),
+                     __func__, &HttpBackgroundChannelParent::AttachStreamFilter,
+                     std::move(aParentEndpoint), std::move(aChildEndpoint));
 }
 
 }  // namespace net
