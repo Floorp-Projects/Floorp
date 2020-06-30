@@ -46,9 +46,6 @@ XPCOMUtils.defineLazyGetter(this, "gEncoder", function() {
   return new TextEncoder();
 });
 
-// Delay for batching invalidation of the JSON cache (ms)
-const CACHE_INVALIDATION_DELAY = 1000;
-
 const CACHE_FILENAME = "search.json.mozlz4";
 
 /**
@@ -62,6 +59,12 @@ class SearchCache {
   constructor(searchService) {
     this._searchService = searchService;
   }
+
+  QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
+
+  // Delay for batching invalidation of the JSON cache (ms)
+  static CACHE_INVALIDATION_DELAY = 1000;
+
   /**
    * A reference to the pending DeferredTask, if there is one.
    */
@@ -93,14 +96,32 @@ class SearchCache {
    */
   _searchService;
 
+  addObservers() {
+    Services.obs.addObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
+    Services.obs.addObserver(this, SearchUtils.TOPIC_SEARCH_SERVICE);
+  }
+
+  /**
+   * Cleans up, removing observers.
+   */
+  removeObservers() {
+    Services.obs.removeObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
+    Services.obs.removeObserver(this, SearchUtils.TOPIC_SEARCH_SERVICE);
+  }
+
   /**
    * Reads the cache file.
    *
+   * @param {string} origin
+   *   If this parameter is "test", then the cache will not be written. As
+   *   some tests manipulate the cache directly, we allow turning off writing to
+   *   avoid writing stale cache data.
    * @returns {object}
    *   Returns the cache file data.
    */
-  async get() {
+  async get(origin = "") {
     let json;
+    await this._ensurePendingWritesCompleted(origin);
     try {
       let cacheFilePath = OS.Path.join(
         OS.Constants.Path.profileDir,
@@ -135,15 +156,15 @@ class SearchCache {
    * Queues writing the cache until after CACHE_INVALIDATION_DELAY. If there
    * is a currently queued task then it will be restarted.
    */
-  delayedWrite() {
+  _delayedWrite() {
     if (this._batchTask) {
       this._batchTask.disarm();
     } else {
       let task = async () => {
         logConsole.debug("batchTask: Invalidating engine cache");
-        await this.write();
+        await this._write();
       };
-      this._batchTask = new DeferredTask(task, CACHE_INVALIDATION_DELAY);
+      this._batchTask = new DeferredTask(task, this.CACHE_INVALIDATION_DELAY);
     }
     this._batchTask.arm();
   }
@@ -156,26 +177,27 @@ class SearchCache {
    *   some tests manipulate the cache directly, we allow turning off writing to
    *   avoid writing stale cache data.
    */
-  async ensurePendingWritesCompleted(origin = "") {
+  async _ensurePendingWritesCompleted(origin = "") {
     // Before we read the cache file, first make sure all pending tasks are clear.
-    if (this._batchTask) {
-      logConsole.debug("finalizing batch task");
-      let task = this._batchTask;
-      this._batchTask = null;
-      // Tests manipulate the cache directly, so let's not double-write with
-      // stale cache data here.
-      if (origin == "test") {
-        task.disarm();
-      } else {
-        await task.finalize();
-      }
+    if (!this._batchTask) {
+      return;
+    }
+    logConsole.debug("finalizing batch task");
+    let task = this._batchTask;
+    this._batchTask = null;
+    // Tests manipulate the cache directly, so let's not double-write with
+    // stale cache data here.
+    if (origin == "test") {
+      task.disarm();
+    } else {
+      await task.finalize();
     }
   }
 
   /**
    * Writes the cache to disk (no delay).
    */
-  async write() {
+  async _write() {
     if (this._batchTask) {
       this._batchTask.disarm();
     }
@@ -238,7 +260,7 @@ class SearchCache {
    */
   setAttribute(name, val) {
     this._metaData[name] = val;
-    this.delayedWrite();
+    this._delayedWrite();
   }
 
   /**
@@ -251,8 +273,9 @@ class SearchCache {
    *   The value to set.
    */
   setVerifiedAttribute(name, val) {
-    this.setAttribute(name, val);
-    this.setAttribute(this.getHashName(name), getVerificationHash(val));
+    this._metaData[name] = val;
+    this._metaData[this.getHashName(name)] = getVerificationHash(val);
+    this._delayedWrite();
   }
 
   /**
@@ -327,6 +350,30 @@ class SearchCache {
       if (ex && typeof ex == "object") {
         state.latestError.stack = ex.stack || undefined;
       }
+    }
+  }
+
+  // nsIObserver
+  observe(engine, topic, verb) {
+    switch (topic) {
+      case SearchUtils.TOPIC_ENGINE_MODIFIED:
+        switch (verb) {
+          case SearchUtils.MODIFIED_TYPE.ADDED:
+          case SearchUtils.MODIFIED_TYPE.CHANGED:
+          case SearchUtils.MODIFIED_TYPE.REMOVED:
+            this._delayedWrite();
+            break;
+        }
+        break;
+      case SearchUtils.TOPIC_SEARCH_SERVICE:
+        switch (verb) {
+          case "init-complete":
+          case "reinit-complete":
+          case "engines-reloaded":
+            this._delayedWrite();
+            break;
+        }
+        break;
     }
   }
 }
