@@ -2245,6 +2245,7 @@ void HTMLMediaElement::AbortExistingLoads() {
   mWaitingForKey = NOT_WAITING_FOR_KEY;
   mSourcePointer = nullptr;
   mIsBlessed = false;
+  SetAudibleState(false);
 
   mTags = nullptr;
   mAudioTrackSilenceStartedTime = 0.0;
