@@ -156,10 +156,10 @@ bool HTMLEditUtils::IsAnyTableElement(nsINode* aNode) {
 }
 
 /**
- * IsTableElementButNotTable() returns true if aNode is an html td, tr, ...
+ * IsAnyTableElementButNotTable() returns true if aNode is an html td, tr, ...
  * (doesn't include table)
  */
-bool HTMLEditUtils::IsTableElementButNotTable(nsINode* aNode) {
+bool HTMLEditUtils::IsAnyTableElementButNotTable(nsINode* aNode) {
   MOZ_ASSERT(aNode);
   return aNode->IsAnyOfHTMLElements(nsGkAtoms::tr, nsGkAtoms::td, nsGkAtoms::th,
                                     nsGkAtoms::thead, nsGkAtoms::tfoot,
