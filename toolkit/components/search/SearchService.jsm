@@ -556,7 +556,6 @@ SearchService.prototype = {
 
       // Make sure the current list of engines is persisted, without the need to wait.
       logConsole.debug("_init: engines loaded, writing cache");
-      this._cache.write();
       this._addObservers();
     } catch (ex) {
       this._initRV = ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE;
@@ -591,9 +590,12 @@ SearchService.prototype = {
    */
   async _setupRemoteSettings() {
     // Now we have the values, listen for future updates.
-    this._ignoreListListener = this._handleIgnoreListUpdated.bind(this);
+    let listener = this._handleIgnoreListUpdated.bind(this);
 
-    const current = await IgnoreLists.getAndSubscribe(this._ignoreListListener);
+    const current = await IgnoreLists.getAndSubscribe(listener);
+    // Only save the listener after the subscribe, otherwise for tests it might
+    // not be fully set up by the time we remove it again.
+    this._ignoreListListener = listener;
 
     await this._handleIgnoreListUpdated({ data: { current } });
     Services.obs.notifyObservers(
@@ -1292,8 +1294,6 @@ SearchService.prototype = {
       return;
     }
 
-    await this._cache.ensurePendingWritesCompleted();
-
     // Capture the current engine state, in case we need to notify below.
     const prevCurrentEngine = this._currentEngine;
     const prevPrivateEngine = this._currentPrivateEngine;
@@ -1305,8 +1305,6 @@ SearchService.prototype = {
     // engine order.
     this.__sortedEngines = null;
     await this._loadEngines(await this._cache.get(), true);
-    // Make sure the current list of engines is persisted.
-    await this._cache.write();
 
     // If the defaultEngine has changed between the previous load and this one,
     // dispatch the appropriate notifications.
@@ -1371,7 +1369,6 @@ SearchService.prototype = {
         }
 
         this._initObservers = PromiseUtils.defer();
-        await this._cache.ensurePendingWritesCompleted(origin);
 
         // Clear the engines, too, so we don't stick with the stale ones.
         this._resetLocalData();
@@ -1384,7 +1381,7 @@ SearchService.prototype = {
           "uninit-complete"
         );
 
-        let cache = await this._cache.get();
+        let cache = await this._cache.get(origin);
         // The init flow is not going to block on a fetch from an external service,
         // but we're kicking it off as soon as possible to prevent UI flickering as
         // much as possible.
@@ -1410,9 +1407,6 @@ SearchService.prototype = {
           this._initObservers.reject(Cr.NS_ERROR_ABORT);
           return;
         }
-
-        // Make sure the current list of engines is persisted.
-        await this._cache.write();
 
         // Typically we'll re-init as a result of a pref observer,
         // so signal to 'callers' that we're done.
@@ -3344,7 +3338,6 @@ SearchService.prototype = {
           case SearchUtils.MODIFIED_TYPE.ADDED:
           case SearchUtils.MODIFIED_TYPE.CHANGED:
           case SearchUtils.MODIFIED_TYPE.REMOVED:
-            this._cache.delayedWrite();
             // Invalidate the map used to parse URLs to search engines.
             this._parseSubmissionMap = null;
             break;
@@ -3457,6 +3450,8 @@ SearchService.prototype = {
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC);
     Services.obs.addObserver(this, TOPIC_LOCALES_CHANGE);
 
+    this._cache.addObservers();
+
     // The current stage of shutdown. Used to help analyze crash
     // signatures in case of shutdown timeout.
     let shutdownState = {
@@ -3508,6 +3503,8 @@ SearchService.prototype = {
       this.idleService.removeIdleObserver(this, REINIT_IDLE_TIME_SEC);
       this._queuedIdle = false;
     }
+
+    this._cache.removeObservers();
 
     Services.obs.removeObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);

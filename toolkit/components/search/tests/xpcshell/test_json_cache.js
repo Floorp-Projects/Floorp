@@ -115,6 +115,7 @@ async function checkLoadCachedProperties(cacheFile) {
   isSubObjectOf(EXPECTED_ENGINE.engine, engineFromSS);
 
   removeCacheFile();
+  ss._removeObservers();
 }
 
 add_task(async function test_legacy_cached_engine_properties() {
@@ -156,7 +157,7 @@ add_task(async function test_cache_write() {
   Services.tm.dispatchToMainThread(() => {
     // Call the observe method directly to simulate a remove but not actually
     // remove anything.
-    Services.search
+    Services.search.wrappedJSObject._cache
       .QueryInterface(Ci.nsIObserver)
       .observe(null, "browser-search-engine-modified", "engine-removed");
   });
