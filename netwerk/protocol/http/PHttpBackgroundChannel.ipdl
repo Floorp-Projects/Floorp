@@ -27,9 +27,6 @@ child:
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message
-  // This is duplicated on PHttpChannel, which gets used for multi-part
-  // streams to make synchronization when we get OnStartRequest multiple
-  // times easier.
   async OnTransportAndData(nsresult  channelStatus,
                            nsresult  transportStatus,
                            uint64_t  offset,
@@ -37,9 +34,7 @@ child:
                            nsCString data,
                            bool dataFromSocketProcess);
 
-  // This is duplicated on PHttpChannel, which gets used for multi-part
-  // streams to make synchronization when we get OnStartRequest multiple
-  // times easier.
+
   async OnStopRequest(nsresult channelStatus,
                       ResourceTimingStructArgs timing,
                       TimeStamp lastActiveTabOptimization,
