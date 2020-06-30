@@ -4335,6 +4335,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
 
       case "Navigation":
         return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_Navigation_Navigation__WEBPACK_IMPORTED_MODULE_13__["Navigation"], {
+          dispatch: this.props.dispatch,
           links: component.properties.links,
           alignment: component.properties.alignment,
           display_variant: component.properties.display_variant,
@@ -10604,23 +10605,43 @@ class HorizontalRule extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCo
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Topic", function() { return Topic; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Navigation", function() { return Navigation; });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(35);
-/* harmony import */ var content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(39);
+/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(35);
+/* harmony import */ var content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(39);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
 
-class Topic extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+
+class Topic extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+
+  onLinkClick(event) {
+    if (this.props.dispatch) {
+      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].ImpressionStats({
+        event: "CLICK",
+        source: "POPULAR_TOPICS",
+        value: {
+          topic: event.target.text.toLowerCase().replace(` `, `-`)
+        }
+      }));
+    }
+  }
+
   render() {
     const {
       url,
       name
     } = this.props;
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_1__["SafeAnchor"], {
+    return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_2__["SafeAnchor"], {
+      onLinkClick: this.onLinkClick,
       className: this.props.className,
       url: url
     }, name);
@@ -10628,7 +10649,7 @@ class Topic extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
 
 }
 
-class ExploreTopics extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+class ExploreTopics extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComponent {
   render() {
     const {
       explore_topics
@@ -10638,11 +10659,13 @@ class ExploreTopics extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       return null;
     }
 
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Topic, {
+    return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(Topic, {
+      dispatch: this.props.dispatch,
       className: "ds-navigation-inline-explore-more",
       url: explore_topics.url,
       name: explore_topics.name
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Topic, {
+    }), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(Topic, {
+      dispatch: this.props.dispatch,
       className: "ds-navigation-header-explore-more",
       url: explore_topics.url,
       name: explore_topics.header
@@ -10651,7 +10674,7 @@ class ExploreTopics extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
 
 }
 
-class Navigation extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+class Navigation extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComponent {
   render() {
     const {
       links
@@ -10668,18 +10691,20 @@ class Navigation extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompon
     const {
       explore_topics
     } = this.props;
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: `ds-navigation ds-navigation-${alignment} ds-navigation-variant-${variant}`
-    }, header.title ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_2__["FluentOrText"], {
+    }, header.title ? react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_3__["FluentOrText"], {
       message: header.title
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+    }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("span", {
       className: "ds-header"
-    })) : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("ul", null, links && links.map(t => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("li", {
+    })) : null, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("ul", null, links && links.map(t => react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("li", {
       key: t.name
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Topic, {
+    }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(Topic, {
       url: t.url,
-      name: t.name
-    })))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(ExploreTopics, {
+      name: t.name,
+      dispatch: this.props.dispatch
+    })))), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(ExploreTopics, {
+      dispatch: this.props.dispatch,
       explore_topics: explore_topics
     }));
   }
