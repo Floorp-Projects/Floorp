@@ -42,9 +42,9 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
 
     await document.getElementById("nav-bar").overflowable.show();
 
-    let subview = document.getElementById(subviewId);
     let button = document.getElementById(buttonId);
     button.click();
+    let subview = document.getElementById(subviewId);
     await BrowserTestUtils.waitForEvent(subview, "ViewShown");
 
     let subviewBody = subview.firstElementChild;
