@@ -639,7 +639,7 @@ EngineStore.prototype = {
 
   _cloneEngine(aEngine) {
     var clonedObj = {};
-    for (var i in aEngine) {
+    for (let i of ["name", "alias", "iconURI"]) {
       clonedObj[i] = aEngine[i];
     }
     clonedObj.originalEngine = aEngine;
@@ -738,7 +738,7 @@ EngineStore.prototype = {
 
   reloadIcons() {
     this._engines.forEach(function(e) {
-      e.uri = e.originalEngine.uri;
+      e.iconURI = e.originalEngine.iconURI;
     });
   },
 };
