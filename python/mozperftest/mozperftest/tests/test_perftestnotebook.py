@@ -19,11 +19,7 @@ def test_get_notebook_section(ptnb):
 
 def test_get_notebook_section_unknown_analysis(ptnb):
     func = "unknown"
-    with mock.patch("mozperftest.metrics.notebook.perftestnotebook.logger") as logger:
-        assert ptnb.get_notebook_section(func) == ""
-        logger.assert_has_calls(
-            mock.call.warning("Could not find the notebook-section called unknown")
-        )
+    assert ptnb.get_notebook_section(func) == ""
 
 
 @pytest.mark.parametrize("analysis", [["scatterplot"], None])

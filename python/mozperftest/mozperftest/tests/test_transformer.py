@@ -1,7 +1,7 @@
 import mozunit
 import pytest
 from jsonschema import ValidationError
-from mozperftest.tests.support import HERE
+from mozperftest.tests.support import get_running_env, HERE
 from mozperftest.metrics.notebook.transformer import Transformer, get_transformers
 from mozperftest.tests.data.perftestetl_plugin import (
     test_transformer_perftestetl_plugin_1,
@@ -12,6 +12,9 @@ from mozperftest.metrics.exceptions import (
     NotebookInvalidPathError,
     NotebookDuplicateTransformsError,
 )
+
+_, metadata, _ = get_running_env()
+prefix = "PerftestNotebook"
 
 
 def test_init_failure():
@@ -25,25 +28,25 @@ def test_init_failure():
 
 def test_files_getter(files):
     files = files["resources"]
-    assert files == Transformer(files).files
+    assert files == Transformer(files, logger=metadata, prefix=prefix).files
 
 
 def test_files_setter(files):
     files = files["resources"]
     files = list(files.values())
-    tfm = Transformer()
+    tfm = Transformer(logger=metadata, prefix=prefix)
     tfm.files = files
     assert files == tfm.files
 
 
 def test_files_setter_failure():
-    tfm = Transformer()
+    tfm = Transformer(logger=metadata, prefix=prefix)
     tfm.files = "fail"
     assert not tfm.files
 
 
 def test_open_data(data, files):
-    tfm = Transformer()
+    tfm = Transformer(logger=metadata, prefix=prefix)
 
     files = files["resources"]
     json_1 = files["file_1"]
@@ -73,7 +76,7 @@ def test_jsonschema_valitate_failure(files):
     file_1 = files["file_1"]
     file_2 = files["file_2"]
 
-    tfm = Transformer([], BadTransformer())
+    tfm = Transformer([], BadTransformer(), logger=metadata, prefix=prefix)
     tfm.files = [file_1, file_2]
     with pytest.raises(ValidationError):
         tfm.process("name")
