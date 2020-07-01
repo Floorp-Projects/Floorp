@@ -639,7 +639,6 @@ TRR::OnPush(nsIHttpChannel* associated, nsIHttpChannel* pushed) {
 NS_IMETHODIMP
 TRR::OnStartRequest(nsIRequest* aRequest) {
   LOG(("TRR::OnStartRequest %p %s %d\n", this, mHost.get(), mType));
-  mStartTime = TimeStamp::Now();
   return NS_OK;
 }
 
