@@ -172,6 +172,9 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let isAddressField = FormAutofillUtils.isAddressField(
       activeFieldDetail.fieldName
     );
+    const isCreditCardField = FormAutofillUtils.isCreditCardField(
+      activeFieldDetail.fieldName
+    );
     let isInputAutofilled = activeFieldDetail.state == FIELD_STATES.AUTO_FILLED;
     let allFieldNames = activeSection.allFieldNames;
     let filledRecordGUID = activeSection.filledRecordGUID;
@@ -186,12 +189,15 @@ AutofillProfileAutoCompleteSearch.prototype = {
     // Fallback to form-history if ...
     //   - specified autofill feature is pref off.
     //   - no profile can fill the currently-focused input.
-    //   - the current form has already been populated.
+    //   - the current form has already been populated and the field is not
+    //     an empty credit card field.
     //   - (address only) less than 3 inputs are covered by all saved fields in the storage.
     if (
       !searchPermitted ||
       !savedFieldNames.has(activeFieldDetail.fieldName) ||
-      (!isInputAutofilled && filledRecordGUID) ||
+      (!isInputAutofilled &&
+        filledRecordGUID &&
+        !(isCreditCardField && activeInput.value === "")) ||
       (isAddressField &&
         allFieldNames.filter(field => savedFieldNames.has(field)).length <
           FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD)
