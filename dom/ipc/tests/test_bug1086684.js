@@ -11,10 +11,6 @@ const { ExtensionTestUtils } = ChromeUtils.import(
 AddonTestUtils.init(this);
 ExtensionTestUtils.init(this);
 
-ChromeUtils.import(
-  "resource://gre/modules/ContentPrefServiceParent.jsm"
-).ContentPrefServiceParent.init();
-
 const childFramePath = "/file_bug1086684.html";
 const childFrameURL = "http://example.com" + childFramePath;
 
