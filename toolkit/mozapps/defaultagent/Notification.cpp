@@ -34,6 +34,9 @@
 // If the notification hasn't been activated or dismissed within 30 minutes,
 // stop waiting for it.
 #define NOTIFICATION_WAIT_TIMEOUT_MS (30 * 60 * 1000)
+// If the mutex hasn't been released within a few minutes, something is wrong
+// and we should give up on it
+#define MUTEX_TIMEOUT_MS (10 * 60 * 1000)
 
 static bool SetInitialNotificationShown(bool wasShown) {
   return !RegistrySetValueBool(IsPrefixed::Unprefixed,
@@ -111,11 +114,6 @@ static ULONGLONG SecondsPassedSince(ULONGLONG initialTime) {
          / 1000                    // To milliseconds
          / 1000;                   // To seconds
 }
-
-enum class NotificationType {
-  Initial,
-  Followup,
-};
 
 struct ToastStrings {
   mozilla::UniquePtr<wchar_t[]> text1;
@@ -220,6 +218,29 @@ static bool GetStrings(Strings& strings) {
                    strings.followupToast.relImagePath);
 }
 
+// This encapsulates the data that needs to be protected by a mutex because it
+// will be shared by the main thread and the handler thread.
+// To ensure the data is only written once, handlerDataHasBeenSet should be
+// initialized to false, then set to true when the handler writes data into the
+// structure.
+struct HandlerData {
+  NotificationActivities activitiesPerformed;
+  bool handlerDataHasBeenSet;
+};
+
+// The value that ToastHandler writes into should be a global. We can't control
+// when ToastHandler is called, and if this value isn't a global, ToastHandler
+// may be called and attempt to access this after it has been deconstructed.
+// Since this value is accessed by the handler thread and the main thread, it
+// is protected by a mutex (gHandlerMutex).
+// Since ShowNotification deconstructs the mutex, it might seem like once
+// ShowNotification exits, we can just rely on the inability to wait on an
+// invalid mutex to protect the deconstructed data, but it's possible that
+// we could deconstruct the mutex while the handler is holding it and is
+// already accessing the protected data.
+static HandlerData gHandlerReturnData;
+static HANDLE gHandlerMutex = INVALID_HANDLE_VALUE;
+
 class ToastHandler : public WinToastLib::IWinToastHandler {
  private:
   NotificationType mWhichNotification;
@@ -231,23 +252,64 @@ class ToastHandler : public WinToastLib::IWinToastHandler {
     mEvent = event;
   }
 
-  void FireEvent() const {
+  void FinishHandler(NotificationActivities& returnData) const {
+    SetReturnData(returnData);
+
     BOOL success = SetEvent(mEvent);
     if (!success) {
       LOG_ERROR_MESSAGE(L"Event could not be set: %#X", GetLastError());
     }
   }
 
+  void SetReturnData(NotificationActivities& toSet) const {
+    DWORD result = WaitForSingleObject(gHandlerMutex, MUTEX_TIMEOUT_MS);
+    if (result == WAIT_TIMEOUT) {
+      LOG_ERROR_MESSAGE(L"Unable to obtain mutex ownership");
+      return;
+    } else if (result == WAIT_FAILED) {
+      LOG_ERROR_MESSAGE(L"Failed to wait on mutex: %#X", GetLastError());
+      return;
+    } else if (result == WAIT_ABANDONED) {
+      LOG_ERROR_MESSAGE(L"Found abandoned mutex");
+      ReleaseMutex(gHandlerMutex);
+      return;
+    }
+
+    // Only set this data once
+    if (!gHandlerReturnData.handlerDataHasBeenSet) {
+      gHandlerReturnData.activitiesPerformed = toSet;
+      gHandlerReturnData.handlerDataHasBeenSet = true;
+    }
+
+    BOOL success = ReleaseMutex(gHandlerMutex);
+    if (!success) {
+      LOG_ERROR_MESSAGE(L"Unable to release mutex ownership: %#X",
+                        GetLastError());
+    }
+  }
+
   void toastActivated() const override {
+    NotificationActivities activitiesPerformed;
+    activitiesPerformed.type = mWhichNotification;
+    activitiesPerformed.shown = NotificationShown::Shown;
+    activitiesPerformed.action = NotificationAction::ToastClicked;
+
     LaunchModernSettingsDialogDefaultApps();
 
-    FireEvent();
+    FinishHandler(activitiesPerformed);
   }
 
   void toastActivated(int actionIndex) const override {
+    NotificationActivities activitiesPerformed;
+    activitiesPerformed.type = mWhichNotification;
+    activitiesPerformed.shown = NotificationShown::Shown;
+    // Override this below
+    activitiesPerformed.action = NotificationAction::NoAction;
+
     if (actionIndex == 0) {
       if (mWhichNotification == NotificationType::Initial) {
         // "Remind me later" button
+        activitiesPerformed.action = NotificationAction::RemindMeLater;
         if (!SetFollowupNotificationRequestTime(GetCurrentTimestamp())) {
           LOG_ERROR_MESSAGE(L"Unable to schedule followup notification");
         }
@@ -256,33 +318,60 @@ class ToastHandler : public WinToastLib::IWinToastHandler {
         // Do nothing. As long as we don't call
         // SetFollowupNotificationRequestTime, there will be no followup
         // notification.
+        activitiesPerformed.action = NotificationAction::DismissedByButton;
       }
     } else if (actionIndex == 1) {
       // "Make Firefox the default" button, on both notifications.
+      activitiesPerformed.action = NotificationAction::MakeFirefoxDefaultButton;
       LaunchModernSettingsDialogDefaultApps();
     }
 
-    FireEvent();
+    FinishHandler(activitiesPerformed);
   }
 
   void toastDismissed(WinToastDismissalReason state) const override {
-    FireEvent();
+    NotificationActivities activitiesPerformed;
+    activitiesPerformed.type = mWhichNotification;
+    activitiesPerformed.shown = NotificationShown::Shown;
+    // Override this below
+    activitiesPerformed.action = NotificationAction::NoAction;
+
+    if (state == WinToastDismissalReason::TimedOut) {
+      activitiesPerformed.action = NotificationAction::DismissedByTimeout;
+    } else if (state == WinToastDismissalReason::ApplicationHidden) {
+      activitiesPerformed.action =
+          NotificationAction::DismissedByApplicationHidden;
+    } else if (state == WinToastDismissalReason::UserCanceled) {
+      activitiesPerformed.action = NotificationAction::DismissedToActionCenter;
+    }
+
+    FinishHandler(activitiesPerformed);
   }
 
   void toastFailed() const override {
+    NotificationActivities activitiesPerformed;
+    activitiesPerformed.type = mWhichNotification;
+    activitiesPerformed.shown = NotificationShown::Error;
+    activitiesPerformed.action = NotificationAction::NoAction;
+
     LOG_ERROR_MESSAGE(L"Toast notification failed to display");
-    FireEvent();
+    FinishHandler(activitiesPerformed);
   }
 };
 
 // This function blocks until the shown notification is activated or dismissed.
-static void ShowNotification(NotificationType whichNotification,
-                             const wchar_t* aumi) {
+static NotificationActivities ShowNotification(
+    NotificationType whichNotification, const wchar_t* aumi) {
+  // Initially set the value that will be returned to error. If the notification
+  // is shown successfully, we'll update it.
+  NotificationActivities activitiesPerformed = {whichNotification,
+                                                NotificationShown::Error,
+                                                NotificationAction::NoAction};
   using namespace WinToastLib;
 
   if (!WinToast::isCompatible()) {
     LOG_ERROR_MESSAGE(L"System is not compatible with WinToast");
-    return;
+    return activitiesPerformed;
   }
 
   WinToast::instance()->setAppName(L"" MOZ_APP_BASENAME);
@@ -291,12 +380,12 @@ static void ShowNotification(NotificationType whichNotification,
   WinToast::WinToastError error;
   if (!WinToast::instance()->initialize(&error)) {
     LOG_ERROR_MESSAGE(WinToast::strerror(error).c_str());
-    return;
+    return activitiesPerformed;
   }
 
   Strings strings;
   if (!GetStrings(strings)) {
-    return;
+    return activitiesPerformed;
   }
   const ToastStrings* toastStrings = strings.GetToastStrings(whichNotification);
 
@@ -305,7 +394,7 @@ static void ShowNotification(NotificationType whichNotification,
   nsAutoHandle event(CreateEventW(nullptr, TRUE, FALSE, nullptr));
   if (event.get() == nullptr) {
     LOG_ERROR_MESSAGE(L"Unable to create event object: %#X", GetLastError());
-    return;
+    return activitiesPerformed;
   }
 
   bool success = false;
@@ -318,7 +407,7 @@ static void ShowNotification(NotificationType whichNotification,
     // Return early in this case to prevent the notification from being shown
     // on every run.
     LOG_ERROR_MESSAGE(L"Unable to set notification as displayed");
-    return;
+    return activitiesPerformed;
   }
 
   // We need the absolute image path, not the relative path.
@@ -326,7 +415,7 @@ static void ShowNotification(NotificationType whichNotification,
   nsresult rv = GetInstallDirectory(installPath);
   if (NS_FAILED(rv)) {
     LOG_ERROR_MESSAGE(L"Failed to get install directory for the image path");
-    return;
+    return activitiesPerformed;
   }
   const wchar_t* absPathFormat = L"%s\\%s";
   int bufferSize = _scwprintf(absPathFormat, installPath.get(),
@@ -336,6 +425,25 @@ static void ShowNotification(NotificationType whichNotification,
       mozilla::MakeUnique<wchar_t[]>(bufferSize);
   _snwprintf_s(absImagePath.get(), bufferSize, _TRUNCATE, absPathFormat,
                installPath.get(), toastStrings->relImagePath.get());
+
+  // This is used to protect gHandlerReturnData.
+  gHandlerMutex = CreateMutexW(nullptr, TRUE, nullptr);
+  if (gHandlerMutex == nullptr) {
+    LOG_ERROR_MESSAGE(L"Unable to create mutex: %#X", GetLastError());
+    return activitiesPerformed;
+  }
+  // Automatically close this mutex when this function exits.
+  nsAutoHandle autoMutex(gHandlerMutex);
+  // No need to initialize gHandlerReturnData.activitiesPerformed, since it will
+  // be set by the handler. But we do need to initialize
+  // gHandlerReturnData.handlerDataHasBeenSet so the handler knows that no data
+  // has been set yet.
+  gHandlerReturnData.handlerDataHasBeenSet = false;
+  success = ReleaseMutex(gHandlerMutex);
+  if (!success) {
+    LOG_ERROR_MESSAGE(L"Unable to release mutex ownership: %#X",
+                      GetLastError());
+  }
 
   // Finally ready to assemble the notification and dispatch it.
   WinToastTemplate toastTemplate =
@@ -351,7 +459,7 @@ static void ShowNotification(NotificationType whichNotification,
   INT64 id = WinToast::instance()->showToast(toastTemplate, handler, &error);
   if (id < 0) {
     LOG_ERROR_MESSAGE(WinToast::strerror(error).c_str());
-    return;
+    return activitiesPerformed;
   }
 
   DWORD result = WaitForSingleObject(event.get(), NOTIFICATION_WAIT_TIMEOUT_MS);
@@ -360,11 +468,38 @@ static void ShowNotification(NotificationType whichNotification,
     LOG_ERROR_MESSAGE(L"Unable to wait on event object: %#X", GetLastError());
   } else if (result == WAIT_TIMEOUT) {
     LOG_ERROR_MESSAGE(L"Timed out waiting for event object");
+  } else {
+    result = WaitForSingleObject(gHandlerMutex, MUTEX_TIMEOUT_MS);
+    if (result == WAIT_TIMEOUT) {
+      LOG_ERROR_MESSAGE(L"Unable to obtain mutex ownership");
+      // activitiesPerformed is already set to error. No change needed.
+    } else if (result == WAIT_FAILED) {
+      LOG_ERROR_MESSAGE(L"Failed to wait on mutex: %#X", GetLastError());
+      // activitiesPerformed is already set to error. No change needed.
+    } else if (result == WAIT_ABANDONED) {
+      LOG_ERROR_MESSAGE(L"Found abandoned mutex");
+      ReleaseMutex(gHandlerMutex);
+      // activitiesPerformed is already set to error. No change needed.
+    } else {
+      // Mutex is being held. It is safe to access gHandlerReturnData.
+      // If gHandlerReturnData.handlerDataHasBeenSet is false, the handler never
+      // ran. Use the error value activitiesPerformed already contains.
+      if (gHandlerReturnData.handlerDataHasBeenSet) {
+        activitiesPerformed = gHandlerReturnData.activitiesPerformed;
+      }
+
+      success = ReleaseMutex(gHandlerMutex);
+      if (!success) {
+        LOG_ERROR_MESSAGE(L"Unable to release mutex ownership: %#X",
+                          GetLastError());
+      }
+    }
   }
 
   if (!WinToast::instance()->hideToast(id)) {
     LOG_ERROR_MESSAGE(L"Failed to hide notification");
   }
+  return activitiesPerformed;
 }
 
 // This function checks that both the Firefox build and the operating system
@@ -406,24 +541,31 @@ bool IsEnglish() {
 // If a notification is shown, this function will block until the notification
 // is activated or dismissed.
 // aumi is the App User Model ID.
-void MaybeShowNotification(const DefaultBrowserInfo& browserInfo,
-                           const wchar_t* aumi) {
+NotificationActivities MaybeShowNotification(
+    const DefaultBrowserInfo& browserInfo, const wchar_t* aumi) {
+  // Default to not showing a notification. Any other value will be returned
+  // directly from ShowNotification.
+  NotificationActivities activitiesPerformed = {NotificationType::Initial,
+                                                NotificationShown::NotShown,
+                                                NotificationAction::NoAction};
+
   if (!mozilla::IsWin10OrLater() || !IsEnglish()) {
     // Notifications aren't shown in versions prior to Windows 10 because the
     // notification API we want isn't available.
     // They are also not shown in non-English contexts because localization is
     // not yet being done for this component.
-    return;
+    return activitiesPerformed;
   }
 
   bool initialNotificationShown = GetInitialNotificationShown();
   if (!initialNotificationShown) {
     if (browserInfo.currentDefaultBrowser == Browser::EdgeWithBlink &&
         browserInfo.previousDefaultBrowser == Browser::Firefox) {
-      ShowNotification(NotificationType::Initial, aumi);
+      return ShowNotification(NotificationType::Initial, aumi);
     }
-    return;
+    return activitiesPerformed;
   }
+  activitiesPerformed.type = NotificationType::Followup;
 
   ULONGLONG followupNotificationRequestTime =
       GetFollowupNotificationRequestTime();
@@ -439,10 +581,52 @@ void MaybeShowNotification(const DefaultBrowserInfo& browserInfo,
       // changed the default browser, permanently suppress the followup since
       // it's no longer relevant.
       if (browserInfo.currentDefaultBrowser == Browser::EdgeWithBlink) {
-        ShowNotification(NotificationType::Followup, aumi);
+        return ShowNotification(NotificationType::Followup, aumi);
       } else {
         SetFollowupNotificationSuppressed(true);
       }
     }
+  }
+  return activitiesPerformed;
+}
+
+std::string GetStringForNotificationType(NotificationType type) {
+  switch (type) {
+    case NotificationType::Initial:
+      return std::string("initial");
+    case NotificationType::Followup:
+      return std::string("followup");
+  }
+}
+
+std::string GetStringForNotificationShown(NotificationShown shown) {
+  switch (shown) {
+    case NotificationShown::NotShown:
+      return std::string("not-shown");
+    case NotificationShown::Shown:
+      return std::string("shown");
+    case NotificationShown::Error:
+      return std::string("error");
+  }
+}
+
+std::string GetStringForNotificationAction(NotificationAction action) {
+  switch (action) {
+    case NotificationAction::DismissedByTimeout:
+      return std::string("dismissed-by-timeout");
+    case NotificationAction::DismissedToActionCenter:
+      return std::string("dismissed-to-action-center");
+    case NotificationAction::DismissedByButton:
+      return std::string("dismissed-by-button");
+    case NotificationAction::DismissedByApplicationHidden:
+      return std::string("dismissed-by-application-hidden");
+    case NotificationAction::RemindMeLater:
+      return std::string("remind-me-later");
+    case NotificationAction::MakeFirefoxDefaultButton:
+      return std::string("make-firefox-default-button");
+    case NotificationAction::ToastClicked:
+      return std::string("toast-clicked");
+    case NotificationAction::NoAction:
+      return std::string("no-action");
   }
 }
