@@ -92,6 +92,7 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
         formatOpt.hourCycle = r.hc;
 
     // Steps 26-30, more or less - see comment after this function.
+    var skeleton;
     var pattern;
     if (lazyDateTimeFormatData.patternOption !== undefined) {
         pattern = lazyDateTimeFormatData.patternOption;
@@ -109,7 +110,8 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
         internalProps.dateStyle = lazyDateTimeFormatData.dateStyle;
         internalProps.timeStyle = lazyDateTimeFormatData.timeStyle;
     } else {
-        pattern = toBestICUPattern(dataLocale, formatOpt);
+        skeleton = toICUSkeleton(formatOpt);
+        pattern = toBestICUPattern(dataLocale, skeleton, formatOpt);
     }
 
     // Step 31.
@@ -533,10 +535,9 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
 
 /* eslint-disable complexity */
 /**
- * Returns an ICU pattern string for the given locale and representing the
- * specified options as closely as possible given available locale data.
+ * Returns an ICU skeleton string representing the specified options.
  */
-function toBestICUPattern(locale, options) {
+function toICUSkeleton(options) {
     // Create an ICU skeleton representing the specified options. See
     // http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
     var skeleton = "";
@@ -673,11 +674,18 @@ function toBestICUPattern(locale, options) {
         skeleton += "zzzz";
         break;
     }
+    return skeleton;
+}
+/* eslint-enable complexity */
 
+/**
+ * Returns an ICU pattern string for the given locale and representing the
+ * specified skeleton as closely as possible given available locale data.
+ */
+function toBestICUPattern(locale, skeleton, options) {
     // Let ICU convert the ICU skeleton to an ICU pattern for the given locale.
     return intl_patternForSkeleton(locale, skeleton, options.hourCycle);
 }
-/* eslint-enable complexity */
 
 /**
  * Returns a new options object that includes the provided options (if any)
