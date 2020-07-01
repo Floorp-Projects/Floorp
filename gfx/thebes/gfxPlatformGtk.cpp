@@ -56,6 +56,7 @@
 #  include <gdk/gdkwayland.h>
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
+#  include "mozilla/StaticPrefs_media.h"
 #endif
 
 #define GDK_PIXMAP_SIZE_MAX 32767
@@ -722,16 +723,19 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 #endif
 
 #ifdef MOZ_WAYLAND
-bool gfxPlatformGtk::UseWaylandDMABufTextures() {
+bool gfxPlatformGtk::UseDMABufTextures() {
   return IsWaylandDisplay() && GetDMABufDevice()->IsDMABufTexturesEnabled();
 }
-bool gfxPlatformGtk::UseWaylandDMABufVideoTextures() {
+bool gfxPlatformGtk::UseDMABufVideoTextures() {
   return IsWaylandDisplay() &&
          (GetDMABufDevice()->IsDMABufVideoTexturesEnabled() ||
-          GetDMABufDevice()->IsDMABufVAAPIEnabled());
+          StaticPrefs::media_ffmpeg_vaapi_enabled());
 }
-bool gfxPlatformGtk::UseWaylandHardwareVideoDecoding() {
-  return IsWaylandDisplay() && GetDMABufDevice()->IsDMABufVAAPIEnabled() &&
-         gfxPlatform::CanUseHardwareVideoDecoding();
+bool gfxPlatformGtk::UseHardwareVideoDecoding() {
+  return IsWaylandDisplay() && gfxPlatform::CanUseHardwareVideoDecoding() &&
+         StaticPrefs::media_ffmpeg_vaapi_enabled();
+}
+bool gfxPlatformGtk::UseDRMVAAPIDisplay() {
+  return IsX11Display() || GetDMABufDevice()->IsDRMVAAPIDisplayEnabled();
 }
 #endif
