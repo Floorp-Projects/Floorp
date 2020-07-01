@@ -37,8 +37,10 @@ add_task(async function setup() {
     Services.io.newURI("file://" + searchExtensions.path)
   );
 
-  await Services.search.ensureBuiltinExtension(ENGINE_ID);
-  await Services.search.ensureBuiltinExtension(PRIVATE_ENGINE_ID);
+  await Services.search.wrappedJSObject.ensureBuiltinExtension(ENGINE_ID);
+  await Services.search.wrappedJSObject.ensureBuiltinExtension(
+    PRIVATE_ENGINE_ID
+  );
 
   engine = await Services.search.getEngineByName(ENGINE_NAME);
   Assert.ok(engine, "Got a search engine");

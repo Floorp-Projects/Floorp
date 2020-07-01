@@ -198,7 +198,9 @@ class SearchConfigTest {
           : AppConstants.MOZ_UPDATE_CHANNEL
       );
       for (let config of configs.engines) {
-        let engine = await Services.search.makeEngineFromConfig(config);
+        let engine = await Services.search.wrappedJSObject.makeEngineFromConfig(
+          config
+        );
         engines.push(engine);
       }
       return engines;

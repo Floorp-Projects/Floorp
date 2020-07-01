@@ -17,7 +17,7 @@ const {
 SearchTestUtils.initXPCShellAddonManager(this);
 
 async function restart() {
-  Services.search.reset();
+  Services.search.wrappedJSObject.reset();
   await promiseRestartManager();
   await Services.search.init();
 }

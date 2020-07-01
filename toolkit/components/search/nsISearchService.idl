@@ -213,10 +213,6 @@ interface nsISearchService : nsISupports
    * Exposed for testing.
    */
   void reInit();
-  void reset();
-  Promise makeEngineFromConfig(in jsval config);
-  Promise ensureBuiltinExtension(in AString id,
-                                [optional] in jsval locales);
 
   /**
    * Determine whether initialization has been completed.
