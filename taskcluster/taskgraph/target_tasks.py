@@ -667,7 +667,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 return False
             # Select live site tests
             if '-live' in try_name and ('fenix' in try_name or 'chrome-m' in try_name):
-                return False  # temporarily disabled, Bug 1648183
+                return _run_live_site()
             # Select fenix resource usage tests
             if 'fenix' in try_name:
                 if 'raptor-scn-power-idle' in try_name:
