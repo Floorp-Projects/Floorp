@@ -24,7 +24,7 @@
     <string name="mozac_feature_downloads_could_not_open_file">Datoteke ni bilo mogoče odpreti</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported">Ni aplikacije za odpiranje datotek %1$s</string>
+    <string name="mozac_feature_downloads_open_not_supported1">Ni aplikacije za odpiranje datotek %1$s</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Premor</string>
