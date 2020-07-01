@@ -9129,6 +9129,18 @@ bool GetFilenameBase(const nsAString& aFilename, const nsAString& aSuffix,
   return true;
 }
 
+RefPtr<BlobImpl> CreateFileBlobImpl(const Database& aDatabase,
+                                    const nsCOMPtr<nsIFile>& aNativeFile,
+                                    const FileInfo::IdType aId) {
+  // XXX aDatabase isn't used right now, but in a subsequent change this should
+  // possibly create an EncryptedFileBlobImpl, and we need the Database to
+  // decide that.
+
+  auto impl = MakeRefPtr<FileBlobImpl>(aNativeFile);
+  impl->SetFileId(aId);
+  return impl;
+}
+
 mozilla::Result<nsTArray<SerializedStructuredCloneFile>, nsresult>
 SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
                               const SafeRefPtr<Database>& aDatabase,
@@ -9175,9 +9187,17 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
         }
 
         switch (file.Type()) {
+          case StructuredCloneFileBase::eStructuredClone:
+            if (!aForPreprocess) {
+              return SerializedStructuredCloneFile{
+                  null_t(), StructuredCloneFileBase::eStructuredClone};
+            }
+
+            [[fallthrough]];
+
           case StructuredCloneFileBase::eBlob: {
-            RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
-            impl->SetFileId(file.FileInfo().Id());
+            auto impl = CreateFileBlobImpl(*aDatabase, nativeFile,
+                                           file.FileInfo().Id());
 
             IPCBlob ipcBlob;
             nsresult rv =
@@ -9190,8 +9210,7 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
 
             aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
 
-            return SerializedStructuredCloneFile{
-                ipcBlob, StructuredCloneFileBase::eBlob};
+            return SerializedStructuredCloneFile{ipcBlob, file.Type()};
           }
 
           case StructuredCloneFileBase::eMutableFile: {
@@ -9219,30 +9238,6 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
 
             return SerializedStructuredCloneFile{
                 actor.get(), StructuredCloneFileBase::eMutableFile};
-          }
-
-          case StructuredCloneFileBase::eStructuredClone: {
-            if (!aForPreprocess) {
-              return SerializedStructuredCloneFile{
-                  null_t(), StructuredCloneFileBase::eStructuredClone};
-            }
-
-            RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
-            impl->SetFileId(file.FileInfo().Id());
-
-            IPCBlob ipcBlob;
-            nsresult rv =
-                IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              // This can only fail if the child has crashed.
-              IDB_REPORT_INTERNAL_ERR();
-              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-            }
-
-            aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
-
-            return SerializedStructuredCloneFile{
-                ipcBlob, StructuredCloneFileBase::eStructuredClone};
           }
 
           case StructuredCloneFileBase::eWasmBytecode:
@@ -20018,6 +20013,7 @@ already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
 already_AddRefed<BlobImpl> MutableFile::CreateBlobImpl() {
   AssertIsOnBackgroundThread();
 
+  // This doesn't use CreateFileBlobImpl as mutable files cannot be encrypted.
   auto blobImpl = MakeRefPtr<FileBlobImpl>(mFile);
   blobImpl->SetFileId(mFileInfo->Id());
 
