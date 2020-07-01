@@ -2304,6 +2304,21 @@ class nsTArray_Impl
   // 'operator<' is defined for elem_type.
   void Sort() { Sort(nsDefaultComparator<elem_type, elem_type>()); }
 
+  // This method sorts the elements of the array in a stable way (i.e. not
+  // changing the relative order of elements considered equal by the
+  // Comparator).  It uses the LessThan
+  // method defined on the given Comparator object to collate elements.
+  // @param aComp The Comparator used to collate elements.
+  template <class Comparator>
+  void StableSort(const Comparator& aComp) {
+    const ::detail::CompareWrapper<Comparator, elem_type> comp(aComp);
+
+    std::stable_sort(Elements(), Elements() + Length(),
+                     [&comp](const auto& lhs, const auto& rhs) {
+                       return comp.LessThan(lhs, rhs);
+                     });
+  }
+
   // This method reverses the array in place.
   void Reverse() {
     elem_type* elements = Elements();
