@@ -16,6 +16,8 @@ from .. import GECKO
 from .treeherder import join_symbol
 from taskgraph.util.attributes import match_run_on_projects, RELEASE_PROJECTS
 
+from taskgraph.util.attributes import ALL_PROJECTS, RUN_ON_PROJECT_ALIASES
+
 logger = logging.getLogger(__name__)
 doc_base_path = os.path.join(GECKO, 'taskcluster', 'docs')
 
@@ -351,6 +353,31 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config):
     if task.kind == 'test':
         build_task = taskgraph[task.dependencies['build']]
         scratch_pad[build_task.label] = 1
+
+
+@verifications.add('full_task_graph')
+def verify_run_known_projects(task, taskgraph, scratch_pad, graph_config):
+    """ Validates the inputs in run-on-projects.
+
+    We should never let 'try' (or 'try-comm-central') be in run-on-projects even though it
+    is valid because it is not considered for try pushes.  While here we also validate for
+    other unknown projects or typos.
+    """
+    if task and task.attributes.get('run_on_projects'):
+        projects = set(task.attributes['run_on_projects'])
+        if {'try', 'try-comm-central'} & set(projects):
+            raise Exception(
+                "In task {}: using try in run-on-projects is invalid; use try "
+                "selectors to select this task on try".format(task.label)
+            )
+        # try isn't valid, but by the time we get here its not an available project anyway.
+        valid_projects = (ALL_PROJECTS | set(RUN_ON_PROJECT_ALIASES.keys()))
+        invalid_projects = projects - valid_projects
+        if invalid_projects:
+            raise Exception(
+                "Task '{}' has an invalid run-on-projects value: "
+                "{}".format(task.label, invalid_projects)
+            )
 
 
 @verifications.add('full_task_graph')
