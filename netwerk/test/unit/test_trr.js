@@ -2106,4 +2106,4 @@ add_task(async function test_ipv6_trr_fallback() {
 
   override.clearOverrides();
   await httpserver.stop();
-}).only();
+});

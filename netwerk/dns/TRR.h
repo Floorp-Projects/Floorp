@@ -152,6 +152,7 @@ class TRR : public Runnable,
                           enum TrrType& type);
   nsresult ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec);
   nsresult On200Response(nsIChannel* aChannel);
+  nsresult FollowCname(nsIChannel* aChannel);
 
   bool UseDefaultServer();
 
