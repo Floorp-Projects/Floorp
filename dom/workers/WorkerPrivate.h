@@ -341,12 +341,12 @@ class WorkerPrivate : public RelativeTimeline {
   }
 
   WorkerGlobalScope* GlobalScope() const {
-    MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+    auto data = mWorkerThreadAccessible.Access();
     return data->mScope;
   }
 
   WorkerDebuggerGlobalScope* DebuggerGlobalScope() const {
-    MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+    auto data = mWorkerThreadAccessible.Access();
     return data->mDebuggerScope;
   }
 
@@ -354,7 +354,7 @@ class WorkerPrivate : public RelativeTimeline {
   // null if we're not in a nested event loop or that nested event loop does not
   // have an associated global.
   nsIGlobalObject* GetCurrentEventLoopGlobal() const {
-    MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+    auto data = mWorkerThreadAccessible.Access();
     return data->mCurrentEventLoopGlobal;
   }
 
@@ -397,7 +397,7 @@ class WorkerPrivate : public RelativeTimeline {
   bool RegisterDebuggerBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
   bool OnLine() const {
-    MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+    auto data = mWorkerThreadAccessible.Access();
     return data->mOnLine;
   }
 
@@ -1038,7 +1038,7 @@ class WorkerPrivate : public RelativeTimeline {
   void NotifyWorkerRefs(WorkerStatus aStatus);
 
   bool HasActiveWorkerRefs() {
-    MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+    auto data = mWorkerThreadAccessible.Access();
     return !(data->mChildWorkers.IsEmpty() && data->mTimeouts.IsEmpty() &&
              data->mWorkerRefs.IsEmpty());
   }
