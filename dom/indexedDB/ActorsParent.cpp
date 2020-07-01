@@ -9129,18 +9129,6 @@ bool GetFilenameBase(const nsAString& aFilename, const nsAString& aSuffix,
   return true;
 }
 
-RefPtr<BlobImpl> CreateFileBlobImpl(const Database& aDatabase,
-                                    const nsCOMPtr<nsIFile>& aNativeFile,
-                                    const FileInfo::IdType aId) {
-  // XXX aDatabase isn't used right now, but in a subsequent change this should
-  // possibly create an EncryptedFileBlobImpl, and we need the Database to
-  // decide that.
-
-  auto impl = MakeRefPtr<FileBlobImpl>(aNativeFile);
-  impl->SetFileId(aId);
-  return impl;
-}
-
 mozilla::Result<nsTArray<SerializedStructuredCloneFile>, nsresult>
 SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
                               const SafeRefPtr<Database>& aDatabase,
@@ -9187,17 +9175,9 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
         }
 
         switch (file.Type()) {
-          case StructuredCloneFileBase::eStructuredClone:
-            if (!aForPreprocess) {
-              return SerializedStructuredCloneFile{
-                  null_t(), StructuredCloneFileBase::eStructuredClone};
-            }
-
-            [[fallthrough]];
-
           case StructuredCloneFileBase::eBlob: {
-            auto impl = CreateFileBlobImpl(*aDatabase, nativeFile,
-                                           file.FileInfo().Id());
+            RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
+            impl->SetFileId(file.FileInfo().Id());
 
             IPCBlob ipcBlob;
             nsresult rv =
@@ -9210,7 +9190,8 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
 
             aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
 
-            return SerializedStructuredCloneFile{ipcBlob, file.Type()};
+            return SerializedStructuredCloneFile{
+                ipcBlob, StructuredCloneFileBase::eBlob};
           }
 
           case StructuredCloneFileBase::eMutableFile: {
@@ -9238,6 +9219,30 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
 
             return SerializedStructuredCloneFile{
                 actor.get(), StructuredCloneFileBase::eMutableFile};
+          }
+
+          case StructuredCloneFileBase::eStructuredClone: {
+            if (!aForPreprocess) {
+              return SerializedStructuredCloneFile{
+                  null_t(), StructuredCloneFileBase::eStructuredClone};
+            }
+
+            RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
+            impl->SetFileId(file.FileInfo().Id());
+
+            IPCBlob ipcBlob;
+            nsresult rv =
+                IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              // This can only fail if the child has crashed.
+              IDB_REPORT_INTERNAL_ERR();
+              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+            }
+
+            aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
+
+            return SerializedStructuredCloneFile{
+                ipcBlob, StructuredCloneFileBase::eStructuredClone};
           }
 
           case StructuredCloneFileBase::eWasmBytecode:
@@ -20013,7 +20018,6 @@ already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
 already_AddRefed<BlobImpl> MutableFile::CreateBlobImpl() {
   AssertIsOnBackgroundThread();
 
-  // This doesn't use CreateFileBlobImpl as mutable files cannot be encrypted.
   auto blobImpl = MakeRefPtr<FileBlobImpl>(mFile);
   blobImpl->SetFileId(mFileInfo->Id());
 
@@ -27354,22 +27358,15 @@ nsCOMPtr<nsIFile> FileHelper::GetJournalFile(const FileInfo& aFileInfo) {
   return mFileManager->GetFileForId(mJournalDirectory->get(), aFileInfo.Id());
 }
 
-static auto FailureIfFalse(const bool aArg)
-    -> Result<decltype(Ok()), nsresult> {
-  if (NS_WARN_IF(!aArg)) {
-    return Err(NS_ERROR_FAILURE);
-  }
-  return Ok();
-};
-
 nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
                                           nsIInputStream& aInputStream,
                                           bool aCompress) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
-  auto existsOrErr = ToResultInvoke(aFile, &nsIFile::Exists);
-  if (NS_WARN_IF(existsOrErr.isErr())) {
-    return existsOrErr.propagateErr();
+  bool exists;
+  nsresult rv = aFile.Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   // DOM blobs that are being stored in IDB are cached by calling
@@ -27384,68 +27381,80 @@ nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
   // file. We could do some tricks to restore previous copy loop, but it's safer
   // to just delete the orphaned file and start from scratch.
   // This corner case is partially simulated in test_file_copy_failure.js
-  if (existsOrErr.inspect()) {
-    auto res = ToResultInvoke(aFile, &nsIFile::IsFile)
-                   .andThen(FailureIfFalse)
-                   .andThen([&aJournalFile](auto) {
-                     return ToResultInvoke(aJournalFile, &nsIFile::Exists);
-                   })
-                   .andThen(FailureIfFalse)
-                   .andThen([&aJournalFile](auto) {
-                     return ToResultInvoke(aJournalFile, &nsIFile::IsFile);
-                   })
-                   .andThen(FailureIfFalse)
-                   .andThen([this, &aFile, &aJournalFile](auto) {
-                     IDB_WARNING("Deleting orphaned file!");
+  if (exists) {
+    bool isFile;
+    rv = aFile.IsFile(&isFile);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-                     return ToResult(
-                         mFileManager->SyncDeleteFile(aFile, aJournalFile));
-                   });
+    if (NS_WARN_IF(!isFile)) {
+      return NS_ERROR_FAILURE;
+    }
 
-    if (res.isErr()) {
-      return res.unwrapErr();
+    rv = aJournalFile.Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(!exists)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    rv = aJournalFile.IsFile(&isFile);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(!isFile)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    IDB_WARNING("Deleting orphaned file!");
+
+    rv = mFileManager->SyncDeleteFile(aFile, aJournalFile);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 
   // Create a journal file first.
-  auto res =
-      ToResult(aJournalFile.Create(nsIFile::NORMAL_FILE_TYPE, 0644))
-          .andThen([this, &aFile](
-                       auto) -> Result<nsCOMPtr<nsIOutputStream>, nsresult> {
-            // Now try to copy the stream.
-            nsCOMPtr<nsIOutputStream> fileOutputStream = CreateFileOutputStream(
-                mFileManager->Type(), mFileManager->Group(),
-                mFileManager->Origin(), Client::IDB, &aFile);
-            if (NS_WARN_IF(!fileOutputStream)) {
-              return Err(NS_ERROR_FAILURE);
-            }
-            return std::move(fileOutputStream);
-          })
-          .andThen([this, aCompress,
-                    &aInputStream](nsCOMPtr<nsIOutputStream> fileOutputStream) {
-            AutoTArray<char, kFileCopyBufferSize> buffer;
-            const auto actualOutputStream =
-                [aCompress, &buffer,
-                 fileOutputStream = std::move(
-                     fileOutputStream)]() mutable -> nsCOMPtr<nsIOutputStream> {
-              if (aCompress) {
-                auto snappyOutputStream =
-                    MakeRefPtr<SnappyCompressOutputStream>(fileOutputStream);
+  rv = aJournalFile.Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-                buffer.SetLength(snappyOutputStream->BlockSize());
+  // Now try to copy the stream.
+  RefPtr<FileOutputStream> fileOutputStream =
+      CreateFileOutputStream(mFileManager->Type(), mFileManager->Group(),
+                             mFileManager->Origin(), Client::IDB, &aFile);
+  if (NS_WARN_IF(!fileOutputStream)) {
+    return NS_ERROR_FAILURE;
+  }
 
-                return snappyOutputStream;
-              }
+  AutoTArray<char, kFileCopyBufferSize> buffer;
+  const auto actualOutputStream =
+      [aCompress, &buffer, &fileOutputStream]() -> nsCOMPtr<nsIOutputStream> {
+    if (aCompress) {
+      auto snappyOutputStream =
+          MakeRefPtr<SnappyCompressOutputStream>(fileOutputStream);
 
-              buffer.SetLength(kFileCopyBufferSize);
-              return std::move(fileOutputStream);
-            }();
+      buffer.SetLength(snappyOutputStream->BlockSize());
 
-            return ToResult(SyncCopy(aInputStream, *actualOutputStream,
-                                     buffer.Elements(), buffer.Length()));
-          });
+      return snappyOutputStream;
+    }
 
-  return res.isErr() ? res.unwrapErr() : NS_OK;
+    buffer.SetLength(kFileCopyBufferSize);
+    return std::move(fileOutputStream);
+  }();
+
+  rv = SyncCopy(aInputStream, *actualOutputStream, buffer.Elements(),
+                buffer.Length());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 class FileHelper::ReadCallback final : public nsIInputStreamCallback {
