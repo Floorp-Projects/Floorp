@@ -44,12 +44,23 @@ let MOCK_STORAGE = [{
 }];
 
 function checkElementFilled(element, expectedvalue) {
+  let focusFired = false;
+  let inputFired = false;
+  let changeFired = false;
   return [
+    new Promise(resolve => {
+      element.addEventListener("focus", function onChange() {
+        ok(true, "Checking " + element.name + " field fires focus event");
+        focusFired = true;
+        resolve();
+      }, {once: true});
+    }),
     new Promise(resolve => {
       let beforeInputFired = false;
       let oldValue = element.value;
       element.addEventListener("beforeinput", function onBeforeInput(event) {
         ok(true, "Checking " + element.name + " field fires beforeinput event");
+        ok(focusFired, "Focus fired before `beforeinput` event");
         beforeInputFired = true;
         ok(event instanceof InputEvent,
            `"beforeinput" event should be dispatched with InputEvent interface on ${element.name}`);
@@ -93,12 +104,24 @@ function checkElementFilled(element, expectedvalue) {
            `"input" event should be never cancelable on ${element.name}`);
         is(event.bubbles, true,
            `"input" event should always bubble on ${element.name}`);
+        inputFired = true;
         resolve();
       }, {once: true});
     }),
     new Promise(resolve => {
       element.addEventListener("change", function onChange() {
         ok(true, "Checking " + element.name + " field fires change event");
+        is(element.value, expectedvalue, "Checking " + element.name + " field");
+        ok(focusFired, "Focus fired before `change` event");
+        changeFired = true;
+        resolve();
+      }, {once: true});
+    }),
+    new Promise(resolve => {
+      element.addEventListener("blur", function onChange() {
+        ok(true, "Checking " + element.name + " field fires blur event");
+        ok(changeFired, "Change fired before `blur` event");
+        ok(inputFired, "Input fired before `blur` event");
         is(element.value, expectedvalue, "Checking " + element.name + " field");
         resolve();
       }, {once: true});
