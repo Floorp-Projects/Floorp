@@ -119,38 +119,35 @@ static const char SandboxPolicyFlash[] = R"SANDBOX_LITERAL(
   (allow process-info-pidinfo)
   (allow process-info-setcontrol (target self))
 
-  ; macOS 10.9 does not support the |sysctl-name| predicate
-  (if (= macosVersion 1009)
-      (allow sysctl-read)
-      (allow sysctl-read
-        (sysctl-name
-          "hw.activecpu"
-          "hw.availcpu"
-          "hw.busfrequency_max"
-          "hw.cpu64bit_capable"
-          "hw.cputype"
-          "hw.physicalcpu_max"
-          "hw.logicalcpu_max"
-          "hw.machine"
-          "hw.model"
-          "hw.ncpu"
-          "hw.optional.avx1_0"
-          "hw.optional.avx2_0"
-          "hw.optional.sse2"
-          "hw.optional.sse3"
-          "hw.optional.sse4_1"
-          "hw.optional.sse4_2"
-          "hw.optional.x86_64"
-          "kern.hostname"
-          "kern.maxfilesperproc"
-          "kern.memorystatus_level"
-          "kern.osrelease"
-          "kern.ostype"
-          "kern.osvariant_status"
-          "kern.osversion"
-          "kern.safeboot"
-          "kern.version"
-          "vm.footprint_suspend")))
+  (allow sysctl-read
+    (sysctl-name
+      "hw.activecpu"
+      "hw.availcpu"
+      "hw.busfrequency_max"
+      "hw.cpu64bit_capable"
+      "hw.cputype"
+      "hw.physicalcpu_max"
+      "hw.logicalcpu_max"
+      "hw.machine"
+      "hw.model"
+      "hw.ncpu"
+      "hw.optional.avx1_0"
+      "hw.optional.avx2_0"
+      "hw.optional.sse2"
+      "hw.optional.sse3"
+      "hw.optional.sse4_1"
+      "hw.optional.sse4_2"
+      "hw.optional.x86_64"
+      "kern.hostname"
+      "kern.maxfilesperproc"
+      "kern.memorystatus_level"
+      "kern.osrelease"
+      "kern.ostype"
+      "kern.osvariant_status"
+      "kern.osversion"
+      "kern.safeboot"
+      "kern.version"
+      "vm.footprint_suspend"))
 
   ; Utilities for allowing access to home subdirectories
   (define home-library-path
@@ -270,9 +267,6 @@ static const char SandboxPolicyFlash[] = R"SANDBOX_LITERAL(
       (global-name "com.apple.cmio.IIDCVideoAssistant")
       (global-name "com.apple.cmio.AVCAssistant")
       (global-name "com.apple.cmio.VDCAssistant"))
-  ; bug 1475707
-  (if (= macosVersion 1009)
-     (allow mach-lookup (global-name "com.apple.xpcd")))
   (if (>= macosVersion 1015)
      (allow mach-lookup
       (global-name "com.apple.ViewBridgeAuxiliary")
@@ -296,26 +290,6 @@ static const char SandboxPolicyFlash[] = R"SANDBOX_LITERAL(
   (allow mach-lookup
     (global-name "com.apple.fonts")
     (global-name "com.apple.FontObjectsServer"))
-  (if (<= macosVersion 1011)
-    (allow mach-lookup (global-name "com.apple.FontServer")))
-
-  ; Fonts
-  ; Workaround for sandbox extensions not being automatically
-  ; issued for fonts on 10.11 and earlier versions (bug 1460917).
-  (if (<= macosVersion 1011)
-    (allow file-read*
-      (regex #"\.[oO][tT][fF]$"          ; otf
-             #"\.[tT][tT][fF]$"          ; ttf
-             #"\.[tT][tT][cC]$"          ; ttc
-             #"\.[oO][tT][cC]$"          ; otc
-             #"\.[dD][fF][oO][nN][tT]$") ; dfont
-      (home-subpath "/Library/FontCollections")
-      (home-subpath "/Library/Application Support/Adobe/CoreSync/plugins/livetype")
-      (home-subpath "/Library/Application Support/FontAgent")
-      (home-subpath "/Library/Extensis/UTC") ; bug 1469657
-      (subpath "/Library/Extensis/UTC")      ; bug 1469657
-      (regex #"\.fontvault/")
-      (home-subpath "/FontExplorer X/Font Library")))
 
   ; level 1: global read access permitted, no global write access
   (if (string=? sandbox-level-1 "TRUE") (allow file-read*))

@@ -98,56 +98,51 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
   ; Needed for things like getpriority()/setpriority()
   (allow process-info-pidinfo process-info-setcontrol (target self))
 
-  ; macOS 10.9 does not support the |sysctl-name| predicate, so unfortunately
-  ; we need to allow all sysctl-reads there.
-  (if (= macosVersion 1009)
-    (allow sysctl-read)
-    (allow sysctl-read
-      (sysctl-name-regex #"^sysctl\.")
-      (sysctl-name "kern.ostype")
-      (sysctl-name "kern.osversion")
-      (sysctl-name "kern.osrelease")
-      (sysctl-name "kern.version")
-      (sysctl-name "kern.tcsm_available")
-      (sysctl-name "kern.tcsm_enable")
-      ; TODO: remove "kern.hostname". Without it the tests hang, but the hostname
-      ; is arguably sensitive information, so we should see what can be done about
-      ; removing it.
-      (sysctl-name "kern.hostname")
-      (sysctl-name "hw.machine")
-      (sysctl-name "hw.model")
-      (sysctl-name "hw.ncpu")
-      (sysctl-name "hw.activecpu")
-      (sysctl-name "hw.byteorder")
-      (sysctl-name "hw.pagesize_compat")
-      (sysctl-name "hw.logicalcpu_max")
-      (sysctl-name "hw.physicalcpu_max")
-      (sysctl-name "hw.busfrequency_compat")
-      (sysctl-name "hw.busfrequency_max")
-      (sysctl-name "hw.cpufrequency")
-      (sysctl-name "hw.cpufrequency_compat")
-      (sysctl-name "hw.cpufrequency_max")
-      (sysctl-name "hw.l2cachesize")
-      (sysctl-name "hw.l3cachesize")
-      (sysctl-name "hw.cachelinesize")
-      (sysctl-name "hw.cachelinesize_compat")
-      (sysctl-name "hw.tbfrequency_compat")
-      (sysctl-name "hw.vectorunit")
-      (sysctl-name "hw.optional.sse2")
-      (sysctl-name "hw.optional.sse3")
-      (sysctl-name "hw.optional.sse4_1")
-      (sysctl-name "hw.optional.sse4_2")
-      (sysctl-name "hw.optional.avx1_0")
-      (sysctl-name "hw.optional.avx2_0")
-      (sysctl-name "machdep.cpu.vendor")
-      (sysctl-name "machdep.cpu.family")
-      (sysctl-name "machdep.cpu.model")
-      (sysctl-name "machdep.cpu.stepping")
-      (sysctl-name "debug.intel.gstLevelGST")
-      (sysctl-name "debug.intel.gstLoaderControl")))
-  (if (> macosVersion 1009)
-    (allow sysctl-write
-      (sysctl-name "kern.tcsm_enable")))
+  (allow sysctl-read
+    (sysctl-name-regex #"^sysctl\.")
+    (sysctl-name "kern.ostype")
+    (sysctl-name "kern.osversion")
+    (sysctl-name "kern.osrelease")
+    (sysctl-name "kern.version")
+    (sysctl-name "kern.tcsm_available")
+    (sysctl-name "kern.tcsm_enable")
+    ; TODO: remove "kern.hostname". Without it the tests hang, but the hostname
+    ; is arguably sensitive information, so we should see what can be done about
+    ; removing it.
+    (sysctl-name "kern.hostname")
+    (sysctl-name "hw.machine")
+    (sysctl-name "hw.model")
+    (sysctl-name "hw.ncpu")
+    (sysctl-name "hw.activecpu")
+    (sysctl-name "hw.byteorder")
+    (sysctl-name "hw.pagesize_compat")
+    (sysctl-name "hw.logicalcpu_max")
+    (sysctl-name "hw.physicalcpu_max")
+    (sysctl-name "hw.busfrequency_compat")
+    (sysctl-name "hw.busfrequency_max")
+    (sysctl-name "hw.cpufrequency")
+    (sysctl-name "hw.cpufrequency_compat")
+    (sysctl-name "hw.cpufrequency_max")
+    (sysctl-name "hw.l2cachesize")
+    (sysctl-name "hw.l3cachesize")
+    (sysctl-name "hw.cachelinesize")
+    (sysctl-name "hw.cachelinesize_compat")
+    (sysctl-name "hw.tbfrequency_compat")
+    (sysctl-name "hw.vectorunit")
+    (sysctl-name "hw.optional.sse2")
+    (sysctl-name "hw.optional.sse3")
+    (sysctl-name "hw.optional.sse4_1")
+    (sysctl-name "hw.optional.sse4_2")
+    (sysctl-name "hw.optional.avx1_0")
+    (sysctl-name "hw.optional.avx2_0")
+    (sysctl-name "machdep.cpu.vendor")
+    (sysctl-name "machdep.cpu.family")
+    (sysctl-name "machdep.cpu.model")
+    (sysctl-name "machdep.cpu.stepping")
+    (sysctl-name "debug.intel.gstLevelGST")
+    (sysctl-name "debug.intel.gstLoaderControl"))
+  (allow sysctl-write
+    (sysctl-name "kern.tcsm_enable"))
 
   (define (home-regex home-relative-regex)
     (regex (string-append "^" (regex-quote home-path) home-relative-regex)))
@@ -182,10 +177,6 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
       ; bug 1392988
       (xpc-service-name "com.apple.coremedia.videodecoder")
       (xpc-service-name "com.apple.coremedia.videoencoder")))
-
-; bug 1312273
-  (if (= macosVersion 1009)
-     (allow mach-lookup (global-name "com.apple.xpcd")))
 
   (allow iokit-open
      (iokit-user-client-class "IOHIDParamUserClient"))
@@ -351,26 +342,6 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
   (allow mach-lookup
     (global-name "com.apple.fonts")
     (global-name "com.apple.FontObjectsServer"))
-  (if (<= macosVersion 1011)
-    (allow mach-lookup (global-name "com.apple.FontServer")))
-
-  ; Fonts
-  ; Workaround for sandbox extensions not being automatically
-  ; issued for fonts on 10.11 and earlier versions (bug 1460917).
-  (if (<= macosVersion 1011)
-    (allow file-read*
-      (regex #"\.[oO][tT][fF]$"          ; otf
-             #"\.[tT][tT][fF]$"          ; ttf
-             #"\.[tT][tT][cC]$"          ; ttc
-             #"\.[oO][tT][cC]$"          ; otc
-             #"\.[dD][fF][oO][nN][tT]$") ; dfont
-      (home-subpath "/Library/FontCollections")
-      (home-subpath "/Library/Application Support/Adobe/CoreSync/plugins/livetype")
-      (home-subpath "/Library/Application Support/FontAgent")
-      (home-subpath "/Library/Extensis/UTC") ; bug 1469657
-      (subpath "/Library/Extensis/UTC")      ; bug 1469657
-      (regex #"\.fontvault/")
-      (home-subpath "/FontExplorer X/Font Library")))
 
   (if (>= macosVersion 1013)
    (allow mach-lookup
