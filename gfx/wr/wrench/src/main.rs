@@ -154,7 +154,8 @@ impl WindowWrapper {
         let gl = self.native_gl();
         let tex = gl.gen_textures(1)[0];
         gl.bind_texture(gl::TEXTURE_2D, tex);
-        let (data_ptr, w, h) = swgl.get_color_buffer(0, true);
+        let (data_ptr, w, h, stride) = swgl.get_color_buffer(0, true);
+        assert!(stride == w * 4);
         let buffer = unsafe { slice::from_raw_parts(data_ptr as *const u8, w as usize * h as usize * 4) };
         gl.tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA8 as gl::GLint, w, h, 0, gl::BGRA, gl::UNSIGNED_BYTE, Some(buffer));
         let fb = gl.gen_framebuffers(1)[0];
@@ -284,7 +285,7 @@ impl WindowWrapper {
     #[cfg(feature = "software")]
     fn update_software(&self, dim: DeviceIntSize) {
         if let Some(swgl) = self.software_gl() {
-            swgl.init_default_framebuffer(dim.width, dim.height);
+            swgl.init_default_framebuffer(dim.width, dim.height, 0, std::ptr::null_mut());
         }
     }
 
