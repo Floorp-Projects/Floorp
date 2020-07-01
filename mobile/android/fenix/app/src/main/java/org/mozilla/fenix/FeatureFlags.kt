@@ -11,11 +11,6 @@ object FeatureFlags {
     const val pullToRefreshEnabled = false
 
     /**
-     * Enables tip feature
-     */
-    val tips = Config.channel.isDebug
-
-    /**
      * Allows edit of saved logins.
      */
     val loginsEdit = Config.channel.isNightlyOrDebug
@@ -29,10 +24,4 @@ object FeatureFlags {
      * Enables new tab tray pref
      */
     val tabTray = Config.channel.isNightlyOrDebug
-
-    /**
-     * Allows search widget CFR to be displayed.
-     * This is a placeholder for the experimentation framework determining cohorts.
-     */
-    val searchWidgetCFR = Config.channel.isDebug
 }

@@ -4,54 +4,12 @@
 
 package org.mozilla.fenix.components.tips
 
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.FeatureFlags
 
 class TipManagerTest {
-
-    @Before
-    fun setup() {
-        mockkObject(FeatureFlags)
-        every { FeatureFlags.tips } returns true
-    }
-
-    @After
-    fun after() {
-        unmockkObject(FeatureFlags)
-    }
-
-    @Test
-    fun `test feature flag off`() {
-        every { FeatureFlags.tips } returns false
-        assertNull(FenixTipManager(emptyList()).getTip())
-        assertNull(FenixTipManager(listOf(
-            object : TipProvider {
-                override val tip = mockk<Tip>()
-                override val shouldDisplay = true
-            },
-            object : TipProvider {
-                override val tip = mockk<Tip>()
-                override val shouldDisplay = false
-            },
-            object : TipProvider {
-                override val tip: Tip? = null
-                override val shouldDisplay = true
-            },
-            object : TipProvider {
-                override val tip: Tip? = null
-                override val shouldDisplay = false
-            }
-        )).getTip())
-    }
-
     @Test
     fun `test first with shouldDisplay`() {
         val shouldDisplayProvider = object : TipProvider {
