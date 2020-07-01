@@ -5,9 +5,8 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ContentPrefServiceChild"];
+var EXPORTED_SYMBOLS = ["ContentPrefsChild", "ContentPrefServiceChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {
   ContentPref,
   _methodsCallableFromChild,
@@ -49,34 +48,23 @@ CallbackCaller.prototype = {
   },
 };
 
-var ContentPrefServiceChild = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPrefService2]),
+class ContentPrefsChild extends JSProcessActorChild {
+  constructor() {
+    super();
 
-  // Map from pref name -> set of observers
-  _observers: new Map(),
+    // Map from pref name -> set of observers
+    this._observers = new Map();
+
+    // Map from random ID string -> CallbackCaller, per request
+    this._requests = new Map();
+  }
 
   _getRandomId() {
     return Cc["@mozilla.org/uuid-generator;1"]
       .getService(Ci.nsIUUIDGenerator)
       .generateUUID()
       .toString();
-  },
-
-  // Map from random ID string -> CallbackCaller, per request
-  _requests: new Map(),
-
-  init() {
-    Services.cpmm.addMessageListener("ContentPrefs:HandleResult", this);
-    Services.cpmm.addMessageListener("ContentPrefs:HandleError", this);
-    Services.cpmm.addMessageListener("ContentPrefs:HandleCompletion", this);
-    Services.obs.addObserver(this, "xpcom-shutdown");
-  },
-
-  observe() {
-    Services.obs.removeObserver(this, "xpcom-shutdown");
-    delete this._observers;
-    delete this._requests;
-  },
+  }
 
   receiveMessage(msg) {
     let data = msg.data;
@@ -111,40 +99,31 @@ var ContentPrefServiceChild = {
         break;
       }
     }
-  },
+  }
 
-  _callFunction(call, args, callback) {
+  callFunction(call, args, callback) {
     let requestId = this._getRandomId();
     let data = { call, args, requestId };
 
-    Services.cpmm.sendAsyncMessage("ContentPrefs:FunctionCall", data);
-
     this._requests.set(requestId, new CallbackCaller(callback));
-  },
-
-  getCachedByDomainAndName: NYI,
-  getCachedBySubdomainAndName: NYI,
-  getCachedGlobal: NYI,
+    this.sendAsyncMessage("ContentPrefs:FunctionCall", data);
+  }
 
   addObserverForName(name, observer) {
     let set = this._observers.get(name);
     if (!set) {
       set = new Set();
-      if (this._observers.size === 0) {
-        // This is the first observer of any kind. Start listening for changes.
-        Services.cpmm.addMessageListener("ContentPrefs:NotifyObservers", this);
-      }
 
       // This is the first observer for this name. Start listening for changes
       // to it.
-      Services.cpmm.sendAsyncMessage("ContentPrefs:AddObserverForName", {
+      this.sendAsyncMessage("ContentPrefs:AddObserverForName", {
         name,
       });
       this._observers.set(name, set);
     }
 
     set.add(observer);
-  },
+  }
 
   removeObserverForName(name, observer) {
     let set = this._observers.get(name);
@@ -155,22 +134,32 @@ var ContentPrefServiceChild = {
     set.delete(observer);
     if (set.size === 0) {
       // This was the last observer for this name. Stop listening for changes.
-      Services.cpmm.sendAsyncMessage("ContentPrefs:RemoveObserverForName", {
+      this.sendAsyncMessage("ContentPrefs:RemoveObserverForName", {
         name,
       });
 
       this._observers.delete(name);
-      if (this._observers.size === 0) {
-        // This was the last observer for this process. Stop listing for all
-        // changes.
-        Services.cpmm.removeMessageListener(
-          "ContentPrefs:NotifyObservers",
-          this
-        );
-      }
     }
+  }
+}
+
+var ContentPrefServiceChild = {
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPrefService2]),
+
+  addObserverForName: (name, observer) => {
+    ChromeUtils.domProcessChild
+      .getActor("ContentPrefs")
+      .addObserverForName(name, observer);
+  },
+  removeObserverForName: (name, observer) => {
+    ChromeUtils.domProcessChild
+      .getActor("ContentPrefs")
+      .removeObserverForName(name, observer);
   },
 
+  getCachedByDomainAndName: NYI,
+  getCachedBySubdomainAndName: NYI,
+  getCachedGlobal: NYI,
   extractDomain: NYI,
 };
 
@@ -189,7 +178,9 @@ function forwardMethodToParent(method, signature, ...args) {
   if (callbackIndex > -1 && args.length > callbackIndex) {
     callback = args.splice(callbackIndex, 1)[0];
   }
-  this._callFunction(method, args, callback);
+
+  let actor = ChromeUtils.domProcessChild.getActor("ContentPrefs");
+  actor.callFunction(method, args, callback);
 }
 
 for (let [method, signature] of _methodsCallableFromChild) {
@@ -199,5 +190,3 @@ for (let [method, signature] of _methodsCallableFromChild) {
     signature
   );
 }
-
-ContentPrefServiceChild.init();
