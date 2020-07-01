@@ -20,12 +20,6 @@
   static_cast<const nsLiteralString&>(    \
       nsLiteralString(NS_CSTRING_LITERAL_AS_STRING_LITERAL(s)))
 
-#define NS_LITERAL_STRING(s) \
-  static_cast<const nsLiteralString&>(nsLiteralString(u"" s))
-
-#define NS_LITERAL_CSTRING(s) \
-  static_cast<const nsLiteralCString&>(nsLiteralCString("" s))
-
 constexpr auto operator""_ns(const char* aStr, std::size_t aLen) {
   return nsLiteralCString{aStr, aLen};
 }
