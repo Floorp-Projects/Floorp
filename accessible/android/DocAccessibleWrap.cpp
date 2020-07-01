@@ -165,9 +165,16 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
     // If first/last are null, pass the root document as pivot boundary.
     if (IPCAccessibilityActive()) {
       DocAccessibleChild* ipcDoc = docAcc->IPCDoc();
-      ipcDoc->GetPlatformExtension()->SendSetPivotBoundaries(
-          first ? first->Document()->IPCDoc() : ipcDoc, UNIQUE_ID(first),
-          last ? last->Document()->IPCDoc() : ipcDoc, UNIQUE_ID(last));
+      DocAccessibleChild* firstDoc =
+          first ? first->Document()->IPCDoc() : ipcDoc;
+      DocAccessibleChild* lastDoc = last ? last->Document()->IPCDoc() : ipcDoc;
+      if (ipcDoc && firstDoc && lastDoc) {
+        // One or more of the documents may not have recieved an IPC doc yet.
+        // In that case, just throw away this update. We will get a new one soon
+        // enough.
+        ipcDoc->GetPlatformExtension()->SendSetPivotBoundaries(
+            firstDoc, UNIQUE_ID(first), lastDoc, UNIQUE_ID(last));
+      }
     } else if (SessionAccessibility* sessionAcc =
                    SessionAccessibility::GetInstanceFor(docAcc)) {
       sessionAcc->UpdateAccessibleFocusBoundaries(
