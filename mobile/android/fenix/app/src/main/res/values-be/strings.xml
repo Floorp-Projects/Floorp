@@ -1041,6 +1041,11 @@
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Дадаць</string>
 
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Перайсці на вэб-сайт</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Назва ярлыка</string>
+
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Лагіны і паролі</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1080,6 +1085,10 @@
     <string name="preferences_passwords_saved_logins_username">Імя карыстальніка</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Пароль</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Паўторна ўвядзіце свой PIN-код</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Разблакуйце, каб пабачыць захаваныя лагіны</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Даведацца больш</string>
 

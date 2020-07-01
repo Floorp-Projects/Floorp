@@ -805,7 +805,7 @@
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Tab wedi’i gau</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Ychwanegwyd at y gwefannau gorau!</string>
+    <string name="snackbar_added_to_top_sites">Ychwanegwyd at fy hoff wefannau!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Tab preifat wedi’i gau</string>
 
@@ -884,8 +884,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Yn dileu data pori’n awtomatig  pan fyddwch yn dewis &quot;Gadael&quot; o’r brif ddewislen</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Yn dileu data pori’n awtomatig  pan fyddwch yn dewis \&quot;Gadael\&quot; o’r brif ddewislen</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Hanes pori</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Gadael</string>
 

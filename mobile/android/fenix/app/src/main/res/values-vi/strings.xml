@@ -157,7 +157,7 @@
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with_2">Lần này, tìm kiếm với:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
-    <string name="awesomebar_clipboard_title">Điền liên kết từ clipboard</string>
+    <string name="awesomebar_clipboard_title">Điền liên kết từ bộ nhớ tạm</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Cho phép</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -271,7 +271,7 @@
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Hiển thị trong phiên riêng tư</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
-    <string name="preferences_show_clipboard_suggestions">Hiển thị đề xuất clipboard</string>
+    <string name="preferences_show_clipboard_suggestions">Hiển thị đề xuất bộ nhớ tạm</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">Tìm kiếm lịch sử duyệt web</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
@@ -882,8 +882,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Tự động xóa dữ liệu duyệt khi bạn chọn &quot;Thoát&quot; từ menu chính</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Tự động xóa dữ liệu duyệt khi bạn chọn \&quot;Thoát\&quot; từ menu chính</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Lịch sử duyệt web</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Thoát</string>
 
@@ -1178,7 +1176,7 @@
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Dán</string>
     <!-- Snackbar message shown after an URL has been copied to clipboard. -->
-    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Đã sao chép URL vào clipboard</string>
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Đã sao chép URL vào bộ nhớ tạm</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Thêm vào màn hình chính</string>
@@ -1253,11 +1251,11 @@
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Không lưu</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
-    <string name="logins_password_copied">Đã sao chép mật khẩu vào clipboard</string>
+    <string name="logins_password_copied">Đã sao chép mật khẩu vào bộ nhớ tạm</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
-    <string name="logins_username_copied">Đã sao chép tên người dùng vào clipboard</string>
+    <string name="logins_username_copied">Đã sao chép tên người dùng vào bộ nhớ tạm</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Đã sao chép URL trang web vào clipboard</string>
+    <string name="logins_site_copied">Đã sao chép trang web vào bộ nhớ tạm</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Sao chép mật khẩu</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->

@@ -887,8 +887,6 @@
     <string name="preference_summary_delete_browsing_data_on_quit">Ana menüden &quot;Çık&quot;ı seçtiğinizde gezinti verilerini otomatik olarak siler</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Ana menüden \&quot;Çık\&quot;ı seçtiğinizde gezinti verilerini otomatik olarak siler</string>
-    <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Gezinti geçmişi</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Çık</string>
 
@@ -950,7 +948,7 @@
     <string name="onboarding_whats_new_description_linktext">Yanıtlar burada</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">%s’dan en iyi şekilde yararlanın.</string>
+    <string name="onboarding_firefox_account_header">%s tarayıcınızdan en iyi şekilde yararlanın.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
