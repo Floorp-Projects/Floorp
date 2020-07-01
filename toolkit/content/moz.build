@@ -41,6 +41,9 @@ if CONFIG['MOZ_INSTALL_TRACKING']:
 if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
     DEFINES['MOZ_FENNEC'] = True
 
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_DEFAULT_BROWSER_AGENT']:
+    DEFINES['MOZ_DEFAULT_BROWSER_AGENT'] = True
+
 JAR_MANIFESTS += ['jar.mn']
 
 SPHINX_TREES['toolkit_widgets'] = 'widgets/docs'
