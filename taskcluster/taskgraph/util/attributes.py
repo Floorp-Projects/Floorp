@@ -35,6 +35,21 @@ RELEASE_PROMOTION_PROJECTS = {
     'try-comm-central',
 } | RELEASE_PROJECTS
 
+TEMPORARY_PROJECTS = set({
+    # When using a "Disposeabel Project Branch" you can specify your branch here. e.g.:
+    # 'oak',
+})
+
+ALL_PROJECTS = RELEASE_PROMOTION_PROJECTS | TRUNK_PROJECTS | TEMPORARY_PROJECTS
+
+RUN_ON_PROJECT_ALIASES = {
+    # key is alias, value is lambda to test it against
+    'all': lambda project: True,
+    'integration': lambda project: project in INTEGRATION_PROJECTS,
+    'release': lambda project: project in RELEASE_PROJECTS,
+    'trunk': lambda project: project in TRUNK_PROJECTS,
+}
+
 _COPYABLE_ATTRIBUTES = (
     'accepted-mar-channel-ids',
     'artifact_map',
@@ -103,16 +118,13 @@ def match_run_on_projects(project, run_on_projects):
     """Determine whether the given project is included in the `run-on-projects`
     parameter, applying expansions for things like "integration" mentioned in
     the attribute documentation."""
-    if 'all' in run_on_projects:
-        return True
-    if 'integration' in run_on_projects:
-        if project in INTEGRATION_PROJECTS:
-            return True
-    if 'release' in run_on_projects:
-        if project in RELEASE_PROJECTS:
-            return True
-    if 'trunk' in run_on_projects:
-        if project in TRUNK_PROJECTS:
+    aliases = RUN_ON_PROJECT_ALIASES.keys()
+    run_aliases = set(aliases) & set(run_on_projects)
+    if run_aliases:
+        if any(
+            RUN_ON_PROJECT_ALIASES[alias](project)
+            for alias in run_aliases
+        ):
             return True
 
     return project in run_on_projects
