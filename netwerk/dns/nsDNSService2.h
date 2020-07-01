@@ -90,7 +90,6 @@ class nsDNSService final : public nsPIDNSService,
   bool mNotifyResolution;
   bool mOfflineLocalhost;
   bool mForceResolveOn;
-  uint32_t mProxyType;
   nsTHashtable<nsCStringHashKey> mLocalDomains;
   RefPtr<mozilla::net::TRRService> mTrrService;
 

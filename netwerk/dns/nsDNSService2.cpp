@@ -39,6 +39,7 @@
 #include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/DNSListenerProxy.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TextUtils.h"
@@ -59,7 +60,6 @@ static const char kPrefDnsLocalDomains[] = "network.dns.localDomains";
 static const char kPrefDnsForceResolve[] = "network.dns.forceResolve";
 static const char kPrefDnsOfflineLocalhost[] = "network.dns.offline-localhost";
 static const char kPrefDnsNotifyResolution[] = "network.dns.notifyResolution";
-static const char kPrefNetworkProxyType[] = "network.proxy.type";
 
 //-----------------------------------------------------------------------------
 
@@ -549,7 +549,6 @@ nsDNSService::nsDNSService()
       mNotifyResolution(false),
       mOfflineLocalhost(false),
       mForceResolveOn(false),
-      mProxyType(0),
       mTrrService(nullptr),
       mResCacheEntries(0),
       mResCacheExpiration(0),
@@ -682,11 +681,6 @@ nsresult nsDNSService::ReadPrefs(const char* name) {
       mNotifyResolution = tmpbool;
     }
   }
-  if (!name || !strcmp(name, kPrefNetworkProxyType)) {
-    if (NS_SUCCEEDED(Preferences::GetUint(kPrefNetworkProxyType, &tmpint))) {
-      mProxyType = tmpint;
-    }
-  }
   if (!name || !strcmp(name, kPrefIPv4OnlyDomains)) {
     Preferences::GetCString(kPrefIPv4OnlyDomains, mIPv4OnlyDomains);
   }
@@ -708,7 +702,8 @@ nsresult nsDNSService::ReadPrefs(const char* name) {
     mForceResolveOn = !mForceResolve.IsEmpty();
   }
 
-  if (mProxyType == nsIProtocolProxyService::PROXYCONFIG_MANUAL) {
+  if (StaticPrefs::network_proxy_type() ==
+      nsIProtocolProxyService::PROXYCONFIG_MANUAL) {
     // Disable prefetching either by explicit preference or if a
     // manual proxy is configured
     mDisablePrefetch = true;
@@ -756,8 +751,6 @@ nsDNSService::Init() {
     prefs->AddObserver(kPrefDnsNotifyResolution, this, false);
 
     // Monitor these to see if there is a change in proxy configuration
-    // If a manual proxy is in use, disable prefetch implicitly
-    prefs->AddObserver("network.proxy.type", this, false);
   }
 
   nsDNSPrefetch::Initialize(this);
