@@ -615,6 +615,25 @@ menupopup::part(drop-indicator) {
   margin-bottom: 4px; /* matches the margin-bottom on description elements */
 }
 
+/* Password Manager Doorhanger */
+
+.ac-dropmarker {
+  -moz-appearance: none;
+  justify-self: end;
+  margin-inline-end: 8px;
+}
+
+.ac-dropmarker::part(icon) {
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+}
+
+.ac-has-end-icon {
+  /* icon width + icon end margin */
+  padding-inline-end: calc(16px + 8px);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
 /* ENABLE DEVTOOLS POPUP */
 
 #enable-devtools-popup {
