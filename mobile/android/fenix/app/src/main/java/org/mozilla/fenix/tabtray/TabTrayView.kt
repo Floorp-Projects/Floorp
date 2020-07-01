@@ -126,7 +126,7 @@ class TabTrayView(
                     }
                     if (!hasLoaded) {
                         hasLoaded = true
-                        scrollToSelectedTab()
+                        scrollToTab(view.context.components.core.store.state.selectedTabId)
                         if (view.context.settings().accessibilityServicesEnabled) {
                             lifecycleScope.launch {
                                 delay(SELECTION_DELAY.toLong())
@@ -145,27 +145,30 @@ class TabTrayView(
             }
         }
 
-        tabTrayItemMenu = TabTrayItemMenu(view.context, { view.tab_layout.selectedTabPosition == 0 }) {
-            when (it) {
-                is TabTrayItemMenu.Item.ShareAllTabs -> interactor.onShareTabsClicked(
-                    isPrivateModeSelected
-                )
-                is TabTrayItemMenu.Item.SaveToCollection -> interactor.onSaveToCollectionClicked()
-                is TabTrayItemMenu.Item.CloseAllTabs -> interactor.onCloseAllTabsClicked(
-                    isPrivateModeSelected
-                )
+        tabTrayItemMenu =
+            TabTrayItemMenu(view.context, { view.tab_layout.selectedTabPosition == 0 }) {
+                when (it) {
+                    is TabTrayItemMenu.Item.ShareAllTabs -> interactor.onShareTabsClicked(
+                        isPrivateModeSelected
+                    )
+                    is TabTrayItemMenu.Item.SaveToCollection -> interactor.onSaveToCollectionClicked()
+                    is TabTrayItemMenu.Item.CloseAllTabs -> interactor.onCloseAllTabsClicked(
+                        isPrivateModeSelected
+                    )
+                }
             }
-        }
 
         view.tab_tray_overflow.setOnClickListener {
             container.context.components.analytics.metrics.track(Event.TabsTrayMenuOpened)
             menu = tabTrayItemMenu.menuBuilder.build(container.context)
             menu?.show(it)
                 ?.also { pu ->
-                    (pu.contentView as? CardView)?.setCardBackgroundColor(ContextCompat.getColor(
-                        view.context,
-                        R.color.foundation_normal_theme
-                    ))
+                    (pu.contentView as? CardView)?.setCardBackgroundColor(
+                        ContextCompat.getColor(
+                            view.context,
+                            R.color.foundation_normal_theme
+                        )
+                    )
                 }
         }
 
@@ -211,7 +214,7 @@ class TabTrayView(
         filterTabs.invoke(filter)
 
         updateState(view.context.components.core.store.state)
-        scrollToSelectedTab()
+        scrollToTab(view.context.components.core.store.state.selectedTabId)
 
         if (isPrivateModeSelected) {
             container.context.components.analytics.metrics.track(Event.TabsTrayPrivateModeTapped)
@@ -220,8 +223,11 @@ class TabTrayView(
         }
     }
 
-    override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/ }
-    override fun onTabUnselected(tab: TabLayout.Tab?) { /*noop*/ }
+    override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/
+    }
+
+    override fun onTabUnselected(tab: TabLayout.Tab?) { /*noop*/
+    }
 
     fun updateState(state: BrowserState) {
         view.let {
@@ -266,14 +272,16 @@ class TabTrayView(
     private fun toggleFabText(private: Boolean) {
         if (private) {
             fabView.new_tab_button.extend()
-            fabView.new_tab_button.contentDescription = view.context.resources.getString(R.string.add_private_tab)
+            fabView.new_tab_button.contentDescription =
+                view.context.resources.getString(R.string.add_private_tab)
         } else {
             fabView.new_tab_button.shrink()
-            fabView.new_tab_button.contentDescription = view.context.resources.getString(R.string.add_tab)
+            fabView.new_tab_button.contentDescription =
+                view.context.resources.getString(R.string.add_tab)
         }
     }
 
-    private fun scrollToSelectedTab() {
+    fun scrollToTab(sessionId: String?) {
         (view.tabsTray as? BrowserTabsTray)?.also { tray ->
             val tabs = if (isPrivateModeSelected) {
                 view.context.components.core.store.state.privateTabs
@@ -282,7 +290,7 @@ class TabTrayView(
             }
 
             val selectedBrowserTabIndex = tabs
-                .indexOfFirst { it.id == view.context.components.core.store.state.selectedTabId }
+                .indexOfFirst { it.id == sessionId }
 
             tray.layoutManager?.scrollToPosition(selectedBrowserTabIndex)
         }

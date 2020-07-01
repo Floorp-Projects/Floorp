@@ -192,6 +192,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment() {
                 getString(R.string.snackbar_deleted_undo),
                 {
                     sessionManager.add(snapshot.session, isSelected, engineSessionState = state)
+                    tabTrayView.scrollToTab(snapshot.session.id)
                 },
                 operation = { },
                 elevation = ELEVATION,
