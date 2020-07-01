@@ -6880,6 +6880,26 @@
     type: bool
     value: false
     mirror: always
+
+#ifdef MOZ_WAYLAND
+# Use DMABuf for ffmpeg video textures on Linux
+- name: media.ffmpeg.dmabuf-textures.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Use VA-API for ffmpeg video playback on Linux
+- name: media.ffmpeg.vaapi.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Use DRM display for VA-API ffmpeg video decoding on Linux
+- name: media.ffmpeg.vaapi-drm-display.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+#endif # MOZ_WAYLAND
 #endif  # MOZ_FFMPEG
 
 #ifdef MOZ_FFVPX
@@ -9609,34 +9629,22 @@
 
 # Use DMABuf for content textures.
 # For testing purposes only.
-- name: widget.wayland-dmabuf-textures.enabled
+- name: widget.dmabuf-textures.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
 #endif
 
-# Use DMABuf backend for WebGL on Wayland.
-- name: widget.wayland-dmabuf-webgl.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Use VA-API for video playback on Wayland.
-- name: widget.wayland-dmabuf-vaapi.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# Use DMABuf for video textures.
-- name: widget.wayland-dmabuf-video-textures.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# Use smooth rendering for basic compositor.
+# Use smooth rendering for Wayland basic compositor.
 - name: widget.wayland-smooth-rendering
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# Use DMABuf backend for WebGL.
+- name: widget.dmabuf-webgl.enabled
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 #endif
 
