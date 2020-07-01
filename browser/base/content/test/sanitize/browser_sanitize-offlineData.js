@@ -48,7 +48,7 @@ function waitForUnregister(host) {
   return new Promise(resolve => {
     let listener = {
       onUnregister: registration => {
-        if (registration.principal.URI.host != host) {
+        if (registration.principal.host != host) {
           return;
         }
         swm.removeListener(listener);
@@ -72,7 +72,7 @@ async function createData(host) {
 function moveOriginInTime(principals, endDate, host) {
   for (let i = 0; i < principals.length; ++i) {
     let principal = principals.queryElementAt(i, Ci.nsIPrincipal);
-    if (principal.URI.host == host) {
+    if (principal.host == host) {
       sas.moveOriginInTime(principal, endDate - fiveHours);
       return true;
     }
@@ -116,10 +116,7 @@ add_task(async function testWithRange() {
   let found = 0;
   for (let i = 0; i < principals.length; ++i) {
     let principal = principals.queryElementAt(i, Ci.nsIPrincipal);
-    if (
-      principal.URI.host == "example.org" ||
-      principal.URI.host == "example.com"
-    ) {
+    if (principal.host == "example.org" || principal.host == "example.com") {
       found++;
     }
   }
