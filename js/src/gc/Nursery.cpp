@@ -1529,9 +1529,14 @@ static inline double ClampDouble(double value, double min, double max) {
 }
 
 size_t js::Nursery::targetSize(JS::GCReason reason) {
+  // Shrink the nursery as much as possible in low memory situations.
   if (gc::IsOOMReason(reason) || gc->systemHasLowMemory()) {
-    // Shrink the nursery as much as possible in low memory situations.
     return 0;
+  }
+
+  // Don't resize the nursery during shutdown.
+  if (gc::IsShutdownReason(reason)) {
+    return capacity();
   }
 
   // Calculate the fraction of the nursery promoted out of its entire
