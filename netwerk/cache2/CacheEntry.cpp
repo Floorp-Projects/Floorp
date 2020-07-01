@@ -1642,22 +1642,26 @@ bool CacheEntry::Purge(uint32_t aWhat) {
       }
   }
 
-  if (mState == WRITING || mState == LOADING || mFrecency == 0) {
-    // In-progress (write or load) entries should (at least for consistency and
-    // from the logical point of view) stay in memory. Zero-frecency entries are
-    // those which have never been given to any consumer, those are actually
-    // very fresh and should not go just because frecency had not been set so
-    // far.
-    LOG(("  state=%s, frecency=%1.10f", StateString(mState), mFrecency));
-    return false;
+  {
+    mozilla::MutexAutoLock lock(mLock);
+
+    if (mState == WRITING || mState == LOADING || mFrecency == 0) {
+      // In-progress (write or load) entries should (at least for consistency
+      // and from the logical point of view) stay in memory. Zero-frecency
+      // entries are those which have never been given to any consumer, those
+      // are actually very fresh and should not go just because frecency had not
+      // been set so far.
+      LOG(("  state=%s, frecency=%1.10f", StateString(mState), mFrecency));
+      return false;
+    }
   }
 
   if (NS_SUCCEEDED(mFileStatus) && mFile->IsWriteInProgress()) {
     // The file is used when there are open streams or chunks/metadata still
-    // waiting for write.  In this case, this entry cannot be purged, otherwise
-    // reopenned entry would may not even find the data on disk - CacheFile is
-    // not shared and cannot be left orphan when its job is not done, hence keep
-    // the whole entry.
+    // waiting for write.  In this case, this entry cannot be purged,
+    // otherwise reopenned entry would may not even find the data on disk -
+    // CacheFile is not shared and cannot be left orphan when its job is not
+    // done, hence keep the whole entry.
     LOG(("  file still under use"));
     return false;
   }
