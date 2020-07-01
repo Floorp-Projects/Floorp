@@ -477,7 +477,7 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
   // image, we can use `CreateFromFile` to create the IRandomAccessStream. We
   // should probably cache it since it could be used very often (Bug 1643102)
 
-  if (image.mSrc.Find(NS_LITERAL_CSTRING("file:///"), false, 0, 0) == 0) {
+  if (image.mSrc.Find("file:///"_ns, false, 0, 0) == 0) {
     LOG("Skip the local file. Try next");
     mImageFetchRequest.DisconnectIfExists();
     LoadImageAtIndex(aIndex + 1);
@@ -505,7 +505,7 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
             // Only used to hold the image data
             nsCOMPtr<nsIInputStream> inputStream;
             nsresult rv =
-                GetEncodedImageBuffer(aImage, NS_LITERAL_CSTRING(IMAGE_PNG),
+                GetEncodedImageBuffer(aImage, nsLiteralCString(IMAGE_PNG),
                                       getter_AddRefs(inputStream), &size, &src);
             if (NS_FAILED(rv) || !inputStream || size == 0 || !src) {
               LOG("Failed to get the image buffer info");

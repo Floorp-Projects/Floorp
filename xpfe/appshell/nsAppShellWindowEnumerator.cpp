@@ -54,7 +54,7 @@ void GetAttribute(nsIAppWindow* inWindow, const nsAString& inAttribute,
 // retrieve the window type, stored as the value of a particular
 // attribute in its XUL window tag
 void GetWindowType(nsIAppWindow* aWindow, nsString& outType) {
-  GetAttribute(aWindow, NS_LITERAL_STRING("windowtype"), outType);
+  GetAttribute(aWindow, u"windowtype"_ns, outType);
 }
 
 //

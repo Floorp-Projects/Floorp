@@ -107,9 +107,9 @@ nsXULElement::~nsXULElement() = default;
 
 void nsXULElement::MaybeUpdatePrivateLifetime() {
   if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::windowtype,
-                  NS_LITERAL_STRING("navigator:browser"), eCaseMatters) ||
+                  u"navigator:browser"_ns, eCaseMatters) ||
       AttrValueIs(kNameSpaceID_None, nsGkAtoms::windowtype,
-                  NS_LITERAL_STRING("navigator:geckoview"), eCaseMatters)) {
+                  u"navigator:geckoview"_ns, eCaseMatters)) {
     return;
   }
 
@@ -1080,10 +1080,10 @@ nsresult nsXULElement::AddPopupListener(nsAtom* aName) {
   SetFlags(listenerFlag);
 
   if (isContext) {
-    manager->AddEventListenerByType(listener, NS_LITERAL_STRING("contextmenu"),
+    manager->AddEventListenerByType(listener, u"contextmenu"_ns,
                                     TrustedEventsAtSystemGroupBubble());
   } else {
-    manager->AddEventListenerByType(listener, NS_LITERAL_STRING("mousedown"),
+    manager->AddEventListenerByType(listener, u"mousedown"_ns,
                                     TrustedEventsAtSystemGroupBubble());
   }
   return NS_OK;

@@ -326,7 +326,7 @@ already_AddRefed<URLSearchParams> URLSearchParams::Constructor(
 
   if (aInit.IsUSVString()) {
     NS_ConvertUTF16toUTF8 input(aInit.GetAsUSVString());
-    if (StringBeginsWith(input, NS_LITERAL_CSTRING("?"))) {
+    if (StringBeginsWith(input, "?"_ns)) {
       sp->ParseInput(Substring(input, 1, input.Length() - 1));
     } else {
       sp->ParseInput(input);

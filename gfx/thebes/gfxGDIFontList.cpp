@@ -1067,7 +1067,7 @@ void gfxGDIFontList::ActivateBundledFonts() {
   if (NS_FAILED(rv)) {
     return;
   }
-  if (NS_FAILED(localDir->Append(NS_LITERAL_STRING("fonts")))) {
+  if (NS_FAILED(localDir->Append(u"fonts"_ns))) {
     return;
   }
   bool isDir;

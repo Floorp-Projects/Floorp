@@ -185,14 +185,14 @@ nsresult StartupCache::Init() {
       return rv;
     }
 
-    rv = file->AppendNative(NS_LITERAL_CSTRING("startupCache"));
+    rv = file->AppendNative("startupCache"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Try to create the directory if it's not there yet
     rv = file->Create(nsIFile::DIRECTORY_TYPE, 0777);
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
 
-    rv = file->AppendNative(NS_LITERAL_CSTRING(STARTUP_CACHE_NAME));
+    rv = file->AppendNative(nsLiteralCString(STARTUP_CACHE_NAME));
 
     NS_ENSURE_SUCCESS(rv, rv);
 

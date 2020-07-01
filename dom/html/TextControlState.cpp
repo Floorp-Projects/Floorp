@@ -865,7 +865,7 @@ void TextInputListener::OnSelectionChange(Selection& aSelection,
     return;
   }
 
-  UpdateTextInputCommands(NS_LITERAL_STRING("select"), &aSelection, aReason);
+  UpdateTextInputCommands(u"select"_ns, &aSelection, aReason);
 }
 
 MOZ_CAN_RUN_SCRIPT
@@ -1009,7 +1009,7 @@ nsresult TextInputListener::OnEditActionHandled(TextEditor& aTextEditor) {
     if ((numUndoItems && !mHadUndoItems) || (!numUndoItems && mHadUndoItems) ||
         (numRedoItems && !mHadRedoItems) || (!numRedoItems && mHadRedoItems)) {
       // Modify the menu if undo or redo items are different
-      UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
+      UpdateTextInputCommands(u"undo"_ns);
 
       mHadUndoItems = numUndoItems != 0;
       mHadRedoItems = numRedoItems != 0;
@@ -1642,11 +1642,9 @@ nsresult TextControlState::BindToFrame(nsTextControlFrame* aFrame) {
 
     // Set the correct direction on the newly created root node
     if (mTextEditor->IsRightToLeft()) {
-      rootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
-                        NS_LITERAL_STRING("rtl"), false);
+      rootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, u"rtl"_ns, false);
     } else if (mTextEditor->IsLeftToRight()) {
-      rootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
-                        NS_LITERAL_STRING("ltr"), false);
+      rootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, u"ltr"_ns, false);
     } else {
       // otherwise, inherit the content node's direction
     }
@@ -2096,7 +2094,7 @@ void TextControlState::SetSelectionRange(
   if (changed) {
     // It sure would be nice if we had an existing Element* or so to work with.
     RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(mTextCtrlElement, NS_LITERAL_STRING("select"),
+        new AsyncEventDispatcher(mTextCtrlElement, u"select"_ns,
                                  CanBubble::eYes, ChromeOnlyDispatch::eNo);
     asyncDispatcher->PostDOMEvent();
   }
@@ -2441,14 +2439,11 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
     EventListenerManager* manager =
         mTextCtrlElement->GetExistingListenerManager();
     if (manager) {
-      manager->RemoveEventListenerByType(mTextListener,
-                                         NS_LITERAL_STRING("keydown"),
+      manager->RemoveEventListenerByType(mTextListener, u"keydown"_ns,
                                          TrustedEventsAtSystemGroupBubble());
-      manager->RemoveEventListenerByType(mTextListener,
-                                         NS_LITERAL_STRING("keypress"),
+      manager->RemoveEventListenerByType(mTextListener, u"keypress"_ns,
                                          TrustedEventsAtSystemGroupBubble());
-      manager->RemoveEventListenerByType(mTextListener,
-                                         NS_LITERAL_STRING("keyup"),
+      manager->RemoveEventListenerByType(mTextListener, u"keyup"_ns,
                                          TrustedEventsAtSystemGroupBubble());
     }
 
@@ -3000,12 +2995,11 @@ void TextControlState::InitializeKeyboardEventListeners() {
   EventListenerManager* manager =
       mTextCtrlElement->GetOrCreateListenerManager();
   if (manager) {
-    manager->AddEventListenerByType(mTextListener, NS_LITERAL_STRING("keydown"),
+    manager->AddEventListenerByType(mTextListener, u"keydown"_ns,
                                     TrustedEventsAtSystemGroupBubble());
-    manager->AddEventListenerByType(mTextListener,
-                                    NS_LITERAL_STRING("keypress"),
+    manager->AddEventListenerByType(mTextListener, u"keypress"_ns,
                                     TrustedEventsAtSystemGroupBubble());
-    manager->AddEventListenerByType(mTextListener, NS_LITERAL_STRING("keyup"),
+    manager->AddEventListenerByType(mTextListener, u"keyup"_ns,
                                     TrustedEventsAtSystemGroupBubble());
   }
 

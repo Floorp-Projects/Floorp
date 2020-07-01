@@ -49,7 +49,7 @@ nsContainerFrame* NS_NewRubyBaseContainerFrame(PresShell* aPresShell,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsRubyBaseContainerFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("RubyBaseContainer"), aResult);
+  return MakeFrameName(u"RubyBaseContainer"_ns, aResult);
 }
 #endif
 

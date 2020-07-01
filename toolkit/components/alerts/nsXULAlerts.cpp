@@ -396,7 +396,7 @@ nsXULAlerts::CloseAlert(const nsAString& aAlertName, nsIPrincipal* aPrincipal) {
   mozIDOMWindowProxy* alert = mNamedWindows.GetWeak(aAlertName);
   if (nsCOMPtr<nsPIDOMWindowOuter> domWindow =
           nsPIDOMWindowOuter::From(alert)) {
-    domWindow->DispatchCustomEvent(NS_LITERAL_STRING("XULAlertClose"),
+    domWindow->DispatchCustomEvent(u"XULAlertClose"_ns,
                                    ChromeOnlyDispatch::eYes);
   }
   return NS_OK;

@@ -264,7 +264,7 @@ void FeaturePolicy::GetAllowlistForFeature(const nsAString& aFeatureName,
   for (const Feature& feature : mFeatures) {
     if (feature.Name().Equals(aFeatureName)) {
       if (feature.AllowsAll()) {
-        aList.AppendElement(NS_LITERAL_STRING("*"));
+        aList.AppendElement(u"*"_ns);
         return;
       }
 
@@ -286,7 +286,7 @@ void FeaturePolicy::GetAllowlistForFeature(const nsAString& aFeatureName,
 
   switch (FeaturePolicyUtils::DefaultAllowListFeature(aFeatureName)) {
     case FeaturePolicyUtils::FeaturePolicyValue::eAll:
-      aList.AppendElement(NS_LITERAL_STRING("*"));
+      aList.AppendElement(u"*"_ns);
       return;
 
     case FeaturePolicyUtils::FeaturePolicyValue::eSelf: {

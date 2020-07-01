@@ -109,7 +109,7 @@ IPCResult BenchmarkStorageParent::RecvGet(const nsCString& aDbName,
 
 IPCResult BenchmarkStorageParent::RecvCheckVersion(const nsCString& aDbName,
                                                    int32_t aVersion) {
-  mStorage->Get(aDbName, NS_LITERAL_CSTRING("Version"))
+  mStorage->Get(aDbName, "Version"_ns)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [storage = mStorage, aDbName, aVersion](int32_t aResult) {
@@ -117,8 +117,7 @@ IPCResult BenchmarkStorageParent::RecvCheckVersion(const nsCString& aDbName,
               storage->Clear(aDbName)->Then(
                   GetCurrentSerialEventTarget(), __func__,
                   [storage, aDbName, aVersion](bool) {
-                    storage->Put(aDbName, NS_LITERAL_CSTRING("Version"),
-                                 aVersion);
+                    storage->Put(aDbName, "Version"_ns, aVersion);
                   },
                   [](nsresult rv) { /*do nothing*/ });
             }

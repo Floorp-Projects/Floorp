@@ -40,14 +40,14 @@ StaticRefPtr<UrlClassifierFeatureTrackingAnnotation> gFeatureTrackingAnnotation;
 
 UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
     : UrlClassifierFeatureBase(
-          NS_LITERAL_CSTRING(TRACKING_ANNOTATION_FEATURE_NAME),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_ANNOTATION_BLACKLIST),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_ANNOTATION_WHITELIST),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_ANNOTATION_BLACKLIST_TEST_ENTRIES),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_ANNOTATION_WHITELIST_TEST_ENTRIES),
-          NS_LITERAL_CSTRING(TABLE_ANNOTATION_BLACKLIST_PREF),
-          NS_LITERAL_CSTRING(TABLE_ANNOTATION_WHITELIST_PREF),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_TRACKING_ANNOTATION_SKIP_URLS)) {}
+          nsLiteralCString(TRACKING_ANNOTATION_FEATURE_NAME),
+          nsLiteralCString(URLCLASSIFIER_ANNOTATION_BLACKLIST),
+          nsLiteralCString(URLCLASSIFIER_ANNOTATION_WHITELIST),
+          nsLiteralCString(URLCLASSIFIER_ANNOTATION_BLACKLIST_TEST_ENTRIES),
+          nsLiteralCString(URLCLASSIFIER_ANNOTATION_WHITELIST_TEST_ENTRIES),
+          nsLiteralCString(TABLE_ANNOTATION_BLACKLIST_PREF),
+          nsLiteralCString(TABLE_ANNOTATION_WHITELIST_PREF),
+          nsLiteralCString(URLCLASSIFIER_TRACKING_ANNOTATION_SKIP_URLS)) {}
 
 /* static */ const char* UrlClassifierFeatureTrackingAnnotation::Name() {
   return TRACKING_ANNOTATION_FEATURE_NAME;
@@ -126,17 +126,14 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(
 
   static std::vector<UrlClassifierCommon::ClassificationData>
       sClassificationData = {
-          {NS_LITERAL_CSTRING("ads-track-"),
+          {"ads-track-"_ns,
            nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_TRACKING_AD},
-          {NS_LITERAL_CSTRING("analytics-track-"),
-           nsIClassifiedChannel::ClassificationFlags::
-               CLASSIFIED_TRACKING_ANALYTICS},
-          {NS_LITERAL_CSTRING("social-track-"),
-           nsIClassifiedChannel::ClassificationFlags::
-               CLASSIFIED_TRACKING_SOCIAL},
-          {NS_LITERAL_CSTRING("content-track-"),
-           nsIClassifiedChannel::ClassificationFlags::
-               CLASSIFIED_TRACKING_CONTENT},
+          {"analytics-track-"_ns, nsIClassifiedChannel::ClassificationFlags::
+                                      CLASSIFIED_TRACKING_ANALYTICS},
+          {"social-track-"_ns, nsIClassifiedChannel::ClassificationFlags::
+                                   CLASSIFIED_TRACKING_SOCIAL},
+          {"content-track-"_ns, nsIClassifiedChannel::ClassificationFlags::
+                                    CLASSIFIED_TRACKING_CONTENT},
       };
 
   uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(

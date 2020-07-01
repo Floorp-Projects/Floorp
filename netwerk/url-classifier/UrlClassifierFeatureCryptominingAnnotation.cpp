@@ -41,17 +41,16 @@ StaticRefPtr<UrlClassifierFeatureCryptominingAnnotation>
 UrlClassifierFeatureCryptominingAnnotation::
     UrlClassifierFeatureCryptominingAnnotation()
     : UrlClassifierFeatureBase(
-          NS_LITERAL_CSTRING(CRYPTOMINING_ANNOTATION_FEATURE_NAME),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_CRYPTOMINING_ANNOTATION_BLACKLIST),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_CRYPTOMINING_ANNOTATION_WHITELIST),
-          NS_LITERAL_CSTRING(
+          nsLiteralCString(CRYPTOMINING_ANNOTATION_FEATURE_NAME),
+          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_ANNOTATION_BLACKLIST),
+          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_ANNOTATION_WHITELIST),
+          nsLiteralCString(
               URLCLASSIFIER_CRYPTOMINING_ANNOTATION_BLACKLIST_TEST_ENTRIES),
-          NS_LITERAL_CSTRING(
+          nsLiteralCString(
               URLCLASSIFIER_CRYPTOMINING_ANNOTATION_WHITELIST_TEST_ENTRIES),
-          NS_LITERAL_CSTRING(TABLE_CRYPTOMINING_ANNOTATION_BLACKLIST_PREF),
-          NS_LITERAL_CSTRING(TABLE_CRYPTOMINING_ANNOTATION_WHITELIST_PREF),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_CRYPTOMINING_ANNOTATION_SKIP_URLS)) {
-}
+          nsLiteralCString(TABLE_CRYPTOMINING_ANNOTATION_BLACKLIST_PREF),
+          nsLiteralCString(TABLE_CRYPTOMINING_ANNOTATION_WHITELIST_PREF),
+          nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_ANNOTATION_SKIP_URLS)) {}
 
 /* static */ const char* UrlClassifierFeatureCryptominingAnnotation::Name() {
   return CRYPTOMINING_ANNOTATION_FEATURE_NAME;
@@ -132,7 +131,7 @@ UrlClassifierFeatureCryptominingAnnotation::ProcessChannel(
 
   static std::vector<UrlClassifierCommon::ClassificationData>
       sClassificationData = {
-          {NS_LITERAL_CSTRING("content-cryptomining-track-"),
+          {"content-cryptomining-track-"_ns,
            nsIClassifiedChannel::ClassificationFlags::
                CLASSIFIED_CRYPTOMINING_CONTENT},
       };

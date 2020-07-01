@@ -1469,8 +1469,7 @@ bool AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue) {
     if (attr->NamespaceEquals(kNameSpaceID_None)) {
       nsAtom* attrAtom = attr->Atom();
       nsDependentAtomString attrStr(attrAtom);
-      if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-")))
-        continue;  // Not ARIA
+      if (!StringBeginsWith(attrStr, u"aria-"_ns)) continue;  // Not ARIA
 
       uint8_t attrFlags = aria::AttrCharacteristicsFor(attrAtom);
       if (attrFlags & ATTR_BYPASSOBJ)

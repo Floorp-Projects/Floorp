@@ -520,9 +520,9 @@ uint32_t MediaConstraintsHelper::FitnessDistance(
   c.mDeviceId = empty.mDeviceId;
   c.mGroupId = empty.mGroupId;
   AutoTArray<RefPtr<MediaDevice>, 1> devices;
-  devices.AppendElement(MakeRefPtr<MediaDevice>(
-      aMediaEngineSource, aMediaEngineSource->GetName(), NS_LITERAL_STRING(""),
-      NS_LITERAL_STRING(""), NS_LITERAL_STRING("")));
+  devices.AppendElement(MakeRefPtr<MediaDevice>(aMediaEngineSource,
+                                                aMediaEngineSource->GetName(),
+                                                u""_ns, u""_ns, u""_ns));
   return FindBadConstraint(c, devices);
 }
 

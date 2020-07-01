@@ -24,8 +24,8 @@ namespace dom {
 NS_IMPL_ISUPPORTS(ServiceWorkerShutdownBlocker, nsIAsyncShutdownBlocker)
 
 NS_IMETHODIMP ServiceWorkerShutdownBlocker::GetName(nsAString& aNameOut) {
-  aNameOut = NS_LITERAL_STRING(
-      "ServiceWorkerShutdownBlocker: shutting down Service Workers");
+  aNameOut = nsLiteralString(
+      u"ServiceWorkerShutdownBlocker: shutting down Service Workers");
   return NS_OK;
 }
 
@@ -53,14 +53,14 @@ NS_IMETHODIMP ServiceWorkerShutdownBlocker::GetState(nsIPropertyBag** aBagOut) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = propertyBag->SetPropertyAsBool(
-      NS_LITERAL_STRING("acceptingPromises"), IsAcceptingPromises());
+  nsresult rv = propertyBag->SetPropertyAsBool(u"acceptingPromises"_ns,
+                                               IsAcceptingPromises());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = propertyBag->SetPropertyAsUint32(NS_LITERAL_STRING("pendingPromises"),
+  rv = propertyBag->SetPropertyAsUint32(u"pendingPromises"_ns,
                                         GetPendingPromises());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -74,8 +74,7 @@ NS_IMETHODIMP ServiceWorkerShutdownBlocker::GetState(nsIPropertyBag** aBagOut) {
     shutdownStates.Append(", ");
   }
 
-  rv = propertyBag->SetPropertyAsACString(NS_LITERAL_STRING("shutdownStates"),
-                                          shutdownStates);
+  rv = propertyBag->SetPropertyAsACString(u"shutdownStates"_ns, shutdownStates);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -95,9 +94,9 @@ ServiceWorkerShutdownBlocker::CreateAndRegisterOn(
   RefPtr<ServiceWorkerShutdownBlocker> blocker =
       new ServiceWorkerShutdownBlocker();
 
-  nsresult rv = aShutdownBarrier->AddBlocker(
-      blocker.get(), NS_LITERAL_STRING(__FILE__), __LINE__,
-      NS_LITERAL_STRING("Service Workers shutdown"));
+  nsresult rv =
+      aShutdownBarrier->AddBlocker(blocker.get(), NS_LITERAL_STRING(__FILE__),
+                                   __LINE__, u"Service Workers shutdown"_ns);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;

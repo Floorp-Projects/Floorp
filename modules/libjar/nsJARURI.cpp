@@ -47,9 +47,9 @@ nsresult nsJARURI::Init(const char* charsetHint) {
   return NS_OK;
 }
 
-#define NS_JAR_SCHEME NS_LITERAL_CSTRING("jar:")
-#define NS_JAR_DELIMITER NS_LITERAL_CSTRING("!/")
-#define NS_BOGUS_ENTRY_SCHEME NS_LITERAL_CSTRING("x:///")
+#define NS_JAR_SCHEME "jar:"_ns
+#define NS_JAR_DELIMITER "!/"_ns
+#define NS_BOGUS_ENTRY_SCHEME "x:///"_ns
 
 // FormatSpec takes the entry spec (including the "x:///" at the
 // beginning) and gives us a full JAR spec.

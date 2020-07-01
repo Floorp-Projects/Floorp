@@ -62,7 +62,7 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGPattern"), aResult);
+    return MakeFrameName(u"SVGPattern"_ns, aResult);
   }
 #endif  // DEBUG
 

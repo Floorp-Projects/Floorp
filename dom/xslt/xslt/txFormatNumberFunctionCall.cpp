@@ -14,8 +14,7 @@
 
 #include "prdtoa.h"
 
-#define INVALID_PARAM_VALUE \
-  NS_LITERAL_STRING("invalid parameter value for function")
+#define INVALID_PARAM_VALUE u"invalid parameter value for function"_ns
 
 const char16_t txFormatNumberFunctionCall::FORMAT_QUOTE = '\'';
 
@@ -74,7 +73,7 @@ nsresult txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
 
   txDecimalFormat* format = mStylesheet->getDecimalFormat(formatName);
   if (!format) {
-    nsAutoString err(NS_LITERAL_STRING("unknown decimal format"));
+    nsAutoString err(u"unknown decimal format"_ns);
 #ifdef TX_TO_STRING
     err.AppendLiteral(" for: ");
     toString(err);
@@ -385,7 +384,7 @@ void txFormatNumberFunctionCall::appendName(nsAString& aDest) {
  */
 
 txDecimalFormat::txDecimalFormat()
-    : mInfinity(NS_LITERAL_STRING("Infinity")), mNaN(NS_LITERAL_STRING("NaN")) {
+    : mInfinity(u"Infinity"_ns), mNaN(u"NaN"_ns) {
   mDecimalSeparator = '.';
   mGroupingSeparator = ',';
   mMinusSign = '-';

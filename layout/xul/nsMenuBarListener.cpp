@@ -55,33 +55,28 @@ nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBarFrame,
   // Also hook up the listener to the window listening for focus events. This
   // is so we can keep proper state as the user alt-tabs through processes.
 
-  mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("keypress"), this,
-                                       false);
-  mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("keydown"), this,
-                                       false);
-  mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("keyup"), this, false);
-  mEventTarget->AddSystemEventListener(
-      NS_LITERAL_STRING("mozaccesskeynotfound"), this, false);
+  mEventTarget->AddSystemEventListener(u"keypress"_ns, this, false);
+  mEventTarget->AddSystemEventListener(u"keydown"_ns, this, false);
+  mEventTarget->AddSystemEventListener(u"keyup"_ns, this, false);
+  mEventTarget->AddSystemEventListener(u"mozaccesskeynotfound"_ns, this, false);
   // Need a capturing event listener if the user has blocked pages from
   // overriding system keys so that we can prevent menu accesskeys from being
   // cancelled.
-  mEventTarget->AddEventListener(NS_LITERAL_STRING("keydown"), this, true);
+  mEventTarget->AddEventListener(u"keydown"_ns, this, true);
 
   // mousedown event should be handled in all phase
-  mEventTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), this, true);
-  mEventTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), this, false);
-  mEventTarget->AddEventListener(NS_LITERAL_STRING("blur"), this, true);
+  mEventTarget->AddEventListener(u"mousedown"_ns, this, true);
+  mEventTarget->AddEventListener(u"mousedown"_ns, this, false);
+  mEventTarget->AddEventListener(u"blur"_ns, this, true);
 
-  mEventTarget->AddEventListener(NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
-                                 this, false);
+  mEventTarget->AddEventListener(u"MozDOMFullscreen:Entered"_ns, this, false);
 
   // Needs to listen to the deactivate event of the window.
   RefPtr<dom::EventTarget> topWindowEventTarget =
       nsContentUtils::GetWindowRoot(aMenuBarContent->GetComposedDoc());
   mTopWindowEventTarget = topWindowEventTarget.get();
 
-  mTopWindowEventTarget->AddSystemEventListener(NS_LITERAL_STRING("deactivate"),
-                                                this, true);
+  mTopWindowEventTarget->AddSystemEventListener(u"deactivate"_ns, this, true);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -91,26 +86,22 @@ nsMenuBarListener::~nsMenuBarListener() {
 }
 
 void nsMenuBarListener::OnDestroyMenuBarFrame() {
-  mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keypress"), this,
+  mEventTarget->RemoveSystemEventListener(u"keypress"_ns, this, false);
+  mEventTarget->RemoveSystemEventListener(u"keydown"_ns, this, false);
+  mEventTarget->RemoveSystemEventListener(u"keyup"_ns, this, false);
+  mEventTarget->RemoveSystemEventListener(u"mozaccesskeynotfound"_ns, this,
                                           false);
-  mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"), this,
-                                          false);
-  mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keyup"), this,
-                                          false);
-  mEventTarget->RemoveSystemEventListener(
-      NS_LITERAL_STRING("mozaccesskeynotfound"), this, false);
-  mEventTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), this, true);
+  mEventTarget->RemoveEventListener(u"keydown"_ns, this, true);
 
-  mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this, true);
-  mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this,
+  mEventTarget->RemoveEventListener(u"mousedown"_ns, this, true);
+  mEventTarget->RemoveEventListener(u"mousedown"_ns, this, false);
+  mEventTarget->RemoveEventListener(u"blur"_ns, this, true);
+
+  mEventTarget->RemoveEventListener(u"MozDOMFullscreen:Entered"_ns, this,
                                     false);
-  mEventTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), this, true);
 
-  mEventTarget->RemoveEventListener(
-      NS_LITERAL_STRING("MozDOMFullscreen:Entered"), this, false);
-
-  mTopWindowEventTarget->RemoveSystemEventListener(
-      NS_LITERAL_STRING("deactivate"), this, true);
+  mTopWindowEventTarget->RemoveSystemEventListener(u"deactivate"_ns, this,
+                                                   true);
 
   mMenuBarFrame = nullptr;
   mEventTarget = nullptr;

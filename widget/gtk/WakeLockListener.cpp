@@ -478,9 +478,8 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
     return NS_ERROR_FAILURE;
   }
 
-  if (!topic.Equals(NS_LITERAL_STRING("screen")) &&
-      !topic.Equals(NS_LITERAL_STRING("audio-playing")) &&
-      !topic.Equals(NS_LITERAL_STRING("video-playing")))
+  if (!topic.Equals(u"screen"_ns) && !topic.Equals(u"audio-playing"_ns) &&
+      !topic.Equals(u"video-playing"_ns))
     return NS_OK;
 
   WakeLockTopic* topicLock = mTopics.Get(topic);

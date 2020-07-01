@@ -2063,14 +2063,14 @@ bool WinUtils::UnexpandEnvVars(nsAString& aPath) {
 WinUtils::WhitelistVec WinUtils::BuildWhitelist() {
   WhitelistVec result;
 
-  Unused << result.emplaceBack(std::make_pair(
-      nsString(NS_LITERAL_STRING("%ProgramFiles%")), nsDependentString()));
+  Unused << result.emplaceBack(
+      std::make_pair(nsString(u"%ProgramFiles%"_ns), nsDependentString()));
 
   // When no substitution is required, set the void flag
   result.back().second.SetIsVoid(true);
 
-  Unused << result.emplaceBack(std::make_pair(
-      nsString(NS_LITERAL_STRING("%SystemRoot%")), nsDependentString()));
+  Unused << result.emplaceBack(
+      std::make_pair(nsString(u"%SystemRoot%"_ns), nsDependentString()));
   result.back().second.SetIsVoid(true);
 
   wchar_t tmpPath[MAX_PATH + 1] = {};

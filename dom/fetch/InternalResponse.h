@@ -124,7 +124,7 @@ class InternalResponse final {
 
 #ifdef DEBUG
     for (uint32_t i = 0; i < mURLList.Length(); ++i) {
-      MOZ_ASSERT(mURLList[i].Find(NS_LITERAL_CSTRING("#")) == kNotFound);
+      MOZ_ASSERT(mURLList[i].Find("#"_ns) == kNotFound);
     }
 #endif
   }

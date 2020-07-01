@@ -406,6 +406,6 @@ nsSize ViewportFrame::AdjustViewportSizeForFixedPosition(
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult ViewportFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Viewport"), aResult);
+  return MakeFrameName(u"Viewport"_ns, aResult);
 }
 #endif

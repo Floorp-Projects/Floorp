@@ -170,7 +170,7 @@ void MediaKeys::GetKeySystem(nsString& aOutKeySystem) const {
 already_AddRefed<DetailedPromise> MediaKeys::SetServerCertificate(
     const ArrayBufferViewOrArrayBuffer& aCert, ErrorResult& aRv) {
   RefPtr<DetailedPromise> promise(
-      MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeys.setServerCertificate")));
+      MakePromise(aRv, "MediaKeys.setServerCertificate"_ns));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -394,8 +394,7 @@ already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy(
 
 already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   EME_LOG("MediaKeys[%p]::Init()", this);
-  RefPtr<DetailedPromise> promise(
-      MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeys::Init()")));
+  RefPtr<DetailedPromise> promise(MakePromise(aRv, "MediaKeys::Init()"_ns));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -623,7 +622,7 @@ void MediaKeys::GetSessionsInfo(nsString& sessionsInfo) {
 already_AddRefed<Promise> MediaKeys::GetStatusForPolicy(
     const MediaKeysPolicy& aPolicy, ErrorResult& aRv) {
   RefPtr<DetailedPromise> promise(
-      MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeys::GetStatusForPolicy()")));
+      MakePromise(aRv, "MediaKeys::GetStatusForPolicy()"_ns));
   if (aRv.Failed()) {
     return nullptr;
   }

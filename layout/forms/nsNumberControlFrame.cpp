@@ -57,7 +57,7 @@ already_AddRefed<Element> nsNumberControlFrame::MakeAnonymousElement(
   if (aPseudoType == PseudoStyleType::mozNumberSpinDown ||
       aPseudoType == PseudoStyleType::mozNumberSpinUp) {
     resultElement->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
-                           NS_LITERAL_STRING("true"), false);
+                           u"true"_ns, false);
   }
 
   if (aParent) {

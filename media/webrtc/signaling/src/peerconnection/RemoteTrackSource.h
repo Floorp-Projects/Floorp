@@ -25,8 +25,7 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
       dom::CallerType aCallerType) override {
     return ApplyConstraintsPromise::CreateAndReject(
         MakeRefPtr<MediaMgrError>(
-            dom::MediaStreamError::Name::OverconstrainedError,
-            NS_LITERAL_STRING("")),
+            dom::MediaStreamError::Name::OverconstrainedError, u""_ns),
         __func__);
   }
 

@@ -99,7 +99,7 @@ static nsresult moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
   return NS_NewInputStreamChannel(
       aChannel, aURI, stream.forget(), nullPrincipal,
       nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
-      nsIContentPolicy::TYPE_INTERNAL_IMAGE, NS_LITERAL_CSTRING(IMAGE_ICON_MS));
+      nsIContentPolicy::TYPE_INTERNAL_IMAGE, nsLiteralCString(IMAGE_ICON_MS));
 }
 
 static GtkWidget* gProtoWindow = nullptr;
@@ -298,9 +298,9 @@ nsresult nsIconChannel::Init(nsIURI* aURI) {
 
   // First lookup the icon by stock id and text direction.
   GtkTextDirection direction = GTK_TEXT_DIR_NONE;
-  if (StringEndsWith(stockIcon, NS_LITERAL_CSTRING("-ltr"))) {
+  if (StringEndsWith(stockIcon, "-ltr"_ns)) {
     direction = GTK_TEXT_DIR_LTR;
-  } else if (StringEndsWith(stockIcon, NS_LITERAL_CSTRING("-rtl"))) {
+  } else if (StringEndsWith(stockIcon, "-rtl"_ns)) {
     direction = GTK_TEXT_DIR_RTL;
   }
 

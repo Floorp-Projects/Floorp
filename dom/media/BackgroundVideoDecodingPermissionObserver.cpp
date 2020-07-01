@@ -102,9 +102,9 @@ void BackgroundVideoDecodingPermissionObserver::EnableEvent() const {
     return;
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      doc, NS_LITERAL_STRING("UnselectedTabHover:Enable"), CanBubble::eYes,
-      ChromeOnlyDispatch::eYes);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(doc, u"UnselectedTabHover:Enable"_ns,
+                               CanBubble::eYes, ChromeOnlyDispatch::eYes);
   asyncDispatcher->PostDOMEvent();
 }
 
@@ -119,9 +119,9 @@ void BackgroundVideoDecodingPermissionObserver::DisableEvent() const {
     return;
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      doc, NS_LITERAL_STRING("UnselectedTabHover:Disable"), CanBubble::eYes,
-      ChromeOnlyDispatch::eYes);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(doc, u"UnselectedTabHover:Disable"_ns,
+                               CanBubble::eYes, ChromeOnlyDispatch::eYes);
   asyncDispatcher->PostDOMEvent();
 }
 

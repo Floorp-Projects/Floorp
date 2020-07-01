@@ -38,16 +38,16 @@ static Maybe<VideoFacingModeEnum> GetFacingMode(const nsString& aDeviceName) {
   // See media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/
   // webrtc/videoengine/VideoCaptureDeviceInfoAndroid.java
 
-  if (aDeviceName.Find(NS_LITERAL_STRING("Facing back")) != kNotFound) {
+  if (aDeviceName.Find(u"Facing back"_ns) != kNotFound) {
     return Some(VideoFacingModeEnum::Environment);
   }
-  if (aDeviceName.Find(NS_LITERAL_STRING("Facing front")) != kNotFound) {
+  if (aDeviceName.Find(u"Facing front"_ns) != kNotFound) {
     return Some(VideoFacingModeEnum::User);
   }
 #endif  // ANDROID
 #ifdef XP_MACOSX
   // Kludge to test user-facing cameras on OSX.
-  if (aDeviceName.Find(NS_LITERAL_STRING("Face")) != -1) {
+  if (aDeviceName.Find(u"Face"_ns) != -1) {
     return Some(VideoFacingModeEnum::User);
   }
 #endif
@@ -55,10 +55,10 @@ static Maybe<VideoFacingModeEnum> GetFacingMode(const nsString& aDeviceName) {
   // The cameras' name of Surface book are "Microsoft Camera Front" and
   // "Microsoft Camera Rear" respectively.
 
-  if (aDeviceName.Find(NS_LITERAL_STRING("Front")) != kNotFound) {
+  if (aDeviceName.Find(u"Front"_ns) != kNotFound) {
     return Some(VideoFacingModeEnum::User);
   }
-  if (aDeviceName.Find(NS_LITERAL_STRING("Rear")) != kNotFound) {
+  if (aDeviceName.Find(u"Rear"_ns) != kNotFound) {
     return Some(VideoFacingModeEnum::Environment);
   }
 #endif  // WINDOWS

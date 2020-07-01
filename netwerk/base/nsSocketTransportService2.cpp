@@ -944,8 +944,7 @@ nsSocketTransportService::CreateTransport(const nsTArray<nsCString>& types,
                                           const nsACString& host, int32_t port,
                                           nsIProxyInfo* proxyInfo,
                                           nsISocketTransport** result) {
-  return CreateRoutedTransport(types, host, port, NS_LITERAL_CSTRING(""), 0,
-                               proxyInfo, result);
+  return CreateRoutedTransport(types, host, port, ""_ns, 0, proxyInfo, result);
 }
 
 NS_IMETHODIMP

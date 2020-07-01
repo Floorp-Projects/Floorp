@@ -121,8 +121,7 @@ void PaintThread::InitPaintWorkers() {
   MOZ_ASSERT(NS_IsMainThread());
   int32_t count = PaintThread::CalculatePaintWorkerCount();
   if (count != 1) {
-    mPaintWorkers =
-        SharedThreadPool::Get(NS_LITERAL_CSTRING("PaintWorker"), count);
+    mPaintWorkers = SharedThreadPool::Get("PaintWorker"_ns, count);
     mPaintWorkers->SetThreadStackSize(GetPaintThreadStackSize());
   }
 }

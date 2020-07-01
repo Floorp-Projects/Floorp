@@ -40,7 +40,7 @@ void LSPAnnotationGatherer::Annotate() {
       do_GetService("@mozilla.org/toolkit/crash-reporter;1");
   bool enabled;
   if (cr && NS_SUCCEEDED(cr->GetEnabled(&enabled)) && enabled) {
-    cr->AnnotateCrashReport(NS_LITERAL_CSTRING("Winsock_LSP"), mString);
+    cr->AnnotateCrashReport("Winsock_LSP"_ns, mString);
   }
 }
 

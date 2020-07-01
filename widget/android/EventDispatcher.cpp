@@ -558,7 +558,7 @@ class JavaCallbackDelegate final : public nsIAndroidEventCallback {
     MOZ_ASSERT(NS_IsMainThread());
 
     jni::Object::LocalRef data(jni::GetGeckoThreadEnv());
-    nsresult rv = BoxData(NS_LITERAL_STRING("callback"), aCx, aData, data,
+    nsresult rv = BoxData(u"callback"_ns, aCx, aData, data,
                           /* ObjectOnly */ false);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -606,8 +606,8 @@ class NativeCallbackDelegateSupport final
     NS_ENSURE_TRUE_VOID(jsapi.Init(mGlobalObject));
 
     JS::RootedValue data(jsapi.cx());
-    nsresult rv = UnboxData(NS_LITERAL_STRING("callback"), jsapi.cx(), aData,
-                            &data, /* BundleOnly */ false);
+    nsresult rv = UnboxData(u"callback"_ns, jsapi.cx(), aData, &data,
+                            /* BundleOnly */ false);
     NS_ENSURE_SUCCESS_VOID(rv);
 
     rv = (mCallback->*aCall)(data, jsapi.cx());

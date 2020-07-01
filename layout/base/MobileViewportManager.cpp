@@ -22,10 +22,10 @@ static mozilla::LazyLogModule sApzMvmLog("apz.mobileviewport");
 
 NS_IMPL_ISUPPORTS(MobileViewportManager, nsIDOMEventListener, nsIObserver)
 
-#define DOM_META_ADDED NS_LITERAL_STRING("DOMMetaAdded")
-#define DOM_META_CHANGED NS_LITERAL_STRING("DOMMetaChanged")
-#define LOAD NS_LITERAL_STRING("load")
-#define BEFORE_FIRST_PAINT NS_LITERAL_CSTRING("before-first-paint")
+#define DOM_META_ADDED u"DOMMetaAdded"_ns
+#define DOM_META_CHANGED u"DOMMetaChanged"_ns
+#define LOAD u"load"_ns
+#define BEFORE_FIRST_PAINT "before-first-paint"_ns
 
 using namespace mozilla;
 using namespace mozilla::dom;

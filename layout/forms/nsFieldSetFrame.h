@@ -77,7 +77,7 @@ class nsFieldSetFrame final : public nsContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("FieldSet"), aResult);
+    return MakeFrameName(u"FieldSet"_ns, aResult);
   }
 #endif
 

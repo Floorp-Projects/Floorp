@@ -73,19 +73,19 @@ TEST(PrincipalSerialization, TwoKeys)
 {
   // Sanity check that this returns a system principal
   nsCOMPtr<nsIPrincipal> systemPrincipal =
-      BasePrincipal::FromJSON(NS_LITERAL_CSTRING("{\"3\":{}}"));
+      BasePrincipal::FromJSON("{\"3\":{}}"_ns);
   ASSERT_EQ(BasePrincipal::Cast(systemPrincipal)->Kind(),
             BasePrincipal::eSystemPrincipal);
 
   // Sanity check that this returns a content principal
-  nsCOMPtr<nsIPrincipal> contentPrincipal = BasePrincipal::FromJSON(
-      NS_LITERAL_CSTRING("{\"1\":{\"0\":\"https://mozilla.com\"}}"));
+  nsCOMPtr<nsIPrincipal> contentPrincipal =
+      BasePrincipal::FromJSON("{\"1\":{\"0\":\"https://mozilla.com\"}}"_ns);
   ASSERT_EQ(BasePrincipal::Cast(contentPrincipal)->Kind(),
             BasePrincipal::eContentPrincipal);
 
   // Check both combined don't return a principal
   nsCOMPtr<nsIPrincipal> combinedPrincipal = BasePrincipal::FromJSON(
-      NS_LITERAL_CSTRING("{\"1\":{\"0\":\"https://mozilla.com\"},\"3\":{}}"));
+      "{\"1\":{\"0\":\"https://mozilla.com\"},\"3\":{}}"_ns);
   ASSERT_EQ(nullptr, combinedPrincipal);
 }
 

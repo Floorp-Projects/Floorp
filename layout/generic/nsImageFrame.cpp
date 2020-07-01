@@ -2417,7 +2417,7 @@ void nsImageFrame::OnVisibilityChange(
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsImageFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("ImageFrame"), aResult);
+  return MakeFrameName(u"ImageFrame"_ns, aResult);
 }
 
 void nsImageFrame::List(FILE* out, const char* aPrefix,

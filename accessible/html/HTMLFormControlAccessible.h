@@ -114,7 +114,7 @@ class HTMLTextFieldAccessible : public HyperTextAccessibleWrap {
       return el;
     }
     // XUL search-textbox custom element
-    return Elm()->Closest(NS_LITERAL_STRING("search-textbox"), IgnoreErrors());
+    return Elm()->Closest(u"search-textbox"_ns, IgnoreErrors());
   }
 };
 

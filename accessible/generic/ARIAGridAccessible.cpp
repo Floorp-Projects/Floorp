@@ -42,8 +42,7 @@ ARIAGridAccessible::NativeAttributes() {
 
   if (IsProbablyLayoutTable()) {
     nsAutoString unused;
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"),
-                                  NS_LITERAL_STRING("true"), unused);
+    attributes->SetStringProperty("layout-guess"_ns, u"true"_ns, unused);
   }
 
   return attributes.forget();
@@ -385,13 +384,11 @@ nsresult ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,
   nsresult rv = NS_OK;
   if (content->IsElement()) {
     if (aIsSelected)
-      rv = content->AsElement()->SetAttr(kNameSpaceID_None,
-                                         nsGkAtoms::aria_selected,
-                                         NS_LITERAL_STRING("true"), aNotify);
+      rv = content->AsElement()->SetAttr(
+          kNameSpaceID_None, nsGkAtoms::aria_selected, u"true"_ns, aNotify);
     else
-      rv = content->AsElement()->SetAttr(kNameSpaceID_None,
-                                         nsGkAtoms::aria_selected,
-                                         NS_LITERAL_STRING("false"), aNotify);
+      rv = content->AsElement()->SetAttr(
+          kNameSpaceID_None, nsGkAtoms::aria_selected, u"false"_ns, aNotify);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -608,8 +605,7 @@ ARIAGridCellAccessible::NativeAttributes() {
 
 #ifdef DEBUG
   nsAutoString unused;
-  attributes->SetStringProperty(NS_LITERAL_CSTRING("cppclass"),
-                                NS_LITERAL_STRING("ARIAGridCellAccessible"),
+  attributes->SetStringProperty("cppclass"_ns, u"ARIAGridCellAccessible"_ns,
                                 unused);
 #endif
 

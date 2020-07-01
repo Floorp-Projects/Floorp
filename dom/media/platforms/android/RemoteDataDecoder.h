@@ -32,7 +32,7 @@ class RemoteDataDecoder : public MediaDataDecoder,
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   nsCString GetDescriptionName() const override {
-    return NS_LITERAL_CSTRING("android decoder (remote)");
+    return "android decoder (remote)"_ns;
   }
 
  protected:

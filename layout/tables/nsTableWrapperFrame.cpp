@@ -1026,6 +1026,6 @@ NS_IMPL_FRAMEARENA_HELPERS(nsTableWrapperFrame)
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsTableWrapperFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("TableWrapper"), aResult);
+  return MakeFrameName(u"TableWrapper"_ns, aResult);
 }
 #endif

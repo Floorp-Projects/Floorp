@@ -163,13 +163,13 @@ void HTMLMarqueeElement::DispatchEventToShadowRoot(
 
 void HTMLMarqueeElement::Start() {
   if (GetShadowRoot()) {
-    DispatchEventToShadowRoot(NS_LITERAL_STRING("marquee-start"));
+    DispatchEventToShadowRoot(u"marquee-start"_ns);
   }
 }
 
 void HTMLMarqueeElement::Stop() {
   if (GetShadowRoot()) {
-    DispatchEventToShadowRoot(NS_LITERAL_STRING("marquee-stop"));
+    DispatchEventToShadowRoot(u"marquee-stop"_ns);
   }
 }
 

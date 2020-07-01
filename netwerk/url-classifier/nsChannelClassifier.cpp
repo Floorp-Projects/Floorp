@@ -122,8 +122,7 @@ void nsChannelClassifier::Start() {
   if (NS_FAILED(rv)) {
     // If we aren't getting a callback for any reason, assume a good verdict and
     // make sure we resume the channel if necessary.
-    OnClassifyComplete(NS_OK, NS_LITERAL_CSTRING(""), NS_LITERAL_CSTRING(""),
-                       NS_LITERAL_CSTRING(""));
+    OnClassifyComplete(NS_OK, ""_ns, ""_ns, ""_ns);
   }
 }
 

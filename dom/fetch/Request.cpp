@@ -233,9 +233,8 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
  public:
   ReferrerSameOriginChecker(WorkerPrivate* aWorkerPrivate,
                             const nsAString& aReferrerURL, nsresult& aResult)
-      : WorkerMainThreadRunnable(
-            aWorkerPrivate,
-            NS_LITERAL_CSTRING("Fetch :: Referrer same origin check")),
+      : WorkerMainThreadRunnable(aWorkerPrivate,
+                                 "Fetch :: Referrer same origin check"_ns),
         mReferrerURL(aReferrerURL),
         mResult(aResult) {
     mWorkerPrivate->AssertIsOnWorkerThread();
@@ -359,7 +358,7 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
   if (aInit.mReferrer.WasPassed()) {
     const nsString& referrer = aInit.mReferrer.Value();
     if (referrer.IsEmpty()) {
-      request->SetReferrer(NS_LITERAL_STRING(""));
+      request->SetReferrer(u""_ns);
     } else {
       nsAutoString referrerURL;
       if (NS_IsMainThread()) {
@@ -589,9 +588,8 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
       nsCOMPtr<nsIInputStream> temporaryBody = stream;
 
       if (!contentTypeWithCharset.IsVoid() &&
-          !requestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
-        requestHeaders->Append(NS_LITERAL_CSTRING("Content-Type"),
-                               contentTypeWithCharset, aRv);
+          !requestHeaders->Has("Content-Type"_ns, aRv)) {
+        requestHeaders->Append("Content-Type"_ns, contentTypeWithCharset, aRv);
       }
 
       if (NS_WARN_IF(aRv.Failed())) {

@@ -386,8 +386,8 @@ void SharedWorker::ErrorPropagation(nsresult aError) {
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(NS_FAILED(aError));
 
-  RefPtr<AsyncEventDispatcher> errorEvent = new AsyncEventDispatcher(
-      this, NS_LITERAL_STRING("error"), CanBubble::eNo);
+  RefPtr<AsyncEventDispatcher> errorEvent =
+      new AsyncEventDispatcher(this, u"error"_ns, CanBubble::eNo);
   errorEvent->PostDOMEvent();
 
   Close();

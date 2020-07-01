@@ -140,7 +140,7 @@ nsScriptErrorWithStack::ToString(nsACString& /*UTF8*/ aResult) {
   JSContext* cx = jsapi.cx();
   JS::RootedObject stack(cx, mStack);
   nsCString stackString = FormatStackString(cx, principals, stack);
-  nsCString combined = message + NS_LITERAL_CSTRING("\n") + stackString;
+  nsCString combined = message + "\n"_ns + stackString;
   aResult.Assign(combined);
 
   return NS_OK;

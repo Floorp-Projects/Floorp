@@ -20,42 +20,37 @@ struct IsURIInListMatch {
 TEST(DOM_Base_ContentUtils, IsURIInList)
 {
   nsCOMPtr<nsIURI> uri, subURI;
-  nsresult rv =
-      NS_NewURI(getter_AddRefs(uri),
-                NS_LITERAL_CSTRING("https://example.com/path/favicon.ico#"));
+  nsresult rv = NS_NewURI(getter_AddRefs(uri),
+                          "https://example.com/path/favicon.ico#"_ns);
   ASSERT_TRUE(rv == NS_OK);
 
   rv = NS_NewURI(getter_AddRefs(subURI),
-                 NS_LITERAL_CSTRING("http://sub.example.com/favicon.ico?"));
+                 "http://sub.example.com/favicon.ico?"_ns);
   ASSERT_TRUE(rv == NS_OK);
 
   static constexpr IsURIInListMatch patterns[] = {
-      {NS_LITERAL_CSTRING("bar.com,*.example.com,example.com,foo.com"), true,
-       true},
-      {NS_LITERAL_CSTRING("bar.com,example.com,*.example.com,foo.com"), true,
-       true},
-      {NS_LITERAL_CSTRING("*.example.com,example.com,foo.com"), true, true},
-      {NS_LITERAL_CSTRING("example.com,*.example.com,foo.com"), true, true},
-      {NS_LITERAL_CSTRING("*.example.com,example.com"), true, true},
-      {NS_LITERAL_CSTRING("example.com,*.example.com"), true, true},
-      {NS_LITERAL_CSTRING("*.example.com/,example.com/"), true, true},
-      {NS_LITERAL_CSTRING("example.com/,*.example.com/"), true, true},
-      {NS_LITERAL_CSTRING("*.example.com/pa,example.com/pa"), false, false},
-      {NS_LITERAL_CSTRING("example.com/pa,*.example.com/pa"), false, false},
-      {NS_LITERAL_CSTRING("*.example.com/pa/,example.com/pa/"), false, false},
-      {NS_LITERAL_CSTRING("example.com/pa/,*.example.com/pa/"), false, false},
-      {NS_LITERAL_CSTRING("*.example.com/path,example.com/path"), false, false},
-      {NS_LITERAL_CSTRING("example.com/path,*.example.com/path"), false, false},
-      {NS_LITERAL_CSTRING("*.example.com/path/,example.com/path/"), true,
-       false},
-      {NS_LITERAL_CSTRING("example.com/path/,*.example.com/path/"), true,
-       false},
-      {NS_LITERAL_CSTRING("*.example.com/favicon.ico"), false, true},
-      {NS_LITERAL_CSTRING("example.com/path/favicon.ico"), true, false},
-      {NS_LITERAL_CSTRING("*.example.com"), false, true},
-      {NS_LITERAL_CSTRING("example.com"), true, false},
-      {NS_LITERAL_CSTRING("foo.com"), false, false},
-      {NS_LITERAL_CSTRING("*.foo.com"), false, false},
+      {"bar.com,*.example.com,example.com,foo.com"_ns, true, true},
+      {"bar.com,example.com,*.example.com,foo.com"_ns, true, true},
+      {"*.example.com,example.com,foo.com"_ns, true, true},
+      {"example.com,*.example.com,foo.com"_ns, true, true},
+      {"*.example.com,example.com"_ns, true, true},
+      {"example.com,*.example.com"_ns, true, true},
+      {"*.example.com/,example.com/"_ns, true, true},
+      {"example.com/,*.example.com/"_ns, true, true},
+      {"*.example.com/pa,example.com/pa"_ns, false, false},
+      {"example.com/pa,*.example.com/pa"_ns, false, false},
+      {"*.example.com/pa/,example.com/pa/"_ns, false, false},
+      {"example.com/pa/,*.example.com/pa/"_ns, false, false},
+      {"*.example.com/path,example.com/path"_ns, false, false},
+      {"example.com/path,*.example.com/path"_ns, false, false},
+      {"*.example.com/path/,example.com/path/"_ns, true, false},
+      {"example.com/path/,*.example.com/path/"_ns, true, false},
+      {"*.example.com/favicon.ico"_ns, false, true},
+      {"example.com/path/favicon.ico"_ns, true, false},
+      {"*.example.com"_ns, false, true},
+      {"example.com"_ns, true, false},
+      {"foo.com"_ns, false, false},
+      {"*.foo.com"_ns, false, false},
   };
 
   for (auto& entry : patterns) {

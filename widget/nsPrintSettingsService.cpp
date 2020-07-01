@@ -538,7 +538,7 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
 
   if (aFlags & nsIPrintSettings::kInitSaveToFileName) {
     if (GETSTRPREF(kPrintToFileName, str)) {
-      if (StringEndsWith(str, NS_LITERAL_STRING(".ps"))) {
+      if (StringEndsWith(str, u".ps"_ns)) {
         // We only support PDF since bug 1425188 landed.  Users may still have
         // prefs with .ps filenames if they last saved a file as Postscript
         // though, so we fix that up here.  (The pref values will be

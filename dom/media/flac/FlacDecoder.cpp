@@ -38,7 +38,7 @@ nsTArray<UniquePtr<TrackInfo>> FlacDecoder::GetTracksInfo(
 
   tracks.AppendElement(
       CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("audio/flac"), aType));
+          "audio/flac"_ns, aType));
 
   return tracks;
 }

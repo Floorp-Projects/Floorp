@@ -30,7 +30,7 @@ class DetailsFrame final : public nsBlockFrame,
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("Details"), aResult);
+    return MakeFrameName(u"Details"_ns, aResult);
   }
 #endif
 

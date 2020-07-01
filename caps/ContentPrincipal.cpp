@@ -147,7 +147,7 @@ nsresult ContentPrincipal::GenerateOriginNoSuffixFromURI(
        // sources. We check for moz-safe-about:blank since origin is an
        // innermost URI.
        !StringBeginsWith(origin->GetSpecOrDefault(),
-                         NS_LITERAL_CSTRING("moz-safe-about:blank")))) {
+                         "moz-safe-about:blank"_ns))) {
     rv = origin->GetAsciiSpec(aOriginNoSuffix);
     NS_ENSURE_SUCCESS(rv, rv);
 

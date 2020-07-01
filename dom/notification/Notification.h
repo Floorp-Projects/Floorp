@@ -259,11 +259,11 @@ class Notification : public DOMEventTargetHelper,
   static const nsString DirectionToString(NotificationDirection aDirection) {
     switch (aDirection) {
       case NotificationDirection::Ltr:
-        return NS_LITERAL_STRING("ltr");
+        return u"ltr"_ns;
       case NotificationDirection::Rtl:
-        return NS_LITERAL_STRING("rtl");
+        return u"rtl"_ns;
       default:
-        return NS_LITERAL_STRING("auto");
+        return u"auto"_ns;
     }
   }
 

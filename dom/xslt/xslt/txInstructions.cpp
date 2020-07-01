@@ -451,7 +451,7 @@ nsresult txMessage::execute(txExecutionState& aEs) {
   nsCOMPtr<nsIConsoleService> consoleSvc =
       do_GetService("@mozilla.org/consoleservice;1");
   if (consoleSvc) {
-    nsAutoString logString(NS_LITERAL_STRING("xsl:message - "));
+    nsAutoString logString(u"xsl:message - "_ns);
     logString.Append(handler->mValue);
     consoleSvc->LogStringMessage(logString.get());
   }

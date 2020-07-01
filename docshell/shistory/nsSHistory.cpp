@@ -78,16 +78,16 @@ extern mozilla::LazyLogModule gPageCacheLog;
 //  nsIURI *uri = [...];
 //  LOG_SPEC(("The URI is %s.", _spec), uri);
 //
-#define LOG_SPEC(format, uri)                             \
-  PR_BEGIN_MACRO                                          \
-  if (MOZ_LOG_TEST(gSHistoryLog, LogLevel::Debug)) {      \
-    nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)")); \
-    if (uri) {                                            \
-      _specStr = uri->GetSpecOrDefault();                 \
-    }                                                     \
-    const char* _spec = _specStr.get();                   \
-    LOG(format);                                          \
-  }                                                       \
+#define LOG_SPEC(format, uri)                        \
+  PR_BEGIN_MACRO                                     \
+  if (MOZ_LOG_TEST(gSHistoryLog, LogLevel::Debug)) { \
+    nsAutoCString _specStr("(null)"_ns);             \
+    if (uri) {                                       \
+      _specStr = uri->GetSpecOrDefault();            \
+    }                                                \
+    const char* _spec = _specStr.get();              \
+    LOG(format);                                     \
+  }                                                  \
   PR_END_MACRO
 
 // This macro makes it easy to log a message including an SHEntry's URI.

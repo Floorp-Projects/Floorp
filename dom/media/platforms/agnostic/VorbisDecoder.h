@@ -32,7 +32,7 @@ class VorbisDataDecoder : public MediaDataDecoder,
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   nsCString GetDescriptionName() const override {
-    return NS_LITERAL_CSTRING("vorbis audio decoder");
+    return "vorbis audio decoder"_ns;
   }
 
   // Return true if mimetype is Vorbis

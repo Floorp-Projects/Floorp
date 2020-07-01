@@ -94,8 +94,7 @@ TEST(FilenameEvalParser, MozExtension)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kMozillaExtension &&
                 ret.second.value() ==
-                    NS_LITERAL_STRING(
-                        "federated-learning@s!/experiments/study/api.js"));
+                    u"federated-learning@s!/experiments/study/api.js"_ns);
   }
   {  // Test mozilla.org replacing
     NS_NAMED_LITERAL_STRING(
@@ -108,8 +107,8 @@ TEST(FilenameEvalParser, MozExtension)
     ASSERT_TRUE(
         ret.first == kMozillaExtension &&
         ret.second.value() ==
-            NS_LITERAL_STRING(
-                "federated-learning@shigeld.m!/experiments/study/api.js"));
+            nsLiteralString(
+                u"federated-learning@shigeld.m!/experiments/study/api.js"));
   }
   {  // Test truncating
     NS_NAMED_LITERAL_STRING(
@@ -119,11 +118,10 @@ TEST(FilenameEvalParser, MozExtension)
         "study/apiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.js");
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
-    ASSERT_TRUE(
-        ret.first == kMozillaExtension &&
-        ret.second.value() ==
-            NS_LITERAL_STRING("federated-learning@shigeld.m!/experiments/"
-                              "study/apiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"));
+    ASSERT_TRUE(ret.first == kMozillaExtension &&
+                ret.second.value() ==
+                    u"federated-learning@shigeld.m!/experiments/"
+                    "study/apiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"_ns);
   }
 }
 
@@ -191,7 +189,7 @@ TEST(FilenameEvalParser, Other)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
-                ret.second.value() == NS_LITERAL_STRING("gallop"));
+                ret.second.value() == u"gallop"_ns);
 #else
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
 #endif
@@ -202,7 +200,7 @@ TEST(FilenameEvalParser, Other)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
-                ret.second.value() == NS_LITERAL_STRING("gallop"));
+                ret.second.value() == u"gallop"_ns);
 #else
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
 #endif
@@ -213,7 +211,7 @@ TEST(FilenameEvalParser, Other)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first == kSanitizedWindowsPath &&
-                ret.second.value() == NS_LITERAL_STRING("content"));
+                ret.second.value() == u"content"_ns);
 #else
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
 #endif
@@ -224,7 +222,7 @@ TEST(FilenameEvalParser, Other)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first == kSanitizedWindowsPath &&
-                ret.second.value() == NS_LITERAL_STRING("content"));
+                ret.second.value() == u"content"_ns);
 #else
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
 #endif
@@ -235,7 +233,7 @@ TEST(FilenameEvalParser, Other)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first == kSanitizedWindowsPath &&
-                ret.second.value() == NS_LITERAL_STRING("thing"));
+                ret.second.value() == u"thing"_ns);
 #else
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
 #endif
@@ -246,7 +244,7 @@ TEST(FilenameEvalParser, Other)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
-                ret.second.value() == NS_LITERAL_STRING("file://.../file.txt"));
+                ret.second.value() == u"file://.../file.txt"_ns);
 #else
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
 #endif
@@ -257,7 +255,7 @@ TEST(FilenameEvalParser, Other)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first == kSanitizedWindowsPath &&
-                ret.second.value() == NS_LITERAL_STRING("file.txt"));
+                ret.second.value() == u"file.txt"_ns);
 #else
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
 #endif
@@ -268,7 +266,7 @@ TEST(FilenameEvalParser, Other)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
-                ret.second.value() == NS_LITERAL_STRING("http"));
+                ret.second.value() == u"http"_ns);
 #else
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
 #endif
@@ -279,7 +277,7 @@ TEST(FilenameEvalParser, Other)
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
-                ret.second.value() == NS_LITERAL_STRING("http"));
+                ret.second.value() == u"http"_ns);
 #else
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
 #endif
@@ -311,13 +309,12 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
             mozilla::fallible);
     nsString& slot = *slotPtr;
     slot.Truncate();
-    slot = NS_LITERAL_STRING("http://example.com");
+    slot = u"http://example.com"_ns;
 
-    wEI->mName = NS_LITERAL_STRING("gtest Test Extension");
-    wEI->mId = NS_LITERAL_STRING("gtesttestextension@mozilla.org");
-    wEI->mBaseURL = NS_LITERAL_STRING("file://foo");
-    wEI->mMozExtensionHostname =
-        NS_LITERAL_CSTRING("e37c3c08-beac-a04b-8032-c4f699a1a856");
+    wEI->mName = u"gtest Test Extension"_ns;
+    wEI->mId = u"gtesttestextension@mozilla.org"_ns;
+    wEI->mBaseURL = u"file://foo"_ns;
+    wEI->mMozExtensionHostname = "e37c3c08-beac-a04b-8032-c4f699a1a856"_ns;
 
     mozilla::ErrorResult eR;
     RefPtr<mozilla::WebExtensionPolicy> w =
@@ -332,9 +329,8 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
 
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
                 ret.second.value() ==
-                    NS_LITERAL_STRING(
-                        "moz-extension://[gtesttestextension@mozilla.org: "
-                        "gtest Test Extension]/path/to/file.js"));
+                    u"moz-extension://[gtesttestextension@mozilla.org: "
+                    "gtest Test Extension]/path/to/file.js"_ns);
 
     w->SetActive(false, eR);
   }
@@ -345,7 +341,7 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
-                ret.second.value() == NS_LITERAL_STRING("moz-extension"));
+                ret.second.value() == u"moz-extension"_ns);
   }
   {
     NS_NAMED_LITERAL_STRING(
@@ -355,8 +351,8 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
     ASSERT_TRUE(
         ret.first == kSanitizedWindowsURL &&
         ret.second.value() ==
-            NS_LITERAL_STRING(
-                "moz-extension://[failed finding addon by host]/file.js"));
+            nsLiteralString(
+                u"moz-extension://[failed finding addon by host]/file.js"));
   }
   {
     NS_NAMED_LITERAL_STRING(
@@ -367,8 +363,8 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
         nsContentSecurityUtils::FilenameToFilenameType(str, true);
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
                 ret.second.value() ==
-                    NS_LITERAL_STRING("moz-extension://[failed finding addon "
-                                      "by host]/path/to/file.js"));
+                    u"moz-extension://[failed finding addon "
+                    "by host]/path/to/file.js"_ns);
   }
 }
 #endif

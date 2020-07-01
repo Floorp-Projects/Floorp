@@ -53,8 +53,7 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
 
   if (!mGMPThread) {
     RejectPromiseWithStateError(
-        aPromiseId,
-        NS_LITERAL_CSTRING("Couldn't get GMP thread ChromiumCDMProxy::Init"));
+        aPromiseId, "Couldn't get GMP thread ChromiumCDMProxy::Init"_ns);
     return;
   }
 
@@ -79,8 +78,8 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
         if (!service) {
           self->RejectPromiseWithStateError(
               aPromiseId,
-              NS_LITERAL_CSTRING("Couldn't get GeckoMediaPluginService in "
-                                 "ChromiumCDMProxy::Init"));
+              nsLiteralCString("Couldn't get GeckoMediaPluginService in "
+                               "ChromiumCDMProxy::Init"));
           return;
         }
         RefPtr<gmp::GetCDMParentPromise> promise =
@@ -104,7 +103,7 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
                         }
                         if (self->mIsShutdown) {
                           self->RejectPromiseWithStateError(
-                              aPromiseId, NS_LITERAL_CSTRING(
+                              aPromiseId, nsLiteralCString(
                                               "ChromiumCDMProxy shutdown "
                                               "during ChromiumCDMProxy::Init"));
                           // If shutdown happened while waiting to init, we
@@ -234,8 +233,7 @@ void ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
-    RejectPromiseWithStateError(
-        aPromiseId, NS_LITERAL_CSTRING("Null CDM in CreateSession"));
+    RejectPromiseWithStateError(aPromiseId, "Null CDM in CreateSession"_ns);
     return;
   }
 
@@ -253,8 +251,7 @@ void ChromiumCDMProxy::LoadSession(PromiseId aPromiseId,
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
-    RejectPromiseWithStateError(aPromiseId,
-                                NS_LITERAL_CSTRING("Null CDM in LoadSession"));
+    RejectPromiseWithStateError(aPromiseId, "Null CDM in LoadSession"_ns);
     return;
   }
 
@@ -273,8 +270,8 @@ void ChromiumCDMProxy::SetServerCertificate(PromiseId aPromiseId,
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
-    RejectPromiseWithStateError(
-        aPromiseId, NS_LITERAL_CSTRING("Null CDM in SetServerCertificate"));
+    RejectPromiseWithStateError(aPromiseId,
+                                "Null CDM in SetServerCertificate"_ns);
     return;
   }
 
@@ -296,8 +293,7 @@ void ChromiumCDMProxy::UpdateSession(const nsAString& aSessionId,
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
-    RejectPromiseWithStateError(
-        aPromiseId, NS_LITERAL_CSTRING("Null CDM in UpdateSession"));
+    RejectPromiseWithStateError(aPromiseId, "Null CDM in UpdateSession"_ns);
     return;
   }
   mGMPThread->Dispatch(
@@ -315,8 +311,7 @@ void ChromiumCDMProxy::CloseSession(const nsAString& aSessionId,
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
-    RejectPromiseWithStateError(aPromiseId,
-                                NS_LITERAL_CSTRING("Null CDM in CloseSession"));
+    RejectPromiseWithStateError(aPromiseId, "Null CDM in CloseSession"_ns);
     return;
   }
   mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
@@ -333,8 +328,7 @@ void ChromiumCDMProxy::RemoveSession(const nsAString& aSessionId,
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
-    RejectPromiseWithStateError(
-        aPromiseId, NS_LITERAL_CSTRING("Null CDM in RemoveSession"));
+    RejectPromiseWithStateError(aPromiseId, "Null CDM in RemoveSession"_ns);
     return;
   }
   mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
@@ -558,8 +552,8 @@ void ChromiumCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
-    RejectPromiseWithStateError(
-        aPromiseId, NS_LITERAL_CSTRING("Null CDM in GetStatusForPolicy"));
+    RejectPromiseWithStateError(aPromiseId,
+                                "Null CDM in GetStatusForPolicy"_ns);
     return;
   }
 

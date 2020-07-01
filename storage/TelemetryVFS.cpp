@@ -556,7 +556,7 @@ int xDelete(sqlite3_vfs* vfs, const char* zName, int syncDir) {
   int rc;
   RefPtr<QuotaObject> quotaObject;
 
-  if (StringEndsWith(nsDependentCString(zName), NS_LITERAL_CSTRING("-wal"))) {
+  if (StringEndsWith(nsDependentCString(zName), "-wal"_ns)) {
     quotaObject = GetQuotaObjectFromName(zName);
   }
 

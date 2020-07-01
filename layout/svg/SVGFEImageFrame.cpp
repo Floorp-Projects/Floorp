@@ -56,7 +56,7 @@ class SVGFEImageFrame final : public nsFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGFEImage"), aResult);
+    return MakeFrameName(u"SVGFEImage"_ns, aResult);
   }
 #endif
 

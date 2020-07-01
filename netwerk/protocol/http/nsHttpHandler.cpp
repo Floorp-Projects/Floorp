@@ -149,8 +149,7 @@ static nsCString GetDeviceModelId() {
       do_GetService("@mozilla.org/system-info;1");
   MOZ_ASSERT(infoService, "Could not find a system info service");
   nsAutoString androidDevice;
-  nsresult rv = infoService->GetPropertyAsAString(NS_LITERAL_STRING("device"),
-                                                  androidDevice);
+  nsresult rv = infoService->GetPropertyAsAString(u"device"_ns, androidDevice);
   if (NS_SUCCEEDED(rv)) {
     deviceModelId = NS_LossyConvertUTF16toASCII(androidDevice);
   }
@@ -158,8 +157,7 @@ static nsCString GetDeviceModelId() {
   rv = Preferences::GetCString(UA_PREF("device_string"), deviceString);
   if (NS_SUCCEEDED(rv)) {
     deviceString.Trim(" ", true, true);
-    deviceString.ReplaceSubstring(NS_LITERAL_CSTRING("%DEVICEID%"),
-                                  deviceModelId);
+    deviceString.ReplaceSubstring("%DEVICEID%"_ns, deviceModelId);
     return std::move(deviceString);
   }
   return std::move(deviceModelId);
@@ -357,8 +355,7 @@ void nsHttpHandler::SetFastOpenOSSupport() {
   nsCOMPtr<nsIPropertyBag2> infoService =
       do_GetService("@mozilla.org/system-info;1");
   MOZ_ASSERT(infoService, "Could not find a system info service");
-  rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("sdk_version"),
-                                          version);
+  rv = infoService->GetPropertyAsACString(u"sdk_version"_ns, version);
 #  else
   char buf[SYS_INFO_BUFFER_LENGTH];
   if (PR_GetSystemInfo(PR_SI_RELEASE, buf, sizeof(buf)) == PR_SUCCESS) {
@@ -709,7 +706,7 @@ nsresult nsHttpHandler::AddStandardRequestHeaders(
 
   // add the "Send Hint" header
   if (mSafeHintEnabled || mParentalControlEnabled) {
-    rv = request->SetHeader(nsHttp::Prefer, NS_LITERAL_CSTRING("safe"), false,
+    rv = request->SetHeader(nsHttp::Prefer, "safe"_ns, false,
                             nsHttpHeaderArray::eVarietyRequestDefault);
     if (NS_FAILED(rv)) return rv;
   }
@@ -1000,8 +997,7 @@ void nsHttpHandler::InitUserAgentComponents() {
 #    ifndef MOZ_UA_OS_AGNOSTIC  // Don't add anything to mPlatform since it's
                                 // empty.
   nsAutoString androidVersion;
-  rv = infoService->GetPropertyAsAString(NS_LITERAL_STRING("release_version"),
-                                         androidVersion);
+  rv = infoService->GetPropertyAsAString(u"release_version"_ns, androidVersion);
   if (NS_SUCCEEDED(rv)) {
     mPlatform += " ";
     // If the 2nd character is a ".", we know the major version is a single
@@ -1017,12 +1013,12 @@ void nsHttpHandler::InitUserAgentComponents() {
 #  endif
   // Add the `Mobile` or `Tablet` or `TV` token when running on device.
   bool isTablet;
-  rv = infoService->GetPropertyAsBool(NS_LITERAL_STRING("tablet"), &isTablet);
+  rv = infoService->GetPropertyAsBool(u"tablet"_ns, &isTablet);
   if (NS_SUCCEEDED(rv) && isTablet) {
     mCompatDevice.AssignLiteral("Tablet");
   } else {
     bool isTV;
-    rv = infoService->GetPropertyAsBool(NS_LITERAL_STRING("tv"), &isTV);
+    rv = infoService->GetPropertyAsBool(u"tv"_ns, &isTV);
     if (NS_SUCCEEDED(rv) && isTV) {
       mCompatDevice.AssignLiteral("TV");
     } else {

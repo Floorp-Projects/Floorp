@@ -508,8 +508,7 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
 
   // If the URI was malformed, try to recover by loading about:blank.
   if (rv == NS_ERROR_MALFORMED_URI) {
-    rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_STRING("about:blank"),
-                   encoding, base_uri);
+    rv = NS_NewURI(getter_AddRefs(uri), u"about:blank"_ns, encoding, base_uri);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -538,8 +537,7 @@ void nsFrameLoader::FireErrorEvent() {
   }
   RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
       new LoadBlockingAsyncEventDispatcher(
-          mOwnerContent, NS_LITERAL_STRING("error"), CanBubble::eNo,
-          ChromeOnlyDispatch::eNo);
+          mOwnerContent, u"error"_ns, CanBubble::eNo, ChromeOnlyDispatch::eNo);
   loadBlockingAsyncDispatcher->PostDOMEvent();
 }
 
@@ -994,11 +992,9 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* frame) {
         // same editor object, instead of creating a new one.
         RefPtr<HTMLEditor> htmlEditor = GetDocShell()->GetHTMLEditor();
         Unused << htmlEditor;
-        htmlDoc->SetDesignMode(NS_LITERAL_STRING("off"), Nothing(),
-                               IgnoreErrors());
+        htmlDoc->SetDesignMode(u"off"_ns, Nothing(), IgnoreErrors());
 
-        htmlDoc->SetDesignMode(NS_LITERAL_STRING("on"), Nothing(),
-                               IgnoreErrors());
+        htmlDoc->SetDesignMode(u"on"_ns, Nothing(), IgnoreErrors());
       } else {
         // Re-initialize the presentation for contenteditable documents
         bool editable = false, hasEditingSession = false;
@@ -3227,7 +3223,7 @@ void nsFrameLoader::InitializeBrowserAPI() {
     return;
   }
   mMessageManager->LoadFrameScript(
-      NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js"),
+      u"chrome://global/content/BrowserElementChild.js"_ns,
       /* allowDelayedLoad = */ true,
       /* aRunInGlobalScope */ true, IgnoreErrors());
 
@@ -3478,9 +3474,9 @@ void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
   // Fire the actual crashed event.
   nsString eventName;
   if (aChannel && !aChannel->DoBuildIDsMatch()) {
-    eventName = NS_LITERAL_STRING("oop-browser-buildid-mismatch");
+    eventName = u"oop-browser-buildid-mismatch"_ns;
   } else {
-    eventName = NS_LITERAL_STRING("oop-browser-crashed");
+    eventName = u"oop-browser-crashed"_ns;
   }
 
   FrameCrashedEventInit init;

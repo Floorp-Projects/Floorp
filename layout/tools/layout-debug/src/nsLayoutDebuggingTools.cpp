@@ -130,13 +130,13 @@ nsLayoutDebuggingTools::SetPagedMode(bool aPagedMode) {
   nsIntMargin unwriteableMargin(0, 0, 0, 0);
   printSettings->SetUnwriteableMarginInTwips(unwriteableMargin);
 
-  printSettings->SetHeaderStrLeft(NS_LITERAL_STRING(""));
-  printSettings->SetHeaderStrCenter(NS_LITERAL_STRING(""));
-  printSettings->SetHeaderStrRight(NS_LITERAL_STRING(""));
+  printSettings->SetHeaderStrLeft(u""_ns);
+  printSettings->SetHeaderStrCenter(u""_ns);
+  printSettings->SetHeaderStrRight(u""_ns);
 
-  printSettings->SetFooterStrLeft(NS_LITERAL_STRING(""));
-  printSettings->SetFooterStrCenter(NS_LITERAL_STRING(""));
-  printSettings->SetFooterStrRight(NS_LITERAL_STRING(""));
+  printSettings->SetFooterStrLeft(u""_ns);
+  printSettings->SetFooterStrCenter(u""_ns);
+  printSettings->SetFooterStrRight(u""_ns);
 
   nsCOMPtr<nsIContentViewer> contentViewer(doc_viewer(mDocShell));
   contentViewer->SetPageModeForTesting(aPagedMode, printSettings);

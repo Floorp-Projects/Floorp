@@ -664,8 +664,8 @@ class PushEventOp final : public ExtendableEventOp {
     pushEventInit.mCancelable = false;
 
     GlobalObject globalObj(aCx, aWorkerPrivate->GlobalScope()->GetWrapper());
-    RefPtr<PushEvent> pushEvent = PushEvent::Constructor(
-        globalObj, NS_LITERAL_STRING("push"), pushEventInit, result);
+    RefPtr<PushEvent> pushEvent =
+        PushEvent::Constructor(globalObj, u"push"_ns, pushEventInit, result);
 
     if (NS_WARN_IF(result.Failed())) {
       return false;
@@ -754,7 +754,7 @@ class PushSubscriptionChangeEventOp final : public ExtendableEventOp {
     init.mCancelable = false;
 
     RefPtr<ExtendableEvent> event = ExtendableEvent::Constructor(
-        target, NS_LITERAL_STRING("pushsubscriptionchange"), init);
+        target, u"pushsubscriptionchange"_ns, init);
     event->SetTrusted(true);
 
     nsresult rv = DispatchExtendableEventOnWorkerScope(
@@ -984,9 +984,7 @@ class MessageEventOp final : public ExtendableEventOp {
     RefPtr<EventTarget> target = aWorkerPrivate->GlobalScope();
     RefPtr<ExtendableMessageEvent> extendableEvent =
         ExtendableMessageEvent::Constructor(
-            target,
-            deserializationFailed ? NS_LITERAL_STRING("messageerror")
-                                  : NS_LITERAL_STRING("message"),
+            target, deserializationFailed ? u"messageerror"_ns : u"message"_ns,
             init);
 
     extendableEvent->SetTrusted(true);
@@ -1015,7 +1013,7 @@ class MOZ_STACK_CLASS FetchEventOp::AutoCancel {
       : mOwner(aOwner),
         mLine(0),
         mColumn(0),
-        mMessageName(NS_LITERAL_CSTRING("InterceptionFailedWithURL")) {
+        mMessageName("InterceptionFailedWithURL"_ns) {
     MOZ_ASSERT(IsCurrentThreadRunningWorker());
     MOZ_ASSERT(mOwner);
 
@@ -1160,8 +1158,7 @@ void FetchEventOp::ReportCanceled(const nsCString& aPreventDefaultScriptSpec,
   GetRequestURL(requestURL);
 
   AsyncLog(aPreventDefaultScriptSpec, aPreventDefaultLineNumber,
-           aPreventDefaultColumnNumber,
-           NS_LITERAL_CSTRING("InterceptionCanceledWithURL"),
+           aPreventDefaultColumnNumber, "InterceptionCanceledWithURL"_ns,
            {std::move(requestURL)});
 }
 
@@ -1305,10 +1302,9 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
     nsContentUtils::ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column,
                                        valueString);
 
-    autoCancel.SetCancelMessageAndLocation(
-        sourceSpec, line, column,
-        NS_LITERAL_CSTRING("InterceptedNonResponseWithURL"), requestURL,
-        valueString);
+    autoCancel.SetCancelMessageAndLocation(sourceSpec, line, column,
+                                           "InterceptedNonResponseWithURL"_ns,
+                                           requestURL, valueString);
     return;
   }
 
@@ -1322,10 +1318,9 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
     nsContentUtils::ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column,
                                        valueString);
 
-    autoCancel.SetCancelMessageAndLocation(
-        sourceSpec, line, column,
-        NS_LITERAL_CSTRING("InterceptedNonResponseWithURL"), requestURL,
-        valueString);
+    autoCancel.SetCancelMessageAndLocation(sourceSpec, line, column,
+                                           "InterceptedNonResponseWithURL"_ns,
+                                           requestURL, valueString);
     return;
   }
 
@@ -1343,8 +1338,8 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
   //      has more than one item.
 
   if (response->Type() == ResponseType::Error) {
-    autoCancel.SetCancelMessage(
-        NS_LITERAL_CSTRING("InterceptedErrorResponseWithURL"), requestURL);
+    autoCancel.SetCancelMessage("InterceptedErrorResponseWithURL"_ns,
+                                requestURL);
     return;
   }
 
@@ -1360,9 +1355,8 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
     nsAutoString requestURL;
     GetRequestURL(requestURL);
 
-    autoCancel.SetCancelMessage(
-        NS_LITERAL_CSTRING("BadOpaqueInterceptionRequestModeWithURL"),
-        requestURL, modeString);
+    autoCancel.SetCancelMessage("BadOpaqueInterceptionRequestModeWithURL"_ns,
+                                requestURL, modeString);
     return;
   }
 
@@ -1371,15 +1365,15 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
 
   if (requestRedirectMode != RequestRedirect::Manual &&
       response->Type() == ResponseType::Opaqueredirect) {
-    autoCancel.SetCancelMessage(
-        NS_LITERAL_CSTRING("BadOpaqueRedirectInterceptionWithURL"), requestURL);
+    autoCancel.SetCancelMessage("BadOpaqueRedirectInterceptionWithURL"_ns,
+                                requestURL);
     return;
   }
 
   if (requestRedirectMode != RequestRedirect::Follow &&
       response->Redirected()) {
-    autoCancel.SetCancelMessage(
-        NS_LITERAL_CSTRING("BadRedirectModeInterceptionWithURL"), requestURL);
+    autoCancel.SetCancelMessage("BadRedirectModeInterceptionWithURL"_ns,
+                                requestURL);
     return;
   }
 
@@ -1392,8 +1386,8 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
       return;
     }
     if (NS_WARN_IF(bodyUsed)) {
-      autoCancel.SetCancelMessage(
-          NS_LITERAL_CSTRING("InterceptedUsedResponseWithURL"), requestURL);
+      autoCancel.SetCancelMessage("InterceptedUsedResponseWithURL"_ns,
+                                  requestURL);
       return;
     }
   }
@@ -1422,9 +1416,8 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
     // The variadic template provided by StringArrayAppender requires exactly
     // an nsString.
     NS_ConvertUTF8toUTF16 responseURL(ir->GetUnfilteredURL());
-    autoCancel.SetCancelMessage(
-        NS_LITERAL_CSTRING("CorsResponseForSameOriginRequest"), requestURL,
-        responseURL);
+    autoCancel.SetCancelMessage("CorsResponseForSameOriginRequest"_ns,
+                                requestURL, responseURL);
     return;
   }
 
@@ -1474,8 +1467,7 @@ void FetchEventOp::RejectedCallback(JSContext* aCx,
   nsString requestURL;
   GetRequestURL(requestURL);
 
-  AsyncLog(sourceSpec, line, column,
-           NS_LITERAL_CSTRING("InterceptionRejectedResponseWithURL"),
+  AsyncLog(sourceSpec, line, column, "InterceptionRejectedResponseWithURL"_ns,
            {std::move(requestURL), valueString});
 
   mRespondWithPromiseHolder.Resolve(
@@ -1558,8 +1550,8 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
   /**
    * Step 4b: create the FetchEvent
    */
-  RefPtr<FetchEvent> fetchEvent = FetchEvent::Constructor(
-      globalObject, NS_LITERAL_STRING("fetch"), fetchEventInit);
+  RefPtr<FetchEvent> fetchEvent =
+      FetchEvent::Constructor(globalObject, u"fetch"_ns, fetchEventInit);
   fetchEvent->SetTrusted(true);
   fetchEvent->PostInit(args.workerScriptSpec(), this);
 

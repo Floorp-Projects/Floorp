@@ -4552,8 +4552,7 @@ nsresult EditorBase::ToggleTextDirectionAsAction(nsIPrincipal* aPrincipal) {
   // but not canceled.
   TextDirection newDirection =
       IsRightToLeft() ? TextDirection::eLTR : TextDirection::eRTL;
-  editActionData.SetData(IsRightToLeft() ? NS_LITERAL_STRING("ltr")
-                                         : NS_LITERAL_STRING("rtl"));
+  editActionData.SetData(IsRightToLeft() ? u"ltr"_ns : u"rtl"_ns);
 
   // FYI: Oddly, Chrome does not dispatch beforeinput event in this case but
   //      dispatches input event.
@@ -4591,9 +4590,8 @@ void EditorBase::SwitchTextDirectionTo(TextDirection aTextDirection) {
     return;
   }
 
-  editActionData.SetData(aTextDirection == TextDirection::eLTR
-                             ? NS_LITERAL_STRING("ltr")
-                             : NS_LITERAL_STRING("rtl"));
+  editActionData.SetData(aTextDirection == TextDirection::eLTR ? u"ltr"_ns
+                                                               : u"rtl"_ns);
 
   // FYI: Oddly, Chrome does not dispatch beforeinput event in this case but
   //      dispatches input event.
@@ -4629,7 +4627,7 @@ nsresult EditorBase::SetTextDirectionTo(TextDirection aTextDirection) {
     mFlags &= ~nsIEditor::eEditorRightToLeft;
     mFlags |= nsIEditor::eEditorLeftToRight;
     nsresult rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
-                                       NS_LITERAL_STRING("ltr"), true);
+                                       u"ltr"_ns, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Element::SetAttr(nsGkAtoms::dir, ltr) failed");
     return rv;
@@ -4640,7 +4638,7 @@ nsresult EditorBase::SetTextDirectionTo(TextDirection aTextDirection) {
     mFlags |= nsIEditor::eEditorRightToLeft;
     mFlags &= ~nsIEditor::eEditorLeftToRight;
     nsresult rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
-                                       NS_LITERAL_STRING("rtl"), true);
+                                       u"rtl"_ns, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Element::SetAttr(nsGkAtoms::dir, rtl) failed");
     return rv;

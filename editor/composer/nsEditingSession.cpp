@@ -926,7 +926,7 @@ void nsEditingSession::TimerCallback(nsITimer* aTimer, void* aClosure) {
       LoadURIOptions loadURIOptions;
       loadURIOptions.mTriggeringPrincipal =
           nsContentUtils::GetSystemPrincipal();
-      webNav->LoadURI(NS_LITERAL_STRING("about:blank"), loadURIOptions);
+      webNav->LoadURI(u"about:blank"_ns, loadURIOptions);
     }
   }
 }

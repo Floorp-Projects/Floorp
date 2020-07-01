@@ -218,7 +218,7 @@ bool a11y::IsHandlerRegistered() {
     return false;
   }
 
-  rv = expectedHandler->Append(NS_LITERAL_STRING("AccessibleHandler.dll"));
+  rv = expectedHandler->Append(u"AccessibleHandler.dll"_ns);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -337,7 +337,7 @@ void a11y::SetInstantiator(const uint32_t aPid) {
   if (!GetInstantiatorExecutable(aPid, getter_AddRefs(clientExe))) {
 #if defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
     AccumulateInstantiatorTelemetry(
-        NS_LITERAL_STRING("(Failed to retrieve client image name)"));
+        u"(Failed to retrieve client image name)"_ns);
 #endif  // defined(MOZ_TELEMETRY_REPORTING) || defined(MOZ_CRASHREPORTER)
     return;
   }

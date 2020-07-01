@@ -2557,8 +2557,8 @@ nsresult WebSocketChannel::HandleExtensions() {
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
-  rv = mHttpChannel->GetResponseHeader(
-      NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"), extensions);
+  rv = mHttpChannel->GetResponseHeader("Sec-WebSocket-Extensions"_ns,
+                                       extensions);
   extensions.CompressWhitespace();
   if (extensions.IsEmpty()) {
     return NS_OK;
@@ -2673,8 +2673,7 @@ void ProcessServerWebSocketExtensions(const nsACString& aExtensions,
 nsresult CalculateWebSocketHashedSecret(const nsACString& aKey,
                                         nsACString& aHash) {
   nsresult rv;
-  nsCString key =
-      aKey + NS_LITERAL_CSTRING("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+  nsCString key = aKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"_ns;
   nsCOMPtr<nsICryptoHash> hasher =
       do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2710,30 +2709,28 @@ nsresult WebSocketChannel::SetupRequest() {
 
   // draft-ietf-hybi-thewebsocketprotocol-07 illustrates Upgrade: websocket
   // in lower case, so go with that. It is technically case insensitive.
-  rv = mChannel->HTTPUpgrade(NS_LITERAL_CSTRING("websocket"), this);
+  rv = mChannel->HTTPUpgrade("websocket"_ns, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mHttpChannel->SetRequestHeader(
-      NS_LITERAL_CSTRING("Sec-WebSocket-Version"),
-      NS_LITERAL_CSTRING(SEC_WEBSOCKET_VERSION), false);
+  rv = mHttpChannel->SetRequestHeader("Sec-WebSocket-Version"_ns,
+                                      nsLiteralCString(SEC_WEBSOCKET_VERSION),
+                                      false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (!mOrigin.IsEmpty()) {
-    rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Origin"), mOrigin,
-                                        false);
+    rv = mHttpChannel->SetRequestHeader("Origin"_ns, mOrigin, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   if (!mProtocol.IsEmpty()) {
-    rv = mHttpChannel->SetRequestHeader(
-        NS_LITERAL_CSTRING("Sec-WebSocket-Protocol"), mProtocol, true);
+    rv = mHttpChannel->SetRequestHeader("Sec-WebSocket-Protocol"_ns, mProtocol,
+                                        true);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   if (mAllowPMCE) {
-    rv = mHttpChannel->SetRequestHeader(
-        NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"),
-        NS_LITERAL_CSTRING("permessage-deflate"), false);
+    rv = mHttpChannel->SetRequestHeader("Sec-WebSocket-Extensions"_ns,
+                                        "permessage-deflate"_ns, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -2748,8 +2745,8 @@ nsresult WebSocketChannel::SetupRequest() {
     return rv;
   }
 
-  rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Key"),
-                                      secKeyString, false);
+  rv = mHttpChannel->SetRequestHeader("Sec-WebSocket-Key"_ns, secKeyString,
+                                      false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   LOG(("WebSocketChannel::SetupRequest: client key %s\n", secKeyString.get()));
 
@@ -3094,8 +3091,7 @@ WebSocketChannel::AsyncOnChannelRedirect(
 
   mEncrypted = newuriIsHttps;
   rv = NS_MutateURI(newuri)
-           .SetScheme(mEncrypted ? NS_LITERAL_CSTRING("wss")
-                                 : NS_LITERAL_CSTRING("ws"))
+           .SetScheme(mEncrypted ? "wss"_ns : "ws"_ns)
            .Finalize(mURI);
 
   if (NS_FAILED(rv)) {
@@ -3345,8 +3341,7 @@ WebSocketChannel::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
   nsCOMPtr<nsIChannel> localChannel;
 
   rv = NS_MutateURI(mURI)
-           .SetScheme(mEncrypted ? NS_LITERAL_CSTRING("https")
-                                 : NS_LITERAL_CSTRING("http"))
+           .SetScheme(mEncrypted ? "https"_ns : "http"_ns)
            .Finalize(localURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3710,8 +3705,7 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
   if (versionMajor == 1) {
     // These are only present on http/1.x websocket upgrades
     nsAutoCString respUpgrade;
-    rv = mHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Upgrade"),
-                                         respUpgrade);
+    rv = mHttpChannel->GetResponseHeader("Upgrade"_ns, respUpgrade);
 
     if (NS_SUCCEEDED(rv)) {
       rv = NS_ERROR_ILLEGAL_VALUE;
@@ -3735,8 +3729,7 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
     }
 
     nsAutoCString respConnection;
-    rv = mHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Connection"),
-                                         respConnection);
+    rv = mHttpChannel->GetResponseHeader("Connection"_ns, respConnection);
 
     if (NS_SUCCEEDED(rv)) {
       rv = NS_ERROR_ILLEGAL_VALUE;
@@ -3760,8 +3753,7 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
     }
 
     nsAutoCString respAccept;
-    rv = mHttpChannel->GetResponseHeader(
-        NS_LITERAL_CSTRING("Sec-WebSocket-Accept"), respAccept);
+    rv = mHttpChannel->GetResponseHeader("Sec-WebSocket-Accept"_ns, respAccept);
 
     if (NS_FAILED(rv) || respAccept.IsEmpty() ||
         !respAccept.Equals(mHashedSecret)) {
@@ -3787,8 +3779,8 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
   // attribute of the WebSocket JS object reflects that
   if (!mProtocol.IsEmpty()) {
     nsAutoCString respProtocol;
-    rv = mHttpChannel->GetResponseHeader(
-        NS_LITERAL_CSTRING("Sec-WebSocket-Protocol"), respProtocol);
+    rv = mHttpChannel->GetResponseHeader("Sec-WebSocket-Protocol"_ns,
+                                         respProtocol);
     if (NS_SUCCEEDED(rv)) {
       rv = NS_ERROR_ILLEGAL_VALUE;
       val = mProtocol.BeginWriting();

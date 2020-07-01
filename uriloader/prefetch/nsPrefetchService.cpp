@@ -128,8 +128,7 @@ nsresult nsPrefetchNode::OpenChannel() {
   if (httpChannel) {
     DebugOnly<nsresult> success = httpChannel->SetReferrerInfo(mReferrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(success));
-    success = httpChannel->SetRequestHeader(
-        NS_LITERAL_CSTRING("X-Moz"), NS_LITERAL_CSTRING("prefetch"), false);
+    success = httpChannel->SetRequestHeader("X-Moz"_ns, "prefetch"_ns, false);
     MOZ_ASSERT(NS_SUCCEEDED(success));
   }
 
@@ -289,8 +288,7 @@ nsPrefetchNode::AsyncOnChannelRedirect(
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel);
   NS_ENSURE_STATE(httpChannel);
 
-  rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
-                                     NS_LITERAL_CSTRING("prefetch"), false);
+  rv = httpChannel->SetRequestHeader("X-Moz"_ns, "prefetch"_ns, false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Assign to mChannel after we get notification about success of the
@@ -440,9 +438,7 @@ void nsPrefetchService::DispatchEvent(nsPrefetchNode* node, bool aSuccess) {
       // that we're not allowed to touch. (Our network request happens in the
       // DocGroup of one of the mSources nodes--not necessarily this one).
       RefPtr<AsyncEventDispatcher> dispatcher = new AsyncEventDispatcher(
-          domNode,
-          aSuccess ? NS_LITERAL_STRING("load") : NS_LITERAL_STRING("error"),
-          CanBubble::eNo);
+          domNode, aSuccess ? u"load"_ns : u"error"_ns, CanBubble::eNo);
       dispatcher->RequireNodeInDocument();
       dispatcher->PostDOMEvent();
     }

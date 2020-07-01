@@ -98,13 +98,12 @@ nsresult nsViewSourceChannel::InitSrcdoc(nsIURI* aURI, nsIURI* aBaseURI,
   // Need to strip view-source: from the URI.  Hardcoded to
   // about:srcdoc as this is the only permissible URI for srcdoc
   // loads
-  rv =
-      NS_NewURI(getter_AddRefs(inStreamURI), NS_LITERAL_STRING("about:srcdoc"));
+  rv = NS_NewURI(getter_AddRefs(inStreamURI), u"about:srcdoc"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_NewInputStreamChannelInternal(
-      getter_AddRefs(mChannel), inStreamURI, aSrcdoc,
-      NS_LITERAL_CSTRING("text/html"), aLoadInfo, true);
+  rv = NS_NewInputStreamChannelInternal(getter_AddRefs(mChannel), inStreamURI,
+                                        aSrcdoc, "text/html"_ns, aLoadInfo,
+                                        true);
 
   NS_ENSURE_SUCCESS(rv, rv);
   mOriginalURI = aURI;
@@ -188,7 +187,7 @@ nsresult nsViewSourceChannel::BuildViewSourceURI(nsIURI* aURI,
     return rv;
   }
 
-  return NS_NewURI(aResult, NS_LITERAL_CSTRING("view-source:") + spec);
+  return NS_NewURI(aResult, "view-source:"_ns + spec);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -896,13 +895,12 @@ nsViewSourceChannel::GetResponseHeader(const nsACString& aHeader,
   aValue.Truncate();
   if (!mHttpChannel) return NS_ERROR_NULL_POINTER;
 
-  if (!aHeader.Equals(NS_LITERAL_CSTRING("Content-Type"),
+  if (!aHeader.Equals("Content-Type"_ns, nsCaseInsensitiveCStringComparator) &&
+      !aHeader.Equals("Content-Security-Policy"_ns,
                       nsCaseInsensitiveCStringComparator) &&
-      !aHeader.Equals(NS_LITERAL_CSTRING("Content-Security-Policy"),
+      !aHeader.Equals("Content-Security-Policy-Report-Only"_ns,
                       nsCaseInsensitiveCStringComparator) &&
-      !aHeader.Equals(NS_LITERAL_CSTRING("Content-Security-Policy-Report-Only"),
-                      nsCaseInsensitiveCStringComparator) &&
-      !aHeader.Equals(NS_LITERAL_CSTRING("X-Frame-Options"),
+      !aHeader.Equals("X-Frame-Options"_ns,
                       nsCaseInsensitiveCStringComparator)) {
     // We simulate the NS_ERROR_NOT_AVAILABLE error which is produced by
     // GetResponseHeader via nsHttpHeaderArray::GetHeader when the entry is

@@ -161,8 +161,7 @@ void nsAccUtils::SetLiveContainerAttributes(
     if (ancestor->IsElement() && ancestor->AsElement()->AttrValueIs(
                                      kNameSpaceID_None, nsGkAtoms::aria_atomic,
                                      nsGkAtoms::_true, eCaseMatters)) {
-      SetAccAttr(aAttributes, nsGkAtoms::containerAtomic,
-                 NS_LITERAL_STRING("true"));
+      SetAccAttr(aAttributes, nsGkAtoms::containerAtomic, u"true"_ns);
     }
 
     // container-busy attribute
@@ -357,10 +356,10 @@ nsIntPoint nsAccUtils::GetScreenCoordsForParent(Accessible* aAccessible) {
 bool nsAccUtils::GetLiveAttrValue(uint32_t aRule, nsAString& aValue) {
   switch (aRule) {
     case eOffLiveAttr:
-      aValue = NS_LITERAL_STRING("off");
+      aValue = u"off"_ns;
       return true;
     case ePoliteLiveAttr:
-      aValue = NS_LITERAL_STRING("polite");
+      aValue = u"polite"_ns;
       return true;
   }
 

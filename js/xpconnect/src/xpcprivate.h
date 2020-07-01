@@ -2735,9 +2735,9 @@ class RealmPrivate {
       if (jsLocationURI) {
         // We cannot call into JS-implemented nsIURI objects, because
         // we are iterating over the JS heap at this point.
-        location = NS_LITERAL_CSTRING("<JS-implemented nsIURI location>");
+        location = "<JS-implemented nsIURI location>"_ns;
       } else if (NS_FAILED(locationURI->GetSpec(location))) {
-        location = NS_LITERAL_CSTRING("<unknown location>");
+        location = "<unknown location>"_ns;
       }
     }
     return location;

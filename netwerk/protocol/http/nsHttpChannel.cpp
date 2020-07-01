@@ -178,21 +178,20 @@ void AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss,
     if (nsContentUtils::IsJavascriptMIMEType(
             NS_ConvertUTF8toUTF16(contentType))) {
       key.AssignLiteral("JAVASCRIPT");
-    } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/css")) ||
+    } else if (StringBeginsWith(contentType, "text/css"_ns) ||
                (loadInfo && loadInfo->GetExternalContentPolicyType() ==
                                 nsIContentPolicy::TYPE_STYLESHEET)) {
       key.AssignLiteral("STYLESHEET");
-    } else if (StringBeginsWith(contentType,
-                                NS_LITERAL_CSTRING("application/wasm"))) {
+    } else if (StringBeginsWith(contentType, "application/wasm"_ns)) {
       key.AssignLiteral("WASM");
-    } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"))) {
+    } else if (StringBeginsWith(contentType, "image/"_ns)) {
       key.AssignLiteral("IMAGE");
-    } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("video/"))) {
+    } else if (StringBeginsWith(contentType, "video/"_ns)) {
       key.AssignLiteral("MEDIA");
-    } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("audio/"))) {
+    } else if (StringBeginsWith(contentType, "audio/"_ns)) {
       key.AssignLiteral("MEDIA");
     } else if (!StringBeginsWith(contentType,
-                                 NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE))) {
+                                 nsLiteralCString(UNKNOWN_CONTENT_TYPE))) {
       key.AssignLiteral("OTHER");
     }
   }
@@ -221,7 +220,7 @@ void AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss,
   }
 
   Telemetry::AccumulateCategoricalKeyed(key, label);
-  Telemetry::AccumulateCategoricalKeyed(NS_LITERAL_CSTRING("ALL"), label);
+  Telemetry::AccumulateCategoricalKeyed("ALL"_ns, label);
 }
 
 // Computes and returns a SHA1 hash of the input buffer. The input buffer
@@ -574,8 +573,7 @@ nsresult nsHttpChannel::OnBeforeConnect() {
 
   if (type == nsIContentPolicy::TYPE_DOCUMENT ||
       type == nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    rv = SetRequestHeader(NS_LITERAL_CSTRING("Upgrade-Insecure-Requests"),
-                          NS_LITERAL_CSTRING("1"), false);
+    rv = SetRequestHeader("Upgrade-Insecure-Requests"_ns, "1"_ns, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1527,9 +1525,9 @@ nsresult ProcessXCTO(nsHttpChannel* aChannel, nsIURI* aURI,
     CopyUTF8toUTF16(contentTypeOptionsHeader, *params.AppendElement());
     RefPtr<Document> doc;
     aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XCTO"), doc,
-        nsContentUtils::eSECURITY_PROPERTIES, "XCTOHeaderValueMissing", params);
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "XCTO"_ns, doc,
+                                    nsContentUtils::eSECURITY_PROPERTIES,
+                                    "XCTOHeaderValueMissing", params);
     return NS_OK;
   }
 
@@ -1675,22 +1673,22 @@ nsresult EnsureMIMEOfScript(nsHttpChannel* aChannel, nsIURI* aURI,
   }
 
   bool block = false;
-  if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"))) {
+  if (StringBeginsWith(contentType, "image/"_ns)) {
     // script load has type image
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::image);
     block = true;
-  } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("audio/"))) {
+  } else if (StringBeginsWith(contentType, "audio/"_ns)) {
     // script load has type audio
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::audio);
     block = true;
-  } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("video/"))) {
+  } else if (StringBeginsWith(contentType, "video/"_ns)) {
     // script load has type video
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::video);
     block = true;
-  } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/csv"))) {
+  } else if (StringBeginsWith(contentType, "text/csv"_ns)) {
     // script load has type text/csv
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::text_csv);
@@ -1708,34 +1706,31 @@ nsresult EnsureMIMEOfScript(nsHttpChannel* aChannel, nsIURI* aURI,
     return NS_ERROR_CORRUPTED_CONTENT;
   }
 
-  if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/plain"))) {
+  if (StringBeginsWith(contentType, "text/plain"_ns)) {
     // script load has type text/plain
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::text_plain);
-  } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/xml"))) {
+  } else if (StringBeginsWith(contentType, "text/xml"_ns)) {
     // script load has type text/xml
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::text_xml);
-  } else if (StringBeginsWith(contentType,
-                              NS_LITERAL_CSTRING("application/octet-stream"))) {
+  } else if (StringBeginsWith(contentType, "application/octet-stream"_ns)) {
     // script load has type application/octet-stream
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::app_octet_stream);
-  } else if (StringBeginsWith(contentType,
-                              NS_LITERAL_CSTRING("application/xml"))) {
+  } else if (StringBeginsWith(contentType, "application/xml"_ns)) {
     // script load has type application/xml
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::app_xml);
-  } else if (StringBeginsWith(contentType,
-                              NS_LITERAL_CSTRING("application/json"))) {
+  } else if (StringBeginsWith(contentType, "application/json"_ns)) {
     // script load has type application/json
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::app_json);
-  } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/json"))) {
+  } else if (StringBeginsWith(contentType, "text/json"_ns)) {
     // script load has type text/json
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::text_json);
-  } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/html"))) {
+  } else if (StringBeginsWith(contentType, "text/html"_ns)) {
     // script load has type text/html
     AccumulateCategorical(
         Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::text_html);
@@ -1830,18 +1825,17 @@ void nsHttpChannel::SetCachedContentType() {
   if (nsContentUtils::IsJavascriptMIMEType(
           NS_ConvertUTF8toUTF16(contentTypeStr))) {
     contentType = nsICacheEntry::CONTENT_TYPE_JAVASCRIPT;
-  } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("text/css")) ||
+  } else if (StringBeginsWith(contentTypeStr, "text/css"_ns) ||
              (mLoadInfo->GetExternalContentPolicyType() ==
               nsIContentPolicy::TYPE_STYLESHEET)) {
     contentType = nsICacheEntry::CONTENT_TYPE_STYLESHEET;
-  } else if (StringBeginsWith(contentTypeStr,
-                              NS_LITERAL_CSTRING("application/wasm"))) {
+  } else if (StringBeginsWith(contentTypeStr, "application/wasm"_ns)) {
     contentType = nsICacheEntry::CONTENT_TYPE_WASM;
-  } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("image/"))) {
+  } else if (StringBeginsWith(contentTypeStr, "image/"_ns)) {
     contentType = nsICacheEntry::CONTENT_TYPE_IMAGE;
-  } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("video/"))) {
+  } else if (StringBeginsWith(contentTypeStr, "video/"_ns)) {
     contentType = nsICacheEntry::CONTENT_TYPE_MEDIA;
-  } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("audio/"))) {
+  } else if (StringBeginsWith(contentTypeStr, "audio/"_ns)) {
     contentType = nsICacheEntry::CONTENT_TYPE_MEDIA;
   }
 
@@ -1960,7 +1954,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
       mResponseHead->SetContentType(mContentTypeHint);
     else if (mResponseHead->Version() == HttpVersion::v0_9 &&
              mConnectionInfo->OriginPort() != mConnectionInfo->DefaultPort())
-      mResponseHead->SetContentType(NS_LITERAL_CSTRING(TEXT_PLAIN));
+      mResponseHead->SetContentType(nsLiteralCString(TEXT_PLAIN));
     else {
       // Uh-oh.  We had better find out what type we are!
       nsCOMPtr<nsIStreamConverterService> serv;
@@ -1991,7 +1985,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     nsAutoCString contentType;
     mResponseHead->ContentType(contentType);
 
-    if (contentType.Equals(NS_LITERAL_CSTRING("multipart/x-mixed-replace"))) {
+    if (contentType.Equals("multipart/x-mixed-replace"_ns)) {
       nsCOMPtr<nsIStreamConverterService> convServ(
           do_GetService("@mozilla.org/streamConverters;1", &rv));
       if (NS_SUCCEEDED(rv)) {
@@ -2137,31 +2131,31 @@ static void GetSTSConsoleErrorTag(uint32_t failureResult,
                                   nsAString& consoleErrorTag) {
   switch (failureResult) {
     case nsISiteSecurityService::ERROR_UNTRUSTWORTHY_CONNECTION:
-      consoleErrorTag = NS_LITERAL_STRING("STSUntrustworthyConnection");
+      consoleErrorTag = u"STSUntrustworthyConnection"_ns;
       break;
     case nsISiteSecurityService::ERROR_COULD_NOT_PARSE_HEADER:
-      consoleErrorTag = NS_LITERAL_STRING("STSCouldNotParseHeader");
+      consoleErrorTag = u"STSCouldNotParseHeader"_ns;
       break;
     case nsISiteSecurityService::ERROR_NO_MAX_AGE:
-      consoleErrorTag = NS_LITERAL_STRING("STSNoMaxAge");
+      consoleErrorTag = u"STSNoMaxAge"_ns;
       break;
     case nsISiteSecurityService::ERROR_MULTIPLE_MAX_AGES:
-      consoleErrorTag = NS_LITERAL_STRING("STSMultipleMaxAges");
+      consoleErrorTag = u"STSMultipleMaxAges"_ns;
       break;
     case nsISiteSecurityService::ERROR_INVALID_MAX_AGE:
-      consoleErrorTag = NS_LITERAL_STRING("STSInvalidMaxAge");
+      consoleErrorTag = u"STSInvalidMaxAge"_ns;
       break;
     case nsISiteSecurityService::ERROR_MULTIPLE_INCLUDE_SUBDOMAINS:
-      consoleErrorTag = NS_LITERAL_STRING("STSMultipleIncludeSubdomains");
+      consoleErrorTag = u"STSMultipleIncludeSubdomains"_ns;
       break;
     case nsISiteSecurityService::ERROR_INVALID_INCLUDE_SUBDOMAINS:
-      consoleErrorTag = NS_LITERAL_STRING("STSInvalidIncludeSubdomains");
+      consoleErrorTag = u"STSInvalidIncludeSubdomains"_ns;
       break;
     case nsISiteSecurityService::ERROR_COULD_NOT_SAVE_STATE:
-      consoleErrorTag = NS_LITERAL_STRING("STSCouldNotSaveState");
+      consoleErrorTag = u"STSCouldNotSaveState"_ns;
       break;
     default:
-      consoleErrorTag = NS_LITERAL_STRING("STSUnknownError");
+      consoleErrorTag = u"STSUnknownError"_ns;
       break;
   }
 }
@@ -2202,7 +2196,7 @@ nsresult nsHttpChannel::ProcessSingleSecurityHeader(
       switch (aType) {
         case nsISiteSecurityService::HEADER_HSTS:
           GetSTSConsoleErrorTag(failureResult, consoleErrorTag);
-          consoleErrorCategory = NS_LITERAL_STRING("Invalid HSTS Headers");
+          consoleErrorCategory = u"Invalid HSTS Headers"_ns;
           break;
         default:
           return NS_ERROR_FAILURE;
@@ -2338,8 +2332,8 @@ void nsHttpChannel::ProcessSSLInformation() {
       (state & nsIWebProgressListener::STATE_IS_BROKEN)) {
     // Send weak crypto warnings to the web console
     if (state & nsIWebProgressListener::STATE_USES_WEAK_CRYPTO) {
-      nsString consoleErrorTag = NS_LITERAL_STRING("WeakCipherSuiteWarning");
-      nsString consoleErrorCategory = NS_LITERAL_STRING("SSL");
+      nsString consoleErrorTag = u"WeakCipherSuiteWarning"_ns;
+      nsString consoleErrorCategory = u"SSL"_ns;
       Unused << AddSecurityMessage(consoleErrorTag, consoleErrorCategory);
     }
   }
@@ -2360,8 +2354,8 @@ void nsHttpChannel::ProcessSSLInformation() {
       if (tag == SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION ||
           tag == SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST ||
           tag == SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE) {
-        nsString consoleErrorTag = NS_LITERAL_STRING("SHA1Sig");
-        nsString consoleErrorMessage = NS_LITERAL_STRING("SHA-1 Signature");
+        nsString consoleErrorTag = u"SHA1Sig"_ns;
+        nsString consoleErrorMessage = u"SHA-1 Signature"_ns;
         Unused << AddSecurityMessage(consoleErrorTag, consoleErrorMessage);
       }
     }
@@ -2372,8 +2366,8 @@ void nsHttpChannel::ProcessSSLInformation() {
   if (NS_SUCCEEDED(rv) &&
       tlsVersion != nsITransportSecurityInfo::TLS_VERSION_1_2 &&
       tlsVersion != nsITransportSecurityInfo::TLS_VERSION_1_3) {
-    nsString consoleErrorTag = NS_LITERAL_STRING("DeprecatedTLSVersion2");
-    nsString consoleErrorCategory = NS_LITERAL_STRING("TLS");
+    nsString consoleErrorTag = u"DeprecatedTLSVersion2"_ns;
+    nsString consoleErrorCategory = u"TLS"_ns;
     Unused << AddSecurityMessage(consoleErrorTag, consoleErrorCategory);
   }
 }
@@ -3498,8 +3492,7 @@ bool nsHttpChannel::IsResumable(int64_t partialLen, int64_t contentLength,
 
   nsAutoCString etag;
   Unused << mCachedResponseHead->GetHeader(nsHttp::ETag, etag);
-  bool hasWeakEtag =
-      !etag.IsEmpty() && StringBeginsWith(etag, NS_LITERAL_CSTRING("W/"));
+  bool hasWeakEtag = !etag.IsEmpty() && StringBeginsWith(etag, "W/"_ns);
 
   return (partialLen < contentLength) &&
          (partialLen > 0 || ignoreMissingPartialLen) && !hasContentEncoding &&
@@ -4478,9 +4471,8 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
       (methodWasGet || methodWasHead)) {
     nsAutoCString cachedETag;
     Unused << mCachedResponseHead->GetHeader(nsHttp::ETag, cachedETag);
-    if (!cachedETag.IsEmpty() &&
-        (StringBeginsWith(cachedETag, NS_LITERAL_CSTRING("W/")) ||
-         !requestedETag.Equals(cachedETag))) {
+    if (!cachedETag.IsEmpty() && (StringBeginsWith(cachedETag, "W/"_ns) ||
+                                  !requestedETag.Equals(cachedETag))) {
       // User has defined If-Match header, if the cached entry is not
       // matching the provided header value or the cached ETag is weak,
       // force validation.
@@ -5673,7 +5665,7 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
               // If hash failed, store a string not very likely
               // to be the result of subsequent hashes
               if (NS_FAILED(rv)) {
-                val = NS_LITERAL_CSTRING("<hash failed>");
+                val = "<hash failed>"_ns;
               } else {
                 val = hash;
               }
@@ -6816,8 +6808,7 @@ nsresult nsHttpChannel::BeginConnect() {
     nsCOMPtr<nsIConsoleService> consoleService =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     if (consoleService) {
-      nsAutoString message(
-          NS_LITERAL_STRING("Alternate Service Mapping found: "));
+      nsAutoString message(u"Alternate Service Mapping found: "_ns);
       AppendASCIItoUTF16(scheme, message);
       message.AppendLiteral(u"://");
       AppendASCIItoUTF16(host, message);
@@ -8016,15 +8007,15 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
   nsCString upgradeKey;
   if (IsHTTPS()) {
     // Browser upgrading is disabled and the content is already HTTPS
-    upgradeKey = NS_LITERAL_CSTRING("disabledNoReason");
+    upgradeKey = "disabledNoReason"_ns;
     // Checks "security.mixed_content.upgrade_display_content" is true
     if (StaticPrefs::security_mixed_content_upgrade_display_content()) {
       if (mLoadInfo->GetBrowserUpgradeInsecureRequests()) {
         // HTTP content the browser has upgraded to HTTPS
-        upgradeKey = NS_LITERAL_CSTRING("enabledUpgrade");
+        upgradeKey = "enabledUpgrade"_ns;
       } else {
         // Content wasn't upgraded but is already HTTPS
-        upgradeKey = NS_LITERAL_CSTRING("enabledNoReason");
+        upgradeKey = "enabledNoReason"_ns;
       }
     }
     // shift http to https disposition enums
@@ -8033,12 +8024,12 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
   } else if (mLoadInfo->GetBrowserWouldUpgradeInsecureRequests()) {
     // HTTP content the browser would upgrade to HTTPS if upgrading was
     // enabled
-    upgradeKey = NS_LITERAL_CSTRING("disabledUpgrade");
+    upgradeKey = "disabledUpgrade"_ns;
   } else {
     // HTTP content that wouldn't upgrade
     upgradeKey = StaticPrefs::security_mixed_content_upgrade_display_content()
-                     ? NS_LITERAL_CSTRING("enabledWont")
-                     : NS_LITERAL_CSTRING("disabledWont");
+                     ? "enabledWont"_ns
+                     : "disabledWont"_ns;
   }
   Telemetry::AccumulateCategoricalKeyed(upgradeKey, upgradeChanDisposition);
   LOG(("  nsHttpChannel::OnStopRequest ChannelDisposition %d\n",
@@ -8317,8 +8308,8 @@ nsHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
           NS_WARNING("Listener OnDataAvailable contract violation");
           nsCOMPtr<nsIConsoleService> consoleService =
               do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-          nsAutoString message(NS_LITERAL_STRING(
-              "http channel Listener OnDataAvailable contract violation"));
+          nsAutoString message(nsLiteralString(
+              u"http channel Listener OnDataAvailable contract violation"));
           if (consoleService) {
             consoleService->LogStringMessage(message.get());
           }
@@ -9570,8 +9561,7 @@ void nsHttpChannel::SetOriginHeader() {
     if (NS_SUCCEEDED(rv) &&
         ReferrerInfo::ShouldSetNullOriginHeader(this, uri)) {
       LOG(("nsHttpChannel::SetOriginHeader null Origin by Referrer-Policy"));
-      rv = mRequestHead.SetHeader(nsHttp::Origin, NS_LITERAL_CSTRING("null"),
-                                  false /* merge */);
+      rv = mRequestHead.SetHeader(nsHttp::Origin, "null"_ns, false /* merge */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
     return;
@@ -9620,8 +9610,8 @@ void nsHttpChannel::SetDoNotTrack() {
 
   if ((loadContext && loadContext->UseTrackingProtection()) ||
       StaticPrefs::privacy_donottrackheader_enabled()) {
-    DebugOnly<nsresult> rv = mRequestHead.SetHeader(
-        nsHttp::DoNotTrack, NS_LITERAL_CSTRING("1"), false);
+    DebugOnly<nsresult> rv =
+        mRequestHead.SetHeader(nsHttp::DoNotTrack, "1"_ns, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 }

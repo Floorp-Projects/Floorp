@@ -75,12 +75,9 @@ nsMathMLmactionFrame::~nsMathMLmactionFrame() {
   // unregister us as a mouse event listener ...
   //  printf("maction:%p unregistering as mouse event listener ...\n", this);
   if (mListener) {
-    mContent->RemoveSystemEventListener(NS_LITERAL_STRING("click"), mListener,
-                                        false);
-    mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mouseover"),
-                                        mListener, false);
-    mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mouseout"),
-                                        mListener, false);
+    mContent->RemoveSystemEventListener(u"click"_ns, mListener, false);
+    mContent->RemoveSystemEventListener(u"mouseover"_ns, mListener, false);
+    mContent->RemoveSystemEventListener(u"mouseout"_ns, mListener, false);
   }
 }
 
@@ -175,12 +172,9 @@ void nsMathMLmactionFrame::SetInitialChildList(ChildListID aListID,
     // create mouse event listener and register it
     mListener = new nsMathMLmactionFrame::MouseListener(this);
     // printf("maction:%p registering as mouse event listener ...\n", this);
-    mContent->AddSystemEventListener(NS_LITERAL_STRING("click"), mListener,
-                                     false, false);
-    mContent->AddSystemEventListener(NS_LITERAL_STRING("mouseover"), mListener,
-                                     false, false);
-    mContent->AddSystemEventListener(NS_LITERAL_STRING("mouseout"), mListener,
-                                     false, false);
+    mContent->AddSystemEventListener(u"click"_ns, mListener, false, false);
+    mContent->AddSystemEventListener(u"mouseover"_ns, mListener, false, false);
+    mContent->AddSystemEventListener(u"mouseout"_ns, mListener, false, false);
   }
 }
 

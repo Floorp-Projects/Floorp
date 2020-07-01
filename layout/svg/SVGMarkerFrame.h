@@ -70,7 +70,7 @@ class SVGMarkerFrame final : public nsSVGContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGMarker"), aResult);
+    return MakeFrameName(u"SVGMarker"_ns, aResult);
   }
 #endif
 
@@ -152,7 +152,7 @@ class SVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGMarkerAnonChild"), aResult);
+    return MakeFrameName(u"SVGMarkerAnonChild"_ns, aResult);
   }
 #endif
 

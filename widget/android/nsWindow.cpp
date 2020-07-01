@@ -1317,7 +1317,7 @@ void nsWindow::GeckoViewSupport::Open(
   } else {
     nsresult rv = Preferences::GetCString("toolkit.defaultChromeURI", url);
     if (NS_FAILED(rv)) {
-      url = NS_LITERAL_CSTRING("chrome://geckoview/content/geckoview.xhtml");
+      url = "chrome://geckoview/content/geckoview.xhtml"_ns;
     }
   }
 

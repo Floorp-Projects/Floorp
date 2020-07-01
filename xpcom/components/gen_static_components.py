@@ -329,7 +329,7 @@ class ModuleEntry(object):
         if self.jsm:
             res += (
                 '      nsCOMPtr<nsISupports> inst;\n'
-                '      MOZ_TRY(ConstructJSMComponent(NS_LITERAL_CSTRING(%s),\n'
+                '      MOZ_TRY(ConstructJSMComponent(nsLiteralCString(%s),\n'
                 '                                    %s,\n'
                 '                                    getter_AddRefs(inst)));'
                 '\n' % (json.dumps(self.jsm), json.dumps(self.constructor)))

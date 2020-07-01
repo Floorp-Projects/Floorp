@@ -204,8 +204,8 @@ void SpeechSynthesisService::DispatchBoundary(jni::String::Param aUtteranceId,
       TimeStamp startTime = sSingleton->mTaskStartTime;
       sSingleton->mTaskTextOffset = aStart;
       DebugOnly<nsresult> rv = task->DispatchBoundary(
-          NS_LITERAL_STRING("word"), (TimeStamp::Now() - startTime).ToSeconds(),
-          aStart, aEnd - aStart, 1);
+          u"word"_ns, (TimeStamp::Now() - startTime).ToSeconds(), aStart,
+          aEnd - aStart, 1);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Unable to dispatch boundary");
     }
   }

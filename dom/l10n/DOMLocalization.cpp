@@ -550,60 +550,55 @@ void DOMLocalization::ReportL10nOverlaysErrors(
 
   for (auto& error : aErrors) {
     if (error.mCode.WasPassed()) {
-      msg = NS_LITERAL_STRING("[fluent-dom] ");
+      msg = u"[fluent-dom] "_ns;
       switch (error.mCode.Value()) {
         case L10nOverlays_Binding::ERROR_FORBIDDEN_TYPE:
-          msg += NS_LITERAL_STRING("An element of forbidden type \"") +
+          msg += u"An element of forbidden type \""_ns +
                  error.mTranslatedElementName.Value() +
-                 NS_LITERAL_STRING(
-                     "\" was found in the translation. Only safe text-level "
+                 nsLiteralString(
+                     u"\" was found in the translation. Only safe text-level "
                      "elements and elements with data-l10n-name are allowed.");
           break;
         case L10nOverlays_Binding::ERROR_NAMED_ELEMENT_MISSING:
-          msg += NS_LITERAL_STRING("An element named \"") +
-                 error.mL10nName.Value() +
-                 NS_LITERAL_STRING("\" wasn't found in the source.");
+          msg += u"An element named \""_ns + error.mL10nName.Value() +
+                 u"\" wasn't found in the source."_ns;
           break;
         case L10nOverlays_Binding::ERROR_NAMED_ELEMENT_TYPE_MISMATCH:
-          msg += NS_LITERAL_STRING("An element named \"") +
-                 error.mL10nName.Value() +
-                 NS_LITERAL_STRING(
-                     "\" was found in the translation but its type ") +
+          msg += u"An element named \""_ns + error.mL10nName.Value() +
+                 nsLiteralString(
+                     u"\" was found in the translation but its type ") +
                  error.mTranslatedElementName.Value() +
-                 NS_LITERAL_STRING(
-                     " didn't match the element found in the source ") +
-                 error.mSourceElementName.Value() + NS_LITERAL_STRING(".");
+                 nsLiteralString(
+                     u" didn't match the element found in the source ") +
+                 error.mSourceElementName.Value() + u"."_ns;
           break;
         case L10nOverlays_Binding::ERROR_TRANSLATED_ELEMENT_DISCONNECTED:
-          msg += NS_LITERAL_STRING("The element using message \"") +
-                 error.mL10nName.Value() +
-                 NS_LITERAL_STRING(
-                     "\" was removed from the DOM when translating its \"") +
-                 error.mTranslatedElementName.Value() +
-                 NS_LITERAL_STRING("\" parent.");
+          msg += u"The element using message \""_ns + error.mL10nName.Value() +
+                 nsLiteralString(
+                     u"\" was removed from the DOM when translating its \"") +
+                 error.mTranslatedElementName.Value() + u"\" parent."_ns;
           break;
         case L10nOverlays_Binding::ERROR_TRANSLATED_ELEMENT_DISALLOWED_DOM:
-          msg += NS_LITERAL_STRING(
-                     "While translating an element with fluent ID \"") +
-                 error.mL10nName.Value() +
-                 NS_LITERAL_STRING("\" a child element of type \"") +
+          msg += nsLiteralString(
+                     u"While translating an element with fluent ID \"") +
+                 error.mL10nName.Value() + u"\" a child element of type \""_ns +
                  error.mTranslatedElementName.Value() +
-                 NS_LITERAL_STRING(
-                     "\" was removed. Either the fluent message "
+                 nsLiteralString(
+                     u"\" was removed. Either the fluent message "
                      "does not contain markup, or it does not contain markup "
                      "of this type.");
           break;
         case L10nOverlays_Binding::ERROR_UNKNOWN:
         default:
-          msg += NS_LITERAL_STRING(
-              "Unknown error happened while translating an element.");
+          msg += nsLiteralString(
+              u"Unknown error happened while translating an element.");
           break;
       }
       nsPIDOMWindowInner* innerWindow = GetParentObject()->AsInnerWindow();
       Document* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
       if (doc) {
         nsContentUtils::ReportToConsoleNonLocalized(
-            msg, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), doc);
+            msg, nsIScriptError::warningFlag, "DOM"_ns, doc);
       } else {
         NS_WARNING("Failed to report l10n DOM Overlay errors to console.");
       }
@@ -620,8 +615,7 @@ void DOMLocalization::ConvertStringToL10nArgs(const nsString& aInput,
   // Once we get Record::Init(const nsAString& aJSON), we'll switch to
   // that.
   L10nArgsHelperDict helperDict;
-  if (!helperDict.Init(NS_LITERAL_STRING("{\"args\": ") + aInput +
-                       NS_LITERAL_STRING("}"))) {
+  if (!helperDict.Init(u"{\"args\": "_ns + aInput + u"}"_ns)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }

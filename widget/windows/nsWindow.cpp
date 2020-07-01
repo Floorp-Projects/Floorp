@@ -3685,8 +3685,7 @@ void nsWindow::SetIcon(const nsAString& aIconSpec) {
   // Assume the given string is a local identifier for an icon file.
 
   nsCOMPtr<nsIFile> iconFile;
-  ResolveIconName(aIconSpec, NS_LITERAL_STRING(".ico"),
-                  getter_AddRefs(iconFile));
+  ResolveIconName(aIconSpec, u".ico"_ns, getter_AddRefs(iconFile));
   if (!iconFile) return;
 
   nsAutoString iconPath;
@@ -4352,8 +4351,7 @@ bool nsWindow::TouchEventShouldStartDrag(EventMessage aEventMessage,
         for (Element* element = content->GetAsElementOrParentElement(); element;
              element = element->GetParentElement()) {
           nsAutoString startDrag;
-          element->GetAttribute(NS_LITERAL_STRING("touchdownstartsdrag"),
-                                startDrag);
+          element->GetAttribute(u"touchdownstartsdrag"_ns, startDrag);
           if (!startDrag.IsEmpty()) {
             return true;
           }
@@ -5967,7 +5965,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       // actual mousedown event because that would break dragging or interfere
       // with other mousedown handling in the caption area.
       if (WithinDraggableRegion(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
-        DispatchCustomEvent(NS_LITERAL_STRING("draggableregionleftmousedown"));
+        DispatchCustomEvent(u"draggableregionleftmousedown"_ns);
       }
       break;
     }

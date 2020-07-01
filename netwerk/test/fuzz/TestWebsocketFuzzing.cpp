@@ -167,8 +167,7 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
       gWebSocketListener->waitUntilDoneOrStarted();
 
       if (gWebSocketListener->isStarted()) {
-        rv =
-            gWebSocketChannel->SendBinaryMsg(NS_LITERAL_CSTRING("Hello world"));
+        rv = gWebSocketChannel->SendBinaryMsg("Hello world"_ns);
 
         if (rv != NS_OK) {
           FUZZING_LOG(("Warning: Failed to call SendBinaryMsg"));
@@ -176,7 +175,7 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
           gWebSocketListener->waitUntilDoneOrAck();
         }
 
-        rv = gWebSocketChannel->Close(1000, NS_LITERAL_CSTRING(""));
+        rv = gWebSocketChannel->Close(1000, ""_ns);
 
         if (rv != NS_OK) {
           FUZZING_LOG(("Warning: Failed to call close"));

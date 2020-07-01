@@ -1848,11 +1848,9 @@ void gfxFcPlatformFontList::GetFontList(nsAtom* aLangGroup,
   // The first in the list becomes the default in
   // FontBuilder.readFontSelection() if the preference-selected font is not
   // available, so put system configured defaults first.
-  if (monospace)
-    aListOfFonts.InsertElementAt(0, NS_LITERAL_STRING("monospace"));
-  if (sansSerif)
-    aListOfFonts.InsertElementAt(0, NS_LITERAL_STRING("sans-serif"));
-  if (serif) aListOfFonts.InsertElementAt(0, NS_LITERAL_STRING("serif"));
+  if (monospace) aListOfFonts.InsertElementAt(0, u"monospace"_ns);
+  if (sansSerif) aListOfFonts.InsertElementAt(0, u"sans-serif"_ns);
+  if (serif) aListOfFonts.InsertElementAt(0, u"serif"_ns);
 }
 
 FontFamily gfxFcPlatformFontList::GetDefaultFontForPlatform(
@@ -1860,7 +1858,7 @@ FontFamily gfxFcPlatformFontList::GetDefaultFontForPlatform(
   // Get the default font by using a fake name to retrieve the first
   // scalable font that fontconfig suggests for the given language.
   PrefFontList* prefFonts =
-      FindGenericFamilies(NS_LITERAL_CSTRING("-moz-default"), aStyle->language);
+      FindGenericFamilies("-moz-default"_ns, aStyle->language);
   NS_ASSERTION(prefFonts, "null list of generic fonts");
   if (prefFonts && !prefFonts->IsEmpty()) {
     return (*prefFonts)[0];
@@ -2442,7 +2440,7 @@ void gfxFcPlatformFontList::ActivateBundledFonts() {
     if (NS_FAILED(rv)) {
       return;
     }
-    if (NS_FAILED(localDir->Append(NS_LITERAL_STRING("fonts")))) {
+    if (NS_FAILED(localDir->Append(u"fonts"_ns))) {
       return;
     }
     bool isDir;

@@ -148,8 +148,8 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, dom::Document* aDocument)
   }
 
   if (!mDocument->DidFireDOMContentLoaded()) {
-    mDocument->AddSystemEventListener(NS_LITERAL_STRING("DOMContentLoaded"),
-                                      this, false, false);
+    mDocument->AddSystemEventListener(u"DOMContentLoaded"_ns, this, false,
+                                      false);
   } else {
     // In some cases we can't rely on CheckLoadingFinished being called from
     // the refresh driver.  For example, documents in display:none iframes.
@@ -195,8 +195,7 @@ void FontFaceSet::Disconnect() {
 
 void FontFaceSet::RemoveDOMContentLoadedListener() {
   if (mDocument) {
-    mDocument->RemoveSystemEventListener(NS_LITERAL_STRING("DOMContentLoaded"),
-                                         this, false);
+    mDocument->RemoveSystemEventListener(u"DOMContentLoaded"_ns, this, false);
   }
 }
 
@@ -1505,7 +1504,7 @@ void FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise() {
     return;
   }
 
-  (new AsyncEventDispatcher(this, NS_LITERAL_STRING("loading"), CanBubble::eNo))
+  (new AsyncEventDispatcher(this, u"loading"_ns, CanBubble::eNo))
       ->PostDOMEvent();
 
   if (PrefEnabled()) {
@@ -1636,12 +1635,10 @@ void FontFaceSet::CheckLoadingFinished() {
     }
   }
 
-  DispatchLoadingFinishedEvent(NS_LITERAL_STRING("loadingdone"),
-                               std::move(loaded));
+  DispatchLoadingFinishedEvent(u"loadingdone"_ns, std::move(loaded));
 
   if (!failed.IsEmpty()) {
-    DispatchLoadingFinishedEvent(NS_LITERAL_STRING("loadingerror"),
-                                 std::move(failed));
+    DispatchLoadingFinishedEvent(u"loadingerror"_ns, std::move(failed));
   }
 }
 

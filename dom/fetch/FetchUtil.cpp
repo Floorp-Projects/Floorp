@@ -49,7 +49,7 @@ nsresult FetchUtil::GetValidRequestMethod(const nsACString& aMethod,
 static bool FindCRLF(nsACString::const_iterator& aStart,
                      nsACString::const_iterator& aEnd) {
   nsACString::const_iterator end(aEnd);
-  return FindInReadable(NS_LITERAL_CSTRING("\r\n"), aStart, end);
+  return FindInReadable("\r\n"_ns, aStart, end);
 }
 
 // Reads over a CRLF and positions start after it.
@@ -501,8 +501,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
       response->GetUrl(url);
 
       nsCString sourceMapUrl;
-      response->GetInternalHeaders()->Get(NS_LITERAL_CSTRING("SourceMap"),
-                                          sourceMapUrl, result);
+      response->GetInternalHeaders()->Get("SourceMap"_ns, sourceMapUrl, result);
       if (NS_WARN_IF(result.Failed())) {
         return ThrowException(aCx, JSMSG_ERROR_CONSUMING_RESPONSE);
       }

@@ -106,7 +106,7 @@ class nsMenuBarFrame final : public nsBoxFrame, public nsMenuParent {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("MenuBar"), aResult);
+    return MakeFrameName(u"MenuBar"_ns, aResult);
   }
 #endif
 

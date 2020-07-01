@@ -237,7 +237,7 @@ nsresult NullPrincipal::PopulateJSONObject(Json::Value& aObject) {
   nsresult rv = mURI->GetSpec(principalURI);
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(principalURI.Length() ==
-                 NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":").Length() +
+                 nsLiteralCString(NS_NULLPRINCIPAL_SCHEME ":").Length() +
                      NSID_LENGTH - 1,
              "Length of the URI should be: (scheme, uuid, - nullptr)");
   aObject[std::to_string(eSpec)] = principalURI.get();

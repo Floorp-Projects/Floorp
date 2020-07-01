@@ -2341,8 +2341,8 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
         StaticPrefs::test_mousescroll()) {
       if (RefPtr<GeckoContentController> controller =
               GetGeckoContentController()) {
-        controller->NotifyMozMouseScrollEvent(
-            GetScrollId(), NS_LITERAL_STRING("MozMouseScrollFailed"));
+        controller->NotifyMozMouseScrollEvent(GetScrollId(),
+                                              u"MozMouseScrollFailed"_ns);
       }
     }
     return nsEventStatus_eConsumeNoDefault;

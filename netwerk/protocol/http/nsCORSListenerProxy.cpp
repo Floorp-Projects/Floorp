@@ -535,8 +535,8 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
     return rv;
   }
 
-  rv = http->GetResponseHeader(
-      NS_LITERAL_CSTRING("Access-Control-Allow-Origin"), allowedOriginHeader);
+  rv = http->GetResponseHeader("Access-Control-Allow-Origin"_ns,
+                               allowedOriginHeader);
   if (NS_FAILED(rv)) {
     LogBlockedRequest(aRequest, "CORSMissingAllowOrigin", nullptr,
                       nsILoadInfo::BLOCKING_REASON_CORSMISSINGALLOWORIGIN,
@@ -577,9 +577,8 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
   // Check Access-Control-Allow-Credentials header
   if (mWithCredentials) {
     nsAutoCString allowCredentialsHeader;
-    rv = http->GetResponseHeader(
-        NS_LITERAL_CSTRING("Access-Control-Allow-Credentials"),
-        allowCredentialsHeader);
+    rv = http->GetResponseHeader("Access-Control-Allow-Credentials"_ns,
+                                 allowCredentialsHeader);
 
     if (!allowCredentialsHeader.EqualsLiteral("true")) {
       LogBlockedRequest(
@@ -1001,16 +1000,15 @@ nsresult nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel,
   // Add Content-Type header if needed
   nsTArray<nsCString> headers;
   nsAutoCString contentTypeHeader;
-  nsresult rv = http->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                       contentTypeHeader);
+  nsresult rv = http->GetRequestHeader("Content-Type"_ns, contentTypeHeader);
   // GetRequestHeader return an error if the header is not set. Don't add
   // "content-type" to the list if that's the case.
   if (NS_SUCCEEDED(rv) &&
       !nsContentUtils::IsAllowedNonCorsContentType(contentTypeHeader) &&
-      !loadInfoHeaders.Contains(NS_LITERAL_CSTRING("content-type"),
+      !loadInfoHeaders.Contains("content-type"_ns,
                                 nsCaseInsensitiveCStringArrayComparator())) {
     headers.AppendElements(loadInfoHeaders);
-    headers.AppendElement(NS_LITERAL_CSTRING("content-type"));
+    headers.AppendElement("content-type"_ns);
     doPreflight = true;
   }
 
@@ -1086,8 +1084,7 @@ void nsCORSPreflightListener::AddResultToCache(nsIRequest* aRequest) {
   // The "Access-Control-Max-Age" header should return an age in seconds.
   nsAutoCString headerVal;
   uint32_t age = 0;
-  Unused << http->GetResponseHeader(
-      NS_LITERAL_CSTRING("Access-Control-Max-Age"), headerVal);
+  Unused << http->GetResponseHeader("Access-Control-Max-Age"_ns, headerVal);
   if (headerVal.IsEmpty()) {
     age = PREFLIGHT_DEFAULT_EXPIRY_SECONDS;
   } else {
@@ -1130,8 +1127,8 @@ void nsCORSPreflightListener::AddResultToCache(nsIRequest* aRequest) {
 
   // The "Access-Control-Allow-Methods" header contains a comma separated
   // list of method names.
-  Unused << http->GetResponseHeader(
-      NS_LITERAL_CSTRING("Access-Control-Allow-Methods"), headerVal);
+  Unused << http->GetResponseHeader("Access-Control-Allow-Methods"_ns,
+                                    headerVal);
 
   nsCCharSeparatedTokenizer methods(headerVal, ',');
   while (methods.hasMoreTokens()) {
@@ -1159,8 +1156,8 @@ void nsCORSPreflightListener::AddResultToCache(nsIRequest* aRequest) {
 
   // The "Access-Control-Allow-Headers" header contains a comma separated
   // list of method names.
-  Unused << http->GetResponseHeader(
-      NS_LITERAL_CSTRING("Access-Control-Allow-Headers"), headerVal);
+  Unused << http->GetResponseHeader("Access-Control-Allow-Headers"_ns,
+                                    headerVal);
 
   nsCCharSeparatedTokenizer headers(headerVal, ',');
   while (headers.hasMoreTokens()) {
@@ -1272,8 +1269,8 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
   nsAutoCString headerVal;
   // The "Access-Control-Allow-Methods" header contains a comma separated
   // list of method names.
-  Unused << http->GetResponseHeader(
-      NS_LITERAL_CSTRING("Access-Control-Allow-Methods"), headerVal);
+  Unused << http->GetResponseHeader("Access-Control-Allow-Methods"_ns,
+                                    headerVal);
   bool foundMethod = mPreflightMethod.EqualsLiteral("GET") ||
                      mPreflightMethod.EqualsLiteral("HEAD") ||
                      mPreflightMethod.EqualsLiteral("POST");
@@ -1306,8 +1303,8 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
 
   // The "Access-Control-Allow-Headers" header contains a comma separated
   // list of header names.
-  Unused << http->GetResponseHeader(
-      NS_LITERAL_CSTRING("Access-Control-Allow-Headers"), headerVal);
+  Unused << http->GetResponseHeader("Access-Control-Allow-Headers"_ns,
+                                    headerVal);
   nsTArray<nsCString> headers;
   nsCCharSeparatedTokenizer headerTokens(headerVal, ',');
   bool allowAllHeaders = false;
@@ -1471,11 +1468,11 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
   nsCOMPtr<nsIHttpChannel> preHttp = do_QueryInterface(preflightChannel);
   NS_ASSERTION(preHttp, "Failed to QI to nsIHttpChannel!");
 
-  rv = preHttp->SetRequestMethod(NS_LITERAL_CSTRING("OPTIONS"));
+  rv = preHttp->SetRequestMethod("OPTIONS"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = preHttp->SetRequestHeader(
-      NS_LITERAL_CSTRING("Access-Control-Request-Method"), method, false);
+  rv = preHttp->SetRequestHeader("Access-Control-Request-Method"_ns, method,
+                                 false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the CORS preflight channel's warning reporter to be the same as the
@@ -1501,8 +1498,8 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
       }
       headers += preflightHeaders[i];
     }
-    rv = preHttp->SetRequestHeader(
-        NS_LITERAL_CSTRING("Access-Control-Request-Headers"), headers, false);
+    rv = preHttp->SetRequestHeader("Access-Control-Request-Headers"_ns, headers,
+                                   false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

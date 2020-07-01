@@ -913,8 +913,8 @@ void Http3Session::Close(nsresult aReason) {
     mError = aReason;
     // If necko closes connection, this will map to "closing" key and 37 in the
     // graph.
-    Telemetry::Accumulate(Telemetry::HTTP3_CONNECTTION_CLOSE_CODE,
-                          NS_LITERAL_CSTRING("closing"), 37);
+    Telemetry::Accumulate(Telemetry::HTTP3_CONNECTTION_CLOSE_CODE, "closing"_ns,
+                          37);
     CloseInternal(true);
   }
 
@@ -1390,10 +1390,8 @@ void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
   // in the later case itt will change to closed. In tthis way we can
   // distinguish which side is closing connecttion first. If necko closes
   // connection, this will map to "closing" key and 37 in the graph.
-  Telemetry::Accumulate(
-      Telemetry::HTTP3_CONNECTTION_CLOSE_CODE,
-      aClosing ? NS_LITERAL_CSTRING("closing") : NS_LITERAL_CSTRING("closed"),
-      value);
+  Telemetry::Accumulate(Telemetry::HTTP3_CONNECTTION_CLOSE_CODE,
+                        aClosing ? "closing"_ns : "closed"_ns, value);
 }
 
 }  // namespace net

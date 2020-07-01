@@ -162,7 +162,7 @@ nsresult nsCertOverrideService::Init() {
 
   nsresult rv = GetShutdownBarrier()->AddBlocker(
       this, NS_LITERAL_STRING(__FILE__), __LINE__,
-      NS_LITERAL_STRING("nsCertOverrideService shutdown"));
+      u"nsCertOverrideService shutdown"_ns);
   // If that failed, we're likely getting initialized during shutdown.
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -202,7 +202,7 @@ nsCertOverrideService::Observe(nsISupports*, const char* aTopic,
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                          getter_AddRefs(mSettingsFile));
     if (NS_SUCCEEDED(rv)) {
-      mSettingsFile->AppendNative(NS_LITERAL_CSTRING(CERT_OVERRIDE_FILE_NAME));
+      mSettingsFile->AppendNative(nsLiteralCString(CERT_OVERRIDE_FILE_NAME));
     } else {
       mSettingsFile = nullptr;
     }
@@ -731,7 +731,7 @@ void nsCertOverrideService::GetHostWithPort(const nsACString& aHostName,
 // nsIAsyncShutdownBlocker implementation
 NS_IMETHODIMP
 nsCertOverrideService::GetName(nsAString& aName) {
-  aName = NS_LITERAL_STRING("nsCertOverrideService: shutdown");
+  aName = u"nsCertOverrideService: shutdown"_ns;
   return NS_OK;
 }
 

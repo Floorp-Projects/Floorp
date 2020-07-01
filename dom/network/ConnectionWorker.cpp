@@ -71,9 +71,8 @@ class InitializeRunnable : public WorkerMainThreadRunnable {
  public:
   InitializeRunnable(WorkerPrivate* aWorkerPrivate, ConnectionProxy* aProxy,
                      hal::NetworkInformation& aNetworkInfo)
-      : WorkerMainThreadRunnable(
-            aWorkerPrivate,
-            NS_LITERAL_CSTRING("ConnectionWorker :: Initialize")),
+      : WorkerMainThreadRunnable(aWorkerPrivate,
+                                 "ConnectionWorker :: Initialize"_ns),
         mProxy(aProxy),
         mNetworkInfo(aNetworkInfo) {
     MOZ_ASSERT(aProxy);
@@ -96,8 +95,8 @@ class ShutdownRunnable : public WorkerMainThreadRunnable {
 
  public:
   ShutdownRunnable(WorkerPrivate* aWorkerPrivate, ConnectionProxy* aProxy)
-      : WorkerMainThreadRunnable(
-            aWorkerPrivate, NS_LITERAL_CSTRING("ConnectionWorker :: Shutdown")),
+      : WorkerMainThreadRunnable(aWorkerPrivate,
+                                 "ConnectionWorker :: Shutdown"_ns),
         mProxy(aProxy) {
     MOZ_ASSERT(aProxy);
     aWorkerPrivate->AssertIsOnWorkerThread();

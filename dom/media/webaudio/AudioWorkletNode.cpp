@@ -666,9 +666,8 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
       aAudioContext.GetParamMapForWorkletName(aName);
   if (!parameterDescriptors) {
     // Not using nsPrintfCString in case aName has embedded nulls.
-    aRv.ThrowInvalidStateError(
-        NS_LITERAL_CSTRING("Unknown AudioWorklet name '") +
-        NS_ConvertUTF16toUTF8(aName) + NS_LITERAL_CSTRING("'"));
+    aRv.ThrowInvalidStateError("Unknown AudioWorklet name '"_ns +
+                               NS_ConvertUTF16toUTF8(aName) + "'"_ns);
     return nullptr;
   }
 
@@ -855,8 +854,8 @@ void AudioWorkletNode::DispatchProcessorErrorEvent(
     init.mFilename = aDetails.mFilename;
     init.mLineno = aDetails.mLineno;
     init.mColno = aDetails.mColno;
-    RefPtr<ErrorEvent> errorEvent = ErrorEvent::Constructor(
-        this, NS_LITERAL_STRING("processorerror"), init);
+    RefPtr<ErrorEvent> errorEvent =
+        ErrorEvent::Constructor(this, u"processorerror"_ns, init);
     MOZ_ASSERT(errorEvent);
     DispatchTrustedEvent(errorEvent);
   }

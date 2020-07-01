@@ -551,7 +551,7 @@ void PaymentRequestManager::AbortPayment(PaymentRequest* aRequest,
 void PaymentRequestManager::CompletePayment(PaymentRequest* aRequest,
                                             const PaymentComplete& aComplete,
                                             ErrorResult& aRv, bool aTimedOut) {
-  nsString completeStatusString(NS_LITERAL_STRING("unknown"));
+  nsString completeStatusString(u"unknown"_ns);
   if (aTimedOut) {
     completeStatusString.AssignLiteral("timeout");
   } else {

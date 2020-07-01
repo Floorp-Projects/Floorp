@@ -443,7 +443,7 @@ void nsTableColGroupFrame::InvalidateFrameWithRect(const nsRect& aRect,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsTableColGroupFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("TableColGroup"), aResult);
+  return MakeFrameName(u"TableColGroup"_ns, aResult);
 }
 
 void nsTableColGroupFrame::Dump(int32_t aIndent) {

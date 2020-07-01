@@ -513,7 +513,7 @@ NSArray* nsFilePicker::GetFilterList() {
     return nil;
   }
 
-  if (filterWide.Equals(NS_LITERAL_STRING("*"))) {
+  if (filterWide.Equals(u"*"_ns)) {
     return nil;
   }
 
@@ -616,7 +616,7 @@ NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter) {
   // "..apps" has to be translated with native executable extensions.
   if (aFilter.EqualsLiteral("..apps")) {
-    mFilters.AppendElement(NS_LITERAL_STRING("*.app"));
+    mFilters.AppendElement(u"*.app"_ns);
   } else {
     mFilters.AppendElement(aFilter);
   }

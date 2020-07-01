@@ -151,7 +151,7 @@ ManualNACPtr HTMLEditor::CreateAnonymousElement(nsAtom* aTag,
   // add the "hidden" class if needed
   if (aIsCreatedHidden) {
     nsresult rv = newElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                      NS_LITERAL_STRING("hidden"), true);
+                                      u"hidden"_ns, true);
     if (NS_FAILED(rv)) {
       NS_WARNING("Element::SetAttr(nsGkAtoms::_class, hidden) failed");
       return nullptr;
@@ -534,21 +534,16 @@ nsresult HTMLEditor::GetPositionAndDimensions(Element& aElement, int32_t& aX,
       return NS_ERROR_FAILURE;
     }
 
-    aBorderLeft = GetCSSFloatValue(computedDOMStyle,
-                                   NS_LITERAL_CSTRING("border-left-width"));
-    aBorderTop = GetCSSFloatValue(computedDOMStyle,
-                                  NS_LITERAL_CSTRING("border-top-width"));
-    aMarginLeft =
-        GetCSSFloatValue(computedDOMStyle, NS_LITERAL_CSTRING("margin-left"));
-    aMarginTop =
-        GetCSSFloatValue(computedDOMStyle, NS_LITERAL_CSTRING("margin-top"));
+    aBorderLeft = GetCSSFloatValue(computedDOMStyle, "border-left-width"_ns);
+    aBorderTop = GetCSSFloatValue(computedDOMStyle, "border-top-width"_ns);
+    aMarginLeft = GetCSSFloatValue(computedDOMStyle, "margin-left"_ns);
+    aMarginTop = GetCSSFloatValue(computedDOMStyle, "margin-top"_ns);
 
-    aX = GetCSSFloatValue(computedDOMStyle, NS_LITERAL_CSTRING("left")) +
-         aMarginLeft + aBorderLeft;
-    aY = GetCSSFloatValue(computedDOMStyle, NS_LITERAL_CSTRING("top")) +
-         aMarginTop + aBorderTop;
-    aW = GetCSSFloatValue(computedDOMStyle, NS_LITERAL_CSTRING("width"));
-    aH = GetCSSFloatValue(computedDOMStyle, NS_LITERAL_CSTRING("height"));
+    aX = GetCSSFloatValue(computedDOMStyle, "left"_ns) + aMarginLeft +
+         aBorderLeft;
+    aY = GetCSSFloatValue(computedDOMStyle, "top"_ns) + aMarginTop + aBorderTop;
+    aW = GetCSSFloatValue(computedDOMStyle, "width"_ns);
+    aH = GetCSSFloatValue(computedDOMStyle, "height"_ns);
   } else {
     mResizedObjectIsAbsolutelyPositioned = false;
     RefPtr<nsGenericHTMLElement> htmlElement =

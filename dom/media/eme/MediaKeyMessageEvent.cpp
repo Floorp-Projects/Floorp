@@ -63,7 +63,7 @@ already_AddRefed<MediaKeyMessageEvent> MediaKeyMessageEvent::Constructor(
     EventTarget* aOwner, MediaKeyMessageType aMessageType,
     const nsTArray<uint8_t>& aMessage) {
   RefPtr<MediaKeyMessageEvent> e = new MediaKeyMessageEvent(aOwner);
-  e->InitEvent(NS_LITERAL_STRING("message"), false, false);
+  e->InitEvent(u"message"_ns, false, false);
   e->mMessageType = aMessageType;
   e->mRawMessage = aMessage.Clone();
   e->SetTrusted(true);

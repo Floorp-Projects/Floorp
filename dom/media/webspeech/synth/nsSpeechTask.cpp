@@ -100,8 +100,8 @@ nsresult nsSpeechTask::DispatchStartImpl(const nsAString& aUri) {
 
   mState = STATE_SPEAKING;
   mUtterance->mChosenVoiceURI = aUri;
-  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("start"), 0,
-                                           nullptr, 0, EmptyString());
+  mUtterance->DispatchSpeechSynthesisEvent(u"start"_ns, 0, nullptr, 0,
+                                           EmptyString());
 
   return NS_OK;
 }
@@ -136,8 +136,8 @@ nsresult nsSpeechTask::DispatchEndImpl(float aElapsedTime,
   }
 
   mState = STATE_ENDED;
-  utterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("end"), aCharIndex,
-                                          nullptr, aElapsedTime, EmptyString());
+  utterance->DispatchSpeechSynthesisEvent(u"end"_ns, aCharIndex, nullptr,
+                                          aElapsedTime, EmptyString());
 
   return NS_OK;
 }
@@ -160,9 +160,8 @@ nsresult nsSpeechTask::DispatchPauseImpl(float aElapsedTime,
 
   mUtterance->mPaused = true;
   if (mState == STATE_SPEAKING) {
-    mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("pause"),
-                                             aCharIndex, nullptr, aElapsedTime,
-                                             EmptyString());
+    mUtterance->DispatchSpeechSynthesisEvent(u"pause"_ns, aCharIndex, nullptr,
+                                             aElapsedTime, EmptyString());
   }
 
   return NS_OK;
@@ -186,9 +185,8 @@ nsresult nsSpeechTask::DispatchResumeImpl(float aElapsedTime,
 
   mUtterance->mPaused = false;
   if (mState == STATE_SPEAKING) {
-    mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("resume"),
-                                             aCharIndex, nullptr, aElapsedTime,
-                                             EmptyString());
+    mUtterance->DispatchSpeechSynthesisEvent(u"resume"_ns, aCharIndex, nullptr,
+                                             aElapsedTime, EmptyString());
   }
 
   return NS_OK;
@@ -223,9 +221,8 @@ nsresult nsSpeechTask::DispatchErrorImpl(float aElapsedTime,
   }
 
   mState = STATE_ENDED;
-  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("error"),
-                                           aCharIndex, nullptr, aElapsedTime,
-                                           EmptyString());
+  mUtterance->DispatchSpeechSynthesisEvent(u"error"_ns, aCharIndex, nullptr,
+                                           aElapsedTime, EmptyString());
   return NS_OK;
 }
 
@@ -247,7 +244,7 @@ nsresult nsSpeechTask::DispatchBoundaryImpl(const nsAString& aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
   mUtterance->DispatchSpeechSynthesisEvent(
-      NS_LITERAL_STRING("boundary"), aCharIndex,
+      u"boundary"_ns, aCharIndex,
       argc ? static_cast<Nullable<uint32_t> >(aCharLength) : nullptr,
       aElapsedTime, aName);
 
@@ -267,8 +264,8 @@ nsresult nsSpeechTask::DispatchMarkImpl(const nsAString& aName,
   if (NS_WARN_IF(mState != STATE_SPEAKING)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mUtterance->DispatchSpeechSynthesisEvent(
-      NS_LITERAL_STRING("mark"), aCharIndex, nullptr, aElapsedTime, aName);
+  mUtterance->DispatchSpeechSynthesisEvent(u"mark"_ns, aCharIndex, nullptr,
+                                           aElapsedTime, aName);
   return NS_OK;
 }
 

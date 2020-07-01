@@ -1519,7 +1519,7 @@ void MediaTrackGraphImpl::AddShutdownBlocker() {
   mShutdownBlocker = MakeAndAddRef<Blocker>(this, blockerName);
   nsresult rv = media::GetShutdownBarrier()->AddBlocker(
       mShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
-      NS_LITERAL_STRING("MediaTrackGraph shutdown"));
+      u"MediaTrackGraph shutdown"_ns);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 }
 
@@ -3261,7 +3261,7 @@ void MediaTrackGraphImpl::FinishCollectReports(
 
 #define REPORT(_path, _amount, _desc)                                    \
   aHandleReport->Callback(EmptyCString(), _path, KIND_HEAP, UNITS_BYTES, \
-                          _amount, NS_LITERAL_CSTRING(_desc), aData);
+                          _amount, nsLiteralCString(_desc), aData);
 
   for (size_t i = 0; i < aAudioTrackSizes.Length(); i++) {
     const AudioNodeSizes& usage = aAudioTrackSizes[i];
@@ -3281,7 +3281,7 @@ void MediaTrackGraphImpl::FinishCollectReports(
 
   size_t hrtfLoaders = WebCore::HRTFDatabaseLoader::sizeOfLoaders(MallocSizeOf);
   if (hrtfLoaders) {
-    REPORT(NS_LITERAL_CSTRING(
+    REPORT(nsLiteralCString(
                "explicit/webaudio/audio-node/PannerNode/hrtf-databases"),
            hrtfLoaders, "Memory used by PannerNode databases (Web Audio).");
   }

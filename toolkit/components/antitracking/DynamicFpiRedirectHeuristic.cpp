@@ -148,10 +148,10 @@ void AddConsoleReport(nsIChannel* aNewChannel, nsIURI* aNewURI,
   AutoTArray<nsString, 2> params = {NS_ConvertUTF8toUTF16(aNewOrigin),
                                     NS_ConvertUTF8toUTF16(aOldOrigin)};
 
-  httpChannel->AddConsoleReport(
-      nsIScriptError::warningFlag, ANTITRACKING_CONSOLE_CATEGORY,
-      nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0,
-      NS_LITERAL_CSTRING("CookieAllowedForFpiByHeuristic"), params);
+  httpChannel->AddConsoleReport(nsIScriptError::warningFlag,
+                                ANTITRACKING_CONSOLE_CATEGORY,
+                                nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0,
+                                "CookieAllowedForFpiByHeuristic"_ns, params);
 }
 
 bool ShouldRedirectHeuristicApplyTrackingResource(nsIChannel* aOldChannel,

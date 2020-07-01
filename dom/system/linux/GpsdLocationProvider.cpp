@@ -370,9 +370,9 @@ GpsdLocationProvider::Startup() {
 
   // ... or create a new one.
   if (!pollThread) {
-    pollThread = MakeAndAddRef<LazyIdleThread>(
-        GPSD_POLL_THREAD_TIMEOUT_MS, NS_LITERAL_CSTRING("Gpsd poll thread"),
-        LazyIdleThread::ManualShutdown);
+    pollThread = MakeAndAddRef<LazyIdleThread>(GPSD_POLL_THREAD_TIMEOUT_MS,
+                                               "Gpsd poll thread"_ns,
+                                               LazyIdleThread::ManualShutdown);
   }
 
   auto rv = pollThread->Dispatch(pollRunnable, NS_DISPATCH_NORMAL);

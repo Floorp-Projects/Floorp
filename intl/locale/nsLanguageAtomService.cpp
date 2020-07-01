@@ -178,7 +178,7 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
     nsACString::const_iterator start, end;
     langStr.BeginReading(start);
     langStr.EndReading(end);
-    if (FindInReadable(NS_LITERAL_CSTRING("-x-"), start, end)) {
+    if (FindInReadable("-x-"_ns, start, end)) {
       // The substring we want ends at the beginning of the "-x-" subtag.
       langStr.Truncate(start.get() - langStr.BeginReading());
     }

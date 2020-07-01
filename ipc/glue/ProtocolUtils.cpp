@@ -86,7 +86,7 @@ bool DuplicateHandle(HANDLE aSourceHandle, DWORD aTargetProcessId,
   if (!targetProcess) {
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::IPCTransportFailureReason,
-        NS_LITERAL_CSTRING("Failed to open target process."));
+        "Failed to open target process."_ns);
     return false;
   }
 

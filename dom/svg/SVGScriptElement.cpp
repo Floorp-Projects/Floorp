@@ -132,23 +132,20 @@ void SVGScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
       NS_NewURI(getter_AddRefs(mUri), src, nullptr, GetBaseURI());
 
       if (!mUri) {
-        AutoTArray<nsString, 2> params = {isHref
-                                              ? NS_LITERAL_STRING("href")
-                                              : NS_LITERAL_STRING("xlink:href"),
-                                          src};
+        AutoTArray<nsString, 2> params = {
+            isHref ? u"href"_ns : u"xlink:href"_ns, src};
 
         nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("SVG"), OwnerDoc(),
+            nsIScriptError::warningFlag, "SVG"_ns, OwnerDoc(),
             nsContentUtils::eDOM_PROPERTIES, "ScriptSourceInvalidUri", params,
             nullptr, EmptyString(), GetScriptLineNumber(),
             GetScriptColumnNumber());
       }
     } else {
-      AutoTArray<nsString, 1> params = {
-          isHref ? NS_LITERAL_STRING("href") : NS_LITERAL_STRING("xlink:href")};
+      AutoTArray<nsString, 1> params = {isHref ? u"href"_ns : u"xlink:href"_ns};
 
       nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("SVG"), OwnerDoc(),
+          nsIScriptError::warningFlag, "SVG"_ns, OwnerDoc(),
           nsContentUtils::eDOM_PROPERTIES, "ScriptSourceEmpty", params, nullptr,
           EmptyString(), GetScriptLineNumber(), GetScriptColumnNumber());
     }

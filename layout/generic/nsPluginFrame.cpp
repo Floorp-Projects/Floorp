@@ -217,7 +217,7 @@ void nsPluginFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsPluginFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("PluginFrame"), aResult);
+  return MakeFrameName(u"PluginFrame"_ns, aResult);
 }
 #endif
 
@@ -991,8 +991,7 @@ nsresult nsPluginFrame::PluginEventNotifier::Run() {
 }
 
 void nsPluginFrame::NotifyPluginReflowObservers() {
-  nsContentUtils::AddScriptRunner(
-      new PluginEventNotifier(NS_LITERAL_STRING("reflow")));
+  nsContentUtils::AddScriptRunner(new PluginEventNotifier(u"reflow"_ns));
 }
 
 void nsPluginFrame::DidSetWidgetGeometry() {

@@ -56,7 +56,7 @@ already_AddRefed<CanvasThreadHolder> CanvasThreadHolder::EnsureCanvasThread() {
     // manage the load between them.
     uint32_t threadLimit = std::max(2, PR_GetNumberOfProcessors() / 2);
     nsCOMPtr<nsIThreadPool> canvasWorkers =
-        SharedThreadPool::Get(NS_LITERAL_CSTRING("CanvasWorkers"), threadLimit);
+        SharedThreadPool::Get("CanvasWorkers"_ns, threadLimit);
     if (!canvasWorkers) {
       return nullptr;
     }

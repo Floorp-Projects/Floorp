@@ -108,12 +108,12 @@ TEST(ObserverService, AddObserver)
       do_CreateInstance("@mozilla.org/observer-service;1");
 
   // Add a strong ref.
-  RefPtr<TestObserver> a = new TestObserver(NS_LITERAL_STRING("A"));
+  RefPtr<TestObserver> a = new TestObserver(u"A"_ns);
   nsresult rv = svc->AddObserver(a, "Foo", false);
   testResult(rv);
 
   // Add a few weak ref.
-  RefPtr<TestObserver> b = new TestObserver(NS_LITERAL_STRING("B"));
+  RefPtr<TestObserver> b = new TestObserver(u"B"_ns);
   rv = svc->AddObserver(b, "Bar", true);
   testResult(rv);
 }
@@ -123,9 +123,9 @@ TEST(ObserverService, RemoveObserver)
   nsCOMPtr<nsIObserverService> svc =
       do_CreateInstance("@mozilla.org/observer-service;1");
 
-  RefPtr<TestObserver> a = new TestObserver(NS_LITERAL_STRING("A"));
-  RefPtr<TestObserver> b = new TestObserver(NS_LITERAL_STRING("B"));
-  RefPtr<TestObserver> c = new TestObserver(NS_LITERAL_STRING("C"));
+  RefPtr<TestObserver> a = new TestObserver(u"A"_ns);
+  RefPtr<TestObserver> b = new TestObserver(u"B"_ns);
+  RefPtr<TestObserver> c = new TestObserver(u"C"_ns);
 
   svc->AddObserver(a, "Foo", false);
   svc->AddObserver(b, "Foo", true);
@@ -154,7 +154,7 @@ TEST(ObserverService, EnumerateEmpty)
   TestExpectedCount(svc, "A", 0);
 
   // Now add an observer and enumerate an unobserved topic.
-  RefPtr<TestObserver> a = new TestObserver(NS_LITERAL_STRING("A"));
+  RefPtr<TestObserver> a = new TestObserver(u"A"_ns);
   testResult(svc->AddObserver(a, "Foo", false));
 
   TestExpectedCount(svc, "A", 0);
@@ -167,13 +167,13 @@ TEST(ObserverService, Enumerate)
 
   const size_t kFooCount = 10;
   for (size_t i = 0; i < kFooCount; i++) {
-    RefPtr<TestObserver> a = new TestObserver(NS_LITERAL_STRING("A"));
+    RefPtr<TestObserver> a = new TestObserver(u"A"_ns);
     testResult(svc->AddObserver(a, "Foo", false));
   }
 
   const size_t kBarCount = kFooCount / 2;
   for (size_t i = 0; i < kBarCount; i++) {
-    RefPtr<TestObserver> a = new TestObserver(NS_LITERAL_STRING("A"));
+    RefPtr<TestObserver> a = new TestObserver(u"A"_ns);
     testResult(svc->AddObserver(a, "Bar", false));
   }
 
@@ -191,7 +191,7 @@ TEST(ObserverService, EnumerateWeakRefs)
 
   const size_t kFooCount = 10;
   for (size_t i = 0; i < kFooCount; i++) {
-    RefPtr<TestObserver> a = new TestObserver(NS_LITERAL_STRING("A"));
+    RefPtr<TestObserver> a = new TestObserver(u"A"_ns);
     testResult(svc->AddObserver(a, "Foo", true));
   }
 
@@ -200,8 +200,8 @@ TEST(ObserverService, EnumerateWeakRefs)
 
   // Now test a mixture.
   for (size_t i = 0; i < kFooCount; i++) {
-    RefPtr<TestObserver> a = new TestObserver(NS_LITERAL_STRING("A"));
-    RefPtr<TestObserver> b = new TestObserver(NS_LITERAL_STRING("B"));
+    RefPtr<TestObserver> a = new TestObserver(u"A"_ns);
+    RefPtr<TestObserver> b = new TestObserver(u"B"_ns);
 
     // Register a as weak for "Foo".
     testResult(svc->AddObserver(a, "Foo", true));
@@ -214,9 +214,9 @@ TEST(ObserverService, EnumerateWeakRefs)
   TestExpectedCount(svc, "Foo", kFooCount);
 
   // Now add a couple weak refs, but don't go out of scope.
-  RefPtr<TestObserver> a = new TestObserver(NS_LITERAL_STRING("A"));
+  RefPtr<TestObserver> a = new TestObserver(u"A"_ns);
   testResult(svc->AddObserver(a, "Foo", true));
-  RefPtr<TestObserver> b = new TestObserver(NS_LITERAL_STRING("B"));
+  RefPtr<TestObserver> b = new TestObserver(u"B"_ns);
   testResult(svc->AddObserver(b, "Foo", true));
 
   // Expect all the observers from before and the two new ones.
@@ -233,10 +233,8 @@ TEST(ObserverService, TestNotify)
   nsCOMPtr<nsIObserverService> svc =
       do_CreateInstance("@mozilla.org/observer-service;1");
 
-  RefPtr<TestObserver> aObserver =
-      new TestObserver(NS_LITERAL_STRING("Observer-A"));
-  RefPtr<TestObserver> bObserver =
-      new TestObserver(NS_LITERAL_STRING("Observer-B"));
+  RefPtr<TestObserver> aObserver = new TestObserver(u"Observer-A"_ns);
+  RefPtr<TestObserver> bObserver = new TestObserver(u"Observer-B"_ns);
 
   // Add two observers for topicA.
   testResult(svc->AddObserver(aObserver, topicA.get(), false));

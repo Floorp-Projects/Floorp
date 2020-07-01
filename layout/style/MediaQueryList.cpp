@@ -14,7 +14,7 @@
 #include "nsPresContext.h"
 #include "mozilla/dom/Document.h"
 
-#define ONCHANGE_STRING NS_LITERAL_STRING("change")
+#define ONCHANGE_STRING u"change"_ns
 
 namespace mozilla {
 namespace dom {

@@ -329,7 +329,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsPageSequenceFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("PageSequence"), aResult);
+  return MakeFrameName(u"PageSequence"_ns, aResult);
 }
 #endif
 

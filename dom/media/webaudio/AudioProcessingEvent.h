@@ -28,8 +28,7 @@ class AudioProcessingEvent final : public Event {
   using Event::InitEvent;
   void InitEvent(AudioBuffer* aInputBuffer, uint32_t aNumberOfInputChannels,
                  double aPlaybackTime) {
-    InitEvent(NS_LITERAL_STRING("audioprocess"), CanBubble::eNo,
-              Cancelable::eNo);
+    InitEvent(u"audioprocess"_ns, CanBubble::eNo, Cancelable::eNo);
     mInputBuffer = aInputBuffer;
     mNumberOfInputChannels = aNumberOfInputChannels;
     mPlaybackTime = aPlaybackTime;

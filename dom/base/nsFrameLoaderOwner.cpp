@@ -183,9 +183,9 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
     // to what XULFrameElement does after rebinding to the tree.
     // ChromeOnlyDispatch is turns on to make sure this isn't fired into
     // content.
-    (new mozilla::AsyncEventDispatcher(
-         owner, NS_LITERAL_STRING("XULFrameLoaderCreated"),
-         mozilla::CanBubble::eYes, mozilla::ChromeOnlyDispatch::eYes))
+    (new mozilla::AsyncEventDispatcher(owner, u"XULFrameLoaderCreated"_ns,
+                                       mozilla::CanBubble::eYes,
+                                       mozilla::ChromeOnlyDispatch::eYes))
         ->RunDOMEventWhenSafe();
   }
 }

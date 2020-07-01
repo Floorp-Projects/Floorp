@@ -37,7 +37,7 @@ class nsSVGSwitchFrame final : public SVGGFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGSwitch"), aResult);
+    return MakeFrameName(u"SVGSwitch"_ns, aResult);
   }
 #endif
 

@@ -389,7 +389,7 @@ static bool DocHasPrintCallbackCanvas(Document& aDoc) {
   // FIXME(emilio): This doesn't account for shadow dom and it's unnecessarily
   // inefficient. Though I guess it doesn't really matter.
   RefPtr<nsContentList> canvases =
-      NS_GetContentList(root, kNameSpaceID_XHTML, NS_LITERAL_STRING("canvas"));
+      NS_GetContentList(root, kNameSpaceID_XHTML, u"canvas"_ns);
   uint32_t canvasCount = canvases->Length(true);
   for (uint32_t i = 0; i < canvasCount; ++i) {
     auto* canvas = HTMLCanvasElement::FromNodeOrNull(canvases->Item(i, false));
@@ -1273,8 +1273,7 @@ void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
 
   JS::Rooted<JS::Value> detail(
       cx, JS::NumberValue(static_cast<double>(aPrintError)));
-  event->InitCustomEvent(cx, NS_LITERAL_STRING("PrintingError"), false, false,
-                         detail);
+  event->InitCustomEvent(cx, u"PrintingError"_ns, false, false, detail);
   event->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
@@ -1629,8 +1628,7 @@ void nsPrintJob::FirePrintPreviewUpdateEvent() {
   // listener bound to this event and therefore no need to dispatch it.
   if (mIsDoingPrintPreview && !mIsDoingPrinting) {
     nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
-    (new AsyncEventDispatcher(cv->GetDocument(),
-                              NS_LITERAL_STRING("printPreviewUpdate"),
+    (new AsyncEventDispatcher(cv->GetDocument(), u"printPreviewUpdate"_ns,
                               CanBubble::eYes, ChromeOnlyDispatch::eYes))
         ->RunDOMEventWhenSafe();
   }
@@ -1812,7 +1810,7 @@ nsresult nsPrintJob::UpdateSelectionAndShrinkPrintObject(
     nsAutoString contentType;
     aPO->mPresShell->GetDocument()->GetContentType(contentType);
     if (contentType.EqualsLiteral("application/xhtml+xml") ||
-        StringBeginsWith(contentType, NS_LITERAL_STRING("text/"))) {
+        StringBeginsWith(contentType, u"text/"_ns)) {
       int32_t limitPercent =
           Preferences::GetInt("print.shrink-to-fit.scale-limit-percent", 20);
       limitPercent = std::max(0, limitPercent);

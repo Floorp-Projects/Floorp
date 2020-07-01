@@ -18,20 +18,15 @@ TEST(TestHttpResponseHead, Bug1636930)
   mozilla::UniquePtr<IPC::Message> msg(new IPC::Message(MSG_ROUTING_NONE, 0));
   mozilla::net::nsHttpResponseHead origHead;
 
-  origHead.ParseStatusLine(NS_LITERAL_CSTRING("HTTP/1.1 200 OK"));
-  Unused << origHead.ParseHeaderLine(
-      NS_LITERAL_CSTRING("content-type: text/plain"));
-  Unused << origHead.ParseHeaderLine(NS_LITERAL_CSTRING("etag: Just testing"));
-  Unused << origHead.ParseHeaderLine(
-      NS_LITERAL_CSTRING("cache-control: max-age=99999"));
-  Unused << origHead.ParseHeaderLine(
-      NS_LITERAL_CSTRING("accept-ranges: bytes"));
-  Unused << origHead.ParseHeaderLine(
-      NS_LITERAL_CSTRING("content-length: 1408"));
-  Unused << origHead.ParseHeaderLine(NS_LITERAL_CSTRING("connection: close"));
-  Unused << origHead.ParseHeaderLine(NS_LITERAL_CSTRING("server: httpd.js"));
-  Unused << origHead.ParseHeaderLine(
-      NS_LITERAL_CSTRING("date: Tue, 12 May 2020 09:24:23 GMT"));
+  origHead.ParseStatusLine("HTTP/1.1 200 OK"_ns);
+  Unused << origHead.ParseHeaderLine("content-type: text/plain"_ns);
+  Unused << origHead.ParseHeaderLine("etag: Just testing"_ns);
+  Unused << origHead.ParseHeaderLine("cache-control: max-age=99999"_ns);
+  Unused << origHead.ParseHeaderLine("accept-ranges: bytes"_ns);
+  Unused << origHead.ParseHeaderLine("content-length: 1408"_ns);
+  Unused << origHead.ParseHeaderLine("connection: close"_ns);
+  Unused << origHead.ParseHeaderLine("server: httpd.js"_ns);
+  Unused << origHead.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
 
   IPC::ParamTraits<mozilla::net::nsHttpResponseHead>::Write(msg.get(),
                                                             origHead);

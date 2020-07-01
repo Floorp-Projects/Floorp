@@ -166,10 +166,10 @@ nsresult ProtocolParserV2::ProcessControl(bool* aDone) {
   while (NextLine(line)) {
     PARSER_LOG(("Processing %s\n", line.get()));
 
-    if (StringBeginsWith(line, NS_LITERAL_CSTRING("i:"))) {
+    if (StringBeginsWith(line, "i:"_ns)) {
       // Set the table name from the table header line.
       SetCurrentTable(Substring(line, 2));
-    } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("n:"))) {
+    } else if (StringBeginsWith(line, "n:"_ns)) {
       if (PR_sscanf(line.get(), "n:%d", &mUpdateWaitSec) != 1) {
         PARSER_LOG(("Error parsing n: '%s' (%d)", line.get(), mUpdateWaitSec));
         return NS_ERROR_FAILURE;
@@ -177,17 +177,17 @@ nsresult ProtocolParserV2::ProcessControl(bool* aDone) {
     } else if (line.EqualsLiteral("r:pleasereset")) {
       PARSER_LOG(("All tables will be reset."));
       mTablesToReset = mRequestedTables.Clone();
-    } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("u:"))) {
+    } else if (StringBeginsWith(line, "u:"_ns)) {
       rv = ProcessForward(line);
       NS_ENSURE_SUCCESS(rv, rv);
-    } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("a:")) ||
-               StringBeginsWith(line, NS_LITERAL_CSTRING("s:"))) {
+    } else if (StringBeginsWith(line, "a:"_ns) ||
+               StringBeginsWith(line, "s:"_ns)) {
       rv = ProcessChunkControl(line);
       NS_ENSURE_SUCCESS(rv, rv);
       *aDone = false;
       return NS_OK;
-    } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("ad:")) ||
-               StringBeginsWith(line, NS_LITERAL_CSTRING("sd:"))) {
+    } else if (StringBeginsWith(line, "ad:"_ns) ||
+               StringBeginsWith(line, "sd:"_ns)) {
       rv = ProcessExpirations(line);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -259,14 +259,11 @@ nsresult ProtocolParserV2::ProcessChunkControl(const nsCString& aLine) {
     return NS_ERROR_FAILURE;
   }
 
-  if (StringEndsWith(mTableUpdate->TableName(),
-                     NS_LITERAL_CSTRING("-shavar")) ||
-      StringEndsWith(mTableUpdate->TableName(),
-                     NS_LITERAL_CSTRING("-simple"))) {
+  if (StringEndsWith(mTableUpdate->TableName(), "-shavar"_ns) ||
+      StringEndsWith(mTableUpdate->TableName(), "-simple"_ns)) {
     // Accommodate test tables ending in -simple for now.
     mChunkState.type = (command == 'a') ? CHUNK_ADD : CHUNK_SUB;
-  } else if (StringEndsWith(mTableUpdate->TableName(),
-                            NS_LITERAL_CSTRING("-digest256"))) {
+  } else if (StringEndsWith(mTableUpdate->TableName(), "-digest256"_ns)) {
     mChunkState.type = (command == 'a') ? CHUNK_ADD_DIGEST : CHUNK_SUB_DIGEST;
   }
   nsresult rv;
@@ -339,12 +336,10 @@ nsresult ProtocolParserV2::ProcessChunk(bool* aDone) {
   *aDone = false;
   mState = PROTOCOL_STATE_CONTROL;
 
-  if (StringEndsWith(mTableUpdate->TableName(),
-                     NS_LITERAL_CSTRING("-shavar"))) {
+  if (StringEndsWith(mTableUpdate->TableName(), "-shavar"_ns)) {
     return ProcessShaChunk(chunk);
   }
-  if (StringEndsWith(mTableUpdate->TableName(),
-                     NS_LITERAL_CSTRING("-digest256"))) {
+  if (StringEndsWith(mTableUpdate->TableName(), "-digest256"_ns)) {
     return ProcessDigestChunk(chunk);
   }
   return ProcessPlaintextChunk(chunk);

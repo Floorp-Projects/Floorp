@@ -451,7 +451,7 @@ nsresult nsStringBundleBase::ParseProperties(nsIPersistentProperties** aProps) {
     if (NS_FAILED(rv)) return rv;
 
     // It's a string bundle.  We expect a text/plain type, so set that as hint
-    channel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
+    channel->SetContentType("text/plain"_ns);
 
     rv = channel->Open(getter_AddRefs(in));
     if (NS_FAILED(rv)) return rv;

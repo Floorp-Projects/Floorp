@@ -125,7 +125,7 @@ nsresult nsVideoFrame::CreateAnonymousContent(
     NS_ENSURE_TRUE(mCaptionDiv, NS_ERROR_OUT_OF_MEMORY);
     nsGenericHTMLElement* div =
         static_cast<nsGenericHTMLElement*>(mCaptionDiv.get());
-    div->SetClassName(NS_LITERAL_STRING("caption-box"));
+    div->SetClassName(u"caption-box"_ns);
 
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.
@@ -364,8 +364,8 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
       if (child->GetSize() != oldChildSize) {
         const nsString name = child->GetContent() == videoControlsDiv
-                                  ? NS_LITERAL_STRING("resizevideocontrols")
-                                  : NS_LITERAL_STRING("resizecaption");
+                                  ? u"resizevideocontrols"_ns
+                                  : u"resizecaption"_ns;
         RefPtr<Runnable> event =
             new DispatchResizeEvent(child->GetContent(), name);
         nsContentUtils::AddScriptRunner(event);
@@ -571,7 +571,7 @@ a11y::AccType nsVideoFrame::AccessibleType() { return a11y::eHTMLMediaType; }
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsVideoFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("HTMLVideo"), aResult);
+  return MakeFrameName(u"HTMLVideo"_ns, aResult);
 }
 #endif
 

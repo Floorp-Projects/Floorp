@@ -20,17 +20,17 @@ static nsLiteralCString SubsystemTelemetryKey(LayoutSubsystem aSubsystem) {
     default:
       MOZ_CRASH("Unexpected LayoutSubsystem value");
     case LayoutSubsystem::Restyle:
-      return nsLiteralCString("Restyle");
+      return "Restyle"_ns;
     case LayoutSubsystem::Reflow:
-      return nsLiteralCString("ReflowOther");
+      return "ReflowOther"_ns;
     case LayoutSubsystem::ReflowFlex:
-      return nsLiteralCString("ReflowFlex");
+      return "ReflowFlex"_ns;
     case LayoutSubsystem::ReflowGrid:
-      return nsLiteralCString("ReflowGrid");
+      return "ReflowGrid"_ns;
     case LayoutSubsystem::ReflowTable:
-      return nsLiteralCString("ReflowTable");
+      return "ReflowTable"_ns;
     case LayoutSubsystem::ReflowText:
-      return nsLiteralCString("ReflowText");
+      return "ReflowText"_ns;
   }
 }
 
@@ -70,9 +70,9 @@ void Data::PingReqsPerFlushTelemetry(FlushType aFlushType) {
     auto styleFlushReqs = mReqsPerFlush[FlushKind::Style].value();
     auto layoutFlushReqs = mReqsPerFlush[FlushKind::Layout].value();
     Telemetry::Accumulate(Telemetry::PRESSHELL_REQS_PER_LAYOUT_FLUSH,
-                          NS_LITERAL_CSTRING("Style"), styleFlushReqs);
+                          "Style"_ns, styleFlushReqs);
     Telemetry::Accumulate(Telemetry::PRESSHELL_REQS_PER_LAYOUT_FLUSH,
-                          NS_LITERAL_CSTRING("Layout"), layoutFlushReqs);
+                          "Layout"_ns, layoutFlushReqs);
     mReqsPerFlush[FlushKind::Style] = SaturateUint8(0);
     mReqsPerFlush[FlushKind::Layout] = SaturateUint8(0);
   } else {
@@ -87,15 +87,15 @@ void Data::PingFlushPerTickTelemetry(FlushType aFlushType) {
   auto flushKind = ToKind(aFlushType);
   auto styleFlushes = mFlushesPerTick[FlushKind::Style].value();
   if (styleFlushes > 0) {
-    Telemetry::Accumulate(Telemetry::PRESSHELL_FLUSHES_PER_TICK,
-                          NS_LITERAL_CSTRING("Style"), styleFlushes);
+    Telemetry::Accumulate(Telemetry::PRESSHELL_FLUSHES_PER_TICK, "Style"_ns,
+                          styleFlushes);
     mFlushesPerTick[FlushKind::Style] = SaturateUint8(0);
   }
 
   auto layoutFlushes = mFlushesPerTick[FlushKind::Layout].value();
   if (flushKind == FlushKind::Layout && layoutFlushes > 0) {
-    Telemetry::Accumulate(Telemetry::PRESSHELL_FLUSHES_PER_TICK,
-                          NS_LITERAL_CSTRING("Layout"), layoutFlushes);
+    Telemetry::Accumulate(Telemetry::PRESSHELL_FLUSHES_PER_TICK, "Layout"_ns,
+                          layoutFlushes);
     mFlushesPerTick[FlushKind::Layout] = SaturateUint8(0);
   }
 }

@@ -1367,8 +1367,7 @@ class GetFeatureStatusWorkerRunnable final
                                  const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                                  int32_t feature, nsACString& failureId,
                                  int32_t* status)
-      : WorkerMainThreadRunnable(workerPrivate,
-                                 NS_LITERAL_CSTRING("GFX :: GetFeatureStatus")),
+      : WorkerMainThreadRunnable(workerPrivate, "GFX :: GetFeatureStatus"_ns),
         mGfxInfo(gfxInfo),
         mFeature(feature),
         mStatus(status),

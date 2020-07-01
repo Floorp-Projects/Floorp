@@ -244,22 +244,20 @@ nsresult SetDocumentStateCommand::GetCommandStateParams(
       switch (htmlEditor->GetDefaultParagraphSeparator()) {
         case ParagraphSeparator::div: {
           DebugOnly<nsresult> rv =
-              aParams.SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("div"));
+              aParams.SetCString(STATE_ATTRIBUTE, "div"_ns);
           NS_WARNING_ASSERTION(
               NS_SUCCEEDED(rv),
               "Failed to set command params to return \"div\"");
           return NS_OK;
         }
         case ParagraphSeparator::p: {
-          DebugOnly<nsresult> rv =
-              aParams.SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("p"));
+          DebugOnly<nsresult> rv = aParams.SetCString(STATE_ATTRIBUTE, "p"_ns);
           NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                "Failed to set command params to return \"p\"");
           return NS_OK;
         }
         case ParagraphSeparator::br: {
-          DebugOnly<nsresult> rv =
-              aParams.SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("br"));
+          DebugOnly<nsresult> rv = aParams.SetCString(STATE_ATTRIBUTE, "br"_ns);
           NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                "Failed to set command params to return \"br\"");
           return NS_OK;

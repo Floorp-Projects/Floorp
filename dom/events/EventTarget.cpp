@@ -142,7 +142,7 @@ EventHandlerNonNull* EventTarget::GetEventHandler(nsAtom* aType) {
 void EventTarget::SetEventHandler(const nsAString& aType,
                                   EventHandlerNonNull* aHandler,
                                   ErrorResult& aRv) {
-  if (!StringBeginsWith(aType, NS_LITERAL_STRING("on"))) {
+  if (!StringBeginsWith(aType, u"on"_ns)) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
   }

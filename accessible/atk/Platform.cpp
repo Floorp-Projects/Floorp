@@ -315,11 +315,10 @@ dbus_done:
   nsCOMPtr<nsIGSettingsCollection> a11y_settings;
 
   if (gsettings) {
-    gsettings->GetCollectionForSchema(
-        NS_LITERAL_CSTRING(GSETINGS_A11Y_INTERFACE),
-        getter_AddRefs(a11y_settings));
+    gsettings->GetCollectionForSchema(nsLiteralCString(GSETINGS_A11Y_INTERFACE),
+                                      getter_AddRefs(a11y_settings));
     if (a11y_settings) {
-      a11y_settings->GetBoolean(NS_LITERAL_CSTRING(GSETINGS_A11Y_KEY),
+      a11y_settings->GetBoolean(nsLiteralCString(GSETINGS_A11Y_KEY),
                                 &sShouldEnable);
     }
   }

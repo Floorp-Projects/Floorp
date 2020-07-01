@@ -48,7 +48,7 @@ TRRService::TRRService()
     : mInitialized(false),
       mTRRBlacklistExpireTime(72 * 3600),
       mLock("trrservice"),
-      mConfirmationNS(NS_LITERAL_CSTRING("example.com")),
+      mConfirmationNS("example.com"_ns),
       mWaitForCaptive(true),
       mRfc1918(false),
       mCaptiveIsPassed(false),

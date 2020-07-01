@@ -349,7 +349,7 @@ nsUrlClassifierUtils::GetProvider(const nsACString& aTableName,
   nsCString* provider = nullptr;
 
   if (IsTestTable(aTableName)) {
-    aProvider = NS_LITERAL_CSTRING(TESTING_TABLE_PROVIDER_NAME);
+    aProvider = nsLiteralCString(TESTING_TABLE_PROVIDER_NAME);
   } else if (mProviderDict.Get(aTableName, &provider)) {
     aProvider = provider ? *provider : EmptyCString();
   } else {
@@ -364,13 +364,10 @@ nsUrlClassifierUtils::GetTelemetryProvider(const nsACString& aTableName,
   GetProvider(aTableName, aProvider);
   // Whitelist known providers to avoid reporting on private ones.
   // An empty provider is treated as "other"
-  if (!NS_LITERAL_CSTRING("mozilla").Equals(aProvider) &&
-      !NS_LITERAL_CSTRING("google").Equals(aProvider) &&
-      !NS_LITERAL_CSTRING("google4").Equals(aProvider) &&
-      !NS_LITERAL_CSTRING("baidu").Equals(aProvider) &&
-      !NS_LITERAL_CSTRING("mozcn").Equals(aProvider) &&
-      !NS_LITERAL_CSTRING("yandex").Equals(aProvider) &&
-      !NS_LITERAL_CSTRING(TESTING_TABLE_PROVIDER_NAME).Equals(aProvider)) {
+  if (!"mozilla"_ns.Equals(aProvider) && !"google"_ns.Equals(aProvider) &&
+      !"google4"_ns.Equals(aProvider) && !"baidu"_ns.Equals(aProvider) &&
+      !"mozcn"_ns.Equals(aProvider) && !"yandex"_ns.Equals(aProvider) &&
+      !nsLiteralCString(TESTING_TABLE_PROVIDER_NAME).Equals(aProvider)) {
     aProvider.AssignLiteral("other");
   }
 
@@ -1047,7 +1044,7 @@ void nsUrlClassifierUtils::CanonicalNum(const nsACString& num, uint32_t bytes,
     if (_retval.IsEmpty()) {
       _retval.Assign(buf);
     } else {
-      _retval = nsDependentCString(buf) + NS_LITERAL_CSTRING(".") + _retval;
+      _retval = nsDependentCString(buf) + "."_ns + _retval;
     }
     val >>= 8;
   }
@@ -1091,15 +1088,14 @@ bool nsUrlClassifierUtils::ShouldURLEscape(const unsigned char c) const {
 // url entries in it. moztest tables don't support updates.
 // static
 bool nsUrlClassifierUtils::IsMozTestTable(const nsACString& aTableName) {
-  return StringBeginsWith(aTableName, NS_LITERAL_CSTRING("moztest-"));
+  return StringBeginsWith(aTableName, "moztest-"_ns);
 }
 
 // test- tables are used by testcases and can add custom test entries
 // through update API.
 // static
 bool nsUrlClassifierUtils::IsTestTable(const nsACString& aTableName) {
-  return IsMozTestTable(aTableName) ||
-         StringBeginsWith(aTableName, NS_LITERAL_CSTRING("test"));
+  return IsMozTestTable(aTableName) || StringBeginsWith(aTableName, "test"_ns);
 }
 
 bool nsUrlClassifierUtils::IsInSafeMode() {

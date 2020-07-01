@@ -224,8 +224,8 @@ void nsPluginArray::NotifyHiddenPluginTouched(nsPluginElement* aHiddenElement) {
   HiddenPluginEventInit init;
   init.mTag = aHiddenElement->PluginTag();
   nsCOMPtr<Document> doc = aHiddenElement->GetParentObject()->GetDoc();
-  RefPtr<HiddenPluginEvent> event = HiddenPluginEvent::Constructor(
-      doc, NS_LITERAL_STRING("HiddenPlugin"), init);
+  RefPtr<HiddenPluginEvent> event =
+      HiddenPluginEvent::Constructor(doc, u"HiddenPlugin"_ns, init);
   event->SetTarget(doc);
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;

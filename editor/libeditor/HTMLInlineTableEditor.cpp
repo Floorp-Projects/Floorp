@@ -65,8 +65,7 @@ nsresult HTMLEditor::ShowInlineTableEditingUIInternal(Element& aCellElement) {
     // If buttons are just created again for same element, we hit the former
     // check.
     ManualNACPtr addColumnBeforeButton = CreateAnonymousElement(
-        nsGkAtoms::a, *rootElement,
-        NS_LITERAL_STRING("mozTableAddColumnBefore"), false);
+        nsGkAtoms::a, *rootElement, u"mozTableAddColumnBefore"_ns, false);
     if (NS_WARN_IF(!addColumnBeforeButton)) {
       NS_WARNING(
           "HTMLEditor::CreateAnonymousElement(nsGkAtoms::a, "
@@ -80,8 +79,7 @@ nsresult HTMLEditor::ShowInlineTableEditingUIInternal(Element& aCellElement) {
     mAddColumnBeforeButton = std::move(addColumnBeforeButton);
 
     ManualNACPtr removeColumnButton = CreateAnonymousElement(
-        nsGkAtoms::a, *rootElement, NS_LITERAL_STRING("mozTableRemoveColumn"),
-        false);
+        nsGkAtoms::a, *rootElement, u"mozTableRemoveColumn"_ns, false);
     if (!removeColumnButton) {
       NS_WARNING(
           "HTMLEditor::CreateAnonymousElement(nsGkAtoms::a, "
@@ -95,8 +93,7 @@ nsresult HTMLEditor::ShowInlineTableEditingUIInternal(Element& aCellElement) {
     mRemoveColumnButton = std::move(removeColumnButton);
 
     ManualNACPtr addColumnAfterButton = CreateAnonymousElement(
-        nsGkAtoms::a, *rootElement, NS_LITERAL_STRING("mozTableAddColumnAfter"),
-        false);
+        nsGkAtoms::a, *rootElement, u"mozTableAddColumnAfter"_ns, false);
     if (!addColumnAfterButton) {
       NS_WARNING(
           "HTMLEditor::CreateAnonymousElement(nsGkAtoms::a, "
@@ -110,8 +107,7 @@ nsresult HTMLEditor::ShowInlineTableEditingUIInternal(Element& aCellElement) {
     mAddColumnAfterButton = std::move(addColumnAfterButton);
 
     ManualNACPtr addRowBeforeButton = CreateAnonymousElement(
-        nsGkAtoms::a, *rootElement, NS_LITERAL_STRING("mozTableAddRowBefore"),
-        false);
+        nsGkAtoms::a, *rootElement, u"mozTableAddRowBefore"_ns, false);
     if (!addRowBeforeButton) {
       NS_WARNING(
           "HTMLEditor::CreateAnonymousElement(nsGkAtoms::a, "
@@ -124,9 +120,8 @@ nsresult HTMLEditor::ShowInlineTableEditingUIInternal(Element& aCellElement) {
     }
     mAddRowBeforeButton = std::move(addRowBeforeButton);
 
-    ManualNACPtr removeRowButton =
-        CreateAnonymousElement(nsGkAtoms::a, *rootElement,
-                               NS_LITERAL_STRING("mozTableRemoveRow"), false);
+    ManualNACPtr removeRowButton = CreateAnonymousElement(
+        nsGkAtoms::a, *rootElement, u"mozTableRemoveRow"_ns, false);
     if (!removeRowButton) {
       NS_WARNING(
           "HTMLEditor::CreateAnonymousElement(nsGkAtoms::a, "
@@ -139,9 +134,8 @@ nsresult HTMLEditor::ShowInlineTableEditingUIInternal(Element& aCellElement) {
     }
     mRemoveRowButton = std::move(removeRowButton);
 
-    ManualNACPtr addRowAfterButton =
-        CreateAnonymousElement(nsGkAtoms::a, *rootElement,
-                               NS_LITERAL_STRING("mozTableAddRowAfter"), false);
+    ManualNACPtr addRowAfterButton = CreateAnonymousElement(
+        nsGkAtoms::a, *rootElement, u"mozTableAddRowAfter"_ns, false);
     if (!addRowAfterButton) {
       NS_WARNING(
           "HTMLEditor::CreateAnonymousElement(nsGkAtoms::a, "
@@ -211,7 +205,7 @@ nsresult HTMLEditor::DoInlineTableEditingAction(const Element& aElement) {
   nsAutoString anonclass;
   aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::_moz_anonclass, anonclass);
 
-  if (!StringBeginsWith(anonclass, NS_LITERAL_STRING("mozTable"))) {
+  if (!StringBeginsWith(anonclass, u"mozTable"_ns)) {
     return NS_OK;
   }
 
@@ -362,8 +356,8 @@ void HTMLEditor::AddMouseClickListener(Element* aElement) {
   if (NS_WARN_IF(!aElement)) {
     return;
   }
-  DebugOnly<nsresult> rvIgnored = aElement->AddEventListener(
-      NS_LITERAL_STRING("click"), mEventListener, true);
+  DebugOnly<nsresult> rvIgnored =
+      aElement->AddEventListener(u"click"_ns, mEventListener, true);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "EventTarget::AddEventListener(click) failed, but ignored");
@@ -373,8 +367,7 @@ void HTMLEditor::RemoveMouseClickListener(Element* aElement) {
   if (NS_WARN_IF(!aElement)) {
     return;
   }
-  aElement->RemoveEventListener(NS_LITERAL_STRING("click"), mEventListener,
-                                true);
+  aElement->RemoveEventListener(u"click"_ns, mEventListener, true);
 }
 
 NS_IMETHODIMP HTMLEditor::RefreshInlineTableEditingUI() {

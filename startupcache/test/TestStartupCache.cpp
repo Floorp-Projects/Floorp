@@ -53,9 +53,9 @@ class TestStartupCache : public ::testing::Test {
 
 TestStartupCache::TestStartupCache() {
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mSCFile));
-  mSCFile->AppendNative(NS_LITERAL_CSTRING("test-startupcache.tmp"));
+  mSCFile->AppendNative("test-startupcache.tmp"_ns);
 #ifdef XP_WIN
-  nsAutoString env(NS_LITERAL_STRING("MOZ_STARTUP_CACHE="));
+  nsAutoString env(u"MOZ_STARTUP_CACHE="_ns);
   env.Append(mSCFile->NativePath());
   _wputenv(env.get());
 #else

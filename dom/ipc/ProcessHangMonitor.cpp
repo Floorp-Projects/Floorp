@@ -461,8 +461,7 @@ bool HangMonitorChild::InterruptCallback() {
 
 void HangMonitorChild::AnnotateHang(BackgroundHangAnnotations& aAnnotations) {
   if (mPaintWhileInterruptingJSActive) {
-    aAnnotations.AddAnnotation(NS_LITERAL_STRING("PaintWhileInterruptingJS"),
-                               true);
+    aAnnotations.AddAnnotation(u"PaintWhileInterruptingJS"_ns, true);
   }
 }
 
@@ -1157,8 +1156,7 @@ HangMonitoredProcess::TerminatePlugin() {
   uint32_t id = mHangData.get_PluginHangData().pluginId();
   base::ProcessId contentPid =
       mHangData.get_PluginHangData().contentProcessId();
-  plugins::TerminatePlugin(id, contentPid, NS_LITERAL_CSTRING("HangMonitor"),
-                           mDumpId);
+  plugins::TerminatePlugin(id, contentPid, "HangMonitor"_ns, mDumpId);
 
   if (mActor) {
     mActor->CleanupPluginHang(id, false);

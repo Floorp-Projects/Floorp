@@ -111,24 +111,24 @@ void OggDemuxer::SandboxDestroy::operator()(rlbox_sandbox_ogg* sandbox) {
 // (http://wiki.xiph.org/SkeletonHeaders)
 const nsString OggDemuxer::GetKind(const nsCString& aRole) {
   if (aRole.Find("audio/main") != -1 || aRole.Find("video/main") != -1) {
-    return NS_LITERAL_STRING("main");
+    return u"main"_ns;
   } else if (aRole.Find("audio/alternate") != -1 ||
              aRole.Find("video/alternate") != -1) {
-    return NS_LITERAL_STRING("alternative");
+    return u"alternative"_ns;
   } else if (aRole.Find("audio/audiodesc") != -1) {
-    return NS_LITERAL_STRING("descriptions");
+    return u"descriptions"_ns;
   } else if (aRole.Find("audio/described") != -1) {
-    return NS_LITERAL_STRING("main-desc");
+    return u"main-desc"_ns;
   } else if (aRole.Find("audio/dub") != -1) {
-    return NS_LITERAL_STRING("translation");
+    return u"translation"_ns;
   } else if (aRole.Find("audio/commentary") != -1) {
-    return NS_LITERAL_STRING("commentary");
+    return u"commentary"_ns;
   } else if (aRole.Find("video/sign") != -1) {
-    return NS_LITERAL_STRING("sign");
+    return u"sign"_ns;
   } else if (aRole.Find("video/captioned") != -1) {
-    return NS_LITERAL_STRING("captions");
+    return u"captions"_ns;
   } else if (aRole.Find("video/subtitled") != -1) {
-    return NS_LITERAL_STRING("subtitles");
+    return u"subtitles"_ns;
   }
   return EmptyString();
 }

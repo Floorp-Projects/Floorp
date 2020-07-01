@@ -271,8 +271,7 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
     corp.Assign(EmptyCString());
     for (auto headerIt = it->mValue.headers().cbegin();
          headerIt != it->mValue.headers().cend(); ++headerIt) {
-      if (headerIt->name().Equals(
-              NS_LITERAL_CSTRING("Cross-Origin-Resource-Policy"))) {
+      if (headerIt->name().Equals("Cross-Origin-Resource-Policy"_ns)) {
         corp = headerIt->value();
         break;
       }

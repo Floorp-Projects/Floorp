@@ -71,7 +71,7 @@ nsresult BackgroundEventTarget::Init() {
   nsCOMPtr<nsIThreadPool> pool(new nsThreadPool());
   NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 
-  nsresult rv = pool->SetName(NS_LITERAL_CSTRING("BackgroundThreadPool"));
+  nsresult rv = pool->SetName("BackgroundThreadPool"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Use potentially more conservative stack size.
@@ -90,7 +90,7 @@ nsresult BackgroundEventTarget::Init() {
   nsCOMPtr<nsIThreadPool> ioPool(new nsThreadPool());
   NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 
-  rv = ioPool->SetName(NS_LITERAL_CSTRING("BgIOThreadPool"));
+  rv = ioPool->SetName("BgIOThreadPool"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Use potentially more conservative stack size.
@@ -602,7 +602,7 @@ bool nsThreadManager::IsNSThread() const {
 NS_IMETHODIMP
 nsThreadManager::NewThread(uint32_t aCreationFlags, uint32_t aStackSize,
                            nsIThread** aResult) {
-  return NewNamedThread(NS_LITERAL_CSTRING(""), aStackSize, aResult);
+  return NewNamedThread(""_ns, aStackSize, aResult);
 }
 
 NS_IMETHODIMP

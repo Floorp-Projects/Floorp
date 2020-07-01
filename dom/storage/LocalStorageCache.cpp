@@ -148,7 +148,7 @@ void LocalStorageCache::Init(LocalStorageManager* aManager, bool aPersistent,
   // this storage cache is bound to.
   MOZ_ASSERT(StringBeginsWith(mQuotaOriginScope, mOriginSuffix));
   MOZ_ASSERT(mOriginSuffix.IsEmpty() !=
-             StringBeginsWith(mQuotaOriginScope, NS_LITERAL_CSTRING("^")));
+             StringBeginsWith(mQuotaOriginScope, "^"_ns));
 
   mUsage = aManager->GetOriginUsage(mQuotaOriginScope);
 }

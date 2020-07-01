@@ -168,7 +168,7 @@ bool nsHTTPSOnlyUtils::OnionException(nsIURI* aURI) {
   }
   nsAutoCString host;
   aURI->GetHost(host);
-  return StringEndsWith(host, NS_LITERAL_CSTRING(".onion"));
+  return StringEndsWith(host, ".onion"_ns);
 }
 
 /* static */

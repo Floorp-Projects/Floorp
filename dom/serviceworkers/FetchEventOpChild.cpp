@@ -94,8 +94,7 @@ void AsyncLog(nsIInterceptedChannel* aChannel, const nsACString& aScriptSpec,
     const nsTArray<nsString> params = std::move(aParams);
 
     reporter->AddConsoleReport(
-        nsIScriptError::errorFlag,
-        NS_LITERAL_CSTRING("Service Worker Interception"),
+        nsIScriptError::errorFlag, "Service Worker Interception"_ns,
         nsContentUtils::eDOM_PROPERTIES, aScriptSpec, aLineNumber,
         aColumnNumber, aMessageName, params);
   }
@@ -129,7 +128,7 @@ class SynthesizeResponseWatcher final : public nsIInterceptedBodyCallback {
       AsyncLog(mInterceptedChannel, mClosure.respondWithScriptSpec(),
                mClosure.respondWithLineNumber(),
                mClosure.respondWithColumnNumber(),
-               NS_LITERAL_CSTRING("InterceptionFailedWithURL"), {mRequestURL});
+               "InterceptionFailedWithURL"_ns, {mRequestURL});
 
       CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
 

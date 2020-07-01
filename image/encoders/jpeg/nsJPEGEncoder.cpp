@@ -123,7 +123,7 @@ nsJPEGEncoder::InitFromData(const uint8_t* aData,
   int quality = 92;
   if (aOutputOptions.Length() > 0) {
     // have options string
-    const nsString qualityPrefix(NS_LITERAL_STRING("quality="));
+    const nsString qualityPrefix(u"quality="_ns);
     if (aOutputOptions.Length() > qualityPrefix.Length() &&
         StringBeginsWith(aOutputOptions, qualityPrefix)) {
       // have quality string

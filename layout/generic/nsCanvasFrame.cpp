@@ -65,7 +65,7 @@ void nsCanvasFrame::ShowCustomContentContainer() {
 void nsCanvasFrame::HideCustomContentContainer() {
   if (mCustomContentContainer) {
     mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden,
-                                     NS_LITERAL_STRING("true"), true);
+                                     u"true"_ns, true);
   }
 }
 
@@ -116,11 +116,10 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
 
   // Do not create an accessible object for the container.
   mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::role,
-                                   NS_LITERAL_STRING("presentation"), false);
+                                   u"presentation"_ns, false);
 
-  mCustomContentContainer->SetAttr(
-      kNameSpaceID_None, nsGkAtoms::_class,
-      NS_LITERAL_STRING("moz-custom-content-container"), false);
+  mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                                   u"moz-custom-content-container"_ns, false);
 
   // Only create a frame for mCustomContentContainer if it has some children.
   if (doc->GetAnonymousContents().IsEmpty()) {
@@ -171,12 +170,12 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
                           dom::NOT_FROM_PARSER);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_default,
-                             NS_LITERAL_STRING("true"), false);
+    mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_default, u"true"_ns,
+                             false);
     // Set the page attribute so XULTooltipElement::PostHandleEvent will find
     // the text for the tooltip from the currently hovered element.
-    mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::page,
-                             NS_LITERAL_STRING("true"), false);
+    mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::page, u"true"_ns,
+                             false);
 
     mTooltipContent->SetProperty(nsGkAtoms::docLevelNativeAnonymousContent,
                                  reinterpret_cast<void*>(true));
@@ -855,6 +854,6 @@ nsresult nsCanvasFrame::GetContentForEvent(WidgetEvent* aEvent,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsCanvasFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Canvas"), aResult);
+  return MakeFrameName(u"Canvas"_ns, aResult);
 }
 #endif

@@ -615,7 +615,7 @@ bool nsOuterWindowProxy::getOwnPropertyDescriptor(
   // case.
   if (!isSameOrigin && IsArrayIndex(GetArrayIndexFromId(id))) {
     // Step 2.5.2.
-    return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("access"));
+    return ReportCrossOriginDenial(cx, id, "access"_ns);
   }
 
   // Step 2.5.1 is handled via the forwarding to js::Wrapper; it saves us an
@@ -835,7 +835,7 @@ bool nsOuterWindowProxy::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
                                  JS::Handle<jsid> id,
                                  JS::ObjectOpResult& result) const {
   if (!IsPlatformObjectSameOrigin(cx, proxy)) {
-    return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("delete"));
+    return ReportCrossOriginDenial(cx, id, "delete"_ns);
   }
 
   if (!GetSubframeWindow(cx, proxy, id).IsNull()) {
@@ -1259,7 +1259,7 @@ already_AddRefed<nsIPrincipal> nsOuterWindowProxy::GetNoPDFJSPrincipal(
   }
 
   nsCOMPtr<nsIPrincipal> principal;
-  propBag->GetPropertyAsInterface(NS_LITERAL_STRING("noPDFJSPrincipal"),
+  propBag->GetPropertyAsInterface(u"noPDFJSPrincipal"_ns,
                                   NS_GET_IID(nsIPrincipal),
                                   getter_AddRefs(principal));
   return principal.forget();
@@ -2592,8 +2592,8 @@ void nsGlobalWindowOuter::DispatchDOMWindowCreated() {
 
   // Fire DOMWindowCreated at chrome event listeners
   nsContentUtils::DispatchChromeEvent(mDoc, ToSupports(mDoc),
-                                      NS_LITERAL_STRING("DOMWindowCreated"),
-                                      CanBubble::eYes, Cancelable::eNo);
+                                      u"DOMWindowCreated"_ns, CanBubble::eYes,
+                                      Cancelable::eNo);
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
@@ -3342,7 +3342,7 @@ void nsGlobalWindowOuter::GetContentOuter(JSContext* aCx,
 already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetContentInternal(
     ErrorResult& aError, CallerType aCallerType) {
   // First check for a named frame named "content"
-  RefPtr<BrowsingContext> bc = GetChildWindow(NS_LITERAL_STRING("content"));
+  RefPtr<BrowsingContext> bc = GetChildWindow(u"content"_ns);
   if (bc) {
     nsCOMPtr<nsPIDOMWindowOuter> content(bc->GetDOMWindow());
     return content.forget();
@@ -3919,7 +3919,7 @@ double nsGlobalWindowOuter::GetDevicePixelRatioOuter(CallerType aCallerType) {
     // blurriness...
     nsAutoCString origin;
     nsresult rv = this->GetPrincipal()->GetOrigin(origin);
-    if (NS_FAILED(rv) || origin != NS_LITERAL_CSTRING("resource://pdf.js")) {
+    if (NS_FAILED(rv) || origin != "resource://pdf.js"_ns) {
       return 1.0;
     }
   }
@@ -4213,8 +4213,8 @@ bool nsGlobalWindowOuter::DispatchCustomEvent(
 
 bool nsGlobalWindowOuter::DispatchResizeEvent(const CSSIntSize& aSize) {
   ErrorResult res;
-  RefPtr<Event> domEvent = mDoc->CreateEvent(NS_LITERAL_STRING("CustomEvent"),
-                                             CallerType::System, res);
+  RefPtr<Event> domEvent =
+      mDoc->CreateEvent(u"CustomEvent"_ns, CallerType::System, res);
   if (res.Failed()) {
     return false;
   }
@@ -4235,7 +4235,7 @@ bool nsGlobalWindowOuter::DispatchResizeEvent(const CSSIntSize& aSize) {
   }
 
   CustomEvent* customEvent = static_cast<CustomEvent*>(domEvent.get());
-  customEvent->InitCustomEvent(cx, NS_LITERAL_STRING("DOMWindowResize"),
+  customEvent->InitCustomEvent(cx, u"DOMWindowResize"_ns,
                                /* aCanBubble = */ true,
                                /* aCancelable = */ true, detailValue);
 
@@ -4694,11 +4694,9 @@ bool nsGlobalWindowOuter::SetWidgetFullscreen(FullscreenReason aReason,
 /* virtual */
 void nsGlobalWindowOuter::FullscreenWillChange(bool aIsFullscreen) {
   if (aIsFullscreen) {
-    DispatchCustomEvent(NS_LITERAL_STRING("willenterfullscreen"),
-                        ChromeOnlyDispatch::eYes);
+    DispatchCustomEvent(u"willenterfullscreen"_ns, ChromeOnlyDispatch::eYes);
   } else {
-    DispatchCustomEvent(NS_LITERAL_STRING("willexitfullscreen"),
-                        ChromeOnlyDispatch::eYes);
+    DispatchCustomEvent(u"willexitfullscreen"_ns, ChromeOnlyDispatch::eYes);
   }
 }
 
@@ -4733,8 +4731,7 @@ void nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen) {
 
   // dispatch a "fullscreen" DOM event so that XUL apps can
   // respond visually if we are kicked into full screen mode
-  DispatchCustomEvent(NS_LITERAL_STRING("fullscreen"),
-                      ChromeOnlyDispatch::eYes);
+  DispatchCustomEvent(u"fullscreen"_ns, ChromeOnlyDispatch::eYes);
 
   if (!NS_WARN_IF(!IsChromeWindow())) {
     if (RefPtr<PresShell> presShell =
@@ -4755,7 +4752,7 @@ void nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen) {
 
     // XXXkhuey using the inner here, do we need to do something if it changes?
     ErrorResult rv;
-    mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("DOM_Fullscreen"),
+    mWakeLock = pmService->NewWakeLock(u"DOM_Fullscreen"_ns,
                                        GetCurrentInnerWindow(), rv);
     NS_WARNING_ASSERTION(!rv.Failed(), "Failed to lock the wakelock");
     rv.SuppressException();
@@ -4953,7 +4950,7 @@ bool nsGlobalWindowOuter::AlertOrConfirm(bool aAlert, const nsAString& aMessage,
 
   // Always allow content modal prompts for alert and confirm.
   if (nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt)) {
-    promptBag->SetPropertyAsUint32(NS_LITERAL_STRING("modalType"),
+    promptBag->SetPropertyAsUint32(u"modalType"_ns,
                                    nsIPrompt::MODAL_TYPE_CONTENT);
   }
 
@@ -5043,7 +5040,7 @@ void nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
 
   // Always allow content modal prompts for prompt.
   if (nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt)) {
-    promptBag->SetPropertyAsUint32(NS_LITERAL_STRING("modalType"),
+    promptBag->SetPropertyAsUint32(u"modalType"_ns,
                                    nsIPrompt::MODAL_TYPE_CONTENT);
   }
 
@@ -5539,8 +5536,8 @@ void nsGlobalWindowOuter::FirePopupBlockedEvent(
   init.mPopupWindowName = aPopupWindowName;
   init.mPopupWindowFeatures = aPopupWindowFeatures;
 
-  RefPtr<PopupBlockedEvent> event = PopupBlockedEvent::Constructor(
-      aDoc, NS_LITERAL_STRING("DOMPopupBlocked"), init);
+  RefPtr<PopupBlockedEvent> event =
+      PopupBlockedEvent::Constructor(aDoc, u"DOMPopupBlocked"_ns, init);
 
   event->SetTrusted(true);
 
@@ -6106,9 +6103,8 @@ void nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller) {
     nsresult rv = mDoc->GetURL(url);
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    if (!StringBeginsWith(url, NS_LITERAL_STRING("about:neterror")) &&
-        !HadOriginalOpener() && !aTrustedCaller &&
-        !IsOnlyTopLevelDocumentInSHistory()) {
+    if (!StringBeginsWith(url, u"about:neterror"_ns) && !HadOriginalOpener() &&
+        !aTrustedCaller && !IsOnlyTopLevelDocumentInSHistory()) {
       bool allowClose =
           mAllowScriptsToClose ||
           Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
@@ -6116,7 +6112,7 @@ void nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller) {
         // We're blocking the close operation
         // report localized error msg in JS console
         nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM Window"),
+            nsIScriptError::warningFlag, "DOM Window"_ns,
             mDoc,  // Better name for the category?
             nsContentUtils::eDOM_PROPERTIES, "WindowCloseBlockedWarning");
 
@@ -6139,8 +6135,7 @@ void nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller) {
   bool wasInClose = mInClose;
   mInClose = true;
 
-  if (!DispatchCustomEvent(NS_LITERAL_STRING("DOMWindowClose"),
-                           ChromeOnlyDispatch::eYes)) {
+  if (!DispatchCustomEvent(u"DOMWindowClose"_ns, ChromeOnlyDispatch::eYes)) {
     // Someone chose to prevent the default action for this event, if
     // so, let's not close this window after all...
 
@@ -6189,8 +6184,7 @@ void nsGlobalWindowOuter::ForceClose() {
 
   mInClose = true;
 
-  DispatchCustomEvent(NS_LITERAL_STRING("DOMWindowClose"),
-                      ChromeOnlyDispatch::eYes);
+  DispatchCustomEvent(u"DOMWindowClose"_ns, ChromeOnlyDispatch::eYes);
 
   FinalClose();
 }
@@ -6376,7 +6370,7 @@ void nsGlobalWindowOuter::LeaveModalState() {
 
   if (topWin->mModalStateDepth == 0) {
     RefPtr<Event> event = NS_NewDOMEvent(inner, nullptr, nullptr);
-    event->InitEvent(NS_LITERAL_STRING("endmodalstate"), true, false);
+    event->InitEvent(u"endmodalstate"_ns, true, false);
     event->SetTrusted(true);
     event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
     topWin->DispatchEvent(*event);
@@ -7020,7 +7014,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
                OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) &&
       !mBrowsingContext->SameOriginWithTop()) {
     forceNoOpener = true;
-    windowName = NS_LITERAL_STRING("_blank");
+    windowName = u"_blank"_ns;
   }
 
   bool windowExists = WindowExists(windowName, forceNoOpener, !aCalledNoScript);

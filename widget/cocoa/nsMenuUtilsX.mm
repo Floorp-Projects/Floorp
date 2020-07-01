@@ -32,7 +32,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent) {
         new dom::XULCommandEvent(doc, doc->GetPresContext(), nullptr);
 
     IgnoredErrorResult rv;
-    event->InitCommandEvent(NS_LITERAL_STRING("command"), true, true,
+    event->InitCommandEvent(u"command"_ns, true, true,
                             nsGlobalWindowInner::Cast(doc->GetInnerWindow()), 0, false, false,
                             false, false, nullptr, 0, rv);
     // FIXME: Should probably figure out how to init this with the actual

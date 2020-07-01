@@ -103,9 +103,9 @@ class FullscreenRequest : public FullscreenChange {
           std::move(pendingEvent));
     }
     MayRejectPromise("Fullscreen request denied");
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    NS_LITERAL_CSTRING("DOM"), Document(),
-                                    nsContentUtils::eDOM_PROPERTIES, aReason);
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                    Document(), nsContentUtils::eDOM_PROPERTIES,
+                                    aReason);
   }
 
  private:

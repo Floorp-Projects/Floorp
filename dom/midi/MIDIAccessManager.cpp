@@ -58,7 +58,7 @@ already_AddRefed<Promise> MIDIAccessManager::RequestMIDIAccess(
     return nullptr;
   }
 
-  if (!FeaturePolicyUtils::IsFeatureAllowed(doc, NS_LITERAL_STRING("midi"))) {
+  if (!FeaturePolicyUtils::IsFeatureAllowed(doc, u"midi"_ns)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }

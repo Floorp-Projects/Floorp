@@ -28,12 +28,12 @@ bool TableAccessible::IsProbablyLayoutTable() {
   // the algorithm. Integrate it into Logging.
   // Change to |#define SHOW_LAYOUT_HEURISTIC DEBUG| before final release
 #ifdef SHOW_LAYOUT_HEURISTIC
-#  define RETURN_LAYOUT_ANSWER(isLayout, heuristic)                          \
-    {                                                                        \
-      mLayoutHeuristic = isLayout                                            \
-                             ? NS_LITERAL_STRING("layout table: " heuristic) \
-                             : NS_LITERAL_STRING("data table: " heuristic);  \
-      return isLayout;                                                       \
+#  define RETURN_LAYOUT_ANSWER(isLayout, heuristic)                         \
+    {                                                                       \
+      mLayoutHeuristic = isLayout                                           \
+                             ? nsLiteralString(u"layout table: " heuristic) \
+                             : nsLiteralString(u"data table: " heuristic);  \
+      return isLayout;                                                      \
     }
 #else
 #  define RETURN_LAYOUT_ANSWER(isLayout, heuristic) \
@@ -64,8 +64,8 @@ bool TableAccessible::IsProbablyLayoutTable() {
              "Table should not be built by CSS display:table style");
 
   // Check if datatable attribute has "0" value.
-  if (el->AttrValueIs(kNameSpaceID_None, nsGkAtoms::datatable,
-                      NS_LITERAL_STRING("0"), eCaseMatters)) {
+  if (el->AttrValueIs(kNameSpaceID_None, nsGkAtoms::datatable, u"0"_ns,
+                      eCaseMatters)) {
     RETURN_LAYOUT_ANSWER(true, "Has datatable = 0 attribute, it's for layout");
   }
 
@@ -130,7 +130,7 @@ bool TableAccessible::IsProbablyLayoutTable() {
 
   // Check for nested tables.
   nsCOMPtr<nsIHTMLCollection> nestedTables =
-      el->GetElementsByTagName(NS_LITERAL_STRING("table"));
+      el->GetElementsByTagName(u"table"_ns);
   if (nestedTables->Length() > 0) {
     RETURN_LAYOUT_ANSWER(true, "Has a nested table within it");
   }
@@ -222,9 +222,8 @@ bool TableAccessible::IsProbablyLayoutTable() {
     RETURN_LAYOUT_ANSWER(true, "2-4 columns, 10 cells or less, non-bordered");
   }
 
-  static const nsLiteralString tags[] = {NS_LITERAL_STRING("embed"),
-                                         NS_LITERAL_STRING("object"),
-                                         NS_LITERAL_STRING("iframe")};
+  static const nsLiteralString tags[] = {u"embed"_ns, u"object"_ns,
+                                         u"iframe"_ns};
   for (auto& tag : tags) {
     nsCOMPtr<nsIHTMLCollection> descendants = el->GetElementsByTagName(tag);
     if (descendants->Length() > 0) {

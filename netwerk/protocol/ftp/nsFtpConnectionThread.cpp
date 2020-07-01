@@ -259,7 +259,7 @@ nsresult nsFtpState::EstablishControlConnection() {
       mTryingCachedControl = true;
 
       // we have to set charset to connection if server supports utf-8
-      if (mUseUTF8) mChannel->SetContentCharset(NS_LITERAL_CSTRING("UTF-8"));
+      if (mUseUTF8) mChannel->SetContentCharset("UTF-8"_ns);
 
       // we're already connected to this server, skip login.
       mState = FTP_S_PASV;
@@ -800,7 +800,7 @@ nsFtpState::R_pass() {
 }
 
 nsresult nsFtpState::S_pwd() {
-  return SendFTPCommand(NS_LITERAL_CSTRING("PWD" CRLF));
+  return SendFTPCommand(nsLiteralCString("PWD" CRLF));
 }
 
 FTP_STATE
@@ -825,7 +825,7 @@ nsFtpState::R_pwd() {
 }
 
 nsresult nsFtpState::S_syst() {
-  return SendFTPCommand(NS_LITERAL_CSTRING("SYST" CRLF));
+  return SendFTPCommand(nsLiteralCString("SYST" CRLF));
 }
 
 FTP_STATE
@@ -867,7 +867,7 @@ nsFtpState::R_syst() {
 }
 
 nsresult nsFtpState::S_acct() {
-  return SendFTPCommand(NS_LITERAL_CSTRING("ACCT noaccount" CRLF));
+  return SendFTPCommand(nsLiteralCString("ACCT noaccount" CRLF));
 }
 
 FTP_STATE
@@ -878,7 +878,7 @@ nsFtpState::R_acct() {
 }
 
 nsresult nsFtpState::S_type() {
-  return SendFTPCommand(NS_LITERAL_CSTRING("TYPE I" CRLF));
+  return SendFTPCommand(nsLiteralCString("TYPE I" CRLF));
 }
 
 FTP_STATE
@@ -1022,7 +1022,7 @@ nsresult nsFtpState::SetContentType() {
     }
   }
   return mChannel->SetContentType(
-      NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT));
+      nsLiteralCString(APPLICATION_HTTP_INDEX_FORMAT));
 }
 
 nsresult nsFtpState::S_list() {
@@ -1101,7 +1101,7 @@ nsFtpState::R_retr() {
   }
 
   if (mResponseCode / 100 == 1) {
-    mChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
+    mChannel->SetContentType(nsLiteralCString(APPLICATION_OCTET_STREAM));
 
     Telemetry::ScalarAdd(
         Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
@@ -1435,15 +1435,15 @@ nsFtpState::R_pasv() {
 }
 
 nsresult nsFtpState::S_feat() {
-  return SendFTPCommand(NS_LITERAL_CSTRING("FEAT" CRLF));
+  return SendFTPCommand(nsLiteralCString("FEAT" CRLF));
 }
 
 FTP_STATE
 nsFtpState::R_feat() {
   if (mResponseCode / 100 == 2) {
-    if (mResponseMsg.Find(NS_LITERAL_CSTRING(CRLF " UTF8" CRLF), true) > -1) {
+    if (mResponseMsg.Find(nsLiteralCString(CRLF " UTF8" CRLF), true) > -1) {
       // This FTP server supports UTF-8 encoding
-      mChannel->SetContentCharset(NS_LITERAL_CSTRING("UTF-8"));
+      mChannel->SetContentCharset("UTF-8"_ns);
       mUseUTF8 = true;
       return FTP_S_OPTS;
     }
@@ -1455,7 +1455,7 @@ nsFtpState::R_feat() {
 
 nsresult nsFtpState::S_opts() {
   // This command is for compatibility of old FTP spec (IETF Draft)
-  return SendFTPCommand(NS_LITERAL_CSTRING("OPTS UTF8 ON" CRLF));
+  return SendFTPCommand(nsLiteralCString("OPTS UTF8 ON" CRLF));
 }
 
 FTP_STATE
@@ -1659,8 +1659,7 @@ nsresult nsFtpState::SendFTPCommand(const nsACString& command) {
 
   // we don't want to log the password:
   nsAutoCString logcmd(command);
-  if (StringBeginsWith(command, NS_LITERAL_CSTRING("PASS ")))
-    logcmd = "PASS xxxxx";
+  if (StringBeginsWith(command, "PASS "_ns)) logcmd = "PASS xxxxx";
 
   LOG(("FTP:(%p) writing \"%s\"\n", this, logcmd.get()));
 

@@ -880,9 +880,9 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
       // Append the segment count.
       path.AppendPrintf("(segments=%u)", entry->mCount);
 
-      aHandleReport->Callback(
-          EmptyCString(), path, KIND_OTHER, UNITS_BYTES, entry->mSize,
-          NS_LITERAL_CSTRING("From MEMORY_BASIC_INFORMATION."), aData);
+      aHandleReport->Callback(EmptyCString(), path, KIND_OTHER, UNITS_BYTES,
+                              entry->mSize, "From MEMORY_BASIC_INFORMATION."_ns,
+                              aData);
     }
 
     return NS_OK;
@@ -1409,8 +1409,8 @@ class ThreadsReporter final : public nsIMemoryReporter {
 
       aHandleReport->Callback(
           EmptyCString(), path, KIND_NONHEAP, UNITS_BYTES, thread.mPrivateSize,
-          NS_LITERAL_CSTRING("The sizes of thread stacks which have been "
-                             "committed to memory."),
+          nsLiteralCString("The sizes of thread stacks which have been "
+                           "committed to memory."),
           aData);
     }
 

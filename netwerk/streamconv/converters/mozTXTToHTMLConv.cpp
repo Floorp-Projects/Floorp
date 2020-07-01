@@ -932,7 +932,7 @@ int32_t mozTXTToHTMLConv::CiteLevelTXT(const char16_t* line,
       // here, |logLineStart < lineLength| is always true
       uint32_t minlength = std::min(uint32_t(6), NS_strlen(indexString));
       if (Substring(indexString, indexString + minlength)
-              .Equals(Substring(NS_LITERAL_STRING(">From "), 0, minlength),
+              .Equals(Substring(u">From "_ns, 0, minlength),
                       nsCaseInsensitiveStringComparator))
         // XXX RFC2646
         moreCites = false;

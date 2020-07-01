@@ -840,7 +840,7 @@ static void Initialize() {
 }
 
 bool IsNamedPipePath(const nsACString& aPath) {
-  return StringBeginsWith(aPath, NS_LITERAL_CSTRING("\\\\.\\pipe\\"));
+  return StringBeginsWith(aPath, "\\\\.\\pipe\\"_ns);
 }
 
 PRFileDesc* CreateNamedPipeLayer() {

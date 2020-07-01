@@ -370,14 +370,14 @@ static void PACLogToConsole(nsString& aMessage) {
 // Javascript errors and warnings are logged to the main error console
 static void PACLogErrorOrWarning(const nsAString& aKind,
                                  JSErrorReport* aReport) {
-  nsString formattedMessage(NS_LITERAL_STRING("PAC Execution "));
+  nsString formattedMessage(u"PAC Execution "_ns);
   formattedMessage += aKind;
-  formattedMessage += NS_LITERAL_STRING(": ");
+  formattedMessage += u": "_ns;
   if (aReport->message())
     formattedMessage.Append(NS_ConvertUTF8toUTF16(aReport->message().c_str()));
-  formattedMessage += NS_LITERAL_STRING(" [");
+  formattedMessage += u" ["_ns;
   formattedMessage.Append(aReport->linebuf(), aReport->linebufLength());
-  formattedMessage += NS_LITERAL_STRING("]");
+  formattedMessage += u"]"_ns;
   PACLogToConsole(formattedMessage);
 }
 
@@ -385,7 +385,7 @@ static void PACWarningReporter(JSContext* aCx, JSErrorReport* aReport) {
   MOZ_ASSERT(aReport);
   MOZ_ASSERT(aReport->isWarning());
 
-  PACLogErrorOrWarning(NS_LITERAL_STRING("Warning"), aReport);
+  PACLogErrorOrWarning(u"Warning"_ns, aReport);
 }
 
 class MOZ_STACK_CLASS AutoPACErrorReporter {
@@ -408,7 +408,7 @@ class MOZ_STACK_CLASS AutoPACErrorReporter {
       return;
     }
 
-    PACLogErrorOrWarning(NS_LITERAL_STRING("Error"), report.report());
+    PACLogErrorOrWarning(u"Error"_ns, report.report());
   }
 };
 
@@ -768,10 +768,9 @@ nsresult ProxyAutoConfig::SetupJS() {
 
   JS::Rooted<JSScript*> script(cx, CompilePACScript(cx));
   if (!script || !JS_ExecuteScript(cx, script)) {
-    nsString alertMessage(
-        NS_LITERAL_STRING("PAC file failed to install from "));
+    nsString alertMessage(u"PAC file failed to install from "_ns);
     if (isDataURI) {
-      alertMessage += NS_LITERAL_STRING("data: URI");
+      alertMessage += u"data: URI"_ns;
     } else {
       alertMessage += NS_ConvertUTF8toUTF16(mPACURI);
     }
@@ -782,9 +781,9 @@ nsresult ProxyAutoConfig::SetupJS() {
   SetRunning(nullptr);
 
   mJSContext->SetOK();
-  nsString alertMessage(NS_LITERAL_STRING("PAC file installed from "));
+  nsString alertMessage(u"PAC file installed from "_ns);
   if (isDataURI) {
-    alertMessage += NS_LITERAL_STRING("data: URI");
+    alertMessage += u"data: URI"_ns;
   } else {
     alertMessage += NS_ConvertUTF8toUTF16(mPACURI);
   }

@@ -69,7 +69,7 @@ already_AddRefed<mozIStorageConnection> getDatabase(
                                  getter_AddRefs(dbFile));
     NS_ASSERTION(dbFile, "The directory doesn't exists?!");
 
-    rv = dbFile->Append(NS_LITERAL_STRING("storage_test_db.sqlite"));
+    rv = dbFile->Append(u"storage_test_db.sqlite"_ns);
     do_check_success(rv);
   } else {
     dbFile = aDBFile;
@@ -314,8 +314,7 @@ already_AddRefed<nsIThread> get_conn_async_thread(mozIStorageConnection* db) {
 
   // - statement with nothing to bind
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT 1"),
-                           getter_AddRefs(stmt));
+  db->CreateAsyncStatement("SELECT 1"_ns, getter_AddRefs(stmt));
   blocking_async_execute(stmt);
   stmt->Finalize();
 

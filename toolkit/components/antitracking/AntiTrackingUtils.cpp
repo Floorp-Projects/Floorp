@@ -93,7 +93,7 @@ void AntiTrackingUtils::CreateStoragePermissionKey(
   MOZ_ASSERT(aPermissionKey.IsEmpty());
 
   static const nsLiteralCString prefix =
-      NS_LITERAL_CSTRING(ANTITRACKING_PERM_KEY "^");
+      nsLiteralCString(ANTITRACKING_PERM_KEY "^");
 
   aPermissionKey.SetCapacity(prefix.Length() + aTrackingOrigin.Length());
   aPermissionKey.Append(prefix);
@@ -625,10 +625,10 @@ nsCString AntiTrackingUtils::GrantedReasonToString(
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason) {
   switch (aReason) {
     case ContentBlockingNotifier::eOpener:
-      return NS_LITERAL_CSTRING("opener");
+      return "opener"_ns;
     case ContentBlockingNotifier::eOpenerAfterUserInteraction:
-      return NS_LITERAL_CSTRING("user interaction");
+      return "user interaction"_ns;
     default:
-      return NS_LITERAL_CSTRING("stroage access API");
+      return "stroage access API"_ns;
   }
 }

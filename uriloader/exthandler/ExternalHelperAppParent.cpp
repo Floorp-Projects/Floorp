@@ -76,8 +76,7 @@ void ExternalHelperAppParent::Init(
   NS_ASSERTION(helperAppService, "No Helper App Service!");
 
   if (aReferrer) {
-    SetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"),
-                           aReferrer);
+    SetPropertyAsInterface(u"docshell.internalReferrer"_ns, aReferrer);
   }
 
   if (aContext) {

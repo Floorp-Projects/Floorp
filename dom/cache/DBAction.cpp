@@ -90,7 +90,7 @@ void DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
     return;
   }
 
-  rv = dbDir->Append(NS_LITERAL_STRING("cache"));
+  rv = dbDir->Append(u"cache"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aResolver->Resolve(rv);
     return;
@@ -209,14 +209,12 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
 
   const nsCString directoryLockIdClause =
       aQuotaInfo.mDirectoryLockId >= 0
-          ? NS_LITERAL_CSTRING("&directoryLockId=") +
-                IntCString(aQuotaInfo.mDirectoryLockId)
+          ? "&directoryLockId="_ns + IntCString(aQuotaInfo.mDirectoryLockId)
           : EmptyCString();
 
-  rv =
-      NS_MutateURI(mutator)
-          .SetQuery(NS_LITERAL_CSTRING("cache=private") + directoryLockIdClause)
-          .Finalize(dbFileUrl);
+  rv = NS_MutateURI(mutator)
+           .SetQuery("cache=private"_ns + directoryLockIdClause)
+           .Finalize(dbFileUrl);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

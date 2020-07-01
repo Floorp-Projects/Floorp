@@ -193,7 +193,6 @@ void PresentationAvailability::UpdateAvailabilityAndDispatchEvent(
   }
 
   if (isChanged) {
-    Unused << NS_WARN_IF(
-        NS_FAILED(DispatchTrustedEvent(NS_LITERAL_STRING("change"))));
+    Unused << NS_WARN_IF(NS_FAILED(DispatchTrustedEvent(u"change"_ns)));
   }
 }

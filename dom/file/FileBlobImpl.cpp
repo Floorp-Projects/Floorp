@@ -162,8 +162,7 @@ class FileBlobImpl::GetTypeRunnable final : public WorkerMainThreadRunnable {
  public:
   GetTypeRunnable(WorkerPrivate* aWorkerPrivate, FileBlobImpl* aBlobImpl,
                   const MutexAutoLock& aProofOfLock)
-      : WorkerMainThreadRunnable(aWorkerPrivate,
-                                 NS_LITERAL_CSTRING("FileBlobImpl :: GetType")),
+      : WorkerMainThreadRunnable(aWorkerPrivate, "FileBlobImpl :: GetType"_ns),
         mBlobImpl(aBlobImpl),
         mProofOfLock(aProofOfLock) {
     MOZ_ASSERT(aBlobImpl);
@@ -238,7 +237,7 @@ void FileBlobImpl::GetTypeInternal(nsAString& aType,
 }
 
 void FileBlobImpl::GetBlobImplType(nsAString& aBlobImplType) const {
-  aBlobImplType = NS_LITERAL_STRING("FileBlobImpl");
+  aBlobImplType = u"FileBlobImpl"_ns;
 }
 
 int64_t FileBlobImpl::GetLastModified(ErrorResult& aRv) {

@@ -14,7 +14,7 @@ PerformanceMeasure::PerformanceMeasure(nsISupports* aParent,
                                        const nsAString& aName,
                                        DOMHighResTimeStamp aStartTime,
                                        DOMHighResTimeStamp aEndTime)
-    : PerformanceEntry(aParent, aName, NS_LITERAL_STRING("measure")),
+    : PerformanceEntry(aParent, aName, u"measure"_ns),
       mStartTime(aStartTime),
       mDuration(aEndTime - aStartTime) {}
 

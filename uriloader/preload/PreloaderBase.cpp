@@ -312,10 +312,10 @@ NS_IMETHODIMP PreloaderBase::UsageTimer::Notify(nsITimer* aTimer) {
   }
   nsString spec = NS_ConvertUTF8toUTF16(uri->GetSpecOrDefault());
 
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), mDocument,
-      nsContentUtils::eDOM_PROPERTIES, "UnusedLinkPreloadPending",
-      nsTArray<nsString>({spec}));
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                  mDocument, nsContentUtils::eDOM_PROPERTIES,
+                                  "UnusedLinkPreloadPending",
+                                  nsTArray<nsString>({spec}));
 
   return NS_OK;
 }

@@ -313,11 +313,11 @@ void HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute) {
   }
 
   if (AllowPaymentRequest()) {
-    mFeaturePolicy->MaybeSetAllowedPolicy(NS_LITERAL_STRING("payment"));
+    mFeaturePolicy->MaybeSetAllowedPolicy(u"payment"_ns);
   }
 
   if (AllowFullscreen()) {
-    mFeaturePolicy->MaybeSetAllowedPolicy(NS_LITERAL_STRING("fullscreen"));
+    mFeaturePolicy->MaybeSetAllowedPolicy(u"fullscreen"_ns);
   }
 
   mFeaturePolicy->InheritPolicy(OwnerDoc()->FeaturePolicy());

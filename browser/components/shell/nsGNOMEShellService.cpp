@@ -428,19 +428,19 @@ nsGNOMEShellService::SetDesktopBackground(dom::Element* aElement,
       do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
   if (gsettings) {
     nsCOMPtr<nsIGSettingsCollection> background_settings;
-    gsettings->GetCollectionForSchema(NS_LITERAL_CSTRING(kDesktopBGSchema),
+    gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopBGSchema),
                                       getter_AddRefs(background_settings));
     if (background_settings) {
       gchar* file_uri = g_filename_to_uri(filePath.get(), nullptr, nullptr);
       if (!file_uri) return NS_ERROR_FAILURE;
 
-      background_settings->SetString(NS_LITERAL_CSTRING(kDesktopOptionGSKey),
+      background_settings->SetString(nsLiteralCString(kDesktopOptionGSKey),
                                      options);
 
-      background_settings->SetString(NS_LITERAL_CSTRING(kDesktopImageGSKey),
+      background_settings->SetString(nsLiteralCString(kDesktopImageGSKey),
                                      nsDependentCString(file_uri));
       g_free(file_uri);
-      background_settings->SetBoolean(NS_LITERAL_CSTRING(kDesktopDrawBGGSKey),
+      background_settings->SetBoolean(nsLiteralCString(kDesktopDrawBGGSKey),
                                       true);
       return rv;
     }
@@ -460,10 +460,10 @@ nsGNOMEShellService::GetDesktopBackgroundColor(uint32_t* aColor) {
   nsAutoCString background;
 
   if (gsettings) {
-    gsettings->GetCollectionForSchema(NS_LITERAL_CSTRING(kDesktopBGSchema),
+    gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopBGSchema),
                                       getter_AddRefs(background_settings));
     if (background_settings) {
-      background_settings->GetString(NS_LITERAL_CSTRING(kDesktopColorGSKey),
+      background_settings->GetString(nsLiteralCString(kDesktopColorGSKey),
                                      background);
     }
   }
@@ -506,10 +506,10 @@ nsGNOMEShellService::SetDesktopBackgroundColor(uint32_t aColor) {
       do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
   if (gsettings) {
     nsCOMPtr<nsIGSettingsCollection> background_settings;
-    gsettings->GetCollectionForSchema(NS_LITERAL_CSTRING(kDesktopBGSchema),
+    gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopBGSchema),
                                       getter_AddRefs(background_settings));
     if (background_settings) {
-      background_settings->SetString(NS_LITERAL_CSTRING(kDesktopColorGSKey),
+      background_settings->SetString(nsLiteralCString(kDesktopColorGSKey),
                                      colorString);
       return NS_OK;
     }

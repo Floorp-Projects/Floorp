@@ -284,8 +284,7 @@ void HTMLCanvasElementObserver::RegisterVisibilityChangeEvent() {
   }
 
   Document* document = mElement->OwnerDoc();
-  document->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
-                                   true, false);
+  document->AddSystemEventListener(u"visibilitychange"_ns, this, true, false);
 }
 
 void HTMLCanvasElementObserver::UnregisterVisibilityChangeEvent() {
@@ -294,8 +293,7 @@ void HTMLCanvasElementObserver::UnregisterVisibilityChangeEvent() {
   }
 
   Document* document = mElement->OwnerDoc();
-  document->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                      this, true);
+  document->RemoveSystemEventListener(u"visibilitychange"_ns, this, true);
 }
 
 void HTMLCanvasElementObserver::RegisterObserverEvents() {
@@ -486,7 +484,7 @@ nsresult HTMLCanvasElement::DispatchPrintCallback(nsITimerCallback* aCallback) {
   if (!mCurrentContext) {
     nsresult rv;
     nsCOMPtr<nsISupports> context;
-    rv = GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(context));
+    rv = GetContext(u"2d"_ns, getter_AddRefs(context));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   mPrintState = new HTMLCanvasPrintState(this, mCurrentContext, aCallback);
@@ -536,7 +534,7 @@ nsresult HTMLCanvasElement::CopyInnerTo(HTMLCanvasElement* aDest) {
     nsIntSize size = GetWidthHeight();
     if (size.height > 0 && size.width > 0) {
       nsCOMPtr<nsISupports> cxt;
-      aDest->GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(cxt));
+      aDest->GetContext(u"2d"_ns, getter_AddRefs(cxt));
       RefPtr<CanvasRenderingContext2D> context2d =
           static_cast<CanvasRenderingContext2D*>(cxt.get());
       if (context2d && !mPrintCallback) {
@@ -736,7 +734,7 @@ nsresult HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
                                           nsAString& aDataURL) {
   nsIntSize size = GetWidthHeight();
   if (size.height == 0 || size.width == 0) {
-    aDataURL = NS_LITERAL_STRING("data:,");
+    aDataURL = u"data:,"_ns;
     return NS_OK;
   }
 
@@ -765,7 +763,7 @@ nsresult HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // build data URL string
-  aDataURL = NS_LITERAL_STRING("data:") + type + NS_LITERAL_STRING(";base64,");
+  aDataURL = u"data:"_ns + type + u";base64,"_ns;
 
   uint64_t count;
   rv = stream->Available(&count);

@@ -216,7 +216,7 @@ void StreamFilterChild::SetNextState() {
 
     case State::FinishedTransferringData:
       if (mStreamFilter) {
-        mStreamFilter->FireEvent(NS_LITERAL_STRING("stop"));
+        mStreamFilter->FireEvent(u"stop"_ns);
         // We don't need access to the stream filter after this point, so break
         // our reference cycle, so that it can be collected if we're the last
         // reference.
@@ -262,7 +262,7 @@ void StreamFilterChild::MaybeStopRequest() {
     default:
       mState = State::FinishedTransferringData;
       if (mStreamFilter) {
-        mStreamFilter->FireEvent(NS_LITERAL_STRING("stop"));
+        mStreamFilter->FireEvent(u"stop"_ns);
         // We don't need access to the stream filter after this point, so break
         // our reference cycle, so that it can be collected if we're the last
         // reference.
@@ -284,7 +284,7 @@ void StreamFilterChild::RecvInitialized(bool aSuccess) {
   } else {
     mState = State::Error;
     if (mStreamFilter) {
-      mStreamFilter->FireErrorEvent(NS_LITERAL_STRING("Invalid request ID"));
+      mStreamFilter->FireErrorEvent(u"Invalid request ID"_ns);
       mStreamFilter = nullptr;
     }
   }
@@ -425,7 +425,7 @@ IPCResult StreamFilterChild::RecvStartRequest() {
   mState = State::TransferringData;
 
   if (mStreamFilter) {
-    mStreamFilter->FireEvent(NS_LITERAL_STRING("start"));
+    mStreamFilter->FireEvent(u"start"_ns);
     Unused << mStreamFilter->CheckAlive();
   }
   return IPC_OK();

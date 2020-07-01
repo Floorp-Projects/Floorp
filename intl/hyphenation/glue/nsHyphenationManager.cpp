@@ -132,7 +132,7 @@ already_AddRefed<nsHyphenator> nsHyphenationManager::GetHyphenator(
       // successive trailing subtags with "-*" to find fallback patterns,
       // so "de-DE-1996" -> "de-DE-*" (and then recursively -> "de-*")
       nsAtomCString localeStr(aLocale);
-      if (StringEndsWith(localeStr, NS_LITERAL_CSTRING("-*"))) {
+      if (StringEndsWith(localeStr, "-*"_ns)) {
         localeStr.Truncate(localeStr.Length() - 2);
       }
       int32_t i = localeStr.RFindChar('-');
@@ -178,7 +178,7 @@ void nsHyphenationManager::LoadPatternList() {
   nsCOMPtr<nsIFile> greDir;
   rv = dirSvc->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
   if (NS_SUCCEEDED(rv)) {
-    greDir->AppendNative(NS_LITERAL_CSTRING("hyphenation"));
+    greDir->AppendNative("hyphenation"_ns);
     LoadPatternListFromDir(greDir);
   }
 
@@ -186,7 +186,7 @@ void nsHyphenationManager::LoadPatternList() {
   rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
                    getter_AddRefs(appDir));
   if (NS_SUCCEEDED(rv)) {
-    appDir->AppendNative(NS_LITERAL_CSTRING("hyphenation"));
+    appDir->AppendNative("hyphenation"_ns);
     bool equals;
     if (NS_SUCCEEDED(appDir->Equals(greDir, &equals)) && !equals) {
       LoadPatternListFromDir(appDir);
@@ -197,7 +197,7 @@ void nsHyphenationManager::LoadPatternList() {
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
                               getter_AddRefs(profileDir));
   if (NS_SUCCEEDED(rv)) {
-    profileDir->AppendNative(NS_LITERAL_CSTRING("hyphenation"));
+    profileDir->AppendNative("hyphenation"_ns);
     LoadPatternListFromDir(profileDir);
   }
 }
@@ -205,12 +205,12 @@ void nsHyphenationManager::LoadPatternList() {
 // Extract the locale code we'll use to identify a given hyphenation resource
 // from the path name as found in omnijar or on disk.
 static already_AddRefed<nsAtom> LocaleAtomFromPath(const nsCString& aPath) {
-  MOZ_ASSERT(StringEndsWith(aPath, NS_LITERAL_CSTRING(".hyf")));
+  MOZ_ASSERT(StringEndsWith(aPath, ".hyf"_ns));
   nsCString locale(aPath);
   locale.Truncate(locale.Length() - 4);      // strip ".hyf"
   locale.Cut(0, locale.RFindChar('/') + 1);  // strip directory
   ToLowerCase(locale);
-  if (StringBeginsWith(locale, NS_LITERAL_CSTRING("hyph_"))) {
+  if (StringBeginsWith(locale, "hyph_"_ns)) {
     locale.Cut(0, 5);
   }
   for (uint32_t i = 0; i < locale.Length(); ++i) {
@@ -286,7 +286,7 @@ void nsHyphenationManager::LoadPatternListFromDir(nsIFile* aDir) {
     nsAutoString dictName;
     file->GetLeafName(dictName);
     NS_ConvertUTF16toUTF8 path(dictName);
-    if (!StringEndsWith(path, NS_LITERAL_CSTRING(".hyf"))) {
+    if (!StringEndsWith(path, ".hyf"_ns)) {
       continue;
     }
     RefPtr<nsAtom> localeAtom = LocaleAtomFromPath(path);

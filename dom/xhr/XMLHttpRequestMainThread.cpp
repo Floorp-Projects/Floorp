@@ -120,23 +120,18 @@ const int32_t XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE =
 
 namespace {
 const nsLiteralString ProgressEventTypeStrings[] = {
-    NS_LITERAL_STRING("loadstart"), NS_LITERAL_STRING("progress"),
-    NS_LITERAL_STRING("error"),     NS_LITERAL_STRING("abort"),
-    NS_LITERAL_STRING("timeout"),   NS_LITERAL_STRING("load"),
-    NS_LITERAL_STRING("loadend")};
+    u"loadstart"_ns, u"progress"_ns, u"error"_ns,  u"abort"_ns,
+    u"timeout"_ns,   u"load"_ns,     u"loadend"_ns};
 static_assert(MOZ_ARRAY_LENGTH(ProgressEventTypeStrings) ==
                   size_t(XMLHttpRequestMainThread::ProgressEventType::ENUM_MAX),
               "Mismatched lengths for ProgressEventTypeStrings and "
               "ProgressEventType enums");
 
-const nsString kLiteralString_readystatechange =
-    NS_LITERAL_STRING("readystatechange");
-const nsString kLiteralString_xmlhttprequest =
-    NS_LITERAL_STRING("xmlhttprequest");
-const nsString kLiteralString_DOMContentLoaded =
-    NS_LITERAL_STRING("DOMContentLoaded");
-const nsCString kLiteralString_charset = NS_LITERAL_CSTRING("charset");
-const nsCString kLiteralString_UTF_8 = NS_LITERAL_CSTRING("UTF-8");
+const nsString kLiteralString_readystatechange = u"readystatechange"_ns;
+const nsString kLiteralString_xmlhttprequest = u"xmlhttprequest"_ns;
+const nsString kLiteralString_DOMContentLoaded = u"DOMContentLoaded"_ns;
+const nsCString kLiteralString_charset = "charset"_ns;
+const nsCString kLiteralString_UTF_8 = "UTF-8"_ns;
 }  // namespace
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
@@ -286,7 +281,7 @@ void XMLHttpRequestMainThread::InitParameters(bool aAnon, bool aSystem) {
 
     uint32_t permission;
     nsresult rv = permMgr->TestPermissionFromPrincipal(
-        principal, NS_LITERAL_CSTRING("systemXHR"), &permission);
+        principal, "systemXHR"_ns, &permission);
     if (NS_FAILED(rv) || permission != nsIPermissionManager::ALLOW_ACTION) {
       SetParameters(aAnon, false);
       return;
@@ -426,9 +421,9 @@ static void LogMessage(
   if (aWindow) {
     doc = aWindow->GetExtantDoc();
   }
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), doc,
-      nsContentUtils::eDOM_PROPERTIES, aWarning, aParams);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns, doc,
+                                  nsContentUtils::eDOM_PROPERTIES, aWarning,
+                                  aParams);
 }
 
 Document* XMLHttpRequestMainThread::GetResponseXML(ErrorResult& aRv) {
@@ -1068,8 +1063,8 @@ bool XMLHttpRequestMainThread::IsSafeHeader(
   nsAutoCString headerVal;
   // The "Access-Control-Expose-Headers" header contains a comma separated
   // list of method names.
-  Unused << aHttpChannel->GetResponseHeader(
-      NS_LITERAL_CSTRING("Access-Control-Expose-Headers"), headerVal);
+  Unused << aHttpChannel->GetResponseHeader("Access-Control-Expose-Headers"_ns,
+                                            headerVal);
   nsCCharSeparatedTokenizer exposeTokens(headerVal, ',');
   bool isSafe = false;
   while (exposeTokens.hasMoreTokens()) {
@@ -1874,7 +1869,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
   nsAutoCString type;
   channel->GetContentType(type);
   if (type.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
-    channel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
+    channel->SetContentType(nsLiteralCString(APPLICATION_OCTET_STREAM));
   }
 
   DetectCharset();
@@ -1908,8 +1903,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
             if (NS_FAILED(rv)) {
               mIsMappedArrayBuffer = false;
             } else {
-              channel->SetContentType(
-                  NS_LITERAL_CSTRING("application/mem-mapped"));
+              channel->SetContentType("application/mem-mapped"_ns);
             }
           }
         }
@@ -2453,7 +2447,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
     // Set the initiator type
     nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
     if (timedChannel) {
-      timedChannel->SetInitiatorType(NS_LITERAL_STRING("xmlhttprequest"));
+      timedChannel->SetInitiatorType(u"xmlhttprequest"_ns);
     }
   }
 
@@ -2542,7 +2536,7 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
   if (httpChannel) {
     // If the user hasn't overridden the Accept header, set it to */* per spec.
     if (!mAuthorRequestHeaders.Has("accept")) {
-      mAuthorRequestHeaders.Set("accept", NS_LITERAL_CSTRING("*/*"));
+      mAuthorRequestHeaders.Set("accept", "*/*"_ns);
     }
 
     mAuthorRequestHeaders.ApplyToChannel(httpChannel, false);
@@ -2767,7 +2761,7 @@ void XMLHttpRequestMainThread::EnsureChannelContentType() {
   if (NS_FAILED(mChannel->GetContentType(contentType)) ||
       contentType.IsEmpty() ||
       contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
-    mChannel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
+    mChannel->SetContentType("text/xml"_ns);
   }
 }
 

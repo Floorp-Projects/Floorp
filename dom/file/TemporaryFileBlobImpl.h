@@ -31,7 +31,7 @@ class TemporaryFileBlobImpl final : public FileBlobImpl {
                          ErrorResult& aRv) override;
 
   void GetBlobImplType(nsAString& aBlobImplType) const override {
-    aBlobImplType = NS_LITERAL_STRING("TemporaryFileBlobImpl");
+    aBlobImplType = u"TemporaryFileBlobImpl"_ns;
   }
 
  protected:

@@ -44,7 +44,7 @@ static const char* kPluginRegistryVersion = "0.19";
 
 StaticRefPtr<nsIFile> sPluginRegFile;
 
-#define kPluginRegistryFilename NS_LITERAL_CSTRING("pluginreg.dat")
+#define kPluginRegistryFilename "pluginreg.dat"_ns
 
 #define NS_ITERATIVE_UNREF_LIST(type_, list_, mNext_) \
   {                                                   \
@@ -142,12 +142,10 @@ NS_IMETHODIMP PluginFinder::GetState(nsIPropertyBag** aBagOut) {
   if (NS_WARN_IF(!propertyBag)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("Finding"),
-                                 !mFinishedFinding);
-  propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("CreatingList"),
-                                 mCreateList);
-  propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("FlashOnly"), mFlashOnly);
-  propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("HavePlugins"), !!mPlugins);
+  propertyBag->SetPropertyAsBool(u"Finding"_ns, !mFinishedFinding);
+  propertyBag->SetPropertyAsBool(u"CreatingList"_ns, mCreateList);
+  propertyBag->SetPropertyAsBool(u"FlashOnly"_ns, mFlashOnly);
+  propertyBag->SetPropertyAsBool(u"HavePlugins"_ns, !!mPlugins);
   propertyBag.forget(aBagOut);
   return NS_OK;
 }
@@ -968,7 +966,7 @@ nsresult PluginFinder::DeterminePluginDirs() {
     rv = dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
                          getter_AddRefs(profDir));
     if (NS_SUCCEEDED(rv)) {
-      profDir->Append(NS_LITERAL_STRING("plugins"));
+      profDir->Append(u"plugins"_ns);
       mPluginDirs.AppendElement(profDir);
     }
   }

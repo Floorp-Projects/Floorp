@@ -55,9 +55,8 @@ class AppleVTDecoder : public MediaDataDecoder,
   }
 
   nsCString GetDescriptionName() const override {
-    return mIsHardwareAccelerated
-               ? NS_LITERAL_CSTRING("apple hardware VT decoder")
-               : NS_LITERAL_CSTRING("apple software VT decoder");
+    return mIsHardwareAccelerated ? "apple hardware VT decoder"_ns
+                                  : "apple software VT decoder"_ns;
   }
 
   ConversionRequired NeedsConversion() const override {

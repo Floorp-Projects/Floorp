@@ -154,7 +154,7 @@ nsresult ImageCapture::PostBlobEvent(Blob* aBlob) {
   init.mData = aBlob;
 
   RefPtr<BlobEvent> blob_event =
-      BlobEvent::Constructor(this, NS_LITERAL_STRING("photo"), init);
+      BlobEvent::Constructor(this, u"photo"_ns, init);
 
   return DispatchTrustedEvent(blob_event);
 }
@@ -181,8 +181,8 @@ nsresult ImageCapture::PostErrorEvent(uint16_t aErrorCode, nsresult aReason) {
   init.mCancelable = false;
   init.mImageCaptureError = error;
 
-  RefPtr<Event> event = ImageCaptureErrorEvent::Constructor(
-      this, NS_LITERAL_STRING("error"), init);
+  RefPtr<Event> event =
+      ImageCaptureErrorEvent::Constructor(this, u"error"_ns, init);
 
   return DispatchTrustedEvent(event);
 }

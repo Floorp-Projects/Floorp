@@ -459,8 +459,8 @@ VariableLengthPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   return aHandleReport->Callback(
       EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES, amount,
-      NS_LITERAL_CSTRING("Memory used by the variable-length prefix set for a "
-                         "URL classifier."),
+      nsLiteralCString("Memory used by the variable-length prefix set for a "
+                       "URL classifier."),
       aData);
 }
 

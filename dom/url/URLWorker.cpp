@@ -24,8 +24,7 @@ class CreateURLRunnable : public WorkerMainThreadRunnable {
  public:
   CreateURLRunnable(WorkerPrivate* aWorkerPrivate, BlobImpl* aBlobImpl,
                     nsAString& aURL)
-      : WorkerMainThreadRunnable(aWorkerPrivate,
-                                 NS_LITERAL_CSTRING("URL :: CreateURL")),
+      : WorkerMainThreadRunnable(aWorkerPrivate, "URL :: CreateURL"_ns),
         mBlobImpl(aBlobImpl),
         mURL(aURL) {
     MOZ_ASSERT(aBlobImpl);
@@ -60,8 +59,7 @@ class RevokeURLRunnable : public WorkerMainThreadRunnable {
 
  public:
   RevokeURLRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aURL)
-      : WorkerMainThreadRunnable(aWorkerPrivate,
-                                 NS_LITERAL_CSTRING("URL :: RevokeURL")),
+      : WorkerMainThreadRunnable(aWorkerPrivate, "URL :: RevokeURL"_ns),
         mURL(aURL) {}
 
   bool MainThreadRun() override {
@@ -93,8 +91,7 @@ class IsValidURLRunnable : public WorkerMainThreadRunnable {
 
  public:
   IsValidURLRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aURL)
-      : WorkerMainThreadRunnable(aWorkerPrivate,
-                                 NS_LITERAL_CSTRING("URL :: IsValidURL")),
+      : WorkerMainThreadRunnable(aWorkerPrivate, "URL :: IsValidURL"_ns),
         mURL(aURL),
         mValid(false) {}
 

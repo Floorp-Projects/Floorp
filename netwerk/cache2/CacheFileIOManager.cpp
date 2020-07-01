@@ -1318,7 +1318,7 @@ nsresult CacheFileIOManager::OnProfile() {
   }
 
   if (directory) {
-    rv = directory->Append(NS_LITERAL_STRING("cache2"));
+    rv = directory->Append(u"cache2"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1327,7 +1327,7 @@ nsresult CacheFileIOManager::OnProfile() {
 
 #if defined(MOZ_WIDGET_ANDROID)
   if (profilelessDirectory) {
-    rv = profilelessDirectory->Append(NS_LITERAL_STRING("cache2"));
+    rv = profilelessDirectory->Append(u"cache2"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2980,7 +2980,7 @@ nsresult CacheFileIOManager::EvictAllInternal() {
     return rv;
   }
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING(ENTRIES_DIR));
+  rv = file->AppendNative(nsLiteralCString(ENTRIES_DIR));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3470,7 +3470,7 @@ nsresult CacheFileIOManager::FindTrashDirToRemove() {
       continue;
     }
 
-    if (!StringBeginsWith(leafName, NS_LITERAL_CSTRING(TRASH_DIR))) {
+    if (!StringBeginsWith(leafName, nsLiteralCString(TRASH_DIR))) {
       continue;
     }
 
@@ -3636,7 +3636,7 @@ nsresult CacheFileIOManager::GetFile(const SHA1Sum::Hash* aHash,
   rv = mCacheDirectory->Clone(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING(ENTRIES_DIR));
+  rv = file->AppendNative(nsLiteralCString(ENTRIES_DIR));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString leafName;
@@ -3669,10 +3669,10 @@ nsresult CacheFileIOManager::GetDoomedFile(nsIFile** _retval) {
   rv = mCacheDirectory->Clone(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING(DOOMED_DIR));
+  rv = file->AppendNative(nsLiteralCString(DOOMED_DIR));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING("dummyleaf"));
+  rv = file->AppendNative("dummyleaf"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   const int32_t kMaxTries = 64;

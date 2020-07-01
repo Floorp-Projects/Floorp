@@ -27,7 +27,7 @@ class DAV1DDecoder : public MediaDataDecoder,
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   nsCString GetDescriptionName() const override {
-    return NS_LITERAL_CSTRING("av1 libdav1d video decoder");
+    return "av1 libdav1d video decoder"_ns;
   }
 
   void ReleaseDataBuffer(const uint8_t* buf);

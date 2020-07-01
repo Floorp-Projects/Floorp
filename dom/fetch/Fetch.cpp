@@ -1233,7 +1233,7 @@ void FetchBody<Derived>::SetMimeType() {
   ErrorResult result;
   nsCString contentTypeValues;
   MOZ_ASSERT(DerivedClass()->GetInternalHeaders());
-  DerivedClass()->GetInternalHeaders()->Get(NS_LITERAL_CSTRING("Content-Type"),
+  DerivedClass()->GetInternalHeaders()->Get("Content-Type"_ns,
                                             contentTypeValues, result);
   MOZ_ALWAYS_TRUE(!result.Failed());
 

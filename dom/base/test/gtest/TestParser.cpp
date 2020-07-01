@@ -38,8 +38,8 @@ TEST(TestParser, TestParserMain)
     nsCOMPtr<nsIDocumentEncoder> encoder =
         do_createDocumentEncoder("text/html");
     if (!encoder) break;
-    nsresult rv = encoder->Init(document, NS_LITERAL_STRING("text/html"),
-                                nsIDocumentEncoder::OutputRaw);
+    nsresult rv =
+        encoder->Init(document, u"text/html"_ns, nsIDocumentEncoder::OutputRaw);
     if (NS_FAILED(rv)) break;
     nsString parsed;
     rv = encoder->EncodeToString(parsed);

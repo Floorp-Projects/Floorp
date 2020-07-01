@@ -70,7 +70,7 @@ static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (scheme.EqualsLiteral("about")) {
-    MakeTopLevelInfo(scheme, NS_LITERAL_CSTRING(ABOUT_URI_FIRST_PARTY_DOMAIN),
+    MakeTopLevelInfo(scheme, nsLiteralCString(ABOUT_URI_FIRST_PARTY_DOMAIN),
                      aUseSite, topLevelInfo);
     return;
   }
@@ -200,27 +200,26 @@ void OriginAttributes::CreateSuffix(nsACString& aStr) const {
   //
 
   if (mInIsolatedMozBrowser) {
-    params.Set(NS_LITERAL_STRING("inBrowser"), NS_LITERAL_STRING("1"));
+    params.Set(u"inBrowser"_ns, u"1"_ns);
   }
 
   if (mUserContextId != nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
     value.Truncate();
     value.AppendInt(mUserContextId);
-    params.Set(NS_LITERAL_STRING("userContextId"), value);
+    params.Set(u"userContextId"_ns, value);
   }
 
   if (mPrivateBrowsingId) {
     value.Truncate();
     value.AppendInt(mPrivateBrowsingId);
-    params.Set(NS_LITERAL_STRING("privateBrowsingId"), value);
+    params.Set(u"privateBrowsingId"_ns, value);
   }
 
   if (!mFirstPartyDomain.IsEmpty()) {
     nsAutoString sanitizedFirstPartyDomain(mFirstPartyDomain);
     sanitizedFirstPartyDomain.ReplaceChar(kSourceChar, kSanitizedChar);
 
-    params.Set(NS_LITERAL_STRING("firstPartyDomain"),
-               sanitizedFirstPartyDomain);
+    params.Set(u"firstPartyDomain"_ns, sanitizedFirstPartyDomain);
   }
 
   if (!mGeckoViewSessionContextId.IsEmpty()) {
@@ -228,15 +227,14 @@ void OriginAttributes::CreateSuffix(nsACString& aStr) const {
     sanitizedGeckoViewUserContextId.ReplaceChar(
         dom::quota::QuotaManager::kReplaceChars, kSanitizedChar);
 
-    params.Set(NS_LITERAL_STRING("geckoViewUserContextId"),
-               sanitizedGeckoViewUserContextId);
+    params.Set(u"geckoViewUserContextId"_ns, sanitizedGeckoViewUserContextId);
   }
 
   if (!mPartitionKey.IsEmpty()) {
     nsAutoString sanitizedPartitionKey(mPartitionKey);
     sanitizedPartitionKey.ReplaceChar(kSourceChar, kSanitizedChar);
 
-    params.Set(NS_LITERAL_STRING("partitionKey"), sanitizedPartitionKey);
+    params.Set(u"partitionKey"_ns, sanitizedPartitionKey);
   }
 
   aStr.Truncate();

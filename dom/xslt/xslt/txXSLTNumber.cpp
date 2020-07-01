@@ -335,8 +335,8 @@ nsresult txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
   // If there are no formatting tokens we need to create a default one.
   if (formatPos == formatLen) {
     txFormattedCounter* defaultCounter;
-    rv = txFormattedCounter::getCounterFor(NS_LITERAL_STRING("1"), groupSize,
-                                           groupSeparator, defaultCounter);
+    rv = txFormattedCounter::getCounterFor(u"1"_ns, groupSize, groupSeparator,
+                                           defaultCounter);
     NS_ENSURE_SUCCESS(rv, rv);
 
     defaultCounter->mSeparator.Assign('.');

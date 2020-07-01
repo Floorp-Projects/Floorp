@@ -542,7 +542,7 @@ static bool StringListContains(const ListString& aList,
 
 inline void AppendStringIfNotEmpty(nsACString& aDest, nsACString&& aSrc) {
   if (!aSrc.IsEmpty()) {
-    aDest.Append(NS_LITERAL_CSTRING("\n"));
+    aDest.Append("\n"_ns);
     aDest.Append(aSrc);
   }
 }

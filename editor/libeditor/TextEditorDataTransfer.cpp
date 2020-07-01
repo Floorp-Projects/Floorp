@@ -443,7 +443,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     uint32_t textLength = 0;
     for (uint32_t i = 0; i < numItems; ++i) {
       nsCOMPtr<nsIVariant> data;
-      dataTransfer->GetDataAtNoSecurityCheck(NS_LITERAL_STRING("text/plain"), i,
+      dataTransfer->GetDataAtNoSecurityCheck(u"text/plain"_ns, i,
                                              getter_AddRefs(data));
       if (!data) {
         continue;

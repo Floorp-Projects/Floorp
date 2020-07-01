@@ -407,7 +407,7 @@ nsresult CSSEditUtils::SetCSSPropertyPixels(Element& aElement,
                                             int32_t aIntValue) {
   nsAutoString s;
   s.AppendInt(aIntValue);
-  nsresult rv = SetCSSProperty(aElement, aProperty, s + NS_LITERAL_STRING("px"),
+  nsresult rv = SetCSSProperty(aElement, aProperty, s + u"px"_ns,
                                /* suppress txn */ false);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "CSSEditUtils::SetCSSProperty() failed");
@@ -1067,7 +1067,7 @@ bool CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
         }
       }
     } else if (nsGkAtoms::tt == aHTMLProperty) {
-      isSet = StringBeginsWith(aValue, NS_LITERAL_STRING("monospace"));
+      isSet = StringBeginsWith(aValue, u"monospace"_ns);
     } else if (nsGkAtoms::font == aHTMLProperty && aAttribute &&
                aAttribute == nsGkAtoms::face) {
       if (!htmlValueString.IsEmpty()) {

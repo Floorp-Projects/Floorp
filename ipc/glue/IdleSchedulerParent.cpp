@@ -46,8 +46,8 @@ IdleSchedulerParent::IdleSchedulerParent() {
               do_GetService(NS_SYSTEMINFO_CONTRACTID);
           if (infoService) {
             int32_t cpus;
-            nsresult rv = infoService->GetPropertyAsInt32(
-                NS_LITERAL_STRING("cpucount"), &cpus);
+            nsresult rv =
+                infoService->GetPropertyAsInt32(u"cpucount"_ns, &cpus);
             if (NS_SUCCEEDED(rv) && cpus > 1) {
               sCPUsForChildProcesses = cpus - 1;
             }

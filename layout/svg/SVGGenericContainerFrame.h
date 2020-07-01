@@ -44,7 +44,7 @@ class SVGGenericContainerFrame final : public nsSVGDisplayContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGGenericContainer"), aResult);
+    return MakeFrameName(u"SVGGenericContainer"_ns, aResult);
   }
 #endif
 

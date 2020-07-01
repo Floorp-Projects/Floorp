@@ -22,16 +22,16 @@ TEST(Dafsa, StringsFound)
 {
   Dafsa d(dafsa_test_1::kDafsa);
 
-  int tag = d.Lookup(NS_LITERAL_CSTRING("foo.bar.baz"));
+  int tag = d.Lookup("foo.bar.baz"_ns);
   EXPECT_EQ(tag, 1);
 
-  tag = d.Lookup(NS_LITERAL_CSTRING("a.test.string"));
+  tag = d.Lookup("a.test.string"_ns);
   EXPECT_EQ(tag, 0);
 
-  tag = d.Lookup(NS_LITERAL_CSTRING("a.test.string2"));
+  tag = d.Lookup("a.test.string2"_ns);
   EXPECT_EQ(tag, 2);
 
-  tag = d.Lookup(NS_LITERAL_CSTRING("aaaa"));
+  tag = d.Lookup("aaaa"_ns);
   EXPECT_EQ(tag, 4);
 }
 
@@ -40,23 +40,23 @@ TEST(Dafsa, StringsNotFound)
   Dafsa d(dafsa_test_1::kDafsa);
 
   // Matches all but last letter.
-  int tag = d.Lookup(NS_LITERAL_CSTRING("foo.bar.ba"));
+  int tag = d.Lookup("foo.bar.ba"_ns);
   EXPECT_EQ(tag, Dafsa::kKeyNotFound);
 
   // Matches prefix with extra letter.
-  tag = d.Lookup(NS_LITERAL_CSTRING("a.test.strings"));
+  tag = d.Lookup("a.test.strings"_ns);
   EXPECT_EQ(tag, Dafsa::kKeyNotFound);
 
   // Matches small portion.
-  tag = d.Lookup(NS_LITERAL_CSTRING("a.test"));
+  tag = d.Lookup("a.test"_ns);
   EXPECT_EQ(tag, Dafsa::kKeyNotFound);
 
   // Matches repeating pattern with extra letters.
-  tag = d.Lookup(NS_LITERAL_CSTRING("aaaaa"));
+  tag = d.Lookup("aaaaa"_ns);
   EXPECT_EQ(tag, Dafsa::kKeyNotFound);
 
   // Empty string.
-  tag = d.Lookup(NS_LITERAL_CSTRING(""));
+  tag = d.Lookup(""_ns);
   EXPECT_EQ(tag, Dafsa::kKeyNotFound);
 }
 
@@ -64,7 +64,7 @@ TEST(Dafsa, HugeString)
 {
   Dafsa d(dafsa_test_1::kDafsa);
 
-  int tag = d.Lookup(NS_LITERAL_CSTRING(
+  int tag = d.Lookup(nsLiteralCString(
       "This is a very long string that is larger than the dafsa itself. "
       "This is a very long string that is larger than the dafsa itself. "
       "This is a very long string that is larger than the dafsa itself. "

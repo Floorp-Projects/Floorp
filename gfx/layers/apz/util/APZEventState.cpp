@@ -222,7 +222,7 @@ bool APZEventState::FireContextmenuEvents(PresShell* aPresShell,
   CSSPoint point = CSSPoint::FromAppUnits(
       ViewportUtils::VisualToLayout(CSSPoint::ToAppUnits(aPoint), aPresShell));
   bool eventHandled = APZCCallbackHelper::DispatchMouseEvent(
-      aPresShell, NS_LITERAL_STRING("contextmenu"), point, 2, 1,
+      aPresShell, u"contextmenu"_ns, point, 2, 1,
       WidgetModifiersToDOMModifiers(aModifiers),
       dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH,
       0 /* Use the default value here. */);

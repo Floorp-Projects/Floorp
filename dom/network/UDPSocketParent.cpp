@@ -530,8 +530,8 @@ void UDPSocketParent::FireInternalError(uint32_t aLineNo) {
     return;
   }
 
-  mozilla::Unused << SendCallbackError(NS_LITERAL_CSTRING("Internal error"),
-                                       NS_LITERAL_CSTRING(__FILE__), aLineNo);
+  mozilla::Unused << SendCallbackError("Internal error"_ns,
+                                       nsLiteralCString(__FILE__), aLineNo);
 }
 
 void UDPSocketParent::SendInternalError(const nsCOMPtr<nsIEventTarget>& aThread,

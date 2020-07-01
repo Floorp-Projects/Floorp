@@ -983,8 +983,8 @@ void txMozillaXSLTProcessor::notifyError() {
   ElementCreationOptionsOrString options;
   options.SetAsString();
 
-  nsCOMPtr<Element> element = document->CreateElementNS(
-      ns, NS_LITERAL_STRING("parsererror"), options, rv);
+  nsCOMPtr<Element> element =
+      document->CreateElementNS(ns, u"parsererror"_ns, options, rv);
   if (rv.Failed()) {
     return;
   }
@@ -1005,8 +1005,8 @@ void txMozillaXSLTProcessor::notifyError() {
     ElementCreationOptionsOrString options;
     options.SetAsString();
 
-    nsCOMPtr<Element> sourceElement = document->CreateElementNS(
-        ns, NS_LITERAL_STRING("sourcetext"), options, rv);
+    nsCOMPtr<Element> sourceElement =
+        document->CreateElementNS(ns, u"sourcetext"_ns, options, rv);
     if (rv.Failed()) {
       return;
     }

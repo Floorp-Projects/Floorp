@@ -37,7 +37,7 @@ class SVGInnerSVGFrame final : public SVGViewportFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGInnerSVG"), aResult);
+    return MakeFrameName(u"SVGInnerSVG"_ns, aResult);
   }
 #endif
 };

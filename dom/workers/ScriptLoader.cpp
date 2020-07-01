@@ -809,7 +809,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 
     // We synthesize the result code, but its never exposed to content.
     RefPtr<mozilla::dom::InternalResponse> ir =
-        new mozilla::dom::InternalResponse(200, NS_LITERAL_CSTRING("OK"));
+        new mozilla::dom::InternalResponse(200, "OK"_ns);
     ir->SetBody(aLoadInfo.mCacheReadStream,
                 InternalResponse::UNKNOWN_BODY_SIZE);
 
@@ -1234,15 +1234,14 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
         return NS_ERROR_NOT_AVAILABLE;
       }
 
-      Unused << httpChannel->GetResponseHeader(
-          NS_LITERAL_CSTRING("content-security-policy"), tCspHeaderValue);
+      Unused << httpChannel->GetResponseHeader("content-security-policy"_ns,
+                                               tCspHeaderValue);
 
       Unused << httpChannel->GetResponseHeader(
-          NS_LITERAL_CSTRING("content-security-policy-report-only"),
-          tCspROHeaderValue);
+          "content-security-policy-report-only"_ns, tCspROHeaderValue);
 
-      Unused << httpChannel->GetResponseHeader(
-          NS_LITERAL_CSTRING("referrer-policy"), tRPHeaderCValue);
+      Unused << httpChannel->GetResponseHeader("referrer-policy"_ns,
+                                               tRPHeaderCValue);
     }
 
     // May be null.
@@ -1255,12 +1254,12 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     if (StaticPrefs::dom_worker_script_loader_utf8_parsing_enabled()) {
       aLoadInfo.InitUTF8Script();
       rv = ScriptLoader::ConvertToUTF8(
-          nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
+          nullptr, aString, aStringLen, u"UTF-8"_ns, parentDoc,
           aLoadInfo.mScript.mUTF8, aLoadInfo.mScriptLength);
     } else {
       aLoadInfo.InitUTF16Script();
       rv = ScriptLoader::ConvertToUTF16(
-          nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
+          nullptr, aString, aStringLen, u"UTF-8"_ns, parentDoc,
           aLoadInfo.mScript.mUTF16, aLoadInfo.mScriptLength);
     }
     if (NS_FAILED(rv)) {
@@ -1273,7 +1272,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       }
 
       nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), parentDoc,
+          nsIScriptError::warningFlag, "DOM"_ns, parentDoc,
           nsContentUtils::eDOM_PROPERTIES, "EmptyWorkerSourceWarning");
     }
 
@@ -1391,12 +1390,12 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     if (StaticPrefs::dom_worker_script_loader_utf8_parsing_enabled()) {
       aLoadInfo.InitUTF8Script();
       rv = ScriptLoader::ConvertToUTF8(
-          nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
+          nullptr, aString, aStringLen, u"UTF-8"_ns, parentDoc,
           aLoadInfo.mScript.mUTF8, aLoadInfo.mScriptLength);
     } else {
       aLoadInfo.InitUTF16Script();
       rv = ScriptLoader::ConvertToUTF16(
-          nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
+          nullptr, aString, aStringLen, u"UTF-8"_ns, parentDoc,
           aLoadInfo.mScript.mUTF16, aLoadInfo.mScriptLength);
     }
     if (NS_SUCCEEDED(rv) && IsMainWorkerScript()) {
@@ -1837,16 +1836,14 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
 
   InternalHeaders* headers = response->GetInternalHeaders();
 
-  headers->Get(NS_LITERAL_CSTRING("content-security-policy"), mCSPHeaderValue,
-               IgnoreErrors());
-  headers->Get(NS_LITERAL_CSTRING("content-security-policy-report-only"),
+  headers->Get("content-security-policy"_ns, mCSPHeaderValue, IgnoreErrors());
+  headers->Get("content-security-policy-report-only"_ns,
                mCSPReportOnlyHeaderValue, IgnoreErrors());
-  headers->Get(NS_LITERAL_CSTRING("referrer-policy"),
-               mReferrerPolicyHeaderValue, IgnoreErrors());
+  headers->Get("referrer-policy"_ns, mReferrerPolicyHeaderValue,
+               IgnoreErrors());
 
   nsAutoCString coepHeader;
-  headers->Get(NS_LITERAL_CSTRING("cross-origin-embedder-policy"), coepHeader,
-               IgnoreErrors());
+  headers->Get("cross-origin-embedder-policy"_ns, coepHeader, IgnoreErrors());
 
   nsILoadInfo::CrossOriginEmbedderPolicy coep =
       NS_GetCrossOriginEmbedderPolicyFromHeader(coepHeader);
@@ -1948,8 +1945,8 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
  public:
   ChannelGetterRunnable(WorkerPrivate* aParentWorker,
                         const nsAString& aScriptURL, WorkerLoadInfo& aLoadInfo)
-      : WorkerMainThreadRunnable(
-            aParentWorker, NS_LITERAL_CSTRING("ScriptLoader :: ChannelGetter")),
+      : WorkerMainThreadRunnable(aParentWorker,
+                                 "ScriptLoader :: ChannelGetter"_ns),
         mScriptURL(aScriptURL)
         // ClientInfo should always be present since this should not be called
         // if parent's status is greater than Running.

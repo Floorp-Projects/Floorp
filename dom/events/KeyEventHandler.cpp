@@ -677,7 +677,7 @@ void KeyEventHandler::ReportKeyConflict(const char16_t* aKey,
   params.AppendElement(aModifiers);
   params.AppendElement(id);
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Key Event Handler"), doc,
+                                  "Key Event Handler"_ns, doc,
                                   nsContentUtils::eDOM_PROPERTIES, aMessageName,
                                   params, nullptr, EmptyString(), 0);
 }

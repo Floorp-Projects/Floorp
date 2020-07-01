@@ -89,8 +89,8 @@ bool nsIConstraintValidation::CheckValidity() {
                "This class should be inherited by HTML elements only!");
 
   nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
-                                       NS_LITERAL_STRING("invalid"),
-                                       CanBubble::eNo, Cancelable::eYes);
+                                       u"invalid"_ns, CanBubble::eNo,
+                                       Cancelable::eYes);
   return false;
 }
 
@@ -111,9 +111,9 @@ bool nsIConstraintValidation::ReportValidity() {
   MOZ_ASSERT(element, "This class should be inherited by HTML elements only!");
 
   bool defaultAction = true;
-  nsContentUtils::DispatchTrustedEvent(
-      element->OwnerDoc(), element, NS_LITERAL_STRING("invalid"),
-      CanBubble::eNo, Cancelable::eYes, &defaultAction);
+  nsContentUtils::DispatchTrustedEvent(element->OwnerDoc(), element,
+                                       u"invalid"_ns, CanBubble::eNo,
+                                       Cancelable::eYes, &defaultAction);
   if (!defaultAction) {
     return false;
   }
@@ -132,7 +132,7 @@ bool nsIConstraintValidation::ReportValidity() {
 
   RefPtr<CustomEvent> event =
       NS_NewDOMCustomEvent(element->OwnerDoc(), nullptr, nullptr);
-  event->InitCustomEvent(jsapi.cx(), NS_LITERAL_STRING("MozInvalidForm"),
+  event->InitCustomEvent(jsapi.cx(), u"MozInvalidForm"_ns,
                          /* CanBubble */ true,
                          /* Cancelable */ true, detail);
   event->SetTrusted(true);

@@ -446,7 +446,7 @@ void ProcessPriorityManagerImpl::ObserveContentParentDestroyed(
   NS_ENSURE_TRUE_VOID(props);
 
   uint64_t childID = CONTENT_PROCESS_ID_UNKNOWN;
-  props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
+  props->GetPropertyAsUint64(u"childID"_ns, &childID);
   NS_ENSURE_TRUE_VOID(childID != CONTENT_PROCESS_ID_UNKNOWN);
 
   if (auto entry = mParticularManagers.Lookup(childID)) {
@@ -511,13 +511,10 @@ void ParticularProcessPriorityManager::Init() {
 
   // This process may already hold the CPU lock; for example, our parent may
   // have acquired it on our behalf.
-  mHoldsCPUWakeLock = IsHoldingWakeLock(NS_LITERAL_STRING("cpu"));
-  mHoldsHighPriorityWakeLock =
-      IsHoldingWakeLock(NS_LITERAL_STRING("high-priority"));
-  mHoldsPlayingAudioWakeLock =
-      IsHoldingWakeLock(NS_LITERAL_STRING("audio-playing"));
-  mHoldsPlayingVideoWakeLock =
-      IsHoldingWakeLock(NS_LITERAL_STRING("video-playing"));
+  mHoldsCPUWakeLock = IsHoldingWakeLock(u"cpu"_ns);
+  mHoldsHighPriorityWakeLock = IsHoldingWakeLock(u"high-priority"_ns);
+  mHoldsPlayingAudioWakeLock = IsHoldingWakeLock(u"audio-playing"_ns);
+  mHoldsPlayingVideoWakeLock = IsHoldingWakeLock(u"video-playing"_ns);
 
   LOGP(
       "Done starting up.  mHoldsCPUWakeLock=%d, "
@@ -923,7 +920,7 @@ ProcessPriorityManagerChild::Observe(nsISupports* aSubject, const char* aTopic,
   NS_ENSURE_TRUE(props, NS_OK);
 
   int32_t priority = static_cast<int32_t>(PROCESS_PRIORITY_UNKNOWN);
-  props->GetPropertyAsInt32(NS_LITERAL_STRING("priority"), &priority);
+  props->GetPropertyAsInt32(u"priority"_ns, &priority);
   NS_ENSURE_TRUE(ProcessPriority(priority) != PROCESS_PRIORITY_UNKNOWN, NS_OK);
 
   mCachedPriority = static_cast<ProcessPriority>(priority);

@@ -1515,7 +1515,7 @@ nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char* host,
 
 bool IsHostLocalTarget(const nsACString& aHost) {
 #if defined(XP_UNIX)
-  return StringBeginsWith(aHost, NS_LITERAL_CSTRING("file:"));
+  return StringBeginsWith(aHost, "file:"_ns);
 #elif defined(XP_WIN)
   return IsNamedPipePath(aHost);
 #else

@@ -88,8 +88,8 @@ bool UrlClassifierCommon::ShouldEnableClassifier(nsIChannel* aChannel) {
     nsCString chanSpec = chanURI->GetSpecOrDefault();
     chanSpec.Truncate(
         std::min(chanSpec.Length(), UrlClassifierCommon::sMaxSpecLength));
-    nsCString topWinSpec = topWinURI ? topWinURI->GetSpecOrDefault()
-                                     : NS_LITERAL_CSTRING("(null)");
+    nsCString topWinSpec =
+        topWinURI ? topWinURI->GetSpecOrDefault() : "(null)"_ns;
     topWinSpec.Truncate(
         std::min(topWinSpec.Length(), UrlClassifierCommon::sMaxSpecLength));
     UC_LOG(
@@ -255,7 +255,7 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
         ClassifierBlockingErrorCodeToConsoleMessage(aErrorCode, category);
   } else {
     message = "UnsafeUriBlocked";
-    category = NS_LITERAL_CSTRING("Safe Browsing");
+    category = "Safe Browsing"_ns;
   }
 
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, category, doc,
@@ -322,9 +322,8 @@ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
 
   rv = chanPrincipal->GetBaseDomain(resourceDomain);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoCString whitelistEntry = NS_LITERAL_CSTRING("http://") + pageHostname +
-                                 NS_LITERAL_CSTRING("/?resource=") +
-                                 resourceDomain;
+  nsAutoCString whitelistEntry =
+      "http://"_ns + pageHostname + "/?resource="_ns + resourceDomain;
   UC_LOG(
       ("CreatePairwiseWhiteListURI: Looking for %s in the whitelist "
        "(channel=%p)",
@@ -474,9 +473,8 @@ bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
     }
 
     nsCOMPtr<nsIURI> uri;
-    nsresult rv =
-        ios->NewURI(NS_LITERAL_CSTRING("http://allowlisted.example.com"),
-                    nullptr, nullptr, getter_AddRefs(uri));
+    nsresult rv = ios->NewURI("http://allowlisted.example.com"_ns, nullptr,
+                              nullptr, getter_AddRefs(uri));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }

@@ -99,7 +99,7 @@ bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
       return WrapResult(aCx, aProxy, children[index],
                         JSPROP_READONLY | JSPROP_ENUMERATE, aDesc);
     }
-    return ReportCrossOriginDenial(aCx, aId, NS_LITERAL_CSTRING("access"));
+    return ReportCrossOriginDenial(aCx, aId, "access"_ns);
   }
 
   bool ok = CrossOriginGetOwnPropertyHelper(aCx, aProxy, aId, aDesc);

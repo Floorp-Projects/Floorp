@@ -1033,7 +1033,7 @@ void nsLookAndFeel::EnsureInit() {
          RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(fg)));
 
     mHighContrast = StaticPrefs::widget_content_gtk_high_contrast_enabled() &&
-                    GetGtkTheme().Find(NS_LITERAL_CSTRING("HighContrast")) >= 0;
+                    GetGtkTheme().Find("HighContrast"_ns) >= 0;
 
     gboolean enableAnimations = false;
     g_object_get(settings, "gtk-enable-animations", &enableAnimations, nullptr);

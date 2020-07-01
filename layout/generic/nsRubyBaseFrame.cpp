@@ -39,6 +39,6 @@ nsContainerFrame* NS_NewRubyBaseFrame(mozilla::PresShell* aPresShell,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsRubyBaseFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("RubyBase"), aResult);
+  return MakeFrameName(u"RubyBase"_ns, aResult);
 }
 #endif

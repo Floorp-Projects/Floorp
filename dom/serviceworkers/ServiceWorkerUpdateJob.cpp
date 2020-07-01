@@ -489,8 +489,7 @@ void ServiceWorkerUpdateJob::Install() {
   // Send the install event to the worker thread
   ServiceWorkerPrivate* workerPrivate =
       mRegistration->GetInstalling()->WorkerPrivate();
-  nsresult rv =
-      workerPrivate->SendLifeCycleEvent(NS_LITERAL_STRING("install"), callback);
+  nsresult rv = workerPrivate->SendLifeCycleEvent(u"install"_ns, callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ContinueAfterInstallEvent(false /* aSuccess */);
   }

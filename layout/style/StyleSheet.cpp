@@ -1057,7 +1057,7 @@ void StyleSheet::List(FILE* aOut, int32_t aIndent) {
     rule->GetCssText(cssText);
 
     NS_ConvertUTF16toUTF8 s(cssText);
-    s.ReplaceSubstring(NS_LITERAL_CSTRING("\n"), newlineIndent);
+    s.ReplaceSubstring("\n"_ns, newlineIndent);
 
     fprintf_stderr(aOut, "%s\n", s.get());
   }

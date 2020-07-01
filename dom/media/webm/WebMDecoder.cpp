@@ -43,18 +43,17 @@ nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
     if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("vorbis")) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("audio/") + NS_ConvertUTF16toUTF8(codec),
-              aType));
+              "audio/"_ns + NS_ConvertUTF16toUTF8(codec), aType));
       continue;
     }
     if (isVideo) {
       UniquePtr<TrackInfo> trackInfo;
       if (IsVP9CodecString(codec)) {
         trackInfo = CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-            NS_LITERAL_CSTRING("video/vp9"), aType);
+            "video/vp9"_ns, aType);
       } else if (IsVP8CodecString(codec)) {
         trackInfo = CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-            NS_LITERAL_CSTRING("video/vp8"), aType);
+            "video/vp8"_ns, aType);
       }
       if (trackInfo) {
         uint8_t profile = 0;
@@ -72,7 +71,7 @@ nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
     if (StaticPrefs::media_av1_enabled() && IsAV1CodecString(codec)) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("video/av1"), aType));
+              "video/av1"_ns, aType));
       continue;
     }
 #endif

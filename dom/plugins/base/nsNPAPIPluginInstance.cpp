@@ -261,8 +261,7 @@ nsresult nsNPAPIPluginInstance::Start() {
     mCachedParamValues[i] = ToNewUTF8String(attributes[i].mValue);
   }
 
-  mCachedParamNames[attributes.Length()] =
-      ToNewUTF8String(NS_LITERAL_STRING("PARAM"));
+  mCachedParamNames[attributes.Length()] = ToNewUTF8String(u"PARAM"_ns);
   mCachedParamValues[attributes.Length()] = nullptr;
 
   for (uint32_t i = 0, pos = attributes.Length() + 1; i < params.Length();

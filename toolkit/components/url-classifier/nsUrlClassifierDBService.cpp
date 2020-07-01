@@ -68,22 +68,22 @@ nsresult TablesToResponse(const nsACString& tables) {
 
   // We don't check mCheckMalware and friends because disabled tables are
   // never included
-  if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
+  if (FindInReadable("-malware-"_ns, tables)) {
     return NS_ERROR_MALWARE_URI;
   }
-  if (FindInReadable(NS_LITERAL_CSTRING("-harmful-"), tables)) {
+  if (FindInReadable("-harmful-"_ns, tables)) {
     return NS_ERROR_HARMFUL_URI;
   }
-  if (FindInReadable(NS_LITERAL_CSTRING("-phish-"), tables)) {
+  if (FindInReadable("-phish-"_ns, tables)) {
     return NS_ERROR_PHISHING_URI;
   }
-  if (FindInReadable(NS_LITERAL_CSTRING("-unwanted-"), tables)) {
+  if (FindInReadable("-unwanted-"_ns, tables)) {
     return NS_ERROR_UNWANTED_URI;
   }
-  if (FindInReadable(NS_LITERAL_CSTRING("-track-"), tables)) {
+  if (FindInReadable("-track-"_ns, tables)) {
     return NS_ERROR_TRACKING_URI;
   }
-  if (FindInReadable(NS_LITERAL_CSTRING("-block-"), tables)) {
+  if (FindInReadable("-block-"_ns, tables)) {
     return NS_ERROR_BLOCKED_URI;
   }
   return NS_OK;
@@ -570,8 +570,7 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString& table) {
   // Check if we should use protobuf to parse the update.
   bool useProtobuf = false;
   for (size_t i = 0; i < mUpdateTables.Length(); i++) {
-    bool isCurProtobuf =
-        StringEndsWith(mUpdateTables[i], NS_LITERAL_CSTRING("-proto"));
+    bool isCurProtobuf = StringEndsWith(mUpdateTables[i], "-proto"_ns);
 
     if (0 == i) {
       // Use the first table name to decice if all the subsequent tables
@@ -1286,7 +1285,7 @@ nsUrlClassifierLookupCallback::CompletionV2(const nsACString& aCompleteHash,
   LOG(("nsUrlClassifierLookupCallback::Completion [%p, %s, %d]", this,
        PromiseFlatCString(aTableName).get(), aChunkId));
 
-  MOZ_ASSERT(!StringEndsWith(aTableName, NS_LITERAL_CSTRING("-proto")));
+  MOZ_ASSERT(!StringEndsWith(aTableName, "-proto"_ns));
 
   RefPtr<CacheResultV2> result = new CacheResultV2();
 
@@ -1306,7 +1305,7 @@ nsUrlClassifierLookupCallback::CompletionV4(const nsACString& aPartialHash,
   LOG(("nsUrlClassifierLookupCallback::CompletionV4 [%p, %s, %d]", this,
        PromiseFlatCString(aTableName).get(), aNegativeCacheDuration));
 
-  MOZ_ASSERT(StringEndsWith(aTableName, NS_LITERAL_CSTRING("-proto")));
+  MOZ_ASSERT(StringEndsWith(aTableName, "-proto"_ns));
 
   if (!aFullHashes) {
     return NS_ERROR_INVALID_ARG;
@@ -1374,7 +1373,7 @@ nsresult nsUrlClassifierLookupCallback::HandleResults() {
     // No results, this URI is clean.
     LOG(("nsUrlClassifierLookupCallback::HandleResults [%p, no results]",
          this));
-    return mCallback->HandleEvent(NS_LITERAL_CSTRING(""));
+    return mCallback->HandleEvent(""_ns);
   }
   MOZ_ASSERT(mPendingCompletions == 0,
              "HandleResults() should never be "
@@ -1466,9 +1465,9 @@ struct Provider {
 // Order matters
 // Provider which is not included in this table has the lowest priority 0
 static const Provider kBuiltInProviders[] = {
-    {NS_LITERAL_CSTRING("mozilla"), 1},
-    {NS_LITERAL_CSTRING("google4"), 2},
-    {NS_LITERAL_CSTRING("google"), 3},
+    {"mozilla"_ns, 1},
+    {"google4"_ns, 2},
+    {"google"_ns, 3},
 };
 
 // -------------------------------------------------------------------------
@@ -1739,7 +1738,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
   uint32_t perm;
   nsresult rv = permissionManager->TestPermissionFromPrincipal(
-      aPrincipal, NS_LITERAL_CSTRING("safe-browsing"), &perm);
+      aPrincipal, "safe-browsing"_ns, &perm);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (perm == nsIPermissionManager::ALLOW_ACTION) {
@@ -1937,7 +1936,7 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel* aChannel,
       formatter->FormatURLPref(NS_ConvertUTF8toUTF16(reportUrlPref), urlStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (urlStr.IsEmpty() || NS_LITERAL_STRING("about:blank").Equals(urlStr)) {
+  if (urlStr.IsEmpty() || u"about:blank"_ns.Equals(urlStr)) {
     LOG(("%s is missing a ThreatHit data reporting URL.",
          PromiseFlatCString(aProvider).get()));
     return NS_OK;
@@ -1987,17 +1986,15 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel* aChannel,
 
   nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(reportChannel));
   NS_ENSURE_TRUE(uploadChannel, NS_ERROR_FAILURE);
-  rv = uploadChannel->SetUploadStream(
-      sis, NS_LITERAL_CSTRING("application/x-protobuf"), -1);
+  rv = uploadChannel->SetUploadStream(sis, "application/x-protobuf"_ns, -1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(reportChannel));
   NS_ENSURE_TRUE(httpChannel, NS_ERROR_FAILURE);
-  rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+  rv = httpChannel->SetRequestMethod("POST"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
   // Disable keepalive.
-  rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Connection"),
-                                     NS_LITERAL_CSTRING("close"), false);
+  rv = httpChannel->SetRequestHeader("Connection"_ns, "close"_ns, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<ThreatHitReportListener> listener = new ThreatHitReportListener();
@@ -2024,9 +2021,8 @@ nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,
   Classifier::SplitTables(aTables, tableArray);
 
   nsCOMPtr<nsIUrlClassifierFeature> feature;
-  nsresult rv =
-      CreateFeatureWithTables(NS_LITERAL_CSTRING("lookup"), tableArray,
-                              nsTArray<nsCString>(), getter_AddRefs(feature));
+  nsresult rv = CreateFeatureWithTables(
+      "lookup"_ns, tableArray, nsTArray<nsCString>(), getter_AddRefs(feature));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;

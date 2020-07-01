@@ -251,9 +251,8 @@ void nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame) {
     if (content && !presContext->HasWarnedAboutPositionedTableParts()) {
       presContext->SetHasWarnedAboutPositionedTableParts();
       nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout: Tables"),
-          content->OwnerDoc(), nsContentUtils::eLAYOUT_PROPERTIES,
-          "TablePartRelPosWarning");
+          nsIScriptError::warningFlag, "Layout: Tables"_ns, content->OwnerDoc(),
+          nsContentUtils::eLAYOUT_PROPERTIES, "TablePartRelPosWarning");
     }
   }
 
@@ -3712,7 +3711,7 @@ bool nsTableFrame::IsAutoLayout() {
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsTableFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Table"), aResult);
+  return MakeFrameName(u"Table"_ns, aResult);
 }
 #endif
 

@@ -1849,7 +1849,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
   *pRetKey = nullptr;
 
   Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_CERT,
-                       NS_LITERAL_STRING("requested"), 1);
+                       u"requested"_ns, 1);
 
   RefPtr<nsNSSSocketInfo> info(
       BitwiseCast<nsNSSSocketInfo*, PRFilePrivate*>(socket->higher->secret));
@@ -1909,8 +1909,8 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     *pRetKey = selectedKey.release();
     // Make joinConnection prohibit joining after we've sent a client cert
     info->SetSentClientCert();
-    Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_CERT,
-                         NS_LITERAL_STRING("sent"), 1);
+    Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_CERT, u"sent"_ns,
+                         1);
   }
 
   return SECSuccess;

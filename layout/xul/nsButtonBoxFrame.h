@@ -42,7 +42,7 @@ class nsButtonBoxFrame : public nsBoxFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("ButtonBoxFrame"), aResult);
+    return MakeFrameName(u"ButtonBoxFrame"_ns, aResult);
   }
 #endif
 

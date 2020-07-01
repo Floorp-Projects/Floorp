@@ -601,6 +601,6 @@ a11y::AccType nsHTMLCanvasFrame::AccessibleType() {
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsHTMLCanvasFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("HTMLCanvas"), aResult);
+  return MakeFrameName(u"HTMLCanvas"_ns, aResult);
 }
 #endif

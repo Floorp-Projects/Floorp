@@ -212,8 +212,7 @@ void ClientWebGLContext::OnContextLoss(const webgl::ContextLossReason reason) {
 
 void ClientWebGLContext::Event_webglcontextlost() {
   WEBGL_BRIDGE_LOGD("[%p] Posting webglcontextlost event", this);
-  const bool useDefaultHandler =
-      DispatchEvent(NS_LITERAL_STRING("webglcontextlost"));
+  const bool useDefaultHandler = DispatchEvent(u"webglcontextlost"_ns);
   if (useDefaultHandler) {
     mLossStatus = webgl::LossStatus::LostForever;
   }
@@ -262,7 +261,7 @@ void ClientWebGLContext::Event_webglcontextrestored() {
   }
 
   WEBGL_BRIDGE_LOGD("[%p] Posting webglcontextrestored event", this);
-  (void)DispatchEvent(NS_LITERAL_STRING("webglcontextrestored"));
+  (void)DispatchEvent(u"webglcontextrestored"_ns);
 }
 
 // ---------
@@ -281,7 +280,7 @@ void ClientWebGLContext::ThrowEvent_WebGLContextCreationError(
   }
 
   WEBGL_BRIDGE_LOGD("[%p] Posting webglcontextcreationerror event", this);
-  const auto kEventName = NS_LITERAL_STRING("webglcontextcreationerror");
+  const auto kEventName = u"webglcontextcreationerror"_ns;
 
   dom::WebGLContextEventInit eventInit;
   // eventInit.mCancelable = true; // The spec says this, but it's silly.
@@ -4618,9 +4617,9 @@ void ClientWebGLContext::GetSupportedProfilesASTC(
   const auto& limits = Limits();
 
   auto& retarr = retval.SetValue();
-  retarr.AppendElement(NS_LITERAL_STRING("ldr"));
+  retarr.AppendElement(u"ldr"_ns);
   if (limits.astcHdr) {
-    retarr.AppendElement(NS_LITERAL_STRING("hdr"));
+    retarr.AppendElement(u"hdr"_ns);
   }
 }
 

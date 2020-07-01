@@ -596,8 +596,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
 #ifdef MOZ_WIDGET_GTK
     RefPtr<dom::Element> thumb = thumbFrame->GetContent()->AsElement();
-    thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
-                   NS_LITERAL_STRING("true"), true);
+    thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, u"true"_ns, true);
 #endif
 
     if (aEvent->mClass == eTouchEventClass) {
@@ -773,8 +772,8 @@ static void UpdateAttribute(dom::Element* aScrollbar, nscoord aNewPos,
   str.AppendInt(aNewPos);
 
   if (aIsSmooth) {
-    aScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::smooth,
-                        NS_LITERAL_STRING("true"), false);
+    aScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::smooth, u"true"_ns,
+                        false);
   }
   aScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, str, aNotify);
   if (aIsSmooth) {
@@ -1084,8 +1083,7 @@ nsresult nsSliderFrame::StartDrag(Event* aEvent) {
 
 #ifdef MOZ_WIDGET_GTK
   RefPtr<dom::Element> thumb = thumbFrame->GetContent()->AsElement();
-  thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
-                 NS_LITERAL_STRING("true"), true);
+  thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, u"true"_ns, true);
 #endif
 
   if (isHorizontal)
@@ -1156,10 +1154,10 @@ void nsSliderFrame::AddListener() {
   if (!thumbFrame) {
     return;
   }
-  thumbFrame->GetContent()->AddSystemEventListener(
-      NS_LITERAL_STRING("mousedown"), mMediator, false, false);
-  thumbFrame->GetContent()->AddSystemEventListener(
-      NS_LITERAL_STRING("touchstart"), mMediator, false, false);
+  thumbFrame->GetContent()->AddSystemEventListener(u"mousedown"_ns, mMediator,
+                                                   false, false);
+  thumbFrame->GetContent()->AddSystemEventListener(u"touchstart"_ns, mMediator,
+                                                   false, false);
 }
 
 void nsSliderFrame::RemoveListener() {
@@ -1168,10 +1166,10 @@ void nsSliderFrame::RemoveListener() {
   nsIFrame* thumbFrame = mFrames.FirstChild();
   if (!thumbFrame) return;
 
-  thumbFrame->GetContent()->RemoveSystemEventListener(
-      NS_LITERAL_STRING("mousedown"), mMediator, false);
-  thumbFrame->GetContent()->RemoveSystemEventListener(
-      NS_LITERAL_STRING("touchstart"), mMediator, false);
+  thumbFrame->GetContent()->RemoveSystemEventListener(u"mousedown"_ns,
+                                                      mMediator, false);
+  thumbFrame->GetContent()->RemoveSystemEventListener(u"touchstart"_ns,
+                                                      mMediator, false);
 }
 
 bool nsSliderFrame::ShouldScrollForEvent(WidgetGUIEvent* aEvent) {

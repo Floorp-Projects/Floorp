@@ -201,7 +201,7 @@ ExtensionPolicyService::CollectReports(nsIHandleReportCallback* aHandleReport,
     name.ReplaceSubstring("\\", "");
 
     nsString url;
-    MOZ_TRY_VAR(url, ext->GetURL(NS_LITERAL_STRING("")));
+    MOZ_TRY_VAR(url, ext->GetURL(u""_ns));
 
     nsPrintfCString desc("Extension(id=%s, name=\"%s\", baseURL=%s)", id.get(),
                          name.get(), NS_ConvertUTF16toUTF8(url).get());
@@ -210,10 +210,9 @@ ExtensionPolicyService::CollectReports(nsIHandleReportCallback* aHandleReport,
     nsCString path("extensions/");
     path.Append(desc);
 
-    aHandleReport->Callback(
-        EmptyCString(), path, KIND_NONHEAP, UNITS_COUNT, 1,
-        NS_LITERAL_CSTRING("WebExtensions that are active in this session"),
-        aData);
+    aHandleReport->Callback(EmptyCString(), path, KIND_NONHEAP, UNITS_COUNT, 1,
+                            "WebExtensions that are active in this session"_ns,
+                            aData);
   }
 
   return NS_OK;
@@ -267,7 +266,7 @@ nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
 
     mMessageManagers.PutEntry(mm);
 
-    mm->AddSystemEventListener(NS_LITERAL_STRING("unload"), this, false, false);
+    mm->AddSystemEventListener(u"unload"_ns, this, false, false);
   } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     const nsCString converted = NS_ConvertUTF16toUTF8(aData);
     const char* pref = converted.get();

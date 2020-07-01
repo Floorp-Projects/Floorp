@@ -608,7 +608,7 @@ FileReader::Notify(nsITimer* aTimer) {
   mTimerIsActive = false;
 
   if (mProgressEventWasDelayed) {
-    rv = DispatchProgressEvent(NS_LITERAL_STRING("progress"));
+    rv = DispatchProgressEvent(u"progress"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
 
     StartProgressEventTimer();

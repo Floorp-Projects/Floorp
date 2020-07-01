@@ -31,7 +31,7 @@ bool RemoteObjectProxyBase::defineProperty(
   // step 3 and
   // https://html.spec.whatwg.org/multipage/browsers.html#location-defineownproperty
   // step 2
-  return ReportCrossOriginDenial(aCx, aId, NS_LITERAL_CSTRING("define"));
+  return ReportCrossOriginDenial(aCx, aId, "define"_ns);
 }
 
 bool RemoteObjectProxyBase::ownPropertyKeys(
@@ -60,7 +60,7 @@ bool RemoteObjectProxyBase::delete_(JSContext* aCx,
   // https://html.spec.whatwg.org/multipage/browsers.html#windowproxy-delete
   // step 3 and
   // https://html.spec.whatwg.org/multipage/browsers.html#location-delete step 2
-  return ReportCrossOriginDenial(aCx, aId, NS_LITERAL_CSTRING("delete"));
+  return ReportCrossOriginDenial(aCx, aId, "delete"_ns);
 }
 
 bool RemoteObjectProxyBase::getPrototypeIfOrdinary(

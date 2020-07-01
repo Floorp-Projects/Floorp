@@ -95,13 +95,12 @@ TEST(storage_async_callbacks_with_spun_event_loops,
 
   // Create a test table and populate it.
   nsCOMPtr<mozIStorageStatement> stmt;
-  db->CreateStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt));
+  db->CreateStatement("CREATE TABLE test (id INTEGER PRIMARY KEY)"_ns,
+                      getter_AddRefs(stmt));
   stmt->Execute();
   stmt->Finalize();
 
-  db->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO test (id) VALUES (?)"),
+  db->CreateStatement("INSERT INTO test (id) VALUES (?)"_ns,
                       getter_AddRefs(stmt));
   for (int32_t i = 0; i < 30; ++i) {
     stmt->BindInt32ByIndex(0, i);
@@ -110,8 +109,7 @@ TEST(storage_async_callbacks_with_spun_event_loops,
   }
   stmt->Finalize();
 
-  db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM test"),
-                      getter_AddRefs(stmt));
+  db->CreateStatement("SELECT * FROM test"_ns, getter_AddRefs(stmt));
   nsCOMPtr<mozIStoragePendingStatement> ps;
   do_check_success(
       stmt->ExecuteAsync(new UnownedCallback(db), getter_AddRefs(ps)));
@@ -126,19 +124,18 @@ TEST(storage_async_callbacks_with_spun_event_loops, SpinEventsLoopInHandleError)
 
   // Create a test table and populate it.
   nsCOMPtr<mozIStorageStatement> stmt;
-  db->CreateStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt));
+  db->CreateStatement("CREATE TABLE test (id INTEGER PRIMARY KEY)"_ns,
+                      getter_AddRefs(stmt));
   stmt->Execute();
   stmt->Finalize();
 
-  db->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO test (id) VALUES (1)"),
+  db->CreateStatement("INSERT INTO test (id) VALUES (1)"_ns,
                       getter_AddRefs(stmt));
   stmt->Execute();
   stmt->Finalize();
 
   // This will cause a constraint error.
-  db->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO test (id) VALUES (1)"),
+  db->CreateStatement("INSERT INTO test (id) VALUES (1)"_ns,
                       getter_AddRefs(stmt));
   nsCOMPtr<mozIStoragePendingStatement> ps;
   do_check_success(

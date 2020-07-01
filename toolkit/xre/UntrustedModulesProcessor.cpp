@@ -145,8 +145,7 @@ NS_IMPL_ISUPPORTS(UntrustedModulesProcessor, nsIObserver)
 static const uint32_t kThreadTimeoutMS = 120000;  // 2 minutes
 
 UntrustedModulesProcessor::UntrustedModulesProcessor()
-    : mThread(new LazyIdleThread(kThreadTimeoutMS,
-                                 NS_LITERAL_CSTRING("Untrusted Modules"),
+    : mThread(new LazyIdleThread(kThreadTimeoutMS, "Untrusted Modules"_ns,
                                  LazyIdleThread::ManualShutdown)),
       mUnprocessedMutex(
           "mozilla::UntrustedModulesProcessor::mUnprocessedMutex"),

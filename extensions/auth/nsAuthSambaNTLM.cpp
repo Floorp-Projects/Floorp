@@ -173,11 +173,10 @@ nsresult nsAuthSambaNTLM::SpawnNTLMAuthHelper() {
                            &mFromChildFD, &mToChildFD);
   if (!isOK) return NS_ERROR_FAILURE;
 
-  if (!WriteString(mToChildFD, NS_LITERAL_CSTRING("YR\n")))
-    return NS_ERROR_FAILURE;
+  if (!WriteString(mToChildFD, "YR\n"_ns)) return NS_ERROR_FAILURE;
   nsCString line;
   if (!ReadLine(mFromChildFD, line)) return NS_ERROR_FAILURE;
-  if (!StringBeginsWith(line, NS_LITERAL_CSTRING("YR "))) {
+  if (!StringBeginsWith(line, "YR "_ns)) {
     // Something went wrong. Perhaps no credentials are accessible.
     return NS_ERROR_FAILURE;
   }
@@ -231,8 +230,7 @@ nsAuthSambaNTLM::GetNextToken(const void* inToken, uint32_t inTokenLen,
   if (!WriteString(mToChildFD, request)) return NS_ERROR_FAILURE;
   nsCString line;
   if (!ReadLine(mFromChildFD, line)) return NS_ERROR_FAILURE;
-  if (!StringBeginsWith(line, NS_LITERAL_CSTRING("KK ")) &&
-      !StringBeginsWith(line, NS_LITERAL_CSTRING("AF "))) {
+  if (!StringBeginsWith(line, "KK "_ns) && !StringBeginsWith(line, "AF "_ns)) {
     // Something went wrong. Perhaps no credentials are accessible.
     return NS_ERROR_FAILURE;
   }

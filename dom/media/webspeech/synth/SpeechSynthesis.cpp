@@ -290,7 +290,7 @@ SpeechSynthesis::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIDocShell> docShell = window ? window->GetDocShell() : nullptr;
 
     if (!nsContentUtils::ShouldResistFingerprinting(docShell)) {
-      DispatchTrustedEvent(NS_LITERAL_STRING("voiceschanged"));
+      DispatchTrustedEvent(u"voiceschanged"_ns);
       // If we have a pending item, and voices become available, speak it.
       if (!mCurrentTask && !mHoldQueue && HasVoices()) {
         AdvanceQueue();

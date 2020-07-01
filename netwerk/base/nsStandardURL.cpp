@@ -1375,7 +1375,7 @@ nsStandardURL::GetDisplayHostPort(nsACString& aUnicodeHostPort) {
     return rv;
   }
 
-  if (StringBeginsWith(Hostport(), NS_LITERAL_CSTRING("["))) {
+  if (StringBeginsWith(Hostport(), "["_ns)) {
     aUnicodeHostPort.AssignLiteral("[");
     aUnicodeHostPort.Append(unicodeHostPort);
     aUnicodeHostPort.AppendLiteral("]");
@@ -1797,7 +1797,7 @@ nsresult nsStandardURL::SetUsername(const nsACString& input) {
   if (mUsername.mLen < 0 && mPassword.mLen < 0) {
     MOZ_ASSERT(!escUsername.IsEmpty(), "Should not be empty at this point");
     mUsername.mPos = mAuthority.mPos;
-    mSpec.Insert(escUsername + NS_LITERAL_CSTRING("@"), mUsername.mPos);
+    mSpec.Insert(escUsername + "@"_ns, mUsername.mPos);
     shift = escUsername.Length() + 1;
     mUsername.mLen = escUsername.Length() > 0 ? escUsername.Length() : -1;
   } else {
@@ -1877,13 +1877,11 @@ nsresult nsStandardURL::SetPassword(const nsACString& input) {
   if (mPassword.mLen < 0) {
     if (mUsername.mLen > 0) {
       mPassword.mPos = mUsername.mPos + mUsername.mLen + 1;
-      mSpec.Insert(NS_LITERAL_CSTRING(":") + escPassword, mPassword.mPos - 1);
+      mSpec.Insert(":"_ns + escPassword, mPassword.mPos - 1);
       shift = escPassword.Length() + 1;
     } else {
       mPassword.mPos = mAuthority.mPos + 1;
-      mSpec.Insert(
-          NS_LITERAL_CSTRING(":") + escPassword + NS_LITERAL_CSTRING("@"),
-          mPassword.mPos - 1);
+      mSpec.Insert(":"_ns + escPassword + "@"_ns, mPassword.mPos - 1);
       shift = escPassword.Length() + 2;
     }
   } else {
@@ -2538,8 +2536,7 @@ nsStandardURL::Resolve(const nsACString& in, nsACString& out) {
         break;
       default:
         if (coalesceFlag & NET_COALESCE_DOUBLE_SLASH_IS_ROOT) {
-          if (Filename().Equals(NS_LITERAL_CSTRING("%2F"),
-                                nsCaseInsensitiveCStringComparator)) {
+          if (Filename().Equals("%2F"_ns, nsCaseInsensitiveCStringComparator)) {
             // if ftp URL ends with %2F then simply
             // append relative part because %2F also
             // marks the root directory with ftp-urls

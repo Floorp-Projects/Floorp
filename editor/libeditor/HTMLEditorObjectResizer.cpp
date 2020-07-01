@@ -35,14 +35,14 @@
 #include "nscore.h"
 #include <algorithm>
 
-#define kTopLeft NS_LITERAL_STRING("nw")
-#define kTop NS_LITERAL_STRING("n")
-#define kTopRight NS_LITERAL_STRING("ne")
-#define kLeft NS_LITERAL_STRING("w")
-#define kRight NS_LITERAL_STRING("e")
-#define kBottomLeft NS_LITERAL_STRING("sw")
-#define kBottom NS_LITERAL_STRING("s")
-#define kBottomRight NS_LITERAL_STRING("se")
+#define kTopLeft u"nw"_ns
+#define kTop u"n"_ns
+#define kTopRight u"ne"_ns
+#define kLeft u"w"_ns
+#define kRight u"e"_ns
+#define kBottomLeft u"sw"_ns
+#define kBottom u"s"_ns
+#define kBottomRight u"se"_ns
 
 namespace mozilla {
 
@@ -54,8 +54,8 @@ using namespace dom;
 
 ManualNACPtr HTMLEditor::CreateResizer(int16_t aLocation,
                                        nsIContent& aParentContent) {
-  ManualNACPtr resizer = CreateAnonymousElement(
-      nsGkAtoms::span, aParentContent, NS_LITERAL_STRING("mozResizer"), false);
+  ManualNACPtr resizer = CreateAnonymousElement(nsGkAtoms::span, aParentContent,
+                                                u"mozResizer"_ns, false);
   if (!resizer) {
     NS_WARNING(
         "HTMLEditor::CreateAnonymousElement(nsGkAtoms::span, mozResizer) "
@@ -64,8 +64,8 @@ ManualNACPtr HTMLEditor::CreateResizer(int16_t aLocation,
   }
 
   // add the mouse listener so we can detect a click on a resizer
-  DebugOnly<nsresult> rvIgnored = resizer->AddEventListener(
-      NS_LITERAL_STRING("mousedown"), mEventListener, true);
+  DebugOnly<nsresult> rvIgnored =
+      resizer->AddEventListener(u"mousedown"_ns, mEventListener, true);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "EventTarget::AddEventListener(mousedown) failed, but ignored");
@@ -118,14 +118,14 @@ ManualNACPtr HTMLEditor::CreateShadow(nsIContent& aParentContent,
     name = nsGkAtoms::span;
   }
 
-  return CreateAnonymousElement(name, aParentContent,
-                                NS_LITERAL_STRING("mozResizingShadow"), true);
+  return CreateAnonymousElement(name, aParentContent, u"mozResizingShadow"_ns,
+                                true);
 }
 
 ManualNACPtr HTMLEditor::CreateResizingInfo(nsIContent& aParentContent) {
   // let's create an info box through the element factory
   return CreateAnonymousElement(nsGkAtoms::span, aParentContent,
-                                NS_LITERAL_STRING("mozResizingInfo"), true);
+                                u"mozResizingInfo"_ns, true);
 }
 
 nsresult HTMLEditor::SetAllResizersPosition() {
@@ -505,9 +505,8 @@ nsresult HTMLEditor::ShowResizersInternal(Element& aResizedElement) {
 
     // XXX Even when it failed to add event listener, should we need to set
     //     _moz_resizing attribute?
-    DebugOnly<nsresult> rvIgnored =
-        aResizedElement.SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_resizing,
-                                NS_LITERAL_STRING("true"), true);
+    DebugOnly<nsresult> rvIgnored = aResizedElement.SetAttr(
+        kNameSpaceID_None, nsGkAtoms::_moz_resizing, u"true"_ns, true);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "Element::SetAttr(nsGkAtoms::_moz_resizing, true) failed, but ignored");
@@ -641,17 +640,15 @@ nsresult HTMLEditor::HideResizersInternal() {
 
 void HTMLEditor::HideShadowAndInfo() {
   if (mResizingShadow) {
-    DebugOnly<nsresult> rvIgnored =
-        mResizingShadow->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                 NS_LITERAL_STRING("hidden"), true);
+    DebugOnly<nsresult> rvIgnored = mResizingShadow->SetAttr(
+        kNameSpaceID_None, nsGkAtoms::_class, u"hidden"_ns, true);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "Element::SetAttr(nsGkAtoms::_class, hidden) failed, but ignored");
   }
   if (mResizingInfo) {
-    DebugOnly<nsresult> rvIgnored =
-        mResizingInfo->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                               NS_LITERAL_STRING("hidden"), true);
+    DebugOnly<nsresult> rvIgnored = mResizingInfo->SetAttr(
+        kNameSpaceID_None, nsGkAtoms::_class, u"hidden"_ns, true);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "Element::SetAttr(nsGkAtoms::_class, hidden) failed, but ignored");
@@ -664,9 +661,8 @@ nsresult HTMLEditor::StartResizing(Element* aHandle) {
     return NS_ERROR_FAILURE;
   }
   mActivatedHandle = aHandle;
-  DebugOnly<nsresult> rvIgnored =
-      mActivatedHandle->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_activated,
-                                NS_LITERAL_STRING("true"), true);
+  DebugOnly<nsresult> rvIgnored = mActivatedHandle->SetAttr(
+      kNameSpaceID_None, nsGkAtoms::_moz_activated, u"true"_ns, true);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "Element::SetAttr(nsGkAtoms::_moz_activated, true) failed");
@@ -808,9 +804,8 @@ nsresult HTMLEditor::OnMouseUp(int32_t aClientX, int32_t aClientY) {
     }
 
     if (mIsMoving) {
-      DebugOnly<nsresult> rvIgnored =
-          mPositioningShadow->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                      NS_LITERAL_STRING("hidden"), true);
+      DebugOnly<nsresult> rvIgnored = mPositioningShadow->SetAttr(
+          kNameSpaceID_None, nsGkAtoms::_class, u"hidden"_ns, true);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "Element::SetAttr(nsGkAtoms::_class, hidden) failed");
@@ -912,10 +907,8 @@ nsresult HTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW,
   diffWidthStr.AppendInt(diffWidth);
   diffHeightStr.AppendInt(diffHeight);
 
-  nsAutoString info(widthStr + NS_LITERAL_STRING(" x ") + heightStr +
-                    NS_LITERAL_STRING(" (") + diffWidthStr +
-                    NS_LITERAL_STRING(", ") + diffHeightStr +
-                    NS_LITERAL_STRING(")"));
+  nsAutoString info(widthStr + u" x "_ns + heightStr + u" ("_ns + diffWidthStr +
+                    u", "_ns + diffHeightStr + u")"_ns);
 
   RefPtr<Document> document = GetDocument();
   textInfo = document->CreateTextNode(info);

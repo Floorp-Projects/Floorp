@@ -30,7 +30,7 @@ TEST(PrioEncoder, BooleanLimitExceeded)
 
   mozilla::dom::GlobalObject global(cx, xpc::PrivilegedJunkScope());
 
-  nsCString batchID = NS_LITERAL_CSTRING("abc123");
+  nsCString batchID = "abc123"_ns;
 
   mozilla::dom::PrioParams prioParams;
   FallibleTArray<bool> sequence;
