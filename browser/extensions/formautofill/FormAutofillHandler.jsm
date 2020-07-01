@@ -36,6 +36,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FormLikeFactory.jsm"
 );
 
+const formFillController = Cc[
+  "@mozilla.org/satchel/form-fill-controller;1"
+].getService(Ci.nsIFormFillController);
+
 XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
   const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
     "brandShortName"
@@ -312,11 +316,12 @@ class FormAutofillSection {
         // For the focused input element, it will be filled with a valid value
         // anyway.
         // For the others, the fields should be only filled when their values
-        // are empty.
+        // are empty or are the result of an earlier auto-fill.
         let focusedInput = focusedDetail.elementWeakRef.get();
         if (
           element == focusedInput ||
-          (element != focusedInput && !element.value)
+          (element != focusedInput && !element.value) ||
+          fieldDetail.state == FIELD_STATES.AUTO_FILLED
         ) {
           element.setUserInput(value);
           this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
@@ -474,17 +479,8 @@ class FormAutofillSection {
       }
     }
 
-    switch (nextState) {
-      case FIELD_STATES.NORMAL: {
-        if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
-          element.removeEventListener("input", this, { mozSystemGroup: true });
-        }
-        break;
-      }
-      case FIELD_STATES.AUTO_FILLED: {
-        element.addEventListener("input", this, { mozSystemGroup: true });
-        break;
-      }
+    if (nextState == FIELD_STATES.AUTO_FILLED) {
+      element.addEventListener("input", this, { mozSystemGroup: true });
     }
 
     fieldDetail.state = nextState;
@@ -562,6 +558,23 @@ class FormAutofillSection {
         }
         const target = event.target;
         const targetFieldDetail = this.getFieldDetailByElement(target);
+        const isCreditCardField = FormAutofillUtils.isCreditCardField(
+          targetFieldDetail.fieldName
+        );
+
+        // If the user manually blanks a credit card field, then
+        // we want the popup to be activated.
+        if (
+          ChromeUtils.getClassName(target) !== "HTMLSelectElement" &&
+          isCreditCardField &&
+          target.value === ""
+        ) {
+          formFillController.showPopup();
+        }
+
+        if (targetFieldDetail.state == FIELD_STATES.NORMAL) {
+          return;
+        }
 
         this._changeFieldState(targetFieldDetail, FIELD_STATES.NORMAL);
 

@@ -174,16 +174,30 @@ add_task(async function check_fields_after_form_autofill() {
   await osKeyStoreLoginShown;
 });
 
-// Fallback to history search after autofill address.
+// Fallback to history search after autofill values (for non-empty fields).
 add_task(async function check_fallback_after_form_autofill() {
   if (!canTest) {
     return;
   }
 
-  await setInput("#cc-name", "", true);
+  await setInput("#cc-name", "J", true);
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(["John Smith"], false);
+});
+
+// Present credit card popup immediately when user blanks a field
+add_task(async function check_cc_popup_on_field_blank() {
+  if (!canTest) {
+    return;
+  }
+
+  await setInput("#cc-name", "", true);
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primary: cc["cc-name"],
+    secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+  })));
 });
 
 // Resume form autofill once all the autofilled fileds are changed.
