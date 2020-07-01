@@ -24,7 +24,6 @@
 
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/dom/ScriptLoader.h"
-#include "mozilla/Omnijar.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/SystemPrincipal.h"
 #include "mozilla/scache/StartupCache.h"
@@ -249,10 +248,6 @@ bool mozJSSubScriptLoader::ReadScript(JS::MutableHandle<JSScript*> script,
                                       const char* uriStr, nsIIOService* serv,
                                       bool wantReturnValue,
                                       bool useCompilationScope) {
-  // We're going to cache the XDR encoded script data - suspend writes via the
-  // CacheAwareZipReader, otherwise we'll end up redundantly caching scripts.
-  AutoSuspendStartupCacheWrites suspendScache;
-
   // We create a channel and call SetContentType, to avoid expensive MIME type
   // lookups (bug 632490).
   nsCOMPtr<nsIChannel> chan;
@@ -455,15 +450,7 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   bool ignoreCache =
       options.ignoreCache || !isSystem || scheme.EqualsLiteral("blob");
 
-  // Since we are intending to cache these buffers in the script preloader
-  // already, caching them in the StartupCache tends to be redundant. This
-  // ought to be addressed, but as in bug 1627075 we extended the
-  // StartupCache to be multi-process, we just didn't want to propagate
-  // this problem into yet more processes, so we pretend the StartupCache
-  // doesn't exist if we're not the parent process.
-  StartupCache* cache = (ignoreCache || !XRE_IsParentProcess())
-                            ? nullptr
-                            : StartupCache::GetSingleton();
+  StartupCache* cache = ignoreCache ? nullptr : StartupCache::GetSingleton();
 
   nsAutoCString cachePath;
   SubscriptCachePath(cx, uri, targetObj, cachePath);

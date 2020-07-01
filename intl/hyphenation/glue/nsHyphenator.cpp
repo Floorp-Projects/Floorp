@@ -41,11 +41,20 @@ static const void* GetItemPtrFromJarURI(nsIJARURI* aJAR, uint32_t* aLength) {
   if (!file) {
     return nullptr;
   }
-  RefPtr<CacheAwareZipReader> archive = Omnijar::GetReader(file);
+  RefPtr<nsZipArchive> archive = Omnijar::GetReader(file);
   if (archive) {
     nsCString path;
     aJAR->GetJAREntry(path);
-    return archive->GetData(path.get(), aLength);
+    nsZipItem* item = archive->GetItem(path.get());
+    if (item && item->Compression() == 0 && item->Size() > 0) {
+      // We do NOT own this data, but it won't go away until the omnijar
+      // file is closed during shutdown.
+      const uint8_t* data = archive->GetData(item);
+      if (data) {
+        *aLength = item->Size();
+        return data;
+      }
+    }
   }
   return nullptr;
 }
