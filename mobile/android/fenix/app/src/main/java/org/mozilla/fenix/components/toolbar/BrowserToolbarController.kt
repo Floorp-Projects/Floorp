@@ -380,6 +380,13 @@ class DefaultBrowserToolbarController(
                     BrowserFragmentDirections.actionGlobalHistoryFragment()
                 )
             }
+
+            ToolbarMenu.Item.Downloads -> browserAnimator.captureEngineViewAndDrawStatically {
+                navController.nav(
+                    R.id.browserFragment,
+                    BrowserFragmentDirections.actionGlobalDownloadsFragment()
+                )
+            }
         }
     }
 
@@ -414,6 +421,7 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.AddonsManager -> Event.BrowserMenuItemTapped.Item.ADDONS_MANAGER
             ToolbarMenu.Item.Bookmarks -> Event.BrowserMenuItemTapped.Item.BOOKMARKS
             ToolbarMenu.Item.History -> Event.BrowserMenuItemTapped.Item.HISTORY
+            ToolbarMenu.Item.Downloads -> Event.BrowserMenuItemTapped.Item.DOWNLOADS
         }
 
         activity.components.analytics.metrics.track(Event.BrowserMenuItemTapped(eventItem))

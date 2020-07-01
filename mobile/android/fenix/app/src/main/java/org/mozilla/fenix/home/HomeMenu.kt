@@ -43,6 +43,7 @@ class HomeMenu(
         object SyncedTabs : Item()
         object History : Item()
         object Bookmarks : Item()
+        object Downloads : Item()
         object Quit : Item()
         object Sync : Item()
     }
@@ -144,6 +145,14 @@ class HomeMenu(
             onItemTapped.invoke(Item.Help)
         }
 
+        val downloadsItem = BrowserMenuImageText(
+            "Downloads",
+            R.drawable.ic_download,
+            primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.Downloads)
+        }
+
         // Only query account manager if it has been initialized.
         // We don't want to cause its initialization just for this check.
         val accountAuthItem = if (context.components.backgroundServices.accountManagerAvailableQueue.isReady()) {
@@ -161,6 +170,7 @@ class HomeMenu(
             if (FeatureFlags.syncedTabs) syncedTabsItem else null,
             bookmarksItem,
             historyItem,
+            if (FeatureFlags.viewDownloads) downloadsItem else null,
             BrowserMenuDivider(),
             addons,
             BrowserMenuDivider(),

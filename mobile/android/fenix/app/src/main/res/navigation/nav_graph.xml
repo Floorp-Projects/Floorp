@@ -70,6 +70,9 @@
     <action
         android:id="@+id/action_global_historyFragment"
         app:destination="@id/historyFragment" />
+
+    <action android:id="@+id/action_global_downloadsFragment"
+        app:destination="@id/downloadsFragment" />
     <action
         android:id="@+id/action_global_accountProblemFragment"
         app:destination="@id/accountProblemFragment" />
@@ -238,6 +241,12 @@
         android:name="org.mozilla.fenix.library.history.HistoryFragment"
         android:label="@string/library_history"
         tools:layout="@layout/fragment_history" />
+
+    <fragment
+        android:id="@+id/downloadsFragment"
+        android:name="org.mozilla.fenix.library.downloads.DownloadFragment"
+        android:label="Downloads"
+        tools:layout="@layout/fragment_downloads" />
 
     <fragment
         android:id="@+id/bookmarkFragment"

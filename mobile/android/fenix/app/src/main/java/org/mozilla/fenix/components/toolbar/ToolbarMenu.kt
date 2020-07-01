@@ -30,6 +30,7 @@ interface ToolbarMenu {
         object ReaderModeAppearance : Item()
         object Bookmarks : Item()
         object History : Item()
+        object Downloads : Item()
     }
 
     val menuBuilder: BrowserMenuBuilder

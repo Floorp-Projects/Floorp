@@ -179,6 +179,7 @@ class DefaultToolbarMenu(
             .shouldDeleteBrowsingDataOnQuit
 
         val menuItems = listOfNotNull(
+            if (FeatureFlags.viewDownloads) downloadsItem else null,
             historyItem,
             bookmarksItem,
             if (FeatureFlags.syncedTabs) syncedTabs else null,
@@ -331,6 +332,14 @@ class DefaultToolbarMenu(
         primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.Bookmarks)
+    }
+
+    val downloadsItem = BrowserMenuImageText(
+        "Downloads",
+        R.drawable.ic_download,
+        primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.Downloads)
     }
 
     @ColorRes

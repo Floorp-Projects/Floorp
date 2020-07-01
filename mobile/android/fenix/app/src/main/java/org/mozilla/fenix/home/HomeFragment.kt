@@ -771,6 +771,15 @@ class HomeFragment : Fragment() {
                             HomeFragmentDirections.actionGlobalHistoryFragment()
                         )
                     }
+
+                    HomeMenu.Item.Downloads -> {
+                        hideOnboardingIfNeeded()
+                        nav(
+                            R.id.homeFragment,
+                            HomeFragmentDirections.actionGlobalDownloadsFragment()
+                        )
+                    }
+
                     HomeMenu.Item.Help -> {
                         hideOnboardingIfNeeded()
                         (activity as HomeActivity).openToBrowserAndLoad(
