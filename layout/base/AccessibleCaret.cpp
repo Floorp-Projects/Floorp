@@ -31,8 +31,9 @@ using namespace dom;
 
 NS_IMPL_ISUPPORTS(AccessibleCaret::DummyTouchListener, nsIDOMEventListener)
 
-NS_NAMED_LITERAL_STRING(AccessibleCaret::sTextOverlayElementId, "text-overlay");
-NS_NAMED_LITERAL_STRING(AccessibleCaret::sCaretImageElementId, "image");
+const nsLiteralString AccessibleCaret::sTextOverlayElementId =
+    u"text-overlay"_ns;
+const nsLiteralString AccessibleCaret::sCaretImageElementId = u"image"_ns;
 
 #define AC_PROCESS_ENUM_TO_STREAM(e) \
   case (e):                          \

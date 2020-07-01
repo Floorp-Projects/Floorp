@@ -31,7 +31,7 @@ nsresult net_GetURLSpecFromActualFile(nsIFile* aFile, nsACString& result) {
   // Windows Desktop paths begin with a drive letter, so need an 'extra'
   // slash at the begining
   // C:\Windows =>  file:///C:/Windows
-  NS_NAMED_LITERAL_CSTRING(prefix, "file:///");
+  constexpr auto prefix = "file:///"_ns;
 
   // Escape the path with the directory mask
   NS_ConvertUTF16toUTF8 ePath(path);

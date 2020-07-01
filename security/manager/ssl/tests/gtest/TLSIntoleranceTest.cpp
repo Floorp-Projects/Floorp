@@ -10,7 +10,7 @@
 
 #include "gtest/gtest.h"
 
-NS_NAMED_LITERAL_CSTRING(HOST, "example.org");
+constexpr auto HOST = "example.org"_ns;
 const int16_t PORT = 443;
 
 class psm_TLSIntoleranceTest : public ::testing::Test {
@@ -251,9 +251,9 @@ TEST_F(psm_TLSIntoleranceTest, TLSDontForgetTolerance) {
 }
 
 TEST_F(psm_TLSIntoleranceTest, TLSPerSiteFallbackLimit) {
-  NS_NAMED_LITERAL_CSTRING(example_com, "example.com");
-  NS_NAMED_LITERAL_CSTRING(example_net, "example.net");
-  NS_NAMED_LITERAL_CSTRING(example_org, "example.org");
+  constexpr auto example_com = "example.com"_ns;
+  constexpr auto example_net = "example.net"_ns;
+  constexpr auto example_org = "example.org"_ns;
 
   helpers.mVersionFallbackLimit = SSL_LIBRARY_VERSION_TLS_1_0;
 

@@ -810,7 +810,7 @@ void nsObjectLoadingContent::GetNestedParams(
       do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
 
   nsCOMPtr<nsIHTMLCollection> allParams;
-  NS_NAMED_LITERAL_STRING(xhtml_ns, "http://www.w3.org/1999/xhtml");
+  constexpr auto xhtml_ns = u"http://www.w3.org/1999/xhtml"_ns;
   ErrorResult rv;
   allParams = ourElement->GetElementsByTagNameNS(xhtml_ns, u"param"_ns, rv);
   if (rv.Failed()) {

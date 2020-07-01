@@ -650,7 +650,7 @@ class VibrateWindowListener : public nsIDOMEventListener {
     mWindow = do_GetWeakReference(aWindow);
     mDocument = do_GetWeakReference(aDocument);
 
-    NS_NAMED_LITERAL_STRING(visibilitychange, "visibilitychange");
+    constexpr auto visibilitychange = u"visibilitychange"_ns;
     aDocument->AddSystemEventListener(visibilitychange, this, /* listener */
                                       true,                   /* use capture */
                                       false /* wants untrusted */);
@@ -701,7 +701,7 @@ void VibrateWindowListener::RemoveListener() {
   if (!target) {
     return;
   }
-  NS_NAMED_LITERAL_STRING(visibilitychange, "visibilitychange");
+  constexpr auto visibilitychange = u"visibilitychange"_ns;
   target->RemoveSystemEventListener(visibilitychange, this,
                                     true /* use capture */);
 }

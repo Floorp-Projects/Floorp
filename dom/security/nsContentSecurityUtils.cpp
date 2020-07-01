@@ -212,27 +212,25 @@ nsString OptimizeFileName(const nsAString& aFileName) {
 FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
     const nsString& fileName, bool collectAdditionalExtensionData) {
   // These are strings because the Telemetry Events API only accepts strings
-  static NS_NAMED_LITERAL_CSTRING(kChromeURI, "chromeuri");
-  static NS_NAMED_LITERAL_CSTRING(kResourceURI, "resourceuri");
-  static NS_NAMED_LITERAL_CSTRING(kBlobUri, "bloburi");
-  static NS_NAMED_LITERAL_CSTRING(kDataUri, "dataurl");
-  static NS_NAMED_LITERAL_CSTRING(kSingleString, "singlestring");
-  static NS_NAMED_LITERAL_CSTRING(kMozillaExtension, "mozillaextension");
-  static NS_NAMED_LITERAL_CSTRING(kOtherExtension, "otherextension");
-  static NS_NAMED_LITERAL_CSTRING(kSuspectedUserChromeJS,
-                                  "suspectedUserChromeJS");
+  static constexpr auto kChromeURI = "chromeuri"_ns;
+  static constexpr auto kResourceURI = "resourceuri"_ns;
+  static constexpr auto kBlobUri = "bloburi"_ns;
+  static constexpr auto kDataUri = "dataurl"_ns;
+  static constexpr auto kSingleString = "singlestring"_ns;
+  static constexpr auto kMozillaExtension = "mozillaextension"_ns;
+  static constexpr auto kOtherExtension = "otherextension"_ns;
+  static constexpr auto kSuspectedUserChromeJS = "suspectedUserChromeJS"_ns;
 #if defined(XP_WIN)
-  static NS_NAMED_LITERAL_CSTRING(kSanitizedWindowsURL, "sanitizedWindowsURL");
-  static NS_NAMED_LITERAL_CSTRING(kSanitizedWindowsPath,
-                                  "sanitizedWindowsPath");
+  static constexpr auto kSanitizedWindowsURL = "sanitizedWindowsURL"_ns;
+  static constexpr auto kSanitizedWindowsPath = "sanitizedWindowsPath"_ns;
 #endif
-  static NS_NAMED_LITERAL_CSTRING(kOther, "other");
-  static NS_NAMED_LITERAL_CSTRING(kOtherWorker, "other-on-worker");
-  static NS_NAMED_LITERAL_CSTRING(kRegexFailure, "regexfailure");
+  static constexpr auto kOther = "other"_ns;
+  static constexpr auto kOtherWorker = "other-on-worker"_ns;
+  static constexpr auto kRegexFailure = "regexfailure"_ns;
 
-  static NS_NAMED_LITERAL_STRING(kUCJSRegex, "(.+).uc.js\\?*[0-9]*$");
-  static NS_NAMED_LITERAL_STRING(kExtensionRegex, "extensions/(.+)@(.+)!(.+)$");
-  static NS_NAMED_LITERAL_STRING(kSingleFileRegex, "^[a-zA-Z0-9.?]+$");
+  static constexpr auto kUCJSRegex = u"(.+).uc.js\\?*[0-9]*$"_ns;
+  static constexpr auto kExtensionRegex = u"extensions/(.+)@(.+)!(.+)$"_ns;
+  static constexpr auto kSingleFileRegex = u"^[a-zA-Z0-9.?]+$"_ns;
 
   // resource:// and chrome://
   if (StringBeginsWith(fileName, u"chrome://"_ns)) {
@@ -419,9 +417,9 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   // We also permit two specific idioms in eval()-like contexts. We'd like to
   // elminate these too; but there are in-the-wild Mozilla privileged extensions
   // that use them.
-  static NS_NAMED_LITERAL_STRING(sAllowedEval1, "this");
-  static NS_NAMED_LITERAL_STRING(sAllowedEval2,
-                                 "function anonymous(\n) {\nreturn this\n}");
+  static constexpr auto sAllowedEval1 = u"this"_ns;
+  static constexpr auto sAllowedEval2 =
+      u"function anonymous(\n) {\nreturn this\n}"_ns;
 
   if (MOZ_LIKELY(!aIsSystemPrincipal && !XRE_IsE10sParentProcess())) {
     // We restrict eval in the system principal and parent process.

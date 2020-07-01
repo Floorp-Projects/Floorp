@@ -26,7 +26,7 @@ enum class ErrorCode {
 
 typedef MozPromise<nsString, ErrorCode, false> U2FPromise;
 
-NS_NAMED_LITERAL_STRING(kRequiredU2FVersion, "U2F_V2");
+constexpr auto kRequiredU2FVersion = u"U2F_V2"_ns;
 
 }  // namespace dom
 }  // namespace mozilla

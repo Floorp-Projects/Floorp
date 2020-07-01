@@ -27,7 +27,7 @@ using mozilla::dom::CreateECParamsForCurve;
 const nsCString U2FSoftTokenManager::mSecretNickname = "U2F_NSSTOKEN"_ns;
 
 namespace {
-NS_NAMED_LITERAL_CSTRING(kAttestCertSubjectName, "CN=Firefox U2F Soft Token");
+constexpr auto kAttestCertSubjectName = "CN=Firefox U2F Soft Token"_ns;
 
 // This U2F-compatible soft token uses FIDO U2F-compatible ECDSA keypairs
 // on the SEC_OID_SECG_EC_SECP256R1 curve. When asked to Register, it will

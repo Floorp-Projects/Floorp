@@ -959,7 +959,7 @@ nsresult nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsTreeColumn* aCol,
     ComputedStyle* cellContext =
         GetPseudoComputedStyle(nsCSSAnonBoxes::mozTreeCell());
 
-    NS_NAMED_LITERAL_CSTRING(cell, "cell");
+    constexpr auto cell = "cell"_ns;
     if (currCol->IsCycler() || cell.Equals(aElement)) {
       // If the current Column is a Cycler, then the Rect is just the cell - the
       // margins. Similarly, if we're just being asked for the cell rect,

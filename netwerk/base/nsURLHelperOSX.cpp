@@ -118,7 +118,7 @@ nsresult net_GetURLSpecFromActualFile(nsIFile* aFile, nsACString& result) {
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString escPath;
-  NS_NAMED_LITERAL_CSTRING(prefix, "file://");
+  constexpr auto prefix = "file://"_ns;
 
   // Escape the path with the directory mask
   if (NS_EscapeURL(ePath.get(), ePath.Length(), esc_Directory + esc_Forced,

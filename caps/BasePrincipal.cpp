@@ -667,7 +667,7 @@ NS_IMETHODIMP
 BasePrincipal::GetPrefLightCacheKey(nsIURI* aURI, bool aWithCredentials,
                                     nsACString& _retval) {
   _retval.Truncate();
-  NS_NAMED_LITERAL_CSTRING(space, " ");
+  constexpr auto space = " "_ns;
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = GetURI(getter_AddRefs(uri));

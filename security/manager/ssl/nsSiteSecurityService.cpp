@@ -638,8 +638,8 @@ static uint32_t ParseSSSHeaders(uint32_t aType, const nsCString& aHeader,
   //  Unrecognized directives (that are otherwise syntactically valid) are
   //  ignored, and the rest of the header is parsed as normal.
 
-  NS_NAMED_LITERAL_CSTRING(max_age_var, "max-age");
-  NS_NAMED_LITERAL_CSTRING(include_subd_var, "includesubdomains");
+  constexpr auto max_age_var = "max-age"_ns;
+  constexpr auto include_subd_var = "includesubdomains"_ns;
 
   nsSecurityHeaderParser parser(aHeader);
   nsresult rv = parser.Parse();

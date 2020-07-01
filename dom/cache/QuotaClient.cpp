@@ -188,7 +188,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-NS_NAMED_LITERAL_STRING(kCachesSQLiteFilename, "caches.sqlite");
+const nsLiteralString kCachesSQLiteFilename = u"caches.sqlite"_ns;
 
 CacheQuotaClient::CacheQuotaClient()
     : mDirPaddingFileMutex("DOMCacheQuotaClient.mDirPaddingFileMutex") {

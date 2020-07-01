@@ -354,7 +354,7 @@ nsLocalFile::GetRelativeDescriptor(nsIFile* aFromFile, nsACString& aResult) {
 NS_IMETHODIMP
 nsLocalFile::SetRelativeDescriptor(nsIFile* aFromFile,
                                    const nsACString& aRelativeDesc) {
-  NS_NAMED_LITERAL_CSTRING(kParentDirStr, "../");
+  constexpr auto kParentDirStr = "../"_ns;
 
   nsCOMPtr<nsIFile> targetFile;
   nsresult rv = aFromFile->Clone(getter_AddRefs(targetFile));

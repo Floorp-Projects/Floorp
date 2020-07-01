@@ -31,15 +31,14 @@ class nsHTMLDocument {
 namespace mozilla {
 namespace dom {
 
-NS_NAMED_LITERAL_STRING(kFinishEnrollment, "navigator.id.finishEnrollment");
-NS_NAMED_LITERAL_STRING(kGetAssertion, "navigator.id.getAssertion");
+constexpr auto kFinishEnrollment = u"navigator.id.finishEnrollment"_ns;
+constexpr auto kGetAssertion = u"navigator.id.getAssertion"_ns;
 
 // Bug #1436078 - Permit Google Accounts. Remove in Bug #1436085 in Jan 2023.
-NS_NAMED_LITERAL_STRING(kGoogleAccountsAppId1,
-                        "https://www.gstatic.com/securitykey/origins.json");
-NS_NAMED_LITERAL_STRING(
-    kGoogleAccountsAppId2,
-    "https://www.gstatic.com/securitykey/a/google.com/origins.json");
+constexpr auto kGoogleAccountsAppId1 =
+    u"https://www.gstatic.com/securitykey/origins.json"_ns;
+constexpr auto kGoogleAccountsAppId2 =
+    u"https://www.gstatic.com/securitykey/a/google.com/origins.json"_ns;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(U2F)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

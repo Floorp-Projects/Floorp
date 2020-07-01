@@ -3514,8 +3514,8 @@ void Selection::SetColors(const nsAString& aForegroundColor,
 
   mCustomColors.reset(new SelectionCustomColors);
 
-  NS_NAMED_LITERAL_STRING(currentColorStr, "currentColor");
-  NS_NAMED_LITERAL_STRING(transparentStr, "transparent");
+  constexpr auto currentColorStr = u"currentColor"_ns;
+  constexpr auto transparentStr = u"transparent"_ns;
 
   if (!aForegroundColor.Equals(currentColorStr)) {
     nscolor foregroundColor;

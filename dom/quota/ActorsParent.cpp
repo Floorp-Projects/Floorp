@@ -187,13 +187,11 @@ const char kAboutHomeOriginPrefix[] = "moz-safe-about:home";
 const char kIndexedDBOriginPrefix[] = "indexeddb://";
 const char kResourceOriginPrefix[] = "resource://";
 
-constexpr auto kPersistentOriginTelemetryKey =
-    NS_LITERAL_CSTRING("PersistentOrigin");
-constexpr auto kTemporaryOriginTelemetryKey =
-    NS_LITERAL_CSTRING("TemporaryOrigin");
+constexpr auto kPersistentOriginTelemetryKey = "PersistentOrigin"_ns;
+constexpr auto kTemporaryOriginTelemetryKey = "TemporaryOrigin"_ns;
 
-constexpr auto kStorageName = NS_LITERAL_STRING("storage");
-constexpr auto kSQLiteSuffix = NS_LITERAL_STRING(".sqlite");
+constexpr auto kStorageName = u"storage"_ns;
+constexpr auto kSQLiteSuffix = u".sqlite"_ns;
 
 #define INDEXEDDB_DIRECTORY_NAME u"indexedDB"
 #define PERSISTENT_DIRECTORY_NAME u"persistent"

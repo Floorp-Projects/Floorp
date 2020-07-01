@@ -123,7 +123,7 @@ void ImageMemoryReporter::ReportSharedSurface(
                      ? nsIMemoryReporter::KIND_NONHEAP
                      : nsIMemoryReporter::KIND_OTHER;
 
-  NS_NAMED_LITERAL_CSTRING(desc, "Decoded image data stored in shared memory.");
+  constexpr auto desc = "Decoded image data stored in shared memory."_ns;
   aHandleReport->Callback(EmptyCString(), path, kind,
                           nsIMemoryReporter::UNITS_BYTES, surfaceSize, desc,
                           aData);

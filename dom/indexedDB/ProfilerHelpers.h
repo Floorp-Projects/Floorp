@@ -90,7 +90,7 @@ class MOZ_STACK_CLASS LoggingString final : public nsAutoCString {
 
   explicit LoggingString(const IDBTransaction& aTransaction)
       : nsAutoCString(kOpenBracket) {
-    NS_NAMED_LITERAL_CSTRING(kCommaSpace, ", ");
+    constexpr auto kCommaSpace = ", "_ns;
 
     const nsTArray<nsString>& stores = aTransaction.ObjectStoreNamesInternal();
 

@@ -3997,7 +3997,7 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
   // use lazy initilization for the font group since it's rather expensive
   if (!CurrentState().fontGroup) {
     ErrorResult err;
-    NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
+    constexpr auto kDefaultFontStyle = u"10px sans-serif"_ns;
     static float kDefaultFontSize = 10.0;
     RefPtr<PresShell> presShell = GetPresShell();
     bool fontUpdated = SetFontInternal(kDefaultFontStyle, err);

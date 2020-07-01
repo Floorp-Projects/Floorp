@@ -377,8 +377,8 @@ bool nsCoreUtils::IsErrorPage(Document* aDocument) {
   nsAutoCString path;
   uri->GetPathQueryRef(path);
 
-  NS_NAMED_LITERAL_CSTRING(neterror, "neterror");
-  NS_NAMED_LITERAL_CSTRING(certerror, "certerror");
+  constexpr auto neterror = "neterror"_ns;
+  constexpr auto certerror = "certerror"_ns;
 
   return StringBeginsWith(path, neterror) || StringBeginsWith(path, certerror);
 }

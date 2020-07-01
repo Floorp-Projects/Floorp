@@ -601,7 +601,7 @@ nsNativeAppSupportUnix::Start(bool* aRetVal) {
   SmPropValue valsRestart[3], valsClone[1], valsProgram[1], valsUser[1];
   int n = 0;
 
-  NS_NAMED_LITERAL_CSTRING(kClientIDParam, "--sm-client-id");
+  constexpr auto kClientIDParam = "--sm-client-id"_ns;
 
   SetSMValue(valsRestart[0], path);
   SetSMValue(valsRestart[1], kClientIDParam);

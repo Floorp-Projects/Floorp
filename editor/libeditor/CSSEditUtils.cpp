@@ -1044,7 +1044,7 @@ bool CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
           } else {
             htmlColor.AppendLiteral("rgb(");
 
-            NS_NAMED_LITERAL_STRING(comma, ", ");
+            constexpr auto comma = u", "_ns;
 
             tmpStr.AppendInt(NS_GET_R(rgba), 10);
             htmlColor.Append(tmpStr + comma);

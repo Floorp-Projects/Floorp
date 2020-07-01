@@ -1802,7 +1802,7 @@ class HTMLMediaElement::ChannelLoader final {
     nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);
     NS_ENSURE_STATE(http);
 
-    NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
+    constexpr auto rangeHdr = "Range"_ns;
 
     nsAutoCString rangeVal;
     if (NS_SUCCEEDED(http->GetRequestHeader(rangeHdr, rangeVal))) {

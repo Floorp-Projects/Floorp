@@ -35,7 +35,7 @@ static void GdkErrorHandler(const gchar* log_domain, GLogLevelFlags log_level,
      * (Details: serial XXXX error_code XXXX request_code XXXX (XXXX) minor_code
      * XXXX)
      */
-    NS_NAMED_LITERAL_CSTRING(serialString, "(Details: serial ");
+    constexpr auto serialString = "(Details: serial "_ns;
     int32_t start = buffer.Find(serialString);
     if (start == kNotFound) {
       MOZ_CRASH_UNSAFE(message);
@@ -48,7 +48,7 @@ static void GdkErrorHandler(const gchar* log_domain, GLogLevelFlags log_level,
       MOZ_CRASH_UNSAFE(message);
     }
 
-    NS_NAMED_LITERAL_CSTRING(errorCodeString, " error_code ");
+    constexpr auto errorCodeString = " error_code "_ns;
     if (!StringBeginsWith(Substring(endptr, buffer.EndReading()),
                           errorCodeString)) {
       MOZ_CRASH_UNSAFE(message);
@@ -60,7 +60,7 @@ static void GdkErrorHandler(const gchar* log_domain, GLogLevelFlags log_level,
       MOZ_CRASH_UNSAFE(message);
     }
 
-    NS_NAMED_LITERAL_CSTRING(requestCodeString, " request_code ");
+    constexpr auto requestCodeString = " request_code "_ns;
     if (!StringBeginsWith(Substring(endptr, buffer.EndReading()),
                           requestCodeString)) {
       MOZ_CRASH_UNSAFE(message);
@@ -73,7 +73,7 @@ static void GdkErrorHandler(const gchar* log_domain, GLogLevelFlags log_level,
       MOZ_CRASH_UNSAFE(message);
     }
 
-    NS_NAMED_LITERAL_CSTRING(minorCodeString, " minor_code ");
+    constexpr auto minorCodeString = " minor_code "_ns;
     start = buffer.Find(minorCodeString, /* aIgnoreCase = */ false,
                         endptr - buffer.BeginReading());
     if (!start) {

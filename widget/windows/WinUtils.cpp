@@ -2083,7 +2083,7 @@ WinUtils::WhitelistVec WinUtils::BuildWhitelist() {
 
     nsAutoString cleanTmpPath(tmpPath);
     if (UnexpandEnvVars(cleanTmpPath)) {
-      NS_NAMED_LITERAL_STRING(tempVar, "%TEMP%");
+      constexpr auto tempVar = u"%TEMP%"_ns;
       Unused << result.emplaceBack(std::make_pair(
           nsString(cleanTmpPath), nsDependentString(tempVar, 0)));
     }

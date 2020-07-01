@@ -923,7 +923,7 @@ NS_IMETHODIMP
 nsViewSourceChannel::VisitResponseHeaders(nsIHttpHeaderVisitor* aVisitor) {
   if (!mHttpChannel) return NS_ERROR_NULL_POINTER;
 
-  NS_NAMED_LITERAL_CSTRING(contentTypeStr, "Content-Type");
+  constexpr auto contentTypeStr = "Content-Type"_ns;
   nsAutoCString contentType;
   nsresult rv = mHttpChannel->GetResponseHeader(contentTypeStr, contentType);
   if (NS_SUCCEEDED(rv)) {

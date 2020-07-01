@@ -810,7 +810,7 @@ static void GetSystemFontInfo(GtkStyleContext* aStyle, nsString* aFontName,
 
   aFontStyle->systemFont = true;
 
-  NS_NAMED_LITERAL_STRING(quote, "\"");
+  constexpr auto quote = u"\""_ns;
   NS_ConvertUTF8toUTF16 family(pango_font_description_get_family(desc));
   *aFontName = quote + family + quote;
 

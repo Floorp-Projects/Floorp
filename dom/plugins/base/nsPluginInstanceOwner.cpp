@@ -2871,7 +2871,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void) {
 
     nsAutoCString description;
     GetPluginDescription(description);
-    NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
+    constexpr auto flash10Head = "Shockwave Flash 10."_ns;
     mFlash10Quirks = StringBeginsWith(description, flash10Head);
 #endif
   } else if (mWidget) {

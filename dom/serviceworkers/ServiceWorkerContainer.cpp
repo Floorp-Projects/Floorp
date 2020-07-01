@@ -286,7 +286,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
 
   // Step 4. If none passed, parse against script's URL
   if (!aOptions.mScope.WasPassed()) {
-    NS_NAMED_LITERAL_CSTRING(defaultScope, "./");
+    constexpr auto defaultScope = "./"_ns;
     rv = NS_NewURI(getter_AddRefs(scopeURI), defaultScope, nullptr, scriptURI);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       nsAutoCString spec;
