@@ -1,6 +1,6 @@
 [package]
 name = "neqo-http3"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Dragana Damjanovic <dragana.damjano@gmail.com>"]
 edition = "2018"
 license = "MIT/Apache-2.0"
@@ -13,6 +13,7 @@ neqo-qpack = { path = "./../neqo-qpack" }
 num-traits = "0.2"
 log = {version = "0.4.0", default-features = false}
 smallvec = "1.0.0"
+qlog = "0.3.0"
 
 [dev-dependencies]
 test-fixture = { path = "../test-fixture" }

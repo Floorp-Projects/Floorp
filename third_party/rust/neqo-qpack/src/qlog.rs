@@ -8,15 +8,15 @@
 
 use crate::Res;
 use neqo_common::hex;
-use neqo_common::qlog::NeqoQlog;
+use neqo_common::qlog::{handle_qlog_result, NeqoQlog};
 use qlog::{event::Event, QPackInstruction, QpackInstructionTypeName};
 
 pub fn qpack_read_insert_count_increment_instruction(
-    qlog: &mut Option<NeqoQlog>,
+    maybe_qlog: &mut Option<NeqoQlog>,
     increment: u64,
     data: &[u8],
 ) -> Res<()> {
-    if let Some(qlog) = qlog {
+    if let Some(qlog) = maybe_qlog {
         let event = Event::qpack_instruction_received(
             QPackInstruction::InsertCountIncrementInstruction {
                 instruction_type: QpackInstructionTypeName::InsertCountIncrementInstruction,
@@ -26,7 +26,8 @@ pub fn qpack_read_insert_count_increment_instruction(
             Some(hex(data)),
         );
 
-        qlog.stream().add_event(event)?;
+        let res = qlog.stream().add_event(event);
+        handle_qlog_result(maybe_qlog, res);
     }
     Ok(())
 }

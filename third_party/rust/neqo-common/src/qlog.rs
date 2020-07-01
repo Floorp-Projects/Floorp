@@ -5,7 +5,7 @@
 // except according to those terms.
 
 use std::fmt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 use chrono::{DateTime, Utc};
@@ -15,6 +15,7 @@ use qlog::{
 };
 
 use crate::Role;
+
 #[allow(clippy::module_name_repetitions)]
 pub struct NeqoQlog {
     qlog_path: PathBuf,
@@ -25,12 +26,15 @@ impl NeqoQlog {
     /// # Errors
     ///
     /// Will return `qlog::Error` if cannot write to the new log.
-    pub fn new(mut streamer: QlogStreamer, qlog_path: PathBuf) -> Result<Self, qlog::Error> {
+    pub fn new(
+        mut streamer: QlogStreamer,
+        qlog_path: impl AsRef<Path>,
+    ) -> Result<Self, qlog::Error> {
         streamer.start_log()?;
 
         Ok(Self {
             streamer,
-            qlog_path,
+            qlog_path: qlog_path.as_ref().to_owned(),
         })
     }
 
@@ -50,6 +54,17 @@ impl Drop for NeqoQlog {
         if let Err(e) = self.streamer.finish_log() {
             crate::do_log!(::log::Level::Error, "Error dropping NeqoQlog: {}", e)
         }
+    }
+}
+
+pub fn handle_qlog_result<T>(qlog: &mut Option<NeqoQlog>, result: Result<T, qlog::Error>) {
+    if let Err(e) = result {
+        crate::do_log!(
+            ::log::Level::Error,
+            "Qlog streaming failed with error {}; closing qlog.",
+            e
+        );
+        *qlog = None;
     }
 }
 

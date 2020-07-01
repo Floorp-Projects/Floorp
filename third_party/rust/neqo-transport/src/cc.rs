@@ -6,14 +6,17 @@
 
 // Congestion control
 
+use std::cell::RefCell;
 use std::cmp::max;
 use std::fmt::{self, Display};
+use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use crate::pace::Pacer;
 use crate::path::PATH_MTU_V6;
+use crate::qlog::{self, CongestionState, QlogMetric};
 use crate::tracking::SentPacket;
-use neqo_common::{const_max, const_min, qdebug, qinfo, qtrace};
+use neqo_common::{const_max, const_min, qdebug, qinfo, qlog::NeqoQlog, qtrace};
 
 pub const MAX_DATAGRAM_SIZE: usize = PATH_MTU_V6;
 pub const INITIAL_CWND_PKTS: usize = 10;
@@ -33,6 +36,9 @@ pub struct CongestionControl {
     congestion_recovery_start_time: Option<Instant>,
     ssthresh: usize,
     pacer: Option<Pacer>,
+
+    qlog: Rc<RefCell<Option<NeqoQlog>>>,
+    qlog_curr_cong_state: CongestionState,
 }
 
 impl Default for CongestionControl {
@@ -43,6 +49,8 @@ impl Default for CongestionControl {
             congestion_recovery_start_time: None,
             ssthresh: std::usize::MAX,
             pacer: None,
+            qlog: Rc::new(RefCell::new(None)),
+            qlog_curr_cong_state: CongestionState::SlowStart,
         }
     }
 }
@@ -61,7 +69,17 @@ impl Display for CongestionControl {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+enum PacketState {
+    Acked,
+    Lost,
+}
+
 impl CongestionControl {
+    pub fn set_qlog(&mut self, qlog: Rc<RefCell<Option<NeqoQlog>>>) {
+        self.qlog = qlog;
+    }
+
     #[cfg(test)]
     #[must_use]
     pub fn cwnd(&self) -> usize {
@@ -87,22 +105,44 @@ impl CongestionControl {
             assert!(self.bytes_in_flight >= pkt.size);
             self.bytes_in_flight -= pkt.size;
 
-            if self.in_congestion_recovery(pkt.time_sent) {
+            if self.in_congestion_recovery(pkt.time_sent, PacketState::Acked) {
                 // Do not increase congestion window in recovery period.
                 continue;
             }
             if self.app_limited() {
                 // Do not increase congestion_window if application limited.
+                qlog::congestion_state_updated(
+                    &mut self.qlog.borrow_mut(),
+                    &mut self.qlog_curr_cong_state,
+                    CongestionState::ApplicationLimited,
+                );
                 continue;
             }
 
             if self.congestion_window < self.ssthresh {
                 self.congestion_window += pkt.size;
                 qinfo!([self], "slow start");
+                qlog::congestion_state_updated(
+                    &mut self.qlog.borrow_mut(),
+                    &mut self.qlog_curr_cong_state,
+                    CongestionState::SlowStart,
+                );
             } else {
                 self.congestion_window += (MAX_DATAGRAM_SIZE * pkt.size) / self.congestion_window;
                 qinfo!([self], "congestion avoidance");
+                qlog::congestion_state_updated(
+                    &mut self.qlog.borrow_mut(),
+                    &mut self.qlog_curr_cong_state,
+                    CongestionState::CongestionAvoidance,
+                );
             }
+            qlog::metrics_updated(
+                &mut self.qlog.borrow_mut(),
+                &[
+                    QlogMetric::CongestionWindow(self.congestion_window),
+                    QlogMetric::BytesInFlight(self.bytes_in_flight),
+                ],
+            );
         }
     }
 
@@ -121,6 +161,10 @@ impl CongestionControl {
             assert!(self.bytes_in_flight >= pkt.size);
             self.bytes_in_flight -= pkt.size;
         }
+        qlog::metrics_updated(
+            &mut self.qlog.borrow_mut(),
+            &[QlogMetric::BytesInFlight(self.bytes_in_flight)],
+        );
 
         qdebug!([self], "Pkts lost {}", lost_packets.len());
 
@@ -145,6 +189,10 @@ impl CongestionControl {
         if pkt.cc_outstanding() {
             assert!(self.bytes_in_flight >= pkt.size);
             self.bytes_in_flight -= pkt.size;
+            qlog::metrics_updated(
+                &mut self.qlog.borrow_mut(),
+                &[QlogMetric::BytesInFlight(self.bytes_in_flight)],
+            );
             qtrace!([self], "Ignore pkt with size {}", pkt.size);
         }
     }
@@ -167,20 +215,39 @@ impl CongestionControl {
             self.bytes_in_flight,
             self.congestion_window
         );
+        qlog::metrics_updated(
+            &mut self.qlog.borrow_mut(),
+            &[QlogMetric::BytesInFlight(self.bytes_in_flight)],
+        );
+
         debug_assert!(self.bytes_in_flight <= self.congestion_window);
     }
 
     #[must_use]
-    pub fn in_congestion_recovery(&self, sent_time: Instant) -> bool {
-        self.congestion_recovery_start_time
-            .map(|start| sent_time <= start)
-            .unwrap_or(false)
+    fn in_congestion_recovery(&mut self, sent_time: Instant, packet_state: PacketState) -> bool {
+        match self.congestion_recovery_start_time {
+            Some(crst) => {
+                if sent_time <= crst {
+                    true
+                } else {
+                    if let PacketState::Acked = packet_state {
+                        qlog::metrics_updated(
+                            &mut self.qlog.borrow_mut(),
+                            &[QlogMetric::InRecovery(false)],
+                        );
+                        self.congestion_recovery_start_time = None;
+                    }
+                    false
+                }
+            }
+            None => false,
+        }
     }
 
     fn on_congestion_event(&mut self, now: Instant, sent_time: Instant) {
         // Start a new congestion event if packet was sent after the
         // start of the previous congestion recovery period.
-        if !self.in_congestion_recovery(sent_time) {
+        if !self.in_congestion_recovery(sent_time, PacketState::Lost) {
             self.congestion_recovery_start_time = Some(now);
             self.congestion_window /= 2; // kLossReductionFactor = 0.5
             self.congestion_window = max(self.congestion_window, MIN_CONG_WINDOW);
@@ -190,6 +257,18 @@ impl CongestionControl {
                 "Cong event -> recovery; cwnd {}, ssthresh {}",
                 self.congestion_window,
                 self.ssthresh
+            );
+            qlog::metrics_updated(
+                &mut self.qlog.borrow_mut(),
+                &[
+                    QlogMetric::SsThresh(self.ssthresh),
+                    QlogMetric::InRecovery(true),
+                ],
+            );
+            qlog::congestion_state_updated(
+                &mut self.qlog.borrow_mut(),
+                &mut self.qlog_curr_cong_state,
+                CongestionState::Recovery,
             );
         } else {
             qdebug!([self], "Cong event but already in recovery");

@@ -535,6 +535,10 @@ impl<'a> PublicPacket<'a> {
         self.quic_version
     }
 
+    pub fn packet_len(&self) -> usize {
+        self.data.len()
+    }
+
     fn decode_pn(expected: PacketNumber, pn: u64, w: usize) -> PacketNumber {
         let window = 1_u64 << (w * 8);
         let candidate = (expected & !(window - 1)) | pn;

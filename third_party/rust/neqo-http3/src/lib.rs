@@ -17,6 +17,7 @@ mod control_stream_remote;
 pub mod hframe;
 mod hsettings_frame;
 mod push_controller;
+mod qlog;
 mod recv_message;
 mod send_message;
 pub mod server;

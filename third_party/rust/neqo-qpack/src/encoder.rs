@@ -120,7 +120,9 @@ impl QPackEncoder {
         loop {
             let mut recv = ReceiverConnWrapper::new(conn, stream_id);
             match self.instruction_reader.read_instructions(&mut recv) {
-                Ok(instruction) => self.call_instruction(instruction, conn.qlog_mut())?,
+                Ok(instruction) => {
+                    self.call_instruction(instruction, &mut conn.qlog_mut().borrow_mut())?
+                }
                 Err(Error::NeedMoreData) => break Ok(()),
                 Err(e) => break Err(e),
             }
@@ -375,7 +377,7 @@ impl QPackEncoder {
             }
         }
 
-        encoded_h.fix_header_block_prefix();
+        encoded_h.encode_header_block_prefix();
 
         if !stream_is_blocker {
             // The streams was not a blocker, check if the stream is a blocker now.

@@ -171,10 +171,10 @@ impl Http3Connection {
 
     /// We have a resumption token which remembers previous settings. Update the setting.
     pub fn set_0rtt_settings(&mut self, conn: &mut Connection, settings: HSettings) -> Res<()> {
-        self.state = Http3State::ZeroRtt;
         self.initialize_http3_connection(conn)?;
         self.set_qpack_settings(&settings)?;
         self.settings_state = Http3RemoteSettingsState::ZeroRtt(settings);
+        self.state = Http3State::ZeroRtt;
         Ok(())
     }
 
@@ -534,7 +534,9 @@ impl Http3Connection {
             .send_streams
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?;
-        send_stream.close(conn)?;
+        // The following funcion may return InvalidStreamId from the transport layer if the stream has been cloesd
+        // already. It is ok to ignore it here.
+        let _ = send_stream.close(conn);
         if send_stream.done() {
             self.send_streams.remove(&stream_id);
         }
