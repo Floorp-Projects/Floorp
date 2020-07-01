@@ -13,6 +13,7 @@
 #include "nsWindowsHelpers.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
+#include "common.h"
 #include "DefaultBrowser.h"
 #include "Notification.h"
 #include "Policy.h"
@@ -25,12 +26,9 @@ static void RemoveAllRegistryEntries() {
     return;
   }
 
-  const wchar_t* regKeyName = L"SOFTWARE\\" MOZ_APP_VENDOR "\\" MOZ_APP_BASENAME
-                              "\\Default Browser Agent";
-
   HKEY rawRegKey = nullptr;
   if (ERROR_SUCCESS !=
-      RegOpenKeyExW(HKEY_CURRENT_USER, regKeyName, 0,
+      RegOpenKeyExW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME, 0,
                     KEY_WRITE | KEY_QUERY_VALUE | KEY_WOW64_64KEY,
                     &rawRegKey)) {
     return;
@@ -83,7 +81,7 @@ static void RemoveAllRegistryEntries() {
   regKey.reset();
 
   if (valueIndex == 0) {
-    RegDeleteKeyW(HKEY_CURRENT_USER, regKeyName);
+    RegDeleteKeyW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME);
   }
 }
 
