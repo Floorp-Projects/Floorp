@@ -53,6 +53,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     ]
     SOURCES += [
         'nsWindowsShellService.cpp',
+        'WindowsDefaultBrowser.cpp',
     ]
     LOCAL_INCLUDES += [
         '../../../other-licenses/nsis/Contrib/CityHash/cityhash',

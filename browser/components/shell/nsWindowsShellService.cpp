@@ -6,7 +6,6 @@
 #include "nsWindowsShellService.h"
 
 #include "BinaryPath.h"
-#include "city.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/RefPtr.h"
@@ -26,27 +25,18 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/dom/Element.h"
+#include "WindowsDefaultBrowser.h"
 
 #include "windows.h"
 #include "shellapi.h"
 #include <propvarutil.h>
 #include <propkey.h>
 
-#ifdef _WIN32_WINNT
-#  undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT 0x0600
-#define INITGUID
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WIN8
-// Needed for access to IApplicationActivationManager
 #include <shlobj.h>
 #include "WinUtils.h"
 
 #include <mbstring.h>
-#include <shlwapi.h>
 
-#include <lm.h>
 #undef ACCESS_READ
 
 #ifndef MAX_BUF
@@ -56,8 +46,6 @@
 #define REG_SUCCEEDED(val) (val == ERROR_SUCCESS)
 
 #define REG_FAILED(val) (val != ERROR_SUCCESS)
-
-#define APP_REG_NAME_BASE L"Firefox-"
 
 #ifdef DEBUG
 #  define NS_ENSURE_HRESULT(hres, ret)                    \
@@ -184,35 +172,6 @@ static bool IsPathDefaultForClass(
   return isDefault;
 }
 
-static nsresult GetAppRegName(nsAutoString& aAppRegName) {
-  nsresult rv;
-  nsCOMPtr<nsIProperties> dirSvc =
-      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIFile> exeFile;
-  rv = dirSvc->Get(XRE_EXECUTABLE_FILE, NS_GET_IID(nsIFile),
-                   getter_AddRefs(exeFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIFile> appDir;
-  rv = exeFile->GetParent(getter_AddRefs(appDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString appDirStr;
-  rv = appDir->GetPath(appDirStr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aAppRegName = APP_REG_NAME_BASE;
-  uint64_t hash =
-      CityHash64(static_cast<const char*>(appDirStr.get()),
-                 appDirStr.Length() * sizeof(nsAutoString::char_type));
-  aAppRegName.AppendInt((int)(hash >> 32), 16);
-  aAppRegName.AppendInt((int)hash, 16);
-
-  return rv;
-}
-
 NS_IMETHODIMP
 nsWindowsShellService::IsDefaultBrowser(bool aForAllTypes,
                                         bool* aIsDefaultBrowser) {
@@ -246,7 +205,7 @@ nsresult nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI() {
       CLSID_ApplicationAssociationRegistrationUI, NULL, CLSCTX_INPROC,
       IID_IApplicationAssociationRegistrationUI, (void**)&pAARUI);
   if (SUCCEEDED(hr)) {
-    nsAutoString appRegName;
+    mozilla::UniquePtr<wchar_t[]> appRegName;
     GetAppRegName(appRegName);
     hr = pAARUI->LaunchAdvancedAssociationUI(appRegName.get());
     pAARUI->Release();
@@ -255,113 +214,11 @@ nsresult nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI() {
 }
 
 nsresult nsWindowsShellService::LaunchControlPanelDefaultPrograms() {
-  // Build the path control.exe path safely
-  WCHAR controlEXEPath[MAX_PATH + 1] = {'\0'};
-  if (!GetSystemDirectoryW(controlEXEPath, MAX_PATH)) {
-    return NS_ERROR_FAILURE;
-  }
-  LPCWSTR controlEXE = L"control.exe";
-  if (wcslen(controlEXEPath) + wcslen(controlEXE) >= MAX_PATH) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!PathAppendW(controlEXEPath, controlEXE)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoString params(
-      u"control.exe /name Microsoft.DefaultPrograms "
-      "/page pageDefaultProgram\\pageAdvancedSettings?pszAppName="_ns);
-  nsAutoString appRegName;
-  GetAppRegName(appRegName);
-  params.Append(appRegName);
-  STARTUPINFOW si = {sizeof(si), 0};
-  si.dwFlags = STARTF_USESHOWWINDOW;
-  si.wShowWindow = SW_SHOWDEFAULT;
-  PROCESS_INFORMATION pi = {0};
-  if (!CreateProcessW(controlEXEPath, static_cast<LPWSTR>(params.get()),
-                      nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi)) {
-    return NS_ERROR_FAILURE;
-  }
-  CloseHandle(pi.hProcess);
-  CloseHandle(pi.hThread);
-
-  return NS_OK;
-}
-
-static bool IsWindowsLogonConnected() {
-  WCHAR userName[UNLEN + 1];
-  DWORD size = ArrayLength(userName);
-  if (!GetUserNameW(userName, &size)) {
-    return false;
-  }
-
-  LPUSER_INFO_24 info;
-  if (NetUserGetInfo(nullptr, userName, 24, (LPBYTE*)&info) != NERR_Success) {
-    return false;
-  }
-  bool connected = info->usri24_internet_identity;
-  NetApiBufferFree(info);
-
-  return connected;
-}
-
-static bool SettingsAppBelievesConnected() {
-  nsresult rv;
-  nsCOMPtr<nsIWindowsRegKey> regKey =
-      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                    u"SOFTWARE\\Microsoft\\Windows\\Shell\\Associations"_ns,
-                    nsIWindowsRegKey::ACCESS_READ);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  uint32_t value;
-  rv = regKey->ReadIntValue(u"IsConnectedAtLogon"_ns, &value);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  return !!value;
+  return ::LaunchControlPanelDefaultPrograms();
 }
 
 nsresult nsWindowsShellService::LaunchModernSettingsDialogDefaultApps() {
-  if (!IsWindowsBuildOrLater(14965) && !IsWindowsLogonConnected() &&
-      SettingsAppBelievesConnected()) {
-    // Use the classic Control Panel to work around a bug of older
-    // builds of Windows 10.
-    return LaunchControlPanelDefaultPrograms();
-  }
-
-  IApplicationActivationManager* pActivator;
-  HRESULT hr = CoCreateInstance(
-      CLSID_ApplicationActivationManager, nullptr, CLSCTX_INPROC,
-      IID_IApplicationActivationManager, (void**)&pActivator);
-
-  if (SUCCEEDED(hr)) {
-    DWORD pid;
-    hr = pActivator->ActivateApplication(
-        L"windows.immersivecontrolpanel_cw5n1h2txyewy"
-        L"!microsoft.windows.immersivecontrolpanel",
-        L"page=SettingsPageAppsDefaults", AO_NONE, &pid);
-    if (SUCCEEDED(hr)) {
-      // Do not check error because we could at least open
-      // the "Default apps" setting.
-      pActivator->ActivateApplication(
-          L"windows.immersivecontrolpanel_cw5n1h2txyewy"
-          L"!microsoft.windows.immersivecontrolpanel",
-          L"page=SettingsPageAppsDefaults"
-          L"&target=SystemSettings_DefaultApps_Browser",
-          AO_NONE, &pid);
-    }
-    pActivator->Release();
-    return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
-  }
-  return NS_OK;
+  return ::LaunchModernSettingsDialogDefaultApps();
 }
 
 nsresult nsWindowsShellService::InvokeHTTPOpenAsVerb() {
