@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test for Bug 1590762</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <form id="form" action="form_submit.sjs" method="POST" target="targetFrame">
+      <input id="input" type="text" name="name" value="">
+      <input id="button" type="submit">
+    </form>
+    <script>
+      "use strict";
+      const PATH = "/tests/docshell/test/mochitest/";
+      const SAME_ORIGIN = new URL(PATH, window.location.origin);;
+      const CROSS_ORIGIN_1 = new URL(PATH, "http://test1.example.com/");
+      const CROSS_ORIGIN_2 = new URL(PATH, "https://example.com/");
+      const TARGET = "ping.html";
+      const ACTION = "form_submit.sjs";
+
+      function generateBody(size) {
+        let data = new Uint8Array(size);
+        for (let i = 0; i < size; ++i) {
+          data[i] = 97 + Math.random() * (123 - 97);
+        }
+
+        return new TextDecoder().decode(data);
+      }
+
+      async function withFrame(url) {
+        info("Creating frame");
+        let frame = document.createElement('iframe');
+        frame.name = "targetFrame";
+
+        return new Promise(resolve => {
+          addEventListener('message', async function({source}) {
+            info("Frame loaded");
+            if (frame.contentWindow == source) {
+              resolve(frame);
+            }
+          }, { once: true });
+          frame.src = url;
+          document.body.appendChild(frame);
+        });
+      }
+
+      function click() {
+        synthesizeMouse(document.getElementById('button'), 5, 5, {});
+      }
+
+      function* spec() {
+        let urls = [SAME_ORIGIN, CROSS_ORIGIN_1, CROSS_ORIGIN_2];
+        for (let action of urls) {
+          for (let target of urls) {
+            yield { action: new URL(ACTION, action),
+                    target: new URL(TARGET, target) };
+          }
+        }
+      }
+
+      info("Starting tests");
+      let form = document.getElementById('form');
+
+      // The body of the POST needs to be large to trigger this.
+      // 1024*1024 seems to be enough, but scaling to get a margin.
+      document.getElementById('input').value = generateBody(1024*1024);
+      for (let { target, action } of spec()) {
+        add_task(async function runTest() {
+          info(`Running test ${target} with ${action}`);
+          form.action = action;
+          let frame = await withFrame(target);
+          await new Promise(resolve => {
+            addEventListener('message', async function() {
+              info("Form loaded");
+              frame.remove();
+              resolve();
+            }, { once: true });
+
+            click();
+          });
+
+          ok(true, `Submitted to ${origin} with target ${action}`)
+        });
+      };
+    </script>
+  </body>
+</html>
