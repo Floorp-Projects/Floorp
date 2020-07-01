@@ -1,0 +1,14 @@
+<script>
+window.onload = () => {
+  document.execCommand("undo", false)
+}
+function go() {
+  var a = document.getElementById("a")
+  document.execCommand("delete", false)
+  b.contentDocument.adoptNode(a)
+}
+</script>
+<p contenteditable="true">
+<link id="a" item="">
+<details open="" ontoggle="go()">
+<iframe id="b"></iframe>

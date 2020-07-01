@@ -145,6 +145,9 @@ void CreateElementTransaction::InsertNewNode(ErrorResult& aError) {
     container->InsertBefore(newElement, child, aError);
     NS_WARNING_ASSERTION(!aError.Failed(),
                          "nsINode::InsertBefore() failed, but ignored");
+    // InsertBefore() may call MightThrowJSException() even if there is no
+    // error. We don't need the flag here.
+    aError.WouldReportJSException();
     return;
   }
 

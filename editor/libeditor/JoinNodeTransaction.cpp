@@ -132,6 +132,9 @@ NS_IMETHODIMP JoinNodeTransaction::UndoTransaction() {
 
   // Second, re-insert the left node into the tree
   parentNode->InsertBefore(leftContent, rightContent, error);
+  // InsertBefore() may call MightThrowJSException() even if there is no
+  // error. We don't need the flag here.
+  error.WouldReportJSException();
   NS_WARNING_ASSERTION(!error.Failed(), "nsINode::InsertBefore() failed");
   return error.StealNSResult();
 }
