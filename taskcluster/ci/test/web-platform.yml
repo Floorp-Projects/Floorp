@@ -68,8 +68,8 @@ web-platform-tests:
     e10s: true
     run-on-projects:
         by-test-platform:
-            linux1804-32-shippable/opt: ['try', 'release']  # skip integration, Bug 1599197
-            .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
+            linux1804-32-shippable/opt: ['release']  # skip integration, Bug 1599197
+            .*-qr/.*: ['release']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
@@ -186,7 +186,7 @@ web-platform-tests-wdspec:
             - --setpref=toolkit.asyncshutdown.log=true
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: ['release', 'try']
+            .*-qr/.*: ['release']
             default: built-projects
     tier:
         by-test-platform:
@@ -281,7 +281,7 @@ web-platform-tests-crashtest:
             - --test-type=crashtest
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: ['release', 'try']
+            .*-qr/.*: ['release']
             default: built-projects
     tier:
         by-test-platform:
@@ -315,9 +315,9 @@ test-verify-wpt:
             .*-ccov/.*: []
             .*-asan/.*: []
             # where shippable is available, do not run on plain opt, except on try
-            (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: ['try']
+            (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: []
             # do not run on beta or release: usually just confirms earlier results
-            default: ['autoland', 'try']
+            default: ['autoland']
     built-projects-only: true
     tier: 2
     mozharness:
