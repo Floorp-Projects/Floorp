@@ -27,7 +27,10 @@ Here's the format of the ping data, with example values for each property:
       os_version: <string>, // ex. 10.0.18363.592
       os_locale: <string>, // ex. en-US
       default_browser: <string>, // ex. "firefox"
-      previous_default_browser: <string> // ex. "edge"
+      previous_default_browser: <string>, // ex. "edge"
+      notification_type: <string>, // ex. "initial" or "followup"
+      notification_shown: <string>, // ex. "shown", or "not-shown", or "error"
+      notification_action: <string>, // ex. "no-action" or "make-firefox-default-button"
     }
 
 ``build_channel``
@@ -57,3 +60,17 @@ Which browser was set as the system default before it was changed to the current
 The OS does not keep track of previous default settings, so the agent records this information itself. That means that it will be inaccurate until the first time the default is changed after the agent task begins running. Before then, the value of ``previous_default_browser`` will be the same as ``default_browser``.
 
 This value is updated every time the Default Browser Agent runs, so when the default browser is first changed the values for ``default_browser`` and ``previous_default_browser`` will be different. But on subsequent executions of the Default Browser Agent, the two values will be the same.
+
+``notification_type``
+---------------------
+Which notification type was shown. There are currently two types of notifications, "initial" and "followup". The initial notification is shown first and has a "Remind me later" button. The followup notification is only shown if the "Remind me later" button is clicked and has a "Never ask again" button instead of the "Remind me later" button. Note that the value of ``notification_shown`` should be consulted to determine whether the notification type specified was actually shown.
+
+``notification_shown``
+----------------------
+Whether a notification was shown or not. Possible value include "shown", "not-shown", and "error".
+
+``notification_action``
+-----------------------
+The action that the user took in response to the notification. Possible values currently include "dismissed-by-timeout", "dismissed-to-action-center", "dismissed-by-button", "dismissed-by-application-hidden", "remind-me-later", "make-firefox-default-button", "toast-clicked", "no-action".
+
+Many of the values correspond to buttons on the notification and should be pretty self explanatory, but a few are less so. The action "no-action" will be used if and only if the value of ``notification_shown`` is not "shown" to indicate that no action was taken because no notification was displayed. The action "dismissed-to-action-center" will be used if the user clicks the arrow in the top right corner of the notification to dismiss it to the action center. The action "dismissed-by-application-hidden" is provided because that is a method of dismissal that the notification API could give but, in practice, should never be seen. The action "dismissed-by-timeout" indicates that the user did not interact with the notification and it timed out.

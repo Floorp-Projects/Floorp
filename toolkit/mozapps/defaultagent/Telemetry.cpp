@@ -184,7 +184,10 @@ static FilePathResult GetPingsenderPath() {
 static mozilla::WindowsError SendPing(const std::string defaultBrowser,
                                       const std::string previousDefaultBrowser,
                                       const std::string osVersion,
-                                      const std::string osLocale) {
+                                      const std::string osLocale,
+                                      const std::string notificationType,
+                                      const std::string notificationShown,
+                                      const std::string notificationAction) {
   // Fill in the ping JSON object.
   Json::Value ping;
   ping["build_channel"] = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
@@ -193,6 +196,9 @@ static mozilla::WindowsError SendPing(const std::string defaultBrowser,
   ping["previous_default_browser"] = previousDefaultBrowser;
   ping["os_version"] = osVersion;
   ping["os_locale"] = osLocale;
+  ping["notification_type"] = notificationType;
+  ping["notification_shown"] = notificationShown;
+  ping["notification_action"] = notificationAction;
 
   // Stringify the JSON.
   Json::StreamWriterBuilder jsonStream;
@@ -260,11 +266,19 @@ static mozilla::WindowsError SendPing(const std::string defaultBrowser,
   return mozilla::WindowsError::CreateSuccess();
 }
 
-HRESULT SendDefaultBrowserPing(const DefaultBrowserInfo& browserInfo) {
+HRESULT SendDefaultBrowserPing(
+    const DefaultBrowserInfo& browserInfo,
+    const NotificationActivities& activitiesPerformed) {
   std::string currentDefaultBrowser =
       GetStringForBrowser(browserInfo.currentDefaultBrowser);
   std::string previousDefaultBrowser =
       GetStringForBrowser(browserInfo.previousDefaultBrowser);
+  std::string notificationType =
+      GetStringForNotificationType(activitiesPerformed.type);
+  std::string notificationShown =
+      GetStringForNotificationShown(activitiesPerformed.shown);
+  std::string notificationAction =
+      GetStringForNotificationAction(activitiesPerformed.action);
 
   TelemetryFieldResult osVersionResult = GetOSVersion();
   if (osVersionResult.isErr()) {
@@ -286,6 +300,7 @@ HRESULT SendDefaultBrowserPing(const DefaultBrowserInfo& browserInfo) {
   }
 
   return SendPing(currentDefaultBrowser, previousDefaultBrowser, osVersion,
-                  osLocale)
+                  osLocale, notificationType, notificationShown,
+                  notificationAction)
       .AsHResult();
 }

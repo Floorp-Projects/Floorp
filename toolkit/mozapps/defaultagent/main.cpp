@@ -164,10 +164,11 @@ int wmain(int argc, wchar_t** argv) {
     }
     DefaultBrowserInfo browserInfo = defaultBrowserResult.unwrap();
 
-    MaybeShowNotification(browserInfo, argv[2]);
+    NotificationActivities activitiesPerformed =
+        MaybeShowNotification(browserInfo, argv[2]);
 
     if (!IsTelemetryDisabled()) {
-      return SendDefaultBrowserPing(browserInfo);
+      return SendDefaultBrowserPing(browserInfo, activitiesPerformed);
     }
     return S_OK;
   } else {
