@@ -19,6 +19,8 @@
 #include "unicode/utypes.h"
 #include "vm/StringType.h"
 
+struct UFormattedValue;
+
 namespace js {
 
 namespace intl {
@@ -156,6 +158,9 @@ static JSString* CallICU(JSContext* cx, const ICUStringFunction& strFn) {
 void AddICUCellMemory(JSObject* obj, size_t nbytes);
 
 void RemoveICUCellMemory(JSFreeOp* fop, JSObject* obj, size_t nbytes);
+
+JSString* FormattedValueToString(JSContext* cx,
+                                 const UFormattedValue* formattedValue);
 
 }  // namespace intl
 
