@@ -154,7 +154,7 @@ class DisperseGroups(OptimizationStrategy):
     DEFAULT_UNSEEN_MODIFIER = 1
 
     def __init__(self, target_counts=None, unseen_modifier=DEFAULT_UNSEEN_MODIFIER):
-        self.target_counts = self.DEFAULT_TARGET_COUNTS
+        self.target_counts = self.DEFAULT_TARGET_COUNTS.copy()
         if target_counts:
             self.target_counts.update(target_counts)
         self.unseen_modifier = unseen_modifier
