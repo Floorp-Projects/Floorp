@@ -95,9 +95,9 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
   ENSURE(taskSettings->put_MultipleInstances(TASK_INSTANCES_IGNORE_NEW));
   ENSURE(taskSettings->put_StartWhenAvailable(VARIANT_TRUE));
   ENSURE(taskSettings->put_StopIfGoingOnBatteries(VARIANT_FALSE));
-  // This cryptic string means "5 minutes". So, if the task runs for longer
+  // This cryptic string means "35 minutes". So, if the task runs for longer
   // than that, the process will be killed, because that should never happen.
-  BStrPtr execTimeLimitBStr = BStrPtr(SysAllocString(L"PT5M"));
+  BStrPtr execTimeLimitBStr = BStrPtr(SysAllocString(L"PT35M"));
   ENSURE(taskSettings->put_ExecutionTimeLimit(execTimeLimitBStr.get()));
 
   RefPtr<IRegistrationInfo> regInfo;
@@ -179,7 +179,10 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
       BStrPtr(SysAllocString(mozilla::GetFullBinaryPath().get()));
   ENSURE(execAction->put_Path(binaryPathBStr.get()));
 
-  BStrPtr argsBStr = BStrPtr(SysAllocString(L"do-task"));
+  std::wstring taskArgs = L"do-task \"";
+  taskArgs += uniqueToken;
+  taskArgs += L"\"";
+  BStrPtr argsBStr = BStrPtr(SysAllocString(taskArgs.c_str()));
   ENSURE(execAction->put_Arguments(argsBStr.get()));
 
   std::wstring taskName(kTaskName);

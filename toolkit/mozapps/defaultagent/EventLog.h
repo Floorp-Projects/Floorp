@@ -9,8 +9,12 @@
 
 #include <windows.h>
 
-void WriteEventLogError(HRESULT hr, const char* sourceFile, int sourceLine);
+void WriteEventLogHresult(HRESULT hr, const char* sourceFile, int sourceLine);
+void WriteEventLogErrorMessage(const wchar_t* messageFormat,
+                               const char* sourceFile, int sourceLine, ...);
 
-#define LOG_ERROR(hr) WriteEventLogError(hr, __FUNCTION__, __LINE__)
+#define LOG_ERROR(hr) WriteEventLogHresult(hr, __FUNCTION__, __LINE__)
+#define LOG_ERROR_MESSAGE(format, ...) \
+  WriteEventLogErrorMessage(format, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #endif  // __DEFAULT_BROWSER_AGENT_EVENT_LOG_H__
