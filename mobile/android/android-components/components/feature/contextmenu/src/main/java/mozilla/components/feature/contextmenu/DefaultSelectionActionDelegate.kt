@@ -5,6 +5,7 @@
 package mozilla.components.feature.contextmenu
 
 import android.content.res.Resources
+import android.util.Patterns
 import androidx.annotation.VisibleForTesting
 import mozilla.components.feature.search.SearchAdapter
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
@@ -15,16 +16,24 @@ internal const val SEARCH = "CUSTOM_CONTEXT_MENU_SEARCH"
 internal const val SEARCH_PRIVATELY = "CUSTOM_CONTEXT_MENU_SEARCH_PRIVATELY"
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal const val SHARE = "CUSTOM_CONTEXT_MENU_SHARE"
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal const val EMAIL = "CUSTOM_CONTEXT_MENU_EMAIL"
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal const val CALL = "CUSTOM_CONTEXT_MENU_CALL"
 
-private val customActions = arrayOf(SEARCH, SEARCH_PRIVATELY, SHARE)
+private val customActions = arrayOf(CALL, EMAIL, SEARCH, SEARCH_PRIVATELY, SHARE)
 
 /**
  * Adds normal and private search buttons to text selection context menus.
+ * Also adds share, email, and call actions which are optionally displayed.
  */
+@Suppress("LongParameterList")
 class DefaultSelectionActionDelegate(
     private val searchAdapter: SearchAdapter,
     resources: Resources,
     private val shareTextClicked: ((String) -> Unit)? = null,
+    private val emailTextClicked: ((String) -> Unit)? = null,
+    private val callTextClicked: ((String) -> Unit)? = null,
     private val actionSorter: ((Array<String>) -> Array<String>)? = null
 ) : SelectionActionDelegate {
 
@@ -33,12 +42,17 @@ class DefaultSelectionActionDelegate(
     private val privateSearchText =
         resources.getString(R.string.mozac_selection_context_menu_search_privately_2)
     private val shareText = resources.getString(R.string.mozac_selection_context_menu_share)
+    private val emailText = resources.getString(R.string.mozac_selection_context_menu_email)
+    private val callText = resources.getString(R.string.mozac_selection_context_menu_call)
 
     override fun getAllActions(): Array<String> = customActions
 
-    override fun isActionAvailable(id: String): Boolean {
+    @SuppressWarnings("ComplexMethod")
+    override fun isActionAvailable(id: String, selectedText: String): Boolean {
         val isPrivate = searchAdapter.isPrivateSession()
         return (id == SHARE && shareTextClicked != null) ||
+                (id == EMAIL && emailTextClicked != null && Patterns.EMAIL_ADDRESS.matcher(selectedText).matches()) ||
+                (id == CALL && callTextClicked != null && Patterns.PHONE.matcher(selectedText).matches()) ||
                 (id == SEARCH && !isPrivate) ||
                 (id == SEARCH_PRIVATELY && isPrivate)
     }
@@ -47,6 +61,8 @@ class DefaultSelectionActionDelegate(
         SEARCH -> normalSearchText
         SEARCH_PRIVATELY -> privateSearchText
         SHARE -> shareText
+        EMAIL -> emailText
+        CALL -> callText
         else -> null
     }
 
@@ -61,6 +77,14 @@ class DefaultSelectionActionDelegate(
         }
         SHARE -> {
             shareTextClicked?.invoke(selectedText)
+            true
+        }
+        EMAIL -> {
+            emailTextClicked?.invoke(selectedText)
+            true
+        }
+        CALL -> {
+            callTextClicked?.invoke(selectedText)
             true
         }
         else -> false

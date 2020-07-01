@@ -39,7 +39,7 @@ class GeckoSelectionActionDelegateTest {
         val customActions = arrayOf("1", "2", "3")
         val customDelegate = object : SelectionActionDelegate {
             override fun getAllActions(): Array<String> = customActions
-            override fun isActionAvailable(id: String): Boolean = false
+            override fun isActionAvailable(id: String, selectedText: String): Boolean = false
             override fun getActionTitle(id: String): CharSequence? = ""
             override fun performAction(id: String, selectedText: String): Boolean = false
             override fun sortedActions(actions: Array<String>): Array<String> {

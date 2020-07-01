@@ -24,7 +24,6 @@ import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.feature.contextmenu.ext.DefaultSelectionActionDelegate
 import mozilla.components.support.base.feature.UserInteractionHandler
-import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
 import org.mozilla.samples.browser.addons.WebExtensionActionPopupActivity
@@ -73,11 +72,9 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
         when (name) {
             EngineView::class.java.name -> components.engine.createView(context, attrs).apply {
                 selectionActionDelegate = DefaultSelectionActionDelegate(
-                    components.store,
-                    context
-                ) {
-                    share(it)
-                }
+                    store = components.store,
+                    context = context
+                )
             }.asView()
             TabsTray::class.java.name -> createTabsTray(context, attrs)
             else -> super.onCreateView(parent, name, context, attrs)

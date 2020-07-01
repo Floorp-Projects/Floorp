@@ -6,6 +6,10 @@
   -->
 
 <resources>
+    <!-- Text displayed when choosing which app to call with after selecting a phone number-->
+    <string name="mozac_support_ktx_menu_call_with">Call with…</string>
+    <!-- Text displayed when choosing which app to email with after selecting an email address-->
+    <string name="mozac_support_ktx_menu_email_with">Email with…</string>
     <string name="mozac_support_ktx_menu_share_with">Share with…</string>
     <string name="mozac_support_ktx_share_dialog_title">Share via</string>
 </resources>
