@@ -15,7 +15,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
 if CONFIG['MOZ_UPDATER']:
     LOCALIZED_GENERATED_FILES += ['updater.ini']
     updater = LOCALIZED_GENERATED_FILES['updater.ini']
-    updater.script = 'generate_updater_ini.py'
+    updater.script = 'generate_ini.py'
     updater.inputs = [
         'en-US/updater/updater.ini',
         '../installer/windows/nsis/updater_append.ini',
