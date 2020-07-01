@@ -36,6 +36,10 @@
       "type": "boolean",
       "description": "Skip the 'Recommend' notifier and show directly."
     },
+    "persistent_doorhanger": {
+      "type": "boolean",
+      "description": "Prevent the doorhanger from being dismissed if user interacts with the page or switches between applications."
+    },
     "notification_text": {
       "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string.",
       "oneOf": [
