@@ -114,31 +114,35 @@ StartupCache* StartupCache::GetSingletonNoInit() {
 }
 
 StartupCache* StartupCache::GetSingleton() {
-  if (!gStartupCache) {
-    if (!XRE_IsParentProcess()) {
-      return nullptr;
-    }
-#ifdef MOZ_DISABLE_STARTUPCACHE
-    return nullptr;
-#else
-    StartupCache::InitSingleton();
-#endif
-  }
-
   return StartupCache::gStartupCache;
 }
 
 void StartupCache::DeleteSingleton() { StartupCache::gStartupCache = nullptr; }
 
-nsresult StartupCache::InitSingleton() {
+nsresult StartupCache::PartialInitSingleton(nsIFile* aProfileLocalDir) {
+#ifdef MOZ_DISABLE_STARTUPCACHE
+  return NS_OK;
+#else
+  if (!XRE_IsParentProcess()) {
+    return NS_OK;
+  }
+
   nsresult rv;
   StartupCache::gStartupCache = new StartupCache();
 
-  rv = StartupCache::gStartupCache->Init();
+  rv = StartupCache::gStartupCache->PartialInit(aProfileLocalDir);
   if (NS_FAILED(rv)) {
     StartupCache::gStartupCache = nullptr;
   }
   return rv;
+#endif
+}
+
+nsresult StartupCache::FullyInitSingleton() {
+  if (!StartupCache::gStartupCache) {
+    return NS_OK;
+  }
+  return StartupCache::gStartupCache->FullyInit();
 }
 
 StaticRefPtr<StartupCache> StartupCache::gStartupCache;
@@ -159,7 +163,7 @@ StartupCache::StartupCache()
 
 StartupCache::~StartupCache() { UnregisterWeakMemoryReporter(this); }
 
-nsresult StartupCache::Init() {
+nsresult StartupCache::PartialInit(nsIFile* aProfileLocalDir) {
   // workaround for bug 653936
   nsCOMPtr<nsIProtocolHandler> jarInitializer(
       do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar"));
@@ -177,9 +181,9 @@ nsresult StartupCache::Init() {
   if (env && *env) {
     rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(env), false,
                          getter_AddRefs(mFile));
-  } else {
+  } else if (aProfileLocalDir) {
     nsCOMPtr<nsIFile> file;
-    rv = NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(file));
+    rv = aProfileLocalDir->Clone(getter_AddRefs(file));
     if (NS_FAILED(rv)) {
       // return silently, this will fail in mochitests's xpcshell process.
       return rv;
@@ -197,24 +201,11 @@ nsresult StartupCache::Init() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     mFile = file;
+  } else {
+    return NS_ERROR_INVALID_ARG;
   }
 
   NS_ENSURE_TRUE(mFile, NS_ERROR_UNEXPECTED);
-
-  mObserverService = do_GetService("@mozilla.org/observer-service;1");
-
-  if (!mObserverService) {
-    NS_WARNING("Could not get observerService.");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  mListener = new StartupCacheListener();
-  rv = mObserverService->AddObserver(mListener, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                     false);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mObserverService->AddObserver(mListener, "startupcache-invalidate",
-                                     false);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   auto result = LoadArchive();
   rv = result.isErr() ? result.unwrapErr() : NS_OK;
@@ -230,6 +221,29 @@ nsresult StartupCache::Init() {
 
   RegisterWeakMemoryReporter(this);
   mDecompressionContext = MakeUnique<LZ4FrameDecompressionContext>(true);
+
+  return NS_OK;
+}
+
+nsresult StartupCache::FullyInit() {
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
+
+  if (!mObserverService) {
+    NS_WARNING("Could not get observerService.");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  mListener = new StartupCacheListener();
+  nsresult rv = mObserverService->AddObserver(
+      mListener, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = mObserverService->AddObserver(mListener, "startupcache-invalidate",
+                                     false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
