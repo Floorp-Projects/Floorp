@@ -43,7 +43,40 @@ registerCleanupFunction(() =>
   OS.File.remove(gTestTargetFile.path, { ignoreAbsent: true })
 );
 
+const DATA_PDF = atob(
+  "JVBERi0xLjANCjEgMCBvYmo8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PmVuZG9iaiAyIDAgb2JqPDwvVHlwZS9QYWdlcy9LaWRzWzMgMCBSXS9Db3VudCAxPj5lbmRvYmogMyAwIG9iajw8L1R5cGUvUGFnZS9NZWRpYUJveFswIDAgMyAzXT4+ZW5kb2JqDQp4cmVmDQowIDQNCjAwMDAwMDAwMDAgNjU1MzUgZg0KMDAwMDAwMDAxMCAwMDAwMCBuDQowMDAwMDAwMDUzIDAwMDAwIG4NCjAwMDAwMDAxMDIgMDAwMDAgbg0KdHJhaWxlcjw8L1NpemUgNC9Sb290IDEgMCBSPj4NCnN0YXJ0eHJlZg0KMTQ5DQolRU9G"
+);
+
 // Asynchronous support subroutines
+
+async function createDownloadedFile(pathname, contents) {
+  let encoder = new TextEncoder();
+  let file = new FileUtils.File(pathname);
+  if (file.exists()) {
+    info(`File at ${pathname} already exists`);
+  }
+  // No post-test cleanup necessary; tmp downloads directory is already removed after each test
+  await OS.File.writeAtomic(pathname, encoder.encode(contents));
+  ok(file.exists(), `Created ${pathname}`);
+  return file;
+}
+
+async function openContextMenu(itemElement, win = window) {
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    itemElement.ownerDocument,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    itemElement,
+    {
+      type: "contextmenu",
+      button: 2,
+    },
+    win
+  );
+  let { target } = await popupShownPromise;
+  return target;
+}
 
 function promiseFocus() {
   return new Promise(resolve => {
@@ -89,13 +122,21 @@ async function task_addDownloads(aItems) {
 
   let publicList = await Downloads.getList(Downloads.PUBLIC);
   for (let item of aItems) {
+    let source = {
+      url: "http://www.example.com/test-download.txt",
+      ...item.source,
+    };
+    let target =
+      item.target instanceof Ci.nsIFile
+        ? item.target
+        : {
+            path: gTestTargetFile.path,
+            ...item.target,
+          };
+
     let download = {
-      source: {
-        url: "http://www.example.com/test-download.txt",
-      },
-      target: {
-        path: gTestTargetFile.path,
-      },
+      source,
+      target,
       succeeded: item.state == DownloadsCommon.DOWNLOAD_FINISHED,
       canceled:
         item.state == DownloadsCommon.DOWNLOAD_CANCELED ||
@@ -106,13 +147,16 @@ async function task_addDownloads(aItems) {
           : null,
       hasPartialData: item.state == DownloadsCommon.DOWNLOAD_PAUSED,
       hasBlockedData: item.hasBlockedData || false,
+      contentType: item.contentType,
       startTime: new Date(startTimeMs++),
     };
     // `"errorObj" in download` must be false when there's no error.
     if (item.errorObj) {
       download.errorObj = item.errorObj;
     }
-    await publicList.add(await Downloads.createDownload(download));
+    download = await Downloads.createDownload(download);
+    await publicList.add(download);
+    await download.refresh();
   }
 }
 
