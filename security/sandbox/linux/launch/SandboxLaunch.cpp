@@ -33,6 +33,7 @@
 #include "mozilla/SandboxSettings.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -170,14 +171,16 @@ static bool ContentNeedsSysVIPC() {
   }
 #endif
 
-  // Bug 1438391: VirtualGL uses SysV shm for images and configuration.
-  if (PR_GetEnv("VGL_ISACTIVE") != nullptr) {
-    return true;
-  }
+  if (!StaticPrefs::security_sandbox_content_headless_AtStartup()) {
+    // Bug 1438391: VirtualGL uses SysV shm for images and configuration.
+    if (PR_GetEnv("VGL_ISACTIVE") != nullptr) {
+      return true;
+    }
 
-  // The fglrx (ATI Catalyst) GPU drivers use SysV IPC.
-  if (HasAtiDrivers()) {
-    return true;
+    // The fglrx (ATI Catalyst) GPU drivers use SysV IPC.
+    if (HasAtiDrivers()) {
+      return true;
+    }
   }
 
   return false;
@@ -293,6 +296,10 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
     } else {
       flags |= CLONE_NEWIPC;
     }
+
+    if (StaticPrefs::security_sandbox_content_headless_AtStartup()) {
+      aOptions->env_map["MOZ_HEADLESS"] = "1";
+    }
   }
 
   // Anything below this requires unprivileged user namespaces.
@@ -317,11 +324,14 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
     case GeckoProcessType_Content:
       if (level >= 4) {
         canChroot = true;
+
         // Unshare network namespace if allowed by graphics; see
         // function definition above for details.  (The display
         // local-ness is cached because it won't change.)
         static const bool canCloneNet =
-            IsDisplayLocal() && !PR_GetEnv("RENDERDOC_CAPTUREOPTS");
+            StaticPrefs::security_sandbox_content_headless_AtStartup() ||
+            (IsDisplayLocal() && !PR_GetEnv("RENDERDOC_CAPTUREOPTS"));
+
         if (canCloneNet) {
           flags |= CLONE_NEWNET;
         }
