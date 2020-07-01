@@ -680,7 +680,7 @@ class PageAction {
     );
     const { primary, secondary } = content.buttons;
     let primaryActionCallback;
-    let options = {};
+    let options = { persistent: !!content.persistent_doorhanger };
     let panelTitle;
 
     headerLabel.value = await this.getStrings(content.heading_text);
@@ -750,6 +750,7 @@ class PageAction {
           popupIconURL: getIcon(),
           popupIconClass: content.icon_class,
           learnMoreURL,
+          ...options,
         };
         break;
       case "message_and_animation":
@@ -808,7 +809,7 @@ class PageAction {
             content: content.text,
           })
         );
-        options = { popupIconURL: content.addon.icon };
+        options = { popupIconURL: content.addon.icon, ...options };
 
         footerLink.value = await this.getStrings({
           string_id: "cfr-doorhanger-extension-learn-more-link",
