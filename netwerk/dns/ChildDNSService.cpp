@@ -12,6 +12,7 @@
 #include "nsNetCID.h"
 #include "nsQueryObject.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/net/NeckoChild.h"
@@ -484,11 +485,9 @@ nsresult ChildDNSService::Init() {
   // Disable prefetching either by explicit preference or if a manual proxy
   // is configured
   bool disablePrefetch = false;
-  int proxyType = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
-    prefs->GetIntPref("network.proxy.type", &proxyType);
     prefs->GetBoolPref(kPrefNameDisablePrefetch, &disablePrefetch);
   }
 
@@ -503,8 +502,9 @@ nsresult ChildDNSService::Init() {
     }
   }
 
-  mDisablePrefetch = disablePrefetch ||
-                     (proxyType == nsIProtocolProxyService::PROXYCONFIG_MANUAL);
+  mDisablePrefetch =
+      disablePrefetch || (StaticPrefs::network_proxy_type() ==
+                          nsIProtocolProxyService::PROXYCONFIG_MANUAL);
 
   return NS_OK;
 }
