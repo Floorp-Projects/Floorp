@@ -20,6 +20,12 @@ const MUTED_AUTOPLAY_PAGE =
     "https://example.com"
   ) + "browser_autoplay_muted.html";
 
+const EMPTY_PAGE =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "empty.html";
+
 const AUTOPLAY_PREF = "media.autoplay.default";
 const AUTOPLAY_PERM = "autoplay-media";
 
@@ -215,6 +221,30 @@ add_task(async function testBFCache() {
       content.history.forward();
     });
     await blockedIconShown();
+  });
+
+  Services.perms.removeAll();
+});
+
+add_task(async function testBlockedIconFromCORSIframe() {
+  Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
+
+  await BrowserTestUtils.withNewTab(EMPTY_PAGE, async browser => {
+    const blockedIconShownPromise = blockedIconShown();
+    const CORS_AUTOPLAY_PAGE = AUTOPLAY_PAGE.replace(
+      "example.com",
+      "example.org"
+    );
+    info(`Load CORS autoplay on an iframe`);
+    await SpecialPowers.spawn(browser, [CORS_AUTOPLAY_PAGE], async url => {
+      const iframe = content.document.createElement("iframe");
+      iframe.src = url;
+      content.document.body.appendChild(iframe);
+      info("Wait until iframe finishes loading");
+      await new Promise(r => (iframe.onload = r));
+    });
+    await blockedIconShownPromise;
+    ok(true, "Blocked icon shown for the CORS autoplay iframe");
   });
 
   Services.perms.removeAll();
