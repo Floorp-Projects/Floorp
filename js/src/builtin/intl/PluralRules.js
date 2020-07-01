@@ -196,11 +196,11 @@ function Intl_PluralRules_select(value) {
                             "Intl_PluralRules_select");
     }
 
-    // Ensure the PluralRules internals are resolved.
-    getPluralRulesInternals(pluralRules);
-
     // Step 4.
     let n = ToNumber(value);
+
+    // Ensure the PluralRules internals are resolved.
+    getPluralRulesInternals(pluralRules);
 
     // Step 5.
     return intl_SelectPluralRule(pluralRules, n);

@@ -131,6 +131,7 @@
   MACRO(emptyRegExp, emptyRegExp, "(?:)")                                      \
   MACRO(encodeURI, encodeURI, "encodeURI")                                     \
   MACRO(encodeURIComponent, encodeURIComponent, "encodeURIComponent")          \
+  MACRO(endRange, endRange, "endRange")                                        \
   MACRO(endTimestamp, endTimestamp, "endTimestamp")                            \
   MACRO(entries, entries, "entries")                                           \
   MACRO(enum, enum_, "enum")                                                   \
@@ -198,6 +199,10 @@
   MACRO(globalThis, globalThis, "globalThis")                                  \
   MACRO(group, group, "group")                                                 \
   MACRO(groups, groups, "groups")                                              \
+  MACRO(h11, h11, "h11")                                                       \
+  MACRO(h12, h12, "h12")                                                       \
+  MACRO(h23, h23, "h23")                                                       \
+  MACRO(h24, h24, "h24")                                                       \
   MACRO(Handle, Handle, "Handle")                                              \
   MACRO(has, has, "has")                                                       \
   MACRO(hasOwn, hasOwn, "hasOwn")                                              \
@@ -389,14 +394,17 @@
   MACRO(setPrefix, setPrefix, "set ")                                          \
   MACRO(setPrototypeOf, setPrototypeOf, "setPrototypeOf")                      \
   MACRO(shape, shape, "shape")                                                 \
+  MACRO(shared, shared, "shared")                                              \
   MACRO(signal, signal, "signal")                                              \
   MACRO(signDisplay, signDisplay, "signDisplay")                               \
   MACRO(size, size, "size")                                                    \
+  MACRO(skeleton, skeleton, "skeleton")                                        \
   MACRO(source, source, "source")                                              \
   MACRO(SpeciesConstructor, SpeciesConstructor, "SpeciesConstructor")          \
   MACRO(stack, stack, "stack")                                                 \
   MACRO(star, star, "*")                                                       \
   MACRO(start, start, "start")                                                 \
+  MACRO(startRange, startRange, "startRange")                                  \
   MACRO(startTimestamp, startTimestamp, "startTimestamp")                      \
   MACRO(state, state, "state")                                                 \
   MACRO(static, static_, "static")                                             \
