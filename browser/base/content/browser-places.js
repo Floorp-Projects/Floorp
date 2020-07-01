@@ -13,6 +13,11 @@ XPCOMUtils.defineLazyScriptGetter(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
 });
+ChromeUtils.defineModuleGetter(
+  this,
+  "PanelMultiView",
+  "resource:///modules/PanelMultiView.jsm"
+);
 
 var StarUI = {
   _itemGuids: null,
@@ -1424,7 +1429,7 @@ var BookmarkingUI = {
   },
 
   selectLabel(elementId, visible) {
-    let element = document.getElementById(elementId);
+    let element = PanelMultiView.getViewNode(document, elementId);
     element.setAttribute(
       "label",
       element.getAttribute(visible ? "label-hide" : "label-show")
@@ -1637,7 +1642,7 @@ var BookmarkingUI = {
     for (let element of [
       this.star,
       document.getElementById("context-bookmarkpage"),
-      document.getElementById("panelMenuBookmarkThisPage"),
+      PanelMultiView.getViewNode(document, "panelMenuBookmarkThisPage"),
       document.getElementById("pageAction-panel-bookmark"),
     ]) {
       if (!element) {
@@ -1700,7 +1705,8 @@ var BookmarkingUI = {
       document.l10n.setAttributes(menuItem, menuItemL10nId);
     }
 
-    let panelMenuToolbarButton = document.getElementById(
+    let panelMenuToolbarButton = PanelMultiView.getViewNode(
+      document,
       "panelMenuBookmarkThisPage"
     );
     if (panelMenuToolbarButton) {
@@ -1770,7 +1776,7 @@ var BookmarkingUI = {
     event,
     anchor = document.getElementById(this.BOOKMARK_BUTTON_ID)
   ) {
-    let view = document.getElementById("PanelUI-bookmarks");
+    let view = PanelMultiView.getViewNode(document, "PanelUI-bookmarks");
     view.addEventListener("ViewShowing", this);
     view.addEventListener("ViewHiding", this);
     anchor.setAttribute("closemenu", "none");

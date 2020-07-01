@@ -35,13 +35,13 @@ async function openBookmarksPanelInLibraryToolbarButton() {
     );
     return bookmarksButton;
   }, "Should have the library bookmarks button");
+  bookmarksButton.click();
 
   let BookmarksView = document.getElementById("PanelUI-bookmarks");
   let viewRecentPromise = BrowserTestUtils.waitForEvent(
     BookmarksView,
     "ViewShown"
   );
-  bookmarksButton.click();
   await viewRecentPromise;
 }
 

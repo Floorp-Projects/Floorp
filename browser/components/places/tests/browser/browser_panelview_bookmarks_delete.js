@@ -28,9 +28,9 @@ add_task(async function test_panelview_bookmarks_delete() {
   let promise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
   await promise;
 
+  document.getElementById("appMenu-library-bookmarks-button").click();
   let bookmarksView = document.getElementById("PanelUI-bookmarks");
   promise = BrowserTestUtils.waitForEvent(bookmarksView, "ViewShown");
-  document.getElementById("appMenu-library-bookmarks-button").click();
   await promise;
 
   let list = document.getElementById("panelMenu_bookmarksMenu");
