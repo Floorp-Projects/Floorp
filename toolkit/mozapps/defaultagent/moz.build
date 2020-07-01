@@ -9,9 +9,11 @@ Program("default-browser-agent")
 SPHINX_TREES['default-browser-agent'] = "docs"
 
 UNIFIED_SOURCES += [
+    "/mfbt/Poison.cpp",
     "EventLog.cpp",
     "main.cpp",
     "Policy.cpp",
+    "Registry.cpp",
     "ScheduledTask.cpp",
     "Telemetry.cpp",
 ]
@@ -35,6 +37,7 @@ OS_LIBS += [
 ]
 
 DEFINES["NS_NO_XPCOM"] = True
+DEFINES['IMPL_MFBT'] = True
 
 DEFINES['UNICODE'] = True
 DEFINES['_UNICODE'] = True
