@@ -76,7 +76,6 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
 
   bool IsSeekableInputStream() const;
   bool IsAsyncInputStream() const;
-  bool IsIPCSerializable() const;
   bool IsInputStreamLength() const;
   bool IsAsyncInputStreamLength() const;
   bool IsCloneableInputStream() const;
@@ -106,8 +105,7 @@ NS_INTERFACE_MAP_BEGIN(nsMIMEInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIInputStream, nsIMIMEInputStream)
   NS_INTERFACE_MAP_ENTRY(nsITellableStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekableInputStream())
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
-                                     IsIPCSerializable())
+  NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream, IsAsyncInputStream())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback,
                                      IsAsyncInputStream())
@@ -362,22 +360,35 @@ void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
   *aSizeUsed = 0;
 
   MIMEInputStreamParams params;
-
-  if (mStream) {
-    InputStreamParams wrappedParams;
-    InputStreamHelper::SerializeInputStream(mStream, wrappedParams,
-                                            aFileDescriptors, aDelayedStart,
-                                            aMaxSize, aSizeUsed, aManager);
-
-    NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
-                 "Wrapped stream failed to serialize!");
-
-    params.optionalStream().emplace(wrappedParams);
-  }
-
   params.headers() = mHeaders.Clone();
   params.startedReading() = mStartedReading;
 
+  if (!mStream) {
+    aParams = params;
+    return;
+  }
+
+  InputStreamParams wrappedParams;
+
+  if (nsCOMPtr<nsIIPCSerializableInputStream> serializable =
+          do_QueryInterface(mStream)) {
+    InputStreamHelper::SerializeInputStream(mStream, wrappedParams,
+                                            aFileDescriptors, aDelayedStart,
+                                            aMaxSize, aSizeUsed, aManager);
+  } else {
+    // Falling back to sending the underlying stream over a pipe when
+    // sending an nsMIMEInputStream over IPC is potentially wasteful
+    // if it is sent several times. This can possibly happen with
+    // fission. There are two ways to improve this, see bug 1648369
+    // and bug 1648370.
+    InputStreamHelper::SerializeInputStreamAsPipe(mStream, wrappedParams,
+                                                  aDelayedStart, aManager);
+  }
+
+  NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
+               "Wrapped stream failed to serialize!");
+
+  params.optionalStream().emplace(wrappedParams);
   aParams = params;
 }
 
@@ -463,17 +474,6 @@ bool nsMIMEInputStream::IsSeekableInputStream() const {
 bool nsMIMEInputStream::IsAsyncInputStream() const {
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mStream);
   return !!asyncStream;
-}
-
-bool nsMIMEInputStream::IsIPCSerializable() const {
-  // If SetData() or Deserialize() has not be called yet, mStream is null.
-  if (!mStream) {
-    return true;
-  }
-
-  nsCOMPtr<nsIIPCSerializableInputStream> serializable =
-      do_QueryInterface(mStream);
-  return !!serializable;
 }
 
 bool nsMIMEInputStream::IsInputStreamLength() const {
