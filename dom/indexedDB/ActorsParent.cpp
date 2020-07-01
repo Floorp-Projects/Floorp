@@ -27358,15 +27358,22 @@ nsCOMPtr<nsIFile> FileHelper::GetJournalFile(const FileInfo& aFileInfo) {
   return mFileManager->GetFileForId(mJournalDirectory->get(), aFileInfo.Id());
 }
 
+static auto FailureIfFalse(const bool aArg)
+    -> Result<decltype(Ok()), nsresult> {
+  if (NS_WARN_IF(!aArg)) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  return Ok();
+};
+
 nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
                                           nsIInputStream& aInputStream,
                                           bool aCompress) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
-  bool exists;
-  nsresult rv = aFile.Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto existsOrErr = ToResultInvoke(aFile, &nsIFile::Exists);
+  if (NS_WARN_IF(existsOrErr.isErr())) {
+    return existsOrErr.propagateErr();
   }
 
   // DOM blobs that are being stored in IDB are cached by calling
@@ -27381,80 +27388,68 @@ nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
   // file. We could do some tricks to restore previous copy loop, but it's safer
   // to just delete the orphaned file and start from scratch.
   // This corner case is partially simulated in test_file_copy_failure.js
-  if (exists) {
-    bool isFile;
-    rv = aFile.IsFile(&isFile);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (existsOrErr.inspect()) {
+    auto res = ToResultInvoke(aFile, &nsIFile::IsFile)
+                   .andThen(FailureIfFalse)
+                   .andThen([&aJournalFile](auto) {
+                     return ToResultInvoke(aJournalFile, &nsIFile::Exists);
+                   })
+                   .andThen(FailureIfFalse)
+                   .andThen([&aJournalFile](auto) {
+                     return ToResultInvoke(aJournalFile, &nsIFile::IsFile);
+                   })
+                   .andThen(FailureIfFalse)
+                   .andThen([this, &aFile, &aJournalFile](auto) {
+                     IDB_WARNING("Deleting orphaned file!");
 
-    if (NS_WARN_IF(!isFile)) {
-      return NS_ERROR_FAILURE;
-    }
+                     return ToResult(
+                         mFileManager->SyncDeleteFile(aFile, aJournalFile));
+                   });
 
-    rv = aJournalFile.Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (NS_WARN_IF(!exists)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = aJournalFile.IsFile(&isFile);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (NS_WARN_IF(!isFile)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    IDB_WARNING("Deleting orphaned file!");
-
-    rv = mFileManager->SyncDeleteFile(aFile, aJournalFile);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (res.isErr()) {
+      return res.unwrapErr();
     }
   }
 
   // Create a journal file first.
-  rv = aJournalFile.Create(nsIFile::NORMAL_FILE_TYPE, 0644);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  auto res =
+      ToResult(aJournalFile.Create(nsIFile::NORMAL_FILE_TYPE, 0644))
+          .andThen([this, &aFile](
+                       auto) -> Result<nsCOMPtr<nsIOutputStream>, nsresult> {
+            // Now try to copy the stream.
+            nsCOMPtr<nsIOutputStream> fileOutputStream = CreateFileOutputStream(
+                mFileManager->Type(), mFileManager->Group(),
+                mFileManager->Origin(), Client::IDB, &aFile);
+            if (NS_WARN_IF(!fileOutputStream)) {
+              return Err(NS_ERROR_FAILURE);
+            }
+            return std::move(fileOutputStream);
+          })
+          .andThen([this, aCompress,
+                    &aInputStream](nsCOMPtr<nsIOutputStream> fileOutputStream) {
+            AutoTArray<char, kFileCopyBufferSize> buffer;
+            const auto actualOutputStream =
+                [aCompress, &buffer,
+                 fileOutputStream = std::move(
+                     fileOutputStream)]() mutable -> nsCOMPtr<nsIOutputStream> {
+              if (aCompress) {
+                auto snappyOutputStream =
+                    MakeRefPtr<SnappyCompressOutputStream>(fileOutputStream);
 
-  // Now try to copy the stream.
-  RefPtr<FileOutputStream> fileOutputStream =
-      CreateFileOutputStream(mFileManager->Type(), mFileManager->Group(),
-                             mFileManager->Origin(), Client::IDB, &aFile);
-  if (NS_WARN_IF(!fileOutputStream)) {
-    return NS_ERROR_FAILURE;
-  }
+                buffer.SetLength(snappyOutputStream->BlockSize());
 
-  AutoTArray<char, kFileCopyBufferSize> buffer;
-  const auto actualOutputStream =
-      [aCompress, &buffer, &fileOutputStream]() -> nsCOMPtr<nsIOutputStream> {
-    if (aCompress) {
-      auto snappyOutputStream =
-          MakeRefPtr<SnappyCompressOutputStream>(fileOutputStream);
+                return snappyOutputStream;
+              }
 
-      buffer.SetLength(snappyOutputStream->BlockSize());
+              buffer.SetLength(kFileCopyBufferSize);
+              return std::move(fileOutputStream);
+            }();
 
-      return snappyOutputStream;
-    }
+            return ToResult(SyncCopy(aInputStream, *actualOutputStream,
+                                     buffer.Elements(), buffer.Length()));
+          });
 
-    buffer.SetLength(kFileCopyBufferSize);
-    return std::move(fileOutputStream);
-  }();
-
-  rv = SyncCopy(aInputStream, *actualOutputStream, buffer.Elements(),
-                buffer.Length());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
+  return res.isErr() ? res.unwrapErr() : NS_OK;
 }
 
 class FileHelper::ReadCallback final : public nsIInputStreamCallback {
