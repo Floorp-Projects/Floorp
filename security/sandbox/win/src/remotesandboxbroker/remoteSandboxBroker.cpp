@@ -39,17 +39,17 @@ bool RemoteSandboxBroker::LaunchApp(
     base::EnvironmentMap& aEnvironment, GeckoProcessType aProcessType,
     const bool aEnableLogging, const IMAGE_THUNK_DATA*, void** aProcessHandle) {
   // Note: we expect to be called on the IPC launch thread from
-  // GeckoChildProcesHost while it's launching a child process. We can't
-  // run a synchronous launch here as that blocks the calling thread while
-  // it dispatches a task to the IPC launch thread to spawn the process.
-  // Since our calling thread is the IPC launch thread, we'd then be
-  // deadlocked. So instead we do an async launch, and spin the event
-  // loop until the process launch succeeds.
+  // GeckoChildProcesHost while it's launching a child process. The IPC launch
+  // thread is a TaskQueue. We can't run a synchronous launch here as that
+  // blocks the calling thread while it dispatches a task to the IPC launch
+  // thread to spawn the process. Since our calling thread is the IPC launch
+  // thread, we'd then be deadlocked. So instead we do an async launch, and spin
+  // the event loop until the process launch succeeds.
 
   // We should be on the IPC launch thread. We're shutdown on the IO thread,
   // so save a ref to the IPC launch thread here, so we can close the channel
   // on the IPC launch thread on shutdown.
-  mIPCLaunchThread = GetCurrentEventTarget();
+  mIPCLaunchThread = GetCurrentSerialEventTarget();
 
   mParameters.path() = nsDependentString(aPath);
   mParameters.args() = nsDependentString(aArguments);
@@ -77,9 +77,14 @@ bool RemoteSandboxBroker::LaunchApp(
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   };
 
-  mParent.Launch(mParameters.shareHandles())
-      ->Then(GetCurrentSerialEventTarget(), __func__, std::move(resolve),
-             std::move(reject));
+  // We need to wait on the current thread for the process to launch which will
+  // block the running IPC Launch taskqueue. We cannot use
+  // GetCurrentSerialEventTarget() (as this returns the currently running
+  // TaskQueue) to resolve our promise as it will be blocked until we return from
+  // this function.
+  nsCOMPtr<nsISerialEventTarget> target = NS_GetCurrentThread();
+  mParent.Launch(mParameters.shareHandles(), target)
+      ->Then(target, __func__, std::move(resolve), std::move(reject));
 
   // Spin the event loop while the sandbox launcher process launches.
   SpinEventLoopUntil([&]() { return res != Pending; });
