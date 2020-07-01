@@ -28,12 +28,18 @@
   TELEMETRY_BASE_URL "/" TELEMETRY_NAMESPACE "/" TELEMETRY_PING_DOCTYPE \
                      "/" TELEMETRY_PING_VERSION "/"
 
+// We only want to send one ping per day. However, this is slightly less than 24
+// hours so that we have a little bit of wiggle room on our task, which is also
+// supposed to run every 24 hours.
+#define MINIMUM_PING_PERIOD_SEC ((23 * 60 * 60) + (45 * 60))
+
 #if !defined(RRF_SUBKEY_WOW6464KEY)
 #  define RRF_SUBKEY_WOW6464KEY 0x00010000
 #endif  // !defined(RRF_SUBKEY_WOW6464KEY)
 
 using TelemetryFieldResult = mozilla::WindowsErrorResult<std::string>;
 using FilePathResult = mozilla::WindowsErrorResult<std::wstring>;
+using BoolResult = mozilla::WindowsErrorResult<bool>;
 
 // This function was copied from the implementation of
 // nsITelemetry::isOfficialTelemetry, currently found in the file
@@ -266,6 +272,39 @@ static mozilla::WindowsError SendPing(const std::string defaultBrowser,
   return mozilla::WindowsError::CreateSuccess();
 }
 
+// This function checks if a ping has already been sent today. If one has not,
+// it assumes that we are about to send one and sets a registry entry that will
+// cause this function to return true for the next day.
+// This function uses unprefixed registry entries, so a RegistryMutex should be
+// held before calling.
+static BoolResult GetPingAlreadySentToday() {
+  const wchar_t* valueName = L"LastPingSentAt";
+  MaybeQwordResult readResult =
+      RegistryGetValueQword(IsPrefixed::Unprefixed, valueName);
+  if (readResult.isErr()) {
+    HRESULT hr = readResult.unwrapErr().AsHResult();
+    LOG_ERROR_MESSAGE(L"Unable to read registry: %#X", hr);
+    return BoolResult(mozilla::WindowsError::FromHResult(hr));
+  }
+  mozilla::Maybe<ULONGLONG> maybeValue = readResult.unwrap();
+  ULONGLONG now = GetCurrentTimestamp();
+  if (maybeValue.isSome()) {
+    ULONGLONG lastPingTime = maybeValue.value();
+    if (SecondsPassedSince(lastPingTime, now) < MINIMUM_PING_PERIOD_SEC) {
+      return true;
+    }
+  }
+
+  mozilla::WindowsErrorResult<mozilla::Ok> writeResult =
+      RegistrySetValueQword(IsPrefixed::Unprefixed, valueName, now);
+  if (writeResult.isErr()) {
+    HRESULT hr = readResult.unwrapErr().AsHResult();
+    LOG_ERROR_MESSAGE(L"Unable to write registry: %#X", hr);
+    return BoolResult(mozilla::WindowsError::FromHResult(hr));
+  }
+  return false;
+}
+
 HRESULT SendDefaultBrowserPing(
     const DefaultBrowserInfo& browserInfo,
     const NotificationActivities& activitiesPerformed) {
@@ -296,6 +335,25 @@ HRESULT SendDefaultBrowserPing(
   // don't even generate the ping in fact, because if we write the file out
   // then some other build might find it later and decide to submit it.
   if (!IsOfficialTelemetry()) {
+    return S_OK;
+  }
+
+  // Pings are limited to one per day (across all installations), so check if we
+  // already sent one today.
+  // This will also set a registry entry indicating that the last ping was
+  // just sent, to prevent another one from being sent today. We'll do this
+  // now even though we haven't sent the ping yet. After this check, we send
+  // a ping unconditionally. The only exception is for errors, and any error
+  // that we get now will probably be hit every time.
+  // Because unsent pings attempted with pingsender can get automatically
+  // re-sent later, we don't even want to try again on transient network
+  // failures.
+  BoolResult pingAlreadySentResult = GetPingAlreadySentToday();
+  if (pingAlreadySentResult.isErr()) {
+    return pingAlreadySentResult.unwrapErr().AsHResult();
+  }
+  bool pingAlreadySent = pingAlreadySentResult.unwrap();
+  if (pingAlreadySent) {
     return S_OK;
   }
 
