@@ -12,8 +12,8 @@ job-defaults:
             fennec: []
             default:
                 by-test-platform:
-                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
-                    android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
+                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central"]
+                    android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
                     default: []
     webrender-run-on-projects: []
     tier: 3
@@ -152,7 +152,7 @@ browsertime-tp6m:
                                     default: ['mozilla-central']
                     default:
                         by-test-platform:
-                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
+                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
                             default: []
             youtube:
                 by-app:
@@ -168,8 +168,8 @@ browsertime-tp6m:
                                 by-test-platform: *android-warm-settings
                     default:
                         by-test-platform:
-                            android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
-                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
+                            android-hw-p2-.*aarch64.*/pgo: ["mozilla-central"]
+                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
                             default: []
             default:
                 by-pageload:
@@ -274,8 +274,8 @@ browsertime-speedometer-mobile:
             fenix: []
             default:
                 by-test-platform:
-                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
-                    android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
+                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central"]
+                    android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
                     default: []
     treeherder-symbol: Btime(sp)
     mozharness:

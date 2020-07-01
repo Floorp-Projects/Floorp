@@ -50,9 +50,9 @@ test-verify:
             .*-ccov/.*: []
             .*-asan/.*: []
             # where shippable is available, do not run on plain opt, except on try
-            (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: ['try']
+            (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: []
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
-            default: ['autoland', 'try']
+            default: ['autoland']
     built-projects-only: true
     target:
         by-test-platform:
@@ -123,9 +123,9 @@ test-verify-gpu:
             .*-ccov/.*: []
             .*-asan/.*: []
             # where shippable is available, do not run on plain opt, except on try
-            (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: ['try']
+            (?:windows10-64|windows7-32|linux1804-64|macosx.*64)(?:-qr)?/opt: []
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
-            default: ['autoland', 'try']
+            default: ['autoland']
     built-projects-only: true
     tier: 2
     mozharness:
@@ -221,7 +221,7 @@ test-coverage-gpu:
     run-on-projects:
         by-test-platform:
             # only run on mozilla-central and try.
-            .*-ccov/.*: ['mozilla-central', 'try']
+            .*-ccov/.*: ['mozilla-central']
             default: []
     tier:
         by-test-platform:
