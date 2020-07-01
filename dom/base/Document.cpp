@@ -16351,7 +16351,9 @@ nsICookieJarSettings* Document::CookieJarSettings() {
                       inProcessParent->CookieJarSettings())
                       ->GetPartitionKey(),
                   inProcessParent->CookieJarSettings()
-                      ->GetIsFirstPartyIsolated())
+                      ->GetIsFirstPartyIsolated(),
+                  inProcessParent->CookieJarSettings()
+                      ->GetIsOnContentBlockingAllowList())
             : net::CookieJarSettings::Create();
 
     if (auto* wgc = GetWindowGlobalChild()) {
