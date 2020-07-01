@@ -566,7 +566,11 @@ impl ClipNodeInfo {
                     let visible_rect = if repeat {
                         *clipped_rect
                     } else {
-                        clipped_rect.intersection(&rect).unwrap()
+                        // Bug 1648323 - It is unclear why on rare occasions we get
+                        // a clipped_rect that does not intersect the clip's mask rect.
+                        // defaulting to clipped_rect here results in zero repetitions
+                        // which clips the primitive entirely.
+                        clipped_rect.intersection(&rect).unwrap_or(*clipped_rect)
                     };
 
                     let repetitions = image_tiling::repetitions(
