@@ -1072,9 +1072,9 @@ StaticAutoPtr<HelperThreadPool> gHelperThreads;
 
 void InitializeHelperThreadPool() { gHelperThreads = new HelperThreadPool(); }
 
-void DispatchOffThreadTask(js::UniquePtr<RunnableTask> task) {
-  gHelperThreads->Dispatch(
-      MakeAndAddRef<HelperThreadTaskHandler>(std::move(task)));
+bool DispatchOffThreadTask(js::UniquePtr<RunnableTask> task) {
+  return NS_SUCCEEDED(gHelperThreads->Dispatch(
+      MakeAndAddRef<HelperThreadTaskHandler>(std::move(task))));
 }
 
 void XPCJSRuntime::Shutdown(JSContext* cx) {
@@ -3302,8 +3302,7 @@ uint32_t GetAndClampCPUCount() {
 }
 nsresult HelperThreadPool::Dispatch(
     already_AddRefed<HelperThreadTaskHandler> aRunnable) {
-  mPool->Dispatch(std::move(aRunnable), NS_DISPATCH_NORMAL);
-  return NS_OK;
+  return mPool->Dispatch(std::move(aRunnable), NS_DISPATCH_NORMAL);
 }
 
 HelperThreadPool::HelperThreadPool() {
