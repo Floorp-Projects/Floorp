@@ -109,7 +109,7 @@ jobs:
                 - macosx64-geckodriver
         run:
             command: >-
-                virtualenv/virtualenv.py -p python3 . &&
+                python3 -m venv . &&
                 bin/python3 condprof/main.py
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --firefox ${MOZ_FETCHES_DIR}/target.dmg
