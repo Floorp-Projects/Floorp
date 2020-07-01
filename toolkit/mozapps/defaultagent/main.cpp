@@ -17,6 +17,7 @@
 #include "DefaultBrowser.h"
 #include "Notification.h"
 #include "Policy.h"
+#include "Registry.h"
 #include "ScheduledTask.h"
 #include "Telemetry.h"
 
@@ -85,6 +86,22 @@ static void RemoveAllRegistryEntries() {
   }
 }
 
+// This function adds a registry value with this format:
+//    <install-dir>|Installed=1
+// RemoveAllRegistryEntries() determines whether the registry key is in use
+// by other installations by checking for install-directory-prefixed value
+// names. Although Firefox mirrors some preferences into install-directory-
+// prefixed values, the WDBA no longer uses any prefixed values. Adding this one
+// makes uninstallation work as expected slightly more reliably.
+static void WriteInstallationRegistryEntry() {
+  mozilla::WindowsErrorResult<mozilla::Ok> result =
+      RegistrySetValueBool(IsPrefixed::Prefixed, L"Installed", true);
+  if (result.isErr()) {
+    LOG_ERROR_MESSAGE(L"Failed to write installation registry entry: %#X",
+                      result.unwrapErr().AsHResult());
+  }
+}
+
 // We expect to be given a command string in argv[1], perhaps followed by other
 // arguments depending on the command. The valid commands are:
 // register-task [unique-token]
@@ -146,11 +163,15 @@ int wmain(int argc, wchar_t** argv) {
     if (argc < 3 || !argv[2]) {
       return E_INVALIDARG;
     }
+    WriteInstallationRegistryEntry();
+
     return RegisterTask(argv[2]);
   } else if (!wcscmp(argv[1], L"update-task")) {
     if (argc < 3 || !argv[2]) {
       return E_INVALIDARG;
     }
+    WriteInstallationRegistryEntry();
+
     return UpdateTask(argv[2]);
   } else if (!wcscmp(argv[1], L"do-task")) {
     if (argc < 3 || !argv[2]) {

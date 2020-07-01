@@ -236,3 +236,24 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueQword(
 
   return mozilla::Ok();
 }
+
+mozilla::WindowsErrorResult<mozilla::Ok> RegistryDeleteValue(
+    IsPrefixed isPrefixed, const wchar_t* registryValueName) {
+  // Get the full registry value name
+  WStringResult registryValueNameResult =
+      MaybePrefixRegistryValueName(isPrefixed, registryValueName);
+  if (registryValueNameResult.isErr()) {
+    return mozilla::Err(registryValueNameResult.unwrapErr());
+  }
+  std::wstring valueName = registryValueNameResult.unwrap();
+
+  LSTATUS ls = RegDeleteKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
+                                  valueName.c_str());
+  if (ls == ERROR_SUCCESS) {
+    HRESULT hr = HRESULT_FROM_WIN32(ls);
+    LOG_ERROR(hr);
+    return mozilla::Err(mozilla::WindowsError::FromHResult(hr));
+  }
+
+  return mozilla::Ok();
+}
