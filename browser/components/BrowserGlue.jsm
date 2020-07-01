@@ -810,12 +810,6 @@ const listeners = {
   },
 
   ppmm: {
-    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
-    "ContentPrefs:FunctionCall": ["ContentPrefServiceParent"],
-    "ContentPrefs:AddObserverForName": ["ContentPrefServiceParent"],
-    "ContentPrefs:RemoveObserverForName": ["ContentPrefServiceParent"],
-    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
-
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN AsyncPrefs.init
     "AsyncPrefs:SetPref": ["AsyncPrefs"],
     "AsyncPrefs:ResetPref": ["AsyncPrefs"],
