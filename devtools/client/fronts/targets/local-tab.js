@@ -125,45 +125,23 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
       false
     );
 
-    // Cache the client as this property will be nullified when the target is closed
-    const client = this.client;
-
+    // When target switching is enabled, everything is handled by the TargetList
+    // In a near future, this client side code should be replaced by actor code,
+    // notifying about new tab targets.
     if (targetSwitchingEnabled) {
-      // By default, we do close the DevToolsClient when the target is destroyed.
-      // This happens when we close the toolbox (Toolbox.destroy calls Target.destroy),
-      // or when the tab is closes, the server emits tabDetached and the target
-      // destroy itself.
-      // Here, in the context of the process switch, the current target will be destroyed
-      // due to a tabDetached event and a we will create a new one. But we want to reuse
-      // the same client.
-      this.shouldCloseClient = false;
-
-      // If we support target switching, only wait for the target to be
-      // destroyed so that TargetFactory clears its memoized target for this tab
-      await this.once("target-destroyed");
-    } else {
-      // Otherwise, if we don't support target switching, ensure the toolbox is destroyed.
-      // We need to wait for the toolbox destruction because the TargetFactory memoized the targets,
-      // and only cleans up the cache after the target is destroyed via toolbox destruction.
-      await toolbox.destroy();
+      this.emit("remoteness-change", this);
+      return;
     }
+
+    // Otherwise, if we don't support target switching, ensure the toolbox is destroyed.
+    // We need to wait for the toolbox destruction because the TargetFactory memoized the targets,
+    // and only cleans up the cache after the target is destroyed via toolbox destruction.
+    await toolbox.destroy();
 
     // Fetch the new target for this tab
-    // Only try to fetch the the target from the existing client when target switching
-    // is enabled. We keep the toolbox open with the original client we created it from.
-    const newTarget = await TargetFactory.forTab(
-      this.localTab,
-      targetSwitchingEnabled ? client : null
-    );
+    const newTarget = await TargetFactory.forTab(this.localTab, null);
 
-    // Depending on if we support target switching or not, we should either
-    // reopen a brand new toolbox against the new target we switched to, or
-    // only communicate the new target to the toolbox.
-    if (targetSwitchingEnabled) {
-      toolbox.targetList.switchToTarget(newTarget);
-    } else {
-      gDevTools.showToolbox(newTarget);
-    }
+    gDevTools.showToolbox(newTarget);
   }
 }
 exports.LocalTabTargetFront = LocalTabTargetFront;

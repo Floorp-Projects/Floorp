@@ -25,6 +25,14 @@ const {
   LegacyWorkersWatcher,
 } = require("devtools/shared/resources/legacy-target-watchers/legacy-workers-watcher");
 
+// eslint-disable-next-line mozilla/reject-some-requires
+loader.lazyRequireGetter(
+  this,
+  "TargetFactory",
+  "devtools/client/framework/target",
+  true
+);
+
 class TargetList {
   /**
    * This class helps managing, iterating over and listening for Targets.
@@ -58,6 +66,15 @@ class TargetList {
     this.targetFront = targetFront;
     targetFront.setTargetType(this.getTargetType(targetFront));
     targetFront.setIsTopLevel(true);
+
+    // Until Watcher actor notify about new top level target when navigating to another process
+    // we have to manually switch to a new target from the client side
+    this.onLocalTabRemotenessChange = this.onLocalTabRemotenessChange.bind(
+      this
+    );
+    if (targetFront.isLocalTab) {
+      targetFront.on("remoteness-change", this.onLocalTabRemotenessChange);
+    }
 
     // Reports if we have at least one listener for the given target type
     this._listenersStarted = new Set();
@@ -446,6 +463,35 @@ class TargetList {
   }
 
   /**
+   * This function is triggered by an event sent by LocalTabTarget when
+   * the tab navigates to a distinct content process.
+   *
+   * @param TargetFront targetFront
+   *        The LocalTabTarget instance that navigated to another process
+   */
+  async onLocalTabRemotenessChange(targetFront) {
+    // Cache the client as this property will be nullified when the target is closed
+    const client = targetFront.client;
+
+    // By default, we do close the DevToolsClient when the target is destroyed.
+    // This happens when we close the toolbox (Toolbox.destroy calls Target.destroy),
+    // or when the tab is closes, the server emits tabDetached and the target
+    // destroy itself.
+    // Here, in the context of the process switch, the current target will be destroyed
+    // due to a tabDetached event and a we will create a new one. But we want to reuse
+    // the same client.
+    targetFront.shouldCloseClient = false;
+
+    // Wait for the target to be destroyed so that TargetFactory clears its memoized target for this tab
+    await targetFront.once("target-destroyed");
+
+    // Fetch the new target from the existing client so that the new target uses the same client.
+    const newTarget = await TargetFactory.forTab(targetFront.localTab, client);
+
+    this.switchToTarget(newTarget);
+  }
+
+  /**
    * Called when the top level target is replaced by a new one.
    * Typically when we navigate to another domain which requires to be loaded in a distinct process.
    *
@@ -454,6 +500,9 @@ class TargetList {
    */
   async switchToTarget(newTarget) {
     newTarget.setIsTopLevel(true);
+    if (newTarget.isLocalTab) {
+      newTarget.on("remoteness-change", this.onLocalTabRemotenessChange);
+    }
 
     // Notify about this new target to creation listeners
     await this._onTargetAvailable(newTarget, true);
