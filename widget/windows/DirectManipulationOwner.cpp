@@ -98,6 +98,7 @@ class DManipEventHandler : public IDirectManipulationViewportEventHandler,
   float mLastYOffset;
   LayoutDeviceIntRect mBounds;
   bool mShouldSendPanStart;
+  bool mShouldSendPinchStart;
   State mState = State::eNone;
 };
 
@@ -110,7 +111,8 @@ DManipEventHandler::DManipEventHandler(nsWindow* aWindow,
       mLastXOffset(0.f),
       mLastYOffset(0.f),
       mBounds(aBounds),
-      mShouldSendPanStart(false) {}
+      mShouldSendPanStart(false),
+      mShouldSendPinchStart(false) {}
 
 STDMETHODIMP
 DManipEventHandler::QueryInterface(REFIID iid, void** ppv) {
@@ -242,7 +244,11 @@ void DManipEventHandler::TransitionToState(State aNewState) {
     case State::ePinching: {
       // * -> ePinching: PinchStart.
       // Pinch gesture may begin with some scroll events.
-      SendPinch(Phase::eStart, 0.f);
+      // We're being called from OnContentUpdated, it has the scale we need to
+      // pass to SendPinch(Phase::eStart), so set mShouldSendPinchStart and when
+      // we return OnContentUpdated will check it and call
+      // SendPinch(Phase::eStart).
+      mShouldSendPinchStart = true;
       break;
     }
     case State::eNone: {
@@ -299,7 +305,12 @@ DManipEventHandler::OnContentUpdated(IDirectManipulationViewport* viewport,
     SendPan(Phase::eMiddle, mLastXOffset - xoffset, mLastYOffset - yoffset,
             true);
   } else if (mState == State::ePinching) {
-    SendPinch(Phase::eMiddle, scale);
+    if (mShouldSendPinchStart) {
+      SendPinch(Phase::eStart, scale);
+      mShouldSendPinchStart = false;
+    } else {
+      SendPinch(Phase::eMiddle, scale);
+    }
   }
 
   mLastScale = scale;
@@ -391,16 +402,15 @@ void DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
   ::ScreenToClient(wnd, &cursor_pos);
   ScreenPoint position = {(float)cursor_pos.x, (float)cursor_pos.y};
 
-  PinchGestureInput event{
-      pinchGestureType,
-      PinchGestureInput::TRACKPAD,
-      eventIntervalTime,
-      eventTimeStamp,
-      screenOffset,
-      position,
-      100.0 * ((aPhase != Phase::eMiddle) ? 1.f : aScale),
-      100.0 * ((aPhase != Phase::eMiddle) ? 1.f : mLastScale),
-      mods};
+  PinchGestureInput event{pinchGestureType,
+                          PinchGestureInput::TRACKPAD,
+                          eventIntervalTime,
+                          eventTimeStamp,
+                          screenOffset,
+                          position,
+                          100.0 * ((aPhase == Phase::eEnd) ? 1.f : aScale),
+                          100.0 * ((aPhase == Phase::eEnd) ? 1.f : mLastScale),
+                          mods};
 
   mWindow->SendAnAPZEvent(event);
 }
