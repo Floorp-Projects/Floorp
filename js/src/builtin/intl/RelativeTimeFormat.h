@@ -35,7 +35,7 @@ class RelativeTimeFormatObject : public NativeObject {
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
-  // Estimated memory use for URelativeDateTimeFormatter.
+  // Estimated memory use for URelativeDateTimeFormatter (see IcuMemoryUsage).
   static constexpr size_t EstimatedMemoryUse = 278;
 
   URelativeDateTimeFormatter* getRelativeDateTimeFormatter() const {
