@@ -9,6 +9,8 @@
 
 #include <windows.h>
 
-HRESULT SendDefaultBrowserPing();
+#include "DefaultBrowser.h"
+
+HRESULT SendDefaultBrowserPing(const DefaultBrowserInfo& browserInfo);
 
 #endif  // __DEFAULT_BROWSER_TELEMETRY_H__

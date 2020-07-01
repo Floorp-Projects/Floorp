@@ -10,6 +10,8 @@ SPHINX_TREES['default-browser-agent'] = "docs"
 
 UNIFIED_SOURCES += [
     "/mfbt/Poison.cpp",
+    "/mfbt/Unused.cpp",
+    "DefaultBrowser.cpp",
     "EventLog.cpp",
     "main.cpp",
     "Policy.cpp",
@@ -23,6 +25,7 @@ USE_LIBS += [
 ]
 
 LOCAL_INCLUDES += [
+    '/mfbt/',
     '/toolkit/components/jsoncpp/include',
     '/xpcom/build',
 ]
