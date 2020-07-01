@@ -11,6 +11,7 @@
 #include <fstream>
 
 #include "common.h"
+#include "Registry.h"
 
 #include "json/json.h"
 #include "mozilla/HelperMacros.h"
@@ -119,24 +120,17 @@ static PolicyState FindPolicyInFile(const char* policyName) {
 }
 
 static PolicyState IsDisabledByPref(const wchar_t* prefRegValue) {
-  mozilla::UniquePtr<wchar_t[]> installPath = mozilla::GetFullBinaryPath();
-  if (!PathRemoveFileSpecW(installPath.get())) {
+  auto prefValueResult =
+      RegistryGetValueBool(IsPrefixed::Prefixed, prefRegValue);
+
+  if (prefValueResult.isErr()) {
     return PolicyState::NoPolicy;
   }
-
-  std::wstring telemetryRegistryValueName(installPath.get());
-  telemetryRegistryValueName.append(L"|");
-  telemetryRegistryValueName.append(prefRegValue);
-
-  DWORD prefValue = 0, dataLen = sizeof(DWORD);
-  LSTATUS ls = RegGetValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
-                            telemetryRegistryValueName.c_str(),
-                            RRF_RT_REG_DWORD, nullptr, &prefValue, &dataLen);
-  if (ls == ERROR_SUCCESS) {
-    return prefValue == 0 ? PolicyState::Disabled : PolicyState::Enabled;
+  auto prefValue = prefValueResult.unwrap();
+  if (prefValue.isNothing()) {
+    return PolicyState::NoPolicy;
   }
-
-  return PolicyState::NoPolicy;
+  return prefValue.value() ? PolicyState::Enabled : PolicyState::Disabled;
 }
 
 // Everything we call from this function wants wide strings, except for jsoncpp,
