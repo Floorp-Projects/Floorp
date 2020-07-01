@@ -888,19 +888,8 @@ bool js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-/**
- * Returns a new UDateFormat with the locale and date-time formatting options
- * of the given DateTimeFormat.
- */
-static UDateFormat* NewUDateFormat(
-    JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat) {
+static UniqueChars DateTimeFormatLocale(JSContext* cx, HandleObject internals) {
   RootedValue value(cx);
-
-  RootedObject internals(cx, intl::GetInternalsObject(cx, dateTimeFormat));
-  if (!internals) {
-    return nullptr;
-  }
-
   if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
     return nullptr;
   }
@@ -961,7 +950,23 @@ static UDateFormat* NewUDateFormat(
     return nullptr;
   }
 
-  UniqueChars locale = tag.toStringZ(cx);
+  return tag.toStringZ(cx);
+}
+
+/**
+ * Returns a new UDateFormat with the locale and date-time formatting options
+ * of the given DateTimeFormat.
+ */
+static UDateFormat* NewUDateFormat(
+    JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat) {
+  RootedValue value(cx);
+
+  RootedObject internals(cx, intl::GetInternalsObject(cx, dateTimeFormat));
+  if (!internals) {
+    return nullptr;
+  }
+
+  UniqueChars locale = DateTimeFormatLocale(cx, internals);
   if (!locale) {
     return nullptr;
   }
