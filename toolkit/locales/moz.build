@@ -35,3 +35,7 @@ LOCALIZED_GENERATED_FILES += ['update.locale']
 update_locale = LOCALIZED_GENERATED_FILES['update.locale']
 update_locale.script = 'generate_update_locale.py'
 LOCALIZED_FILES += ['!update.locale']
+
+LOCALIZED_GENERATED_FILES += ['locale.ini']
+LOCALIZED_GENERATED_FILES['locale.ini'].script = 'generate_locale_ini.py'
+LOCALIZED_FILES += ['!locale.ini']

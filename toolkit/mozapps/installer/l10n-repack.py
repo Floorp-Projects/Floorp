@@ -18,6 +18,7 @@ NON_CHROME = set([
     'dictionaries',
     'defaults/profile',
     'defaults/pref*/*-l10n.js',
+    'locale.ini',
     'update.locale',
     'updater.ini',
     'extensions/langpack-*@*',
