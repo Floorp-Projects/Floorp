@@ -9,7 +9,6 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -23,7 +22,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  * These tests will verify different functionalities of the app as a way to quickly detect regressions in main areas
  */
 
-@Ignore("Temp disable for triggering a native Gecko crash - https://github.com/mozilla-mobile/fenix/issues/11642")
 class SmokeTest {
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer

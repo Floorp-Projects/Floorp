@@ -422,7 +422,7 @@ class BookmarksTest {
     }
 
     @Test
-    fun multipleBookmarkDeletions() {
+    fun multipleBookmarkDeletionsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
@@ -527,7 +527,7 @@ class BookmarksTest {
     }
 
     @Test
-    fun verifyCloseMenu() {
+    fun verifyCloseMenuTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
