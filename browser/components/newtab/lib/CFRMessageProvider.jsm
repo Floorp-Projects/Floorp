@@ -553,6 +553,7 @@ const CFR_MESSAGES = [
     template: "cfr_doorhanger",
     content: {
       skip_address_bar_notifier: true,
+      persistent_doorhanger: true,
       anchor_id: "PanelUI-menu-button",
       layout: "icon_and_message",
       text: { string_id: "cfr-doorhanger-doh-body" },

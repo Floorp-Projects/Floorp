@@ -772,6 +772,7 @@ describe("CFRPageActions", () => {
             popupIconURL: fakeRecommendation.content.addon.icon,
             hideClose: true,
             eventCallback: pageAction._popupStateChange,
+            persistent: false,
           }
         );
       });
