@@ -85,8 +85,8 @@ jittest:
             # Additionally, platforms contain suffixes like "/opt" or "/debug".
             (?=linux).*(?!-ccov)...../.*: []  # redundant with SM(...)
             (?=windows).*(?!-ccov)...../.*: []  # redundant with SM(p)
-            android-hw-.*-aarch64/debug: ['try', 'mozilla-central', 'release']
-            android-hw-.*-api-16(?:-shippable)?/.*: ['try', 'mozilla-central', 'release']
+            android-hw-.*-aarch64/debug: ['mozilla-central', 'release']
+            android-hw-.*-api-16(?:-shippable)?/.*: ['mozilla-central', 'release']
             default: built-projects
     chunks:
         by-test-platform:

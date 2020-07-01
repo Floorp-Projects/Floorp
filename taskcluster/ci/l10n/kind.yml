@@ -59,7 +59,7 @@ job-template:
                 win64.*: win64-opt
     run-on-projects:
         by-build-platform:
-            linux-shippable.*: ['try', 'release']  # Do not run on autoland - Bug 1599197
+            linux-shippable.*: ['release']  # Do not run on autoland - Bug 1599197
             default: ['all']
     worker-type:
         by-build-platform:
