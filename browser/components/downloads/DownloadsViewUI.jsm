@@ -842,6 +842,11 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     // this command toggles between setting preferredAction for this mime-type to open
     // using the system viewer, or to open the file in browser.
     const mimeInfo = DownloadsCommon.getMimeInfo(this.download);
+    if (!mimeInfo) {
+      throw new Error(
+        "Can't open download with unknown mime-type in system viewer"
+      );
+    }
     if (mimeInfo.preferredAction !== mimeInfo.useSystemDefault) {
       // User has selected to open this mime-type with the system viewer from now on
       DownloadsCommon.log(

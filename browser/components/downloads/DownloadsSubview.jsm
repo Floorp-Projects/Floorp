@@ -298,9 +298,8 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
       button = button.parentNode;
     }
     let download = button._shell.download;
-    let { preferredAction, useSystemDefault } = DownloadsCommon.getMimeInfo(
-      download
-    );
+    let mimeInfo = DownloadsCommon.getMimeInfo(download);
+    let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
 
     menu.setAttribute("state", button.getAttribute("state"));
     if (button.hasAttribute("exists")) {

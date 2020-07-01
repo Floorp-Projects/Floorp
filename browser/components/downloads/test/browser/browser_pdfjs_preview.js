@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const DATA_PDF = atob(
-  "JVBERi0xLjANCjEgMCBvYmo8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PmVuZG9iaiAyIDAgb2JqPDwvVHlwZS9QYWdlcy9LaWRzWzMgMCBSXS9Db3VudCAxPj5lbmRvYmogMyAwIG9iajw8L1R5cGUvUGFnZS9NZWRpYUJveFswIDAgMyAzXT4+ZW5kb2JqDQp4cmVmDQowIDQNCjAwMDAwMDAwMDAgNjU1MzUgZg0KMDAwMDAwMDAxMCAwMDAwMCBuDQowMDAwMDAwMDUzIDAwMDAwIG4NCjAwMDAwMDAxMDIgMDAwMDAgbg0KdHJhaWxlcjw8L1NpemUgNC9Sb290IDEgMCBSPj4NCnN0YXJ0eHJlZg0KMTQ5DQolRU9G"
-);
 let gDownloadDir;
 
 SimpleTest.requestFlakyTimeout(
@@ -368,23 +365,6 @@ function contentTriggerDblclickOn(selector, eventModifiers = {}, browser) {
   );
 }
 
-async function openContextMenu(itemElement, win = window) {
-  let popupShownPromise = BrowserTestUtils.waitForEvent(
-    itemElement.ownerDocument,
-    "popupshown"
-  );
-  EventUtils.synthesizeMouseAtCenter(
-    itemElement,
-    {
-      type: "contextmenu",
-      button: 2,
-    },
-    win
-  );
-  let { target } = await popupShownPromise;
-  return target;
-}
-
 async function verifyContextMenu(contextMenu, expected = {}) {
   info("verifyContextMenu with expected: " + JSON.stringify(expected, null, 2));
   let alwaysMenuItem = contextMenu.querySelector(
@@ -393,12 +373,14 @@ async function verifyContextMenu(contextMenu, expected = {}) {
   let useSystemMenuItem = contextMenu.querySelector(
     ".downloadUseSystemDefaultMenuItem"
   );
+  info("Waiting for the context menu to show up");
   await TestUtils.waitForCondition(
     () => BrowserTestUtils.is_visible(contextMenu),
     "The context menu is visible"
   );
   await TestUtils.waitForTick();
 
+  info("Checking visibility of the system viewer menu items");
   is(
     BrowserTestUtils.is_hidden(useSystemMenuItem),
     expected.useSystemMenuItemDisabled,
@@ -428,22 +410,13 @@ async function verifyContextMenu(contextMenu, expected = {}) {
   }
 }
 
-async function createDownloadedFile(pathname, contents) {
-  let encoder = new TextEncoder();
-  let file = new FileUtils.File(pathname);
-  if (file.exists()) {
-    info(`File at ${pathname} already exists`);
-  }
-  // No post-test cleanup necessary; tmp downloads directory is already removed after each test
-  await OS.File.writeAtomic(pathname, encoder.encode(contents));
-  ok(file.exists(), `Created ${pathname}`);
-  return file;
-}
-
 async function addPDFDownload(itemData) {
   let startTimeMs = Date.now();
+  info("addPDFDownload with itemData: " + JSON.stringify(itemData, null, 2));
 
   let downloadPathname = OS.Path.join(gDownloadDir, itemData.targetFilename);
+  delete itemData.targetFilename;
+
   info("Creating saved download file at:" + downloadPathname);
   let pdfFile = await createDownloadedFile(downloadPathname, DATA_PDF);
   info("Created file at:" + pdfFile.path);
@@ -465,6 +438,7 @@ async function addPDFDownload(itemData) {
     hasPartialData: false,
     hasBlockedData: itemData.hasBlockedData || false,
     startTime: new Date(startTimeMs++),
+    ...itemData,
   };
   if (itemData.errorObj) {
     download.errorObj = itemData.errorObj;
@@ -499,6 +473,7 @@ async function openDownloadPanel(expectedItemCount) {
 async function testOpenPDFPreview({
   name,
   whichUI,
+  downloadProperties,
   itemSelector,
   expected,
   prefs = [],
@@ -517,8 +492,13 @@ async function testOpenPDFPreview({
 
   // Populate downloads database with the data required by this test.
   info("Adding download objects");
+  if (!downloadProperties) {
+    downloadProperties = {
+      targetFilename: "downloaded.pdf",
+    };
+  }
   let download = await addPDFDownload({
-    targetFilename: "downloaded.pdf",
+    ...downloadProperties,
     isPrivate,
   });
   info("Got download pathname:" + download.target.path);
