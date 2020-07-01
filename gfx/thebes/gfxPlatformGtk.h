@@ -113,7 +113,9 @@ class gfxPlatformGtk final : public gfxPlatform {
 #ifdef MOZ_X11
   Display* mCompositorDisplay;
 #endif
+#ifdef MOZ_WAYLAND
   bool mUseWebGLDmabufBackend;
+#endif
 };
 
 #endif /* GFX_PLATFORM_GTK_H */
