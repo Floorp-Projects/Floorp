@@ -112,10 +112,6 @@
   padding: 5px;
 }
 
-treechildren::-moz-tree-separator {
-  height: 1px;
-}
-
 #editBMPanel_tagsSelectorRow > richlistbox > richlistitem,
 .expander-up,
 .expander-down {
@@ -288,6 +284,7 @@ treechildren::-moz-tree-separator {
   }
 
   treechildren::-moz-tree-separator {
+    height: 1px;
     border-color: var(--organizer-text-secondary-color);
   }
 
