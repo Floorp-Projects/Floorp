@@ -247,16 +247,6 @@ js::Nursery::Nursery(GCRuntime* gc)
 }
 
 bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
-  capacity_ = tunables().gcMinNurseryBytes();
-  if (!allocateNextChunk(0, lock)) {
-    capacity_ = 0;
-    return false;
-  }
-  // After this point the Nursery has been enabled.
-
-  setCurrentChunk(0);
-  setStartPosition();
-  poisonAndInitCurrentChunk();
 
   char* env = getenv("JS_GC_PROFILE_NURSERY");
   if (env) {
@@ -286,8 +276,7 @@ bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
     return false;
   }
 
-  MOZ_ASSERT(isEnabled());
-  return true;
+  return initFirstChunk(lock);
 }
 
 js::Nursery::~Nursery() { disable(); }
@@ -301,23 +290,36 @@ void js::Nursery::enable() {
 
   {
     AutoLockGCBgAlloc lock(gc);
-    capacity_ = tunables().gcMinNurseryBytes();
-    if (!allocateNextChunk(0, lock)) {
-      capacity_ = 0;
+    if (!initFirstChunk(lock)) {
+      // If we fail to allocate memory, the nursery will not be enabled.
       return;
     }
   }
 
-  setCurrentChunk(0);
-  setStartPosition();
-  poisonAndInitCurrentChunk();
 #ifdef JS_GC_ZEAL
   if (gc->hasZealMode(ZealMode::GenerationalGC)) {
     enterZealMode();
   }
 #endif
 
+  // This should always succeed after the first time it's called.
   MOZ_ALWAYS_TRUE(gc->storeBuffer().enable());
+}
+
+bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
+  MOZ_ASSERT(!isEnabled());
+
+  capacity_ = tunables().gcMinNurseryBytes();
+  if (!allocateNextChunk(0, lock)) {
+    capacity_ = 0;
+    return false;
+  }
+
+  setCurrentChunk(0);
+  setStartPosition();
+  poisonAndInitCurrentChunk();
+
+  return true;
 }
 
 void js::Nursery::disable() {
