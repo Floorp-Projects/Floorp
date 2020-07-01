@@ -18,7 +18,6 @@
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "mozilla/net/MozURL.h"
-#include "mozilla/StaticPrefs_extensions.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozStorageHelper.h"
@@ -2470,10 +2469,7 @@ nsresult ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
 
 #ifdef DEBUG
     nsDependentCSubstring scheme = url->Scheme();
-    MOZ_ASSERT(
-        scheme == "http" || scheme == "https" || scheme == "file" ||
-        (StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup() &&
-         scheme == "moz-extension"));
+    MOZ_ASSERT(scheme == "http" || scheme == "https" || scheme == "file");
 #endif
 
     nsCString origin;
