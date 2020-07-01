@@ -1524,7 +1524,9 @@ pub extern "C" fn wr_window_new(
         namespace_alloc_by_client: true,
         enable_picture_caching,
         allow_pixel_local_storage_support: false,
-        clear_caches_with_quads: !allow_scissored_cache_clears,
+        // SWGL doesn't support the GL_ALWAYS depth comparison function used by
+        // `clear_caches_with_quads`, but scissored clears work well.
+        clear_caches_with_quads: !software && !allow_scissored_cache_clears,
         start_debug_server,
         surface_origin_is_top_left: !software && surface_origin_is_top_left,
         compositor_config,
