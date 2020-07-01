@@ -13,8 +13,6 @@ import org.mockito.Mockito.anyString
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
-private const val APP_NAME = "appName"
-
 class DefaultSelectionActionDelegateTest {
 
     var lambdaValue: String? = null
@@ -28,7 +26,6 @@ class DefaultSelectionActionDelegateTest {
         val delegate = DefaultSelectionActionDelegate(
             searchAdapter,
             getTestResources(),
-            APP_NAME,
             shareClicked
         )
 
@@ -44,8 +41,7 @@ class DefaultSelectionActionDelegateTest {
         }
         val delegate = DefaultSelectionActionDelegate(
             searchAdapter,
-            getTestResources(),
-            APP_NAME
+            getTestResources()
         )
 
         assertTrue(delegate.isActionAvailable(SEARCH))
@@ -61,7 +57,6 @@ class DefaultSelectionActionDelegateTest {
         val delegate = DefaultSelectionActionDelegate(
             searchAdapter,
             getTestResources(),
-            APP_NAME,
             shareClicked
         )
 
@@ -74,7 +69,7 @@ class DefaultSelectionActionDelegateTest {
     fun `when share ID is passed to perform action it should invoke the lambda`() {
         val adapter = mock<SearchAdapter>()
         val delegate =
-            DefaultSelectionActionDelegate(adapter, getTestResources(), APP_NAME, shareClicked)
+            DefaultSelectionActionDelegate(adapter, getTestResources(), shareClicked)
 
         delegate.performAction(SHARE, "some selected text")
 
@@ -85,7 +80,7 @@ class DefaultSelectionActionDelegateTest {
     fun `when unknown ID is passed to performAction it should not perform a search`() {
         val adapter = mock<SearchAdapter>()
         val delegate =
-            DefaultSelectionActionDelegate(adapter, getTestResources(), APP_NAME, shareClicked)
+            DefaultSelectionActionDelegate(adapter, getTestResources(), shareClicked)
 
         delegate.performAction("unrecognized string", "some selected text")
 
@@ -96,7 +91,7 @@ class DefaultSelectionActionDelegateTest {
     fun `when unknown ID is passed to performAction it not consume the action`() {
         val adapter = mock<SearchAdapter>()
         val delegate =
-            DefaultSelectionActionDelegate(adapter, getTestResources(), APP_NAME, shareClicked)
+            DefaultSelectionActionDelegate(adapter, getTestResources(), shareClicked)
 
         val result = delegate.performAction("unrecognized string", "some selected text")
 
@@ -107,7 +102,7 @@ class DefaultSelectionActionDelegateTest {
     fun `when search ID is passed to performAction it should perform a search`() {
         val adapter = mock<SearchAdapter>()
         val delegate =
-            DefaultSelectionActionDelegate(adapter, getTestResources(), APP_NAME, shareClicked)
+            DefaultSelectionActionDelegate(adapter, getTestResources(), shareClicked)
 
         delegate.performAction(SEARCH, "some selected text")
 
@@ -118,7 +113,7 @@ class DefaultSelectionActionDelegateTest {
     fun `when search ID is passed to performAction it should consume the action`() {
         val adapter = mock<SearchAdapter>()
         val delegate =
-            DefaultSelectionActionDelegate(adapter, getTestResources(), APP_NAME, shareClicked)
+            DefaultSelectionActionDelegate(adapter, getTestResources(), shareClicked)
 
         val result = delegate.performAction(SEARCH, "some selected text")
 
@@ -129,7 +124,7 @@ class DefaultSelectionActionDelegateTest {
     fun `when private search ID is passed to performAction it should perform a private normal search`() {
         val adapter = mock<SearchAdapter>()
         val delegate =
-            DefaultSelectionActionDelegate(adapter, getTestResources(), APP_NAME, shareClicked)
+            DefaultSelectionActionDelegate(adapter, getTestResources(), shareClicked)
 
         delegate.performAction(SEARCH_PRIVATELY, "some selected text")
 
@@ -140,7 +135,7 @@ class DefaultSelectionActionDelegateTest {
     fun `when private search ID is passed to performAction it should consume the action`() {
         val adapter = mock<SearchAdapter>()
         val delegate =
-            DefaultSelectionActionDelegate(adapter, getTestResources(), APP_NAME, shareClicked)
+            DefaultSelectionActionDelegate(adapter, getTestResources(), shareClicked)
 
         val result = delegate.performAction(SEARCH_PRIVATELY, "some selected text")
 
@@ -149,12 +144,8 @@ class DefaultSelectionActionDelegateTest {
 }
 
 fun getTestResources() = mock<Resources> {
-    whenever(getString(R.string.mozac_selection_context_menu_search, APP_NAME)).thenReturn("search")
-    whenever(
-        getString(
-            R.string.mozac_selection_context_menu_search_privately,
-            APP_NAME
-        )
-    ).thenReturn("search privately")
+    whenever(getString(R.string.mozac_selection_context_menu_search_2)).thenReturn("Search")
+    whenever(getString(R.string.mozac_selection_context_menu_search_privately_2))
+        .thenReturn("search privately")
     whenever(getString(R.string.mozac_selection_context_menu_share)).thenReturn("share")
 }
