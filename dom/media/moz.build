@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 include('/media/webrtc/webrtc.mozbuild')
 
-FILES_PER_UNIFIED_FILE = 6
-
 with Files('*'):
     BUG_COMPONENT = ('Core', 'Audio/Video')
 
