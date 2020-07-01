@@ -147,6 +147,12 @@ interface OAuthAccount : AutoCloseable {
     fun getAccessTokenAsync(singleScope: String): Deferred<AccessTokenInfo?>
 
     /**
+     * Call this whenever an authentication error was encountered while using an access token
+     * issued by [getAccessTokenAsync].
+     */
+    fun authErrorDetected()
+
+    /**
      * This method should be called when a request made with an OAuth token failed with an
      * authentication error. It will re-build cached state and perform a connectivity check.
      *

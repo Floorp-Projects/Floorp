@@ -19,8 +19,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 import mozilla.appservices.syncmanager.DeviceSettings
 import mozilla.components.concept.sync.AccountObserver
-import mozilla.components.concept.sync.AuthException
-import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
@@ -30,6 +28,7 @@ import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.service.fxa.AccountManagerException
 import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
@@ -65,27 +64,6 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Exposes an instance of [FxaAccountManager] for internal consumption; populated during initialization of
- * [FxaAccountManager]. This exists to allow various internal parts without a direct reference to an instance of
- * [FxaAccountManager] to notify it of encountered auth errors.
- */
-internal object GlobalAccountManager {
-    private var instance: WeakReference<FxaAccountManager>? = null
-
-    internal fun setInstance(am: FxaAccountManager) {
-        instance = WeakReference(am)
-    }
-
-    internal fun close() {
-        instance = null
-    }
-
-    internal suspend fun authError(cause: Exception? = null) {
-        instance?.get()?.encounteredAuthError(cause)
-    }
-}
-
-/**
  * Observer interface which lets its consumers respond to authentication requests.
  */
 private interface OAuthObserver {
@@ -107,6 +85,15 @@ const val SCOPE_PROFILE = "profile"
 const val SCOPE_SYNC = "https://identity.mozilla.com/apps/oldsync"
 // Necessary to obtain a sessionToken, which gives full access to the account.
 const val SCOPE_SESSION = "https://identity.mozilla.com/tokens/session"
+
+// If we see more than AUTH_CHECK_CIRCUIT_BREAKER_COUNT checks, and each is less than
+// AUTH_CHECK_CIRCUIT_BREAKER_RESET_MS since the last check, then we'll trigger a "circuit breaker".
+const val AUTH_CHECK_CIRCUIT_BREAKER_RESET_MS = 1000L * 10
+const val AUTH_CHECK_CIRCUIT_BREAKER_COUNT = 10
+// This logic is in place to protect ourselves from endless auth recovery loops, while at the same
+// time allowing for a few 401s to hit the state machine in a quick succession.
+// For example, initializing the account state machine & syncing after letting our access tokens expire
+// due to long period of inactivity will trigger a few 401s, and that shouldn't be a cause for concern.
 
 /**
  * Describes a result of running [FxaAccountManager.signInWithShareableAccountAsync].
@@ -225,7 +212,7 @@ open class FxaAccountManager(
 
     // We always obtain a "profile" scope, as that's assumed to be needed for any application integration.
     // We obtain a sync scope only if this was requested by the application via SyncConfig.
-    // Additionally, we obtain any scopes that application requested explicitly.
+    // Additionally, we obtain any scopes that the application requested explicitly.
     private val scopes: Set<String>
         get() = if (syncConfig != null) {
             setOf(SCOPE_PROFILE, SCOPE_SYNC)
@@ -537,8 +524,13 @@ open class FxaAccountManager(
         account.close()
     }
 
-    internal suspend fun encounteredAuthError(cause: Exception? = null) = withContext(coroutineContext) {
-        processQueueAsync(Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED, cause))).await()
+    internal suspend fun encounteredAuthError(
+        operation: String,
+        errorCountWithinTheTimeWindow: Int = 1
+    ) = withContext(coroutineContext) {
+        processQueueAsync(
+            Event.AuthenticationError(operation, errorCountWithinTheTimeWindow)
+        ).await()
     }
 
     /**
@@ -865,10 +857,28 @@ open class FxaAccountManager(
                         // If we fail with a 401, then we know we have a legitimate authentication problem.
                         logger.info("Hit auth problem. Trying to recover.")
 
+                        // Ensure we clear any auth-relevant internal state, such as access tokens.
+                        account.authErrorDetected()
+
                         // Clear our access token cache; it'll be re-populated as part of the
                         // regular state machine flow if we manage to recover.
                         SyncAuthInfoCache(context).clear()
 
+                        // Circuit-breaker logic to protect ourselves from getting into endless authorization
+                        // check loops. If we determine that application is trying to check auth status too
+                        // frequently, drive the state machine into an unauthorized state.
+                        if (via.errorCountWithinTheTimeWindow >= AUTH_CHECK_CIRCUIT_BREAKER_COUNT) {
+                            crashReporter?.submitCaughtException(
+                                AccountManagerException.AuthRecoveryCircuitBreakerException(via.operation)
+                            )
+                            logger.warn("Unable to recover from an auth problem, triggered a circuit breaker.")
+
+                            notifyObservers { onAuthenticationProblems() }
+
+                            return null
+                        }
+
+                        // Since we haven't hit the circuit-breaker above, perform an authorization check.
                         // We request an access token for a "profile" scope since that's the only
                         // scope we're guaranteed to have at this point. That is, we don't rely on
                         // passed-in application-specific scopes.

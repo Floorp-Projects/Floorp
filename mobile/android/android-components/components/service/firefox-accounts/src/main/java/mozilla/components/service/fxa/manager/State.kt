@@ -4,7 +4,6 @@
 
 package mozilla.components.service.fxa.manager
 
-import mozilla.components.concept.sync.AuthException
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.sharing.ShareableAccount
 
@@ -55,9 +54,9 @@ internal sealed class Event {
      */
     object InFlightReuseMigration : Event()
 
-    data class AuthenticationError(val error: AuthException) : Event() {
+    data class AuthenticationError(val operation: String, val errorCountWithinTheTimeWindow: Int = 1) : Event() {
         override fun toString(): String {
-            return this.javaClass.simpleName
+            return "${this.javaClass.simpleName} - $operation"
         }
     }
     data class SignInShareableAccount(val account: ShareableAccount, val reuseAccount: Boolean) : Event() {

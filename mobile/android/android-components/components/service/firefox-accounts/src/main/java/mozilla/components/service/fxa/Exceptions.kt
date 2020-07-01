@@ -29,3 +29,16 @@ typealias FxaUnauthorizedException = mozilla.appservices.fxaclient.FxaException.
  * This may indicate library misuse, network errors, etc.
  */
 typealias FxaUnspecifiedException = mozilla.appservices.fxaclient.FxaException.Unspecified
+
+/**
+ * Exceptions related to the account manager.
+ */
+sealed class AccountManagerException(message: String) : Exception(message) {
+    /**
+     * Hit a circuit-breaker during auth recovery flow.
+     * @param operation An operation which triggered an auth recovery flow that hit a circuit breaker.
+     */
+    class AuthRecoveryCircuitBreakerException(operation: String) : AccountManagerException(
+        "Auth recovery circuit breaker triggered by: $operation"
+    )
+}

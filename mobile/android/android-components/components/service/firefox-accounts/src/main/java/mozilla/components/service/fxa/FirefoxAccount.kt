@@ -203,11 +203,13 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    override fun checkAuthorizationStatusAsync(singleScope: String) = scope.async {
+    override fun authErrorDetected() {
         // fxalib maintains some internal token caches that need to be cleared whenever we
         // hit an auth problem. Call below makes that clean-up happen.
         inner.clearAccessTokenCache()
+    }
 
+    override fun checkAuthorizationStatusAsync(singleScope: String) = scope.async {
         // Now that internal token caches are cleared, we can perform a connectivity check.
         // Do so by requesting a new access token using an internally-stored "refresh token".
         // Success here means that we're still able to connect - our cached access token simply expired.
