@@ -1287,48 +1287,64 @@ nsresult TRR::FailData(nsresult error) {
   return NS_OK;
 }
 
+nsresult TRR::FollowCname(nsIChannel* aChannel) {
+  nsresult rv = NS_OK;
+  nsAutoCString cname;
+  while (NS_SUCCEEDED(rv) && !mDNS.mAddresses.getFirst() && !mCname.IsEmpty() &&
+         mCnameLoop > 0) {
+    mCnameLoop--;
+    LOG(("TRR::On200Response CNAME %s => %s (%u)\n", mHost.get(), mCname.get(),
+         mCnameLoop));
+    cname = mCname;
+    mCname = EmptyCString();
+
+    LOG(("TRR: check for CNAME record for %s within previous response\n",
+         cname.get()));
+    rv = DohDecode(cname);
+    if (NS_FAILED(rv)) {
+      LOG(("TRR::On200Response DohDecode %x\n", (int)rv));
+    }
+  }
+
+  // restore mCname as DohDecode() change it
+  mCname = cname;
+  if (NS_SUCCEEDED(rv) && mDNS.mAddresses.getFirst()) {
+    ReturnData(aChannel);
+    return NS_OK;
+  }
+
+  if (!mCnameLoop) {
+    LOG(("TRR::On200Response CNAME loop, eject!\n"));
+    return NS_ERROR_REDIRECT_LOOP;
+  }
+
+  LOG(("TRR::On200Response CNAME %s => %s (%u)\n", mHost.get(), mCname.get(),
+       mCnameLoop));
+  RefPtr<TRR> trr =
+      new TRR(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB);
+  if (!gTRRService) {
+    return NS_ERROR_FAILURE;
+  }
+  return gTRRService->DispatchTRRRequest(trr);
+}
+
 nsresult TRR::On200Response(nsIChannel* aChannel) {
   // decode body and create an AddrInfo struct for the response
   nsresult rv = DohDecode(mHost);
 
-  if (NS_SUCCEEDED(rv)) {
-    if (!mDNS.mAddresses.getFirst() && !mCname.IsEmpty() &&
-        mType != TRRTYPE_TXT) {
-      nsCString cname = mCname;
-      LOG(("TRR: check for CNAME record for %s within previous response\n",
-           cname.get()));
-      rv = DohDecode(cname);
-      if (NS_SUCCEEDED(rv) && mDNS.mAddresses.getFirst()) {
-        LOG(("TRR: Got the CNAME record without asking for it\n"));
-        ReturnData(aChannel);
-        return NS_OK;
-      }
-      // restore mCname as DohDecode() change it
-      mCname = cname;
-      if (!--mCnameLoop) {
-        LOG(("TRR::On200Response CNAME loop, eject!\n"));
-      } else {
-        LOG(("TRR::On200Response CNAME %s => %s (%u)\n", mHost.get(),
-             mCname.get(), mCnameLoop));
-        RefPtr<TRR> trr =
-            new TRR(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB);
-        if (!gTRRService) {
-          return NS_ERROR_FAILURE;
-        }
-        rv = gTRRService->DispatchTRRRequest(trr);
-        if (NS_SUCCEEDED(rv)) {
-          return rv;
-        }
-      }
-    } else {
-      // pass back the response data
-      ReturnData(aChannel);
-      return NS_OK;
-    }
-  } else {
+  if (NS_FAILED(rv)) {
     LOG(("TRR::On200Response DohDecode %x\n", (int)rv));
+    return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_FAILURE;
+
+  if (mDNS.mAddresses.getFirst() || mType == TRRTYPE_TXT || mCname.IsEmpty()) {
+    // pass back the response data
+    ReturnData(aChannel);
+    return NS_OK;
+  }
+
+  LOG(("TRR::On200Response trying CNAME %s", mCname.get()));
+  return FollowCname(aChannel);
 }
 
 static void RecordProcessingTime(nsIChannel* aChannel) {
