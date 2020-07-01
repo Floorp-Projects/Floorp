@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include "EventLog.h"
+#include "Registry.h"
 
 #include "json/json.h"
 #include "mozilla/ArrayUtils.h"
@@ -101,53 +102,15 @@ static TelemetryFieldResult GetPreviousDefaultBrowser(
   // browser. It returns the data stored in that registry value and replaces the
   // stored string with the current default browser string that was passed in.
 
-  // We'll need the currentDefault string in UTF-16 so that we can use it
-  // in and around the registry.
-  int currentDefaultLen =
-      MultiByteToWideChar(CP_UTF8, 0, currentDefault.c_str(), -1, nullptr, 0);
-  mozilla::UniquePtr<wchar_t[]> wCurrentDefault =
-      mozilla::MakeUnique<wchar_t[]>(currentDefaultLen);
-  MultiByteToWideChar(CP_UTF8, 0, currentDefault.c_str(), -1,
-                      wCurrentDefault.get(), currentDefaultLen);
+  std::string previousDefault =
+      RegistryGetValueString(IsPrefixed::Prefixed, L"CurrentDefault")
+          .unwrapOr(mozilla::Some(currentDefault))
+          .valueOr(currentDefault);
 
-  // We don't really need to store this value using a name that includes the
-  // install path, because the default browser is a system (per-user) setting,
-  // but we're doing it anyway as a means of avoiding concurrency issues if
-  // multiple instances of the task are running at once.
-  mozilla::UniquePtr<wchar_t[]> installPath = mozilla::GetFullBinaryPath();
-  if (!PathRemoveFileSpecW(installPath.get())) {
-    LOG_ERROR(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER));
-    return std::string("");
-  }
-  std::wstring currentDefaultRegistryValueName(installPath.get());
-  currentDefaultRegistryValueName.append(L"|CurrentDefault");
+  RegistrySetValueString(IsPrefixed::Prefixed, L"CurrentDefault",
+                         currentDefault.c_str());
 
-  // First, read the "current default" value that is already stored in the
-  // registry.
-  wchar_t oldCurrentDefault[MAX_PATH + 1] = L"";
-  DWORD regStrLen = MAX_PATH + 1;
-  LSTATUS ls =
-      RegGetValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
-                   currentDefaultRegistryValueName.c_str(), RRF_RT_REG_SZ,
-                   nullptr, &oldCurrentDefault, &regStrLen);
-  if (ls != ERROR_SUCCESS) {
-    wcsncpy_s(oldCurrentDefault, MAX_PATH, wCurrentDefault.get(), _TRUNCATE);
-  }
-
-  // Next, store the string passed in into the registry value
-  RegSetKeyValueW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME,
-                  currentDefaultRegistryValueName.c_str(), REG_SZ,
-                  wCurrentDefault.get(), currentDefaultLen * sizeof(wchar_t));
-
-  // We need the previous default string in UTF-8 so we can submit it.
-  int previousDefaultLen = WideCharToMultiByte(
-      CP_UTF8, 0, oldCurrentDefault, -1, nullptr, 0, nullptr, nullptr);
-  mozilla::UniquePtr<char[]> narrowPreviousDefault =
-      mozilla::MakeUnique<char[]>(previousDefaultLen);
-  WideCharToMultiByte(CP_UTF8, 0, oldCurrentDefault, -1,
-                      narrowPreviousDefault.get(), previousDefaultLen, nullptr,
-                      nullptr);
-  return std::string(narrowPreviousDefault.get());
+  return previousDefault;
 }
 
 static TelemetryFieldResult GetOSVersion() {
