@@ -938,9 +938,8 @@ var DownloadsView = {
     DownloadsViewController.updateCommands();
 
     let download = element._shell.download;
-    let { preferredAction, useSystemDefault } = DownloadsCommon.getMimeInfo(
-      download
-    );
+    let mimeInfo = DownloadsCommon.getMimeInfo(download);
+    let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
 
     // Set the state attribute so that only the appropriate items are displayed.
     let contextMenu = document.getElementById("downloadsContextMenu");
