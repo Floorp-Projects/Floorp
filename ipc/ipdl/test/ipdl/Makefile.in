@@ -7,11 +7,34 @@ include $(topsrcdir)/config/rules.mk
 OKTESTS := $(wildcard $(srcdir)/ok/*.ipdl) $(wildcard $(srcdir)/ok/*.ipdlh)
 ERRORTESTS := $(wildcard $(srcdir)/error/*.ipdl) $(wildcard $(srcdir)/error/*.ipdlh)
 
-check::
-	@$(PYTHON3) $(srcdir)/runtests.py  \
-		$(srcdir)/ok $(srcdir)/error  \
-		$(PYTHON3) $(topsrcdir)/ipc/ipdl/ipdl.py  \
-		--sync-msg-list=$(srcdir)/sync-messages.ini \
-		--msg-metadata=$(srcdir)/message-metadata.ini \
-		OKTESTS $(OKTESTS)  \
-		ERRORTESTS $(ERRORTESTS)
+base_command := $(PYTHON3) $(srcdir)/runtests.py  \
+	$(srcdir)/ok $(srcdir)/error  \
+	$(PYTHON3) $(topsrcdir)/ipc/ipdl/ipdl.py  \
+	--sync-msg-list=$(srcdir)/sync-messages.ini \
+	--msg-metadata=$(srcdir)/message-metadata.ini
+
+define run-single-test
+$(base_command) OKTESTS $(1) ERRORTESTS $(2)
+endef
+
+basic-test-name = $(notdir $(1))
+ok-test-name = ok$(call basic-test-name,$(1))
+err-test-name = error$(call basic-test-name,$(1))
+
+define run-ok-test
+$(call ok-test-name,$(1)):
+	@$(call run-single-test,$(1),)
+endef
+
+define run-err-test
+$(call err-test-name,$(1)):
+	@$(call run-single-test,,$(1))
+endef
+
+all_ok_tests := $(foreach oktest,$(OKTESTS),$(call ok-test-name,$(oktest)))
+all_err_tests := $(foreach errtest,$(ERRORTESTS),$(call err-test-name,$(errtest)))
+
+$(foreach oktest,$(OKTESTS),$(eval $(call run-ok-test,$(oktest))))
+$(foreach errtest,$(ERRORTESTS),$(eval $(call run-err-test,$(errtest))))
+
+check:: $(all_ok_tests) $(all_err_tests)
