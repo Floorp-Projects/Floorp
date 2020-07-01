@@ -551,31 +551,6 @@ Toolbox.prototype = {
   },
 
   /**
-   * Instruct the toolbox to switch to a new top-level target.
-   * It means that the currently debugged target is destroyed in favor of a new one.
-   * This typically happens when navigating to a new URL which has to be loaded
-   * in a distinct process.
-   */
-  async switchToTarget(newTarget) {
-    // Notify gDevTools that the toolbox will be hooked to another target.
-    this.emit("switch-target", newTarget);
-
-    // TargetList.switchToTarget won't wait for all target listeners, like
-    // Toolbox._onTargetAvailable to be finished before resolving.
-    // But, we do expect the target to be attached before calling listFrames
-    // and initPerformance. So wait for this via an internal event.
-    const onAttached = this.once("top-target-attached");
-    await this.targetList.switchToTarget(newTarget);
-    await onAttached;
-
-    // Attach the toolbox to this new target
-    await this._listFrames();
-    await this.initPerformance();
-
-    this.emit("switched-target", newTarget);
-  },
-
-  /**
    * Get the current top level target the toolbox is debugging.
    */
   get target() {
@@ -722,8 +697,13 @@ Toolbox.prototype = {
    * This method will be called for the top-level target, as well as any potential
    * additional targets we may care about.
    */
-  async _onTargetAvailable({ targetFront }) {
+  async _onTargetAvailable({ targetFront, isTargetSwitching }) {
     if (targetFront.isTopLevel) {
+      if (isTargetSwitching) {
+        // Notify gDevTools that the toolbox will be hooked to another target.
+        this.emit("switch-target", targetFront);
+      }
+
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
       targetFront.on("will-navigate", this._onWillNavigate);
@@ -742,8 +722,14 @@ Toolbox.prototype = {
       await this.store.dispatch(registerTarget(targetFront));
     }
 
-    if (targetFront.isTopLevel) {
-      this.emit("top-target-attached");
+    if (targetFront.isTopLevel && isTargetSwitching) {
+      // Attach the toolbox to this new target
+      // This is done *after* the call to _attachTarget as these methods
+      // expect the target to be attached.
+      await this._listFrames();
+      await this.initPerformance();
+
+      this.emit("switched-target", targetFront);
     }
   },
 
@@ -842,10 +828,16 @@ Toolbox.prototype = {
         );
       });
 
-      await this.targetList.startListening();
-
       // Optimization: fire up a few other things before waiting on
       // the iframe being ready (makes startup faster)
+      await this.targetList.startListening();
+
+      // The TargetList is created from Toolbox's constructor,
+      // and Toolbox.open (i.e. this function) is called soon after.
+      // It means that this call to TargetList.watchTargets is the first,
+      // and we are registering the first target listener.
+      // It is later important as we expect Toolbox._onTargetAvailable to be called first,
+      // before any other panel.
       await this.targetList.watchTargets(
         TargetList.ALL_TYPES,
         this._onTargetAvailable,
