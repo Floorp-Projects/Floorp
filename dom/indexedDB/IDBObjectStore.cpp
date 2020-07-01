@@ -135,8 +135,8 @@ struct MOZ_STACK_CLASS GetAddInfoClosure final {
   MOZ_COUNTED_DTOR(GetAddInfoClosure)
 };
 
-RefPtr<IDBRequest> GenerateRequest(JSContext* aCx,
-                                   IDBObjectStore* aObjectStore) {
+MovingNotNull<RefPtr<IDBRequest>> GenerateRequest(
+    JSContext* aCx, IDBObjectStore* aObjectStore) {
   MOZ_ASSERT(aObjectStore);
   aObjectStore->AssertIsOnOwningThread();
 
@@ -901,8 +901,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
       aOverwrite ? RequestParams{ObjectStorePutParams(std::move(commonParams))}
                  : RequestParams{ObjectStoreAddParams(std::move(commonParams))};
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   if (!aFromCursor) {
     if (aOverwrite) {
@@ -970,8 +969,7 @@ RefPtr<IDBRequest> IDBObjectStore::GetAllInternal(
     params = ObjectStoreGetAllParams(id, optionalKeyRange, limit);
   }
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   if (aKeysOnly) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -1069,8 +1067,7 @@ RefPtr<IDBRequest> IDBObjectStore::Clear(JSContext* aCx, ErrorResult& aRv) {
 
   const ObjectStoreClearParams params = {Id()};
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).clear()",
@@ -1288,8 +1285,7 @@ RefPtr<IDBRequest> IDBObjectStore::GetInternal(bool aKeyOnly, JSContext* aCx,
       aKeyOnly ? RequestParams{ObjectStoreGetKeyParams(id, serializedKeyRange)}
                : RequestParams{ObjectStoreGetParams(id, serializedKeyRange)};
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).get(%s)",
@@ -1346,8 +1342,7 @@ RefPtr<IDBRequest> IDBObjectStore::DeleteInternal(JSContext* aCx,
   params.objectStoreId() = Id();
   keyRange->ToSerialized(params.keyRange());
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   if (!aFromCursor) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -1566,8 +1561,7 @@ RefPtr<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
     params.optionalKeyRange().emplace(serializedKeyRange);
   }
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).count(%s)",
@@ -1629,8 +1623,7 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
       aKeysOnly ? OpenCursorParams{ObjectStoreOpenKeyCursorParams{commonParams}}
                 : OpenCursorParams{ObjectStoreOpenCursorParams{commonParams}};
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   if (aKeysOnly) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(

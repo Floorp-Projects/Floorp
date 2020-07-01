@@ -198,7 +198,7 @@ class BackgroundDatabaseChild;
 
 class BackgroundRequestChildBase {
  protected:
-  RefPtr<IDBRequest> mRequest;
+  const NotNull<RefPtr<IDBRequest>> mRequest;
 
  public:
   void AssertIsOnOwningThread() const
@@ -210,7 +210,8 @@ class BackgroundRequestChildBase {
 #endif
 
  protected:
-  explicit BackgroundRequestChildBase(IDBRequest* aRequest);
+  explicit BackgroundRequestChildBase(
+      MovingNotNull<RefPtr<IDBRequest>> aRequest);
 
   virtual ~BackgroundRequestChildBase();
 };
@@ -245,13 +246,14 @@ class BackgroundFactoryRequestChild final
   const bool mIsDeleteOp;
 
  public:
-  IDBOpenDBRequest* GetOpenDBRequest() const;
+  NotNull<IDBOpenDBRequest*> GetOpenDBRequest() const;
 
  private:
   // Only created by IDBFactory.
-  BackgroundFactoryRequestChild(SafeRefPtr<IDBFactory> aFactory,
-                                IDBOpenDBRequest* aOpenRequest,
-                                bool aIsDeleteOp, uint64_t aRequestedVersion);
+  BackgroundFactoryRequestChild(
+      SafeRefPtr<IDBFactory> aFactory,
+      MovingNotNull<RefPtr<IDBOpenDBRequest>> aOpenRequest, bool aIsDeleteOp,
+      uint64_t aRequestedVersion);
 
   // Only destroyed by BackgroundFactoryChild.
   ~BackgroundFactoryRequestChild();
@@ -372,7 +374,8 @@ class BackgroundDatabaseRequestChild final
 
  private:
   // Only created by IDBDatabase.
-  BackgroundDatabaseRequestChild(IDBDatabase* aDatabase, IDBRequest* aRequest);
+  BackgroundDatabaseRequestChild(IDBDatabase* aDatabase,
+                                 MovingNotNull<RefPtr<IDBRequest>> aRequest);
 
   // Only destroyed by BackgroundDatabaseChild.
   ~BackgroundDatabaseRequestChild();
@@ -582,7 +585,7 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
 
  private:
   // Only created by IDBTransaction.
-  explicit BackgroundRequestChild(IDBRequest* aRequest);
+  explicit BackgroundRequestChild(MovingNotNull<RefPtr<IDBRequest>> aRequest);
 
   // Only destroyed by BackgroundTransactionChild or
   // BackgroundVersionChangeTransactionChild.
@@ -649,7 +652,8 @@ class BackgroundCursorChildBase : public PBackgroundIDBCursorChild {
 
   const Direction mDirection;
 
-  BackgroundCursorChildBase(IDBRequest* aRequest, Direction aDirection);
+  BackgroundCursorChildBase(NotNull<IDBRequest*> aRequest,
+                            Direction aDirection);
 
   void HandleResponse(nsresult aResponse);
 
@@ -658,7 +662,9 @@ class BackgroundCursorChildBase : public PBackgroundIDBCursorChild {
     NS_ASSERT_OWNINGTHREAD(BackgroundCursorChildBase);
   }
 
-  IDBRequest* GetRequest() const {
+  MovingNotNull<RefPtr<IDBRequest>> AcquireRequest() const;
+
+  NotNull<IDBRequest*> GetRequest() const {
     AssertIsOnOwningThread();
 
     return *mRequest;
@@ -692,7 +698,7 @@ class BackgroundCursorChild final : public BackgroundCursorChildBase {
   bool mInFlightResponseInvalidationNeeded;
 
  public:
-  BackgroundCursorChild(IDBRequest* aRequest, SourceType* aSource,
+  BackgroundCursorChild(NotNull<IDBRequest*> aRequest, SourceType* aSource,
                         Direction aDirection);
 
   void SendContinueInternal(const CursorRequestParams& aParams,

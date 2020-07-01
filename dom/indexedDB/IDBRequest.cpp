@@ -88,8 +88,9 @@ void IDBRequest::InitMembers() {
 }
 
 // static
-RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx, IDBDatabase* aDatabase,
-                                      SafeRefPtr<IDBTransaction> aTransaction) {
+MovingNotNull<RefPtr<IDBRequest>> IDBRequest::Create(
+    JSContext* aCx, IDBDatabase* aDatabase,
+    SafeRefPtr<IDBTransaction> aTransaction) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
@@ -99,36 +100,37 @@ RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx, IDBDatabase* aDatabase,
 
   request->mTransaction = std::move(aTransaction);
 
-  return request;
+  return WrapMovingNotNullUnchecked(std::move(request));
 }
 
 // static
-RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx,
-                                      IDBObjectStore* aSourceAsObjectStore,
-                                      IDBDatabase* aDatabase,
-                                      SafeRefPtr<IDBTransaction> aTransaction) {
+MovingNotNull<RefPtr<IDBRequest>> IDBRequest::Create(
+    JSContext* aCx, IDBObjectStore* aSourceAsObjectStore,
+    IDBDatabase* aDatabase, SafeRefPtr<IDBTransaction> aTransaction) {
   MOZ_ASSERT(aSourceAsObjectStore);
   aSourceAsObjectStore->AssertIsOnOwningThread();
 
-  auto request = Create(aCx, aDatabase, std::move(aTransaction));
+  auto request =
+      Create(aCx, aDatabase, std::move(aTransaction)).unwrapBasePtr();
 
   request->mSourceAsObjectStore = aSourceAsObjectStore;
 
-  return request;
+  return WrapMovingNotNullUnchecked(std::move(request));
 }
 
 // static
-RefPtr<IDBRequest> IDBRequest::Create(JSContext* aCx, IDBIndex* aSourceAsIndex,
-                                      IDBDatabase* aDatabase,
-                                      SafeRefPtr<IDBTransaction> aTransaction) {
+MovingNotNull<RefPtr<IDBRequest>> IDBRequest::Create(
+    JSContext* aCx, IDBIndex* aSourceAsIndex, IDBDatabase* aDatabase,
+    SafeRefPtr<IDBTransaction> aTransaction) {
   MOZ_ASSERT(aSourceAsIndex);
   aSourceAsIndex->AssertIsOnOwningThread();
 
-  auto request = Create(aCx, aDatabase, std::move(aTransaction));
+  auto request =
+      Create(aCx, aDatabase, std::move(aTransaction)).unwrapBasePtr();
 
   request->mSourceAsIndex = aSourceAsIndex;
 
-  return request;
+  return WrapMovingNotNullUnchecked(std::move(request));
 }
 
 // static

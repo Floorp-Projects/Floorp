@@ -202,7 +202,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
       const Optional<StorageType>& aStorageType, bool aDeleting,
       CallerType aCallerType, ErrorResult& aRv);
 
-  nsresult InitiateRequest(IDBOpenDBRequest* aRequest,
+  nsresult InitiateRequest(const NotNull<RefPtr<IDBOpenDBRequest>>& aRequest,
                            const indexedDB::FactoryRequestParams& aParams);
 };
 
