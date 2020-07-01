@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import kotlinx.android.synthetic.main.component_downloads.*
 import kotlinx.android.synthetic.main.component_downloads.view.*
+import kotlinx.android.synthetic.main.component_history.view.progress_bar
+import kotlinx.android.synthetic.main.component_history.view.swipe_refresh
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibraryPageView
@@ -27,6 +29,22 @@ interface DownloadViewInteractor : SelectionInteractor<DownloadItem> {
      * Called on backpressed to exit edit mode
      */
     fun onBackPressed(): Boolean
+
+    /**
+     * Called when the mode is switched so we can invalidate the menu
+     */
+    fun onModeSwitched()
+
+    /**
+     * Called when multiple downloads items are deleted
+     * @param items the downloads items to delete
+     */
+    fun onDeleteSome(items: Set<DownloadItem>)
+
+    /**
+     * Called when all downloads items are deleted
+     */
+    fun onDeleteAll()
 }
 
 /**
@@ -55,18 +73,41 @@ class DownloadView(
     }
 
     fun update(state: DownloadFragmentState) {
+        val oldMode = mode
 
+        view.progress_bar.isVisible = state.isDeletingItems
         view.swipe_refresh.isEnabled = false
         mode = state.mode
 
-        updateEmptyState(state.items.isNotEmpty())
+        downloadAdapter.updatePendingDeletionIds(state.pendingDeletionIds)
+
+        updateEmptyState(state.pendingDeletionIds.size != state.items.size)
 
         downloadAdapter.updateMode(state.mode)
         downloadAdapter.updateDownloads(state.items)
 
-        setUiForNormalMode(
-            context.getString(R.string.library_downloads)
-        )
+        if (state.mode::class != oldMode::class) {
+            interactor.onModeSwitched()
+        }
+
+        when (val mode = state.mode) {
+            is DownloadFragmentState.Mode.Normal -> {
+                setUiForNormalMode(
+                    context.getString(R.string.library_downloads)
+                )
+            }
+            is DownloadFragmentState.Mode.Editing -> {
+                val unselectedItems = oldMode.selectedItems - state.mode.selectedItems
+
+                state.mode.selectedItems.union(unselectedItems).forEach { item ->
+                    val index = state.items.indexOf(item)
+                    downloadAdapter.notifyItemChanged(index)
+                }
+                setUiForSelectingMode(
+                    context.getString(R.string.download_multi_select_title, mode.selectedItems.size)
+                )
+            }
+        }
     }
 
     fun updateEmptyState(userHasDownloads: Boolean) {

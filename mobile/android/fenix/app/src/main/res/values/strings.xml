@@ -665,11 +665,22 @@
     <string name="history_empty_message">No history here</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Delete downloads</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Are you sure you want to clear your downloads?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">Downloads Deleted</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">No downloads here</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d selected</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Open</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Delete</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->

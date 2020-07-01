@@ -6,6 +6,7 @@ package org.mozilla.fenix.library.downloads
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.downloads.viewholders.DownloadsListItemViewHolder
@@ -16,6 +17,7 @@ class DownloadAdapter(
     private var downloads: List<DownloadItem> = listOf()
     private var mode: DownloadFragmentState.Mode = DownloadFragmentState.Mode.Normal
     override val selectedItems get() = mode.selectedItems
+    var pendingDeletionIds = emptySet<String>()
 
     override fun getItemCount(): Int = downloads.size
     override fun getItemViewType(position: Int): Int = DownloadsListItemViewHolder.LAYOUT_ID
@@ -27,14 +29,38 @@ class DownloadAdapter(
 
     fun updateMode(mode: DownloadFragmentState.Mode) {
         this.mode = mode
+        // Update the delete button alpha that the first item holds
+        if (itemCount > 0) notifyItemChanged(0)
     }
 
     override fun onBindViewHolder(holder: DownloadsListItemViewHolder, position: Int) {
-        holder.bind(downloads[position])
+        val current = downloads[position]
+        val isPendingDeletion = pendingDeletionIds.contains(current.id)
+        holder.bind(downloads[position], position == 0, mode, isPendingDeletion)
     }
 
     fun updateDownloads(downloads: List<DownloadItem>) {
         this.downloads = downloads
         notifyDataSetChanged()
+    }
+
+    fun updatePendingDeletionIds(pendingDeletionIds: Set<String>) {
+        this.pendingDeletionIds = pendingDeletionIds
+    }
+
+    companion object {
+        private val downloadDiffCallback = object : DiffUtil.ItemCallback<DownloadItem>() {
+            override fun areItemsTheSame(oldItem: DownloadItem, newItem: DownloadItem): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun areContentsTheSame(oldItem: DownloadItem, newItem: DownloadItem): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun getChangePayload(oldItem: DownloadItem, newItem: DownloadItem): Any? {
+                return newItem
+            }
+        }
     }
 }

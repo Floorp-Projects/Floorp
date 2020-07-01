@@ -31,7 +31,7 @@ class DownloadAdapterTest {
     }
 
     @Test
-    fun `getItemCount should return the number of tab collections`() {
+    fun `getItemCount should return the number of downloads`() {
         val download = mockk<DownloadItem>()
 
         assertEquals(0, adapter.itemCount)

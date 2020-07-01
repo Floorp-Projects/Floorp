@@ -26,6 +26,24 @@ class DownloadInteractorTest {
     }
 
     @Test
+    fun onSelect() {
+        interactor.select(downloadItem)
+
+        verifyAll {
+            controller.handleSelect(downloadItem)
+        }
+    }
+
+    @Test
+    fun onDeselect() {
+        interactor.deselect(downloadItem)
+
+        verifyAll {
+            controller.handleDeselect(downloadItem)
+        }
+    }
+
+    @Test
     fun onBackPressed() {
         every {
             controller.handleBackPressed()
@@ -37,5 +55,33 @@ class DownloadInteractorTest {
             controller.handleBackPressed()
         }
         assertTrue(backpressHandled)
+    }
+
+    @Test
+    fun onModeSwitched() {
+        interactor.onModeSwitched()
+
+        verifyAll {
+            controller.handleModeSwitched()
+        }
+    }
+
+    @Test
+    fun onDeleteAll() {
+        interactor.onDeleteAll()
+
+        verifyAll {
+            controller.handleDeleteAll()
+        }
+    }
+
+    @Test
+    fun onDeleteSome() {
+        val items = setOf(downloadItem)
+
+        interactor.onDeleteSome(items)
+        verifyAll {
+            controller.handleDeleteSome(items)
+        }
     }
 }

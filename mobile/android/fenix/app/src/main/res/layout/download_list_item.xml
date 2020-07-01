@@ -9,6 +9,13 @@
     android:layout_width="match_parent" xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical">
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/delete_downloads_button"
+        style="@style/DestructiveButton"
+        android:layout_marginHorizontal="16dp"
+        android:text="@string/download_delete_all"
+        android:visibility="gone" />
+
     <org.mozilla.fenix.library.LibrarySiteItemView
         android:id="@+id/download_layout"
         android:layout_width="match_parent"

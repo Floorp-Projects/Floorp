@@ -8,15 +8,31 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 
 interface DownloadController {
     fun handleOpen(item: DownloadItem, mode: BrowsingMode? = null)
+    fun handleSelect(item: DownloadItem)
+    fun handleDeselect(item: DownloadItem)
     fun handleBackPressed(): Boolean
+    fun handleModeSwitched()
+    fun handleDeleteSome(items: Set<DownloadItem>)
+    fun handleDeleteAll()
 }
 
 class DefaultDownloadController(
     private val store: DownloadFragmentStore,
-    private val openToFileManager: (item: DownloadItem, mode: BrowsingMode?) -> Unit
+    private val openToFileManager: (item: DownloadItem, mode: BrowsingMode?) -> Unit,
+    private val displayDeleteAll: () -> Unit,
+    private val invalidateOptionsMenu: () -> Unit,
+    private val deleteDownloadItems: (Set<DownloadItem>) -> Unit
 ) : DownloadController {
     override fun handleOpen(item: DownloadItem, mode: BrowsingMode?) {
         openToFileManager(item, mode)
+    }
+
+    override fun handleSelect(item: DownloadItem) {
+        store.dispatch(DownloadFragmentAction.AddItemForRemoval(item))
+    }
+
+    override fun handleDeselect(item: DownloadItem) {
+        store.dispatch(DownloadFragmentAction.RemoveItemForRemoval(item))
     }
 
     override fun handleBackPressed(): Boolean {
@@ -26,5 +42,17 @@ class DefaultDownloadController(
         } else {
             false
         }
+    }
+
+    override fun handleModeSwitched() {
+        invalidateOptionsMenu.invoke()
+    }
+
+    override fun handleDeleteAll() {
+        displayDeleteAll.invoke()
+    }
+
+    override fun handleDeleteSome(items: Set<DownloadItem>) {
+        deleteDownloadItems.invoke(items)
     }
 }

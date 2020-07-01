@@ -10,7 +10,7 @@ import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
 /**
- * Class representing a history entry
+ * Class representing a downloads entry
  * @property id Unique id of the download item
  * @property fileName File name of the download item
  * @property filePath Full path of the download item
@@ -35,8 +35,15 @@ class DownloadFragmentStore(initialState: DownloadFragmentState) :
 /**
  * Actions to dispatch through the `DownloadStore` to modify `DownloadState` through the reducer.
  */
+
 sealed class DownloadFragmentAction : Action {
     object ExitEditMode : DownloadFragmentAction()
+    data class AddItemForRemoval(val item: DownloadItem) : DownloadFragmentAction()
+    data class RemoveItemForRemoval(val item: DownloadItem) : DownloadFragmentAction()
+    data class AddPendingDeletionSet(val itemIds: Set<String>) : DownloadFragmentAction()
+    data class UndoPendingDeletionSet(val itemIds: Set<String>) : DownloadFragmentAction()
+    object EnterDeletionMode : DownloadFragmentAction()
+    object ExitDeletionMode : DownloadFragmentAction()
 }
 
 /**
@@ -46,7 +53,9 @@ sealed class DownloadFragmentAction : Action {
  */
 data class DownloadFragmentState(
     val items: List<DownloadItem>,
-    val mode: Mode
+    val mode: Mode,
+    val pendingDeletionIds: Set<String>,
+    val isDeletingItems: Boolean
 ) : State {
     sealed class Mode {
         open val selectedItems = emptySet<DownloadItem>()
@@ -64,6 +73,28 @@ private fun downloadStateReducer(
     action: DownloadFragmentAction
 ): DownloadFragmentState {
     return when (action) {
+        is DownloadFragmentAction.AddItemForRemoval ->
+            state.copy(mode = DownloadFragmentState.Mode.Editing(state.mode.selectedItems + action.item))
+        is DownloadFragmentAction.RemoveItemForRemoval -> {
+            val selected = state.mode.selectedItems - action.item
+            state.copy(
+                mode = if (selected.isEmpty()) {
+                    DownloadFragmentState.Mode.Normal
+                } else {
+                    DownloadFragmentState.Mode.Editing(selected)
+                }
+            )
+        }
         is DownloadFragmentAction.ExitEditMode -> state.copy(mode = DownloadFragmentState.Mode.Normal)
+        is DownloadFragmentAction.EnterDeletionMode -> state.copy(isDeletingItems = true)
+        is DownloadFragmentAction.ExitDeletionMode -> state.copy(isDeletingItems = false)
+        is DownloadFragmentAction.AddPendingDeletionSet ->
+            state.copy(
+                pendingDeletionIds = state.pendingDeletionIds + action.itemIds
+            )
+        is DownloadFragmentAction.UndoPendingDeletionSet ->
+            state.copy(
+                pendingDeletionIds = state.pendingDeletionIds - action.itemIds
+            )
     }
 }

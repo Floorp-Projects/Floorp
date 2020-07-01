@@ -15,11 +15,27 @@ class DownloadInteractor(
         downloadController.handleOpen(item)
     }
 
-    override fun select(item: DownloadItem) { /* noop */ }
+    override fun select(item: DownloadItem) {
+        downloadController.handleSelect(item)
+    }
 
-    override fun deselect(item: DownloadItem) { /* noop */ }
+    override fun deselect(item: DownloadItem) {
+        downloadController.handleDeselect(item)
+    }
 
     override fun onBackPressed(): Boolean {
         return downloadController.handleBackPressed()
+    }
+
+    override fun onModeSwitched() {
+        downloadController.handleModeSwitched()
+    }
+
+    override fun onDeleteSome(items: Set<DownloadItem>) {
+        downloadController.handleDeleteSome(items)
+    }
+
+    override fun onDeleteAll() {
+        downloadController.handleDeleteAll()
     }
 }
