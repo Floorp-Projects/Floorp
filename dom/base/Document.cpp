@@ -15936,7 +15936,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   }
 
   // Step 9. Check any additional rules that the browser has.
-  //         Examples: Whitelists, blacklists, on-device classification,
+  //         Examples: skip-lists, on-device classification,
   //         user settings, anti-clickjacking heuristics, or prompting the
   //         user for explicit permission. Reject if some rule is not fulfilled.
   if (CookieJarSettings()->GetRejectThirdPartyContexts()) {
