@@ -517,7 +517,7 @@ void ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot* ins) {
   } else {
     // UnsafeSetReserveSlot can access baked-in slots which are guarded by
     // conditions, which are not seen by the escape analysis.
-    MBail* bailout = MBail::New(alloc_, Bailout_Inevitable);
+    MBail* bailout = MBail::New(alloc_, BailoutKind::Inevitable);
     ins->block()->insertBefore(ins, bailout);
   }
 
@@ -537,7 +537,7 @@ void ObjectMemoryView::visitLoadFixedSlot(MLoadFixedSlot* ins) {
   } else {
     // UnsafeGetReserveSlot can access baked-in slots which are guarded by
     // conditions, which are not seen by the escape analysis.
-    MBail* bailout = MBail::New(alloc_, Bailout_Inevitable);
+    MBail* bailout = MBail::New(alloc_, BailoutKind::Inevitable);
     ins->block()->insertBefore(ins, bailout);
     ins->replaceAllUsesWith(undefinedVal_);
   }
@@ -579,7 +579,7 @@ void ObjectMemoryView::visitStoreDynamicSlot(MStoreDynamicSlot* ins) {
   } else {
     // UnsafeSetReserveSlot can access baked-in slots which are guarded by
     // conditions, which are not seen by the escape analysis.
-    MBail* bailout = MBail::New(alloc_, Bailout_Inevitable);
+    MBail* bailout = MBail::New(alloc_, BailoutKind::Inevitable);
     ins->block()->insertBefore(ins, bailout);
   }
 
@@ -603,7 +603,7 @@ void ObjectMemoryView::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
   } else {
     // UnsafeGetReserveSlot can access baked-in slots which are guarded by
     // conditions, which are not seen by the escape analysis.
-    MBail* bailout = MBail::New(alloc_, Bailout_Inevitable);
+    MBail* bailout = MBail::New(alloc_, BailoutKind::Inevitable);
     ins->block()->insertBefore(ins, bailout);
     ins->replaceAllUsesWith(undefinedVal_);
   }

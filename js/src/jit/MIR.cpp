@@ -6509,7 +6509,7 @@ static MInstruction* AddGroupGuard(TempAllocator& alloc, MBasicBlock* current,
 
   if (key->isGroup()) {
     guard = MGuardObjectGroup::New(alloc, obj, key->group(), bailOnEquality,
-                                   Bailout_ObjectIdentityOrTypeGuard);
+                                   BailoutKind::ObjectIdentityOrTypeGuard);
   } else {
     MConstant* singletonConst =
         MConstant::NewConstraintlessObject(alloc, key->singleton());

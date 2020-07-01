@@ -228,7 +228,8 @@ bool jit::ExceptionHandlerBailout(JSContext* cx,
     // Overwrite the kind so HandleException after the bailout returns
     // false, jumping directly to the exception tail.
     if (excInfo.propagatingIonExceptionForDebugMode()) {
-      bailoutInfo->bailoutKind = mozilla::Some(Bailout_IonExceptionDebugMode);
+      bailoutInfo->bailoutKind =
+          mozilla::Some(BailoutKind::IonExceptionDebugMode);
     }
 
     rfe->kind = ResumeFromException::RESUME_BAILOUT;
@@ -283,7 +284,7 @@ void jit::CheckFrequentBailouts(JSContext* cx, JSScript* script,
       // which should prevent this from happening again.  Also note that
       // the first execution bailout can be related to an inlined script,
       // so there is no need to penalize the caller.
-      if (bailoutKind != Bailout_FirstExecution &&
+      if (bailoutKind != BailoutKind::FirstExecution &&
           !script->hadFrequentBailouts()) {
         script->setHadFrequentBailouts();
       }
