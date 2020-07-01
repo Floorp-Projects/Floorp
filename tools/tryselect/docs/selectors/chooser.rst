@@ -6,7 +6,7 @@ many to remember, making it easy to forget a set of tasks which should otherwise
 
 This selector allows you to select tasks from a web interface that lists all the possible build and
 test tasks and allows you to select them from a list. It is similar in concept to the old `try
-syntax chooser`_ page, except that the values are dynamically generated using the `taskgraph`_ as an
+syntax chooser`_ page, except that the values are dynamically generated using the :ref:`taskgraph<TaskCluster Task-Graph Generation>` as an
 input. This ensures that it will never be out of date.
 
 To use:
@@ -25,9 +25,8 @@ You can run:
 
     $ mach try chooser --full
 
-To generate the interface using the full taskgraph instead. This will include tasks that don't run
+To generate the interface using the full :ref:`taskgraph<TaskCluster Task-Graph Generation>` instead. This will include tasks that don't run
 on mozilla-central.
 
 
 .. _try syntax chooser: https://mozilla-releng.net/trychooser
-.. _taskgraph: https://firefox-source-docs.mozilla.org/taskcluster/taskcluster/index.html
