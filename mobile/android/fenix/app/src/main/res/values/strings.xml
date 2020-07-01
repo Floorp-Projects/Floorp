@@ -1432,6 +1432,4 @@
     <string name="top_sites_max_limit_content">To add a new top site, remove one. Long press the site and select remove.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, Got It</string>
-    <!-- Content description (not visible, for screen readers etc.) used to announce [LinkTextView]. -->
-    <string name="link_text_view_type_announcement">link</string>
 </resources>

@@ -33,4 +33,7 @@
     <!-- Label for the secret settings preference -->
     <string name="preferences_debug_settings">Secret Settings</string>
     <string name="preferences_debug_settings_enable_tab_tray">Use New Tab Tray</string>
+
+    <!-- Content description (not visible, for screen readers etc.) used to announce [LinkTextView]. -->
+    <string name="link_text_view_type_announcement" translatable="false">link</string>
 </resources>
