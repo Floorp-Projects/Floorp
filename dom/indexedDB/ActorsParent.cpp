@@ -17042,31 +17042,8 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
           subdirNameWithDot + kFileManagerDirectoryNameSuffix;
     }
 
-    // We do have a database that uses this directory so we should rename it
-    // now. However, first check to make sure that we're not overwriting
-    // something else.
+    // We do have a database that uses this subdir so we should rename it now.
     nsCOMPtr<nsIFile> subdir;
-    rv = aDirectory->Clone(getter_AddRefs(subdir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = subdir->Append(subdirNameWithSuffix);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool exists;
-    rv = subdir->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (exists) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-
     rv = aDirectory->Clone(getter_AddRefs(subdir));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -17081,6 +17058,37 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
     MOZ_ASSERT(NS_SUCCEEDED(subdir->IsDirectory(&isDirectory)));
     MOZ_ASSERT(isDirectory);
 
+    // Check if the subdir with suffix already exists before renaming.
+    nsCOMPtr<nsIFile> subdirWithSuffix;
+    rv = aDirectory->Clone(getter_AddRefs(subdirWithSuffix));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = subdirWithSuffix->Append(subdirNameWithSuffix);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool exists;
+    rv = subdirWithSuffix->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (exists) {
+      IDB_WARNING("Deleting old %s files directory!",
+                  NS_ConvertUTF16toUTF8(subdirName).get());
+
+      rv = subdir->Remove(/* aRecursive */ true);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      continue;
+    }
+
+    // Finally, rename the subdir.
     rv = subdir->RenameTo(nullptr, subdirNameWithSuffix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
