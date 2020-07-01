@@ -118,7 +118,7 @@ class CookieJarSettings final : public nsICookieJarSettings {
 
   static already_AddRefed<nsICookieJarSettings> Create(
       uint32_t aCookieBehavior, const nsAString& aPartitionKey,
-      bool aIsFirstPartyIsolated);
+      bool aIsFirstPartyIsolated, bool aIsOnContentBlockingAllowList);
 
   static CookieJarSettings* Cast(nsICookieJarSettings* aCS) {
     return static_cast<CookieJarSettings*>(aCS);

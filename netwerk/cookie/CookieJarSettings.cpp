@@ -104,12 +104,14 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create() {
 // static
 already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
     uint32_t aCookieBehavior, const nsAString& aPartitionKey,
-    bool aIsFirstPartyIsolated) {
+    bool aIsFirstPartyIsolated, bool aIsOnContentBlockingAllowList) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<CookieJarSettings> cookieJarSettings = new CookieJarSettings(
       aCookieBehavior, aIsFirstPartyIsolated, eProgressive);
   cookieJarSettings->mPartitionKey = aPartitionKey;
+  cookieJarSettings->mIsOnContentBlockingAllowList =
+      aIsOnContentBlockingAllowList;
 
   return cookieJarSettings.forget();
 }
