@@ -9,7 +9,7 @@
 # too long.
 #
 # You can use it by running this command from the project root:
-# `ln -s ../../tools/pre-push-recommended.sh .git/hooks/pre-push`
+# `ln -s ../../config/pre-push-recommended.sh .git/hooks/pre-push`
 
 # Descriptions for each gradle task below can be found in the
 # output of `./gradlew tasks`.
