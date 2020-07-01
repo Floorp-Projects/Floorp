@@ -131,9 +131,8 @@ nsresult nsMenuItemX::SetChecked(bool aIsChecked) {
 
   // update the content model. This will also handle unchecking our siblings
   // if we are a radiomenu
-  mContent->AsElement()->SetAttr(
-      kNameSpaceID_None, nsGkAtoms::checked,
-      mIsChecked ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"), true);
+  mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
+                                 mIsChecked ? u"true"_ns : u"false"_ns, true);
 
   // update native menu item
   if (mIsChecked)
@@ -171,7 +170,7 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString& eventName, bool* preventD
 
   // create DOM event
   ErrorResult rv;
-  RefPtr<Event> event = parentDoc->CreateEvent(NS_LITERAL_STRING("Events"), CallerType::System, rv);
+  RefPtr<Event> event = parentDoc->CreateEvent(u"Events"_ns, CallerType::System, rv);
   if (rv.Failed()) {
     NS_WARNING("Failed to create Event");
     return rv.StealNSResult();
@@ -211,8 +210,7 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent) {
       // if the current sibling is in the same group, clear it
       if (sibling->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, myGroupName,
                                             eCaseMatters)) {
-        sibling->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                                      NS_LITERAL_STRING("false"), true);
+        sibling->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, u"false"_ns, true);
       }
     }
   }

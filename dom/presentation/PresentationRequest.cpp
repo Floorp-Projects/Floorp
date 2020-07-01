@@ -427,7 +427,7 @@ nsresult PresentationRequest::DispatchConnectionAvailableEvent(
 
   RefPtr<PresentationConnectionAvailableEvent> event =
       PresentationConnectionAvailableEvent::Constructor(
-          this, NS_LITERAL_STRING("connectionavailable"), init);
+          this, u"connectionavailable"_ns, init);
   if (NS_WARN_IF(!event)) {
     return NS_ERROR_FAILURE;
   }

@@ -27,11 +27,10 @@ TestInterfaceIterableDoubleUnion::TestInterfaceIterableDoubleUnion(
     : mParent(aParent) {
   OwningStringOrLong a;
   a.SetAsLong() = 1;
+  mValues.AppendElement(std::pair<nsString, OwningStringOrLong>(u"long"_ns, a));
+  a.SetAsString() = u"a"_ns;
   mValues.AppendElement(
-      std::pair<nsString, OwningStringOrLong>(NS_LITERAL_STRING("long"), a));
-  a.SetAsString() = NS_LITERAL_STRING("a");
-  mValues.AppendElement(
-      std::pair<nsString, OwningStringOrLong>(NS_LITERAL_STRING("string"), a));
+      std::pair<nsString, OwningStringOrLong>(u"string"_ns, a));
 }
 
 // static

@@ -48,7 +48,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsInlineFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Inline"), aResult);
+  return MakeFrameName(u"Inline"_ns, aResult);
 }
 #endif
 
@@ -969,7 +969,7 @@ void nsFirstLineFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsFirstLineFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Line"), aResult);
+  return MakeFrameName(u"Line"_ns, aResult);
 }
 #endif
 

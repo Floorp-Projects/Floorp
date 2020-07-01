@@ -254,7 +254,7 @@ already_AddRefed<Promise> RTCCertificate::GenerateCertificate(
     return nullptr;
   }
   Sequence<nsString> usages;
-  if (!usages.AppendElement(NS_LITERAL_STRING("sign"), fallible)) {
+  if (!usages.AppendElement(u"sign"_ns, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }

@@ -169,7 +169,7 @@ void InitializeSSLServerCertVerificationThreads() {
   (void)gCertVerificationThreadPool->SetIdleThreadLimit(5);
   (void)gCertVerificationThreadPool->SetIdleThreadTimeout(30 * 1000);
   (void)gCertVerificationThreadPool->SetThreadLimit(5);
-  (void)gCertVerificationThreadPool->SetName(NS_LITERAL_CSTRING("SSL Cert"));
+  (void)gCertVerificationThreadPool->SetName("SSL Cert"_ns);
 }
 
 // Called when the socket transport thread finishes, to destroy the thread
@@ -422,8 +422,7 @@ static nsresult OverrideAllowedForHost(
   }
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                          NS_LITERAL_CSTRING("https://") + aHostname);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), "https://"_ns + aHostname);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("[0x%" PRIx64 "] Creating new URI failed", aPtrForLog));
@@ -489,8 +488,7 @@ static SECStatus BlockServerCertChangeForSpdy(
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "GetNegotiatedNPN() failed during renegotiation");
 
-  if (NS_SUCCEEDED(rv) &&
-      !StringBeginsWith(negotiatedNPN, NS_LITERAL_CSTRING("spdy/"))) {
+  if (NS_SUCCEEDED(rv) && !StringBeginsWith(negotiatedNPN, "spdy/"_ns)) {
     return SECSuccess;
   }
   // If GetNegotiatedNPN() failed we will assume spdy for safety's safe
@@ -623,7 +621,7 @@ void GatherBaselineRequirementsTelemetry(const UniqueCERTCertList& certList) {
           BitwiseCast<char*, unsigned char*>(currentName->name.other.data),
           currentName->name.other.len);
       nsDependentCString altNameWithoutWildcard(altName, 0);
-      if (StringBeginsWith(altNameWithoutWildcard, NS_LITERAL_CSTRING("*."))) {
+      if (StringBeginsWith(altNameWithoutWildcard, "*."_ns)) {
         altNameWithoutWildcard.Rebind(altName, 2);
         commonNameInSubjectAltNames |=
             TryMatchingWildcardSubjectAltName(commonName.get(), altName);

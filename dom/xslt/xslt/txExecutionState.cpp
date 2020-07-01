@@ -137,8 +137,7 @@ nsresult txExecutionState::init(
 
   // The actual value here doesn't really matter since noone should use this
   // value. But lets put something errorlike in just in case
-  mGlobalVarPlaceholderValue =
-      new StringResult(NS_LITERAL_STRING("Error"), nullptr);
+  mGlobalVarPlaceholderValue = new StringResult(u"Error"_ns, nullptr);
 
   // Initiate first instruction. This has to be done last since findTemplate
   // might use us.
@@ -394,8 +393,7 @@ const txXPathNode* txExecutionState::retrieveDocument(const nsAString& aUri) {
                                getter_Transfers(entry->mDocument));
 
     if (entry->LoadingFailed()) {
-      receiveError(NS_LITERAL_STRING("Couldn't load document '") + aUri +
-                       NS_LITERAL_STRING("': ") + errMsg,
+      receiveError(u"Couldn't load document '"_ns + aUri + u"': "_ns + errMsg,
                    entry->mLoadResult);
     }
   }

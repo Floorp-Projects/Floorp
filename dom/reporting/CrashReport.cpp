@@ -31,8 +31,8 @@ bool CrashReport::Deliver(nsIPrincipal* aPrincipal, bool aIsOOM) {
   MOZ_ASSERT(aPrincipal);
 
   nsAutoCString endpoint_url;
-  ReportingHeader::GetEndpointForReport(NS_LITERAL_STRING("default"),
-                                        aPrincipal, endpoint_url);
+  ReportingHeader::GetEndpointForReport(u"default"_ns, aPrincipal,
+                                        endpoint_url);
   if (endpoint_url.IsEmpty()) {
     return false;
   }
@@ -41,8 +41,8 @@ bool CrashReport::Deliver(nsIPrincipal* aPrincipal, bool aIsOOM) {
   aPrincipal->GetExposableSpec(safe_origin_spec);
 
   ReportDeliver::ReportData data;
-  data.mType = NS_LITERAL_STRING("crash");
-  data.mGroupName = NS_LITERAL_STRING("default");
+  data.mType = u"crash"_ns;
+  data.mGroupName = u"default"_ns;
   data.mURL = NS_ConvertUTF8toUTF16(safe_origin_spec);
   data.mCreationTime = TimeStamp::Now();
 

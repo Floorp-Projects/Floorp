@@ -69,7 +69,7 @@ MediaKeySession::MediaKeySession(nsPIDOMWindowInner* aParent, MediaKeys* aKeys,
   if (aRv.Failed()) {
     return;
   }
-  mClosed = MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeys.createSession"));
+  mClosed = MakePromise(aRv, "MediaKeys.createSession"_ns);
 }
 
 void MediaKeySession::SetSessionId(const nsAString& aSessionId) {
@@ -196,7 +196,7 @@ already_AddRefed<Promise> MediaKeySession::GenerateRequest(
     const nsAString& aInitDataType,
     const ArrayBufferViewOrArrayBuffer& aInitData, ErrorResult& aRv) {
   RefPtr<DetailedPromise> promise(
-      MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeySession.generateRequest")));
+      MakePromise(aRv, "MediaKeySession.generateRequest"_ns));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -311,8 +311,7 @@ already_AddRefed<Promise> MediaKeySession::GenerateRequest(
 
 already_AddRefed<Promise> MediaKeySession::Load(const nsAString& aSessionId,
                                                 ErrorResult& aRv) {
-  RefPtr<DetailedPromise> promise(
-      MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeySession.load")));
+  RefPtr<DetailedPromise> promise(MakePromise(aRv, "MediaKeySession.load"_ns));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -387,7 +386,7 @@ already_AddRefed<Promise> MediaKeySession::Load(const nsAString& aSessionId,
 already_AddRefed<Promise> MediaKeySession::Update(
     const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResult& aRv) {
   RefPtr<DetailedPromise> promise(
-      MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeySession.update")));
+      MakePromise(aRv, "MediaKeySession.update"_ns));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -439,8 +438,7 @@ already_AddRefed<Promise> MediaKeySession::Update(
 }
 
 already_AddRefed<Promise> MediaKeySession::Close(ErrorResult& aRv) {
-  RefPtr<DetailedPromise> promise(
-      MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeySession.close")));
+  RefPtr<DetailedPromise> promise(MakePromise(aRv, "MediaKeySession.close"_ns));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -501,7 +499,7 @@ bool MediaKeySession::IsClosed() const { return mIsClosed; }
 
 already_AddRefed<Promise> MediaKeySession::Remove(ErrorResult& aRv) {
   RefPtr<DetailedPromise> promise(
-      MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeySession.remove")));
+      MakePromise(aRv, "MediaKeySession.remove"_ns));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -573,8 +571,8 @@ void MediaKeySession::DispatchKeyStatusesChange() {
 
   UpdateKeyStatusMap();
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      this, NS_LITERAL_STRING("keystatuseschange"), CanBubble::eNo);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(this, u"keystatuseschange"_ns, CanBubble::eNo);
   asyncDispatcher->PostDOMEvent();
 }
 

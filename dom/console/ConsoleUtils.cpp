@@ -81,19 +81,19 @@ void ConsoleUtils::ReportForServiceWorkerScopeInternal(
   event.mID.Value().SetAsString() = aScope;
 
   event.mInnerID.Construct();
-  event.mInnerID.Value().SetAsString() = NS_LITERAL_STRING("ServiceWorker");
+  event.mInnerID.Value().SetAsString() = u"ServiceWorker"_ns;
 
   switch (aLevel) {
     case eLog:
-      event.mLevel = NS_LITERAL_STRING("log");
+      event.mLevel = u"log"_ns;
       break;
 
     case eWarning:
-      event.mLevel = NS_LITERAL_STRING("warn");
+      event.mLevel = u"warn"_ns;
       break;
 
     case eError:
-      event.mLevel = NS_LITERAL_STRING("error");
+      event.mLevel = u"error"_ns;
       break;
   }
 
@@ -131,7 +131,7 @@ void ConsoleUtils::ReportForServiceWorkerScopeInternal(
     return;
   }
 
-  storage->RecordEvent(NS_LITERAL_STRING("ServiceWorker"), aScope, eventValue);
+  storage->RecordEvent(u"ServiceWorker"_ns, aScope, eventValue);
 }
 
 JSObject* ConsoleUtils::GetOrCreateSandbox(JSContext* aCx) {

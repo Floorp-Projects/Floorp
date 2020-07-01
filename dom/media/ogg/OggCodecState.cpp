@@ -398,7 +398,7 @@ bool TheoraState::Init() {
   }
 
   // Video track's frame sizes will not overflow. Activate the video track.
-  mInfo.mMimeType = NS_LITERAL_CSTRING("video/theora");
+  mInfo.mMimeType = "video/theora"_ns;
   mInfo.mDisplay = display;
   mInfo.mImage = frame;
   mInfo.SetImageRect(picture);
@@ -752,7 +752,7 @@ bool VorbisState::Init() {
     return mActive = false;
   }
   mHeaders.Erase();
-  mInfo.mMimeType = NS_LITERAL_CSTRING("audio/vorbis");
+  mInfo.mMimeType = "audio/vorbis"_ns;
   mInfo.mRate = mVorbisInfo.rate;
   mInfo.mChannels = mVorbisInfo.channels;
   mInfo.mBitDepth = 16;
@@ -1012,7 +1012,7 @@ bool OpusState::Init(void) {
       mParser->mRate, mParser->mChannels, mParser->mStreams,
       mParser->mCoupledStreams, mParser->mMappingTable, &error);
 
-  mInfo.mMimeType = NS_LITERAL_CSTRING("audio/opus");
+  mInfo.mMimeType = "audio/opus"_ns;
   mInfo.mRate = mParser->mRate;
   mInfo.mChannels = mParser->mChannels;
   mInfo.mBitDepth = 16;

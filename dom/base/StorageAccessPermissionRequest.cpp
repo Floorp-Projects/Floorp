@@ -22,8 +22,8 @@ StorageAccessPermissionRequest::StorageAccessPermissionRequest(
     nsPIDOMWindowInner* aWindow, nsIPrincipal* aNodePrincipal,
     AllowCallback&& aAllowCallback, CancelCallback&& aCancelCallback)
     : ContentPermissionRequestBase(aNodePrincipal, aWindow,
-                                   NS_LITERAL_CSTRING("dom.storage_access"),
-                                   NS_LITERAL_CSTRING("storage-access")),
+                                   "dom.storage_access"_ns,
+                                   "storage-access"_ns),
       mAllowCallback(std::move(aAllowCallback)),
       mCancelCallback(std::move(aCancelCallback)),
       mCallbackCalled(false) {

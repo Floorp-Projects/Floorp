@@ -547,9 +547,8 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
         });
     if (foundIt == end) {
       // Not using nsPrintfCString in case "name" has embedded nulls.
-      aRv.ThrowNotFoundError(
-          NS_LITERAL_CSTRING("'") + NS_ConvertUTF16toUTF8(name) +
-          NS_LITERAL_CSTRING("' is not a known object store name"));
+      aRv.ThrowNotFoundError("'"_ns + NS_ConvertUTF16toUTF8(name) +
+                             "' is not a known object store name"_ns);
       return nullptr;
     }
 

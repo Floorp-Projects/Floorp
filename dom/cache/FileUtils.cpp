@@ -71,7 +71,7 @@ nsresult BodyCreateDir(nsIFile* aBaseDir) {
     return rv;
   }
 
-  rv = aBodyDir->Append(NS_LITERAL_STRING("morgue"));
+  rv = aBodyDir->Append(u"morgue"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -97,7 +97,7 @@ nsresult BodyDeleteDir(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir) {
     return rv;
   }
 
-  rv = aBodyDir->Append(NS_LITERAL_STRING("morgue"));
+  rv = aBodyDir->Append(u"morgue"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -124,7 +124,7 @@ nsresult BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId,
   }
   MOZ_DIAGNOSTIC_ASSERT(*aCacheDirOut);
 
-  rv = (*aCacheDirOut)->Append(NS_LITERAL_STRING("morgue"));
+  rv = (*aCacheDirOut)->Append(u"morgue"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -507,7 +507,7 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
   }
 
   // Add the root morgue directory
-  rv = dir->Append(NS_LITERAL_STRING("morgue"));
+  rv = dir->Append(u"morgue"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -585,12 +585,12 @@ nsresult GetMarkerFileHandle(const QuotaInfo& aQuotaInfo, nsIFile** aFileOut) {
     return rv;
   }
 
-  rv = marker->Append(NS_LITERAL_STRING("cache"));
+  rv = marker->Append(u"cache"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = marker->Append(NS_LITERAL_STRING("context_open.marker"));
+  rv = marker->Append(u"context_open.marker"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

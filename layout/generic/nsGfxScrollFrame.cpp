@@ -1295,7 +1295,7 @@ void nsHTMLScrollFrame::DidReflow(nsPresContext* aPresContext,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsHTMLScrollFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("HTMLScroll"), aResult);
+  return MakeFrameName(u"HTMLScroll"_ns, aResult);
 }
 #endif
 
@@ -1735,7 +1735,7 @@ nsSize nsXULScrollFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsXULScrollFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("XULScroll"), aResult);
+  return MakeFrameName(u"XULScroll"_ns, aResult);
 }
 #endif
 
@@ -2008,30 +2008,30 @@ ComputeBezierAnimationSettingsForOrigin(ScrollOrigin aOrigin) {
   nsAutoCString prefBase;
   switch (aOrigin) {
     case ScrollOrigin::Pixels:
-      prefBase = NS_LITERAL_CSTRING("general.smoothScroll.pixels");
+      prefBase = "general.smoothScroll.pixels"_ns;
       break;
     case ScrollOrigin::Lines:
-      prefBase = NS_LITERAL_CSTRING("general.smoothScroll.lines");
+      prefBase = "general.smoothScroll.lines"_ns;
       break;
     case ScrollOrigin::Pages:
-      prefBase = NS_LITERAL_CSTRING("general.smoothScroll.pages");
+      prefBase = "general.smoothScroll.pages"_ns;
       break;
     case ScrollOrigin::MouseWheel:
-      prefBase = NS_LITERAL_CSTRING("general.smoothScroll.mouseWheel");
+      prefBase = "general.smoothScroll.mouseWheel"_ns;
       break;
     case ScrollOrigin::Scrollbars:
-      prefBase = NS_LITERAL_CSTRING("general.smoothScroll.scrollbars");
+      prefBase = "general.smoothScroll.scrollbars"_ns;
       break;
     default:
-      prefBase = NS_LITERAL_CSTRING("general.smoothScroll.other");
+      prefBase = "general.smoothScroll.other"_ns;
       break;
   }
 
   isOriginSmoothnessEnabled =
       Preferences::GetBool(prefBase.get(), kDefaultIsSmoothEnabled);
   if (isOriginSmoothnessEnabled) {
-    nsAutoCString prefMin = prefBase + NS_LITERAL_CSTRING(".durationMinMS");
-    nsAutoCString prefMax = prefBase + NS_LITERAL_CSTRING(".durationMaxMS");
+    nsAutoCString prefMin = prefBase + ".durationMinMS"_ns;
+    nsAutoCString prefMax = prefBase + ".durationMaxMS"_ns;
     minMS = Preferences::GetInt(prefMin.get(), kDefaultMinMS);
     maxMS = Preferences::GetInt(prefMax.get(), kDefaultMaxMS);
 
@@ -4880,8 +4880,8 @@ void ScrollFrameHelper::FireScrollEndEvent() {
   mScrollEndEvent = nullptr;
 
   nsContentUtils::DispatchEventOnlyToChrome(
-      mOuter->GetContent()->OwnerDoc(), mOuter->GetContent(),
-      NS_LITERAL_STRING("scrollend"), CanBubble::eYes, Cancelable::eNo);
+      mOuter->GetContent()->OwnerDoc(), mOuter->GetContent(), u"scrollend"_ns,
+      CanBubble::eYes, Cancelable::eNo);
 }
 
 void ScrollFrameHelper::ReloadChildFrames() {
@@ -4931,8 +4931,8 @@ already_AddRefed<Element> ScrollFrameHelper::MakeScrollbar(
       aNodeInfo->Equals(nsGkAtoms::scrollbar, nullptr, kNameSpaceID_XUL));
 
   static constexpr nsLiteralString kOrientValues[2] = {
-      NS_LITERAL_STRING("horizontal"),
-      NS_LITERAL_STRING("vertical"),
+      u"horizontal"_ns,
+      u"vertical"_ns,
   };
 
   aKey = AnonymousContentKey::Type_Scrollbar;
@@ -4953,14 +4953,12 @@ already_AddRefed<Element> ScrollFrameHelper::MakeScrollbar(
 
   e->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, kOrientValues[aVertical],
              false);
-  e->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
-             NS_LITERAL_STRING("always"), false);
+  e->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough, u"always"_ns, false);
 
   if (mIsRoot) {
     e->SetProperty(nsGkAtoms::docLevelNativeAnonymousContent,
                    reinterpret_cast<void*>(true));
-    e->SetAttr(kNameSpaceID_None, nsGkAtoms::root_, NS_LITERAL_STRING("true"),
-               false);
+    e->SetAttr(kNameSpaceID_None, nsGkAtoms::root_, u"true"_ns, false);
 
     // Don't bother making style caching take [root="true"] styles into account.
     aKey = AnonymousContentKey::None;
@@ -5116,11 +5114,11 @@ nsresult ScrollFrameHelper::CreateAnonymousContent(
       mCollapsedResizer = true;
     } else {
       mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::element,
-                               NS_LITERAL_STRING("_parent"), false);
+                               u"_parent"_ns, false);
     }
 
     mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
-                             NS_LITERAL_STRING("always"), false);
+                             u"always"_ns, false);
 
     aElements.AppendElement(ContentInfo(mResizerContent, key));
   }
@@ -6450,8 +6448,7 @@ void ScrollFrameHelper::SetScrollbarEnabled(Element* aElement,
   if (aMaxPos) {
     aElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
   } else {
-    aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
-                      NS_LITERAL_STRING("true"), true);
+    aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, u"true"_ns, true);
   }
   MOZ_ASSERT(ShellIsAlive(weakShell), "pres shell was destroyed by scrolling");
 }

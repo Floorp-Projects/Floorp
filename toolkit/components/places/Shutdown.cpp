@@ -58,7 +58,7 @@ PlacesShutdownBlocker::GetState(nsIPropertyBag** _state) {
   nsresult rv = progress->SetAsUint8(mState);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
   rv = static_cast<nsIWritablePropertyBag2*>(*_state)->SetPropertyAsInterface(
-      NS_LITERAL_STRING("progress"), progress);
+      u"progress"_ns, progress);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   // Put `mBarrier`'s state in field `barrier`, if possible
@@ -75,7 +75,7 @@ PlacesShutdownBlocker::GetState(nsIPropertyBag** _state) {
   rv = barrier->SetAsInterface(NS_GET_IID(nsIPropertyBag), barrierState);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
   rv = static_cast<nsIWritablePropertyBag2*>(*_state)->SetPropertyAsInterface(
-      NS_LITERAL_STRING("Barrier"), barrier);
+      u"Barrier"_ns, barrier);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   return NS_OK;
@@ -121,7 +121,7 @@ NS_IMPL_ISUPPORTS(PlacesShutdownBlocker, nsIAsyncShutdownBlocker,
 ////////////////////////////////////////////////////////////////////////////////
 
 ClientsShutdownBlocker::ClientsShutdownBlocker()
-    : PlacesShutdownBlocker(NS_LITERAL_STRING("Places Clients shutdown")) {
+    : PlacesShutdownBlocker(u"Places Clients shutdown"_ns) {
   // Do nothing.
 }
 
@@ -145,7 +145,7 @@ ClientsShutdownBlocker::Done() {
 ////////////////////////////////////////////////////////////////////////////////
 
 ConnectionShutdownBlocker::ConnectionShutdownBlocker(Database* aDatabase)
-    : PlacesShutdownBlocker(NS_LITERAL_STRING("Places Connection shutdown")),
+    : PlacesShutdownBlocker(u"Places Connection shutdown"_ns),
       mDatabase(aDatabase) {
   // Do nothing.
 }

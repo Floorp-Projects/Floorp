@@ -170,7 +170,7 @@ class DataStorageMemoryReporter final : public nsIMemoryReporter {
                            NS_ConvertUTF16toUTF8(file).get());
       Unused << aHandleReport->Callback(
           EmptyCString(), path, KIND_HEAP, UNITS_BYTES, amount,
-          NS_LITERAL_CSTRING("Memory used by PSM data storage cache."), aData);
+          "Memory used by PSM data storage cache."_ns, aData);
     }
     return NS_OK;
   }

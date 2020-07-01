@@ -166,8 +166,7 @@ void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
   }
 
   nsAutoCString headerValue;
-  rv =
-      aChannel->GetResponseHeader(NS_LITERAL_CSTRING("Report-To"), headerValue);
+  rv = aChannel->GetResponseHeader("Report-To"_ns, headerValue);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -464,8 +463,7 @@ void ReportingHeader::LogToConsoleInternal(nsIHttpChannel* aChannel,
   }
 
   rv = nsContentUtils::ReportToConsoleByWindowID(
-      localizedMsg, nsIScriptError::infoFlag, NS_LITERAL_CSTRING("Reporting"),
-      windowID, aURI);
+      localizedMsg, nsIScriptError::infoFlag, "Reporting"_ns, windowID, aURI);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 

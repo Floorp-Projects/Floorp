@@ -2043,10 +2043,9 @@ nsNativeThemeCocoa::ScaleParams nsNativeThemeCocoa::ComputeXULScaleParams(nsIFra
     params.max = 100;
   }
 
-  params.reverse =
-      aFrame->GetContent()->IsElement() &&
-      aFrame->GetContent()->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                                     NS_LITERAL_STRING("reverse"), eCaseMatters);
+  params.reverse = aFrame->GetContent()->IsElement() &&
+                   aFrame->GetContent()->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
+                                                                  u"reverse"_ns, eCaseMatters);
   params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
   params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUSRING);
   params.disabled = IsDisabled(aFrame, aEventState);
@@ -2867,11 +2866,11 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         }
         SpinButtonParams params;
         if (content->IsElement()) {
-          if (content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
-                                                NS_LITERAL_STRING("up"), eCaseMatters)) {
+          if (content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state, u"up"_ns,
+                                                eCaseMatters)) {
             params.pressedButton = Some(SpinButton::eUp);
           } else if (content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
-                                                       NS_LITERAL_STRING("down"), eCaseMatters)) {
+                                                       u"down"_ns, eCaseMatters)) {
             params.pressedButton = Some(SpinButton::eDown);
           }
         }

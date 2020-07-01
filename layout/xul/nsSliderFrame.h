@@ -53,7 +53,7 @@ class nsSliderFrame final : public nsBoxFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SliderFrame"), aResult);
+    return MakeFrameName(u"SliderFrame"_ns, aResult);
   }
 #endif
 
@@ -173,7 +173,7 @@ class nsSliderFrame final : public nsBoxFrame {
 
   void StartRepeat() {
     nsRepeatService::GetInstance()->Start(Notify, this, mContent->OwnerDoc(),
-                                          NS_LITERAL_CSTRING("nsSliderFrame"));
+                                          "nsSliderFrame"_ns);
   }
   void StopRepeat() { nsRepeatService::GetInstance()->Stop(Notify, this); }
   void Notify();

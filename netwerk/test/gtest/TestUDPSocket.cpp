@@ -264,7 +264,7 @@ TEST(TestUDPSocket, TestUDPSocketMain)
   data.AppendElements((const uint8_t*)&dataBuffer, sizeof(uint32_t));
 
   phase = TEST_OUTPUT_STREAM;
-  rv = client->Send(NS_LITERAL_CSTRING("127.0.0.1"), serverPort, data, &count);
+  rv = client->Send("127.0.0.1"_ns, serverPort, data, &count);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   EXPECT_EQ(count, sizeof(uint32_t));
 

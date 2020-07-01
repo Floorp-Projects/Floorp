@@ -430,8 +430,7 @@ static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
              "We're assuming B8G8R8A8/X8");
 
   // Get an image encoder for the media type
-  nsAutoCString encoderCID(
-      NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type=") + aMimeType);
+  nsAutoCString encoderCID("@mozilla.org/image/encoder;2?type="_ns + aMimeType);
 
   nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get());
   if (!encoder) {

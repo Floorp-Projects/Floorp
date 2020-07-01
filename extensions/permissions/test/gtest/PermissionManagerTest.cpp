@@ -17,14 +17,13 @@ using namespace mozilla;
 class PermissionManagerTester : public ::testing::Test {
  protected:
   PermissionManagerTester()
-      : mNonExistentType(
-            NS_LITERAL_CSTRING("permissionTypeThatIsGuaranteedToNeverExist")) {}
+      : mNonExistentType("permissionTypeThatIsGuaranteedToNeverExist"_ns) {}
   void SetUp() override {
     mPermissionManager = PermissionManager::GetInstance();
     nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(
-        getter_AddRefs(uri),
-        NS_LITERAL_CSTRING("https://test.origin.with.subdomains.example.com"));
+    nsresult rv =
+        NS_NewURI(getter_AddRefs(uri),
+                  "https://test.origin.with.subdomains.example.com"_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     mPrincipal =
         mozilla::BasePrincipal::CreateContentPrincipal(uri, OriginAttributes());

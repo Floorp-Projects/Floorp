@@ -2204,7 +2204,7 @@ static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
   // From canvas spec, force to set line-height property to 'normal' font
   // property.
   if (aProperty == eCSSProperty_font) {
-    const nsCString normalString = NS_LITERAL_CSTRING("normal");
+    const nsCString normalString = "normal"_ns;
     Servo_DeclarationBlock_SetPropertyById(
         servoDeclarations, eCSSProperty_line_height, &normalString, false, data,
         ParsingMode::Default, aDocument->GetCompatibilityMode(),
@@ -2252,7 +2252,7 @@ static already_AddRefed<ComputedStyle> GetFontStyleForServo(
     }
   } else {
     RefPtr<RawServoDeclarationBlock> declarations =
-        CreateFontDeclarationForServo(NS_LITERAL_STRING("10px sans-serif"),
+        CreateFontDeclarationForServo(u"10px sans-serif"_ns,
                                       aPresShell->GetDocument());
     MOZ_ASSERT(declarations);
 

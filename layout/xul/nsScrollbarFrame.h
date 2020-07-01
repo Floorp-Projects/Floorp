@@ -49,7 +49,7 @@ class nsScrollbarFrame final : public nsBoxFrame,
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("ScrollbarFrame"), aResult);
+    return MakeFrameName(u"ScrollbarFrame"_ns, aResult);
   }
 #endif
 

@@ -1023,7 +1023,7 @@ bool IMEHandler::AutoInvokeOnScreenKeyboardInDesktopMode() {
     return false;
   }
   rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                    NS_LITERAL_STRING("SOFTWARE\\Microsoft\\TabletTip\\1.7"),
+                    u"SOFTWARE\\Microsoft\\TabletTip\\1.7"_ns,
                     nsIWindowsRegKey::ACCESS_QUERY_VALUE);
   if (NS_FAILED(rv)) {
     Preferences::SetString(kOskDebugReason,
@@ -1035,8 +1035,7 @@ bool IMEHandler::AutoInvokeOnScreenKeyboardInDesktopMode() {
   // when there's no keyboard attached to your device." If the user has
   // opted-in to this behavior, the tablet-mode requirement is skipped.
   uint32_t value;
-  rv = regKey->ReadIntValue(NS_LITERAL_STRING("EnableDesktopModeAutoInvoke"),
-                            &value);
+  rv = regKey->ReadIntValue(u"EnableDesktopModeAutoInvoke"_ns, &value);
   if (NS_FAILED(rv)) {
     Preferences::SetString(kOskDebugReason,
                            L"AIOSKIDM: failed reading value of regkey.");

@@ -80,8 +80,8 @@ void ProfilerScreenshots::SubmitScreenshot(
           // Encode surf to a JPEG data URL.
           nsCString dataURL;
           nsresult rv = gfxUtils::EncodeSourceSurface(
-              surf, ImageType::JPEG, NS_LITERAL_STRING("quality=85"),
-              gfxUtils::eDataURIEncode, nullptr, &dataURL);
+              surf, ImageType::JPEG, u"quality=85"_ns, gfxUtils::eDataURIEncode,
+              nullptr, &dataURL);
           if (NS_SUCCEEDED(rv)) {
             // Add a marker with the data URL.
             AUTO_PROFILER_STATS(add_marker_with_ScreenshotPayload);

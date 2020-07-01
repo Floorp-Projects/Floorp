@@ -30,7 +30,7 @@ class nsGridRowGroupFrame final : public nsBoxFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("nsGridRowGroup"), aResult);
+    return MakeFrameName(u"nsGridRowGroup"_ns, aResult);
   }
 #endif
 

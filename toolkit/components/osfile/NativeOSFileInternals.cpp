@@ -663,14 +663,14 @@ class AbstractReadEvent : public AbstractDoEvent {
                       /*Template file*/ nullptr);
 
     if (handle == INVALID_HANDLE_VALUE) {
-      Fail(NS_LITERAL_CSTRING("open"), nullptr, ::GetLastError());
+      Fail("open"_ns, nullptr, ::GetLastError());
       return NS_ERROR_FAILURE;
     }
 
     file = PR_ImportFile((PROsfd)handle);
     if (!file) {
       // |file| is closed by PR_ImportFile
-      Fail(NS_LITERAL_CSTRING("ImportFile"), nullptr, PR_GetOSError());
+      Fail("ImportFile"_ns, nullptr, PR_GetOSError());
       return NS_ERROR_FAILURE;
     }
 
@@ -679,7 +679,7 @@ class AbstractReadEvent : public AbstractDoEvent {
     NS_ConvertUTF16toUTF8 path(mPath);
     file = PR_OpenFile(path.get(), PR_RDONLY, 0);
     if (!file) {
-      Fail(NS_LITERAL_CSTRING("open"), nullptr, PR_GetOSError());
+      Fail("open"_ns, nullptr, PR_GetOSError());
       return NS_ERROR_FAILURE;
     }
 
@@ -687,18 +687,18 @@ class AbstractReadEvent : public AbstractDoEvent {
 
     PRFileInfo64 stat;
     if (PR_GetOpenFileInfo64(file, &stat) != PR_SUCCESS) {
-      Fail(NS_LITERAL_CSTRING("stat"), nullptr, PR_GetOSError());
+      Fail("stat"_ns, nullptr, PR_GetOSError());
       return NS_ERROR_FAILURE;
     }
 
     uint64_t bytes = std::min((uint64_t)stat.size, mBytes);
     if (bytes > UINT32_MAX) {
-      Fail(NS_LITERAL_CSTRING("Arithmetics"), nullptr, OS_ERROR_INVAL);
+      Fail("Arithmetics"_ns, nullptr, OS_ERROR_INVAL);
       return NS_ERROR_FAILURE;
     }
 
     if (!aBuffer.Allocate(bytes)) {
-      Fail(NS_LITERAL_CSTRING("allocate"), nullptr, OS_ERROR_NOMEM);
+      Fail("allocate"_ns, nullptr, OS_ERROR_NOMEM);
       return NS_ERROR_FAILURE;
     }
 
@@ -709,14 +709,14 @@ class AbstractReadEvent : public AbstractDoEvent {
       just_read = PR_Read(file, dest_chars + total_read,
                           std::min(uint64_t(PR_INT32_MAX), bytes - total_read));
       if (just_read == -1) {
-        Fail(NS_LITERAL_CSTRING("read"), nullptr, PR_GetOSError());
+        Fail("read"_ns, nullptr, PR_GetOSError());
         return NS_ERROR_FAILURE;
       }
       total_read += just_read;
     } while (just_read != 0 && total_read < bytes);
     if (total_read != bytes) {
       // We seem to have a race condition here.
-      Fail(NS_LITERAL_CSTRING("read"), nullptr, OS_ERROR_RACE);
+      Fail("read"_ns, nullptr, OS_ERROR_RACE);
       return NS_ERROR_FAILURE;
     }
 
@@ -810,13 +810,12 @@ class DoReadToStringEvent final : public AbstractReadEvent {
     MOZ_ASSERT(!NS_IsMainThread());
     const Encoding* encoding = Encoding::ForLabel(mEncoding);
     if (!encoding) {
-      Fail(NS_LITERAL_CSTRING("Decode"), mResult.forget(), OS_ERROR_INVAL);
+      Fail("Decode"_ns, mResult.forget(), OS_ERROR_INVAL);
       return NS_ERROR_FAILURE;
     }
     mDecoder = encoding->NewDecoderWithBOMRemoval();
     if (!mDecoder) {
-      Fail(NS_LITERAL_CSTRING("DecoderForEncoding"), mResult.forget(),
-           OS_ERROR_INVAL);
+      Fail("DecoderForEncoding"_ns, mResult.forget(), OS_ERROR_INVAL);
       return NS_ERROR_FAILURE;
     }
 
@@ -832,16 +831,14 @@ class DoReadToStringEvent final : public AbstractReadEvent {
     CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(src.Length());
     if (!needed.isValid() ||
         needed.value() > std::numeric_limits<nsAString::size_type>::max()) {
-      Fail(NS_LITERAL_CSTRING("arithmetics"), mResult.forget(),
-           OS_ERROR_TOO_LARGE);
+      Fail("arithmetics"_ns, mResult.forget(), OS_ERROR_TOO_LARGE);
       return;
     }
 
     nsString resultString;
     bool ok = resultString.SetLength(needed.value(), fallible);
     if (!ok) {
-      Fail(NS_LITERAL_CSTRING("allocation"), mResult.forget(),
-           OS_ERROR_TOO_LARGE);
+      Fail("allocation"_ns, mResult.forget(), OS_ERROR_TOO_LARGE);
       return;
     }
 
@@ -860,8 +857,7 @@ class DoReadToStringEvent final : public AbstractReadEvent {
     Unused << hadErrors;
     ok = resultString.SetLength(written, fallible);
     if (!ok) {
-      Fail(NS_LITERAL_CSTRING("allocation"), mResult.forget(),
-           OS_ERROR_TOO_LARGE);
+      Fail("allocation"_ns, mResult.forget(), OS_ERROR_TOO_LARGE);
       return;
     }
 
@@ -963,7 +959,7 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
 
     // Check noOverwrite.
     if (mNoOverwrite && fileExists) {
-      Fail(NS_LITERAL_CSTRING("noOverwrite"), nullptr, OS_ERROR_FILE_EXISTS);
+      Fail("noOverwrite"_ns, nullptr, OS_ERROR_FILE_EXISTS);
       return NS_ERROR_FAILURE;
     }
 
@@ -974,13 +970,13 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
         // The file specified by mBackupTo exists, so we need to delete it
         // first.
         if (::DeleteFileW(mBackupTo.get()) == false) {
-          Fail(NS_LITERAL_CSTRING("delete"), nullptr, ::GetLastError());
+          Fail("delete"_ns, nullptr, ::GetLastError());
           return NS_ERROR_FAILURE;
         }
       }
 
       if (::MoveFileW(mPath.get(), mBackupTo.get()) == false) {
-        Fail(NS_LITERAL_CSTRING("rename"), nullptr, ::GetLastError());
+        Fail("rename"_ns, nullptr, ::GetLastError());
         return NS_ERROR_FAILURE;
       }
 #else
@@ -988,13 +984,13 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
         // The file specified by mBackupTo exists, so we need to delete it
         // first.
         if (PR_Delete(backupTo.get()) == PR_FAILURE) {
-          Fail(NS_LITERAL_CSTRING("delete"), nullptr, PR_GetOSError());
+          Fail("delete"_ns, nullptr, PR_GetOSError());
           return NS_ERROR_FAILURE;
         }
       }
 
       if (PR_Rename(path.get(), backupTo.get()) == PR_FAILURE) {
-        Fail(NS_LITERAL_CSTRING("rename"), nullptr, PR_GetOSError());
+        Fail("rename"_ns, nullptr, PR_GetOSError());
         return NS_ERROR_FAILURE;
       }
 #endif  // defined(XP_WIN)
@@ -1027,14 +1023,14 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
     }
 
     if (handle == INVALID_HANDLE_VALUE) {
-      Fail(NS_LITERAL_CSTRING("open"), nullptr, ::GetLastError());
+      Fail("open"_ns, nullptr, ::GetLastError());
       return NS_ERROR_FAILURE;
     }
 
     file = PR_ImportFile((PROsfd)handle);
     if (!file) {
       // |file| is closed by PR_ImportFile
-      Fail(NS_LITERAL_CSTRING("ImportFile"), nullptr, PR_GetOSError());
+      Fail("ImportFile"_ns, nullptr, PR_GetOSError());
       return NS_ERROR_FAILURE;
     }
 
@@ -1050,7 +1046,7 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
     }
 
     if (!file) {
-      Fail(NS_LITERAL_CSTRING("open"), nullptr, PR_GetOSError());
+      Fail("open"_ns, nullptr, PR_GetOSError());
       return NS_ERROR_FAILURE;
     }
 #endif  // defined(XP_WIN)
@@ -1059,7 +1055,7 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
         PR_Write(file, (void*)(mBuffer.get()), mBytes);
 
     if (bytesWrittenSuccess == -1) {
-      Fail(NS_LITERAL_CSTRING("write"), nullptr, PR_GetOSError());
+      Fail("write"_ns, nullptr, PR_GetOSError());
       return NS_ERROR_FAILURE;
     }
 
@@ -1070,12 +1066,12 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
         // already renamed it as a part of backing it up.
 #if defined(XP_WIN)
         if (::DeleteFileW(mPath.get()) == false) {
-          Fail(NS_LITERAL_CSTRING("delete"), nullptr, ::GetLastError());
+          Fail("delete"_ns, nullptr, ::GetLastError());
           return NS_ERROR_FAILURE;
         }
 #else
         if (PR_Delete(path.get()) == PR_FAILURE) {
-          Fail(NS_LITERAL_CSTRING("delete"), nullptr, PR_GetOSError());
+          Fail("delete"_ns, nullptr, PR_GetOSError());
           return NS_ERROR_FAILURE;
         }
 #endif  // defined(XP_WIN)
@@ -1083,12 +1079,12 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
 
 #if defined(XP_WIN)
       if (::MoveFileW(mTmpPath.get(), mPath.get()) == false) {
-        Fail(NS_LITERAL_CSTRING("rename"), nullptr, ::GetLastError());
+        Fail("rename"_ns, nullptr, ::GetLastError());
         return NS_ERROR_FAILURE;
       }
 #else
       if (PR_Rename(tmpPath.get(), path.get()) == PR_FAILURE) {
-        Fail(NS_LITERAL_CSTRING("rename"), nullptr, PR_GetOSError());
+        Fail("rename"_ns, nullptr, PR_GetOSError());
         return NS_ERROR_FAILURE;
       }
 #endif  // defined(XP_WIN)
@@ -1096,7 +1092,7 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
 
     if (mFlush) {
       if (PR_Sync(file) == PR_FAILURE) {
-        Fail(NS_LITERAL_CSTRING("sync"), nullptr, PR_GetOSError());
+        Fail("sync"_ns, nullptr, PR_GetOSError());
         return NS_ERROR_FAILURE;
       }
     }

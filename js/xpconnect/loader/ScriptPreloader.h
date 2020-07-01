@@ -96,8 +96,7 @@ class ScriptPreloader : public nsIObserver,
                   TimeStamp loadTime);
 
   // Initializes the script cache from the startup script cache file.
-  Result<Ok, nsresult> InitCache(
-      const nsAString& = NS_LITERAL_STRING("scriptCache"));
+  Result<Ok, nsresult> InitCache(const nsAString& = u"scriptCache"_ns);
 
   Result<Ok, nsresult> InitCache(const Maybe<ipc::FileDescriptor>& cacheFile,
                                  ScriptCacheChild* cacheChild);

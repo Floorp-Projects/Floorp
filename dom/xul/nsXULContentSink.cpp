@@ -708,11 +708,10 @@ nsresult XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
 
         if (NS_SUCCEEDED(rv)) {
           nsContentUtils::ReportToConsoleNonLocalized(
-              NS_LITERAL_STRING(
-                  "Versioned JavaScripts are no longer supported. "
-                  "Please remove the version parameter."),
-              nsIScriptError::errorFlag, NS_LITERAL_CSTRING("XUL Document"),
-              nullptr, mDocumentURL, EmptyString(), aLineNumber);
+              u"Versioned JavaScripts are no longer supported. "
+              "Please remove the version parameter."_ns,
+              nsIScriptError::errorFlag, "XUL Document"_ns, nullptr,
+              mDocumentURL, EmptyString(), aLineNumber);
           isJavaScript = false;
         } else if (rv != NS_ERROR_INVALID_ARG) {
           return rv;

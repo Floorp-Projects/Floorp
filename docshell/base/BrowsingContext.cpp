@@ -1869,7 +1869,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
       messageData = ErrorMessageData();
 
       nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM Window"),
+          nsIScriptError::warningFlag, "DOM Window"_ns,
           callerInnerWindow ? callerInnerWindow->GetDocument() : nullptr,
           nsContentUtils::eDOM_PROPERTIES,
           "PostMessageSharedMemoryObjectToCrossOriginWarning");
@@ -1893,7 +1893,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
       messageData = ErrorMessageData();
 
       nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM Window"),
+          nsIScriptError::warningFlag, "DOM Window"_ns,
           callerInnerWindow ? callerInnerWindow->GetDocument() : nullptr,
           nsContentUtils::eDOM_PROPERTIES,
           "PostMessageSharedMemoryObjectToCrossOriginWarning");
@@ -2359,7 +2359,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_TextZoom>, float aOldValue) {
   if (IsTop() && XRE_IsParentProcess()) {
     if (Element* element = GetEmbedderElement()) {
       auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
-          element, NS_LITERAL_STRING("TextZoomChange"), CanBubble::eYes,
+          element, u"TextZoomChange"_ns, CanBubble::eYes,
           ChromeOnlyDispatch::eYes);
       dispatcher->RunDOMEventWhenSafe();
     }
@@ -2389,7 +2389,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_FullZoom>, float aOldValue) {
   if (IsTop() && XRE_IsParentProcess()) {
     if (Element* element = GetEmbedderElement()) {
       auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
-          element, NS_LITERAL_STRING("FullZoomChange"), CanBubble::eYes,
+          element, u"FullZoomChange"_ns, CanBubble::eYes,
           ChromeOnlyDispatch::eYes);
       dispatcher->RunDOMEventWhenSafe();
     }

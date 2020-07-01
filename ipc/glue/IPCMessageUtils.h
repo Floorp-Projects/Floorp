@@ -129,13 +129,11 @@ struct EnumSerializer {
     uintParamType value;
     if (!ReadParam(aMsg, aIter, &value)) {
       CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::IPCReadErrorReason,
-          NS_LITERAL_CSTRING("Bad iter"));
+          CrashReporter::Annotation::IPCReadErrorReason, "Bad iter"_ns);
       return false;
     } else if (!EnumValidator::IsLegalValue(paramType(value))) {
       CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::IPCReadErrorReason,
-          NS_LITERAL_CSTRING("Illegal value"));
+          CrashReporter::Annotation::IPCReadErrorReason, "Illegal value"_ns);
       return false;
     }
     *aResult = paramType(value);

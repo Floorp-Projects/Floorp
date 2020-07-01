@@ -363,7 +363,7 @@ nsresult TokenizeQueryString(const nsACString& aQuery,
 
 void TokensToQueryString(const nsTArray<QueryKeyValuePair>& aTokens,
                          nsACString& aQuery) {
-  aQuery = NS_LITERAL_CSTRING("place:");
+  aQuery = "place:"_ns;
   for (uint32_t i = 0; i < aTokens.Length(); i++) {
     if (i > 0) {
       aQuery.Append("&");

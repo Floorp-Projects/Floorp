@@ -298,7 +298,7 @@ UniquePtr<EncryptionInfo> MP4Demuxer::GetCrypto() {
   UniquePtr<EncryptionInfo> crypto;
   if (!mCryptoInitData.IsEmpty()) {
     crypto.reset(new EncryptionInfo{});
-    crypto->AddInitData(NS_LITERAL_STRING("cenc"), mCryptoInitData);
+    crypto->AddInitData(u"cenc"_ns, mCryptoInitData);
   }
   return crypto;
 }

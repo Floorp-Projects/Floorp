@@ -20,7 +20,7 @@
   nsresult rv = aAboutURI->GetPathQueryRef(aModule);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int32_t f = aModule.FindCharInSet(NS_LITERAL_CSTRING("#?"));
+  int32_t f = aModule.FindCharInSet("#?"_ns);
   if (f != kNotFound) {
     aModule.Truncate(f);
   }

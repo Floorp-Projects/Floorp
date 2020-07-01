@@ -222,8 +222,7 @@ uint32_t ClearSiteData::ParseHeader(nsIHttpChannel* aChannel,
   MOZ_ASSERT(aChannel);
 
   nsAutoCString headerValue;
-  nsresult rv = aChannel->GetResponseHeader(
-      NS_LITERAL_CSTRING("Clear-Site-Data"), headerValue);
+  nsresult rv = aChannel->GetResponseHeader("Clear-Site-Data"_ns, headerValue);
   if (NS_FAILED(rv)) {
     return 0;
   }
@@ -296,8 +295,7 @@ void ClearSiteData::LogToConsoleInternal(
     return;
   }
 
-  httpChannel->AddConsoleReport(nsIScriptError::infoFlag,
-                                NS_LITERAL_CSTRING("Clear-Site-Data"),
+  httpChannel->AddConsoleReport(nsIScriptError::infoFlag, "Clear-Site-Data"_ns,
                                 nsContentUtils::eSECURITY_PROPERTIES, uri, 0, 0,
                                 nsDependentCString(aMsg), aParams);
 }

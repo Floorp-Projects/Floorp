@@ -542,8 +542,7 @@ class CompareManager final : public PromiseNativeHandler {
       return rv;
     }
 
-    RefPtr<InternalResponse> ir =
-        new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
+    RefPtr<InternalResponse> ir = new InternalResponse(200, "OK"_ns);
     ir->SetBody(body, aCN->Buffer().Length());
     ir->SetURLList(aCN->URLList());
 
@@ -684,8 +683,7 @@ nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Service-Worker"),
-                                       NS_LITERAL_CSTRING("script"),
+    rv = httpChannel->SetRequestHeader("Service-Worker"_ns, "script"_ns,
                                        /* merge */ false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
@@ -917,9 +915,8 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
     // in aStatus and they never reach this point.
     char16_t* buffer = nullptr;
     size_t len = 0;
-    rv = ScriptLoader::ConvertToUTF16(channel, aString, aLen,
-                                      NS_LITERAL_STRING("UTF-8"), nullptr,
-                                      buffer, len);
+    rv = ScriptLoader::ConvertToUTF16(channel, aString, aLen, u"UTF-8"_ns,
+                                      nullptr, buffer, len);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -959,8 +956,8 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
 
   // Note: we explicitly don't check for the return value here, because the
   // absence of the header is not an error condition.
-  Unused << httpChannel->GetResponseHeader(
-      NS_LITERAL_CSTRING("Service-Worker-Allowed"), mMaxScope);
+  Unused << httpChannel->GetResponseHeader("Service-Worker-Allowed"_ns,
+                                           mMaxScope);
 
   // [9.2 Update]4.13, If response's cache state is not "local",
   // set registration's last update check time to the current time
@@ -1009,9 +1006,8 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
   char16_t* buffer = nullptr;
   size_t len = 0;
 
-  rv = ScriptLoader::ConvertToUTF16(httpChannel, aString, aLen,
-                                    NS_LITERAL_STRING("UTF-8"), nullptr, buffer,
-                                    len);
+  rv = ScriptLoader::ConvertToUTF16(httpChannel, aString, aLen, u"UTF-8"_ns,
+                                    nullptr, buffer, len);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1089,8 +1085,8 @@ CompareCache::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
   char16_t* buffer = nullptr;
   size_t len = 0;
 
-  nsresult rv = ScriptLoader::ConvertToUTF16(
-      nullptr, aString, aLen, NS_LITERAL_STRING("UTF-8"), nullptr, buffer, len);
+  nsresult rv = ScriptLoader::ConvertToUTF16(nullptr, aString, aLen,
+                                             u"UTF-8"_ns, nullptr, buffer, len);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Finish(rv, false);
     return rv;

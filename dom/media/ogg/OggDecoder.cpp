@@ -68,14 +68,12 @@ nsTArray<UniquePtr<TrackInfo>> OggDecoder::GetTracksInfo(
         codec.EqualsLiteral("flac")) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("audio/") + NS_ConvertUTF16toUTF8(codec),
-              aType));
+              "audio/"_ns + NS_ConvertUTF16toUTF8(codec), aType));
     } else {
       MOZ_ASSERT(codec.EqualsLiteral("theora"));
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("video/") + NS_ConvertUTF16toUTF8(codec),
-              aType));
+              "video/"_ns + NS_ConvertUTF16toUTF8(codec), aType));
     }
   }
   return tracks;

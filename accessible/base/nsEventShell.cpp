@@ -61,8 +61,7 @@ void nsEventShell::GetEventAttributes(nsINode* aNode,
   if (aNode != sEventTargetNode) return;
 
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::eventFromInput,
-                         sEventFromUserInput ? NS_LITERAL_STRING("true")
-                                             : NS_LITERAL_STRING("false"));
+                         sEventFromUserInput ? u"true"_ns : u"false"_ns);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

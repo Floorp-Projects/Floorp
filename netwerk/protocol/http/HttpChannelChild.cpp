@@ -3678,9 +3678,8 @@ nsresult HttpChannelChild::SetReferrerHeader(const nsACString& aReferrer,
   }
 
   // remove old referrer if any
-  mClientSetRequestHeaders.RemoveElementsBy([](const auto& header) {
-    return NS_LITERAL_CSTRING("Referer").Equals(header.mHeader);
-  });
+  mClientSetRequestHeaders.RemoveElementsBy(
+      [](const auto& header) { return "Referer"_ns.Equals(header.mHeader); });
 
   return HttpBaseChannel::SetReferrerHeader(aReferrer, aRespectBeforeConnect);
 }
@@ -3955,9 +3954,8 @@ HttpChannelChild::LogMimeTypeMismatch(const nsACString& aMessageName,
   params.AppendElement(aContentType);
   nsContentUtils::ReportToConsole(
       aWarning ? nsIScriptError::warningFlag : nsIScriptError::errorFlag,
-      NS_LITERAL_CSTRING("MIMEMISMATCH"), doc,
-      nsContentUtils::eSECURITY_PROPERTIES, nsCString(aMessageName).get(),
-      params);
+      "MIMEMISMATCH"_ns, doc, nsContentUtils::eSECURITY_PROPERTIES,
+      nsCString(aMessageName).get(), params);
   return NS_OK;
 }
 

@@ -52,7 +52,7 @@ class nsSVGGradientFrame : public nsSVGPaintServerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGGradient"), aResult);
+    return MakeFrameName(u"SVGGradient"_ns, aResult);
   }
 #endif  // DEBUG
 
@@ -131,7 +131,7 @@ class nsSVGLinearGradientFrame final : public nsSVGGradientFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGLinearGradient"), aResult);
+    return MakeFrameName(u"SVGLinearGradient"_ns, aResult);
   }
 #endif  // DEBUG
 
@@ -171,7 +171,7 @@ class nsSVGRadialGradientFrame final : public nsSVGGradientFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGRadialGradient"), aResult);
+    return MakeFrameName(u"SVGRadialGradient"_ns, aResult);
   }
 #endif  // DEBUG
 

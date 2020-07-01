@@ -90,7 +90,7 @@ void HTMLSelectListAccessible::SetCurrentItem(const Accessible* aItem) {
   if (!aItem->GetContent()->IsElement()) return;
 
   aItem->GetContent()->AsElement()->SetAttr(
-      kNameSpaceID_None, nsGkAtoms::selected, NS_LITERAL_STRING("true"), true);
+      kNameSpaceID_None, nsGkAtoms::selected, u"true"_ns, true);
 }
 
 bool HTMLSelectListAccessible::IsAcceptableChild(nsIContent* aEl) const {

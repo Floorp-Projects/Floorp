@@ -824,7 +824,7 @@ std::unique_ptr<NrSocketProxyConfig> PeerConnectionMedia::GetProxyConfig()
     return nullptr;
   }
 
-  nsCString alpn = NS_LITERAL_CSTRING("webrtc,c-webrtc");
+  nsCString alpn = "webrtc,c-webrtc"_ns;
   auto browserChild = BrowserChild::GetFrom(GetWindow());
   if (!browserChild) {
     // Android doesn't have browser child apparently...

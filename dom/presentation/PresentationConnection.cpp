@@ -200,7 +200,7 @@ void PresentationConnection::Send(const nsAString& aData, ErrorResult& aRv) {
       do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
     AsyncCloseConnectionWithErrorMsg(
-        NS_LITERAL_STRING("Unable to send message due to an internal error."));
+        u"Unable to send message due to an internal error."_ns);
     return;
   }
 
@@ -209,9 +209,8 @@ void PresentationConnection::Send(const nsAString& aData, ErrorResult& aRv) {
     const uint32_t kMaxMessageLength = 256;
     nsAutoString data(Substring(aData, 0, kMaxMessageLength));
 
-    AsyncCloseConnectionWithErrorMsg(
-        NS_LITERAL_STRING("Unable to send message: \"") + data +
-        NS_LITERAL_STRING("\""));
+    AsyncCloseConnectionWithErrorMsg(u"Unable to send message: \""_ns + data +
+                                     u"\""_ns);
   }
 }
 
@@ -229,14 +228,14 @@ void PresentationConnection::Send(Blob& aData, ErrorResult& aRv) {
       do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
     AsyncCloseConnectionWithErrorMsg(
-        NS_LITERAL_STRING("Unable to send message due to an internal error."));
+        u"Unable to send message due to an internal error."_ns);
     return;
   }
 
   nsresult rv = service->SendSessionBlob(mId, mRole, &aData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     AsyncCloseConnectionWithErrorMsg(
-        NS_LITERAL_STRING("Unable to send binary message for Blob message."));
+        u"Unable to send binary message for Blob message."_ns);
   }
 }
 
@@ -254,7 +253,7 @@ void PresentationConnection::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
       do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
     AsyncCloseConnectionWithErrorMsg(
-        NS_LITERAL_STRING("Unable to send message due to an internal error."));
+        u"Unable to send message due to an internal error."_ns);
     return;
   }
 
@@ -268,8 +267,8 @@ void PresentationConnection::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
 
   nsresult rv = service->SendSessionBinaryMsg(mId, mRole, msgString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AsyncCloseConnectionWithErrorMsg(NS_LITERAL_STRING(
-        "Unable to send binary message for ArrayBuffer message."));
+    AsyncCloseConnectionWithErrorMsg(nsLiteralString(
+        u"Unable to send binary message for ArrayBuffer message."));
   }
 }
 
@@ -288,7 +287,7 @@ void PresentationConnection::Send(const ArrayBufferView& aData,
       do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
     AsyncCloseConnectionWithErrorMsg(
-        NS_LITERAL_STRING("Unable to send message due to an internal error."));
+        u"Unable to send message due to an internal error."_ns);
     return;
   }
 
@@ -302,8 +301,8 @@ void PresentationConnection::Send(const ArrayBufferView& aData,
 
   nsresult rv = service->SendSessionBinaryMsg(mId, mRole, msgString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AsyncCloseConnectionWithErrorMsg(NS_LITERAL_STRING(
-        "Unable to send binary message for ArrayBufferView message."));
+    AsyncCloseConnectionWithErrorMsg(nsLiteralString(
+        u"Unable to send binary message for ArrayBufferView message."));
   }
 }
 
@@ -415,8 +414,8 @@ nsresult PresentationConnection::ProcessStateChanged(nsresult aReason) {
         return NS_OK;
       }
 
-      RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-          this, NS_LITERAL_STRING("connect"), CanBubble::eNo);
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+          new AsyncEventDispatcher(this, u"connect"_ns, CanBubble::eNo);
       return asyncDispatcher->PostDOMEvent();
     }
     case PresentationConnectionState::Closed: {
@@ -445,8 +444,8 @@ nsresult PresentationConnection::ProcessStateChanged(nsresult aReason) {
     case PresentationConnectionState::Terminated: {
       if (!nsContentUtils::ShouldResistFingerprinting()) {
         // Ensure onterminate event is fired.
-        RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-            this, NS_LITERAL_STRING("terminate"), CanBubble::eNo);
+        RefPtr<AsyncEventDispatcher> asyncDispatcher =
+            new AsyncEventDispatcher(this, u"terminate"_ns, CanBubble::eNo);
         Unused << NS_WARN_IF(NS_FAILED(asyncDispatcher->PostDOMEvent()));
       }
 
@@ -486,8 +485,7 @@ PresentationConnection::NotifyMessage(const nsAString& aSessionId,
   }
 
   if (NS_WARN_IF(NS_FAILED(DoReceiveMessage(aData, aIsBinary)))) {
-    AsyncCloseConnectionWithErrorMsg(
-        NS_LITERAL_STRING("Unable to receive a message."));
+    AsyncCloseConnectionWithErrorMsg(u"Unable to receive a message."_ns);
     return NS_ERROR_FAILURE;
   }
 
@@ -557,8 +555,7 @@ nsresult PresentationConnection::DispatchConnectionCloseEvent(
   init.mMessage = aMessage;
 
   RefPtr<PresentationConnectionCloseEvent> closedEvent =
-      PresentationConnectionCloseEvent::Constructor(
-          this, NS_LITERAL_STRING("close"), init);
+      PresentationConnectionCloseEvent::Constructor(this, u"close"_ns, init);
   closedEvent->SetTrusted(true);
 
   if (aDispatchNow) {
@@ -588,10 +585,9 @@ nsresult PresentationConnection::DispatchMessageEvent(
 
   RefPtr<MessageEvent> messageEvent = new MessageEvent(this, nullptr, nullptr);
 
-  messageEvent->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
-                                 CanBubble::eNo, Cancelable::eNo, aData, origin,
-                                 EmptyString(), nullptr,
-                                 Sequence<OwningNonNull<MessagePort>>());
+  messageEvent->InitMessageEvent(
+      nullptr, u"message"_ns, CanBubble::eNo, Cancelable::eNo, aData, origin,
+      EmptyString(), nullptr, Sequence<OwningNonNull<MessagePort>>());
   messageEvent->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =

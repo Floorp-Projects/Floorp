@@ -91,7 +91,7 @@ SafeRefPtr<WorkerThread> WorkerThread::Create(
     const WorkerThreadFriendKey& /* aKey */) {
   SafeRefPtr<WorkerThread> thread =
       MakeSafeRefPtr<WorkerThread>(ConstructorKey());
-  if (NS_FAILED(thread->Init(NS_LITERAL_CSTRING("DOM Worker")))) {
+  if (NS_FAILED(thread->Init("DOM Worker"_ns))) {
     NS_WARNING("Failed to create new thread!");
     return nullptr;
   }

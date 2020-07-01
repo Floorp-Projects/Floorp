@@ -71,7 +71,7 @@ static PRFileDesc* OpenTCPSocket(int32_t family, nsIProxyInfo* proxy) {
 static PRFileDesc* OpenTCPSocket(int32_t family, nsIProxyInfo* proxy) {
   nsAutoCString proxyHost;
   proxy->GetHost(proxyHost);
-  if (StringBeginsWith(proxyHost, NS_LITERAL_CSTRING("file://"))) {
+  if (StringBeginsWith(proxyHost, "file://"_ns)) {
     family = AF_LOCAL;
   }
 

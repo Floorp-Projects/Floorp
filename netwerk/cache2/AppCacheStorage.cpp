@@ -70,7 +70,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(
   // there is just a single session for an appcache version (identified
   // by the client id).
   if (LoadInfo()->IsAnonymous()) {
-    cacheKey = NS_LITERAL_CSTRING("anon&") + cacheKey;
+    cacheKey = "anon&"_ns + cacheKey;
   }
 
   nsAutoCString scheme;

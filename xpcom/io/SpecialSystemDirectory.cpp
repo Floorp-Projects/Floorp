@@ -377,7 +377,7 @@ static nsresult GetUnixXDGUserDirectory(SystemDirectories aSystemDirectory,
       return rv;
     }
 
-    rv = file->AppendNative(NS_LITERAL_CSTRING("Desktop"));
+    rv = file->AppendNative("Desktop"_ns);
   } else {
     // no fallback for the other XDG dirs
     rv = NS_ERROR_FAILURE;

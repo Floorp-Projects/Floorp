@@ -73,9 +73,7 @@ class OmxDataDecoder : public MediaDataDecoder,
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
 
-  nsCString GetDescriptionName() const override {
-    return NS_LITERAL_CSTRING("omx decoder");
-  }
+  nsCString GetDescriptionName() const override { return "omx decoder"_ns; }
 
   ConversionRequired NeedsConversion() const override {
     return ConversionRequired::kNeedAnnexB;

@@ -24,8 +24,7 @@ namespace dom {
 using namespace mozilla;
 using mozilla::dom::CreateECParamsForCurve;
 
-const nsCString U2FSoftTokenManager::mSecretNickname =
-    NS_LITERAL_CSTRING("U2F_NSSTOKEN");
+const nsCString U2FSoftTokenManager::mSecretNickname = "U2F_NSSTOKEN"_ns;
 
 namespace {
 NS_NAMED_LITERAL_CSTRING(kAttestCertSubjectName, "CN=Firefox U2F Soft Token");

@@ -70,7 +70,7 @@ class nsColumnSetFrame final : public nsContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("ColumnSet"), aResult);
+    return MakeFrameName(u"ColumnSet"_ns, aResult);
   }
 #endif
 

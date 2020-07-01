@@ -258,11 +258,11 @@ bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
     nsAString::const_iterator start, pos, end;
     start = str->BeginReading(pos);
     str->EndReading(end);
-    if (FindInReadable(NS_LITERAL_STRING("dddd"), pos, end)) {
+    if (FindInReadable(u"dddd"_ns, pos, end)) {
       str->ReplaceLiteral(pos - start, 4, u"EEEE");
     } else {
       pos = start;
-      if (FindInReadable(NS_LITERAL_STRING("ddd"), pos, end)) {
+      if (FindInReadable(u"ddd"_ns, pos, end)) {
         str->ReplaceLiteral(pos - start, 3, u"EEE");
       }
     }
@@ -285,7 +285,7 @@ bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
       nsAString::const_iterator start, pos, end;
       start = aRetVal.BeginReading(pos);
       aRetVal.EndReading(end);
-      if (FindInReadable(NS_LITERAL_STRING("{1}"), pos, end)) {
+      if (FindInReadable(u"{1}"_ns, pos, end)) {
         aRetVal.Replace(pos - start, 3, tmpStr);
       }
     }
@@ -325,7 +325,7 @@ bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
       nsAString::const_iterator start, pos, end;
       start = aRetVal.BeginReading(pos);
       aRetVal.EndReading(end);
-      if (FindInReadable(NS_LITERAL_STRING("{0}"), pos, end)) {
+      if (FindInReadable(u"{0}"_ns, pos, end)) {
         aRetVal.Replace(pos - start, 3, tmpStr);
       }
     }

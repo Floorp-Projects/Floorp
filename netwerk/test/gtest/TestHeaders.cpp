@@ -8,10 +8,9 @@ TEST(TestHeaders, DuplicateHSTS)
   // effective value is the value of the first item. It is not merged as other
   // headers are.
   mozilla::net::nsHttpHeaderArray headers;
-  nsresult rv =
-      headers.SetHeaderFromNet(mozilla::net::nsHttp::Strict_Transport_Security,
-                               NS_LITERAL_CSTRING("Strict_Transport_Security"),
-                               NS_LITERAL_CSTRING("max-age=360"), true);
+  nsresult rv = headers.SetHeaderFromNet(
+      mozilla::net::nsHttp::Strict_Transport_Security,
+      "Strict_Transport_Security"_ns, "max-age=360"_ns, true);
   ASSERT_EQ(rv, NS_OK);
 
   nsAutoCString h;
@@ -20,8 +19,8 @@ TEST(TestHeaders, DuplicateHSTS)
   ASSERT_EQ(h.get(), "max-age=360");
 
   rv = headers.SetHeaderFromNet(mozilla::net::nsHttp::Strict_Transport_Security,
-                                NS_LITERAL_CSTRING("Strict_Transport_Security"),
-                                NS_LITERAL_CSTRING("max-age=720"), true);
+                                "Strict_Transport_Security"_ns,
+                                "max-age=720"_ns, true);
   ASSERT_EQ(rv, NS_OK);
 
   rv = headers.GetHeader(mozilla::net::nsHttp::Strict_Transport_Security, h);

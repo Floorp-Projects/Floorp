@@ -131,7 +131,7 @@ void gfxPlatformGtk::InitPlatformGPUProcessPrefs() {
     FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
     gpuProc.ForceDisable(FeatureStatus::Blocked,
                          "Wayland does not work in the GPU process",
-                         NS_LITERAL_CSTRING("FEATURE_FAILURE_WAYLAND"));
+                         "FEATURE_FAILURE_WAYLAND"_ns);
   }
 #endif
 }

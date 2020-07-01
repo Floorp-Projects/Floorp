@@ -328,8 +328,8 @@ void nsExpatDriver::HandleStartElementForSystemPrincipal(
     error.AppendLiteral("> created from entity value.");
 
     nsContentUtils::ReportToConsoleNonLocalized(
-        error, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XML Document"),
-        doc, nullptr, EmptyString(), lineNumber, colNumber);
+        error, nsIScriptError::warningFlag, "XML Document"_ns, doc, nullptr,
+        EmptyString(), lineNumber, colNumber);
   }
 }
 
@@ -694,7 +694,7 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
   NS_ENSURE_SUCCESS(rv, rv);
   CopyUTF8toUTF16(absURL, aAbsURL);
 
-  channel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
+  channel->SetContentType("application/xml"_ns);
   return channel->Open(aStream);
 }
 

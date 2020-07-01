@@ -28,9 +28,9 @@ TEST(ImportScanner, Simple)
       "@import \"bazz)\"");
 
   ASSERT_EQ(urls.Length(), 3u);
-  ASSERT_EQ(urls[0], NS_LITERAL_STRING("bar"));
-  ASSERT_EQ(urls[1], NS_LITERAL_STRING("baz"));
-  ASSERT_EQ(urls[2], NS_LITERAL_STRING("bazz)"));
+  ASSERT_EQ(urls[0], u"bar"_ns);
+  ASSERT_EQ(urls[1], u"baz"_ns);
+  ASSERT_EQ(urls[2], u"bazz)"_ns);
 }
 
 TEST(ImportScanner, UrlWithQuotes)
@@ -44,9 +44,9 @@ TEST(ImportScanner, UrlWithQuotes)
       "@import\turL( 'bazz' ); ");
 
   ASSERT_EQ(urls.Length(), 3u);
-  ASSERT_EQ(urls[0], NS_LITERAL_STRING("bar"));
-  ASSERT_EQ(urls[1], NS_LITERAL_STRING("baz"));
-  ASSERT_EQ(urls[2], NS_LITERAL_STRING("bazz"));
+  ASSERT_EQ(urls[0], u"bar"_ns);
+  ASSERT_EQ(urls[1], u"baz"_ns);
+  ASSERT_EQ(urls[2], u"bazz"_ns);
 }
 
 TEST(ImportScanner, MediaIsIgnored)
@@ -59,7 +59,7 @@ TEST(ImportScanner, MediaIsIgnored)
       "@import\turL( bazz ) (max-width: 100px);");
 
   ASSERT_EQ(urls.Length(), 3u);
-  ASSERT_EQ(urls[0], NS_LITERAL_STRING("bar"));
-  ASSERT_EQ(urls[1], NS_LITERAL_STRING("baz"));
-  ASSERT_EQ(urls[2], NS_LITERAL_STRING("bazz"));
+  ASSERT_EQ(urls[0], u"bar"_ns);
+  ASSERT_EQ(urls[1], u"baz"_ns);
+  ASSERT_EQ(urls[2], u"bazz"_ns);
 }

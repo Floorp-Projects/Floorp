@@ -323,8 +323,7 @@ nsresult GetFailedProfileLockFile(nsIFile** aFile, nsIFile* aProfileDir) {
   nsresult rv = aProfileDir->Clone(aFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  (*aFile)->AppendNative(
-      NS_LITERAL_CSTRING("Telemetry.FailedProfileLocks.txt"));
+  (*aFile)->AppendNative("Telemetry.FailedProfileLocks.txt"_ns);
   return NS_OK;
 }
 
@@ -414,7 +413,7 @@ static PathCharPtr GetShutdownTimeFileName() {
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
     if (!mozFile) return nullptr;
 
-    mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
+    mozFile->AppendNative("Telemetry.ShutdownTime.txt"_ns);
 
     gRecordedShutdownTimeFileName = NS_xstrdup(mozFile->NativePath().get());
   }
@@ -1215,16 +1214,14 @@ static void internal_initGlean() {
   }
 
   nsAutoCString osVersion;
-  rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("version"),
-                                          osVersion);
+  rv = infoService->GetPropertyAsACString(u"version"_ns, osVersion);
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't get OS version. FOG will not be initialized.");
     return;
   }
 
   nsAutoCString architecture;
-  rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("arch"),
-                                          architecture);
+  rv = infoService->GetPropertyAsACString(u"arch"_ns, architecture);
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't get architecture. FOG will not be initialized.");
     return;
@@ -2136,7 +2133,7 @@ void SetProfileDir(nsIFile* aProfD) {
   if (NS_FAILED(rv)) {
     return;
   }
-  sTelemetryIOObserver->AddPath(profDirPath, NS_LITERAL_STRING("{profile}"));
+  sTelemetryIOObserver->AddPath(profDirPath, u"{profile}"_ns);
 }
 
 // Scalar API C++ Endpoints

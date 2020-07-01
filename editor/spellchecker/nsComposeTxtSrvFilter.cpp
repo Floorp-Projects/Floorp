@@ -47,9 +47,9 @@ bool nsComposeTxtSrvFilter::Skip(nsINode* aNode) const {
   }
 
   if (aNode->IsHTMLElement(nsGkAtoms::table)) {
-    return aNode->AsElement()->AttrValueIs(
-        kNameSpaceID_None, nsGkAtoms::_class,
-        NS_LITERAL_STRING("moz-email-headers-table"), eCaseMatters);
+    return aNode->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_class,
+                                           u"moz-email-headers-table"_ns,
+                                           eCaseMatters);
   }
 
   return false;

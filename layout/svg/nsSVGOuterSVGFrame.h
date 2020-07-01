@@ -81,7 +81,7 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGOuterSVG"), aResult);
+    return MakeFrameName(u"SVGOuterSVG"_ns, aResult);
   }
 #endif
 
@@ -245,7 +245,7 @@ class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGOuterSVGAnonChild"), aResult);
+    return MakeFrameName(u"SVGOuterSVGAnonChild"_ns, aResult);
   }
 #endif
 

@@ -82,26 +82,25 @@ nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
     if (IsAACCodecString(codec)) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
+              "audio/mp4a-latm"_ns, aType));
       continue;
     }
     if (codec.EqualsLiteral("mp3")) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("audio/mpeg"), aType));
+              "audio/mpeg"_ns, aType));
       continue;
     }
     if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("flac")) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("audio/") + NS_ConvertUTF16toUTF8(codec),
-              aType));
+              "audio/"_ns + NS_ConvertUTF16toUTF8(codec), aType));
       continue;
     }
     if (IsVP9CodecString(codec)) {
       auto trackInfo =
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("video/vp9"), aType);
+              "video/vp9"_ns, aType);
       uint8_t profile = 0;
       uint8_t level = 0;
       uint8_t bitDepth = 0;
@@ -116,14 +115,14 @@ nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
     if (IsAV1CodecString(codec)) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("video/av1"), aType));
+              "video/av1"_ns, aType));
       continue;
     }
 #endif
     if (isVideo && IsWhitelistedH264Codec(codec)) {
       auto trackInfo =
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("video/avc"), aType);
+              "video/avc"_ns, aType);
       uint8_t profile = 0, constraint = 0, level = 0;
       MOZ_ALWAYS_TRUE(
           ExtractH264CodecDetails(codec, profile, constraint, level));
@@ -161,11 +160,11 @@ bool MP4Decoder::IsSupportedType(const MediaContainerType& aType,
         aType.Type() == MEDIAMIMETYPE("audio/x-m4a")) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
+              "audio/mp4a-latm"_ns, aType));
     } else {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              NS_LITERAL_CSTRING("video/avc"), aType));
+              "video/avc"_ns, aType));
     }
   }
 

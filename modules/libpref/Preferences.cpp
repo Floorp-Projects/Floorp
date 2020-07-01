@@ -2605,8 +2605,7 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt) {
   nsAutoCString branchName(pref.get());
 
   // Add a trailing '.' if it doesn't already have one.
-  if (branchName.Length() > 1 &&
-      !StringEndsWith(branchName, NS_LITERAL_CSTRING("."))) {
+  if (branchName.Length() > 1 && !StringEndsWith(branchName, "."_ns)) {
     branchName += '.';
   }
 
@@ -3268,9 +3267,9 @@ PreferenceServiceReporter::CollectReports(
     aHandleReport->Callback(
         /* process = */ EmptyCString(), suspectPath, KIND_OTHER, UNITS_COUNT,
         totalReferentCount,
-        NS_LITERAL_CSTRING("A preference with a suspiciously large number "
-                           "referents (symptom of a "
-                           "leak)."),
+        nsLiteralCString("A preference with a suspiciously large number "
+                         "referents (symptom of a "
+                         "leak)."),
         aData);
   }
 
@@ -4028,7 +4027,7 @@ void Preferences::ReadUserOverridePrefs() {
     return;
   }
 
-  aFile->AppendNative(NS_LITERAL_CSTRING("user.js"));
+  aFile->AppendNative("user.js"_ns);
   rv = openPrefFile(aFile, PrefValueKind::User);
   if (rv != NS_ERROR_FILE_NOT_FOUND) {
     // If the file exists and was at least partially read, record that in
@@ -4200,7 +4199,7 @@ static nsresult openPrefFile(nsIFile* aFile, PrefValueKind aKind) {
 
 static nsresult parsePrefData(const nsCString& aData, PrefValueKind aKind) {
   TimeStamp startTime = TimeStamp::Now();
-  const nsCString path = NS_LITERAL_CSTRING("$MOZ_DEFAULT_PREFS");
+  const nsCString path = "$MOZ_DEFAULT_PREFS"_ns;
 
   Parser parser;
   if (!parser.Parse(path, aKind, path.get(), startTime, aData)) {
@@ -4257,7 +4256,7 @@ static nsresult pref_LoadPrefsInDir(nsIFile* aDir,
         "Failure in default prefs: directory enumerator returned empty file?");
 
     // Skip non-js files.
-    if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".js"),
+    if (StringEndsWith(leafName, ".js"_ns,
                        nsCaseInsensitiveCStringComparator)) {
       bool shouldParse = true;
 
@@ -4549,7 +4548,7 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
     rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greprefsFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = greprefsFile->AppendNative(NS_LITERAL_CSTRING("greprefs.js"));
+    rv = greprefsFile->AppendNative("greprefs.js"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = openPrefFile(greprefsFile, PrefValueKind::Default);
@@ -5366,7 +5365,7 @@ static void InitAll() {
   // which prevents automatic int-to-float coercion.
 #define NEVER_PREF(name, cpp_type, value) InitPref_##cpp_type(name, value);
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, value) \
-  InitAlwaysPref(NS_LITERAL_CSTRING(name), &sMirror_##full_id, value);
+  InitAlwaysPref(nsLiteralCString(name), &sMirror_##full_id, value);
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
   InitPref_##cpp_type(name, value);
 #include "mozilla/StaticPrefListAll.h"
@@ -5384,7 +5383,7 @@ static void StartObservingAlwaysPrefs() {
   // since the call to InitAll().
 #define NEVER_PREF(name, cpp_type, value)
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, value) \
-  AddMirror(&sMirror_##full_id, NS_LITERAL_CSTRING(name), sMirror_##full_id);
+  AddMirror(&sMirror_##full_id, nsLiteralCString(name), sMirror_##full_id);
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value)
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF

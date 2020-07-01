@@ -100,7 +100,7 @@ void XULFrameElement::LoadSrc() {
       return;
     }
 
-    (new AsyncEventDispatcher(this, NS_LITERAL_STRING("XULFrameLoaderCreated"),
+    (new AsyncEventDispatcher(this, u"XULFrameLoaderCreated"_ns,
                               CanBubble::eYes))
         ->RunDOMEventWhenSafe();
   }

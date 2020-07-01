@@ -282,7 +282,7 @@ static bool IsSystemOleAcc(nsCOMPtr<nsIFile>& aFile) {
     return false;
   }
 
-  rv = oleAcc->Append(NS_LITERAL_STRING("oleacc.dll"));
+  rv = oleAcc->Append(u"oleacc.dll"_ns);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -369,8 +369,7 @@ static bool UseIAccessibleProxyStub() {
   // IAccessible configuration in the computer's registry. Let's annotate this
   // so that we can easily determine this condition during crash analysis.
   CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IAccessibleConfig,
-      NS_LITERAL_CSTRING("NoSystemTypeLibOrPS"));
+      CrashReporter::Annotation::IAccessibleConfig, "NoSystemTypeLibOrPS"_ns);
   return false;
 }
 

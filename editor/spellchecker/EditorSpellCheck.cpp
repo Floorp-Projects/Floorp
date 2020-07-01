@@ -65,7 +65,7 @@ class UpdateDictionaryHolder {
   }
 };
 
-#define CPS_PREF_NAME NS_LITERAL_STRING("spellcheck.lang")
+#define CPS_PREF_NAME u"spellcheck.lang"_ns
 
 /**
  * Gets the URI of aEditor's document.

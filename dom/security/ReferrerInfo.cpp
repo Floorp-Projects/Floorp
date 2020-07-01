@@ -333,7 +333,7 @@ nsresult ReferrerInfo::HandleUserXOriginSendingPolicy(nsIURI* aURI,
   // Send an empty referrer if xorigin and leaving a .onion domain.
   if (StaticPrefs::network_http_referer_hideOnionSource() &&
       !uriHost.Equals(referrerHost) &&
-      StringEndsWith(referrerHost, NS_LITERAL_CSTRING(".onion"))) {
+      StringEndsWith(referrerHost, ".onion"_ns)) {
     return NS_OK;
   }
 
@@ -411,7 +411,7 @@ bool ReferrerInfo::ShouldSetNullOriginHeader(net::HttpBaseChannel* aChannel,
   if (StaticPrefs::network_http_referer_hideOnionSource()) {
     nsAutoCString host;
     if (NS_SUCCEEDED(aOriginURI->GetAsciiHost(host)) &&
-        StringEndsWith(host, NS_LITERAL_CSTRING(".onion"))) {
+        StringEndsWith(host, ".onion"_ns)) {
       return ReferrerInfo::IsCrossOriginRequest(aChannel);
     }
   }
@@ -702,8 +702,7 @@ void ReferrerInfo::LogMessageToConsole(
   }
 
   rv = nsContentUtils::ReportToConsoleByWindowID(
-      localizedMsg, nsIScriptError::infoFlag, NS_LITERAL_CSTRING("Security"),
-      windowID, uri);
+      localizedMsg, nsIScriptError::infoFlag, "Security"_ns, windowID, uri);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 

@@ -41,17 +41,17 @@ StaticRefPtr<UrlClassifierFeatureSocialTrackingAnnotation>
 UrlClassifierFeatureSocialTrackingAnnotation::
     UrlClassifierFeatureSocialTrackingAnnotation()
     : UrlClassifierFeatureBase(
-          NS_LITERAL_CSTRING(SOCIALTRACKING_ANNOTATION_FEATURE_NAME),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLACKLIST),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_WHITELIST),
-          NS_LITERAL_CSTRING(
+          nsLiteralCString(SOCIALTRACKING_ANNOTATION_FEATURE_NAME),
+          nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLACKLIST),
+          nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_WHITELIST),
+          nsLiteralCString(
               URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLACKLIST_TEST_ENTRIES),
-          NS_LITERAL_CSTRING(
+          nsLiteralCString(
               URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_WHITELIST_TEST_ENTRIES),
-          NS_LITERAL_CSTRING(TABLE_SOCIALTRACKING_ANNOTATION_BLACKLIST_PREF),
-          NS_LITERAL_CSTRING(TABLE_SOCIALTRACKING_ANNOTATION_WHITELIST_PREF),
-          NS_LITERAL_CSTRING(
-              URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_SKIP_URLS)) {}
+          nsLiteralCString(TABLE_SOCIALTRACKING_ANNOTATION_BLACKLIST_PREF),
+          nsLiteralCString(TABLE_SOCIALTRACKING_ANNOTATION_WHITELIST_PREF),
+          nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_SKIP_URLS)) {
+}
 
 /* static */ const char* UrlClassifierFeatureSocialTrackingAnnotation::Name() {
   return SOCIALTRACKING_ANNOTATION_FEATURE_NAME;
@@ -134,13 +134,13 @@ UrlClassifierFeatureSocialTrackingAnnotation::ProcessChannel(
 
   static std::vector<UrlClassifierCommon::ClassificationData>
       sClassificationData = {
-          {NS_LITERAL_CSTRING("social-tracking-protection-facebook-"),
+          {"social-tracking-protection-facebook-"_ns,
            nsIClassifiedChannel::ClassificationFlags::
                CLASSIFIED_SOCIALTRACKING_FACEBOOK},
-          {NS_LITERAL_CSTRING("social-tracking-protection-linkedin-"),
+          {"social-tracking-protection-linkedin-"_ns,
            nsIClassifiedChannel::ClassificationFlags::
                CLASSIFIED_SOCIALTRACKING_LINKEDIN},
-          {NS_LITERAL_CSTRING("social-tracking-protection-twitter-"),
+          {"social-tracking-protection-twitter-"_ns,
            nsIClassifiedChannel::ClassificationFlags::
                CLASSIFIED_SOCIALTRACKING_TWITTER},
       };

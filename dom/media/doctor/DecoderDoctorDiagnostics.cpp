@@ -364,9 +364,9 @@ static void ReportToConsole(dom::Document* aDocument,
           ? ""
           : NS_ConvertUTF16toUTF8(aParams[0]).get(),
       aParams.Length() < 2 ? "" : ", ...");
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Media"), aDocument,
-      nsContentUtils::eDOM_PROPERTIES, aConsoleStringId, aParams);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Media"_ns,
+                                  aDocument, nsContentUtils::eDOM_PROPERTIES,
+                                  aConsoleStringId, aParams);
 }
 
 static bool AllowNotification(
@@ -410,13 +410,13 @@ static bool AllowDecodeIssue(const MediaResult& aDecodeIssue,
   return StringListContains(filter, decodeIssueName);
 }
 
-static void ReportAnalysis(
-    dom::Document* aDocument,
-    const NotificationAndReportStringId& aNotification, bool aIsSolved,
-    const nsAString& aFormats = NS_LITERAL_STRING(""),
-    const MediaResult& aDecodeIssue = NS_OK, bool aDecodeIssueIsError = true,
-    const nsACString& aDocURL = NS_LITERAL_CSTRING(""),
-    const nsAString& aResourceURL = NS_LITERAL_STRING("")) {
+static void ReportAnalysis(dom::Document* aDocument,
+                           const NotificationAndReportStringId& aNotification,
+                           bool aIsSolved, const nsAString& aFormats = u""_ns,
+                           const MediaResult& aDecodeIssue = NS_OK,
+                           bool aDecodeIssueIsError = true,
+                           const nsACString& aDocURL = ""_ns,
+                           const nsAString& aResourceURL = u""_ns) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aDocument) {
@@ -478,7 +478,7 @@ static nsString CleanItemForFormatsList(const nsAString& aItem) {
 
 static void AppendToFormatsList(nsAString& aList, const nsAString& aItem) {
   if (!aList.IsEmpty()) {
-    aList += NS_LITERAL_STRING(", ");
+    aList += u", "_ns;
   }
   aList += CleanItemForFormatsList(aItem);
 }
@@ -728,7 +728,7 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
         "DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - "
         "Decode error: %s",
         this, mDocument, firstDecodeError->Description().get());
-    ReportAnalysis(mDocument, sMediaDecodeError, false, NS_LITERAL_STRING(""),
+    ReportAnalysis(mDocument, sMediaDecodeError, false, u""_ns,
                    *firstDecodeError,
                    true,  // aDecodeIssueIsError=true
                    mDocument->GetDocumentURI()->GetSpecOrDefault(),
@@ -741,7 +741,7 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
         "DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - "
         "Decode warning: %s",
         this, mDocument, firstDecodeWarning->Description().get());
-    ReportAnalysis(mDocument, sMediaDecodeWarning, false, NS_LITERAL_STRING(""),
+    ReportAnalysis(mDocument, sMediaDecodeWarning, false, u""_ns,
                    *firstDecodeWarning,
                    false,  // aDecodeIssueIsError=false
                    mDocument->GetDocumentURI()->GetSpecOrDefault(),
@@ -970,15 +970,13 @@ void DecoderDoctorDiagnostics::StoreEvent(dom::Document* aDocument,
             "DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics() - "
             "unable to initialize PulseAudio",
             this, aDocument);
-        ReportAnalysis(aDocument, sCannotInitializePulseAudio, false,
-                       NS_LITERAL_STRING("*"));
+        ReportAnalysis(aDocument, sCannotInitializePulseAudio, false, u"*"_ns);
       } else if (aEvent.mResult == NS_OK) {
         DD_INFO(
             "DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics() - now "
             "able to initialize PulseAudio",
             this, aDocument);
-        ReportAnalysis(aDocument, sCannotInitializePulseAudio, true,
-                       NS_LITERAL_STRING("*"));
+        ReportAnalysis(aDocument, sCannotInitializePulseAudio, true, u"*"_ns);
       }
       break;
   }

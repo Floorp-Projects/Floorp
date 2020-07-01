@@ -38,7 +38,7 @@ class nsGridRowLeafFrame : public nsBoxFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("nsGridRowLeaf"), aResult);
+    return MakeFrameName(u"nsGridRowLeaf"_ns, aResult);
   }
 #endif
 

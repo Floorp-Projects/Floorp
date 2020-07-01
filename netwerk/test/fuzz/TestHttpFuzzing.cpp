@@ -190,7 +190,7 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
     nsCOMPtr<nsIHttpChannel> gHttpChannel;
 
     gHttpChannel = do_QueryInterface(channel);
-    rv = gHttpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
+    rv = gHttpChannel->SetRequestMethod("GET"_ns);
     if (NS_FAILED(rv)) {
       MOZ_CRASH("SetRequestMethod on gHttpChannel failed.");
     }

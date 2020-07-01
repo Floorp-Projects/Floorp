@@ -263,7 +263,7 @@ void Yield() { eventInProgress = false; }
 TEST(TestFetchPreloader, CacheNoneBeforeConsume)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -280,9 +280,9 @@ TEST(TestFetchPreloader, CacheNoneBeforeConsume)
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
   EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
@@ -301,7 +301,7 @@ TEST(TestFetchPreloader, CacheNoneBeforeConsume)
 TEST(TestFetchPreloader, CacheStartBeforeConsume)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -322,9 +322,9 @@ TEST(TestFetchPreloader, CacheStartBeforeConsume)
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
     EXPECT_TRUE(listener->mOnStart);
 
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
     EXPECT_TRUE(listener->mOnData.EqualsLiteral("onetwothree"));
 
     EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
@@ -341,7 +341,7 @@ TEST(TestFetchPreloader, CacheStartBeforeConsume)
 TEST(TestFetchPreloader, CachePartOfDataBeforeConsume)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -354,8 +354,8 @@ TEST(TestFetchPreloader, CachePartOfDataBeforeConsume)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
 
   RefPtr<FakeListener> listener = new FakeListener();
   EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
@@ -364,7 +364,7 @@ TEST(TestFetchPreloader, CachePartOfDataBeforeConsume)
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
     EXPECT_TRUE(listener->mOnStart);
 
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
     EXPECT_TRUE(listener->mOnData.EqualsLiteral("onetwothree"));
 
     EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
@@ -381,7 +381,7 @@ TEST(TestFetchPreloader, CachePartOfDataBeforeConsume)
 TEST(TestFetchPreloader, CacheAllDataBeforeConsume)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -394,9 +394,9 @@ TEST(TestFetchPreloader, CacheAllDataBeforeConsume)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
 
   // Request consumation of the preload...
   RefPtr<FakeListener> listener = new FakeListener();
@@ -421,7 +421,7 @@ TEST(TestFetchPreloader, CacheAllDataBeforeConsume)
 TEST(TestFetchPreloader, CacheAllBeforeConsume)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -434,9 +434,9 @@ TEST(TestFetchPreloader, CacheAllBeforeConsume)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
   EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
 
   RefPtr<FakeListener> listener = new FakeListener();
@@ -460,7 +460,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsume)
 TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelError)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -473,9 +473,9 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelError)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
   EXPECT_TRUE(NS_FAILED(channel->Stop(ERROR_ONSTOP)));
 
   RefPtr<FakeListener> listener = new FakeListener();
@@ -499,7 +499,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelError)
 TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelCancel)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -512,8 +512,8 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelCancel)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
   channel->Cancel(ERROR_CANCEL);
   EXPECT_TRUE(NS_FAILED(channel->Stop(ERROR_CANCEL)));
 
@@ -542,7 +542,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelCancel)
 TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStartRequest)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -555,9 +555,9 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStartRequest)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
   EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
 
   RefPtr<FakeListener> listener = new FakeListener();
@@ -582,7 +582,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStartRequest)
 TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnDataAvailable)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -595,9 +595,9 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnDataAvailable)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
   EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
 
   RefPtr<FakeListener> listener = new FakeListener();
@@ -622,7 +622,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnDataAvailable)
 TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStopRequest)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -635,9 +635,9 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStopRequest)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
   EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
 
   RefPtr<FakeListener> listener = new FakeListener();
@@ -664,7 +664,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStopRequest)
 TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnStartRequest)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -677,9 +677,9 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnStartRequest)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
   EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
 
   RefPtr<FakeListener> listener = new FakeListener();
@@ -707,7 +707,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnStartRequest)
 TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnDataAvailable)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -720,9 +720,9 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnDataAvailable)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
   EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
 
   RefPtr<FakeListener> listener = new FakeListener();
@@ -751,7 +751,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnDataAvailable)
 TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailable)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -764,8 +764,8 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailable)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mCancelIn = FakeListener::OnData;
@@ -774,7 +774,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailable)
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
-    EXPECT_TRUE(NS_FAILED(channel->Data(NS_LITERAL_CSTRING("three"))));
+    EXPECT_TRUE(NS_FAILED(channel->Data("three"_ns)));
     EXPECT_TRUE(NS_FAILED(channel->Stop(NS_OK)));
 
     EXPECT_TRUE(listener->mOnStart);
@@ -792,7 +792,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailable)
 TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnStartRequestAndRace)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -805,14 +805,14 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnStartRequestAndRace)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
 
   // This has to simulate a possibiilty when stream listener notifications from
   // the channel are already pending in the queue while AsyncConsume is called.
   // At this moment the listener has not been notified yet.
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
     EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
   }));
 
@@ -841,7 +841,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnStartRequestAndRace)
 TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailableAndRace)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -854,14 +854,14 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailableAndRace)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
 
   // This has to simulate a possibiilty when stream listener notifications from
   // the channel are already pending in the queue while AsyncConsume is called.
   // At this moment the listener has not been notified yet.
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
     EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
   }));
 
@@ -890,7 +890,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailableAndRace)
 TEST(TestFetchPreloader, CachePartlyBeforeConsumeThrowFromOnStartRequestAndRace)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://example.com"));
+  NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
   RefPtr<FakeChannel> channel = new FakeChannel();
@@ -903,14 +903,14 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeThrowFromOnStartRequestAndRace)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("one"))));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("two"))));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
+  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
 
   // This has to simulate a possibiilty when stream listener notifications from
   // the channel are already pending in the queue while AsyncConsume is called.
   // At this moment the listener has not been notified yet.
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data(NS_LITERAL_CSTRING("three"))));
+    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
     EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
   }));
 

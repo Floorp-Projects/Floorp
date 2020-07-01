@@ -142,7 +142,7 @@ BackgroundHangManager::Observe(nsISupports* aSubject, const char* aTopic,
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                          getter_AddRefs(mPermahangFile));
     if (NS_SUCCEEDED(rv)) {
-      mPermahangFile->AppendNative(NS_LITERAL_CSTRING("last_permahang.bin"));
+      mPermahangFile->AppendNative("last_permahang.bin"_ns);
     } else {
       mPermahangFile = nullptr;
     }

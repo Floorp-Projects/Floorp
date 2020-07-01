@@ -577,8 +577,7 @@ nsNativeAppSupportUnix::Start(bool* aRetVal) {
       // is what Breakpad does
       nsAutoCString leafName;
       rv = executablePath->GetNativeLeafName(leafName);
-      if (NS_SUCCEEDED(rv) &&
-          StringEndsWith(leafName, NS_LITERAL_CSTRING("-bin"))) {
+      if (NS_SUCCEEDED(rv) && StringEndsWith(leafName, "-bin"_ns)) {
         leafName.SetLength(leafName.Length() - strlen("-bin"));
         executablePath->SetNativeLeafName(leafName);
       }
@@ -626,7 +625,7 @@ nsNativeAppSupportUnix::Start(bool* aRetVal) {
   if (pw && pw->pw_name) {
     userName = pw->pw_name;
   } else {
-    userName = NS_LITERAL_CSTRING("nobody");
+    userName = "nobody"_ns;
     MOZ_LOG(
         sMozSMLog, LogLevel::Warning,
         ("Could not determine user-name. Falling back to %s.", userName.get()));

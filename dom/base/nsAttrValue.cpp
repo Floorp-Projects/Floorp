@@ -552,7 +552,7 @@ void nsAttrValue::ToString(nsAString& aResult) const {
       } else {
         str.AppendInt(GetIntInternal());
       }
-      aResult = str + NS_LITERAL_STRING("%");
+      aResult = str + u"%"_ns;
 
       break;
     }

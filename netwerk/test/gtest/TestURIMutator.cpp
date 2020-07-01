@@ -14,87 +14,78 @@ TEST(TestURIMutator, Mutator)
   // and uses it to create a new URI.
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-                    .SetSpec(NS_LITERAL_CSTRING("http://example.com"))
+                    .SetSpec("http://example.com"_ns)
                     .Finalize(uri);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(uri->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("http://example.com/"));
+  ASSERT_TRUE(out == "http://example.com/"_ns);
 
   // This test verifies that we can use NS_MutateURI to change a URI
   rv = NS_MutateURI(uri)
-           .SetScheme(NS_LITERAL_CSTRING("ftp"))
-           .SetHost(NS_LITERAL_CSTRING("mozilla.org"))
-           .SetPathQueryRef(NS_LITERAL_CSTRING("/path?query#ref"))
+           .SetScheme("ftp"_ns)
+           .SetHost("mozilla.org"_ns)
+           .SetPathQueryRef("/path?query#ref"_ns)
            .Finalize(uri);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(uri->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("ftp://mozilla.org/path?query#ref"));
+  ASSERT_TRUE(out == "ftp://mozilla.org/path?query#ref"_ns);
 
   // This test verifies that we can pass nsIURL to Finalize, and
   nsCOMPtr<nsIURL> url;
-  rv = NS_MutateURI(uri).SetScheme(NS_LITERAL_CSTRING("https")).Finalize(url);
+  rv = NS_MutateURI(uri).SetScheme("https"_ns).Finalize(url);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(url->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("https://mozilla.org/path?query#ref"));
+  ASSERT_TRUE(out == "https://mozilla.org/path?query#ref"_ns);
 
   // This test verifies that we can pass nsIURL** to Finalize.
   // We need to use the explicit template because it's actually passing
   // getter_AddRefs
   nsCOMPtr<nsIURL> url2;
   rv = NS_MutateURI(url)
-           .SetRef(NS_LITERAL_CSTRING("newref"))
+           .SetRef("newref"_ns)
            .Finalize<nsIURL>(getter_AddRefs(url2));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(url2->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out ==
-              NS_LITERAL_CSTRING("https://mozilla.org/path?query#newref"));
+  ASSERT_TRUE(out == "https://mozilla.org/path?query#newref"_ns);
 
   // This test verifies that we can pass nsIURI** to Finalize.
   // No need to be explicit.
   auto functionSetRef = [](nsIURI* aURI, nsIURI** aResult) -> nsresult {
-    return NS_MutateURI(aURI)
-        .SetRef(NS_LITERAL_CSTRING("originalRef"))
-        .Finalize(aResult);
+    return NS_MutateURI(aURI).SetRef("originalRef"_ns).Finalize(aResult);
   };
 
   nsCOMPtr<nsIURI> newURI;
   rv = functionSetRef(url2, getter_AddRefs(newURI));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(newURI->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out ==
-              NS_LITERAL_CSTRING("https://mozilla.org/path?query#originalRef"));
+  ASSERT_TRUE(out == "https://mozilla.org/path?query#originalRef"_ns);
 
   // This test verifies that we can pass nsIURI** to Finalize.
   nsCOMPtr<nsIURI> uri2;
-  rv = NS_MutateURI(url2)
-           .SetQuery(NS_LITERAL_CSTRING("newquery"))
-           .Finalize(getter_AddRefs(uri2));
+  rv =
+      NS_MutateURI(url2).SetQuery("newquery"_ns).Finalize(getter_AddRefs(uri2));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(uri2->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out ==
-              NS_LITERAL_CSTRING("https://mozilla.org/path?newquery#newref"));
+  ASSERT_TRUE(out == "https://mozilla.org/path?newquery#newref"_ns);
 
   // This test verifies that we can pass nsIURI** to Finalize.
   // No need to be explicit.
   auto functionSetQuery = [](nsIURI* aURI, nsIURL** aResult) -> nsresult {
-    return NS_MutateURI(aURI)
-        .SetQuery(NS_LITERAL_CSTRING("originalQuery"))
-        .Finalize(aResult);
+    return NS_MutateURI(aURI).SetQuery("originalQuery"_ns).Finalize(aResult);
   };
 
   nsCOMPtr<nsIURL> newURL;
   rv = functionSetQuery(uri2, getter_AddRefs(newURL));
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(newURL->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING(
-                         "https://mozilla.org/path?originalQuery#newref"));
+  ASSERT_TRUE(out == "https://mozilla.org/path?originalQuery#newref"_ns);
 
   // Check that calling Finalize twice will fail.
   NS_MutateURI mutator(newURL);
   rv = mutator.SetQuery(EmptyCString()).Finalize(uri2);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(uri2->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("https://mozilla.org/path#newref"));
+  ASSERT_TRUE(out == "https://mozilla.org/path#newref"_ns);
   nsCOMPtr<nsIURI> uri3;
   rv = mutator.Finalize(uri3);
   ASSERT_EQ(rv, NS_ERROR_NOT_AVAILABLE);
@@ -113,12 +104,11 @@ TEST(TestURIMutator, OnAnyThread)
     nsCOMPtr<nsIRunnable> task =
         NS_NewRunnableFunction("gtest-OnAnyThread", []() {
           nsCOMPtr<nsIURI> uri;
-          nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                                  NS_LITERAL_CSTRING("http://example.com"));
+          nsresult rv = NS_NewURI(getter_AddRefs(uri), "http://example.com"_ns);
           ASSERT_EQ(rv, NS_OK);
           nsAutoCString out;
           ASSERT_EQ(uri->GetSpec(out), NS_OK);
-          ASSERT_TRUE(out == NS_LITERAL_CSTRING("http://example.com/"));
+          ASSERT_TRUE(out == "http://example.com/"_ns);
         });
     EXPECT_TRUE(task);
 
@@ -126,12 +116,11 @@ TEST(TestURIMutator, OnAnyThread)
   }
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv =
-      NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://example.com"));
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), "http://example.com"_ns);
   ASSERT_EQ(rv, NS_OK);
   nsAutoCString out;
   ASSERT_EQ(uri->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("http://example.com/"));
+  ASSERT_TRUE(out == "http://example.com/"_ns);
 
   pool->Shutdown();
 

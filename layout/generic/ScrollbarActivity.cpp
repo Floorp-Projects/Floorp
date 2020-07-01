@@ -183,8 +183,7 @@ void ScrollbarActivity::StartListeningForScrollAreaEvents() {
   if (mListeningForScrollAreaEvents) return;
 
   nsIFrame* scrollArea = do_QueryFrame(mScrollableFrame);
-  scrollArea->GetContent()->AddEventListener(NS_LITERAL_STRING("mousemove"),
-                                             this, true);
+  scrollArea->GetContent()->AddEventListener(u"mousemove"_ns, this, true);
   mListeningForScrollAreaEvents = true;
 }
 
@@ -192,28 +191,27 @@ void ScrollbarActivity::StopListeningForScrollAreaEvents() {
   if (!mListeningForScrollAreaEvents) return;
 
   nsIFrame* scrollArea = do_QueryFrame(mScrollableFrame);
-  scrollArea->GetContent()->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                                                this, true);
+  scrollArea->GetContent()->RemoveEventListener(u"mousemove"_ns, this, true);
   mListeningForScrollAreaEvents = false;
 }
 
 void ScrollbarActivity::AddScrollbarEventListeners(
     dom::EventTarget* aScrollbar) {
   if (aScrollbar) {
-    aScrollbar->AddEventListener(NS_LITERAL_STRING("mousedown"), this, true);
-    aScrollbar->AddEventListener(NS_LITERAL_STRING("mouseup"), this, true);
-    aScrollbar->AddEventListener(NS_LITERAL_STRING("mouseover"), this, true);
-    aScrollbar->AddEventListener(NS_LITERAL_STRING("mouseout"), this, true);
+    aScrollbar->AddEventListener(u"mousedown"_ns, this, true);
+    aScrollbar->AddEventListener(u"mouseup"_ns, this, true);
+    aScrollbar->AddEventListener(u"mouseover"_ns, this, true);
+    aScrollbar->AddEventListener(u"mouseout"_ns, this, true);
   }
 }
 
 void ScrollbarActivity::RemoveScrollbarEventListeners(
     dom::EventTarget* aScrollbar) {
   if (aScrollbar) {
-    aScrollbar->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this, true);
-    aScrollbar->RemoveEventListener(NS_LITERAL_STRING("mouseup"), this, true);
-    aScrollbar->RemoveEventListener(NS_LITERAL_STRING("mouseover"), this, true);
-    aScrollbar->RemoveEventListener(NS_LITERAL_STRING("mouseout"), this, true);
+    aScrollbar->RemoveEventListener(u"mousedown"_ns, this, true);
+    aScrollbar->RemoveEventListener(u"mouseup"_ns, this, true);
+    aScrollbar->RemoveEventListener(u"mouseover"_ns, this, true);
+    aScrollbar->RemoveEventListener(u"mouseout"_ns, this, true);
   }
 }
 
@@ -273,8 +271,7 @@ static void SetBooleanAttribute(Element* aElement, nsAtom* aAttribute,
                                 bool aValue) {
   if (aElement) {
     if (aValue) {
-      aElement->SetAttr(kNameSpaceID_None, aAttribute,
-                        NS_LITERAL_STRING("true"), true);
+      aElement->SetAttr(kNameSpaceID_None, aAttribute, u"true"_ns, true);
     } else {
       aElement->UnsetAttr(kNameSpaceID_None, aAttribute, true);
     }
@@ -300,8 +297,7 @@ static void SetOpacityOnElement(nsIContent* aContent, double aOpacity) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
     nsAutoCString str;
     str.AppendFloat(aOpacity);
-    decl->SetProperty(NS_LITERAL_CSTRING("opacity"), str, EmptyString(),
-                      IgnoreErrors());
+    decl->SetProperty("opacity"_ns, str, EmptyString(), IgnoreErrors());
   }
 }
 
@@ -331,7 +327,7 @@ static void UnsetOpacityOnElement(nsIContent* aContent) {
   if (inlineStyleContent) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
     nsAutoString dummy;
-    decl->RemoveProperty(NS_LITERAL_CSTRING("opacity"), dummy, IgnoreErrors());
+    decl->RemoveProperty("opacity"_ns, dummy, IgnoreErrors());
   }
 }
 

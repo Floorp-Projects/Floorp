@@ -405,9 +405,9 @@ nsresult PrototypeDocumentContentSink::ResumeWalk() {
   nsresult rv = ResumeWalkInternal();
   if (NS_FAILED(rv)) {
     nsContentUtils::ReportToConsoleNonLocalized(
-        NS_LITERAL_STRING("Failed to load document from prototype document."),
-        nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Prototype Document"),
-        mDocument, mDocumentURI);
+        u"Failed to load document from prototype document."_ns,
+        nsIScriptError::errorFlag, "Prototype Document"_ns, mDocument,
+        mDocumentURI);
   }
   return rv;
 }
@@ -551,10 +551,10 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
           if (piProto->mTarget.EqualsLiteral("xml-stylesheet")) {
             AutoTArray<nsString, 1> params = {piProto->mTarget};
 
-            nsContentUtils::ReportToConsole(
-                nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XUL Document"),
-                nullptr, nsContentUtils::eXUL_PROPERTIES, "PINotInProlog",
-                params, docURI);
+            nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                            "XUL Document"_ns, nullptr,
+                                            nsContentUtils::eXUL_PROPERTIES,
+                                            "PINotInProlog", params, docURI);
           }
 
           nsIContent* parent = element.get();
@@ -608,10 +608,9 @@ nsresult PrototypeDocumentContentSink::DoneWalking() {
     mDocument->SetReadyStateInternal(Document::READYSTATE_INTERACTIVE);
     mDocument->NotifyPossibleTitleChange(false);
 
-    nsContentUtils::DispatchEventOnlyToChrome(
-        mDocument, ToSupports(mDocument),
-        NS_LITERAL_STRING("MozBeforeInitialXULLayout"), CanBubble::eYes,
-        Cancelable::eNo);
+    nsContentUtils::DispatchEventOnlyToChrome(mDocument, ToSupports(mDocument),
+                                              u"MozBeforeInitialXULLayout"_ns,
+                                              CanBubble::eYes, Cancelable::eNo);
   }
 
   if (mScriptLoader) {

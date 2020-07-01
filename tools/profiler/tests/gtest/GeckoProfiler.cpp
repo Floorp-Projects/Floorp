@@ -48,28 +48,24 @@ TEST(BaseProfiler, BlocksRingBuffer)
                       &buffer[MBSize], MakePowerOfTwo32<MBSize>());
 
   {
-    nsCString cs(NS_LITERAL_CSTRING("nsCString"));
-    nsString s(NS_LITERAL_STRING("nsString"));
-    nsAutoCString acs(NS_LITERAL_CSTRING("nsAutoCString"));
-    nsAutoString as(NS_LITERAL_STRING("nsAutoString"));
-    nsAutoCStringN<8> acs8(NS_LITERAL_CSTRING("nsAutoCStringN"));
-    nsAutoStringN<8> as8(NS_LITERAL_STRING("nsAutoStringN"));
+    nsCString cs("nsCString"_ns);
+    nsString s(u"nsString"_ns);
+    nsAutoCString acs("nsAutoCString"_ns);
+    nsAutoString as(u"nsAutoString"_ns);
+    nsAutoCStringN<8> acs8("nsAutoCStringN"_ns);
+    nsAutoStringN<8> as8(u"nsAutoStringN"_ns);
     JS::UniqueChars jsuc = JS_smprintf("%s", "JS::UniqueChars");
 
     rb.PutObjects(cs, s, acs, as, acs8, as8, jsuc);
   }
 
   rb.ReadEach([](ProfileBufferEntryReader& aER) {
-    ASSERT_EQ(aER.ReadObject<nsCString>(), NS_LITERAL_CSTRING("nsCString"));
-    ASSERT_EQ(aER.ReadObject<nsString>(), NS_LITERAL_STRING("nsString"));
-    ASSERT_EQ(aER.ReadObject<nsAutoCString>(),
-              NS_LITERAL_CSTRING("nsAutoCString"));
-    ASSERT_EQ(aER.ReadObject<nsAutoString>(),
-              NS_LITERAL_STRING("nsAutoString"));
-    ASSERT_EQ(aER.ReadObject<nsAutoCStringN<8>>(),
-              NS_LITERAL_CSTRING("nsAutoCStringN"));
-    ASSERT_EQ(aER.ReadObject<nsAutoStringN<8>>(),
-              NS_LITERAL_STRING("nsAutoStringN"));
+    ASSERT_EQ(aER.ReadObject<nsCString>(), "nsCString"_ns);
+    ASSERT_EQ(aER.ReadObject<nsString>(), u"nsString"_ns);
+    ASSERT_EQ(aER.ReadObject<nsAutoCString>(), "nsAutoCString"_ns);
+    ASSERT_EQ(aER.ReadObject<nsAutoString>(), u"nsAutoString"_ns);
+    ASSERT_EQ(aER.ReadObject<nsAutoCStringN<8>>(), "nsAutoCStringN"_ns);
+    ASSERT_EQ(aER.ReadObject<nsAutoStringN<8>>(), u"nsAutoStringN"_ns);
     auto jsuc2 = aER.ReadObject<JS::UniqueChars>();
     ASSERT_TRUE(!!jsuc2);
     ASSERT_TRUE(strcmp(jsuc2.get(), "JS::UniqueChars") == 0);
@@ -673,8 +669,7 @@ TEST(GeckoProfiler, Markers)
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "DOMEventMarkerPayload marker", OTHER, DOMEventMarkerPayload,
-      (NS_LITERAL_STRING("dom event"), ts1, "category", TRACING_EVENT,
-       mozilla::Nothing()));
+      (u"dom event"_ns, ts1, "category", TRACING_EVENT, mozilla::Nothing()));
 
   {
     const char gcMajorJSON[] = "42";
@@ -734,7 +729,7 @@ TEST(GeckoProfiler, Markers)
       "NetworkMarkerPayload stop marker", OTHER, NetworkMarkerPayload,
       (12, "http://mozilla.org/", NetworkLoadType::LOAD_STOP, ts1, ts2, 34, 56,
        net::kCacheUnresolved, 78, nullptr, nullptr, nullptr,
-       Some(nsDependentCString(NS_LITERAL_CSTRING("text/html").get()))));
+       Some(nsDependentCString("text/html"))));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "NetworkMarkerPayload redirect marker", OTHER, NetworkMarkerPayload,
@@ -744,30 +739,28 @@ TEST(GeckoProfiler, Markers)
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "PrefMarkerPayload marker", OTHER, PrefMarkerPayload,
       ("preference name", mozilla::Nothing(), mozilla::Nothing(),
-       NS_LITERAL_CSTRING("preference value"), ts1));
+       "preference value"_ns, ts1));
 
-  nsCString screenshotURL = NS_LITERAL_CSTRING("url");
+  nsCString screenshotURL = "url"_ns;
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "ScreenshotPayload marker", OTHER, ScreenshotPayload,
       (ts1, std::move(screenshotURL), mozilla::gfx::IntSize(12, 34),
        uintptr_t(0x45678u)));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD("TextMarkerPayload marker 1", OTHER,
-                                   TextMarkerPayload,
-                                   (NS_LITERAL_CSTRING("text"), ts1));
+                                   TextMarkerPayload, ("text"_ns, ts1));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD("TextMarkerPayload marker 2", OTHER,
-                                   TextMarkerPayload,
-                                   (NS_LITERAL_CSTRING("text"), ts1, ts2));
+                                   TextMarkerPayload, ("text"_ns, ts1, ts2));
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "UserTimingMarkerPayload marker mark", OTHER, UserTimingMarkerPayload,
-      (NS_LITERAL_STRING("mark name"), ts1, mozilla::Nothing()));
+  PROFILER_ADD_MARKER_WITH_PAYLOAD("UserTimingMarkerPayload marker mark", OTHER,
+                                   UserTimingMarkerPayload,
+                                   (u"mark name"_ns, ts1, mozilla::Nothing()));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "UserTimingMarkerPayload marker measure", OTHER, UserTimingMarkerPayload,
-      (NS_LITERAL_STRING("measure name"), Some(NS_LITERAL_STRING("start mark")),
-       Some(NS_LITERAL_STRING("end mark")), ts1, ts2, mozilla::Nothing()));
+      (u"measure name"_ns, Some(u"start mark"_ns), Some(u"end mark"_ns), ts1,
+       ts2, mozilla::Nothing()));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD("VsyncMarkerPayload marker", OTHER,
                                    VsyncMarkerPayload, (ts1));

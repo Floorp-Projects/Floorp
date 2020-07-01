@@ -127,11 +127,11 @@ GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
 
 void GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags) {
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
-    aTags.AppendElement(NS_LITERAL_CSTRING("h264"));
+    aTags.AppendElement("h264"_ns);
   } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
-    aTags.AppendElement(NS_LITERAL_CSTRING("vp8"));
+    aTags.AppendElement("vp8"_ns);
   } else if (VPXDecoder::IsVP9(mConfig.mMimeType)) {
-    aTags.AppendElement(NS_LITERAL_CSTRING("vp9"));
+    aTags.AppendElement("vp9"_ns);
   }
 }
 

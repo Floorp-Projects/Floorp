@@ -86,7 +86,7 @@ nsresult InterceptedChannelBase::DoSynthesizeHeader(const nsACString& aName,
                                                     const nsACString& aValue) {
   EnsureSynthesizedResponse();
 
-  nsAutoCString header = aName + NS_LITERAL_CSTRING(": ") + aValue;
+  nsAutoCString header = aName + ": "_ns + aValue;
   // Overwrite any existing header.
   return (*mSynthesizedResponseHead)->ParseHeaderLine(header);
 }
@@ -154,9 +154,8 @@ InterceptedChannelBase::SaveTimeStamps() {
 
   bool isNonSubresourceRequest =
       nsContentUtils::IsNonSubresourceRequest(channel);
-  nsCString navigationOrSubresource = isNonSubresourceRequest
-                                          ? NS_LITERAL_CSTRING("navigation")
-                                          : NS_LITERAL_CSTRING("subresource");
+  nsCString navigationOrSubresource =
+      isNonSubresourceRequest ? "navigation"_ns : "subresource"_ns;
 
   nsAutoCString subresourceKey(EmptyCString());
   GetSubresourceTimeStampKey(channel, subresourceKey);

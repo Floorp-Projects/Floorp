@@ -42,7 +42,7 @@ void ScrollAreaEvent::InitScrollAreaEvent(const nsAString& aEventType,
 void ScrollAreaEvent::Serialize(IPC::Message* aMsg,
                                 bool aSerializeInterfaceType) {
   if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, NS_LITERAL_STRING("scrollareaevent"));
+    IPC::WriteParam(aMsg, u"scrollareaevent"_ns);
   }
 
   Event::Serialize(aMsg, false);

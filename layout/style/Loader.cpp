@@ -441,10 +441,9 @@ void SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread) {
   nsCOMPtr<nsINode> node = mOwningNode;
   MOZ_ASSERT(node, "How did that happen???");
 
-  nsContentUtils::DispatchTrustedEvent(
-      node->OwnerDoc(), node,
-      mLoadFailed ? NS_LITERAL_STRING("error") : NS_LITERAL_STRING("load"),
-      CanBubble::eNo, Cancelable::eNo);
+  nsContentUtils::DispatchTrustedEvent(node->OwnerDoc(), node,
+                                       mLoadFailed ? u"error"_ns : u"load"_ns,
+                                       CanBubble::eNo, Cancelable::eNo);
 
   // And unblock onload
   mLoader->UnblockOnload(true);
@@ -786,7 +785,7 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
 
     nsCOMPtr<nsIURI> referrer = ReferrerInfo()->GetOriginalReferrer();
     nsContentUtils::ReportToConsole(
-        errorFlag, NS_LITERAL_CSTRING("CSS Loader"), mLoader->mDocument,
+        errorFlag, "CSS Loader"_ns, mLoader->mDocument,
         nsContentUtils::eCSS_PROPERTIES, errorMessage, strings, referrer);
 
     if (errorFlag == nsIScriptError::errorFlag) {
@@ -895,9 +894,9 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
   }
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(
-      aTargetURI, secCheckLoadInfo, NS_LITERAL_CSTRING("text/css"), &shouldLoad,
-      nsContentUtils::GetContentPolicy());
+  nsresult rv = NS_CheckContentLoadPolicy(aTargetURI, secCheckLoadInfo,
+                                          "text/css"_ns, &shouldLoad,
+                                          nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
     return NS_ERROR_CONTENT_BLOCKED;
   }
@@ -954,12 +953,11 @@ std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
   }
 
   if (mSheets) {
-    SheetLoadDataHashKey key(aURI, aTriggeringPrincipal, LoaderPrincipal(),
-                             PartitionedPrincipal(),
-                             GetFallbackEncoding(*this, aLinkingContent,
-                                                 aPreloadOrParentDataEncoding),
-                             aCORSMode, aParsingMode, mCompatMode, sriMetadata,
-                             aIsPreload);
+    SheetLoadDataHashKey key(
+        aURI, aTriggeringPrincipal, LoaderPrincipal(), PartitionedPrincipal(),
+        GetFallbackEncoding(*this, aLinkingContent,
+                            aPreloadOrParentDataEncoding),
+        aCORSMode, aParsingMode, mCompatMode, sriMetadata, aIsPreload);
     auto cacheResult = mSheets->Lookup(*this, key, aSyncLoad);
     if (const auto& [styleSheet, sheetState] = cacheResult; styleSheet) {
       LOG(("  Hit cache with state: %s", gStateStrings[size_t(sheetState)]));
@@ -1255,7 +1253,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     // Force UA sheets to be UTF-8.
     // XXX this is only necessary because the default in
     // SheetLoadData::OnDetermineCharset is wrong (bug 521039).
-    channel->SetContentCharset(NS_LITERAL_CSTRING("UTF-8"));
+    channel->SetContentCharset("UTF-8"_ns);
 
     // Manually feed the streamloader the contents of the stream.
     // This will call back into OnStreamComplete
@@ -1399,7 +1397,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     if (nsCOMPtr<nsITimedChannel> timedChannel =
             do_QueryInterface(httpChannel)) {
       if (aLoadData.mParentData) {
-        timedChannel->SetInitiatorType(NS_LITERAL_STRING("css"));
+        timedChannel->SetInitiatorType(u"css"_ns);
 
         // This is a child sheet load.
         //
@@ -1433,14 +1431,14 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
         }
 
       } else {
-        timedChannel->SetInitiatorType(NS_LITERAL_STRING("link"));
+        timedChannel->SetInitiatorType(u"link"_ns);
       }
     }
   }
 
   // Now tell the channel we expect text/css data back....  We do
   // this before opening it, so it's only treated as a hint.
-  channel->SetContentType(NS_LITERAL_CSTRING("text/css"));
+  channel->SetContentType("text/css"_ns);
 
   // We don't have to hold on to the stream loader.  The ownership
   // model is: Necko owns the stream loader, which owns the load data,
@@ -1770,9 +1768,9 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
     if (aInfo.mContent && !mDocument->IsLoadedAsData()) {
       // Fire an async error event on it.
       RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
-          new LoadBlockingAsyncEventDispatcher(
-              aInfo.mContent, NS_LITERAL_STRING("error"), CanBubble::eNo,
-              ChromeOnlyDispatch::eNo);
+          new LoadBlockingAsyncEventDispatcher(aInfo.mContent, u"error"_ns,
+                                               CanBubble::eNo,
+                                               ChromeOnlyDispatch::eNo);
       loadBlockingAsyncDispatcher->PostDOMEvent();
     }
     return Err(rv);

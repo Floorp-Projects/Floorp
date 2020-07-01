@@ -135,7 +135,7 @@ void AccessCheck::reportCrossOriginDenial(JSContext* cx, JS::HandleId id,
 
   nsAutoCString message;
   if (JSID_IS_VOID(id)) {
-    message = NS_LITERAL_CSTRING("Permission denied to access object");
+    message = "Permission denied to access object"_ns;
   } else {
     // We want to use JS_ValueToSource here, because that most closely
     // matches what AutoEnterPolicy::reportErrorIfExceptionIsNotPending
@@ -146,10 +146,8 @@ void AccessCheck::reportCrossOriginDenial(JSContext* cx, JS::HandleId id,
     if (!idStr || !propName.init(cx, idStr)) {
       return;
     }
-    message = NS_LITERAL_CSTRING("Permission denied to ") + accessType +
-              NS_LITERAL_CSTRING(" property ") +
-              NS_ConvertUTF16toUTF8(propName) +
-              NS_LITERAL_CSTRING(" on cross-origin object");
+    message = "Permission denied to "_ns + accessType + " property "_ns +
+              NS_ConvertUTF16toUTF8(propName) + " on cross-origin object"_ns;
   }
   ErrorResult rv;
   rv.ThrowSecurityError(message);

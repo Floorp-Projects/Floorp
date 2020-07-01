@@ -370,10 +370,8 @@ nsresult TextEventDispatcher::CommitComposition(
     // editor requires non-void string even when it's empty.
     compositionCommitEvent.mData.SetIsVoid(false);
     // Don't send CRLF nor CR, replace it with LF here.
-    compositionCommitEvent.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                                                  NS_LITERAL_STRING("\n"));
-    compositionCommitEvent.mData.ReplaceSubstring(NS_LITERAL_STRING("\r"),
-                                                  NS_LITERAL_STRING("\n"));
+    compositionCommitEvent.mData.ReplaceSubstring(u"\r\n"_ns, u"\n"_ns);
+    compositionCommitEvent.mData.ReplaceSubstring(u"\r"_ns, u"\n"_ns);
   }
   rv = DispatchEvent(widget, compositionCommitEvent, aStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -808,8 +806,8 @@ void TextEventDispatcher::PendingComposition::ReplaceNativeLineBreakers() {
 
   nsAutoString nativeString(mString);
   // Don't expose CRLF nor CR to web contents, instead, use LF.
-  mString.ReplaceSubstring(NS_LITERAL_STRING("\r\n"), NS_LITERAL_STRING("\n"));
-  mString.ReplaceSubstring(NS_LITERAL_STRING("\r"), NS_LITERAL_STRING("\n"));
+  mString.ReplaceSubstring(u"\r\n"_ns, u"\n"_ns);
+  mString.ReplaceSubstring(u"\r"_ns, u"\n"_ns);
 
   // If the length isn't changed, we don't need to adjust any offset and length
   // of mClauses nor mCaret.
@@ -838,8 +836,7 @@ void TextEventDispatcher::PendingComposition::AdjustRange(
   //     composition string is usually short and separated as a few clauses.
   if (nativeRange.mStartOffset > 0) {
     nsAutoString preText(Substring(aNativeString, 0, nativeRange.mStartOffset));
-    preText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                             NS_LITERAL_STRING("\n"));
+    preText.ReplaceSubstring(u"\r\n"_ns, u"\n"_ns);
     aRange.mStartOffset = preText.Length();
   }
   if (nativeRange.Length() == 0) {
@@ -847,7 +844,7 @@ void TextEventDispatcher::PendingComposition::AdjustRange(
   } else {
     nsAutoString clause(Substring(aNativeString, nativeRange.mStartOffset,
                                   nativeRange.Length()));
-    clause.ReplaceSubstring(NS_LITERAL_STRING("\r\n"), NS_LITERAL_STRING("\n"));
+    clause.ReplaceSubstring(u"\r\n"_ns, u"\n"_ns);
     aRange.mEndOffset = aRange.mStartOffset + clause.Length();
   }
 }

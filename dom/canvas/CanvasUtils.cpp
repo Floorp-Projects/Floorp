@@ -38,7 +38,7 @@
 #define TOPIC_CANVAS_PERMISSIONS_PROMPT "canvas-permissions-prompt"
 #define TOPIC_CANVAS_PERMISSIONS_PROMPT_HIDE_DOORHANGER \
   "canvas-permissions-prompt-hide-doorhanger"
-#define PERMISSION_CANVAS_EXTRACT_DATA NS_LITERAL_CSTRING("canvas")
+#define PERMISSION_CANVAS_EXTRACT_DATA "canvas"_ns
 
 using namespace mozilla::gfx;
 
@@ -108,8 +108,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
     message.AppendPrintf("Blocked third party %s from extracting canvas data.",
                          docURISpec.get());
     nsContentUtils::ReportToConsoleNonLocalized(
-        message, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
-        aDocument);
+        message, nsIScriptError::warningFlag, "Security"_ns, aDocument);
     return false;
   }
 
@@ -149,8 +148,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
         "detected.",
         docURISpec.get());
     nsContentUtils::ReportToConsoleNonLocalized(
-        message, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
-        aDocument);
+        message, nsIScriptError::warningFlag, "Security"_ns, aDocument);
   } else {
     // It was in response to user input, so log and display the prompt.
     nsAutoString message;
@@ -158,8 +156,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
         "Blocked %s from extracting canvas data, but prompting the user.",
         docURISpec.get());
     nsContentUtils::ReportToConsoleNonLocalized(
-        message, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
-        aDocument);
+        message, nsIScriptError::warningFlag, "Security"_ns, aDocument);
   }
 
   // Prompt the user (asynchronous).

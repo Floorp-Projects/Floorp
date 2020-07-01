@@ -345,8 +345,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   }
 
   nsAutoCString clientDataJSON;
-  nsresult srv = AssembleClientData(origin, challenge,
-                                    NS_LITERAL_STRING("webauthn.create"),
+  nsresult srv = AssembleClientData(origin, challenge, u"webauthn.create"_ns,
                                     aOptions.mExtensions, clientDataJSON);
   if (NS_WARN_IF(NS_FAILED(srv))) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
@@ -526,9 +525,8 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
   }
 
   nsAutoCString clientDataJSON;
-  nsresult srv =
-      AssembleClientData(origin, challenge, NS_LITERAL_STRING("webauthn.get"),
-                         aOptions.mExtensions, clientDataJSON);
+  nsresult srv = AssembleClientData(origin, challenge, u"webauthn.get"_ns,
+                                    aOptions.mExtensions, clientDataJSON);
   if (NS_WARN_IF(NS_FAILED(srv))) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
@@ -724,7 +722,7 @@ void WebAuthnManager::FinishMakeCredential(
 
   RefPtr<PublicKeyCredential> credential = new PublicKeyCredential(mParent);
   credential->SetId(keyHandleBase64Url);
-  credential->SetType(NS_LITERAL_STRING("public-key"));
+  credential->SetType(u"public-key"_ns);
   credential->SetRawId(keyHandleBuf);
   credential->SetResponse(attestation);
 
@@ -803,7 +801,7 @@ void WebAuthnManager::FinishGetAssertion(
 
   RefPtr<PublicKeyCredential> credential = new PublicKeyCredential(mParent);
   credential->SetId(credentialBase64Url);
-  credential->SetType(NS_LITERAL_STRING("public-key"));
+  credential->SetType(u"public-key"_ns);
   credential->SetRawId(credentialBuf);
   credential->SetResponse(assertion);
 

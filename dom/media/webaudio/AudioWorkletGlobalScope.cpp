@@ -244,10 +244,9 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
 
   for (const auto& descriptor : res) {
     if (namesSet.Contains(descriptor.mName)) {
-      aRv.ThrowNotSupportedError(
-          NS_LITERAL_CSTRING("Duplicated name \"") +
-          NS_ConvertUTF16toUTF8(descriptor.mName) +
-          NS_LITERAL_CSTRING("\" in parameterDescriptors."));
+      aRv.ThrowNotSupportedError("Duplicated name \""_ns +
+                                 NS_ConvertUTF16toUTF8(descriptor.mName) +
+                                 "\" in parameterDescriptors."_ns);
       return AudioParamDescriptorMap();
     }
 
@@ -258,19 +257,19 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
 
     if (descriptor.mMinValue > descriptor.mMaxValue) {
       aRv.ThrowInvalidStateError(
-          NS_LITERAL_CSTRING("In parameterDescriptors, ") +
+          "In parameterDescriptors, "_ns +
           NS_ConvertUTF16toUTF8(descriptor.mName) +
-          NS_LITERAL_CSTRING(" minValue should be smaller than maxValue."));
+          " minValue should be smaller than maxValue."_ns);
       return AudioParamDescriptorMap();
     }
 
     if (descriptor.mDefaultValue < descriptor.mMinValue ||
         descriptor.mDefaultValue > descriptor.mMaxValue) {
       aRv.ThrowInvalidStateError(
-          NS_LITERAL_CSTRING("In parameterDescriptors, ") +
+          "In parameterDescriptors, "_ns +
           NS_ConvertUTF16toUTF8(descriptor.mName) +
-          NS_LITERAL_CSTRING(" defaultValue is out of the range defined by "
-                             "minValue and maxValue."));
+          nsLiteralCString(" defaultValue is out of the range defined by "
+                           "minValue and maxValue."));
       return AudioParamDescriptorMap();
     }
   }

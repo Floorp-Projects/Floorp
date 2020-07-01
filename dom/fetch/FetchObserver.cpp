@@ -72,8 +72,7 @@ void FetchObserver::SetState(FetchState aState) {
 
   // TODO which kind of event should we dispatch here?
 
-  RefPtr<Event> event =
-      Event::Constructor(this, NS_LITERAL_STRING("statechange"), init);
+  RefPtr<Event> event = Event::Constructor(this, u"statechange"_ns, init);
   event->SetTrusted(true);
 
   DispatchEvent(*event);

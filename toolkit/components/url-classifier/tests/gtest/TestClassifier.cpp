@@ -56,8 +56,7 @@ TEST(UrlClassifierClassifier, ReadNoiseEntriesV4)
   ASSERT_TRUE(rv == NS_OK)
   << "Fail to build LookupCache";
 
-  TestReadNoiseEntries(classifier, GTEST_TABLE_V4,
-                       NS_LITERAL_CSTRING("gound.com/"), array);
+  TestReadNoiseEntries(classifier, GTEST_TABLE_V4, "gound.com/"_ns, array);
 }
 
 TEST(UrlClassifierClassifier, ReadNoiseEntriesV2)
@@ -80,6 +79,5 @@ TEST(UrlClassifierClassifier, ReadNoiseEntriesV2)
   ASSERT_TRUE(rv == NS_OK)
   << "Fail to build LookupCache";
 
-  TestReadNoiseEntries(classifier, GTEST_TABLE_V2,
-                       NS_LITERAL_CSTRING("helloworld.com/"), array);
+  TestReadNoiseEntries(classifier, GTEST_TABLE_V2, "helloworld.com/"_ns, array);
 }

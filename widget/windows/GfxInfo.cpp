@@ -468,11 +468,11 @@ nsresult GfxInfo::Init() {
     }
   }
 
-  mDeviceKeyDebug = NS_LITERAL_STRING("PrimarySearch");
+  mDeviceKeyDebug = u"PrimarySearch"_ns;
 
   while (EnumDisplayDevicesW(nullptr, deviceIndex, &displayDevice, 0)) {
     if (displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) {
-      mDeviceKeyDebug = NS_LITERAL_STRING("NullSearch");
+      mDeviceKeyDebug = u"NullSearch"_ns;
       break;
     }
     deviceIndex++;
@@ -778,12 +778,12 @@ nsresult GfxInfo::Init() {
     nsAutoString eligibleDLLs;
     if (NS_SUCCEEDED(GetAdapterDriver(eligibleDLLs))) {
       if (FindInReadable(dllFileName, eligibleDLLs)) {
-        dllFileName += NS_LITERAL_STRING(".dll");
+        dllFileName += u".dll"_ns;
         gfxWindowsPlatform::GetDLLVersion(dllFileName.get(), dllVersion);
         ParseDriverVersion(dllVersion, &dllNumericVersion);
       }
       if (FindInReadable(dllFileName2, eligibleDLLs)) {
-        dllFileName2 += NS_LITERAL_STRING(".dll");
+        dllFileName2 += u".dll"_ns;
         gfxWindowsPlatform::GetDLLVersion(dllFileName2.get(), dllVersion2);
         ParseDriverVersion(dllVersion2, &dllNumericVersion2);
       }
@@ -814,8 +814,7 @@ nsresult GfxInfo::Init() {
     }
 
     ParseDriverVersion(mDriverVersion[mActiveGPUIndex], &driverNumericVersion);
-    ParseDriverVersion(NS_LITERAL_STRING("9.17.10.0"),
-                       &knownSafeMismatchVersion);
+    ParseDriverVersion(u"9.17.10.0"_ns, &knownSafeMismatchVersion);
 
     // If there's a driver version mismatch, consider this harmful only when
     // the driver version is less than knownSafeMismatchVersion.  See the
@@ -1089,8 +1088,7 @@ static void CheckForCiscoVPN() {
                     0, KEY_QUERY_VALUE, &key);
   if (result == ERROR_SUCCESS) {
     RegCloseKey(key);
-    CrashReporter::AppendAppNotesToCrashReport(
-        NS_LITERAL_CSTRING("Cisco VPN\n"));
+    CrashReporter::AppendAppNotesToCrashReport("Cisco VPN\n"_ns);
   }
 }
 
@@ -1098,8 +1096,7 @@ void GfxInfo::AddCrashReportAnnotations() {
   CheckForCiscoVPN();
 
   if (mHasDriverVersionMismatch) {
-    CrashReporter::AppendAppNotesToCrashReport(
-        NS_LITERAL_CSTRING("DriverVersionMismatch\n"));
+    CrashReporter::AppendAppNotesToCrashReport("DriverVersionMismatch\n"_ns);
   }
 
   nsString deviceID, vendorID, driverVersion, subsysID;

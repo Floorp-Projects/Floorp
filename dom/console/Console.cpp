@@ -680,14 +680,14 @@ class ConsoleCallDataWorkerRunnable final : public ConsoleWorkerRunnable {
       nsString id = frame.mFilename;
       nsString innerID;
       if (aWorkerPrivate->IsSharedWorker()) {
-        innerID = NS_LITERAL_STRING("SharedWorker");
+        innerID = u"SharedWorker"_ns;
       } else if (aWorkerPrivate->IsServiceWorker()) {
-        innerID = NS_LITERAL_STRING("ServiceWorker");
+        innerID = u"ServiceWorker"_ns;
         // Use scope as ID so the webconsole can decide if the message should
         // show up per tab
         CopyASCIItoUTF16(aWorkerPrivate->ServiceWorkerScope(), id);
       } else {
-        innerID = NS_LITERAL_STRING("Worker");
+        innerID = u"Worker"_ns;
       }
 
       mCallData->SetIDs(id, innerID);
@@ -1004,32 +1004,30 @@ METHOD(GroupCollapsed, "groupCollapsed")
 /* static */
 void Console::Clear(const GlobalObject& aGlobal) {
   const Sequence<JS::Value> data;
-  Method(aGlobal, MethodClear, NS_LITERAL_STRING("clear"), data);
+  Method(aGlobal, MethodClear, u"clear"_ns, data);
 }
 
 /* static */
 void Console::GroupEnd(const GlobalObject& aGlobal) {
   const Sequence<JS::Value> data;
-  Method(aGlobal, MethodGroupEnd, NS_LITERAL_STRING("groupEnd"), data);
+  Method(aGlobal, MethodGroupEnd, u"groupEnd"_ns, data);
 }
 
 /* static */
 void Console::Time(const GlobalObject& aGlobal, const nsAString& aLabel) {
-  StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodTime,
-               NS_LITERAL_STRING("time"));
+  StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodTime, u"time"_ns);
 }
 
 /* static */
 void Console::TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel) {
   StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodTimeEnd,
-               NS_LITERAL_STRING("timeEnd"));
+               u"timeEnd"_ns);
 }
 
 /* static */
 void Console::TimeLog(const GlobalObject& aGlobal, const nsAString& aLabel,
                       const Sequence<JS::Value>& aData) {
-  StringMethod(aGlobal, aLabel, aData, MethodTimeLog,
-               NS_LITERAL_STRING("timeLog"));
+  StringMethod(aGlobal, aLabel, aData, MethodTimeLog, u"timeLog"_ns);
 }
 
 /* static */
@@ -1087,20 +1085,19 @@ void Console::TimeStamp(const GlobalObject& aGlobal,
     return;
   }
 
-  Method(aGlobal, MethodTimeStamp, NS_LITERAL_STRING("timeStamp"), data);
+  Method(aGlobal, MethodTimeStamp, u"timeStamp"_ns, data);
 }
 
 /* static */
 void Console::Profile(const GlobalObject& aGlobal,
                       const Sequence<JS::Value>& aData) {
-  ProfileMethod(aGlobal, MethodProfile, NS_LITERAL_STRING("profile"), aData);
+  ProfileMethod(aGlobal, MethodProfile, u"profile"_ns, aData);
 }
 
 /* static */
 void Console::ProfileEnd(const GlobalObject& aGlobal,
                          const Sequence<JS::Value>& aData) {
-  ProfileMethod(aGlobal, MethodProfileEnd, NS_LITERAL_STRING("profileEnd"),
-                aData);
+  ProfileMethod(aGlobal, MethodProfileEnd, u"profileEnd"_ns, aData);
 }
 
 /* static */
@@ -1213,20 +1210,20 @@ void Console::ProfileMethodMainthread(JSContext* aCx, const nsAString& aAction,
 void Console::Assert(const GlobalObject& aGlobal, bool aCondition,
                      const Sequence<JS::Value>& aData) {
   if (!aCondition) {
-    Method(aGlobal, MethodAssert, NS_LITERAL_STRING("assert"), aData);
+    Method(aGlobal, MethodAssert, u"assert"_ns, aData);
   }
 }
 
 /* static */
 void Console::Count(const GlobalObject& aGlobal, const nsAString& aLabel) {
   StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodCount,
-               NS_LITERAL_STRING("count"));
+               u"count"_ns);
 }
 
 /* static */
 void Console::CountReset(const GlobalObject& aGlobal, const nsAString& aLabel) {
   StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodCountReset,
-               NS_LITERAL_STRING("countReset"));
+               u"countReset"_ns);
 }
 
 namespace {
@@ -1426,14 +1423,14 @@ void Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     if (mInnerID) {
       callData->SetIDs(mOuterID, mInnerID);
     } else if (!mPassedInnerID.IsEmpty()) {
-      callData->SetIDs(NS_LITERAL_STRING("jsm"), mPassedInnerID);
+      callData->SetIDs(u"jsm"_ns, mPassedInnerID);
     } else {
       nsAutoString filename;
       if (callData->mTopStackFrame.isSome()) {
         filename = callData->mTopStackFrame->mFilename;
       }
 
-      callData->SetIDs(NS_LITERAL_STRING("jsm"), filename);
+      callData->SetIDs(u"jsm"_ns, filename);
     }
 
     GetOrCreateMainThreadData()->ProcessCallData(aCx, callData, aData);

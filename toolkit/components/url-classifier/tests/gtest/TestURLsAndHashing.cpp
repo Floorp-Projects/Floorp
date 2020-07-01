@@ -30,14 +30,14 @@ TEST(URLsAndHashing, FragmentURLWithQuery)
 {
   const nsLiteralCString url("a.b.c/1/2.html?param=1");
   nsTArray<nsCString> expect = {
-      nsLiteralCString("a.b.c/1/2.html?param=1"),
-      nsLiteralCString("a.b.c/1/2.html"),
-      nsLiteralCString("a.b.c/"),
-      nsLiteralCString("a.b.c/1/"),
-      nsLiteralCString("b.c/1/2.html?param=1"),
-      nsLiteralCString("b.c/1/2.html"),
-      nsLiteralCString("b.c/"),
-      nsLiteralCString("b.c/1/"),
+      "a.b.c/1/2.html?param=1"_ns,
+      "a.b.c/1/2.html"_ns,
+      "a.b.c/"_ns,
+      "a.b.c/1/"_ns,
+      "b.c/1/2.html?param=1"_ns,
+      "b.c/1/2.html"_ns,
+      "b.c/"_ns,
+      "b.c/1/"_ns,
   };
 
   VerifyFragments(url, expect);
@@ -49,16 +49,11 @@ TEST(URLsAndHashing, FragmentURLWithoutQuery)
 {
   const nsLiteralCString url("a.b.c.d.e.f.g/1.html");
   nsTArray<nsCString> expect = {
-      nsLiteralCString("a.b.c.d.e.f.g/1.html"),
-      nsLiteralCString("a.b.c.d.e.f.g/"),
-      nsLiteralCString("c.d.e.f.g/1.html"),
-      nsLiteralCString("c.d.e.f.g/"),
-      nsLiteralCString("d.e.f.g/1.html"),
-      nsLiteralCString("d.e.f.g/"),
-      nsLiteralCString("e.f.g/1.html"),
-      nsLiteralCString("e.f.g/"),
-      nsLiteralCString("f.g/1.html"),
-      nsLiteralCString("f.g/"),
+      "a.b.c.d.e.f.g/1.html"_ns, "a.b.c.d.e.f.g/"_ns,
+      "c.d.e.f.g/1.html"_ns,     "c.d.e.f.g/"_ns,
+      "d.e.f.g/1.html"_ns,       "d.e.f.g/"_ns,
+      "e.f.g/1.html"_ns,         "e.f.g/"_ns,
+      "f.g/1.html"_ns,           "f.g/"_ns,
   };
 
   VerifyFragments(url, expect);
@@ -68,8 +63,8 @@ TEST(URLsAndHashing, FragmentURLEndWithoutPath)
 {
   const nsLiteralCString url("1.2.3.4/?query=string");
   nsTArray<nsCString> expect = {
-      nsLiteralCString("1.2.3.4/?query=string"),
-      nsLiteralCString("1.2.3.4/"),
+      "1.2.3.4/?query=string"_ns,
+      "1.2.3.4/"_ns,
   };
 
   VerifyFragments(url, expect);

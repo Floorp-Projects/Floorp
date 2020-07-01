@@ -82,7 +82,7 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mInner);
 
-  KeepAliveIfHasListenersFor(NS_LITERAL_STRING("statechange"));
+  KeepAliveIfHasListenersFor(u"statechange"_ns);
 
   // The error event handler is required by the spec currently, but is not used
   // anywhere.  Don't keep the object alive in that case.
@@ -153,13 +153,13 @@ void ServiceWorker::MaybeDispatchStateChangeEvent() {
   }
   mLastNotifiedState = mDescriptor.State();
 
-  DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
+  DOMEventTargetHelper::DispatchTrustedEvent(u"statechange"_ns);
 
   // Once we have transitioned to the redundant state then no
   // more statechange events will occur.  We can allow the DOM
   // object to GC if script is not holding it alive.
   if (mLastNotifiedState == ServiceWorkerState::Redundant) {
-    IgnoreKeepAliveIfHasListenersFor(NS_LITERAL_STRING("statechange"));
+    IgnoreKeepAliveIfHasListenersFor(u"statechange"_ns);
   }
 }
 

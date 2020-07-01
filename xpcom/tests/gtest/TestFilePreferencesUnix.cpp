@@ -28,15 +28,13 @@ TEST(TestFilePreferencesUnix, Parsing)
     nsresult rv = Preferences::ClearUser(kForbiddenPathsPref);
     ASSERT_EQ(rv, NS_OK);
     FilePreferences::InitPrefs();
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kForbidden)),
+    ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kForbidden)),
               true);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kForbiddenDir)),
+    ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kForbiddenDir)),
               true);
-    ASSERT_EQ(
-        FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kForbiddenFile)),
-        true);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kAllowed)),
+    ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kForbiddenFile)),
               true);
+    ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kAllowed)), true);
   });
 
   auto CheckPrefs = [](const nsACString& aPaths) {
@@ -44,25 +42,23 @@ TEST(TestFilePreferencesUnix, Parsing)
     rv = Preferences::SetCString(kForbiddenPathsPref, aPaths);
     ASSERT_EQ(rv, NS_OK);
     FilePreferences::InitPrefs();
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kForbiddenDir)),
+    ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kForbiddenDir)),
               false);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kForbiddenDir)),
+    ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kForbiddenDir)),
               false);
-    ASSERT_EQ(
-        FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kForbiddenFile)),
-        false);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kForbidden)),
+    ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kForbiddenFile)),
               false);
-    ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kAllowed)),
-              true);
+    ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kForbidden)),
+              false);
+    ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kAllowed)), true);
   };
 
-  CheckPrefs(NS_LITERAL_CSTRING(kForbidden));
-  CheckPrefs(NS_LITERAL_CSTRING(kForbidden "," kOther));
-  ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kOtherFile)),
+  CheckPrefs(nsLiteralCString(kForbidden));
+  CheckPrefs(nsLiteralCString(kForbidden "," kOther));
+  ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kOtherFile)),
             false);
-  CheckPrefs(NS_LITERAL_CSTRING(kForbidden "," kOther ","));
-  ASSERT_EQ(FilePreferences::IsAllowedPath(NS_LITERAL_CSTRING(kOtherFile)),
+  CheckPrefs(nsLiteralCString(kForbidden "," kOther ","));
+  ASSERT_EQ(FilePreferences::IsAllowedPath(nsLiteralCString(kOtherFile)),
             false);
 }
 
@@ -77,7 +73,7 @@ TEST(TestFilePreferencesUnix, Simple)
   ASSERT_EQ(rv, NS_OK);
   rv = forbiddenDir->GetNativePath(tempPath);
   ASSERT_EQ(rv, NS_OK);
-  rv = forbiddenDir->AppendNative(NS_LITERAL_CSTRING("forbidden_dir"));
+  rv = forbiddenDir->AppendNative("forbidden_dir"_ns);
   ASSERT_EQ(rv, NS_OK);
 
   // This is executed at exit to clean up after ourselves.
@@ -98,7 +94,7 @@ TEST(TestFilePreferencesUnix, Simple)
   nsCOMPtr<nsIFile> forbiddenFile;
   rv = forbiddenDir->Clone(getter_AddRefs(forbiddenFile));
   ASSERT_EQ(rv, NS_OK);
-  rv = forbiddenFile->AppendNative(NS_LITERAL_CSTRING("test_file"));
+  rv = forbiddenFile->AppendNative("test_file"_ns);
 
   // Create the file
   ASSERT_EQ(rv, NS_OK);
@@ -131,14 +127,14 @@ TEST(TestFilePreferencesUnix, Simple)
   nsCOMPtr<nsIFile> newPath;
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(newPath));
   ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendNative(NS_LITERAL_CSTRING("."));
+  rv = newPath->AppendNative("."_ns);
   ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendNative(NS_LITERAL_CSTRING("forbidden_dir"));
+  rv = newPath->AppendNative("forbidden_dir"_ns);
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->Exists(&exists);
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
 
-  rv = newPath->AppendNative(NS_LITERAL_CSTRING("test_file"));
+  rv = newPath->AppendNative("test_file"_ns);
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->Exists(&exists);
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
@@ -146,8 +142,7 @@ TEST(TestFilePreferencesUnix, Simple)
   // Check that ./ does not bypass the filter
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(newPath));
   ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendRelativeNativePath(
-      NS_LITERAL_CSTRING("./forbidden_dir/file"));
+  rv = newPath->AppendRelativeNativePath("./forbidden_dir/file"_ns);
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->Exists(&exists);
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
@@ -155,19 +150,18 @@ TEST(TestFilePreferencesUnix, Simple)
   // Check that ..  does not bypass the filter
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(newPath));
   ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendRelativeNativePath(
-      NS_LITERAL_CSTRING("allowed/../forbidden_dir/file"));
+  rv = newPath->AppendRelativeNativePath("allowed/../forbidden_dir/file"_ns);
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->Exists(&exists);
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);
 
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(newPath));
   ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendNative(NS_LITERAL_CSTRING("allowed"));
+  rv = newPath->AppendNative("allowed"_ns);
   ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendNative(NS_LITERAL_CSTRING(".."));
+  rv = newPath->AppendNative(".."_ns);
   ASSERT_EQ(rv, NS_OK);
-  rv = newPath->AppendNative(NS_LITERAL_CSTRING("forbidden_dir"));
+  rv = newPath->AppendNative("forbidden_dir"_ns);
   ASSERT_EQ(rv, NS_OK);
   rv = newPath->Exists(&exists);
   ASSERT_EQ(rv, NS_ERROR_FILE_ACCESS_DENIED);

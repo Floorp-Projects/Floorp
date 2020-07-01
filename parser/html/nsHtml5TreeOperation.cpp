@@ -1118,8 +1118,8 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
         klass.AppendLiteral(" error");
         element->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass, true);
       } else {
-        element->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                         NS_LITERAL_STRING("error"), true);
+        element->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, u"error"_ns,
+                         true);
       }
 
       nsresult rv;
@@ -1155,7 +1155,7 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     nsresult operator()(const opAddLineNumberId& aOperation) {
       Element* element = (*(aOperation.mElement))->AsElement();
       int32_t lineNumber = aOperation.mLineNumber;
-      nsAutoString val(NS_LITERAL_STRING("line"));
+      nsAutoString val(u"line"_ns);
       val.AppendInt(lineNumber);
       element->SetAttr(kNameSpaceID_None, nsGkAtoms::id, val, true);
       return NS_OK;

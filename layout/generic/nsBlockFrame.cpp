@@ -540,7 +540,7 @@ void nsBlockFrame::List(FILE* out, const char* aPrefix,
 }
 
 nsresult nsBlockFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Block"), aResult);
+  return MakeFrameName(u"Block"_ns, aResult);
 }
 #endif
 

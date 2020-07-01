@@ -60,7 +60,7 @@ void IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal) {
   init.mTotal = aTotal;
 
   RefPtr<ProgressEvent> event =
-      ProgressEvent::Constructor(this, NS_LITERAL_STRING("progress"), init);
+      ProgressEvent::Constructor(this, u"progress"_ns, init);
   DispatchTrustedEvent(event);
 }
 

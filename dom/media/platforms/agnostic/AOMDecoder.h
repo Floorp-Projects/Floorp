@@ -27,7 +27,7 @@ class AOMDecoder : public MediaDataDecoder,
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   nsCString GetDescriptionName() const override {
-    return NS_LITERAL_CSTRING("av1 libaom video decoder");
+    return "av1 libaom video decoder"_ns;
   }
 
   // Return true if aMimeType is a one of the strings used

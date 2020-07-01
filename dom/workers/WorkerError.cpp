@@ -204,8 +204,8 @@ class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable {
 
     RefPtr<mozilla::dom::EventTarget> parentEventTarget =
         aWorkerPrivate->ParentEventTargetRef();
-    RefPtr<Event> event = Event::Constructor(
-        parentEventTarget, NS_LITERAL_STRING("error"), EventInit());
+    RefPtr<Event> event =
+        Event::Constructor(parentEventTarget, u"error"_ns, EventInit());
     event->SetTrusted(true);
 
     parentEventTarget->DispatchEvent(*event);
@@ -287,7 +287,7 @@ void WorkerErrorReport::ReportError(
 
     if (aTarget) {
       RefPtr<ErrorEvent> event =
-          ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
+          ErrorEvent::Constructor(aTarget, u"error"_ns, init);
       event->SetTrusted(true);
 
       bool defaultActionEnabled =
@@ -340,7 +340,7 @@ void WorkerErrorReport::ReportError(
         MOZ_ASSERT(globalScope->GetWrapperPreserveColor() == global);
 
         RefPtr<ErrorEvent> event =
-            ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
+            ErrorEvent::Constructor(aTarget, u"error"_ns, init);
         event->SetTrusted(true);
 
         if (NS_FAILED(EventDispatcher::DispatchDOMEvent(

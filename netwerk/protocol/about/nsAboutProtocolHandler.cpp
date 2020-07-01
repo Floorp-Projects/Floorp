@@ -237,11 +237,10 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                      "nsIAboutModule->newChannel(aURI, aLoadInfo) needs to "
                      "set LoadInfo");
         AutoTArray<nsString, 2> params = {
-            NS_LITERAL_STRING("nsIAboutModule->newChannel(aURI)"),
-            NS_LITERAL_STRING("nsIAboutModule->newChannel(aURI, aLoadInfo)")};
+            u"nsIAboutModule->newChannel(aURI)"_ns,
+            u"nsIAboutModule->newChannel(aURI, aLoadInfo)"_ns};
         nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag,
-            NS_LITERAL_CSTRING("Security by Default"),
+            nsIScriptError::warningFlag, "Security by Default"_ns,
             nullptr,  // aDocument
             nsContentUtils::eNECKO_PROPERTIES, "APIDeprecationWarning", params);
         (*result)->SetLoadInfo(aLoadInfo);
@@ -263,7 +262,7 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
         nsCOMPtr<nsIWritablePropertyBag2> writableBag =
             do_QueryInterface(*result);
         if (writableBag) {
-          writableBag->SetPropertyAsInterface(NS_LITERAL_STRING("baseURI"),
+          writableBag->SetPropertyAsInterface(u"baseURI"_ns,
                                               aboutURI->GetBaseURI());
         }
       }

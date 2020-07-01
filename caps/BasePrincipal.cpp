@@ -831,7 +831,7 @@ NS_IMETHODIMP BasePrincipal::GetIsOnion(bool* aIsOnion) {
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
-  *aIsOnion = StringEndsWith(host, NS_LITERAL_CSTRING(".onion"));
+  *aIsOnion = StringEndsWith(host, ".onion"_ns);
   return NS_OK;
 }
 
@@ -1060,13 +1060,13 @@ already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
 
 already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
     const nsACString& aOrigin) {
-  MOZ_ASSERT(!StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("[")),
+  MOZ_ASSERT(!StringBeginsWith(aOrigin, "["_ns),
              "CreateContentPrincipal does not support System and Expanded "
              "principals");
 
-  MOZ_ASSERT(!StringBeginsWith(aOrigin,
-                               NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":")),
-             "CreateContentPrincipal does not support NullPrincipal");
+  MOZ_ASSERT(
+      !StringBeginsWith(aOrigin, nsLiteralCString(NS_NULLPRINCIPAL_SCHEME ":")),
+      "CreateContentPrincipal does not support NullPrincipal");
 
   nsAutoCString originNoSuffix;
   OriginAttributes attrs;

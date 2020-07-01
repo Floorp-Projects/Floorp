@@ -124,8 +124,7 @@ nsresult nsJARInputStream::InitDirectory(nsJAR* aJar,
     }
     ++curr;
   }
-  nsAutoCString pattern = escDirName + NS_LITERAL_CSTRING("?*~") + escDirName +
-                          NS_LITERAL_CSTRING("?*/?*");
+  nsAutoCString pattern = escDirName + "?*~"_ns + escDirName + "?*/?*"_ns;
   rv = mJar->mZip->FindInit(pattern.get(), &find);
   if (NS_FAILED(rv)) return rv;
 

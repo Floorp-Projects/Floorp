@@ -635,7 +635,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   // Determine whether a new window was opened specifically for this request
   bool shouldCloseWindow = false;
   if (props) {
-    props->GetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
+    props->GetPropertyAsBool(u"docshell.newWindowTarget"_ns,
                              &shouldCloseWindow);
   }
 
@@ -749,7 +749,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
     if (fileExtension.IsEmpty() || mimeType.IsEmpty()) {
       // Extension lookup gave us no useful match
       mimeSvc->GetFromTypeAndExtension(
-          NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM), fileExtension,
+          nsLiteralCString(APPLICATION_OCTET_STREAM), fileExtension,
           getter_AddRefs(mimeInfo));
       mimeType.AssignLiteral(APPLICATION_OCTET_STREAM);
     }
@@ -1454,7 +1454,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel* aChannel) {
   rv = mTempFile->GetLeafName(mTempLeafName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_TRUE(StringEndsWith(mTempLeafName, NS_LITERAL_STRING(".part")),
+  NS_ENSURE_TRUE(StringEndsWith(mTempLeafName, u".part"_ns),
                  NS_ERROR_UNEXPECTED);
 
   // Strip off the ".part" from mTempLeafName
@@ -1582,8 +1582,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     // Determine whether a new window was opened specifically for this request
     if (props) {
       bool tmp = false;
-      if (NS_SUCCEEDED(props->GetPropertyAsBool(
-              NS_LITERAL_STRING("docshell.newWindowTarget"), &tmp))) {
+      if (NS_SUCCEEDED(
+              props->GetPropertyAsBool(u"docshell.newWindowTarget"_ns, &tmp))) {
         mMaybeCloseWindowHelper->SetShouldCloseWindow(tmp);
       }
     }

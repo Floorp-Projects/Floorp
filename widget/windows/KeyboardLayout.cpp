@@ -329,87 +329,87 @@ static const char* GetBoolName(bool aBool) { return aBool ? "true" : "false"; }
 static const nsCString GetCharacterCodeName(WPARAM aCharCode) {
   switch (aCharCode) {
     case 0x0000:
-      return NS_LITERAL_CSTRING("NULL (0x0000)");
+      return "NULL (0x0000)"_ns;
     case 0x0008:
-      return NS_LITERAL_CSTRING("BACKSPACE (0x0008)");
+      return "BACKSPACE (0x0008)"_ns;
     case 0x0009:
-      return NS_LITERAL_CSTRING("CHARACTER TABULATION (0x0009)");
+      return "CHARACTER TABULATION (0x0009)"_ns;
     case 0x000A:
-      return NS_LITERAL_CSTRING("LINE FEED (0x000A)");
+      return "LINE FEED (0x000A)"_ns;
     case 0x000B:
-      return NS_LITERAL_CSTRING("LINE TABULATION (0x000B)");
+      return "LINE TABULATION (0x000B)"_ns;
     case 0x000C:
-      return NS_LITERAL_CSTRING("FORM FEED (0x000C)");
+      return "FORM FEED (0x000C)"_ns;
     case 0x000D:
-      return NS_LITERAL_CSTRING("CARRIAGE RETURN (0x000D)");
+      return "CARRIAGE RETURN (0x000D)"_ns;
     case 0x0018:
-      return NS_LITERAL_CSTRING("CANCEL (0x0018)");
+      return "CANCEL (0x0018)"_ns;
     case 0x001B:
-      return NS_LITERAL_CSTRING("ESCAPE (0x001B)");
+      return "ESCAPE (0x001B)"_ns;
     case 0x0020:
-      return NS_LITERAL_CSTRING("SPACE (0x0020)");
+      return "SPACE (0x0020)"_ns;
     case 0x007F:
-      return NS_LITERAL_CSTRING("DELETE (0x007F)");
+      return "DELETE (0x007F)"_ns;
     case 0x00A0:
-      return NS_LITERAL_CSTRING("NO-BREAK SPACE (0x00A0)");
+      return "NO-BREAK SPACE (0x00A0)"_ns;
     case 0x00AD:
-      return NS_LITERAL_CSTRING("SOFT HYPHEN (0x00AD)");
+      return "SOFT HYPHEN (0x00AD)"_ns;
     case 0x2000:
-      return NS_LITERAL_CSTRING("EN QUAD (0x2000)");
+      return "EN QUAD (0x2000)"_ns;
     case 0x2001:
-      return NS_LITERAL_CSTRING("EM QUAD (0x2001)");
+      return "EM QUAD (0x2001)"_ns;
     case 0x2002:
-      return NS_LITERAL_CSTRING("EN SPACE (0x2002)");
+      return "EN SPACE (0x2002)"_ns;
     case 0x2003:
-      return NS_LITERAL_CSTRING("EM SPACE (0x2003)");
+      return "EM SPACE (0x2003)"_ns;
     case 0x2004:
-      return NS_LITERAL_CSTRING("THREE-PER-EM SPACE (0x2004)");
+      return "THREE-PER-EM SPACE (0x2004)"_ns;
     case 0x2005:
-      return NS_LITERAL_CSTRING("FOUR-PER-EM SPACE (0x2005)");
+      return "FOUR-PER-EM SPACE (0x2005)"_ns;
     case 0x2006:
-      return NS_LITERAL_CSTRING("SIX-PER-EM SPACE (0x2006)");
+      return "SIX-PER-EM SPACE (0x2006)"_ns;
     case 0x2007:
-      return NS_LITERAL_CSTRING("FIGURE SPACE (0x2007)");
+      return "FIGURE SPACE (0x2007)"_ns;
     case 0x2008:
-      return NS_LITERAL_CSTRING("PUNCTUATION SPACE (0x2008)");
+      return "PUNCTUATION SPACE (0x2008)"_ns;
     case 0x2009:
-      return NS_LITERAL_CSTRING("THIN SPACE (0x2009)");
+      return "THIN SPACE (0x2009)"_ns;
     case 0x200A:
-      return NS_LITERAL_CSTRING("HAIR SPACE (0x200A)");
+      return "HAIR SPACE (0x200A)"_ns;
     case 0x200B:
-      return NS_LITERAL_CSTRING("ZERO WIDTH SPACE (0x200B)");
+      return "ZERO WIDTH SPACE (0x200B)"_ns;
     case 0x200C:
-      return NS_LITERAL_CSTRING("ZERO WIDTH NON-JOINER (0x200C)");
+      return "ZERO WIDTH NON-JOINER (0x200C)"_ns;
     case 0x200D:
-      return NS_LITERAL_CSTRING("ZERO WIDTH JOINER (0x200D)");
+      return "ZERO WIDTH JOINER (0x200D)"_ns;
     case 0x200E:
-      return NS_LITERAL_CSTRING("LEFT-TO-RIGHT MARK (0x200E)");
+      return "LEFT-TO-RIGHT MARK (0x200E)"_ns;
     case 0x200F:
-      return NS_LITERAL_CSTRING("RIGHT-TO-LEFT MARK (0x200F)");
+      return "RIGHT-TO-LEFT MARK (0x200F)"_ns;
     case 0x2029:
-      return NS_LITERAL_CSTRING("PARAGRAPH SEPARATOR (0x2029)");
+      return "PARAGRAPH SEPARATOR (0x2029)"_ns;
     case 0x202A:
-      return NS_LITERAL_CSTRING("LEFT-TO-RIGHT EMBEDDING (0x202A)");
+      return "LEFT-TO-RIGHT EMBEDDING (0x202A)"_ns;
     case 0x202B:
-      return NS_LITERAL_CSTRING("RIGHT-TO-LEFT EMBEDDING (0x202B)");
+      return "RIGHT-TO-LEFT EMBEDDING (0x202B)"_ns;
     case 0x202D:
-      return NS_LITERAL_CSTRING("LEFT-TO-RIGHT OVERRIDE (0x202D)");
+      return "LEFT-TO-RIGHT OVERRIDE (0x202D)"_ns;
     case 0x202E:
-      return NS_LITERAL_CSTRING("RIGHT-TO-LEFT OVERRIDE (0x202E)");
+      return "RIGHT-TO-LEFT OVERRIDE (0x202E)"_ns;
     case 0x202F:
-      return NS_LITERAL_CSTRING("NARROW NO-BREAK SPACE (0x202F)");
+      return "NARROW NO-BREAK SPACE (0x202F)"_ns;
     case 0x205F:
-      return NS_LITERAL_CSTRING("MEDIUM MATHEMATICAL SPACE (0x205F)");
+      return "MEDIUM MATHEMATICAL SPACE (0x205F)"_ns;
     case 0x2060:
-      return NS_LITERAL_CSTRING("WORD JOINER (0x2060)");
+      return "WORD JOINER (0x2060)"_ns;
     case 0x2066:
-      return NS_LITERAL_CSTRING("LEFT-TO-RIGHT ISOLATE (0x2066)");
+      return "LEFT-TO-RIGHT ISOLATE (0x2066)"_ns;
     case 0x2067:
-      return NS_LITERAL_CSTRING("RIGHT-TO-LEFT ISOLATE (0x2067)");
+      return "RIGHT-TO-LEFT ISOLATE (0x2067)"_ns;
     case 0x3000:
-      return NS_LITERAL_CSTRING("IDEOGRAPHIC SPACE (0x3000)");
+      return "IDEOGRAPHIC SPACE (0x3000)"_ns;
     case 0xFEFF:
-      return NS_LITERAL_CSTRING("ZERO WIDTH NO-BREAK SPACE (0xFEFF)");
+      return "ZERO WIDTH NO-BREAK SPACE (0xFEFF)"_ns;
     default: {
       if (aCharCode < ' ' || (aCharCode >= 0x80 && aCharCode < 0xA0)) {
         return nsPrintfCString("control (0x%04X)", aCharCode);
@@ -436,13 +436,13 @@ static const nsCString GetCharacterCodeName(WPARAM aCharCode) {
 static const nsCString GetKeyLocationName(uint32_t aLocation) {
   switch (aLocation) {
     case eKeyLocationLeft:
-      return NS_LITERAL_CSTRING("KEY_LOCATION_LEFT");
+      return "KEY_LOCATION_LEFT"_ns;
     case eKeyLocationRight:
-      return NS_LITERAL_CSTRING("KEY_LOCATION_RIGHT");
+      return "KEY_LOCATION_RIGHT"_ns;
     case eKeyLocationStandard:
-      return NS_LITERAL_CSTRING("KEY_LOCATION_STANDARD");
+      return "KEY_LOCATION_STANDARD"_ns;
     case eKeyLocationNumpad:
-      return NS_LITERAL_CSTRING("KEY_LOCATION_NUMPAD");
+      return "KEY_LOCATION_NUMPAD"_ns;
     default:
       return nsPrintfCString("Unknown (0x%04X)", aLocation);
   }
@@ -524,33 +524,33 @@ class MOZ_STACK_CLASS GetShiftStateName final : public nsAutoCString {
 static const nsCString GetMessageName(UINT aMessage) {
   switch (aMessage) {
     case WM_NULL:
-      return NS_LITERAL_CSTRING("WM_NULL");
+      return "WM_NULL"_ns;
     case WM_KEYDOWN:
-      return NS_LITERAL_CSTRING("WM_KEYDOWN");
+      return "WM_KEYDOWN"_ns;
     case WM_KEYUP:
-      return NS_LITERAL_CSTRING("WM_KEYUP");
+      return "WM_KEYUP"_ns;
     case WM_SYSKEYDOWN:
-      return NS_LITERAL_CSTRING("WM_SYSKEYDOWN");
+      return "WM_SYSKEYDOWN"_ns;
     case WM_SYSKEYUP:
-      return NS_LITERAL_CSTRING("WM_SYSKEYUP");
+      return "WM_SYSKEYUP"_ns;
     case WM_CHAR:
-      return NS_LITERAL_CSTRING("WM_CHAR");
+      return "WM_CHAR"_ns;
     case WM_UNICHAR:
-      return NS_LITERAL_CSTRING("WM_UNICHAR");
+      return "WM_UNICHAR"_ns;
     case WM_SYSCHAR:
-      return NS_LITERAL_CSTRING("WM_SYSCHAR");
+      return "WM_SYSCHAR"_ns;
     case WM_DEADCHAR:
-      return NS_LITERAL_CSTRING("WM_DEADCHAR");
+      return "WM_DEADCHAR"_ns;
     case WM_SYSDEADCHAR:
-      return NS_LITERAL_CSTRING("WM_SYSDEADCHAR");
+      return "WM_SYSDEADCHAR"_ns;
     case MOZ_WM_KEYDOWN:
-      return NS_LITERAL_CSTRING("MOZ_WM_KEYDOWN");
+      return "MOZ_WM_KEYDOWN"_ns;
     case MOZ_WM_KEYUP:
-      return NS_LITERAL_CSTRING("MOZ_WM_KEYUP");
+      return "MOZ_WM_KEYUP"_ns;
     case WM_APPCOMMAND:
-      return NS_LITERAL_CSTRING("WM_APPCOMMAND");
+      return "WM_APPCOMMAND"_ns;
     case WM_QUIT:
-      return NS_LITERAL_CSTRING("WM_QUIT");
+      return "WM_QUIT"_ns;
     default:
       return nsPrintfCString("Unknown Message (0x%04X)", aMessage);
   }
@@ -566,109 +566,109 @@ static const nsCString GetVirtualKeyCodeName(WPARAM aVK) {
 static const nsCString GetAppCommandName(WPARAM aCommand) {
   switch (aCommand) {
     case APPCOMMAND_BASS_BOOST:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BASS_BOOST");
+      return "APPCOMMAND_BASS_BOOST"_ns;
     case APPCOMMAND_BASS_DOWN:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BASS_DOWN");
+      return "APPCOMMAND_BASS_DOWN"_ns;
     case APPCOMMAND_BASS_UP:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BASS_UP");
+      return "APPCOMMAND_BASS_UP"_ns;
     case APPCOMMAND_BROWSER_BACKWARD:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_BACKWARD");
+      return "APPCOMMAND_BROWSER_BACKWARD"_ns;
     case APPCOMMAND_BROWSER_FAVORITES:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_FAVORITES");
+      return "APPCOMMAND_BROWSER_FAVORITES"_ns;
     case APPCOMMAND_BROWSER_FORWARD:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_FORWARD");
+      return "APPCOMMAND_BROWSER_FORWARD"_ns;
     case APPCOMMAND_BROWSER_HOME:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_HOME");
+      return "APPCOMMAND_BROWSER_HOME"_ns;
     case APPCOMMAND_BROWSER_REFRESH:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_REFRESH");
+      return "APPCOMMAND_BROWSER_REFRESH"_ns;
     case APPCOMMAND_BROWSER_SEARCH:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_SEARCH");
+      return "APPCOMMAND_BROWSER_SEARCH"_ns;
     case APPCOMMAND_BROWSER_STOP:
-      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_STOP");
+      return "APPCOMMAND_BROWSER_STOP"_ns;
     case APPCOMMAND_CLOSE:
-      return NS_LITERAL_CSTRING("APPCOMMAND_CLOSE");
+      return "APPCOMMAND_CLOSE"_ns;
     case APPCOMMAND_COPY:
-      return NS_LITERAL_CSTRING("APPCOMMAND_COPY");
+      return "APPCOMMAND_COPY"_ns;
     case APPCOMMAND_CORRECTION_LIST:
-      return NS_LITERAL_CSTRING("APPCOMMAND_CORRECTION_LIST");
+      return "APPCOMMAND_CORRECTION_LIST"_ns;
     case APPCOMMAND_CUT:
-      return NS_LITERAL_CSTRING("APPCOMMAND_CUT");
+      return "APPCOMMAND_CUT"_ns;
     case APPCOMMAND_DICTATE_OR_COMMAND_CONTROL_TOGGLE:
-      return NS_LITERAL_CSTRING("APPCOMMAND_DICTATE_OR_COMMAND_CONTROL_TOGGLE");
+      return "APPCOMMAND_DICTATE_OR_COMMAND_CONTROL_TOGGLE"_ns;
     case APPCOMMAND_FIND:
-      return NS_LITERAL_CSTRING("APPCOMMAND_FIND");
+      return "APPCOMMAND_FIND"_ns;
     case APPCOMMAND_FORWARD_MAIL:
-      return NS_LITERAL_CSTRING("APPCOMMAND_FORWARD_MAIL");
+      return "APPCOMMAND_FORWARD_MAIL"_ns;
     case APPCOMMAND_HELP:
-      return NS_LITERAL_CSTRING("APPCOMMAND_HELP");
+      return "APPCOMMAND_HELP"_ns;
     case APPCOMMAND_LAUNCH_APP1:
-      return NS_LITERAL_CSTRING("APPCOMMAND_LAUNCH_APP1");
+      return "APPCOMMAND_LAUNCH_APP1"_ns;
     case APPCOMMAND_LAUNCH_APP2:
-      return NS_LITERAL_CSTRING("APPCOMMAND_LAUNCH_APP2");
+      return "APPCOMMAND_LAUNCH_APP2"_ns;
     case APPCOMMAND_LAUNCH_MAIL:
-      return NS_LITERAL_CSTRING("APPCOMMAND_LAUNCH_MAIL");
+      return "APPCOMMAND_LAUNCH_MAIL"_ns;
     case APPCOMMAND_LAUNCH_MEDIA_SELECT:
-      return NS_LITERAL_CSTRING("APPCOMMAND_LAUNCH_MEDIA_SELECT");
+      return "APPCOMMAND_LAUNCH_MEDIA_SELECT"_ns;
     case APPCOMMAND_MEDIA_CHANNEL_DOWN:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_CHANNEL_DOWN");
+      return "APPCOMMAND_MEDIA_CHANNEL_DOWN"_ns;
     case APPCOMMAND_MEDIA_CHANNEL_UP:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_CHANNEL_UP");
+      return "APPCOMMAND_MEDIA_CHANNEL_UP"_ns;
     case APPCOMMAND_MEDIA_FAST_FORWARD:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_FAST_FORWARD");
+      return "APPCOMMAND_MEDIA_FAST_FORWARD"_ns;
     case APPCOMMAND_MEDIA_NEXTTRACK:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_NEXTTRACK");
+      return "APPCOMMAND_MEDIA_NEXTTRACK"_ns;
     case APPCOMMAND_MEDIA_PAUSE:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_PAUSE");
+      return "APPCOMMAND_MEDIA_PAUSE"_ns;
     case APPCOMMAND_MEDIA_PLAY:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_PLAY");
+      return "APPCOMMAND_MEDIA_PLAY"_ns;
     case APPCOMMAND_MEDIA_PLAY_PAUSE:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_PLAY_PAUSE");
+      return "APPCOMMAND_MEDIA_PLAY_PAUSE"_ns;
     case APPCOMMAND_MEDIA_PREVIOUSTRACK:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_PREVIOUSTRACK");
+      return "APPCOMMAND_MEDIA_PREVIOUSTRACK"_ns;
     case APPCOMMAND_MEDIA_RECORD:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_RECORD");
+      return "APPCOMMAND_MEDIA_RECORD"_ns;
     case APPCOMMAND_MEDIA_REWIND:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_REWIND");
+      return "APPCOMMAND_MEDIA_REWIND"_ns;
     case APPCOMMAND_MEDIA_STOP:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_STOP");
+      return "APPCOMMAND_MEDIA_STOP"_ns;
     case APPCOMMAND_MIC_ON_OFF_TOGGLE:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MIC_ON_OFF_TOGGLE");
+      return "APPCOMMAND_MIC_ON_OFF_TOGGLE"_ns;
     case APPCOMMAND_MICROPHONE_VOLUME_DOWN:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MICROPHONE_VOLUME_DOWN");
+      return "APPCOMMAND_MICROPHONE_VOLUME_DOWN"_ns;
     case APPCOMMAND_MICROPHONE_VOLUME_MUTE:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MICROPHONE_VOLUME_MUTE");
+      return "APPCOMMAND_MICROPHONE_VOLUME_MUTE"_ns;
     case APPCOMMAND_MICROPHONE_VOLUME_UP:
-      return NS_LITERAL_CSTRING("APPCOMMAND_MICROPHONE_VOLUME_UP");
+      return "APPCOMMAND_MICROPHONE_VOLUME_UP"_ns;
     case APPCOMMAND_NEW:
-      return NS_LITERAL_CSTRING("APPCOMMAND_NEW");
+      return "APPCOMMAND_NEW"_ns;
     case APPCOMMAND_OPEN:
-      return NS_LITERAL_CSTRING("APPCOMMAND_OPEN");
+      return "APPCOMMAND_OPEN"_ns;
     case APPCOMMAND_PASTE:
-      return NS_LITERAL_CSTRING("APPCOMMAND_PASTE");
+      return "APPCOMMAND_PASTE"_ns;
     case APPCOMMAND_PRINT:
-      return NS_LITERAL_CSTRING("APPCOMMAND_PRINT");
+      return "APPCOMMAND_PRINT"_ns;
     case APPCOMMAND_REDO:
-      return NS_LITERAL_CSTRING("APPCOMMAND_REDO");
+      return "APPCOMMAND_REDO"_ns;
     case APPCOMMAND_REPLY_TO_MAIL:
-      return NS_LITERAL_CSTRING("APPCOMMAND_REPLY_TO_MAIL");
+      return "APPCOMMAND_REPLY_TO_MAIL"_ns;
     case APPCOMMAND_SAVE:
-      return NS_LITERAL_CSTRING("APPCOMMAND_SAVE");
+      return "APPCOMMAND_SAVE"_ns;
     case APPCOMMAND_SEND_MAIL:
-      return NS_LITERAL_CSTRING("APPCOMMAND_SEND_MAIL");
+      return "APPCOMMAND_SEND_MAIL"_ns;
     case APPCOMMAND_SPELL_CHECK:
-      return NS_LITERAL_CSTRING("APPCOMMAND_SPELL_CHECK");
+      return "APPCOMMAND_SPELL_CHECK"_ns;
     case APPCOMMAND_TREBLE_DOWN:
-      return NS_LITERAL_CSTRING("APPCOMMAND_TREBLE_DOWN");
+      return "APPCOMMAND_TREBLE_DOWN"_ns;
     case APPCOMMAND_TREBLE_UP:
-      return NS_LITERAL_CSTRING("APPCOMMAND_TREBLE_UP");
+      return "APPCOMMAND_TREBLE_UP"_ns;
     case APPCOMMAND_UNDO:
-      return NS_LITERAL_CSTRING("APPCOMMAND_UNDO");
+      return "APPCOMMAND_UNDO"_ns;
     case APPCOMMAND_VOLUME_DOWN:
-      return NS_LITERAL_CSTRING("APPCOMMAND_VOLUME_DOWN");
+      return "APPCOMMAND_VOLUME_DOWN"_ns;
     case APPCOMMAND_VOLUME_MUTE:
-      return NS_LITERAL_CSTRING("APPCOMMAND_VOLUME_MUTE");
+      return "APPCOMMAND_VOLUME_MUTE"_ns;
     case APPCOMMAND_VOLUME_UP:
-      return NS_LITERAL_CSTRING("APPCOMMAND_VOLUME_UP");
+      return "APPCOMMAND_VOLUME_UP"_ns;
     default:
       return nsPrintfCString("Unknown app command (0x%08X)", aCommand);
   }
@@ -677,11 +677,11 @@ static const nsCString GetAppCommandName(WPARAM aCommand) {
 static const nsCString GetAppCommandDeviceName(LPARAM aDevice) {
   switch (aDevice) {
     case FAPPCOMMAND_KEY:
-      return NS_LITERAL_CSTRING("FAPPCOMMAND_KEY");
+      return "FAPPCOMMAND_KEY"_ns;
     case FAPPCOMMAND_MOUSE:
-      return NS_LITERAL_CSTRING("FAPPCOMMAND_MOUSE");
+      return "FAPPCOMMAND_MOUSE"_ns;
     case FAPPCOMMAND_OEM:
-      return NS_LITERAL_CSTRING("FAPPCOMMAND_OEM");
+      return "FAPPCOMMAND_OEM"_ns;
     default:
       return nsPrintfCString("Unknown app command device (0x%04X)", aDevice);
   }
@@ -800,7 +800,7 @@ static const nsCString ToString(const MSG& aMSG) {
 static const nsCString ToString(
     const UniCharsAndModifiers& aUniCharsAndModifiers) {
   if (aUniCharsAndModifiers.IsEmpty()) {
-    return NS_LITERAL_CSTRING("{}");
+    return "{}"_ns;
   }
   nsCString result;
   result.AssignLiteral("{ ");
@@ -2931,7 +2931,7 @@ bool NativeKey::NeedsToHandleWithoutFollowingCharMessages() const {
 static nsCString GetResultOfInSendMessageEx() {
   DWORD ret = ::InSendMessageEx(nullptr);
   if (!ret) {
-    return NS_LITERAL_CSTRING("ISMEX_NOSEND");
+    return "ISMEX_NOSEND"_ns;
   }
   nsCString result;
   if (ret & ISMEX_CALLBACK) {
@@ -3225,7 +3225,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
         CrashReporter::AppendAppNotesToCrashReport(info);
       } else {
         CrashReporter::AppendAppNotesToCrashReport(
-            NS_LITERAL_CSTRING("\nThere is no message in any window"));
+            "\nThere is no message in any window"_ns);
       }
 
       MOZ_CRASH("We lost the following char message");
@@ -3374,8 +3374,8 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
       CrashReporter::AppendAppNotesToCrashReport(info);
     } else {
       CrashReporter::AppendAppNotesToCrashReport(
-          NS_LITERAL_CSTRING("\nThere is no key message after unexpected char "
-                             "message removed, "));
+          nsLiteralCString("\nThere is no key message after unexpected char "
+                           "message removed, "));
     }
     // Another window has a key message?
     if (WinUtils::PeekMessage(&nextKeyMsgInAllWindows, 0, WM_KEYFIRST,
@@ -3385,7 +3385,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
       CrashReporter::AppendAppNotesToCrashReport(info);
     } else {
       CrashReporter::AppendAppNotesToCrashReport(
-          NS_LITERAL_CSTRING("\nThere is no key message in any windows."));
+          "\nThere is no key message in any windows."_ns);
     }
 
     MOZ_CRASH("PeekMessage() removed unexpected message");
@@ -4341,7 +4341,7 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
     wchar_t buf[256];
     if (NS_WARN_IF(!WinUtils::GetRegistryKey(
             HKEY_LOCAL_MACHINE, key.get(), L"Layout Text", buf, sizeof(buf)))) {
-      return NS_LITERAL_CSTRING("No name or too long name");
+      return "No name or too long name"_ns;
     }
     return NS_ConvertUTF16toUTF8(buf);
   }

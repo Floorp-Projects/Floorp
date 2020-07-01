@@ -65,31 +65,26 @@ class QueueMessagesRunnable : public MIDIBackgroundRunnable {
 
 TestMIDIPlatformService::TestMIDIPlatformService()
     : mBackgroundThread(NS_GetCurrentThread()),
-      mControlInputPort(
-          NS_LITERAL_STRING("b744eebe-f7d8-499b-872b-958f63c8f522"),
-          NS_LITERAL_STRING("Test Control MIDI Device Input Port"),
-          NS_LITERAL_STRING("Test Manufacturer"), NS_LITERAL_STRING("1.0.0"),
-          static_cast<uint32_t>(MIDIPortType::Input)),
-      mControlOutputPort(
-          NS_LITERAL_STRING("ab8e7fe8-c4de-436a-a960-30898a7c9a3d"),
-          NS_LITERAL_STRING("Test Control MIDI Device Output Port"),
-          NS_LITERAL_STRING("Test Manufacturer"), NS_LITERAL_STRING("1.0.0"),
-          static_cast<uint32_t>(MIDIPortType::Output)),
-      mStateTestInputPort(
-          NS_LITERAL_STRING("a9329677-8588-4460-a091-9d4a7f629a48"),
-          NS_LITERAL_STRING("Test State MIDI Device Input Port"),
-          NS_LITERAL_STRING("Test Manufacturer"), NS_LITERAL_STRING("1.0.0"),
-          static_cast<uint32_t>(MIDIPortType::Input)),
-      mStateTestOutputPort(
-          NS_LITERAL_STRING("478fa225-b5fc-4fa6-a543-d32d9cb651e7"),
-          NS_LITERAL_STRING("Test State MIDI Device Output Port"),
-          NS_LITERAL_STRING("Test Manufacturer"), NS_LITERAL_STRING("1.0.0"),
-          static_cast<uint32_t>(MIDIPortType::Output)),
-      mAlwaysClosedTestOutputPort(
-          NS_LITERAL_STRING("f87d0c76-3c68-49a9-a44f-700f1125c07a"),
-          NS_LITERAL_STRING("Always Closed MIDI Device Output Port"),
-          NS_LITERAL_STRING("Test Manufacturer"), NS_LITERAL_STRING("1.0.0"),
-          static_cast<uint32_t>(MIDIPortType::Output)),
+      mControlInputPort(u"b744eebe-f7d8-499b-872b-958f63c8f522"_ns,
+                        u"Test Control MIDI Device Input Port"_ns,
+                        u"Test Manufacturer"_ns, u"1.0.0"_ns,
+                        static_cast<uint32_t>(MIDIPortType::Input)),
+      mControlOutputPort(u"ab8e7fe8-c4de-436a-a960-30898a7c9a3d"_ns,
+                         u"Test Control MIDI Device Output Port"_ns,
+                         u"Test Manufacturer"_ns, u"1.0.0"_ns,
+                         static_cast<uint32_t>(MIDIPortType::Output)),
+      mStateTestInputPort(u"a9329677-8588-4460-a091-9d4a7f629a48"_ns,
+                          u"Test State MIDI Device Input Port"_ns,
+                          u"Test Manufacturer"_ns, u"1.0.0"_ns,
+                          static_cast<uint32_t>(MIDIPortType::Input)),
+      mStateTestOutputPort(u"478fa225-b5fc-4fa6-a543-d32d9cb651e7"_ns,
+                           u"Test State MIDI Device Output Port"_ns,
+                           u"Test Manufacturer"_ns, u"1.0.0"_ns,
+                           static_cast<uint32_t>(MIDIPortType::Output)),
+      mAlwaysClosedTestOutputPort(u"f87d0c76-3c68-49a9-a44f-700f1125c07a"_ns,
+                                  u"Always Closed MIDI Device Output Port"_ns,
+                                  u"Test Manufacturer"_ns, u"1.0.0"_ns,
+                                  static_cast<uint32_t>(MIDIPortType::Output)),
       mIsInitialized(false) {
   AssertIsOnBackgroundThread();
 }

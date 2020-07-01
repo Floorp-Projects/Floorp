@@ -117,7 +117,7 @@ class BaseBlobImpl : public BlobImpl {
   virtual bool IsFile() const override { return mIsFile; }
 
   virtual void GetBlobImplType(nsAString& aBlobImplType) const override {
-    aBlobImplType = NS_LITERAL_STRING("BaseBlobImpl");
+    aBlobImplType = u"BaseBlobImpl"_ns;
   }
 
  protected:

@@ -21,7 +21,7 @@
 // (because NodeIds are random strings which can't contain the '-' character),
 // so there's no way a malicious GMP can harvest, store, and then report any
 // privacy sensitive data about what users are watching.
-#  define SHARED_GMP_DECODING_NODE_ID NS_LITERAL_CSTRING("gmp-shared-decoding")
+#  define SHARED_GMP_DECODING_NODE_ID "gmp-shared-decoding"_ns
 
 namespace mozilla {
 

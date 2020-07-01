@@ -7751,7 +7751,7 @@ void nsIFrame::ListWithMatchedRules(FILE* out, const char* aPrefix) const {
 }
 
 nsresult nsIFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Frame"), aResult);
+  return MakeFrameName(u"Frame"_ns, aResult);
 }
 
 nsresult nsIFrame::MakeFrameName(const nsAString& aType,

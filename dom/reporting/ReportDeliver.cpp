@@ -173,8 +173,7 @@ void SendReports(nsTArray<ReportDeliver::ReportData>& aReports,
   IgnoredErrorResult error;
   RefPtr<InternalHeaders> internalHeaders =
       new InternalHeaders(HeadersGuardEnum::Request);
-  internalHeaders->Set(NS_LITERAL_CSTRING("Content-Type"),
-                       NS_LITERAL_CSTRING("application/reports+json"), error);
+  internalHeaders->Set("Content-Type"_ns, "application/reports+json"_ns, error);
   if (NS_WARN_IF(error.Failed())) {
     return;
   }
@@ -206,7 +205,7 @@ void SendReports(nsTArray<ReportDeliver::ReportData>& aReports,
 
   auto internalRequest = MakeSafeRefPtr<InternalRequest>(uriSpec, uriFragment);
 
-  internalRequest->SetMethod(NS_LITERAL_CSTRING("POST"));
+  internalRequest->SetMethod("POST"_ns);
   internalRequest->SetBody(streamBody, body.Length());
   internalRequest->SetHeaders(internalHeaders);
   internalRequest->SetSkipServiceWorker();

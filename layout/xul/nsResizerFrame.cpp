@@ -429,10 +429,8 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
       nsICSSDeclaration* decl = inlineStyleContent->Style();
 
       if (aOriginalSizeInfo) {
-        decl->GetPropertyValue(NS_LITERAL_CSTRING("width"),
-                               aOriginalSizeInfo->width);
-        decl->GetPropertyValue(NS_LITERAL_CSTRING("height"),
-                               aOriginalSizeInfo->height);
+        decl->GetPropertyValue("width"_ns, aOriginalSizeInfo->width);
+        decl->GetPropertyValue("height"_ns, aOriginalSizeInfo->height);
       }
 
       // only set the property if the element could have changed in that
@@ -442,8 +440,7 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
         if (!widthstr.IsEmpty() &&
             !Substring(widthstr, widthstr.Length() - 2, 2).EqualsLiteral("px"))
           widthstr.AppendLiteral("px");
-        decl->SetProperty(NS_LITERAL_CSTRING("width"), widthstr, EmptyString(),
-                          IgnoreErrors());
+        decl->SetProperty("width"_ns, widthstr, EmptyString(), IgnoreErrors());
       }
       if (aDirection.mVertical) {
         NS_ConvertUTF16toUTF8 heightstr(aSizeInfo.height);
@@ -451,8 +448,8 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
             !Substring(heightstr, heightstr.Length() - 2, 2)
                  .EqualsLiteral("px"))
           heightstr.AppendLiteral("px");
-        decl->SetProperty(NS_LITERAL_CSTRING("height"), heightstr,
-                          EmptyString(), IgnoreErrors());
+        decl->SetProperty("height"_ns, heightstr, EmptyString(),
+                          IgnoreErrors());
       }
     }
   }

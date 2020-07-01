@@ -29,44 +29,35 @@ NS_IMPL_ISUPPORTS(PrintPreviewUserEventSuppressor, nsIDOMEventListener)
 
 void PrintPreviewUserEventSuppressor::AddListeners() {
   if (mEventTarget) {
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("click"), this, true);
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("contextmenu"), this,
-                                   true);
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("keydown"), this, true);
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("keypress"), this, true);
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("keyup"), this, true);
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), this, true);
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("mousemove"), this, true);
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("mouseout"), this, true);
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("mouseover"), this, true);
-    mEventTarget->AddEventListener(NS_LITERAL_STRING("mouseup"), this, true);
+    mEventTarget->AddEventListener(u"click"_ns, this, true);
+    mEventTarget->AddEventListener(u"contextmenu"_ns, this, true);
+    mEventTarget->AddEventListener(u"keydown"_ns, this, true);
+    mEventTarget->AddEventListener(u"keypress"_ns, this, true);
+    mEventTarget->AddEventListener(u"keyup"_ns, this, true);
+    mEventTarget->AddEventListener(u"mousedown"_ns, this, true);
+    mEventTarget->AddEventListener(u"mousemove"_ns, this, true);
+    mEventTarget->AddEventListener(u"mouseout"_ns, this, true);
+    mEventTarget->AddEventListener(u"mouseover"_ns, this, true);
+    mEventTarget->AddEventListener(u"mouseup"_ns, this, true);
 
-    mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("keydown"), this,
-                                         true);
+    mEventTarget->AddSystemEventListener(u"keydown"_ns, this, true);
   }
 }
 
 void PrintPreviewUserEventSuppressor::RemoveListeners() {
   if (mEventTarget) {
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("click"), this, true);
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this,
-                                      true);
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), this, true);
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), this,
-                                      true);
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), this, true);
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this,
-                                      true);
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"), this,
-                                      true);
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseout"), this,
-                                      true);
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"), this,
-                                      true);
-    mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseup"), this, true);
+    mEventTarget->RemoveEventListener(u"click"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"contextmenu"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"keydown"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"keypress"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"keyup"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"mousedown"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"mousemove"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"mouseout"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"mouseover"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"mouseup"_ns, this, true);
 
-    mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"), this,
-                                            true);
+    mEventTarget->RemoveSystemEventListener(u"keydown"_ns, this, true);
   }
 }
 

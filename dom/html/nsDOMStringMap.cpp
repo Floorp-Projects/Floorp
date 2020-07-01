@@ -200,7 +200,7 @@ bool nsDOMStringMap::AttrToDataProp(const nsAString& aAttr,
                                     nsAutoString& aResult) {
   // If the attribute name does not begin with "data-" then it can not be
   // a data attribute.
-  if (!StringBeginsWith(aAttr, NS_LITERAL_STRING("data-"))) {
+  if (!StringBeginsWith(aAttr, u"data-"_ns)) {
     return false;
   }
 
@@ -238,8 +238,7 @@ void nsDOMStringMap::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   if ((aModType == MutationEvent_Binding::ADDITION ||
        aModType == MutationEvent_Binding::REMOVAL) &&
       aNameSpaceID == kNameSpaceID_None &&
-      StringBeginsWith(nsDependentAtomString(aAttribute),
-                       NS_LITERAL_STRING("data-"))) {
+      StringBeginsWith(nsDependentAtomString(aAttribute), u"data-"_ns)) {
     ++mExpandoAndGeneration.generation;
   }
 }

@@ -905,8 +905,7 @@ void CustomElementRegistry::Define(
      *          any exceptions from the conversion.
      */
     if (callbacksHolder->mAttributeChangedCallback.WasPassed()) {
-      if (!JSObjectToAtomArray(aCx, constructor,
-                               NS_LITERAL_STRING("observedAttributes"),
+      if (!JSObjectToAtomArray(aCx, constructor, u"observedAttributes"_ns,
                                observedAttributes, aRv)) {
         return;
       }
@@ -922,8 +921,7 @@ void CustomElementRegistry::Define(
      *       Rethrow any exceptions from the conversion.
      */
     if (StaticPrefs::dom_webcomponents_elementInternals_enabled()) {
-      if (!JSObjectToAtomArray(aCx, constructor,
-                               NS_LITERAL_STRING("disabledFeatures"),
+      if (!JSObjectToAtomArray(aCx, constructor, u"disabledFeatures"_ns,
                                disabledFeatures, aRv)) {
         return;
       }
@@ -994,7 +992,7 @@ void CustomElementRegistry::Define(
 
     JS::Rooted<JS::Value> detail(aCx, JS::StringValue(nameJsStr));
     RefPtr<CustomEvent> event = NS_NewDOMCustomEvent(doc, nullptr, nullptr);
-    event->InitCustomEvent(aCx, NS_LITERAL_STRING("customelementdefined"),
+    event->InitCustomEvent(aCx, u"customelementdefined"_ns,
                            /* CanBubble */ true,
                            /* Cancelable */ true, detail);
     event->SetTrusted(true);

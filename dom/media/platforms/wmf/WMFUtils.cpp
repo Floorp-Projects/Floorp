@@ -161,7 +161,7 @@ nsString GetProgramW6432Path() {
   }
 
   if (!programPath) {
-    return NS_LITERAL_STRING("C:\\Program Files");
+    return u"C:\\Program Files"_ns;
   }
   return NS_ConvertUTF8toUTF16(programPath);
 }

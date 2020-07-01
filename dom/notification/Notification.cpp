@@ -214,9 +214,8 @@ class NotificationPermissionRequest : public ContentPermissionRequestBase,
   NotificationPermissionRequest(nsIPrincipal* aPrincipal,
                                 nsPIDOMWindowInner* aWindow, Promise* aPromise,
                                 NotificationPermissionCallback* aCallback)
-      : ContentPermissionRequestBase(
-            aPrincipal, aWindow, NS_LITERAL_CSTRING("notification"),
-            NS_LITERAL_CSTRING("desktop-notification")),
+      : ContentPermissionRequestBase(aPrincipal, aWindow, "notification"_ns,
+                                     "desktop-notification"_ns),
         mPermission(NotificationPermission::Default),
         mPromise(aPromise),
         mCallback(aCallback) {
@@ -259,8 +258,7 @@ class GetPermissionRunnable final : public WorkerMainThreadRunnable {
 
  public:
   explicit GetPermissionRunnable(WorkerPrivate* aWorker)
-      : WorkerMainThreadRunnable(
-            aWorker, NS_LITERAL_CSTRING("Notification :: Get Permission")),
+      : WorkerMainThreadRunnable(aWorker, "Notification :: Get Permission"_ns),
         mPermission(NotificationPermission::Denied) {}
 
   bool MainThreadRun() override {
@@ -487,7 +485,7 @@ NotificationPermissionRequest::Run() {
       nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
       if (doc) {
         nsContentUtils::ReportToConsole(
-            nsIScriptError::errorFlag, NS_LITERAL_CSTRING("DOM"), doc,
+            nsIScriptError::errorFlag, "DOM"_ns, doc,
             nsContentUtils::eDOM_PROPERTIES,
             "NotificationsInsecureRequestIsForbidden");
       }
@@ -529,7 +527,7 @@ NotificationPermissionRequest::Run() {
     nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
     if (doc) {
       nsContentUtils::ReportToConsole(
-          nsIScriptError::errorFlag, NS_LITERAL_CSTRING("DOM"), doc,
+          nsIScriptError::errorFlag, "DOM"_ns, doc,
           nsContentUtils::eDOM_PROPERTIES,
           "NotificationsCrossOriginIframeRequestIsForbidden");
     }
@@ -583,9 +581,9 @@ nsresult NotificationPermissionRequest::ResolvePromise() {
         StaticPrefs::dom_webnotifications_requireuserinteraction()) {
       nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
       if (doc) {
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::errorFlag, NS_LITERAL_CSTRING("DOM"), doc,
-            nsContentUtils::eDOM_PROPERTIES, "NotificationsRequireUserGesture");
+        nsContentUtils::ReportToConsole(nsIScriptError::errorFlag, "DOM"_ns,
+                                        doc, nsContentUtils::eDOM_PROPERTIES,
+                                        "NotificationsRequireUserGesture");
       }
     }
 
@@ -1014,7 +1012,7 @@ NS_IMPL_ISUPPORTS(ServiceWorkerNotificationObserver, nsIObserver)
 bool Notification::DispatchClickEvent() {
   AssertIsOnTargetThread();
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
-  event->InitEvent(NS_LITERAL_STRING("click"), false, true);
+  event->InitEvent(u"click"_ns, false, true);
   event->SetTrusted(true);
   WantsPopupControlCheck popupControlCheck(event);
   return DispatchEvent(*event, CallerType::System, IgnoreErrors());
@@ -1121,9 +1119,9 @@ MainThreadNotificationObserver::Observe(nsISupports* aSubject,
   } else if (!strcmp("alertfinished", aTopic)) {
     notification->UnpersistNotification();
     notification->mIsClosed = true;
-    notification->DispatchTrustedEvent(NS_LITERAL_STRING("close"));
+    notification->DispatchTrustedEvent(u"close"_ns);
   } else if (!strcmp("alertshow", aTopic)) {
-    notification->DispatchTrustedEvent(NS_LITERAL_STRING("show"));
+    notification->DispatchTrustedEvent(u"show"_ns);
   }
   return NS_OK;
 }
@@ -1169,11 +1167,9 @@ WorkerNotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp("alertfinished", aTopic)) {
     notification->UnpersistNotification();
     notification->mIsClosed = true;
-    r = new NotificationEventWorkerRunnable(notification,
-                                            NS_LITERAL_STRING("close"));
+    r = new NotificationEventWorkerRunnable(notification, u"close"_ns);
   } else if (!strcmp("alertshow", aTopic)) {
-    r = new NotificationEventWorkerRunnable(notification,
-                                            NS_LITERAL_STRING("show"));
+    r = new NotificationEventWorkerRunnable(notification, u"show"_ns);
   }
 
   MOZ_ASSERT(r);
@@ -1212,7 +1208,7 @@ ServiceWorkerNotificationObserver::Observe(nsISupports* aSubject,
       NotificationEventData data(originSuffix, NS_ConvertUTF16toUTF8(mScope),
                                  mID, mTitle, mDir, mLang, mBody, mTag, mIcon,
                                  mData, mBehavior);
-      Unused << cc->SendNotificationEvent(NS_LITERAL_STRING("click"), data);
+      Unused << cc->SendNotificationEvent(u"click"_ns, data);
     }
     return NS_OK;
   }
@@ -1247,7 +1243,7 @@ ServiceWorkerNotificationObserver::Observe(nsISupports* aSubject,
       NotificationEventData data(originSuffix, NS_ConvertUTF16toUTF8(mScope),
                                  mID, mTitle, mDir, mLang, mBody, mTag, mIcon,
                                  mData, mBehavior);
-      Unused << cc->SendNotificationEvent(NS_LITERAL_STRING("close"), data);
+      Unused << cc->SendNotificationEvent(u"close"_ns, data);
     }
     return NS_OK;
   }
@@ -1335,12 +1331,12 @@ void Notification::ShowInternal() {
   if (permission != NotificationPermission::Granted || !alertService) {
     if (mWorkerPrivate) {
       RefPtr<NotificationEventWorkerRunnable> r =
-          new NotificationEventWorkerRunnable(this, NS_LITERAL_STRING("error"));
+          new NotificationEventWorkerRunnable(this, u"error"_ns);
       if (!r->Dispatch()) {
         NS_WARNING("Could not dispatch event to worker notification");
       }
     } else {
-      DispatchTrustedEvent(NS_LITERAL_STRING("error"));
+      DispatchTrustedEvent(u"error"_ns);
     }
     return;
   }
@@ -1384,7 +1380,7 @@ void Notification::ShowInternal() {
 
   // In the case of IPC, the parent process uses the cookie to map to
   // nsIObserver. Thus the cookie must be unique to differentiate observers.
-  nsString uniqueCookie = NS_LITERAL_STRING("notification:");
+  nsString uniqueCookie = u"notification:"_ns;
   uniqueCookie.AppendInt(sCount++);
   bool inPrivateBrowsing = IsInPrivateBrowsing();
 
@@ -1552,7 +1548,7 @@ NotificationPermission Notification::TestPermission(nsIPrincipal* aPrincipal) {
   }
 
   permissionManager->TestExactPermissionFromPrincipal(
-      aPrincipal, NS_LITERAL_CSTRING("desktop-notification"), &permission);
+      aPrincipal, "desktop-notification"_ns, &permission);
 
   // Convert the result to one of the enum types.
   switch (permission) {
@@ -1839,7 +1835,7 @@ void Notification::Close() {
   nsresult rv = DispatchToMainThread(closeNotificationTask.forget());
 
   if (NS_FAILED(rv)) {
-    DispatchTrustedEvent(NS_LITERAL_STRING("error"));
+    DispatchTrustedEvent(u"error"_ns);
     // If dispatch fails, NotificationTask will release the ref when it goes
     // out of scope at the end of this function.
   }
@@ -1986,9 +1982,8 @@ class CloseNotificationRunnable final : public WorkerMainThreadRunnable {
 
  public:
   explicit CloseNotificationRunnable(Notification* aNotification)
-      : WorkerMainThreadRunnable(
-            aNotification->mWorkerPrivate,
-            NS_LITERAL_CSTRING("Notification :: Close Notification")),
+      : WorkerMainThreadRunnable(aNotification->mWorkerPrivate,
+                                 "Notification :: Close Notification"_ns),
         mNotification(aNotification),
         mHadObserver(false) {}
 
@@ -2073,8 +2068,7 @@ class CheckLoadRunnable final : public WorkerMainThreadRunnable {
   explicit CheckLoadRunnable(
       WorkerPrivate* aWorker, const nsACString& aScope,
       const ServiceWorkerRegistrationDescriptor& aDescriptor)
-      : WorkerMainThreadRunnable(
-            aWorker, NS_LITERAL_CSTRING("Notification :: Check Load")),
+      : WorkerMainThreadRunnable(aWorker, "Notification :: Check Load"_ns),
         mRv(NS_ERROR_DOM_SECURITY_ERR),
         mScope(aScope),
         mDescriptor(aDescriptor) {}
@@ -2223,7 +2217,7 @@ already_AddRefed<Notification> Notification::CreateAndShow(
       notification->DispatchToMainThread(showNotificationTask.forget());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    notification->DispatchTrustedEvent(NS_LITERAL_STRING("error"));
+    notification->DispatchTrustedEvent(u"error"_ns);
   }
 
   return notification.forget();
@@ -2237,8 +2231,7 @@ nsresult Notification::RemovePermission(nsIPrincipal* aPrincipal) {
   if (!permissionManager) {
     return NS_ERROR_FAILURE;
   }
-  permissionManager->RemoveFromPrincipal(
-      aPrincipal, NS_LITERAL_CSTRING("desktop-notification"));
+  permissionManager->RemoveFromPrincipal(aPrincipal, "desktop-notification"_ns);
   return NS_OK;
 }
 

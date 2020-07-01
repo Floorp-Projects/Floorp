@@ -110,9 +110,9 @@ class FFmpegVideoDecoder<LIBAV_VER>
   void InitCodecContext() override;
   nsCString GetDescriptionName() const override {
 #ifdef USING_MOZFFVPX
-    return NS_LITERAL_CSTRING("ffvpx video decoder");
+    return "ffvpx video decoder"_ns;
 #else
-    return NS_LITERAL_CSTRING("ffmpeg video decoder");
+    return "ffmpeg video decoder"_ns;
 #endif
   }
   ConversionRequired NeedsConversion() const override {

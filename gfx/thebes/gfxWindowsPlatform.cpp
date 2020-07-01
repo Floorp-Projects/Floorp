@@ -570,7 +570,7 @@ gfxPlatformFontList* gfxWindowsPlatform::CreatePlatformFontList() {
     // So we're going to fall back to GDI fonts & rendering.
     gfxPlatformFontList::Shutdown();
     DisableD2D(FeatureStatus::Failed, "Failed to initialize fonts",
-               NS_LITERAL_CSTRING("FEATURE_FAILURE_FONT_FAIL"));
+               "FEATURE_FAILURE_FONT_FAIL"_ns);
   }
 
   // Ensure this is false, even if the Windows version was recent enough to
@@ -1257,9 +1257,9 @@ static void InitializeANGLEConfig() {
   FeatureState& d3d11ANGLE = gfxConfig::GetFeature(Feature::D3D11_HW_ANGLE);
 
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    d3d11ANGLE.DisableByDefault(
-        FeatureStatus::Unavailable, "D3D11 compositing is disabled",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DISABLED"));
+    d3d11ANGLE.DisableByDefault(FeatureStatus::Unavailable,
+                                "D3D11 compositing is disabled",
+                                "FEATURE_FAILURE_D3D11_DISABLED"_ns);
     return;
   }
 
@@ -1299,9 +1299,9 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
 
   if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
-    d3d11.DisableByDefault(
-        FeatureStatus::Unavailable, "Hardware compositing is disabled",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_NEED_HWCOMP"));
+    d3d11.DisableByDefault(FeatureStatus::Unavailable,
+                           "Hardware compositing is disabled",
+                           "FEATURE_FAILURE_D3D11_NEED_HWCOMP"_ns);
     return;
   }
 
@@ -1326,7 +1326,7 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
         adaptorId.EqualsLiteral("0x1902")) {
 #ifdef RELEASE_OR_BETA
       d3d11.Disable(FeatureStatus::Blocklisted, "Blocklisted, see bug 1351349",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_BUG_1351349"));
+                    "FEATURE_FAILURE_BUG_1351349"_ns);
 #else
       Preferences::SetBool("gfx.compositor.clearstate", true);
 #endif
@@ -1362,7 +1362,7 @@ void gfxWindowsPlatform::InitializeAdvancedLayersConfig() {
     } else {
       al.Disable(FeatureStatus::Disabled,
                  "Advanced Layers is disabled on Windows 7 by default",
-                 NS_LITERAL_CSTRING("FEATURE_FAILURE_DISABLED_ON_WIN7"));
+                 "FEATURE_FAILURE_DISABLED_ON_WIN7"_ns);
     }
   }
 
@@ -1373,10 +1373,10 @@ void gfxWindowsPlatform::InitializeAdvancedLayersConfig() {
   } else if (gfxVars::UseWebRender()) {
     al.Disable(FeatureStatus::Blocked,
                "Blocked from fallback candidate by WebRender usage",
-               NS_LITERAL_CSTRING("FEATURE_BLOCKED_BY_WEBRENDER_USAGE"));
+               "FEATURE_BLOCKED_BY_WEBRENDER_USAGE"_ns);
   } else if (Preferences::GetBool("layers.mlgpu.sanity-test-failed", false)) {
     al.Disable(FeatureStatus::Broken, "Failed to render sanity test",
-               NS_LITERAL_CSTRING("FEATURE_FAILURE_FAILED_TO_RENDER"));
+               "FEATURE_FAILURE_FAILED_TO_RENDER"_ns);
   }
 }
 
@@ -1509,7 +1509,7 @@ void gfxWindowsPlatform::InitializeD2DConfig() {
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     d2d1.DisableByDefault(FeatureStatus::Unavailable,
                           "Direct2D requires Direct3D 11 compositing",
-                          NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_D3D11_COMP"));
+                          "FEATURE_FAILURE_D2D_D3D11_COMP"_ns);
     return;
   }
 
@@ -1542,7 +1542,7 @@ void gfxWindowsPlatform::InitializeD2D() {
   if (dm->IsWARP()) {
     d2d1.Disable(FeatureStatus::Blocked,
                  "Direct2D is not compatible with Direct3D11 WARP",
-                 NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_WARP_BLOCK"));
+                 "FEATURE_FAILURE_D2D_WARP_BLOCK"_ns);
   }
 
   // If we pass all the initial checks, we can proceed to runtime decisions.
@@ -1553,21 +1553,21 @@ void gfxWindowsPlatform::InitializeD2D() {
   if (!Factory::SupportsD2D1()) {
     d2d1.SetFailed(FeatureStatus::Unavailable,
                    "Failed to acquire a Direct2D 1.1 factory",
-                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_FACTORY"));
+                   "FEATURE_FAILURE_D2D_FACTORY"_ns);
     return;
   }
 
   if (!dm->GetContentDevice()) {
     d2d1.SetFailed(FeatureStatus::Failed,
                    "Failed to acquire a Direct3D 11 content device",
-                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_DEVICE"));
+                   "FEATURE_FAILURE_D2D_DEVICE"_ns);
     return;
   }
 
   if (!dm->TextureSharingWorks()) {
     d2d1.SetFailed(FeatureStatus::Failed,
                    "Direct3D11 device does not support texture sharing",
-                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_TXT_SHARING"));
+                   "FEATURE_FAILURE_D2D_TXT_SHARING"_ns);
     return;
   }
 
@@ -1575,7 +1575,7 @@ void gfxWindowsPlatform::InitializeD2D() {
   if (!DWriteEnabled() && !InitDWriteSupport()) {
     d2d1.SetFailed(FeatureStatus::Failed,
                    "Failed to initialize DirectWrite support",
-                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_DWRITE"));
+                   "FEATURE_FAILURE_D2D_DWRITE"_ns);
     return;
   }
 
@@ -1583,7 +1583,7 @@ void gfxWindowsPlatform::InitializeD2D() {
   RefPtr<ID3D11Device> contentDevice = dm->GetContentDevice();
   if (!Factory::SetDirect3D11Device(contentDevice)) {
     d2d1.SetFailed(FeatureStatus::Failed, "Failed to create a Direct2D device",
-                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_CREATE_FAILED"));
+                   "FEATURE_FAILURE_D2D_CREATE_FAILED"_ns);
     return;
   }
 
@@ -1614,21 +1614,21 @@ bool gfxWindowsPlatform::InitGPUProcessSupport() {
     }
     gpuProc.Disable(FeatureStatus::Unavailable,
                     "Not using GPU Process since D3D11 is unavailable",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_D3D11"));
+                    "FEATURE_FAILURE_NO_D3D11"_ns);
   } else if (!IsWin7SP1OrLater()) {
     // On Windows 7 Pre-SP1, DXGI 1.2 is not available and remote presentation
     // for D3D11 will not work. Rather than take a regression we revert back
     // to in-process rendering.
     gpuProc.Disable(FeatureStatus::Unavailable,
                     "Windows 7 Pre-SP1 cannot use the GPU process",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_OLD_WINDOWS"));
+                    "FEATURE_FAILURE_OLD_WINDOWS"_ns);
   } else if (!IsWin8OrLater()) {
     // Windows 7 SP1 can have DXGI 1.2 only via the Platform Update, so we
     // explicitly check for that here.
     if (!DeviceManagerDx::Get()->CheckRemotePresentSupport()) {
       gpuProc.Disable(FeatureStatus::Unavailable,
                       "GPU Process requires the Windows 7 Platform Update",
-                      NS_LITERAL_CSTRING("FEATURE_FAILURE_PLATFORM_UPDATE"));
+                      "FEATURE_FAILURE_PLATFORM_UPDATE"_ns);
     } else {
       // Clear anything cached by the above call since we don't need it.
       DeviceManagerDx::Get()->ResetDevices();
@@ -1985,7 +1985,7 @@ void gfxWindowsPlatform::ImportGPUDeviceData(
     if (d2d1.IsEnabled()) {
       d2d1.SetFailed(FeatureStatus::Unavailable,
                      "Direct2D requires Direct3D 11 compositing",
-                     NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_D3D11_COMP"));
+                     "FEATURE_FAILURE_D2D_D3D11_COMP"_ns);
     }
   }
 

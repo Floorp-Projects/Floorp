@@ -179,7 +179,7 @@ static bool GetFile(nsIFile* dir, const nsACString& name,
 }
 
 static bool GetStatusFile(nsIFile* dir, nsCOMPtr<nsIFile>& result) {
-  return GetFile(dir, NS_LITERAL_CSTRING("update.status"), result);
+  return GetFile(dir, "update.status"_ns, result);
 }
 
 /**
@@ -260,7 +260,7 @@ static UpdateStatus GetUpdateStatus(nsIFile* dir,
 }
 
 static bool GetVersionFile(nsIFile* dir, nsCOMPtr<nsIFile>& result) {
-  return GetFile(dir, NS_LITERAL_CSTRING("update.version"), result);
+  return GetFile(dir, "update.version"_ns, result);
 }
 
 // Compares the current application version with the update's application
@@ -326,7 +326,7 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   nsAutoCString updateDirPath;
 #if defined(XP_WIN)
   // Get an nsIFile reference for the updater in the installation dir.
-  if (!GetFile(greDir, NS_LITERAL_CSTRING(UPDATER_BIN), updater)) {
+  if (!GetFile(greDir, nsLiteralCString(UPDATER_BIN), updater)) {
     return;
   }
 
@@ -347,18 +347,18 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   updateDirPath = NS_ConvertUTF16toUTF8(updateDirPathW);
 #elif defined(XP_MACOSX)
   // Get an nsIFile reference for the updater in the installation dir.
-  if (!GetFile(appDir, NS_LITERAL_CSTRING(UPDATER_APP), updater)) {
+  if (!GetFile(appDir, nsLiteralCString(UPDATER_APP), updater)) {
     return;
   }
-  rv = updater->AppendNative(NS_LITERAL_CSTRING("Contents"));
+  rv = updater->AppendNative("Contents"_ns);
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = updater->AppendNative(NS_LITERAL_CSTRING("MacOS"));
+  rv = updater->AppendNative("MacOS"_ns);
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = updater->AppendNative(NS_LITERAL_CSTRING(UPDATER_BIN));
+  rv = updater->AppendNative(nsLiteralCString(UPDATER_BIN));
   if (NS_FAILED(rv)) {
     return;
   }
@@ -376,7 +376,7 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   }
 #else
   // Get an nsIFile reference for the updater in the installation dir.
-  if (!GetFile(greDir, NS_LITERAL_CSTRING(UPDATER_BIN), updater)) {
+  if (!GetFile(greDir, nsLiteralCString(UPDATER_BIN), updater)) {
     return;
   }
 
@@ -442,9 +442,9 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   } else {
     // Get the directory where the update is staged or will be staged.
 #if defined(XP_MACOSX)
-    if (!GetFile(updateDir, NS_LITERAL_CSTRING("Updated.app"), updatedDir)) {
+    if (!GetFile(updateDir, "Updated.app"_ns, updatedDir)) {
 #else
-    if (!GetFile(appDir, NS_LITERAL_CSTRING("updated"), updatedDir)) {
+    if (!GetFile(appDir, "updated"_ns, updatedDir)) {
 #endif
       return;
     }
@@ -661,9 +661,9 @@ nsresult ProcessUpdates(nsIFile* greDir, nsIFile* appDir, nsIFile* updRootDir,
   nsCOMPtr<nsIFile> updatesDir;
   rv = updRootDir->Clone(getter_AddRefs(updatesDir));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = updatesDir->AppendNative(NS_LITERAL_CSTRING("updates"));
+  rv = updatesDir->AppendNative("updates"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = updatesDir->AppendNative(NS_LITERAL_CSTRING("0"));
+  rv = updatesDir->AppendNative("0"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Return early since there isn't a valid update when the update application

@@ -435,8 +435,7 @@ bool WheelBlockState::MaybeTimeout(const TimeStamp& aTimeStamp) {
 
   if (StaticPrefs::test_mousescroll()) {
     RefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
-    apzc->NotifyMozMouseScrollEvent(
-        NS_LITERAL_STRING("MozMouseScrollTransactionTimeout"));
+    apzc->NotifyMozMouseScrollEvent(u"MozMouseScrollTransactionTimeout"_ns);
   }
 
   EndTransaction();

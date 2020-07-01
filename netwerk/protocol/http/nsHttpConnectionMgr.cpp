@@ -4129,10 +4129,10 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
   nsTArray<nsCString> socketTypes;
   const nsHttpConnectionInfo* ci = mEnt->mConnInfo;
   if (mIsHttp3) {
-    socketTypes.AppendElement(NS_LITERAL_CSTRING("quic"));
+    socketTypes.AppendElement("quic"_ns);
   } else {
     if (ci->FirstHopSSL()) {
-      socketTypes.AppendElement(NS_LITERAL_CSTRING("ssl"));
+      socketTypes.AppendElement("ssl"_ns);
     } else {
       const nsCString& defaultType = gHttpHandler->DefaultSocketType();
       if (!defaultType.IsVoid()) {
@@ -5431,11 +5431,11 @@ bool nsHttpConnectionMgr::GetConnectionData(nsTArray<HttpRetParams>* aArg) {
       data.halfOpens.AppendElement(hSocket);
     }
     if (ent->mConnInfo->IsHttp3()) {
-      data.httpVersion = NS_LITERAL_CSTRING("HTTP/3");
+      data.httpVersion = "HTTP/3"_ns;
     } else if (ent->mUsingSpdy) {
-      data.httpVersion = NS_LITERAL_CSTRING("HTTP/2");
+      data.httpVersion = "HTTP/2"_ns;
     } else {
-      data.httpVersion = NS_LITERAL_CSTRING("HTTP <= 1.1");
+      data.httpVersion = "HTTP <= 1.1"_ns;
     }
     data.ssl = ent->mConnInfo->EndToEndSSL();
     aArg->AppendElement(data);

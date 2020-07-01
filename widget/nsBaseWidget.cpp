@@ -1535,8 +1535,8 @@ bool nsBaseWidget::ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) {
  */
 static bool ResolveIconNameHelper(nsIFile* aFile, const nsAString& aIconName,
                                   const nsAString& aIconSuffix) {
-  aFile->Append(NS_LITERAL_STRING("icons"));
-  aFile->Append(NS_LITERAL_STRING("default"));
+  aFile->Append(u"icons"_ns);
+  aFile->Append(u"default"_ns);
   aFile->Append(aIconName + aIconSuffix);
 
   bool readable;
@@ -3032,7 +3032,7 @@ void IMENotification::TextChangeDataBase::Test() {
 nsAutoString nsBaseWidget::debug_GuiEventToString(WidgetGUIEvent* aGuiEvent) {
   NS_ASSERTION(nullptr != aGuiEvent, "cmon, null gui event.");
 
-  nsAutoString eventName(NS_LITERAL_STRING("UNKNOWN"));
+  nsAutoString eventName(u"UNKNOWN"_ns);
 
 #  define _ASSIGN_eventName(_value, _name) \
     case _value:                           \

@@ -328,9 +328,9 @@ Predictor::GetInterface(const nsIID& iid, void** result) {
 
 static bool IsURIMetadataElement(const char* key) {
   return StringBeginsWith(nsDependentCString(key),
-                          NS_LITERAL_CSTRING(META_DATA_PREFIX)) &&
-         !NS_LITERAL_CSTRING(SEEN_META_DATA).Equals(key) &&
-         !NS_LITERAL_CSTRING(RESOURCE_META_DATA).Equals(key);
+                          nsLiteralCString(META_DATA_PREFIX)) &&
+         !nsLiteralCString(SEEN_META_DATA).Equals(key) &&
+         !nsLiteralCString(RESOURCE_META_DATA).Equals(key);
 }
 
 nsresult Predictor::OnMetaDataElement(const char* asciiKey,
@@ -618,7 +618,7 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
   openFlags = nsICacheStorage::OPEN_READONLY | nsICacheStorage::OPEN_SECRETLY |
               nsICacheStorage::CHECK_MULTITHREADED;
   cacheDiskStorage->AsyncOpenURI(originKey,
-                                 NS_LITERAL_CSTRING(PREDICTOR_ORIGIN_EXTENSION),
+                                 nsLiteralCString(PREDICTOR_ORIGIN_EXTENSION),
                                  openFlags, originAction);
 
   PREDICTOR_LOG(("    predict returning"));
@@ -1405,7 +1405,7 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
                       nsICacheStorage::CHECK_MULTITHREADED;
   }
   cacheDiskStorage->AsyncOpenURI(originKey,
-                                 NS_LITERAL_CSTRING(PREDICTOR_ORIGIN_EXTENSION),
+                                 nsLiteralCString(PREDICTOR_ORIGIN_EXTENSION),
                                  originOpenFlags, originAction);
 
   PREDICTOR_LOG(("Predictor::Learn returning"));
@@ -1815,7 +1815,7 @@ Predictor::Resetter::OnMetaDataElement(const char* asciiKey,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!StringBeginsWith(nsDependentCString(asciiKey),
-                        NS_LITERAL_CSTRING(META_DATA_PREFIX))) {
+                        nsLiteralCString(META_DATA_PREFIX))) {
     // Not a metadata entry we care about, carry on
     return NS_OK;
   }

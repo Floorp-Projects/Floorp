@@ -960,11 +960,10 @@ nsGIOProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   }
 
   RefPtr<nsGIOInputStream> tmpStream = stream;
-  rv =
-      NS_NewInputStreamChannelInternal(aResult, aURI, tmpStream.forget(),
-                                       NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE),
-                                       EmptyCString(),  // aContentCharset
-                                       aLoadInfo);
+  rv = NS_NewInputStreamChannelInternal(aResult, aURI, tmpStream.forget(),
+                                        nsLiteralCString(UNKNOWN_CONTENT_TYPE),
+                                        EmptyCString(),  // aContentCharset
+                                        aLoadInfo);
   if (NS_SUCCEEDED(rv)) {
     stream->SetChannel(*aResult);
   }

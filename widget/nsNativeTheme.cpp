@@ -87,8 +87,8 @@ bool nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsAtom* aAtom) {
   // For XML/XUL elements, an attribute must be equal to the literal
   // string "true" to be counted as true.  An empty string should _not_
   // be counted as true.
-  return content->AsElement()->AttrValueIs(
-      kNameSpaceID_None, aAtom, NS_LITERAL_STRING("true"), eCaseMatters);
+  return content->AsElement()->AttrValueIs(kNameSpaceID_None, aAtom, u"true"_ns,
+                                           eCaseMatters);
 }
 
 /* static */
@@ -154,8 +154,7 @@ bool nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame) {
   nsIContent* content = aFrame->GetContent();
   return content->IsXULElement(nsGkAtoms::button) &&
          content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                           NS_LITERAL_STRING("menu"),
-                                           eCaseMatters);
+                                           u"menu"_ns, eCaseMatters);
 }
 
 bool nsNativeTheme::IsPressedButton(nsIFrame* aFrame) {
@@ -294,8 +293,7 @@ bool nsNativeTheme::IsDisabled(nsIFrame* aFrame, EventStates aEventStates) {
   // string "true" to be counted as true.  An empty string should _not_
   // be counted as true.
   return content->AsElement()->AttrValueIs(
-      kNameSpaceID_None, nsGkAtoms::disabled, NS_LITERAL_STRING("true"),
-      eCaseMatters);
+      kNameSpaceID_None, nsGkAtoms::disabled, u"true"_ns, eCaseMatters);
 }
 
 /* static */
@@ -378,9 +376,9 @@ bool nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame) {
   }
 
   // If the column picker is visible, this can't be the last column.
-  if (parent && !parent->AsElement()->AttrValueIs(
-                    kNameSpaceID_None, nsGkAtoms::hidecolumnpicker,
-                    NS_LITERAL_STRING("true"), eCaseMatters))
+  if (parent && !parent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                  nsGkAtoms::hidecolumnpicker,
+                                                  u"true"_ns, eCaseMatters))
     return false;
 
   while ((aFrame = aFrame->GetNextSibling())) {

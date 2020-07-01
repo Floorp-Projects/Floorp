@@ -38,7 +38,7 @@ XULMAP_TYPE(toolbarbutton, XULToolbarButtonAccessible)
 XULMAP_TYPE(tooltip, XULTooltipAccessible)
 
 XULMAP(label, [](Element* aElement, Accessible* aContext) -> Accessible* {
-  if (aElement->ClassList()->Contains(NS_LITERAL_STRING("text-link"))) {
+  if (aElement->ClassList()->Contains(u"text-link"_ns)) {
     return new XULLinkAccessible(aElement, aContext->Document());
   }
   return new XULLabelAccessible(aElement, aContext->Document());

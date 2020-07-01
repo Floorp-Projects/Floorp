@@ -73,7 +73,7 @@ void MediaShutdownManager::InitStatics() {
 
   nsresult rv = GetShutdownBarrier()->AddBlocker(
       sInstance, NS_LITERAL_STRING(__FILE__), __LINE__,
-      NS_LITERAL_STRING("MediaShutdownManager shutdown"));
+      u"MediaShutdownManager shutdown"_ns);
   if (NS_FAILED(rv)) {
     LOGW("Failed to add shutdown blocker! rv=%x", uint32_t(rv));
     sInitPhase = InitFailed;
@@ -124,7 +124,7 @@ void MediaShutdownManager::Unregister(MediaDecoder* aDecoder) {
 
 NS_IMETHODIMP
 MediaShutdownManager::GetName(nsAString& aName) {
-  aName = NS_LITERAL_STRING("MediaShutdownManager: shutdown");
+  aName = u"MediaShutdownManager: shutdown"_ns;
   return NS_OK;
 }
 

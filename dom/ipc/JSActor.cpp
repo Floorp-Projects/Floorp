@@ -69,13 +69,13 @@ struct MOZ_RAII AutoAnnotateMessageInCaseOfCrash {
 
 void JSActor::StartDestroy() {
   AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
-                                         NS_LITERAL_CSTRING("<WillDestroy>"));
+                                         "<WillDestroy>"_ns);
   InvokeCallback(CallbackFunction::WillDestroy);
 }
 
 void JSActor::AfterDestroy() {
   AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
-                                         NS_LITERAL_CSTRING("<DidDestroy>"));
+                                         "<DidDestroy>"_ns);
   InvokeCallback(CallbackFunction::DidDestroy);
   // Clear out & reject mPendingQueries
   RejectPendingQueries();
@@ -472,8 +472,7 @@ void JSActor::QueryHandler::ResolvedCallback(JSContext* aCx,
     msg.Append(NS_LossyConvertUTF16toASCII(mMessageName));
     msg.AppendLiteral(": message reply cannot be cloned.");
 
-    auto exc = MakeRefPtr<Exception>(msg, NS_ERROR_FAILURE,
-                                     NS_LITERAL_CSTRING("DataCloneError"),
+    auto exc = MakeRefPtr<Exception>(msg, NS_ERROR_FAILURE, "DataCloneError"_ns,
                                      nullptr, nullptr);
 
     JS::Rooted<JS::Value> val(aCx);

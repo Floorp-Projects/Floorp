@@ -247,7 +247,7 @@ void nsSplitterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
       if (!nsContentUtils::HasNonEmptyAttr(aContent, kNameSpaceID_None,
                                            nsGkAtoms::orient)) {
         aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
-                                       NS_LITERAL_STRING("vertical"), false);
+                                       u"vertical"_ns, false);
       }
     }
   }
@@ -443,20 +443,20 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
           // printf("Collapse right\n");
           if (supportsAfter) {
             RefPtr<Element> outer = mOuter->mContent->AsElement();
-            outer->SetAttr(kNameSpaceID_None, nsGkAtoms::substate,
-                           NS_LITERAL_STRING("after"), true);
-            outer->SetAttr(kNameSpaceID_None, nsGkAtoms::state,
-                           NS_LITERAL_STRING("collapsed"), true);
+            outer->SetAttr(kNameSpaceID_None, nsGkAtoms::substate, u"after"_ns,
+                           true);
+            outer->SetAttr(kNameSpaceID_None, nsGkAtoms::state, u"collapsed"_ns,
+                           true);
           }
 
         } else if (pastBegin) {
           // printf("Collapse left\n");
           if (supportsBefore) {
             RefPtr<Element> outer = mOuter->mContent->AsElement();
-            outer->SetAttr(kNameSpaceID_None, nsGkAtoms::substate,
-                           NS_LITERAL_STRING("before"), true);
-            outer->SetAttr(kNameSpaceID_None, nsGkAtoms::state,
-                           NS_LITERAL_STRING("collapsed"), true);
+            outer->SetAttr(kNameSpaceID_None, nsGkAtoms::substate, u"before"_ns,
+                           true);
+            outer->SetAttr(kNameSpaceID_None, nsGkAtoms::state, u"collapsed"_ns,
+                           true);
           }
         }
       }
@@ -465,8 +465,7 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
       // we are dragging.
       if (currentState != Dragging) {
         mOuter->mContent->AsElement()->SetAttr(
-            kNameSpaceID_None, nsGkAtoms::state, NS_LITERAL_STRING("dragging"),
-            true);
+            kNameSpaceID_None, nsGkAtoms::state, u"dragging"_ns, true);
       }
       AdjustChildren(aPresContext);
     }
@@ -476,26 +475,18 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
 }
 
 void nsSplitterFrameInner::AddListener() {
-  mOuter->GetContent()->AddEventListener(NS_LITERAL_STRING("mouseup"), this,
-                                         false, false);
-  mOuter->GetContent()->AddEventListener(NS_LITERAL_STRING("mousedown"), this,
-                                         false, false);
-  mOuter->GetContent()->AddEventListener(NS_LITERAL_STRING("mousemove"), this,
-                                         false, false);
-  mOuter->GetContent()->AddEventListener(NS_LITERAL_STRING("mouseout"), this,
-                                         false, false);
+  mOuter->GetContent()->AddEventListener(u"mouseup"_ns, this, false, false);
+  mOuter->GetContent()->AddEventListener(u"mousedown"_ns, this, false, false);
+  mOuter->GetContent()->AddEventListener(u"mousemove"_ns, this, false, false);
+  mOuter->GetContent()->AddEventListener(u"mouseout"_ns, this, false, false);
 }
 
 void nsSplitterFrameInner::RemoveListener() {
   NS_ENSURE_TRUE_VOID(mOuter);
-  mOuter->GetContent()->RemoveEventListener(NS_LITERAL_STRING("mouseup"), this,
-                                            false);
-  mOuter->GetContent()->RemoveEventListener(NS_LITERAL_STRING("mousedown"),
-                                            this, false);
-  mOuter->GetContent()->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                                            this, false);
-  mOuter->GetContent()->RemoveEventListener(NS_LITERAL_STRING("mouseout"), this,
-                                            false);
+  mOuter->GetContent()->RemoveEventListener(u"mouseup"_ns, this, false);
+  mOuter->GetContent()->RemoveEventListener(u"mousedown"_ns, this, false);
+  mOuter->GetContent()->RemoveEventListener(u"mousemove"_ns, this, false);
+  mOuter->GetContent()->RemoveEventListener(u"mouseout"_ns, this, false);
 }
 
 nsresult nsSplitterFrameInner::HandleEvent(dom::Event* aEvent) {
@@ -691,7 +682,7 @@ nsresult nsSplitterFrameInner::MouseMove(Event* aMouseEvent) {
 
   nsCOMPtr<nsIDOMEventListener> kungfuDeathGrip(this);
   mOuter->mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::state,
-                                         NS_LITERAL_STRING("dragging"), true);
+                                         u"dragging"_ns, true);
 
   RemoveListener();
   mDragging = true;
@@ -771,9 +762,8 @@ void nsSplitterFrameInner::UpdateState() {
                     newState == CollapsedAfter)) {
           // Open -> CollapsedBefore / CollapsedAfter
           // Dragging -> CollapsedBefore / CollapsedAfter
-          nsContentUtils::AddScriptRunner(
-              new nsSetAttrRunnable(sibling->AsElement(), nsGkAtoms::collapsed,
-                                    NS_LITERAL_STRING("true")));
+          nsContentUtils::AddScriptRunner(new nsSetAttrRunnable(
+              sibling->AsElement(), nsGkAtoms::collapsed, u"true"_ns));
         }
       }
     }

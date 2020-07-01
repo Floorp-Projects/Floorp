@@ -557,7 +557,7 @@ nsresult ParagraphStateCommand::GetCurrentState(
   aParams.SetBool(STATE_MIXED, state.IsMixed());
   if (NS_WARN_IF(!state.GetFirstParagraphStateAtSelection())) {
     // XXX This is odd behavior, we should fix this later.
-    aParams.SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("x"));
+    aParams.SetCString(STATE_ATTRIBUTE, "x"_ns);
   } else {
     nsCString paragraphState;  // Don't use `nsAutoCString` for avoiding copy.
     state.GetFirstParagraphStateAtSelection()->ToUTF8String(paragraphState);
@@ -918,8 +918,8 @@ nsresult AbsolutePositioningCommand::GetCurrentState(
   RefPtr<Element> container =
       aHTMLEditor->GetAbsolutelyPositionedSelectionContainer();
   aParams.SetBool(STATE_MIXED, false);
-  aParams.SetCString(STATE_ATTRIBUTE, container ? NS_LITERAL_CSTRING("absolute")
-                                                : EmptyCString());
+  aParams.SetCString(STATE_ATTRIBUTE,
+                     container ? "absolute"_ns : EmptyCString());
   return NS_OK;
 }
 

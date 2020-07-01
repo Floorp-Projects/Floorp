@@ -2226,17 +2226,17 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
                             phasePercent);
     };
 
-    record(NS_LITERAL_CSTRING("Event"), phaseMetrics[0]);
-    record(NS_LITERAL_CSTRING("Style"), phaseMetrics[1]);
-    record(NS_LITERAL_CSTRING("Reflow"), phaseMetrics[2]);
-    record(NS_LITERAL_CSTRING("Display"), phaseMetrics[3]);
-    record(NS_LITERAL_CSTRING("Paint"), phasePaint);
+    record("Event"_ns, phaseMetrics[0]);
+    record("Style"_ns, phaseMetrics[1]);
+    record("Reflow"_ns, phaseMetrics[2]);
+    record("Display"_ns, phaseMetrics[3]);
+    record("Paint"_ns, phasePaint);
 
     // Explicitly record the time unaccounted for.
     double other = totalMs -
                    std::accumulate(phaseMetrics, ArrayEnd(phaseMetrics), 0.0) -
                    phasePaint;
-    record(NS_LITERAL_CSTRING("Other"), other);
+    record("Other"_ns, other);
   }
 
   if (mNotifyDOMContentFlushed) {

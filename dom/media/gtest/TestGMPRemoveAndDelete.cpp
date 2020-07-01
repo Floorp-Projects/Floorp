@@ -17,9 +17,9 @@
 #include "GMPUtils.h"
 #include "mozilla/StaticPtr.h"
 
-#define GMP_DIR_NAME NS_LITERAL_STRING("gmp-fakeopenh264")
-#define GMP_OLD_VERSION NS_LITERAL_STRING("1.0")
-#define GMP_NEW_VERSION NS_LITERAL_STRING("1.1")
+#define GMP_DIR_NAME u"gmp-fakeopenh264"_ns
+#define GMP_OLD_VERSION u"1.0"_ns
+#define GMP_NEW_VERSION u"1.1"_ns
 
 #define GMP_DELETED_TOPIC "gmp-directory-deleted"
 
@@ -135,7 +135,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteForcedInUse)
   RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();
-  EXPECT_TRUE(test->CreateVideoDecoder(NS_LITERAL_CSTRING("thisOrigin")));
+  EXPECT_TRUE(test->CreateVideoDecoder("thisOrigin"_ns));
 
   // Test that we can decode a frame.
   GMPErr err = test->Decode();
@@ -145,7 +145,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteForcedInUse)
   test->Wait();
 
   // Test that the VideoDecoder is no longer available.
-  EXPECT_FALSE(test->CreateVideoDecoder(NS_LITERAL_CSTRING("thisOrigin")));
+  EXPECT_FALSE(test->CreateVideoDecoder("thisOrigin"_ns));
 
   // Test that we were notified of the plugin's destruction.
   EXPECT_TRUE(test->IsTerminated());
@@ -160,7 +160,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredInUse)
   RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();
-  EXPECT_TRUE(test->CreateVideoDecoder(NS_LITERAL_CSTRING("thisOrigin")));
+  EXPECT_TRUE(test->CreateVideoDecoder("thisOrigin"_ns));
 
   // Make sure decoding works before we do anything.
   GMPErr err = test->Decode();
@@ -173,7 +173,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredInUse)
   EXPECT_EQ(err, GMPNoErr);
 
   // Test that this origin is still able to fetch the video decoder.
-  EXPECT_TRUE(test->CreateVideoDecoder(NS_LITERAL_CSTRING("thisOrigin")));
+  EXPECT_TRUE(test->CreateVideoDecoder("thisOrigin"_ns));
 
   test->CloseVideoDecoder();
   test->Wait();
@@ -284,8 +284,8 @@ void GMPRemoveTest::gmp_GetVideoDecoder(nsCString aNodeId,
                                         GMPVideoDecoderProxy** aOutDecoder,
                                         GMPVideoHost** aOutHost) {
   nsTArray<nsCString> tags;
-  tags.AppendElement(NS_LITERAL_CSTRING("h264"));
-  tags.AppendElement(NS_LITERAL_CSTRING("fake"));
+  tags.AppendElement("h264"_ns);
+  tags.AppendElement("fake"_ns);
 
   class Callback : public GetGMPVideoDecoderCallback {
    public:

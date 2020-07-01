@@ -41,17 +41,17 @@ StaticRefPtr<UrlClassifierFeatureFingerprintingAnnotation>
 UrlClassifierFeatureFingerprintingAnnotation::
     UrlClassifierFeatureFingerprintingAnnotation()
     : UrlClassifierFeatureBase(
-          NS_LITERAL_CSTRING(FINGERPRINTING_ANNOTATION_FEATURE_NAME),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_FINGERPRINTING_ANNOTATION_BLACKLIST),
-          NS_LITERAL_CSTRING(URLCLASSIFIER_FINGERPRINTING_ANNOTATION_WHITELIST),
-          NS_LITERAL_CSTRING(
+          nsLiteralCString(FINGERPRINTING_ANNOTATION_FEATURE_NAME),
+          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_ANNOTATION_BLACKLIST),
+          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_ANNOTATION_WHITELIST),
+          nsLiteralCString(
               URLCLASSIFIER_FINGERPRINTING_ANNOTATION_BLACKLIST_TEST_ENTRIES),
-          NS_LITERAL_CSTRING(
+          nsLiteralCString(
               URLCLASSIFIER_FINGERPRINTING_ANNOTATION_WHITELIST_TEST_ENTRIES),
-          NS_LITERAL_CSTRING(TABLE_FINGERPRINTING_ANNOTATION_BLACKLIST_PREF),
-          NS_LITERAL_CSTRING(TABLE_FINGERPRINTING_ANNOTATION_WHITELIST_PREF),
-          NS_LITERAL_CSTRING(
-              URLCLASSIFIER_FINGERPRINTING_ANNOTATION_SKIP_URLS)) {}
+          nsLiteralCString(TABLE_FINGERPRINTING_ANNOTATION_BLACKLIST_PREF),
+          nsLiteralCString(TABLE_FINGERPRINTING_ANNOTATION_WHITELIST_PREF),
+          nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_ANNOTATION_SKIP_URLS)) {
+}
 
 /* static */ const char* UrlClassifierFeatureFingerprintingAnnotation::Name() {
   return FINGERPRINTING_ANNOTATION_FEATURE_NAME;
@@ -138,7 +138,7 @@ UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel(
 
   static std::vector<UrlClassifierCommon::ClassificationData>
       sClassificationData = {
-          {NS_LITERAL_CSTRING("content-fingerprinting-track-"),
+          {"content-fingerprinting-track-"_ns,
            nsIClassifiedChannel::ClassificationFlags::
                CLASSIFIED_FINGERPRINTING_CONTENT},
       };

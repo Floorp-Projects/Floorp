@@ -1328,7 +1328,7 @@ nsresult nsSocketTransport::InitiateSocket() {
       netAddrCString.SetLength(kIPv6CStrBufSize);
       if (!NetAddrToString(&mNetAddr, netAddrCString.BeginWriting(),
                            kIPv6CStrBufSize))
-        netAddrCString = NS_LITERAL_CSTRING("<IP-to-string failed>");
+        netAddrCString = "<IP-to-string failed>"_ns;
       SOCKET_LOG(
           ("nsSocketTransport::InitiateSocket skipping "
            "speculative connection for host [%s:%d] proxy "

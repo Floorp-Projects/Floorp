@@ -80,13 +80,12 @@ bool FileSystemSecurity::ContentProcessHasAccessTo(ContentParentId aId,
   AssertIsInMainProcess();
 
 #if defined(XP_WIN)
-  if (StringBeginsWith(aPath, NS_LITERAL_STRING("..\\")) ||
-      FindInReadable(NS_LITERAL_STRING("\\..\\"), aPath)) {
+  if (StringBeginsWith(aPath, u"..\\"_ns) ||
+      FindInReadable(u"\\..\\"_ns, aPath)) {
     return false;
   }
 #elif defined(XP_UNIX)
-  if (StringBeginsWith(aPath, NS_LITERAL_STRING("../")) ||
-      FindInReadable(NS_LITERAL_STRING("/../"), aPath)) {
+  if (StringBeginsWith(aPath, u"../"_ns) || FindInReadable(u"/../"_ns, aPath)) {
     return false;
   }
 #endif

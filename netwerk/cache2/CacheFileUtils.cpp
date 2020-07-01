@@ -223,8 +223,7 @@ void AppendTagWithValue(nsACString& aTarget, char const aTag,
       aTarget.Append(aValue);
     } else {
       nsAutoCString escapedValue(aValue);
-      escapedValue.ReplaceSubstring(NS_LITERAL_CSTRING(","),
-                                    NS_LITERAL_CSTRING(",,"));
+      escapedValue.ReplaceSubstring(","_ns, ",,"_ns);
       aTarget.Append(escapedValue);
     }
   }

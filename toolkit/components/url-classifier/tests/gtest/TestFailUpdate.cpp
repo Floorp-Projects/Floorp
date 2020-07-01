@@ -13,10 +13,10 @@
 static const char* kFilesInV2[] = {".vlpset", ".sbstore"};
 static const char* kFilesInV4[] = {".vlpset", ".metadata"};
 
-#define GTEST_MALWARE_TABLE_V4 NS_LITERAL_CSTRING("goog-malware-proto")
-#define GTEST_PHISH_TABLE_V4 NS_LITERAL_CSTRING("goog-phish-proto")
+#define GTEST_MALWARE_TABLE_V4 "goog-malware-proto"_ns
+#define GTEST_PHISH_TABLE_V4 "goog-phish-proto"_ns
 
-#define ROOT_DIR NS_LITERAL_STRING("safebrowsing")
+#define ROOT_DIR u"safebrowsing"_ns
 #define SB_FILE(x, y) NS_ConvertUTF8toUTF16(nsPrintfCString("%s%s", x, y))
 
 template <typename T, size_t N>

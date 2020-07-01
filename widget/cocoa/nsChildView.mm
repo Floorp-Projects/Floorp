@@ -3879,8 +3879,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
         !TextInputHandler::IsSecureEventInputEnabled()) {
 #  define CRASH_MESSAGE "A password editor has focus, but not in secure input mode"
 
-      CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\nBug 893973: ") +
-                                                 NS_LITERAL_CSTRING(CRASH_MESSAGE));
+      CrashReporter::AppendAppNotesToCrashReport("\nBug 893973: "_ns +
+                                                 nsLiteralCString(CRASH_MESSAGE));
       CrashReporter::AppendAppNotesToCrashReport(additionalInfo);
 
       MOZ_CRASH(CRASH_MESSAGE);
@@ -3889,8 +3889,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
                TextInputHandler::IsSecureEventInputEnabled()) {
 #  define CRASH_MESSAGE "A non-password editor has focus, but in secure input mode"
 
-      CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\nBug 893973: ") +
-                                                 NS_LITERAL_CSTRING(CRASH_MESSAGE));
+      CrashReporter::AppendAppNotesToCrashReport("\nBug 893973: "_ns +
+                                                 nsLiteralCString(CRASH_MESSAGE));
       CrashReporter::AppendAppNotesToCrashReport(additionalInfo);
 
       MOZ_CRASH(CRASH_MESSAGE);

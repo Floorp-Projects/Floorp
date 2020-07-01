@@ -10,7 +10,7 @@
 #include "nsStringFwd.h"
 #include "mozilla/Maybe.h"
 
-#define ANTITRACKING_CONSOLE_CATEGORY NS_LITERAL_CSTRING("Content Blocking")
+#define ANTITRACKING_CONSOLE_CATEGORY "Content Blocking"_ns
 
 class nsIChannel;
 class nsPIDOMWindowInner;

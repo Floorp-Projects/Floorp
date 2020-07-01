@@ -466,9 +466,8 @@ bool NS_HandleScriptError(nsIScriptGlobalObject* aScriptGlobal,
     if (errorDepth < 2) {
       // Dispatch() must be synchronous for the recursion block
       // (errorDepth) to work.
-      RefPtr<ErrorEvent> event =
-          ErrorEvent::Constructor(nsGlobalWindowInner::Cast(win),
-                                  NS_LITERAL_STRING("error"), aErrorEventInit);
+      RefPtr<ErrorEvent> event = ErrorEvent::Constructor(
+          nsGlobalWindowInner::Cast(win), u"error"_ns, aErrorEventInit);
       event->SetTrusted(true);
 
       EventDispatcher::DispatchDOMEvent(win, nullptr, event, presContext,
@@ -524,7 +523,7 @@ class ScriptErrorEvent : public Runnable {
       }
 
       RefPtr<ErrorEvent> event = ErrorEvent::Constructor(
-          nsGlobalWindowInner::Cast(win), NS_LITERAL_STRING("error"), init);
+          nsGlobalWindowInner::Cast(win), u"error"_ns, init);
       event->SetTrusted(true);
 
       EventDispatcher::DispatchDOMEvent(win, nullptr, event, presContext,

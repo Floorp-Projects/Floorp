@@ -96,7 +96,7 @@ void XRInputSourceArray::Update(XRSession* aSession) {
   if (addInit.mAdded.Length()) {
     RefPtr<XRInputSourcesChangeEvent> event =
         XRInputSourcesChangeEvent::Constructor(
-            aSession, NS_LITERAL_STRING("inputsourceschange"), addInit);
+            aSession, u"inputsourceschange"_ns, addInit);
 
     event->SetTrusted(true);
     aSession->DispatchEvent(*event);
@@ -140,8 +140,8 @@ void XRInputSourceArray::DispatchInputSourceRemovedEvent(
 
   if (init.mRemoved.Length()) {
     RefPtr<XRInputSourcesChangeEvent> event =
-        XRInputSourcesChangeEvent::Constructor(
-            aSession, NS_LITERAL_STRING("inputsourceschange"), init);
+        XRInputSourcesChangeEvent::Constructor(aSession,
+                                               u"inputsourceschange"_ns, init);
 
     event->SetTrusted(true);
     aSession->DispatchEvent(*event);

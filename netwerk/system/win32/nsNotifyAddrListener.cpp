@@ -332,7 +332,7 @@ nsresult nsNotifyAddrListener::Init(void) {
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(1));
   MOZ_ALWAYS_SUCCEEDS(
       threadPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize));
-  MOZ_ALWAYS_SUCCEEDS(threadPool->SetName(NS_LITERAL_CSTRING("Link Monitor")));
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetName("Link Monitor"_ns));
   mThread = threadPool.forget();
 
   return mThread->Dispatch(this, NS_DISPATCH_NORMAL);
@@ -523,8 +523,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
         return false;
       }
       nsAutoString wideSuffixString;
-      rv = regKey->ReadStringValue(NS_LITERAL_STRING("SearchList"),
-                                   wideSuffixString);
+      rv = regKey->ReadStringValue(u"SearchList"_ns, wideSuffixString);
       if (NS_FAILED(rv)) {
         LOG(("  reading registry string value failed\n"));
         return false;
@@ -548,10 +547,10 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
     // The Local group policy overrides the user set suffix list, so we must
     // first check the registry key that is sets by gpedit, and if that fails we
     // fall back to the one that is set by the user.
-    if (!checkRegistry(NS_LITERAL_STRING(
-            "SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient"))) {
-      checkRegistry(NS_LITERAL_STRING(
-          "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"));
+    if (!checkRegistry(nsLiteralString(
+            u"SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient"))) {
+      checkRegistry(nsLiteralString(
+          u"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"));
     }
   }
 
@@ -580,23 +579,19 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
   };
 
   if (StaticPrefs::network_notify_checkForProxies()) {
-    if (registryChildCount(
-            NS_LITERAL_STRING("SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
-                              "Parameters\\DnsConnections")) > 0 ||
-        registryChildCount(
-            NS_LITERAL_STRING("SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
-                              "Parameters\\DnsConnectionsProxies")) > 0) {
+    if (registryChildCount(u"SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
+                           "Parameters\\DnsConnections"_ns) > 0 ||
+        registryChildCount(u"SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
+                           "Parameters\\DnsConnectionsProxies"_ns) > 0) {
       platformDNSIndications |= PROXY_DETECTED;
     }
   }
 
   if (StaticPrefs::network_notify_checkForNRPT()) {
-    if (registryChildCount(
-            NS_LITERAL_STRING("SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
-                              "Parameters\\DnsPolicyConfig")) > 0 ||
-        registryChildCount(
-            NS_LITERAL_STRING("SOFTWARE\\Policies\\Microsoft\\Windows NT\\"
-                              "DNSClient\\DnsPolicyConfig")) > 0) {
+    if (registryChildCount(u"SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
+                           "Parameters\\DnsPolicyConfig"_ns) > 0 ||
+        registryChildCount(u"SOFTWARE\\Policies\\Microsoft\\Windows NT\\"
+                           "DNSClient\\DnsPolicyConfig"_ns) > 0) {
       platformDNSIndications |= NRPT_DETECTED;
     }
   }

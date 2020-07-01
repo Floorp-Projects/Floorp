@@ -926,7 +926,7 @@ nsresult nsHttpConnection::SetupNPNList(nsISSLSocketControl* ssl,
     // For NPN, In the case of overlap, matching priority is driven by
     // the order of the server's advertisement - with index 0 used when
     // there is no match.
-    protocolArray.AppendElement(NS_LITERAL_CSTRING("http/1.1"));
+    protocolArray.AppendElement("http/1.1"_ns);
 
     if (gHttpHandler->IsSpdyEnabled() && !(caps & NS_HTTP_DISALLOW_SPDY)) {
       LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
@@ -1247,8 +1247,8 @@ nsresult nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction* trans,
   MOZ_ASSERT(responseHead, "No response head?");
 
   if (mInSpdyTunnel) {
-    DebugOnly<nsresult> rv = responseHead->SetHeader(
-        nsHttp::X_Firefox_Spdy_Proxy, NS_LITERAL_CSTRING("true"));
+    DebugOnly<nsresult> rv =
+        responseHead->SetHeader(nsHttp::X_Firefox_Spdy_Proxy, "true"_ns);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -2237,7 +2237,7 @@ nsresult nsHttpConnection::MakeConnectString(nsAHttpTransaction* trans,
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // CONNECT host:port HTTP/1.1
-  request->SetMethod(NS_LITERAL_CSTRING("CONNECT"));
+  request->SetMethod("CONNECT"_ns);
   request->SetVersion(gHttpHandler->HttpVersion());
   if (h2ws) {
     // HTTP/2 websocket CONNECT forms need the full request URI
@@ -2253,10 +2253,9 @@ nsresult nsHttpConnection::MakeConnectString(nsAHttpTransaction* trans,
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // a CONNECT is always persistent
-  rv = request->SetHeader(nsHttp::Proxy_Connection,
-                          NS_LITERAL_CSTRING("keep-alive"));
+  rv = request->SetHeader(nsHttp::Proxy_Connection, "keep-alive"_ns);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  rv = request->SetHeader(nsHttp::Connection, NS_LITERAL_CSTRING("keep-alive"));
+  rv = request->SetHeader(nsHttp::Connection, "keep-alive"_ns);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // all HTTP/1.1 requests must include a Host header (even though it
@@ -2279,7 +2278,7 @@ nsresult nsHttpConnection::MakeConnectString(nsAHttpTransaction* trans,
     // in CONNECT when not used for TLS. The protocol is stored in Upgrade.
     // We have to copy this header here since a new HEAD request is created
     // for the CONNECT.
-    rv = request->SetHeader(NS_LITERAL_CSTRING("ALPN"), val);
+    rv = request->SetHeader("ALPN"_ns, val);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 

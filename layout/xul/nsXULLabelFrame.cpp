@@ -91,6 +91,6 @@ nsresult nsXULLabelFrame::AttributeChanged(int32_t aNameSpaceID,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsXULLabelFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("XULLabel"), aResult);
+  return MakeFrameName(u"XULLabel"_ns, aResult);
 }
 #endif

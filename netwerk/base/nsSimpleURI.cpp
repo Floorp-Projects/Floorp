@@ -199,15 +199,13 @@ bool nsSimpleURI::Deserialize(const URIParams& aParams) {
 
 NS_IMETHODIMP
 nsSimpleURI::GetSpec(nsACString& result) {
-  if (!result.Assign(mScheme, fallible) ||
-      !result.Append(NS_LITERAL_CSTRING(":"), fallible) ||
+  if (!result.Assign(mScheme, fallible) || !result.Append(":"_ns, fallible) ||
       !result.Append(mPath, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (mIsQueryValid) {
-    if (!result.Append(NS_LITERAL_CSTRING("?"), fallible) ||
-        !result.Append(mQuery, fallible)) {
+    if (!result.Append("?"_ns, fallible) || !result.Append(mQuery, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else {
@@ -215,8 +213,7 @@ nsSimpleURI::GetSpec(nsACString& result) {
   }
 
   if (mIsRefValid) {
-    if (!result.Append(NS_LITERAL_CSTRING("#"), fallible) ||
-        !result.Append(mRef, fallible)) {
+    if (!result.Append("#"_ns, fallible) || !result.Append(mRef, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else {
@@ -229,9 +226,9 @@ nsSimpleURI::GetSpec(nsACString& result) {
 // result may contain unescaped UTF-8 characters
 NS_IMETHODIMP
 nsSimpleURI::GetSpecIgnoringRef(nsACString& result) {
-  result = mScheme + NS_LITERAL_CSTRING(":") + mPath;
+  result = mScheme + ":"_ns + mPath;
   if (mIsQueryValid) {
-    result += NS_LITERAL_CSTRING("?") + mQuery;
+    result += "?"_ns + mQuery;
   }
   return NS_OK;
 }
@@ -301,7 +298,7 @@ nsresult nsSimpleURI::SetScheme(const nsACString& scheme) {
 
 NS_IMETHODIMP
 nsSimpleURI::GetPrePath(nsACString& result) {
-  result = mScheme + NS_LITERAL_CSTRING(":");
+  result = mScheme + ":"_ns;
   return NS_OK;
 }
 
@@ -362,10 +359,10 @@ NS_IMETHODIMP
 nsSimpleURI::GetPathQueryRef(nsACString& result) {
   result = mPath;
   if (mIsQueryValid) {
-    result += NS_LITERAL_CSTRING("?") + mQuery;
+    result += "?"_ns + mQuery;
   }
   if (mIsRefValid) {
-    result += NS_LITERAL_CSTRING("#") + mRef;
+    result += "#"_ns + mRef;
   }
 
   return NS_OK;

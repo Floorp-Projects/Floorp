@@ -20,8 +20,8 @@
 #include "nsTArray.h"
 #include "nsString.h"
 
-#define kIndentStr NS_LITERAL_STRING("  ")
-#define kEndTag NS_LITERAL_STRING("</")
+#define kIndentStr u"  "_ns
+#define kEndTag u"</"_ns
 
 class nsAtom;
 class nsINode;

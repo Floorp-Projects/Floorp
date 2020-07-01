@@ -32,10 +32,9 @@ static void UpdateContentViewerRegistration(const char* aPref, void* aData) {
     return;
   }
 
-  static nsLiteralCString kCategory =
-      NS_LITERAL_CSTRING("Gecko-Content-Viewers");
-  static nsLiteralCString kContractId = NS_LITERAL_CSTRING(
-      "@mozilla.org/content/plugin/document-loader-factory;1");
+  static nsLiteralCString kCategory = "Gecko-Content-Viewers"_ns;
+  static nsLiteralCString kContractId =
+      "@mozilla.org/content/plugin/document-loader-factory;1"_ns;
 
   if (cookie->mIsEnabled()) {
     catMan->AddCategoryEntry(kCategory, cookie->mMimeType, kContractId,
@@ -56,11 +55,9 @@ nsresult mozilla::image::EnsureModuleInitialized() {
   }
 
   static ImageEnablementCookie kAVIFCookie = {
-      mozilla::StaticPrefs::image_avif_enabled,
-      NS_LITERAL_CSTRING("image/avif")};
+      mozilla::StaticPrefs::image_avif_enabled, "image/avif"_ns};
   static ImageEnablementCookie kWebPCookie = {
-      mozilla::StaticPrefs::image_webp_enabled,
-      NS_LITERAL_CSTRING("image/webp")};
+      mozilla::StaticPrefs::image_webp_enabled, "image/webp"_ns};
   Preferences::RegisterCallbackAndCall(UpdateContentViewerRegistration,
                                        "image.avif.enabled", &kAVIFCookie);
   Preferences::RegisterCallbackAndCall(UpdateContentViewerRegistration,

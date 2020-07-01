@@ -530,9 +530,9 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
 
     // We need to use an App Bundle on OS X so that we can hide
     // the dock icon. See Bug 557225.
-    childProcPath->AppendNative(NS_LITERAL_CSTRING("plugin-container.app"));
-    childProcPath->AppendNative(NS_LITERAL_CSTRING("Contents"));
-    childProcPath->AppendNative(NS_LITERAL_CSTRING("MacOS"));
+    childProcPath->AppendNative("plugin-container.app"_ns);
+    childProcPath->AppendNative("Contents"_ns);
+    childProcPath->AppendNative("MacOS"_ns);
     nsCString tempCPath;
     childProcPath->GetNativePath(tempCPath);
     exePath = FilePath(tempCPath.get());
@@ -924,8 +924,7 @@ nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   StaticMutexAutoLock lock(gIPCLaunchThreadMutex);
   if (!gIPCLaunchThread) {
     nsCOMPtr<nsIThread> thread;
-    nsresult rv = NS_NewNamedThread(NS_LITERAL_CSTRING("IPC Launch"),
-                                    getter_AddRefs(thread));
+    nsresult rv = NS_NewNamedThread("IPC Launch"_ns, getter_AddRefs(thread));
     if (!NS_WARN_IF(NS_FAILED(rv))) {
       NS_DispatchToMainThread(
           NS_NewRunnableFunction("GeckoChildProcessHost::GetIPCLauncher", [] {
@@ -950,7 +949,7 @@ nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
 
 nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   nsCOMPtr<nsIEventTarget> pool =
-      mozilla::SharedThreadPool::Get(NS_LITERAL_CSTRING("IPC Launch"));
+      mozilla::SharedThreadPool::Get("IPC Launch"_ns);
   MOZ_DIAGNOSTIC_ASSERT(pool);
   return pool;
 }

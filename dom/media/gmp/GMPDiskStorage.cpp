@@ -44,7 +44,7 @@ static nsresult GetGMPStorageDir(nsIFile** aTempDir, const nsString& aGMPName,
     return rv;
   }
 
-  rv = tmpFile->AppendNative(NS_LITERAL_CSTRING("storage"));
+  rv = tmpFile->AppendNative("storage"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -56,9 +56,8 @@ nsUnixSystemProxySettings::GetMainThreadOnly(bool* aMainThreadOnly) {
 void nsUnixSystemProxySettings::Init() {
   mGSettings = do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
   if (mGSettings) {
-    mGSettings->GetCollectionForSchema(
-        NS_LITERAL_CSTRING("org.gnome.system.proxy"),
-        getter_AddRefs(mProxySettings));
+    mGSettings->GetCollectionForSchema("org.gnome.system.proxy"_ns,
+                                       getter_AddRefs(mProxySettings));
   }
 }
 
@@ -66,11 +65,9 @@ nsresult nsUnixSystemProxySettings::GetPACURI(nsACString& aResult) {
   if (mProxySettings) {
     nsCString proxyMode;
     // Check if mode is auto
-    nsresult rv =
-        mProxySettings->GetString(NS_LITERAL_CSTRING("mode"), proxyMode);
+    nsresult rv = mProxySettings->GetString("mode"_ns, proxyMode);
     if (rv == NS_OK && proxyMode.EqualsLiteral("auto")) {
-      return mProxySettings->GetString(NS_LITERAL_CSTRING("autoconfig-url"),
-                                       aResult);
+      return mProxySettings->GetString("autoconfig-url"_ns, aResult);
     }
   }
 
@@ -210,12 +207,12 @@ nsresult nsUnixSystemProxySettings::SetProxyResultFromGSettings(
   }
 
   nsAutoCString host;
-  rv = proxy_settings->GetString(NS_LITERAL_CSTRING("host"), host);
+  rv = proxy_settings->GetString("host"_ns, host);
   NS_ENSURE_SUCCESS(rv, rv);
   if (host.IsEmpty()) return NS_ERROR_FAILURE;
 
   int32_t port;
-  rv = proxy_settings->GetInt(NS_LITERAL_CSTRING("port"), &port);
+  rv = proxy_settings->GetInt("port"_ns, &port);
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* When port is 0, proxy is not considered as enabled even if host is set. */
@@ -323,8 +320,7 @@ nsresult nsUnixSystemProxySettings::GetProxyFromGSettings(
     const nsACString& aScheme, const nsACString& aHost, int32_t aPort,
     nsACString& aResult) {
   nsCString proxyMode;
-  nsresult rv =
-      mProxySettings->GetString(NS_LITERAL_CSTRING("mode"), proxyMode);
+  nsresult rv = mProxySettings->GetString("mode"_ns, proxyMode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // return NS_ERROR_FAILURE when no proxy is set
@@ -333,8 +329,8 @@ nsresult nsUnixSystemProxySettings::GetProxyFromGSettings(
   }
 
   nsCOMPtr<nsIArray> ignoreList;
-  if (NS_SUCCEEDED(mProxySettings->GetStringList(
-          NS_LITERAL_CSTRING("ignore-hosts"), getter_AddRefs(ignoreList))) &&
+  if (NS_SUCCEEDED(mProxySettings->GetStringList("ignore-hosts"_ns,
+                                                 getter_AddRefs(ignoreList))) &&
       ignoreList) {
     uint32_t len = 0;
     ignoreList->GetLength(&len);

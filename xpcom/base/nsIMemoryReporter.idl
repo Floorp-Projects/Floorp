@@ -611,8 +611,8 @@ nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
 // variables. The (void) is there because we should always ignore the return
 // value of the callback, because callback failures aren't fatal.
 #define MOZ_COLLECT_REPORT(path, kind, units, amount, description)            \
-  (void)aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(path),     \
+  (void)aHandleReport->Callback(EmptyCString(), nsLiteralCString(path),     \
                                 kind, units, amount,                          \
-                                NS_LITERAL_CSTRING(description), aData)
+                                nsLiteralCString(description), aData)
 
 %}

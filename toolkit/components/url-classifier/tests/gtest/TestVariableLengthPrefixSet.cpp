@@ -137,7 +137,7 @@ class UrlClassifierPrefixSetTest : public ::testing::TestWithParam<uint32_t> {
         "browser.safebrowsing.prefixset.max_array_size";
     mozilla::Preferences::SetUint(prefKey, GetParam());
 
-    mCache = SetupLookupCache(NS_LITERAL_CSTRING("test"));
+    mCache = SetupLookupCache("test"_ns);
   }
 
   void TearDown() override {
@@ -332,8 +332,7 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveFixedLengthPrefixSet) {
 
   // Save
   {
-    RefPtr<LookupCacheV4> save =
-        SetupLookupCache(NS_LITERAL_CSTRING("test-save"));
+    RefPtr<LookupCacheV4> save = SetupLookupCache("test-save"_ns);
 
     RandomPrefixes(10000, 4, 4, array);
 
@@ -345,14 +344,13 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveFixedLengthPrefixSet) {
     CheckContent(save, array);
 
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-    file->Append(NS_LITERAL_STRING("test.vlpset"));
+    file->Append(u"test.vlpset"_ns);
     save->StoreToFile(file);
   }
 
   // Load
   {
-    RefPtr<LookupCacheV4> load =
-        SetupLookupCache(NS_LITERAL_CSTRING("test-load"));
+    RefPtr<LookupCacheV4> load = SetupLookupCache("test-load"_ns);
     load->LoadFromFile(file);
 
     DoExpectedLookup(load, array);
@@ -371,8 +369,7 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveVariableLengthPrefixSet) {
 
   // Save
   {
-    RefPtr<LookupCacheV4> save =
-        SetupLookupCache(NS_LITERAL_CSTRING("test-save"));
+    RefPtr<LookupCacheV4> save = SetupLookupCache("test-save"_ns);
 
     RandomPrefixes(10000, 5, 32, array);
 
@@ -384,14 +381,13 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveVariableLengthPrefixSet) {
     CheckContent(save, array);
 
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-    file->Append(NS_LITERAL_STRING("test.vlpset"));
+    file->Append(u"test.vlpset"_ns);
     save->StoreToFile(file);
   }
 
   // Load
   {
-    RefPtr<LookupCacheV4> load =
-        SetupLookupCache(NS_LITERAL_CSTRING("test-load"));
+    RefPtr<LookupCacheV4> load = SetupLookupCache("test-load"_ns);
     load->LoadFromFile(file);
 
     DoExpectedLookup(load, array);
@@ -410,8 +406,7 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSavePrefixSet) {
 
   // Save
   {
-    RefPtr<LookupCacheV4> save =
-        SetupLookupCache(NS_LITERAL_CSTRING("test-save"));
+    RefPtr<LookupCacheV4> save = SetupLookupCache("test-save"_ns);
 
     // Try to simulate the real case that most prefixes are 4bytes
     RandomPrefixes(20000, 4, 4, array);
@@ -425,14 +420,13 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSavePrefixSet) {
     CheckContent(save, array);
 
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-    file->Append(NS_LITERAL_STRING("test.vlpset"));
+    file->Append(u"test.vlpset"_ns);
     save->StoreToFile(file);
   }
 
   // Load
   {
-    RefPtr<LookupCacheV4> load =
-        SetupLookupCache(NS_LITERAL_CSTRING("test-load"));
+    RefPtr<LookupCacheV4> load = SetupLookupCache("test-load"_ns);
     load->LoadFromFile(file);
 
     DoExpectedLookup(load, array);
@@ -459,8 +453,7 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveNoDelta) {
 
   // Save
   {
-    RefPtr<LookupCacheV4> save =
-        SetupLookupCache(NS_LITERAL_CSTRING("test-save"));
+    RefPtr<LookupCacheV4> save = SetupLookupCache("test-save"_ns);
 
     PrefixArrayToPrefixStringMap(array, map);
     save->Build(map);
@@ -470,14 +463,13 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveNoDelta) {
     CheckContent(save, array);
 
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-    file->Append(NS_LITERAL_STRING("test.vlpset"));
+    file->Append(u"test.vlpset"_ns);
     save->StoreToFile(file);
   }
 
   // Load
   {
-    RefPtr<LookupCacheV4> load =
-        SetupLookupCache(NS_LITERAL_CSTRING("test-load"));
+    RefPtr<LookupCacheV4> load = SetupLookupCache("test-load"_ns);
     load->LoadFromFile(file);
 
     DoExpectedLookup(load, array);

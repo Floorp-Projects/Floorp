@@ -103,8 +103,7 @@ nsresult ContentBlockingAllowList::Check(
   // Check both the normal mode and private browsing mode user override
   // permissions.
   std::pair<const nsLiteralCString, bool> types[] = {
-      {NS_LITERAL_CSTRING("trackingprotection"), false},
-      {NS_LITERAL_CSTRING("trackingprotection-pb"), true}};
+      {"trackingprotection"_ns, false}, {"trackingprotection-pb"_ns, true}};
 
   for (const auto& type : types) {
     if (aIsPrivateBrowsing != type.second) {
@@ -155,7 +154,7 @@ nsresult ContentBlockingAllowList::Check(
   // Take the host/port portion so we can allowlist by site. Also ignore the
   // scheme, since users who put sites on the allowlist probably don't expect
   // allowlisting to depend on scheme.
-  nsAutoCString escaped(NS_LITERAL_CSTRING("https://"));
+  nsAutoCString escaped("https://"_ns);
   nsAutoCString temp;
   nsresult rv = aDocumentPrincipal->GetHostPort(temp);
   // view-source URIs will be handled by the next block.
@@ -200,7 +199,7 @@ nsresult ContentBlockingAllowList::Check(
   // Take the host/port portion so we can allowlist by site. Also ignore the
   // scheme, since users who put sites on the allowlist probably don't expect
   // allowlisting to depend on scheme.
-  nsAutoCString escaped(NS_LITERAL_CSTRING("https://"));
+  nsAutoCString escaped("https://"_ns);
   nsAutoCString temp;
   nsresult rv = aURIBeingLoaded->GetHostPort(temp);
   // view-source URIs will be handled by the next block.

@@ -12,7 +12,7 @@ nsresult txErrorExpr::evaluate(txIEvalContext* aContext,
                                txAExprResult** aResult) {
   *aResult = nullptr;
 
-  nsAutoString err(NS_LITERAL_STRING("Invalid expression evaluated"));
+  nsAutoString err(u"Invalid expression evaluated"_ns);
 #ifdef TX_TO_STRING
   err.AppendLiteral(": ");
   toString(err);

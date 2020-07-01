@@ -26,7 +26,7 @@ MediaTimer::MediaTimer(bool aFuzzy)
   // Use the SharedThreadPool to create an nsIThreadPool with a maximum of one
   // thread, which is equivalent to an nsIThread for our purposes.
   RefPtr<SharedThreadPool> threadPool(
-      SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaTimer"), 1));
+      SharedThreadPool::Get("MediaTimer"_ns, 1));
   mThread = threadPool.get();
   mTimer = NS_NewTimer(mThread);
 }

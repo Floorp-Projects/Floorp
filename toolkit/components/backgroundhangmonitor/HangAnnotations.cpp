@@ -43,9 +43,9 @@ void BackgroundHangAnnotations::AddAnnotation(const nsString& aName,
 void BackgroundHangAnnotations::AddAnnotation(const nsString& aName,
                                               const bool aData) {
   if (aData) {
-    AppendElement(HangAnnotation(aName, NS_LITERAL_STRING("true")));
+    AppendElement(HangAnnotation(aName, u"true"_ns));
   } else {
-    AppendElement(HangAnnotation(aName, NS_LITERAL_STRING("false")));
+    AppendElement(HangAnnotation(aName, u"false"_ns));
   }
 }
 

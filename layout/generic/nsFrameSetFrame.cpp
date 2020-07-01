@@ -133,7 +133,7 @@ class nsHTMLFramesetBlankFrame final : public nsLeafFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("FramesetBlank"), aResult);
+    return MakeFrameName(u"FramesetBlank"_ns, aResult);
   }
 #endif
 
@@ -1057,7 +1057,7 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsHTMLFramesetFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Frameset"), aResult);
+  return MakeFrameName(u"Frameset"_ns, aResult);
 }
 #endif
 
@@ -1468,7 +1468,7 @@ Maybe<nsIFrame::Cursor> nsHTMLFramesetBorderFrame::GetCursor(const nsPoint&) {
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsHTMLFramesetBorderFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("FramesetBorder"), aResult);
+  return MakeFrameName(u"FramesetBorder"_ns, aResult);
 }
 #endif
 

@@ -22,8 +22,8 @@ class TableUpdate;
 }  // namespace safebrowsing
 }  // namespace mozilla
 
-#define GTEST_TABLE_V4 NS_LITERAL_CSTRING("gtest-malware-proto")
-#define GTEST_TABLE_V2 NS_LITERAL_CSTRING("gtest-malware-simple")
+#define GTEST_TABLE_V4 "gtest-malware-proto"_ns
+#define GTEST_TABLE_V2 "gtest-malware-simple"_ns
 
 template <typename Function>
 void RunTestInNewThread(Function&& aFunction);

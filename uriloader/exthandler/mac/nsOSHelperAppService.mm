@@ -475,7 +475,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
       }
     } else {
       // Otherwise set the MIME type to a reasonable fallback.
-      mimeInfoMac->SetMIMEType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
+      mimeInfoMac->SetMIMEType(nsLiteralCString(APPLICATION_OCTET_STREAM));
     }
   }
 

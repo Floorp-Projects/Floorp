@@ -43,7 +43,7 @@ using namespace mozilla::widget;
 
 namespace mozilla {
 
-#define IDEOGRAPHIC_SPACE (NS_LITERAL_STRING(u"\x3000"))
+#define IDEOGRAPHIC_SPACE (u"\x3000"_ns)
 
 /******************************************************************************
  * TextComposition

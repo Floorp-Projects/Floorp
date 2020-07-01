@@ -212,7 +212,7 @@ void InProcessBrowserChildMessageManager::FireUnloadEvent() {
 
   // Don't let the unload event propagate to chrome event handlers.
   mPreventEventsEscaping = true;
-  DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("unload"));
+  DOMEventTargetHelper::DispatchTrustedEvent(u"unload"_ns);
 
   // Allow events fired during docshell destruction (pagehide, unload) to
   // propagate to the <browser> element since chrome code depends on this.

@@ -942,19 +942,19 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
   // Clear histograms
   TelemetryTestHelpers::GetAndClearHistogram(
       cx.GetJSContext(), mTelemetry,
-      NS_LITERAL_CSTRING(
+      nsLiteralCString(
           "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS"),
       false /* is_keyed */);
 
   TelemetryTestHelpers::GetAndClearHistogram(
       cx.GetJSContext(), mTelemetry,
-      NS_LITERAL_CSTRING(
+      nsLiteralCString(
           "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CRYPTO"),
       false /* is_keyed */);
 
   TelemetryTestHelpers::GetAndClearHistogram(
       cx.GetJSContext(), mTelemetry,
-      NS_LITERAL_CSTRING("MEDIA_MP4_PARSE_NUM_SAMPLE_DESCRIPTION_ENTRIES"),
+      "MEDIA_MP4_PARSE_NUM_SAMPLE_DESCRIPTION_ENTRIES"_ns,
       false /* is_keyed */);
 
   // The snapshot won't have any data in it until we populate our histograms, so

@@ -244,8 +244,8 @@ class MOZ_STACK_CLASS EntryWrapper final {
   nsCString ModuleDescription() {
     MATCH(nsCString,
           return entry->mModule ? entry->mModule->Description()
-                                : NS_LITERAL_CSTRING("<unknown module>"),
-          return NS_LITERAL_CSTRING("<unknown module>"));
+                                : "<unknown module>"_ns,
+          return "<unknown module>"_ns);
   }
 
  private:
@@ -496,8 +496,7 @@ nsresult nsComponentManagerImpl::Init() {
     if (greOmnijar) {
       cl->location.Init(greOmnijar, "chrome.manifest");
     } else {
-      nsCOMPtr<nsIFile> lf =
-          CloneAndAppend(greDir, NS_LITERAL_CSTRING("chrome.manifest"));
+      nsCOMPtr<nsIFile> lf = CloneAndAppend(greDir, "chrome.manifest"_ns);
       cl->location.Init(lf);
     }
 
@@ -513,8 +512,7 @@ nsresult nsComponentManagerImpl::Init() {
       if (!equals) {
         cl = sModuleLocations->AppendElement();
         cl->type = NS_APP_LOCATION;
-        nsCOMPtr<nsIFile> lf =
-            CloneAndAppend(appDir, NS_LITERAL_CSTRING("chrome.manifest"));
+        nsCOMPtr<nsIFile> lf = CloneAndAppend(appDir, "chrome.manifest"_ns);
         cl->location.Init(lf);
       }
     }
@@ -1127,10 +1125,8 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
 #ifdef SHOW_CI_ON_EXISTING_SERVICE
   if (entry->ServiceInstance()) {
     nsAutoCString message;
-    message =
-        NS_LITERAL_CSTRING("You are calling CreateInstance \"") +
-        AutoIDString(aClass) +
-        NS_LITERAL_CSTRING("\" when a service for this CID already exists!");
+    message = "You are calling CreateInstance \""_ns + AutoIDString(aClass) +
+              "\" when a service for this CID already exists!"_ns;
     NS_ERROR(message.get());
   }
 #endif
@@ -1210,9 +1206,9 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char* aContractID,
   if (entry->ServiceInstance()) {
     nsAutoCString message;
     message =
-        NS_LITERAL_CSTRING("You are calling CreateInstance \"") +
+        "You are calling CreateInstance \""_ns +
         nsDependentCString(aContractID) +
-        NS_LITERAL_CSTRING(
+        nsLiteralCString(
             "\" when a service for this CID already exists! "
             "Add it to abusedContracts to track down the service consumer.");
     NS_ERROR(message.get());
@@ -1924,8 +1920,7 @@ nsComponentManagerImpl::AddBootstrappedManifestLocation(nsIFile* aLocation) {
     return XRE_AddJarManifestLocation(NS_BOOTSTRAPPED_LOCATION, aLocation);
   }
 
-  nsCOMPtr<nsIFile> manifest =
-      CloneAndAppend(aLocation, NS_LITERAL_CSTRING("chrome.manifest"));
+  nsCOMPtr<nsIFile> manifest = CloneAndAppend(aLocation, "chrome.manifest"_ns);
   return XRE_AddManifestLocation(NS_BOOTSTRAPPED_LOCATION, manifest);
 }
 
@@ -1950,8 +1945,7 @@ nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation) {
   if (Substring(path, path.Length() - 4).EqualsLiteral(".xpi")) {
     elem.location.Init(aLocation, "chrome.manifest");
   } else {
-    nsCOMPtr<nsIFile> lf =
-        CloneAndAppend(aLocation, NS_LITERAL_CSTRING("chrome.manifest"));
+    nsCOMPtr<nsIFile> lf = CloneAndAppend(aLocation, "chrome.manifest"_ns);
     elem.location.Init(lf);
   }
 

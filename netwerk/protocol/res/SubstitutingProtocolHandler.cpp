@@ -617,8 +617,7 @@ nsresult SubstitutingProtocolHandler::ResolveURI(nsIURI* uri,
     if (baseDir) {
       nsAutoCString basePath;
       rv = baseURI->GetFilePath(basePath);
-      if (NS_SUCCEEDED(rv) &&
-          !StringEndsWith(basePath, NS_LITERAL_CSTRING("/"))) {
+      if (NS_SUCCEEDED(rv) && !StringEndsWith(basePath, "/"_ns)) {
         // Cf. the assertion above, path already starts with a /, so prefixing
         // with a string that doesn't end with one will leave us wit the right
         // amount of /.

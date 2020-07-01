@@ -71,16 +71,16 @@ static nsresult SystemWantsDarkTheme(int32_t& darkThemeEnabled) {
 
   rv = personalizeKey->Open(
       nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-      NS_LITERAL_STRING(
-          "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"),
+      nsLiteralString(
+          u"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"),
       nsIWindowsRegKey::ACCESS_QUERY_VALUE);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   uint32_t lightThemeEnabled;
-  rv = personalizeKey->ReadIntValue(NS_LITERAL_STRING("AppsUseLightTheme"),
-                                    &lightThemeEnabled);
+  rv =
+      personalizeKey->ReadIntValue(u"AppsUseLightTheme"_ns, &lightThemeEnabled);
   if (NS_SUCCEEDED(rv)) {
     darkThemeEnabled = !lightThemeEnabled;
   }
@@ -488,10 +488,9 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       }
 
       uint32_t colorPrevalence;
-      nsresult rv =
-          mDwmKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                        NS_LITERAL_STRING("SOFTWARE\\Microsoft\\Windows\\DWM"),
-                        nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+      nsresult rv = mDwmKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                                  u"SOFTWARE\\Microsoft\\Windows\\DWM"_ns,
+                                  nsIWindowsRegKey::ACCESS_QUERY_VALUE);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -499,8 +498,8 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       // The ColorPrevalence value is set to 1 when the "Show color on title
       // bar" setting in the Color section of Window's Personalization settings
       // is turned on.
-      aResult = (NS_SUCCEEDED(mDwmKey->ReadIntValue(
-                     NS_LITERAL_STRING("ColorPrevalence"), &colorPrevalence)) &&
+      aResult = (NS_SUCCEEDED(mDwmKey->ReadIntValue(u"ColorPrevalence"_ns,
+                                                    &colorPrevalence)) &&
                  colorPrevalence == 1)
                     ? 1
                     : 0;
@@ -738,7 +737,7 @@ static bool GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
   aFontStyle.systemFont = true;
 
   if (useShellDlg) {
-    aFontName = NS_LITERAL_STRING("MS Shell Dlg 2");
+    aFontName = u"MS Shell Dlg 2"_ns;
   } else {
     memcpy(name, ptrLogFont->lfFaceName, LF_FACESIZE * sizeof(char16_t));
     aFontName = name;
@@ -831,15 +830,14 @@ nsresult nsLookAndFeel::GetAccentColor(nscolor& aColor) {
   }
 
   rv = mDwmKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                     NS_LITERAL_STRING("SOFTWARE\\Microsoft\\Windows\\DWM"),
+                     u"SOFTWARE\\Microsoft\\Windows\\DWM"_ns,
                      nsIWindowsRegKey::ACCESS_QUERY_VALUE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   uint32_t accentColor;
-  if (NS_SUCCEEDED(mDwmKey->ReadIntValue(NS_LITERAL_STRING("AccentColor"),
-                                         &accentColor))) {
+  if (NS_SUCCEEDED(mDwmKey->ReadIntValue(u"AccentColor"_ns, &accentColor))) {
     // The order of the color components in the DWORD stored in the registry
     // happens to be the same order as we store the components in nscolor
     // so we can just assign directly here.

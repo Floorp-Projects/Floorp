@@ -347,8 +347,7 @@ void ServiceWorkerRegistrationInfo::Activate() {
 
   ServiceWorkerPrivate* workerPrivate = mActiveWorker->WorkerPrivate();
   MOZ_ASSERT(workerPrivate);
-  nsresult rv = workerPrivate->SendLifeCycleEvent(NS_LITERAL_STRING("activate"),
-                                                  callback);
+  nsresult rv = workerPrivate->SendLifeCycleEvent(u"activate"_ns, callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     nsCOMPtr<nsIRunnable> failRunnable = NewRunnableMethod<bool>(
         "dom::ServiceWorkerRegistrationInfo::FinishActivate", this,

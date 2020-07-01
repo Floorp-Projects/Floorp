@@ -135,7 +135,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
     if (NS_FAILED(rv)) return rv;
   }
 
-  channel->SetContentType(NS_LITERAL_CSTRING("text/html"));
+  channel->SetContentType("text/html"_ns);
 
   mParser = nsDirIndexParser::CreateInstance();
   if (!mParser) return NS_ERROR_FAILURE;
@@ -192,7 +192,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
     if (NS_FAILED(rv)) return rv;
 
     if (!path.EqualsLiteral("//") && !path.LowerCaseEqualsLiteral("/%2f")) {
-      rv = uri->Resolve(NS_LITERAL_CSTRING(".."), parentStr);
+      rv = uri->Resolve(".."_ns, parentStr);
       if (NS_FAILED(rv)) return rv;
     }
   } else if (uri->SchemeIs("file")) {
@@ -229,8 +229,8 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
     // XXX this won't work correctly when the name of the directory being
     // XXX displayed ends with "!", but then again, jar: URIs don't deal
     // XXX particularly well with such directories anyway
-    if (!StringEndsWith(path, NS_LITERAL_CSTRING("!/"))) {
-      rv = uri->Resolve(NS_LITERAL_CSTRING(".."), parentStr);
+    if (!StringEndsWith(path, "!/"_ns)) {
+      rv = uri->Resolve(".."_ns, parentStr);
       if (NS_FAILED(rv)) return rv;
     }
   } else {
@@ -245,7 +245,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
       mozilla::Unused << NS_MutateURI(uri).SetPathQueryRef(path).Finalize(uri);
     }
     if (!path.EqualsLiteral("/")) {
-      rv = uri->Resolve(NS_LITERAL_CSTRING(".."), parentStr);
+      rv = uri->Resolve(".."_ns, parentStr);
       if (NS_FAILED(rv)) return rv;
     }
   }
@@ -503,8 +503,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
   }
 
   nsAutoString unEscapeSpec;
-  rv = mTextToSubURI->UnEscapeAndConvert(NS_LITERAL_CSTRING("UTF-8"), titleUri,
-                                         unEscapeSpec);
+  rv = mTextToSubURI->UnEscapeAndConvert("UTF-8"_ns, titleUri, unEscapeSpec);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -547,7 +546,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
     NS_ERROR("broken protocol handler didn't escape double-quote.");
   }
 
-  nsCString direction(NS_LITERAL_CSTRING("ltr"));
+  nsCString direction("ltr"_ns);
   if (LocaleService::GetInstance()->IsAppLocaleRTL()) {
     direction.AssignLiteral("rtl");
   }

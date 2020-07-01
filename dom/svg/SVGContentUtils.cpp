@@ -441,9 +441,9 @@ float SVGContentUtils::GetFontXHeight(ComputedStyle* aComputedStyle,
 }
 nsresult SVGContentUtils::ReportToConsole(Document* doc, const char* aWarning,
                                           const nsTArray<nsString>& aParams) {
-  return nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("SVG"), doc,
-      nsContentUtils::eSVG_PROPERTIES, aWarning, aParams);
+  return nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "SVG"_ns,
+                                         doc, nsContentUtils::eSVG_PROPERTIES,
+                                         aWarning, aParams);
 }
 
 bool SVGContentUtils::EstablishesViewport(nsIContent* aContent) {

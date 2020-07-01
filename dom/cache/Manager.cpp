@@ -190,7 +190,7 @@ class DeleteOrphanedBodyAction final : public Action {
       return;
     }
 
-    rv = dbDir->Append(NS_LITERAL_STRING("cache"));
+    rv = dbDir->Append(u"cache"_ns);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aResolver->Resolve(rv);
       return;

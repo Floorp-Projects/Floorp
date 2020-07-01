@@ -57,9 +57,8 @@ nsresult nsXMLPrettyPrinter::PrettyPrint(Document* aDocument,
 
   // Load the XSLT
   nsCOMPtr<nsIURI> xslUri;
-  rv = NS_NewURI(
-      getter_AddRefs(xslUri),
-      NS_LITERAL_CSTRING("chrome://global/content/xml/XMLPrettyPrint.xsl"));
+  rv = NS_NewURI(getter_AddRefs(xslUri),
+                 "chrome://global/content/xml/XMLPrettyPrint.xsl"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<Document> xslDocument;

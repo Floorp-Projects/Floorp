@@ -34,7 +34,7 @@ void nsGfxButtonControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsGfxButtonControlFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("ButtonControl"), aResult);
+  return MakeFrameName(u"ButtonControl"_ns, aResult);
 }
 #endif
 

@@ -72,7 +72,7 @@ static nsresult MakeDefaultFaviconChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                           getter_AddRefs(chan));
   NS_ENSURE_SUCCESS(rv, rv);
   chan->SetOriginalURI(aURI);
-  chan->SetContentType(NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE));
+  chan->SetContentType(nsLiteralCString(FAVICON_DEFAULT_MIMETYPE));
   chan.forget(aOutChannel);
   return NS_OK;
 }
@@ -90,8 +90,7 @@ static nsresult StreamDefaultFavicon(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                            aOutputStream, observer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aOriginalChannel->SetContentType(
-      NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE));
+  aOriginalChannel->SetContentType(nsLiteralCString(FAVICON_DEFAULT_MIMETYPE));
   nsCOMPtr<nsIChannel> defaultIconChannel;
   rv = MakeDefaultFaviconChannel(aURI, aLoadInfo,
                                  getter_AddRefs(defaultIconChannel));
@@ -152,7 +151,7 @@ NS_IMPL_ISUPPORTS(PageIconProtocolHandler, nsIProtocolHandler,
                   nsISupportsWeakReference);
 
 NS_IMETHODIMP PageIconProtocolHandler::GetScheme(nsACString& aScheme) {
-  aScheme.Assign(NS_LITERAL_CSTRING("page-icon"));
+  aScheme.Assign("page-icon"_ns);
   return NS_OK;
 }
 

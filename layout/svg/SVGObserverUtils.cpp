@@ -1488,8 +1488,7 @@ Element* SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
     MOZ_ASSERT(hashtable, "this property should only store non-null values");
   }
 
-  nsAutoString elementId =
-      NS_LITERAL_STRING("#") + nsDependentAtomString(aHref);
+  nsAutoString elementId = u"#"_ns + nsDependentAtomString(aHref);
   nsCOMPtr<nsIURI> targetURI;
   nsContentUtils::NewURIWithDocumentCharset(
       getter_AddRefs(targetURI), elementId,

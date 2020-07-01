@@ -264,7 +264,7 @@ bool mozJSSubScriptLoader::ReadScript(JS::MutableHandle<JSScript*> script,
                      nsIRequest::LOAD_NORMAL, serv);
 
   if (NS_SUCCEEDED(rv)) {
-    chan->SetContentType(NS_LITERAL_CSTRING("application/javascript"));
+    chan->SetContentType("application/javascript"_ns);
     rv = chan->Open(getter_AddRefs(instream));
   }
 
@@ -394,7 +394,7 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
 
   nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
   if (!serv) {
-    ReportError(cx, NS_LITERAL_CSTRING(LOAD_ERROR_NOSERVICE));
+    ReportError(cx, nsLiteralCString(LOAD_ERROR_NOSERVICE));
     return NS_OK;
   }
 
@@ -408,13 +408,13 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   // canonicalized spec.
   rv = NS_NewURI(getter_AddRefs(uri), asciiUrl);
   if (NS_FAILED(rv)) {
-    ReportError(cx, NS_LITERAL_CSTRING(LOAD_ERROR_NOURI));
+    ReportError(cx, nsLiteralCString(LOAD_ERROR_NOURI));
     return NS_OK;
   }
 
   rv = uri->GetSpec(uriStr);
   if (NS_FAILED(rv)) {
-    ReportError(cx, NS_LITERAL_CSTRING(LOAD_ERROR_NOSPEC));
+    ReportError(cx, nsLiteralCString(LOAD_ERROR_NOSPEC));
     return NS_OK;
   }
 

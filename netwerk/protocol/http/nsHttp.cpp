@@ -28,9 +28,7 @@ namespace mozilla {
 namespace net {
 
 const uint32_t kHttp3VersionCount = 3;
-const nsCString kHttp3Versions[] = {NS_LITERAL_CSTRING("h3-27"),
-                                    NS_LITERAL_CSTRING("h3-28"),
-                                    NS_LITERAL_CSTRING("h3-29")};
+const nsCString kHttp3Versions[] = {"h3-27"_ns, "h3-28"_ns, "h3-29"_ns};
 
 // define storage for all atoms
 namespace nsHttp {

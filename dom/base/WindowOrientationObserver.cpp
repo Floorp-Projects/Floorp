@@ -37,8 +37,7 @@ void WindowOrientationObserver::Notify(
   uint16_t currentAngle = aConfiguration.angle();
   if (mAngle != currentAngle && mWindow->IsCurrentInnerWindow()) {
     mAngle = currentAngle;
-    mWindow->GetOuterWindow()->DispatchCustomEvent(
-        NS_LITERAL_STRING("orientationchange"));
+    mWindow->GetOuterWindow()->DispatchCustomEvent(u"orientationchange"_ns);
   }
 }
 

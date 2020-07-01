@@ -56,8 +56,7 @@ TEST(storage_AsXXX_helpers, NULLFallback)
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  (void)db->CreateStatement(NS_LITERAL_CSTRING("SELECT NULL"),
-                            getter_AddRefs(stmt));
+  (void)db->CreateStatement("SELECT NULL"_ns, getter_AddRefs(stmt));
 
   nsCOMPtr<mozIStorageValueArray> valueArray = do_QueryInterface(stmt);
   do_check_true(valueArray);
@@ -99,8 +98,7 @@ TEST(storage_AsXXX_helpers, asyncNULLFallback)
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  (void)db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT NULL"),
-                                 getter_AddRefs(stmt));
+  (void)db->CreateAsyncStatement("SELECT NULL"_ns, getter_AddRefs(stmt));
 
   nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
   do_check_true(

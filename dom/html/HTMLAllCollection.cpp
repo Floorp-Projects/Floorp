@@ -69,7 +69,7 @@ void HTMLAllCollection::Item(const Optional<nsAString>& aNameOrIndex,
 nsContentList* HTMLAllCollection::Collection() {
   if (!mCollection) {
     Document* document = mDocument;
-    mCollection = document->GetElementsByTagName(NS_LITERAL_STRING("*"));
+    mCollection = document->GetElementsByTagName(u"*"_ns);
     MOZ_ASSERT(mCollection);
   }
   return mCollection;

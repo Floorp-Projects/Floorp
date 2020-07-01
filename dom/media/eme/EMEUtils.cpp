@@ -61,10 +61,10 @@ bool IsWidevineKeySystem(const nsAString& aKeySystem) {
 
 nsString KeySystemToGMPName(const nsAString& aKeySystem) {
   if (IsClearkeyKeySystem(aKeySystem)) {
-    return NS_LITERAL_STRING("gmp-clearkey");
+    return u"gmp-clearkey"_ns;
   }
   if (IsWidevineKeySystem(aKeySystem)) {
-    return NS_LITERAL_STRING("gmp-widevinecdm");
+    return u"gmp-widevinecdm"_ns;
   }
   MOZ_ASSERT(false, "We should only call this for known GMPs");
   return EmptyString();

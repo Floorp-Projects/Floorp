@@ -201,7 +201,7 @@ void MediaDevices::OnDeviceChange() {
   mFuzzTimer->InitWithNamedFuncCallback(
       [](nsITimer*, void* aClosure) {
         MediaDevices* md = static_cast<MediaDevices*>(aClosure);
-        md->DispatchTrustedEvent(NS_LITERAL_STRING("devicechange"));
+        md->DispatchTrustedEvent(u"devicechange"_ns);
         md->mFuzzTimer = nullptr;
       },
       this, DEVICECHANGE_HOLD_TIME_IN_MS, nsITimer::TYPE_ONE_SHOT,

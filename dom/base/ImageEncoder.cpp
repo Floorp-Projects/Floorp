@@ -433,7 +433,7 @@ already_AddRefed<imgIEncoder> ImageEncoder::GetImageEncoder(nsAString& aType) {
   encoderCID += encoderType;
   nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get());
 
-  if (!encoder && aType != NS_LITERAL_STRING("image/png")) {
+  if (!encoder && aType != u"image/png"_ns) {
     // Unable to create an encoder instance of the specified type. Falling back
     // to PNG.
     aType.AssignLiteral("image/png");

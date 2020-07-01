@@ -301,7 +301,7 @@ nsresult PaymentRequestService::RequestPayment(
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      if (completeStatus.Equals(NS_LITERAL_STRING("initial"))) {
+      if (completeStatus.Equals(u"initial"_ns)) {
         request->SetCompleteStatus(EmptyString());
       }
       MOZ_ASSERT(mShowingRequest && mShowingRequest == request);
@@ -544,7 +544,7 @@ nsresult PaymentRequestService::ShowPayment(const nsAString& aRequestId,
   MOZ_ASSERT(request);
   request->SetState(payments::PaymentRequest::eInteractive);
   if (aIsUpdating) {
-    request->SetCompleteStatus(NS_LITERAL_STRING("initial"));
+    request->SetCompleteStatus(u"initial"_ns);
   }
 
   if (mShowingRequest || !CanMakePayment(aRequestId)) {

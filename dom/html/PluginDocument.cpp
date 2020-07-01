@@ -153,7 +153,7 @@ nsresult PluginDocument::StartDocumentLoad(const char* aCommand,
   nsCOMPtr<nsIDocShellTreeItem> dsti(do_QueryInterface(aContainer));
   if (dsti) {
     bool isMsgPane = false;
-    dsti->NameEquals(NS_LITERAL_STRING("messagepane"), &isMsgPane);
+    dsti->NameEquals(u"messagepane"_ns, &isMsgPane);
     if (isMsgPane) {
       return NS_ERROR_FAILURE;
     }
@@ -208,8 +208,8 @@ nsresult PluginDocument::CreateSyntheticPluginDocument() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // make it a named element
-  mPluginContent->SetAttr(kNameSpaceID_None, nsGkAtoms::name,
-                          NS_LITERAL_STRING("plugin"), false);
+  mPluginContent->SetAttr(kNameSpaceID_None, nsGkAtoms::name, u"plugin"_ns,
+                          false);
 
   // fill viewport and auto-resize
   NS_NAMED_LITERAL_STRING(percent100, "100%");

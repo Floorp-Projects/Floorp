@@ -47,7 +47,7 @@ class SVGFEContainerFrame final : public nsContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGFEContainer"), aResult);
+    return MakeFrameName(u"SVGFEContainer"_ns, aResult);
   }
 #endif
 

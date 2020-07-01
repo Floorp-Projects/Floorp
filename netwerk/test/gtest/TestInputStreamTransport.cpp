@@ -72,8 +72,7 @@ NS_IMPL_ISUPPORTS(BlockingSyncStream, nsIInputStream)
 // Testing a simple blocking stream.
 TEST(TestInputStreamTransport, BlockingNotAsync)
 {
-  RefPtr<BlockingSyncStream> stream =
-      new BlockingSyncStream(NS_LITERAL_CSTRING("Hello world"));
+  RefPtr<BlockingSyncStream> stream = new BlockingSyncStream("Hello world"_ns);
 
   nsCOMPtr<nsIAsyncInputStream> ais;
   CreateStream(stream.forget(), getter_AddRefs(ais));
@@ -177,7 +176,7 @@ NS_IMPL_ISUPPORTS(BlockingAsyncStream, nsIInputStream, nsIAsyncInputStream)
 TEST(TestInputStreamTransport, BlockingAsync)
 {
   RefPtr<BlockingAsyncStream> stream =
-      new BlockingAsyncStream(NS_LITERAL_CSTRING("Hello world"));
+      new BlockingAsyncStream("Hello world"_ns);
 
   nsCOMPtr<nsIAsyncInputStream> ais;
   CreateStream(stream.forget(), getter_AddRefs(ais));

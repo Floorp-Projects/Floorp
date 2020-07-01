@@ -82,7 +82,7 @@ void DOMRequest::FireSuccess(JS::Handle<JS::Value> aResult) {
   }
   mResult = aResult;
 
-  FireEvent(NS_LITERAL_STRING("success"), false, false);
+  FireEvent(u"success"_ns, false, false);
 
   if (mPromise) {
     mPromise->MaybeResolve(mResult);
@@ -99,7 +99,7 @@ void DOMRequest::FireError(const nsAString& aError) {
   mError = DOMException::Create(NS_ERROR_DOM_UNKNOWN_ERR,
                                 NS_ConvertUTF16toUTF8(aError));
 
-  FireEvent(NS_LITERAL_STRING("error"), true, true);
+  FireEvent(u"error"_ns, true, true);
 
   if (mPromise) {
     mPromise->MaybeRejectBrokenly(mError);
@@ -114,7 +114,7 @@ void DOMRequest::FireError(nsresult aError) {
   mDone = true;
   mError = DOMException::Create(aError);
 
-  FireEvent(NS_LITERAL_STRING("error"), true, true);
+  FireEvent(u"error"_ns, true, true);
 
   if (mPromise) {
     mPromise->MaybeRejectBrokenly(mError);
@@ -129,7 +129,7 @@ void DOMRequest::FireDetailedError(DOMException& aError) {
   mDone = true;
   mError = &aError;
 
-  FireEvent(NS_LITERAL_STRING("error"), true, true);
+  FireEvent(u"error"_ns, true, true);
 
   if (mPromise) {
     mPromise->MaybeRejectBrokenly(mError);

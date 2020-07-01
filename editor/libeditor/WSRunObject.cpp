@@ -1777,8 +1777,7 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
             MOZ_KnownLive(mHTMLEditor)
                 .ReplaceTextWithTransaction(
                     MOZ_KnownLive(*atPreviousCharOfEndOfRun.ContainerAsText()),
-                    atPreviousCharOfEndOfRun.Offset(), 1,
-                    NS_LITERAL_STRING(" "));
+                    atPreviousCharOfEndOfRun.Offset(), 1, u" "_ns);
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "HTMLEditor::ReplaceTextWithTransaction() failed");
         return rv;
@@ -1823,7 +1822,7 @@ nsresult WSRunObject::NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun) {
             .ReplaceTextWithTransaction(
                 MOZ_KnownLive(*atFirstASCIIWhiteSpace.ContainerAsText()),
                 atFirstASCIIWhiteSpace.Offset(), replaceLengthInStartNode,
-                NS_LITERAL_STRING(u"\x00A0 "));
+                u"\x00A0 "_ns);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
       return rv;
@@ -1934,7 +1933,7 @@ nsresult WSRunObject::MaybeReplacePreviousNBSPWithASCIIWhiteSpace(
   nsresult rv = MOZ_KnownLive(mHTMLEditor)
                     .ReplaceTextWithTransaction(
                         MOZ_KnownLive(*atPreviousChar.ContainerAsText()),
-                        atPreviousChar.Offset(), 1, NS_LITERAL_STRING(" "));
+                        atPreviousChar.Offset(), 1, u" "_ns);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::ReplaceTextWithTransaction() failed");
   return rv;
@@ -1975,7 +1974,7 @@ nsresult WSRunObject::MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
   nsresult rv = MOZ_KnownLive(mHTMLEditor)
                     .ReplaceTextWithTransaction(
                         MOZ_KnownLive(*atNextChar.ContainerAsText()),
-                        atNextChar.Offset(), 1, NS_LITERAL_STRING(" "));
+                        atNextChar.Offset(), 1, u" "_ns);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::ReplaceTextWithTransaction() failed");
   return rv;

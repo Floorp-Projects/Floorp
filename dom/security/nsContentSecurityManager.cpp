@@ -88,7 +88,7 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   NS_ENSURE_SUCCESS(rv, true);
 
   // Allow data: images as long as they are not SVGs
-  if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/")) &&
+  if (StringBeginsWith(contentType, "image/"_ns) &&
       !contentType.EqualsLiteral("image/svg+xml")) {
     return true;
   }
@@ -120,7 +120,7 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   AutoTArray<nsString, 1> params;
   CopyUTF8toUTF16(NS_UnescapeURL(dataSpec), *params.AppendElement());
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("DATA_URI_BLOCKED"), doc,
+                                  "DATA_URI_BLOCKED"_ns, doc,
                                   nsContentUtils::eSECURITY_PROPERTIES,
                                   "BlockTopLevelDataURINavigation", params);
   return false;
@@ -165,7 +165,7 @@ bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
   AutoTArray<nsString, 1> params;
   CopyUTF8toUTF16(NS_UnescapeURL(dataSpec), *params.AppendElement());
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("DATA_URI_BLOCKED"), doc,
+                                  "DATA_URI_BLOCKED"_ns, doc,
                                   nsContentUtils::eSECURITY_PROPERTIES,
                                   "BlockSubresourceRedirectToData", params);
   return false;
@@ -218,7 +218,7 @@ nsresult nsContentSecurityManager::CheckFTPSubresourceLoad(
   CopyUTF8toUTF16(NS_UnescapeURL(spec), *params.AppendElement());
 
   nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("FTP_URI_BLOCKED"), doc,
+      nsIScriptError::warningFlag, "FTP_URI_BLOCKED"_ns, doc,
       nsContentUtils::eSECURITY_PROPERTIES, "BlockSubresourceFTP", params);
 
   return NS_ERROR_CONTENT_BLOCKED;
@@ -389,7 +389,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_SCRIPT: {
-      mimeTypeGuess = NS_LITERAL_CSTRING("application/javascript");
+      mimeTypeGuess = "application/javascript"_ns;
       break;
     }
 
@@ -399,7 +399,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_STYLESHEET: {
-      mimeTypeGuess = NS_LITERAL_CSTRING("text/css");
+      mimeTypeGuess = "text/css"_ns;
       break;
     }
 
@@ -414,7 +414,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_SUBDOCUMENT: {
-      mimeTypeGuess = NS_LITERAL_CSTRING("text/html");
+      mimeTypeGuess = "text/html"_ns;
       break;
     }
 
@@ -447,7 +447,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
         MOZ_ASSERT(internalContentPolicyType ==
                        nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE,
                    "can not set mime type guess for unexpected internal type");
-        mimeTypeGuess = NS_LITERAL_CSTRING(TEXT_EVENT_STREAM);
+        mimeTypeGuess = nsLiteralCString(TEXT_EVENT_STREAM);
       }
       break;
     }
@@ -484,7 +484,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
 
     case nsIContentPolicy::TYPE_MEDIA: {
       if (internalContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_TRACK) {
-        mimeTypeGuess = NS_LITERAL_CSTRING("text/vtt");
+        mimeTypeGuess = "text/vtt"_ns;
       } else {
         mimeTypeGuess = EmptyCString();
       }
@@ -518,7 +518,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_XSLT: {
-      mimeTypeGuess = NS_LITERAL_CSTRING("application/xml");
+      mimeTypeGuess = "application/xml"_ns;
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = aLoadInfo->LoadingNode();
@@ -552,7 +552,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_WEB_MANIFEST: {
-      mimeTypeGuess = NS_LITERAL_CSTRING("application/manifest+json");
+      mimeTypeGuess = "application/manifest+json"_ns;
       break;
     }
 
@@ -707,11 +707,9 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
 
     // Log Principals
     nsCOMPtr<nsIPrincipal> requestPrincipal = aLoadInfo->TriggeringPrincipal();
-    LogPrincipal(aLoadInfo->GetLoadingPrincipal(),
-                 NS_LITERAL_STRING("loadingPrincipal"));
-    LogPrincipal(requestPrincipal, NS_LITERAL_STRING("triggeringPrincipal"));
-    LogPrincipal(aLoadInfo->PrincipalToInherit(),
-                 NS_LITERAL_STRING("principalToInherit"));
+    LogPrincipal(aLoadInfo->GetLoadingPrincipal(), u"loadingPrincipal"_ns);
+    LogPrincipal(requestPrincipal, u"triggeringPrincipal"_ns);
+    LogPrincipal(aLoadInfo->PrincipalToInherit(), u"principalToInherit"_ns);
 
     // Log Redirect Chain
     MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  RedirectChain:\n"));
@@ -719,7 +717,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
          aLoadInfo->RedirectChain()) {
       nsCOMPtr<nsIPrincipal> principal;
       redirectHistoryEntry->GetPrincipal(getter_AddRefs(principal));
-      LogPrincipal(principal, NS_LITERAL_STRING("->"));
+      LogPrincipal(principal, u"->"_ns);
     }
 
     MOZ_LOG(sCSMLog, LogLevel::Verbose,

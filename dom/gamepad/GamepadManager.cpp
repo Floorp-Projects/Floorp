@@ -255,8 +255,8 @@ void GamepadManager::RemoveGamepad(uint32_t aIndex,
 
 void GamepadManager::FireButtonEvent(EventTarget* aTarget, Gamepad* aGamepad,
                                      uint32_t aButton, double aValue) {
-  nsString name = aValue == 1.0L ? NS_LITERAL_STRING("gamepadbuttondown")
-                                 : NS_LITERAL_STRING("gamepadbuttonup");
+  nsString name =
+      aValue == 1.0L ? u"gamepadbuttondown"_ns : u"gamepadbuttonup"_ns;
   GamepadButtonEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
@@ -278,8 +278,8 @@ void GamepadManager::FireAxisMoveEvent(EventTarget* aTarget, Gamepad* aGamepad,
   init.mGamepad = aGamepad;
   init.mAxis = aAxis;
   init.mValue = aValue;
-  RefPtr<GamepadAxisMoveEvent> event = GamepadAxisMoveEvent::Constructor(
-      aTarget, NS_LITERAL_STRING("gamepadaxismove"), init);
+  RefPtr<GamepadAxisMoveEvent> event =
+      GamepadAxisMoveEvent::Constructor(aTarget, u"gamepadaxismove"_ns, init);
 
   event->SetTrusted(true);
 
@@ -365,8 +365,8 @@ void GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected) {
 
 void GamepadManager::FireConnectionEvent(EventTarget* aTarget,
                                          Gamepad* aGamepad, bool aConnected) {
-  nsString name = aConnected ? NS_LITERAL_STRING("gamepadconnected")
-                             : NS_LITERAL_STRING("gamepaddisconnected");
+  nsString name =
+      aConnected ? u"gamepadconnected"_ns : u"gamepaddisconnected"_ns;
   GamepadEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;

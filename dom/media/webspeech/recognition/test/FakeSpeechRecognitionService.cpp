@@ -84,7 +84,7 @@ FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
     mRecognition->DispatchError(
         SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
         SpeechRecognitionErrorCode::Network,  // TODO different codes?
-        NS_LITERAL_STRING("RECOGNITIONSERVICE_ERROR test event"));
+        u"RECOGNITIONSERVICE_ERROR test event"_ns);
 
   } else if (eventName.EqualsLiteral("EVENT_RECOGNITIONSERVICE_FINAL_RESULT")) {
     RefPtr<SpeechEvent> event = new SpeechEvent(
@@ -105,7 +105,7 @@ FakeSpeechRecognitionService::BuildMockResultList() {
     SpeechRecognitionAlternative* alternative =
         new SpeechRecognitionAlternative(mRecognition);
 
-    alternative->mTranscript = NS_LITERAL_STRING("Mock final result");
+    alternative->mTranscript = u"Mock final result"_ns;
     alternative->mConfidence = 0.0f;
 
     result->mItems.AppendElement(alternative);

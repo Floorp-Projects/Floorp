@@ -589,7 +589,7 @@ bool OculusSession::LoadOvrLib() {
     if (libPath.Length() == 0) {
       fullName.Assign(libName);
     } else {
-      fullName.Assign(libPath + NS_LITERAL_STRING(u"\\") + libName);
+      fullName.Assign(libPath + u"\\"_ns + libName);
     }
 
     mOvrLib = LoadLibraryWithFlags(fullName.get());

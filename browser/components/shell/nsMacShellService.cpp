@@ -27,10 +27,9 @@
 using mozilla::dom::Element;
 using mozilla::widget::SetDesktopImage;
 
-#define NETWORK_PREFPANE \
-  NS_LITERAL_CSTRING("/System/Library/PreferencePanes/Network.prefPane")
+#define NETWORK_PREFPANE "/System/Library/PreferencePanes/Network.prefPane"_ns
 #define DESKTOP_PREFPANE \
-  NS_LITERAL_CSTRING(    \
+  nsLiteralCString(      \
       "/System/Library/PreferencePanes/DesktopScreenEffectsPref.prefPane")
 
 #define SAFARI_BUNDLE_IDENTIFIER "com.apple.Safari"

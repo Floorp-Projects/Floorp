@@ -501,9 +501,9 @@ already_AddRefed<InternalHeaders> InternalHeaders::BasicHeaders(
   ErrorResult result;
   // The Set-Cookie headers cannot be invalid mutable headers, so the Delete
   // must succeed.
-  basic->Delete(NS_LITERAL_CSTRING("Set-Cookie"), result);
+  basic->Delete("Set-Cookie"_ns, result);
   MOZ_ASSERT(!result.Failed());
-  basic->Delete(NS_LITERAL_CSTRING("Set-Cookie2"), result);
+  basic->Delete("Set-Cookie2"_ns, result);
   MOZ_ASSERT(!result.Failed());
   return basic.forget();
 }
@@ -515,8 +515,7 @@ already_AddRefed<InternalHeaders> InternalHeaders::CORSHeaders(
   ErrorResult result;
 
   nsAutoCString acExposedNames;
-  aHeaders->Get(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"),
-                acExposedNames, result);
+  aHeaders->Get("Access-Control-Expose-Headers"_ns, acExposedNames, result);
   MOZ_ASSERT(!result.Failed());
 
   bool allowAllHeaders = false;

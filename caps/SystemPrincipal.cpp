@@ -26,7 +26,7 @@ NS_IMPL_CI_INTERFACE_GETTER(SystemPrincipal, nsIPrincipal, nsISerializable)
 
 already_AddRefed<SystemPrincipal> SystemPrincipal::Create() {
   RefPtr<SystemPrincipal> sp = new SystemPrincipal();
-  sp->FinishInit(NS_LITERAL_CSTRING(SYSTEM_PRINCIPAL_SPEC), OriginAttributes());
+  sp->FinishInit(nsLiteralCString(SYSTEM_PRINCIPAL_SPEC), OriginAttributes());
   return sp.forget();
 }
 

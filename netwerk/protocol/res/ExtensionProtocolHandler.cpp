@@ -828,9 +828,8 @@ Result<Ok, nsresult> ExtensionProtocolHandler::NewFD(
   MOZ_TRY(innerFileURL->GetFile(getter_AddRefs(jarFile)));
 
   if (!mFileOpenerThread) {
-    mFileOpenerThread =
-        new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
-                           NS_LITERAL_CSTRING("ExtensionProtocolHandler"));
+    mFileOpenerThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
+                                           "ExtensionProtocolHandler"_ns);
   }
 
   RefPtr<ExtensionJARFileOpener> fileOpener =

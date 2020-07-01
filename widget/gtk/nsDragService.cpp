@@ -1496,8 +1496,8 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
         if (!infoService) return;
 
         nsAutoCString host;
-        if (NS_SUCCEEDED(infoService->GetPropertyAsACString(
-                NS_LITERAL_STRING("host"), host))) {
+        if (NS_SUCCEEDED(
+                infoService->GetPropertyAsACString(u"host"_ns, host))) {
           if (!host.Equals(hostname)) {
             MOZ_LOG(sDragLm, LogLevel::Debug,
                     ("ignored drag because of different host.\n"));

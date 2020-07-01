@@ -32,7 +32,7 @@ void WriteConsoleLog() {
     rv = nsXREDirProvider::GetUserAppDataDirectory(getter_AddRefs(lfile));
     if (NS_FAILED(rv)) return;
 
-    lfile->AppendNative(NS_LITERAL_CSTRING("console.log"));
+    lfile->AppendNative("console.log"_ns);
   }
 
   PRFileDesc* file;

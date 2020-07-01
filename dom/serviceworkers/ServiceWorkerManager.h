@@ -222,7 +222,7 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
    * so that argument might look like: nsTArray<nsString> { some_nsString,
    * PromiseFlatString(some_nsSubString_aka_nsAString),
    * NS_ConvertUTF8toUTF16(some_nsCString_or_nsCSubString),
-   * NS_LITERAL_STRING("some literal") }.  If you have anything else, like a
+   * u"some literal"_ns }.  If you have anything else, like a
    * number, you can use an nsAutoString with AppendInt/friends.
    *
    * @param [aFlags]

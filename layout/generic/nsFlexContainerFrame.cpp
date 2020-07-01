@@ -2566,7 +2566,7 @@ void nsFlexContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsFlexContainerFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("FlexContainer"), aResult);
+  return MakeFrameName(u"FlexContainer"_ns, aResult);
 }
 #endif
 

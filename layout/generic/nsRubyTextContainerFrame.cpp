@@ -41,7 +41,7 @@ nsContainerFrame* NS_NewRubyTextContainerFrame(PresShell* aPresShell,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsRubyTextContainerFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("RubyTextContainer"), aResult);
+  return MakeFrameName(u"RubyTextContainer"_ns, aResult);
 }
 #endif
 

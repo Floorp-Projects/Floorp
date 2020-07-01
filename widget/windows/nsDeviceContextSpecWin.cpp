@@ -151,45 +151,38 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
   // novaPDF, PDF-XChange and Soda PDF, for example.)
   if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
-                         NS_LITERAL_STRING("pdf_file"), 1);
-  } else if (StringBeginsWith(printerName,
-                              NS_LITERAL_STRING("Microsoft Print to PDF")) ||
-             StringBeginsWith(printerName, NS_LITERAL_STRING("Adobe PDF")) ||
+                         u"pdf_file"_ns, 1);
+  } else if (StringBeginsWith(printerName, u"Microsoft Print to PDF"_ns) ||
+             StringBeginsWith(printerName, u"Adobe PDF"_ns) ||
+             StringBeginsWith(printerName, u"Bullzip PDF Printer"_ns) ||
+             StringBeginsWith(printerName, u"CutePDF Writer"_ns) ||
+             StringBeginsWith(printerName, u"doPDF"_ns) ||
+             StringBeginsWith(printerName, u"Foxit Reader PDF Printer"_ns) ||
+             StringBeginsWith(printerName, u"Nitro PDF Creator"_ns) ||
+             StringBeginsWith(printerName, u"novaPDF"_ns) ||
+             StringBeginsWith(printerName, u"PDF-XChange"_ns) ||
+             StringBeginsWith(printerName, u"PDF24 PDF"_ns) ||
+             StringBeginsWith(printerName, u"PDFCreator"_ns) ||
+             StringBeginsWith(printerName, u"PrimoPDF"_ns) ||
+             StringBeginsWith(printerName, u"Soda PDF"_ns) ||
+             StringBeginsWith(printerName, u"Solid PDF Creator"_ns) ||
              StringBeginsWith(printerName,
-                              NS_LITERAL_STRING("Bullzip PDF Printer")) ||
-             StringBeginsWith(printerName,
-                              NS_LITERAL_STRING("CutePDF Writer")) ||
-             StringBeginsWith(printerName, NS_LITERAL_STRING("doPDF")) ||
-             StringBeginsWith(printerName,
-                              NS_LITERAL_STRING("Foxit Reader PDF Printer")) ||
-             StringBeginsWith(printerName,
-                              NS_LITERAL_STRING("Nitro PDF Creator")) ||
-             StringBeginsWith(printerName, NS_LITERAL_STRING("novaPDF")) ||
-             StringBeginsWith(printerName, NS_LITERAL_STRING("PDF-XChange")) ||
-             StringBeginsWith(printerName, NS_LITERAL_STRING("PDF24 PDF")) ||
-             StringBeginsWith(printerName, NS_LITERAL_STRING("PDFCreator")) ||
-             StringBeginsWith(printerName, NS_LITERAL_STRING("PrimoPDF")) ||
-             StringBeginsWith(printerName, NS_LITERAL_STRING("Soda PDF")) ||
-             StringBeginsWith(printerName,
-                              NS_LITERAL_STRING("Solid PDF Creator")) ||
-             StringBeginsWith(
-                 printerName,
-                 NS_LITERAL_STRING("Universal Document Converter"))) {
+                              u"Universal Document Converter"_ns)) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
-                         NS_LITERAL_STRING("pdf_file"), 1);
+                         u"pdf_file"_ns, 1);
   } else if (printerName.EqualsLiteral("Microsoft XPS Document Writer")) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
-                         NS_LITERAL_STRING("xps_file"), 1);
+                         u"xps_file"_ns, 1);
   } else {
     nsAString::const_iterator start, end;
     printerName.BeginReading(start);
     printerName.EndReading(end);
-    if (CaseInsensitiveFindInReadable(NS_LITERAL_STRING("pdf"), start, end)) {
+    if (CaseInsensitiveFindInReadable(u"pdf"_ns, start, end)) {
       Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
-                           NS_LITERAL_STRING("pdf_unknown"), 1);
+                           u"pdf_unknown"_ns, 1);
     } else {
       Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
-                           NS_LITERAL_STRING("unknown"), 1);
+                           u"unknown"_ns, 1);
     }
   }
 

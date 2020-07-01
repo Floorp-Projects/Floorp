@@ -29,7 +29,7 @@ ENameValueFlag XULMenuitemAccessibleWrap::Name(nsString& aName) const {
     mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::acceltext,
                                    accel);
   }
-  if (!accel.IsEmpty()) aName += NS_LITERAL_STRING("\t") + accel;
+  if (!accel.IsEmpty()) aName += u"\t"_ns + accel;
 
   return eNameOK;
 }

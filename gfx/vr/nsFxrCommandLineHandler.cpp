@@ -63,8 +63,7 @@ NS_IMPL_ISUPPORTS(nsFxrCommandLineHandler, nsICommandLineHandler)
 NS_IMETHODIMP
 nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
   bool handleFlagRetVal = false;
-  nsresult result =
-      aCmdLine->HandleFlag(NS_LITERAL_STRING("fxr"), false, &handleFlagRetVal);
+  nsresult result = aCmdLine->HandleFlag(u"fxr"_ns, false, &handleFlagRetVal);
   if (result == NS_OK && handleFlagRetVal) {
     if (XRE_IsParentProcess() && !XRE_IsE10sParentProcess()) {
       MOZ_CRASH("--fxr not supported without e10s");

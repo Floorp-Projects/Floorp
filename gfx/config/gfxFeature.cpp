@@ -41,7 +41,7 @@ bool FeatureState::SetDefault(bool aEnable, FeatureStatus aDisableStatus,
                               const char* aDisableMessage) {
   if (!aEnable) {
     DisableByDefault(aDisableStatus, aDisableMessage,
-                     NS_LITERAL_CSTRING("FEATURE_FAILURE_DISABLED"));
+                     "FEATURE_FAILURE_DISABLED"_ns);
     return false;
   }
   EnableByDefault();
@@ -64,8 +64,7 @@ void FeatureState::SetDefaultFromPref(const char* aPrefName, bool aIsEnablePref,
     } else {
       nsCString message("Disabled via ");
       message.AppendASCII(aPrefName);
-      UserDisable(message.get(),
-                  NS_LITERAL_CSTRING("FEATURE_FAILURE_PREF_OFF"));
+      UserDisable(message.get(), "FEATURE_FAILURE_PREF_OFF"_ns);
     }
   }
 }

@@ -89,8 +89,7 @@ nsresult nsTreeUtils::UpdateSortIndicators(dom::Element* aColumn,
                                            const nsAString& aDirection) {
   aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection, aDirection,
                    true);
-  aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
-                   NS_LITERAL_STRING("true"), true);
+  aColumn->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive, u"true"_ns, true);
 
   // Unset sort attribute(s) on the other columns
   nsCOMPtr<nsIContent> parentContent = aColumn->GetParent();

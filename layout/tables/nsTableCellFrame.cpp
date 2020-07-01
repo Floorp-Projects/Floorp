@@ -1045,7 +1045,7 @@ void nsTableCellFrame::AppendDirectlyOwnedAnonBoxes(
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsTableCellFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("TableCell"), aResult);
+  return MakeFrameName(u"TableCell"_ns, aResult);
 }
 #endif
 
@@ -1067,7 +1067,7 @@ nsMargin nsBCTableCellFrame::GetUsedBorder() const {
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsBCTableCellFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("BCTableCell"), aResult);
+  return MakeFrameName(u"BCTableCell"_ns, aResult);
 }
 #endif
 

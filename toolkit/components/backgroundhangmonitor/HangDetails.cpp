@@ -585,8 +585,7 @@ Result<HangDetails, nsresult> ReadHangDetailsFromFile(nsIFile* aFile) {
   if (!annotations.SetCapacity(numAnnotations + 1, mozilla::fallible)) {
     return Err(NS_ERROR_FAILURE);
   }
-  annotations.AppendElement(HangAnnotation(NS_LITERAL_STRING("Unrecovered"),
-                                           NS_LITERAL_STRING("true")));
+  annotations.AppendElement(HangAnnotation(u"Unrecovered"_ns, u"true"_ns));
 
   for (size_t i = 0; i < numAnnotations; ++i) {
     HangAnnotation annot;

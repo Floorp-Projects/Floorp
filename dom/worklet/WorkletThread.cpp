@@ -265,7 +265,7 @@ WorkletThread::~WorkletThread() = default;
 already_AddRefed<WorkletThread> WorkletThread::Create(
     WorkletImpl* aWorkletImpl) {
   RefPtr<WorkletThread> thread = new WorkletThread(aWorkletImpl);
-  if (NS_WARN_IF(NS_FAILED(thread->Init(NS_LITERAL_CSTRING("DOM Worklet"))))) {
+  if (NS_WARN_IF(NS_FAILED(thread->Init("DOM Worklet"_ns)))) {
     return nullptr;
   }
 

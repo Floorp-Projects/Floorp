@@ -953,7 +953,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   }
   aListener = nullptr;
 
-  nsAutoCString url(NS_LITERAL_CSTRING("-moz-evil:lying-event-listener"));
+  nsAutoCString url("-moz-evil:lying-event-listener"_ns);
   MOZ_ASSERT(body);
   MOZ_ASSERT(aElement);
   nsIURI* uri = aElement->OwnerDoc()->GetDocumentURI();
@@ -1134,7 +1134,7 @@ EventMessage EventListenerManager::GetEventMessageAndAtomForListener(
     return nsContentUtils::GetEventMessageAndAtomForListener(aType, aAtom);
   }
 
-  *aAtom = NS_Atomize(NS_LITERAL_STRING("on") + aType).take();
+  *aAtom = NS_Atomize(u"on"_ns + aType).take();
   return eUnidentifiedEvent;
 }
 
@@ -1471,7 +1471,7 @@ uint32_t EventListenerManager::MutationListenerBits() {
 }
 
 bool EventListenerManager::HasListenersFor(const nsAString& aEventName) const {
-  RefPtr<nsAtom> atom = NS_Atomize(NS_LITERAL_STRING("on") + aEventName);
+  RefPtr<nsAtom> atom = NS_Atomize(u"on"_ns + aEventName);
   return HasListenersFor(atom);
 }
 
@@ -1480,7 +1480,7 @@ bool EventListenerManager::HasListenersFor(nsAtom* aEventNameWithOn) const {
   nsAutoString name;
   aEventNameWithOn->ToString(name);
 #endif
-  NS_ASSERTION(StringBeginsWith(name, NS_LITERAL_STRING("on")),
+  NS_ASSERTION(StringBeginsWith(name, u"on"_ns),
                "Event name does not start with 'on'");
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {

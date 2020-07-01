@@ -768,13 +768,11 @@ void GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str) {
   htmlStr.EndReading(end);
   nsACString::const_iterator valueStart(start), valueEnd(start);
 
-  if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("CONTENT=\"text/html;"),
-                                    start, end)) {
+  if (CaseInsensitiveFindInReadable("CONTENT=\"text/html;"_ns, start, end)) {
     start = end;
     htmlStr.EndReading(end);
 
-    if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("charset="), start,
-                                      end)) {
+    if (CaseInsensitiveFindInReadable("charset="_ns, start, end)) {
       valueStart = end;
       start = end;
       htmlStr.EndReading(end);

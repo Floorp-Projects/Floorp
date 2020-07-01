@@ -1062,8 +1062,7 @@ HyperTextAccessible::NativeAttributes() {
   nsIFrame* frame = GetFrame();
   if (frame && frame->IsBlockFrame()) {
     nsAutoString unused;
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("formatting"),
-                                  NS_LITERAL_STRING("block"), unused);
+    attributes->SetStringProperty("formatting"_ns, u"block"_ns, unused);
   }
 
   if (FocusMgr()->IsFocused(this)) {
@@ -2056,8 +2055,7 @@ void HyperTextAccessible::GetSpellTextAttr(
       if (endOffset < *aEndOffset) *aEndOffset = endOffset;
 
       if (aAttributes) {
-        nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid,
-                               NS_LITERAL_STRING("spelling"));
+        nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid, u"spelling"_ns);
       }
 
       return;

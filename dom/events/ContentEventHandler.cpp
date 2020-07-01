@@ -506,7 +506,7 @@ static bool IsPaddingBR(nsIContent* aContent) {
 
 static void ConvertToNativeNewlines(nsString& aString) {
 #if defined(XP_WIN)
-  aString.ReplaceSubstring(NS_LITERAL_STRING("\n"), NS_LITERAL_STRING("\r\n"));
+  aString.ReplaceSubstring(u"\n"_ns, u"\r\n"_ns);
 #endif
 }
 

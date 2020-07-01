@@ -72,7 +72,7 @@ class MediaDevice : public nsIMediaDevice {
 
   MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
               const nsString& aID, const nsString& aGroupID,
-              const nsString& aRawID = NS_LITERAL_STRING(""));
+              const nsString& aRawID = u""_ns);
 
   MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
               const nsString& aGroupID, const nsString& aRawID,

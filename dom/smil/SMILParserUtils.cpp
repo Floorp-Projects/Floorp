@@ -30,10 +30,10 @@ const uint32_t MSEC_PER_SEC = 1000;
 const uint32_t MSEC_PER_MIN = 1000 * 60;
 const uint32_t MSEC_PER_HOUR = 1000 * 60 * 60;
 
-#define ACCESSKEY_PREFIX_LC NS_LITERAL_STRING("accesskey(")  // SMIL2+
-#define ACCESSKEY_PREFIX_CC NS_LITERAL_STRING("accessKey(")  // SVG/SMIL ANIM
-#define REPEAT_PREFIX NS_LITERAL_STRING("repeat(")
-#define WALLCLOCK_PREFIX NS_LITERAL_STRING("wallclock(")
+#define ACCESSKEY_PREFIX_LC u"accesskey("_ns  // SMIL2+
+#define ACCESSKEY_PREFIX_CC u"accessKey("_ns  // SVG/SMIL ANIM
+#define REPEAT_PREFIX u"repeat("_ns
+#define WALLCLOCK_PREFIX u"wallclock("_ns
 
 inline bool SkipWhitespace(RangedPtr<const char16_t>& aIter,
                            const RangedPtr<const char16_t>& aEnd) {

@@ -11,11 +11,11 @@ namespace dom {
 
 static const nsLiteralCString kPermissionTypes[] = {
     // clang-format off
-    NS_LITERAL_CSTRING("geo"),
-    NS_LITERAL_CSTRING("desktop-notification"),
+    "geo"_ns,
+    "desktop-notification"_ns,
     // Alias `push` to `desktop-notification`.
-    NS_LITERAL_CSTRING("desktop-notification"),
-    NS_LITERAL_CSTRING("persistent-storage")
+    "desktop-notification"_ns,
+    "persistent-storage"_ns
     // clang-format on
 };
 

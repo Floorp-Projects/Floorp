@@ -654,7 +654,7 @@ nsresult AddonManagerStartup::EnumerateJARSubtree(nsIURI* uri,
     }
     pattern.Append(chr);
   }
-  if (!pattern.IsEmpty() && !StringEndsWith(pattern, NS_LITERAL_CSTRING("/"))) {
+  if (!pattern.IsEmpty() && !StringEndsWith(pattern, "/"_ns)) {
     pattern.Append('/');
   }
   pattern.Append('*');

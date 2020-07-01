@@ -85,7 +85,7 @@ nsParentalControlsService::nsParentalControlsService()
     }
 
     uint32_t filterOn = 0;
-    rv = regKey->ReadIntValue(NS_LITERAL_STRING("Filter On"), &filterOn);
+    rv = regKey->ReadIntValue(u"Filter On"_ns, &filterOn);
     if (NS_FAILED(rv)) {
       return;
     }

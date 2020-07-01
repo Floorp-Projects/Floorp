@@ -618,7 +618,7 @@ void nsSubDocumentFrame::List(FILE* out, const char* aPrefix,
 }
 
 nsresult nsSubDocumentFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("FrameOuter"), aResult);
+  return MakeFrameName(u"FrameOuter"_ns, aResult);
 }
 #endif
 

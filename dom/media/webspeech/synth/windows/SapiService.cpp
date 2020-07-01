@@ -131,20 +131,19 @@ void SapiCallback::OnSpeechEvent(const SPEVENT& speechEvent) {
       break;
     case SPEI_TTS_BOOKMARK:
       mCurrentIndex = static_cast<ULONG>(speechEvent.lParam) - mTextOffset;
-      mTask->DispatchBoundary(NS_LITERAL_STRING("mark"),
-                              GetTickCount() - mStartingTime, mCurrentIndex, 0,
-                              0);
+      mTask->DispatchBoundary(u"mark"_ns, GetTickCount() - mStartingTime,
+                              mCurrentIndex, 0, 0);
       break;
     case SPEI_WORD_BOUNDARY:
       mCurrentIndex = static_cast<ULONG>(speechEvent.lParam) - mTextOffset;
-      mTask->DispatchBoundary(NS_LITERAL_STRING("word"),
-                              GetTickCount() - mStartingTime, mCurrentIndex,
+      mTask->DispatchBoundary(u"word"_ns, GetTickCount() - mStartingTime,
+                              mCurrentIndex,
                               static_cast<ULONG>(speechEvent.wParam), 1);
       break;
     case SPEI_SENTENCE_BOUNDARY:
       mCurrentIndex = static_cast<ULONG>(speechEvent.lParam) - mTextOffset;
-      mTask->DispatchBoundary(NS_LITERAL_STRING("sentence"),
-                              GetTickCount() - mStartingTime, mCurrentIndex,
+      mTask->DispatchBoundary(u"sentence"_ns, GetTickCount() - mStartingTime,
+                              mCurrentIndex,
                               static_cast<ULONG>(speechEvent.wParam), 1);
       break;
     default:

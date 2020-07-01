@@ -230,8 +230,8 @@ bool nsXHTMLContentSerializer::SerializeAttributes(
 
     // Filter out any attribute starting with [-|_]moz
     nsDependentAtomString attrNameStr(attrName);
-    if (StringBeginsWith(attrNameStr, NS_LITERAL_STRING("_moz")) ||
-        StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
+    if (StringBeginsWith(attrNameStr, u"_moz"_ns) ||
+        StringBeginsWith(attrNameStr, u"-moz"_ns)) {
       continue;
     }
 
@@ -287,8 +287,8 @@ bool nsXHTMLContentSerializer::SerializeAttributes(
         nsAutoString header;
         aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
         if (header.LowerCaseEqualsLiteral("content-type")) {
-          valueStr = NS_LITERAL_STRING("text/html; charset=") +
-                     NS_ConvertASCIItoUTF16(mCharset);
+          valueStr =
+              u"text/html; charset="_ns + NS_ConvertASCIItoUTF16(mCharset);
         }
       }
 
@@ -345,19 +345,15 @@ bool nsXHTMLContentSerializer::AfterElementStart(nsIContent* aContent,
         NS_ENSURE_TRUE(AppendIndentation(aStr), false);
       }
       NS_ENSURE_TRUE(
-          AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""),
-                         aStr),
-          false);
-      NS_ENSURE_TRUE(
-          AppendToString(NS_LITERAL_STRING(" content=\"text/html; charset="),
-                         aStr),
-          false);
+          AppendToString(u"<meta http-equiv=\"content-type\""_ns, aStr), false);
+      NS_ENSURE_TRUE(AppendToString(u" content=\"text/html; charset="_ns, aStr),
+                     false);
       NS_ENSURE_TRUE(AppendToString(NS_ConvertASCIItoUTF16(mCharset), aStr),
                      false);
       if (mIsHTMLSerializer) {
-        NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("\">"), aStr), false);
+        NS_ENSURE_TRUE(AppendToString(u"\">"_ns, aStr), false);
       } else {
-        NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("\" />"), aStr), false);
+        NS_ENSURE_TRUE(AppendToString(u"\" />"_ns, aStr), false);
       }
     }
   }
@@ -690,9 +686,9 @@ bool nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
   if (offset == 0 && found) {
     // offset = 0 => LI itself has the value attribute and we did not need to
     // traverse back. Just serialize value attribute like other tags.
-    NS_ENSURE_TRUE(SerializeAttr(EmptyString(), NS_LITERAL_STRING("value"),
-                                 valueStr, aStr, false),
-                   false);
+    NS_ENSURE_TRUE(
+        SerializeAttr(EmptyString(), u"value"_ns, valueStr, aStr, false),
+        false);
   } else if (offset == 1 && !found) {
     /*(offset = 1 && !found) means either LI is the first child node of OL
     and LI is not having "value" attribute.
@@ -706,9 +702,9 @@ bool nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
 
     // As serializer needs to use this valueAttr we are creating here,
     valueStr.AppendInt(startVal + offset);
-    NS_ENSURE_TRUE(SerializeAttr(EmptyString(), NS_LITERAL_STRING("value"),
-                                 valueStr, aStr, false),
-                   false);
+    NS_ENSURE_TRUE(
+        SerializeAttr(EmptyString(), u"value"_ns, valueStr, aStr, false),
+        false);
   }
 
   return true;

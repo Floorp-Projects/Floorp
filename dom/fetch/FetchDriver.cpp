@@ -727,7 +727,7 @@ nsresult FetchDriver::HttpFetch(
     // Set the initiator type
     nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChan));
     if (timedChannel) {
-      timedChannel->SetInitiatorType(NS_LITERAL_STRING("fetch"));
+      timedChannel->SetInitiatorType(u"fetch"_ns);
     }
   }
 
@@ -738,8 +738,7 @@ nsresult FetchDriver::HttpFetch(
   if (uploadChan) {
     nsAutoCString contentType;
     ErrorResult result;
-    mRequest->Headers()->GetFirst(NS_LITERAL_CSTRING("content-type"),
-                                  contentType, result);
+    mRequest->Headers()->GetFirst("content-type"_ns, contentType, result);
     // We don't actually expect "result" to have failed here: that only happens
     // for invalid header names.  But if for some reason it did, just propagate
     // it out.
@@ -751,7 +750,7 @@ nsresult FetchDriver::HttpFetch(
     // void string if no header was set.
 #ifdef DEBUG
     bool hasContentTypeHeader =
-        mRequest->Headers()->Has(NS_LITERAL_CSTRING("content-type"), result);
+        mRequest->Headers()->Has("content-type"_ns, result);
     MOZ_ASSERT(!result.Failed());
     MOZ_ASSERT_IF(!hasContentTypeHeader, contentType.IsVoid());
 #endif  // DEBUG
@@ -816,9 +815,9 @@ nsresult FetchDriver::HttpFetch(
     if (mRequest->GetIntegrity().IsEmpty()) {
       nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
       if (cic) {
-        cic->PreferAlternativeDataType(
-            NS_LITERAL_CSTRING(WASM_ALT_DATA_TYPE_V1),
-            NS_LITERAL_CSTRING(WASM_CONTENT_TYPE), false);
+        cic->PreferAlternativeDataType(nsLiteralCString(WASM_ALT_DATA_TYPE_V1),
+                                       nsLiteralCString(WASM_CONTENT_TYPE),
+                                       false);
       }
     }
 
@@ -982,10 +981,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
     // Content-Length (which refer to the decoded data) is obscured behind the
     // encodings.
     ErrorResult result;
-    if (response->Headers()->Has(NS_LITERAL_CSTRING("content-encoding"),
-                                 result) ||
-        response->Headers()->Has(NS_LITERAL_CSTRING("transfer-encoding"),
-                                 result)) {
+    if (response->Headers()->Has("content-encoding"_ns, result) ||
+        response->Headers()->Has("transfer-encoding"_ns, result)) {
       // We cannot trust the content-length when content-encoding or
       // transfer-encoding are set.  There are many servers which just
       // get this wrong.
@@ -993,19 +990,18 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
     }
     MOZ_ASSERT(!result.Failed());
   } else {
-    response = new InternalResponse(200, NS_LITERAL_CSTRING("OK"),
-                                    mRequest->GetCredentialsMode());
+    response =
+        new InternalResponse(200, "OK"_ns, mRequest->GetCredentialsMode());
 
     if (!contentType.IsEmpty()) {
       nsAutoCString contentCharset;
       channel->GetContentCharset(contentCharset);
       if (NS_SUCCEEDED(rv) && !contentCharset.IsEmpty()) {
-        contentType += NS_LITERAL_CSTRING(";charset=") + contentCharset;
+        contentType += ";charset="_ns + contentCharset;
       }
 
       IgnoredErrorResult result;
-      response->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"),
-                                  contentType, result);
+      response->Headers()->Append("Content-Type"_ns, contentType, result);
       MOZ_ASSERT(!result.Failed());
     }
 
@@ -1014,8 +1010,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
       contentLenStr.AppendInt(contentLength);
 
       IgnoredErrorResult result;
-      response->Headers()->Append(NS_LITERAL_CSTRING("Content-Length"),
-                                  contentLenStr, result);
+      response->Headers()->Append("Content-Length"_ns, contentLenStr, result);
       MOZ_ASSERT(!result.Failed());
     }
   }

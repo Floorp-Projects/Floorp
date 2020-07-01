@@ -45,8 +45,7 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
       CrashReporter::Annotation::ProxyStreamUnmarshalStatus;
 
   if (!aInitBufSize) {
-    CrashReporter::AnnotateCrashReport(kCrashReportKey,
-                                       NS_LITERAL_CSTRING("!aInitBufSize"));
+    CrashReporter::AnnotateCrashReport(kCrashReportKey, "!aInitBufSize"_ns);
     // We marshaled a nullptr. Nothing else to do here.
     return;
   }
@@ -64,8 +63,7 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
   // in that case, even though marshaling a nullptr is allowable.
   MOZ_ASSERT(mStream);
   if (!mStream) {
-    CrashReporter::AnnotateCrashReport(kCrashReportKey,
-                                       NS_LITERAL_CSTRING("!mStream"));
+    CrashReporter::AnnotateCrashReport(kCrashReportKey, "!mStream"_ns);
     return;
   }
 
@@ -141,8 +139,8 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
         CrashReporter::Annotation::CoUnmarshalInterfaceResult, hrAsStr);
     AnnotateInterfaceRegistration(aIID);
     if (!mUnmarshaledProxy) {
-      CrashReporter::AnnotateCrashReport(
-          kCrashReportKey, NS_LITERAL_CSTRING("!mUnmarshaledProxy"));
+      CrashReporter::AnnotateCrashReport(kCrashReportKey,
+                                         "!mUnmarshaledProxy"_ns);
     }
 
 #if defined(ACCESSIBILITY)
@@ -154,8 +152,7 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
         NS_ConvertUTF16toUTF8(manifestPath));
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::A11yHandlerRegistered,
-        a11y::IsHandlerRegistered() ? NS_LITERAL_CSTRING("true")
-                                    : NS_LITERAL_CSTRING("false"));
+        a11y::IsHandlerRegistered() ? "true"_ns : "false"_ns);
 
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::ExpectedStreamLen, expectedStreamLen);
@@ -379,8 +376,7 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
 
   if (streamSize) {
     CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::ProxyStreamSizeFrom,
-        NS_LITERAL_CSTRING("IStream::Stat"));
+        CrashReporter::Annotation::ProxyStreamSizeFrom, "IStream::Stat"_ns);
     mBufSize = streamSize;
   }
 
@@ -396,8 +392,7 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
   // be larger than the actual stream size.
   if (!streamSize) {
     CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::ProxyStreamSizeFrom,
-        NS_LITERAL_CSTRING("GlobalSize"));
+        CrashReporter::Annotation::ProxyStreamSizeFrom, "GlobalSize"_ns);
     mBufSize = static_cast<int>(::GlobalSize(hglobal));
   }
 

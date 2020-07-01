@@ -487,8 +487,7 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
   nsTArray<nsCString> keyValues;
   ParseString(aBlocklistEntry, '\t', keyValues);
 
-  aDriverInfo.mRuleId =
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLOCKLIST_NO_ID");
+  aDriverInfo.mRuleId = "FEATURE_FAILURE_DL_BLOCKLIST_NO_ID"_ns;
 
   for (uint32_t i = 0; i < keyValues.Length(); ++i) {
     nsCString keyValue = keyValues[i];
@@ -512,8 +511,7 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
     }
 
     if (key.EqualsLiteral("blockID")) {
-      nsCString blockIdStr =
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_DL_BLOCKLIST_") + value;
+      nsCString blockIdStr = "FEATURE_FAILURE_DL_BLOCKLIST_"_ns + value;
       aDriverInfo.mRuleId = blockIdStr.get();
     } else if (key.EqualsLiteral("os")) {
       aDriverInfo.mOperatingSystem = BlocklistOSToOperatingSystem(dataValue);
@@ -1059,7 +1057,7 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
     if (!adapterInfoFailed[1]) {
       nsAString& nvVendorID =
           (nsAString&)GfxDriverInfo::GetDeviceVendor(DeviceVendor::NVIDIA);
-      const nsString nv310mDeviceId = NS_LITERAL_STRING("0x0A70");
+      const nsString nv310mDeviceId = u"0x0A70"_ns;
       if (nvVendorID.Equals(adapterVendorID[1],
                             nsCaseInsensitiveStringComparator) &&
           nv310mDeviceId.Equals(adapterDeviceID[1],
@@ -1623,7 +1621,8 @@ void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
   gfx::FeatureState& webrender = gfxConfig::GetFeature(gfx::Feature::WEBRENDER);
   InitFeatureObject(aCx, aObj, "webrender", webrender, &obj);
 
-  gfx::FeatureState& wrCompositor = gfxConfig::GetFeature(gfx::Feature::WEBRENDER_COMPOSITOR);
+  gfx::FeatureState& wrCompositor =
+      gfxConfig::GetFeature(gfx::Feature::WEBRENDER_COMPOSITOR);
   InitFeatureObject(aCx, aObj, "wrCompositor", wrCompositor, &obj);
 
   gfx::FeatureState& openglCompositing = gfxConfig::GetFeature(gfx::Feature::OPENGL_COMPOSITING);

@@ -8,7 +8,7 @@
 #define __nsPlacesTables_h__
 
 #define CREATE_MOZ_PLACES                              \
-  NS_LITERAL_CSTRING(                                  \
+  nsLiteralCString(                                    \
       "CREATE TABLE moz_places ( "                     \
       "  id INTEGER PRIMARY KEY"                       \
       ", url LONGVARCHAR"                              \
@@ -28,7 +28,7 @@
       ")")
 
 #define CREATE_MOZ_HISTORYVISITS         \
-  NS_LITERAL_CSTRING(                    \
+  nsLiteralCString(                      \
       "CREATE TABLE moz_historyvisits (" \
       "  id INTEGER PRIMARY KEY"         \
       ", from_visit INTEGER"             \
@@ -39,7 +39,7 @@
       ")")
 
 #define CREATE_MOZ_INPUTHISTORY         \
-  NS_LITERAL_CSTRING(                   \
+  nsLiteralCString(                     \
       "CREATE TABLE moz_inputhistory (" \
       "  place_id INTEGER NOT NULL"     \
       ", input LONGVARCHAR NOT NULL"    \
@@ -50,7 +50,7 @@
 // Note: flags, expiration, type, dateAdded and lastModified should be
 // considered deprecated but are kept to ease backwards compatibility.
 #define CREATE_MOZ_ANNOS                 \
-  NS_LITERAL_CSTRING(                    \
+  nsLiteralCString(                      \
       "CREATE TABLE moz_annos ("         \
       "  id INTEGER PRIMARY KEY"         \
       ", place_id INTEGER NOT NULL"      \
@@ -64,14 +64,14 @@
       ")")
 
 #define CREATE_MOZ_ANNO_ATTRIBUTES         \
-  NS_LITERAL_CSTRING(                      \
+  nsLiteralCString(                        \
       "CREATE TABLE moz_anno_attributes (" \
       "  id INTEGER PRIMARY KEY"           \
       ", name VARCHAR(32) UNIQUE NOT NULL" \
       ")")
 
 #define CREATE_MOZ_ITEMS_ANNOS           \
-  NS_LITERAL_CSTRING(                    \
+  nsLiteralCString(                      \
       "CREATE TABLE moz_items_annos ("   \
       "  id INTEGER PRIMARY KEY"         \
       ", item_id INTEGER NOT NULL"       \
@@ -85,7 +85,7 @@
       ")")
 
 #define CREATE_MOZ_BOOKMARKS                                                   \
-  NS_LITERAL_CSTRING(                                                          \
+  nsLiteralCString(                                                            \
       "CREATE TABLE moz_bookmarks ("                                           \
       "  id INTEGER PRIMARY KEY"                                               \
       ", type INTEGER"                                                         \
@@ -132,14 +132,14 @@
 // never set up, we'll never write new tombstones, since all bookmarks will stay
 // in SYNC_STATUS_NEW.
 #define CREATE_MOZ_BOOKMARKS_DELETED             \
-  NS_LITERAL_CSTRING(                            \
+  nsLiteralCString(                              \
       "CREATE TABLE moz_bookmarks_deleted ("     \
       "  guid TEXT PRIMARY KEY"                  \
       ", dateRemoved INTEGER NOT NULL DEFAULT 0" \
       ")")
 
 #define CREATE_MOZ_KEYWORDS                    \
-  NS_LITERAL_CSTRING(                          \
+  nsLiteralCString(                            \
       "CREATE TABLE moz_keywords ("            \
       "  id INTEGER PRIMARY KEY AUTOINCREMENT" \
       ", keyword TEXT UNIQUE"                  \
@@ -148,7 +148,7 @@
       ")")
 
 #define CREATE_MOZ_ORIGINS          \
-  NS_LITERAL_CSTRING(               \
+  nsLiteralCString(                 \
       "CREATE TABLE moz_origins ( " \
       "id INTEGER PRIMARY KEY, "    \
       "prefix TEXT NOT NULL, "      \
@@ -160,7 +160,7 @@
 // Note: this should be kept up-to-date with the definition in
 //       nsPlacesAutoComplete.js.
 #define CREATE_MOZ_OPENPAGES_TEMP              \
-  NS_LITERAL_CSTRING(                          \
+  nsLiteralCString(                            \
       "CREATE TEMP TABLE moz_openpages_temp (" \
       "  url TEXT"                             \
       ", userContextId INTEGER"                \
@@ -174,7 +174,7 @@
 // will take care of updating the moz_origins table for every new origin. See
 // CREATE_PLACES_AFTERINSERT_TRIGGER in nsPlacestriggers.h for details.
 #define CREATE_UPDATEORIGINSINSERT_TEMP                   \
-  NS_LITERAL_CSTRING(                                     \
+  nsLiteralCString(                                       \
       "CREATE TEMP TABLE moz_updateoriginsinsert_temp ( " \
       "place_id INTEGER PRIMARY KEY, "                    \
       "prefix TEXT NOT NULL, "                            \
@@ -188,7 +188,7 @@
 // When rows are added to this table, moz_places.origin_id may be null.  That's
 // why this table uses prefix + host as its primary key, not origin_id.
 #define CREATE_UPDATEORIGINSDELETE_TEMP                   \
-  NS_LITERAL_CSTRING(                                     \
+  nsLiteralCString(                                       \
       "CREATE TEMP TABLE moz_updateoriginsdelete_temp ( " \
       "prefix TEXT NOT NULL, "                            \
       "host TEXT NOT NULL, "                              \
@@ -203,7 +203,7 @@
 // When rows are added to this table, moz_places.origin_id may be null.  That's
 // why this table uses prefix + host as its primary key, not origin_id.
 #define CREATE_UPDATEORIGINSUPDATE_TEMP                   \
-  NS_LITERAL_CSTRING(                                     \
+  nsLiteralCString(                                       \
       "CREATE TEMP TABLE moz_updateoriginsupdate_temp ( " \
       "prefix TEXT NOT NULL, "                            \
       "host TEXT NOT NULL, "                              \
@@ -218,7 +218,7 @@
 // created with a different places.sqlite (not just in case of a user messing
 // up with the profile, but also in case of corruption).
 #define CREATE_MOZ_PAGES_W_ICONS          \
-  NS_LITERAL_CSTRING(                     \
+  nsLiteralCString(                       \
       "CREATE TABLE moz_pages_w_icons ( " \
       "id INTEGER PRIMARY KEY, "          \
       "page_url TEXT NOT NULL, "          \
@@ -231,7 +231,7 @@
 // We are considering squared icons for simplicity, so storing only one size.
 // For svg payloads, width will be set to 65535 (UINT16_MAX).
 #define CREATE_MOZ_ICONS                       \
-  NS_LITERAL_CSTRING(                          \
+  nsLiteralCString(                            \
       "CREATE TABLE moz_icons ( "              \
       "id INTEGER PRIMARY KEY, "               \
       "icon_url TEXT NOT NULL, "               \
@@ -247,7 +247,7 @@
 // Each page can have multiple icons, and each icon can be used by multiple
 // pages.
 #define CREATE_MOZ_ICONS_TO_PAGES                                              \
-  NS_LITERAL_CSTRING(                                                          \
+  nsLiteralCString(                                                            \
       "CREATE TABLE moz_icons_to_pages ( "                                     \
       "page_id INTEGER NOT NULL, "                                             \
       "icon_id INTEGER NOT NULL, "                                             \
@@ -260,7 +260,7 @@
 // the sync IDs for the bookmarks and history collections in this table, and the
 // last sync time for history.
 #define CREATE_MOZ_META         \
-  NS_LITERAL_CSTRING(           \
+  nsLiteralCString(             \
       "CREATE TABLE moz_meta (" \
       "key TEXT PRIMARY KEY, "  \
       "value NOT NULL"          \

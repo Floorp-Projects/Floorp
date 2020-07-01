@@ -217,7 +217,7 @@ TEST(CubebDeviceEnumerator, DeviceInfoFromName)
       cubeb_devid id_1 = reinterpret_cast<cubeb_devid>(1);
       mock->AddDevice(DeviceTemplate(id_1, deviceType, "device name 1"));
       cubeb_devid id_2 = reinterpret_cast<cubeb_devid>(2);
-      nsCString device_name = NS_LITERAL_CSTRING("device name 2");
+      nsCString device_name = "device name 2"_ns;
       mock->AddDevice(DeviceTemplate(id_2, deviceType, device_name.get()));
       cubeb_devid id_3 = reinterpret_cast<cubeb_devid>(3);
       mock->AddDevice(DeviceTemplate(id_3, deviceType, "device name 3"));

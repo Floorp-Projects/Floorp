@@ -31,16 +31,16 @@
 // come from localizable resources
 
 #if defined(MOZ_WIDGET_COCOA)
-#  define APP_REGISTRY_NAME NS_LITERAL_CSTRING("Application Registry")
-#  define ESSENTIAL_FILES NS_LITERAL_CSTRING("Essential Files")
+#  define APP_REGISTRY_NAME "Application Registry"_ns
+#  define ESSENTIAL_FILES "Essential Files"_ns
 #elif defined(XP_WIN)
-#  define APP_REGISTRY_NAME NS_LITERAL_CSTRING("registry.dat")
+#  define APP_REGISTRY_NAME "registry.dat"_ns
 #else
-#  define APP_REGISTRY_NAME NS_LITERAL_CSTRING("appreg")
+#  define APP_REGISTRY_NAME "appreg"_ns
 #endif
 
 // define default product directory
-#define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING(MOZ_USER_DIR)
+#define DEFAULT_PRODUCT_DIR nsLiteralCString(MOZ_USER_DIR)
 
 // Locally defined keys used by nsAppDirectoryEnumerator
 #define NS_USER_PLUGINS_DIR "UserPlugins"
@@ -52,11 +52,11 @@
 #  define NS_SYSTEM_PLUGINS_DIR "SysPlugins"
 #endif
 
-#define DEFAULTS_DIR_NAME NS_LITERAL_CSTRING("defaults")
-#define DEFAULTS_PREF_DIR_NAME NS_LITERAL_CSTRING("pref")
-#define RES_DIR_NAME NS_LITERAL_CSTRING("res")
-#define CHROME_DIR_NAME NS_LITERAL_CSTRING("chrome")
-#define PLUGINS_DIR_NAME NS_LITERAL_CSTRING("plugins")
+#define DEFAULTS_DIR_NAME "defaults"_ns
+#define DEFAULTS_PREF_DIR_NAME "pref"_ns
+#define RES_DIR_NAME "res"_ns
+#define CHROME_DIR_NAME "chrome"_ns
+#define PLUGINS_DIR_NAME "plugins"_ns
 
 //*****************************************************************************
 // nsAppFileLocationProvider::Constructor/Destructor
@@ -329,7 +329,7 @@ nsresult nsAppFileLocationProvider::GetDefaultUserProfileRoot(
 
 #if defined(MOZ_WIDGET_COCOA) || defined(XP_WIN)
   // These 3 platforms share this part of the path - do them as one
-  rv = localDir->AppendRelativeNativePath(NS_LITERAL_CSTRING("Profiles"));
+  rv = localDir->AppendRelativeNativePath("Profiles"_ns);
   if (NS_FAILED(rv)) {
     return rv;
   }

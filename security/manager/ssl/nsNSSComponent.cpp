@@ -433,8 +433,7 @@ static nsresult AccountHasFamilySafetyEnabled(bool& enabled) {
   // account for the first time, However, these sub-keys are not created
   // unless they are switched away from the default value.
   uint32_t parentalControlsOn;
-  rv = sidKey->ReadIntValue(NS_LITERAL_STRING("Parental Controls On"),
-                            &parentalControlsOn);
+  rv = sidKey->ReadIntValue(u"Parental Controls On"_ns, &parentalControlsOn);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("couldn't read Parental Controls On"));
@@ -2468,8 +2467,7 @@ nsresult nsNSSComponent::LogoutAuthenticatedPK11() {
   nsCOMPtr<nsICertOverrideService> icos =
       do_GetService("@mozilla.org/security/certoverride;1");
   if (icos) {
-    icos->ClearValidityOverride(
-        NS_LITERAL_CSTRING("all:temporary-certificates"), 0);
+    icos->ClearValidityOverride("all:temporary-certificates"_ns, 0);
   }
 
   nsCOMPtr<nsIClientAuthRememberService> svc =

@@ -1190,7 +1190,7 @@ ServiceWorkerRegistrar::BlockShutdown(nsIAsyncShutdownClient* aClient) {
 
 NS_IMETHODIMP
 ServiceWorkerRegistrar::GetName(nsAString& aName) {
-  aName = NS_LITERAL_STRING("ServiceWorkerRegistrar: Flushing data");
+  aName = u"ServiceWorkerRegistrar: Flushing data"_ns;
   return NS_OK;
 }
 
@@ -1199,11 +1199,10 @@ ServiceWorkerRegistrar::GetState(nsIPropertyBag** aBagOut) {
   nsCOMPtr<nsIWritablePropertyBag2> propertyBag =
       do_CreateInstance("@mozilla.org/hash-property-bag;1");
 
-  MOZ_TRY(propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("shuttingDown"),
-                                         mShuttingDown));
+  MOZ_TRY(propertyBag->SetPropertyAsBool(u"shuttingDown"_ns, mShuttingDown));
 
-  MOZ_TRY(propertyBag->SetPropertyAsBool(
-      NS_LITERAL_STRING("saveDataRunnableDispatched"), mRunnableDispatched));
+  MOZ_TRY(propertyBag->SetPropertyAsBool(u"saveDataRunnableDispatched"_ns,
+                                         mRunnableDispatched));
 
   propertyBag.forget(aBagOut);
 

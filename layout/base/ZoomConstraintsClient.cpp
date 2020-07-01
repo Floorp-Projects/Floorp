@@ -29,11 +29,11 @@ static mozilla::LazyLogModule sApzZoomLog("apz.zoom");
 
 NS_IMPL_ISUPPORTS(ZoomConstraintsClient, nsIDOMEventListener, nsIObserver)
 
-#define DOM_META_ADDED NS_LITERAL_STRING("DOMMetaAdded")
-#define DOM_META_CHANGED NS_LITERAL_STRING("DOMMetaChanged")
-#define FULLSCREEN_CHANGED NS_LITERAL_STRING("fullscreenchange")
-#define BEFORE_FIRST_PAINT NS_LITERAL_CSTRING("before-first-paint")
-#define NS_PREF_CHANGED NS_LITERAL_CSTRING("nsPref:changed")
+#define DOM_META_ADDED u"DOMMetaAdded"_ns
+#define DOM_META_CHANGED u"DOMMetaChanged"_ns
+#define FULLSCREEN_CHANGED u"fullscreenchange"_ns
+#define BEFORE_FIRST_PAINT "before-first-paint"_ns
+#define NS_PREF_CHANGED "nsPref:changed"_ns
 
 using namespace mozilla;
 using namespace mozilla::dom;

@@ -79,10 +79,9 @@ static nsresult IsEligible(nsIChannel* aChannel,
   nsTArray<nsString> params;
   params.AppendElement(requestSpecUTF16);
   aReporter->AddConsoleReport(
-      nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Sub-resource Integrity"),
+      nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
       nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
-      NS_LITERAL_CSTRING("IneligibleResource"),
-      const_cast<const nsTArray<nsString>&>(params));
+      "IneligibleResource"_ns, const_cast<const nsTArray<nsString>&>(params));
   return NS_ERROR_SRI_NOT_ELIGIBLE;
 }
 
@@ -122,10 +121,9 @@ nsresult SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
       nsTArray<nsString> params;
       params.AppendElement(tokenUTF16);
       aReporter->AddConsoleReport(
-          nsIScriptError::warningFlag,
-          NS_LITERAL_CSTRING("Sub-resource Integrity"),
+          nsIScriptError::warningFlag, "Sub-resource Integrity"_ns,
           nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
-          NS_LITERAL_CSTRING("MalformedIntegrityHash"),
+          "MalformedIntegrityHash"_ns,
           const_cast<const nsTArray<nsString>&>(params));
     } else if (!metadata.IsAlgorithmSupported()) {
       nsAutoCString alg;
@@ -134,10 +132,9 @@ nsresult SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
       nsTArray<nsString> params;
       params.AppendElement(algUTF16);
       aReporter->AddConsoleReport(
-          nsIScriptError::warningFlag,
-          NS_LITERAL_CSTRING("Sub-resource Integrity"),
+          nsIScriptError::warningFlag, "Sub-resource Integrity"_ns,
           nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
-          NS_LITERAL_CSTRING("UnsupportedHashAlg"),
+          "UnsupportedHashAlg"_ns,
           const_cast<const nsTArray<nsString>&>(params));
     }
 
@@ -194,12 +191,10 @@ SRICheckDataVerifier::SRICheckDataVerifier(const SRIMetadata& aMetadata,
 
   if (!aMetadata.IsValid()) {
     nsTArray<nsString> params;
-    aReporter->AddConsoleReport(nsIScriptError::warningFlag,
-                                NS_LITERAL_CSTRING("Sub-resource Integrity"),
-                                nsContentUtils::eSECURITY_PROPERTIES,
-                                aSourceFileURI, 0, 0,
-                                NS_LITERAL_CSTRING("NoValidMetadata"),
-                                const_cast<const nsTArray<nsString>&>(params));
+    aReporter->AddConsoleReport(
+        nsIScriptError::warningFlag, "Sub-resource Integrity"_ns,
+        nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
+        "NoValidMetadata"_ns, const_cast<const nsTArray<nsString>&>(params));
     mInvalidMetadata = true;
     return;  // ignore invalid metadata for forward-compatibility
   }
@@ -270,9 +265,9 @@ nsresult SRICheckDataVerifier::VerifyHash(
   if (NS_WARN_IF(NS_FAILED(Base64Decode(base64Hash, binaryHash)))) {
     nsTArray<nsString> params;
     aReporter->AddConsoleReport(
-        nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Sub-resource Integrity"),
+        nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
         nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
-        NS_LITERAL_CSTRING("InvalidIntegrityBase64"),
+        "InvalidIntegrityBase64"_ns,
         const_cast<const nsTArray<nsString>&>(params));
     return NS_ERROR_SRI_CORRUPT;
   }
@@ -283,9 +278,9 @@ nsresult SRICheckDataVerifier::VerifyHash(
   if (binaryHash.Length() != hashLength) {
     nsTArray<nsString> params;
     aReporter->AddConsoleReport(
-        nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Sub-resource Integrity"),
+        nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
         nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
-        NS_LITERAL_CSTRING("InvalidIntegrityLength"),
+        "InvalidIntegrityLength"_ns,
         const_cast<const nsTArray<nsString>&>(params));
     return NS_ERROR_SRI_CORRUPT;
   }
@@ -350,10 +345,9 @@ nsresult SRICheckDataVerifier::Verify(const SRIMetadata& aMetadata,
   nsTArray<nsString> params;
   params.AppendElement(algUTF16);
   aReporter->AddConsoleReport(
-      nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Sub-resource Integrity"),
+      nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
       nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
-      NS_LITERAL_CSTRING("IntegrityMismatch"),
-      const_cast<const nsTArray<nsString>&>(params));
+      "IntegrityMismatch"_ns, const_cast<const nsTArray<nsString>&>(params));
   return NS_ERROR_SRI_CORRUPT;
 }
 

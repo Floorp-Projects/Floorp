@@ -241,8 +241,7 @@ nsXMLContentSerializer::AppendCDATASection(nsIContent* aCDATASection,
   NS_ENSURE_TRUE(AppendToStringConvertLF(data, *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("]]>"), *mOutput),
-                 NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(u"]]>"_ns, *mOutput), NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }
@@ -287,8 +286,7 @@ nsXMLContentSerializer::AppendProcessingInstruction(ProcessingInstruction* aPI,
     NS_ENSURE_TRUE(AppendToStringConvertLF(data, *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
   }
-  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("?>"), *mOutput),
-                 NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(u"?>"_ns, *mOutput), NS_ERROR_OUT_OF_MEMORY);
 
   MaybeFlagNewlineForRootNode(aPI);
 
@@ -341,8 +339,7 @@ nsXMLContentSerializer::AppendComment(Comment* aComment, int32_t aStartOffset,
   // could have been preformated by the author
   NS_ENSURE_TRUE(AppendToStringConvertLF(data, *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("-->"), *mOutput),
-                 NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(u"-->"_ns, *mOutput), NS_ERROR_OUT_OF_MEMORY);
 
   MaybeFlagNewlineForRootNode(aComment);
 
@@ -360,13 +357,13 @@ nsXMLContentSerializer::AppendDoctype(DocumentType* aDocType) {
 
   NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(*mOutput), NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("<!DOCTYPE "), *mOutput),
+  NS_ENSURE_TRUE(AppendToString(u"<!DOCTYPE "_ns, *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(AppendToString(name, *mOutput), NS_ERROR_OUT_OF_MEMORY);
 
   char16_t quote;
   if (!publicId.IsEmpty()) {
-    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(" PUBLIC "), *mOutput),
+    NS_ENSURE_TRUE(AppendToString(u" PUBLIC "_ns, *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
     if (publicId.FindChar(char16_t('"')) == -1) {
       quote = char16_t('"');
@@ -396,7 +393,7 @@ nsXMLContentSerializer::AppendDoctype(DocumentType* aDocType) {
     } else {
       quote = char16_t('\'');
     }
-    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(" SYSTEM "), *mOutput),
+    NS_ENSURE_TRUE(AppendToString(u" SYSTEM "_ns, *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_TRUE(AppendToString(quote, *mOutput), NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_TRUE(AppendToString(systemId, *mOutput), NS_ERROR_OUT_OF_MEMORY);
@@ -658,14 +655,12 @@ bool nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
     NS_ENSURE_TRUE(attrString.Append(cDelimiter, mozilla::fallible), false);
     nsAutoString sValue(aValue);
     NS_ENSURE_TRUE(
-        sValue.ReplaceSubstring(NS_LITERAL_STRING("&"),
-                                NS_LITERAL_STRING("&amp;"), mozilla::fallible),
+        sValue.ReplaceSubstring(u"&"_ns, u"&amp;"_ns, mozilla::fallible),
         false);
     if (bIncludesDouble && bIncludesSingle) {
-      NS_ENSURE_TRUE(sValue.ReplaceSubstring(NS_LITERAL_STRING("\""),
-                                             NS_LITERAL_STRING("&quot;"),
-                                             mozilla::fallible),
-                     false);
+      NS_ENSURE_TRUE(
+          sValue.ReplaceSubstring(u"\""_ns, u"&quot;"_ns, mozilla::fallible),
+          false);
     }
     NS_ENSURE_TRUE(attrString.Append(sValue, mozilla::fallible), false);
     NS_ENSURE_TRUE(attrString.Append(cDelimiter, mozilla::fallible), false);
@@ -803,8 +798,8 @@ bool nsXMLContentSerializer::SerializeAttributes(
 
     // Filter out any attribute starting with [-|_]moz
     nsDependentAtomString attrNameStr(attrName);
-    if (StringBeginsWith(attrNameStr, NS_LITERAL_STRING("_moz")) ||
-        StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
+    if (StringBeginsWith(attrNameStr, u"_moz"_ns) ||
+        StringBeginsWith(attrNameStr, u"-moz"_ns)) {
       continue;
     }
 
@@ -905,8 +900,7 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
   NS_ENSURE_TRUE(AppendToString(kLessThan, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   if (!tagPrefix.IsEmpty()) {
     NS_ENSURE_TRUE(AppendToString(tagPrefix, *mOutput), NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(":"), *mOutput),
-                   NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(u":"_ns, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   }
   NS_ENSURE_TRUE(AppendToString(tagLocalName, *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
@@ -977,7 +971,7 @@ bool nsXMLContentSerializer::AppendEndOfElementStart(Element* aElement,
     }
   }
 
-  return AppendToString(NS_LITERAL_STRING("/>"), aStr);
+  return AppendToString(u"/>"_ns, aStr);
 }
 
 NS_IMETHODIMP
@@ -1043,8 +1037,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
   NS_ENSURE_TRUE(AppendToString(kEndTag, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   if (!tagPrefix.IsEmpty()) {
     NS_ENSURE_TRUE(AppendToString(tagPrefix, *mOutput), NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(":"), *mOutput),
-                   NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(u":"_ns, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   }
   NS_ENSURE_TRUE(AppendToString(tagLocalName, *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
@@ -1099,11 +1092,11 @@ nsXMLContentSerializer::AppendDocumentStart(Document* aDocument) {
 
   NS_NAMED_LITERAL_STRING(endQuote, "\"");
 
-  *mOutput += NS_LITERAL_STRING("<?xml version=\"") + version + endQuote;
+  *mOutput += u"<?xml version=\""_ns + version + endQuote;
 
   if (!mCharset.IsEmpty()) {
-    *mOutput += NS_LITERAL_STRING(" encoding=\"") +
-                NS_ConvertASCIItoUTF16(mCharset) + endQuote;
+    *mOutput +=
+        u" encoding=\""_ns + NS_ConvertASCIItoUTF16(mCharset) + endQuote;
   }
   // Otherwise just don't output an encoding attr.  Not that we expect
   // mCharset to ever be empty.
@@ -1114,7 +1107,7 @@ nsXMLContentSerializer::AppendDocumentStart(Document* aDocument) {
 #endif
 
   if (!standalone.IsEmpty()) {
-    *mOutput += NS_LITERAL_STRING(" standalone=\"") + standalone + endQuote;
+    *mOutput += u" standalone=\""_ns + standalone + endQuote;
   }
 
   NS_ENSURE_TRUE(mOutput->AppendLiteral("?>", mozilla::fallible),

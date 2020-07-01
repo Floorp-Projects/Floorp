@@ -250,9 +250,9 @@
 extern uint32_t gRestartMode;
 extern void InstallSignalHandlers(const char* ProgramName);
 
-#define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
-#define FILE_INVALIDATE_CACHES NS_LITERAL_CSTRING(".purgecaches")
-#define FILE_STARTUP_INCOMPLETE NS_LITERAL_STRING(".startup-incomplete")
+#define FILE_COMPATIBILITY_INFO "compatibility.ini"_ns
+#define FILE_INVALIDATE_CACHES ".purgecaches"_ns
+#define FILE_STARTUP_INCOMPLETE u".startup-incomplete"_ns
 
 #if defined(MOZ_BLOCK_PROFILE_DOWNGRADE) || defined(MOZ_LAUNCHER_PROCESS) || \
     defined(MOZ_DEFAULT_BROWSER_AGENT)
@@ -799,7 +799,7 @@ NS_IMETHODIMP
 nsXULAppInfo::GetAccessibilityInstantiator(nsAString& aInstantiator) {
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
   if (!GetAccService()) {
-    aInstantiator = NS_LITERAL_STRING("");
+    aInstantiator = u""_ns;
     return NS_OK;
   }
   nsAutoString ipClientInfo;
@@ -815,7 +815,7 @@ nsXULAppInfo::GetAccessibilityInstantiator(nsAString& aInstantiator) {
     }
   }
 #else
-  aInstantiator = NS_LITERAL_STRING("");
+  aInstantiator = u""_ns;
 #endif
   return NS_OK;
 }
@@ -2220,7 +2220,7 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
   nsCOMPtr<nsIPropertyBag2> sysInfo =
       do_GetService("@mozilla.org/system-info;1");
   NS_ENSURE_TRUE_VOID(sysInfo);
-  sysInfo->GetPropertyAsACString(NS_LITERAL_STRING("arch"), arch);
+  sysInfo->GetPropertyAsACString(u"arch"_ns, arch);
 
   time_t now;
   time(&now);
@@ -2251,7 +2251,7 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
   nsCOMPtr<nsIFile> pingFile;
   rv = NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR, getter_AddRefs(pingFile));
   NS_ENSURE_SUCCESS_VOID(rv);
-  rv = pingFile->Append(NS_LITERAL_STRING("Pending Pings"));
+  rv = pingFile->Append(u"Pending Pings"_ns);
   NS_ENSURE_SUCCESS_VOID(rv);
   rv = pingFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
   if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS) {
@@ -2264,9 +2264,9 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
   rv = NS_GetSpecialDirectory(NS_GRE_BIN_DIR, getter_AddRefs(pingSender));
   NS_ENSURE_SUCCESS_VOID(rv);
 #  ifdef XP_WIN
-  pingSender->Append(NS_LITERAL_STRING("pingsender.exe"));
+  pingSender->Append(u"pingsender.exe"_ns);
 #  else
-  pingSender->Append(NS_LITERAL_STRING("pingsender"));
+  pingSender->Append(u"pingsender"_ns);
 #  endif
 
   bool exists;
@@ -2380,7 +2380,7 @@ static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
       rv = aProfileDir->Clone(getter_AddRefs(prefsFile));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = prefsFile->Append(NS_LITERAL_STRING("prefs.js"));
+      rv = prefsFile->Append(u"prefs.js"_ns);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = prefSvc->ReadUserPrefsFromFile(prefsFile);
@@ -2686,7 +2686,7 @@ static bool RemoveComponentRegistries(nsIFile* aProfileDir,
   if (!file) return false;
 
   if (aRemoveEMFiles) {
-    file->SetNativeLeafName(NS_LITERAL_CSTRING("extensions.ini"));
+    file->SetNativeLeafName("extensions.ini"_ns);
     file->Remove(false);
   }
 
@@ -2699,13 +2699,13 @@ static bool RemoveComponentRegistries(nsIFile* aProfileDir,
 #  define PLATFORM_FASL_SUFFIX ".mfl"
 #endif
 
-  file->AppendNative(NS_LITERAL_CSTRING("XUL" PLATFORM_FASL_SUFFIX));
+  file->AppendNative(nsLiteralCString("XUL" PLATFORM_FASL_SUFFIX));
   file->Remove(false);
 
-  file->SetNativeLeafName(NS_LITERAL_CSTRING("XPC" PLATFORM_FASL_SUFFIX));
+  file->SetNativeLeafName(nsLiteralCString("XPC" PLATFORM_FASL_SUFFIX));
   file->Remove(false);
 
-  file->SetNativeLeafName(NS_LITERAL_CSTRING("startupCache"));
+  file->SetNativeLeafName("startupCache"_ns);
   nsresult rv = file->Remove(true);
   return NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
          rv == NS_ERROR_FILE_NOT_FOUND;
@@ -2722,7 +2722,7 @@ static void MakeOrSetMinidumpPath(nsIFile* profD) {
   if (dumpD) {
     bool fileExists;
     // XXX: do some more error checking here
-    dumpD->Append(NS_LITERAL_STRING("minidumps"));
+    dumpD->Append(u"minidumps"_ns);
     dumpD->Exists(&fileExists);
     if (!fileExists) {
       nsresult rv = dumpD->Create(nsIFile::DIRECTORY_TYPE, 0700);
@@ -3280,8 +3280,8 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
       nsCOMPtr<nsIFile> overrideini;
       if (NS_SUCCEEDED(
               mDirProvider.GetAppDir()->Clone(getter_AddRefs(overrideini))) &&
-          NS_SUCCEEDED(overrideini->AppendNative(
-              NS_LITERAL_CSTRING("crashreporter-override.ini")))) {
+          NS_SUCCEEDED(
+              overrideini->AppendNative("crashreporter-override.ini"_ns))) {
 #ifdef XP_WIN
         nsAutoString overridePathW;
         overrideini->GetPath(overridePathW);
@@ -4399,7 +4399,7 @@ nsresult XREMain::XRE_mainRun() {
   if (gDoMigration) {
     nsCOMPtr<nsIFile> file;
     mDirProvider.GetAppDir()->Clone(getter_AddRefs(file));
-    file->AppendNative(NS_LITERAL_CSTRING("override.ini"));
+    file->AppendNative("override.ini"_ns);
     nsINIParser parser;
     nsresult rv = parser.Init(file);
     // if override.ini doesn't exist, also check for distribution.ini
@@ -4407,7 +4407,7 @@ nsresult XREMain::XRE_mainRun() {
       bool persistent;
       mDirProvider.GetFile(XRE_APP_DISTRIBUTION_DIR, &persistent,
                            getter_AddRefs(file));
-      file->AppendNative(NS_LITERAL_CSTRING("distribution.ini"));
+      file->AppendNative("distribution.ini"_ns);
       rv = parser.Init(file);
     }
     if (NS_SUCCEEDED(rv)) {
@@ -4791,7 +4791,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
     nsCOMPtr<nsIFile> parent;
     greDir->GetParent(getter_AddRefs(parent));
     greDir = parent.forget();
-    greDir->AppendNative(NS_LITERAL_CSTRING("Resources"));
+    greDir->AppendNative("Resources"_ns);
 #endif
 
     mAppData->xreDirectory = greDir;
@@ -5231,13 +5231,13 @@ void setASanReporterPath(nsIFile* aDir) {
   nsCOMPtr<nsIFile> dir;
   aDir->Clone(getter_AddRefs(dir));
 
-  dir->Append(NS_LITERAL_STRING("asan"));
+  dir->Append(u"asan"_ns);
   nsresult rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0700);
   if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)) {
     MOZ_CRASH("[ASan Reporter] Unable to create crash directory.");
   }
 
-  dir->Append(NS_LITERAL_STRING("ff_asan_log"));
+  dir->Append(u"ff_asan_log"_ns);
 
 #  ifdef XP_WIN
   nsAutoString nspathW;

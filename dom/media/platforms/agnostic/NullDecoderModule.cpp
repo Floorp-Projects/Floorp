@@ -29,8 +29,7 @@ class NullDecoderModule : public PlatformDecoderModule {
       const CreateDecoderParams& aParams) override {
     UniquePtr<DummyDataCreator> creator = MakeUnique<NullVideoDataCreator>();
     RefPtr<MediaDataDecoder> decoder = new DummyMediaDataDecoder(
-        std::move(creator), NS_LITERAL_CSTRING("null media data decoder"),
-        aParams);
+        std::move(creator), "null media data decoder"_ns, aParams);
     return decoder.forget();
   }
 

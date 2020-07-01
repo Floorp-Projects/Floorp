@@ -760,7 +760,7 @@ nsresult FileHandleThreadPool::Init() {
 
   mThreadPool = new nsThreadPool();
 
-  nsresult rv = mThreadPool->SetName(NS_LITERAL_CSTRING("FileHandles"));
+  nsresult rv = mThreadPool->SetName("FileHandles"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

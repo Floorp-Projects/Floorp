@@ -89,11 +89,9 @@ IPCResult SharedWorkerChild::RecvError(const ErrorValue& aValue) {
     errorInit.mLineno = errorData.lineNumber();
     errorInit.mColno = errorData.columnNumber();
 
-    event =
-        ErrorEvent::Constructor(mParent, NS_LITERAL_STRING("error"), errorInit);
+    event = ErrorEvent::Constructor(mParent, u"error"_ns, errorInit);
   } else {
-    event =
-        Event::Constructor(mParent, NS_LITERAL_STRING("error"), EventInit());
+    event = Event::Constructor(mParent, u"error"_ns, EventInit());
   }
   event->SetTrusted(true);
 

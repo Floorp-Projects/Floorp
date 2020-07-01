@@ -114,7 +114,7 @@ ModuleEvaluator::ModuleEvaluator()
     return;
   }
 
-  nsresult rv = winSxSDir->Append(NS_LITERAL_STRING("WinSxS"));
+  nsresult rv = winSxSDir->Append(u"WinSxS"_ns);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (NS_FAILED(rv)) {
     return;

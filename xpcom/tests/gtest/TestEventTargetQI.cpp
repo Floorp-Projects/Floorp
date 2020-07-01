@@ -39,8 +39,7 @@ TEST(TestEventTargetQI, ThreadPool)
 
 TEST(TestEventTargetQI, SharedThreadPool)
 {
-  nsCOMPtr<nsIThreadPool> thing =
-      SharedThreadPool::Get(NS_LITERAL_CSTRING("TestPool"), 1);
+  nsCOMPtr<nsIThreadPool> thing = SharedThreadPool::Get("TestPool"_ns, 1);
   EXPECT_TRUE(thing);
 
   EXPECT_FALSE(TestQITo<nsISerialEventTarget>(thing));
@@ -72,8 +71,7 @@ TEST(TestEventTargetQI, ThrottledEventQueue)
 
 TEST(TestEventTargetQI, LazyIdleThread)
 {
-  nsCOMPtr<nsIThread> thing =
-      new LazyIdleThread(0, NS_LITERAL_CSTRING("TestThread"));
+  nsCOMPtr<nsIThread> thing = new LazyIdleThread(0, "TestThread"_ns);
   EXPECT_TRUE(thing);
 
   EXPECT_TRUE(TestQITo<nsISerialEventTarget>(thing));

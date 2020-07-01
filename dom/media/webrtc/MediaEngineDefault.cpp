@@ -57,7 +57,7 @@ static nsString DefaultVideoName() {
   if (NS_SUCCEEDED(rv)) {
     return std::move(cameraNameFromPref);
   }
-  return NS_LITERAL_STRING(u"Default Video Device");
+  return u"Default Video Device"_ns;
 }
 
 /**
@@ -84,11 +84,11 @@ MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource() = default;
 nsString MediaEngineDefaultVideoSource::GetName() const { return mName; }
 
 nsCString MediaEngineDefaultVideoSource::GetUUID() const {
-  return NS_LITERAL_CSTRING("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676");
+  return "1041FCBD-3F12-4F7B-9E9B-1EC556DD5676"_ns;
 }
 
 nsString MediaEngineDefaultVideoSource::GetGroupId() const {
-  return NS_LITERAL_STRING(u"Default Video Group");
+  return u"Default Video Group"_ns;
 }
 
 uint32_t MediaEngineDefaultVideoSource::GetBestFitnessDistance(
@@ -381,15 +381,15 @@ MediaEngineDefaultAudioSource::MediaEngineDefaultAudioSource() = default;
 MediaEngineDefaultAudioSource::~MediaEngineDefaultAudioSource() = default;
 
 nsString MediaEngineDefaultAudioSource::GetName() const {
-  return NS_LITERAL_STRING(u"Default Audio Device");
+  return u"Default Audio Device"_ns;
 }
 
 nsCString MediaEngineDefaultAudioSource::GetUUID() const {
-  return NS_LITERAL_CSTRING("B7CBD7C1-53EF-42F9-8353-73F61C70C092");
+  return "B7CBD7C1-53EF-42F9-8353-73F61C70C092"_ns;
 }
 
 nsString MediaEngineDefaultAudioSource::GetGroupId() const {
-  return NS_LITERAL_STRING(u"Default Audio Group");
+  return u"Default Audio Group"_ns;
 }
 
 void MediaEngineDefaultAudioSource::GetSettings(
@@ -516,18 +516,18 @@ void MediaEngineDefault::EnumerateDevices(
     case MediaSourceEnum::Camera: {
       // Only supports camera video sources. See Bug 1038241.
       auto newSource = MakeRefPtr<MediaEngineDefaultVideoSource>();
-      aDevices->AppendElement(MakeRefPtr<MediaDevice>(
-          newSource, newSource->GetName(),
-          NS_ConvertUTF8toUTF16(newSource->GetUUID()), newSource->GetGroupId(),
-          NS_LITERAL_STRING("")));
+      aDevices->AppendElement(
+          MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
+                                  NS_ConvertUTF8toUTF16(newSource->GetUUID()),
+                                  newSource->GetGroupId(), u""_ns));
       return;
     }
     case MediaSourceEnum::Microphone: {
       auto newSource = MakeRefPtr<MediaEngineDefaultAudioSource>();
-      aDevices->AppendElement(MakeRefPtr<MediaDevice>(
-          newSource, newSource->GetName(),
-          NS_ConvertUTF8toUTF16(newSource->GetUUID()), newSource->GetGroupId(),
-          NS_LITERAL_STRING("")));
+      aDevices->AppendElement(
+          MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
+                                  NS_ConvertUTF8toUTF16(newSource->GetUUID()),
+                                  newSource->GetGroupId(), u""_ns));
       return;
     }
     default:

@@ -59,7 +59,7 @@ already_AddRefed<MIDIMessageEvent> MIDIMessageEvent::Constructor(
     const nsTArray<uint8_t>& aData) {
   MOZ_ASSERT(aOwner);
   RefPtr<MIDIMessageEvent> e = new MIDIMessageEvent(aOwner);
-  e->InitEvent(NS_LITERAL_STRING("midimessage"), false, false);
+  e->InitEvent(u"midimessage"_ns, false, false);
   e->mEvent->mTimeStamp = aReceivedTime;
   e->mRawData = aData.Clone();
   e->SetTrusted(true);

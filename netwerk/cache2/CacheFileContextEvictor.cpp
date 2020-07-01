@@ -51,7 +51,7 @@ nsresult CacheFileContextEvictor::Init(nsIFile* aCacheDirectory) {
     return rv;
   }
 
-  rv = mEntriesDir->AppendNative(NS_LITERAL_CSTRING(ENTRIES_DIR));
+  rv = mEntriesDir->AppendNative(nsLiteralCString(ENTRIES_DIR));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -368,7 +368,7 @@ nsresult CacheFileContextEvictor::LoadEvictInfoFromDisk() {
       continue;
     }
 
-    if (!StringBeginsWith(leaf, NS_LITERAL_CSTRING(CONTEXT_EVICTION_PREFIX))) {
+    if (!StringBeginsWith(leaf, nsLiteralCString(CONTEXT_EVICTION_PREFIX))) {
       continue;
     }
 
@@ -403,7 +403,7 @@ nsresult CacheFileContextEvictor::LoadEvictInfoFromDisk() {
     }
 
     nsCOMPtr<nsILoadContextInfo> info;
-    if (!NS_LITERAL_CSTRING("*").Equals(decoded)) {
+    if (!"*"_ns.Equals(decoded)) {
       // "*" is indication of 'delete all', info left null will pass
       // to CacheFileContextEvictor::AddContext and clear all the cache data.
       info = CacheFileUtils::ParseKey(decoded);

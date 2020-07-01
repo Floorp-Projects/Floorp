@@ -1846,7 +1846,7 @@ void MLGDeviceD3D11::HandleDeviceReset(const char* aWhere) {
     return;
   }
 
-  Fail(NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_RESET"), nullptr);
+  Fail("FEATURE_FAILURE_DEVICE_RESET"_ns, nullptr);
 
   gfxCriticalNote << "GFX: D3D11 detected a device reset in " << aWhere;
   if (XRE_IsGPUProcess()) {

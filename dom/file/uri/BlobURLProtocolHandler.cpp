@@ -413,7 +413,7 @@ class ReleasingTimerHolder final : public Runnable,
     NS_ENSURE_TRUE(!!phase, NS_OK);
 
     rv = phase->AddBlocker(this, NS_LITERAL_STRING(__FILE__), __LINE__,
-                           NS_LITERAL_STRING("ReleasingTimerHolder shutdown"));
+                           u"ReleasingTimerHolder shutdown"_ns);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     raii.release();

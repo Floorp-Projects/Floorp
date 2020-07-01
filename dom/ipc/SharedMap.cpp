@@ -129,8 +129,8 @@ void SharedMap::Update(const FileDescriptor& aMapFile, size_t aMapSize,
                                               fallible);
   }
 
-  RefPtr<SharedMapChangeEvent> event = SharedMapChangeEvent::Constructor(
-      this, NS_LITERAL_STRING("change"), init);
+  RefPtr<SharedMapChangeEvent> event =
+      SharedMapChangeEvent::Constructor(this, u"change"_ns, init);
   event->SetTrusted(true);
 
   DispatchEvent(*event);

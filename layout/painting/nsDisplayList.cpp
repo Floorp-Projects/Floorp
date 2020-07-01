@@ -1223,7 +1223,7 @@ void nsDisplayListBuilder::MarkFramesForDisplayList(
       if (content && content->IsInNativeAnonymousSubtree() &&
           content->IsElement()) {
         auto classList = content->AsElement()->ClassList();
-        if (classList->Contains(NS_LITERAL_STRING("moz-accessiblecaret"))) {
+        if (classList->Contains(u"moz-accessiblecaret"_ns)) {
           continue;
         }
       }
@@ -10007,15 +10007,15 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint() {
   // If the total time was >= 16ms, then it's likely we missed a frame due to
   // painting. We bucket these metrics separately.
   if (totalMs >= 16.0) {
-    recordLarge(NS_LITERAL_CSTRING("dl"), dlMs);
-    recordLarge(NS_LITERAL_CSTRING("flb"), flbMs);
-    recordLarge(NS_LITERAL_CSTRING("fr"), frMs);
-    recordLarge(NS_LITERAL_CSTRING("r"), rMs);
+    recordLarge("dl"_ns, dlMs);
+    recordLarge("flb"_ns, flbMs);
+    recordLarge("fr"_ns, frMs);
+    recordLarge("r"_ns, rMs);
   } else {
-    recordSmall(NS_LITERAL_CSTRING("dl"), dlMs);
-    recordSmall(NS_LITERAL_CSTRING("flb"), flbMs);
-    recordSmall(NS_LITERAL_CSTRING("fr"), frMs);
-    recordSmall(NS_LITERAL_CSTRING("r"), rMs);
+    recordSmall("dl"_ns, dlMs);
+    recordSmall("flb"_ns, flbMs);
+    recordSmall("fr"_ns, frMs);
+    recordSmall("r"_ns, rMs);
   }
 
   Telemetry::Accumulate(Telemetry::PAINT_BUILD_LAYERS_TIME, flbMs);

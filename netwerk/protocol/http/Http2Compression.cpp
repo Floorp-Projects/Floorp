@@ -107,70 +107,67 @@ static void InitializeStaticHeaders() {
     gStaticHeaders = new nsDeque<nvPair>();
     gStaticReporter = new HpackStaticTableReporter();
     RegisterStrongMemoryReporter(gStaticReporter);
-    AddStaticElement(NS_LITERAL_CSTRING(":authority"));
-    AddStaticElement(NS_LITERAL_CSTRING(":method"), NS_LITERAL_CSTRING("GET"));
-    AddStaticElement(NS_LITERAL_CSTRING(":method"), NS_LITERAL_CSTRING("POST"));
-    AddStaticElement(NS_LITERAL_CSTRING(":path"), NS_LITERAL_CSTRING("/"));
-    AddStaticElement(NS_LITERAL_CSTRING(":path"),
-                     NS_LITERAL_CSTRING("/index.html"));
-    AddStaticElement(NS_LITERAL_CSTRING(":scheme"), NS_LITERAL_CSTRING("http"));
-    AddStaticElement(NS_LITERAL_CSTRING(":scheme"),
-                     NS_LITERAL_CSTRING("https"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("200"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("204"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("206"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("304"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("400"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("404"));
-    AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("500"));
-    AddStaticElement(NS_LITERAL_CSTRING("accept-charset"));
-    AddStaticElement(NS_LITERAL_CSTRING("accept-encoding"),
-                     NS_LITERAL_CSTRING("gzip, deflate"));
-    AddStaticElement(NS_LITERAL_CSTRING("accept-language"));
-    AddStaticElement(NS_LITERAL_CSTRING("accept-ranges"));
-    AddStaticElement(NS_LITERAL_CSTRING("accept"));
-    AddStaticElement(NS_LITERAL_CSTRING("access-control-allow-origin"));
-    AddStaticElement(NS_LITERAL_CSTRING("age"));
-    AddStaticElement(NS_LITERAL_CSTRING("allow"));
-    AddStaticElement(NS_LITERAL_CSTRING("authorization"));
-    AddStaticElement(NS_LITERAL_CSTRING("cache-control"));
-    AddStaticElement(NS_LITERAL_CSTRING("content-disposition"));
-    AddStaticElement(NS_LITERAL_CSTRING("content-encoding"));
-    AddStaticElement(NS_LITERAL_CSTRING("content-language"));
-    AddStaticElement(NS_LITERAL_CSTRING("content-length"));
-    AddStaticElement(NS_LITERAL_CSTRING("content-location"));
-    AddStaticElement(NS_LITERAL_CSTRING("content-range"));
-    AddStaticElement(NS_LITERAL_CSTRING("content-type"));
-    AddStaticElement(NS_LITERAL_CSTRING("cookie"));
-    AddStaticElement(NS_LITERAL_CSTRING("date"));
-    AddStaticElement(NS_LITERAL_CSTRING("etag"));
-    AddStaticElement(NS_LITERAL_CSTRING("expect"));
-    AddStaticElement(NS_LITERAL_CSTRING("expires"));
-    AddStaticElement(NS_LITERAL_CSTRING("from"));
-    AddStaticElement(NS_LITERAL_CSTRING("host"));
-    AddStaticElement(NS_LITERAL_CSTRING("if-match"));
-    AddStaticElement(NS_LITERAL_CSTRING("if-modified-since"));
-    AddStaticElement(NS_LITERAL_CSTRING("if-none-match"));
-    AddStaticElement(NS_LITERAL_CSTRING("if-range"));
-    AddStaticElement(NS_LITERAL_CSTRING("if-unmodified-since"));
-    AddStaticElement(NS_LITERAL_CSTRING("last-modified"));
-    AddStaticElement(NS_LITERAL_CSTRING("link"));
-    AddStaticElement(NS_LITERAL_CSTRING("location"));
-    AddStaticElement(NS_LITERAL_CSTRING("max-forwards"));
-    AddStaticElement(NS_LITERAL_CSTRING("proxy-authenticate"));
-    AddStaticElement(NS_LITERAL_CSTRING("proxy-authorization"));
-    AddStaticElement(NS_LITERAL_CSTRING("range"));
-    AddStaticElement(NS_LITERAL_CSTRING("referer"));
-    AddStaticElement(NS_LITERAL_CSTRING("refresh"));
-    AddStaticElement(NS_LITERAL_CSTRING("retry-after"));
-    AddStaticElement(NS_LITERAL_CSTRING("server"));
-    AddStaticElement(NS_LITERAL_CSTRING("set-cookie"));
-    AddStaticElement(NS_LITERAL_CSTRING("strict-transport-security"));
-    AddStaticElement(NS_LITERAL_CSTRING("transfer-encoding"));
-    AddStaticElement(NS_LITERAL_CSTRING("user-agent"));
-    AddStaticElement(NS_LITERAL_CSTRING("vary"));
-    AddStaticElement(NS_LITERAL_CSTRING("via"));
-    AddStaticElement(NS_LITERAL_CSTRING("www-authenticate"));
+    AddStaticElement(":authority"_ns);
+    AddStaticElement(":method"_ns, "GET"_ns);
+    AddStaticElement(":method"_ns, "POST"_ns);
+    AddStaticElement(":path"_ns, "/"_ns);
+    AddStaticElement(":path"_ns, "/index.html"_ns);
+    AddStaticElement(":scheme"_ns, "http"_ns);
+    AddStaticElement(":scheme"_ns, "https"_ns);
+    AddStaticElement(":status"_ns, "200"_ns);
+    AddStaticElement(":status"_ns, "204"_ns);
+    AddStaticElement(":status"_ns, "206"_ns);
+    AddStaticElement(":status"_ns, "304"_ns);
+    AddStaticElement(":status"_ns, "400"_ns);
+    AddStaticElement(":status"_ns, "404"_ns);
+    AddStaticElement(":status"_ns, "500"_ns);
+    AddStaticElement("accept-charset"_ns);
+    AddStaticElement("accept-encoding"_ns, "gzip, deflate"_ns);
+    AddStaticElement("accept-language"_ns);
+    AddStaticElement("accept-ranges"_ns);
+    AddStaticElement("accept"_ns);
+    AddStaticElement("access-control-allow-origin"_ns);
+    AddStaticElement("age"_ns);
+    AddStaticElement("allow"_ns);
+    AddStaticElement("authorization"_ns);
+    AddStaticElement("cache-control"_ns);
+    AddStaticElement("content-disposition"_ns);
+    AddStaticElement("content-encoding"_ns);
+    AddStaticElement("content-language"_ns);
+    AddStaticElement("content-length"_ns);
+    AddStaticElement("content-location"_ns);
+    AddStaticElement("content-range"_ns);
+    AddStaticElement("content-type"_ns);
+    AddStaticElement("cookie"_ns);
+    AddStaticElement("date"_ns);
+    AddStaticElement("etag"_ns);
+    AddStaticElement("expect"_ns);
+    AddStaticElement("expires"_ns);
+    AddStaticElement("from"_ns);
+    AddStaticElement("host"_ns);
+    AddStaticElement("if-match"_ns);
+    AddStaticElement("if-modified-since"_ns);
+    AddStaticElement("if-none-match"_ns);
+    AddStaticElement("if-range"_ns);
+    AddStaticElement("if-unmodified-since"_ns);
+    AddStaticElement("last-modified"_ns);
+    AddStaticElement("link"_ns);
+    AddStaticElement("location"_ns);
+    AddStaticElement("max-forwards"_ns);
+    AddStaticElement("proxy-authenticate"_ns);
+    AddStaticElement("proxy-authorization"_ns);
+    AddStaticElement("range"_ns);
+    AddStaticElement("referer"_ns);
+    AddStaticElement("refresh"_ns);
+    AddStaticElement("retry-after"_ns);
+    AddStaticElement("server"_ns);
+    AddStaticElement("set-cookie"_ns);
+    AddStaticElement("strict-transport-security"_ns);
+    AddStaticElement("transfer-encoding"_ns);
+    AddStaticElement("user-agent"_ns);
+    AddStaticElement("vary"_ns);
+    AddStaticElement("via"_ns);
+    AddStaticElement("www-authenticate"_ns);
   }
 }
 
@@ -546,7 +543,7 @@ nsresult Http2Decompressor::OutputHeader(const nsACString& name,
 
   // Status comes first
   if (name.EqualsLiteral(":status")) {
-    nsAutoCString status(NS_LITERAL_CSTRING("HTTP/2 "));
+    nsAutoCString status("HTTP/2 "_ns);
     status.Append(value);
     status.AppendLiteral("\r\n");
     mOutput->Insert(status, 0);
@@ -1067,17 +1064,16 @@ nsresult Http2Compressor::EncodeHeaderBlock(
 
   // colon headers first
   if (!simpleConnectForm) {
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false, false);
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":path"), path), true, false);
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false, false);
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":scheme"), scheme), false, false);
+    ProcessHeader(nvPair(":method"_ns, method), false, false);
+    ProcessHeader(nvPair(":path"_ns, path), true, false);
+    ProcessHeader(nvPair(":authority"_ns, host), false, false);
+    ProcessHeader(nvPair(":scheme"_ns, scheme), false, false);
     if (isWebsocket) {
-      ProcessHeader(nvPair(NS_LITERAL_CSTRING(":protocol"), protocol), false,
-                    false);
+      ProcessHeader(nvPair(":protocol"_ns, protocol), false, false);
     }
   } else {
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false, false);
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false, false);
+    ProcessHeader(nvPair(":method"_ns, method), false, false);
+    ProcessHeader(nvPair(":authority"_ns, host), false, false);
   }
 
   // now the non colon headers

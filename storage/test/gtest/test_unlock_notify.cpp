@@ -121,17 +121,15 @@ void setup() {
   nsCOMPtr<mozIStorageConnection> db(getDatabase());
 
   // Create and populate a dummy table.
-  nsresult rv = db->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  nsresult rv = db->ExecuteSimpleSQL(nsLiteralCString(
       "CREATE TABLE test (id INTEGER PRIMARY KEY, data STRING)"));
   do_check_success(rv);
-  rv = db->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("INSERT INTO test (data) VALUES ('foo')"));
+  rv = db->ExecuteSimpleSQL("INSERT INTO test (data) VALUES ('foo')"_ns);
   do_check_success(rv);
-  rv = db->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("INSERT INTO test (data) VALUES ('bar')"));
+  rv = db->ExecuteSimpleSQL("INSERT INTO test (data) VALUES ('bar')"_ns);
   do_check_success(rv);
-  rv = db->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX unique_data ON test (data)"));
+  rv =
+      db->ExecuteSimpleSQL("CREATE UNIQUE INDEX unique_data ON test (data)"_ns);
   do_check_success(rv);
 }
 
@@ -142,8 +140,7 @@ void test_step_locked_does_not_block_main_thread() {
   // step and not prepare.
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = db->CreateStatement(
-      NS_LITERAL_CSTRING("INSERT INTO test (data) VALUES ('test1')"),
-      getter_AddRefs(stmt));
+      "INSERT INTO test (data) VALUES ('test1')"_ns, getter_AddRefs(stmt));
   do_check_success(rv);
 
   nsCOMPtr<nsIFile> dbFile;
@@ -174,8 +171,8 @@ void test_drop_index_does_not_loop() {
   // Need to prepare our statement ahead of time so we make sure to only test
   // step and not prepare.
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM test"),
-                                    getter_AddRefs(stmt));
+  nsresult rv =
+      db->CreateStatement("SELECT * FROM test"_ns, getter_AddRefs(stmt));
   do_check_success(rv);
 
   RefPtr<DatabaseTester> tester =
@@ -204,8 +201,8 @@ void test_drop_table_does_not_loop() {
   // Need to prepare our statement ahead of time so we make sure to only test
   // step and not prepare.
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM test"),
-                                    getter_AddRefs(stmt));
+  nsresult rv =
+      db->CreateStatement("SELECT * FROM test"_ns, getter_AddRefs(stmt));
   do_check_success(rv);
 
   RefPtr<DatabaseTester> tester(new DatabaseTester(db, "DROP TABLE test"));

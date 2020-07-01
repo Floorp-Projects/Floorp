@@ -983,7 +983,7 @@ void nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder* aBuilder,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsBoxFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Box"), aResult);
+  return MakeFrameName(u"Box"_ns, aResult);
 }
 #endif
 

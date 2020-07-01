@@ -349,8 +349,7 @@ void CanonicalBrowsingContext::DispatchWheelZoomChange(bool aIncrease) {
     return;
   }
 
-  auto event = aIncrease ? NS_LITERAL_STRING("DoZoomEnlargeBy10")
-                         : NS_LITERAL_STRING("DoZoomReduceBy10");
+  auto event = aIncrease ? u"DoZoomEnlargeBy10"_ns : u"DoZoomReduceBy10"_ns;
   auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
       element, event, CanBubble::eYes, ChromeOnlyDispatch::eYes);
   dispatcher->PostDOMEvent();
@@ -609,10 +608,9 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
 
     // Some frontend code checks the value of the `remote` attribute on the
     // browser to determine if it is remote, so update the value.
-    browserElement->SetAttr(
-        kNameSpaceID_None, nsGkAtoms::remote,
-        mContentParent ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"),
-        /* notify */ true);
+    browserElement->SetAttr(kNameSpaceID_None, nsGkAtoms::remote,
+                            mContentParent ? u"true"_ns : u"false"_ns,
+                            /* notify */ true);
 
     // The process has been created, hand off to nsFrameLoaderOwner to finish
     // the process switch.

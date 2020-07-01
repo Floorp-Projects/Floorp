@@ -675,8 +675,7 @@ static bool HasCameraPermission(const uint64_t& aWindowId) {
 
   nsresult rv;
   // Name used with nsIPermissionManager
-  static const nsLiteralCString cameraPermission =
-      NS_LITERAL_CSTRING("MediaManagerVideo");
+  static const nsLiteralCString cameraPermission = "MediaManagerVideo"_ns;
   nsCOMPtr<nsIPermissionManager> mgr =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1056,7 +1055,7 @@ void CamerasParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 nsString CamerasParent::GetNewName() {
   static volatile uint64_t counter = 0;
-  nsString name(NS_LITERAL_STRING("CamerasParent "));
+  nsString name(u"CamerasParent "_ns);
   name.AppendInt(++counter);
   return name;
 }
@@ -1088,7 +1087,7 @@ CamerasParent::CamerasParent()
   RefPtr<CamerasParent> self(this);
   NS_DispatchToMainThread(NewRunnableFrom([self]() {
     nsresult rv = GetShutdownBarrier()->AddBlocker(
-        self, NS_LITERAL_STRING(__FILE__), __LINE__, NS_LITERAL_STRING(""));
+        self, NS_LITERAL_STRING(__FILE__), __LINE__, u""_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
     // Start the thread

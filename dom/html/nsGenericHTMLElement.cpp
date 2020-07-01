@@ -673,12 +673,11 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
       SetDirectionalityOnDescendants(this, dir, aNotify);
     } else if (aName == nsGkAtoms::contenteditable) {
       int32_t editableCountDelta = 0;
-      if (aOldValue &&
-          (aOldValue->Equals(NS_LITERAL_STRING("true"), eIgnoreCase) ||
-           aOldValue->Equals(EmptyString(), eIgnoreCase))) {
+      if (aOldValue && (aOldValue->Equals(u"true"_ns, eIgnoreCase) ||
+                        aOldValue->Equals(EmptyString(), eIgnoreCase))) {
         editableCountDelta = -1;
       }
-      if (aValue && (aValue->Equals(NS_LITERAL_STRING("true"), eIgnoreCase) ||
+      if (aValue && (aValue->Equals(u"true"_ns, eIgnoreCase) ||
                      aValue->Equals(EmptyString(), eIgnoreCase))) {
         ++editableCountDelta;
       }

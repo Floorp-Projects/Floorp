@@ -16,7 +16,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsBackdropFrame)
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsBackdropFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Backdrop"), aResult);
+  return MakeFrameName(u"Backdrop"_ns, aResult);
 }
 #endif
 

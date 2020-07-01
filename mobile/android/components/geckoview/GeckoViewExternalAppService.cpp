@@ -87,7 +87,7 @@ NS_IMETHODIMP GeckoViewExternalAppService::CreateListener(
     return NS_ERROR_ABORT;
   }
 
-  keys.AppendElement(jni::StringParam(NS_LITERAL_STRING("uri")));
+  keys.AppendElement(jni::StringParam(u"uri"_ns));
   values.AppendElement(jni::StringParam(uriSpec));
 
   nsCString contentType;
@@ -95,7 +95,7 @@ NS_IMETHODIMP GeckoViewExternalAppService::CreateListener(
     return NS_ERROR_ABORT;
   }
 
-  keys.AppendElement(jni::StringParam(NS_LITERAL_STRING("contentType")));
+  keys.AppendElement(jni::StringParam(u"contentType"_ns));
   values.AppendElement(jni::StringParam(contentType));
 
   int64_t contentLength = 0;
@@ -103,12 +103,12 @@ NS_IMETHODIMP GeckoViewExternalAppService::CreateListener(
     return NS_ERROR_ABORT;
   }
 
-  keys.AppendElement(jni::StringParam(NS_LITERAL_STRING("contentLength")));
+  keys.AppendElement(jni::StringParam(u"contentLength"_ns));
   values.AppendElement(java::sdk::Long::ValueOf(contentLength));
 
   nsString filename;
   if (NS_SUCCEEDED(channel->GetContentDispositionFilename(filename))) {
-    keys.AppendElement(jni::StringParam(NS_LITERAL_STRING("filename")));
+    keys.AppendElement(jni::StringParam(u"filename"_ns));
     values.AppendElement(jni::StringParam(filename));
   }
 

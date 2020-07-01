@@ -82,19 +82,17 @@ static nsCString MediaCapabilitiesInfoToStr(
 static nsCString MediaDecodingConfigurationToStr(
     const MediaDecodingConfiguration& aConfig) {
   nsCString str;
-  str += NS_LITERAL_CSTRING("[");
+  str += "["_ns;
   if (aConfig.mVideo.WasPassed()) {
-    str += NS_LITERAL_CSTRING("video:") +
-           VideoConfigurationToStr(&aConfig.mVideo.Value());
+    str += "video:"_ns + VideoConfigurationToStr(&aConfig.mVideo.Value());
     if (aConfig.mAudio.WasPassed()) {
-      str += NS_LITERAL_CSTRING(" ");
+      str += " "_ns;
     }
   }
   if (aConfig.mAudio.WasPassed()) {
-    str += NS_LITERAL_CSTRING("audio:") +
-           AudioConfigurationToStr(&aConfig.mAudio.Value());
+    str += "audio:"_ns + AudioConfigurationToStr(&aConfig.mAudio.Value());
   }
-  str += NS_LITERAL_CSTRING("]");
+  str += "]"_ns;
   return str;
 }
 

@@ -251,7 +251,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request,
     // Reset to application/octet-stream for now; no one other than the
     // external helper app service should see APPLICATION_GUESS_FROM_EXT.
     mContentType = APPLICATION_OCTET_STREAM;
-    aChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
+    aChannel->SetContentType(nsLiteralCString(APPLICATION_OCTET_STREAM));
   }
 
   // Check whether the data should be forced to be handled externally.  This
@@ -427,7 +427,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request,
 
     if (isGuessFromExt) {
       mContentType = APPLICATION_GUESS_FROM_EXT;
-      aChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_GUESS_FROM_EXT));
+      aChannel->SetContentType(nsLiteralCString(APPLICATION_GUESS_FROM_EXT));
     }
 
     rv = TryExternalHelperApp(helperAppService, aChannel);

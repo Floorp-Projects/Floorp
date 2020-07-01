@@ -679,7 +679,7 @@ void DataChannelConnection::AppendStatsToReport(
       continue;
     }
     mozilla::dom::RTCDataChannelStats stats;
-    nsString id = NS_LITERAL_STRING("dc");
+    nsString id = u"dc"_ns;
     id.AppendInt(chan->GetStream());
     stats.mId.Construct(id);
     chan->GetLabel(temp);

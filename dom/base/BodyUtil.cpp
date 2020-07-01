@@ -155,15 +155,13 @@ class MOZ_STACK_CLASS FormDataParser {
           continue;
         }
 
-        if (seenFormData &&
-            StringBeginsWith(token, NS_LITERAL_CSTRING("name="))) {
+        if (seenFormData && StringBeginsWith(token, "name="_ns)) {
           mName = StringTail(token, token.Length() - 5);
           mName.Trim(" \"");
           continue;
         }
 
-        if (seenFormData &&
-            StringBeginsWith(token, NS_LITERAL_CSTRING("filename="))) {
+        if (seenFormData && StringBeginsWith(token, "filename="_ns)) {
           mFilename = StringTail(token, token.Length() - 9);
           mFilename.Trim(" \"");
           continue;
@@ -323,7 +321,7 @@ class MOZ_STACK_CLASS FormDataParser {
         case START_PART:
           mName.SetIsVoid(true);
           mFilename.SetIsVoid(true);
-          mContentType = NS_LITERAL_CSTRING("text/plain");
+          mContentType = "text/plain"_ns;
 
           // MUST start with boundary.
           if (!PushOverBoundary(boundaryString, start, end)) {

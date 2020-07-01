@@ -215,8 +215,8 @@ nsString MediaStatusManager::GetDefaultFaviconURL() const {
 #ifdef MOZ_PLACES
   nsCOMPtr<nsIURI> faviconURI;
   nsresult rv = NS_NewURI(getter_AddRefs(faviconURI),
-                          NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
-  NS_ENSURE_SUCCESS(rv, NS_LITERAL_STRING(""));
+                          nsLiteralCString(FAVICON_DEFAULT_URL));
+  NS_ENSURE_SUCCESS(rv, u""_ns);
 
   // Convert URI from `chrome://XXX` to `file://XXX` because we would like to
   // let OS related frameworks, such as SMTC and MPRIS, handle this URL in order

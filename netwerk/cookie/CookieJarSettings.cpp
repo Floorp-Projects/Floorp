@@ -258,8 +258,8 @@ CookieJarSettings::CookiePermission(nsIPrincipal* aPrincipal,
   } else         // Note the tricky `else` which controls the call below.
 #endif
 
-    rv = pm->TestPermissionFromPrincipal(
-        aPrincipal, NS_LITERAL_CSTRING("cookie"), aCookiePermission);
+    rv = pm->TestPermissionFromPrincipal(aPrincipal, "cookie"_ns,
+                                         aCookiePermission);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -267,8 +267,8 @@ CookieJarSettings::CookiePermission(nsIPrincipal* aPrincipal,
   // Let's store the permission, also if the result is UNKNOWN in order to avoid
   // race conditions.
 
-  nsCOMPtr<nsIPermission> permission = Permission::Create(
-      aPrincipal, NS_LITERAL_CSTRING("cookie"), *aCookiePermission, 0, 0, 0);
+  nsCOMPtr<nsIPermission> permission =
+      Permission::Create(aPrincipal, "cookie"_ns, *aCookiePermission, 0, 0, 0);
   if (permission) {
     mCookiePermissions.AppendElement(permission);
   }
@@ -327,9 +327,8 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
 
     nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
-    nsCOMPtr<nsIPermission> permission =
-        Permission::Create(principal, NS_LITERAL_CSTRING("cookie"),
-                           data.cookiePermission(), 0, 0, 0);
+    nsCOMPtr<nsIPermission> permission = Permission::Create(
+        principal, "cookie"_ns, data.cookiePermission(), 0, 0, 0);
     if (NS_WARN_IF(!permission)) {
       continue;
     }
@@ -400,9 +399,8 @@ void CookieJarSettings::Merge(const CookieJarSettingsArgs& aData) {
     }
 
     nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
-    nsCOMPtr<nsIPermission> permission =
-        Permission::Create(principal, NS_LITERAL_CSTRING("cookie"),
-                           data.cookiePermission(), 0, 0, 0);
+    nsCOMPtr<nsIPermission> permission = Permission::Create(
+        principal, "cookie"_ns, data.cookiePermission(), 0, 0, 0);
     if (NS_WARN_IF(!permission)) {
       continue;
     }

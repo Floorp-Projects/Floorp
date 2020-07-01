@@ -131,7 +131,7 @@ bool GeckoMVMContext::IsInReaderMode() const {
   if (NS_FAILED(mDocument->GetDocumentURI(uri))) {
     return false;
   }
-  static auto readerModeUriPrefix = NS_LITERAL_STRING("about:reader");
+  static auto readerModeUriPrefix = u"about:reader"_ns;
   return StringBeginsWith(uri, readerModeUriPrefix);
 }
 

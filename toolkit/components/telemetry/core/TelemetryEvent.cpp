@@ -334,7 +334,7 @@ nsCString GetCategory(const StaticMutexAutoLock& lock,
   }
 
   if (!gDynamicEventInfo) {
-    return NS_LITERAL_CSTRING("");
+    return ""_ns;
   }
 
   return (*gDynamicEventInfo)[eventKey.id].category;
@@ -777,7 +777,7 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
   // Check value argument.
   if ((optional_argc > 0) && !aValue.isNull() && !aValue.isString()) {
     LogToBrowserConsole(nsIScriptError::warningFlag,
-                        NS_LITERAL_STRING("Invalid type for value parameter."));
+                        u"Invalid type for value parameter."_ns);
     mozilla::Telemetry::AccumulateCategorical(
         LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Value);
     return NS_OK;
@@ -788,9 +788,8 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
   if (aValue.isString()) {
     nsAutoJSString jsStr;
     if (!jsStr.init(cx, aValue)) {
-      LogToBrowserConsole(
-          nsIScriptError::warningFlag,
-          NS_LITERAL_STRING("Invalid string value for value parameter."));
+      LogToBrowserConsole(nsIScriptError::warningFlag,
+                          u"Invalid string value for value parameter."_ns);
       mozilla::Telemetry::AccumulateCategorical(
           LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Value);
       return NS_OK;
@@ -800,8 +799,8 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
     if (str.Length() > kMaxValueByteLength) {
       LogToBrowserConsole(
           nsIScriptError::warningFlag,
-          NS_LITERAL_STRING(
-              "Value parameter exceeds maximum string length, truncating."));
+          nsLiteralString(
+              u"Value parameter exceeds maximum string length, truncating."));
       TruncateToByteLength(str, kMaxValueByteLength);
     }
     value = mozilla::Some(str);
@@ -810,7 +809,7 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
   // Check extra argument.
   if ((optional_argc > 1) && !aExtra.isNull() && !aExtra.isObject()) {
     LogToBrowserConsole(nsIScriptError::warningFlag,
-                        NS_LITERAL_STRING("Invalid type for extra parameter."));
+                        u"Invalid type for extra parameter."_ns);
     mozilla::Telemetry::AccumulateCategorical(
         LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
     return NS_OK;
@@ -823,7 +822,7 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
     JS::Rooted<JS::IdVector> ids(cx, JS::IdVector(cx));
     if (!JS_Enumerate(cx, obj, &ids)) {
       LogToBrowserConsole(nsIScriptError::warningFlag,
-                          NS_LITERAL_STRING("Failed to enumerate object."));
+                          u"Failed to enumerate object."_ns);
       mozilla::Telemetry::AccumulateCategorical(
           LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
       return NS_OK;
@@ -834,8 +833,8 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
       if (!key.init(cx, ids[i])) {
         LogToBrowserConsole(
             nsIScriptError::warningFlag,
-            NS_LITERAL_STRING(
-                "Extra dictionary should only contain string keys."));
+            nsLiteralString(
+                u"Extra dictionary should only contain string keys."));
         mozilla::Telemetry::AccumulateCategorical(
             LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
         return NS_OK;
@@ -844,7 +843,7 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
       JS::Rooted<JS::Value> value(cx);
       if (!JS_GetPropertyById(cx, obj, ids[i], &value)) {
         LogToBrowserConsole(nsIScriptError::warningFlag,
-                            NS_LITERAL_STRING("Failed to get extra property."));
+                            u"Failed to get extra property."_ns);
         mozilla::Telemetry::AccumulateCategorical(
             LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
         return NS_OK;
@@ -852,9 +851,8 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
 
       nsAutoJSString jsStr;
       if (!value.isString() || !jsStr.init(cx, value)) {
-        LogToBrowserConsole(
-            nsIScriptError::warningFlag,
-            NS_LITERAL_STRING("Extra properties should have string values."));
+        LogToBrowserConsole(nsIScriptError::warningFlag,
+                            u"Extra properties should have string values."_ns);
         mozilla::Telemetry::AccumulateCategorical(
             LABELS_TELEMETRY_EVENT_RECORDING_ERROR::Extra);
         return NS_OK;
@@ -864,8 +862,8 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
       if (str.Length() > kMaxExtraValueByteLength) {
         LogToBrowserConsole(
             nsIScriptError::warningFlag,
-            NS_LITERAL_STRING(
-                "Extra value exceeds maximum string length, truncating."));
+            nsLiteralString(
+                u"Extra value exceeds maximum string length, truncating."));
         TruncateToByteLength(str, kMaxExtraValueByteLength);
       }
 
@@ -926,7 +924,7 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
     }
     case RecordEventResult::StorageLimitReached: {
       LogToBrowserConsole(nsIScriptError::warningFlag,
-                          NS_LITERAL_STRING("Event storage limit reached."));
+                          u"Event storage limit reached."_ns);
       nsCOMPtr<nsIObserverService> serv =
           mozilla::services::GetObserverService();
       if (serv) {
@@ -1345,7 +1343,7 @@ void TelemetryEvent::SetEventRecordingEnabled(const nsACString& category,
     LogToBrowserConsole(
         nsIScriptError::warningFlag,
         NS_ConvertUTF8toUTF16(
-            NS_LITERAL_CSTRING(
+            nsLiteralCString(
                 "Unknown category for SetEventRecordingEnabled: ") +
             category));
     return;

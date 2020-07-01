@@ -397,14 +397,12 @@ struct EnumSerializer {
     DataType value;
     if (!aConsumerView.ReadParam(&value)) {
       CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::IPCReadErrorReason,
-          NS_LITERAL_CSTRING("Bad iter"));
+          CrashReporter::Annotation::IPCReadErrorReason, "Bad iter"_ns);
       return aConsumerView.GetStatus();
     }
     if (!EnumValidator::IsLegalValue(ParamType(value))) {
       CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::IPCReadErrorReason,
-          NS_LITERAL_CSTRING("Illegal value"));
+          CrashReporter::Annotation::IPCReadErrorReason, "Illegal value"_ns);
       return aConsumerView.GetStatus();
     }
 

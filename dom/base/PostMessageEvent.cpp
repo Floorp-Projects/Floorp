@@ -218,7 +218,7 @@ PostMessageEvent::Run() {
     return NS_OK;
   }
 
-  event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"), CanBubble::eNo,
+  event->InitMessageEvent(nullptr, u"message"_ns, CanBubble::eNo,
                           Cancelable::eNo, messageData, mCallerOrigin,
                           EmptyString(), source, ports);
 
@@ -238,8 +238,8 @@ void PostMessageEvent::DispatchError(JSContext* aCx,
     init.mSource.SetValue().SetAsWindowProxy() = mSource;
   }
 
-  RefPtr<Event> event = MessageEvent::Constructor(
-      aEventTarget, NS_LITERAL_STRING("messageerror"), init);
+  RefPtr<Event> event =
+      MessageEvent::Constructor(aEventTarget, u"messageerror"_ns, init);
   Dispatch(aTargetWindow, event);
 }
 

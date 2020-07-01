@@ -60,12 +60,12 @@ static void AppendDistroSearchDirs(nsIProperties* aDirSvc,
   nsresult rv = aDirSvc->Get(XRE_APP_DISTRIBUTION_DIR, NS_GET_IID(nsIFile),
                              getter_AddRefs(searchPlugins));
   if (NS_FAILED(rv)) return;
-  searchPlugins->AppendNative(NS_LITERAL_CSTRING("searchplugins"));
+  searchPlugins->AppendNative("searchplugins"_ns);
 
   nsCOMPtr<nsIFile> commonPlugins;
   rv = searchPlugins->Clone(getter_AddRefs(commonPlugins));
   if (NS_SUCCEEDED(rv)) {
-    commonPlugins->AppendNative(NS_LITERAL_CSTRING("common"));
+    commonPlugins->AppendNative("common"_ns);
     array.AppendObject(commonPlugins);
   }
 
@@ -75,7 +75,7 @@ static void AppendDistroSearchDirs(nsIProperties* aDirSvc,
     rv = searchPlugins->Clone(getter_AddRefs(localePlugins));
     if (NS_FAILED(rv)) return;
 
-    localePlugins->AppendNative(NS_LITERAL_CSTRING("locale"));
+    localePlugins->AppendNative("locale"_ns);
 
     nsAutoCString defLocale;
     rv = prefs->GetCharPref("distribution.searchplugins.defaultLocale",

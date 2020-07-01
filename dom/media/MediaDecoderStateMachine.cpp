@@ -2165,8 +2165,8 @@ static void ReportRecoveryTelemetry(const TimeStamp& aRecoveryStart,
   double duration_ms = duration.ToMilliseconds();
   Telemetry::Accumulate(Telemetry::VIDEO_SUSPEND_RECOVERY_TIME_MS, key,
                         uint32_t(duration_ms + 0.5));
-  Telemetry::Accumulate(Telemetry::VIDEO_SUSPEND_RECOVERY_TIME_MS,
-                        NS_LITERAL_CSTRING("All"), uint32_t(duration_ms + 0.5));
+  Telemetry::Accumulate(Telemetry::VIDEO_SUSPEND_RECOVERY_TIME_MS, "All"_ns,
+                        uint32_t(duration_ms + 0.5));
 }
 
 void MediaDecoderStateMachine::StateObject::HandleResumeVideoDecoding(

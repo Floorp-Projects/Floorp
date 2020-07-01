@@ -68,8 +68,8 @@ nsresult URLPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
     aHandleReport->Callback(
         EmptyCString(), path, KIND_HEAP, UNITS_BYTES,
         elem->SizeOfIncludingThis(MallocSizeOf),
-        NS_LITERAL_CSTRING("Memory used to hold cache data for files which "
-                           "have been read or pre-loaded during this session."),
+        nsLiteralCString("Memory used to hold cache data for files which "
+                         "have been read or pre-loaded during this session."),
         aData);
   }
 
@@ -156,10 +156,10 @@ Result<nsCOMPtr<nsIFile>, nsresult> URLPreloader::GetCacheFile(
   nsCOMPtr<nsIFile> cacheFile;
   MOZ_TRY(mProfD->Clone(getter_AddRefs(cacheFile)));
 
-  MOZ_TRY(cacheFile->AppendNative(NS_LITERAL_CSTRING("startupCache")));
+  MOZ_TRY(cacheFile->AppendNative("startupCache"_ns));
   Unused << cacheFile->Create(nsIFile::DIRECTORY_TYPE, 0777);
 
-  MOZ_TRY(cacheFile->Append(NS_LITERAL_STRING("urlCache") + suffix));
+  MOZ_TRY(cacheFile->Append(u"urlCache"_ns + suffix));
 
   return std::move(cacheFile);
 }
@@ -168,15 +168,14 @@ static const uint8_t URL_MAGIC[] = "mozURLcachev002";
 
 Result<nsCOMPtr<nsIFile>, nsresult> URLPreloader::FindCacheFile() {
   nsCOMPtr<nsIFile> cacheFile;
-  MOZ_TRY_VAR(cacheFile, GetCacheFile(NS_LITERAL_STRING(".bin")));
+  MOZ_TRY_VAR(cacheFile, GetCacheFile(u".bin"_ns));
 
   bool exists;
   MOZ_TRY(cacheFile->Exists(&exists));
   if (exists) {
-    MOZ_TRY(
-        cacheFile->MoveTo(nullptr, NS_LITERAL_STRING("urlCache-current.bin")));
+    MOZ_TRY(cacheFile->MoveTo(nullptr, u"urlCache-current.bin"_ns));
   } else {
-    MOZ_TRY(cacheFile->SetLeafName(NS_LITERAL_STRING("urlCache-current.bin")));
+    MOZ_TRY(cacheFile->SetLeafName(u"urlCache-current.bin"_ns));
     MOZ_TRY(cacheFile->Exists(&exists));
     if (!exists) {
       return Err(NS_ERROR_FILE_NOT_FOUND);
@@ -204,7 +203,7 @@ Result<Ok, nsresult> URLPreloader::WriteCache() {
   LOG(Debug, "Writing cache...");
 
   nsCOMPtr<nsIFile> cacheFile;
-  MOZ_TRY_VAR(cacheFile, GetCacheFile(NS_LITERAL_STRING("-new.bin")));
+  MOZ_TRY_VAR(cacheFile, GetCacheFile(u"-new.bin"_ns));
 
   bool exists;
   MOZ_TRY(cacheFile->Exists(&exists));
@@ -239,7 +238,7 @@ Result<Ok, nsresult> URLPreloader::WriteCache() {
     MOZ_TRY(Write(fd, buf.Get(), buf.cursor()));
   }
 
-  MOZ_TRY(cacheFile->MoveTo(nullptr, NS_LITERAL_STRING("urlCache.bin")));
+  MOZ_TRY(cacheFile->MoveTo(nullptr, u"urlCache.bin"_ns));
 
   NS_DispatchToMainThread(
       NewRunnableMethod("URLPreloader::Cleanup", this, &URLPreloader::Cleanup));

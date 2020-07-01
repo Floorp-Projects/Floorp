@@ -470,7 +470,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject* aDataObject,
                     do_CreateInstance("@mozilla.org/image/tools;1");
                 result = imgTools->DecodeImageFromBuffer(
                     clipboardData, allocLen,
-                    NS_LITERAL_CSTRING(IMAGE_BMP_MS_CLIPBOARD),
+                    nsLiteralCString(IMAGE_BMP_MS_CLIPBOARD),
                     getter_AddRefs(container));
                 if (NS_FAILED(result)) {
                   break;
@@ -880,7 +880,7 @@ bool nsClipboard ::FindURLFromLocalFile(IDataObject* inDataObject, UINT inIndex,
         if (title.IsEmpty()) {
           title = urlString;
         }
-        *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + title);
+        *outData = ToNewUnicode(urlString + u"\n"_ns + title);
         *outDataLen =
             NS_strlen(static_cast<char16_t*>(*outData)) * sizeof(char16_t);
 
@@ -925,7 +925,7 @@ bool nsClipboard ::FindURLFromNativeURL(IDataObject* inDataObject, UINT inIndex,
     // the internal mozilla URL format, text/x-moz-url, contains
     // URL\ntitle.  Since we don't actually have a title here,
     // just repeat the URL to fake it.
-    *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + urlString);
+    *outData = ToNewUnicode(urlString + u"\n"_ns + urlString);
     *outDataLen =
         NS_strlen(static_cast<char16_t*>(*outData)) * sizeof(char16_t);
     free(tempOutData);
@@ -954,7 +954,7 @@ bool nsClipboard ::FindURLFromNativeURL(IDataObject* inDataObject, UINT inIndex,
       // the internal mozilla URL format, text/x-moz-url, contains
       // URL\ntitle.  Since we don't actually have a title here,
       // just repeat the URL to fake it.
-      *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + urlString);
+      *outData = ToNewUnicode(urlString + u"\n"_ns + urlString);
       *outDataLen =
           NS_strlen(static_cast<char16_t*>(*outData)) * sizeof(char16_t);
       free(tempOutData);
@@ -990,7 +990,7 @@ void nsClipboard ::ResolveShortcut(nsIFile* aFile, nsACString& outURL) {
 // A file is an Internet Shortcut if it ends with .URL
 //
 bool nsClipboard ::IsInternetShortcut(const nsAString& inFileName) {
-  return StringEndsWith(inFileName, NS_LITERAL_STRING(".url"),
+  return StringEndsWith(inFileName, u".url"_ns,
                         nsCaseInsensitiveStringComparator);
 }  // IsInternetShortcut
 

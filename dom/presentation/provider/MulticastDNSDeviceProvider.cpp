@@ -64,8 +64,8 @@ static void GetAndroidDeviceName(nsACString& aRetVal) {
       do_GetService("@mozilla.org/system-info;1");
   MOZ_ASSERT(infoService, "Could not find a system info service");
 
-  Unused << NS_WARN_IF(NS_FAILED(infoService->GetPropertyAsACString(
-      NS_LITERAL_STRING("device"), aRetVal)));
+  Unused << NS_WARN_IF(
+      NS_FAILED(infoService->GetPropertyAsACString(u"device"_ns, aRetVal)));
 }
 #endif  // MOZ_WIDGET_ANDROID
 
@@ -291,8 +291,8 @@ nsresult MulticastDNSDeviceProvider::RegisterMDNSService() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  if (NS_WARN_IF(NS_FAILED(rv = serviceInfo->SetServiceType(
-                               NS_LITERAL_CSTRING(SERVICE_TYPE))))) {
+  if (NS_WARN_IF(NS_FAILED(
+          rv = serviceInfo->SetServiceType(nsLiteralCString(SERVICE_TYPE))))) {
     return rv;
   }
   if (NS_WARN_IF(NS_FAILED(rv = serviceInfo->SetServiceName(mServiceName)))) {
@@ -602,10 +602,9 @@ MulticastDNSDeviceProvider::ForceDiscovery() {
 
   StopDiscovery(NS_OK);
 
-  if (NS_WARN_IF(
-          NS_FAILED(rv = mMulticastDNS->StartDiscovery(
-                        NS_LITERAL_CSTRING(SERVICE_TYPE), mWrappedListener,
-                        getter_AddRefs(mDiscoveryRequest))))) {
+  if (NS_WARN_IF(NS_FAILED(rv = mMulticastDNS->StartDiscovery(
+                               nsLiteralCString(SERVICE_TYPE), mWrappedListener,
+                               getter_AddRefs(mDiscoveryRequest))))) {
     return rv;
   }
 

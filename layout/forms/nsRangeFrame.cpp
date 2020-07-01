@@ -69,8 +69,7 @@ void nsRangeFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   if (!mDummyTouchListener) {
     mDummyTouchListener = new DummyTouchListener();
   }
-  aContent->AddEventListener(NS_LITERAL_STRING("touchstart"),
-                             mDummyTouchListener, false);
+  aContent->AddEventListener(u"touchstart"_ns, mDummyTouchListener, false);
 
   return nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
@@ -81,8 +80,7 @@ void nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot,
                "nsRangeFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
 
-  mContent->RemoveEventListener(NS_LITERAL_STRING("touchstart"),
-                                mDummyTouchListener, false);
+  mContent->RemoveEventListener(u"touchstart"_ns, mDummyTouchListener, false);
 
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   aPostDestroyData.AddAnonymousContent(mTrackDiv.forget());

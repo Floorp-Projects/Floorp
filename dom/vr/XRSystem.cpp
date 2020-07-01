@@ -476,11 +476,11 @@ void XRSystem::NotifyVRDisplayMounted(uint32_t aDisplayID) {}
 void XRSystem::NotifyVRDisplayUnmounted(uint32_t aDisplayID) {}
 
 void XRSystem::NotifyVRDisplayConnect(uint32_t aDisplayID) {
-  DispatchTrustedEvent(NS_LITERAL_STRING("devicechange"));
+  DispatchTrustedEvent(u"devicechange"_ns);
 }
 
 void XRSystem::NotifyVRDisplayDisconnect(uint32_t aDisplayID) {
-  DispatchTrustedEvent(NS_LITERAL_STRING("devicechange"));
+  DispatchTrustedEvent(u"devicechange"_ns);
 }
 
 void XRSystem::NotifyVRDisplayPresentChange(uint32_t aDisplayID) {}
@@ -631,9 +631,8 @@ XRRequestSessionPermissionRequest::XRRequestSessionPermissionRequest(
     AllowCallback&& aAllowCallback,
     AllowAnySiteCallback&& aAllowAnySiteCallback,
     CancelCallback&& aCancelCallback)
-    : ContentPermissionRequestBase(aNodePrincipal, aWindow,
-                                   NS_LITERAL_CSTRING("dom.xr"),
-                                   NS_LITERAL_CSTRING("xr")),
+    : ContentPermissionRequestBase(aNodePrincipal, aWindow, "dom.xr"_ns,
+                                   "xr"_ns),
       mAllowCallback(std::move(aAllowCallback)),
       mAllowAnySiteCallback(std::move(aAllowAnySiteCallback)),
       mCancelCallback(std::move(aCancelCallback)),

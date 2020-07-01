@@ -160,8 +160,7 @@ nsresult WebrtcTCPSocket::Open(
   }
 
   mOpened = true;
-  nsCString schemePrefix =
-      aUseTls ? NS_LITERAL_CSTRING("https://") : NS_LITERAL_CSTRING("http://");
+  nsCString schemePrefix = aUseTls ? "https://"_ns : "http://"_ns;
   nsCString spec = schemePrefix + aHost;
 
   nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
@@ -296,7 +295,7 @@ void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
 
   AutoTArray<nsCString, 1> socketTypes;
   if (mTls) {
-    socketTypes.AppendElement(NS_LITERAL_CSTRING("ssl"));
+    socketTypes.AppendElement("ssl"_ns);
   }
 
   nsCOMPtr<nsISocketTransportService> sts =

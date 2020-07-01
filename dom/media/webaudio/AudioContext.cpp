@@ -811,7 +811,7 @@ class OnStateChangeTask final : public Runnable {
 
     return nsContentUtils::DispatchTrustedEvent(
         doc, static_cast<DOMEventTargetHelper*>(mAudioContext),
-        NS_LITERAL_STRING("statechange"), CanBubble::eNo, Cancelable::eNo);
+        u"statechange"_ns, CanBubble::eNo, Cancelable::eNo);
   }
 
  private:
@@ -1095,8 +1095,8 @@ void AudioContext::ReportBlocked() {
         AUTOPLAY_LOG("Dispatch `blocked` event for AudioContext %p",
                      self.get());
         nsContentUtils::DispatchTrustedEvent(
-            doc, static_cast<DOMEventTargetHelper*>(self),
-            NS_LITERAL_STRING("blocked"), CanBubble::eNo, Cancelable::eNo);
+            doc, static_cast<DOMEventTargetHelper*>(self), u"blocked"_ns,
+            CanBubble::eNo, Cancelable::eNo);
       });
   Dispatch(r.forget());
 }
@@ -1277,7 +1277,7 @@ void AudioContext::ReportToConsole(uint32_t aErrorFlags,
   MOZ_ASSERT(aMsg);
   Document* doc =
       GetParentObject() ? GetParentObject()->GetExtantDoc() : nullptr;
-  nsContentUtils::ReportToConsole(aErrorFlags, NS_LITERAL_CSTRING("Media"), doc,
+  nsContentUtils::ReportToConsole(aErrorFlags, "Media"_ns, doc,
                                   nsContentUtils::eDOM_PROPERTIES, aMsg);
 }
 

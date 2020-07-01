@@ -33,7 +33,7 @@ class FFmpegAudioDecoder<LIBAV_VER>
   void InitCodecContext() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
   nsCString GetDescriptionName() const override {
-    return NS_LITERAL_CSTRING("ffmpeg audio decoder");
+    return "ffmpeg audio decoder"_ns;
   }
 
  private:

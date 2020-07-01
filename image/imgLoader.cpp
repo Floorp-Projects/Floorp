@@ -286,7 +286,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
                           nsISupports* aData, const char* aPathPrefix,
                           const ImageMemoryCounter& aCounter,
                           layers::SharedSurfacesMemoryReport& aSharedSurfaces) {
-    nsAutoCString pathPrefix(NS_LITERAL_CSTRING("explicit/"));
+    nsAutoCString pathPrefix("explicit/"_ns);
     pathPrefix.Append(aPathPrefix);
 
     switch (aCounter.Type()) {
@@ -2799,7 +2799,7 @@ ProxyListener::OnStartRequest(nsIRequest* aRequest) {
       nsAutoString type;
       timedChannel->GetInitiatorType(type);
       if (type.IsEmpty()) {
-        timedChannel->SetInitiatorType(NS_LITERAL_STRING("img"));
+        timedChannel->SetInitiatorType(u"img"_ns);
       }
     }
 
@@ -2811,7 +2811,7 @@ ProxyListener::OnStartRequest(nsIRequest* aRequest) {
          in the pipeline to handle the content and pass it along to our
          original listener.
        */
-      if (NS_LITERAL_CSTRING("multipart/x-mixed-replace").Equals(contentType)) {
+      if ("multipart/x-mixed-replace"_ns.Equals(contentType)) {
         nsCOMPtr<nsIStreamConverterService> convServ(
             do_GetService("@mozilla.org/streamConverters;1", &rv));
         if (NS_SUCCEEDED(rv)) {

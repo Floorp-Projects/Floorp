@@ -393,7 +393,7 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
       return NS_ERROR_FAILURE;
     }
 
-    rv = binaryFile->AppendNative(NS_LITERAL_CSTRING("nonexistent-executable"));
+    rv = binaryFile->AppendNative("nonexistent-executable"_ns);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

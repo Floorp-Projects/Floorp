@@ -158,7 +158,7 @@ Maybe<double> MediaExtendedMIMEType::ComputeFractionalString(
     return Some(result);
   }
 
-  int32_t slashPos = frac.Find(NS_LITERAL_STRING("/"));
+  int32_t slashPos = frac.Find(u"/"_ns);
   if (slashPos == kNotFound) {
     return Nothing();
   }

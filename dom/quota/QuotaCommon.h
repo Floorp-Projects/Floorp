@@ -171,7 +171,7 @@ void StringifyTableKeys(const T& aTable, nsACString& aResult) {
     if (first) {
       first = false;
     } else {
-      aResult.Append(NS_LITERAL_CSTRING(", "));
+      aResult.Append(", "_ns);
     }
 
     const auto& key = iter.Get()->GetKey();

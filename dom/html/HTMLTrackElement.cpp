@@ -170,7 +170,7 @@ void HTMLTrackElement::CreateTextTrack() {
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
   if (!parentObject) {
     nsContentUtils::ReportToConsole(
-        nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Media"), OwnerDoc(),
+        nsIScriptError::errorFlag, "Media"_ns, OwnerDoc(),
         nsContentUtils::eDOM_PROPERTIES,
         "Using track element in non-window context");
     return;
@@ -439,11 +439,11 @@ void HTMLTrackElement::SetReadyState(TextTrackReadyState aReadyState) {
     switch (aReadyState) {
       case TextTrackReadyState::Loaded:
         LOG("dispatch 'load' event");
-        DispatchTrackRunnable(NS_LITERAL_STRING("load"));
+        DispatchTrackRunnable(u"load"_ns);
         break;
       case TextTrackReadyState::FailedToLoad:
         LOG("dispatch 'error' event");
-        DispatchTrackRunnable(NS_LITERAL_STRING("error"));
+        DispatchTrackRunnable(u"error"_ns);
         break;
       default:
         break;

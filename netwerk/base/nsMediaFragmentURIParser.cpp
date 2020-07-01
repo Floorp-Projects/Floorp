@@ -289,10 +289,10 @@ bool nsMediaFragmentURIParser::ParseXYWH(nsDependentSubstring aString) {
   ClipUnit clipUnit;
 
   // Determine units.
-  if (StringBeginsWith(aString, NS_LITERAL_STRING("pixel:"))) {
+  if (StringBeginsWith(aString, u"pixel:"_ns)) {
     clipUnit = eClipUnit_Pixel;
     aString.Rebind(aString, 6);
-  } else if (StringBeginsWith(aString, NS_LITERAL_STRING("percent:"))) {
+  } else if (StringBeginsWith(aString, u"percent:"_ns)) {
     clipUnit = eClipUnit_Percent;
     aString.Rebind(aString, 8);
   } else {

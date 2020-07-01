@@ -54,7 +54,7 @@ RefPtr<GenericPromise> KeyValueStorage::Init() {
   }
   MOZ_ASSERT(profileDir);
 
-  rv = profileDir->AppendNative(NS_LITERAL_CSTRING("mediacapabilities"));
+  rv = profileDir->AppendNative("mediacapabilities"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return GenericPromise::CreateAndReject(rv, __func__);
   }

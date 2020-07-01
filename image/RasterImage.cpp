@@ -1807,12 +1807,12 @@ void RasterImage::ReportDecoderError() {
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
 
   if (consoleService && errorObject) {
-    nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated."));
+    nsAutoString msg(u"Image corrupt or truncated."_ns);
     nsAutoString src;
     if (GetURI()) {
       nsAutoCString uri;
       if (!GetSpecTruncatedTo1k(uri)) {
-        msg += NS_LITERAL_STRING(" URI in this note truncated due to length.");
+        msg += u" URI in this note truncated due to length."_ns;
       }
       src = NS_ConvertUTF8toUTF16(uri);
     }

@@ -62,7 +62,7 @@ class nsNumberControlFrame final : public nsTextControlFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("NumberControl"), aResult);
+    return MakeFrameName(u"NumberControl"_ns, aResult);
   }
 #endif
 

@@ -90,12 +90,11 @@ void VideoDocument::SetScriptGlobalObject(
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic video document");
 
     if (!nsContentUtils::IsChildOfSameType(this)) {
-      LinkStylesheet(NS_LITERAL_STRING(
-          "resource://content-accessible/TopLevelVideoDocument.css"));
-      LinkStylesheet(NS_LITERAL_STRING(
-          "chrome://global/skin/media/TopLevelVideoDocument.css"));
-      LinkScript(NS_LITERAL_STRING(
-          "chrome://global/content/TopLevelVideoDocument.js"));
+      LinkStylesheet(nsLiteralString(
+          u"resource://content-accessible/TopLevelVideoDocument.css"));
+      LinkStylesheet(nsLiteralString(
+          u"chrome://global/skin/media/TopLevelVideoDocument.css"));
+      LinkScript(u"chrome://global/content/TopLevelVideoDocument.js"_ns);
     }
     InitialSetupDone();
   }
@@ -127,8 +126,8 @@ nsresult VideoDocument::CreateVideoElement() {
     // not have margins
     element->SetAttr(
         kNameSpaceID_None, nsGkAtoms::style,
-        NS_LITERAL_STRING(
-            "position:absolute; top:0; left:0; width:100%; height:100%"),
+        nsLiteralString(
+            u"position:absolute; top:0; left:0; width:100%; height:100%"),
         true);
   }
 

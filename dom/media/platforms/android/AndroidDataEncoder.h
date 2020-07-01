@@ -28,9 +28,7 @@ class AndroidDataEncoder final : public MediaDataEncoder {
   RefPtr<ShutdownPromise> Shutdown() override;
   RefPtr<GenericPromise> SetBitrate(const Rate aBitsPerSec) override;
 
-  nsCString GetDescriptionName() const override {
-    return NS_LITERAL_CSTRING("Android Encoder");
-  }
+  nsCString GetDescriptionName() const override { return "Android Encoder"_ns; }
 
  private:
   class CallbacksSupport final : public JavaCallbacksSupport {

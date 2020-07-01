@@ -219,11 +219,11 @@ void XRInputSource::SetGamepadIsConnected(bool aConnected,
 
   if (!aConnected) {
     if (mSelectAction != ActionState::ActionState_Released) {
-      DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
+      DispatchEvent(u"selectend"_ns, aSession);
       mSelectAction = ActionState::ActionState_Released;
     }
     if (mSqueezeAction != ActionState::ActionState_Released) {
-      DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
+      DispatchEvent(u"squeezeend"_ns, aSession);
       mSqueezeAction = ActionState::ActionState_Released;
     }
   }
@@ -284,7 +284,7 @@ void XRInputSource::Update(XRSession* aSession) {
         controllerState.selectActionStopFrameId) {
       if (mSelectAction == ActionState::ActionState_Released &&
           controllerState.triggerValue[selectIndex] > endThreshold) {
-        DispatchEvent(NS_LITERAL_STRING("selectstart"), aSession);
+        DispatchEvent(u"selectstart"_ns, aSession);
         mSelectAction = ActionState::ActionState_Pressing;
       } else if (mSelectAction == ActionState::ActionState_Pressing &&
                  controllerState.triggerValue[selectIndex] >
@@ -292,23 +292,23 @@ void XRInputSource::Update(XRSession* aSession) {
         mSelectAction = ActionState::ActionState_Pressed;
       } else if (mSelectAction == ActionState::ActionState_Pressed &&
                  controllerState.triggerValue[selectIndex] < startThreshold) {
-        DispatchEvent(NS_LITERAL_STRING("select"), aSession);
+        DispatchEvent(u"select"_ns, aSession);
         mSelectAction = ActionState::ActionState_Releasing;
       } else if (mSelectAction <= ActionState::ActionState_Releasing &&
                  controllerState.triggerValue[selectIndex] < endThreshold) {
         // For a select btn which only has pressed and unpressed status.
         if (mSelectAction == ActionState::ActionState_Pressed) {
-          DispatchEvent(NS_LITERAL_STRING("select"), aSession);
+          DispatchEvent(u"select"_ns, aSession);
         }
-        DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
+        DispatchEvent(u"selectend"_ns, aSession);
         mSelectAction = ActionState::ActionState_Released;
       }
     } else if (mSelectAction <= ActionState::ActionState_Releasing) {
       // For a select btn which only has pressed and unpressed status.
       if (mSelectAction == ActionState::ActionState_Pressed) {
-        DispatchEvent(NS_LITERAL_STRING("select"), aSession);
+        DispatchEvent(u"select"_ns, aSession);
       }
-      DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
+      DispatchEvent(u"selectend"_ns, aSession);
       mSelectAction = ActionState::ActionState_Released;
     }
   }
@@ -319,7 +319,7 @@ void XRInputSource::Update(XRSession* aSession) {
         controllerState.squeezeActionStopFrameId) {
       if (mSqueezeAction == ActionState::ActionState_Released &&
           controllerState.triggerValue[squeezeIndex] > endThreshold) {
-        DispatchEvent(NS_LITERAL_STRING("squeezestart"), aSession);
+        DispatchEvent(u"squeezestart"_ns, aSession);
         mSqueezeAction = ActionState::ActionState_Pressing;
       } else if (mSqueezeAction == ActionState::ActionState_Pressing &&
                  controllerState.triggerValue[squeezeIndex] >
@@ -327,23 +327,23 @@ void XRInputSource::Update(XRSession* aSession) {
         mSqueezeAction = ActionState::ActionState_Pressed;
       } else if (mSqueezeAction == ActionState::ActionState_Pressed &&
                  controllerState.triggerValue[squeezeIndex] < startThreshold) {
-        DispatchEvent(NS_LITERAL_STRING("squeeze"), aSession);
+        DispatchEvent(u"squeeze"_ns, aSession);
         mSqueezeAction = ActionState::ActionState_Releasing;
       } else if (mSqueezeAction <= ActionState::ActionState_Releasing &&
                  controllerState.triggerValue[squeezeIndex] < endThreshold) {
         // For a squeeze btn which only has pressed and unpressed status.
         if (mSqueezeAction == ActionState::ActionState_Pressed) {
-          DispatchEvent(NS_LITERAL_STRING("squeeze"), aSession);
+          DispatchEvent(u"squeeze"_ns, aSession);
         }
-        DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
+        DispatchEvent(u"squeezeend"_ns, aSession);
         mSqueezeAction = ActionState::ActionState_Released;
       }
     } else if (mSqueezeAction <= ActionState::ActionState_Releasing) {
       // For a squeeze btn which only has pressed and unpressed status.
       if (mSqueezeAction == ActionState::ActionState_Pressed) {
-        DispatchEvent(NS_LITERAL_STRING("squeeze"), aSession);
+        DispatchEvent(u"squeeze"_ns, aSession);
       }
-      DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
+      DispatchEvent(u"squeezeend"_ns, aSession);
       mSqueezeAction = ActionState::ActionState_Released;
     }
   }

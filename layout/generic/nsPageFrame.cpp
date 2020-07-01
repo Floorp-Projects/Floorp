@@ -167,7 +167,7 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsPageFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Page"), aResult);
+  return MakeFrameName(u"Page"_ns, aResult);
 }
 #endif
 
@@ -713,6 +713,6 @@ void nsPageBreakFrame::Reflow(nsPresContext* aPresContext,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsPageBreakFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("PageBreak"), aResult);
+  return MakeFrameName(u"PageBreak"_ns, aResult);
 }
 #endif

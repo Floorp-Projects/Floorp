@@ -36,7 +36,7 @@ PaymentResponseData::Init(const uint32_t aType) {
 NS_IMPL_ISUPPORTS_INHERITED(GeneralResponseData, PaymentResponseData,
                             nsIGeneralResponseData)
 
-GeneralResponseData::GeneralResponseData() : mData(NS_LITERAL_STRING("{}")) {
+GeneralResponseData::GeneralResponseData() : mData(u"{}"_ns) {
   Init(nsIPaymentResponseData::GENERAL_RESPONSE);
 }
 
@@ -370,8 +370,7 @@ MethodChangeDetails::Init(const uint32_t aType) {
 NS_IMPL_ISUPPORTS_INHERITED(GeneralMethodChangeDetails, MethodChangeDetails,
                             nsIGeneralChangeDetails)
 
-GeneralMethodChangeDetails::GeneralMethodChangeDetails()
-    : mDetails(NS_LITERAL_STRING("{}")) {
+GeneralMethodChangeDetails::GeneralMethodChangeDetails() : mDetails(u"{}"_ns) {
   Init(nsIMethodChangeDetails::GENERAL_DETAILS);
 }
 

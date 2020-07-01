@@ -139,21 +139,21 @@ bool IsAutoAdminLogonEnabled() {
 
   rv = regKey->Open(
       nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-      NS_LITERAL_STRING(
-          "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"),
+      nsLiteralString(
+          u"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"),
       nsIWindowsRegKey::ACCESS_READ);
   if (NS_FAILED(rv)) {
     return false;
   }
 
   nsAutoString value;
-  rv = regKey->ReadStringValue(NS_LITERAL_STRING("AutoAdminLogon"), value);
+  rv = regKey->ReadStringValue(u"AutoAdminLogon"_ns, value);
   if (NS_FAILED(rv)) {
     return false;
   }
   regKey->Close();
 
-  return value.Equals(NS_LITERAL_STRING("1"));
+  return value.Equals(u"1"_ns);
 }
 
 bool IsRequireSignonEnabled() {
@@ -165,36 +165,33 @@ bool IsRequireSignonEnabled() {
     return true;
   }
 
-  rv = regKey->Open(
-      nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-      NS_LITERAL_STRING("System\\CurrentControlSet\\Control\\Power\\User\\Power"
-                        "Schemes"),
-      nsIWindowsRegKey::ACCESS_READ);
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                    u"System\\CurrentControlSet\\Control\\Power\\User\\Power"
+                    "Schemes"_ns,
+                    nsIWindowsRegKey::ACCESS_READ);
   if (NS_FAILED(rv)) {
     return true;
   }
 
   nsAutoString activePowerScheme;
-  rv = regKey->ReadStringValue(NS_LITERAL_STRING("ActivePowerScheme"),
-                               activePowerScheme);
+  rv = regKey->ReadStringValue(u"ActivePowerScheme"_ns, activePowerScheme);
   if (NS_FAILED(rv)) {
     return true;
   }
   regKey->Close();
 
-  rv = regKey->Open(
-      nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-      NS_LITERAL_STRING("System\\CurrentControlSet\\Control\\Power\\User\\Power"
-                        "Schemes\\") +
-          activePowerScheme +
-          NS_LITERAL_STRING("\\0e796bdb-100d-47d6-a2d5-f7d2daa51f51"),
-      nsIWindowsRegKey::ACCESS_READ);
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                    u"System\\CurrentControlSet\\Control\\Power\\User\\Power"
+                    "Schemes\\"_ns +
+                        activePowerScheme +
+                        u"\\0e796bdb-100d-47d6-a2d5-f7d2daa51f51"_ns,
+                    nsIWindowsRegKey::ACCESS_READ);
   if (NS_FAILED(rv)) {
     return true;
   }
 
   uint32_t value;
-  rv = regKey->ReadIntValue(NS_LITERAL_STRING("ACSettingIndex"), &value);
+  rv = regKey->ReadIntValue(u"ACSettingIndex"_ns, &value);
   if (NS_FAILED(rv)) {
     return true;
   }

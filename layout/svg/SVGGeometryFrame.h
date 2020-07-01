@@ -84,7 +84,7 @@ class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGGeometry"), aResult);
+    return MakeFrameName(u"SVGGeometry"_ns, aResult);
   }
 #endif
 

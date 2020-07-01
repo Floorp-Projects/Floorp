@@ -133,7 +133,7 @@ class MemoryBlobImplDataOwnerMemoryReporter final : public nsIMemoryReporter {
         }
 
         aHandleReport->Callback(
-            /* process */ NS_LITERAL_CSTRING(""),
+            /* process */ ""_ns,
             nsPrintfCString(
                 "explicit/dom/memory-file-data/large/file(length=%" PRIu64
                 ", sha1=%s)",
@@ -156,9 +156,8 @@ class MemoryBlobImplDataOwnerMemoryReporter final : public nsIMemoryReporter {
 
     if (smallObjectsTotal > 0) {
       aHandleReport->Callback(
-          /* process */ NS_LITERAL_CSTRING(""),
-          NS_LITERAL_CSTRING("explicit/dom/memory-file-data/small"), KIND_HEAP,
-          UNITS_BYTES, smallObjectsTotal,
+          /* process */ ""_ns, "explicit/dom/memory-file-data/small"_ns,
+          KIND_HEAP, UNITS_BYTES, smallObjectsTotal,
           nsPrintfCString(
               "Memory used to back small memory files (i.e. those taking up "
               "less "

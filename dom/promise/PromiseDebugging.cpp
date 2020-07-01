@@ -167,7 +167,7 @@ void PromiseDebugging::Init() {
   FlushRejections::Init();
 
   // Generate a prefix for identifiers: "PromiseDebugging.$processid."
-  sIDPrefix = NS_LITERAL_STRING("PromiseDebugging.");
+  sIDPrefix = u"PromiseDebugging."_ns;
   if (XRE_IsContentProcess()) {
     sIDPrefix.AppendInt(ContentChild::GetSingleton()->GetID());
     sIDPrefix.Append('.');

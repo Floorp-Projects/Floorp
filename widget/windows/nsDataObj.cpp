@@ -477,8 +477,7 @@ nsDataObj::nsDataObj(nsIURI* uri)
       mTransferable(nullptr),
       mIsAsyncMode(FALSE),
       mIsInOperation(FALSE) {
-  mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
-                                 NS_LITERAL_CSTRING("nsDataObj"),
+  mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS, "nsDataObj"_ns,
                                  LazyIdleThread::ManualShutdown);
   m_enumFE = new CEnumFormatEtc();
   m_enumFE->AddRef();
@@ -958,7 +957,7 @@ nsDataObj::GetDib(const nsACString& inFlavor, FORMATETC& aFormat,
   nsCOMPtr<imgITools> imgTools =
       do_CreateInstance("@mozilla.org/image/tools;1");
 
-  nsAutoString options(NS_LITERAL_STRING("bpp=32;"));
+  nsAutoString options(u"bpp=32;"_ns);
   if (aFormat.cfFormat == CF_DIBV5) {
     options.AppendLiteral("version=5");
   } else {
@@ -966,7 +965,7 @@ nsDataObj::GetDib(const nsACString& inFlavor, FORMATETC& aFormat,
   }
 
   nsCOMPtr<nsIInputStream> inputStream;
-  nsresult rv = imgTools->EncodeImage(image, NS_LITERAL_CSTRING(IMAGE_BMP),
+  nsresult rv = imgTools->EncodeImage(image, nsLiteralCString(IMAGE_BMP),
                                       options, getter_AddRefs(inputStream));
   if (NS_FAILED(rv) || !inputStream) {
     return E_FAIL;
@@ -1612,8 +1611,8 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG) {
     nsCOMPtr<imgITools> imgTools =
         do_CreateInstance("@mozilla.org/image/tools;1");
     nsCOMPtr<nsIInputStream> inputStream;
-    rv = imgTools->EncodeImage(image, NS_LITERAL_CSTRING(IMAGE_BMP),
-                               NS_LITERAL_STRING("bpp=32;version=3"),
+    rv = imgTools->EncodeImage(image, nsLiteralCString(IMAGE_BMP),
+                               u"bpp=32;version=3"_ns,
                                getter_AddRefs(inputStream));
     if (NS_FAILED(rv) || !inputStream) {
       return E_FAIL;

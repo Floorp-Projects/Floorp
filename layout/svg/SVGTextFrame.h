@@ -213,7 +213,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGText"), aResult);
+    return MakeFrameName(u"SVGText"_ns, aResult);
   }
 #endif
 

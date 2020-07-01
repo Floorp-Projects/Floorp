@@ -49,7 +49,7 @@ class SVGUseFrame final : public SVGGFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGUse"), aResult);
+    return MakeFrameName(u"SVGUse"_ns, aResult);
   }
 #endif
 

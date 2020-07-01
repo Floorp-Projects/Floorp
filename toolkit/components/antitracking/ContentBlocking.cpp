@@ -1227,7 +1227,7 @@ bool ContentBlocking::ShouldAllowAccessFor(
     PermissionManager* permManager = PermissionManager::GetInstance();
     if (permManager) {
       Unused << NS_WARN_IF(NS_FAILED(permManager->TestPermissionFromPrincipal(
-          aPrincipal, NS_LITERAL_CSTRING("cookie"), &access)));
+          aPrincipal, "cookie"_ns, &access)));
     }
   }
 

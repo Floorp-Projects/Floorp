@@ -519,7 +519,7 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvDispatchSecurityPolicyViolation(
   }
 
   RefPtr<Event> event = SecurityPolicyViolationEvent::Constructor(
-      doc, NS_LITERAL_STRING("securitypolicyviolation"), violationEvent);
+      doc, u"securitypolicyviolation"_ns, violationEvent);
   event->SetTrusted(true);
   doc->DispatchEvent(*event, IgnoreErrors());
   return IPC_OK();

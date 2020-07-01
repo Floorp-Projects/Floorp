@@ -435,9 +435,9 @@ nsresult nsJSChannel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
   // and the underlying Input Stream will not be created...
   nsCOMPtr<nsIChannel> channel;
   RefPtr<nsJSThunk> thunk = mIOThunk;
-  rv = NS_NewInputStreamChannelInternal(
-      getter_AddRefs(channel), aURI, thunk.forget(),
-      NS_LITERAL_CSTRING("text/html"), EmptyCString(), aLoadInfo);
+  rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel), aURI,
+                                        thunk.forget(), "text/html"_ns,
+                                        EmptyCString(), aLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mIOThunk->Init(aURI);
@@ -446,8 +446,7 @@ nsresult nsJSChannel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
     mPropertyBag = do_QueryInterface(channel);
     nsCOMPtr<nsIWritablePropertyBag2> writableBag = do_QueryInterface(channel);
     if (writableBag && jsURI->GetBaseURI()) {
-      writableBag->SetPropertyAsInterface(NS_LITERAL_STRING("baseURI"),
-                                          jsURI->GetBaseURI());
+      writableBag->SetPropertyAsInterface(u"baseURI"_ns, jsURI->GetBaseURI());
     }
   }
 

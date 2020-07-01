@@ -2226,8 +2226,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
 
       if (bodyWM != docElementWM) {
         nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"),
-            mDocument, nsContentUtils::eLAYOUT_PROPERTIES,
+            nsIScriptError::warningFlag, "Layout"_ns, mDocument,
+            nsContentUtils::eLAYOUT_PROPERTIES,
             "PrincipalWritingModePropagationWarning");
       }
 
@@ -4059,7 +4059,7 @@ nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
 
 #  ifdef MOZ_THUNDERBIRD
   if (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           NS_LITERAL_STRING("menu-button"), eCaseMatters)) {
+                           u"menu-button"_ns, eCaseMatters)) {
     return &sXULMenuData;
   }
 #  endif

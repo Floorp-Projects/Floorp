@@ -190,7 +190,7 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("Menu"), aResult);
+    return MakeFrameName(u"Menu"_ns, aResult);
   }
 #endif
 

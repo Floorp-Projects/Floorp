@@ -97,7 +97,7 @@ void ColumnSetWrapperFrame::AppendDirectlyOwnedAnonBoxes(
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult ColumnSetWrapperFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("ColumnSetWrapper"), aResult);
+  return MakeFrameName(u"ColumnSetWrapper"_ns, aResult);
 }
 #endif
 

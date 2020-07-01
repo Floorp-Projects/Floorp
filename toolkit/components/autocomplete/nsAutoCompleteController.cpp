@@ -1662,7 +1662,7 @@ nsresult nsAutoCompleteController::CompleteValue(nsString& aValue)
       // Autocompleting something other than a URI from the middle.
       // Use the format "searchstring >> full string" to indicate to the user
       // what we are going to replace their search string with.
-      SetValueOfInputTo(mSearchString + NS_LITERAL_STRING(" >> ") + aValue,
+      SetValueOfInputTo(mSearchString + u" >> "_ns + aValue,
                         nsIAutoCompleteInput::TEXTVALUE_REASON_COMPLETEDEFAULT);
 
       endSelect = mSearchString.Length() + 4 + aValue.Length();

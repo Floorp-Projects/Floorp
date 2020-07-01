@@ -435,7 +435,7 @@ nsresult PaymentResponse::UpdatePayerDetail(const nsAString& aPayerName,
   if (options.mRequestPayerPhone) {
     mPayerPhone = aPayerPhone;
   }
-  return DispatchUpdateEvent(NS_LITERAL_STRING("payerdetailchange"));
+  return DispatchUpdateEvent(u"payerdetailchange"_ns);
 }
 
 nsresult PaymentResponse::DispatchUpdateEvent(const nsAString& aType) {

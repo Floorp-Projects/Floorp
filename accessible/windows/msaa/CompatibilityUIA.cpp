@@ -174,8 +174,7 @@ Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
   nsAutoHandle section;
   auto comparator = [&](const nsDependentSubstring& aName,
                         const nsDependentSubstring& aType) -> bool {
-    if (aType.Equals(NS_LITERAL_STRING("Section")) &&
-        FindInReadable(kStrHookShmem, aName) &&
+    if (aType.Equals(u"Section"_ns) && FindInReadable(kStrHookShmem, aName) &&
         StringEndsWith(aName, partialSectionSuffix)) {
       section.own(::OpenFileMapping(GENERIC_READ, FALSE,
                                     PromiseFlatString(aName).get()));
@@ -274,7 +273,7 @@ Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
       // Now we check whether the object's type name matches "Section"
       nsDependentSubstring objTypeName(
           objType->TypeName.Buffer, objType->TypeName.Length / sizeof(wchar_t));
-      if (!objTypeName.Equals(NS_LITERAL_STRING("Section"))) {
+      if (!objTypeName.Equals(u"Section"_ns)) {
         nonSectionObjTypes.PutEntry(
             static_cast<uint32_t>(curHandle.mObjectTypeIndex));
         continue;

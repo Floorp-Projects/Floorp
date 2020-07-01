@@ -364,7 +364,7 @@ bool ScreenOrientation::LockDeviceOrientation(
       mFullscreenListener = new FullscreenEventListener();
     }
 
-    aRv = target->AddSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
+    aRv = target->AddSystemEventListener(u"fullscreenchange"_ns,
                                          mFullscreenListener,
                                          /* useCapture = */ true);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -390,7 +390,7 @@ void ScreenOrientation::UnlockDeviceOrientation() {
   // Remove event listener in case of fullscreen lock.
   nsCOMPtr<EventTarget> target = GetOwner()->GetDoc();
   if (target) {
-    target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
+    target->RemoveSystemEventListener(u"fullscreenchange"_ns,
                                       mFullscreenListener,
                                       /* useCapture */ true);
   }
@@ -510,15 +510,14 @@ void ScreenOrientation::Notify(const hal::ScreenConfiguration& aConfiguration) {
   DebugOnly<nsresult> rv;
   if (mScreen && mType != previousOrientation) {
     // Use of mozorientationchange is deprecated.
-    rv = mScreen->DispatchTrustedEvent(
-        NS_LITERAL_STRING("mozorientationchange"));
+    rv = mScreen->DispatchTrustedEvent(u"mozorientationchange"_ns);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchTrustedEvent failed");
   }
 
   if (doc->Hidden() && !mVisibleListener) {
     mVisibleListener = new VisibleEventListener();
-    rv = doc->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                     mVisibleListener, /* useCapture = */ true);
+    rv = doc->AddSystemEventListener(u"visibilitychange"_ns, mVisibleListener,
+                                     /* useCapture = */ true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddSystemEventListener failed");
     return;
   }
@@ -548,8 +547,7 @@ ScreenOrientation::DispatchChangeEventAndResolvePromise() {
   RefPtr<ScreenOrientation> self = this;
   return NS_NewRunnableFunction(
       "dom::ScreenOrientation::DispatchChangeEvent", [self, doc]() {
-        DebugOnly<nsresult> rv =
-            self->DispatchTrustedEvent(NS_LITERAL_STRING("change"));
+        DebugOnly<nsresult> rv = self->DispatchTrustedEvent(u"change"_ns);
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchTrustedEvent failed");
         if (doc) {
           Promise* pendingPromise = doc->GetOrientationPendingPromise();
@@ -603,8 +601,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent) {
   ScreenOrientation* orientation = screen->Orientation();
   MOZ_ASSERT(orientation);
 
-  target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
-                                    true);
+  target->RemoveSystemEventListener(u"visibilitychange"_ns, this, true);
 
   BrowsingContext* bc = doc->GetBrowsingContext();
   if (bc && bc->GetCurrentOrientationType() !=
@@ -650,7 +647,6 @@ ScreenOrientation::FullscreenEventListener::HandleEvent(Event* aEvent) {
 
   hal::UnlockScreenOrientation();
 
-  target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"), this,
-                                    true);
+  target->RemoveSystemEventListener(u"fullscreenchange"_ns, this, true);
   return NS_OK;
 }

@@ -128,8 +128,7 @@ void ChromiumCDMParent::CreateSession(uint32_t aCreateSessionToken,
   if (!SendCreateSessionAndGenerateRequest(aPromiseId, aSessionType,
                                            aInitDataType, aInitData)) {
     RejectPromiseWithStateError(
-        aPromiseId,
-        NS_LITERAL_CSTRING("Failed to send generateRequest to CDM process."));
+        aPromiseId, "Failed to send generateRequest to CDM process."_ns);
     return;
   }
   mPromiseToCreateSessionToken.Put(aPromiseId, aCreateSessionToken);
@@ -147,8 +146,7 @@ void ChromiumCDMParent::LoadSession(uint32_t aPromiseId, uint32_t aSessionType,
   if (!SendLoadSession(aPromiseId, aSessionType,
                        NS_ConvertUTF16toUTF8(aSessionId))) {
     RejectPromiseWithStateError(
-        aPromiseId,
-        NS_LITERAL_CSTRING("Failed to send loadSession to CDM process."));
+        aPromiseId, "Failed to send loadSession to CDM process."_ns);
     return;
   }
 }
@@ -162,8 +160,7 @@ void ChromiumCDMParent::SetServerCertificate(uint32_t aPromiseId,
   }
   if (!SendSetServerCertificate(aPromiseId, aCert)) {
     RejectPromiseWithStateError(
-        aPromiseId, NS_LITERAL_CSTRING(
-                        "Failed to send setServerCertificate to CDM process"));
+        aPromiseId, "Failed to send setServerCertificate to CDM process"_ns);
   }
 }
 
@@ -177,8 +174,7 @@ void ChromiumCDMParent::UpdateSession(const nsCString& aSessionId,
   }
   if (!SendUpdateSession(aPromiseId, aSessionId, aResponse)) {
     RejectPromiseWithStateError(
-        aPromiseId,
-        NS_LITERAL_CSTRING("Failed to send updateSession to CDM process"));
+        aPromiseId, "Failed to send updateSession to CDM process"_ns);
   }
 }
 
@@ -191,8 +187,7 @@ void ChromiumCDMParent::CloseSession(const nsCString& aSessionId,
   }
   if (!SendCloseSession(aPromiseId, aSessionId)) {
     RejectPromiseWithStateError(
-        aPromiseId,
-        NS_LITERAL_CSTRING("Failed to send closeSession to CDM process"));
+        aPromiseId, "Failed to send closeSession to CDM process"_ns);
   }
 }
 
@@ -205,8 +200,7 @@ void ChromiumCDMParent::RemoveSession(const nsCString& aSessionId,
   }
   if (!SendRemoveSession(aPromiseId, aSessionId)) {
     RejectPromiseWithStateError(
-        aPromiseId,
-        NS_LITERAL_CSTRING("Failed to send removeSession to CDM process"));
+        aPromiseId, "Failed to send removeSession to CDM process"_ns);
   }
 }
 
@@ -271,8 +265,7 @@ void ChromiumCDMParent::GetStatusForPolicy(uint32_t aPromiseId,
 
   if (!SendGetStatusForPolicy(aPromiseId, hdcpVersionResult.unwrap())) {
     RejectPromiseWithStateError(
-        aPromiseId,
-        NS_LITERAL_CSTRING("Failed to send getStatusForPolicy to CDM process"));
+        aPromiseId, "Failed to send getStatusForPolicy to CDM process"_ns);
   }
 }
 
@@ -412,8 +405,8 @@ ipc::IPCResult ChromiumCDMParent::RecvOnResolveNewSessionPromise(
 
   Maybe<uint32_t> token = mPromiseToCreateSessionToken.GetAndRemove(aPromiseId);
   if (token.isNothing()) {
-    RejectPromiseWithStateError(
-        aPromiseId, NS_LITERAL_CSTRING("Lost session token for new session."));
+    RejectPromiseWithStateError(aPromiseId,
+                                "Lost session token for new session."_ns);
     return IPC_OK();
   }
 
@@ -473,8 +466,7 @@ void ChromiumCDMParent::RejectPromise(uint32_t aPromiseId,
 }
 
 void ChromiumCDMParent::RejectPromiseShutdown(uint32_t aPromiseId) {
-  RejectPromiseWithStateError(aPromiseId,
-                              NS_LITERAL_CSTRING("CDM is shutdown"));
+  RejectPromiseWithStateError(aPromiseId, "CDM is shutdown"_ns);
 }
 
 void ChromiumCDMParent::RejectPromiseWithStateError(

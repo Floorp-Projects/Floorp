@@ -552,8 +552,7 @@ nsIEventTarget* Connection::getAsyncExecutionTarget() {
       NS_WARNING("Failed to create async thread.");
       return nullptr;
     }
-    mAsyncExecutionThread->SetNameForWakeupTelemetry(
-        NS_LITERAL_CSTRING("mozStorage (all)"));
+    mAsyncExecutionThread->SetNameForWakeupTelemetry("mozStorage (all)"_ns);
   }
 
   return mAsyncExecutionThread;
@@ -745,15 +744,14 @@ nsresult Connection::initializeInternal() {
   // Set the synchronous PRAGMA, according to the preference.
   switch (Service::getSynchronousPref()) {
     case 2:
-      (void)ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = FULL;"));
+      (void)ExecuteSimpleSQL("PRAGMA synchronous = FULL;"_ns);
       break;
     case 0:
-      (void)ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF;"));
+      (void)ExecuteSimpleSQL("PRAGMA synchronous = OFF;"_ns);
       break;
     case 1:
     default:
-      (void)ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("PRAGMA synchronous = NORMAL;"));
+      (void)ExecuteSimpleSQL("PRAGMA synchronous = NORMAL;"_ns);
       break;
   }
 
@@ -1443,8 +1441,7 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
   // Re-attach on-disk databases that were attached to the original connection.
   {
     nsCOMPtr<mozIStorageStatement> stmt;
-    rv = CreateStatement(NS_LITERAL_CSTRING("PRAGMA database_list"),
-                         getter_AddRefs(stmt));
+    rv = CreateStatement("PRAGMA database_list"_ns, getter_AddRefs(stmt));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     bool hasResult = false;
     while (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
@@ -1456,12 +1453,10 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
         rv = stmt->GetUTF8String(2, path);
         if (NS_SUCCEEDED(rv) && !path.IsEmpty()) {
           nsCOMPtr<mozIStorageStatement> attachStmt;
-          rv = aClone->CreateStatement(
-              NS_LITERAL_CSTRING("ATTACH DATABASE :path AS ") + name,
-              getter_AddRefs(attachStmt));
+          rv = aClone->CreateStatement("ATTACH DATABASE :path AS "_ns + name,
+                                       getter_AddRefs(attachStmt));
           MOZ_ASSERT(NS_SUCCEEDED(rv));
-          rv = attachStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("path"),
-                                                path);
+          rv = attachStmt->BindUTF8StringByName("path"_ns, path);
           MOZ_ASSERT(NS_SUCCEEDED(rv));
           rv = attachStmt->Execute();
           MOZ_ASSERT(NS_SUCCEEDED(rv),
@@ -1503,15 +1498,14 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
   // connections. Entities in `sqlite_temp_master` are only visible to the
   // connection that created them.
   if (!aReadOnly) {
-    rv = aClone->ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN TRANSACTION"));
+    rv = aClone->ExecuteSimpleSQL("BEGIN TRANSACTION"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStorageStatement> stmt;
-    rv =
-        CreateStatement(NS_LITERAL_CSTRING("SELECT sql FROM sqlite_temp_master "
-                                           "WHERE type IN ('table', 'view', "
-                                           "'index', 'trigger')"),
-                        getter_AddRefs(stmt));
+    rv = CreateStatement(nsLiteralCString("SELECT sql FROM sqlite_temp_master "
+                                          "WHERE type IN ('table', 'view', "
+                                          "'index', 'trigger')"),
+                         getter_AddRefs(stmt));
     // Propagate errors, because failing to copy triggers might cause schema
     // coherency issues when writing to the database from the cloned connection.
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1525,9 +1519,9 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
       // keyword. We need to add it back, or we'll recreate temporary entities
       // as persistent ones. `sqlite_temp_master` also holds `CREATE INDEX`
       // statements, but those don't need `TEMP` keywords.
-      if (StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE TABLE ")) ||
-          StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE TRIGGER ")) ||
-          StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE VIEW "))) {
+      if (StringBeginsWith(query, "CREATE TABLE "_ns) ||
+          StringBeginsWith(query, "CREATE TRIGGER "_ns) ||
+          StringBeginsWith(query, "CREATE VIEW "_ns)) {
         query.Replace(0, 6, "CREATE TEMP");
       }
 
@@ -1535,7 +1529,7 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = aClone->ExecuteSimpleSQL(NS_LITERAL_CSTRING("COMMIT"));
+    rv = aClone->ExecuteSimpleSQL("COMMIT"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1706,8 +1700,7 @@ Connection::GetSchemaVersion(int32_t* _version) {
   }
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  (void)CreateStatement(NS_LITERAL_CSTRING("PRAGMA user_version"),
-                        getter_AddRefs(stmt));
+  (void)CreateStatement("PRAGMA user_version"_ns, getter_AddRefs(stmt));
   NS_ENSURE_TRUE(stmt, NS_ERROR_OUT_OF_MEMORY);
 
   *_version = 0;
@@ -1728,7 +1721,7 @@ Connection::SetSchemaVersion(int32_t aVersion) {
     return rv;
   }
 
-  nsAutoCString stmt(NS_LITERAL_CSTRING("PRAGMA user_version = "));
+  nsAutoCString stmt("PRAGMA user_version = "_ns);
   stmt.AppendInt(aVersion);
 
   return ExecuteSimpleSQL(stmt);

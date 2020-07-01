@@ -171,13 +171,11 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
         !mozilla::IsWin8OrLater() && ::GetModuleHandle(kNvidiaShimDriver) &&
         !::GetModuleHandle(kNvidiaInitDriver)) {
       NS_NAMED_LITERAL_STRING(pdbNameStr, "detoured.pdb");
-      SharedLibrary shlib(
-          (uintptr_t)module.lpBaseOfDll,
-          (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
-          0,  // DLLs are always mapped at offset 0 on Windows
-          NS_LITERAL_CSTRING("000000000000000000000000000000000"),
-          moduleNameStr, modulePathStr, pdbNameStr, pdbNameStr,
-          NS_LITERAL_CSTRING(""), "");
+      SharedLibrary shlib((uintptr_t)module.lpBaseOfDll,
+                          (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
+                          0,  // DLLs are always mapped at offset 0 on Windows
+                          "000000000000000000000000000000000"_ns, moduleNameStr,
+                          modulePathStr, pdbNameStr, pdbNameStr, ""_ns, "");
       sharedLibraryInfo.AddSharedLibrary(shlib);
       continue;
     }

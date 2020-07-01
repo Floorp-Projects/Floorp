@@ -405,7 +405,7 @@ nsresult txCompileObserver::startLoad(nsIURI* aUri,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
+  channel->SetContentType("text/xml"_ns);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {

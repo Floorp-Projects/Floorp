@@ -54,10 +54,8 @@ TEST(DOM_L10n_Overlays, Initial)
   //
   RefPtr<Element> elem = doc->CreateHTMLElement(nsGkAtoms::div);
   RefPtr<Element> span = doc->CreateHTMLElement(nsGkAtoms::a);
-  span->SetAttribute(NS_LITERAL_STRING("data-l10n-name"),
-                     NS_LITERAL_STRING("link"), rv);
-  span->SetAttribute(NS_LITERAL_STRING("href"),
-                     NS_LITERAL_STRING("https://www.mozilla.org"), rv);
+  span->SetAttribute(u"data-l10n-name"_ns, u"link"_ns, rv);
+  span->SetAttribute(u"href"_ns, u"https://www.mozilla.org"_ns, rv);
   elem->AppendChild(*span, rv);
 
   // 3. Create an L10nMessage with a translation for the element.

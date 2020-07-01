@@ -21,7 +21,7 @@ InjectCrashRunnable::InjectCrashRunnable(DWORD pid)
   nsCOMPtr<nsIFile> dll;
   nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(dll));
   if (NS_SUCCEEDED(rv)) {
-    dll->Append(NS_LITERAL_STRING("breakpadinjector.dll"));
+    dll->Append(u"breakpadinjector.dll"_ns);
     dll->GetPath(mInjectorPath);
   }
 }

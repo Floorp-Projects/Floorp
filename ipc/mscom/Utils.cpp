@@ -419,9 +419,9 @@ bool IsClassThreadAwareInprocServer(REFCLSID aClsid) {
   nsAutoString strClsid;
   GUIDToString(aClsid, strClsid);
 
-  nsAutoString inprocServerSubkey(NS_LITERAL_STRING("CLSID\\"));
+  nsAutoString inprocServerSubkey(u"CLSID\\"_ns);
   inprocServerSubkey.Append(strClsid);
-  inprocServerSubkey.Append(NS_LITERAL_STRING("\\InprocServer32"));
+  inprocServerSubkey.Append(u"\\InprocServer32"_ns);
 
   // Of the possible values, "Apartment" is the longest, so we'll make this
   // buffer large enough to hold that one.

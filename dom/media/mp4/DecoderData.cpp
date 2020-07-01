@@ -161,7 +161,7 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   Mp4parseByteData codecSpecificConfig =
       audio->sample_info[0].codec_specific_config;
   if (codecType == MP4PARSE_CODEC_OPUS) {
-    mMimeType = NS_LITERAL_CSTRING("audio/opus");
+    mMimeType = "audio/opus"_ns;
     // The Opus decoder expects the container's codec delay or
     // pre-skip value, in microseconds, as a 64-bit int at the
     // start of the codec-specific config blob.
@@ -175,11 +175,11 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
       mozilla::OpusDataDecoder::AppendCodecDelay(mCodecSpecificConfig, 0);
     }
   } else if (codecType == MP4PARSE_CODEC_AAC) {
-    mMimeType = NS_LITERAL_CSTRING("audio/mp4a-latm");
+    mMimeType = "audio/mp4a-latm"_ns;
   } else if (codecType == MP4PARSE_CODEC_FLAC) {
-    mMimeType = NS_LITERAL_CSTRING("audio/flac");
+    mMimeType = "audio/flac"_ns;
   } else if (codecType == MP4PARSE_CODEC_MP3) {
-    mMimeType = NS_LITERAL_CSTRING("audio/mpeg");
+    mMimeType = "audio/mpeg"_ns;
   }
 
   mRate = audio->sample_info[0].sample_rate;
@@ -230,13 +230,13 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
   // ever not hold. E.g. if we need to handle different codecs in a single
   // track, or if we have different numbers or channels in a single track.
   if (codecType == MP4PARSE_CODEC_AVC) {
-    mMimeType = NS_LITERAL_CSTRING("video/avc");
+    mMimeType = "video/avc"_ns;
   } else if (codecType == MP4PARSE_CODEC_VP9) {
-    mMimeType = NS_LITERAL_CSTRING("video/vp9");
+    mMimeType = "video/vp9"_ns;
   } else if (codecType == MP4PARSE_CODEC_AV1) {
-    mMimeType = NS_LITERAL_CSTRING("video/av1");
+    mMimeType = "video/av1"_ns;
   } else if (codecType == MP4PARSE_CODEC_MP4V) {
-    mMimeType = NS_LITERAL_CSTRING("video/mp4v-es");
+    mMimeType = "video/mp4v-es"_ns;
   }
   mTrackId = track->track_id;
   mDuration = TimeUnit::FromMicroseconds(track->duration);

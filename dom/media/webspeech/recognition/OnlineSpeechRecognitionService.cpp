@@ -103,7 +103,7 @@ OnlineSpeechRecognitionService::OnStopRequest(nsIRequest* aRequest,
 
   if (NS_FAILED(aStatusCode)) {
     success = false;
-    errorMsg.Assign(NS_LITERAL_STRING("Error connecting to the service."));
+    errorMsg.Assign(u"Error connecting to the service."_ns);
     errorCode = SpeechRecognitionErrorCode::Network;
   } else {
     success = true;
@@ -113,7 +113,7 @@ OnlineSpeechRecognitionService::OnStopRequest(nsIRequest* aRequest,
     if (!parsingSuccessful) {
       // there's an internal server error
       success = false;
-      errorMsg.Assign(NS_LITERAL_STRING("Internal server error"));
+      errorMsg.Assign(u"Internal server error"_ns);
       errorCode = SpeechRecognitionErrorCode::Network;
     } else {
       result.Assign(root.get("status", "error").asString().c_str());
@@ -124,7 +124,7 @@ OnlineSpeechRecognitionService::OnStopRequest(nsIRequest* aRequest,
           confidence = root["data"][0].get("confidence", "0").asFloat();
         } else {
           success = false;
-          errorMsg.Assign(NS_LITERAL_STRING("Error reading result data."));
+          errorMsg.Assign(u"Error reading result data."_ns);
           errorCode = SpeechRecognitionErrorCode::Network;
         }
       } else {
@@ -237,8 +237,7 @@ void OnlineSpeechRecognitionService::EncoderError() {
         }
         mRecognition->DispatchError(
             SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-            SpeechRecognitionErrorCode::Audio_capture,
-            NS_LITERAL_STRING("Encoder error"));
+            SpeechRecognitionErrorCode::Audio_capture, u"Encoder error"_ns);
       }));
 }
 
@@ -310,7 +309,7 @@ void OnlineSpeechRecognitionService::DoSTT() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mRecognition->DispatchError(
         SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-        SpeechRecognitionErrorCode::Network, NS_LITERAL_STRING("Unknown URI"));
+        SpeechRecognitionErrorCode::Network, u"Unknown URI"_ns);
     return;
   }
 
@@ -325,7 +324,7 @@ void OnlineSpeechRecognitionService::DoSTT() {
   if (NS_WARN_IF(!window)) {
     mRecognition->DispatchError(
         SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-        SpeechRecognitionErrorCode::Aborted, NS_LITERAL_STRING("No window"));
+        SpeechRecognitionErrorCode::Aborted, u"No window"_ns);
     return;
   }
 
@@ -333,7 +332,7 @@ void OnlineSpeechRecognitionService::DoSTT() {
   if (NS_WARN_IF(!doc)) {
     mRecognition->DispatchError(
         SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-        SpeechRecognitionErrorCode::Aborted, NS_LITERAL_STRING("No document"));
+        SpeechRecognitionErrorCode::Aborted, u"No document"_ns);
   }
   rv = NS_NewChannel(getter_AddRefs(chan), uri, doc->NodePrincipal(), secFlags,
                      contentPolicy, nullptr, nullptr, nullptr, nullptr,
@@ -341,14 +340,13 @@ void OnlineSpeechRecognitionService::DoSTT() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mRecognition->DispatchError(
         SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-        SpeechRecognitionErrorCode::Network,
-        NS_LITERAL_STRING("Failed to open channel"));
+        SpeechRecognitionErrorCode::Network, u"Failed to open channel"_ns);
     return;
   }
 
   nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(chan);
   if (httpChan) {
-    rv = httpChan->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+    rv = httpChan->SetRequestMethod("POST"_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -356,20 +354,17 @@ void OnlineSpeechRecognitionService::DoSTT() {
     mRecognition->GetLang(language);
     // Accept-Language-STT is a custom header of our backend server used to set
     // the language of the speech sample being submitted by the client
-    rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Language-STT"),
+    rv = httpChan->SetRequestHeader("Accept-Language-STT"_ns,
                                     NS_ConvertUTF16toUTF8(language), false);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     // Tell the server to not store the transcription by default
-    rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Store-Transcription"),
-                                    NS_LITERAL_CSTRING("0"), false);
+    rv = httpChan->SetRequestHeader("Store-Transcription"_ns, "0"_ns, false);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     // Tell the server to not store the sample by default
-    rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Store-Sample"),
-                                    NS_LITERAL_CSTRING("0"), false);
+    rv = httpChan->SetRequestHeader("Store-Sample"_ns, "0"_ns, false);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     // Set the product tag as teh web speech api
-    rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Product-Tag"),
-                                    NS_LITERAL_CSTRING("wsa"), false);
+    rv = httpChan->SetRequestHeader("Product-Tag"_ns, "wsa"_ns, false);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -390,8 +385,7 @@ void OnlineSpeechRecognitionService::DoSTT() {
     if (!audio.SetCapacity(length, fallible)) {
       mRecognition->DispatchError(
           SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-          SpeechRecognitionErrorCode::Audio_capture,
-          NS_LITERAL_STRING("Allocation error"));
+          SpeechRecognitionErrorCode::Audio_capture, u"Allocation error"_ns);
       return;
     }
 
@@ -405,14 +399,12 @@ void OnlineSpeechRecognitionService::DoSTT() {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mRecognition->DispatchError(
           SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-          SpeechRecognitionErrorCode::Network,
-          NS_LITERAL_STRING("Failed to open stream"));
+          SpeechRecognitionErrorCode::Network, u"Failed to open stream"_ns);
       return;
     }
     if (bodyStream) {
-      rv = uploadChan->ExplicitSetUploadStream(
-          bodyStream, NS_LITERAL_CSTRING("audio/ogg"), length,
-          NS_LITERAL_CSTRING("POST"), false);
+      rv = uploadChan->ExplicitSetUploadStream(bodyStream, "audio/ogg"_ns,
+                                               length, "POST"_ns, false);
       MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -421,8 +413,7 @@ void OnlineSpeechRecognitionService::DoSTT() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mRecognition->DispatchError(
         SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-        SpeechRecognitionErrorCode::Network,
-        NS_LITERAL_STRING("Internal server error"));
+        SpeechRecognitionErrorCode::Network, u"Internal server error"_ns);
   }
 }
 

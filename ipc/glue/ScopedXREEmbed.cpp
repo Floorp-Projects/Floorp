@@ -69,7 +69,7 @@ void ScopedXREEmbed::Start() {
     localFile = parent;
     NS_ENSURE_TRUE_VOID(localFile);
 
-    rv = localFile->SetNativeLeafName(NS_LITERAL_CSTRING("Resources"));
+    rv = localFile->SetNativeLeafName("Resources"_ns);
     if (NS_FAILED(rv)) {
       return;
     }

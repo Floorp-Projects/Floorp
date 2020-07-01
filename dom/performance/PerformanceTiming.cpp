@@ -51,7 +51,7 @@ PerformanceTimingData* PerformanceTimingData::Create(
   // If the initiator type had no valid value, then set it to the default
   // ("other") value.
   if (aInitiatorType.IsEmpty()) {
-    aInitiatorType = NS_LITERAL_STRING("other");
+    aInitiatorType = u"other"_ns;
   }
 
   // According to the spec, "The name attribute must return the resolved URL

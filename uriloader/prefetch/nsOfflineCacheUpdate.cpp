@@ -163,9 +163,8 @@ nsresult nsManifestCheck::Begin() {
         new mozilla::dom::ReferrerInfo(mReferrerURI);
     rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
-                                       NS_LITERAL_CSTRING("offline-resource"),
-                                       false);
+    rv =
+        httpChannel->SetRequestHeader("X-Moz"_ns, "offline-resource"_ns, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -344,9 +343,8 @@ nsresult nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate* aUpdate) {
         new mozilla::dom::ReferrerInfo(mReferrerURI);
     rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
-                                       NS_LITERAL_CSTRING("offline-resource"),
-                                       false);
+    rv =
+        httpChannel->SetRequestHeader("X-Moz"_ns, "offline-resource"_ns, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -509,9 +507,7 @@ nsOfflineCacheUpdateItem::AsyncOnChannelRedirect(
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel);
   NS_ENSURE_STATE(httpChannel);
 
-  rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
-                                     NS_LITERAL_CSTRING("offline-resource"),
-                                     false);
+  rv = httpChannel->SetRequestHeader("X-Moz"_ns, "offline-resource"_ns, false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   mChannel = aNewChannel;

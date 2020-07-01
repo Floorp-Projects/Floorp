@@ -19,65 +19,55 @@ TEST(TestStandardURL, Simple)
 {
   nsCOMPtr<nsIURI> url;
   ASSERT_EQ(NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-                .SetSpec(NS_LITERAL_CSTRING("http://example.com"))
+                .SetSpec("http://example.com"_ns)
                 .Finalize(url),
             NS_OK);
   ASSERT_TRUE(url);
 
-  ASSERT_EQ(NS_MutateURI(url)
-                .SetSpec(NS_LITERAL_CSTRING("http://example.com"))
-                .Finalize(url),
+  ASSERT_EQ(NS_MutateURI(url).SetSpec("http://example.com"_ns).Finalize(url),
             NS_OK);
 
   nsAutoCString out;
 
   ASSERT_EQ(url->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("http://example.com/"));
+  ASSERT_TRUE(out == "http://example.com/"_ns);
 
-  ASSERT_EQ(url->Resolve(NS_LITERAL_CSTRING("foo.html?q=45"), out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("http://example.com/foo.html?q=45"));
+  ASSERT_EQ(url->Resolve("foo.html?q=45"_ns, out), NS_OK);
+  ASSERT_TRUE(out == "http://example.com/foo.html?q=45"_ns);
 
-  ASSERT_EQ(
-      NS_MutateURI(url).SetScheme(NS_LITERAL_CSTRING("foo")).Finalize(url),
-      NS_OK);
+  ASSERT_EQ(NS_MutateURI(url).SetScheme("foo"_ns).Finalize(url), NS_OK);
 
   ASSERT_EQ(url->GetScheme(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("foo"));
+  ASSERT_TRUE(out == "foo"_ns);
 
   ASSERT_EQ(url->GetHost(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("example.com"));
-  ASSERT_EQ(NS_MutateURI(url)
-                .SetHost(NS_LITERAL_CSTRING("www.yahoo.com"))
-                .Finalize(url),
-            NS_OK);
+  ASSERT_TRUE(out == "example.com"_ns);
+  ASSERT_EQ(NS_MutateURI(url).SetHost("www.yahoo.com"_ns).Finalize(url), NS_OK);
   ASSERT_EQ(url->GetHost(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("www.yahoo.com"));
+  ASSERT_TRUE(out == "www.yahoo.com"_ns);
 
   ASSERT_EQ(NS_MutateURI(url)
-                .SetPathQueryRef(NS_LITERAL_CSTRING(
+                .SetPathQueryRef(nsLiteralCString(
                     "/some-path/one-the-net/about.html?with-a-query#for-you"))
                 .Finalize(url),
             NS_OK);
   ASSERT_EQ(url->GetPathQueryRef(out), NS_OK);
   ASSERT_TRUE(out ==
-              NS_LITERAL_CSTRING(
+              nsLiteralCString(
                   "/some-path/one-the-net/about.html?with-a-query#for-you"));
 
   ASSERT_EQ(NS_MutateURI(url)
-                .SetQuery(NS_LITERAL_CSTRING(
+                .SetQuery(nsLiteralCString(
                     "a=b&d=c&what-ever-you-want-to-be-called=45"))
                 .Finalize(url),
             NS_OK);
   ASSERT_EQ(url->GetQuery(out), NS_OK);
-  ASSERT_TRUE(out ==
-              NS_LITERAL_CSTRING("a=b&d=c&what-ever-you-want-to-be-called=45"));
+  ASSERT_TRUE(out == "a=b&d=c&what-ever-you-want-to-be-called=45"_ns);
 
-  ASSERT_EQ(NS_MutateURI(url)
-                .SetRef(NS_LITERAL_CSTRING("#some-book-mark"))
-                .Finalize(url),
+  ASSERT_EQ(NS_MutateURI(url).SetRef("#some-book-mark"_ns).Finalize(url),
             NS_OK);
   ASSERT_EQ(url->GetRef(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("some-book-mark"));
+  ASSERT_TRUE(out == "some-book-mark"_ns);
 }
 
 TEST(TestStandardURL, NormalizeGood)
@@ -258,38 +248,33 @@ TEST(TestStandardURL, From_test_standardurldotjs)
 MOZ_GTEST_BENCH(TestStandardURL, DISABLED_Perf, [] {
   nsCOMPtr<nsIURI> url;
   ASSERT_EQ(NS_OK, NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-                       .SetSpec(NS_LITERAL_CSTRING("http://example.com"))
+                       .SetSpec("http://example.com"_ns)
                        .Finalize(url));
 
   nsAutoCString out;
   for (int i = COUNT; i; --i) {
-    ASSERT_EQ(NS_MutateURI(url)
-                  .SetSpec(NS_LITERAL_CSTRING("http://example.com"))
-                  .Finalize(url),
+    ASSERT_EQ(NS_MutateURI(url).SetSpec("http://example.com"_ns).Finalize(url),
               NS_OK);
     ASSERT_EQ(url->GetSpec(out), NS_OK);
-    url->Resolve(NS_LITERAL_CSTRING("foo.html?q=45"), out);
-    mozilla::Unused
-        << NS_MutateURI(url).SetScheme(NS_LITERAL_CSTRING("foo")).Finalize(url);
+    url->Resolve("foo.html?q=45"_ns, out);
+    mozilla::Unused << NS_MutateURI(url).SetScheme("foo"_ns).Finalize(url);
     url->GetScheme(out);
-    mozilla::Unused << NS_MutateURI(url)
-                           .SetHost(NS_LITERAL_CSTRING("www.yahoo.com"))
-                           .Finalize(url);
+    mozilla::Unused
+        << NS_MutateURI(url).SetHost("www.yahoo.com"_ns).Finalize(url);
     url->GetHost(out);
     mozilla::Unused
         << NS_MutateURI(url)
-               .SetPathQueryRef(NS_LITERAL_CSTRING(
+               .SetPathQueryRef(nsLiteralCString(
                    "/some-path/one-the-net/about.html?with-a-query#for-you"))
                .Finalize(url);
     url->GetPathQueryRef(out);
     mozilla::Unused << NS_MutateURI(url)
-                           .SetQuery(NS_LITERAL_CSTRING(
+                           .SetQuery(nsLiteralCString(
                                "a=b&d=c&what-ever-you-want-to-be-called=45"))
                            .Finalize(url);
     url->GetQuery(out);
-    mozilla::Unused << NS_MutateURI(url)
-                           .SetRef(NS_LITERAL_CSTRING("#some-book-mark"))
-                           .Finalize(url);
+    mozilla::Unused
+        << NS_MutateURI(url).SetRef("#some-book-mark"_ns).Finalize(url);
     url->GetRef(out);
   }
 });
@@ -336,34 +321,34 @@ TEST(TestStandardURL, Mutator)
   nsAutoCString out;
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-                    .SetSpec(NS_LITERAL_CSTRING("http://example.com"))
+                    .SetSpec("http://example.com"_ns)
                     .Finalize(uri);
   ASSERT_EQ(rv, NS_OK);
 
   ASSERT_EQ(uri->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("http://example.com/"));
+  ASSERT_TRUE(out == "http://example.com/"_ns);
 
   rv = NS_MutateURI(uri)
-           .SetScheme(NS_LITERAL_CSTRING("ftp"))
-           .SetHost(NS_LITERAL_CSTRING("mozilla.org"))
-           .SetPathQueryRef(NS_LITERAL_CSTRING("/path?query#ref"))
+           .SetScheme("ftp"_ns)
+           .SetHost("mozilla.org"_ns)
+           .SetPathQueryRef("/path?query#ref"_ns)
            .Finalize(uri);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(uri->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("ftp://mozilla.org/path?query#ref"));
+  ASSERT_TRUE(out == "ftp://mozilla.org/path?query#ref"_ns);
 
   nsCOMPtr<nsIURL> url;
-  rv = NS_MutateURI(uri).SetScheme(NS_LITERAL_CSTRING("https")).Finalize(url);
+  rv = NS_MutateURI(uri).SetScheme("https"_ns).Finalize(url);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(url->GetSpec(out), NS_OK);
-  ASSERT_TRUE(out == NS_LITERAL_CSTRING("https://mozilla.org/path?query#ref"));
+  ASSERT_TRUE(out == "https://mozilla.org/path?query#ref"_ns);
 }
 
 TEST(TestStandardURL, Deserialize_Bug1392739)
 {
   mozilla::ipc::StandardURLParams standard_params;
   standard_params.urlType() = nsIStandardURL::URLTYPE_STANDARD;
-  standard_params.spec() = NS_LITERAL_CSTRING("");
+  standard_params.spec() = ""_ns;
   standard_params.host() = mozilla::ipc::StandardURLSegment(4294967295, 1);
 
   mozilla::ipc::URIParams params(standard_params);

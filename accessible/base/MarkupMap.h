@@ -80,8 +80,7 @@ MARKUPMAP(
       nsAutoString displayValue;
       StyleInfo styleInfo(aElement);
       styleInfo.Display(displayValue);
-      if (displayValue != NS_LITERAL_STRING("block") &&
-          displayValue != NS_LITERAL_STRING("inline-block")) {
+      if (displayValue != u"block"_ns && displayValue != u"inline-block"_ns) {
         return nullptr;
       }
       // Check for various conditions to determine if this is a block

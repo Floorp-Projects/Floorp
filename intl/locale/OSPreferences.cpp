@@ -249,7 +249,7 @@ OSPreferences::GetSystemLocales(nsTArray<nsCString>& aRetVal) {
   // If we failed to get the system locale, we still need
   // to return something because there are tests out there that
   // depend on system locale to be set.
-  aRetVal.AppendElement(NS_LITERAL_CSTRING("en-US"));
+  aRetVal.AppendElement("en-US"_ns);
   return NS_ERROR_FAILURE;
 }
 

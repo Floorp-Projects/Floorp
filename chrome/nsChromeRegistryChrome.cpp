@@ -35,7 +35,7 @@
 #include "nsIXULRuntime.h"
 
 #define PACKAGE_OVERRIDE_BRANCH "chrome.override_package."
-#define SKIN NS_LITERAL_CSTRING("classic/1.0")
+#define SKIN "classic/1.0"_ns
 
 using namespace mozilla;
 using mozilla::dom::ContentParent;
@@ -170,8 +170,7 @@ nsresult nsChromeRegistryChrome::GetSelectedLocale(const nsACString& aPackage,
 
 nsresult nsChromeRegistryChrome::OverrideLocalePackage(
     const nsACString& aPackage, nsACString& aOverride) {
-  const nsACString& pref =
-      NS_LITERAL_CSTRING(PACKAGE_OVERRIDE_BRANCH) + aPackage;
+  const nsACString& pref = nsLiteralCString(PACKAGE_OVERRIDE_BRANCH) + aPackage;
   nsAutoCString override;
   nsresult rv = mozilla::Preferences::GetCString(PromiseFlatCString(pref).get(),
                                                  override);
@@ -527,8 +526,7 @@ void nsChromeRegistryChrome::ManifestLocale(ManifestProcessingContext& cx,
   // registered. For most cases it will be "global", but for Fennec it will be
   // "browser".
   nsAutoCString mainPackage;
-  nsresult rv =
-      OverrideLocalePackage(NS_LITERAL_CSTRING("global"), mainPackage);
+  nsresult rv = OverrideLocalePackage("global"_ns, mainPackage);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -592,9 +590,8 @@ void nsChromeRegistryChrome::ManifestOverride(ManifestProcessingContext& cx,
       nsAutoCString chromePath, resolvedPath;
       chromeuri->GetPathQueryRef(chromePath);
       resolveduri->GetPathQueryRef(resolvedPath);
-      chromeSkinOnly =
-          StringBeginsWith(chromePath, NS_LITERAL_CSTRING("/skin/")) &&
-          StringBeginsWith(resolvedPath, NS_LITERAL_CSTRING("/skin/"));
+      chromeSkinOnly = StringBeginsWith(chromePath, "/skin/"_ns) &&
+                       StringBeginsWith(resolvedPath, "/skin/"_ns);
     }
     if (!chromeSkinOnly) {
       LogMessageWithContext(

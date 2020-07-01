@@ -755,39 +755,39 @@ TEST(TestCookie, TestCookieMain)
   // first, ensure a clean slate
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));
   // add some cookies
+  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->AddNative("cookiemgr.test"_ns,  // domain
+                                                 "/foo"_ns,            // path
+                                                 "test1"_ns,           // name
+                                                 "yes"_ns,             // value
+                                                 false,      // is secure
+                                                 false,      // is httponly
+                                                 true,       // is session
+                                                 INT64_MAX,  // expiry time
+                                                 &attrs,     // originAttributes
+                                                 nsICookie::SAMESITE_NONE,
+                                                 nsICookie::SCHEME_HTTPS)));
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->AddNative(
-      NS_LITERAL_CSTRING("cookiemgr.test"),  // domain
-      NS_LITERAL_CSTRING("/foo"),            // path
-      NS_LITERAL_CSTRING("test1"),           // name
-      NS_LITERAL_CSTRING("yes"),             // value
-      false,                                 // is secure
-      false,                                 // is httponly
-      true,                                  // is session
-      INT64_MAX,                             // expiry time
-      &attrs,                                // originAttributes
+      "cookiemgr.test"_ns,             // domain
+      "/foo"_ns,                       // path
+      "test2"_ns,                      // name
+      "yes"_ns,                        // value
+      false,                           // is secure
+      true,                            // is httponly
+      true,                            // is session
+      PR_Now() / PR_USEC_PER_SEC + 2,  // expiry time
+      &attrs,                          // originAttributes
       nsICookie::SAMESITE_NONE, nsICookie::SCHEME_HTTPS)));
-  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->AddNative(
-      NS_LITERAL_CSTRING("cookiemgr.test"),  // domain
-      NS_LITERAL_CSTRING("/foo"),            // path
-      NS_LITERAL_CSTRING("test2"),           // name
-      NS_LITERAL_CSTRING("yes"),             // value
-      false,                                 // is secure
-      true,                                  // is httponly
-      true,                                  // is session
-      PR_Now() / PR_USEC_PER_SEC + 2,        // expiry time
-      &attrs,                                // originAttributes
-      nsICookie::SAMESITE_NONE, nsICookie::SCHEME_HTTPS)));
-  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->AddNative(
-      NS_LITERAL_CSTRING("new.domain"),  // domain
-      NS_LITERAL_CSTRING("/rabbit"),     // path
-      NS_LITERAL_CSTRING("test3"),       // name
-      NS_LITERAL_CSTRING("yes"),         // value
-      false,                             // is secure
-      false,                             // is httponly
-      true,                              // is session
-      INT64_MAX,                         // expiry time
-      &attrs,                            // originAttributes
-      nsICookie::SAMESITE_NONE, nsICookie::SCHEME_HTTPS)));
+  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->AddNative("new.domain"_ns,  // domain
+                                                 "/rabbit"_ns,     // path
+                                                 "test3"_ns,       // name
+                                                 "yes"_ns,         // value
+                                                 false,            // is secure
+                                                 false,      // is httponly
+                                                 true,       // is session
+                                                 INT64_MAX,  // expiry time
+                                                 &attrs,     // originAttributes
+                                                 nsICookie::SAMESITE_NONE,
+                                                 nsICookie::SCHEME_HTTPS)));
   // confirm using enumerator
   nsTArray<RefPtr<nsICookie>> cookies;
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
@@ -808,26 +808,24 @@ TEST(TestCookie, TestCookieMain)
   EXPECT_TRUE(CheckResult(cookie.get(), MUST_NOT_CONTAIN, "test2=yes"));
   // check CountCookiesFromHost()
   uint32_t hostCookies = 0;
-  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(
-      NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)));
+  EXPECT_TRUE(NS_SUCCEEDED(
+      cookieMgr2->CountCookiesFromHost("cookiemgr.test"_ns, &hostCookies)));
   EXPECT_EQ(hostCookies, 2u);
   // check CookieExistsNative() using the third cookie
   bool found;
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->CookieExistsNative(
-      NS_LITERAL_CSTRING("new.domain"), NS_LITERAL_CSTRING("/rabbit"),
-      NS_LITERAL_CSTRING("test3"), &attrs, &found)));
+      "new.domain"_ns, "/rabbit"_ns, "test3"_ns, &attrs, &found)));
   EXPECT_TRUE(found);
 
   // sleep four seconds, to make sure the second cookie has expired
   PR_Sleep(4 * PR_TicksPerSecond());
   // check that both CountCookiesFromHost() and CookieExistsNative() count the
   // expired cookie
-  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(
-      NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)));
+  EXPECT_TRUE(NS_SUCCEEDED(
+      cookieMgr2->CountCookiesFromHost("cookiemgr.test"_ns, &hostCookies)));
   EXPECT_EQ(hostCookies, 2u);
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->CookieExistsNative(
-      NS_LITERAL_CSTRING("cookiemgr.test"), NS_LITERAL_CSTRING("/foo"),
-      NS_LITERAL_CSTRING("test2"), &attrs, &found)));
+      "cookiemgr.test"_ns, "/foo"_ns, "test2"_ns, &attrs, &found)));
   EXPECT_TRUE(found);
   // double-check RemoveAll() using the enumerator
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));
@@ -844,14 +842,14 @@ TEST(TestCookie, TestCookieMain)
   nsAutoCString name;
   nsAutoCString expected;
   for (int32_t i = 0; i < 60; ++i) {
-    name = NS_LITERAL_CSTRING("test");
+    name = "test"_ns;
     name.AppendInt(i);
-    name += NS_LITERAL_CSTRING("=creation");
+    name += "=creation"_ns;
     SetACookie(cookieService, "http://creation.ordering.tests/", name.get());
 
     if (i >= 10) {
       expected += name;
-      if (i < 59) expected += NS_LITERAL_CSTRING("; ");
+      if (i < 59) expected += "; "_ns;
     }
   }
   GetACookie(cookieService, "http://creation.ordering.tests/", cookie);
@@ -860,13 +858,13 @@ TEST(TestCookie, TestCookieMain)
   cookieMgr->RemoveAll();
 
   for (int32_t i = 0; i < 60; ++i) {
-    name = NS_LITERAL_CSTRING("test");
+    name = "test"_ns;
     name.AppendInt(i);
-    name += NS_LITERAL_CSTRING("=delete_non_security");
+    name += "=delete_non_security"_ns;
 
     // Create 50 cookies that include the secure flag.
     if (i < 50) {
-      name += NS_LITERAL_CSTRING("; secure");
+      name += "; secure"_ns;
       SetACookie(cookieService, "https://creation.ordering.tests/", name.get());
     } else {
       // non-security cookies will be removed beside the latest cookie that be

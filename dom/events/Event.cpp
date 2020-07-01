@@ -431,8 +431,7 @@ void Event::SetEventType(const nsAString& aEventTypeArg) {
         aEventTypeArg, mEvent->mClass, &(mEvent->mMessage));
     mEvent->SetDefaultComposed();
   } else {
-    mEvent->mSpecifiedEventType =
-        NS_Atomize(NS_LITERAL_STRING("on") + aEventTypeArg);
+    mEvent->mSpecifiedEventType = NS_Atomize(u"on"_ns + aEventTypeArg);
     mEvent->mMessage = eUnidentifiedEvent;
     mEvent->SetComposed(aEventTypeArg);
   }
@@ -739,7 +738,7 @@ double Event::TimeStamp() {
 
 void Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) {
   if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, NS_LITERAL_STRING("event"));
+    IPC::WriteParam(aMsg, u"event"_ns);
   }
 
   nsString type;

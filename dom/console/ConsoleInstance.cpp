@@ -134,28 +134,26 @@ METHOD(GroupCollapsed, "groupCollapsed")
 void ConsoleInstance::GroupEnd(JSContext* aCx) {
   const Sequence<JS::Value> data;
   RefPtr<Console> console(mConsole);
-  console->MethodInternal(aCx, Console::MethodGroupEnd,
-                          NS_LITERAL_STRING("groupEnd"), data);
+  console->MethodInternal(aCx, Console::MethodGroupEnd, u"groupEnd"_ns, data);
 }
 
 void ConsoleInstance::Time(JSContext* aCx, const nsAString& aLabel) {
   RefPtr<Console> console(mConsole);
   console->StringMethodInternal(aCx, aLabel, Sequence<JS::Value>(),
-                                Console::MethodTime, NS_LITERAL_STRING("time"));
+                                Console::MethodTime, u"time"_ns);
 }
 
 void ConsoleInstance::TimeLog(JSContext* aCx, const nsAString& aLabel,
                               const Sequence<JS::Value>& aData) {
   RefPtr<Console> console(mConsole);
   console->StringMethodInternal(aCx, aLabel, aData, Console::MethodTimeLog,
-                                NS_LITERAL_STRING("timeLog"));
+                                u"timeLog"_ns);
 }
 
 void ConsoleInstance::TimeEnd(JSContext* aCx, const nsAString& aLabel) {
   RefPtr<Console> console(mConsole);
   console->StringMethodInternal(aCx, aLabel, Sequence<JS::Value>(),
-                                Console::MethodTimeEnd,
-                                NS_LITERAL_STRING("timeEnd"));
+                                Console::MethodTimeEnd, u"timeEnd"_ns);
 }
 
 void ConsoleInstance::TimeStamp(JSContext* aCx,
@@ -170,52 +168,47 @@ void ConsoleInstance::TimeStamp(JSContext* aCx,
   }
 
   RefPtr<Console> console(mConsole);
-  console->MethodInternal(aCx, Console::MethodTimeStamp,
-                          NS_LITERAL_STRING("timeStamp"), data);
+  console->MethodInternal(aCx, Console::MethodTimeStamp, u"timeStamp"_ns, data);
 }
 
 void ConsoleInstance::Profile(JSContext* aCx,
                               const Sequence<JS::Value>& aData) {
   RefPtr<Console> console(mConsole);
-  console->ProfileMethodInternal(aCx, Console::MethodProfile,
-                                 NS_LITERAL_STRING("profile"), aData);
+  console->ProfileMethodInternal(aCx, Console::MethodProfile, u"profile"_ns,
+                                 aData);
 }
 
 void ConsoleInstance::ProfileEnd(JSContext* aCx,
                                  const Sequence<JS::Value>& aData) {
   RefPtr<Console> console(mConsole);
   console->ProfileMethodInternal(aCx, Console::MethodProfileEnd,
-                                 NS_LITERAL_STRING("profileEnd"), aData);
+                                 u"profileEnd"_ns, aData);
 }
 
 void ConsoleInstance::Assert(JSContext* aCx, bool aCondition,
                              const Sequence<JS::Value>& aData) {
   if (!aCondition) {
     RefPtr<Console> console(mConsole);
-    console->MethodInternal(aCx, Console::MethodAssert,
-                            NS_LITERAL_STRING("assert"), aData);
+    console->MethodInternal(aCx, Console::MethodAssert, u"assert"_ns, aData);
   }
 }
 
 void ConsoleInstance::Count(JSContext* aCx, const nsAString& aLabel) {
   RefPtr<Console> console(mConsole);
   console->StringMethodInternal(aCx, aLabel, Sequence<JS::Value>(),
-                                Console::MethodCount,
-                                NS_LITERAL_STRING("count"));
+                                Console::MethodCount, u"count"_ns);
 }
 
 void ConsoleInstance::CountReset(JSContext* aCx, const nsAString& aLabel) {
   RefPtr<Console> console(mConsole);
   console->StringMethodInternal(aCx, aLabel, Sequence<JS::Value>(),
-                                Console::MethodCountReset,
-                                NS_LITERAL_STRING("countReset"));
+                                Console::MethodCountReset, u"countReset"_ns);
 }
 
 void ConsoleInstance::Clear(JSContext* aCx) {
   const Sequence<JS::Value> data;
   RefPtr<Console> console(mConsole);
-  console->MethodInternal(aCx, Console::MethodClear, NS_LITERAL_STRING("clear"),
-                          data);
+  console->MethodInternal(aCx, Console::MethodClear, u"clear"_ns, data);
 }
 
 void ConsoleInstance::ReportForServiceWorkerScope(const nsAString& aScope,

@@ -850,7 +850,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
           self->GatheredOOPProfile(profileString);
         },
         [self](ipc::ResponseRejectReason&& aReason) {
-          self->GatheredOOPProfile(NS_LITERAL_CSTRING(""));
+          self->GatheredOOPProfile(""_ns);
         });
   }
   if (!mPendingProfiles) {

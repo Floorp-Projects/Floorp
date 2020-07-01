@@ -102,11 +102,11 @@ MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench_UseCounters, [] {
 });
 
 MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_Bench,
-                [] { ServoSetPropertyByIdBench(NS_LITERAL_CSTRING("10px")); });
+                [] { ServoSetPropertyByIdBench("10px"_ns); });
 
 MOZ_GTEST_BENCH(Stylo,
                 Servo_DeclarationBlock_SetPropertyById_WithInitialSpace_Bench,
-                [] { ServoSetPropertyByIdBench(NS_LITERAL_CSTRING(" 10px")); });
+                [] { ServoSetPropertyByIdBench(" 10px"_ns); });
 
 MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_GetPropertyById_Bench,
                 ServoGetPropertyValueById);

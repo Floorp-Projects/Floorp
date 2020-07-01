@@ -478,7 +478,7 @@ AccessibleWrap::get_accRole(
       if (!nodeInfo->NamespaceEquals(document->GetDefaultNamespaceID())) {
         nsAutoString nameSpaceURI;
         nodeInfo->GetNamespaceURI(nameSpaceURI);
-        roleString += NS_LITERAL_STRING(", ") + nameSpaceURI;
+        roleString += u", "_ns + nameSpaceURI;
       }
     }
 

@@ -37,7 +37,7 @@ class StringBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   }
 
   void GetBlobImplType(nsAString& aBlobImplType) const override {
-    aBlobImplType = NS_LITERAL_STRING("StringBlobImpl");
+    aBlobImplType = u"StringBlobImpl"_ns;
   }
 
  private:

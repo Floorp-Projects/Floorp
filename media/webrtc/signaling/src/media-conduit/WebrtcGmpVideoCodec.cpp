@@ -193,12 +193,12 @@ void WebrtcGmpVideoEncoder::InitEncode_g(
     const GMPVideoCodec& aCodecParams, int32_t aNumberOfCores,
     uint32_t aMaxPayloadSize, const RefPtr<GmpInitDoneRunnable>& aInitDone) {
   nsTArray<nsCString> tags;
-  tags.AppendElement(NS_LITERAL_CSTRING("h264"));
+  tags.AppendElement("h264"_ns);
   UniquePtr<GetGMPVideoEncoderCallback> callback(
       new InitDoneCallback(aThis, aInitDone, aCodecParams, aMaxPayloadSize));
   aThis->mInitting = true;
-  nsresult rv = aThis->mMPS->GetGMPVideoEncoder(
-      nullptr, &tags, NS_LITERAL_CSTRING(""), std::move(callback));
+  nsresult rv = aThis->mMPS->GetGMPVideoEncoder(nullptr, &tags, ""_ns,
+                                                std::move(callback));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     GMP_LOG_DEBUG("GMP Encode: GetGMPVideoEncoder failed");
     aThis->Close_g();
@@ -312,10 +312,10 @@ void WebrtcGmpVideoEncoder::RegetEncoderForResolutionChange(
   // re-init the plugin when the resolution changes
   // XXX allow codec to indicate it doesn't need re-init!
   nsTArray<nsCString> tags;
-  tags.AppendElement(NS_LITERAL_CSTRING("h264"));
+  tags.AppendElement("h264"_ns);
   mInitting = true;
-  if (NS_WARN_IF(NS_FAILED(mMPS->GetGMPVideoEncoder(
-          nullptr, &tags, NS_LITERAL_CSTRING(""), std::move(callback))))) {
+  if (NS_WARN_IF(NS_FAILED(mMPS->GetGMPVideoEncoder(nullptr, &tags, ""_ns,
+                                                    std::move(callback))))) {
     aInitDone->Dispatch(WEBRTC_VIDEO_CODEC_ERROR,
                         "GMP Encode: GetGMPVideoEncoder failed");
   }
@@ -684,12 +684,12 @@ void WebrtcGmpVideoDecoder::InitDecode_g(
     const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
     const RefPtr<GmpInitDoneRunnable>& aInitDone) {
   nsTArray<nsCString> tags;
-  tags.AppendElement(NS_LITERAL_CSTRING("h264"));
+  tags.AppendElement("h264"_ns);
   UniquePtr<GetGMPVideoDecoderCallback> callback(
       new InitDoneCallback(aThis, aInitDone));
   aThis->mInitting = true;
-  nsresult rv = aThis->mMPS->GetGMPVideoDecoder(
-      nullptr, &tags, NS_LITERAL_CSTRING(""), std::move(callback));
+  nsresult rv = aThis->mMPS->GetGMPVideoDecoder(nullptr, &tags, ""_ns,
+                                                std::move(callback));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     GMP_LOG_DEBUG("GMP Decode: GetGMPVideoDecoder failed");
     aThis->Close_g();

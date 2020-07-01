@@ -2236,14 +2236,14 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
       if (parent) {
         nsIContent* content = parent->GetContent();
         if (content && content->IsElement()) {
-          if (content->AsElement()->AttrValueIs(
-                  kNameSpaceID_None, nsGkAtoms::fontstyle_,
-                  NS_LITERAL_STRING("normal"), eCaseMatters)) {
+          if (content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                nsGkAtoms::fontstyle_,
+                                                u"normal"_ns, eCaseMatters)) {
             mathFlags |= MathMLTextRunFactory::MATH_FONT_STYLING_NORMAL;
           }
-          if (content->AsElement()->AttrValueIs(
-                  kNameSpaceID_None, nsGkAtoms::fontweight_,
-                  NS_LITERAL_STRING("bold"), eCaseMatters)) {
+          if (content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                nsGkAtoms::fontweight_,
+                                                u"bold"_ns, eCaseMatters)) {
             mathFlags |= MathMLTextRunFactory::MATH_FONT_WEIGHT_BOLD;
           }
         }
@@ -4959,8 +4959,8 @@ static bool IsUnderlineRight(const ComputedStyle& aStyle) {
     return false;
   }
   nsDependentAtomString langStr(langAtom);
-  return (StringBeginsWith(langStr, NS_LITERAL_STRING("ja")) ||
-          StringBeginsWith(langStr, NS_LITERAL_STRING("ko"))) &&
+  return (StringBeginsWith(langStr, u"ja"_ns) ||
+          StringBeginsWith(langStr, u"ko"_ns)) &&
          (langStr.Length() == 2 || langStr[2] == '-');
 }
 
@@ -10001,13 +10001,12 @@ void nsTextFrame::ToCString(nsCString& aBuf,
 }
 
 nsresult nsTextFrame::GetFrameName(nsAString& aResult) const {
-  MakeFrameName(NS_LITERAL_STRING("Text"), aResult);
+  MakeFrameName(u"Text"_ns, aResult);
   int32_t totalContentLength;
   nsAutoCString tmp;
   ToCString(tmp, &totalContentLength);
   tmp.SetLength(std::min(tmp.Length(), 50u));
-  aResult += NS_LITERAL_STRING("\"") + NS_ConvertASCIItoUTF16(tmp) +
-             NS_LITERAL_STRING("\"");
+  aResult += u"\""_ns + NS_ConvertASCIItoUTF16(tmp) + u"\""_ns;
   return NS_OK;
 }
 

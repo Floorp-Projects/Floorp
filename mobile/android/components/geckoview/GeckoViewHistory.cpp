@@ -279,7 +279,7 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
   if (NS_WARN_IF(NS_FAILED(aURI->GetSpec(uriSpec)))) {
     return NS_OK;
   }
-  keys.AppendElement(jni::StringParam(NS_LITERAL_STRING("url")));
+  keys.AppendElement(jni::StringParam(u"url"_ns));
   values.AppendElement(jni::StringParam(uriSpec));
 
   if (aLastVisitedURI) {
@@ -287,7 +287,7 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
     if (NS_WARN_IF(NS_FAILED(aLastVisitedURI->GetSpec(lastVisitedURISpec)))) {
       return NS_OK;
     }
-    keys.AppendElement(jni::StringParam(NS_LITERAL_STRING("lastVisitedURL")));
+    keys.AppendElement(jni::StringParam(u"lastVisitedURL"_ns));
     values.AppendElement(jni::StringParam(lastVisitedURISpec));
   }
 
@@ -314,7 +314,7 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
     flags |=
         static_cast<int32_t>(GeckoViewVisitFlags::VISIT_UNRECOVERABLE_ERROR);
   }
-  keys.AppendElement(jni::StringParam(NS_LITERAL_STRING("flags")));
+  keys.AppendElement(jni::StringParam(u"flags"_ns));
   values.AppendElement(java::sdk::Integer::ValueOf(flags));
 
   MOZ_ASSERT(keys.Length() == values.Length());
@@ -463,7 +463,7 @@ void GeckoViewHistory::QueryVisitedState(
   }
 
   auto bundleKeys = jni::ObjectArray::New<jni::String>(1);
-  jni::String::LocalRef key(jni::StringParam(NS_LITERAL_STRING("urls")));
+  jni::String::LocalRef key(jni::StringParam(u"urls"_ns));
   bundleKeys->SetElement(0, key);
 
   auto bundleValues = jni::ObjectArray::New<jni::Object>(1);

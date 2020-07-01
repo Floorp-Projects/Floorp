@@ -245,8 +245,7 @@ void PreloadService::NotifyNodeEvent(nsINode* aNode, bool aSuccess) {
   // DocGroup of one of the mSources nodes--not necessarily this one).
 
   RefPtr<AsyncEventDispatcher> dispatcher = new AsyncEventDispatcher(
-      aNode, aSuccess ? NS_LITERAL_STRING("load") : NS_LITERAL_STRING("error"),
-      CanBubble::eNo);
+      aNode, aSuccess ? u"load"_ns : u"error"_ns, CanBubble::eNo);
 
   dispatcher->RequireNodeInDocument();
   dispatcher->PostDOMEvent();

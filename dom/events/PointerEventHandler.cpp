@@ -645,8 +645,8 @@ void PointerEventHandler::DispatchGotOrLostPointerCaptureEvent(
     ConvertPointerTypeToString(aPointerEvent->mInputSource, init.mPointerType);
     init.mIsPrimary = aPointerEvent->mIsPrimary;
     RefPtr<PointerEvent> event;
-    event = PointerEvent::Constructor(
-        aCaptureTarget, NS_LITERAL_STRING("lostpointercapture"), init);
+    event = PointerEvent::Constructor(aCaptureTarget, u"lostpointercapture"_ns,
+                                      init);
     targetDoc->DispatchEvent(*event);
     return;
   }

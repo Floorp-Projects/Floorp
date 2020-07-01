@@ -365,7 +365,7 @@ void MediaController::HandleSupportedMediaSessionActionsChanged(
   mSupportedKeys = newSupportedKeys;
   mSupportedKeysChangedEvent.Notify(mSupportedKeys);
   RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      this, NS_LITERAL_STRING("supportedkeyschange"), CanBubble::eYes);
+      this, u"supportedkeyschange"_ns, CanBubble::eYes);
   asyncDispatcher->PostDOMEvent();
   MediaController_Binding::ClearCachedSupportedKeysValue(this);
 }

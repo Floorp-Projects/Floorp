@@ -587,8 +587,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
     }
   }
 
-  aContext->receiveError(NS_LITERAL_STRING("Internal error"),
-                         NS_ERROR_UNEXPECTED);
+  aContext->receiveError(u"Internal error"_ns, NS_ERROR_UNEXPECTED);
   return NS_ERROR_UNEXPECTED;
 }
 

@@ -231,7 +231,7 @@ void CPUUsageWatcher::AnnotateHang(BackgroundHangAnnotations& aAnnotations) {
   }
 
   if (mExternalUsageRatio > mExternalUsageThreshold) {
-    aAnnotations.AddAnnotation(NS_LITERAL_STRING("ExternalCPUHigh"), true);
+    aAnnotations.AddAnnotation(u"ExternalCPUHigh"_ns, true);
   }
 }
 

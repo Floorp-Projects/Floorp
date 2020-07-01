@@ -768,7 +768,7 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
                                                  aRenderingContext);
 }
 
-#define OLD_ELLIPSIS NS_LITERAL_STRING("...")
+#define OLD_ELLIPSIS u"..."_ns
 
 // the following block is to append the accesskey to mTitle if there is an
 // accesskey but the mTitle doesn't have the character
@@ -1102,8 +1102,8 @@ nscoord nsTextBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState) {
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsTextBoxFrame::GetFrameName(nsAString& aResult) const {
-  MakeFrameName(NS_LITERAL_STRING("TextBox"), aResult);
-  aResult += NS_LITERAL_STRING("[value=") + mTitle + NS_LITERAL_STRING("]");
+  MakeFrameName(u"TextBox"_ns, aResult);
+  aResult += u"[value="_ns + mTitle + u"]"_ns;
   return NS_OK;
 }
 #endif

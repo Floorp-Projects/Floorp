@@ -146,7 +146,7 @@ nsresult NullPrincipalURI::SetRef(const nsACString& aRef) {
 
 NS_IMETHODIMP
 NullPrincipalURI::GetPrePath(nsACString& _prePath) {
-  _prePath = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":");
+  _prePath = nsLiteralCString(NS_NULLPRINCIPAL_SCHEME ":");
   return NS_OK;
 }
 
@@ -159,7 +159,7 @@ nsresult NullPrincipalURI::SetPort(int32_t aPort) {
 
 NS_IMETHODIMP
 NullPrincipalURI::GetScheme(nsACString& _scheme) {
-  _scheme = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME);
+  _scheme = nsLiteralCString(NS_NULLPRINCIPAL_SCHEME);
   return NS_OK;
 }
 
@@ -169,7 +169,7 @@ nsresult NullPrincipalURI::SetScheme(const nsACString& aScheme) {
 
 NS_IMETHODIMP
 NullPrincipalURI::GetSpec(nsACString& _spec) {
-  _spec = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":") + mPath;
+  _spec = nsLiteralCString(NS_NULLPRINCIPAL_SCHEME ":") + mPath;
   return NS_OK;
 }
 

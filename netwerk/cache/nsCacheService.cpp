@@ -554,7 +554,7 @@ void nsCacheService::Shutdown() {
   if (cacheIOThread) nsShutdownThread::BlockingShutdown(cacheIOThread);
 
   if (shouldSanitize) {
-    nsresult rv = parentDir->AppendNative(NS_LITERAL_CSTRING("Cache"));
+    nsresult rv = parentDir->AppendNative("Cache"_ns);
     if (NS_SUCCEEDED(rv)) {
       bool exists;
       if (NS_SUCCEEDED(parentDir->Exists(&exists)) && exists)
@@ -1800,7 +1800,7 @@ void nsCacheService::GetDiskCacheDirectory(nsIFile** result) {
   GetCacheBaseDirectoty(getter_AddRefs(directory));
   if (!directory) return;
 
-  nsresult rv = directory->AppendNative(NS_LITERAL_CSTRING("Cache"));
+  nsresult rv = directory->AppendNative("Cache"_ns);
   if (NS_FAILED(rv)) return;
 
   directory.forget(result);
@@ -1812,7 +1812,7 @@ void nsCacheService::GetAppCacheDirectory(nsIFile** result) {
   GetCacheBaseDirectoty(getter_AddRefs(directory));
   if (!directory) return;
 
-  nsresult rv = directory->AppendNative(NS_LITERAL_CSTRING("OfflineCache"));
+  nsresult rv = directory->AppendNative("OfflineCache"_ns);
   if (NS_FAILED(rv)) return;
 
   directory.forget(result);

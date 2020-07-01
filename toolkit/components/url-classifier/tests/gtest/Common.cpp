@@ -19,7 +19,7 @@
 using namespace mozilla;
 using namespace mozilla::safebrowsing;
 
-#define GTEST_SAFEBROWSING_DIR NS_LITERAL_CSTRING("safebrowsing")
+#define GTEST_SAFEBROWSING_DIR "safebrowsing"_ns
 
 template <typename Function>
 void RunTestInNewThread(Function&& aFunction) {

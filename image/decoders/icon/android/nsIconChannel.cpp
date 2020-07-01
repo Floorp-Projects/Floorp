@@ -104,7 +104,7 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
   return NS_NewInputStreamChannel(
       aChannel, aURI, stream.forget(), nullPrincipal,
       nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
-      nsIContentPolicy::TYPE_INTERNAL_IMAGE, NS_LITERAL_CSTRING(IMAGE_ICON_MS));
+      nsIContentPolicy::TYPE_INTERNAL_IMAGE, nsLiteralCString(IMAGE_ICON_MS));
 }
 
 nsresult nsIconChannel::Init(nsIURI* aURI) {

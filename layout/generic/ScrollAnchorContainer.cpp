@@ -361,7 +361,7 @@ void ScrollAnchorContainer::AdjustmentMade(nscoord aAdjustment) {
   arguments.AppendElement()->AppendFloat(cssPixels);
 
   nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"),
+      nsIScriptError::warningFlag, "Layout"_ns,
       Frame()->PresContext()->Document(), nsContentUtils::eLAYOUT_PROPERTIES,
       "ScrollAnchoringDisabledInContainer", arguments);
 }

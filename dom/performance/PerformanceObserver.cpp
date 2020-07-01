@@ -149,9 +149,9 @@ void PerformanceObserver::ReportUnsupportedTypesErrorToConsole(
     nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(mOwner);
     Document* document = ownerWindow->GetExtantDoc();
     AutoTArray<nsString, 1> params = {aInvalidTypes};
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document,
-        nsContentUtils::eDOM_PROPERTIES, msgId, params);
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                    document, nsContentUtils::eDOM_PROPERTIES,
+                                    msgId, params);
   }
 }
 

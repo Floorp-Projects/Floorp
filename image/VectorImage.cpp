@@ -175,12 +175,10 @@ class SVGLoadEventListener final : public nsIDOMEventListener {
     MOZ_ASSERT(mDocument, "Need an SVG document");
     MOZ_ASSERT(mImage, "Need an image");
 
-    mDocument->AddEventListener(NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"),
-                                this, true, false);
-    mDocument->AddEventListener(NS_LITERAL_STRING("SVGAbort"), this, true,
+    mDocument->AddEventListener(u"MozSVGAsImageDocumentLoad"_ns, this, true,
                                 false);
-    mDocument->AddEventListener(NS_LITERAL_STRING("SVGError"), this, true,
-                                false);
+    mDocument->AddEventListener(u"SVGAbort"_ns, this, true, false);
+    mDocument->AddEventListener(u"SVGError"_ns, this, true, false);
   }
 
  private:
@@ -220,10 +218,10 @@ class SVGLoadEventListener final : public nsIDOMEventListener {
   void Cancel() {
     MOZ_ASSERT(mDocument, "Duplicate call to Cancel");
     if (mDocument) {
-      mDocument->RemoveEventListener(
-          NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"), this, true);
-      mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGAbort"), this, true);
-      mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGError"), this, true);
+      mDocument->RemoveEventListener(u"MozSVGAsImageDocumentLoad"_ns, this,
+                                     true);
+      mDocument->RemoveEventListener(u"SVGAbort"_ns, this, true);
+      mDocument->RemoveEventListener(u"SVGError"_ns, this, true);
       mDocument = nullptr;
     }
   }

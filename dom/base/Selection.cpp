@@ -285,8 +285,8 @@ void Selection::Stringify(nsAString& aResult, FlushFrames aFlushFrames) {
   }
 
   IgnoredErrorResult rv;
-  ToStringWithFormat(NS_LITERAL_STRING("text/plain"),
-                     nsIDocumentEncoder::SkipInvisibleContent, 0, aResult, rv);
+  ToStringWithFormat(u"text/plain"_ns, nsIDocumentEncoder::SkipInvisibleContent,
+                     0, aResult, rv);
   if (rv.Failed()) {
     aResult.Truncate();
   }
@@ -806,8 +806,8 @@ static bool MaybeDispatchSelectstartEvent(
 
   if (selectstartEventTarget) {
     nsContentUtils::DispatchTrustedEvent(
-        aDocument, selectstartEventTarget, NS_LITERAL_STRING("selectstart"),
-        CanBubble::eYes, Cancelable::eYes, &executeDefaultAction);
+        aDocument, selectstartEventTarget, u"selectstart"_ns, CanBubble::eYes,
+        Cancelable::eYes, &executeDefaultAction);
   }
 
   return executeDefaultAction;

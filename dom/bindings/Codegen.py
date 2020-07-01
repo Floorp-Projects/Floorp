@@ -12752,7 +12752,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
             delete += dedent(
                 """
                 if (!IsPlatformObjectSameOrigin(cx, proxy)) {
-                  return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("delete"));
+                  return ReportCrossOriginDenial(cx, id, "delete"_ns);
                 }
 
                 // Safe to enter the Realm of proxy now.

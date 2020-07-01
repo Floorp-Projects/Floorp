@@ -1106,7 +1106,7 @@ static void CreatePropertyValue(
     aResult.mEasing.Construct();
     aTimingFunction->AppendToString(aResult.mEasing.Value());
   } else {
-    aResult.mEasing.Construct(NS_LITERAL_STRING("linear"));
+    aResult.mEasing.Construct(u"linear"_ns);
   }
 
   aResult.mComposite = aComposite;

@@ -31,8 +31,8 @@ class PerformanceNavigationTiming final : public PerformanceResourceTiming {
       Performance* aPerformance, const nsAString& aName)
       : PerformanceResourceTiming(std::move(aPerformanceTiming), aPerformance,
                                   aName) {
-    SetEntryType(NS_LITERAL_STRING("navigation"));
-    SetInitiatorType(NS_LITERAL_STRING("navigation"));
+    SetEntryType(u"navigation"_ns);
+    SetInitiatorType(u"navigation"_ns);
   }
 
   DOMHighResTimeStamp Duration() const override {

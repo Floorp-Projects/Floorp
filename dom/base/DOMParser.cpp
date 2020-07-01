@@ -96,8 +96,7 @@ already_AddRefed<Document> DOMParser::ParseFromString(const nsAString& aStr,
     return nullptr;
   }
 
-  return ParseFromStream(stream, NS_LITERAL_STRING("UTF-8"), utf8str.Length(),
-                         aType, aRv);
+  return ParseFromStream(stream, u"UTF-8"_ns, utf8str.Length(), aType, aRv);
 }
 
 already_AddRefed<Document> DOMParser::ParseFromSafeString(const nsAString& aStr,

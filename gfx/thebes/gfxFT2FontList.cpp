@@ -1420,7 +1420,7 @@ void gfxFT2FontList::FindFonts() {
     if (androidRoot) {
       root = androidRoot;
     } else {
-      root = NS_LITERAL_CSTRING("/system");
+      root = "/system"_ns;
     }
     root.AppendLiteral("/fonts");
 
@@ -1446,7 +1446,7 @@ void gfxFT2FontList::FindFonts() {
     nsresult rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
                               getter_AddRefs(appDir));
     if (NS_SUCCEEDED(rv)) {
-      appDir->AppendNative(NS_LITERAL_CSTRING("fonts"));
+      appDir->AppendNative("fonts"_ns);
       nsCString localPath;
       if (NS_SUCCEEDED(appDir->GetNativePath(localPath))) {
         FindFontsInDir(localPath, mFontNameCache.get());
@@ -1458,8 +1458,7 @@ void gfxFT2FontList::FindFonts() {
   nsCOMPtr<nsIFile> localDir;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
                                        getter_AddRefs(localDir));
-  if (NS_SUCCEEDED(rv) &&
-      NS_SUCCEEDED(localDir->Append(NS_LITERAL_STRING("fonts")))) {
+  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(localDir->Append(u"fonts"_ns))) {
     nsCString localPath;
     rv = localDir->GetNativePath(localPath);
     if (NS_SUCCEEDED(rv)) {
@@ -1755,9 +1754,9 @@ FontFamily gfxFT2FontList::GetDefaultFontForPlatform(
     const gfxFontStyle* aStyle) {
   FontFamily ff;
 #if defined(MOZ_WIDGET_ANDROID)
-  ff = FindFamily(NS_LITERAL_CSTRING("Roboto"));
+  ff = FindFamily("Roboto"_ns);
   if (ff.IsNull()) {
-    ff = FindFamily(NS_LITERAL_CSTRING("Droid Sans"));
+    ff = FindFamily("Droid Sans"_ns);
   }
 #endif
   /* TODO: what about Qt or other platforms that may use this? */

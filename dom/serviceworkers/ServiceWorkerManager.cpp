@@ -2898,7 +2898,7 @@ ServiceWorkerManager::RegisterForAddonPrincipal(nsIPrincipal* aPrincipal,
   }
 
   nsCString scope;
-  auto result = addonPolicy->GetURL(NS_LITERAL_STRING(""));
+  auto result = addonPolicy->GetURL(u""_ns);
   if (result.isOk()) {
     scope.Assign(NS_ConvertUTF16toUTF8(result.unwrap()));
   } else {

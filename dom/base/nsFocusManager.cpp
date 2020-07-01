@@ -93,7 +93,7 @@ LazyLogModule gFocusNavigationLog("FocusNavigation");
 
 #define LOGTAG(log, format, content)                      \
   if (MOZ_LOG_TEST(log, LogLevel::Debug)) {               \
-    nsAutoCString tag(NS_LITERAL_CSTRING("(none)"));      \
+    nsAutoCString tag("(none)"_ns);                       \
     if (content) {                                        \
       content->NodeInfo()->NameAtom()->ToUTF8String(tag); \
     }                                                     \
@@ -1026,7 +1026,7 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
   if (oldFocusedElement && oldFocusedElement->IsInComposedDoc()) {
     NotifyFocusStateChange(oldFocusedElement, nullptr,
                            mFocusedWindow->ShouldShowFocusRing(), 0, false);
-    window->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
+    window->UpdateCommands(u"focus"_ns, nullptr, 0);
 
     if (presShell) {
       SendFocusOrBlurEvent(eBlur, presShell,
@@ -1291,9 +1291,8 @@ void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
   if (aWindow->GetExtantDoc()) {
     nsContentUtils::DispatchEventOnlyToChrome(
         aWindow->GetExtantDoc(), aWindow->GetCurrentInnerWindow(),
-        aActive ? NS_LITERAL_STRING("activate")
-                : NS_LITERAL_STRING("deactivate"),
-        CanBubble::eYes, Cancelable::eYes, nullptr);
+        aActive ? u"activate"_ns : u"deactivate"_ns, CanBubble::eYes,
+        Cancelable::eYes, nullptr);
   }
 
   // Look for any remote child frames, iterate over them and send the activation
@@ -1331,7 +1330,7 @@ void LogWarningFullscreenWindowRaise(Element* aElement) {
   NS_ENSURE_SUCCESS_VOID(rv);
 
   Unused << nsContentUtils::ReportToConsoleByWindowID(
-      localizedMsg, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"),
+      localizedMsg, nsIScriptError::warningFlag, "DOM"_ns,
       windowGlobalParent->InnerWindowId(),
       windowGlobalParent->GetDocumentURI());
 }
@@ -1533,10 +1532,10 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
       nsContentUtils::GetRootDocument(elementToFocus->OwnerDoc())
           ->GetFullscreenElement() &&
       nsContentUtils::HasPluginWithUncontrolledEventDispatch(elementToFocus)) {
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"),
-        elementToFocus->OwnerDoc(), nsContentUtils::eDOM_PROPERTIES,
-        "FocusedWindowedPluginWhileFullscreen");
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                    elementToFocus->OwnerDoc(),
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "FocusedWindowedPluginWhileFullscreen");
     Document::AsyncExitFullscreen(elementToFocus->OwnerDoc());
   }
 #endif
@@ -1632,8 +1631,7 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
 
     // update the commands even when inactive so that the attributes for that
     // window are up to date.
-    if (allowFrameSwitch)
-      newWindow->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
+    if (allowFrameSwitch) newWindow->UpdateCommands(u"focus"_ns, nullptr, 0);
 
     if (aFlags & FLAG_RAISE) {
       if (newRootBrowsingContext) {
@@ -2188,7 +2186,7 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
     // window, then this was a blur caused by the active window being lowered,
     // so there is no need to update the commands
     if (GetActiveBrowsingContext()) {
-      window->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
+      window->UpdateCommands(u"focus"_ns, nullptr, 0);
     }
 
     SendFocusOrBlurEvent(eBlur, presShell, element->GetComposedDoc(), element,
@@ -2436,7 +2434,7 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
       // commands
       // XXXndeakin P2 someone could adjust the focus during the update
       if (!aWindowRaised) {
-        aWindow->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
+        aWindow->UpdateCommands(u"focus"_ns, nullptr, 0);
       }
 
       if (!aFocusInOtherContentProcess) {
@@ -2448,7 +2446,7 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
       IMEStateManager::OnChangeFocus(presContext, nullptr,
                                      GetFocusMoveActionCause(aFlags));
       if (!aWindowRaised) {
-        aWindow->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
+        aWindow->UpdateCommands(u"focus"_ns, nullptr, 0);
       }
     }
   } else {
@@ -2477,8 +2475,7 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
                                      GetFocusMoveActionCause(aFlags));
     }
 
-    if (!aWindowRaised)
-      aWindow->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
+    if (!aWindowRaised) aWindow->UpdateCommands(u"focus"_ns, nullptr, 0);
   }
 
   // update the caret visibility and position to match the newly focused
@@ -2819,9 +2816,8 @@ void nsFocusManager::UpdateCaret(bool aMoveCaretToFocus, bool aUpdateVisibility,
   if (!browseWithCaret) {
     nsCOMPtr<Element> docElement = mFocusedWindow->GetFrameElementInternal();
     if (docElement)
-      browseWithCaret =
-          docElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::showcaret,
-                                  NS_LITERAL_STRING("true"), eCaseMatters);
+      browseWithCaret = docElement->AttrValueIs(
+          kNameSpaceID_None, nsGkAtoms::showcaret, u"true"_ns, eCaseMatters);
   }
 
   SetCaretVisible(presShell, browseWithCaret, aContent);

@@ -15,7 +15,7 @@
  * We have to use macros here because our leak analysis tool things we are
  * leaking strings when we have |static const nsString|. Sad :(
  */
-#define CHANGE_EVENT_NAME NS_LITERAL_STRING("typechange")
+#define CHANGE_EVENT_NAME u"typechange"_ns
 
 namespace mozilla {
 namespace dom {

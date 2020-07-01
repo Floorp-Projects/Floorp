@@ -1217,13 +1217,11 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       if (uriToLoad) {
         // The url notified in the webNavigation.onCreatedNavigationTarget
         // event.
-        props->SetPropertyAsACString(NS_LITERAL_STRING("url"),
-                                     uriToLoad->GetSpecOrDefault());
+        props->SetPropertyAsACString(u"url"_ns, uriToLoad->GetSpecOrDefault());
       }
 
-      props->SetPropertyAsInterface(NS_LITERAL_STRING("sourceTabDocShell"),
-                                    parentDocShell);
-      props->SetPropertyAsInterface(NS_LITERAL_STRING("createdTabDocShell"),
+      props->SetPropertyAsInterface(u"sourceTabDocShell"_ns, parentDocShell);
+      props->SetPropertyAsInterface(u"createdTabDocShell"_ns,
                                     ToSupports(newDocShell));
 
       obsSvc->NotifyObservers(static_cast<nsIPropertyBag2*>(props),

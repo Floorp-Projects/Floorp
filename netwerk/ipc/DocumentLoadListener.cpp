@@ -68,7 +68,7 @@ static void SetNeedToAddURIVisit(nsIChannel* aChannel,
     return;
   }
 
-  props->SetPropertyAsBool(NS_LITERAL_STRING("docshell.needToAddURIVisit"),
+  props->SetPropertyAsBool(u"docshell.needToAddURIVisit"_ns,
                            aNeedToAddURIVisit);
 }
 
@@ -1209,8 +1209,8 @@ static bool IsLargeAllocationLoad(CanonicalBrowsingContext* aBrowsingContext,
   }
 
   nsAutoCString ignoredHeaderValue;
-  nsresult rv = httpChannel->GetResponseHeader(
-      NS_LITERAL_CSTRING("Large-Allocation"), ignoredHeaderValue);
+  nsresult rv =
+      httpChannel->GetResponseHeader("Large-Allocation"_ns, ignoredHeaderValue);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -2038,7 +2038,7 @@ DocumentLoadListener::AsyncOnChannelRedirect(
               mChannel, getter_AddRefs(resultPrincipal));
       if (NS_SUCCEEDED(rv)) {
         isHttpsOnlyExempt = nsContentUtils::IsExactSitePermAllow(
-            resultPrincipal, NS_LITERAL_CSTRING("https-only-mode-exception"));
+            resultPrincipal, "https-only-mode-exception"_ns);
       }
     }
 

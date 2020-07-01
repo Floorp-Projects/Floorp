@@ -457,7 +457,7 @@ mozilla::ipc::IPCResult Parent<Super>::RecvGetPrincipalKey(
           GetCurrentSerialEventTarget(), __func__,
           [aResolve](const PrincipalKeyPromise::ResolveOrRejectValue& aValue) {
             if (aValue.IsReject()) {
-              aResolve(NS_LITERAL_CSTRING(""));
+              aResolve(""_ns);
             } else {
               aResolve(aValue.ResolveValue());
             }

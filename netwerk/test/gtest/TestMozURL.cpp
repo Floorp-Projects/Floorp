@@ -39,8 +39,7 @@ TEST(TestMozURL, Getters)
   ASSERT_TRUE(url->Ref().EqualsLiteral("ref"));
 
   url = nullptr;
-  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), NS_LITERAL_CSTRING("")),
-            NS_ERROR_MALFORMED_URI);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), ""_ns), NS_ERROR_MALFORMED_URI);
   ASSERT_EQ(url, nullptr);
 }
 
@@ -53,13 +52,13 @@ TEST(TestMozURL, MutatorChain)
 
   RefPtr<MozURL> url2;
   ASSERT_EQ(url->Mutate()
-                .SetScheme(NS_LITERAL_CSTRING("https"))
-                .SetUsername(NS_LITERAL_CSTRING("newuser"))
-                .SetPassword(NS_LITERAL_CSTRING("newpass"))
-                .SetHostname(NS_LITERAL_CSTRING("test"))
-                .SetFilePath(NS_LITERAL_CSTRING("new/file/path"))
-                .SetQuery(NS_LITERAL_CSTRING("bla"))
-                .SetRef(NS_LITERAL_CSTRING("huh"))
+                .SetScheme("https"_ns)
+                .SetUsername("newuser"_ns)
+                .SetPassword("newpass"_ns)
+                .SetHostname("test"_ns)
+                .SetFilePath("new/file/path"_ns)
+                .SetQuery("bla"_ns)
+                .SetRef("huh"_ns)
                 .Finalize(getter_AddRefs(url2)),
             NS_OK);
 
@@ -76,7 +75,7 @@ TEST(TestMozURL, MutatorFinalizeTwice)
 
   RefPtr<MozURL> url2;
   MozURL::Mutator mut = url->Mutate();
-  mut.SetScheme(NS_LITERAL_CSTRING("https"));  // Change the scheme to https
+  mut.SetScheme("https"_ns);  // Change the scheme to https
   ASSERT_EQ(mut.Finalize(getter_AddRefs(url2)), NS_OK);
   ASSERT_TRUE(url2->Spec().EqualsLiteral(
       "https://user:pass@example.com/path?query#ref"));
@@ -96,11 +95,11 @@ TEST(TestMozURL, MutatorErrorStatus)
 
   // Test that trying to set the scheme to a bad value will get you an error
   MozURL::Mutator mut = url->Mutate();
-  mut.SetScheme(NS_LITERAL_CSTRING("!@#$%^&*("));
+  mut.SetScheme("!@#$%^&*("_ns);
   ASSERT_EQ(mut.GetStatus(), NS_ERROR_MALFORMED_URI);
 
   // Test that the mutator will not work after one faulty operation
-  mut.SetScheme(NS_LITERAL_CSTRING("test"));
+  mut.SetScheme("test"_ns);
   ASSERT_EQ(mut.GetStatus(), NS_ERROR_MALFORMED_URI);
 }
 
@@ -113,9 +112,7 @@ TEST(TestMozURL, InitWithBase)
   ASSERT_TRUE(url->Spec().EqualsLiteral("https://example.net/a/b.html"));
 
   RefPtr<MozURL> url2;
-  ASSERT_EQ(
-      MozURL::Init(getter_AddRefs(url2), NS_LITERAL_CSTRING("c.png"), url),
-      NS_OK);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url2), "c.png"_ns, url), NS_OK);
 
   ASSERT_TRUE(url2->Spec().EqualsLiteral("https://example.net/a/c.png"));
 }
@@ -142,9 +139,7 @@ TEST(TestMozURL, HostPort)
   ASSERT_TRUE(url->HostPort().EqualsLiteral("example.net:1234"));
 
   RefPtr<MozURL> url2;
-  url->Mutate()
-      .SetHostPort(NS_LITERAL_CSTRING("test:321"))
-      .Finalize(getter_AddRefs(url2));
+  url->Mutate().SetHostPort("test:321"_ns).Finalize(getter_AddRefs(url2));
 
   ASSERT_TRUE(url2->HostPort().EqualsLiteral("test:321"));
   ASSERT_TRUE(
@@ -167,16 +162,14 @@ TEST(TestMozURL, Origin)
   ASSERT_TRUE(out.EqualsLiteral("https://example.net:1234"));
 
   RefPtr<MozURL> url2;
-  ASSERT_EQ(
-      MozURL::Init(getter_AddRefs(url2), NS_LITERAL_CSTRING("file:///tmp/foo")),
-      NS_OK);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url2), "file:///tmp/foo"_ns), NS_OK);
   url2->Origin(out);
   ASSERT_TRUE(out.EqualsLiteral("file:///tmp/foo"));
 
   RefPtr<MozURL> url3;
   ASSERT_EQ(
       MozURL::Init(getter_AddRefs(url3),
-                   NS_LITERAL_CSTRING(
+                   nsLiteralCString(
                        "moz-extension://53711a8f-65ed-e742-9671-1f02e267c0bc/"
                        "foo/bar.html")),
       NS_OK);
@@ -185,16 +178,13 @@ TEST(TestMozURL, Origin)
       "moz-extension://53711a8f-65ed-e742-9671-1f02e267c0bc"));
 
   RefPtr<MozURL> url4;
-  ASSERT_EQ(MozURL::Init(getter_AddRefs(url4),
-                         NS_LITERAL_CSTRING("resource://foo/bar.html")),
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url4), "resource://foo/bar.html"_ns),
             NS_OK);
   url4->Origin(out);
   ASSERT_TRUE(out.EqualsLiteral("resource://foo"));
 
   RefPtr<MozURL> url5;
-  ASSERT_EQ(
-      MozURL::Init(getter_AddRefs(url5), NS_LITERAL_CSTRING("about:home")),
-      NS_OK);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url5), "about:home"_ns), NS_OK);
   url5->Origin(out);
   ASSERT_TRUE(out.EqualsLiteral("about:home"));
 }
@@ -210,16 +200,14 @@ TEST(TestMozURL, BaseDomain)
   ASSERT_TRUE(out.EqualsLiteral("example.net"));
 
   RefPtr<MozURL> url2;
-  ASSERT_EQ(
-      MozURL::Init(getter_AddRefs(url2), NS_LITERAL_CSTRING("file:///tmp/foo")),
-      NS_OK);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url2), "file:///tmp/foo"_ns), NS_OK);
   ASSERT_EQ(url2->BaseDomain(out), NS_OK);
   ASSERT_TRUE(out.EqualsLiteral("/tmp/foo"));
 
   RefPtr<MozURL> url3;
   ASSERT_EQ(
       MozURL::Init(getter_AddRefs(url3),
-                   NS_LITERAL_CSTRING(
+                   nsLiteralCString(
                        "moz-extension://53711a8f-65ed-e742-9671-1f02e267c0bc/"
                        "foo/bar.html")),
       NS_OK);
@@ -227,16 +215,13 @@ TEST(TestMozURL, BaseDomain)
   ASSERT_TRUE(out.EqualsLiteral("53711a8f-65ed-e742-9671-1f02e267c0bc"));
 
   RefPtr<MozURL> url4;
-  ASSERT_EQ(MozURL::Init(getter_AddRefs(url4),
-                         NS_LITERAL_CSTRING("resource://foo/bar.html")),
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url4), "resource://foo/bar.html"_ns),
             NS_OK);
   ASSERT_EQ(url4->BaseDomain(out), NS_OK);
   ASSERT_TRUE(out.EqualsLiteral("foo"));
 
   RefPtr<MozURL> url5;
-  ASSERT_EQ(
-      MozURL::Init(getter_AddRefs(url5), NS_LITERAL_CSTRING("about:home")),
-      NS_OK);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url5), "about:home"_ns), NS_OK);
   ASSERT_EQ(url5->BaseDomain(out), NS_OK);
   ASSERT_TRUE(out.EqualsLiteral("about:home"));
 }
@@ -246,7 +231,7 @@ namespace {
 bool OriginMatchesExpectedOrigin(const nsACString& aOrigin,
                                  const nsACString& aExpectedOrigin) {
   if (aExpectedOrigin.Equals("null") &&
-      StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("moz-nullprincipal"))) {
+      StringBeginsWith(aOrigin, "moz-nullprincipal"_ns)) {
     return true;
   }
   return aOrigin == aExpectedOrigin;
@@ -329,7 +314,7 @@ TEST(TestMozURL, UrlTestData)
       NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(file));
   ASSERT_EQ(rv, NS_OK);
 
-  rv = file->Append(NS_LITERAL_STRING("urltestdata.json"));
+  rv = file->Append(u"urltestdata.json"_ns);
   ASSERT_EQ(rv, NS_OK);
 
   bool exists;

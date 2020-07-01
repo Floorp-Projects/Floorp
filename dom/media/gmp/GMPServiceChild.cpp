@@ -76,7 +76,7 @@ GeckoMediaPluginServiceChild::GetContentParent(
         nsCString displayName;
         uint32_t pluginId = 0;
         ipc::Endpoint<PGMPContentParent> endpoint;
-        nsCString errorDescription = NS_LITERAL_CSTRING("");
+        nsCString errorDescription = ""_ns;
 
         bool ok = child->SendLaunchGMP(
             nodeIdString, api, tags, alreadyBridgedTo, &pluginId, &otherProcess,
@@ -152,7 +152,7 @@ GeckoMediaPluginServiceChild::GetContentParent(
         nsCString displayName;
         uint32_t pluginId = 0;
         ipc::Endpoint<PGMPContentParent> endpoint;
-        nsCString errorDescription = NS_LITERAL_CSTRING("");
+        nsCString errorDescription = ""_ns;
 
         bool ok = child->SendLaunchGMPForNodeId(
             nodeId, api, tags, alreadyBridgedTo, &pluginId, &otherProcess,

@@ -40,7 +40,7 @@ class GMPVideoDecoder : public MediaDataDecoder,
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   nsCString GetDescriptionName() const override {
-    return NS_LITERAL_CSTRING("gmp video decoder");
+    return "gmp video decoder"_ns;
   }
   ConversionRequired NeedsConversion() const override {
     return mConvertToAnnexB ? ConversionRequired::kNeedAnnexB

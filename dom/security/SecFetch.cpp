@@ -17,94 +17,94 @@
 nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
   switch (aType) {
     case nsIContentPolicy::TYPE_OTHER:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
     case nsIContentPolicy::TYPE_INTERNAL_MODULE:
     case nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD:
     case nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS:
     case nsIContentPolicy::TYPE_SCRIPT:
-      return NS_LITERAL_CSTRING("script");
+      return "script"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_WORKER:
-      return NS_LITERAL_CSTRING("worker");
+      return "worker"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
-      return NS_LITERAL_CSTRING("sharedworker");
+      return "sharedworker"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
-      return NS_LITERAL_CSTRING("serviceworker");
+      return "serviceworker"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_AUDIOWORKLET:
-      return NS_LITERAL_CSTRING("audioworklet");
+      return "audioworklet"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET:
-      return NS_LITERAL_CSTRING("paintworklet");
+      return "paintworklet"_ns;
     case nsIContentPolicy::TYPE_IMAGESET:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
     case nsIContentPolicy::TYPE_IMAGE:
-      return NS_LITERAL_CSTRING("image");
+      return "image"_ns;
     case nsIContentPolicy::TYPE_STYLESHEET:
     case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
     case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
-      return NS_LITERAL_CSTRING("style");
+      return "style"_ns;
     case nsIContentPolicy::TYPE_OBJECT:
     case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
-      return NS_LITERAL_CSTRING("object");
+      return "object"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_EMBED:
-      return NS_LITERAL_CSTRING("embed");
+      return "embed"_ns;
     case nsIContentPolicy::TYPE_DOCUMENT:
-      return NS_LITERAL_CSTRING("document");
+      return "document"_ns;
     case nsIContentPolicy::TYPE_SUBDOCUMENT:
     case nsIContentPolicy::TYPE_INTERNAL_IFRAME:
-      return NS_LITERAL_CSTRING("iframe");
+      return "iframe"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_FRAME:
-      return NS_LITERAL_CSTRING("frame");
+      return "frame"_ns;
     case nsIContentPolicy::TYPE_REFRESH:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_PING:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
     case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_DTD:
     case nsIContentPolicy::TYPE_INTERNAL_DTD:
     case nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_FONT:
     case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
-      return NS_LITERAL_CSTRING("font");
+      return "font"_ns;
     case nsIContentPolicy::TYPE_MEDIA:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_AUDIO:
-      return NS_LITERAL_CSTRING("audio");
+      return "audio"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
-      return NS_LITERAL_CSTRING("video");
+      return "video"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_TRACK:
-      return NS_LITERAL_CSTRING("track");
+      return "track"_ns;
     case nsIContentPolicy::TYPE_WEBSOCKET:
-      return NS_LITERAL_CSTRING("websocket");
+      return "websocket"_ns;
     case nsIContentPolicy::TYPE_CSP_REPORT:
-      return NS_LITERAL_CSTRING("report");
+      return "report"_ns;
     case nsIContentPolicy::TYPE_XSLT:
-      return NS_LITERAL_CSTRING("xslt");
+      return "xslt"_ns;
     case nsIContentPolicy::TYPE_BEACON:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_FETCH:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_WEB_MANIFEST:
-      return NS_LITERAL_CSTRING("manifest");
+      return "manifest"_ns;
     case nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_SPECULATIVE:
-      return NS_LITERAL_CSTRING("empty");
+      return "empty"_ns;
     default:
       MOZ_CRASH("Unhandled nsContentPolicyType value");
       break;
   }
 
-  return NS_LITERAL_CSTRING("empty");
+  return "empty"_ns;
 }
 
 // Helper function to determine whether a request (including involved
@@ -224,8 +224,8 @@ void SecFetch::AddSecFetchDest(nsIHttpChannel* aHTTPChannel) {
   nsContentPolicyType contentType = loadInfo->InternalContentPolicyType();
   nsCString dest = MapInternalContentPolicyTypeToDest(contentType);
 
-  nsresult rv = aHTTPChannel->SetRequestHeader(
-      NS_LITERAL_CSTRING("Sec-Fetch-Dest"), dest, false);
+  nsresult rv =
+      aHTTPChannel->SetRequestHeader("Sec-Fetch-Dest"_ns, dest, false);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
@@ -238,9 +238,9 @@ void SecFetch::AddSecFetchMode(nsIHttpChannel* aHTTPChannel) {
 
   if (securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS ||
       securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED) {
-    mode = NS_LITERAL_CSTRING("same-origin");
+    mode = "same-origin"_ns;
   } else if (securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
-    mode = NS_LITERAL_CSTRING("cors");
+    mode = "cors"_ns;
   } else {
     // If it's not one of the security modes above, then we ensure it's
     // at least one of the others defined in nsILoadInfo
@@ -254,13 +254,13 @@ void SecFetch::AddSecFetchMode(nsIHttpChannel* aHTTPChannel) {
       externalType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
       externalType == nsIContentPolicy::TYPE_REFRESH ||
       externalType == nsIContentPolicy::TYPE_OBJECT) {
-    mode = NS_LITERAL_CSTRING("navigate");
+    mode = "navigate"_ns;
   } else if (externalType == nsIContentPolicy::TYPE_WEBSOCKET) {
-    mode = NS_LITERAL_CSTRING("websocket");
+    mode = "websocket"_ns;
   }
 
-  nsresult rv = aHTTPChannel->SetRequestHeader(
-      NS_LITERAL_CSTRING("Sec-Fetch-Mode"), mode, false);
+  nsresult rv =
+      aHTTPChannel->SetRequestHeader("Sec-Fetch-Mode"_ns, mode, false);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
@@ -271,18 +271,18 @@ void SecFetch::AddSecFetchSite(nsIHttpChannel* aHTTPChannel) {
   if (!isSameOrigin) {
     bool isSameSite = IsSameSite(aHTTPChannel);
     if (isSameSite) {
-      site = NS_LITERAL_CSTRING("same-site");
+      site = "same-site"_ns;
     } else {
-      site = NS_LITERAL_CSTRING("cross-site");
+      site = "cross-site"_ns;
     }
   }
 
   if (IsUserTriggeredForSecFetchSite(aHTTPChannel)) {
-    site = NS_LITERAL_CSTRING("none");
+    site = "none"_ns;
   }
 
-  nsresult rv = aHTTPChannel->SetRequestHeader(
-      NS_LITERAL_CSTRING("Sec-Fetch-Site"), site, false);
+  nsresult rv =
+      aHTTPChannel->SetRequestHeader("Sec-Fetch-Site"_ns, site, false);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
@@ -302,8 +302,8 @@ void SecFetch::AddSecFetchUser(nsIHttpChannel* aHTTPChannel) {
   }
 
   nsAutoCString user("?1");
-  nsresult rv = aHTTPChannel->SetRequestHeader(
-      NS_LITERAL_CSTRING("Sec-Fetch-User"), user, false);
+  nsresult rv =
+      aHTTPChannel->SetRequestHeader("Sec-Fetch-User"_ns, user, false);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 

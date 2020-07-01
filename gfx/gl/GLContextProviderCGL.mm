@@ -297,12 +297,12 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateHeadless(const GLContext
                                                                  nsACString* const out_failureId) {
   auto gl = CreateOffscreenFBOContext(desc);
   if (!gl) {
-    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_CGL_FBO");
+    *out_failureId = "FEATURE_FAILURE_CGL_FBO"_ns;
     return nullptr;
   }
 
   if (!gl->Init()) {
-    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_CGL_INIT");
+    *out_failureId = "FEATURE_FAILURE_CGL_INIT"_ns;
     NS_WARNING("Failed during Init.");
     return nullptr;
   }

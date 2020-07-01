@@ -119,9 +119,9 @@ nsresult nsAboutCacheEntry::Channel::Init(nsIURI* uri, nsILoadInfo* aLoadInfo) {
   rv = GetContentStream(uri, getter_AddRefs(stream));
   if (NS_FAILED(rv)) return rv;
 
-  rv = NS_NewInputStreamChannelInternal(
-      getter_AddRefs(mChannel), uri, stream.forget(),
-      NS_LITERAL_CSTRING("text/html"), NS_LITERAL_CSTRING("utf-8"), aLoadInfo);
+  rv = NS_NewInputStreamChannelInternal(getter_AddRefs(mChannel), uri,
+                                        stream.forget(), "text/html"_ns,
+                                        "utf-8"_ns, aLoadInfo);
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
@@ -211,14 +211,14 @@ nsresult nsAboutCacheEntry::Channel::ParseURI(nsIURI* uri,
 
   keyBegin = begin;
   keyEnd = end;
-  if (!FindInReadable(NS_LITERAL_CSTRING("?storage="), keyBegin, keyEnd))
+  if (!FindInReadable("?storage="_ns, keyBegin, keyEnd))
     return NS_ERROR_FAILURE;
 
   valBegin = keyEnd;  // the value of the storage key starts after the key
 
   keyBegin = keyEnd;
   keyEnd = end;
-  if (!FindInReadable(NS_LITERAL_CSTRING("&context="), keyBegin, keyEnd))
+  if (!FindInReadable("&context="_ns, keyBegin, keyEnd))
     return NS_ERROR_FAILURE;
 
   storageName.Assign(Substring(valBegin, keyBegin));
@@ -226,16 +226,14 @@ nsresult nsAboutCacheEntry::Channel::ParseURI(nsIURI* uri,
 
   keyBegin = keyEnd;
   keyEnd = end;
-  if (!FindInReadable(NS_LITERAL_CSTRING("&eid="), keyBegin, keyEnd))
-    return NS_ERROR_FAILURE;
+  if (!FindInReadable("&eid="_ns, keyBegin, keyEnd)) return NS_ERROR_FAILURE;
 
   nsAutoCString contextKey(Substring(valBegin, keyBegin));
   valBegin = keyEnd;  // the value of the eid key starts after the key
 
   keyBegin = keyEnd;
   keyEnd = end;
-  if (!FindInReadable(NS_LITERAL_CSTRING("&uri="), keyBegin, keyEnd))
-    return NS_ERROR_FAILURE;
+  if (!FindInReadable("&uri="_ns, keyBegin, keyEnd)) return NS_ERROR_FAILURE;
 
   enahnceID.Assign(Substring(valBegin, keyBegin));
 

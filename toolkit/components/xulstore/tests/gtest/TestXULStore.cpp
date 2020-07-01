@@ -14,16 +14,16 @@ using mozilla::XULStore::SetValue;
 
 TEST(XULStore, SetGetValue)
 {
-  nsAutoString doc(NS_LITERAL_STRING("SetGetValue"));
-  nsAutoString id(NS_LITERAL_STRING("foo"));
-  nsAutoString attr(NS_LITERAL_STRING("bar"));
+  nsAutoString doc(u"SetGetValue"_ns);
+  nsAutoString id(u"foo"_ns);
+  nsAutoString attr(u"bar"_ns);
   nsAutoString value;
 
   EXPECT_EQ(GetValue(doc, id, attr, value), NS_OK);
   EXPECT_TRUE(value.EqualsASCII(""));
 
   {
-    nsAutoString value(NS_LITERAL_STRING("baz"));
+    nsAutoString value(u"baz"_ns);
     EXPECT_EQ(SetValue(doc, id, attr, value), NS_OK);
   }
 
@@ -33,13 +33,13 @@ TEST(XULStore, SetGetValue)
 
 TEST(XULStore, HasValue)
 {
-  nsAutoString doc(NS_LITERAL_STRING("HasValue"));
-  nsAutoString id(NS_LITERAL_STRING("foo"));
-  nsAutoString attr(NS_LITERAL_STRING("bar"));
+  nsAutoString doc(u"HasValue"_ns);
+  nsAutoString id(u"foo"_ns);
+  nsAutoString attr(u"bar"_ns);
   bool hasValue = true;
   EXPECT_EQ(HasValue(doc, id, attr, hasValue), NS_OK);
   EXPECT_FALSE(hasValue);
-  nsAutoString value(NS_LITERAL_STRING("baz"));
+  nsAutoString value(u"baz"_ns);
   EXPECT_EQ(SetValue(doc, id, attr, value), NS_OK);
   EXPECT_EQ(HasValue(doc, id, attr, hasValue), NS_OK);
   EXPECT_TRUE(hasValue);
@@ -47,10 +47,10 @@ TEST(XULStore, HasValue)
 
 TEST(XULStore, RemoveValue)
 {
-  nsAutoString doc(NS_LITERAL_STRING("RemoveValue"));
-  nsAutoString id(NS_LITERAL_STRING("foo"));
-  nsAutoString attr(NS_LITERAL_STRING("bar"));
-  nsAutoString value(NS_LITERAL_STRING("baz"));
+  nsAutoString doc(u"RemoveValue"_ns);
+  nsAutoString id(u"foo"_ns);
+  nsAutoString attr(u"bar"_ns);
+  nsAutoString value(u"baz"_ns);
   EXPECT_EQ(SetValue(doc, id, attr, value), NS_OK);
   EXPECT_EQ(GetValue(doc, id, attr, value), NS_OK);
   EXPECT_TRUE(value.EqualsASCII("baz"));
@@ -61,12 +61,12 @@ TEST(XULStore, RemoveValue)
 
 TEST(XULStore, GetIDsIterator)
 {
-  nsAutoString doc(NS_LITERAL_STRING("idIterDoc"));
-  nsAutoString id1(NS_LITERAL_STRING("id1"));
-  nsAutoString id2(NS_LITERAL_STRING("id2"));
-  nsAutoString id3(NS_LITERAL_STRING("id3"));
-  nsAutoString attr(NS_LITERAL_STRING("attr"));
-  nsAutoString value(NS_LITERAL_STRING("value"));
+  nsAutoString doc(u"idIterDoc"_ns);
+  nsAutoString id1(u"id1"_ns);
+  nsAutoString id2(u"id2"_ns);
+  nsAutoString id3(u"id3"_ns);
+  nsAutoString attr(u"attr"_ns);
+  nsAutoString value(u"value"_ns);
   nsAutoString id;
 
   // Confirm that the store doesn't have any IDs yet.
@@ -83,8 +83,8 @@ TEST(XULStore, GetIDsIterator)
 
   // Insert different ID for another doc to confirm that store
   // won't return it when iterating IDs for our doc.
-  nsAutoString otherDoc(NS_LITERAL_STRING("otherDoc"));
-  nsAutoString otherID(NS_LITERAL_STRING("otherID"));
+  nsAutoString otherDoc(u"otherDoc"_ns);
+  nsAutoString otherID(u"otherID"_ns);
   EXPECT_EQ(SetValue(otherDoc, otherID, attr, value), NS_OK);
 
   EXPECT_EQ(GetIDs(doc, iter), NS_OK);
@@ -102,12 +102,12 @@ TEST(XULStore, GetIDsIterator)
 
 TEST(XULStore, GetAttributeIterator)
 {
-  nsAutoString doc(NS_LITERAL_STRING("attrIterDoc"));
-  nsAutoString id(NS_LITERAL_STRING("id"));
-  nsAutoString attr1(NS_LITERAL_STRING("attr1"));
-  nsAutoString attr2(NS_LITERAL_STRING("attr2"));
-  nsAutoString attr3(NS_LITERAL_STRING("attr3"));
-  nsAutoString value(NS_LITERAL_STRING("value"));
+  nsAutoString doc(u"attrIterDoc"_ns);
+  nsAutoString id(u"id"_ns);
+  nsAutoString attr1(u"attr1"_ns);
+  nsAutoString attr2(u"attr2"_ns);
+  nsAutoString attr3(u"attr3"_ns);
+  nsAutoString value(u"value"_ns);
   nsAutoString attr;
 
   mozilla::UniquePtr<XULStoreIterator> iter;
@@ -123,8 +123,8 @@ TEST(XULStore, GetAttributeIterator)
 
   // Insert different attribute for another ID to confirm that store
   // won't return it when iterating attributes for our ID.
-  nsAutoString otherID(NS_LITERAL_STRING("otherID"));
-  nsAutoString otherAttr(NS_LITERAL_STRING("otherAttr"));
+  nsAutoString otherID(u"otherID"_ns);
+  nsAutoString otherAttr(u"otherAttr"_ns);
   EXPECT_EQ(SetValue(doc, otherID, otherAttr, value), NS_OK);
 
   EXPECT_EQ(GetAttrs(doc, id, iter), NS_OK);

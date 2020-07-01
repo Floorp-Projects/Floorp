@@ -134,9 +134,9 @@ nsresult txUnknownHandler::startElement(nsAtom* aPrefix,
     NS_ASSERTION(mEs->mResultHandler == this,
                  "We're leaking mEs->mResultHandler.");
 
-    bool htmlRoot = aNsID == kNameSpaceID_None && !aPrefix &&
-                    aLocalName.Equals(NS_LITERAL_STRING("html"),
-                                      nsCaseInsensitiveStringComparator);
+    bool htmlRoot =
+        aNsID == kNameSpaceID_None && !aPrefix &&
+        aLocalName.Equals(u"html"_ns, nsCaseInsensitiveStringComparator);
     nsresult rv = createHandlerAndFlush(htmlRoot, aLocalName, aNsID);
     NS_ENSURE_SUCCESS(rv, rv);
   }

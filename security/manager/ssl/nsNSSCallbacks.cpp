@@ -607,35 +607,35 @@ nsCString getKeaGroupName(uint32_t aKeaGroup) {
   nsCString groupName;
   switch (aKeaGroup) {
     case ssl_grp_ec_secp256r1:
-      groupName = NS_LITERAL_CSTRING("P256");
+      groupName = "P256"_ns;
       break;
     case ssl_grp_ec_secp384r1:
-      groupName = NS_LITERAL_CSTRING("P384");
+      groupName = "P384"_ns;
       break;
     case ssl_grp_ec_secp521r1:
-      groupName = NS_LITERAL_CSTRING("P521");
+      groupName = "P521"_ns;
       break;
     case ssl_grp_ec_curve25519:
-      groupName = NS_LITERAL_CSTRING("x25519");
+      groupName = "x25519"_ns;
       break;
     case ssl_grp_ffdhe_2048:
-      groupName = NS_LITERAL_CSTRING("FF 2048");
+      groupName = "FF 2048"_ns;
       break;
     case ssl_grp_ffdhe_3072:
-      groupName = NS_LITERAL_CSTRING("FF 3072");
+      groupName = "FF 3072"_ns;
       break;
     case ssl_grp_none:
-      groupName = NS_LITERAL_CSTRING("none");
+      groupName = "none"_ns;
       break;
     case ssl_grp_ffdhe_custom:
-      groupName = NS_LITERAL_CSTRING("custom");
+      groupName = "custom"_ns;
       break;
     // All other groups are not enabled in Firefox. See namedGroups in
     // nsNSSIOLayer.cpp.
     default:
       // This really shouldn't happen!
       MOZ_ASSERT_UNREACHABLE("Invalid key exchange group.");
-      groupName = NS_LITERAL_CSTRING("unknown group");
+      groupName = "unknown group"_ns;
   }
   return groupName;
 }
@@ -644,50 +644,50 @@ nsCString getSignatureName(uint32_t aSignatureScheme) {
   nsCString signatureName;
   switch (aSignatureScheme) {
     case ssl_sig_none:
-      signatureName = NS_LITERAL_CSTRING("none");
+      signatureName = "none"_ns;
       break;
     case ssl_sig_rsa_pkcs1_sha1:
-      signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA1");
+      signatureName = "RSA-PKCS1-SHA1"_ns;
       break;
     case ssl_sig_rsa_pkcs1_sha256:
-      signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA256");
+      signatureName = "RSA-PKCS1-SHA256"_ns;
       break;
     case ssl_sig_rsa_pkcs1_sha384:
-      signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA384");
+      signatureName = "RSA-PKCS1-SHA384"_ns;
       break;
     case ssl_sig_rsa_pkcs1_sha512:
-      signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA512");
+      signatureName = "RSA-PKCS1-SHA512"_ns;
       break;
     case ssl_sig_ecdsa_secp256r1_sha256:
-      signatureName = NS_LITERAL_CSTRING("ECDSA-P256-SHA256");
+      signatureName = "ECDSA-P256-SHA256"_ns;
       break;
     case ssl_sig_ecdsa_secp384r1_sha384:
-      signatureName = NS_LITERAL_CSTRING("ECDSA-P384-SHA384");
+      signatureName = "ECDSA-P384-SHA384"_ns;
       break;
     case ssl_sig_ecdsa_secp521r1_sha512:
-      signatureName = NS_LITERAL_CSTRING("ECDSA-P521-SHA512");
+      signatureName = "ECDSA-P521-SHA512"_ns;
       break;
     case ssl_sig_rsa_pss_sha256:
-      signatureName = NS_LITERAL_CSTRING("RSA-PSS-SHA256");
+      signatureName = "RSA-PSS-SHA256"_ns;
       break;
     case ssl_sig_rsa_pss_sha384:
-      signatureName = NS_LITERAL_CSTRING("RSA-PSS-SHA384");
+      signatureName = "RSA-PSS-SHA384"_ns;
       break;
     case ssl_sig_rsa_pss_sha512:
-      signatureName = NS_LITERAL_CSTRING("RSA-PSS-SHA512");
+      signatureName = "RSA-PSS-SHA512"_ns;
       break;
     case ssl_sig_ecdsa_sha1:
-      signatureName = NS_LITERAL_CSTRING("ECDSA-SHA1");
+      signatureName = "ECDSA-SHA1"_ns;
       break;
     case ssl_sig_rsa_pkcs1_sha1md5:
-      signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA1MD5");
+      signatureName = "RSA-PKCS1-SHA1MD5"_ns;
       break;
     // All other groups are not enabled in Firefox. See sEnabledSignatureSchemes
     // in nsNSSIOLayer.cpp.
     default:
       // This really shouldn't happen!
       MOZ_ASSERT_UNREACHABLE("Invalid signature scheme.");
-      signatureName = NS_LITERAL_CSTRING("unknown signature");
+      signatureName = "unknown signature"_ns;
   }
   return signatureName;
 }

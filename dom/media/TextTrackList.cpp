@@ -83,7 +83,7 @@ void TextTrackList::AddTextTrack(TextTrack* aTextTrack,
   }
   mTextTracks.InsertElementSorted(aTextTrack, aCompareTT);
   aTextTrack->SetTextTrackList(this);
-  CreateAndDispatchTrackEventRunner(aTextTrack, NS_LITERAL_STRING("addtrack"));
+  CreateAndDispatchTrackEventRunner(aTextTrack, u"addtrack"_ns);
 }
 
 TextTrack* TextTrackList::GetTrackById(const nsAString& aId) {
@@ -99,7 +99,7 @@ TextTrack* TextTrackList::GetTrackById(const nsAString& aId) {
 
 void TextTrackList::RemoveTextTrack(TextTrack* aTrack) {
   if (mTextTracks.RemoveElement(aTrack)) {
-    CreateAndDispatchTrackEventRunner(aTrack, NS_LITERAL_STRING("removetrack"));
+    CreateAndDispatchTrackEventRunner(aTrack, u"removetrack"_ns);
   }
 }
 
@@ -129,7 +129,7 @@ void TextTrackList::CreateAndDispatchChangeEvent() {
 
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
-  event->InitEvent(NS_LITERAL_STRING("change"), false, false);
+  event->InitEvent(u"change"_ns, false, false);
   event->SetTrusted(true);
 
   nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);

@@ -75,7 +75,7 @@ void nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList) {
   // MOZILLA_POSTSCRIPT_PRINTER_LIST or a preference setting
   // print.printer_list, which contains a space-separated list of printer
   // names.
-  aList.AppendElement(NS_LITERAL_CSTRING(NS_POSTSCRIPT_DRIVER_NAME "default"));
+  aList.AppendElement(nsLiteralCString(NS_POSTSCRIPT_DRIVER_NAME "default"));
 
   nsAutoCString list(PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST"));
   if (list.IsEmpty()) {
@@ -100,10 +100,10 @@ void nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList) {
 /* Identify the printer type */
 nsPSPrinterList::PrinterType nsPSPrinterList::GetPrinterType(
     const nsACString& aName) {
-  if (StringBeginsWith(aName, NS_LITERAL_CSTRING(NS_POSTSCRIPT_DRIVER_NAME))) {
+  if (StringBeginsWith(aName, nsLiteralCString(NS_POSTSCRIPT_DRIVER_NAME))) {
     return kTypePS;
   }
-  if (StringBeginsWith(aName, NS_LITERAL_CSTRING(NS_CUPS_PRINTER))) {
+  if (StringBeginsWith(aName, nsLiteralCString(NS_CUPS_PRINTER))) {
     return kTypeCUPS;
   }
   return kTypeUnknown;

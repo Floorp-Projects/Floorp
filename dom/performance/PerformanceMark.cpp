@@ -12,8 +12,7 @@ using namespace mozilla::dom;
 
 PerformanceMark::PerformanceMark(nsISupports* aParent, const nsAString& aName,
                                  DOMHighResTimeStamp aStartTime)
-    : PerformanceEntry(aParent, aName, NS_LITERAL_STRING("mark")),
-      mStartTime(aStartTime) {}
+    : PerformanceEntry(aParent, aName, u"mark"_ns), mStartTime(aStartTime) {}
 
 PerformanceMark::~PerformanceMark() = default;
 

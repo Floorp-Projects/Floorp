@@ -362,7 +362,7 @@ already_AddRefed<DOMException> DOMException::Constructor(
     const Optional<nsAString>& aName) {
   nsresult exceptionResult = NS_OK;
   uint16_t exceptionCode = 0;
-  nsCString name(NS_LITERAL_CSTRING("Error"));
+  nsCString name("Error"_ns);
 
   if (aName.WasPassed()) {
     CopyUTF16toUTF8(aName.Value(), name);

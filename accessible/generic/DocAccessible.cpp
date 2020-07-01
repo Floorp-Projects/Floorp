@@ -824,8 +824,7 @@ void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
   // Check for namespaced ARIA attribute
   if (aNameSpaceID == kNameSpaceID_None) {
     // Check for hyphenated aria-foo property?
-    if (StringBeginsWith(nsDependentAtomString(aAttribute),
-                         NS_LITERAL_STRING("aria-"))) {
+    if (StringBeginsWith(nsDependentAtomString(aAttribute), u"aria-"_ns)) {
       ARIAAttributeChanged(aAccessible, aAttribute);
     }
   }

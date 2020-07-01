@@ -48,7 +48,7 @@ class nsDeckFrame final : public nsBoxFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("Deck"), aResult);
+    return MakeFrameName(u"Deck"_ns, aResult);
   }
 #endif
 

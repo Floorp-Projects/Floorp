@@ -521,7 +521,7 @@ void OscillatorNode::NotifyMainThreadTrackEnded() {
         return NS_OK;
       }
 
-      mNode->DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
+      mNode->DispatchTrustedEvent(u"ended"_ns);
       // Release track resources.
       mNode->DestroyMediaTrack();
       return NS_OK;

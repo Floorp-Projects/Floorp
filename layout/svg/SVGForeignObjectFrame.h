@@ -67,7 +67,7 @@ class SVGForeignObjectFrame final : public nsContainerFrame,
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGForeignObject"), aResult);
+    return MakeFrameName(u"SVGForeignObject"_ns, aResult);
   }
 #endif
 

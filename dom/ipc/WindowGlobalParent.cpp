@@ -352,7 +352,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentTitle(
     return IPC_OK();
   }
 
-  (new AsyncEventDispatcher(frameElement, NS_LITERAL_STRING("pagetitlechanged"),
+  (new AsyncEventDispatcher(frameElement, u"pagetitlechanged"_ns,
                             CanBubble::eYes, ChromeOnlyDispatch::eYes))
       ->RunDOMEventWhenSafe();
 

@@ -337,7 +337,7 @@ nsresult nsAutoConfig::readOfflineFile() {
                               getter_AddRefs(failoverFile));
   if (NS_FAILED(rv)) return rv;
 
-  failoverFile->AppendNative(NS_LITERAL_CSTRING("failover.jsc"));
+  failoverFile->AppendNative("failover.jsc"_ns);
   rv = evaluateLocalFile(failoverFile);
   if (NS_FAILED(rv))
     NS_WARNING("Couldn't open failover.jsc, going back to default prefs");
@@ -377,7 +377,7 @@ nsresult nsAutoConfig::writeFailoverFile() {
                               getter_AddRefs(failoverFile));
   if (NS_FAILED(rv)) return rv;
 
-  failoverFile->AppendNative(NS_LITERAL_CSTRING("failover.jsc"));
+  failoverFile->AppendNative("failover.jsc"_ns);
 
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStr), failoverFile);
   if (NS_FAILED(rv)) return rv;
@@ -400,16 +400,14 @@ nsresult nsAutoConfig::getEmailAddr(nsACString& emailAddr) {
   rv =
       mPrefBranch->GetCharPref("mail.accountmanager.defaultaccount", prefValue);
   if (NS_SUCCEEDED(rv) && !prefValue.IsEmpty()) {
-    emailAddr = NS_LITERAL_CSTRING("mail.account.") + prefValue +
-                NS_LITERAL_CSTRING(".identities");
+    emailAddr = "mail.account."_ns + prefValue + ".identities"_ns;
     rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                   prefValue);
     if (NS_FAILED(rv) || prefValue.IsEmpty())
       return PromptForEMailAddress(emailAddr);
     int32_t commandIndex = prefValue.FindChar(',');
     if (commandIndex != kNotFound) prefValue.Truncate(commandIndex);
-    emailAddr = NS_LITERAL_CSTRING("mail.identity.") + prefValue +
-                NS_LITERAL_CSTRING(".useremail");
+    emailAddr = "mail.identity."_ns + prefValue + ".useremail"_ns;
     rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                   prefValue);
     if (NS_FAILED(rv) || prefValue.IsEmpty())

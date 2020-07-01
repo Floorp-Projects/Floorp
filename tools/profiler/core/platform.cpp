@@ -2522,7 +2522,7 @@ static void StreamMetaJSCustomObject(
 
           aWriter.StringElement(NS_ConvertUTF16toUTF8(ext->Name()).get());
 
-          auto url = ext->GetURL(NS_LITERAL_STRING(""));
+          auto url = ext->GetURL(u""_ns);
           if (url.isOk()) {
             aWriter.StringElement(NS_ConvertUTF16toUTF8(url.unwrap()).get());
           }

@@ -146,9 +146,9 @@ void nsHTMLTags::TestTagTable() {
   }
 
   // Make sure we don't find things that aren't there
-  id = StringTagToId(NS_LITERAL_STRING("@"));
+  id = StringTagToId(u"@"_ns);
   NS_ASSERTION(id == eHTMLTag_userdefined, "found @");
-  id = StringTagToId(NS_LITERAL_STRING("zzzzz"));
+  id = StringTagToId(u"zzzzz"_ns);
   NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
 
   atom = NS_Atomize("@");

@@ -414,8 +414,8 @@ nsresult PageThumbProtocolHandler::GetThumbnailPath(const nsACString& aPath,
 
   // Extract URL from query string.
   nsAutoString url;
-  bool found = dom::URLParams::Extract(Substring(aPath, queryIndex + 1),
-                                       NS_LITERAL_STRING("url"), url);
+  bool found =
+      dom::URLParams::Extract(Substring(aPath, queryIndex + 1), u"url"_ns, url);
   if (!found || url.IsVoid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }

@@ -191,8 +191,7 @@ void xpc::ErrorNote::Init(JSErrorNotes::Note* aNote) {
 void xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
                             bool aIsChrome, uint64_t aWindowID) {
   xpc::ErrorBase::Init(aReport);
-  mCategory = aIsChrome ? NS_LITERAL_CSTRING("chrome javascript")
-                        : NS_LITERAL_CSTRING("content javascript");
+  mCategory = aIsChrome ? "chrome javascript"_ns : "content javascript"_ns;
   mWindowID = aWindowID;
 
   if (aToStringResult) {
@@ -231,8 +230,7 @@ void xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
 
 void xpc::ErrorReport::Init(JSContext* aCx, mozilla::dom::Exception* aException,
                             bool aIsChrome, uint64_t aWindowID) {
-  mCategory = aIsChrome ? NS_LITERAL_CSTRING("chrome javascript")
-                        : NS_LITERAL_CSTRING("content javascript");
+  mCategory = aIsChrome ? "chrome javascript"_ns : "content javascript"_ns;
   mWindowID = aWindowID;
 
   aException->GetErrorMessage(mErrorMsg);
@@ -328,7 +326,7 @@ void xpc::ErrorReport::LogToConsoleWithStack(
       mIsWarning ? nsIScriptError::warningFlag : nsIScriptError::errorFlag;
   nsresult rv = errorObject->InitWithWindowID(
       mErrorMsg, mFileName, mSourceLine, mLineNumber, mColumn, flags, mCategory,
-      mWindowID, mCategory.Equals(NS_LITERAL_CSTRING("chrome javascript")));
+      mWindowID, mCategory.Equals("chrome javascript"_ns));
   NS_ENSURE_SUCCESS_VOID(rv);
 
   rv = errorObject->InitSourceId(mSourceId);
@@ -756,7 +754,7 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, const char* filename,
   if (filename) {
     filenameStr.Assign(filename);
   } else {
-    filenameStr = NS_LITERAL_CSTRING("x-bogus://XPConnect/Sandbox");
+    filenameStr = "x-bogus://XPConnect/Sandbox"_ns;
   }
   return EvalInSandbox(cx, sandbox, source, filenameStr, 1,
                        /* enforceFilenameRestrictions */ true, rval);

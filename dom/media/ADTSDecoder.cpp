@@ -13,7 +13,7 @@ namespace mozilla {
 /* static */
 bool ADTSDecoder::IsEnabled() {
   RefPtr<PDMFactory> platform = new PDMFactory();
-  return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mp4a-latm"),
+  return platform->SupportsMimeType("audio/mp4a-latm"_ns,
                                     /* DecoderDoctorDiagnostics* */ nullptr);
 }
 
@@ -39,7 +39,7 @@ nsTArray<UniquePtr<TrackInfo>> ADTSDecoder::GetTracksInfo(
 
   tracks.AppendElement(
       CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
+          "audio/mp4a-latm"_ns, aType));
 
   return tracks;
 }

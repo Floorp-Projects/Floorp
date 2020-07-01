@@ -252,7 +252,7 @@ bool HTMLEditor::CreateGrabberInternal(nsIContent& aParentContent) {
   }
 
   mGrabber = CreateAnonymousElement(nsGkAtoms::span, aParentContent,
-                                    NS_LITERAL_STRING("mozGrabber"), false);
+                                    u"mozGrabber"_ns, false);
 
   // mGrabber may be destroyed during creation due to there may be
   // mutation event listener.
@@ -266,8 +266,7 @@ bool HTMLEditor::CreateGrabberInternal(nsIContent& aParentContent) {
   EventListenerManager* eventListenerManager =
       mGrabber->GetOrCreateListenerManager();
   eventListenerManager->AddEventListenerByType(
-      mEventListener, NS_LITERAL_STRING("mousedown"),
-      TrustedEventsAtSystemGroupBubble());
+      mEventListener, u"mousedown"_ns, TrustedEventsAtSystemGroupBubble());
   MOZ_ASSERT(mGrabber);
   return true;
 }
@@ -597,7 +596,7 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
                        "HTMLEditor::GetElementOrigin() failed, but ignored");
 
   rvIgnored = mCSSEditUtils->SetCSSProperty(aElement, *nsGkAtoms::position,
-                                            NS_LITERAL_STRING("absolute"));
+                                            u"absolute"_ns);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "CSSEditUtils::SetCSSProperty(nsGkAtoms::position, "
                        "absolute) failed, but ignored");

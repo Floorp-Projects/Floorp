@@ -40,10 +40,9 @@ MediaKeySystemAccessPermissionRequest::Create(nsPIDOMWindowInner* aWindow) {
 
 MediaKeySystemAccessPermissionRequest::MediaKeySystemAccessPermissionRequest(
     nsGlobalWindowInner* aWindow)
-    : ContentPermissionRequestBase(
-          aWindow->GetPrincipal(), aWindow,
-          NS_LITERAL_CSTRING("media.eme.require-app-approval"),
-          NS_LITERAL_CSTRING("media-key-system-access")) {}
+    : ContentPermissionRequestBase(aWindow->GetPrincipal(), aWindow,
+                                   "media.eme.require-app-approval"_ns,
+                                   "media-key-system-access"_ns) {}
 
 MediaKeySystemAccessPermissionRequest::
     ~MediaKeySystemAccessPermissionRequest() {

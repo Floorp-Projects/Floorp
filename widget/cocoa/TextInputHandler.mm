@@ -4688,8 +4688,7 @@ bool IMEInputHandler::OnHandleEvent(NSEvent* aEvent) {
     tis.InitByCurrentInputSource();
     nsAutoString inputSourceID;
     tis.GetInputSourceID(inputSourceID);
-    allowConsumeEvent =
-        !StringBeginsWith(inputSourceID, NS_LITERAL_STRING("com.apple.inputmethod.Korean."));
+    allowConsumeEvent = !StringBeginsWith(inputSourceID, u"com.apple.inputmethod.Korean."_ns);
   }
   NSTextInputContext* inputContext = [mView inputContext];
   return [inputContext handleEvent:aEvent] && allowConsumeEvent;

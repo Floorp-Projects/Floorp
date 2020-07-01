@@ -208,7 +208,7 @@ void UIEvent::DuplicatePrivateData() {
 
 void UIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) {
   if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, NS_LITERAL_STRING("uievent"));
+    IPC::WriteParam(aMsg, u"uievent"_ns);
   }
 
   Event::Serialize(aMsg, false);

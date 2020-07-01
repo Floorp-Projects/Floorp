@@ -80,8 +80,7 @@ void AbortSignal::Abort() {
   init.mBubbles = false;
   init.mCancelable = false;
 
-  RefPtr<Event> event =
-      Event::Constructor(this, NS_LITERAL_STRING("abort"), init);
+  RefPtr<Event> event = Event::Constructor(this, u"abort"_ns, init);
   event->SetTrusted(true);
 
   DispatchEvent(*event);

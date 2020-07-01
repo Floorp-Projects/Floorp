@@ -207,7 +207,7 @@ static nsresult InitOperators(void) {
   nsCOMPtr<nsIPersistentProperties> mathfontProp;
   rv = NS_LoadPersistentPropertiesFromURISpec(
       getter_AddRefs(mathfontProp),
-      NS_LITERAL_CSTRING("resource://gre/res/fonts/mathfont.properties"));
+      "resource://gre/res/fonts/mathfont.properties"_ns);
 
   if (NS_FAILED(rv)) return rv;
 

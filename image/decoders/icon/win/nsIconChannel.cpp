@@ -498,7 +498,7 @@ nsresult nsIconChannel::GetHIconFromFile(bool aNonBlocking, HICON* hIcon) {
     // If the mime service does not know about this mime type, we show
     // the generic icon.
     // In any case, we need to insert a '.' before the extension.
-    filePath = NS_LITERAL_STRING(".") + NS_ConvertUTF8toUTF16(defFileExt);
+    filePath = u"."_ns + NS_ConvertUTF8toUTF16(defFileExt);
   }
 
   if (aNonBlocking) {

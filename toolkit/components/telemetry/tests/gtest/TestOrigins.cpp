@@ -133,8 +133,8 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceMixed) {
   Preferences::SetCString("prio.publicKeyB", prioKeyB);
 
   nsTArray<Tuple<nsCString, nsCString>> encodedStrings;
-  GetEncodedOriginStrings(
-      aCx, kTelemetryTest1Metric + NS_LITERAL_CSTRING("-%u"), encodedStrings);
+  GetEncodedOriginStrings(aCx, kTelemetryTest1Metric + "-%u"_ns,
+                          encodedStrings);
   ASSERT_EQ(2 * TelemetryOrigin::SizeOfPrioDatasPerMetric(),
             encodedStrings.Length());
 
@@ -218,13 +218,11 @@ TEST_F(TelemetryTestFixture, EncodedSnapshot) {
   Preferences::SetCString("prio.publicKeyB", prioKeyB);
 
   nsTArray<Tuple<nsCString, nsCString>> firstStrings;
-  GetEncodedOriginStrings(
-      aCx, kTelemetryTest1Metric + NS_LITERAL_CSTRING("-%u"), firstStrings);
+  GetEncodedOriginStrings(aCx, kTelemetryTest1Metric + "-%u"_ns, firstStrings);
 
   // Now snapshot a second time and ensure the encoded payloads change.
   nsTArray<Tuple<nsCString, nsCString>> secondStrings;
-  GetEncodedOriginStrings(
-      aCx, kTelemetryTest1Metric + NS_LITERAL_CSTRING("-%u"), secondStrings);
+  GetEncodedOriginStrings(aCx, kTelemetryTest1Metric + "-%u"_ns, secondStrings);
 
   const auto sizeOfPrioDatasPerMetric =
       TelemetryOrigin::SizeOfPrioDatasPerMetric();

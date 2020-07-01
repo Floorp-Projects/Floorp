@@ -2936,7 +2936,7 @@ void nsGlobalWindowInner::GetOwnPropertyNames(
   }
 
   // "Components" is marked as enumerable but only resolved on demand :-/.
-  // aNames.AppendElement(NS_LITERAL_STRING("Components"));
+  // aNames.AppendElement(u"Components"_ns);
 
   JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
 
@@ -4261,7 +4261,7 @@ nsresult nsGlobalWindowInner::FireHashchange(const nsAString& aOldURL,
   init.mOldURL = aOldURL;
 
   RefPtr<HashChangeEvent> event =
-      HashChangeEvent::Constructor(this, NS_LITERAL_STRING("hashchange"), init);
+      HashChangeEvent::Constructor(this, u"hashchange"_ns, init);
 
   event->SetTrusted(true);
 
@@ -4299,7 +4299,7 @@ nsresult nsGlobalWindowInner::DispatchSyncPopState() {
   init.mState = stateJSValue;
 
   RefPtr<PopStateEvent> event =
-      PopStateEvent::Constructor(this, NS_LITERAL_STRING("popstate"), init);
+      PopStateEvent::Constructor(this, u"popstate"_ns, init);
   event->SetTrusted(true);
   event->SetTarget(this);
 
@@ -4755,7 +4755,7 @@ nsGlobalWindowInner::ShowSlowScriptDialog(JSContext* aCx,
   mHasHadSlowScript = true;
 
   // Override the cursor to something that we're sure the user can see.
-  SetCursor(NS_LITERAL_CSTRING("auto"), IgnoreErrors());
+  SetCursor("auto"_ns, IgnoreErrors());
 
   if (XRE_IsContentProcess() && ProcessHangMonitor::Get()) {
     ProcessHangMonitor::SlowScriptAction action;
@@ -4982,7 +4982,7 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
 
     nsAutoCString type;
     perm->GetType(type);
-    if (type == NS_LITERAL_CSTRING("autoplay-media")) {
+    if (type == "autoplay-media"_ns) {
       UpdateAutoplayPermission();
     }
 
@@ -5017,7 +5017,7 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
-    event->InitEvent(NS_LITERAL_STRING("languagechange"), false, false);
+    event->InitEvent(u"languagechange"_ns, false, false);
     event->SetTrusted(true);
 
     ErrorResult rv;
@@ -6433,8 +6433,8 @@ void nsGlobalWindowInner::DispatchVRDisplayActivate(
       init.mDisplay = display;
       init.mReason.Construct(aReason);
 
-      RefPtr<VRDisplayEvent> event = VRDisplayEvent::Constructor(
-          this, NS_LITERAL_STRING("vrdisplayactivate"), init);
+      RefPtr<VRDisplayEvent> event =
+          VRDisplayEvent::Constructor(this, u"vrdisplayactivate"_ns, init);
       // vrdisplayactivate is a trusted event, allowing VRDisplay.requestPresent
       // to be used in response to link traversal, user request (chrome UX), and
       // HMD mounting detection sensors.
@@ -6470,8 +6470,8 @@ void nsGlobalWindowInner::DispatchVRDisplayDeactivate(
       init.mDisplay = display;
       init.mReason.Construct(aReason);
 
-      RefPtr<VRDisplayEvent> event = VRDisplayEvent::Constructor(
-          this, NS_LITERAL_STRING("vrdisplaydeactivate"), init);
+      RefPtr<VRDisplayEvent> event =
+          VRDisplayEvent::Constructor(this, u"vrdisplaydeactivate"_ns, init);
       event->SetTrusted(true);
       DispatchEvent(*event);
       // Once we dispatch the event, we must not access any members as an event
@@ -6496,8 +6496,8 @@ void nsGlobalWindowInner::DispatchVRDisplayConnect(uint32_t aDisplayID) {
       init.mDisplay = display;
       // VRDisplayEvent.reason is not set for vrdisplayconnect
 
-      RefPtr<VRDisplayEvent> event = VRDisplayEvent::Constructor(
-          this, NS_LITERAL_STRING("vrdisplayconnect"), init);
+      RefPtr<VRDisplayEvent> event =
+          VRDisplayEvent::Constructor(this, u"vrdisplayconnect"_ns, init);
       event->SetTrusted(true);
       DispatchEvent(*event);
       // Once we dispatch the event, we must not access any members as an event
@@ -6522,8 +6522,8 @@ void nsGlobalWindowInner::DispatchVRDisplayDisconnect(uint32_t aDisplayID) {
       init.mDisplay = display;
       // VRDisplayEvent.reason is not set for vrdisplaydisconnect
 
-      RefPtr<VRDisplayEvent> event = VRDisplayEvent::Constructor(
-          this, NS_LITERAL_STRING("vrdisplaydisconnect"), init);
+      RefPtr<VRDisplayEvent> event =
+          VRDisplayEvent::Constructor(this, u"vrdisplaydisconnect"_ns, init);
       event->SetTrusted(true);
       DispatchEvent(*event);
       // Once we dispatch the event, we must not access any members as an event
@@ -6547,8 +6547,8 @@ void nsGlobalWindowInner::DispatchVRDisplayPresentChange(uint32_t aDisplayID) {
       init.mCancelable = false;
       init.mDisplay = display;
       // VRDisplayEvent.reason is not set for vrdisplaypresentchange
-      RefPtr<VRDisplayEvent> event = VRDisplayEvent::Constructor(
-          this, NS_LITERAL_STRING("vrdisplaypresentchange"), init);
+      RefPtr<VRDisplayEvent> event =
+          VRDisplayEvent::Constructor(this, u"vrdisplaypresentchange"_ns, init);
       event->SetTrusted(true);
       DispatchEvent(*event);
       // Once we dispatch the event, we must not access any members as an event
@@ -6942,8 +6942,7 @@ void nsGlobalWindowInner::GetSidebar(OwningExternalOrWindowProxy& aResult,
                                      ErrorResult& aRv) {
 #ifdef HAVE_SIDEBAR
   // First check for a named frame named "sidebar"
-  RefPtr<BrowsingContext> domWindow =
-      GetChildWindow(NS_LITERAL_STRING("sidebar"));
+  RefPtr<BrowsingContext> domWindow = GetChildWindow(u"sidebar"_ns);
   if (domWindow) {
     aResult.SetAsWindowProxy() = std::move(domWindow);
     return;

@@ -554,7 +554,7 @@ class PendingInputEventHangAnnotator final : public BackgroundHangAnnotator {
   virtual void AnnotateHang(BackgroundHangAnnotations& aAnnotations) override {
     int32_t pending = ContentChild::GetSingleton()->GetPendingInputEvents();
     if (pending > 0) {
-      aAnnotations.AddAnnotation(NS_LITERAL_STRING("PendingInput"), pending);
+      aAnnotations.AddAnnotation(u"PendingInput"_ns, pending);
     }
   }
 
@@ -748,7 +748,7 @@ bool ContentChild::Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
   RefPtr<nsPrintingProxy> printingProxy = nsPrintingProxy::GetInstance();
 #endif
 
-  SetProcessName(NS_LITERAL_STRING("Web Content"));
+  SetProcessName(u"Web Content"_ns);
 
 #ifdef NIGHTLY_BUILD
   // NOTE: We have to register the annotator on the main thread, as annotators
@@ -2581,16 +2581,16 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
 
   // Update the process name so about:memory's process names are more obvious.
   if (aRemoteType.EqualsLiteral(FILE_REMOTE_TYPE)) {
-    SetProcessName(NS_LITERAL_STRING("file:// Content"));
+    SetProcessName(u"file:// Content"_ns);
   } else if (aRemoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
-    SetProcessName(NS_LITERAL_STRING("WebExtensions"));
+    SetProcessName(u"WebExtensions"_ns);
   } else if (aRemoteType.EqualsLiteral(PRIVILEGEDABOUT_REMOTE_TYPE)) {
-    SetProcessName(NS_LITERAL_STRING("Privileged Content"));
+    SetProcessName(u"Privileged Content"_ns);
   } else if (aRemoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
-    SetProcessName(NS_LITERAL_STRING("Large Allocation Web Content"));
+    SetProcessName(u"Large Allocation Web Content"_ns);
   } else if (RemoteTypePrefix(aRemoteType)
                  .EqualsLiteral(FISSION_WEB_REMOTE_TYPE)) {
-    SetProcessName(NS_LITERAL_STRING("Isolated Web Content"));
+    SetProcessName(u"Isolated Web Content"_ns);
   }
   // else "prealloc", "web" or "webCOOP+COEP" type -> "Web Content" already set
 
@@ -2668,8 +2668,7 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
   NS_ENSURE_TRUE(os, IPC_OK());
 
   RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
-  props->SetPropertyAsInt32(NS_LITERAL_STRING("priority"),
-                            static_cast<int32_t>(aPriority));
+  props->SetPropertyAsInt32(u"priority"_ns, static_cast<int32_t>(aPriority));
 
   os->NotifyObservers(static_cast<nsIPropertyBag2*>(props),
                       "ipc:process-priority-changed", nullptr);
@@ -2849,8 +2848,7 @@ void ContentChild::ShutdownInternal() {
   // terminate an "unload" or "pagehide" event handler (which might be doing a
   // sync XHR, for example).
   CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IPCShutdownState,
-      NS_LITERAL_CSTRING("RecvShutdown"));
+      CrashReporter::Annotation::IPCShutdownState, "RecvShutdown"_ns);
 
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<nsThread> mainThread = nsThreadManager::get().GetCurrentThread();
@@ -2910,12 +2908,11 @@ void ContentChild::ShutdownInternal() {
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::IPCShutdownState,
-      NS_LITERAL_CSTRING("SendFinishShutdown (sending)"));
+      "SendFinishShutdown (sending)"_ns);
   bool sent = SendFinishShutdown();
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::IPCShutdownState,
-      sent ? NS_LITERAL_CSTRING("SendFinishShutdown (sent)")
-           : NS_LITERAL_CSTRING("SendFinishShutdown (failed)"));
+      sent ? "SendFinishShutdown (sent)"_ns : "SendFinishShutdown (failed)"_ns);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUpdateWindow(

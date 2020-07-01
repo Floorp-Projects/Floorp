@@ -490,8 +490,7 @@ SMILValue SMILCSSValueType::ValueFromAnimationValue(
   // string passed to CSPAllowsInlineStyle is only used for reporting violations
   // and an intermediate CSS value is not likely to be particularly useful
   // in that case, we just use a generic placeholder string instead.
-  static const nsLiteralString kPlaceholderText =
-      NS_LITERAL_STRING("[SVG animation of CSS]");
+  static const nsLiteralString kPlaceholderText = u"[SVG animation of CSS]"_ns;
   if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr, doc, nullptr, 0, 0,
                                                 kPlaceholderText, nullptr)) {
     return result;

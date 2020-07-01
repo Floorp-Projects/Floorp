@@ -1889,10 +1889,10 @@ static nsresult LocateExecutable(nsIFile* aXREDirectory,
   NS_ENSURE_SUCCESS(rv, rv);
 
 #  ifdef XP_MACOSX
-  exePath->SetNativeLeafName(NS_LITERAL_CSTRING("MacOS"));
-  exePath->Append(NS_LITERAL_STRING("crashreporter.app"));
-  exePath->Append(NS_LITERAL_STRING("Contents"));
-  exePath->Append(NS_LITERAL_STRING("MacOS"));
+  exePath->SetNativeLeafName("MacOS"_ns);
+  exePath->Append(u"crashreporter.app"_ns);
+  exePath->Append(u"Contents"_ns);
+  exePath->Append(u"MacOS"_ns);
 #  endif
 
   exePath->AppendNative(aName);
@@ -1949,9 +1949,9 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
 #if !defined(MOZ_WIDGET_ANDROID)
   // Locate the crash reporter executable
   nsAutoString crashReporterPath_temp;
-  nsresult rv = LocateExecutable(aXREDirectory,
-                                 NS_LITERAL_CSTRING(CRASH_REPORTER_FILENAME),
-                                 crashReporterPath_temp);
+  nsresult rv =
+      LocateExecutable(aXREDirectory, nsLiteralCString(CRASH_REPORTER_FILENAME),
+                       crashReporterPath_temp);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2311,8 +2311,7 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
   }
 
   nsAutoCString data;
-  if (NS_SUCCEEDED(GetOrInit(dataDirectory,
-                             NS_LITERAL_CSTRING("InstallTime") + aBuildID, data,
+  if (NS_SUCCEEDED(GetOrInit(dataDirectory, "InstallTime"_ns + aBuildID, data,
                              InitInstallTime)))
     AnnotateCrashReport(Annotation::InstallTime, data);
 
@@ -2321,8 +2320,7 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
   // crash report with the stored value, since we really want
   // (now - LastCrash), so we just get a value if it exists,
   // and store it in a time_t value.
-  if (NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_CSTRING("LastCrash"),
-                             data, nullptr))) {
+  if (NS_SUCCEEDED(GetOrInit(dataDirectory, "LastCrash"_ns, data, nullptr))) {
     lastCrashTime = (time_t)atol(data.get());
   }
 
@@ -2331,7 +2329,7 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
   rv = dataDirectory->Clone(getter_AddRefs(lastCrashFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = lastCrashFile->AppendNative(NS_LITERAL_CSTRING("LastCrash"));
+  rv = lastCrashFile->AppendNative("LastCrash"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
   memset(lastCrashTimeFilename, 0, sizeof(lastCrashTimeFilename));
 
@@ -2413,8 +2411,7 @@ nsresult UnsetExceptionHandler() {
 }
 
 nsresult AnnotateCrashReport(Annotation key, bool data) {
-  return AnnotateCrashReport(
-      key, data ? NS_LITERAL_CSTRING("1") : NS_LITERAL_CSTRING("0"));
+  return AnnotateCrashReport(key, data ? "1"_ns : "0"_ns);
 }
 
 nsresult AnnotateCrashReport(Annotation key, int data) {
@@ -2473,7 +2470,7 @@ static void AddCommonAnnotations(AnnotationTable& aAnnotations) {
   aAnnotations[Annotation::UptimeTS] = uptimeStr;
 
   if (memoryReportPath) {
-    aAnnotations[Annotation::ContainsMemoryReport] = NS_LITERAL_CSTRING("1");
+    aAnnotations[Annotation::ContainsMemoryReport] = "1"_ns;
   }
 }
 
@@ -2701,7 +2698,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint32_t value = *aSubmitReports ? 1 : 0;
-    rv = regKey->WriteIntValue(NS_LITERAL_STRING("SubmitCrashReport"), value);
+    rv = regKey->WriteIntValue(u"SubmitCrashReport"_ns, value);
     regKey->Close();
     return rv;
   }
@@ -2715,7 +2712,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref) {
                     NS_ConvertUTF8toUTF16(regPath),
                     nsIWindowsRegKey::ACCESS_QUERY_VALUE);
   if (NS_SUCCEEDED(rv)) {
-    rv = regKey->ReadIntValue(NS_LITERAL_STRING("SubmitCrashReport"), &value);
+    rv = regKey->ReadIntValue(u"SubmitCrashReport"_ns, &value);
     regKey->Close();
     if (NS_SUCCEEDED(rv)) {
       *aSubmitReports = !!value;
@@ -2731,7 +2728,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref) {
     return NS_OK;
   }
 
-  rv = regKey->ReadIntValue(NS_LITERAL_STRING("SubmitCrashReport"), &value);
+  rv = regKey->ReadIntValue(u"SubmitCrashReport"_ns, &value);
   // default to true on failure
   if (NS_FAILED(rv)) {
     value = 1;
@@ -2767,8 +2764,8 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref) {
   nsCOMPtr<nsIFile> reporterINI;
   rv = NS_GetSpecialDirectory("UAppData", getter_AddRefs(reporterINI));
   NS_ENSURE_SUCCESS(rv, rv);
-  reporterINI->AppendNative(NS_LITERAL_CSTRING("Crash Reports"));
-  reporterINI->AppendNative(NS_LITERAL_CSTRING("crashreporter.ini"));
+  reporterINI->AppendNative("Crash Reports"_ns);
+  reporterINI->AppendNative("crashreporter.ini"_ns);
 
   bool exists;
   rv = reporterINI->Exists(&exists);
@@ -2797,18 +2794,15 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref) {
     nsCOMPtr<nsIINIParserWriter> iniWriter = do_QueryInterface(iniParser);
     NS_ENSURE_TRUE(iniWriter, NS_ERROR_FAILURE);
 
-    rv = iniWriter->SetString(
-        NS_LITERAL_CSTRING("Crash Reporter"),
-        NS_LITERAL_CSTRING("SubmitReport"),
-        *aSubmitReports ? NS_LITERAL_CSTRING("1") : NS_LITERAL_CSTRING("0"));
+    rv = iniWriter->SetString("Crash Reporter"_ns, "SubmitReport"_ns,
+                              *aSubmitReports ? "1"_ns : "0"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = iniWriter->WriteFile(reporterINI);
     return rv;
   }
 
   nsAutoCString submitReportValue;
-  rv = iniParser->GetString(NS_LITERAL_CSTRING("Crash Reporter"),
-                            NS_LITERAL_CSTRING("SubmitReport"),
+  rv = iniParser->GetString("Crash Reporter"_ns, "SubmitReport"_ns,
                             submitReportValue);
 
   // Default to "true" if the pref can't be found.
@@ -2884,9 +2878,9 @@ void SetProfileDirectory(nsIFile* aDir) {
   nsCOMPtr<nsIFile> dir;
   aDir->Clone(getter_AddRefs(dir));
 
-  dir->Append(NS_LITERAL_STRING("crashes"));
+  dir->Append(u"crashes"_ns);
   EnsureDirectoryExists(dir);
-  dir->Append(NS_LITERAL_STRING("events"));
+  dir->Append(u"events"_ns);
   EnsureDirectoryExists(dir);
   SetCrashEventsDir(dir);
 }
@@ -2895,9 +2889,9 @@ void SetUserAppDataDirectory(nsIFile* aDir) {
   nsCOMPtr<nsIFile> dir;
   aDir->Clone(getter_AddRefs(dir));
 
-  dir->Append(NS_LITERAL_STRING("Crash Reports"));
+  dir->Append(u"Crash Reports"_ns);
   EnsureDirectoryExists(dir);
-  dir->Append(NS_LITERAL_STRING("events"));
+  dir->Append(u"events"_ns);
   EnsureDirectoryExists(dir);
   SetCrashEventsDir(dir);
 }
@@ -2958,8 +2952,7 @@ nsresult GetDefaultMemoryReportFile(nsIFile** aFile) {
     if (NS_FAILED(rv)) {
       return rv;
     }
-    defaultMemoryReportFile->AppendNative(
-        NS_LITERAL_CSTRING("memory-report.json.gz"));
+    defaultMemoryReportFile->AppendNative("memory-report.json.gz"_ns);
     defaultMemoryReportPath = CreatePathFromFile(defaultMemoryReportFile);
     if (!defaultMemoryReportPath) {
       return NS_ERROR_FAILURE;
@@ -2985,8 +2978,8 @@ static void FindPendingDir() {
         "Couldn't get the user appdata directory, crash dumps will go in an "
         "unusual location");
   } else {
-    pendingDir->Append(NS_LITERAL_STRING("Crash Reports"));
-    pendingDir->Append(NS_LITERAL_STRING("pending"));
+    pendingDir->Append(u"Crash Reports"_ns);
+    pendingDir->Append(u"pending"_ns);
 
 #ifdef XP_WIN
     nsString path;
@@ -3060,7 +3053,7 @@ bool GetMinidumpForID(const nsAString& id, nsIFile** minidump) {
     return false;
   }
 
-  (*minidump)->Append(id + NS_LITERAL_STRING(".dmp"));
+  (*minidump)->Append(id + u".dmp"_ns);
 
   bool exists;
   if (NS_FAILED((*minidump)->Exists(&exists)) || !exists) {
@@ -3083,7 +3076,7 @@ bool GetExtraFileForID(const nsAString& id, nsIFile** extraFile) {
     return false;
   }
 
-  (*extraFile)->Append(id + NS_LITERAL_STRING(".extra"));
+  (*extraFile)->Append(id + u".extra"_ns);
 
   bool exists;
   if (NS_FAILED((*extraFile)->Exists(&exists)) || !exists) {
@@ -3102,7 +3095,7 @@ bool GetExtraFileForMinidump(nsIFile* minidump, nsIFile** extraFile) {
   rv = minidump->Clone(getter_AddRefs(extraF));
   if (NS_FAILED(rv)) return false;
 
-  leafName.Replace(leafName.Length() - 3, 3, NS_LITERAL_STRING("extra"));
+  leafName.Replace(leafName.Length() - 3, 3, u"extra"_ns);
   rv = extraF->SetLeafName(leafName);
   if (NS_FAILED(rv)) return false;
 
@@ -3163,7 +3156,7 @@ bool WriteExtraFile(const nsAString& id, const AnnotationTable& annotations) {
     return false;
   }
 
-  extra->Append(id + NS_LITERAL_STRING(".extra"));
+  extra->Append(id + u".extra"_ns);
 #ifdef XP_WIN
   nsAutoString path;
   NS_ENSURE_SUCCESS(extra->GetPath(path), false);
@@ -3637,7 +3630,7 @@ static void RenameAdditionalHangMinidump(nsIFile* minidump,
   childMinidump->GetNativeLeafName(leafName);
 
   // turn "<id>.dmp" into "<id>-<name>.dmp
-  leafName.Insert(NS_LITERAL_CSTRING("-") + name, leafName.Length() - 4);
+  leafName.Insert("-"_ns + name, leafName.Length() - 4);
 
   if (NS_FAILED(minidump->MoveToNative(directory, leafName))) {
     NS_WARNING("RenameAdditionalHangMinidump failed to move minidump.");

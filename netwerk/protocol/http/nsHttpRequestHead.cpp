@@ -17,7 +17,7 @@ namespace mozilla {
 namespace net {
 
 nsHttpRequestHead::nsHttpRequestHead()
-    : mMethod(NS_LITERAL_CSTRING("GET")),
+    : mMethod("GET"_ns),
       mVersion(HttpVersion::v1_1),
       mParsedMethod(kMethod_Get),
       mHTTPS(false),

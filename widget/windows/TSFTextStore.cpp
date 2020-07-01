@@ -214,9 +214,9 @@ static nsCString GetGUIDNameStr(REFGUID aGUID) {
 }
 
 static nsCString GetGUIDNameStrWithTable(REFGUID aGUID) {
-#define RETURN_GUID_NAME(aNamedGUID)        \
-  if (IsEqualGUID(aGUID, aNamedGUID)) {     \
-    return NS_LITERAL_CSTRING(#aNamedGUID); \
+#define RETURN_GUID_NAME(aNamedGUID)      \
+  if (IsEqualGUID(aGUID, aNamedGUID)) {   \
+    return nsLiteralCString(#aNamedGUID); \
   }
 
   RETURN_GUID_NAME(GUID_PROP_INPUTSCOPE)
@@ -463,7 +463,7 @@ static const char* GetTextRunTypeName(TsRunType aRunType) {
 static nsCString GetColorName(const TF_DA_COLOR& aColor) {
   switch (aColor.type) {
     case TF_CT_NONE:
-      return NS_LITERAL_CSTRING("TF_CT_NONE");
+      return "TF_CT_NONE"_ns;
     case TF_CT_SYSCOLOR:
       return nsPrintfCString("TF_CT_SYSCOLOR, nIndex:0x%08X",
                              static_cast<int32_t>(aColor.nIndex));
@@ -480,15 +480,15 @@ static nsCString GetColorName(const TF_DA_COLOR& aColor) {
 static nsCString GetLineStyleName(TF_DA_LINESTYLE aLineStyle) {
   switch (aLineStyle) {
     case TF_LS_NONE:
-      return NS_LITERAL_CSTRING("TF_LS_NONE");
+      return "TF_LS_NONE"_ns;
     case TF_LS_SOLID:
-      return NS_LITERAL_CSTRING("TF_LS_SOLID");
+      return "TF_LS_SOLID"_ns;
     case TF_LS_DOT:
-      return NS_LITERAL_CSTRING("TF_LS_DOT");
+      return "TF_LS_DOT"_ns;
     case TF_LS_DASH:
-      return NS_LITERAL_CSTRING("TF_LS_DASH");
+      return "TF_LS_DASH"_ns;
     case TF_LS_SQUIGGLE:
-      return NS_LITERAL_CSTRING("TF_LS_SQUIGGLE");
+      return "TF_LS_SQUIGGLE"_ns;
     default: {
       return nsPrintfCString("Unknown(%08X)", static_cast<int32_t>(aLineStyle));
     }
@@ -498,19 +498,19 @@ static nsCString GetLineStyleName(TF_DA_LINESTYLE aLineStyle) {
 static nsCString GetClauseAttrName(TF_DA_ATTR_INFO aAttr) {
   switch (aAttr) {
     case TF_ATTR_INPUT:
-      return NS_LITERAL_CSTRING("TF_ATTR_INPUT");
+      return "TF_ATTR_INPUT"_ns;
     case TF_ATTR_TARGET_CONVERTED:
-      return NS_LITERAL_CSTRING("TF_ATTR_TARGET_CONVERTED");
+      return "TF_ATTR_TARGET_CONVERTED"_ns;
     case TF_ATTR_CONVERTED:
-      return NS_LITERAL_CSTRING("TF_ATTR_CONVERTED");
+      return "TF_ATTR_CONVERTED"_ns;
     case TF_ATTR_TARGET_NOTCONVERTED:
-      return NS_LITERAL_CSTRING("TF_ATTR_TARGET_NOTCONVERTED");
+      return "TF_ATTR_TARGET_NOTCONVERTED"_ns;
     case TF_ATTR_INPUT_ERROR:
-      return NS_LITERAL_CSTRING("TF_ATTR_INPUT_ERROR");
+      return "TF_ATTR_INPUT_ERROR"_ns;
     case TF_ATTR_FIXEDCONVERTED:
-      return NS_LITERAL_CSTRING("TF_ATTR_FIXEDCONVERTED");
+      return "TF_ATTR_FIXEDCONVERTED"_ns;
     case TF_ATTR_OTHER:
-      return NS_LITERAL_CSTRING("TF_ATTR_OTHER");
+      return "TF_ATTR_OTHER"_ns;
     default: {
       return nsPrintfCString("Unknown(%08X)", static_cast<int32_t>(aAttr));
     }
@@ -554,7 +554,7 @@ static const char* GetMouseButtonName(int16_t aButton) {
 
 static nsCString GetMouseButtonsName(int16_t aButtons) {
   if (!aButtons) {
-    return NS_LITERAL_CSTRING("no buttons");
+    return "no buttons"_ns;
   }
   nsCString names;
   if (aButtons & MouseButtonsFlag::ePrimaryFlag) {
@@ -581,7 +581,7 @@ static nsCString GetMouseButtonsName(int16_t aButtons) {
 
 static nsCString GetModifiersName(Modifiers aModifiers) {
   if (aModifiers == MODIFIER_NONE) {
-    return NS_LITERAL_CSTRING("no modifiers");
+    return "no modifiers"_ns;
   }
   nsCString names;
   if (aModifiers & MODIFIER_ALT) {
@@ -1200,8 +1200,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
     EnsureInitActiveTIPKeyboard();
     // FYI: Name of packaged ATOK includes the release year like "ATOK 2015".
     //      Name of ATOK Passport (subscription) equals "ATOK".
-    return StringBeginsWith(mActiveTIPKeyboardDescription,
-                            NS_LITERAL_STRING("ATOK ")) ||
+    return StringBeginsWith(mActiveTIPKeyboardDescription, u"ATOK "_ns) ||
            mActiveTIPKeyboardDescription.EqualsLiteral("ATOK");
   }
 

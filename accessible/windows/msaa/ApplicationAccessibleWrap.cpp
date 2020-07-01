@@ -32,9 +32,7 @@ ApplicationAccessibleWrap::NativeAttributes() {
     gfxInfo->GetD2DEnabled(&isD2DEnabled);
     nsAutoString unused;
     attributes->SetStringProperty(
-        NS_LITERAL_CSTRING("D2D"),
-        isD2DEnabled ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"),
-        unused);
+        "D2D"_ns, isD2DEnabled ? u"true"_ns : u"false"_ns, unused);
   }
 
   return attributes.forget();

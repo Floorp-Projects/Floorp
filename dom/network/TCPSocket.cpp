@@ -241,9 +241,9 @@ nsresult TCPSocket::Init() {
 
   AutoTArray<nsCString, 1> socketTypes;
   if (mSsl) {
-    socketTypes.AppendElement(NS_LITERAL_CSTRING("ssl"));
+    socketTypes.AppendElement("ssl"_ns);
   } else {
-    socketTypes.AppendElement(NS_LITERAL_CSTRING("starttls"));
+    socketTypes.AppendElement("starttls"_ns);
   }
   nsCOMPtr<nsISocketTransport> transport;
   nsresult rv = sts->CreateTransport(socketTypes, NS_ConvertUTF16toUTF8(mHost),
@@ -423,7 +423,7 @@ void TCPSocket::NotifyCopyComplete(nsresult aStatus) {
   // ondrain should be dispatched.
   if (mWaitingForDrain && !mSocketBridgeParent) {
     mWaitingForDrain = false;
-    FireEvent(NS_LITERAL_STRING("drain"));
+    FireEvent(u"drain"_ns);
   }
 
   if (mReadyState == TCPReadyState::Closing) {
@@ -432,7 +432,7 @@ void TCPSocket::NotifyCopyComplete(nsresult aStatus) {
       mSocketOutputStream = nullptr;
     }
     mReadyState = TCPReadyState::Closed;
-    FireEvent(NS_LITERAL_STRING("close"));
+    FireEvent(u"close"_ns);
   }
 }
 
@@ -459,7 +459,7 @@ TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType) {
   init.mMessage = aType;
 
   RefPtr<TCPSocketErrorEvent> event =
-      TCPSocketErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
+      TCPSocketErrorEvent::Constructor(this, u"error"_ns, init);
   MOZ_ASSERT(event);
   event->SetTrusted(true);
   DispatchEvent(*event);
@@ -686,7 +686,7 @@ nsresult TCPSocket::MaybeReportErrorAndCloseIfOpen(nsresult status) {
     Unused << NS_WARN_IF(NS_FAILED(FireErrorEvent(errName, errorType)));
   }
 
-  return FireEvent(NS_LITERAL_STRING("close"));
+  return FireEvent(u"close"_ns);
 }
 
 void TCPSocket::Close() { CloseHelper(true); }
@@ -894,7 +894,7 @@ TCPSocket::OnTransportStatus(nsITransport* aTransport, nsresult aStatus,
   mReadyState = TCPReadyState::Open;
   nsresult rv = CreateInputStreamPump();
   NS_ENSURE_SUCCESS(rv, rv);
-  FireEvent(NS_LITERAL_STRING("open"));
+  FireEvent(u"open"_ns);
 
   return NS_OK;
 }
@@ -942,7 +942,7 @@ TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
     if (!ToJSValue(cx, TypedArrayCreator<ArrayBuffer>(buffer), &value)) {
       return NS_ERROR_FAILURE;
     }
-    FireDataEvent(cx, NS_LITERAL_STRING("data"), value);
+    FireDataEvent(cx, u"data"_ns, value);
     return NS_OK;
   }
 
@@ -965,7 +965,7 @@ TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
   if (!ToJSValue(cx, NS_ConvertASCIItoUTF16(data), &value)) {
     return NS_ERROR_FAILURE;
   }
-  FireDataEvent(cx, NS_LITERAL_STRING("data"), value);
+  FireDataEvent(cx, u"data"_ns, value);
 
   return NS_OK;
 }
@@ -1011,7 +1011,7 @@ TCPSocket::UpdateBufferedAmount(uint32_t aBufferedAmount,
   if (!mBufferedAmount) {
     if (mWaitingForDrain) {
       mWaitingForDrain = false;
-      return FireEvent(NS_LITERAL_STRING("drain"));
+      return FireEvent(u"drain"_ns);
     }
   }
   return NS_OK;

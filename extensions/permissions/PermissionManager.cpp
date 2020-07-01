@@ -96,9 +96,8 @@ bool HasDefaultPref(const nsACString& aType) {
   // A list of permissions that can have a fallback default permission
   // set under the permissions.default.* pref.
   static const nsLiteralCString kPermissionsWithDefaults[] = {
-      NS_LITERAL_CSTRING("camera"), NS_LITERAL_CSTRING("microphone"),
-      NS_LITERAL_CSTRING("geo"), NS_LITERAL_CSTRING("desktop-notification"),
-      NS_LITERAL_CSTRING("shortcuts")};
+      "camera"_ns, "microphone"_ns, "geo"_ns, "desktop-notification"_ns,
+      "shortcuts"_ns};
 
   if (!aType.IsEmpty()) {
     for (const auto& perm : kPermissionsWithDefaults) {
@@ -122,19 +121,16 @@ static const nsLiteralCString kPreloadPermissions[] = {
     // interception when a user has disabled storage for a specific site.  Once
     // service worker interception moves to the parent process this should be
     // removed.  See bug 1428130.
-    NS_LITERAL_CSTRING("cookie")};
+    "cookie"_ns};
 
 // Certain permissions should never be persisted to disk under GeckoView; it's
 // the responsibility of the app to manage storing these beyond the scope of
 // a single session.
 #ifdef ANDROID
 static const nsLiteralCString kGeckoViewRestrictedPermissions[] = {
-    NS_LITERAL_CSTRING("MediaManagerVideo"),
-    NS_LITERAL_CSTRING("geolocation"),
-    NS_LITERAL_CSTRING("desktop-notification"),
-    NS_LITERAL_CSTRING("persistent-storage"),
-    NS_LITERAL_CSTRING("trackingprotection"),
-    NS_LITERAL_CSTRING("trackingprotection-pb")};
+    "MediaManagerVideo"_ns,    "geolocation"_ns,
+    "desktop-notification"_ns, "persistent-storage"_ns,
+    "trackingprotection"_ns,   "trackingprotection-pb"_ns};
 #endif
 
 // NOTE: nullptr can be passed as aType - if it is this function will return
@@ -160,7 +156,7 @@ bool IsPreloadPermission(const nsACString& aType) {
 // Non-preloaded, but OA stripped permissions would not be accessible by sites
 // in private browsing / non-default user context.
 static constexpr std::array<nsLiteralCString, 1> kStripOAPermissions = {
-    {NS_LITERAL_CSTRING("cookie")}};
+    {"cookie"_ns}};
 
 bool IsOAForceStripPermission(const nsACString& aType) {
   if (aType.IsEmpty()) {
@@ -511,8 +507,7 @@ nsresult UpgradeHostToOriginAndInsert(
     }
 
     // http:// URI default
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   NS_LITERAL_CSTRING("http://") + hostSegment);
+    rv = NS_NewURI(getter_AddRefs(uri), "http://"_ns + hostSegment);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
@@ -527,8 +522,7 @@ nsresult UpgradeHostToOriginAndInsert(
               aModificationTime);
 
     // https:// URI default
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   NS_LITERAL_CSTRING("https://") + hostSegment);
+    rv = NS_NewURI(getter_AddRefs(uri), "https://"_ns + hostSegment);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
@@ -771,8 +765,8 @@ void PermissionManager::InitDB(bool aRemoveFile) {
       }
     }
 
-    rv = mPermissionsFile->AppendNative(
-        NS_LITERAL_CSTRING(PERMISSIONS_FILE_NAME));
+    rv =
+        mPermissionsFile->AppendNative(nsLiteralCString(PERMISSIONS_FILE_NAME));
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 
@@ -835,8 +829,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
 
   rv = OpenDatabase(mPermissionsFile);
   if (rv == NS_ERROR_FILE_CORRUPTED) {
-    LogToConsole(
-        NS_LITERAL_STRING("permissions.sqlite is corrupted! Try again!"));
+    LogToConsole(u"permissions.sqlite is corrupted! Try again!"_ns);
 
     // Add telemetry probe
     Telemetry::Accumulate(Telemetry::PERMISSIONS_SQL_CORRUPTED, 1);
@@ -844,13 +837,11 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
     // delete corrupted permissions.sqlite and try again
     rv = mPermissionsFile->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
-    LogToConsole(
-        NS_LITERAL_STRING("Corrupted permissions.sqlite has been removed."));
+    LogToConsole(u"Corrupted permissions.sqlite has been removed."_ns);
 
     rv = OpenDatabase(mPermissionsFile);
     NS_ENSURE_SUCCESS(rv, rv);
-    LogToConsole(
-        NS_LITERAL_STRING("OpenDatabase to permissions.sqlite is successful!"));
+    LogToConsole(u"OpenDatabase to permissions.sqlite is successful!"_ns);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -860,31 +851,29 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
   bool ready;
   data->mDBConn->GetConnectionReady(&ready);
   if (!ready) {
-    LogToConsole(NS_LITERAL_STRING(
-        "Fail to get connection to permissions.sqlite! Try again!"));
+    LogToConsole(nsLiteralString(
+        u"Fail to get connection to permissions.sqlite! Try again!"));
 
     // delete and try again
     rv = mPermissionsFile->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
-    LogToConsole(
-        NS_LITERAL_STRING("Defective permissions.sqlite has been removed."));
+    LogToConsole(u"Defective permissions.sqlite has been removed."_ns);
 
     // Add telemetry probe
     Telemetry::Accumulate(Telemetry::DEFECTIVE_PERMISSIONS_SQL_REMOVED, 1);
 
     rv = OpenDatabase(mPermissionsFile);
     NS_ENSURE_SUCCESS(rv, rv);
-    LogToConsole(
-        NS_LITERAL_STRING("OpenDatabase to permissions.sqlite is successful!"));
+    LogToConsole(u"OpenDatabase to permissions.sqlite is successful!"_ns);
 
     data->mDBConn->GetConnectionReady(&ready);
     if (!ready) return NS_ERROR_UNEXPECTED;
   }
 
   bool tableExists = false;
-  data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_perms"), &tableExists);
+  data->mDBConn->TableExists("moz_perms"_ns, &tableExists);
   if (!tableExists) {
-    data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"), &tableExists);
+    data->mDBConn->TableExists("moz_hosts"_ns, &tableExists);
   }
   if (!tableExists) {
     rv = CreateTable();
@@ -905,11 +894,11 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
         // previous non-expiry version of database.  Upgrade it by adding
         // the expiration columns
         rv = data->mDBConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("ALTER TABLE moz_hosts ADD expireType INTEGER"));
+            "ALTER TABLE moz_hosts ADD expireType INTEGER"_ns);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = data->mDBConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("ALTER TABLE moz_hosts ADD expireTime INTEGER"));
+            "ALTER TABLE moz_hosts ADD expireTime INTEGER"_ns);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -922,10 +911,10 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
       case 2: {
         // Add appId/isInBrowserElement fields.
         rv = data->mDBConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("ALTER TABLE moz_hosts ADD appId INTEGER"));
+            "ALTER TABLE moz_hosts ADD appId INTEGER"_ns);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = data->mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        rv = data->mDBConn->ExecuteSimpleSQL(nsLiteralCString(
             "ALTER TABLE moz_hosts ADD isInBrowserElement INTEGER"));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -938,7 +927,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
 
       // Version 3->4 is the creation of the modificationTime field.
       case 3: {
-        rv = data->mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        rv = data->mDBConn->ExecuteSimpleSQL(nsLiteralCString(
             "ALTER TABLE moz_hosts ADD modificationTime INTEGER"));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -997,12 +986,11 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
           // visible in previous versions of firefox.
 
           bool permsTableExists = false;
-          data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_perms"),
-                                     &permsTableExists);
+          data->mDBConn->TableExists("moz_perms"_ns, &permsTableExists);
           if (!permsTableExists) {
             // Move the upgraded database to moz_perms
-            rv = data->mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-                "ALTER TABLE moz_hosts RENAME TO moz_perms"));
+            rv = data->mDBConn->ExecuteSimpleSQL(
+                "ALTER TABLE moz_hosts RENAME TO moz_perms"_ns);
             NS_ENSURE_SUCCESS(rv, rv);
           } else {
             NS_WARNING(
@@ -1020,26 +1008,23 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
             // user actually wants to use. We have to get rid of moz_hosts
             // such that moz_hosts_v4 can be moved into its place if it
             // exists.
-            rv = data->mDBConn->ExecuteSimpleSQL(
-                NS_LITERAL_CSTRING("DROP TABLE moz_hosts"));
+            rv = data->mDBConn->ExecuteSimpleSQL("DROP TABLE moz_hosts"_ns);
             NS_ENSURE_SUCCESS(rv, rv);
           }
 
 #ifdef DEBUG
           // The moz_hosts table shouldn't exist anymore
           bool hostsTableExists = false;
-          data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"),
-                                     &hostsTableExists);
+          data->mDBConn->TableExists("moz_hosts"_ns, &hostsTableExists);
           MOZ_ASSERT(!hostsTableExists);
 #endif
 
           // Rename moz_hosts_v4 back to it's original location, if it
           // exists
           bool v4TableExists = false;
-          data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts_v4"),
-                                     &v4TableExists);
+          data->mDBConn->TableExists("moz_hosts_v4"_ns, &v4TableExists);
           if (v4TableExists) {
-            rv = data->mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            rv = data->mDBConn->ExecuteSimpleSQL(nsLiteralCString(
                 "ALTER TABLE moz_hosts_v4 RENAME TO moz_hosts"));
             NS_ENSURE_SUCCESS(rv, rv);
           }
@@ -1064,8 +1049,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
       case 4:
       case 6: {
         bool hostsTableExists = false;
-        data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"),
-                                   &hostsTableExists);
+        data->mDBConn->TableExists("moz_hosts"_ns, &hostsTableExists);
         if (hostsTableExists) {
           // Both versions 4 and 6 have a version 4 formatted hosts table
           // named moz_hosts. We can migrate this table to our version 7
@@ -1076,32 +1060,30 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
           NS_ENSURE_SUCCESS(rv, rv);
 
           bool tableExists = false;
-          data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts_new"),
-                                     &tableExists);
+          data->mDBConn->TableExists("moz_hosts_new"_ns, &tableExists);
           if (tableExists) {
             NS_WARNING(
                 "The temporary database moz_hosts_new already exists, "
                 "dropping "
                 "it.");
-            rv = data->mDBConn->ExecuteSimpleSQL(
-                NS_LITERAL_CSTRING("DROP TABLE moz_hosts_new"));
+            rv = data->mDBConn->ExecuteSimpleSQL("DROP TABLE moz_hosts_new"_ns);
             NS_ENSURE_SUCCESS(rv, rv);
           }
           rv = data->mDBConn->ExecuteSimpleSQL(
-              NS_LITERAL_CSTRING("CREATE TABLE moz_hosts_new ("
-                                 " id INTEGER PRIMARY KEY"
-                                 ",origin TEXT"
-                                 ",type TEXT"
-                                 ",permission INTEGER"
-                                 ",expireType INTEGER"
-                                 ",expireTime INTEGER"
-                                 ",modificationTime INTEGER"
-                                 ")"));
+              nsLiteralCString("CREATE TABLE moz_hosts_new ("
+                               " id INTEGER PRIMARY KEY"
+                               ",origin TEXT"
+                               ",type TEXT"
+                               ",permission INTEGER"
+                               ",expireType INTEGER"
+                               ",expireTime INTEGER"
+                               ",modificationTime INTEGER"
+                               ")"));
           NS_ENSURE_SUCCESS(rv, rv);
 
           nsCOMPtr<mozIStorageStatement> stmt;
           rv = data->mDBConn->CreateStatement(
-              NS_LITERAL_CSTRING(
+              nsLiteralCString(
                   "SELECT host, type, permission, expireType, "
                   "expireTime, "
                   "modificationTime, isInBrowserElement FROM moz_hosts"),
@@ -1141,13 +1123,12 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
           // intended to act as a backup. If this table is not present,
           // then the moz_hosts table was created as a random empty table.
           rv = data->mDBConn->ExecuteSimpleSQL(
-              NS_LITERAL_CSTRING("CREATE TABLE moz_hosts_is_backup (dummy "
-                                 "INTEGER PRIMARY KEY)"));
+              nsLiteralCString("CREATE TABLE moz_hosts_is_backup (dummy "
+                               "INTEGER PRIMARY KEY)"));
           NS_ENSURE_SUCCESS(rv, rv);
 
           bool permsTableExists = false;
-          data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_perms"),
-                                     &permsTableExists);
+          data->mDBConn->TableExists("moz_perms"_ns, &permsTableExists);
           if (permsTableExists) {
             // The user already had a moz_perms table, and we are
             // performing a re-migration. We count the rows in the old
@@ -1156,8 +1137,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
 
             nsCOMPtr<mozIStorageStatement> countStmt;
             rv = data->mDBConn->CreateStatement(
-                NS_LITERAL_CSTRING("SELECT COUNT(*) FROM moz_perms"),
-                getter_AddRefs(countStmt));
+                "SELECT COUNT(*) FROM moz_perms"_ns, getter_AddRefs(countStmt));
             bool hasResult = false;
             if (NS_FAILED(rv) ||
                 NS_FAILED(countStmt->ExecuteStep(&hasResult)) || !hasResult) {
@@ -1166,12 +1146,12 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
 
             // Back up the old moz_perms database as moz_perms_v6 before
             // we move the new table into its position
-            rv = data->mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            rv = data->mDBConn->ExecuteSimpleSQL(nsLiteralCString(
                 "ALTER TABLE moz_perms RENAME TO moz_perms_v6"));
             NS_ENSURE_SUCCESS(rv, rv);
           }
 
-          rv = data->mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          rv = data->mDBConn->ExecuteSimpleSQL(nsLiteralCString(
               "ALTER TABLE moz_hosts_new RENAME TO moz_perms"));
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1181,17 +1161,17 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
           // We don't have a moz_hosts table, so we create one for
           // downgrading purposes. This table is empty.
           rv = data->mDBConn->ExecuteSimpleSQL(
-              NS_LITERAL_CSTRING("CREATE TABLE moz_hosts ("
-                                 " id INTEGER PRIMARY KEY"
-                                 ",host TEXT"
-                                 ",type TEXT"
-                                 ",permission INTEGER"
-                                 ",expireType INTEGER"
-                                 ",expireTime INTEGER"
-                                 ",modificationTime INTEGER"
-                                 ",appId INTEGER"
-                                 ",isInBrowserElement INTEGER"
-                                 ")"));
+              nsLiteralCString("CREATE TABLE moz_hosts ("
+                               " id INTEGER PRIMARY KEY"
+                               ",host TEXT"
+                               ",type TEXT"
+                               ",permission INTEGER"
+                               ",expireType INTEGER"
+                               ",expireTime INTEGER"
+                               ",modificationTime INTEGER"
+                               ",appId INTEGER"
+                               ",isInBrowserElement INTEGER"
+                               ")"));
           NS_ENSURE_SUCCESS(rv, rv);
 
           // We are guaranteed to have a moz_perms table at this point.
@@ -1203,10 +1183,8 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
           // exist
           bool hostsTableExists = false;
           bool permsTableExists = false;
-          data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"),
-                                     &hostsTableExists);
-          data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_perms"),
-                                     &permsTableExists);
+          data->mDBConn->TableExists("moz_hosts"_ns, &hostsTableExists);
+          data->mDBConn->TableExists("moz_perms"_ns, &permsTableExists);
           MOZ_ASSERT(hostsTableExists && permsTableExists);
         }
 #endif
@@ -1234,7 +1212,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
         // We only want to perform the re-migration if moz_hosts is a
         // backup
         bool hostsIsBackupExists = false;
-        data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts_is_backup"),
+        data->mDBConn->TableExists("moz_hosts_is_backup"_ns,
                                    &hostsIsBackupExists);
 
         // Only perform this migration if the original schema version was
@@ -1242,7 +1220,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
         if (dbSchemaVersion == 7 && hostsIsBackupExists) {
           nsCOMPtr<mozIStorageStatement> stmt;
           rv = data->mDBConn->CreateStatement(
-              NS_LITERAL_CSTRING(
+              nsLiteralCString(
                   "SELECT host, type, permission, expireType, "
                   "expireTime, "
                   "modificationTime, isInBrowserElement FROM moz_hosts"),
@@ -1251,8 +1229,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
 
           nsCOMPtr<mozIStorageStatement> idStmt;
           rv = data->mDBConn->CreateStatement(
-              NS_LITERAL_CSTRING("SELECT MAX(id) FROM moz_hosts"),
-              getter_AddRefs(idStmt));
+              "SELECT MAX(id) FROM moz_hosts"_ns, getter_AddRefs(idStmt));
 
           int64_t id = 0;
           bool hasResult = false;
@@ -1311,19 +1288,18 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
         // We only want to clear out the old table if it is a backup. If
         // it isn't a backup, we don't need to touch it.
         bool hostsIsBackupExists = false;
-        data->mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts_is_backup"),
+        data->mDBConn->TableExists("moz_hosts_is_backup"_ns,
                                    &hostsIsBackupExists);
         if (hostsIsBackupExists) {
           // Delete everything from the backup, we want to keep around the
           // table so that you can still downgrade and not break things,
           // but we don't need to keep the rows around.
-          rv = data->mDBConn->ExecuteSimpleSQL(
-              NS_LITERAL_CSTRING("DELETE FROM moz_hosts"));
+          rv = data->mDBConn->ExecuteSimpleSQL("DELETE FROM moz_hosts"_ns);
           NS_ENSURE_SUCCESS(rv, rv);
 
           // The table is no longer a backup, so get rid of it.
           rv = data->mDBConn->ExecuteSimpleSQL(
-              NS_LITERAL_CSTRING("DROP TABLE moz_hosts_is_backup"));
+              "DROP TABLE moz_hosts_is_backup"_ns);
           NS_ENSURE_SUCCESS(rv, rv);
         }
 
@@ -1346,7 +1322,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
         // Filter out the rows with storage access API permissions with a
         // granted origin, and remove the granted origin part from the
         // permission type.
-        rv = data->mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        rv = data->mDBConn->ExecuteSimpleSQL(nsLiteralCString(
             "UPDATE moz_perms "
             "SET type=SUBSTR(type, 0, INSTR(SUBSTR(type, INSTR(type, "
             "'^') + "
@@ -1376,15 +1352,14 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
         // check if all the expected columns exist
         nsCOMPtr<mozIStorageStatement> stmt;
         rv = data->mDBConn->CreateStatement(
-            NS_LITERAL_CSTRING("SELECT origin, type, permission, "
-                               "expireType, expireTime, "
-                               "modificationTime FROM moz_perms"),
+            nsLiteralCString("SELECT origin, type, permission, "
+                             "expireType, expireTime, "
+                             "modificationTime FROM moz_perms"),
             getter_AddRefs(stmt));
         if (NS_SUCCEEDED(rv)) break;
 
         // our columns aren't there - drop the table!
-        rv = data->mDBConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("DROP TABLE moz_perms"));
+        rv = data->mDBConn->ExecuteSimpleSQL("DROP TABLE moz_perms"_ns);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = CreateTable();
@@ -1396,23 +1371,22 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
   // cache frequently used statements (for insertion, deletion, and
   // updating)
   rv = data->mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("INSERT INTO moz_perms "
-                         "(id, origin, type, permission, expireType, "
-                         "expireTime, modificationTime) "
-                         "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"),
+      nsLiteralCString("INSERT INTO moz_perms "
+                       "(id, origin, type, permission, expireType, "
+                       "expireTime, modificationTime) "
+                       "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"),
       getter_AddRefs(data->mStmtInsert));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv =
-      data->mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_perms "
-                                                        "WHERE id = ?1"),
-                                     getter_AddRefs(data->mStmtDelete));
+  rv = data->mDBConn->CreateStatement(nsLiteralCString("DELETE FROM moz_perms "
+                                                       "WHERE id = ?1"),
+                                      getter_AddRefs(data->mStmtDelete));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = data->mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("UPDATE moz_perms "
-                         "SET permission = ?2, expireType= ?3, expireTime = "
-                         "?4, modificationTime = ?5 WHERE id = ?1"),
+      nsLiteralCString("UPDATE moz_perms "
+                       "SET permission = ?2, expireType= ?3, expireTime = "
+                       "?4, modificationTime = ?5 WHERE id = ?1"),
       getter_AddRefs(data->mStmtUpdate));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1466,8 +1440,8 @@ void PermissionManager::PerformIdleDailyMaintenance() {
 
         nsCOMPtr<mozIStorageStatement> stmtDeleteExpired;
         nsresult rv = data->mDBConn->CreateStatement(
-            NS_LITERAL_CSTRING("DELETE FROM moz_perms WHERE expireType = "
-                               "?1 AND expireTime <= ?2"),
+            nsLiteralCString("DELETE FROM moz_perms WHERE expireType = "
+                             "?1 AND expireTime <= ?2"),
             getter_AddRefs(stmtDeleteExpired));
         NS_ENSURE_SUCCESS_VOID(rv);
 
@@ -1496,30 +1470,30 @@ nsresult PermissionManager::CreateTable() {
   // SQL also lives in automation.py.in. If you change this SQL change that
   // one too
   rv = data->mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE moz_perms ("
-                         " id INTEGER PRIMARY KEY"
-                         ",origin TEXT"
-                         ",type TEXT"
-                         ",permission INTEGER"
-                         ",expireType INTEGER"
-                         ",expireTime INTEGER"
-                         ",modificationTime INTEGER"
-                         ")"));
+      nsLiteralCString("CREATE TABLE moz_perms ("
+                       " id INTEGER PRIMARY KEY"
+                       ",origin TEXT"
+                       ",type TEXT"
+                       ",permission INTEGER"
+                       ",expireType INTEGER"
+                       ",expireTime INTEGER"
+                       ",modificationTime INTEGER"
+                       ")"));
   if (NS_FAILED(rv)) return rv;
 
   // We also create a legacy V4 table, for backwards compatability,
   // and to ensure that downgrades don't trigger a schema version change.
   return data->mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE moz_hosts ("
-                         " id INTEGER PRIMARY KEY"
-                         ",host TEXT"
-                         ",type TEXT"
-                         ",permission INTEGER"
-                         ",expireType INTEGER"
-                         ",expireTime INTEGER"
-                         ",modificationTime INTEGER"
-                         ",isInBrowserElement INTEGER"
-                         ")"));
+      nsLiteralCString("CREATE TABLE moz_hosts ("
+                       " id INTEGER PRIMARY KEY"
+                       ",host TEXT"
+                       ",type TEXT"
+                       ",permission INTEGER"
+                       ",expireType INTEGER"
+                       ",expireTime INTEGER"
+                       ",modificationTime INTEGER"
+                       ",isInBrowserElement INTEGER"
+                       ")"));
 }
 
 // Returns whether the given combination of expire type and expire time are
@@ -2097,8 +2071,8 @@ nsresult PermissionManager::RemoveAllInternal(bool aNotifyObservers) {
         }
 
         // clear the db
-        nsresult rv = data->mDBConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("DELETE FROM moz_perms"));
+        nsresult rv =
+            data->mDBConn->ExecuteSimpleSQL("DELETE FROM moz_perms"_ns);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           NS_DispatchToMainThread(NS_NewRunnableFunction(
               "PermissionManager::RemoveAllInternal-Failure",
@@ -2244,7 +2218,7 @@ nsresult PermissionManager::CommonTestPermissionInternal(
 
 NS_IMETHODIMP PermissionManager::GetAll(
     nsTArray<RefPtr<nsIPermission>>& aResult) {
-  return GetAllWithTypePrefix(NS_LITERAL_CSTRING(""), aResult);
+  return GetAllWithTypePrefix(""_ns, aResult);
 }
 
 NS_IMETHODIMP PermissionManager::GetAllWithTypePrefix(
@@ -2692,7 +2666,7 @@ nsresult PermissionManager::Read(const MonitorAutoLock& aProofOfLock) {
 
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = data->mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING(
+      nsLiteralCString(
           "SELECT id, origin, type, permission, expireType, "
           "expireTime, modificationTime "
           "FROM moz_perms WHERE expireType != ?1 OR expireTime > ?2"),
@@ -3050,9 +3024,9 @@ void PermissionManager::GetKeyForOrigin(const nsACString& aOrigin,
   // scheme in the case where they are one of these interesting URIs. We don't
   // want to actually parse the URL here however, because this can be called on
   // hot paths.
-  if (!StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("http:")) &&
-      !StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("https:")) &&
-      !StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("ftp:"))) {
+  if (!StringBeginsWith(aOrigin, "http:"_ns) &&
+      !StringBeginsWith(aOrigin, "https:"_ns) &&
+      !StringBeginsWith(aOrigin, "ftp:"_ns)) {
     return;
   }
 

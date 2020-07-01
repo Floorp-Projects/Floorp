@@ -828,7 +828,7 @@ nsresult nsDNSService::PreprocessHostname(bool aLocalDomain,
                                           nsIIDNService* aIDN,
                                           nsACString& aACE) {
   // Enforce RFC 7686
-  if (mBlockDotOnion && StringEndsWith(aInput, NS_LITERAL_CSTRING(".onion"))) {
+  if (mBlockDotOnion && StringEndsWith(aInput, ".onion"_ns)) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 

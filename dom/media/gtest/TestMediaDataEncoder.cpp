@@ -18,12 +18,12 @@
 
 #include <fstream>
 
-#define SKIP_IF_NOT_SUPPORTED(mimeType)                       \
-  do {                                                        \
-    RefPtr<PEMFactory> f(new PEMFactory());                   \
-    if (!f->SupportsMimeType(NS_LITERAL_CSTRING(mimeType))) { \
-      return;                                                 \
-    }                                                         \
+#define SKIP_IF_NOT_SUPPORTED(mimeType)                     \
+  do {                                                      \
+    RefPtr<PEMFactory> f(new PEMFactory());                 \
+    if (!f->SupportsMimeType(nsLiteralCString(mimeType))) { \
+      return;                                               \
+    }                                                       \
   } while (0)
 
 #define BLOCK_SIZE 64
@@ -141,12 +141,12 @@ static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
             MediaDataEncoder::H264Specific::ProfileLevel::BaselineAutoLevel))) {
   RefPtr<PEMFactory> f(new PEMFactory());
 
-  if (!f->SupportsMimeType(NS_LITERAL_CSTRING(VIDEO_MP4))) {
+  if (!f->SupportsMimeType(nsLiteralCString(VIDEO_MP4))) {
     return nullptr;
   }
 
   VideoInfo videoInfo(WIDTH, HEIGHT);
-  videoInfo.mMimeType = NS_LITERAL_CSTRING(VIDEO_MP4);
+  videoInfo.mMimeType = nsLiteralCString(VIDEO_MP4);
   const RefPtr<TaskQueue> taskQueue(
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)));
 

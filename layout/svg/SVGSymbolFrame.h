@@ -37,7 +37,7 @@ class SVGSymbolFrame final : public SVGViewportFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGSymbol"), aResult);
+    return MakeFrameName(u"SVGSymbol"_ns, aResult);
   }
 #endif
 };

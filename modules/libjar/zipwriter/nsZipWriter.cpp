@@ -792,7 +792,7 @@ nsresult nsZipWriter::InternalAddEntryDirectory(const nsACString& aZipEntry,
   nsresult rv = NS_OK;
   if (aZipEntry.Last() != '/') {
     nsCString dirPath;
-    dirPath.Assign(aZipEntry + NS_LITERAL_CSTRING("/"));
+    dirPath.Assign(aZipEntry + "/"_ns);
     rv = header->Init(dirPath, aModTime, zipAttributes, mCDSOffset);
   } else {
     rv = header->Init(aZipEntry, aModTime, zipAttributes, mCDSOffset);

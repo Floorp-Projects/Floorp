@@ -491,7 +491,7 @@ void nsMenuBarX::HideItem(mozilla::dom::Document* inDoc, const nsAString& inID,
                           nsIContent** outHiddenNode) {
   nsCOMPtr<Element> menuElement = inDoc->GetElementById(inID);
   if (menuElement) {
-    menuElement->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, NS_LITERAL_STRING("true"), false);
+    menuElement->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, u"true"_ns, false);
     if (outHiddenNode) {
       *outHiddenNode = menuElement.get();
       NS_IF_ADDREF(*outHiddenNode);
@@ -504,27 +504,27 @@ void nsMenuBarX::AquifyMenuBar() {
   RefPtr<mozilla::dom::Document> domDoc = mContent->GetComposedDoc();
   if (domDoc) {
     // remove the "About..." item and its separator
-    HideItem(domDoc, NS_LITERAL_STRING("aboutSeparator"), nullptr);
-    HideItem(domDoc, NS_LITERAL_STRING("aboutName"), getter_AddRefs(mAboutItemContent));
+    HideItem(domDoc, u"aboutSeparator"_ns, nullptr);
+    HideItem(domDoc, u"aboutName"_ns, getter_AddRefs(mAboutItemContent));
     if (!sAboutItemContent) sAboutItemContent = mAboutItemContent;
 
     // remove quit item and its separator
-    HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nullptr);
-    HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitItem"), getter_AddRefs(mQuitItemContent));
+    HideItem(domDoc, u"menu_FileQuitSeparator"_ns, nullptr);
+    HideItem(domDoc, u"menu_FileQuitItem"_ns, getter_AddRefs(mQuitItemContent));
     if (!sQuitItemContent) sQuitItemContent = mQuitItemContent;
 
     // remove prefs item and its separator, but save off the pref content node
     // so we can invoke its command later.
-    HideItem(domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nullptr);
-    HideItem(domDoc, NS_LITERAL_STRING("menu_preferences"), getter_AddRefs(mPrefItemContent));
+    HideItem(domDoc, u"menu_PrefsSeparator"_ns, nullptr);
+    HideItem(domDoc, u"menu_preferences"_ns, getter_AddRefs(mPrefItemContent));
     if (!sPrefItemContent) sPrefItemContent = mPrefItemContent;
 
     // hide items that we use for the Application menu
-    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_services"), nullptr);
-    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_app"), nullptr);
-    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_others"), nullptr);
-    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_show_all"), nullptr);
-    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_touch_bar"), nullptr);
+    HideItem(domDoc, u"menu_mac_services"_ns, nullptr);
+    HideItem(domDoc, u"menu_mac_hide_app"_ns, nullptr);
+    HideItem(domDoc, u"menu_mac_hide_others"_ns, nullptr);
+    HideItem(domDoc, u"menu_mac_show_all"_ns, nullptr);
+    HideItem(domDoc, u"menu_mac_touch_bar"_ns, nullptr);
   }
 }
 
@@ -566,7 +566,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
     RefPtr<Element> keyElement = doc->GetElementById(key);
     if (keyElement) {
       // first grab the key equivalent character
-      nsAutoString keyChar(NS_LITERAL_STRING(" "));
+      nsAutoString keyChar(u" "_ns);
       keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);
       if (!keyChar.EqualsLiteral(" ")) {
         keyEquiv = [[NSString stringWithCharacters:reinterpret_cast<const unichar*>(keyChar.get())
@@ -661,9 +661,8 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     BOOL addAboutSeparator = FALSE;
 
     // Add the About menu item
-    itemBeingAdded =
-        CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("aboutName"), @selector(menuItemHit:),
-                                eCommand_ID_About, nsMenuBarX::sNativeEventTarget);
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, u"aboutName"_ns, @selector(menuItemHit:),
+                                             eCommand_ID_About, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -676,9 +675,9 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     if (addAboutSeparator) [sApplicationMenu addItem:[NSMenuItem separatorItem]];
 
     // Add the Preferences menu item
-    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_preferences"),
-                                             @selector(menuItemHit:), eCommand_ID_Prefs,
-                                             nsMenuBarX::sNativeEventTarget);
+    itemBeingAdded =
+        CreateNativeAppMenuItem(inMenu, u"menu_preferences"_ns, @selector(menuItemHit:),
+                                eCommand_ID_Prefs, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -689,8 +688,7 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     }
 
     // Add Services menu item
-    itemBeingAdded =
-        CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_services"), nil, 0, nil);
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, u"menu_mac_services"_ns, nil, 0, nil);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
 
@@ -709,9 +707,9 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     BOOL addHideShowSeparator = FALSE;
 
     // Add menu item to hide this application
-    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_hide_app"),
-                                             @selector(menuItemHit:), eCommand_ID_HideApp,
-                                             nsMenuBarX::sNativeEventTarget);
+    itemBeingAdded =
+        CreateNativeAppMenuItem(inMenu, u"menu_mac_hide_app"_ns, @selector(menuItemHit:),
+                                eCommand_ID_HideApp, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -721,9 +719,9 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     }
 
     // Add menu item to hide other applications
-    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_hide_others"),
-                                             @selector(menuItemHit:), eCommand_ID_HideOthers,
-                                             nsMenuBarX::sNativeEventTarget);
+    itemBeingAdded =
+        CreateNativeAppMenuItem(inMenu, u"menu_mac_hide_others"_ns, @selector(menuItemHit:),
+                                eCommand_ID_HideOthers, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -733,9 +731,9 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     }
 
     // Add menu item to show all applications
-    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_show_all"),
-                                             @selector(menuItemHit:), eCommand_ID_ShowAll,
-                                             nsMenuBarX::sNativeEventTarget);
+    itemBeingAdded =
+        CreateNativeAppMenuItem(inMenu, u"menu_mac_show_all"_ns, @selector(menuItemHit:),
+                                eCommand_ID_ShowAll, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -750,9 +748,9 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     BOOL addTouchBarSeparator = NO;
 
     // Add Touch Bar customization menu item.
-    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_touch_bar"),
-                                             @selector(menuItemHit:), eCommand_ID_TouchBar,
-                                             nsMenuBarX::sNativeEventTarget);
+    itemBeingAdded =
+        CreateNativeAppMenuItem(inMenu, u"menu_mac_touch_bar"_ns, @selector(menuItemHit:),
+                                eCommand_ID_TouchBar, nsMenuBarX::sNativeEventTarget);
 
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
@@ -770,9 +768,9 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     if (addTouchBarSeparator) [sApplicationMenu addItem:[NSMenuItem separatorItem]];
 
     // Add quit menu item
-    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_FileQuitItem"),
-                                             @selector(menuItemHit:), eCommand_ID_Quit,
-                                             nsMenuBarX::sNativeEventTarget);
+    itemBeingAdded =
+        CreateNativeAppMenuItem(inMenu, u"menu_FileQuitItem"_ns, @selector(menuItemHit:),
+                                eCommand_ID_Quit, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];

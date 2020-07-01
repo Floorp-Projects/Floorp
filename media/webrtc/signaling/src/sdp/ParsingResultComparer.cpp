@@ -79,7 +79,7 @@ bool ParsingResultComparer::Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
   LOG_EXPECT(result, expect, ("The original sdp: \n%s", mOriginalSdp.c_str()));
   if (result) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
-                         NS_LITERAL_STRING("serialization_is_equal"), 1);
+                         u"serialization_is_equal"_ns, 1);
     LOG_EXPECT(result, expect, ("Serialization is equal"));
     return result;
   }
@@ -87,7 +87,7 @@ bool ParsingResultComparer::Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
   result = true;
 
   Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
-                       NS_LITERAL_STRING("serialization_is_not_equal"), 1);
+                       u"serialization_is_not_equal"_ns, 1);
   LOG_EXPECT(result, expect,
              ("Serialization is not equal\n"
               " --- Sipcc SDP ---\n"
@@ -101,8 +101,8 @@ bool ParsingResultComparer::Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
 
   // Compare the session level
   if (rsdparsaOriginStr != sipccOriginStr) {
-    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
-                         NS_LITERAL_STRING("o="), 1);
+    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF, u"o="_ns,
+                         1);
     result = false;
     LOG_EXPECT(result, expect,
                ("origin is not equal\nrust origin: %s\nsipcc origin: %s",
@@ -132,7 +132,7 @@ bool ParsingResultComparer::Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
   if (sipccMediaSecCount != rsdparsaMediaSecCount) {
     result = false;
     Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
-                         NS_LITERAL_STRING("inequal_msec_count"), 1);
+                         u"inequal_msec_count"_ns, 1);
     LOG_EXPECT(result, expect,
                ("Media section count is NOT equal, rsdparsa: %d, sipcc: %d \n",
                 rsdparsaMediaSecCount, sipccMediaSecCount));
@@ -156,7 +156,7 @@ bool ParsingResultComparer::CompareMediaSections(
                                     auto rustValue, auto sipccValue,
                                     const nsString& valueDescription) {
     result = false;
-    nsString typeStr = NS_LITERAL_STRING("m=");
+    nsString typeStr = u"m="_ns;
     typeStr += valueDescription;
     Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF, typeStr,
                          1);
@@ -184,26 +184,19 @@ bool ParsingResultComparer::CompareMediaSections(
                               valueDescription);
       };
 
-  compareSimpleMediaLineValue(&SdpMediaSection::GetMediaType,
-                              NS_LITERAL_STRING("media_type"));
-  compareSimpleMediaLineValue(&SdpMediaSection::GetPort,
-                              NS_LITERAL_STRING("port"));
-  compareSimpleMediaLineValue(&SdpMediaSection::GetPortCount,
-                              NS_LITERAL_STRING("port_count"));
-  compareSimpleMediaLineValue(&SdpMediaSection::GetProtocol,
-                              NS_LITERAL_STRING("protocol"));
+  compareSimpleMediaLineValue(&SdpMediaSection::GetMediaType, u"media_type"_ns);
+  compareSimpleMediaLineValue(&SdpMediaSection::GetPort, u"port"_ns);
+  compareSimpleMediaLineValue(&SdpMediaSection::GetPortCount, u"port_count"_ns);
+  compareSimpleMediaLineValue(&SdpMediaSection::GetProtocol, u"protocol"_ns);
   compareSimpleMediaLineValue(&SdpMediaSection::IsReceiving,
-                              NS_LITERAL_STRING("is_receiving"));
-  compareSimpleMediaLineValue(&SdpMediaSection::IsSending,
-                              NS_LITERAL_STRING("is_sending"));
-  compareSimpleMediaLineValue(&SdpMediaSection::GetDirection,
-                              NS_LITERAL_STRING("direction"));
-  compareSimpleMediaLineValue(&SdpMediaSection::GetLevel,
-                              NS_LITERAL_STRING("level"));
+                              u"is_receiving"_ns);
+  compareSimpleMediaLineValue(&SdpMediaSection::IsSending, u"is_sending"_ns);
+  compareSimpleMediaLineValue(&SdpMediaSection::GetDirection, u"direction"_ns);
+  compareSimpleMediaLineValue(&SdpMediaSection::GetLevel, u"level"_ns);
 
   compareMediaLineValue(ToString(rustMediaSection.GetConnection()),
                         ToString(sipccMediaSection.GetConnection()),
-                        NS_LITERAL_STRING("connection"));
+                        u"connection"_ns);
 
   result &= CompareAttrLists(rustMediaSection.GetAttributeList(),
                              sipccMediaSection.GetAttributeList(),
@@ -233,7 +226,7 @@ bool ParsingResultComparer::CompareAttrLists(
         result = false;
         nsString typeStr;
         typeStr.AssignASCII(attrStr.c_str());
-        typeStr += NS_LITERAL_STRING("_missing");
+        typeStr += u"_missing"_ns;
         Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
                              typeStr, 1);
         LOG_EXPECT(result, expect,
@@ -258,7 +251,7 @@ bool ParsingResultComparer::CompareAttrLists(
           result = false;
           nsString typeStr;
           typeStr.AssignASCII(attrStr.c_str());
-          typeStr += NS_LITERAL_STRING("_inequal");
+          typeStr += u"_inequal"_ns;
           Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
                                typeStr, 1);
           LOG_EXPECT(result, expect,
@@ -281,7 +274,7 @@ bool ParsingResultComparer::CompareAttrLists(
       if (rustAttrlist.HasAttribute(type, false)) {
         nsString typeStr;
         typeStr.AssignASCII(attrStr.c_str());
-        typeStr += NS_LITERAL_STRING("_unexpected");
+        typeStr += u"_unexpected"_ns;
         Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
                              typeStr, 1);
       }

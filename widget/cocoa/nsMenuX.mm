@@ -315,8 +315,7 @@ nsresult nsMenuX::RemoveAll() {
 nsEventStatus nsMenuX::MenuOpened() {
   // Open the node.
   if (mContent->IsElement()) {
-    mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, NS_LITERAL_STRING("true"),
-                                   true);
+    mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, u"true"_ns, true);
   }
 
   // Fire a handler. If we're told to stop, don't build the menu at all
@@ -590,7 +589,7 @@ bool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent) {
   if (aMenuContent && aMenuContent->IsElement()) {
     nsAutoString id;
     aMenuContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
-    if (id.Equals(NS_LITERAL_STRING("helpMenu"))) retval = true;
+    if (id.Equals(u"helpMenu"_ns)) retval = true;
   }
   return retval;
 }
@@ -716,8 +715,7 @@ nsresult nsMenuX::SetupIcon() {
   if (target && (target->MenuObjectType() == eMenuItemObjectType)) {
     nsMenuItemX* targetMenuItem = static_cast<nsMenuItemX*>(target);
     bool handlerCalledPreventDefault;  // but we don't actually care
-    targetMenuItem->DispatchDOMEvent(NS_LITERAL_STRING("DOMMenuItemActive"),
-                                     &handlerCalledPreventDefault);
+    targetMenuItem->DispatchDOMEvent(u"DOMMenuItemActive"_ns, &handlerCalledPreventDefault);
   }
 }
 

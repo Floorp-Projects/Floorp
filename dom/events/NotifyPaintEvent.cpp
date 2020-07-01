@@ -83,7 +83,7 @@ already_AddRefed<PaintRequestList> NotifyPaintEvent::PaintRequests(
 void NotifyPaintEvent::Serialize(IPC::Message* aMsg,
                                  bool aSerializeInterfaceType) {
   if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, NS_LITERAL_STRING("notifypaintevent"));
+    IPC::WriteParam(aMsg, u"notifypaintevent"_ns);
   }
 
   Event::Serialize(aMsg, false);

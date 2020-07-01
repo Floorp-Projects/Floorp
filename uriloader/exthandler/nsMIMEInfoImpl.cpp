@@ -26,7 +26,7 @@ static already_AddRefed<nsIFile> GetCanonicalExecutable(nsIFile* aFile) {
   if (binary) {
     binary->GetLeafName(leafName);
   }
-  while (binary && !StringEndsWith(leafName, NS_LITERAL_STRING(".app"))) {
+  while (binary && !StringEndsWith(leafName, u".app"_ns)) {
     nsCOMPtr<nsIFile> parent;
     binary->GetParent(getter_AddRefs(parent));
     binary = parent;

@@ -651,7 +651,7 @@ nsresult txMozillaXMLOutput::startHTMLElement(nsIContent* aElement,
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = meta->SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
-                       NS_LITERAL_STRING("Content-Type"), false);
+                       u"Content-Type"_ns, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString metacontent;
@@ -764,9 +764,9 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
   if (!mOutputFormat.mMediaType.IsEmpty()) {
     mDocument->SetContentType(mOutputFormat.mMediaType);
   } else if (mOutputFormat.mMethod == eHTMLOutput) {
-    mDocument->SetContentType(NS_LITERAL_STRING("text/html"));
+    mDocument->SetContentType(u"text/html"_ns);
   } else {
-    mDocument->SetContentType(NS_LITERAL_STRING("application/xml"));
+    mDocument->SetContentType(u"application/xml"_ns);
   }
 
   if (mOutputFormat.mMethod == eXMLOutput &&

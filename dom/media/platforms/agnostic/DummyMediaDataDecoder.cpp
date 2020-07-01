@@ -66,7 +66,7 @@ RefPtr<MediaDataDecoder::FlushPromise> DummyMediaDataDecoder::Flush() {
 }
 
 nsCString DummyMediaDataDecoder::GetDescriptionName() const {
-  return NS_LITERAL_CSTRING("blank media data decoder");
+  return "blank media data decoder"_ns;
 }
 
 MediaDataDecoder::ConversionRequired DummyMediaDataDecoder::NeedsConversion()

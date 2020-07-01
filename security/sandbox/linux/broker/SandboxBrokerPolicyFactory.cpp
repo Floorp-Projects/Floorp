@@ -182,7 +182,7 @@ static void AddPathsFromFileInternal(SandboxBroker::Policy* aPolicy,
     line.EndReading(end);
     token_end = end;
 
-    if (FindInReadable(NS_LITERAL_CSTRING("include "), start, token_end)) {
+    if (FindInReadable("include "_ns, start, token_end)) {
       nsAutoCString includes(Substring(token_end, end));
       for (const nsACString& includeGlob : includes.Split(' ')) {
         // Glob path might be relative, so add cwd if so.
@@ -250,7 +250,7 @@ static void AddPathsFromFile(SandboxBroker::Policy* aPolicy,
 }
 
 static void AddLdconfigPaths(SandboxBroker::Policy* aPolicy) {
-  nsAutoCString ldConfig(NS_LITERAL_CSTRING("/etc/ld.so.conf"));
+  nsAutoCString ldConfig("/etc/ld.so.conf"_ns);
   AddPathsFromFile(aPolicy, ldConfig);
 }
 
@@ -378,9 +378,9 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory() {
     // ~/.local/share (for themes)
     rv = homeDir->Clone(getter_AddRefs(confDir));
     if (NS_SUCCEEDED(rv)) {
-      rv = confDir->AppendNative(NS_LITERAL_CSTRING(".local"));
+      rv = confDir->AppendNative(".local"_ns);
       if (NS_SUCCEEDED(rv)) {
-        rv = confDir->AppendNative(NS_LITERAL_CSTRING("share"));
+        rv = confDir->AppendNative("share"_ns);
       }
       if (NS_SUCCEEDED(rv)) {
         nsAutoCString tmpPath;
@@ -394,7 +394,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory() {
     // ~/.fonts.conf (Fontconfig)
     rv = homeDir->Clone(getter_AddRefs(confDir));
     if (NS_SUCCEEDED(rv)) {
-      rv = confDir->AppendNative(NS_LITERAL_CSTRING(".fonts.conf"));
+      rv = confDir->AppendNative(".fonts.conf"_ns);
       if (NS_SUCCEEDED(rv)) {
         nsAutoCString tmpPath;
         rv = confDir->GetNativePath(tmpPath);
@@ -407,7 +407,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory() {
     // .pangorc
     rv = homeDir->Clone(getter_AddRefs(confDir));
     if (NS_SUCCEEDED(rv)) {
-      rv = confDir->AppendNative(NS_LITERAL_CSTRING(".pangorc"));
+      rv = confDir->AppendNative(".pangorc"_ns);
       if (NS_SUCCEEDED(rv)) {
         nsAutoCString tmpPath;
         rv = confDir->GetNativePath(tmpPath);
@@ -570,7 +570,7 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
     nsCOMPtr<nsIFile> workDir;
     rv = profileDir->Clone(getter_AddRefs(workDir));
     if (NS_SUCCEEDED(rv)) {
-      rv = workDir->AppendNative(NS_LITERAL_CSTRING("chrome"));
+      rv = workDir->AppendNative("chrome"_ns);
       if (NS_SUCCEEDED(rv)) {
         nsAutoCString tmpPath;
         rv = workDir->GetNativePath(tmpPath);
@@ -581,7 +581,7 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
     }
     rv = profileDir->Clone(getter_AddRefs(workDir));
     if (NS_SUCCEEDED(rv)) {
-      rv = workDir->AppendNative(NS_LITERAL_CSTRING("extensions"));
+      rv = workDir->AppendNative("extensions"_ns);
       if (NS_SUCCEEDED(rv)) {
         nsAutoCString tmpPath;
         rv = workDir->GetNativePath(tmpPath);

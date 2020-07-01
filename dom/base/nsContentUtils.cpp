@@ -675,8 +675,7 @@ nsresult nsContentUtils::Init() {
 #endif
 
   nsDependentCString buildID(mozilla::PlatformBuildID());
-  sJSBytecodeMimeType =
-      new nsCString(NS_LITERAL_CSTRING("javascript/moz-bytecode-") + buildID);
+  sJSBytecodeMimeType = new nsCString("javascript/moz-bytecode-"_ns + buildID);
 
   Element::InitCCCallbacks();
 
@@ -1064,8 +1063,8 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
       enumValue.ParseEnumValue(tokenString, kAutocompleteFieldNameTable, false);
   if (result) {
     // Off/Automatic/Normal categories.
-    if (enumValue.Equals(NS_LITERAL_STRING("off"), eIgnoreCase) ||
-        enumValue.Equals(NS_LITERAL_STRING("on"), eIgnoreCase)) {
+    if (enumValue.Equals(u"off"_ns, eIgnoreCase) ||
+        enumValue.Equals(u"on"_ns, eIgnoreCase)) {
       if (numTokens > 1) {
         return eAutocompleteAttrState_Invalid;
       }
@@ -1073,7 +1072,7 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
       ASCIIToLower(str);
       aInfo.mFieldName.Assign(str);
       aInfo.mCanAutomaticallyPersist =
-          !enumValue.Equals(NS_LITERAL_STRING("off"), eIgnoreCase);
+          !enumValue.Equals(u"off"_ns, eIgnoreCase);
       return eAutocompleteAttrState_Valid;
     }
 
@@ -2709,9 +2708,9 @@ static inline void KeyAppendInt(int32_t aInt, nsACString& aKey) {
 
 static inline bool IsAutocompleteOff(const nsIContent* aContent) {
   return aContent->IsElement() &&
-         aContent->AsElement()->AttrValueIs(
-             kNameSpaceID_None, nsGkAtoms::autocomplete,
-             NS_LITERAL_STRING("off"), eIgnoreCase);
+         aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::autocomplete, u"off"_ns,
+                                            eIgnoreCase);
 }
 
 /*static*/
@@ -2799,11 +2798,11 @@ void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
           MOZ_ASSERT(formElement->GetFormNumberForStateKey() != -1,
                      "when generating a state key for a parser inserted form "
                      "control we should have a parser inserted <form> element");
-          KeyAppendString(NS_LITERAL_CSTRING("fp"), aKey);
+          KeyAppendString("fp"_ns, aKey);
           KeyAppendInt(formElement->GetFormNumberForStateKey(), aKey);
           appendedForm = true;
         } else {
-          KeyAppendString(NS_LITERAL_CSTRING("fn"), aKey);
+          KeyAppendString("fn"_ns, aKey);
           int32_t index = htmlForms->IndexOf(formElement, false);
           if (index <= -1) {
             //
@@ -2840,12 +2839,12 @@ void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
         // inserted control, or the index of the control in the document
         // otherwise.
         if (parserInserted) {
-          KeyAppendString(NS_LITERAL_CSTRING("dp"), aKey);
+          KeyAppendString("dp"_ns, aKey);
           KeyAppendInt(control->GetParserInsertedControlNumberForStateKey(),
                        aKey);
           generatedUniqueKey = true;
         } else {
-          KeyAppendString(NS_LITERAL_CSTRING("dn"), aKey);
+          KeyAppendString("dn"_ns, aKey);
           int32_t index = htmlFormControls->IndexOf(aContent, true);
           if (index > -1) {
             KeyAppendInt(index, aKey);
@@ -2872,7 +2871,7 @@ void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
     } else {
       // Append a character that is not "d" or "f" to disambiguate from
       // the case when we were a form control in an HTML document.
-      KeyAppendString(NS_LITERAL_CSTRING("o"), aKey);
+      KeyAppendString("o"_ns, aKey);
     }
 
     // Now start at aContent and append the indices of it and all its ancestors
@@ -3764,7 +3763,7 @@ nsresult nsContentUtils::ReportToConsole(
 
 /* static */
 void nsContentUtils::ReportEmptyGetElementByIdArg(const Document* aDoc) {
-  ReportToConsole(nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), aDoc,
+  ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns, aDoc,
                   nsContentUtils::eDOM_PROPERTIES, "EmptyGetElementByIdParam");
 }
 
@@ -3934,7 +3933,7 @@ nsAtom* nsContentUtils::GetEventMessageAndAtom(
   }
 
   *aEventMessage = eUnidentifiedEvent;
-  RefPtr<nsAtom> atom = NS_AtomizeMainThread(NS_LITERAL_STRING("on") + aName);
+  RefPtr<nsAtom> atom = NS_AtomizeMainThread(u"on"_ns + aName);
   sUserDefinedEvents->AppendElement(atom);
   mapping.mAtom = atom;
   mapping.mMessage = eUnidentifiedEvent;
@@ -3967,7 +3966,7 @@ EventMessage nsContentUtils::GetEventMessageAndAtomForListener(
     if (mapping.mMaybeSpecialSVGorSMILEvent) {
       // Try the atom version so that we should get the right message for
       // SVG/SMIL.
-      atom = NS_AtomizeMainThread(NS_LITERAL_STRING("on") + aName);
+      atom = NS_AtomizeMainThread(u"on"_ns + aName);
       msg = GetEventMessage(atom);
     } else {
       atom = mapping.mAtom;
@@ -3995,7 +3994,7 @@ static nsresult GetEventAndTarget(Document* aDoc, nsISupports* aTarget,
 
   ErrorResult err;
   RefPtr<Event> event =
-      aDoc->CreateEvent(NS_LITERAL_STRING("Events"), CallerType::System, err);
+      aDoc->CreateEvent(u"Events"_ns, CallerType::System, err);
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }
@@ -4299,9 +4298,9 @@ void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise,
   RefPtr<Element> target = &aFrameElement;
   bool defaultAction = true;
   if (aCanRaise) {
-    DispatchEventOnlyToChrome(
-        target->OwnerDoc(), target, NS_LITERAL_STRING("framefocusrequested"),
-        CanBubble::eYes, Cancelable::eYes, &defaultAction);
+    DispatchEventOnlyToChrome(target->OwnerDoc(), target,
+                              u"framefocusrequested"_ns, CanBubble::eYes,
+                              Cancelable::eYes, &defaultAction);
   }
   if (!defaultAction) {
     return;
@@ -4974,7 +4973,7 @@ nsresult nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
 
   nsCOMPtr<nsIDocumentEncoder> encoder = do_createDocumentEncoder("text/plain");
 
-  rv = encoder->Init(document, NS_LITERAL_STRING("text/plain"), aFlags);
+  rv = encoder->Init(document, u"text/plain"_ns, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   encoder->SetWrapColumn(aWrapCol);
@@ -5938,7 +5937,7 @@ nsresult nsContentUtils::DispatchXULCommand(nsIContent* aTarget, bool aTrusted,
 
   RefPtr<XULCommandEvent> xulCommand =
       new XULCommandEvent(doc, presContext, nullptr);
-  xulCommand->InitCommandEvent(NS_LITERAL_STRING("command"), true, true,
+  xulCommand->InitCommandEvent(u"command"_ns, true, true,
                                nsGlobalWindowInner::Cast(doc->GetInnerWindow()),
                                0, aCtrl, aAlt, aShift, aMeta, aSourceEvent,
                                aInputSource, IgnoreErrors());
@@ -6323,7 +6322,7 @@ bool nsContentUtils::AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal) {
 
   return (StaticPrefs::dom_allow_XUL_XBL_for_file() &&
           aPrincipal->SchemeIs("file")) ||
-         IsSitePermAllow(aPrincipal, NS_LITERAL_CSTRING("allowXULXBL"));
+         IsSitePermAllow(aPrincipal, "allowXULXBL"_ns);
 }
 
 bool nsContentUtils::IsPDFJSEnabled() {
@@ -6403,9 +6402,8 @@ static void ReportPatternCompileFailure(nsAString& aPattern,
     return;
   }
 
-  nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                  NS_LITERAL_CSTRING("DOM"), aDocument,
-                                  nsContentUtils::eDOM_PROPERTIES,
+  nsContentUtils::ReportToConsole(nsIScriptError::errorFlag, "DOM"_ns,
+                                  aDocument, nsContentUtils::eDOM_PROPERTIES,
                                   "PatternAttributeCompileFailure", strings);
   savedExc.drop();
 }
@@ -6806,9 +6804,9 @@ bool nsContentUtils::IsForbiddenRequestHeader(const nsACString& aHeader) {
     return true;
   }
 
-  return StringBeginsWith(aHeader, NS_LITERAL_CSTRING("proxy-"),
+  return StringBeginsWith(aHeader, "proxy-"_ns,
                           nsCaseInsensitiveCStringComparator) ||
-         StringBeginsWith(aHeader, NS_LITERAL_CSTRING("sec-"),
+         StringBeginsWith(aHeader, "sec-"_ns,
                           nsCaseInsensitiveCStringComparator);
 }
 
@@ -7310,7 +7308,7 @@ bool nsContentUtils::IsFileImage(nsIFile* aFile, nsACString& aType) {
     return false;
   }
 
-  return StringBeginsWith(aType, NS_LITERAL_CSTRING("image/"));
+  return StringBeginsWith(aType, "image/"_ns);
 }
 
 nsresult nsContentUtils::CalculateBufferSizeForImage(
@@ -7991,8 +7989,7 @@ ReferrerPolicy nsContentUtils::GetReferrerPolicyFromChannel(
 
   nsresult rv;
   nsAutoCString headerValue;
-  rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("referrer-policy"),
-                                      headerValue);
+  rv = httpChannel->GetResponseHeader("referrer-policy"_ns, headerValue);
   if (NS_FAILED(rv) || headerValue.IsEmpty()) {
     return ReferrerPolicy::_empty;
   }
@@ -8537,8 +8534,8 @@ static void StartElement(Element* aContent, StringBuilder& aBuilder) {
 
     // Filter out any attribute starting with [-|_]moz
     nsDependentAtomString attrNameStr(attName);
-    if (StringBeginsWith(attrNameStr, NS_LITERAL_STRING("_moz")) ||
-        StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
+    if (StringBeginsWith(attrNameStr, u"_moz"_ns) ||
+        StringBeginsWith(attrNameStr, u"-moz"_ns)) {
       continue;
     }
 
@@ -8549,7 +8546,7 @@ static void StartElement(Element* aContent, StringBuilder& aBuilder) {
     // Bug 16988.  Yuck.
     if (localName == nsGkAtoms::br && tagNS == kNameSpaceID_XHTML &&
         attName == nsGkAtoms::type && attNs == kNameSpaceID_None &&
-        StringBeginsWith(*attValue, NS_LITERAL_STRING("_moz"))) {
+        StringBeginsWith(*attValue, u"_moz"_ns)) {
       delete attValue;
       continue;
     }
@@ -9536,8 +9533,7 @@ bool nsContentUtils::ShouldBlockReservedKeys(WidgetKeyboardEvent* aKeyEvent) {
   }
 
   if (principal) {
-    return nsContentUtils::IsSitePermDeny(principal,
-                                          NS_LITERAL_CSTRING("shortcuts"));
+    return nsContentUtils::IsSitePermDeny(principal, "shortcuts"_ns);
   }
 
   return false;
@@ -9744,11 +9740,9 @@ bool nsContentUtils::GetUserIsInteracting() {
 /* static */
 bool nsContentUtils::GetSourceMapURL(nsIHttpChannel* aChannel,
                                      nsACString& aResult) {
-  nsresult rv =
-      aChannel->GetResponseHeader(NS_LITERAL_CSTRING("SourceMap"), aResult);
+  nsresult rv = aChannel->GetResponseHeader("SourceMap"_ns, aResult);
   if (NS_FAILED(rv)) {
-    rv =
-        aChannel->GetResponseHeader(NS_LITERAL_CSTRING("X-SourceMap"), aResult);
+    rv = aChannel->GetResponseHeader("X-SourceMap"_ns, aResult);
   }
   return NS_SUCCEEDED(rv);
 }
@@ -9826,7 +9820,7 @@ void nsContentUtils::UserInteractionObserver::AnnotateHang(
     BackgroundHangAnnotations& aAnnotations) {
   // NOTE: Only annotate the hang report if the user is known to be interacting.
   if (sUserActive) {
-    aAnnotations.AddAnnotation(NS_LITERAL_STRING("UserInteracting"), true);
+    aAnnotations.AddAnnotation(u"UserInteracting"_ns, true);
   }
 }
 
@@ -10167,8 +10161,7 @@ bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aList) {
       if (startIndexOfNextLevel <= 0) {
         break;
       }
-      host = NS_LITERAL_CSTRING("*") +
-             nsDependentCSubstring(host, startIndexOfNextLevel);
+      host = "*"_ns + nsDependentCSubstring(host, startIndexOfNextLevel);
     }
   }
 

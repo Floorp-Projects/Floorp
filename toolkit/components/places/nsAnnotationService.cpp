@@ -72,7 +72,7 @@ nsresult nsAnnotationService::SetAnnotationStringInternal(
 
   mozStorageStatementScoper scoper(statement);
 
-  rv = statement->BindStringByName(NS_LITERAL_CSTRING("content"), aValue);
+  rv = statement->BindStringByName("content"_ns, aValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
@@ -177,7 +177,7 @@ nsresult nsAnnotationService::SetAnnotationInt32Internal(
 
   mozStorageStatementScoper scoper(statement);
 
-  rv = statement->BindInt32ByName(NS_LITERAL_CSTRING("content"), aValue);
+  rv = statement->BindInt32ByName("content"_ns, aValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
@@ -201,7 +201,7 @@ nsresult nsAnnotationService::SetAnnotationInt64Internal(
 
   mozStorageStatementScoper scoper(statement);
 
-  rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("content"), aValue);
+  rv = statement->BindInt64ByName("content"_ns, aValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
@@ -225,7 +225,7 @@ nsresult nsAnnotationService::SetAnnotationDoubleInternal(
 
   mozStorageStatementScoper scoper(statement);
 
-  rv = statement->BindDoubleByName(NS_LITERAL_CSTRING("content"), aValue);
+  rv = statement->BindDoubleByName("content"_ns, aValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
@@ -299,10 +299,10 @@ nsresult nsAnnotationService::RemoveAnnotationInternal(
   mozStorageStatementScoper scoper(statement);
 
   nsresult rv;
-  rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
+  rv = statement->BindInt64ByName("item_id"_ns, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
+  rv = statement->BindUTF8StringByName("anno_name"_ns, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
@@ -341,8 +341,7 @@ nsresult nsAnnotationService::RemoveItemAnnotations(int64_t aItemId) {
   NS_ENSURE_STATE(statement);
   mozStorageStatementScoper scoper(statement);
 
-  nsresult rv =
-      statement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
+  nsresult rv = statement->BindInt64ByName("item_id"_ns, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
@@ -368,10 +367,9 @@ nsAnnotationService::ItemHasAnnotation(int64_t aItemId, const nsACString& aName,
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper checkAnnoScoper(stmt);
 
-  nsresult rv =
-      stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
+  nsresult rv = stmt->BindUTF8StringByName("anno_name"_ns, aName);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
+  rv = stmt->BindInt64ByName("item_id"_ns, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasResult;
@@ -414,10 +412,10 @@ nsresult nsAnnotationService::StartGetAnnotation(
   mozStorageStatementScoper getAnnoScoper(aStatement);
 
   nsresult rv;
-  rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
+  rv = aStatement->BindInt64ByName("item_id"_ns, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
+  rv = aStatement->BindUTF8StringByName("anno_name"_ns, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasResult = false;
@@ -453,8 +451,7 @@ nsresult nsAnnotationService::StartSetAnnotation(
   NS_ENSURE_STATE(addNameStmt);
   mozStorageStatementScoper scoper(addNameStmt);
 
-  nsresult rv =
-      addNameStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
+  nsresult rv = addNameStmt->BindUTF8StringByName("anno_name"_ns, aName);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = addNameStmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -479,9 +476,9 @@ nsresult nsAnnotationService::StartSetAnnotation(
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper checkAnnoScoper(stmt);
 
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aName);
+  rv = stmt->BindUTF8StringByName("anno_name"_ns, aName);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
+  rv = stmt->BindInt64ByName("item_id"_ns, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasResult;
@@ -522,33 +519,29 @@ nsresult nsAnnotationService::StartSetAnnotation(
 
   // Don't replace existing annotations.
   if (oldAnnoId > 0) {
-    rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"), oldAnnoId);
+    rv = aStatement->BindInt64ByName("id"_ns, oldAnnoId);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("date_added"),
-                                     oldAnnoDate);
+    rv = aStatement->BindInt64ByName("date_added"_ns, oldAnnoDate);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    rv = aStatement->BindNullByName(NS_LITERAL_CSTRING("id"));
+    rv = aStatement->BindNullByName("id"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("date_added"),
-                                     RoundedPRNow());
+    rv = aStatement->BindInt64ByName("date_added"_ns, RoundedPRNow());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("fk"), fkId);
+  rv = aStatement->BindInt64ByName("fk"_ns, fkId);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("name_id"), nameID);
+  rv = aStatement->BindInt64ByName("name_id"_ns, nameID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aStatement->BindInt32ByName(NS_LITERAL_CSTRING("flags"), aFlags);
+  rv = aStatement->BindInt32ByName("flags"_ns, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStatement->BindInt32ByName(NS_LITERAL_CSTRING("expiration"),
-                                   aExpiration);
+  rv = aStatement->BindInt32ByName("expiration"_ns, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStatement->BindInt32ByName(NS_LITERAL_CSTRING("type"), aType);
+  rv = aStatement->BindInt32ByName("type"_ns, aType);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("last_modified"),
-                                   RoundedPRNow());
+  rv = aStatement->BindInt64ByName("last_modified"_ns, RoundedPRNow());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // On success, leave the statement open, the caller will set the value

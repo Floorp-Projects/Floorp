@@ -458,8 +458,8 @@ static bool WindowIsDeferredWindow(HWND hWnd) {
 
   // Common mozilla windows we must defer messages to.
   nsDependentString className(buffer, length);
-  if (StringBeginsWith(className, NS_LITERAL_STRING("Mozilla")) ||
-      StringBeginsWith(className, NS_LITERAL_STRING("Gecko")) ||
+  if (StringBeginsWith(className, u"Mozilla"_ns) ||
+      StringBeginsWith(className, u"Gecko"_ns) ||
       className.EqualsLiteral("nsToolkitClass") ||
       className.EqualsLiteral("nsAppShell:EventWindowClass")) {
     return true;

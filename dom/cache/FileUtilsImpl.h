@@ -30,8 +30,7 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
   rv = parentFile->GetNativeLeafName(nativeLeafName);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
-  MOZ_DIAGNOSTIC_ASSERT(
-      StringEndsWith(nativeLeafName, NS_LITERAL_CSTRING("morgue")));
+  MOZ_DIAGNOSTIC_ASSERT(StringEndsWith(nativeLeafName, "morgue"_ns));
 #endif
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
@@ -66,15 +65,14 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
 
     // Delete all tmp files regardless of known bodies. These are all
     // considered orphans.
-    if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".tmp"))) {
+    if (StringEndsWith(leafName, ".tmp"_ns)) {
       if (aCanRemoveFiles) {
         DebugOnly<nsresult> result =
             RemoveNsIFile(aQuotaInfo, file, aTrackQuota);
         MOZ_ASSERT(NS_SUCCEEDED(result));
         continue;
       }
-    } else if (NS_WARN_IF(
-                   !StringEndsWith(leafName, NS_LITERAL_CSTRING(".final")))) {
+    } else if (NS_WARN_IF(!StringEndsWith(leafName, ".final"_ns))) {
       // Otherwise, it must be a .final file.  If its not, then try to remove it
       // and move on
       DebugOnly<nsresult> result =

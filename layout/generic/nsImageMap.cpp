@@ -73,12 +73,12 @@ inline bool is_space(char c) {
 static void logMessage(nsIContent* aContent, const nsAString& aCoordsSpec,
                        int32_t aFlags, const char* aMessageName) {
   nsContentUtils::ReportToConsole(
-      aFlags, NS_LITERAL_CSTRING("Layout: ImageMap"), aContent->OwnerDoc(),
+      aFlags, "Layout: ImageMap"_ns, aContent->OwnerDoc(),
       nsContentUtils::eLAYOUT_PROPERTIES, aMessageName,
       nsTArray<nsString>(), /* params */
       nullptr,
-      PromiseFlatString(NS_LITERAL_STRING("coords=\"") + aCoordsSpec +
-                        NS_LITERAL_STRING("\""))); /* source line */
+      PromiseFlatString(u"coords=\""_ns + aCoordsSpec +
+                        u"\""_ns)); /* source line */
 }
 
 void Area::ParseCoords(const nsAString& aSpec) {
@@ -628,8 +628,8 @@ void nsImageMap::AreaRemoved(HTMLAreaElement* aArea) {
     aArea->SetPrimaryFrame(nullptr);
   }
 
-  aArea->RemoveSystemEventListener(NS_LITERAL_STRING("focus"), this, false);
-  aArea->RemoveSystemEventListener(NS_LITERAL_STRING("blur"), this, false);
+  aArea->RemoveSystemEventListener(u"focus"_ns, this, false);
+  aArea->RemoveSystemEventListener(u"blur"_ns, this, false);
 }
 
 void nsImageMap::FreeAreas() {
@@ -721,8 +721,8 @@ void nsImageMap::AddArea(HTMLAreaElement* aArea) {
   }
 
   // Add focus listener to track area focus changes
-  aArea->AddSystemEventListener(NS_LITERAL_STRING("focus"), this, false, false);
-  aArea->AddSystemEventListener(NS_LITERAL_STRING("blur"), this, false, false);
+  aArea->AddSystemEventListener(u"focus"_ns, this, false, false);
+  aArea->AddSystemEventListener(u"blur"_ns, this, false, false);
 
   // This is a nasty hack.  It needs to go away: see bug 135040.  Once this is
   // removed, the code added to RestyleManager::RestyleElement,

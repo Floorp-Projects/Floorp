@@ -237,20 +237,16 @@ bool WAVTrackDemuxer::ListChunkParserInit(uint32_t aChunkSize) {
 
     switch (id) {
       case 0x49415254:  // IART
-        mInfo->mTags.AppendElement(
-            MetadataTag(NS_LITERAL_CSTRING("artist"), val));
+        mInfo->mTags.AppendElement(MetadataTag("artist"_ns, val));
         break;
       case 0x49434d54:  // ICMT
-        mInfo->mTags.AppendElement(
-            MetadataTag(NS_LITERAL_CSTRING("comments"), val));
+        mInfo->mTags.AppendElement(MetadataTag("comments"_ns, val));
         break;
       case 0x49474e52:  // IGNR
-        mInfo->mTags.AppendElement(
-            MetadataTag(NS_LITERAL_CSTRING("genre"), val));
+        mInfo->mTags.AppendElement(MetadataTag("genre"_ns, val));
         break;
       case 0x494e414d:  // INAM
-        mInfo->mTags.AppendElement(
-            MetadataTag(NS_LITERAL_CSTRING("name"), val));
+        mInfo->mTags.AppendElement(MetadataTag("name"_ns, val));
         break;
     }
 

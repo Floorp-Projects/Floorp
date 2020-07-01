@@ -138,7 +138,7 @@ void nsCSSProps::ReleaseTable(void) {
 /* static */
 bool nsCSSProps::IsCustomPropertyName(const nsACString& aProperty) {
   return aProperty.Length() >= CSS_CUSTOM_NAME_PREFIX_LENGTH &&
-         StringBeginsWith(aProperty, NS_LITERAL_CSTRING("--"));
+         StringBeginsWith(aProperty, "--"_ns);
 }
 
 nsCSSPropertyID nsCSSProps::LookupPropertyByIDLName(

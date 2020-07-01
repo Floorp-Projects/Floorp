@@ -46,8 +46,8 @@ void HTMLDialogElement::Close(
 
   RemoveFromTopLayerIfNeeded();
 
-  RefPtr<AsyncEventDispatcher> eventDispatcher = new AsyncEventDispatcher(
-      this, NS_LITERAL_STRING("close"), CanBubble::eNo);
+  RefPtr<AsyncEventDispatcher> eventDispatcher =
+      new AsyncEventDispatcher(this, u"close"_ns, CanBubble::eNo);
   eventDispatcher->PostDOMEvent();
 }
 
@@ -183,9 +183,9 @@ void HTMLDialogElement::RunCancelDialogSteps() {
   // 1) Let close be the result of firing an event named cancel at dialog, with
   // the cancelable attribute initialized to true.
   bool defaultAction = true;
-  nsContentUtils::DispatchTrustedEvent(
-      OwnerDoc(), this, NS_LITERAL_STRING("cancel"), CanBubble::eNo,
-      Cancelable::eYes, &defaultAction);
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(), this, u"cancel"_ns,
+                                       CanBubble::eNo, Cancelable::eYes,
+                                       &defaultAction);
 
   // 2) If close is true and dialog has an open attribute, then close the dialog
   // with no return value.

@@ -330,8 +330,7 @@ nsresult nsHttpTransaction::Init(
   //   field unless the server is known to be HTTP/1.1 compliant.
   if ((requestHead->IsPost() || requestHead->IsPut()) && !requestBody &&
       !requestHead->HasHeader(nsHttp::Transfer_Encoding)) {
-    rv =
-        requestHead->SetHeader(nsHttp::Content_Length, NS_LITERAL_CSTRING("0"));
+    rv = requestHead->SetHeader(nsHttp::Content_Length, "0"_ns);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -562,8 +561,7 @@ void nsHttpTransaction::OnActivated() {
     // of the header happens in the h2 compression code. We still have to
     // add the header to the request head here, though, so that devtools can
     // show that we sent the header. FUN!
-    Unused << mRequestHead->SetHeader(nsHttp::TE,
-                                      NS_LITERAL_CSTRING("Trailers"));
+    Unused << mRequestHead->SetHeader(nsHttp::TE, "Trailers"_ns);
   }
 
   mActivated = true;
@@ -1405,8 +1403,8 @@ nsresult nsHttpTransaction::Restart() {
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
     mConnInfo = ci;
     if (mRequestHead) {
-      DebugOnly<nsresult> rv = mRequestHead->SetHeader(
-          nsHttp::Alternate_Service_Used, NS_LITERAL_CSTRING("0"));
+      DebugOnly<nsresult> rv =
+          mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, "0"_ns);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -1688,27 +1686,26 @@ nsresult nsHttpTransaction::HandleContentStart() {
         mEarlyDataDisposition = EARLY_425;
       } else {
         Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_Early_Data,
-                                           NS_LITERAL_CSTRING("accepted"));
+                                           "accepted"_ns);
       }
     } else if (mEarlyDataDisposition == EARLY_SENT) {
       Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_Early_Data,
-                                         NS_LITERAL_CSTRING("sent"));
+                                         "sent"_ns);
     } else if (mEarlyDataDisposition == EARLY_425) {
       Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_Early_Data,
-                                         NS_LITERAL_CSTRING("received 425"));
+                                         "received 425"_ns);
       mEarlyDataDisposition = EARLY_NONE;
     }  // no header on NONE case
 
     if (mFastOpenStatus == TFO_DATA_SENT) {
       Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_TCP_Fast_Open,
-                                         NS_LITERAL_CSTRING("data sent"));
+                                         "data sent"_ns);
     } else if (mFastOpenStatus == TFO_TRIED) {
-      Unused << mResponseHead->SetHeader(
-          nsHttp::X_Firefox_TCP_Fast_Open,
-          NS_LITERAL_CSTRING("tried negotiating"));
+      Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_TCP_Fast_Open,
+                                         "tried negotiating"_ns);
     } else if (mFastOpenStatus == TFO_FAILED) {
       Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_TCP_Fast_Open,
-                                         NS_LITERAL_CSTRING("failed"));
+                                         "failed"_ns);
     }  // no header on TFO_NOT_TRIED case
 
     if (LOG3_ENABLED()) {

@@ -68,10 +68,10 @@
 #include "nsProxyRelease.h"
 #include "nsWeakReference.h"
 
-#define OPEN_EVENT_STRING NS_LITERAL_STRING("open")
-#define MESSAGE_EVENT_STRING NS_LITERAL_STRING("message")
-#define ERROR_EVENT_STRING NS_LITERAL_STRING("error")
-#define CLOSE_EVENT_STRING NS_LITERAL_STRING("close")
+#define OPEN_EVENT_STRING u"open"_ns
+#define MESSAGE_EVENT_STRING u"message"_ns
+#define ERROR_EVENT_STRING u"error"_ns
+#define CLOSE_EVENT_STRING u"close"_ns
 
 using namespace mozilla::net;
 
@@ -269,9 +269,8 @@ class PrintErrorOnConsoleRunnable final : public WorkerMainThreadRunnable {
   PrintErrorOnConsoleRunnable(WebSocketImpl* aImpl, const char* aBundleURI,
                               const char* aError,
                               nsTArray<nsString>&& aFormatStrings)
-      : WorkerMainThreadRunnable(
-            aImpl->mWorkerRef->Private(),
-            NS_LITERAL_CSTRING("WebSocket :: print error on console")),
+      : WorkerMainThreadRunnable(aImpl->mWorkerRef->Private(),
+                                 "WebSocket :: print error on console"_ns),
         mImpl(aImpl),
         mBundleURI(aBundleURI),
         mError(aError),
@@ -527,7 +526,7 @@ class DisconnectInternalRunnable final : public WorkerMainThreadRunnable {
  public:
   explicit DisconnectInternalRunnable(WebSocketImpl* aImpl)
       : WorkerMainThreadRunnable(GetCurrentThreadWorkerPrivate(),
-                                 NS_LITERAL_CSTRING("WebSocket :: disconnect")),
+                                 "WebSocket :: disconnect"_ns),
         mImpl(aImpl) {}
 
   bool MainThreadRun() override {
@@ -983,8 +982,7 @@ class InitRunnable final : public WebSocketMainThreadRunnable {
                nsTArray<nsString>& aProtocolArray,
                const nsACString& aScriptFile, uint32_t aScriptLine,
                uint32_t aScriptColumn)
-      : WebSocketMainThreadRunnable(aWorkerPrivate,
-                                    NS_LITERAL_CSTRING("WebSocket :: init")),
+      : WebSocketMainThreadRunnable(aWorkerPrivate, "WebSocket :: init"_ns),
         mImpl(aImpl),
         mIsServerSide(aIsServerSide),
         mURL(aURL),
@@ -1048,8 +1046,7 @@ class InitRunnable final : public WebSocketMainThreadRunnable {
 class ConnectRunnable final : public WebSocketMainThreadRunnable {
  public:
   ConnectRunnable(WorkerPrivate* aWorkerPrivate, WebSocketImpl* aImpl)
-      : WebSocketMainThreadRunnable(aWorkerPrivate,
-                                    NS_LITERAL_CSTRING("WebSocket :: init")),
+      : WebSocketMainThreadRunnable(aWorkerPrivate, "WebSocket :: init"_ns),
         mImpl(aImpl),
         mConnectionFailed(true) {
     MOZ_ASSERT(mWorkerPrivate);
@@ -1090,9 +1087,8 @@ class AsyncOpenRunnable final : public WebSocketMainThreadRunnable {
  public:
   explicit AsyncOpenRunnable(WebSocketImpl* aImpl,
                              UniquePtr<SerializedStackHolder> aOriginStack)
-      : WebSocketMainThreadRunnable(
-            aImpl->mWorkerRef->Private(),
-            NS_LITERAL_CSTRING("WebSocket :: AsyncOpen")),
+      : WebSocketMainThreadRunnable(aImpl->mWorkerRef->Private(),
+                                    "WebSocket :: AsyncOpen"_ns),
         mImpl(aImpl),
         mOriginStack(std::move(aOriginStack)),
         mErrorCode(NS_OK) {
@@ -1595,15 +1591,15 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
     }
     mSecure = true;
 
-    params.AppendElement(NS_LITERAL_STRING("wss"));
+    params.AppendElement(u"wss"_ns);
     CSP_LogLocalizedStr("upgradeInsecureRequest", params,
                         EmptyString(),  // aSourceFile
                         EmptyString(),  // aScriptSample
                         0,              // aLineNumber
                         0,              // aColumnNumber
                         nsIScriptError::warningFlag,
-                        NS_LITERAL_CSTRING("upgradeInsecureRequest"),
-                        mInnerWindowID, mPrivateBrowsing);
+                        "upgradeInsecureRequest"_ns, mInnerWindowID,
+                        mPrivateBrowsing);
   }
 
   // Don't allow https:// to open ws://

@@ -70,14 +70,12 @@ static already_AddRefed<dom::MediaStreamTrack> CreateTrack(
   if (aAudio) {
     RefPtr<SourceMediaTrack> source =
         graph->CreateSourceTrack(MediaSegment::AUDIO);
-    trackSource = new RemoteTrackSource(source, aPrincipal,
-                                        NS_LITERAL_STRING("remote audio"));
+    trackSource = new RemoteTrackSource(source, aPrincipal, u"remote audio"_ns);
     track = new AudioStreamTrack(aWindow, source, trackSource);
   } else {
     RefPtr<SourceMediaTrack> source =
         graph->CreateSourceTrack(MediaSegment::VIDEO);
-    trackSource = new RemoteTrackSource(source, aPrincipal,
-                                        NS_LITERAL_STRING("remote video"));
+    trackSource = new RemoteTrackSource(source, aPrincipal, u"remote video"_ns);
     track = new VideoStreamTrack(aWindow, source, trackSource);
   }
 
@@ -162,9 +160,8 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
   UniquePtr<dom::RTCStatsCollection> report(new dom::RTCStatsCollection);
   auto asVideo = aPipeline->Conduit()->AsVideoSessionConduit();
 
-  nsString kind = asVideo.isNothing() ? NS_LITERAL_STRING("audio")
-                                      : NS_LITERAL_STRING("video");
-  nsString idstr = kind + NS_LITERAL_STRING("_");
+  nsString kind = asVideo.isNothing() ? u"audio"_ns : u"video"_ns;
+  nsString idstr = kind + u"_"_ns;
   idstr.AppendInt(static_cast<uint32_t>(aPipeline->Level()));
 
   Maybe<uint32_t> ssrc;
@@ -184,7 +181,7 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
   // TODO(@@NG):ssrcs handle Conduits having multiple stats at the same level
   // This is pending spec work
   // Gather pipeline stats.
-  nsString localId = NS_LITERAL_STRING("inbound_rtp_") + idstr;
+  nsString localId = u"inbound_rtp_"_ns + idstr;
   nsString remoteId;
 
   // First, fill in remote stat with rtcp sender data, if present.
@@ -196,7 +193,7 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
   if (timestamp.isSome() && aPipeline->Conduit()->GetRTCPSenderReport(
                                 &packetsSent, &bytesSent, &remoteTimestamp)) {
     RTCRemoteOutboundRtpStreamStats s;
-    remoteId = NS_LITERAL_STRING("inbound_rtcp_") + idstr;
+    remoteId = u"inbound_rtcp_"_ns + idstr;
     s.mTimestamp.Construct(*timestamp);
     s.mId.Construct(remoteId);
     s.mType.Construct(RTCStatsType::Remote_outbound_rtp);

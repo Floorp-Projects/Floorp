@@ -239,8 +239,7 @@ class FSMultipartFormData : public EncodingFormSubmission {
                                         nsCOMPtr<nsIURI>& aOutURI) override;
 
   void GetContentType(nsACString& aContentType) {
-    aContentType =
-        NS_LITERAL_CSTRING("multipart/form-data; boundary=") + mBoundary;
+    aContentType = "multipart/form-data; boundary="_ns + mBoundary;
   }
 
   nsIInputStream* GetSubmissionBody(uint64_t* aContentLength);

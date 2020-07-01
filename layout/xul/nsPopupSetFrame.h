@@ -50,7 +50,7 @@ class nsPopupSetFrame final : public nsBoxFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("PopupSet"), aResult);
+    return MakeFrameName(u"PopupSet"_ns, aResult);
   }
 #endif
 

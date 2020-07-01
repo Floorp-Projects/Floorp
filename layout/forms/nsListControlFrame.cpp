@@ -129,20 +129,15 @@ void nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   mEventListener->SetFrame(nullptr);
 
-  mContent->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"),
-                                      mEventListener, false);
-  mContent->RemoveSystemEventListener(NS_LITERAL_STRING("keypress"),
-                                      mEventListener, false);
-  mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"),
-                                      mEventListener, false);
-  mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mouseup"),
-                                      mEventListener, false);
-  mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mousemove"),
-                                      mEventListener, false);
+  mContent->RemoveSystemEventListener(u"keydown"_ns, mEventListener, false);
+  mContent->RemoveSystemEventListener(u"keypress"_ns, mEventListener, false);
+  mContent->RemoveSystemEventListener(u"mousedown"_ns, mEventListener, false);
+  mContent->RemoveSystemEventListener(u"mouseup"_ns, mEventListener, false);
+  mContent->RemoveSystemEventListener(u"mousemove"_ns, mEventListener, false);
 
   if (ShouldFireDropDownEvent()) {
     nsContentUtils::AddScriptRunner(
-        new AsyncEventDispatcher(mContent, NS_LITERAL_STRING("mozhidedropdown"),
+        new AsyncEventDispatcher(mContent, u"mozhidedropdown"_ns,
                                  CanBubble::eYes, ChromeOnlyDispatch::eYes));
   }
 
@@ -928,16 +923,14 @@ void nsListControlFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // we need to hook up our listeners before the editor is initialized
   mEventListener = new nsListEventListener(this);
 
-  mContent->AddSystemEventListener(NS_LITERAL_STRING("keydown"), mEventListener,
-                                   false, false);
-  mContent->AddSystemEventListener(NS_LITERAL_STRING("keypress"),
-                                   mEventListener, false, false);
-  mContent->AddSystemEventListener(NS_LITERAL_STRING("mousedown"),
-                                   mEventListener, false, false);
-  mContent->AddSystemEventListener(NS_LITERAL_STRING("mouseup"), mEventListener,
-                                   false, false);
-  mContent->AddSystemEventListener(NS_LITERAL_STRING("mousemove"),
-                                   mEventListener, false, false);
+  mContent->AddSystemEventListener(u"keydown"_ns, mEventListener, false, false);
+  mContent->AddSystemEventListener(u"keypress"_ns, mEventListener, false,
+                                   false);
+  mContent->AddSystemEventListener(u"mousedown"_ns, mEventListener, false,
+                                   false);
+  mContent->AddSystemEventListener(u"mouseup"_ns, mEventListener, false, false);
+  mContent->AddSystemEventListener(u"mousemove"_ns, mEventListener, false,
+                                   false);
 
   mStartSelectionIndex = kNothingSelected;
   mEndSelectionIndex = kNothingSelected;
@@ -1290,8 +1283,8 @@ void nsListControlFrame::FireOnInputAndOnChange() {
 
   // Dispatch the change event.
   nsContentUtils::DispatchTrustedEvent(element->OwnerDoc(), element,
-                                       NS_LITERAL_STRING("change"),
-                                       CanBubble::eYes, Cancelable::eNo);
+                                       u"change"_ns, CanBubble::eYes,
+                                       Cancelable::eNo);
 }
 
 NS_IMETHODIMP_(void)
@@ -1418,7 +1411,7 @@ void nsListControlFrame::DidReflow(nsPresContext* aPresContext,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsListControlFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("ListControl"), aResult);
+  return MakeFrameName(u"ListControl"_ns, aResult);
 }
 #endif
 
@@ -1602,7 +1595,7 @@ void nsListControlFrame::FireMenuItemActiveEvent() {
     return;
   }
 
-  FireDOMEvent(NS_LITERAL_STRING("DOMMenuItemActive"), optionContent);
+  FireDOMEvent(u"DOMMenuItemActive"_ns, optionContent);
 }
 #endif
 
@@ -1641,11 +1634,10 @@ static bool FireShowDropDownEvent(nsIContent* aContent, bool aShow,
   if (ShouldFireDropDownEvent()) {
     nsString eventName;
     if (aShow) {
-      eventName = aIsSourceTouchEvent
-                      ? NS_LITERAL_STRING("mozshowdropdown-sourcetouch")
-                      : NS_LITERAL_STRING("mozshowdropdown");
+      eventName = aIsSourceTouchEvent ? u"mozshowdropdown-sourcetouch"_ns
+                                      : u"mozshowdropdown"_ns;
     } else {
-      eventName = NS_LITERAL_STRING("mozhidedropdown");
+      eventName = u"mozhidedropdown"_ns;
     }
     nsContentUtils::DispatchChromeEvent(aContent->OwnerDoc(), aContent,
                                         eventName, CanBubble::eYes,

@@ -25,7 +25,7 @@ namespace {
 #define IDB_PREFIX "indexedDB"
 #define TOPIC_PREFIX IDB_PREFIX "-permissions-"
 
-const nsLiteralCString kPermissionString = NS_LITERAL_CSTRING(IDB_PREFIX);
+const nsLiteralCString kPermissionString = nsLiteralCString(IDB_PREFIX);
 
 const char kPermissionPromptTopic[] = TOPIC_PREFIX "prompt";
 

@@ -44,7 +44,7 @@ class SVGFEUnstyledLeafFrame final : public nsFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGFEUnstyledLeaf"), aResult);
+    return MakeFrameName(u"SVGFEUnstyledLeaf"_ns, aResult);
   }
 #endif
 

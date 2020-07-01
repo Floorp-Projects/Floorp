@@ -151,47 +151,45 @@ nsresult EditorEventListener::InstallToEditor() {
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("keydown"), TrustedEventsAtSystemGroupBubble());
+      this, u"keydown"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("keyup"), TrustedEventsAtSystemGroupBubble());
+      this, u"keyup"_ns, TrustedEventsAtSystemGroupBubble());
 #endif
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("keypress"), TrustedEventsAtSystemGroupBubble());
+      this, u"keypress"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("dragenter"), TrustedEventsAtSystemGroupBubble());
+      this, u"dragenter"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("dragover"), TrustedEventsAtSystemGroupBubble());
+      this, u"dragover"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("dragexit"), TrustedEventsAtSystemGroupBubble());
+      this, u"dragexit"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("drop"), TrustedEventsAtSystemGroupBubble());
+      this, u"drop"_ns, TrustedEventsAtSystemGroupBubble());
   // XXX We should add the mouse event listeners as system event group.
   //     E.g., web applications cannot prevent middle mouse paste by
   //     preventDefault() of click event at bubble phase.
   //     However, if we do so, all click handlers in any frames and frontend
   //     code need to check if it's editable.  It makes easier create new bugs.
-  eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("mousedown"), TrustedEventsAtCapture());
-  eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("mouseup"), TrustedEventsAtCapture());
-  eventListenerManager->AddEventListenerByType(this, NS_LITERAL_STRING("click"),
+  eventListenerManager->AddEventListenerByType(this, u"mousedown"_ns,
+                                               TrustedEventsAtCapture());
+  eventListenerManager->AddEventListenerByType(this, u"mouseup"_ns,
+                                               TrustedEventsAtCapture());
+  eventListenerManager->AddEventListenerByType(this, u"click"_ns,
                                                TrustedEventsAtCapture());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("auxclick"), TrustedEventsAtSystemGroupCapture());
+      this, u"auxclick"_ns, TrustedEventsAtSystemGroupCapture());
   // Focus event doesn't bubble so adding the listener to capturing phase as
   // system event group.
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("blur"), TrustedEventsAtSystemGroupCapture());
+      this, u"blur"_ns, TrustedEventsAtSystemGroupCapture());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("focus"), TrustedEventsAtSystemGroupCapture());
+      this, u"focus"_ns, TrustedEventsAtSystemGroupCapture());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("text"), TrustedEventsAtSystemGroupBubble());
+      this, u"text"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("compositionstart"),
-      TrustedEventsAtSystemGroupBubble());
+      this, u"compositionstart"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->AddEventListenerByType(
-      this, NS_LITERAL_STRING("compositionend"),
-      TrustedEventsAtSystemGroupBubble());
+      this, u"compositionend"_ns, TrustedEventsAtSystemGroupBubble());
 
   return NS_OK;
 }
@@ -236,40 +234,38 @@ void EditorEventListener::UninstallFromEditor() {
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("keydown"), TrustedEventsAtSystemGroupBubble());
+      this, u"keydown"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("keyup"), TrustedEventsAtSystemGroupBubble());
+      this, u"keyup"_ns, TrustedEventsAtSystemGroupBubble());
 #endif
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("keypress"), TrustedEventsAtSystemGroupBubble());
+      this, u"keypress"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("dragenter"), TrustedEventsAtSystemGroupBubble());
+      this, u"dragenter"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("dragover"), TrustedEventsAtSystemGroupBubble());
+      this, u"dragover"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("dragexit"), TrustedEventsAtSystemGroupBubble());
+      this, u"dragexit"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("drop"), TrustedEventsAtSystemGroupBubble());
+      this, u"drop"_ns, TrustedEventsAtSystemGroupBubble());
+  eventListenerManager->RemoveEventListenerByType(this, u"mousedown"_ns,
+                                                  TrustedEventsAtCapture());
+  eventListenerManager->RemoveEventListenerByType(this, u"mouseup"_ns,
+                                                  TrustedEventsAtCapture());
+  eventListenerManager->RemoveEventListenerByType(this, u"click"_ns,
+                                                  TrustedEventsAtCapture());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("mousedown"), TrustedEventsAtCapture());
+      this, u"auxclick"_ns, TrustedEventsAtSystemGroupCapture());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("mouseup"), TrustedEventsAtCapture());
+      this, u"blur"_ns, TrustedEventsAtSystemGroupCapture());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("click"), TrustedEventsAtCapture());
+      this, u"focus"_ns, TrustedEventsAtSystemGroupCapture());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("auxclick"), TrustedEventsAtSystemGroupCapture());
+      this, u"text"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("blur"), TrustedEventsAtSystemGroupCapture());
+      this, u"compositionstart"_ns, TrustedEventsAtSystemGroupBubble());
   eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("focus"), TrustedEventsAtSystemGroupCapture());
-  eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("text"), TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("compositionstart"),
-      TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->RemoveEventListenerByType(
-      this, NS_LITERAL_STRING("compositionend"),
-      TrustedEventsAtSystemGroupBubble());
+      this, u"compositionend"_ns, TrustedEventsAtSystemGroupBubble());
 }
 
 PresShell* EditorEventListener::GetPresShell() const {

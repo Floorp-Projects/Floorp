@@ -93,10 +93,9 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
 
   // https://w3c.github.io/ServiceWorker/#start-register-algorithm step 3.
   if (!hasValidURISchemes(aScriptURI)) {
-    auto message =
-        !isExtension
-            ? NS_LITERAL_CSTRING("Script URL's scheme is not 'http' or 'https'")
-            : NS_LITERAL_CSTRING("Script URL's scheme is not 'moz-extension'");
+    auto message = !isExtension
+                       ? "Script URL's scheme is not 'http' or 'https'"_ns
+                       : "Script URL's scheme is not 'moz-extension'"_ns;
     aRv.ThrowTypeError(message);
     return;
   }
@@ -109,10 +108,9 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
 
   // https://w3c.github.io/ServiceWorker/#start-register-algorithm step 8.
   if (!hasValidURISchemes(aScopeURI)) {
-    auto message =
-        !isExtension
-            ? NS_LITERAL_CSTRING("Scope URL's scheme is not 'http' or 'https'")
-            : NS_LITERAL_CSTRING("Scope URL's scheme is not 'moz-extension'");
+    auto message = !isExtension
+                       ? "Scope URL's scheme is not 'http' or 'https'"_ns
+                       : "Scope URL's scheme is not 'moz-extension'"_ns;
     aRv.ThrowTypeError(message);
     return;
   }

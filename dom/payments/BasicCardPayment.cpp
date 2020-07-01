@@ -15,15 +15,11 @@ namespace mozilla {
 namespace dom {
 namespace {
 bool IsValidNetwork(const nsAString& aNetwork) {
-  return aNetwork.Equals(NS_LITERAL_STRING("amex")) ||
-         aNetwork.Equals(NS_LITERAL_STRING("cartebancaire")) ||
-         aNetwork.Equals(NS_LITERAL_STRING("diners")) ||
-         aNetwork.Equals(NS_LITERAL_STRING("discover")) ||
-         aNetwork.Equals(NS_LITERAL_STRING("jcb")) ||
-         aNetwork.Equals(NS_LITERAL_STRING("mastercard")) ||
-         aNetwork.Equals(NS_LITERAL_STRING("mir")) ||
-         aNetwork.Equals(NS_LITERAL_STRING("unionpay")) ||
-         aNetwork.Equals(NS_LITERAL_STRING("visa"));
+  return aNetwork.Equals(u"amex"_ns) || aNetwork.Equals(u"cartebancaire"_ns) ||
+         aNetwork.Equals(u"diners"_ns) || aNetwork.Equals(u"discover"_ns) ||
+         aNetwork.Equals(u"jcb"_ns) || aNetwork.Equals(u"mastercard"_ns) ||
+         aNetwork.Equals(u"mir"_ns) || aNetwork.Equals(u"unionpay"_ns) ||
+         aNetwork.Equals(u"visa"_ns);
 }
 }  // end of namespace
 
@@ -39,7 +35,7 @@ already_AddRefed<BasicCardService> BasicCardService::GetService() {
 }
 
 bool BasicCardService::IsBasicCardPayment(const nsAString& aSupportedMethods) {
-  return aSupportedMethods.Equals(NS_LITERAL_STRING("basic-card"));
+  return aSupportedMethods.Equals(u"basic-card"_ns);
 }
 
 bool BasicCardService::IsValidBasicCardRequest(JSContext* aCx, JSObject* aData,
@@ -58,8 +54,7 @@ bool BasicCardService::IsValidBasicCardRequest(JSContext* aCx, JSObject* aData,
 
   for (const nsString& network : request.mSupportedNetworks) {
     if (!IsValidNetwork(network)) {
-      aErrorMsg.Assign(network +
-                       NS_LITERAL_STRING(" is not an valid network."));
+      aErrorMsg.Assign(network + u" is not an valid network."_ns);
       return false;
     }
   }

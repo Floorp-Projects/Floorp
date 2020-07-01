@@ -7,7 +7,7 @@
 #ifndef mozilla_contentblockinguserinteraction_h
 #define mozilla_contentblockinguserinteraction_h
 
-#define USER_INTERACTION_PERM NS_LITERAL_CSTRING("storageAccessAPI")
+#define USER_INTERACTION_PERM "storageAccessAPI"_ns
 
 class nsIPrincipal;
 

@@ -1651,7 +1651,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsTableRowGroupFrame)
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsTableRowGroupFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("TableRowGroup"), aResult);
+  return MakeFrameName(u"TableRowGroup"_ns, aResult);
 }
 #endif
 

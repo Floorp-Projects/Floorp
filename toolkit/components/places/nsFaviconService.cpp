@@ -238,7 +238,7 @@ nsFaviconService::GetDefaultFavicon(nsIURI** _retval) {
   // not found, use default
   if (!mDefaultIcon) {
     nsresult rv = NS_NewURI(getter_AddRefs(mDefaultIcon),
-                            NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
+                            nsLiteralCString(FAVICON_DEFAULT_URL));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -249,7 +249,7 @@ nsFaviconService::GetDefaultFavicon(nsIURI** _retval) {
 
 NS_IMETHODIMP
 nsFaviconService::GetDefaultFaviconMimeType(nsACString& _retval) {
-  _retval = NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE);
+  _retval = nsLiteralCString(FAVICON_DEFAULT_MIMETYPE);
   return NS_OK;
 }
 
@@ -303,11 +303,11 @@ nsFaviconService::SetAndFetchFaviconForPage(
   if (!loadingPrincipal) {
     // Let's default to the nullPrincipal if no loadingPrincipal is provided.
     AutoTArray<nsString, 2> params = {
-        NS_LITERAL_STRING("nsFaviconService::setAndFetchFaviconForPage()"),
-        NS_LITERAL_STRING("nsFaviconService::setAndFetchFaviconForPage(..., "
-                          "[optional aLoadingPrincipal])")};
+        u"nsFaviconService::setAndFetchFaviconForPage()"_ns,
+        u"nsFaviconService::setAndFetchFaviconForPage(..., "
+        "[optional aLoadingPrincipal])"_ns};
     nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security by Default"),
+        nsIScriptError::warningFlag, "Security by Default"_ns,
         nullptr,  // aDocument
         nsContentUtils::eNECKO_PROPERTIES, "APIDeprecationWarning", params);
     loadingPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
@@ -323,7 +323,7 @@ nsFaviconService::SetAndFetchFaviconForPage(
   NS_ENSURE_SUCCESS(rv, rv);
   // URIs can arguably lack a host.
   Unused << aPageURI->GetHost(page.host);
-  if (StringBeginsWith(page.host, NS_LITERAL_CSTRING("www."))) {
+  if (StringBeginsWith(page.host, "www."_ns)) {
     page.host.Cut(0, 4);
   }
   bool canAddToHistory;
@@ -346,7 +346,7 @@ nsFaviconService::SetAndFetchFaviconForPage(
     NS_ENSURE_SUCCESS(rv, rv);
     // URIs can arguably lack a host.
     Unused << aFaviconURI->GetHost(icon.host);
-    if (StringBeginsWith(icon.host, NS_LITERAL_CSTRING("www."))) {
+    if (StringBeginsWith(icon.host, "www."_ns)) {
       icon.host.Cut(0, 4);
     }
   }
@@ -427,7 +427,7 @@ nsFaviconService::ReplaceFaviconData(nsIURI* aFaviconURI,
   NS_ENSURE_SUCCESS(rv, rv);
   // URIs can arguably lack a host.
   Unused << aFaviconURI->GetHost(iconData->host);
-  if (StringBeginsWith(iconData->host, NS_LITERAL_CSTRING("www."))) {
+  if (StringBeginsWith(iconData->host, "www."_ns)) {
     iconData->host.Cut(0, 4);
   }
 
@@ -497,11 +497,11 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(
   if (!loadingPrincipal) {
     // Let's default to the nullPrincipal if no loadingPrincipal is provided.
     AutoTArray<nsString, 2> params = {
-        NS_LITERAL_STRING("nsFaviconService::ReplaceFaviconDataFromDataURL()"),
-        NS_LITERAL_STRING("nsFaviconService::ReplaceFaviconDataFromDataURL(...,"
-                          " [optional aLoadingPrincipal])")};
+        u"nsFaviconService::ReplaceFaviconDataFromDataURL()"_ns,
+        u"nsFaviconService::ReplaceFaviconDataFromDataURL(...,"
+        " [optional aLoadingPrincipal])"_ns};
     nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security by Default"),
+        nsIScriptError::warningFlag, "Security by Default"_ns,
         nullptr,  // aDocument
         nsContentUtils::eNECKO_PROPERTIES, "APIDeprecationWarning", params);
 
@@ -668,7 +668,7 @@ nsresult nsFaviconService::GetFaviconLinkForIconString(const nsCString& aSpec,
     return GetDefaultFavicon(aOutput);
   }
 
-  if (StringBeginsWith(aSpec, NS_LITERAL_CSTRING("chrome:"))) {
+  if (StringBeginsWith(aSpec, "chrome:"_ns)) {
     // pass through for chrome URLs, since they can be referenced without
     // this service
     return NS_NewURI(aOutput, aSpec);
@@ -722,7 +722,7 @@ nsresult nsFaviconService::OptimizeIconSizes(IconData& aIcon) {
 
   for (const auto& frameInfo : framesInfo) {
     IconPayload newPayload;
-    newPayload.mimeType = NS_LITERAL_CSTRING(PNG_MIME_TYPE);
+    newPayload.mimeType = nsLiteralCString(PNG_MIME_TYPE);
     newPayload.width = frameInfo.width;
     for (uint16_t size : gFaviconSizes) {
       // The icon could be smaller than 16, that is our minimum.
@@ -782,7 +782,7 @@ nsresult nsFaviconService::GetFaviconDataAsync(
       "ORDER BY width DESC");
   NS_ENSURE_STATE(stmt);
 
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"), aFaviconURI);
+  nsresult rv = URIBinder::Bind(stmt, "url"_ns, aFaviconURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStoragePendingStatement> pendingStatement;

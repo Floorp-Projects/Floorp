@@ -198,8 +198,7 @@ bool Vacuumer::execute() {
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING("VACUUM"),
-                                     getter_AddRefs(stmt));
+  rv = mDBConn->CreateAsyncStatement("VACUUM"_ns, getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, false);
   rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, false);

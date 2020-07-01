@@ -74,7 +74,7 @@ class nsHTMLButtonControlFrame : public nsContainerFrame,
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("HTMLButtonControl"), aResult);
+    return MakeFrameName(u"HTMLButtonControl"_ns, aResult);
   }
 #endif
 

@@ -91,7 +91,7 @@
 @implementation mozTabAccessible
 
 - (NSString*)moxRoleDescription {
-  return utils::LocalizedString(NS_LITERAL_STRING("tab"));
+  return utils::LocalizedString(u"tab"_ns);
 }
 
 - (id)moxValue {

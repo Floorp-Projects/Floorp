@@ -17,7 +17,7 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
 
-#define METADATA_SUFFIX NS_LITERAL_CSTRING(".metadata")
+#define METADATA_SUFFIX ".metadata"_ns
 
 namespace mozilla {
 namespace safebrowsing {
@@ -162,7 +162,7 @@ nsresult LookupCacheV4::ClearLegacyFile() {
     return rv;
   }
 
-  rv = file->AppendNative(mTableName + NS_LITERAL_CSTRING(".pset"));
+  rv = file->AppendNative(mTableName + ".pset"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -192,7 +192,7 @@ nsresult LookupCacheV4::LoadLegacyFile() {
     return rv;
   }
 
-  rv = file->AppendNative(mTableName + NS_LITERAL_CSTRING(".pset"));
+  rv = file->AppendNative(mTableName + ".pset"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -264,9 +264,7 @@ nsresult LookupCacheV4::SanityCheck(const Header& aHeader) {
   return NS_OK;
 }
 
-nsCString LookupCacheV4::GetPrefixSetSuffix() const {
-  return NS_LITERAL_CSTRING(".vlpset");
-}
+nsCString LookupCacheV4::GetPrefixSetSuffix() const { return ".vlpset"_ns; }
 
 static nsresult AppendPrefixToMap(PrefixStringMap& prefixes,
                                   const nsACString& prefix) {

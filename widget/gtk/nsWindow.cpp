@@ -1888,12 +1888,12 @@ static bool DesktopUsesDynamicWorkspaces(GdkWindow* gdk_window) {
       do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
   if (gsettings) {
     nsCOMPtr<nsIGSettingsCollection> mutterSettings;
-    gsettings->GetCollectionForSchema(NS_LITERAL_CSTRING(kDesktopMutterSchema),
+    gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopMutterSchema),
                                       getter_AddRefs(mutterSettings));
     if (mutterSettings) {
       bool usesDynamicWorkspaces;
       if (NS_SUCCEEDED(mutterSettings->GetBoolean(
-              NS_LITERAL_CSTRING(kDesktopDynamicWorkspacesKey),
+              nsLiteralCString(kDesktopDynamicWorkspacesKey),
               &usesDynamicWorkspaces))) {
         return usesDynamicWorkspaces;
       }
@@ -5881,7 +5881,7 @@ void nsWindow::SetUrgencyHint(GtkWidget* top_window, bool state) {
   gdk_window_set_urgency_hint(gtk_widget_get_window(top_window), state);
 }
 
-void nsWindow::SetDefaultIcon(void) { SetIcon(NS_LITERAL_STRING("default")); }
+void nsWindow::SetDefaultIcon(void) { SetIcon(u"default"_ns); }
 
 gint nsWindow::ConvertBorderStyles(nsBorderStyle aStyle) {
   gint w = 0;

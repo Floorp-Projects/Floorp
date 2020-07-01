@@ -49,7 +49,7 @@ class SVGFELeafFrame final : public nsFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGFELeaf"), aResult);
+    return MakeFrameName(u"SVGFELeaf"_ns, aResult);
   }
 #endif
 

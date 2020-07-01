@@ -48,8 +48,8 @@ class ClientShutdownBlocker final : public nsIAsyncShutdownBlocker {
 
   NS_IMETHOD
   GetName(nsAString& aNameOut) override {
-    aNameOut = NS_LITERAL_STRING(
-        "ClientManagerService: start destroying IPC actors early");
+    aNameOut = nsLiteralString(
+        u"ClientManagerService: start destroying IPC actors early");
     return NS_OK;
   }
 
@@ -91,9 +91,9 @@ RefPtr<GenericPromise> OnShutdown() {
 
         nsCOMPtr<nsIAsyncShutdownBlocker> blocker =
             new ClientShutdownBlocker(ref);
-        nsresult rv = phase->AddBlocker(
-            blocker, NS_LITERAL_STRING(__FILE__), __LINE__,
-            NS_LITERAL_STRING("ClientManagerService shutdown"));
+        nsresult rv =
+            phase->AddBlocker(blocker, NS_LITERAL_STRING(__FILE__), __LINE__,
+                              u"ClientManagerService shutdown"_ns);
 
         if (NS_FAILED(rv)) {
           ref->Resolve(true, __func__);

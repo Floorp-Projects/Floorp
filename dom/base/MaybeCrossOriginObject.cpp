@@ -118,7 +118,7 @@ bool MaybeCrossOriginObjectMixins::CrossOriginPropertyFallback(
   }
 
   // Step 2.
-  return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("access"));
+  return ReportCrossOriginDenial(cx, id, "access"_ns);
 }
 
 /* static */
@@ -173,7 +173,7 @@ bool MaybeCrossOriginObjectMixins::CrossOriginGet(
   JS::Rooted<JSObject*> getter(cx);
   if (!desc.hasGetterObject() || !(getter = desc.getterObject())) {
     // Step 6.
-    return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("get"));
+    return ReportCrossOriginDenial(cx, id, "get"_ns);
   }
 
   // Step 7.
@@ -229,7 +229,7 @@ bool MaybeCrossOriginObjectMixins::CrossOriginSet(
   }
 
   // Step 4.
-  return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("set"));
+  return ReportCrossOriginDenial(cx, id, "set"_ns);
 }
 
 /* static */
@@ -432,7 +432,7 @@ bool MaybeCrossOriginObject<Base>::defineProperty(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
     JS::Handle<JS::PropertyDescriptor> desc, JS::ObjectOpResult& result) const {
   if (!IsPlatformObjectSameOrigin(cx, proxy)) {
-    return ReportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("define"));
+    return ReportCrossOriginDenial(cx, id, "define"_ns);
   }
 
   // Enter the Realm of proxy and do the remaining work in there.

@@ -538,7 +538,7 @@ void AccessibleWrap::GetRoleDescription(role aRole,
   if (aRole == roles::HEADING && aAttributes) {
     // The heading level is an attribute, so we need that.
     AutoTArray<nsString, 1> formatString;
-    nsresult rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("level"),
+    nsresult rv = aAttributes->GetStringProperty("level"_ns,
                                                  *formatString.AppendElement());
     if (NS_SUCCEEDED(rv) &&
         LocalizeString("headingLevel", aRoleDescription, formatString)) {
@@ -548,8 +548,8 @@ void AccessibleWrap::GetRoleDescription(role aRole,
 
   if ((aRole == roles::LANDMARK || aRole == roles::REGION) && aAttributes) {
     nsAutoString xmlRoles;
-    if (NS_SUCCEEDED(aAttributes->GetStringProperty(
-            NS_LITERAL_CSTRING("xml-roles"), xmlRoles))) {
+    if (NS_SUCCEEDED(
+            aAttributes->GetStringProperty("xml-roles"_ns, xmlRoles))) {
       nsWhitespaceTokenizer tokenizer(xmlRoles);
       while (tokenizer.hasMoreTokens()) {
         if (LocalizeString(NS_ConvertUTF16toUTF8(tokenizer.nextToken()).get(),
@@ -798,8 +798,7 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
     }
 
     nsString posinset;
-    nsresult rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("posinset"),
-                                                 posinset);
+    nsresult rv = aAttributes->GetStringProperty("posinset"_ns, posinset);
     if (NS_SUCCEEDED(rv)) {
       int32_t rowIndex;
       if (sscanf(NS_ConvertUTF16toUTF8(posinset).get(), "%d", &rowIndex) > 0) {
@@ -819,8 +818,7 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
     }
 
     nsString colSize;
-    rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("child-item-count"),
-                                        colSize);
+    rv = aAttributes->GetStringProperty("child-item-count"_ns, colSize);
     if (NS_SUCCEEDED(rv)) {
       int32_t rowCount;
       if (sscanf(NS_ConvertUTF16toUTF8(colSize).get(), "%d", &rowCount) > 0) {
@@ -831,8 +829,7 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
                         java::sdk::Integer::ValueOf(1));
 
         nsString unused;
-        rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("hierarchical"),
-                                            unused);
+        rv = aAttributes->GetStringProperty("hierarchical"_ns, unused);
         if (NS_SUCCEEDED(rv)) {
           GECKOBUNDLE_PUT(collectionInfo, "isHierarchical",
                           java::sdk::Boolean::TRUE());
@@ -897,8 +894,7 @@ bool AccessibleWrap::HandleLiveRegionEvent(AccEvent* aEvent) {
 
   nsCOMPtr<nsIPersistentProperties> attributes = Attributes();
   nsString live;
-  nsresult rv =
-      attributes->GetStringProperty(NS_LITERAL_CSTRING("container-live"), live);
+  nsresult rv = attributes->GetStringProperty("container-live"_ns, live);
   if (!NS_SUCCEEDED(rv)) {
     return false;
   }
@@ -908,8 +904,7 @@ bool AccessibleWrap::HandleLiveRegionEvent(AccEvent* aEvent) {
                           : nsIAccessibleAnnouncementEvent::POLITE;
 
   nsString atomic;
-  rv = attributes->GetStringProperty(NS_LITERAL_CSTRING("container-atomic"),
-                                     atomic);
+  rv = attributes->GetStringProperty("container-atomic"_ns, atomic);
 
   Accessible* announcementTarget = this;
   nsAutoString announcement;

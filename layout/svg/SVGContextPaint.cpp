@@ -63,8 +63,8 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
       BasePrincipal::CreateContentPrincipal(aURI, OriginAttributes());
   nsString addonId;
   if (NS_SUCCEEDED(principal->GetAddonId(addonId))) {
-    if (StringEndsWith(addonId, NS_LITERAL_STRING("@mozilla.org")) ||
-        StringEndsWith(addonId, NS_LITERAL_STRING("@mozilla.com"))) {
+    if (StringEndsWith(addonId, u"@mozilla.org"_ns) ||
+        StringEndsWith(addonId, u"@mozilla.com"_ns)) {
       return true;
     }
   }

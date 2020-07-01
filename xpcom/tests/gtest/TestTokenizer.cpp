@@ -28,11 +28,11 @@ TEST(Tokenizer, HTTPResponse)
   // Real life test, HTTP response
 
   Tokenizer p(
-      NS_LITERAL_CSTRING("HTTP/1.0 304 Not modified\r\n"
-                         "ETag: hallo\r\n"
-                         "Content-Length: 16\r\n"
-                         "\r\n"
-                         "This is the body"));
+      nsLiteralCString("HTTP/1.0 304 Not modified\r\n"
+                       "ETag: hallo\r\n"
+                       "Content-Length: 16\r\n"
+                       "\r\n"
+                       "This is the body"));
 
   EXPECT_TRUE(p.CheckWord("HTTP"));
   EXPECT_TRUE(p.CheckChar('/'));
@@ -101,7 +101,7 @@ TEST(Tokenizer, Main)
 
   // Synthetic code-specific test
 
-  Tokenizer p(NS_LITERAL_CSTRING("test123 ,15  \t*\r\n%xx,-15\r\r"));
+  Tokenizer p("test123 ,15  \t*\r\n%xx,-15\r\r"_ns);
 
   EXPECT_TRUE(p.Next(t));
   EXPECT_TRUE(t.Type() == Tokenizer::TOKEN_WORD);
@@ -215,11 +215,11 @@ TEST(Tokenizer, Main16)
 
   // Synthetic code-specific test
 
-  Tokenizer16 p(NS_LITERAL_STRING("test123 ,15  \t*\r\n%xx,-15\r\r"));
+  Tokenizer16 p(u"test123 ,15  \t*\r\n%xx,-15\r\r"_ns);
 
   EXPECT_TRUE(p.Next(t));
   EXPECT_TRUE(t.Type() == Tokenizer16::TOKEN_WORD);
-  EXPECT_TRUE(t.AsString() == NS_LITERAL_STRING("test123"));
+  EXPECT_TRUE(t.AsString() == u"test123"_ns);
 
   Tokenizer16::Token u;
   EXPECT_FALSE(p.Check(u));
@@ -274,21 +274,21 @@ TEST(Tokenizer, Main16)
 
   nsAutoString claim;
   p.Claim(claim, Tokenizer16::EXCLUDE_LAST);
-  EXPECT_TRUE(claim == NS_LITERAL_STRING("*\r\n"));
+  EXPECT_TRUE(claim == u"*\r\n"_ns);
   p.Claim(claim, Tokenizer16::INCLUDE_LAST);
-  EXPECT_TRUE(claim == NS_LITERAL_STRING("*\r\n%"));
+  EXPECT_TRUE(claim == u"*\r\n%"_ns);
 
   p.Rollback();
   EXPECT_TRUE(p.CheckChar('%'));
 
   p.Record(Tokenizer16::INCLUDE_LAST);
 
-  EXPECT_FALSE(p.CheckWord(NS_LITERAL_STRING("xy")));
+  EXPECT_FALSE(p.CheckWord(u"xy"_ns));
 
-  EXPECT_TRUE(p.CheckWord(NS_LITERAL_STRING("xx")));
+  EXPECT_TRUE(p.CheckWord(u"xx"_ns));
 
   p.Claim(claim, Tokenizer16::INCLUDE_LAST);
-  EXPECT_TRUE(claim == NS_LITERAL_STRING("%xx"));
+  EXPECT_TRUE(claim == u"%xx"_ns);
 
   EXPECT_TRUE(p.Next(t));
   EXPECT_TRUE(t.Type() == Tokenizer16::TOKEN_CHAR);
@@ -327,7 +327,7 @@ TEST(Tokenizer, SingleWord)
 {
   // Single word with numbers in it test
 
-  Tokenizer p(NS_LITERAL_CSTRING("test123"));
+  Tokenizer p("test123"_ns);
 
   EXPECT_TRUE(p.CheckWord("test123"));
   EXPECT_TRUE(p.CheckEOF());
@@ -337,7 +337,7 @@ TEST(Tokenizer, EndingAfterNumber)
 {
   // An end handling after a number
 
-  Tokenizer p(NS_LITERAL_CSTRING("123"));
+  Tokenizer p("123"_ns);
 
   EXPECT_FALSE(p.CheckWord("123"));
   EXPECT_TRUE(p.Check(Tokenizer::Token::Number(123)));
@@ -350,7 +350,7 @@ TEST(Tokenizer, BadInteger)
 
   // A bad integer test
 
-  Tokenizer p(NS_LITERAL_CSTRING("189234891274981758617846178651647620587135"));
+  Tokenizer p("189234891274981758617846178651647620587135"_ns);
 
   EXPECT_TRUE(p.Next(t));
   EXPECT_TRUE(t.Type() == Tokenizer::TOKEN_ERROR);
@@ -363,7 +363,7 @@ TEST(Tokenizer, CheckExpectedTokenValue)
 
   // Check expected token value test
 
-  Tokenizer p(NS_LITERAL_CSTRING("blue velvet"));
+  Tokenizer p("blue velvet"_ns);
 
   EXPECT_FALSE(p.Check(Tokenizer::TOKEN_INTEGER, t));
 
@@ -388,13 +388,13 @@ TEST(Tokenizer, HasFailed)
 
   // HasFailed test
 
-  Tokenizer p1(NS_LITERAL_CSTRING("a b"));
+  Tokenizer p1("a b"_ns);
 
   while (p1.Next(t) && t.Type() != Tokenizer::TOKEN_CHAR)
     ;
   EXPECT_TRUE(p1.HasFailed());
 
-  Tokenizer p2(NS_LITERAL_CSTRING("a b ?!c"));
+  Tokenizer p2("a b ?!c"_ns);
 
   EXPECT_FALSE(p2.CheckChar('c'));
   EXPECT_TRUE(p2.HasFailed());
@@ -462,7 +462,7 @@ TEST(Tokenizer, Construction)
   }
 
   {
-    Tokenizer p1(NS_LITERAL_CSTRING("test"));
+    Tokenizer p1("test"_ns);
     EXPECT_TRUE(p1.CheckWord("test"));
     EXPECT_TRUE(p1.CheckEOF());
   }
@@ -476,15 +476,14 @@ TEST(Tokenizer, Construction)
 
 TEST(Tokenizer, Customization)
 {
-  Tokenizer p1(NS_LITERAL_CSTRING("test-custom*words and\tdefault-whites"),
-               nullptr, "-*");
+  Tokenizer p1("test-custom*words and\tdefault-whites"_ns, nullptr, "-*");
   EXPECT_TRUE(p1.CheckWord("test-custom*words"));
   EXPECT_TRUE(p1.CheckWhite());
   EXPECT_TRUE(p1.CheckWord("and"));
   EXPECT_TRUE(p1.CheckWhite());
   EXPECT_TRUE(p1.CheckWord("default-whites"));
 
-  Tokenizer p2(NS_LITERAL_CSTRING("test, custom,whites"), ", ");
+  Tokenizer p2("test, custom,whites"_ns, ", ");
   EXPECT_TRUE(p2.CheckWord("test"));
   EXPECT_TRUE(p2.CheckWhite());
   EXPECT_TRUE(p2.CheckWhite());
@@ -492,8 +491,7 @@ TEST(Tokenizer, Customization)
   EXPECT_TRUE(p2.CheckWhite());
   EXPECT_TRUE(p2.CheckWord("whites"));
 
-  Tokenizer p3(NS_LITERAL_CSTRING("test, custom, whites-and#word-chars"), ",",
-               "-#");
+  Tokenizer p3("test, custom, whites-and#word-chars"_ns, ",", "-#");
   EXPECT_TRUE(p3.CheckWord("test"));
   EXPECT_TRUE(p3.CheckWhite());
   EXPECT_FALSE(p3.CheckWhite());
@@ -789,12 +787,11 @@ TEST(Tokenizer, ReadUntil)
   EXPECT_TRUE(f == "Hello;test 4,");
   p.Rollback();
 
-  EXPECT_TRUE(
-      p.ReadUntil(Tokenizer::Token::Word(NS_LITERAL_CSTRING("test")), f));
+  EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Word("test"_ns), f));
   EXPECT_TRUE(f == "Hello;");
   p.Rollback();
 
-  EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Word(NS_LITERAL_CSTRING("test")), f,
+  EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Word("test"_ns), f,
                           Tokenizer::INCLUDE_LAST));
   EXPECT_TRUE(f == "Hello;test");
   EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Char(','), f));
@@ -949,13 +946,13 @@ TEST(Tokenizer, Incremental)
       [&](Token const& t, IncrementalTokenizer& i) -> nsresult {
         switch (++test) {
           case 1:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test1"))));
+            EXPECT_TRUE(t.Equals(Token::Word("test1"_ns)));
             break;
           case 2:
             EXPECT_TRUE(t.Equals(Token::Char(',')));
             break;
           case 3:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test2"))));
+            EXPECT_TRUE(t.Equals(Token::Word("test2"_ns)));
             break;
           case 4:
             EXPECT_TRUE(t.Equals(Token::Char(',')));
@@ -967,7 +964,7 @@ TEST(Tokenizer, Incremental)
             EXPECT_TRUE(t.Equals(Token::Char(',')));
             break;
           case 7:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test3"))));
+            EXPECT_TRUE(t.Equals(Token::Word("test3"_ns)));
             break;
           case 8:
             EXPECT_TRUE(t.Equals(Token::EndOfFile()));
@@ -998,17 +995,17 @@ TEST(Tokenizer, IncrementalRollback)
       [&](Token const& t, IncrementalTokenizer& i) -> nsresult {
         switch (++test) {
           case 1:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test1"))));
+            EXPECT_TRUE(t.Equals(Token::Word("test1"_ns)));
             break;
           case 2:
             EXPECT_TRUE(t.Equals(Token::Char(',')));
             break;
           case 3:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test2"))));
+            EXPECT_TRUE(t.Equals(Token::Word("test2"_ns)));
             i.Rollback();  // so that we get the token again
             break;
           case 4:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test2"))));
+            EXPECT_TRUE(t.Equals(Token::Word("test2"_ns)));
             break;
           case 5:
             EXPECT_TRUE(t.Equals(Token::Char(',')));
@@ -1020,7 +1017,7 @@ TEST(Tokenizer, IncrementalRollback)
             EXPECT_TRUE(t.Equals(Token::Char(',')));
             break;
           case 8:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test3"))));
+            EXPECT_TRUE(t.Equals(Token::Word("test3"_ns)));
             break;
           case 9:
             EXPECT_TRUE(t.Equals(Token::EndOfFile()));
@@ -1052,7 +1049,7 @@ TEST(Tokenizer, IncrementalNeedMoreInput)
         Token t2;
         switch (++test) {
           case 1:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("a"))));
+            EXPECT_TRUE(t.Equals(Token::Word("a"_ns)));
             break;
           case 2:
           case 3:
@@ -1061,7 +1058,7 @@ TEST(Tokenizer, IncrementalNeedMoreInput)
             EXPECT_TRUE(t.Equals(Token::Whitespace()));
             if (i.Next(t2)) {
               EXPECT_TRUE(test == 5);
-              EXPECT_TRUE(t2.Equals(Token::Word(NS_LITERAL_CSTRING("bb"))));
+              EXPECT_TRUE(t2.Equals(Token::Word("bb"_ns)));
             } else {
               EXPECT_TRUE(test < 5);
               i.NeedMoreInput();
@@ -1071,7 +1068,7 @@ TEST(Tokenizer, IncrementalNeedMoreInput)
             EXPECT_TRUE(t.Equals(Token::Char(',')));
             break;
           case 7:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("c"))));
+            EXPECT_TRUE(t.Equals(Token::Word("c"_ns)));
             return NS_ERROR_FAILURE;
           default:
             EXPECT_TRUE(false);
@@ -1114,7 +1111,7 @@ TEST(Tokenizer, IncrementalCustom)
             EXPECT_TRUE(t.Equals(custom));
             break;
           case 2:
-            EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("bla"))));
+            EXPECT_TRUE(t.Equals(Token::Word("bla"_ns)));
             break;
           case 3:
             EXPECT_TRUE(t.Equals(Token::EndOfFile()));
@@ -1126,11 +1123,11 @@ TEST(Tokenizer, IncrementalCustom)
       nullptr, "-");
 
   custom = i.AddCustomToken("some-test", Tokenizer::CASE_SENSITIVE);
-  i.FeedInput(NS_LITERAL_CSTRING("some-"));
+  i.FeedInput("some-"_ns);
   EXPECT_TRUE(test == 0);
-  i.FeedInput(NS_LITERAL_CSTRING("tes"));
+  i.FeedInput("tes"_ns);
   EXPECT_TRUE(test == 0);
-  i.FeedInput(NS_LITERAL_CSTRING("tbla"));
+  i.FeedInput("tbla"_ns);
   EXPECT_TRUE(test == 1);
   i.FinishInput();
   EXPECT_TRUE(test == 3);
@@ -1267,17 +1264,17 @@ TEST(Tokenizer, IncrementalBuffering1)
   Unused << i.AddCustomToken("bb", Tokenizer::CASE_SENSITIVE);
   i.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
 
-  i.FeedInput(NS_LITERAL_CSTRING("01234"));
+  i.FeedInput("01234"_ns);
   EXPECT_TRUE(test == 1);
   EXPECT_TRUE(observedFragment.EqualsLiteral("012"));
 
-  i.FeedInput(NS_LITERAL_CSTRING("5"));
+  i.FeedInput("5"_ns);
   EXPECT_TRUE(test == 1);
-  i.FeedInput(NS_LITERAL_CSTRING("6789aa"));
+  i.FeedInput("6789aa"_ns);
   EXPECT_TRUE(test == 2);
   EXPECT_TRUE(observedFragment.EqualsLiteral("3456789"));
 
-  i.FeedInput(NS_LITERAL_CSTRING("aqwert"));
+  i.FeedInput("aqwert"_ns);
   EXPECT_TRUE(test == 4);
   EXPECT_TRUE(observedFragment.EqualsLiteral("qwe"));
 
@@ -1323,13 +1320,13 @@ TEST(Tokenizer, IncrementalBuffering2)
   Unused << i.AddCustomToken("bbbbb", Tokenizer::CASE_SENSITIVE);
   i.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
 
-  i.FeedInput(NS_LITERAL_CSTRING("01234"));
+  i.FeedInput("01234"_ns);
   EXPECT_TRUE(test == 0);
-  i.FeedInput(NS_LITERAL_CSTRING("5"));
+  i.FeedInput("5"_ns);
   EXPECT_TRUE(test == 1);
-  i.FeedInput(NS_LITERAL_CSTRING("6789aa"));
+  i.FeedInput("6789aa"_ns);
   EXPECT_TRUE(test == 2);
-  i.FeedInput(NS_LITERAL_CSTRING("aqwert"));
+  i.FeedInput("aqwert"_ns);
   EXPECT_TRUE(test == 4);
   i.FinishInput();
   EXPECT_TRUE(test == 6);

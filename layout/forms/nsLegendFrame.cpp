@@ -88,6 +88,6 @@ dom::HTMLLegendElement::LegendAlignValue nsLegendFrame::GetLogicalAlign(
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsLegendFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Legend"), aResult);
+  return MakeFrameName(u"Legend"_ns, aResult);
 }
 #endif

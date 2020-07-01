@@ -435,7 +435,7 @@ nsresult LookupCache::GetLookupWhitelistFragments(
   // Fallback to use default fragment rule when the URL doesn't contain
   // "/?resoruce=" because this means the URL is not generated in
   // CreatePairwiseWhiteListURI()
-  if (!FindInReadable(NS_LITERAL_CSTRING("/?resource="), iter, iter_end)) {
+  if (!FindInReadable("/?resource="_ns, iter, iter_end)) {
     return GetLookupFragments(aSpec, aFragments);
   }
 
@@ -453,7 +453,7 @@ nsresult LookupCache::GetLookupWhitelistFragments(
     topLevelURL.BeginReading(begin);
     topLevelURL.EndReading(end);
     int numTopLevelURLComponents = 0;
-    while (RFindInReadable(NS_LITERAL_CSTRING("."), begin, end) &&
+    while (RFindInReadable("."_ns, begin, end) &&
            numTopLevelURLComponents < MAX_HOST_COMPONENTS) {
       // don't bother checking toplevel domains
       if (++numTopLevelURLComponents >= 2) {
@@ -540,7 +540,7 @@ nsresult LookupCache::GetLookupFragments(const nsACString& aSpec,
     host.BeginReading(begin);
     host.EndReading(end);
     int numHostComponents = 0;
-    while (RFindInReadable(NS_LITERAL_CSTRING("."), begin, end) &&
+    while (RFindInReadable("."_ns, begin, end) &&
            numHostComponents < MAX_HOST_COMPONENTS) {
       // don't bother checking toplevel domains
       if (++numHostComponents >= 2) {
@@ -999,7 +999,7 @@ nsresult LookupCacheV2::ClearLegacyFile() {
     return rv;
   }
 
-  rv = file->AppendNative(mTableName + NS_LITERAL_CSTRING(".pset"));
+  rv = file->AppendNative(mTableName + ".pset"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1022,9 +1022,7 @@ nsresult LookupCacheV2::ClearLegacyFile() {
   return NS_OK;
 }
 
-nsCString LookupCacheV2::GetPrefixSetSuffix() const {
-  return NS_LITERAL_CSTRING(".vlpset");
-}
+nsCString LookupCacheV2::GetPrefixSetSuffix() const { return ".vlpset"_ns; }
 
 // Support creating built-in entries for phsihing, malware, unwanted, harmful,
 // tracking/tracking whitelist and flash block tables.
@@ -1039,32 +1037,26 @@ nsresult LookupCacheV2::LoadMozEntries() {
 
   if (mTableName.EqualsLiteral("moztest-phish-simple")) {
     // Entries for phishing table
-    entries.AppendElement(
-        NS_LITERAL_CSTRING("itisatrap.org/firefox/its-a-trap.html"));
+    entries.AppendElement("itisatrap.org/firefox/its-a-trap.html"_ns);
   } else if (mTableName.EqualsLiteral("moztest-malware-simple")) {
     // Entries for malware table
-    entries.AppendElement(
-        NS_LITERAL_CSTRING("itisatrap.org/firefox/its-an-attack.html"));
+    entries.AppendElement("itisatrap.org/firefox/its-an-attack.html"_ns);
   } else if (mTableName.EqualsLiteral("moztest-unwanted-simple")) {
     // Entries for unwanted table
-    entries.AppendElement(
-        NS_LITERAL_CSTRING("itisatrap.org/firefox/unwanted.html"));
+    entries.AppendElement("itisatrap.org/firefox/unwanted.html"_ns);
   } else if (mTableName.EqualsLiteral("moztest-harmful-simple")) {
     // Entries for harmfule tables
-    entries.AppendElement(
-        NS_LITERAL_CSTRING("itisatrap.org/firefox/harmful.html"));
+    entries.AppendElement("itisatrap.org/firefox/harmful.html"_ns);
   } else if (mTableName.EqualsLiteral("moztest-track-simple")) {
     // Entries for tracking table
-    entries.AppendElement(NS_LITERAL_CSTRING("trackertest.org/"));
-    entries.AppendElement(NS_LITERAL_CSTRING("itisatracker.org/"));
+    entries.AppendElement("trackertest.org/"_ns);
+    entries.AppendElement("itisatracker.org/"_ns);
   } else if (mTableName.EqualsLiteral("moztest-trackwhite-simple")) {
     // Entries for tracking whitelist table
-    entries.AppendElement(
-        NS_LITERAL_CSTRING("itisatrap.org/?resource=itisatracker.org"));
+    entries.AppendElement("itisatrap.org/?resource=itisatracker.org"_ns);
   } else if (mTableName.EqualsLiteral("moztest-block-simple")) {
     // Entries for flash block table
-    entries.AppendElement(
-        NS_LITERAL_CSTRING("itisatrap.org/firefox/blocked.html"));
+    entries.AppendElement("itisatrap.org/firefox/blocked.html"_ns);
   } else {
     MOZ_ASSERT_UNREACHABLE();
   }

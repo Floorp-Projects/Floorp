@@ -183,26 +183,25 @@ nsresult nsAppStartup::Init() {
   // This last event is only interesting to us for xperf-based measures
 
   // Initialize interaction with profiler
-  mProbesManager = new ProbeManager(
-      kApplicationTracingCID, NS_LITERAL_CSTRING("Application startup probe"));
+  mProbesManager =
+      new ProbeManager(kApplicationTracingCID, "Application startup probe"_ns);
   // Note: The operation is meant mostly for in-house profiling.
   // Therefore, we do not warn if probes manager cannot be initialized
 
   if (mProbesManager) {
     mPlacesInitCompleteProbe = mProbesManager->GetProbe(
-        kPlacesInitCompleteCID, NS_LITERAL_CSTRING("places-init-complete"));
+        kPlacesInitCompleteCID, "places-init-complete"_ns);
     NS_WARNING_ASSERTION(mPlacesInitCompleteProbe,
                          "Cannot initialize probe 'places-init-complete'");
 
     mSessionWindowRestoredProbe = mProbesManager->GetProbe(
-        kSessionStoreWindowRestoredCID,
-        NS_LITERAL_CSTRING("sessionstore-windows-restored"));
+        kSessionStoreWindowRestoredCID, "sessionstore-windows-restored"_ns);
     NS_WARNING_ASSERTION(
         mSessionWindowRestoredProbe,
         "Cannot initialize probe 'sessionstore-windows-restored'");
 
-    mXPCOMShutdownProbe = mProbesManager->GetProbe(
-        kXPCOMShutdownCID, NS_LITERAL_CSTRING("xpcom-shutdown"));
+    mXPCOMShutdownProbe =
+        mProbesManager->GetProbe(kXPCOMShutdownCID, "xpcom-shutdown"_ns);
     NS_WARNING_ASSERTION(mXPCOMShutdownProbe,
                          "Cannot initialize probe 'xpcom-shutdown'");
 

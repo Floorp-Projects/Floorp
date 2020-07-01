@@ -53,7 +53,7 @@ class nsSVGStopFrame : public nsFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGStop"), aResult);
+    return MakeFrameName(u"SVGStop"_ns, aResult);
   }
 #endif
 };

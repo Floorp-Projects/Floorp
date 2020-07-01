@@ -1116,7 +1116,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
       XRE_GetFileFromPath(argv[0], getter_AddRefs(greDir));
       greDir->GetParent(getter_AddRefs(tmpDir));
       tmpDir->Clone(getter_AddRefs(greDir));
-      tmpDir->SetNativeLeafName(NS_LITERAL_CSTRING("Resources"));
+      tmpDir->SetNativeLeafName("Resources"_ns);
       bool dirExists = false;
       tmpDir->Exists(&dirExists);
       if (dirExists) {
@@ -1402,7 +1402,7 @@ void XPCShellDirProvider::SetGREDirs(nsIFile* greDir) {
   nsAutoCString leafName;
   mGREDir->GetNativeLeafName(leafName);
   if (leafName.EqualsLiteral("Resources")) {
-    mGREBinDir->SetNativeLeafName(NS_LITERAL_CSTRING("MacOS"));
+    mGREBinDir->SetNativeLeafName("MacOS"_ns);
   }
 #endif
 }
@@ -1440,8 +1440,8 @@ XPCShellDirProvider::GetFile(const char* prop, bool* persistent,
     nsCOMPtr<nsIFile> file;
     *persistent = true;
     if (NS_FAILED(mGREDir->Clone(getter_AddRefs(file))) ||
-        NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("defaults"))) ||
-        NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("pref"))))
+        NS_FAILED(file->AppendNative("defaults"_ns)) ||
+        NS_FAILED(file->AppendNative("pref"_ns)))
       return NS_ERROR_FAILURE;
     file.forget(result);
     return NS_OK;
@@ -1457,7 +1457,7 @@ XPCShellDirProvider::GetFiles(const char* prop, nsISimpleEnumerator** result) {
 
     nsCOMPtr<nsIFile> file;
     mGREDir->Clone(getter_AddRefs(file));
-    file->AppendNative(NS_LITERAL_CSTRING("chrome"));
+    file->AppendNative("chrome"_ns);
     dirs.AppendObject(file);
 
     nsresult rv =
@@ -1472,8 +1472,8 @@ XPCShellDirProvider::GetFiles(const char* prop, nsISimpleEnumerator** result) {
     nsCOMPtr<nsIFile> appDir;
     bool exists;
     if (mAppDir && NS_SUCCEEDED(mAppDir->Clone(getter_AddRefs(appDir))) &&
-        NS_SUCCEEDED(appDir->AppendNative(NS_LITERAL_CSTRING("defaults"))) &&
-        NS_SUCCEEDED(appDir->AppendNative(NS_LITERAL_CSTRING("preferences"))) &&
+        NS_SUCCEEDED(appDir->AppendNative("defaults"_ns)) &&
+        NS_SUCCEEDED(appDir->AppendNative("preferences"_ns)) &&
         NS_SUCCEEDED(appDir->Exists(&exists)) && exists) {
       dirs.AppendObject(appDir);
       return NS_NewArrayEnumerator(result, dirs, NS_GET_IID(nsIFile));
@@ -1494,7 +1494,7 @@ XPCShellDirProvider::GetFiles(const char* prop, nsISimpleEnumerator** result) {
       if (mGREDir) {
         mGREDir->Clone(getter_AddRefs(file));
         if (NS_SUCCEEDED(mGREDir->Clone(getter_AddRefs(file)))) {
-          file->AppendNative(NS_LITERAL_CSTRING("plugins"));
+          file->AppendNative("plugins"_ns);
           if (NS_SUCCEEDED(file->Exists(&exists)) && exists) {
             dirs.AppendObject(file);
           }

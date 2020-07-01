@@ -261,7 +261,7 @@ void nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsPlaceholderFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Placeholder"), aResult);
+  return MakeFrameName(u"Placeholder"_ns, aResult);
 }
 
 void nsPlaceholderFrame::List(FILE* out, const char* aPrefix,

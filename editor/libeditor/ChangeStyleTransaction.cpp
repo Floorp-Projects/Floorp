@@ -173,7 +173,7 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
     nsAutoString returnString;
     if (multiple) {
       // Let's remove only the value we have to remove and not the others
-      RemoveValueFromListOfValues(values, NS_LITERAL_STRING("none"));
+      RemoveValueFromListOfValues(values, u"none"_ns);
       RemoveValueFromListOfValues(values, mValue);
       if (values.IsEmpty()) {
         ErrorResult error;
