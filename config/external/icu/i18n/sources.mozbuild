@@ -157,6 +157,7 @@ SOURCES += [
    '/intl/icu/source/i18n/ucol_sit.cpp',
    '/intl/icu/source/i18n/ucoleitr.cpp',
    '/intl/icu/source/i18n/udat.cpp',
+   '/intl/icu/source/i18n/udateintervalformat.cpp',
    '/intl/icu/source/i18n/udatpg.cpp',
    '/intl/icu/source/i18n/ufieldpositer.cpp',
    '/intl/icu/source/i18n/uitercollationiterator.cpp',
