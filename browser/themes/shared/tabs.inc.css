@@ -94,64 +94,66 @@
   padding: 0 12px;
 }
 
-:root[sessionrestored] .tab-loading-burst {
-  position: relative;
-  overflow: hidden;
-}
-
-:root[sessionrestored] .tab-loading-burst::before {
-  position: absolute;
-  content: "";
-  /* We set the width to be a percentage of the tab's width so that we can use
-     the `scale` transform to scale it up to the full size of the tab when the
-     burst occurs. We also need to set the margin-inline-start so that the
-     center of the burst matches the center of the favicon. */
-  width: 5%;
-  height: 100%;
-  /* Center the burst over the .tab-loading-burst; it's 9px from the edge thanks
-     to .tab-content, plus 8px more since .tab-loading-burst is 16px wide. */
-  margin-inline-start: calc(17px - 2.5%);
-}
-
-:root[sessionrestored] .tab-loading-burst[pinned]::before {
-  /* This is like the margin-inline-start rule above, except that icons for
-     pinned tabs are 12px from the edge. */
-  margin-inline-start: calc(20px - 2.5%);
-}
-
-:root[sessionrestored] .tab-loading-burst[bursting]::before {
-  background-image: url("chrome://browser/skin/tabbrowser/loading-burst.svg");
-  background-position: center center;
-  background-size: 100% auto;
-  background-repeat: no-repeat;
-  animation: tab-burst-animation 375ms cubic-bezier(0,0,.58,1);
-  -moz-context-properties: fill;
-  fill: var(--tab-loading-fill);
-}
-
-:root[sessionrestored] .tab-loading-burst[bursting][notselectedsinceload]::before {
-  animation-name: tab-burst-animation-light;
-}
-
-@keyframes tab-burst-animation {
-  0% {
-    opacity: 0.4;
-    transform: scale(1);
+@media (prefers-reduced-motion: no-preference) {
+  :root[sessionrestored] .tab-loading-burst {
+    position: relative;
+    overflow: hidden;
   }
-  100% {
-    opacity: 0;
-    transform: scale(40);
-  }
-}
 
-@keyframes tab-burst-animation-light {
-  0% {
-    opacity: 0.2;
-    transform: scale(1);
+  :root[sessionrestored] .tab-loading-burst::before {
+    position: absolute;
+    content: "";
+    /* We set the width to be a percentage of the tab's width so that we can use
+       the `scale` transform to scale it up to the full size of the tab when the
+       burst occurs. We also need to set the margin-inline-start so that the
+       center of the burst matches the center of the favicon. */
+    width: 5%;
+    height: 100%;
+    /* Center the burst over the .tab-loading-burst; it's 9px from the edge thanks
+       to .tab-content, plus 8px more since .tab-loading-burst is 16px wide. */
+    margin-inline-start: calc(17px - 2.5%);
   }
-  100% {
-    opacity: 0;
-    transform: scale(40);
+
+  :root[sessionrestored] .tab-loading-burst[pinned]::before {
+    /* This is like the margin-inline-start rule above, except that icons for
+       pinned tabs are 12px from the edge. */
+    margin-inline-start: calc(20px - 2.5%);
+  }
+
+  :root[sessionrestored] .tab-loading-burst[bursting]::before {
+    background-image: url("chrome://browser/skin/tabbrowser/loading-burst.svg");
+    background-position: center center;
+    background-size: 100% auto;
+    background-repeat: no-repeat;
+    animation: tab-burst-animation 375ms cubic-bezier(0,0,.58,1);
+    -moz-context-properties: fill;
+    fill: var(--tab-loading-fill);
+  }
+
+  :root[sessionrestored] .tab-loading-burst[bursting][notselectedsinceload]::before {
+    animation-name: tab-burst-animation-light;
+  }
+
+  @keyframes tab-burst-animation {
+    0% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(40);
+    }
+  }
+
+  @keyframes tab-burst-animation-light {
+    0% {
+      opacity: 0.2;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(40);
+    }
   }
 }
 
@@ -180,62 +182,79 @@
   margin-inline-end: 6px;
 }
 
-:root[sessionrestored] .tab-throbber[busy] {
-  position: relative;
-  overflow: hidden;
+@media (prefers-reduced-motion: reduce) {
+  .tab-throbber[busy] {
+    background-image: url("chrome://browser/skin/tabbrowser/hourglass.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    -moz-context-properties: fill;
+    fill: currentColor;
+    opacity: 0.4;
+  }
+
+  .tab-throbber[progress] {
+    opacity: 0.8;
+  }
 }
 
-:root[sessionrestored] .tab-throbber[busy]::before {
-  content: "";
-  position: absolute;
-  background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
-  background-position: left center;
-  background-repeat: no-repeat;
-  width: 480px;
-  height: 100%;
-  animation: tab-throbber-animation 1.05s steps(30) infinite;
-  -moz-context-properties: fill;
+@media (prefers-reduced-motion: no-preference) {
+  :root[sessionrestored] .tab-throbber[busy] {
+    position: relative;
+    overflow: hidden;
+  }
 
-  /* XXX: It would be nice to transition between the "connecting" color and the
-     "loading" color (see the `.tab-throbber[progress]::before` rule below);
-     however, that currently forces main thread painting. When this is fixed
-     (after WebRender lands), we can do something like
-     `transition: fill 0.333s, opacity 0.333s;` */
+  :root[sessionrestored] .tab-throbber[busy]::before {
+    content: "";
+    position: absolute;
+    background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
+    background-position: left center;
+    background-repeat: no-repeat;
+    width: 480px;
+    height: 100%;
+    animation: tab-throbber-animation 1.05s steps(30) infinite;
+    -moz-context-properties: fill;
 
-  fill: currentColor;
-  opacity: 0.7;
-}
+    /* XXX: It would be nice to transition between the "connecting" color and the
+       "loading" color (see the `.tab-throbber[progress]::before` rule below);
+       however, that currently forces main thread painting. When this is fixed
+       (after WebRender lands), we can do something like
+       `transition: fill 0.333s, opacity 0.333s;` */
 
-:root[sessionrestored] .tab-throbber[busy]:-moz-locale-dir(rtl)::before {
-  animation-name: tab-throbber-animation-rtl;
-}
+    fill: currentColor;
+    opacity: 0.7;
+  }
 
-@keyframes tab-throbber-animation {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
-}
+  :root[sessionrestored] .tab-throbber[busy]:-moz-locale-dir(rtl)::before {
+    animation-name: tab-throbber-animation-rtl;
+  }
 
-@keyframes tab-throbber-animation-rtl {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(100%); }
-}
+  @keyframes tab-throbber-animation {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
 
-#TabsToolbar[brighttext] .tab-throbber[busy]:not([selected=true])::before {
-  /* Don't change the --tab-loading-fill variable because this should only affect
-     tabs that are not visually selected. */
-  fill: #717171;
-  opacity: 1;
-}
+  @keyframes tab-throbber-animation-rtl {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(100%); }
+  }
 
-:root[sessionrestored] .tab-throbber[progress]::before {
-  fill: var(--tab-loading-fill);
-  opacity: 1;
-}
+  #TabsToolbar[brighttext] .tab-throbber[busy]:not([selected=true])::before {
+    /* Don't change the --tab-loading-fill variable because this should only affect
+       tabs that are not visually selected. */
+    fill: #717171;
+    opacity: 1;
+  }
 
-#TabsToolbar[brighttext] .tab-throbber[progress]:not([selected=true])::before {
-  /* Don't change the --tab-loading-fill variable because this should only affect
-     tabs that are not visually selected. */
-  fill: #84c1ff;
+  :root[sessionrestored] .tab-throbber[progress]::before {
+    fill: var(--tab-loading-fill);
+    opacity: 1;
+  }
+
+  #TabsToolbar[brighttext] .tab-throbber[progress]:not([selected=true])::before {
+    /* Don't change the --tab-loading-fill variable because this should only affect
+       tabs that are not visually selected. */
+    fill: #84c1ff;
+  }
 }
 
 .tab-icon-image {
@@ -329,29 +348,44 @@
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-blocked-small.svg");
 }
 
-.tab-throbber-tabslist[busy] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-connecting.png");
-}
-
-.tab-throbber-tabslist[progress] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading.png");
-}
-
-:root[lwt-popup-brighttext] .tab-throbber-tabslist[progress]:not([selected=true]) {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading-inverted.png");
-}
-
-@media (min-resolution: 1.1dppx) {
+@media (prefers-reduced-motion: reduce) {
   .tab-throbber-tabslist[busy] {
-    list-style-image: url("chrome://browser/skin/tabbrowser/tab-connecting@2x.png");
+    list-style-image: url("chrome://browser/skin/tabbrowser/hourglass.svg");
+    -moz-context-properties: fill;
+    fill: currentColor;
+    opacity: 0.4;
   }
 
   .tab-throbber-tabslist[progress] {
-    list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading@2x.png");
+    opacity: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tab-throbber-tabslist[busy] {
+    list-style-image: url("chrome://browser/skin/tabbrowser/tab-connecting.png");
+  }
+
+  .tab-throbber-tabslist[progress] {
+    list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading.png");
   }
 
   :root[lwt-popup-brighttext] .tab-throbber-tabslist[progress]:not([selected=true]) {
-    list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading-inverted@2x.png");
+    list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading-inverted.png");
+  }
+
+  @media (min-resolution: 1.1dppx) {
+    .tab-throbber-tabslist[busy] {
+      list-style-image: url("chrome://browser/skin/tabbrowser/tab-connecting@2x.png");
+    }
+
+    .tab-throbber-tabslist[progress] {
+      list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading@2x.png");
+    }
+
+    :root[lwt-popup-brighttext] .tab-throbber-tabslist[progress]:not([selected=true]) {
+      list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading-inverted@2x.png");
+    }
   }
 }
 

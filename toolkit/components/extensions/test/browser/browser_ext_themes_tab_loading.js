@@ -2,7 +2,11 @@
 
 add_task(async function test_support_tab_loading_filling() {
   const TAB_LOADING_COLOR = "#FF0000";
-  const TAB_TEXT_COLOR = "#9400ff";
+
+  // Make sure we use the animating loading icon
+  await SpecialPowers.pushPrefEnv({
+    set: [["ui.prefersReducedMotion", 0]],
+  });
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -13,7 +17,7 @@ add_task(async function test_support_tab_loading_filling() {
         colors: {
           frame: "#000",
           toolbar: "#124455",
-          tab_background_text: TAB_TEXT_COLOR,
+          tab_background_text: "#9400ff",
           tab_loading: TAB_LOADING_COLOR,
         },
       },
