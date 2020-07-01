@@ -141,9 +141,9 @@ add_task(async function testStayopenBookmarksClicks() {
   await ViewShownPromise;
   info("Library panel shown.");
   let bookmarks = document.getElementById("appMenu-library-bookmarks-button");
+  bookmarks.click();
   let BMview = document.getElementById("PanelUI-bookmarks");
   ViewShownPromise = BrowserTestUtils.waitForEvent(BMview, "ViewShown");
-  bookmarks.click();
   await ViewShownPromise;
   info("Library's bookmarks panel shown.");
 
