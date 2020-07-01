@@ -79,10 +79,6 @@ class TRR : public Runnable,
         mRec(aRec),
         mHostResolver(aResolver),
         mType(aType),
-        mBodySize(0),
-        mFailed(false),
-        mCnameLoop(kCnameChaseMax),
-        mAllowRFC1918(false),
         mOriginSuffix(aRec->originSuffix) {
     mHost = aRec->host;
     mPB = aRec->pb;
@@ -98,11 +94,8 @@ class TRR : public Runnable,
         mRec(aRec),
         mHostResolver(aResolver),
         mType(aType),
-        mBodySize(0),
-        mFailed(false),
         mPB(aPB),
         mCnameLoop(aLoopCount),
-        mAllowRFC1918(false),
         mOriginSuffix(aRec ? aRec->originSuffix : EmptyCString()) {
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess(),
                           "TRR must be in parent or socket process");
@@ -113,11 +106,7 @@ class TRR : public Runnable,
       : mozilla::Runnable("TRR"),
         mHostResolver(aResolver),
         mType(TRRTYPE_A),
-        mBodySize(0),
-        mFailed(false),
-        mPB(aPB),
-        mCnameLoop(kCnameChaseMax),
-        mAllowRFC1918(false) {
+        mPB(aPB) {
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess(),
                           "TRR must be in parent or socket process");
   }
@@ -130,11 +119,7 @@ class TRR : public Runnable,
         mRec(nullptr),
         mHostResolver(aResolver),
         mType(aType),
-        mBodySize(0),
-        mFailed(false),
         mPB(aPB),
-        mCnameLoop(kCnameChaseMax),
-        mAllowRFC1918(false),
         mOriginSuffix(aOriginSuffix) {
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess(),
                           "TRR must be in parent or socket process");
@@ -182,14 +167,14 @@ class TRR : public Runnable,
   nsCOMPtr<nsIChannel> mChannel;
   enum TrrType mType;
   unsigned char mResponse[kMaxSize];
-  unsigned int mBodySize;
-  bool mFailed;
+  unsigned int mBodySize = 0;
+  bool mFailed = false;
   bool mPB;
   DOHresp mDNS;
   nsCOMPtr<nsITimer> mTimeout;
   nsCString mCname;
-  uint32_t mCnameLoop;  // loop detection counter
-  bool mAllowRFC1918;
+  uint32_t mCnameLoop = kCnameChaseMax;  // loop detection counter
+  bool mAllowRFC1918 = false;
 
   uint32_t mTTL = UINT32_MAX;
   TypeRecordResultType mResult = mozilla::AsVariant(Nothing());
