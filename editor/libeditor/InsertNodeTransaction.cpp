@@ -106,6 +106,9 @@ NS_IMETHODIMP InsertNodeTransaction::DoTransaction() {
 
   ErrorResult error;
   container->InsertBefore(contentToInsert, refChild, error);
+  // InsertBefore() may call MightThrowJSException() even if there is no
+  // error. We don't need the flag here.
+  error.WouldReportJSException();
   if (error.Failed()) {
     NS_WARNING("nsINode::InsertBefore() failed");
     return error.StealNSResult();
