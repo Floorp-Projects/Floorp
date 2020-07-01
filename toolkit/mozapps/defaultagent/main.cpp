@@ -32,6 +32,18 @@
 // synchronously in the foreground.
 #define REGISTRY_MUTEX_TIMEOUT_MS (3 * 1000)
 
+// Returns true if the registry value name given is one of the
+// install-directory-prefixed values used by the Windows Default Browser Agent.
+// ex: "C:\Program Files\Mozilla Firefox|PreviousDefault"
+//     Returns true
+// ex: "InitialNotificationShown"
+//     Returns false
+static bool IsPrefixedValueName(const wchar_t* valueName) {
+  // Prefixed value names use '|' as a delimiter. None of the
+  // non-install-directory-prefixed value names contain one.
+  return wcschr(valueName, L'|') != nullptr;
+}
+
 static void RemoveAllRegistryEntries() {
   mozilla::UniquePtr<wchar_t[]> installPath = mozilla::GetFullBinaryPath();
   if (!PathRemoveFileSpecW(installPath.get())) {
@@ -61,6 +73,10 @@ static void RemoveAllRegistryEntries() {
       mozilla::MakeUnique<wchar_t[]>(maxValueNameLen);
 
   DWORD valueIndex = 0;
+  // Set this to true if we encounter values in this key that are prefixed with
+  // different install directories, indicating that this key is still in use
+  // by other installs.
+  bool keyStillInUse = false;
 
   while (true) {
     DWORD valueNameLen = maxValueNameLen;
@@ -80,19 +96,18 @@ static void RemoveAllRegistryEntries() {
       // that we haven't looked at yet.
     } else {
       valueIndex++;
+      if (IsPrefixedValueName(valueName.get())) {
+        // If this is not one of the unprefixed value names, it must be one of
+        // the install-directory prefixed values.
+        keyStillInUse = true;
+      }
     }
-  }
-
-  // If we just deleted every value, then also delete the key.
-  if (ERROR_SUCCESS != RegQueryInfoKeyW(regKey.get(), nullptr, nullptr, nullptr,
-                                        nullptr, nullptr, nullptr, &valueIndex,
-                                        nullptr, nullptr, nullptr, nullptr)) {
-    return;
   }
 
   regKey.reset();
 
-  if (valueIndex == 0) {
+  // If no other installs are using this key, remove it now.
+  if (!keyStillInUse) {
     RegDeleteKeyW(HKEY_CURRENT_USER, AGENT_REGKEY_NAME);
   }
 }
