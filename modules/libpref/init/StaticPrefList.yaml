@@ -8009,9 +8009,20 @@
   value: 2000
   mirror: always
 
+# The proxy type. See nsIProtocolProxyService.idl
+#     PROXYCONFIG_DIRECT   = 0
+#     PROXYCONFIG_MANUAL   = 1
+#     PROXYCONFIG_PAC      = 2
+#     PROXYCONFIG_WPAD     = 4
+#     PROXYCONFIG_SYSTEM   = 5
+- name: network.proxy.type
+  type: RelaxedAtomicUint32
+  value: 5
+  mirror: always
+
 # Whether the SOCKS proxy should be in charge of DNS resolution.
 - name: network.proxy.socks_remote_dns
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
