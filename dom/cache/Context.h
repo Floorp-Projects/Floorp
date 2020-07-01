@@ -115,14 +115,14 @@ class Context final : public SafeRefCounted<Context> {
   // be execute synchronously.
   static SafeRefPtr<Context> Create(SafeRefPtr<Manager> aManager,
                                     nsISerialEventTarget* aTarget,
-                                    Action* aInitAction,
+                                    SafeRefPtr<Action> aInitAction,
                                     Maybe<Context&> aOldContext);
 
   // Execute given action on the target once the quota manager has been
   // initialized.
   //
   // Only callable from the thread that created the Context.
-  void Dispatch(Action* aAction);
+  void Dispatch(SafeRefPtr<Action> aAction);
 
   // Cancel any Actions running or waiting to run.  This should allow the
   // Context to be released and Listener::RemoveContext() will be called
@@ -171,12 +171,12 @@ class Context final : public SafeRefCounted<Context> {
 
   struct PendingAction {
     nsCOMPtr<nsIEventTarget> mTarget;
-    RefPtr<Action> mAction;
+    SafeRefPtr<Action> mAction;
   };
 
   void Init(Maybe<Context&> aOldContext);
   void Start();
-  void DispatchAction(Action* aAction, bool aDoomData = false);
+  void DispatchAction(SafeRefPtr<Action> aAction, bool aDoomData = false);
   void OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
                    already_AddRefed<DirectoryLock> aDirectoryLock);
 
@@ -193,7 +193,7 @@ class Context final : public SafeRefCounted<Context> {
   bool mOrphanedData;
   QuotaInfo mQuotaInfo;
   RefPtr<QuotaInitRunnable> mInitRunnable;
-  RefPtr<Action> mInitAction;
+  SafeRefPtr<Action> mInitAction;
   nsTArray<PendingAction> mPendingActions;
 
   // Weak refs since activites must remove themselves from this list before
@@ -211,7 +211,7 @@ class Context final : public SafeRefCounted<Context> {
  public:
   // XXX Consider adding a private guard parameter.
   Context(SafeRefPtr<Manager> aManager, nsISerialEventTarget* aTarget,
-          Action* aInitAction);
+          SafeRefPtr<Action> aInitAction);
   ~Context();
 
   NS_DECL_OWNINGTHREAD

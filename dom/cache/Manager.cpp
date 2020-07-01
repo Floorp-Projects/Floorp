@@ -1416,9 +1416,8 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
           pinnedContext->NoteOrphanedData();
         } else {
           pinnedContext->CancelForCacheId(mCacheId);
-          RefPtr<Action> action =
-              new DeleteOrphanedCacheAction(mManager.clonePtr(), mCacheId);
-          pinnedContext->Dispatch(action);
+          pinnedContext->Dispatch(MakeSafeRefPtr<DeleteOrphanedCacheAction>(
+              mManager.clonePtr(), mCacheId));
         }
       }
     }
@@ -1664,9 +1663,8 @@ void Manager::ReleaseCacheId(CacheId aCacheId) {
             pinnedContext->NoteOrphanedData();
           } else {
             pinnedContext->CancelForCacheId(aCacheId);
-            RefPtr<Action> action =
-                new DeleteOrphanedCacheAction(SafeRefPtrFromThis(), aCacheId);
-            pinnedContext->Dispatch(action);
+            pinnedContext->Dispatch(MakeSafeRefPtr<DeleteOrphanedCacheAction>(
+                SafeRefPtrFromThis(), aCacheId));
           }
         }
       }
@@ -1711,8 +1709,8 @@ void Manager::ReleaseBodyId(const nsID& aBodyId) {
           if (pinnedContext->IsCanceled()) {
             pinnedContext->NoteOrphanedData();
           } else {
-            RefPtr<Action> action = new DeleteOrphanedBodyAction(aBodyId);
-            pinnedContext->Dispatch(action);
+            pinnedContext->Dispatch(
+                MakeSafeRefPtr<DeleteOrphanedBodyAction>(aBodyId));
           }
         }
       }
@@ -1751,13 +1749,14 @@ void Manager::ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
   const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
   MOZ_DIAGNOSTIC_ASSERT(!pinnedContext->IsCanceled());
 
-  const auto action = [this, aListener, aCacheId, &aOpArgs,
-                       &pinnedContext]() -> RefPtr<Action> {
+  auto action = [this, aListener, aCacheId, &aOpArgs,
+                 &pinnedContext]() -> SafeRefPtr<Action> {
     const ListenerId listenerId = SaveListener(aListener);
 
     if (CacheOpArgs::TCacheDeleteArgs == aOpArgs.type()) {
-      return new CacheDeleteAction(SafeRefPtrFromThis(), listenerId, aCacheId,
-                                   aOpArgs.get_CacheDeleteArgs());
+      return MakeSafeRefPtr<CacheDeleteAction>(SafeRefPtrFromThis(), listenerId,
+                                               aCacheId,
+                                               aOpArgs.get_CacheDeleteArgs());
     }
 
     auto streamList = MakeSafeRefPtr<StreamList>(SafeRefPtrFromThis(),
@@ -1765,23 +1764,23 @@ void Manager::ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
 
     switch (aOpArgs.type()) {
       case CacheOpArgs::TCacheMatchArgs:
-        return new CacheMatchAction(SafeRefPtrFromThis(), listenerId, aCacheId,
-                                    aOpArgs.get_CacheMatchArgs(),
-                                    std::move(streamList));
+        return MakeSafeRefPtr<CacheMatchAction>(
+            SafeRefPtrFromThis(), listenerId, aCacheId,
+            aOpArgs.get_CacheMatchArgs(), std::move(streamList));
       case CacheOpArgs::TCacheMatchAllArgs:
-        return new CacheMatchAllAction(
+        return MakeSafeRefPtr<CacheMatchAllAction>(
             SafeRefPtrFromThis(), listenerId, aCacheId,
             aOpArgs.get_CacheMatchAllArgs(), std::move(streamList));
       case CacheOpArgs::TCacheKeysArgs:
-        return new CacheKeysAction(SafeRefPtrFromThis(), listenerId, aCacheId,
-                                   aOpArgs.get_CacheKeysArgs(),
-                                   std::move(streamList));
+        return MakeSafeRefPtr<CacheKeysAction>(
+            SafeRefPtrFromThis(), listenerId, aCacheId,
+            aOpArgs.get_CacheKeysArgs(), std::move(streamList));
       default:
         MOZ_CRASH("Unknown Cache operation!");
     }
   }();
 
-  pinnedContext->Dispatch(action);
+  pinnedContext->Dispatch(std::move(action));
 }
 
 void Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
@@ -1797,36 +1796,38 @@ void Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
   const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
   MOZ_DIAGNOSTIC_ASSERT(!pinnedContext->IsCanceled());
 
-  const auto action = [this, aListener, aNamespace, &aOpArgs,
-                       &pinnedContext]() -> RefPtr<Action> {
+  auto action = [this, aListener, aNamespace, &aOpArgs,
+                 &pinnedContext]() -> SafeRefPtr<Action> {
     const ListenerId listenerId = SaveListener(aListener);
 
     switch (aOpArgs.type()) {
       case CacheOpArgs::TStorageMatchArgs:
-        return new StorageMatchAction(
+        return MakeSafeRefPtr<StorageMatchAction>(
             SafeRefPtrFromThis(), listenerId, aNamespace,
             aOpArgs.get_StorageMatchArgs(),
             MakeSafeRefPtr<StreamList>(SafeRefPtrFromThis(),
                                        pinnedContext.clonePtr()));
       case CacheOpArgs::TStorageHasArgs:
-        return new StorageHasAction(SafeRefPtrFromThis(), listenerId,
-                                    aNamespace, aOpArgs.get_StorageHasArgs());
+        return MakeSafeRefPtr<StorageHasAction>(SafeRefPtrFromThis(),
+                                                listenerId, aNamespace,
+                                                aOpArgs.get_StorageHasArgs());
       case CacheOpArgs::TStorageOpenArgs:
-        return new StorageOpenAction(SafeRefPtrFromThis(), listenerId,
-                                     aNamespace, aOpArgs.get_StorageOpenArgs());
+        return MakeSafeRefPtr<StorageOpenAction>(SafeRefPtrFromThis(),
+                                                 listenerId, aNamespace,
+                                                 aOpArgs.get_StorageOpenArgs());
       case CacheOpArgs::TStorageDeleteArgs:
-        return new StorageDeleteAction(SafeRefPtrFromThis(), listenerId,
-                                       aNamespace,
-                                       aOpArgs.get_StorageDeleteArgs());
+        return MakeSafeRefPtr<StorageDeleteAction>(
+            SafeRefPtrFromThis(), listenerId, aNamespace,
+            aOpArgs.get_StorageDeleteArgs());
       case CacheOpArgs::TStorageKeysArgs:
-        return new StorageKeysAction(SafeRefPtrFromThis(), listenerId,
-                                     aNamespace);
+        return MakeSafeRefPtr<StorageKeysAction>(SafeRefPtrFromThis(),
+                                                 listenerId, aNamespace);
       default:
         MOZ_CRASH("Unknown CacheStorage operation!");
     }
   }();
 
-  pinnedContext->Dispatch(action);
+  pinnedContext->Dispatch(std::move(action));
 }
 
 void Manager::ExecuteOpenStream(Listener* aListener,
@@ -1850,10 +1851,8 @@ void Manager::ExecuteOpenStream(Listener* aListener,
   // mechanism in favor of std::function or MozPromise.
   ListenerId listenerId = SaveListener(aListener);
 
-  RefPtr<Action> action = new OpenStreamAction(SafeRefPtrFromThis(), listenerId,
-                                               std::move(aResolver), aBodyId);
-
-  pinnedContext->Dispatch(action);
+  pinnedContext->Dispatch(MakeSafeRefPtr<OpenStreamAction>(
+      SafeRefPtrFromThis(), listenerId, std::move(aResolver), aBodyId));
 }
 
 void Manager::ExecutePutAll(
@@ -1873,12 +1872,9 @@ void Manager::ExecutePutAll(
   MOZ_DIAGNOSTIC_ASSERT(!pinnedContext->IsCanceled());
 
   ListenerId listenerId = SaveListener(aListener);
-
-  RefPtr<Action> action =
-      new CachePutAllAction(SafeRefPtrFromThis(), listenerId, aCacheId,
-                            aPutList, aRequestStreamList, aResponseStreamList);
-
-  pinnedContext->Dispatch(action);
+  pinnedContext->Dispatch(MakeSafeRefPtr<CachePutAllAction>(
+      SafeRefPtrFromThis(), listenerId, aCacheId, aPutList, aRequestStreamList,
+      aResponseStreamList));
 }
 
 Manager::Manager(SafeRefPtr<ManagerId> aManagerId, nsIThread* aIOThread,
@@ -1912,9 +1908,9 @@ void Manager::Init(Maybe<Manager&> aOldManager) {
   // Create the context immediately.  Since there can at most be one Context
   // per Manager now, this lets us cleanly call Factory::Remove() once the
   // Context goes away.
-  RefPtr<Action> setupAction = new SetupAction();
   SafeRefPtr<Context> ref = Context::Create(
-      SafeRefPtrFromThis(), mIOThread->SerialEventTarget(), setupAction,
+      SafeRefPtrFromThis(), mIOThread->SerialEventTarget(),
+      MakeSafeRefPtr<SetupAction>(),
       aOldManager ? SomeRef(*aOldManager->mContext) : Nothing());
   mContext = ref.unsafeGetRawPtr();
 }
@@ -2041,9 +2037,8 @@ void Manager::NoteOrphanedBodyIdList(const nsTArray<nsID>& aDeletedBodyIdList) {
   const auto pinnedContext = SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
   if (!deleteNowList.IsEmpty() && pinnedContext &&
       !pinnedContext->IsCanceled()) {
-    RefPtr<Action> action =
-        new DeleteOrphanedBodyAction(std::move(deleteNowList));
-    pinnedContext->Dispatch(action);
+    pinnedContext->Dispatch(
+        MakeSafeRefPtr<DeleteOrphanedBodyAction>(std::move(deleteNowList)));
   }
 }
 
