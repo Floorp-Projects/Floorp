@@ -146,9 +146,10 @@ def config_status(config):
     # relevant Python changes.
     with io.open('config_status_deps.in', 'w', encoding='utf-8',
                  newline='\n') as fh:
-        for f in itertools.chain(config['CONFIG_STATUS_DEPS'],
-                                 iter_modules_in_path(config['TOPOBJDIR'],
-                                                      config['TOPSRCDIR'])):
+        for f in sorted(
+                itertools.chain(config['CONFIG_STATUS_DEPS'],
+                                iter_modules_in_path(config['TOPOBJDIR'],
+                                                     config['TOPSRCDIR']))):
             fh.write('%s\n' % mozpath.normpath(f))
 
     # Other things than us are going to run this file, so we need to give it
