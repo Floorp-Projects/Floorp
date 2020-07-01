@@ -7,6 +7,7 @@
 
 #include "DMABufLibWrapper.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/StaticPrefs_media.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -159,14 +160,17 @@ bool nsDMABufDevice::IsDMABufEnabled() {
   }
 
   mIsDMABufConfigured = true;
-  if (
+  bool isDMABufUsed =
 #ifdef NIGHTLY_BUILD
-      !StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() &&
-      !StaticPrefs::widget_wayland_dmabuf_textures_enabled() &&
+      StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() ||
+      StaticPrefs::widget_dmabuf_textures_enabled() ||
 #endif
-      !StaticPrefs::widget_wayland_dmabuf_video_textures_enabled() &&
-      !StaticPrefs::widget_wayland_dmabuf_webgl_enabled() &&
-      !StaticPrefs::widget_wayland_dmabuf_vaapi_enabled()) {
+      StaticPrefs::widget_dmabuf_webgl_enabled() ||
+      StaticPrefs::media_ffmpeg_dmabuf_textures_enabled() ||
+      StaticPrefs::media_ffmpeg_vaapi_enabled() ||
+      StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled();
+
+  if (!isDMABufUsed) {
     // Disabled by user, just quit.
     LOGDMABUF(("IsDMABufEnabled(): Disabled by preferences."));
     return false;
@@ -187,8 +191,7 @@ bool nsDMABufDevice::IsDMABufBasicEnabled() {
          StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled();
 }
 bool nsDMABufDevice::IsDMABufTexturesEnabled() {
-  return IsDMABufEnabled() &&
-         StaticPrefs::widget_wayland_dmabuf_textures_enabled();
+  return IsDMABufEnabled() && StaticPrefs::widget_dmabuf_textures_enabled();
 }
 #else
 bool nsDMABufDevice::IsDMABufBasicEnabled() { return false; }
@@ -196,16 +199,15 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
 bool nsDMABufDevice::IsDMABufVideoTexturesEnabled() {
   return IsDMABufEnabled() &&
-         StaticPrefs::widget_wayland_dmabuf_video_textures_enabled();
+         StaticPrefs::media_ffmpeg_dmabuf_textures_enabled();
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
+  return IsDMABufEnabled() && StaticPrefs::widget_dmabuf_webgl_enabled();
+}
+bool nsDMABufDevice::IsDRMVAAPIDisplayEnabled() {
   return IsDMABufEnabled() &&
-         StaticPrefs::widget_wayland_dmabuf_webgl_enabled();
+         StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled();
 }
-bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
-  return StaticPrefs::widget_wayland_dmabuf_vaapi_enabled();
-}
-
 nsDMABufDevice* GetDMABufDevice() {
   static nsDMABufDevice gDMABufDevice;
   return &gDMABufDevice;
