@@ -9,6 +9,11 @@ ChromeUtils.defineModuleGetter(
   "Services",
   "resource://gre/modules/Services.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "FeatureGate",
+  "resource://featuregates/FeatureGate.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["FeatureGateImplementation"];
 
@@ -109,6 +114,32 @@ class FeatureGateImplementation {
     return this._definition.defaultValue;
   }
 
+  /** The default value before any targeting evaluation. */
+  get defaultValueOriginalValue() {
+    // This will probably be overwritten by the loader, but if not provide a default.
+    return (
+      this._definition.defaultValueOriginalValue || {
+        default: this._definition.defaultValue,
+      }
+    );
+  }
+
+  /**
+   * Check what the default value of this feature gate would be on another
+   * browser with different facts, such as on another platform.
+   *
+   * @param {Map} extraFacts
+   *   A `Map` of hypothetical facts to consider, such as {'windows': true} to
+   *   check what the value of this feature would be on Windows.
+   */
+  defaultValueWith(extraFacts) {
+    return FeatureGate.evaluateTargetedValue(
+      this.defaultValueOriginalValue,
+      extraFacts,
+      { mergeFactsWithDefault: true }
+    );
+  }
+
   /**
    * If this feature should be exposed to users in an advanced settings panel
    * for this build of Firefox.
@@ -117,6 +148,32 @@ class FeatureGateImplementation {
    */
   get isPublic() {
     return this._definition.isPublic;
+  }
+
+  /** The isPublic before any targeting evaluation. */
+  get isPublicOriginalValue() {
+    // This will probably be overwritten by the loader, but if not provide a default.
+    return (
+      this._definition.isPublicOriginalValue || {
+        default: this._definition.isPublic,
+      }
+    );
+  }
+
+  /**
+   * Check if this feature is available on another browser with different
+   * facts, such as on another platform.
+   *
+   * @param {Map} extraFacts
+   *   A `Map` of hypothetical facts to consider, such as {'windows': true} to
+   *   check if this feature would be available on Windows.
+   */
+  isPublicWith(extraFacts) {
+    return FeatureGate.evaluateTargetedValue(
+      this.isPublicOriginalValue,
+      extraFacts,
+      { mergeFactsWithDefault: true }
+    );
   }
 
   /**
