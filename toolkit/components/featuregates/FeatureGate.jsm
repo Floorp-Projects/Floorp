@@ -27,64 +27,17 @@ XPCOMUtils.defineLazyGetter(this, "gFeatureDefinitionsPromise", async () => {
   return fetchFeatureDefinitions(url);
 });
 
-const kTargetFacts = new Map([
-  ["release", AppConstants.MOZ_UPDATE_CHANNEL === "release"],
-  ["beta", AppConstants.MOZ_UPDATE_CHANNEL === "beta"],
-  ["dev-edition", AppConstants.MOZ_UPDATE_CHANNEL === "aurora"],
-  [
-    "nightly",
-    AppConstants.MOZ_UPDATE_CHANNEL === "nightly" ||
-      /* Treat local builds the same as Nightly builds */
-      AppConstants.MOZ_UPDATE_CHANNEL === "default",
-  ],
-  ["win", AppConstants.platform === "win"],
-  ["mac", AppConstants.platform === "macosx"],
-  ["linux", AppConstants.platform === "linux"],
-  ["android", AppConstants.platform === "android"],
-]);
-
 async function fetchFeatureDefinitions(url) {
   const res = await fetch(url);
   let definitionsJson = await res.json();
   return new Map(Object.entries(definitionsJson));
 }
 
-/**
- * Take a map of conditions to values, and return the value who's conditions
- * match this browser, or the default value in the map.
- *
- * @example `evaluateTargetedValue({default: false, nightly: true})` would
- *          return true on Nightly, and false otherwise.
- * @param {Object} targetedValue An object mapping string conditions to values. The
- *                 conditions are comma separated values such as those specified
- *                 in `kTargetFacts` above. A condition "default" is required, as
- *                 the fallback valued.
- * @param {Map} targetingFacts A map of target facts to use, such as `kTargetFacts`.
- * @returns A value from `targetedValue`.
- */
-function evaluateTargetedValue(targetedValue, targetingFacts) {
-  if (!Object.hasOwnProperty.call(targetedValue, "default")) {
-    throw new Error(
-      `Targeted value ${JSON.stringify(targetedValue)} has no default key`
-    );
-  }
-
-  for (const [key, value] of Object.entries(targetedValue)) {
-    if (key === "default") {
-      continue;
-    }
-    if (key.split(",").every(part => targetingFacts.get(part))) {
-      return value;
-    }
-  }
-
-  return targetedValue.default;
-}
-
 function buildFeatureGateImplementation(definition) {
   const targetValueKeys = ["defaultValue", "isPublic"];
   for (const key of targetValueKeys) {
-    definition[key] = evaluateTargetedValue(definition[key], kTargetFacts);
+    definition[`${key}OriginalValue`] = definition[key];
+    definition[key] = FeatureGate.evaluateTargetedValue(definition[key]);
   }
   return new FeatureGateImplementation(definition);
 }
@@ -264,5 +217,81 @@ class FeatureGate {
       feature = await FeatureGate.fromId(id, testDefinitionsUrl);
     }
     return feature.isEnabled();
+  }
+
+  static targetingFacts = new Map([
+    ["release", AppConstants.MOZ_UPDATE_CHANNEL === "release"],
+    ["beta", AppConstants.MOZ_UPDATE_CHANNEL === "beta"],
+    ["dev-edition", AppConstants.MOZ_UPDATE_CHANNEL === "aurora"],
+    [
+      "nightly",
+      AppConstants.MOZ_UPDATE_CHANNEL === "nightly" ||
+        /* Treat local builds the same as Nightly builds */
+        AppConstants.MOZ_UPDATE_CHANNEL === "default",
+    ],
+    ["win", AppConstants.platform === "win"],
+    ["mac", AppConstants.platform === "macosx"],
+    ["linux", AppConstants.platform === "linux"],
+    ["android", AppConstants.platform === "android"],
+  ]);
+
+  /**
+   * Take a map of conditions to values, and return the value who's conditions
+   * match this browser, or the default value in the map.
+   *
+   * @example
+   *   Calling the function as
+   *
+   *       evaluateTargetedValue({"default": false, "nightly,linux": true})
+   *
+   *   would return true on Nightly on Linux, and false otherwise.
+   *
+   * @param {Object} targetedValue
+   *   An object mapping string conditions to values. The conditions are comma
+   *   separated values specified in `targetingFacts`. A condition "default" is
+   *   required, as the fallback valued. All conditions must be true.
+   *
+   *   If multiple values have conditions that match, then an arbitrary one will
+   *   be returned. Specifically, the one returned first in an `Object.entries`
+   *   iteration of the targetedValue.
+   *
+   * @param {Map} [targetingFacts]
+   *   A map of target facts to use. Defaults to facts about the current browser.
+   *
+   * @param {boolean} [options.mergeFactsWithDefault]
+   *   If set to true, the value passed for `targetingFacts` will be merged with
+   *   the default facts.
+   *
+   * @returns A value from `targetedValue`.
+   */
+  static evaluateTargetedValue(
+    targetedValue,
+    targetingFacts = FeatureGate.targetingFacts,
+    { mergeFactsWithDefault = false } = {}
+  ) {
+    if (!Object.hasOwnProperty.call(targetedValue, "default")) {
+      throw new Error(
+        `Targeted value ${JSON.stringify(targetedValue)} has no default key`
+      );
+    }
+
+    if (mergeFactsWithDefault) {
+      const combinedFacts = new Map(FeatureGate.targetingFacts);
+      for (const [key, value] of targetingFacts.entries()) {
+        combinedFacts.set(key, value);
+      }
+      targetingFacts = combinedFacts;
+    }
+
+    for (const [key, value] of Object.entries(targetedValue)) {
+      if (key === "default") {
+        continue;
+      }
+      if (key.split(",").every(part => targetingFacts.get(part))) {
+        return value;
+      }
+    }
+
+    return targetedValue.default;
   }
 }
