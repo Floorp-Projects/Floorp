@@ -171,7 +171,6 @@ toolkit/components/viaduct/fetch_msg_types.pb.cc
 toolkit/components/viaduct/fetch_msg_types.pb.h
 toolkit/crashreporter/breakpad-client/
 toolkit/crashreporter/google-breakpad/
-toolkit/vendor/
 tools/fuzzing/libfuzzer/
 tools/profiler/core/vtune/
 xpcom/build/mach_override.c
