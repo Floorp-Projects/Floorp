@@ -14,6 +14,7 @@
 #else
 #  include <pthread.h>
 #endif
+#include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 
 // Mutexes based on spinlocks.  We can't use normal pthread spinlocks in all
