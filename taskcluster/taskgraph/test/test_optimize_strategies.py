@@ -194,7 +194,7 @@ def test_optimization_strategy(responses, params, opt, tasks, arg, expected):
 
     # tasks matching "reduced_tasks" are selected, when they exceed the confidence threshold
     pytest.param(
-        (0.7, True),
+        (0.7, True, True),
         {
             'tasks': {'task-2': 0.7, 'task-4': 0.7},
             'reduced_tasks': {'task-4': 0.7},
