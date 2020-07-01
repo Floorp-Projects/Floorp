@@ -6,22 +6,15 @@
 
 #include "Telemetry.h"
 
-#include <shlobj.h>
-#include <shlwapi.h>
-
 #include <fstream>
 #include <string>
-#include <unordered_map>
 
-#include "common.h"
 #include "EventLog.h"
-#include "Registry.h"
 
 #include "json/json.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/HelperMacros.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
@@ -52,65 +45,6 @@ static bool IsOfficialTelemetry() {
 #else
   return false;
 #endif
-}
-
-static TelemetryFieldResult GetDefaultBrowser() {
-  RefPtr<IApplicationAssociationRegistration> pAAR;
-  HRESULT hr = CoCreateInstance(
-      CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC,
-      IID_IApplicationAssociationRegistration, getter_AddRefs(pAAR));
-  if (FAILED(hr)) {
-    LOG_ERROR(hr);
-    return TelemetryFieldResult(mozilla::WindowsError::FromHResult(hr));
-  }
-
-  // Whatever is handling the HTTP protocol is effectively the default browser.
-  wchar_t* rawRegisteredApp;
-  hr = pAAR->QueryCurrentDefault(L"http", AT_URLPROTOCOL, AL_EFFECTIVE,
-                                 &rawRegisteredApp);
-  if (FAILED(hr)) {
-    LOG_ERROR(hr);
-    return TelemetryFieldResult(mozilla::WindowsError::FromHResult(hr));
-  }
-  mozilla::UniquePtr<wchar_t, mozilla::CoTaskMemFreeDeleter> registeredApp(
-      rawRegisteredApp);
-
-  // This maps a prefix of the AppID string used to register each browser's HTTP
-  // handler to a custom string that we'll use to identify that browser in our
-  // telemetry ping (which is this function's return value).
-  // We're assuming that any UWP app set as the default browser must be Edge.
-  const std::unordered_map<std::wstring, std::string> AppIDPrefixes = {
-      {L"Firefox", "firefox"},       {L"Chrome", "chrome"}, {L"AppX", "edge"},
-      {L"MSEdgeHTM", "edge-chrome"}, {L"IE.", "ie"},        {L"Opera", "opera"},
-      {L"Brave", "brave"},
-  };
-
-  for (const auto& prefix : AppIDPrefixes) {
-    if (!wcsnicmp(registeredApp.get(), prefix.first.c_str(),
-                  prefix.first.length())) {
-      return prefix.second;
-    }
-  }
-
-  // The default browser is one that we don't know about.
-  return std::string("");
-}
-
-static TelemetryFieldResult GetPreviousDefaultBrowser(
-    std::string& currentDefault) {
-  // This function uses a registry value which stores the current default
-  // browser. It returns the data stored in that registry value and replaces the
-  // stored string with the current default browser string that was passed in.
-
-  std::string previousDefault =
-      RegistryGetValueString(IsPrefixed::Prefixed, L"CurrentDefault")
-          .unwrapOr(mozilla::Some(currentDefault))
-          .valueOr(currentDefault);
-
-  RegistrySetValueString(IsPrefixed::Prefixed, L"CurrentDefault",
-                         currentDefault.c_str());
-
-  return previousDefault;
 }
 
 static TelemetryFieldResult GetOSVersion() {
@@ -247,10 +181,10 @@ static FilePathResult GetPingsenderPath() {
   return std::wstring(pingsenderPath);
 }
 
-static mozilla::WindowsError SendPing(std::string defaultBrowser,
-                                      std::string previousDefaultBrowser,
-                                      std::string osVersion,
-                                      std::string osLocale) {
+static mozilla::WindowsError SendPing(const std::string defaultBrowser,
+                                      const std::string previousDefaultBrowser,
+                                      const std::string osVersion,
+                                      const std::string osLocale) {
   // Fill in the ping JSON object.
   Json::Value ping;
   ping["build_channel"] = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
@@ -326,20 +260,7 @@ static mozilla::WindowsError SendPing(std::string defaultBrowser,
   return mozilla::WindowsError::CreateSuccess();
 }
 
-HRESULT SendDefaultBrowserPing() {
-  TelemetryFieldResult defaultBrowserResult = GetDefaultBrowser();
-  if (defaultBrowserResult.isErr()) {
-    return defaultBrowserResult.unwrapErr().AsHResult();
-  }
-  std::string defaultBrowser = defaultBrowserResult.unwrap();
-
-  TelemetryFieldResult previousDefaultBrowserResult =
-      GetPreviousDefaultBrowser(defaultBrowser);
-  if (previousDefaultBrowserResult.isErr()) {
-    return previousDefaultBrowserResult.unwrapErr().AsHResult();
-  }
-  std::string previousDefaultBrowser = previousDefaultBrowserResult.unwrap();
-
+HRESULT SendDefaultBrowserPing(const DefaultBrowserInfo& browserInfo) {
   TelemetryFieldResult osVersionResult = GetOSVersion();
   if (osVersionResult.isErr()) {
     return osVersionResult.unwrapErr().AsHResult();
@@ -359,6 +280,7 @@ HRESULT SendDefaultBrowserPing() {
     return S_OK;
   }
 
-  return SendPing(defaultBrowser, previousDefaultBrowser, osVersion, osLocale)
+  return SendPing(browserInfo.currentDefaultBrowser,
+                  browserInfo.previousDefaultBrowser, osVersion, osLocale)
       .AsHResult();
 }
