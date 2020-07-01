@@ -65,6 +65,8 @@ impl From<PacketType> for PNSpace {
 
 #[derive(Debug, Clone)]
 pub struct SentPacket {
+    pub pt: PacketType,
+    pub pn: u64,
     ack_eliciting: bool,
     pub time_sent: Instant,
     pub tokens: Rc<Vec<RecoveryToken>>,
@@ -79,6 +81,8 @@ pub struct SentPacket {
 
 impl SentPacket {
     pub fn new(
+        pt: PacketType,
+        pn: u64,
         time_sent: Instant,
         ack_eliciting: bool,
         tokens: Rc<Vec<RecoveryToken>>,
@@ -86,6 +90,8 @@ impl SentPacket {
         in_flight: bool,
     ) -> Self {
         Self {
+            pt,
+            pn,
             time_sent,
             ack_eliciting,
             tokens,

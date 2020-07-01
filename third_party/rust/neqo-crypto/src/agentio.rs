@@ -94,11 +94,6 @@ impl RecordList {
         self.records.push(Record::new(epoch, ct, data));
     }
 
-    /// Filter out `EndOfEarlyData` messages.
-    pub fn remove_eoed(&mut self) {
-        self.records.retain(|rec| rec.epoch != 1);
-    }
-
     #[allow(clippy::unused_self)]
     unsafe extern "C" fn ingest(
         _fd: *mut ssl::PRFileDesc,
