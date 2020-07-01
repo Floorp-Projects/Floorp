@@ -167,7 +167,7 @@ android {
             setIgnore true
         }
 
-        if (buildType.name == 'fenixProduction' && flavors.contains("geckonightly")) {
+        if (buildType.name == 'fenixProduction' && flavors.contains("geckobeta")) {
             setIgnore true
         }
 

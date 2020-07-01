@@ -129,14 +129,15 @@ jobs:
         treeherder:
             symbol: beta(B)
 
+    # XXX `production` is now the new nightly. We keep this name around while we officially remove
+    # `nightly` and `fennec-nightly`
     production:
         attributes:
-            release-type: production
-        include-release-version: true
+            nightly: true
+        include-nightly-version: true
         include-shippable-secrets: true
-        filter-incomplete-translations: true
         run:
-            geckoview-engine: geckoBeta
+            geckoview-engine: geckoNightly
             gradle-build-type: fenixProduction
         run-on-tasks-for: [github-release]
         treeherder:

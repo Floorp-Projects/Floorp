@@ -52,6 +52,7 @@ enum class ReleaseChannel {
             FenixNightly -> true
             FennecNightly -> true
             FenixDebug -> true
+            FenixProduction -> true
             else -> false
         }
 
