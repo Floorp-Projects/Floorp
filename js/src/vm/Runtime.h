@@ -1115,7 +1115,8 @@ extern JS::FilenameValidationCallback gFilenameValidationCallback;
 
 // This callback is set by js::SetHelperThreadTaskCallback and may be null.
 // See comment in jsapi.h.
-extern void (*HelperThreadTaskCallback)(js::UniquePtr<js::RunnableTask>);
+// Returns false if the thread pool fails to dispatch.
+extern bool (*HelperThreadTaskCallback)(js::UniquePtr<js::RunnableTask>);
 
 } /* namespace js */
 

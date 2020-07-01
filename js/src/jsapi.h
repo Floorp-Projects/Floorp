@@ -312,7 +312,7 @@ JS_PUBLIC_API void SetFilenameValidationCallback(FilenameValidationCallback cb);
  * Set callback to send tasks to XPCOM thread pools
  */
 JS_PUBLIC_API void SetHelperThreadTaskCallback(
-    void (*callback)(js::UniquePtr<js::RunnableTask>));
+    bool (*callback)(js::UniquePtr<js::RunnableTask>));
 
 extern JS_PUBLIC_API const char* JS_GetImplementationVersion(void);
 
