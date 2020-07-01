@@ -10,8 +10,6 @@ EXTRA_COMPONENTS += [
     'l10n-registry.manifest',
 ]
 
-JAR_MANIFESTS += ['vendor/d3/jar.mn']
-
 DIRS += [
     'actors',
     'components',
