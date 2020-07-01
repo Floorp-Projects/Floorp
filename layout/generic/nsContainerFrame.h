@@ -695,6 +695,12 @@ class nsContainerFrame : public nsSplittableFrame {
   bool DrainAndMergeSelfOverflowList();
 
   /**
+   * Helper to find the first non-anonymous-box frame in the subtree rooted at
+   * aFrame.
+   */
+  static nsIFrame* GetFirstNonAnonBoxInSubtree(nsIFrame* aFrame);
+
+  /**
    * Reparent floats whose placeholders are inline descendants of aFrame from
    * whatever block they're currently parented by to aOurBlock.
    * @param aReparentSiblings if this is true, we follow aFrame's
