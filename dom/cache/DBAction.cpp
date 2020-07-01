@@ -72,8 +72,8 @@ DBAction::DBAction(Mode aMode) : mMode(aMode) {}
 
 DBAction::~DBAction() = default;
 
-void DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
-                           Data* aOptionalData) {
+void DBAction::RunOnTarget(SafeRefPtr<Resolver> aResolver,
+                           const QuotaInfo& aQuotaInfo, Data* aOptionalData) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aResolver);
   MOZ_DIAGNOSTIC_ASSERT(aQuotaInfo.mDir);
@@ -124,7 +124,7 @@ void DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
     }
   }
 
-  RunWithDBOnTarget(aResolver, aQuotaInfo, dbDir, conn);
+  RunWithDBOnTarget(std::move(aResolver), aQuotaInfo, dbDir, conn);
 }
 
 nsresult DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
@@ -168,7 +168,7 @@ SyncDBAction::SyncDBAction(Mode aMode) : DBAction(aMode) {}
 
 SyncDBAction::~SyncDBAction() = default;
 
-void SyncDBAction::RunWithDBOnTarget(Resolver* aResolver,
+void SyncDBAction::RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
                                      const QuotaInfo& aQuotaInfo,
                                      nsIFile* aDBDir,
                                      mozIStorageConnection* aConn) {

@@ -9,6 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/cache/Types.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "nsISupportsImpl.h"
 
 class mozIStorageConnection;
@@ -21,10 +22,16 @@ class Action {
  public:
   class Resolver {
    public:
+    Resolver& operator=(const Resolver& aRHS) = delete;
+
     // Note: Action must drop Resolver ref after calling Resolve()!
     // Note: Must be called on the same thread used to execute
     //       Action::RunOnTarget().
     virtual void Resolve(nsresult aRv) = 0;
+
+    inline SafeRefPtr<Action::Resolver> SafeRefPtrFromThis() {
+      return SafeRefPtr<Action::Resolver>{this, AcquireStrongRefFromRawPtr{}};
+    }
 
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   };
@@ -45,7 +52,8 @@ class Action {
   // Note: Action should hold Resolver ref until its ready to call Resolve().
   // Note: The "target" thread is determined when the Action is scheduled on
   //       Context.  The Action should not assume any particular thread is used.
-  virtual void RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
+  virtual void RunOnTarget(SafeRefPtr<Resolver> aResolver,
+                           const QuotaInfo& aQuotaInfo,
                            Data* aOptionalData) = 0;
 
   // Called on initiating thread when the Action is canceled.  The Action is
