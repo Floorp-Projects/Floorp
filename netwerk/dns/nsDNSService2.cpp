@@ -60,6 +60,7 @@ static const char kPrefDnsLocalDomains[] = "network.dns.localDomains";
 static const char kPrefDnsForceResolve[] = "network.dns.forceResolve";
 static const char kPrefDnsOfflineLocalhost[] = "network.dns.offline-localhost";
 static const char kPrefDnsNotifyResolution[] = "network.dns.notifyResolution";
+static const char kPrefNetworkProxySOCKS[] = "network.proxy.socks";
 
 //-----------------------------------------------------------------------------
 
@@ -550,6 +551,7 @@ nsDNSService::nsDNSService()
       mOfflineLocalhost(false),
       mForceResolveOn(false),
       mTrrService(nullptr),
+      mHasSocksProxy(false),
       mResCacheEntries(0),
       mResCacheExpiration(0),
       mResCacheGrace(0),
@@ -681,6 +683,13 @@ nsresult nsDNSService::ReadPrefs(const char* name) {
       mNotifyResolution = tmpbool;
     }
   }
+  if (!name || !strcmp(name, kPrefNetworkProxySOCKS)) {
+    if (NS_SUCCEEDED(Preferences::GetUint(kPrefNetworkProxySOCKS, &tmpint))) {
+      nsAutoCString socks;
+      Preferences::GetCString(kPrefNetworkProxySOCKS, socks);
+      mHasSocksProxy = !socks.IsEmpty();
+    }
+  }
   if (!name || !strcmp(name, kPrefIPv4OnlyDomains)) {
     Preferences::GetCString(kPrefIPv4OnlyDomains, mIPv4OnlyDomains);
   }
@@ -751,6 +760,7 @@ nsDNSService::Init() {
     prefs->AddObserver(kPrefDnsNotifyResolution, this, false);
 
     // Monitor these to see if there is a change in proxy configuration
+    prefs->AddObserver(kPrefNetworkProxySOCKS, this, false);
   }
 
   nsDNSPrefetch::Initialize(this);
@@ -814,6 +824,21 @@ nsDNSService::SetPrefetchEnabled(bool inVal) {
   MutexAutoLock lock(mLock);
   mDisablePrefetch = !inVal;
   return NS_OK;
+}
+
+bool nsDNSService::DNSForbiddenByActiveProxy(const nsACString& aHostname) {
+  // We should avoid doing DNS when a proxy is in use.
+  PRNetAddr tempAddr;
+  if (StaticPrefs::network_proxy_type() ==
+          nsIProtocolProxyService::PROXYCONFIG_MANUAL &&
+      mHasSocksProxy && StaticPrefs::network_proxy_socks_remote_dns()) {
+    // Allow IP lookups through, but nothing else.
+    if (PR_StringToNetAddr(nsCString(aHostname).get(), &tempAddr) !=
+        PR_SUCCESS) {
+      return true;
+    }
+  }
+  return false;
 }
 
 nsresult nsDNSService::PreprocessHostname(bool aLocalDomain,
@@ -885,6 +910,13 @@ nsresult nsDNSService::AsyncResolveInternal(
   if ((type != RESOLVE_TYPE_DEFAULT) && (type != RESOLVE_TYPE_TXT) &&
       (type != RESOLVE_TYPE_HTTPSSVC)) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  if (DNSForbiddenByActiveProxy(aHostname)) {
+    // nsHostResolver returns NS_ERROR_UNKNOWN_HOST for lots of reasons.
+    // We use a different error code to differentiate this failure and to make
+    // it clear(er) where this error comes from.
+    return NS_ERROR_UNKNOWN_PROXY_HOST;
   }
 
   nsCString hostname;
@@ -1186,6 +1218,10 @@ nsresult nsDNSService::ResolveInternal(
   if (GetOffline() &&
       (!mOfflineLocalhost || !hostname.LowerCaseEqualsASCII("localhost"))) {
     flags |= RESOLVE_OFFLINE;
+  }
+
+  if (DNSForbiddenByActiveProxy(aHostname)) {
+    return NS_ERROR_UNKNOWN_PROXY_HOST;
   }
 
   //
