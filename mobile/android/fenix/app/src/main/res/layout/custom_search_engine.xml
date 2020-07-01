@@ -29,6 +29,7 @@
             android:id="@+id/edit_engine_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="@dimen/accessibility_min_height"
             android:hint="@string/search_add_custom_engine_name_hint"
             android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
@@ -46,6 +47,7 @@
             android:id="@+id/edit_search_string"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="@dimen/accessibility_min_height"
             android:hint="@string/search_add_custom_engine_search_string_hint"
             android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
