@@ -10,6 +10,8 @@
     <string name="mozac_feature_contextmenu_download_link">Tengill til að hala niður</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Deila tengli</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">Deila mynd</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Afrita tengil</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->

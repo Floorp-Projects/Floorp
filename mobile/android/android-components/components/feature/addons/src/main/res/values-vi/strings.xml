@@ -17,9 +17,9 @@
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">Xóa lịch sử duyệt web gần đây, cookie, và dữ liệu liên quan</string>
     <!-- Description for clipboard_read permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_read_description">Nhận dữ liệu từ clipboard</string>
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Nhận dữ liệu từ bộ nhớ tạm</string>
     <!-- Description for clipboard_write permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_write_description">Nhập dữ liệu vào clipboard</string>
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Nhập dữ liệu vào bộ nhớ tạm</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Tải về các tập tin và chỉnh sửa lịch sử tải về của trình duyệt</string>
     <!-- Description for downloads_open permission. -->
