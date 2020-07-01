@@ -129,6 +129,14 @@ InProcessParent::GetChildID(uint64_t* aChildID) {
 }
 
 NS_IMETHODIMP
+InProcessParent::GetOsPid(int32_t* aOsPid) {
+  // InProcessParent always run in the parent process,
+  // so we can return the current process id.
+  *aOsPid = base::GetCurrentProcId();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 InProcessParent::GetActor(const nsACString& aName,
                           JSProcessActorParent** aActor) {
   if (!CanSend()) {
