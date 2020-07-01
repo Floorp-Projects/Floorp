@@ -57,7 +57,7 @@ bool FFmpegRuntimeLinker::Init() {
   }
 
 #ifdef MOZ_WAYLAND
-  if (gfxPlatformGtk::GetPlatform()->UseWaylandHardwareVideoDecoding()) {
+  if (gfxPlatformGtk::GetPlatform()->UseHardwareVideoDecoding()) {
     const char* libWayland = "libva-wayland.so.2";
     PRLibSpec lspec;
     lspec.type = PR_LibSpec_Pathname;
