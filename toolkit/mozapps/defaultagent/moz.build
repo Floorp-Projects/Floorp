@@ -11,6 +11,7 @@ SPHINX_TREES['default-browser-agent'] = "docs"
 UNIFIED_SOURCES += [
     "/mfbt/Poison.cpp",
     "/mfbt/Unused.cpp",
+    "common.cpp",
     "DefaultBrowser.cpp",
     "EventLog.cpp",
     "main.cpp",
