@@ -722,7 +722,7 @@ nsresult PermissionManager::Init() {
 
 nsresult PermissionManager::OpenDatabase(nsIFile* aPermissionsFile) {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ACCESS_THREAD_BOUND(mThreadBoundData, data);
+  auto data = mThreadBoundData.Access();
 
   nsresult rv;
   nsCOMPtr<mozIStorageService> storage =
@@ -805,7 +805,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
     mState = eDBInitialized;
   });
 
-  MOZ_ACCESS_THREAD_BOUND(mThreadBoundData, data);
+  auto data = mThreadBoundData.Access();
 
   auto raiiFailure = MakeScopeExit([&]() {
     if (data->mDBConn) {
@@ -1432,7 +1432,7 @@ void PermissionManager::PerformIdleDailyMaintenance() {
   RefPtr<PermissionManager> self = this;
   mThread->Dispatch(NS_NewRunnableFunction(
       "PermissionManager::PerformIdleDailyMaintenance", [self] {
-        MOZ_ACCESS_THREAD_BOUND(self->mThreadBoundData, data);
+        auto data = self->mThreadBoundData.Access();
 
         if (self->mState == eClosed || !data->mDBConn) {
           return;
@@ -1460,7 +1460,7 @@ void PermissionManager::PerformIdleDailyMaintenance() {
 // sets the schema version and creates the moz_perms table.
 nsresult PermissionManager::CreateTable() {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ACCESS_THREAD_BOUND(mThreadBoundData, data);
+  auto data = mThreadBoundData.Access();
 
   // set the schema version, before creating the table
   nsresult rv = data->mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
@@ -2009,7 +2009,7 @@ void PermissionManager::CloseDB(bool aRebuildOnSuccess) {
   mThread->Dispatch(NS_NewRunnableFunction(
       "PermissionManager::CloseDB",
       [self, aRebuildOnSuccess, defaultsInputStream] {
-        MOZ_ACCESS_THREAD_BOUND(self->mThreadBoundData, data);
+        auto data = self->mThreadBoundData.Access();
         // Null the statements, this will finalize them.
         data->mStmtInsert = nullptr;
         data->mStmtDelete = nullptr;
@@ -2064,7 +2064,7 @@ nsresult PermissionManager::RemoveAllInternal(bool aNotifyObservers) {
   RefPtr<PermissionManager> self = this;
   mThread->Dispatch(
       NS_NewRunnableFunction("PermissionManager::RemoveAllInternal", [self] {
-        MOZ_ACCESS_THREAD_BOUND(self->mThreadBoundData, data);
+        auto data = self->mThreadBoundData.Access();
 
         if (self->mState == eClosed || !data->mDBConn) {
           return;
@@ -2660,7 +2660,7 @@ nsresult PermissionManager::Read(const MonitorAutoLock& aProofOfLock) {
   ENSURE_NOT_CHILD_PROCESS;
 
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ACCESS_THREAD_BOUND(mThreadBoundData, data);
+  auto data = mThreadBoundData.Access();
 
   nsresult rv;
 
@@ -2828,7 +2828,7 @@ void PermissionManager::UpdateDB(OperationType aOp, int64_t aID,
        aModificationTime] {
         nsresult rv;
 
-        MOZ_ACCESS_THREAD_BOUND(self->mThreadBoundData, data);
+        auto data = self->mThreadBoundData.Access();
 
         if (self->mState == eClosed || !data->mDBConn) {
           // no statement is ok - just means we don't have a profile
