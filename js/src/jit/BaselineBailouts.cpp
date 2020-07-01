@@ -1978,7 +1978,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::DuringVMCall:
     case BailoutKind::TooManyArguments:
     case BailoutKind::DynamicNameNotFound:
-    case BailoutKind::StringArgumentsEval:
     case BailoutKind::Overflow:
     case BailoutKind::Round:
     case BailoutKind::NonPrimitiveInput:
@@ -1987,7 +1986,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::TypeBarrierV:
     case BailoutKind::ValueGuard:
     case BailoutKind::NullOrUndefinedGuard:
-    case BailoutKind::MonitorTypes:
     case BailoutKind::Hole:
     case BailoutKind::NoDenseElementsGuard:
     case BailoutKind::NegativeIndex:
