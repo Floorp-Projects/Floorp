@@ -519,54 +519,45 @@ function renderRawIceTable(caption, candidates) {
 }
 
 function renderConfiguration(c) {
-  const provided = () => {
-    const italics = document.createElement("i");
-    italics.textContent = string("configuration_element_provided");
-    return italics;
-  };
-  const notProvided = () => {
-    const italics = document.createElement("i");
-    italics.textContent = string("configuration_element_not_provided");
-    return italics;
-  };
-  const br = () => document.createElement("br");
+  const provided = string("configuration_element_provided");
+  const notProvided = string("configuration_element_not_provided");
 
-  const div = document.createElement("div");
-  div.classList = "peer-connection-config";
   // Create the text for a configuration field
-  const cfg = (obj, key, elem) => {
-    elem.append(br(), `${key}: `, key in obj ? `${obj[key]}` : notProvided());
-  };
-  // Create the text for a fooProvided configuration field
-  const pro = (obj, key, elem) => {
-    elem.append(
-      br(),
-      `${key}(`,
-      provided(),
-      "/",
-      notProvided(),
-      "): ",
-      `${key}Provided` in obj ? provided() : notProvided()
-    );
-  };
+  const cfg = (obj, key) => [
+    renderElement("br"),
+    `${key}: `,
+    key in obj ? obj[key] : renderText("i", notProvided),
+  ];
 
-  div.append("RTCConfiguration");
-  cfg(c, "bundlePolicy", div);
-  cfg(c, "iceTransportPolicy", div);
-  pro(c, "peerIdentity", div);
-  cfg(c, "sdpSemantics", div);
-  div.append(br(), "iceServers: ");
-  if (!c.iceServers) {
-    div.append(notProvided());
-  }
-  for (const i of c.iceServers) {
-    const inner = document.createElement("div");
-    div.append(inner);
-    inner.append(`urls: ${JSON.stringify(i.urls)}`);
-    pro(i, "credential", inner);
-    pro(i, "userName", inner);
-  }
-  return div;
+  // Create the text for a fooProvided configuration field
+  const pro = (obj, key) => [
+    renderElement("br"),
+    `${key}(`,
+    renderText("i", provided),
+    `/`,
+    renderText("i", notProvided),
+    `): `,
+    renderText("i", obj[`${key}Provided`] ? provided : notProvided),
+  ];
+
+  return renderElements("div", { classList: "peer-connection-config" }, [
+    "RTCConfiguration",
+    ...cfg(c, "bundlePolicy"),
+    ...cfg(c, "iceTransportPolicy"),
+    ...pro(c, "peerIdentity"),
+    ...cfg(c, "sdpSemantics"),
+    renderElement("br"),
+    "iceServers: ",
+    ...(!c.iceServers
+      ? [renderText("i", notProvided)]
+      : c.iceServers.map(i =>
+          renderElements("div", {}, [
+            `urls: ${JSON.stringify(i.urls)}`,
+            ...pro(i, "credential"),
+            ...pro(i, "userName"),
+          ])
+        )),
+  ]);
 }
 
 function renderICEStats(report) {
