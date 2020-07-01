@@ -67,7 +67,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
-  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
 });
 
@@ -332,32 +331,6 @@ var ExtensionAddonObserver = {
       return;
     }
 
-    let baseURI = Services.io.newURI(`moz-extension://${uuid}/`);
-    let principal = Services.scriptSecurityManager.createContentPrincipal(
-      baseURI,
-      {}
-    );
-
-    // Clear all the registered service workers for the extension
-    // principal.
-    // Any stored data would be cleared below (if the pref
-    // "extensions.webextensions.keepStorageOnUninstall has not been
-    // explicitly set to true, which is usually only done in
-    // tests and by some extensions developers for testing purpose).
-    if (WebExtensionPolicy.backgroundServiceWorkerEnabled) {
-      // TODO: ServiceWorkerCleanUp may go away once Bug 1183245
-      // is fixed, and so this may actually go away, replaced by
-      // marking the registration as disabled or to be removed on
-      // shutdown (where we do know if the extension is shutting
-      // down because is being uninstalled) and then cleared from
-      // the persisted serviceworker registration on the next
-      // startup.
-      AsyncShutdown.profileChangeTeardown.addBlocker(
-        `Clear ServiceWorkers for ${addon.id}`,
-        ServiceWorkerCleanUp.removeFromPrincipal(principal)
-      );
-    }
-
     if (!Services.prefs.getBoolPref(LEAVE_STORAGE_PREF, false)) {
       // Clear browser.storage.local backends.
       AsyncShutdown.profileChangeTeardown.addBlocker(
@@ -367,6 +340,11 @@ var ExtensionAddonObserver = {
 
       // Clear any IndexedDB storage created by the extension
       // If LSNG is enabled, this also clears localStorage.
+      let baseURI = Services.io.newURI(`moz-extension://${uuid}/`);
+      let principal = Services.scriptSecurityManager.createContentPrincipal(
+        baseURI,
+        {}
+      );
       Services.qms.clearStoragesForPrincipal(principal);
 
       // Clear any storage.local data stored in the IDBBackend.
@@ -2114,10 +2092,6 @@ class Extension extends ExtensionData {
     return this.manifest.background && this.manifest.background.scripts;
   }
 
-  get backgroundWorkerScript() {
-    return this.manifest.background && this.manifest.background.service_worker;
-  }
-
   get optionalPermissions() {
     return this.manifest.optional_permissions;
   }
@@ -2156,7 +2130,6 @@ class Extension extends ExtensionData {
   serializeExtended() {
     return {
       backgroundScripts: this.backgroundScripts,
-      backgroundWorkerScript: this.backgroundWorkerScript,
       childModules: this.modules && this.modules.child,
       dependencies: this.dependencies,
       schemaURLs: this.schemaURLs,
