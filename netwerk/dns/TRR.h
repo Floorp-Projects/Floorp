@@ -181,7 +181,6 @@ class TRR : public Runnable,
 
   nsCOMPtr<nsIChannel> mChannel;
   enum TrrType mType;
-  TimeStamp mStartTime;
   unsigned char mResponse[kMaxSize];
   unsigned int mBodySize;
   bool mFailed;
