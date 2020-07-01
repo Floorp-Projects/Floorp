@@ -20,16 +20,62 @@
 #include "mozilla/Unused.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
-using StringResult = mozilla::WindowsErrorResult<std::string>;
+using BrowserResult = mozilla::WindowsErrorResult<Browser>;
 
-static StringResult GetDefaultBrowser() {
+std::string GetStringForBrowser(Browser browser) {
+  switch (browser) {
+    case Browser::Firefox:
+      return std::string("firefox");
+    case Browser::Chrome:
+      return std::string("chrome");
+    case Browser::EdgeWithEdgeHTML:
+      return std::string("edge");
+    case Browser::EdgeWithBlink:
+      return std::string("edge-chrome");
+    case Browser::InternetExplorer:
+      return std::string("ie");
+    case Browser::Opera:
+      return std::string("opera");
+    case Browser::Brave:
+      return std::string("brave");
+    case Browser::Unknown:
+      return std::string("");
+  }
+}
+
+Browser GetBrowserFromString(const std::string& browserString) {
+  if (browserString.compare("firefox") == 0) {
+    return Browser::Firefox;
+  }
+  if (browserString.compare("chrome") == 0) {
+    return Browser::Chrome;
+  }
+  if (browserString.compare("edge") == 0) {
+    return Browser::EdgeWithEdgeHTML;
+  }
+  if (browserString.compare("edge-chrome") == 0) {
+    return Browser::EdgeWithBlink;
+  }
+  if (browserString.compare("ie") == 0) {
+    return Browser::InternetExplorer;
+  }
+  if (browserString.compare("opera") == 0) {
+    return Browser::Opera;
+  }
+  if (browserString.compare("brave") == 0) {
+    return Browser::Brave;
+  }
+  return Browser::Unknown;
+}
+
+static BrowserResult GetDefaultBrowser() {
   RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(
       CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC,
       IID_IApplicationAssociationRegistration, getter_AddRefs(pAAR));
   if (FAILED(hr)) {
     LOG_ERROR(hr);
-    return StringResult(mozilla::WindowsError::FromHResult(hr));
+    return BrowserResult(mozilla::WindowsError::FromHResult(hr));
   }
 
   // Whatever is handling the HTTP protocol is effectively the default browser.
@@ -38,7 +84,7 @@ static StringResult GetDefaultBrowser() {
                                  &rawRegisteredApp);
   if (FAILED(hr)) {
     LOG_ERROR(hr);
-    return StringResult(mozilla::WindowsError::FromHResult(hr));
+    return BrowserResult(mozilla::WindowsError::FromHResult(hr));
   }
   mozilla::UniquePtr<wchar_t, mozilla::CoTaskMemFreeDeleter> registeredApp(
       rawRegisteredApp);
@@ -47,10 +93,14 @@ static StringResult GetDefaultBrowser() {
   // handler to a custom string that we'll use to identify that browser in our
   // telemetry ping (which is this function's return value).
   // We're assuming that any UWP app set as the default browser must be Edge.
-  const std::unordered_map<std::wstring, std::string> AppIDPrefixes = {
-      {L"Firefox", "firefox"},       {L"Chrome", "chrome"}, {L"AppX", "edge"},
-      {L"MSEdgeHTM", "edge-chrome"}, {L"IE.", "ie"},        {L"Opera", "opera"},
-      {L"Brave", "brave"},
+  const std::unordered_map<std::wstring, Browser> AppIDPrefixes = {
+      {L"Firefox", Browser::Firefox},
+      {L"Chrome", Browser::Chrome},
+      {L"AppX", Browser::EdgeWithEdgeHTML},
+      {L"MSEdgeHTM", Browser::EdgeWithBlink},
+      {L"IE.", Browser::InternetExplorer},
+      {L"Opera", Browser::Opera},
+      {L"Brave", Browser::Brave},
   };
 
   for (const auto& prefix : AppIDPrefixes) {
@@ -61,36 +111,36 @@ static StringResult GetDefaultBrowser() {
   }
 
   // The default browser is one that we don't know about.
-  return std::string("");
+  return Browser::Unknown;
 }
 
-static StringResult GetPreviousDefaultBrowser(
-    const std::string& currentDefault) {
+static BrowserResult GetPreviousDefaultBrowser(Browser currentDefault) {
   // This function uses a registry value which stores the current default
   // browser. It returns the data stored in that registry value and replaces the
   // stored string with the current default browser string that was passed in.
 
+  std::string currentDefaultStr = GetStringForBrowser(currentDefault);
   std::string previousDefault =
       RegistryGetValueString(IsPrefixed::Prefixed, L"CurrentDefault")
-          .unwrapOr(mozilla::Some(currentDefault))
-          .valueOr(currentDefault);
+          .unwrapOr(mozilla::Some(currentDefaultStr))
+          .valueOr(currentDefaultStr);
 
   mozilla::Unused << RegistrySetValueString(
-      IsPrefixed::Prefixed, L"CurrentDefault", currentDefault.c_str());
+      IsPrefixed::Prefixed, L"CurrentDefault", currentDefaultStr.c_str());
 
-  return previousDefault;
+  return GetBrowserFromString(previousDefault);
 }
 
 DefaultBrowserResult GetDefaultBrowserInfo() {
   DefaultBrowserInfo browserInfo;
 
-  StringResult defaultBrowserResult = GetDefaultBrowser();
+  BrowserResult defaultBrowserResult = GetDefaultBrowser();
   if (defaultBrowserResult.isErr()) {
     return DefaultBrowserResult(defaultBrowserResult.unwrapErr());
   }
   browserInfo.currentDefaultBrowser = defaultBrowserResult.unwrap();
 
-  StringResult previousDefaultBrowserResult =
+  BrowserResult previousDefaultBrowserResult =
       GetPreviousDefaultBrowser(browserInfo.currentDefaultBrowser);
   if (previousDefaultBrowserResult.isErr()) {
     return DefaultBrowserResult(previousDefaultBrowserResult.unwrapErr());

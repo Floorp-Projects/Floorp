@@ -261,6 +261,11 @@ static mozilla::WindowsError SendPing(const std::string defaultBrowser,
 }
 
 HRESULT SendDefaultBrowserPing(const DefaultBrowserInfo& browserInfo) {
+  std::string currentDefaultBrowser =
+      GetStringForBrowser(browserInfo.currentDefaultBrowser);
+  std::string previousDefaultBrowser =
+      GetStringForBrowser(browserInfo.previousDefaultBrowser);
+
   TelemetryFieldResult osVersionResult = GetOSVersion();
   if (osVersionResult.isErr()) {
     return osVersionResult.unwrapErr().AsHResult();
@@ -280,7 +285,7 @@ HRESULT SendDefaultBrowserPing(const DefaultBrowserInfo& browserInfo) {
     return S_OK;
   }
 
-  return SendPing(browserInfo.currentDefaultBrowser,
-                  browserInfo.previousDefaultBrowser, osVersion, osLocale)
+  return SendPing(currentDefaultBrowser, previousDefaultBrowser, osVersion,
+                  osLocale)
       .AsHResult();
 }
