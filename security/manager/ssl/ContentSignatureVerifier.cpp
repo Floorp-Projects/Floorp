@@ -393,7 +393,7 @@ static nsresult ParseContentSignatureHeader(
     const nsACString& aContentSignatureHeader,
     /* out */ nsCString& aSignature) {
   // We only support p384 ecdsa.
-  NS_NAMED_LITERAL_CSTRING(signature_var, "p384ecdsa");
+  constexpr auto signature_var = "p384ecdsa"_ns;
 
   aSignature.Truncate();
 

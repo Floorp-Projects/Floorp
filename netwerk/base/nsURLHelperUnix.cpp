@@ -32,7 +32,7 @@ nsresult net_GetURLSpecFromActualFile(nsIFile* aFile, nsACString& result) {
     ePath = nativePath;
 
   nsAutoCString escPath;
-  NS_NAMED_LITERAL_CSTRING(prefix, "file://");
+  constexpr auto prefix = "file://"_ns;
 
   // Escape the path with the directory mask
   if (NS_EscapeURL(ePath.get(), -1, esc_Directory + esc_Forced, escPath))

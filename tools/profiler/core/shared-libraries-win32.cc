@@ -170,7 +170,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     if (moduleNameStr.LowerCaseEqualsLiteral("detoured.dll") &&
         !mozilla::IsWin8OrLater() && ::GetModuleHandle(kNvidiaShimDriver) &&
         !::GetModuleHandle(kNvidiaInitDriver)) {
-      NS_NAMED_LITERAL_STRING(pdbNameStr, "detoured.pdb");
+      constexpr auto pdbNameStr = u"detoured.pdb"_ns;
       SharedLibrary shlib((uintptr_t)module.lpBaseOfDll,
                           (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
                           0,  // DLLs are always mapped at offset 0 on Windows

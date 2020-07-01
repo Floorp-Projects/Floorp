@@ -510,7 +510,7 @@ class ScriptErrorEvent : public Runnable {
       init.mFilename = mReport->mFileName;
       init.mBubbles = true;
 
-      NS_NAMED_LITERAL_STRING(xoriginMsg, "Script error.");
+      constexpr auto xoriginMsg = u"Script error."_ns;
       if (!mReport->mIsMuted) {
         init.mMessage = mReport->mErrorMsg;
         init.mLineno = mReport->mLineNumber;

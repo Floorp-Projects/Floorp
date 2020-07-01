@@ -45,7 +45,7 @@ static void LimitStringLength(nsAString& aStr, size_t aMaxFieldLength) {
     return;
   }
 
-  NS_NAMED_LITERAL_STRING(kEllipsis, "...");
+  constexpr auto kEllipsis = u"..."_ns;
 
   if (aMaxFieldLength <= (kEllipsis.Length() + 3)) {
     // An ellipsis is useless in this case, as it would obscure the string to
@@ -90,7 +90,7 @@ static JSString* ModuleVersionToJSString(JSContext* aCx,
 
   Tie(major, minor, patch, build) = aVersion.AsTuple();
 
-  NS_NAMED_LITERAL_STRING(dot, ".");
+  constexpr auto dot = u"."_ns;
 
   nsAutoString strVer;
   strVer.AppendInt(major);

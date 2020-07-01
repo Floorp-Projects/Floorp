@@ -176,7 +176,7 @@ void nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr) {
 
   // Search to see if the &D code is in the string
   // then subst in the current date/time
-  NS_NAMED_LITERAL_STRING(kDate, "&D");
+  constexpr auto kDate = u"&D"_ns;
   if (aStr.Find(kDate) != kNotFound) {
     aNewStr.ReplaceSubstring(kDate, mPD->mDateTimeStr);
   }
@@ -186,7 +186,7 @@ void nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr) {
   // Search to see if the "page number and page" total code are in the string
   // and replace the page number and page total code with the actual
   // values
-  NS_NAMED_LITERAL_STRING(kPageAndTotal, "&PT");
+  constexpr auto kPageAndTotal = u"&PT"_ns;
   if (aStr.Find(kPageAndTotal) != kNotFound) {
     nsAutoString uStr;
     nsTextFormatter::ssprintf(uStr, mPD->mPageNumAndTotalsFormat.get(),
@@ -196,24 +196,24 @@ void nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr) {
 
   // Search to see if the page number code is in the string
   // and replace the page number code with the actual value
-  NS_NAMED_LITERAL_STRING(kPage, "&P");
+  constexpr auto kPage = u"&P"_ns;
   if (aStr.Find(kPage) != kNotFound) {
     nsAutoString uStr;
     nsTextFormatter::ssprintf(uStr, mPD->mPageNumFormat.get(), mPageNum);
     aNewStr.ReplaceSubstring(kPage, uStr);
   }
 
-  NS_NAMED_LITERAL_STRING(kTitle, "&T");
+  constexpr auto kTitle = u"&T"_ns;
   if (aStr.Find(kTitle) != kNotFound) {
     aNewStr.ReplaceSubstring(kTitle, mPD->mDocTitle);
   }
 
-  NS_NAMED_LITERAL_STRING(kDocURL, "&U");
+  constexpr auto kDocURL = u"&U"_ns;
   if (aStr.Find(kDocURL) != kNotFound) {
     aNewStr.ReplaceSubstring(kDocURL, mPD->mDocURL);
   }
 
-  NS_NAMED_LITERAL_STRING(kPageTotal, "&L");
+  constexpr auto kPageTotal = u"&L"_ns;
   if (aStr.Find(kPageTotal) != kNotFound) {
     nsAutoString uStr;
     nsTextFormatter::ssprintf(uStr, mPD->mPageNumFormat.get(), mTotNumPages);

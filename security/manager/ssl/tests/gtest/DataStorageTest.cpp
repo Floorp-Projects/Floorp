@@ -29,9 +29,9 @@ class psm_DataStorageTest : public ::testing::Test {
   RefPtr<DataStorage> storage;
 };
 
-NS_NAMED_LITERAL_CSTRING(testKey, "test");
-NS_NAMED_LITERAL_CSTRING(testValue, "value");
-NS_NAMED_LITERAL_CSTRING(privateTestValue, "private");
+constexpr auto testKey = "test"_ns;
+constexpr auto testValue = "value"_ns;
+constexpr auto privateTestValue = "private"_ns;
 
 TEST_F(psm_DataStorageTest, GetPutRemove) {
   // Test Put/Get on Persistent data
@@ -49,7 +49,7 @@ TEST_F(psm_DataStorageTest, GetPutRemove) {
   EXPECT_TRUE(result.IsEmpty());
 
   // Put with Temporary/Private data shouldn't affect Persistent data
-  NS_NAMED_LITERAL_CSTRING(temporaryTestValue, "temporary");
+  constexpr auto temporaryTestValue = "temporary"_ns;
   EXPECT_EQ(NS_OK,
             storage->Put(testKey, temporaryTestValue, DataStorage_Temporary));
   EXPECT_EQ(NS_OK,
@@ -62,7 +62,7 @@ TEST_F(psm_DataStorageTest, GetPutRemove) {
   EXPECT_STREQ("value", result.get());
 
   // Put of a previously-present key overwrites it (if of the same type)
-  NS_NAMED_LITERAL_CSTRING(newValue, "new");
+  constexpr auto newValue = "new"_ns;
   EXPECT_EQ(NS_OK, storage->Put(testKey, newValue, DataStorage_Persistent));
   result = storage->Get(testKey, DataStorage_Persistent);
   EXPECT_STREQ("new", result.get());

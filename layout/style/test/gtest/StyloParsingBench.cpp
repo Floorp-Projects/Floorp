@@ -77,7 +77,7 @@ static void ServoGetPropertyValueById() {
   RefPtr<URLExtraData> data =
       new URLExtraData(uri.forget(), referrerInfo.forget(),
                        NullPrincipal::CreateWithoutOriginAttributes());
-  NS_NAMED_LITERAL_CSTRING(css_, "10px");
+  constexpr auto css_ = "10px"_ns;
   const nsACString& css = css_;
   Servo_DeclarationBlock_SetPropertyById(
       block, eCSSProperty_width, &css,

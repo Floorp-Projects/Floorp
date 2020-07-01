@@ -170,7 +170,7 @@ nsresult nsChromeRegistry::GetProviderAndPath(nsIURI* aChromeURL,
 }
 
 nsresult nsChromeRegistry::Canonify(nsCOMPtr<nsIURI>& aChromeURL) {
-  NS_NAMED_LITERAL_CSTRING(kSlash, "/");
+  constexpr auto kSlash = "/"_ns;
 
   nsresult rv;
 

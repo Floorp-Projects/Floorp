@@ -41,7 +41,7 @@ inline bool NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath) {
   if (aNtPath.IsEmpty()) {
     return true;
   }
-  NS_NAMED_LITERAL_STRING(symLinkPrefix, "\\??\\");
+  constexpr auto symLinkPrefix = u"\\??\\"_ns;
   uint32_t ntPathLen = aNtPath.Length();
   uint32_t symLinkPrefixLen = symLinkPrefix.Length();
   if (ntPathLen >= 6 && aNtPath.CharAt(5) == L':' &&
@@ -120,15 +120,15 @@ inline bool NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath) {
   }
   // Try to handle UNC paths. NB: This must happen after we've checked drive
   // mappings in case a UNC path is mapped to a drive!
-  NS_NAMED_LITERAL_STRING(uncPrefix, "\\\\");
-  NS_NAMED_LITERAL_STRING(deviceMupPrefix, "\\Device\\Mup\\");
+  constexpr auto uncPrefix = u"\\\\"_ns;
+  constexpr auto deviceMupPrefix = u"\\Device\\Mup\\"_ns;
   if (StringBeginsWith(aNtPath, deviceMupPrefix)) {
     aDosPath = uncPrefix;
     aDosPath += Substring(aNtPath, deviceMupPrefix.Length());
     return true;
   }
-  NS_NAMED_LITERAL_STRING(deviceLanmanRedirectorPrefix,
-                          "\\Device\\LanmanRedirector\\");
+  constexpr auto deviceLanmanRedirectorPrefix =
+      u"\\Device\\LanmanRedirector\\"_ns;
   if (StringBeginsWith(aNtPath, deviceLanmanRedirectorPrefix)) {
     aDosPath = uncPrefix;
     aDosPath += Substring(aNtPath, deviceLanmanRedirectorPrefix.Length());

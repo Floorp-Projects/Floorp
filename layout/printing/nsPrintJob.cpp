@@ -2118,7 +2118,7 @@ bool nsPrintJob::PrintDocContent(const UniquePtr<nsPrintObject>& aPO,
   return false;
 }
 
-static NS_NAMED_LITERAL_STRING(kEllipsis, u"\x2026");
+static constexpr auto kEllipsis = u"\x2026"_ns;
 
 /**
  * Builds the complement set of ranges and adds those to the selection.

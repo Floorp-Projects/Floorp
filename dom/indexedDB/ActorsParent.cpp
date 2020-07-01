@@ -256,19 +256,19 @@ const uint32_t kConnectionThreadIdleMS = 30 * 1000;  // 30 seconds
 
 const uint32_t kFileCopyBufferSize = 32768;
 
-constexpr auto kJournalDirectoryName = NS_LITERAL_STRING("journals");
+constexpr auto kJournalDirectoryName = u"journals"_ns;
 
-constexpr auto kFileManagerDirectoryNameSuffix = NS_LITERAL_STRING(".files");
-constexpr auto kSQLiteSuffix = NS_LITERAL_STRING(".sqlite");
-constexpr auto kSQLiteJournalSuffix = NS_LITERAL_STRING(".sqlite-journal");
-constexpr auto kSQLiteSHMSuffix = NS_LITERAL_STRING(".sqlite-shm");
-constexpr auto kSQLiteWALSuffix = NS_LITERAL_STRING(".sqlite-wal");
+constexpr auto kFileManagerDirectoryNameSuffix = u".files"_ns;
+constexpr auto kSQLiteSuffix = u".sqlite"_ns;
+constexpr auto kSQLiteJournalSuffix = u".sqlite-journal"_ns;
+constexpr auto kSQLiteSHMSuffix = u".sqlite-shm"_ns;
+constexpr auto kSQLiteWALSuffix = u".sqlite-wal"_ns;
 
 const char kPrefFileHandleEnabled[] = "dom.fileHandle.enabled";
 
-constexpr auto kPermissionStringBase = NS_LITERAL_CSTRING("indexedDB-chrome-");
-constexpr auto kPermissionReadSuffix = NS_LITERAL_CSTRING("-read");
-constexpr auto kPermissionWriteSuffix = NS_LITERAL_CSTRING("-write");
+constexpr auto kPermissionStringBase = "indexedDB-chrome-"_ns;
+constexpr auto kPermissionReadSuffix = "-read"_ns;
+constexpr auto kPermissionWriteSuffix = "-write"_ns;
 
 // The following constants define all names of binding parameters in statements,
 // where they are bound by name. This should include all parameter names which
@@ -279,38 +279,34 @@ constexpr auto kPermissionWriteSuffix = NS_LITERAL_CSTRING("-write");
 // (literally vs. via these constants) nor the binding styles (by index vs. by
 // name) should not be mixed for the same statement. The decision must be made
 // for each statement based on the proximity of statement and binding calls.
-constexpr auto kStmtParamNameCurrentKey = NS_LITERAL_CSTRING("current_key");
-constexpr auto kStmtParamNameRangeBound = NS_LITERAL_CSTRING("range_bound");
-constexpr auto kStmtParamNameObjectStorePosition =
-    NS_LITERAL_CSTRING("object_store_position");
-constexpr auto kStmtParamNameLowerKey = NS_LITERAL_CSTRING("lower_key");
-constexpr auto kStmtParamNameUpperKey = NS_LITERAL_CSTRING("upper_key");
-constexpr auto kStmtParamNameKey = NS_LITERAL_CSTRING("key");
-constexpr auto kStmtParamNameObjectStoreId =
-    NS_LITERAL_CSTRING("object_store_id");
-constexpr auto kStmtParamNameIndexId = NS_LITERAL_CSTRING("index_id");
+constexpr auto kStmtParamNameCurrentKey = "current_key"_ns;
+constexpr auto kStmtParamNameRangeBound = "range_bound"_ns;
+constexpr auto kStmtParamNameObjectStorePosition = "object_store_position"_ns;
+constexpr auto kStmtParamNameLowerKey = "lower_key"_ns;
+constexpr auto kStmtParamNameUpperKey = "upper_key"_ns;
+constexpr auto kStmtParamNameKey = "key"_ns;
+constexpr auto kStmtParamNameObjectStoreId = "object_store_id"_ns;
+constexpr auto kStmtParamNameIndexId = "index_id"_ns;
 // TODO: Maybe the uses of kStmtParamNameId should be replaced by more
 // specific constants such as kStmtParamNameObjectStoreId.
-constexpr auto kStmtParamNameId = NS_LITERAL_CSTRING("id");
-constexpr auto kStmtParamNameValue = NS_LITERAL_CSTRING("value");
-constexpr auto kStmtParamNameObjectDataKey =
-    NS_LITERAL_CSTRING("object_data_key");
-constexpr auto kStmtParamNameIndexDataValues =
-    NS_LITERAL_CSTRING("index_data_values");
-constexpr auto kStmtParamNameData = NS_LITERAL_CSTRING("data");
-constexpr auto kStmtParamNameFileIds = NS_LITERAL_CSTRING("file_ids");
-constexpr auto kStmtParamNameValueLocale = NS_LITERAL_CSTRING("value_locale");
-constexpr auto kStmtParamNameLimit = NS_LITERAL_CSTRING("limit");
+constexpr auto kStmtParamNameId = "id"_ns;
+constexpr auto kStmtParamNameValue = "value"_ns;
+constexpr auto kStmtParamNameObjectDataKey = "object_data_key"_ns;
+constexpr auto kStmtParamNameIndexDataValues = "index_data_values"_ns;
+constexpr auto kStmtParamNameData = "data"_ns;
+constexpr auto kStmtParamNameFileIds = "file_ids"_ns;
+constexpr auto kStmtParamNameValueLocale = "value_locale"_ns;
+constexpr auto kStmtParamNameLimit = "limit"_ns;
 
 // The following constants define some names of columns in tables, which are
 // referred to in remote locations, e.g. in calls to
 // GetBindingClauseForKeyRange.
-constexpr auto kColumnNameKey = NS_LITERAL_CSTRING("key");
-constexpr auto kColumnNameValue = NS_LITERAL_CSTRING("value");
-constexpr auto kColumnNameAliasSortKey = NS_LITERAL_CSTRING("sort_column");
+constexpr auto kColumnNameKey = "key"_ns;
+constexpr auto kColumnNameValue = "value"_ns;
+constexpr auto kColumnNameAliasSortKey = "sort_column"_ns;
 
 // SQL fragments used at multiple locations.
-constexpr auto kOpenLimit = NS_LITERAL_CSTRING(" LIMIT ");
+constexpr auto kOpenLimit = " LIMIT "_ns;
 
 // The deletion marker file is created before RemoveDatabaseFilesAndDirectory
 // begins deleting a database. It is removed as the last step of deletion. If a
@@ -319,8 +315,7 @@ constexpr auto kOpenLimit = NS_LITERAL_CSTRING(" LIMIT ");
 // are removed. The primary goal of this mechanism is to avoid situations where
 // a database has been partially deleted, leading to inconsistent state for the
 // origin.
-constexpr auto kIdbDeletionMarkerFilePrefix =
-    NS_LITERAL_STRING("idb-deleting-");
+constexpr auto kIdbDeletionMarkerFilePrefix = u"idb-deleting-"_ns;
 
 const uint32_t kDeleteTimeoutMs = 1000;
 
@@ -1825,7 +1820,7 @@ nsresult UpgradeSchemaFrom8To9_0(mozIStorageConnection& aConnection) {
 
   nsCOMPtr<mozIStorageFunction> compressor = new CompressDataBlobsFunction();
 
-  NS_NAMED_LITERAL_CSTRING(compressorName, "compress");
+  constexpr auto compressorName = "compress"_ns;
 
   rv = aConnection.CreateFunction(compressorName, 1, compressor);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2104,7 +2099,7 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
 
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom11_0To12_0", DOM);
 
-  NS_NAMED_LITERAL_CSTRING(encoderName, "encode");
+  constexpr auto encoderName = "encode"_ns;
 
   nsCOMPtr<mozIStorageFunction> encoder = new EncodeKeysFunction();
 
@@ -2748,7 +2743,7 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgrade(
   // Register the |upgrade_key| function.
   RefPtr<UpgradeKeyFunction> updateFunction = new UpgradeKeyFunction();
 
-  NS_NAMED_LITERAL_CSTRING(upgradeKeyFunctionName, "upgrade_key");
+  constexpr auto upgradeKeyFunctionName = "upgrade_key"_ns;
 
   nsresult rv =
       aConnection.CreateFunction(upgradeKeyFunctionName, 1, updateFunction);
@@ -2760,7 +2755,7 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgrade(
   RefPtr<InsertIndexDataValuesFunction> insertIDVFunction =
       new InsertIndexDataValuesFunction();
 
-  NS_NAMED_LITERAL_CSTRING(insertIDVFunctionName, "insert_idv");
+  constexpr auto insertIDVFunctionName = "insert_idv"_ns;
 
   rv = aConnection.CreateFunction(insertIDVFunctionName, 4, insertIDVFunction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3384,7 +3379,7 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
     return rv;
   }
 
-  NS_NAMED_LITERAL_CSTRING(functionName, "upgrade");
+  constexpr auto functionName = "upgrade"_ns;
 
   rv = aConnection.CreateFunction(functionName, 2, function);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3587,7 +3582,7 @@ nsresult UpgradeSchemaFrom20_0To21_0(mozIStorageConnection& aConnection) {
   RefPtr<UpgradeIndexDataValuesFunction> function =
       new UpgradeIndexDataValuesFunction();
 
-  NS_NAMED_LITERAL_CSTRING(functionName, "upgrade_idv");
+  constexpr auto functionName = "upgrade_idv"_ns;
 
   nsresult rv = aConnection.CreateFunction(functionName, 1, function);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3746,7 +3741,7 @@ nsresult UpgradeSchemaFrom25_0To26_0(mozIStorageConnection& aConnection) {
 
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom25_0To26_0", DOM);
 
-  NS_NAMED_LITERAL_CSTRING(functionName, "strip_obsolete_attributes");
+  constexpr auto functionName = "strip_obsolete_attributes"_ns;
 
   nsCOMPtr<mozIStorageFunction> stripObsoleteAttributes =
       new StripObsoleteOriginAttributesFunction();
@@ -3836,7 +3831,7 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
 nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  static constexpr auto kBuiltInPragmas = NS_LITERAL_CSTRING(
+  static constexpr auto kBuiltInPragmas =
       // We use foreign keys in DEBUG builds only because there is a performance
       // cost to using them.
       "PRAGMA foreign_keys = "
@@ -3856,7 +3851,7 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
 
       // We aggressively truncate the database file when idle so don't bother
       // overwriting the WAL with 0 during active periods.
-      "PRAGMA secure_delete = OFF;");
+      "PRAGMA secure_delete = OFF;"_ns;
 
   nsresult rv = aConnection.ExecuteSimpleSQL(kBuiltInPragmas);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3897,8 +3892,8 @@ nsresult SetJournalMode(mozIStorageConnection& aConnection) {
 
   // Try enabling WAL mode. This can fail in various circumstances so we have to
   // check the results here.
-  NS_NAMED_LITERAL_CSTRING(journalModeQueryStart, "PRAGMA journal_mode = ");
-  NS_NAMED_LITERAL_CSTRING(journalModeWAL, "wal");
+  constexpr auto journalModeQueryStart = "PRAGMA journal_mode = "_ns;
+  constexpr auto journalModeWAL = "wal"_ns;
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection.CreateStatement(
@@ -9743,7 +9738,7 @@ uint32_t TelemetryIdForFile(nsIFile* aFile) {
   nsString persistence;
   MOZ_ALWAYS_SUCCEEDS(persistenceDirectory->GetLeafName(persistence));
 
-  NS_NAMED_LITERAL_STRING(separator, "*");
+  constexpr auto separator = u"*"_ns;
 
   uint32_t hashValue =
       HashString(persistence + separator + origin + separator + filename);
@@ -19095,8 +19090,8 @@ nsAutoCString DatabaseOperationBase::GetBindingClauseForKeyRange(
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(!aKeyColumnName.IsEmpty());
 
-  NS_NAMED_LITERAL_CSTRING(andStr, " AND ");
-  NS_NAMED_LITERAL_CSTRING(spacecolon, " :");
+  constexpr auto andStr = " AND "_ns;
+  constexpr auto spacecolon = " :"_ns;
 
   nsAutoCString result;
   if (aKeyRange.isOnly()) {
@@ -23756,7 +23751,7 @@ nsresult CreateIndexOp::InsertDataFromObjectStore(
   RefPtr<UpdateIndexDataValuesFunction> updateFunction =
       new UpdateIndexDataValuesFunction(this, aConnection);
 
-  NS_NAMED_LITERAL_CSTRING(updateFunctionName, "update_index_data_values");
+  constexpr auto updateFunctionName = "update_index_data_values"_ns;
 
   nsresult rv =
       storageConnection.CreateFunction(updateFunctionName, 4, updateFunction);

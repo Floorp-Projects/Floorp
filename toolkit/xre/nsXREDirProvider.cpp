@@ -294,15 +294,15 @@ static nsresult GetSystemParentDirectory(nsIFile** aFile) {
     rv = localDir->AppendNative("Mozilla"_ns);
   }
 #  else
-  NS_NAMED_LITERAL_CSTRING(dirname,
+  constexpr auto dirname =
 #    ifdef HAVE_USR_LIB64_DIR
-                           "/usr/lib64/mozilla"
+      "/usr/lib64/mozilla"_ns
 #    elif defined(__OpenBSD__) || defined(__FreeBSD__)
-                           "/usr/local/lib/mozilla"
+      "/usr/local/lib/mozilla"_ns
 #    else
-                           "/usr/lib/mozilla"
+      "/usr/lib/mozilla"_ns
 #    endif
-  );
+      ;
   rv = NS_NewNativeLocalFile(dirname, false, getter_AddRefs(localDir));
 #  endif
 
@@ -1518,13 +1518,13 @@ nsresult nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile) {
 
   rv = GetSystemParentDirectory(getter_AddRefs(localDir));
   if (NS_SUCCEEDED(rv)) {
-    NS_NAMED_LITERAL_CSTRING(sExtensions,
+    constexpr auto sExtensions =
 #  if defined(XP_MACOSX)
-                             "Extensions"
+        "Extensions"_ns
 #  else
-                             "extensions"
+        "extensions"_ns
 #  endif
-    );
+        ;
 
     rv = localDir->AppendNative(sExtensions);
     if (NS_SUCCEEDED(rv)) {

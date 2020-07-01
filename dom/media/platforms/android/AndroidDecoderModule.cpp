@@ -34,10 +34,10 @@ mozilla::LazyLogModule sAndroidDecoderModuleLog("AndroidDecoderModule");
 
 const nsCString TranslateMimeType(const nsACString& aMimeType) {
   if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8)) {
-    static NS_NAMED_LITERAL_CSTRING(vp8, "video/x-vnd.on2.vp8");
+    static constexpr auto vp8 = "video/x-vnd.on2.vp8"_ns;
     return vp8;
   } else if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9)) {
-    static NS_NAMED_LITERAL_CSTRING(vp9, "video/x-vnd.on2.vp9");
+    static constexpr auto vp9 = "video/x-vnd.on2.vp9"_ns;
     return vp9;
   }
   return nsCString(aMimeType);

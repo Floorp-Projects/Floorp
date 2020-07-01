@@ -54,11 +54,11 @@ namespace net {
 
 static StaticRefPtr<CookieService> gCookieService;
 
-constexpr auto CONSOLE_SAMESITE_CATEGORY = NS_LITERAL_CSTRING("cookieSameSite");
-constexpr auto CONSOLE_OVERSIZE_CATEGORY =
-    NS_LITERAL_CSTRING("cookiesOversize");
-constexpr auto SAMESITE_MDN_URL = NS_LITERAL_STRING(
-    "https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite");
+constexpr auto CONSOLE_SAMESITE_CATEGORY = "cookieSameSite"_ns;
+constexpr auto CONSOLE_OVERSIZE_CATEGORY = "cookiesOversize"_ns;
+constexpr auto SAMESITE_MDN_URL =
+    "https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/"
+    u"SameSite"_ns;
 
 namespace {
 

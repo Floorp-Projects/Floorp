@@ -220,7 +220,7 @@ nsXMLContentSerializer::AppendCDATASection(nsIContent* aCDATASection,
 
   nsresult rv;
 
-  NS_NAMED_LITERAL_STRING(cdata, "<![CDATA[");
+  constexpr auto cdata = u"<![CDATA["_ns;
 
   if (mDoRaw || PreLevel() > 0) {
     NS_ENSURE_TRUE(AppendToString(cdata, *mOutput), NS_ERROR_OUT_OF_MEMORY);
@@ -316,7 +316,7 @@ nsXMLContentSerializer::AppendComment(Comment* aComment, int32_t aStartOffset,
 
   NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(*mOutput), NS_ERROR_OUT_OF_MEMORY);
 
-  NS_NAMED_LITERAL_STRING(startComment, "<!--");
+  constexpr auto startComment = u"<!--"_ns;
 
   if (mDoRaw || PreLevel() > 0) {
     NS_ENSURE_TRUE(AppendToString(startComment, *mOutput),
@@ -1090,7 +1090,7 @@ nsXMLContentSerializer::AppendDocumentStart(Document* aDocument) {
   if (version.IsEmpty())
     return NS_OK;  // A declaration must have version, or there is no decl
 
-  NS_NAMED_LITERAL_STRING(endQuote, "\"");
+  constexpr auto endQuote = u"\""_ns;
 
   *mOutput += u"<?xml version=\""_ns + version + endQuote;
 

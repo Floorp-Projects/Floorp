@@ -255,7 +255,7 @@ bool PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
   mAsyncRenderSupport = info.fSupportsAsyncRender;
 #endif
 #if defined(MOZ_X11)
-  NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
+  constexpr auto flash10Head = "Shockwave Flash 10."_ns;
   if (StringBeginsWith(nsDependentCString(info.fDescription), flash10Head)) {
     AddQuirk(QUIRK_FLASH_EXPOSE_COORD_TRANSLATION);
   }

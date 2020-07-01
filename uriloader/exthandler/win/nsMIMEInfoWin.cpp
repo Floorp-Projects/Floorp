@@ -482,7 +482,7 @@ bool nsMIMEInfoWin::GetDllLaunchInfo(nsIFile* aDll, nsIFile* aFile,
     // C:\Windows\System32\rundll32.exe "C:\Program Files\Windows
     // Photo Gallery\PhotoViewer.dll", ImageView_Fullscreen %1
     nsAutoString params;
-    NS_NAMED_LITERAL_STRING(rundllSegment, "rundll32.exe ");
+    constexpr auto rundllSegment = u"rundll32.exe "_ns;
     int32_t index = appFilesystemCommand.Find(rundllSegment);
     if (index > kNotFound) {
       params.Append(
@@ -492,7 +492,7 @@ bool nsMIMEInfoWin::GetDllLaunchInfo(nsIFile* aDll, nsIFile* aFile,
     }
 
     // check to make sure we have a %1 and fill it
-    NS_NAMED_LITERAL_STRING(percentOneParam, "%1");
+    constexpr auto percentOneParam = u"%1"_ns;
     index = params.Find(percentOneParam);
     if (index == kNotFound)  // no parameter
       return false;

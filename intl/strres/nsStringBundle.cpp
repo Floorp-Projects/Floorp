@@ -384,11 +384,10 @@ nsStringBundleBase::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   path.AppendLiteral(")");
 
-  NS_NAMED_LITERAL_CSTRING(
-      desc,
+  constexpr auto desc =
       "A StringBundle instance representing the data in a (probably "
       "localized) .properties file. Data may be shared between "
-      "processes.");
+      "processes."_ns;
 
   aHandleReport->Callback(EmptyCString(), path, KIND_HEAP, UNITS_BYTES,
                           heapSize, desc, aData);
