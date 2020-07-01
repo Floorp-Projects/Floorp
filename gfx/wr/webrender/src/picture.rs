@@ -4397,7 +4397,31 @@ impl PrimitiveList {
             .intersection(&prim_rect)
             .unwrap_or_else(LayoutRect::zero);
 
-        let instance_index = self.prim_instances.len();
+
+        // Primitive lengths aren't evenly distributed among primitive lists:
+        // We often have a large amount of single primitive lists, a
+        // few below 20~30 primitives, and even fewer lists (maybe a couple)
+        // in the multiple hundreds with nothing in between.
+        // We can see in profiles that reallocating vectors while pushing
+        // primitives is taking a large amount of the total scene build time,
+        // so we take advantage of what we know about the length distributions
+        // to go for an adapted vector growth pattern that avoids over-allocating
+        // for the many small allocations while avoiding a lot of reallocation by
+        // quickly converging to the common sizes.
+        // Rust's default vector growth strategy (when pushing elements one by one)
+        // is to double the capacity every time.
+        let prims_len = self.prim_instances.len();
+        if prims_len == self.prim_instances.capacity() {
+            let next_alloc = match prims_len {
+                1 ..= 31 => 32 - prims_len,
+                32 ..= 256 => 512 - prims_len,
+                _ => prims_len * 2,
+            };
+
+            self.prim_instances.reserve(next_alloc);
+        }
+
+        let instance_index = prims_len;
         self.prim_instances.push(prim_instance);
 
         if let Some(cluster) = self.clusters.last_mut() {
@@ -4405,6 +4429,18 @@ impl PrimitiveList {
                 cluster.add_instance(&culling_rect, instance_index);
                 return;
             }
+        }
+
+        // Same idea with clusters, using a different distribution.
+        let clusters_len = self.clusters.len();
+        if clusters_len == self.clusters.capacity() {
+            let next_alloc = match clusters_len {
+                1 ..= 15 => 16 - clusters_len,
+                16 ..= 127 => 128 - clusters_len,
+                _ => clusters_len * 2,
+            };
+
+            self.clusters.reserve(next_alloc);
         }
 
         let mut cluster = PrimitiveCluster::new(
