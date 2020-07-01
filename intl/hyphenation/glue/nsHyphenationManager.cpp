@@ -228,7 +228,7 @@ void nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType) {
     return;
   }
 
-  RefPtr<nsZipArchive> zip = Omnijar::GetReader(aType);
+  RefPtr<CacheAwareZipReader> zip = Omnijar::GetReader(aType);
   if (!zip) {
     return;
   }
