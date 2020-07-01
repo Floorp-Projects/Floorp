@@ -4,8 +4,6 @@
 
 package mozilla.components.service.fxa.manager
 
-import mozilla.components.concept.sync.AuthException
-import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.support.test.mock
@@ -29,7 +27,7 @@ class FxaStateMatrixTest {
         assertNull(FxaStateMatrix.nextState(state, Event.FailedToFetchProfile))
         assertNull(FxaStateMatrix.nextState(state, Event.FailedToAuthenticate))
         assertNull(FxaStateMatrix.nextState(state, Event.Logout))
-        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
+        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError("test")))
         assertNull(FxaStateMatrix.nextState(state, Event.SignInShareableAccount(mock(), false)))
         assertNull(FxaStateMatrix.nextState(state, Event.SignedInShareableAccount(false)))
         assertEquals(AccountState.CanAutoRetryAuthenticationViaTokenReuse, FxaStateMatrix.nextState(state, Event.InFlightReuseMigration))
@@ -51,7 +49,7 @@ class FxaStateMatrixTest {
         assertNull(FxaStateMatrix.nextState(state, Event.FailedToFetchProfile))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.FailedToAuthenticate))
         assertNull(FxaStateMatrix.nextState(state, Event.Logout))
-        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
+        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError("test")))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.SignInShareableAccount(mock(), false)))
         assertEquals(AccountState.AuthenticatedNoProfile, FxaStateMatrix.nextState(state, Event.SignedInShareableAccount(false)))
         assertNull(FxaStateMatrix.nextState(state, Event.InFlightReuseMigration))
@@ -72,7 +70,7 @@ class FxaStateMatrixTest {
         assertEquals(AccountState.AuthenticatedNoProfile, FxaStateMatrix.nextState(state, Event.FailedToFetchProfile))
         assertNull(FxaStateMatrix.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.Logout))
-        assertEquals(AccountState.AuthenticationProblem, FxaStateMatrix.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
+        assertEquals(AccountState.AuthenticationProblem, FxaStateMatrix.nextState(state, Event.AuthenticationError("test")))
         assertNull(FxaStateMatrix.nextState(state, Event.SignInShareableAccount(mock(), false)))
         assertNull(FxaStateMatrix.nextState(state, Event.SignedInShareableAccount(false)))
         assertNull(FxaStateMatrix.nextState(state, Event.InFlightReuseMigration))
@@ -93,7 +91,7 @@ class FxaStateMatrixTest {
         assertNull(FxaStateMatrix.nextState(state, Event.FailedToFetchProfile))
         assertNull(FxaStateMatrix.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.Logout))
-        assertEquals(AccountState.AuthenticationProblem, FxaStateMatrix.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
+        assertEquals(AccountState.AuthenticationProblem, FxaStateMatrix.nextState(state, Event.AuthenticationError("test")))
         assertNull(FxaStateMatrix.nextState(state, Event.SignInShareableAccount(mock(), false)))
         assertNull(FxaStateMatrix.nextState(state, Event.SignedInShareableAccount(false)))
         assertNull(FxaStateMatrix.nextState(state, Event.InFlightReuseMigration))
@@ -114,7 +112,7 @@ class FxaStateMatrixTest {
         assertNull(FxaStateMatrix.nextState(state, Event.FailedToFetchProfile))
         assertEquals(AccountState.AuthenticationProblem, FxaStateMatrix.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.Logout))
-        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
+        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError("test")))
         assertNull(FxaStateMatrix.nextState(state, Event.SignInShareableAccount(mock(), false)))
         assertNull(FxaStateMatrix.nextState(state, Event.SignedInShareableAccount(false)))
         assertNull(FxaStateMatrix.nextState(state, Event.InFlightReuseMigration))
@@ -135,7 +133,7 @@ class FxaStateMatrixTest {
         assertNull(FxaStateMatrix.nextState(state, Event.FailedToFetchProfile))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.Logout))
-        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
+        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError("test")))
         assertNull(FxaStateMatrix.nextState(state, Event.SignInShareableAccount(mock(), false)))
         assertEquals(AccountState.AuthenticatedNoProfile, FxaStateMatrix.nextState(state, Event.SignedInShareableAccount(false)))
         assertNull(FxaStateMatrix.nextState(state, Event.InFlightReuseMigration))
@@ -156,7 +154,7 @@ class FxaStateMatrixTest {
         assertNull(FxaStateMatrix.nextState(state, Event.FailedToFetchProfile))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaStateMatrix.nextState(state, Event.Logout))
-        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
+        assertNull(FxaStateMatrix.nextState(state, Event.AuthenticationError("test")))
         assertNull(FxaStateMatrix.nextState(state, Event.SignInShareableAccount(mock(), false)))
         assertEquals(AccountState.AuthenticatedNoProfile, FxaStateMatrix.nextState(state, Event.SignedInShareableAccount(false)))
         assertNull(FxaStateMatrix.nextState(state, Event.InFlightReuseMigration))

@@ -448,7 +448,7 @@ class WorkManagerSyncWorker(
             // Failure cases.
             SyncServiceStatus.AUTH_ERROR -> {
                 logger.error("Auth error")
-                GlobalAccountManager.authError()
+                GlobalAccountManager.authError("RustSyncManager.sync")
                 Result.failure()
             }
             SyncServiceStatus.SERVICE_ERROR -> {

@@ -36,7 +36,7 @@ suspend fun <T> handleFxaExceptions(
         when (e) {
             is FxaUnauthorizedException -> {
                 logger.warn("Auth error while running: $operation")
-                GlobalAccountManager.authError(e)
+                GlobalAccountManager.authError(operation)
                 postHandleAuthErrorBlock(e)
             }
             else -> {

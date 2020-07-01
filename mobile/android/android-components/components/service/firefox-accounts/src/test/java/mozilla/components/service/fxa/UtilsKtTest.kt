@@ -7,13 +7,14 @@ package mozilla.components.service.fxa
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.GlobalAccountManager
-import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -54,11 +55,7 @@ class UtilsKtTest {
             fail()
         }))
 
-        val captor = argumentCaptor<FxaException>()
-        verify(accountManager).encounteredAuthError(captor.capture())
-
-        assertEquals("auth!", captor.value.message)
-        assertTrue(captor.value is FxaUnauthorizedException)
+        verify(accountManager).encounteredAuthError(eq("test op"), anyInt())
 
         reset(accountManager)
         assertEquals("pass!", handleFxaExceptions(mock(), "test op", {
@@ -104,11 +101,7 @@ class UtilsKtTest {
             throw FxaUnauthorizedException("401")
         })
 
-        val captor = argumentCaptor<FxaException>()
-        verify(accountManager).encounteredAuthError(captor.capture())
-
-        assertEquals("401", captor.value.message)
-        assertTrue(captor.value is FxaUnauthorizedException)
+        verify(accountManager).encounteredAuthError("test op")
 
         reset(accountManager)
 
@@ -161,11 +154,7 @@ class UtilsKtTest {
             throw FxaUnauthorizedException("401")
         })
 
-        val captor = argumentCaptor<FxaException>()
-        verify(accountManager).encounteredAuthError(captor.capture())
-
-        assertEquals("401", captor.value.message)
-        assertTrue(captor.value is FxaUnauthorizedException)
+        verify(accountManager).encounteredAuthError(eq("test op"), anyInt())
 
         reset(accountManager)
 
