@@ -6811,6 +6811,11 @@ NS_IMETHODIMP ContentParent::GetChildID(uint64_t* aOut) {
   return NS_OK;
 }
 
+NS_IMETHODIMP ContentParent::GetOsPid(int32_t* aOut) {
+  *aOut = Pid();
+  return NS_OK;
+}
+
 IPCResult ContentParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
                                         const ClonedMessageData& aData,
                                         const ClonedMessageData& aStack) {
