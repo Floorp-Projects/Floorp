@@ -65,6 +65,9 @@ permalink: /changelog/
   * `WebNotificationFeature` checks the site permissions first before showing a notification.
   * Notifications with a long text body are now expandable to show the full text.
 
+* **concept-engine**
+  * Adds `profiler` property with `isProfilerActive`, `getProfilerTime` and `addMarker` Firefox Profiler APIs. These will allow to add profiler markers.
+
 # 47.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v46.0.0...v47.0.0)

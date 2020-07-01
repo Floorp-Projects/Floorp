@@ -27,6 +27,7 @@ import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
+import mozilla.components.concept.engine.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
@@ -495,6 +496,11 @@ class GeckoEngine(
             GeckoResult<Void>()
         })
     }
+
+    /**
+     * See [Engine.profiler].
+     */
+    override val profiler: Profiler? = null
 
     override fun name(): String = "Gecko"
 
