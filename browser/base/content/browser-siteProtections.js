@@ -813,7 +813,7 @@ var ThirdPartyCookies = {
     for (let perm of Services.perms.all) {
       if (
         perm.type == "cookie" &&
-        Services.eTLD.hasRootDomain(host, perm.principal.host)
+        Services.eTLD.hasRootDomain(host, perm.principal.URI.host)
       ) {
         Services.perms.removePermission(perm);
       }

@@ -51,7 +51,7 @@ add_task(async function test_toplevel_frame_permission() {
         browser
       );
       is(
-        notification.options.principal.host,
+        notification.options.principal.URI.host,
         "example.com",
         "Should use top host for permission prompt!"
       );
