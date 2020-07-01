@@ -760,39 +760,39 @@ extern nsresult TX_ConstructEXSLTFunction(nsAtom* aName, int32_t aNamespaceID,
 }
 
 extern bool TX_InitEXSLTFunction() {
-#define EXSLT_FUNCS(NS, CLASS, ...)                                           \
-  {                                                                           \
-    int32_t nsid = txNamespaceManager::getNamespaceID(NS_LITERAL_STRING(NS)); \
-    if (nsid == kNameSpaceID_Unknown) {                                       \
-      return false;                                                           \
-    }                                                                         \
-    MOZ_FOR_EACH(EXSLT_FUNC, (nsid, CLASS, ), (__VA_ARGS__))                  \
+#define EXSLT_FUNCS(NS, CLASS, ...)                                         \
+  {                                                                         \
+    int32_t nsid = txNamespaceManager::getNamespaceID(nsLiteralString(NS)); \
+    if (nsid == kNameSpaceID_Unknown) {                                     \
+      return false;                                                         \
+    }                                                                       \
+    MOZ_FOR_EACH(EXSLT_FUNC, (nsid, CLASS, ), (__VA_ARGS__))                \
   }
 
 #define EXSLT_FUNC(NS, CLASS, ...)                      \
   descriptTable[txEXSLTType::MOZ_ARG_1 __VA_ARGS__] = { \
       MOZ_ARGS_AFTER_1 __VA_ARGS__, CLASS::Create, NS};
 
-  EXSLT_FUNCS("http://exslt.org/common", txEXSLTFunctionCall,
+  EXSLT_FUNCS(u"http://exslt.org/common", txEXSLTFunctionCall,
               (NODE_SET, 1, 1, Expr::NODESET_RESULT, nsGkAtoms::nodeSet),
               (OBJECT_TYPE, 1, 1, Expr::STRING_RESULT, nsGkAtoms::objectType))
 
-  EXSLT_FUNCS("http://exslt.org/dates-and-times", txEXSLTFunctionCall,
+  EXSLT_FUNCS(u"http://exslt.org/dates-and-times", txEXSLTFunctionCall,
               (DATE_TIME, 0, 0, Expr::STRING_RESULT, nsGkAtoms::dateTime))
 
-  EXSLT_FUNCS("http://exslt.org/math", txEXSLTFunctionCall,
+  EXSLT_FUNCS(u"http://exslt.org/math", txEXSLTFunctionCall,
               (MAX, 1, 1, Expr::NUMBER_RESULT, nsGkAtoms::max),
               (MIN, 1, 1, Expr::NUMBER_RESULT, nsGkAtoms::min),
               (HIGHEST, 1, 1, Expr::NODESET_RESULT, nsGkAtoms::highest),
               (LOWEST, 1, 1, Expr::NODESET_RESULT, nsGkAtoms::lowest))
 
-  EXSLT_FUNCS("http://exslt.org/regular-expressions", txEXSLTRegExFunctionCall,
+  EXSLT_FUNCS(u"http://exslt.org/regular-expressions", txEXSLTRegExFunctionCall,
               (MATCH, 2, 3, Expr::NODESET_RESULT, nsGkAtoms::match),
               (REPLACE, 4, 4, Expr::STRING_RESULT, nsGkAtoms::replace),
               (TEST, 2, 3, Expr::BOOLEAN_RESULT, nsGkAtoms::test))
 
   EXSLT_FUNCS(
-      "http://exslt.org/sets", txEXSLTFunctionCall,
+      u"http://exslt.org/sets", txEXSLTFunctionCall,
       (DIFFERENCE_, 2, 2, Expr::NODESET_RESULT, nsGkAtoms::difference),
       (DISTINCT, 1, 1, Expr::NODESET_RESULT, nsGkAtoms::distinct),
       (HAS_SAME_NODE, 2, 2, Expr::BOOLEAN_RESULT, nsGkAtoms::hasSameNode),
@@ -800,7 +800,7 @@ extern bool TX_InitEXSLTFunction() {
       (LEADING, 2, 2, Expr::NODESET_RESULT, nsGkAtoms::leading),
       (TRAILING, 2, 2, Expr::NODESET_RESULT, nsGkAtoms::trailing))
 
-  EXSLT_FUNCS("http://exslt.org/strings", txEXSLTFunctionCall,
+  EXSLT_FUNCS(u"http://exslt.org/strings", txEXSLTFunctionCall,
               (CONCAT, 1, 1, Expr::STRING_RESULT, nsGkAtoms::concat),
               (SPLIT, 1, 2, Expr::STRING_RESULT, nsGkAtoms::split),
               (TOKENIZE, 1, 2, Expr::STRING_RESULT, nsGkAtoms::tokenize))

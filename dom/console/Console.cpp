@@ -980,24 +980,24 @@ void Console::ClearStorage() {
 #define METHOD(name, string)                                          \
   /* static */ void Console::name(const GlobalObject& aGlobal,        \
                                   const Sequence<JS::Value>& aData) { \
-    Method(aGlobal, Method##name, NS_LITERAL_STRING(string), aData);  \
+    Method(aGlobal, Method##name, nsLiteralString(string), aData);    \
   }
 
-METHOD(Log, "log")
-METHOD(Info, "info")
-METHOD(Warn, "warn")
-METHOD(Error, "error")
-METHOD(Exception, "exception")
-METHOD(Debug, "debug")
-METHOD(Table, "table")
-METHOD(Trace, "trace")
+METHOD(Log, u"log")
+METHOD(Info, u"info")
+METHOD(Warn, u"warn")
+METHOD(Error, u"error")
+METHOD(Exception, u"exception")
+METHOD(Debug, u"debug")
+METHOD(Table, u"table")
+METHOD(Trace, u"trace")
 
 // Displays an interactive listing of all the properties of an object.
-METHOD(Dir, "dir");
-METHOD(Dirxml, "dirxml");
+METHOD(Dir, u"dir");
+METHOD(Dirxml, u"dirxml");
 
-METHOD(Group, "group")
-METHOD(GroupCollapsed, "groupCollapsed")
+METHOD(Group, u"group")
+METHOD(GroupCollapsed, u"groupCollapsed")
 
 #undef METHOD
 

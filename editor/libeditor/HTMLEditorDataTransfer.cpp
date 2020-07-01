@@ -1193,7 +1193,7 @@ nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
   EditorDOMPoint pointToInsert(mPointToInsert);
   rv = MOZ_KnownLive(mHTMLEditor)
            ->DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
-                                     NS_LITERAL_STRING(kFileMime),
+                                     NS_LITERAL_STRING_FROM_CSTRING(kFileMime),
                                      sourceDocument, pointToInsert,
                                      mDoDeleteSelection, mIsSafe, false);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -1392,9 +1392,9 @@ nsresult HTMLEditor::InsertObject(const nsACString& aType, nsISupports* aObject,
 
     AutoPlaceholderBatch treatAsOneTransaction(*this);
     rv = DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
-                                 NS_LITERAL_STRING(kFileMime), aSourceDoc,
-                                 aPointToInsert, aDoDeleteSelection, aIsSafe,
-                                 false);
+                                 NS_LITERAL_STRING_FROM_CSTRING(kFileMime),
+                                 aSourceDoc, aPointToInsert, aDoDeleteSelection,
+                                 aIsSafe, false);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DoInsertHTMLWithContext() failed, but ignored");
@@ -1572,7 +1572,8 @@ nsresult HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
     return error.StealNSResult();
   }
 
-  bool hasPrivateHTMLFlavor = types->Contains(NS_LITERAL_STRING(kHTMLContext));
+  bool hasPrivateHTMLFlavor =
+      types->Contains(NS_LITERAL_STRING_FROM_CSTRING(kHTMLContext));
 
   bool isPlaintextEditor = IsPlaintextEditor();
   bool isSafe = IsSafeToInsertData(aSourceDoc);
@@ -1622,12 +1623,12 @@ nsresult HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
             // If we have our private HTML flavor, we will only use the fragment
             // from the CF_HTML. The rest comes from the clipboard.
             nsAutoString contextString, infoString;
+            GetStringFromDataTransfer(
+                aDataTransfer, NS_LITERAL_STRING_FROM_CSTRING(kHTMLContext),
+                aIndex, contextString);
             GetStringFromDataTransfer(aDataTransfer,
-                                      NS_LITERAL_STRING(kHTMLContext), aIndex,
-                                      contextString);
-            GetStringFromDataTransfer(aDataTransfer,
-                                      NS_LITERAL_STRING(kHTMLInfo), aIndex,
-                                      infoString);
+                                      NS_LITERAL_STRING_FROM_CSTRING(kHTMLInfo),
+                                      aIndex, infoString);
             nsresult rv = DoInsertHTMLWithContext(
                 cffragment, contextString, infoString, type, aSourceDoc,
                 aDroppedAt, aDoDeleteSelection, isSafe);
@@ -1647,9 +1648,10 @@ nsresult HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
         nsAutoString text, contextString, infoString;
         GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
         GetStringFromDataTransfer(aDataTransfer,
-                                  NS_LITERAL_STRING(kHTMLContext), aIndex,
-                                  contextString);
-        GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLInfo),
+                                  NS_LITERAL_STRING_FROM_CSTRING(kHTMLContext),
+                                  aIndex, contextString);
+        GetStringFromDataTransfer(aDataTransfer,
+                                  NS_LITERAL_STRING_FROM_CSTRING(kHTMLInfo),
                                   aIndex, infoString);
         if (type.EqualsLiteral(kHTMLMime)) {
           nsresult rv = DoInsertHTMLWithContext(text, contextString, infoString,

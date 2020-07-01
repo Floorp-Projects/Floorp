@@ -1464,7 +1464,8 @@ void DataTransfer::FillAllExternalData() {
 void DataTransfer::FillInExternalCustomTypes(uint32_t aIndex,
                                              nsIPrincipal* aPrincipal) {
   RefPtr<DataTransferItem> item = new DataTransferItem(
-      this, NS_LITERAL_STRING(kCustomTypesMime), DataTransferItem::KIND_STRING);
+      this, NS_LITERAL_STRING_FROM_CSTRING(kCustomTypesMime),
+      DataTransferItem::KIND_STRING);
   item->SetIndex(aIndex);
 
   nsCOMPtr<nsIVariant> variant = item->DataNoSecurityCheck();

@@ -33,8 +33,8 @@
 #define PREF_PRESENTATION_DEVICE_NAME "dom.presentation.device.name"
 
 #define SERVICE_TYPE "_presentation-ctrl._tcp"
-#define PROTOCOL_VERSION_TAG "version"
-#define CERT_FINGERPRINT_TAG "certFingerprint"
+#define PROTOCOL_VERSION_TAG u"version"
+#define CERT_FINGERPRINT_TAG u"certFingerprint"
 
 static mozilla::LazyLogModule sMulticastDNSProviderLogModule(
     "MulticastDNSDeviceProvider");
@@ -310,7 +310,7 @@ nsresult MulticastDNSDeviceProvider::RegisterMDNSService() {
   rv = mPresentationService->GetVersion(&version);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  rv = propBag->SetPropertyAsUint32(NS_LITERAL_STRING(PROTOCOL_VERSION_TAG),
+  rv = propBag->SetPropertyAsUint32(nsLiteralString(PROTOCOL_VERSION_TAG),
                                     version);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
@@ -319,7 +319,7 @@ nsresult MulticastDNSDeviceProvider::RegisterMDNSService() {
     rv = mPresentationService->GetCertFingerprint(certFingerprint);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    rv = propBag->SetPropertyAsACString(NS_LITERAL_STRING(CERT_FINGERPRINT_TAG),
+    rv = propBag->SetPropertyAsACString(nsLiteralString(CERT_FINGERPRINT_TAG),
                                         certFingerprint);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
@@ -384,7 +384,7 @@ bool MulticastDNSDeviceProvider::IsCompatibleServer(
 
   uint32_t remoteVersion;
   if (NS_WARN_IF(NS_FAILED(propBag->GetPropertyAsUint32(
-          NS_LITERAL_STRING(PROTOCOL_VERSION_TAG), &remoteVersion)))) {
+          nsLiteralString(PROTOCOL_VERSION_TAG), &remoteVersion)))) {
     return false;
   }
 
@@ -850,7 +850,7 @@ MulticastDNSDeviceProvider::OnServiceResolved(nsIDNSServiceInfo* aServiceInfo) {
 
   nsAutoCString certFingerprint;
   Unused << propBag->GetPropertyAsACString(
-      NS_LITERAL_STRING(CERT_FINGERPRINT_TAG), certFingerprint);
+      nsLiteralString(CERT_FINGERPRINT_TAG), certFingerprint);
 
   uint32_t index;
   if (FindDeviceById(host, index)) {

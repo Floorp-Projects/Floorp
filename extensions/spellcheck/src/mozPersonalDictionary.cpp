@@ -27,7 +27,7 @@
 #include "nsUnicharInputStream.h"
 #include "prio.h"
 
-#define MOZ_PERSONAL_DICT_NAME "persdict.dat"
+#define MOZ_PERSONAL_DICT_NAME u"persdict.dat"
 
 /**
  * This is the most braindead implementation of a personal dictionary possible.
@@ -211,7 +211,7 @@ nsresult mozPersonalDictionary::LoadInternal() {
     return NS_ERROR_FAILURE;
   }
 
-  rv = mFile->Append(NS_LITERAL_STRING(MOZ_PERSONAL_DICT_NAME));
+  rv = mFile->Append(nsLiteralString(MOZ_PERSONAL_DICT_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -339,7 +339,7 @@ NS_IMETHODIMP mozPersonalDictionary::Save() {
                                getter_AddRefs(theFile));
   if (NS_FAILED(res)) return res;
   if (!theFile) return NS_ERROR_FAILURE;
-  res = theFile->Append(NS_LITERAL_STRING(MOZ_PERSONAL_DICT_NAME));
+  res = theFile->Append(nsLiteralString(MOZ_PERSONAL_DICT_NAME));
   if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIEventTarget> target =

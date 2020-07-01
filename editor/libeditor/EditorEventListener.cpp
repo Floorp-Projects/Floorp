@@ -964,11 +964,12 @@ bool EditorEventListener::DragEventHasSupportingData(
   // Plaintext editors only support dropping text. Otherwise, HTML and files
   // can be dropped as well.
   DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
-  return dataTransfer->HasType(NS_LITERAL_STRING(kTextMime)) ||
-         dataTransfer->HasType(NS_LITERAL_STRING(kMozTextInternal)) ||
+  return dataTransfer->HasType(NS_LITERAL_STRING_FROM_CSTRING(kTextMime)) ||
+         dataTransfer->HasType(
+             NS_LITERAL_STRING_FROM_CSTRING(kMozTextInternal)) ||
          (!mEditorBase->IsPlaintextEditor() &&
-          (dataTransfer->HasType(NS_LITERAL_STRING(kHTMLMime)) ||
-           dataTransfer->HasType(NS_LITERAL_STRING(kFileMime))));
+          (dataTransfer->HasType(NS_LITERAL_STRING_FROM_CSTRING(kHTMLMime)) ||
+           dataTransfer->HasType(NS_LITERAL_STRING_FROM_CSTRING(kFileMime))));
 }
 
 bool EditorEventListener::CanInsertAtDropPosition(DragEvent* aDragEvent) {

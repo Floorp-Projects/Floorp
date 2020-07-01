@@ -299,8 +299,9 @@ void PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent) {
 bool PreallocatedProcessManagerImpl::CanAllocate() {
   return mEnabled && sNumBlockers == 0 &&
          mPreallocatedProcesses.size() < mNumberPreallocs && !sShutdown &&
-         (FissionAutostart() || !ContentParent::IsMaxProcessCountReached(
-                                    NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE)));
+         (FissionAutostart() ||
+          !ContentParent::IsMaxProcessCountReached(
+              NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE)));
 }
 
 void PreallocatedProcessManagerImpl::AllocateAfterDelay() {

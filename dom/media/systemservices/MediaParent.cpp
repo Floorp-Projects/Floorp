@@ -30,7 +30,7 @@ mozilla::LazyLogModule gMediaParentLog("MediaParent");
 // A file in the profile dir is used to persist mOriginKeys used to anonymize
 // deviceIds to be unique per origin, to avoid them being supercookies.
 
-#define ORIGINKEYS_FILE "enumerate_devices.txt"
+#define ORIGINKEYS_FILE u"enumerate_devices.txt"
 #define ORIGINKEYS_VERSION "1"
 
 namespace mozilla {
@@ -181,7 +181,7 @@ class OriginKeyStore : public nsISupports {
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
       }
-      file->Append(NS_LITERAL_STRING(ORIGINKEYS_FILE));
+      file->Append(nsLiteralString(ORIGINKEYS_FILE));
       return file.forget();
     }
 

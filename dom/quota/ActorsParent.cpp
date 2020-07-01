@@ -195,23 +195,23 @@ constexpr auto kTemporaryOriginTelemetryKey =
 constexpr auto kStorageName = NS_LITERAL_STRING("storage");
 constexpr auto kSQLiteSuffix = NS_LITERAL_STRING(".sqlite");
 
-#define INDEXEDDB_DIRECTORY_NAME "indexedDB"
-#define PERSISTENT_DIRECTORY_NAME "persistent"
-#define PERMANENT_DIRECTORY_NAME "permanent"
-#define TEMPORARY_DIRECTORY_NAME "temporary"
-#define DEFAULT_DIRECTORY_NAME "default"
+#define INDEXEDDB_DIRECTORY_NAME u"indexedDB"
+#define PERSISTENT_DIRECTORY_NAME u"persistent"
+#define PERMANENT_DIRECTORY_NAME u"permanent"
+#define TEMPORARY_DIRECTORY_NAME u"temporary"
+#define DEFAULT_DIRECTORY_NAME u"default"
 
 // The name of the file that we use to load/save the last access time of an
 // origin.
 // XXX We should get rid of old metadata files at some point, bug 1343576.
-#define METADATA_FILE_NAME ".metadata"
-#define METADATA_TMP_FILE_NAME ".metadata-tmp"
-#define METADATA_V2_FILE_NAME ".metadata-v2"
-#define METADATA_V2_TMP_FILE_NAME ".metadata-v2-tmp"
+#define METADATA_FILE_NAME u".metadata"
+#define METADATA_TMP_FILE_NAME u".metadata-tmp"
+#define METADATA_V2_FILE_NAME u".metadata-v2"
+#define METADATA_V2_TMP_FILE_NAME u".metadata-v2-tmp"
 
-#define WEB_APPS_STORE_FILE_NAME "webappsstore.sqlite"
-#define LS_ARCHIVE_FILE_NAME "ls-archive.sqlite"
-#define LS_ARCHIVE_TMP_FILE_NAME "ls-archive-tmp.sqlite"
+#define WEB_APPS_STORE_FILE_NAME u"webappsstore.sqlite"
+#define LS_ARCHIVE_FILE_NAME u"ls-archive.sqlite"
+#define LS_ARCHIVE_TMP_FILE_NAME u"ls-archive-tmp.sqlite"
 
 const uint32_t kLocalStorageArchiveVersion = 4;
 
@@ -510,7 +510,7 @@ nsresult GetLocalStorageArchiveFile(const nsAString& aDirectoryPath,
 
   nsCOMPtr<nsIFile> lsArchiveFile = lsArchiveFileOrErr.unwrap();
 
-  nsresult rv = lsArchiveFile->Append(NS_LITERAL_STRING(LS_ARCHIVE_FILE_NAME));
+  nsresult rv = lsArchiveFile->Append(nsLiteralString(LS_ARCHIVE_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -533,7 +533,7 @@ nsresult GetLocalStorageArchiveTmpFile(const nsAString& aDirectoryPath,
   nsCOMPtr<nsIFile> lsArchiveTmpFile = lsArchiveTempFileOrErr.unwrap();
 
   nsresult rv =
-      lsArchiveTmpFile->Append(NS_LITERAL_STRING(LS_ARCHIVE_TMP_FILE_NAME));
+      lsArchiveTmpFile->Append(nsLiteralString(LS_ARCHIVE_TMP_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2550,7 +2550,7 @@ nsresult CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
     return rv;
   }
 
-  rv = file->Append(NS_LITERAL_STRING(METADATA_TMP_FILE_NAME));
+  rv = file->Append(nsLiteralString(METADATA_TMP_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2594,7 +2594,7 @@ nsresult CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
     return rv;
   }
 
-  rv = file->RenameTo(nullptr, NS_LITERAL_STRING(METADATA_FILE_NAME));
+  rv = file->RenameTo(nullptr, nsLiteralString(METADATA_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2615,7 +2615,7 @@ nsresult CreateDirectoryMetadata2(nsIFile* aDirectory, int64_t aTimestamp,
     return rv;
   }
 
-  rv = file->Append(NS_LITERAL_STRING(METADATA_V2_TMP_FILE_NAME));
+  rv = file->Append(nsLiteralString(METADATA_V2_TMP_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2684,7 +2684,7 @@ nsresult CreateDirectoryMetadata2(nsIFile* aDirectory, int64_t aTimestamp,
     return rv;
   }
 
-  rv = file->RenameTo(nullptr, NS_LITERAL_STRING(METADATA_V2_FILE_NAME));
+  rv = file->RenameTo(nullptr, nsLiteralString(METADATA_V2_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3984,7 +3984,7 @@ nsresult QuotaManager::Init() {
   nsCOMPtr<nsIFile> baseDir = baseDirOrErr.unwrap();
 
   nsresult rv = CloneStoragePath(
-      baseDir, NS_LITERAL_STRING(INDEXEDDB_DIRECTORY_NAME), mIndexedDBPath);
+      baseDir, nsLiteralString(INDEXEDDB_DIRECTORY_NAME), mIndexedDBPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3999,19 +3999,19 @@ nsresult QuotaManager::Init() {
     return rv;
   }
 
-  rv = CloneStoragePath(baseDir, NS_LITERAL_STRING(PERMANENT_DIRECTORY_NAME),
+  rv = CloneStoragePath(baseDir, nsLiteralString(PERMANENT_DIRECTORY_NAME),
                         mPermanentStoragePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = CloneStoragePath(baseDir, NS_LITERAL_STRING(TEMPORARY_DIRECTORY_NAME),
+  rv = CloneStoragePath(baseDir, nsLiteralString(TEMPORARY_DIRECTORY_NAME),
                         mTemporaryStoragePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = CloneStoragePath(baseDir, NS_LITERAL_STRING(DEFAULT_DIRECTORY_NAME),
+  rv = CloneStoragePath(baseDir, nsLiteralString(DEFAULT_DIRECTORY_NAME),
                         mDefaultStoragePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4939,7 +4939,7 @@ nsresult QuotaManager::GetDirectoryMetadata2(
 
   nsCOMPtr<nsIBinaryInputStream> binaryStream;
   nsresult rv =
-      GetBinaryInputStream(aDirectory, NS_LITERAL_STRING(METADATA_V2_FILE_NAME),
+      GetBinaryInputStream(aDirectory, nsLiteralString(METADATA_V2_FILE_NAME),
                            getter_AddRefs(binaryStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5053,7 +5053,7 @@ nsresult QuotaManager::GetDirectoryMetadata2(nsIFile* aDirectory,
 
   nsCOMPtr<nsIBinaryInputStream> binaryStream;
   nsresult rv =
-      GetBinaryInputStream(aDirectory, NS_LITERAL_STRING(METADATA_V2_FILE_NAME),
+      GetBinaryInputStream(aDirectory, nsLiteralString(METADATA_V2_FILE_NAME),
                            getter_AddRefs(binaryStream));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -5371,8 +5371,7 @@ QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
 
   nsCOMPtr<nsIFile> persistentStorageDir = persistentStorageDirOrErr.unwrap();
 
-  rv = persistentStorageDir->Append(
-      NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
+  rv = persistentStorageDir->Append(nsLiteralString(PERSISTENT_DIRECTORY_NAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
@@ -5401,7 +5400,7 @@ QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
   // is on different volume, but it should be rare enough that we don't have
   // to worry about it.
   rv = aIndexedDBDir->MoveTo(storageDir,
-                             NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
+                             nsLiteralString(PERSISTENT_DIRECTORY_NAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -5493,8 +5492,8 @@ QuotaManager::UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
   }
 
   // And finally rename persistent to default.
-  rv = aPersistentStorageDir->RenameTo(
-      nullptr, NS_LITERAL_STRING(DEFAULT_DIRECTORY_NAME));
+  rv = aPersistentStorageDir->RenameTo(nullptr,
+                                       nsLiteralString(DEFAULT_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5872,7 +5871,7 @@ nsresult QuotaManager::MaybeRemoveLocalStorageDirectories() {
       return rv;
     }
 
-    rv = lsDir->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
+    rv = lsDir->Append(NS_LITERAL_STRING_FROM_CSTRING(LS_DIRECTORY_NAME));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5951,7 +5950,7 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore(
 
   nsCOMPtr<nsIFile> webAppsStoreFile = webAppsStoreFileOrErr.unwrap();
 
-  rv = webAppsStoreFile->Append(NS_LITERAL_STRING(WEB_APPS_STORE_FILE_NAME));
+  rv = webAppsStoreFile->Append(nsLiteralString(WEB_APPS_STORE_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -6019,7 +6018,7 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore(
     nsCOMPtr<nsIFile> storageDir = storageDirOrErr.unwrap();
 
     rv = webAppsStoreFile->CopyTo(storageDir,
-                                  NS_LITERAL_STRING(LS_ARCHIVE_TMP_FILE_NAME));
+                                  nsLiteralString(LS_ARCHIVE_TMP_FILE_NAME));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6056,7 +6055,7 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore(
 
     // Finally, rename ls-archive-tmp.sqlite to ls-archive.sqlite
     rv = lsArchiveTmpFile->MoveTo(nullptr,
-                                  NS_LITERAL_STRING(LS_ARCHIVE_FILE_NAME));
+                                  nsLiteralString(LS_ARCHIVE_FILE_NAME));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6392,7 +6391,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     nsCOMPtr<nsIFile> persistentStorageDir = persistentStorageDirOrErr.unwrap();
 
     rv = persistentStorageDir->Append(
-        NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
+        nsLiteralString(PERSISTENT_DIRECTORY_NAME));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8516,7 +8515,7 @@ nsresult SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
     return rv;
   }
 
-  rv = file->Append(NS_LITERAL_STRING(METADATA_V2_FILE_NAME));
+  rv = file->Append(nsLiteralString(METADATA_V2_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10224,7 +10223,7 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
         return rv;
       }
 
-      rv = file->Append(NS_LITERAL_STRING(METADATA_V2_FILE_NAME));
+      rv = file->Append(nsLiteralString(METADATA_V2_FILE_NAME));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10498,7 +10497,7 @@ nsresult StorageOperationBase::GetDirectoryMetadata(nsIFile* aDirectory,
 
   nsCOMPtr<nsIBinaryInputStream> binaryStream;
   nsresult rv =
-      GetBinaryInputStream(aDirectory, NS_LITERAL_STRING(METADATA_FILE_NAME),
+      GetBinaryInputStream(aDirectory, nsLiteralString(METADATA_FILE_NAME),
                            getter_AddRefs(binaryStream));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -10543,7 +10542,7 @@ nsresult StorageOperationBase::GetDirectoryMetadata2(
 
   nsCOMPtr<nsIBinaryInputStream> binaryStream;
   nsresult rv =
-      GetBinaryInputStream(aDirectory, NS_LITERAL_STRING(METADATA_V2_FILE_NAME),
+      GetBinaryInputStream(aDirectory, nsLiteralString(METADATA_V2_FILE_NAME),
                            getter_AddRefs(binaryStream));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -11401,7 +11400,7 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
     return rv;
   }
 
-  rv = metadataFile->Append(NS_LITERAL_STRING(METADATA_FILE_NAME));
+  rv = metadataFile->Append(nsLiteralString(METADATA_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -11602,7 +11601,7 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
       return rv;
     }
 
-    rv = file->Append(NS_LITERAL_STRING(METADATA_FILE_NAME));
+    rv = file->Append(nsLiteralString(METADATA_FILE_NAME));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

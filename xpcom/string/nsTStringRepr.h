@@ -251,6 +251,21 @@ class nsTStringRepr {
     return EqualsASCII(aStr, N - 1);
   }
 
+  // EqualsLiteral must ONLY be called with an actual literal string, or
+  // a char array *constant* declared without an explicit size and with an
+  // initializer that is a string literal or is otherwise null-terminated.
+  // Use EqualsASCII for other char array variables.
+  // (Although this method may happen to produce expected results for other
+  // char arrays that have bound one greater than the sequence of interest,
+  // such use is discouraged for reasons of readability and maintainability.)
+  // The template trick to acquire the array bound at compile time without
+  // using a macro is due to Corey Kosak, with much thanks.
+  template <size_t N, typename = std::enable_if_t<!std::is_same_v<
+                          const char (&)[N], const char_type (&)[N]>>>
+  inline bool EqualsLiteral(const char_type (&aStr)[N]) const {
+    return *this == nsTLiteralString<char_type>(aStr);
+  }
+
   // The LowerCaseEquals methods compare the ASCII-lowercase version of
   // this string (lowercasing only ASCII uppercase characters) to some
   // ASCII/Literal string. The ASCII string is *not* lowercased for

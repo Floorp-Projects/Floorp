@@ -17545,7 +17545,7 @@ nsresult QuotaClient::GetDirectory(PersistenceType aPersistenceType,
 
   MOZ_ASSERT(directory);
 
-  rv = directory->Append(NS_LITERAL_STRING(IDB_DIRECTORY_NAME));
+  rv = directory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -17988,7 +17988,8 @@ nsresult Maintenance::DirectoryWork() {
                     size_t(PERSISTENCE_TYPE_INVALID),
                 "Something changed with available persistence types!");
 
-  NS_NAMED_LITERAL_STRING(idbDirName, IDB_DIRECTORY_NAME);
+  constexpr auto idbDirName =
+      NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME);
 
   for (const PersistenceType persistenceType : kPersistenceTypes) {
     // Loop over "<persistence>" directories.
@@ -20757,7 +20758,7 @@ nsresult FactoryOp::OpenDirectory() {
     return rv;
   }
 
-  rv = dbFile->Append(NS_LITERAL_STRING(IDB_DIRECTORY_NAME));
+  rv = dbFile->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21008,7 +21009,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = dbDirectory->Append(NS_LITERAL_STRING(IDB_DIRECTORY_NAME));
+  rv = dbDirectory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22317,7 +22318,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = directory->Append(NS_LITERAL_STRING(IDB_DIRECTORY_NAME));
+  rv = directory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

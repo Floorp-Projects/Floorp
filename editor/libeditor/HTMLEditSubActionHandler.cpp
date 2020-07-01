@@ -1545,7 +1545,7 @@ EditActionResult HTMLEditor::HandleInsertText(
   // don't change my selection in subtransactions
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
   int32_t pos = 0;
-  NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
+  constexpr auto newlineStr = NS_LITERAL_STRING_FROM_CSTRING(LFSTR);
 
   {
     AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToInsert);

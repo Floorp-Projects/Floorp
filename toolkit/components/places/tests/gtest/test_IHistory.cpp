@@ -266,8 +266,8 @@ void test_RegisterVisitedCallback_returns_before_notifying() {
 }
 
 namespace test_observer_topic_dispatched_helpers {
-#define URI_VISITED "visited"
-#define URI_NOT_VISITED "not visited"
+#define URI_VISITED u"visited"
+#define URI_NOT_VISITED u"not visited"
 #define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
 class statusObserver final : public nsIObserver {
   ~statusObserver() = default;
@@ -301,8 +301,8 @@ class statusObserver final : public nsIObserver {
     }
 
     // Check that we have either the visited or not visited string.
-    bool visited = !!NS_LITERAL_STRING(URI_VISITED).Equals(aData);
-    bool notVisited = !!NS_LITERAL_STRING(URI_NOT_VISITED).Equals(aData);
+    bool visited = !!nsLiteralString(URI_VISITED).Equals(aData);
+    bool notVisited = !!nsLiteralString(URI_NOT_VISITED).Equals(aData);
     do_check_true(visited || notVisited);
 
     // Check to make sure we got the state we expected.
