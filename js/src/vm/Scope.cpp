@@ -354,12 +354,12 @@ ConcreteScope* Scope::create(
 template <typename ConcreteScope>
 inline void Scope::initData(
     MutableHandle<UniquePtr<typename ConcreteScope::Data>> data) {
-  MOZ_ASSERT(!rawData());
+  MOZ_ASSERT(!data_);
 
   AddCellMemory(this, SizeOfAllocatedData(data.get().get()),
                 MemoryUse::ScopeData);
 
-  setHeaderPtr(data.get().release());
+  data_ = data.get().release();
 }
 
 uint32_t Scope::chainLength() const {
@@ -480,12 +480,12 @@ void Scope::finalize(JSFreeOp* fop) {
   applyScopeDataTyped([this, fop](auto data) {
     fop->delete_(this, data, SizeOfAllocatedData(data), MemoryUse::ScopeData);
   });
-  setHeaderPtr(nullptr);
+  data_ = nullptr;
 }
 
 size_t Scope::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-  if (rawData()) {
-    return mallocSizeOf(rawData());
+  if (data_) {
+    return mallocSizeOf(data_);
   }
   return 0;
 }

@@ -124,16 +124,9 @@ class AbstractBindingName {
 
 using BindingName = AbstractBindingName<JSAtom>;
 
-const size_t ScopeDataAlignBytes = size_t(1) << gc::CellFlagBitsReservedForGC;
-
-/**
- * Empty base class for scope Data classes to inherit from.
- *
- * Scope GC things store a pointer to these in their first word so they must be
- * suitably aligned to allow storing GC flags in the low bits.
- */
+/** Empty base class for scope Data classes to inherit from. */
 template <typename NameT>
-class alignas(ScopeDataAlignBytes) AbstractBaseScopeData {};
+class AbstractBaseScopeData {};
 
 using BaseScopeData = AbstractBaseScopeData<JSAtom>;
 
@@ -272,15 +265,15 @@ class WrappedPtrOperations<Scope*, Wrapper> {
 //
 // The base class of all Scopes.
 //
-class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
+class Scope : public gc::CellWithTenuredGCPointer<gc::TenuredCell, Scope> {
   friend class GCMarker;
   friend class frontend::ScopeCreationData;
 
- protected:
-  // The raw data pointer, stored in the cell header.
-  BaseScopeData* rawData() { return headerPtr(); }
-  const BaseScopeData* rawData() const { return headerPtr(); }
+ public:
+  // The enclosing scope or nullptr, stored in the cell header.
+  Scope* enclosing() const { return headerPtr(); }
 
+ protected:
   // The kind determines data_.
   const ScopeKind kind_;
 
@@ -288,14 +281,13 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   // EnvironmentObject. Otherwise nullptr.
   const GCPtrShape environmentShape_;
 
-  // The enclosing scope or nullptr.
-  GCPtrScope enclosingScope_;
+  BaseScopeData* data_;
 
   Scope(ScopeKind kind, Scope* enclosing, Shape* environmentShape)
-      : TenuredCellWithNonGCPointer(nullptr),
+      : CellWithTenuredGCPointer(enclosing),
         kind_(kind),
         environmentShape_(environmentShape),
-        enclosingScope_(enclosing) {}
+        data_(nullptr) {}
 
   static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
                        HandleShape envShape);
@@ -342,8 +334,6 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   ScopeKind kind() const { return kind_; }
 
   Shape* environmentShape() const { return environmentShape_; }
-
-  Scope* enclosing() const { return enclosingScope_; }
 
   static bool hasEnvironment(ScopeKind kind, bool environmentShape) {
     switch (kind) {
@@ -477,8 +467,9 @@ class LexicalScope : public Scope {
                                       MutableHandle<UniquePtr<Data>> data,
                                       ShapeType envShape);
 
-  Data& data() { return *static_cast<Data*>(rawData()); }
-  const Data& data() const { return *static_cast<const Data*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(data_); }
+
+  const Data& data() const { return *static_cast<Data*>(data_); }
 
   static uint32_t nextFrameSlot(const AbstractScopePtr& scope);
 
@@ -617,9 +608,9 @@ class FunctionScope : public Scope {
                                        HandleFunction fun,
                                        HandleScope enclosing);
 
-  Data& data() { return *static_cast<Data*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(data_); }
 
-  const Data& data() const { return *static_cast<const Data*>(rawData()); }
+  const Data& data() const { return *static_cast<Data*>(data_); }
 
  public:
   uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
@@ -702,9 +693,9 @@ class VarScope : public Scope {
       JSContext* cx,
       MutableHandle<frontend::EnvironmentShapeCreationData> envShape,
       bool needsEnvironment);
-  Data& data() { return *static_cast<Data*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(data_); }
 
-  const Data& data() const { return *static_cast<const Data*>(rawData()); }
+  const Data& data() const { return *static_cast<Data*>(data_); }
 
  public:
   uint32_t firstFrameSlot() const;
@@ -786,9 +777,9 @@ class GlobalScope : public Scope {
   static GlobalScope* createWithData(JSContext* cx, ScopeKind kind,
                                      MutableHandle<UniquePtr<Data>> data);
 
-  Data& data() { return *static_cast<Data*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(data_); }
 
-  const Data& data() const { return *static_cast<const Data*>(rawData()); }
+  const Data& data() const { return *static_cast<Data*>(data_); }
 
  public:
   bool isSyntactic() const { return kind() != ScopeKind::NonSyntactic; }
@@ -885,9 +876,9 @@ class EvalScope : public Scope {
       JSContext* cx,
       MutableHandle<frontend::EnvironmentShapeCreationData> envShape,
       ScopeKind scopeKind);
-  Data& data() { return *static_cast<Data*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(data_); }
 
-  const Data& data() const { return *static_cast<const Data*>(rawData()); }
+  const Data& data() const { return *static_cast<Data*>(data_); }
 
  public:
   // Starting a scope, the nearest var scope that a direct eval can
@@ -986,9 +977,9 @@ class ModuleScope : public Scope {
       JSContext* cx,
       MutableHandle<frontend::EnvironmentShapeCreationData> envShape);
 
-  Data& data() { return *static_cast<Data*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(data_); }
 
-  const Data& data() const { return *static_cast<const Data*>(rawData()); }
+  const Data& data() const { return *static_cast<Data*>(data_); }
 
  public:
   uint32_t nextFrameSlot() const { return data().nextFrameSlot; }
@@ -1035,9 +1026,9 @@ class WasmInstanceScope : public Scope {
   static WasmInstanceScope* create(JSContext* cx, WasmInstanceObject* instance);
 
  private:
-  Data& data() { return *static_cast<Data*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(data_); }
 
-  const Data& data() const { return *static_cast<const Data*>(rawData()); }
+  const Data& data() const { return *static_cast<Data*>(data_); }
 
  public:
   WasmInstanceObject* instance() const { return data().instance; }
@@ -1087,9 +1078,9 @@ class WasmFunctionScope : public Scope {
                                    uint32_t funcIndex);
 
  private:
-  Data& data() { return *static_cast<Data*>(rawData()); }
+  Data& data() { return *static_cast<Data*>(data_); }
 
-  const Data& data() const { return *static_cast<const Data*>(rawData()); }
+  const Data& data() const { return *static_cast<Data*>(data_); }
 
  public:
   static Shape* getEmptyEnvironmentShape(JSContext* cx);
