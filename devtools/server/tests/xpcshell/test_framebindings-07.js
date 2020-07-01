@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { EnvironmentFront } = require("devtools/client/fronts/environment");
-
 add_task(
   threadFrontTest(async ({ threadFront, debuggee, client }) => {
     const packet = await executeOnNextTickAndWaitForPause(
@@ -15,24 +13,16 @@ add_task(
 
     const environment = await packet.frame.getEnvironment();
     Assert.equal(environment.type, "function");
+    Assert.equal(environment.bindings.arguments[0].z.value, "z");
 
     const parent = environment.parent;
     Assert.equal(parent.type, "block");
+    Assert.equal(parent.bindings.variables.banana3.value.class, "Function");
 
     const grandpa = parent.parent;
     Assert.equal(grandpa.type, "function");
+    Assert.equal(grandpa.bindings.arguments[0].y.value, "y");
 
-    const envClient = new EnvironmentFront(client, environment);
-    let response = await envClient.getBindings();
-    Assert.equal(response.arguments[0].z.value, "z");
-
-    const parentClient = new EnvironmentFront(client, parent);
-    response = await parentClient.getBindings();
-    Assert.equal(response.variables.banana3.value.class, "Function");
-
-    const grandpaClient = new EnvironmentFront(client, grandpa);
-    response = await grandpaClient.getBindings();
-    Assert.equal(response.arguments[0].y.value, "y");
     await threadFront.resume();
   })
 );
