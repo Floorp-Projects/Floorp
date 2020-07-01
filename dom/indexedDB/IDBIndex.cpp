@@ -29,7 +29,8 @@ using namespace mozilla::dom::indexedDB;
 
 namespace {
 
-RefPtr<IDBRequest> GenerateRequest(JSContext* aCx, IDBIndex* aIndex) {
+MovingNotNull<RefPtr<IDBRequest>> GenerateRequest(JSContext* aCx,
+                                                  IDBIndex* aIndex) {
   MOZ_ASSERT(aIndex);
   aIndex->AssertIsOnOwningThread();
 
@@ -346,8 +347,7 @@ RefPtr<IDBRequest> IDBIndex::GetInternal(bool aKeyOnly, JSContext* aCx,
     params = IndexGetParams(objectStoreId, indexId, serializedKeyRange);
   }
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   if (aKeyOnly) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -422,8 +422,7 @@ RefPtr<IDBRequest> IDBIndex::GetAllInternal(bool aKeysOnly, JSContext* aCx,
                 : RequestParams{IndexGetAllParams(objectStoreId, indexId,
                                                   optionalKeyRange, limit)};
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   if (aKeysOnly) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -501,8 +500,7 @@ RefPtr<IDBRequest> IDBIndex::OpenCursorInternal(bool aKeysOnly, JSContext* aCx,
       aKeysOnly ? OpenCursorParams{IndexOpenKeyCursorParams{commonIndexParams}}
                 : OpenCursorParams{IndexOpenCursorParams{commonIndexParams}};
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   if (aKeysOnly) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -576,8 +574,7 @@ RefPtr<IDBRequest> IDBIndex::Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
     params.optionalKeyRange().emplace(serializedKeyRange);
   }
 
-  auto request = GenerateRequest(aCx, this);
-  MOZ_ASSERT(request);
+  auto request = GenerateRequest(aCx, this).unwrap();
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).index(%s)."

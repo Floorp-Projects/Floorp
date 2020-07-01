@@ -163,12 +163,11 @@ IDBTransaction::~IDBTransaction() {
 SafeRefPtr<IDBTransaction> IDBTransaction::CreateVersionChange(
     IDBDatabase* const aDatabase,
     BackgroundVersionChangeTransactionChild* const aActor,
-    IDBOpenDBRequest* const aOpenRequest, const int64_t aNextObjectStoreId,
-    const int64_t aNextIndexId) {
+    const NotNull<IDBOpenDBRequest*> aOpenRequest,
+    const int64_t aNextObjectStoreId, const int64_t aNextIndexId) {
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT(aOpenRequest);
   MOZ_ASSERT(aNextObjectStoreId > 0);
   MOZ_ASSERT(aNextIndexId > 0);
 
@@ -278,12 +277,13 @@ void IDBTransaction::SetBackgroundActor(
 }
 
 BackgroundRequestChild* IDBTransaction::StartRequest(
-    IDBRequest* const aRequest, const RequestParams& aParams) {
+    MovingNotNull<RefPtr<mozilla::dom::IDBRequest> > aRequest,
+    const RequestParams& aParams) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aRequest);
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  BackgroundRequestChild* const actor = new BackgroundRequestChild(aRequest);
+  BackgroundRequestChild* const actor =
+      new BackgroundRequestChild(std::move(aRequest));
 
   DoWithTransactionChild([actor, &aParams](auto& transactionChild) {
     transactionChild.SendPBackgroundIDBRequestConstructor(actor, aParams);

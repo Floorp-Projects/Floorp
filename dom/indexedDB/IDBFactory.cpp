@@ -705,7 +705,7 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
         IDB_LOG_STRINGIFY(aVersion));
   }
 
-  nsresult rv = InitiateRequest(request, params);
+  nsresult rv = InitiateRequest(WrapNotNull(request), params);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     IDB_REPORT_INTERNAL_ERR();
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -715,9 +715,9 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
   return request;
 }
 
-nsresult IDBFactory::InitiateRequest(IDBOpenDBRequest* aRequest,
-                                     const FactoryRequestParams& aParams) {
-  MOZ_ASSERT(aRequest);
+nsresult IDBFactory::InitiateRequest(
+    const NotNull<RefPtr<IDBOpenDBRequest>>& aRequest,
+    const FactoryRequestParams& aParams) {
   MOZ_ASSERT(mBackgroundActor);
   MOZ_ASSERT(!mBackgroundActorFailed);
 
