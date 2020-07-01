@@ -15,11 +15,22 @@
 
 #include "common.h"
 #include "DefaultBrowser.h"
+#include "EventLog.h"
 #include "Notification.h"
 #include "Policy.h"
 #include "Registry.h"
 #include "ScheduledTask.h"
 #include "Telemetry.h"
+
+// The AGENT_REGKEY_NAME is dependent on MOZ_APP_VENDOR and MOZ_APP_BASENAME,
+// so using those values in the mutex name prevents waiting on processes that
+// are using completely different data.
+#define REGISTRY_MUTEX_NAME \
+  L"" MOZ_APP_VENDOR MOZ_APP_BASENAME L"DefaultBrowserAgentRegistryMutex"
+// How long to wait on the registry mutex before giving up on it. This should
+// be short. Although the WDBA runs in the background, uninstallation happens
+// synchronously in the foreground.
+#define REGISTRY_MUTEX_TIMEOUT_MS (3 * 1000)
 
 static void RemoveAllRegistryEntries() {
   mozilla::UniquePtr<wchar_t[]> installPath = mozilla::GetFullBinaryPath();
@@ -102,6 +113,79 @@ static void WriteInstallationRegistryEntry() {
   }
 }
 
+// This class is designed to prevent concurrency problems when accessing the
+// registry. It should be acquired before any usage of unprefixed registry
+// entries.
+class RegistryMutex {
+ private:
+  nsAutoHandle mMutex;
+  bool mLocked;
+
+ public:
+  RegistryMutex() : mMutex(nullptr), mLocked(false) {}
+  ~RegistryMutex() {
+    Release();
+    // nsAutoHandle will take care of closing the mutex's handle.
+  }
+
+  // Returns true on success, false on failure.
+  bool Acquire() {
+    if (mLocked) {
+      return true;
+    }
+
+    if (mMutex.get() == nullptr) {
+      // It seems like we would want to set the second parameter (bInitialOwner)
+      // to TRUE, but the documentation for CreateMutexW suggests that, because
+      // we aren't sure that the mutex doesn't already exist, we can't be sure
+      // whether we got ownership via this mechanism.
+      mMutex.own(CreateMutexW(nullptr, FALSE, REGISTRY_MUTEX_NAME));
+      if (mMutex.get() == nullptr) {
+        LOG_ERROR_MESSAGE(L"Couldn't open registry mutex: %#X", GetLastError());
+        return false;
+      }
+    }
+
+    DWORD mutexStatus =
+        WaitForSingleObject(mMutex.get(), REGISTRY_MUTEX_TIMEOUT_MS);
+    if (mutexStatus == WAIT_OBJECT_0) {
+      mLocked = true;
+    } else if (mutexStatus == WAIT_TIMEOUT) {
+      LOG_ERROR_MESSAGE(L"Timed out waiting for registry mutex");
+    } else if (mutexStatus == WAIT_ABANDONED) {
+      // This isn't really an error for us. No one else is using the registry.
+      // This status code means that we are supposed to check our data for
+      // consistency, but there isn't really anything we can fix here.
+      // This is an indication that an agent crashed though, which is clearly an
+      // error, so log an error message.
+      LOG_ERROR_MESSAGE(L"Found abandoned registry mutex. Continuing...");
+      mLocked = true;
+    } else {
+      // The only other documented status code is WAIT_FAILED. In the case that
+      // we somehow get some other code, that is also an error.
+      LOG_ERROR_MESSAGE(L"Failed to wait on registry mutex: %#X",
+                        GetLastError());
+    }
+    return mLocked;
+  }
+
+  bool IsLocked() { return mLocked; }
+
+  void Release() {
+    if (mLocked) {
+      if (mMutex.get() == nullptr) {
+        LOG_ERROR_MESSAGE(L"Unexpectedly missing registry mutex");
+        return;
+      }
+      BOOL success = ReleaseMutex(mMutex.get());
+      if (!success) {
+        LOG_ERROR_MESSAGE(L"Failed to release registry mutex");
+      }
+      mLocked = false;
+    }
+  }
+};
+
 // We expect to be given a command string in argv[1], perhaps followed by other
 // arguments depending on the command. The valid commands are:
 // register-task [unique-token]
@@ -142,6 +226,8 @@ int wmain(int argc, wchar_t** argv) {
     ~ComUninitializer() { CoUninitialize(); }
   } kCUi;
 
+  RegistryMutex regMutex;
+
   // The uninstall and unregister commands are allowed even if the policy
   // disabling the task is set, so that uninstalls and updates always work.
   if (!wcscmp(argv[1], L"uninstall") || !wcscmp(argv[1], L"unregister-task")) {
@@ -150,6 +236,22 @@ int wmain(int argc, wchar_t** argv) {
     }
 
     if (!wcscmp(argv[1], L"uninstall")) {
+      // We aren't actually going to check whether we got the mutex here.
+      // Ideally we would acquire it since we are about to access the registry,
+      // so we would like to block simultaneous users of our registry key.
+      // But there are two reasons that it is preferable to ignore a mutex
+      // wait timeout here:
+      //   1. If we fail to uninstall our prefixed registry entries, the
+      //      registry key containing them will never be removed, even when the
+      //      last installation is uninstalled.
+      //   2. If we timed out waiting on the mutex, it implies that there are
+      //      other installations. If there are other installations, there will
+      //      be other prefixed registry entries. If there are other prefixed
+      //      registry entries, we won't remove the whole key or touch the
+      //      unprefixed entries during uninstallation. Therefore, we should
+      //      be able to safely uninstall without stepping on anyone's toes.
+      regMutex.Acquire();
+
       RemoveAllRegistryEntries();
     }
     return RemoveTask(argv[2]);
@@ -163,6 +265,16 @@ int wmain(int argc, wchar_t** argv) {
     if (argc < 3 || !argv[2]) {
       return E_INVALIDARG;
     }
+    // We aren't actually going to check whether we got the mutex here.
+    // Ideally we would acquire it since registration might migrate registry
+    // entries. But it is preferable to ignore a mutex wait timeout here
+    // because:
+    //   1. Otherwise the task doesn't get registered at all
+    //   2. If another installation's agent is holding the mutex, it either
+    //      is far enough out of date that it doesn't yet use the migrated
+    //      values, or it already did the migration for us.
+    regMutex.Acquire();
+
     WriteInstallationRegistryEntry();
 
     return RegisterTask(argv[2]);
@@ -170,6 +282,10 @@ int wmain(int argc, wchar_t** argv) {
     if (argc < 3 || !argv[2]) {
       return E_INVALIDARG;
     }
+    // Not checking if we got the mutex for the same reason we didn't in
+    // register-task
+    regMutex.Acquire();
+
     WriteInstallationRegistryEntry();
 
     return UpdateTask(argv[2]);
@@ -177,6 +293,23 @@ int wmain(int argc, wchar_t** argv) {
     if (argc < 3 || !argv[2]) {
       return E_INVALIDARG;
     }
+    // Acquire() has a short timeout. Since this runs in the background, we
+    // could use a longer timeout in this situation. However, if another
+    // installation's agent is already running, it will update CurrentDefault,
+    // possibly send a ping, and possibly show a notification.
+    // Once all that has happened, there is no real reason to do it again. We
+    // only send one ping per day, so we aren't going to do that again. And
+    // the only time we ever show a second notification is 7 days after the
+    // first one, so we aren't going to do that again either.
+    // If the other process didn't take those actions, there is no reason that
+    // this process would take them.
+    // If the other process fails, this one will most likely fail for the same
+    // reason.
+    // So we'll just bail if we can't get the mutex quickly.
+    if (!regMutex.Acquire()) {
+      return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
+    }
+
     DefaultBrowserResult defaultBrowserResult = GetDefaultBrowserInfo();
     if (defaultBrowserResult.isErr()) {
       return defaultBrowserResult.unwrapErr().AsHResult();
