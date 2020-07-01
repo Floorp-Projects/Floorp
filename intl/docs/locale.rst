@@ -44,7 +44,7 @@ On top of that, a locale may contain:
      These fields can be used to carry additional information about a locale.
      Mozilla currently has partial support for them in the JS implementation and plans to
      extend support to all APIs.
- - extkeys and grandfathered tags
+ - extkeys and "grandfathered" tags (unfortunate language, but part of the spec)
      Mozilla does not support these yet.
 
 
