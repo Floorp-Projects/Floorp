@@ -561,7 +561,7 @@ nsresult txMozillaXMLOutput::createTxWrapper() {
 
   int32_t namespaceID;
   nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
-      NS_LITERAL_STRING(kTXNameSpaceURI), namespaceID);
+      nsLiteralString(kTXNameSpaceURI), namespaceID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<Element> wrapper =

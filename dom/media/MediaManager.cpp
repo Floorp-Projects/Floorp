@@ -2080,8 +2080,8 @@ MediaManager* MediaManager::Get() {
 
     sSingleton->mShutdownBlocker = new Blocker();
     nsresult rv = media::GetShutdownBarrier()->AddBlocker(
-        sSingleton->mShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
-        u""_ns);
+        sSingleton->mShutdownBlocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+        __LINE__, u""_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
   return sSingleton;

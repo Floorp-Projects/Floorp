@@ -16,23 +16,25 @@ namespace script {
 // This macro is used to wrap a tracing mechanism which is scheduling events
 // which are then used by the JavaScript code of test cases to track the code
 // path to verify the optimizations are working as expected.
-#define TRACE_FOR_TEST(elem, str)                                  \
-  PR_BEGIN_MACRO                                                   \
-  nsresult rv = NS_OK;                                             \
-  rv = script::TestingDispatchEvent(elem, NS_LITERAL_STRING(str)); \
-  NS_ENSURE_SUCCESS(rv, rv);                                       \
+#define TRACE_FOR_TEST(elem, str)                                              \
+  PR_BEGIN_MACRO                                                               \
+  nsresult rv = NS_OK;                                                         \
+  rv =                                                                         \
+      script::TestingDispatchEvent(elem, NS_LITERAL_STRING_FROM_CSTRING(str)); \
+  NS_ENSURE_SUCCESS(rv, rv);                                                   \
   PR_END_MACRO
 
-#define TRACE_FOR_TEST_BOOL(elem, str)                             \
-  PR_BEGIN_MACRO                                                   \
-  nsresult rv = NS_OK;                                             \
-  rv = script::TestingDispatchEvent(elem, NS_LITERAL_STRING(str)); \
-  NS_ENSURE_SUCCESS(rv, false);                                    \
+#define TRACE_FOR_TEST_BOOL(elem, str)                                         \
+  PR_BEGIN_MACRO                                                               \
+  nsresult rv = NS_OK;                                                         \
+  rv =                                                                         \
+      script::TestingDispatchEvent(elem, NS_LITERAL_STRING_FROM_CSTRING(str)); \
+  NS_ENSURE_SUCCESS(rv, false);                                                \
   PR_END_MACRO
 
-#define TRACE_FOR_TEST_NONE(elem, str)                        \
-  PR_BEGIN_MACRO                                              \
-  script::TestingDispatchEvent(elem, NS_LITERAL_STRING(str)); \
+#define TRACE_FOR_TEST_NONE(elem, str)                                     \
+  PR_BEGIN_MACRO                                                           \
+  script::TestingDispatchEvent(elem, NS_LITERAL_STRING_FROM_CSTRING(str)); \
   PR_END_MACRO
 
 static nsresult TestingDispatchEvent(nsIScriptElement* aScriptElement,

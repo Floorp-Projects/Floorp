@@ -623,7 +623,8 @@ SpeechRecognition::StartRecording(RefPtr<AudioStreamTrack>& aTrack) {
   mShutdownBlocker =
       MakeAndAddRef<SpeechRecognitionShutdownBlocker>(this, blockerName);
   RefPtr<nsIAsyncShutdownClient> shutdown = media::GetShutdownBarrier();
-  shutdown->AddBlocker(mShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
+  shutdown->AddBlocker(mShutdownBlocker,
+                       NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
                        u"SpeechRecognition shutdown"_ns);
 
   mEndpointer.StartSession();

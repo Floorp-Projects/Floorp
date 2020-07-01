@@ -1087,7 +1087,7 @@ CamerasParent::CamerasParent()
   RefPtr<CamerasParent> self(this);
   NS_DispatchToMainThread(NewRunnableFrom([self]() {
     nsresult rv = GetShutdownBarrier()->AddBlocker(
-        self, NS_LITERAL_STRING(__FILE__), __LINE__, u""_ns);
+        self, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
     // Start the thread

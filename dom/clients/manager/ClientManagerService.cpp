@@ -92,8 +92,8 @@ RefPtr<GenericPromise> OnShutdown() {
         nsCOMPtr<nsIAsyncShutdownBlocker> blocker =
             new ClientShutdownBlocker(ref);
         nsresult rv =
-            phase->AddBlocker(blocker, NS_LITERAL_STRING(__FILE__), __LINE__,
-                              u"ClientManagerService shutdown"_ns);
+            phase->AddBlocker(blocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+                              __LINE__, u"ClientManagerService shutdown"_ns);
 
         if (NS_FAILED(rv)) {
           ref->Resolve(true, __func__);

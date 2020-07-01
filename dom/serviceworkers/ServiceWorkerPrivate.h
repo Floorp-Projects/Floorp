@@ -13,8 +13,8 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/MozPromise.h"
 
-#define NOTIFICATION_CLICK_EVENT_NAME "notificationclick"
-#define NOTIFICATION_CLOSE_EVENT_NAME "notificationclose"
+#define NOTIFICATION_CLICK_EVENT_NAME u"notificationclick"
+#define NOTIFICATION_CLOSE_EVENT_NAME u"notificationclose"
 
 class nsIInterceptedChannel;
 class nsIWorkerDebugger;

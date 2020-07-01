@@ -1526,7 +1526,7 @@ void GeckoMediaPluginServiceParent::ServiceUserCreated(
   mServiceParents.AppendElement(aServiceParent);
   if (mServiceParents.Length() == 1) {
     nsresult rv = GetShutdownBarrier()->AddBlocker(
-        this, NS_LITERAL_STRING(__FILE__), __LINE__,
+        this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
         u"GeckoMediaPluginServiceParent shutdown"_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }

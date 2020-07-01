@@ -132,7 +132,7 @@ TEST_F(TelemetryTestFixture, ScalarString) {
 
   // Set the test scalar to a known value.
   Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_STRING_KIND,
-                       NS_LITERAL_STRING(EXPECTED_STRING));
+                       NS_LITERAL_STRING_FROM_CSTRING(EXPECTED_STRING));
 
 // Make sure that calls of the unsupported type don't corrupt the stored value.
 // Don't run this part in debug builds as that intentionally asserts.
@@ -400,7 +400,7 @@ TEST_F(TelemetryTestFixture, WrongScalarOperator) {
   Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
                        expectedValue);
   Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_STRING_KIND,
-                       NS_LITERAL_STRING(EXPECTED_STRING));
+                       NS_LITERAL_STRING_FROM_CSTRING(EXPECTED_STRING));
   Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_BOOLEAN_KIND, true);
 
   TelemetryScalar::DeserializationStarted();

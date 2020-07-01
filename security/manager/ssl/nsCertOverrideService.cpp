@@ -161,7 +161,7 @@ nsresult nsCertOverrideService::Init() {
   }
 
   nsresult rv = GetShutdownBarrier()->AddBlocker(
-      this, NS_LITERAL_STRING(__FILE__), __LINE__,
+      this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
       u"nsCertOverrideService shutdown"_ns);
   // If that failed, we're likely getting initialized during shutdown.
   NS_ENSURE_SUCCESS(rv, rv);

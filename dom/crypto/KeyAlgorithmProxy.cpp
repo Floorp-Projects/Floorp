@@ -107,96 +107,96 @@ nsString KeyAlgorithmProxy::JwkAlg() const {
   if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC)) {
     switch (mAes.mLength) {
       case 128:
-        return NS_LITERAL_STRING(JWK_ALG_A128CBC);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A128CBC);
       case 192:
-        return NS_LITERAL_STRING(JWK_ALG_A192CBC);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A192CBC);
       case 256:
-        return NS_LITERAL_STRING(JWK_ALG_A256CBC);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A256CBC);
     }
   }
 
   if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR)) {
     switch (mAes.mLength) {
       case 128:
-        return NS_LITERAL_STRING(JWK_ALG_A128CTR);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A128CTR);
       case 192:
-        return NS_LITERAL_STRING(JWK_ALG_A192CTR);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A192CTR);
       case 256:
-        return NS_LITERAL_STRING(JWK_ALG_A256CTR);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A256CTR);
     }
   }
 
   if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
     switch (mAes.mLength) {
       case 128:
-        return NS_LITERAL_STRING(JWK_ALG_A128GCM);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A128GCM);
       case 192:
-        return NS_LITERAL_STRING(JWK_ALG_A192GCM);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A192GCM);
       case 256:
-        return NS_LITERAL_STRING(JWK_ALG_A256GCM);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A256GCM);
     }
   }
 
   if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_KW)) {
     switch (mAes.mLength) {
       case 128:
-        return NS_LITERAL_STRING(JWK_ALG_A128KW);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A128KW);
       case 192:
-        return NS_LITERAL_STRING(JWK_ALG_A192KW);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A192KW);
       case 256:
-        return NS_LITERAL_STRING(JWK_ALG_A256KW);
+        return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_A256KW);
     }
   }
 
   if (mName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
     nsString hashName = mHmac.mHash.mName;
     if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
-      return NS_LITERAL_STRING(JWK_ALG_HS1);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_HS1);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
-      return NS_LITERAL_STRING(JWK_ALG_HS256);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_HS256);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
-      return NS_LITERAL_STRING(JWK_ALG_HS384);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_HS384);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
-      return NS_LITERAL_STRING(JWK_ALG_HS512);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_HS512);
     }
   }
 
   if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
     nsString hashName = mRsa.mHash.mName;
     if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
-      return NS_LITERAL_STRING(JWK_ALG_RS1);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_RS1);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
-      return NS_LITERAL_STRING(JWK_ALG_RS256);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_RS256);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
-      return NS_LITERAL_STRING(JWK_ALG_RS384);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_RS384);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
-      return NS_LITERAL_STRING(JWK_ALG_RS512);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_RS512);
     }
   }
 
   if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
     nsString hashName = mRsa.mHash.mName;
     if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
-      return NS_LITERAL_STRING(JWK_ALG_RSA_OAEP);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_RSA_OAEP);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
-      return NS_LITERAL_STRING(JWK_ALG_RSA_OAEP_256);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_RSA_OAEP_256);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
-      return NS_LITERAL_STRING(JWK_ALG_RSA_OAEP_384);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_RSA_OAEP_384);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
-      return NS_LITERAL_STRING(JWK_ALG_RSA_OAEP_512);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_RSA_OAEP_512);
     }
   }
 
   if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
     nsString hashName = mRsa.mHash.mName;
     if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
-      return NS_LITERAL_STRING(JWK_ALG_PS1);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_PS1);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
-      return NS_LITERAL_STRING(JWK_ALG_PS256);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_PS256);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
-      return NS_LITERAL_STRING(JWK_ALG_PS384);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_PS384);
     } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
-      return NS_LITERAL_STRING(JWK_ALG_PS512);
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_PS512);
     }
   }
 

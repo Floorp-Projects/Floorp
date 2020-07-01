@@ -1024,7 +1024,7 @@ nsresult nsSystemInfo::Init() {
 // This version will need to be updated whenever there is a new official
 // Android release. Search for "kDefaultAndroidMajorVersion" in:
 // https://source.chromium.org/chromium/chromium/src/+/master:base/system/sys_info_android.cc
-#  define DEFAULT_ANDROID_VERSION "10.0.99"
+#  define DEFAULT_ANDROID_VERSION u"10.0.99"
 
 /* static */
 void nsSystemInfo::GetAndroidSystemInfo(AndroidSystemInfo* aInfo) {
@@ -1052,7 +1052,7 @@ void nsSystemInfo::GetAndroidSystemInfo(AndroidSystemInfo* aInfo) {
   int num_read = sscanf(NS_ConvertUTF16toUTF8(str).get(), "%d.%d.%d",
                         &major_version, &minor_version, &bugfix_version);
   if (num_read == 0) {
-    aInfo->release_version() = NS_LITERAL_STRING(DEFAULT_ANDROID_VERSION);
+    aInfo->release_version() = nsLiteralString(DEFAULT_ANDROID_VERSION);
   } else {
     aInfo->release_version() = str;
   }

@@ -362,7 +362,7 @@ nsresult ServiceWorkerRegistrar::ReadData() {
     }
   }
 
-  nsresult rv = file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
+  nsresult rv = file->Append(nsLiteralString(SERVICEWORKERREGISTRAR_FILE));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -763,7 +763,7 @@ void ServiceWorkerRegistrar::DeleteData() {
     }
   }
 
-  nsresult rv = file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
+  nsresult rv = file->Append(nsLiteralString(SERVICEWORKERREGISTRAR_FILE));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -988,7 +988,7 @@ nsresult ServiceWorkerRegistrar::WriteData(
     }
   }
 
-  nsresult rv = file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
+  nsresult rv = file->Append(nsLiteralString(SERVICEWORKERREGISTRAR_FILE));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1112,8 +1112,8 @@ void ServiceWorkerRegistrar::ProfileStarted() {
   nsAutoString blockerName;
   MOZ_ALWAYS_SUCCEEDS(GetName(blockerName));
 
-  rv = GetShutdownPhase()->AddBlocker(this, NS_LITERAL_STRING(__FILE__),
-                                      __LINE__, blockerName);
+  rv = GetShutdownPhase()->AddBlocker(
+      this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, blockerName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }

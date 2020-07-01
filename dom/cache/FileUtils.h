@@ -20,8 +20,8 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-#define PADDING_FILE_NAME ".padding"
-#define PADDING_TMP_FILE_NAME ".padding-tmp"
+#define PADDING_FILE_NAME u".padding"
+#define PADDING_TMP_FILE_NAME u".padding-tmp"
 
 enum DirPaddingFile { FILE, TMP_FILE };
 
