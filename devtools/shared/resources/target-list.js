@@ -121,11 +121,30 @@ class TargetList {
       return;
     }
 
+    // Handle top level target switching
+    // Note that, for now, `_onTargetAvailable` isn't called for the *initial* top level target.
+    // i.e. the one that is passed to TargetList constructor.
+    if (targetFront.isTopLevel) {
+      // First report that all existing targets are destroyed
+      for (const target of this._targets) {
+        // We only consider the top level target to be switched
+        const isDestroyedTargetSwitching = target == this.targetFront;
+        this._onTargetDestroyed(target, isDestroyedTargetSwitching);
+      }
+      // Stop listening to legacy listeners as we now have to listen
+      // on the new target.
+      this.stopListening();
+
+      // Clear the cached target list
+      this._targets.clear();
+
+      // Update the reference to the memoized top level target
+      this.targetFront = targetFront;
+    }
+
     // Map the descriptor typeName to a target type.
     const targetType = this.getTargetType(targetFront);
-
     targetFront.setTargetType(targetType);
-    targetFront.setIsTopLevel(targetFront == this.targetFront);
 
     this._targets.add(targetFront);
 
@@ -134,6 +153,12 @@ class TargetList {
       targetFront,
       isTargetSwitching,
     });
+
+    // Re-register the listeners as the top level target changed
+    // and some targets are fetched from it
+    if (targetFront.isTopLevel) {
+      await this.startListening();
+    }
   }
 
   _onTargetDestroyed(targetFront, isTargetSwitching = false) {
@@ -402,27 +427,10 @@ class TargetList {
    *        The new top level target to debug.
    */
   async switchToTarget(newTarget) {
-    // First report that all existing targets are destroyed
-    for (const target of this._targets) {
-      // We only consider the top level target to be switched
-      const isTargetSwitching = target == this.targetFront;
-      this._onTargetDestroyed(target, isTargetSwitching);
-    }
-    this.stopListening();
-
-    // Clear the cached target list
-    this._targets.clear();
-
-    // Update the reference to the top level target so that
-    // creation listening can know this is about the top level target
-    this.targetFront = newTarget;
+    newTarget.setIsTopLevel(true);
 
     // Notify about this new target to creation listeners
     await this._onTargetAvailable(newTarget, true);
-
-    // Re-register the listeners as the top level target changed
-    // and some targets are fetched from it
-    await this.startListening();
   }
 
   isTargetRegistered(targetFront) {
