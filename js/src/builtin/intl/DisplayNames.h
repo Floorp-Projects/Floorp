@@ -45,7 +45,7 @@ class DisplayNamesObject : public NativeObject {
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
-  // Estimated memory use for ULocaleDisplayNames.
+  // Estimated memory use for ULocaleDisplayNames (see IcuMemoryUsage).
   static constexpr size_t EstimatedMemoryUse = 1256;
 
   ULocaleDisplayNames* getLocaleDisplayNames() const {

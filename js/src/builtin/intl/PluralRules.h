@@ -35,10 +35,11 @@ class PluralRulesObject : public NativeObject {
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
-  // Estimated memory use for UNumberFormatter and UFormattedNumber.
+  // Estimated memory use for UNumberFormatter and UFormattedNumber
+  // (see IcuMemoryUsage).
   static constexpr size_t UNumberFormatterEstimatedMemoryUse = 750;
 
-  // Estimated memory use for UPluralRules.
+  // Estimated memory use for UPluralRules (see IcuMemoryUsage).
   static constexpr size_t UPluralRulesEstimatedMemoryUse = 2976;
 
   UPluralRules* getPluralRules() const {

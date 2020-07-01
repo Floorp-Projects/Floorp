@@ -9,6 +9,8 @@ import java.util.regex.*;
 import java.util.stream.Collectors;
 
 /**
+ * Java program to estimate the memory usage of ICU objects (bug 1585536).
+ *
  * Insert before {@code JS_InitWithFailureDiagnostic} in "js.cpp":
  * 
  * <pre>
