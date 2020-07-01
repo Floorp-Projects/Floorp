@@ -8,6 +8,8 @@
 #define mozilla_devtools_AutoMemMap_h
 
 #include <prio.h>
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 
 namespace mozilla {
