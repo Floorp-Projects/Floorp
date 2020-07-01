@@ -107,9 +107,9 @@ bool WebGLParent::RunCommandQueue() {
 
   // Re-issue the task
   MOZ_ASSERT(mRunCommandsRunnable);
-  MOZ_ASSERT(MessageLoop::current());
-  MessageLoop::current()->PostDelayedTask(do_AddRef(mRunCommandsRunnable),
-                                          kDrainDelayMs);
+  MOZ_ASSERT(GetCurrentSerialEventTarget());
+  GetCurrentSerialEventTarget()->DelayedDispatch(do_AddRef(mRunCommandsRunnable),
+                                                 kDrainDelayMs);
   */
   return true;
 }

@@ -6,8 +6,8 @@
 
 #include "CanvasThread.h"
 
-#include "base/task.h"
 #include "mozilla/SharedThreadPool.h"
+#include "nsThreadUtils.h"
 #include "prsystem.h"
 
 bool NS_IsInCanvasThreadOrWorker() {
@@ -21,7 +21,7 @@ StaticDataMutex<StaticRefPtr<CanvasThreadHolder>>
     CanvasThreadHolder::sCanvasThreadHolder("sCanvasThreadHolder");
 
 CanvasThreadHolder::CanvasThreadHolder(
-    already_AddRefed<nsIThread> aCanvasThread,
+    already_AddRefed<nsISerialEventTarget> aCanvasThread,
     already_AddRefed<nsIThreadPool> aCanvasWorkers)
     : mCanvasThread(aCanvasThread),
       mCanvasWorkers(aCanvasWorkers),
@@ -44,8 +44,9 @@ already_AddRefed<CanvasThreadHolder> CanvasThreadHolder::EnsureCanvasThread() {
 
   auto lockedCanvasThreadHolder = sCanvasThreadHolder.Lock();
   if (!lockedCanvasThreadHolder.ref()) {
-    nsCOMPtr<nsIThread> canvasThread;
-    nsresult rv = NS_NewNamedThread("Canvas", getter_AddRefs(canvasThread));
+    nsCOMPtr<nsISerialEventTarget> canvasThread;
+    nsresult rv =
+        NS_CreateBackgroundTaskQueue("Canvas", getter_AddRefs(canvasThread));
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     // Given that the canvas workers are receiving instructions from
@@ -80,7 +81,6 @@ void CanvasThreadHolder::StaticRelease(
 
   auto lockedCanvasThreadHolder = sCanvasThreadHolder.Lock();
   if (lockedCanvasThreadHolder.ref()->mRefCnt == 1) {
-    lockedCanvasThreadHolder.ref()->mCanvasThread->Shutdown();
     lockedCanvasThreadHolder.ref() = nullptr;
   }
 }
@@ -88,12 +88,15 @@ void CanvasThreadHolder::StaticRelease(
 /* static */
 void CanvasThreadHolder::ReleaseOnCompositorThread(
     already_AddRefed<CanvasThreadHolder> aCanvasThreadHolder) {
+  RefPtr<CanvasThreadHolder> canvasThreadHolder = aCanvasThreadHolder;
   auto lockedCanvasThreadHolder = sCanvasThreadHolder.Lock();
   lockedCanvasThreadHolder.ref()
       ->mCompositorThreadKeepAlive->GetCompositorThread()
-      ->Dispatch(NewRunnableFunction("CanvasThreadHolder::StaticRelease",
-                                     CanvasThreadHolder::StaticRelease,
-                                     std::move(aCanvasThreadHolder)));
+      ->Dispatch(NS_NewRunnableFunction(
+          "CanvasThreadHolder::StaticRelease",
+          [canvasThreadHolder = std::move(canvasThreadHolder)]() mutable {
+            CanvasThreadHolder::StaticRelease(canvasThreadHolder.forget());
+          }));
 }
 
 /* static */

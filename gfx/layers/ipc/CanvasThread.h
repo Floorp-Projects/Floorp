@@ -11,9 +11,6 @@
 #include "mozilla/DataMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskQueue.h"
-#include "mozilla/UniquePtr.h"
-#include "nsISupports.h"
-#include "nsIThread.h"
 #include "nsIThreadPool.h"
 
 namespace mozilla {
@@ -85,12 +82,12 @@ class CanvasThreadHolder final {
 
   static StaticDataMutex<StaticRefPtr<CanvasThreadHolder>> sCanvasThreadHolder;
 
-  CanvasThreadHolder(already_AddRefed<nsIThread> aCanvasThread,
+  CanvasThreadHolder(already_AddRefed<nsISerialEventTarget> aCanvasThread,
                      already_AddRefed<nsIThreadPool> aCanvasWorkers);
 
   ~CanvasThreadHolder();
 
-  nsCOMPtr<nsIThread> mCanvasThread;
+  nsCOMPtr<nsISerialEventTarget> mCanvasThread;
   RefPtr<nsIThreadPool> mCanvasWorkers;
 
   // Hold a reference to prevent the compositor thread ending.

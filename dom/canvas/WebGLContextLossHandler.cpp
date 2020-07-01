@@ -28,10 +28,11 @@ WebGLContextLossHandler::~WebGLContextLossHandler() = default;
 
 void WebGLContextLossHandler::RunTimer() {
   const uint32_t kDelayMS = 1000;
-  MOZ_ASSERT(MessageLoop::current());
+  MOZ_ASSERT(GetCurrentSerialEventTarget());
   // Only create a new task if one isn't already queued.
   if (mTimerIsScheduled.compareExchange(false, true)) {
-    MessageLoop::current()->PostDelayedTask(do_AddRef(mRunnable), kDelayMS);
+    GetCurrentSerialEventTarget()->DelayedDispatch(do_AddRef(mRunnable),
+                                                   kDelayMS);
   }
 }
 

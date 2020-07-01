@@ -174,16 +174,20 @@ void CanvasTranslator::StartTranslation() {
 }
 
 void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
+  MOZ_ASSERT(CanvasThreadHolder::IsInCanvasThread());
+
   if (!mTranslationTaskQueue) {
     return FinishShutdown();
   }
 
   mTranslationTaskQueue->BeginShutdown()->Then(
-      MessageLoop::current()->SerialEventTarget(), __func__, this,
+      GetCurrentSerialEventTarget(), __func__, this,
       &CanvasTranslator::FinishShutdown, &CanvasTranslator::FinishShutdown);
 }
 
 void CanvasTranslator::FinishShutdown() {
+  MOZ_ASSERT(CanvasThreadHolder::IsInCanvasThread());
+
   // mTranslationTaskQueue has shutdown we can safely drop the ring buffer to
   // break the cycle caused by RingBufferReaderServices.
   mStream = nullptr;
