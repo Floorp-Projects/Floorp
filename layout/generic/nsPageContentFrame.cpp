@@ -123,6 +123,6 @@ void nsPageContentFrame::AppendDirectlyOwnedAnonBoxes(
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsPageContentFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("PageContent"), aResult);
+  return MakeFrameName(u"PageContent"_ns, aResult);
 }
 #endif

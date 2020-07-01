@@ -1165,7 +1165,7 @@ void AudioInputProcessing::DeviceChanged(MediaTrackGraphImpl* aGraph) {
 void AudioInputProcessing::End() { mEnded = true; }
 
 nsString MediaEngineWebRTCAudioCaptureSource::GetName() const {
-  return NS_LITERAL_STRING(u"AudioCapture");
+  return u"AudioCapture"_ns;
 }
 
 nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
@@ -1176,7 +1176,7 @@ nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
 
   rv = nsContentUtils::GenerateUUIDInPlace(uuid);
   if (rv.Failed()) {
-    return NS_LITERAL_CSTRING("");
+    return ""_ns;
   }
 
   uuid.ToProvidedString(uuidBuffer);
@@ -1187,7 +1187,7 @@ nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
 }
 
 nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() const {
-  return NS_LITERAL_STRING(u"AudioCaptureGroup");
+  return u"AudioCaptureGroup"_ns;
 }
 
 void MediaEngineWebRTCAudioCaptureSource::SetTrack(

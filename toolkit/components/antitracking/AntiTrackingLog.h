@@ -20,7 +20,7 @@ static const nsCString::size_type sMaxSpecLength = 128;
 #define LOG_SPEC(format, uri)                                       \
   PR_BEGIN_MACRO                                                    \
   if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {   \
-    nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));           \
+    nsAutoCString _specStr("(null)"_ns);                            \
     if (uri) {                                                      \
       _specStr = (uri)->GetSpecOrDefault();                         \
     }                                                               \
@@ -33,13 +33,13 @@ static const nsCString::size_type sMaxSpecLength = 128;
 #define LOG_SPEC2(format, uri1, uri2)                                 \
   PR_BEGIN_MACRO                                                      \
   if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {     \
-    nsAutoCString _specStr1(NS_LITERAL_CSTRING("(null)"));            \
+    nsAutoCString _specStr1("(null)"_ns);                             \
     if (uri1) {                                                       \
       _specStr1 = (uri1)->GetSpecOrDefault();                         \
     }                                                                 \
     _specStr1.Truncate(std::min(_specStr1.Length(), sMaxSpecLength)); \
     const char* _spec1 = _specStr1.get();                             \
-    nsAutoCString _specStr2(NS_LITERAL_CSTRING("(null)"));            \
+    nsAutoCString _specStr2("(null)"_ns);                             \
     if (uri2) {                                                       \
       _specStr2 = (uri2)->GetSpecOrDefault();                         \
     }                                                                 \
@@ -52,7 +52,7 @@ static const nsCString::size_type sMaxSpecLength = 128;
 #define LOG_PRIN(format, principal)                                 \
   PR_BEGIN_MACRO                                                    \
   if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {   \
-    nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));           \
+    nsAutoCString _specStr("(null)"_ns);                            \
     if (principal) {                                                \
       (principal)->GetAsciiSpec(_specStr);                          \
     }                                                               \

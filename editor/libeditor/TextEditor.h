@@ -292,8 +292,8 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return NS_ERROR_NOT_INITIALIZED;
     }
-    nsresult rv = ComputeValueInternal(NS_LITERAL_STRING("text/plain"),
-                                       aDocumentEncoderFlags, aOutputString);
+    nsresult rv = ComputeValueInternal(u"text/plain"_ns, aDocumentEncoderFlags,
+                                       aOutputString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditorBase::ToGenericNSResult(rv);
     }

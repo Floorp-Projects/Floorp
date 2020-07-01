@@ -72,21 +72,21 @@
 #  define USE_NATIVE_MENUS
 #endif
 
-#define SIZEMODE_NORMAL NS_LITERAL_STRING("normal")
-#define SIZEMODE_MAXIMIZED NS_LITERAL_STRING("maximized")
-#define SIZEMODE_MINIMIZED NS_LITERAL_STRING("minimized")
-#define SIZEMODE_FULLSCREEN NS_LITERAL_STRING("fullscreen")
+#define SIZEMODE_NORMAL u"normal"_ns
+#define SIZEMODE_MAXIMIZED u"maximized"_ns
+#define SIZEMODE_MINIMIZED u"minimized"_ns
+#define SIZEMODE_FULLSCREEN u"fullscreen"_ns
 
-#define WINDOWTYPE_ATTRIBUTE NS_LITERAL_STRING("windowtype")
+#define WINDOWTYPE_ATTRIBUTE u"windowtype"_ns
 
-#define PERSIST_ATTRIBUTE NS_LITERAL_STRING("persist")
-#define SCREENX_ATTRIBUTE NS_LITERAL_STRING("screenX")
-#define SCREENY_ATTRIBUTE NS_LITERAL_STRING("screenY")
-#define WIDTH_ATTRIBUTE NS_LITERAL_STRING("width")
-#define HEIGHT_ATTRIBUTE NS_LITERAL_STRING("height")
-#define MODE_ATTRIBUTE NS_LITERAL_STRING("sizemode")
-#define TILED_ATTRIBUTE NS_LITERAL_STRING("gtktiledwindow")
-#define ZLEVEL_ATTRIBUTE NS_LITERAL_STRING("zlevel")
+#define PERSIST_ATTRIBUTE u"persist"_ns
+#define SCREENX_ATTRIBUTE u"screenX"_ns
+#define SCREENY_ATTRIBUTE u"screenY"_ns
+#define WIDTH_ATTRIBUTE u"width"_ns
+#define HEIGHT_ATTRIBUTE u"height"_ns
+#define MODE_ATTRIBUTE u"sizemode"_ns
+#define TILED_ATTRIBUTE u"gtktiledwindow"_ns
+#define ZLEVEL_ATTRIBUTE u"zlevel"_ns
 
 #define SIZE_PERSISTENCE_TIMEOUT 500  // msec
 
@@ -357,10 +357,10 @@ NS_IMETHODIMP AppWindow::SetZLevel(uint32_t aLevel) {
     RefPtr<dom::Document> doc = cv->GetDocument();
     if (doc) {
       ErrorResult rv;
-      RefPtr<dom::Event> event = doc->CreateEvent(NS_LITERAL_STRING("Events"),
-                                                  dom::CallerType::System, rv);
+      RefPtr<dom::Event> event =
+          doc->CreateEvent(u"Events"_ns, dom::CallerType::System, rv);
       if (event) {
-        event->InitEvent(NS_LITERAL_STRING("windowZLevel"), true, false);
+        event->InitEvent(u"windowZLevel"_ns, true, false);
 
         event->SetTrusted(true);
 
@@ -1631,7 +1631,7 @@ void AppWindow::SyncAttributesToWidget() {
 
   // "chromemargin" attribute
   nsIntMargin margins;
-  windowElement->GetAttribute(NS_LITERAL_STRING("chromemargin"), attr);
+  windowElement->GetAttribute(u"chromemargin"_ns, attr);
   if (nsContentUtils::ParseIntMarginValue(attr, margins)) {
     LayoutDeviceIntMargin tmp =
         LayoutDeviceIntMargin::FromUnknownMargin(margins);
@@ -1649,7 +1649,7 @@ void AppWindow::SyncAttributesToWidget() {
   NS_ENSURE_TRUE_VOID(mWindow);
 
   // "icon" attribute
-  windowElement->GetAttribute(NS_LITERAL_STRING("icon"), attr);
+  windowElement->GetAttribute(u"icon"_ns, attr);
   if (!attr.IsEmpty()) {
     mWindow->SetIcon(attr);
 
@@ -1657,25 +1657,25 @@ void AppWindow::SyncAttributesToWidget() {
   }
 
   // "drawtitle" attribute
-  windowElement->GetAttribute(NS_LITERAL_STRING("drawtitle"), attr);
+  windowElement->GetAttribute(u"drawtitle"_ns, attr);
   mWindow->SetDrawsTitle(attr.LowerCaseEqualsLiteral("true"));
 
   NS_ENSURE_TRUE_VOID(mWindow);
 
   // "toggletoolbar" attribute
-  windowElement->GetAttribute(NS_LITERAL_STRING("toggletoolbar"), attr);
+  windowElement->GetAttribute(u"toggletoolbar"_ns, attr);
   mWindow->SetShowsToolbarButton(attr.LowerCaseEqualsLiteral("true"));
 
   NS_ENSURE_TRUE_VOID(mWindow);
 
   // "macnativefullscreen" attribute
-  windowElement->GetAttribute(NS_LITERAL_STRING("macnativefullscreen"), attr);
+  windowElement->GetAttribute(u"macnativefullscreen"_ns, attr);
   mWindow->SetSupportsNativeFullscreen(attr.LowerCaseEqualsLiteral("true"));
 
   NS_ENSURE_TRUE_VOID(mWindow);
 
   // "macanimationtype" attribute
-  windowElement->GetAttribute(NS_LITERAL_STRING("macanimationtype"), attr);
+  windowElement->GetAttribute(u"macanimationtype"_ns, attr);
   if (attr.EqualsLiteral("document")) {
     mWindow->SetWindowAnimationType(nsIWidget::eDocumentWindowAnimation);
   }
@@ -1913,9 +1913,9 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
     }
     bool tiled = mWindow->IsTiled();
     if (tiled) {
-      sizeString.Assign(NS_LITERAL_STRING("true"));
+      sizeString.Assign(u"true"_ns);
     } else {
-      sizeString.Assign(NS_LITERAL_STRING("false"));
+      sizeString.Assign(u"false"_ns);
     }
     docShellElement->SetAttribute(TILED_ATTRIBUTE, sizeString, rv);
     if (persistString.Find("zlevel") >= 0) {
@@ -2388,7 +2388,7 @@ void AppWindow::ApplyChromeFlags() {
   // Note that if we're not actually changing the value this will be a no-op,
   // so no need to compare to the old value.
   IgnoredErrorResult rv;
-  window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue, rv);
+  window->SetAttribute(u"chromehidden"_ns, newvalue, rv);
 }
 
 NS_IMETHODIMP
@@ -2598,10 +2598,9 @@ bool AppWindow::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) {
   if (mDocShell && mDocShell->GetWindow()) {
     nsCOMPtr<EventTarget> eventTarget =
         mDocShell->GetWindow()->GetTopWindowRoot();
-    nsContentUtils::DispatchChromeEvent(mDocShell->GetDocument(), eventTarget,
-                                        NS_LITERAL_STRING("MozUpdateWindowPos"),
-                                        CanBubble::eNo, Cancelable::eNo,
-                                        nullptr);
+    nsContentUtils::DispatchChromeEvent(
+        mDocShell->GetDocument(), eventTarget, u"MozUpdateWindowPos"_ns,
+        CanBubble::eNo, Cancelable::eNo, nullptr);
   }
 
   // Persist position, but not immediately, in case this OS is firing
@@ -2688,7 +2687,7 @@ void AppWindow::SizeModeChanged(nsSizeMode sizeMode) {
     }
 
     // And always fire a user-defined sizemodechange event on the window
-    ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("sizemodechange"));
+    ourWindow->DispatchCustomEvent(u"sizemodechange"_ns);
   }
 
   if (PresShell* presShell = GetPresShell()) {
@@ -2706,7 +2705,7 @@ void AppWindow::UIResolutionChanged() {
   nsCOMPtr<nsPIDOMWindowOuter> ourWindow =
       mDocShell ? mDocShell->GetWindow() : nullptr;
   if (ourWindow) {
-    ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("resolutionchange"),
+    ourWindow->DispatchCustomEvent(u"resolutionchange"_ns,
                                    ChromeOnlyDispatch::eYes);
   }
 }
@@ -2732,7 +2731,7 @@ void AppWindow::OcclusionStateChanged(bool aIsFullyOccluded) {
       mDocShell ? mDocShell->GetWindow() : nullptr;
   if (ourWindow) {
     // And always fire a user-defined occlusionstatechange event on the window
-    ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("occlusionstatechange"),
+    ourWindow->DispatchCustomEvent(u"occlusionstatechange"_ns,
                                    ChromeOnlyDispatch::eYes);
   }
 }
@@ -2808,9 +2807,9 @@ static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
   // Find the menubar tag (if there is more than one, we ignore all but
   // the first).
   nsCOMPtr<nsINodeList> menubarElements = aDoc->GetElementsByTagNameNS(
-      NS_LITERAL_STRING(
-          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
-      NS_LITERAL_STRING("menubar"));
+      nsLiteralString(
+          u"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
+      u"menubar"_ns);
 
   nsCOMPtr<nsINode> menubarNode;
   if (menubarElements) {

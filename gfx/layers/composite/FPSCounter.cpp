@@ -320,9 +320,9 @@ nsresult FPSCounter::WriteFrameTimeStamps() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!strncmp(mFPSName, "Compositor", strlen(mFPSName))) {
-    resultFile->Append(NS_LITERAL_STRING("fps.txt"));
+    resultFile->Append(u"fps.txt"_ns);
   } else {
-    resultFile->Append(NS_LITERAL_STRING("txn.txt"));
+    resultFile->Append(u"txn.txt"_ns);
   }
 
   PRFileDesc* fd = nullptr;

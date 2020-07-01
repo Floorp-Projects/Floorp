@@ -14,9 +14,7 @@ TEST(TestNativeNtGTest, GenerateDependentModuleSet)
 {
   mozilla::nt::PEHeaders executable(::GetModuleHandleW(nullptr));
   auto dependentModules = executable.GenerateDependentModuleSet();
-  EXPECT_NE(dependentModules.GetEntry(NS_LITERAL_STRING("mozglue.dll")),
-            nullptr);
-  EXPECT_NE(dependentModules.GetEntry(NS_LITERAL_STRING("MOZGLUE.dll")),
-            nullptr);
-  EXPECT_EQ(dependentModules.GetEntry(NS_LITERAL_STRING("xxx.dll")), nullptr);
+  EXPECT_NE(dependentModules.GetEntry(u"mozglue.dll"_ns), nullptr);
+  EXPECT_NE(dependentModules.GetEntry(u"MOZGLUE.dll"_ns), nullptr);
+  EXPECT_EQ(dependentModules.GetEntry(u"xxx.dll"_ns), nullptr);
 }

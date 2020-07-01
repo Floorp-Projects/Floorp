@@ -372,8 +372,7 @@ nsresult NativeFileWatcherIOTask::RunInternal() {
         WatchedResourceDescriptor* changedRes =
             mWatchedResourcesByHandle.Get((HANDLE)changedResourceHandle);
 
-        nsresult rv =
-            DispatchChangeCallbacks(changedRes, NS_LITERAL_STRING("*"));
+        nsresult rv = DispatchChangeCallbacks(changedRes, u"*"_ns);
         if (NS_FAILED(rv)) {
           // We failed to dispatch the error callbacks. Something very
           // bad happened to the main thread, so we bail out from the watcher

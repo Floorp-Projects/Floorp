@@ -57,7 +57,7 @@ class nsRangeFrame final : public nsContainerFrame,
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("Range"), aResult);
+    return MakeFrameName(u"Range"_ns, aResult);
   }
 #endif
 

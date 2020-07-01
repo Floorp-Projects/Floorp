@@ -134,8 +134,8 @@ nsresult RTCDTMFSender::Notify(nsITimer* timer) {
     }
   }
 
-  RefPtr<RTCDTMFToneChangeEvent> event = RTCDTMFToneChangeEvent::Constructor(
-      this, NS_LITERAL_STRING("tonechange"), init);
+  RefPtr<RTCDTMFToneChangeEvent> event =
+      RTCDTMFToneChangeEvent::Constructor(this, u"tonechange"_ns, init);
   DispatchTrustedEvent(event);
 
   return NS_OK;

@@ -113,8 +113,7 @@ class AsyncPaintWaitEvent : public Runnable {
   NS_IMETHOD Run() override {
     nsContentUtils::DispatchEventOnlyToChrome(
         mContent->OwnerDoc(), mContent,
-        mFinished ? NS_LITERAL_STRING("MozPaintWaitFinished")
-                  : NS_LITERAL_STRING("MozPaintWait"),
+        mFinished ? u"MozPaintWaitFinished"_ns : u"MozPaintWait"_ns,
         CanBubble::eYes, Cancelable::eYes);
     return NS_OK;
   }
@@ -1934,9 +1933,8 @@ void nsPluginInstanceOwner::PerformDelayedBlurs() {
   nsCOMPtr<EventTarget> windowRoot =
       content->OwnerDoc()->GetWindow()->GetTopWindowRoot();
   nsContentUtils::DispatchEventOnlyToChrome(
-      content->OwnerDoc(), windowRoot,
-      NS_LITERAL_STRING("MozPerformDelayedBlur"), CanBubble::eNo,
-      Cancelable::eNo, nullptr);
+      content->OwnerDoc(), windowRoot, u"MozPerformDelayedBlur"_ns,
+      CanBubble::eNo, Cancelable::eNo, nullptr);
 }
 
 #endif
@@ -2429,32 +2427,30 @@ nsresult nsPluginInstanceOwner::Destroy() {
     mCXMenuListener = nullptr;
   }
 
-  content->RemoveEventListener(NS_LITERAL_STRING("focus"), this, false);
-  content->RemoveEventListener(NS_LITERAL_STRING("blur"), this, false);
-  content->RemoveEventListener(NS_LITERAL_STRING("mouseup"), this, false);
-  content->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this, false);
-  content->RemoveEventListener(NS_LITERAL_STRING("mousemove"), this, false);
-  content->RemoveEventListener(NS_LITERAL_STRING("click"), this, false);
-  content->RemoveEventListener(NS_LITERAL_STRING("dblclick"), this, false);
-  content->RemoveEventListener(NS_LITERAL_STRING("mouseover"), this, false);
-  content->RemoveEventListener(NS_LITERAL_STRING("mouseout"), this, false);
-  content->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, true);
-  content->RemoveSystemEventListener(NS_LITERAL_STRING("keypress"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("keydown"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("keyup"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("drop"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("drag"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("dragenter"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("dragover"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("dragleave"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("dragexit"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("dragstart"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("dragend"), this, true);
-  content->RemoveSystemEventListener(NS_LITERAL_STRING("compositionstart"),
-                                     this, true);
-  content->RemoveSystemEventListener(NS_LITERAL_STRING("compositionend"), this,
-                                     true);
-  content->RemoveSystemEventListener(NS_LITERAL_STRING("text"), this, true);
+  content->RemoveEventListener(u"focus"_ns, this, false);
+  content->RemoveEventListener(u"blur"_ns, this, false);
+  content->RemoveEventListener(u"mouseup"_ns, this, false);
+  content->RemoveEventListener(u"mousedown"_ns, this, false);
+  content->RemoveEventListener(u"mousemove"_ns, this, false);
+  content->RemoveEventListener(u"click"_ns, this, false);
+  content->RemoveEventListener(u"dblclick"_ns, this, false);
+  content->RemoveEventListener(u"mouseover"_ns, this, false);
+  content->RemoveEventListener(u"mouseout"_ns, this, false);
+  content->RemoveEventListener(u"keypress"_ns, this, true);
+  content->RemoveSystemEventListener(u"keypress"_ns, this, true);
+  content->RemoveEventListener(u"keydown"_ns, this, true);
+  content->RemoveEventListener(u"keyup"_ns, this, true);
+  content->RemoveEventListener(u"drop"_ns, this, true);
+  content->RemoveEventListener(u"drag"_ns, this, true);
+  content->RemoveEventListener(u"dragenter"_ns, this, true);
+  content->RemoveEventListener(u"dragover"_ns, this, true);
+  content->RemoveEventListener(u"dragleave"_ns, this, true);
+  content->RemoveEventListener(u"dragexit"_ns, this, true);
+  content->RemoveEventListener(u"dragstart"_ns, this, true);
+  content->RemoveEventListener(u"dragend"_ns, this, true);
+  content->RemoveSystemEventListener(u"compositionstart"_ns, this, true);
+  content->RemoveSystemEventListener(u"compositionend"_ns, this, true);
+  content->RemoveSystemEventListener(u"text"_ns, this, true);
 
   if (mWidget) {
     if (mPluginWindow) {
@@ -2731,38 +2727,33 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent) {
   // register context menu listener
   mCXMenuListener = new nsPluginDOMContextMenuListener(aContent);
 
-  aContent->AddEventListener(NS_LITERAL_STRING("focus"), this, false, false);
-  aContent->AddEventListener(NS_LITERAL_STRING("blur"), this, false, false);
-  aContent->AddEventListener(NS_LITERAL_STRING("mouseup"), this, false, false);
-  aContent->AddEventListener(NS_LITERAL_STRING("mousedown"), this, false,
-                             false);
-  aContent->AddEventListener(NS_LITERAL_STRING("mousemove"), this, false,
-                             false);
-  aContent->AddEventListener(NS_LITERAL_STRING("click"), this, false, false);
-  aContent->AddEventListener(NS_LITERAL_STRING("dblclick"), this, false, false);
-  aContent->AddEventListener(NS_LITERAL_STRING("mouseover"), this, false,
-                             false);
-  aContent->AddEventListener(NS_LITERAL_STRING("mouseout"), this, false, false);
+  aContent->AddEventListener(u"focus"_ns, this, false, false);
+  aContent->AddEventListener(u"blur"_ns, this, false, false);
+  aContent->AddEventListener(u"mouseup"_ns, this, false, false);
+  aContent->AddEventListener(u"mousedown"_ns, this, false, false);
+  aContent->AddEventListener(u"mousemove"_ns, this, false, false);
+  aContent->AddEventListener(u"click"_ns, this, false, false);
+  aContent->AddEventListener(u"dblclick"_ns, this, false, false);
+  aContent->AddEventListener(u"mouseover"_ns, this, false, false);
+  aContent->AddEventListener(u"mouseout"_ns, this, false, false);
   // "keypress" event should be handled when it's in the default event group
   // if the event is fired in content.  Otherwise, it should be handled when
   // it's in the system event group.
-  aContent->AddEventListener(NS_LITERAL_STRING("keypress"), this, true);
-  aContent->AddSystemEventListener(NS_LITERAL_STRING("keypress"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("keydown"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("keyup"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("drop"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("drag"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("dragenter"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("dragover"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("dragleave"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("dragexit"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("dragstart"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("dragend"), this, true);
-  aContent->AddSystemEventListener(NS_LITERAL_STRING("compositionstart"), this,
-                                   true);
-  aContent->AddSystemEventListener(NS_LITERAL_STRING("compositionend"), this,
-                                   true);
-  aContent->AddSystemEventListener(NS_LITERAL_STRING("text"), this, true);
+  aContent->AddEventListener(u"keypress"_ns, this, true);
+  aContent->AddSystemEventListener(u"keypress"_ns, this, true);
+  aContent->AddEventListener(u"keydown"_ns, this, true);
+  aContent->AddEventListener(u"keyup"_ns, this, true);
+  aContent->AddEventListener(u"drop"_ns, this, true);
+  aContent->AddEventListener(u"drag"_ns, this, true);
+  aContent->AddEventListener(u"dragenter"_ns, this, true);
+  aContent->AddEventListener(u"dragover"_ns, this, true);
+  aContent->AddEventListener(u"dragleave"_ns, this, true);
+  aContent->AddEventListener(u"dragexit"_ns, this, true);
+  aContent->AddEventListener(u"dragstart"_ns, this, true);
+  aContent->AddEventListener(u"dragend"_ns, this, true);
+  aContent->AddSystemEventListener(u"compositionstart"_ns, this, true);
+  aContent->AddSystemEventListener(u"compositionend"_ns, this, true);
+  aContent->AddSystemEventListener(u"text"_ns, this, true);
 
   return NS_OK;
 }
@@ -3167,12 +3158,10 @@ void nsPluginInstanceOwner::SetFrame(nsPluginFrame* aFrame) {
       nsCOMPtr<EventTarget> windowRoot =
           content->OwnerDoc()->GetWindow()->GetTopWindowRoot();
       if (windowRoot) {
-        windowRoot->RemoveEventListener(NS_LITERAL_STRING("activate"), this,
+        windowRoot->RemoveEventListener(u"activate"_ns, this, false);
+        windowRoot->RemoveEventListener(u"deactivate"_ns, this, false);
+        windowRoot->RemoveEventListener(u"MozPerformDelayedBlur"_ns, this,
                                         false);
-        windowRoot->RemoveEventListener(NS_LITERAL_STRING("deactivate"), this,
-                                        false);
-        windowRoot->RemoveEventListener(
-            NS_LITERAL_STRING("MozPerformDelayedBlur"), this, false);
       }
     }
 
@@ -3207,12 +3196,10 @@ void nsPluginInstanceOwner::SetFrame(nsPluginFrame* aFrame) {
       nsCOMPtr<EventTarget> windowRoot =
           content->OwnerDoc()->GetWindow()->GetTopWindowRoot();
       if (windowRoot) {
-        windowRoot->AddEventListener(NS_LITERAL_STRING("activate"), this, false,
+        windowRoot->AddEventListener(u"activate"_ns, this, false, false);
+        windowRoot->AddEventListener(u"deactivate"_ns, this, false, false);
+        windowRoot->AddEventListener(u"MozPerformDelayedBlur"_ns, this, false,
                                      false);
-        windowRoot->AddEventListener(NS_LITERAL_STRING("deactivate"), this,
-                                     false, false);
-        windowRoot->AddEventListener(NS_LITERAL_STRING("MozPerformDelayedBlur"),
-                                     this, false, false);
       }
     }
   }
@@ -3279,7 +3266,7 @@ void nsPluginInstanceOwner::GeneratePluginEvent(
 
 nsPluginDOMContextMenuListener::nsPluginDOMContextMenuListener(
     nsIContent* aContent) {
-  aContent->AddEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
+  aContent->AddEventListener(u"contextmenu"_ns, this, true);
 }
 
 nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener() = default;
@@ -3295,5 +3282,5 @@ nsPluginDOMContextMenuListener::HandleEvent(Event* aEvent) {
 
 void nsPluginDOMContextMenuListener::Destroy(nsIContent* aContent) {
   // Unregister context menu listener
-  aContent->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
+  aContent->RemoveEventListener(u"contextmenu"_ns, this, true);
 }

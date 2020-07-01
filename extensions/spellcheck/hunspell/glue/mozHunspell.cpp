@@ -322,7 +322,7 @@ mozHunspell::LoadDictionariesFromDir(nsIFile* aDir) {
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(file))) && file) {
     nsAutoString leafName;
     file->GetLeafName(leafName);
-    if (!StringEndsWith(leafName, NS_LITERAL_STRING(".dic"))) continue;
+    if (!StringEndsWith(leafName, u".dic"_ns)) continue;
 
     nsAutoString dict(leafName);
     dict.SetLength(dict.Length() - 4);  // magic length of ".dic"

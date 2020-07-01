@@ -1518,8 +1518,8 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         dataDirParent->GetLeafName(dirName);
 
         nsAutoCString newRelativePathToData;
-        newRelativePathToData = NS_ConvertUTF16toUTF8(dirName) +
-                                NS_LITERAL_CSTRING("/") + relativePathToData;
+        newRelativePathToData =
+            NS_ConvertUTF16toUTF8(dirName) + "/"_ns + relativePathToData;
         relativePathToData = newRelativePathToData;
 
         nsCOMPtr<nsIFile> newDataDirParent;
@@ -2490,10 +2490,10 @@ nsresult nsWebBrowserPersist::SaveSubframeContent(
     mWalkStack.AppendElement(std::move(toWalk));
   } else {
     nsContentPolicyType policyType = nsIContentPolicy::TYPE_OTHER;
-    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"))) {
+    if (StringBeginsWith(contentType, "image/"_ns)) {
       policyType = nsIContentPolicy::TYPE_IMAGE;
-    } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("audio/")) ||
-               StringBeginsWith(contentType, NS_LITERAL_CSTRING("video/"))) {
+    } else if (StringBeginsWith(contentType, "audio/"_ns) ||
+               StringBeginsWith(contentType, "video/"_ns)) {
       policyType = nsIContentPolicy::TYPE_MEDIA;
     }
     rv = StoreURI(aURISpec, aParentDocument, policyType);

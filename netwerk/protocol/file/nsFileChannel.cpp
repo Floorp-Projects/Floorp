@@ -377,7 +377,7 @@ nsresult nsFileChannel::OpenContentStream(bool async, nsIInputStream** result,
     // sniffer code in nsBaseChannel.
     // However, don't override explicitly set types.
     if (!HasContentTypeHint())
-      SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
+      SetContentType(nsLiteralCString(APPLICATION_OCTET_STREAM));
   } else {
     nsAutoCString contentType;
     rv = MakeFileInputStream(file, stream, contentType, async);

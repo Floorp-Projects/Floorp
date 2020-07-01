@@ -472,7 +472,7 @@ void FakeWebrtcTCPSocket::InvokeOnClose(nsresult aReason) {
 }
 
 void FakeWebrtcTCPSocket::InvokeOnConnected() {
-  mProxyCallbacks->OnConnected(NS_LITERAL_CSTRING("http"));
+  mProxyCallbacks->OnConnected("http"_ns);
 }
 
 void FakeWebrtcTCPSocket::InvokeOnRead(nsTArray<uint8_t>&& aReadData) {

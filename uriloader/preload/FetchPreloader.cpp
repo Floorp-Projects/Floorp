@@ -111,7 +111,7 @@ nsresult FetchPreloader::CreateChannel(
   }
 
   if (nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(channel)) {
-    timedChannel->SetInitiatorType(NS_LITERAL_STRING("link"));
+    timedChannel->SetInitiatorType(u"link"_ns);
   }
 
   channel.forget(aChannel);

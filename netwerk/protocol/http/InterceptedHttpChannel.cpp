@@ -699,7 +699,7 @@ InterceptedHttpChannel::SynthesizeHeader(const nsACString& aName,
     mSynthesizedResponseHead.reset(new nsHttpResponseHead());
   }
 
-  nsAutoCString header = aName + NS_LITERAL_CSTRING(": ") + aValue;
+  nsAutoCString header = aName + ": "_ns + aValue;
   // Overwrite any existing header.
   nsresult rv = mSynthesizedResponseHead->ParseHeaderLine(header);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -925,9 +925,8 @@ InterceptedHttpChannel::SaveTimeStamps(void) {
   }
 
   bool isNonSubresourceRequest = nsContentUtils::IsNonSubresourceRequest(this);
-  nsCString navigationOrSubresource = isNonSubresourceRequest
-                                          ? NS_LITERAL_CSTRING("navigation")
-                                          : NS_LITERAL_CSTRING("subresource");
+  nsCString navigationOrSubresource =
+      isNonSubresourceRequest ? "navigation"_ns : "subresource"_ns;
 
   nsAutoCString subresourceKey(EmptyCString());
   GetSubresourceTimeStampKey(this, subresourceKey);

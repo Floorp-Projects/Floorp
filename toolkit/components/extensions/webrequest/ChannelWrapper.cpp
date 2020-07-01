@@ -46,8 +46,7 @@ using namespace JS;
 namespace mozilla {
 namespace extensions {
 
-#define CHANNELWRAPPER_PROP_KEY \
-  NS_LITERAL_STRING("ChannelWrapper::CachedInstance")
+#define CHANNELWRAPPER_PROP_KEY u"ChannelWrapper::CachedInstance"_ns
 
 using CF = nsIClassifiedChannel::ClassificationFlags;
 using MUC = MozUrlClassificationFlags;
@@ -535,7 +534,7 @@ const URLInfo& ChannelWrapper::FinalURLInfo() const {
     if (Type() == MozContentPolicyType::Websocket &&
         (url.Scheme() == nsGkAtoms::http || url.Scheme() == nsGkAtoms::https)) {
       nsAutoCString spec(url.CSpec());
-      spec.Replace(0, 4, NS_LITERAL_CSTRING("ws"));
+      spec.Replace(0, 4, "ws"_ns);
 
       Unused << NS_NewURI(getter_AddRefs(uri), spec);
       MOZ_RELEASE_ASSERT(uri);
@@ -1021,7 +1020,7 @@ void ChannelWrapper::ErrorCheck() {
       mChannelEntry = nullptr;
       mFiredErrorEvent = true;
       ChannelWrapper_Binding::ClearCachedErrorStringValue(this);
-      FireEvent(NS_LITERAL_STRING("error"));
+      FireEvent(u"error"_ns);
     }
   }
 }
@@ -1052,7 +1051,7 @@ ChannelWrapper::RequestListener::OnStartRequest(nsIRequest* request) {
   mChannelWrapper->mChannelEntry = nullptr;
   mChannelWrapper->mResponseStarted = true;
   mChannelWrapper->ErrorCheck();
-  mChannelWrapper->FireEvent(NS_LITERAL_STRING("start"));
+  mChannelWrapper->FireEvent(u"start"_ns);
 
   return mOrigStreamListener->OnStartRequest(request);
 }
@@ -1064,7 +1063,7 @@ ChannelWrapper::RequestListener::OnStopRequest(nsIRequest* request,
 
   mChannelWrapper->mChannelEntry = nullptr;
   mChannelWrapper->ErrorCheck();
-  mChannelWrapper->FireEvent(NS_LITERAL_STRING("stop"));
+  mChannelWrapper->FireEvent(u"stop"_ns);
 
   return mOrigStreamListener->OnStopRequest(request, aStatus);
 }

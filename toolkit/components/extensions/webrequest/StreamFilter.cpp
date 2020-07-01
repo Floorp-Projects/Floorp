@@ -225,14 +225,14 @@ void StreamFilter::FireDataEvent(const nsTArray<uint8_t>& aData) {
   auto buffer = ArrayBuffer::Create(cx, aData.Length(), aData.Elements());
   if (!buffer) {
     // TODO: There is no way to recover from this. This chunk of data is lost.
-    FireErrorEvent(NS_LITERAL_STRING("Out of memory"));
+    FireErrorEvent(u"Out of memory"_ns);
     return;
   }
 
   init.mData.Init(buffer);
 
   RefPtr<StreamFilterDataEvent> event =
-      StreamFilterDataEvent::Constructor(this, NS_LITERAL_STRING("data"), init);
+      StreamFilterDataEvent::Constructor(this, u"data"_ns, init);
   event->SetTrusted(true);
 
   DispatchEvent(*event);
@@ -242,7 +242,7 @@ void StreamFilter::FireErrorEvent(const nsAString& aError) {
   MOZ_ASSERT(mError.IsEmpty());
 
   mError = aError;
-  FireEvent(NS_LITERAL_STRING("error"));
+  FireEvent(u"error"_ns);
 }
 
 /*****************************************************************************

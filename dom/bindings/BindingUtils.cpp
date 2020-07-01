@@ -3983,8 +3983,8 @@ class GetLocalizedStringRunnable final : public WorkerMainThreadRunnable {
   GetLocalizedStringRunnable(WorkerPrivate* aWorkerPrivate,
                              const nsAutoCString& aKey,
                              nsAutoString& aLocalizedString)
-      : WorkerMainThreadRunnable(
-            aWorkerPrivate, NS_LITERAL_CSTRING("GetLocalizedStringRunnable")),
+      : WorkerMainThreadRunnable(aWorkerPrivate,
+                                 "GetLocalizedStringRunnable"_ns),
         mKey(aKey),
         mLocalizedString(aLocalizedString) {
     MOZ_ASSERT(aWorkerPrivate);
@@ -4063,8 +4063,7 @@ void ReportDeprecation(nsIGlobalObject* aGlobal, nsIURI* aURI,
       new DeprecationReportBody(aGlobal, type, nullptr /* date */, msg,
                                 aFileName, aLineNumber, aColumnNumber);
 
-  ReportingUtils::Report(aGlobal, nsGkAtoms::deprecation,
-                         NS_LITERAL_STRING("default"),
+  ReportingUtils::Report(aGlobal, nsGkAtoms::deprecation, u"default"_ns,
                          NS_ConvertUTF8toUTF16(spec), body);
 }
 

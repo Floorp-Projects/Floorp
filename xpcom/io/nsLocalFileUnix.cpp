@@ -656,7 +656,7 @@ nsresult nsLocalFile::GetNativeTargetPathName(nsIFile* aNewParent,
     return rv;
   }
 
-  aResult = dirName + NS_LITERAL_CSTRING("/") + Substring(nameBegin, nameEnd);
+  aResult = dirName + "/"_ns + Substring(nameBegin, nameEnd);
   return NS_OK;
 }
 
@@ -1965,7 +1965,7 @@ nsLocalFile::Launch() {
     rv = mimeService->GetTypeFromFile(this, type);
   }
 
-  nsAutoCString fileUri = NS_LITERAL_CSTRING("file://") + mPath;
+  nsAutoCString fileUri = "file://"_ns + mPath;
   return java::GeckoAppShell::OpenUriExternal(
              NS_ConvertUTF8toUTF16(fileUri), NS_ConvertUTF8toUTF16(type),
              EmptyString(), EmptyString(), EmptyString(), EmptyString())

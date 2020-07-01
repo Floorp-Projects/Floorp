@@ -85,11 +85,11 @@ TEST(storage_asyncStatementExecution_transaction, MultipleAsyncReadStatements)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageAsyncStatement> stmt1;
-  db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
+  db->CreateAsyncStatement("SELECT * FROM sqlite_master"_ns,
                            getter_AddRefs(stmt1));
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt2;
-  db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
+  db->CreateAsyncStatement("SELECT * FROM sqlite_master"_ns,
                            getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
@@ -110,12 +110,10 @@ TEST(storage_asyncStatementExecution_transaction, MultipleReadStatements)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageStatement> stmt1;
-  db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
-                      getter_AddRefs(stmt1));
+  db->CreateStatement("SELECT * FROM sqlite_master"_ns, getter_AddRefs(stmt1));
 
   nsCOMPtr<mozIStorageStatement> stmt2;
-  db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
-                      getter_AddRefs(stmt2));
+  db->CreateStatement("SELECT * FROM sqlite_master"_ns, getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
       ToRefPtr(std::move(stmt1)),
@@ -136,13 +134,12 @@ TEST(storage_asyncStatementExecution_transaction,
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageAsyncStatement> stmt1;
-  db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
+  db->CreateAsyncStatement("SELECT * FROM sqlite_master"_ns,
                            getter_AddRefs(stmt1));
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt2;
-  db->CreateAsyncStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt2));
+  db->CreateAsyncStatement("CREATE TABLE test (id INTEGER PRIMARY KEY)"_ns,
+                           getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
       ToRefPtr(std::move(stmt1)),
@@ -161,13 +158,11 @@ TEST(storage_asyncStatementExecution_transaction, MultipleReadWriteStatements)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageStatement> stmt1;
-  db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
-                      getter_AddRefs(stmt1));
+  db->CreateStatement("SELECT * FROM sqlite_master"_ns, getter_AddRefs(stmt1));
 
   nsCOMPtr<mozIStorageStatement> stmt2;
-  db->CreateStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt2));
+  db->CreateStatement("CREATE TABLE test (id INTEGER PRIMARY KEY)"_ns,
+                      getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
       ToRefPtr(std::move(stmt1)),
@@ -187,14 +182,12 @@ TEST(storage_asyncStatementExecution_transaction, MultipleAsyncWriteStatements)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageAsyncStatement> stmt1;
-  db->CreateAsyncStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test1 (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt1));
+  db->CreateAsyncStatement("CREATE TABLE test1 (id INTEGER PRIMARY KEY)"_ns,
+                           getter_AddRefs(stmt1));
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt2;
-  db->CreateAsyncStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test2 (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt2));
+  db->CreateAsyncStatement("CREATE TABLE test2 (id INTEGER PRIMARY KEY)"_ns,
+                           getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
       ToRefPtr(std::move(stmt1)),
@@ -214,14 +207,12 @@ TEST(storage_asyncStatementExecution_transaction, MultipleWriteStatements)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageStatement> stmt1;
-  db->CreateStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test1 (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt1));
+  db->CreateStatement("CREATE TABLE test1 (id INTEGER PRIMARY KEY)"_ns,
+                      getter_AddRefs(stmt1));
 
   nsCOMPtr<mozIStorageStatement> stmt2;
-  db->CreateStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test2 (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt2));
+  db->CreateStatement("CREATE TABLE test2 (id INTEGER PRIMARY KEY)"_ns,
+                      getter_AddRefs(stmt2));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
       ToRefPtr(std::move(stmt1)),
@@ -241,7 +232,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleAsyncReadStatement)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
+  db->CreateAsyncStatement("SELECT * FROM sqlite_master"_ns,
                            getter_AddRefs(stmt));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
@@ -261,8 +252,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleReadStatement)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageStatement> stmt;
-  db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
-                      getter_AddRefs(stmt));
+  db->CreateStatement("SELECT * FROM sqlite_master"_ns, getter_AddRefs(stmt));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
       ToRefPtr(std::move(stmt)),
@@ -281,9 +271,8 @@ TEST(storage_asyncStatementExecution_transaction, SingleAsyncWriteStatement)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  db->CreateAsyncStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt));
+  db->CreateAsyncStatement("CREATE TABLE test (id INTEGER PRIMARY KEY)"_ns,
+                           getter_AddRefs(stmt));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
       ToRefPtr(std::move(stmt)),
@@ -301,9 +290,8 @@ TEST(storage_asyncStatementExecution_transaction, SingleWriteStatement)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageStatement> stmt;
-  db->CreateStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(stmt));
+  db->CreateStatement("CREATE TABLE test (id INTEGER PRIMARY KEY)"_ns,
+                      getter_AddRefs(stmt));
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
       ToRefPtr(std::move(stmt)),
@@ -323,9 +311,8 @@ TEST(storage_asyncStatementExecution_transaction,
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  db->CreateAsyncStatement(
-      NS_LITERAL_CSTRING("SELECT :param FROM sqlite_master"),
-      getter_AddRefs(stmt));
+  db->CreateAsyncStatement("SELECT :param FROM sqlite_master"_ns,
+                           getter_AddRefs(stmt));
 
   // -- bind multiple BindingParams
   nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
@@ -333,7 +320,7 @@ TEST(storage_asyncStatementExecution_transaction,
   for (int32_t i = 0; i < 2; i++) {
     nsCOMPtr<mozIStorageBindingParams> params;
     paramsArray->NewBindingParams(getter_AddRefs(params));
-    params->BindInt32ByName(NS_LITERAL_CSTRING("param"), 1);
+    params->BindInt32ByName("param"_ns, 1);
     paramsArray->AddParams(params);
   }
   stmt->BindParameters(paramsArray);
@@ -356,7 +343,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleParamsReadStatement)
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageStatement> stmt;
-  db->CreateStatement(NS_LITERAL_CSTRING("SELECT :param FROM sqlite_master"),
+  db->CreateStatement("SELECT :param FROM sqlite_master"_ns,
                       getter_AddRefs(stmt));
 
   // -- bind multiple BindingParams
@@ -365,7 +352,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleParamsReadStatement)
   for (int32_t i = 0; i < 2; i++) {
     nsCOMPtr<mozIStorageBindingParams> params;
     paramsArray->NewBindingParams(getter_AddRefs(params));
-    params->BindInt32ByName(NS_LITERAL_CSTRING("param"), 1);
+    params->BindInt32ByName("param"_ns, 1);
     paramsArray->AddParams(params);
   }
   stmt->BindParameters(paramsArray);
@@ -389,17 +376,15 @@ TEST(storage_asyncStatementExecution_transaction,
 
   // -- create a table for writes
   nsCOMPtr<mozIStorageStatement> tableStmt;
-  db->CreateStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(tableStmt));
+  db->CreateStatement("CREATE TABLE test (id INTEGER PRIMARY KEY)"_ns,
+                      getter_AddRefs(tableStmt));
   tableStmt->Execute();
   tableStmt->Finalize();
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  db->CreateAsyncStatement(
-      NS_LITERAL_CSTRING("DELETE FROM test WHERE id = :param"),
-      getter_AddRefs(stmt));
+  db->CreateAsyncStatement("DELETE FROM test WHERE id = :param"_ns,
+                           getter_AddRefs(stmt));
 
   // -- bind multiple BindingParams
   nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
@@ -407,7 +392,7 @@ TEST(storage_asyncStatementExecution_transaction,
   for (int32_t i = 0; i < 2; i++) {
     nsCOMPtr<mozIStorageBindingParams> params;
     paramsArray->NewBindingParams(getter_AddRefs(params));
-    params->BindInt32ByName(NS_LITERAL_CSTRING("param"), 1);
+    params->BindInt32ByName("param"_ns, 1);
     paramsArray->AddParams(params);
   }
   stmt->BindParameters(paramsArray);
@@ -430,15 +415,14 @@ TEST(storage_asyncStatementExecution_transaction, MultipleParamsWriteStatement)
 
   // -- create a table for writes
   nsCOMPtr<mozIStorageStatement> tableStmt;
-  db->CreateStatement(
-      NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
-      getter_AddRefs(tableStmt));
+  db->CreateStatement("CREATE TABLE test (id INTEGER PRIMARY KEY)"_ns,
+                      getter_AddRefs(tableStmt));
   tableStmt->Execute();
   tableStmt->Finalize();
 
   // -- create statements and execute them
   nsCOMPtr<mozIStorageStatement> stmt;
-  db->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM test WHERE id = :param"),
+  db->CreateStatement("DELETE FROM test WHERE id = :param"_ns,
                       getter_AddRefs(stmt));
 
   // -- bind multiple BindingParams
@@ -447,7 +431,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleParamsWriteStatement)
   for (int32_t i = 0; i < 2; i++) {
     nsCOMPtr<mozIStorageBindingParams> params;
     paramsArray->NewBindingParams(getter_AddRefs(params));
-    params->BindInt32ByName(NS_LITERAL_CSTRING("param"), 1);
+    params->BindInt32ByName("param"_ns, 1);
     paramsArray->AddParams(params);
   }
   stmt->BindParameters(paramsArray);

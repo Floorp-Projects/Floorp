@@ -91,7 +91,7 @@ static void CacheDirAndAutoClear(nsIProperties* aDirSvc, const char* aDirKey,
   MOZ_ALWAYS_SUCCEEDS(dirToCache->GetPath(**cacheVar));
 
   // Convert network share path to format for sandbox policy.
-  if (Substring(**cacheVar, 0, 2).Equals(NS_LITERAL_STRING("\\\\"))) {
+  if (Substring(**cacheVar, 0, 2).Equals(u"\\\\"_ns)) {
     (*cacheVar)->InsertLiteral(u"??\\UNC", 1);
   }
 }
@@ -588,7 +588,7 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   // to the normal TEMP dir. However such failures should be pretty rare and
   // without this printing will not currently work.
   AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                   sContentTempDir, NS_LITERAL_STRING("\\*"));
+                   sContentTempDir, u"\\*"_ns);
 
   // We still have edge cases where the child at low integrity can't read some
   // files, so add a rule to allow read access to everything when required.
@@ -602,29 +602,28 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   } else {
     // Add rule to allow access to user specific fonts.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
-                     sLocalAppDataDir,
-                     NS_LITERAL_STRING("\\Microsoft\\Windows\\Fonts\\*"));
+                     sLocalAppDataDir, u"\\Microsoft\\Windows\\Fonts\\*"_ns);
 
     // Add rule to allow read access to installation directory.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
-                     sBinDir, NS_LITERAL_STRING("\\*"));
+                     sBinDir, u"\\*"_ns);
 
     // Add rule to allow read access to the chrome directory within profile.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
-                     sProfileDir, NS_LITERAL_STRING("\\chrome\\*"));
+                     sProfileDir, u"\\chrome\\*"_ns);
 
     // Add rule to allow read access to the extensions directory within profile.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
-                     sProfileDir, NS_LITERAL_STRING("\\extensions\\*"));
+                     sProfileDir, u"\\extensions\\*"_ns);
 
     // Read access to a directory for system extension dev (see bug 1393805)
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
-                     sUserExtensionsDevDir, NS_LITERAL_STRING("\\*"));
+                     sUserExtensionsDevDir, u"\\*"_ns);
 
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     // Add rule to allow read access to the per-user extensions directory.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
-                     sUserExtensionsDir, NS_LITERAL_STRING("\\*"));
+                     sUserExtensionsDir, u"\\*"_ns);
 #endif
   }
 
@@ -1125,40 +1124,34 @@ bool SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) {
 
   // Add rule to allow read / write access to a special plugin temp dir.
   AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                   sPluginTempDir, NS_LITERAL_STRING("\\*"));
+                   sPluginTempDir, u"\\*"_ns);
 
   if (aSandboxLevel >= 2) {
     // Level 2 and above uses low integrity, so we need to give write access to
     // the Flash directories.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                     sRoamingAppDataDir,
-                     NS_LITERAL_STRING("\\Macromedia\\Flash Player\\*"));
+                     sRoamingAppDataDir, u"\\Macromedia\\Flash Player\\*"_ns);
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                     sLocalAppDataDir,
-                     NS_LITERAL_STRING("\\Macromedia\\Flash Player\\*"));
+                     sLocalAppDataDir, u"\\Macromedia\\Flash Player\\*"_ns);
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                     sRoamingAppDataDir,
-                     NS_LITERAL_STRING("\\Adobe\\Flash Player\\*"));
+                     sRoamingAppDataDir, u"\\Adobe\\Flash Player\\*"_ns);
 
     // Access also has to be given to create the parent directories as they may
     // not exist.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
-                     sRoamingAppDataDir, NS_LITERAL_STRING("\\Macromedia"));
+                     sRoamingAppDataDir, u"\\Macromedia"_ns);
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_QUERY,
-                     sRoamingAppDataDir, NS_LITERAL_STRING("\\Macromedia\\"));
+                     sRoamingAppDataDir, u"\\Macromedia\\"_ns);
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
-                     sRoamingAppDataDir,
-                     NS_LITERAL_STRING("\\Macromedia\\Flash Player"));
+                     sRoamingAppDataDir, u"\\Macromedia\\Flash Player"_ns);
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
-                     sLocalAppDataDir, NS_LITERAL_STRING("\\Macromedia"));
+                     sLocalAppDataDir, u"\\Macromedia"_ns);
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
-                     sLocalAppDataDir,
-                     NS_LITERAL_STRING("\\Macromedia\\Flash Player"));
+                     sLocalAppDataDir, u"\\Macromedia\\Flash Player"_ns);
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
-                     sRoamingAppDataDir, NS_LITERAL_STRING("\\Adobe"));
+                     sRoamingAppDataDir, u"\\Adobe"_ns);
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
-                     sRoamingAppDataDir,
-                     NS_LITERAL_STRING("\\Adobe\\Flash Player"));
+                     sRoamingAppDataDir, u"\\Adobe\\Flash Player"_ns);
   }
 
   // Add the policy for the client side of a pipe. It is just a file

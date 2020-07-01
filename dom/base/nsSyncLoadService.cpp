@@ -96,7 +96,7 @@ nsForceXMLListener::OnStartRequest(nsIRequest* aRequest) {
   aRequest->GetStatus(&status);
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel && NS_SUCCEEDED(status)) {
-    channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
+    channel->SetContentType("text/xml"_ns);
   }
 
   return mListener->OnStartRequest(aRequest);
@@ -130,8 +130,8 @@ nsresult nsSyncLoader::LoadDocument(nsIChannel* aChannel, bool aChannelIsSync,
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(mChannel);
   if (http) {
     rv = http->SetRequestHeader(
-        NS_LITERAL_CSTRING("Accept"),
-        NS_LITERAL_CSTRING(
+        "Accept"_ns,
+        nsLiteralCString(
             "text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
         false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -291,7 +291,7 @@ nsresult nsSyncLoadService::LoadDocument(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aForceToXML) {
-    channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
+    channel->SetContentType("text/xml"_ns);
   }
 
   // if the load needs to enforce CORS, then force the load to be async

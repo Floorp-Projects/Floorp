@@ -570,7 +570,7 @@ TEST_F(Strings, DependentStrings) {
 
 TEST_F(Strings, assign) {
   nsCString result;
-  test_assign_helper(NS_LITERAL_CSTRING("a") + NS_LITERAL_CSTRING("b"), result);
+  test_assign_helper("a"_ns + "b"_ns, result);
   EXPECT_STREQ(result.get(), "ab");
 }
 
@@ -665,7 +665,7 @@ TEST_F(Strings, findinreadable) {
   nsACString::const_iterator delim_begin(begin), delim_end(end);
 
   // Search for last !/ at the end of the string
-  EXPECT_TRUE(FindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end));
+  EXPECT_TRUE(FindInReadable("!/"_ns, delim_begin, delim_end));
   char* r = ToNewCString(Substring(delim_begin, delim_end));
   // Should match the first "!/" but not the last
   EXPECT_NE(delim_end, end);
@@ -676,8 +676,7 @@ TEST_F(Strings, findinreadable) {
   delim_end = end;
 
   // Search for first jar:
-  EXPECT_TRUE(
-      FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(FindInReadable("jar:"_ns, delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
@@ -689,8 +688,7 @@ TEST_F(Strings, findinreadable) {
   delim_begin = begin;
   delim_begin++;
   delim_end = end;
-  EXPECT_TRUE(
-      FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(FindInReadable("jar:"_ns, delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
@@ -699,8 +697,7 @@ TEST_F(Strings, findinreadable) {
   free(r);
 
   // Should not find a match
-  EXPECT_FALSE(
-      FindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
+  EXPECT_FALSE(FindInReadable("gecko"_ns, delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
@@ -709,8 +706,7 @@ TEST_F(Strings, findinreadable) {
   delim_begin = begin;
   for (int i = 0; i < 6; i++) delim_begin++;
   delim_end = end;
-  EXPECT_FALSE(
-      FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_FALSE(FindInReadable("jar:"_ns, delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
@@ -719,8 +715,7 @@ TEST_F(Strings, findinreadable) {
   delim_begin = begin;
   delim_end = end;
   for (int i = 0; i < 7; i++) delim_end--;
-  EXPECT_FALSE(
-      FindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
+  EXPECT_FALSE(FindInReadable("classic"_ns, delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
@@ -738,8 +733,7 @@ TEST_F(Strings, rfindinreadable) {
   nsACString::const_iterator delim_begin(begin), delim_end(end);
 
   // Search for last !/ at the end of the string
-  EXPECT_TRUE(
-      RFindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end));
+  EXPECT_TRUE(RFindInReadable("!/"_ns, delim_begin, delim_end));
   char* r = ToNewCString(Substring(delim_begin, delim_end));
   // Should match the last "!/"
   EXPECT_EQ(delim_end, end);
@@ -750,8 +744,7 @@ TEST_F(Strings, rfindinreadable) {
   delim_end = end;
 
   // Search for last jar: but not the first one...
-  EXPECT_TRUE(
-      RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(RFindInReadable("jar:"_ns, delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
@@ -763,8 +756,7 @@ TEST_F(Strings, rfindinreadable) {
   delim_begin = begin;
   delim_end = begin;
   for (int i = 0; i < 6; i++) delim_end++;
-  EXPECT_TRUE(
-      RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(RFindInReadable("jar:"_ns, delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
@@ -775,8 +767,7 @@ TEST_F(Strings, rfindinreadable) {
   // Should not find a match
   delim_begin = begin;
   delim_end = end;
-  EXPECT_FALSE(
-      RFindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
+  EXPECT_FALSE(RFindInReadable("gecko"_ns, delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
@@ -785,8 +776,7 @@ TEST_F(Strings, rfindinreadable) {
   delim_begin = begin;
   for (int i = 0; i < 6; i++) delim_begin++;
   delim_end = end;
-  EXPECT_FALSE(
-      RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_FALSE(RFindInReadable("jar:"_ns, delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
@@ -795,8 +785,7 @@ TEST_F(Strings, rfindinreadable) {
   delim_begin = begin;
   delim_end = end;
   for (int i = 0; i < 7; i++) delim_end--;
-  EXPECT_FALSE(
-      RFindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
+  EXPECT_FALSE(RFindInReadable("classic"_ns, delim_begin, delim_end));
 
   // When no match is found, range should be empty
   EXPECT_EQ(delim_begin, delim_end);
@@ -967,8 +956,8 @@ TEST_F(Strings, concat) {
   nsCString bar("bar");
   const nsACString& barRef = bar;
 
-  const nsPromiseFlatCString& result = PromiseFlatCString(
-      NS_LITERAL_CSTRING("foo") + NS_LITERAL_CSTRING(",") + barRef);
+  const nsPromiseFlatCString& result =
+      PromiseFlatCString("foo"_ns + ","_ns + barRef);
   EXPECT_STREQ(result.get(), "foo,bar");
 }
 
@@ -1330,13 +1319,12 @@ static void test_strip_chars_helper(const char16_t* str, const char16_t* strip,
 
 TEST(String, strip_chars)
 {
-  test_strip_chars_helper(u"foo \r \nbar", u" \n\r",
-                          NS_LITERAL_STRING("foobar"));
-  test_strip_chars_helper(u"\r\nfoo\r\n", u" \n\r", NS_LITERAL_STRING("foo"));
-  test_strip_chars_helper(u"foo", u" \n\r", NS_LITERAL_STRING("foo"));
-  test_strip_chars_helper(u"foo", u"fo", NS_LITERAL_STRING(""));
-  test_strip_chars_helper(u"foo", u"foo", NS_LITERAL_STRING(""));
-  test_strip_chars_helper(u" foo", u" ", NS_LITERAL_STRING("foo"));
+  test_strip_chars_helper(u"foo \r \nbar", u" \n\r", u"foobar"_ns);
+  test_strip_chars_helper(u"\r\nfoo\r\n", u" \n\r", u"foo"_ns);
+  test_strip_chars_helper(u"foo", u" \n\r", u"foo"_ns);
+  test_strip_chars_helper(u"foo", u"fo", u""_ns);
+  test_strip_chars_helper(u"foo", u"foo", u""_ns);
+  test_strip_chars_helper(u" foo", u" ", u"foo"_ns);
 }
 
 TEST_F(Strings, append_with_capacity) {
@@ -1543,20 +1531,19 @@ static void test_tofloat_helper(const nsString& aStr, float aExpected,
 }
 
 TEST_F(Strings, tofloat) {
-  test_tofloat_helper(NS_LITERAL_STRING("42"), 42.f, true);
-  test_tofloat_helper(NS_LITERAL_STRING("42.0"), 42.f, true);
-  test_tofloat_helper(NS_LITERAL_STRING("-42"), -42.f, true);
-  test_tofloat_helper(NS_LITERAL_STRING("+42"), 42, true);
-  test_tofloat_helper(NS_LITERAL_STRING("13.37"), 13.37f, true);
-  test_tofloat_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789f, true);
-  test_tofloat_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456f,
-                      true);
-  test_tofloat_helper(NS_LITERAL_STRING("0"), 0.f, true);
-  test_tofloat_helper(NS_LITERAL_STRING("1.e5"), 100000, true);
-  test_tofloat_helper(NS_LITERAL_STRING(""), 0.f, false);
-  test_tofloat_helper(NS_LITERAL_STRING("42foo"), 42.f, false);
-  test_tofloat_helper(NS_LITERAL_STRING("foo"), 0.f, false);
-  test_tofloat_helper(NS_LITERAL_STRING("1.5e-"), 1.5f, false);
+  test_tofloat_helper(u"42"_ns, 42.f, true);
+  test_tofloat_helper(u"42.0"_ns, 42.f, true);
+  test_tofloat_helper(u"-42"_ns, -42.f, true);
+  test_tofloat_helper(u"+42"_ns, 42, true);
+  test_tofloat_helper(u"13.37"_ns, 13.37f, true);
+  test_tofloat_helper(u"1.23456789"_ns, 1.23456789f, true);
+  test_tofloat_helper(u"1.98765432123456"_ns, 1.98765432123456f, true);
+  test_tofloat_helper(u"0"_ns, 0.f, true);
+  test_tofloat_helper(u"1.e5"_ns, 100000, true);
+  test_tofloat_helper(u""_ns, 0.f, false);
+  test_tofloat_helper(u"42foo"_ns, 42.f, false);
+  test_tofloat_helper(u"foo"_ns, 0.f, false);
+  test_tofloat_helper(u"1.5e-"_ns, 1.5f, false);
 }
 
 static void test_tofloat_allow_trailing_chars_helper(const nsString& aStr,
@@ -1572,17 +1559,12 @@ static void test_tofloat_allow_trailing_chars_helper(const nsString& aStr,
 }
 
 TEST_F(Strings, ToFloatAllowTrailingChars) {
-  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING(""), 0.f, false);
-  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("foo"), 0.f,
-                                           false);
-  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("42foo"), 42.f,
-                                           true);
-  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("42-5"), 42.f,
-                                           true);
-  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("13.37.8"), 13.37f,
-                                           true);
-  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("1.5e-"), 1.5f,
-                                           true);
+  test_tofloat_allow_trailing_chars_helper(u""_ns, 0.f, false);
+  test_tofloat_allow_trailing_chars_helper(u"foo"_ns, 0.f, false);
+  test_tofloat_allow_trailing_chars_helper(u"42foo"_ns, 42.f, true);
+  test_tofloat_allow_trailing_chars_helper(u"42-5"_ns, 42.f, true);
+  test_tofloat_allow_trailing_chars_helper(u"13.37.8"_ns, 13.37f, true);
+  test_tofloat_allow_trailing_chars_helper(u"1.5e-"_ns, 1.5f, true);
 }
 
 static void test_todouble_helper(const nsString& aStr, double aExpected,
@@ -1597,22 +1579,21 @@ static void test_todouble_helper(const nsString& aStr, double aExpected,
 }
 
 TEST_F(Strings, todouble) {
-  test_todouble_helper(NS_LITERAL_STRING("42"), 42, true);
-  test_todouble_helper(NS_LITERAL_STRING("42.0"), 42, true);
-  test_todouble_helper(NS_LITERAL_STRING("-42"), -42, true);
-  test_todouble_helper(NS_LITERAL_STRING("+42"), 42, true);
-  test_todouble_helper(NS_LITERAL_STRING("13.37"), 13.37, true);
-  test_todouble_helper(NS_LITERAL_STRING("1.23456789"), 1.23456789, true);
-  test_todouble_helper(NS_LITERAL_STRING("1.98765432123456"), 1.98765432123456,
+  test_todouble_helper(u"42"_ns, 42, true);
+  test_todouble_helper(u"42.0"_ns, 42, true);
+  test_todouble_helper(u"-42"_ns, -42, true);
+  test_todouble_helper(u"+42"_ns, 42, true);
+  test_todouble_helper(u"13.37"_ns, 13.37, true);
+  test_todouble_helper(u"1.23456789"_ns, 1.23456789, true);
+  test_todouble_helper(u"1.98765432123456"_ns, 1.98765432123456, true);
+  test_todouble_helper(u"123456789.98765432123456"_ns, 123456789.98765432123456,
                        true);
-  test_todouble_helper(NS_LITERAL_STRING("123456789.98765432123456"),
-                       123456789.98765432123456, true);
-  test_todouble_helper(NS_LITERAL_STRING("0"), 0, true);
-  test_todouble_helper(NS_LITERAL_STRING("1.e5"), 100000, true);
-  test_todouble_helper(NS_LITERAL_STRING(""), 0, false);
-  test_todouble_helper(NS_LITERAL_STRING("42foo"), 42, false);
-  test_todouble_helper(NS_LITERAL_STRING("foo"), 0, false);
-  test_todouble_helper(NS_LITERAL_STRING("1.5e-"), 1.5, false);
+  test_todouble_helper(u"0"_ns, 0, true);
+  test_todouble_helper(u"1.e5"_ns, 100000, true);
+  test_todouble_helper(u""_ns, 0, false);
+  test_todouble_helper(u"42foo"_ns, 42, false);
+  test_todouble_helper(u"foo"_ns, 0, false);
+  test_todouble_helper(u"1.5e-"_ns, 1.5, false);
 }
 
 static void test_todouble_allow_trailing_chars_helper(const nsString& aStr,
@@ -1628,16 +1609,12 @@ static void test_todouble_allow_trailing_chars_helper(const nsString& aStr,
 }
 
 TEST_F(Strings, ToDoubleAllowTrailingChars) {
-  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING(""), 0, false);
-  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("foo"), 0, false);
-  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("42foo"), 42,
-                                            true);
-  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("42-5"), 42,
-                                            true);
-  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("13.37.8"), 13.37,
-                                            true);
-  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("1.5e-"), 1.5,
-                                            true);
+  test_todouble_allow_trailing_chars_helper(u""_ns, 0, false);
+  test_todouble_allow_trailing_chars_helper(u"foo"_ns, 0, false);
+  test_todouble_allow_trailing_chars_helper(u"42foo"_ns, 42, true);
+  test_todouble_allow_trailing_chars_helper(u"42-5"_ns, 42, true);
+  test_todouble_allow_trailing_chars_helper(u"13.37.8"_ns, 13.37, true);
+  test_todouble_allow_trailing_chars_helper(u"1.5e-"_ns, 1.5, true);
 }
 
 TEST_F(Strings, Split) {
@@ -1709,9 +1686,9 @@ TEST_F(Strings, Split) {
   counter = 0;
   for (const nsAString& token : wide.Split(' ')) {
     if (counter == 0) {
-      EXPECT_TRUE(token.Equals(NS_LITERAL_STRING("hello")));
+      EXPECT_TRUE(token.Equals(u"hello"_ns));
     } else if (counter == 1) {
-      EXPECT_TRUE(token.Equals(NS_LITERAL_STRING("world")));
+      EXPECT_TRUE(token.Equals(u"world"_ns));
     }
     counter++;
   }
@@ -2484,7 +2461,7 @@ CONVERSION_BENCH(PerfUTF8toUTF16VIThousand, CopyUTF8toUTF16, mViThousandUtf8,
                  nsAutoString);
 
 // Tests for usability of nsTLiteralString in constant expressions.
-static_assert(NS_LITERAL_STRING("").IsEmpty());
+static_assert(u""_ns.IsEmpty());
 
 constexpr auto testStringA = NS_LITERAL_STRING("a");
 static_assert(!testStringA.IsEmpty());

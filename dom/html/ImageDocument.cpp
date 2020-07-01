@@ -188,8 +188,8 @@ nsresult ImageDocument::StartDocumentLoad(const char* aCommand,
 void ImageDocument::Destroy() {
   if (RefPtr<HTMLImageElement> img = std::move(mImageContent)) {
     // Remove our event listener from the image content.
-    img->RemoveEventListener(NS_LITERAL_STRING("load"), this, false);
-    img->RemoveEventListener(NS_LITERAL_STRING("click"), this, false);
+    img->RemoveEventListener(u"load"_ns, this, false);
+    img->RemoveEventListener(u"click"_ns, this, false);
 
     // Break reference cycle with mImageContent, if we have one
     if (mObservingImageLoader) {
@@ -207,8 +207,8 @@ void ImageDocument::SetScriptGlobalObject(
   nsCOMPtr<EventTarget> target;
   if (mScriptGlobalObject && aScriptGlobalObject != mScriptGlobalObject) {
     target = do_QueryInterface(mScriptGlobalObject);
-    target->RemoveEventListener(NS_LITERAL_STRING("resize"), this, false);
-    target->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, false);
+    target->RemoveEventListener(u"resize"_ns, this, false);
+    target->RemoveEventListener(u"keypress"_ns, this, false);
   }
 
   // Set the script global object on the superclass before doing
@@ -226,22 +226,21 @@ void ImageDocument::SetScriptGlobalObject(
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic document");
 
       target = mImageContent;
-      target->AddEventListener(NS_LITERAL_STRING("load"), this, false);
-      target->AddEventListener(NS_LITERAL_STRING("click"), this, false);
+      target->AddEventListener(u"load"_ns, this, false);
+      target->AddEventListener(u"click"_ns, this, false);
     }
 
     target = do_QueryInterface(aScriptGlobalObject);
-    target->AddEventListener(NS_LITERAL_STRING("resize"), this, false);
-    target->AddEventListener(NS_LITERAL_STRING("keypress"), this, false);
+    target->AddEventListener(u"resize"_ns, this, false);
+    target->AddEventListener(u"keypress"_ns, this, false);
 
     if (!InitialSetupHasBeenDone()) {
-      LinkStylesheet(
-          NS_LITERAL_STRING("resource://content-accessible/ImageDocument.css"));
+      LinkStylesheet(u"resource://content-accessible/ImageDocument.css"_ns);
       if (!nsContentUtils::IsChildOfSameType(this)) {
-        LinkStylesheet(NS_LITERAL_STRING(
-            "resource://content-accessible/TopLevelImageDocument.css"));
-        LinkStylesheet(NS_LITERAL_STRING(
-            "chrome://global/skin/media/TopLevelImageDocument.css"));
+        LinkStylesheet(nsLiteralString(
+            u"resource://content-accessible/TopLevelImageDocument.css"));
+        LinkStylesheet(nsLiteralString(
+            u"chrome://global/skin/media/TopLevelImageDocument.css"));
       }
       InitialSetupDone();
     }
@@ -280,10 +279,9 @@ void ImageDocument::ShrinkToFit() {
     uint32_t imageHeight = img->Height();
     nsDOMTokenList* classList = img->ClassList();
     if (imageHeight > mVisibleHeight) {
-      classList->Add(NS_LITERAL_STRING("overflowingVertical"), IgnoreErrors());
+      classList->Add(u"overflowingVertical"_ns, IgnoreErrors());
     } else {
-      classList->Remove(NS_LITERAL_STRING("overflowingVertical"),
-                        IgnoreErrors());
+      classList->Remove(u"overflowingVertical"_ns, IgnoreErrors());
     }
     return;
   }
@@ -406,30 +404,28 @@ void ImageDocument::OnHasTransparency() {
   }
 
   nsDOMTokenList* classList = mImageContent->ClassList();
-  classList->Add(NS_LITERAL_STRING("transparent"), IgnoreErrors());
+  classList->Add(u"transparent"_ns, IgnoreErrors());
 }
 
 void ImageDocument::SetModeClass(eModeClasses mode) {
   nsDOMTokenList* classList = mImageContent->ClassList();
 
   if (mode == eShrinkToFit) {
-    classList->Add(NS_LITERAL_STRING("shrinkToFit"), IgnoreErrors());
+    classList->Add(u"shrinkToFit"_ns, IgnoreErrors());
   } else {
-    classList->Remove(NS_LITERAL_STRING("shrinkToFit"), IgnoreErrors());
+    classList->Remove(u"shrinkToFit"_ns, IgnoreErrors());
   }
 
   if (mode == eOverflowingVertical) {
-    classList->Add(NS_LITERAL_STRING("overflowingVertical"), IgnoreErrors());
+    classList->Add(u"overflowingVertical"_ns, IgnoreErrors());
   } else {
-    classList->Remove(NS_LITERAL_STRING("overflowingVertical"), IgnoreErrors());
+    classList->Remove(u"overflowingVertical"_ns, IgnoreErrors());
   }
 
   if (mode == eOverflowingHorizontalOnly) {
-    classList->Add(NS_LITERAL_STRING("overflowingHorizontalOnly"),
-                   IgnoreErrors());
+    classList->Add(u"overflowingHorizontalOnly"_ns, IgnoreErrors());
   } else {
-    classList->Remove(NS_LITERAL_STRING("overflowingHorizontalOnly"),
-                      IgnoreErrors());
+    classList->Remove(u"overflowingHorizontalOnly"_ns, IgnoreErrors());
   }
 }
 
@@ -639,8 +635,7 @@ void ImageDocument::UpdateTitleAndCharset() {
     mimeType.BeginReading(start);
     mimeType.EndReading(end);
     nsCString::const_iterator iter = end;
-    if (FindInReadable(NS_LITERAL_CSTRING("IMAGE/"), start, iter) &&
-        iter != end) {
+    if (FindInReadable("IMAGE/"_ns, start, iter) && iter != end) {
       // strip out "X-" if any
       if (*iter == 'X') {
         ++iter;

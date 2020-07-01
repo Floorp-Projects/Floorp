@@ -11,56 +11,37 @@ using namespace mozilla::toolkit::system;
 
 TEST(WindowsProxy, TestProxyBypassRules)
 {
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("mozilla.org"),
-                               NS_LITERAL_CSTRING("mozilla.org")));
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("mozilla.org"),
-                               NS_LITERAL_CSTRING("*mozilla.org")));
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("mozilla.org"),
-                               NS_LITERAL_CSTRING("*.mozilla.org")));
-  EXPECT_FALSE(IsHostProxyEntry(NS_LITERAL_CSTRING("notmozilla.org"),
-                                NS_LITERAL_CSTRING("*.mozilla.org")));
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("www.mozilla.org"),
-                               NS_LITERAL_CSTRING("*mozilla.org")));
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("www.mozilla.org"),
-                               NS_LITERAL_CSTRING("*.mozilla.org")));
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("www.mozilla.com"),
-                               NS_LITERAL_CSTRING("*.mozilla.*")));
+  EXPECT_TRUE(IsHostProxyEntry("mozilla.org"_ns, "mozilla.org"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("mozilla.org"_ns, "*mozilla.org"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("mozilla.org"_ns, "*.mozilla.org"_ns));
+  EXPECT_FALSE(IsHostProxyEntry("notmozilla.org"_ns, "*.mozilla.org"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("www.mozilla.org"_ns, "*mozilla.org"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("www.mozilla.org"_ns, "*.mozilla.org"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("www.mozilla.com"_ns, "*.mozilla.*"_ns));
 }
 
 TEST(WindowsProxy, TestProxyBypassRulesIPv4)
 {
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("192.168.1.1"),
-                               NS_LITERAL_CSTRING("192.168.1.*")));
-  EXPECT_FALSE(IsHostProxyEntry(NS_LITERAL_CSTRING("192.168.1.1"),
-                                NS_LITERAL_CSTRING("192.168.2.*")));
+  EXPECT_TRUE(IsHostProxyEntry("192.168.1.1"_ns, "192.168.1.*"_ns));
+  EXPECT_FALSE(IsHostProxyEntry("192.168.1.1"_ns, "192.168.2.*"_ns));
 
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("10.1.2.3"),
-                               NS_LITERAL_CSTRING("10.0.0.0/8")));
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("192.168.192.1"),
-                               NS_LITERAL_CSTRING("192.168/16")));
-  EXPECT_FALSE(IsHostProxyEntry(NS_LITERAL_CSTRING("192.168.192.1"),
-                                NS_LITERAL_CSTRING("192.168/17")));
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("192.168.192.1"),
-                               NS_LITERAL_CSTRING("192.168.128/17")));
-  EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("192.168.1.1"),
-                               NS_LITERAL_CSTRING("192.168.1.1/32")));
+  EXPECT_TRUE(IsHostProxyEntry("10.1.2.3"_ns, "10.0.0.0/8"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("192.168.192.1"_ns, "192.168/16"_ns));
+  EXPECT_FALSE(IsHostProxyEntry("192.168.192.1"_ns, "192.168/17"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("192.168.192.1"_ns, "192.168.128/17"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("192.168.1.1"_ns, "192.168.1.1/32"_ns));
 }
 
 TEST(WindowsProxy, TestProxyBypassRulesIPv6)
 {
-  EXPECT_TRUE(IsHostProxyEntry(
-      NS_LITERAL_CSTRING("2001:0DB8:ABCD:0012:0123:4567:89AB:CDEF"),
-      NS_LITERAL_CSTRING("2001:db8:abcd:0012::0/64")));
-  EXPECT_TRUE(IsHostProxyEntry(
-      NS_LITERAL_CSTRING("2001:0DB8:ABCD:0012:0000:4567:89AB:CDEF"),
-      NS_LITERAL_CSTRING("2001:db8:abcd:0012::0/80")));
-  EXPECT_FALSE(IsHostProxyEntry(
-      NS_LITERAL_CSTRING("2001:0DB8:ABCD:0012:0123:4567:89AB:CDEF"),
-      NS_LITERAL_CSTRING("2001:db8:abcd:0012::0/80")));
-  EXPECT_TRUE(IsHostProxyEntry(
-      NS_LITERAL_CSTRING("2001:0DB8:ABCD:0012:0000:0000:89AB:CDEF"),
-      NS_LITERAL_CSTRING("2001:db8:abcd:0012::0/96")));
-  EXPECT_FALSE(IsHostProxyEntry(
-      NS_LITERAL_CSTRING("2001:0DB8:ABCD:0012:0123:4567:89AB:CDEF"),
-      NS_LITERAL_CSTRING("2001:db8:abcd:0012::0/96")));
+  EXPECT_TRUE(IsHostProxyEntry("2001:0DB8:ABCD:0012:0123:4567:89AB:CDEF"_ns,
+                               "2001:db8:abcd:0012::0/64"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("2001:0DB8:ABCD:0012:0000:4567:89AB:CDEF"_ns,
+                               "2001:db8:abcd:0012::0/80"_ns));
+  EXPECT_FALSE(IsHostProxyEntry("2001:0DB8:ABCD:0012:0123:4567:89AB:CDEF"_ns,
+                                "2001:db8:abcd:0012::0/80"_ns));
+  EXPECT_TRUE(IsHostProxyEntry("2001:0DB8:ABCD:0012:0000:0000:89AB:CDEF"_ns,
+                               "2001:db8:abcd:0012::0/96"_ns));
+  EXPECT_FALSE(IsHostProxyEntry("2001:0DB8:ABCD:0012:0123:4567:89AB:CDEF"_ns,
+                                "2001:db8:abcd:0012::0/96"_ns));
 }

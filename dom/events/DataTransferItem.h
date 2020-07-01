@@ -55,13 +55,13 @@ class DataTransferItem final : public nsISupports, public nsWrapperCache {
   void GetKind(nsAString& aKind) const {
     switch (mKind) {
       case KIND_FILE:
-        aKind = NS_LITERAL_STRING("file");
+        aKind = u"file"_ns;
         return;
       case KIND_STRING:
-        aKind = NS_LITERAL_STRING("string");
+        aKind = u"string"_ns;
         return;
       default:
-        aKind = NS_LITERAL_STRING("other");
+        aKind = u"other"_ns;
         return;
     }
   }

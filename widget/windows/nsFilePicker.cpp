@@ -703,9 +703,8 @@ bool nsFilePicker::IsDefaultPathLink() {
   NS_ConvertUTF16toUTF8 ext(mDefaultFilePath);
   ext.Trim(" .", false, true);  // watch out for trailing space and dots
   ToLowerCase(ext);
-  if (StringEndsWith(ext, NS_LITERAL_CSTRING(".lnk")) ||
-      StringEndsWith(ext, NS_LITERAL_CSTRING(".pif")) ||
-      StringEndsWith(ext, NS_LITERAL_CSTRING(".url")))
+  if (StringEndsWith(ext, ".lnk"_ns) || StringEndsWith(ext, ".pif"_ns) ||
+      StringEndsWith(ext, ".url"_ns))
     return true;
   return false;
 }

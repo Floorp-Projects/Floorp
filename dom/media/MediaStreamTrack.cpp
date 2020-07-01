@@ -52,7 +52,7 @@ auto MediaStreamTrackSource::ApplyConstraints(
     -> RefPtr<ApplyConstraintsPromise> {
   return ApplyConstraintsPromise::CreateAndReject(
       MakeRefPtr<MediaMgrError>(MediaMgrError::Name::OverconstrainedError,
-                                NS_LITERAL_STRING("")),
+                                u""_ns),
       __func__);
 }
 
@@ -459,8 +459,7 @@ void MediaStreamTrack::MutedChanged(bool aNewState) {
       ("MediaStreamTrack %p became %s", this, aNewState ? "muted" : "unmuted"));
 
   mMuted = aNewState;
-  nsString eventName =
-      aNewState ? NS_LITERAL_STRING("mute") : NS_LITERAL_STRING("unmute");
+  nsString eventName = aNewState ? u"mute"_ns : u"unmute"_ns;
   DispatchTrustedEvent(eventName);
 }
 
@@ -573,7 +572,7 @@ void MediaStreamTrack::OverrideEnded() {
 
   NotifyEnded();
 
-  DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
+  DispatchTrustedEvent(u"ended"_ns);
 }
 
 void MediaStreamTrack::AddListener(MediaTrackListener* aListener) {

@@ -1797,7 +1797,7 @@ MediaPipeline::RtpCSRCStats::RtpCSRCStats(const uint32_t aCsrc,
 void MediaPipeline::RtpCSRCStats::GetWebidlInstance(
     dom::RTCRTPContributingSourceStats& aWebidlObj,
     const nsString& aInboundRtpStreamId) const {
-  nsString statId = NS_LITERAL_STRING("csrc_") + aInboundRtpStreamId;
+  nsString statId = u"csrc_"_ns + aInboundRtpStreamId;
   statId.AppendLiteral("_");
   statId.AppendInt(mCsrc);
   aWebidlObj.mId.Construct(statId);

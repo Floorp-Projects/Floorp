@@ -43,7 +43,7 @@ class nsDateTimeControlFrame final : public nsContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("DateTimeControl"), aResult);
+    return MakeFrameName(u"DateTimeControl"_ns, aResult);
   }
 #endif
 

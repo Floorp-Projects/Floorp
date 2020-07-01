@@ -27,8 +27,7 @@ NS_IMPL_RELEASE_INHERITED(PerformanceResourceTiming, PerformanceEntry)
 PerformanceResourceTiming::PerformanceResourceTiming(
     UniquePtr<PerformanceTimingData>&& aPerformanceTiming,
     Performance* aPerformance, const nsAString& aName)
-    : PerformanceEntry(aPerformance->GetParentObject(), aName,
-                       NS_LITERAL_STRING("resource")),
+    : PerformanceEntry(aPerformance->GetParentObject(), aName, u"resource"_ns),
       mTimingData(std::move(aPerformanceTiming)),
       mPerformance(aPerformance) {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");

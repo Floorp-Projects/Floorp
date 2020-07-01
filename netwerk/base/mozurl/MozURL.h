@@ -106,8 +106,8 @@ class MozURL final {
     // chain setter operations as such:
     //
     // RefPtr<MozURL> url2;
-    // nsresult rv = url->Mutate().SetHostname(NS_LITERAL_CSTRING("newhost"))
-    //                            .SetFilePath(NS_LITERAL_CSTRING("new/file/path"))
+    // nsresult rv = url->Mutate().SetHostname("newhost"_ns)
+    //                            .SetFilePath("new/file/path"_ns)
     //                            .Finalize(getter_AddRefs(url2));
     // if (NS_SUCCEEDED(rv)) { /* use url2 */ }
     Mutator& SetScheme(const nsACString& aScheme) {

@@ -126,8 +126,8 @@ void MIDIAccess::FireConnectionEvent(MIDIPort* aPort) {
       }
     }
   }
-  RefPtr<MIDIConnectionEvent> event = MIDIConnectionEvent::Constructor(
-      this, NS_LITERAL_STRING("statechange"), init);
+  RefPtr<MIDIConnectionEvent> event =
+      MIDIConnectionEvent::Constructor(this, u"statechange"_ns, init);
   DispatchTrustedEvent(event);
 }
 

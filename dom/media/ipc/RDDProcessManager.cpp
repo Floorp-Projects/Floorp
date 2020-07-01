@@ -168,8 +168,7 @@ void RDDProcessManager::OnProcessLaunchComplete(RDDProcessHost* aHost) {
   mQueuedPrefs.Clear();
 
   CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::RDDProcessStatus,
-      NS_LITERAL_CSTRING("Running"));
+      CrashReporter::Annotation::RDDProcessStatus, "Running"_ns);
 }
 
 void RDDProcessManager::OnProcessUnexpectedShutdown(RDDProcessHost* aHost) {
@@ -221,8 +220,7 @@ void RDDProcessManager::DestroyProcess() {
   mQueuedPrefs.Clear();
 
   CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::RDDProcessStatus,
-      NS_LITERAL_CSTRING("Destroyed"));
+      CrashReporter::Annotation::RDDProcessStatus, "Destroyed"_ns);
 }
 
 bool RDDProcessManager::CreateContentBridge(

@@ -3793,7 +3793,7 @@ nsresult TelemetryScalar::SerializeScalars(mozilla::JSONWriter& aWriter) {
     nsresult rv = internal_GetScalarSnapshot(
         locker, scalarsToReflect, nsITelemetry::DATASET_PRERELEASE_CHANNELS,
         false, /*aClearScalars*/
-        NS_LITERAL_CSTRING("main"));
+        "main"_ns);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -3843,7 +3843,7 @@ nsresult TelemetryScalar::SerializeKeyedScalars(mozilla::JSONWriter& aWriter) {
     nsresult rv = internal_GetKeyedScalarSnapshot(
         locker, keyedScalarsToReflect,
         nsITelemetry::DATASET_PRERELEASE_CHANNELS, false, /*aClearScalars*/
-        NS_LITERAL_CSTRING("main"));
+        "main"_ns);
     if (NS_FAILED(rv)) {
       return rv;
     }

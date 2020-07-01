@@ -307,16 +307,16 @@ struct BlockingErrorCode {
 static const BlockingErrorCode sBlockingErrorCodes[] = {
     {NS_ERROR_TRACKING_URI,
      nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT,
-     "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
+     "TrackerUriBlocked", "Tracking Protection"_ns},
     {NS_ERROR_FINGERPRINTING_URI,
      nsIWebProgressListener::STATE_BLOCKED_FINGERPRINTING_CONTENT,
-     "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
+     "TrackerUriBlocked", "Tracking Protection"_ns},
     {NS_ERROR_CRYPTOMINING_URI,
      nsIWebProgressListener::STATE_BLOCKED_CRYPTOMINING_CONTENT,
-     "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
+     "TrackerUriBlocked", "Tracking Protection"_ns},
     {NS_ERROR_SOCIALTRACKING_URI,
      nsIWebProgressListener::STATE_BLOCKED_SOCIALTRACKING_CONTENT,
-     "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
+     "TrackerUriBlocked", "Tracking Protection"_ns},
 };
 
 }  // namespace

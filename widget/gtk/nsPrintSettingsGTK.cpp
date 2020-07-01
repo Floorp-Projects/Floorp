@@ -424,7 +424,7 @@ NS_IMETHODIMP
 nsPrintSettingsGTK::SetPrinterName(const nsAString& aPrinter) {
   NS_ConvertUTF16toUTF8 gtkPrinter(aPrinter);
 
-  if (StringBeginsWith(gtkPrinter, NS_LITERAL_CSTRING("CUPS/"))) {
+  if (StringBeginsWith(gtkPrinter, "CUPS/"_ns)) {
     // Strip off "CUPS/"; GTK might recognize the rest
     gtkPrinter.Cut(0, strlen("CUPS/"));
   }

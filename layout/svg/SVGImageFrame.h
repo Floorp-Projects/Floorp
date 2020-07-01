@@ -87,7 +87,7 @@ class SVGImageFrame final : public SVGGeometryFrame, public nsIReflowCallback {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGImage"), aResult);
+    return MakeFrameName(u"SVGImage"_ns, aResult);
   }
 #endif
 

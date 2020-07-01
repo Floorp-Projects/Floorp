@@ -365,10 +365,9 @@ RefPtr<SharePromise> WindowsUIUtils::Share(nsAutoString aTitle,
      * Thus we trick the API by passing a whitespace when we have no title.
      * https://docs.microsoft.com/en-us/windows/uwp/app-to-app/share-data
      */
-    auto wTitle =
-        ConvertToWindowsString((title.IsVoid() || title.Length() == 0)
-                                   ? nsAutoString(NS_LITERAL_STRING(" "))
-                                   : title);
+    auto wTitle = ConvertToWindowsString((title.IsVoid() || title.Length() == 0)
+                                             ? nsAutoString(u" "_ns)
+                                             : title);
     if (wTitle.isErr() ||
         FAILED(spDataPackageProperties->put_Title(wTitle.unwrap().get()))) {
       promiseHolder->Reject(NS_ERROR_FAILURE, __func__);

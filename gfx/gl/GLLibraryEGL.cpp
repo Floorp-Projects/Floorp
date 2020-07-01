@@ -226,7 +226,7 @@ static bool IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
   if (failureId.IsEmpty() && angleSupport != nsIGfxInfo::FEATURE_STATUS_OK) {
     // This shouldn't happen, if we see this it's because we've missed
     // some failure paths
-    failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_ACCL_ANGLE_NOT_OK");
+    failureId = "FEATURE_FAILURE_ACCL_ANGLE_NOT_OK"_ns;
   }
   if (out_failureId->IsEmpty()) {
     *out_failureId = failureId;
@@ -295,7 +295,7 @@ static EGLDisplay GetAndInitDisplayForAccelANGLE(
 
   if (!StaticPrefs::webgl_angle_try_d3d11()) {
     d3d11ANGLE.UserDisable("User disabled D3D11 ANGLE by pref",
-                           NS_LITERAL_CSTRING("FAILURE_ID_ANGLE_PREF"));
+                           "FAILURE_ID_ANGLE_PREF"_ns);
   }
   if (StaticPrefs::webgl_angle_force_d3d11()) {
     d3d11ANGLE.UserForceEnable(
@@ -323,7 +323,7 @@ static EGLDisplay GetAndInitDisplayForAccelANGLE(
   }
 
   if (!ret && out_failureId->IsEmpty()) {
-    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_ACCL_ANGLE_NO_DISP");
+    *out_failureId = "FEATURE_FAILURE_ACCL_ANGLE_NO_DISP"_ns;
   }
 
   return ret;
@@ -395,7 +395,7 @@ bool GLLibraryEGL::DoEnsureInitialized() {
 bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
                                        nsACString* const out_failureId) {
   if (mInitialized && !mSymbols.fTerminate) {
-    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_DESTROYED");
+    *out_failureId = "FEATURE_FAILURE_EGL_DESTROYED"_ns;
     MOZ_ASSERT(false);
     return false;
   }
@@ -433,9 +433,9 @@ bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
       MOZ_ASSERT(false, "d3dcompiler DLL loading failed.");
     } while (false);
 
-    mGLLibrary = LoadLibraryForEGLOnWindows(NS_LITERAL_STRING("libGLESv2.dll"));
+    mGLLibrary = LoadLibraryForEGLOnWindows(u"libGLESv2.dll"_ns);
 
-    mEGLLibrary = LoadLibraryForEGLOnWindows(NS_LITERAL_STRING("libEGL.dll"));
+    mEGLLibrary = LoadLibraryForEGLOnWindows(u"libEGL.dll"_ns);
   }
 
 #else  // !Windows
@@ -476,7 +476,7 @@ bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
 
   if (!mEGLLibrary || !mGLLibrary) {
     NS_WARNING("Couldn't load EGL LIB.");
-    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_LOAD_3");
+    *out_failureId = "FEATURE_FAILURE_EGL_LOAD_3"_ns;
     return false;
   }
 
@@ -526,7 +526,7 @@ bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
     if (!libLoader.LoadSymbols(earlySymbols)) {
       NS_WARNING(
           "Couldn't find required entry points in EGL library (early init)");
-      *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_SYM");
+      *out_failureId = "FEATURE_FAILURE_EGL_SYM"_ns;
       return false;
     }
   }
@@ -784,7 +784,7 @@ EGLDisplay GLLibraryEGL::CreateDisplay(bool forceAccel,
       shouldTryWARP = true;
       shouldTryAccel = false;
       if (accelAngleFailureId.IsEmpty()) {
-        accelAngleFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_FORCE_WARP");
+        accelAngleFailureId = "FEATURE_FAILURE_FORCE_WARP"_ns;
       }
     }
 
@@ -796,16 +796,15 @@ EGLDisplay GLLibraryEGL::CreateDisplay(bool forceAccel,
     // Report the acceleration status to telemetry
     if (!chosenDisplay) {
       if (accelAngleFailureId.IsEmpty()) {
-        Telemetry::Accumulate(
-            Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
-            NS_LITERAL_CSTRING("FEATURE_FAILURE_ACCL_ANGLE_UNKNOWN"));
+        Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
+                              "FEATURE_FAILURE_ACCL_ANGLE_UNKNOWN"_ns);
       } else {
         Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
                               accelAngleFailureId);
       }
     } else {
       Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
-                            NS_LITERAL_CSTRING("SUCCESS"));
+                            "SUCCESS"_ns);
     }
 
     // Fallback to a WARP display if ANGLE fails, or if WARP is forced
@@ -813,7 +812,7 @@ EGLDisplay GLLibraryEGL::CreateDisplay(bool forceAccel,
       chosenDisplay = GetAndInitWARPDisplay(*this, EGL_DEFAULT_DISPLAY);
       if (!chosenDisplay) {
         if (out_failureId->IsEmpty()) {
-          *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WARP_FALLBACK");
+          *out_failureId = "FEATURE_FAILURE_WARP_FALLBACK"_ns;
         }
         NS_ERROR("Fallback WARP context failed to initialize.");
         return nullptr;
@@ -838,7 +837,7 @@ EGLDisplay GLLibraryEGL::CreateDisplay(bool forceAccel,
 
   if (!chosenDisplay) {
     if (out_failureId->IsEmpty()) {
-      *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DISPLAY");
+      *out_failureId = "FEATURE_FAILURE_NO_DISPLAY"_ns;
     }
     NS_WARNING("Failed to initialize a display.");
     return nullptr;

@@ -43,10 +43,10 @@ class PendingFullscreenEvent {
     nsString name;
     switch (mType) {
       case FullscreenEventType::Change:
-        name = NS_LITERAL_STRING("fullscreenchange");
+        name = u"fullscreenchange"_ns;
         break;
       case FullscreenEventType::Error:
-        name = NS_LITERAL_STRING("fullscreenerror");
+        name = u"fullscreenerror"_ns;
         break;
     }
     nsINode* target = mTarget->GetComposedDoc() == mDocument ? mTarget.get()

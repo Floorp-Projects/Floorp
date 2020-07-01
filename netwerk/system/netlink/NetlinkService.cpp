@@ -1622,7 +1622,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
       if (linkInfo->mIsUp) {
         nsAutoCString linkName;
         linkInfo->mLink->GetName(linkName);
-        if (StringBeginsWith(linkName, NS_LITERAL_CSTRING("rmnet"))) {
+        if (StringBeginsWith(linkName, "rmnet"_ns)) {
           // Check whether there is some non-local address associated with this
           // link.
           for (uint32_t i = 0; i < linkInfo->mAddresses.Length(); ++i) {

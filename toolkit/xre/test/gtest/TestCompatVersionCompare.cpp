@@ -49,6 +49,5 @@ TEST(CompatVersionCompare, CompareVersionChange)
 
   // Check that if the last run was safe mode then we consider this an upgrade.
   CheckCompatVersionCompare(
-      NS_LITERAL_CSTRING("Safe Mode"),
-      NS_LITERAL_CSTRING("67.0.1_20000000000000/20000000000000"), false, false);
+      "Safe Mode"_ns, "67.0.1_20000000000000/20000000000000"_ns, false, false);
 }

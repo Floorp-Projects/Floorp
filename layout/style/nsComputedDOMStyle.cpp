@@ -687,8 +687,7 @@ void nsComputedDOMStyle::GetCSSImageURLs(const nsACString& aPropertyName,
   if (prop == eCSSProperty_UNKNOWN) {
     // Note: not using nsPrintfCString here in case aPropertyName contains
     // nulls.
-    aRv.ThrowSyntaxError(NS_LITERAL_CSTRING("Invalid property name '") +
-                         aPropertyName + NS_LITERAL_CSTRING("'"));
+    aRv.ThrowSyntaxError("Invalid property name '"_ns + aPropertyName + "'"_ns);
     return;
   }
 
@@ -1118,9 +1117,9 @@ void nsComputedDOMStyle::RemoveProperty(const nsACString& aPropertyName,
                                         nsAString& aReturn, ErrorResult& aRv) {
   // Note: not using nsPrintfCString here in case aPropertyName contains
   // nulls.
-  aRv.ThrowNoModificationAllowedError(
-      NS_LITERAL_CSTRING("Can't remove property '") + aPropertyName +
-      NS_LITERAL_CSTRING("' from computed style"));
+  aRv.ThrowNoModificationAllowedError("Can't remove property '"_ns +
+                                      aPropertyName +
+                                      "' from computed style"_ns);
 }
 
 void nsComputedDOMStyle::GetPropertyPriority(const nsACString& aPropertyName,
@@ -1135,9 +1134,8 @@ void nsComputedDOMStyle::SetProperty(const nsACString& aPropertyName,
                                      ErrorResult& aRv) {
   // Note: not using nsPrintfCString here in case aPropertyName contains
   // nulls.
-  aRv.ThrowNoModificationAllowedError(
-      NS_LITERAL_CSTRING("Can't set value for property '") + aPropertyName +
-      NS_LITERAL_CSTRING("' in computed style"));
+  aRv.ThrowNoModificationAllowedError("Can't set value for property '"_ns +
+                                      aPropertyName + "' in computed style"_ns);
 }
 
 void nsComputedDOMStyle::IndexedGetter(uint32_t aIndex, bool& aFound,
@@ -1267,7 +1265,7 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::MatrixToCSSValue(
     const mozilla::gfx::Matrix4x4& matrix) {
   bool is3D = !matrix.Is2D();
 
-  nsAutoString resultString(NS_LITERAL_STRING("matrix"));
+  nsAutoString resultString(u"matrix"_ns);
   if (is3D) {
     resultString.AppendLiteral("3d");
   }

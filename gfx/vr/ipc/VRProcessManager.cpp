@@ -86,7 +86,7 @@ void VRProcessManager::DestroyProcess() {
   mVRChild = nullptr;
 
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::VRProcessStatus,
-                                     NS_LITERAL_CSTRING("Destroyed"));
+                                     "Destroyed"_ns);
 }
 
 bool VRProcessManager::EnsureVRReady() {
@@ -133,7 +133,7 @@ void VRProcessManager::OnProcessLaunchComplete(VRProcessParent* aParent) {
   mQueuedPrefs.Clear();
 
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::VRProcessStatus,
-                                     NS_LITERAL_CSTRING("Running"));
+                                     "Running"_ns);
 }
 
 void VRProcessManager::OnProcessUnexpectedShutdown(VRProcessParent* aParent) {

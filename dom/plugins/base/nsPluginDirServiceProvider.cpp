@@ -26,9 +26,8 @@ using namespace mozilla;
       do_CreateInstance("@mozilla.org/windows-registry-key;1");
   NS_ENSURE_TRUE(regKey, NS_ERROR_FAILURE);
 
-  nsresult rv =
-      regKey->Open(aKey, NS_LITERAL_STRING("Software\\MozillaPlugins"),
-                   nsIWindowsRegKey::ACCESS_READ);
+  nsresult rv = regKey->Open(aKey, u"Software\\MozillaPlugins"_ns,
+                             nsIWindowsRegKey::ACCESS_READ);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -45,7 +44,7 @@ using namespace mozilla;
                              getter_AddRefs(childKey));
       if (NS_SUCCEEDED(rv) && childKey) {
         nsAutoString path;
-        rv = childKey->ReadStringValue(NS_LITERAL_STRING("Path"), path);
+        rv = childKey->ReadStringValue(u"Path"_ns, path);
         if (NS_SUCCEEDED(rv)) {
           // We deliberately do not do any further checks here on whether
           // these are actually directories, whether they even exist, or

@@ -111,10 +111,10 @@ nsresult GetHelperPath(nsAutoString& aPath) {
                              getter_AddRefs(appHelper));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = appHelper->SetNativeLeafName(NS_LITERAL_CSTRING("uninstall"));
+  rv = appHelper->SetNativeLeafName("uninstall"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = appHelper->AppendNative(NS_LITERAL_CSTRING("helper.exe"));
+  rv = appHelper->AppendNative("helper.exe"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = appHelper->GetPath(aPath);
@@ -268,9 +268,9 @@ nsresult nsWindowsShellService::LaunchControlPanelDefaultPrograms() {
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoString params(NS_LITERAL_STRING(
-      "control.exe /name Microsoft.DefaultPrograms "
-      "/page pageDefaultProgram\\pageAdvancedSettings?pszAppName="));
+  nsAutoString params(
+      u"control.exe /name Microsoft.DefaultPrograms "
+      "/page pageDefaultProgram\\pageAdvancedSettings?pszAppName="_ns);
   nsAutoString appRegName;
   GetAppRegName(appRegName);
   params.Append(appRegName);
@@ -313,16 +313,15 @@ static bool SettingsAppBelievesConnected() {
     return false;
   }
 
-  rv = regKey->Open(
-      nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-      NS_LITERAL_STRING("SOFTWARE\\Microsoft\\Windows\\Shell\\Associations"),
-      nsIWindowsRegKey::ACCESS_READ);
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                    u"SOFTWARE\\Microsoft\\Windows\\Shell\\Associations"_ns,
+                    nsIWindowsRegKey::ACCESS_READ);
   if (NS_FAILED(rv)) {
     return false;
   }
 
   uint32_t value;
-  rv = regKey->ReadIntValue(NS_LITERAL_STRING("IsConnectedAtLogon"), &value);
+  rv = regKey->ReadIntValue(u"IsConnectedAtLogon"_ns, &value);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -373,12 +372,11 @@ nsresult nsWindowsShellService::InvokeHTTPOpenAsVerb() {
   }
 
   nsString urlStr;
-  nsresult rv = formatter->FormatURLPref(
-      NS_LITERAL_STRING("app.support.baseURL"), urlStr);
+  nsresult rv = formatter->FormatURLPref(u"app.support.baseURL"_ns, urlStr);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (!StringBeginsWith(urlStr, NS_LITERAL_STRING("https://"))) {
+  if (!StringBeginsWith(urlStr, u"https://"_ns)) {
     return NS_ERROR_FAILURE;
   }
   urlStr.AppendLiteral("win10-default-browser");
@@ -615,7 +613,7 @@ nsWindowsShellService::SetDesktopBackground(dom::Element* aElement,
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                        NS_LITERAL_STRING("Control Panel\\Desktop"),
+                        u"Control Panel\\Desktop"_ns,
                         nsIWindowsRegKey::ACCESS_SET_VALUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -648,9 +646,9 @@ nsWindowsShellService::SetDesktopBackground(dom::Element* aElement,
         break;
     }
 
-    rv = regKey->WriteStringValue(NS_LITERAL_STRING("TileWallpaper"), tile);
+    rv = regKey->WriteStringValue(u"TileWallpaper"_ns, tile);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = regKey->WriteStringValue(NS_LITERAL_STRING("WallpaperStyle"), style);
+    rv = regKey->WriteStringValue(u"WallpaperStyle"_ns, style);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = regKey->Close();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -685,15 +683,14 @@ nsWindowsShellService::SetDesktopBackgroundColor(uint32_t aColor) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                      NS_LITERAL_STRING("Control Panel\\Colors"),
+                      u"Control Panel\\Colors"_ns,
                       nsIWindowsRegKey::ACCESS_SET_VALUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   wchar_t rgb[12];
   _snwprintf(rgb, 12, L"%u %u %u", r, g, b);
 
-  rv = regKey->WriteStringValue(NS_LITERAL_STRING("Background"),
-                                nsDependentString(rgb));
+  rv = regKey->WriteStringValue(u"Background"_ns, nsDependentString(rgb));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return regKey->Close();

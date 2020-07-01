@@ -304,9 +304,9 @@ nsresult TRR::SendHTTPRequest() {
     }
 
     if (query.IsEmpty()) {
-      query.Assign(NS_LITERAL_CSTRING("?dns="));
+      query.Assign("?dns="_ns);
     } else {
-      query.Append(NS_LITERAL_CSTRING("&dns="));
+      query.Append("&dns="_ns);
     }
     query.Append(body);
 
@@ -353,9 +353,8 @@ nsresult TRR::SendHTTPRequest() {
   rv = httpChannel->SetTRRMode(nsIRequest::TRR_DISABLED_MODE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = httpChannel->SetRequestHeader(
-      NS_LITERAL_CSTRING("Accept"),
-      NS_LITERAL_CSTRING("application/dns-message"), false);
+  rv = httpChannel->SetRequestHeader("Accept"_ns, "application/dns-message"_ns,
+                                     false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString cred;
@@ -363,8 +362,7 @@ nsresult TRR::SendHTTPRequest() {
     gTRRService->GetCredentials(cred);
   }
   if (!cred.IsEmpty()) {
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Authorization"),
-                                       cred, false);
+    rv = httpChannel->SetRequestHeader("Authorization"_ns, cred, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -383,7 +381,7 @@ nsresult TRR::SendHTTPRequest() {
   mAllowRFC1918 = gTRRService->AllowRFC1918();
 
   if (useGet) {
-    rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
+    rv = httpChannel->SetRequestMethod("GET"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);
@@ -396,9 +394,9 @@ nsresult TRR::SendHTTPRequest() {
         NS_NewCStringInputStream(getter_AddRefs(uploadStream), std::move(body));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = uploadChannel->ExplicitSetUploadStream(
-        uploadStream, NS_LITERAL_CSTRING("application/dns-message"),
-        streamLength, NS_LITERAL_CSTRING("POST"), false);
+    rv = uploadChannel->ExplicitSetUploadStream(uploadStream,
+                                                "application/dns-message"_ns,
+                                                streamLength, "POST"_ns, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -428,35 +426,32 @@ nsresult TRR::SetupTRRServiceChannelInternal(nsIHttpChannel* aChannel,
 
   nsresult rv = NS_OK;
   if (!aUseGet) {
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cache-Control"),
-                                       NS_LITERAL_CSTRING("no-store"), false);
+    rv =
+        httpChannel->SetRequestHeader("Cache-Control"_ns, "no-store"_ns, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Sanitize the request by removing the Accept-Language header so we minimize
   // the amount of fingerprintable information we send to the server.
   if (!StaticPrefs::network_trr_send_accept_language_headers()) {
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Language"),
-                                       EmptyCString(), false);
+    rv = httpChannel->SetRequestHeader("Accept-Language"_ns, EmptyCString(),
+                                       false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Sanitize the request by removing the User-Agent
   if (!StaticPrefs::network_trr_send_user_agent_headers()) {
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"),
-                                       EmptyCString(), false);
+    rv = httpChannel->SetRequestHeader("User-Agent"_ns, EmptyCString(), false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (StaticPrefs::network_trr_send_empty_accept_encoding_headers()) {
-    rv = httpChannel->SetEmptyRequestHeader(
-        NS_LITERAL_CSTRING("Accept-Encoding"));
+    rv = httpChannel->SetEmptyRequestHeader("Accept-Encoding"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // set the *default* response content type
-  if (NS_FAILED(httpChannel->SetContentType(
-          NS_LITERAL_CSTRING("application/dns-message")))) {
+  if (NS_FAILED(httpChannel->SetContentType("application/dns-message"_ns))) {
     LOG(("TRR::SetupTRRServiceChannelInternal: couldn't set content-type!\n"));
   }
 

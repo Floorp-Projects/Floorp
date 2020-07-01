@@ -40,8 +40,8 @@ void HexEncode(const SECItem* it, nsACString& result) {
   }
 }
 
-#define DSA_KEY_TYPE_STRING (NS_LITERAL_CSTRING("DS160"))
-#define RSA_KEY_TYPE_STRING (NS_LITERAL_CSTRING("RS256"))
+#define DSA_KEY_TYPE_STRING ("DS160"_ns)
+#define RSA_KEY_TYPE_STRING ("RS256"_ns)
 
 class KeyPair : public nsIIdentityKeyPair {
  public:

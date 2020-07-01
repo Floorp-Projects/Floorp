@@ -353,8 +353,7 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
 
   nsAutoCString path;
   aURI->GetPathQueryRef(path);
-  if (!(StringEndsWith(path, NS_LITERAL_CSTRING(".xul")) ||
-        StringEndsWith(path, NS_LITERAL_CSTRING(".xhtml")))) {
+  if (!(StringEndsWith(path, ".xul"_ns) || StringEndsWith(path, ".xhtml"_ns))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -501,7 +500,7 @@ void nsXULPrototypeCache::CollectMemoryReports(
   size_t other = mallocSizeOf(sInstance);
 
 #define REPORT_SIZE(_path, _amount, _desc) \
-  ReportSize(_path, _amount, NS_LITERAL_CSTRING(_desc), aHandleReport, aData)
+  ReportSize(_path, _amount, nsLiteralCString(_desc), aHandleReport, aData)
 
   other += sInstance->mPrototypeTable.ShallowSizeOfExcludingThis(mallocSizeOf);
   // TODO Report content in mPrototypeTable?
@@ -526,7 +525,7 @@ void nsXULPrototypeCache::CollectMemoryReports(
   other +=
       sInstance->mInputStreamTable.ShallowSizeOfExcludingThis(mallocSizeOf);
 
-  REPORT_SIZE(NS_LITERAL_CSTRING("other"), other,
+  REPORT_SIZE("other"_ns, other,
               "Memory used by "
               "the instance and tables of the XUL prototype cache.");
 

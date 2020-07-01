@@ -75,8 +75,8 @@ class nsMenuActivateEvent : public Runnable {
 
     if (mIsActivate) {
       // Highlight the menu.
-      mMenu->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive,
-                     NS_LITERAL_STRING("true"), true);
+      mMenu->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, u"true"_ns,
+                     true);
       // The menuactivated event is used by accessibility to track the user's
       // movements through menus
       domEventToFire.AssignLiteral("DOMMenuItemActive");
@@ -511,8 +511,8 @@ void nsMenuFrame::PopupOpened() {
   gMenuJustOpenedOrClosed = true;
 
   AutoWeakFrame weakFrame(this);
-  mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open,
-                                 NS_LITERAL_STRING("true"), true);
+  mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, u"true"_ns,
+                                 true);
   if (!weakFrame.IsAlive()) return;
 
   nsMenuParent* menuParent = GetMenuParent();
@@ -761,7 +761,7 @@ nsresult nsMenuFrame::Notify(nsITimer* aTimer) {
         // menu.
         AutoWeakFrame weakFrame(this);
         mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive,
-                                       NS_LITERAL_STRING("true"), true);
+                                       u"true"_ns, true);
         if (weakFrame.IsAlive()) {
           aTimer->InitWithCallback(mTimerMediator, kBlinkDelay,
                                    nsITimer::TYPE_ONE_SHOT);

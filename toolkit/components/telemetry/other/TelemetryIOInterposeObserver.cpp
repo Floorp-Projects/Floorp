@@ -15,7 +15,7 @@ TelemetryIOInterposeObserver::TelemetryIOInterposeObserver(nsIFile* aXreDir)
   nsAutoString xreDirPath;
   nsresult rv = aXreDir->GetPath(xreDirPath);
   if (NS_SUCCEEDED(rv)) {
-    AddPath(xreDirPath, NS_LITERAL_STRING("{xre}"));
+    AddPath(xreDirPath, u"{xre}"_ns);
   }
 }
 

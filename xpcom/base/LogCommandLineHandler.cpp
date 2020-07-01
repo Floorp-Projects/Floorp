@@ -19,8 +19,7 @@ void LoggingHandleCommandLineArgs(
   // Used for the `-MOZ_LOG <modules>` form of argument.
   nsAutoCString env;
 
-  auto const names = {NS_LITERAL_CSTRING("MOZ_LOG"),
-                      NS_LITERAL_CSTRING("MOZ_LOG_FILE")};
+  auto const names = {"MOZ_LOG"_ns, "MOZ_LOG_FILE"_ns};
 
   for (int arg = 1; arg < argc; ++arg) {
     Tokenizer p(argv[arg]);

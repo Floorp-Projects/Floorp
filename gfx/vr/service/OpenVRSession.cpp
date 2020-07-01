@@ -1369,7 +1369,7 @@ void OpenVRSession::VibrateHaptic(uint32_t aControllerIdx,
 void OpenVRSession::StartHapticThread() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mHapticThread) {
-    mHapticThread = new VRThread(NS_LITERAL_CSTRING("VR_OpenVR_Haptics"));
+    mHapticThread = new VRThread("VR_OpenVR_Haptics"_ns);
   }
   mHapticThread->Start();
   StartHapticTimer();

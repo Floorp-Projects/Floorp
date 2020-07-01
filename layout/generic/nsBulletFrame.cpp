@@ -89,7 +89,7 @@ void nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsBulletFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("Bullet"), aResult);
+  return MakeFrameName(u"Bullet"_ns, aResult);
 }
 #endif
 

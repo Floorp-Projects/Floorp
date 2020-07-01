@@ -66,8 +66,8 @@ bool nsHTMLContentSerializer::SerializeHTMLAttributes(
 
     // Filter out any attribute starting with [-|_]moz
     nsDependentAtomString attrNameStr(attrName);
-    if (StringBeginsWith(attrNameStr, NS_LITERAL_STRING("_moz")) ||
-        StringBeginsWith(attrNameStr, NS_LITERAL_STRING("-moz"))) {
+    if (StringBeginsWith(attrNameStr, u"_moz"_ns) ||
+        StringBeginsWith(attrNameStr, u"-moz"_ns)) {
       continue;
     }
     aElement->GetAttr(namespaceID, attrName, valueStr);
@@ -107,8 +107,7 @@ bool nsHTMLContentSerializer::SerializeHTMLAttributes(
       nsAutoString header;
       aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
       if (header.LowerCaseEqualsLiteral("content-type")) {
-        valueStr = NS_LITERAL_STRING("text/html; charset=") +
-                   NS_ConvertASCIItoUTF16(mCharset);
+        valueStr = u"text/html; charset="_ns + NS_ConvertASCIItoUTF16(mCharset);
       }
     }
 

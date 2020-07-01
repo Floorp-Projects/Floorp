@@ -344,11 +344,10 @@ void FetchStreamReader::ReportErrorToConsole(JSContext* aCx,
   params.AppendElement(valueString);
 
   RefPtr<ConsoleReportCollector> reporter = new ConsoleReportCollector();
-  reporter->AddConsoleReport(
-      nsIScriptError::errorFlag,
-      NS_LITERAL_CSTRING("ReadableStreamReader.read"),
-      nsContentUtils::eDOM_PROPERTIES, sourceSpec, line, column,
-      NS_LITERAL_CSTRING("ReadableStreamReadingFailed"), params);
+  reporter->AddConsoleReport(nsIScriptError::errorFlag,
+                             "ReadableStreamReader.read"_ns,
+                             nsContentUtils::eDOM_PROPERTIES, sourceSpec, line,
+                             column, "ReadableStreamReadingFailed"_ns, params);
 
   uint64_t innerWindowId = 0;
 

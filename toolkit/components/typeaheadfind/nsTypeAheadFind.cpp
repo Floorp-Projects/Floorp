@@ -322,7 +322,7 @@ void nsTypeAheadFind::PlayNotFoundSound() {
     nsCOMPtr<nsIURI> soundURI;
     if (mNotFoundSoundURL.EqualsLiteral("default"))
       NS_NewURI(getter_AddRefs(soundURI),
-                NS_LITERAL_CSTRING(TYPEAHEADFIND_NOTFOUND_WAV_URL));
+                nsLiteralCString(TYPEAHEADFIND_NOTFOUND_WAV_URL));
     else
       NS_NewURI(getter_AddRefs(soundURI), mNotFoundSoundURL);
 
@@ -882,8 +882,8 @@ void nsTypeAheadFind::RangeStartsInsideLink(nsRange* aRange,
                                            kNameSpaceID_XLink, nsGkAtoms::href);
       if (*aIsInsideLink) {
         if (!startContent->AsElement()->AttrValueIs(
-                kNameSpaceID_XLink, nsGkAtoms::type,
-                NS_LITERAL_STRING("simple"), eCaseMatters)) {
+                kNameSpaceID_XLink, nsGkAtoms::type, u"simple"_ns,
+                eCaseMatters)) {
           *aIsInsideLink = false;  // Xlink must be type="simple"
         }
 

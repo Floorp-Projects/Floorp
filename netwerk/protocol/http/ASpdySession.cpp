@@ -43,7 +43,7 @@ SpdyInformation::SpdyInformation() {
   // highest index of enabled protocols is the
   // most preferred for ALPN negotiaton
   Version[0] = SpdyVersion::HTTP_2;
-  VersionString[0] = NS_LITERAL_CSTRING("h2");
+  VersionString[0] = "h2"_ns;
   ALPNCallbacks[0] = Http2Session::ALPNCallback;
 }
 

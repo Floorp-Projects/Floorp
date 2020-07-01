@@ -110,8 +110,8 @@ void ChromeObserver::UpdateBrightTitlebarForeground() {
     mainWidget->SetUseBrightTitlebarForeground(
         mDocument->GetDocumentLWTheme() == Document::Doc_Theme_Bright ||
         mDocument->GetRootElement()->AttrValueIs(
-            kNameSpaceID_None, nsGkAtoms::brighttitlebarforeground,
-            NS_LITERAL_STRING("true"), eCaseMatters));
+            kNameSpaceID_None, nsGkAtoms::brighttitlebarforeground, u"true"_ns,
+            eCaseMatters));
   }
 }
 
@@ -172,7 +172,7 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
   if (value) {
     // Hide chrome if needed
     if (aName == nsGkAtoms::hidechrome) {
-      HideWindowChrome(value->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
+      HideWindowChrome(value->Equals(u"true"_ns, eCaseMatters));
     } else if (aName == nsGkAtoms::chromemargin) {
       SetChromeMargins(value);
     } else if (aName == nsGkAtoms::windowtype && aElement->IsXULElement()) {
@@ -184,10 +184,9 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
     else if (aName == nsGkAtoms::title) {
       mDocument->NotifyPossibleTitleChange(false);
     } else if (aName == nsGkAtoms::drawintitlebar) {
-      SetDrawsInTitlebar(
-          value->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
+      SetDrawsInTitlebar(value->Equals(u"true"_ns, eCaseMatters));
     } else if (aName == nsGkAtoms::drawtitle) {
-      SetDrawsTitle(value->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
+      SetDrawsTitle(value->Equals(u"true"_ns, eCaseMatters));
     } else if (aName == nsGkAtoms::localedir) {
       // if the localedir changed on the root element, reset the document
       // direction

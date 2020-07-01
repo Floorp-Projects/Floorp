@@ -97,9 +97,8 @@ void ProcessActor::ConstructActor(const nsACString& aName,
   // Load the specific property from our module.
   JS::RootedValue ctor(cx);
   nsAutoCString ctorName(aName);
-  ctorName.Append(actorType == JSActor::Type::Parent
-                      ? NS_LITERAL_CSTRING("Parent")
-                      : NS_LITERAL_CSTRING("Child"));
+  ctorName.Append(actorType == JSActor::Type::Parent ? "Parent"_ns
+                                                     : "Child"_ns);
   if (!JS_GetProperty(cx, exports, ctorName.get(), &ctor)) {
     aRv.NoteJSContextException(cx);
     return;

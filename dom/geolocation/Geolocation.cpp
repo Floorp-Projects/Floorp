@@ -200,8 +200,8 @@ nsGeolocationRequest::nsGeolocationRequest(
     int32_t aWatchId)
     : ContentPermissionRequestBase(
           aLocator->GetPrincipal(),
-          ConvertWeakReferenceToWindow(aLocator->GetOwner()),
-          NS_LITERAL_CSTRING("geo"), NS_LITERAL_CSTRING("geolocation")),
+          ConvertWeakReferenceToWindow(aLocator->GetOwner()), "geo"_ns,
+          "geolocation"_ns),
       mIsWatchPositionRequest(aWatchPositionRequest),
       mCallback(std::move(aCallback)),
       mErrorCallback(std::move(aErrorCallback)),
@@ -973,8 +973,7 @@ bool Geolocation::ShouldBlockInsecureRequests() const {
   }
 
   if (!nsGlobalWindowInner::Cast(win)->IsSecureContext()) {
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    NS_LITERAL_CSTRING("DOM"), doc,
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag, "DOM"_ns, doc,
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "GeolocationInsecureRequestIsForbidden");
     return true;

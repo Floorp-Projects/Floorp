@@ -403,8 +403,7 @@ NS_IMETHODIMP nsXULPopupShownEvent::HandleEvent(Event* aEvent) {
 }
 
 void nsXULPopupShownEvent::CancelListener() {
-  mPopup->RemoveSystemEventListener(NS_LITERAL_STRING("transitionend"), this,
-                                    false);
+  mPopup->RemoveSystemEventListener(u"transitionend"_ns, this, false);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsXULPopupShownEvent, Runnable,
@@ -626,7 +625,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
         AnimationUtils::HasCurrentTransitions(mContent->AsElement(),
                                               PseudoStyleType::NotPseudo)) {
       mPopupShownDispatcher = new nsXULPopupShownEvent(mContent, pc);
-      mContent->AddSystemEventListener(NS_LITERAL_STRING("transitionend"),
+      mContent->AddSystemEventListener(u"transitionend"_ns,
                                        mPopupShownDispatcher, false, false);
       return;
     }
@@ -976,7 +975,7 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
   nsViewManager* viewManager = view->GetViewManager();
   viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
 
-  FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"), mContent);
+  FireDOMEvent(u"DOMMenuInactive"_ns, mContent);
 
   // XXX, bug 137033, In Windows, if mouse is outside the window when the
   // menupopup closes, no mouse_enter/mouse_exit event will be fired to clear

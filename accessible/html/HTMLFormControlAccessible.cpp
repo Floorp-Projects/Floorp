@@ -249,8 +249,7 @@ HTMLTextFieldAccessible::NativeAttributes() {
                                      type)) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType, type);
     if (!ARIARoleMap() && type.EqualsLiteral("search")) {
-      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                             NS_LITERAL_STRING("searchbox"));
+      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, u"searchbox"_ns);
     }
   }
 

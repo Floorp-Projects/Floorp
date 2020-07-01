@@ -150,8 +150,8 @@ nsresult ReadChainIntoCertList(const nsACString& aCertChain,
   bool inBlock = false;
   bool certFound = false;
 
-  const nsCString header = NS_LITERAL_CSTRING("-----BEGIN CERTIFICATE-----");
-  const nsCString footer = NS_LITERAL_CSTRING("-----END CERTIFICATE-----");
+  const nsCString header = "-----BEGIN CERTIFICATE-----"_ns;
+  const nsCString footer = "-----END CERTIFICATE-----"_ns;
 
   nsCWhitespaceTokenizerTemplate<IsNewLine> tokenizer(aCertChain);
 

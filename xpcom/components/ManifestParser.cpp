@@ -270,8 +270,7 @@ static bool CheckOsFlag(const nsAString& aFlag, const nsAString& aData,
   bool result = CheckStringFlag(aFlag, aData, aValue, aResult);
 #if defined(XP_UNIX) && !defined(XP_DARWIN) && !defined(ANDROID)
   if (result && aResult == eBad) {
-    result =
-        CheckStringFlag(aFlag, aData, NS_LITERAL_STRING("likeunix"), aResult);
+    result = CheckStringFlag(aFlag, aData, u"likeunix"_ns, aResult);
   }
 #endif
   return result;

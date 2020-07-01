@@ -145,7 +145,7 @@ ScriptPreloader& ScriptPreloader::GetChildSingleton() {
   if (!singleton) {
     singleton = new ScriptPreloader();
     if (XRE_IsParentProcess()) {
-      Unused << singleton->InitCache(NS_LITERAL_STRING("scriptCache-child"));
+      Unused << singleton->InitCache(u"scriptCache-child"_ns);
     }
     ClearOnShutdown(&singleton);
   }
@@ -384,7 +384,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> ScriptPreloader::GetCacheFile(
   nsCOMPtr<nsIFile> cacheFile;
   MOZ_TRY(mProfD->Clone(getter_AddRefs(cacheFile)));
 
-  MOZ_TRY(cacheFile->AppendNative(NS_LITERAL_CSTRING("startupCache")));
+  MOZ_TRY(cacheFile->AppendNative("startupCache"_ns));
   Unused << cacheFile->Create(nsIFile::DIRECTORY_TYPE, 0777);
 
   MOZ_TRY(cacheFile->Append(mBaseName + suffix));
@@ -398,16 +398,14 @@ Result<Ok, nsresult> ScriptPreloader::OpenCache() {
   MOZ_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
 
   nsCOMPtr<nsIFile> cacheFile;
-  MOZ_TRY_VAR(cacheFile, GetCacheFile(NS_LITERAL_STRING(".bin")));
+  MOZ_TRY_VAR(cacheFile, GetCacheFile(u".bin"_ns));
 
   bool exists;
   MOZ_TRY(cacheFile->Exists(&exists));
   if (exists) {
-    MOZ_TRY(cacheFile->MoveTo(nullptr,
-                              mBaseName + NS_LITERAL_STRING("-current.bin")));
+    MOZ_TRY(cacheFile->MoveTo(nullptr, mBaseName + u"-current.bin"_ns));
   } else {
-    MOZ_TRY(
-        cacheFile->SetLeafName(mBaseName + NS_LITERAL_STRING("-current.bin")));
+    MOZ_TRY(cacheFile->SetLeafName(mBaseName + u"-current.bin"_ns));
     MOZ_TRY(cacheFile->Exists(&exists));
     if (!exists) {
       return Err(NS_ERROR_FILE_NOT_FOUND);
@@ -660,7 +658,7 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
   }
 
   nsCOMPtr<nsIFile> cacheFile;
-  MOZ_TRY_VAR(cacheFile, GetCacheFile(NS_LITERAL_STRING("-new.bin")));
+  MOZ_TRY_VAR(cacheFile, GetCacheFile(u"-new.bin"_ns));
 
   bool exists;
   MOZ_TRY(cacheFile->Exists(&exists));
@@ -712,7 +710,7 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
     }
   }
 
-  MOZ_TRY(cacheFile->MoveTo(nullptr, mBaseName + NS_LITERAL_STRING(".bin")));
+  MOZ_TRY(cacheFile->MoveTo(nullptr, mBaseName + u".bin"_ns));
 
   return Ok();
 }

@@ -2295,7 +2295,7 @@ CacheStorageService::CollectReports(nsIHandleReportCallback* aHandleReport,
               table->Type() == CacheEntryTable::MEMORY_ONLY ? "memory" : "disk",
               aAnonymize ? "<anonymized>" : iter1.Key().BeginReading()),
           nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES, size,
-          NS_LITERAL_CSTRING("Memory used by the cache storage."), aData);
+          "Memory used by the cache storage."_ns, aData);
     }
   }
 

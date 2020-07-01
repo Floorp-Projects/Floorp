@@ -134,69 +134,54 @@ void RunTest(const nsCString& aPrefName1, const nsCString& aPrefName2,
 }
 
 TEST(CallbackAndVarCacheOrder, Bool)
-{
-  RunTest<bool>(NS_LITERAL_CSTRING("test_pref.bool.1"),
-                NS_LITERAL_CSTRING("test_pref.bool.2"), false, true);
-}
+{ RunTest<bool>("test_pref.bool.1"_ns, "test_pref.bool.2"_ns, false, true); }
 
 TEST(CallbackAndVarCacheOrder, AtomicBoolRelaxed)
 {
   RunTest<bool, Atomic<bool, Relaxed>>(
-      NS_LITERAL_CSTRING("test_pref.atomic_bool.1"),
-      NS_LITERAL_CSTRING("test_pref.atomic_bool.2"), false, true);
+      "test_pref.atomic_bool.1"_ns, "test_pref.atomic_bool.2"_ns, false, true);
 }
 
 TEST(CallbackAndVarCacheOrder, AtomicBoolReleaseAcquire)
 {
   RunTest<bool, Atomic<bool, ReleaseAcquire>>(
-      NS_LITERAL_CSTRING("test_pref.atomic_bool.3"),
-      NS_LITERAL_CSTRING("test_pref.atomic_bool.4"), false, true);
+      "test_pref.atomic_bool.3"_ns, "test_pref.atomic_bool.4"_ns, false, true);
 }
 
 TEST(CallbackAndVarCacheOrder, Int)
-{
-  RunTest<int32_t>(NS_LITERAL_CSTRING("test_pref.int.1"),
-                   NS_LITERAL_CSTRING("test_pref.int.2"), -2, 3);
-}
+{ RunTest<int32_t>("test_pref.int.1"_ns, "test_pref.int.2"_ns, -2, 3); }
 
 TEST(CallbackAndVarCacheOrder, AtomicInt)
 {
   RunTest<int32_t, Atomic<int32_t, Relaxed>>(
-      NS_LITERAL_CSTRING("test_pref.atomic_int.1"),
-      NS_LITERAL_CSTRING("test_pref.atomic_int.2"), -3, 4);
+      "test_pref.atomic_int.1"_ns, "test_pref.atomic_int.2"_ns, -3, 4);
 }
 
 TEST(CallbackAndVarCacheOrder, Uint)
-{
-  RunTest<uint32_t>(NS_LITERAL_CSTRING("test_pref.uint.1"),
-                    NS_LITERAL_CSTRING("test_pref.uint.2"), 4u, 5u);
-}
+{ RunTest<uint32_t>("test_pref.uint.1"_ns, "test_pref.uint.2"_ns, 4u, 5u); }
 
 TEST(CallbackAndVarCacheOrder, AtomicUintRelaxed)
 {
   RunTest<uint32_t, Atomic<uint32_t, Relaxed>>(
-      NS_LITERAL_CSTRING("test_pref.atomic_uint.1"),
-      NS_LITERAL_CSTRING("test_pref.atomic_uint.2"), 6u, 7u);
+      "test_pref.atomic_uint.1"_ns, "test_pref.atomic_uint.2"_ns, 6u, 7u);
 }
 
 TEST(CallbackAndVarCacheOrder, AtomicUintReleaseAcquire)
 {
   RunTest<uint32_t, Atomic<uint32_t, ReleaseAcquire>>(
-      NS_LITERAL_CSTRING("test_pref.atomic_uint.3"),
-      NS_LITERAL_CSTRING("test_pref.atomic_uint.4"), 8u, 9u);
+      "test_pref.atomic_uint.3"_ns, "test_pref.atomic_uint.4"_ns, 8u, 9u);
 }
 
 TEST(CallbackAndVarCacheOrder, Float)
 {
-  RunTest<float>(NS_LITERAL_CSTRING("test_pref.float.1"),
-                 NS_LITERAL_CSTRING("test_pref.float.2"), -10.0f, 11.0f);
+  RunTest<float>("test_pref.float.1"_ns, "test_pref.float.2"_ns, -10.0f, 11.0f);
 }
 
 TEST(CallbackAndVarCacheOrder, AtomicFloat)
 {
-  RunTest<float, std::atomic<float>>(
-      NS_LITERAL_CSTRING("test_pref.atomic_float.1"),
-      NS_LITERAL_CSTRING("test_pref.atomic_float.2"), -12.0f, 13.0f);
+  RunTest<float, std::atomic<float>>("test_pref.atomic_float.1"_ns,
+                                     "test_pref.atomic_float.2"_ns, -12.0f,
+                                     13.0f);
 }
 
 }  // namespace mozilla

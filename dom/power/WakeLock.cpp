@@ -111,8 +111,7 @@ WakeLock::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   uint64_t childID = 0;
-  nsresult rv =
-      props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
+  nsresult rv = props->GetPropertyAsUint64(u"childID"_ns, &childID);
   if (NS_SUCCEEDED(rv)) {
     if (childID == mContentParentID) {
       mLocked = false;
@@ -151,15 +150,15 @@ void WakeLock::AttachEventListener() {
   if (nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow)) {
     nsCOMPtr<Document> doc = window->GetExtantDoc();
     if (doc) {
-      doc->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
+      doc->AddSystemEventListener(u"visibilitychange"_ns, this,
                                   /* useCapture = */ true,
                                   /* wantsUntrusted = */ false);
 
       nsCOMPtr<EventTarget> target = do_QueryInterface(window);
-      target->AddSystemEventListener(NS_LITERAL_STRING("pagehide"), this,
+      target->AddSystemEventListener(u"pagehide"_ns, this,
                                      /* useCapture = */ true,
                                      /* wantsUntrusted = */ false);
-      target->AddSystemEventListener(NS_LITERAL_STRING("pageshow"), this,
+      target->AddSystemEventListener(u"pageshow"_ns, this,
                                      /* useCapture = */ true,
                                      /* wantsUntrusted = */ false);
     }
@@ -170,13 +169,12 @@ void WakeLock::DetachEventListener() {
   if (nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow)) {
     nsCOMPtr<Document> doc = window->GetExtantDoc();
     if (doc) {
-      doc->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                     this,
+      doc->RemoveSystemEventListener(u"visibilitychange"_ns, this,
                                      /* useCapture = */ true);
       nsCOMPtr<EventTarget> target = do_QueryInterface(window);
-      target->RemoveSystemEventListener(NS_LITERAL_STRING("pagehide"), this,
+      target->RemoveSystemEventListener(u"pagehide"_ns, this,
                                         /* useCapture = */ true);
-      target->RemoveSystemEventListener(NS_LITERAL_STRING("pageshow"), this,
+      target->RemoveSystemEventListener(u"pageshow"_ns, this,
                                         /* useCapture = */ true);
     }
   }

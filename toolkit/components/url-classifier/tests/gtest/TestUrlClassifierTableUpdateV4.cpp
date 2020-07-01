@@ -14,9 +14,9 @@
 
 #include "Common.h"
 
-#define GTEST_SAFEBROWSING_DIR NS_LITERAL_CSTRING("safebrowsing")
-#define GTEST_TABLE NS_LITERAL_CSTRING("gtest-malware-proto")
-#define GTEST_PREFIXFILE NS_LITERAL_CSTRING("gtest-malware-proto.vlpset")
+#define GTEST_SAFEBROWSING_DIR "safebrowsing"_ns
+#define GTEST_TABLE "gtest-malware-proto"_ns
+#define GTEST_PREFIXFILE "gtest-malware-proto.vlpset"_ns
 
 // This function removes common elements of inArray and outArray from
 // outArray. This is used by partial update testcase to ensure partial update
@@ -141,7 +141,7 @@ static void VerifyPrefixSet(PrefixStringMap& expected) {
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
 
   RefPtr<LookupCacheV4> lookup =
-      new LookupCacheV4(GTEST_TABLE, NS_LITERAL_CSTRING("test"), file);
+      new LookupCacheV4(GTEST_TABLE, "test"_ns, file);
   lookup->Init();
 
   file->AppendNative(GTEST_PREFIXFILE);

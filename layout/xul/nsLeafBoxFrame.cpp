@@ -269,7 +269,7 @@ void nsLeafBoxFrame::Reflow(nsPresContext* aPresContext,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsLeafBoxFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("LeafBox"), aResult);
+  return MakeFrameName(u"LeafBox"_ns, aResult);
 }
 #endif
 

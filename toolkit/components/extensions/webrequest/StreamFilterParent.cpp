@@ -481,8 +481,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
       RunOnActorThread(FUNC, [=] {
         if (self->IPCActive()) {
           self->mState = State::Disconnected;
-          CheckResult(
-              self->SendError(NS_LITERAL_CSTRING("Channel redirected")));
+          CheckResult(self->SendError("Channel redirected"_ns));
         }
       });
     }
@@ -499,8 +498,8 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
       RunOnActorThread(FUNC, [=] {
         if (self->IPCActive()) {
           self->mState = State::Disconnected;
-          CheckResult(self->SendError(
-              NS_LITERAL_CSTRING("Channel is delivering cached alt-data")));
+          CheckResult(
+              self->SendError("Channel is delivering cached alt-data"_ns));
         }
       });
     }

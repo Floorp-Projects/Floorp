@@ -19,20 +19,20 @@ TEST(Collation, AllocateRowSortKey)
 
   // Don't throw error even if locale name is invalid
   nsCOMPtr<nsICollation> collator;
-  nsresult rv = colFactory->CreateCollationForLocale(
-      NS_LITERAL_CSTRING("$languageName"), getter_AddRefs(collator));
+  nsresult rv = colFactory->CreateCollationForLocale("$languageName"_ns,
+                                                     getter_AddRefs(collator));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsTArray<uint8_t> sortKey1;
   // Don't throw error even if locale name is invalid
   rv = collator->AllocateRawSortKey(nsICollation::kCollationStrengthDefault,
-                                    NS_LITERAL_STRING("ABC"), sortKey1);
+                                    u"ABC"_ns, sortKey1);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsTArray<uint8_t> sortKey2;
   // Don't throw error even if locale name is invalid
   rv = collator->AllocateRawSortKey(nsICollation::kCollationStrengthDefault,
-                                    NS_LITERAL_STRING("DEF"), sortKey2);
+                                    u"DEF"_ns, sortKey2);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   int32_t result;

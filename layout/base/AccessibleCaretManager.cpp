@@ -926,8 +926,7 @@ void AccessibleCaretManager::SetSelectionDragState(bool aState) const {
 
 bool AccessibleCaretManager::IsPhoneNumber(nsAString& aCandidate) const {
   RefPtr<Document> doc = mPresShell->GetDocument();
-  nsAutoString phoneNumberRegex(
-      NS_LITERAL_STRING("(^\\+)?[0-9 ,\\-.()*#pw]{1,30}$"));
+  nsAutoString phoneNumberRegex(u"(^\\+)?[0-9 ,\\-.()*#pw]{1,30}$"_ns);
   return nsContentUtils::IsPatternMatching(aCandidate, phoneNumberRegex, doc)
       .valueOr(false);
 }
@@ -937,10 +936,10 @@ void AccessibleCaretManager::SelectMoreIfPhoneNumber() const {
 
   if (IsPhoneNumber(selectedText)) {
     SetSelectionDirection(eDirNext);
-    ExtendPhoneNumberSelection(NS_LITERAL_STRING("forward"));
+    ExtendPhoneNumberSelection(u"forward"_ns);
 
     SetSelectionDirection(eDirPrevious);
-    ExtendPhoneNumberSelection(NS_LITERAL_STRING("backward"));
+    ExtendPhoneNumberSelection(u"backward"_ns);
 
     SetSelectionDirection(eDirNext);
   }
@@ -972,8 +971,8 @@ void AccessibleCaretManager::ExtendPhoneNumberSelection(
     nsAutoString oldSelectedText = StringifiedSelection();
 
     // Extend the selection by one char.
-    selection->Modify(NS_LITERAL_STRING("extend"), aDirection,
-                      NS_LITERAL_STRING("character"), IgnoreErrors());
+    selection->Modify(u"extend"_ns, aDirection, u"character"_ns,
+                      IgnoreErrors());
     if (IsTerminated()) {
       return;
     }
@@ -1463,7 +1462,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
   init.mSelectedTextContent = StringifiedSelection();
 
   RefPtr<CaretStateChangedEvent> event = CaretStateChangedEvent::Constructor(
-      doc, NS_LITERAL_STRING("mozcaretstatechanged"), init);
+      doc, u"mozcaretstatechanged"_ns, init);
 
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;

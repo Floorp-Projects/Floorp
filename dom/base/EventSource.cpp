@@ -401,7 +401,7 @@ class CleanupRunnable final : public WorkerMainThreadRunnable {
  public:
   explicit CleanupRunnable(EventSourceImpl* aEventSourceImpl)
       : WorkerMainThreadRunnable(GetCurrentThreadWorkerPrivate(),
-                                 NS_LITERAL_CSTRING("EventSource :: Cleanup")),
+                                 "EventSource :: Cleanup"_ns),
         mImpl(aEventSourceImpl) {
     mWorkerPrivate->AssertIsOnWorkerThread();
   }
@@ -492,8 +492,7 @@ class InitRunnable final : public WorkerMainThreadRunnable {
  public:
   InitRunnable(WorkerPrivate* aWorkerPrivate, EventSourceImpl* aEventSourceImpl,
                const nsAString& aURL)
-      : WorkerMainThreadRunnable(aWorkerPrivate,
-                                 NS_LITERAL_CSTRING("EventSource :: Init")),
+      : WorkerMainThreadRunnable(aWorkerPrivate, "EventSource :: Init"_ns),
         mImpl(aEventSourceImpl),
         mURL(aURL),
         mRv(NS_ERROR_NOT_INITIALIZED) {
@@ -534,8 +533,7 @@ class ConnectRunnable final : public WorkerMainThreadRunnable {
  public:
   explicit ConnectRunnable(WorkerPrivate* aWorkerPrivate,
                            EventSourceImpl* aEventSourceImpl)
-      : WorkerMainThreadRunnable(aWorkerPrivate,
-                                 NS_LITERAL_CSTRING("EventSource :: Connect")),
+      : WorkerMainThreadRunnable(aWorkerPrivate, "EventSource :: Connect"_ns),
         mImpl(aEventSourceImpl) {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -971,14 +969,13 @@ nsresult EventSourceImpl::GetBaseURI(nsIURI** aBaseURI) {
 void EventSourceImpl::SetupHttpChannel() {
   AssertIsOnMainThread();
   MOZ_ASSERT(!IsShutDown());
-  nsresult rv = mHttpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
+  nsresult rv = mHttpChannel->SetRequestMethod("GET"_ns);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   /* set the http request headers */
 
-  rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                      NS_LITERAL_CSTRING(TEXT_EVENT_STREAM),
-                                      false);
+  rv = mHttpChannel->SetRequestHeader(
+      "Accept"_ns, nsLiteralCString(TEXT_EVENT_STREAM), false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // LOAD_BYPASS_CACHE already adds the Cache-Control: no-cache header
@@ -987,8 +984,7 @@ void EventSourceImpl::SetupHttpChannel() {
     return;
   }
   NS_ConvertUTF16toUTF8 eventId(mLastEventID);
-  rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Last-Event-ID"),
-                                      eventId, false);
+  rv = mHttpChannel->SetRequestHeader("Last-Event-ID"_ns, eventId, false);
 #ifdef DEBUG
   if (NS_FAILED(rv)) {
     MOZ_LOG(gEventSourceLog, LogLevel::Warning,
@@ -1117,7 +1113,7 @@ void EventSourceImpl::AnnounceConnection() {
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = mEventSource->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("open"));
+  rv = mEventSource->CreateAndDispatchSimpleEvent(u"open"_ns);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the error event!!!");
     return;
@@ -1145,9 +1141,8 @@ void EventSourceImpl::ResetDecoder() {
 class CallRestartConnection final : public WorkerMainThreadRunnable {
  public:
   explicit CallRestartConnection(EventSourceImpl* aEventSourceImpl)
-      : WorkerMainThreadRunnable(
-            aEventSourceImpl->mWorkerRef->Private(),
-            NS_LITERAL_CSTRING("EventSource :: RestartConnection")),
+      : WorkerMainThreadRunnable(aEventSourceImpl->mWorkerRef->Private(),
+                                 "EventSource :: RestartConnection"_ns),
         mImpl(aEventSourceImpl) {
     mWorkerPrivate->AssertIsOnWorkerThread();
   }
@@ -1202,7 +1197,7 @@ void EventSourceImpl::ReestablishConnection() {
 
   SetReadyState(CONNECTING);
   ResetDecoder();
-  rv = mEventSource->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("error"));
+  rv = mEventSource->CreateAndDispatchSimpleEvent(u"error"_ns);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the error event!!!");
     return;
@@ -1325,7 +1320,7 @@ void EventSourceImpl::FailConnection() {
   // named error at the EventSource object.
   nsresult rv = mEventSource->CheckCurrentGlobalCorrectness();
   if (NS_SUCCEEDED(rv)) {
-    rv = mEventSource->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("error"));
+    rv = mEventSource->CreateAndDispatchSimpleEvent(u"error"_ns);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch the error event!!!");
     }

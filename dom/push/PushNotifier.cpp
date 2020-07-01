@@ -433,11 +433,11 @@ nsresult PushErrorDispatcher::NotifyWorkers() {
       (!mPrincipal || mPrincipal->IsSystemPrincipal())) {
     // For system subscriptions, log the error directly to the browser console.
     return nsContentUtils::ReportToConsoleNonLocalized(
-        mMessage, mFlags, NS_LITERAL_CSTRING("Push"), nullptr, /* aDocument */
-        nullptr,                                               /* aURI */
-        EmptyString(),                                         /* aLine */
-        0,                                                     /* aLineNumber */
-        0, /* aColumnNumber */
+        mMessage, mFlags, "Push"_ns, nullptr, /* aDocument */
+        nullptr,                              /* aURI */
+        EmptyString(),                        /* aLine */
+        0,                                    /* aLineNumber */
+        0,                                    /* aColumnNumber */
         nsContentUtils::eOMIT_LOCATION);
   }
 
@@ -472,11 +472,11 @@ nsresult PushErrorDispatcher::HandleNoChildProcesses() {
     return rv;
   }
   return nsContentUtils::ReportToConsoleNonLocalized(
-      mMessage, mFlags, NS_LITERAL_CSTRING("Push"), nullptr, /* aDocument */
-      scopeURI,                                              /* aURI */
-      EmptyString(),                                         /* aLine */
-      0,                                                     /* aLineNumber */
-      0,                                                     /* aColumnNumber */
+      mMessage, mFlags, "Push"_ns, nullptr, /* aDocument */
+      scopeURI,                             /* aURI */
+      EmptyString(),                        /* aLine */
+      0,                                    /* aLineNumber */
+      0,                                    /* aColumnNumber */
       nsContentUtils::eOMIT_LOCATION);
 }
 

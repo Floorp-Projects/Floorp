@@ -1432,9 +1432,8 @@ void nsMathMLContainerFrame::PropagateFrameFlagFor(nsIFrame* aFrame,
 nsresult nsMathMLContainerFrame::ReportErrorToConsole(
     const char* errorMsgId, const nsTArray<nsString>& aParams) {
   return nsContentUtils::ReportToConsole(
-      nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Layout: MathML"),
-      mContent->OwnerDoc(), nsContentUtils::eMATHML_PROPERTIES, errorMsgId,
-      aParams);
+      nsIScriptError::errorFlag, "Layout: MathML"_ns, mContent->OwnerDoc(),
+      nsContentUtils::eMATHML_PROPERTIES, errorMsgId, aParams);
 }
 
 nsresult nsMathMLContainerFrame::ReportParseError(const char16_t* aAttribute,

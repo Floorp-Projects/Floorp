@@ -802,21 +802,19 @@ nsresult nsHttpChannelAuthProvider::GetCredentialsForChallenge(
       // Collect statistics on how frequently the various types of HTTP
       // authentication are used over SSL and non-SSL connections.
       if (Telemetry::CanRecordPrereleaseData()) {
-        if (NS_LITERAL_CSTRING("basic").LowerCaseEqualsASCII(authType)) {
+        if ("basic"_ns.LowerCaseEqualsASCII(authType)) {
           Telemetry::Accumulate(
               Telemetry::HTTP_AUTH_TYPE_STATS,
               UsingSSL() ? HTTP_AUTH_BASIC_SECURE : HTTP_AUTH_BASIC_INSECURE);
-        } else if (NS_LITERAL_CSTRING("digest").LowerCaseEqualsASCII(
-                       authType)) {
+        } else if ("digest"_ns.LowerCaseEqualsASCII(authType)) {
           Telemetry::Accumulate(
               Telemetry::HTTP_AUTH_TYPE_STATS,
               UsingSSL() ? HTTP_AUTH_DIGEST_SECURE : HTTP_AUTH_DIGEST_INSECURE);
-        } else if (NS_LITERAL_CSTRING("ntlm").LowerCaseEqualsASCII(authType)) {
+        } else if ("ntlm"_ns.LowerCaseEqualsASCII(authType)) {
           Telemetry::Accumulate(
               Telemetry::HTTP_AUTH_TYPE_STATS,
               UsingSSL() ? HTTP_AUTH_NTLM_SECURE : HTTP_AUTH_NTLM_INSECURE);
-        } else if (NS_LITERAL_CSTRING("negotiate")
-                       .LowerCaseEqualsASCII(authType)) {
+        } else if ("negotiate"_ns.LowerCaseEqualsASCII(authType)) {
           Telemetry::Accumulate(Telemetry::HTTP_AUTH_TYPE_STATS,
                                 UsingSSL() ? HTTP_AUTH_NEGOTIATE_SECURE
                                            : HTTP_AUTH_NEGOTIATE_INSECURE);

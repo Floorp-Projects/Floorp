@@ -31,7 +31,7 @@ class OpusDataDecoder : public MediaDataDecoder,
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   nsCString GetDescriptionName() const override {
-    return NS_LITERAL_CSTRING("opus audio decoder");
+    return "opus audio decoder"_ns;
   }
 
   // Return true if mimetype is Opus

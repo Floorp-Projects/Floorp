@@ -10,9 +10,8 @@
 #include "mozilla/StaticPtr.h"
 #include "nsNetUtil.h"
 
-#define REJECTFOREIGNALLOWLIST_PREF \
-  NS_LITERAL_CSTRING("privacy.rejectForeign.allowList")
-#define REJECTFOREIGNALLOWLIST_NAME NS_LITERAL_CSTRING("RejectForeignAllowList")
+#define REJECTFOREIGNALLOWLIST_PREF "privacy.rejectForeign.allowList"_ns
+#define REJECTFOREIGNALLOWLIST_NAME "RejectForeignAllowList"_ns
 
 namespace mozilla {
 

@@ -505,9 +505,9 @@ class ReportErrorToConsoleRunnable final : public WorkerRunnable {
     }
 
     // Log a warning to the console.
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), nullptr,
-        nsContentUtils::eDOM_PROPERTIES, aMessage, aParams);
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                    nullptr, nsContentUtils::eDOM_PROPERTIES,
+                                    aMessage, aParams);
   }
 
  private:
@@ -796,7 +796,7 @@ class MemoryPressureRunnable : public WorkerControlRunnable {
 
 #ifdef DEBUG
 static bool StartsWithExplicit(nsACString& s) {
-  return StringBeginsWith(s, NS_LITERAL_CSTRING("explicit/"));
+  return StringBeginsWith(s, "explicit/"_ns);
 }
 #endif
 
@@ -1022,7 +1022,7 @@ class WorkerJSContextStats final : public JS::RuntimeStats {
     extras->jsPathPrefix.Assign(mRtPath);
     extras->jsPathPrefix +=
         nsPrintfCString("zone(0x%p)/", (void*)js::GetRealmZone(aRealm));
-    extras->jsPathPrefix += NS_LITERAL_CSTRING("realm(web-worker)/");
+    extras->jsPathPrefix += "realm(web-worker)/"_ns;
 
     // This should never be used when reporting with workers (hence the "?!").
     extras->domPathPrefix.AssignLiteral("explicit/workers/?!/");
@@ -1242,8 +1242,7 @@ WorkerPrivate::MemoryReporter::FinishCollectRunnable::Run() {
       mHandleReport->Callback(
           EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,
           nsIMemoryReporter::UNITS_BYTES, mPerformanceUserEntries,
-          NS_LITERAL_CSTRING("Memory used for performance user entries."),
-          mHandlerData);
+          "Memory used for performance user entries."_ns, mHandlerData);
     }
 
     if (mPerformanceResourceEntries) {
@@ -1252,8 +1251,7 @@ WorkerPrivate::MemoryReporter::FinishCollectRunnable::Run() {
       mHandleReport->Callback(
           EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,
           nsIMemoryReporter::UNITS_BYTES, mPerformanceResourceEntries,
-          NS_LITERAL_CSTRING("Memory used for performance resource entries."),
-          mHandlerData);
+          "Memory used for performance resource entries."_ns, mHandlerData);
     }
   }
 
@@ -2655,8 +2653,8 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       NS_ENSURE_SUCCESS(rv, rv);
 
       uint32_t perm;
-      rv = permMgr->TestPermissionFromPrincipal(
-          loadInfo.mLoadingPrincipal, NS_LITERAL_CSTRING("systemXHR"), &perm);
+      rv = permMgr->TestPermissionFromPrincipal(loadInfo.mLoadingPrincipal,
+                                                "systemXHR"_ns, &perm);
       NS_ENSURE_SUCCESS(rv, rv);
 
       loadInfo.mXHRParamsAllowed = perm == nsIPermissionManager::ALLOW_ACTION;
@@ -4815,7 +4813,7 @@ void WorkerPrivate::UpdateLanguagesInternal(
 
   RefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
 
-  event->InitEvent(NS_LITERAL_STRING("languagechange"), false, false);
+  event->InitEvent(u"languagechange"_ns, false, false);
   event->SetTrusted(true);
 
   globalScope->DispatchEvent(*event);
@@ -5054,8 +5052,8 @@ bool WorkerPrivate::ConnectMessagePort(JSContext* aCx,
     return false;
   }
 
-  RefPtr<MessageEvent> event = MessageEvent::Constructor(
-      globalObject, NS_LITERAL_STRING("connect"), init);
+  RefPtr<MessageEvent> event =
+      MessageEvent::Constructor(globalObject, u"connect"_ns, init);
 
   event->SetTrusted(true);
 

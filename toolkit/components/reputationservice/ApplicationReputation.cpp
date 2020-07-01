@@ -948,35 +948,35 @@ ClientDownloadRequest::DownloadType PendingLookup::GetDownloadType(
 
   // From
   // https://cs.chromium.org/chromium/src/chrome/common/safe_browsing/download_protection_util.cc?l=17
-  if (StringEndsWith(aFilename, NS_LITERAL_CSTRING(".zip"))) {
+  if (StringEndsWith(aFilename, ".zip"_ns)) {
     return ClientDownloadRequest::ZIPPED_EXECUTABLE;
-  } else if (StringEndsWith(aFilename, NS_LITERAL_CSTRING(".apk"))) {
+  } else if (StringEndsWith(aFilename, ".apk"_ns)) {
     return ClientDownloadRequest::ANDROID_APK;
-  } else if (StringEndsWith(aFilename, NS_LITERAL_CSTRING(".app")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".applescript")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".cdr")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dart")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dc42")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".diskcopy42")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dmg")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dmgpart")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dvdr")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".img")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".imgpart")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".iso")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".mpkg")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".ndif")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".osas")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".osax")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".pkg")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".scpt")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".scptd")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".seplugin")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".smi")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".sparsebundle")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".sparseimage")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".toast")) ||
-             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".udif"))) {
+  } else if (StringEndsWith(aFilename, ".app"_ns) ||
+             StringEndsWith(aFilename, ".applescript"_ns) ||
+             StringEndsWith(aFilename, ".cdr"_ns) ||
+             StringEndsWith(aFilename, ".dart"_ns) ||
+             StringEndsWith(aFilename, ".dc42"_ns) ||
+             StringEndsWith(aFilename, ".diskcopy42"_ns) ||
+             StringEndsWith(aFilename, ".dmg"_ns) ||
+             StringEndsWith(aFilename, ".dmgpart"_ns) ||
+             StringEndsWith(aFilename, ".dvdr"_ns) ||
+             StringEndsWith(aFilename, ".img"_ns) ||
+             StringEndsWith(aFilename, ".imgpart"_ns) ||
+             StringEndsWith(aFilename, ".iso"_ns) ||
+             StringEndsWith(aFilename, ".mpkg"_ns) ||
+             StringEndsWith(aFilename, ".ndif"_ns) ||
+             StringEndsWith(aFilename, ".osas"_ns) ||
+             StringEndsWith(aFilename, ".osax"_ns) ||
+             StringEndsWith(aFilename, ".pkg"_ns) ||
+             StringEndsWith(aFilename, ".scpt"_ns) ||
+             StringEndsWith(aFilename, ".scptd"_ns) ||
+             StringEndsWith(aFilename, ".seplugin"_ns) ||
+             StringEndsWith(aFilename, ".smi"_ns) ||
+             StringEndsWith(aFilename, ".sparsebundle"_ns) ||
+             StringEndsWith(aFilename, ".sparseimage"_ns) ||
+             StringEndsWith(aFilename, ".toast"_ns) ||
+             StringEndsWith(aFilename, ".udif"_ns)) {
     return ClientDownloadRequest::MAC_EXECUTABLE;
   }
 
@@ -1657,8 +1657,7 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
 
   if (LOG_ENABLED()) {
     nsAutoCString serializedStr(serialized.c_str(), serialized.length());
-    serializedStr.ReplaceSubstring(NS_LITERAL_CSTRING("\0"),
-                                   NS_LITERAL_CSTRING("\\0"));
+    serializedStr.ReplaceSubstring("\0"_ns, "\\0"_ns);
 
     LOG(("Serialized protocol buffer [this = %p]: (length=%d) %s", this,
          serializedStr.Length(), serializedStr.get()));
@@ -1698,8 +1697,8 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = uploadChannel->ExplicitSetUploadStream(
-      sstream, NS_LITERAL_CSTRING("application/octet-stream"),
-      serialized.size(), NS_LITERAL_CSTRING("POST"), false);
+      sstream, "application/octet-stream"_ns, serialized.size(), "POST"_ns,
+      false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t timeoutMs =

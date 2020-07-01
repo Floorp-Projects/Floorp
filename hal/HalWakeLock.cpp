@@ -104,8 +104,7 @@ CleanupOnContentShutdown::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   uint64_t childID = 0;
-  nsresult rv =
-      props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
+  nsresult rv = props->GetPropertyAsUint64(u"childID"_ns, &childID);
   if (NS_SUCCEEDED(rv)) {
     for (auto iter = sLockTable->Iter(); !iter.Done(); iter.Next()) {
       auto table = iter.UserData();

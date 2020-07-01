@@ -34,13 +34,12 @@ nsresult txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
           return aContext->recycler()->getNumberResult(1.0, aResult);
         }
         if (qname.mLocalName == nsGkAtoms::vendor) {
-          return aContext->recycler()->getStringResult(
-              NS_LITERAL_STRING("Transformiix"), aResult);
+          return aContext->recycler()->getStringResult(u"Transformiix"_ns,
+                                                       aResult);
         }
         if (qname.mLocalName == nsGkAtoms::vendorUrl) {
           return aContext->recycler()->getStringResult(
-              NS_LITERAL_STRING("http://www.mozilla.org/projects/xslt/"),
-              aResult);
+              u"http://www.mozilla.org/projects/xslt/"_ns, aResult);
         }
       }
       aContext->recycler()->getEmptyStringResult(aResult);

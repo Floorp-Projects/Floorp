@@ -430,9 +430,9 @@ void nsAtomSubTable::GCLocked(GCKind aKind) {
       if (nonZeroRefcountAtomsCount == 0) {
         nonZeroRefcountAtoms = name;
       } else if (nonZeroRefcountAtomsCount < 20) {
-        nonZeroRefcountAtoms += NS_LITERAL_CSTRING(",") + name;
+        nonZeroRefcountAtoms += ","_ns + name;
       } else if (nonZeroRefcountAtomsCount == 20) {
-        nonZeroRefcountAtoms += NS_LITERAL_CSTRING(",...");
+        nonZeroRefcountAtoms += ",..."_ns;
       }
       nonZeroRefcountAtomsCount++;
     }

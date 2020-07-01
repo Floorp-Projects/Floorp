@@ -450,7 +450,7 @@ void nsTerminator::StartWriter() {
     return;
   }
 
-  rv = profLD->Append(NS_LITERAL_STRING("ShutdownDuration.json"));
+  rv = profLD->Append(u"ShutdownDuration.json"_ns);
   if (NS_FAILED(rv)) {
     return;
   }

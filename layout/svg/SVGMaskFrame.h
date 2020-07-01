@@ -87,7 +87,7 @@ class SVGMaskFrame final : public nsSVGContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGMask"), aResult);
+    return MakeFrameName(u"SVGMask"_ns, aResult);
   }
 #endif
 

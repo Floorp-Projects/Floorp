@@ -414,8 +414,7 @@ already_AddRefed<imgRequestProxy> ImageLoader::LoadImage(
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(
       uri, loadingDoc, loadingDoc, data.Principal(), 0, data.ReferrerInfo(),
-      sImageObserver, loadFlags, NS_LITERAL_STRING("css"),
-      getter_AddRefs(request));
+      sImageObserver, loadFlags, u"css"_ns, getter_AddRefs(request));
 
   if (NS_FAILED(rv) || !request) {
     return nullptr;

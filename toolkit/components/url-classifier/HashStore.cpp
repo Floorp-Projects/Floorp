@@ -252,7 +252,7 @@ nsresult HashStore::Reset() {
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(STORE_SUFFIX));
+  rv = storeFile->AppendNative(mTableName + nsLiteralCString(STORE_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = storeFile->Remove(false);
@@ -304,7 +304,7 @@ nsresult HashStore::Open(uint32_t aVersion) {
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(".sbstore"));
+  rv = storeFile->AppendNative(mTableName + ".sbstore"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInputStream> origStream;
@@ -913,7 +913,7 @@ nsresult HashStore::WriteFile() {
   nsCOMPtr<nsIFile> storeFile;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(".sbstore"));
+  rv = storeFile->AppendNative(mTableName + ".sbstore"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIOutputStream> out;
@@ -962,7 +962,7 @@ nsresult HashStore::ReadCompletionsLegacyV3(AddCompleteArray& aCompletes) {
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(STORE_SUFFIX));
+  rv = storeFile->AppendNative(mTableName + nsLiteralCString(STORE_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t offset = mFileSize -

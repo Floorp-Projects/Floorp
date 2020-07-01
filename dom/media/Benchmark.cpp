@@ -104,8 +104,7 @@ bool VP9Benchmark::IsVP9DecodeFast(bool aDefault) {
           if (XRE_IsContentProcess()) {
             dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
             if (contentChild) {
-              contentChild->SendNotifyBenchmarkResult(NS_LITERAL_STRING("VP9"),
-                                                      aDecodeFps);
+              contentChild->SendNotifyBenchmarkResult(u"VP9"_ns, aDecodeFps);
             }
           } else {
             Preferences::SetUint(sBenchmarkFpsPref, aDecodeFps);

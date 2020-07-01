@@ -178,8 +178,7 @@ DocGroup::DocGroup(BrowsingContextGroup* aBrowsingContextGroup,
     mArena = new mozilla::dom::DOMArena();
   }
 
-  mPerformanceCounter =
-      new mozilla::PerformanceCounter(NS_LITERAL_CSTRING("DocGroup:") + aKey);
+  mPerformanceCounter = new mozilla::PerformanceCounter("DocGroup:"_ns + aKey);
 }
 
 DocGroup::~DocGroup() {

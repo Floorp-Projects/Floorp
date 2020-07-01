@@ -1412,7 +1412,7 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
     if (!mGCLog.mStream) {
       return NS_ERROR_UNEXPECTED;
     }
-    CloseLog(&mGCLog, NS_LITERAL_STRING("Garbage"));
+    CloseLog(&mGCLog, u"Garbage"_ns);
     return NS_OK;
   }
 
@@ -1420,7 +1420,7 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
     if (!mCCLog.mStream) {
       return NS_ERROR_UNEXPECTED;
     }
-    CloseLog(&mCCLog, NS_LITERAL_STRING("Cycle"));
+    CloseLog(&mCCLog, u"Cycle"_ns);
     return NS_OK;
   }
 
@@ -1470,8 +1470,8 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
     // aFilename under a memory-reporting-specific folder
     // (/data/local/tmp/memory-reports). Otherwise, it will open a
     // file named aFilename under "NS_OS_TEMP_DIR".
-    nsresult rv = nsDumpUtils::OpenTempFile(
-        filename, &logFile, NS_LITERAL_CSTRING("memory-reports"));
+    nsresult rv =
+        nsDumpUtils::OpenTempFile(filename, &logFile, "memory-reports"_ns);
     if (NS_FAILED(rv)) {
       NS_IF_RELEASE(logFile);
       return nullptr;
@@ -1532,8 +1532,8 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
     // Log to the error console.
     nsAutoString logPath;
     logFileFinalDestination->GetPath(logPath);
-    nsAutoString msg = aCollectorKind +
-                       NS_LITERAL_STRING(" Collector log dumped to ") + logPath;
+    nsAutoString msg =
+        aCollectorKind + u" Collector log dumped to "_ns + logPath;
 
     // We don't want any JS to run between ScanRoots and CollectWhite calls,
     // and since ScanRoots calls this method, better to log the message

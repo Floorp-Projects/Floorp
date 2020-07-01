@@ -24,13 +24,13 @@ GeolocationPositionError::~GeolocationPositionError() = default;
 void GeolocationPositionError::GetMessage(nsAString& aMessage) const {
   switch (mCode) {
     case GeolocationPositionError_Binding::PERMISSION_DENIED:
-      aMessage = NS_LITERAL_STRING("User denied geolocation prompt");
+      aMessage = u"User denied geolocation prompt"_ns;
       break;
     case GeolocationPositionError_Binding::POSITION_UNAVAILABLE:
-      aMessage = NS_LITERAL_STRING("Unknown error acquiring position");
+      aMessage = u"Unknown error acquiring position"_ns;
       break;
     case GeolocationPositionError_Binding::TIMEOUT:
-      aMessage = NS_LITERAL_STRING("Position acquisition timed out");
+      aMessage = u"Position acquisition timed out"_ns;
       break;
     default:
       break;

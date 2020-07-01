@@ -373,7 +373,7 @@ class CreateImageFromRawDataInMainThreadSyncTask final
       const Maybe<IntRect>& aCropRect, layers::Image** aImage)
       : WorkerMainThreadRunnable(
             GetCurrentThreadWorkerPrivate(),
-            NS_LITERAL_CSTRING("ImageBitmap :: Create Image from Raw Data")),
+            "ImageBitmap :: Create Image from Raw Data"_ns),
         mImage(aImage),
         mBuffer(aBuffer),
         mBufferLength(aBufferLength),

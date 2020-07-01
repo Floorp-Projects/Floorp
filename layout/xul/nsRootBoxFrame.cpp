@@ -222,6 +222,6 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsRootBoxFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("RootBox"), aResult);
+  return MakeFrameName(u"RootBox"_ns, aResult);
 }
 #endif

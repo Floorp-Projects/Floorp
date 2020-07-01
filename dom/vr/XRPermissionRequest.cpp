@@ -25,8 +25,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(XRPermissionRequest,
 XRPermissionRequest::XRPermissionRequest(nsPIDOMWindowInner* aWindow,
                                          uint64_t aWindowId)
     : ContentPermissionRequestBase(aWindow->GetDoc()->NodePrincipal(), aWindow,
-                                   NS_LITERAL_CSTRING("dom.vr"),
-                                   NS_LITERAL_CSTRING("xr")),
+                                   "dom.vr"_ns, "xr"_ns),
       mWindowId(aWindowId) {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->GetDoc());

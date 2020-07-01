@@ -168,9 +168,8 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
   }
   if (!mAttachments || !mAttachments->IsValid()) {
     gfxCriticalNote << "[D3D11] failed to get compositor device attachments";
-    *out_failureReason =
-        mAttachments ? mAttachments->GetFailureId()
-                     : NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_ATTACHMENTS");
+    *out_failureReason = mAttachments ? mAttachments->GetFailureId()
+                                      : "FEATURE_FAILURE_NO_ATTACHMENTS"_ns;
     return false;
   }
 

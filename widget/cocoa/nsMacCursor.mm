@@ -160,8 +160,8 @@
 
   nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(resDir));
   if (NS_FAILED(rv)) goto INIT_FAILURE;
-  resDir->AppendNative(NS_LITERAL_CSTRING("res"));
-  resDir->AppendNative(NS_LITERAL_CSTRING("cursors"));
+  resDir->AppendNative("res"_ns);
+  resDir->AppendNative("cursors"_ns);
 
   rv = resDir->GetNativePath(resPath);
   if (NS_FAILED(rv)) goto INIT_FAILURE;

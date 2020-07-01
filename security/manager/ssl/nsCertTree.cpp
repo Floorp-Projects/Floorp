@@ -888,7 +888,7 @@ nsCertTree::GetCellText(int32_t row, nsTreeColumn* col, nsAString& _retval) {
 
   treeArrayEl* el = GetThreadDescAtIndex(row);
   if (el) {
-    if (NS_LITERAL_STRING("certcol").Equals(colID))
+    if (u"certcol"_ns.Equals(colID))
       _retval.Assign(el->orgName);
     else
       _retval.Truncate();
@@ -920,42 +920,42 @@ nsCertTree::GetCellText(int32_t row, nsTreeColumn* col, nsAString& _retval) {
     }
   }
 
-  if (NS_LITERAL_STRING("certcol").Equals(colID)) {
+  if (u"certcol"_ns.Equals(colID)) {
     if (!cert) {
       rv = GetPIPNSSBundleString("CertNotStored", _retval);
     } else {
       rv = cert->GetDisplayName(_retval);
     }
-  } else if (NS_LITERAL_STRING("tokencol").Equals(colID) && cert) {
+  } else if (u"tokencol"_ns.Equals(colID) && cert) {
     rv = cert->GetTokenName(_retval);
-  } else if (NS_LITERAL_STRING("emailcol").Equals(colID) && cert) {
+  } else if (u"emailcol"_ns.Equals(colID) && cert) {
     rv = cert->GetEmailAddress(_retval);
-  } else if (NS_LITERAL_STRING("issuedcol").Equals(colID) && cert) {
+  } else if (u"issuedcol"_ns.Equals(colID) && cert) {
     nsCOMPtr<nsIX509CertValidity> validity;
 
     rv = cert->GetValidity(getter_AddRefs(validity));
     if (NS_SUCCEEDED(rv)) {
       validity->GetNotBeforeLocalDay(_retval);
     }
-  } else if (NS_LITERAL_STRING("expiredcol").Equals(colID) && cert) {
+  } else if (u"expiredcol"_ns.Equals(colID) && cert) {
     nsCOMPtr<nsIX509CertValidity> validity;
 
     rv = cert->GetValidity(getter_AddRefs(validity));
     if (NS_SUCCEEDED(rv)) {
       validity->GetNotAfterLocalDay(_retval);
     }
-  } else if (NS_LITERAL_STRING("serialnumcol").Equals(colID) && cert) {
+  } else if (u"serialnumcol"_ns.Equals(colID) && cert) {
     rv = cert->GetSerialNumber(_retval);
-  } else if (NS_LITERAL_STRING("sitecol").Equals(colID)) {
+  } else if (u"sitecol"_ns.Equals(colID)) {
     if (certdi->mTypeOfEntry == nsCertTreeDispInfo::host_port_override) {
       nsAutoCString hostPort;
       nsCertOverrideService::GetHostWithPort(certdi->mAsciiHost, certdi->mPort,
                                              hostPort);
       _retval = NS_ConvertUTF8toUTF16(hostPort);
     } else {
-      _retval = NS_LITERAL_STRING("*");
+      _retval = u"*"_ns;
     }
-  } else if (NS_LITERAL_STRING("lifetimecol").Equals(colID)) {
+  } else if (u"lifetimecol"_ns.Equals(colID)) {
     const char* stringID = (certdi->mIsTemporary) ? "CertExceptionTemporary"
                                                   : "CertExceptionPermanent";
     rv = GetPIPNSSBundleString(stringID, _retval);

@@ -230,8 +230,7 @@ bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack) {
     aEnv->ExceptionDescribe();
     aEnv->ExceptionClear();
   } else if (appNotes) {
-    CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\n") +
-                                               appNotes->ToCString());
+    CrashReporter::AppendAppNotesToCrashReport("\n"_ns + appNotes->ToCString());
   }
 
   if (sOOMErrorClass && aEnv->IsInstanceOf(aExc, sOOMErrorClass)) {

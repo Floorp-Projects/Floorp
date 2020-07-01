@@ -1211,7 +1211,7 @@ nsresult nsLocalFile::AppendInternal(const nsString& aNode,
     }
 
     // catches the remaining cases of prefixes
-    if (StringBeginsWith(aNode, NS_LITERAL_STRING("..\\"))) {
+    if (StringBeginsWith(aNode, u"..\\"_ns)) {
       return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
   }
@@ -1304,7 +1304,7 @@ nsLocalFile::Normalize() {
     if (currentDir.Last() == '\\') {
       path.Replace(0, 2, currentDir);
     } else {
-      path.Replace(0, 2, currentDir + NS_LITERAL_STRING("\\"));
+      path.Replace(0, 2, currentDir + u"\\"_ns);
     }
   }
 

@@ -418,28 +418,24 @@ void MediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent) {
       Invalidate();
       break;
     case MediaPlaybackEvent::EnterVideoSuspend:
-      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozentervideosuspend"));
+      GetOwner()->DispatchAsyncEvent(u"mozentervideosuspend"_ns);
       mIsVideoDecodingSuspended = true;
       break;
     case MediaPlaybackEvent::ExitVideoSuspend:
-      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozexitvideosuspend"));
+      GetOwner()->DispatchAsyncEvent(u"mozexitvideosuspend"_ns);
       mIsVideoDecodingSuspended = false;
       break;
     case MediaPlaybackEvent::StartVideoSuspendTimer:
-      GetOwner()->DispatchAsyncEvent(
-          NS_LITERAL_STRING("mozstartvideosuspendtimer"));
+      GetOwner()->DispatchAsyncEvent(u"mozstartvideosuspendtimer"_ns);
       break;
     case MediaPlaybackEvent::CancelVideoSuspendTimer:
-      GetOwner()->DispatchAsyncEvent(
-          NS_LITERAL_STRING("mozcancelvideosuspendtimer"));
+      GetOwner()->DispatchAsyncEvent(u"mozcancelvideosuspendtimer"_ns);
       break;
     case MediaPlaybackEvent::VideoOnlySeekBegin:
-      GetOwner()->DispatchAsyncEvent(
-          NS_LITERAL_STRING("mozvideoonlyseekbegin"));
+      GetOwner()->DispatchAsyncEvent(u"mozvideoonlyseekbegin"_ns);
       break;
     case MediaPlaybackEvent::VideoOnlySeekCompleted:
-      GetOwner()->DispatchAsyncEvent(
-          NS_LITERAL_STRING("mozvideoonlyseekcompleted"));
+      GetOwner()->DispatchAsyncEvent(u"mozvideoonlyseekcompleted"_ns);
       break;
     default:
       break;
@@ -928,7 +924,7 @@ void MediaDecoder::DurationChanged() {
   // of whether we should fire durationchange on explicit infinity.
   if (mFiredMetadataLoaded &&
       (!mozilla::IsInfinite<double>(mDuration) || mExplicitDuration.isSome())) {
-    GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
+    GetOwner()->DispatchAsyncEvent(u"durationchange"_ns);
   }
 
   if (CurrentPosition() > TimeUnit::FromSeconds(mDuration)) {
@@ -1290,10 +1286,10 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
       AbstractThread::MainThread(), __func__,
       [handleReport, data](size_t size) {
         handleReport->Callback(
-            EmptyCString(), NS_LITERAL_CSTRING("explicit/media/resources"),
-            KIND_HEAP, UNITS_BYTES, size,
-            NS_LITERAL_CSTRING("Memory used by media resources including "
-                               "streaming buffers, caches, etc."),
+            EmptyCString(), "explicit/media/resources"_ns, KIND_HEAP,
+            UNITS_BYTES, size,
+            nsLiteralCString("Memory used by media resources including "
+                             "streaming buffers, caches, etc."),
             data);
 
         nsCOMPtr<nsIMemoryReporterManager> imgr =

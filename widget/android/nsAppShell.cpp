@@ -355,9 +355,9 @@ class XPCOMEventTargetWrapper final
 
   static void Init() {
     java::XPCOMEventTarget::Natives<XPCOMEventTargetWrapper>::Init();
-    CreateWrapper(NS_LITERAL_STRING("main"), do_GetMainThread());
+    CreateWrapper(u"main"_ns, do_GetMainThread());
     if (XRE_IsParentProcess()) {
-      CreateWrapper(NS_LITERAL_STRING("launcher"), ipc::GetIPCLauncher());
+      CreateWrapper(u"launcher"_ns, ipc::GetIPCLauncher());
     }
   }
 
@@ -588,8 +588,7 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
     }
   } else if (!strcmp(aTopic, "quit-application")) {
     if (jni::IsAvailable()) {
-      const bool restarting =
-          aData && NS_LITERAL_STRING("restart").Equals(aData);
+      const bool restarting = aData && u"restart"_ns.Equals(aData);
       java::GeckoThread::SetState(restarting
                                       ? java::GeckoThread::State::RESTARTING()
                                       : java::GeckoThread::State::EXITING());

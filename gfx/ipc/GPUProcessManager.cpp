@@ -391,8 +391,7 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
   mQueuedPrefs.Clear();
 
   CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GPUProcessStatus,
-      NS_LITERAL_CSTRING("Running"));
+      CrashReporter::Annotation::GPUProcessStatus, "Running"_ns);
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::GPUProcessLaunchCount,
@@ -454,25 +453,24 @@ void GPUProcessManager::DisableWebRender(wr::WebRenderError aError) {
   // Disable WebRender
   if (aError == wr::WebRenderError::INITIALIZE) {
     gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
-        .ForceDisable(
-            gfx::FeatureStatus::Unavailable, "WebRender initialization failed",
-            NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_INITIALIZE"));
+        .ForceDisable(gfx::FeatureStatus::Unavailable,
+                      "WebRender initialization failed",
+                      "FEATURE_FAILURE_WEBRENDER_INITIALIZE"_ns);
   } else if (aError == wr::WebRenderError::MAKE_CURRENT) {
     gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
-        .ForceDisable(
-            gfx::FeatureStatus::Unavailable,
-            "Failed to make render context current",
-            NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_MAKE_CURRENT"));
+        .ForceDisable(gfx::FeatureStatus::Unavailable,
+                      "Failed to make render context current",
+                      "FEATURE_FAILURE_WEBRENDER_MAKE_CURRENT"_ns);
   } else if (aError == wr::WebRenderError::RENDER) {
     gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
         .ForceDisable(gfx::FeatureStatus::Unavailable,
                       "Failed to render WebRender",
-                      NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_RENDER"));
+                      "FEATURE_FAILURE_WEBRENDER_RENDER"_ns);
   } else if (aError == wr::WebRenderError::NEW_SURFACE) {
     gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
-        .ForceDisable(
-            gfx::FeatureStatus::Unavailable, "Failed to create new surface",
-            NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_NEW_SURFACE"));
+        .ForceDisable(gfx::FeatureStatus::Unavailable,
+                      "Failed to create new surface",
+                      "FEATURE_FAILURE_WEBRENDER_NEW_SURFACE"_ns);
   } else {
     MOZ_ASSERT_UNREACHABLE("Invalid value");
   }
@@ -742,8 +740,7 @@ void GPUProcessManager::DestroyProcess() {
   }
 
   CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GPUProcessStatus,
-      NS_LITERAL_CSTRING("Destroyed"));
+      CrashReporter::Annotation::GPUProcessStatus, "Destroyed"_ns);
 }
 
 already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(

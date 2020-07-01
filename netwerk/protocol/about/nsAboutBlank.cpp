@@ -20,9 +20,9 @@ nsAboutBlank::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewInputStreamChannelInternal(
-      getter_AddRefs(channel), aURI, in.forget(),
-      NS_LITERAL_CSTRING("text/html"), NS_LITERAL_CSTRING("utf-8"), aLoadInfo);
+  rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel), aURI,
+                                        in.forget(), "text/html"_ns, "utf-8"_ns,
+                                        aLoadInfo);
   if (NS_FAILED(rv)) return rv;
 
   channel.forget(result);

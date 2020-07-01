@@ -245,7 +245,7 @@ static bool SerializeEvent(JSContext* aCx, JS::MutableHandleValue aElement,
 
   nsDependentCString effectiveThreadName;
   if (aEvent.mThreadId == ::GetCurrentThreadId()) {
-    effectiveThreadName.Rebind(NS_LITERAL_CSTRING("Main Thread"), 0);
+    effectiveThreadName.Rebind("Main Thread"_ns, 0);
   } else {
     effectiveThreadName.Rebind(aEvent.mThreadName, 0);
   }
@@ -310,7 +310,7 @@ static nsresult GetPerProcObject(JSContext* aCx, const IndexMap& aModuleIndices,
                                  JS::MutableHandleObject aObj) {
   nsDependentCString strProcType;
   if (aData.mProcessType == GeckoProcessType_Default) {
-    strProcType.Rebind(NS_LITERAL_CSTRING("browser"), 0);
+    strProcType.Rebind("browser"_ns, 0);
   } else {
     strProcType.Rebind(XRE_GeckoProcessTypeToString(aData.mProcessType));
   }

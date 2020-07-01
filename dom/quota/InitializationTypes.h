@@ -90,27 +90,27 @@ class InitializationInfo final {
       const Initialization aInitialization) {
     switch (aInitialization) {
       case Initialization::Storage:
-        return NS_LITERAL_CSTRING("Storage");
+        return "Storage"_ns;
       case Initialization::TemporaryStorage:
-        return NS_LITERAL_CSTRING("TemporaryStorage");
+        return "TemporaryStorage"_ns;
       case Initialization::DefaultRepository:
-        return NS_LITERAL_CSTRING("DefaultRepository");
+        return "DefaultRepository"_ns;
       case Initialization::TemporaryRepository:
-        return NS_LITERAL_CSTRING("TemporaryRepository");
+        return "TemporaryRepository"_ns;
       case Initialization::UpgradeStorageFrom0_0To1_0:
-        return NS_LITERAL_CSTRING("UpgradeStorageFrom0_0To1_0");
+        return "UpgradeStorageFrom0_0To1_0"_ns;
       case Initialization::UpgradeStorageFrom1_0To2_0:
-        return NS_LITERAL_CSTRING("UpgradeStorageFrom1_0To2_0");
+        return "UpgradeStorageFrom1_0To2_0"_ns;
       case Initialization::UpgradeStorageFrom2_0To2_1:
-        return NS_LITERAL_CSTRING("UpgradeStorageFrom2_0To2_1");
+        return "UpgradeStorageFrom2_0To2_1"_ns;
       case Initialization::UpgradeStorageFrom2_1To2_2:
-        return NS_LITERAL_CSTRING("UpgradeStorageFrom2_1To2_2");
+        return "UpgradeStorageFrom2_1To2_2"_ns;
       case Initialization::UpgradeStorageFrom2_2To2_3:
-        return NS_LITERAL_CSTRING("UpgradeStorageFrom2_2To2_3");
+        return "UpgradeStorageFrom2_2To2_3"_ns;
       case Initialization::UpgradeFromIndexedDBDirectory:
-        return NS_LITERAL_CSTRING("UpgradeFromIndexedDBDirectory");
+        return "UpgradeFromIndexedDBDirectory"_ns;
       case Initialization::UpgradeFromPersistentStorageDirectory:
-        return NS_LITERAL_CSTRING("UpgradeFromPersistentStorageDirectory");
+        return "UpgradeFromPersistentStorageDirectory"_ns;
 
       default:
         MOZ_CRASH("Bad initialization value!");

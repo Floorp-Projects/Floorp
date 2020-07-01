@@ -127,7 +127,7 @@ bool PopupBlocker::CanShowPopupByPermission(nsIPrincipal* aPrincipal) {
 
   if (permissionManager &&
       NS_SUCCEEDED(permissionManager->TestPermissionFromPrincipal(
-          aPrincipal, NS_LITERAL_CSTRING("popup"), &permit))) {
+          aPrincipal, "popup"_ns, &permit))) {
     if (permit == nsIPermissionManager::ALLOW_ACTION) {
       return true;
     }

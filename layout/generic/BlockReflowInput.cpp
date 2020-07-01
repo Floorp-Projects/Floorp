@@ -817,9 +817,9 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
           // FIXME(emilio, bug 1426747): This looks fishy.
           nsIContent* content = prevFrame->GetContent();
           if (content && content->IsElement() &&
-              content->AsElement()->AttrValueIs(
-                  kNameSpaceID_None, nsGkAtoms::align,
-                  NS_LITERAL_STRING("left"), eIgnoreCase)) {
+              content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                nsGkAtoms::align, u"left"_ns,
+                                                eIgnoreCase)) {
             keepFloatOnSameLine = true;
             // don't advance to next line (IE quirkie behaviour)
             // it breaks rule CSS2/9.5.1/1, but what the hell

@@ -67,18 +67,18 @@ bool GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
     return false;
   }
 
-  nsCString api = NS_LITERAL_CSTRING(CHROMIUM_CDM_API);
+  nsCString api = nsLiteralCString(CHROMIUM_CDM_API);
 
   if (MP4Decoder::IsH264(aMimeType)) {
-    return HaveGMPFor(api, {NS_LITERAL_CSTRING("h264"), aGMP.value()});
+    return HaveGMPFor(api, {"h264"_ns, aGMP.value()});
   }
 
   if (VPXDecoder::IsVP9(aMimeType)) {
-    return HaveGMPFor(api, {NS_LITERAL_CSTRING("vp9"), aGMP.value()});
+    return HaveGMPFor(api, {"vp9"_ns, aGMP.value()});
   }
 
   if (VPXDecoder::IsVP8(aMimeType)) {
-    return HaveGMPFor(api, {NS_LITERAL_CSTRING("vp8"), aGMP.value()});
+    return HaveGMPFor(api, {"vp8"_ns, aGMP.value()});
   }
 
   return false;

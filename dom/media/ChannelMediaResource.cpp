@@ -114,8 +114,7 @@ void ChannelMediaResource::Listener::Revoke() {
 
 static bool IsPayloadCompressed(nsIHttpChannel* aChannel) {
   nsAutoCString encoding;
-  Unused << aChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
-                                        encoding);
+  Unused << aChannel->GetResponseHeader("Content-Encoding"_ns, encoding);
   return encoding.Length() > 0;
 }
 
@@ -191,8 +190,7 @@ nsresult ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     }
 
     nsAutoCString ranges;
-    Unused << hc->GetResponseHeader(NS_LITERAL_CSTRING("Accept-Ranges"),
-                                    ranges);
+    Unused << hc->GetResponseHeader("Accept-Ranges"_ns, ranges);
     bool acceptsRanges =
         net::nsHttp::FindToken(ranges.get(), "bytes", HTTP_HEADER_VALUE_SEPS);
 
@@ -305,15 +303,14 @@ nsresult ChannelMediaResource::ParseContentRangeHeader(
   NS_ENSURE_ARG(aHttpChan);
 
   nsAutoCString rangeStr;
-  nsresult rv = aHttpChan->GetResponseHeader(
-      NS_LITERAL_CSTRING("Content-Range"), rangeStr);
+  nsresult rv = aHttpChan->GetResponseHeader("Content-Range"_ns, rangeStr);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_FALSE(rangeStr.IsEmpty(), NS_ERROR_ILLEGAL_VALUE);
 
   // Parse the range header: e.g. Content-Range: bytes 7000-7999/8000.
-  int32_t spacePos = rangeStr.Find(NS_LITERAL_CSTRING(" "));
-  int32_t dashPos = rangeStr.Find(NS_LITERAL_CSTRING("-"), true, spacePos);
-  int32_t slashPos = rangeStr.Find(NS_LITERAL_CSTRING("/"), true, dashPos);
+  int32_t spacePos = rangeStr.Find(" "_ns);
+  int32_t dashPos = rangeStr.Find("-"_ns, true, spacePos);
+  int32_t slashPos = rangeStr.Find("/"_ns, true, dashPos);
 
   nsAutoCString aRangeStartText;
   rangeStr.Mid(aRangeStartText, spacePos + 1, dashPos - (spacePos + 1));
@@ -572,8 +569,7 @@ nsresult ChannelMediaResource::SetupChannelHeaders(int64_t aOffset) {
     nsAutoCString rangeString("bytes=");
     rangeString.AppendInt(aOffset);
     rangeString.Append('-');
-    nsresult rv =
-        hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, false);
+    nsresult rv = hc->SetRequestHeader("Range"_ns, rangeString, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Send Accept header for video and audio types only (Bug 489071)

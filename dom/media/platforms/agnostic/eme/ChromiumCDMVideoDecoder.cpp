@@ -82,7 +82,7 @@ RefPtr<MediaDataDecoder::InitPromise> ChromiumCDMVideoDecoder::Init() {
 }
 
 nsCString ChromiumCDMVideoDecoder::GetDescriptionName() const {
-  return NS_LITERAL_CSTRING("chromium cdm video decoder");
+  return "chromium cdm video decoder"_ns;
 }
 
 MediaDataDecoder::ConversionRequired ChromiumCDMVideoDecoder::NeedsConversion()

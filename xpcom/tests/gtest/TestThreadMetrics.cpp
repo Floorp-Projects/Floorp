@@ -120,8 +120,8 @@ class ThreadMetrics : public ::testing::Test {
     // building the DocGroup structure
     RefPtr<dom::BrowsingContextGroup> group =
         dom::BrowsingContextGroup::Create();
-    mDocGroup = group->AddDocument(NS_LITERAL_CSTRING("key"), nullptr);
-    mDocGroup2 = group->AddDocument(NS_LITERAL_CSTRING("key2"), nullptr);
+    mDocGroup = group->AddDocument("key"_ns, nullptr);
+    mDocGroup2 = group->AddDocument("key2"_ns, nullptr);
     mCounter = mDocGroup->GetPerformanceCounter();
     mCounter2 = mDocGroup2->GetPerformanceCounter();
     mThreadMgr = do_GetService("@mozilla.org/thread-manager;1");

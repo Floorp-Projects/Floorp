@@ -232,7 +232,7 @@ void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
 }
 
 void Performance::ClearMarks(const Optional<nsAString>& aName) {
-  ClearUserEntries(aName, NS_LITERAL_STRING("mark"));
+  ClearUserEntries(aName, u"mark"_ns);
 }
 
 DOMHighResTimeStamp Performance::ResolveTimestampFromName(
@@ -328,7 +328,7 @@ void Performance::Measure(const nsAString& aName,
 }
 
 void Performance::ClearMeasures(const Optional<nsAString>& aName) {
-  ClearUserEntries(aName, NS_LITERAL_STRING("measure"));
+  ClearUserEntries(aName, u"measure"_ns);
 }
 
 void Performance::LogEntry(PerformanceEntry* aEntry,
@@ -354,8 +354,7 @@ void Performance::TimingNotification(PerformanceEntry* aEntry,
   init.mOrigin = NS_ConvertUTF8toUTF16(aOwner.BeginReading());
 
   RefPtr<PerformanceEntryEvent> perfEntryEvent =
-      PerformanceEntryEvent::Constructor(
-          this, NS_LITERAL_STRING("performanceentry"), init);
+      PerformanceEntryEvent::Constructor(this, u"performanceentry"_ns, init);
 
   nsCOMPtr<EventTarget> et = do_QueryInterface(GetOwner());
   if (et) {

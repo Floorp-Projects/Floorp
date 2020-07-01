@@ -147,28 +147,28 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
           case uint32_t(
               nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION):
             message = "CookieBlockedByPermission";
-            category = NS_LITERAL_CSTRING("cookieBlockedPermission");
+            category = "cookieBlockedPermission"_ns;
             break;
 
           case uint32_t(nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER):
             message = "CookieBlockedTracker";
-            category = NS_LITERAL_CSTRING("cookieBlockedTracker");
+            category = "cookieBlockedTracker"_ns;
             break;
 
           case uint32_t(nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL):
             message = "CookieBlockedAll";
-            category = NS_LITERAL_CSTRING("cookieBlockedAll");
+            category = "cookieBlockedAll"_ns;
             break;
 
           case uint32_t(nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN):
             message = "CookieBlockedForeign";
-            category = NS_LITERAL_CSTRING("cookieBlockedForeign");
+            category = "cookieBlockedForeign"_ns;
             break;
 
           case uint32_t(
               nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN):
             message = "CookiePartitionedForeign";
-            category = NS_LITERAL_CSTRING("cookiePartitionedForeign");
+            category = "cookiePartitionedForeign"_ns;
             break;
 
           default:

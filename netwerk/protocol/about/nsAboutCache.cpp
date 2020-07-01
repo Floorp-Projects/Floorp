@@ -63,9 +63,9 @@ nsresult nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
   mOverview = storageName.IsEmpty();
   if (mOverview) {
     // ...and visit all we can
-    mStorageList.AppendElement(NS_LITERAL_CSTRING("memory"));
-    mStorageList.AppendElement(NS_LITERAL_CSTRING("disk"));
-    mStorageList.AppendElement(NS_LITERAL_CSTRING("appcache"));
+    mStorageList.AppendElement("memory"_ns);
+    mStorageList.AppendElement("disk"_ns);
+    mStorageList.AppendElement("appcache"_ns);
   } else {
     // ...and visit just the specified storage, entries will output too
     mStorageList.AppendElement(storageName);
@@ -74,9 +74,9 @@ nsresult nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
   // The entries header is added on encounter of the first entry
   mEntriesHeaderAdded = false;
 
-  rv = NS_NewInputStreamChannelInternal(
-      getter_AddRefs(mChannel), aURI, inputStream.forget(),
-      NS_LITERAL_CSTRING("text/html"), NS_LITERAL_CSTRING("utf-8"), aLoadInfo);
+  rv = NS_NewInputStreamChannelInternal(getter_AddRefs(mChannel), aURI,
+                                        inputStream.forget(), "text/html"_ns,
+                                        "utf-8"_ns, aLoadInfo);
   if (NS_FAILED(rv)) return rv;
 
   mBuffer.AssignLiteral(
@@ -147,7 +147,7 @@ nsresult nsAboutCache::Channel::ParseURI(nsIURI* uri, nsACString& storage) {
   if (NS_FAILED(rv)) return rv;
 
   mContextString.Truncate();
-  mLoadInfo = CacheFileUtils::ParseKey(NS_LITERAL_CSTRING(""));
+  mLoadInfo = CacheFileUtils::ParseKey(""_ns);
   storage.Truncate();
 
   nsACString::const_iterator start, valueStart, end;
@@ -155,7 +155,7 @@ nsresult nsAboutCache::Channel::ParseURI(nsIURI* uri, nsACString& storage) {
   path.EndReading(end);
 
   valueStart = end;
-  if (!FindInReadable(NS_LITERAL_CSTRING("?storage="), start, valueStart)) {
+  if (!FindInReadable("?storage="_ns, start, valueStart)) {
     return NS_OK;
   }
 
@@ -163,8 +163,7 @@ nsresult nsAboutCache::Channel::ParseURI(nsIURI* uri, nsACString& storage) {
 
   start = valueStart;
   valueStart = end;
-  if (!FindInReadable(NS_LITERAL_CSTRING("&context="), start, valueStart))
-    start = end;
+  if (!FindInReadable("&context="_ns, start, valueStart)) start = end;
 
   nsACString::const_iterator storageNameEnd = start;
 

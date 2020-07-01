@@ -43,12 +43,12 @@ static nsAutoCString GetSandboxedPath(const nsACString& libName) {
 
 nsAutoCString GetSandboxedGraphitePath() {
   return GetSandboxedPath(
-      NS_LITERAL_CSTRING(MOZ_DLL_PREFIX "graphitewasm" MOZ_DLL_SUFFIX));
+      nsLiteralCString(MOZ_DLL_PREFIX "graphitewasm" MOZ_DLL_SUFFIX));
 }
 
 nsAutoCString GetSandboxedOggPath() {
   return GetSandboxedPath(
-      NS_LITERAL_CSTRING(MOZ_DLL_PREFIX "oggwasm" MOZ_DLL_SUFFIX));
+      nsLiteralCString(MOZ_DLL_PREFIX "oggwasm" MOZ_DLL_SUFFIX));
 }
 
 PRLibrary* PreloadLibrary(const nsAutoCString& path) {

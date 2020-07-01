@@ -1188,7 +1188,7 @@ bool HTMLEditor::IsOnlyAttribute(const Element* aElement, nsAtom* aAttribute) {
     if (name->LocalName() != aAttribute) {
       nsAutoString attrString;
       name->LocalName()->ToString(attrString);
-      if (!StringBeginsWith(attrString, NS_LITERAL_STRING("_moz"))) {
+      if (!StringBeginsWith(attrString, u"_moz"_ns)) {
         return false;
       }
     }
@@ -1954,7 +1954,7 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
             DebugOnly<nsresult> rvIgnored = SetInlinePropertyOnNode(
                 MOZ_KnownLive(content), MOZ_KnownLive(*style.mProperty),
                 MOZ_KnownLive(style.mAttribute),
-                NS_LITERAL_STRING("-moz-editor-invert-value"));
+                u"-moz-editor-invert-value"_ns);
             if (NS_WARN_IF(Destroyed())) {
               return NS_ERROR_EDITOR_DESTROYED;
             }
@@ -1979,7 +1979,7 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
           nsresult rv = SetInlinePropertyOnTextNode(
               MOZ_KnownLive(*content->AsText()), startOffset, endOffset,
               MOZ_KnownLive(*style.mProperty), MOZ_KnownLive(style.mAttribute),
-              NS_LITERAL_STRING("-moz-editor-invert-value"));
+              u"-moz-editor-invert-value"_ns);
           if (NS_FAILED(rv)) {
             NS_WARNING(
                 "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
@@ -2017,7 +2017,7 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
                 MOZ_KnownLive(textNode), 0, textNode->TextLength(),
                 MOZ_KnownLive(*style.mProperty),
                 MOZ_KnownLive(style.mAttribute),
-                NS_LITERAL_STRING("-moz-editor-invert-value"));
+                u"-moz-editor-invert-value"_ns);
             if (NS_FAILED(rv)) {
               NS_WARNING(
                   "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"

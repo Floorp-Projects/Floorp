@@ -694,14 +694,13 @@ std::ostream& operator<<(std::ostream& aStream, const nsINode& aNode) {
     }
 
     if (!elemDesc.IsEmpty()) {
-      elemDesc = elemDesc + NS_LITERAL_STRING(".");
+      elemDesc = elemDesc + u"."_ns;
     }
 
     elemDesc = elemDesc + localName;
 
     if (!id.IsEmpty()) {
-      elemDesc =
-          elemDesc + NS_LITERAL_STRING("['") + id + NS_LITERAL_STRING("']");
+      elemDesc = elemDesc + u"['"_ns + id + u"']"_ns;
     }
 
     curr = curr->GetParentNode();
@@ -2833,9 +2832,8 @@ const RawServoSelectorList* nsINode::ParseSelectorList(
   if (list) {
     if (!*list) {
       // Invalid selector.
-      aRv.ThrowSyntaxError(NS_LITERAL_CSTRING("'") +
-                           NS_ConvertUTF16toUTF8(aSelectorString) +
-                           NS_LITERAL_CSTRING("' is not a valid selector"));
+      aRv.ThrowSyntaxError("'"_ns + NS_ConvertUTF16toUTF8(aSelectorString) +
+                           "' is not a valid selector"_ns);
       return nullptr;
     }
 
@@ -2853,8 +2851,8 @@ const RawServoSelectorList* nsINode::ParseSelectorList(
 
   // Now make sure we throw an exception if the selector was invalid.
   if (!ret) {
-    aRv.ThrowSyntaxError(NS_LITERAL_CSTRING("'") + selectorString +
-                         NS_LITERAL_CSTRING("' is not a valid selector"));
+    aRv.ThrowSyntaxError("'"_ns + selectorString +
+                         "' is not a valid selector"_ns);
   }
 
   return ret;

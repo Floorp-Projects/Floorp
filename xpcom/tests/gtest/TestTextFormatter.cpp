@@ -9,7 +9,7 @@
 
 TEST(TextFormatter, Tests)
 {
-  nsAutoString fmt(NS_LITERAL_STRING("%3$s %4$S %1$d %2$d %2$d %3$s"));
+  nsAutoString fmt(u"%3$s %4$S %1$d %2$d %2$d %3$s"_ns);
   char utf8[] = "Hello";
   char16_t ucs2[] = {'W',    'o',    'r',    'l',    'd',
                      0x4e00, 0xAc00, 0xFF45, 0x0103, 0x00};

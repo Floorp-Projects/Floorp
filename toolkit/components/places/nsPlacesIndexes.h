@@ -7,9 +7,9 @@
 #ifndef nsPlacesIndexes_h__
 #define nsPlacesIndexes_h__
 
-#define CREATE_PLACES_IDX(__name, __table, __columns, __type)         \
-  NS_LITERAL_CSTRING("CREATE " __type " INDEX IF NOT EXISTS " __table \
-                     "_" __name " ON " __table " (" __columns ")")
+#define CREATE_PLACES_IDX(__name, __table, __columns, __type)                  \
+  nsLiteralCString("CREATE " __type " INDEX IF NOT EXISTS " __table "_" __name \
+                   " ON " __table " (" __columns ")")
 
 /**
  * moz_places

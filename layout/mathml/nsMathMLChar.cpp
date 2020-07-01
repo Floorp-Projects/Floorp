@@ -549,7 +549,7 @@ class nsGlyphTableList final : public nsIObserver {
 
   nsPropertiesTable mUnicodeTable;
 
-  nsGlyphTableList() : mUnicodeTable(NS_LITERAL_CSTRING("Unicode")) {}
+  nsGlyphTableList() : mUnicodeTable("Unicode"_ns) {}
 
   nsresult Initialize();
   nsresult Finalize();
@@ -660,7 +660,7 @@ static nsresult InitCharGlobals() {
   // observer and will be deleted at shutdown. We now add some private
   // per font-family tables for stretchy operators, in order of preference.
   // Do not include the Unicode table in this list.
-  if (!glyphTableList->AddGlyphTable(NS_LITERAL_CSTRING("STIXGeneral"))) {
+  if (!glyphTableList->AddGlyphTable("STIXGeneral"_ns)) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1530,10 +1530,10 @@ nsresult nsMathMLChar::StretchInternal(
         font.fontlist.GetFontlist()->mNames;
     for (const FontFamilyName& name : fontlist) {
       if (StretchEnumContext::EnumCallback(name, name.IsGeneric(), &enumData)) {
-        if (name.IsNamedFamily(NS_LITERAL_STRING("STIXGeneral"))) {
+        if (name.IsNamedFamily(u"STIXGeneral"_ns)) {
           AutoTArray<nsString, 1> params{
-              NS_LITERAL_STRING("https://developer.mozilla.org/docs/Mozilla/"
-                                "MathML_Project/Fonts")};
+              u"https://developer.mozilla.org/docs/Mozilla/"
+              "MathML_Project/Fonts"_ns};
           aForFrame->PresContext()->Document()->WarnOnceAbout(
               dom::Document::eMathML_DeprecatedStixgeneralOperatorStretching,
               false, params);

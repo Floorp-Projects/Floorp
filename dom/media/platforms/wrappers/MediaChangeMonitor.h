@@ -43,7 +43,7 @@ class MediaChangeMonitor : public MediaDataDecoder,
     if (mDecoder) {
       return mDecoder->GetDescriptionName();
     }
-    return NS_LITERAL_CSTRING("MediaChangeMonitor decoder (pending)");
+    return "MediaChangeMonitor decoder (pending)"_ns;
   }
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
   bool SupportDecoderRecycling() const override {

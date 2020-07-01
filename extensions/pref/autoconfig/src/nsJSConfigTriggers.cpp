@@ -140,9 +140,9 @@ nsresult EvaluateAdminConfigScript(JS::HandleObject sandbox,
     convertedScript = NS_ConvertUTF8toUTF16(script);
   } else {
     nsContentUtils::ReportToConsoleNonLocalized(
-        NS_LITERAL_STRING(
-            "Your AutoConfig file is ASCII. Please convert it to UTF-8."),
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("autoconfig"), nullptr);
+        nsLiteralString(
+            u"Your AutoConfig file is ASCII. Please convert it to UTF-8."),
+        nsIScriptError::warningFlag, "autoconfig"_ns, nullptr);
     /* If the length is 0, the conversion failed. Fallback to ASCII */
     convertedScript = NS_ConvertASCIItoUTF16(script);
   }

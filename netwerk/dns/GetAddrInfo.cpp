@@ -253,7 +253,7 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
   nsAutoCString host(aHost);
   if (gNativeIsLocalhost) {
     // pretend we use the given host but use IPv4 localhost instead!
-    host = NS_LITERAL_CSTRING("localhost");
+    host = "localhost"_ns;
     aAddressFamily = PR_AF_INET;
   }
 

@@ -66,7 +66,7 @@ const char* ToChar(EventClassID aEventClassID) {
 
 const nsCString ToString(KeyNameIndex aKeyNameIndex) {
   if (aKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
-    return NS_LITERAL_CSTRING("USE_STRING");
+    return "USE_STRING"_ns;
   }
   nsAutoString keyName;
   WidgetKeyboardEvent::GetDOMKeyName(aKeyNameIndex, keyName);
@@ -75,7 +75,7 @@ const nsCString ToString(KeyNameIndex aKeyNameIndex) {
 
 const nsCString ToString(CodeNameIndex aCodeNameIndex) {
   if (aCodeNameIndex == CODE_NAME_INDEX_USE_STRING) {
-    return NS_LITERAL_CSTRING("USE_STRING");
+    return "USE_STRING"_ns;
   }
   nsAutoString codeName;
   WidgetKeyboardEvent::GetDOMCodeName(aCodeNameIndex, codeName);
@@ -114,7 +114,7 @@ const nsCString GetDOMKeyCodeName(uint32_t aKeyCode) {
 #define NS_DISALLOW_SAME_KEYCODE
 #define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) \
   case aDOMKeyCode:                            \
-    return NS_LITERAL_CSTRING(#aDOMKeyName);
+    return nsLiteralCString(#aDOMKeyName);
 
 #include "mozilla/VirtualKeyCodeList.h"
 

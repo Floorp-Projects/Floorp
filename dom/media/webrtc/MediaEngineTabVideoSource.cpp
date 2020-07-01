@@ -108,15 +108,13 @@ nsresult MediaEngineTabVideoSource::DestroyRunnable::Run() {
 }
 
 nsString MediaEngineTabVideoSource::GetName() const {
-  return NS_LITERAL_STRING(u"&getUserMedia.videoSource.tabShare;");
+  return u"&getUserMedia.videoSource.tabShare;"_ns;
 }
 
-nsCString MediaEngineTabVideoSource::GetUUID() const {
-  return NS_LITERAL_CSTRING("tab");
-}
+nsCString MediaEngineTabVideoSource::GetUUID() const { return "tab"_ns; }
 
 nsString MediaEngineTabVideoSource::GetGroupId() const {
-  return NS_LITERAL_STRING(u"&getUserMedia.videoSource.tabShareGroup;");
+  return u"&getUserMedia.videoSource.tabShareGroup;"_ns;
 }
 
 #define DEFAULT_TABSHARE_VIDEO_MAX_WIDTH 4096

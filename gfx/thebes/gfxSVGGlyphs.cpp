@@ -34,8 +34,8 @@
 #include "harfbuzz/hb.h"
 #include "zlib.h"
 
-#define SVG_CONTENT_TYPE NS_LITERAL_CSTRING("image/svg+xml")
-#define UTF8_CHARSET NS_LITERAL_CSTRING("utf-8")
+#define SVG_CONTENT_TYPE "image/svg+xml"_ns
+#define UTF8_CHARSET "utf-8"_ns
 
 using namespace mozilla;
 using mozilla::dom::Document;
@@ -431,7 +431,7 @@ void gfxSVGGlyphsDocument::InsertGlyphId(Element* aGlyphElement) {
   // The maximum glyph ID is 65535 so the maximum length of the numeric part
   // is 5.
   if (!aGlyphElement->GetAttr(kNameSpaceID_None, nsGkAtoms::id, glyphIdStr) ||
-      !StringBeginsWith(glyphIdStr, NS_LITERAL_STRING("glyph")) ||
+      !StringBeginsWith(glyphIdStr, u"glyph"_ns) ||
       glyphIdStr.Length() > glyphPrefixLength + 5) {
     return;
   }

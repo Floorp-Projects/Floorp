@@ -473,7 +473,7 @@ nsresult gfxPlatformFontList::InitFontList() {
       }
       i.Data()->mShmemCharacterMap = nullptr;
       i.Data()->mShmemFace = nullptr;
-      i.Data()->mFamilyName = NS_LITERAL_CSTRING("");
+      i.Data()->mFamilyName = ""_ns;
     }
     mFontEntries.Clear();
     mShmemCharMaps.Clear();
@@ -1778,18 +1778,18 @@ void gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[],
 
     // Then add the known CJK prefs in order of system preferred locales
     AutoTArray<nsCString, 5> prefLocales;
-    prefLocales.AppendElement(NS_LITERAL_CSTRING("ja"));
-    prefLocales.AppendElement(NS_LITERAL_CSTRING("zh-CN"));
-    prefLocales.AppendElement(NS_LITERAL_CSTRING("zh-TW"));
-    prefLocales.AppendElement(NS_LITERAL_CSTRING("zh-HK"));
-    prefLocales.AppendElement(NS_LITERAL_CSTRING("ko"));
+    prefLocales.AppendElement("ja"_ns);
+    prefLocales.AppendElement("zh-CN"_ns);
+    prefLocales.AppendElement("zh-TW"_ns);
+    prefLocales.AppendElement("zh-HK"_ns);
+    prefLocales.AppendElement("ko"_ns);
 
     AutoTArray<nsCString, 16> sysLocales;
     AutoTArray<nsCString, 16> negLocales;
     if (NS_SUCCEEDED(
             OSPreferences::GetInstance()->GetSystemLocales(sysLocales))) {
       LocaleService::GetInstance()->NegotiateLanguages(
-          sysLocales, prefLocales, NS_LITERAL_CSTRING(""),
+          sysLocales, prefLocales, ""_ns,
           LocaleService::kLangNegStrategyFiltering, negLocales);
       for (const auto& localeStr : negLocales) {
         Locale locale(localeStr);

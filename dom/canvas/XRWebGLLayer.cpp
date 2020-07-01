@@ -110,25 +110,25 @@ already_AddRefed<XRWebGLLayer> XRWebGLLayer::Constructor(
     const auto document = gl->GetParentObject()->OwnerDoc();
     if (aXRWebGLLayerInitDict.mAlpha) {
       nsContentUtils::ReportToConsoleNonLocalized(
-          NS_LITERAL_STRING("XRWebGLLayer doesn't support no alpha value. "
-                            "Alpha will be enabled."),
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document);
+          u"XRWebGLLayer doesn't support no alpha value. "
+          "Alpha will be enabled."_ns,
+          nsIScriptError::warningFlag, "DOM"_ns, document);
     }
     if (aXRWebGLLayerInitDict.mDepth != aXRWebGLLayerInitDict.mStencil) {
       nsContentUtils::ReportToConsoleNonLocalized(
-          NS_LITERAL_STRING(
-              "XRWebGLLayer doesn't support separate "
+          nsLiteralString(
+              u"XRWebGLLayer doesn't support separate "
               "depth or stencil buffers. They will be enabled together."),
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document);
+          nsIScriptError::warningFlag, "DOM"_ns, document);
     }
 
     bool antialias = aXRWebGLLayerInitDict.mAntialias;
     if (antialias && !StaticPrefs::webgl_msaa_force()) {
       antialias = false;
       nsContentUtils::ReportToConsoleNonLocalized(
-          NS_LITERAL_STRING("XRWebGLLayer antialiasing is not supported."
-                            "Antialiasing will be disabled."),
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document);
+          u"XRWebGLLayer antialiasing is not supported."
+          "Antialiasing will be disabled."_ns,
+          nsIScriptError::warningFlag, "DOM"_ns, document);
     }
 
     webgl::OpaqueFramebufferOptions options;

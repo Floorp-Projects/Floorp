@@ -195,7 +195,7 @@ NS_IMETHODIMP _OldVisitCallbackWrapper::VisitEntry(const char* deviceID,
   if (NS_FAILED(rv)) return NS_OK;
 
   if (mLoadInfo->IsPrivate() !=
-      StringBeginsWith(clientId, NS_LITERAL_CSTRING("HTTP-memory-only-PB"))) {
+      StringBeginsWith(clientId, "HTTP-memory-only-PB"_ns)) {
     return NS_OK;
   }
 
@@ -203,7 +203,7 @@ NS_IMETHODIMP _OldVisitCallbackWrapper::VisitEntry(const char* deviceID,
   rv = entryInfo->GetKey(cacheKey);
   if (NS_FAILED(rv)) return NS_OK;
 
-  if (StringBeginsWith(cacheKey, NS_LITERAL_CSTRING("anon&"))) {
+  if (StringBeginsWith(cacheKey, "anon&"_ns)) {
     if (!mLoadInfo->IsAnonymous()) return NS_OK;
 
     cacheKey = Substring(cacheKey, 5, cacheKey.Length());
@@ -211,7 +211,7 @@ NS_IMETHODIMP _OldVisitCallbackWrapper::VisitEntry(const char* deviceID,
     return NS_OK;
   }
 
-  if (StringBeginsWith(cacheKey, NS_LITERAL_CSTRING("id="))) {
+  if (StringBeginsWith(cacheKey, "id="_ns)) {
     int32_t uriSpecEnd = cacheKey.Find("&uri=");
     if (uriSpecEnd == kNotFound)  // Corrupted, ignore
       return NS_OK;
@@ -220,7 +220,7 @@ NS_IMETHODIMP _OldVisitCallbackWrapper::VisitEntry(const char* deviceID,
     cacheKey = Substring(cacheKey, uriSpecEnd + 1, cacheKey.Length());
   }
 
-  if (StringBeginsWith(cacheKey, NS_LITERAL_CSTRING("uri="))) {
+  if (StringBeginsWith(cacheKey, "uri="_ns)) {
     cacheKey = Substring(cacheKey, 4, cacheKey.Length());
   }
 
@@ -913,8 +913,8 @@ NS_IMETHODIMP _OldStorage::AsyncEvictStorage(
   } else {
     // Oh, I'll be so happy when session names are gone...
     nsCOMPtr<nsICacheSession> session;
-    rv = GetCacheSession(NS_LITERAL_CSTRING("http"), mWriteToDisk, mLoadInfo,
-                         mAppCache, getter_AddRefs(session));
+    rv = GetCacheSession("http"_ns, mWriteToDisk, mLoadInfo, mAppCache,
+                         getter_AddRefs(session));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = session->EvictEntries();

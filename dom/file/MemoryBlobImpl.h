@@ -58,7 +58,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
   }
 
   void GetBlobImplType(nsAString& aBlobImplType) const override {
-    aBlobImplType = NS_LITERAL_STRING("MemoryBlobImpl");
+    aBlobImplType = u"MemoryBlobImpl"_ns;
   }
 
   class DataOwner final : public mozilla::LinkedListElement<DataOwner> {

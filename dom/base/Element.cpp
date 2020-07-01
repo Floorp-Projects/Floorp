@@ -1112,7 +1112,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
   // Dispatch a "shadowrootattached" event for devtools.
   {
     AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-        this, NS_LITERAL_STRING("shadowrootattached"), CanBubble::eYes,
+        this, u"shadowrootattached"_ns, CanBubble::eYes,
         ChromeOnlyDispatch::eYes, Composed::eYes);
     dispatcher->PostDOMEvent();
   }
@@ -1157,9 +1157,9 @@ void Element::NotifyUAWidgetSetupOrChange() {
         MOZ_ASSERT(self->GetShadowRoot() &&
                    self->GetShadowRoot()->IsUAWidget());
 
-        nsContentUtils::DispatchChromeEvent(
-            ownerDoc, self, NS_LITERAL_STRING("UAWidgetSetupOrChange"),
-            CanBubble::eYes, Cancelable::eNo);
+        nsContentUtils::DispatchChromeEvent(ownerDoc, self,
+                                            u"UAWidgetSetupOrChange"_ns,
+                                            CanBubble::eYes, Cancelable::eNo);
       }));
 }
 
@@ -1186,8 +1186,8 @@ void Element::NotifyUAWidgetTeardown(UnattachShadowRoot aUnattachShadowRoot) {
         }
 
         nsresult rv = nsContentUtils::DispatchChromeEvent(
-            ownerDoc, self, NS_LITERAL_STRING("UAWidgetTeardown"),
-            CanBubble::eYes, Cancelable::eNo);
+            ownerDoc, self, u"UAWidgetTeardown"_ns, CanBubble::eYes,
+            Cancelable::eNo);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return;
         }
@@ -1699,9 +1699,9 @@ void Element::UnbindFromTree(bool aNullParent) {
   if (mState.HasState(NS_EVENT_STATE_FULLSCREEN)) {
     // The element being removed is an ancestor of the fullscreen element,
     // exit fullscreen state.
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), OwnerDoc(),
-        nsContentUtils::eDOM_PROPERTIES, "RemovedFullscreenElement");
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                    OwnerDoc(), nsContentUtils::eDOM_PROPERTIES,
+                                    "RemovedFullscreenElement");
     // Fully exit fullscreen.
     Document::ExitFullscreenInDocTree(OwnerDoc());
   }

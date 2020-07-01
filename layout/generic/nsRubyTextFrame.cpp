@@ -42,7 +42,7 @@ bool nsRubyTextFrame::CanContinueTextRun() const { return false; }
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsRubyTextFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("RubyText"), aResult);
+  return MakeFrameName(u"RubyText"_ns, aResult);
 }
 #endif
 

@@ -239,7 +239,7 @@ TEST(MruCache, TestRemove)
     // Fill it up.
     for (char i = 1; i < 32; i++) {
       const nsCString key = MakeStringKey(i);
-      mru.Put(key, StringStruct{key, NS_LITERAL_CSTRING("foo")});
+      mru.Put(key, StringStruct{key, "foo"_ns});
     }
 
     // Now remove each value.
@@ -384,12 +384,12 @@ TEST(MruCache, TestLookupAndSetWithMove)
   StringStructMap mru;
 
   const nsCString key = MakeStringKey((char)1);
-  StringStruct val{key, NS_LITERAL_CSTRING("foo")};
+  StringStruct val{key, "foo"_ns};
 
   auto p = mru.Lookup(key);
   EXPECT_FALSE(p);
   p.Set(std::move(val));
 
   EXPECT_TRUE(p.Data().mKey == key);
-  EXPECT_TRUE(p.Data().mOther == NS_LITERAL_CSTRING("foo"));
+  EXPECT_TRUE(p.Data().mOther == "foo"_ns);
 }

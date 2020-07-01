@@ -38,7 +38,7 @@ nsresult nsAppStartupNotifier::NotifyObservers(const char* aCategory) {
     // If we see the word "service," in the beginning
     // of the contractId then we create it as a service
     // if not we do a createInstance
-    if (StringBeginsWith(contractId, NS_LITERAL_CSTRING("service,"))) {
+    if (StringBeginsWith(contractId, "service,"_ns)) {
       startupInstance = do_GetService(contractId.get() + 8, &rv);
     } else {
       startupInstance = do_CreateInstance(contractId.get(), &rv);

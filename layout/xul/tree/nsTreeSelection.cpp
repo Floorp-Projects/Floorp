@@ -270,7 +270,7 @@ NS_IMETHODIMP nsTreeSelection::GetSingle(bool* aSingle) {
   }
 
   *aSingle = mTree->AttrValueIs(kNameSpaceID_None, nsGkAtoms::seltype,
-                                NS_LITERAL_STRING("single"), eCaseMatters);
+                                u"single"_ns, eCaseMatters);
 
   return NS_OK;
 }
@@ -694,9 +694,8 @@ nsTreeSelection::GetShiftSelectPivot(int32_t* aIndex) {
 nsresult nsTreeSelection::FireOnSelectHandler() {
   if (mSuppressed || !mTree) return NS_OK;
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(mTree, NS_LITERAL_STRING("select"),
-                               CanBubble::eYes, ChromeOnlyDispatch::eNo);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+      mTree, u"select"_ns, CanBubble::eYes, ChromeOnlyDispatch::eNo);
   asyncDispatcher->RunDOMEventWhenSafe();
   return NS_OK;
 }

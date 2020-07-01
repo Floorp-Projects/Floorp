@@ -78,7 +78,7 @@ already_AddRefed<HTMLAudioElement> HTMLAudioElement::Audio(
 
   RefPtr<HTMLAudioElement> audio =
       static_cast<HTMLAudioElement*>(NS_NewHTMLAudioElement(nodeInfo.forget()));
-  audio->SetHTMLAttr(nsGkAtoms::preload, NS_LITERAL_STRING("auto"), aRv);
+  audio->SetHTMLAttr(nsGkAtoms::preload, u"auto"_ns, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -99,7 +99,7 @@ nsresult HTMLAudioElement::SetAcceptHeader(nsIHttpChannel* aChannel) {
       "application/ogg;q=0.7,"
       "video/*;q=0.6,*/*;q=0.5");
 
-  return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"), value, false);
+  return aChannel->SetRequestHeader("Accept"_ns, value, false);
 }
 
 JSObject* HTMLAudioElement::WrapNode(JSContext* aCx,

@@ -1461,22 +1461,22 @@ void GLContext::DebugCallback(GLenum source, GLenum type, GLuint id,
   nsAutoCString sourceStr;
   switch (source) {
     case LOCAL_GL_DEBUG_SOURCE_API:
-      sourceStr = NS_LITERAL_CSTRING("SOURCE_API");
+      sourceStr = "SOURCE_API"_ns;
       break;
     case LOCAL_GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-      sourceStr = NS_LITERAL_CSTRING("SOURCE_WINDOW_SYSTEM");
+      sourceStr = "SOURCE_WINDOW_SYSTEM"_ns;
       break;
     case LOCAL_GL_DEBUG_SOURCE_SHADER_COMPILER:
-      sourceStr = NS_LITERAL_CSTRING("SOURCE_SHADER_COMPILER");
+      sourceStr = "SOURCE_SHADER_COMPILER"_ns;
       break;
     case LOCAL_GL_DEBUG_SOURCE_THIRD_PARTY:
-      sourceStr = NS_LITERAL_CSTRING("SOURCE_THIRD_PARTY");
+      sourceStr = "SOURCE_THIRD_PARTY"_ns;
       break;
     case LOCAL_GL_DEBUG_SOURCE_APPLICATION:
-      sourceStr = NS_LITERAL_CSTRING("SOURCE_APPLICATION");
+      sourceStr = "SOURCE_APPLICATION"_ns;
       break;
     case LOCAL_GL_DEBUG_SOURCE_OTHER:
-      sourceStr = NS_LITERAL_CSTRING("SOURCE_OTHER");
+      sourceStr = "SOURCE_OTHER"_ns;
       break;
     default:
       sourceStr = nsPrintfCString("<source 0x%04x>", source);
@@ -1486,25 +1486,25 @@ void GLContext::DebugCallback(GLenum source, GLenum type, GLuint id,
   nsAutoCString typeStr;
   switch (type) {
     case LOCAL_GL_DEBUG_TYPE_ERROR:
-      typeStr = NS_LITERAL_CSTRING("TYPE_ERROR");
+      typeStr = "TYPE_ERROR"_ns;
       break;
     case LOCAL_GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-      typeStr = NS_LITERAL_CSTRING("TYPE_DEPRECATED_BEHAVIOR");
+      typeStr = "TYPE_DEPRECATED_BEHAVIOR"_ns;
       break;
     case LOCAL_GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-      typeStr = NS_LITERAL_CSTRING("TYPE_UNDEFINED_BEHAVIOR");
+      typeStr = "TYPE_UNDEFINED_BEHAVIOR"_ns;
       break;
     case LOCAL_GL_DEBUG_TYPE_PORTABILITY:
-      typeStr = NS_LITERAL_CSTRING("TYPE_PORTABILITY");
+      typeStr = "TYPE_PORTABILITY"_ns;
       break;
     case LOCAL_GL_DEBUG_TYPE_PERFORMANCE:
-      typeStr = NS_LITERAL_CSTRING("TYPE_PERFORMANCE");
+      typeStr = "TYPE_PERFORMANCE"_ns;
       break;
     case LOCAL_GL_DEBUG_TYPE_OTHER:
-      typeStr = NS_LITERAL_CSTRING("TYPE_OTHER");
+      typeStr = "TYPE_OTHER"_ns;
       break;
     case LOCAL_GL_DEBUG_TYPE_MARKER:
-      typeStr = NS_LITERAL_CSTRING("TYPE_MARKER");
+      typeStr = "TYPE_MARKER"_ns;
       break;
     default:
       typeStr = nsPrintfCString("<type 0x%04x>", type);
@@ -1514,16 +1514,16 @@ void GLContext::DebugCallback(GLenum source, GLenum type, GLuint id,
   nsAutoCString sevStr;
   switch (severity) {
     case LOCAL_GL_DEBUG_SEVERITY_HIGH:
-      sevStr = NS_LITERAL_CSTRING("SEVERITY_HIGH");
+      sevStr = "SEVERITY_HIGH"_ns;
       break;
     case LOCAL_GL_DEBUG_SEVERITY_MEDIUM:
-      sevStr = NS_LITERAL_CSTRING("SEVERITY_MEDIUM");
+      sevStr = "SEVERITY_MEDIUM"_ns;
       break;
     case LOCAL_GL_DEBUG_SEVERITY_LOW:
-      sevStr = NS_LITERAL_CSTRING("SEVERITY_LOW");
+      sevStr = "SEVERITY_LOW"_ns;
       break;
     case LOCAL_GL_DEBUG_SEVERITY_NOTIFICATION:
-      sevStr = NS_LITERAL_CSTRING("SEVERITY_NOTIFICATION");
+      sevStr = "SEVERITY_NOTIFICATION"_ns;
       break;
     default:
       sevStr = nsPrintfCString("<severity 0x%04x>", severity);

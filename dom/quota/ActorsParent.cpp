@@ -240,9 +240,9 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
 
   // Table `database`
   nsresult rv = aConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE database"
-                         "( cache_version INTEGER NOT NULL DEFAULT 0"
-                         ");"));
+      nsLiteralCString("CREATE TABLE database"
+                       "( cache_version INTEGER NOT NULL DEFAULT 0"
+                       ");"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -274,8 +274,7 @@ nsresult LoadCacheVersion(mozIStorageConnection* aConnection,
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT cache_version FROM database"),
-      getter_AddRefs(stmt));
+      "SELECT cache_version FROM database"_ns, getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -307,13 +306,12 @@ nsresult SaveCacheVersion(mozIStorageConnection* aConnection,
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(
-      NS_LITERAL_CSTRING("UPDATE database SET cache_version = :version;"),
-      getter_AddRefs(stmt));
+      "UPDATE database SET cache_version = :version;"_ns, getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("version"), aVersion);
+  rv = stmt->BindInt32ByName("version"_ns, aVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -332,39 +330,39 @@ nsresult CreateCacheTables(mozIStorageConnection* aConnection) {
 
   // Table `cache`
   nsresult rv = aConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE cache"
-                         "( valid INTEGER NOT NULL DEFAULT 0"
-                         ", build_id TEXT NOT NULL DEFAULT ''"
-                         ");"));
+      nsLiteralCString("CREATE TABLE cache"
+                       "( valid INTEGER NOT NULL DEFAULT 0"
+                       ", build_id TEXT NOT NULL DEFAULT ''"
+                       ");"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Table `repository`
-  rv = aConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE repository"
-                         "( id INTEGER PRIMARY KEY"
-                         ", name TEXT NOT NULL"
-                         ");"));
+  rv =
+      aConnection->ExecuteSimpleSQL(nsLiteralCString("CREATE TABLE repository"
+                                                     "( id INTEGER PRIMARY KEY"
+                                                     ", name TEXT NOT NULL"
+                                                     ");"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Table `origin`
   rv = aConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE origin"
-                         "( repository_id INTEGER NOT NULL"
-                         ", origin TEXT NOT NULL"
-                         ", group_ TEXT NOT NULL"
-                         ", client_usages TEXT NOT NULL"
-                         ", usage INTEGER NOT NULL"
-                         ", last_access_time INTEGER NOT NULL"
-                         ", accessed INTEGER NOT NULL"
-                         ", persisted INTEGER NOT NULL"
-                         ", PRIMARY KEY (repository_id, origin)"
-                         ", FOREIGN KEY (repository_id) "
-                         "REFERENCES repository(id) "
-                         ");"));
+      nsLiteralCString("CREATE TABLE origin"
+                       "( repository_id INTEGER NOT NULL"
+                       ", origin TEXT NOT NULL"
+                       ", group_ TEXT NOT NULL"
+                       ", client_usages TEXT NOT NULL"
+                       ", usage INTEGER NOT NULL"
+                       ", last_access_time INTEGER NOT NULL"
+                       ", accessed INTEGER NOT NULL"
+                       ", persisted INTEGER NOT NULL"
+                       ", PRIMARY KEY (repository_id, origin)"
+                       ", FOREIGN KEY (repository_id) "
+                       "REFERENCES repository(id) "
+                       ");"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -424,14 +422,12 @@ nsresult InvalidateCache(mozIStorageConnection* aConnection) {
   mozStorageTransaction transaction(
       aConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-  nsresult rv =
-      aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM origin;"));
+  nsresult rv = aConnection->ExecuteSimpleSQL("DELETE FROM origin;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("UPDATE cache SET valid = 0"));
+  rv = aConnection->ExecuteSimpleSQL("UPDATE cache SET valid = 0"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -551,7 +547,7 @@ nsresult InitializeLocalStorageArchive(mozIStorageConnection* aConnection,
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  nsresult rv = aConnection->ExecuteSimpleSQL(nsLiteralCString(
       "CREATE TABLE database(version INTEGER NOT NULL DEFAULT 0);"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -559,13 +555,13 @@ nsresult InitializeLocalStorageArchive(mozIStorageConnection* aConnection,
 
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = aConnection->CreateStatement(
-      NS_LITERAL_CSTRING("INSERT INTO database (version) VALUES (:version)"),
+      "INSERT INTO database (version) VALUES (:version)"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("version"), aVersion);
+  rv = stmt->BindInt32ByName("version"_ns, aVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -584,8 +580,7 @@ nsresult IsLocalStorageArchiveInitialized(mozIStorageConnection* aConnection,
   MOZ_ASSERT(aConnection);
 
   bool exists;
-  nsresult rv =
-      aConnection->TableExists(NS_LITERAL_CSTRING("database"), &exists);
+  nsresult rv = aConnection->TableExists("database"_ns, &exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -600,8 +595,8 @@ nsresult LoadLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
   MOZ_ASSERT(aConnection);
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT version FROM database"), getter_AddRefs(stmt));
+  nsresult rv = aConnection->CreateStatement("SELECT version FROM database"_ns,
+                                             getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -634,13 +629,13 @@ nsresult SaveLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(
-      NS_LITERAL_CSTRING("UPDATE database SET version = :version;"),
+      "UPDATE database SET version = :version;"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("version"), aVersion);
+  rv = stmt->BindInt32ByName("version"_ns, aVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4334,7 +4329,7 @@ nsresult QuotaManager::LoadQuota() {
   auto LoadQuotaFromCache = [&]() {
     nsCOMPtr<mozIStorageStatement> stmt;
     nsresult rv = mStorageConnection->CreateStatement(
-        NS_LITERAL_CSTRING(
+        nsLiteralCString(
             "SELECT repository_id, origin, group_, client_usages, usage, "
             "last_access_time, accessed, persisted "
             "FROM origin"),
@@ -4502,8 +4497,8 @@ nsresult QuotaManager::LoadQuota() {
   if (mCacheUsable) {
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = mStorageConnection->CreateStatement(
-        NS_LITERAL_CSTRING("SELECT valid, build_id "
-                           "FROM cache"),
+        nsLiteralCString("SELECT valid, build_id "
+                         "FROM cache"),
         getter_AddRefs(stmt));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -4607,8 +4602,7 @@ void QuotaManager::UnloadQuota() {
   mozStorageTransaction transaction(
       mStorageConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-  nsresult rv = mStorageConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("DELETE FROM origin;"));
+  nsresult rv = mStorageConnection->ExecuteSimpleSQL("DELETE FROM origin;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -4641,7 +4635,7 @@ void QuotaManager::UnloadQuota() {
             MOZ_ALWAYS_SUCCEEDS(insertStmt->Reset());
           } else {
             rv = mStorageConnection->CreateStatement(
-                NS_LITERAL_CSTRING(
+                nsLiteralCString(
                     "INSERT INTO origin (repository_id, origin, group_, "
                     "client_usages, usage, last_access_time, accessed, "
                     "persisted) "
@@ -4674,19 +4668,18 @@ void QuotaManager::UnloadQuota() {
 
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = mStorageConnection->CreateStatement(
-      NS_LITERAL_CSTRING(
-          "UPDATE cache SET valid = :valid, build_id = :buildId;"),
+      "UPDATE cache SET valid = :valid, build_id = :buildId;"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("valid"), 1);
+  rv = stmt->BindInt32ByName("valid"_ns, 1);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("buildId"), *gBuildId);
+  rv = stmt->BindUTF8StringByName("buildId"_ns, *gBuildId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -5702,16 +5695,16 @@ nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
 
   // Table `database`
   nsresult rv = aConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE database"
-                         "( cache_version INTEGER NOT NULL DEFAULT 0"
-                         ");"));
+      nsLiteralCString("CREATE TABLE database"
+                       "( cache_version INTEGER NOT NULL DEFAULT 0"
+                       ");"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("INSERT INTO database (cache_version) "
-                         "VALUES (0)"));
+      nsLiteralCString("INSERT INTO database (cache_version) "
+                       "VALUES (0)"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5974,7 +5967,7 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore(
   if (connection) {
     // Find out the journal mode.
     nsCOMPtr<mozIStorageStatement> stmt;
-    rv = connection->CreateStatement(NS_LITERAL_CSTRING("PRAGMA journal_mode;"),
+    rv = connection->CreateStatement("PRAGMA journal_mode;"_ns,
                                      getter_AddRefs(stmt));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -6002,8 +5995,7 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore(
     if (journalMode.EqualsLiteral("wal")) {
       // We don't copy the WAL file, so make sure the old database is fully
       // checkpointed.
-      rv = connection->ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("PRAGMA wal_checkpoint(TRUNCATE);"));
+      rv = connection->ExecuteSimpleSQL("PRAGMA wal_checkpoint(TRUNCATE);"_ns);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -6053,7 +6045,7 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore(
       // rollback journal also provides atomicity across multiple attached
       // databases which is import for the lazy data migration to work safely.
       rv = lsArchiveTmpConnection->ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("PRAGMA journal_mode = DELETE;"));
+          "PRAGMA journal_mode = DELETE;"_ns);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -6445,8 +6437,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   }
 
   // We want extra durability for this important file.
-  rv = connection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("PRAGMA synchronous = EXTRA;"));
+  rv = connection->ExecuteSimpleSQL("PRAGMA synchronous = EXTRA;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -6518,8 +6509,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       MOZ_ASSERT(storageVersion == kStorageVersion);
 
       rv = connection->ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("INSERT INTO database (cache_version) "
-                             "VALUES (0)"));
+          nsLiteralCString("INSERT INTO database (cache_version) "
+                           "VALUES (0)"));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -6686,8 +6677,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       MOZ_ASSERT(cacheVersion == kCacheVersion);
 
       rv = connection->ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("INSERT INTO cache (valid, build_id) "
-                             "VALUES (0, '')"));
+          nsLiteralCString("INSERT INTO cache (valid, build_id) "
+                           "VALUES (0, '')"));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -6699,23 +6690,21 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           MOZ_ALWAYS_SUCCEEDS(insertStmt->Reset());
         } else {
           rv = connection->CreateStatement(
-              NS_LITERAL_CSTRING("INSERT INTO repository (id, name) "
-                                 "VALUES (:id, :name)"),
+              nsLiteralCString("INSERT INTO repository (id, name) "
+                               "VALUES (:id, :name)"),
               getter_AddRefs(insertStmt));
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
         }
 
-        rv = insertStmt->BindInt32ByName(NS_LITERAL_CSTRING("id"),
-                                         persistenceType);
+        rv = insertStmt->BindInt32ByName("id"_ns, persistenceType);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
 
         rv = insertStmt->BindUTF8StringByName(
-            NS_LITERAL_CSTRING("name"),
-            PersistenceTypeToString(persistenceType));
+            "name"_ns, PersistenceTypeToString(persistenceType));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -8000,19 +7989,18 @@ nsresult OriginInfo::LockedBindToStatement(
   AssertCurrentThreadOwnsQuotaMutex();
   MOZ_ASSERT(mGroupInfo);
 
-  nsresult rv = aStatement->BindInt32ByName(NS_LITERAL_CSTRING("repository_id"),
+  nsresult rv = aStatement->BindInt32ByName("repository_id"_ns,
                                             mGroupInfo->mPersistenceType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("origin"), mOrigin);
+  rv = aStatement->BindUTF8StringByName("origin"_ns, mOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("group_"),
-                                        mGroupInfo->mGroup);
+  rv = aStatement->BindUTF8StringByName("group_"_ns, mGroupInfo->mGroup);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8020,29 +8008,27 @@ nsresult OriginInfo::LockedBindToStatement(
   nsCString clientUsagesText;
   mClientUsages.Serialize(clientUsagesText);
 
-  rv = aStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("client_usages"),
-                                        clientUsagesText);
+  rv = aStatement->BindUTF8StringByName("client_usages"_ns, clientUsagesText);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("usage"), mUsage);
+  rv = aStatement->BindInt64ByName("usage"_ns, mUsage);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("last_access_time"),
-                                   mAccessTime);
+  rv = aStatement->BindInt64ByName("last_access_time"_ns, mAccessTime);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aStatement->BindInt32ByName(NS_LITERAL_CSTRING("accessed"), mAccessed);
+  rv = aStatement->BindInt32ByName("accessed"_ns, mAccessed);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aStatement->BindInt32ByName(NS_LITERAL_CSTRING("persisted"), mPersisted);
+  rv = aStatement->BindInt32ByName("persisted"_ns, mPersisted);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -11723,7 +11709,7 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveMorgueDirectory(
     return rv;
   }
 
-  rv = morgueDir->Append(NS_LITERAL_STRING("morgue"));
+  rv = morgueDir->Append(u"morgue"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

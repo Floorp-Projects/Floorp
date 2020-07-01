@@ -380,10 +380,10 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_STATE(history);
-  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("tags_folder"),
-                                      history->GetTagsFolder());
+  nsresult rv =
+      stmt->BindInt64ByName("tags_folder"_ns, history->GetTagsFolder());
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mURI);
+  rv = URIBinder::Bind(stmt, "page_url"_ns, mURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasTags = false;
@@ -3144,7 +3144,7 @@ nsresult nsNavHistoryQueryResultNode::OnMobilePrefChanged(bool newValue) {
 
   // We're removing the mobile folder, so find it.
   int32_t existingIndex;
-  FindChildByGuid(NS_LITERAL_CSTRING(MOBILE_BOOKMARKS_VIRTUAL_GUID),
+  FindChildByGuid(nsLiteralCString(MOBILE_BOOKMARKS_VIRTUAL_GUID),
                   &existingIndex);
 
   if (existingIndex == -1) {
@@ -3375,10 +3375,9 @@ nsNavHistoryFolderResultNode::OnItemMoved(
   RESTART_AND_RETURN_IF_ASYNC_PENDING();
 
   bool excludeItems = mOptions->ExcludeItems();
-  if (excludeItems &&
-      (aItemType == nsINavBookmarksService::TYPE_SEPARATOR ||
-       (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
-        !StringBeginsWith(aURI, NS_LITERAL_CSTRING("place:"))))) {
+  if (excludeItems && (aItemType == nsINavBookmarksService::TYPE_SEPARATOR ||
+                       (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
+                        !StringBeginsWith(aURI, "place:"_ns)))) {
     // This is a bookmark or a separator, so we don't need to handle this if
     // we're excluding items.
     return NS_OK;

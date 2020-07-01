@@ -342,15 +342,13 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     JNIEnv* const env = jni::GetEnvForThread();
 
     bool formatHasCSD = false;
-    NS_ENSURE_SUCCESS_VOID(
-        aFormat->ContainsKey(NS_LITERAL_STRING("csd-0"), &formatHasCSD));
+    NS_ENSURE_SUCCESS_VOID(aFormat->ContainsKey(u"csd-0"_ns, &formatHasCSD));
 
     if (!formatHasCSD && aConfig.mCodecSpecificConfig->Length() >= 2) {
       jni::ByteBuffer::LocalRef buffer(env);
       buffer = jni::ByteBuffer::New(aConfig.mCodecSpecificConfig->Elements(),
                                     aConfig.mCodecSpecificConfig->Length());
-      NS_ENSURE_SUCCESS_VOID(
-          aFormat->SetByteBuffer(NS_LITERAL_STRING("csd-0"), buffer));
+      NS_ENSURE_SUCCESS_VOID(aFormat->SetByteBuffer(u"csd-0"_ns, buffer));
     }
   }
 
@@ -422,7 +420,7 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     void HandleOutputFormatChanged(
         java::sdk::MediaFormat::Param aFormat) override {
       int32_t outputChannels = 0;
-      aFormat->GetInteger(NS_LITERAL_STRING("channel-count"), &outputChannels);
+      aFormat->GetInteger(u"channel-count"_ns, &outputChannels);
       AudioConfig::ChannelLayout layout(outputChannels);
       if (!layout.IsValid()) {
         mDecoder->Error(MediaResult(
@@ -432,7 +430,7 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
       }
 
       int32_t sampleRate = 0;
-      aFormat->GetInteger(NS_LITERAL_STRING("sample-rate"), &sampleRate);
+      aFormat->GetInteger(u"sample-rate"_ns, &sampleRate);
       LOG("Audio output format changed: channels:%d sample rate:%d",
           outputChannels, sampleRate);
 

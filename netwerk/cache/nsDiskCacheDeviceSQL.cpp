@@ -109,15 +109,15 @@ class EvictionObserver {
       : mDB(db), mEvictionFunction(evictionFunction) {
     mEvictionFunction->Init();
     mDB->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE TEMP TRIGGER cache_on_delete BEFORE DELETE"
-                           " ON moz_cache FOR EACH ROW BEGIN SELECT"
-                           " cache_eviction_observer("
-                           "  OLD.ClientID, OLD.key, OLD.generation);"
-                           " END;"));
+        nsLiteralCString("CREATE TEMP TRIGGER cache_on_delete BEFORE DELETE"
+                         " ON moz_cache FOR EACH ROW BEGIN SELECT"
+                         " cache_eviction_observer("
+                         "  OLD.ClientID, OLD.key, OLD.generation);"
+                         " END;"));
   }
 
   ~EvictionObserver() {
-    mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TRIGGER cache_on_delete;"));
+    mDB->ExecuteSimpleSQL("DROP TRIGGER cache_on_delete;"_ns);
     mEvictionFunction->Reset();
   }
 
@@ -423,7 +423,7 @@ nsOfflineCacheBinding* nsOfflineCacheBinding::Create(nsIFile* cacheDir,
   char leaf[64];
 
   if (generation == -1) {
-    file->AppendNative(NS_LITERAL_CSTRING("placeholder"));
+    file->AppendNative("placeholder"_ns);
 
     for (generation = 0;; ++generation) {
       SprintfLiteral(leaf, "%014" PRIX64 "-%X", hash, generation);
@@ -1056,7 +1056,7 @@ nsresult nsOfflineCacheDevice::InitWithSqlite(mozIStorageService* ss) {
   nsCOMPtr<nsIFile> indexFile;
   rv = mCacheDirectory->Clone(getter_AddRefs(indexFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = indexFile->AppendNative(NS_LITERAL_CSTRING("index.sqlite"));
+  rv = indexFile->AppendNative("index.sqlite"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(ss,
@@ -1069,7 +1069,7 @@ nsresult nsOfflineCacheDevice::InitWithSqlite(mozIStorageService* ss) {
 
   mInitEventTarget = GetCurrentEventTarget();
 
-  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF;"));
+  mDB->ExecuteSimpleSQL("PRAGMA synchronous = OFF;"_ns);
 
   // XXX ... other initialization steps
 
@@ -1081,37 +1081,37 @@ nsresult nsOfflineCacheDevice::InitWithSqlite(mozIStorageService* ss) {
   //  "Generation" is the data file generation number.
   //
   rv = mDB->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE IF NOT EXISTS moz_cache (\n"
-                         "  ClientID        TEXT,\n"
-                         "  Key             TEXT,\n"
-                         "  MetaData        BLOB,\n"
-                         "  Generation      INTEGER,\n"
-                         "  DataSize        INTEGER,\n"
-                         "  FetchCount      INTEGER,\n"
-                         "  LastFetched     INTEGER,\n"
-                         "  LastModified    INTEGER,\n"
-                         "  ExpirationTime  INTEGER,\n"
-                         "  ItemType        INTEGER DEFAULT 0\n"
-                         ");\n"));
+      nsLiteralCString("CREATE TABLE IF NOT EXISTS moz_cache (\n"
+                       "  ClientID        TEXT,\n"
+                       "  Key             TEXT,\n"
+                       "  MetaData        BLOB,\n"
+                       "  Generation      INTEGER,\n"
+                       "  DataSize        INTEGER,\n"
+                       "  FetchCount      INTEGER,\n"
+                       "  LastFetched     INTEGER,\n"
+                       "  LastModified    INTEGER,\n"
+                       "  ExpirationTime  INTEGER,\n"
+                       "  ItemType        INTEGER DEFAULT 0\n"
+                       ");\n"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Databases from 1.9.0 don't have the ItemType column.  Add the column
   // here, but don't worry about failures (the column probably already exists)
-  mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "ALTER TABLE moz_cache ADD ItemType INTEGER DEFAULT 0"));
+  mDB->ExecuteSimpleSQL(
+      "ALTER TABLE moz_cache ADD ItemType INTEGER DEFAULT 0"_ns);
 
   // Create the table for storing cache groups.  All actions on
   // moz_cache_groups use the GroupID, so use it as the primary key.
   rv = mDB->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE IF NOT EXISTS moz_cache_groups (\n"
-                         " GroupID TEXT PRIMARY KEY,\n"
-                         " ActiveClientID TEXT\n"
-                         ");\n"));
+      nsLiteralCString("CREATE TABLE IF NOT EXISTS moz_cache_groups (\n"
+                       " GroupID TEXT PRIMARY KEY,\n"
+                       " ActiveClientID TEXT\n"
+                       ");\n"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDB->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("ALTER TABLE moz_cache_groups "
-                         "ADD ActivateTimeStamp INTEGER DEFAULT 0"));
+      nsLiteralCString("ALTER TABLE moz_cache_groups "
+                       "ADD ActivateTimeStamp INTEGER DEFAULT 0"));
 
   // ClientID: clientID joining moz_cache and moz_cache_namespaces
   // tables.
@@ -1119,48 +1119,46 @@ nsresult nsOfflineCacheDevice::InitWithSqlite(mozIStorageService* ss) {
   // for fallback entries).
   // ItemType: the type of namespace.
   rv =
-      mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE IF NOT EXISTS"
-                                               " moz_cache_namespaces (\n"
-                                               " ClientID TEXT,\n"
-                                               " NameSpace TEXT,\n"
-                                               " Data TEXT,\n"
-                                               " ItemType INTEGER\n"
-                                               ");\n"));
+      mDB->ExecuteSimpleSQL(nsLiteralCString("CREATE TABLE IF NOT EXISTS"
+                                             " moz_cache_namespaces (\n"
+                                             " ClientID TEXT,\n"
+                                             " NameSpace TEXT,\n"
+                                             " Data TEXT,\n"
+                                             " ItemType INTEGER\n"
+                                             ");\n"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Databases from 1.9.0 have a moz_cache_index that should be dropped
-  rv = mDB->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_cache_index"));
+  rv = mDB->ExecuteSimpleSQL("DROP INDEX IF EXISTS moz_cache_index"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Key/ClientID pairs should be unique in the database.  All queries
   // against moz_cache use the Key (which is also the most unique), so
   // use it as the primary key for this index.
   rv = mDB->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX IF NOT EXISTS "
-                         " moz_cache_key_clientid_index"
-                         " ON moz_cache (Key, ClientID);"));
+      nsLiteralCString("CREATE UNIQUE INDEX IF NOT EXISTS "
+                       " moz_cache_key_clientid_index"
+                       " ON moz_cache (Key, ClientID);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Used for ClientID lookups and to keep ClientID/NameSpace pairs unique.
   rv = mDB->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX IF NOT EXISTS"
-                         " moz_cache_namespaces_clientid_index"
-                         " ON moz_cache_namespaces (ClientID, NameSpace);"));
+      nsLiteralCString("CREATE UNIQUE INDEX IF NOT EXISTS"
+                       " moz_cache_namespaces_clientid_index"
+                       " ON moz_cache_namespaces (ClientID, NameSpace);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Used for namespace lookups.
   rv = mDB->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS"
-                         " moz_cache_namespaces_namespace_index"
-                         " ON moz_cache_namespaces (NameSpace);"));
+      nsLiteralCString("CREATE INDEX IF NOT EXISTS"
+                       " moz_cache_namespaces_namespace_index"
+                       " ON moz_cache_namespaces (NameSpace);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mEvictionFunction = new nsOfflineCacheEvictionFunction(this);
   if (!mEvictionFunction) return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 3,
-                           mEvictionFunction);
+  rv = mDB->CreateFunction("cache_eviction_observer"_ns, 3, mEvictionFunction);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create all (most) of our statements up front
@@ -1293,7 +1291,7 @@ nsresult nsOfflineCacheDevice::Shutdown() {
     EvictionObserver evictionObserver(mDB, mEvictionFunction);
 
     // Delete all rows whose clientID is not an active clientID.
-    nsresult rv = mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    nsresult rv = mDB->ExecuteSimpleSQL(nsLiteralCString(
         "DELETE FROM moz_cache WHERE rowid IN"
         "  (SELECT moz_cache.rowid FROM"
         "    moz_cache LEFT OUTER JOIN moz_cache_groups ON"
@@ -1306,7 +1304,7 @@ nsresult nsOfflineCacheDevice::Shutdown() {
       evictionObserver.Apply();
 
     // Delete all namespaces whose clientID is not an active clientID.
-    rv = mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    rv = mDB->ExecuteSimpleSQL(nsLiteralCString(
         "DELETE FROM moz_cache_namespaces WHERE rowid IN"
         "  (SELECT moz_cache_namespaces.rowid FROM"
         "    moz_cache_namespaces LEFT OUTER JOIN moz_cache_groups ON"
@@ -1712,7 +1710,7 @@ nsresult nsOfflineCacheDevice::Visit(nsICacheVisitor* visitor) {
 
   // XXX may want to list columns explicitly
   nsCOMPtr<mozIStorageStatement> statement;
-  rv = mDB->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM moz_cache;"),
+  rv = mDB->CreateStatement("SELECT * FROM moz_cache;"_ns,
                             getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1756,9 +1754,8 @@ nsresult nsOfflineCacheDevice::EvictEntries(const char* clientID) {
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv;
   if (clientID) {
-    rv = mDB->CreateStatement(
-        NS_LITERAL_CSTRING("DELETE FROM moz_cache WHERE ClientID=?;"),
-        getter_AddRefs(statement));
+    rv = mDB->CreateStatement("DELETE FROM moz_cache WHERE ClientID=?;"_ns,
+                              getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = statement->BindUTF8StringByIndex(0, nsDependentCString(clientID));
@@ -1768,7 +1765,7 @@ nsresult nsOfflineCacheDevice::EvictEntries(const char* clientID) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDB->CreateStatement(
-        NS_LITERAL_CSTRING(
+        nsLiteralCString(
             "DELETE FROM moz_cache_groups WHERE ActiveClientID=?;"),
         getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1782,16 +1779,15 @@ nsresult nsOfflineCacheDevice::EvictEntries(const char* clientID) {
     // TODO - Should update internal hashtables.
     // Low priority, since this API is not widely used.
   } else {
-    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache;"),
+    rv = mDB->CreateStatement("DELETE FROM moz_cache;"_ns,
                               getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = statement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDB->CreateStatement(
-        NS_LITERAL_CSTRING("DELETE FROM moz_cache_groups;"),
-        getter_AddRefs(statement));
+    rv = mDB->CreateStatement("DELETE FROM moz_cache_groups;"_ns,
+                              getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = statement->Execute();
@@ -1809,16 +1805,15 @@ nsresult nsOfflineCacheDevice::EvictEntries(const char* clientID) {
   // Also evict any namespaces associated with this clientID.
   if (clientID) {
     rv = mDB->CreateStatement(
-        NS_LITERAL_CSTRING("DELETE FROM moz_cache_namespaces WHERE ClientID=?"),
+        "DELETE FROM moz_cache_namespaces WHERE ClientID=?"_ns,
         getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = statement->BindUTF8StringByIndex(0, nsDependentCString(clientID));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    rv = mDB->CreateStatement(
-        NS_LITERAL_CSTRING("DELETE FROM moz_cache_namespaces;"),
-        getter_AddRefs(statement));
+    rv = mDB->CreateStatement("DELETE FROM moz_cache_namespaces;"_ns,
+                              getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2300,7 +2295,7 @@ OriginMatch::OnFunctionCall(mozIStorageValueArray* aFunctionArguments,
   rv = aFunctionArguments->GetUTF8String(0, groupId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int32_t hash = groupId.Find(NS_LITERAL_CSTRING("#"));
+  int32_t hash = groupId.Find("#"_ns);
   if (hash == kNotFound) {
     // Just ignore...
     return NS_OK;
@@ -2334,23 +2329,21 @@ nsresult nsOfflineCacheDevice::Evict(
   nsresult rv;
 
   nsCOMPtr<mozIStorageFunction> function1(new OriginMatch(aPattern));
-  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("ORIGIN_MATCH"), 1, function1);
+  rv = mDB->CreateFunction("ORIGIN_MATCH"_ns, 1, function1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   class AutoRemoveFunc {
    public:
     mozIStorageConnection* mDB;
     explicit AutoRemoveFunc(mozIStorageConnection* aDB) : mDB(aDB) {}
-    ~AutoRemoveFunc() {
-      mDB->RemoveFunction(NS_LITERAL_CSTRING("ORIGIN_MATCH"));
-    }
+    ~AutoRemoveFunc() { mDB->RemoveFunction("ORIGIN_MATCH"_ns); }
   };
   AutoRemoveFunc autoRemove(mDB);
 
   nsCOMPtr<mozIStorageStatement> statement;
   rv = mDB->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT GroupID, ActiveClientID FROM moz_cache_groups "
-                         "WHERE ORIGIN_MATCH(GroupID);"),
+      nsLiteralCString("SELECT GroupID, ActiveClientID FROM moz_cache_groups "
+                       "WHERE ORIGIN_MATCH(GroupID);"),
       getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2585,7 +2578,7 @@ void nsOfflineCacheDevice::SetCacheParentDirectory(nsIFile* parentDir) {
   nsCOMPtr<nsIFile> dir;
   rv = parentDir->Clone(getter_AddRefs(dir));
   if (NS_FAILED(rv)) return;
-  rv = dir->AppendNative(NS_LITERAL_CSTRING("OfflineCache"));
+  rv = dir->AppendNative("OfflineCache"_ns);
   if (NS_FAILED(rv)) return;
 
   mCacheDirectory = dir;

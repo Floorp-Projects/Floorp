@@ -41,7 +41,7 @@ class SVGGFrame : public nsSVGDisplayContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGG"), aResult);
+    return MakeFrameName(u"SVGG"_ns, aResult);
   }
 #endif
 

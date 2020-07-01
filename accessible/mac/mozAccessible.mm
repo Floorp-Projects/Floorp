@@ -462,34 +462,33 @@ struct RoleDescrMap {
   const nsString description;
 };
 
-static const RoleDescrMap sRoleDescrMap[] = {
-    {@"AXApplicationAlert", NS_LITERAL_STRING("alert")},
-    {@"AXApplicationAlertDialog", NS_LITERAL_STRING("alertDialog")},
-    {@"AXApplicationDialog", NS_LITERAL_STRING("dialog")},
-    {@"AXApplicationLog", NS_LITERAL_STRING("log")},
-    {@"AXApplicationMarquee", NS_LITERAL_STRING("marquee")},
-    {@"AXApplicationStatus", NS_LITERAL_STRING("status")},
-    {@"AXApplicationTimer", NS_LITERAL_STRING("timer")},
-    {@"AXContentSeparator", NS_LITERAL_STRING("separator")},
-    {@"AXDefinition", NS_LITERAL_STRING("definition")},
-    {@"AXDetails", NS_LITERAL_STRING("details")},
-    {@"AXDocument", NS_LITERAL_STRING("document")},
-    {@"AXDocumentArticle", NS_LITERAL_STRING("article")},
-    {@"AXDocumentMath", NS_LITERAL_STRING("math")},
-    {@"AXDocumentNote", NS_LITERAL_STRING("note")},
-    {@"AXLandmarkApplication", NS_LITERAL_STRING("application")},
-    {@"AXLandmarkBanner", NS_LITERAL_STRING("banner")},
-    {@"AXLandmarkComplementary", NS_LITERAL_STRING("complementary")},
-    {@"AXLandmarkContentInfo", NS_LITERAL_STRING("content")},
-    {@"AXLandmarkMain", NS_LITERAL_STRING("main")},
-    {@"AXLandmarkNavigation", NS_LITERAL_STRING("navigation")},
-    {@"AXLandmarkRegion", NS_LITERAL_STRING("region")},
-    {@"AXLandmarkSearch", NS_LITERAL_STRING("search")},
-    {@"AXSearchField", NS_LITERAL_STRING("searchTextField")},
-    {@"AXSummary", NS_LITERAL_STRING("summary")},
-    {@"AXTabPanel", NS_LITERAL_STRING("tabPanel")},
-    {@"AXTerm", NS_LITERAL_STRING("term")},
-    {@"AXUserInterfaceTooltip", NS_LITERAL_STRING("tooltip")}};
+static const RoleDescrMap sRoleDescrMap[] = {{@"AXApplicationAlert", u"alert"_ns},
+                                             {@"AXApplicationAlertDialog", u"alertDialog"_ns},
+                                             {@"AXApplicationDialog", u"dialog"_ns},
+                                             {@"AXApplicationLog", u"log"_ns},
+                                             {@"AXApplicationMarquee", u"marquee"_ns},
+                                             {@"AXApplicationStatus", u"status"_ns},
+                                             {@"AXApplicationTimer", u"timer"_ns},
+                                             {@"AXContentSeparator", u"separator"_ns},
+                                             {@"AXDefinition", u"definition"_ns},
+                                             {@"AXDetails", u"details"_ns},
+                                             {@"AXDocument", u"document"_ns},
+                                             {@"AXDocumentArticle", u"article"_ns},
+                                             {@"AXDocumentMath", u"math"_ns},
+                                             {@"AXDocumentNote", u"note"_ns},
+                                             {@"AXLandmarkApplication", u"application"_ns},
+                                             {@"AXLandmarkBanner", u"banner"_ns},
+                                             {@"AXLandmarkComplementary", u"complementary"_ns},
+                                             {@"AXLandmarkContentInfo", u"content"_ns},
+                                             {@"AXLandmarkMain", u"main"_ns},
+                                             {@"AXLandmarkNavigation", u"navigation"_ns},
+                                             {@"AXLandmarkRegion", u"region"_ns},
+                                             {@"AXLandmarkSearch", u"search"_ns},
+                                             {@"AXSearchField", u"searchTextField"_ns},
+                                             {@"AXSummary", u"summary"_ns},
+                                             {@"AXTabPanel", u"tabPanel"_ns},
+                                             {@"AXTerm", u"term"_ns},
+                                             {@"AXUserInterfaceTooltip", u"tooltip"_ns}};
 
 struct RoleDescrComparator {
   const NSString* mRole;
@@ -498,14 +497,14 @@ struct RoleDescrComparator {
 };
 
 - (NSString*)moxRoleDescription {
-  if (mRole == roles::DOCUMENT) return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
+  if (mRole == roles::DOCUMENT) return utils::LocalizedString(u"htmlContent"_ns);
 
-  if (mRole == roles::FIGURE) return utils::LocalizedString(NS_LITERAL_STRING("figure"));
+  if (mRole == roles::FIGURE) return utils::LocalizedString(u"figure"_ns);
 
-  if (mRole == roles::HEADING) return utils::LocalizedString(NS_LITERAL_STRING("heading"));
+  if (mRole == roles::HEADING) return utils::LocalizedString(u"heading"_ns);
 
   if (mRole == roles::MARK) {
-    return utils::LocalizedString(NS_LITERAL_STRING("highlight"));
+    return utils::LocalizedString(u"highlight"_ns);
   }
 
   NSString* subrole = [self moxSubrole];

@@ -767,7 +767,7 @@ nsresult NS_NewInputStreamChannelInternal(nsIChannel** outChannel, nsIURI* aUri,
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel), aUri,
                                         stream.forget(), aContentType,
-                                        NS_LITERAL_CSTRING("UTF-8"), aLoadInfo);
+                                        "UTF-8"_ns, aLoadInfo);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1150,7 +1150,7 @@ void NS_GetReferrerFromChannel(nsIChannel* channel, nsIURI** referrer) {
     // referrer may be empty for security reasons (for example, when loading
     // an http page with an https referrer).
     nsresult rv = props->GetPropertyAsInterface(
-        NS_LITERAL_STRING("docshell.internalReferrer"), NS_GET_IID(nsIURI),
+        u"docshell.internalReferrer"_ns, NS_GET_IID(nsIURI),
         reinterpret_cast<void**>(referrer));
     if (NS_SUCCEEDED(rv)) {
       return;
@@ -2714,8 +2714,7 @@ void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
        */
       nsAutoCString currentContentType;
       channel->GetContentType(currentContentType);
-      if (!StringBeginsWith(currentContentType,
-                            NS_LITERAL_CSTRING("application/"))) {
+      if (!StringBeginsWith(currentContentType, "application/"_ns)) {
         return;
       }
     }
@@ -2796,8 +2795,8 @@ nsresult NS_ShouldSecureUpgrade(
               EmptyString(),  // aScriptSample
               0,              // aLineNumber
               0,              // aColumnNumber
-              nsIScriptError::warningFlag,
-              NS_LITERAL_CSTRING("upgradeInsecureRequest"), innerWindowId,
+              nsIScriptError::warningFlag, "upgradeInsecureRequest"_ns,
+              innerWindowId,
               !!aLoadInfo->GetOriginAttributes().mPrivateBrowsingId);
           Telemetry::AccumulateCategorical(
               Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::CSP);
@@ -2815,8 +2814,7 @@ nsresult NS_ShouldSecureUpgrade(
             AutoTArray<nsString, 3> params = {brandName, reportSpec,
                                               reportScheme};
             nsContentUtils::ReportToConsole(
-                nsIScriptError::warningFlag,
-                NS_LITERAL_CSTRING("DATA_URI_BLOCKED"), doc,
+                nsIScriptError::warningFlag, "DATA_URI_BLOCKED"_ns, doc,
                 nsContentUtils::eSECURITY_PROPERTIES,
                 "BrowserUpgradeInsecureDisplayRequest", params);
           }
@@ -2926,8 +2924,7 @@ nsresult NS_ShouldSecureUpgrade(
 
 nsresult NS_GetSecureUpgradedURI(nsIURI* aURI, nsIURI** aUpgradedURI) {
   NS_MutateURI mutator(aURI);
-  mutator.SetScheme(
-      NS_LITERAL_CSTRING("https"));  // Change the scheme to HTTPS:
+  mutator.SetScheme("https"_ns);  // Change the scheme to HTTPS:
 
   // Change the default port to 443:
   nsCOMPtr<nsIStandardURL> stdURL = do_QueryInterface(aURI);

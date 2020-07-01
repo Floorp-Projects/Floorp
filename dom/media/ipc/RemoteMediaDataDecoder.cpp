@@ -34,8 +34,7 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {
               return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
                                                   __func__);
             }
-            mDescription =
-                mChild->GetDescriptionName() + NS_LITERAL_CSTRING(" (remote)");
+            mDescription = mChild->GetDescriptionName() + " (remote)"_ns;
             mIsHardwareAccelerated =
                 mChild->IsHardwareAccelerated(mHardwareAcceleratedReason);
             mConversion = mChild->NeedsConversion();

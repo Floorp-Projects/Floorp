@@ -217,9 +217,9 @@ void HTMLVideoElement::UnbindFromTree(bool aNullParent) {
   if (mVisualCloneSource) {
     mVisualCloneSource->EndCloningVisually();
   } else if (mVisualCloneTarget) {
-    RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-        this, NS_LITERAL_STRING("MozStopPictureInPicture"), CanBubble::eNo,
-        ChromeOnlyDispatch::eYes);
+    RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(this, u"MozStopPictureInPicture"_ns,
+                                 CanBubble::eNo, ChromeOnlyDispatch::eYes);
     asyncDispatcher->RunDOMEventWhenSafe();
 
     EndCloningVisually();
@@ -236,7 +236,7 @@ nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel) {
       "application/ogg;q=0.7,"
       "audio/*;q=0.6,*/*;q=0.5");
 
-  return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"), value, false);
+  return aChannel->SetRequestHeader("Accept"_ns, value, false);
 }
 
 bool HTMLVideoElement::IsInteractiveHTMLContent() const {
@@ -409,7 +409,7 @@ void HTMLVideoElement::CreateVideoWakeLockIfNeeded() {
     NS_ENSURE_TRUE_VOID(pmService);
 
     ErrorResult rv;
-    mScreenWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("video-playing"),
+    mScreenWakeLock = pmService->NewWakeLock(u"video-playing"_ns,
                                              OwnerDoc()->GetInnerWindow(), rv);
   }
 }

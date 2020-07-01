@@ -567,10 +567,10 @@ void BrowserParent::AddWindowListeners() {
             mFrameElement->OwnerDoc()->GetWindow()) {
       nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
       if (eventTarget) {
-        eventTarget->AddEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
-                                      this, false, false);
-        eventTarget->AddEventListener(NS_LITERAL_STRING("fullscreenchange"),
-                                      this, false, false);
+        eventTarget->AddEventListener(u"MozUpdateWindowPos"_ns, this, false,
+                                      false);
+        eventTarget->AddEventListener(u"fullscreenchange"_ns, this, false,
+                                      false);
       }
     }
   }
@@ -582,10 +582,8 @@ void BrowserParent::RemoveWindowListeners() {
         mFrameElement->OwnerDoc()->GetWindow();
     nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
     if (eventTarget) {
-      eventTarget->RemoveEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
-                                       this, false);
-      eventTarget->RemoveEventListener(NS_LITERAL_STRING("fullscreenchange"),
-                                       this, false);
+      eventTarget->RemoveEventListener(u"MozUpdateWindowPos"_ns, this, false);
+      eventTarget->RemoveEventListener(u"fullscreenchange"_ns, this, false);
     }
   }
 }
@@ -682,10 +680,8 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
         // was caused by OOM
         bool is_oom = false;
         if (crash_reason == "OOM" || crash_reason == "OOM!" ||
-            StringBeginsWith(crash_reason,
-                             NS_LITERAL_CSTRING("[unhandlable oom]")) ||
-            StringBeginsWith(crash_reason,
-                             NS_LITERAL_CSTRING("Unhandlable OOM"))) {
+            StringBeginsWith(crash_reason, "[unhandlable oom]"_ns) ||
+            StringBeginsWith(crash_reason, "Unhandlable OOM"_ns)) {
           is_oom = true;
         }
 
@@ -3541,9 +3537,9 @@ void BrowserParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch,
   RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
   if (aActive) {
     mHasPresented = true;
-    event->InitEvent(NS_LITERAL_STRING("MozLayerTreeReady"), true, false);
+    event->InitEvent(u"MozLayerTreeReady"_ns, true, false);
   } else {
-    event->InitEvent(NS_LITERAL_STRING("MozLayerTreeCleared"), true, false);
+    event->InitEvent(u"MozLayerTreeCleared"_ns, true, false);
   }
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
@@ -3567,7 +3563,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRemotePaintIsReady() {
   }
 
   RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
-  event->InitEvent(NS_LITERAL_STRING("MozAfterRemotePaint"), false, false);
+  event->InitEvent(u"MozAfterRemotePaint"_ns, false, false);
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
   mFrameElement->DispatchEvent(*event);

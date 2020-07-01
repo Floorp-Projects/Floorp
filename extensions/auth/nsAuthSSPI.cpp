@@ -124,7 +124,7 @@ nsresult nsAuthSSPI::MakeSN(const char* principal, nsCString& result) {
   nsAutoCString cname;
   rv = record->GetCanonicalName(cname);
   if (NS_SUCCEEDED(rv)) {
-    result = StringHead(buf, index) + NS_LITERAL_CSTRING("/") + cname;
+    result = StringHead(buf, index) + "/"_ns + cname;
     LOG(("Using SPN of [%s]\n", result.get()));
   }
   return rv;

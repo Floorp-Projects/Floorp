@@ -130,7 +130,7 @@ BroadcastChannel::BroadcastChannel(nsIGlobalObject* aGlobal,
       mState(StateActive),
       mPortUUID(aPortUUID) {
   MOZ_ASSERT(aGlobal);
-  KeepAliveIfHasListenersFor(NS_LITERAL_STRING("message"));
+  KeepAliveIfHasListenersFor(u"message"_ns);
 }
 
 BroadcastChannel::~BroadcastChannel() {
@@ -345,7 +345,7 @@ void BroadcastChannel::Shutdown() {
     mActor = nullptr;
   }
 
-  IgnoreKeepAliveIfHasListenersFor(NS_LITERAL_STRING("message"));
+  IgnoreKeepAliveIfHasListenersFor(u"message"_ns);
 }
 
 void BroadcastChannel::RemoveDocFromBFCache() {
@@ -431,7 +431,7 @@ void BroadcastChannel::MessageReceived(const MessageData& aData) {
   init.mData = value;
 
   RefPtr<MessageEvent> event =
-      MessageEvent::Constructor(this, NS_LITERAL_STRING("message"), init);
+      MessageEvent::Constructor(this, u"message"_ns, init);
 
   event->SetTrusted(true);
 
@@ -450,7 +450,7 @@ void BroadcastChannel::DispatchError(JSContext* aCx) {
   init.mOrigin = mOriginNoSuffix;
 
   RefPtr<Event> event =
-      MessageEvent::Constructor(this, NS_LITERAL_STRING("messageerror"), init);
+      MessageEvent::Constructor(this, u"messageerror"_ns, init);
   event->SetTrusted(true);
 
   DispatchEvent(*event);

@@ -159,11 +159,9 @@ nsXULPopupManager::Observe(nsISupports* aSubject, const char* aTopic,
                            const char16_t* aData) {
   if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
     if (mKeyListener) {
-      mKeyListener->RemoveEventListener(NS_LITERAL_STRING("keypress"), this,
-                                        true);
-      mKeyListener->RemoveEventListener(NS_LITERAL_STRING("keydown"), this,
-                                        true);
-      mKeyListener->RemoveEventListener(NS_LITERAL_STRING("keyup"), this, true);
+      mKeyListener->RemoveEventListener(u"keypress"_ns, this, true);
+      mKeyListener->RemoveEventListener(u"keydown"_ns, this, true);
+      mKeyListener->RemoveEventListener(u"keyup"_ns, this, true);
       mKeyListener = nullptr;
     }
     mRangeParentContent = nullptr;
@@ -350,7 +348,7 @@ bool nsXULPopupManager::ShouldRollupOnMouseWheelEvent() {
 
   nsAutoString value;
   element->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
-  return StringBeginsWith(value, NS_LITERAL_STRING("autocomplete"));
+  return StringBeginsWith(value, u"autocomplete"_ns);
 }
 
 bool nsXULPopupManager::ShouldConsumeOnMouseWheelEvent() {
@@ -986,8 +984,7 @@ class TransitionEnder final : public nsIDOMEventListener {
       : mContent(aContent), mDeselectMenu(aDeselectMenu) {}
 
   NS_IMETHOD HandleEvent(Event* aEvent) override {
-    mContent->RemoveSystemEventListener(NS_LITERAL_STRING("transitionend"),
-                                        this, false);
+    mContent->RemoveSystemEventListener(u"transitionend"_ns, this, false);
 
     nsMenuPopupFrame* popupFrame = do_QueryFrame(mContent->GetPrimaryFrame());
 
@@ -1458,8 +1455,8 @@ void nsXULPopupManager::FirePopupHidingEvent(
                   aPopup->AsElement(), PseudoStyleType::NotPseudo)) {
             RefPtr<TransitionEnder> ender =
                 new TransitionEnder(aPopup, aDeselectMenu);
-            aPopup->AddSystemEventListener(NS_LITERAL_STRING("transitionend"),
-                                           ender, false, false);
+            aPopup->AddSystemEventListener(u"transitionend"_ns, ender, false,
+                                           false);
             return;
           }
         }
@@ -1777,19 +1774,17 @@ void nsXULPopupManager::UpdateKeyboardListeners() {
 
   if (mKeyListener != newTarget) {
     if (mKeyListener) {
-      mKeyListener->RemoveEventListener(NS_LITERAL_STRING("keypress"), this,
-                                        true);
-      mKeyListener->RemoveEventListener(NS_LITERAL_STRING("keydown"), this,
-                                        true);
-      mKeyListener->RemoveEventListener(NS_LITERAL_STRING("keyup"), this, true);
+      mKeyListener->RemoveEventListener(u"keypress"_ns, this, true);
+      mKeyListener->RemoveEventListener(u"keydown"_ns, this, true);
+      mKeyListener->RemoveEventListener(u"keyup"_ns, this, true);
       mKeyListener = nullptr;
       nsContentUtils::NotifyInstalledMenuKeyboardListener(false);
     }
 
     if (newTarget) {
-      newTarget->AddEventListener(NS_LITERAL_STRING("keypress"), this, true);
-      newTarget->AddEventListener(NS_LITERAL_STRING("keydown"), this, true);
-      newTarget->AddEventListener(NS_LITERAL_STRING("keyup"), this, true);
+      newTarget->AddEventListener(u"keypress"_ns, this, true);
+      newTarget->AddEventListener(u"keydown"_ns, this, true);
+      newTarget->AddEventListener(u"keyup"_ns, this, true);
       nsContentUtils::NotifyInstalledMenuKeyboardListener(isForMenu);
       mKeyListener = newTarget;
     }
@@ -2675,8 +2670,7 @@ nsXULMenuCommandEvent::Run() {
     if (menuFrame->IsChecked()) {
       mMenu->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked, true);
     } else {
-      mMenu->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                     NS_LITERAL_STRING("true"), true);
+      mMenu->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, u"true"_ns, true);
     }
   }
 

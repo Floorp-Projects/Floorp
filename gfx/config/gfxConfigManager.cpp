@@ -104,7 +104,7 @@ void gfxConfigManager::ConfigureFromBlocklist(long aFeature,
   int32_t status;
   if (!NS_SUCCEEDED(mGfxInfo->GetFeatureStatus(aFeature, blockId, &status))) {
     aFeatureState->Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
-                           NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_GFX_INFO"));
+                           "FEATURE_FAILURE_NO_GFX_INFO"_ns);
 
   } else {
     if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
@@ -125,7 +125,7 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
     if (!*mWrQualifiedOverride) {
       mFeatureWrQualified->Disable(
           FeatureStatus::BlockedOverride, "HW qualification pref override",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_QUALIFICATION_OVERRIDE"));
+          "FEATURE_FAILURE_WR_QUALIFICATION_OVERRIDE"_ns);
     }
     return guarded;
   }
@@ -134,9 +134,9 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
   int32_t status;
   if (NS_FAILED(mGfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRENDER,
                                            failureId, &status))) {
-    mFeatureWrQualified->Disable(
-        FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_NO_GFX_INFO"));
+    mFeatureWrQualified->Disable(FeatureStatus::BlockedNoGfxInfo,
+                                 "gfxInfo is broken",
+                                 "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
     return guarded;
   }
 
@@ -172,9 +172,9 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
       bool hasBattery = false;
       mGfxInfo->GetHasBattery(&hasBattery);
       if (hasBattery && !mFeatureWrCompositor->IsEnabled()) {
-        mFeatureWrQualified->Disable(
-            FeatureStatus::Blocked, "Battery Intel requires os compositor",
-            NS_LITERAL_CSTRING("INTEL_BATTERY_REQUIRES_DCOMP"));
+        mFeatureWrQualified->Disable(FeatureStatus::Blocked,
+                                     "Battery Intel requires os compositor",
+                                     "INTEL_BATTERY_REQUIRES_DCOMP"_ns);
       }
     }
 
@@ -182,7 +182,7 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
     if (maxRefreshRate > 60) {
       mFeatureWrQualified->Disable(FeatureStatus::Blocked,
                                    "Monitor refresh rate too high",
-                                   NS_LITERAL_CSTRING("REFRESH_RATE_TOO_HIGH"));
+                                   "REFRESH_RATE_TOO_HIGH"_ns);
     }
   }
 
@@ -215,16 +215,16 @@ void gfxConfigManager::ConfigureWebRender() {
   // for avoiding a problem like Bug 1618370.
   // XXX Is there a better check for Bug 1618370?
   if (!mHwStretchingSupport && mScaledResolution) {
-    mFeatureWrCompositor->Disable(
-        FeatureStatus::Unavailable, "No hardware stretching support",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_HARDWARE_STRETCHING"));
+    mFeatureWrCompositor->Disable(FeatureStatus::Unavailable,
+                                  "No hardware stretching support",
+                                  "FEATURE_FAILURE_NO_HARDWARE_STRETCHING"_ns);
   }
 
   bool guardedByQualifiedPref = ConfigureWebRenderQualified();
 
-  mFeatureWr->DisableByDefault(
-      FeatureStatus::OptIn, "WebRender is an opt-in feature",
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
+  mFeatureWr->DisableByDefault(FeatureStatus::OptIn,
+                               "WebRender is an opt-in feature",
+                               "FEATURE_FAILURE_DEFAULT_OFF"_ns);
 
   // envvar works everywhere; note that we need this for testing in CI.
   // Prior to bug 1523788, the `prefEnabled` check was only done on Nightly,
@@ -250,40 +250,38 @@ void gfxConfigManager::ConfigureWebRender() {
   // gfx.webrender.all, and gfx.webrender.all.qualified).
   if (mWrForceDisabled ||
       (mWrEnvForceDisabled && mWrQualifiedOverride.isNothing())) {
-    mFeatureWr->UserDisable(
-        "User force-disabled WR",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_USER_FORCE_DISABLED"));
+    mFeatureWr->UserDisable("User force-disabled WR",
+                            "FEATURE_FAILURE_USER_FORCE_DISABLED"_ns);
   }
 
   // HW_COMPOSITING being disabled implies interfacing with the GPU might break
   if (!mFeatureHwCompositing->IsEnabled()) {
-    mFeatureWr->ForceDisable(
-        FeatureStatus::UnavailableNoHwCompositing,
-        "Hardware compositing is disabled",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_NEED_HWCOMP"));
+    mFeatureWr->ForceDisable(FeatureStatus::UnavailableNoHwCompositing,
+                             "Hardware compositing is disabled",
+                             "FEATURE_FAILURE_WEBRENDER_NEED_HWCOMP"_ns);
   }
 
   if (mSafeMode) {
     mFeatureWr->ForceDisable(FeatureStatus::UnavailableInSafeMode,
                              "Safe-mode is enabled",
-                             NS_LITERAL_CSTRING("FEATURE_FAILURE_SAFE_MODE"));
+                             "FEATURE_FAILURE_SAFE_MODE"_ns);
   }
 
-  mFeatureWrAngle->DisableByDefault(
-      FeatureStatus::OptIn, "WebRender ANGLE is an opt-in feature",
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
+  mFeatureWrAngle->DisableByDefault(FeatureStatus::OptIn,
+                                    "WebRender ANGLE is an opt-in feature",
+                                    "FEATURE_FAILURE_DEFAULT_OFF"_ns);
 
   if (mFeatureD3D11HwAngle && mWrForceAngle) {
     if (!mFeatureD3D11HwAngle->IsEnabled()) {
-      mFeatureWr->ForceDisable(
-          FeatureStatus::UnavailableNoAngle, "ANGLE is disabled",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_ANGLE_DISABLED"));
+      mFeatureWr->ForceDisable(FeatureStatus::UnavailableNoAngle,
+                               "ANGLE is disabled",
+                               "FEATURE_FAILURE_ANGLE_DISABLED"_ns);
     } else if (!mFeatureGPUProcess->IsEnabled() &&
                (!mIsNightly || !mWrForceAngleNoGPUProcess)) {
       // WebRender with ANGLE relies on the GPU process when on Windows
-      mFeatureWr->ForceDisable(
-          FeatureStatus::UnavailableNoGpuProcess, "GPU Process is disabled",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_GPU_PROCESS_DISABLED"));
+      mFeatureWr->ForceDisable(FeatureStatus::UnavailableNoGpuProcess,
+                               "GPU Process is disabled",
+                               "FEATURE_FAILURE_GPU_PROCESS_DISABLED"_ns);
     } else if (mFeatureWr->IsEnabled()) {
       mFeatureWrAngle->UserEnable("Enabled");
     }
@@ -312,7 +310,7 @@ void gfxConfigManager::ConfigureWebRender() {
 
   mFeatureWrDComp->DisableByDefault(
       FeatureStatus::OptIn, "WebRender DirectComposition is an opt-in feature",
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
+      "FEATURE_FAILURE_DEFAULT_OFF"_ns);
 
   if (mWrDCompWinEnabled) {
     // XXX relax win version to windows 8.
@@ -325,13 +323,13 @@ void gfxConfigManager::ConfigureWebRender() {
   if (!mWrPictureCaching) {
     mFeatureWrCompositor->ForceDisable(
         FeatureStatus::Unavailable, "Picture caching is disabled",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_PICTURE_CACHING_DISABLED"));
+        "FEATURE_FAILURE_PICTURE_CACHING_DISABLED"_ns);
   }
 
   if (!mFeatureWrDComp->IsEnabled() && mWrCompositorDCompRequired) {
     mFeatureWrCompositor->ForceDisable(
         FeatureStatus::Unavailable, "No DirectComposition usage",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DIRECTCOMPOSITION"));
+        "FEATURE_FAILURE_NO_DIRECTCOMPOSITION"_ns);
   }
 
   // Initialize WebRender partial present config.
@@ -342,7 +340,7 @@ void gfxConfigManager::ConfigureWebRender() {
       if (!mWrPictureCaching) {
         mFeatureWrPartial->ForceDisable(
             FeatureStatus::Unavailable, "Picture caching is disabled",
-            NS_LITERAL_CSTRING("FEATURE_FAILURE_PICTURE_CACHING_DISABLED"));
+            "FEATURE_FAILURE_PICTURE_CACHING_DISABLED"_ns);
       }
     }
   }

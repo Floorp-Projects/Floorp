@@ -504,9 +504,7 @@ class SendMessageEventRunnable final : public ExtendableEventWorkerRunnable {
     RefPtr<EventTarget> target = aWorkerPrivate->GlobalScope();
     RefPtr<ExtendableMessageEvent> extendableEvent =
         ExtendableMessageEvent::Constructor(
-            target,
-            deserializationFailed ? NS_LITERAL_STRING("messageerror")
-                                  : NS_LITERAL_STRING("message"),
+            target, deserializationFailed ? u"messageerror"_ns : u"message"_ns,
             init);
 
     extendableEvent->SetTrusted(true);
@@ -844,8 +842,8 @@ class SendPushEventRunnable final
     pei.mCancelable = false;
 
     ErrorResult result;
-    RefPtr<PushEvent> event = PushEvent::Constructor(
-        globalObj, NS_LITERAL_STRING("push"), pei, result);
+    RefPtr<PushEvent> event =
+        PushEvent::Constructor(globalObj, u"push"_ns, pei, result);
     if (NS_WARN_IF(result.Failed())) {
       result.SuppressException();
       errorReporter->Report();
@@ -885,7 +883,7 @@ class SendPushSubscriptionChangeEventRunnable final
     init.mCancelable = false;
 
     RefPtr<ExtendableEvent> event = ExtendableEvent::Constructor(
-        target, NS_LITERAL_STRING("pushsubscriptionchange"), init);
+        target, u"pushsubscriptionchange"_ns, init);
 
     event->SetTrusted(true);
 
@@ -1480,7 +1478,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     }
 
     RefPtr<FetchEvent> event =
-        FetchEvent::Constructor(globalObj, NS_LITERAL_STRING("fetch"), init);
+        FetchEvent::Constructor(globalObj, u"fetch"_ns, init);
 
     event->PostInit(mInterceptedChannel, mRegistration, mScriptSpec);
     event->SetTrusted(true);

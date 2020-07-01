@@ -17,8 +17,7 @@ using namespace mozilla;
 #ifdef MOZ_XUL
 /* static */
 bool nsCSSAnonBoxes::IsTreePseudoElement(nsAtom* aPseudo) {
-  return StringBeginsWith(nsDependentAtomString(aPseudo),
-                          NS_LITERAL_STRING(":-moz-tree-"));
+  return StringBeginsWith(nsDependentAtomString(aPseudo), u":-moz-tree-"_ns);
 }
 #endif
 

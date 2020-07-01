@@ -341,7 +341,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("MenuPopup"), aResult);
+    return MakeFrameName(u"MenuPopup"_ns, aResult);
   }
 #endif
 

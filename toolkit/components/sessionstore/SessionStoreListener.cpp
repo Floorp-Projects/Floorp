@@ -216,18 +216,16 @@ nsresult TabListener::Init() {
   if (!eventTarget) {
     return NS_OK;
   }
-  eventTarget->AddSystemEventListener(NS_LITERAL_STRING("mozvisualscroll"),
-                                      this, false);
-  eventTarget->AddSystemEventListener(NS_LITERAL_STRING("input"), this, false);
+  eventTarget->AddSystemEventListener(u"mozvisualscroll"_ns, this, false);
+  eventTarget->AddSystemEventListener(u"input"_ns, this, false);
 
   if (mSHistoryInParent) {
-    eventTarget->AddSystemEventListener(NS_LITERAL_STRING("DOMTitleChanged"),
-                                        this, false);
+    eventTarget->AddSystemEventListener(u"DOMTitleChanged"_ns, this, false);
   }
 
   mEventListenerRegistered = true;
-  eventTarget->AddSystemEventListener(
-      NS_LITERAL_STRING("MozSessionStorageChanged"), this, false);
+  eventTarget->AddSystemEventListener(u"MozSessionStorageChanged"_ns, this,
+                                      false);
   mStorageChangeListenerRegistered = true;
   return NS_OK;
 }
@@ -789,8 +787,8 @@ void TabListener::ResetStorageChangeListener() {
   if (!eventTarget) {
     return;
   }
-  eventTarget->AddSystemEventListener(
-      NS_LITERAL_STRING("MozSessionStorageChanged"), this, false);
+  eventTarget->AddSystemEventListener(u"MozSessionStorageChanged"_ns, this,
+                                      false);
   mStorageChangeListenerRegistered = true;
 }
 
@@ -801,8 +799,8 @@ void TabListener::RemoveStorageChangeListener() {
 
   nsCOMPtr<EventTarget> eventTarget = GetEventTarget();
   if (eventTarget) {
-    eventTarget->RemoveSystemEventListener(
-        NS_LITERAL_STRING("MozSessionStorageChanged"), this, false);
+    eventTarget->RemoveSystemEventListener(u"MozSessionStorageChanged"_ns, this,
+                                           false);
     mStorageChangeListenerRegistered = false;
   }
 }
@@ -820,19 +818,18 @@ void TabListener::RemoveListeners() {
     nsCOMPtr<EventTarget> eventTarget = GetEventTarget();
     if (eventTarget) {
       if (mEventListenerRegistered) {
-        eventTarget->RemoveSystemEventListener(
-            NS_LITERAL_STRING("mozvisualscroll"), this, false);
-        eventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("input"), this,
+        eventTarget->RemoveSystemEventListener(u"mozvisualscroll"_ns, this,
                                                false);
+        eventTarget->RemoveSystemEventListener(u"input"_ns, this, false);
         if (mSHistoryInParent) {
-          eventTarget->RemoveSystemEventListener(
-              NS_LITERAL_STRING("DOMTitleChanged"), this, false);
+          eventTarget->RemoveSystemEventListener(u"DOMTitleChanged"_ns, this,
+                                                 false);
         }
         mEventListenerRegistered = false;
       }
       if (mStorageChangeListenerRegistered) {
-        eventTarget->RemoveSystemEventListener(
-            NS_LITERAL_STRING("MozSessionStorageChanged"), this, false);
+        eventTarget->RemoveSystemEventListener(u"MozSessionStorageChanged"_ns,
+                                               this, false);
         mStorageChangeListenerRegistered = false;
       }
     }

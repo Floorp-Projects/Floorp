@@ -77,9 +77,9 @@ nsresult FontPreloader::BuildChannel(
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
     rv = httpChannel->SetRequestHeader(
-        NS_LITERAL_CSTRING("Accept"),
-        NS_LITERAL_CSTRING("application/font-woff2;q=1.0,application/"
-                           "font-woff;q=0.9,*/*;q=0.8"),
+        "Accept"_ns,
+        nsLiteralCString("application/font-woff2;q=1.0,application/"
+                         "font-woff;q=0.9,*/*;q=0.8"),
         false);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -91,9 +91,8 @@ nsresult FontPreloader::BuildChannel(
       // and apply additional compression at the content-encoding layer
       if (aFontFaceSrc->mFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF |
                                         gfxUserFontSet::FLAG_FORMAT_WOFF2)) {
-        rv = httpChannel->SetRequestHeader(
-            NS_LITERAL_CSTRING("Accept-Encoding"),
-            NS_LITERAL_CSTRING("identity"), false);
+        rv = httpChannel->SetRequestHeader("Accept-Encoding"_ns, "identity"_ns,
+                                           false);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     } else {

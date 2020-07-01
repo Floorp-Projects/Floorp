@@ -393,19 +393,18 @@ void GlobalStyleSheetCache::InitSharedSheetsInParent() {
   // Normally calling ToShared on UA sheets should not fail.  It happens
   // in practice in odd cases that seem like corrupted installations; see bug
   // 1621773.  On failure, return early and fall back to non-shared sheets.
-#define STYLE_SHEET(identifier_, url_, shared_)                             \
-  if (shared_) {                                                            \
-    StyleSheet* sheet = identifier_##Sheet();                               \
-    size_t i = size_t(UserAgentStyleSheetID::identifier_);                  \
-    URLExtraData::sShared[i] = sheet->URLData();                            \
-    header->mSheets[i] = sheet->ToShared(builder.get(), message);           \
-    if (!header->mSheets[i]) {                                              \
-      CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\n") + \
-                                                 message);                  \
-      Telemetry::Accumulate(                                                \
-          Telemetry::SHARED_MEMORY_UA_SHEETS_TOSHMEM_SUCCEEDED, false);     \
-      return;                                                               \
-    }                                                                       \
+#define STYLE_SHEET(identifier_, url_, shared_)                         \
+  if (shared_) {                                                        \
+    StyleSheet* sheet = identifier_##Sheet();                           \
+    size_t i = size_t(UserAgentStyleSheetID::identifier_);              \
+    URLExtraData::sShared[i] = sheet->URLData();                        \
+    header->mSheets[i] = sheet->ToShared(builder.get(), message);       \
+    if (!header->mSheets[i]) {                                          \
+      CrashReporter::AppendAppNotesToCrashReport("\n"_ns + message);    \
+      Telemetry::Accumulate(                                            \
+          Telemetry::SHARED_MEMORY_UA_SHEETS_TOSHMEM_SUCCEEDED, false); \
+      return;                                                           \
+    }                                                                   \
   }
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
@@ -495,8 +494,8 @@ void GlobalStyleSheetCache::InitFromProfile() {
   contentFile->Clone(getter_AddRefs(chromeFile));
   if (!chromeFile) return;
 
-  contentFile->Append(NS_LITERAL_STRING("userContent.css"));
-  chromeFile->Append(NS_LITERAL_STRING("userChrome.css"));
+  contentFile->Append(u"userContent.css"_ns);
+  chromeFile->Append(u"userChrome.css"_ns);
 
   mUserContentSheet = LoadSheetFile(contentFile, eUserSheetFeatures);
   mUserChromeSheet = LoadSheetFile(chromeFile, eUserSheetFeatures);

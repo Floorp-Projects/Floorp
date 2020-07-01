@@ -153,8 +153,8 @@ mozilla::ipc::IPCResult TCPSocketParent::RecvClose() {
 void TCPSocketParent::FireErrorEvent(const nsAString& aName,
                                      const nsAString& aType,
                                      TCPReadyState aReadyState) {
-  SendEvent(NS_LITERAL_STRING("error"),
-            TCPError(nsString(aName), nsString(aType)), aReadyState);
+  SendEvent(u"error"_ns, TCPError(nsString(aName), nsString(aType)),
+            aReadyState);
 }
 
 void TCPSocketParent::FireEvent(const nsAString& aType,
@@ -168,14 +168,14 @@ void TCPSocketParent::FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer,
   arr.SwapElements(aBuffer);
 
   SendableData data(arr);
-  SendEvent(NS_LITERAL_STRING("data"), data, aReadyState);
+  SendEvent(u"data"_ns, data, aReadyState);
 }
 
 void TCPSocketParent::FireStringDataEvent(const nsACString& aData,
                                           TCPReadyState aReadyState) {
   SendableData data((nsCString(aData)));
 
-  SendEvent(NS_LITERAL_STRING("data"), data, aReadyState);
+  SendEvent(u"data"_ns, data, aReadyState);
 }
 
 void TCPSocketParent::SendEvent(const nsAString& aType, CallbackData aData,

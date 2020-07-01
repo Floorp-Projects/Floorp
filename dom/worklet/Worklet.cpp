@@ -226,9 +226,9 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
 
     JS::UniqueTwoByteChars scriptTextBuf;
     size_t scriptTextLength;
-    nsresult rv = ScriptLoader::ConvertToUTF16(
-        nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), nullptr,
-        scriptTextBuf, scriptTextLength);
+    nsresult rv =
+        ScriptLoader::ConvertToUTF16(nullptr, aString, aStringLen, u"UTF-8"_ns,
+                                     nullptr, scriptTextBuf, scriptTextLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       RejectPromises(rv);
       return NS_OK;

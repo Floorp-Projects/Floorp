@@ -118,8 +118,7 @@ HTMLTableCellAccessible::NativeAttributes() {
 
 #ifdef DEBUG
   nsAutoString unused;
-  attributes->SetStringProperty(NS_LITERAL_CSTRING("cppclass"),
-                                NS_LITERAL_STRING("HTMLTableCellAccessible"),
+  attributes->SetStringProperty("cppclass"_ns, u"HTMLTableCellAccessible"_ns,
                                 unused);
 #endif
 
@@ -396,8 +395,7 @@ HTMLTableAccessible::NativeAttributes() {
 
   if (IsProbablyLayoutTable()) {
     nsAutoString unused;
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"),
-                                  NS_LITERAL_STRING("true"), unused);
+    attributes->SetStringProperty("layout-guess"_ns, u"true"_ns, unused);
   }
 
   return attributes.forget();

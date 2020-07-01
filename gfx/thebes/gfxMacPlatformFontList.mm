@@ -828,7 +828,7 @@ gfxMacPlatformFontList::gfxMacPlatformFontList()
   nsresult rv;
   nsCOMPtr<nsIFile> langFonts(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) {
-    rv = langFonts->InitWithNativePath(NS_LITERAL_CSTRING(LANG_FONTS_DIR));
+    rv = langFonts->InitWithNativePath(nsLiteralCString(LANG_FONTS_DIR));
     if (NS_SUCCEEDED(rv)) {
       ActivateFontsFromDir(langFonts);
     }
@@ -1791,7 +1791,7 @@ void gfxMacPlatformFontList::ActivateBundledFonts() {
   if (NS_FAILED(NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(localDir)))) {
     return;
   }
-  if (NS_FAILED(localDir->Append(NS_LITERAL_STRING("fonts")))) {
+  if (NS_FAILED(localDir->Append(u"fonts"_ns))) {
     return;
   }
 

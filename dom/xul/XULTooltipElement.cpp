@@ -35,9 +35,8 @@ nsresult XULTooltipElement::Init() {
                                  dom::NOT_FROM_PARSER);
   NS_ENSURE_SUCCESS(rv, rv);
   description->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                       NS_LITERAL_STRING("tooltip-label"), false);
-  description->SetAttr(kNameSpaceID_None, nsGkAtoms::flex,
-                       NS_LITERAL_STRING("true"), false);
+                       u"tooltip-label"_ns, false);
+  description->SetAttr(kNameSpaceID_None, nsGkAtoms::flex, u"true"_ns, false);
   ErrorResult error;
   AppendChild(*description, error);
 

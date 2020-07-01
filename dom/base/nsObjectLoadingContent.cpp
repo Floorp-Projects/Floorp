@@ -345,8 +345,8 @@ nsPluginCrashedEvent::Run() {
   init.mBubbles = true;
   init.mCancelable = true;
 
-  RefPtr<PluginCrashedEvent> event = PluginCrashedEvent::Constructor(
-      doc, NS_LITERAL_STRING("PluginCrashed"), init);
+  RefPtr<PluginCrashedEvent> event =
+      PluginCrashedEvent::Constructor(doc, u"PluginCrashed"_ns, init);
 
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
@@ -601,7 +601,7 @@ void nsObjectLoadingContent::UnbindFromTree(bool aNullParent) {
     Document* doc = thisElement->GetComposedDoc();
     if (doc && doc->IsActive()) {
       nsCOMPtr<nsIRunnable> ev =
-          new nsSimplePluginEvent(doc, NS_LITERAL_STRING("PluginRemoved"));
+          new nsSimplePluginEvent(doc, u"PluginRemoved"_ns);
       NS_DispatchToCurrentThread(ev);
     }
   }
@@ -763,8 +763,8 @@ nsresult nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading) {
       // Fire plugin outdated event if necessary
       LOG(("OBJLC [%p]: Dispatching plugin outdated event for content\n",
            this));
-      nsCOMPtr<nsIRunnable> ev = new nsSimplePluginEvent(
-          thisContent, NS_LITERAL_STRING("PluginOutdated"));
+      nsCOMPtr<nsIRunnable> ev =
+          new nsSimplePluginEvent(thisContent, u"PluginOutdated"_ns);
       nsresult rv = NS_DispatchToCurrentThread(ev);
       if (NS_FAILED(rv)) {
         NS_WARNING("failed to dispatch nsSimplePluginEvent");
@@ -783,8 +783,8 @@ nsresult nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading) {
     }
   }
 
-  nsCOMPtr<nsIRunnable> ev = new nsSimplePluginEvent(
-      thisContent, doc, NS_LITERAL_STRING("PluginInstantiated"));
+  nsCOMPtr<nsIRunnable> ev =
+      new nsSimplePluginEvent(thisContent, doc, u"PluginInstantiated"_ns);
   NS_DispatchToCurrentThread(ev);
 
 #ifdef XP_MACOSX
@@ -812,8 +812,7 @@ void nsObjectLoadingContent::GetNestedParams(
   nsCOMPtr<nsIHTMLCollection> allParams;
   NS_NAMED_LITERAL_STRING(xhtml_ns, "http://www.w3.org/1999/xhtml");
   ErrorResult rv;
-  allParams = ourElement->GetElementsByTagNameNS(
-      xhtml_ns, NS_LITERAL_STRING("param"), rv);
+  allParams = ourElement->GetElementsByTagNameNS(xhtml_ns, u"param"_ns, rv);
   if (rv.Failed()) {
     return;
   }
@@ -885,7 +884,7 @@ nsresult nsObjectLoadingContent::BuildParametersArray() {
 
   if (!wmodeOverride.IsEmpty()) {
     MozPluginParameter param;
-    param.mName = NS_LITERAL_STRING("wmode");
+    param.mName = u"wmode"_ns;
     CopyASCIItoUTF16(wmodeOverride, param.mValue);
     mCachedAttributes.AppendElement(param);
   }
@@ -901,7 +900,7 @@ nsresult nsObjectLoadingContent::BuildParametersArray() {
     MozPluginParameter param;
     element->GetAttr(kNameSpaceID_None, nsGkAtoms::data, param.mValue);
     if (!param.mValue.IsEmpty()) {
-      param.mName = NS_LITERAL_STRING("SRC");
+      param.mName = u"SRC"_ns;
       mCachedAttributes.AppendElement(param);
     }
   }
@@ -977,10 +976,10 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
       nsCOMPtr<nsIURI> uri;
       chan->GetURI(getter_AddRefs(uri));
       nsString message =
-          NS_LITERAL_STRING("Blocking ") +
+          u"Blocking "_ns +
           NS_ConvertASCIItoUTF16(uri->GetSpecOrDefault().get()) +
-          NS_LITERAL_STRING(
-              " since it was found on an internal Firefox blocklist.");
+          nsLiteralString(
+              u" since it was found on an internal Firefox blocklist.");
       console->LogStringMessage(message.get());
     }
     mContentBlockingEnabled = true;
@@ -1283,7 +1282,7 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   // touch object nodes with "/embed/" urls that already do that right thing.
   nsAutoCString path;
   aURI->GetPathQueryRef(path);
-  if (!StringBeginsWith(path, NS_LITERAL_CSTRING("/v/"))) {
+  if (!StringBeginsWith(path, "/v/"_ns)) {
     return;
   }
 
@@ -1325,8 +1324,7 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   }
   // Switch out video access url formats, which should possibly allow HTML5
   // video loading.
-  uri.ReplaceSubstring(NS_LITERAL_CSTRING("/v/"),
-                       NS_LITERAL_CSTRING("/embed/"));
+  uri.ReplaceSubstring("/v/"_ns, "/embed/"_ns);
   nsAutoString utf16URI = NS_ConvertUTF8toUTF16(uri);
   rv = nsContentUtils::NewURIWithDocumentCharset(
       aOutURI, utf16URI, thisContent->OwnerDoc(), aBaseURI);
@@ -1343,9 +1341,8 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
     msgName = "RewriteYouTubeEmbedPathParams";
   }
   nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Plugins"),
-      thisContent->OwnerDoc(), nsContentUtils::eDOM_PROPERTIES, msgName,
-      params);
+      nsIScriptError::warningFlag, "Plugins"_ns, thisContent->OwnerDoc(),
+      nsContentUtils::eDOM_PROPERTIES, msgName, params);
 }
 
 bool nsObjectLoadingContent::CheckLoadPolicy(int16_t* aContentPolicy) {
@@ -1541,7 +1538,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
     if (rewrittenURI) {
       newURI = rewrittenURI;
       mRewrittenYoutubeEmbed = true;
-      newMime = NS_LITERAL_CSTRING("text/html");
+      newMime = "text/html"_ns;
     }
 
     if (NS_FAILED(rv)) {
@@ -2631,8 +2628,8 @@ nsNPAPIPluginInstance* nsObjectLoadingContent::ScriptRequestPluginInstance(
   // types, see header.
   if (callerIsContentJS && !mScriptRequested && InActiveDocument(thisContent) &&
       mType == eType_Null && mFallbackType >= eFallbackClickToPlay) {
-    nsCOMPtr<nsIRunnable> ev = new nsSimplePluginEvent(
-        thisContent, NS_LITERAL_STRING("PluginScripted"));
+    nsCOMPtr<nsIRunnable> ev =
+        new nsSimplePluginEvent(thisContent, u"PluginScripted"_ns);
     nsresult rv = NS_DispatchToCurrentThread(ev);
     if (NS_FAILED(rv)) {
       MOZ_ASSERT_UNREACHABLE("failed to dispatch PluginScripted event");
@@ -3192,7 +3189,7 @@ bool nsObjectLoadingContent::HasGoodFallback() {
             nsresult rv = href->GetAsciiHost(asciiHost);
             if (NS_SUCCEEDED(rv) && !asciiHost.IsEmpty() &&
                 (asciiHost.EqualsLiteral("adobe.com") ||
-                 StringEndsWith(asciiHost, NS_LITERAL_CSTRING(".adobe.com")))) {
+                 StringEndsWith(asciiHost, ".adobe.com"_ns))) {
               return false;
             }
           }
@@ -3208,12 +3205,10 @@ bool nsObjectLoadingContent::HasGoodFallback() {
       ErrorResult rv;
       thisContent->GetTextContent(textContent, rv);
       bool hasText =
-          !rv.Failed() && (CaseInsensitiveFindInReadable(
-                               NS_LITERAL_STRING("Flash"), textContent) ||
-                           CaseInsensitiveFindInReadable(
-                               NS_LITERAL_STRING("Install"), textContent) ||
-                           CaseInsensitiveFindInReadable(
-                               NS_LITERAL_STRING("Download"), textContent));
+          !rv.Failed() &&
+          (CaseInsensitiveFindInReadable(u"Flash"_ns, textContent) ||
+           CaseInsensitiveFindInReadable(u"Install"_ns, textContent) ||
+           CaseInsensitiveFindInReadable(u"Download"_ns, textContent));
 
       if (hasText) {
         return false;
@@ -3471,8 +3466,7 @@ void nsObjectLoadingContent::MaybeFireErrorEvent() {
   if (thisContent->IsHTMLElement(nsGkAtoms::object)) {
     RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
         new LoadBlockingAsyncEventDispatcher(
-            thisContent, NS_LITERAL_STRING("error"), CanBubble::eNo,
-            ChromeOnlyDispatch::eNo);
+            thisContent, u"error"_ns, CanBubble::eNo, ChromeOnlyDispatch::eNo);
     loadBlockingAsyncDispatcher->PostDOMEvent();
   }
 }

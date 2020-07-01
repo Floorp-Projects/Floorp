@@ -105,8 +105,8 @@ bool CSP_ShouldResponseInheritCSP(nsIChannel* aChannel) {
     rv = uri->GetSpec(aboutSpec);
     NS_ENSURE_SUCCESS(rv, false);
     // also allow about:blank#foo
-    if (StringBeginsWith(aboutSpec, NS_LITERAL_CSTRING("about:blank")) ||
-        StringBeginsWith(aboutSpec, NS_LITERAL_CSTRING("about:srcdoc"))) {
+    if (StringBeginsWith(aboutSpec, "about:blank"_ns) ||
+        StringBeginsWith(aboutSpec, "about:srcdoc"_ns)) {
       return true;
     }
   }
@@ -1463,7 +1463,7 @@ bool nsCSPPolicy::allows(nsContentPolicyType aContentType,
 
 bool nsCSPPolicy::allows(nsContentPolicyType aContentType,
                          enum CSPKeyword aKeyword) const {
-  return allows(aContentType, aKeyword, NS_LITERAL_STRING(""), false);
+  return allows(aContentType, aKeyword, u""_ns, false);
 }
 
 void nsCSPPolicy::toString(nsAString& outStr) const {

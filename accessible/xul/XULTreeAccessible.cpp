@@ -614,8 +614,7 @@ nsIntRect XULTreeItemAccessibleBase::BoundsInCSSPixels() const {
   RefPtr<nsTreeColumn> column = nsCoreUtils::GetFirstSensibleColumn(mTree);
 
   nsresult rv;
-  nsIntRect rect =
-      mTree->GetCoordsForCellItem(mRow, column, NS_LITERAL_STRING("cell"), rv);
+  nsIntRect rect = mTree->GetCoordsForCellItem(mRow, column, u"cell"_ns, rv);
   if (NS_FAILED(rv)) {
     return nsIntRect();
   }
@@ -843,7 +842,7 @@ void XULTreeItemAccessibleBase::DispatchClickEvent(
   } else {
     // Primary column contains a twisty we should click on.
     column = columns->GetPrimaryColumn();
-    pseudoElm = NS_LITERAL_STRING("twisty");
+    pseudoElm = u"twisty"_ns;
   }
 
   if (column) {

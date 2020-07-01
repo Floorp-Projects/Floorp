@@ -147,7 +147,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       nsAutoString xmlRoles;
 
       nsCOMPtr<nsIPersistentProperties> attributes = mAcc->Attributes();
-      attributes->GetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRoles);
+      attributes->GetStringProperty("xml-roles"_ns, xmlRoles);
 
       if (!xmlRoles.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;

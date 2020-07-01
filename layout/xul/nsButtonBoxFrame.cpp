@@ -68,14 +68,12 @@ void nsButtonBoxFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   mButtonBoxListener = new nsButtonBoxListener(this);
 
-  mContent->AddSystemEventListener(NS_LITERAL_STRING("blur"),
-                                   mButtonBoxListener, false);
+  mContent->AddSystemEventListener(u"blur"_ns, mButtonBoxListener, false);
 }
 
 void nsButtonBoxFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                    PostDestroyData& aPostDestroyData) {
-  mContent->RemoveSystemEventListener(NS_LITERAL_STRING("blur"),
-                                      mButtonBoxListener, false);
+  mContent->RemoveSystemEventListener(u"blur"_ns, mButtonBoxListener, false);
 
   mButtonBoxListener->mButtonBoxFrame = nullptr;
   mButtonBoxListener = nullptr;

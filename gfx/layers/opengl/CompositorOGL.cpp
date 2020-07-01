@@ -516,21 +516,21 @@ bool CompositorOGL::Initialize(nsCString* const out_failureReason) {
 
   if (console) {
     nsString msg;
-    msg += NS_LITERAL_STRING(
-        "OpenGL compositor Initialized Succesfully.\nVersion: ");
+    msg += nsLiteralString(
+        u"OpenGL compositor Initialized Succesfully.\nVersion: ");
     msg += NS_ConvertUTF8toUTF16(nsDependentCString(
         (const char*)mGLContext->fGetString(LOCAL_GL_VERSION)));
-    msg += NS_LITERAL_STRING("\nVendor: ");
+    msg += u"\nVendor: "_ns;
     msg += NS_ConvertUTF8toUTF16(nsDependentCString(
         (const char*)mGLContext->fGetString(LOCAL_GL_VENDOR)));
-    msg += NS_LITERAL_STRING("\nRenderer: ");
+    msg += u"\nRenderer: "_ns;
     msg += NS_ConvertUTF8toUTF16(nsDependentCString(
         (const char*)mGLContext->fGetString(LOCAL_GL_RENDERER)));
-    msg += NS_LITERAL_STRING("\nFBO Texture Target: ");
+    msg += u"\nFBO Texture Target: "_ns;
     if (mFBOTextureTarget == LOCAL_GL_TEXTURE_2D)
-      msg += NS_LITERAL_STRING("TEXTURE_2D");
+      msg += u"TEXTURE_2D"_ns;
     else
-      msg += NS_LITERAL_STRING("TEXTURE_RECTANGLE");
+      msg += u"TEXTURE_RECTANGLE"_ns;
     console->LogStringMessage(msg.get());
   }
 

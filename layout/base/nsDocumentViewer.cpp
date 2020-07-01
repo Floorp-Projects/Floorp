@@ -494,11 +494,9 @@ namespace mozilla {
 class AutoPrintEventDispatcher {
  public:
   explicit AutoPrintEventDispatcher(Document* aTop) : mTop(aTop) {
-    DispatchEventToWindowTree(NS_LITERAL_STRING("beforeprint"));
+    DispatchEventToWindowTree(u"beforeprint"_ns);
   }
-  ~AutoPrintEventDispatcher() {
-    DispatchEventToWindowTree(NS_LITERAL_STRING("afterprint"));
-  }
+  ~AutoPrintEventDispatcher() { DispatchEventToWindowTree(u"afterprint"_ns); }
 
  private:
   static CallState CollectDocuments(Document& aDoc,
@@ -668,10 +666,8 @@ void nsDocumentViewer::RemoveFocusListener() {
           std::move(mFocusListener)) {
     oldListener->Disconnect();
     if (mDocument) {
-      mDocument->RemoveEventListener(NS_LITERAL_STRING("focus"), oldListener,
-                                     false);
-      mDocument->RemoveEventListener(NS_LITERAL_STRING("blur"), oldListener,
-                                     false);
+      mDocument->RemoveEventListener(u"focus"_ns, oldListener, false);
+      mDocument->RemoveEventListener(u"blur"_ns, oldListener, false);
     }
   }
 }
@@ -680,10 +676,8 @@ void nsDocumentViewer::ReinitializeFocusListener() {
   RemoveFocusListener();
   mFocusListener = new nsDocViewerFocusListener(this);
   if (mDocument) {
-    mDocument->AddEventListener(NS_LITERAL_STRING("focus"), mFocusListener,
-                                false, false);
-    mDocument->AddEventListener(NS_LITERAL_STRING("blur"), mFocusListener,
-                                false, false);
+    mDocument->AddEventListener(u"focus"_ns, mFocusListener, false, false);
+    mDocument->AddEventListener(u"blur"_ns, mFocusListener, false, false);
   }
 }
 
@@ -1282,7 +1276,7 @@ nsresult nsDocumentViewer::PermitUnloadInternal(uint32_t* aPermitUnloadFlags,
   nsPresContext* presContext = mDocument->GetPresContext();
   RefPtr<BeforeUnloadEvent> event =
       new BeforeUnloadEvent(mDocument, presContext, nullptr);
-  event->InitEvent(NS_LITERAL_STRING("beforeunload"), false, true);
+  event->InitEvent(u"beforeunload"_ns, false, true);
 
   // Dispatching to |window|, but using |document| as the target.
   event->SetTarget(mDocument);
@@ -3154,7 +3148,7 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(
   // might need another update string for simple selection changes, but that
   // would be expenseive.
   if (mSelectionWasCollapsed != selectionCollapsed) {
-    domWindow->UpdateCommands(NS_LITERAL_STRING("select"), selection, aReason);
+    domWindow->UpdateCommands(u"select"_ns, selection, aReason);
     mSelectionWasCollapsed = selectionCollapsed;
   }
 

@@ -179,8 +179,8 @@ GeckoMediaPluginService::RunPluginCrashCallbacks(
     CopyUTF8toUTF16(aPluginName, init.mPluginName);
     init.mSubmittedCrashReport = false;
     RefPtr<dom::PluginCrashedEvent> event =
-        dom::PluginCrashedEvent::Constructor(
-            document, NS_LITERAL_STRING("PluginCrashed"), init);
+        dom::PluginCrashedEvent::Constructor(document, u"PluginCrashed"_ns,
+                                             init);
     event->SetTrusted(true);
     event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
@@ -223,8 +223,7 @@ RefPtr<GetCDMParentPromise> GeckoMediaPluginService::GetCDM(
   RefPtr<GetCDMParentPromise> promise = rawHolder->Ensure(__func__);
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
   RefPtr<GMPCrashHelper> helper(aHelper);
-  GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(CHROMIUM_CDM_API),
-                   aTags)
+  GetContentParent(aHelper, aNodeId, nsLiteralCString(CHROMIUM_CDM_API), aTags)
       ->Then(
           thread, __func__,
           [rawHolder, helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
@@ -345,7 +344,7 @@ GeckoMediaPluginService::GetDecryptingGMPVideoDecoder(
   GetGMPVideoDecoderCallback* rawCallback = aCallback.release();
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
   RefPtr<GMPCrashHelper> helper(aHelper);
-  GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+  GetContentParent(aHelper, aNodeId, nsLiteralCString(GMP_API_VIDEO_DECODER),
                    *aTags)
       ->Then(
           thread, __func__,
@@ -386,7 +385,7 @@ GeckoMediaPluginService::GetGMPVideoEncoder(
   GetGMPVideoEncoderCallback* rawCallback = aCallback.release();
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
   RefPtr<GMPCrashHelper> helper(aHelper);
-  GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER),
+  GetContentParent(aHelper, aNodeId, nsLiteralCString(GMP_API_VIDEO_ENCODER),
                    *aTags)
       ->Then(
           thread, __func__,

@@ -251,7 +251,7 @@ nsresult nsStreamTransportService::Init() {
   mPool = new nsThreadPool();
 
   // Configure the pool
-  mPool->SetName(NS_LITERAL_CSTRING("StreamTrans"));
+  mPool->SetName("StreamTrans"_ns);
   mPool->SetThreadLimit(25);
   mPool->SetIdleThreadLimit(5);
   mPool->SetIdleThreadTimeoutRegressive(true);

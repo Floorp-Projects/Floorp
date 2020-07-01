@@ -391,12 +391,12 @@ bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
     nsJSUtils::GetCallingLocation(aCx, filename, &lineno, &column);
     nsCOMPtr<nsIScriptError> error(
         do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-    error->Init(NS_LITERAL_STRING("Sending message that cannot be cloned. Are "
-                                  "you trying to send an XPCOM object?"),
-                filename, EmptyString(), lineno, column,
-                nsIScriptError::warningFlag, "chrome javascript",
-                false /* from private window */,
-                true /* from chrome context */);
+    error->Init(
+        u"Sending message that cannot be cloned. Are "
+        "you trying to send an XPCOM object?"_ns,
+        filename, EmptyString(), lineno, column, nsIScriptError::warningFlag,
+        "chrome javascript", false /* from private window */,
+        true /* from chrome context */);
     console->LogMessage(error);
   }
 
@@ -742,9 +742,10 @@ void nsFrameMessageManager::ReceiveMessage(
         data->Write(cx, rval, aError);
         if (NS_WARN_IF(aError.Failed())) {
           aRetVal->RemoveLastElement();
-          nsString msg = aMessage + NS_LITERAL_STRING(
-                                        ": message reply cannot be cloned. Are "
-                                        "you trying to send an XPCOM object?");
+          nsString msg =
+              aMessage + nsLiteralString(
+                             u": message reply cannot be cloned. Are "
+                             "you trying to send an XPCOM object?");
 
           nsCOMPtr<nsIConsoleService> console(
               do_GetService(NS_CONSOLESERVICE_CONTRACTID));

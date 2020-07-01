@@ -2452,8 +2452,8 @@ void Document::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
   nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(aChannel);
   if (bag) {
     nsCOMPtr<nsIURI> baseURI;
-    bag->GetPropertyAsInterface(NS_LITERAL_STRING("baseURI"),
-                                NS_GET_IID(nsIURI), getter_AddRefs(baseURI));
+    bag->GetPropertyAsInterface(u"baseURI"_ns, NS_GET_IID(nsIURI),
+                                getter_AddRefs(baseURI));
     if (baseURI) {
       mDocumentBaseURI = baseURI;
       mChromeXHRDocBaseURI = nullptr;
@@ -2959,7 +2959,7 @@ static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
       !(aSandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION)) {
     nsCOMPtr<nsIURI> iframeUri;
     nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Iframe Sandbox"),
+        nsIScriptError::warningFlag, "Iframe Sandbox"_ns,
         aDocShell->GetDocument(), nsContentUtils::eSECURITY_PROPERTIES,
         "BothAllowTopNavigationAndUserActivationPresent");
   }
@@ -3002,11 +3002,11 @@ static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
     nsCOMPtr<Document> parentDocument = parentDocShell->GetDocument();
     nsCOMPtr<nsIURI> iframeUri;
     parentChannel->GetURI(getter_AddRefs(iframeUri));
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Iframe Sandbox"),
-        parentDocument, nsContentUtils::eSECURITY_PROPERTIES,
-        "BothAllowScriptsAndSameOriginPresent", nsTArray<nsString>(),
-        iframeUri);
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    "Iframe Sandbox"_ns, parentDocument,
+                                    nsContentUtils::eSECURITY_PROPERTIES,
+                                    "BothAllowScriptsAndSameOriginPresent",
+                                    nsTArray<nsString>(), iframeUri);
   }
 }
 
@@ -3066,8 +3066,8 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
   nsAutoCString contentType;
   nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(aChannel);
-  if ((bag && NS_SUCCEEDED(bag->GetPropertyAsACString(
-                  NS_LITERAL_STRING("contentType"), contentType))) ||
+  if ((bag && NS_SUCCEEDED(bag->GetPropertyAsACString(u"contentType"_ns,
+                                                      contentType))) ||
       NS_SUCCEEDED(aChannel->GetContentType(contentType))) {
     // XXX this is only necessary for viewsource:
     nsACString::const_iterator start, end, semicolon;
@@ -3350,12 +3350,11 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   }
 
   if (httpChannel) {
-    Unused << httpChannel->GetResponseHeader(
-        NS_LITERAL_CSTRING("content-security-policy"), tCspHeaderValue);
+    Unused << httpChannel->GetResponseHeader("content-security-policy"_ns,
+                                             tCspHeaderValue);
 
     Unused << httpChannel->GetResponseHeader(
-        NS_LITERAL_CSTRING("content-security-policy-report-only"),
-        tCspROHeaderValue);
+        "content-security-policy-report-only"_ns, tCspROHeaderValue);
   }
   NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
   NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
@@ -3506,8 +3505,7 @@ nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
 
   // query the policy from the header
   nsAutoCString value;
-  rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Feature-Policy"),
-                                      value);
+  rv = httpChannel->GetResponseHeader("Feature-Policy"_ns, value);
   if (NS_SUCCEEDED(rv)) {
     mFeaturePolicy->SetDeclaredPolicy(this, NS_ConvertUTF8toUTF16(value),
                                       NodePrincipal(), nullptr);
@@ -4165,349 +4163,349 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
   sInternalCommandDataHashtable = new InternalCommandDataHashtable();
   // clang-format off
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("bold"),
+      u"bold"_ns,
       InternalCommandData(
           "cmd_bold",
           Command::FormatBold,
           ExecCommandParam::Ignore,
           StyleUpdatingCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("italic"),
+      u"italic"_ns,
       InternalCommandData(
           "cmd_italic",
           Command::FormatItalic,
           ExecCommandParam::Ignore,
           StyleUpdatingCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("underline"),
+      u"underline"_ns,
       InternalCommandData(
           "cmd_underline",
           Command::FormatUnderline,
           ExecCommandParam::Ignore,
           StyleUpdatingCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("strikethrough"),
+      u"strikethrough"_ns,
       InternalCommandData(
           "cmd_strikethrough",
           Command::FormatStrikeThrough,
           ExecCommandParam::Ignore,
           StyleUpdatingCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("subscript"),
+      u"subscript"_ns,
       InternalCommandData(
           "cmd_subscript",
           Command::FormatSubscript,
           ExecCommandParam::Ignore,
           StyleUpdatingCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("superscript"),
+      u"superscript"_ns,
       InternalCommandData(
           "cmd_superscript",
           Command::FormatSuperscript,
           ExecCommandParam::Ignore,
           StyleUpdatingCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("cut"),
+      u"cut"_ns,
       InternalCommandData(
           "cmd_cut",
           Command::Cut,
           ExecCommandParam::Ignore,
           CutCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("copy"),
+      u"copy"_ns,
       InternalCommandData(
           "cmd_copy",
           Command::Copy,
           ExecCommandParam::Ignore,
           CopyCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("paste"),
+      u"paste"_ns,
       InternalCommandData(
           "cmd_paste",
           Command::Paste,
           ExecCommandParam::Ignore,
           PasteCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("delete"),
+      u"delete"_ns,
       InternalCommandData(
           "cmd_deleteCharBackward",
           Command::DeleteCharBackward,
           ExecCommandParam::Ignore,
           DeleteCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("forwarddelete"),
+      u"forwarddelete"_ns,
       InternalCommandData(
           "cmd_deleteCharForward",
           Command::DeleteCharForward,
           ExecCommandParam::Ignore,
           DeleteCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("selectall"),
+      u"selectall"_ns,
       InternalCommandData(
           "cmd_selectAll",
           Command::SelectAll,
           ExecCommandParam::Ignore,
           SelectAllCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("undo"),
+      u"undo"_ns,
       InternalCommandData(
           "cmd_undo",
           Command::HistoryUndo,
           ExecCommandParam::Ignore,
           UndoCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("redo"),
+      u"redo"_ns,
       InternalCommandData(
           "cmd_redo",
           Command::HistoryRedo,
           ExecCommandParam::Ignore,
           RedoCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("indent"),
+      u"indent"_ns,
       InternalCommandData("cmd_indent",
           Command::FormatIndent,
           ExecCommandParam::Ignore,
           IndentCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("outdent"),
+      u"outdent"_ns,
       InternalCommandData(
           "cmd_outdent",
           Command::FormatOutdent,
           ExecCommandParam::Ignore,
           OutdentCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("backcolor"),
+      u"backcolor"_ns,
       InternalCommandData(
           "cmd_highlight",
           Command::FormatBackColor,
           ExecCommandParam::String,
           HighlightColorStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("hilitecolor"),
+      u"hilitecolor"_ns,
       InternalCommandData(
           "cmd_highlight",
           Command::FormatBackColor,
           ExecCommandParam::String,
           HighlightColorStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("forecolor"),
+      u"forecolor"_ns,
       InternalCommandData(
           "cmd_fontColor",
           Command::FormatFontColor,
           ExecCommandParam::String,
           FontColorStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("fontname"),
+      u"fontname"_ns,
       InternalCommandData(
           "cmd_fontFace",
           Command::FormatFontName,
           ExecCommandParam::String,
           FontFaceStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("fontsize"),
+      u"fontsize"_ns,
       InternalCommandData(
           "cmd_fontSize",
           Command::FormatFontSize,
           ExecCommandParam::String,
           FontSizeStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("increasefontsize"),
+      u"increasefontsize"_ns,
       InternalCommandData(
           "cmd_increaseFont",
           Command::FormatIncreaseFontSize,
           ExecCommandParam::Ignore,
           IncreaseFontSizeCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("decreasefontsize"),
+      u"decreasefontsize"_ns,
       InternalCommandData(
           "cmd_decreaseFont",
           Command::FormatDecreaseFontSize,
           ExecCommandParam::Ignore,
           DecreaseFontSizeCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("inserthorizontalrule"),
+      u"inserthorizontalrule"_ns,
       InternalCommandData(
           "cmd_insertHR",
           Command::InsertHorizontalRule,
           ExecCommandParam::Ignore,
           InsertTagCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("createlink"),
+      u"createlink"_ns,
       InternalCommandData(
           "cmd_insertLinkNoUI",
           Command::InsertLink,
           ExecCommandParam::String,
           InsertTagCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("insertimage"),
+      u"insertimage"_ns,
       InternalCommandData(
           "cmd_insertImageNoUI",
           Command::InsertImage,
           ExecCommandParam::String,
           InsertTagCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("inserthtml"),
+      u"inserthtml"_ns,
       InternalCommandData(
           "cmd_insertHTML",
           Command::InsertHTML,
           ExecCommandParam::String,
           InsertHTMLCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("inserttext"),
+      u"inserttext"_ns,
       InternalCommandData(
           "cmd_insertText",
           Command::InsertText,
           ExecCommandParam::String,
           InsertPlaintextCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("gethtml"),
+      u"gethtml"_ns,
       InternalCommandData(
           "cmd_getContents",
           Command::GetHTML,
           ExecCommandParam::Ignore,
           nullptr));  // Not defined in EditorCommands.h
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("justifyleft"),
+      u"justifyleft"_ns,
       InternalCommandData(
           "cmd_align",
           Command::FormatJustifyLeft,
           ExecCommandParam::Ignore,  // Will be set to "left"
           AlignCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("justifyright"),
+      u"justifyright"_ns,
       InternalCommandData(
           "cmd_align",
           Command::FormatJustifyRight,
           ExecCommandParam::Ignore,  // Will be set to "right"
           AlignCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("justifycenter"),
+      u"justifycenter"_ns,
       InternalCommandData(
           "cmd_align",
           Command::FormatJustifyCenter,
           ExecCommandParam::Ignore,  // Will be set to "center"
           AlignCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("justifyfull"),
+      u"justifyfull"_ns,
       InternalCommandData(
           "cmd_align",
           Command::FormatJustifyFull,
           ExecCommandParam::Ignore,  // Will be set to "justify"
           AlignCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("removeformat"),
+      u"removeformat"_ns,
       InternalCommandData(
           "cmd_removeStyles",
           Command::FormatRemove,
           ExecCommandParam::Ignore,
           RemoveStylesCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("unlink"),
+      u"unlink"_ns,
       InternalCommandData(
           "cmd_removeLinks",
           Command::FormatRemoveLink,
           ExecCommandParam::Ignore,
           StyleUpdatingCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("insertorderedlist"),
+      u"insertorderedlist"_ns,
       InternalCommandData(
           "cmd_ol",
           Command::InsertOrderedList,
           ExecCommandParam::Ignore,
           ListCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("insertunorderedlist"),
+      u"insertunorderedlist"_ns,
       InternalCommandData(
           "cmd_ul",
           Command::InsertUnorderedList,
           ExecCommandParam::Ignore,
           ListCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("insertparagraph"),
+      u"insertparagraph"_ns,
       InternalCommandData(
           "cmd_insertParagraph",
           Command::InsertParagraph,
           ExecCommandParam::Ignore,
           InsertParagraphCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("insertlinebreak"),
+      u"insertlinebreak"_ns,
       InternalCommandData(
           "cmd_insertLineBreak",
           Command::InsertLineBreak,
           ExecCommandParam::Ignore,
           InsertLineBreakCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("formatblock"),
+      u"formatblock"_ns,
       InternalCommandData(
           "cmd_paragraphState",
           Command::FormatBlock,
           ExecCommandParam::String,
           ParagraphStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("heading"),
+      u"heading"_ns,
       InternalCommandData(
           "cmd_paragraphState",
           Command::FormatBlock,
           ExecCommandParam::String,
           ParagraphStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("styleWithCSS"),
+      u"styleWithCSS"_ns,
       InternalCommandData(
           "cmd_setDocumentUseCSS",
           Command::SetDocumentUseCSS,
           ExecCommandParam::Boolean,
           SetDocumentStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("usecss"),  // Legacy command
+      u"usecss"_ns,  // Legacy command
       InternalCommandData(
           "cmd_setDocumentUseCSS",
           Command::SetDocumentUseCSS,
           ExecCommandParam::InvertedBoolean,
           SetDocumentStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("contentReadOnly"),
+      u"contentReadOnly"_ns,
       InternalCommandData(
           "cmd_setDocumentReadOnly",
           Command::SetDocumentReadOnly,
           ExecCommandParam::Boolean,
           SetDocumentStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("readonly"),  // Legacy command
+      u"readonly"_ns,  // Legacy command
       InternalCommandData(
           "cmd_setDocumentReadOnly",
           Command::SetDocumentReadOnly,
           ExecCommandParam::InvertedBoolean,
           SetDocumentStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("insertBrOnReturn"),
+      u"insertBrOnReturn"_ns,
       InternalCommandData(
           "cmd_insertBrOnReturn",
           Command::SetDocumentInsertBROnEnterKeyPress,
           ExecCommandParam::Boolean,
           SetDocumentStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("defaultParagraphSeparator"),
+      u"defaultParagraphSeparator"_ns,
       InternalCommandData(
           "cmd_defaultParagraphSeparator",
           Command::SetDocumentDefaultParagraphSeparator,
           ExecCommandParam::String,
           SetDocumentStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("enableObjectResizing"),
+      u"enableObjectResizing"_ns,
       InternalCommandData(
           "cmd_enableObjectResizing",
           Command::ToggleObjectResizers,
           ExecCommandParam::Boolean,
           SetDocumentStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("enableInlineTableEditing"),
+      u"enableInlineTableEditing"_ns,
       InternalCommandData(
           "cmd_enableInlineTableEditing",
           Command::ToggleInlineTableEditor,
           ExecCommandParam::Boolean,
           SetDocumentStateCommand::GetInstance));
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("enableAbsolutePositionEditing"),
+      u"enableAbsolutePositionEditing"_ns,
       InternalCommandData(
           "cmd_enableAbsolutePositionEditing",
           Command::ToggleAbsolutePositionEditor,
@@ -4516,7 +4514,7 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
 #if 0
   // with empty string
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("justifynone"),
+      u"justifynone"_ns,
       InternalCommandData(
           "cmd_align",
           Command::Undefined,
@@ -4524,7 +4522,7 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
           nullptr));  // Not implemented yet.
   // REQUIRED SPECIAL REVIEW special review
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("saveas"),
+      u"saveas"_ns,
       InternalCommandData(
           "cmd_saveAs",
           Command::Undefined,
@@ -4532,7 +4530,7 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
           nullptr));  // Not implemented yet.
   // REQUIRED SPECIAL REVIEW special review
   sInternalCommandDataHashtable->Put(
-      NS_LITERAL_STRING("print"),
+      u"print"_ns,
       InternalCommandData(
           "cmd_print",
           Command::Undefined,
@@ -4732,9 +4730,8 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
     if (!nsContentUtils::IsCutCopyAllowed(this, aSubjectPrincipal)) {
       // We have rejected the event due to it not being performed in an
       // input-driven context therefore, we report the error to the console.
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DOM"), this,
-                                      nsContentUtils::eDOM_PROPERTIES,
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                      this, nsContentUtils::eDOM_PROPERTIES,
                                       "ExecCommandCutCopyDeniedNotInputDriven");
       return false;
     }
@@ -5182,7 +5179,7 @@ void Document::QueryCommandValue(const nsAString& aHTMLCommandName,
     if (aRv.Failed()) {
       return;
     }
-    aRv = params->SetCString("format", NS_LITERAL_CSTRING("text/html"));
+    aRv = params->SetCString("format", "text/html"_ns);
     if (aRv.Failed()) {
       return;
     }
@@ -5497,8 +5494,7 @@ nsresult Document::EditingStateChanged() {
     // restricted one.
     ErrorResult errorResult;
     nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
-    Unused << ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), false,
-                          NS_LITERAL_STRING("false"),
+    Unused << ExecCommand(u"insertBrOnReturn"_ns, false, u"false"_ns,
                           // Principal doesn't matter here, because the
                           // insertBrOnReturn command doesn't use it.   Still
                           // it's too bad we can't easily grab a nullprincipal
@@ -6578,7 +6574,7 @@ void Document::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
 
     RefPtr<StyleSheetApplicableStateChangeEvent> event =
         StyleSheetApplicableStateChangeEvent::Constructor(
-            this, NS_LITERAL_STRING("StyleSheetApplicableStateChanged"), init);
+            this, u"StyleSheetApplicableStateChanged"_ns, init);
     event->SetTrusted(true);
     event->SetTarget(this);
     RefPtr<AsyncEventDispatcher> asyncDispatcher =
@@ -7195,8 +7191,8 @@ void Document::DispatchContentLoadedEvents() {
   // loaded (excluding images and other loads initiated by this
   // document).
   nsContentUtils::DispatchTrustedEvent(this, ToSupports(this),
-                                       NS_LITERAL_STRING("DOMContentLoaded"),
-                                       CanBubble::eYes, Cancelable::eNo);
+                                       u"DOMContentLoaded"_ns, CanBubble::eYes,
+                                       Cancelable::eNo);
 
   if (auto* const window = GetInnerWindow()) {
     const RefPtr<ServiceWorkerContainer> serviceWorker =
@@ -7244,13 +7240,11 @@ void Document::DispatchContentLoadedEvents() {
       RefPtr<Event> event;
       if (parent) {
         IgnoredErrorResult ignored;
-        event = parent->CreateEvent(NS_LITERAL_STRING("Events"),
-                                    CallerType::System, ignored);
+        event = parent->CreateEvent(u"Events"_ns, CallerType::System, ignored);
       }
 
       if (event) {
-        event->InitEvent(NS_LITERAL_STRING("DOMFrameContentLoaded"), true,
-                         true);
+        event->InitEvent(u"DOMFrameContentLoaded"_ns, true, true);
 
         event->SetTarget(target_frame);
         event->SetTrusted(true);
@@ -7280,9 +7274,9 @@ void Document::DispatchContentLoadedEvents() {
   // event.
   Element* root = GetRootElement();
   if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::manifest)) {
-    nsContentUtils::DispatchChromeEvent(
-        this, ToSupports(this), NS_LITERAL_STRING("MozApplicationManifest"),
-        CanBubble::eYes, Cancelable::eYes);
+    nsContentUtils::DispatchChromeEvent(this, ToSupports(this),
+                                        u"MozApplicationManifest"_ns,
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 
   nsPIDOMWindowInner* inner = GetInnerWindow();
@@ -7766,7 +7760,7 @@ already_AddRefed<CDATASection> Document::CreateCDATASection(
     return nullptr;
   }
 
-  if (FindInReadable(NS_LITERAL_STRING("]]>"), aData)) {
+  if (FindInReadable(u"]]>"_ns, aData)) {
     rv.Throw(NS_ERROR_DOM_INVALID_CHARACTER_ERR);
     return nullptr;
   }
@@ -7788,7 +7782,7 @@ already_AddRefed<ProcessingInstruction> Document::CreateProcessingInstruction(
     return nullptr;
   }
 
-  if (FindInReadable(NS_LITERAL_STRING("?>"), aData)) {
+  if (FindInReadable(u"?>"_ns, aData)) {
     rv.Throw(NS_ERROR_DOM_INVALID_CHARACTER_ERR);
     return nullptr;
   }
@@ -8075,8 +8069,7 @@ void Document::SetDomain(const nsAString& aDomain, ErrorResult& rv) {
     return;
   }
 
-  if (!FeaturePolicyUtils::IsFeatureAllowed(
-          this, NS_LITERAL_STRING("document-domain"))) {
+  if (!FeaturePolicyUtils::IsFeatureAllowed(this, u"document-domain"_ns)) {
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -8421,8 +8414,8 @@ void Document::DoNotifyPossibleTitleChange() {
 
   // Fire a DOM event for the title change.
   nsContentUtils::DispatchChromeEvent(this, ToSupports(this),
-                                      NS_LITERAL_STRING("DOMTitleChanged"),
-                                      CanBubble::eYes, Cancelable::eYes);
+                                      u"DOMTitleChanged"_ns, CanBubble::eYes,
+                                      Cancelable::eYes);
 }
 
 already_AddRefed<MediaQueryList> Document::MatchMedia(
@@ -9058,7 +9051,7 @@ void Document::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
     if (mIgnoreDestructiveWritesCounter) {
       // Instead of implying a call to document.open(), ignore the call.
       nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM Events"), this,
+          nsIScriptError::warningFlag, "DOM Events"_ns, this,
           nsContentUtils::eDOM_PROPERTIES, "DocumentWriteIgnored");
       return;
     }
@@ -9075,7 +9068,7 @@ void Document::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
     if (mIgnoreDestructiveWritesCounter) {
       // Instead of implying a call to document.open(), ignore the call.
       nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM Events"), this,
+          nsIScriptError::warningFlag, "DOM Events"_ns, this,
           nsContentUtils::eDOM_PROPERTIES, "DocumentWriteIgnored");
       return;
     }
@@ -9889,9 +9882,9 @@ void Document::AddMetaViewportElement(HTMLMetaElement* aElement,
   // Trigger recomputation of the nsViewportInfo the next time it's queried.
   mViewportType = Unknown;
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      this, NS_LITERAL_STRING("DOMMetaViewportFitChanged"), CanBubble::eYes,
-      ChromeOnlyDispatch::eYes);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(this, u"DOMMetaViewportFitChanged"_ns,
+                               CanBubble::eYes, ChromeOnlyDispatch::eYes);
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
@@ -9902,9 +9895,9 @@ void Document::RemoveMetaViewportElement(HTMLMetaElement* aElement) {
       // Trigger recomputation of the nsViewportInfo the next time it's queried.
       mViewportType = Unknown;
 
-      RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-          this, NS_LITERAL_STRING("DOMMetaViewportFitChanged"), CanBubble::eYes,
-          ChromeOnlyDispatch::eYes);
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+          new AsyncEventDispatcher(this, u"DOMMetaViewportFitChanged"_ns,
+                                   CanBubble::eYes, ChromeOnlyDispatch::eYes);
       asyncDispatcher->RunDOMEventWhenSafe();
       return;
     }
@@ -10143,8 +10136,7 @@ void Document::RetrieveRelevantHeaders(nsIChannel* aChannel) {
 
   if (httpChannel) {
     nsAutoCString tmp;
-    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
-                                        tmp);
+    rv = httpChannel->GetResponseHeader("last-modified"_ns, tmp);
 
     if (NS_SUCCEEDED(rv)) {
       PRTime time;
@@ -10252,8 +10244,7 @@ void Document::Sanitize() {
   // First locate all input elements, regardless of whether they are
   // in a form, and reset the password and autocomplete=off elements.
 
-  RefPtr<nsContentList> nodes =
-      GetElementsByTagName(NS_LITERAL_STRING("input"));
+  RefPtr<nsContentList> nodes = GetElementsByTagName(u"input"_ns);
 
   nsAutoString value;
 
@@ -10272,7 +10263,7 @@ void Document::Sanitize() {
   }
 
   // Now locate all _form_ elements that have autocomplete=off and reset them
-  nodes = GetElementsByTagName(NS_LITERAL_STRING("form"));
+  nodes = GetElementsByTagName(u"form"_ns);
 
   length = nodes->Length(true);
   for (uint32_t i = 0; i < length; ++i) {
@@ -10685,9 +10676,9 @@ void Document::UnblockOnload(bool aFireSync) {
       // event to indicate that the SVG should be considered fully loaded.
       // Because scripting is disabled on SVG-as-image documents, this event
       // is not accessible to content authors. (See bug 837315.)
-      RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-          this, NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"), CanBubble::eNo,
-          ChromeOnlyDispatch::eNo);
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+          new AsyncEventDispatcher(this, u"MozSVGAsImageDocumentLoad"_ns,
+                                   CanBubble::eNo, ChromeOnlyDispatch::eNo);
       asyncDispatcher->PostDOMEvent();
     }
   }
@@ -10801,7 +10792,7 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
   if (aPersisted && root) {
     // Send out notifications that our <link> elements are attached.
     RefPtr<nsContentList> links =
-        NS_GetContentList(root, kNameSpaceID_XHTML, NS_LITERAL_STRING("link"));
+        NS_GetContentList(root, kNameSpaceID_XHTML, u"link"_ns);
 
     uint32_t linkCount = links->Length(true);
     for (uint32_t i = 0; i < linkCount; ++i) {
@@ -10850,8 +10841,8 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
     if (!target) {
       target = do_QueryInterface(GetWindow());
     }
-    DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"),
-                           inFrameLoaderSwap, aPersisted, aOnlySystemGroup);
+    DispatchPageTransition(target, u"pageshow"_ns, inFrameLoaderSwap,
+                           aPersisted, aOnlySystemGroup);
   }
 }
 
@@ -10878,7 +10869,7 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
   Element* root = GetRootElement();
   if (aPersisted && root) {
     RefPtr<nsContentList> links =
-        NS_GetContentList(root, kNameSpaceID_XHTML, NS_LITERAL_STRING("link"));
+        NS_GetContentList(root, kNameSpaceID_XHTML, u"link"_ns);
 
     uint32_t linkCount = links->Length(true);
     for (uint32_t i = 0; i < linkCount; ++i) {
@@ -10924,8 +10915,8 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
     }
     {
       PageUnloadingEventTimeStamp timeStamp(this);
-      DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"),
-                             inFrameLoaderSwap, aPersisted, aOnlySystemGroup);
+      DispatchPageTransition(target, u"pagehide"_ns, inFrameLoaderSwap,
+                             aPersisted, aOnlySystemGroup);
     }
   }
 
@@ -11257,9 +11248,8 @@ void Document::SetReadyStateInternal(ReadyState aReadyState,
     RecordNavigationTiming(aReadyState);
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, NS_LITERAL_STRING("readystatechange"),
-                               CanBubble::eNo, ChromeOnlyDispatch::eNo);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+      this, u"readystatechange"_ns, CanBubble::eNo, ChromeOnlyDispatch::eNo);
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
@@ -11419,8 +11409,8 @@ void Document::PreLoadImage(nsIURI* aUri, const nsAString& aCrossOriginAttr,
   nsresult rv = nsContentUtils::LoadImage(
       aUri, static_cast<nsINode*>(this), this, NodePrincipal(), 0, referrerInfo,
       nullptr /* no observer */, loadFlags,
-      aLinkPreload ? NS_LITERAL_STRING("link") : NS_LITERAL_STRING("img"),
-      getter_AddRefs(request), policyType, false /* urgent */, aLinkPreload);
+      aLinkPreload ? u"link"_ns : u"img"_ns, getter_AddRefs(request),
+      policyType, false /* urgent */, aLinkPreload);
 
   // Pin image-reference to avoid evicting it from the img-cache before
   // the "real" load occurs. Unpinned in DispatchContentLoadedEvents and
@@ -11473,9 +11463,9 @@ void Document::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode) {
   // normalize the path before putting it in the hash to accomplish that.
 
   if (aCORSMode == CORS_ANONYMOUS) {
-    mutator.SetPathQueryRef(NS_LITERAL_CSTRING("/anonymous"));
+    mutator.SetPathQueryRef("/anonymous"_ns);
   } else {
-    mutator.SetPathQueryRef(NS_LITERAL_CSTRING("/"));
+    mutator.SetPathQueryRef("/"_ns);
   }
 
   nsCOMPtr<nsIURI> uri;
@@ -12262,7 +12252,7 @@ void Document::WarnOnceAbout(
   }
   uint32_t flags =
       asError ? nsIScriptError::errorFlag : nsIScriptError::warningFlag;
-  nsContentUtils::ReportToConsole(flags, NS_LITERAL_CSTRING("DOM Core"), this,
+  nsContentUtils::ReportToConsole(flags, "DOM Core"_ns, this,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   kDeprecationWarnings[aOperation], aParams);
 }
@@ -12281,7 +12271,7 @@ void Document::WarnOnceAbout(
   mDocWarningWarnedAbout[aWarning] = true;
   uint32_t flags =
       asError ? nsIScriptError::errorFlag : nsIScriptError::warningFlag;
-  nsContentUtils::ReportToConsole(flags, NS_LITERAL_CSTRING("DOM Core"), this,
+  nsContentUtils::ReportToConsole(flags, "DOM Core"_ns, this,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   kDocumentWarnings[aWarning], aParams);
 }
@@ -12805,9 +12795,9 @@ void Document::MaybeWarnAboutZoom() {
   }
 
   mHasWarnedAboutZoom = true;
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"), this,
-      nsContentUtils::eLAYOUT_PROPERTIES, "ZoomPropertyWarning");
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Layout"_ns,
+                                  this, nsContentUtils::eLAYOUT_PROPERTIES,
+                                  "ZoomPropertyWarning");
 }
 
 nsIHTMLCollection* Document::Children() {
@@ -13076,8 +13066,8 @@ already_AddRefed<Promise> Document::ExitFullscreen(ErrorResult& aRv) {
 static void AskWindowToExitFullscreen(Document* aDoc) {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     nsContentUtils::DispatchEventOnlyToChrome(
-        aDoc, ToSupports(aDoc), NS_LITERAL_STRING("MozDOMFullscreen:Exit"),
-        CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
+        aDoc, ToSupports(aDoc), u"MozDOMFullscreen:Exit"_ns, CanBubble::eYes,
+        Cancelable::eNo, /* DefaultAction */ nullptr);
   } else {
     if (nsPIDOMWindowOuter* win = aDoc->GetWindow()) {
       win->SetFullscreenInternal(FullscreenReason::ForFullscreenAPI, false);
@@ -13190,7 +13180,7 @@ class ExitFullscreenScriptRunnable : public Runnable {
     // document since we want this event to follow the same path that
     // MozDOMFullscreen:Entered was dispatched.
     nsContentUtils::DispatchEventOnlyToChrome(
-        mLeaf, ToSupports(mLeaf), NS_LITERAL_STRING("MozDOMFullscreen:Exited"),
+        mLeaf, ToSupports(mLeaf), u"MozDOMFullscreen:Exited"_ns,
         CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
     // Ensure the window exits fullscreen.
     if (nsPIDOMWindowOuter* win = mRoot->GetWindow()) {
@@ -13253,9 +13243,9 @@ void Document::ExitFullscreenInDocTree(Document* aMaybeNotARootDoc) {
 }
 
 static void DispatchFullscreenNewOriginEvent(Document* aDoc) {
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      aDoc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"), CanBubble::eYes,
-      ChromeOnlyDispatch::eYes);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(aDoc, u"MozDOMFullscreen:NewOrigin"_ns,
+                               CanBubble::eYes, ChromeOnlyDispatch::eYes);
   asyncDispatcher->PostDOMEvent();
 }
 
@@ -13640,8 +13630,7 @@ const char* Document::GetFullscreenError(CallerType aCallerType) {
     return "FullscreenDeniedHidden";
   }
 
-  if (!FeaturePolicyUtils::IsFeatureAllowed(this,
-                                            NS_LITERAL_STRING("fullscreen"))) {
+  if (!FeaturePolicyUtils::IsFeatureAllowed(this, u"fullscreen"_ns)) {
     return "FullscreenDeniedFeaturePolicy";
   }
 
@@ -13797,8 +13786,8 @@ void Document::RequestFullscreenInContentProcess(
   // If we are not the top level process, dispatch an event to make
   // our parent process go fullscreen first.
   nsContentUtils::DispatchEventOnlyToChrome(
-      this, ToSupports(this), NS_LITERAL_STRING("MozDOMFullscreen:Request"),
-      CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
+      this, ToSupports(this), u"MozDOMFullscreen:Request"_ns, CanBubble::eYes,
+      Cancelable::eNo, /* DefaultAction */ nullptr);
 }
 
 void Document::RequestFullscreenInParentProcess(
@@ -13946,8 +13935,8 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
   // to pop up warning UI.
   if (!previousFullscreenDoc) {
     nsContentUtils::DispatchEventOnlyToChrome(
-        this, ToSupports(elem), NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
-        CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
+        this, ToSupports(elem), u"MozDOMFullscreen:Entered"_ns, CanBubble::eYes,
+        Cancelable::eNo, /* DefaultAction */ nullptr);
   }
 
   // The origin which is fullscreen gets changed. Trigger an event so
@@ -13991,7 +13980,7 @@ static void DispatchPointerLockChange(Document* aTarget) {
   }
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(aTarget, NS_LITERAL_STRING("pointerlockchange"),
+      new AsyncEventDispatcher(aTarget, u"pointerlockchange"_ns,
                                CanBubble::eYes, ChromeOnlyDispatch::eNo);
   asyncDispatcher->PostDOMEvent();
 }
@@ -14002,12 +13991,12 @@ static void DispatchPointerLockError(Document* aTarget, const char* aMessage) {
   }
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(aTarget, NS_LITERAL_STRING("pointerlockerror"),
-                               CanBubble::eYes, ChromeOnlyDispatch::eNo);
+      new AsyncEventDispatcher(aTarget, u"pointerlockerror"_ns, CanBubble::eYes,
+                               ChromeOnlyDispatch::eNo);
   asyncDispatcher->PostDOMEvent();
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("DOM"), aTarget,
-                                  nsContentUtils::eDOM_PROPERTIES, aMessage);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                  aTarget, nsContentUtils::eDOM_PROPERTIES,
+                                  aMessage);
 }
 
 class PointerLockRequest final : public Runnable {
@@ -14150,8 +14139,8 @@ PointerLockRequest::Run() {
 
   ChangePointerLockedElement(e, doc, nullptr);
   nsContentUtils::DispatchEventOnlyToChrome(
-      doc, ToSupports(e), NS_LITERAL_STRING("MozDOMPointerLock:Entered"),
-      CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
+      doc, ToSupports(e), u"MozDOMPointerLock:Entered"_ns, CanBubble::eYes,
+      Cancelable::eNo, /* DefaultAction */ nullptr);
   return NS_OK;
 }
 
@@ -14247,8 +14236,8 @@ void Document::UnlockPointer(Document* aDoc) {
   ChangePointerLockedElement(nullptr, pointerLockedDoc, pointerLockedElement);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      pointerLockedElement, NS_LITERAL_STRING("MozDOMPointerLock:Exited"),
-      CanBubble::eYes, ChromeOnlyDispatch::eYes);
+      pointerLockedElement, u"MozDOMPointerLock:Exited"_ns, CanBubble::eYes,
+      ChromeOnlyDispatch::eYes);
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
@@ -14257,7 +14246,7 @@ void Document::UpdateVisibilityState() {
   mVisibilityState = ComputeVisibilityState();
   if (oldState != mVisibilityState) {
     nsContentUtils::DispatchTrustedEvent(this, ToSupports(this),
-                                         NS_LITERAL_STRING("visibilitychange"),
+                                         u"visibilitychange"_ns,
                                          CanBubble::eYes, Cancelable::eNo);
     EnumerateActivityObservers(NotifyActivityChanged);
   }
@@ -15110,7 +15099,7 @@ void Document::ReportHasScrollLinkedEffect() {
   }
   mHasScrollLinkedEffect = true;
   nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Async Pan/Zoom"), this,
+      nsIScriptError::warningFlag, "Async Pan/Zoom"_ns, this,
       nsContentUtils::eLAYOUT_PROPERTIES, "ScrollLinkedEffectFound2");
 }
 
@@ -15399,7 +15388,7 @@ class UserIntractionTimer final : public Runnable,
     NS_ENSURE_TRUE(!!phase, NS_OK);
 
     rv = phase->AddBlocker(this, NS_LITERAL_STRING(__FILE__), __LINE__,
-                           NS_LITERAL_STRING("UserIntractionTimer shutdown"));
+                           u"UserIntractionTimer shutdown"_ns);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     raii.release();
@@ -16242,10 +16231,10 @@ void Document::ReportShadowDOMUsage() {
     nsString uri;
     Unused << topLevel->GetDocumentURI(uri);
     if (!uri.IsEmpty()) {
-      nsAutoString msg = NS_LITERAL_STRING("Shadow DOM used in [") + uri +
-                         NS_LITERAL_STRING("] or in some of its subdocuments.");
-      nsContentUtils::ReportToConsoleNonLocalized(
-          msg, nsIScriptError::infoFlag, NS_LITERAL_CSTRING("DOM"), topLevel);
+      nsAutoString msg = u"Shadow DOM used in ["_ns + uri +
+                         u"] or in some of its subdocuments."_ns;
+      nsContentUtils::ReportToConsoleNonLocalized(msg, nsIScriptError::infoFlag,
+                                                  "DOM"_ns, topLevel);
     }
   }
 

@@ -98,8 +98,8 @@ class EstimateWorkerMainThreadRunnable final : public WorkerMainThreadRunnable {
  public:
   EstimateWorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
                                    PromiseWorkerProxy* aProxy)
-      : WorkerMainThreadRunnable(
-            aWorkerPrivate, NS_LITERAL_CSTRING("StorageManager :: Estimate")),
+      : WorkerMainThreadRunnable(aWorkerPrivate,
+                                 "StorageManager :: Estimate"_ns),
         mProxy(aProxy) {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -116,8 +116,8 @@ class PersistedWorkerMainThreadRunnable final
  public:
   PersistedWorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
                                     PromiseWorkerProxy* aProxy)
-      : WorkerMainThreadRunnable(
-            aWorkerPrivate, NS_LITERAL_CSTRING("StorageManager :: Persisted")),
+      : WorkerMainThreadRunnable(aWorkerPrivate,
+                                 "StorageManager :: Persisted"_ns),
         mProxy(aProxy) {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -140,8 +140,8 @@ class PersistentStoragePermissionRequest final
                                      nsPIDOMWindowInner* aWindow,
                                      Promise* aPromise)
       : ContentPermissionRequestBase(aPrincipal, aWindow,
-                                     NS_LITERAL_CSTRING("dom.storageManager"),
-                                     NS_LITERAL_CSTRING("persistent-storage")),
+                                     "dom.storageManager"_ns,
+                                     "persistent-storage"_ns),
         mPromise(aPromise) {
     MOZ_ASSERT(aWindow);
     MOZ_ASSERT(aPromise);

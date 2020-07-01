@@ -201,8 +201,7 @@ void CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
 
 void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
                                       bool aValue) {
-  mExtraAnnotations[aKey] =
-      aValue ? NS_LITERAL_CSTRING("1") : NS_LITERAL_CSTRING("0");
+  mExtraAnnotations[aKey] = aValue ? "1"_ns : "0"_ns;
 }
 
 void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,

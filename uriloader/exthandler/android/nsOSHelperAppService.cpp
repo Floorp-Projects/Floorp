@@ -37,8 +37,8 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
   // Support any URI barring a couple schemes we use in testing; let the
   // app decide what to do with them.
   nsAutoCString scheme(aScheme);
-  *aExists = !scheme.Equals(NS_LITERAL_CSTRING("unsupported")) &&
-             !scheme.Equals(NS_LITERAL_CSTRING("unknownextproto"));
+  *aExists =
+      !scheme.Equals("unsupported"_ns) && !scheme.Equals("unknownextproto"_ns);
   return NS_OK;
 }
 

@@ -486,7 +486,7 @@ LocaleService::GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal) {
 NS_IMETHODIMP
 LocaleService::GetWebExposedLocales(nsTArray<nsCString>& aRetVal) {
   if (StaticPrefs::privacy_spoof_english() == 2) {
-    aRetVal = nsTArray<nsCString>({NS_LITERAL_CSTRING("en-US")});
+    aRetVal = nsTArray<nsCString>({"en-US"_ns});
     return NS_OK;
   }
 

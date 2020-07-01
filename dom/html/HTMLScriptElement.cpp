@@ -187,19 +187,19 @@ void HTMLScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
                                                 OwnerDoc(), GetBaseURI());
 
       if (!mUri) {
-        AutoTArray<nsString, 2> params = {NS_LITERAL_STRING("src"), src};
+        AutoTArray<nsString, 2> params = {u"src"_ns, src};
 
         nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("HTML"), OwnerDoc(),
+            nsIScriptError::warningFlag, "HTML"_ns, OwnerDoc(),
             nsContentUtils::eDOM_PROPERTIES, "ScriptSourceInvalidUri", params,
             nullptr, EmptyString(), GetScriptLineNumber(),
             GetScriptColumnNumber());
       }
     } else {
-      AutoTArray<nsString, 1> params = {NS_LITERAL_STRING("src")};
+      AutoTArray<nsString, 1> params = {u"src"_ns};
 
       nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("HTML"), OwnerDoc(),
+          nsIScriptError::warningFlag, "HTML"_ns, OwnerDoc(),
           nsContentUtils::eDOM_PROPERTIES, "ScriptSourceEmpty", params, nullptr,
           EmptyString(), GetScriptLineNumber(), GetScriptColumnNumber());
     }

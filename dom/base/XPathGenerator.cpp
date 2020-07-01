@@ -103,15 +103,14 @@ void GenerateConcatExpression(const nsAString& aStr, nsAString& aResult) {
   }
 
   // Prepend concat(' and append ').
-  aResult.Assign(NS_LITERAL_STRING("concat(\'") + result +
-                 NS_LITERAL_STRING("\')"));
+  aResult.Assign(u"concat(\'"_ns + result + u"\')"_ns);
 }
 
 void XPathGenerator::QuoteArgument(const nsAString& aArg, nsAString& aResult) {
   if (!aArg.Contains('\'')) {
-    aResult.Assign(NS_LITERAL_STRING("\'") + aArg + NS_LITERAL_STRING("\'"));
+    aResult.Assign(u"\'"_ns + aArg + u"\'"_ns);
   } else if (!aArg.Contains('\"')) {
-    aResult.Assign(NS_LITERAL_STRING("\"") + aArg + NS_LITERAL_STRING("\""));
+    aResult.Assign(u"\""_ns + aArg + u"\""_ns);
   } else {
     GenerateConcatExpression(aArg, aResult);
   }
@@ -121,8 +120,7 @@ void XPathGenerator::EscapeName(const nsAString& aName, nsAString& aResult) {
   if (ContainNonWordCharacter(aName)) {
     nsAutoString quotedArg;
     QuoteArgument(aName, quotedArg);
-    aResult.Assign(NS_LITERAL_STRING("*[local-name()=") + quotedArg +
-                   NS_LITERAL_STRING("]"));
+    aResult.Assign(u"*[local-name()="_ns + quotedArg + u"]"_ns);
   } else {
     aResult.Assign(aName);
   }
@@ -146,7 +144,7 @@ void XPathGenerator::Generate(const nsINode* aNode, nsAString& aResult) {
   if (prefix.IsEmpty()) {
     tag.Assign(nodeEscapeName);
   } else {
-    tag.Assign(prefix + NS_LITERAL_STRING(":") + nodeEscapeName);
+    tag.Assign(prefix + u":"_ns + nodeEscapeName);
   }
 
   if (aNode->HasID()) {
@@ -156,8 +154,7 @@ void XPathGenerator::Generate(const nsINode* aNode, nsAString& aResult) {
     nsAutoString quotedArgument;
     elem->GetId(elemId);
     QuoteArgument(elemId, quotedArgument);
-    aResult.Assign(NS_LITERAL_STRING("//") + tag + NS_LITERAL_STRING("[@id=") +
-                   quotedArgument + NS_LITERAL_STRING("]"));
+    aResult.Assign(u"//"_ns + tag + u"[@id="_ns + quotedArgument + u"]"_ns);
     return;
   }
 
@@ -183,8 +180,7 @@ void XPathGenerator::Generate(const nsINode* aNode, nsAString& aResult) {
   if (!nodeNameAttribute.IsEmpty()) {
     nsAutoString quotedArgument;
     QuoteArgument(nodeNameAttribute, quotedArgument);
-    namePart.Assign(NS_LITERAL_STRING("[@name=") + quotedArgument +
-                    NS_LITERAL_STRING("]"));
+    namePart.Assign(u"[@name="_ns + quotedArgument + u"]"_ns);
   }
   if (count != 1) {
     countPart.AssignLiteral(u"[");
@@ -192,5 +188,5 @@ void XPathGenerator::Generate(const nsINode* aNode, nsAString& aResult) {
     countPart.AppendLiteral(u"]");
   }
   Generate(aNode->GetParentNode(), aResult);
-  aResult.Append(NS_LITERAL_STRING("/") + tag + namePart + countPart);
+  aResult.Append(u"/"_ns + tag + namePart + countPart);
 }

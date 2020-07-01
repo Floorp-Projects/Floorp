@@ -39,8 +39,7 @@ TEST_F(psm_DataStorageTest, GetPutRemove) {
   // Don't re-use testKey / testValue here, to make sure that this works as
   // expected with objects that have the same semantic value but are not
   // literally the same object.
-  nsCString result =
-      storage->Get(NS_LITERAL_CSTRING("test"), DataStorage_Persistent);
+  nsCString result = storage->Get("test"_ns, DataStorage_Persistent);
   EXPECT_STREQ("value", result.get());
 
   // Get on Temporary/Private data with the same key should give nothing
@@ -89,26 +88,20 @@ TEST_F(psm_DataStorageTest, GetPutRemove) {
 TEST_F(psm_DataStorageTest, InputValidation) {
   // Keys may not have tabs or newlines
   EXPECT_EQ(NS_ERROR_INVALID_ARG,
-            storage->Put(NS_LITERAL_CSTRING("key\thas tab"), testValue,
-                         DataStorage_Persistent));
-  nsCString result =
-      storage->Get(NS_LITERAL_CSTRING("key\thas tab"), DataStorage_Persistent);
+            storage->Put("key\thas tab"_ns, testValue, DataStorage_Persistent));
+  nsCString result = storage->Get("key\thas tab"_ns, DataStorage_Persistent);
   EXPECT_TRUE(result.IsEmpty());
-  EXPECT_EQ(NS_ERROR_INVALID_ARG,
-            storage->Put(NS_LITERAL_CSTRING("key has\nnewline"), testValue,
-                         DataStorage_Persistent));
-  result = storage->Get(NS_LITERAL_CSTRING("keyhas\nnewline"),
-                        DataStorage_Persistent);
+  EXPECT_EQ(NS_ERROR_INVALID_ARG, storage->Put("key has\nnewline"_ns, testValue,
+                                               DataStorage_Persistent));
+  result = storage->Get("keyhas\nnewline"_ns, DataStorage_Persistent);
   EXPECT_TRUE(result.IsEmpty());
   // Values may not have newlines
-  EXPECT_EQ(NS_ERROR_INVALID_ARG,
-            storage->Put(testKey, NS_LITERAL_CSTRING("value\nhas newline"),
-                         DataStorage_Persistent));
+  EXPECT_EQ(NS_ERROR_INVALID_ARG, storage->Put(testKey, "value\nhas newline"_ns,
+                                               DataStorage_Persistent));
   result = storage->Get(testKey, DataStorage_Persistent);
   // Values may have tabs
   EXPECT_TRUE(result.IsEmpty());
-  EXPECT_EQ(NS_OK, storage->Put(testKey,
-                                NS_LITERAL_CSTRING("val\thas tab; this is ok"),
+  EXPECT_EQ(NS_OK, storage->Put(testKey, "val\thas tab; this is ok"_ns,
                                 DataStorage_Persistent));
   result = storage->Get(testKey, DataStorage_Persistent);
   EXPECT_STREQ("val\thas tab; this is ok", result.get());

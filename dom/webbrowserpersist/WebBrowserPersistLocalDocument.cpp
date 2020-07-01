@@ -140,8 +140,7 @@ WebBrowserPersistLocalDocument::GetContentDisposition(nsAString& aCD) {
   }
   nsCOMPtr<nsIDOMWindowUtils> utils =
       nsGlobalWindowOuter::Cast(window)->WindowUtils();
-  nsresult rv =
-      utils->GetDocumentMetadata(NS_LITERAL_STRING("content-disposition"), aCD);
+  nsresult rv = utils->GetDocumentMetadata(u"content-disposition"_ns, aCD);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aCD.SetIsVoid(true);
   }
@@ -660,7 +659,7 @@ nsresult PersistNodeFixup::FixupAnchor(nsINode* aNode) {
   RefPtr<nsDOMAttributeMap> attrMap = element->Attributes();
 
   // Make all anchor links absolute so they point off onto the Internet
-  nsString attribute(NS_LITERAL_STRING("href"));
+  nsString attribute(u"href"_ns);
   RefPtr<dom::Attr> attr = attrMap->GetNamedItem(attribute);
   if (attr) {
     nsString oldValue;
@@ -756,21 +755,21 @@ nsresult PersistNodeFixup::FixupXMLStyleSheetLink(
     nsContentUtils::GetPseudoAttributeValue(data, nsGkAtoms::media, media);
 
     nsAutoString newData;
-    AppendXMLAttr(NS_LITERAL_STRING("href"), aHref, newData);
+    AppendXMLAttr(u"href"_ns, aHref, newData);
     if (!title.IsEmpty()) {
-      AppendXMLAttr(NS_LITERAL_STRING("title"), title, newData);
+      AppendXMLAttr(u"title"_ns, title, newData);
     }
     if (!media.IsEmpty()) {
-      AppendXMLAttr(NS_LITERAL_STRING("media"), media, newData);
+      AppendXMLAttr(u"media"_ns, media, newData);
     }
     if (!type.IsEmpty()) {
-      AppendXMLAttr(NS_LITERAL_STRING("type"), type, newData);
+      AppendXMLAttr(u"type"_ns, type, newData);
     }
     if (!charset.IsEmpty()) {
-      AppendXMLAttr(NS_LITERAL_STRING("charset"), charset, newData);
+      AppendXMLAttr(u"charset"_ns, charset, newData);
     }
     if (!alternate.IsEmpty()) {
-      AppendXMLAttr(NS_LITERAL_STRING("alternate"), alternate, newData);
+      AppendXMLAttr(u"alternate"_ns, alternate, newData);
     }
     aPI->SetData(newData, IgnoreErrors());
   }
@@ -831,8 +830,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn, bool* aSerializeCloneKids,
     nsAutoString commentText;
     commentText.AssignLiteral(" base ");
     if (!href.IsEmpty()) {
-      commentText +=
-          NS_LITERAL_STRING("href=\"") + href + NS_LITERAL_STRING("\" ");
+      commentText += u"href=\""_ns + href + u"\" "_ns;
     }
     *aNodeOut = ownerDoc->CreateComment(commentText).take();
     return NS_OK;

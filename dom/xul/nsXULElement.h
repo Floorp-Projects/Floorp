@@ -371,12 +371,11 @@ class nsXULElement : public nsStyledElement {
     SetAttr(aName, aValue, aError);
   }
   bool GetXULBoolAttr(nsAtom* aName) const {
-    return AttrValueIs(kNameSpaceID_None, aName, NS_LITERAL_STRING("true"),
-                       eCaseMatters);
+    return AttrValueIs(kNameSpaceID_None, aName, u"true"_ns, eCaseMatters);
   }
   void SetXULBoolAttr(nsAtom* aName, bool aValue) {
     if (aValue) {
-      SetAttr(kNameSpaceID_None, aName, NS_LITERAL_STRING("true"), true);
+      SetAttr(kNameSpaceID_None, aName, u"true"_ns, true);
     } else {
       UnsetAttr(kNameSpaceID_None, aName, true);
     }

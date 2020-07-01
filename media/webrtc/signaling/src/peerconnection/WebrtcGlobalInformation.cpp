@@ -282,8 +282,7 @@ static void OnGetLogging_m(WebrtcGlobalChild* aThisChild, const int aRequestId,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aLogList.IsEmpty()) {
-    if (!aLogList.AppendElement(NS_LITERAL_STRING("+++++++ END ++++++++"),
-                                fallible)) {
+    if (!aLogList.AppendElement(u"+++++++ END ++++++++"_ns, fallible)) {
       mozalloc_handle_oom(0);
     }
   }

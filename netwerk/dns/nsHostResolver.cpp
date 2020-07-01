@@ -704,7 +704,7 @@ nsresult nsHostResolver::Init() {
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadTimeout(poolTimeoutMs));
   MOZ_ALWAYS_SUCCEEDS(
       threadPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize));
-  MOZ_ALWAYS_SUCCEEDS(threadPool->SetName(NS_LITERAL_CSTRING("DNS Resolver")));
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetName("DNS Resolver"_ns));
   mResolverThreads = ToRefPtr(std::move(threadPool));
 
   return NS_OK;

@@ -750,7 +750,7 @@ nscoord nsImageBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aState) {
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsImageBoxFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("ImageBox"), aResult);
+  return MakeFrameName(u"ImageBox"_ns, aResult);
 }
 #endif
 

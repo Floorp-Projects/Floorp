@@ -41,7 +41,7 @@ class SVGAFrame final : public nsSVGDisplayContainerFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("SVGA"), aResult);
+    return MakeFrameName(u"SVGA"_ns, aResult);
   }
 #endif
 };

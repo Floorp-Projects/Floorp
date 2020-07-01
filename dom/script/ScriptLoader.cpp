@@ -308,7 +308,7 @@ static bool IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement) {
   // We found for="window", now check for event="onload".
   const nsAString& event_str =
       nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(eventAttr, false);
-  if (!StringBeginsWith(event_str, NS_LITERAL_STRING("onload"),
+  if (!StringBeginsWith(event_str, u"onload"_ns,
                         nsCaseInsensitiveStringComparator)) {
     // It ain't "onload.*".
 
@@ -682,9 +682,9 @@ static already_AddRefed<nsIURI> ResolveModuleSpecifier(
     return nullptr;
   }
 
-  if (!StringBeginsWith(aSpecifier, NS_LITERAL_STRING("/")) &&
-      !StringBeginsWith(aSpecifier, NS_LITERAL_STRING("./")) &&
-      !StringBeginsWith(aSpecifier, NS_LITERAL_STRING("../"))) {
+  if (!StringBeginsWith(aSpecifier, u"/"_ns) &&
+      !StringBeginsWith(aSpecifier, u"./"_ns) &&
+      !StringBeginsWith(aSpecifier, u"../"_ns)) {
     return nullptr;
   }
 
@@ -1473,8 +1473,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
         aRequest->ShouldAcceptBinASTEncoding()) {
       acceptTypes = APPLICATION_JAVASCRIPT_BINAST ", */*";
     }
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                       acceptTypes, false);
+    rv = httpChannel->SetRequestHeader("Accept"_ns, acceptTypes, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
@@ -1500,9 +1499,9 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
   if (timedChannel) {
     if (aRequest->IsLinkPreloadScript()) {
-      timedChannel->SetInitiatorType(NS_LITERAL_STRING("link"));
+      timedChannel->SetInitiatorType(u"link"_ns);
     } else {
-      timedChannel->SetInitiatorType(NS_LITERAL_STRING("script"));
+      timedChannel->SetInitiatorType(u"script"_ns);
     }
   }
 
@@ -2480,9 +2479,8 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
   bool runScript = !!pwin;
   if (runScript) {
     nsContentUtils::DispatchTrustedEvent(
-        scriptElem->OwnerDoc(), scriptElem,
-        NS_LITERAL_STRING("beforescriptexecute"), CanBubble::eYes,
-        Cancelable::eYes, &runScript);
+        scriptElem->OwnerDoc(), scriptElem, u"beforescriptexecute"_ns,
+        CanBubble::eYes, Cancelable::eYes, &runScript);
   }
 
   // Inner window could have gone away after firing beforescriptexecute
@@ -2501,10 +2499,9 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
       doc->DecrementIgnoreDestructiveWritesCounter();
     }
 
-    nsContentUtils::DispatchTrustedEvent(
-        scriptElem->OwnerDoc(), scriptElem,
-        NS_LITERAL_STRING("afterscriptexecute"), CanBubble::eYes,
-        Cancelable::eNo);
+    nsContentUtils::DispatchTrustedEvent(scriptElem->OwnerDoc(), scriptElem,
+                                         u"afterscriptexecute"_ns,
+                                         CanBubble::eYes, Cancelable::eNo);
   }
 
   FireScriptEvaluated(rv, aRequest);
@@ -3568,9 +3565,9 @@ void ScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
   uint32_t columnNo = element ? element->GetScriptColumnNumber() : 0;
 
   nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Script Loader"),
-      mDocument, nsContentUtils::eDOM_PROPERTIES, message, params, nullptr,
-      EmptyString(), lineNo, columnNo);
+      nsIScriptError::warningFlag, "Script Loader"_ns, mDocument,
+      nsContentUtils::eDOM_PROPERTIES, message, params, nullptr, EmptyString(),
+      lineNo, columnNo);
 }
 
 void ScriptLoader::ReportPreloadErrorsToConsole(ScriptLoadRequest* aRequest) {

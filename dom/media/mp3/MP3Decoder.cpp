@@ -13,7 +13,7 @@ namespace mozilla {
 /* static */
 bool MP3Decoder::IsEnabled() {
   RefPtr<PDMFactory> platform = new PDMFactory();
-  return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mpeg"),
+  return platform->SupportsMimeType("audio/mpeg"_ns,
                                     /* DecoderDoctorDiagnostics* */ nullptr);
 }
 
@@ -37,7 +37,7 @@ nsTArray<UniquePtr<TrackInfo>> MP3Decoder::GetTracksInfo(
 
   tracks.AppendElement(
       CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("audio/mpeg"), aType));
+          "audio/mpeg"_ns, aType));
 
   return tracks;
 }

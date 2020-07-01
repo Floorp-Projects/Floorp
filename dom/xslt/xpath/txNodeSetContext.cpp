@@ -42,7 +42,7 @@ txResultRecycler* txNodeSetContext::recycler() {
 void txNodeSetContext::receiveError(const nsAString& aMsg, nsresult aRes) {
   NS_ASSERTION(mInner, "mInner is null!!!");
 #ifdef DEBUG
-  nsAutoString error(NS_LITERAL_STRING("forwarded error: "));
+  nsAutoString error(u"forwarded error: "_ns);
   error.Append(aMsg);
   mInner->receiveError(error, aRes);
 #else

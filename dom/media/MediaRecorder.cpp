@@ -115,9 +115,8 @@ class MediaRecorderReporter final : public nsIMemoryReporter {
               }
 
               handleReport->Callback(
-                  EmptyCString(), NS_LITERAL_CSTRING("explicit/media/recorder"),
-                  KIND_HEAP, UNITS_BYTES, sum,
-                  NS_LITERAL_CSTRING("Memory used by media recorder."), data);
+                  EmptyCString(), "explicit/media/recorder"_ns, KIND_HEAP,
+                  UNITS_BYTES, sum, "Memory used by media recorder."_ns, data);
 
               manager->EndReport();
             },
@@ -230,9 +229,9 @@ nsCString TypeSupportToCString(TypeSupport aSupport,
           "Video cannot be recorded with %s as it is an audio type",
           mime.get());
     case TypeSupport::ContainersDisabled:
-      return NS_LITERAL_CSTRING("All containers are disabled");
+      return "All containers are disabled"_ns;
     case TypeSupport::CodecsDisabled:
-      return NS_LITERAL_CSTRING("All codecs are disabled");
+      return "All codecs are disabled"_ns;
     case TypeSupport::ContainerUnsupported:
       return nsPrintfCString("%s indicates an unsupported container",
                              mime.get());
@@ -243,7 +242,7 @@ nsCString TypeSupportToCString(TypeSupport aSupport,
                              mime.get());
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown TypeSupport");
-      return NS_LITERAL_CSTRING("Unknown error");
+      return "Unknown error"_ns;
   }
 }
 
@@ -476,20 +475,20 @@ nsString SelectMimeType(bool aHasVideo, bool aHasAudio,
         // order to be valid. Use them as is.
         majorType = constrainedType->Type().AsString();
       } else if (aHasVideo) {
-        majorType = NS_LITERAL_CSTRING(VIDEO_WEBM);
+        majorType = nsLiteralCString(VIDEO_WEBM);
       } else {
-        majorType = NS_LITERAL_CSTRING(AUDIO_OGG);
+        majorType = nsLiteralCString(AUDIO_OGG);
       }
     }
 
     nsCString codecs;
     {
       if (aHasVideo && aHasAudio) {
-        codecs = NS_LITERAL_CSTRING("\"vp8, opus\"");
+        codecs = "\"vp8, opus\""_ns;
       } else if (aHasVideo) {
-        codecs = NS_LITERAL_CSTRING("vp8");
+        codecs = "vp8"_ns;
       } else {
-        codecs = NS_LITERAL_CSTRING("opus");
+        codecs = "opus"_ns;
       }
     }
     result = NS_ConvertUTF8toUTF16(
@@ -753,8 +752,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
         // check track principals async later.
         nsPIDOMWindowInner* window = mRecorder->GetOwner();
         Document* document = window ? window->GetExtantDoc() : nullptr;
-        nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                        NS_LITERAL_CSTRING("Media"), document,
+        nsContentUtils::ReportToConsole(nsIScriptError::errorFlag, "Media"_ns,
+                                        document,
                                         nsContentUtils::eDOM_PROPERTIES,
                                         "MediaRecorderMultiTracksNotSupported");
         DoSessionEndTask(NS_ERROR_ABORT);
@@ -1065,7 +1064,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     mShutdownBlocker = MakeAndAddRef<Blocker>(this, name);
     nsresult rv = GetShutdownBarrier()->AddBlocker(
         mShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
-        NS_LITERAL_STRING("MediaRecorder::Session: shutdown"));
+        u"MediaRecorder::Session: shutdown"_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
     mEncoder = MediaEncoder::CreateEncoder(
@@ -1151,7 +1150,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
               }
 
               if (needsStartEvent) {
-                mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("start"));
+                mRecorder->DispatchSimpleEvent(u"start"_ns);
               }
 
               // If there was an error, Fire the appropriate one
@@ -1181,7 +1180,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
               }
 
               // Fire an event named stop
-              mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
+              mRecorder->DispatchSimpleEvent(u"stop"_ns);
 
               // And finally, Shutdown and destroy the Session
               return Shutdown();
@@ -1217,7 +1216,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
           mRecorder->mMimeType = mMimeType;
         }
-        mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("start"));
+        mRecorder->DispatchSimpleEvent(u"start"_ns);
       }
       return NS_OK;
     }));
@@ -1631,7 +1630,7 @@ void MediaRecorder::Pause(ErrorResult& aResult) {
       "MediaRecorder::Pause", [recorder = RefPtr<MediaRecorder>(this)] {
         // 2. Let target be the MediaRecorder context object. Fire an event
         //    named pause at target.
-        recorder->DispatchSimpleEvent(NS_LITERAL_STRING("pause"));
+        recorder->DispatchSimpleEvent(u"pause"_ns);
       }));
 
   // 4. return undefined.
@@ -1669,7 +1668,7 @@ void MediaRecorder::Resume(ErrorResult& aResult) {
       "MediaRecorder::Resume", [recorder = RefPtr<MediaRecorder>(this)] {
         // 2. Let target be the MediaRecorder context object. Fire an event
         //    named resume at target.
-        recorder->DispatchSimpleEvent(NS_LITERAL_STRING("resume"));
+        recorder->DispatchSimpleEvent(u"resume"_ns);
       }));
 
   // 4. return undefined.
@@ -1923,7 +1922,7 @@ nsresult MediaRecorder::CreateAndDispatchBlobEvent(BlobImpl* aBlobImpl) {
   init.mData = blob;
 
   RefPtr<BlobEvent> event =
-      BlobEvent::Constructor(this, NS_LITERAL_STRING("dataavailable"), init);
+      BlobEvent::Constructor(this, u"dataavailable"_ns, init);
   event->SetTrusted(true);
   ErrorResult rv;
   DispatchEvent(*event, rv);
@@ -1979,8 +1978,8 @@ void MediaRecorder::NotifyError(nsresult aRv) {
       init.mError = std::move(mUnknownDomException);
   }
 
-  RefPtr<MediaRecorderErrorEvent> event = MediaRecorderErrorEvent::Constructor(
-      this, NS_LITERAL_STRING("error"), init);
+  RefPtr<MediaRecorderErrorEvent> event =
+      MediaRecorderErrorEvent::Constructor(this, u"error"_ns, init);
   event->SetTrusted(true);
 
   IgnoredErrorResult res;

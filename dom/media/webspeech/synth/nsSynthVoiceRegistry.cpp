@@ -535,7 +535,7 @@ bool nsSynthVoiceRegistry::FindVoiceByLang(const nsAString& aLang,
     dashPos = end;
     end = start;
 
-    if (!RFindInReadable(NS_LITERAL_STRING("-"), end, dashPos)) {
+    if (!RFindInReadable(u"-"_ns, end, dashPos)) {
       break;
     }
   }
@@ -582,7 +582,7 @@ VoiceData* nsSynthVoiceRegistry::FindBestMatch(const nsAString& aUri,
   }
 
   // Try en-US, the language of locale "C"
-  if (FindVoiceByLang(NS_LITERAL_STRING("en-US"), &retval)) {
+  if (FindVoiceByLang(u"en-US"_ns, &retval)) {
     LOG(LogLevel::Debug, ("nsSynthVoiceRegistry::FindBestMatch - Matched C "
                           "locale language (en-US ~= %s)",
                           NS_ConvertUTF16toUTF8(retval->mLang).get()));

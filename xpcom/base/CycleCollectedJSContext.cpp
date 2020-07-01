@@ -352,8 +352,8 @@ void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
         init.mReason = JS::GetPromiseResult(aPromise);
 
         RefPtr<PromiseRejectionEvent> event =
-            PromiseRejectionEvent::Constructor(
-                owner, NS_LITERAL_STRING("rejectionhandled"), init);
+            PromiseRejectionEvent::Constructor(owner, u"rejectionhandled"_ns,
+                                               init);
 
         RefPtr<AsyncEventDispatcher> asyncDispatcher =
             new AsyncEventDispatcher(owner, event);
@@ -712,8 +712,8 @@ NS_IMETHODIMP CycleCollectedJSContext::NotifyUnhandledRejections::Run() {
         init.mCancelable = true;
 
         RefPtr<PromiseRejectionEvent> event =
-            PromiseRejectionEvent::Constructor(
-                target, NS_LITERAL_STRING("unhandledrejection"), init);
+            PromiseRejectionEvent::Constructor(target, u"unhandledrejection"_ns,
+                                               init);
         // We don't use the result of dispatching event here to check whether to
         // report the Promise to console.
         target->DispatchEvent(*event);

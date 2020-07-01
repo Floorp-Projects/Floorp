@@ -853,10 +853,9 @@ Family* FontList::FindFamily(const nsCString& aName) {
       pfl->mLocalNameTable.Clear();
       return nullptr;
     }
-    const nsLiteralCString kStyleSuffixes[] = {
-        nsLiteralCString(" book"),   nsLiteralCString(" medium"),
-        nsLiteralCString(" normal"), nsLiteralCString(" regular"),
-        nsLiteralCString(" roman"),  nsLiteralCString(" upright")};
+    const nsLiteralCString kStyleSuffixes[] = {" book"_ns,   " medium"_ns,
+                                               " normal"_ns, " regular"_ns,
+                                               " roman"_ns,  " upright"_ns};
     for (const auto& styleName : kStyleSuffixes) {
       if (StringEndsWith(aName, styleName)) {
         // See if we have a known family that matches the "base" family name

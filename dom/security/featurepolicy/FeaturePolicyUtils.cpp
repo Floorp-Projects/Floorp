@@ -242,11 +242,10 @@ void FeaturePolicyUtils::ReportViolation(Document* aDocument,
   RefPtr<FeaturePolicyViolationReportBody> body =
       new FeaturePolicyViolationReportBody(window->AsGlobal(), aFeatureName,
                                            fileName, lineNumber, columnNumber,
-                                           NS_LITERAL_STRING("enforce"));
+                                           u"enforce"_ns);
 
   ReportingUtils::Report(window->AsGlobal(), nsGkAtoms::featurePolicyViolation,
-                         NS_LITERAL_STRING("default"),
-                         NS_ConvertUTF8toUTF16(spec), body);
+                         u"default"_ns, NS_ConvertUTF8toUTF16(spec), body);
 }
 
 }  // namespace dom

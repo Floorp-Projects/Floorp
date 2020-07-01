@@ -869,7 +869,7 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsComboboxControlFrame::GetFrameName(nsAString& aResult) const {
-  return MakeFrameName(NS_LITERAL_STRING("ComboboxControl"), aResult);
+  return MakeFrameName(u"ComboboxControl"_ns, aResult);
 }
 #endif
 
@@ -1174,20 +1174,18 @@ nsresult nsComboboxControlFrame::CreateAnonymousContent(
   // make someone to listen to the button. If its pressed by someone like
   // Accessibility then open or close the combo box.
   mButtonListener = new nsComboButtonListener(this);
-  mButtonContent->AddEventListener(NS_LITERAL_STRING("click"), mButtonListener,
-                                   false, false);
+  mButtonContent->AddEventListener(u"click"_ns, mButtonListener, false, false);
 
-  mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                          NS_LITERAL_STRING("button"), false);
+  mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type, u"button"_ns,
+                          false);
   // Set tabindex="-1" so that the button is not tabbable
-  mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex,
-                          NS_LITERAL_STRING("-1"), false);
+  mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, u"-1"_ns,
+                          false);
 
   WritingMode wm = GetWritingMode();
   if (wm.IsVertical()) {
     mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orientation,
-                            wm.IsVerticalRL() ? NS_LITERAL_STRING("left")
-                                              : NS_LITERAL_STRING("right"),
+                            wm.IsVerticalRL() ? u"left"_ns : u"right"_ns,
                             false);
   }
 
@@ -1226,7 +1224,7 @@ class nsComboboxDisplayFrame final : public nsBlockFrame {
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
-    return MakeFrameName(NS_LITERAL_STRING("ComboboxDisplay"), aResult);
+    return MakeFrameName(u"ComboboxDisplay"_ns, aResult);
   }
 #endif
 
@@ -1572,9 +1570,8 @@ nsComboboxControlFrame::OnOptionSelected(int32_t aIndex, bool aSelected) {
 
 void nsComboboxControlFrame::FireValueChangeEvent() {
   // Fire ValueChange event to indicate data value of combo box has changed
-  nsContentUtils::AddScriptRunner(
-      new AsyncEventDispatcher(mContent, NS_LITERAL_STRING("ValueChange"),
-                               CanBubble::eYes, ChromeOnlyDispatch::eNo));
+  nsContentUtils::AddScriptRunner(new AsyncEventDispatcher(
+      mContent, u"ValueChange"_ns, CanBubble::eYes, ChromeOnlyDispatch::eNo));
 }
 
 void nsComboboxControlFrame::OnContentReset() {
