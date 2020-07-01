@@ -54,7 +54,7 @@ Maybe<layers::SurfaceDescriptor> SharedSurface_DMABUF::ToSurfaceDescriptor() {
 
 /*static*/
 UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
-  if (!gfxPlatformGtk::GetPlatform()->UseWaylandDMABufWebGL()) {
+  if (!gfxPlatformGtk::GetPlatform()->UseDMABufWebGL()) {
     return nullptr;
   }
 
@@ -63,7 +63,7 @@ UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
     return dmabufFactory;
   }
 
-  gfxPlatformGtk::GetPlatform()->DisableWaylandDMABufWebGL();
+  gfxPlatformGtk::GetPlatform()->DisableDMABufWebGL();
   return nullptr;
 }
 
