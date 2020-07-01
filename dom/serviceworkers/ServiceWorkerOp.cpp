@@ -306,7 +306,7 @@ bool ServiceWorkerOp::MaybeStart(RemoteWorkerChild* aOwner,
   MOZ_ASSERT(aOwner);
   MOZ_ASSERT(aOwner->GetOwningEventTarget()->IsOnCurrentThread());
 
-  MOZ_ACCESS_THREAD_BOUND(aOwner->mLauncherData, launcherData);
+  auto launcherData = aOwner->mLauncherData.Access();
 
   if (NS_WARN_IF(!launcherData->mIPCActive)) {
     RejectAll(NS_ERROR_DOM_ABORT_ERR);
