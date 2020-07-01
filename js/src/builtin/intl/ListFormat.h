@@ -34,7 +34,7 @@ class ListFormatObject : public NativeObject {
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
-  // Estimated memory use for UListFormatter.
+  // Estimated memory use for UListFormatter (see IcuMemoryUsage).
   static constexpr size_t EstimatedMemoryUse = 24;
 
   UListFormatter* getListFormatter() const {

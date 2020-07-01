@@ -34,7 +34,8 @@ class NumberFormatObject : public NativeObject {
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
-  // Estimated memory use for UNumberFormatter and UFormattedNumber.
+  // Estimated memory use for UNumberFormatter and UFormattedNumber
+  // (see IcuMemoryUsage).
   static constexpr size_t EstimatedMemoryUse = 750;
 
   UNumberFormatter* getNumberFormatter() const {
