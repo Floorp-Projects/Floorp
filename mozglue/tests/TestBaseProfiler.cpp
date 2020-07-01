@@ -40,6 +40,8 @@
 #include <type_traits>
 #include <utility>
 
+#ifdef MOZ_GECKO_PROFILER
+
 MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
 #if defined(_MSC_VER) || defined(__MINGW32__)
   Sleep(aMilliseconds);
@@ -57,8 +59,6 @@ MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
   }
 #endif
 }
-
-#ifdef MOZ_GECKO_PROFILER
 
 using namespace mozilla;
 
