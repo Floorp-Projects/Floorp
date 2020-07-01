@@ -16,6 +16,7 @@ use crate::table::HeaderTable;
 use crate::Header;
 use crate::{Error, Res};
 use neqo_common::qtrace;
+use std::mem;
 use std::ops::{Deref, Div};
 
 #[derive(Default, Debug, PartialEq)]
@@ -35,15 +36,13 @@ impl ::std::fmt::Display for HeaderEncoder {
 
 impl HeaderEncoder {
     pub fn new(base: u64, use_huffman: bool, max_entries: u64) -> Self {
-        let mut encoder = Self {
+        Self {
             buf: QPData::default(),
             base,
             use_huffman,
             max_entries,
             max_dynamic_index_ref: None,
-        };
-        encoder.encode_header_block_prefix(false, 0, base, true);
-        encoder
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -52,47 +51,6 @@ impl HeaderEncoder {
 
     pub fn read(&mut self, r: usize) {
         self.buf.read(r);
-    }
-
-    fn encode_header_block_prefix(
-        &mut self,
-        fix: bool,
-        req_insert_cnt: u64,
-        delta: u64,
-        positive: bool,
-    ) {
-        qtrace!(
-            [self],
-            "encode header block prefix req_insert_cnt={} delta={} (fix={}).",
-            req_insert_cnt,
-            delta,
-            fix
-        );
-        let enc_insert_cnt = if req_insert_cnt == 0 {
-            0
-        } else {
-            (req_insert_cnt % (2 * self.max_entries)) + 1
-        };
-
-        let prefix = if positive {
-            BASE_PREFIX_POSITIVE
-        } else {
-            BASE_PREFIX_NEGATIVE
-        };
-
-        if fix {
-            // TODO fix for case when there is no enough space!!!
-            let offset =
-                self.buf
-                    .encode_prefixed_encoded_int_with_offset(0, NO_PREFIX, enc_insert_cnt);
-            let _ = self
-                .buf
-                .encode_prefixed_encoded_int_with_offset(offset, prefix, delta);
-        } else {
-            self.buf
-                .encode_prefixed_encoded_int(NO_PREFIX, enc_insert_cnt);
-            self.buf.encode_prefixed_encoded_int(prefix, delta);
-        }
     }
 
     pub fn encode_indexed_static(&mut self, index: u64) {
@@ -163,25 +121,41 @@ impl HeaderEncoder {
         self.buf.encode_literal(self.use_huffman, NO_PREFIX, value);
     }
 
-    pub fn fix_header_block_prefix(&mut self) {
-        if let Some(r) = self.max_dynamic_index_ref {
+    pub fn encode_header_block_prefix(&mut self) {
+        let tmp = mem::take(&mut self.buf);
+        let (enc_insert_cnt, delta, prefix) = if let Some(r) = self.max_dynamic_index_ref {
             let req_insert_cnt = r + 1;
             if req_insert_cnt <= self.base {
-                self.encode_header_block_prefix(
-                    true,
-                    req_insert_cnt,
+                (
+                    req_insert_cnt % (2 * self.max_entries) + 1,
                     self.base - req_insert_cnt,
-                    true,
-                );
+                    BASE_PREFIX_POSITIVE,
+                )
             } else {
-                self.encode_header_block_prefix(
-                    true,
-                    req_insert_cnt,
+                (
+                    req_insert_cnt % (2 * self.max_entries) + 1,
                     req_insert_cnt - self.base - 1,
-                    false,
-                );
+                    BASE_PREFIX_NEGATIVE,
+                )
             }
-        }
+        } else {
+            (0, self.base, BASE_PREFIX_POSITIVE)
+        };
+        qtrace!(
+            [self],
+            "encode header block prefix max_dynamic_index_ref={:?}, base={}, enc_insert_cnt={}, delta={}, prefix={:?}.",
+            self.max_dynamic_index_ref,
+            self.base,
+            enc_insert_cnt,
+            delta,
+            prefix
+        );
+
+        self.buf
+            .encode_prefixed_encoded_int(NO_PREFIX, enc_insert_cnt);
+        self.buf.encode_prefixed_encoded_int(prefix, delta);
+
+        self.buf.write_bytes(&tmp);
     }
 }
 
@@ -611,7 +585,7 @@ mod tests {
         for (index, result, _, _) in INDEX_STATIC_TEST {
             let mut encoded_h = HeaderEncoder::new(0, true, 1000);
             encoded_h.encode_indexed_static(*index);
-            encoded_h.fix_header_block_prefix();
+            encoded_h.encode_header_block_prefix();
             assert_eq!(&&*encoded_h, result);
         }
     }
@@ -621,7 +595,7 @@ mod tests {
         for (index, result, _, _) in INDEX_DYNAMIC_TEST {
             let mut encoded_h = HeaderEncoder::new(66, true, 1000);
             encoded_h.encode_indexed_dynamic(*index);
-            encoded_h.fix_header_block_prefix();
+            encoded_h.encode_header_block_prefix();
             assert_eq!(&&*encoded_h, result);
         }
     }
@@ -631,7 +605,7 @@ mod tests {
         for (index, result, _, _) in INDEX_DYNAMIC_POST_TEST {
             let mut encoded_h = HeaderEncoder::new(0, true, 1000);
             encoded_h.encode_indexed_dynamic(*index);
-            encoded_h.fix_header_block_prefix();
+            encoded_h.encode_header_block_prefix();
             assert_eq!(&&*encoded_h, result);
         }
     }
@@ -641,7 +615,7 @@ mod tests {
         for (index, result, _, _) in NAME_REF_STATIC {
             let mut encoded_h = HeaderEncoder::new(0, false, 1000);
             encoded_h.encode_literal_with_name_ref(true, *index, VALUE);
-            encoded_h.fix_header_block_prefix();
+            encoded_h.encode_header_block_prefix();
             assert_eq!(&&*encoded_h, result);
         }
     }
@@ -651,7 +625,7 @@ mod tests {
         for (index, result, _, _) in NAME_REF_DYNAMIC {
             let mut encoded_h = HeaderEncoder::new(66, false, 1000);
             encoded_h.encode_literal_with_name_ref(false, *index, VALUE);
-            encoded_h.fix_header_block_prefix();
+            encoded_h.encode_header_block_prefix();
             assert_eq!(&&*encoded_h, result);
         }
     }
@@ -661,7 +635,7 @@ mod tests {
         for (index, result, _, _) in NAME_REF_DYNAMIC_POST {
             let mut encoded_h = HeaderEncoder::new(0, false, 1000);
             encoded_h.encode_literal_with_name_ref(false, *index, VALUE);
-            encoded_h.fix_header_block_prefix();
+            encoded_h.encode_header_block_prefix();
             assert_eq!(&&*encoded_h, result);
         }
     }
@@ -671,7 +645,7 @@ mod tests {
         for (index, result, _, _) in NAME_REF_DYNAMIC_HUFFMAN {
             let mut encoded_h = HeaderEncoder::new(66, true, 1000);
             encoded_h.encode_literal_with_name_ref(false, *index, VALUE);
-            encoded_h.fix_header_block_prefix();
+            encoded_h.encode_header_block_prefix();
             assert_eq!(&&*encoded_h, result);
         }
     }
@@ -679,12 +653,12 @@ mod tests {
     fn test_encode_literal_with_literal() {
         let mut encoded_h = HeaderEncoder::new(66, false, 1000);
         encoded_h.encode_literal_with_name_literal(VALUE, VALUE);
-        encoded_h.fix_header_block_prefix();
+        encoded_h.encode_header_block_prefix();
         assert_eq!(&*encoded_h, LITERAL_LITERAL);
 
         let mut encoded_h = HeaderEncoder::new(66, true, 1000);
         encoded_h.encode_literal_with_name_literal(VALUE, VALUE);
-        encoded_h.fix_header_block_prefix();
+        encoded_h.encode_header_block_prefix();
         assert_eq!(&*encoded_h, LITERAL_LITERAL_HUFFMAN);
     }
 

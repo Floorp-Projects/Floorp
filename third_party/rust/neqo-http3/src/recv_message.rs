@@ -6,7 +6,9 @@
 
 use crate::hframe::{HFrame, HFrameReader};
 use crate::push_controller::PushController;
+use crate::qlog;
 use crate::{Error, Header, Res};
+
 use neqo_common::{matches, qdebug, qinfo, qtrace};
 use neqo_qpack::decoder::QPackDecoder;
 use neqo_transport::Connection;
@@ -181,6 +183,12 @@ impl RecvMessage {
                     let to_read = min(*remaining_data_len, buf.len() - written);
                     let (amount, fin) =
                         conn.stream_recv(self.stream_id, &mut buf[written..written + to_read])?;
+                    qlog::h3_data_moved_up(
+                        &mut conn.qlog_mut().borrow_mut(),
+                        self.stream_id,
+                        amount,
+                    );
+
                     debug_assert!(amount <= to_read);
                     *remaining_data_len -= amount;
                     written += amount;

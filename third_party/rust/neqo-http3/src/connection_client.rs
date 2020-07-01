@@ -157,7 +157,9 @@ impl Http3Client {
         qtrace!([self], "  settings {}", hex_with_len(&settings_slice));
         let mut dec_settings = Decoder::from(settings_slice);
         let mut settings = HSettings::default();
-        settings.decode_frame_contents(&mut dec_settings)?;
+        settings
+            .decode_frame_contents(&mut dec_settings)
+            .map_err(|_| Error::InvalidResumptionToken)?;
         let tok = dec.decode_remainder();
         qtrace!([self], "  Transport token {}", hex(&tok));
         self.conn.set_resumption_token(now, tok)?;

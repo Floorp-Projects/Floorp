@@ -5,8 +5,10 @@
 // except according to those terms.
 
 use crate::hframe::HFrame;
+use crate::qlog;
 use crate::Header;
 use crate::{Error, Res};
+
 use neqo_common::{matches, qdebug, qinfo, qtrace, Encoder};
 use neqo_qpack::encoder::QPackEncoder;
 use neqo_transport::Connection;
@@ -125,9 +127,9 @@ impl SendMessage {
     }
 
     pub fn send_body(&mut self, conn: &mut Connection, buf: &[u8]) -> Res<usize> {
-        qinfo!(
+        qtrace!(
             [self],
-            "send_request_body: state={:?} len={}",
+            "send_body: state={:?} len={}",
             self.state,
             buf.len()
         );
@@ -174,7 +176,14 @@ impl SendMessage {
                     Err(e) => return Err(Error::TransportError(e)),
                 }
                 match conn.stream_send(self.stream_id, &buf[..to_send]) {
-                    Ok(sent) => Ok(sent),
+                    Ok(sent) => {
+                        qlog::h3_data_moved_down(
+                            &mut conn.qlog_mut().borrow_mut(),
+                            self.stream_id,
+                            buf.len(),
+                        );
+                        Ok(sent)
+                    }
                     Err(e) => Err(Error::TransportError(e)),
                 }
             }
@@ -231,6 +240,8 @@ impl SendMessage {
 
         if let SendMessageState::SendingInitialMessage { ref mut buf, fin } = self.state {
             let sent = conn.stream_send(self.stream_id, &buf)?;
+            qlog::h3_data_moved_down(&mut conn.qlog_mut().borrow_mut(), self.stream_id, buf.len());
+
             qtrace!([label], "{} bytes sent", sent);
 
             if sent == buf.len() {
