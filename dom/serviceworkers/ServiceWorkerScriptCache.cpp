@@ -880,53 +880,6 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  MOZ_ASSERT(channel, "How come we don't have any channel?");
-
-  // TODO: also check a pref and disallow if the pref is false.
-  nsCOMPtr<nsIURI> uri;
-  channel->GetOriginalURI(getter_AddRefs(uri));
-  bool isExtension = uri->SchemeIs("moz-extension");
-
-  if (isExtension) {
-    // TODO: avoid duplicated parts that could be shared with the HTTP channel
-    // scenario?
-    // TODO: check aStatus and early exit if loading the script body failed?
-    nsCOMPtr<nsIURI> channelURL;
-    rv = channel->GetURI(getter_AddRefs(channelURL));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCString channelURLSpec;
-    MOZ_ALWAYS_SUCCEEDS(channelURL->GetSpec(channelURLSpec));
-
-    MOZ_DIAGNOSTIC_ASSERT(!mURLList.IsEmpty());
-    if (channelURLSpec != mURLList[0]) {
-      // Append the final URL (a file or jar url).
-      mURLList.AppendElement(channelURLSpec);
-    }
-
-    // TODO: refreshing a moz-extension service worker should only
-    // happen through the addon updates?
-    //
-    // NOTE: trying to register any moz-extension use that doesn't ends
-    // with .js/.jsm/.mjs seems to be already completing with an error
-    // in aStatus and they never reach this point.
-    char16_t* buffer = nullptr;
-    size_t len = 0;
-    rv = ScriptLoader::ConvertToUTF16(channel, aString, aLen, u"UTF-8"_ns,
-                                      nullptr, buffer, len);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    mBuffer.Adopt(buffer, len);
-
-    rv = NS_OK;
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
   MOZ_ASSERT(httpChannel, "How come we don't have an HTTP channel?");
 

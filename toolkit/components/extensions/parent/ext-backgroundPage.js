@@ -26,12 +26,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "extensions.webextensions.background-delayed-startup"
 );
 
-XPCOMUtils.defineLazyGetter(this, "serviceWorkerManager", () => {
-  return Cc["@mozilla.org/serviceworkers/manager;1"].getService(
-    Ci.nsIServiceWorkerManager
-  );
-});
-
 // Responsible for the background_page section of the manifest.
 class BackgroundPage extends HiddenExtensionPage {
   constructor(extension, options) {
@@ -108,56 +102,23 @@ class BackgroundPage extends HiddenExtensionPage {
   }
 }
 
-// Responsible for the background.service_worker section of the manifest.
-class BackgroundWorker {
-  constructor(extension, options) {
-    this.registrationInfo = null;
-    this.extension = extension;
-    this.workerScript = options.service_worker;
-
-    if (!this.workerScript) {
-      throw new Error("Missing mandatory background.service_worker property");
-    }
-  }
-
-  async build() {
-    const regInfo = await serviceWorkerManager.registerForAddonPrincipal(
-      this.extension.principal
-    );
-    this.registrationInfo = regInfo.QueryInterface(
-      Ci.nsIServiceWorkerRegistrationInfo
-    );
-  }
-
-  shutdown() {
-    if (this.registrationInfo) {
-      this.registrationInfo.forceShutdown();
-      this.registrationInfo = null;
-    }
-  }
-}
-
 this.backgroundPage = class extends ExtensionAPI {
-  async build() {
-    if (this.bgInstance) {
+  build() {
+    if (this.bgPage) {
       return;
     }
 
     let { extension } = this;
     let { manifest } = extension;
 
-    let BackgroundClass = manifest.background.service_worker
-      ? BackgroundWorker
-      : BackgroundPage;
-
-    this.bgInstance = new BackgroundClass(extension, manifest.background);
-    return this.bgInstance.build();
+    this.bgPage = new BackgroundPage(extension, manifest.background);
+    return this.bgPage.build();
   }
 
-  async onManifestEntry(entryName) {
+  onManifestEntry(entryName) {
     let { extension } = this;
 
-    this.bgInstance = null;
+    this.bgPage = null;
 
     // When in PPB background pages all run in a private context.  This check
     // simply avoids an extraneous error in the console since the BaseContext
@@ -221,9 +182,8 @@ this.backgroundPage = class extends ExtensionAPI {
   }
 
   onShutdown() {
-    if (this.bgInstance) {
-      this.bgInstance.shutdown();
-      this.bgInstance = null;
+    if (this.bgPage) {
+      this.bgPage.shutdown();
     } else {
       EventManager.clearPrimedListeners(this.extension, false);
     }

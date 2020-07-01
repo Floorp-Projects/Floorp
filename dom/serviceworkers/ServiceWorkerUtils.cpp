@@ -79,24 +79,9 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
     return;
   }
 
-  auto hasHTTPScheme = [](nsIURI* aURI) -> bool {
-    return aURI->SchemeIs("http") || aURI->SchemeIs("https");
-  };
-  auto hasMozExtScheme = [](nsIURI* aURI) -> bool {
-    return aURI->SchemeIs("moz-extension");
-  };
-
-  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
-
-  auto isExtension = !!BasePrincipal::Cast(principal)->AddonPolicy();
-  auto hasValidURISchemes = !isExtension ? hasHTTPScheme : hasMozExtScheme;
-
   // https://w3c.github.io/ServiceWorker/#start-register-algorithm step 3.
-  if (!hasValidURISchemes(aScriptURI)) {
-    auto message = !isExtension
-                       ? "Script URL's scheme is not 'http' or 'https'"_ns
-                       : "Script URL's scheme is not 'moz-extension'"_ns;
-    aRv.ThrowTypeError(message);
+  if (!aScriptURI->SchemeIs("http") && !aScriptURI->SchemeIs("https")) {
+    aRv.ThrowTypeError("Script URL's scheme is not 'http' or 'https'");
     return;
   }
 
@@ -107,11 +92,8 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
   }
 
   // https://w3c.github.io/ServiceWorker/#start-register-algorithm step 8.
-  if (!hasValidURISchemes(aScopeURI)) {
-    auto message = !isExtension
-                       ? "Scope URL's scheme is not 'http' or 'https'"_ns
-                       : "Scope URL's scheme is not 'moz-extension'"_ns;
-    aRv.ThrowTypeError(message);
+  if (!aScopeURI->SchemeIs("http") && !aScopeURI->SchemeIs("https")) {
+    aRv.ThrowTypeError("Scope URL's scheme is not 'http' or 'https'");
     return;
   }
 
@@ -135,6 +117,8 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
     aRv.ThrowSecurityError("Non-empty fragment on script URL");
     return;
   }
+
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
   // Unfortunately we don't seem to have an obvious window id here; in
   // particular ClientInfo does not have one.

@@ -83,7 +83,6 @@ class ServiceWorkerContainer final : public DOMEventTargetHelper {
 
   already_AddRefed<Promise> Register(const nsAString& aScriptURL,
                                      const RegistrationOptions& aOptions,
-                                     const CallerType aCallerType,
                                      ErrorResult& aRv);
 
   already_AddRefed<ServiceWorker> GetController();

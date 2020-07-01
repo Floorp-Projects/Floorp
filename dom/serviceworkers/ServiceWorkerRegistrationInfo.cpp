@@ -268,13 +268,6 @@ ServiceWorkerRegistrationInfo::RemoveListener(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ServiceWorkerRegistrationInfo::ForceShutdown() {
-  ClearInstalling();
-  ShutdownWorkers();
-  return NS_OK;
-}
-
 already_AddRefed<ServiceWorkerInfo>
 ServiceWorkerRegistrationInfo::GetServiceWorkerInfoById(uint64_t aId) {
   MOZ_ASSERT(NS_IsMainThread());
