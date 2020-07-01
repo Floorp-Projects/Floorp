@@ -14,10 +14,18 @@ UNIFIED_SOURCES += [
     "DefaultBrowser.cpp",
     "EventLog.cpp",
     "main.cpp",
+    "Notification.cpp",
     "Policy.cpp",
     "Registry.cpp",
     "ScheduledTask.cpp",
     "Telemetry.cpp",
+]
+
+SOURCES += [
+    "/browser/components/shell/WindowsDefaultBrowser.cpp",
+    "/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp",
+    "/third_party/WinToast/wintoastlib.cpp",
+    "/toolkit/mozapps/update/common/readstrings.cpp",
 ]
 
 USE_LIBS += [
@@ -25,12 +33,17 @@ USE_LIBS += [
 ]
 
 LOCAL_INCLUDES += [
+    '/browser/components/shell/',
     '/mfbt/',
+    '/other-licenses/nsis/Contrib/CityHash/cityhash',
+    '/third_party/WinToast',
     '/toolkit/components/jsoncpp/include',
+    '/toolkit/mozapps/update/common',
     '/xpcom/build',
 ]
 
 OS_LIBS += [
+    "netapi32",
     "ole32",
     "oleaut32",
     "rpcrt4",
