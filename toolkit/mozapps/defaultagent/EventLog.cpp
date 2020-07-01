@@ -8,7 +8,9 @@
 
 #include <stdio.h>
 
-void WriteEventLogError(HRESULT hr, const char* sourceFile, int sourceLine) {
+#include "mozilla/UniquePtr.h"
+
+static void WriteEventLogErrorBuffer(const wchar_t* buffer, DWORD eventId) {
   HANDLE source = RegisterEventSourceW(
       nullptr, L"" MOZ_APP_DISPLAYNAME " Default Browser Agent");
   if (!source) {
@@ -16,15 +18,50 @@ void WriteEventLogError(HRESULT hr, const char* sourceFile, int sourceLine) {
     return;
   }
 
-  // The size of this buffer is arbitrary, but it should easily be enough
-  // unless we come up with a really excessively long function name.
-  wchar_t errorStr[MAX_PATH + 1] = L"";
-  _snwprintf_s(errorStr, MAX_PATH + 1, _TRUNCATE, L"0x%X in %S:%d", hr,
-               sourceFile, sourceLine);
-
-  const wchar_t* stringsArray[] = {errorStr};
-  ReportEventW(source, EVENTLOG_ERROR_TYPE, 0, hr, nullptr, 1, 0, stringsArray,
-               nullptr);
+  const wchar_t* stringsArray[] = {buffer};
+  ReportEventW(source, EVENTLOG_ERROR_TYPE, 0, eventId, nullptr, 1, 0,
+               stringsArray, nullptr);
 
   DeregisterEventSource(source);
+}
+
+void WriteEventLogHresult(HRESULT hr, const char* sourceFile, int sourceLine) {
+  const wchar_t* format = L"0x%X in %S:%d";
+  int bufferSize = _scwprintf(format, hr, sourceFile, sourceLine);
+  ++bufferSize;  // Extra character for terminating null
+  mozilla::UniquePtr<wchar_t[]> errorStr =
+      mozilla::MakeUnique<wchar_t[]>(bufferSize);
+
+  _snwprintf_s(errorStr.get(), bufferSize, _TRUNCATE, format, hr, sourceFile,
+               sourceLine);
+
+  WriteEventLogErrorBuffer(errorStr.get(), hr);
+}
+
+void WriteEventLogErrorMessage(const wchar_t* messageFormat,
+                               const char* sourceFile, int sourceLine, ...) {
+  // First assemble the passed message
+  va_list ap;
+  va_start(ap, sourceLine);
+  int bufferSize = _vscwprintf(messageFormat, ap);
+  ++bufferSize;  // Extra character for terminating null
+  va_end(ap);
+  mozilla::UniquePtr<wchar_t[]> message =
+      mozilla::MakeUnique<wchar_t[]>(bufferSize);
+
+  va_start(ap, sourceLine);
+  vswprintf(message.get(), bufferSize, messageFormat, ap);
+  va_end(ap);
+
+  // Next, assemble the complete error message to print
+  const wchar_t* errorFormat = L"Error: %s (%S:%d)";
+  bufferSize = _scwprintf(errorFormat, message.get(), sourceFile, sourceLine);
+  ++bufferSize;  // Extra character for terminating null
+  mozilla::UniquePtr<wchar_t[]> errorStr =
+      mozilla::MakeUnique<wchar_t[]>(bufferSize);
+
+  _snwprintf_s(errorStr.get(), bufferSize, _TRUNCATE, errorFormat,
+               message.get(), sourceFile, sourceLine);
+
+  WriteEventLogErrorBuffer(errorStr.get(), 0);
 }

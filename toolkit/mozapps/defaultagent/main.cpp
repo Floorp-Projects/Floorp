@@ -14,6 +14,7 @@
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 #include "DefaultBrowser.h"
+#include "Notification.h"
 #include "Policy.h"
 #include "ScheduledTask.h"
 #include "Telemetry.h"
@@ -108,15 +109,16 @@ static void RemoveAllRegistryEntries() {
 //   Removes the previously created task, and also removes all registry entries
 //   running the task may have created. The unique token argument is required
 //   and should be the same one that was passed in when the task was registered.
-// do-task
+// do-task [app-user-model-id]
 //   Actually performs the default agent task, which currently means generating
-//   and sending our telemetry ping.
+//   and sending our telemetry ping and possibly showing a notification to the
+//   user if their browser has switched from Firefox to Edge with Blink.
 int wmain(int argc, wchar_t** argv) {
   if (argc < 2 || !argv[1]) {
     return E_INVALIDARG;
   }
 
-  HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+  HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
   if (FAILED(hr)) {
     return hr;
   }
@@ -153,11 +155,17 @@ int wmain(int argc, wchar_t** argv) {
     }
     return UpdateTask(argv[2]);
   } else if (!wcscmp(argv[1], L"do-task")) {
+    if (argc < 3 || !argv[2]) {
+      return E_INVALIDARG;
+    }
     DefaultBrowserResult defaultBrowserResult = GetDefaultBrowserInfo();
     if (defaultBrowserResult.isErr()) {
       return defaultBrowserResult.unwrapErr().AsHResult();
     }
     DefaultBrowserInfo browserInfo = defaultBrowserResult.unwrap();
+
+    MaybeShowNotification(browserInfo, argv[2]);
+
     if (!IsTelemetryDisabled()) {
       return SendDefaultBrowserPing(browserInfo);
     }
