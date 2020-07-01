@@ -234,7 +234,7 @@ as a string.
 Linter
 ======
 
-:bash:`mach lint` includes a `l10n linter`_, called :bash:`moz-l10n-lint`. It
+:bash:`mach lint` includes a :ref:`l10n linter <L10n>`, called :bash:`moz-l10n-lint`. It
 can be run locally by developers but also runs on Treeherder: in the Build
 Status section of the diff on Phabricator, open the Treeherder Jobs link and
 look for the :js:`l1nt` job.
@@ -272,4 +272,3 @@ __ ./fluent_migrations.html
 .. _fluent-reviewers: https://phabricator.services.mozilla.com/tag/fluent-reviewers/
 .. _fluent-react: https://github.com/projectfluent/fluent.js/wiki/React-Bindings
 .. _term: https://projectfluent.org/fluent/guide/terms.html
-.. _l10n linter: https://firefox-source-docs.mozilla.org/code-quality/lint/linters/l10n.html
