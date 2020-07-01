@@ -2100,14 +2100,38 @@ static bool IsPrevContinuationOf(nsIFrame* aFrame1, nsIFrame* aFrame2) {
 void nsContainerFrame::MergeSortedFrameLists(nsFrameList& aDest,
                                              nsFrameList& aSrc,
                                              nsIContent* aCommonAncestor) {
+  // Returns a frame whose DOM node can be used for the purpose of ordering
+  // aFrame among its sibling frames by DOM position. If aFrame is
+  // non-anonymous, this just returns aFrame itself. Otherwise, this returns the
+  // first non-anonymous descendant in aFrame's continuation chain.
+  auto FrameForDOMPositionComparison = [](nsIFrame* aFrame) {
+    if (!aFrame->Style()->IsAnonBox()) {
+      // The usual case.
+      return aFrame;
+    }
+
+    // Walk the continuation chain from the start, and return the first
+    // non-anonymous descendant that we find.
+    for (nsIFrame* f = aFrame->FirstContinuation(); f;
+         f = f->GetNextContinuation()) {
+      if (nsIFrame* nonAnonBox = GetFirstNonAnonBoxInSubtree(f)) {
+        return nonAnonBox;
+      }
+    }
+
+    MOZ_ASSERT_UNREACHABLE(
+        "Why is there no non-anonymous descendants in the continuation chain?");
+    return aFrame;
+  };
+
   nsIFrame* dest = aDest.FirstChild();
   for (nsIFrame* src = aSrc.FirstChild(); src;) {
     if (!dest) {
       aDest.AppendFrames(nullptr, aSrc);
       break;
     }
-    nsIContent* srcContent = src->GetContent();
-    nsIContent* destContent = dest->GetContent();
+    nsIContent* srcContent = FrameForDOMPositionComparison(src)->GetContent();
+    nsIContent* destContent = FrameForDOMPositionComparison(dest)->GetContent();
     int32_t result = nsLayoutUtils::CompareTreePosition(srcContent, destContent,
                                                         aCommonAncestor);
     if (MOZ_UNLIKELY(result == 0)) {

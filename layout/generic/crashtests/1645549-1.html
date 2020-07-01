@@ -1,0 +1,19 @@
+<style>
+#a {
+  display: flex;
+  flex-flow: column-reverse;
+}
+:not(wbr) {
+  column-width: 1px;
+}
+</style>
+<script>
+window.onload = () => {
+  a.insertBefore(b, a.childNodes[0])
+  document.documentElement.style.display = "none"
+  document.documentElement.getBoundingClientRect()
+  document.documentElement.style.display = ""
+}
+</script>
+<label id="a">x</label>
+<details id="b">

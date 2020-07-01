@@ -2104,3 +2104,4 @@ fuzzy-if(OSX,0-42,0-4) fuzzy-if((Android||winWidget)&&!webrender,0-115,0-2) == 1
 fuzzy(0-2,0-21184) == 1626259-1.html 1626259-1-ref.html
 fuzzy(0-2,0-21184) == 1626259-2.html 1626259-2-ref.html
 == 1642603-1.html 1642603-1-ref.html
+== 1645549-2.html 1645549-2-ref.html
