@@ -27,8 +27,8 @@ class NullAction final : public Action {
  public:
   NullAction() = default;
 
-  virtual void RunOnTarget(Resolver* aResolver, const QuotaInfo&,
-                           Data*) override {
+  virtual void RunOnTarget(mozilla::SafeRefPtr<Resolver> aResolver,
+                           const QuotaInfo&, Data*) override {
     // Resolve success immediately.  This Action does no actual work.
     MOZ_DIAGNOSTIC_ASSERT(aResolver);
     aResolver->Resolve(NS_OK);
@@ -325,7 +325,7 @@ Context::QuotaInitRunnable::Run() {
   // May run on different threads depending on the state.  See individual
   // state cases for thread assertions.
 
-  RefPtr<SyncResolver> resolver = new SyncResolver();
+  SafeRefPtr<SyncResolver> resolver = MakeSafeRefPtr<SyncResolver>();
 
   switch (mState) {
     // -----------------------------------
@@ -414,7 +414,7 @@ Context::QuotaInitRunnable::Run() {
 
       // Execute the provided initialization Action.  The Action must Resolve()
       // before returning.
-      mInitAction->RunOnTarget(resolver, mQuotaInfo, mData);
+      mInitAction->RunOnTarget(resolver.clonePtr(), mQuotaInfo, mData);
       MOZ_DIAGNOSTIC_ASSERT(resolver->Resolved());
 
       mData = nullptr;
@@ -619,7 +619,7 @@ Context::ActionRunnable::Run() {
       mExecutingRunOnTarget = true;
 
       mState = STATE_RUNNING;
-      mAction->RunOnTarget(this, mQuotaInfo, mData);
+      mAction->RunOnTarget(SafeRefPtrFromThis(), mQuotaInfo, mData);
 
       mData = nullptr;
 
@@ -926,8 +926,8 @@ void Context::Start() {
 void Context::DispatchAction(Action* aAction, bool aDoomData) {
   NS_ASSERT_OWNINGTHREAD(Context);
 
-  RefPtr<ActionRunnable> runnable = new ActionRunnable(
-      SafeRefPtrFromThis(), mData, mTarget, aAction, mQuotaInfo);
+  auto runnable = MakeSafeRefPtr<ActionRunnable>(SafeRefPtrFromThis(), mData,
+                                                 mTarget, aAction, mQuotaInfo);
 
   if (aDoomData) {
     mData = nullptr;
@@ -939,7 +939,7 @@ void Context::DispatchAction(Action* aAction, bool aDoomData) {
     // for this invariant violation.
     MOZ_CRASH("Failed to dispatch ActionRunnable to target thread.");
   }
-  AddActivity(runnable);
+  AddActivity(runnable.unsafeGetRawPtr());
 }
 
 void Context::OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
