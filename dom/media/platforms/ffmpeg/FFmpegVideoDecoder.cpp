@@ -339,7 +339,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
   mUseDMABufSurfaces =
-      gfxPlatformGtk::GetPlatform()->UseWaylandDMABufVideoTextures() &&
+      gfxPlatformGtk::GetPlatform()->UseDMABufVideoTextures() &&
       mImageAllocator &&
       (mImageAllocator->GetCompositorBackendType() ==
        layers::LayersBackend::LAYERS_WR);
