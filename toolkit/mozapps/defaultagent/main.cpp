@@ -13,8 +13,9 @@
 #include "nsWindowsHelpers.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
-#include "ScheduledTask.h"
+#include "DefaultBrowser.h"
 #include "Policy.h"
+#include "ScheduledTask.h"
 #include "Telemetry.h"
 
 static void RemoveAllRegistryEntries() {
@@ -152,8 +153,13 @@ int wmain(int argc, wchar_t** argv) {
     }
     return UpdateTask(argv[2]);
   } else if (!wcscmp(argv[1], L"do-task")) {
+    DefaultBrowserResult defaultBrowserResult = GetDefaultBrowserInfo();
+    if (defaultBrowserResult.isErr()) {
+      return defaultBrowserResult.unwrapErr().AsHResult();
+    }
+    DefaultBrowserInfo browserInfo = defaultBrowserResult.unwrap();
     if (!IsTelemetryDisabled()) {
-      return SendDefaultBrowserPing();
+      return SendDefaultBrowserPing(browserInfo);
     }
     return S_OK;
   } else {
