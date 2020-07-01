@@ -64,4 +64,7 @@ mozilla::WindowsErrorResult<mozilla::Ok> RegistrySetValueQword(
     IsPrefixed isPrefixed, const wchar_t* registryValueName,
     ULONGLONG newValue);
 
+mozilla::WindowsErrorResult<mozilla::Ok> RegistryDeleteValue(
+    IsPrefixed isPrefixed, const wchar_t* registryValueName);
+
 #endif  // __DEFAULT_BROWSER_AGENT_REGISTRY_H__

@@ -32,5 +32,6 @@ using DefaultBrowserResult = mozilla::WindowsErrorResult<DefaultBrowserInfo>;
 DefaultBrowserResult GetDefaultBrowserInfo();
 
 std::string GetStringForBrowser(Browser browser);
+void MaybeMigrateCurrentDefault();
 
 #endif  // __DEFAULT_BROWSER_DEFAULT_BROWSER_H__

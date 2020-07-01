@@ -121,12 +121,12 @@ static BrowserResult GetPreviousDefaultBrowser(Browser currentDefault) {
 
   std::string currentDefaultStr = GetStringForBrowser(currentDefault);
   std::string previousDefault =
-      RegistryGetValueString(IsPrefixed::Prefixed, L"CurrentDefault")
+      RegistryGetValueString(IsPrefixed::Unprefixed, L"CurrentDefault")
           .unwrapOr(mozilla::Some(currentDefaultStr))
           .valueOr(currentDefaultStr);
 
   mozilla::Unused << RegistrySetValueString(
-      IsPrefixed::Prefixed, L"CurrentDefault", currentDefaultStr.c_str());
+      IsPrefixed::Unprefixed, L"CurrentDefault", currentDefaultStr.c_str());
 
   return GetBrowserFromString(previousDefault);
 }
@@ -148,4 +148,38 @@ DefaultBrowserResult GetDefaultBrowserInfo() {
   browserInfo.previousDefaultBrowser = previousDefaultBrowserResult.unwrap();
 
   return browserInfo;
+}
+
+// We used to prefix this key with the installation directory, but that causes
+// problems with our new "only one ping per day across installs" restriction.
+// To make sure all installations use consistent data, the value's name is
+// being migrated to a shared, non-prefixed name.
+// This function doesn't really do any error handling, because there isn't
+// really anything to be done if it fails.
+void MaybeMigrateCurrentDefault() {
+  const wchar_t* valueName = L"CurrentDefault";
+
+  MaybeStringResult valueResult =
+      RegistryGetValueString(IsPrefixed::Prefixed, valueName);
+  if (valueResult.isErr()) {
+    return;
+  }
+  mozilla::Maybe<std::string> maybeValue = valueResult.unwrap();
+  if (maybeValue.isNothing()) {
+    // No value to migrate
+    return;
+  }
+  std::string value = maybeValue.value();
+
+  mozilla::Unused << RegistryDeleteValue(IsPrefixed::Prefixed, valueName);
+
+  // Only migrate the value if no value is in the new location yet.
+  valueResult = RegistryGetValueString(IsPrefixed::Unprefixed, valueName);
+  if (valueResult.isErr()) {
+    return;
+  }
+  if (valueResult.unwrap().isNothing()) {
+    mozilla::Unused << RegistrySetValueString(IsPrefixed::Unprefixed, valueName,
+                                              value.c_str());
+  }
 }
