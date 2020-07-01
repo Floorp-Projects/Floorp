@@ -1311,6 +1311,7 @@ if CONFIG['MOZ_SYSTEM_ICU']:
         'unicode/ucurr.h',
         'unicode/udat.h',
         'unicode/udata.h',
+        'unicode/udateintervalformat.h',
         'unicode/udatpg.h',
         'unicode/udisplaycontext.h',
         'unicode/uldnames.h',

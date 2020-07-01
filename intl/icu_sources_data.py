@@ -82,7 +82,6 @@ UNUSED_SOURCES = set([
     'intl/icu/source/i18n/translit.cpp',
     'intl/icu/source/i18n/transreg.cpp',
     'intl/icu/source/i18n/tridpars.cpp',
-    'intl/icu/source/i18n/udateintervalformat.cpp',
     'intl/icu/source/i18n/unesctrn.cpp',
     'intl/icu/source/i18n/uni2name.cpp',
     'intl/icu/source/i18n/uregexc.cpp',
