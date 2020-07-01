@@ -159,10 +159,10 @@ static bool LogWasQualifiedForSct(const VerifiedSCT& verifiedSct,
 // "A certificate is CT Qualified if it is presented with at least two SCTs
 // from once or currently qualified logs run by a minimum of two entities
 // independent of the CA and of each other."
-// By the grandfathering provision (not currently implemented), certificates
-// "are CT Qualified if they are presented with SCTs from once or
-// currently qualified logs run by a minimum of one entity independent
-// of the CA."
+// By the preexisting certificate exception provision (not currently
+// implemented), certificates "are CT Qualified if they are presented with SCTs
+// from once or currently qualified logs run by a minimum of one entity
+// independent of the CA."
 static void CheckOperatorDiversityCompliance(
     const VerifiedSCTList& verifiedScts, uint64_t certIssuanceTime,
     const CTLogOperatorList& dependentOperators, bool& compliant) {
@@ -173,8 +173,8 @@ static void CheckOperatorDiversityCompliance(
         return LogWasQualifiedForSct(verifiedSct, certIssuanceTime);
       });
   // Having at least 2 operators implies we have at least 2 SCTs.
-  // For the grandfathering provision (1 operator) we will need to include
-  // an additional SCTs count check using
+  // For the preexisting certificate exception provision (1 operator) we will
+  // need to include an additional SCTs count check using
   // CountLogsForSelectedScts(verifiedScts, sctsCount,
   //   [certIssuanceTime](const VerifiedSCT& verifiedSct)->bool {
   //     return LogWasQualifiedForSct(verifiedSct, certIssuanceTime);

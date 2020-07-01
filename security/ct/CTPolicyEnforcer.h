@@ -39,8 +39,8 @@ enum class CTPolicyCompliance {
 // OF MOZILLA CT POLICY. Specifically:
 // 1. CT log operators being CA-dependent is not currently taken into account
 // (see CTDiversityPolicy.h).
-// 2. The grandfathering provision of the operator diversity requirement
-// is not implemented (see "CT Qualified" section of the policy and
+// 2. The preexisting certificate exception provision of the operator diversity
+// requirement is not implemented (see "CT Qualified" section of the policy and
 // CheckOperatorDiversityCompliance in CTPolicyEnforcer.cpp).
 class CTPolicyEnforcer {
  public:

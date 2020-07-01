@@ -2921,7 +2921,7 @@ bool gfxPlatform::UsesOffMainThreadCompositing() {
              !StaticPrefs::
                  layers_offmainthreadcomposition_force_disabled_AtStartup();
 #if defined(MOZ_WIDGET_GTK)
-    // Linux users who chose OpenGL are being grandfathered in to OMTC
+    // Linux users who chose OpenGL are being included in OMTC
     result |= StaticPrefs::
         layers_acceleration_force_enabled_AtStartup_DoNotUseDirectly();
 
