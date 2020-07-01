@@ -15,6 +15,17 @@ BEGIN_QUOTA_NAMESPACE
 
 enum struct UsageKind { Database, File };
 
+namespace detail {
+inline void AddCapped(Maybe<uint64_t>& aValue, const Maybe<uint64_t> aDelta) {
+  if (aDelta.isSome()) {
+    CheckedUint64 value = aValue.valueOr(0);
+
+    value += aDelta.value();
+
+    aValue = Some(value.isValid() ? value.value() : UINT64_MAX);
+  }
+}
+
 template <UsageKind Kind>
 struct Usage {
   explicit Usage(Maybe<uint64_t> aValue = Nothing{}) : mValue(aValue) {}
@@ -22,13 +33,7 @@ struct Usage {
   Maybe<uint64_t> GetValue() const { return mValue; }
 
   Usage& operator+=(const Usage aDelta) {
-    if (aDelta.mValue.isSome()) {
-      CheckedUint64 value = mValue.valueOr(0);
-
-      value += aDelta.mValue.value();
-
-      mValue = Some(value.isValid() ? value.value() : UINT64_MAX);
-    }
+    AddCapped(mValue, aDelta.mValue);
 
     return *this;
   }
@@ -42,9 +47,10 @@ struct Usage {
  private:
   Maybe<uint64_t> mValue;
 };
+}  // namespace detail
 
-using DatabaseUsageType = Usage<UsageKind::Database>;
-using FileUsageType = Usage<UsageKind::File>;
+using DatabaseUsageType = detail::Usage<UsageKind::Database>;
+using FileUsageType = detail::Usage<UsageKind::File>;
 
 class UsageInfo final {
  public:
@@ -67,9 +73,9 @@ class UsageInfo final {
   Maybe<uint64_t> FileUsage() const { return mFileUsage.GetValue(); }
 
   Maybe<uint64_t> TotalUsage() const {
-    const uint64_t res =
-        mDatabaseUsage.GetValue().valueOr(0) + FileUsage().valueOr(0);
-    return res ? Some(res) : Nothing();
+    Maybe<uint64_t> res = mDatabaseUsage.GetValue();
+    detail::AddCapped(res, FileUsage());
+    return res;
   }
 
  private:
