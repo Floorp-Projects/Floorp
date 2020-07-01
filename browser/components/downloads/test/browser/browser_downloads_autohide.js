@@ -497,15 +497,6 @@ function promiseCustomizeEnd(aWindow = window) {
   });
 }
 
-async function openContextMenu(element) {
-  let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(element, {
-    type: "contextmenu",
-    button: 2,
-  });
-  await popupShownPromise;
-}
-
 function clickCheckbox(checkbox) {
   // Clicking a checkbox toggles its checkedness first.
   if (checkbox.getAttribute("checked") == "true") {
