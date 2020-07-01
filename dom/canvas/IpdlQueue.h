@@ -146,10 +146,8 @@ class AsyncProducerActor {
       return true;
     }
 
-    if (!MessageLoop::current()) {
-      NS_WARNING("No message loop for IpdlQueue flush task");
-      return false;
-    }
+    MOZ_ASSERT(GetCurrentSerialEventTarget(),
+               "No message loop for IpdlQueue flush task");
 
     Derived* self = static_cast<Derived*>(this);
     // IpdlProducer/IpdlConsumer guarantees the actor supports WeakPtr.
@@ -164,8 +162,9 @@ class AsyncProducerActor {
           strong->ClearFlushRunnable();
         });
 
-    MessageLoop::current()->PostDelayedTask(std::move(flushRunnable),
-                                            aEstWaitTimeMs);
+    NS_ENSURE_SUCCESS(GetCurrentSerialEventTarget()->DelayedDispatch(
+                          std::move(flushRunnable), aEstWaitTimeMs),
+                      false);
     mPostedFlushRunnable = true;
     return true;
   }
