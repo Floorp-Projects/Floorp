@@ -256,8 +256,8 @@ void ChromiumCDMParent::GetStatusForPolicy(uint32_t aPromiseId,
     // <https://github.com/WICG/hdcp-detection/blob/master/explainer.md>
     // does not define what exceptions get thrown.  Let's assume
     // TypeError for invalid args, as usual.
-    NS_NAMED_LITERAL_CSTRING(
-        err, "getStatusForPolicy failed due to bad hdcp version argument");
+    constexpr auto err =
+        "getStatusForPolicy failed due to bad hdcp version argument"_ns;
     rv.ThrowTypeError(err);
     RejectPromise(aPromiseId, std::move(rv), err);
     return;

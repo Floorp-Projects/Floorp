@@ -9083,7 +9083,7 @@ void Document::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
     }
   }
 
-  static NS_NAMED_LITERAL_STRING(new_line, "\n");
+  static constexpr auto new_line = u"\n"_ns;
 
   ++mWriteLevel;
 

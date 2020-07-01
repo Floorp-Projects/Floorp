@@ -387,13 +387,13 @@ nsresult nsProfileLock::GetReplacedLockTime(PRTime* aResult) {
 nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
                              nsIProfileUnlocker** aUnlocker) {
 #if defined(XP_MACOSX)
-  NS_NAMED_LITERAL_STRING(LOCKFILE_NAME, ".parentlock");
-  NS_NAMED_LITERAL_STRING(OLD_LOCKFILE_NAME, "parent.lock");
+  constexpr auto LOCKFILE_NAME = u".parentlock"_ns;
+  constexpr auto OLD_LOCKFILE_NAME = u"parent.lock"_ns;
 #elif defined(XP_UNIX)
-  NS_NAMED_LITERAL_STRING(OLD_LOCKFILE_NAME, "lock");
-  NS_NAMED_LITERAL_STRING(LOCKFILE_NAME, ".parentlock");
+  constexpr auto OLD_LOCKFILE_NAME = u"lock"_ns;
+  constexpr auto LOCKFILE_NAME = u".parentlock"_ns;
 #else
-  NS_NAMED_LITERAL_STRING(LOCKFILE_NAME, "parent.lock");
+  constexpr auto LOCKFILE_NAME = u"parent.lock"_ns;
 #endif
 
   nsresult rv;

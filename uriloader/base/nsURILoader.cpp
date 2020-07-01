@@ -238,7 +238,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request,
     return NS_ERROR_FAILURE;
   }
 
-  NS_NAMED_LITERAL_CSTRING(anyType, "*/*");
+  constexpr auto anyType = "*/*"_ns;
   if (mContentType.IsEmpty() || mContentType == anyType) {
     rv = aChannel->GetContentType(mContentType);
     if (NS_FAILED(rv)) return rv;
@@ -517,7 +517,7 @@ nsresult nsDocumentOpenInfo::ConvertData(nsIRequest* request,
 }
 
 nsresult nsDocumentOpenInfo::TryStreamConversion(nsIChannel* aChannel) {
-  NS_NAMED_LITERAL_CSTRING(anyType, "*/*");
+  constexpr auto anyType = "*/*"_ns;
   nsresult rv = ConvertData(aChannel, m_contentListener, mContentType, anyType);
   if (NS_FAILED(rv)) {
     m_targetStreamListener = nullptr;

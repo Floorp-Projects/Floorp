@@ -317,8 +317,8 @@ nsresult nsJSThunk::EvaluateScript(
 
     char* bytes;
     uint32_t bytesLen;
-    NS_NAMED_LITERAL_CSTRING(isoCharset, "windows-1252");
-    NS_NAMED_LITERAL_CSTRING(utf8Charset, "UTF-8");
+    constexpr auto isoCharset = "windows-1252"_ns;
+    constexpr auto utf8Charset = "UTF-8"_ns;
     const nsLiteralCString* charset;
     if (IsISO88591(result)) {
       // For compatibility, if the result is ISO-8859-1, we use

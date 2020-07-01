@@ -473,12 +473,11 @@ ContentParentsMemoryReporter::CollectReports(
         NS_ConvertUTF16toUTF8(friendlyName).get(), cp->Pid(), channelStr,
         static_cast<nsIObserver*>(cp), refcnt);
 
-    NS_NAMED_LITERAL_CSTRING(
-        desc,
+    constexpr auto desc =
         "The number of unset IPC messages held in this ContentParent's "
         "channel.  A large value here might indicate that we're leaking "
         "messages.  Similarly, a ContentParent object for a process that's no "
-        "longer running could indicate that we're leaking ContentParents.");
+        "longer running could indicate that we're leaking ContentParents."_ns;
 
     aHandleReport->Callback(/* process */ EmptyCString(), path, KIND_OTHER,
                             UNITS_COUNT, numQueuedMessages, desc, aData);

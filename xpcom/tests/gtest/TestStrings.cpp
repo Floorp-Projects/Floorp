@@ -581,7 +581,7 @@ TEST_F(Strings, assign_c) {
 }
 
 TEST_F(Strings, test1) {
-  NS_NAMED_LITERAL_STRING(empty, "");
+  constexpr auto empty = u""_ns;
   const nsAString& aStr = empty;
 
   nsAutoString buf(aStr);
@@ -2463,7 +2463,7 @@ CONVERSION_BENCH(PerfUTF8toUTF16VIThousand, CopyUTF8toUTF16, mViThousandUtf8,
 // Tests for usability of nsTLiteralString in constant expressions.
 static_assert(u""_ns.IsEmpty());
 
-constexpr auto testStringA = NS_LITERAL_STRING("a");
+constexpr auto testStringA = u"a"_ns;
 static_assert(!testStringA.IsEmpty());
 static_assert(!testStringA.IsVoid());
 static_assert(testStringA.IsLiteral());

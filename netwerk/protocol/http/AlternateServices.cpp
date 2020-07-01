@@ -1182,8 +1182,8 @@ void AltSvcCache::ClearHostMapping(const nsACString& host, int32_t port,
   }
   nsAutoCString key;
   for (int secure = 0; secure < 2; ++secure) {
-    NS_NAMED_LITERAL_CSTRING(http, "http");
-    NS_NAMED_LITERAL_CSTRING(https, "https");
+    constexpr auto http = "http"_ns;
+    constexpr auto https = "https"_ns;
     const nsLiteralCString& scheme = secure ? https : http;
     for (int pb = 1; pb >= 0; --pb) {
       for (int isolate = 0; isolate < 2; ++isolate) {

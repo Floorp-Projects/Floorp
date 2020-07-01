@@ -145,13 +145,13 @@ MediaKeySystemStatus MediaKeySystemAccess::GetKeySystemStatus(
 
 typedef nsCString EMECodecString;
 
-static NS_NAMED_LITERAL_CSTRING(EME_CODEC_AAC, "aac");
-static NS_NAMED_LITERAL_CSTRING(EME_CODEC_OPUS, "opus");
-static NS_NAMED_LITERAL_CSTRING(EME_CODEC_VORBIS, "vorbis");
-static NS_NAMED_LITERAL_CSTRING(EME_CODEC_FLAC, "flac");
-static NS_NAMED_LITERAL_CSTRING(EME_CODEC_H264, "h264");
-static NS_NAMED_LITERAL_CSTRING(EME_CODEC_VP8, "vp8");
-static NS_NAMED_LITERAL_CSTRING(EME_CODEC_VP9, "vp9");
+static constexpr auto EME_CODEC_AAC = "aac"_ns;
+static constexpr auto EME_CODEC_OPUS = "opus"_ns;
+static constexpr auto EME_CODEC_VORBIS = "vorbis"_ns;
+static constexpr auto EME_CODEC_FLAC = "flac"_ns;
+static constexpr auto EME_CODEC_H264 = "h264"_ns;
+static constexpr auto EME_CODEC_VP8 = "vp8"_ns;
+static constexpr auto EME_CODEC_VP9 = "vp9"_ns;
 
 EMECodecString ToEMEAPICodecString(const nsString& aCodec) {
   if (IsAACCodecString(aCodec)) {

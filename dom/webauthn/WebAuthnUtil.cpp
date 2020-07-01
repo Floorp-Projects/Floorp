@@ -13,11 +13,10 @@ namespace mozilla {
 namespace dom {
 
 // Bug #1436078 - Permit Google Accounts. Remove in Bug #1436085 in Jan 2023.
-NS_NAMED_LITERAL_STRING(kGoogleAccountsAppId1,
-                        "https://www.gstatic.com/securitykey/origins.json");
-NS_NAMED_LITERAL_STRING(
-    kGoogleAccountsAppId2,
-    "https://www.gstatic.com/securitykey/a/google.com/origins.json");
+constexpr auto kGoogleAccountsAppId1 =
+    u"https://www.gstatic.com/securitykey/origins.json"_ns;
+constexpr auto kGoogleAccountsAppId2 =
+    u"https://www.gstatic.com/securitykey/a/google.com/origins.json"_ns;
 
 const uint8_t FLAG_TUP = 0x01;  // Test of User Presence required
 const uint8_t FLAG_AT = 0x40;   // Authenticator Data is provided

@@ -195,7 +195,7 @@ nsresult PluginDocument::CreateSyntheticPluginDocument() {
   }
 
   // remove margins from body
-  NS_NAMED_LITERAL_STRING(zero, "0");
+  constexpr auto zero = u"0"_ns;
   body->SetAttr(kNameSpaceID_None, nsGkAtoms::marginwidth, zero, false);
   body->SetAttr(kNameSpaceID_None, nsGkAtoms::marginheight, zero, false);
 
@@ -212,7 +212,7 @@ nsresult PluginDocument::CreateSyntheticPluginDocument() {
                           false);
 
   // fill viewport and auto-resize
-  NS_NAMED_LITERAL_STRING(percent100, "100%");
+  constexpr auto percent100 = u"100%"_ns;
   mPluginContent->SetAttr(kNameSpaceID_None, nsGkAtoms::width, percent100,
                           false);
   mPluginContent->SetAttr(kNameSpaceID_None, nsGkAtoms::height, percent100,

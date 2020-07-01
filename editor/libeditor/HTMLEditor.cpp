@@ -1386,7 +1386,7 @@ NS_IMETHODIMP HTMLEditor::RebuildDocumentFromSource(
   } else {
     nsReadingIterator<char16_t> begintotal;
     aSourceString.BeginReading(begintotal);
-    NS_NAMED_LITERAL_STRING(head, "<head>");
+    constexpr auto head = u"<head>"_ns;
     if (foundclosehead) {
       nsresult rv = ReplaceHeadContentsWithSourceWithTransaction(
           head + Substring(begintotal, beginclosehead));
@@ -1426,7 +1426,7 @@ NS_IMETHODIMP HTMLEditor::RebuildDocumentFromSource(
   }
 
   if (!foundbody) {
-    NS_NAMED_LITERAL_STRING(body, "<body>");
+    constexpr auto body = u"<body>"_ns;
     // XXX Without recourse to some parser/content sink/docshell hackery we
     // don't really know where the head ends and the body begins
     if (foundclosehead) {

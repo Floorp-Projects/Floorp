@@ -11,7 +11,7 @@
 #include "nsXULAppAPI.h"
 #include "xpcpublic.h"
 
-static NS_NAMED_LITERAL_STRING(kInterfaceName, u"captive-portal-inteface");
+static constexpr auto kInterfaceName = u"captive-portal-inteface"_ns;
 
 static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kAbortCaptivePortalLoginEvent[] =

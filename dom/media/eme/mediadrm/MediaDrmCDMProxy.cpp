@@ -329,8 +329,9 @@ void MediaDrmCDMProxy::OnKeyStatusesChange(const nsAString& aSessionId) {
 void MediaDrmCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
                                           const nsAString& aMinHdcpVersion) {
   // TODO: Implement GetStatusForPolicy.
-  NS_NAMED_LITERAL_CSTRING(
-      err, "Currently Fennec does not support GetStatusForPolicy");
+  constexpr auto err =
+      "Currently Fennec does not support GetStatusForPolicy"_ns;
+
   ErrorResult rv;
   rv.ThrowNotSupportedError(err);
   RejectPromise(aPromiseId, std::move(rv), err);
@@ -359,7 +360,7 @@ void MediaDrmCDMProxy::OnCDMCreated(uint32_t aPromiseId) {
   }
 
   // No CDM? Just reject the promise.
-  NS_NAMED_LITERAL_CSTRING(err, "Null CDM in OnCDMCreated()");
+  constexpr auto err = "Null CDM in OnCDMCreated()"_ns;
   ErrorResult rv;
   rv.ThrowInvalidStateError(err);
   mKeys->RejectPromise(aPromiseId, std::move(rv), err);

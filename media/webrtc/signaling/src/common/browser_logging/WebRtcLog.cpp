@@ -26,7 +26,7 @@ using mozilla::LogLevel;
 static const char* default_tmp_dir = "/dev/null";
 static const char* default_log_name = "nspr";
 #else  // Assume a POSIX environment
-NS_NAMED_LITERAL_CSTRING(default_log_name, "WebRTC.log");
+constexpr auto default_log_name = "WebRTC.log"_ns;
 #endif
 
 static mozilla::LazyLogModule sWebRtcLog("webrtc_trace");

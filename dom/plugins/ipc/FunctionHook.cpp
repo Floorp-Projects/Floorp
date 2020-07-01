@@ -205,7 +205,7 @@ static HANDLE WINAPI CreateFileAHookFn(LPCSTR aFname, DWORD aAccess,
 }
 
 static bool GetLocalLowTempPath(size_t aLen, LPWSTR aPath) {
-  NS_NAMED_LITERAL_STRING(tempname, "\\Temp");
+  constexpr auto tempname = u"\\Temp"_ns;
   LPWSTR path;
   if (SUCCEEDED(
           SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0, nullptr, &path))) {

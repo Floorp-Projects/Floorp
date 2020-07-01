@@ -844,8 +844,8 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
 
   // Try enabling WAL mode. This can fail in various circumstances so we have to
   // check the results here.
-  NS_NAMED_LITERAL_CSTRING(journalModeQueryStart, "PRAGMA journal_mode = ");
-  NS_NAMED_LITERAL_CSTRING(journalModeWAL, "wal");
+  constexpr auto journalModeQueryStart = "PRAGMA journal_mode = "_ns;
+  constexpr auto journalModeWAL = "wal"_ns;
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(

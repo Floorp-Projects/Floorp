@@ -161,7 +161,7 @@ Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
   Telemetry::AutoTimer<Telemetry::A11Y_UIA_DETECTION_TIMING_MS> timer;
 
   // UIA creates a section containing the substring "HOOK_SHMEM_"
-  NS_NAMED_LITERAL_STRING(kStrHookShmem, "HOOK_SHMEM_");
+  constexpr auto kStrHookShmem = u"HOOK_SHMEM_"_ns;
 
   // The section name always ends with this suffix, which is derived from the
   // current thread id and the UIA message's WPARAM and LPARAM.

@@ -420,7 +420,7 @@ already_AddRefed<FormData> BodyUtil::ConsumeFormData(nsIGlobalObject* aParent,
                                                      const nsCString& aMimeType,
                                                      const nsCString& aStr,
                                                      ErrorResult& aRv) {
-  NS_NAMED_LITERAL_CSTRING(formDataMimeType, "multipart/form-data");
+  constexpr auto formDataMimeType = "multipart/form-data"_ns;
 
   // Allow semicolon separated boundary/encoding suffix like
   // multipart/form-data; boundary= but disallow multipart/form-datafoobar.
@@ -443,8 +443,7 @@ already_AddRefed<FormData> BodyUtil::ConsumeFormData(nsIGlobalObject* aParent,
     return fd.forget();
   }
 
-  NS_NAMED_LITERAL_CSTRING(urlDataMimeType,
-                           "application/x-www-form-urlencoded");
+  constexpr auto urlDataMimeType = "application/x-www-form-urlencoded"_ns;
   bool isValidUrlEncodedMimeType = StringBeginsWith(aMimeType, urlDataMimeType);
 
   if (isValidUrlEncodedMimeType &&

@@ -1088,8 +1088,8 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
             new ConvertAppIdToOriginAttrsSQLFunction());
         NS_ENSURE_TRUE(convertToOriginAttrs, RESULT_RETRY);
 
-        NS_NAMED_LITERAL_CSTRING(convertToOriginAttrsName,
-                                 "CONVERT_TO_ORIGIN_ATTRIBUTES");
+        constexpr auto convertToOriginAttrsName =
+            "CONVERT_TO_ORIGIN_ATTRIBUTES"_ns;
 
         rv = mSyncConn->CreateFunction(convertToOriginAttrsName, 2,
                                        convertToOriginAttrs);
@@ -1141,7 +1141,7 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
             new SetAppIdFromOriginAttributesSQLFunction());
         NS_ENSURE_TRUE(setAppId, RESULT_RETRY);
 
-        NS_NAMED_LITERAL_CSTRING(setAppIdName, "SET_APP_ID");
+        constexpr auto setAppIdName = "SET_APP_ID"_ns;
 
         rv = mSyncConn->CreateFunction(setAppIdName, 1, setAppId);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
@@ -1150,7 +1150,7 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
             new SetInBrowserFromOriginAttributesSQLFunction());
         NS_ENSURE_TRUE(setInBrowser, RESULT_RETRY);
 
-        NS_NAMED_LITERAL_CSTRING(setInBrowserName, "SET_IN_BROWSER");
+        constexpr auto setInBrowserName = "SET_IN_BROWSER"_ns;
 
         rv = mSyncConn->CreateFunction(setInBrowserName, 1, setInBrowser);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);

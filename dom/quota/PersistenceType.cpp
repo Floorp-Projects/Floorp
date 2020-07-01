@@ -12,9 +12,9 @@ namespace quota {
 
 namespace {
 
-constexpr auto kPersistentCString = NS_LITERAL_CSTRING("persistent");
-constexpr auto kTemporaryCString = NS_LITERAL_CSTRING("temporary");
-constexpr auto kDefaultCString = NS_LITERAL_CSTRING("default");
+constexpr auto kPersistentCString = "persistent"_ns;
+constexpr auto kTemporaryCString = "temporary"_ns;
+constexpr auto kDefaultCString = "default"_ns;
 
 static_assert(PERSISTENCE_TYPE_PERSISTENT == 0 &&
                   PERSISTENCE_TYPE_TEMPORARY == 1 &&

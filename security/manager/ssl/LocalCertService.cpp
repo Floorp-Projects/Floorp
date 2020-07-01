@@ -30,7 +30,7 @@ namespace mozilla {
 static nsresult FindLocalCertByName(const nsACString& aName,
                                     /*out*/ UniqueCERTCertificate& aResult) {
   aResult.reset(nullptr);
-  NS_NAMED_LITERAL_CSTRING(commonNamePrefix, "CN=");
+  constexpr auto commonNamePrefix = "CN="_ns;
   nsAutoCString expectedDistinguishedName(commonNamePrefix + aName);
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
@@ -136,7 +136,7 @@ class LocalCertGetTask final : public LocalCertTask {
     }
 
     // Generate a new cert
-    NS_NAMED_LITERAL_CSTRING(commonNamePrefix, "CN=");
+    constexpr auto commonNamePrefix = "CN="_ns;
     nsAutoCString subjectNameStr(commonNamePrefix + mNickname);
     UniqueCERTName subjectName(CERT_AsciiToName(subjectNameStr.get()));
     if (!subjectName) {
@@ -291,7 +291,7 @@ class LocalCertGetTask final : public LocalCertTask {
     if (!subjectName.Equals(issuerName)) {
       return NS_ERROR_FAILURE;
     }
-    NS_NAMED_LITERAL_STRING(commonNamePrefix, "CN=");
+    constexpr auto commonNamePrefix = u"CN="_ns;
     nsAutoString subjectNameFromNickname(commonNamePrefix +
                                          NS_ConvertASCIItoUTF16(mNickname));
     if (!subjectName.Equals(subjectNameFromNickname)) {

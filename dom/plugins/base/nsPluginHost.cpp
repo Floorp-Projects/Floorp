@@ -2192,8 +2192,8 @@ void nsPluginHost::RegisterWithCategoryManager(const nsCString& aMimeType,
     return;
   }
 
-  NS_NAMED_LITERAL_CSTRING(
-      contractId, "@mozilla.org/content/plugin/document-loader-factory;1");
+  constexpr auto contractId =
+      "@mozilla.org/content/plugin/document-loader-factory;1"_ns;
 
   if (aType == ePluginRegister) {
     catMan->AddCategoryEntry("Gecko-Content-Viewers", aMimeType, contractId,

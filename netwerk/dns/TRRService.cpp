@@ -108,8 +108,8 @@ bool TRRService::CheckCaptivePortalIsPassed() {
   return result;
 }
 
-NS_NAMED_LITERAL_CSTRING(kTRRIsAutoDetectedKey, "(auto-detected)");
-NS_NAMED_LITERAL_CSTRING(kTRRNotAutoDetectedKey, "(default)");
+constexpr auto kTRRIsAutoDetectedKey = "(auto-detected)"_ns;
+constexpr auto kTRRNotAutoDetectedKey = "(default)"_ns;
 // static
 const nsCString& TRRService::AutoDetectedKey() {
   if (gTRRService && gTRRService->IsUsingAutoDetectedURL()) {

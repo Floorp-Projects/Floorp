@@ -15,17 +15,17 @@ namespace dom {
 
 // Collected from
 // https://developers.google.com/android/reference/com/google/android/gms/fido/fido2/api/common/ErrorCode
-NS_NAMED_LITERAL_STRING(kSecurityError, "SECURITY_ERR");
-NS_NAMED_LITERAL_STRING(kConstraintError, "CONSTRAINT_ERR");
-NS_NAMED_LITERAL_STRING(kNotSupportedError, "NOT_SUPPORTED_ERR");
-NS_NAMED_LITERAL_STRING(kInvalidStateError, "INVALID_STATE_ERR");
-NS_NAMED_LITERAL_STRING(kNotAllowedError, "NOT_ALLOWED_ERR");
-NS_NAMED_LITERAL_STRING(kAbortError, "ABORT_ERR");
-NS_NAMED_LITERAL_STRING(kEncodingError, "ENCODING_ERR");
-NS_NAMED_LITERAL_STRING(kDataError, "DATA_ERR");
-NS_NAMED_LITERAL_STRING(kTimeoutError, "TIMEOUT_ERR");
-NS_NAMED_LITERAL_STRING(kNetworkError, "NETWORK_ERR");
-NS_NAMED_LITERAL_STRING(kUnknownError, "UNKNOWN_ERR");
+constexpr auto kSecurityError = u"SECURITY_ERR"_ns;
+constexpr auto kConstraintError = u"CONSTRAINT_ERR"_ns;
+constexpr auto kNotSupportedError = u"NOT_SUPPORTED_ERR"_ns;
+constexpr auto kInvalidStateError = u"INVALID_STATE_ERR"_ns;
+constexpr auto kNotAllowedError = u"NOT_ALLOWED_ERR"_ns;
+constexpr auto kAbortError = u"ABORT_ERR"_ns;
+constexpr auto kEncodingError = u"ENCODING_ERR"_ns;
+constexpr auto kDataError = u"DATA_ERR"_ns;
+constexpr auto kTimeoutError = u"TIMEOUT_ERR"_ns;
+constexpr auto kNetworkError = u"NETWORK_ERR"_ns;
+constexpr auto kUnknownError = u"UNKNOWN_ERR"_ns;
 
 class AndroidWebAuthnResult {
  public:

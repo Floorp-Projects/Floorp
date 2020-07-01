@@ -391,7 +391,7 @@ TEST(Base64, DecodeNon8BitWideString)
 
 TEST(Base64, TruncateOnInvalidDecodeCString)
 {
-  NS_NAMED_LITERAL_CSTRING(invalid, "@@==");
+  constexpr auto invalid = "@@=="_ns;
   nsAutoCString out("I should be truncated!");
   nsresult rv = mozilla::Base64Decode(invalid, out);
   ASSERT_TRUE(NS_FAILED(rv));
@@ -400,7 +400,7 @@ TEST(Base64, TruncateOnInvalidDecodeCString)
 
 TEST(Base64, TruncateOnInvalidDecodeWideString)
 {
-  NS_NAMED_LITERAL_STRING(invalid, "@@==");
+  constexpr auto invalid = u"@@=="_ns;
   nsAutoString out(u"I should be truncated!");
   nsresult rv = mozilla::Base64Decode(invalid, out);
   ASSERT_TRUE(NS_FAILED(rv));

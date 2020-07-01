@@ -187,7 +187,7 @@ nsresult nsWindowsSystemProxySettings::GetProxyForURI(const nsACString& aSpec,
 
   NS_ConvertUTF16toUTF8 cbuf(buf);
 
-  NS_NAMED_LITERAL_CSTRING(kSocksPrefix, "socks=");
+  constexpr auto kSocksPrefix = "socks="_ns;
   nsAutoCString prefix;
   ToLowerCase(aScheme, prefix);
 

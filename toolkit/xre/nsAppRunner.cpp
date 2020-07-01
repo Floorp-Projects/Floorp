@@ -2230,7 +2230,7 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
   // NSID_LENGTH includes the trailing \0 and we also want to strip off the
   // surrounding braces so the length becomes NSID_LENGTH - 3.
   nsDependentCSubstring pingId(strid + 1, NSID_LENGTH - 3);
-  NS_NAMED_LITERAL_CSTRING(pingType, "downgrade");
+  constexpr auto pingType = "downgrade"_ns;
 
   int32_t pos = aLastVersion.Find("_");
   if (pos == kNotFound) {
@@ -4135,10 +4135,10 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   BuildVersion(version);
 
 #ifdef TARGET_OS_ABI
-  NS_NAMED_LITERAL_CSTRING(osABI, TARGET_OS_ABI);
+  constexpr auto osABI = nsLiteralCString{TARGET_OS_ABI};
 #else
   // No TARGET_XPCOM_ABI, but at least the OS is known
-  NS_NAMED_LITERAL_CSTRING(osABI, OS_TARGET "_UNKNOWN");
+  constexpr auto osABI = nsLiteralCString{OS_TARGET "_UNKNOWN"};
 #endif
 
   // Check for version compatibility with the last version of the app this

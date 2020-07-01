@@ -1973,9 +1973,9 @@ nsresult nsDataObj ::BuildPlatformHTML(const char* inOurHTML,
       (kSourceURLLength > 0 ? strlen(startSourceURLPrefix) : 0) +
       kSourceURLLength + (4 * kNumberLength);
 
-  NS_NAMED_LITERAL_CSTRING(htmlHeaderString, "<html><body>\r\n");
+  constexpr auto htmlHeaderString = "<html><body>\r\n"_ns;
 
-  NS_NAMED_LITERAL_CSTRING(fragmentHeaderString, "<!--StartFragment-->");
+  constexpr auto fragmentHeaderString = "<!--StartFragment-->"_ns;
 
   nsDependentCString trailingString(
       "<!--EndFragment-->\r\n"

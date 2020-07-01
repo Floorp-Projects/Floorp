@@ -976,8 +976,8 @@ void txMozillaXSLTProcessor::notifyError() {
       "Bad readyState.");
   document->SetReadyStateInternal(Document::READYSTATE_LOADING);
 
-  NS_NAMED_LITERAL_STRING(
-      ns, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
+  constexpr auto ns =
+      u"http://www.mozilla.org/newlayout/xml/parsererror.xml"_ns;
 
   IgnoredErrorResult rv;
   ElementCreationOptionsOrString options;

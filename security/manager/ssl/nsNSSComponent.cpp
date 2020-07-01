@@ -369,16 +369,15 @@ static nsresult AccountHasFamilySafetyEnabled(bool& enabled) {
     return NS_ERROR_FAILURE;
   }
   uint32_t flags = nsIWindowsRegKey::ACCESS_READ | nsIWindowsRegKey::WOW64_64;
-  NS_NAMED_LITERAL_STRING(
-      familySafetyPath,
-      "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Parental Controls");
+  constexpr auto familySafetyPath =
+      u"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Parental Controls"_ns;
   nsresult rv = parentalControlsKey->Open(
       nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, familySafetyPath, flags);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't open parentalControlsKey"));
     return rv;
   }
-  NS_NAMED_LITERAL_STRING(usersString, "Users");
+  constexpr auto usersString = u"Users"_ns;
   bool hasUsers;
   rv = parentalControlsKey->HasChild(usersString, &hasUsers);
   if (NS_FAILED(rv)) {
@@ -1743,8 +1742,8 @@ static nsresult AttemptToRenamePKCS11ModuleDB(
 // |profilePath| is encoded in UTF-8.
 static nsresult AttemptToRenameBothPKCS11ModuleDBVersions(
     const nsACString& profilePath) {
-  NS_NAMED_LITERAL_CSTRING(legacyModuleDBFilename, "secmod.db");
-  NS_NAMED_LITERAL_CSTRING(sqlModuleDBFilename, "pkcs11.txt");
+  constexpr auto legacyModuleDBFilename = "secmod.db"_ns;
+  constexpr auto sqlModuleDBFilename = "pkcs11.txt"_ns;
   nsresult rv =
       AttemptToRenamePKCS11ModuleDB(profilePath, legacyModuleDBFilename);
   if (NS_FAILED(rv)) {
@@ -1818,7 +1817,7 @@ static void MaybeCleanUpOldNSSFiles(const nsACString& profilePath) {
   if (!hasPassword) {
     return;
   }
-  NS_NAMED_LITERAL_CSTRING(newKeyDBFilename, "key4.db");
+  constexpr auto newKeyDBFilename = "key4.db"_ns;
   nsCOMPtr<nsIFile> newDBFile;
   nsresult rv =
       GetFileIfExists(profilePath, newKeyDBFilename, getter_AddRefs(newDBFile));
@@ -1831,7 +1830,7 @@ static void MaybeCleanUpOldNSSFiles(const nsACString& profilePath) {
   if (!newDBFile) {
     return;
   }
-  NS_NAMED_LITERAL_CSTRING(oldKeyDBFilename, "key3.db");
+  constexpr auto oldKeyDBFilename = "key3.db"_ns;
   nsCOMPtr<nsIFile> oldDBFile;
   rv =
       GetFileIfExists(profilePath, oldKeyDBFilename, getter_AddRefs(oldDBFile));

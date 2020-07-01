@@ -21,24 +21,22 @@ using ::testing::_;
 using ::testing::AtLeast;
 using ::testing::StrEq;
 
-NS_NAMED_LITERAL_CSTRING(kTelemetryTest1Metric, "telemetry.test_test1");
+constexpr auto kTelemetryTest1Metric = "telemetry.test_test1"_ns;
 
-NS_NAMED_LITERAL_CSTRING(kDoubleclickOrigin, "doubleclick.net");
-NS_NAMED_LITERAL_CSTRING(kDoubleclickOriginHash,
-                         "uXNT1PzjAVau8b402OMAIGDejKbiXfQX5iXvPASfO/s=");
-NS_NAMED_LITERAL_CSTRING(kFacebookOrigin, "fb.com");
-NS_NAMED_LITERAL_CSTRING(kUnknownOrigin1,
-                         "this origin isn't known to Origin Telemetry");
-NS_NAMED_LITERAL_CSTRING(kUnknownOrigin2, "neither is this one");
+constexpr auto kDoubleclickOrigin = "doubleclick.net"_ns;
+constexpr auto kDoubleclickOriginHash =
+    "uXNT1PzjAVau8b402OMAIGDejKbiXfQX5iXvPASfO/s="_ns;
+constexpr auto kFacebookOrigin = "fb.com"_ns;
+constexpr auto kUnknownOrigin1 =
+    "this origin isn't known to Origin Telemetry"_ns;
+constexpr auto kUnknownOrigin2 = "neither is this one"_ns;
 
 // Properly prepare the prio prefs
 // (Sourced from PrioEncoder.cpp from when it was being prototyped)
-NS_NAMED_LITERAL_CSTRING(
-    prioKeyA,
-    "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8875707733");
-NS_NAMED_LITERAL_CSTRING(
-    prioKeyB,
-    "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50");
+constexpr auto prioKeyA =
+    "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8875707733"_ns;
+constexpr auto prioKeyB =
+    "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50"_ns;
 
 // Test that we can properly record origin stuff using the C++ API.
 TEST_F(TelemetryTestFixture, RecordOrigin) {

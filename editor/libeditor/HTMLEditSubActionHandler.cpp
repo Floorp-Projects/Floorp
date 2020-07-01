@@ -1618,8 +1618,8 @@ EditActionResult HTMLEditor::HandleInsertText(
         }
       }
     } else {
-      NS_NAMED_LITERAL_STRING(tabStr, "\t");
-      NS_NAMED_LITERAL_STRING(spacesStr, "    ");
+      constexpr auto tabStr = u"\t"_ns;
+      constexpr auto spacesStr = u"    "_ns;
       char specialChars[] = {TAB, nsCRT::LF, 0};
       nsAutoString insertionString(aInsertionString);  // For FindCharInSet().
       while (pos != -1 &&

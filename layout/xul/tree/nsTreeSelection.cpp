@@ -561,8 +561,8 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(int32_t aIndex) {
   // Fire DOMMenuItemActive or DOMMenuItemInactive event for tree.
   NS_ENSURE_STATE(mTree);
 
-  NS_NAMED_LITERAL_STRING(DOMMenuItemActive, "DOMMenuItemActive");
-  NS_NAMED_LITERAL_STRING(DOMMenuItemInactive, "DOMMenuItemInactive");
+  constexpr auto DOMMenuItemActive = u"DOMMenuItemActive"_ns;
+  constexpr auto DOMMenuItemInactive = u"DOMMenuItemInactive"_ns;
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
       mTree, (aIndex != -1 ? DOMMenuItemActive : DOMMenuItemInactive),

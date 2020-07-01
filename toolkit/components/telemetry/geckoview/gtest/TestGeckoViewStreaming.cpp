@@ -25,10 +25,9 @@ namespace {
 const char* kGeckoViewStreamingPref = "toolkit.telemetry.geckoview.streaming";
 const char* kBatchTimeoutPref = "toolkit.telemetry.geckoview.batchDurationMS";
 
-NS_NAMED_LITERAL_CSTRING(kTestHgramName, "TELEMETRY_TEST_STREAMING");
-NS_NAMED_LITERAL_CSTRING(kTestHgramName2, "TELEMETRY_TEST_STREAMING_2");
-NS_NAMED_LITERAL_CSTRING(kTestCategoricalName,
-                         "TELEMETRY_TEST_CATEGORICAL_OPTOUT");
+constexpr auto kTestHgramName = "TELEMETRY_TEST_STREAMING"_ns;
+constexpr auto kTestHgramName2 = "TELEMETRY_TEST_STREAMING_2"_ns;
+constexpr auto kTestCategoricalName = "TELEMETRY_TEST_CATEGORICAL_OPTOUT"_ns;
 const HistogramID kTestHgram = Telemetry::TELEMETRY_TEST_STREAMING;
 const HistogramID kTestHgram2 = Telemetry::TELEMETRY_TEST_STREAMING_2;
 
@@ -174,12 +173,12 @@ TEST_F(TelemetryStreamingFixture, MultipleThreads) {
 }
 
 TEST_F(TelemetryStreamingFixture, ScalarValues) {
-  NS_NAMED_LITERAL_CSTRING(kBoolScalarName, "telemetry.test.boolean_kind");
-  NS_NAMED_LITERAL_CSTRING(kStringScalarName, "telemetry.test.string_kind");
-  NS_NAMED_LITERAL_CSTRING(kUintScalarName, "telemetry.test.unsigned_int_kind");
+  constexpr auto kBoolScalarName = "telemetry.test.boolean_kind"_ns;
+  constexpr auto kStringScalarName = "telemetry.test.string_kind"_ns;
+  constexpr auto kUintScalarName = "telemetry.test.unsigned_int_kind"_ns;
 
   const bool kBoolScalarValue = true;
-  NS_NAMED_LITERAL_CSTRING(kStringScalarValue, "a string scalar value");
+  constexpr auto kStringScalarValue = "a string scalar value"_ns;
   const uint32_t kUintScalarValue = 42;
 
   auto md = MakeRefPtr<MockDelegate>();
@@ -214,7 +213,7 @@ TEST_F(TelemetryStreamingFixture, ExpiredHistogram) {
 }
 
 TEST_F(TelemetryStreamingFixture, SendOnAppBackground) {
-  NS_NAMED_LITERAL_CSTRING(kBoolScalarName, "telemetry.test.boolean_kind");
+  constexpr auto kBoolScalarName = "telemetry.test.boolean_kind"_ns;
   const bool kBoolScalarValue = true;
   const char* kApplicationBackgroundTopic = "application-background";
 

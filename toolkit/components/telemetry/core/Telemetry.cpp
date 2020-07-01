@@ -597,7 +597,7 @@ TelemetryImpl::GetSnapshotForHistograms(const nsACString& aStoreName,
                                         bool aClearStore, bool aFilterTest,
                                         JSContext* aCx,
                                         JS::MutableHandleValue aResult) {
-  NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
+  constexpr auto defaultStore = "main"_ns;
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
                              : nsITelemetry::DATASET_ALL_CHANNELS;
@@ -611,7 +611,7 @@ TelemetryImpl::GetSnapshotForKeyedHistograms(const nsACString& aStoreName,
                                              bool aClearStore, bool aFilterTest,
                                              JSContext* aCx,
                                              JS::MutableHandleValue aResult) {
-  NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
+  constexpr auto defaultStore = "main"_ns;
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
                              : nsITelemetry::DATASET_ALL_CHANNELS;
@@ -631,7 +631,7 @@ TelemetryImpl::GetSnapshotForScalars(const nsACString& aStoreName,
                                      bool aClearStore, bool aFilterTest,
                                      JSContext* aCx,
                                      JS::MutableHandleValue aResult) {
-  NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
+  constexpr auto defaultStore = "main"_ns;
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
                              : nsITelemetry::DATASET_ALL_CHANNELS;
@@ -645,7 +645,7 @@ TelemetryImpl::GetSnapshotForKeyedScalars(const nsACString& aStoreName,
                                           bool aClearStore, bool aFilterTest,
                                           JSContext* aCx,
                                           JS::MutableHandleValue aResult) {
-  NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
+  constexpr auto defaultStore = "main"_ns;
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
                              : nsITelemetry::DATASET_ALL_CHANNELS;
@@ -1028,7 +1028,7 @@ void TelemetryImpl::ReadLateWritesStacks(nsIFile* aProfileDir) {
     return;
   }
 
-  NS_NAMED_LITERAL_STRING(prefix, "Telemetry.LateWriteFinal-");
+  constexpr auto prefix = u"Telemetry.LateWriteFinal-"_ns;
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(file))) && file) {
     nsAutoString leafName;

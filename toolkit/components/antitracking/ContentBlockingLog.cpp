@@ -28,7 +28,7 @@ using ipc::AutoIPCStream;
 typedef Telemetry::OriginMetricID OriginMetricID;
 
 // sync with TelemetryOriginData.inc
-NS_NAMED_LITERAL_CSTRING(ContentBlockingLog::kDummyOriginHash, "PAGELOAD");
+const nsLiteralCString ContentBlockingLog::kDummyOriginHash = "PAGELOAD"_ns;
 
 // randomly choose 1% users included in the content blocking measurement
 // based on their client id.

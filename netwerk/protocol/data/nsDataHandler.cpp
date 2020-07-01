@@ -150,8 +150,8 @@ nsresult nsDataHandler::ParsePathWithoutRef(
     const nsACString& aPath, nsCString& aContentType,
     nsCString* aContentCharset, bool& aIsBase64,
     nsDependentCSubstring* aDataBuffer) {
-  static NS_NAMED_LITERAL_CSTRING(kBase64, "base64");
-  static NS_NAMED_LITERAL_CSTRING(kCharset, "charset");
+  static constexpr auto kBase64 = "base64"_ns;
+  static constexpr auto kCharset = "charset"_ns;
 
   aIsBase64 = false;
 
@@ -242,7 +242,7 @@ nsresult nsDataHandler::ParsePathWithoutRef(
 nsresult nsDataHandler::ParseURI(nsCString& spec, nsCString& contentType,
                                  nsCString* contentCharset, bool& isBase64,
                                  nsCString* dataBuffer) {
-  static NS_NAMED_LITERAL_CSTRING(kDataScheme, "data:");
+  static constexpr auto kDataScheme = "data:"_ns;
 
   // move past "data:"
   int32_t scheme = spec.Find(kDataScheme, /* aIgnoreCase = */ true);

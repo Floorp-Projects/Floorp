@@ -18,11 +18,10 @@
 TEST(TestParser, TestParserMain)
 {
   bool allTestsPassed = false;
-  NS_NAMED_LITERAL_STRING(
-      htmlInput,
-      "<html><head>"
+  constexpr auto htmlInput =
+      u"<html><head>"
       "<meta http-equiv=\"content-type\" content=\"text/html; charset=\">"
-      "</head><body>Hello <b>Thunderbird!</b></body></html>");
+      "</head><body>Hello <b>Thunderbird!</b></body></html>"_ns;
 
   do {
     // Parse the HTML source.

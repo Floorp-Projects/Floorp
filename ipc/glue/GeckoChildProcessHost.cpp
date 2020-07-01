@@ -870,7 +870,7 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
 
   // Remove .moz_log extension to avoid its duplication, it will be added
   // automatically by the logging backend
-  static NS_NAMED_LITERAL_CSTRING(kMozLogExt, MOZ_LOG_FILE_EXTENSION);
+  static constexpr auto kMozLogExt = nsLiteralCString{MOZ_LOG_FILE_EXTENSION};
   if (StringEndsWith(buffer, kMozLogExt)) {
     buffer.Truncate(buffer.Length() - kMozLogExt.Length());
   }

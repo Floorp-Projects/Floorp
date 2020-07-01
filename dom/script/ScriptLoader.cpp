@@ -131,7 +131,7 @@ LazyLogModule ScriptLoader::gScriptLoaderLog("ScriptLoader");
 
 // Alternate Data MIME type used by the ScriptLoader to register that we want to
 // store bytecode without reading it.
-static NS_NAMED_LITERAL_CSTRING(kNullMimeType, "javascript/null");
+static constexpr auto kNullMimeType = "javascript/null"_ns;
 
 //////////////////////////////////////////////////////////////
 // ScriptLoader::PreloadInfo

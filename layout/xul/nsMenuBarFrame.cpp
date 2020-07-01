@@ -90,8 +90,8 @@ nsMenuBarFrame::SetActive(bool aActiveFlag) {
     RemoveKeyboardNavigator();
   }
 
-  NS_NAMED_LITERAL_STRING(active, "DOMMenuBarActive");
-  NS_NAMED_LITERAL_STRING(inactive, "DOMMenuBarInactive");
+  constexpr auto active = u"DOMMenuBarActive"_ns;
+  constexpr auto inactive = u"DOMMenuBarInactive"_ns;
 
   FireDOMEvent(mIsActive ? active : inactive, mContent);
 

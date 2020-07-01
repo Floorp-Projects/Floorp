@@ -246,7 +246,7 @@ bool TextEditor::UpdateMetaCharset(Document& aDocument,
 
     metaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, currentValue);
 
-    NS_NAMED_LITERAL_STRING(charsetEquals, "charset=");
+    constexpr auto charsetEquals = u"charset="_ns;
     nsAString::const_iterator originalStart, start, end;
     originalStart = currentValue.BeginReading(start);
     currentValue.EndReading(end);

@@ -17,18 +17,17 @@
 #include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
-static NS_NAMED_LITERAL_CSTRING(kChromeURI, "chromeuri");
-static NS_NAMED_LITERAL_CSTRING(kResourceURI, "resourceuri");
-static NS_NAMED_LITERAL_CSTRING(kBlobUri, "bloburi");
-static NS_NAMED_LITERAL_CSTRING(kDataUri, "dataurl");
-static NS_NAMED_LITERAL_CSTRING(kSingleString, "singlestring");
-static NS_NAMED_LITERAL_CSTRING(kMozillaExtension, "mozillaextension");
-static NS_NAMED_LITERAL_CSTRING(kOtherExtension, "otherextension");
-static NS_NAMED_LITERAL_CSTRING(kSuspectedUserChromeJS,
-                                "suspectedUserChromeJS");
-static NS_NAMED_LITERAL_CSTRING(kSanitizedWindowsURL, "sanitizedWindowsURL");
-static NS_NAMED_LITERAL_CSTRING(kSanitizedWindowsPath, "sanitizedWindowsPath");
-static NS_NAMED_LITERAL_CSTRING(kOther, "other");
+static constexpr auto kChromeURI = "chromeuri"_ns;
+static constexpr auto kResourceURI = "resourceuri"_ns;
+static constexpr auto kBlobUri = "bloburi"_ns;
+static constexpr auto kDataUri = "dataurl"_ns;
+static constexpr auto kSingleString = "singlestring"_ns;
+static constexpr auto kMozillaExtension = "mozillaextension"_ns;
+static constexpr auto kOtherExtension = "otherextension"_ns;
+static constexpr auto kSuspectedUserChromeJS = "suspectedUserChromeJS"_ns;
+static constexpr auto kSanitizedWindowsURL = "sanitizedWindowsURL"_ns;
+static constexpr auto kSanitizedWindowsPath = "sanitizedWindowsPath"_ns;
+static constexpr auto kOther = "other"_ns;
 
 #define ASSERT_AND_PRINT(first, second, condition)                      \
   fprintf(stderr, "First: %s\n", first.get());                          \
@@ -39,14 +38,14 @@ static NS_NAMED_LITERAL_CSTRING(kOther, "other");
 TEST(FilenameEvalParser, ResourceChrome)
 {
   {
-    NS_NAMED_LITERAL_STRING(str, "chrome://firegestures/content/browser.js");
+    constexpr auto str = u"chrome://firegestures/content/browser.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kChromeURI && ret.second.isSome() &&
                 ret.second.value() == str);
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "resource://firegestures/content/browser.js");
+    constexpr auto str = u"resource://firegestures/content/browser.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kResourceURI && ret.second.isSome() &&
@@ -57,25 +56,25 @@ TEST(FilenameEvalParser, ResourceChrome)
 TEST(FilenameEvalParser, BlobData)
 {
   {
-    NS_NAMED_LITERAL_STRING(str, "blob://000-000");
+    constexpr auto str = u"blob://000-000"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kBlobUri && !ret.second.isSome());
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "blob:000-000");
+    constexpr auto str = u"blob:000-000"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kBlobUri && !ret.second.isSome());
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "data://blahblahblah");
+    constexpr auto str = u"data://blahblahblah"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kDataUri && !ret.second.isSome());
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "data:blahblahblah");
+    constexpr auto str = u"data:blahblahblah"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kDataUri && !ret.second.isSome());
@@ -85,11 +84,11 @@ TEST(FilenameEvalParser, BlobData)
 TEST(FilenameEvalParser, MozExtension)
 {
   {  // Test shield.mozilla.org replacing
-    NS_NAMED_LITERAL_STRING(
-        str,
-        "jar:file:///c:/users/bob/appdata/roaming/mozilla/firefox/profiles/foo/"
+    constexpr auto str =
+        u"jar:file:///c:/users/bob/appdata/roaming/mozilla/firefox/profiles/"
+        u"foo/"
         "extensions/federated-learning@shield.mozilla.org.xpi!/experiments/"
-        "study/api.js");
+        "study/api.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kMozillaExtension &&
@@ -97,11 +96,11 @@ TEST(FilenameEvalParser, MozExtension)
                     u"federated-learning@s!/experiments/study/api.js"_ns);
   }
   {  // Test mozilla.org replacing
-    NS_NAMED_LITERAL_STRING(
-        str,
-        "jar:file:///c:/users/bob/appdata/roaming/mozilla/firefox/profiles/foo/"
+    constexpr auto str =
+        u"jar:file:///c:/users/bob/appdata/roaming/mozilla/firefox/profiles/"
+        u"foo/"
         "extensions/federated-learning@shigeld.mozilla.org.xpi!/experiments/"
-        "study/api.js");
+        "study/api.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(
@@ -111,11 +110,11 @@ TEST(FilenameEvalParser, MozExtension)
                 u"federated-learning@shigeld.m!/experiments/study/api.js"));
   }
   {  // Test truncating
-    NS_NAMED_LITERAL_STRING(
-        str,
-        "jar:file:///c:/users/bob/appdata/roaming/mozilla/firefox/profiles/foo/"
+    constexpr auto str =
+        u"jar:file:///c:/users/bob/appdata/roaming/mozilla/firefox/profiles/"
+        u"foo/"
         "extensions/federated-learning@shigeld.mozilla.org.xpi!/experiments/"
-        "study/apiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.js");
+        "study/apiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kMozillaExtension &&
@@ -128,29 +127,27 @@ TEST(FilenameEvalParser, MozExtension)
 TEST(FilenameEvalParser, UserChromeJS)
 {
   {
-    NS_NAMED_LITERAL_STRING(str, "firegestures/content/browser.uc.js");
+    constexpr auto str = u"firegestures/content/browser.uc.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kSuspectedUserChromeJS && !ret.second.isSome());
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "firegestures/content/browser.uc.js?");
+    constexpr auto str = u"firegestures/content/browser.uc.js?"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kSuspectedUserChromeJS && !ret.second.isSome());
   }
   {
-    nsLiteralString str =
-        NS_LITERAL_STRING("firegestures/content/browser.uc.js?243244224");
+    constexpr auto str = u"firegestures/content/browser.uc.js?243244224"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kSuspectedUserChromeJS && !ret.second.isSome());
   }
   {
-    NS_NAMED_LITERAL_STRING(
-        str,
-        "file:///b:/fxprofiles/mark/chrome/"
-        "addbookmarkherewithmiddleclick.uc.js?1558444389291");
+    constexpr auto str =
+        u"file:///b:/fxprofiles/mark/chrome/"
+        "addbookmarkherewithmiddleclick.uc.js?1558444389291"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kSuspectedUserChromeJS && !ret.second.isSome());
@@ -160,14 +157,14 @@ TEST(FilenameEvalParser, UserChromeJS)
 TEST(FilenameEvalParser, SingleFile)
 {
   {
-    NS_NAMED_LITERAL_STRING(str, "browser.uc.js?2456");
+    constexpr auto str = u"browser.uc.js?2456"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kSingleString && ret.second.isSome() &&
                 ret.second.value() == str);
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "debugger");
+    constexpr auto str = u"debugger"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kSingleString && ret.second.isSome() &&
@@ -178,24 +175,13 @@ TEST(FilenameEvalParser, SingleFile)
 TEST(FilenameEvalParser, Other)
 {
   {
-    NS_NAMED_LITERAL_STRING(str, "firegestures--content");
+    constexpr auto str = u"firegestures--content"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "gallop://thing/fire");
-    FilenameTypeAndDetails ret =
-        nsContentSecurityUtils::FilenameToFilenameType(str, false);
-#if defined(XP_WIN)
-    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
-                ret.second.value() == u"gallop"_ns);
-#else
-    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
-#endif
-  }
-  {
-    NS_NAMED_LITERAL_STRING(str, "gallop://fire");
+    constexpr auto str = u"gallop://thing/fire"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
@@ -206,7 +192,18 @@ TEST(FilenameEvalParser, Other)
 #endif
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "firegestures/content");
+    constexpr auto str = u"gallop://fire"_ns;
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str, false);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+                ret.second.value() == u"gallop"_ns);
+#else
+    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
+#endif
+  }
+  {
+    constexpr auto str = u"firegestures/content"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
@@ -217,7 +214,7 @@ TEST(FilenameEvalParser, Other)
 #endif
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "firegestures\\content");
+    constexpr auto str = u"firegestures\\content"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
@@ -228,7 +225,7 @@ TEST(FilenameEvalParser, Other)
 #endif
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "/home/tom/files/thing");
+    constexpr auto str = u"/home/tom/files/thing"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
@@ -239,7 +236,7 @@ TEST(FilenameEvalParser, Other)
 #endif
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "file://c/uers/tom/file.txt");
+    constexpr auto str = u"file://c/uers/tom/file.txt"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
@@ -250,7 +247,7 @@ TEST(FilenameEvalParser, Other)
 #endif
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "c:/uers/tom/file.txt");
+    constexpr auto str = u"c:/uers/tom/file.txt"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
@@ -261,7 +258,7 @@ TEST(FilenameEvalParser, Other)
 #endif
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "http://example.com/");
+    constexpr auto str = u"http://example.com/"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
@@ -272,7 +269,7 @@ TEST(FilenameEvalParser, Other)
 #endif
   }
   {
-    NS_NAMED_LITERAL_STRING(str, "http://example.com/thing.html");
+    constexpr auto str = u"http://example.com/thing.html"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
 #if defined(XP_WIN)
@@ -321,9 +318,8 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
         mozilla::extensions::WebExtensionPolicy::Constructor(go, *wEI, eR);
     w->SetActive(true, eR);
 
-    NS_NAMED_LITERAL_STRING(
-        str,
-        "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/path/to/file.js");
+    constexpr auto str =
+        u"moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/path/to/file.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, true);
 
@@ -335,17 +331,16 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
     w->SetActive(false, eR);
   }
   {
-    NS_NAMED_LITERAL_STRING(
-        str,
-        "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/path/to/file.js");
+    constexpr auto str =
+        u"moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/path/to/file.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, false);
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
                 ret.second.value() == u"moz-extension"_ns);
   }
   {
-    NS_NAMED_LITERAL_STRING(
-        str, "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/file.js");
+    constexpr auto str =
+        u"moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/file.js"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, true);
     ASSERT_TRUE(
@@ -355,10 +350,9 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
                 u"moz-extension://[failed finding addon by host]/file.js"));
   }
   {
-    NS_NAMED_LITERAL_STRING(
-        str,
-        "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/path/to/"
-        "file.js?querystringx=6");
+    constexpr auto str =
+        u"moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/path/to/"
+        "file.js?querystringx=6"_ns;
     FilenameTypeAndDetails ret =
         nsContentSecurityUtils::FilenameToFilenameType(str, true);
     ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&

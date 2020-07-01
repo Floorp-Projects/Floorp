@@ -96,7 +96,7 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
 
   aCtx->SetColor(sRGBColor::OpaqueWhite());
   nscoord ascent = fm->MaxAscent();
-  NS_NAMED_LITERAL_STRING(errorMsg, "invalid-markup");
+  constexpr auto errorMsg = u"invalid-markup"_ns;
   nsLayoutUtils::DrawUniDirString(errorMsg.get(), uint32_t(errorMsg.Length()),
                                   nsPoint(pt.x, pt.y + ascent), *fm, *aCtx);
 }

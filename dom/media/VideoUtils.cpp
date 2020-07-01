@@ -178,7 +178,7 @@ bool IsDefaultPlaybackDeviceMono() {
 }
 
 bool IsVideoContentType(const nsCString& aContentType) {
-  NS_NAMED_LITERAL_CSTRING(video, "video");
+  constexpr auto video = "video"_ns;
   if (FindInReadable(video, aContentType)) {
     return true;
   }

@@ -284,7 +284,7 @@ static void AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend) {
 
   aStrToAppend.AppendLiteral(u"|");
 
-  NS_NAMED_LITERAL_STRING(dot, ".");
+  constexpr auto dot = u"."_ns;
 
   aStrToAppend.AppendInt(major);
   aStrToAppend.Append(dot);

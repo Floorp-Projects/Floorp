@@ -3394,7 +3394,7 @@ bool nsHttpChannel::ResponseWouldVary(nsICacheEntry* entry) {
   nsAutoCString buf, metaKey;
   Unused << mCachedResponseHead->GetHeader(nsHttp::Vary, buf);
   if (!buf.IsEmpty()) {
-    NS_NAMED_LITERAL_CSTRING(prefix, "request-");
+    constexpr auto prefix = "request-"_ns;
 
     // enumerate the elements of the Vary header...
     char* val = buf.BeginWriting();  // going to munge buf
@@ -5641,7 +5641,7 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
     nsAutoCString buf, metaKey;
     Unused << responseHead->GetHeader(nsHttp::Vary, buf);
     if (!buf.IsEmpty()) {
-      NS_NAMED_LITERAL_CSTRING(prefix, "request-");
+      constexpr auto prefix = "request-"_ns;
 
       char* bufData = buf.BeginWriting();  // going to munge buf
       char* token = nsCRT::strtok(bufData, NS_HTTP_HEADER_SEPS, &bufData);

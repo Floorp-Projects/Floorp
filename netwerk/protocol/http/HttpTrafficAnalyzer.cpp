@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace net {
 
-NS_NAMED_LITERAL_CSTRING(kInvalidCategory, "INVALID_CATEGORY");
+constexpr auto kInvalidCategory = "INVALID_CATEGORY"_ns;
 
 #define DEFINE_CATEGORY(_name, _idx) nsLiteralCString("Y" #_idx "_" #_name),
 static const nsCString gKeyName[] = {

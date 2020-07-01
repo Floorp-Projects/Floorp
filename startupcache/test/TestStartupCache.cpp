@@ -121,7 +121,7 @@ TEST_F(TestStartupCache, WriteObject) {
 
   nsCOMPtr<nsIURI> obj;
 
-  NS_NAMED_LITERAL_CSTRING(spec, "http://www.mozilla.org");
+  constexpr auto spec = "http://www.mozilla.org"_ns;
   rv = NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID).SetSpec(spec).Finalize(obj);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 

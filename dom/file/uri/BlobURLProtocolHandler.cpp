@@ -194,11 +194,10 @@ class BlobURLsReporter final : public nsIMemoryReporter {
         BlobImpl* blobImpl = iter.UserData()->mBlobImpl;
         MOZ_ASSERT(blobImpl);
 
-        NS_NAMED_LITERAL_CSTRING(
-            desc,
+        constexpr auto desc =
             "A blob URL allocated with URL.createObjectURL; the referenced "
             "blob cannot be freed until all URLs for it have been explicitly "
-            "invalidated with URL.revokeObjectURL.");
+            "invalidated with URL.revokeObjectURL."_ns;
         nsAutoCString path, url, owner, specialDesc;
         uint64_t size = 0;
         uint32_t refCount = 1;
@@ -264,11 +263,10 @@ class BlobURLsReporter final : public nsIMemoryReporter {
       path = "media-source-urls/";
       BuildPath(path, key, info, aAnonymize);
 
-      NS_NAMED_LITERAL_CSTRING(
-          desc,
+      constexpr auto desc =
           "An object URL allocated with URL.createObjectURL; the referenced "
           "data cannot be freed until all URLs for it have been explicitly "
-          "invalidated with URL.revokeObjectURL.");
+          "invalidated with URL.revokeObjectURL."_ns;
 
       aCallback->Callback(EmptyCString(), path, KIND_OTHER, UNITS_COUNT, 1,
                           desc, aData);

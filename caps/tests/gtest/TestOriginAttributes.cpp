@@ -110,10 +110,9 @@ TEST(OriginAttributes, NullPrincipal)
   bool oldSitePref = Preferences::GetBool(SITE_PREF);
   Preferences::SetBool(SITE_PREF, true);
 
-  NS_NAMED_LITERAL_STRING(
-      spec, "moz-nullprincipal:{9bebdabb-828a-4284-8b00-432a968c6e42}");
-  NS_NAMED_LITERAL_STRING(expected,
-                          "9bebdabb-828a-4284-8b00-432a968c6e42.mozilla");
+  constexpr auto spec =
+      u"moz-nullprincipal:{9bebdabb-828a-4284-8b00-432a968c6e42}"_ns;
+  constexpr auto expected = u"9bebdabb-828a-4284-8b00-432a968c6e42.mozilla"_ns;
 
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), spec);

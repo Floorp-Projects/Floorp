@@ -3415,7 +3415,7 @@ nsresult TelemetryHistogram::DeserializeHistograms(JSContext* aCx,
         }
 
         base::Histogram* h = nullptr;
-        NS_NAMED_LITERAL_CSTRING(store, "main");
+        constexpr auto store = "main"_ns;
         if (!w->GetHistogram(store, &h)) {
           continue;
         }

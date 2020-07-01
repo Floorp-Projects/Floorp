@@ -758,7 +758,7 @@ nsIncrementalDownload::AsyncOnChannelRedirect(
   nsCOMPtr<nsIHttpChannel> newHttpChannel = do_QueryInterface(newChannel);
   NS_ENSURE_STATE(newHttpChannel);
 
-  NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
+  constexpr auto rangeHdr = "Range"_ns;
 
   nsresult rv = ClearRequestHeader(newHttpChannel);
   if (NS_FAILED(rv)) return rv;

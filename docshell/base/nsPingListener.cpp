@@ -193,7 +193,7 @@ static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     return;
   }
 
-  NS_NAMED_LITERAL_CSTRING(uploadData, "PING");
+  constexpr auto uploadData = "PING"_ns;
 
   nsCOMPtr<nsIInputStream> uploadStream;
   rv = NS_NewCStringInputStream(getter_AddRefs(uploadStream), uploadData);

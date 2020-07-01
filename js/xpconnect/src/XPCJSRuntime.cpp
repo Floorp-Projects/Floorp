@@ -254,9 +254,9 @@ void RealmPrivate::Init(HandleObject aGlobal, const SiteIdentifier& aSite) {
 static bool TryParseLocationURICandidate(
     const nsACString& uristr, RealmPrivate::LocationHint aLocationHint,
     nsIURI** aURI) {
-  static NS_NAMED_LITERAL_CSTRING(kGRE, "resource://gre/");
-  static NS_NAMED_LITERAL_CSTRING(kToolkit, "chrome://global/");
-  static NS_NAMED_LITERAL_CSTRING(kBrowser, "chrome://browser/");
+  static constexpr auto kGRE = "resource://gre/"_ns;
+  static constexpr auto kToolkit = "chrome://global/"_ns;
+  static constexpr auto kBrowser = "chrome://browser/"_ns;
 
   if (aLocationHint == RealmPrivate::LocationHintAddon) {
     // Blacklist some known locations which are clearly not add-on related.

@@ -48,7 +48,7 @@ namespace {
 
 const uint32_t kCopyBufferSize = 32768;
 
-constexpr auto kSDBSuffix = NS_LITERAL_STRING(".sdb");
+constexpr auto kSDBSuffix = u".sdb"_ns;
 
 /*******************************************************************************
  * Actor class declarations

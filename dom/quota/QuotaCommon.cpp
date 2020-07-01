@@ -61,8 +61,8 @@ void AnonymizeCString(nsACString& aCString, uint32_t aStart) {
 const char kQuotaGenericDelimiter = '|';
 
 #ifdef NIGHTLY_BUILD
-NS_NAMED_LITERAL_CSTRING(kQuotaInternalError, "internal");
-NS_NAMED_LITERAL_CSTRING(kQuotaExternalError, "external");
+const nsLiteralCString kQuotaInternalError = "internal"_ns;
+const nsLiteralCString kQuotaExternalError = "external"_ns;
 #endif
 
 LogModule* GetQuotaManagerLogger() { return gLogger; }

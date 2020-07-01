@@ -167,7 +167,7 @@ nsresult GetTransferableFile(nsCOMPtr<nsITransferable>& pTransferable) {
 
 nsresult GetTransferableText(nsCOMPtr<nsITransferable>& pTransferable) {
   nsresult rv;
-  NS_NAMED_LITERAL_STRING(mozString, "Mozilla can drag and drop");
+  constexpr auto mozString = u"Mozilla can drag and drop"_ns;
   nsCOMPtr<nsISupportsString> xferString =
       do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
   rv = xferString->SetData(mozString);
@@ -184,7 +184,7 @@ nsresult GetTransferableText(nsCOMPtr<nsITransferable>& pTransferable) {
 
 nsresult GetTransferableTextTwo(nsCOMPtr<nsITransferable>& pTransferable) {
   nsresult rv;
-  NS_NAMED_LITERAL_STRING(mozString, " twice over");
+  constexpr auto mozString = u" twice over"_ns;
   nsCOMPtr<nsISupportsString> xferString =
       do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
   rv = xferString->SetData(mozString);

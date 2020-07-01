@@ -3125,7 +3125,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
 
   // Search for anchor in the HTML namespace with a matching name
   if (!content && !mDocument->IsHTMLDocument()) {
-    NS_NAMED_LITERAL_STRING(nameSpace, "http://www.w3.org/1999/xhtml");
+    constexpr auto nameSpace = u"http://www.w3.org/1999/xhtml"_ns;
     // Get the list of anchor elements
     nsCOMPtr<nsINodeList> list =
         mDocument->GetElementsByTagNameNS(nameSpace, u"a"_ns);
@@ -3215,7 +3215,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     }
   } else {
     rv = NS_ERROR_FAILURE;
-    NS_NAMED_LITERAL_STRING(top, "top");
+    constexpr auto top = u"top"_ns;
     if (nsContentUtils::EqualsIgnoreASCIICase(aAnchorName, top)) {
       // Scroll to the top/left if aAnchorName is "top" and there is no element
       // with such a name or id.

@@ -199,9 +199,8 @@ nsresult OCSPRequest::GetResponse(/*out*/ Vector<uint8_t>& response) {
   return NS_OK;
 }
 
-static NS_NAMED_LITERAL_CSTRING(OCSP_REQUEST_MIME_TYPE,
-                                "application/ocsp-request");
-static NS_NAMED_LITERAL_CSTRING(OCSP_REQUEST_METHOD, "POST");
+static constexpr auto OCSP_REQUEST_MIME_TYPE = "application/ocsp-request"_ns;
+static constexpr auto OCSP_REQUEST_METHOD = "POST"_ns;
 
 NS_IMETHODIMP
 OCSPRequest::Run() {

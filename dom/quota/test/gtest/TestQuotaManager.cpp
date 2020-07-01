@@ -76,7 +76,7 @@ TEST(QuotaManager, OriginScope)
   // Sanity checks.
 
   {
-    NS_NAMED_LITERAL_CSTRING(origin, "http://www.mozilla.org");
+    constexpr auto origin = "http://www.mozilla.org"_ns;
     originScope.SetFromOrigin(origin);
     EXPECT_TRUE(originScope.IsOrigin());
     EXPECT_TRUE(originScope.GetOrigin().Equals(origin));
@@ -84,7 +84,7 @@ TEST(QuotaManager, OriginScope)
   }
 
   {
-    NS_NAMED_LITERAL_CSTRING(prefix, "http://www.mozilla.org");
+    constexpr auto prefix = "http://www.mozilla.org"_ns;
     originScope.SetFromPrefix(prefix);
     EXPECT_TRUE(originScope.IsPrefix());
     EXPECT_TRUE(originScope.GetOriginNoSuffix().Equals(prefix));

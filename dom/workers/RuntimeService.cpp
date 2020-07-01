@@ -367,8 +367,8 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
     return;
   }
 
-  NS_NAMED_LITERAL_CSTRING(jsPrefix, PREF_JS_OPTIONS_PREFIX);
-  NS_NAMED_LITERAL_CSTRING(workersPrefix, PREF_WORKERS_OPTIONS_PREFIX);
+  constexpr auto jsPrefix = nsLiteralCString{PREF_JS_OPTIONS_PREFIX};
+  constexpr auto workersPrefix = nsLiteralCString{PREF_WORKERS_OPTIONS_PREFIX};
 
   const nsDependentCString fullPrefName(aPrefName);
 

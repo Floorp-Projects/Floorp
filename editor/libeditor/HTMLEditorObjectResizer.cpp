@@ -546,7 +546,7 @@ nsresult HTMLEditor::HideResizersInternal() {
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
 
-  NS_NAMED_LITERAL_STRING(mousedown, "mousedown");
+  constexpr auto mousedown = u"mousedown"_ns;
 
   // HTMLEditor should forget all members related to resizers first since
   // removing a part of UI may cause showing the resizers again.  In such
