@@ -58,5 +58,14 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
 else:
     WIN32_EXE_LDFLAGS += ['-municode']
 
+GENERATED_FILES += ['defaultagent.ini']
+defaultagentini = GENERATED_FILES['defaultagent.ini']
+defaultagentini.script = '/browser/locales/generate_ini.py'
+defaultagentini.inputs = [
+    'defaultagent.ini',
+    'defaultagent_append.ini',
+]
+FINAL_TARGET_FILES += ['!defaultagent.ini']
+
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Installer")
