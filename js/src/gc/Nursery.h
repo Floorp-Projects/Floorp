@@ -634,6 +634,8 @@ class Nursery {
   // the current chunk.
   void setCurrentChunk(unsigned chunkno);
 
+  bool initFirstChunk(AutoLockGCBgAlloc& lock);
+
   // extent is advisory, it will be ignored in sub-chunk and generational zeal
   // modes. It will be clamped to Min(NurseryChunkUsableSize, capacity_).
   void poisonAndInitCurrentChunk(size_t extent = NurseryChunkUsableSize);
