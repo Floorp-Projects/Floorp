@@ -97,11 +97,17 @@ class nsZipArchive final {
    * object. If we were allowed to use exceptions this would have been
    * part of the constructor
    *
-   * @param   aZipHandle  The nsZipHandle used to access the zip
-   * @param   aFd         Optional PRFileDesc for Windows readahead optimization
+   * @param   aZipHandle      The nsZipHandle used to access the zip
+   * @param   aFd             Optional PRFileDesc for Windows readahead
+                              optimization
+   * @param   aCachedCentral  Optional cached buffer containing the zip central
+                              for this zip.
+   * @param   aCachedCentralSize  Optional size of aCachedCentral.
    * @return  status code
    */
-  nsresult OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd = nullptr);
+  nsresult OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd = nullptr,
+                       const uint8_t* aCachedCentral = nullptr,
+                       size_t aCachedCentralSize = 0);
 
   /**
    * OpenArchive
@@ -109,9 +115,13 @@ class nsZipArchive final {
    * Convenience function that generates nsZipHandle
    *
    * @param   aFile         The file used to access the zip
+   * @param   aCachedCentral  Optional cached buffer containing the zip central
+                              for this zip.
+   * @param   aCachedCentralSize  Optional size of aCachedCentral.
    * @return  status code
    */
-  nsresult OpenArchive(nsIFile* aFile);
+  nsresult OpenArchive(nsIFile* aFile, const uint8_t* aCachedCentral = nullptr,
+                       size_t aCachedCentralSize = 0);
 
   /**
    * Test the integrity of items in this archive by running
@@ -181,6 +191,17 @@ class nsZipArchive final {
    */
   const uint8_t* GetData(nsZipItem* aItem);
 
+  /**
+   * Copies the contents of the zip central directory, and returns it to the
+   * caller to take ownership. This is useful for caching the contents of the
+   * central directory, which can be compressed and stored elsewhere, and
+   * passed back into OpenArchive when this archive is opened in the future.
+   *
+   * @param   aSize       size_t pointer to be filled with the size of the
+                          returned buffer.
+   */
+  mozilla::UniquePtr<uint8_t[]> CopyCentralDirectoryBuffer(size_t* aSize);
+
   bool GetComment(nsACString& aComment);
 
   /**
@@ -204,6 +225,8 @@ class nsZipArchive final {
   mozilla::ArenaAllocator<1024, sizeof(void*)> mArena;
 
   const char* mCommentPtr;
+  size_t mZipCentralOffset;
+  size_t mZipCentralSize;
   uint16_t mCommentLen;
 
   // Whether we synthesized the directory entries
@@ -223,6 +246,7 @@ class nsZipArchive final {
   //--- private methods ---
   nsZipItem* CreateZipItem();
   nsresult BuildFileList(PRFileDesc* aFd = nullptr);
+  nsresult BuildFileListFromBuffer(const uint8_t* aBuf, const uint8_t* aEnd);
   nsresult BuildSynthetics();
 
   nsZipArchive& operator=(const nsZipArchive& rhs) = delete;

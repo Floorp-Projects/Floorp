@@ -439,7 +439,7 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
   return NS_OK;
 }
 
-// Makes a copy of the buffer, client retains ownership of inbuf.
+// Takes ownership of the input buffer
 nsresult StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
                                  uint32_t len) {
   NS_ASSERTION(NS_IsMainThread(),
