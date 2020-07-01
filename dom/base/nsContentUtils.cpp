@@ -10090,19 +10090,19 @@ nsGlobalWindowInner* nsContentUtils::CallerInnerWindow() {
 bool nsContentUtils::IsURIInPrefList(nsIURI* aURI, const char* aPrefName) {
   MOZ_ASSERT(aPrefName);
 
-  nsAutoCString blackList;
-  Preferences::GetCString(aPrefName, blackList);
-  ToLowerCase(blackList);
-  return IsURIInList(aURI, blackList);
+  nsAutoCString list;
+  Preferences::GetCString(aPrefName, list);
+  ToLowerCase(list);
+  return IsURIInList(aURI, list);
 }
 
 /* static */
-bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aBlackList) {
+bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aList) {
 #ifdef DEBUG
-  nsAutoCString blackListLowerCase(aBlackList);
-  ToLowerCase(blackListLowerCase);
-  MOZ_ASSERT(blackListLowerCase.Equals(aBlackList),
-             "The aBlackList argument should be lower-case");
+  nsAutoCString listLowerCase(aList);
+  ToLowerCase(listLowerCase);
+  MOZ_ASSERT(listLowerCase.Equals(aList),
+             "The aList argument should be lower-case");
 #endif
 
   if (!aURI) {
@@ -10115,14 +10115,14 @@ bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aBlackList) {
     return false;
   }
 
-  if (aBlackList.IsEmpty()) {
+  if (aList.IsEmpty()) {
     return false;
   }
 
   // The list is comma separated domain list.  Each item may start with "*.".
   // If starts with "*.", it matches any sub-domains.
 
-  nsCCharSeparatedTokenizer tokenizer(aBlackList, ',');
+  nsCCharSeparatedTokenizer tokenizer(aList, ',');
   while (tokenizer.hasMoreTokens()) {
     const nsCString token(tokenizer.nextToken());
 
@@ -10143,20 +10143,20 @@ bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aBlackList) {
           return true;
         }
         // If next character is '/', we need to check the path too.
-        // We assume the path in blacklist means "/foo" + "*".
+        // We assume the path in the list means "/foo" + "*".
         if (token[indexAfterHost] == '/') {
-          nsDependentCSubstring pathInBlackList(
+          nsDependentCSubstring pathInList(
               token, indexAfterHost,
               static_cast<nsDependentCSubstring::size_type>(-1));
           nsAutoCString filePath;
           aURI->GetFilePath(filePath);
           ToLowerCase(filePath);
-          if (StringBeginsWith(filePath, pathInBlackList) &&
-              (filePath.Length() == pathInBlackList.Length() ||
-               pathInBlackList.EqualsLiteral("/") ||
-               filePath[pathInBlackList.Length() - 1] == '/' ||
-               filePath[pathInBlackList.Length() - 1] == '?' ||
-               filePath[pathInBlackList.Length() - 1] == '#')) {
+          if (StringBeginsWith(filePath, pathInList) &&
+              (filePath.Length() == pathInList.Length() ||
+               pathInList.EqualsLiteral("/") ||
+               filePath[pathInList.Length() - 1] == '/' ||
+               filePath[pathInList.Length() - 1] == '?' ||
+               filePath[pathInList.Length() - 1] == '#')) {
             return true;
           }
         }
