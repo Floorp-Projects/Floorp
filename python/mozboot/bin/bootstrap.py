@@ -170,6 +170,9 @@ def main(args):
     parser.add_option('--debug', dest='debug', action='store_true',
                       help='Print extra runtime information useful for debugging and '
                       'bug reports.')
+    parser.add_option('--no-system-changes', dest='no_system_changes', action='store_true',
+                      help='Only executes actions that leave the system '
+                      'configuration alone.')
 
     options, leftover = parser.parse_args(args)
 
@@ -190,7 +193,7 @@ def main(args):
             return 1
 
         dasboot = cls(choice=options.application_choice, no_interactive=options.no_interactive,
-                      vcs=options.vcs)
+                      vcs=options.vcs, no_system_changes=options.no_system_changes)
         dasboot.bootstrap()
 
         return 0
