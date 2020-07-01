@@ -133,7 +133,7 @@ class TargetList {
       }
       // Stop listening to legacy listeners as we now have to listen
       // on the new target.
-      this.stopListening();
+      this.stopListening({ onlyLegacy: true });
 
       // Clear the cached target list
       this._targets.clear();
@@ -157,7 +157,7 @@ class TargetList {
     // Re-register the listeners as the top level target changed
     // and some targets are fetched from it
     if (targetFront.isTopLevel) {
-      await this.startListening();
+      await this.startListening({ onlyLegacy: true });
     }
   }
 
@@ -182,14 +182,21 @@ class TargetList {
   }
 
   /**
+   * Start listening for targets from the server
+   *
    * Interact with the actors in order to start listening for new types of targets.
    * This will fire the _onTargetAvailable function for all already-existing targets,
    * as well as the next one to be created. It will also call _onTargetDestroyed
    * everytime a target is reported as destroyed by the actors.
    * By the time this function resolves, all the already-existing targets will be
    * reported to _onTargetAvailable.
+   *
+   * @param Object options
+   *        Dictionary object with `onlyLegacy` optional boolean.
+   *        If true, we wouldn't register listener set on the Watcher Actor,
+   *        but still register listeners set via Legacy Listeners.
    */
-  async startListening() {
+  async startListening({ onlyLegacy = false } = {}) {
     let types = [];
     if (this.targetFront.isParentProcess) {
       const fissionBrowserToolboxEnabled = Services.prefs.getBoolPref(
@@ -234,6 +241,12 @@ class TargetList {
       if (supportsWatcher) {
         const watcher = await this.descriptorFront.getWatcher();
         if (watcher.traits[type]) {
+          // When we switch to a new top level target, we don't have to stop and restart
+          // Watcher listener as it is independant from the top level target.
+          // This isn't the case for some Legacy Listeners, which fetch targets from the top level target
+          if (onlyLegacy) {
+            continue;
+          }
           if (!this._startedListeningToWatcher) {
             this._startedListeningToWatcher = true;
             watcher.on("target-available", this._onTargetAvailable);
@@ -251,7 +264,15 @@ class TargetList {
     }
   }
 
-  stopListening() {
+  /**
+   * Stop listening for targets from the server
+   *
+   * @param Object options
+   *        Dictionary object with `onlyLegacy` optional boolean.
+   *        If true, we wouldn't unregister listener set on the Watcher Actor,
+   *        but still unregister listeners set via Legacy Listeners.
+   */
+  stopListening({ onlyLegacy = false } = {}) {
     for (const type of TargetList.ALL_TYPES) {
       if (!this._isListening(type)) {
         continue;
@@ -263,7 +284,12 @@ class TargetList {
       if (supportsWatcher) {
         const watcher = this.descriptorFront.getCachedWatcher();
         if (watcher && watcher.traits[type]) {
-          watcher.unwatchTargets(type);
+          // When we switch to a new top level target, we don't have to stop and restart
+          // Watcher listener as it is independant from the top level target.
+          // This isn't the case for some Legacy Listeners, which fetch targets from the top level target
+          if (!onlyLegacy) {
+            watcher.unwatchTargets(type);
+          }
           continue;
         }
       }
