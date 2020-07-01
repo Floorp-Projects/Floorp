@@ -9,6 +9,7 @@
 #include "builtin/intl/CommonFunctions.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
@@ -19,6 +20,7 @@
 #include "gc/Zone.h"
 #include "gc/ZoneAllocator.h"
 #include "js/Value.h"
+#include "unicode/uformattedvalue.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
@@ -136,4 +138,18 @@ void js::intl::AddICUCellMemory(JSObject* obj, size_t nbytes) {
 void js::intl::RemoveICUCellMemory(JSFreeOp* fop, JSObject* obj,
                                    size_t nbytes) {
   fop->removeCellMemory(obj, nbytes, MemoryUse::ICUObject);
+}
+
+JSString* js::intl::FormattedValueToString(
+    JSContext* cx, const UFormattedValue* formattedValue) {
+  UErrorCode status = U_ZERO_ERROR;
+  int32_t strLength;
+  const char16_t* str = ufmtval_getString(formattedValue, &strLength, &status);
+  if (U_FAILURE(status)) {
+    ReportInternalError(cx);
+    return nullptr;
+  }
+
+  return NewStringCopyN<CanGC>(cx, str,
+                               mozilla::AssertedCast<uint32_t>(strLength));
 }
