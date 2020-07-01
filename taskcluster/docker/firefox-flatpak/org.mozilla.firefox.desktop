@@ -50,7 +50,7 @@ MimeType=text/html;text/xml;application/xhtml+xml;application/vnd.mozilla.xul+xm
 StartupNotify=true
 Categories=Network;WebBrowser;
 Keywords=web;browser;internet;
-Actions=new-window;new-private-window;
+Actions=new-window;new-private-window;profile-manager-window;
 
 [Desktop Action new-window]
 Name=Open a New Window
@@ -158,8 +158,6 @@ Name[wo]=Palanteer bu bees
 Name[xh]=Ifestile entsha
 Name[zh-CN]=新建窗口
 Name[zh-TW]=開新視窗
-
-
 Exec=firefox --new-window %u
 
 [Desktop Action new-private-window]
@@ -269,3 +267,8 @@ Name[xh]=Ifestile yangasese entsha
 Name[zh-CN]=新建隐私浏览窗口
 Name[zh-TW]=新增隱私視窗
 Exec=firefox --private-window %u
+
+[Desktop Action profile-manager-window]
+Name=Open the Profile Manager
+Name[cs]=Správa profilů
+Exec=firefox --ProfileManager
