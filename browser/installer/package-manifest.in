@@ -60,6 +60,10 @@
 @RESPATH@/update.locale
 @RESPATH@/updater.ini
 #endif
+#ifdef MOZ_DEFAULT_BROWSER_AGENT
+@RESPATH@/defaultagent.ini
+@RESPATH@/locale.ini
+#endif
 
 [xpcom]
 @RESPATH@/dependentlibs.list
