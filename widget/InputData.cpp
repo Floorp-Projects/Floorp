@@ -628,6 +628,8 @@ WidgetWheelEvent PinchGestureInput::ToWidgetWheelEvent(
                        (aWidget ? aWidget->GetDefaultScaleInternal() : 1.f);
 #endif
 
+  MOZ_ASSERT(mType == PINCHGESTURE_END || wheelEvent.mDeltaY != 0.0);
+
   return wheelEvent;
 }
 
