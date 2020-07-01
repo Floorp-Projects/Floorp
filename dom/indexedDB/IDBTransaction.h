@@ -125,7 +125,7 @@ class IDBTransaction final
   [[nodiscard]] static SafeRefPtr<IDBTransaction> CreateVersionChange(
       IDBDatabase* aDatabase,
       indexedDB::BackgroundVersionChangeTransactionChild* aActor,
-      IDBOpenDBRequest* aOpenRequest, int64_t aNextObjectStoreId,
+      NotNull<IDBOpenDBRequest*> aOpenRequest, int64_t aNextObjectStoreId,
       int64_t aNextIndexId);
 
   [[nodiscard]] static SafeRefPtr<IDBTransaction> Create(
@@ -160,7 +160,8 @@ class IDBTransaction final
   }
 
   indexedDB::BackgroundRequestChild* StartRequest(
-      IDBRequest* aRequest, const indexedDB::RequestParams& aParams);
+      MovingNotNull<RefPtr<mozilla::dom::IDBRequest>> aRequest,
+      const indexedDB::RequestParams& aParams);
 
   void OpenCursor(indexedDB::PBackgroundIDBCursorChild* aBackgroundActor,
                   const indexedDB::OpenCursorParams& aParams);

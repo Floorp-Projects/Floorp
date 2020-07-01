@@ -64,15 +64,15 @@ class IDBRequest : public DOMEventTargetHelper {
   bool mHaveResultOrErrorCode;
 
  public:
-  [[nodiscard]] static RefPtr<IDBRequest> Create(
+  [[nodiscard]] static MovingNotNull<RefPtr<IDBRequest>> Create(
       JSContext* aCx, IDBDatabase* aDatabase,
       SafeRefPtr<IDBTransaction> aTransaction);
 
-  [[nodiscard]] static RefPtr<IDBRequest> Create(
+  [[nodiscard]] static MovingNotNull<RefPtr<IDBRequest>> Create(
       JSContext* aCx, IDBObjectStore* aSource, IDBDatabase* aDatabase,
       SafeRefPtr<IDBTransaction> aTransaction);
 
-  [[nodiscard]] static RefPtr<IDBRequest> Create(
+  [[nodiscard]] static MovingNotNull<RefPtr<IDBRequest>> Create(
       JSContext* aCx, IDBIndex* aSource, IDBDatabase* aDatabase,
       SafeRefPtr<IDBTransaction> aTransaction);
 

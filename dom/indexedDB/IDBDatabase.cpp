@@ -656,8 +656,7 @@ RefPtr<IDBRequest> IDBDatabase::CreateMutableFile(
 
   CreateFileParams params(nsString(aName), type);
 
-  auto request = IDBRequest::Create(aCx, this, nullptr);
-  MOZ_ASSERT(request);
+  auto request = IDBRequest::Create(aCx, this, nullptr).unwrap();
 
   BackgroundDatabaseRequestChild* actor =
       new BackgroundDatabaseRequestChild(this, request);
