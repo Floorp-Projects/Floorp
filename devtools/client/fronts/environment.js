@@ -13,34 +13,22 @@ const { environmentSpec } = require("devtools/shared/specs/environment");
 /**
  * Environment fronts are used to manipulate the lexical environment actors.
  *
- * @param client DevToolsClient
- *        The devtools client parent.
- * @param form Object
- *        The form sent across the remote debugging protocol.
+ * @param {DevToolsClient} client: The devtools client parent.
+ * @param {Front} targetFront: The target front this EnvironmentFront will be created for.
+ * @param {Front} parentFront: The parent front of this EnvironmentFront.
  */
 class EnvironmentFront extends FrontClassWithSpec(environmentSpec) {
-  constructor(client, form) {
-    super(client, form);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
     this._client = client;
-    if (form) {
-      this._form = form;
-      this.actorID = form.actor;
-      this.manage(this);
-    }
   }
 
   get actor() {
-    return this._form.actor;
-  }
-  get _transport() {
-    return this._client._transport;
+    return this.actorID;
   }
 
-  /**
-   * Fetches the bindings introduced by this lexical environment.
-   */
-  getBindings() {
-    return super.bindings();
+  get _transport() {
+    return this._client._transport;
   }
 }
 
