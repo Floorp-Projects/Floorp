@@ -28,7 +28,6 @@ UNSUPPORTED_FEATURES = set([
     "regexp-match-indices",
     "export-star-as-namespace-from-module",
     "Intl.DateTimeFormat-quarter",
-    "Intl.DateTimeFormat-formatRange",
     "Intl.Segmenter",
     "top-level-await",
     "Atomics.waitAsync",
@@ -42,6 +41,7 @@ FEATURE_CHECK_NEEDED = {
 RELEASE_OR_BETA = set([
     "Intl.DateTimeFormat-fractionalSecondDigits",
     "Intl.DateTimeFormat-dayPeriod",
+    "Intl.DateTimeFormat-formatRange",
     "AggregateError",
 ])
 
