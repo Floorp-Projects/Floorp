@@ -261,6 +261,7 @@ class LoginManagerPrompter {
       let nameField = chromeDoc.getElementById(
         "password-notification-username"
       );
+
       nameField.placeholder = usernamePlaceholder;
       nameField.value = login.username;
 
@@ -274,6 +275,7 @@ class LoginManagerPrompter {
       // Ensure the type is reset so the field is masked.
       passwordField.type = "password";
       passwordField.value = login.password;
+
       updateButtonLabel();
     };
 
@@ -313,6 +315,12 @@ class LoginManagerPrompter {
       }
       passwordField.selectionStart = selectionStart;
       passwordField.selectionEnd = selectionEnd;
+    };
+
+    let togglePopup = event => {
+      event.target.parentElement
+        .getElementsByClassName("ac-has-end-icon")[0]
+        .toggleHistoryPopup();
     };
 
     let persistData = () => {
@@ -567,6 +575,9 @@ class LoginManagerPrompter {
               chromeDoc
                 .getElementById("password-notification-password")
                 .addEventListener("input", onInput);
+              chromeDoc
+                .getElementById("password-notification-username-dropmarker")
+                .addEventListener("click", togglePopup);
               let toggleBtn = chromeDoc.getElementById(
                 "password-notification-visibilityToggle"
               );
@@ -595,6 +606,7 @@ class LoginManagerPrompter {
                       Date.now() - VISIBILITY_TOGGLE_MAX_PW_AGE_MS);
                 toggleBtn.setAttribute("hidden", hideToggle);
               }
+
               break;
             case "shown": {
               log.debug("shown");
@@ -627,6 +639,9 @@ class LoginManagerPrompter {
               passwordField.removeEventListener("input", onInput);
               passwordField.removeEventListener("keyup", onKeyUp);
               passwordField.removeEventListener("command", onVisibilityToggle);
+              chromeDoc
+                .getElementById("password-notification-username-dropmarker")
+                .removeEventListener("click", togglePopup);
               break;
             }
           }
