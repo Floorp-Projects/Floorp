@@ -8,8 +8,8 @@ XPCSHELL_TESTS_MANIFESTS += [
     'tests/unit_cps2/xpcshell.ini',
 ]
 
-MOCHITEST_MANIFESTS += [
-    'tests/mochitest/mochitest.ini'
+BROWSER_CHROME_MANIFESTS += [
+    'tests/browser/browser.ini'
 ]
 
 EXTRA_JS_MODULES += [
