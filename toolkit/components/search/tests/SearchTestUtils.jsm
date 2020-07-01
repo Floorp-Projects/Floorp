@@ -128,7 +128,9 @@ var SearchTestUtils = Object.freeze({
   async searchConfigToEngines(engineConfigurations) {
     let engines = [];
     for (let config of engineConfigurations) {
-      let engine = await Services.search.makeEngineFromConfig(config);
+      let engine = await Services.search.wrappedJSObject.makeEngineFromConfig(
+        config
+      );
       engines.push(engine);
     }
     return engines;
