@@ -10,4 +10,8 @@ ifndef MOZ_DEBUG
 MOZ_WINCONSOLE = 0
 endif
 
+# Rebuild if the resources or manifest change.
+EXTRA_DEPS += $(srcdir)/DefaultBrowserAgent.rc
+EXTRA_DEPS += $(srcdir)/DefaultBrowserAgent.manifest
+
 include $(topsrcdir)/config/rules.mk
