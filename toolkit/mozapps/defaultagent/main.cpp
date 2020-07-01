@@ -17,7 +17,6 @@
 #include "DefaultBrowser.h"
 #include "EventLog.h"
 #include "Notification.h"
-#include "Policy.h"
 #include "Registry.h"
 #include "ScheduledTask.h"
 #include "Telemetry.h"
@@ -334,10 +333,7 @@ int wmain(int argc, wchar_t** argv) {
     NotificationActivities activitiesPerformed =
         MaybeShowNotification(browserInfo, argv[2]);
 
-    if (!IsTelemetryDisabled()) {
-      return SendDefaultBrowserPing(browserInfo, activitiesPerformed);
-    }
-    return S_OK;
+    return SendDefaultBrowserPing(browserInfo, activitiesPerformed);
   } else {
     return E_INVALIDARG;
   }
