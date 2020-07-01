@@ -175,7 +175,7 @@ class DeleteOrphanedBodyAction final : public Action {
   explicit DeleteOrphanedBodyAction(const nsID& aBodyId)
       : mDeletedBodyIdList{aBodyId} {}
 
-  void RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
+  void RunOnTarget(SafeRefPtr<Resolver> aResolver, const QuotaInfo& aQuotaInfo,
                    Data*) override {
     MOZ_DIAGNOSTIC_ASSERT(aResolver);
     MOZ_DIAGNOSTIC_ASSERT(aQuotaInfo.mDir);
@@ -706,7 +706,7 @@ class Manager::CachePutAllAction final : public DBAction {
  private:
   ~CachePutAllAction() = default;
 
-  virtual void RunWithDBOnTarget(Resolver* aResolver,
+  virtual void RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
                                  const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                                  mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aResolver);
@@ -725,7 +725,7 @@ class Manager::CachePutAllAction final : public DBAction {
     // cases.
     MOZ_DIAGNOSTIC_ASSERT(mExpectedAsyncCopyCompletions == 1);
 
-    mResolver = aResolver;
+    mResolver = std::move(aResolver);
     mDBDir = aDBDir;
     mConn = aConn;
     mQuotaInfo.emplace(aQuotaInfo);
@@ -1030,8 +1030,7 @@ class Manager::CachePutAllAction final : public DBAction {
     mTarget = nullptr;
 
     // Make sure to de-ref the resolver per the Action API contract.
-    RefPtr<Action::Resolver> resolver;
-    mResolver.swap(resolver);
+    SafeRefPtr<Action::Resolver> resolver = std::move(mResolver);
     resolver->Resolve(aRv);
   }
 
@@ -1046,7 +1045,7 @@ class Manager::CachePutAllAction final : public DBAction {
   uint32_t mExpectedAsyncCopyCompletions;
 
   // target thread only
-  RefPtr<Resolver> mResolver;
+  SafeRefPtr<Resolver> mResolver;
   nsCOMPtr<nsIFile> mDBDir;
   nsCOMPtr<mozIStorageConnection> mConn;
   nsCOMPtr<nsISerialEventTarget> mTarget;

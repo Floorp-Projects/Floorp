@@ -35,12 +35,12 @@ class DBAction : public Action {
   // Just as the resolver must be ref'd until resolve, you may also
   // ref the DB connection.  The connection can only be referenced from the
   // target thread and must be released upon resolve.
-  virtual void RunWithDBOnTarget(Resolver* aResolver,
+  virtual void RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
                                  const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                                  mozIStorageConnection* aConn) = 0;
 
  private:
-  void RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
+  void RunOnTarget(SafeRefPtr<Resolver> aResolver, const QuotaInfo& aQuotaInfo,
                    Data* aOptionalData) override;
 
   nsresult OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aQuotaDir,
@@ -61,7 +61,7 @@ class SyncDBAction : public DBAction {
                                          mozIStorageConnection* aConn) = 0;
 
  private:
-  virtual void RunWithDBOnTarget(Resolver* aResolver,
+  virtual void RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
                                  const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                                  mozIStorageConnection* aConn) override;
 };
