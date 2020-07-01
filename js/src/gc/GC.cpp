@@ -4048,7 +4048,8 @@ void GCRuntime::unmarkWeakMaps() {
 static bool IsShutdownGC(JS::GCReason reason) {
   return reason == JS::GCReason::WORKER_SHUTDOWN ||
          reason == JS::GCReason::SHUTDOWN_CC ||
-         reason == JS::GCReason::DESTROY_RUNTIME;
+         reason == JS::GCReason::DESTROY_RUNTIME ||
+         reason == JS::GCReason::XPCONNECT_SHUTDOWN;
 }
 
 bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
