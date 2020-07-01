@@ -96,6 +96,7 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     var pattern;
     if (lazyDateTimeFormatData.patternOption !== undefined) {
         pattern = lazyDateTimeFormatData.patternOption;
+        skeleton = intl_skeletonForPattern(pattern);
 
         internalProps.patternOption = lazyDateTimeFormatData.patternOption;
     } else if (lazyDateTimeFormatData.dateStyle !== undefined ||
@@ -106,6 +107,7 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
                                        lazyDateTimeFormatData.timeZone,
                                        formatOpt.hour12,
                                        formatOpt.hourCycle);
+        skeleton = intl_skeletonForPattern(pattern);
 
         internalProps.dateStyle = lazyDateTimeFormatData.dateStyle;
         internalProps.timeStyle = lazyDateTimeFormatData.timeStyle;
@@ -115,6 +117,7 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     }
 
     // Step 31.
+    internalProps.skeleton = skeleton;
     internalProps.pattern = pattern;
 
     // The caller is responsible for associating |internalProps| with the right
@@ -892,14 +895,92 @@ function Intl_DateTimeFormat_formatToParts(date) {
                             "Intl_DateTimeFormat_formatToParts");
     }
 
-    // Ensure the DateTimeFormat internals are resolved.
-    getDateTimeFormatInternals(dtf);
-
     // Steps 4-5.
     var x = (date === undefined) ? std_Date_now() : ToNumber(date);
 
+    // Ensure the DateTimeFormat internals are resolved.
+    getDateTimeFormatInternals(dtf);
+
     // Step 6.
     return intl_FormatDateTime(dtf, x, /* formatToParts = */ true);
+}
+
+/**
+ * Intl.DateTimeFormat.prototype.formatRange ( startDate , endDate )
+ *
+ * Spec: Intl.DateTimeFormat.prototype.formatRange proposal
+ */
+function Intl_DateTimeFormat_formatRange(startDate, endDate) {
+    // Step 1.
+    var dtf = this;
+
+    // Steps 2-3.
+    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
+                            "Intl_DateTimeFormat_formatRange");
+    }
+
+    // Step 4.
+    if (startDate === undefined || endDate === undefined) {
+        ThrowTypeError(JSMSG_UNDEFINED_DATE, startDate === undefined ? "start" : "end",
+                       "formatRange");
+    }
+
+    // Step 5.
+    var x = ToNumber(startDate);
+
+    // Step 6.
+    var y = ToNumber(endDate);
+
+    // Step 7.
+    if (x > y) {
+        ThrowRangeError(JSMSG_START_AFTER_END_DATE, "formatRange");
+    }
+
+    // Ensure the DateTimeFormat internals are resolved.
+    getDateTimeFormatInternals(dtf);
+
+    // Step 8.
+    return intl_FormatDateTimeRange(dtf, x, y, /* formatToParts = */ false);
+}
+
+/**
+ * Intl.DateTimeFormat.prototype.formatRangeToParts ( startDate , endDate )
+ *
+ * Spec: Intl.DateTimeFormat.prototype.formatRange proposal
+ */
+function Intl_DateTimeFormat_formatRangeToParts(startDate, endDate) {
+    // Step 1.
+    var dtf = this;
+
+    // Steps 2-3.
+    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
+                            "Intl_DateTimeFormat_formatRangeToParts");
+    }
+
+    // Step 4.
+    if (startDate === undefined || endDate === undefined) {
+        ThrowTypeError(JSMSG_UNDEFINED_DATE, startDate === undefined ? "start" : "end",
+                       "formatRangeToParts");
+    }
+
+    // Step 5.
+    var x = ToNumber(startDate);
+
+    // Step 6.
+    var y = ToNumber(endDate);
+
+    // Step 7.
+    if (x > y) {
+        ThrowRangeError(JSMSG_START_AFTER_END_DATE, "formatRangeToParts");
+    }
+
+    // Ensure the DateTimeFormat internals are resolved.
+    getDateTimeFormatInternals(dtf);
+
+    // Step 8.
+    return intl_FormatDateTimeRange(dtf, x, y, /* formatToParts = */ true);
 }
 
 /**

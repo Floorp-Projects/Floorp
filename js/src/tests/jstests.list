@@ -660,6 +660,10 @@ skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-d
 # https://github.com/tc39/test262/pull/2680
 skip script test262/built-ins/Atomics/exchange/nonshared-int-views.js
 
+# Tests not yet updated for https://github.com/tc39/proposal-intl-DateTimeFormat-formatRange/issues/15
+skip script test262/intl402/DateTimeFormat/prototype/formatRange/date-undefined-throws.js
+skip script test262/intl402/DateTimeFormat/prototype/formatRangeToParts/date-undefined-throws.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #

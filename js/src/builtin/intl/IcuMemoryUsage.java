@@ -11,6 +11,10 @@ import java.util.stream.Collectors;
 /**
  * Java program to estimate the memory usage of ICU objects (bug 1585536).
  *
+ * It computes for each Intl constructor the amount of allocated memory. We're
+ * currently using the maximum memory ("max" in the output) to estimate the
+ * memory consumption of ICU objects.
+ *
  * Insert before {@code JS_InitWithFailureDiagnostic} in "js.cpp":
  * 
  * <pre>
@@ -120,7 +124,7 @@ public class IcuMemoryUsage {
         return Long.parseLong(m.group(group), 16);
     }
 
-    private static void measure(String exec, String constructor, String initializer) throws IOException {
+    private static void measure(String exec, String constructor, String description, String initializer) throws IOException {
         var locales = Arrays.stream(Locale.getAvailableLocales()).map(Locale::toLanguageTag).sorted()
                 .collect(Collectors.toUnmodifiableList());
 
@@ -171,7 +175,7 @@ public class IcuMemoryUsage {
 
         var stats = memory.statistics();
 
-        System.out.printf("%s%n", constructor);
+        System.out.printf("%s%n", description);
         System.out.printf("  max: %d%n", stats.getMax());
         System.out.printf("  min: %d%n", stats.getMin());
         System.out.printf("  avg: %.0f%n", stats.getAverage());
@@ -191,20 +195,32 @@ public class IcuMemoryUsage {
             throw new RuntimeException("The first argument must point to the SpiderMonkey shell executable");
         }
 
-        var objects = new ArrayList<Map.Entry<String, String>>();
-        objects.add(Map.entry("Collator", "o.compare('a', 'b')"));
-        objects.add(Map.entry("DateTimeFormat", "o.format(0)"));
-        objects.add(Map.entry("DisplayNames", "o.of('en')"));
-        objects.add(Map.entry("ListFormat", "o.format(['a', 'b'])"));
-        objects.add(Map.entry("NumberFormat", "o.format(0)"));
+        record Entry (String constructor, String description, String initializer) {
+            public static Entry of(String constructor, String description, String initializer) {
+                return new Entry(constructor, description, initializer);
+            }
+
+            public static Entry of(String constructor, String initializer) {
+                return new Entry(constructor, constructor, initializer);
+            }
+        }
+
+        var objects = new ArrayList<Entry>();
+        objects.add(Entry.of("Collator", "o.compare('a', 'b')"));
+        objects.add(Entry.of("DateTimeFormat", "DateTimeFormat (UDateFormat)", "o.format(0)"));
+        objects.add(Entry.of("DateTimeFormat", "DateTimeFormat (UDateFormat+UDateIntervalFormat)",
+                             "o.formatRange(0, 24*60*60*1000)"));
+        objects.add(Entry.of("DisplayNames", "o.of('en')"));
+        objects.add(Entry.of("ListFormat", "o.format(['a', 'b'])"));
+        objects.add(Entry.of("NumberFormat", "o.format(0)"));
         // Instantiates UPluralRules and UNumberFormatter
-        // objects.add(Map.entry("PluralRules", "o.select(0)"));
+        // objects.add(Entry.of("PluralRules", "o.select(0)"));
         // Instantiates only UPluralRules
-        objects.add(Map.entry("PluralRules", "o.resolvedOptions()"));
-        objects.add(Map.entry("RelativeTimeFormat", "o.format(0, 'hour')"));
+        objects.add(Entry.of("PluralRules", "o.resolvedOptions()"));
+        objects.add(Entry.of("RelativeTimeFormat", "o.format(0, 'hour')"));
 
         for (var entry : objects) {
-            measure(args[0], entry.getKey(), entry.getValue());
+            measure(args[0], entry.constructor, entry.description, entry.initializer);
         }
     }
 
