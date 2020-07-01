@@ -83,8 +83,8 @@ struct KeyAlgorithmProxy {
 
   void MakeHmac(uint32_t aLength, const nsString& aHashName) {
     mType = HMAC;
-    mName = NS_LITERAL_STRING(WEBCRYPTO_ALG_HMAC);
-    mHmac.mName = NS_LITERAL_STRING(WEBCRYPTO_ALG_HMAC);
+    mName = NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_ALG_HMAC);
+    mHmac.mName = NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_ALG_HMAC);
     mHmac.mLength = aLength;
     mHmac.mHash.mName = aHashName;
   }

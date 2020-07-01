@@ -19,7 +19,7 @@ int FuzzingInitContentParentIPC(int* argc, char*** argv) { return 0; }
 static int RunContentParentIPCFuzzing(const uint8_t* data, size_t size) {
   static mozilla::dom::ContentParent* p =
       mozilla::ipc::ProtocolFuzzerHelper::CreateContentParent(
-          NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+          NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE));
 
   static nsTArray<nsCString> ignored = mozilla::ipc::LoadIPCMessageBlacklist(
       getenv("MOZ_IPC_MESSAGE_FUZZ_BLACKLIST"));

@@ -1952,8 +1952,9 @@ nsresult nsPluginHost::LoadPlugins() {
     nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase =
         GetProfileChangeTeardownPhase();
     if (shutdownPhase) {
-      rv = shutdownPhase->AddBlocker(
-          mPendingFinder, NS_LITERAL_STRING(__FILE__), __LINE__, u""_ns);
+      rv = shutdownPhase->AddBlocker(mPendingFinder,
+                                     NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+                                     __LINE__, u""_ns);
       mAddedFinderShutdownBlocker = NS_SUCCEEDED(rv);
     }
 

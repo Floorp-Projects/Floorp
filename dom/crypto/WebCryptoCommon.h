@@ -179,7 +179,8 @@ inline CK_MECHANISM_TYPE MapAlgorithmNameToMechanism(const nsString& aName) {
 }
 
 #define NORMALIZED_EQUALS(aTest, aConst) \
-  nsContentUtils::EqualsIgnoreASCIICase(aTest, NS_LITERAL_STRING(aConst))
+  nsContentUtils::EqualsIgnoreASCIICase( \
+      aTest, NS_LITERAL_STRING_FROM_CSTRING(aConst))
 
 inline bool NormalizeToken(const nsString& aName, nsString& aDest) {
   // Algorithm names

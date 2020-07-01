@@ -34,7 +34,7 @@ using mozilla::Unused;  // <snicker>
 using namespace mozilla::dom;
 using namespace mozilla;
 using DelegateInfo = PermissionDelegateHandler::PermissionDelegateInfo;
-#define kVisibilityChange "visibilitychange"
+#define kVisibilityChange u"visibilitychange"
 
 class VisibilityChangeListener final : public nsIDOMEventListener {
  public:
@@ -63,7 +63,7 @@ VisibilityChangeListener::VisibilityChangeListener(
   mWindow = do_GetWeakReference(aWindow);
   nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
   if (doc) {
-    doc->AddSystemEventListener(NS_LITERAL_STRING(kVisibilityChange),
+    doc->AddSystemEventListener(nsLiteralString(kVisibilityChange),
                                 /* listener */ this,
                                 /* use capture */ true,
                                 /* wants untrusted */ false);
@@ -96,7 +96,7 @@ void VisibilityChangeListener::RemoveListener() {
 
   nsCOMPtr<EventTarget> target = window->GetExtantDoc();
   if (target) {
-    target->RemoveSystemEventListener(NS_LITERAL_STRING(kVisibilityChange),
+    target->RemoveSystemEventListener(nsLiteralString(kVisibilityChange),
                                       /* listener */ this,
                                       /* use capture */ true);
   }

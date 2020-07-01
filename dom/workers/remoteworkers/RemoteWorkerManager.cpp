@@ -131,22 +131,23 @@ Result<nsString, nsresult> RemoteWorkerManager::GetRemoteType(
       "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
 
   if (isMozExtension) {
-    remoteType.Assign(NS_LITERAL_STRING(EXTENSION_REMOTE_TYPE));
+    remoteType.Assign(NS_LITERAL_STRING_FROM_CSTRING(EXTENSION_REMOTE_TYPE));
   } else if (separatePrivilegedMozilla) {
     bool isPrivilegedMozilla = false;
     aPrincipal->IsURIInPrefList("browser.tabs.remote.separatedMozillaDomains",
                                 &isPrivilegedMozilla);
 
     if (isPrivilegedMozilla) {
-      remoteType.Assign(NS_LITERAL_STRING(PRIVILEGEDMOZILLA_REMOTE_TYPE));
+      remoteType.Assign(
+          NS_LITERAL_STRING_FROM_CSTRING(PRIVILEGEDMOZILLA_REMOTE_TYPE));
     } else {
-      remoteType.Assign(aWorkerType == WorkerType::WorkerTypeShared &&
-                                contentChild
-                            ? contentChild->GetRemoteType()
-                            : NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+      remoteType.Assign(
+          aWorkerType == WorkerType::WorkerTypeShared && contentChild
+              ? contentChild->GetRemoteType()
+              : NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE));
     }
   } else {
-    remoteType.Assign(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+    remoteType.Assign(NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE));
   }
 
   return remoteType;
@@ -586,9 +587,10 @@ void RemoteWorkerManager::LaunchNewContentProcess(
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       __func__, [callback = std::move(processLaunchCallback),
                  workerRemoteType = aData.remoteType()]() mutable {
-        auto remoteType = workerRemoteType.IsEmpty()
-                              ? NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE)
-                              : workerRemoteType;
+        auto remoteType =
+            workerRemoteType.IsEmpty()
+                ? NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_REMOTE_TYPE)
+                : workerRemoteType;
 
         ContentParent::GetNewOrUsedBrowserProcessAsync(
             /* aFrameElement = */ nullptr,

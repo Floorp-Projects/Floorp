@@ -473,7 +473,7 @@ nsresult Database::Init() {
     if (shutdownPhase) {
       DebugOnly<nsresult> rv = shutdownPhase->AddBlocker(
           static_cast<nsIAsyncShutdownBlocker*>(mClientsShutdown.get()),
-          NS_LITERAL_STRING(__FILE__), __LINE__, u""_ns);
+          NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -486,7 +486,7 @@ nsresult Database::Init() {
     if (shutdownPhase) {
       DebugOnly<nsresult> rv = shutdownPhase->AddBlocker(
           static_cast<nsIAsyncShutdownBlocker*>(mConnectionShutdown.get()),
-          NS_LITERAL_STRING(__FILE__), __LINE__, u""_ns);
+          NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }

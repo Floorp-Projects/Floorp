@@ -2455,7 +2455,7 @@ PluginModuleParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
 
 // We only add the crash reporter to subprocess which have the filename
 // FlashPlayerPlugin*
-#  define FLASH_PROCESS_PREFIX "FLASHPLAYERPLUGIN"
+#  define FLASH_PROCESS_PREFIX u"FLASHPLAYERPLUGIN"
 
 static DWORD GetFlashChildOfPID(DWORD pid, HANDLE snapshot) {
   PROCESSENTRY32 entry = {sizeof(entry)};
@@ -2464,7 +2464,7 @@ static DWORD GetFlashChildOfPID(DWORD pid, HANDLE snapshot) {
     if (entry.th32ParentProcessID == pid) {
       nsString name(entry.szExeFile);
       ToUpperCase(name);
-      if (StringBeginsWith(name, NS_LITERAL_STRING(FLASH_PROCESS_PREFIX))) {
+      if (StringBeginsWith(name, nsLiteralString(FLASH_PROCESS_PREFIX))) {
         return entry.th32ProcessID;
       }
     }

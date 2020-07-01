@@ -130,7 +130,7 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
       NS_ConvertUTF8toUTF16 nameString(sourceName);
 
       nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();
-      LogMessage(NS_LITERAL_STRING(VERSIONED_JS_BLOCKED_MESSAGE), nameString,
+      LogMessage(nsLiteralString(VERSIONED_JS_BLOCKED_MESSAGE), nameString,
                  typeString, context);
       return NS_OK;
     }

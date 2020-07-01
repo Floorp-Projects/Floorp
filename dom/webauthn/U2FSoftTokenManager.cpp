@@ -46,7 +46,8 @@ const uint32_t kWrappedKeyBufLen = 256;
 const uint32_t kWrappingKeyByteLen = 128 / 8;
 const uint32_t kSaltByteLen = 64 / 8;
 const uint32_t kVersion1KeyHandleLen = 162;
-NS_NAMED_LITERAL_STRING(kEcAlgorithm, WEBCRYPTO_NAMED_CURVE_P256);
+constexpr auto kEcAlgorithm =
+    NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_NAMED_CURVE_P256);
 
 const PRTime kOneDay = PRTime(PR_USEC_PER_SEC) * PRTime(60)  // sec
                        * PRTime(60)                          // min

@@ -34,14 +34,14 @@ using namespace mozilla::dom;
 
 // Event names
 
-#define CHECKING_STR "checking"
-#define ERROR_STR "error"
-#define NOUPDATE_STR "noupdate"
-#define DOWNLOADING_STR "downloading"
-#define PROGRESS_STR "progress"
-#define CACHED_STR "cached"
-#define UPDATEREADY_STR "updateready"
-#define OBSOLETE_STR "obsolete"
+#define CHECKING_STR u"checking"
+#define ERROR_STR u"error"
+#define NOUPDATE_STR u"noupdate"
+#define DOWNLOADING_STR u"downloading"
+#define PROGRESS_STR u"progress"
+#define CACHED_STR u"cached"
+#define UPDATEREADY_STR u"updateready"
+#define OBSOLETE_STR u"obsolete"
 
 // To prevent abuse of the resource list for data storage, the number
 // of offline urls and their length are limited.
@@ -634,24 +634,24 @@ nsDOMOfflineResourceList::UpdateStateChanged(nsIOfflineCacheUpdate* aUpdate,
 
   switch (event) {
     case STATE_ERROR:
-      SendEvent(NS_LITERAL_STRING(ERROR_STR));
+      SendEvent(nsLiteralString(ERROR_STR));
       break;
     case STATE_CHECKING:
-      SendEvent(NS_LITERAL_STRING(CHECKING_STR));
+      SendEvent(nsLiteralString(CHECKING_STR));
       break;
     case STATE_NOUPDATE:
-      SendEvent(NS_LITERAL_STRING(NOUPDATE_STR));
+      SendEvent(nsLiteralString(NOUPDATE_STR));
       break;
     case STATE_OBSOLETE:
       mStatus = OfflineResourceList_Binding::OBSOLETE;
       mAvailableApplicationCache = nullptr;
-      SendEvent(NS_LITERAL_STRING(OBSOLETE_STR));
+      SendEvent(nsLiteralString(OBSOLETE_STR));
       break;
     case STATE_DOWNLOADING:
-      SendEvent(NS_LITERAL_STRING(DOWNLOADING_STR));
+      SendEvent(nsLiteralString(DOWNLOADING_STR));
       break;
     case STATE_ITEMSTARTED:
-      SendEvent(NS_LITERAL_STRING(PROGRESS_STR));
+      SendEvent(nsLiteralString(PROGRESS_STR));
       break;
     case STATE_ITEMCOMPLETED:
       // Nothing to do here...
@@ -787,9 +787,9 @@ void nsDOMOfflineResourceList::UpdateCompleted(nsIOfflineCacheUpdate* aUpdate) {
   if (NS_SUCCEEDED(rv) && succeeded && !partial) {
     mStatus = OfflineResourceList_Binding::IDLE;
     if (isUpgrade) {
-      SendEvent(NS_LITERAL_STRING(UPDATEREADY_STR));
+      SendEvent(nsLiteralString(UPDATEREADY_STR));
     } else {
-      SendEvent(NS_LITERAL_STRING(CACHED_STR));
+      SendEvent(nsLiteralString(CACHED_STR));
     }
   }
 }

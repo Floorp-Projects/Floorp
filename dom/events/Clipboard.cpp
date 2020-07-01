@@ -73,8 +73,8 @@ already_AddRefed<Promise> Clipboard::ReadHelper(
             MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
                     ("Clipboard, ReadHelper, read text case\n"));
             nsAutoString str;
-            dataTransfer->GetData(NS_LITERAL_STRING(kTextMime), str,
-                                  aSubjectPrincipal, ier);
+            dataTransfer->GetData(NS_LITERAL_STRING_FROM_CSTRING(kTextMime),
+                                  str, aSubjectPrincipal, ier);
             // Either resolve with a string extracted from data transfer item
             // or resolve with an empty string if nothing was found
             p->MaybeResolve(str);
@@ -166,8 +166,8 @@ already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
   RefPtr<DataTransfer> dataTransfer = new DataTransfer(this, eCopy,
                                                        /* is external */ true,
                                                        /* clipboard type */ -1);
-  dataTransfer->SetData(NS_LITERAL_STRING(kTextMime), aData, aSubjectPrincipal,
-                        aRv);
+  dataTransfer->SetData(NS_LITERAL_STRING_FROM_CSTRING(kTextMime), aData,
+                        aSubjectPrincipal, aRv);
   return Write(*dataTransfer, aSubjectPrincipal, aRv);
 }
 

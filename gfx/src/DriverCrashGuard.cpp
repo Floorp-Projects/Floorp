@@ -283,8 +283,8 @@ bool DriverCrashGuard::UpdateBaseEnvironment() {
   }
 
   // Firefox properties.
-  changed |=
-      CheckAndUpdatePref("appVersion", NS_LITERAL_STRING(MOZ_APP_VERSION));
+  changed |= CheckAndUpdatePref(
+      "appVersion", NS_LITERAL_STRING_FROM_CSTRING(MOZ_APP_VERSION));
 
   return changed;
 }

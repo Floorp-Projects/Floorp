@@ -113,21 +113,21 @@ JSObject* ConsoleInstance::WrapObject(JSContext* aCx,
                              const Sequence<JS::Value>& aData) { \
     RefPtr<Console> console(mConsole);                           \
     console->MethodInternal(aCx, Console::Method##name,          \
-                            NS_LITERAL_STRING(string), aData);   \
+                            nsLiteralString(string), aData);     \
   }
 
-METHOD(Log, "log")
-METHOD(Info, "info")
-METHOD(Warn, "warn")
-METHOD(Error, "error")
-METHOD(Exception, "exception")
-METHOD(Debug, "debug")
-METHOD(Table, "table")
-METHOD(Trace, "trace")
-METHOD(Dir, "dir");
-METHOD(Dirxml, "dirxml");
-METHOD(Group, "group")
-METHOD(GroupCollapsed, "groupCollapsed")
+METHOD(Log, u"log")
+METHOD(Info, u"info")
+METHOD(Warn, u"warn")
+METHOD(Error, u"error")
+METHOD(Exception, u"exception")
+METHOD(Debug, u"debug")
+METHOD(Table, u"table")
+METHOD(Trace, u"trace")
+METHOD(Dir, u"dir");
+METHOD(Dirxml, u"dirxml");
+METHOD(Group, u"group")
+METHOD(GroupCollapsed, u"groupCollapsed")
 
 #undef METHOD
 

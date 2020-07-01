@@ -902,7 +902,7 @@ void nsRFPService::MaybeCreateSpoofingKeyCodesForEnUS() {
   static const SpoofingKeyboardInfo spoofingKeyboardInfoTable[] = {
 #define KEY(key_, _codeNameIdx, _keyCode, _modifier) \
   {KEY_NAME_INDEX_USE_STRING,                        \
-   NS_LITERAL_STRING(key_),                          \
+   NS_LITERAL_STRING_FROM_CSTRING(key_),             \
    {CODE_NAME_INDEX_##_codeNameIdx, _keyCode, _modifier}},
 #define CONTROL(keyNameIdx_, _codeNameIdx, _keyCode) \
   {KEY_NAME_INDEX_##keyNameIdx_,                     \

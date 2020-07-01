@@ -166,7 +166,8 @@ NetworkConnectivityService::Observe(nsISupports* aSubject, const char* aTopic,
                                     "network:captive-portal-connectivity");
     observerService->RemoveObserver(this, NS_NETWORK_LINK_TOPIC);
   } else if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC) &&
-             !NS_LITERAL_STRING(NS_NETWORK_LINK_DATA_UNKNOWN).Equals(aData)) {
+             !NS_LITERAL_STRING_FROM_CSTRING(NS_NETWORK_LINK_DATA_UNKNOWN)
+                  .Equals(aData)) {
     PerformChecks();
   }
 

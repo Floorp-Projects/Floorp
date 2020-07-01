@@ -94,9 +94,9 @@ ServiceWorkerShutdownBlocker::CreateAndRegisterOn(
   RefPtr<ServiceWorkerShutdownBlocker> blocker =
       new ServiceWorkerShutdownBlocker();
 
-  nsresult rv =
-      aShutdownBarrier->AddBlocker(blocker.get(), NS_LITERAL_STRING(__FILE__),
-                                   __LINE__, u"Service Workers shutdown"_ns);
+  nsresult rv = aShutdownBarrier->AddBlocker(
+      blocker.get(), NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
+      u"Service Workers shutdown"_ns);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;

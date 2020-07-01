@@ -623,7 +623,7 @@ nsresult FSTextPlain::AddNameValuePair(const nsAString& aName,
   // XXX This won't work well with a name like "a=b" or "a\nb" but I suppose
   // text/plain doesn't care about that.  Parsers aren't built for escaped
   // values so we'll have to live with it.
-  mBody.Append(aName + u"="_ns + aValue + NS_LITERAL_STRING(CRLF));
+  mBody.Append(aName + u"="_ns + aValue + NS_LITERAL_STRING_FROM_CSTRING(CRLF));
 
   return NS_OK;
 }

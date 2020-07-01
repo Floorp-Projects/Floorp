@@ -72,7 +72,7 @@ void MediaShutdownManager::InitStatics() {
   MOZ_DIAGNOSTIC_ASSERT(sInstance);
 
   nsresult rv = GetShutdownBarrier()->AddBlocker(
-      sInstance, NS_LITERAL_STRING(__FILE__), __LINE__,
+      sInstance, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
       u"MediaShutdownManager shutdown"_ns);
   if (NS_FAILED(rv)) {
     LOGW("Failed to add shutdown blocker! rv=%x", uint32_t(rv));

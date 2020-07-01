@@ -14,6 +14,12 @@
 
 #include "mozilla/Char16.h"
 
+#define NS_CSTRING_LITERAL_AS_STRING_LITERAL(s) u"" s
+
+#define NS_LITERAL_STRING_FROM_CSTRING(s) \
+  static_cast<const nsLiteralString&>(    \
+      nsLiteralString(NS_CSTRING_LITERAL_AS_STRING_LITERAL(s)))
+
 #define NS_LITERAL_STRING(s) \
   static_cast<const nsLiteralString&>(nsLiteralString(u"" s))
 #define NS_NAMED_LITERAL_STRING(n, s) const nsLiteralString n(u"" s)

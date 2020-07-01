@@ -316,7 +316,7 @@ static nsresult GetLowIntegrityTempBase(nsIFile** aLowIntegrityTempBase) {
     return rv;
   }
 
-  rv = localFile->Append(NS_LITERAL_STRING(MOZ_USER_DIR));
+  rv = localFile->Append(NS_LITERAL_STRING_FROM_CSTRING(MOZ_USER_DIR));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

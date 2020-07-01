@@ -16,7 +16,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-#define SERVICEWORKERREGISTRAR_FILE "serviceworker.txt"
+#define SERVICEWORKERREGISTRAR_FILE u"serviceworker.txt"
 #define SERVICEWORKERREGISTRAR_VERSION "8"
 #define SERVICEWORKERREGISTRAR_TERMINATOR "#"
 #define SERVICEWORKERREGISTRAR_TRUE "true"

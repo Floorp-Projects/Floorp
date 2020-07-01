@@ -347,7 +347,7 @@ UploadLastDir::ContentPrefCallback::HandleCompletion(uint16_t aReason) {
     // If no custom directory was set through the pref, default to
     // "desktop" directory for each platform.
     mFilePicker->SetDisplaySpecialDirectory(
-        NS_LITERAL_STRING(NS_OS_DESKTOP_DIR));
+        NS_LITERAL_STRING_FROM_CSTRING(NS_OS_DESKTOP_DIR));
   }
 
   mFilePicker->Open(mFpCallback);

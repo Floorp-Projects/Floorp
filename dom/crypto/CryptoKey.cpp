@@ -191,28 +191,36 @@ void CryptoKey::GetAlgorithm(JSContext* cx,
 
 void CryptoKey::GetUsages(nsTArray<nsString>& aRetVal) const {
   if (mAttributes & ENCRYPT) {
-    aRetVal.AppendElement(NS_LITERAL_STRING(WEBCRYPTO_KEY_USAGE_ENCRYPT));
+    aRetVal.AppendElement(
+        NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_KEY_USAGE_ENCRYPT));
   }
   if (mAttributes & DECRYPT) {
-    aRetVal.AppendElement(NS_LITERAL_STRING(WEBCRYPTO_KEY_USAGE_DECRYPT));
+    aRetVal.AppendElement(
+        NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_KEY_USAGE_DECRYPT));
   }
   if (mAttributes & SIGN) {
-    aRetVal.AppendElement(NS_LITERAL_STRING(WEBCRYPTO_KEY_USAGE_SIGN));
+    aRetVal.AppendElement(
+        NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_KEY_USAGE_SIGN));
   }
   if (mAttributes & VERIFY) {
-    aRetVal.AppendElement(NS_LITERAL_STRING(WEBCRYPTO_KEY_USAGE_VERIFY));
+    aRetVal.AppendElement(
+        NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_KEY_USAGE_VERIFY));
   }
   if (mAttributes & DERIVEKEY) {
-    aRetVal.AppendElement(NS_LITERAL_STRING(WEBCRYPTO_KEY_USAGE_DERIVEKEY));
+    aRetVal.AppendElement(
+        NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_KEY_USAGE_DERIVEKEY));
   }
   if (mAttributes & DERIVEBITS) {
-    aRetVal.AppendElement(NS_LITERAL_STRING(WEBCRYPTO_KEY_USAGE_DERIVEBITS));
+    aRetVal.AppendElement(
+        NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_KEY_USAGE_DERIVEBITS));
   }
   if (mAttributes & WRAPKEY) {
-    aRetVal.AppendElement(NS_LITERAL_STRING(WEBCRYPTO_KEY_USAGE_WRAPKEY));
+    aRetVal.AppendElement(
+        NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_KEY_USAGE_WRAPKEY));
   }
   if (mAttributes & UNWRAPKEY) {
-    aRetVal.AppendElement(NS_LITERAL_STRING(WEBCRYPTO_KEY_USAGE_UNWRAPKEY));
+    aRetVal.AppendElement(
+        NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_KEY_USAGE_UNWRAPKEY));
   }
 }
 
@@ -668,15 +676,18 @@ bool ECKeyToJwk(const PK11ObjectType aKeyType, void* aKey,
   switch (SECOID_FindOIDTag(&oid)) {
     case SEC_OID_SECG_EC_SECP256R1:
       flen = 32;  // bytes
-      aRetVal.mCrv.Construct(NS_LITERAL_STRING(WEBCRYPTO_NAMED_CURVE_P256));
+      aRetVal.mCrv.Construct(
+          NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_NAMED_CURVE_P256));
       break;
     case SEC_OID_SECG_EC_SECP384R1:
       flen = 48;  // bytes
-      aRetVal.mCrv.Construct(NS_LITERAL_STRING(WEBCRYPTO_NAMED_CURVE_P384));
+      aRetVal.mCrv.Construct(
+          NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_NAMED_CURVE_P384));
       break;
     case SEC_OID_SECG_EC_SECP521R1:
       flen = 66;  // bytes
-      aRetVal.mCrv.Construct(NS_LITERAL_STRING(WEBCRYPTO_NAMED_CURVE_P521));
+      aRetVal.mCrv.Construct(
+          NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_NAMED_CURVE_P521));
       break;
     default:
       return false;
@@ -710,7 +721,7 @@ bool ECKeyToJwk(const PK11ObjectType aKeyType, void* aKey,
     return false;
   }
 
-  aRetVal.mKty = NS_LITERAL_STRING(JWK_TYPE_EC);
+  aRetVal.mKty = NS_LITERAL_STRING_FROM_CSTRING(JWK_TYPE_EC);
   return true;
 }
 
@@ -738,7 +749,7 @@ nsresult CryptoKey::PrivateKeyToJwk(SECKEYPrivateKey* aPrivKey,
         return NS_ERROR_DOM_OPERATION_ERR;
       }
 
-      aRetVal.mKty = NS_LITERAL_STRING(JWK_TYPE_RSA);
+      aRetVal.mKty = NS_LITERAL_STRING_FROM_CSTRING(JWK_TYPE_RSA);
       return NS_OK;
     }
     case ecKey: {
@@ -902,7 +913,7 @@ nsresult CryptoKey::PublicKeyToJwk(SECKEYPublicKey* aPubKey,
         return NS_ERROR_DOM_OPERATION_ERR;
       }
 
-      aRetVal.mKty = NS_LITERAL_STRING(JWK_TYPE_RSA);
+      aRetVal.mKty = NS_LITERAL_STRING_FROM_CSTRING(JWK_TYPE_RSA);
       return NS_OK;
     }
     case ecKey:

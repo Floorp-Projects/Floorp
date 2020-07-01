@@ -464,9 +464,9 @@ nsresult LockedDirectoryPaddingWrite(nsIFile* aBaseDir,
   }
 
   if (aPaddingFileType == DirPaddingFile::TMP_FILE) {
-    rv = file->Append(NS_LITERAL_STRING(PADDING_TMP_FILE_NAME));
+    rv = file->Append(nsLiteralString(PADDING_TMP_FILE_NAME));
   } else {
-    rv = file->Append(NS_LITERAL_STRING(PADDING_FILE_NAME));
+    rv = file->Append(nsLiteralString(PADDING_FILE_NAME));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -767,9 +767,9 @@ bool DirectoryPaddingFileExists(nsIFile* aBaseDir,
 
   nsString fileName;
   if (aPaddingFileType == DirPaddingFile::TMP_FILE) {
-    fileName = NS_LITERAL_STRING(PADDING_TMP_FILE_NAME);
+    fileName = nsLiteralString(PADDING_TMP_FILE_NAME);
   } else {
-    fileName = NS_LITERAL_STRING(PADDING_FILE_NAME);
+    fileName = nsLiteralString(PADDING_FILE_NAME);
   }
 
   rv = file->Append(fileName);
@@ -800,7 +800,7 @@ nsresult LockedDirectoryPaddingGet(nsIFile* aBaseDir,
     return rv;
   }
 
-  rv = file->Append(NS_LITERAL_STRING(PADDING_FILE_NAME));
+  rv = file->Append(nsLiteralString(PADDING_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -966,12 +966,12 @@ nsresult LockedDirectoryPaddingFinalizeWrite(nsIFile* aBaseDir) {
     return rv;
   }
 
-  rv = file->Append(NS_LITERAL_STRING(PADDING_TMP_FILE_NAME));
+  rv = file->Append(nsLiteralString(PADDING_TMP_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = file->RenameTo(nullptr, NS_LITERAL_STRING(PADDING_FILE_NAME));
+  rv = file->RenameTo(nullptr, nsLiteralString(PADDING_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1030,9 +1030,9 @@ nsresult LockedDirectoryPaddingDeleteFile(nsIFile* aBaseDir,
   }
 
   if (aPaddingFileType == DirPaddingFile::TMP_FILE) {
-    rv = file->Append(NS_LITERAL_STRING(PADDING_TMP_FILE_NAME));
+    rv = file->Append(nsLiteralString(PADDING_TMP_FILE_NAME));
   } else {
-    rv = file->Append(NS_LITERAL_STRING(PADDING_FILE_NAME));
+    rv = file->Append(nsLiteralString(PADDING_FILE_NAME));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

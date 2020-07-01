@@ -202,7 +202,7 @@ already_AddRefed<DataStorage> DataStorage::Get(DataStorageClass aFilename) {
   switch (aFilename) {
 #define DATA_STORAGE(_)     \
   case DataStorageClass::_: \
-    return GetFromRawFileName(NS_LITERAL_STRING(#_ ".txt"));
+    return GetFromRawFileName(NS_LITERAL_STRING_FROM_CSTRING(#_ ".txt"));
 #include "mozilla/DataStorageList.h"
 #undef DATA_STORAGE
     default:
@@ -233,7 +233,8 @@ void DataStorage::GetAllFileNames(nsTArray<nsString>& aItems) {
   if (!sDataStorages) {
     return;
   }
-#define DATA_STORAGE(_) aItems.AppendElement(NS_LITERAL_STRING(#_ ".txt"));
+#define DATA_STORAGE(_) \
+  aItems.AppendElement(NS_LITERAL_STRING_FROM_CSTRING(#_ ".txt"));
 #include "mozilla/DataStorageList.h"
 #undef DATA_STORAGE
 }
@@ -274,17 +275,17 @@ void DataStorage::SetCachedStorageEntries(
   // about updating the algorithm here to something more fancy if the list
   // of DataStorage items grows some day.
   nsTArray<psm::DataStorageEntry> entries;
-#define DATA_STORAGE(_)                              \
-  {                                                  \
-    psm::DataStorageEntry entry;                     \
-    entry.filename() = NS_LITERAL_STRING(#_ ".txt"); \
-    for (auto& e : aEntries) {                       \
-      if (entry.filename().Equals(e.filename())) {   \
-        entry.items() = e.items().Clone();           \
-        break;                                       \
-      }                                              \
-    }                                                \
-    entries.AppendElement(std::move(entry));         \
+#define DATA_STORAGE(_)                                           \
+  {                                                               \
+    psm::DataStorageEntry entry;                                  \
+    entry.filename() = NS_LITERAL_STRING_FROM_CSTRING(#_ ".txt"); \
+    for (auto& e : aEntries) {                                    \
+      if (entry.filename().Equals(e.filename())) {                \
+        entry.items() = e.items().Clone();                        \
+        break;                                                    \
+      }                                                           \
+    }                                                             \
+    entries.AppendElement(std::move(entry));                      \
   }
 #include "mozilla/DataStorageList.h"
 #undef DATA_STORAGE

@@ -1971,7 +1971,7 @@ class ExportKeyTask : public WebCryptoTask {
           return NS_ERROR_DOM_OPERATION_ERR;
         }
         mJwk.mK.Construct(k);
-        mJwk.mKty = NS_LITERAL_STRING(JWK_TYPE_SYMMETRIC);
+        mJwk.mKty = NS_LITERAL_STRING_FROM_CSTRING(JWK_TYPE_SYMMETRIC);
       } else if (mKeyType == CryptoKey::PUBLIC) {
         if (!mPublicKey) {
           return NS_ERROR_DOM_UNKNOWN_ERR;
@@ -2637,7 +2637,8 @@ class DeriveKeyTask : public DeriveBitsTask {
       return;
     }
 
-    NS_NAMED_LITERAL_STRING(format, WEBCRYPTO_KEY_FORMAT_RAW);
+    constexpr auto format =
+        NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_KEY_FORMAT_RAW);
     mTask = new ImportSymmetricKeyTask(aGlobal, aCx, format, aDerivedKeyType,
                                        aExtractable, aKeyUsages);
   }

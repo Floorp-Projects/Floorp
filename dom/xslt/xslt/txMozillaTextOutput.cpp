@@ -162,7 +162,7 @@ nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
   if (!observer) {
     int32_t namespaceID;
     rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
-        NS_LITERAL_STRING(kTXNameSpaceURI), namespaceID);
+        nsLiteralString(kTXNameSpaceURI), namespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mTextParent =

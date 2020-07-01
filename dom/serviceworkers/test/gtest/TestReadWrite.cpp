@@ -55,7 +55,7 @@ already_AddRefed<nsIFile> GetFile() {
     return nullptr;
   }
 
-  file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
+  file->Append(nsLiteralString(SERVICEWORKERREGISTRAR_FILE));
   return file.forget();
 }
 
