@@ -2906,7 +2906,7 @@ bool WarpBuilder::buildBailoutForColdIC(BytecodeLocation loc, CacheKind kind) {
 
   // TODO: ideally we would terminate the block here and set the implicitly-used
   // flag for skipped bytecode ops. OSR makes this more tricky though.
-  MBail* bail = MBail::New(alloc(), Bailout_FirstExecution);
+  MBail* bail = MBail::New(alloc(), BailoutKind::FirstExecution);
   current->add(bail);
 
   MIRType resultType;

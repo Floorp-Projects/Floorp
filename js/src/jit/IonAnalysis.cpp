@@ -343,7 +343,7 @@ static void RemoveFromSuccessors(MBasicBlock* block) {
 
 static void ConvertToBailingBlock(TempAllocator& alloc, MBasicBlock* block) {
   // Add a bailout instruction.
-  MBail* bail = MBail::New(alloc, Bailout_FirstExecution);
+  MBail* bail = MBail::New(alloc, BailoutKind::FirstExecution);
   MInstruction* bailPoint = block->safeInsertTop();
   block->insertBefore(block->safeInsertTop(), bail);
 

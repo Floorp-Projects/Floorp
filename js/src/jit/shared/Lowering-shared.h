@@ -316,7 +316,7 @@ class LIRGeneratorShared {
   // function may build a snapshot that captures the result of its own
   // instruction, and as such, should generally be called after define*().
   void assignSafepoint(LInstruction* ins, MInstruction* mir,
-                       BailoutKind kind = Bailout_DuringVMCall);
+                       BailoutKind kind = BailoutKind::DuringVMCall);
 
   // Marks this instruction as needing a wasm safepoint.
   void assignWasmSafepoint(LInstruction* ins, MInstruction* mir);

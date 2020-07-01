@@ -685,13 +685,13 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   Value returnValue = UndefinedValue();
   ArgumentsObject* argsObj = nullptr;
   BailoutKind bailoutKind = iter.bailoutKind();
-  if (bailoutKind == Bailout_ArgumentCheck) {
+  if (bailoutKind == BailoutKind::ArgumentCheck) {
     // Skip the (unused) envChain, because it could be bogus (we can fail before
     // the env chain slot is set) and use the function's initial environment.
     // This will be fixed up later if needed in |FinishBailoutToBaseline|, which
     // calls |EnsureHasEnvironmentObjects|.
     JitSpew(JitSpew_BaselineBailouts,
-            "      Bailout_ArgumentCheck! (using function's environment)");
+            "      BailoutKind::ArgumentCheck! (using function's environment)");
     iter.skip();
     envChain = fun->environment();
 
@@ -700,10 +700,10 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
 
     // Scripts with |argumentsHasVarBinding| have an extra slot.
     if (script->argumentsHasVarBinding()) {
-      JitSpew(
-          JitSpew_BaselineBailouts,
-          "      Bailout_ArgumentCheck for script with argumentsHasVarBinding!"
-          "Using empty arguments object");
+      JitSpew(JitSpew_BaselineBailouts,
+              "      BailoutKind::ArgumentCheck for script with "
+              "argumentsHasVarBinding!"
+              "Using empty arguments object");
       iter.skip();
     }
   } else {
@@ -1974,65 +1974,65 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
 
   switch (bailoutKind) {
     // Normal bailouts.
-    case Bailout_Inevitable:
-    case Bailout_DuringVMCall:
-    case Bailout_TooManyArguments:
-    case Bailout_DynamicNameNotFound:
-    case Bailout_StringArgumentsEval:
-    case Bailout_Overflow:
-    case Bailout_Round:
-    case Bailout_NonPrimitiveInput:
-    case Bailout_PrecisionLoss:
-    case Bailout_TypeBarrierO:
-    case Bailout_TypeBarrierV:
-    case Bailout_ValueGuard:
-    case Bailout_NullOrUndefinedGuard:
-    case Bailout_MonitorTypes:
-    case Bailout_Hole:
-    case Bailout_NoDenseElementsGuard:
-    case Bailout_NegativeIndex:
-    case Bailout_NonInt32Input:
-    case Bailout_NonNumericInput:
-    case Bailout_NonBooleanInput:
-    case Bailout_NonObjectInput:
-    case Bailout_NonStringInput:
-    case Bailout_NonSymbolInput:
-    case Bailout_NonBigIntInput:
-    case Bailout_Debugger:
-    case Bailout_SpecificAtomGuard:
-    case Bailout_SpecificSymbolGuard:
-    case Bailout_NonInt32ArrayLength:
+    case BailoutKind::Inevitable:
+    case BailoutKind::DuringVMCall:
+    case BailoutKind::TooManyArguments:
+    case BailoutKind::DynamicNameNotFound:
+    case BailoutKind::StringArgumentsEval:
+    case BailoutKind::Overflow:
+    case BailoutKind::Round:
+    case BailoutKind::NonPrimitiveInput:
+    case BailoutKind::PrecisionLoss:
+    case BailoutKind::TypeBarrierO:
+    case BailoutKind::TypeBarrierV:
+    case BailoutKind::ValueGuard:
+    case BailoutKind::NullOrUndefinedGuard:
+    case BailoutKind::MonitorTypes:
+    case BailoutKind::Hole:
+    case BailoutKind::NoDenseElementsGuard:
+    case BailoutKind::NegativeIndex:
+    case BailoutKind::NonInt32Input:
+    case BailoutKind::NonNumericInput:
+    case BailoutKind::NonBooleanInput:
+    case BailoutKind::NonObjectInput:
+    case BailoutKind::NonStringInput:
+    case BailoutKind::NonSymbolInput:
+    case BailoutKind::NonBigIntInput:
+    case BailoutKind::Debugger:
+    case BailoutKind::SpecificAtomGuard:
+    case BailoutKind::SpecificSymbolGuard:
+    case BailoutKind::NonInt32ArrayLength:
       // Do nothing.
       break;
 
-    case Bailout_FirstExecution:
+    case BailoutKind::FirstExecution:
       // Do not return directly, as this was not frequent in the first place,
       // thus rely on the check for frequent bailouts to recompile the current
       // script.
       break;
 
     // Invalid assumption based on baseline code.
-    case Bailout_OverflowInvalidate:
+    case BailoutKind::OverflowInvalidate:
       outerScript->setHadOverflowBailout();
       [[fallthrough]];
-    case Bailout_DoubleOutput:
-    case Bailout_ObjectIdentityOrTypeGuard:
+    case BailoutKind::DoubleOutput:
+    case BailoutKind::ObjectIdentityOrTypeGuard:
       HandleBaselineInfoBailout(cx, outerScript, innerScript);
       break;
 
-    case Bailout_ArgumentCheck:
+    case BailoutKind::ArgumentCheck:
       // Do nothing, bailout will resume before the argument monitor ICs.
       break;
-    case Bailout_BoundsCheck:
+    case BailoutKind::BoundsCheck:
       HandleBoundsCheckFailure(cx, outerScript, innerScript);
       break;
-    case Bailout_ShapeGuard:
+    case BailoutKind::ShapeGuard:
       HandleShapeGuardFailure(cx, outerScript, innerScript);
       break;
-    case Bailout_UninitializedLexical:
+    case BailoutKind::UninitializedLexical:
       HandleLexicalCheckFailure(cx, outerScript, innerScript);
       break;
-    case Bailout_IonExceptionDebugMode:
+    case BailoutKind::IonExceptionDebugMode:
       // Return false to resume in HandleException with reconstructed
       // baseline frame.
       return false;

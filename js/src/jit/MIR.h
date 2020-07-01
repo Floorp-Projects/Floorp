@@ -2955,7 +2955,7 @@ class MBail : public MNullaryInstruction {
     return new (alloc) MBail(kind);
   }
   static MBail* New(TempAllocator& alloc) {
-    return new (alloc) MBail(Bailout_Inevitable);
+    return new (alloc) MBail(BailoutKind::Inevitable);
   }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
@@ -3376,25 +3376,25 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
     BailoutKind kind;
     switch (type) {
       case MIRType::Boolean:
-        kind = Bailout_NonBooleanInput;
+        kind = BailoutKind::NonBooleanInput;
         break;
       case MIRType::Int32:
-        kind = Bailout_NonInt32Input;
+        kind = BailoutKind::NonInt32Input;
         break;
       case MIRType::Double:
-        kind = Bailout_NonNumericInput;  // Int32s are fine too
+        kind = BailoutKind::NonNumericInput;  // Int32s are fine too
         break;
       case MIRType::String:
-        kind = Bailout_NonStringInput;
+        kind = BailoutKind::NonStringInput;
         break;
       case MIRType::Symbol:
-        kind = Bailout_NonSymbolInput;
+        kind = BailoutKind::NonSymbolInput;
         break;
       case MIRType::BigInt:
-        kind = Bailout_NonBigIntInput;
+        kind = BailoutKind::NonBigIntInput;
         break;
       case MIRType::Object:
-        kind = Bailout_NonObjectInput;
+        kind = BailoutKind::NonObjectInput;
         break;
       default:
         MOZ_CRASH("Given MIRType cannot be unboxed.");
@@ -6418,7 +6418,7 @@ class MWasmTrap : public MAryControlInstruction<0, 0>,
 class MLexicalCheck : public MUnaryInstruction, public BoxPolicy<0>::Data {
   BailoutKind kind_;
   explicit MLexicalCheck(MDefinition* input,
-                         BailoutKind kind = Bailout_UninitializedLexical)
+                         BailoutKind kind = BailoutKind::UninitializedLexical)
       : MUnaryInstruction(classOpcode, input), kind_(kind) {
     setResultType(MIRType::Value);
     setResultTypeSet(input->resultTypeSet());

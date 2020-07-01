@@ -213,7 +213,7 @@ void LIRGeneratorARM64::lowerDivI(MDiv* div) {
     if (rhs != 0 && uint32_t(1) << shift == mozilla::Abs(rhs)) {
       LDivPowTwoI* lir = new (alloc()) LDivPowTwoI(lhs, shift, rhs < 0);
       if (div->fallible()) {
-        assignSnapshot(lir, Bailout_DoubleOutput);
+        assignSnapshot(lir, BailoutKind::DoubleOutput);
       }
       define(lir, div);
       return;
@@ -221,7 +221,7 @@ void LIRGeneratorARM64::lowerDivI(MDiv* div) {
     if (rhs != 0) {
       LDivConstantI* lir = new (alloc()) LDivConstantI(lhs, rhs, temp());
       if (div->fallible()) {
-        assignSnapshot(lir, Bailout_DoubleOutput);
+        assignSnapshot(lir, BailoutKind::DoubleOutput);
       }
       define(lir, div);
       return;
@@ -231,7 +231,7 @@ void LIRGeneratorARM64::lowerDivI(MDiv* div) {
   LDivI* lir = new (alloc())
       LDivI(useRegister(div->lhs()), useRegister(div->rhs()), temp());
   if (div->fallible()) {
-    assignSnapshot(lir, Bailout_DoubleOutput);
+    assignSnapshot(lir, BailoutKind::DoubleOutput);
   }
   define(lir, div);
 }
@@ -240,7 +240,7 @@ void LIRGeneratorARM64::lowerMulI(MMul* mul, MDefinition* lhs,
                                   MDefinition* rhs) {
   LMulI* lir = new (alloc()) LMulI;
   if (mul->fallible()) {
-    assignSnapshot(lir, Bailout_DoubleOutput);
+    assignSnapshot(lir, BailoutKind::DoubleOutput);
   }
   lowerForALU(lir, mul, lhs, rhs);
 }
@@ -258,7 +258,7 @@ void LIRGeneratorARM64::lowerModI(MMod* mod) {
       LModPowTwoI* lir =
           new (alloc()) LModPowTwoI(useRegister(mod->lhs()), shift);
       if (mod->fallible()) {
-        assignSnapshot(lir, Bailout_DoubleOutput);
+        assignSnapshot(lir, BailoutKind::DoubleOutput);
       }
       define(lir, mod);
       return;
@@ -266,7 +266,7 @@ void LIRGeneratorARM64::lowerModI(MMod* mod) {
       LModMaskI* lir = new (alloc())
           LModMaskI(useRegister(mod->lhs()), temp(), temp(), shift + 1);
       if (mod->fallible()) {
-        assignSnapshot(lir, Bailout_DoubleOutput);
+        assignSnapshot(lir, BailoutKind::DoubleOutput);
       }
       define(lir, mod);
     }
@@ -275,7 +275,7 @@ void LIRGeneratorARM64::lowerModI(MMod* mod) {
   LModI* lir = new (alloc())
       LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), temp());
   if (mod->fallible()) {
-    assignSnapshot(lir, Bailout_DoubleOutput);
+    assignSnapshot(lir, BailoutKind::DoubleOutput);
   }
   define(lir, mod);
 }
@@ -319,7 +319,7 @@ void LIRGeneratorARM64::lowerPowOfTwoI(MPow* mir) {
   MDefinition* power = mir->power();
 
   auto* lir = new (alloc()) LPowOfTwoI(base, useRegister(power));
-  assignSnapshot(lir, Bailout_PrecisionLoss);
+  assignSnapshot(lir, BailoutKind::PrecisionLoss);
   define(lir, mir);
 }
 
@@ -348,7 +348,7 @@ void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
     if (rhs != 0 && uint32_t(1) << shift == mozilla::Abs(rhs)) {
       LDivPowTwoI* lir = new (alloc()) LDivPowTwoI(lhs, shift, false);
       if (div->fallible()) {
-        assignSnapshot(lir, Bailout_DoubleOutput);
+        assignSnapshot(lir, BailoutKind::DoubleOutput);
       }
       define(lir, div);
       return;
@@ -356,7 +356,7 @@ void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
 
     LUDivConstantI* lir = new (alloc()) LUDivConstantI(lhs, rhs, temp());
     if (div->fallible()) {
-      assignSnapshot(lir, Bailout_DoubleOutput);
+      assignSnapshot(lir, BailoutKind::DoubleOutput);
     }
     define(lir, div);
     return;
@@ -371,7 +371,7 @@ void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
 
   LUDiv* lir = new (alloc()) LUDiv(lhs, rhs, remainder);
   if (div->fallible()) {
-    assignSnapshot(lir, Bailout_DoubleOutput);
+    assignSnapshot(lir, BailoutKind::DoubleOutput);
   }
   define(lir, div);
 }
@@ -380,7 +380,7 @@ void LIRGeneratorARM64::lowerUMod(MMod* mod) {
   LUMod* lir = new (alloc())
       LUMod(useRegister(mod->getOperand(0)), useRegister(mod->getOperand(1)));
   if (mod->fallible()) {
-    assignSnapshot(lir, Bailout_DoubleOutput);
+    assignSnapshot(lir, BailoutKind::DoubleOutput);
   }
   define(lir, mod);
 }
