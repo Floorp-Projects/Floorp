@@ -985,11 +985,13 @@ class ICStubCompiler : public ICStubCompilerBase {
  public:
   virtual ICStub* getStub(ICStubSpace* space) = 0;
 
-  static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script);
+  static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
+                                       ICScript* icScript);
 
   ICStubSpace* getStubSpace(JSScript* outerScript) {
+    MOZ_ASSERT(IsTypeInferenceEnabled());
     return StubSpaceForStub(ICStub::NonCacheIRStubMakesGCCalls(kind),
-                            outerScript);
+                            outerScript, /*icScript = */ nullptr);
   }
 };
 

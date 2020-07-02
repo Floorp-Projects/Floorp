@@ -777,6 +777,7 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
 
   if (stub->state().canAttachStub()) {
     RootedScript script(cx, frame->script());
+    ICScript* icScript = frame->icScript();
     jsbytecode* pc = stub->icEntry()->pc(script);
 
     bool attached = false;
@@ -786,7 +787,7 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
       case AttachDecision::Attach: {
         ICStub* newStub =
             AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                      kind, script, stub, &attached);
+                                      kind, script, icScript, stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached %s CacheIR stub", name);
         }
@@ -970,9 +971,11 @@ bool ICCacheIR_Updated::initUpdatingChain(JSContext* cx, ICStubSpace* space) {
 
 /* static */
 ICStubSpace* ICStubCompiler::StubSpaceForStub(bool makesGCCalls,
-                                              JSScript* script) {
+                                              JSScript* script,
+                                              ICScript* icScript) {
   if (makesGCCalls) {
-    return script->jitScript()->fallbackStubSpace();
+    return icScript ? icScript->fallbackStubSpace()
+                    : script->jitScript()->fallbackStubSpace();
   }
   return script->zone()->jitZone()->optimizedStubSpace();
 }
@@ -1850,15 +1853,17 @@ static bool TryAttachGetPropStub(const char* name, JSContext* cx,
 
   if (stub->state().canAttachStub()) {
     RootedScript script(cx, frame->script());
+    ICScript* icScript = frame->icScript();
     jsbytecode* pc = stub->icEntry()->pc(script);
 
     GetPropIRGenerator gen(cx, script, pc, stub->state().mode(), kind, val,
                            idVal, receiver, GetPropertyResultFlags::All);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
-        ICStub* newStub = AttachBaselineCacheIRStub(
-            cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Monitored, script, stub, &attached);
+        ICStub* newStub =
+            AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                      BaselineCacheIRStubKind::Monitored,
+                                      script, icScript, stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached %s CacheIR stub", name);
           if (gen.shouldNotePreliminaryObjectStub()) {
@@ -2129,13 +2134,15 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   }
 
   if (stub->state().canAttachStub()) {
+    ICScript* icScript = frame->icScript();
     SetPropIRGenerator gen(cx, script, pc, CacheKind::SetElem,
                            stub->state().mode(), objv, index, rhs);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
+            BaselineCacheIRStubKind::Updated, frame->script(), icScript, stub,
+            &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
 
@@ -2219,9 +2226,11 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 
     switch (decision) {
       case AttachDecision::Attach: {
+        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
+            BaselineCacheIRStubKind::Updated, frame->script(), icScript, stub,
+            &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
 
@@ -2722,9 +2731,11 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
                            stub->state().mode(), lhs, idVal, rhs);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
+        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
+            BaselineCacheIRStubKind::Updated, frame->script(), icScript, stub,
+            &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetProp CacheIR stub");
 
@@ -2805,9 +2816,11 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 
     switch (decision) {
       case AttachDecision::Attach: {
+        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
+            BaselineCacheIRStubKind::Updated, frame->script(), icScript, stub,
+            &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
 
@@ -2930,9 +2943,10 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
       case AttachDecision::NoAction:
         break;
       case AttachDecision::Attach: {
+        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
-            stub, &handled);
+            icScript, stub, &handled);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached Call CacheIR stub");
 
@@ -2995,9 +3009,10 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
                         callArgs.thisv(), newTarget, args);
     switch (gen.tryAttachDeferredStub(res)) {
       case AttachDecision::Attach: {
+        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
-            stub, &handled);
+            icScript, stub, &handled);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached Call CacheIR stub");
 
@@ -3063,9 +3078,10 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
       case AttachDecision::NoAction:
         break;
       case AttachDecision::Attach: {
+        ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
             cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
-            stub, &handled);
+            icScript, stub, &handled);
 
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached Spread Call CacheIR stub");
