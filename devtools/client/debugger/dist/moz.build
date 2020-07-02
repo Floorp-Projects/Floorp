@@ -7,6 +7,5 @@ DevToolsModules(
     'parser-worker.js',
     'pretty-print-worker.js',
     'search-worker.js',
-    'vendors.css',
     'vendors.js',
 )
