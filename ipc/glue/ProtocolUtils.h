@@ -430,9 +430,6 @@ class IToplevelProtocol : public IProtocol {
             MessageLoop* aThread = nullptr,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
-  bool Open(MessageChannel* aChannel, MessageLoop* aMessageLoop,
-            mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
-
   bool Open(MessageChannel* aChannel, nsISerialEventTarget* aEventTarget,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
