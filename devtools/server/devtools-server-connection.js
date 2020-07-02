@@ -182,7 +182,7 @@ DevToolsServerConnection.prototype = {
   getActor(actorID) {
     const pool = this.poolFor(actorID);
     if (pool) {
-      return pool.get(actorID);
+      return pool.getActorByID(actorID);
     }
 
     if (actorID === "root") {

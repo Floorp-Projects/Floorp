@@ -92,7 +92,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
    * with a real form by the end of the deserialization.
    */
   ensureDOMNodeFront(id) {
-    const front = this.get(id);
+    const front = this.getActorByID(id);
     if (front) {
       return front;
     }
@@ -273,7 +273,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
 
       // The target is only an actorID, get the associated front.
       const targetID = change.target;
-      const targetFront = this.get(targetID);
+      const targetFront = this.getActorByID(targetID);
 
       if (!targetFront) {
         console.warn(
@@ -295,7 +295,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
         const addedFronts = [];
         const removedFronts = [];
         for (const removed of change.removed) {
-          const removedFront = this.get(removed);
+          const removedFront = this.getActorByID(removed);
           if (!removedFront) {
             console.error(
               "Got a removal of an actor we didn't know about: " + removed
@@ -311,7 +311,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
           removedFronts.push(removedFront);
         }
         for (const added of change.added) {
-          const addedFront = this.get(added);
+          const addedFront = this.getActorByID(added);
           if (!addedFront) {
             console.error(
               "Got an addition of an actor we didn't know " + "about: " + added
@@ -370,7 +370,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
         // Retained orphans were force-released without the intervention of
         // client (probably a navigated frame).
         for (const released of change.nodes) {
-          const releasedFront = this.get(released);
+          const releasedFront = this.getActorByID(released);
           this._retainedOrphans.delete(released);
           this._releaseFront(releasedFront, true);
         }

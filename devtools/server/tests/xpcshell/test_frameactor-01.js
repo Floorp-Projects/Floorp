@@ -15,7 +15,7 @@ add_task(
     );
 
     Assert.ok(!!packet.frame);
-    Assert.ok(!!packet.frame.actor);
+    Assert.ok(!!packet.frame.getActorByID);
     Assert.equal(packet.frame.displayName, "stopMe");
     threadFront.resume();
   })
