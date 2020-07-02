@@ -38,6 +38,8 @@ const App = createFactory(
   require("devtools/client/application/src/components/App")
 );
 
+const { safeAsyncMethod } = require("devtools/shared/async-utils");
+
 /**
  * Global Application object in this panel. This object is expected by panel.js and is
  * called to start the UI for the panel.
@@ -46,11 +48,16 @@ window.Application = {
   async bootstrap({ toolbox, panel }) {
     // bind event handlers to `this`
     this.handleOnNavigate = this.handleOnNavigate.bind(this);
-    this.updateWorkers = this.updateWorkers.bind(this);
     this.updateDomain = this.updateDomain.bind(this);
     this.updateCanDebugWorkers = this.updateCanDebugWorkers.bind(this);
     this.onTargetAvailable = this.onTargetAvailable.bind(this);
     this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
+
+    // wrap updateWorkers to swallow rejections occurring after destroy
+    this.safeUpdateWorkers = safeAsyncMethod(
+      () => this.updateWorkers(),
+      () => this._destroyed
+    );
 
     this.toolbox = toolbox;
     // NOTE: the client is the same through the lifecycle of the toolbox, even
@@ -65,7 +72,7 @@ window.Application = {
 
     await this.updateWorkers();
     this.workersListener = new WorkersListener(this.client.mainRoot);
-    this.workersListener.addListener(this.updateWorkers);
+    this.workersListener.addListener(this.safeUpdateWorkers);
 
     this.deviceFront = await this.client.mainRoot.getFront("device");
     await this.updateCanDebugWorkers();
@@ -99,19 +106,8 @@ window.Application = {
   },
 
   async updateWorkers() {
-    try {
-      const registrationsWithWorkers = await this.client.mainRoot.listAllServiceWorkers();
-      this.actions.updateWorkers(registrationsWithWorkers);
-    } catch (e) {
-      if (this._destroyed) {
-        // Errors are expected if a worker update was fired while the panel is
-        // being destroyed. Log and swallow the error.
-        console.error("updateWorkers resolved after panel destruction", e);
-      } else {
-        // Otherwise, let the error through.
-        throw e;
-      }
-    }
+    const registrationsWithWorkers = await this.client.mainRoot.listAllServiceWorkers();
+    this.actions.updateWorkers(registrationsWithWorkers);
   },
 
   updateDomain() {
