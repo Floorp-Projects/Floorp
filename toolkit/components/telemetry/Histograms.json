@@ -7326,6 +7326,18 @@
     "description": "The length of time (in seconds) that a Picture-in-Picture window was open.",
     "releaseChannelCollection": "opt-out"
   },
+  "FX_ABOUTHOME_CACHE_CONSTRUCTION": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["mconley@mozilla.com"],
+    "bug_numbers": [1622263],
+    "expires_in_version": "87",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "The length of time (in milliseconds) that it takes for the cache worker to generate the cache and return it to the main thread",
+    "releaseChannelCollection": "opt-out"
+  },
   "INPUT_EVENT_RESPONSE_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
