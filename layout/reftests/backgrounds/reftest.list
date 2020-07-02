@@ -140,7 +140,6 @@ HTTP != root-background-1.html about:blank
 == really-big-background.html really-big-background-ref.html
 == body-background.html body-background-ref.html
 == table-background.html table-background-ref.html
-== table-background-print.html table-background-print-ref.html
 != div-background.html div-background-ref.html
 
 == background-repeat-1-ref.html background-repeat-1.html
