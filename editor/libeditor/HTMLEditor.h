@@ -4420,22 +4420,22 @@ class HTMLEditor final : public TextEditor,
    * @param aOutArrayOfContents [Out] Topmost children which are completely in
    *                            the range.
    */
-  static void CollectTopMostChildNodesCompletelyInRange(
+  static void CollectTopMostChildContentsCompletelyInRange(
       const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents);
 
   /**
-   * AutoHTMLFragmentBoundariesFixer fixes both edges of topmost child nodes
+   * AutoHTMLFragmentBoundariesFixer fixes both edges of topmost child contents
    * which are created with SubtreeContentIterator.
    */
   class MOZ_STACK_CLASS AutoHTMLFragmentBoundariesFixer final {
    public:
     /**
      * @param aArrayOfTopMostChildContents
-     *                         [in/out] The topmost child nodes which will be
+     *                         [in/out] The topmost child contents which will be
      *                         inserted into the DOM tree.  Both edges, i.e.,
      *                         first node and last node in this array will be
-     *                         checked whether they can be insertted into
+     *                         checked whether they can be inserted into
      *                         another DOM tree.  If not, it'll replaces some
      *                         orphan nodes around nodes with proper parent.
      */
