@@ -218,6 +218,11 @@ static EGLSurface CreateFallbackSurface(GLLibraryEGL* const egl,
 static EGLSurface CreateSurfaceFromNativeWindow(
     GLLibraryEGL* const egl, const EGLNativeWindowType window,
     const EGLConfig config) {
+  nsCString discardFailureId;
+  if (!GLLibraryEGL::EnsureInitialized(false, &discardFailureId)) {
+    gfxCriticalNote << "Failed to load EGL library 7!";
+    return EGL_NO_SURFACE;
+  }
   MOZ_ASSERT(window);
   EGLSurface newSurface = EGL_NO_SURFACE;
 
