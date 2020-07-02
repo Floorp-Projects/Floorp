@@ -6890,10 +6890,8 @@ void Document::SetScriptGlobalObject(
       }
     }
 
-    ErrorResult error;
     if (GetController().isSome()) {
-      imgLoader* loader = nsContentUtils::GetImgLoaderForDocument(this);
-      if (loader) {
+      if (imgLoader* loader = nsContentUtils::GetImgLoaderForDocument(this)) {
         loader->ClearCacheForControlledDocument(this);
       }
 
@@ -6941,9 +6939,7 @@ void Document::SetScriptGlobalObject(
 
     // If we are set in a window that is already focused we should remember this
     // as the time the document gained focus.
-    IgnoredErrorResult ignored;
-    bool focused = HasFocus(ignored);
-    if (focused) {
+    if (HasFocus(IgnoreErrors())) {
       SetLastFocusTime(TimeStamp::Now());
     }
   }
@@ -6954,8 +6950,8 @@ void Document::SetScriptGlobalObject(
   mWindow = window;
 
   // Now that we know what our window is, we can flush the CSP errors to the
-  // Web Console. We are flushing all messages that occured and were stored
-  // in the queue prior to this point.
+  // Web Console. We are flushing all messages that occurred and were stored in
+  // the queue prior to this point.
   if (mCSP) {
     static_cast<nsCSPContext*>(mCSP.get())->flushConsoleMessages();
   }
