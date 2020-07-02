@@ -7,6 +7,7 @@
 
 #include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/dom/MediaMetadata.h"
+#include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
@@ -99,6 +100,7 @@ class MediaControlKeySource {
   // to notify change to the embedded application.
   virtual void SetEnableFullScreen(bool aIsEnabled){};
   virtual void SetEnablePictureInPictureMode(bool aIsEnabled){};
+  virtual void SetPositionState(const PositionState& aState){};
 
  protected:
   virtual ~MediaControlKeySource() = default;

@@ -147,6 +147,7 @@ class MediaControlService final : public nsIObserver {
     MediaEventListener mSupportedKeysChangedListener;
     MediaEventListener mFullScreenChangedListener;
     MediaEventListener mPictureInPictureModeChangedListener;
+    MediaEventListener mPositionChangedListener;
   };
 
   void Init();
