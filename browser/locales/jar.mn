@@ -49,9 +49,6 @@
     locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
     locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
     locale/browser/downloads/settingsChange.dtd  (%chrome/overrides/settingsChange.dtd)
-% locale pdf.js @AB_CD@ %locale/pdfviewer/
-    locale/pdfviewer/viewer.properties             (%pdfviewer/viewer.properties)
-    locale/pdfviewer/chrome.properties             (%pdfviewer/chrome.properties)
     locale/browser/newInstall.dtd                  (%chrome/browser/newInstall.dtd)
     locale/browser/brandings.dtd                   (%chrome/browser/brandings.dtd)
     locale/browser/fxmonitor.properties            (%chrome/browser/fxmonitor.properties)
