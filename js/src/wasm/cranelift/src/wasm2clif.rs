@@ -29,8 +29,8 @@ use cranelift_codegen::ir::InstBuilder;
 use cranelift_codegen::isa::{CallConv, TargetFrontendConfig, TargetIsa};
 use cranelift_codegen::packed_option::PackedOption;
 use cranelift_wasm::{
-    FuncEnvironment, FuncIndex, GlobalIndex, GlobalVariable, MemoryIndex, ReturnMode,
-    SignatureIndex, TableIndex, TargetEnvironment, WasmError, WasmResult,
+    FuncEnvironment, FuncIndex, FunctionBuilder, GlobalIndex, GlobalVariable, MemoryIndex,
+    ReturnMode, SignatureIndex, TableIndex, TargetEnvironment, WasmError, WasmResult,
 };
 
 use crate::bindings::{self, GlobalDesc, SymbolicAddress};
@@ -1085,6 +1085,7 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         &mut self,
         mut pos: FuncCursor,
         table_index: TableIndex,
+        _table: ir::Table,
         delta: ir::Value,
         init_value: ir::Value,
     ) -> WasmResult<ir::Value> {
@@ -1096,10 +1097,14 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
 
     fn translate_table_get(
         &mut self,
-        mut pos: FuncCursor,
+        builder: &mut FunctionBuilder,
         table_index: TableIndex,
+        _table: ir::Table,
         index: ir::Value,
     ) -> WasmResult<ir::Value> {
+        // TODO(bug 1650038): make use of the `FunctionBuilder` here and its
+        // ability to edit the CFG in order to add a fast-path.
+        let mut pos = builder.cursor();
         let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
         Ok(self
             .instance_call(&mut pos, &FN_TABLE_GET, &[index, table_index])
@@ -1108,11 +1113,15 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
 
     fn translate_table_set(
         &mut self,
-        mut pos: FuncCursor,
+        builder: &mut FunctionBuilder,
         table_index: TableIndex,
+        _table: ir::Table,
         value: ir::Value,
         index: ir::Value,
     ) -> WasmResult<()> {
+        // TODO(bug 1650038): make use of the `FunctionBuilder` here and its
+        // ability to edit the CFG in order to add a fast-path.
+        let mut pos = builder.cursor();
         let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
         self.instance_call(&mut pos, &FN_TABLE_SET, &[index, value, table_index]);
         Ok(())
@@ -1187,9 +1196,9 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
     fn translate_ref_func(
         &mut self,
         mut pos: FuncCursor,
-        func_index: u32,
+        func_index: FuncIndex,
     ) -> WasmResult<ir::Value> {
-        let func_index = pos.ins().iconst(ir::types::I32, func_index as i64);
+        let func_index = pos.ins().iconst(ir::types::I32, func_index.index() as i64);
         Ok(self
             .instance_call(&mut pos, &FN_REF_FUNC, &[func_index])
             .unwrap())

@@ -38,7 +38,7 @@ fn main() {
                 ref ty,
             } => {
                 println!(
-                    "ImportSectionEntry {{ module: \"{}\", field: \"{}\", ty: {:?} }}",
+                    "ImportSectionEntry {{ module: \"{}\", field: {:?}, ty: {:?} }}",
                     module, field, ty
                 );
             }
