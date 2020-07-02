@@ -9,6 +9,7 @@
 #define gc_Nursery_h
 
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 
 #include "gc/GCParallelTask.h"
@@ -514,7 +515,7 @@ class Nursery {
   };
   PreviousGC previousGC;
 
-  double smoothedGrowthFactor;
+  mozilla::Maybe<double> smoothedGrowthFactor;
 
   // Calculate the promotion rate of the most recent minor GC.
   // The valid_for_tenuring parameter is used to return whether this
