@@ -832,7 +832,7 @@ BlobURLProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
 
   raii.release();
 
-  channel->Initialize(info->mBlobImpl);
+  channel->Initialize();
   channel.forget(aResult);
   return NS_OK;
 }

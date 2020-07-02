@@ -28,7 +28,7 @@ class BlobURLChannel final : public nsBaseChannel {
 
   // There is a valid BlobImpl for the channel. The blob's inputStream will be
   // used when ::OpenContentStream is called.
-  void Initialize(BlobImpl* aBlobImpl);
+  void Initialize();
 
  private:
   ~BlobURLChannel();
