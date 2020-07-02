@@ -55,7 +55,7 @@ object GeckoProvider {
         }
 
         val geckoRuntime = GeckoRuntime.create(context, runtimeSettings)
-        val loginStorageDelegate = GeckoLoginStorageDelegate(storage, { true })
+        val loginStorageDelegate = GeckoLoginStorageDelegate(storage)
         geckoRuntime.loginStorageDelegate = GeckoLoginDelegateWrapper(loginStorageDelegate)
 
         return geckoRuntime

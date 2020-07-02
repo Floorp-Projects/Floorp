@@ -466,8 +466,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
             sessionFeature.set(
                 feature = SessionFeature(
-                    sessionManager,
-                    SessionUseCases(sessionManager),
+                    requireComponents.core.store,
+                    requireComponents.useCases.sessionUseCases.goBack,
+                    requireComponents.useCases.engineSessionUseCases,
                     view.engineView,
                     customTabSessionId
                 ),
@@ -517,7 +518,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
             fullScreenFeature.set(
                 feature = FullScreenFeature(
-                    sessionManager,
+                    requireComponents.core.store,
                     SessionUseCases(sessionManager),
                     customTabSessionId,
                     ::viewportFitChange,
@@ -563,7 +564,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 view.swipeRefresh.setColorSchemeColors(primaryTextColor)
                 swipeRefreshFeature.set(
                     feature = SwipeRefreshFeature(
-                        sessionManager,
+                        requireComponents.core.store,
                         context.components.useCases.sessionUseCases.reload,
                         view.swipeRefresh,
                         customTabSessionId
