@@ -11,6 +11,28 @@
 namespace mozilla {
 namespace a11y {
 
+int32_t AccessibleOrProxy::IndexInParent() const {
+  if (IsAccessible()) {
+    return AsAccessible()->IndexInParent();
+  }
+
+  ProxyAccessible* proxy = AsProxy();
+  if (!proxy) {
+    return -1;
+  }
+
+  if (proxy->Parent()) {
+    return proxy->IndexInParent();
+  }
+
+  if (proxy->OuterDocOfRemoteBrowser()) {
+    return 0;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Proxy should have parent or outer doc.");
+  return -1;
+}
+
 AccessibleOrProxy AccessibleOrProxy::Parent() const {
   if (IsAccessible()) {
     return AsAccessible()->Parent();
