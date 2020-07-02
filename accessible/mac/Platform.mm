@@ -91,7 +91,7 @@ void ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t aState, bool aEnabl
   }
 }
 
-void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset) {
+void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset, bool aIsSelectionCollapsed) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
   if (wrapper) {
     [wrapper handleAccessibleEvent:nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED];

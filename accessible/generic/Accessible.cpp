@@ -821,7 +821,8 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
         }
         case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
           AccCaretMoveEvent* event = downcast_accEvent(aEvent);
-          ipcDoc->SendCaretMoveEvent(id, event->GetCaretOffset());
+          ipcDoc->SendCaretMoveEvent(id, event->GetCaretOffset(),
+                                     event->IsSelectionCollapsed());
           break;
         }
         case nsIAccessibleEvent::EVENT_TEXT_INSERTED:

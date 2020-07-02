@@ -289,7 +289,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
 #if defined(XP_WIN)
     const LayoutDeviceIntRect& aCaretRect,
 #endif  // defined (XP_WIN)
-    const int32_t& aOffset) {
+    const int32_t& aOffset, const bool& aIsSelectionCollapsed) {
   if (mShutdown) {
     return IPC_OK();
   }
@@ -303,7 +303,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
 #if defined(XP_WIN)
   ProxyCaretMoveEvent(proxy, aCaretRect);
 #else
-  ProxyCaretMoveEvent(proxy, aOffset);
+  ProxyCaretMoveEvent(proxy, aOffset, aIsSelectionCollapsed);
 #endif
 
   if (!nsCoreUtils::AccEventObserversExist()) {
