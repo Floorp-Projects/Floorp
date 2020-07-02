@@ -178,8 +178,6 @@ var whitelist = [
   },
   // Bug 1356031 (only used by devtools)
   { file: "chrome://global/skin/icons/error-16.png" },
-  // Bug 1641777 (only used by devtools)
-  { file: "chrome://global/content/third_party/d3/d3.js" },
   // Bug 1344267
   { file: "chrome://marionette/content/test.xhtml" },
   { file: "chrome://marionette/content/test_dialog.properties" },
