@@ -106,6 +106,7 @@ object Deps {
     const val mozilla_feature_pwa = "org.mozilla.components:feature-pwa:${Versions.mozilla_android_components}"
     const val mozilla_feature_toolbar = "org.mozilla.components:feature-toolbar:${Versions.mozilla_android_components}"
     const val mozilla_feature_findinpage = "org.mozilla.components:feature-findinpage:${Versions.mozilla_android_components}"
+    const val mozilla_feature_logins = "org.mozilla.components:feature-logins:${Versions.mozilla_android_components}"
     const val mozilla_feature_site_permissions = "org.mozilla.components:feature-sitepermissions:${Versions.mozilla_android_components}"
     const val mozilla_feature_readerview = "org.mozilla.components:feature-readerview:${Versions.mozilla_android_components}"
     const val mozilla_feature_tab_collections = "org.mozilla.components:feature-tab-collections:${Versions.mozilla_android_components}"

@@ -25,7 +25,7 @@ import org.mozilla.fenix.utils.view.addToRadioGroup
 
 /**
  * Displays the toggle for tracking protection, options for tracking protection policy and a button
- * to open info about the tracking protection [org.mozilla.fenix.exceptions.ExceptionsFragment].
+ * to open info about the tracking protection [org.mozilla.fenix.settings.TrackingProtectionFragment].
  */
 class TrackingProtectionFragment : PreferenceFragmentCompat() {
 
@@ -56,7 +56,8 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         showToolbar(getString(R.string.preference_enhanced_tracking_protection))
 
         // Tracking Protection Switch
-        val preferenceTP = requirePreference<SwitchPreference>(R.string.pref_key_tracking_protection)
+        val preferenceTP =
+            requirePreference<SwitchPreference>(R.string.pref_key_tracking_protection)
 
         preferenceTP.isChecked = requireContext().settings().shouldUseTrackingProtection
         preferenceTP.setOnPreferenceChangeListener<Boolean> { preference, trackingProtectionOn ->
@@ -86,7 +87,8 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             getString(R.string.app_name)
         )
 
-        val preferenceExceptions = requirePreference<Preference>(R.string.pref_key_tracking_protection_exceptions)
+        val preferenceExceptions =
+            requirePreference<Preference>(R.string.pref_key_tracking_protection_exceptions)
         preferenceExceptions.onPreferenceClickListener = exceptionsClickListener
     }
 

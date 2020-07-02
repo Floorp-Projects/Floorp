@@ -133,6 +133,13 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
             }
         }
 
+        requirePreference<Preference>(R.string.pref_key_login_exceptions).apply {
+            setOnPreferenceClickListener {
+                navigateToLoginExceptionFragment()
+                true
+            }
+        }
+
         requirePreference<SwitchPreference>(R.string.pref_key_autofill_logins).apply {
             isChecked = context.settings().shouldAutofillLogins
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
@@ -319,6 +326,12 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
     private fun navigateToSaveLoginSettingFragment() {
         val directions =
             SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToSavedLoginsSettingFragment()
+        findNavController().navigate(directions)
+    }
+
+    private fun navigateToLoginExceptionFragment() {
+        val directions =
+            SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToLoginExceptionsFragment()
         findNavController().navigate(directions)
     }
 

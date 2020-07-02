@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.exceptions
+package org.mozilla.fenix.trackingprotectionexceptions
 
 import android.os.Bundle
 import android.util.Log
@@ -27,7 +27,7 @@ import org.mozilla.fenix.settings.SupportUtils
  * Displays a list of sites that are exempted from Tracking Protection,
  * along with controls to remove the exception.
  */
-class ExceptionsFragment : Fragment() {
+class TrackingProtectionExceptionsFragment : Fragment() {
 
     private lateinit var exceptionsStore: ExceptionsFragmentStore
     private lateinit var exceptionsView: ExceptionsView
@@ -54,8 +54,16 @@ class ExceptionsFragment : Fragment() {
             )
         }
         exceptionsInteractor =
-            ExceptionsInteractor(::openLearnMore, ::deleteOneItem, ::deleteAllItems)
-        exceptionsView = ExceptionsView(view.exceptionsLayout, exceptionsInteractor)
+            ExceptionsInteractor(
+                ::openLearnMore,
+                ::deleteOneItem,
+                ::deleteAllItems
+            )
+        exceptionsView =
+            ExceptionsView(
+                view.exceptionsLayout,
+                exceptionsInteractor
+            )
         reloadExceptions()
         return view
     }
@@ -83,13 +91,17 @@ class ExceptionsFragment : Fragment() {
             searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
                 (SupportUtils.SumoTopic.TRACKING_PROTECTION),
             newTab = true,
-            from = BrowserDirection.FromExceptions
+            from = BrowserDirection.FromTrackingProtectionExceptions
         )
     }
 
     private fun reloadExceptions() {
         trackingProtectionUseCases.fetchExceptions { resultList ->
-            exceptionsStore.dispatch(ExceptionsFragmentAction.Change(resultList))
+            exceptionsStore.dispatch(
+                ExceptionsFragmentAction.Change(
+                    resultList
+                )
+            )
         }
     }
 }

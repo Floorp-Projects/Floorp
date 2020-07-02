@@ -170,6 +170,7 @@ class SettingsPrivacyTest {
             verifyDefaultView()
             verifyDefaultValueSyncLogins()
             verifyDefaultValueAutofillLogins()
+            verifyDefaultValueExceptions()
         }.openSavedLogins {
             verifySavedLoginsView()
             tapSetupLater()
@@ -209,13 +210,13 @@ class SettingsPrivacyTest {
     }
 
     @Test
-    fun doNotSaveLoginFromPromptTest() {
+    fun neverSaveLoginFromPromptTest() {
         val saveLoginTest = TestAssetHelper.getSaveLoginAsset(mockWebServer)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
             verifySaveLoginPromptIsShown()
-            // Don't save the login
+            // Don't save the login, add to exceptions
             saveLoginFromPrompt("Never save")
         }.openTabDrawer {
         }.openHomeScreen {
@@ -228,7 +229,11 @@ class SettingsPrivacyTest {
             verifySavedLoginsView()
             tapSetupLater()
             // Verify that the login list is empty
-            verifyNotSavedLoginFromPromt()
+            verifyNotSavedLoginFromPrompt()
+        }.goBack {
+        }.openLoginExceptions {
+            // Verify localhost was added to exceptions list
+            verifyLocalhostExceptionAdded()
         }
     }
 

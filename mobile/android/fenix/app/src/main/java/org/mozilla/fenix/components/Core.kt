@@ -30,6 +30,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadMiddleware
+import mozilla.components.feature.logins.exceptions.LoginExceptionStorage
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.middleware.MediaMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
@@ -250,6 +251,8 @@ class Core(private val context: Context) {
     val permissionStorage by lazy { PermissionStorage(context) }
 
     val webAppManifestStorage by lazy { ManifestStorage(context) }
+
+    val loginExceptionStorage by lazy { LoginExceptionStorage(context) }
 
     /**
      * Shared Preferences that encrypt/decrypt using Android KeyStore and lib-dataprotect for 23+

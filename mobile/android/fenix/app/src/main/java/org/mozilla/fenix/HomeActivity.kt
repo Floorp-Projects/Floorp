@@ -62,7 +62,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
+import org.mozilla.fenix.trackingprotectionexceptions.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -498,8 +498,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             BookmarkFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromHistory ->
             HistoryFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromExceptions ->
-            ExceptionsFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromTrackingProtectionExceptions ->
+            TrackingProtectionExceptionsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromAbout ->
             AboutFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromTrackingProtection ->

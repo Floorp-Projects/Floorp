@@ -443,6 +443,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     isSaveLoginEnabled = {
                         context.settings().shouldPromptToSaveLogins
                     },
+                    loginExceptionStorage = context.components.core.loginExceptionStorage,
                     shareDelegate = object : ShareDelegate {
                         override fun showShareSheet(
                             context: Context,

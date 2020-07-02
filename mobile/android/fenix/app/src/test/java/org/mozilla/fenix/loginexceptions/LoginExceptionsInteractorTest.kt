@@ -2,32 +2,19 @@
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.exceptions
+package org.mozilla.fenix.loginexceptions
 
 import io.mockk.mockk
-import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
+import mozilla.components.feature.logins.exceptions.LoginException
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class ExceptionsInteractorTest {
-
-    @Test
-    fun onLearnMore() {
-        var learnMoreClicked = false
-        val interactor = ExceptionsInteractor(
-            { learnMoreClicked = true },
-            mockk(),
-            mockk()
-        )
-        interactor.onLearnMore()
-        assertEquals(true, learnMoreClicked)
-    }
+class LoginExceptionsInteractorTest {
 
     @Test
     fun onDeleteAll() {
         var onDeleteAll = false
-        val interactor = ExceptionsInteractor(
-            mockk(),
+        val interactor = LoginExceptionsInteractor(
             mockk(),
             { onDeleteAll = true }
         )
@@ -37,10 +24,9 @@ class ExceptionsInteractorTest {
 
     @Test
     fun onDeleteOne() {
-        var exceptionsItemReceived: TrackingProtectionException? = null
-        val exceptionsItem = ExceptionItem("url")
-        val interactor = ExceptionsInteractor(
-            mockk(),
+        var exceptionsItemReceived: LoginException? = null
+        val exceptionsItem: LoginException = mockk()
+        val interactor = LoginExceptionsInteractor(
             { exceptionsItemReceived = exceptionsItem },
             mockk()
         )

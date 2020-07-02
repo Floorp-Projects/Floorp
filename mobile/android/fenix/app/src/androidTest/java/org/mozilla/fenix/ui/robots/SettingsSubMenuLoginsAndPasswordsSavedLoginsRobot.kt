@@ -13,6 +13,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -24,16 +25,23 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     fun verifySavedLoginsView() = assertSavedLoginsView()
 
     fun verifySavedLoginsAfterSync() {
-        mDevice.waitNotNull(Until.findObjects(By.text("https://accounts.google.com")), TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(
+            Until.findObjects(By.text("https://accounts.google.com")),
+            TestAssetHelper.waitingTime
+        )
         assertSavedLoginAppears()
     }
 
     fun tapSetupLater() = onView(ViewMatchers.withText("Later")).perform(ViewActions.click())
 
-    fun verifySavedLoginFromPrompt() = mDevice.waitNotNull(Until.findObjects(By.text("test@example.com")))
+    fun verifySavedLoginFromPrompt() =
+        mDevice.waitNotNull(Until.findObjects(By.text("test@example.com")))
 
-    fun verifyNotSavedLoginFromPromt() = onView(ViewMatchers.withText("test@example.com"))
-            .check(ViewAssertions.doesNotExist())
+    fun verifyNotSavedLoginFromPrompt() = onView(ViewMatchers.withText("test@example.com"))
+        .check(ViewAssertions.doesNotExist())
+
+    fun verifyLocalhostExceptionAdded() = onView(ViewMatchers.withText(containsString("localhost")))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
     class Transition {
         fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
@@ -46,9 +54,10 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 }
 
 private fun goBackButton() =
-        onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+    onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
 
-private fun assertSavedLoginsView() = onView(ViewMatchers.withText("Secure your logins and passwords"))
+private fun assertSavedLoginsView() =
+    onView(ViewMatchers.withText("Secure your logins and passwords"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertSavedLoginAppears() = onView(ViewMatchers.withText("https://accounts.google.com"))

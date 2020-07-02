@@ -27,35 +27,83 @@
         android:id="@+id/action_global_search"
         app:destination="@id/searchFragment" />
 
-    <action android:id="@+id/action_global_shareFragment" app:destination="@id/shareFragment" />
-    <action android:id="@+id/action_global_crash_reporter" app:destination="@id/crashReporterFragment" />
-    <action android:id="@+id/action_global_turn_on_sync" app:destination="@id/turnOnSyncFragment" />
-    <action android:id="@+id/action_global_settings_addonsManagementFragment" app:destination="@id/addonsManagementFragment" />
-    <action android:id="@+id/action_global_searchEngineFragment" app:destination="@id/searchEngineFragment" />
-    <action android:id="@+id/action_global_accessibilityFragment" app:destination="@id/accessibilityFragment" />
-    <action android:id="@+id/action_global_deleteBrowsingDataFragment" app:destination="@id/deleteBrowsingDataFragment" />
-    <action android:id="@+id/action_global_webExtensionActionPopupFragment" app:destination="@id/webExtensionActionPopupFragment" />
-    <action android:id="@+id/action_global_settingsFragment" app:destination="@id/settingsFragment" />
-    <action android:id="@+id/action_global_syncedTabsFragment" app:destination="@+id/syncedTabsFragment" />
-    <action android:id="@+id/action_global_privateBrowsingFragment" app:destination="@id/privateBrowsingFragment"/>
-    <action android:id="@+id/action_global_bookmarkFragment" app:destination="@id/bookmarkFragment"/>
-    <action android:id="@+id/action_global_historyFragment" app:destination="@id/historyFragment"/>
-    <action android:id="@+id/action_global_accountProblemFragment" app:destination="@id/accountProblemFragment"/>
-    <action android:id="@+id/action_global_SitePermissionsManagePhoneFeature" app:destination="@id/SitePermissionsManagePhoneFeature" />
-    <action android:id="@+id/action_global_collectionCreationFragment" app:destination="@id/collectionCreationFragment" />
-    <action android:id="@+id/action_global_bookmarkEditFragment" app:destination="@id/bookmarkEditFragment" />
-    <action android:id="@+id/action_global_addonsManagementFragment" app:destination="@id/addonsManagementFragment" />
-    <action android:id="@+id/action_global_trackingProtectionFragment" app:destination="@id/trackingProtectionFragment" />
-    <action android:id="@+id/action_global_exceptionsFragment" app:destination="@id/exceptionsFragment" />
-    <action android:id="@+id/action_global_accountSettingsFragment" app:destination="@id/accountSettingsFragment" />
-    <action android:id="@+id/action_global_trackingProtectionPanelDialogFragment" app:destination="@id/trackingProtectionPanelDialogFragment" />
-    <action android:id="@+id/action_global_quickSettingsSheetDialogFragment" app:destination="@id/quickSettingsSheetDialogFragment"/>
-    <action android:id="@+id/action_global_tabTrayDialogFragment" app:destination="@id/tabTrayDialogFragment"/>
+    <action
+        android:id="@+id/action_global_shareFragment"
+        app:destination="@id/shareFragment" />
+    <action
+        android:id="@+id/action_global_crash_reporter"
+        app:destination="@id/crashReporterFragment" />
+    <action
+        android:id="@+id/action_global_turn_on_sync"
+        app:destination="@id/turnOnSyncFragment" />
+    <action
+        android:id="@+id/action_global_settings_addonsManagementFragment"
+        app:destination="@id/addonsManagementFragment" />
+    <action
+        android:id="@+id/action_global_searchEngineFragment"
+        app:destination="@id/searchEngineFragment" />
+    <action
+        android:id="@+id/action_global_accessibilityFragment"
+        app:destination="@id/accessibilityFragment" />
+    <action
+        android:id="@+id/action_global_deleteBrowsingDataFragment"
+        app:destination="@id/deleteBrowsingDataFragment" />
+    <action
+        android:id="@+id/action_global_webExtensionActionPopupFragment"
+        app:destination="@id/webExtensionActionPopupFragment" />
+    <action
+        android:id="@+id/action_global_settingsFragment"
+        app:destination="@id/settingsFragment" />
+    <action
+        android:id="@+id/action_global_syncedTabsFragment"
+        app:destination="@+id/syncedTabsFragment" />
+    <action
+        android:id="@+id/action_global_privateBrowsingFragment"
+        app:destination="@id/privateBrowsingFragment" />
+    <action
+        android:id="@+id/action_global_bookmarkFragment"
+        app:destination="@id/bookmarkFragment" />
+    <action
+        android:id="@+id/action_global_historyFragment"
+        app:destination="@id/historyFragment" />
+    <action
+        android:id="@+id/action_global_accountProblemFragment"
+        app:destination="@id/accountProblemFragment" />
+    <action
+        android:id="@+id/action_global_SitePermissionsManagePhoneFeature"
+        app:destination="@id/SitePermissionsManagePhoneFeature" />
+    <action
+        android:id="@+id/action_global_collectionCreationFragment"
+        app:destination="@id/collectionCreationFragment" />
+    <action
+        android:id="@+id/action_global_bookmarkEditFragment"
+        app:destination="@id/bookmarkEditFragment" />
+    <action
+        android:id="@+id/action_global_addonsManagementFragment"
+        app:destination="@id/addonsManagementFragment" />
+    <action
+        android:id="@+id/action_global_trackingProtectionFragment"
+        app:destination="@id/trackingProtectionFragment" />
+    <action
+        android:id="@+id/action_global_trackingProtectionExceptionsFragment"
+        app:destination="@id/trackingProtectionExceptionsFragment" />
+    <action
+        android:id="@+id/action_global_accountSettingsFragment"
+        app:destination="@id/accountSettingsFragment" />
+    <action
+        android:id="@+id/action_global_trackingProtectionPanelDialogFragment"
+        app:destination="@id/trackingProtectionPanelDialogFragment" />
+    <action
+        android:id="@+id/action_global_quickSettingsSheetDialogFragment"
+        app:destination="@id/quickSettingsSheetDialogFragment" />
+    <action
+        android:id="@+id/action_global_tabTrayDialogFragment"
+        app:destination="@id/tabTrayDialogFragment" />
 
     <dialog
         android:id="@+id/tabTrayDialogFragment"
         android:name="org.mozilla.fenix.tabtray.TabTrayDialogFragment"
-        tools:layout="@layout/fragment_tab_tray_dialog"/>
+        tools:layout="@layout/fragment_tab_tray_dialog" />
 
     <fragment
         android:id="@+id/homeFragment"
@@ -73,9 +121,9 @@
             app:argType="boolean" />
         <argument
             android:name="session_to_delete"
+            android:defaultValue="@null"
             app:argType="string"
-            app:nullable="true"
-            android:defaultValue="@null" />
+            app:nullable="true" />
     </fragment>
 
     <fragment
@@ -93,8 +141,8 @@
             app:nullable="true" />
         <argument
             android:name="search_access_point"
-            app:argType="org.mozilla.fenix.components.metrics.Event$PerformedSearch$SearchAccessPoint"
-            android:defaultValue="NONE" />
+            android:defaultValue="NONE"
+            app:argType="org.mozilla.fenix.components.metrics.Event$PerformedSearch$SearchAccessPoint" />
     </fragment>
 
     <fragment
@@ -149,17 +197,17 @@
         tools:layout="@layout/fragment_browser">
         <action
             android:id="@+id/action_browserFragment_to_searchFragment"
+            app:destination="@id/searchFragment"
             app:enterAnim="@anim/fade_in_up"
-            app:popExitAnim="@anim/fade_out_down"
-            app:destination="@id/searchFragment" />
+            app:popExitAnim="@anim/fade_out_down" />
         <argument
             android:name="activeSessionId"
             app:argType="string"
             app:nullable="true" />
         <argument
             android:name="shouldAnimate"
-            app:argType="boolean"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            app:argType="boolean" />
         <action
             android:id="@+id/action_browserFragment_to_syncedTabsFragment"
             app:destination="@id/syncedTabsFragment" />
@@ -234,8 +282,8 @@
             app:destination="@id/bookmarkSelectFolderFragment" />
         <argument
             android:name="requiresSnackbarPaddingForToolbar"
-            app:argType="boolean"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
 
     <fragment
@@ -274,25 +322,32 @@
         android:label="@string/preferences_passwords_logins_and_passwords">
         <action
             android:id="@+id/action_savedLoginsAuthFragment_to_loginsListFragment"
+            app:destination="@id/savedLoginsFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/savedLoginsFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_savedLoginsAuthFragment_to_turnOnSyncFragment"
+            app:destination="@id/turnOnSyncFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/turnOnSyncFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_savedLoginsAuthFragment_to_savedLoginsSettingFragment"
+            app:destination="@id/saveLoginSettingFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/saveLoginSettingFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_savedLoginsAuthFragment_to_loginExceptionsFragment"
+            app:destination="@id/loginExceptionsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment
@@ -313,8 +368,13 @@
         android:id="@+id/syncedTabsFragment"
         android:name="org.mozilla.fenix.sync.SyncedTabsFragment"
         android:label="@string/synced_tabs"
-        tools:layout="@layout/fragment_synced_tabs">
-    </fragment>
+        tools:layout="@layout/fragment_synced_tabs"/>
+
+    <fragment
+        android:id="@+id/loginExceptionsFragment"
+        android:name="org.mozilla.fenix.loginexceptions.LoginExceptionsFragment"
+        android:label="@string/preferences_passwords_exceptions"
+        tools:layout="@layout/fragment_exceptions"/>
 
     <fragment
         android:id="@+id/loginDetailFragment"
@@ -323,12 +383,12 @@
         <argument
             android:name="savedLoginId"
             app:argType="string"
-            app:nullable="false"/>
+            app:nullable="false" />
         <action
             android:id="@+id/action_loginDetailFragment_to_editLoginFragment"
             app:destination="@id/editLoginFragment"
             app:popUpTo="@id/editLoginFragment"
-            app:popUpToInclusive="true"/>
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -338,12 +398,12 @@
         <argument
             android:name="savedLoginItem"
             app:argType="org.mozilla.fenix.settings.logins.SavedLogin"
-            app:nullable="false"/>
+            app:nullable="false" />
         <action
             android:id="@+id/action_editLoginFragment_to_loginDetailFragment"
             app:destination="@id/loginDetailFragment"
             app:popUpTo="@id/loginDetailFragment"
-            app:popUpToInclusive="true"/>
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -352,124 +412,124 @@
         android:label="@string/settings_title">
         <action
             android:id="@+id/action_settingsFragment_to_dataChoicesFragment"
+            app:destination="@id/dataChoicesFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/dataChoicesFragment"
             app:popUpTo="@+id/settingsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_sitePermissionsFragment"
+            app:destination="@id/sitePermissionsFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/sitePermissionsFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_savedLoginsAuthFragment"
+            app:destination="@id/savedLoginsAuthFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/savedLoginsAuthFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_accessibilityFragment"
+            app:destination="@id/accessibilityFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/accessibilityFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_accountSettingsFragment"
+            app:destination="@id/accountSettingsFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/accountSettingsFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_searchEngineFragment"
+            app:destination="@id/searchEngineFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/searchEngineFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_turnOnSyncFragment"
+            app:destination="@id/turnOnSyncFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/turnOnSyncFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_aboutFragment"
+            app:destination="@id/aboutFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/aboutFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_secretSettingsFragment"
+            app:destination="@id/secretSettingsPreference"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/secretSettingsPreference" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_customizationFragment"
+            app:destination="@id/customizationFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/customizationFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_privateBrowsingFragment"
+            app:destination="@id/privateBrowsingFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/privateBrowsingFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_trackingProtectionFragment"
+            app:destination="@id/trackingProtectionFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/trackingProtectionFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_deleteBrowsingDataFragment"
+            app:destination="@id/deleteBrowsingDataFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/deleteBrowsingDataFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_accountProblemFragment"
+            app:destination="@id/accountProblemFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/accountProblemFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_deleteBrowsingDataOnQuitFragment"
+            app:destination="@id/deleteBrowsingDataOnQuitFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/deleteBrowsingDataOnQuitFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_localeSettingsFragment"
+            app:destination="@id/localeSettingsFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/localeSettingsFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_settingsFragment_to_addonsFragment"
+            app:destination="@id/addonsManagementFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/addonsManagementFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
     <fragment
         android:id="@+id/dataChoicesFragment"
@@ -481,19 +541,19 @@
         android:label="@string/preferences_site_permissions">
         <action
             android:id="@+id/action_site_permissions_to_manage_phone_features"
+            app:destination="@id/SitePermissionsManagePhoneFeature"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/SitePermissionsManagePhoneFeature"
             app:popUpTo="@id/sitePermissionsFragment" />
         <action
             android:id="@+id/action_site_permissions_to_exceptions"
+            app:destination="@id/sitePermissionsExceptionsFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/sitePermissionsExceptionsFragment"
             app:popUpTo="@id/sitePermissionsFragment" />
     </fragment>
 
@@ -541,7 +601,7 @@
 
     <fragment
         android:id="@+id/aboutFragment"
-        android:name="org.mozilla.fenix.settings.about.AboutFragment"/>
+        android:name="org.mozilla.fenix.settings.about.AboutFragment" />
     <fragment
         android:id="@+id/secretSettingsPreference"
         android:name="org.mozilla.fenix.settings.SecretSettingsFragment"
@@ -566,27 +626,27 @@
         android:name="org.mozilla.fenix.settings.TrackingProtectionFragment">
         <action
             android:id="@+id/action_trackingProtectionFragment_to_exceptionsFragment"
+            app:destination="@id/trackingProtectionExceptionsFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/exceptionsFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_trackingProtectionFragment_to_trackingProtectionBlockingFragment"
+            app:destination="@id/trackingProtectionBlockingFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/trackingProtectionBlockingFragment" />
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
     <fragment
         android:id="@+id/deleteBrowsingDataFragment"
         android:name="org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataFragment"
         android:label="@string/preferences_delete_browsing_data" />
     <fragment
-        android:id="@+id/exceptionsFragment"
-        android:name="org.mozilla.fenix.exceptions.ExceptionsFragment"
-        android:label="@string/preference_exceptions"/>
+        android:id="@+id/trackingProtectionExceptionsFragment"
+        android:name="org.mozilla.fenix.trackingprotectionexceptions.TrackingProtectionExceptionsFragment"
+        android:label="@string/preference_exceptions" />
     <dialog
         android:id="@+id/collectionCreationFragment"
         android:name="org.mozilla.fenix.collections.CollectionCreationFragment"
@@ -795,6 +855,6 @@
         <argument
             android:name="webExtensionTitle"
             app:argType="string"
-            app:nullable="true"/>
+            app:nullable="true" />
     </fragment>
 </navigation>

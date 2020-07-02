@@ -501,6 +501,7 @@ dependencies {
     implementation Deps.mozilla_feature_toolbar
     implementation Deps.mozilla_feature_tabs
     implementation Deps.mozilla_feature_findinpage
+    implementation Deps.mozilla_feature_logins
     implementation Deps.mozilla_feature_site_permissions
     implementation Deps.mozilla_feature_readerview
     implementation Deps.mozilla_feature_tab_collections

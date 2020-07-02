@@ -1217,6 +1217,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Logins and passwords that are not saved will be shown here.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Logins and passwords will not be saved for these sites.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Delete all exceptions</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Search logins</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
