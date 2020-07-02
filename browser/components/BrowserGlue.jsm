@@ -5077,15 +5077,25 @@ var AboutHomeStartupCache = {
     this.log.trace("Initialized.");
   },
 
+  get initted() {
+    return this._initted;
+  },
+
   uninit() {
-    if (!this._enabled || !this._initted) {
+    if (!this._enabled) {
       return;
     }
 
-    Services.obs.removeObserver(this, "ipc:content-created");
-    Services.obs.removeObserver(this, "process-type-set");
-    Services.obs.removeObserver(this, "ipc:content-shutdown");
-    Services.obs.removeObserver(this, "intl:app-locales-changed");
+    try {
+      Services.obs.removeObserver(this, "ipc:content-created");
+      Services.obs.removeObserver(this, "process-type-set");
+      Services.obs.removeObserver(this, "ipc:content-shutdown");
+      Services.obs.removeObserver(this, "intl:app-locales-changed");
+    } catch (e) {
+      // If we failed to initialize and register for these observer
+      // notifications, then attempting to remove them will throw.
+      // It's fine to ignore that case on shutdown.
+    }
 
     if (this._cacheTask) {
       this._cacheTask.disarm();
@@ -5101,9 +5111,12 @@ var AboutHomeStartupCache = {
     this._cacheEntryResolver = null;
     this._cacheDeferredResultScalar = -1;
 
-    this.log.trace("Uninitialized.");
-    this.log.removeAppender(this._appender);
-    this.log = null;
+    if (this.log) {
+      this.log.trace("Uninitialized.");
+      this.log.removeAppender(this._appender);
+      this.log = null;
+    }
+
     this._appender = null;
     this._cacheDeferred = null;
   },
