@@ -11,6 +11,8 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/MediaSession.h"
+#include "mozilla/dom/PositionStateEvent.h"
 
 // avoid redefined macro in unified build
 #undef LOG
@@ -67,6 +69,9 @@ MediaController::MediaController(uint64_t aBrowsingContextId)
   mSupportedActionsChangedListener = SupportedActionsChangedEvent().Connect(
       AbstractThread::MainThread(), this,
       &MediaController::HandleSupportedMediaSessionActionsChanged);
+  mPositionStateChangedListener = PositionChangedEvent().Connect(
+      AbstractThread::MainThread(), this,
+      &MediaController::HandlePositionStateChanged);
 }
 
 MediaController::~MediaController() {
@@ -154,6 +159,7 @@ void MediaController::Shutdown() {
   Deactivate();
   mShutdown = true;
   mSupportedActionsChangedListener.DisconnectIfExists();
+  mPositionStateChangedListener.DisconnectIfExists();
 }
 
 void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
@@ -368,6 +374,33 @@ void MediaController::HandleSupportedMediaSessionActionsChanged(
       this, u"supportedkeyschange"_ns, CanBubble::eYes);
   asyncDispatcher->PostDOMEvent();
   MediaController_Binding::ClearCachedSupportedKeysValue(this);
+}
+
+void MediaController::HandlePositionStateChanged(const PositionState& aState) {
+  PositionStateEventInit init;
+  init.mDuration = aState.mDuration;
+  init.mPlaybackRate = aState.mPlaybackRate;
+  init.mPosition = aState.mLastReportedPlaybackPosition;
+  RefPtr<PositionStateEvent> event = PositionStateEvent::Constructor(
+      this, u"positionstatechange"_ns, init);
+  DispatchAsyncEvent(event);
+}
+
+void MediaController::DispatchAsyncEvent(const nsAString& aName) {
+  LOG("Dispatch event %s", NS_ConvertUTF16toUTF8(aName).get());
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(this, aName, CanBubble::eYes);
+  asyncDispatcher->PostDOMEvent();
+}
+
+void MediaController::DispatchAsyncEvent(Event* aEvent) {
+  MOZ_ASSERT(aEvent);
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+  LOG("Dispatch event %s", NS_ConvertUTF16toUTF8(eventType).get());
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(this, aEvent);
+  asyncDispatcher->PostDOMEvent();
 }
 
 CopyableTArray<MediaControlKey> MediaController::GetSupportedMediaKeys() const {

@@ -28,6 +28,7 @@ interface MediaController : EventTarget {
   [Frozen, Cached, Pure]
   readonly attribute sequence<MediaControlKey> supportedKeys;
 
+  attribute EventHandler onpositionstatechange;
   attribute EventHandler onsupportedkeyschange;
 
   // TODO : expose other media controller methods to webidl in order to support

@@ -12,6 +12,7 @@
 #include "MediaStatusManager.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MediaControllerBinding.h"
+#include "mozilla/dom/MediaSession.h"
 #include "mozilla/LinkedList.h"
 #include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
@@ -85,6 +86,7 @@ class MediaController final : public DOMEventTargetHelper,
                        JS::Handle<JSObject*> aGivenProto) override;
   void GetSupportedKeys(nsTArray<MediaControlKey>& aRetVal) const;
   IMPL_EVENT_HANDLER(supportedkeyschange);
+  IMPL_EVENT_HANDLER(positionstatechange);
 
   // IMediaController's methods
   void Focus() override;
@@ -140,6 +142,8 @@ class MediaController final : public DOMEventTargetHelper,
   void HandleSupportedMediaSessionActionsChanged(
       const nsTArray<MediaSessionAction>& aSupportedAction);
 
+  void HandlePositionStateChanged(const PositionState& aState);
+
   // This would register controller to the media control service that takes a
   // responsibility to manage all active controllers.
   void Activate();
@@ -155,6 +159,9 @@ class MediaController final : public DOMEventTargetHelper,
 
   bool IsMediaBeingUsedInPIPModeOrFullScreen() const;
 
+  void DispatchAsyncEvent(const nsAString& aName);
+  void DispatchAsyncEvent(Event* aEvent);
+
   bool mIsActive = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;
@@ -164,6 +171,8 @@ class MediaController final : public DOMEventTargetHelper,
   // the media keys, then determine the supported media keys.
   MediaEventListener mSupportedActionsChangedListener;
   MediaEventProducer<nsTArray<MediaControlKey>> mSupportedKeysChangedEvent;
+
+  MediaEventListener mPositionStateChangedListener;
 
   MediaEventProducer<bool> mFullScreenChangedEvent;
   MediaEventProducer<bool> mPictureInPictureModeChangedEvent;
