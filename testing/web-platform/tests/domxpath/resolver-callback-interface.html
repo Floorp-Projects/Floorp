@@ -77,6 +77,22 @@ test(() => {
 }, "object resolver");
 
 test(() => {
+  let thisValue, prefixArg;
+  const resolver = {
+    lookupNamespaceURI(prefix) {
+      thisValue = this;
+      prefixArg = prefix;
+      return "";
+    },
+  };
+
+  document.evaluate("/foo:bar", document.documentElement, resolver);
+
+  assert_equals(thisValue, resolver);
+  assert_equals(prefixArg, "foo");
+}, "object resolver: this value and `prefix` argument");
+
+test(() => {
   let resolverCalls = 0;
   const lookupNamespaceURI = () => {
     resolverCalls++;
