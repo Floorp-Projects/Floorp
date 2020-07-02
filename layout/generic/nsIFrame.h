@@ -3734,8 +3734,8 @@ class nsIFrame : public nsQueryFrame {
 
   // given a frame five me the first/last leaf available
   // XXX Robert O'Callahan wants to move these elsewhere
-  static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
-  static void GetFirstLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
+  static void GetLastLeaf(nsIFrame** aFrame);
+  static void GetFirstLeaf(nsIFrame** aFrame);
 
   static nsresult GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                                  nsPeekOffsetStruct* aPos,
