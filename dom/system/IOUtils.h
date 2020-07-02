@@ -7,7 +7,16 @@
 #ifndef mozilla_dom_IOUtils__
 #define mozilla_dom_IOUtils__
 
-#include <prio.h>
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/DataMutex.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/IOUtilsBinding.h"
+#include "mozilla/dom/TypedArray.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/MozPromise.h"
+#include "nspr/prio.h"
+#include "nsIAsyncShutdown.h"
+#include "nsISerialEventTarget.h"
 
 namespace mozilla {
 
@@ -30,6 +39,81 @@ class PR_CloseDelete {
   void operator()(PRFileDesc* aPtr) const { PR_Close(aPtr); }
 };
 
+namespace dom {
+
+class IOUtils final {
+ public:
+  static already_AddRefed<Promise> Read(GlobalObject& aGlobal,
+                                        const nsAString& aPath,
+                                        const Optional<uint32_t>& aMaxBytes);
+
+  static already_AddRefed<Promise> WriteAtomic(
+      GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
+      const WriteAtomicOptions& aOptions);
+
+ private:
+  ~IOUtils() = default;
+
+  friend class IOUtilsShutdownBlocker;
+
+  static StaticDataMutex<StaticRefPtr<nsISerialEventTarget>>
+      sBackgroundEventTarget;
+  static StaticRefPtr<nsIAsyncShutdownClient> sBarrier;
+  static Atomic<bool> sShutdownStarted;
+
+  static already_AddRefed<nsIAsyncShutdownClient> GetShutdownBarrier();
+
+  static already_AddRefed<nsISerialEventTarget> GetBackgroundEventTarget();
+
+  static void SetShutdownHooks();
+
+  static already_AddRefed<Promise> CreateJSPromise(GlobalObject& aGlobal);
+
+  /**
+   * Opens an existing file at |path|.
+   *
+   * @param path  The location of the file as a unix-style UTF-8 path string.
+   * @param flags PRIO flags, excluding |PR_CREATE| and |PR_EXCL|.
+   */
+  static UniquePtr<PRFileDesc, PR_CloseDelete> OpenExistingSync(
+      const char* aPath, int32_t aFlags);
+
+  /**
+   * Creates a new file at |path|.
+   *
+   * @param aPath  The location of the file as a unix-style UTF-8 path string.
+   * @param aFlags PRIO flags to be used in addition to |PR_CREATE| and
+   *               |PR_EXCL|.
+   * @param aMode  Optional file mode. Defaults to 0666 to allow the system
+   *               umask to compute the best mode for the new file.
+   */
+  static UniquePtr<PRFileDesc, PR_CloseDelete> CreateFileSync(
+      const char* aPath, int32_t aFlags, int32_t aMode = 0666);
+
+  static nsresult ReadSync(PRFileDesc* aFd, const uint32_t aBufSize,
+                           nsTArray<uint8_t>& aResult);
+
+  static nsresult WriteSync(PRFileDesc* aFd, const nsTArray<uint8_t>& aBytes,
+                            uint32_t& aResult);
+
+  using IOReadMozPromise =
+      mozilla::MozPromise<nsTArray<uint8_t>, const nsCString,
+                          /* IsExclusive */ true>;
+
+  using IOWriteMozPromise =
+      mozilla::MozPromise<uint32_t, const nsCString, /* IsExclusive */ true>;
+};
+
+class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIASYNCSHUTDOWNBLOCKER
+
+ private:
+  virtual ~IOUtilsShutdownBlocker() = default;
+};
+
+}  // namespace dom
 }  // namespace mozilla
 
 #endif
