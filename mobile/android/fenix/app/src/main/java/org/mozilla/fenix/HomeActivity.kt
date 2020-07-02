@@ -474,6 +474,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             AddSearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromEditCustomSearchEngineFragment ->
             EditCustomSearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromAddonDetailsFragment ->
+            EditCustomSearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
     }
 
     private fun load(

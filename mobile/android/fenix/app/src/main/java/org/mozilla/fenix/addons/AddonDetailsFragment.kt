@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.addons
 
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -19,6 +18,8 @@ import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.showInformationDialog
 import mozilla.components.feature.addons.ui.translatedName
 import mozilla.components.feature.addons.update.DefaultAddonUpdater.UpdateAttemptStorage
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.showToolbar
 
@@ -38,7 +39,11 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details), AddonDe
     }
 
     override fun openWebsite(addonSiteUrl: Uri) {
-        startActivity(Intent(Intent.ACTION_VIEW, addonSiteUrl))
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = addonSiteUrl.toString(),
+            newTab = true,
+            from = BrowserDirection.FromAddonDetailsFragment
+        )
     }
 
     override fun showUpdaterDialog(addon: Addon) {

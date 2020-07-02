@@ -5,10 +5,14 @@
 package org.mozilla.fenix.addons
 
 import android.net.Uri
+import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.URLSpan
 import android.view.View
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
+import androidx.core.text.getSpans
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_add_on_details.*
 import mozilla.components.feature.addons.Addon
@@ -102,8 +106,31 @@ class AddonDetailsView(
         val parsedText = detailsText.replace("\n", "<br/>")
         val text = HtmlCompat.fromHtml(parsedText, HtmlCompat.FROM_HTML_MODE_COMPACT)
 
-        details.text = text
+        val spannableStringBuilder = SpannableStringBuilder(text)
+        val links = spannableStringBuilder.getSpans<URLSpan>()
+        for (link in links) {
+            addActionToLinks(spannableStringBuilder, link)
+        }
+        details.text = spannableStringBuilder
         details.movementMethod = LinkMovementMethod.getInstance()
+    }
+
+    private fun addActionToLinks(
+        spannableStringBuilder: SpannableStringBuilder,
+        link: URLSpan
+    ) {
+        val start = spannableStringBuilder.getSpanStart(link)
+        val end = spannableStringBuilder.getSpanEnd(link)
+        val flags = spannableStringBuilder.getSpanFlags(link)
+        val clickable: ClickableSpan = object : ClickableSpan() {
+            override fun onClick(view: View) {
+                view.setOnClickListener {
+                    interactor.openWebsite(link.url.toUri())
+                }
+            }
+        }
+        spannableStringBuilder.setSpan(clickable, start, end, flags)
+        spannableStringBuilder.removeSpan(link)
     }
 
     private fun formatDate(text: String): String {
