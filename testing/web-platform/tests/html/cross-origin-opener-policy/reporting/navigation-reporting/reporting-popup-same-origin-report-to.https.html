@@ -3,13 +3,15 @@
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <script src="/common/get-host-info.sub.js"></script>
-<script src="resources/common.js"></script>
-<script src="resources/reporting-common.js"></script>
+<script src="/common/utils.js"></script>
+<script src="../../resources/common.js"></script>
+<script src="../resources/dispatcher.js"></script>
+<script src="../resources/reporting-common.js"></script>
 
 <script>
 
 let tests = [
-  // popup origin, popup COOP, popup COEP, expected opener, expected reports
+  // popup origin, popup COOP, popup COEP, popup COOP report only, popup COEP report only, expected reports
 
   // Open a popup on a same-origin page, with a compatible COOP.
   // This is a sanity check that no report are produced.
@@ -17,7 +19,8 @@ let tests = [
     SAME_ORIGIN,
     `same-origin; report-to="${popupReportEndpoint.name}"`,
     "",
-    true,
+    "",
+    "",
     []
   ],
   // Open a cross-origin popup with a same-origin COOP. Produces two
@@ -29,7 +32,8 @@ let tests = [
     CROSS_ORIGIN,
     `same-origin; report-to="${popupReportEndpoint.name}"`,
     "",
-    false,
+    "",
+    "",
     [
       {
         "endpoint": reportEndpoint,
@@ -38,7 +42,7 @@ let tests = [
             "disposition": "enforce",
             "document-uri": `${location.href}`,
             "effective-policy": "same-origin",
-            "navigation-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/, // initial navigation URL (equal to the next document url in that case)
+            "navigation-uri": /uuid=EXECUTOR_UUID$/, // initial navigation URL (equal to the next document url in that case)
             "violation-type": "navigation-from-document"
           },
           "url": `${location.href}`,
@@ -50,12 +54,12 @@ let tests = [
         "report": {
           "body": {
             "disposition": "enforce",
-            "document-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+            "document-uri": /uuid=EXECUTOR_UUID$/,
             "effective-policy": "same-origin",
             "navigation-uri": '', // referrer (empty due to the Referrer Policy)
             "violation-type": "navigation-to-document"
           },
-          "url": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+          "url": /uuid=EXECUTOR_UUID$/,
           "type": "coop"
         }
       }
@@ -68,7 +72,8 @@ let tests = [
     SAME_ORIGIN,
     `unsafe-none; report-to="${popupReportEndpoint.name}"`,
     "",
-    false,
+    "",
+    "",
     [
       {
         "endpoint": reportEndpoint,
@@ -77,7 +82,7 @@ let tests = [
             "disposition": "enforce",
             "document-uri": `${location.href}`,
             "effective-policy": "same-origin",
-            "navigation-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+            "navigation-uri": /uuid=EXECUTOR_UUID$/,
             "violation-type": "navigation-from-document"
           },
           "url": `${location.href}`,
@@ -89,12 +94,12 @@ let tests = [
         "report": {
           "body": {
             "disposition": "enforce",
-            "document-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+            "document-uri": /uuid=EXECUTOR_UUID$/,
             "effective-policy": "unsafe-none",
             "navigation-uri": `${location.href}`,
             "violation-type": "navigation-to-document"
           },
-          "url": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+          "url": /uuid=EXECUTOR_UUID$/,
           "type": "coop"
         }
       }
@@ -108,7 +113,8 @@ let tests = [
     SAME_ORIGIN,
     `same-origin; report-to="${popupReportEndpoint.name}"`,
     "require-corp",
-    false,
+    "",
+    "",
     [
       {
         "endpoint": reportEndpoint,
@@ -117,7 +123,7 @@ let tests = [
             "disposition": "enforce",
             "document-uri": `${location.href}`,
             "effective-policy": "same-origin",
-            "navigation-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/, // Next document URL
+            "navigation-uri": /uuid=EXECUTOR_UUID$/, // Next document URL
             "violation-type": "navigation-from-document"
           },
           "url": `${location.href}`,
@@ -129,12 +135,12 @@ let tests = [
         "report": {
           "body": {
             "disposition": "enforce",
-            "document-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+            "document-uri": /uuid=EXECUTOR_UUID$/,
             "effective-policy": "same-origin-plus-coep",
             "navigation-uri": `${location.href}`, // Previous document URL
             "violation-type": "navigation-to-document"
           },
-          "url": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+          "url": /uuid=EXECUTOR_UUID$/,
           "type": "coop"
         }
       }
@@ -148,7 +154,8 @@ let tests = [
     CROSS_ORIGIN,
     `unsafe-none; report-to="${popupReportEndpoint.name}"`,
     "",
-    false,
+    "",
+    "",
     [
       {
         "endpoint": reportEndpoint,
@@ -157,7 +164,7 @@ let tests = [
             "disposition": "enforce",
             "document-uri": `${location.href}`,
             "effective-policy": "same-origin",
-            "navigation-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/, // initial navigation URL
+            "navigation-uri": /uuid=EXECUTOR_UUID$/, // initial navigation URL
             "violation-type": "navigation-from-document"
           },
           "url": `${location.href}`,
@@ -169,12 +176,12 @@ let tests = [
         "report": {
           "body": {
             "disposition": "enforce",
-            "document-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+            "document-uri": /uuid=EXECUTOR_UUID$/,
             "effective-policy": "unsafe-none",
             "navigation-uri": '', // referrer, as per the no-referrer policy.
             "violation-type": "navigation-to-document"
           },
-          "url": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+          "url": /uuid=EXECUTOR_UUID$/,
           "type": "coop"
         }
       }
@@ -188,7 +195,8 @@ let tests = [
     SAME_ORIGIN,
     "unsafe-none",
     "",
-    false,
+    "",
+    "",
     [
       {
         "endpoint": reportEndpoint,
@@ -197,7 +205,7 @@ let tests = [
             "disposition": "enforce",
             "document-uri": `${location.href}`,
             "effective-policy": "same-origin",
-            "navigation-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+            "navigation-uri": /uuid=EXECUTOR_UUID$/,
             "violation-type": "navigation-from-document"
           },
           "url": `${location.href}`,
@@ -208,6 +216,6 @@ let tests = [
   ]
 ];
 
-runCoopReportingTest(document.title, tests);
+runNavigationReportingTests(document.title, tests);
 
 </script>

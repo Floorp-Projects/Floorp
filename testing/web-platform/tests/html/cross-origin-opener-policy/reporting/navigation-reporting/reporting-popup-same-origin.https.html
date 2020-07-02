@@ -3,13 +3,15 @@
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <script src="/common/get-host-info.sub.js"></script>
-<script src="resources/common.js"></script>
-<script src="resources/reporting-common.js"></script>
+<script src="/common/utils.js"></script>
+<script src="../../resources/common.js"></script>
+<script src="../resources/dispatcher.js"></script>
+<script src="../resources/reporting-common.js"></script>
 
 <script>
 
 let tests = [
-  // popup origin, popup COOP, popup COEP, expected opener, expected reports
+  // popup origin, popup COOP, popup COEP, popup COOP report only, popup COEP report only, expected reports
 
   // Open a cross-origin popup with a same-origin COOP and no COEP. COOP
   // switches the browsing context group and hence produces one report.
@@ -19,19 +21,20 @@ let tests = [
     CROSS_ORIGIN,
     `same-origin; report-to="${popupReportEndpoint.name}"`,
     "",
-    false,
+    "",
+    "",
     [
       {
         "endpoint": popupReportEndpoint,
         "report": {
           "body": {
             "disposition": "enforce",
-            "document-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+            "document-uri": /uuid=EXECUTOR_UUID$/,
             "effective-policy": "same-origin",
             "navigation-uri": `${location.href}`, // referrer
             "violation-type": "navigation-to-document"
           },
-          "url": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+          "url": /uuid=EXECUTOR_UUID$/,
           "type": "coop"
         }
       }
@@ -45,19 +48,20 @@ let tests = [
     SAME_ORIGIN,
     `unsafe-none; report-to="${popupReportEndpoint.name}"`,
     "",
-    false,
+    "",
+    "",
     [
       {
         "endpoint": popupReportEndpoint,
         "report": {
           "body": {
             "disposition": "enforce",
-            "document-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+            "document-uri": /uuid=EXECUTOR_UUID$/,
             "effective-policy": "unsafe-none",
             "navigation-uri": `${location.href}`,
             "violation-type": "navigation-to-document"
           },
-          "url": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+          "url": /uuid=EXECUTOR_UUID$/,
           "type": "coop"
         }
       }
@@ -71,19 +75,20 @@ let tests = [
     CROSS_ORIGIN,
     `unsafe-none; report-to="${popupReportEndpoint.name}"`,
     "",
-    false,
+    "",
+    "",
     [
       {
         "endpoint": popupReportEndpoint,
         "report": {
           "body": {
             "disposition": "enforce",
-            "document-uri": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+            "document-uri": /uuid=EXECUTOR_UUID$/,
             "effective-policy": "unsafe-none",
             "navigation-uri": `${location.href}`, // referrer
             "violation-type": "navigation-to-document"
           },
-          "url": /coop-coep.py?.*channel=CHANNEL_NAME$/,
+          "url": /uuid=EXECUTOR_UUID$/,
           "type": "coop"
         }
       }
@@ -91,6 +96,6 @@ let tests = [
   ]
 ];
 
-runCoopReportingTest(document.title, tests);
+runNavigationReportingTests(document.title, tests);
 
 </script>
