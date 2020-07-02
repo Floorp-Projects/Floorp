@@ -450,7 +450,15 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   bool ignoreCache =
       options.ignoreCache || !isSystem || scheme.EqualsLiteral("blob");
 
-  StartupCache* cache = ignoreCache ? nullptr : StartupCache::GetSingleton();
+  // Since we are intending to cache these buffers in the script preloader
+  // already, caching them in the StartupCache tends to be redundant. This
+  // ought to be addressed, but as in bug 1627075 we extended the
+  // StartupCache to be multi-process, we just didn't want to propagate
+  // this problem into yet more processes, so we pretend the StartupCache
+  // doesn't exist if we're not the parent process.
+  StartupCache* cache = (ignoreCache || !XRE_IsParentProcess())
+                            ? nullptr
+                            : StartupCache::GetSingleton();
 
   nsAutoCString cachePath;
   SubscriptCachePath(cx, uri, targetObj, cachePath);
