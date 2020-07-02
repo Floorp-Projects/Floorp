@@ -118,10 +118,20 @@ class AccessibleOrProxy {
     return AsAccessible()->Role();
   }
 
+  int32_t IndexInParent() const;
+
   AccessibleOrProxy Parent() const;
 
   AccessibleOrProxy ChildAtPoint(int32_t aX, int32_t aY,
                                  Accessible::EWhichChildAtPoint aWhichChild);
+
+  bool operator!=(const AccessibleOrProxy& aOther) const {
+    return mBits != aOther.mBits;
+  }
+
+  bool operator==(const AccessibleOrProxy& aOther) const {
+    return mBits == aOther.mBits;
+  }
 
   // XXX these are implementation details that ideally would not be exposed.
   uintptr_t Bits() const { return mBits; }
