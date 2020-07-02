@@ -350,6 +350,11 @@ class WeakMap
 
   bool markEntries(GCMarker* marker) override;
 
+ protected:
+  // Find sweep group edges for delegates, if the key type has delegates. (If
+  // not, the optimizer should make this a nop.)
+  bool findSweepGroupEdges() override;
+
   /**
    * If a wrapper is used as a key in a weakmap, the garbage collector should
    * keep that object around longer than it otherwise would. We want to avoid
@@ -365,11 +370,6 @@ class WeakMap
   }
   void exposeGCThingToActiveJS(JSObject* obj) const {
     JS::ExposeObjectToActiveJS(obj);
-  }
-
-  bool findSweepGroupEdges() override {
-    // This is overridden by ObjectValueWeakMap and DebuggerWeakMap.
-    return true;
   }
 
   void sweep() override;
@@ -396,8 +396,6 @@ class WeakMap
 class ObjectValueWeakMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>> {
  public:
   ObjectValueWeakMap(JSContext* cx, JSObject* obj) : WeakMap(cx, obj) {}
-
-  bool findSweepGroupEdges() override;
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
