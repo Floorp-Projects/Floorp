@@ -33,7 +33,7 @@ function createDOMMutationBreakpoint(nodeFront, mutationType) {
   assert(typeof mutationType === "string");
 
   return async function(dispatch) {
-    const walker = nodeFront.getParent();
+    const walker = nodeFront.walkerFront;
 
     dispatch({
       type: "ADD_DOM_MUTATION_BREAKPOINT",
@@ -53,7 +53,7 @@ function deleteDOMMutationBreakpoint(nodeFront, mutationType) {
   assert(typeof mutationType === "string");
 
   return async function(dispatch) {
-    const walker = nodeFront.getParent();
+    const walker = nodeFront.walkerFront;
     await walker.setMutationBreakpoints(nodeFront, {
       [mutationType]: false,
     });
