@@ -138,7 +138,6 @@ IPCResult HttpBackgroundChannelChild::RecvOnAfterLastPart(
   LOG(("HttpBackgroundChannelChild::RecvOnAfterLastPart [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
-  MOZ_ASSERT(mChannelChild, "no channel child in RecvOnAfterLastPart");
   if (NS_WARN_IF(!mChannelChild)) {
     return IPC_OK();
   }
@@ -152,7 +151,6 @@ IPCResult HttpBackgroundChannelChild::RecvOnProgress(
   LOG(("HttpBackgroundChannelChild::RecvOnProgress [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
-  MOZ_ASSERT(mChannelChild, "no channel child in RecvOnProgress");
   if (NS_WARN_IF(!mChannelChild)) {
     return IPC_OK();
   }
@@ -165,7 +163,6 @@ IPCResult HttpBackgroundChannelChild::RecvOnStatus(const nsresult& aStatus) {
   LOG(("HttpBackgroundChannelChild::RecvOnStatus [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
-  MOZ_ASSERT(mChannelChild, "no channel child in RecvOnStatus");
   if (NS_WARN_IF(!mChannelChild)) {
     return IPC_OK();
   }
@@ -190,7 +187,6 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
   LOG(("HttpBackgroundChannelChild::RecvOnStartRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
-  MOZ_ASSERT(mChannelChild, "no channel child in RecvOnStartRequest");
   if (NS_WARN_IF(!mChannelChild)) {
     return IPC_OK();
   }
