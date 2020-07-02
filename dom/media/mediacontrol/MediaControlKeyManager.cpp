@@ -173,5 +173,14 @@ void MediaControlKeyManager::SetEnablePictureInPictureMode(bool aIsEnabled) {
   }
 }
 
+void MediaControlKeyManager::SetPositionState(const PositionState& aState) {
+  LOG_INFO("Set PositionState, duration=%f, playbackRate=%f, position=%f",
+           aState.mDuration, aState.mPlaybackRate,
+           aState.mLastReportedPlaybackPosition);
+  if (mEventSource && mEventSource->IsOpened()) {
+    mEventSource->SetPositionState(aState);
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
