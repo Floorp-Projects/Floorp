@@ -3,4 +3,4 @@ try {
   toSource = (function() {
   })
 } catch (foo) {}
-shortestPaths(["$4"], {start: this, maxNumPaths: 5})
+shortestPaths(this, ["$4"], 5)
