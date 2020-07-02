@@ -217,6 +217,24 @@ var getNodeFrontInFrame = async function(selector, frameSelector, inspector) {
 };
 
 /**
+ * Get the NodeFront for the document node inside a given iframe.
+ *
+ * @param {String|NodeFront} frameSelector
+ *        A selector that matches the iframe the document node is in
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox
+ * @return {Promise} Resolves the node front when the inspector is updated with the new
+ *         node.
+ */
+var getFrameDocument = async function(frameSelector, inspector) {
+  const iframe = await getNodeFront(frameSelector, inspector);
+  const { nodes } = await inspector.walker.children(iframe);
+
+  // Find the document node in the children of the iframe element.
+  return nodes.filter(node => node.displayName === "#document")[0];
+};
+
+/**
  * Get the NodeFront for the shadowRoot of a shadow host.
  *
  * @param {String|NodeFront} hostSelector
