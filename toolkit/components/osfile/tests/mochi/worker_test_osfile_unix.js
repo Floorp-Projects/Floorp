@@ -2,8 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-env mozilla/chrome-worker, node */
+/* global finish, log */
 
-importScripts("worker_test_osfile_shared.js");
+importScripts("chrome://mochikit/content/tests/SimpleTest/WorkerSimpleTest.js");
 
 self.onmessage = function(msg) {
   log("received message " + JSON.stringify(msg.data));
