@@ -20,7 +20,9 @@
     <dimen name="tab_corner_radius">8dp</dimen>
     <dimen name="preference_icon_drawable_size">24dp</dimen>
     <dimen name="search_bar_search_engine_icon_padding">12dp</dimen>
+    <dimen name="search_bar_search_icon_margin">28dp</dimen>
     <dimen name="search_engine_radio_button_height">48dp</dimen>
+    <dimen name="search_engine_engine_icon_height">24dp</dimen>
     <dimen name="radio_button_drawable_padding">32dp</dimen>
     <dimen name="radio_button_padding_horizontal">16dp</dimen>
     <dimen name="radio_button_padding_vertical">12dp</dimen>
@@ -35,6 +37,7 @@
     <dimen name="component_collection_creation_list_margin">16dp</dimen>
     <dimen name="exceptions_description_margin">12dp</dimen>
     <dimen name="preference_seek_bar_padding">24dp</dimen>
+    <dimen name="custom_checkbox_alignment_margin">68dp</dimen>
 
     <dimen name="context_menu_height">48dp</dimen>
     <dimen name="context_menu_x_offset">8dp</dimen>

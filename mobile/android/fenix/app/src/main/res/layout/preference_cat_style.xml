@@ -7,7 +7,7 @@
     style="?android:attr/listViewStyle"
     android:layout_marginTop="16dp"
     android:textAlignment="viewStart"
-    android:layout_marginStart="16dp"
+    android:layout_marginStart="72dp"
     android:gravity="start|center_vertical"
     app:fontFamily="@font/metropolis_semibold"
     android:id="@android:id/title" />

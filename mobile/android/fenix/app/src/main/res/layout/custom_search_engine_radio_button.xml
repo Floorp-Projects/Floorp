@@ -13,12 +13,12 @@
     android:focusable="true">
     <RadioButton
         android:id="@+id/radio_button"
-        android:layout_width="@dimen/search_engine_radio_button_height"
-        android:layout_height="@dimen/search_engine_radio_button_height"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:importantForAccessibility="no"
         android:textAlignment="textStart"
         android:textAppearance="?android:attr/textAppearanceListItem"
-        android:layout_marginStart="@dimen/radio_button_padding_horizontal"
+        android:layout_marginStart="@dimen/search_bar_search_engine_icon_padding"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
     <TextView
@@ -26,6 +26,7 @@
         android:textColor="?primaryText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/search_bar_search_icon_margin"
         android:layout_marginEnd="@dimen/radio_button_padding_horizontal"
         android:text="@string/search_add_custom_engine_label_other"
         app:layout_constraintStart_toEndOf="@id/radio_button"
