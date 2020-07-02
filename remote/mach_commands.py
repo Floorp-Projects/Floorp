@@ -555,10 +555,9 @@ class PuppeteerTest(MachCommandBase):
         from mozversioncontrol import get_repository_object
         repo = get_repository_object(self.topsrcdir)
         puppeteer_dir = os.path.join("remote", "test", "puppeteer")
-        src_dir = os.path.join(puppeteer_dir, "src")
         changed_files = False
         for f in repo.get_changed_files():
-            if f.startswith(src_dir):
+            if f.startswith(puppeteer_dir) and f.endswith(".ts"):
                 changed_files = True
                 break
 
