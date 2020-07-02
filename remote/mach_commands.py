@@ -336,9 +336,6 @@ class PuppeteerRunner(MozbuildObject):
         `binary`:
           Path for the browser binary to use.  Defaults to the local
           build.
-        `jobs`:
-          Number of tests to run in parallel.  Defaults to not
-          parallelise, e.g. `-j1`.
         `headless`:
           Boolean to indicate whether to activate Firefox' headless mode.
         `extra_prefs`:
@@ -379,8 +376,6 @@ class PuppeteerRunner(MozbuildObject):
             env["PUPPETEER_PRODUCT"] = "firefox"
         command = ["run", "unit", "--"] + mocha_options
 
-        if params.get("jobs"):
-            env["PPTR_PARALLEL_TESTS"] = str(params["jobs"])
         env["HEADLESS"] = str(params.get("headless", False))
 
         prefs = {}
@@ -452,11 +447,6 @@ def create_parser_puppeteer():
                    dest="extra_options",
                    metavar="<option>=<value>",
                    help="Defines additional options for `puppeteer.launch`.")
-    p.add_argument("-j",
-                   dest="jobs",
-                   type=int,
-                   metavar="<N>",
-                   help="Optionally run tests in parallel.")
     p.add_argument("-v",
                    dest="verbosity",
                    action="count",
@@ -489,7 +479,7 @@ class PuppeteerTest(MachCommandBase):
              description="Run Puppeteer unit tests.",
              parser=create_parser_puppeteer)
     def puppeteer_test(self, binary=None, enable_fission=False, headless=False,
-                       extra_prefs=None, extra_options=None, jobs=1, verbosity=0,
+                       extra_prefs=None, extra_options=None, verbosity=0,
                        tests=None, product="firefox", write_results=None,
                        subset=False, **kwargs):
 
@@ -545,7 +535,6 @@ class PuppeteerTest(MachCommandBase):
                   "headless": headless,
                   "extra_prefs": prefs,
                   "product": product,
-                  "jobs": jobs,
                   "extra_launcher_options": options,
                   "write_results": write_results,
                   "subset": subset}
