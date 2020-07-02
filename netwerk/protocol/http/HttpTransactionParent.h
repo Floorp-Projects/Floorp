@@ -52,7 +52,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const nsCString& aSecurityInfoSerialization,
       const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
       const int32_t& aProxyConnectResponseCode,
-      nsTArray<uint8_t>&& aDataForSniffer);
+      nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed);
   mozilla::ipc::IPCResult RecvOnTransportStatus(const nsresult& aStatus,
                                                 const int64_t& aProgress,
                                                 const int64_t& aProgressMax);
@@ -92,7 +92,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                         const bool& aProxyConnectFailed,
                         const TimingStructArgs& aTimings,
                         const int32_t& aProxyConnectResponseCode,
-                        nsTArray<uint8_t>&& aDataForSniffer);
+                        nsTArray<uint8_t>&& aDataForSniffer,
+                        const Maybe<nsCString>& aAltSvcUsed);
   void DoOnTransportStatus(const nsresult& aStatus, const int64_t& aProgress,
                            const int64_t& aProgressMax);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
