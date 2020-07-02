@@ -240,6 +240,16 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   return self;
 }
 
+- (id<MOXTextMarkerSupport>)moxTextMarkerDelegate {
+  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+
+  if (mGeckoAccessible.IsAccessible()) {
+    return [MOXTextMarkerDelegate getOrCreateForDoc:mGeckoAccessible.AsAccessible()->Document()];
+  }
+
+  return [MOXTextMarkerDelegate getOrCreateForDoc:mGeckoAccessible.AsProxy()->Document()];
+}
+
 - (id)moxHitTest:(NSPoint)point {
   MOZ_ASSERT(!mGeckoAccessible.IsNull());
 

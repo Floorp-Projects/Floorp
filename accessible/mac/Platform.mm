@@ -6,6 +6,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "MOXTextMarkerDelegate.h"
+
 #include "Platform.h"
 #include "ProxyAccessible.h"
 #include "AccessibleOrProxy.h"
@@ -63,6 +65,10 @@ void ProxyDestroyed(ProxyAccessible* aProxy) {
   [wrapper expire];
   [wrapper release];
   aProxy->SetWrapper(0);
+
+  if (aProxy->IsDoc()) {
+    [MOXTextMarkerDelegate destroyForDoc:aProxy];
+  }
 }
 
 void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
