@@ -123,7 +123,7 @@ async function testSteps() {
     );
   }
 
-  // Unknown file in sdb client directory
+  // Unknown file and unknown directory in sdb client directory
   {
     const database = getSimpleDatabase(principal);
 
@@ -137,6 +137,7 @@ async function testSteps() {
     await requestFinished(request);
 
     createUnknownFileIn(`${originRelativePath}/sdb`);
+    createUnknownDirectoryIn(`${originRelativePath}/sdb`);
   }
 
   // Unknown file and unknown directory in ls client directory
