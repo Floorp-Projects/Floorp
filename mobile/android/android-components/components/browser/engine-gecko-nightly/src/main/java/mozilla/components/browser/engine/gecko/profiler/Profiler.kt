@@ -46,7 +46,7 @@ class Profiler(
     /**
      * See [Profiler.addMarker].
      */
-    override fun addMarker(markerName: String, startTime: Double) {
+    override fun addMarker(markerName: String, startTime: Double?) {
         runtime.profilerController.addMarker(markerName, startTime)
     }
 

@@ -15,6 +15,9 @@ permalink: /changelog/
 * **service-sync-logins**
   * ⚠️ **This is a breaking change**: removed `isAutofillEnabled` lambda from `GeckoLoginStorageDelegate` because setting has been exposed through GV
 
+* **concept-engine**
+  * Adds `profiler` property with `isProfilerActive`, `getProfilerTime` and `addMarker` Firefox Profiler APIs. These will allow to add profiler markers.
+
 # 48.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v47.0.0...v48.0.0)
@@ -67,9 +70,6 @@ permalink: /changelog/
 * **feature-webnotifications**
   * `WebNotificationFeature` checks the site permissions first before showing a notification.
   * Notifications with a long text body are now expandable to show the full text.
-
-* **concept-engine**
-  * Adds `profiler` property with `isProfilerActive`, `getProfilerTime` and `addMarker` Firefox Profiler APIs. These will allow to add profiler markers.
 
 # 47.0.0
 
