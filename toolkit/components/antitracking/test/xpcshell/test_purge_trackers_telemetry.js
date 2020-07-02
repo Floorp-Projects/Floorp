@@ -95,9 +95,7 @@ add_task(async function() {
   );
 
   TelemetryTestUtils.assertHistogram(purgedHistogram, 0, 1);
-  TelemetryTestUtils.assertHistogram(notPurgedHistogram, 2, 1);
-  // Both https and http origins are counted here, even if only
-  // one has the permission.
+  TelemetryTestUtils.assertHistogram(notPurgedHistogram, 1, 1);
   TelemetryTestUtils.assertHistogram(remainingDaysHistogram, 4, 2);
   TelemetryTestUtils.assertHistogram(intervalHistogram, 0, 1);
 
@@ -135,8 +133,7 @@ add_task(async function() {
     "quota storage was deleted"
   );
 
-  // We purge both https and http origins always.
-  TelemetryTestUtils.assertHistogram(purgedHistogram, 2, 1);
+  TelemetryTestUtils.assertHistogram(purgedHistogram, 1, 1);
   Assert.equal(
     notPurgedHistogram.snapshot().sum,
     0,
@@ -144,5 +141,35 @@ add_task(async function() {
   );
   TelemetryTestUtils.assertHistogram(intervalHistogram, 0, 1);
 
+  UrlClassifierTestUtils.cleanupTestTrackers();
+});
+
+/**
+ * Test counting correctly across cookies batches
+ */
+add_task(async function() {
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  // Enforce deleting the same origin twice by adding two cookies and setting
+  // the max number of cookies per batch to 1.
+  SiteDataTestUtils.addToCookies(TRACKING_PAGE, "cookie1");
+  SiteDataTestUtils.addToCookies(TRACKING_PAGE, "cookie2");
+  Services.prefs.setIntPref("privacy.purge_trackers.max_purge_count", 1);
+
+  let purgedHistogram = TelemetryTestUtils.getAndClearHistogram(
+    "COOKIE_PURGING_ORIGINS_PURGED"
+  );
+
+  await PurgeTrackerService.purgeTrackingCookieJars();
+
+  // Cookie should have been removed.
+  await TestUtils.waitForCondition(
+    () => !SiteDataTestUtils.hasCookies(TRACKING_PAGE),
+    "cookie is removed after purge."
+  );
+
+  TelemetryTestUtils.assertHistogram(purgedHistogram, 1, 1);
+
+  Services.prefs.clearUserPref("privacy.purge_trackers.max_purge_count");
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
