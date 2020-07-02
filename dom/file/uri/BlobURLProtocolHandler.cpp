@@ -783,7 +783,6 @@ BlobURLProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   if (!channel) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  channel->Initialize();
   channel.forget(aResult);
   return NS_OK;
 }
