@@ -318,7 +318,7 @@
     function tmpl_moveTo(aID, aInvokerFunc, aWholeText, aCharIter) {
       this.offset = aCharIter.offset;
 
-      var checker = new caretMoveChecker(this.offset, aID);
+      var checker = new caretMoveChecker(this.offset, true, aID);
       this.__proto__ = new (aInvokerFunc)(aID, checker);
 
       this.finalCheck = function genericMoveTo_finalCheck() {
