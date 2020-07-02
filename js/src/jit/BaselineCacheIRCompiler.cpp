@@ -2086,7 +2086,7 @@ static void ResetEnteredCounts(ICFallbackStub* stub) {
 
 ICStub* js::jit::AttachBaselineCacheIRStub(
     JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
-    BaselineCacheIRStubKind stubKind, JSScript* outerScript,
+    BaselineCacheIRStubKind stubKind, JSScript* outerScript, ICScript* icScript,
     ICFallbackStub* stub, bool* attached) {
   // We shouldn't GC or report OOM (or any other exception) here.
   AutoAssertNoPendingException aanpe(cx);
@@ -2229,8 +2229,8 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
 
   size_t bytesNeeded = stubInfo->stubDataOffset() + stubInfo->stubDataSize();
 
-  ICStubSpace* stubSpace =
-      ICStubCompiler::StubSpaceForStub(stubInfo->makesGCCalls(), outerScript);
+  ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(
+      stubInfo->makesGCCalls(), outerScript, icScript);
   void* newStubMem = stubSpace->alloc(bytesNeeded);
   if (!newStubMem) {
     return nullptr;
