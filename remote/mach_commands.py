@@ -248,7 +248,7 @@ class MochaOutputHandler(object):
             # Also, mocha doesn't log test-start for skipped tests
             if status == "SKIP":
                 self.logger.test_start(test_name)
-                if status not in expected:
+                if self.expected and status not in expected:
                     self.unexpected_skips.add(test_name)
                 expected = ["SKIP"]
             known_intermittent = expected[1:]
