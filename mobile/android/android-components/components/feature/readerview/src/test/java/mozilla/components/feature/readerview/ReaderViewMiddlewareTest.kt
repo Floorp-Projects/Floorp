@@ -70,7 +70,7 @@ class ReaderViewMiddlewareTest {
     }
 
     @Test
-    fun `state is updated to trigger readerable check when new tab is selected`() {
+    fun `state is updated to reconnect and trigger readerable check when new tab is selected`() {
         val tab1 = createTab("https://www.mozilla.org", id = "test-tab1")
         val tab2 = createTab("https://www.firefox.com", id = "test-tab2",
             readerState = ReaderState(readerable = true)
@@ -79,16 +79,20 @@ class ReaderViewMiddlewareTest {
             initialState = BrowserState(tabs = listOf(tab1, tab2)),
             middleware = listOf(ReaderViewMiddleware())
         )
+        assertFalse(store.state.findTab(tab1.id)!!.readerState.connectRequired)
         assertFalse(store.state.findTab(tab1.id)!!.readerState.checkRequired)
         assertFalse(store.state.findTab(tab1.id)!!.readerState.readerable)
+        assertFalse(store.state.findTab(tab2.id)!!.readerState.connectRequired)
         assertFalse(store.state.findTab(tab2.id)!!.readerState.checkRequired)
         assertTrue(store.state.findTab(tab2.id)!!.readerState.readerable)
 
         store.dispatch(TabListAction.SelectTabAction(tab2.id)).joinBlocking()
         assertFalse(store.state.findTab(tab1.id)!!.readerState.readerable)
         assertFalse(store.state.findTab(tab1.id)!!.readerState.checkRequired)
+        assertFalse(store.state.findTab(tab1.id)!!.readerState.connectRequired)
         assertFalse(store.state.findTab(tab2.id)!!.readerState.readerable)
         assertTrue(store.state.findTab(tab2.id)!!.readerState.checkRequired)
+        assertTrue(store.state.findTab(tab2.id)!!.readerState.connectRequired)
     }
 
     @Test

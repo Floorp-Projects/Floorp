@@ -99,6 +99,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
     ) {
         when (action) {
             is TabListAction.SelectTabAction -> {
+                store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.tabId, true))
                 store.dispatch(ReaderAction.UpdateReaderableAction(action.tabId, false))
                 store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.tabId, true))
             }
