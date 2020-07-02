@@ -18,6 +18,7 @@ from taskgraph.util.attributes import keymatch
 from taskgraph.util.schema import (
     resolve_keyed_by,
     optionally_keyed_by,
+    Schema,
 )
 from taskgraph.util.treeherder import join_symbol, split_symbol
 
@@ -26,7 +27,6 @@ from voluptuous import (
     Extra,
     Optional,
     Required,
-    Schema,
 )
 
 source_test_description_schema = Schema({
