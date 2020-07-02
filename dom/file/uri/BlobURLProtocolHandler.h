@@ -59,8 +59,7 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
 
   static bool HasDataEntry(const nsACString& aUri);
 
-  static nsIPrincipal* GetDataEntryPrincipal(const nsACString& aUri,
-                                             bool aAlsoIfRevoked = false);
+  static nsIPrincipal* GetDataEntryPrincipal(const nsACString& aUri);
   static void Traverse(const nsACString& aUri,
                        nsCycleCollectionTraversalCallback& aCallback);
 
@@ -106,8 +105,7 @@ extern nsresult NS_GetBlobForBlobURI(nsIURI* aURI,
                                      mozilla::dom::BlobImpl** aBlob);
 
 extern nsresult NS_GetBlobForBlobURISpec(const nsACString& aSpec,
-                                         mozilla::dom::BlobImpl** aBlob,
-                                         bool aAlsoIfRevoked = false);
+                                         mozilla::dom::BlobImpl** aBlob);
 
 extern nsresult NS_GetSourceForMediaSourceURI(
     nsIURI* aURI, mozilla::dom::MediaSource** aSource);
