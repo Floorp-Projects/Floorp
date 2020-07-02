@@ -1,3 +1,8 @@
+
+const directory = "/html/cross-origin-opener-policy/reporting/resources";
+const executor_path = directory + "/executor.html?pipe=";
+const coep_header = '|header(Cross-Origin-Embedder-Policy,require-corp)';
+
 // Allows RegExps to be pretty printed when printing unmatched expected reports.
 Object.defineProperty(RegExp.prototype, "toJSON", {
   value: RegExp.prototype.toString
@@ -22,7 +27,7 @@ function isCoopOpenerBreakageReport(report) {
 
 async function pollReports(endpoint) {
   const res = await fetch(
-      `resources/report.py?endpoint=${endpoint.name}`,
+    `${directory}/report.py?endpoint=${endpoint.name}`,
       {cache: 'no-store'});
   if (res.status !== 200) {
     return;
@@ -88,57 +93,93 @@ function replaceFromRegexOrString(str, match, value) {
 }
 
 // Replace generated values in regexes and strings of an expected report:
-// CHANNEL_NAME: the channel name is generated from the test parameters.
-function replaceValuesInExpectedReport(expectedReport, channelName) {
+// EXECUTOR_UUID: the uuid generated with token().
+function replaceValuesInExpectedReport(expectedReport, executorUuid) {
   if (expectedReport.report.body !== undefined) {
     if (expectedReport.report.body["document-uri"] !== undefined) {
       expectedReport.report.body["document-uri"] = replaceFromRegexOrString(
-          expectedReport.report.body["document-uri"], "CHANNEL_NAME",
-          channelName);
+          expectedReport.report.body["document-uri"], "EXECUTOR_UUID",
+          executorUuid);
     }
     if (expectedReport.report.body["navigation-uri"] !== undefined) {
       expectedReport.report.body["navigation-uri"] = replaceFromRegexOrString(
-          expectedReport.report.body["navigation-uri"], "CHANNEL_NAME",
-          channelName);
+          expectedReport.report.body["navigation-uri"], "EXECUTOR_UUID",
+          executorUuid);
     }
   }
   if (expectedReport.report.url !== undefined) {
       expectedReport.report.url = replaceFromRegexOrString(
-          expectedReport.report.url, "CHANNEL_NAME", channelName);
+          expectedReport.report.url, "EXECUTOR_UUID", executorUuid);
   }
   return expectedReport;
 }
 
 // Run a test (such as coop_coep_test from ./common.js) then check that all
 // expected reports are present.
-async function reportingTest(testFunction, channelName, expectedReports) {
-  await new Promise( async resolve => {
-    testFunction(resolve);
-  });
+async function reportingTest(testFunction, executorToken, expectedReports) {
+  await new Promise(testFunction);
   expectedReports = Array.from(
       expectedReports,
-      report => replaceValuesInExpectedReport(report, channelName) );
+      report => replaceValuesInExpectedReport(report, executorToken) );
   await Promise.all(Array.from(expectedReports, checkForExpectedReport));
 }
 
-function coopCoepReportingTest(testName, host, coop, coep, hasOpener,
-    expectedReports){
-  const channelName = `${testName.replace(/[ ;"=]/g,"-")}_to_${host.name}_${coop.replace(/[ ;"=]/g,"-")}_${coep}`;
+function getReportEndpoints(host) {
+  result = "";
+  reportEndpoints.forEach(
+    reportEndpoint => {
+      let reportToJSON = {
+        'group': `${reportEndpoint.name}`,
+        'max_age': 3600,
+        'endpoints': [
+          {'url': `${host}/html/cross-origin-opener-policy/reporting/resources/report.py?endpoint=${reportEndpoint.name}`
+          },
+        ]
+      };
+      result += JSON.stringify(reportToJSON)
+                        .replace(/,/g, '\\,')
+                        .replace(/\(/g, '\\\(')
+                        .replace(/\)/g, '\\\)=')
+                + "\\,";
+    }
+  );
+  return result.slice(0, -2);
+}
+
+function navigationReportingTest(testName, host, coop, coep, coopRo, coepRo,
+    expectedReports ){
+  const executorToken = token();
+  const callbackToken = token();
   promise_test(async t => {
-    await reportingTest( (resolve) => {
-      coop_coep_test(t, host, coop, coep, channelName,
-          hasOpener, undefined /* openerDOMAccess */, resolve);
-    }, channelName, expectedReports);
-  }, `coop reporting test ${channelName}`);
+    await reportingTest( async resolve => {
+      const openee_url = host.origin + executor_path +
+      `|header(report-to,${encodeURIComponent(getReportEndpoints(host.origin))})` +
+      `|header(Cross-Origin-Opener-Policy,${encodeURIComponent(coop)})` +
+      `|header(Cross-Origin-Embedder-Policy,${encodeURIComponent(coep)})` +
+      `|header(Cross-Origin-Opener-Policy-Report-Only,${encodeURIComponent(coopRo)})` +
+      `|header(Cross-Origin-Embedder-Policy-Report-Only,${encodeURIComponent(coepRo)})`+
+      `&uuid=${executorToken}`;
+      const openee = window.open(openee_url);
+      t.add_cleanup(() => send(5, "window.close()"));
+
+      // 1. Make sure the new document is loaded.
+      send(executorToken, `
+        send("${callbackToken}", "Ready");
+      `);
+      let reply = await receive(callbackToken);
+      assert_equals(reply, "Ready");
+      resolve();
+    }, executorToken, expectedReports);
+  }, `coop reporting test ${testName} to ${host.name} with ${coop}, ${coep}, ${coopRo}, ${coepRo}`);
 }
 
 // Run an array of reporting tests then verify there's no reports that were not
 // expected.
 // Tests' elements contain: host, coop, coep, hasOpener, expectedReports.
 // See isObjectAsExpected for explanations regarding the matching behavior.
-function runCoopReportingTest(testName, tests){
+function runNavigationReportingTests(testName, tests){
   tests.forEach( test => {
-    coopCoepReportingTest(testName, ...test);
+    navigationReportingTest(testName, ...test);
   });
   verifyRemainingReports();
 }

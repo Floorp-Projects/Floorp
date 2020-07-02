@@ -7,7 +7,7 @@
 // It can also be used to receive reports.
 
 const dispatcher_path =
-    '/html/cross-origin-opener-policy/access-reporting/resources/dispatcher.py';
+    '/html/cross-origin-opener-policy/reporting/resources/dispatcher.py';
 const dispatcher_url = new URL(dispatcher_path, location.href).href;
 
 const send = function(uuid, message) {

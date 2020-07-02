@@ -1,5 +1,5 @@
 <title>
-  COOP reports are sent when the openee used COOP+COEP and then its opener
+  COOP reports are sent when the openee used COOP-RO+COEP and then its opener
   tries to access it.
 </title>
 <meta name=timeout content=long>
@@ -7,11 +7,11 @@
 <script src=/resources/testharnessreport.js></script>
 <script src=/common/get-host-info.sub.js></script>
 <script src="/common/utils.js"></script>
-<script src="./resources/dispatcher.js"></script>
-<script src="./resources/try-access.js"></script>
+<script src="../resources/dispatcher.js"></script>
+<script src="../resources/try-access.js"></script>
 <script>
 
-const directory = "/html/cross-origin-opener-policy/access-reporting";
+const directory = "/html/cross-origin-opener-policy/reporting";
 const executor_path = directory + "/resources/executor.html?pipe=";
 const cross_origin = get_host_info().HTTPS_REMOTE_ORIGIN;
 const coep_header = '|header(Cross-Origin-Embedder-Policy,require-corp)';
@@ -23,7 +23,7 @@ promise_test(async t => {
 
   const reportTo = reportToHeaders(report_token);
   const openee_url = cross_origin + executor_path +
-    reportTo.header + reportTo.coopSameOriginHeader + coep_header +
+    reportTo.header + reportTo.coopReportOnlySameOriginHeader + coep_header +
     `&uuid=${executor_token}`;
   const openee = window.open(openee_url);
   t.add_cleanup(() => send(executor_token, "window.close()"))
@@ -35,7 +35,7 @@ promise_test(async t => {
   let reply = await receive(callback_token);
   assert_equals(reply, "Ready");
 
-  // 2. Try to access the openee. This shouldn't work because of COOP+COEP.
+  // 2. Try to access the openee. A report is sent, because of COOP-RO+COEP.
   tryAccess(openee);
 
   // 3. Check a report is sent to the openee.
@@ -44,11 +44,11 @@ promise_test(async t => {
   assert_equals(report.type, "coop");
   assert_equals(report.url, openee_url.replace(/"/g, '%22'));
   assert_equals(report.body["violation-type"], "access-to-coop-page");
-  assert_equals(report.body["disposition"], "enforce");
+  assert_equals(report.body["disposition"], "reporting");
   assert_equals(report.body["effective-policy"], "same-origin-plus-coep");
   assert_equals(report.body["property"], "blur");
   assert_source_location_missing(report);
   // TODO(arthursonzogni): Add check for report > body > blocked-window-url
-}, "Opener accesses openee (COOP+COEP). Report to openee");
+}, "Opener accesses openee (COOP-RO+COEP). Report to openee");
 
 </script>
