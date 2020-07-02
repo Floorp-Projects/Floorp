@@ -51,6 +51,8 @@ const INACTIVE_ON_DOCTYPE_ITEMS = ALL_MENU_ITEMS.filter(
   item => !ACTIVE_ON_DOCTYPE_ITEMS.includes(item)
 );
 
+const INACTIVE_ON_DOCUMENT_ITEMS = INACTIVE_ON_DOCTYPE_ITEMS;
+
 const INACTIVE_ON_SHADOW_ROOT_ITEMS = ALL_MENU_ITEMS.filter(
   item => !ACTIVE_ON_SHADOW_ROOT_ITEMS.includes(item)
 );
@@ -245,6 +247,12 @@ const TEST_CASES = [
     selector: "#host",
     shadowRoot: true,
   },
+  {
+    desc: "Document node in iFrame",
+    disabled: INACTIVE_ON_DOCUMENT_ITEMS,
+    selector: "iframe",
+    documentNode: true,
+  },
 ];
 
 var clipboard = require("devtools/shared/platform/clipboard");
@@ -261,6 +269,7 @@ add_task(async function() {
       disabled,
       selector,
       attributeTrigger,
+      documentNode = false,
       shadowRoot = false,
     } = test;
 
@@ -270,6 +279,7 @@ add_task(async function() {
     const front = await getNodeFrontForSelector(
       selector,
       inspector,
+      documentNode,
       shadowRoot
     );
 
@@ -305,12 +315,20 @@ add_task(async function() {
  * A helper that fetches a front for a node that matches the given selector or
  * doctype node if the selector is falsy.
  */
-async function getNodeFrontForSelector(selector, inspector, shadowRoot) {
+async function getNodeFrontForSelector(
+  selector,
+  inspector,
+  documentNode,
+  shadowRoot
+) {
   if (selector) {
     info("Retrieving front for selector " + selector);
     const node = await getNodeFront(selector, inspector);
     if (shadowRoot) {
       return getShadowRoot(node, inspector);
+    }
+    if (documentNode) {
+      return getFrameDocument(node, inspector);
     }
     return node;
   }
