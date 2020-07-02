@@ -98,13 +98,12 @@ var Profiler;
           ["js", "leaf", "stackwalk", "threads"],
           profiler_threadsArray
         );
-        if (_profiler.PauseSampling) {
-          _profiler.PauseSampling();
-        }
+        _profiler.PauseSampling();
       }
     },
     finishTest: function Profiler__finishTest() {
       if (_profiler && enabled) {
+        _profiler.Pause();
         _profiler.dumpProfileToFile(
           profiler_dir + "/" + currentTest + ".profile"
         );
@@ -159,6 +158,7 @@ var Profiler;
     },
     finishStartupProfiling: function Profiler__finishStartupProfiling() {
       if (_profiler && enabled) {
+        _profiler.Pause();
         _profiler.dumpProfileToFile(profiler_dir + "/startup.profile");
         _profiler.StopProfiler();
       }
@@ -178,9 +178,7 @@ var Profiler;
         ChromeUtils.addProfilerMarker(
           explicit ? name : 'End of test "' + (name || test_name) + '"'
         );
-        if (_profiler.PauseSampling) {
-          _profiler.PauseSampling();
-        }
+        _profiler.PauseSampling();
       }
     },
     mark: function Profiler__mark(marker, explicit) {

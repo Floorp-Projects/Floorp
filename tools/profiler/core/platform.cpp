@@ -812,10 +812,11 @@ class ActivePS {
                             ProfilerFeature::HasFileIOAll(aFeatures))
                                ? new ProfilerIOInterposeObserver()
                                : nullptr),
-        mIsPaused(false)
+        mIsPaused(false),
+        mIsSamplingPaused(false)
 #if defined(GP_OS_linux) || defined(GP_OS_freebsd)
         ,
-        mWasPaused(false)
+        mWasSamplingPaused(false)
 #endif
   {
     // Deep copy aFilters.
@@ -1182,8 +1183,20 @@ class ActivePS {
 
   PS_GET_AND_SET(bool, IsPaused)
 
+  // True if sampling is paused (though generic `SetIsPaused()` or specific
+  // `SetIsSamplingPaused()`).
+  static bool IsSamplingPaused(PSLockRef lock) {
+    MOZ_ASSERT(sInstance);
+    return IsPaused(lock) || sInstance->mIsSamplingPaused;
+  }
+
+  static void SetIsSamplingPaused(PSLockRef, bool aIsSamplingPaused) {
+    MOZ_ASSERT(sInstance);
+    sInstance->mIsSamplingPaused = aIsSamplingPaused;
+  }
+
 #if defined(GP_OS_linux) || defined(GP_OS_freebsd)
-  PS_GET_AND_SET(bool, WasPaused)
+  PS_GET_AND_SET(bool, WasSamplingPaused)
 #endif
 
   static void DiscardExpiredDeadProfiledThreads(PSLockRef) {
@@ -1388,13 +1401,16 @@ class ActivePS {
   // The interposer that records main thread I/O.
   RefPtr<ProfilerIOInterposeObserver> mInterposeObserver;
 
-  // Is the profiler paused?
+  // Is the profiler fully paused?
   bool mIsPaused;
 
+  // Is the profiler periodic sampling paused?
+  bool mIsSamplingPaused;
+
 #if defined(GP_OS_linux) || defined(GP_OS_freebsd)
-  // Used to record whether the profiler was paused just before forking. False
+  // Used to record whether the sampler was paused just before forking. False
   // at all times except just before/after forking.
-  bool mWasPaused;
+  bool mWasSamplingPaused;
 #endif
 
   // Optional startup profile thread array from BaseProfiler.
@@ -3210,7 +3226,7 @@ void SamplerThread::Run() {
 
       TimeStamp expiredMarkersCleaned = TimeStamp::NowUnfuzzed();
 
-      if (!ActivePS::IsPaused(lock)) {
+      if (!ActivePS::IsSamplingPaused(lock)) {
         TimeDuration delta = sampleStart - CorePS::ProcessStartTime();
         ProfileBuffer& buffer = ActivePS::Buffer(lock);
 
@@ -4762,15 +4778,17 @@ void profiler_pause() {
       return;
     }
 
+#if defined(GP_OS_android)
+    if (ActivePS::FeatureJava(lock) && !ActivePS::IsSamplingPaused(lock)) {
+      // Not paused yet, so this is the first pause, let Java know.
+      // TODO: Distinguish Pause and PauseSampling in Java.
+      java::GeckoJavaSampler::PauseSampling();
+    }
+#endif
+
     RacyFeatures::SetPaused();
     ActivePS::SetIsPaused(lock, true);
     ActivePS::Buffer(lock).AddEntry(ProfileBufferEntry::Pause(profiler_time()));
-
-#if defined(GP_OS_android)
-    if (ActivePS::FeatureJava(lock)) {
-      java::GeckoJavaSampler::Pause();
-    }
-#endif
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
@@ -4796,8 +4814,10 @@ void profiler_resume() {
     RacyFeatures::SetUnpaused();
 
 #if defined(GP_OS_android)
-    if (ActivePS::FeatureJava(lock)) {
-      java::GeckoJavaSampler::Unpause();
+    if (ActivePS::FeatureJava(lock) && !ActivePS::IsSamplingPaused(lock)) {
+      // Not paused anymore, so this is the last unpause, let Java know.
+      // TODO: Distinguish Unpause and UnpauseSampling in Java.
+      java::GeckoJavaSampler::UnpauseSampling();
     }
 #endif
   }
@@ -4805,6 +4825,80 @@ void profiler_resume() {
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
   ProfilerParent::ProfilerResumed();
   NotifyObservers("profiler-resumed");
+}
+
+bool profiler_is_sampling_paused() {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  PSAutoLock lock(gPSMutex);
+
+  if (!ActivePS::Exists(lock)) {
+    return false;
+  }
+
+  return ActivePS::IsSamplingPaused(lock);
+}
+
+void profiler_pause_sampling() {
+  LOG("profiler_pause_sampling");
+
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  {
+    PSAutoLock lock(gPSMutex);
+
+    if (!ActivePS::Exists(lock)) {
+      return;
+    }
+
+#if defined(GP_OS_android)
+    if (ActivePS::FeatureJava(lock) && !ActivePS::IsSamplingPaused(lock)) {
+      // Not paused yet, so this is the first pause, let Java know.
+      // TODO: Distinguish Pause and PauseSampling in Java.
+      java::GeckoJavaSampler::PauseSampling();
+    }
+#endif
+
+    RacyFeatures::SetSamplingPaused();
+    ActivePS::SetIsSamplingPaused(lock, true);
+    ActivePS::Buffer(lock).AddEntry(
+        ProfileBufferEntry::PauseSampling(profiler_time()));
+  }
+
+  // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
+  ProfilerParent::ProfilerPausedSampling();
+  NotifyObservers("profiler-paused-sampling");
+}
+
+void profiler_resume_sampling() {
+  LOG("profiler_resume_sampling");
+
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  {
+    PSAutoLock lock(gPSMutex);
+
+    if (!ActivePS::Exists(lock)) {
+      return;
+    }
+
+    ActivePS::Buffer(lock).AddEntry(
+        ProfileBufferEntry::ResumeSampling(profiler_time()));
+    ActivePS::SetIsSamplingPaused(lock, false);
+    RacyFeatures::SetSamplingUnpaused();
+
+#if defined(GP_OS_android)
+    if (ActivePS::FeatureJava(lock) && !ActivePS::IsSamplingPaused(lock)) {
+      // Not paused anymore, so this is the last unpause, let Java know.
+      // TODO: Distinguish Unpause and UnpauseSampling in Java.
+      java::GeckoJavaSampler::UnpauseSampling();
+    }
+#endif
+  }
+
+  // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
+  ProfilerParent::ProfilerResumedSampling();
+  NotifyObservers("profiler-resumed-sampling");
 }
 
 bool profiler_feature_active(uint32_t aFeature) {

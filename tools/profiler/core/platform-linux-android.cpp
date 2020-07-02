@@ -503,27 +503,27 @@ void SamplerThread::Stop(PSLockRef aLock) {
 // Unfortunately all this is only doable on non-Android because Bionic doesn't
 // have pthread_atfork.
 
-// In the parent, before the fork, record IsPaused, and then pause.
+// In the parent, before the fork, record IsSamplingPaused, and then pause.
 static void paf_prepare() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
 
   if (ActivePS::Exists(lock)) {
-    ActivePS::SetWasPaused(lock, ActivePS::IsPaused(lock));
-    ActivePS::SetIsPaused(lock, true);
+    ActivePS::SetWasSamplingPaused(lock, ActivePS::IsSamplingPaused(lock));
+    ActivePS::SetIsSamplingPaused(lock, true);
   }
 }
 
-// In the parent, after the fork, return IsPaused to the pre-fork state.
+// In the parent, after the fork, return IsSamplingPaused to the pre-fork state.
 static void paf_parent() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
 
   if (ActivePS::Exists(lock)) {
-    ActivePS::SetIsPaused(lock, ActivePS::WasPaused(lock));
-    ActivePS::SetWasPaused(lock, false);
+    ActivePS::SetIsSamplingPaused(lock, ActivePS::WasSamplingPaused(lock));
+    ActivePS::SetWasSamplingPaused(lock, false);
   }
 }
 

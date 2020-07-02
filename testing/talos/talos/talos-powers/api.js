@@ -139,6 +139,7 @@ TalosPowersService.prototype = {
    */
   profilerFinish(profileFile) {
     return new Promise((resolve, reject) => {
+      Services.profiler.Pause();
       Services.profiler.getProfileDataAsync().then(
         profile => {
           let encoder = new TextEncoder();

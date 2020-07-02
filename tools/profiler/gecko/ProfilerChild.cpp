@@ -190,6 +190,16 @@ mozilla::ipc::IPCResult ProfilerChild::RecvResume() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ProfilerChild::RecvPauseSampling() {
+  profiler_pause_sampling();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ProfilerChild::RecvResumeSampling() {
+  profiler_resume_sampling();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ProfilerChild::RecvClearAllPages() {
   profiler_clear_all_pages();
   return IPC_OK();

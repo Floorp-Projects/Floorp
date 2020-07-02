@@ -453,7 +453,7 @@ function getActiveConfiguration() {
 
   // Immediately pause the sampling, to make sure the test runs fast. The profiler
   // only needs to be started to initialize the configuration.
-  Services.profiler.PauseSampling();
+  Services.profiler.Pause();
 
   const { activeConfiguration } = Services.profiler;
   if (!activeConfiguration) {

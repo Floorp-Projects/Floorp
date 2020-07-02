@@ -191,7 +191,7 @@ async function captureProfile(pageContext) {
 
   // Pause profiler before we collect the profile, so that we don't capture
   // more samples while the parent process waits for subprocess profiles.
-  Services.profiler.PauseSampling();
+  Services.profiler.Pause();
 
   const profile = await Services.profiler
     .getProfileDataAsGzippedArrayBuffer()

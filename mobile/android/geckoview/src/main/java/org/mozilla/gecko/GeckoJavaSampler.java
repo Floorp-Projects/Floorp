@@ -408,7 +408,7 @@ public class GeckoJavaSampler {
     }
 
     @WrapForJNI
-    public static void pause() {
+    public static void pauseSampling() {
         synchronized (GeckoJavaSampler.class) {
             sSamplingFuture.cancel(false /* mayInterruptIfRunning */ );
             sSamplingFuture = null;
@@ -416,7 +416,7 @@ public class GeckoJavaSampler {
     }
 
     @WrapForJNI
-    public static void unpause() {
+    public static void unpauseSampling() {
         synchronized (GeckoJavaSampler.class) {
             if (sSamplingFuture != null) {
                 return;

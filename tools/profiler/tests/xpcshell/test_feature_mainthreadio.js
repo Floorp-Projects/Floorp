@@ -109,7 +109,7 @@ async function startProfilerAndgetFileIOPayloads(features, filename) {
 
   // Pause the profiler as we don't need to collect more samples as we retrieve
   // and serialize the profile.
-  Services.profiler.PauseSampling();
+  Services.profiler.Pause();
 
   const profile = await Services.profiler.getProfileDataAsync();
   Services.profiler.StopProfiler();

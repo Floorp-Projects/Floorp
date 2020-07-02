@@ -239,18 +239,23 @@ class RacyFeatures {
 
   static void SetUnpaused() { sActiveAndFeatures &= ~Paused; }
 
+  static void SetSamplingPaused() { sActiveAndFeatures |= SamplingPaused; }
+
+  static void SetSamplingUnpaused() { sActiveAndFeatures &= ~SamplingPaused; }
+
   static mozilla::Maybe<uint32_t> FeaturesIfActive() {
     if (uint32_t af = sActiveAndFeatures; af & Active) {
       // Active, remove the Active&Paused bits to get all features.
-      return Some(af & ~(Active | Paused));
+      return Some(af & ~(Active | Paused | SamplingPaused));
     }
     return Nothing();
   }
 
   static mozilla::Maybe<uint32_t> FeaturesIfActiveAndUnpaused() {
     if (uint32_t af = sActiveAndFeatures; (af & (Active | Paused)) == Active) {
-      // Active but not paused, remove the Active bit to get all features.
-      return Some(af & ~Active);
+      // Active but not fully paused, remove the Active and sampling-paused bits
+      // to get all features.
+      return Some(af & ~(Active | SamplingPaused));
     }
     return Nothing();
   }
@@ -262,18 +267,29 @@ class RacyFeatures {
     return (af & Active) && (af & aFeature);
   }
 
+  // True if profiler is active, and not fully paused.
+  // Note that periodic sampling *could* be paused!
   static bool IsActiveAndUnpaused() {
     uint32_t af = sActiveAndFeatures;  // copy it first
     return (af & Active) && !(af & Paused);
   }
 
+  // True if profiler is active, and sampling is not paused (though generic
+  // `SetPaused()` or specific `SetSamplingPaused()`).
+  static bool IsActiveAndSamplingUnpaused() {
+    uint32_t af = sActiveAndFeatures;  // copy it first
+    return (af & Active) && !(af & (Paused | SamplingPaused));
+  }
+
  private:
   static constexpr uint32_t Active = 1u << 31;
   static constexpr uint32_t Paused = 1u << 30;
+  static constexpr uint32_t SamplingPaused = 1u << 29;
 
 // Ensure Active/Paused don't overlap with any of the feature bits.
-#  define NO_OVERLAP(n_, str_, Name_, desc_) \
-    static_assert(ProfilerFeature::Name_ != Paused, "bad feature value");
+#  define NO_OVERLAP(n_, str_, Name_, desc_)                \
+    static_assert(ProfilerFeature::Name_ != SamplingPaused, \
+                  "bad feature value");
 
   PROFILER_FOR_EACH_FEATURE(NO_OVERLAP);
 
@@ -465,6 +481,11 @@ using PostSamplingCallback = std::function<void(SamplingState)>;
 void profiler_pause();
 void profiler_resume();
 
+// Only pause and resume the periodic sampling loop, including stack sampling,
+// counters, and profiling overheads.
+void profiler_pause_sampling();
+void profiler_resume_sampling();
+
 // These functions tell the profiler that a thread went to sleep so that we can
 // avoid sampling it while it's sleeping. Calling profiler_thread_sleep()
 // twice without an intervening profiler_thread_wake() is an error. All three
@@ -543,6 +564,10 @@ inline bool profiler_is_active_and_thread_is_registered() {
 
 // Is the profiler active and paused? Returns false if the profiler is inactive.
 bool profiler_is_paused();
+
+// Is the profiler active and sampling is paused? Returns false if the profiler
+// is inactive.
+bool profiler_is_sampling_paused();
 
 // Is the current thread sleeping?
 bool profiler_thread_is_sleeping();
