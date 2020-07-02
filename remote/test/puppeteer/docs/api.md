@@ -1,5 +1,5 @@
 
-# Puppeteer API <!-- GEN:version -->Tip-Of-Tree<!-- GEN:stop-->
+# Puppeteer API <!-- GEN:version -->v5.0.0<!-- GEN:stop-->
 <!-- GEN:empty-if-release --><!-- GEN:stop -->
 
 - Interactive Documentation: https://pptr.dev
@@ -170,6 +170,8 @@
   * [page.waitForSelector(selector[, options])](#pagewaitforselectorselector-options)
   * [page.waitForXPath(xpath[, options])](#pagewaitforxpathxpath-options)
   * [page.workers()](#pageworkers)
+  * [GeolocationOptions](#geolocationoptions)
+  * [WaitTimeoutOptions](#waittimeoutoptions)
 - [class: WebWorker](#class-webworker)
   * [webWorker.evaluate(pageFunction[, ...args])](#webworkerevaluatepagefunction-args)
   * [webWorker.evaluateHandle(pageFunction[, ...args])](#webworkerevaluatehandlepagefunction-args)
@@ -354,7 +356,7 @@ The Puppeteer API is hierarchical and mirrors the browser structure.
 
 > **NOTE** On the following diagram, faded entities are not currently represented in Puppeteer.
 
-![puppeteer overview](../docs/assets/overview.png)
+![puppeteer overview](https://user-images.githubusercontent.com/81942/86137523-ab2ba080-baed-11ea-9d4b-30eda784585a.png)
 
 - [`Puppeteer`](#class-puppeteer) communicates with the browser using [DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/).
 - [`Browser`](#class-browser) instance can own multiple browser contexts.
@@ -1454,7 +1456,7 @@ Shortcut for [page.mainFrame().evaluate(pageFunction, ...args)](#frameevaluatepa
 #### page.evaluateHandle(pageFunction[, ...args])
 - `pageFunction` <[function]|[string]> Function to be evaluated in the page context
 - `...args` <...[Serializable]|[JSHandle]> Arguments to pass to `pageFunction`
-- returns: <[Promise]<[JSHandle]>> Promise which resolves to the return value of `pageFunction` as in-page object (JSHandle)
+- returns: <[Promise]<[JSHandle]|[ElementHandle]>> Promise which resolves to the return value of `pageFunction` as an in-page object.
 
 The only difference between `page.evaluate` and `page.evaluateHandle` is that `page.evaluateHandle` returns in-page object (JSHandle).
 
@@ -1471,6 +1473,14 @@ const aHandle = await page.evaluateHandle(() => document.body);
 const resultHandle = await page.evaluateHandle(body => body.innerHTML, aHandle);
 console.log(await resultHandle.jsonValue());
 await resultHandle.dispose();
+```
+
+This function will return a [JSHandle] by default, however if your `pageFunction` returns an HTML element you will get back an `ElementHandle`:
+
+```js
+const button = await page.evaluateHandle(() => document.querySelector('button'))
+// button is an ElementHandle, so you can call methods such as click:
+await button.click();
 ```
 
 Shortcut for [page.mainFrame().executionContext().evaluateHandle(pageFunction, ...args)](#executioncontextevaluatehandlepagefunction-args).
@@ -1900,10 +1910,7 @@ The extra HTTP headers will be sent with every request the page initiates.
 > **NOTE** page.setExtraHTTPHeaders does not guarantee the order of headers in the outgoing requests.
 
 #### page.setGeolocation(options)
-- `options` <[Object]>
-  - `latitude` <[number]> Latitude between -90 and 90.
-  - `longitude` <[number]> Longitude between -180 and 180.
-  - `accuracy` <[number]> Optional non-negative accuracy value.
+- `options` <[GeolocationOptions](####GeolocationOptions)>
 - returns: <[Promise]>
 
 Sets the page's geolocation.
@@ -2077,8 +2084,7 @@ await page.waitFor(selector => !!document.querySelector(selector), {}, selector)
 Shortcut for [page.mainFrame().waitFor(selectorOrFunctionOrTimeout[, options[, ...args]])](#framewaitforselectororfunctionortimeout-options-args).
 
 #### page.waitForFileChooser([options])
-- `options` <[Object]> Optional waiting parameters
-  - `timeout` <[number]> Maximum wait time in milliseconds, defaults to 30 seconds, pass `0` to disable the timeout. The default value can be changed by using the [page.setDefaultTimeout(timeout)](#pagesetdefaulttimeouttimeout) method.
+- `options` <[WaitTimeoutOptions](####WaitTimeoutOptions)> Optional waiting parameters
 - returns: <[Promise]<[FileChooser]>> A promise that resolves after a page requests a file picker.
 
 > **NOTE** In non-headless Chromium, this method results in the native file picker dialog **not showing up** for the user.
@@ -2263,6 +2269,15 @@ This method returns all of the dedicated [WebWorkers](https://developer.mozilla.
 
 > **NOTE** This does not contain ServiceWorkers
 
+#### GeolocationOptions
+- `latitude` <[number]> Latitude between -90 and 90.
+- `longitude` <[number]> Longitude between -180 and 180.
+- `accuracy` <[number]> Optional non-negative accuracy value.
+
+#### WaitTimeoutOptions
+- `timeout` <[number]> Maximum wait time in milliseconds, defaults to 30 seconds, pass `0` to disable the timeout. The default value can be changed by using the [page.setDefaultTimeout(timeout)](#pagesetdefaulttimeouttimeout) method.
+
+
 ### class: WebWorker
 
 The WebWorker class represents a [WebWorker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
@@ -2291,11 +2306,13 @@ Shortcut for [(await worker.executionContext()).evaluate(pageFunction, ...args)]
 #### webWorker.evaluateHandle(pageFunction[, ...args])
 - `pageFunction` <[function]|[string]> Function to be evaluated in the page context
 - `...args` <...[Serializable]|[JSHandle]> Arguments to pass to `pageFunction`
-- returns: <[Promise]<[JSHandle]>> Promise which resolves to the return value of `pageFunction` as in-page object (JSHandle)
+- returns: <[Promise]<[JSHandle]|[ElementHandle]>> Promise which resolves to the return value of `pageFunction` as an in-page object.
 
 The only difference between `worker.evaluate` and `worker.evaluateHandle` is that `worker.evaluateHandle` returns in-page object (JSHandle).
 
 If the function passed to the `worker.evaluateHandle` returns a [Promise], then `worker.evaluateHandle` would wait for the promise to resolve and return its value.
+
+If the function returns an element, the returned handle is an [ElementHandle].
 
 Shortcut for [(await worker.executionContext()).evaluateHandle(pageFunction, ...args)](#executioncontextevaluatehandlepagefunction-args).
 
@@ -2848,11 +2865,13 @@ await bodyHandle.dispose();
 #### frame.evaluateHandle(pageFunction[, ...args])
 - `pageFunction` <[function]|[string]> Function to be evaluated in the page context
 - `...args` <...[Serializable]|[JSHandle]> Arguments to pass to `pageFunction`
-- returns: <[Promise]<[JSHandle]>> Promise which resolves to the return value of `pageFunction` as in-page object (JSHandle)
+- returns: <[Promise]<[JSHandle]|[ElementHandle]>> Promise which resolves to the return value of `pageFunction` as an in-page object.
 
 The only difference between `frame.evaluate` and `frame.evaluateHandle` is that `frame.evaluateHandle` returns in-page object (JSHandle).
 
 If the function, passed to the `frame.evaluateHandle`, returns a [Promise], then `frame.evaluateHandle` would wait for the promise to resolve and return its value.
+
+If the function returns an element, the returned handle is an [ElementHandle].
 
 ```js
 const aWindowHandle = await frame.evaluateHandle(() => Promise.resolve(window));
@@ -3177,9 +3196,11 @@ console.log(result); // prints '3'.
 #### executionContext.evaluateHandle(pageFunction[, ...args])
 - `pageFunction` <[function]|[string]> Function to be evaluated in the `executionContext`
 - `...args` <...[Serializable]|[JSHandle]> Arguments to pass to `pageFunction`
-- returns: <[Promise]<[JSHandle]>> Promise which resolves to the return value of `pageFunction` as in-page object (JSHandle)
+- returns: <[Promise]<[JSHandle]|[ElementHandle]>> Promise which resolves to the return value of `pageFunction` as an in-page object.
 
 The only difference between `executionContext.evaluate` and `executionContext.evaluateHandle` is that `executionContext.evaluateHandle` returns in-page object (JSHandle).
+
+If the function returns an element, the returned handle is an [ElementHandle].
 
 If the function passed to the `executionContext.evaluateHandle` returns a [Promise], then `executionContext.evaluateHandle` would wait for the promise to resolve and return its value.
 
@@ -3270,11 +3291,13 @@ expect(await tweetHandle.evaluate(node => node.innerText)).toBe('10');
 #### jsHandle.evaluateHandle(pageFunction[, ...args])
 - `pageFunction` <[function]|[string]> Function to be evaluated
 - `...args` <...[Serializable]|[JSHandle]> Arguments to pass to `pageFunction`
-- returns: <[Promise]<[JSHandle]>> Promise which resolves to the return value of `pageFunction` as in-page object (JSHandle)
+- returns: <[Promise]<[JSHandle]|[ElementHandle]>> Promise which resolves to the return value of `pageFunction` as an in-page object.
 
 This method passes this handle as the first argument to `pageFunction`.
 
 The only difference between `jsHandle.evaluate` and `jsHandle.evaluateHandle` is that `executionContext.evaluateHandle` returns in-page object (JSHandle).
+
+If the function returns an element, the returned handle is an [ElementHandle].
 
 If the function passed to the `jsHandle.evaluateHandle` returns a [Promise], then `jsHandle.evaluateHandle` would wait for the promise to resolve and return its value.
 
@@ -3459,11 +3482,13 @@ expect(await tweetHandle.evaluate(node => node.innerText)).toBe('10');
 #### elementHandle.evaluateHandle(pageFunction[, ...args])
 - `pageFunction` <[function]|[string]> Function to be evaluated
 - `...args` <...[Serializable]|[JSHandle]> Arguments to pass to `pageFunction`
-- returns: <[Promise]<[JSHandle]>> Promise which resolves to the return value of `pageFunction` as in-page object (JSHandle)
+- returns: <[Promise]<[JSHandle]|[ElementHandle]>> Promise which resolves to the return value of `pageFunction` as an in-page object.
 
 This method passes this handle as the first argument to `pageFunction`.
 
 The only difference between `evaluateHandle.evaluate` and `evaluateHandle.evaluateHandle` is that `executionContext.evaluateHandle` returns in-page object (JSHandle).
+
+If the function returns an element, the returned handle is an [ElementHandle].
 
 If the function passed to the `evaluateHandle.evaluateHandle` returns a [Promise], then `evaluateHandle.evaluateHandle` would wait for the promise to resolve and return its value.
 
@@ -4050,8 +4075,8 @@ This method is identical to `off` and maintained for compatibility with Node's E
 [Object]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object "Object"
 [Page]: #class-page "Page"
 [Promise]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise "Promise"
-[HTTPRequest]: #class-request  "HTTPRequest"
-[HTTPResponse]: #class-response  "HTTPRHTTPesponse"
+[HTTPRequest]: #class-httprequest  "HTTPRequest"
+[HTTPResponse]: #class-httpresponse  "HTTPResponse"
 [SecurityDetails]: #class-securitydetails "SecurityDetails"
 [Serializable]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Description "Serializable"
 [Target]: #class-target "Target"

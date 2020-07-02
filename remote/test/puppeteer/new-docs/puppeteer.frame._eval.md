@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-$eval<ReturnType extends any>(selector: string, pageFunction: Function | string, ...args: unknown[]): Promise<ReturnType>;
+$eval<ReturnType>(selector: string, pageFunction: (element: Element, ...args: unknown[]) => ReturnType | Promise<ReturnType>, ...args: SerializableOrJSHandle[]): Promise<WrapElementHandle<ReturnType>>;
 ```
 
 ## Parameters
@@ -15,10 +15,10 @@ $eval<ReturnType extends any>(selector: string, pageFunction: Function | string,
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  selector | string |  |
-|  pageFunction | Function \| string |  |
-|  args | unknown\[\] |  |
+|  pageFunction | (element: Element, ...args: unknown\[\]) =&gt; ReturnType \| Promise&lt;ReturnType&gt; |  |
+|  args | [SerializableOrJSHandle](./puppeteer.serializableorjshandle.md)<!-- -->\[\] |  |
 
 <b>Returns:</b>
 
-Promise&lt;ReturnType&gt;
+Promise&lt;[WrapElementHandle](./puppeteer.wrapelementhandle.md)<!-- -->&lt;ReturnType&gt;&gt;
 

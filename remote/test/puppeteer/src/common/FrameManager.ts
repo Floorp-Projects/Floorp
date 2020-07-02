@@ -25,10 +25,16 @@ import { NetworkManager } from './NetworkManager';
 import { TimeoutSettings } from './TimeoutSettings';
 import { CDPSession } from './Connection';
 import { JSHandle, ElementHandle } from './JSHandle';
-import { MouseButtonInput } from './Input';
+import { MouseButton } from './Input';
 import { Page } from './Page';
 import { HTTPResponse } from './HTTPResponse';
 import Protocol from '../protocol';
+import {
+  EvaluateFn,
+  SerializableOrJSHandle,
+  EvaluateHandleFn,
+  WrapElementHandle,
+} from './EvalTypes';
 
 const UTILITY_WORLD_NAME = '__puppeteer_utility_world__';
 
@@ -430,11 +436,11 @@ export class Frame {
     return this._mainWorld.executionContext();
   }
 
-  async evaluateHandle(
-    pageFunction: Function | string,
-    ...args: unknown[]
-  ): Promise<JSHandle> {
-    return this._mainWorld.evaluateHandle(pageFunction, ...args);
+  async evaluateHandle<HandlerType extends JSHandle = JSHandle>(
+    pageFunction: EvaluateHandleFn,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<HandlerType> {
+    return this._mainWorld.evaluateHandle<HandlerType>(pageFunction, ...args);
   }
 
   async evaluate<ReturnType extends any>(
@@ -452,18 +458,21 @@ export class Frame {
     return this._mainWorld.$x(expression);
   }
 
-  async $eval<ReturnType extends any>(
+  async $eval<ReturnType>(
     selector: string,
-    pageFunction: Function | string,
-    ...args: unknown[]
-  ): Promise<ReturnType> {
+    pageFunction: (
+      element: Element,
+      ...args: unknown[]
+    ) => ReturnType | Promise<ReturnType>,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<WrapElementHandle<ReturnType>> {
     return this._mainWorld.$eval<ReturnType>(selector, pageFunction, ...args);
   }
 
   async $$eval<ReturnType extends any>(
     selector: string,
-    pageFunction: Function | string,
-    ...args: unknown[]
+    pageFunction: EvaluateFn | string,
+    ...args: SerializableOrJSHandle[]
   ): Promise<ReturnType> {
     return this._mainWorld.$$eval<ReturnType>(selector, pageFunction, ...args);
   }
@@ -527,7 +536,7 @@ export class Frame {
     selector: string,
     options: {
       delay?: number;
-      button?: MouseButtonInput;
+      button?: MouseButton;
       clickCount?: number;
     } = {}
   ): Promise<void> {
@@ -561,7 +570,7 @@ export class Frame {
   waitFor(
     selectorOrFunctionOrTimeout: string | number | Function,
     options: {} = {},
-    ...args: unknown[]
+    ...args: SerializableOrJSHandle[]
   ): Promise<JSHandle | null> {
     const xPathPattern = '//';
 
@@ -618,7 +627,7 @@ export class Frame {
   waitForFunction(
     pageFunction: Function | string,
     options: { polling?: string | number; timeout?: number } = {},
-    ...args: unknown[]
+    ...args: SerializableOrJSHandle[]
   ): Promise<JSHandle> {
     return this._mainWorld.waitForFunction(pageFunction, options, ...args);
   }

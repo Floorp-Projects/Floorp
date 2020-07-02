@@ -1,15 +1,11 @@
 {
   "name": "puppeteer",
-  "version": "4.0.0-post",
+  "version": "5.0.0",
   "description": "A high-level API to control headless Chrome over the DevTools Protocol",
-  "main": "lib/index.js",
+  "main": "./cjs-entry.js",
   "repository": "github:puppeteer/puppeteer",
   "engines": {
     "node": ">=10.18.1"
-  },
-  "puppeteer": {
-    "chromium_revision": "756035",
-    "firefox_revision": "latest"
   },
   "scripts": {
     "unit": "tsc --version && mocha --config mocha-config/puppeteer-unit-tests.js",
@@ -28,7 +24,10 @@
     "lint": "npm run eslint && npm run tsc && npm run doc",
     "doc": "node utils/doclint/cli.js",
     "clean-lib": "rm -rf lib",
-    "tsc": "npm run clean-lib && tsc --version && tsc -p . && cp src/protocol.d.ts lib/",
+    "tsc": "npm run clean-lib && tsc --version && npm run tsc-cjs && npm run tsc-esm",
+    "tsc-cjs": "tsc -p . && cp src/protocol.d.ts lib/cjs",
+    "tsc-esm": "tsc --build tsconfig-esm.json && cp src/protocol.d.ts lib/esm",
+    "typecheck": "tsc -p . --noEmit",
     "apply-next-version": "node utils/apply_next_version.js",
     "update-protocol-d-ts": "node utils/protocol-types-generator update",
     "compare-protocol-d-ts": "node utils/protocol-types-generator compare",
@@ -39,9 +38,10 @@
   },
   "files": [
     "lib/",
-    "index.js",
     "install.js",
-    "typescript-if-required.js"
+    "typescript-if-required.js",
+    "cjs-entry.js",
+    "cjs-entry-core.js"
   ],
   "author": "The Chromium Authors",
   "license": "Apache-2.0",
@@ -51,6 +51,7 @@
     "https-proxy-agent": "^4.0.0",
     "mime": "^2.0.3",
     "mitt": "^2.0.1",
+    "pkg-dir": "^4.2.0",
     "progress": "^2.0.1",
     "proxy-from-env": "^1.0.0",
     "rimraf": "^3.0.2",
