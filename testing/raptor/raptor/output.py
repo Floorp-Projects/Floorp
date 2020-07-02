@@ -575,6 +575,96 @@ class PerftestOutput(object):
 
         return _subtests.values(), sorted(vals, reverse=True)
 
+    def parseYoutubePlaybackPerformanceOutput(self, test):
+        """Parse the metrics for the Youtube playback performance test.
+
+        For each video measured values for dropped and decoded frames will be
+        available from the benchmark site.
+
+        {u'PlaybackPerf.VP9.2160p60@2X': {u'droppedFrames': 1, u'decodedFrames': 796}
+
+        With each page cycle / iteration of the test multiple values can be present.
+
+        Raptor will calculate the percentage of dropped frames to decoded frames.
+        All those three values will then be emitted as separate sub tests.
+        """
+        _subtests = {}
+        test_name = [measurement
+                     for measurement in test["measurements"].keys()
+                     if "youtube-playback" in measurement
+                     ]
+        if len(test_name) > 0:
+            data = test["measurements"].get(test_name[0])
+        else:
+            raise Exception("No measurements found for youtube test!")
+
+        def create_subtest_entry(
+            name,
+            value,
+            unit=test["subtest_unit"],
+            lower_is_better=test["subtest_lower_is_better"],
+        ):
+            # build a list of subtests and append all related replicates
+            if name not in _subtests.keys():
+                # subtest not added yet, first pagecycle, so add new one
+                _subtests[name] = {
+                    "name": name,
+                    "unit": unit,
+                    "lowerIsBetter": lower_is_better,
+                    "replicates": [],
+                }
+
+            _subtests[name]["replicates"].append(value)
+            if self.subtest_alert_on is not None:
+                if name in self.subtest_alert_on:
+                    LOG.info(
+                        "turning on subtest alerting for measurement type: %s" % name
+                    )
+                    _subtests[name]["shouldAlert"] = True
+
+        for pagecycle in data:
+            for _sub, _value in pagecycle[0].iteritems():
+                try:
+                    percent_dropped = (
+                        float(_value["droppedFrames"]) / _value["decodedFrames"] * 100.0
+                    )
+                except ZeroDivisionError:
+                    # if no frames have been decoded the playback failed completely
+                    percent_dropped = 100.0
+
+                # Remove the not needed "PlaybackPerf." prefix from each test
+                _sub = _sub.split("PlaybackPerf", 1)[-1]
+                if _sub.startswith("."):
+                    _sub = _sub[1:]
+
+                # build a list of subtests and append all related replicates
+                create_subtest_entry(
+                    "{}_decoded_frames".format(_sub),
+                    _value["decodedFrames"],
+                    lower_is_better=False,
+                )
+                create_subtest_entry(
+                    "{}_dropped_frames".format(_sub), _value["droppedFrames"]
+                )
+                create_subtest_entry(
+                    "{}_%_dropped_frames".format(_sub), percent_dropped
+                )
+
+        vals = []
+        subtests = []
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]["value"] = round(
+                filters.median(_subtests[name]["replicates"]), 2
+            )
+            subtests.append(_subtests[name])
+            # only include dropped_frames values, without the %_dropped_frames values
+            if name.endswith("X_dropped_frames"):
+                vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
+
 
 class RaptorOutput(PerftestOutput):
     """class for raptor output"""
@@ -683,27 +773,9 @@ class RaptorOutput(PerftestOutput):
 
             elif test["type"] == "benchmark":
 
-                # to reduce the conditions in the if below, i will use this list
-                # to check if we are running an youtube playback perf test
-                youtube_playback_tests = [
-                    "youtube-playbackperf-test",
-                    "youtube-playbackperf-sfr-vp9-test",
-                    "youtube-playbackperf-sfr-h264-test",
-                    "youtube-playbackperf-sfr-av1-test",
-                    "youtube-playbackperf-hfr-test",
-                    "youtube-playbackperf-widevine-sfr-vp9-test",
-                    "youtube-playbackperf-widevine-sfr-h264-test",
-                    "youtube-playbackperf-widevine-hfr-test",
-                ]
-
-                youtube_playback_test_name = [
-                    i for i in youtube_playback_tests if i in test["measurements"]
-                ]
-
-                if youtube_playback_test_name:
-                    subtests, vals = self.parseYoutubePlaybackPerformanceOutput(
-                        test, test_name=youtube_playback_test_name[0]
-                    )
+                if any(["youtube-playback" in measurement
+                        for measurement in test["measurements"].keys()]):
+                    subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
                 elif "assorted-dom" in test["measurements"]:
                     subtests, vals = self.parseAssortedDomOutput(test)
                 elif "ares6" in test["measurements"]:
@@ -1232,89 +1304,6 @@ class RaptorOutput(PerftestOutput):
 
         return subtests, vals
 
-    def parseYoutubePlaybackPerformanceOutput(self, test, test_name):
-        """Parse the metrics for the Youtube playback performance test.
-
-        For each video measured values for dropped and decoded frames will be
-        available from the benchmark site.
-
-        {u'PlaybackPerf.VP9.2160p60@2X': {u'droppedFrames': 1, u'decodedFrames': 796}
-
-        With each page cycle / iteration of the test multiple values can be present.
-
-        Raptor will calculate the percentage of dropped frames to decoded frames.
-        All those three values will then be emitted as separate sub tests.
-        """
-        _subtests = {}
-        data = test["measurements"].get(test_name)
-
-        def create_subtest_entry(
-            name,
-            value,
-            unit=test["subtest_unit"],
-            lower_is_better=test["subtest_lower_is_better"],
-        ):
-            # build a list of subtests and append all related replicates
-            if name not in _subtests.keys():
-                # subtest not added yet, first pagecycle, so add new one
-                _subtests[name] = {
-                    "name": name,
-                    "unit": unit,
-                    "lowerIsBetter": lower_is_better,
-                    "replicates": [],
-                }
-
-            _subtests[name]["replicates"].append(value)
-            if self.subtest_alert_on is not None:
-                if name in self.subtest_alert_on:
-                    LOG.info(
-                        "turning on subtest alerting for measurement type: %s" % name
-                    )
-                    _subtests[name]["shouldAlert"] = True
-
-        for pagecycle in data:
-            for _sub, _value in pagecycle[0].items():
-                try:
-                    percent_dropped = (
-                        float(_value["droppedFrames"]) / _value["decodedFrames"] * 100.0
-                    )
-                except ZeroDivisionError:
-                    # if no frames have been decoded the playback failed completely
-                    percent_dropped = 100.0
-
-                # Remove the not needed "PlaybackPerf." prefix from each test
-                _sub = _sub.split("PlaybackPerf", 1)[-1]
-                if _sub.startswith("."):
-                    _sub = _sub[1:]
-
-                # build a list of subtests and append all related replicates
-                create_subtest_entry(
-                    "{}_decoded_frames".format(_sub),
-                    _value["decodedFrames"],
-                    lower_is_better=False,
-                )
-                create_subtest_entry(
-                    "{}_dropped_frames".format(_sub), _value["droppedFrames"]
-                )
-                create_subtest_entry(
-                    "{}_%_dropped_frames".format(_sub), percent_dropped
-                )
-
-        vals = []
-        subtests = []
-        names = _subtests.keys()
-        names.sort(reverse=True)
-        for name in names:
-            _subtests[name]["value"] = round(
-                filters.median(_subtests[name]["replicates"]), 2
-            )
-            subtests.append(_subtests[name])
-            # only include dropped_frames values, without the %_dropped_frames values
-            if name.endswith("X_dropped_frames"):
-                vals.append([_subtests[name]["value"], name])
-
-        return subtests, vals
-
     def summarize_screenshots(self, screenshots):
         if len(screenshots) == 0:
             return
@@ -1489,6 +1478,8 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseSpeedometerOutput(test)
                 if "ares6" in test["name"]:
                     subtests, vals = self.parseAresSixOutput(test)
+                if any("youtube-playback" in key for key in test["measurements"].keys()):
+                    subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
 
                 suite["subtests"] = subtests
                 # summarize results for both benchmark type tests

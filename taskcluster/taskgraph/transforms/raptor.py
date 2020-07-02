@@ -255,13 +255,17 @@ def split_page_load_by_url(config, tests):
             yield test
             continue
 
-        if len(subtest_symbol) > 10:
+        if len(subtest_symbol) > 10 and \
+                'ytp' not in subtest_symbol:
             raise Exception(
                 "Treeherder symbol %s is lager than 10 char! Please use a different symbol."
                 % subtest_symbol)
 
-        if test['test-name'].startswith('browsertime-tp6'):
+        if test['test-name'].startswith('browsertime-'):
             test['raptor-test'] = subtest
+
+            # Remove youtube-playback in the test name to avoid duplication
+            test['test-name'] = test['test-name'].replace("youtube-playback-", "")
         else:
             # Use full test name if running on webextension
             test['raptor-test'] = 'raptor-tp6-' + subtest + "-{}".format(test['app'])
@@ -332,10 +336,11 @@ def add_extra_options(config, tests):
             "android-hw-g5": [
                 {
                     "branches": [],  # For all branches
-                    "testnames": ["youtube-playback"],
+                    "testnames": ["youtube-playback", "raptor-youtube-playback"],
                     "urlparams": [
                         # It excludes all VP9 tests
-                        "exclude=1-34"
+                        "exclude=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,"
+                        "24,25,26,27,28,29,30,31,32,33,34"
                     ]
                 },
             ]
@@ -349,7 +354,7 @@ def add_extra_options(config, tests):
                 for testurlparams_by_project in testurlparams_by_project_definitions:
                     # The test should contain at least one defined testname
                     if any(
-                        testname in test['test-name']
+                        testname == test['test-name']
                         for testname in testurlparams_by_project['testnames']
                     ):
                         branches = testurlparams_by_project['branches']
