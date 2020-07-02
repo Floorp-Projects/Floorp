@@ -82,14 +82,16 @@ final class SamplePool {
             for (Sample s : mRecycledSamples) {
                 disposeSample(s);
             }
-
             mRecycledSamples.clear();
+
+            mBuffers.forEach((i, m) -> m.dispose());
             mBuffers.clear();
         }
 
         private void disposeSample(final Sample sample) {
             if (sample.bufferId != Sample.NO_BUFFER) {
-                mBuffers.remove(sample.bufferId);
+                SampleBuffer s = mBuffers.remove(sample.bufferId);
+                s.dispose();
             }
             sample.dispose();
         }
