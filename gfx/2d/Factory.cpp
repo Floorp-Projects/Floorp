@@ -51,6 +51,7 @@
 #  include "HelpersD2D.h"
 #  include "DXVA2Manager.h"
 #  include "mozilla/layers/TextureD3D11.h"
+#  include "nsWindowsHelpers.h"
 #endif
 
 #include "DrawTargetCapture.h"
@@ -900,7 +901,7 @@ RefPtr<IDWriteFactory> Factory::EnsureDWriteFactory() {
 
   mDWriteFactoryInitialized = true;
 
-  HMODULE dwriteModule = LoadLibraryW(L"dwrite.dll");
+  HMODULE dwriteModule = LoadLibrarySystem32(L"dwrite.dll");
   decltype(DWriteCreateFactory)* createDWriteFactory =
       (decltype(DWriteCreateFactory)*)GetProcAddress(dwriteModule,
                                                      "DWriteCreateFactory");
