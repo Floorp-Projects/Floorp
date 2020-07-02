@@ -179,9 +179,9 @@ if $NEED_WINDOW_MANAGER; then
     eval `echo '' | /usr/bin/gnome-keyring-daemon -r -d --unlock --components=secrets`
 fi
 
-if [ $NEED_COMPIZ == "true" ]  && [ $RELEASE == "16.04" ]; then
+if [[ $NEED_COMPIZ == true ]]  && [[ $RELEASE == 16.04 ]]; then
     compiz 2>&1 &
-elif [ $NEED_COMPIZ == "true" ] && [ $RELEASE == "18.04" ]; then
+elif [[ $NEED_COMPIZ == true ]] && [[ $RELEASE == 18.04 ]]; then
     compiz --replace 2>&1 &
 fi
 
