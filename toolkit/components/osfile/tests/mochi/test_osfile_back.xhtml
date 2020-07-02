@@ -10,7 +10,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
   <script type="application/javascript"
-          src="worker_handler.js"/>
+          src="chrome://mochikit/content/tests/SimpleTest/WorkerHandler.js"/>
   <script type="application/javascript">
   <![CDATA[
 
@@ -28,7 +28,7 @@ function test() {
   SimpleTest.waitForExplicitFinish();
   ok(true, "test_osfile.xul: Chrome worker created");
   dump("MAIN: go\n");
-  worker_handler(worker);
+  listenForTests(worker);
   worker.postMessage(0);
   ok(true, "test_osfile.xul: Test in progress");
 };

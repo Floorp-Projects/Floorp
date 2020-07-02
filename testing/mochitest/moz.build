@@ -60,6 +60,8 @@ FINAL_TARGET_FILES.content.tests.SimpleTest += [
     'tests/SimpleTest/test.css',
     'tests/SimpleTest/TestRunner.js',
     'tests/SimpleTest/WindowSnapshot.js',
+    'tests/SimpleTest/WorkerHandler.js',
+    'tests/SimpleTest/WorkerSimpleTest.js'
 ]
 
 FINAL_TARGET_FILES.content.tests.BrowserTestUtils += [
