@@ -24,13 +24,14 @@ import { BrowserFetcher } from './BrowserFetcher';
 import { Connection } from '../common/Connection';
 import { Browser } from '../common/Browser';
 import { assert } from '../common/assert';
-import { helper, debugError } from '../common/helper';
+import { debugError } from '../common/helper';
 import { ConnectionTransport } from '../common/ConnectionTransport';
 import { WebSocketTransport } from '../common/WebSocketTransport';
 import { BrowserRunner } from './BrowserRunner';
+import { promisify } from 'util';
 
-const mkdtempAsync = helper.promisify(fs.mkdtemp);
-const writeFileAsync = helper.promisify(fs.writeFile);
+const mkdtempAsync = promisify(fs.mkdtemp);
+const writeFileAsync = promisify(fs.writeFile);
 
 import {
   ChromeArgOptions,
@@ -38,6 +39,10 @@ import {
   BrowserOptions,
 } from './LaunchOptions';
 
+/**
+ * Describes a launcher - a class that is able to create and launch a browser instance.
+ * @public
+ */
 export interface ProductLauncher {
   launch(object);
   connect(object);
@@ -46,6 +51,9 @@ export interface ProductLauncher {
   product: string;
 }
 
+/**
+ * @internal
+ */
 class ChromeLauncher implements ProductLauncher {
   _projectRoot: string;
   _preferredRevision: string;
@@ -266,6 +274,9 @@ class ChromeLauncher implements ProductLauncher {
   }
 }
 
+/**
+ * @internal
+ */
 class FirefoxLauncher implements ProductLauncher {
   _projectRoot: string;
   _preferredRevision: string;
@@ -765,7 +776,10 @@ function resolveExecutablePath(
   return { executablePath: revisionInfo.executablePath, missingText };
 }
 
-function Launcher(
+/**
+ * @internal
+ */
+export default function Launcher(
   projectRoot: string,
   preferredRevision: string,
   isPuppeteerCore: boolean,
@@ -802,5 +816,3 @@ function Launcher(
       );
   }
 }
-
-export default Launcher;
