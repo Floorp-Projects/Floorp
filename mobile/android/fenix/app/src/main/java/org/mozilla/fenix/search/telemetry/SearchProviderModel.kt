@@ -6,11 +6,56 @@ package org.mozilla.fenix.search.telemetry
 
 data class SearchProviderModel(
     val name: String,
-    val regexp: String,
+    val regexp: Regex,
     val queryParam: String,
-    val codeParam: String = "",
-    val codePrefixes: List<String> = ArrayList(),
-    val followOnParams: List<String> = ArrayList(),
-    val extraAdServersRegexps: List<String> = ArrayList(),
-    val followOnCookies: List<SearchProviderCookie> = ArrayList()
-)
+    val codeParam: String,
+    val codePrefixes: List<String>,
+    val followOnParams: List<String>,
+    val extraAdServersRegexps: List<Regex>,
+    val followOnCookies: List<SearchProviderCookie>
+) {
+
+    constructor(
+        name: String,
+        regexp: String,
+        queryParam: String,
+        codeParam: String = "",
+        codePrefixes: List<String> = emptyList(),
+        followOnParams: List<String> = emptyList(),
+        extraAdServersRegexps: List<String> = emptyList(),
+        followOnCookies: List<SearchProviderCookie> = emptyList()
+    ) : this(
+        name = name,
+        regexp = regexp.toRegex(),
+        queryParam = queryParam,
+        codeParam = codeParam,
+        codePrefixes = codePrefixes,
+        followOnParams = followOnParams,
+        extraAdServersRegexps = extraAdServersRegexps.map { it.toRegex() },
+        followOnCookies = followOnCookies
+    )
+
+    /**
+     * Checks if any of the given URLs represent an ad from the search engine.
+     * Used to check if a clicked link was for an ad.
+     */
+    fun containsAds(urlList: List<String>) = urlList.containsAds(extraAdServersRegexps)
+
+    private fun String.isAd(adRegexps: List<Regex>): Boolean {
+        for (adsRegex in adRegexps) {
+            if (adsRegex.containsMatchIn(this)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun List<String>.containsAds(adRegexps: List<Regex>): Boolean {
+        for (url in this) {
+            if (url.isAd(adRegexps)) {
+                return true
+            }
+        }
+        return false
+    }
+}

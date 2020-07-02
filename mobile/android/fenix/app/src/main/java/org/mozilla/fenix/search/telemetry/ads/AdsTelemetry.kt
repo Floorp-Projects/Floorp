@@ -10,7 +10,6 @@ import mozilla.components.concept.engine.Engine
 import org.json.JSONObject
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.containsAds
 import org.mozilla.fenix.search.telemetry.BaseSearchTelemetry
 import org.mozilla.fenix.search.telemetry.ExtensionInfo
 
