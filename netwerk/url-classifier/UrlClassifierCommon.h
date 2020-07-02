@@ -86,8 +86,6 @@ class UrlClassifierCommon final {
  private:
   static uint32_t TableToClassificationFlag(
       const nsACString& aTable, const std::vector<ClassificationData>& aData);
-
-  static nsresult GetTopWindowURI(nsIChannel* aChannel, nsIURI** aURI);
 };
 
 }  // namespace net
