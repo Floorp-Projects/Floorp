@@ -64,6 +64,8 @@ class IonCompileTask final : public RunnableTask,
     backgroundCodegen_ = codegen;
   }
 
+  void runTaskLocked(AutoLockHelperThreadState& locked);
+
   ThreadType threadType() override { return THREAD_TYPE_ION; }
   void runTask() override;
 };
