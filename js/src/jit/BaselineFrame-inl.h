@@ -89,6 +89,13 @@ inline CallObject& BaselineFrame::callObj() const {
   return obj->as<CallObject>();
 }
 
+inline ICScript* BaselineFrame::icScript() const {
+  if (JitOptions.warpBuilder) {
+    return icScript_;
+  }
+  return script()->jitScript()->icScript();
+}
+
 inline void BaselineFrame::unsetIsDebuggee() {
   MOZ_ASSERT(!script()->isDebuggee());
   flags_ &= ~DEBUGGEE;

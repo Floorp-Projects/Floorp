@@ -433,9 +433,7 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
       } else {
         *res = script->baselineScript()->warmUpCheckPrologueAddr();
       }
-      ICScript* icScript = JitOptions.warpBuilder ?
-        script->jitScript()->icScript() : nullptr;
-      frame->prepareForBaselineInterpreterToJitOSR(icScript);
+      frame->prepareForBaselineInterpreterToJitOSR();
       return true;
     }
   }
