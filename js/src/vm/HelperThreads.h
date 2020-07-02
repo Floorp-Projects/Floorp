@@ -61,6 +61,7 @@ typedef Fifo<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrFifo;
 
 struct Tier2GeneratorTask : public RunnableTask {
   virtual ~Tier2GeneratorTask() = default;
+  virtual void runTaskLocked(AutoLockHelperThreadState& locked) = 0;
   virtual void cancel() = 0;
 };
 
