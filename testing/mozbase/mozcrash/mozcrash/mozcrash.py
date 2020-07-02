@@ -123,7 +123,7 @@ def check_for_crashes(dump_directory,
                 out="\n".join(stackwalk_output),
                 err="\n".join(info.stackwalk_errors))
         if output is not None:
-            if sys.stdout.encoding != 'UTF-8':
+            if six.PY2 and sys.stdout.encoding != 'UTF-8':
                 output = output.encode('utf-8')
             print(output)
 
