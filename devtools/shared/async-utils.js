@@ -35,3 +35,33 @@ exports.listenOnce = function listenOnce(element, event, useCapture) {
     element.addEventListener(event, onEvent, useCapture);
   });
 };
+
+// Return value when `safeAsyncMethod` catches an error.
+const SWALLOWED_RET = Symbol("swallowed");
+
+/**
+ * Wraps the provided async method in a try/catch block.
+ * If an error is caught while running the method, check the provided condition
+ * to decide whether the error should bubble or not.
+ *
+ * @param  {Function} asyncFn
+ *         The async method to wrap.
+ * @param  {Function} shouldSwallow
+ *         Function that will run when an error is caught. If it returns true,
+ *         the error will be swallowed. Otherwise, it will bubble up.
+ * @return {Function} The wrapped method.
+ */
+exports.safeAsyncMethod = function(asyncFn, shouldSwallow) {
+  return async function(...args) {
+    try {
+      const ret = await asyncFn(...args);
+      return ret;
+    } catch (e) {
+      if (shouldSwallow()) {
+        console.warn("Async method failed in safeAsyncMethod", e);
+        return SWALLOWED_RET;
+      }
+      throw e;
+    }
+  };
+};
