@@ -86,7 +86,7 @@ class ChromeDriverPrintRefTestExecutor(WebDriverRefTestExecutor):
             self.has_window = True
 
         self.viewport_size = viewport_size
-        self.page_ranges = page_ranges.get(test)
+        self.page_ranges = page_ranges.get(test.url)
         timeout = self.timeout_multiplier * test.timeout if self.debug_info is None else None
 
         test_url = self.test_url(test)
