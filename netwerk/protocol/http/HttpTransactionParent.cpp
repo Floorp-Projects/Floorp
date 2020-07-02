@@ -406,17 +406,17 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const nsCString& aSecurityInfoSerialization,
     const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
     const int32_t& aProxyConnectResponseCode,
-    nsTArray<uint8_t>&& aDataForSniffer) {
+    nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this,
-      [self = UnsafePtr<HttpTransactionParent>(this), aStatus, aResponseHead,
-       aSecurityInfoSerialization, aProxyConnectFailed, aTimings,
-       aProxyConnectResponseCode,
-       aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)}]() mutable {
+      this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
+             aResponseHead, aSecurityInfoSerialization, aProxyConnectFailed,
+             aTimings, aProxyConnectResponseCode,
+             aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)},
+             aAltSvcUsed]() mutable {
         self->DoOnStartRequest(aStatus, aResponseHead,
                                aSecurityInfoSerialization, aProxyConnectFailed,
                                aTimings, aProxyConnectResponseCode,
-                               std::move(aDataForSniffer));
+                               std::move(aDataForSniffer), aAltSvcUsed);
       }));
   return IPC_OK();
 }
@@ -444,7 +444,7 @@ void HttpTransactionParent::DoOnStartRequest(
     const nsCString& aSecurityInfoSerialization,
     const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
     const int32_t& aProxyConnectResponseCode,
-    nsTArray<uint8_t>&& aDataForSniffer) {
+    nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed) {
   LOG(("HttpTransactionParent::DoOnStartRequest [this=%p aStatus=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
@@ -470,6 +470,19 @@ void HttpTransactionParent::DoOnStartRequest(
 
   mProxyConnectResponseCode = aProxyConnectResponseCode;
   mDataForSniffer = std::move(aDataForSniffer);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  MOZ_ASSERT(httpChannel, "mChannel is expected to implement nsIHttpChannel");
+  if (httpChannel) {
+    if (aAltSvcUsed.isSome()) {
+      Unused << httpChannel->SetRequestHeader(
+          nsDependentCString(nsHttp::Alternate_Service_Used), aAltSvcUsed.ref(),
+          false);
+    } else {
+      Unused << httpChannel->SetEmptyRequestHeader(
+          nsDependentCString(nsHttp::Alternate_Service_Used));
+    }
+  }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
   nsresult rv = mChannel->OnStartRequest(this);
