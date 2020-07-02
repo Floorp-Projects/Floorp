@@ -305,7 +305,8 @@ void ContentMediaAgent::UpdatePositionState(uint64_t aBrowsingContextId,
     return;
   }
   if (XRE_IsContentProcess()) {
-    // TODO : update IPC method in next patch.
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyPositionStateChanged(bc, aState);
     return;
   }
   // This would only happen when we disable e10s.

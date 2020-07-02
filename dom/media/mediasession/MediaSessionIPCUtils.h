@@ -7,6 +7,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "MediaMetadata.h"
+#include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/Maybe.h"
 
@@ -58,6 +59,27 @@ struct ParamTraits<mozilla::dom::MediaMetadataBase> {
         !ReadParam(aMsg, aIter, &(aResult->mArtist)) ||
         !ReadParam(aMsg, aIter, &(aResult->mAlbum)) ||
         !ReadParam(aMsg, aIter, &(aResult->mArtwork))) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::dom::PositionState> {
+  typedef mozilla::dom::PositionState paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mDuration);
+    WriteParam(aMsg, aParam.mPlaybackRate);
+    WriteParam(aMsg, aParam.mLastReportedPlaybackPosition);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    if (!ReadParam(aMsg, aIter, &(aResult->mDuration)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mPlaybackRate)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mLastReportedPlaybackPosition))) {
       return false;
     }
     return true;
