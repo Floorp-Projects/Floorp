@@ -33,6 +33,13 @@ permalink: /changelog/
   * Adds `Resources.getSpanned` to format strings using style spans.
   * Adds `Resources.locale` to get the corresponding locale on all SDK versions.
 
+* **feature-logins**
+  * 🆕 New component for logins related features.
+  * Adds `LoginExceptionStorage` for storing and accessing save login prompt exceptions.
+
+* **feature-prompts**
+   * Added an optional `LoginExceptions` param that a storage layer can implement to check for exceptions before showing a save login prompt.
+
 # 48.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v47.0.0...v48.0.0)

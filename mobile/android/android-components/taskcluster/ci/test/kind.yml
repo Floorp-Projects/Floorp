@@ -105,3 +105,10 @@ jobs:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-top-sites', 'arm', '1']
         treeherder:
             symbol: 'unit-feature-top-sites'
+    android-feature-logins:
+        description: 'Run unit tests on device for feature logins'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-logins', 'arm', '1']
+        treeherder:
+            symbol: 'unit-logins'

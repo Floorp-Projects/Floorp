@@ -24,9 +24,9 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.concept.engine.prompt.PromptRequest.BeforeUnload
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
+import mozilla.components.concept.engine.prompt.PromptRequest.BeforeUnload
 import mozilla.components.concept.engine.prompt.PromptRequest.Color
 import mozilla.components.concept.engine.prompt.PromptRequest.Confirm
 import mozilla.components.concept.engine.prompt.PromptRequest.Dismissible
@@ -103,11 +103,13 @@ private const val PROGRESS_ALMOST_COMPLETE = 90
  * 'save login'prompts will not be shown.
  * @property isSaveLoginEnabled A callback invoked when a login prompt is triggered. If false,
  * 'save login'prompts will not be shown.
+ * @property loginExceptionStorage An implementation of [LoginExceptions] that saves and checks origins
+ * the user does not want to see a save login dialog for.
  * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class PromptFeature private constructor(
     private val container: PromptContainer,
     private val store: BrowserStore,
@@ -116,6 +118,7 @@ class PromptFeature private constructor(
     private val shareDelegate: ShareDelegate,
     override val loginValidationDelegate: LoginValidationDelegate? = null,
     private val isSaveLoginEnabled: () -> Boolean = { false },
+    override val loginExceptionStorage: LoginExceptions? = null,
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature, Prompter {
     // These two scopes have identical lifetimes. We do not yet have a way of combining scopes
@@ -137,6 +140,7 @@ class PromptFeature private constructor(
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
+        loginExceptionStorage: LoginExceptions? = null,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Activity(activity),
@@ -146,6 +150,7 @@ class PromptFeature private constructor(
         shareDelegate = shareDelegate,
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
+        loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions
     )
 
@@ -157,6 +162,7 @@ class PromptFeature private constructor(
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
+        loginExceptionStorage: LoginExceptions? = null,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Fragment(fragment),
@@ -166,6 +172,7 @@ class PromptFeature private constructor(
         shareDelegate = shareDelegate,
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
+        loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions
     )
 
@@ -364,7 +371,10 @@ class PromptFeature private constructor(
                     }
                 }
             } catch (e: ClassCastException) {
-                throw IllegalArgumentException("PromptFeature onConsume cast failed with ${it.javaClass}", e)
+                throw IllegalArgumentException(
+                    "PromptFeature onConsume cast failed with ${it.javaClass}",
+                    e
+                )
             }
         }
     }
@@ -534,10 +544,14 @@ class PromptFeature private constructor(
             }
             is BeforeUnload -> {
 
-                val title = container.getString(R.string.mozac_feature_prompt_before_unload_dialog_title)
-                val body = container.getString(R.string.mozac_feature_prompt_before_unload_dialog_body)
-                val leaveLabel = container.getString(R.string.mozac_feature_prompts_before_unload_leave)
-                val stayLabel = container.getString(R.string.mozac_feature_prompts_before_unload_stay)
+                val title =
+                    container.getString(R.string.mozac_feature_prompt_before_unload_dialog_title)
+                val body =
+                    container.getString(R.string.mozac_feature_prompt_before_unload_dialog_body)
+                val leaveLabel =
+                    container.getString(R.string.mozac_feature_prompts_before_unload_leave)
+                val stayLabel =
+                    container.getString(R.string.mozac_feature_prompts_before_unload_stay)
 
                 ConfirmDialogFragment.newInstance(
                     sessionId = session.id,
