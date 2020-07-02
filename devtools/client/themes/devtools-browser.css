@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("resource://devtools/client/themes/splitters.css");
+@import url("chrome://devtools/skin/splitters.css");
 /* Imports the styles that will apply to the browser window for Responsive Design Mode.
    This is dynamically loaded when either the toolbox or RDM is open. */
-@import url("resource://devtools/client/responsive/responsive-browser.css");
+@import url("chrome://devtools/content/responsive/responsive-browser.css");
 
 /* Set min-height to 29px as it matches the height of the .devtools-tabbar (/devtools/client/themes/toolbox.css#67)
  * This prevents the shrinking of the toolbox until it disappears. */
