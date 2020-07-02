@@ -74,27 +74,31 @@ class RemoteCommands(MachCommandBase):
                      required=True,
                      help="The commit or tag object name to check out.")
     def vendor_puppeteer(self, repository, commitish):
-        puppeteerdir = os.path.join(self.remotedir, "test", "puppeteer")
+        puppeteer_dir = os.path.join(self.remotedir, "test", "puppeteer")
 
-        shutil.rmtree(puppeteerdir, ignore_errors=True)
-        os.makedirs(puppeteerdir)
+        # Preserve our custom mocha reporter
+        shutil.move(os.path.join(puppeteer_dir, "json-mocha-reporter.js"), self.remotedir)
+        shutil.rmtree(puppeteer_dir, ignore_errors=True)
+        os.makedirs(puppeteer_dir)
         with TemporaryDirectory() as tmpdir:
             git("clone", "-q", repository, tmpdir)
             git("checkout", commitish, worktree=tmpdir)
             git("checkout-index", "-a", "-f",
-                "--prefix", "{}/".format(puppeteerdir),
+                "--prefix", "{}/".format(puppeteer_dir),
                 worktree=tmpdir)
 
         # remove files which may interfere with git checkout of central
         try:
-            os.remove(os.path.join(puppeteerdir, ".gitattributes"))
-            os.remove(os.path.join(puppeteerdir, ".gitignore"))
+            os.remove(os.path.join(puppeteer_dir, ".gitattributes"))
+            os.remove(os.path.join(puppeteer_dir, ".gitignore"))
         except OSError:
             pass
 
-        experimental_dir = os.path.join(puppeteerdir, "experimental")
+        experimental_dir = os.path.join(puppeteer_dir, "experimental")
         if os.path.isdir(experimental_dir):
             shutil.rmtree(experimental_dir)
+
+        shutil.move(os.path.join(self.remotedir, "json-mocha-reporter.js"), puppeteer_dir)
 
         import yaml
         annotation = {
@@ -111,7 +115,7 @@ class RemoteCommands(MachCommandBase):
                 "release": commitish,
             },
         }
-        with open(os.path.join(puppeteerdir, "moz.yaml"), "w") as fh:
+        with open(os.path.join(puppeteer_dir, "moz.yaml"), "w") as fh:
             yaml.safe_dump(annotation, fh,
                            default_flow_style=False,
                            encoding="utf-8",
@@ -321,7 +325,7 @@ class PuppeteerRunner(MozbuildObject):
         super(PuppeteerRunner, self).__init__(*args, **kwargs)
 
         self.remotedir = os.path.join(self.topsrcdir, "remote")
-        self.puppeteerdir = os.path.join(self.remotedir, "test", "puppeteer")
+        self.puppeteer_dir = os.path.join(self.remotedir, "test", "puppeteer")
 
     def run_test(self, logger, *tests, **params):
         """
@@ -398,7 +402,7 @@ class PuppeteerRunner(MozbuildObject):
             expected_data = {}
 
         output_handler = MochaOutputHandler(logger, expected_data)
-        proc = npm(*command, cwd=self.puppeteerdir, env=env,
+        proc = npm(*command, cwd=self.puppeteer_dir, env=env,
                    processOutputLine=output_handler, wait=False)
         output_handler.proc = proc
 
