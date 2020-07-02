@@ -3404,11 +3404,15 @@ bool WorkerPrivate::IsOnCurrentThread() {
 }
 
 void WorkerPrivate::ScheduleDeletion(WorkerRanOrNot aRanOrNot) {
+  AssertIsOnWorkerThread();
   {
     // mWorkerThreadAccessible's accessor must be destructed before
     // the scheduled Runnable gets to run.
     auto data = mWorkerThreadAccessible.Access();
     MOZ_ASSERT(data->mChildWorkers.IsEmpty());
+
+    MOZ_RELEASE_ASSERT(!data->mDeletionScheduled);
+    data->mDeletionScheduled.Flip();
   }
   MOZ_ASSERT(mSyncLoopStack.IsEmpty());
   MOZ_ASSERT(mPostSyncLoopOperations == 0);
