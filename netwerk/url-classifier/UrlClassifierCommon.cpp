@@ -75,9 +75,12 @@ bool UrlClassifierCommon::ShouldEnableClassifier(nsIChannel* aChannel) {
     return false;
   }
 
-  rv = channel->GetTopWindowURI(getter_AddRefs(topWinURI));
-  if (NS_FAILED(rv)) {
-    // Skipping top-level load.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  MOZ_ASSERT(loadInfo);
+
+  auto policyType = loadInfo->GetExternalContentPolicyType();
+  if (policyType == nsIContentPolicy::TYPE_DOCUMENT) {
+    UC_LOG(("nsChannelClassifier: Skipping top-level load"));
     return false;
   }
 
@@ -85,6 +88,10 @@ bool UrlClassifierCommon::ShouldEnableClassifier(nsIChannel* aChannel) {
   // the security state. If any channels are subsequently cancelled
   // (page elements blocked) the state will be then updated.
   if (UC_LOG_ENABLED()) {
+    nsCOMPtr<nsIURI> topWinURI;
+    Unused << UrlClassifierCommon::GetTopWindowURI(aChannel,
+                                                   getter_AddRefs(topWinURI));
+
     nsCString chanSpec = chanURI->GetSpecOrDefault();
     chanSpec.Truncate(
         std::min(chanSpec.Length(), UrlClassifierCommon::sMaxSpecLength));
@@ -266,6 +273,37 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
 }
 
 /* static */
+nsresult UrlClassifierCommon::GetTopWindowURI(nsIChannel* aChannel,
+                                              nsIURI** aURI) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  MOZ_ASSERT(loadInfo);
+
+  RefPtr<dom::BrowsingContext> browsingContext;
+  nsresult rv =
+      loadInfo->GetTargetBrowsingContext(getter_AddRefs(browsingContext));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !browsingContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  dom::CanonicalBrowsingContext* top = browsingContext->Canonical()->Top();
+  dom::WindowGlobalParent* wgp = top->GetCurrentWindowGlobal();
+  if (!wgp) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<nsIURI> uri = wgp->GetDocumentURI();
+  if (!uri) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uri.forget(aURI);
+  return NS_OK;
+}
+
+/* static */
 nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
                                                          nsIURI** aURI) {
   MOZ_ASSERT(aChannel);
@@ -279,7 +317,8 @@ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
   }
 
   nsCOMPtr<nsIURI> topWinURI;
-  rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
+  rv =
+      UrlClassifierCommon::GetTopWindowURI(aChannel, getter_AddRefs(topWinURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!topWinURI) {
