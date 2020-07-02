@@ -9,5 +9,6 @@ DevToolsModules(
     'TreeCell.js',
     'TreeHeader.js',
     'TreeRow.js',
+    'TreeView.css',
     'TreeView.js',
 )
