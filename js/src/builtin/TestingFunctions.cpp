@@ -4150,20 +4150,29 @@ static bool FindPath(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "shortestPaths", 1)) {
+  if (!args.requireAtLeast(cx, "shortestPaths", 3)) {
     return false;
   }
 
-  if (!args[0].isObject() || !args[0].toObject().is<ArrayObject>()) {
+  // We don't ToString non-objects given as 'start' or 'target', because this
+  // test is all about object identity, and ToString doesn't preserve that.
+  // Non-GCThing endpoints don't make much sense.
+  if (!args[0].isObject() && !args[0].isString() && !args[0].isSymbol()) {
     ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0],
+                     nullptr, "not an object, string, or symbol");
+    return false;
+  }
+
+  if (!args[1].isObject() || !args[1].toObject().is<ArrayObject>()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[1],
                      nullptr, "not an array object");
     return false;
   }
 
-  RootedArrayObject objs(cx, &args[0].toObject().as<ArrayObject>());
+  RootedArrayObject objs(cx, &args[1].toObject().as<ArrayObject>());
   size_t length = objs->getDenseInitializedLength();
   if (length == 0) {
-    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0],
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[1],
                      nullptr,
                      "not a dense array object with one or more elements");
     return false;
@@ -4178,47 +4187,15 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  RootedValue start(cx, NullValue());
-  int32_t maxNumPaths = 3;
-
-  if (!args.get(1).isUndefined()) {
-    if (!args[1].isObject()) {
-      ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[1],
-                       nullptr, "not an options object");
-      return false;
-    }
-
-    RootedObject options(cx, &args[1].toObject());
-    bool exists;
-    if (!JS_HasProperty(cx, options, "start", &exists)) {
-      return false;
-    }
-    if (exists) {
-      if (!JS_GetProperty(cx, options, "start", &start)) {
-        return false;
-      }
-
-      // Non-GCThing endpoints don't make much sense.
-      if (!start.isGCThing()) {
-        ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, start,
-                         nullptr, "not a GC thing");
-        return false;
-      }
-    }
-
-    RootedValue v(cx);
-    if (!JS_GetProperty(cx, options, "maxNumPaths", &v)) {
-      return false;
-    }
-    if (!JS::ToInt32(cx, v, &maxNumPaths)) {
-      return false;
-    }
-    if (maxNumPaths <= 0) {
-      ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[2],
-                       nullptr, "not greater than 0");
-      return false;
-    }
-  } while (0);
+  int32_t maxNumPaths;
+  if (!JS::ToInt32(cx, args[2], &maxNumPaths)) {
+    return false;
+  }
+  if (maxNumPaths <= 0) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[2],
+                     nullptr, "not greater than 0");
+    return false;
+  }
 
   // We accumulate the results into a GC-stable form, due to the fact that the
   // JS::ubi::ShortestPaths lifetime (when operating on the live heap graph)
@@ -4228,7 +4205,7 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
   Vector<Vector<Vector<JS::ubi::EdgeName>>> names(cx);
 
   {
-    mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
+    JS::AutoCheckCannotGC noGC(cx);
 
     JS::ubi::NodeSet targets;
 
@@ -4241,23 +4218,13 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    mozilla::Maybe<JS::ubi::Node> root;
-    mozilla::Maybe<JS::ubi::ShortestPaths> maybeShortestPaths;
-    if (start.isNull()) {
-      maybeShortestPaths = JS::ubi::ShortestPaths::Create(
-          cx, maybeNoGC, maxNumPaths, std::move(targets));
-    } else {
-      maybeNoGC.emplace(cx);
-      root.emplace(start);
-      maybeShortestPaths = JS::ubi::ShortestPaths::Create(
-          cx, maybeNoGC.ref(), maxNumPaths, root.value(), std::move(targets));
-    }
-
+    JS::ubi::Node root(args[0]);
+    auto maybeShortestPaths = JS::ubi::ShortestPaths::Create(
+        cx, noGC, maxNumPaths, root, std::move(targets));
     if (maybeShortestPaths.isNothing()) {
       ReportOutOfMemory(cx);
       return false;
     }
-    MOZ_ASSERT(maybeNoGC.isSome());
     auto& shortestPaths = *maybeShortestPaths;
 
     for (size_t i = 0; i < length; i++) {
@@ -6619,15 +6586,11 @@ gc::ZealModeHelpText),
 "  the last array element is implicitly |target|.\n"),
 
     JS_FN_HELP("shortestPaths", ShortestPaths, 3, 0,
-"shortestPaths(targets, options)",
+"shortestPaths(start, targets, maxNumPaths)",
 "  Return an array of arrays of shortest retaining paths. There is an array of\n"
-"  shortest retaining paths for each object in |targets|. Each element in a path\n"
-"  is of the form |{ predecessor, edge }|. |options| may contain:\n"
-"  \n"
-"    maxNumPaths: The maximum number of paths returned in each of those arrays\n"
-"      (default 3).\n"
-"    start: The object to start all paths from. If not given, then\n"
-"      the starting point will be the set of GC roots."),
+"  shortest retaining paths for each object in |targets|. The maximum number of\n"
+"  paths in each of those arrays is bounded by |maxNumPaths|. Each element in a\n"
+"  path is of the form |{ predecessor, edge }|."),
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
     JS_FN_HELP("dumpObject", DumpObject, 1, 0,
