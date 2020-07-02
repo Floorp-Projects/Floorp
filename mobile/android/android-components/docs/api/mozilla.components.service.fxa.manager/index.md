@@ -15,6 +15,8 @@
 
 | Name | Summary |
 |---|---|
+| [AUTH_CHECK_CIRCUIT_BREAKER_COUNT](-a-u-t-h_-c-h-e-c-k_-c-i-r-c-u-i-t_-b-r-e-a-k-e-r_-c-o-u-n-t.md) | `const val AUTH_CHECK_CIRCUIT_BREAKER_COUNT: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [AUTH_CHECK_CIRCUIT_BREAKER_RESET_MS](-a-u-t-h_-c-h-e-c-k_-c-i-r-c-u-i-t_-b-r-e-a-k-e-r_-r-e-s-e-t_-m-s.md) | `const val AUTH_CHECK_CIRCUIT_BREAKER_RESET_MS: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
 | [SCOPE_PROFILE](-s-c-o-p-e_-p-r-o-f-i-l-e.md) | `const val SCOPE_PROFILE: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [SCOPE_SESSION](-s-c-o-p-e_-s-e-s-s-i-o-n.md) | `const val SCOPE_SESSION: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [SCOPE_SYNC](-s-c-o-p-e_-s-y-n-c.md) | `const val SCOPE_SYNC: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

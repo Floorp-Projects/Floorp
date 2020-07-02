@@ -2,7 +2,7 @@
 
 # Engine
 
-`interface Engine : `[`WebExtensionRuntime`](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md)`, `[`DataCleanable`](../-data-cleanable/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L23)
+`interface Engine : `[`WebExtensionRuntime`](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md)`, `[`DataCleanable`](../-data-cleanable/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L24)
 
 Entry point for interacting with the engine implementation.
 
@@ -16,6 +16,7 @@ Entry point for interacting with the engine implementation.
 
 | Name | Summary |
 |---|---|
+| [profiler](profiler.md) | `abstract val profiler: `[`Profiler`](../../mozilla.components.concept.engine.profiler/-profiler/index.md)`?`<br>Provides access to Firefox Profiler features. See [Profiler](../../mozilla.components.concept.engine.profiler/-profiler/index.md) for more information. |
 | [settings](settings.md) | `abstract val settings: `[`Settings`](../-settings/index.md)<br>Provides access to the settings of this engine. |
 | [trackingProtectionExceptionStore](tracking-protection-exception-store.md) | `open val trackingProtectionExceptionStore: `[`TrackingProtectionExceptionStorage`](../../mozilla.components.concept.engine.content.blocking/-tracking-protection-exception-storage/index.md)<br>Provides access to the tracking protection exception list for this engine. |
 | [version](version.md) | `abstract val version: `[`EngineVersion`](../../mozilla.components.concept.engine.utils/-engine-version/index.md)<br>Returns the version of the engine as [EngineVersion](../../mozilla.components.concept.engine.utils/-engine-version/index.md) object. |

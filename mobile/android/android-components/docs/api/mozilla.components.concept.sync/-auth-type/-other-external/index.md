@@ -2,7 +2,7 @@
 
 # OtherExternal
 
-`data class OtherExternal : `[`AuthType`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L288)
+`data class OtherExternal : `[`AuthType`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L294)
 
 Account was created for an unknown external reason, hopefully identified by [action](action.md).
 

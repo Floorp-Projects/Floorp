@@ -2,7 +2,7 @@
 
 # retryMigrateFromSessionTokenAsync
 
-`abstract fun retryMigrateFromSessionTokenAsync(): Deferred<<ERROR CLASS>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L224)
+`abstract fun retryMigrateFromSessionTokenAsync(): Deferred<<ERROR CLASS>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L230)
 
 Retries an in-flight migration attempt.
 

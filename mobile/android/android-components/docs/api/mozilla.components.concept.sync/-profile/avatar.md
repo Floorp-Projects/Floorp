@@ -2,4 +2,4 @@
 
 # avatar
 
-`val avatar: `[`Avatar`](../-avatar/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L340)
+`val avatar: `[`Avatar`](../-avatar/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L346)

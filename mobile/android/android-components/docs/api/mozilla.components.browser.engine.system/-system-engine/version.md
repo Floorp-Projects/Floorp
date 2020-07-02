@@ -2,7 +2,7 @@
 
 # version
 
-`val version: `[`EngineVersion`](../../mozilla.components.concept.engine.utils/-engine-version/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngine.kt#L70)
+`val version: `[`EngineVersion`](../../mozilla.components.concept.engine.utils/-engine-version/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngine.kt#L76)
 
 Overrides [Engine.version](../../mozilla.components.concept.engine/-engine/version.md)
 
