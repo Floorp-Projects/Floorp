@@ -885,6 +885,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     metaTwoByte_(MetaTwoByteKind::ScriptedTemplateObject, callee,
                  templateObject);
   }
+  friend class CacheIRCloner;
 
   CACHE_IR_WRITER_GENERATED
 };
@@ -1029,6 +1030,35 @@ class MOZ_RAII CacheIRReader {
     return false;
   }
   const uint8_t* currentPosition() const { return buffer_.currentPosition(); }
+};
+
+class MOZ_RAII CacheIRCloner {
+ public:
+  explicit CacheIRCloner(ICStub* stubInfo);
+
+  void cloneOp(CacheOp op, CacheIRReader& reader, CacheIRWriter& writer);
+
+  CACHE_IR_CLONE_GENERATED
+
+ private:
+  const CacheIRStubInfo* stubInfo_;
+  const uint8_t* stubData_;
+
+  uintptr_t readStubWord(uint32_t offset);
+  int64_t readStubInt64(uint32_t offset);
+
+  Shape* getShapeField(uint32_t stubOffset);
+  ObjectGroup* getGroupField(uint32_t stubOffset);
+  JSObject* getObjectField(uint32_t stubOffset);
+  JSString* getStringField(uint32_t stubOffset);
+  JSAtom* getAtomField(uint32_t stubOffset);
+  PropertyName* getPropertyNameField(uint32_t stubOffset);
+  JS::Symbol* getSymbolField(uint32_t stubOffset);
+  uintptr_t getRawWordField(uint32_t stubOffset);
+  const void* getRawPointerField(uint32_t stubOffset);
+  jsid getIdField(uint32_t stubOffset);
+  const Value getValueField(uint32_t stubOffset);
+  uint64_t getDOMExpandoGenerationField(uint32_t stubOffset);
 };
 
 class MOZ_RAII IRGenerator {
