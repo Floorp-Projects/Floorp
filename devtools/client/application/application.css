@@ -5,28 +5,28 @@
  /*
 * Global styles
 */
-@import "resource://devtools/client/application/src/base.css";
+@import "chrome://devtools/content/application/src/base.css";
 
 /*
 * Components
 */
-@import "resource://devtools/client/application/src/components/App.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestColorItem.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestIconItem.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestIssue.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestIssueList.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestItem.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestJsonLink.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestLoader.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestSection.css";
-@import "resource://devtools/client/application/src/components/routing/PageSwitcher.css";
-@import "resource://devtools/client/application/src/components/routing/Sidebar.css";
-@import "resource://devtools/client/application/src/components/routing/SidebarItem.css";
-@import "resource://devtools/client/application/src/components/service-workers/Registration.css";
-@import "resource://devtools/client/application/src/components/service-workers/RegistrationList.css";
-@import "resource://devtools/client/application/src/components/service-workers/RegistrationListEmpty.css";
-@import "resource://devtools/client/application/src/components/service-workers/Worker.css";
-@import "resource://devtools/client/application/src/components/ui/UIButton.css";
+@import "chrome://devtools/content/application/src/components/App.css";
+@import "chrome://devtools/content/application/src/components/manifest/ManifestColorItem.css";
+@import "chrome://devtools/content/application/src/components/manifest/ManifestIconItem.css";
+@import "chrome://devtools/content/application/src/components/manifest/ManifestIssue.css";
+@import "chrome://devtools/content/application/src/components/manifest/ManifestIssueList.css";
+@import "chrome://devtools/content/application/src/components/manifest/ManifestItem.css";
+@import "chrome://devtools/content/application/src/components/manifest/ManifestJsonLink.css";
+@import "chrome://devtools/content/application/src/components/manifest/ManifestLoader.css";
+@import "chrome://devtools/content/application/src/components/manifest/ManifestSection.css";
+@import "chrome://devtools/content/application/src/components/routing/PageSwitcher.css";
+@import "chrome://devtools/content/application/src/components/routing/Sidebar.css";
+@import "chrome://devtools/content/application/src/components/routing/SidebarItem.css";
+@import "chrome://devtools/content/application/src/components/service-workers/Registration.css";
+@import "chrome://devtools/content/application/src/components/service-workers/RegistrationList.css";
+@import "chrome://devtools/content/application/src/components/service-workers/RegistrationListEmpty.css";
+@import "chrome://devtools/content/application/src/components/service-workers/Worker.css";
+@import "chrome://devtools/content/application/src/components/ui/UIButton.css";
 
 html,
 body,

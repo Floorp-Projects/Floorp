@@ -3,10 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'PageSwitcher.css',
     'PageSwitcher.js',
-    'Sidebar.css',
     'Sidebar.js',
-    'SidebarItem.css',
     'SidebarItem.js'
 )
