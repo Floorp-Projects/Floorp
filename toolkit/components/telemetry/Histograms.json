@@ -936,16 +936,6 @@
     "bug_numbers": [1528867],
     "description": "Size of the GC nursery (bytes)"
   },
-  "GC_PRETENURE_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "81",
-    "kind": "enumerated",
-    "n_values": 32,
-    "bug_numbers": [1293262],
-    "description": "How many objects groups were selected for pretenuring by a minor GC"
-  },
   "GC_PRETENURE_COUNT_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
