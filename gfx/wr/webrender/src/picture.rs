@@ -3141,7 +3141,7 @@ impl TileCacheInstance {
         &mut self,
         prim_instance: &mut PrimitiveInstance,
         prim_spatial_node_index: SpatialNodeIndex,
-        prim_clip_chain: Option<&ClipChainInstance>,
+        prim_clip_chain: &ClipChainInstance,
         local_prim_rect: LayoutRect,
         frame_context: &FrameVisibilityContext,
         data_stores: &DataStores,
@@ -3155,13 +3155,6 @@ impl TileCacheInstance {
         // This primitive exists on the last element on the current surface stack.
         profile_scope!("update_prim_dependencies");
         let prim_surface_index = *surface_stack.last().unwrap();
-
-        // If the primitive is completely clipped out by the clip chain, there
-        // is no need to add it to any primitive dependencies.
-        let prim_clip_chain = match prim_clip_chain {
-            Some(prim_clip_chain) => prim_clip_chain,
-            None => return None,
-        };
 
         self.map_local_to_surface.set_target_spatial_node(
             prim_spatial_node_index,
