@@ -9,7 +9,7 @@
 const CanvasUtils = require("devtools/client/memory/components/tree-map/canvas-utils");
 const D3_SCRIPT =
   '<script type="application/javascript" ' +
-  'src="chrome://devtools/content/shared/vendor/d3.js>';
+  'src="chrome://global/content/third_party/d3/d3.js">';
 const TEST_URL = `data:text/html,<html><body>${D3_SCRIPT}</body></html>`;
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
