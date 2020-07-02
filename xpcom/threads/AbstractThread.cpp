@@ -243,7 +243,15 @@ AbstractThread::Dispatch(already_AddRefed<nsIRunnable> aEvent,
 NS_IMETHODIMP
 AbstractThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
                                 uint32_t aDelayMs) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIRunnable> event = aEvent;
+  NS_ENSURE_TRUE(!!aDelayMs, NS_ERROR_UNEXPECTED);
+
+  RefPtr<DelayedRunnable> r =
+      new DelayedRunnable(do_AddRef(this), event.forget(), aDelayMs);
+  nsresult rv = r->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
 nsresult AbstractThread::TailDispatchTasksFor(AbstractThread* aThread) {
