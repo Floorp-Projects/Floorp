@@ -777,7 +777,7 @@ DevToolsClient.prototype = {
    */
   getFrontByID(actorID) {
     const pool = this.poolFor(actorID);
-    return pool ? pool.get(actorID) : null;
+    return pool ? pool.getActorByID(actorID) : null;
   },
 
   poolFor(actorID) {

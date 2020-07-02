@@ -331,7 +331,7 @@ async function getFrames(thread: string) {
 }
 
 async function getFrameScopes(frame: Frame): Promise<*> {
-  const frameFront = lookupThreadFront(frame.thread).get(frame.id);
+  const frameFront = lookupThreadFront(frame.thread).getActorByID(frame.id);
   return frameFront.getEnvironment();
 }
 

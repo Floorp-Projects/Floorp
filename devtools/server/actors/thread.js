@@ -1116,7 +1116,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     let frame = this.youngestFrame;
 
     if (frameActorID) {
-      frame = this._framesPool.get(frameActorID).frame;
+      frame = this._framesPool.getActorByID(frameActorID).frame;
       if (!frame) {
         throw new Error("Frame should exist in the frames pool.");
       }

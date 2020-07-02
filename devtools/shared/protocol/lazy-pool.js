@@ -25,7 +25,7 @@ function LazyPool(conn) {
 
 LazyPool.prototype = extend(Pool.prototype, {
   // The actor for a given actor id stored in this pool
-  actor: function(actorID) {
+  getActorByID: function(actorID) {
     if (this.__poolMap) {
       const entry = this._poolMap.get(actorID);
       if (entry instanceof LazyActor) {
@@ -34,12 +34,6 @@ LazyPool.prototype = extend(Pool.prototype, {
       return entry;
     }
     return null;
-  },
-
-  // Same as actor, should update debugger connection to use 'actor'
-  // and then remove this.
-  get: function(actorID) {
-    return this.actor(actorID);
   },
 });
 
