@@ -8,6 +8,7 @@
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/BlobURL.h"
 #include "mozilla/dom/BlobURLInputStream.h"
+#include "mozilla/ScopeExit.h"
 
 using namespace mozilla::dom;
 
@@ -35,27 +36,38 @@ void BlobURLChannel::InitFailed() {
 void BlobURLChannel::Initialize() {
   MOZ_ASSERT(!mInitialized);
 
+  auto cleanupOnEarlyExit = MakeScopeExit([&] { InitFailed(); });
+
   nsCOMPtr<nsIURI> uri;
   nsresult rv = GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    InitFailed();
-    return;
-  }
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   RefPtr<BlobURL> blobURL;
   rv = uri->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(blobURL));
 
-  if (NS_FAILED(rv) || !blobURL) {
-    InitFailed();
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!blobURL)) {
     return;
+  }
+
+  if (blobURL->Revoked()) {
+#ifdef MOZ_WIDGET_ANDROID
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    GetLoadInfo(getter_AddRefs(loadInfo));
+    // if the channel was not triggered by the system principal,
+    // then we return here because the URL had been revoked
+    if (loadInfo && !loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
+      return;
+    }
+#else
+    return;
+#endif
   }
 
   mInputStream = BlobURLInputStream::Create(this, blobURL);
   if (NS_WARN_IF(!mInputStream)) {
-    InitFailed();
     return;
   }
-
+  cleanupOnEarlyExit.release();
   mInitialized = true;
 }
 
