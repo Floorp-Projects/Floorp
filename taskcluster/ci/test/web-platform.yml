@@ -294,7 +294,10 @@ web-platform-tests-print-reftest:
     schedules-component: web-platform-tests-print-reftest
     treeherder-symbol: W(Wp)
     chunks: 1
-    tier: 2
+    tier:
+        by-test-platform:
+            .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
+            default: default
     run-on-projects: built-projects
     mozharness:
         extra-options:
