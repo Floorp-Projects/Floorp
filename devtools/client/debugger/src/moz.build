@@ -18,3 +18,7 @@ CompiledModules(
     'main.js',
     'vendors.js',
 )
+
+DevToolsModules(
+    'debugger.css',
+)

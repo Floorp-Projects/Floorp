@@ -7,3 +7,10 @@
 DIRS += [
     'audio',
 ]
+
+DevToolsModules(
+    'common.css',
+    'splitters.css',
+    'toolbars.css',
+    'variables.css',
+)
