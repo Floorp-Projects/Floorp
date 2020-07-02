@@ -264,41 +264,6 @@ struct JS_PUBLIC_API ShortestPaths {
   }
 
   /**
-   * Same as Create() above, except use a dummy root with all runtime roots as
-   * its successors.
-   */
-  static mozilla::Maybe<ShortestPaths> Create(
-      JSContext* cx, mozilla::Maybe<JS::AutoCheckCannotGC>& maybeNoGC,
-      uint32_t maxNumPaths, NodeSet&& targets) {
-    MOZ_ASSERT(targets.count() > 0);
-    MOZ_ASSERT(maxNumPaths > 0);
-    MOZ_ASSERT(maybeNoGC.isNothing());
-
-    JS::ubi::RootList rootList(cx, maybeNoGC, true);
-    if (!rootList.init()) {
-      return mozilla::Nothing();
-    }
-
-    JS::ubi::Node root(&rootList);
-
-    ShortestPaths paths(maxNumPaths, root, std::move(targets));
-
-    Handler handler(paths);
-    Traversal traversal(cx, handler, maybeNoGC.ref());
-    traversal.wantNames = true;
-    if (!traversal.addStart(root) || !traversal.traverse()) {
-      return mozilla::Nothing();
-    }
-
-    // Take ownership of the back edges we created while traversing the
-    // graph so that we can follow them from `paths_` and don't
-    // use-after-free.
-    paths.backEdges_ = std::move(traversal.visited);
-
-    return mozilla::Some(std::move(paths));
-  }
-
-  /**
    * Get an iterator over each target node we searched for retaining paths
    * for. The returned iterator must not outlive the `ShortestPaths`
    * instance.
