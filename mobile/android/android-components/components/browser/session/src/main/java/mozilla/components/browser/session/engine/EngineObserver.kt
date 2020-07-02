@@ -32,6 +32,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.ktx.android.net.isInScope
+import mozilla.components.support.ktx.kotlin.isSameOriginAs
 
 /**
  * [EngineSession.Observer] implementation responsible to update the state of a [Session] from the events coming out of
@@ -61,17 +62,18 @@ internal class EngineObserver(
             session.webAppManifest = null
         }
 
+        if (!session.url.isSameOriginAs(url)) {
+            session.contentPermissionRequest.consume {
+                it.reject()
+                true
+            }
+        }
         session.url = url
 
         // Meh, GeckoView doesn't notify us about recording devices no longer used when navigating away. As a
         // workaround we clear them here. But that's not perfect...
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1554778
         session.recordingDevices = listOf()
-
-        session.contentPermissionRequest.consume {
-            it.reject()
-            true
-        }
     }
 
     private fun isUrlSame(originalUrl: String, newUrl: String): Boolean {

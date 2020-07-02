@@ -109,6 +109,7 @@ fun String.tryGetHostFromUrl(): String = try {
 /**
  * Compares 2 URLs and returns true if they have the same origin,
  * which means: same protocol, same host, same port.
+ * It will return false if either this or [other] is not a valid URL.
  */
 fun String.isSameOriginAs(other: String): Boolean {
     fun canonicalizeOrigin(urlStr: String): String {
@@ -117,7 +118,11 @@ fun String.isSameOriginAs(other: String): Boolean {
         val canonicalized = URL(url.protocol, url.host, port, "")
         return canonicalized.toString()
     }
-    return canonicalizeOrigin(this) == canonicalizeOrigin(other)
+    return try {
+        canonicalizeOrigin(this) == canonicalizeOrigin(other)
+    } catch (e: MalformedURLException) {
+        false
+    }
 }
 
 /**
