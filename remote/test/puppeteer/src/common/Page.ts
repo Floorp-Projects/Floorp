@@ -15,6 +15,7 @@
  */
 
 import * as fs from 'fs';
+import { promisify } from 'util';
 import { EventEmitter } from './EventEmitter';
 import * as mime from 'mime';
 import { Events } from './Events';
@@ -22,7 +23,7 @@ import { Connection, CDPSession } from './Connection';
 import { Dialog } from './Dialog';
 import { EmulationManager } from './EmulationManager';
 import { Frame, FrameManager } from './FrameManager';
-import { Keyboard, Mouse, Touchscreen, MouseButtonInput } from './Input';
+import { Keyboard, Mouse, Touchscreen, MouseButton } from './Input';
 import { Tracing } from './Tracing';
 import { assert } from './assert';
 import { helper, debugError } from './helper';
@@ -41,9 +42,18 @@ import { FileChooser } from './FileChooser';
 import { ConsoleMessage, ConsoleMessageType } from './ConsoleMessage';
 import { PuppeteerLifeCycleEvent } from './LifecycleWatcher';
 import Protocol from '../protocol';
+import {
+  EvaluateFn,
+  SerializableOrJSHandle,
+  EvaluateHandleFn,
+  WrapElementHandle,
+} from './EvalTypes';
 
-const writeFileAsync = helper.promisify(fs.writeFile);
+const writeFileAsync = promisify(fs.writeFile);
 
+/**
+ * @public
+ */
 export interface Metrics {
   Timestamp?: number;
   Documents?: number;
@@ -60,9 +70,54 @@ export interface Metrics {
   JSHeapTotalSize?: number;
 }
 
-interface WaitForOptions {
+/**
+ * @public
+ */
+export interface WaitTimeoutOptions {
+  /**
+   * Maximum wait time in milliseconds, defaults to 30 seconds, pass `0` to
+   * disable the timeout.
+   *
+   * @remarks
+   * The default value can be changed by using the
+   * {@link Page.setDefaultTimeout} method.
+   */
+  timeout?: number;
+}
+
+/**
+ * @public
+ */
+export interface WaitForOptions {
+  /**
+   * Maximum wait time in milliseconds, defaults to 30 seconds, pass `0` to
+   * disable the timeout.
+   *
+   * @remarks
+   * The default value can be changed by using the
+   * {@link Page.setDefaultTimeout} or {@link Page.setDefaultNavigationTimeout}
+   * methods.
+   */
   timeout?: number;
   waitUntil?: PuppeteerLifeCycleEvent | PuppeteerLifeCycleEvent[];
+}
+
+/**
+ * @public
+ */
+export interface GeolocationOptions {
+  /**
+   * Latitude between -90 and 90.
+   */
+  longitude: number;
+  /**
+   * Longitude between -180 and 180.
+   */
+  latitude: number;
+  /**
+   * Optional non-negative accuracy value.
+   */
+  accuracy?: number;
 }
 
 interface MediaFeature {
@@ -139,6 +194,8 @@ type VisionDeficiency =
 
 /**
  * All the events that a page instance may emit.
+ *
+ * @public
  */
 export const enum PageEmittedEvents {
   /**
@@ -241,7 +298,8 @@ export class Page extends EventEmitter {
   private _viewport: Viewport | null;
   private _screenshotTaskQueue: ScreenshotTaskQueue;
   private _workers = new Map<string, WebWorker>();
-  // TODO: improve this typedef - it's a function that takes a file chooser or something?
+  // TODO: improve this typedef - it's a function that takes a file chooser or
+  // something?
   private _fileChooserInterceptors = new Set<Function>();
 
   private _disconnectPromise?: Promise<Error>;
@@ -367,12 +425,19 @@ export class Page extends EventEmitter {
     for (const interceptor of interceptors) interceptor.call(null, fileChooser);
   }
 
+  /**
+   * @returns `true` if the page has JavaScript enabled, `false` otherwise.
+   */
   public isJavaScriptEnabled(): boolean {
     return this._javascriptEnabled;
   }
 
+  /**
+   * @param options - Optional waiting parameters
+   * @returns Resolves after a page requests a file picker.
+   */
   async waitForFileChooser(
-    options: { timeout?: number } = {}
+    options: WaitTimeoutOptions = {}
   ): Promise<FileChooser> {
     if (!this._fileChooserInterceptors.size)
       await this._client.send('Page.setInterceptFileChooserDialog', {
@@ -395,11 +460,19 @@ export class Page extends EventEmitter {
       });
   }
 
-  async setGeolocation(options: {
-    longitude: number;
-    latitude: number;
-    accuracy?: number;
-  }): Promise<void> {
+  /**
+   * Sets the page's geolocation.
+   *
+   * @remarks
+   * Consider using {@link BrowserContext.overridePermissions} to grant
+   * permissions for the page to read its geolocation.
+   *
+   * @example
+   * ```js
+   * await page.setGeolocation({latitude: 59.95, longitude: 30.31667});
+   * ```
+   */
+  async setGeolocation(options: GeolocationOptions): Promise<void> {
     const { longitude, latitude, accuracy = 0 } = options;
     if (longitude < -180 || longitude > 180)
       throw new Error(
@@ -420,14 +493,23 @@ export class Page extends EventEmitter {
     });
   }
 
+  /**
+   * @returns A target this page was created from.
+   */
   target(): Target {
     return this._target;
   }
 
+  /**
+   * @returns The browser this page belongs to.
+   */
   browser(): Browser {
     return this._target.browser();
   }
 
+  /**
+   * @returns The browser context that the page belongs to
+   */
   browserContext(): BrowserContext {
     return this._target.browserContext();
   }
@@ -446,6 +528,9 @@ export class Page extends EventEmitter {
       );
   }
 
+  /**
+   * @returns The page's main frame.
+   */
   mainFrame(): Frame {
     return this._frameManager.mainFrame();
   }
@@ -470,40 +555,150 @@ export class Page extends EventEmitter {
     return this._accessibility;
   }
 
+  /**
+   * @returns An array of all frames attached to the page.
+   */
   frames(): Frame[] {
     return this._frameManager.frames();
   }
 
+  /**
+   * @returns all of the dedicated
+   * {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API | WebWorkers}
+   * associated with the page.
+   */
   workers(): WebWorker[] {
     return Array.from(this._workers.values());
   }
 
+  /**
+   * @param value - Whether to enable request interception.
+   *
+   * @remarks
+   * Activating request interception enables {@link HTTPRequest.abort},
+   * {@link HTTPRequest.continue} and {@link HTTPRequest.respond} methods.  This
+   * provides the capability to modify network requests that are made by a page.
+   *
+   * Once request interception is enabled, every request will stall unless it's
+   * continued, responded or aborted.
+   *
+   * **NOTE** Enabling request interception disables page caching.
+   *
+   * @example
+   * An example of a naïve request interceptor that aborts all image requests:
+   * ```js
+   * const puppeteer = require('puppeteer');
+   * (async () => {
+   *   const browser = await puppeteer.launch();
+   *   const page = await browser.newPage();
+   *   await page.setRequestInterception(true);
+   *   page.on('request', interceptedRequest => {
+   *     if (interceptedRequest.url().endsWith('.png') ||
+   *         interceptedRequest.url().endsWith('.jpg'))
+   *       interceptedRequest.abort();
+   *     else
+   *       interceptedRequest.continue();
+   *     });
+   *   await page.goto('https://example.com');
+   *   await browser.close();
+   * })();
+   * ```
+   */
   async setRequestInterception(value: boolean): Promise<void> {
     return this._frameManager.networkManager().setRequestInterception(value);
   }
 
+  /**
+   * @param enabled - When `true`, enables offline mode for the page.
+   */
   setOfflineMode(enabled: boolean): Promise<void> {
     return this._frameManager.networkManager().setOfflineMode(enabled);
   }
 
+  /**
+   * @param timeout - Maximum navigation time in milliseconds.
+   */
   setDefaultNavigationTimeout(timeout: number): void {
     this._timeoutSettings.setDefaultNavigationTimeout(timeout);
   }
 
+  /**
+   * @param timeout - Maximum time in milliseconds.
+   */
   setDefaultTimeout(timeout: number): void {
     this._timeoutSettings.setDefaultTimeout(timeout);
   }
 
+  /**
+   * Runs `document.querySelector` within the page. If no element matches the
+   * selector, the return value resolves to `null`.
+   *
+   * @remarks
+   * Shortcut for {@link Frame.$ | Page.mainFrame().$(selector) }.
+   *
+   * @param selector - A
+   * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector}
+   * to query page for.
+   */
   async $(selector: string): Promise<ElementHandle | null> {
     return this.mainFrame().$(selector);
   }
 
-  async evaluateHandle(
-    pageFunction: Function | string,
-    ...args: unknown[]
-  ): Promise<JSHandle> {
+  /**
+   * @remarks
+   *
+   * The only difference between {@link Page.evaluate | page.evaluate} and
+   * `page.evaluateHandle` is that `evaluateHandle` will return the value
+   * wrapped in an in-page object.
+   *
+   * If the function passed to `page.evaluteHandle` returns a Promise, the
+   * function will wait for the promise to resolve and return its value.
+   *
+   * You can pass a string instead of a function (although functions are
+   * recommended as they are easier to debug and use with TypeScript):
+   *
+   * @example
+   * ```
+   * const aHandle = await page.evaluateHandle('document')
+   * ```
+   *
+   * @example
+   * {@link JSHandle} instances can be passed as arguments to the `pageFunction`:
+   * ```
+   * const aHandle = await page.evaluateHandle(() => document.body);
+   * const resultHandle = await page.evaluateHandle(body => body.innerHTML, aHandle);
+   * console.log(await resultHandle.jsonValue());
+   * await resultHandle.dispose();
+   * ```
+   *
+   * Most of the time this function returns a {@link JSHandle},
+   * but if `pageFunction` returns a reference to an element,
+   * you instead get an {@link ElementHandle} back:
+   *
+   * @example
+   * ```
+   * const button = await page.evaluateHandle(() => document.querySelector('button'));
+   * // can call `click` because `button` is an `ElementHandle`
+   * await button.click();
+   * ```
+   *
+   * The TypeScript definitions assume that `evaluateHandle` returns
+   *  a `JSHandle`, but if you know it's going to return an
+   * `ElementHandle`, pass it as the generic argument:
+   *
+   * ```
+   * const button = await page.evaluateHandle<ElementHandle>(...);
+   * ```
+   *
+   * @param pageFunction - a function that is run within the page
+   * @param args - arguments to be passed to the pageFunction
+   */
+  async evaluateHandle<HandlerType extends JSHandle = JSHandle>(
+    pageFunction: EvaluateHandleFn,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<HandlerType> {
     const context = await this.mainFrame().executionContext();
-    return context.evaluateHandle(pageFunction, ...args);
+    return context.evaluateHandle<HandlerType>(pageFunction, ...args);
   }
 
   async queryObjects(prototypeHandle: JSHandle): Promise<JSHandle> {
@@ -511,18 +706,89 @@ export class Page extends EventEmitter {
     return context.queryObjects(prototypeHandle);
   }
 
-  async $eval<ReturnType extends any>(
+  /**
+   * This method runs `document.querySelector` within the page and passes the
+   * result as the first argument to the `pageFunction`.
+   *
+   * @remarks
+   *
+   * If no element is found matching `selector`, the method will throw an error.
+   *
+   * If `pageFunction` returns a promise `$eval` will wait for the promise to
+   * resolve and then return its value.
+   *
+   * @example
+   *
+   * ```
+   * const searchValue = await page.$eval('#search', el => el.value);
+   * const preloadHref = await page.$eval('link[rel=preload]', el => el.href);
+   * const html = await page.$eval('.main-container', el => el.outerHTML);
+   * ```
+   *
+   * If you are using TypeScript, you may have to provide an explicit type to the
+   * first argument of the `pageFunction`.
+   * By default it is typed as `Element`, but you may need to provide a more
+   * specific sub-type:
+   *
+   * @example
+   *
+   * ```
+   * // if you don't provide HTMLInputElement here, TS will error
+   * // as `value` is not on `Element`
+   * const searchValue = await page.$eval('#search', (el: HTMLInputElement) => el.value);
+   * ```
+   *
+   * The compiler should be able to infer the return type
+   * from the `pageFunction` you provide. If it is unable to, you can use the generic
+   * type to tell the compiler what return type you expect from `$eval`:
+   *
+   * @example
+   *
+   * ```
+   * // The compiler can infer the return type in this case, but if it can't
+   * // or if you want to be more explicit, provide it as the generic type.
+   * const searchValue = await page.$eval<string>(
+   *  '#search', (el: HTMLInputElement) => el.value
+   * );
+   * ```
+   *
+   * @param selector the
+   * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector}
+   * to query for
+   * @param pageFunction the function to be evaluated in the page context. Will
+   * be passed the result of `document.querySelector(selector)` as its first
+   * argument.
+   * @param args any additional arguments to pass through to `pageFunction`.
+   *
+   * @returns The result of calling `pageFunction`. If it returns an element it
+   * is wrapped in an {@link ElementHandle}, else the raw value itself is
+   * returned.
+   */
+  async $eval<ReturnType>(
     selector: string,
-    pageFunction: Function | string,
-    ...args: unknown[]
-  ): Promise<ReturnType> {
+    pageFunction: (
+      element: Element,
+      /* Unfortunately this has to be unknown[] because it's hard to get
+       * TypeScript to understand that the arguments will be left alone unless
+       * they are an ElementHandle, in which case they will be unwrapped.
+       * The nice thing about unknown vs any is that unknown will force the user
+       * to type the item before using it to avoid errors.
+       *
+       * TODO(@jackfranklin): We could fix this by using overloads like
+       * DefinitelyTyped does:
+       * https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/puppeteer/index.d.ts#L114
+       */
+      ...args: unknown[]
+    ) => ReturnType | Promise<ReturnType>,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<WrapElementHandle<ReturnType>> {
     return this.mainFrame().$eval<ReturnType>(selector, pageFunction, ...args);
   }
 
   async $$eval<ReturnType extends any>(
     selector: string,
-    pageFunction: Function | string,
-    ...args: unknown[]
+    pageFunction: EvaluateFn | string,
+    ...args: SerializableOrJSHandle[]
   ): Promise<ReturnType> {
     return this.mainFrame().$$eval<ReturnType>(selector, pageFunction, ...args);
   }
@@ -1291,7 +1557,7 @@ export class Page extends EventEmitter {
     selector: string,
     options: {
       delay?: number;
-      button?: MouseButtonInput;
+      button?: MouseButton;
       clickCount?: number;
     } = {}
   ): Promise<void> {
@@ -1330,7 +1596,7 @@ export class Page extends EventEmitter {
       timeout?: number;
       polling?: string | number;
     } = {},
-    ...args: unknown[]
+    ...args: SerializableOrJSHandle[]
   ): Promise<JSHandle> {
     return this.mainFrame().waitFor(
       selectorOrFunctionOrTimeout,
@@ -1367,7 +1633,7 @@ export class Page extends EventEmitter {
       timeout?: number;
       polling?: string | number;
     } = {},
-    ...args: unknown[]
+    ...args: SerializableOrJSHandle[]
   ): Promise<JSHandle> {
     return this.mainFrame().waitForFunction(pageFunction, options, ...args);
   }

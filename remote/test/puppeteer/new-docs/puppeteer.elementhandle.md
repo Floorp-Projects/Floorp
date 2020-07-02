@@ -9,7 +9,7 @@ ElementHandle represents an in-page DOM element.
 <b>Signature:</b>
 
 ```typescript
-export declare class ElementHandle extends JSHandle 
+export declare class ElementHandle<ElementType extends Element = Element> extends JSHandle 
 ```
 <b>Extends:</b> [JSHandle](./puppeteer.jshandle.md)
 
@@ -30,9 +30,11 @@ const puppeteer = require('puppeteer');
 })();
 
 ```
-ElementHandle prevents DOM element from garbage collection unless the handle is [disposed](./puppeteer.jshandle.dispose.md)<!-- -->. ElementHandles are auto-disposed when their origin frame gets navigated.
+ElementHandle prevents the DOM element from being garbage-collected unless the handle is [disposed](./puppeteer.jshandle.dispose.md)<!-- -->. ElementHandles are auto-disposed when their origin frame gets navigated.
 
 ElementHandle instances can be used as arguments in [Page.$eval()](./puppeteer.page._eval.md) and [Page.evaluate()](./puppeteer.page.evaluate.md) methods.
+
+If you're using TypeScript, ElementHandle takes a generic argument that denotes the type of element the handle is holding within. For example, if you have a handle to a `<select>` element, you can type it as `ElementHandle<HTMLSelectElement>` and you get some nicer type checks.
 
 The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `ElementHandle` class.
 
@@ -40,8 +42,8 @@ The constructor for this class is marked as internal. Third-party code should no
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [$(selector)](./puppeteer.elementhandle._.md) |  | The method runs <code>element.querySelector</code> within the page. If no element matches the selector, the return value resolves to <code>null</code>. |
-|  [$$(selector)](./puppeteer.elementhandle.__.md) |  | The method runs <code>element.querySelectorAll</code> within the page. If no elements match the selector, the return value resolves to <code>[]</code>. |
+|  [$(selector)](./puppeteer.elementhandle._.md) |  | Runs <code>element.querySelector</code> within the page. If no element matches the selector, the return value resolves to <code>null</code>. |
+|  [$$(selector)](./puppeteer.elementhandle.__.md) |  | Runs <code>element.querySelectorAll</code> within the page. If no elements match the selector, the return value resolves to <code>[]</code>. |
 |  [$$eval(selector, pageFunction, args)](./puppeteer.elementhandle.__eval.md) |  | This method runs <code>document.querySelectorAll</code> within the element and passes it as the first argument to <code>pageFunction</code>. If there's no element matching <code>selector</code>, the method throws an error.<!-- -->If <code>pageFunction</code> returns a Promise, then <code>frame.$$eval</code> would wait for the promise to resolve and return its value. |
 |  [$eval(selector, pageFunction, args)](./puppeteer.elementhandle._eval.md) |  | This method runs <code>document.querySelector</code> within the element and passes it as the first argument to <code>pageFunction</code>. If there's no element matching <code>selector</code>, the method throws an error.<!-- -->If <code>pageFunction</code> returns a Promise, then <code>frame.$eval</code> would wait for the promise to resolve and return its value. |
 |  [$x(expression)](./puppeteer.elementhandle._x.md) |  | The method evaluates the XPath expression relative to the elementHandle. If there are no such elements, the method will resolve to an empty array. |

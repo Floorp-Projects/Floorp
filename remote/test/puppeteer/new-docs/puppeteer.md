@@ -15,21 +15,21 @@
 |  [CDPSession](./puppeteer.cdpsession.md) | The <code>CDPSession</code> instances are used to talk raw Chrome Devtools Protocol. |
 |  [Connection](./puppeteer.connection.md) |  |
 |  [ConsoleMessage](./puppeteer.consolemessage.md) | ConsoleMessage objects are dispatched by page via the 'console' event. |
-|  [Coverage](./puppeteer.coverage.md) |  |
+|  [Coverage](./puppeteer.coverage.md) | The Coverage class provides methods to gathers information about parts of JavaScript and CSS that were used by the page. |
 |  [Dialog](./puppeteer.dialog.md) | Dialog instances are dispatched by the [Page](./puppeteer.page.md) via the <code>dialog</code> event. |
 |  [ElementHandle](./puppeteer.elementhandle.md) | ElementHandle represents an in-page DOM element. |
 |  [EventEmitter](./puppeteer.eventemitter.md) | The EventEmitter class that many Puppeteer classes extend. |
-|  [ExecutionContext](./puppeteer.executioncontext.md) |  |
+|  [ExecutionContext](./puppeteer.executioncontext.md) | This class represents a context for JavaScript execution. A \[Page\] might have many execution contexts: - each [frame](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) has "default" execution context that is always created after frame is attached to DOM. This context is returned by the  method. - [Extension](https://developer.chrome.com/extensions)<!-- -->'s content scripts create additional execution contexts.<!-- -->Besides pages, execution contexts can be found in [workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)<!-- -->. |
 |  [FileChooser](./puppeteer.filechooser.md) | File choosers let you react to the page requesting for a file. |
 |  [Frame](./puppeteer.frame.md) |  |
 |  [FrameManager](./puppeteer.framemanager.md) |  |
 |  [HTTPRequest](./puppeteer.httprequest.md) |  |
-|  [HTTPResponse](./puppeteer.httpresponse.md) |  |
-|  [JSHandle](./puppeteer.jshandle.md) |  |
-|  [Keyboard](./puppeteer.keyboard.md) |  |
+|  [HTTPResponse](./puppeteer.httpresponse.md) | The HTTPResponse class represents responses which are received by the [Page](./puppeteer.page.md) class. |
+|  [JSHandle](./puppeteer.jshandle.md) | Represents an in-page JavaScript object. JSHandles can be created with the [page.evaluateHandle](./puppeteer.page.evaluatehandle.md) method. |
+|  [Keyboard](./puppeteer.keyboard.md) | Keyboard provides an api for managing a virtual keyboard. The high level api is [Keyboard.type()](./puppeteer.keyboard.type.md)<!-- -->, which takes raw characters and generates proper keydown, keypress/input, and keyup events on your page. |
 |  [Mouse](./puppeteer.mouse.md) | The Mouse class operates in main-frame CSS pixels relative to the top-left corner of the viewport. |
 |  [Page](./puppeteer.page.md) | Page provides methods to interact with a single tab or \[extension background page\](https://developer.chrome.com/extensions/background\_pages) in Chromium. One \[Browser\] instance might have multiple \[Page\] instances. |
-|  [Puppeteer](./puppeteer.puppeteer.md) | The main Puppeteer class |
+|  [Puppeteer](./puppeteer.puppeteer.md) | The main Puppeteer class Puppeteer module provides a method to launch a browser instance. |
 |  [SecurityDetails](./puppeteer.securitydetails.md) | The SecurityDetails class represents the security details of a response that was received over a secure connection. |
 |  [Target](./puppeteer.target.md) |  |
 |  [TimeoutError](./puppeteer.timeouterror.md) | TimeoutError is emitted whenever certain operations are terminated due to timeout. |
@@ -50,21 +50,35 @@
 |  [BoundingBox](./puppeteer.boundingbox.md) |  |
 |  [BoxModel](./puppeteer.boxmodel.md) |  |
 |  [BrowserFetcherOptions](./puppeteer.browserfetcheroptions.md) |  |
+|  [BrowserFetcherRevisionInfo](./puppeteer.browserfetcherrevisioninfo.md) |  |
+|  [BrowserOptions](./puppeteer.browseroptions.md) | Generic browser options that can be passed when launching any browser. |
+|  [ChromeArgOptions](./puppeteer.chromeargoptions.md) | Launcher options that only apply to Chrome. |
 |  [ClickOptions](./puppeteer.clickoptions.md) |  |
 |  [ConsoleMessageLocation](./puppeteer.consolemessagelocation.md) |  |
-|  [KeyDefinition](./puppeteer.keydefinition.md) | Copyright 2017 Google Inc. All rights reserved.<!-- -->Licensed under the Apache License, Version 2.0 (the 'License'); you may not use this file except in compliance with the License. You may obtain a copy of the License at<!-- -->http://www.apache.org/licenses/LICENSE-2.0<!-- -->Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. |
+|  [CoverageEntry](./puppeteer.coverageentry.md) | The CoverageEntry class represents one entry of the coverage report. |
+|  [CSSCoverageOptions](./puppeteer.csscoverageoptions.md) | Set of configurable options for CSS coverage. |
+|  [GeolocationOptions](./puppeteer.geolocationoptions.md) |  |
+|  [JSCoverageOptions](./puppeteer.jscoverageoptions.md) | Set of configurable options for JS coverage. |
+|  [JSONObject](./puppeteer.jsonobject.md) |  |
+|  [LaunchOptions](./puppeteer.launchoptions.md) | Generic launch options that can be passed when launching any browser. |
 |  [Metrics](./puppeteer.metrics.md) |  |
+|  [MouseOptions](./puppeteer.mouseoptions.md) |  |
 |  [PressOptions](./puppeteer.pressoptions.md) |  |
+|  [ProductLauncher](./puppeteer.productlauncher.md) | Describes a launcher - a class that is able to create and launch a browser instance. |
+|  [RemoteAddress](./puppeteer.remoteaddress.md) |  |
 |  [SerializedAXNode](./puppeteer.serializedaxnode.md) | Represents a Node and the properties of it that are relevant to Accessibility. |
 |  [SnapshotOptions](./puppeteer.snapshotoptions.md) |  |
+|  [TracingOptions](./puppeteer.tracingoptions.md) |  |
+|  [WaitForOptions](./puppeteer.waitforoptions.md) |  |
 |  [WaitForTargetOptions](./puppeteer.waitfortargetoptions.md) |  |
+|  [WaitTimeoutOptions](./puppeteer.waittimeoutoptions.md) |  |
 
 ## Variables
 
 |  Variable | Description |
 |  --- | --- |
+|  [devicesMap](./puppeteer.devicesmap.md) |  |
 |  [EVALUATION\_SCRIPT\_URL](./puppeteer.evaluation_script_url.md) |  |
-|  [keyDefinitions](./puppeteer.keydefinitions.md) |  |
 |  [puppeteerErrors](./puppeteer.puppeteererrors.md) |  |
 
 ## Type Aliases
@@ -72,7 +86,18 @@
 |  Type Alias | Description |
 |  --- | --- |
 |  [ConsoleMessageType](./puppeteer.consolemessagetype.md) | The supported types for console messages. |
-|  [KeyInput](./puppeteer.keyinput.md) |  |
-|  [MouseButtonInput](./puppeteer.mousebuttoninput.md) |  |
+|  [DevicesMap](./puppeteer.devicesmap.md) |  |
+|  [EvaluateFn](./puppeteer.evaluatefn.md) |  |
+|  [EvaluateFnReturnType](./puppeteer.evaluatefnreturntype.md) |  |
+|  [EvaluateHandleFn](./puppeteer.evaluatehandlefn.md) |  |
+|  [JSONArray](./puppeteer.jsonarray.md) |  |
+|  [KeyInput](./puppeteer.keyinput.md) | All the valid keys that can be passed to functions that take user input, such as [keyboard.press](./puppeteer.keyboard.press.md) |
+|  [MouseButton](./puppeteer.mousebutton.md) |  |
+|  [Platform](./puppeteer.platform.md) | Supported platforms. |
+|  [Product](./puppeteer.product.md) | Supported products. |
 |  [PuppeteerErrors](./puppeteer.puppeteererrors.md) |  |
+|  [Serializable](./puppeteer.serializable.md) |  |
+|  [SerializableOrJSHandle](./puppeteer.serializableorjshandle.md) |  |
+|  [UnwrapElementHandle](./puppeteer.unwrapelementhandle.md) | Unwraps a DOM element out of an ElementHandle instance |
+|  [WrapElementHandle](./puppeteer.wrapelementhandle.md) | Wraps a DOM element into an ElementHandle instance |
 
