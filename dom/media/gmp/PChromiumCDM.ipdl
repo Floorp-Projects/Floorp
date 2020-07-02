@@ -6,6 +6,8 @@
 include protocol PGMPContent;
 include GMPTypes;
 
+include "GMPMessageUtils.h";
+
 using cdm::HdcpVersion from "content_decryption_module.h";
 
 include "GMPMessageUtils.h";
@@ -64,7 +66,7 @@ child:
   async GiveBuffer(Shmem aShmem);
 
   async PurgeShmems();
-  
+
 
 parent:
   async __delete__();
