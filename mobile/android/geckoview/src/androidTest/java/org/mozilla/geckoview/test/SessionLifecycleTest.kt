@@ -79,7 +79,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.session.open()
     }
 
-    @Suppress("DEPRECATION")
     @Test fun readFromParcel() {
         val session = sessionRule.createOpenSession()
 
@@ -98,7 +97,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
     }
 
-    @Suppress("DEPRECATION")
     @Ignore //Disable test for frequent failures Bug 1532186
     @Test(expected = IllegalStateException::class)
     fun readFromParcel_throwOnAlreadyOpen() {
@@ -110,7 +108,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         }
     }
 
-    @Suppress("DEPRECATION")
     @Test fun readFromParcel_canLoadPageAfterRead() {
         var newSession: GeckoSession? = null
 
@@ -122,7 +119,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         newSession!!.waitForPageStop()
     }
 
-    @Suppress("DEPRECATION")
     @Test fun readFromParcel_closedSession() {
         val session = sessionRule.createClosedSession()
 
@@ -136,7 +132,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
     }
 
-    @Suppress("DEPRECATION")
     @Test fun readFromParcel_closedSessionAfterParceling() {
         val session = sessionRule.createOpenSession()
 
@@ -153,7 +148,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
     }
 
-    @Suppress("DEPRECATION")
     @Test fun readFromParcel_closedSessionAfterReadParcel() {
         // disable test on opt for frequently failing Bug 1519591
         assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
@@ -172,7 +166,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
     }
 
-    @Suppress("DEPRECATION")
     @Test fun readFromParcel_closeOpenAndLoad() {
         var newSession: GeckoSession? = null
 
@@ -187,7 +180,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         newSession!!.waitForPageStop()
     }
 
-    @Suppress("DEPRECATION")
     @Test fun readFromParcel_allowCallsBeforeUnparceling() {
         val newSession = sessionRule.createClosedSession()
 
@@ -200,7 +192,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         newSession.waitForPageStops(2)
     }
 
-    @Suppress("DEPRECATION")
     @Test fun readFromParcel_chained() {
         var session1: GeckoSession? = null
         var session2: GeckoSession? = null
@@ -220,7 +211,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         session3!!.waitForPageStop()
     }
 
-    @Suppress("DEPRECATION")
     @NullDelegate(GeckoSession.NavigationDelegate::class)
     @ClosedSessionAtStart
     @Test fun readFromParcel_moduleUpdated() {
@@ -254,7 +244,6 @@ class SessionLifecycleTest : BaseSessionTest() {
                    onLocationCount, equalTo(1))
     }
 
-    @Suppress("DEPRECATION")
     @Test fun readFromParcel_focusedInput() {
         // When an input is focused, make sure SessionTextInput is still active after transferring.
         mainSession.loadTestPath(INPUTS_PATH)
@@ -426,7 +415,6 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
     }
 
-    @Suppress("DEPRECATION")
     @Ignore // Bug 1533934 - disabled createFromParcel on pgo for frequent failures
     @Test fun createFromParcel() {
         val session = sessionRule.createOpenSession()
