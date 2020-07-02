@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const RELATIVE_DIR = "browser/extensions/pdfjs/test/";
+const RELATIVE_DIR = "toolkit/components/pdfjs/test/";
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 
 add_task(async function test() {
