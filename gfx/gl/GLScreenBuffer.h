@@ -57,11 +57,12 @@ class SwapChain final {
   UniquePtr<SurfaceFactory> mFactory;
 
  private:
-  std::shared_ptr<SharedSurface> mFrontBuffer;
-  SwapChainPresenter* mPresenter = nullptr;
-
- private:
   std::queue<std::shared_ptr<SharedSurface>> mPool;
+  std::shared_ptr<SharedSurface> mFrontBuffer;
+ public:
+  std::shared_ptr<SharedSurface> mPrevFrontBuffer; // Hold this ref while it's in-flight.
+ private:
+  SwapChainPresenter* mPresenter = nullptr;
 
  public:
   SwapChain();
