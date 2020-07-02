@@ -5486,7 +5486,6 @@ XPCOMService_GetHistoryService
 ?MaybeCreateDoc@nsPIDOMWindowOuter@@IAEXXZ
 ?GetOriginAttributes@nsDocShell@@UAGXAAVOriginAttributes@mozilla@@@Z
 ?GetOriginAttributes@BrowsingContext@dom@mozilla@@UAGXAAVOriginAttributes@3@@Z
-?GetForceCharset@nsDocumentViewer@@UAGPBVEncoding@mozilla@@XZ
 ?GetHintCharset@nsDocumentViewer@@UAGPBVEncoding@mozilla@@XZ
 ?GetHintCharacterSetSource@nsDocumentViewer@@UAG?AW4nsresult@@PAH@Z
 ?GetAuthorStyleDisabled@nsDocumentViewer@@UAG?AW4nsresult@@PA_N@Z

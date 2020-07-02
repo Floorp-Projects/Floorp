@@ -264,12 +264,6 @@ interface nsIContentViewer : nsISupports
   attribute boolean authorStyleDisabled;
 
   /**
-   * XXX comm-central only: bug 829543. Not the Character Encoding menu in
-   * browser!
-   */
-  attribute ACString forceCharacterSet;
-
-  /**
    * XXX comm-central only: bug 829543.
    */
   attribute ACString hintCharacterSet;
@@ -339,6 +333,4 @@ interface nsIContentViewer : nsISupports
 
   [noscript, notxpcom] Encoding getHintCharset();
   [noscript, notxpcom] void setHintCharset(in Encoding aEncoding);
-  [noscript, notxpcom] Encoding getForceCharset();
-  [noscript, notxpcom] void setForceCharset(in Encoding aEncoding);
 };
