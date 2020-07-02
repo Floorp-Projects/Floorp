@@ -126,5 +126,26 @@ void RefMessageBodyService::ForgetPort(const nsID& aPortID) {
   }
 }
 
+RefMessageBody::RefMessageBody(const nsID& aPortID,
+                               UniquePtr<ipc::StructuredCloneData>&& aCloneData)
+    : mPortID(aPortID),
+      mMutex("RefMessageBody::mMutex"),
+      mCloneData(std::move(aCloneData)),
+      mMaxCount(Nothing()),
+      mCount(0) {}
+
+void RefMessageBody::Read(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+                          const JS::CloneDataPolicy& aCloneDataPolicy,
+                          ErrorResult& aRv) {
+  MutexAutoLock lock(mMutex);
+  mCloneData->Read(aCx, aValue, aCloneDataPolicy, aRv);
+}
+
+bool RefMessageBody::TakeTransferredPortsAsSequence(
+    Sequence<OwningNonNull<mozilla::dom::MessagePort>>& aPorts) {
+  MOZ_ASSERT(mMaxCount.isNothing());
+  return mCloneData->TakeTransferredPortsAsSequence(aPorts);
+}
+
 }  // namespace dom
 }  // namespace mozilla
