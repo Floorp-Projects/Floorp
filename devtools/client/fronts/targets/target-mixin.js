@@ -261,6 +261,13 @@ function TargetMixin(parentClass) {
      */
     actorHasMethod(actorName, methodName) {
       return this.getActorDescription(actorName).then(desc => {
+        if (!desc) {
+          console.error(
+            `Actor "${actorName}" was not found in the protocol description.
+            Ensure you used the correct typename and that the actor is initialized.`
+          );
+        }
+
         if (desc?.methods) {
           return !!desc.methods.find(method => method.name === methodName);
         }
