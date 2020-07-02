@@ -206,7 +206,12 @@ class span_iterator {
 
   constexpr friend bool operator==(const span_iterator& lhs,
                                    const span_iterator& rhs) {
-    return lhs.span_ == rhs.span_ && lhs.index_ == rhs.index_;
+    // Iterators from different spans are uncomparable. A diagnostic assertion
+    // should be enough to check this, though. To ensure that no iterators from
+    // different spans are ever considered equal, still compare them in release
+    // builds.
+    MOZ_DIAGNOSTIC_ASSERT(lhs.span_ == rhs.span_);
+    return lhs.index_ == rhs.index_ && lhs.span_ == rhs.span_;
   }
 
   constexpr friend bool operator!=(const span_iterator& lhs,
@@ -216,7 +221,7 @@ class span_iterator {
 
   constexpr friend bool operator<(const span_iterator& lhs,
                                   const span_iterator& rhs) {
-    MOZ_RELEASE_ASSERT(lhs.span_ == rhs.span_);
+    MOZ_DIAGNOSTIC_ASSERT(lhs.span_ == rhs.span_);
     return lhs.index_ < rhs.index_;
   }
 
@@ -357,6 +362,10 @@ class extent_type<dynamic_extent> {
  * Any Span<const T> can be viewed as Span<const uint8_t> using the function
  * AsBytes(). Any Span<T> can be viewed as Span<uint8_t> using the function
  * AsWritableBytes().
+ *
+ * Note that iterators from different Span instances are uncomparable, even if
+ * they refer to the same memory. This also applies to any spans derived via
+ * Subspan etc.
  */
 template <class ElementType, size_t Extent /* = dynamic_extent */>
 class Span {
