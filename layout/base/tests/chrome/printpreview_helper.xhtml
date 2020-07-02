@@ -48,15 +48,15 @@ function printpreview(hasMozPrintCallback) {
   var prefs = Cc["@mozilla.org/preferences-service;1"]
                 .getService(Ci.nsIPrefBranch);
   prefs.setBoolPref('print.show_print_progress', false);
-  //XXX I would have thought this would work, instead I'm forced to use prefs service
-  gWbp.globalPrintSettings.showPrintProgress = false;
+  let settings = gWbp.globalPrintSettings;
+  settings.showPrintProgress = false;
   var before = 0;
   var after = 0;
   function beforeprint() { ++before; }
   function afterprint() { ++after; }
   frameElts[0].contentWindow.addEventListener("beforeprint", beforeprint, true);
   frameElts[0].contentWindow.addEventListener("afterprint", afterprint, true);
-  gWbp.printPreview(gWbp.globalPrintSettings, frameElts[0].contentWindow, listener);
+  gWbp.printPreview(settings, frameElts[0].contentWindow, listener);
   is(before, 1, "Should have called beforeprint listener!");
   if (!hasMozPrintCallback) {
     // If there's a mozPrintCallback the after print event won't fire until
@@ -65,7 +65,6 @@ function printpreview(hasMozPrintCallback) {
   }
   frameElts[0].contentWindow.removeEventListener("beforeprint", beforeprint, true);
   frameElts[0].contentWindow.removeEventListener("afterprint", afterprint, true);
-  prefs.clearUserPref('print.show_print_progress');
 }
 
 function exitprintpreview() {
