@@ -471,7 +471,6 @@ Result<Ok, nsresult> StartupCache::LoadEntriesOffDisk() {
   }
 
   auto data = mCacheData.get<uint8_t>();
-  auto start = data;
   auto end = data + size;
 
   MMAP_FAULT_HANDLER_BEGIN_BUFFER(data.get(), size)
