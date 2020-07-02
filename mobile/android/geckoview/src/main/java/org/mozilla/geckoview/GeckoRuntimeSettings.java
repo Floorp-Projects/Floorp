@@ -48,7 +48,11 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @param use A flag determining whether multiprocess should be enabled.
          *            Default is true.
          * @return This Builder instance.
+         *
+         * @deprecated This method will be removed in GeckoView 82, at which point GeckoView will
+         *             only operate in multiprocess mode.
          */
+        @Deprecated // Bug 1650118
         public @NonNull Builder useMultiprocess(final boolean use) {
             getSettings().mUseMultiprocess.set(use);
             return this;
@@ -574,7 +578,11 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      * Whether multiprocess is enabled.
      *
      * @return true if multiprocess is enabled, false otherwise.
+     *
+     * @deprecated This method will be removed in GeckoView 82, at which point GeckoView will only
+     *             operate in multiprocess mode.
      */
+    @Deprecated // Bug 1650118
     public boolean getUseMultiprocess() {
         return mUseMultiprocess.get();
     }

@@ -32,12 +32,17 @@ to allow adding gecko profiler markers.
 ([bug 1624993]({{bugzilla}}1624993))
 - ⚠️ Deprecated `Parcelable` support in `GeckoSession` with the intention of removing
   in GeckoView v82. ([bug 1649529]({{bugzilla}}1649529))
+- ⚠️ Deprecated [`GeckoRuntimeSettings.Builder.useMultiprocess`][79.6] and
+  [`GeckoRuntimeSettings.getUseMultiprocess`][79.7] with the intention of removing
+  them in GeckoView v82. ([bug 1649530]({{bugzilla}}1649530))
 
 [79.1]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onOpenOptionsPage-org.mozilla.geckoview.WebExtension-
 [79.2]: {{javadoc_uri}}/WebNotification.html#source
 [79.3]: {{javadoc_uri}}/WebExtensionController.html#ensureBuiltIn-java.lang.String-java.lang.String-
 [79.4]: {{javadoc_uri}}/ProfilerController.html
 [79.5]: {{javadoc_uri}}/GeckoRuntime.html#getProfilerController--
+[79.6]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
+[79.7]: {{javadoc_uri}}/GeckoRuntimeSettings.html#getUseMultiprocess--
 
 ## v78
 - Added [`WebExtensionController.installBuiltIn`][78.1] that allows installing an
@@ -738,4 +743,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 3bf9118a008a2a172964a13ba3f79ff59fe1f77e
+[api-version]: 41921b808dd64b6d85929aa7f52031cc762605f9
