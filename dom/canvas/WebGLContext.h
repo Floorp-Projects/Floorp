@@ -96,6 +96,7 @@ class VRLayerChild;
 namespace gl {
 class GLScreenBuffer;
 class MozFramebuffer;
+class Texture;
 }  // namespace gl
 
 namespace layers {
@@ -308,6 +309,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   uint64_t mNextFenceId = 1;
   uint64_t mCompletedFenceId = 0;
+
+  std::unique_ptr<gl::Texture> mIncompleteTexOverride;
 
  public:
   class FuncScope;

@@ -9406,6 +9406,11 @@
   value: true
   mirror: always
 
+- name: webgl.debug.incomplete-tex-color
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+
 - name: webgl.default-antialias
   type: RelaxedAtomicBool
   value: @IS_NOT_ANDROID@
