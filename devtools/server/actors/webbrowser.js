@@ -333,7 +333,7 @@ BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
       });
     }
     if (window) {
-      const iframe = window.windowUtils.containerElement;
+      const iframe = window.browsingContext.embedderElement;
       if (iframe) {
         return this._getActorForBrowser(iframe);
       }

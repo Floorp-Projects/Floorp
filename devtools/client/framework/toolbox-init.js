@@ -14,7 +14,7 @@ const href = window.location.href.replace("about:", "http://");
 const url = new window.URL(href);
 
 // `host` is the frame element loading the toolbox.
-let host = window.windowUtils.containerElement;
+let host = window.browsingContext.embedderElement;
 
 // If there's no containerElement (which happens when loading about:devtools-toolbox as
 // a top level document), use the current window.

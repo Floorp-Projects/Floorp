@@ -709,7 +709,7 @@ FinderHighlighter.prototype = {
 
       // Since the frame is an element inside a parent window, we'd like to
       // learn its position relative to it.
-      let el = this._getDWU(currWin).containerElement;
+      let el = currWin.browsingContext.embedderElement;
       currWin = currWin.parent;
       dwu = this._getDWU(currWin);
       let parentRect = Rect.fromRect(dwu.getBoundsWithoutFlushing(el));

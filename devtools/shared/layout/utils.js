@@ -77,7 +77,7 @@ exports.isWindowIncluded = isWindowIncluded;
  */
 const getFrameElement = win => {
   const isTopWindow = win && DevToolsUtils.getTopWindow(win) === win;
-  return isTopWindow ? null : utilsFor(win).containerElement;
+  return isTopWindow ? null : win.browsingContext.embedderElement;
 };
 exports.getFrameElement = getFrameElement;
 

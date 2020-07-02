@@ -1416,12 +1416,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute float displayDPI;
 
   /**
-   * Return this window's frame element.
-   * Ignores all chrome/content or mozbrowser boundaries.
-   */
-  readonly attribute Element containerElement;
-
-  /**
    * advanceTimeAndRefresh allows the caller to take over the refresh
    * driver timing for a window.  A call to advanceTimeAndRefresh does
    * three things:
