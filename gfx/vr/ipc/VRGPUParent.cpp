@@ -31,7 +31,7 @@ void VRGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
 
   mClosed = true;
-  MessageLoop::current()->PostTask(
+  GetCurrentSerialEventTarget()->Dispatch(
       NewRunnableMethod("gfx::VRGPUParent::DeferredDestroy", this,
                         &VRGPUParent::DeferredDestroy));
 }
@@ -42,8 +42,10 @@ void VRGPUParent::DeferredDestroy() { mSelfRef = nullptr; }
 RefPtr<VRGPUParent> VRGPUParent::CreateForGPU(
     Endpoint<PVRGPUParent>&& aEndpoint) {
   RefPtr<VRGPUParent> vcp = new VRGPUParent(aEndpoint.OtherPid());
-  MessageLoop::current()->PostTask(NewRunnableMethod<Endpoint<PVRGPUParent>&&>(
-      "gfx::VRGPUParent::Bind", vcp, &VRGPUParent::Bind, std::move(aEndpoint)));
+  GetCurrentSerialEventTarget()->Dispatch(
+      NewRunnableMethod<Endpoint<PVRGPUParent>&&>("gfx::VRGPUParent::Bind", vcp,
+                                                  &VRGPUParent::Bind,
+                                                  std::move(aEndpoint)));
 
   return vcp;
 }
