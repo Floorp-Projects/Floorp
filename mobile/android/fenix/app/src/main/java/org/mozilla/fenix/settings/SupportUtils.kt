@@ -25,7 +25,7 @@ object SupportUtils {
     const val WIKIPEDIA_URL = "https://www.wikipedia.org/"
     const val FENIX_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
     const val FIREFOX_BETA_PLAY_STORE_URL = "market://details?id=org.mozilla.firefox_beta"
-    const val FIREFOX_NIGHTLY_PLAY_STORE_URL = "market://details?id=org.mozilla.fennec_aurora"
+    const val FIREFOX_NIGHTLY_PLAY_STORE_URL = "market://details?id=org.mozilla.fenix"
     const val GOOGLE_URL = "https://www.google.com/"
 
     enum class SumoTopic(internal val topicStr: String) {
