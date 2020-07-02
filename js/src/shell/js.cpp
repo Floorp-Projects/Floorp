@@ -3640,13 +3640,8 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  js::jit::CacheIRHealth cih(cx);
-
-  if (!cih.init()) {
-    return false;
-  }
-
-  if (!cih.rateMyCacheIR(script)) {
+  js::jit::CacheIRHealth cih;
+  if (!cih.rateMyCacheIR(cx, script)) {
     return false;
   }
 
