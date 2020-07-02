@@ -23,7 +23,7 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderParent)
 
   RemoteDecoderParent(RemoteDecoderManagerParent* aParent,
-                      TaskQueue* aManagerTaskQueue,
+                      nsISerialEventTarget* aManagerThread,
                       TaskQueue* aDecodeTaskQueue);
 
   void Destroy();
@@ -61,7 +61,7 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   void ReleaseBuffer(ShmemBuffer&& aBuffer);
   void ReleaseUsedShmems();
   RefPtr<RemoteDecoderParent> mIPDLSelfRef;
-  const RefPtr<TaskQueue> mManagerTaskQueue;
+  const RefPtr<nsISerialEventTarget> mManagerThread;
   ShmemPool mDecodedFramePool;
   AutoTArray<ShmemBuffer, 4> mUsedShmems;
 };
