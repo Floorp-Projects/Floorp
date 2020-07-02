@@ -110,7 +110,7 @@ interface Profiler {
      * @param markerName Name of the event as a string.
      * @param startTime Start time as Double. It can be null if you want to mark a point of time.
      */
-    fun addMarker(markerName: String, startTime: Double)
+    fun addMarker(markerName: String, startTime: Double?)
 
     /**
      * Add a profiler marker to Gecko Profiler with the given arguments.
