@@ -29,9 +29,11 @@ fn main() {
             } => {
                 println!("  Export {} {:?}", field, kind);
             }
-            ParserState::ImportSectionEntry { module, field, .. } => {
-                println!("  Import {}::{}", module, field)
-            }
+            ParserState::ImportSectionEntry {
+                module,
+                field: Some(field),
+                ..
+            } => println!("  Import {}::{}", module, field),
             ParserState::EndWasm => break,
             ParserState::Error(ref err) => panic!("Error: {:?}", err),
             _ => ( /* println!(" Other {:?}", state); */ ),

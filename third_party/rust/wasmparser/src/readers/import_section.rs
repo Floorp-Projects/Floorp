@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-use super::{
-    BinaryReader, ExternalKind, ImportSectionEntryType, Result, SectionIteratorLimited,
-    SectionReader, SectionWithLimitedItems,
+use crate::{
+    BinaryReader, ImportSectionEntryType, Result, SectionIteratorLimited, SectionReader,
+    SectionWithLimitedItems,
 };
 
 #[derive(Debug, Copy, Clone)]
 pub struct Import<'a> {
     pub module: &'a str,
-    pub field: &'a str,
+    pub field: Option<&'a str>,
     pub ty: ImportSectionEntryType,
 }
 
@@ -67,16 +67,7 @@ impl<'a> ImportSectionReader<'a> {
     where
         'a: 'b,
     {
-        let module = self.reader.read_string()?;
-        let field = self.reader.read_string()?;
-        let kind = self.reader.read_external_kind()?;
-        let ty = match kind {
-            ExternalKind::Function => ImportSectionEntryType::Function(self.reader.read_var_u32()?),
-            ExternalKind::Table => ImportSectionEntryType::Table(self.reader.read_table_type()?),
-            ExternalKind::Memory => ImportSectionEntryType::Memory(self.reader.read_memory_type()?),
-            ExternalKind::Global => ImportSectionEntryType::Global(self.reader.read_global_type()?),
-        };
-        Ok(Import { module, field, ty })
+        self.reader.read_import()
     }
 }
 

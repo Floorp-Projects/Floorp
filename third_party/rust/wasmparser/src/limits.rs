@@ -17,8 +17,8 @@
 // The limits are agreed upon with other engines for consistency.
 pub const MAX_WASM_TYPES: usize = 1_000_000;
 pub const MAX_WASM_FUNCTIONS: usize = 1_000_000;
-pub const _MAX_WASM_IMPORTS: usize = 100_000;
-pub const _MAX_WASM_EXPORTS: usize = 100_000;
+pub const MAX_WASM_IMPORTS: usize = 100_000;
+pub const MAX_WASM_EXPORTS: usize = 100_000;
 pub const MAX_WASM_GLOBALS: usize = 1_000_000;
 pub const _MAX_WASM_DATA_SEGMENTS: usize = 100_000;
 pub const MAX_WASM_MEMORY_PAGES: usize = 65536;
@@ -32,3 +32,5 @@ pub const _MAX_WASM_TABLE_SIZE: usize = 10_000_000;
 pub const MAX_WASM_TABLE_ENTRIES: usize = 10_000_000;
 pub const MAX_WASM_TABLES: usize = 1;
 pub const MAX_WASM_MEMORIES: usize = 1;
+pub const MAX_WASM_MODULES: usize = 1_000;
+pub const MAX_WASM_INSTANCES: usize = 1_000;
