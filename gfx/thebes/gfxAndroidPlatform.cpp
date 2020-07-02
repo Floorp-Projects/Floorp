@@ -8,9 +8,12 @@
 
 #include "gfxAndroidPlatform.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/CountingAllocatorBase.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/OSPreferences.h"
+#include "mozilla/jni/Utils.h"
+#include "mozilla/layers/AndroidHardwareBuffer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
 
@@ -100,6 +103,18 @@ gfxAndroidPlatform::gfxAndroidPlatform() {
 gfxAndroidPlatform::~gfxAndroidPlatform() {
   FT_Done_Library(gPlatformFTLibrary);
   gPlatformFTLibrary = nullptr;
+}
+
+void gfxAndroidPlatform::InitAcceleration() {
+  gfxPlatform::InitAcceleration();
+  if (XRE_IsParentProcess() && jni::GetAPIVersion() >= 26) {
+    if (StaticPrefs::gfx_use_ahardwarebuffer_content_AtStartup()) {
+      gfxVars::SetUseAHardwareBufferContent(true);
+    }
+  }
+  if (gfx::gfxVars::UseAHardwareBufferContent()) {
+    layers::AndroidHardwareBufferApi::Init();
+  }
 }
 
 already_AddRefed<gfxASurface> gfxAndroidPlatform::CreateOffscreenSurface(

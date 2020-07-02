@@ -16,8 +16,11 @@
 #  include <jni.h>
 #  include <android/native_window.h>
 #  include <android/native_window_jni.h>
+#  include "mozilla/ipc/FileDescriptor.h"
 #  include "mozilla/java/GeckoSurfaceWrappers.h"
 #  include "mozilla/java/SurfaceAllocatorWrappers.h"
+#  include "mozilla/layers/AndroidHardwareBuffer.h"
+#  include "mozilla/UniquePtrExtensions.h"
 #endif
 
 using namespace mozilla::gl;
@@ -204,6 +207,121 @@ void AndroidNativeWindowTextureData::OnForwardedToHost() {
     if (r < 0) {
       MOZ_CRASH("ANativeWindow_unlockAndPost failed\n.");
     }
+    mIsLocked = false;
+  }
+}
+
+AndroidHardwareBufferTextureData* AndroidHardwareBufferTextureData::Create(
+    gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
+  RefPtr<AndroidHardwareBuffer> buffer =
+      AndroidHardwareBuffer::Create(aSize, aFormat);
+  if (!buffer) {
+    return nullptr;
+  }
+  return new AndroidHardwareBufferTextureData(buffer, aSize, aFormat);
+}
+
+AndroidHardwareBufferTextureData::AndroidHardwareBufferTextureData(
+    AndroidHardwareBuffer* aAndroidHardwareBuffer, gfx::IntSize aSize,
+    gfx::SurfaceFormat aFormat)
+    : mAndroidHardwareBuffer(aAndroidHardwareBuffer),
+      mSize(aSize),
+      mFormat(aFormat),
+      mAddress(nullptr),
+      mIsLocked(false) {}
+
+AndroidHardwareBufferTextureData::~AndroidHardwareBufferTextureData() {}
+
+void AndroidHardwareBufferTextureData::FillInfo(
+    TextureData::Info& aInfo) const {
+  aInfo.size = mSize;
+  aInfo.format = mFormat;
+  aInfo.hasIntermediateBuffer = false;
+  aInfo.hasSynchronization = true;
+  aInfo.supportsMoz2D = true;
+  aInfo.canExposeMappedData = false;
+  aInfo.canConcurrentlyReadLock = true;
+}
+
+bool AndroidHardwareBufferTextureData::Serialize(
+    SurfaceDescriptor& aOutDescriptor) {
+  int fd[2];
+  if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd) != 0) {
+    aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
+        ipc::FileDescriptor(), mSize, mFormat);
+    return false;
+  }
+
+  UniqueFileHandle readerFd(fd[0]);
+  UniqueFileHandle writerFd(fd[1]);
+
+  // Send the AHardwareBuffer to an AF_UNIX socket. It does not acquire or
+  // retain a reference to the buffer object. The caller is therefore
+  // responsible for ensuring that the buffer remains alive through the lifetime
+  // of this file descriptor.
+  int ret = mAndroidHardwareBuffer->SendHandleToUnixSocket(writerFd.get());
+  if (ret < 0) {
+    aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
+        ipc::FileDescriptor(), mSize, mFormat);
+    return false;
+  }
+
+  aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
+      ipc::FileDescriptor(readerFd.release()), mSize, mFormat);
+  return true;
+}
+
+bool AndroidHardwareBufferTextureData::Lock(OpenMode aMode) {
+  if (!mIsLocked) {
+    MOZ_ASSERT(!mAddress);
+
+    uint64_t usage = 0;
+    if (aMode & OpenMode::OPEN_READ) {
+      usage |= AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN;
+    }
+    if (aMode & OpenMode::OPEN_WRITE) {
+      usage |= AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN;
+    }
+
+    int ret = mAndroidHardwareBuffer->Lock(usage, -1, 0, &mAddress);
+    if (ret) {
+      mAddress = nullptr;
+      return false;
+    }
+    mIsLocked = true;
+  }
+  return true;
+}
+
+void AndroidHardwareBufferTextureData::Unlock() {
+  // The TextureClient may want to call Lock again before handing ownership
+  // to the host, so we cannot call AHardwareBuffer_unlock yet.
+}
+
+void AndroidHardwareBufferTextureData::Forget(LayersIPCChannel*) {
+  MOZ_ASSERT(!mIsLocked);
+  mAndroidHardwareBuffer = nullptr;
+  mAddress = nullptr;
+}
+
+already_AddRefed<gfx::DrawTarget>
+AndroidHardwareBufferTextureData::BorrowDrawTarget() {
+  MOZ_ASSERT(mIsLocked);
+
+  const int bpp = (mFormat == gfx::SurfaceFormat::R5G6B5_UINT16) ? 2 : 4;
+
+  return gfx::Factory::CreateDrawTargetForData(
+      gfx::BackendType::SKIA, static_cast<unsigned char*>(mAddress),
+      gfx::IntSize(mAndroidHardwareBuffer->mSize.width,
+                   mAndroidHardwareBuffer->mSize.height),
+      mAndroidHardwareBuffer->mStride * bpp, mFormat, true);
+}
+
+void AndroidHardwareBufferTextureData::OnForwardedToHost() {
+  if (mIsLocked) {
+    // XXX Need to handle fence fd when harware does rendering.
+    mAndroidHardwareBuffer->Unlock(nullptr);
+    mAddress = nullptr;
     mIsLocked = false;
   }
 }
