@@ -9,11 +9,13 @@
 
 #include "mozilla/SandboxBroker.h"
 
+#include <mutex>
+
 namespace mozilla {
 
 class SandboxBrokerPolicyFactory {
  public:
-  SandboxBrokerPolicyFactory();
+  SandboxBrokerPolicyFactory() = default;
 
   UniquePtr<SandboxBroker::Policy> GetContentPolicy(int aPid,
                                                     bool aFileProcess);
@@ -23,6 +25,9 @@ class SandboxBrokerPolicyFactory {
 
  private:
   UniquePtr<const SandboxBroker::Policy> mCommonContentPolicy;
+  std::once_flag mContentInited;
+
+  void InitContentPolicy();
 };
 
 }  // namespace mozilla

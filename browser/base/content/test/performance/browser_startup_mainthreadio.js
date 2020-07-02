@@ -213,13 +213,6 @@ const startupPhases = {
       close: 1,
     },
     {
-      path: "*ld.so.conf*",
-      condition: LINUX,
-      ignoreIfUnused: true,
-      read: 22,
-      close: 11,
-    },
-    {
       // bug 1546838
       path: "ProfD:xulstore/data.mdb",
       condition: WIN,
@@ -265,9 +258,10 @@ const startupPhases = {
       write: 1,
     },
     {
+      // Side-effect of bug 1412090, via sandboxing (but the real
+      // problem there is main-thread CPU use; see bug 1439412)
       path: "*ld.so.conf*",
       condition: LINUX,
-      ignoreIfUnused: true,
       read: 22,
       close: 11,
     },
@@ -338,6 +332,13 @@ const startupPhases = {
       path: "SysD:spool/drivers/color/*",
       condition: WIN,
       read: 1,
+    },
+    {
+      // Sandbox policy construction
+      path: "*ld.so.conf*",
+      condition: LINUX,
+      read: 22,
+      close: 11,
     },
     {
       // bug 1541246
