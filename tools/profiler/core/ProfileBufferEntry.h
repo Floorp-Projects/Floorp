@@ -39,6 +39,8 @@ class ProfilerCodeAddressService;
   MACRO(NativeLeafAddr, void*, sizeof(void*))                        \
   MACRO(Pause, double, sizeof(double))                               \
   MACRO(Resume, double, sizeof(double))                              \
+  MACRO(PauseSampling, double, sizeof(double))                       \
+  MACRO(ResumeSampling, double, sizeof(double))                      \
   MACRO(ThreadId, int, sizeof(int))                                  \
   MACRO(Time, double, sizeof(double))                                \
   MACRO(TimeBeforeCompactStack, double, sizeof(double))              \

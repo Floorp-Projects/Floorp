@@ -116,7 +116,7 @@ function captureAtLeastOneJsSample() {
  * @returns {Promise<Profile>}
  */
 async function stopAndGetProfile() {
-  Services.profiler.PauseSampling();
+  Services.profiler.Pause();
   const profile = await Services.profiler.getProfileDataAsync();
   Services.profiler.StopProfiler();
   return profile;

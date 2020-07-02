@@ -671,13 +671,12 @@ class ActivePS {
         // The new sampler thread doesn't start sampling immediately because the
         // main loop within Run() is blocked until this function's caller
         // unlocks gPSMutex.
-        mSamplerThread(NewSamplerThread(aLock, mGeneration, aInterval))
-#undef HAS_FEATURE
-        ,
-        mIsPaused(false)
+        mSamplerThread(NewSamplerThread(aLock, mGeneration, aInterval)),
+        mIsPaused(false),
+        mIsSamplingPaused(false)
 #if defined(GP_OS_linux) || defined(GP_OS_freebsd)
         ,
-        mWasPaused(false)
+        mWasSamplingPaused(false)
 #endif
   {
     // Deep copy aFilters.
@@ -923,8 +922,20 @@ class ActivePS {
 
   PS_GET_AND_SET(bool, IsPaused)
 
+  // True if sampling is paused (though generic `SetIsPaused()` or specific
+  // `SetIsSamplingPaused()`).
+  static bool IsSamplingPaused(PSLockRef lock) {
+    MOZ_ASSERT(sInstance);
+    return IsPaused(lock) || sInstance->mIsSamplingPaused;
+  }
+
+  static void SetIsSamplingPaused(PSLockRef, bool aIsSamplingPaused) {
+    MOZ_ASSERT(sInstance);
+    sInstance->mIsSamplingPaused = aIsSamplingPaused;
+  }
+
 #if defined(GP_OS_linux) || defined(GP_OS_freebsd)
-  PS_GET_AND_SET(bool, WasPaused)
+  PS_GET_AND_SET(bool, WasSamplingPaused)
 #endif
 
   static void DiscardExpiredDeadProfiledThreads(PSLockRef) {
@@ -1075,13 +1086,16 @@ class ActivePS {
   // can destroy it.
   SamplerThread* const mSamplerThread;
 
-  // Is the profiler paused?
+  // Is the profiler fully paused?
   bool mIsPaused;
 
+  // Is the profiler periodic sampling paused?
+  bool mIsSamplingPaused;
+
 #if defined(GP_OS_linux) || defined(GP_OS_freebsd)
-  // Used to record whether the profiler was paused just before forking. False
+  // Used to record whether the sampler was paused just before forking. False
   // at all times except just before/after forking.
-  bool mWasPaused;
+  bool mWasSamplingPaused;
 #endif
 
   struct ExitProfile {
@@ -1118,6 +1132,14 @@ void RacyFeatures::SetPaused() { sActiveAndFeatures |= Paused; }
 void RacyFeatures::SetUnpaused() { sActiveAndFeatures &= ~Paused; }
 
 /* static */
+void RacyFeatures::SetSamplingPaused() { sActiveAndFeatures |= SamplingPaused; }
+
+/* static */
+void RacyFeatures::SetSamplingUnpaused() {
+  sActiveAndFeatures &= ~SamplingPaused;
+}
+
+/* static */
 bool RacyFeatures::IsActiveWithFeature(uint32_t aFeature) {
   uint32_t af = sActiveAndFeatures;  // copy it first
   return (af & Active) && (af & aFeature);
@@ -1127,6 +1149,12 @@ bool RacyFeatures::IsActiveWithFeature(uint32_t aFeature) {
 bool RacyFeatures::IsActiveAndUnpaused() {
   uint32_t af = sActiveAndFeatures;  // copy it first
   return (af & Active) && !(af & Paused);
+}
+
+/* static */
+bool RacyFeatures::IsActiveAndSamplingUnpaused() {
+  uint32_t af = sActiveAndFeatures;  // copy it first
+  return (af & Active) && !(af & (Paused | SamplingPaused));
 }
 
 // Each live thread has a RegisteredThread, and we store a reference to it in
@@ -2231,7 +2259,7 @@ void SamplerThread::Run() {
 
       TimeStamp expiredMarkersCleaned = TimeStamp::NowUnfuzzed();
 
-      if (!ActivePS::IsPaused(lock)) {
+      if (!ActivePS::IsSamplingPaused(lock)) {
         TimeDuration delta = sampleStart - CorePS::ProcessStartTime();
         ProfileBuffer& buffer = ActivePS::Buffer(lock);
 
@@ -3203,6 +3231,56 @@ void profiler_resume() {
         ProfileBufferEntry::Resume(profiler_time()));
     ActivePS::SetIsPaused(lock, false);
     RacyFeatures::SetUnpaused();
+  }
+}
+
+bool profiler_is_sampling_paused() {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  PSAutoLock lock;
+
+  if (!ActivePS::Exists(lock)) {
+    return false;
+  }
+
+  return ActivePS::IsSamplingPaused(lock);
+}
+
+void profiler_pause_sampling() {
+  LOG("profiler_pause_sampling");
+
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  {
+    PSAutoLock lock;
+
+    if (!ActivePS::Exists(lock)) {
+      return;
+    }
+
+    RacyFeatures::SetSamplingPaused();
+    ActivePS::SetIsSamplingPaused(lock, true);
+    ActivePS::Buffer(lock).AddEntry(
+        ProfileBufferEntry::PauseSampling(profiler_time()));
+  }
+}
+
+void profiler_resume_sampling() {
+  LOG("profiler_resume_sampling");
+
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  {
+    PSAutoLock lock;
+
+    if (!ActivePS::Exists(lock)) {
+      return;
+    }
+
+    ActivePS::Buffer(lock).AddEntry(
+        ProfileBufferEntry::ResumeSampling(profiler_time()));
+    ActivePS::SetIsSamplingPaused(lock, false);
+    RacyFeatures::SetSamplingUnpaused();
   }
 }
 

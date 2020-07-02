@@ -672,6 +672,28 @@ void ProfilerParent::ProfilerResumed() {
 }
 
 /* static */
+void ProfilerParent::ProfilerPausedSampling() {
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
+  ProfilerParentTracker::Enumerate([](ProfilerParent* profilerParent) {
+    Unused << profilerParent->SendPauseSampling();
+  });
+}
+
+/* static */
+void ProfilerParent::ProfilerResumedSampling() {
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
+  ProfilerParentTracker::Enumerate([](ProfilerParent* profilerParent) {
+    Unused << profilerParent->SendResumeSampling();
+  });
+}
+
+/* static */
 void ProfilerParent::ClearAllPages() {
   if (!NS_IsMainThread()) {
     return;
