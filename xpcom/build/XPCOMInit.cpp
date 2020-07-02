@@ -462,7 +462,7 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   // Init mozilla::SharedThreadPool (which needs the service manager).
   mozilla::SharedThreadPool::InitStatics();
 
-  mozilla::scache::StartupCache::GetSingleton();
+  mozilla::scache::StartupCache::FullyInitSingleton();
   mozilla::AvailableMemoryTracker::Init();
 
   // Notify observers of xpcom autoregistration start
