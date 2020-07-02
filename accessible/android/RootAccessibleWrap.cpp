@@ -69,7 +69,12 @@ AccessibleWrap* RootAccessibleWrap::FindAccessibleById(
     if (!child) {
       break;
     }
-    acc = FindAccessibleById(child, aID);
+    // A child document's id is not in its parent document's hash table.
+    if (child->VirtualViewID() == aID) {
+      acc = child;
+    } else {
+      acc = FindAccessibleById(child, aID);
+    }
   }
 
   return acc;
