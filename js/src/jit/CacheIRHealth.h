@@ -21,7 +21,7 @@ namespace jit {
 // The goal of CacheIR health rating is to make the costlier
 // CacheIR stubs more apparent and easier to diagnose.
 // This is done by using the scores assigned to different CacheIROps in
-// CacheIROps.yaml (see the description of op_health_score in the
+// CacheIROps.yaml (see the description of cost_estimate in the
 // aforementioned file for how these scores are determined), summing
 // the score of each op generated for a particular stub together, and displaying
 // this score for each stub in a CacheIR chain. The higher the total stub score
@@ -33,31 +33,21 @@ namespace jit {
 // for the script associated with that function, or if you call rateMyCacheIR()
 // without any parameters it will take the topmost script and rate that.
 //
-// TODO: Hook up to StructuredSpewer in order to dump to JSON file and
-// create an interactive UI for developers to inspect suspicious stubs.
-//
 
 class CacheIRHealth {
-  Sprinter output_;
-
  public:
-  explicit CacheIRHealth(JSContext* cx) : output_(cx) {}
-  ~CacheIRHealth() { output_.flush(); }
-
-  MOZ_MUST_USE bool init() { return output_.init(); }
-
-  void formatForNewStub();
-  void spewCacheIREntryState(ICEntry* entry);
   // Health of an individual stub.
-  bool spewStubHealth(ICStub* stub);
+  bool spewStubHealth(AutoStructuredSpewer& spew, ICStub* stub);
   // Health of all the stubs in an individual CacheIR Entry.
-  bool spewHealthForStubsInCacheIREntry(ICEntry* entry);
+  bool spewHealthForStubsInCacheIREntry(AutoStructuredSpewer& spew,
+                                        ICEntry* entry);
   // Show JSOps present in the script, formatted for CacheIR
   // health report.
-  uint32_t spewJSOpForCacheIRHealth(unsigned pcOffset, jsbytecode next);
+  uint32_t spewJSOpForCacheIRHealth(AutoStructuredSpewer& spew,
+                                    unsigned pcOffset, jsbytecode next);
   // If a JitScript exists, shows health of all ICEntries that exist
   // for the specified script.
-  bool rateMyCacheIR(HandleScript script);
+  bool rateMyCacheIR(JSContext* cx, HandleScript script);
 };
 
 }  // namespace jit
