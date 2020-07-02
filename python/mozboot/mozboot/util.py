@@ -11,6 +11,9 @@ import os
 here = os.path.join(os.path.dirname(__file__))
 
 
+MINIMUM_RUST_VERSION = '1.43.0'
+
+
 def get_state_dir(srcdir=False):
     """Obtain path to a directory to hold state.
 

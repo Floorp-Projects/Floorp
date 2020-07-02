@@ -12,6 +12,7 @@ import sys
 
 from distutils.version import LooseVersion
 from mozboot import rust
+from mozboot.util import MINIMUM_RUST_VERSION
 
 # NOTE: This script is intended to be run with a vanilla Python install.  We
 # have to rely on the standard library instead of Python 2+3 helpers like
@@ -153,7 +154,7 @@ MODERN_MERCURIAL_VERSION = LooseVersion('4.8')
 MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
 
 # Upgrade rust older than this.
-MODERN_RUST_VERSION = LooseVersion('1.43.0')
+MODERN_RUST_VERSION = LooseVersion(MINIMUM_RUST_VERSION)
 
 # Upgrade nasm older than this.
 MODERN_NASM_VERSION = LooseVersion('2.14')
