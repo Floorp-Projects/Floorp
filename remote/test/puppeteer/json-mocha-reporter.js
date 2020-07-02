@@ -54,7 +54,7 @@ function writeEvent(event) {
  * free of cyclic properties, etc.
  *
  * @private
- * @param {Test} test - Instance used as data source.
+ * @param {Object} test - Instance used as data source.
  * @return {Object} object containing pared-down test instance data
  */
 function clean(test) {
