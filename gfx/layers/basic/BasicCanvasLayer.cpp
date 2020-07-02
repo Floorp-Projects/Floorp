@@ -32,14 +32,15 @@ void BasicCanvasLayer::Paint(DrawTarget* aDT, const Point& aDeviceOffset,
   if (IsHidden()) return;
   // Ignore IsDirty().
 
-  const auto& cr = mCanvasRenderer;
-  MOZ_ASSERT(cr);
-  const auto snapshot = cr->BorrowSnapshot();
+  MOZ_ASSERT(mCanvasRenderer);
+  mCanvasRenderer->FirePreTransactionCallback();
+
+  const auto snapshot = mCanvasRenderer->BorrowSnapshot();
   if (!snapshot) return;
   const auto& surface = snapshot->mSurf;
 
   Maybe<Matrix> oldTM;
-  if (!cr->YIsDown()) {
+  if (!mCanvasRenderer->YIsDown()) {
     // y-flip
     oldTM = Some(aDT->GetTransform());
     aDT->SetTransform(Matrix(*oldTM)
@@ -56,6 +57,8 @@ void BasicCanvasLayer::Paint(DrawTarget* aDT, const Point& aDeviceOffset,
   if (oldTM) {
     aDT->SetTransform(*oldTM);
   }
+
+  mCanvasRenderer->FireDidTransactionCallback();
 
   Painted();
 }
