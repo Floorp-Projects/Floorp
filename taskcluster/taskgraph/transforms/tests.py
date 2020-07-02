@@ -296,7 +296,7 @@ transforms = TransformSequence()
 # *****WARNING*****
 test_description_schema = Schema({
     # description of the suite, for the task metadata
-    'description': text_type,
+    Required('description'): text_type,
 
     # test suite category and name
     Optional('suite'): Any(
@@ -319,7 +319,7 @@ test_description_schema = Schema({
 
     # the symbol, or group(symbol), under which this task should appear in
     # treeherder.
-    'treeherder-symbol': text_type,
+    Required('treeherder-symbol'): text_type,
 
     # the value to place in task.extra.treeherder.machine.platform; ideally
     # this is the same as build-platform, and that is the default, but in
@@ -535,20 +535,20 @@ test_description_schema = Schema({
     # -- values supplied by the task-generation infrastructure
 
     # the platform of the build this task is testing
-    'build-platform': text_type,
+    Required('build-platform'): text_type,
 
     # the label of the build task generating the materials to test
-    'build-label': text_type,
+    Required('build-label'): text_type,
 
     # the label of the signing task generating the materials to test.
     # Signed builds are used in xpcshell tests on Windows, for instance.
     Optional('build-signing-label'): text_type,
 
     # the build's attributes
-    'build-attributes': {text_type: object},
+    Required('build-attributes'): {text_type: object},
 
     # the platform on which the tests will run
-    'test-platform': text_type,
+    Required('test-platform'): text_type,
 
     # limit the test-platforms (as defined in test-platforms.yml)
     # that the test will run on
@@ -558,23 +558,23 @@ test_description_schema = Schema({
     ),
 
     # the name of the test (the key in tests.yml)
-    'test-name': text_type,
+    Required('test-name'): text_type,
 
     # the product name, defaults to firefox
     Optional('product'): text_type,
 
     # conditional files to determine when these tests should be run
-    Exclusive(Optional('when'), 'optimization'): {
+    Exclusive('when', 'optimization'): {
         Optional('files-changed'): [text_type],
     },
 
     # Optimization to perform on this task during the optimization phase.
     # Optimizations are defined in taskcluster/taskgraph/optimize.py.
-    Exclusive(Optional('optimization'), 'optimization'): OptimizationSchema,
+    Exclusive('optimization', 'optimization'): OptimizationSchema,
 
     # The SCHEDULES component for this task; this defaults to the suite
     # (not including the flavor) but can be overridden here.
-    Exclusive(Optional('schedules-component'), 'optimization'): Any(
+    Exclusive('schedules-component', 'optimization'): Any(
         text_type,
         [text_type],
     ),
@@ -595,14 +595,14 @@ test_description_schema = Schema({
     # or target.zip (Windows).
     Optional('target'): optionally_keyed_by(
         'test-platform',
-        Any(text_type, None, {'index': text_type, 'name': text_type}),
+        Any(text_type, None, {Required('index'): text_type, Required('name'): text_type}),
     ),
 
     # A list of artifacts to install from 'fetch' tasks.
     Optional('fetches'): {
         text_type: optionally_keyed_by('test-platform', [text_type])
     },
-}, required=True)
+})
 
 
 @transforms.add
