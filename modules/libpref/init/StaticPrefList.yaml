@@ -4201,6 +4201,11 @@
   value: false
   mirror: once
 
+- name: gfx.use-ahardwarebuffer-content
+  type: bool
+  value: false
+  mirror: once
+
 # Use SurfaceTextures as preferred backend for TextureClient/Host.
 - name: gfx.use-surfacetexture-textures
   type: bool
