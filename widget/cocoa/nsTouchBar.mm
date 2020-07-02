@@ -211,7 +211,7 @@ static const uint32_t kInputIconSize = 16;
 
 - (bool)updateItem:(TouchBarInput*)aInput {
   if (!mTouchBarHelper) {
-    return nil;
+    return false;
   }
 
   NSTouchBarItem* item = [self itemForIdentifier:[aInput nativeIdentifier]];
