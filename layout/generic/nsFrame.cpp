@@ -7981,7 +7981,7 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
           return NS_ERROR_FAILURE;
         }
       }
-      GetLastLeaf(aPresContext, &lastFrame);
+      GetLastLeaf(&lastFrame);
 
       if (aPos->mDirection == eDirNext) {
         nearStoppingFrame = firstFrame;
@@ -8840,9 +8840,9 @@ nsresult nsIFrame::GetFrameFromDirection(
         bool frameIsRTL =
             (nsBidiPresUtils::FrameDirection(*framePtr) == NSBIDI_RTL);
         if ((frameIsRTL == lineIsRTL) == (aDirection == eDirPrevious)) {
-          nsFrame::GetFirstLeaf(presContext, framePtr);
+          nsFrame::GetFirstLeaf(framePtr);
         } else {
-          nsFrame::GetLastLeaf(presContext, framePtr);
+          nsFrame::GetLastLeaf(framePtr);
         }
         atLineEdge = *framePtr == traversedFrame;
       } else {
@@ -8855,7 +8855,7 @@ nsresult nsIFrame::GetFrameFromDirection(
       if (NS_FAILED(result)) return result;
 
       if (aDirection == eDirPrevious) {
-        nsFrame::GetFirstLeaf(presContext, &firstFrame);
+        nsFrame::GetFirstLeaf(&firstFrame);
         atLineEdge = firstFrame == traversedFrame;
       } else {  // eDirNext
         lastFrame = firstFrame;
@@ -8866,7 +8866,7 @@ nsresult nsIFrame::GetFrameFromDirection(
             return NS_ERROR_FAILURE;
           }
         }
-        nsFrame::GetLastLeaf(presContext, &lastFrame);
+        nsFrame::GetLastLeaf(&lastFrame);
         atLineEdge = lastFrame == traversedFrame;
       }
     }
@@ -9813,7 +9813,7 @@ ComputedStyle* nsIFrame::DoGetParentComputedStyle(
   return placeholder->GetParentComputedStyleForOutOfFlow(aProviderFrame);
 }
 
-void nsIFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame) {
+void nsIFrame::GetLastLeaf(nsIFrame** aFrame) {
   if (!aFrame || !*aFrame) return;
   nsIFrame* child = *aFrame;
   // if we are a block frame then go for the last line of 'this'
@@ -9832,7 +9832,7 @@ void nsIFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame) {
   }
 }
 
-void nsIFrame::GetFirstLeaf(nsPresContext* aPresContext, nsIFrame** aFrame) {
+void nsIFrame::GetFirstLeaf(nsIFrame** aFrame) {
   if (!aFrame || !*aFrame) return;
   nsIFrame* child = *aFrame;
   while (1) {
