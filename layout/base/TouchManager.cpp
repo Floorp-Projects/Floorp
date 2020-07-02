@@ -40,7 +40,7 @@ void TouchManager::Init(PresShell* aPresShell, Document* aDocument) {
 }
 
 void TouchManager::Destroy() {
-  EvictTouches();
+  EvictTouches(mDocument);
   mDocument = nullptr;
   mPresShell = nullptr;
 }
@@ -92,11 +92,11 @@ void TouchManager::AppendToTouchList(
   }
 }
 
-void TouchManager::EvictTouches() {
+void TouchManager::EvictTouches(Document* aLimitToDocument) {
   WidgetTouchEvent::AutoTouchArray touches;
   AppendToTouchList(&touches);
   for (uint32_t i = 0; i < touches.Length(); ++i) {
-    EvictTouchPoint(touches[i], mDocument);
+    EvictTouchPoint(touches[i], aLimitToDocument);
   }
 }
 
@@ -224,11 +224,7 @@ bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
       // the start of a new touch session and evict any old touches in the
       // queue
       if (touchEvent->mTouches.Length() == 1) {
-        WidgetTouchEvent::AutoTouchArray touches;
-        AppendToTouchList(&touches);
-        for (uint32_t i = 0; i < touches.Length(); ++i) {
-          EvictTouchPoint(touches[i]);
-        }
+        EvictTouches();
       }
       // Add any new touches to the queue
       WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
