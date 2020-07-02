@@ -714,8 +714,8 @@ class ICFallbackStub : public ICStub {
 };
 
 // Shared trait for all CacheIR stubs.
-template <typename T>
-class ICCacheIR_Trait {
+template <typename Base>
+class ICCacheIR_Trait : public Base {
  protected:
   const CacheIRStubInfo* stubInfo_;
 
@@ -723,33 +723,37 @@ class ICCacheIR_Trait {
   //
   // See Bug 1494473 comment 6 for a mechanism to handle overflow if overflow
   // becomes a concern.
-  uint32_t enteredCount_;
+  uint32_t enteredCount_ = 0;
 
  public:
-  explicit ICCacheIR_Trait(const CacheIRStubInfo* stubInfo)
-      : stubInfo_(stubInfo), enteredCount_(0) {}
+  template <typename... Args>
+  explicit ICCacheIR_Trait(const CacheIRStubInfo* stubInfo, Args&&... args)
+      : Base(args...), stubInfo_(stubInfo) {}
 
   const CacheIRStubInfo* stubInfo() const { return stubInfo_; }
+  uint8_t* stubDataStart();
 
   // Return the number of times this stub has successfully provided a value to
   // the caller.
   uint32_t enteredCount() const { return enteredCount_; }
   void resetEnteredCount() { enteredCount_ = 0; }
 
-  static size_t offsetOfEnteredCount() { return offsetof(T, enteredCount_); }
+  void notePreliminaryObject() { this->extra_ = 1; }
+  bool hasPreliminaryObject() const { return this->extra_; }
+
+  static constexpr size_t offsetOfEnteredCount() {
+    using T = ICCacheIR_Trait<Base>;
+    return offsetof(T, enteredCount_);
+  }
 };
 
 // Base class for Trait::Regular CacheIR stubs
-class ICCacheIR_Regular : public ICStub,
-                          public ICCacheIR_Trait<ICCacheIR_Regular> {
+class ICCacheIR_Regular : public ICCacheIR_Trait<ICStub> {
+  using Base = ICCacheIR_Trait<ICStub>;
+
  public:
   ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
-      : ICStub(ICStub::CacheIR_Regular, stubCode), ICCacheIR_Trait(stubInfo) {}
-
-  void notePreliminaryObject() { extra_ = 1; }
-  bool hasPreliminaryObject() const { return extra_; }
-
-  uint8_t* stubDataStart();
+      : Base(stubInfo, ICStub::CacheIR_Regular, stubCode) {}
 };
 
 // Monitored stubs are IC stubs that feed a single resulting value out to a
@@ -780,22 +784,18 @@ class ICMonitoredStub : public ICStub {
   }
 };
 
-class ICCacheIR_Monitored : public ICMonitoredStub,
-                            public ICCacheIR_Trait<ICCacheIR_Monitored> {
+class ICCacheIR_Monitored : public ICCacheIR_Trait<ICMonitoredStub> {
+  using Base = ICCacheIR_Trait<ICMonitoredStub>;
+
  public:
   ICCacheIR_Monitored(JitCode* stubCode, ICStub* firstMonitorStub,
                       const CacheIRStubInfo* stubInfo)
-      : ICMonitoredStub(ICStub::CacheIR_Monitored, stubCode, firstMonitorStub),
-        ICCacheIR_Trait(stubInfo) {}
-
-  void notePreliminaryObject() { extra_ = 1; }
-  bool hasPreliminaryObject() const { return extra_; }
-
-  uint8_t* stubDataStart();
+      : Base(stubInfo, ICStub::CacheIR_Monitored, stubCode, firstMonitorStub) {}
 };
 
-class ICCacheIR_Updated : public ICStub,
-                          public ICCacheIR_Trait<ICCacheIR_Updated> {
+class ICCacheIR_Updated : public ICCacheIR_Trait<ICStub> {
+  using Base = ICCacheIR_Trait<ICStub>;
+
   uint32_t numOptimizedStubs_;
 
   GCPtrObjectGroup updateStubGroup_;
@@ -808,8 +808,7 @@ class ICCacheIR_Updated : public ICStub,
 
  public:
   ICCacheIR_Updated(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
-      : ICStub(ICStub::CacheIR_Updated, ICStub::Updated, stubCode),
-        ICCacheIR_Trait(stubInfo),
+      : Base(stubInfo, ICStub::CacheIR_Updated, ICStub::Updated, stubCode),
         numOptimizedStubs_(0),
         updateStubGroup_(nullptr),
         updateStubId_(JSID_EMPTY),
@@ -818,8 +817,6 @@ class ICCacheIR_Updated : public ICStub,
   GCPtrObjectGroup& updateStubGroup() { return updateStubGroup_; }
   GCPtrId& updateStubId() { return updateStubId_; }
 
-  uint8_t* stubDataStart();
-
   inline ICStub* firstUpdateStub() const { return firstUpdateStub_; }
 
   static inline size_t offsetOfFirstUpdateStub() {
@@ -827,9 +824,6 @@ class ICCacheIR_Updated : public ICStub,
   }
 
   inline uint32_t numOptimizedStubs() const { return numOptimizedStubs_; }
-
-  void notePreliminaryObject() { extra_ = 1; }
-  bool hasPreliminaryObject() const { return extra_; }
 
   MOZ_MUST_USE bool initUpdatingChain(JSContext* cx, ICStubSpace* space);
 
