@@ -91,7 +91,7 @@ void ProcessLink::Open(UniquePtr<Transport> aTransport, MessageLoop* aIOLoop,
   mIOLoop = aIOLoop;
 
   NS_ASSERTION(mIOLoop, "need an IO loop");
-  NS_ASSERTION(mChan->mWorkerLoop, "need a worker loop");
+  NS_ASSERTION(mChan->mWorkerThread, "need a worker thread");
 
   // If we were never able to open the transport, immediately post an error
   // message.
