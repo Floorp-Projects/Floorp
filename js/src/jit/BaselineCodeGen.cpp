@@ -1156,11 +1156,22 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
   masm.bind(&done);
   masm.storePtr(scratch1, frame.addressOfInterpreterScript());
 
-  // Initialize interpreterICEntry.
-  masm.loadJitScript(scratch1, scratch2);
-  masm.computeEffectiveAddress(
-      Address(scratch2, JitScript::offsetOfICEntries()), scratch2);
-  masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
+  if (JitOptions.warpBuilder) {
+    // Initialize icScript and interpreterICEntry
+    masm.loadJitScript(scratch1, scratch2);
+    masm.computeEffectiveAddress(
+        Address(scratch2, JitScript::offsetOfICScript()), scratch2);
+    masm.storePtr(scratch2, frame.addressOfICScript());
+    masm.computeEffectiveAddress(
+        Address(scratch2, ICScript::offsetOfICEntries()), scratch2);
+    masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
+  } else {
+    // Initialize interpreterICEntry
+    masm.loadJitScript(scratch1, scratch2);
+    masm.computeEffectiveAddress(
+        Address(scratch2, JitScript::offsetOfICEntries()), scratch2);
+    masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
+  }
 
   // Initialize interpreter pc.
   masm.loadPtr(Address(scratch1, JSScript::offsetOfSharedData()), scratch1);
@@ -5932,21 +5943,21 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
   static_assert(BaselineDisabledScript == 0x1,
                 "Comparison below requires specific sentinel encoding");
 
+  if (JitOptions.warpBuilder) {
+    // Initialize the icScript slot in the baseline frame.
+    masm.loadJitScript(script, scratch);
+    masm.computeEffectiveAddress(
+        Address(scratch, JitScript::offsetOfICScript()), scratch);
+    Address icScriptAddr(BaselineFrameReg,
+                         BaselineFrame::reverseOffsetOfICScript());
+    masm.storePtr(scratch, icScriptAddr);
+  }
+
   Label noBaselineScript;
   masm.loadJitScript(script, scratch);
   masm.loadPtr(Address(scratch, JitScript::offsetOfBaselineScript()), scratch);
   masm.branchPtr(Assembler::BelowOrEqual, scratch,
                  ImmPtr(BaselineDisabledScriptPtr), &noBaselineScript);
-
-  if (JitOptions.warpBuilder) {
-    // Initialize the icScript slot in the baseline frame.
-    masm.loadJitScript(script, script);
-    masm.computeEffectiveAddress(Address(script, JitScript::offsetOfICScript()),
-                                 script);
-    Address icScriptAddr(BaselineFrameReg,
-                         BaselineFrame::reverseOffsetOfCompilerICScript());
-    masm.storePtr(script, icScriptAddr);
-  }
 
   masm.load32(Address(scratch, BaselineScript::offsetOfResumeEntriesOffset()),
               script);
@@ -6306,11 +6317,18 @@ bool BaselineInterpreterCodeGen::emit_JumpTarget() {
   masm.lshiftPtr(Imm32(shift), scratch1);
 
   // Compute ICEntry* and store to frame->interpreterICEntry.
-  loadScript(scratch2);
-  masm.loadJitScript(scratch2, scratch2);
-  masm.computeEffectiveAddress(
-      BaseIndex(scratch2, scratch1, TimesOne, JitScript::offsetOfICEntries()),
-      scratch2);
+  if (JitOptions.warpBuilder) {
+    masm.loadPtr(frame.addressOfICScript(), scratch2);
+    masm.computeEffectiveAddress(
+        BaseIndex(scratch2, scratch1, TimesOne, ICScript::offsetOfICEntries()),
+        scratch2);
+  } else {
+    loadScript(scratch2);
+    masm.loadJitScript(scratch2, scratch2);
+    masm.computeEffectiveAddress(
+        BaseIndex(scratch2, scratch1, TimesOne, JitScript::offsetOfICEntries()),
+        scratch2);
+  }
   masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
   return true;
 }
