@@ -138,10 +138,7 @@ class ViewSourceChild extends JSWindowActorChild {
 
     try {
       let pageLoader = this.docShell.QueryInterface(Ci.nsIWebPageDescriptor);
-      pageLoader.loadPage(
-        pageDescriptor,
-        Ci.nsIWebPageDescriptor.DISPLAY_AS_SOURCE
-      );
+      pageLoader.loadPageAsViewSource(pageDescriptor);
     } catch (e) {
       // We were not able to load the source from the network cache.
       this.loadSourceFromURL(viewSrcURL);
