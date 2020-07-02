@@ -57,11 +57,14 @@ class GtkCompositorWidget : public CompositorWidget,
   GtkCompositorWidget* AsX11() override { return this; }
   CompositorWidgetDelegate* AsDelegate() override { return this; }
 
+  EGLNativeWindowType GetEGLNativeWindow();
+  int32_t GetDepth();
+
+#if defined(MOZ_X11)
   Display* XDisplay() const { return mXDisplay; }
   Window XWindow() const { return mXWindow; }
-
-  EGLNativeWindowType GetEGLNativeWindow();
-#ifdef MOZ_WAYLAND
+#endif
+#if defined(MOZ_WAYLAND)
   void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
 #endif
 
@@ -75,9 +78,13 @@ class GtkCompositorWidget : public CompositorWidget,
  private:
   LayoutDeviceIntSize mClientSize;
 
-  Display* mXDisplay;
-  Window mXWindow;
   WindowSurfaceProvider mProvider;
+
+#if defined(MOZ_X11)
+  Display* mXDisplay = {};
+  Window mXWindow = {};
+#endif
+  int32_t mDepth = {};
 };
 
 }  // namespace widget
