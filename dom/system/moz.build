@@ -73,12 +73,7 @@ EXPORTS.mozilla += [
     'OSFileConstants.h',
 ]
 
-EXPORTS.mozilla.dom += [
-    'IOUtils.h',
-]
-
 UNIFIED_SOURCES += [
-    'IOUtils.cpp',
     'nsDeviceSensors.cpp',
     'nsOSPermissionRequestBase.cpp',
     'OSFileConstants.cpp',
