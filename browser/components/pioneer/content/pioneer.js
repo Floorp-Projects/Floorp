@@ -55,12 +55,12 @@ async function showAvailableStudies(cachedAddons) {
   for (const cachedAddon of cachedAddons) {
     if (!cachedAddon) {
       console.error(
-        `about:pioneer - Study addon ID not found in cache: ${studyAddonId}`
+        `about:pioneer - Study addon ID not found in AMO cache: ${studyAddonId}`
       );
       return;
     }
 
-    const studyAddonId = cachedAddon.addon_id;
+    const studyAddonId = cachedAddon.id;
 
     const study = document.createElement("div");
     study.setAttribute("id", studyAddonId);
@@ -217,23 +217,23 @@ async function setup(cachedAddons) {
       if (pioneerId) {
         Services.prefs.clearUserPref(PREF_PIONEER_ID);
         for (const cachedAddon of cachedAddons) {
-          const addon = await AddonManager.getAddonByID(cachedAddon.addon_id);
+          const addon = await AddonManager.getAddonByID(cachedAddon.id);
           if (addon) {
             await addon.uninstall();
           }
 
-          const study = document.getElementById(cachedAddon.addon_id);
+          const study = document.getElementById(cachedAddon.id);
           if (study) {
-            await updateStudy(cachedAddon.addon_id);
+            await updateStudy(cachedAddon.id);
           }
         }
       } else {
         let uuid = generateUUID();
         Services.prefs.setStringPref(PREF_PIONEER_ID, uuid);
-        for (const cachedAddon of cachedAddons) {
-          const study = document.getElementById(cachedAddon.addon_id);
+        for (const addon of cachedAddons) {
+          const study = document.getElementById(addon.id);
           if (study) {
-            await updateStudy(cachedAddon.addon_id);
+            await updateStudy(addon.id);
           }
         }
       }
@@ -242,7 +242,7 @@ async function setup(cachedAddons) {
 
   const onAddonEvent = async addon => {
     for (const cachedAddon in cachedAddons) {
-      if (cachedAddon.addon_id == addon.id) {
+      if (cachedAddon.id == addon.id) {
         await updateStudy(addon.id);
       }
     }
