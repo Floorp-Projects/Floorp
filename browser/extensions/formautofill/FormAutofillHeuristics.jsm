@@ -23,6 +23,10 @@ ChromeUtils.defineModuleGetter(
   "resource://formautofill/FormAutofillUtils.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  CreditCard: "resource://gre/modules/CreditCard.jsm",
+});
+
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
@@ -709,25 +713,46 @@ this.FormAutofillHeuristics = {
    *          Return true if there is any field can be recognized in the parser,
    *          otherwise false.
    */
-  _parseCreditCardExpirationDateFields(fieldScanner) {
+  _parseCreditCardFields(fieldScanner) {
     if (fieldScanner.parsingFinished) {
       return false;
     }
 
     const savedIndex = fieldScanner.parsingIndex;
-    const monthAndYearFieldNames = ["cc-exp-month", "cc-exp-year"];
     const detail = fieldScanner.getFieldDetailByIndex(
       fieldScanner.parsingIndex
     );
-    const element = detail.elementWeakRef.get();
 
-    // Respect to autocomplete attr and skip the uninteresting fields
+    // Respect to autocomplete attr
+    if (!detail || (detail._reason && detail._reason == "autocomplete")) {
+      return false;
+    }
+
+    const monthAndYearFieldNames = ["cc-exp-month", "cc-exp-year"];
+    // Skip the uninteresting fields
     if (
-      !detail ||
-      (detail._reason && detail._reason == "autocomplete") ||
-      !["cc-exp", ...monthAndYearFieldNames].includes(detail.fieldName)
+      !["cc-exp", "cc-type", ...monthAndYearFieldNames].includes(
+        detail.fieldName
+      )
     ) {
       return false;
+    }
+
+    const element = detail.elementWeakRef.get();
+
+    // If we didn't auto-discover type field, check every select for options that
+    // match credit card network names in value or label.
+    if (ChromeUtils.getClassName(element) == "HTMLSelectElement") {
+      for (let option of element.querySelectorAll("option")) {
+        if (
+          CreditCard.getNetworkFromName(option.value) ||
+          CreditCard.getNetworkFromName(option.text)
+        ) {
+          fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-type");
+          fieldScanner.parsingIndex++;
+          return true;
+        }
+      }
     }
 
     // If the input type is a month picker, then assume it's cc-exp.
@@ -881,7 +906,7 @@ this.FormAutofillHeuristics = {
     while (!fieldScanner.parsingFinished) {
       let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
-      let parsedExpirationDateFields = this._parseCreditCardExpirationDateFields(
+      let parsedExpirationDateFields = this._parseCreditCardFields(
         fieldScanner
       );
 
@@ -935,6 +960,7 @@ this.FormAutofillHeuristics = {
       "cc-exp-month",
       "cc-exp-year",
       "cc-exp",
+      "cc-type",
     ];
     let regexps = isAutoCompleteOff
       ? FIELDNAMES_IGNORING_AUTOCOMPLETE_OFF
@@ -954,6 +980,7 @@ this.FormAutofillHeuristics = {
         "cc-exp-month",
         "cc-exp-year",
         "cc-exp",
+        "cc-type",
       ];
       regexps = regexps.filter(name =>
         FIELDNAMES_FOR_SELECT_ELEMENT.includes(name)

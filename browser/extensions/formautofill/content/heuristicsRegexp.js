@@ -35,6 +35,7 @@ var HeuristicsRegExp = {
     "cc-exp-month": undefined,
     "cc-exp-year": undefined,
     "cc-exp": undefined,
+    "cc-type": undefined,
   },
 
   RULE_SETS: [
@@ -49,6 +50,7 @@ var HeuristicsRegExp = {
       "cc-number": "(cc|kk)nr", // de-DE
       "cc-exp-month": "(cc|kk)month", // de-DE
       "cc-exp-year": "(cc|kk)year", // de-DE
+      "cc-type": "type",
     },
 
     //=========================================================================

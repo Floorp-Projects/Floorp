@@ -32,6 +32,12 @@ const MOCK_DOC = MockDocument.createTestDocument(
                       <input id="cc-number" autocomplete="cc-number">
                       <input id="cc-exp-month" autocomplete="cc-exp-month">
                       <input id="cc-exp-year" autocomplete="cc-exp-year">
+                      <select id="cc-type">
+                        <option value="">Select</option>
+                        <option value="visa">Visa</option>
+                        <option value="mastercard">Master Card</option>
+                        <option value="amex">American Express</option>
+                      </select>
                       <input id="submit" type="submit">
                     </form>`
 );
@@ -95,6 +101,7 @@ const TESTCASES = [
       "cc-number": "5105105105105100",
       "cc-exp-month": 12,
       "cc-exp-year": 2000,
+      "cc-type": "amex",
     },
     expectedResult: {
       formSubmission: true,
@@ -108,6 +115,7 @@ const TESTCASES = [
               "cc-number": "5105105105105100",
               "cc-exp-month": 12,
               "cc-exp-year": 2000,
+              "cc-type": "amex",
             },
             untouchedFields: [],
           },
@@ -125,6 +133,7 @@ const TESTCASES = [
       "cc-number": "5105105105105100",
       "cc-exp-month": 12,
       "cc-exp-year": 2000,
+      "cc-type": "visa",
     },
     expectedResult: {
       formSubmission: true,
@@ -151,6 +160,7 @@ const TESTCASES = [
               "cc-number": "5105105105105100",
               "cc-exp-month": 12,
               "cc-exp-year": 2000,
+              "cc-type": "visa",
             },
             untouchedFields: [],
           },

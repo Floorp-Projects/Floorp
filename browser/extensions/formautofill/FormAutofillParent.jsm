@@ -588,7 +588,9 @@ class FormAutofillParent extends JSWindowActorParent {
       creditCard.record["cc-type"] &&
       !CreditCard.isValidNetwork(creditCard.record["cc-type"])
     ) {
-      delete creditCard.record["cc-type"];
+      // Let's reset the credit card to empty, and then network auto-detect will
+      // pick it up.
+      creditCard.record["cc-type"] = "";
     }
 
     // We'll show the credit card doorhanger if:

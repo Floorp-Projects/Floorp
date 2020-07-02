@@ -21,7 +21,12 @@ runHeuristicsTest(
             //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"},
           ],
           [
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"},
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "cc-type",
+            },
             {
               section: "",
               addressType: "",
@@ -74,7 +79,12 @@ runHeuristicsTest(
             //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"}, // select
           ],
           [
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"}, // select
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "cc-type",
+            }, // ac-off
             {
               section: "",
               addressType: "",
