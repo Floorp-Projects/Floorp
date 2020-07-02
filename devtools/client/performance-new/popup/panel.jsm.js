@@ -49,7 +49,8 @@ function selectElementsInPanelview(panelview) {
    */
   function getElementById(id) {
     /** @type {HTMLElement | null} */
-    const element = document.getElementById(id);
+    const { PanelMultiView } = lazy.PanelMultiView();
+    const element = PanelMultiView.getViewNode(document, id);
     if (!element) {
       throw new Error(`Could not find the element from the ID "${id}"`);
     }
