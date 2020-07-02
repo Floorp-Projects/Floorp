@@ -17,6 +17,12 @@ basepath = "../.."
     reference = "dom/locales/en-US/**"
     l10n = "{l}dom/**"
 
+# Pick up l10n files for pdfviewer from browser
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=1618465
+[[paths]]
+    reference = "browser/locales/en-US/pdfviewer/**"
+    l10n = "{l}browser/pdfviewer/**"
+
 [[paths]]
     reference = "netwerk/locales/en-US/**"
     l10n = "{l}netwerk/**"
