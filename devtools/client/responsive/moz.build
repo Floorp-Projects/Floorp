@@ -8,18 +8,15 @@ DIRS += [
     'actions',
     'browser',
     'components',
-    'images',
     'reducers',
     'utils',
 ]
 
 DevToolsModules(
     'constants.js',
-    'index.css',
     'index.js',
     'manager.js',
     'reducers.js',
-    'responsive-browser.css',
     'store.js',
     'types.js',
     'ui.js',
