@@ -26,6 +26,7 @@ const { reducers } = require("devtools/client/webconsole/reducers/index");
 const { ignore } = require("devtools/client/shared/redux/middleware/ignore");
 const eventTelemetry = require("devtools/client/webconsole/middleware/event-telemetry");
 const historyPersistence = require("devtools/client/webconsole/middleware/history-persistence");
+const performanceMarker = require("devtools/client/webconsole/middleware/performance-marker");
 const {
   thunkWithOptions,
 } = require("devtools/client/shared/redux/middleware/thunk-with-options");
@@ -94,6 +95,7 @@ function configureStore(webConsoleUI, options = {}) {
   const { toolbox } = options.thunkArgs;
   const sessionId = (toolbox && toolbox.sessionId) || -1;
   const middleware = applyMiddleware(
+    performanceMarker,
     ignore,
     thunkWithOptions.bind(null, {
       prefsService,

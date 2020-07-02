@@ -6,4 +6,5 @@
 DevToolsModules(
     'event-telemetry.js',
     'history-persistence.js',
+    'performance-marker.js',
 )
