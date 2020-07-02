@@ -1289,6 +1289,10 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvNotifyMediaFullScreenState(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aIsInFullScreen);
 
+  mozilla::ipc::IPCResult RecvNotifyPositionStateChanged(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const PositionState& aState);
+
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,
       GetModulesTrustResolver&& aResolver);

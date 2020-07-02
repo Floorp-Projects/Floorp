@@ -24,6 +24,7 @@ namespace dom {
 
 // https://w3c.github.io/mediasession/#position-state
 struct PositionState {
+  PositionState() = default;
   PositionState(double aDuration, double aPlaybackRate,
                 double aLastReportedTime)
       : mDuration(aDuration),
@@ -83,6 +84,7 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   void NotifyMetadataUpdated();
   void NotifyEnableSupportedAction(MediaSessionAction aAction);
   void NotifyDisableSupportedAction(MediaSessionAction aAction);
+  void NotifyPositionStateChanged();
 
   void DispatchNotifyHandler(const MediaSessionActionDetails& aDetails);
 
