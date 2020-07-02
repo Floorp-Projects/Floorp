@@ -1688,6 +1688,17 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
     nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
     MOZ_ASSERT(file);
 
+    bool isDirectory;
+    rv = file->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
+    }
+
+    if (isDirectory) {
+      Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
+      continue;
+    }
+
     nsAutoString leafName;
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1708,7 +1719,7 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
       continue;
     }
 
-    UNKNOWN_FILE_WARNING(leafName);
+    Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
