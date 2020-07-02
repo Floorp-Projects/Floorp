@@ -18,8 +18,8 @@
     /**
      * Click checker.
      */
-    function clickChecker(aCaretOffset, aID, aExtraNodeOrID, aExtraCaretOffset) {
-      this.__proto__ = new caretMoveChecker(aCaretOffset, aID);
+    function clickChecker(aCaretOffset, aIsSelectionCollapsed, aID, aExtraNodeOrID, aExtraCaretOffset) {
+      this.__proto__ = new caretMoveChecker(aCaretOffset, aIsSelectionCollapsed, aID);
 
       this.extraNode = getNode(aExtraNodeOrID);
 
@@ -46,43 +46,43 @@
       gQueue = new eventQueue();
 
       var id = "textbox";
-      gQueue.push(new synthFocus(id, new caretMoveChecker(5, id)));
-      gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, id)));
-      gQueue.push(new synthClick(id, new caretMoveChecker(0, id)));
-      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
+      gQueue.push(new synthFocus(id, new caretMoveChecker(5, true, id)));
+      gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, false, id)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0, true, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, true, id)));
 
       if (!MAC) {
-        gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, id)));
-        gQueue.push(new synthHomeKey(id, new caretMoveChecker(0, id)));
-        gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
+        gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, false, id)));
+        gQueue.push(new synthHomeKey(id, new caretMoveChecker(0, true, id)));
+        gQueue.push(new synthRightKey(id, new caretMoveChecker(1, true, id)));
       }
       else {
         todo(false, "Make these tests pass on OSX (bug 650294)");
       }
 
       id = "textarea";
-      gQueue.push(new synthClick(id, new caretMoveChecker(0, id)));
-      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
-      gQueue.push(new synthDownKey(id, new caretMoveChecker(12, id)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0, true, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, true, id)));
+      gQueue.push(new synthDownKey(id, new caretMoveChecker(12, true, id)));
 
       id = "textarea_wrapped";
       gQueue.push(new setCaretOffset(id, 4, id));
-      gQueue.push(new synthLeftKey(id, new caretMoveChecker(4, id)));
+      gQueue.push(new synthLeftKey(id, new caretMoveChecker(4, true, id)));
 
       id = "p";
-      gQueue.push(new synthClick(id, new caretMoveChecker(0, id)));
-      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
-      gQueue.push(new synthDownKey(id, new caretMoveChecker(6, id)));
+      gQueue.push(new synthClick(id, new caretMoveChecker(0, true, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, true, id)));
+      gQueue.push(new synthDownKey(id, new caretMoveChecker(6, true, id)));
 
       id = "p1_in_div";
-      gQueue.push(new synthClick(id, new clickChecker(0, id, "p2_in_div", -1)));
+      gQueue.push(new synthClick(id, new clickChecker(0, true, id, "p2_in_div", -1)));
 
       id = "p";
-      gQueue.push(new synthShiftTab(id, new caretMoveChecker(0, id)));
+      gQueue.push(new synthShiftTab(id, new caretMoveChecker(0, true, id)));
       id = "textarea";
-      gQueue.push(new synthShiftTab(id, new caretMoveChecker(12, id)));
+      gQueue.push(new synthShiftTab(id, new caretMoveChecker(12, true, id)));
       id = "p";
-      gQueue.push(new synthTab(id, new caretMoveChecker(0, id)));
+      gQueue.push(new synthTab(id, new caretMoveChecker(0, true, id)));
 
       // Set caret after a child of span element, i.e. after 'text' text.
       gQueue.push(new moveCaretToDOMPoint("test1", getNode("test1_span"), 1,
