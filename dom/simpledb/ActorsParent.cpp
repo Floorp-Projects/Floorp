@@ -1669,24 +1669,24 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   DebugOnly<bool> exists;
   MOZ_ASSERT(NS_SUCCEEDED(directory->Exists(&exists)) && exists);
 
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsCOMPtr<nsIDirectoryEnumerator> directoryEntries;
+  rv = directory->GetDirectoryEntries(getter_AddRefs(directoryEntries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
   }
 
   UsageInfo res;
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore &&
-         !aCanceled) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
+
+  while (!aCanceled) {
+    nsCOMPtr<nsIFile> file;
+    rv = directoryEntries->GetNextFile(getter_AddRefs(file));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Err(rv);
     }
 
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    MOZ_ASSERT(file);
+    if (!file) {
+      break;
+    }
 
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
@@ -1699,7 +1699,7 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
       continue;
     }
 
-    nsAutoString leafName;
+    nsString leafName;
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Err(rv);
@@ -1720,9 +1720,6 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
     }
 
     Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
   }
 
   return res;
