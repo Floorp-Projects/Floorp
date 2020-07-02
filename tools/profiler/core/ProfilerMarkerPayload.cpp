@@ -1146,6 +1146,7 @@ static const char* IPCSideToString(ipc::Side aSide) {
       return "unknown";
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid IPC side");
+      return "<invalid IPC side>";
   }
 }
 
@@ -1159,6 +1160,7 @@ static const char* IPCPhaseToString(ipc::MessagePhase aPhase) {
       return "transferEnd";
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid IPC phase");
+      return "<invalid IPC phase>";
   }
 }
 
