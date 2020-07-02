@@ -123,9 +123,10 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyInProcessPrimitive {
   /**
    * @return true if the page that hosts aVAddress is accessible.
    */
-  bool IsPageAccessible(void* aVAddress) const {
+  bool IsPageAccessible(uintptr_t aVAddress) const {
     MEMORY_BASIC_INFORMATION mbi;
-    SIZE_T result = nt::VirtualQuery(aVAddress, &mbi, sizeof(mbi));
+    SIZE_T result = nt::VirtualQuery(reinterpret_cast<LPCVOID>(aVAddress), &mbi,
+                                     sizeof(mbi));
 
     return result && mbi.AllocationProtect && (mbi.Type & MEM_IMAGE) &&
            mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
@@ -767,9 +768,10 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
   /**
    * @return true if the page that hosts aVAddress is accessible.
    */
-  bool IsPageAccessible(void* aVAddress) const {
+  bool IsPageAccessible(uintptr_t aVAddress) const {
     MEMORY_BASIC_INFORMATION mbi;
-    SIZE_T result = nt::VirtualQueryEx(mProcess, aVAddress, &mbi, sizeof(mbi));
+    SIZE_T result = nt::VirtualQueryEx(
+        mProcess, reinterpret_cast<LPCVOID>(aVAddress), &mbi, sizeof(mbi));
 
     return result && mbi.AllocationProtect && (mbi.Type & MEM_IMAGE) &&
            mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
