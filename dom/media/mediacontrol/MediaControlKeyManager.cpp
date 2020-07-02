@@ -158,5 +158,20 @@ void MediaControlKeyManager::SetControlledTabBrowsingContextId(
   }
 }
 
+void MediaControlKeyManager::SetEnableFullScreen(bool aIsEnabled) {
+  LOG_INFO("Set fullscreen %s", aIsEnabled ? "enabled" : "disabled");
+  if (mEventSource && mEventSource->IsOpened()) {
+    mEventSource->SetEnableFullScreen(aIsEnabled);
+  }
+}
+
+void MediaControlKeyManager::SetEnablePictureInPictureMode(bool aIsEnabled) {
+  LOG_INFO("Set Picture-In-Picture mode %s",
+           aIsEnabled ? "enabled" : "disabled");
+  if (mEventSource && mEventSource->IsOpened()) {
+    mEventSource->SetEnablePictureInPictureMode(aIsEnabled);
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
