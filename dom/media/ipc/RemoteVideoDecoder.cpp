@@ -251,9 +251,9 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     RemoteDecoderManagerParent* aParent, const VideoInfo& aVideoInfo,
     float aFramerate, const CreateDecoderParams::OptionSet& aOptions,
     const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-    TaskQueue* aManagerTaskQueue, TaskQueue* aDecodeTaskQueue, bool* aSuccess,
-    nsCString* aErrorDescription)
-    : RemoteDecoderParent(aParent, aManagerTaskQueue, aDecodeTaskQueue),
+    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
+    bool* aSuccess, nsCString* aErrorDescription)
+    : RemoteDecoderParent(aParent, aManagerThread, aDecodeTaskQueue),
       mVideoInfo(aVideoInfo) {
   if (aIdentifier) {
     // Check to see if we have a direct PVideoBridge connection to the
