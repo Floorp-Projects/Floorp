@@ -48,6 +48,8 @@ class gfxAndroidPlatform final : public gfxPlatform {
       override;
 
  protected:
+  void InitAcceleration() override;
+
   bool AccelerateLayersByDefault() override { return true; }
 
   bool CheckVariationFontSupport() override {

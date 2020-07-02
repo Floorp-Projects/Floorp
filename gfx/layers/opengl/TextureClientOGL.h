@@ -20,6 +20,7 @@
 #  include "AndroidSurfaceTexture.h"
 #  include "AndroidNativeWindow.h"
 #  include "mozilla/java/GeckoSurfaceWrappers.h"
+#  include "mozilla/layers/AndroidHardwareBuffer.h"
 #endif
 
 namespace mozilla {
@@ -33,6 +34,8 @@ class DrawTarget;
 namespace layers {
 
 #ifdef MOZ_WIDGET_ANDROID
+
+class AndroidHardwareBuffer;
 
 class AndroidSurfaceTextureData : public TextureData {
  public:
@@ -99,6 +102,42 @@ class AndroidNativeWindowTextureData : public TextureData {
 
   const gfx::IntSize mSize;
   const gfx::SurfaceFormat mFormat;
+};
+
+class AndroidHardwareBufferTextureData : public TextureData {
+ public:
+  static AndroidHardwareBufferTextureData* Create(gfx::IntSize aSize,
+                                                  gfx::SurfaceFormat aFormat);
+
+  virtual ~AndroidHardwareBufferTextureData();
+
+  void FillInfo(TextureData::Info& aInfo) const override;
+
+  bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
+
+  bool Lock(OpenMode aMode) override;
+  void Unlock() override;
+
+  void Forget(LayersIPCChannel*) override;
+  void Deallocate(LayersIPCChannel*) override {}
+
+  already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
+
+  void OnForwardedToHost() override;
+
+ protected:
+  AndroidHardwareBufferTextureData(
+      AndroidHardwareBuffer* aAndroidHardwareBuffer, gfx::IntSize aSize,
+      gfx::SurfaceFormat aFormat);
+
+  RefPtr<AndroidHardwareBuffer> mAndroidHardwareBuffer;
+  const gfx::IntSize mSize;
+  const gfx::SurfaceFormat mFormat;
+
+  void* mAddress;
+
+  // Keeps track of whether the underlying NativeWindow is actually locked.
+  bool mIsLocked;
 };
 
 #endif  // MOZ_WIDGET_ANDROID

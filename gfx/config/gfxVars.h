@@ -64,7 +64,8 @@ class gfxVarReceiver;
   _(UseGLSwizzle, bool, true)                                      \
   _(ForceSubpixelAAWherePossible, bool, false)                     \
   _(DwmCompositionEnabled, bool, true)                             \
-  _(FxREmbedded, bool, false)
+  _(FxREmbedded, bool, false)                                      \
+  _(UseAHardwareBufferContent, bool, false)
 
 /* Add new entries above this line. */
 

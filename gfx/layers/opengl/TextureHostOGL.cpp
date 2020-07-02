@@ -27,6 +27,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/layers/AndroidHardwareBuffer.h"
 #  include "mozilla/webrender/RenderAndroidSurfaceTextureHostOGL.h"
 #endif
 
@@ -68,6 +69,12 @@ already_AddRefed<TextureHost> CreateTextureHostOGL(
       result = new SurfaceTextureHost(aFlags, surfaceTexture, desc.size(),
                                       desc.format(), desc.continuous(),
                                       desc.ignoreTransform());
+      break;
+    }
+    case SurfaceDescriptor::TSurfaceDescriptorAndroidHardwareBuffer: {
+      const SurfaceDescriptorAndroidHardwareBuffer& desc =
+          aDesc.get_SurfaceDescriptorAndroidHardwareBuffer();
+      result = AndroidHardwareBufferTextureHost::Create(aFlags, desc);
       break;
     }
 #endif
@@ -698,6 +705,185 @@ void SurfaceTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     }
   }
+}
+
+////////////////////////////////////////////////////////////////////////
+// AndroidHardwareBufferTextureHost
+
+/* static */
+already_AddRefed<AndroidHardwareBufferTextureHost>
+AndroidHardwareBufferTextureHost::Create(
+    TextureFlags aFlags, const SurfaceDescriptorAndroidHardwareBuffer& aDesc) {
+  RefPtr<AndroidHardwareBuffer> buffer =
+      AndroidHardwareBuffer::FromFileDescriptor(
+          const_cast<ipc::FileDescriptor&>(aDesc.handle()), aDesc.size(),
+          aDesc.format());
+  if (!buffer) {
+    return nullptr;
+  }
+  RefPtr<AndroidHardwareBufferTextureHost> host =
+      new AndroidHardwareBufferTextureHost(aFlags, buffer);
+  return host.forget();
+}
+
+AndroidHardwareBufferTextureHost::AndroidHardwareBufferTextureHost(
+    TextureFlags aFlags, AndroidHardwareBuffer* aAndroidHardwareBuffer)
+    : TextureHost(aFlags),
+      mAndroidHardwareBuffer(aAndroidHardwareBuffer),
+      mEGLImage(EGL_NO_IMAGE) {}
+
+AndroidHardwareBufferTextureHost::~AndroidHardwareBufferTextureHost() {
+  DestroyEGLImage();
+}
+
+void AndroidHardwareBufferTextureHost::DestroyEGLImage() {
+  if (mEGLImage && gl()) {
+    const auto& gle = gl::GLContextEGL::Cast(gl());
+    const auto& egl = gle->mEgl;
+    egl->fDestroyImage(egl->Display(), mEGLImage);
+    mEGLImage = EGL_NO_IMAGE;
+  }
+}
+
+void AndroidHardwareBufferTextureHost::PrepareTextureSource(
+    CompositableTextureSourceRef& aTextureSource) {
+  MOZ_ASSERT(mAndroidHardwareBuffer);
+
+  if (!mAndroidHardwareBuffer) {
+    mTextureSource = nullptr;
+    return;
+  }
+
+  if (mTextureSource) {
+    // We are already attached to a TextureSource, nothing to do except tell
+    // the compositable to use it.
+    aTextureSource = mTextureSource;
+    return;
+  }
+
+  if (!gl() || !gl()->MakeCurrent()) {
+    mTextureSource = nullptr;
+    return;
+  }
+
+  if (!mEGLImage) {
+    // XXX add crop handling for video
+    // Should only happen the first time.
+    const auto& gle = gl::GLContextEGL::Cast(gl());
+    const auto& egl = gle->mEgl;
+
+    const EGLint attrs[] = {
+        LOCAL_EGL_IMAGE_PRESERVED,
+        LOCAL_EGL_TRUE,
+        LOCAL_EGL_NONE,
+        LOCAL_EGL_NONE,
+    };
+
+    EGLClientBuffer clientBuffer = egl->fGetNativeClientBufferANDROID(
+        mAndroidHardwareBuffer->GetNativeBuffer());
+    mEGLImage =
+        egl->fCreateImage(egl->Display(), EGL_NO_CONTEXT,
+                          LOCAL_EGL_NATIVE_BUFFER_ANDROID, clientBuffer, attrs);
+  }
+
+  GLenum textureTarget = LOCAL_GL_TEXTURE_EXTERNAL;
+  GLTextureSource* glSource =
+      aTextureSource ? aTextureSource->AsSourceOGL()->AsGLTextureSource()
+                     : nullptr;
+
+  bool shouldCreateTextureSource =
+      !glSource || !glSource->IsValid() ||
+      glSource->NumCompositableRefs() > 1 ||
+      glSource->GetTextureTarget() != textureTarget;
+
+  if (shouldCreateTextureSource) {
+    GLuint textureHandle;
+    gl()->fGenTextures(1, &textureHandle);
+    gl()->fBindTexture(textureTarget, textureHandle);
+    gl()->fTexParameteri(textureTarget, LOCAL_GL_TEXTURE_WRAP_T,
+                         LOCAL_GL_CLAMP_TO_EDGE);
+    gl()->fTexParameteri(textureTarget, LOCAL_GL_TEXTURE_WRAP_S,
+                         LOCAL_GL_CLAMP_TO_EDGE);
+    gl()->fEGLImageTargetTexture2D(textureTarget, mEGLImage);
+
+    mTextureSource = new GLTextureSource(mProvider, textureHandle,
+                                         textureTarget, GetSize(), GetFormat());
+    aTextureSource = mTextureSource;
+  } else {
+    gl()->fBindTexture(textureTarget, glSource->GetTextureHandle());
+    gl()->fEGLImageTargetTexture2D(textureTarget, mEGLImage);
+    glSource->SetSize(GetSize());
+    glSource->SetFormat(GetFormat());
+    mTextureSource = glSource;
+  }
+}
+
+bool AndroidHardwareBufferTextureHost::BindTextureSource(
+    CompositableTextureSourceRef& aTextureSource) {
+  // This happens at composition time.
+
+  // If mTextureSource is null it means PrepareTextureSource failed.
+  if (!mTextureSource) {
+    return false;
+  }
+
+  // If Prepare didn't fail, we expect our TextureSource to be the same as
+  // aTextureSource, otherwise it means something has fiddled with the
+  // TextureSource between Prepare and now.
+  MOZ_ASSERT(mTextureSource == aTextureSource);
+  aTextureSource = mTextureSource;
+
+  // XXX Acquire Fence Handling
+  return true;
+}
+
+gl::GLContext* AndroidHardwareBufferTextureHost::gl() const {
+  return mProvider ? mProvider->GetGLContext() : nullptr;
+}
+
+bool AndroidHardwareBufferTextureHost::Lock() {
+  return mTextureSource && mTextureSource->IsValid();
+}
+
+void AndroidHardwareBufferTextureHost::SetTextureSourceProvider(
+    TextureSourceProvider* aProvider) {
+  if (mProvider != aProvider) {
+    if (!aProvider || !aProvider->GetGLContext()) {
+      DeallocateDeviceData();
+      return;
+    }
+    mProvider = aProvider;
+  }
+
+  if (mTextureSource) {
+    mTextureSource->SetTextureSourceProvider(aProvider);
+  }
+}
+
+void AndroidHardwareBufferTextureHost::NotifyNotUsed() {
+  // XXX Add android fence handling
+  TextureHost::NotifyNotUsed();
+}
+
+gfx::SurfaceFormat AndroidHardwareBufferTextureHost::GetFormat() const {
+  if (mAndroidHardwareBuffer) {
+    return mAndroidHardwareBuffer->mFormat;
+  }
+  return gfx::SurfaceFormat::UNKNOWN;
+}
+
+gfx::IntSize AndroidHardwareBufferTextureHost::GetSize() const {
+  if (mAndroidHardwareBuffer) {
+    return mAndroidHardwareBuffer->mSize;
+  }
+  return gfx::IntSize();
+}
+
+void AndroidHardwareBufferTextureHost::DeallocateDeviceData() {
+  if (mTextureSource) {
+    mTextureSource = nullptr;
+  }
+  DestroyEGLImage();
 }
 
 #endif  // MOZ_WIDGET_ANDROID

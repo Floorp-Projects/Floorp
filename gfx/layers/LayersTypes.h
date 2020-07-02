@@ -166,6 +166,7 @@ enum class TextureType : int8_t {
   X11,
   MacIOSurface,
   AndroidNativeWindow,
+  AndroidHardwareBuffer,
   DMABUF,
   EGLImage,
   Last

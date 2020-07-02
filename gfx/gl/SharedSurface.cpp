@@ -115,6 +115,9 @@ UniquePtr<SurfaceFactory> SurfaceFactory::Create(
 #endif
       return nullptr;
 
+    case layers::TextureType::AndroidHardwareBuffer:
+      return nullptr;
+
     case layers::TextureType::AndroidNativeWindow:
 #ifdef MOZ_WIDGET_ANDROID
       if (XRE_IsParentProcess() && !StaticPrefs::webgl_enable_surface_texture())

@@ -46,6 +46,8 @@ namespace layers {
 
 class Compositor;
 class CompositorOGL;
+class AndroidHardwareBuffer;
+class SurfaceDescriptorAndroidHardwareBuffer;
 class TextureImageTextureSourceOGL;
 class GLTextureSource;
 
@@ -453,6 +455,49 @@ class SurfaceTextureHost : public TextureHost {
   const bool mIgnoreTransform;
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<SurfaceTextureSource> mTextureSource;
+};
+
+class AndroidHardwareBufferTextureHost : public TextureHost {
+ public:
+  static already_AddRefed<AndroidHardwareBufferTextureHost> Create(
+      TextureFlags aFlags, const SurfaceDescriptorAndroidHardwareBuffer& aDesc);
+
+  AndroidHardwareBufferTextureHost(
+      TextureFlags aFlags, AndroidHardwareBuffer* aAndroidHardwareBuffer);
+
+  virtual ~AndroidHardwareBufferTextureHost();
+
+  void PrepareTextureSource(
+      CompositableTextureSourceRef& aTextureSource) override;
+
+  bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
+
+  void DeallocateDeviceData() override;
+
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+
+  bool Lock() override;
+
+  gfx::SurfaceFormat GetFormat() const override;
+
+  gfx::IntSize GetSize() const override;
+
+  void NotifyNotUsed() override;
+
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
+    return nullptr;  // XXX - implement this (for MOZ_DUMP_PAINTING)
+  }
+
+  gl::GLContext* gl() const;
+
+  const char* Name() override { return "AndroidHardwareBufferTextureHost"; }
+
+ protected:
+  void DestroyEGLImage();
+
+  RefPtr<AndroidHardwareBuffer> mAndroidHardwareBuffer;
+  RefPtr<GLTextureSource> mTextureSource;
+  EGLImage mEGLImage;
 };
 
 #endif  // MOZ_WIDGET_ANDROID
