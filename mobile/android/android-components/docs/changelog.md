@@ -22,6 +22,10 @@ permalink: /changelog/
 * **concept-engine**
   * Adds `profiler` property with `isProfilerActive`, `getProfilerTime` and `addMarker` Firefox Profiler APIs. These will allow to add profiler markers.
 
+* **support-ktx**
+  * Adds `Resources.getSpanned` to format strings using style spans.
+  * Adds `Resources.locale` to get the corresponding locale on all SDK versions.
+
 # 48.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v47.0.0...v48.0.0)
