@@ -688,14 +688,14 @@ nsresult BlobURLProtocolHandler::GenerateURIString(nsIPrincipal* aPrincipal,
 
 /* static */
 nsIPrincipal* BlobURLProtocolHandler::GetDataEntryPrincipal(
-    const nsACString& aUri, bool aAlsoIfRevoked) {
+    const nsACString& aUri) {
   MOZ_ASSERT(NS_IsMainThread(),
              "without locking gDataTable is main-thread only");
   if (!gDataTable) {
     return nullptr;
   }
 
-  DataInfo* res = GetDataInfo(aUri, aAlsoIfRevoked);
+  DataInfo* res = GetDataInfo(aUri);
 
   if (!res) {
     return nullptr;
@@ -779,10 +779,60 @@ BlobURLProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aResult) {
 NS_IMETHODIMP
 BlobURLProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                    nsIChannel** aResult) {
-  auto channel = MakeRefPtr<BlobURLChannel>(aURI, aLoadInfo);
-  if (!channel) {
-    return NS_ERROR_NOT_INITIALIZED;
+  RefPtr<BlobURLChannel> channel = new BlobURLChannel(aURI, aLoadInfo);
+
+  auto raii = MakeScopeExit([&] {
+    channel->InitFailed();
+    channel.forget(aResult);
+  });
+
+  RefPtr<BlobURL> blobURL;
+  nsresult rv =
+      aURI->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(blobURL));
+  if (NS_FAILED(rv) || !blobURL) {
+    return NS_OK;
   }
+
+  MOZ_ASSERT(NS_IsMainThread(),
+             "without locking gDataTable is main-thread only");
+  DataInfo* info = GetDataInfoFromURI(aURI, true /*aAlsoIfRevoked */);
+  if (!info || info->mObjectType != DataInfo::eBlobImpl || !info->mBlobImpl) {
+    return NS_OK;
+  }
+
+  if (blobURL->Revoked()) {
+#ifdef MOZ_WIDGET_ANDROID
+    // if the channel was not triggered by the system principal,
+    // then we return here because the URL had been revoked
+    if (aLoadInfo && !aLoadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
+      return NS_OK;
+    }
+#else
+    return NS_OK;
+#endif
+  }
+
+  // We want to be sure that we stop the creation of the channel if the blob URL
+  // is copy-and-pasted on a different context (ex. private browsing or
+  // containers).
+  //
+  // We also allow the system principal to create the channel regardless of the
+  // OriginAttributes.  This is primarily for the benefit of mechanisms like
+  // the Download API that explicitly create a channel with the system
+  // principal and which is never mutated to have a non-zero mPrivateBrowsingId
+  // or container.
+  if (aLoadInfo &&
+      (!aLoadInfo->GetLoadingPrincipal() ||
+       !aLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()) &&
+      !ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
+          aLoadInfo->GetOriginAttributes(),
+          BasePrincipal::Cast(info->mPrincipal)->OriginAttributesRef())) {
+    return NS_OK;
+  }
+
+  raii.release();
+
+  channel->Initialize(info->mBlobImpl);
   channel.forget(aResult);
   return NS_OK;
 }
@@ -851,14 +901,13 @@ nsresult NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob) {
   return NS_OK;
 }
 
-nsresult NS_GetBlobForBlobURISpec(const nsACString& aSpec, BlobImpl** aBlob,
-                                  bool aAlsoIfRevoked) {
+nsresult NS_GetBlobForBlobURISpec(const nsACString& aSpec, BlobImpl** aBlob) {
   *aBlob = nullptr;
   MOZ_ASSERT(NS_IsMainThread(),
              "without locking gDataTable is main-thread only");
 
-  DataInfo* info = GetDataInfo(aSpec, aAlsoIfRevoked);
-  if (!info || info->mObjectType != DataInfo::eBlobImpl || !info->mBlobImpl) {
+  DataInfo* info = GetDataInfo(aSpec);
+  if (!info || info->mObjectType != DataInfo::eBlobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
