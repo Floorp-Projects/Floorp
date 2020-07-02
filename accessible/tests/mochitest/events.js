@@ -1659,12 +1659,12 @@ function moveToLineEnd(aID, aCaretOffset) {
       aID,
       "VK_RIGHT",
       { metaKey: true },
-      new caretMoveChecker(aCaretOffset, aID)
+      new caretMoveChecker(aCaretOffset, true, aID)
     );
   } else {
     this.__proto__ = new synthEndKey(
       aID,
-      new caretMoveChecker(aCaretOffset, aID)
+      new caretMoveChecker(aCaretOffset, true, aID)
     );
   }
 
@@ -1679,7 +1679,7 @@ function moveToLineEnd(aID, aCaretOffset) {
 function moveToPrevLineEnd(aID, aCaretOffset) {
   this.__proto__ = new synthAction(
     aID,
-    new caretMoveChecker(aCaretOffset, aID)
+    new caretMoveChecker(aCaretOffset, true, aID)
   );
 
   this.invoke = function moveToPrevLineEnd_invoke() {
@@ -1706,12 +1706,12 @@ function moveToLineStart(aID, aCaretOffset) {
       aID,
       "VK_LEFT",
       { metaKey: true },
-      new caretMoveChecker(aCaretOffset, aID)
+      new caretMoveChecker(aCaretOffset, true, aID)
     );
   } else {
     this.__proto__ = new synthHomeKey(
       aID,
-      new caretMoveChecker(aCaretOffset, aID)
+      new caretMoveChecker(aCaretOffset, true, aID)
     );
   }
 
@@ -1729,14 +1729,14 @@ function moveToTextStart(aID) {
       aID,
       "VK_UP",
       { metaKey: true },
-      new caretMoveChecker(0, aID)
+      new caretMoveChecker(0, true, aID)
     );
   } else {
     this.__proto__ = new synthKey(
       aID,
       "VK_HOME",
       { ctrlKey: true },
-      new caretMoveChecker(0, aID)
+      new caretMoveChecker(0, true, aID)
     );
   }
 
@@ -1792,7 +1792,7 @@ function moveCaretToDOMPoint(
     }
   };
 
-  this.eventSeq = [new caretMoveChecker(aExpectedOffset, this.target)];
+  this.eventSeq = [new caretMoveChecker(aExpectedOffset, true, this.target)];
 
   if (this.focus) {
     this.eventSeq.push(new asyncInvokerChecker(EVENT_FOCUS, this.focus));
@@ -1815,7 +1815,7 @@ function setCaretOffset(aID, aOffset, aFocusTargetID) {
     return "Set caretOffset on " + prettyName(aID) + " at " + this.offset;
   };
 
-  this.eventSeq = [new caretMoveChecker(this.offset, this.target)];
+  this.eventSeq = [new caretMoveChecker(this.offset, true, this.target)];
 
   if (this.focus) {
     this.eventSeq.push(new asyncInvokerChecker(EVENT_FOCUS, this.focus));
@@ -2013,6 +2013,7 @@ function textChangeChecker(
  */
 function caretMoveChecker(
   aCaretOffset,
+  aIsSelectionCollapsed,
   aTargetOrFunc,
   aTargetFuncArg,
   aIsAsync
@@ -2025,10 +2026,16 @@ function caretMoveChecker(
   );
 
   this.check = function caretMoveChecker_check(aEvent) {
+    let evt = aEvent.QueryInterface(nsIAccessibleCaretMoveEvent);
     is(
-      aEvent.QueryInterface(nsIAccessibleCaretMoveEvent).caretOffset,
+      evt.caretOffset,
       aCaretOffset,
       "Wrong caret offset for " + prettyName(aEvent.accessible)
+    );
+    is(
+      evt.isSelectionCollapsed,
+      aIsSelectionCollapsed,
+      "wrong collapsed value for  " + prettyName(aEvent.accessible)
     );
   };
 }
@@ -2036,6 +2043,7 @@ function caretMoveChecker(
 function asyncCaretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg) {
   this.__proto__ = new caretMoveChecker(
     aCaretOffset,
+    true, // Caret is collapsed
     aTargetOrFunc,
     aTargetFuncArg,
     true

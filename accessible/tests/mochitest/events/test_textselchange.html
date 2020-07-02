@@ -24,7 +24,7 @@
 
     function getOnclickSeq(aID) {
       return [
-        new caretMoveChecker(0, aID),
+        new caretMoveChecker(0, true, aID),
         new unexpectedInvokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID),
       ];
     }
@@ -43,7 +43,7 @@
                                     { shiftKey: true }));
       gQueue.push(new synthLeftKey("ta1",
                                     [new textSelectionChecker("ta1", 0, 0, "ta1", 0, "ta1", 0),
-                                     new caretMoveChecker(0, "ta1")]));
+                                     new caretMoveChecker(0, true, "ta1")]));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
