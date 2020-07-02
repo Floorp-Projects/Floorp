@@ -18,7 +18,7 @@ from six.moves.configparser import SafeConfigParser, NoOptionError
 # The following developers frequently modify mach code, and testing will commonly cause
 # exceptions to be thrown. We don't want these exceptions reported to Sentry.
 _DEVELOPER_BLOCKLIST = [
-    'ahalberstadt@mozilla.com'
+    'ahalberstadt@mozilla.com',
     'mhentges@mozilla.com',
     'rstewart@mozilla.com',
     'sledru@mozilla.com'
