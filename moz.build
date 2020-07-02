@@ -152,11 +152,13 @@ DIRS += [
     'config',
     'python',
     'testing/mozbase',
-    'third_party/python',
 ]
 
 if not CONFIG['JS_STANDALONE']:
-    DIRS += ['taskcluster']
+    DIRS += [
+        'taskcluster',
+        'third_party',
+    ]
 
 if not CONFIG['JS_STANDALONE'] or not CONFIG['MOZ_BUILD_APP']:
     CONFIGURE_DEFINE_FILES += [
