@@ -9,6 +9,7 @@
 #ifndef regexp_RegExpAPI_h
 #define regexp_RegExpAPI_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "frontend/TokenStream.h"
@@ -26,7 +27,9 @@ size_t IsolateSizeOfIncludingThis(Isolate* isolate,
 
 bool CheckPatternSyntax(JSContext* cx, frontend::TokenStreamAnyChars& ts,
                         const mozilla::Range<const char16_t> chars,
-                        JS::RegExpFlags flags);
+                        JS::RegExpFlags flags,
+                        mozilla::Maybe<uint32_t> line = mozilla::Nothing(),
+                        mozilla::Maybe<uint32_t> column = mozilla::Nothing());
 bool CheckPatternSyntax(JSContext* cx, frontend::TokenStreamAnyChars& ts,
                         HandleAtom pattern, JS::RegExpFlags flags);
 

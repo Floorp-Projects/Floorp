@@ -33,7 +33,9 @@ namespace irregexp {
 
 using mozilla::AssertedCast;
 using mozilla::Maybe;
+using mozilla::Nothing;
 using mozilla::PointerRangeSize;
+using mozilla::Some;
 
 using frontend::DummyTokenStream;
 using frontend::TokenStreamAnyChars;
@@ -161,8 +163,12 @@ static size_t ComputeColumn(const char16_t* begin, const char16_t* end) {
 // We never call it with additional arguments.
 template <typename CharT>
 static void ReportSyntaxError(TokenStreamAnyChars& ts,
+                              mozilla::Maybe<uint32_t> line,
+                              mozilla::Maybe<uint32_t> column,
                               RegExpCompileData& result, CharT* start,
                               size_t length, ...) {
+  MOZ_ASSERT(line.isSome() == column.isSome());
+
   gc::AutoSuppressGC suppressGC(ts.context());
   uint32_t errorNumber = ErrorNumber(result.error);
 
@@ -181,13 +187,25 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
   // a line of context based on the expression source.
   uint32_t location = ts.currentToken().pos.begin;
   if (ts.fillExceptingContext(&err, location)) {
-    // Line breaks are not significant in pattern text in the same way as
-    // in source text, so act as though pattern text is a single line, then
-    // compute a column based on "code point" count (treating a lone
-    // surrogate as a "code point" in UTF-16).  Gak.
-    err.lineNumber = 1;
-    err.columnNumber =
+    uint32_t columnNumber =
         AssertedCast<uint32_t>(ComputeColumn(start, start + offset));
+    if (line.isSome()) {
+      // If this pattern is being checked by the frontend Parser instead
+      // of other API entry points like |new RegExp|, then the parser will
+      // have provided both a line and column pointing at the *beginning*
+      // of the RegExp literal inside the source text.
+      // We adjust the columnNumber to point to the actual syntax error
+      // inside the literal.
+      err.lineNumber = *line;
+      err.columnNumber = *column + columnNumber;
+    } else {
+      // Line breaks are not significant in pattern text in the same way as
+      // in source text, so act as though pattern text is a single line, then
+      // compute a column based on "code point" count (treating a lone
+      // surrogate as a "code point" in UTF-16).  Gak.
+      err.lineNumber = 1;
+      err.columnNumber = columnNumber;
+    }
   }
 
   // For most error reporting, the line of context derives from the token
@@ -235,11 +253,11 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
                               RegExpCompileData& result, HandleAtom pattern) {
   JS::AutoCheckCannotGC nogc_;
   if (pattern->hasLatin1Chars()) {
-    ReportSyntaxError(ts, result, pattern->latin1Chars(nogc_),
-                      pattern->length());
+    ReportSyntaxError(ts, Nothing(), Nothing(), result,
+                      pattern->latin1Chars(nogc_), pattern->length());
   } else {
-    ReportSyntaxError(ts, result, pattern->twoByteChars(nogc_),
-                      pattern->length());
+    ReportSyntaxError(ts, Nothing(), Nothing(), result,
+                      pattern->twoByteChars(nogc_), pattern->length());
   }
 }
 
@@ -257,11 +275,13 @@ static bool CheckPatternSyntaxImpl(JSContext* cx, FlatStringReader* pattern,
 
 bool CheckPatternSyntax(JSContext* cx, TokenStreamAnyChars& ts,
                         const mozilla::Range<const char16_t> chars,
-                        JS::RegExpFlags flags) {
+                        JS::RegExpFlags flags, mozilla::Maybe<uint32_t> line,
+                        mozilla::Maybe<uint32_t> column) {
   FlatStringReader reader(chars);
   RegExpCompileData result;
   if (!CheckPatternSyntaxImpl(cx, &reader, flags, &result)) {
-    ReportSyntaxError(ts, result, chars.begin().get(), chars.length());
+    ReportSyntaxError(ts, line, column, result, chars.begin().get(),
+                      chars.length());
     return false;
   }
   return true;
