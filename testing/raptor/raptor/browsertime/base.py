@@ -23,7 +23,7 @@ LOG = RaptorLogger(component="raptor-browsertime")
 
 DEFAULT_CHROMEVERSION = "77"
 BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT = 120  # 2 minutes
-BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT = 900  # 15 minutes
+BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT = None  # Disable output timeout for benchmark tests
 
 
 class Browsertime(Perftest):

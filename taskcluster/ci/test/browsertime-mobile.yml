@@ -193,6 +193,24 @@ browsertime-tp6m:
     run-visual-metrics: true
     treeherder-symbol: Btime(tp6m)
 
+browsertime-youtube-playback-mobile:
+    description: "Browsertime YouTube Playback on Android"
+    treeherder-symbol: Btime(ytp)
+    raptor-subtests:
+        - [youtube-playback, ytp]
+        - [youtube-playback-av1-sfr, ytp-av1-sfr]
+        - [youtube-playback-h264-sfr, ytp-h264-sfr]
+        - [youtube-playback-h264-std, ytp-h264-std]
+        - [youtube-playback-vp9-sfr, ytp-vp9-sfr]
+        - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
+        - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
+        - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
+    apps: ["fenix", "geckoview", "refbrow"]
+    run-on-projects: []
+    mozharness:
+        extra-options:
+            - --browsertime
+
 browsertime-tp6m-live:
     description: "Raptor (browsertime) tp6 live site page-load tests on android"
     raptor-test: tp6m
