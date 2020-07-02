@@ -754,6 +754,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
 
+  void runTaskLocked(AutoLockHelperThreadState& locked);
   void runTask() override;
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_PARSE; }
 };
