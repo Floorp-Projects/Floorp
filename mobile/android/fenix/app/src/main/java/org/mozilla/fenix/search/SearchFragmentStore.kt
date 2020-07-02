@@ -41,6 +41,8 @@ sealed class SearchEngineSource {
  * @property showSearchSuggestions Whether or not to show search suggestions from the search engine in the AwesomeBar
  * @property showSearchSuggestionsHint Whether or not to show search suggestions in private hint panel
  * @property showSearchShortcuts Whether or not to show search shortcuts in the AwesomeBar
+ * @property areShortcutsAvailable Whether or not there are >=2 search engines installed
+ *                                 so to know to present users with certain options or not.
  * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar
  * @property showHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
  * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
@@ -55,6 +57,7 @@ data class SearchFragmentState(
     val showSearchSuggestions: Boolean,
     val showSearchSuggestionsHint: Boolean,
     val showSearchShortcuts: Boolean,
+    val areShortcutsAvailable: Boolean,
     val showClipboardSuggestions: Boolean,
     val showHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
@@ -71,6 +74,7 @@ sealed class SearchFragmentAction : Action {
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
     data class SelectNewDefaultSearchEngine(val engine: SearchEngine) : SearchFragmentAction()
     data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchFragmentAction()
+    data class UpdateShortcutsAvailability(val areShortcutsAvailable: Boolean) : SearchFragmentAction()
     data class AllowSearchSuggestionsInPrivateModePrompt(val show: Boolean) : SearchFragmentAction()
     data class UpdateQuery(val query: String) : SearchFragmentAction()
 }
@@ -86,7 +90,9 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchShortcuts = false
             )
         is SearchFragmentAction.ShowSearchShortcutEnginePicker ->
-            state.copy(showSearchShortcuts = action.show)
+            state.copy(showSearchShortcuts = action.show && state.areShortcutsAvailable)
+        is SearchFragmentAction.UpdateShortcutsAvailability ->
+            state.copy(areShortcutsAvailable = action.areShortcutsAvailable)
         is SearchFragmentAction.UpdateQuery ->
             state.copy(query = action.query)
         is SearchFragmentAction.SelectNewDefaultSearchEngine ->

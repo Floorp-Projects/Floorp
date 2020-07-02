@@ -47,6 +47,16 @@ class SearchFragmentStoreTest {
         assertEquals(true, store.state.showSearchShortcuts)
     }
 
+    @Test
+    fun hideSearchShortcutEnginePicker() = runBlocking {
+        val initialState = emptyDefaultState()
+        val store = SearchFragmentStore(initialState)
+
+        store.dispatch(SearchFragmentAction.UpdateShortcutsAvailability(false)).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(false, store.state.showSearchShortcuts)
+    }
+
     private fun emptyDefaultState(): SearchFragmentState = SearchFragmentState(
         tabId = null,
         url = "",
@@ -57,6 +67,7 @@ class SearchFragmentStoreTest {
         showSearchSuggestionsHint = false,
         showSearchSuggestions = false,
         showSearchShortcuts = false,
+        areShortcutsAvailable = true,
         showClipboardSuggestions = false,
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
