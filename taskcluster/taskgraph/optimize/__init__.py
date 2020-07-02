@@ -39,7 +39,7 @@ def register_strategy(name, args=()):
     return wrap
 
 
-def optimize_task_graph(target_task_graph, requested_tasks, params, do_not_optimize,
+def optimize_task_graph(target_task_graph, params, do_not_optimize,
                         decision_task_id, existing_tasks=None, strategy_override=None):
     """
     Perform task optimization, returning a taskgraph and a map from label to
@@ -58,7 +58,6 @@ def optimize_task_graph(target_task_graph, requested_tasks, params, do_not_optim
 
     removed_tasks = remove_tasks(
         target_task_graph=target_task_graph,
-        requested_tasks=requested_tasks,
         optimizations=optimizations,
         params=params,
         do_not_optimize=do_not_optimize)
@@ -103,7 +102,7 @@ def _log_optimization(verb, opt_counts):
         logger.info('No tasks {} during optimization'.format(verb))
 
 
-def remove_tasks(target_task_graph, requested_tasks, params, optimizations, do_not_optimize):
+def remove_tasks(target_task_graph, params, optimizations, do_not_optimize):
     """
     Implement the "Removing Tasks" phase, returning a set of task labels of all removed tasks.
     """
@@ -124,15 +123,6 @@ def remove_tasks(target_task_graph, requested_tasks, params, optimizations, do_n
         if any(l not in removed for l in reverse_links_dict[label]):
             logger.debug(message.format(label=label, verb=verb, reason="dependent tasks"))
             continue
-
-        # Some tasks in the task graph only exist because they were required
-        # by a task that has just been optimized away. They can now be removed.
-        if label not in requested_tasks:
-            reason = "downstreams-optimized"
-            verb = "removed"
-            removed.add(label)
-            opt_counts['downstreams-optimized'] += 1
-            logger.debug(message.format(label=label, verb=verb, reason=reason))
 
         # call the optimization strategy
         task = target_task_graph.tasks[label]
