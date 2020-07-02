@@ -724,10 +724,12 @@ bool TestAssemblyFunctions() {
     // original jump destination is returned as a stub.
     TestCase("MovPushRet", JumpDestination),
     TestCase("MovRaxJump", JumpDestination),
+    TestCase("DoubleJump", JumpDestination),
 #    elif defined(_M_IX86)
     // Skip the stub address check as we always generate a trampoline for x86.
     TestCase("PushRet", NoStubAddressCheck),
     TestCase("MovEaxJump", NoStubAddressCheck),
+    TestCase("DoubleJump", NoStubAddressCheck),
     TestCase("Opcode83", NoStubAddressCheck),
     TestCase("LockPrefix", NoStubAddressCheck),
     TestCase("LooksLikeLockPrefix", NoStubAddressCheck),
@@ -954,6 +956,8 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
                              ApiSetQueryApiSetPresence, Equals, FALSE,
                              &gEmptyUnicodeString, &gIsPresent) &&
       TEST_HOOK("kernelbase.dll", QueryDosDeviceW, Equals, 0) &&
+      TEST_HOOK("kernel32.dll", GetFileAttributesW, Equals,
+                INVALID_FILE_ATTRIBUTES) &&
 #if !defined(_M_ARM64)
 #  ifndef MOZ_ASAN
       // Bug 733892: toolkit/crashreporter/nsExceptionHandler.cpp
