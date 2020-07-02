@@ -482,7 +482,11 @@ def get_raptor_test_list(args, oskey):
         # of supporting both webext and browsertime, just provide a dummy 'measure' setting
         # here to prevent having to check in multiple places; it has no effect on what
         # browsertime actually measures; remove this when eventually we remove webext support
-        if args.browsertime and next_test.get('measure') is None:
+        if (
+            args.browsertime
+            and next_test.get("measure") is None
+            and next_test.get("type") == "pageload"
+        ):
             next_test['measure'] = "fnbpaint, fcp, dcf, loadtime"
 
         # convert 'measure =' test INI line to list
