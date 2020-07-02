@@ -69,7 +69,7 @@ class DefaultSearchController(
     private fun openSearchOrUrl(url: String) {
         activity.openToBrowserAndLoad(
             searchTermOrURL = url,
-            newTab = store.state.session == null,
+            newTab = store.state.tabId == null,
             from = BrowserDirection.FromSearch,
             engine = store.state.searchEngineSource.searchEngine
         )
@@ -103,8 +103,8 @@ class DefaultSearchController(
     override fun handleTextChanged(text: String) {
         val settings = activity.settings()
         // Display the search shortcuts on each entry of the search fragment (see #5308)
-        val textMatchesCurrentUrl = store.state.session?.url ?: "" == text
-        val textMatchesCurrentSearch = store.state.session?.searchTerms ?: "" == text
+        val textMatchesCurrentUrl = store.state.url == text
+        val textMatchesCurrentSearch = store.state.searchTerms == text
 
         store.dispatch(SearchFragmentAction.UpdateQuery(text))
         store.dispatch(
@@ -126,7 +126,7 @@ class DefaultSearchController(
     override fun handleUrlTapped(url: String) {
         activity.openToBrowserAndLoad(
             searchTermOrURL = url,
-            newTab = store.state.session == null,
+            newTab = store.state.tabId == null,
             from = BrowserDirection.FromSearch
         )
 
@@ -138,7 +138,7 @@ class DefaultSearchController(
 
         activity.openToBrowserAndLoad(
             searchTermOrURL = searchTerms,
-            newTab = store.state.session == null,
+            newTab = store.state.tabId == null,
             from = BrowserDirection.FromSearch,
             engine = store.state.searchEngineSource.searchEngine,
             forceSearch = true

@@ -48,6 +48,9 @@ class SearchFragmentStoreTest {
     }
 
     private fun emptyDefaultState(): SearchFragmentState = SearchFragmentState(
+        tabId = null,
+        url = "",
+        searchTerms = "",
         query = "",
         searchEngineSource = mockk(),
         defaultEngineSource = mockk(),
@@ -57,7 +60,6 @@ class SearchFragmentStoreTest {
         showClipboardSuggestions = false,
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
-        session = null,
         searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.NONE
     )
 }

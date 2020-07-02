@@ -15,7 +15,6 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
@@ -43,7 +42,6 @@ class DefaultSearchControllerTest {
     private val store: SearchFragmentStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val defaultSearchEngine: SearchEngine? = mockk(relaxed = true)
-    private val session: Session? = mockk(relaxed = true)
     private val searchEngine: SearchEngine = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val sessionManager: SessionManager = mockk(relaxed = true)
@@ -55,7 +53,7 @@ class DefaultSearchControllerTest {
     @Before
     fun setUp() {
         every { activity.searchEngineManager.defaultSearchEngine } returns defaultSearchEngine
-        every { store.state.session } returns session
+        every { store.state.tabId } returns "test-tab-id"
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
         every { activity.metrics } returns metrics
         every { activity.components.core.sessionManager } returns sessionManager
@@ -79,7 +77,7 @@ class DefaultSearchControllerTest {
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = url,
-                newTab = session == null,
+                newTab = false,
                 from = BrowserDirection.FromSearch,
                 engine = searchEngine
             )
@@ -105,7 +103,7 @@ class DefaultSearchControllerTest {
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO),
-                newTab = session == null,
+                newTab = false,
                 from = BrowserDirection.FromSearch,
                 engine = searchEngine
             )
@@ -163,13 +161,11 @@ class DefaultSearchControllerTest {
     @Test
     fun `show search shortcuts when setting enabled AND query equals url`() {
         val text = "mozilla.org"
-        every { session?.url } returns "mozilla.org"
+        every { store.state.url } returns "mozilla.org"
         testContext.settings().preferences
                 .edit()
                 .putBoolean(testContext.getString(R.string.pref_key_show_search_shortcuts), true)
                 .apply()
-
-        assertEquals(text, session?.url)
 
         controller.handleTextChanged(text)
 
@@ -226,7 +222,7 @@ class DefaultSearchControllerTest {
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = url,
-                newTab = session == null,
+                newTab = false,
                 from = BrowserDirection.FromSearch
             )
         }
@@ -242,7 +238,7 @@ class DefaultSearchControllerTest {
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = searchTerms,
-                newTab = session == null,
+                newTab = false,
                 from = BrowserDirection.FromSearch,
                 engine = searchEngine,
                 forceSearch = true

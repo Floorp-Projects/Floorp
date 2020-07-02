@@ -5,7 +5,6 @@
 package org.mozilla.fenix.search
 
 import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.session.Session
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -34,6 +33,9 @@ sealed class SearchEngineSource {
 /**
  * The state for the Search Screen
  * @property query The current search query string
+ * @property url The current URL of the tab (if this fragment is shown for an already existing tab)
+ * @property searchTerms The search terms used to search previously in this tab (if this fragment is shown
+ * for an already existing tab)
  * @property searchEngineSource The current selected search engine with the context of how it was selected
  * @property defaultEngineSource The current default search engine source
  * @property showSearchSuggestions Whether or not to show search suggestions from the search engine in the AwesomeBar
@@ -42,11 +44,12 @@ sealed class SearchEngineSource {
  * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar
  * @property showHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
  * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
- * @property session The current session if available
  * @property pastedText The text pasted from the long press toolbar menu
  */
 data class SearchFragmentState(
     val query: String,
+    val url: String,
+    val searchTerms: String,
     val searchEngineSource: SearchEngineSource,
     val defaultEngineSource: SearchEngineSource.Default,
     val showSearchSuggestions: Boolean,
@@ -55,7 +58,7 @@ data class SearchFragmentState(
     val showClipboardSuggestions: Boolean,
     val showHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
-    val session: Session?,
+    val tabId: String?,
     val pastedText: String? = null,
     val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint?
 ) : State

@@ -198,7 +198,7 @@ class AwesomeBarView(
         updateSuggestionProvidersVisibility(state)
 
         // Do not make suggestions based on user's current URL unless it's a search shortcut
-        if (state.query == state.session?.url && !state.showSearchShortcuts) {
+        if (state.query == state.url && !state.showSearchShortcuts) {
             return
         }
 
