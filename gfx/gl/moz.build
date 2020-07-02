@@ -52,12 +52,6 @@ EXPORTS += [
     'SurfaceTypes.h',
 ]
 
-if CONFIG['MOZ_X11']:
-    EXPORTS += [
-        'GLContextGLX.h',
-        'GLXLibrary.h',
-    ]
-
 # Win32 is a special snowflake, for ANGLE
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
@@ -116,9 +110,12 @@ elif gl_provider == 'GLX':
     # as it includes X11 headers which cause conflicts.
     SOURCES += [
         'GLContextProviderGLX.cpp',
+        'GLContextProviderX11.cpp',
         'SharedSurfaceGLX.cpp'
     ]
     EXPORTS += [
+        'GLContextGLX.h',
+        'GLXLibrary.h',
         'SharedSurfaceGLX.h'
     ]
 
