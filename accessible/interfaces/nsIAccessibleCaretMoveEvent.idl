@@ -15,4 +15,9 @@ interface nsIAccessibleCaretMoveEvent: nsIAccessibleEvent
    * Return caret offset.
    */
   readonly attribute long caretOffset;
+
+  /**
+   * Return true if there is no selection.
+   */
+  readonly attribute bool isSelectionCollapsed;
 };
