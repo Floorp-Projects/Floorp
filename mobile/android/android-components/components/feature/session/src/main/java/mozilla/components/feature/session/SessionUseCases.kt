@@ -115,6 +115,15 @@ class SessionUseCases(
                 sessionManager.getOrCreateEngineSession(session).reload()
             }
         }
+
+        /**
+         * Reloads the current page of the tab with the given [tabId].
+         */
+        operator fun invoke(tabId: String) {
+            sessionManager.findSessionById(tabId)?.let {
+                invoke(it)
+            }
+        }
     }
 
     class StopLoadingUseCase internal constructor(
@@ -141,6 +150,15 @@ class SessionUseCases(
         operator fun invoke(session: Session? = sessionManager.selectedSession) {
             if (session != null) {
                 sessionManager.getOrCreateEngineSession(session).goBack()
+            }
+        }
+
+        /**
+         * Navigates back in the history of the tab with the given [tabId].
+         */
+        operator fun invoke(tabId: String) {
+            sessionManager.findSessionById(tabId)?.let {
+                invoke(it)
             }
         }
     }
@@ -181,6 +199,13 @@ class SessionUseCases(
             if (session != null) {
                 sessionManager.getOrCreateEngineSession(session).exitFullScreenMode()
             }
+        }
+
+        /**
+         * Exits fullscreen mode of the tab with the given [tabId].
+         */
+        operator fun invoke(tabId: String) {
+            sessionManager.findSessionById(tabId)?.let { invoke(it) }
         }
     }
 

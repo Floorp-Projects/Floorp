@@ -65,8 +65,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
 
         sessionFeature.set(
             feature = SessionFeature(
-                components.sessionManager,
+                components.store,
                 components.sessionUseCases.goBack,
+                components.engineSessionUseCases,
                 layout.engineView,
                 sessionId),
             owner = this,
@@ -84,7 +85,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
 
         swipeRefreshFeature.set(
             feature = SwipeRefreshFeature(
-                components.sessionManager,
+                components.store,
                 components.sessionUseCases.reload,
                 layout.swipeToRefresh),
             owner = this,

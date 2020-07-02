@@ -12,6 +12,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-session**
+  * ⚠️ **This is a breaking change**: `FullScreenFeature`, `SettingsUseCases`, `SwipeRefreshFeature` and `SessionFeature` now require a `BrowserStore` instead of a `SessionManager`.
+  * ⚠️ **This is a breaking change**: `SessionFeature` now requires an `EngineSessionUseCases` instance.
+
 * **service-sync-logins**
   * ⚠️ **This is a breaking change**: removed `isAutofillEnabled` lambda from `GeckoLoginStorageDelegate` because setting has been exposed through GV
 

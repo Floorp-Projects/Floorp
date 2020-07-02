@@ -4,31 +4,25 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.usecases.EngineSessionUseCases
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.feature.session.engine.EngineViewPresenter
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 
 /**
  * Feature implementation for connecting the engine module with the session module.
  */
 class SessionFeature(
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val goBackUseCase: SessionUseCases.GoBackUseCase,
+    engineSessionUseCases: EngineSessionUseCases,
     private val engineView: EngineView,
-    private val sessionId: String? = null
+    private val tabId: String? = null
 ) : LifecycleAwareFeature, UserInteractionHandler {
-    internal val presenter = EngineViewPresenter(sessionManager, engineView, sessionId)
-
-    /**
-     * @deprecated Pass [SessionUseCases.GoBackUseCase] directly instead.
-     */
-    constructor(
-        sessionManager: SessionManager,
-        sessionUseCases: SessionUseCases,
-        engineView: EngineView,
-        sessionId: String? = null
-    ) : this(sessionManager, sessionUseCases.goBack, engineView, sessionId)
+    internal val presenter = EngineViewPresenter(store, engineView, engineSessionUseCases, tabId)
 
     /**
      * Start feature: App is in the foreground.
@@ -43,15 +37,13 @@ class SessionFeature(
      * @return true if the event was handled, otherwise false.
      */
     override fun onBackPressed(): Boolean {
-        val session = sessionId?.let {
-            sessionManager.findSessionById(it)
-        } ?: sessionManager.selectedSession
+        val tab = store.state.findTabOrCustomTabOrSelectedTab(tabId)
 
         if (engineView.canClearSelection()) {
             engineView.clearSelection()
             return true
-        } else if (session?.canGoBack == true) {
-            goBackUseCase(session)
+        } else if (tab?.content?.canGoBack == true) {
+            goBackUseCase(tab.id)
             return true
         }
 
