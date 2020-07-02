@@ -2039,18 +2039,12 @@ void HelperThread::handleWasmTier2GeneratorWorkload(
       HelperThreadState().wasmTier2GeneratorWorklist(locked).popCopy());
 
   wasm::Tier2GeneratorTask* task = wasmTier2GeneratorTask();
-  {
-    AutoUnlockHelperThreadState unlock(locked);
-    task->runTask();
-  }
+
+  // 'task' will be released inside runTaskLocked().
+  task->runTaskLocked(locked);
 
   currentTask.reset();
-  js_delete(task);
 
-  // During shutdown the main thread will wait for any ongoing (cancelled)
-  // tier-2 generation to shut down normally.  To do so, it waits on the
-  // CONSUMER condition for the count of finished generators to rise.
-  HelperThreadState().incWasmTier2GeneratorsFinished(locked);
   HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
 }
 
