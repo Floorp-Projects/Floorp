@@ -10,7 +10,7 @@ license:
         - browser/branding/
         # Trademark
         - browser/components/pocket/content/panels/
-        - browser/extensions/pdfjs/content/web/images/
+        - toolkit/components/pdfjs/content/web/images/
         # We probably want a specific license
         - browser/extensions/webcompat/injections/
         # Different license

@@ -70,7 +70,7 @@ if (AppConstants.platform == "macosx") {
 // referencing the whitelisted file in a way that the test can't detect, or a
 // bug number to remove or use the file if it is indeed currently unreferenced.
 var whitelist = [
-  // browser/extensions/pdfjs/content/PdfStreamConverter.jsm
+  // toolkt/components/pdfjs/content/PdfStreamConverter.jsm
   { file: "chrome://pdf.js/locale/chrome.properties" },
   { file: "chrome://pdf.js/locale/viewer.properties" },
 
@@ -157,7 +157,7 @@ var whitelist = [
     platforms: ["linux", "macosx"],
   },
 
-  // browser/extensions/pdfjs/content/web/viewer.js#7450
+  // toolkt/components/pdfjs/content/web/viewer.js#7450
   { file: "resource://pdf.js/web/debugger.js" },
 
   // resource://app/modules/translation/TranslationContentHandler.jsm
