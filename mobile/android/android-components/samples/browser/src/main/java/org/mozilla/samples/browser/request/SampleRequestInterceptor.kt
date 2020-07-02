@@ -22,12 +22,13 @@ class SampleRequestInterceptor(val context: Context) : RequestInterceptor {
         uri: String,
         hasUserGesture: Boolean,
         isSameDomain: Boolean,
-        isRedirect: Boolean
+        isRedirect: Boolean,
+        isDirectNavigation: Boolean
     ): InterceptionResponse? {
         return when (uri) {
             "sample:about" -> InterceptionResponse.Content("<h1>I am the sample browser</h1>")
             else -> context.components.appLinksInterceptor.onLoadRequest(
-                engineSession, uri, hasUserGesture, isSameDomain, isRedirect)
+                engineSession, uri, hasUserGesture, isSameDomain, isRedirect, isDirectNavigation)
         }
     }
 
