@@ -5,13 +5,15 @@
 
 #include "Accessible-inl.h"
 #include "HyperTextAccessible-inl.h"
-#include "TextLeafAccessible.h"
-
+#include "mozilla/a11y/PDocAccessible.h"
 #include "nsCocoaUtils.h"
+#include "nsIPersistentProperties2.h"
 #include "nsObjCExceptions.h"
+#include "TextLeafAccessible.h"
 
 #import "mozTextAccessible.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 inline bool ToNSRange(id aValue, NSRange* aRange) {

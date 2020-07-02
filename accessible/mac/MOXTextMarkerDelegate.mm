@@ -46,11 +46,17 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 }
 
 - (id)moxStartTextMarker {
-  return nil;
+  GeckoTextMarker geckoTextPoint(mGeckoDocAccessible, 0);
+  return geckoTextPoint.CreateAXTextMarker();
 }
 
 - (id)moxEndTextMarker {
-  return nil;
+  uint32_t characterCount =
+      mGeckoDocAccessible.IsProxy()
+          ? mGeckoDocAccessible.AsProxy()->CharacterCount()
+          : mGeckoDocAccessible.AsAccessible()->Document()->AsHyperText()->CharacterCount();
+  GeckoTextMarker geckoTextPoint(mGeckoDocAccessible, characterCount);
+  return geckoTextPoint.CreateAXTextMarker();
 }
 
 - (NSString*)moxStringForTextMarkerRange:(id)textMarkerRange {
@@ -62,7 +68,18 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 }
 
 - (id)moxTextMarkerRangeForUnorderedTextMarkers:(NSArray*)textMarkers {
-  return nil;
+  if ([textMarkers count] != 2) {
+    // Don't allow anything but a two member array.
+    return nil;
+  }
+
+  GeckoTextMarker p1(mGeckoDocAccessible, textMarkers[0]);
+  GeckoTextMarker p2(mGeckoDocAccessible, textMarkers[1]);
+
+  bool ordered = p1 < p2;
+  GeckoTextMarkerRange range(ordered ? p1 : p2, ordered ? p2 : p1);
+
+  return range.CreateAXTextMarkerRange();
 }
 
 @end
