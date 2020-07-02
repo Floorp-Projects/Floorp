@@ -10,7 +10,6 @@ import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -56,11 +55,7 @@ object GeckoProvider {
         }
 
         val geckoRuntime = GeckoRuntime.create(context, runtimeSettings)
-        // As a quick fix for #8967 we are conflating "should autofill" with "should save logins"
-        val loginStorageDelegate = GeckoLoginStorageDelegate(
-            storage,
-            { context.settings().shouldPromptToSaveLogins }
-        )
+        val loginStorageDelegate = GeckoLoginStorageDelegate(storage, { true })
         geckoRuntime.loginStorageDelegate = GeckoLoginDelegateWrapper(loginStorageDelegate)
 
         return geckoRuntime
