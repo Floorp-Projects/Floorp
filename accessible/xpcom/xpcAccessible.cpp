@@ -410,7 +410,8 @@ xpcAccessible::GetNativeInterface(nsISupports** aNativeInterface) {
   // We don't cache or store this instance anywhere so each get returns a
   // different instance. So `acc.nativeInterface != acc.nativeInterface`. This
   // just seems simpler and more robust for now.
-  nsCOMPtr<nsISupports> macIface = new xpcAccessibleMacInterface(IntlGeneric());
+  nsCOMPtr<nsISupports> macIface = static_cast<nsIAccessibleMacInterface*>(
+      new xpcAccessibleMacInterface(IntlGeneric()));
   macIface.swap(*aNativeInterface);
 
   return NS_OK;
