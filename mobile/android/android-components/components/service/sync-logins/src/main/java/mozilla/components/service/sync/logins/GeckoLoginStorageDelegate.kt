@@ -4,7 +4,6 @@
 
 package mozilla.components.service.sync.logins
 
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +46,6 @@ import mozilla.components.concept.storage.LoginsStorage
  */
 class GeckoLoginStorageDelegate(
     private val loginStorage: Lazy<LoginsStorage>,
-    private val isAutofillEnabled: () -> Boolean = { false },
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : LoginStorageDelegate {
 
@@ -61,7 +59,6 @@ class GeckoLoginStorageDelegate(
     }
 
     override fun onLoginFetch(domain: String): Deferred<List<Login>> {
-        if (!isAutofillEnabled()) return CompletableDeferred(listOf())
         return scope.async {
             loginStorage.value.getByBaseDomain(domain)
         }

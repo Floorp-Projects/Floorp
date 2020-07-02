@@ -38,25 +38,7 @@ class GeckoLoginStorageDelegateTest {
     fun before() = runBlocking {
         loginsStorage.wipeLocal()
         scope = TestCoroutineScope()
-        delegate = GeckoLoginStorageDelegate(lazy { loginsStorage }, { false }, scope)
-    }
-
-    @Test
-    fun `WHEN passed false for shouldAutofill onLoginsFetch returns early`() {
-        scope.launch {
-            delegate.onLoginFetch("login")
-            verify(loginsStorage, times(0)).touch(any())
-        }
-    }
-
-    @Test
-    fun `WHEN passed true for shouldAutofill onLoginsFetch does not return early`() {
-        delegate = GeckoLoginStorageDelegate(lazy { loginsStorage }, { true }, scope)
-
-        scope.launch {
-            delegate.onLoginFetch("login")
-            verify(loginsStorage, times(1)).touch(any())
-        }
+        delegate = GeckoLoginStorageDelegate(lazy { loginsStorage }, scope)
     }
 
     @Test
