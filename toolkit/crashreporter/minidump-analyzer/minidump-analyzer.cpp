@@ -88,6 +88,42 @@ struct ModuleCompare {
 
 typedef map<const CodeModule*, unsigned int, ModuleCompare> OrderedModulesMap;
 
+static void AddModulesFromCallStack(OrderedModulesMap& aOrderedModules,
+                                    const CallStack* aStack) {
+  int frameCount = aStack->frames()->size();
+
+  for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+    const StackFrame* frame = aStack->frames()->at(frameIndex);
+
+    if (frame->module) {
+      aOrderedModules.insert(
+          std::pair<const CodeModule*, unsigned int>(frame->module, 0));
+    }
+  }
+}
+
+static void PopulateModuleList(const ProcessState& aProcessState,
+                               OrderedModulesMap& aOrderedModules,
+                               bool aFullStacks) {
+  int threadCount = aProcessState.threads()->size();
+  int requestingThread = aProcessState.requesting_thread();
+
+  if (!aFullStacks && (requestingThread != -1)) {
+    AddModulesFromCallStack(aOrderedModules,
+                            aProcessState.threads()->at(requestingThread));
+  } else {
+    for (int threadIndex = 0; threadIndex < threadCount; ++threadIndex) {
+      AddModulesFromCallStack(aOrderedModules,
+                              aProcessState.threads()->at(threadIndex));
+    }
+  }
+
+  int moduleCount = 0;
+  for (auto& itr : aOrderedModules) {
+    itr.second = moduleCount++;
+  }
+}
+
 static const char kExtraDataExtension[] = ".extra";
 
 static string ToHex(uint64_t aValue) {
@@ -154,18 +190,16 @@ static void ConvertStackToJSON(const ProcessState& aProcessState,
                                const OrderedModulesMap& aOrderedModules,
                                const CallStack* aStack, Json::Value& aNode) {
   int frameCount = aStack->frames()->size();
-  unsigned int moduleIndex = 0;
 
   for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
     const StackFrame* frame = aStack->frames()->at(frameIndex);
     Json::Value frameNode;
 
     if (frame->module) {
-      auto itr = aOrderedModules.find(frame->module);
+      const auto& itr = aOrderedModules.find(frame->module);
 
       if (itr != aOrderedModules.end()) {
-        moduleIndex = (*itr).second;
-        frameNode["module_index"] = moduleIndex;
+        frameNode["module_index"] = (*itr).second;
       }
     }
 
@@ -181,20 +215,13 @@ static void ConvertStackToJSON(const ProcessState& aProcessState,
 // in the |aNode| parameter.
 
 static int ConvertModulesToJSON(const ProcessState& aProcessState,
-                                OrderedModulesMap& aOrderedModules,
+                                const OrderedModulesMap& aOrderedModules,
                                 Json::Value& aNode,
                                 Json::Value& aCertSubjects) {
   const CodeModules* modules = aProcessState.modules();
 
   if (!modules) {
     return -1;
-  }
-
-  // Create a sorted set of modules so that we'll be able to lookup the index
-  // of a particular module.
-  for (unsigned int i = 0; i < modules->module_count(); ++i) {
-    aOrderedModules.insert(std::pair<const CodeModule*, unsigned int>(
-        modules->GetModuleAtSequence(i), i));
   }
 
   uint64_t mainAddress = 0;
@@ -204,15 +231,13 @@ static int ConvertModulesToJSON(const ProcessState& aProcessState,
     mainAddress = mainModule->base_address();
   }
 
-  unsigned int moduleCount = modules->module_count();
   int mainModuleIndex = -1;
 
-  for (unsigned int moduleSequence = 0; moduleSequence < moduleCount;
-       ++moduleSequence) {
-    const CodeModule* module = modules->GetModuleAtSequence(moduleSequence);
+  for (const auto& itr : aOrderedModules) {
+    const CodeModule* module = itr.first;
 
-    if (module->base_address() == mainAddress) {
-      mainModuleIndex = moduleSequence;
+    if ((module->base_address() == mainAddress) && mainModule) {
+      mainModuleIndex = itr.second;
     }
 
 #if defined(XP_WIN)
@@ -255,9 +280,6 @@ static void ConvertProcessStateToJSON(const ProcessState& aProcessState,
                                       Json::Value& aStackTraces,
                                       const bool aFullStacks,
                                       Json::Value& aCertSubjects) {
-  // We use this map to get the index of a module when listed by address
-  OrderedModulesMap orderedModules;
-
   // Crash info
   Json::Value crashInfo;
   int requestingThread = aProcessState.requesting_thread();
@@ -285,6 +307,9 @@ static void ConvertProcessStateToJSON(const ProcessState& aProcessState,
   aStackTraces["crash_info"] = crashInfo;
 
   // Modules
+  OrderedModulesMap orderedModules;
+  PopulateModuleList(aProcessState, orderedModules, aFullStacks);
+
   Json::Value modules(Json::arrayValue);
   int mainModule = ConvertModulesToJSON(aProcessState, orderedModules, modules,
                                         aCertSubjects);
