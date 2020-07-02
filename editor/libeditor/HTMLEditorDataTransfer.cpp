@@ -269,7 +269,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   Unused << streamStartPoint;
   Unused << streamEndPoint;
 
-  HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
+  HTMLEditor::CollectTopMostChildContentsCompletelyInRange(
       EditorRawDOMPoint(streamStartParent, streamStartOffset),
       EditorRawDOMPoint(streamEndParent, streamEndOffset),
       arrayOfTopMostChildContents);
@@ -3073,7 +3073,7 @@ nsresult HTMLEditor::ParseFragment(const nsAString& aFragStr,
 }
 
 // static
-void HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
+void HTMLEditor::CollectTopMostChildContentsCompletelyInRange(
     const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
     nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents) {
   MOZ_ASSERT(aStartPoint.IsSetAndValid());
