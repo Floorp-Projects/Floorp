@@ -1467,15 +1467,14 @@ EditorDOMPointInText WSRunScanner::GetEndOfCollapsibleASCIIWhiteSpaces(
   // the following text nodes.
   // XXX Perhaps, we should stop scanning if there is non-editable and visible
   //     content.
-  for (EditorDOMPointInText atEndOfPreviousTextNode =
-           EditorDOMPointInText::AtEndOf(
-               *aPointAtASCIIWhiteSpace.ContainerAsText());
-       ;) {
+  EditorDOMPointInText afterLastWhiteSpace =
+      EditorDOMPointInText::AtEndOf(*aPointAtASCIIWhiteSpace.ContainerAsText());
+  for (EditorDOMPointInText atEndOfPreviousTextNode = afterLastWhiteSpace;;) {
     EditorDOMPointInText atStartOfNextTextNode =
         GetInclusiveNextEditableCharPoint(atEndOfPreviousTextNode);
     if (!atStartOfNextTextNode.IsSet()) {
       // There is no more text nodes.  Return end of the previous text node.
-      return atEndOfPreviousTextNode;
+      return afterLastWhiteSpace;
     }
 
     // We can ignore empty text nodes.
@@ -1487,7 +1486,7 @@ EditorDOMPointInText WSRunScanner::GetEndOfCollapsibleASCIIWhiteSpaces(
     // If next node starts with non-white-space character, return end of
     // previous text node.
     if (!atStartOfNextTextNode.IsCharASCIISpace()) {
-      return atEndOfPreviousTextNode;
+      return afterLastWhiteSpace;
     }
 
     // Otherwise, scan the text node.
@@ -1500,7 +1499,7 @@ EditorDOMPointInText WSRunScanner::GetEndOfCollapsibleASCIIWhiteSpaces(
     }
 
     // The next text nodes ends with white-space too.  Try next one.
-    atEndOfPreviousTextNode =
+    afterLastWhiteSpace = atEndOfPreviousTextNode =
         EditorDOMPointInText::AtEndOf(*atStartOfNextTextNode.ContainerAsText());
   }
 }
@@ -1527,14 +1526,14 @@ EditorDOMPointInText WSRunScanner::GetFirstASCIIWhiteSpacePointCollapsedTo(
   // the preceding text nodes.
   // XXX Perhaps, we should stop scanning if there is non-editable and visible
   //     content.
-  for (EditorDOMPointInText atStartOfPreviousTextNode =
-           EditorDOMPointInText(aPointAtASCIIWhiteSpace.ContainerAsText(), 0);
-       ;) {
+  EditorDOMPointInText atLastWhiteSpace =
+      EditorDOMPointInText(aPointAtASCIIWhiteSpace.ContainerAsText(), 0);
+  for (EditorDOMPointInText atStartOfPreviousTextNode = atLastWhiteSpace;;) {
     EditorDOMPointInText atLastCharOfNextTextNode =
         GetPreviousEditableCharPoint(atStartOfPreviousTextNode);
     if (!atLastCharOfNextTextNode.IsSet()) {
       // There is no more text nodes.  Return end of last text node.
-      return atStartOfPreviousTextNode;
+      return atLastWhiteSpace;
     }
 
     // We can ignore empty text nodes.
@@ -1546,7 +1545,7 @@ EditorDOMPointInText WSRunScanner::GetFirstASCIIWhiteSpacePointCollapsedTo(
     // If next node ends with non-white-space character, return start of
     // previous text node.
     if (!atLastCharOfNextTextNode.IsCharASCIISpace()) {
-      return atStartOfPreviousTextNode;
+      return atLastWhiteSpace;
     }
 
     // Otherwise, scan the text node.
@@ -1559,7 +1558,7 @@ EditorDOMPointInText WSRunScanner::GetFirstASCIIWhiteSpacePointCollapsedTo(
     }
 
     // The next text nodes starts with white-space too.  Try next one.
-    atStartOfPreviousTextNode =
+    atLastWhiteSpace = atStartOfPreviousTextNode =
         EditorDOMPointInText(atLastCharOfNextTextNode.ContainerAsText(), 0);
   }
 }
