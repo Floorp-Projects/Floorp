@@ -34,8 +34,6 @@ exclude: true
 - Added [`ProfilerController`][79.4], accessible via [`GeckoRuntime.getProfilerController`][79.5]
 to allow adding gecko profiler markers.
 ([bug 1624993]({{bugzilla}}1624993))
-- ⚠️ Deprecated `Parcelable` support in `GeckoSession` with the intention of removing
-  in GeckoView v82. ([bug 1649529]({{bugzilla}}1649529))
 
 [79.1]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onOpenOptionsPage-org.mozilla.geckoview.WebExtension-
 [79.2]: {{javadoc_uri}}/WebNotification.html#source
