@@ -8993,15 +8993,7 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
     return Err(rv);
   }
 
-  if (!directoryEntries) {
-    return res;
-  }
-
-  while (true) {
-    if (aCanceled) {
-      break;
-    }
-
+  while (!aCanceled) {
     nsCOMPtr<nsIFile> file;
     rv = directoryEntries->GetNextFile(getter_AddRefs(file));
     if (NS_WARN_IF(NS_FAILED(rv))) {
