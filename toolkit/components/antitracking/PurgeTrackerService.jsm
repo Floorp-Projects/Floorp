@@ -240,7 +240,7 @@ PurgeTrackerService.prototype = {
   },
 
   submitTelemetry() {
-    let { purged, notPurged, durationIntervals } = this._telemetryData;
+    let { numPurged, notPurged, durationIntervals } = this._telemetryData;
     let now = Date.now();
     let lastPurge = Number(
       Services.prefs.getStringPref("privacy.purge_trackers.last_purge", now)
@@ -252,7 +252,7 @@ PurgeTrackerService.prototype = {
     let hoursBetween = Math.floor((now - lastPurge) / 1000 / 60 / 60);
     intervalHistogram.add(hoursBetween);
 
-    Services.prefs.setStringPref(
+    Services.prefs.setIntPref(
       "privacy.purge_trackers.last_purge",
       now.toString()
     );
@@ -260,12 +260,12 @@ PurgeTrackerService.prototype = {
     let purgedHistogram = Services.telemetry.getHistogramById(
       "COOKIE_PURGING_ORIGINS_PURGED"
     );
-    purgedHistogram.add(purged.size);
+    purgedHistogram.add(numPurged);
 
     let notPurgedHistogram = Services.telemetry.getHistogramById(
       "COOKIE_PURGING_TRACKERS_WITH_USER_INTERACTION"
     );
-    notPurgedHistogram.add(notPurged.size);
+    notPurgedHistogram.add(notPurged);
 
     let duration = durationIntervals
       .map(([start, end]) => end - start)
@@ -312,8 +312,8 @@ PurgeTrackerService.prototype = {
     if (this._firstIteration) {
       this._telemetryData = {
         durationIntervals: [],
-        purged: new Set(),
-        notPurged: new Set(),
+        numPurged: 0,
+        notPurged: 0,
       };
 
       this._baseDomainsWithInteraction = new Map();
