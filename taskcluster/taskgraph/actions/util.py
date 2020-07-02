@@ -276,6 +276,7 @@ def create_tasks(graph_config, to_run, full_task_graph, label_to_taskid,
     if decision_task_id and decision_task_id != os.environ.get('TASK_ID'):
         target_task_graph.for_each_task(update_dependencies)
     optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
+                                                                to_run,
                                                                 params,
                                                                 to_run,
                                                                 decision_task_id,
