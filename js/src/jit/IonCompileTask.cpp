@@ -16,6 +16,31 @@
 using namespace js;
 using namespace js::jit;
 
+void IonCompileTask::runTaskLocked(AutoLockHelperThreadState& locked) {
+  // The build is taken by this thread. Unfreeze the LifoAlloc to allow
+  // mutations.
+  alloc().lifoAlloc()->setReadWrite();
+
+  {
+    AutoUnlockHelperThreadState unlock(locked);
+    runTask();
+  }
+
+  FinishOffThreadIonCompile(this, locked);
+
+  JSRuntime* rt = script()->runtimeFromAnyThread();
+
+  // Ping the main thread so that the compiled code can be incorporated at the
+  // next interrupt callback.
+  //
+  // This must happen before the current task is reset. DestroyContext
+  // cancels in progress Ion compilations before destroying its target
+  // context, and after we reset the current task we are no longer considered
+  // to be Ion compiling.
+  rt->mainContextFromAnyThread()->requestInterrupt(
+      InterruptReason::AttachIonCompilations);
+}
+
 void IonCompileTask::runTask() {
   // This is the entry point when ion compiles are run offthread.
   TraceLoggerThread* logger = TraceLoggerForCurrentThread();
