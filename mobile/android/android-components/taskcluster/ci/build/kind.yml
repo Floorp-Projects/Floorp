@@ -16,6 +16,16 @@ not-for-components:
 kind-dependencies:
     - toolchain
 
+# We always build components that have changed files or dependencies, but we also need
+# to rebuild some or all components when other files change. This structure
+# maintains the latter mapping. The value may either be a list of specific components,
+# or the special sentinel value `all-components`.
+files-affecting-components:
+    ^build.gradle$: all-components
+    ^settings.gradle$: all-components
+    ^buildSrc.*$: all-components
+    ^gradle.properties$: all-components
+    ^gradle/wrapper/gradle-wrapper.properties$: all-components
 
 job-defaults:
     artifact-template:

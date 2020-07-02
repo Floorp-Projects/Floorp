@@ -68,6 +68,13 @@ tasks:
                           else:
                               $if: 'tasks_for in ["cron", "action"]'
                               then: '${push.branch}'
+              base_sha:
+                  $if: 'tasks_for == "github-push"'
+                  then: '${event.before}'
+                  else:
+                      $if: 'tasks_for == "github-pull-request"'
+                      then: '${event.pull_request.base.sha}'
+                      else: 'UNDEFINED'
               head_sha:
                   $if: 'tasks_for == "github-push"'
                   then: '${event.after}'
@@ -213,6 +220,7 @@ tasks:
                                     # to `mach taskgraph decision` are all on the command line.
                                     $merge:
                                         - MOBILE_BASE_REPOSITORY: '${baseRepoUrl}'
+                                          MOBILE_BASE_REV: '${base_sha}'
                                           MOBILE_HEAD_REPOSITORY: '${repoUrl}'
                                           MOBILE_HEAD_REF: '${head_branch}'
                                           MOBILE_HEAD_REV: '${head_sha}'
