@@ -250,8 +250,8 @@
 @RESPATH@/browser/chrome.manifest
 @RESPATH@/browser/chrome/browser@JAREXT@
 @RESPATH@/browser/chrome/browser.manifest
-@RESPATH@/browser/chrome/pdfjs.manifest
-@RESPATH@/browser/chrome/pdfjs/*
+@RESPATH@/chrome/pdfjs.manifest
+@RESPATH@/chrome/pdfjs/*
 @RESPATH@/chrome/toolkit@JAREXT@
 @RESPATH@/chrome/toolkit.manifest
 @RESPATH@/chrome/recording.manifest
