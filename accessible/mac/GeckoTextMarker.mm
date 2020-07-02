@@ -6,6 +6,7 @@
 
 #include "DocAccessibleParent.h"
 #include "AccessibleOrProxy.h"
+#include "nsCocoaUtils.h"
 
 #import "GeckoTextMarker.h"
 
@@ -123,5 +124,116 @@ id GeckoTextMarkerRange::CreateAXTextMarkerRange() {
   return [static_cast<id>(cf_text_marker_range) autorelease];
 }
 
+NSString* GeckoTextMarkerRange::Text() const {
+  nsAutoString text;
+  TextInternal(text, mStart.mContainer, mStart.mOffset);
+  return nsCocoaUtils::ToNSString(text);
+}
+
+void GeckoTextMarkerRange::AppendTextTo(const AccessibleOrProxy& aContainer, nsAString& aText,
+                                        uint32_t aStartOffset, uint32_t aEndOffset) const {
+  nsAutoString text;
+  if (aContainer.IsProxy()) {
+    aContainer.AsProxy()->TextSubstring(aStartOffset, aEndOffset, text);
+  } else if (aContainer.AsAccessible()->IsHyperText()) {
+    aContainer.AsAccessible()->AsHyperText()->TextSubstring(aStartOffset, aEndOffset, text);
+  }
+
+  aText.Append(text);
+}
+
+int32_t GeckoTextMarkerRange::StartOffset(const AccessibleOrProxy& aChild) const {
+  if (aChild.IsProxy()) {
+    bool unused;
+    return aChild.AsProxy()->StartOffset(&unused);
+  }
+
+  return aChild.AsAccessible()->StartOffset();
+}
+
+int32_t GeckoTextMarkerRange::EndOffset(const AccessibleOrProxy& aChild) const {
+  if (aChild.IsProxy()) {
+    bool unused;
+    return aChild.AsProxy()->EndOffset(&unused);
+  }
+
+  return aChild.AsAccessible()->EndOffset();
+}
+
+int32_t GeckoTextMarkerRange::LinkCount(const AccessibleOrProxy& aContainer) const {
+  if (aContainer.IsProxy()) {
+    return aContainer.AsProxy()->LinkCount();
+  }
+
+  if (aContainer.AsAccessible()->IsHyperText()) {
+    return aContainer.AsAccessible()->AsHyperText()->LinkCount();
+  }
+
+  return 0;
+}
+
+AccessibleOrProxy GeckoTextMarkerRange::LinkAt(const AccessibleOrProxy& aContainer,
+                                               uint32_t aIndex) const {
+  if (aContainer.IsProxy()) {
+    return aContainer.AsProxy()->LinkAt(aIndex);
+  }
+
+  if (aContainer.AsAccessible()->IsHyperText()) {
+    return aContainer.AsAccessible()->AsHyperText()->LinkAt(aIndex);
+  }
+
+  return AccessibleOrProxy();
+}
+
+bool GeckoTextMarkerRange::TextInternal(nsAString& aText, AccessibleOrProxy aCurrent,
+                                        int32_t aStartIntlOffset) const {
+  int32_t endIntlOffset = aCurrent == mEnd.mContainer ? mEnd.mOffset : -1;
+  if (endIntlOffset == 0) {
+    return false;
+  }
+
+  AccessibleOrProxy next;
+  int32_t linkCount = LinkCount(aCurrent);
+  int32_t linkStartOffset = 0;
+  int32_t end = endIntlOffset;
+  // Find the first link that is at or after the start offset.
+  for (int32_t i = 0; i < linkCount; i++) {
+    AccessibleOrProxy link = LinkAt(aCurrent, i);
+    linkStartOffset = StartOffset(link);
+    if (aStartIntlOffset <= linkStartOffset) {
+      next = link;
+      break;
+    }
+  }
+
+  bool endIsBeyondLink = !next.IsNull() && (endIntlOffset < 0 || endIntlOffset > linkStartOffset);
+
+  if (endIsBeyondLink) {
+    end = linkStartOffset;
+  }
+
+  AppendTextTo(aCurrent, aText, aStartIntlOffset, end);
+
+  if (endIsBeyondLink) {
+    if (!TextInternal(aText, next, 0)) {
+      return false;
+    }
+  }
+
+  if (endIntlOffset >= 0) {
+    // If our original end marker is positive, we know we found all the text we
+    // needed within this current node, and our search is complete.
+    return false;
+  }
+
+  next = aCurrent.Parent();
+  if (!next.IsNull()) {
+    // The end offset is passed this link, go back to the parent
+    // and continue from this link's end offset.
+    return TextInternal(aText, next, EndOffset(aCurrent));
+  }
+
+  return true;
+}
 }
 }

@@ -60,11 +60,12 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 }
 
 - (NSString*)moxStringForTextMarkerRange:(id)textMarkerRange {
-  return nil;
+  mozilla::a11y::GeckoTextMarkerRange range(mGeckoDocAccessible, textMarkerRange);
+  return range.Text();
 }
 
 - (NSNumber*)moxLengthForTextMarkerRange:(id)textMarkerRange {
-  return nil;
+  return @([[self moxStringForTextMarkerRange:textMarkerRange] length]);
 }
 
 - (id)moxTextMarkerRangeForUnorderedTextMarkers:(NSArray*)textMarkers {
