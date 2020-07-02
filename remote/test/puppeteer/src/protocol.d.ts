@@ -1,7 +1,7 @@
 // This is generated from /utils/protocol-types-generator/index.js
   type binary = string;
-declare global {
-  module Protocol {
+
+declare module Protocol {
     export module Accessibility {
         /**
          * Unique accessibility node identifier.
@@ -15499,6 +15499,5 @@ unsubscribes current runtime agent from Runtime.bindingCalled notifications.
       "Schema.getDomains": Schema.getDomainsReturnValue;
     }
   }
-}
 
 export default Protocol;

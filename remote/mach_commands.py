@@ -369,7 +369,8 @@ class PuppeteerRunner(MozbuildObject):
             "--reporter", "./json-mocha-reporter.js",
             "--retries", "0",
             "--fullTrace",
-            "--timeout", "15000"
+            "--timeout", "15000",
+            "--no-parallel",
         ]
         if product == "firefox":
             env["BINARY"] = binary

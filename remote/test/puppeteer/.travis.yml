@@ -6,6 +6,7 @@ jobs:
     - os: "osx"
       name: 'Unit tests: macOS/Chromium'
       node_js: "10.19.0"
+      osx_image: xcode11.4
       env:
         - CHROMIUM=true
       before_install:
@@ -66,7 +67,7 @@ jobs:
         - npm run test-install
         - npm run lint
         - npm run test-doclint
-        - npm run test-types
+        - npm run ensure-new-docs-up-to-date
 
     # Runs unit tests on Linux + Firefox
     - node_js: "10.19.0"
