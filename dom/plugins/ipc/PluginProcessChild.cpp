@@ -5,12 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/plugins/PluginProcessChild.h"
-#include "mozilla/TaskController.h"
 
 #include "ClearOnShutdown.h"
 #include "base/command_line.h"
+#include "base/message_loop.h"  // for MessageLoop
 #include "base/string_util.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/TaskController.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "nsDebugImpl.h"
 #include "nsThreadManager.h"

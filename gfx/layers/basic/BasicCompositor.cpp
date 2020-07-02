@@ -1134,7 +1134,7 @@ void BasicCompositor::TryToEndRemoteDrawing() {
     RefPtr<Runnable> runnable =
         NS_NewRunnableFunction("layers::BasicCompositor::TryToEndRemoteDrawing",
                                [self]() { self->TryToEndRemoteDrawing(); });
-    MessageLoop::current()->PostDelayedTask(runnable.forget(), retryMs);
+    GetCurrentSerialEventTarget()->DelayedDispatch(runnable.forget(), retryMs);
   } else {
     EndRemoteDrawing();
   }
