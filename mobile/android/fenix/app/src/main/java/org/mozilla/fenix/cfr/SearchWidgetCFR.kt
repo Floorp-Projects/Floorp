@@ -34,7 +34,11 @@ class SearchWidgetCFR(
 
     fun displayIfNecessary() {
         if (!context.settings().isInSearchWidgetExperiment ||
-            !context.settings().shouldDisplaySearchWidgetCFR()) { return }
+            !context.settings().shouldDisplaySearchWidgetCFR() ||
+            isShown
+        ) { return }
+
+        isShown = true
         showSearchWidgetCFR()
     }
 
@@ -85,14 +89,21 @@ class SearchWidgetCFR(
         }
 
         searchWidgetCFRDialog.setOnCancelListener {
+            isShown = false
             context.components.analytics.metrics.track(Event.SearchWidgetCFRCanceled)
         }
 
         searchWidgetCFRDialog.setOnDismissListener {
+            isShown = false
             context.settings().incrementSearchWidgetCFRDismissed()
         }
 
         searchWidgetCFRDialog.show()
         context.components.analytics.metrics.track(Event.SearchWidgetCFRDisplayed)
+    }
+
+    companion object {
+        // Used to ensure multiple dialogs are not shown on top of each other
+        var isShown = false
     }
 }
