@@ -14,6 +14,7 @@
 #ifdef MOZ_WAYLAND_USE_VAAPI
 #  include "gfxPlatformGtk.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
+#  include "mozilla/widget/DMABufLibWrapper.h"
 #  include "H264.h"
 #endif
 
@@ -207,12 +208,30 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   AVHWDeviceContext* hwctx = (AVHWDeviceContext*)mVAAPIDeviceContext->data;
   AVVAAPIDeviceContext* vactx = (AVVAAPIDeviceContext*)hwctx->hwctx;
 
-  wl_display* display = widget::WaylandDisplayGetWLDisplay();
-  if (!display) {
-    FFMPEG_LOG("Can't get default wayland display.");
-    return false;
+  if (gfxPlatformGtk::GetPlatform()->UseDRMVAAPIDisplay()) {
+    mDisplay =
+        mLib->vaGetDisplayDRM(widget::GetDMABufDevice()->GetGbmDeviceFd());
+    if (!mDisplay) {
+      FFMPEG_LOG("Can't get DRM VA-API display.");
+      return false;
+    }
+  } else {
+    if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
+      wl_display* display = widget::WaylandDisplayGetWLDisplay();
+      if (!display) {
+        FFMPEG_LOG("Can't get default wayland display.");
+        return false;
+      }
+      mDisplay = mLib->vaGetDisplayWl(display);
+      if (!mDisplay) {
+        FFMPEG_LOG("Can't get Wayland VA-API display.");
+        return false;
+      }
+    } else {
+      FFMPEG_LOG("VA-API X11 display is not implemented.");
+      return false;
+    }
   }
-  mDisplay = mLib->vaGetDisplayWl(display);
 
   hwctx->user_opaque = new VAAPIDisplayHolder(mLib, mDisplay);
   hwctx->free = VAAPIDisplayReleaseCallback;
@@ -345,7 +364,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
        layers::LayersBackend::LAYERS_WR);
 
   if (!mUseDMABufSurfaces) {
-    FFMPEG_LOG("DMA-BUF/VA-API can't be used, WebRender/Wayland is disabled");
+    FFMPEG_LOG("DMA-Buf/VA-API can't be used, WebRender/DMA-Buf is disabled");
   }
 #endif
 }
