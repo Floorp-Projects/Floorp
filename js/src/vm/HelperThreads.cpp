@@ -534,6 +534,29 @@ size_t ParseTask::sizeOfExcludingThis(
          errors.sizeOfExcludingThis(mallocSizeOf);
 }
 
+void ParseTask::runTaskLocked(AutoLockHelperThreadState& locked) {
+#ifdef DEBUG
+  JSRuntime* runtime = parseGlobal->runtimeFromAnyThread();
+  runtime->incOffThreadParsesRunning();
+#endif
+
+  {
+    AutoUnlockHelperThreadState unlock(locked);
+    runTask();
+  }
+
+  // The callback is invoked while we are still off thread.
+  callback(this, callbackData);
+
+  // FinishOffThreadScript will need to be called on the script to
+  // migrate it into the correct compartment.
+  HelperThreadState().parseFinishedList(locked).insertBack(this);
+
+#ifdef DEBUG
+  runtime->decOffThreadParsesRunning();
+#endif
+}
+
 void ParseTask::runTask() {
   AutoSetHelperThreadContext usesContext;
 
@@ -2172,25 +2195,7 @@ void HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked) {
   currentTask.emplace(HelperThreadState().parseWorklist(locked).popCopy());
   ParseTask* task = parseTask();
 
-#ifdef DEBUG
-  JSRuntime* runtime = task->parseGlobal->runtimeFromAnyThread();
-  runtime->incOffThreadParsesRunning();
-#endif
-
-  {
-    AutoUnlockHelperThreadState unlock(locked);
-    task->runTask();
-  }
-  // The callback is invoked while we are still off thread.
-  task->callback(task, task->callbackData);
-
-  // FinishOffThreadScript will need to be called on the script to
-  // migrate it into the correct compartment.
-  HelperThreadState().parseFinishedList(locked).insertBack(task);
-
-#ifdef DEBUG
-  runtime->decOffThreadParsesRunning();
-#endif
+  task->runTaskLocked(locked);
 
   currentTask.reset();
 
