@@ -215,16 +215,8 @@ add_task(async function navigate_around() {
       max: 51,
     };
     if (AppConstants.platform == "linux") {
-      // The following 3 sandbox prefs are covered by
+      // The following sandbox pref is covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1600189
-      knownProblematicPrefs["security.sandbox.content.write_path_whitelist"] = {
-        min: 49,
-        max: 55,
-      };
-      knownProblematicPrefs["security.sandbox.content.read_path_whitelist"] = {
-        min: 49,
-        max: 55,
-      };
       knownProblematicPrefs["security.sandbox.content.force-namespace"] = {
         min: 49,
         max: 55,
