@@ -727,9 +727,9 @@
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
     <string name="create_collection_add_new_collection">Add new collection</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_all">Select All</string>
+    <string name="create_collection_select_all">Select all</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_deselect_all">Deselect All</string>
+    <string name="create_collection_deselect_all">Deselect all</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">Select tabs to save</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
