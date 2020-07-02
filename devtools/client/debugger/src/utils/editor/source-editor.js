@@ -12,7 +12,7 @@
 const CodeMirror = require("codemirror");
 
 // $FlowIgnore
-require("raw!chrome://devtools/content/shared/sourceeditor/codemirror/lib/codemirror.css");
+require("codemirror/lib/codemirror.css");
 require("codemirror/mode/javascript/javascript");
 require("codemirror/mode/htmlmixed/htmlmixed");
 require("codemirror/mode/coffeescript/coffeescript");
@@ -32,8 +32,7 @@ require("codemirror/addon/display/placeholder");
 require("codemirror/mode/clike/clike");
 require("codemirror/mode/rust/rust");
 
-// $FlowIgnore
-require("raw!chrome://devtools/content/debugger/src/utils/editor/source-editor.css");
+require("./source-editor.css");
 
 // NOTE: we should eventually use debugger-html context type mode
 type Mode = string | Object;

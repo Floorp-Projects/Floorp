@@ -20,3 +20,15 @@ CompiledModules(
     'WhyPaused.js',
     'XHRBreakpoints.js',
 )
+
+DevToolsModules(
+    'CommandBar.css',
+    'DOMMutationBreakpoints.css',
+    'EventListeners.css',
+    'Expressions.css',
+    'Scopes.css',
+    'SecondaryPanes.css',
+    'Threads.css',
+    'WhyPaused.css',
+    'XHRBreakpoints.css',
+)
