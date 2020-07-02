@@ -1934,7 +1934,7 @@ security:
     release_channel_collection: opt-out
     products:
       - firefox
-    expiry_version: "77"
+    expiry_version: "never"
     record_in_processes:
       - all
     extra_keys:
@@ -1952,7 +1952,7 @@ security:
     release_channel_collection: opt-out
     products:
       - firefox
-    expiry_version: "77"
+    expiry_version: "never"
     record_in_processes:
       - main
     extra_keys:
