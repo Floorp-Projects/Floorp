@@ -1517,7 +1517,8 @@ parent:
                                                   MaybeDiscardedBrowsingContext aParentContext,
                                                   Principal aTrackingPrincipal,
                                                   nsCString aTrackingOrigin,
-                                                  int aAllowMode)
+                                                  int aAllowMode,
+                                                  StorageAccessPermissionGrantedReason? aReason)
           returns (bool unused);
 
     async CompleteAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
