@@ -21,4 +21,6 @@ TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += [
     'test.css',
     'TestRunner.js',
     'WindowSnapshot.js',
+    'WorkerHandler.js',
+    'WorkerSimpleTest.js'
 ]
