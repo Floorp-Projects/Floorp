@@ -116,6 +116,10 @@ class IMediaInfoUpdater {
   // Use this method when media enters or leaves the fullscreen.
   virtual void NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
                                           bool aIsInFullScreen) = 0;
+
+  // Use this method when media session update its position state.
+  virtual void UpdatePositionState(uint64_t aBrowsingContextId,
+                                   const PositionState& aState) = 0;
 };
 
 /**
@@ -159,6 +163,8 @@ class MediaStatusManager : public IMediaInfoUpdater {
                     MediaSessionAction aAction) override;
   void DisableAction(uint64_t aBrowsingContextId,
                      MediaSessionAction aAction) override;
+  void UpdatePositionState(uint64_t aBrowsingContextId,
+                           const PositionState& aState) override;
 
   // Return active media session's metadata if active media session exists and
   // it has already set its metadata. Otherwise, return default media metadata
@@ -169,10 +175,13 @@ class MediaStatusManager : public IMediaInfoUpdater {
   bool IsMediaPlaying() const;
   bool IsAnyMediaBeingControlled() const;
 
-  // This event would be notified when the active media session's metadata
-  // changes.
+  // These events would be notified when the active media session's certain
+  // property changes.
   MediaEventSource<MediaMetadataBase>& MetadataChangedEvent() {
     return mMetadataChangedEvent;
+  }
+  MediaEventSource<PositionState>& PositionChangedEvent() {
+    return mPositionStateChangedEvent;
   }
 
   // Return the actual playback state.
@@ -247,6 +256,7 @@ class MediaStatusManager : public IMediaInfoUpdater {
   MediaEventProducer<MediaMetadataBase> mMetadataChangedEvent;
   MediaEventProducer<nsTArray<MediaSessionAction>>
       mSupportedActionsChangedEvent;
+  MediaEventProducer<PositionState> mPositionStateChangedEvent;
   MediaPlaybackStatus mPlaybackStatusDelegate;
 };
 

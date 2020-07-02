@@ -379,6 +379,10 @@ void MediaControlService::ControllerManager::ConnectMainControllerEvents() {
           AbstractThread::MainThread(), [this](bool aIsEnabled) {
             mSource->SetEnablePictureInPictureMode(aIsEnabled);
           });
+  mPositionChangedListener = mMainController->PositionChangedEvent().Connect(
+      AbstractThread::MainThread(), [this](const PositionState& aState) {
+        mSource->SetPositionState(aState);
+      });
 }
 
 void MediaControlService::ControllerManager::DisconnectMainControllerEvents() {
@@ -386,6 +390,7 @@ void MediaControlService::ControllerManager::DisconnectMainControllerEvents() {
   mSupportedKeysChangedListener.DisconnectIfExists();
   mFullScreenChangedListener.DisconnectIfExists();
   mPictureInPictureModeChangedListener.DisconnectIfExists();
+  mPositionChangedListener.DisconnectIfExists();
 }
 
 MediaController* MediaControlService::ControllerManager::GetMainController()

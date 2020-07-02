@@ -298,6 +298,23 @@ void ContentMediaAgent::NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
   }
 }
 
+void ContentMediaAgent::UpdatePositionState(uint64_t aBrowsingContextId,
+                                            const PositionState& aState) {
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+  if (XRE_IsContentProcess()) {
+    // TODO : update IPC method in next patch.
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<IMediaInfoUpdater> updater =
+          bc->Canonical()->GetMediaController()) {
+    updater->UpdatePositionState(bc->Id(), aState);
+  }
+}
+
 ContentMediaController::ContentMediaController(uint64_t aId)
     : mTopLevelBrowsingContextId(aId) {}
 

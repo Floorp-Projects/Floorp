@@ -338,6 +338,16 @@ void MediaStatusManager::DisableAction(uint64_t aBrowsingContextId,
   NotifySupportedKeysChangedIfNeeded(aBrowsingContextId);
 }
 
+void MediaStatusManager::UpdatePositionState(uint64_t aBrowsingContextId,
+                                             const PositionState& aState) {
+  // The position state comes from non-active media session which we don't care.
+  if (!mActiveMediaSessionContextId ||
+      *mActiveMediaSessionContextId != aBrowsingContextId) {
+    return;
+  }
+  mPositionStateChangedEvent.Notify(aState);
+}
+
 void MediaStatusManager::NotifySupportedKeysChangedIfNeeded(
     uint64_t aBrowsingContextId) {
   // Only the active media session's supported actions would be shown in virtual
