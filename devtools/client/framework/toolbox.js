@@ -20,6 +20,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 var { Ci, Cc } = require("chrome");
 var promise = require("promise");
 const { debounce } = require("devtools/shared/debounce");
+const { safeAsyncMethod } = require("devtools/shared/async-utils");
 var Services = require("Services");
 var ChromeUtils = require("ChromeUtils");
 var { gDevTools } = require("devtools/client/framework/devtools");
@@ -3509,7 +3510,9 @@ Toolbox.prototype = {
     let currentHighlighterFront;
 
     return {
-      highlight: async (object, options) => {
+      // highlight might be triggered right before a test finishes. Wrap it
+      // with safeAsyncMethod to avoid intermittents.
+      highlight: this._safeAsyncAfterDestroy(async (object, options) => {
         pendingHighlight = (async () => {
           let nodeFront = object;
 
@@ -3527,8 +3530,8 @@ Toolbox.prototype = {
           return nodeFront.highlighterFront.highlight(nodeFront, options);
         })();
         return pendingHighlight;
-      },
-      unhighlight: async forceHide => {
+      }),
+      unhighlight: this._safeAsyncAfterDestroy(async forceHide => {
         if (pendingHighlight) {
           await pendingHighlight;
           pendingHighlight = null;
@@ -3541,8 +3544,17 @@ Toolbox.prototype = {
         const unHighlight = currentHighlighterFront.unhighlight(forceHide);
         currentHighlighterFront = null;
         return unHighlight;
-      },
+      }),
     };
+  },
+
+  /**
+   * Shortcut to avoid throwing errors when an async method fails after toolbox
+   * destroy. Should be used with methods that might be triggered by a user
+   * input, regardless of the toolbox lifecycle.
+   */
+  _safeAsyncAfterDestroy(fn) {
+    return safeAsyncMethod(fn, () => !!this._destroyer);
   },
 
   _onNewSelectedNodeFront: async function() {
