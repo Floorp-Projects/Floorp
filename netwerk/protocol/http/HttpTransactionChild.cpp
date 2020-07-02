@@ -413,6 +413,13 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
+  Maybe<nsCString> optionalAltSvcUsed;
+  nsCString altSvcUsed;
+  if (NS_SUCCEEDED(mTransaction->RequestHead()->GetHeader(
+          nsHttp::Alternate_Service_Used, altSvcUsed))) {
+    optionalAltSvcUsed.emplace(altSvcUsed);
+  }
+
   if (CanSendODAToContentProcessDirectly(optionalHead)) {
     Maybe<RefPtr<BackgroundDataBridgeParent>> dataBridgeParent =
         SocketProcessChild::GetSingleton()->GetAndRemoveDataBridge(mChannelId);
@@ -444,7 +451,8 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
   Unused << SendOnStartRequest(status, optionalHead, serializedSecurityInfoOut,
                                mTransaction->ProxyConnectFailed(),
                                ToTimingStructArgs(mTransaction->Timings()),
-                               proxyConnectResponseCode, dataForSniffer);
+                               proxyConnectResponseCode, dataForSniffer,
+                               optionalAltSvcUsed);
   return NS_OK;
 }
 
