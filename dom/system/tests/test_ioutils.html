@@ -1,0 +1,165 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <!---
+    This implementation is compared against an already well-tested reference
+    implementation of File I/0.
+  -->
+  <script src="resource://gre/modules/FileTestUtils.jsm"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+
+    // TODO: Remove this import for OS.File. It is currently being used as a
+    //       stop gap for missing IOUtils functionality.
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+
+    add_task(async function test_api_is_available_on_window() {
+      ok(window.IOUtils, "IOUtils is present on the window");
+    });
+
+    add_task(async function test_read_failure() {
+      await Assert.rejects(
+        window.IOUtils.read("does_not_exist.txt"),
+        /Could not open file/,
+        "IOUtils::read rejects when file does not exist"
+      );
+    });
+
+    add_task(async function test_write_no_overwrite() {
+      // Make a new file, and try to write to it with overwrites disabled.
+      const tmpFileName = "test_ioutils_overwrite.tmp";
+      const untouchableContents = new TextEncoder().encode("Can't touch this!\n");
+      await window.IOUtils.writeAtomic(tmpFileName, untouchableContents);
+
+      const newContents = new TextEncoder().encode("Nah nah nah!\n");
+      await Assert.rejects(
+        window.IOUtils.writeAtomic(tmpFileName, newContents, {
+          noOverwrite: true,
+        }),
+        /Refusing to overwrite file/,
+        "IOUtils::writeAtomic rejects writing to existing file if overwrites are disabled"
+      );
+
+      const bytesWritten = await window.IOUtils.writeAtomic(
+        tmpFileName,
+        newContents,
+        { noOverwrite: false /* Default. */ }
+      );
+      is(
+        bytesWritten,
+        newContents.length,
+        "IOUtils::writeAtomic can overwrite files if specified"
+      );
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_partial_read() {
+      const tmpFileName = "test_ioutils_partial_read.tmp";
+      const bytes = Uint8Array.of(...new Array(50).keys());
+      const bytesWritten = await window.IOUtils.writeAtomic(tmpFileName, bytes);
+      is(
+        bytesWritten,
+        50,
+        "IOUtils::writeAtomic can write entire byte array to file"
+      );
+
+      // Read just the first 10 bytes.
+      const first10 = bytes.slice(0, 10);
+      const bytes10 = await window.IOUtils.read(tmpFileName, 10);
+      ok(
+        ObjectUtils.deepEqual(bytes10, first10),
+        "IOUtils::read can read part of a file, up to specified max bytes"
+      );
+
+      // Trying to explicitly read nothing isn't useful, but it should still
+      // succeed.
+      const bytes0 = await window.IOUtils.read(tmpFileName, 0);
+      is(bytes0.length, 0, "IOUtils::read can read 0 bytes");
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_empty_read_and_write() {
+      // Trying to write an empty file isn't very useful, but it should still
+      // succeed.
+      const tmpFileName = "test_ioutils_empty.tmp";
+      const emptyByteArray = new Uint8Array(0);
+      const bytesWritten = await window.IOUtils.writeAtomic(
+        tmpFileName,
+        emptyByteArray
+      );
+      is(bytesWritten, 0, "IOUtils::writeAtomic can create an empty file");
+
+      // Trying to explicitly read nothing isn't useful, but it should still
+      // succeed.
+      const bytes0 = await window.IOUtils.read(tmpFileName, 0);
+      is(bytes0.length, 0, "IOUtils::read can read 0 bytes");
+
+      // Implicitly try to read nothing.
+      const nothing = await window.IOUtils.read(tmpFileName);
+      is(nothing.length, 0, "IOUtils:: read can read empty files");
+
+      await cleanup(tmpFileName);
+    });
+
+    add_task(async function test_full_read_and_write() {
+      // Write a file.
+      const tmpFileName = "test_ioutils_numbers.tmp";
+      const bytes = Uint8Array.of(...new Array(50).keys());
+      const bytesWritten = await window.IOUtils.writeAtomic(tmpFileName, bytes);
+      is(
+        bytesWritten,
+        50,
+        "IOUtils::writeAtomic can write entire byte array to file"
+      );
+
+      // Read it back.
+      let fileContents = await window.IOUtils.read(tmpFileName);
+      ok(
+        ObjectUtils.deepEqual(bytes, fileContents) &&
+        bytes.length == fileContents.length,
+        "IOUtils::read can read back entire file"
+      );
+
+      const tooManyBytes = bytes.length + 1;
+      fileContents = await window.IOUtils.read(tmpFileName, tooManyBytes);
+      ok(
+        ObjectUtils.deepEqual(bytes, fileContents) &&
+        fileContents.length == bytes.length,
+        "IOUtils::read can read entire file when requested maxBytes is too large"
+      );
+
+      await cleanup(tmpFileName);
+    });
+
+
+    // Utility functions.
+    async function cleanup(...files) {
+      for (const file of files) {
+        await OS.File.remove(file);
+        const exists = await OS.File.exists(file);
+        ok(!exists, `Removed temporary file: ${file}`);
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>
