@@ -48,11 +48,15 @@ UniquePtr<SwapChainPresenter> SwapChain::Acquire(const gfx::IntSize& size) {
   }
 
   auto ret = MakeUnique<SwapChainPresenter>(*this);
-  ret->SwapBackBuffer(std::move(surf));
+  const auto old = ret->SwapBackBuffer(surf);
+  MOZ_ALWAYS_TRUE(!old);
   return ret;
 }
 
-void SwapChain::ClearPool() { mPool = {}; }
+void SwapChain::ClearPool() {
+  mPool = {};
+  mPrevFrontBuffer = nullptr;
+}
 
 // -
 
@@ -69,7 +73,8 @@ SwapChainPresenter::~SwapChainPresenter() {
 
   auto newFront = SwapBackBuffer(nullptr);
   if (newFront) {
-    mSwapChain->mFrontBuffer = std::move(newFront);
+    mSwapChain->mPrevFrontBuffer = mSwapChain->mFrontBuffer;
+    mSwapChain->mFrontBuffer = newFront;
   }
 }
 
@@ -80,8 +85,8 @@ std::shared_ptr<SharedSurface> SwapChainPresenter::SwapBackBuffer(
     mBackBuffer->ProducerRelease();
     mBackBuffer->Commit();
   }
-  auto old = std::move(mBackBuffer);
-  mBackBuffer = std::move(back);
+  auto old = mBackBuffer;
+  mBackBuffer = back;
   if (mBackBuffer) {
     mBackBuffer->WaitForBufferOwnership();
     mBackBuffer->ProducerAcquire();
