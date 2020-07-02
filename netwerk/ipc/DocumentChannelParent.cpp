@@ -79,11 +79,11 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
         self->mDocumentLoadListener = nullptr;
       },
       [self](DocumentLoadListener::OpenPromiseFailedType&& aRejectValue) {
-        if (self->CanSend()) {
-          Unused << self->SendDisconnectChildListeners(
-              aRejectValue.mStatus, aRejectValue.mLoadGroupStatus,
-              aRejectValue.mSwitchedProcess);
+        if (!self->CanSend()) {
+          return;
         }
+        Unused << self->SendDisconnectChildListeners(
+            aRejectValue.mStatus, aRejectValue.mLoadGroupStatus);
         self->mDocumentLoadListener = nullptr;
       });
 

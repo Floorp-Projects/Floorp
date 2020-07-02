@@ -14,7 +14,6 @@
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_security.h"
-#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ChildProcessChannelListener.h"
@@ -799,6 +798,14 @@ void DocumentLoadListener::Cancel(const nsresult& aStatusCode) {
        "aStatusCode=%" PRIx32 " ]",
        this, static_cast<uint32_t>(aStatusCode)));
   mCancelled = true;
+
+  if (mDoingProcessSwitch) {
+    // If we've already initiated process-switching
+    // then we can no longer be cancelled and we'll
+    // disconnect the old listeners when done.
+    return;
+  }
+
   if (mChannel) {
     mChannel->Cancel(aStatusCode);
   }
@@ -819,16 +826,12 @@ void DocumentLoadListener::DisconnectListeners(nsresult aStatus,
 
   Disconnect();
 
-  if (!aSwitchedProcess) {
-    // If we're not going to send anything else to the content process, and
-    // we haven't yet consumed a stream filter promise, then we're never going
-    // to. If we're disconnecting the old content process due to a proces
-    // switch, then we can rely on FinishReplacementChannelSetup being called
-    // (even if the switch failed), so we clear at that point instead.
-    // TODO: This might be because we retargeted the stream to the download
-    // handler or similar. Do we need to attach a stream filter to that?
-    mStreamFilterRequests.Clear();
-  }
+  // If we're not going to send anything else to the content process, and
+  // we haven't yet consumed a stream filter promise, then we're never going
+  // to.
+  // TODO: This might be because we retargeted the stream to the download
+  // handler or similar. Do we need to attach a stream filter to that?
+  mStreamFilterRequests.Clear();
 }
 
 void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
@@ -884,7 +887,11 @@ void DocumentLoadListener::FinishReplacementChannelSetup(nsresult aResult) {
       ctx->EndDocumentLoad(false);
     }
   });
-  mStreamFilterRequests.Clear();
+
+  if (mDoingProcessSwitch) {
+    DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED,
+                        NS_SUCCEEDED(aResult));
+  }
 
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
@@ -1302,8 +1309,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
   // Get information about the current document loaded in our BrowsingContext.
   nsCOMPtr<nsIPrincipal> currentPrincipal;
-  RefPtr<WindowGlobalParent> wgp = browsingContext->GetCurrentWindowGlobal();
-  if (wgp) {
+  if (RefPtr<WindowGlobalParent> wgp =
+          browsingContext->GetCurrentWindowGlobal()) {
     currentPrincipal = wgp->DocumentPrincipal();
   }
   RefPtr<ContentParent> contentParent = browsingContext->GetContentParent();
@@ -1422,18 +1429,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
        NS_ConvertUTF16toUTF8(currentRemoteType).get(),
        NS_ConvertUTF16toUTF8(remoteType).get()));
 
-  // We're now committing to a process switch, so we can disconnect from
-  // the listeners in the old process.
   mDoingProcessSwitch = true;
-  DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
-  if (wgp) {
-    if (RefPtr<BrowserParent> browserParent = wgp->GetBrowserParent()) {
-      // This load has already started, so we want to filter out any 'stop'
-      // progress events coming from the old process as a result of us
-      // disconnecting from it.
-      browserParent->SuspendProgressEventsUntilAfterNextLoadStarts();
-    }
-  }
 
   LOG(("Process Switch: Calling ChangeRemoteness"));
   browsingContext
