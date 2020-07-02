@@ -501,8 +501,20 @@ ContentBlocking::CompleteAllowAccessFor(
       }
     }
 
-    ContentBlockingNotifier::ReportUnblockingToConsole(
-        aParentContext, NS_ConvertUTF8toUTF16(trackingOrigin), aReason);
+    Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>
+        reportReason;
+    // We can directly report here if we can know the origin of the top.
+    if (XRE_IsParentProcess() || aParentContext->Top()->IsInProcess()) {
+      ContentBlockingNotifier::ReportUnblockingToConsole(
+          aParentContext, NS_ConvertUTF8toUTF16(trackingOrigin), aReason);
+
+      // Set the report reason to nothing if we've already reported.
+      reportReason = Nothing();
+    } else {
+      // Set the report reason, so that we can know the reason when reporting
+      // in the parent.
+      reportReason.emplace(aReason);
+    }
 
     if (XRE_IsParentProcess()) {
       LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
@@ -534,7 +546,8 @@ ContentBlocking::CompleteAllowAccessFor(
     return cc
         ->SendStorageAccessPermissionGrantedForOrigin(
             aTopLevelWindowId, aParentContext,
-            IPC::Principal(trackingPrincipal), trackingOrigin, aAllowMode)
+            IPC::Principal(trackingPrincipal), trackingOrigin, aAllowMode,
+            reportReason)
         ->Then(GetCurrentSerialEventTarget(), __func__,
                [](const ContentChild::
                       StorageAccessPermissionGrantedForOriginPromise::

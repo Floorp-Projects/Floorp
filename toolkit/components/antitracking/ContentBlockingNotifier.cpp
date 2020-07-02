@@ -378,11 +378,13 @@ void ContentBlockingNotifier::ReportUnblockingToConsole(
     BrowsingContext* aBrowsingContext, const nsAString& aTrackingOrigin,
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason) {
   MOZ_ASSERT(aBrowsingContext);
+  MOZ_ASSERT_IF(XRE_IsContentProcess(), aBrowsingContext->Top()->IsInProcess());
 
   uint64_t windowID = aBrowsingContext->GetCurrentInnerWindowId();
 
+  // The storage permission is granted under the top-level origin.
   nsCOMPtr<nsIPrincipal> principal =
-      AntiTrackingUtils::GetPrincipal(aBrowsingContext);
+      AntiTrackingUtils::GetPrincipal(aBrowsingContext->Top());
   if (NS_WARN_IF(!principal)) {
     return;
   }
