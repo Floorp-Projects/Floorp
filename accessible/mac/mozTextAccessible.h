@@ -4,8 +4,6 @@
 
 #import "mozAccessible.h"
 
-#import "HyperTextAccessible.h"
-
 @interface mozTextAccessible : mozAccessible
 
 // override
