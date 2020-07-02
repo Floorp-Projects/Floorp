@@ -363,7 +363,7 @@ class BrowserLogResults(object):
                 self.error("Could not find %s in browser output: (tokens: %s)"
                            % (attr, tokens))
             try:
-                value = int(value)
+                value = int(float(value))
             except ValueError:
                 self.error("Could not cast %s to an integer: %s"
                            % (attr, value))
