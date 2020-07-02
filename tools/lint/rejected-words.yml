@@ -145,6 +145,7 @@ avoid-blacklist-and-whitelist:
         - devtools/server/actors/webconsole/eager-function-whitelist.js
         - devtools/server/actors/webconsole/eval-with-debugger.js
         - devtools/server/tests/xpcshell/test_extension_storage_actor.js
+        - devtools/server/tests/xpcshell/test_extension_storage_actor_upgrade.js
         - devtools/shared/webconsole/GeneratePureDOMFunctions.py
         - docshell/base/nsDocShell.cpp
         - docshell/base/URIFixup.jsm
