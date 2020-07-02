@@ -213,18 +213,6 @@ void nsHTMLDocument::TryUserForcedCharset(nsIContentViewer* aCv,
     return;
   }
 
-  const Encoding* forceCharsetFromDocShell = nullptr;
-  if (aCv) {
-    // XXX mailnews-only
-    forceCharsetFromDocShell = aCv->GetForceCharset();
-  }
-
-  if (forceCharsetFromDocShell && IsAsciiCompatible(forceCharsetFromDocShell)) {
-    aEncoding = WrapNotNull(forceCharsetFromDocShell);
-    aCharsetSource = kCharsetFromUserForced;
-    return;
-  }
-
   if (aDocShell) {
     // This is the Character Encoding menu code path in Firefox
     auto encoding = nsDocShell::Cast(aDocShell)->GetForcedCharset();
@@ -507,7 +495,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     TryUserForcedCharset(cv, docShell, charsetSource, encoding);
 
-    TryHintCharset(cv, charsetSource, encoding);  // XXX mailnews-only
+    TryHintCharset(cv, charsetSource, encoding);  // For encoding reload
     TryParentCharset(docShell, charsetSource, encoding);
 
     if (cachingChan && !urlSpec.IsEmpty()) {
